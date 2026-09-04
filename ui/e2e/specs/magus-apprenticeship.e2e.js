@@ -151,12 +151,15 @@ describe('magus apprenticeship through the life stages', () => {
     expect(await $(FUNDING_LIFE_STAGES).isEnabled()).toBe(true);
     await $(FUNDING_LIFE_STAGES).click();
 
-    // The plan's own fields arrive with it — the age the years are priced from is
-    // read out first of all — and the note explains what that age means for a magus.
+    // The plan's own fields arrive with it — the age the years are priced from is read
+    // out first of all, and the Gauntlet age is the field beside it. The paragraph that
+    // used to explain what those two ages mean went with manual-testing-findings #21;
+    // the labelled fields are what the panel offers now.
     // (That the plan also retires the typed pool is read off the XP bar, on the step
     // that mounts it; see the abilities step below.)
     await $(AGE_READOUT).waitForExist({ timeout: STEP_TIMEOUT });
-    expect(clean(await $(GAUNTLET_NOTE).getText()).length).toBeGreaterThan(0);
+    await expect($('[data-testid="life-stage-gauntlet-age-input"]')).toExist();
+    expect(await $(GAUNTLET_NOTE).isExisting()).toBe(false);
   });
 
   it('refuses an age younger than the Gauntlet, and takes 25', async () => {
@@ -364,7 +367,9 @@ describe('magus apprenticeship through the life stages', () => {
     const latin = await checklistRow('magus-recommended-ability.dead_language');
     expect(latin.met).toBe('false');
     expect(latin.text).toContain('is not met');
-    expect(await textOf('[data-testid="magus-recommended-hint"]')).toContain('90');
+    // manual-testing-findings #21: the "they cost 90 xp and below them the magus is
+    // weak" sentence is gone; the rows themselves are the checklist's content.
+    expect(await $('[data-testid="magus-recommended-hint"]').isExisting()).toBe(false);
 
     // … as warnings, with Next still enabled: a warning does not gate a step.
     expect(await issueCount('magus_recommended_ability')).toBeGreaterThan(0);

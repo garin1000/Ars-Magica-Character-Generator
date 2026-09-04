@@ -147,7 +147,6 @@
     {#if warpingOwedGrants.length > 0}
       <div class="detail-section" data-testid="warping-owed">
         <h3 class="detail-label">{store.t('warping-owed-label')}</h3>
-        <p class="warping-owed-hint">{store.t('warping-owed-hint')}</p>
         {#each warpingSlotGroups as group (group.labelKey)}
           <div class="warping-owed-group" data-testid="warping-owed-group-{group.labelKey}">
             <h4 class="detail-label">

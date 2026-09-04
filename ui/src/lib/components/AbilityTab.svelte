@@ -118,12 +118,6 @@
     );
   }
 
-  // The engine's age → max-Ability-score cap. Its one home since Slice 12 (#24):
-  // it used to be echoed on both the Details tab and the life-stage panel, neither
-  // of which shows an Ability score. It constrains the lists below, so it is read
-  // beside them.
-  const ageCap = $derived(store.effective?.age_ability_cap ?? null);
-
   // === Selected side ===
 
   const advancement = $derived(store.ruleset?.ruleset.advancement ?? []);
@@ -262,16 +256,6 @@
      bounded column and only the third needed height. Empty for every type but a
      magus, so nothing gates the checklist here. -->
 <MagusMinimumAbilities />
-
-<!-- The age → max-Ability-score ceiling, read where it bites (Slice 12, #24). Like
-     the checklist above it, an auto-height sibling of `.region-row` and never a
-     wrapper, and one single line so it costs the lists as little height as a
-     statement can. Announced: it moves in response to an age typed on another step. -->
-{#if ageCap != null}
-  <p class="hint age-cap" role="status" data-testid="age-cap-note">
-    {store.t('age-cap-note', { cap: String(ageCap) })}
-  </p>
-{/if}
 
 <div class="region-row">
   <section class="region region-source">

@@ -21,7 +21,7 @@
      it does anything: those two are two views of one fact and this is the year they
      are measured against. Changing it rewrites NEITHER of them and does not dirty
      the document — advancing a saga means aging rolls, Living Conditions and any
-     Longevity Ritual applied per year, not a subtraction (D3.3). The hint says so.
+     Longevity Ritual applied per year, not a subtraction (D3.3).
 
      Absent until the setting has been read: the default is a rules value the engine
      owns, so this field never states a year of its own. -->
@@ -34,13 +34,9 @@
         min={I32_MIN}
         max={I32_MAX}
         value={sagaYear}
-        aria-describedby="saga-year-hint"
         oninput={onSagaYear}
         data-testid="saga-year-input"
       />
     </label>
-    <span class="hint" id="saga-year-hint" data-testid="saga-year-hint">
-      {store.t('saga-year-hint')}
-    </span>
   </div>
 {/if}

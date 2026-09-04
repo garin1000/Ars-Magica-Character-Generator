@@ -1932,22 +1932,24 @@ fn every_export_label_key_has_a_fluent_key_in_each_locale() {
     }
 }
 
-/// The wizard's step rail labels each creation phase through `phase-<slug>`, and
-/// each step carries a note saying what is decided there through
-/// `wizard-guidance-<slug>`, so a phase with either key missing would render as its
-/// raw slug — the one thing a label may never do. `CreationPhase::ALL` is the source
-/// of the set, so adding a phase fails this test until both locales carry both keys.
+/// The wizard's step rail labels each creation phase through `phase-<slug>`, so a
+/// phase with that key missing would render as its raw slug — the one thing a label
+/// may never do. `CreationPhase::ALL` is the source of the set, so adding a phase
+/// fails this test until both locales carry the key.
+///
+/// The `wizard-guidance-<slug>` half of this check went with the guidance paragraph
+/// itself (manual-testing-findings #21): the wizard no longer explains a step, so
+/// demanding copy per phase would demand a string nothing renders.
 #[test]
 fn every_creation_phase_has_a_fluent_key_in_each_locale() {
     for lang in ["en", "de"] {
         let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
         for phase in arm_rules::CreationPhase::ALL {
-            for key in [format!("phase-{phase}"), format!("wizard-guidance-{phase}")] {
-                assert!(
-                    ftl.contains(&format!("{key} =")),
-                    "locale '{lang}' is missing key '{key}'"
-                );
-            }
+            let key = format!("phase-{phase}");
+            assert!(
+                ftl.contains(&format!("{key} =")),
+                "locale '{lang}' is missing key '{key}'"
+            );
         }
     }
 }

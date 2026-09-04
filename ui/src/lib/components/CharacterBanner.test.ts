@@ -86,69 +86,53 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-// Slice 2 (#1) deleted the read-only `type` wizard step. Its two facts that live
-// nowhere else — the Virtue/Flaw budget numbers and the Gift policy line — moved
-// here, to the banner both the editor and the wizard already show above every
-// screen, so they stay reachable throughout the whole flow. These assertions are
-// TypeStep.test.ts's, followed to the content's new home.
-describe('CharacterBanner states what the character type commits the character to', () => {
+// manual-testing-findings #3: the banner names the character's type and nothing
+// else. The Virtue/Flaw budget sentence and the Gift-policy line were relocated here
+// by Slice 2 (#1) from the deleted `type` step; they explained the rules rather than
+// showing the character, and this banner sits above every tab and every wizard step,
+// so what it does not say is height the surfaces below get back. The budget numbers
+// remain on the Virtues & Flaws balance bar, where they are acted on.
+describe('CharacterBanner names the character type and nothing else', () => {
   it('names the type through its Fluent key, never the raw slug', () => {
     const label = text(render(CharacterBanner).body, 'character-type');
     expect(label).toContain('Magus');
     expect(label).not.toContain('type-magus');
   });
 
-  it("states the profile's Virtue and Flaw budget", () => {
-    expect(text(render(CharacterBanner).body, 'character-type-budget')).toContain('10');
+  it('carries no budget, explainer or Gift-policy line, for any Gift policy', () => {
+    const removed = [
+      'character-type-explainer',
+      'character-type-budget',
+      'character-type-gift-required',
+      'character-type-gift-forbidden',
+      'character-type-gift-optional',
+    ];
+    for (const policy of ['required', 'forbidden', 'allowed'] as const) {
+      installProfile({ ...magus(), gift_policy: policy });
+      const body = render(CharacterBanner).body;
+      for (const testid of removed) {
+        expect(body, `${testid} survived for gift_policy=${policy}`).not.toContain(
+          `data-testid="${testid}"`,
+        );
+      }
+    }
   });
 
-  it('reads the budget from the profile rather than assuming the magus numbers', () => {
-    installProfile({ ...magus(), id: 'grog', budget: { virtue_points: 3, flaw_points: 3 } });
-    const budget = text(render(CharacterBanner).body, 'character-type-budget');
-    expect(budget).toContain('3');
-    expect(budget).not.toContain('10');
-  });
-
-  // Gated on the profile's Gift policy, never on the type id — a new Gifted type
-  // gets the right line with no code change.
-  it('states that this type requires The Gift', () => {
-    const body = render(CharacterBanner).body;
-    expect(body).toContain('data-testid="character-type-gift-required"');
-    expect(body).not.toContain('data-testid="character-type-gift-forbidden"');
-  });
-
-  it('states that a companion may not have The Gift', () => {
-    installProfile({ ...magus(), id: 'companion', is_magus: false, gift_policy: 'forbidden' });
-    const body = render(CharacterBanner).body;
-    expect(body).toContain('data-testid="character-type-gift-forbidden"');
-    expect(body).not.toContain('data-testid="character-type-gift-required"');
-  });
-
-  it('says nothing about The Gift when the profile has no policy', () => {
-    const profile = magus();
-    delete profile.gift_policy;
-    installProfile(profile);
-    const body = render(CharacterBanner).body;
-    expect(body).not.toContain('data-testid="character-type-gift-required"');
-    expect(body).not.toContain('data-testid="character-type-gift-forbidden"');
-    expect(body).not.toContain('data-testid="character-type-gift-optional"');
-  });
-
-  it('says the type is fixed, and says nothing at all without a profile', () => {
-    expect(render(CharacterBanner).body).toContain('data-testid="character-type-explainer"');
+  // The `type-unknown` fallback is the banner's remaining conditional and the one
+  // thing it still has to get right: a save naming a type the ruleset has no profile
+  // for must not render the raw slug.
+  it('falls back to a localized label for a type the ruleset has no profile for', () => {
     installProfile({ ...magus(), id: 'grog' });
     store.entity.type_id = 'sorcerer';
-    const body = render(CharacterBanner).body;
-    // No profile, no budget and no Gift claim: the numbers would be invented.
-    expect(body).not.toContain('data-testid="character-type-budget"');
-    expect(body).not.toContain('data-testid="character-type-gift-required"');
+    const label = text(render(CharacterBanner).body, 'character-type');
+    expect(label).not.toContain('sorcerer');
+    expect(label).not.toContain('type-unknown');
   });
 
   it('localizes to German, rendering prose rather than an echoed key', () => {
     store.lang = 'de';
     const body = render(CharacterBanner).body;
     expect(text(body, 'character-type')).toContain('Magus');
-    expect(body).not.toContain('character-type-explainer =');
-    expect(text(body, 'character-type-explainer')).not.toContain('banner-type-explainer');
+    expect(body).not.toContain('type-label =');
   });
 });

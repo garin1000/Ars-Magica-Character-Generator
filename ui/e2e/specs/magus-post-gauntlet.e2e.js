@@ -98,7 +98,7 @@ async function issue(code) {
 }
 
 describe('a magus past its Gauntlet', () => {
-  it('explains the years after the Gauntlet instead of sending them elsewhere', async () => {
+  it('costs the years after the Gauntlet instead of sending them elsewhere', async () => {
     await startWizard('magus');
     await advanceWizardTo('experience');
     await $(PANEL).waitForExist({ timeout: BOOT_TIMEOUT });
@@ -108,14 +108,13 @@ describe('a magus past its Gauntlet', () => {
     // the XP bar, on the step that mounts it (see the Abilities step below).
     await $(AGE_READOUT).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // Until 6b5 the note ended "an older magus should use the experience pool
-    // instead" — the guided flow disowning the very years this slice models. It must
-    // now cost them instead: 30 points a year (`:2471`), said in words.
-    const note = await textOf(GAUNTLET_NOTE);
-    expect(note).toContain('30');
-    expect(note).not.toContain('experience pool');
-    // The three fields those points come from are on screen, and the split is one of
-    // them — this step owns it (see the Spells step below).
+    // Until 6b5 a note here ended "an older magus should use the experience pool
+    // instead" — the guided flow disowning the very years this slice models. That note
+    // was removed outright by manual-testing-findings #21, so the claim it made in
+    // words is now made by the FIELDS and the read-out: the three inputs the points
+    // come from are offered, and the engine's own post-Gauntlet summary prices them at
+    // 30 a year (`:2471`) — asserted with real numbers by the next test.
+    expect(await $(GAUNTLET_NOTE).isExisting()).toBe(false);
     for (const field of [GAUNTLET_AGE_INPUT, LAB_SEASONS_INPUT, SPELL_LEVELS_INPUT]) {
       expect(await $(field).isExisting()).toBe(true);
     }

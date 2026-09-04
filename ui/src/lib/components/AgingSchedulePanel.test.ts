@@ -212,11 +212,15 @@ describe('AgingSchedulePanel (slice 6b6b)', () => {
     expect(formula).not.toContain('−');
   });
 
-  it('names the standing Longevity Ritual clamp only while it stands', () => {
+  // manual-testing-findings #21: the standing-clamp paragraph is gone from the
+  // schedule, in both states. What the player still gets is the PER-ROLL statement
+  // `aging-die-capped` on the calculator, which reports the clamp where it actually
+  // bit a total instead of explaining the rule in advance.
+  it('states nothing about a standing Longevity Ritual clamp', () => {
     setAging(readout({ longevity_modifier: 7 }));
     expect(has(html(), 'aging-longevity-clamp')).toBe(false);
     setAging(readout({ longevity_modifier: 7, longevity_clamp_active: true }));
-    expect(has(html(), 'aging-longevity-clamp')).toBe(true);
+    expect(has(html(), 'aging-longevity-clamp')).toBe(false);
   });
 
   it('renders no raw slug or code as a label', () => {

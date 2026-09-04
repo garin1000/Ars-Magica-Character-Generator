@@ -33,6 +33,7 @@ WP5 → WP6 → WP7, one finding at a time.
 | 2026-09-03 | WP3 | Finding 4 done, engine untouched: `issuesForStep` + `phaseSelectedItemIds` let the docked panel show a foreign-phase finding whose `context` was chosen on this step, marked `data-elsewhere` with a dashed bar and the `issue-other-step` sentence naming the owning step (4a/4b); a `data-pending` rail marker with its own glyph and `.sr-only` label carries an open warning forward, gated to steps already reached after measuring 7 warnings over 4 of 11 unopened steps on a fresh magus (4c). | Full gate green including `cargo tauri build --no-bundle`; e2e not run |
 | 2026-09-04 | WP3 | Finding 5 done: the ability parameter picker offers the whole catalogue plus an instance field for parameterized abilities, and `ability_bonus_dangling_target` moved to the `abilities` phase, so the wizard runs forward and the rail keeps flagging what is owed. Finding 12 done: the exemplar now leads the requirement ("below Latin 1 (any Dead Language)"), fixed alongside the recommended-ability warning, the scholarly-language finding and the checklist. **WP3 complete.** | Full gate green including `cargo tauri build --no-bundle`; e2e run at package end |
 | 2026-09-04 | WP5 | Finding 16 done: `AppStore.#effectiveBasis` + `readSettled()` pin a badge's bought score to the generation its modifiers were computed for, so the Art/Ability/Characteristic badges make one transition per committed edit instead of rendering `newScore + oldBonus` for the length of the debounce. Three new `client` tests. | `npm run test:unit` (1259 tests), `check`, `lint`, `format:check`, `cargo test --workspace` — all green; release build and e2e **not** run, an e2e suite held `target/release` |
+| 2026-09-04 | WP7 | Findings 21, 2 and 3 done: the project-wide prose sweep. 43 Fluent keys deleted from both locales (rendering site, EN, DE and the tests that pinned them), one sentence trimmed, one `familiar-powers-note` swept in beyond the brief; every `aria-describedby` that named a deleted node removed with it; `wizardGuidance` and the whole guidance machinery deleted from `derive.ts`; RULES.md re-written where it cited the removed keys. | `npm run test:unit` (1239 tests), `check`, `lint`, `format:check`, `cargo test --workspace`, `clippy --all-targets -D warnings`, `cargo fmt --check` — all green; release build and e2e **not** run, an e2e suite held `target/release` |
 
 ---
 
@@ -567,7 +568,7 @@ and must be checked against the German locale, not English.
 
 ### 21 — Explanatory prose, project-wide
 
-**Status:** open
+**Status:** done (2026-09-04), with findings 2 and 3
 
 The Aging panel spends a whole column on explanation instead of content, and the
 same pattern recurs across guided creation. The player has the rulebook open; the
@@ -589,3 +590,37 @@ The sweep also covers the per-step `wizard-guidance-*` family, the in-step hints
 on the concept, experience and abilities steps, and the Aging/longevity notes.
 Two hazards: deleting a hint must also remove the `aria-describedby` that points
 at it, and `crates/arm-rules/RULES.md` cites two of the removed keys.
+
+**What was removed.** 43 Fluent keys in both locales, plus one sentence trimmed:
+
+- Wizard chrome: `wizard-step-incomplete-hint`; the whole `wizard-guidance-*`
+  family (twelve per-phase lines, the two `-flaw-cap` selectors and
+  `wizard-guidance-hermetic-flaw`); `character-type-explainer`,
+  `character-type-budget`, `character-type-gift-{required,forbidden,optional}`.
+- In-step hints: `saga-year-hint`, `ability-funding-{pool,life_stages}-hint`,
+  `life-stage-gauntlet-note`, `life-stage-{gauntlet-age,lab-seasons,spell-levels}-hint`,
+  `childhood-apply-hint`, `magus-recommended-hint`, `age-cap-note`,
+  `warping-owed-hint`, `familiar-powers-note`.
+- Aging/longevity: `living-conditions-hint`, `living-conditions-cumulative-note`,
+  `aging-longevity-clamp`, `aging-die-hint`, `aging-outcome-crisis-note`,
+  `aging-calculator-note`, `aging-points-note`, `longevity-sterility-note`,
+  `crisis-note`, `crisis-die-hint`.
+- Trimmed: `life-stage-post-gauntlet-no-years-note` lost its second sentence; the
+  first stays because it explains a read-only state and is the `aria-describedby`
+  target of both read-only fields.
+
+**Kept deliberately.** The `start-*-hint` copy on the start screen, the
+`derived-*-note` "guidance only / vis costs ignored" disclosures,
+`familiar-{characteristics,bond}-note`, `crisis-bedridden`,
+`crisis-die-unrolled`, `aging-die-capped` and `aging-note-*` — each states what
+*this application* does or does not do, or a read-only state a control cannot
+state for itself, rather than teaching a rule.
+
+**Code that went with the copy.** `wizardGuidance`, `GUIDANCE_ARGS`,
+`guidanceNotes`, `flawCapNotes`, `GuidanceContext`, `GuidanceNote` and
+`WizardGuidance` in `ui/src/lib/derive.ts`; `WizardNavigation.phaseIncomplete`
+and `AppStore.wizardPhaseIncomplete`; the `.wizard-incomplete-hint`,
+`.wizard-guidance`, `.age-cap`, `.gauntlet-note`, `.magus-recommended-hint` and
+`.childhood-hint` rules in `app.css`. The `.hidden-reserved` utility is kept
+though nothing uses it now: it encodes cross-cutting theme 1's house rule and is
+pinned by `app.css.test.ts`.

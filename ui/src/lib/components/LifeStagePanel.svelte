@@ -68,12 +68,6 @@
   const noPostGauntletYears = $derived(budget != null && budget.post_gauntlet_years === 0);
   const noYearsNoteId = 'life-stage-post-gauntlet-no-years-note';
 
-  /** A post-Gauntlet field's descriptions: its own hint, plus the read-only reason. */
-  function describedBy(field: string): string {
-    const hint = `life-stage-${field}-hint`;
-    return noPostGauntletYears ? `${hint} ${noYearsNoteId}` : hint;
-  }
-
   /** A stored optional count as an input value: absent reads as an empty field. */
   function fieldValue(count: number | undefined): string {
     return count == null ? '' : String(count);
@@ -88,10 +82,6 @@
   // The two funding modes, in the order they are offered. A fixed taxonomy (the
   // store's `AbilityFunding` union), not catalogue data.
   const options: AbilityFunding[] = ['pool', 'life_stages'];
-
-  function hintId(option: AbilityFunding): string {
-    return `ability-funding-${option}-hint`;
-  }
 
   function onNativeLanguage(event: Event) {
     store.setNativeLanguage((event.currentTarget as HTMLInputElement).value);
@@ -110,19 +100,11 @@
               name="ability-funding"
               value={option}
               checked={funding === option}
-              aria-describedby={hintId(option)}
               onchange={() => store.setAbilityFunding(option)}
               data-testid="ability-funding-{option}"
             />
             <span>{store.t(`ability-funding-${option}`)}</span>
           </label>
-          <span
-            class="funding-hint"
-            id={hintId(option)}
-            data-testid="ability-funding-{option}-hint"
-          >
-            {store.t(`ability-funding-${option}-hint`)}
-          </span>
         </div>
       {/each}
     </fieldset>
@@ -137,14 +119,6 @@
            mode: the age is still shown, because a magus carries two ages and the
            Gauntlet age below is measured against this one, but it is no longer a
            second place to change it. -->
-      {#if isMagus}
-        <!-- Announced, and placed above the two age inputs it explains: a magus has an
-             age AND a Gauntlet age, and neither field can say for itself which is
-             which or what the years between them are worth. -->
-        <p class="gauntlet-note" role="status" data-testid="life-stage-gauntlet-note">
-          {store.t('life-stage-gauntlet-note')}
-        </p>
-      {/if}
       <div class="life-stage-fields">
         <AgeFields readonly />
         {#if showPostGauntlet}
@@ -163,7 +137,6 @@
               max={U32_MAX}
               placeholder={gauntletPlaceholder}
               value={fieldValue(plan?.gauntlet_age)}
-              aria-describedby="life-stage-gauntlet-age-hint"
               oninput={(event) => store.setGauntletAge(count(event))}
               data-testid="life-stage-gauntlet-age-input"
             />
@@ -176,7 +149,7 @@
               max={U32_MAX}
               readonly={noPostGauntletYears}
               value={fieldValue(plan?.post_gauntlet_lab_seasons)}
-              aria-describedby={describedBy('lab-seasons')}
+              aria-describedby={noPostGauntletYears ? noYearsNoteId : undefined}
               oninput={(event) => store.setPostGauntletLabSeasons(count(event))}
               data-testid="life-stage-lab-seasons-input"
             />
@@ -189,7 +162,7 @@
               max={U32_MAX}
               readonly={noPostGauntletYears}
               value={fieldValue(plan?.post_gauntlet_spell_levels)}
-              aria-describedby={describedBy('spell-levels')}
+              aria-describedby={noPostGauntletYears ? noYearsNoteId : undefined}
               oninput={(event) => store.setPostGauntletSpellLevels(count(event))}
               data-testid="life-stage-spell-levels-input"
             />
@@ -207,28 +180,18 @@
         </label>
       </div>
       {#if showPostGauntlet}
-        <!-- The three hints share one wrapping row rather than sitting under their
-             fields: three stacked hint lines would cost the region row below three
-             more lines of height. -->
-        <div class="life-stage-hints">
-          {#each ['gauntlet-age', 'lab-seasons', 'spell-levels'] as field (field)}
-            <span
-              class="funding-hint"
-              id="life-stage-{field}-hint"
-              data-testid="life-stage-{field}-hint"
-            >
-              {store.t(`life-stage-${field}-hint`)}
-            </span>
-          {/each}
-          {#if noPostGauntletYears}
-            <!-- Referenced by both read-only fields through `aria-describedby`, so it
-                 is deliberately NOT a `role="status"` live region: the two together
-                 would announce it twice, once on arrival and again on focus. -->
+        {#if noPostGauntletYears}
+          <!-- The one surviving note on this panel (manual-testing-findings #21): it
+               states why the two fields above are read-only, which they cannot state
+               for themselves, and it is the `aria-describedby` target of both.
+               Deliberately NOT a `role="status"` live region: the two references
+               together would announce it twice, once on arrival and again on focus. -->
+          <div class="life-stage-hints">
             <span class="funding-hint" id={noYearsNoteId} data-testid={noYearsNoteId}>
               {store.t('life-stage-post-gauntlet-no-years-note')}
             </span>
-          {/if}
-        </div>
+          </div>
+        {/if}
         {#if budget}
           <!-- Announced: the numbers arrive in response to an edit above (either age,
                the lab seasons or the split), so their change must reach a screen

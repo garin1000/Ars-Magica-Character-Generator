@@ -1,9 +1,6 @@
 <script lang="ts">
   import type { Component } from 'svelte';
   import type { CreationPhase } from '../types';
-  import { store } from '../state.svelte';
-  import { wizardGuidance } from '../derive';
-
   import AbilityTab from './AbilityTab.svelte';
   import AgingStep from './AgingStep.svelte';
   import ArtGrid from './ArtGrid.svelte';
@@ -86,27 +83,6 @@
   const step = $derived<StepDef>(STEPS[phase]);
   const Body = $derived(step.component);
   const Bar = $derived(step.bar);
-
-  // What this stage of character creation is, in the rules' own terms. Its
-  // numbers come from the loaded ruleset, so nothing here restates a rule value.
-  const guidance = $derived(
-    wizardGuidance(phase, {
-      profile: store.ruleset?.ruleset.type_profiles[store.entity.type_id],
-      characteristicRules: store.ruleset?.ruleset.characteristic_rules,
-    }),
-  );
-
-  // The note as one paragraph: the step's own sentence, then whatever the character
-  // type's profile adds (guided-creation-review-2026-08 #7 — the per-type Virtue and
-  // Flaw advice). Joined here rather than in the markup so the sentences are
-  // separated by exactly one space, which an `{#each}` in a `<p>` cannot promise.
-  const guidanceText = $derived(
-    guidance
-      ? [{ key: guidance.key, args: guidance.args }, ...guidance.notes]
-          .map((note) => store.t(note.key, note.args))
-          .join(' ')
-      : '',
-  );
 </script>
 
 <!-- Reproduces the editor's height chain verbatim — `.tab-content > .vf-tab
@@ -115,13 +91,10 @@
      each region component already ships its own "Available"/"Selected" headings,
      and a second heading above them would nest. -->
 <div class="vf-tab">
-  <!-- A note, not a heading: it sits where the step's bar sits, inside the same
-       flex column, so it costs the input surface below only its own height. -->
-  {#if guidance}
-    <p class="hint wizard-guidance" data-testid="wizard-guidance">
-      {guidanceText}
-    </p>
-  {/if}
+  <!-- No per-step guidance paragraph (manual-testing-findings #21): the player has
+       the rulebook open, and the sentences cost every step a paragraph of height
+       above its input surface. Only the bar — the step's own budget, which is
+       content and not teaching — sits above the body now. -->
   {#if Bar}
     <Bar {...step.barProps ?? {}} />
   {/if}

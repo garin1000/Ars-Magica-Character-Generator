@@ -139,29 +139,11 @@
     })}
   </p>
 
-  <!-- Said on the step as well as in the rail, because the rail's mark is easy to
-       miss on the step you are standing on. It is a statement, never a gate: Next
-       stays exactly as enabled as the findings leave it.
-
-       ALWAYS MOUNTED, hidden by visibility alone (guided-creation-review-2026-08 #2,
-       an instance of cross-cutting theme 1). The flag is the engine's
-       `completeness.incomplete_phases`, which flips on the very FIRST recorded value
-       — so mounting this paragraph conditionally guaranteed that the first `+` click
-       collapsed a line directly above the step's input surface and moved the control
-       being clicked, worst on the characteristics step where clicks repeat. Keeping
-       the box reserves its space, so the surface below never moves. `aria-hidden`
-       rides along with the hidden state because the sentence is FALSE once something
-       is recorded: it must not be read out either, and the rail's own per-step marker
-       is what remains in the accessibility tree. -->
-  <p
-    class="hint wizard-incomplete-hint"
-    class:hidden-reserved={!store.wizardPhaseIncomplete}
-    aria-hidden={store.wizardPhaseIncomplete ? undefined : 'true'}
-    data-testid="wizard-incomplete-hint"
-  >
-    {store.t('wizard-step-incomplete-hint')}
-  </p>
-
+  <!-- No on-step "nothing recorded here yet" statement (manual-testing-findings #2):
+       the rail's own `.sr-only` per-step marker above carries the same flag, and the
+       line it used to reserve above every step body was permanent chrome spent on
+       teaching rather than content. Nothing conditional was put in its place, so the
+       layout-stability concern the reservation existed for is gone with it. -->
   <main class="tab-content wizard-body">
     <WizardStep phase={store.wizardPhase} />
   </main>

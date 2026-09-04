@@ -90,7 +90,6 @@
     slots.map((slot) => faults.get(slot.slot)).find((fault) => !!fault) ?? null,
   );
 
-  const APPLY_HINT_ID = 'childhood-apply-hint';
   const APPLY_REASON_ID = 'childhood-apply-reason';
 
   function reasonId(slot: string): string {
@@ -180,7 +179,7 @@
         <button
           type="button"
           disabled={!!blockingFault}
-          aria-describedby={blockingFault ? `${APPLY_REASON_ID} ${APPLY_HINT_ID}` : APPLY_HINT_ID}
+          aria-describedby={blockingFault ? APPLY_REASON_ID : undefined}
           onclick={() => store.applyChildhoodPackage()}
           data-testid="childhood-apply"
         >
@@ -191,9 +190,6 @@
             {faultReason(blockingFault)}
           </span>
         {/if}
-        <span class="childhood-hint" id={APPLY_HINT_ID} data-testid={APPLY_HINT_ID}>
-          {store.t('childhood-apply-hint')}
-        </span>
       </div>
     {/if}
 

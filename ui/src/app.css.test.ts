@@ -344,4 +344,166 @@ describe('app.css', () => {
     expect(block![1]).toMatch(/width:\s*fit-content;/);
     expect(block![1]).toMatch(/max-width:\s*100%;/);
   });
+
+  // ── The edit-mode tab strip has to fit its widest label set ─────────────────
+  //
+  // manual-testing-findings-2026-09 #1: at the default 1100x800 window the strip
+  // ran out of room and the tab titles ellipsized — which is why every tab also
+  // carries its full label in `title` (App.svelte). GERMAN is the binding case,
+  // not English: the magus tab set (thirteen tabs, the longest any type gets) is
+  // ~146 characters of label where English is ~130.
+  //
+  // WHY ARITHMETIC AND NOT A RENDER. Text advance width cannot be observed here:
+  // `render` from `svelte/server` attaches no stylesheet, and happy-dom performs
+  // no layout, so there is no measurable box at any level below e2e. The budget
+  // below is therefore a model — but a CALIBRATED one, against the single real
+  // measurement this repo recorded. `.tabbar`'s own comment states the English
+  // thirteen-tab strip as "~1350px of text" at the old geometry (15px type,
+  // 0.75rem tab padding, 0.25rem gap). Subtracting that geometry
+  // (13 x 2 x 11.25px padding + 12 x 3.75px gap = 337.5px) leaves ~1012px for 130
+  // characters, i.e. 0.52em per character. An independent per-glyph sum over
+  // DejaVu Sans (what `system-ui` usually resolves to in the shipped WebKitGTK)
+  // puts the German set at 0.53em per character. The larger of the two is used,
+  // so the model errs towards a wider string than reality.
+  //
+  // The e2e counterpart (`e2e/specs/tab-area.e2e.js`) measures the real thing in
+  // a real engine; this test is the fast guard that catches a longer German label
+  // or a loosened rule long before the binary is built.
+  const ROOT_FONT_PX = 15; // `:root { font-size: 15px }`
+  const EM_PER_CHARACTER = 0.53;
+  const DEFAULT_WINDOW_PX = 1100; // crates/arm-app/tauri.conf.json
+
+  // The magus set, in App.svelte's order. Spelled out rather than derived: the
+  // point is precisely which thirteen labels share one strip, and a type whose set
+  // grows past this one is exactly the change that must fail here.
+  const MAGUS_TAB_KEYS = [
+    'tab-details',
+    'tab-characteristics',
+    'tab-virtues-flaws',
+    'tab-experience',
+    'tab-abilities',
+    'tab-arts',
+    'tab-spells',
+    'tab-personality-reputations',
+    'tab-aging',
+    'tab-possessions',
+    'tab-house-specialisation',
+    'tab-equipment',
+    'tab-totals',
+  ];
+  // The two tabs no magus has (mythic companion only) still share the strip with
+  // the rest of their own set, so they count for the minimum-target check.
+  const OTHER_TAB_KEYS = ['tab-mythic-type', 'tab-supernatural'];
+
+  // Comments are stripped before any rule below is matched. A `[^}]*` body match
+  // stops at the first closing brace, and app.css comments quote CSS at length — one
+  // `button { font: inherit }` inside a comment truncated the `.tab` body and made
+  // these assertions read a rule that was right there in the file.
+  const cssWithoutComments = appCss.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  /** The declaration block of a top-level class rule, e.g. `tab` or `tabbar`. */
+  function ruleBody(className: string): string {
+    const block = new RegExp(`^\\.${className}\\s*\\{([^}]*)\\}`, 'm').exec(cssWithoutComments);
+    expect(block, `app.css should declare a base .${className} rule`).not.toBeNull();
+    return block![1];
+  }
+
+  /** One CSS length token (`0`, `0.375rem`, `2px`) in CSS pixels. */
+  function lengthPx(token: string): number {
+    const match = /^(-?[\d.]+)(rem|px)?$/.exec(token.trim());
+    expect(match, `'${token}' should be a plain px/rem length`).not.toBeNull();
+    return match![2] === 'rem' ? Number(match![1]) * ROOT_FONT_PX : Number(match![1]);
+  }
+
+  /** The `padding` shorthand's [vertical, horizontal] halves, in CSS pixels. */
+  function paddingPx(body: string): [number, number] {
+    const shorthand = /padding:\s*([^;]+);/.exec(body);
+    expect(shorthand).not.toBeNull();
+    const parts = shorthand![1].trim().split(/\s+/);
+    expect(parts).toHaveLength(2);
+    return [lengthPx(parts[0]), lengthPx(parts[1])];
+  }
+
+  /** One Fluent value from a shipped locale. */
+  function ftlLabel(source: string, key: string): string {
+    const entry = new RegExp(`^${key} = (.+)$`, 'm').exec(source);
+    expect(entry, `${key} should be translated`).not.toBeNull();
+    // NFC so a decomposed umlaut cannot inflate the character count.
+    return entry![1].trim().normalize('NFC');
+  }
+
+  const locale = (lang: string) =>
+    readFileSync(
+      fileURLToPath(new URL(`../../locales/${lang}/main.ftl`, import.meta.url)),
+      'utf-8',
+    );
+
+  it('gives the tab strip its own type size — small enough to fit, large enough to read', () => {
+    const tab = ruleBody('tab');
+
+    // Declared HERE and not inherited: `button { font: inherit }` otherwise hands
+    // every tab the 15px root size, which is what overflowed the strip.
+    const declared = /font-size:\s*([\d.]+)rem;/.exec(tab);
+    expect(declared, '.tab should declare its own font-size, in rem').not.toBeNull();
+    const fontPx = Number(declared![1]) * ROOT_FONT_PX;
+
+    // A floor, not just a ceiling. The base size is deliberately 15px because the
+    // audience skews middle-aged (`:root`), so the strip may drop to secondary
+    // chrome size — `.badge`/`.param` already sit at 0.75rem — but no further:
+    // below ~10.5px short nav labels stop being comfortably readable, and no
+    // amount of fitting is worth that.
+    expect(fontPx).toBeGreaterThanOrEqual(0.7 * ROOT_FONT_PX);
+    expect(fontPx).toBeLessThan(ROOT_FONT_PX);
+
+    const [vertical, horizontal] = paddingPx(tab);
+    // The horizontal padding is what the labels are competing with: thirteen tabs
+    // spend it twenty-six times over.
+    expect(horizontal).toBeLessThanOrEqual(0.5 * ROOT_FONT_PX);
+    // Smaller type shrinks the button in BOTH directions, and the vertical one buys
+    // no room at all — so the vertical padding compensates instead of following the
+    // font down. Roughly the line box plus both paddings.
+    expect(fontPx * 1.2 + 2 * vertical).toBeGreaterThanOrEqual(32);
+
+    // WCAG 2.5.8 (AA) puts the floor at 24x24 CSS px. The narrowest tab in either
+    // shipped locale is the one that decides it.
+    const shortest = Math.min(
+      ...['en', 'de'].flatMap((lang) => {
+        const source = locale(lang);
+        return [...MAGUS_TAB_KEYS, ...OTHER_TAB_KEYS].map((key) => ftlLabel(source, key).length);
+      }),
+    );
+    expect(shortest * EM_PER_CHARACTER * fontPx + 2 * horizontal).toBeGreaterThanOrEqual(24);
+  });
+
+  it('fits the widest (German) tab set inside the default window', () => {
+    const tab = ruleBody('tab');
+    const tabbar = ruleBody('tabbar');
+
+    const fontPx = lengthPx(/font-size:\s*([^;]+);/.exec(tab)![1]);
+    const [, horizontal] = paddingPx(tab);
+    const [, barHorizontal] = paddingPx(tabbar);
+    const gapPx = lengthPx(/gap:\s*([^;]+);/.exec(tabbar)![1]);
+
+    const german = locale('de');
+    const characters = MAGUS_TAB_KEYS.reduce(
+      (total, key) => total + ftlLabel(german, key).length,
+      0,
+    );
+
+    const labels = characters * EM_PER_CHARACTER * fontPx;
+    const padding = 2 * horizontal * MAGUS_TAB_KEYS.length;
+    const gaps = gapPx * (MAGUS_TAB_KEYS.length - 1);
+    const strip = DEFAULT_WINDOW_PX - 2 * barHorizontal;
+
+    expect(labels + padding + gaps).toBeLessThanOrEqual(strip);
+
+    // German must stay the binding case: if English ever needed more room than
+    // German, the arithmetic above would be guarding the wrong locale.
+    const englishSource = locale('en');
+    const english = MAGUS_TAB_KEYS.reduce(
+      (total, key) => total + ftlLabel(englishSource, key).length,
+      0,
+    );
+    expect(characters).toBeGreaterThan(english);
+  });
 });

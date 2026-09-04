@@ -344,14 +344,17 @@ describe('ChildhoodPackagePicker slot inputs (slice 6b3b)', () => {
 });
 
 describe('ChildhoodPackagePicker apply (slice 6b3b)', () => {
-  it('offers Apply with its hint spoken, for a package that asks nothing', () => {
+  // manual-testing-findings #21 removed the "the package fills in these scores, they
+  // stay editable" hint. Its `aria-describedby` had to go with it or the button would
+  // point at a missing id; a live Apply now describes itself with nothing, and the
+  // refusal reason below is the only description left.
+  it('offers Apply undescribed, for a package that asks nothing', () => {
     store.setChildhoodDraftPackage('childhood.athletic');
     const body = html();
     const button = open(body, 'childhood-apply');
     expect(button).not.toMatch(/disabled/);
-    expect(button).toMatch(/aria-describedby="[^"]*childhood-apply-hint/);
-    // The scores are filled in, not frozen — say so before the click.
-    expect(text(body, 'childhood-apply-hint')).toContain('editable');
+    expect(button).not.toMatch(/aria-describedby/);
+    expect(has(body, 'childhood-apply-hint')).toBe(false);
     expect(has(body, 'childhood-apply-reason')).toBe(false);
   });
 

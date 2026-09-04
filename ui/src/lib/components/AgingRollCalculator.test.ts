@@ -238,8 +238,9 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     expect(has(body, 'aging-total')).toBe(false);
     expect(has(body, 'aging-outcome')).toBe(false);
     expect(has(body, 'aging-apply')).toBe(false);
-    // The app never rolls; the hint says so.
-    expect(text(body, 'aging-die-hint').length).toBeGreaterThan(0);
+    // manual-testing-findings #21: the "roll a stress die at the table, the app never
+    // rolls for you" paragraph is gone. The field's own label names the die.
+    expect(has(body, 'aging-die-hint')).toBe(false);
   });
 
   it("renders the engine's total and every part of it", () => {
@@ -316,23 +317,23 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     expect(text(body, 'aging-distribute-remaining')).toContain('5');
   });
 
-  it('says a Crisis follows, and offers the die that resolves it', () => {
+  // manual-testing-findings #21 removed the "this roll is a Crisis, place the points
+  // first" paragraph; the Crisis panel appearing IS the statement, so what still has
+  // to hold is that a Crisis brings its die and a plain roll brings neither.
+  it('offers the die that resolves a Crisis, and nothing when there is none', () => {
     store.agingDraft = draft({ die: 9 });
     setPreview(total({ die: 9, total: 13 }), crisisOutcome());
     const body = html();
-    expect(has(body, 'aging-outcome-crisis')).toBe(true);
-    expect(text(body, 'aging-outcome-crisis').length).toBeGreaterThan(0);
+    expect(has(body, 'aging-outcome-crisis')).toBe(false);
     // "Roll a ten-sided die. Each number counts for its value, except that a zero
     // counts as ten." (`:474`) — the bounds are the ruleset's, not a literal here.
     expect(has(body, 'crisis-die-input')).toBe(true);
     expect(open(body, 'crisis-die-input')).toContain('min="1"');
     expect(open(body, 'crisis-die-input')).toContain('max="10"');
 
-    // A roll that is no Crisis says nothing about one, and asks for no die.
+    // A roll that is no Crisis asks for no die.
     setPreview(total(), outcome());
-    const plain = html();
-    expect(has(plain, 'aging-outcome-crisis')).toBe(false);
-    expect(has(plain, 'crisis-die-input')).toBe(false);
+    expect(has(html(), 'crisis-die-input')).toBe(false);
   });
 
   it('reads the CRISIS TOTAL and names the row in words, never as a slug', () => {
@@ -519,13 +520,15 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     expect(body).not.toContain('−');
   });
 
-  it('says in words that nothing it shows is recorded until applied', () => {
+  // manual-testing-findings #21: the "nothing is recorded until you press Apply"
+  // paragraph is gone. Apply and Clear are the controls that say it.
+  it('states nothing about what Apply does', () => {
     store.agingDraft = draft({ die: 10 });
     setPreview(total(), outcome());
-    const note = text(html(), 'aging-calculator-note');
-    expect(note.length).toBeGreaterThan(0);
-    // Not a bare glyph or an icon: the guarantee is stated in words.
-    expect(note.split(' ').length).toBeGreaterThan(3);
+    const body = html();
+    expect(has(body, 'aging-calculator-note')).toBe(false);
+    expect(has(body, 'aging-apply')).toBe(true);
+    expect(has(body, 'aging-calculator-clear')).toBe(true);
   });
 
   it('writes every displayed modifier with an ASCII hyphen', () => {

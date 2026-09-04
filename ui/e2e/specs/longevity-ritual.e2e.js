@@ -230,9 +230,10 @@ describe('longevity ritual', () => {
     await $(HALVED).waitForExist({ timeout: 5000 });
     expect(await $(BONUS).getValue()).toBe('9');
 
-    // The focus, plus the sterility consequence the rules attach to it.
+    // The focus is stored; the sterility consequence the rules attach to it is in the
+    // rulebook, not on the panel (manual-testing-findings #21).
     await (await reach(FOCUS)).setValue('A draught of quicksilver at midwinter');
-    await $('[data-testid="longevity-sterility-note"]').waitForExist({ timeout: 5000 });
+    expect(await $('[data-testid="longevity-sterility-note"]').isExisting()).toBe(false);
 
     // Switching source keeps the entered bonus and the focus: who made the ritual
     // does not change its value (this used to null the bonus).

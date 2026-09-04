@@ -46,9 +46,10 @@ describe('German UI bundle', () => {
     expect(translate(de, 'childhood-label')).toBe('Beispielhafte Kindheit');
     // A magus is built through its life stages too (slice 6b4), so the guided chrome
     // names apprenticeship and the Gauntlet exactly as the German rulebook does
-    // (Basisregeln.md:2433, :2449 — Lehrlingszeit, Lehrlingsprüfung). The chip that
-    // carried this term is now `xp-pool-block-apprenticeship` (#14), asserted below.
-    expect(translate(de, 'life-stage-gauntlet-note')).toContain('Lehrlingsprüfung');
+    // (Basisregeln.md:2433, :2449 — Lehrlingszeit, Lehrlingsprüfung). The prose that
+    // carried this term went with manual-testing-findings #21; the FIELD LABEL is
+    // what has to keep it, since it is now the only place the word is read.
+    expect(translate(de, 'life-stage-gauntlet-age-label')).toContain('Lehrlingsprüfung');
     // The two checklist headings are the rulebook's own (Basisregeln.md:2437, :2451).
     expect(translate(de, 'magus-minimums-label')).toBe('Mindestfertigkeiten');
     expect(translate(de, 'magus-recommended-label')).toBe('Empfohlene Mindestfertigkeiten');
@@ -56,7 +57,6 @@ describe('German UI bundle', () => {
     expect(translate(de, 'magus-minimums-summary', { unmet: '3', total: '7' })).not.toContain(
       'Fähigkeiten',
     );
-    expect(translate(de, 'magus-recommended-hint', { xp: '90' })).toContain('Erfahrungspunkte');
     // Whole sentences per status, so neither row leans on colour alone. `qualifier`
     // is the trailing "any Dead Language" note, empty for a requirement that names
     // no exemplar — and never absent, because Fluent throws on a missing variable.
@@ -66,19 +66,19 @@ describe('German UI bundle', () => {
   });
 
   // Slice 2 (#1, #11): the read-only `type` step is gone and the `experience` step
-  // took the funding choice off the Abilities step. The Rust side already asserts
-  // `phase-<slug>`/`wizard-guidance-<slug>` exist for every `CreationPhase`; this
-  // pins the other half — that the removed phase's keys left with it, so no key
-  // names a phase the engine no longer has.
-  it('keys the experience phase and no longer keys the removed type phase', () => {
+  // took the funding choice off the Abilities step. This pins that the removed
+  // phase's keys left with it, so no key names a phase the engine no longer has.
+  //
+  // manual-testing-findings #21 then removed the whole `wizard-guidance-*` family,
+  // so its absence is asserted here too: a surviving key would be a dead string
+  // nothing renders, which a later reader would take for live copy.
+  it('keys the experience phase, and neither the removed type phase nor any guidance', () => {
     for (const lang of ['en', 'de']) {
       const keys = messageKeys(sourceForLang(lang));
       expect(keys).toContain('phase-experience');
-      expect(keys).toContain('wizard-guidance-experience');
       expect(keys).not.toContain('phase-type');
-      expect(keys).not.toContain('wizard-guidance-type');
-      // #1's two surviving facts were re-keyed to their new home, never deleted.
       expect([...keys].filter((key) => key.startsWith('phase-type-'))).toEqual([]);
+      expect([...keys].filter((key) => key.startsWith('wizard-guidance-'))).toEqual([]);
     }
   });
 
@@ -133,9 +133,10 @@ describe('German UI bundle', () => {
       expect(translate(de, key, args)).toContain('Lehrlingsprüfung');
       expect(translate(de, key, args)).not.toContain('Als Magus');
     }
-    // The prose keeps "as a magus"/"als Magus": it is a description, not the label.
-    expect(translate(en, 'life-stage-lab-seasons-hint')).toContain('as a magus');
-    expect(translate(de, 'life-stage-lab-seasons-hint')).toContain('als Magus');
+    // The one surviving piece of prose on that panel keeps "as a magus"/"als Magus":
+    // it is a description of a read-only state, not the block's label.
+    expect(translate(en, 'life-stage-post-gauntlet-no-years-note')).toContain('as a magus');
+    expect(translate(de, 'life-stage-post-gauntlet-no-years-note')).toContain('als Magus');
   });
 
   // The German block names are the rulebook's own, at the mirrored lines
@@ -208,61 +209,6 @@ describe('German UI bundle', () => {
       }),
     );
     expect(restricted.toLowerCase()).toMatch(/wast|verfall/);
-  });
-
-  // guided-creation-review-2026-08 #7: the per-type V/F advice is generated from the
-  // profile's `flaw_category_caps`, so each cap category needs its own message —
-  // German compounds ("Geschichte-Fehler") do not compose from an interpolated
-  // category label. Every category the shipped profiles cap must therefore be keyed,
-  // or the guidance renders a raw slug.
-  it('keys a flaw-cap sentence for every category the shipped profiles cap', async () => {
-    const profiles = (await import('../../../rules/core/character_types.json'))
-      .default as unknown as {
-      budget: { flaw_category_caps?: { category: string; major_only?: boolean }[] };
-    }[];
-    const categories = new Set(
-      profiles.flatMap((p) =>
-        (p.budget.flaw_category_caps ?? [])
-          .filter((cap) => cap.major_only !== true)
-          .map((cap) => cap.category),
-      ),
-    );
-    expect(categories.size).toBeGreaterThan(0);
-    for (const lang of ['en', 'de']) {
-      const keys = messageKeys(sourceForLang(lang));
-      for (const category of categories) {
-        expect(keys, `${lang} is missing wizard-guidance-${category}-flaw-cap`).toContain(
-          `wizard-guidance-${category}-flaw-cap`,
-        );
-      }
-      expect(keys, `${lang} is missing the Hermetic-Flaw clause`).toContain(
-        'wizard-guidance-hermetic-flaw',
-      );
-    }
-  });
-
-  // The correction the review doc records because it is easy to get backwards: the
-  // rules give Story Flaws a recommended CEILING of one and no minimum. The only
-  // "at least one" anywhere is the magus's Hermetic Flaw. A guidance string claiming
-  // a Story Flaw minimum would be a rule the source does not make, so no guidance
-  // string may read that way in either language.
-  it.each(['en', 'de'])('claims no Story Flaw minimum anywhere in the guidance (%s)', (lang) => {
-    const src = sourceForLang(lang);
-    const bundle = buildBundle(lang as 'en' | 'de');
-    const clean = (s: string) => s.replace(/[⁦-⁩]/g, '');
-    const guidanceKeys = [...messageKeys(src)].filter((key) => key.startsWith('wizard-guidance-'));
-    expect(guidanceKeys.length).toBeGreaterThan(0);
-
-    const args = { virtues: '10', flaws: '10', points: '7', cap: 1, rule: 'soft' };
-    const storyMinimum = /(at least|mindestens)/i;
-    for (const key of guidanceKeys) {
-      const text = clean(translate(bundle, key, args));
-      if (!/story|geschichte/i.test(text)) continue;
-      expect(text, `${key} states a Story Flaw minimum`).not.toMatch(storyMinimum);
-    }
-    // The one "at least one" the rules DO state is the magus's Hermetic Flaw, and it
-    // is worded as its own clause — so the check above is discriminating, not blanket.
-    expect(clean(translate(bundle, 'wizard-guidance-hermetic-flaw'))).toMatch(storyMinimum);
   });
 
   it('has full message-key parity between English and German', () => {

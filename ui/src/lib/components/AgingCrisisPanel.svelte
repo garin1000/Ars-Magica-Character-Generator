@@ -78,7 +78,6 @@
       data-testid="crisis-die-input"
     />
   </label>
-  <p class="hint" data-testid="crisis-die-hint">{store.t('crisis-die-hint')}</p>
 
   {#if crisis}
     <!-- Announced: both figures change on every keystroke in the die. -->
@@ -148,8 +147,6 @@
                character this sheet does not hold (`:16634`). -->
           <p class="hint" data-testid="crisis-allowance-{i}">{allowanceText(allowance)}</p>
         {/each}
-
-        <p class="hint" data-testid="crisis-note">{store.t('crisis-note')}</p>
       </div>
     {:else}
       <!-- "Bedridden for a week" (`:16626`) is time, not a roll: there is

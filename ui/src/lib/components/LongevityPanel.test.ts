@@ -208,9 +208,14 @@ describe('LongevityPanel focus and sterility', () => {
     expect(open).toContain('A draught of quicksilver');
   });
 
-  it('always notes the permanent sterility the ritual causes', () => {
+  // manual-testing-findings #21: the sterility sentence is a rules consequence the
+  // player reads in the book, not state this panel holds, so it is gone. The panel's
+  // own inputs are untouched.
+  it('notes nothing about sterility', () => {
     store.addLongevityRitual('self_made');
-    expect(element(html(), 'longevity-sterility-note').text).toContain('sterile');
+    const body = html();
+    expect(() => element(body, 'longevity-sterility-note')).toThrow();
+    expect(element(body, 'longevity-focus').open).toMatch(/<input/i);
   });
 
   it('no longer claims the bonus is computed for a self-made ritual', () => {

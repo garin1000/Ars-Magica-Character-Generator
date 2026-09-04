@@ -123,11 +123,6 @@ export class WizardNavigation {
     return incompletePhases(this.#host.result());
   }
 
-  /** Whether the step currently on screen is one of those. */
-  get phaseIncomplete(): boolean {
-    return this.incompletePhases.includes(this.phase);
-  }
-
   /**
    * Advance one step, unless the current phase holds an error.
    *

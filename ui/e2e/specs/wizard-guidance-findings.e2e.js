@@ -1,13 +1,14 @@
 // End-to-end: what the guided flow TELLS the player (Slice 11 —
-// guided-creation-review-2026-08 #7, #12, #30), plus the geometry lock that came out
-// of the same slice's re-measure.
+// guided-creation-review-2026-08 #12, #30), plus the geometry lock that came out of
+// the same slice's re-measure.
 //
 // Four things only the running app can show:
 //
-//  - #7  The Virtues & Flaws step states the character type's own Story and
-//        Personality Flaw caps, generated from the profile — so a grog and a magus
-//        read different numbers off one code path, and no locale string carries a
-//        rules figure. The magus's also states the Hermetic-Flaw recommendation.
+//  - The Virtues & Flaws step explains NOTHING. It used to state the character type's
+//        own Story and Personality Flaw caps (#7); manual-testing-findings #21 removed
+//        the whole `wizard-guidance-*` family, so the caps now reach the player only
+//        as validator findings. Checked on two character types, because the paragraph
+//        was table-driven and a leftover mount would show up on one type alone.
 //  - #12 The Hermetic minimums are one collapsed line that expands on demand, and its
 //        count matches the rows it heads (it used to read "N of 7" above a list of
 //        three). Only a real disclosure can be opened.
@@ -73,40 +74,24 @@ async function setWindowHeight(height) {
 }
 
 describe('guided guidance and unspent-budget findings (slice 11)', () => {
-  it("states a grog's own Flaw caps and claims no Story Flaw minimum (#7)", async () => {
+  // manual-testing-findings #21, in the shipped binary. The paragraph was generated
+  // per character type from `flaw_category_caps`, so a grog and a magus went down the
+  // same code path with different data — hence both are checked here, and the magus is
+  // checked last so the rail is standing on `virtues_flaws` for the suite below.
+  //
+  // The caps themselves are not lost: they are the validator's
+  // `too_many_<category>_flaws` findings, and the finding pipeline is what the #30
+  // test at the end of this file exercises end to end.
+  it('explains nothing on the Virtues & Flaws step, for either character type', async () => {
     await startWizard('grog');
     await advanceWizardTo('virtues_flaws');
-    const guidance = clean(await $(GUIDANCE).getText());
+    expect(await $(GUIDANCE).isExisting()).toBe(false);
 
-    // Real prose from the locale, never a Fluent key echoed back — which is what a
-    // missing `wizard-guidance-<category>-flaw-cap` would look like on screen.
-    expect(guidance).not.toContain('wizard-guidance');
-    // Core Rules :2826-2827 — a grog should take NO Story Flaws and not more than one
-    // Personality Flaw. Both clauses are generated from `flaw_category_caps`.
-    expect(guidance).toContain('Story Flaws');
-    expect(guidance).toContain('Personality Flaw');
-    expect(guidance).toContain('should not');
-    // A grog is no magus, so the Hermetic clause is absent…
-    expect(guidance).not.toContain('Hermetic');
-    // …and no clause anywhere claims a Story Flaw MINIMUM. The rules give Story Flaws
-    // a recommended ceiling and no floor; the only "at least one" is the magus's
-    // Hermetic Flaw.
-    expect(guidance).not.toMatch(/at least one Story/i);
-  });
-
-  it("states the magus's own caps and its Hermetic-Flaw recommendation (#7)", async () => {
     await startWizard('magus');
     await advanceWizardTo('virtues_flaws');
-    const guidance = clean(await $(GUIDANCE).getText());
-
-    expect(guidance).not.toContain('wizard-guidance');
-    // :2861-2862 — one Story Flaw and two Personality Flaws, different numbers off
-    // the same code path the grog's sentence uses.
-    expect(guidance).toMatch(/more than 1 Story Flaw/);
-    expect(guidance).toMatch(/more than 2 Personality Flaws/);
-    // :2860, worded exactly as the `missing_hermetic_flaw` warning.
-    expect(guidance).toContain('at least one Hermetic Flaw');
-    expect(guidance).not.toMatch(/at least one Story/i);
+    expect(await $(GUIDANCE).isExisting()).toBe(false);
+    // The step's own input surface is untouched by the prose removal.
+    await expect($('[data-testid="balance-flaws"]')).toExist();
   });
 
   it('collapses the Hermetic minimums to one line that expands on demand (#12)', async () => {

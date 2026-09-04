@@ -221,7 +221,9 @@ describe('FamiliarPanel invested powers', () => {
     // familiar bond must not, or the UI would invent a limit the rules deny.
     expect(() => element(body, 'power-levels-used')).toThrow();
     expect(body).not.toContain('Power levels:');
-    expect(element(body, 'familiar-powers-note').text).toContain('no limit');
+    // The absent bar is the whole statement: manual-testing-findings #21 removed the
+    // sentence that also said "there is no limit" in words.
+    expect(() => element(body, 'familiar-powers-note')).toThrow();
   });
 });
 
