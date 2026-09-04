@@ -747,6 +747,42 @@ current scale: the marker occupies the specialty column
 the parameter field and the remove button, any of which may be what shifts the
 columns.
 
+### 34 — A Virtue the rules let you take repeatedly can only be taken once
+
+**Status:** open — reported externally, GitHub issue #3 (Windows, .exe, v0.2.0)
+
+> "I tried to build a character using the 'Improved Characteristics' virtue. This
+> is a virtue that can be taken multiple times. However, the system only allows
+> it to be taken once."
+
+Correct, and the rules are explicit: *"You have an additional three points to
+spend on buying Characteristics… **You may take this Virtue multiple times**."*
+(`Ars Magica - Definitive Edition (Core Rules).md:4105`).
+
+**Cause.** Repeatability is not modelled; it is *inferred*. The engine keys
+duplicates on `(item_ref, params)` and allows `max_per_target` copies, defaulting
+to 1 (`crates/arm-rules/src/validation/selections.rs:121-144`,
+`crates/arm-rules/src/types.rs:1679-1700`). The UI mirrors that inference —
+`repeatable(item)` is "has a target parameter, or `max_per_target > 1`"
+(`ui/src/lib/components/VirtueFlawTab.svelte:79-82`). So an item that repeats
+*with a different target each time* works (Immunity, Student of (Realm)), while
+one that simply repeats does not. `virtue.improved_characteristics`
+(`rules/core/virtues_flaws.json:4511-4519`) has neither a parameter nor a raised
+`max_per_target`.
+
+**Scope — nine entries in the core rules say so, and they split two ways.**
+Parameterized, working today: Immunity :4015, Student of (Realm) :5054, Weak
+Magic Resistance :6348. Unparameterized and therefore blocked: Improved
+Characteristics :4105, Demonic Might :3665 ("no more than half the character's
+total Virtues"), Mastered Spells :4474, Magic Item :4534 ("add the total levels
+together"), Special Circumstances :5000 ("you only gain a +3 bonus even if more
+than one set of circumstances applies"), Holy Powers :5030.
+
+Note three of those carry a *limit* in the same sentence, so a blanket "repeat
+freely" flag would be wrong for them — the fix needs to say what each item's
+ceiling is, and whether stacking multiplies the effect (Improved Characteristics:
+yes, +3 each; Special Circumstances: explicitly no).
+
 ### 33 — The Aging tab lost its columns; it should keep three, done properly
 
 **Status:** open — corrects findings 22/20/24/25 as delivered
