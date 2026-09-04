@@ -747,6 +747,39 @@ current scale: the marker occupies the specialty column
 the parameter field and the remove button, any of which may be what shifts the
 columns.
 
+### 33 — The Aging tab lost its columns; it should keep three, done properly
+
+**Status:** open — corrects findings 22/20/24/25 as delivered
+
+Findings 22 and 20 asked for the awkward layout and its screen-third of white
+space to be fixed. What landed instead **removed the multi-column layout**: every
+aging block now spans the full width (`.character-details .aging-panel > *` /
+`.aging-record > *` at `grid-column: 1 / -1`), one stage per row. That was chosen
+because a grid row is as tall as its tallest item, so any pairing of a one-line
+read-out with the tall roll calculator leaves the leftover as blank space — one
+item per row is the only arrangement where the gap *cannot* arise.
+
+That reasoning was sound but answered the wrong question. The three-column layout
+is wanted; the gap is what was not.
+
+Approaches to weigh at fix time — not yet decided:
+
+- **CSS multi-column** (`column-count: 3`, `break-inside: avoid`) for the stages
+  above the log, with the log kept full-width below. Blocks flow down one column
+  and into the next, so short and tall neighbours pack without leftover rows and
+  no block's height is set by another's. Reading order stays DOM order. The cost
+  is that column *balance* is the browser's decision, not ours.
+- **Explicit grid placement** — assign each block a column deliberately, grouping
+  by height (e.g. schedule and living conditions in one column, the roll
+  calculator alone in another, the read-outs in a third). Fully deterministic and
+  keeps the log's full-width row, but a content change can reintroduce a gap, so
+  it needs a geometry test that fails when one appears.
+- Whatever is chosen must keep what the last pass bought: the log visible without
+  scrolling, its growth bounded, the panel degrading to one column on a narrow
+  window, DOM order equal to visual order, and no horizontal clipping (the
+  Living Conditions row overflowed by 15px and is now held by a 360px column
+  floor plus wrapping).
+
 ### 32 — Heartbeast is offered to a magus of any House
 
 **Status:** open
