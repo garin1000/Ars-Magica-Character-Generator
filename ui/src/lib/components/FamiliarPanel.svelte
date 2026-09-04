@@ -282,7 +282,7 @@
      step down from `.detail-label`. */
   .detail-sublabel {
     margin: 0.5rem 0 0;
-    font-size: 0.85rem;
+    font-size: var(--font-small);
     font-weight: 600;
     opacity: 0.85;
   }

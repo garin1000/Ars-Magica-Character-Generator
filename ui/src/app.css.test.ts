@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -11,11 +11,130 @@ import { describe, expect, it } from 'vitest';
 // ValidationPanel.test.ts already uses for the same reason.
 const appCss = readFileSync(fileURLToPath(new URL('./app.css', import.meta.url)), 'utf-8');
 
+// Comments are stripped before any rule below is matched. A `[^}]*` body match
+// stops at the first closing brace, and app.css comments quote CSS at length — one
+// `button { font: inherit }` inside a comment truncated the `.tab` body and made
+// these assertions read a rule that was right there in the file.
+const cssWithoutComments = appCss.replace(/\/\*[\s\S]*?\*\//g, '');
+
 // A base typography reset is not observable by rendering: `render()` from
 // `svelte/server` emits markup with no stylesheet attached, and even a mounted
 // component in `happy-dom` would need the sheet loaded and computed styles read
 // — disproportionate for a static selector.
 describe('app.css', () => {
+  // ── THE TYPE SCALE ──────────────────────────────────────────────────────────
+  //
+  // The app ships as a native binary in an OS webview, so it is seen SIDE BY SIDE
+  // with the platform's own chrome. At the 15px root it started from, every string
+  // in the app was visibly larger than the Explorer window next to it and the
+  // padding/gap rem values were inflated to match — the report was "wastes quite
+  // some space", with the warning-explanation text (`.issue`) named as the size the
+  // whole app should have used.
+  //
+  // So the root is REBASED to that size, not merely divided: 1rem is 12.75px, which
+  // is what `.issue` computed to before (0.85 x 15). A plain division would have
+  // taken the secondary sizes down with it — 0.7rem would have become 8.9px, well
+  // under anything readable — so the sub-body steps are re-expressed as rem
+  // fractions of the NEW root that hold their old pixel size. Nothing in the app
+  // renders smaller than it did at the 15px root; only body text and above shrink.
+  //
+  // The steps are named variables and not literals so the next rebase is one block
+  // rather than forty-odd scattered decimals — the same reason `--readout-max-width`
+  // exists. Sizes at or above 1rem stay plain rem: those SHOULD track the root.
+  const SCALE_STEPS = {
+    'font-small': 12, // was 0.8rem/0.82rem/0.85rem/0.9rem/0.95rem of a 15px root
+    'font-chrome': 11.25, // was 0.75rem — badges, params, tab labels
+    'font-micro': 10.5, // was 0.7rem — the smallest text the app has ever shipped
+  } as const;
+
+  /** The `:root` declaration block, comments already stripped. */
+  const rootBlock = (): string => {
+    const block = /^:root\s*\{([^}]*)\}/m.exec(cssWithoutComments);
+    expect(block, 'app.css should declare a :root block').not.toBeNull();
+    return block![1];
+  };
+
+  /** The rem value of a `--font-*` scale step declared on `:root`. */
+  const scaleStepRem = (name: string): number => {
+    const declared = new RegExp(`--${name}:\\s*([\\d.]+)rem;`).exec(rootBlock());
+    expect(declared, `:root should declare --${name} in rem`).not.toBeNull();
+    return Number(declared![1]);
+  };
+
+  it('rebases the root on the size the warning text already used', () => {
+    // 12.75px exactly: 0.85 x the old 15px root, i.e. what `.issue` computed to.
+    expect(rootBlock()).toMatch(/font-size:\s*12\.75px;/);
+  });
+
+  it('holds every sub-body step at the pixel size it had on the 15px root', () => {
+    const root = 12.75;
+    let previous = root;
+    for (const [name, expectedPx] of Object.entries(SCALE_STEPS)) {
+      const px = scaleStepRem(name) * root;
+      // The step is a fraction of the NEW root that reproduces the OLD pixel size,
+      // so a rebase can never be the thing that made text smaller.
+      expect(px, `--${name}`).toBeCloseTo(expectedPx, 1);
+      // …and the steps stay strictly ordered, body first. Re-expressing them
+      // independently is exactly how two of them end up inverted.
+      expect(px, `--${name} must stay below the step above it`).toBeLessThan(previous);
+      previous = px;
+    }
+    // The floor is absolute, not relative: 10.5px is the smallest text this app has
+    // ever shipped and no rebase may go under it.
+    expect(scaleStepRem('font-micro') * root).toBeGreaterThanOrEqual(10.5);
+  });
+
+  it('routes every sub-body size through the scale instead of a bare rem literal', () => {
+    // A stray `font-size: 0.75rem` is not wrong at 15px and IS wrong at 12.75px —
+    // it silently means 9.6px. The literals are gone so the next one is a review
+    // question rather than an invisible regression.
+    const componentsDir = fileURLToPath(new URL('./lib/components/', import.meta.url));
+    const sources: Array<[string, string]> = [['app.css', cssWithoutComments]];
+    for (const entry of readdirSync(componentsDir)) {
+      if (!entry.endsWith('.svelte')) continue;
+      sources.push([entry, readFileSync(`${componentsDir}${entry}`, 'utf-8')]);
+    }
+
+    const offenders: string[] = [];
+    for (const [name, source] of sources) {
+      for (const match of source.matchAll(/font-size:\s*(0?\.\d+)rem/g)) {
+        offenders.push(`${name}: font-size: ${match[1]}rem`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  // WCAG 2.5.8 (AA) puts the pointer-target floor at 24x24 CSS px, and `.icon-btn`
+  // — every `×` remove button and every +/- stepper in the app — was sized at
+  // exactly 1.6rem, i.e. exactly 24px, on the 15px root. Rebasing the root without
+  // touching it would have made it 20.4px: a square button is the one shape where
+  // the type rebase lands directly on an accessibility floor.
+  it('keeps the square glyph buttons at the WCAG pointer-target floor', () => {
+    const button = /^\.icon-btn\s*\{([^}]*)\}/m.exec(cssWithoutComments);
+    expect(button).not.toBeNull();
+    const width = /width:\s*([\d.]+)rem;/.exec(button![1]);
+    const height = /height:\s*([\d.]+)rem;/.exec(button![1]);
+    expect(width).not.toBeNull();
+    expect(height).not.toBeNull();
+    expect(Number(width![1]) * 12.75).toBeGreaterThanOrEqual(24);
+    expect(Number(height![1]) * 12.75).toBeGreaterThanOrEqual(24);
+  });
+
+  // The two content-derived column floors are the other place a rem value carries an
+  // absolute measurement: 24rem was chosen as "360px holds a Living Conditions row,
+  // the aging formula's longest German token and a labelled field", and
+  // `aging.e2e.js` asserts no `.character-details` track comes out under 360px. A
+  // rebase that left the number alone would have quietly moved the floor to 306px
+  // and reintroduced the checklist overflow fixed in the same week.
+  it('keeps the content-derived column floors at the 360px they were measured for', () => {
+    for (const rule of ['character-details', 'living-conditions-list']) {
+      const block = new RegExp(`^\\.${rule}\\s*\\{([^}]*)\\}`, 'm').exec(cssWithoutComments);
+      expect(block, `.${rule} should exist`).not.toBeNull();
+      const floorRem = parseFloat(/minmax\(\s*([\d.]+)rem/.exec(block![1])![1]);
+      expect(floorRem * 12.75, `.${rule} column floor`).toBeGreaterThanOrEqual(360);
+    }
+  });
+
   // Why this test exists (guided-creation-review-2026-08 #23 and #3): app.css
   // had no base rule for `p` or headings, so any unstyled `<p>`/`<h3>` kept the
   // UA `margin: 1em 0`. Flex and grid gaps do NOT collapse margins, so inside a
@@ -405,7 +524,7 @@ describe('app.css', () => {
   // The e2e counterpart (`e2e/specs/tab-area.e2e.js`) measures the real thing in
   // a real engine; this test is the fast guard that catches a longer German label
   // or a loosened rule long before the binary is built.
-  const ROOT_FONT_PX = 15; // `:root { font-size: 15px }`
+  const ROOT_FONT_PX = 12.75; // `:root { font-size: 12.75px }` — see the type scale above
   const EM_PER_CHARACTER = 0.53;
   const DEFAULT_WINDOW_PX = 1100; // crates/arm-app/tauri.conf.json
 
@@ -431,12 +550,6 @@ describe('app.css', () => {
   // the rest of their own set, so they count for the minimum-target check.
   const OTHER_TAB_KEYS = ['tab-mythic-type', 'tab-supernatural'];
 
-  // Comments are stripped before any rule below is matched. A `[^}]*` body match
-  // stops at the first closing brace, and app.css comments quote CSS at length — one
-  // `button { font: inherit }` inside a comment truncated the `.tab` body and made
-  // these assertions read a rule that was right there in the file.
-  const cssWithoutComments = appCss.replace(/\/\*[\s\S]*?\*\//g, '');
-
   /** The declaration block of a top-level class rule, e.g. `tab` or `tabbar`. */
   function ruleBody(className: string): string {
     const block = new RegExp(`^\\.${className}\\s*\\{([^}]*)\\}`, 'm').exec(cssWithoutComments);
@@ -449,6 +562,19 @@ describe('app.css', () => {
     const match = /^(-?[\d.]+)(rem|px)?$/.exec(token.trim());
     expect(match, `'${token}' should be a plain px/rem length`).not.toBeNull();
     return match![2] === 'rem' ? Number(match![1]) * ROOT_FONT_PX : Number(match![1]);
+  }
+
+  /**
+   * A rule's own `font-size` in CSS pixels, whether it names a scale step or spells
+   * a rem value out. Sub-body sizes go through `--font-*` (see the type scale at the
+   * top of this file), so a raw `lengthPx` on the token would not resolve.
+   */
+  function fontSizePx(body: string): number {
+    const declared = /font-size:\s*([^;]+);/.exec(body);
+    expect(declared, 'the rule should declare its own font-size').not.toBeNull();
+    const token = declared![1].trim();
+    const step = /^var\(--(font-[a-z]+)\)$/.exec(token);
+    return step ? scaleStepRem(step[1]) * ROOT_FONT_PX : lengthPx(token);
   }
 
   /** The `padding` shorthand's [vertical, horizontal] halves, in CSS pixels. */
@@ -478,17 +604,16 @@ describe('app.css', () => {
     const tab = ruleBody('tab');
 
     // Declared HERE and not inherited: `button { font: inherit }` otherwise hands
-    // every tab the 15px root size, which is what overflowed the strip.
-    const declared = /font-size:\s*([\d.]+)rem;/.exec(tab);
-    expect(declared, '.tab should declare its own font-size, in rem').not.toBeNull();
-    const fontPx = Number(declared![1]) * ROOT_FONT_PX;
+    // every tab the root body size, which is what overflowed the strip.
+    const fontPx = fontSizePx(tab);
 
-    // A floor, not just a ceiling. The base size is deliberately 15px because the
-    // audience skews middle-aged (`:root`), so the strip may drop to secondary
-    // chrome size — `.badge`/`.param` already sit at 0.75rem — but no further:
-    // below ~10.5px short nav labels stop being comfortably readable, and no
-    // amount of fitting is worth that.
-    expect(fontPx).toBeGreaterThanOrEqual(0.7 * ROOT_FONT_PX);
+    // A floor, not just a ceiling, and an ABSOLUTE one — a relative floor
+    // (`0.7 * ROOT_FONT_PX`) would have silently followed the root down to 8.9px
+    // during the 15px → 12.75px rebase, which is exactly the failure the rebase had
+    // to avoid. Below ~10.5px short nav labels stop being comfortably readable and
+    // no amount of fitting is worth that; above the body size the strip would be
+    // shouting over the content it labels.
+    expect(fontPx).toBeGreaterThanOrEqual(10.5);
     expect(fontPx).toBeLessThan(ROOT_FONT_PX);
 
     const [vertical, horizontal] = paddingPx(tab);
@@ -515,7 +640,7 @@ describe('app.css', () => {
     const tab = ruleBody('tab');
     const tabbar = ruleBody('tabbar');
 
-    const fontPx = lengthPx(/font-size:\s*([^;]+);/.exec(tab)![1]);
+    const fontPx = fontSizePx(tab);
     const [, horizontal] = paddingPx(tab);
     const [, barHorizontal] = paddingPx(tabbar);
     const gapPx = lengthPx(/gap:\s*([^;]+);/.exec(tabbar)![1]);

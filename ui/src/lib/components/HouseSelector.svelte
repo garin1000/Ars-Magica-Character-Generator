@@ -197,7 +197,7 @@
   }
 
   .house-granted-label {
-    font-size: 0.75rem;
+    font-size: var(--font-chrome);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--muted);
