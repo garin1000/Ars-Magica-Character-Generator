@@ -57,8 +57,10 @@ describe('German UI bundle', () => {
       'Fähigkeiten',
     );
     expect(translate(de, 'magus-recommended-hint', { xp: '90' })).toContain('Erfahrungspunkte');
-    // Whole sentences per status, so neither row leans on colour alone.
-    const row = { ability: 'Parma Magica', min: '1', score: '0' };
+    // Whole sentences per status, so neither row leans on colour alone. `qualifier`
+    // is the trailing "any Dead Language" note, empty for a requirement that names
+    // no exemplar — and never absent, because Fluent throws on a missing variable.
+    const row = { ability: 'Parma Magica', min: '1', score: '0', qualifier: '' };
     expect(translate(de, 'magus-minimum-met', row)).toContain('erfüllt');
     expect(translate(de, 'magus-minimum-unmet', row)).toContain('nicht erfüllt');
   });

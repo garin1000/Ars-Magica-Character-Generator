@@ -55,6 +55,7 @@ import {
   ORDINARY_SPELL_MINIMUM_LEVEL,
   paramValueUsage,
   requirementAbilityLabel,
+  requirementExemplarNote,
   resolveIssueArgValue,
   resolveIssueArgs,
   restrictedPoolLabel,
@@ -841,10 +842,20 @@ describe('exemplarLabel / requirementAbilityLabel', () => {
     },
   });
   const t = (key: string, args?: Record<string, string>) => {
-    if (key === 'requirement-exemplar') return `${args?.ability} (e.g. ${args?.exemplar})`;
+    if (key === 'requirement-exemplar') return ` (any ${args?.ability})`;
     if (key === 'param-hint') return `(${args?.label})`;
     return key;
   };
+  /** The catalogue entry the parameterized Ability needs to interpolate an instance. */
+  const withCatalogue = {
+    ...rs,
+    ruleset: {
+      ...rs.ruleset,
+      abilities: {
+        'ability.dead_language': { id: 'ability.dead_language', parameter: 'language' },
+      },
+    },
+  } as unknown as LocalizedRuleset;
 
   it('maps the exemplar slug to its localized name, never rendering the slug', () => {
     expect(exemplarLabel(rs, 'latin')).toBe('Latin');
@@ -853,10 +864,25 @@ describe('exemplarLabel / requirementAbilityLabel', () => {
     expect(exemplarLabel(rs, undefined)).toBeNull();
   });
 
-  it('names the exemplar beside the widened requirement', () => {
-    expect(requirementAbilityLabel(rs, 'ability.dead_language', null, 'latin', t)).toBe(
-      'Dead Language (e.g. Latin)',
+  it('heads the requirement with the exemplar, so its score follows it directly', () => {
+    // `:2437` demands "Latin 1". The label used to read "Dead Language (e.g. Latin)",
+    // which put the example between the Ability and its score — "Dead Language
+    // (e.g. Latin) 1" reads as though "e.g. Latin" were the thing being scored.
+    expect(requirementAbilityLabel(rs, 'ability.dead_language', null, 'latin', t)).toBe('Latin');
+  });
+
+  it('states the widening the engine really enforces as a trailing note', () => {
+    // The note names the GENERAL Ability, never an instance, so it stays true of
+    // every dead language a troupe invents.
+    expect(requirementExemplarNote(rs, 'ability.dead_language', 'latin', t)).toBe(
+      ' (any Dead Language)',
     );
+    expect(requirementExemplarNote(withCatalogue, 'ability.dead_language', 'latin', t)).toBe(
+      ' (any Dead Language)',
+    );
+    // No exemplar, or one the i18n layer cannot resolve: no note at all.
+    expect(requirementExemplarNote(rs, 'ability.parma_magica', undefined, t)).toBe('');
+    expect(requirementExemplarNote(rs, 'ability.parma_magica', 'greek', t)).toBe('');
   });
 
   it('leaves a requirement with no exemplar exactly as it was', () => {
@@ -869,37 +895,38 @@ describe('exemplarLabel / requirementAbilityLabel', () => {
     );
   });
 
-  it('keeps the bought instance when the character holds one', () => {
+  it('keeps the bought instance when the requirement names no exemplar', () => {
     // Interpolating the instance needs the Ability's own param key from the
     // catalogue, so this case wants an `abilities` map the bare fixture omits.
-    const withCatalogue = {
-      ...rs,
-      ruleset: {
-        ...rs.ruleset,
-        abilities: {
-          'ability.dead_language': { id: 'ability.dead_language', parameter: 'language' },
-        },
-      },
-    } as unknown as LocalizedRuleset;
-    expect(
-      requirementAbilityLabel(withCatalogue, 'ability.dead_language', 'Latin', 'latin', t),
-    ).toBe('Latin (Dead Language) (e.g. Latin)');
+    expect(requirementAbilityLabel(withCatalogue, 'ability.dead_language', 'Latin', null, t)).toBe(
+      'Latin (Dead Language)',
+    );
   });
 
-  it('composes the exemplar into the ability arg of a validation issue', () => {
-    // The Fluent message stays `{ $ability } { $min }`: an `exemplar` arg qualifies
-    // the ability rather than standing on its own, so the two are folded into one
-    // label and `exemplar` never reaches the message. That is what makes the
+  it('names the exemplar the rules named, not whichever instance was bought', () => {
+    // The demand is "Latin 1" whatever dead language the character actually holds;
+    // what they hold is what the message's own score says.
+    expect(
+      requirementAbilityLabel(withCatalogue, 'ability.dead_language', 'Greek', 'latin', t),
+    ).toBe('Latin');
+  });
+
+  it('composes the exemplar into the ability arg and its note into a qualifier arg', () => {
+    // The `exemplar` arg qualifies the ability rather than standing on its own, so it
+    // never reaches the message under its own name: it becomes the `ability` label and
+    // a `qualifier` the message places AFTER the score. That is what makes the
     // minimums row and `issue-magus_minimum_ability` read identically.
     expect(
       resolveIssueArgs(rs, { ability: 'ability.dead_language', exemplar: 'latin', min: '1' }, t),
-    ).toEqual({ ability: 'Dead Language (e.g. Latin)', min: '1' });
+    ).toEqual({ ability: 'Latin', min: '1', qualifier: ' (any Dead Language)' });
   });
 
-  it('leaves an issue with no exemplar arg untouched', () => {
+  it('gives an ability requirement with no exemplar an empty qualifier', () => {
+    // Empty, never absent: Fluent throws on a variable the args map does not carry.
     expect(resolveIssueArgs(rs, { ability: 'ability.parma_magica', min: '1' }, t)).toEqual({
       ability: 'Parma Magica',
       min: '1',
+      qualifier: '',
     });
   });
 });
@@ -1817,7 +1844,14 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
     const rs = makeRuleset([], { i18n: { 'ability.area_lore': { name: '{area} Lore' } } });
     expect(
       resolveIssueArgs(rs, { ability: 'ability.area_lore', characteristic: 'int', score: '5' }, t),
-    ).toEqual({ ability: '(Area) Lore', characteristic: 'Intelligence', score: '5' });
+    ).toEqual({
+      ability: '(Area) Lore',
+      characteristic: 'Intelligence',
+      score: '5',
+      // Every `ability` arg carries a qualifier, empty when the requirement names no
+      // exemplar — Fluent throws on a variable the args map does not carry.
+      qualifier: '',
+    });
   });
 });
 

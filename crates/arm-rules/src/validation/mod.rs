@@ -109,8 +109,9 @@ impl fmt::Display for IssueSeverity {
 ///
 /// An arg marked **(opt)** is present only when the rules data states it. The
 /// `issue-<code>` Fluent message must therefore not interpolate it directly (Fluent
-/// reports a missing variable): `exemplar` is folded into the `ability` label by the
-/// UI's `resolveIssueArgs` and never reaches the message as a variable of its own.
+/// reports a missing variable): `exemplar` is folded by the UI's `resolveIssueArgs`
+/// into the `ability` label plus a `qualifier` note, and never reaches the message as
+/// a variable of its own.
 ///
 /// | `code` | severity | phase | `args` keys |
 /// |--------|----------|-------|-------------|
