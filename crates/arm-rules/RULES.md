@@ -253,14 +253,14 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   elsewhere): magnitude/categories parsed from the descriptor; each category slugged
   (`Social Status`→`social_status`, source typo `Subernatural`→`supernatural`).
   The optional `Type` token sets `tainted` (see the Tainted note above).
-- **A descriptor may name more than one category, and all of them are kept.**
-  `PointItem.categories` is a `Vec<String>` holding **every** category the
-  descriptor lists, in the descriptor's own order, so `categories[0]` is the
-  *primary*. The extraction used to keep only the earliest-listed one and drop the
-  rest, which silently made a Flaw invisible to the other category's cap and to the
-  other category's permit/forbid list. Four core items are affected — the complete
-  set of multi-category descriptors in `rules/source/en/` that are not the
-  `Tainted` marker (see the Tainted note) — and they are stored primary-first:
+- **A descriptor may name more than one category, and all of them are kept —
+  none of them is "primary".** `PointItem.categories` is a `Vec<String>` holding
+  **every** category the descriptor lists, in the descriptor's own order. The
+  extraction used to keep only the earliest-listed one and drop the rest, which
+  silently made a Flaw invisible to the other category's cap and to the other
+  category's permit/forbid list. Four core items are affected — the complete set of
+  multi-category descriptors in `rules/source/en/` that are not the `Tainted`
+  marker (see the Tainted note):
 
   | id | descriptor | `categories` | source |
   |---|---|---|---|
@@ -269,11 +269,27 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   | `flaw.suppressed_gift` | *Major, Hermetic, Story* | `["hermetic", "story"]` | `:6803-6804` |
   | `flaw.visions` | *Minor, Story, Supernatural* | `["story", "supernatural"]` | `:6985-6986` |
 
+  **The book itself treats the two categories as equals.** Under `## List of
+  Virtues` `:3004` and `## List of Flaws` `:5283` the indexes are cut into
+  `### <Category>, <Magnitude>` sections, and each of the four items above is
+  listed in **both** of its sections — verified line by line:
+
+  | item | listed at | and at |
+  |---|---|---|
+  | Sufi | `:3179` (`### Supernatural, Minor` `:3135`) | `:3230` (`### Social Status, Minor` `:3187`) |
+  | Suppressed Gift | `:5301` (`### Hermetic, Major` `:5285`) | `:5369` (`### Story, Major` `:5340`) |
+  | Raised from the Dead | `:5365` (`### Story, Major` `:5340`) | `:5399` (`### Supernatural, Major` `:5387`) |
+  | Visions | `:5517` (`### Story, Minor` `:5501`) | `:5561` (`### Supernatural, Minor` `:5534`) |
+
+  So `categories[0]` is **not** a rule and must never be documented as one. It is
+  only the descriptor's own first-listed slug, used as a deterministic tie-break by
+  the two surfaces that have room for exactly one (below).
+
   No core descriptor names three real categories. `Tainted` is **not** a category
   (it is `PointItem.tainted: bool`) and neither is `Mythic Companion` (see the
   marker note below), so descriptors such as `*Minor, Story, Tainted*` stay
   single-category.
-- **Membership uses the whole list; display uses the primary.** Every rule that asks
+- **Membership uses the whole list, and so does browsing.** Every rule that asks
   "is this item of category X" is a membership test over all of `categories`
   (`PointItem::has_category` / `any_category_in`): permitted and forbidden
   categories (`validation/selections.rs`), the data-driven per-category caps
@@ -281,12 +297,30 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   (`grant.rs`), the Gift categories (`effective/gift_confidence.rs`,
   `validation/magus.rs`), the engine-required `personality` category
   (`validation/scores.rs`, `ruleset/integrity.rs`), and `Ruleset::items_by_category`.
-  Anything rendering a *single* label uses `PointItem::primary_category`. The
-  Markdown export's "Type" cell is the one place that renders them all, joined with
-  the shared localized list separator, each through its own `category-<id>` Fluent
-  key (`export/sections.rs`). Consequences worth naming: Suppressed Gift now counts
-  against the **Story** Flaw cap as well as being Hermetic, and Sufi is returned by
-  `items_by_category("supernatural")` as well as by `"social_status"`.
+  The UI's **Available (source) V/F picker** mirrors the book's indexes: `derive.ts`
+  `groupByCategory` emits the item once per category it carries, so Sufi is offered
+  under *both* Social Status and Supernatural. That grouping is also the sole source
+  of the category-filter dropdown's options
+  (`VirtueFlawTab.svelte` `categoriesFor`), so a category carried only in second
+  position is still filterable. The Markdown export's "Type" cell renders them all,
+  joined with the shared localized list separator, each through its own
+  `category-<id>` Fluent key (`export/sections.rs`). Consequences worth naming:
+  Suppressed Gift counts against the **Story** Flaw cap as well as being Hermetic,
+  and Sufi is returned by `items_by_category("supernatural")` as well as by
+  `"social_status"`.
+- **Two surfaces have room for exactly one category, and both use
+  `PointItem::first_listed_category` as a tie-break** (renamed from
+  `primary_category`, which asserted a rule the book does not have):
+  the `category_not_permitted` issue's `category` argument
+  (`validation/selections.rs` — only reached when *every* category failed, so any
+  of them would do), and the UI's **Selected** V/F list (`derive.ts`
+  `groupSelectionsByCategory`). The Selected list must not duplicate a row: bought
+  rows are removed by their `entity.selections` index, so the same row under two
+  headings would delete each other and make one selection read as two against the
+  point budget. Picking the first-listed slug also keeps that heading agreeing with
+  the row's first category badge, which `ui/e2e/specs/houses.e2e.js:148,165`
+  asserts. The `forbidden_category` issue is *not* one of these surfaces — it names
+  the category that actually offended, whichever position it holds.
 - **`categories` is order-significant and therefore exempt from canonical sorting** —
   the same deliberate exception the crisis table's `crisis.rows` takes (see the
   aging section's "Three things a later sweep must not undo"), and the reason it is

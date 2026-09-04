@@ -470,12 +470,15 @@ function warpingSlotKeys(constraint: GrantConstraint): { labelKey: string; count
 }
 
 /**
- * An item's PRIMARY category: the one its rulebook descriptor lists first, which
- * is what every single-label display and every grouping bucket uses. Mirrors the
- * engine's `PointItem::primary_category`. The engine rejects a categoryless item
- * at load, so the empty fallback is unreachable through a real ruleset.
+ * The category a *single-bucket* list files an item under: the one its rulebook
+ * descriptor names first. This is a tie-break, not a rule — the book has no
+ * notion of a primary category (see `groupByCategory`) — so it is used only where
+ * exactly one bucket is structurally required, i.e. `groupSelectionsByCategory`.
+ * Mirrors the engine's `PointItem::first_listed_category`. The engine rejects a
+ * categoryless item at load, so the empty fallback is unreachable through a real
+ * ruleset.
  */
-function primaryCategory(item: PointItem): string {
+function firstListedCategory(item: PointItem): string {
   return item.categories[0] ?? '';
 }
 
@@ -485,18 +488,32 @@ function primaryCategory(item: PointItem): string {
  * `kind` is in it are kept (used to split the picker into separate Virtue and
  * Flaw lists).
  *
- * Single-bucket, keyed on the PRIMARY category: an item whose descriptor names
- * two categories is listed once, under the first — repeating it under the second
- * would show the same catalogue entry twice in one picker.
+ * An item appears under EVERY category it carries, because that is what the
+ * rulebook itself does: its Virtue/Flaw indexes list each dual-category item
+ * twice, once per category, with no "primary" among them. Sufi is at
+ * `Ars Magica - Definitive Edition (Core Rules).md:3179` under
+ * "### Supernatural, Minor" (:3135) and again at :3230 under
+ * "### Social Status, Minor" (:3187); likewise Suppressed Gift (:5301 Hermetic,
+ * Major / :5369 Story, Major), Raised from the Dead (:5365 Story, Major / :5399
+ * Supernatural, Major) and Visions (:5517 Story, Minor / :5561 Supernatural,
+ * Minor). Filing such an item under one heading only hid it from a player
+ * browsing the other category — the very category that may be the one making it
+ * legal for their character (`validation/selections.rs` permits on ANY category).
+ *
+ * This also makes the grouping the complete source of category names, which
+ * `VirtueFlawTab.categoriesFor` relies on for the filter dropdown's options.
+ *
+ * The Selected list does NOT mirror this; see `groupSelectionsByCategory`.
  */
 export function groupByCategory(localized: LocalizedRuleset, kinds?: ItemKind[]): CategoryGroup[] {
   const groups = new Map<string, PointItem[]>();
   for (const item of Object.values(localized.ruleset.point_items)) {
     if (kinds && !kinds.includes(item.kind)) continue;
-    const key = primaryCategory(item);
-    const list = groups.get(key) ?? [];
-    list.push(item);
-    groups.set(key, list);
+    for (const key of item.categories) {
+      const list = groups.get(key) ?? [];
+      list.push(item);
+      groups.set(key, list);
+    }
   }
   return [...groups.entries()]
     .map(([category, items]) => ({
@@ -536,8 +553,9 @@ export interface SelectionGroup {
 
 /**
  * Virtue/Flaw rows grouped by category and alpha-sorted by localized name within
- * each group, mirroring the source picker's grouping (`groupByCategory`).
- * Categories order the same way as the source list (by category id); rows whose
+ * each group, using the same category headings and the same ordering (by category
+ * id) as the source picker (`groupByCategory`) — but placing each row in exactly
+ * one of them, which is where the two deliberately differ (see below). Rows whose
  * item ref is unknown are dropped.
  *
  * Bought and `granted` rows are grouped and sorted TOGETHER, each under its own
@@ -548,12 +566,16 @@ export interface SelectionGroup {
  * the absent remove button distinguish it, exactly as for a `Required` row.
  * Equal-name ties keep bought before granted (the sort is stable).
  *
- * Each row lands in exactly ONE group, keyed on its item's PRIMARY category
- * (`categories[0]`), the same bucket the source picker uses. That single-bucket
- * rule is load-bearing for a dual-category item, not merely tidy: a bought row
- * carries its `entity.selections` index and `VirtueFlawTab` removes by that
- * index, so a row repeated under a second heading would give the player two
- * apparently independent rows that delete each other.
+ * Each row lands in exactly ONE group, keyed on its item's first-listed category
+ * (`categories[0]`). This is the one place that deliberately DIVERGES from the
+ * source picker, which lists a dual-category item under both of its headings:
+ * a bought row carries its `entity.selections` index and `VirtueFlawTab` removes
+ * by that index, so a row repeated under a second heading would show the player
+ * two apparently independent rows that delete each other — and would make one
+ * selection look like two against the point budget. The descriptor's own order
+ * picks the bucket because it is the only ordering the data carries, and it keeps
+ * the heading agreeing with the row's FIRST category badge (the invariant
+ * `houses.e2e.js` asserts).
  */
 export function groupSelectionsByCategory(
   localized: LocalizedRuleset,
@@ -564,7 +586,7 @@ export function groupSelectionsByCategory(
   const add = (row: SelectionRow): void => {
     const item = localized.ruleset.point_items[row.selection.ref];
     if (!item) return;
-    const key = primaryCategory(item);
+    const key = firstListedCategory(item);
     const list = groups.get(key) ?? [];
     list.push(row);
     groups.set(key, list);

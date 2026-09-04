@@ -39,12 +39,27 @@ const HEARTBEAST: PointItem = {
   entity_kinds: ['character'],
 } as PointItem;
 
+// A dual-category item, so the Available picker renders the SAME `{#each}` key
+// (`getId` = the item id) in two different group blocks. Keys are scoped per
+// block instance, so this is legal — but `each_key_duplicate` aborts the whole
+// tab in production and only the client reconciler raises it, so the claim is
+// asserted rather than assumed. Sufi is "*Minor, Social Status, Supernatural*"
+// and the book indexes it under both (Core Rules :3230 and :3179).
+const SUFI: PointItem = {
+  id: 'virtue.sufi',
+  kind: 'virtue',
+  magnitude: 'minor',
+  categories: ['social_status', 'supernatural'],
+  classification: 'narrative',
+  entity_kinds: ['character'],
+} as PointItem;
+
 function installRuleset(): void {
   store.ruleset = {
     ruleset: {
       id: 'test',
       version: '1',
-      point_items: { [HEARTBEAST.id]: HEARTBEAST },
+      point_items: { [HEARTBEAST.id]: HEARTBEAST, [SUFI.id]: SUFI },
       type_profiles: {
         magus: {
           id: 'magus',
@@ -59,7 +74,7 @@ function installRuleset(): void {
       ability_category_order: ['general'],
       art_type_order: ['technique', 'form'],
     },
-    i18n: { 'virtue.heartbeast': { name: 'Heartbeast' } },
+    i18n: { 'virtue.heartbeast': { name: 'Heartbeast' }, 'virtue.sufi': { name: 'Sufi' } },
   } as unknown as LocalizedRuleset;
 }
 
@@ -136,5 +151,24 @@ describe('VirtueFlawTab survives a doubly-granted Virtue (#9)', () => {
     }).not.toThrow();
 
     expect(target.querySelectorAll('li')).not.toHaveLength(0);
+  });
+});
+
+// The Available picker lists a dual-category item under BOTH of its headings, so
+// its `{#each group.items as item (getId(item))}` key repeats across two group
+// blocks. That is legal (keys are scoped to one block instance) but the mirror
+// image of the #9 hazard above, and only a mounted render can prove it: SSR never
+// runs the reconciler that raises `each_key_duplicate`.
+describe('VirtueFlawTab offers a dual-category item under both headings', () => {
+  it('mounts with the same source row keyed in two groups', () => {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+
+    expect(() => {
+      app = mount(VirtueFlawTab, { target });
+      flushSync();
+    }).not.toThrow();
+
+    expect(target.querySelectorAll('[data-testid="add-virtue.sufi"]')).toHaveLength(2);
   });
 });

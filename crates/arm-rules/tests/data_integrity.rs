@@ -3804,9 +3804,9 @@ fn shipped_two_category_items_keep_the_descriptor_order() {
             "{id} must keep its descriptor's categories in order"
         );
         assert_eq!(
-            item.primary_category(),
+            item.first_listed_category(),
             categories[0],
-            "{id}'s primary is the descriptor's first-listed category"
+            "{id}'s single-bucket tie-break is the descriptor's first-listed category"
         );
     }
 }
@@ -3922,7 +3922,7 @@ fn a_secondary_category_satisfies_the_permitted_category_check() {
 /// Supernatural*" (Ars Magica - Definitive Edition (Core Rules).md:6985-6986),
 /// so the two issues name two different categories for the same item.
 #[test]
-fn the_forbidden_category_issue_names_the_offending_category_not_the_primary() {
+fn the_forbidden_category_issue_names_the_offending_category_not_the_first_listed() {
     let rs = load_ruleset();
     let grog = rs
         .profile(&Id::new("grog"))
@@ -3932,7 +3932,7 @@ fn the_forbidden_category_issue_names_the_offending_category_not_the_primary() {
 
     let visions = Id::new("flaw.visions");
     let item = rs.item(&visions).expect("flaw.visions must ship");
-    assert_eq!(item.primary_category(), "story");
+    assert_eq!(item.first_listed_category(), "story");
 
     let result = validate(&entity("grog", vec![Selection::new(visions.clone())]), &rs);
     let forbidden = result

@@ -1005,10 +1005,13 @@ describe('groupByCategory', () => {
     expect(groupByCategory(makeRuleset([]))).toEqual([]);
   });
 
-  // Grouping is single-bucket and keyed on the PRIMARY category (`categories[0]`,
-  // the descriptor's first-listed one), so a dual-category item shows up under
-  // exactly one heading — never once per category.
-  it('groups a dual-category item under its primary category only', () => {
+  // The rulebook's own Virtue/Flaw indexes list a dual-category item under BOTH
+  // of its categories, with no notion of one being primary: Sufi appears at
+  // `Ars Magica - Definitive Edition (Core Rules).md:3179` under
+  // "### Supernatural, Minor" (:3135) and again at :3230 under
+  // "### Social Status, Minor" (:3187). The Available list mirrors that — an item
+  // is offered under every category that can make it legal for the character.
+  it('lists a dual-category item under every category it carries', () => {
     const ruleset = makeRuleset([
       item({ id: 'virtue.sufi', categories: ['social_status', 'supernatural'] }),
       item({ id: 'virtue.second_sight', categories: ['supernatural'] }),
@@ -1017,7 +1020,24 @@ describe('groupByCategory', () => {
 
     expect(groups.map((g) => g.category)).toEqual(['social_status', 'supernatural']);
     expect(groups[0].items.map((i) => i.id)).toEqual(['virtue.sufi']);
-    expect(groups[1].items.map((i) => i.id)).toEqual(['virtue.second_sight']);
+    // Sorted by name within the group; with no i18n names the id is the sort key.
+    expect(groups[1].items.map((i) => i.id)).toEqual(['virtue.second_sight', 'virtue.sufi']);
+  });
+
+  // The grouping is also the source of the category-filter dropdown's options
+  // (`VirtueFlawTab.categoriesFor`), so a category that no item happens to list
+  // first must still produce a heading — otherwise it would be unreachable in the
+  // filter even though items carry it. Suppressed Gift is
+  // "*Major, Hermetic, Story*" (Core Rules :5301 under "### Hermetic, Major",
+  // :5369 under "### Story, Major").
+  it('creates a heading for a category no item lists first', () => {
+    const ruleset = makeRuleset([
+      item({ id: 'flaw.suppressed_gift', kind: 'flaw', categories: ['hermetic', 'story'] }),
+    ]);
+    expect(groupByCategory(ruleset, ['flaw']).map((g) => g.category)).toEqual([
+      'hermetic',
+      'story',
+    ]);
   });
 
   it('keeps only items whose kind is in the given filter', () => {
@@ -1954,8 +1974,10 @@ describe('groupSelectionsByCategory', () => {
 
   // `VirtueFlawTab` addresses a bought row's removal by its `entity.selections`
   // index, so a dual-category item must yield exactly ONE row — duplicating it
-  // under a second heading would give two rows the same index.
-  it('lists a bought dual-category row once, under its primary category', () => {
+  // under a second heading would give two rows the same index. This is the one
+  // place the descriptor's first-listed category still picks a single bucket; the
+  // Available list, which has no such constraint, lists the item under both.
+  it('lists a bought dual-category row once, under its first-listed category', () => {
     const dualRs = makeRuleset([
       item({ id: 'virtue.sufi', categories: ['social_status', 'supernatural'] }),
     ]);

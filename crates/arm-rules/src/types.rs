@@ -1538,16 +1538,24 @@ pub struct PointItem {
     /// Point weight (free/minor/major).
     pub magnitude: Magnitude,
     /// Every grouping category the rulebook descriptor lists for this item, in
-    /// the order it lists them — so `categories[0]` is the **primary** one
-    /// ([`PointItem::primary_category`]).
+    /// the order it lists them.
     ///
     /// Most descriptors name a single category, but some name two: Suppressed
     /// Gift is "*Major, Hermetic, Story*"
     /// (Ars Magica - Definitive Edition (Core Rules).md:6803-6804), and a
-    /// character may legitimately reach it through either. So *membership* tests
-    /// — permitted/forbidden categories, category caps, grant constraints, Gift
-    /// categories — consider the whole list, while anything rendering one label
-    /// uses the primary.
+    /// character may legitimately reach it through either. **All of them are
+    /// equally real** — the book's own indexes list such an item under both
+    /// headings (Suppressed Gift at
+    /// Ars Magica - Definitive Edition (Core Rules).md:5301 under
+    /// "### Hermetic, Major" and again at :5369 under "### Story, Major"), and
+    /// there is no "primary" among them. *Membership* tests — permitted/forbidden
+    /// categories, category caps, grant constraints, Gift categories — consider
+    /// the whole list, and so does the UI's Available picker, which offers the
+    /// item under every heading it carries.
+    ///
+    /// `categories[0]` therefore carries no rules meaning; it is only a
+    /// deterministic tie-break for the two places that structurally have room for
+    /// exactly one ([`PointItem::first_listed_category`]).
     ///
     /// Order carries the descriptor's own emphasis and is therefore deliberately
     /// exempt from canonical sorting (like [`EntityTypeProfile::creation_phases`]
@@ -1686,14 +1694,14 @@ impl TryFrom<PointItemRepr> for PointItem {
         if category.is_some() {
             return Err(format!(
                 "point item '{id}' uses the removed singular 'category' key; \
-                 it takes 'categories', an array of category slugs with the \
-                 descriptor's first-listed (primary) category first"
+                 it takes 'categories', an array of category slugs in the \
+                 descriptor's own order"
             ));
         }
         let Some(categories) = categories else {
             return Err(format!(
                 "point item '{id}' is missing the required 'categories' field, \
-                 an array of category slugs with the primary category first"
+                 an array of category slugs in the descriptor's own order"
             ));
         };
 
@@ -1718,26 +1726,33 @@ impl TryFrom<PointItemRepr> for PointItem {
 impl PointItem {
     /// Sorts the `parameters` vector by key for canonical serialization.
     ///
-    /// `categories` is order-significant (the descriptor's own order, primary
-    /// first) and so is deliberately left untouched.
+    /// `categories` is order-significant (the descriptor's own order) and so is
+    /// deliberately left untouched.
     pub fn normalize(&mut self) {
         self.parameters.sort_by(|a, b| a.key.cmp(&b.key));
     }
 
-    /// The item's **primary** category: the one its rulebook descriptor lists
-    /// first. This is what a single-category *display* uses; it is never the
-    /// basis of a membership decision (see [`PointItem::has_category`]).
+    /// The category the item's rulebook descriptor lists **first**.
+    ///
+    /// This is a deterministic tie-break, NOT a statement about the item: the
+    /// rulebook indexes every category a descriptor names, so no category is
+    /// privileged over another. Use it only where the surface has room for
+    /// exactly one — the `category_not_permitted` message's `category` argument,
+    /// and the UI's Selected list, whose rows are addressed by index and so must
+    /// not be repeated. It is never the basis of a membership decision (see
+    /// [`PointItem::has_category`]) and never the basis of a *browsing* list (the
+    /// Available picker lists the item under all of them).
     ///
     /// Empty only for a catalogue that failed load-time integrity, which rejects
     /// an item with no categories.
-    pub fn primary_category(&self) -> &str {
+    pub fn first_listed_category(&self) -> &str {
         self.categories
             .first()
             .map(String::as_str)
             .unwrap_or_default()
     }
 
-    /// Whether the item carries `category` at all — primary or secondary. Every
+    /// Whether the item carries `category` at all, in any position. Every
     /// membership rule (permitted/forbidden lists, caps, grant constraints, Gift
     /// categories) is expressed with this, so a two-category item counts under
     /// both of them.
@@ -3786,7 +3801,7 @@ mod tests {
     #[test]
     fn point_item_keeps_every_descriptor_category_in_source_order() {
         // Suppressed Gift's descriptor reads "Major, Hermetic, Story" — two
-        // categories, the earlier of which is the primary.
+        // equally real categories, kept in the descriptor's own order.
         // Source: Ars Magica - Definitive Edition (Core Rules).md:6803-6804.
         let json = r#"{
           "id": "flaw.suppressed_gift",
@@ -3799,7 +3814,7 @@ mod tests {
 
         let item: PointItem = serde_json::from_str(json).unwrap();
         assert_eq!(item.categories, vec!["hermetic", "story"]);
-        assert_eq!(item.primary_category(), "hermetic");
+        assert_eq!(item.first_listed_category(), "hermetic");
         assert!(item.has_category("story"));
         assert!(!item.has_category("general"));
 

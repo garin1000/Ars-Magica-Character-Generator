@@ -36,7 +36,10 @@
   // Filter state lives on the store (per side), so it survives tab switches that
   // unmount this component. Magnitude options come from the engine-surfaced
   // taxonomy; the category options reuse the same category source the grouped
-  // display uses (`groupByCategory`), never a hardcoded list.
+  // display uses (`groupByCategory`), never a hardcoded list. Since that grouping
+  // buckets an item under EVERY category it carries, the options cover every
+  // category any item on this side holds — a category no item happens to list
+  // first is still offered.
   const magnitudes = $derived(
     store.ruleset ? Object.keys(store.ruleset.ruleset.magnitude_points) : [],
   );
@@ -56,7 +59,14 @@
       magnitudes: filter.magnitude ? [filter.magnitude as Magnitude] : undefined,
       tainted: filter.taintedOnly || undefined,
     };
-    return groupByCategory(rs, kindsFor(side))
+    // A dual-category item is listed under BOTH its headings, so a category
+    // filter has to narrow the SECTIONS as well as the rows: otherwise Sufi,
+    // which passes a membership filter on either of its categories, comes back
+    // under a "Social Status" heading the player just filtered away.
+    const sections = groupByCategory(rs, kindsFor(side)).filter(
+      (g) => !filter.category || g.category === filter.category,
+    );
+    return sections
       .map((g) => ({
         key: g.category,
         header: store.t(`category-${g.category}`),
@@ -214,9 +224,12 @@
      was; the four that name two (e.g. Sufi, "Minor, Social Status,
      Supernatural") make it three, and `.tall-badges` grows the row to contain
      that third tag instead of letting it bleed over the row border into the
-     neighbours. Category order is the descriptor's own, so the FIRST badge is
-     the primary — the same category as the group heading the row sits under,
-     which is what houses.e2e.js compares the two against. -->
+     neighbours. Category order is the descriptor's own; no category outranks
+     another, but a SELECTED row can only sit under one heading (it is removed by
+     its entity index), and that heading is the first-listed category — the same
+     one the FIRST badge names, which is what houses.e2e.js compares the two
+     against. The Available picker has no such constraint and lists a
+     dual-category item under both headings. -->
 {#snippet nameWrap(ref: string, params: Record<string, string> | undefined)}
   {@const item = store.ruleset?.ruleset.point_items[ref]}
   <span
