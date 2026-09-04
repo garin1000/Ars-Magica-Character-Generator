@@ -15,10 +15,38 @@
      ~7 columns that a narrow cap would cramp. */
   --readout-max-width: 26rem;
   --readout-table-max-width: 44rem;
+  /* THE SUB-BODY TYPE SCALE. Every font size SMALLER than body text is one of
+     these three steps; sizes at or above 1rem stay plain rem, because those
+     should track the root. Named rather than spelled out at each use so the next
+     rebase is one block instead of forty scattered decimals — the same reason
+     `--readout-max-width` above exists. Pinned by `src/app.css.test.ts`, which
+     also rejects any bare sub-1rem `font-size` literal reappearing anywhere in
+     app.css or a component's scoped block.
+       --font-small  = 12.00px   secondary/muted running text, field labels
+       --font-chrome = 11.25px   badges, params, row markers, tab labels
+       --font-micro  = 10.50px   the severity badge — the smallest text shipped
+     The rem fractions look arbitrary because they are DERIVED: each reproduces
+     the pixel size that step had on the old 15px root (0.8-0.95rem, 0.75rem and
+     0.7rem respectively), now expressed against a 12.75px one. That is the whole
+     point of the rebase — see the `font-size` note below. */
+  --font-small: 0.941rem;
+  --font-chrome: 0.882rem;
+  --font-micro: 0.824rem;
   font-family: system-ui, sans-serif;
-  /* Base size tuned for readability (the audience skews middle-aged); all rem
-     sizes scale from here. */
-  font-size: 15px;
+  /* THE ROOT IS THE APP'S BODY SIZE, AND IT IS 12.75px.
+     This is a desktop binary in an OS webview, so it is read SIDE BY SIDE with the
+     platform's own chrome — and at the 15px this started from, every string sat
+     visibly larger than the Explorer window beside it while the rem padding, gaps
+     and column floors were all inflated to match. The reported symptom was wasted
+     space; the size named as the one it should have had was the warning
+     explanation (`.issue`), which computed to 0.85 x 15 = 12.75px. So body text is
+     that size now, and every rem length in the file — padding, gap, min-height,
+     max-width — comes down 15% with it. That is where the space comes back.
+     NOT a plain division, which would have dragged the small end under with it
+     (0.7rem would have become 8.9px): the sub-body steps above are re-expressed so
+     they hold the exact pixel size they had at 15px. Nothing in the app renders
+     smaller than it did before this change; only body text and above shrink. */
+  font-size: 12.75px;
   color-scheme: dark;
 }
 
@@ -125,7 +153,7 @@ h6 {
 .doc-status {
   margin-left: auto;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: var(--font-small);
   font-variant-numeric: tabular-nums;
 }
 
@@ -140,7 +168,7 @@ h6 {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-size: 0.8rem;
+  font-size: var(--font-small);
   color: var(--muted);
 }
 
@@ -245,13 +273,16 @@ button:disabled {
    HOW THE ROOM IS SPENT (manual-testing-findings-2026-09 #1). Ellipsizing was the
    safety net, not the design, and at the default 1100px window it was firing on
    nearly every tab — worst in GERMAN, whose magus set is ~146 characters of label
-   against English's ~130. The room is now budgeted so the full labels fit:
-     strip  = 1100px window - 2 x 11.25px `.tabbar` padding      = 1077.5px
-     labels = 146 chars x 0.53em x 11.25px type                  =  870.5px
-     tabs   = 13 x 2 x 5.625px horizontal padding                =  146.25px
-     gaps   = 12 x 1.875px                                       =   22.5px
-                                                        total    = 1039.3px
-   ~38px to spare, i.e. the labels may render up to ~4% wider than the model (0.53em
+   against English's ~130. The room is now budgeted so the full labels fit. Note
+   that the WINDOW is 1100px whatever the root font-size is, so the 12.75px rebase
+   did not shrink this budget — it only shrank the rem-sized padding and gaps
+   competing for it, which is why the label type could keep its full 11.25px:
+     strip  = 1100px window - 2 x 9.5625px `.tabbar` padding     = 1080.9px
+     labels = 146 chars x 0.53em x 11.25px type                  =  870.2px
+     tabs   = 13 x 2 x 4.78125px horizontal padding              =  124.3px
+     gaps   = 12 x 1.59375px                                     =   19.1px
+                                                        total    = 1013.6px
+   ~67px to spare, i.e. the labels may render up to ~7% wider than the model (0.53em
    per character, a per-glyph sum over DejaVu Sans and the more pessimistic of two
    estimates — the other is this comment's own historical "~1350px" English figure,
    which works out at 0.52em) before anything truncates again. Pinned by
@@ -261,11 +292,11 @@ button:disabled {
 .tabbar {
   display: flex;
   /* Gap is the cheapest room in the strip: twelve of them against twenty-six tab
-     paddings, so it is spent last and trimmed first. 1.875px plus the two tab
-     paddings still leaves ~13px between adjacent labels. */
+     paddings, so it is spent last and trimmed first. 1.59px plus the two tab
+     paddings still leaves ~11px between adjacent labels. */
   gap: 0.125rem;
-  /* Halved from 1.5rem to give the labels back 22.5px. The first label's optical
-     left edge lands at 11.25 + 5.625 = ~17px rather than the header's 22.5px — a
+  /* Halved from 1.5rem to give the labels back room. The first label's optical
+     left edge lands at 9.56 + 4.78 = ~14px rather than the header's 19px — a
      small alignment cost, paid because the alternative is truncated tab titles. */
   padding: 0 0.75rem;
   border-bottom: 1px solid #38355a;
@@ -279,20 +310,24 @@ button:disabled {
   border-radius: 0;
   /* HORIZONTAL is bought twenty-six times over by a magus's thirteen tabs, so it
      is the second-largest claim on the strip after the labels themselves: at the
-     1rem it started from it took 390px, at 0.75rem 292px, and here 146px. VERTICAL
-     is bought once and buys nothing back, so it goes the other way — UP from the
-     0.6rem it was, to keep the button's height where the 15px type used to put it
-     (0.7rem x 2 + a ~13.5px line box ≈ 34px, against ~35px before). Smaller type
-     shrinks a target in both directions; only one of them is under any pressure. */
-  padding: 0.7rem 0.375rem;
+     1rem it started from it took 390px, at the old 0.75rem-of-15px 292px, and here
+     124px. VERTICAL is bought once and buys nothing back, so it goes the other
+     way — UP again, from 0.7rem to 0.75rem, so the button keeps a comfortable
+     pointer target now that the root no longer inflates it (0.75rem x 2 + a ~13.5px
+     line box + the 2px active underline ≈ 34.6px, against ~36.5px before). Smaller
+     type shrinks a target in both directions; only one of them is under any
+     pressure, and WCAG 2.5.8's 24px floor is on the other one. */
+  padding: 0.75rem 0.375rem;
   /* Declared, not inherited. The shared `font: inherit` on every button handed the
-     strip the 15px root size, and thirteen German labels at 15px need ~1176px of a
-     1055px strip — the ellipsis was firing on nearly every tab. 11.25px is this app's
-     established secondary-chrome size (`.badge`, `.param`, `.row-marker`) and the
-     floor `app.css.test.ts` enforces: the base 15px is deliberately large because
-     the audience skews middle-aged, so the strip may drop to chrome size for its
-     one- and two-word labels, but no further. See `.tabbar` for the full budget. */
-  font-size: 0.75rem;
+     strip the root body size, and thirteen German labels at 15px needed ~1176px of a
+     1055px strip — the ellipsis was firing on nearly every tab. `--font-chrome` is
+     this app's established secondary-chrome size (`.badge`, `.param`,
+     `.row-marker`), 11.25px, and the floor `app.css.test.ts` enforces is that same
+     figure in absolute pixels: the strip may drop to chrome size for its one- and
+     two-word labels, but no further, and it did NOT have to drop below it during
+     the 12.75px rebase because the rebase gave the strip room back rather than
+     taking it. See `.tabbar` for the full budget. */
+  font-size: var(--font-chrome);
   color: var(--muted);
   /* Shrink (never grow) and ellipsize. `min-width: 0` is what lets a flex item
      shrink below its content width at all; without it the text wraps instead. The
@@ -345,7 +380,7 @@ button:disabled {
 
 .start-screen .hint {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: var(--font-small);
   max-width: 40rem;
 }
 
@@ -371,7 +406,7 @@ button:disabled {
   gap: 0.15rem 0.4rem;
   margin: 0 0 0.1rem;
   padding: 0 0.4rem;
-  font-size: 0.8rem;
+  font-size: var(--font-small);
   color: var(--muted);
 }
 
@@ -397,7 +432,7 @@ button:disabled {
 }
 
 .char-banner .desc-input {
-  font-size: 0.95rem;
+  font-size: var(--font-small);
   color: var(--muted);
 }
 
@@ -669,7 +704,7 @@ button:disabled {
 .wizard-progress {
   padding: 0.4rem 1.5rem 0;
   color: #b9b6d6;
-  font-size: 0.9rem;
+  font-size: var(--font-small);
 }
 
 .wizard-nav {
@@ -713,7 +748,7 @@ button:disabled {
   margin: 0.2rem 0 0.6rem;
   padding-left: 1.2rem;
   color: #b9b6d6;
-  font-size: 0.9rem;
+  font-size: var(--font-small);
 }
 
 /* Shared issues panel, pinned below the tabs at the bottom of the viewport. It
@@ -734,7 +769,7 @@ button:disabled {
 }
 
 .region-title {
-  font-size: 0.8rem;
+  font-size: var(--font-small);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);
@@ -859,11 +894,11 @@ button:disabled {
 
 .panel h2 {
   margin: 0 0 0.25rem;
-  font-size: 0.95rem;
+  font-size: var(--font-small);
 }
 
 .category {
-  font-size: 0.82rem;
+  font-size: var(--font-small);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--accent);
@@ -931,12 +966,21 @@ ul {
 }
 
 /* Holds the name with the tags overlaid on its right; positioning context for
-   the absolute tags. min-height fits the stacked tags on single-line rows. */
+   the absolute tags. min-height fits the stacked tags on single-line rows.
+
+   THESE THREE FLOORS DO NOT FOLLOW THE TYPE DOWN. A `.badge` carries no vertical
+   padding (`padding: 0 0.45rem`), so a tag is its line box plus its 1px borders —
+   and its text is `--font-chrome`, which the 12.75px rebase held at its old 11.25px.
+   The tag stack is therefore the same height it always was, while a floor left at
+   its old rem value would have come down 15% and let a two-tag stack bleed through
+   the row border into its neighbours. So the numbers below are the OLD pixel
+   heights re-expressed against the 12.75px root: 1.9rem = 24.2px (was 1.6rem),
+   2.85rem = 36.3px (was 2.4rem), 4.15rem = 52.9px (was 3.5rem). */
 .name-wrap {
   position: relative;
   flex: 1;
   min-width: 0;
-  min-height: 1.6rem;
+  min-height: 1.9rem;
 }
 
 /* Selected rows carry two stacked tags (category + magnitude). The vertically
@@ -944,7 +988,7 @@ ul {
    must be at least that tall or the stack bleeds past the row border into the
    neighbouring rows. Sized to fully contain the stack. */
 .selection-list .name-wrap {
-  min-height: 2.4rem;
+  min-height: 2.85rem;
 }
 
 /* …and three tags when the item's descriptor names two categories (Sufi is
@@ -954,7 +998,7 @@ ul {
    row by `VirtueFlawTab`, so the single-category rows keep their shorter height
    instead of every row paying for the rare one. */
 .selection-list .name-wrap.tall-badges {
-  min-height: 3.5rem;
+  min-height: 4.15rem;
 }
 
 /* Block so the JS-reserved padding-right forms a gutter the tags sit in; wraps
@@ -1034,10 +1078,16 @@ ul {
   color: var(--muted);
 }
 
-/* Compact single-glyph +/- action buttons, kept square regardless of glyph. */
+/* Compact single-glyph +/- action buttons, kept square regardless of glyph.
+   1.9rem, NOT the 1.6rem this was: the number is a WCAG 2.5.8 (AA) pointer target
+   of 24x24 CSS px, and 1.6rem only happened to mean 24px while the root was 15px.
+   The 12.75px rebase would have made it 20.4px — a square button is the one shape
+   where a type rebase lands straight on an accessibility floor, so this size does
+   not follow the type down. 1.9rem is 24.2px. Pinned by `src/app.css.test.ts` and
+   measured on the real strip by `tab-area.e2e.js`. */
 .icon-btn {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.9rem;
+  height: 1.9rem;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -1050,7 +1100,7 @@ ul {
 .points {
   margin: 0 0 0.5rem;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: var(--font-small);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1180,7 +1230,7 @@ ul {
 .ability-selection .ability-unbought {
   flex: 1 1 6rem;
   min-width: 5rem;
-  font-size: 0.9rem;
+  font-size: var(--font-small);
   font-style: italic;
 }
 
@@ -1291,8 +1341,8 @@ ul {
 .spell-list .item-name {
   flex: 1 1 14rem;
   min-width: 9rem;
-  /* Align the first line with the adjacent 1.6rem control buttons. */
-  line-height: 1.6rem;
+  /* Align the first line with the adjacent `.icon-btn` control buttons. */
+  line-height: 1.9rem;
 }
 
 /* The mastery special abilities take a WRAP LINE OF THEIR OWN at the end of the
@@ -1363,10 +1413,17 @@ ul {
    is why the old `@media (max-width: 720px) { columns: 1 }` is gone rather than
    kept — the two would fight over what "narrow" means.
 
-   THE 24rem FLOOR was chosen from the CONTENT, not measured in a running window:
+   THE 360px FLOOR was chosen from the CONTENT, not measured in a running window:
    nobody has viewed these surfaces since the layout changed, so this is the
-   intended place to nudge once someone does. Root font-size is 15px (see `:root`),
-   so 24rem is 360px. It is deliberately erring WIDE — fewer, wider columns — because
+   intended place to nudge once someone does. It was written as 24rem while the root
+   was 15px; at the 12.75px root it is 28.25rem, and it is expressed that way rather
+   than left at 24rem BECAUSE it is a content measurement and not a type-relative
+   one — 24rem would silently have become 306px, and `aging.e2e.js` asserts no track
+   comes out under 360. The content it holds does now render a little smaller, so
+   360px is if anything more generous than when it was picked; it is kept because
+   erring wide is the documented intent and re-deriving it needs the running window
+   nobody has measured in. It is deliberately erring WIDE — fewer, wider columns —
+   because
    the review's actual complaint was a column too narrow to show a field, and a tight
    floor recreates exactly that. What has to stay readable at 360px: the aging
    formula's wrapped terms, whose longest single unbreakable token is German's
@@ -1383,7 +1440,7 @@ ul {
    is meaningless in a grid, and spacing between grid items is the container's job. */
 .character-details {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(28.25rem, 1fr));
   align-items: start;
   gap: 1rem 1.5rem;
 }
@@ -1581,17 +1638,21 @@ ul {
    take. Column-major (`grid-auto-flow: column`) would read better as a ranking and
    is exactly the reordering that leaves the tab order scrambled, so it is not used.
 
-   THE FLOOR IS THE PANEL'S 24rem, not a narrower number of its own. A checklist row
-   is one of the three things that floor was measured from (see `.character-details`
-   above), so anything under it contradicts the only measurement taken of this
-   content — and did: at the 1100px default window an 18rem floor fitted THREE 325px
-   tracks under a 358px row ("Typical Summer or Autumn covenant (mundane)"), so the
-   long rows ran across their neighbours and 15px past the panel's own edge. At 24rem
-   the same stage takes two ~499px columns, which holds the longest German name
-   ("Typischer Sommer- oder Herbst-Konvent (Sterblicher)") on one line as well. */
+   THE FLOOR IS THE PANEL'S OWN 360px (28.25rem here, as there), not a narrower
+   number of its own. A checklist row is one of the three things that floor was
+   measured from (see `.character-details` above), so anything under it contradicts
+   the only measurement taken of this content — and did: at the 1100px default window
+   an 18rem floor fitted THREE 325px tracks under a 358px row ("Typical Summer or
+   Autumn covenant (mundane)"), so the long rows ran across their neighbours and 15px
+   past the panel's own edge. At 360px the same stage takes two ~499px columns, which
+   holds the longest German name ("Typischer Sommer- oder Herbst-Konvent
+   (Sterblicher)") on one line as well — and that row's text is BODY size, so the
+   12.75px rebase shrank the 358px measurement to ~304px while the floor stayed put.
+   The two floors are asserted equal by `src/app.css.test.ts`, so they cannot drift
+   apart in a later rebase either. */
 .living-conditions-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(28.25rem, 1fr));
   column-gap: 1.5rem;
   row-gap: 0.15rem;
   list-style: none;
@@ -1778,7 +1839,7 @@ ul {
 
 .funding-hint {
   color: var(--muted, #6b7280);
-  font-size: 0.85rem;
+  font-size: var(--font-small);
 }
 
 /* Age, its cap echo, a magus's three post-Gauntlet fields and the native language
@@ -1803,7 +1864,7 @@ ul {
 /* The engine's read-out of the years past the Gauntlet: a figure, not a warning. */
 .post-gauntlet-summary {
   color: var(--muted, #6b7280);
-  font-size: 0.85rem;
+  font-size: var(--font-small);
 }
 
 /* The Hermetic minimum Abilities a magus owes: a `<details>` whose summary is the
@@ -1826,14 +1887,14 @@ ul {
 }
 
 .magus-minimums h3 {
-  font-size: 0.95rem;
+  font-size: var(--font-small);
   margin-block: 0.3rem 0.1rem;
 }
 
 .magus-minimum-list {
   margin: 0;
   padding-inline-start: 1.2rem;
-  font-size: 0.85rem;
+  font-size: var(--font-small);
 }
 
 /* Colour is a second channel only: every row already says "is met"/"is not met". */
@@ -1843,7 +1904,7 @@ ul {
 
 .magus-minimums-summary {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: var(--font-small);
 }
 
 /* The Sample Childhood picker inside the guided life-stage panel: the recorded
@@ -1896,7 +1957,7 @@ ul {
 /* A fault is spoken through aria-describedby; the colour only reinforces it. */
 .childhood-reason {
   color: var(--error);
-  font-size: 0.85rem;
+  font-size: var(--font-small);
 }
 
 /* Carried-equipment list on the Selected side (name + Equipped checkbox + remove). */
@@ -1972,7 +2033,7 @@ ul {
 
 /* Opaque fill so the name behind the tag is hidden, not bleeding through. */
 .badge {
-  font-size: 0.75rem;
+  font-size: var(--font-chrome);
   color: var(--accent);
   background: var(--panel);
   border: 1px solid var(--accent);
@@ -1994,7 +2055,7 @@ ul {
 .row-marker {
   flex: none;
   align-self: center;
-  font-size: 0.75rem;
+  font-size: var(--font-chrome);
   color: var(--muted);
   background: var(--panel);
   border: 1px solid var(--muted);
@@ -2007,7 +2068,7 @@ ul {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  font-size: 0.75rem;
+  font-size: var(--font-chrome);
   color: var(--muted);
   margin: 0.25rem 0 0.5rem 1rem;
 }
@@ -2029,7 +2090,7 @@ ul {
   border-radius: 6px;
   margin-bottom: 0.35rem;
   border-left: 3px solid transparent;
-  font-size: 0.85rem;
+  font-size: var(--font-small);
   color: var(--ink);
 }
 
@@ -2052,7 +2113,7 @@ ul {
 .issue-severity {
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.7rem;
+  font-size: var(--font-micro);
   letter-spacing: 0.02em;
   margin-right: 0.3rem;
 }
@@ -2075,14 +2136,15 @@ ul {
 .issue-elsewhere-note {
   display: block;
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: var(--font-chrome);
 }
 
 /* The one box both panel states render into (ValidationPanel.svelte), floored so
    the footer keeps its height when the last issue clears instead of jumping.
-   The floor is one `.issue` row: 0.35rem padding-top + ~1.2rem line box
-   (`line-height: normal` at the 15px root size) + 0.35rem padding-bottom +
-   0.35rem margin-bottom ≈ 2.25rem. The empty "No issues" line is a single
+   The floor is one `.issue` row: 0.35rem padding-top + a ~14.4px line box
+   (`line-height: normal` at `--font-small`) + 0.35rem padding-bottom +
+   0.35rem margin-bottom ≈ 27.8px, inside this 2.25rem = 28.7px. The empty
+   "No issues" line is a single
    ~1.2rem line box, so without the floor the two states differ by ~1rem
    (guided-creation-review-2026-08 #3). */
 .validation-body {
@@ -2094,7 +2156,7 @@ ul {
    it overflows. */
 .validation-docked h2 {
   margin: 0 0 0.35rem;
-  font-size: 0.8rem;
+  font-size: var(--font-small);
   color: var(--muted);
 }
 
@@ -2117,7 +2179,7 @@ ul {
    severity-named class can pick it up by accident. */
 .error-banner {
   color: var(--error);
-  font-size: 0.85rem;
+  font-size: var(--font-small);
 }
 
 /* Hover/focus tooltip carrying an item's description + example specialties
@@ -2133,7 +2195,7 @@ ul {
   border: 1px solid var(--accent);
   border-radius: 8px;
   padding: 0.6rem 0.75rem;
-  font-size: 0.95rem;
+  font-size: var(--font-small);
   line-height: 1.45;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   pointer-events: none;
