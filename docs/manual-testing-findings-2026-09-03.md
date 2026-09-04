@@ -691,3 +691,77 @@ and `AppStore.wizardPhaseIncomplete`; the `.wizard-incomplete-hint`,
 `.childhood-hint` rules in `app.css`. The `.hidden-reserved` utility is kept
 though nothing uses it now: it encodes cross-cutting theme 1's house rule and is
 pinned by `app.css.test.ts`.
+
+---
+
+## Second pass — 2026-09-05
+
+Findings from a further session against the Windows build. **Collected only;
+nothing here is implemented, and no approach is decided.** Numbering continues
+the first pass.
+
+### 29 — Granted Reputations are added by a button instead of being listed
+
+**Status:** open
+
+A character whose Virtue or Flaw grants a Reputation gets a button reading
+"Add Ecclesiastical Reputation (level 4)". Pressing it twice produces two
+identical rows, and the duplicate is only reported afterwards as a validation
+error.
+
+The user's objection is the flow, not the error: the grant is already known, so
+the Reputations list should simply *contain* the granted rows with their
+description empty and waiting to be filled, rather than making the player press
+a button to conjure something the rules already gave them. That would also make
+the duplicate unreachable rather than merely invalid.
+
+To settle at fix time: whether any V/F can grant the same Reputation kind twice
+legitimately (two separate reputations of one kind), and what a save holds for a
+granted-but-undescribed reputation.
+
+### 30 — A granted Reputation never says which Virtue or Flaw granted it
+
+**Status:** open
+
+Asked as "Why Ecclesiastical at all??" — the app offers an Ecclesiastical
+Reputation with no indication of where it came from. Three shipped items grant
+that kind: `flaw.apostate` (Ecclesiastical 4), `virtue.senior_master`
+(Ecclesiastical 4) and `flaw.failed_monk` (Ecclesiastical 2). The level 4 in the
+screenshot narrows it to the first two, but the character's full Virtue/Flaw list
+is needed to say which — and that is precisely the finding: the player should not
+have to work it out. `virtue.hermetic_magus` grants no reputation, so the
+character's Social Status is not the source.
+
+Related to 29: if the list were prefilled from the grants, the row could name its
+source directly.
+
+### 31 — Alignment breaks on the not-bought Ability rows
+
+**Status:** open
+
+The read-only "not bought" rows added for finding 17 (an Ability carrying a
+Puissant bonus or a granted floor but no bought score) do not line up with the
+bought rows around them. Reported after the type rebase, so check it against the
+current scale: the marker occupies the specialty column
+(`.ability-selection .ability-unbought`) and the row omits the specialty input,
+the parameter field and the remove button, any of which may be what shifts the
+columns.
+
+### 32 — Heartbeast is offered to a magus of any House
+
+**Status:** open
+
+A Bonisagus magus can select `virtue.heartbeast`. The entry carries no
+`prerequisites` (`rules/core/virtues_flaws.json:4421-4429`), while the source
+says: "You have been initiated into the Outer Mystery of the Heartbeast … and
+thus are a member of House Bjornaer. You start with the Ability Heartbeast 1.
+Note that all Bjornaer magi gain this Virtue for free at character creation."
+(`Ars Magica - Definitive Edition (Core Rules).md:4059-4061`).
+
+So the Virtue is not merely *associated* with Bjornaer — taking it makes the
+character Bjornaer, which contradicts a House already chosen as Bonisagus. The
+engine has a `Prereq::House` variant, so the mechanism exists; what needs
+deciding is whether the correct model is a House prerequisite, a
+mutual-exclusion with the other Houses' free Virtues, or something that changes
+the House. Worth checking the other Houses' Outer Mystery Virtues for the same
+gap while fixing it.
