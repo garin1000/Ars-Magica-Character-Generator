@@ -839,10 +839,13 @@ class AppStore {
    * Set (or clear) the age the magus was gauntleted at — the one post-Gauntlet
    * figure stored, with the years, points and experience all derived from it.
    *
-   * A blank or zero age deletes the key, which is what "the magus stands AT its
-   * Gauntlet" means: with no Gauntlet age the engine reads the character's own age
-   * as the Gauntlet age, exactly how a magus was built before the field existed. So
-   * a magus at its Gauntlet still saves nothing but its native language.
+   * A blank or zero age deletes the key, so the save keeps only what the player
+   * actually chose. The engine then reads the ruleset's own baseline —
+   * `apprenticeship.default_gauntlet_age`, clamped to the character's age — which is
+   * the number `LifeStagePanel` shows as the field's placeholder. Deliberately NOT
+   * prefilled here: writing a 25 into the plan would dirty the entity for a field the
+   * player never touched, and a stored 25 against an age of 22 typed later would
+   * raise a blocking `life_stage_gauntlet_age_after_age` the blank field never did.
    *
    * A no-op when no plan exists, like {@link setNativeLanguage}: no surface can
    * conjure one into being.

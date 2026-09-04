@@ -131,8 +131,10 @@ fn validate_life_stage_age_is_set(entity: &Entity, issues: &mut Vec<ValidationIs
 /// For a magus the subject is its **Gauntlet** age, not its own: the years after
 /// the Gauntlet run forward from it (`:2216`), so a magus of 60 gauntleted at 12
 /// is exactly as impossible as one aged 12 standing at its Gauntlet, and only the
-/// Gauntlet age sees both. With no Gauntlet age stored the two are the same
-/// number, which is what keeps every pre-6b5 plan reading as it always did.
+/// Gauntlet age sees both. With no Gauntlet age stored the budget supplies the
+/// ruleset's baseline (`ApprenticeshipRules::default_gauntlet_age`), clamped to the
+/// character's age — so for a magus younger than that baseline the two numbers are
+/// still identical and this check sees exactly what it always saw.
 fn validate_life_stage_age_meets_minimum(
     entity: &Entity,
     rules: &LifeStageRules,
@@ -483,8 +485,13 @@ mod tests {
     /// gate only demands that a magus ruleset declare the block, and the abilities
     /// const above ships no dead language, so filling the lists here would drag an
     /// unrelated catalogue change into these tests.
+    ///
+    /// `default_gauntlet_age` IS declared, on purpose: it is what a plan naming no
+    /// Gauntlet age falls back to, so the fixture has to carry it for these
+    /// validators to be exercised against the shipped shape.
     const LIFE_STAGES: &str = r#"{
       "apprenticeship": {
+        "default_gauntlet_age": 25,
         "years": 15,
         "xp": 240,
         "minimum_abilities": [],
@@ -617,10 +624,11 @@ mod tests {
 
     /// The earliest a magus can have been gauntleted is childhood plus the fifteen
     /// years of apprenticeship (Ars Magica - Definitive Edition (Core Rules).md:2435) — twenty — and this magus carries
-    /// no `gauntlet_age`, so it stands at its Gauntlet and its own age is the one
-    /// measured. A younger one is one wrong age, so it gets **one** finding, and a
-    /// magus-specific one: "your age is inside childhood" would be plain wrong about a
-    /// magus of 19.
+    /// no `gauntlet_age`. The ruleset's baseline of 25 is clamped to the character's
+    /// own age, so 19 is still the number measured and this finding is reachable
+    /// exactly as it was before the baseline existed. A younger magus is one wrong
+    /// age, so it gets **one** finding, and a magus-specific one: "your age is inside
+    /// childhood" would be plain wrong about a magus of 19.
     #[test]
     fn an_age_before_the_gauntlet_is_a_magus_specific_error() {
         let mut magus = planned(19);

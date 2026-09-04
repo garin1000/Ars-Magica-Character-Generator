@@ -1,5 +1,6 @@
 {
   "apprenticeship": {
+    "default_gauntlet_age": 25,
     "minimum_abilities": [
       { "ability": "ability.dead_language", "exemplar": "latin", "min_score": 1 },
       { "ability": "ability.magic_theory", "min_score": 1 },

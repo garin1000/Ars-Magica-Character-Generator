@@ -377,9 +377,11 @@ life-stage-age-label = Age
 # age is how old the magus is NOW; the Gauntlet age is when its apprenticeship
 # ended — the fifteen years before it (Core Rules.md:2435), with every year before
 # those earning later-life experience (`:2214`). The years between the two are life
-# as a magus, worth "30 points" each (`:2216`, `:2471`). Blank means the magus
-# stands at its Gauntlet, which is what an absent Gauntlet age stores.
-life-stage-gauntlet-note = For a magus the age is how old it is now, and the Gauntlet age is when its apprenticeship ended: apprenticeship is the fifteen years before the Gauntlet, every year before those earns later-life experience, and every year from the Gauntlet to today is worth 30 points. Leave the Gauntlet age blank and the magus stands at its Gauntlet.
+# as a magus, worth "30 points" each (`:2216`, `:2471`). Nothing is stored for a
+# blank field: the engine reads it as the ruleset's own baseline magus, "25 years
+# old and just out of apprenticeship" (`:1601`), clamped to a younger character's
+# age — which is the number the empty field shows as its placeholder.
+life-stage-gauntlet-note = For a magus the age is how old it is now, and the Gauntlet age is when its apprenticeship ended: apprenticeship is the fifteen years before the Gauntlet, every year before those earns later-life experience, and every year from the Gauntlet to today is worth 30 points. Leave the Gauntlet age blank and the magus takes the usual age for one just out of apprenticeship, which the empty field shows.
 # The years a magus has lived since its Gauntlet. Only the Gauntlet age is stored;
 # the years, the points and the experience all follow from it and the age. Each
 # point "can be an experience point in an Art or Ability or one level of spell"
@@ -387,7 +389,7 @@ life-stage-gauntlet-note = For a magus the age is how old it is now, and the Gau
 # only three seasons a year are charged, because the third has already taken the
 # whole 30 (`:2482`).
 life-stage-gauntlet-age-label = Gauntlet age
-life-stage-gauntlet-age-hint = The age the apprenticeship ended at. Blank means the magus stands at its Gauntlet, with no years as a magus behind it.
+life-stage-gauntlet-age-hint = The age the apprenticeship ended at. Left blank it takes the age the empty field shows: the usual age for a magus just out of apprenticeship, or this character's own age if it is younger than that.
 life-stage-lab-seasons-label = Lab seasons
 life-stage-lab-seasons-hint = Seasons of lab work, totalled over all the years as a magus: each costs 10 of that year's 30 points, and only three a year are charged — the third already takes the whole 30, so a fourth is free.
 life-stage-spell-levels-label = Levels of spells

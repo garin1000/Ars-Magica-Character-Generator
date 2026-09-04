@@ -1283,6 +1283,12 @@ export interface PostApprenticeshipRules {
 // `ApprenticeshipRules`. The 120 spell levels are NOT here — they are the magus
 // type profile's `spell_levels`.
 export interface ApprenticeshipRules {
+  // The age a plan naming no Gauntlet age is read at — the rules' own baseline
+  // magus, "25 years old and just out of apprenticeship". Data, so the Gauntlet-age
+  // field's placeholder says what blank means without hardcoding a number. Absent
+  // for a ruleset stating no baseline, where blank still means "stands at its
+  // Gauntlet".
+  default_gauntlet_age?: number;
   // Abilities without which a magus "would not be admitted to the Order".
   minimum_abilities: AbilityRequirement[];
   // The recommended package, priced by `recommended_xp`.

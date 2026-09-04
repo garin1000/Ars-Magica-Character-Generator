@@ -35,6 +35,18 @@
   const postGauntlet = $derived(rules?.post_apprenticeship ?? null);
   const showPostGauntlet = $derived(isMagus && postGauntlet != null);
   const plan = $derived(store.entity.life_stages ?? null);
+  // What the engine reads a BLANK Gauntlet-age field as, so the placeholder states
+  // it instead of contradicting it. The number is the ruleset's
+  // (`apprenticeship.default_gauntlet_age` — "25 years old and just out of
+  // apprenticeship"), never a constant here, and it is clamped to the character's
+  // own age exactly as `LifeStageRules::budget` clamps it: a magus younger than the
+  // baseline really does stand at its Gauntlet. With no baseline in the data the
+  // older reading holds and the age is the answer.
+  const defaultGauntletAge = $derived(rules?.apprenticeship?.default_gauntlet_age ?? null);
+  const gauntletPlaceholder = $derived.by(() => {
+    if (age == null) return '';
+    return String(defaultGauntletAge == null ? age : Math.min(defaultGauntletAge, age));
+  });
   // The engine's own figures for those years; null until an age makes a budget.
   const budget = $derived(store.effective?.life_stage ?? null);
 
@@ -125,7 +137,7 @@
               type="number"
               min="1"
               max={U32_MAX}
-              placeholder={age == null ? '' : String(age)}
+              placeholder={gauntletPlaceholder}
               value={fieldValue(plan?.gauntlet_age)}
               aria-describedby="life-stage-gauntlet-age-hint"
               oninput={(event) => store.setGauntletAge(count(event))}

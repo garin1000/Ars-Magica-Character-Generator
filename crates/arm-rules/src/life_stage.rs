@@ -56,6 +56,22 @@ pub struct LifeStageRules {
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2433-2437.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ApprenticeshipRules {
+    /// The age a plan naming no Gauntlet age is read at — the rules' own baseline
+    /// magus, "25 years old and just out of apprenticeship"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:1601), which the Darius
+    /// example builds too: apprenticed at 10 (`:2402`) plus the fifteen years of
+    /// `:2435`, with his years as a magus then counted "from 26 to 33" (`:2486`).
+    ///
+    /// Here rather than in Rust because it is a rule's number like `years` and `xp`:
+    /// a ruleset whose magi are gauntleted at another age says so in its own file.
+    /// Clamped to the character's age when it is read, so a magus too young to have
+    /// reached the baseline still stands at its Gauntlet.
+    ///
+    /// `None` for a ruleset that states no baseline, which then keeps the reading
+    /// that predates this field: a plan with no Gauntlet age means the magus stands
+    /// at its Gauntlet. Additive, so no save and no ruleset migrates.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default_gauntlet_age: Option<u32>,
     /// Abilities the Order demands of every magus: "Magi must have the following
     /// minimum Abilities: Parma Magica 1, Magic Theory 1, Latin 1. Characters with
     /// lower scores would not be admitted to the Order." (`:2437`.)
@@ -344,10 +360,15 @@ pub struct LifeStagePlan {
     /// ago it ended), so exactly one of them has to be recorded and every other
     /// figure derived from it.
     ///
-    /// **`None` means the character stands at its Gauntlet** — the Gauntlet age is
-    /// then [`Entity::age`] itself, which is precisely how a magus was built before
-    /// this field existed. So every earlier save keeps its numbers unchanged, and the
-    /// field is additive.
+    /// **`None` means the ruleset's baseline** —
+    /// [`ApprenticeshipRules::default_gauntlet_age`], 25 in the shipped data ("25
+    /// years old and just out of apprenticeship",
+    /// Ars Magica - Definitive Edition (Core Rules).md:1601), clamped to
+    /// [`Entity::age`] so a younger magus still stands at its Gauntlet. It read as
+    /// the age itself until that baseline existed, which made a blank field mean
+    /// "zero years as a magus" — the least likely magus there is. The field stays
+    /// additive: nothing is written here on the player's behalf, so a save records
+    /// only what was actually chosen.
     ///
     /// Storing `post_gauntlet_years` instead was rejected: raising a magus's age
     /// would then stretch the *childhood-to-apprenticeship* span — the years before
@@ -412,11 +433,12 @@ pub struct LifeStageBudget {
     /// `EffectiveScores::xp_general_pool`. This field is the block's base, which is
     /// why nothing displays it as "the pool".
     pub apprenticeship_xp: u32,
-    /// The age this character was gauntleted at: [`LifeStagePlan::gauntlet_age`] for a
-    /// magus that has lived past its Gauntlet, and the character's own age for one
-    /// standing at it — or for anyone serving no apprenticeship, where it is simply
-    /// the age later life runs to. Clamped to the age, and 0 while the age is unset,
-    /// like every other age-dependent figure here.
+    /// The age this character was gauntleted at: [`LifeStagePlan::gauntlet_age`] when
+    /// the plan names one, otherwise the ruleset's
+    /// [`ApprenticeshipRules::default_gauntlet_age`] — or, for anyone serving no
+    /// apprenticeship, simply the age later life runs to. Clamped to the age (so a
+    /// magus younger than the baseline stands at its Gauntlet), and 0 while the age
+    /// is unset, like every other age-dependent figure here.
     pub gauntlet_age: u32,
     /// Years lived after the Gauntlet (age − [`Self::gauntlet_age`]), 0 for a
     /// character standing at it (Ars Magica - Definitive Edition (Core Rules).md:2216).
@@ -484,9 +506,10 @@ impl LifeStageRules {
     /// **The age is spent around the Gauntlet, not up to it.** The years before the
     /// Gauntlet are childhood, later life and apprenticeship; the years after it earn
     /// "30 points per year" (`:2216`, `:2471`). So every figure here is derived from
-    /// the *Gauntlet* age — [`LifeStagePlan::gauntlet_age`], or the character's own
-    /// age when it stands at its Gauntlet — and raising a magus's age lengthens its
-    /// life as a magus, never the childhood-to-apprenticeship span behind it.
+    /// the *Gauntlet* age — [`LifeStagePlan::gauntlet_age`], or the ruleset's
+    /// [`ApprenticeshipRules::default_gauntlet_age`] when the plan names none — and
+    /// raising a magus's age lengthens its life as a magus, never the
+    /// childhood-to-apprenticeship span behind it.
     pub fn budget(&self, entity: &Entity, ruleset: &Ruleset) -> Option<LifeStageBudget> {
         match entity.ability_funding {
             AbilityFunding::Pool => return None,
@@ -500,12 +523,25 @@ impl LifeStageRules {
         // Gauntlet age is read for a character that serves an apprenticeship and
         // ignored on every other plan — gating on the *points* being zero instead
         // would let a hand-edited companion plan carrying one cut its later life
-        // short. Clamped to the age, because Advisory and Silent validation do not
-        // block a Gauntlet after the character's own age and an unclamped value
-        // would grant later-life years never lived.
+        // short.
+        //
+        // A plan that names no Gauntlet age falls back to the ruleset's own baseline
+        // ([`ApprenticeshipRules::default_gauntlet_age`], 25 in the shipped data:
+        // "25 years old and just out of apprenticeship",
+        // Ars Magica - Definitive Edition (Core Rules).md:1601) rather than to the
+        // character's age, which would have read a blank field as "zero years as a
+        // magus" — the least likely magus there is. Only a character that serves an
+        // apprenticeship reaches the fallback at all, so a companion still runs its
+        // later life to its own age.
+        //
+        // Clamped to the age either way, because Advisory and Silent validation do
+        // not block a Gauntlet after the character's own age and an unclamped value
+        // would grant later-life years never lived. The clamp is also why the
+        // baseline reaches no validator: a magus younger than it simply stands at its
+        // Gauntlet, exactly as it did before.
         let gauntlet_age = entity.age.map_or(0, |age| {
             apprenticeship
-                .and(plan.gauntlet_age)
+                .and_then(|block| plan.gauntlet_age.or(block.default_gauntlet_age))
                 .map_or(age, |gauntlet| gauntlet.min(age))
         });
         let later_life_years = self.later_life_years(gauntlet_age, apprenticeship_years);
@@ -685,6 +721,7 @@ mod tests {
       "apprenticeship": {
         "years": 15,
         "xp": 240,
+        "default_gauntlet_age": 25,
         "minimum_abilities": [
           { "ability": "ability.dead_language", "min_score": 1 },
           { "ability": "ability.magic_theory", "min_score": 1 },
@@ -780,6 +817,33 @@ mod tests {
 
         // A ruleset shipping no apprenticeship parses just as well, and says so.
         assert!(rules().apprenticeship.is_none());
+    }
+
+    /// The age a plan naming no Gauntlet age is read at: "These templates are of a
+    /// stereotypical member of each House, 25 years old and just out of
+    /// apprenticeship" (Ars Magica - Definitive Edition (Core Rules).md:1601). The
+    /// number belongs to the ruleset like every other figure on this block, not to a
+    /// constant in the engine.
+    ///
+    /// Optional, so a ruleset stating no baseline keeps the older reading — a plan
+    /// with no Gauntlet age means the magus stands at its Gauntlet — rather than
+    /// having one invented for it.
+    #[test]
+    fn apprenticeship_carries_the_default_gauntlet_age() {
+        let parsed: LifeStageRules = serde_json::from_str(SHIPPED_WITH_APPRENTICESHIP)
+            .expect("the apprenticeship shape parses");
+        let apprenticeship = parsed
+            .apprenticeship
+            .expect("the file declares an apprenticeship block");
+        assert_eq!(apprenticeship.default_gauntlet_age, Some(25));
+
+        // A block stating no baseline parses, and writes no key.
+        let silent = ApprenticeshipRules {
+            default_gauntlet_age: None,
+            ..apprenticeship
+        };
+        let json = serde_json::to_string(&silent).expect("the block serializes");
+        assert!(!json.contains("default_gauntlet_age"), "{json}");
     }
 
     /// The fourth period: "For every year, the magus gets 30 points"
@@ -1115,11 +1179,11 @@ mod tests {
         entity
     }
 
-    /// The 6b4 behavior, locked: a plan carrying no Gauntlet age means the magus
-    /// stands at its Gauntlet, so its age *is* that age and the years after it are
-    /// none. Every save written before the field existed keeps its numbers.
+    /// At the ruleset's own baseline age the stored value and the default coincide:
+    /// a magus of 25 with no Gauntlet age on file stands at its Gauntlet either way,
+    /// so every save written before the field existed keeps these numbers.
     #[test]
-    fn a_magus_with_no_stored_gauntlet_age_stands_at_its_gauntlet() {
+    fn a_magus_at_the_default_gauntlet_age_stands_at_its_gauntlet() {
         let budget = rules_with_apprenticeship()
             .budget(&planned_magus(25), &rate_ruleset())
             .expect("a magus with a plan");
@@ -1130,6 +1194,61 @@ mod tests {
         assert_eq!(budget.post_gauntlet_points, 0);
         assert_eq!(budget.post_gauntlet_xp, 0);
         assert_eq!(budget.total(), 435);
+    }
+
+    /// A plan naming no Gauntlet age reads the ruleset's baseline, not the
+    /// character's own age: "These templates are of a stereotypical member of each
+    /// House, 25 years old and just out of apprenticeship"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:1601). So a magus of 60 that
+    /// never filled the field in is thirty-five years out of apprenticeship, which is
+    /// what the rules' own worked example does — Darius counts his years as a magus
+    /// "from 26 to 33" (`:2486`), not from the age he happens to be.
+    ///
+    /// Reading the age itself, as this did before, made the blank field mean "zero
+    /// years as a magus" — the least likely magus there is, and the one that made an
+    /// otherwise fine lab-season entry look impossible.
+    #[test]
+    fn a_magus_with_no_stored_gauntlet_age_takes_the_rulesets_default() {
+        let budget = rules_with_apprenticeship()
+            .budget(&planned_magus(60), &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.gauntlet_age, 25);
+        assert_eq!(budget.later_life_years, 5);
+        assert_eq!(budget.post_gauntlet_years, 35);
+        assert_eq!(budget.post_gauntlet_points, 1050);
+    }
+
+    /// The default is clamped to the age like a stored value is, so a magus younger
+    /// than the baseline still stands at its Gauntlet and no new finding becomes
+    /// reachable: `life_stage_gauntlet_age_after_age` reads the *stored* number,
+    /// which is still absent here, and `life_stage_age_before_gauntlet` sees the same
+    /// age it saw before.
+    #[test]
+    fn a_magus_younger_than_the_default_gauntlet_age_stands_at_its_gauntlet() {
+        let budget = rules_with_apprenticeship()
+            .budget(&planned_magus(22), &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.gauntlet_age, 22);
+        assert_eq!(budget.later_life_years, 2);
+        assert_eq!(budget.post_gauntlet_years, 0);
+        assert_eq!(budget.post_gauntlet_points, 0);
+    }
+
+    /// A ruleset stating no baseline keeps the reading that predates the field: the
+    /// magus stands at its Gauntlet, whatever its age.
+    #[test]
+    fn a_ruleset_with_no_default_gauntlet_age_leaves_the_magus_at_its_gauntlet() {
+        let mut rules = rules_with_apprenticeship();
+        rules
+            .apprenticeship
+            .as_mut()
+            .expect("the fixture declares an apprenticeship")
+            .default_gauntlet_age = None;
+        let budget = rules
+            .budget(&planned_magus(60), &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.gauntlet_age, 60);
+        assert_eq!(budget.post_gauntlet_years, 0);
     }
 
     /// "For every year, the magus gets 30 points."
@@ -1557,18 +1676,20 @@ mod tests {
     /// the Gauntlet age — is recorded, and the years as a magus follow from it.
     ///
     /// All three are additive. Absent, they add no key at all, so a save written
-    /// before they existed is byte-identical and needs no schema bump; and an absent
-    /// `gauntlet_age` means the magus stands at its Gauntlet, which is exactly what
-    /// such a save meant.
+    /// before they existed is byte-identical and needs no schema bump. This is also
+    /// what keeps the **default** Gauntlet age out of the save: it is resolved when
+    /// the budget is computed and never written back, so a plan the player left blank
+    /// serializes to no `gauntlet_age` key — which is why nothing marks the entity
+    /// dirty and no round trip can silently acquire a 25.
     #[test]
     fn the_post_gauntlet_choices_roundtrip_and_are_schema_stable() {
-        let at_the_gauntlet = LifeStagePlan {
+        let nothing_chosen = LifeStagePlan {
             native_language: Some("German".into()),
             childhood_package: Some(Id::new("childhood.athletic")),
             ..LifeStagePlan::default()
         };
         assert_eq!(
-            serde_json::to_string(&at_the_gauntlet).unwrap(),
+            serde_json::to_string(&nothing_chosen).unwrap(),
             r#"{"native_language":"German","childhood_package":"childhood.athletic"}"#
         );
 
@@ -1576,7 +1697,7 @@ mod tests {
             gauntlet_age: Some(25),
             post_gauntlet_lab_seasons: 12,
             post_gauntlet_spell_levels: 300,
-            ..at_the_gauntlet
+            ..nothing_chosen
         };
         let mut entity = companion(vec![]);
         entity.age = Some(60);
