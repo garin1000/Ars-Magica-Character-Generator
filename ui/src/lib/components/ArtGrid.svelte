@@ -39,6 +39,14 @@
     return store.effective?.art_bonuses?.find((b) => b.art === artId)?.bonus ?? 0;
   }
 
+  // The bought score `bonusOf` was computed against — NOT the live one the spinner
+  // shows (#16). The spinner is direct feedback and must move on the keystroke; the
+  // badge is a bought+bonus pair, and mixing a fresh half with a stale one renders a
+  // total that is true of no character. @see AppStore.readSettled
+  function settledScoreOf(artId: string): number {
+    return store.readSettled((e) => e.art_scores?.find((a) => a.art === artId)?.score ?? 0);
+  }
+
   function tip(artId: string): TooltipContent {
     return { text: store.ruleset?.i18n[artId]?.description ?? undefined };
   }
@@ -82,7 +90,9 @@
                 {#if bonus !== 0}
                   <span class="eff-slot">
                     <span class="eff-badge" data-testid="art-eff-{art.id}">
-                      {store.t('effective-score', { score: String(score + bonus) })}
+                      {store.t('effective-score', {
+                        score: String(settledScoreOf(art.id) + bonus),
+                      })}
                     </span>
                   </span>
                 {:else}

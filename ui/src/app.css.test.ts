@@ -234,6 +234,55 @@ describe('app.css', () => {
     expect(block![1]).toMatch(/border-top:/);
   });
 
+  // Finding #18: a source row that cannot be taken used to be greyed out; after the
+  // switch from the native `disabled` attribute to `aria-disabled` (deliberate — the
+  // row must stay focusable so its "why" tooltip stays reachable), the generic
+  // `button:disabled { opacity }` stopped matching and the ONLY remaining cue was the
+  // "+" glyph going from `--accent` (#d0ac63) to `--muted` (#c3bfde). `--muted` sits
+  // right next to the normal ink `--ink` (#f3f1fb), so a blocked row was practically
+  // indistinguishable from a takeable one — and a hue swap alone is a WCAG 1.4.1
+  // failure regardless of how far apart the two hues are.
+  //
+  // The treatment is a luminance drop, not a hue change, and it is asserted here
+  // because a stylesheet rule with no visible owner is exactly what a later cleanup
+  // deletes — as the dead `.pick-row:disabled .pick-plus` rule this replaces shows.
+  it('dims a blocked source row rather than only recolouring its glyph', () => {
+    const dimmed = /^\.pick-row\[aria-disabled='true'\] > \*\s*\{([^}]*)\}/m.exec(appCss);
+    expect(dimmed).not.toBeNull();
+    const opacity = /opacity:\s*([\d.]+);/.exec(dimmed![1]);
+    expect(opacity).not.toBeNull();
+    // Low enough to read as "off" at a glance, high enough that `--ink` composited
+    // over `--panel` still clears 4.5:1 (at 0.55 it is ~5.1:1; at 0.45 it is ~4.0:1).
+    expect(Number(opacity![1])).toBeGreaterThanOrEqual(0.5);
+    expect(Number(opacity![1])).toBeLessThanOrEqual(0.6);
+  });
+
+  // The dim goes on the row's CONTENT, not on the button box. `opacity` fades an
+  // element's outline along with its content, and the whole reason these rows use
+  // `aria-disabled` instead of `disabled` is that they stay focusable — fading the
+  // focus ring of the one control a keyboard user must reach to learn WHY the row is
+  // blocked would give back exactly what `aria-disabled` bought.
+  it('keeps the blocked row itself unfaded so its focus ring survives', () => {
+    const box = /^\.pick-row\[aria-disabled='true'\]\s*\{([^}]*)\}/m.exec(appCss);
+    expect(box).not.toBeNull();
+    expect(box![1]).not.toMatch(/opacity:/);
+    expect(box![1]).toMatch(/cursor:\s*default;/);
+    // The glyph keeps its muted colour as a SECOND cue on top of the dim, never as
+    // the only one.
+    const glyph = /^\.pick-row\[aria-disabled='true'\] \.pick-plus\s*\{([^}]*)\}/m.exec(appCss);
+    expect(glyph).not.toBeNull();
+    expect(glyph![1]).toMatch(/color:\s*var\(--muted\);/);
+  });
+
+  // The hover highlight is an "you can click this" affordance, so it must not fire on
+  // a row that ignores the click. It has to be qualified on `[aria-disabled]`: these
+  // rows are NEVER natively disabled, so any `:disabled` qualifier on `.pick-row` is
+  // dead code that silently matches nothing.
+  it('suppresses the hover affordance on a blocked source row', () => {
+    expect(appCss).toMatch(/^\.pick-row:hover:not\(\[aria-disabled='true'\]\)\s*\{/m);
+    expect(appCss).not.toMatch(/\.pick-row:disabled/);
+  });
+
   it('centres the characteristics panel itself, in either mount', () => {
     const block = /^\.char-panel\s*\{([^}]*)\}/m.exec(appCss);
     expect(block).not.toBeNull();

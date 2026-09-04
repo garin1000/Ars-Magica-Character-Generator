@@ -4,7 +4,9 @@
 import type { TranslateArgs } from './i18n';
 import type {
   Ability,
+  AbilityBonus,
   AbilityCategory,
+  AbilityFloor,
   AbilityScore,
   Addend,
   Art,
@@ -1778,6 +1780,48 @@ export function groupAbilitySelectionsByCategory(
           ),
         ),
     }));
+}
+
+/**
+ * The `index` of a row that has no `entity.ability_scores` entry behind it, so the
+ * index-addressed mutators (`adjustAbilityAt`, `removeAbilityAt`, …) must not be
+ * called for it. Negative on purpose: every real index is a valid array position.
+ */
+export const UNBOUGHT_ROW_INDEX = -1;
+
+/**
+ * Display-only rows for Abilities the engine reports an effective-score modifier
+ * for — a flat bonus (Puissant Ability) or a granted free floor (Second Sight) —
+ * that the character has not bought (Issue 17).
+ *
+ * The Selected list is built from bought rows, so without these a character who
+ * genuinely holds Puissant Magic Theory saw nothing at all about it on the
+ * Abilities tab: there was no row for the badge to hang on. `ArtGrid` never had
+ * the problem because all 15 Arts are always rendered.
+ *
+ * Only ability-level (unparameterized) modifiers get a row: the engine reports a
+ * parameterized instance only when it IS bought, and an invented row could not
+ * name its instance anyway (the parameter lives on the bought entry). Each row
+ * reads score 0 — the bought score, which is what it is — and carries
+ * {@link UNBOUGHT_ROW_INDEX} so the renderer knows not to offer edits.
+ */
+export function unboughtModifiedAbilities(
+  scores: AbilityScore[],
+  bonuses: AbilityBonus[],
+  floors: AbilityFloor[],
+): IndexedAbilityScore[] {
+  const boughtIds = new Set(scores.map((s) => s.ability));
+  const unbought = new Set<string>();
+  for (const bonus of bonuses) {
+    if (bonus.parameter == null && !boughtIds.has(bonus.ability)) unbought.add(bonus.ability);
+  }
+  for (const floor of floors) {
+    if (!boughtIds.has(floor.ability)) unbought.add(floor.ability);
+  }
+  return [...unbought].map((ability) => ({
+    entry: { ability, score: 0 },
+    index: UNBOUGHT_ROW_INDEX,
+  }));
 }
 
 /** Localized Art name (e.g. "Creo", "Ignem"). Arts carry no parameter. */

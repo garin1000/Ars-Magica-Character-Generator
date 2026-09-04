@@ -47,11 +47,23 @@
     store.setCharacteristic(characteristic, next);
   }
 
+  // The bought score the engine's effective values were computed against — NOT the
+  // live one the spinner shows (#16). The badge compares the two halves of a pair,
+  // so both must come from the same generation: against the live score, raising a
+  // characteristic flashed a phantom "-> +0" badge for the length of the debounce,
+  // because the engine had not yet been asked about the new value.
+  // @see AppStore.readSettled
+  function settledScoreOf(characteristic: Characteristic): number {
+    return store.readSettled((e) => e.characteristics?.[characteristic] ?? 0);
+  }
+
   // Effective score after aging drops AND free virtue deltas. Falls back to the
-  // bought score when the engine reports no change — the engine owns the floor
-  // clamp, so the UI never re-implements it.
+  // settled bought score when the engine reports no change — the engine owns the
+  // floor clamp, so the UI never re-implements it.
   function effectiveOf(characteristic: Characteristic): number {
-    return store.effective?.characteristic_effective?.[characteristic] ?? scoreOf(characteristic);
+    return (
+      store.effective?.characteristic_effective?.[characteristic] ?? settledScoreOf(characteristic)
+    );
   }
 
   // Aging-drop count for the tooltip breakdown (0 when none).
@@ -82,7 +94,9 @@
     }
     return {
       text: store.t('characteristic-effective-tooltip-summary', {
-        bought: formatSigned(scoreOf(characteristic)),
+        // The settled bought score, so the "bought -> effective" summary reads as
+        // one coherent pair rather than two generations (#16).
+        bought: formatSigned(settledScoreOf(characteristic)),
         effective: formatSigned(effectiveOf(characteristic)),
       }),
       listLabel: store.t('characteristic-effective-tooltip-breakdown-label'),
@@ -126,7 +140,7 @@
           {#snippet children()}
             <span class="spinner-value" data-testid="char-value-{characteristic}">
               {formatSigned(scoreOf(characteristic))}
-              {#if effectiveOf(characteristic) !== scoreOf(characteristic)}<span
+              {#if effectiveOf(characteristic) !== settledScoreOf(characteristic)}<span
                   class="eff-badge char-effective"
                   data-testid="char-effective-{characteristic}"
                   use:tooltip={effectiveTooltip(characteristic)}

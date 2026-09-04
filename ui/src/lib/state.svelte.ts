@@ -193,6 +193,15 @@ class AppStore {
   result = $state<ValidationResult | null>(null);
   effective = $state<EffectiveScores | null>(null);
   derived = $state<DerivedTotals | null>(null);
+  /**
+   * The entity snapshot the currently-published `effective`/`derived` payloads
+   * were computed from — the *settled* character, as against the live one under
+   * the cursor. Written only inside {@link revalidate}'s sequence guard, from the
+   * very snapshot that was sent, so basis and payload can never drift apart, not
+   * even when responses land out of order. Never written anywhere else.
+   * @see readSettled
+   */
+  #effectiveBasis = $state<Entity | null>(null);
   error = $state<AppError | null>(null);
   loading = $state(false);
   // Per-picker filter/search state; persists across tab switches (see
@@ -2044,6 +2053,10 @@ class AppStore {
     this.sagaIssues = [];
     this.effective = null;
     this.derived = null;
+    // The basis goes with the payloads it describes; leaving the outgoing
+    // character's scores behind would hold badges over a document that no longer
+    // exists (#16).
+    this.#effectiveBasis = null;
     this.#savedSnapshot = this.#snapshot();
     await this.revalidate();
   }
@@ -2087,6 +2100,8 @@ class AppStore {
     this.sagaIssues = [];
     this.effective = null;
     this.derived = null;
+    // As in `newDocument`: the basis is cleared with the payloads it describes (#16).
+    this.#effectiveBasis = null;
     this.#savedSnapshot = this.#snapshot();
   }
 
@@ -2205,6 +2220,33 @@ class AppStore {
     this.#fileOps.resolveDiscardPrompt(discard);
   }
 
+  /**
+   * Read a value out of the entity the current `effective`/`derived` payloads
+   * describe, rather than out of the live entity.
+   *
+   * The one fix for manual-testing finding #16 (2026-09-03), and the reason it is
+   * here rather than in each component: an effective-score badge is a *pair* — a bought score
+   * plus an engine-computed modifier — but only one half of that pair moves
+   * synchronously. `adjustArt`/`adjustAbilityAt`/`setCharacteristic` mutate the
+   * entity at once, while the modifier behind it is a debounce plus an IPC round
+   * trip behind, so a badge built from the live score renders `newScore +
+   * oldModifier`: a value that is true of no character, for ~150 ms, once per
+   * keystroke. Reading the score through here pins both halves to the same
+   * generation, so the badge makes exactly one transition per committed edit —
+   * holding its previous value while the recompute is open, never a blend.
+   *
+   * Cheap by construction: the basis is the snapshot {@link revalidate} already
+   * takes, so retaining it costs one reference, and a read is `read`'s own lookup
+   * with no comparison against the live entity.
+   *
+   * Falls back to the live entity until the first pass has settled — there is no
+   * previous value to hold then, and `effective` is still null at that point, so
+   * every badge is hidden by its own "no modifier" gate anyway.
+   */
+  readSettled<T>(read: (entity: Entity) => T): T {
+    return read(this.#effectiveBasis ?? this.entity);
+  }
+
   /** Validate now, ignoring any in-flight response that finishes out of order. */
   async revalidate(): Promise<void> {
     // The startup screen holds a placeholder, not a character: its empty type
@@ -2238,6 +2280,12 @@ class AppStore {
         this.result = result;
         this.effective = effective;
         this.derived = derived;
+        // In lockstep with the payloads, inside the same guard and from the same
+        // snapshot that produced them (#16): a basis published outside this guard —
+        // eagerly at call time, or from the live entity on arrival — would pair a
+        // superseded response's numbers with someone else's scores, which is the
+        // very blend the basis exists to prevent.
+        this.#effectiveBasis = snapshot;
         // A succeeding pass retires whatever the last rejected payload latched —
         // otherwise one bad value keeps the error banner up for the rest of the
         // session even after the user corrects it. It may retire ONLY its own

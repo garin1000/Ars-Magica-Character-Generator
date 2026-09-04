@@ -325,6 +325,98 @@ describe('AbilityTab search box (S5)', () => {
   });
 });
 
+// Issue 17: the Selected list is built from BOUGHT rows, so a Puissant Ability (or
+// a virtue-granted floor) whose target has no bought score had nothing to hang its
+// badge on — the character genuinely held Puissant Magic Theory and this tab said
+// nothing. `ArtGrid` never had the problem: all 15 Arts are always rendered. The
+// fix is a display-only row, testid-suffixed `unbought` rather than an array index,
+// because there is no entity row behind it to address.
+describe('AbilityTab unbought bonus rows (#17)', () => {
+  /** The engine's effective scores as they arrive on the store. */
+  function setModifiers(
+    bonuses: EffectiveScores['ability_bonuses'],
+    floors: EffectiveScores['ability_score_floors'] = [],
+  ): void {
+    store.effective = {
+      ability_bonuses: bonuses,
+      ability_score_floors: floors,
+    } as unknown as EffectiveScores;
+  }
+
+  it('renders a row for a bonus whose target has no bought score', () => {
+    setModifiers([{ ability: 'ability.parma_magica', bonus: 2 }]);
+    const body = html();
+    expect(body).toContain('data-testid="ability-score-ability.parma_magica-unbought"');
+    // Score 0 — the bought score, which is what it is — and effective 0 + 2.
+    const score = /data-testid="ability-score-ability.parma_magica-unbought"[^>]*>([\s\S]*?)</.exec(
+      body,
+    );
+    expect(score![1].trim()).toBe('0');
+    const badge = /data-testid="ability-eff-ability.parma_magica-unbought"[^>]*>([\s\S]*?)</.exec(
+      body,
+    );
+    expect(badge![1]).toContain('2');
+  });
+
+  it('renders one for a granted free starting score too', () => {
+    // `ability_score_floors` already iterated effects rather than bought rows, so
+    // the floor path had the same hole: Second Sight granted but not yet bought.
+    setModifiers([], [{ ability: 'ability.parma_magica', floor: 1 }]);
+    const body = html();
+    const badge = /data-testid="ability-eff-ability.parma_magica-unbought"[^>]*>([\s\S]*?)</.exec(
+      body,
+    );
+    expect(badge![1]).toContain('1');
+  });
+
+  it('offers no edits on it — nothing exists yet to raise, name or remove', () => {
+    setModifiers([{ ability: 'ability.parma_magica', bonus: 2 }]);
+    const body = html();
+    // The Available picker stays the one way to buy it, so both stepper buttons
+    // are inert rather than silently conjuring an entity row.
+    const dec = /<button[^>]*data-testid="ability-dec-ability.parma_magica-unbought"[^>]*>/.exec(
+      body,
+    );
+    expect(dec![0]).toContain('disabled');
+    const inc = /<button[^>]*data-testid="ability-inc-ability.parma_magica-unbought"[^>]*>/.exec(
+      body,
+    );
+    expect(inc![0]).toContain('disabled');
+    // No specialty box, no parameter box, no remove button: there is no stored row
+    // to edit, and removing the bonus means removing the Virtue on its own tab.
+    expect(body).not.toContain('data-testid="ability-specialty-ability.parma_magica-unbought"');
+    expect(body).not.toContain('data-testid="remove-ability.parma_magica-unbought"');
+    // Told in words, not by the greyed controls alone (WCAG 1.4.1).
+    expect(body).toContain('Not bought');
+  });
+
+  it('shows the row instead of the "nothing selected" message', () => {
+    setModifiers([{ ability: 'ability.parma_magica', bonus: 2 }]);
+    const body = html();
+    expect(body).toContain('data-testid="ability-score-ability.parma_magica-unbought"');
+    expect(body).not.toContain('class="empty"');
+  });
+
+  it('sorts it into its own category group, where the bought row will appear', () => {
+    // Athletics is general, Parma Magica arcane; `ability_category_order` puts
+    // general first, so the unbought arcane row lands below it under its own header.
+    store.entity.ability_scores = [{ ability: 'ability.athletics', score: 3 }];
+    setModifiers([{ ability: 'ability.parma_magica', bonus: 2 }]);
+    const body = html();
+    expect(body.indexOf('data-testid="ability-score-ability.athletics-0"')).toBeLessThan(
+      body.indexOf('data-testid="ability-score-ability.parma_magica-unbought"'),
+    );
+  });
+
+  it('adds no row when the target already has a bought row to carry the badge', () => {
+    store.entity.ability_scores = [{ ability: 'ability.parma_magica', score: 1 }];
+    setModifiers([{ ability: 'ability.parma_magica', bonus: 2 }]);
+    const body = html();
+    expect(body).not.toContain('ability-score-ability.parma_magica-unbought');
+    expect(body).toContain('data-testid="ability-eff-ability.parma_magica-0"');
+  });
+});
+
 // --- Slice 12 (#24): the age cap note's one home -----------------------------
 //
 // This component is BOTH surfaces — the editor's Abilities tab and the wizard's
