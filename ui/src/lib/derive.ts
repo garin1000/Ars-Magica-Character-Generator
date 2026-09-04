@@ -23,6 +23,8 @@ import type {
   Magnitude,
   PointItem,
   Prereq,
+  Reputation,
+  ReputationGrant,
   RestrictedXpPool,
   Selection,
   Spell,
@@ -2083,4 +2085,82 @@ export function artsOfType(localized: LocalizedRuleset, artType: ArtType): Art[]
 /** Highest whole Art score the advancement table can price (the spinner ceiling). */
 export function maxArtScore(artAdvancement: { score: number }[] | undefined): number {
   return maxAbilityScore(artAdvancement);
+}
+
+/** Index sentinel for a granted Reputation slot nothing is stored against yet. */
+export const UNFILLED_REPUTATION_INDEX = -1;
+
+/**
+ * One row of the Reputations panel: a slot a Virtue/Flaw granted (filled or
+ * still waiting for its description), or a stored Reputation no grant covers.
+ */
+export interface ReputationRow {
+  /** Index into `entity.reputations`, or `UNFILLED_REPUTATION_INDEX` when empty. */
+  index: number;
+  /** The grant that opened this slot; `null` for a stored row nothing granted. */
+  grant: ReputationGrant | null;
+  /** The type to show. `null` only on an unfilled wildcard slot (Famous). */
+  kind: Reputation['kind'] | null;
+  /** The level to show: the stored row's, or the grant's while unfilled. */
+  score: number;
+  /** The stored description; `''` while the slot is unfilled. */
+  content: string;
+}
+
+/**
+ * Matches stored Reputations to the slots the character's Virtues/Flaws grant,
+ * and returns the rows the panel renders: every grant (in grant order) first,
+ * then every stored Reputation no grant covers.
+ *
+ * The matching is deliberately the SAME two-pass rule the engine's
+ * `validate_reputations` (`crates/arm-rules/src/validation/scores.rs`) uses, so
+ * the panel and the validator never disagree about which rows are authorized: a
+ * stored Reputation consumes an unconsumed grant **of its own kind** first, and
+ * only then an unconsumed **wildcard** grant (`kind === null`, e.g. Famous).
+ * Anything left over is ungranted — it still renders, with a remove control, and
+ * the engine still reports `reputation_not_granted` for it.
+ *
+ * Like validation, matching keys on `kind` alone, never on `score`: a hand-edited
+ * save whose Local 1 sits under a Local 4 grant is one authorized row in both
+ * places, not authorized here and flagged there.
+ *
+ * Where two grants share a kind — Apostate and Senior Clergy both grant
+ * Ecclesiastical 4 — which stored row is attributed to which grant is
+ * **arbitrary** (first unconsumed wins). Nothing downstream depends on the
+ * pairing: the rows carry identical kind and score, only their player-written
+ * content differs, and that travels with the stored row.
+ */
+export function reputationRows(
+  reputations: Reputation[],
+  grants: ReputationGrant[],
+): ReputationRow[] {
+  const filledBy: number[] = grants.map(() => UNFILLED_REPUTATION_INDEX);
+  const ungranted: number[] = [];
+
+  reputations.forEach((reputation, storedIndex) => {
+    const free = (i: number) => filledBy[i] === UNFILLED_REPUTATION_INDEX;
+    let slot = grants.findIndex((g, i) => free(i) && g.kind === reputation.kind);
+    if (slot === -1) slot = grants.findIndex((g, i) => free(i) && g.kind === null);
+    if (slot === -1) ungranted.push(storedIndex);
+    else filledBy[slot] = storedIndex;
+  });
+
+  const grantRows = grants.map((grant, slot): ReputationRow => {
+    const index = filledBy[slot];
+    const stored = index === UNFILLED_REPUTATION_INDEX ? null : reputations[index];
+    return {
+      index,
+      grant,
+      kind: stored ? stored.kind : grant.kind,
+      score: stored ? stored.score : grant.score,
+      content: stored ? stored.content : '',
+    };
+  });
+
+  const looseRows = ungranted.map((index): ReputationRow => {
+    const stored = reputations[index];
+    return { index, grant: null, kind: stored.kind, score: stored.score, content: stored.content };
+  });
+
+  return [...grantRows, ...looseRows];
 }

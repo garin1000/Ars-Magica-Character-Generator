@@ -1193,9 +1193,18 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  /** Add a Reputation from a granting V/F (kind + score come from the grant). */
-  addReputation(kind: ReputationType, score: number): void {
-    this.entity.reputations = [...(this.entity.reputations ?? []), { kind, score, content: '' }];
+  /**
+   * Record a Reputation the character's V/F grant: kind and score come from the
+   * grant, `content` from whatever the player has typed so far.
+   *
+   * Called lazily, on the first thing the player actually chooses in a granted
+   * slot — the first keystroke of a description, or the type picked on a
+   * wildcard (Famous) slot. The panel derives its rows from the grants, so
+   * nothing is written merely because a grant exists; opening a character with
+   * granted Reputations must not dirty it.
+   */
+  addReputation(kind: ReputationType, score: number, content = ''): void {
+    this.entity.reputations = [...(this.entity.reputations ?? []), { kind, score, content }];
     this.#scheduleValidate();
   }
 
@@ -1204,9 +1213,32 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /**
+   * Rewrite a stored Reputation's description — and **delete the row** when the
+   * description is emptied, since an undescribed Reputation records nothing the
+   * grant does not already say. Leaving it would also put an empty row into the
+   * save, where `Entity::normalize`'s (kind, score, content) sort files it ahead
+   * of every described one.
+   */
   setReputationContent(index: number, content: string): void {
+    if (content === '') {
+      this.removeReputationAt(index);
+      return;
+    }
     this.entity.reputations = (this.entity.reputations ?? []).map((r, i) =>
       i === index ? { ...r, content } : r,
+    );
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Retype a stored Reputation. Only a wildcard grant (Famous fixes no type)
+   * leaves the choice open, and that choice is the player's, so it persists on
+   * its own without waiting for a description.
+   */
+  setReputationKind(index: number, kind: ReputationType): void {
+    this.entity.reputations = (this.entity.reputations ?? []).map((r, i) =>
+      i === index ? { ...r, kind } : r,
     );
     this.#scheduleValidate();
   }

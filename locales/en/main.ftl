@@ -620,7 +620,13 @@ personality-add = Add trait
 personality-empty = No Personality Traits yet.
 reputations-label = Reputations
 reputation-content-placeholder = What it is for
-reputation-add = Add { $kind } Reputation (level { $score })
+# A granted Reputation names the Virtue or Flaw that opened the slot, so
+# "Ecclesiastical 4" is never an unexplained row. There is no add control any
+# more: the grant IS the row.
+reputation-granted-by = level { $score } from { $source }
+# A grant that fixes no type (Famous) leaves the type to the player.
+reputation-kind-label = Type
+reputation-kind-choose = Choose a type
 reputation-empty = No Reputation is granted (take a Virtue or Flaw that grants one).
 reputation-type-local = Local
 reputation-type-ecclesiastical = Ecclesiastical

@@ -184,7 +184,10 @@ describe('WizardStep', () => {
   it('shows both halves of the personality step, traits and reputations', () => {
     const markup = body('personality_reputations');
     expect(markup).toContain('data-testid="personality-list"');
-    expect(markup).toContain('data-testid="reputation-list"');
+    // The Reputations half is keyed on its SECTION, not its list: a character
+    // with no granting Virtue/Flaw has no Reputation rows at all now (the grants
+    // ARE the rows), so the list element only exists once something grants one.
+    expect(markup).toContain('data-testid="reputations"');
   });
 
   // The rail carries the step's title. A heading here would nest under it, and

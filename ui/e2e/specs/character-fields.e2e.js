@@ -104,15 +104,28 @@ describe('character details', () => {
     await $(PERSONALITY_TAB).click();
     await expect($('[data-testid="reputation-empty"]')).toExist();
 
-    // Infamous grants a Local Reputation.
+    // Infamous grants a Local Reputation. Findings 29/30: the grant IS the row —
+    // there is no add button to press (pressing it twice used to make two
+    // identical rows), so the description input exists as soon as the Flaw is
+    // taken, and the row names the Flaw that put it there. The old spec drove
+    // `reputation-add-local` and then typed into `reputation-content-0`; this
+    // one types into the same input, having asserted that no click was needed to
+    // conjure it. The saved-file assertion below is unchanged, so the
+    // round-tripped row is still proven identical.
     await $(VF_TAB).click();
     await $('[data-testid="add-flaw.infamous"]').click();
     await $(PERSONALITY_TAB).click();
-    const add = await $('[data-testid="reputation-add-local"]');
-    await add.waitForExist({ timeout: 5000 });
-    await add.click();
-    await $('[data-testid="reputation-content-0"]').waitForExist({ timeout: 5000 });
-    await $('[data-testid="reputation-content-0"]').setValue('dragon slayer');
+    const content = await $('[data-testid="reputation-content-0"]');
+    await content.waitForExist({ timeout: 5000 });
+    await expect($('[data-testid="reputation-add-local"]')).not.toExist();
+    // The row says WHY it is there, by the Flaw's name and not its id.
+    const source = await $('[data-testid="reputation-source-0"]').getText();
+    expect(source).toContain('Infamous');
+    expect(source).not.toContain('flaw.infamous');
+    // No remove control on a granted row — the Flaw owns it, not the player.
+    await expect($('[data-testid="reputation-remove-0"]')).not.toExist();
+
+    await content.setValue('dragon slayer');
   });
 
   it('edits name and description in the header banner and concept on Details', async () => {

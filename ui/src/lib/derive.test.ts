@@ -56,6 +56,7 @@ import {
   maxArtScore,
   ORDINARY_SPELL_MINIMUM_LEVEL,
   paramValueUsage,
+  reputationRows,
   requirementAbilityLabel,
   requirementExemplarNote,
   resolveIssueArgValue,
@@ -75,6 +76,8 @@ import type {
   GrantConstraint,
   LocalizedRuleset,
   PointItem,
+  Reputation,
+  ReputationGrant,
   Spell,
   ValidationIssue,
   ValidationResult,
@@ -3332,5 +3335,110 @@ describe('childhoodSlots / childhoodEntryPreview / childhoodSlotFault', () => {
     it('has nothing to say about a slot the package does not declare', () => {
       expect(childhoodSlotFault(rs, exploring, 'area_b', { area: 'Rhine' }, plan)).toBeNull();
     });
+  });
+});
+
+// --- reputationRows ---------------------------------------------------------
+
+describe('reputationRows', () => {
+  function grant(source: string, kind: ReputationGrant['kind'], score: number): ReputationGrant {
+    return { source, kind, score };
+  }
+
+  function rep(kind: Reputation['kind'], score: number, content: string): Reputation {
+    return { kind, score, content };
+  }
+
+  it('renders one unfilled row per grant when nothing is stored yet', () => {
+    const rows = reputationRows([], [grant('flaw.infamous', 'local', 4)]);
+    expect(rows).toEqual([
+      {
+        index: -1,
+        grant: grant('flaw.infamous', 'local', 4),
+        kind: 'local',
+        score: 4,
+        content: '',
+      },
+    ]);
+  });
+
+  it('keeps a wildcard grant as ONE row with no kind chosen', () => {
+    // Famous fixes no type. It used to be flattened into four add-buttons for a
+    // single legal slot; it is one row with a type picker now.
+    const rows = reputationRows([], [grant('virtue.famous', null, 4)]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].kind).toBeNull();
+    expect(rows[0].score).toBe(4);
+  });
+
+  it('fills a grant row from the stored Reputation of that kind', () => {
+    const rows = reputationRows(
+      [rep('local', 4, 'dragon slayer')],
+      [grant('flaw.infamous', 'local', 4)],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].index).toBe(0);
+    expect(rows[0].content).toBe('dragon slayer');
+  });
+
+  it('consumes a matching concrete grant before a wildcard, as validation does', () => {
+    // Same two-pass rule as `validate_reputations`: a Local row takes the Local
+    // slot, so the wildcard stays open for a type the player still picks.
+    const grants = [grant('virtue.famous', null, 4), grant('flaw.infamous', 'local', 4)];
+    const rows = reputationRows([rep('local', 4, 'dragon slayer')], grants);
+    expect(rows[0].grant?.source).toBe('virtue.famous');
+    expect(rows[0].index).toBe(-1);
+    expect(rows[1].grant?.source).toBe('flaw.infamous');
+    expect(rows[1].content).toBe('dragon slayer');
+  });
+
+  it('falls back to a wildcard slot when no concrete grant matches the kind', () => {
+    const rows = reputationRows(
+      [rep('hermetic', 4, 'reckless')],
+      [grant('virtue.famous', null, 4)],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].grant?.source).toBe('virtue.famous');
+    expect(rows[0].kind).toBe('hermetic');
+    expect(rows[0].content).toBe('reckless');
+  });
+
+  it('fills both rows when two grants share a kind and score, in normalized order', () => {
+    // Apostate and Senior Clergy each grant Ecclesiastical 4, and `Entity::normalize`
+    // sorts stored reputations by (kind, score, content) — so the rows arrive
+    // alphabetically. Which grant each row is attributed to is arbitrary; that
+    // both rows are filled, with the right content, is not.
+    const grants = [
+      grant('flaw.apostate', 'ecclesiastical', 4),
+      grant('virtue.senior_clergy', 'ecclesiastical', 4),
+    ];
+    const stored = [
+      rep('ecclesiastical', 4, 'archdeacon of Reims'),
+      rep('ecclesiastical', 4, 'renounced his vows'),
+    ];
+    const rows = reputationRows(stored, grants);
+    expect(rows).toHaveLength(2);
+    expect(rows.map((r) => r.content).sort()).toEqual([
+      'archdeacon of Reims',
+      'renounced his vows',
+    ]);
+    expect(rows.every((r) => r.index >= 0)).toBe(true);
+  });
+
+  it('renders an ungranted stored row after the granted ones, with no grant', () => {
+    const rows = reputationRows(
+      [rep('academic', 2, 'a legacy save'), rep('local', 4, 'dragon slayer')],
+      [grant('flaw.infamous', 'local', 4)],
+    );
+    expect(rows).toHaveLength(2);
+    expect(rows[0].grant?.source).toBe('flaw.infamous');
+    expect(rows[0].content).toBe('dragon slayer');
+    expect(rows[1].grant).toBeNull();
+    expect(rows[1].index).toBe(0);
+    expect(rows[1].kind).toBe('academic');
+  });
+
+  it('is empty when there is neither a grant nor a stored Reputation', () => {
+    expect(reputationRows([], [])).toEqual([]);
   });
 });

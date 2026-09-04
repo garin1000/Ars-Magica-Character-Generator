@@ -1541,7 +1541,8 @@ mod tests {
     fn reputation_grants_reads_one_entry_per_grants_reputation_effect() {
         // Famous grants a player-chosen-type Reputation 3 (kind omitted =
         // wildcard, Ars Magica - Definitive Edition (Core Rules).md:3861-3863);
-        // Infamous fixes the kind to Local (:6310-6312).
+        // Infamous fixes the kind to Local (:6310-6312). Each grant names the
+        // Virtue/Flaw it came from, so the UI can say WHY the slot exists.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.famous"), sel("flaw.infamous")]);
         let grants = reputation_grants(&e, &rs);
@@ -1549,10 +1550,12 @@ mod tests {
             grants,
             vec![
                 ReputationGrant {
+                    source: Id::new("virtue.famous"),
                     reputation_type: None,
                     score: 3,
                 },
                 ReputationGrant {
+                    source: Id::new("flaw.infamous"),
                     reputation_type: Some(ReputationType::Local),
                     score: 4,
                 },

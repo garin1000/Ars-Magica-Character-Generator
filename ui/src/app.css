@@ -1725,6 +1725,15 @@ ul {
   white-space: nowrap;
 }
 
+/* "level 4 from Infamous" — the attribution that answers "why Ecclesiastical at
+   all?". Muted like the type tag it sits beside; it explains the row rather than
+   competing with the description the player writes. */
+.reputation-source {
+  color: var(--muted, #6b7280);
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
 /* Shared XP summary (Abilities + Arts): a single row reading
    "XP pool <used> / [<editable total>]   Available: N   Martial: 10/50 …".
    The general-pool total is the only editable field; used + restricted

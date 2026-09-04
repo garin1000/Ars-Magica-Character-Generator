@@ -27,8 +27,8 @@ use crate::spell::{RITUAL_MIN_LEVEL, Spell, SpellDuration, SpellTarget, SpellsFi
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, CreationPhase, Effect, EntityTypeProfile, I18nEntry, Id,
-    ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDomain, PointItem, Prereq, RulesetRef,
-    SourceRef, SpecialCasting,
+    ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDomain, PointItem, Prereq, ReputationType,
+    RulesetRef, SourceRef, SpecialCasting,
 };
 
 mod accessors;
@@ -186,6 +186,14 @@ pub struct Ruleset {
     /// stable public contract.
     #[serde(default)]
     pub(crate) art_type_order: Vec<ArtType>,
+    /// Reputation types in canonical book order, derived from
+    /// [`ReputationType::ALL`]. Serialized to the frontend so the wildcard
+    /// Reputation-grant `<select>` (Famous fixes no type) offers the engine's
+    /// taxonomy instead of re-hardcoding the four slugs in Svelte. Derived data,
+    /// not authored (see `magnitude_points`). The `reputation_type_order` field
+    /// name is a stable public contract.
+    #[serde(default)]
+    pub(crate) reputation_type_order: Vec<ReputationType>,
     /// The minimum level a Ritual spell may be learned at, derived from
     /// [`crate::spell::RITUAL_MIN_LEVEL`]. Serialized to the frontend so the UI
     /// reads the Ritual floor from engine data instead of re-hardcoding it.
@@ -253,19 +261,20 @@ fn derived_magnitude_points() -> BTreeMap<Magnitude, u8> {
 }
 
 impl Ruleset {
-    /// Overwrites this `Ruleset`'s six engine-derived fields — fixed
+    /// Overwrites this `Ruleset`'s seven engine-derived fields — fixed
     /// taxonomies and engineering constants that are never authored data (see
     /// `magnitude_points`'s own doc). The single place both construction
     /// paths call: [`parse::assemble_ruleset`] (the fresh-parse path,
     /// `Ruleset::from_sources`) and [`Ruleset::from_serialized`] (the cached
     /// path, which must re-derive rather than trust the incoming JSON — see
     /// that method's doc). Before V46 each path carried its own copy of these
-    /// six assignments; drift between them was a silent possibility. Now a
-    /// change to any of the six needs one edit, and both paths pick it up.
+    /// assignments; drift between them was a silent possibility. Now a
+    /// change to any of them needs one edit, and both paths pick it up.
     fn apply_derived_fields(&mut self) {
         self.magnitude_points = derived_magnitude_points();
         self.ability_category_order = AbilityCategory::ALL.to_vec();
         self.art_type_order = ArtType::ALL.to_vec();
+        self.reputation_type_order = ReputationType::ALL.to_vec();
         self.ritual_min_level = RITUAL_MIN_LEVEL;
         self.aura_modifier_min = AURA_MODIFIER_MIN;
         self.aura_modifier_max = AURA_MODIFIER_MAX;
@@ -4428,6 +4437,7 @@ mod tests {
                 "magnitude_points",
                 "mythic_companion_types",
                 "point_items",
+                "reputation_type_order",
                 "ritual_min_level",
                 "shields",
                 "spell_mastery_abilities",
@@ -4448,6 +4458,13 @@ mod tests {
         // categories as an ordered array.
         assert_eq!(obj["magnitude_points"]["minor"], 1);
         assert!(obj["ability_category_order"].is_array());
+        // Reputation types in canonical order, so the wildcard-grant `<select>`
+        // in the Reputations panel offers the engine's taxonomy rather than a
+        // list re-hardcoded in Svelte.
+        assert_eq!(
+            obj["reputation_type_order"],
+            serde_json::json!(["local", "ecclesiastical", "hermetic", "academic"])
+        );
         // Derived rule constant (VA2): the Ritual spell-level floor, mirrored from
         // `spell::RITUAL_MIN_LEVEL` so the UI never re-hardcodes it.
         assert_eq!(obj["ritual_min_level"], 20);
@@ -4463,16 +4480,17 @@ mod tests {
         assert_eq!(rs, restored);
     }
 
-    /// V46 characterization test: pins that the six engine-derived fields
+    /// V46 characterization test: pins that the seven engine-derived fields
     /// (`magnitude_points`, `ability_category_order`, `art_type_order`,
-    /// `ritual_min_level`, `aura_modifier_min`, `aura_modifier_max`) come out
+    /// `reputation_type_order`, `ritual_min_level`, `aura_modifier_min`,
+    /// `aura_modifier_max`) come out
     /// byte-for-byte identical whichever of the two construction paths
     /// produced the `Ruleset` — fresh-parsed via `assemble_ruleset`
     /// (`Ruleset::from_sources`) or reconstructed via
     /// `Ruleset::from_serialized`. Written before the V46 dedup so it pins
     /// current (pre-refactor) behaviour; it must stay green once both paths
     /// route through one shared derivation instead of each carrying its own
-    /// copy of the six assignments.
+    /// copy of the assignments.
     #[test]
     fn from_sources_and_from_serialized_derive_identical_engine_fields() {
         let fresh = Ruleset::from_sources(RulesetSources {
@@ -4502,6 +4520,7 @@ mod tests {
             restored.ability_category_order
         );
         assert_eq!(fresh.art_type_order, restored.art_type_order);
+        assert_eq!(fresh.reputation_type_order, restored.reputation_type_order);
         assert_eq!(fresh.ritual_min_level, restored.ritual_min_level);
         assert_eq!(fresh.aura_modifier_min, restored.aura_modifier_min);
         assert_eq!(fresh.aura_modifier_max, restored.aura_modifier_max);
@@ -4509,6 +4528,7 @@ mod tests {
         assert!(!fresh.magnitude_points.is_empty());
         assert!(!fresh.ability_category_order.is_empty());
         assert!(!fresh.art_type_order.is_empty());
+        assert!(!fresh.reputation_type_order.is_empty());
     }
 
     #[test]

@@ -807,8 +807,14 @@ export interface DerivedTotals {
   surfaced_modifiers: SurfacedModifier[];
 }
 
+// A Reputation slot a Virtue/Flaw opens. One grant = one row in the Reputations
+// panel, so there is nothing to press twice. `kind` is null for a
+// player-chosen-type grant (Famous), which renders as a type `<select>`;
+// `source` is the id of the granting Virtue/Flaw, shown through its i18n name so
+// the row can say WHY it is there.
 export interface ReputationGrant {
-  kind: ReputationType;
+  source: string;
+  kind: ReputationType | null;
   score: number;
 }
 
@@ -1413,6 +1419,12 @@ export interface Ruleset {
   magnitude_points: Record<Magnitude, number>;
   ability_category_order: AbilityCategory[];
   art_type_order?: ArtType[];
+  // Reputation types in book order, mirrored from the Rust `ReputationType::ALL`,
+  // so the wildcard-grant `<select>` offers the engine's taxonomy instead of a
+  // list re-hardcoded in Svelte. Optional like `art_type_order`, for the same
+  // reason: a live payload always sends it, but requiring it would force every
+  // hand-built `Ruleset` test fixture to grow a field it does not exercise.
+  reputation_type_order?: ReputationType[];
   // The minimum level a Ritual spell may be learned at, derived from the Rust
   // `spell::RITUAL_MIN_LEVEL` constant (populated at construction and
   // re-derived on every deserialize, never trusted from input JSON), so the UI
