@@ -368,11 +368,6 @@ class AppStore {
     return this.#wizardNav.incompletePhases;
   }
 
-  /** @see WizardNavigation.phaseIncomplete */
-  get wizardPhaseIncomplete() {
-    return this.#wizardNav.phaseIncomplete;
-  }
-
   /**
    * Save/Save As/Export-Markdown and the discard-confirmation prompt,
    * extracted to {@link FileOperations} (VA6). `markSaved` is the only path

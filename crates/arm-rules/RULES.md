@@ -106,32 +106,23 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   `personality`/`story` caps map onto the existing Fluent keys
   (`too_many_major_personality_flaws`, `too_many_personality_flaws`,
   `too_many_story_flaws`) by convention rather than a baked-in mapping.
-- **The same caps are also the guided wizard's V/F guidance**
-  (guided-creation-review-2026-08 #7). The Virtues & Flaws step used to state only
-  the point budget; it now appends one sentence per cap, generated from the very
-  same `flaw_category_caps`, so no rules figure is frozen into a translated
-  string. `ui/src/lib/derive.ts::flawCapNotes` maps each cap that is **not**
-  `major_only` onto the Fluent key `wizard-guidance-<category>-flaw-cap`, passing
-  `cap` (the maximum, as a **number**, so Fluent's `[0]`/`[1]`/`*[other]` variants
-  can pick the grammatical form) and `rule` (`hard` | `soft`, straight off the
-  cap's `hard` flag — which is precisely the book's own "may not" vs "should
-  not"). The per-type wording it reproduces: grog `:2826-2827`, companion
-  `:2837-2838`, Mythic Companion `:2850-2851`, magus `:2861-2862`, over the
-  general statements at `:2818` (Story ceiling) and `:2820` (Personality
-  ceiling + Major cap).
-- `major_only` caps are deliberately **left out of the guidance**: they are hard
-  caps the validator already reports as errors
-  (`too_many_major_<category>_flaws`), and restating them in an advisory
-  paragraph would state the same rule twice. `virtue_category_caps` is likewise
-  not walked — every shipped entry is `major_only` and hard.
-- **There is NO "at least one Story Flaw" rule**, and no guidance string may claim
-  one. `:2818` and `:2837` give Story Flaws a recommended *ceiling* of one and no
-  minimum whatsoever. The only "at least one" the rules state is the magus's
-  **Hermetic** Flaw (`:2860`), which the guidance carries as its own separate
-  clause (`wizard-guidance-hermetic-flaw`, worded exactly as the
-  `missing_hermetic_flaw` warning) under the same condition the engine uses — a
-  magus whose profile names at least one `gift_categories` entry.
-  `ui/src/lib/i18n.test.ts` asserts the absence in both locales.
+- **The caps are reported, never explained** (manual-testing-findings #21). The
+  guided wizard briefly restated each cap as a sentence on the Virtues & Flaws
+  step (`wizard-guidance-<category>-flaw-cap`, generated from these very caps);
+  that whole guidance family was removed along with the rest of the app's
+  explanatory prose — the player has the rulebook open. The caps therefore reach
+  the screen through the **validator's own findings** alone:
+  `too_many_<category>_flaws` and `too_many_major_<category>_flaws`, which is
+  where the book's "may not" (`hard`) vs "should not" distinction is carried, as
+  an error and a warning respectively. The per-type figures the data encodes:
+  grog `:2826-2827`, companion `:2837-2838`, Mythic Companion `:2850-2851`,
+  magus `:2861-2862`, over the general statements at `:2818` (Story ceiling) and
+  `:2820` (Personality ceiling + Major cap).
+- **There is NO "at least one Story Flaw" rule.** `:2818` and `:2837` give Story
+  Flaws a recommended *ceiling* of one and no minimum whatsoever. The only "at
+  least one" the rules state is the magus's **Hermetic** Flaw (`:2860`), carried
+  by the `missing_hermetic_flaw` warning under the condition that the profile
+  names at least one `gift_categories` entry.
 
 #### Tainted Virtues/Flaws — the "Type" tag + half-of-taken cap
 > "Tainted Virtues and Flaws are associated with the Infernal realm ... no more
@@ -1520,14 +1511,15 @@ no aging phase exists yet — 6b6 adds `CreationPhase::Aging` and moves it there
 
 App/UI: `EffectiveScores` gains `decrepitude_score: u8` and widens `warping_points`
 to `u32`; the Details tab (`CharacterDetails.svelte`) enters identity fields,
-Warping Points and twilight scars, while the aging points per Characteristic (with
-an `aging-points-note` explaining drops are auto-derived) sit on the Aging tab
-(`AgingPanel.svelte` → `AgingRecordPanel.svelte`; they were on Details until the
-Slice 3 tab split). Between them they show the engine-computed
+Warping Points and twilight scars, while the aging points per Characteristic sit on
+the Aging tab (`AgingPanel.svelte` → `AgingRecordPanel.svelte`; they were on Details
+until the Slice 3 tab split). Between them they show the engine-computed
 Decrepitude / Warping **scores** and the aging-lowered Characteristics (never
-recomputed in JS). Fluent keys en/de: identity + aging block (`identity-*`,
-`aging-*` incl. `aging-points-note`, `warping-points-label`, `twilight-*`,
-`decrepitude-{label,readout}`).
+recomputed in JS). The Characteristic drop is applied automatically once the accrued
+points exceed the score, and the derived totals are where the player sees it —
+manual-testing-findings #21 removed the `aging-points-note` that said so in words.
+Fluent keys en/de: identity + aging block (`identity-*`, `aging-*`,
+`warping-points-label`, `twilight-*`, `decrepitude-{label,readout}`).
 
 #### True Faith — special derived score (`true_faith_grant`)
 > "You have a True Faith score of 1 and can gain more."
@@ -3396,9 +3388,10 @@ Abilities are bought with experience earned in blocks, not from one bank:
     with `max_charged_lab_seasons_per_year` of 0 still has years, so it keeps the
     sibling and its "more than the 0 those years hold" reading stays true.) Both
     messages were shortened at the same time — the "the third already takes the whole
-    30, so a fourth is free" gloss belongs to
-    `life-stage-lab-seasons-hint`, which states it beside the field, not to a
-    finding.
+    30, so a fourth is free" gloss belonged to the field's own
+    `life-stage-lab-seasons-hint`, not to a finding, and manual-testing-findings #21
+    then removed that hint too: the charging rule is in the rulebook, and the engine
+    still enforces it.
   - `life_stage_spell_level_split_exceeds_points` (`levels`, `points`) — a spell-level
     share larger than the points the years granted (`:2471`).
   - The fifth is `aging_rolls_pending` (warning, `aging`), which the
@@ -5014,49 +5007,28 @@ catalogue data, never a list in code.
 
 ---
 
-## Guided wizard step copy (M6/6b8b) — `locales/<lang>/main.ftl`
+## Guided wizard step copy (M6/6b8b) — REMOVED
 
-Each wizard step opens with two or three sentences saying what is decided there.
-This is **UI copy, not a mechanic**: nothing reads it, nothing validates against
-it, and no engine value is derived from it. It is filed here anyway, because
-every factual claim it makes is a rules claim and therefore owes a source — the
-one thing that separates guidance from invention.
+Each wizard step used to open with two or three sentences saying what is decided
+there (`wizard-guidance-<phase>`, one Fluent line per `CreationPhase`, with the
+per-type Flaw-cap clauses appended on `virtues_flaws`). The whole family — the
+per-phase lines, `wizard-guidance-<category>-flaw-cap`,
+`wizard-guidance-hermetic-flaw`, and `ui/src/lib/derive.ts`'s `wizardGuidance`,
+`GUIDANCE_ARGS`, `guidanceNotes` and `flawCapNotes` — was deleted by
+**manual-testing-findings #21**: the player has the rulebook open, and a
+paragraph above every step's input surface cost real content its height.
 
-It lives in Fluent (`wizard-guidance-<phase>`, one line per `CreationPhase`) and
-not in `rules/i18n/`, because it is instructional chrome about this application's
-flow, keyed by a phase of *our* wizard rather than by a catalogue item's ID.
-`rules/i18n/` holds the text of items the ruleset names; no item is named here.
+This section is kept as the record of what went and why, because the copy made
+rules claims and this file is where those claims were sourced. Nothing in the app
+renders any `wizard-guidance-*` key today; `ui/src/lib/i18n.test.ts` asserts the
+whole prefix is absent from both locales, so a reintroduced key fails loudly
+rather than becoming an unsourced rules statement.
 
-**No rules number is written into the copy.** Where a sentence needs one it is a
-Fluent placeable filled from loaded data (`ui/src/lib/derive.ts` —
-`wizardGuidance`), so the numbers below live in `rules/core/*.json` alone and a
-translation can never freeze a stale one:
-
-| Placeable | Filled from | Value today |
-|---|---|---|
-| `{ $points }` (characteristics) | `characteristic_rules.start_points` | 7 (`:2342`) |
-| `{ $flaws }` / `{ $virtues }` (virtues_flaws) | the type profile's `budget.flaw_points` / `budget.virtue_points` | 3/3 grog, 10/10 companion and magus, 10/20 Mythic Companion (`:2210-2211`, `:2295`, `:2303`, `:2844`) |
-
-Every other sentence is deliberately worded without a number — including the
-spell-level cap, which names its terms (Technique, Form, Intelligence, Magic
-Theory) but not the `+3` of `:2465`, since that constant is nowhere in the data.
-
-Source per phase, all in `Ars Magica - Definitive Edition (Core Rules).md`:
-
-| Phase | Claim made | Source |
-|---|---|---|
-| `concept` | creation starts from a concept; the examples (fire wizard / scholar / warrior or covenant staff) | `:2203` |
-| `characteristics` | Characteristics are inborn and normal means never raise them; the point buy; a negative score gives points back | `:1025`, `:1027`, `:2342`, `:2346-2354` |
-| `virtues_flaws` | Flaws fund Virtues up to the budget; the maximum need not be taken; every character takes a Social Status | `:2209-2211`, `:2295-2303`, `:2309`, `:2816`, `:2844` |
-| `experience` | experience is acquired in blocks — the first five years of childhood, then later life a year at a time, plus apprenticeship and the years after it for a magus; a total may be entered instead, or the life stages earn it from the age | `:2364`, `:2378`, `:2392`, `:2213-2216` |
-| `abilities` | Abilities are learned skills, bought with that experience; age caps the creation score | `:2364`, `:2366` |
-| `arts` | every spell combines one Technique and one Form; apprenticeship's experience buys Arts and Abilities from the same total | `:8835`, `:2435` |
-| `spells` | apprenticeship grants levels of spells; the highest level learnable is set by Technique, Form, Intelligence and Magic Theory | `:2215`, `:2435`, `:2465` |
-| `house_specialisation` | a magus belongs to exactly one House, whose benefit at creation is a free Minor Virtue needing no Flaw to fund it | `:2264`, `:2859` |
-| `mythic_type` | the type is a Free Virtue fixing the character's status; the types are incompatible with each other and with The Gift; one normally brings a free Minor Virtue | `:2637-2638`, `:2846-2847` |
-| `personality_reputations` | a few words scored +3 to -3; Loyal for grogs, Brave for warriors; a Reputation only where a Virtue or Flaw grants one | `:2502`, `:2504`, `:2514` |
-| `aging` | over 35 an aging roll per year before play; apparent age and Characteristic points are what it costs; Aging Points drop a Characteristic once they exceed it | `:2232`, `:16565`, `:16577`, `:16579` |
-| `review` | **no rules claim** — the review step is this application's own, so its line describes the flow and nothing else | — |
+Every rules figure the copy interpolated is still on screen, on the surface that
+acts on it rather than in a sentence: the Characteristic point buy on the
+Characteristics step's own counter, and the Virtue/Flaw budget on the Virtues &
+Flaws balance bar. The Flaw caps are reported by the validator
+(`too_many_<category>_flaws`), as described under *Category caps* above.
 
 #### A grog's Personality Traits (#33)
 
@@ -5094,13 +5066,17 @@ which input surface owns which step:
 - **`type` removed.** It asked for nothing: the character type is fixed when the
   character is created (`StartScreen` enters the wizard per type) and is immutable
   afterwards, so the step only read back what the profile already commits the
-  character to. Its two facts that live nowhere else — the Virtue/Flaw budget numbers
-  (`:2209-2211`, `:2295`, `:2303`, `:2844`) and the Gift policy line (`:2224`) — moved
-  to the character banner shown above both the editor and the wizard
-  (`ui/src/lib/components/CharacterBanner.svelte`), keyed `character-type-explainer`,
-  `character-type-budget` and `character-type-gift-required|forbidden|optional`. Both
-  numbers stay Fluent placeables filled from the loaded profile, so no rules value is
-  written into a translated string.
+  character to. Its two statements — the Virtue/Flaw budget numbers (`:2209-2211`,
+  `:2295`, `:2303`, `:2844`) and the Gift policy line (`:2224`) — moved to the
+  character banner for a time and were then removed outright by
+  **manual-testing-findings #3**, along with the keys that carried them
+  (`character-type-explainer`, `character-type-budget`,
+  `character-type-gift-required|forbidden|optional`). Neither fact was lost: the
+  budget is on the Virtues & Flaws balance bar, which is the surface that spends it,
+  and the Gift policy is enforced by the engine — a forbidden Gift is an error, a
+  required one is granted automatically. The banner
+  (`ui/src/lib/components/CharacterBanner.svelte`) now names the type and nothing
+  else.
 - **`experience` added, immediately before `abilities`.** The blocks that fund a
   character — early childhood, later life, and for a magus apprenticeship and the
   years after it (`:2364`, `:2213-2216`) — are chosen and priced on their own step

@@ -136,10 +136,9 @@ describe('WizardStep', () => {
 
   // The step has to offer the funding choice it asks for. Under flat (pool) funding
   // the panel renders only the two radios — the total itself is `XpBar`'s input — so
-  // without a bar here `wizard-guidance-experience` promises "enter one total
-  // yourself" beside no field to enter it in, and the step can never record
-  // anything for a pool-funded character. #14's life-stage chips land on this step
-  // too, so the bar belongs here for both funding modes.
+  // without a bar here the step can never record anything for a pool-funded
+  // character. #14's life-stage chips land on this step too, so the bar belongs here
+  // for both funding modes.
   it('mounts the experience budget bar so the pool total can be entered', () => {
     // The editable field, not the read-only `xp-pool-total` span beside it: the
     // point is that a pool-funded character can answer this step at all.
@@ -208,40 +207,14 @@ describe('WizardStep', () => {
     expect(body('concept')).toContain('class="tab-scroll"');
   });
 
-  // --- 6b8b: the per-step guidance note ------------------------------------
-
-  function guidance(phase: CreationPhase): string {
-    const markup = /data-testid="wizard-guidance"[^>]*>([\s\S]*?)<\/p>/.exec(body(phase));
-    if (!markup) throw new Error(`no guidance on the ${phase} step`);
-    return markup[1]
-      .replace(/<[^>]*>/g, '')
-      .replace(/[⁨⁩]/g, '')
-      .trim();
-  }
-
-  // Every step says what is decided on it — including the closing one, which
-  // decides nothing and says so.
-  for (const [phase] of expected) {
-    it(`explains what the ${phase} step is for`, () => {
-      const note = guidance(phase);
-      expect(note.length).toBeGreaterThan(0);
-      // The one thing a label may never do: render its own key back at the player,
-      // which is exactly what a locale missing the line would produce.
-      expect(note).not.toContain('wizard-guidance');
-    });
-  }
-
-  it('takes the Characteristic allowance from the ruleset rather than stating it', () => {
-    expect(guidance('characteristics')).toContain('7');
-    store.ruleset!.ruleset.characteristic_rules!.start_points = 9;
-    expect(guidance('characteristics')).toContain('9');
-  });
-
-  it("takes the Virtue and Flaw budget from the character type's profile", () => {
-    store.ruleset!.ruleset.type_profiles.magus.budget = { virtue_points: 20, flaw_points: 10 };
-    const note = guidance('virtues_flaws');
-    expect(note).toContain('20');
-    expect(note).toContain('10');
+  // manual-testing-findings #21: the per-step guidance paragraph is gone from every
+  // step, and no step grew a replacement. Asserted across the whole phase table
+  // rather than on one step, because the note was table-driven and a single leftover
+  // mount would otherwise pass unseen.
+  it('carries no guidance paragraph on any step', () => {
+    for (const [phase] of expected) {
+      expect(body(phase)).not.toContain('data-testid="wizard-guidance"');
+    }
   });
 
   // --- Slice 9 (#27): one panel, two mounts, one centring ------------------
@@ -272,13 +245,6 @@ describe('WizardStep', () => {
     // got — the divergence the shared class has to overcome.
     expect(wizardMount).toContain('class="vf-tab"');
     expect(editorMount).not.toContain('class="vf-tab"');
-  });
-
-  it('localizes the note to German', () => {
-    store.lang = 'de';
-    const note = guidance('concept');
-    expect(note).not.toContain('wizard-guidance-concept');
-    expect(note).toContain('Konzept');
   });
 
   // --- Slice 12 (#24): age has ONE canonical home ---------------------------
@@ -328,14 +294,14 @@ describe('WizardStep', () => {
     expect(countAcrossSteps('life-stage-age-input')).toBe(0);
   });
 
-  it('renders the age cap note exactly once, beside the ability lists', () => {
+  // manual-testing-findings #21: the age→Ability-score cap read-out is gone from
+  // every step. It used to render on the abilities step; the count across the whole
+  // table is what proves no surface kept a copy.
+  it('renders the age cap note on no step at all', () => {
     store.effective = { age_ability_cap: 5 } as unknown as EffectiveScores;
     store.entity.age = 30;
     try {
-      // It used to render on two surfaces at once. Its home is the step whose lists
-      // the cap actually constrains.
-      expect(countAcrossSteps('age-cap-note')).toBe(1);
-      expect(body('abilities')).toContain('data-testid="age-cap-note"');
+      expect(countAcrossSteps('age-cap-note')).toBe(0);
     } finally {
       store.effective = null;
     }

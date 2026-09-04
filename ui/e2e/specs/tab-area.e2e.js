@@ -28,6 +28,9 @@ const DEFAULT_SIZE = { width: 1100, height: 800 };
 // Under two source rows: this rejects the collapse, not a particular row height.
 const MIN_USABLE_LIST = 60;
 
+// The whole-app language control in the header.
+const LANG_SELECT = '[data-testid="language-select"]';
+
 /** Geometry of the tab area and the source picker's scrolling list. */
 function tabAreaMetrics() {
   return browser.execute(() => {
@@ -59,6 +62,21 @@ function tabAreaMetrics() {
         );
         return [tab.id, rect.right, hit ? tab.contains(hit) || hit === tab : false];
       }),
+      // `.tab` is `overflow: hidden` + `text-overflow: ellipsis` on one nowrap line,
+      // so a label wider than its box is exactly a label wearing an ellipsis. Each
+      // entry carries the rendered text too, so a failure names the offender rather
+      // than only its id.
+      tabsTruncated: [...tabbar.querySelectorAll('[role="tab"]')]
+        .filter((tab) => tab.scrollWidth > tab.clientWidth + 1)
+        .map((tab) => [tab.id, tab.textContent.trim(), tab.scrollWidth, tab.clientWidth]),
+      // Both dimensions of the smallest tab, against WCAG 2.5.8's 24x24 CSS px.
+      smallestTabBox: [...tabbar.querySelectorAll('[role="tab"]')].reduce(
+        (smallest, tab) => {
+          const rect = tab.getBoundingClientRect();
+          return [Math.min(smallest[0], rect.width), Math.min(smallest[1], rect.height)];
+        },
+        [Infinity, Infinity],
+      ),
     };
   });
 }
@@ -133,6 +151,53 @@ describe('tab area at a short window height', () => {
     expect(
       m.tabsHittableAtCentre.filter(([, right]) => right > m.tabbarRight + 1).map(([id]) => id),
     ).toEqual([]);
+  });
+
+  // manual-testing-findings-2026-09 #1: the strip fitting is not the same claim as
+  // the strip being ONE LINE — the test above was green throughout, because the
+  // labels were ellipsizing rather than wrapping. GERMAN is the binding locale (the
+  // magus set is ~146 characters of label against English's ~130), and it is the one
+  // no earlier assertion here ever rendered, so English fitting proved nothing about
+  // the case that actually failed. `app.css.test.ts` budgets this arithmetically
+  // from the same `.ftl` strings; only a real engine can confirm the arithmetic.
+  it('shows every tab label in full, in German as well as English', async () => {
+    await setWindowHeight(DEFAULT_SIZE.height);
+
+    const english = await tabAreaMetrics();
+    expect(english.tabsTruncated).toEqual([]);
+    // The type shrank to fit; the button must not have shrunk with it.
+    expect(english.smallestTabBox[0]).toBeGreaterThanOrEqual(24);
+    expect(english.smallestTabBox[1]).toBeGreaterThanOrEqual(24);
+
+    await $(LANG_SELECT).selectByAttribute('value', 'de');
+    await browser.waitUntil(async () => (await $(LANG_SELECT).getValue()) === 'de', {
+      timeout: 5000,
+      timeoutMsg: 'the language should switch to German',
+    });
+    // Wait for a label the two locales spell differently, so the assertions below
+    // cannot race the re-render and measure English boxes.
+    await browser.waitUntil(
+      async () => (await $('[data-testid="tab-abilities"]').getText()).trim() === 'Fertigkeiten',
+      { timeout: 5000, timeoutMsg: 'the tab strip should re-render in German' },
+    );
+
+    const german = await tabAreaMetrics();
+    expect(german.tabsTruncated).toEqual([]);
+    expect(german.tabbarScrollHeight).toBeLessThanOrEqual(german.tabbarClientHeight + 1);
+    expect(
+      german.tabsHittableAtCentre
+        .filter(([, right]) => right > german.tabbarRight + 1)
+        .map(([id]) => id),
+    ).toEqual([]);
+    expect(german.smallestTabBox[0]).toBeGreaterThanOrEqual(24);
+    expect(german.smallestTabBox[1]).toBeGreaterThanOrEqual(24);
+
+    // Hand the next spec in this file the language it expects.
+    await $(LANG_SELECT).selectByAttribute('value', 'en');
+    await browser.waitUntil(async () => (await $(LANG_SELECT).getValue()) === 'en', {
+      timeout: 5000,
+      timeoutMsg: 'the language should switch back to English',
+    });
   });
 
   it('restores the full-height layout when the window grows back', async () => {

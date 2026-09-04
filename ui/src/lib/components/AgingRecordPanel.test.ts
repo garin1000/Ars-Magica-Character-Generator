@@ -125,7 +125,9 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
     for (const characteristic of CHARACTERISTICS) {
       expect(has(body, `aging-points-${characteristic}`)).toBe(true);
     }
-    expect(has(body, 'aging-points-note')).toBe(true);
+    // manual-testing-findings #21: the "drops are applied automatically" note is not
+    // a control and is gone; every control above it stays.
+    expect(has(body, 'aging-points-note')).toBe(false);
     expect(has(body, 'aging-log-list')).toBe(true);
     expect(has(body, 'aging-log-year-0')).toBe(true);
     expect(has(body, 'aging-log-effect-0')).toBe(true);

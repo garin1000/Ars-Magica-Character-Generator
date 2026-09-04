@@ -65,6 +65,7 @@ const XP_POOL_TOTAL = '[data-testid="xp-pool-total"]';
 const LATER_LIFE = '[data-testid="life-stage-later-life"]';
 const APPRENTICESHIP = '[data-testid="life-stage-apprenticeship"]';
 const GAUNTLET_NOTE = '[data-testid="life-stage-gauntlet-note"]';
+const GAUNTLET_AGE_INPUT = '[data-testid="life-stage-gauntlet-age-input"]';
 const EARLY_CHILDHOOD = '[data-testid="life-stage-early-childhood"]';
 const RESTRICTED_0 = '[data-testid="restricted-xp-0"]';
 const PACKAGE_SELECT = '[data-testid="childhood-package-select"]';
@@ -172,9 +173,9 @@ describe('life-stage funding and Sample Childhoods', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'the age typed on the concept step did not reach the experience panel',
     });
-    // The age → Ability-score cap is no longer echoed here: it has one home now, on
-    // the Abilities step, beside the lists it constrains (#24). Checked below, where
-    // this spec already walks to that step.
+    // The age → Ability-score cap is not echoed here — and, since
+    // manual-testing-findings #21, nowhere else either. It is still ENFORCED by the
+    // engine (`ability_above_age_cap`); what went is the read-out restating it.
     expect(await $('[data-testid="life-stage-age-cap"]').isExisting()).toBe(false);
     expect(await $(AGE_CAP_NOTE).isExisting()).toBe(false);
 
@@ -223,13 +224,11 @@ describe('life-stage funding and Sample Childhoods', () => {
     await standOnWizardStep('abilities');
     await $(XP_POOL_TOTAL).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // And the age → Ability-score cap is read HERE now (Slice 12, #24), beside the
-    // lists it constrains, rather than on the two surfaces that used to echo it and
-    // show no Ability score between them. A companion of 25 caps at 5.
-    const ageCap = await $(AGE_CAP_NOTE);
-    await ageCap.waitForExist({ timeout: STEP_TIMEOUT });
-    expect(clean(await ageCap.getText())).toContain('5');
-    expect(clean(await ageCap.getText())).not.toContain('age_ability_cap');
+    // The age → Ability-score cap is not restated on this step either: Slice 12 (#24)
+    // gave it one home here, and manual-testing-findings #21 then removed that too. So
+    // the cap appears on no surface at all — which is what this pair of assertions,
+    // taken with the one on the experience step above, establishes.
+    expect(await $(AGE_CAP_NOTE).isExisting()).toBe(false);
     // Under life-stage funding the pools are derived, so the editable input gives way
     // to a read-only total. Later life is (age - childhood years) x 15 = (25 - 5) x 15 = 300.
     await browser.waitUntil(async () => (await textOf(XP_POOL_TOTAL)) === '300', {
@@ -521,12 +520,11 @@ describe('life-stage funding and Sample Childhoods', () => {
     await $(FUNDING_LIFE_STAGES).click();
     await $(AGE_READOUT).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // A magus carries two ages, which neither field can say for itself — so the note
-    // says it, and is announced.
-    const note = await $(GAUNTLET_NOTE);
-    await note.waitForExist({ timeout: STEP_TIMEOUT });
-    expect(await note.getAttribute('role')).toBe('status');
-    expect(clean(await note.getText()).length).toBeGreaterThan(0);
+    // A magus carries two ages: the read-out above and the Gauntlet-age field, each
+    // labelled. The paragraph that used to explain the difference went with
+    // manual-testing-findings #21.
+    await $(GAUNTLET_AGE_INPUT).waitForExist({ timeout: STEP_TIMEOUT });
+    expect(await $(GAUNTLET_NOTE).isExisting()).toBe(false);
 
     await setWizardAge(25);
     // A magus's plan needs its native language too, both because the engine demands it

@@ -233,11 +233,12 @@ describe('MagusMinimumAbilities checklist (slice 6b4)', () => {
     expect([...body.matchAll(/role="status"/g)]).toHaveLength(1);
   });
 
-  it('prices the recommended package from the rules data, never a literal', () => {
+  // manual-testing-findings #21: the "the recommended Abilities cost 90 xp, below
+  // them the magus is weak" sentence is gone. The rows themselves are the content;
+  // the price of the package was rules teaching, and the player has the book.
+  it('states no price for the recommended package', () => {
     setChecklist(shippedChecklist());
-    const hint = element(html(), 'magus-recommended-hint');
-    expect(clean(hint.text)).toContain('90');
-    expect(clean(hint.text)).toContain('weak relative to other magi');
+    expect(has(html(), 'magus-recommended-hint')).toBe(false);
   });
 
   it('names each Ability through the rules i18n, with the bought instance filled in', () => {
@@ -301,12 +302,11 @@ describe('MagusMinimumAbilities collapsed to a summary (slice 11, #12)', () => {
   it('keeps the whole checklist inside the disclosure, so opening it reveals everything', () => {
     setChecklist(shippedChecklist());
     const inside = disclosure(html());
-    // Both groups, their headings and the price of the recommended package: nothing
-    // is withheld from the expanded view, and nothing escapes the collapsed one.
+    // Both groups and their headings: nothing is withheld from the expanded view,
+    // and nothing escapes the collapsed one.
     for (const testid of [
       'magus-minimum-ability.parma_magica',
       'magus-recommended-ability.parma_magica',
-      'magus-recommended-hint',
     ]) {
       expect(has(inside, testid), `${testid} is outside the disclosure`).toBe(true);
     }

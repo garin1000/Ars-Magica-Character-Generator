@@ -98,11 +98,12 @@ describe('the saga year', () => {
     // settings file, and the year it reports is the published setting's own.
     await expectValue(SAGA_YEAR_INPUT, DEFAULT_SAGA_YEAR, 'the default saga year');
 
-    // The hint says what the setting does AND what it does not, since "changing this
-    // leaves both values alone" is not something a number field can convey.
-    const hint = clean(await $(SAGA_YEAR_HINT).getText());
-    expect(hint.length).toBeGreaterThan(0);
-    expect(hint).not.toContain('saga-year-hint');
+    // manual-testing-findings #21: the sentence explaining what the setting does and
+    // does not do is gone, and its `aria-describedby` with it — the field's label is
+    // the whole of what it says. What it DOES is asserted for real by the two tests
+    // below, which type into it and read the age and birth year back.
+    expect(await $(SAGA_YEAR_HINT).isExisting()).toBe(false);
+    expect(await $(SAGA_YEAR_INPUT).getAttribute('aria-describedby')).toBe(null);
   });
 
   it('derives the age from a typed birth year, and the birth year from a typed age', async () => {

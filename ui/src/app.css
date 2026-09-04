@@ -230,7 +230,7 @@ button:disabled {
    out of the surface below — and at 800px that surface has none to give (Slice 2
    measured a single extra banner line clipping the Virtues & Flaws picker by ~16px).
    Once the tab list mirrors the phase list (#28) a magus has thirteen tabs, whose
-   labels are ~1350px of text against 1050px of room, so something has to give. Left
+   labels were ~1350px of text against 1050px of room, so something had to give. Left
    to the flex defaults the buttons shrink below their text width and the text wraps
    INSIDE them: a second line, and the panels below pay for it. So each button keeps
    its text on one line and ellipsizes what will not fit.
@@ -240,11 +240,34 @@ button:disabled {
    strip everything below ~19px stopped hit-testing to the button — the lower half of
    every tab became unclickable (measured; WebDriver reported the tabs as not
    interactable). Truncation costs a few characters; that cost half a control.
-   Pinned by `tab-area.e2e.js`. */
+   Pinned by `tab-area.e2e.js`.
+
+   HOW THE ROOM IS SPENT (manual-testing-findings-2026-09 #1). Ellipsizing was the
+   safety net, not the design, and at the default 1100px window it was firing on
+   nearly every tab — worst in GERMAN, whose magus set is ~146 characters of label
+   against English's ~130. The room is now budgeted so the full labels fit:
+     strip  = 1100px window - 2 x 11.25px `.tabbar` padding      = 1077.5px
+     labels = 146 chars x 0.53em x 11.25px type                  =  870.5px
+     tabs   = 13 x 2 x 5.625px horizontal padding                =  146.25px
+     gaps   = 12 x 1.875px                                       =   22.5px
+                                                        total    = 1039.3px
+   ~38px to spare, i.e. the labels may render up to ~4% wider than the model (0.53em
+   per character, a per-glyph sum over DejaVu Sans and the more pessimistic of two
+   estimates — the other is this comment's own historical "~1350px" English figure,
+   which works out at 0.52em) before anything truncates again. Pinned by
+   `src/app.css.test.ts`, measured for real by `tab-area.e2e.js`.
+   Below the 900px minimum window (tauri.conf.json) the labels DO still ellipsize,
+   which is why each tab keeps its `title`. */
 .tabbar {
   display: flex;
-  gap: 0.25rem;
-  padding: 0 1.5rem;
+  /* Gap is the cheapest room in the strip: twelve of them against twenty-six tab
+     paddings, so it is spent last and trimmed first. 1.875px plus the two tab
+     paddings still leaves ~13px between adjacent labels. */
+  gap: 0.125rem;
+  /* Halved from 1.5rem to give the labels back 22.5px. The first label's optical
+     left edge lands at 11.25 + 5.625 = ~17px rather than the header's 22.5px — a
+     small alignment cost, paid because the alternative is truncated tab titles. */
+  padding: 0 0.75rem;
   border-bottom: 1px solid #38355a;
   flex: 0 0 auto;
 }
@@ -254,13 +277,22 @@ button:disabled {
   border: none;
   border-bottom: 2px solid transparent;
   border-radius: 0;
-  /* Tighter than the 1rem it was: the horizontal padding of thirteen tabs is
-     ~200px of the room the labels need, and padding truncates labels for nothing.
-     Measured at 1100px with a magus's thirteen tabs, this leaves the labels ~40px
-     short overall — so the longest one or two lose a few characters to the ellipsis
-     and the rest are untouched. Trimming further buys single-digit pixels and costs
-     click-target width, so it stops here. */
-  padding: 0.6rem 0.75rem;
+  /* HORIZONTAL is bought twenty-six times over by a magus's thirteen tabs, so it
+     is the second-largest claim on the strip after the labels themselves: at the
+     1rem it started from it took 390px, at 0.75rem 292px, and here 146px. VERTICAL
+     is bought once and buys nothing back, so it goes the other way — UP from the
+     0.6rem it was, to keep the button's height where the 15px type used to put it
+     (0.7rem x 2 + a ~13.5px line box ≈ 34px, against ~35px before). Smaller type
+     shrinks a target in both directions; only one of them is under any pressure. */
+  padding: 0.7rem 0.375rem;
+  /* Declared, not inherited. The shared `font: inherit` on every button handed the
+     strip the 15px root size, and thirteen German labels at 15px need ~1176px of a
+     1055px strip — the ellipsis was firing on nearly every tab. 11.25px is this app's
+     established secondary-chrome size (`.badge`, `.param`, `.row-marker`) and the
+     floor `app.css.test.ts` enforces: the base 15px is deliberately large because
+     the audience skews middle-aged, so the strip may drop to chrome size for its
+     one- and two-word labels, but no further. See `.tabbar` for the full budget. */
+  font-size: 0.75rem;
   color: var(--muted);
   /* Shrink (never grow) and ellipsize. `min-width: 0` is what lets a flex item
      shrink below its content width at all; without it the text wraps instead. The
@@ -630,31 +662,9 @@ button:disabled {
    `completeness.incomplete_phases`, so on a fresh character every step in the rail
    was labelled at once. The marker survives as `.sr-only` text inside the step
    button (WizardShell.svelte), so it is still part of the accessible name, and the
-   statement stays visible for sighted users on the step itself (below) and in the
-   Review step's outstanding list. Hence no `.wizard-rail-incomplete` rule here. */
-
-/* The statement on the step itself. Its box is ALWAYS there — the element is
-   mounted on every step and only its visibility is toggled (`.hidden-reserved`,
-   WizardShell.svelte), because the flag behind it flips on the player's first click
-   and a collapsing line above an input surface moves the control being clicked
-   (guided-creation-review-2026-08 #2). So this padding is permanent space, spent on
-   every step, not only on untouched ones. */
-.wizard-incomplete-hint {
-  padding: 0.2rem 1.5rem 0;
-  color: #b9b6d6;
-  font-size: 0.85rem;
-}
-
-/* The step's guidance note. It sits inside the step's own `.vf-tab` column, above
-   the budget bar, so it is a plain flex item: no `flex: 1`, or it would take the
-   height the input surface below needs. Muted and capped in width, because it is
-   read once per step and then ignored. */
-.wizard-guidance {
-  color: #b9b6d6;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  max-width: 60rem;
-}
+   Review step's outstanding list states it for sighted users. Hence no
+   `.wizard-rail-incomplete` rule here, and — since manual-testing-findings #2 — no
+   on-step paragraph and no reserved line above the step body either. */
 
 .wizard-progress {
   padding: 0.4rem 1.5rem 0;
@@ -1535,11 +1545,6 @@ ul {
   font-weight: 600;
 }
 
-.age-cap {
-  color: var(--muted, #6b7280);
-  font-variant-numeric: tabular-nums;
-}
-
 /* Aging points: a two-column grid (Characteristic name | points input) so the
    spinners line up in their own column instead of butting against the names.
    Each <li> is `display: contents` so its name + input flow into the grid
@@ -1754,14 +1759,6 @@ ul {
   font-size: 0.85rem;
 }
 
-/* What a guided magus's age means: read before the age field it qualifies, so it
-   keeps the muted hint voice rather than shouting like an error. */
-.gauntlet-note {
-  max-width: 44rem;
-  color: var(--muted, #6b7280);
-  font-size: 0.85rem;
-}
-
 /* Age, its cap echo, a magus's three post-Gauntlet fields and the native language
    on ONE wrapping row. Everything shares the row on purpose: the panel is an
    auto-height sibling of the `flex: 1` `.region-row`, so each full-width row added
@@ -1822,8 +1819,7 @@ ul {
   color: var(--error);
 }
 
-.magus-minimums-summary,
-.magus-recommended-hint {
+.magus-minimums-summary {
   color: var(--muted);
   font-size: 0.85rem;
 }
@@ -1873,11 +1869,6 @@ ul {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-.childhood-hint {
-  color: var(--muted);
-  font-size: 0.85rem;
 }
 
 /* A fault is spoken through aria-describedby; the colour only reinforces it. */

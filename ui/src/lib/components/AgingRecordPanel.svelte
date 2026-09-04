@@ -300,9 +300,6 @@
           </li>
         {/each}
       </ul>
-      <p class="detail-label" data-testid="aging-points-note">
-        {store.t('aging-points-note')}
-      </p>
     </div>
   </div>
 </div>

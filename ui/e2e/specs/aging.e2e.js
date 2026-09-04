@@ -56,7 +56,6 @@ const ROLLS_RECORDED = '[data-testid="aging-rolls-recorded"]';
 const TOTAL_FORMULA = '[data-testid="aging-total-formula"]';
 const CONDITIONS = '[data-testid="living-conditions"]';
 const CONDITIONS_TOTAL = '[data-testid="living-conditions-total"]';
-const CUMULATIVE_NOTE = '[data-testid="living-conditions-cumulative-note"]';
 // The two asterisked rows this grog lives under (`:16588`, `:16591`).
 const LEPER_COLONY = 'living_condition.live_in_a_leper_colony';
 const POOR_LOCATION = 'living_condition.poor_or_unhealthy_location_typical_town';
@@ -262,12 +261,23 @@ describe('the guided aging step', () => {
     // ASCII hyphen-minus, never the mathematical minus.
     expect(await textOf(CONDITIONS_TOTAL)).not.toContain('−');
 
-    // Which rows stack is marked on the row and stated in words; the marking is
-    // data (`cumulative` in `rules/core/aging.json`), so the test reads it back off
-    // the very rows it ticked.
+    // Which rows stack is marked on the row itself; the marking is data (`cumulative`
+    // in `rules/core/aging.json`), so the test reads it back off the very rows it
+    // ticked. manual-testing-findings #21 removed the paragraph that also spelled the
+    // rule out — each such row still carries its own `.sr-only` "cumulative" label, so
+    // the marking is not asterisk-only for assistive tech.
     expect(await $(condition(LEPER_COLONY)).getAttribute('data-cumulative')).toBe('true');
     expect(await $(condition(POOR_LOCATION)).getAttribute('data-cumulative')).toBe('true');
-    expect(await $(CUMULATIVE_NOTE).isDisplayed()).toBe(true);
+    expect(await $('[data-testid="living-conditions-cumulative-note"]').isExisting()).toBe(false);
+    // `.sr-only` text is clipped, so it is read out of the DOM rather than through
+    // `getText()`: every asterisked row still names the marking in words.
+    const cumulativeLabels = await browser.execute(() =>
+      [...document.querySelectorAll('[data-cumulative="true"]')].map(
+        (input) => input.closest('li')?.querySelector('.sr-only')?.textContent?.trim() ?? '',
+      ),
+    );
+    expect(cumulativeLabels.length).toBeGreaterThan(0);
+    for (const label of cumulativeLabels) expect(label.length).toBeGreaterThan(0);
 
     // Every row is named through `rules/i18n/<lang>/aging.json`, never as its id.
     const checklist = await textOf(CONDITIONS);

@@ -30,11 +30,11 @@ const NEXT = '[data-testid="wizard-next"]';
 const FINISH = '[data-testid="wizard-finish"]';
 const NAME_INPUT = '[data-testid="identity-name"]';
 const MODE_SELECT = '[data-testid="mode-select"]';
-const GUIDANCE = '[data-testid="wizard-guidance"]';
-// The Virtue/Flaw budget the character's type commits it to. Slice 2 deleted the
-// read-only `type` step it used to be read from; it lives in the always-visible
-// character banner now, so it is readable from any step.
-const BANNER_BUDGET = '[data-testid="character-type-budget"]';
+// The balance bar's Flaw half on the Virtues & Flaws step: the surviving home of the
+// Flaw budget after manual-testing-findings #3 removed the banner's restatement of
+// it. It is the surface that SPENDS the budget, which is why it is the one that keeps
+// stating it.
+const BALANCE_FLAWS = '[data-testid="balance-flaws"]';
 // A Minor Virtue with no prerequisites and no Flaws to fund it, so the V/F step
 // carries exactly one deterministic error: `unbalanced_virtues`.
 const ADD_VIRTUE = '[data-testid="add-virtue.keen_vision"]';
@@ -58,15 +58,19 @@ describe('guided creation wizard', () => {
     await expect($('[data-testid="save-button"]')).toExist();
     await expect($(MODE_SELECT)).toExist();
 
-    // Slice 2 (#1) deleted the read-only `type` step and relocated its two surviving
-    // facts to that banner, so they are readable from EVERY step instead of from one
-    // step nobody could act on: what the type commits the character to, its
-    // Virtue/Flaw budget, and — this profile has The Gift by rule — the Gift policy
-    // line. Read here, on the first step, which is the proof they are no longer
-    // gated on standing somewhere in particular.
-    await expect($('[data-testid="character-type-explainer"]')).toExist();
-    await expect($(BANNER_BUDGET)).toExist();
-    await expect($('[data-testid="character-type-gift-required"]')).toExist();
+    // Slice 2 (#1) deleted the read-only `type` step; manual-testing-findings #3 then
+    // deleted the explanatory lines its content had been relocated into. The banner
+    // names the type and nothing more — no explainer, no budget sentence, no Gift
+    // policy line — so the chrome above every step costs one line, not four.
+    for (const testid of [
+      'character-type-explainer',
+      'character-type-budget',
+      'character-type-gift-required',
+      'character-type-gift-forbidden',
+      'character-type-gift-optional',
+    ]) {
+      expect(await $(`[data-testid="${testid}"]`).isExisting()).toBe(false);
+    }
     expect(await $('[data-testid="wizard-step-type"]').isExisting()).toBe(false);
 
     // The rail follows the ruleset, and the magus profile deliberately places the
@@ -79,12 +83,13 @@ describe('guided creation wizard', () => {
     expect(phases.at(-1)).toBe('review');
 
     // A brand-new character has recorded nothing, so the opening step reads as
-    // untouched — in the rail and on the step itself — while Next stays live: the
-    // mark is information, never a gate.
+    // untouched — in the rail, which is now the only place it is said
+    // (manual-testing-findings #2 removed the on-step notice) — while Next stays
+    // live: the mark is information, never a gate.
     const conceptStep = await $('[data-testid="wizard-step-concept"]');
     expect(await conceptStep.getAttribute('data-incomplete')).toBe('true');
     await expect($('[data-testid="wizard-incomplete-concept"]')).toExist();
-    await expect($('[data-testid="wizard-incomplete-hint"]')).toExist();
+    expect(await $('[data-testid="wizard-incomplete-hint"]').isExisting()).toBe(false);
     expect(await $(NEXT).isEnabled()).toBe(true);
 
     // guided-creation-review-2026-08 #10: the rail's per-step marker is now
@@ -118,11 +123,9 @@ describe('guided creation wizard', () => {
     expect(railMarker.text.length).toBeGreaterThan(0);
     expect(railMarker.insideStepButton).toBe('wizard-step-concept');
 
-    // The step also says what is decided on it, in the rules' own terms — real
-    // prose from the locale, never the Fluent key echoed back.
-    const conceptGuidance = clean(await $(GUIDANCE).getText());
-    expect(conceptGuidance.length).toBeGreaterThan(0);
-    expect(conceptGuidance).not.toContain('wizard-guidance');
+    // manual-testing-findings #21: no step explains itself. The guidance paragraph
+    // that used to head every step is gone from the shipped binary too.
+    expect(await $('[data-testid="wizard-guidance"]').isExisting()).toBe(false);
 
     // Filling the step in clears the mark. The name is also what proves, at the
     // end, that Finish carries the wizard's character over untouched.
@@ -131,13 +134,6 @@ describe('guided creation wizard', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'naming the character did not clear the untouched mark on the Concept step',
     });
-    // The note goes quiet without leaving the flow: it keeps its box so the input
-    // surface below it cannot move on the edit that clears the mark
-    // (guided-creation-review-2026-08 #2 — `layout-stability.e2e.js` measures that).
-    // So the assertion is that it is no longer SHOWN, not that it is gone.
-    const incompleteHint = await $('[data-testid="wizard-incomplete-hint"]');
-    expect(await incompleteHint.isDisplayed()).toBe(false);
-    expect(await incompleteHint.isExisting()).toBe(true);
 
     // Back is dead on the first step; Next advances and the rail follows.
     expect(await $(BACK).isEnabled()).toBe(false);
@@ -152,21 +148,17 @@ describe('guided creation wizard', () => {
       await $('[data-testid="wizard-step-characteristics"]').getAttribute('data-incomplete'),
     ).toBe('true');
 
-    // The banner reads the magus profile's Flaw budget straight out of the ruleset;
-    // hold on to the number, because the Virtues & Flaws guidance further down has
-    // to state that very same value rather than one frozen into the translation.
-    const flawPoints = clean(await $(BANNER_BUDGET).getText()).match(/\d+/)[0];
-
     // Walk to Virtues & Flaws and break it: a Minor Virtue with no Flaws to fund
     // it is `unbalanced_virtues`, an error.
     await advanceWizardTo('virtues_flaws');
 
-    // Guidance is per step, not one banner reused: this step's note is its own,
-    // and the budget in it is the profile's, not a number written into the copy.
-    const vfGuidance = clean(await $(GUIDANCE).getText());
-    expect(vfGuidance).not.toBe(conceptGuidance);
-    expect(vfGuidance).not.toContain('wizard-guidance');
-    expect(vfGuidance).toContain(flawPoints);
+    // The Flaw budget survived manual-testing-findings #3 on the surface that spends
+    // it: the balance bar states the profile's own number, read out of the ruleset
+    // rather than written into a translation. This is the assertion that makes
+    // deleting the banner's copy of it safe.
+    const flawBudget = clean(await $(BALANCE_FLAWS).getText());
+    expect(flawBudget).toMatch(/\d/);
+    expect(flawBudget).not.toContain('balance-flaws');
 
     const addVirtue = await $(ADD_VIRTUE);
     await addVirtue.waitForExist({ timeout: STEP_TIMEOUT });

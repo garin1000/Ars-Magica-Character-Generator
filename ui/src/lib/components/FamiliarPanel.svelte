@@ -201,9 +201,10 @@
 
     <!-- Powers invested in the bond. Deliberately NO budget read-out: "there is no
          limit to the number of powers which may be invested in a familiar"
-         (Core:10866), so a bar here would invent a limit the rules deny. -->
+         (Core:10866), so a bar here would invent a limit the rules deny. The absence
+         of a bar is the whole statement — manual-testing-findings #21 removed the
+         sentence that also said it in words. -->
     <h4 class="detail-sublabel">{store.t('familiar-powers-label')}</h4>
-    <p class="hint" data-testid="familiar-powers-note">{store.t('familiar-powers-note')}</p>
     <ul class="power-list" data-testid="familiar-power-list">
       {#each powers as power, i (i)}
         <li>

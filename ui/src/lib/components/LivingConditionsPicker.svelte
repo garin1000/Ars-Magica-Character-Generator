@@ -49,8 +49,6 @@
   // with the total the player is about to roll against.
   const total = $derived(store.effective?.aging?.living_conditions_modifier ?? null);
 
-  const anyCumulative = $derived(rows.some((row) => row.cumulative));
-
   function onToggle(id: string, event: Event): void {
     store.setLivingCondition(id, (event.currentTarget as HTMLInputElement).checked);
   }
@@ -59,12 +57,6 @@
 {#if rows.length > 0}
   <div class="detail-section living-conditions" data-testid="living-conditions">
     <h3 class="detail-label">{store.t('living-conditions-label')}</h3>
-    <!-- The hint also carries the table's own "Average peasant 0" framing for an
-         empty set. There is deliberately no separate "nothing chosen" line: the
-         total below the list already states the figure, so an empty set was
-         announced twice over, and a line that comes and goes is a height change
-         the grid would rather not absorb. -->
-    <p class="hint">{store.t('living-conditions-hint')}</p>
 
     <ul class="living-conditions-list">
       {#each rows as row (row.id)}
@@ -91,12 +83,6 @@
         </li>
       {/each}
     </ul>
-
-    {#if anyCumulative}
-      <p class="hint" data-testid="living-conditions-cumulative-note">
-        {store.t('living-conditions-cumulative-note')}
-      </p>
-    {/if}
 
     {#if total != null}
       <!-- Announced: the figure changes the moment a box is ticked, and the change

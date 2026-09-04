@@ -325,7 +325,11 @@
 
     <!-- The strip is one line and ellipsizes a label too long for the room it has
          (app.css), so each tab carries its full label in `title` as well — the same
-         Fluent string as the visible text, never a second wording. -->
+         Fluent string as the visible text, never a second wording. `title` STAYS
+         even though the strip's type and padding were re-budgeted so the labels fit
+         in full at the default window: the window is resizable down to 900px
+         (tauri.conf.json), where German's thirteen-tab magus set truncates again. -->
+
     <div class="tabbar" role="tablist" tabindex="-1" onkeydown={onTabsKeydown}>
       {#each tabs as t (t.id)}
         <button

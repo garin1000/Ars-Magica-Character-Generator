@@ -86,97 +86,9 @@ wizard-step-pending-label = enthält offene Warnungen
 # Regelkonform ist nicht dasselbe wie fertig: ein leerer Schritt wird gekennzeichnet,
 # aber nie blockiert.
 wizard-step-incomplete-label = nicht begonnen
-# Dieselbe Aussage, auf dem Schritt selbst.
-wizard-step-incomplete-hint = Für diesen Schritt wurde noch nichts eingetragen. Das blockiert nicht: du kannst fortfahren und später zurückkehren.
 # Wird angezeigt, solange der Prüfmodus „Beratend" oder „Stumm" ist: es wird nichts
 # erzwungen, also blockiert kein Schritt und „Fertigstellen" ist immer möglich.
 wizard-unchecked-hint = Die Prüfung wird nicht erzwungen, daher blockiert kein Schritt.
-
-# Erläuterung je Schritt: was hier entschieden wird und was die Regeln dazu sagen.
-# Geschlüsselt nach dem `CreationPhase`-Slug der Engine, eine Zeile je Phase.
-# Anleitung zum Ablauf, kein Katalogtext mit Item-ID — daher Fluent und nicht
-# `rules/i18n/`. Jede Sachaussage stammt aus
-# `Ars Magica Definitive Edition Basisregeln.md`, zeilengleich zur englischen
-# Quelle; die Zeilenbereiche stehen in `crates/arm-rules/RULES.md`. Zahlen, die
-# das Regelwerk bereits trägt, werden eingesetzt ({ $points }, { $flaws },
-# { $virtues }) und nie ausgeschrieben.
-wizard-guidance-concept = Beginne mit einem Konzept: wer dieser Charakter ist und welche Rolle er in der Saga spielt. Ein Magus könnte ein Feuerzauberer sein, ein Gefährte ein Gelehrter fern der Heimat, ein Grog jede Art Krieger oder ein Mitglied des Konventspersonals.
-wizard-guidance-characteristics = Eigenschaften sind die angeborenen Wesenszüge deines Charakters und lassen sich später mit normalen Mitteln nicht steigern. Du hast { $points } Punkte zu vergeben, und ein Wert unter null gibt Punkte zurück.
-wizard-guidance-virtues_flaws = Fehler bezahlen Tugenden: Bis zu { $flaws } Punkte an Fehlern finanzieren bis zu { $virtues } Punkte an Tugenden. Du musst das Maximum nicht ausschöpfen, und jeder Charakter nimmt einen Sozialen Status.
-wizard-guidance-experience = Erfahrung wird in Blöcken erworben: zuerst die ersten fünf Jahre der Kindheit, dann das spätere Leben Jahr für Jahr — bei einem Magus zusätzlich die Lehrlingszeit und die Jahre danach. Trage eine Gesamtsumme selbst ein, oder lass diese Lebensabschnitte sie aus dem Alter des Charakters erbringen.
-wizard-guidance-abilities = Fertigkeiten sind erlernte Fähigkeiten und werden mit der Erfahrung des vorigen Schritts gekauft. Das Alter deines Charakters bestimmt den Höchstwert, den eine Fertigkeit bei der Erschaffung erreichen darf.
-wizard-guidance-arts = Techniken und Formen sind die Magie des Magus: Jeder Zauber verbindet eine Technik mit einer Form. Dieselben Erfahrungspunkte der Lehrlingszeit kaufen Künste und Fertigkeiten, sodass hier Ausgegebenes dort fehlt.
-wizard-guidance-spells = Die Lehrlingszeit gewährt Stufen Zauber statt Erfahrungspunkte, die hier ausgegeben werden. Kein Zauber darf eine höhere Stufe haben, als Technik, Form, Intelligenz und Magietheorie des Magus zulassen.
-wizard-guidance-house_specialisation = Jeder hermetische Magus gehört genau einem Haus an, das ihm bei der Erschaffung einen Vorteil gewährt. Das Haus steht vor den Tugenden und Fehlern, weil dieser Vorteil eine kostenlose Kleine Tugend ist, die kein Fehler ausgleichen muss.
-wizard-guidance-mythic_type = Der Typ eines Mythischen Gefährten ist eine kostenlose Tugend, die seinen Status festlegt. Die Typen sind untereinander und mit der Gabe unvereinbar, und einer bringt normalerweise eine kostenlose Kleine Tugend mit sich.
-wizard-guidance-personality_reputations = Wähle einige Worte für die Persönlichkeit des Charakters und gib jedem einen Wert zwischen +3 und -3. Grogs sollten einen Wert in Loyal haben, Krieger einen in Tapfer. Eine Reputation gehört nur hierher, wenn eine Tugend oder ein Fehler sie gewährt.
-wizard-guidance-aging = Ein Charakter über 35 legt vor Spielbeginn für jedes Jahr einen Alterungswurf ab, der scheinbares Alter oder Eigenschaftspunkte kosten kann. Alterungspunkte sammeln sich in einer Eigenschaft, bis sie deren Wert übersteigen — dann sinkt die Eigenschaft um einen Punkt.
-# Keine Regelstelle beschreibt einen Überprüfungsschritt — er gehört allein dieser
-# Anwendung, daher trifft diese Zeile keine Regelaussage.
-wizard-guidance-review = Hier wird nichts Neues gewählt — dies ist der letzte Blick, bevor der Charakter die geführte Erstellung verlässt. Nach dem Fertigstellen bleibt alles bearbeitbar.
-
-# Der typspezifische Hinweis zu Tugenden und Fehlern, angehängt an
-# `wizard-guidance-virtues_flaws` (guided-creation-review-2026-08 #7). Wortlaut aus
-# den Basisregeln an den gespiegelten Zeilen: :2826 („Du solltest keine
-# Geschichte-Fehler wählen"), :2827/:2838 („Du solltest nicht mehr als … wählen"),
-# :2820/:2835 („Du darfst nicht mehr als …"). „Geschichte-Fehler" steht so in
-# `rules/source/de/translation-tables/tugenden-fehler.md:392`; „Persönlichkeitsfehler"
-# ist der bereits ausgelieferte Begriff aus `issue-too_many_personality_flaws` (das
-# Regelbuch schreibt an :2820 „Persönlichkeits-Fehler" mit Bindestrich).
-#
-# `$cap` ist das Maximum aus `flaw_category_caps` und kommt als ZAHL an, damit die
-# Varianten darauf auswählen können; die Zahl selbst wird immer eingesetzt und nie
-# ausgeschrieben. Anders als im Englischen braucht das Deutsche keine
-# Singular-/Pluralvariante — „Geschichte-Fehler" und „Persönlichkeitsfehler" lauten
-# in beiden Zahlformen gleich.
-#
-# `$rule` ist das `hard`-Flag: „darfst nicht" (erzwungen, vom Prüfer als Fehler
-# gemeldet) gegenüber „solltest nicht" (eine Richtlinie, :2818).
-#
-# Bewusst nirgends „mindestens ein Geschichte-Fehler": für Geschichte-Fehler nennen
-# die Regeln eine empfohlene Obergrenze und keine Untergrenze. Das einzige
-# „mindestens ein" gilt dem hermetischen Fehler des Magus, siehe unten.
-wizard-guidance-story-flaw-cap =
-    { $rule ->
-        [hard]
-            { $cap ->
-                [0] Du darfst keine Geschichte-Fehler wählen.
-               *[other] Du darfst nicht mehr als { $cap } Geschichte-Fehler wählen.
-            }
-       *[soft]
-            { $cap ->
-                [0] Du solltest keine Geschichte-Fehler wählen.
-               *[other] Du solltest nicht mehr als { $cap } Geschichte-Fehler wählen.
-            }
-    }
-wizard-guidance-personality-flaw-cap =
-    { $rule ->
-        [hard]
-            { $cap ->
-                [0] Du darfst keine Persönlichkeitsfehler wählen.
-               *[other] Du darfst nicht mehr als { $cap } Persönlichkeitsfehler wählen.
-            }
-       *[soft]
-            { $cap ->
-                [0] Du solltest keine Persönlichkeitsfehler wählen.
-               *[other] Du solltest nicht mehr als { $cap } Persönlichkeitsfehler wählen.
-            }
-    }
-# Basisregeln :2860. Wortlaut wie `issue-missing_hermetic_flaw`, die Warnung des
-# Regelwerks zur selben Richtlinie, damit Hinweis und Befund gleich klingen.
-wizard-guidance-hermetic-flaw = Ein Magus sollte mindestens einen hermetischen Fehler wählen.
-
-# Worauf der gewählte Charaktertyp diesen Charakter festlegt, angezeigt im Banner
-# über Editor und geführter Erstellung. Verlagert aus dem entfallenen Schritt
-# „Charaktertyp" (Prüfung der geführten Erstellung, #1), der nichts abfragte: der
-# Typ wird bei der Erstellung des Charakters festgelegt und ist danach unveränderlich.
-# Neu geschlüsselt als `character-type-*`, damit kein Schlüssel eine Erstellungsphase
-# benennt, die es nicht mehr gibt.
-character-type-explainer = Der Charaktertyp ist für diesen Charakter festgelegt. Er bestimmt das Budget für Tugenden und Fehler, welche Kategorien gewählt werden dürfen und welche Erstellungsschritte folgen.
-character-type-budget = Bis zu { $flaws } Punkte an Fehlern, die bis zu { $virtues } Punkte an Tugenden finanzieren.
-character-type-gift-required = Dieser Typ besitzt Die Gabe; sie wird automatisch gewährt.
-character-type-gift-forbidden = Dieser Typ kann Die Gabe nicht besitzen.
-character-type-gift-optional = Dieser Typ darf Die Gabe wählen.
 
 # Der Abschlussschritt des Assistenten.
 wizard-review-title = Überprüfung
@@ -335,8 +247,6 @@ xp-pool-later_life = Späteres Leben (nur Fertigkeiten)
 ability-funding-label = Herkunft der Erfahrung
 ability-funding-pool = EP-Vorrat
 ability-funding-life_stages = Lebensabschnitte
-ability-funding-pool-hint = Trage einen Gesamtwert selbst ein und gib ihn für beliebige Fertigkeiten aus.
-ability-funding-life_stages-hint = Frühe Kindheit und späteres Leben erbringen die Erfahrung: das Alter bestimmt die Erfahrung des späteren Lebens, Muttersprache und eine beispielhafte Kindheit füllen die Blöcke der Kindheit.
 life-stage-no-budget = Noch keine Erfahrung aus Lebensabschnitten.
 # DIE CHIPS DER LEBENSABSCHNITTE — ein Chip pro Block, in der Reihenfolge, in der der
 # Charakter sie gelebt hat (guided-creation-review-2026-08 #14). Die Regeln nennen die
@@ -389,29 +299,13 @@ xp-pool-block-after-gauntlet = Nach der Lehrlingsprüfung: { $years } × { $rate
 # Das Alter wird im Bereich wiederholt, weil das spätere Leben in Jahren gemessen
 # wird — es wird hier ebenso bearbeitet wie im Details-Reiter.
 life-stage-age-label = Alter
-# Was die beiden Altersangaben für einen Magus bedeuten, was keines der beiden
-# Felder allein sagen kann. Das Alter ist das HEUTIGE Alter; das Alter bei der
-# Lehrlingsprüfung ist der Zeitpunkt, an dem die Lehrlingszeit endete — die
-# fünfzehn Jahre davor (Basisregeln.md:2435), wobei jedes Jahr davor Erfahrung des
-# späteren Lebens erbringt (`:2214`). Die Jahre zwischen beiden sind das Leben als
-# Magus und je „30 Punkte“ wert (`:2216`, `:2471`). Ein leeres Feld speichert
-# nichts: Die Engine liest es als den Standard-Magus des Regelwerks, „25 years old
-# and just out of apprenticeship“ (`:1601`), begrenzt auf das Alter einer jüngeren
-# Figur — und genau diese Zahl zeigt das leere Feld als Platzhalter.
-life-stage-gauntlet-note = Bei einem Magus ist das Alter sein heutiges Alter, und das Alter bei der Lehrlingsprüfung ist der Zeitpunkt, an dem seine Lehrlingszeit endete: Die Lehrlingszeit sind die fünfzehn Jahre vor der Prüfung, jedes Jahr davor erbringt Erfahrung des späteren Lebens, und jedes Jahr von der Prüfung bis heute ist 30 Punkte wert. Bleibt das Alter bei der Lehrlingsprüfung leer, gilt das übliche Alter eines Magus frisch nach der Lehrlingszeit, das im leeren Feld steht.
-# Die Jahre, die ein Magus seit seiner Lehrlingsprüfung gelebt hat. Gespeichert wird
-# nur das Prüfungsalter; Jahre, Punkte und Erfahrung folgen daraus und aus dem Alter.
-# Jeder Punkt kann ein Erfahrungspunkt in einer Kunst oder Fertigkeit oder eine
-# Zauberstufe sein (Basisregeln.md:2471), und ein Quartal Laborarbeit kostet 10 der
-# 30 Punkte des Jahres — angerechnet werden aber nur drei Quartale pro Jahr, denn das
-# dritte hat die vollen 30 bereits aufgezehrt (`:2482`).
 life-stage-gauntlet-age-label = Alter bei der Lehrlingsprüfung
-life-stage-gauntlet-age-hint = Das Alter, mit dem die Lehrlingszeit endete. Bleibt das Feld leer, gilt das darin angezeigte Alter: das übliche Alter eines Magus frisch nach der Lehrlingszeit, oder das eigene Alter dieser Figur, falls sie jünger ist.
 life-stage-lab-seasons-label = Laborquartale
-life-stage-lab-seasons-hint = Quartale Laborarbeit, über alle Jahre als Magus zusammengezählt: jedes kostet 10 der 30 Punkte des jeweiligen Jahres, und nur drei pro Jahr werden angerechnet — das dritte nimmt bereits die vollen 30, ein viertes ist kostenlos.
 life-stage-spell-levels-label = Zauberstufen
-life-stage-spell-levels-hint = Wie viele der Punkte als Zauberstufen statt als Erfahrungspunkte genommen werden.
-life-stage-post-gauntlet-no-years-note = Noch keine Jahre als Magus, daher können Laborquartale und Zauberstufen nichts aufnehmen. Diese Jahre laufen vom Alter bei der Lehrlingsprüfung bis zum Alter des Charakters.
+# Warum beide Felder darüber schreibgeschützt sind: die Aussage über einen
+# schreibgeschützten Zustand, den die Felder selbst nicht treffen können; sie ist
+# das `aria-describedby`-Ziel beider Felder.
+life-stage-post-gauntlet-no-years-note = Noch keine Jahre als Magus, daher können Laborquartale und Zauberstufen nichts aufnehmen.
 life-stage-post-gauntlet-summary = { $years } Jahre als Magus: { $points } Punkte = { $xp } EP + { $levels } Zauberstufen
 # Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
 # Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
@@ -437,7 +331,6 @@ childhood-entry = { $name } { $score }
 childhood-slot-label = { $name }
 childhood-slot-label-nth = { $name } ({ $index })
 childhood-apply = Diese Kindheit nehmen
-childhood-apply-hint = Das Fertigkeitspaket trägt diese Fertigkeitswerte ein; sie bleiben danach bearbeitbar.
 # Warum das Nehmen des Pakets blockiert ist. Zwei Plätze derselben Fertigkeit mit
 # gleichem Wert würden zu einer Zeile verschmelzen und die Erfahrung des anderen
 # verschwenden; eine Sprache der Kindheit muss sich von der Muttersprache
@@ -460,7 +353,6 @@ magus-minimums-summary = Anforderungen an Fertigkeiten: { $unmet } von { $total 
 magus-minimum-met = { $ability } { $min }{ $qualifier } ist erfüllt: dieser Charakter hat { $score }.
 magus-minimum-unmet = { $ability } { $min }{ $qualifier } ist nicht erfüllt: dieser Charakter hat { $score }.
 magus-recommended-label = Empfohlene Mindestfertigkeiten
-magus-recommended-hint = Die empfohlenen Fertigkeiten kosten zusammen { $xp } Erfahrungspunkte; darunter ist der Magus relativ zu anderen Magi schwach.
 ability-score-label = Wert
 ability-specialty-label = Spezialisierung
 # Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.
@@ -545,14 +437,12 @@ remove-item = { $name } entfernen
 # Details-Reiter: Alter, Selbstvertrauen (abgeleitet, schreibgeschützt), Persönlichkeit, Reputation.
 age-label = Alter
 apparent-age-label = Scheinbares Alter
-age-cap-note = Maximaler Fertigkeitswert: { $cap }
 confidence-label = Selbstvertrauen
 confidence-readout = Wert { $score }, { $points } Punkte
 warping-label = Verzerrung
 warping-readout = Wert { $score }, { $points } Punkte
 warping-effect-label = Verzerrungseffekt
 warping-owed-label = Verzerrungs-Tugenden & -Fehler
-warping-owed-hint = Dein Verzerrungswert gewährt diese Tugenden und Fehler (außerhalb des Budgets). Wähle für jeden Platz einen aus.
 warping-owed-minor-flaws = { $count ->
     [one] { $count } Kleiner Fehler
    *[other] { $count } Kleine Fehler
@@ -590,7 +480,6 @@ identity-birth-year = Geburtsjahr
 # nicht Teil eines Charakters. "Saga" bleibt unübersetzt
 # (rules/source/de/translation-tables/grundbegriffe.md:104).
 saga-year-label = Jahr der Saga
-saga-year-hint = Das Jahr, in dem deine Saga spielt. Es verknüpft Alter und Geburtsjahr während der Eingabe; eine Änderung lässt beide Werte unverändert.
 identity-sigil = Zauberer-Sigil
 identity-covenant = Konvent
 identity-parens = Parens
@@ -598,7 +487,6 @@ identity-parens = Parens
 # Gebrechlichkeit und Verzerrung berechnet die Engine aus diesen Punkten.
 aging-label = Alterung
 aging-points-heading = Alterungspunkte pro Eigenschaft
-aging-points-note = Wertminderungen werden automatisch angewendet, sobald die angesammelten Alterungspunkte den Eigenschaftswert übersteigen; die Minderung erscheint in den abgeleiteten Werten.
 warping-points-label = Verzerrungspunkte
 twilight-scars-label = Zwielichtnarben
 twilight-scar-placeholder = Beschreibe die Narbe
@@ -651,14 +539,11 @@ aging-rolls-recorded = { $recorded } von { $owed } eingetragen
 # nicht auf. Wortgleich mit `aging-total-parts` weiter unten, damit beide
 # Anzeigen übereinstimmen.
 aging-total-formula = Stresswürfel { $age } (Alter) { $conditions } (Lebensumstände) { $longevity } (Langlebigkeitsritual) { $traits } (Tugenden und Fehler) = Stresswürfel { $fixed }
-aging-longevity-clamp = Ein Langlebigkeitsritual wirkt: solange es anhält, erreicht kein Ergebnis die erste Zeile der Alterungstabelle, diese Würfe können den Charakter also nicht altern lassen.
 # Die Auswahl der Lebensumstände (Core Rules.md:16581-16594). Der angezeigte Wert
 # ist der von der Engine berechnete Lebensumständemodifikator — er enthält auch
 # die Beiträge von Tugenden und Fehlern, die hier keine eigene Zeile haben.
 living-conditions-label = Lebensumstände
-living-conditions-hint = Der Alterungswurf zieht diesen Modifikator ab; ein höherer Modifikator bedeutet also ein längeres Leben. Ohne Auswahl gilt der Charakter als durchschnittlicher Bauer (0).
 living-conditions-total = Lebensumständemodifikator: { $modifier }
-living-conditions-cumulative-note = Als kumulativ markierte Lebensumstände sind untereinander kumulativ; die übrigen sind Alternativen, von denen höchstens eine gewählt werden sollte.
 living-conditions-cumulative-label = kumulativ
 # Der Alterungswurf-Rechner (Core Rules.md:16567-16615). Der Spieler wirft den
 # Stresswürfel am Tisch und trägt ihn hier ein — die App würfelt nie, und der
@@ -675,7 +560,6 @@ aging-year-option-dated = { $recorded ->
    *[no] Alter { $age } ({ $year })
 }
 aging-die-label = Stresswürfel
-aging-die-hint = Wirf den Stresswürfel (kein Patzer) am Tisch und trage ihn hier ein — die App würfelt nie für dich. Ein Stresswürfel explodiert, es gibt also keinen Höchstwert.
 aging-total-readout = Alterungswurf gesamt: { $total }
 aging-total-parts = { $die } (Stresswürfel) { $age } (Alter) { $conditions } (Lebensumstände) { $longevity } (Langlebigkeitsritual) { $traits } (Tugenden und Fehler)
 aging-die-capped = Das Langlebigkeitsritual begrenzt diesen Wurf: { $uncapped } zählt als { $total }.
@@ -691,14 +575,12 @@ aging-outcome-points_fixed = { $points ->
 }
 aging-outcome-decrepitude_and_crisis = { $points } Alterungspunkte — genug für die nächste Stufe Gebrechlichkeit — und eine Krise.
 aging-outcome-decrepitude_unpriceable = Genug Alterungspunkte für die nächste Stufe Gebrechlichkeit, und eine Krise. Die Steigerungstabelle reicht nicht bis zu dieser Stufe; legt die Zahl am Tisch fest.
-aging-outcome-crisis-note = Dieser Wurf ist eine Krise. Verteile zuerst die Alterungspunkte und wirf dann unten den Krisenwürfel — die Gebrechlichkeit, die diese Punkte erhöhen, zählt zum Krisen-Gesamtwert.
 # Die Krise (Core Rules.md:16619-16638). Zwei Würfe, beide vom Spieler: der
 # Stresswürfel oben hat das Jahr hierher geschickt, und auf der Krisentabelle wird
 # ein Einfachwürfel geworfen. Die App würfelt keinen von beiden, macht nie den
 # Überlebenswurf und entscheidet nie, ob der Charakter überlebt.
 crisis-label = Krise
 crisis-die-label = Einfachwürfel
-crisis-die-hint = Wirf am Tisch einen Einfachwürfel und trage ihn hier ein — die App würfelt nie für dich. Eine Null zählt als zehn.
 crisis-die-unrolled = Solange der Einfachwürfel fehlt, trägt dieses Jahr die Krise als offen und ungewürfelt ein.
 crisis-total-readout = Krisen-Gesamtwert: { $total }
 # Dieselbe Größe als reines Spaltenlabel für das exportierte Charakterblatt.
@@ -721,7 +603,6 @@ crisis-modifier-row = { $source } { $amount }
 crisis-modifier-bronze_cord = Bronzene Kordel
 crisis-modifier-total = Modifikatoren auf den Überlebenswurf: { $total }
 crisis-allowance-attendant = Ein behandelnder Arzt darf { $characteristic } + { $ability } gegen Schwierigkeitsgrad { $ease } würfeln; bei Erfolg wird sein { $ability }-Wert zum Überlebenswurf addiert, bei einem Patzer gilt { $botch }. Nur ein Arzt kann sinnvoll beistehen.
-crisis-note = Die App macht nie den Überlebenswurf und entscheidet nie, ob der Charakter überlebt; das gehört an den Tisch.
 # Was ein angewendetes Jahr dem Spieler sagen muss, im Unterschied zu dem, was es
 # eingetragen hat.
 aging-note-longevity_ritual_spent = Die Krise verbraucht das Langlebigkeitsritual: es stellt sicher, dass der Charakter überlebt, aber seine Kraft ist erschöpft und das Ritual muss erneut durchgeführt werden. Der Eintrag bleibt stehen — trage das neue Ritual selbst ein.
@@ -734,7 +615,6 @@ aging-distribute-remaining = { $placed } von { $owed } verteilt
 aging-apply = Dieses Jahr anwenden
 aging-revert = Alter { $age } zurücknehmen
 aging-calculator-clear = Diesen Wurf verwerfen
-aging-calculator-note = Nichts hiervon wird am Charakter eingetragen, bevor du diesen Wurf anwendest; der Würfelwurf selbst wird nie gespeichert.
 personality-label = Persönlichkeitseigenschaften
 personality-name-placeholder = Eigenschaft
 # Barrierefreier Name für das gebundene Werteingabefeld (S29, full-audit UX):
@@ -810,7 +690,6 @@ familiar-might-clear = Magische Macht entfernen
 familiar-might-empty = Keine Magische Macht eingetragen.
 familiar-characteristics-note = Die eigenen Werte des Tieres — sie werden nicht aus den Eigenschaftspunkten des Magus bezahlt.
 familiar-powers-label = Investierte Kräfte
-familiar-powers-note = Die Anzahl der Kräfte, die in eine Vertrautenbindung investiert werden können, ist nicht begrenzt.
 familiar-bond-note = Die Bindung verleiht beiden Partnern die Kleine Tugend Wahrer Freund und die Persönlichkeitseigenschaft Loyal (Partner) +3. Ein Vertrauter ohne menschliche Intelligenz erhält sie mit Intelligenz -3. Dies wird nicht automatisch angewendet.
 # Talisman: das persönliche Zaubergerät des Magus. Seine Kapazität stammt als
 # Richtwert aus der Engine (höchste Technik + höchste Form, in Bauern Vim-Vis) und
@@ -864,7 +743,6 @@ longevity-hint = Ein jetzt erschaffenes Ritual: Alterungsbonus { $bonus } (Creo 
 longevity-hint-halved = halbiert
 longevity-focus-label = Fokus
 longevity-focus-placeholder = Worin das Ritual gipfelt
-longevity-sterility-note = Der Anker des Rituals verhindert, dass der Magus seine Lebenskraft auf normale menschliche Weise verausgabt; der Magus wird dadurch dauerhaft unfruchtbar.
 # Grund, warum eine übernatürliche Fähigkeit im Auswähler ausgegraut ist.
 ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe)
 # Nur für Screenreader: Text auf einer gewählten Fähigkeitszeile, auf die ein

@@ -27,11 +27,6 @@
   const required = $derived(rows.filter((row) => row.requirement === 'required'));
   const recommended = $derived(rows.filter((row) => row.requirement === 'recommended'));
   const unmet = $derived(rows.filter((row) => !row.met).length);
-  // What the recommended package costs, off the rules data rather than a literal in a
-  // locale file — the number lives in `rules/core/life_stages.json`.
-  const recommendedXp = $derived(
-    localized?.ruleset.life_stages?.apprenticeship?.recommended_xp ?? null,
-  );
 
   /**
    * The instance of a parameterized Ability the row is about: the one the requirement
@@ -110,11 +105,6 @@
           <li data-met={row.met} data-testid="magus-recommended-{row.ability}">{statusOf(row)}</li>
         {/each}
       </ul>
-      {#if recommendedXp != null}
-        <p class="magus-recommended-hint" data-testid="magus-recommended-hint">
-          {store.t('magus-recommended-hint', { xp: String(recommendedXp) })}
-        </p>
-      {/if}
     {/if}
   </details>
 {/if}

@@ -90,10 +90,6 @@
       />
     </label>
 
-    <p class="hint" data-testid="longevity-sterility-note">
-      {store.t('longevity-sterility-note')}
-    </p>
-
     <button
       type="button"
       onclick={() => store.removeLongevityRitual()}

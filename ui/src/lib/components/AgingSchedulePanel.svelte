@@ -85,13 +85,5 @@
     <p class="aging-formula" data-testid="aging-total-formula">
       {store.t('aging-total-formula', formula)}
     </p>
-    {#if aging.longevity_clamp_active}
-      <!-- "treats all rolls of 10 or more as rolls of 9 until he reaches the age of
-           35 … he is at no risk of actually aging before any other characters."
-           Source: Ars Magica - Definitive Edition (Core Rules).md:16575 -->
-      <p class="aging-clamp" data-testid="aging-longevity-clamp">
-        {store.t('aging-longevity-clamp')}
-      </p>
-    {/if}
   </div>
 {/if}

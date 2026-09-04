@@ -213,14 +213,15 @@ describe('LivingConditionsPicker (slice 6b6c)', () => {
   // counts as an average peasant (0)" and then, immediately beneath it, "Living
   // Conditions modifier: +0" — the same fact twice. The total alone states it, and
   // one stable line in place of two-then-one also removes a height change from the
-  // grid. The "average peasant" framing lives on in the always-present hint.
+  // grid. manual-testing-findings #21 then removed the hint that had carried the
+  // "average peasant" framing, so the total is now the only summary line at all.
   it('renders exactly one summary line when nothing is chosen', () => {
     const body = html();
     expect(has(body, 'living-conditions-none')).toBe(false);
     expect(has(body, 'living-conditions-total')).toBe(true);
-    // An empty set IS the table's own "Average peasant 0" — a complete answer, not
-    // a missing one — so the framing is still on screen, just not as a second line.
-    expect(visibleText(body)).toContain('average peasant');
+    // The picker's own "Average peasant" row is still in the list, so the table's
+    // zero is a row the player can tick rather than a sentence they must read.
+    expect(has(body, 'living-condition-living_condition.average_peasant')).toBe(true);
   });
 
   it("shows the engine's resolved modifier, not a sum of its own", () => {
@@ -246,10 +247,10 @@ describe('LivingConditionsPicker (slice 6b6c)', () => {
     for (const row of ROWS.filter((r) => !r.cumulative)) {
       expect(open(body, `living-condition-${row.id}`)).not.toContain('data-cumulative');
     }
-    // Not colour-only: each cumulative row carries a readable label, and the rule
-    // itself is spelled out once.
-    expect(has(body, 'living-conditions-cumulative-note')).toBe(true);
-    expect(text(body, 'living-conditions-cumulative-note').length).toBeGreaterThan(0);
+    // Not colour-only: each cumulative row still carries a readable label beside its
+    // asterisk. manual-testing-findings #21 removed the paragraph that spelled the
+    // rule out — the label is the row's own accessible marking and stays.
+    expect(has(body, 'living-conditions-cumulative-note')).toBe(false);
     const marks = [...visibleText(body).matchAll(/cumulative/gi)];
     expect(marks.length).toBeGreaterThanOrEqual(ROWS.filter((r) => r.cumulative).length);
   });

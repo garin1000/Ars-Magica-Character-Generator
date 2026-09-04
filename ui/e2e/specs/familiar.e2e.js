@@ -127,9 +127,10 @@ describe('familiar', () => {
 
     // NO budget bar for the invested powers: the character's own powers get a
     // `power-levels-used` read-out, but Core:10866 sets no limit on what may be
-    // invested in a familiar, so a bar here would invent one.
+    // invested in a familiar, so a bar here would invent one. The absent bar is the
+    // whole statement — manual-testing-findings #21 removed the sentence too.
     expect(await $('[data-testid="power-levels-used"]').isExisting()).toBe(false);
-    await expect($('[data-testid="familiar-powers-note"]')).toExist();
+    expect(await $('[data-testid="familiar-powers-note"]').isExisting()).toBe(false);
 
     // The totals panel: binding level = Magic Might 10 + 25 + 5 x Size(-4) = 15.
     // The negative Size takes 20 points off, which is the whole point of the rule.

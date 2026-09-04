@@ -264,21 +264,15 @@ describe('LifeStagePanel funding switch (slice 6b3b)', () => {
     expect(body).not.toMatch(/>\s*life_stages\s*</);
   });
 
-  it('points each radio at its own hint, so switching is explained before it happens', () => {
+  // manual-testing-findings #21: the two explanatory hints under the radios are
+  // gone, and — the half that matters for a11y — so is the `aria-describedby` that
+  // pointed at them. A radio left describing a deleted id is a dangling reference.
+  it('leaves neither hint node nor a description pointing at one', () => {
     const body = html();
-    expect(element(body, 'ability-funding-pool').open).toMatch(
-      /aria-describedby="[^"]*ability-funding-pool-hint/,
-    );
-    expect(element(body, 'ability-funding-life_stages').open).toMatch(
-      /aria-describedby="[^"]*ability-funding-life_stages-hint/,
-    );
-    expect(element(body, 'ability-funding-pool-hint').open).toMatch(
-      /id="ability-funding-pool-hint"/,
-    );
-    expect(element(body, 'ability-funding-life_stages-hint').open).toMatch(
-      /id="ability-funding-life_stages-hint"/,
-    );
-    expect(element(body, 'ability-funding-pool-hint').text).toContain('Enter one total yourself');
+    expect(has(body, 'ability-funding-pool-hint')).toBe(false);
+    expect(has(body, 'ability-funding-life_stages-hint')).toBe(false);
+    expect(element(body, 'ability-funding-pool').open).not.toMatch(/aria-describedby/);
+    expect(element(body, 'ability-funding-life_stages').open).not.toMatch(/aria-describedby/);
   });
 });
 
@@ -296,8 +290,9 @@ describe('LifeStagePanel offers both modes to a magus (slice 6b4)', () => {
     // Apprenticeship is modelled now, so a magus with a life-stage plan is legal and
     // the option must be live — the engine no longer refuses the combination.
     expect(guided.open).not.toMatch(/disabled/);
-    // The reason node is gone, so the radio describes itself with its hint alone.
-    expect(guided.open).toMatch(/aria-describedby="ability-funding-life_stages-hint"/);
+    // The reason node is gone, and so is the hint that replaced it: the radio's own
+    // label is the whole of what it says now.
+    expect(guided.open).not.toMatch(/aria-describedby/);
     expect(element(body, 'ability-funding-pool').open).not.toMatch(/disabled/);
   });
 
@@ -309,33 +304,19 @@ describe('LifeStagePanel offers both modes to a magus (slice 6b4)', () => {
     expect(has(html(), 'ability-funding-magus-reason')).toBe(false);
   });
 
-  it('announces the Gauntlet note above the age it constrains, for a guided magus', () => {
+  // manual-testing-findings #21: the paragraph explaining what a magus's two ages
+  // mean is gone for every character type and every funding mode. The two fields
+  // still carry their own labels, which is what the panel is for.
+  it('shows the Gauntlet explanation to nobody, in either funding mode', () => {
     installMagus();
     installPlan();
     const body = html();
-    const note = element(body, 'life-stage-gauntlet-note');
-    // The age shown here is the one the Gauntlet age is measured against, which
-    // neither field can say for itself, so the note is read before both.
-    expect(body.indexOf('life-stage-gauntlet-note')).toBeLessThan(body.indexOf('age-readout'));
-    // It arrives when the funding source is switched, so its appearance is announced.
-    expect(note.open).toMatch(/role="status"/);
-    expect(note.text).toContain('Gauntlet');
-    // The actionable half (6b5): the two ages mean different things, and the years
-    // between them are worth 30 points each. It must no longer send an older magus
-    // to the flat pool — those years are counted now.
-    expect(note.text).toContain('30 points');
-    expect(note.text).not.toContain('experience pool');
-  });
+    expect(has(body, 'life-stage-gauntlet-note')).toBe(false);
+    // Both age controls survive it — this is a prose removal, not a field removal.
+    expect(has(body, 'age-readout')).toBe(true);
+    expect(has(body, 'life-stage-gauntlet-age-input')).toBe(true);
 
-  it('shows no Gauntlet note for a guided companion', () => {
-    installPlan();
-    // A companion has no apprenticeship, so its age is simply its age.
-    expect(has(html(), 'life-stage-gauntlet-note')).toBe(false);
-  });
-
-  it('shows no Gauntlet note for a magus in pool mode', () => {
     installMagus();
-    // Nothing is built from life stages there, so the note has nothing to constrain.
     expect(has(html(), 'life-stage-gauntlet-note')).toBe(false);
   });
 });
@@ -496,18 +477,18 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
     expect(body).not.toMatch(/>\s*gauntlet_age\s*</);
   });
 
-  it('wires each field to its own hint, the way the funding radios are', () => {
+  // manual-testing-findings #21: all three per-field hints are gone, together with
+  // the `aria-describedby` that named them — the dangling-reference half of the
+  // removal, and the one an a11y regression would hide in. In the ordinary state
+  // (years to spend) the fields carry no description at all; the read-only state
+  // below is the sole exception and has its own suite.
+  it('leaves no per-field hint and no description naming one', () => {
     installGuidedMagus();
     const body = html();
     for (const testid of inputs) {
-      const hint = testid.replace('-input', '-hint');
-      expect(element(body, testid).open).toMatch(new RegExp(`aria-describedby="${hint}"`));
-      expect(element(body, hint).open).toMatch(new RegExp(`id="${hint}"`));
+      expect(has(body, testid.replace('-input', '-hint'))).toBe(false);
+      expect(element(body, testid).open).not.toMatch(/aria-describedby/);
     }
-    // The charged-seasons rule is the one that cannot be guessed from the label.
-    const seasons = element(body, 'life-stage-lab-seasons-hint').text;
-    expect(seasons).toContain('10');
-    expect(seasons).toContain('three');
   });
 
   it('reads out the engine years, points and split, announced', () => {
@@ -566,6 +547,10 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
       // Localized prose, never the raw key.
       expect(note.text).toContain('as a magus');
       expect(note.text).not.toContain('life-stage-post-gauntlet-no-years-note');
+      // manual-testing-findings #21 kept the first sentence — a read-only state the
+      // controls cannot state for themselves — and cut the second, which taught the
+      // player where those years come from.
+      expect(note.text).not.toContain('run from the Gauntlet age');
       for (const testid of scaled) {
         expect(element(body, testid).open).toMatch(/life-stage-post-gauntlet-no-years-note/);
       }

@@ -52,7 +52,6 @@ import { e2eFile } from '../wdio.conf.js';
 const SCHEDULE = '[data-testid="aging-schedule"]';
 const DIE_INPUT = '[data-testid="aging-die-input"]';
 const AGING_TOTAL = '[data-testid="aging-total"]';
-const OUTCOME_CRISIS = '[data-testid="aging-outcome-crisis"]';
 const DISTRIBUTE_STA = '[data-testid="aging-distribute-sta"]';
 const APPLY = '[data-testid="aging-apply"]';
 // manual-testing-findings-2026-09-03 #19: the calculator's per-year "Take back age N"
@@ -109,7 +108,9 @@ describe('the aging crisis', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'a stress die of 9 at age 36 should total 13',
     });
-    expect(await textOf(OUTCOME_CRISIS)).not.toHaveLength(0);
+    // manual-testing-findings #21 removed the "this roll is a Crisis, place the points
+    // first" paragraph. The Crisis panel appearing IS that statement now.
+    expect(await $('[data-testid="aging-outcome-crisis"]').isExisting()).toBe(false);
 
     // The panel appears with the row that demanded it, never before.
     await $(CRISIS).waitForExist({ timeout: STEP_TIMEOUT });

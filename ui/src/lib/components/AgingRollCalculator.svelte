@@ -159,7 +159,6 @@
         data-testid="aging-die-input"
       />
     </label>
-    <p class="hint" data-testid="aging-die-hint">{store.t('aging-die-hint')}</p>
 
     {#if preview && parts}
       <!-- Announced: both figures change on every keystroke in the die field. -->
@@ -197,12 +196,6 @@
           <p>{awardText(award)}</p>
         {/each}
       </div>
-
-      {#if preview.outcome.crisis}
-        <p class="warning" data-testid="aging-outcome-crisis">
-          {store.t('aging-outcome-crisis-note')}
-        </p>
-      {/if}
 
       {#if owed > 0}
         <div class="aging-distribute" data-testid="aging-distribute">
@@ -256,8 +249,6 @@
         </button>
       </div>
     {/if}
-
-    <p class="hint" data-testid="aging-calculator-note">{store.t('aging-calculator-note')}</p>
 
     {#if store.agingNotes.length > 0}
       <!-- What the year just applied had to TELL the player, as opposed to what it

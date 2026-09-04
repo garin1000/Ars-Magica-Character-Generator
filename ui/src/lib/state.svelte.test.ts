@@ -536,26 +536,19 @@ describe('the guided wizard', () => {
       await store.startWizard('magus');
     });
 
-    it('says whether the step in hand is one nobody has filled in', () => {
+    // The per-step `phaseIncomplete` getter went with the on-step notice
+    // (manual-testing-findings #2). What is left is the list itself, which the rail's
+    // per-step `.sr-only` marker and the Review step's outstanding list both read.
+    it('reports the untouched phases the engine names, in rail order', () => {
       untouched('concept', 'abilities');
-      expect(store.wizardPhaseIncomplete).toBe(true);
-
-      untouched('abilities');
-      expect(store.wizardPhaseIncomplete).toBe(false);
-    });
-
-    it('follows the rail from step to step', () => {
-      untouched('characteristics');
-      expect(store.wizardPhaseIncomplete).toBe(false);
-      store.wizardNext();
-      expect(store.wizardPhaseIncomplete).toBe(true);
+      expect(store.wizardIncompletePhases).toEqual(['concept', 'abilities']);
     });
 
     // The whole promise of the indicator: it says a step is empty, and changes
     // nothing about what the flow lets the player do.
     it('never gates: an untouched step can still be advanced past and finished on', () => {
       untouched('concept', 'characteristics', 'house_specialisation', 'experience');
-      expect(store.wizardPhaseIncomplete).toBe(true);
+      expect(store.wizardIncompletePhases).toContain(store.wizardPhase);
       expect(store.wizardCanAdvance).toBe(true);
 
       while (store.wizardPhase !== 'review') store.wizardNext();
@@ -567,7 +560,6 @@ describe('the guided wizard', () => {
     it('reports nothing before the first validation result arrives', () => {
       store.result = null;
       expect(store.wizardIncompletePhases).toEqual([]);
-      expect(store.wizardPhaseIncomplete).toBe(false);
     });
   });
 

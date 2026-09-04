@@ -36,7 +36,10 @@ import {
 // it is a fixed frame the step's content moves within — exactly what is needed to
 // see a step body shift upward when something above it collapses.
 const WIZARD = '[data-testid="wizard"]';
-const INCOMPLETE_HINT = '[data-testid="wizard-incomplete-hint"]';
+// The rail entry for the characteristics step. Its `data-incomplete` attribute is the
+// observable form of the engine's `completeness.incomplete_phases` flip — the state
+// change that used to relay out the step body, now that no on-step notice reacts to it.
+const CHARACTERISTICS_STEP = '[data-testid="wizard-step-characteristics"]';
 const CHAR_PANEL = '[data-testid="char-panel"]';
 const INT_INC = '[data-testid="char-inc-int"]';
 
@@ -155,47 +158,47 @@ async function addSpell(spellId) {
 }
 
 describe('layout stability under first interaction', () => {
-  // guided-creation-review-2026-08 #2. The incomplete-step note is driven by the
-  // engine's `completeness.incomplete_phases`, which flips on the very FIRST recorded
-  // value — so the click measured here is precisely the one that used to unmount a
-  // paragraph above the input surface and drag the stepper out from under the pointer.
-  // Characteristics is the worst case of the general pattern because its controls are
-  // clicked repeatedly.
+  // guided-creation-review-2026-08 #2. The click measured here is the one that flips
+  // the engine's `completeness.incomplete_phases` for this step — the very first
+  // recorded value — and it used to unmount a paragraph above the input surface and
+  // drag the stepper out from under the pointer. Characteristics is the worst case of
+  // the general pattern because its controls are clicked repeatedly.
+  //
+  // THE GUARANTEE OUTLIVED ITS ORIGINAL FIX, which is why this test stays. #2 was
+  // first answered by keeping the paragraph mounted and reserving its box
+  // (`.hidden-reserved`); manual-testing-findings #2 then deleted the paragraph
+  // outright, which is a strictly stronger answer — an element that does not exist
+  // cannot enter or leave the flow. What must still hold is unchanged and is what is
+  // asserted below: on the completeness flip, nothing above the stepper relays out.
+  // Any future chrome keyed on the same flag would break this test, which is the
+  // point.
   it('does not move the characteristics stepper on the click that completes the step', async () => {
     await startWizard('grog');
     await advanceWizardTo('characteristics');
 
-    const hint = await $(INCOMPLETE_HINT);
-    await hint.waitForExist({ timeout: BOOT_TIMEOUT });
-    // Nothing is recorded yet, so the note is on show and announced.
-    expect(await hint.isDisplayed()).toBe(true);
-    expect(await hint.getAttribute('aria-hidden')).toBe(null);
+    const railStep = await $(CHARACTERISTICS_STEP);
+    await railStep.waitForExist({ timeout: BOOT_TIMEOUT });
+    // Nothing is recorded yet, so the step reads as untouched — and no on-step notice
+    // says so, because there is none any more.
+    expect(await railStep.getAttribute('data-incomplete')).toBe('true');
+    expect(await $('[data-testid="wizard-incomplete-hint"]').isExisting()).toBe(false);
 
     const inc = await $(INT_INC);
     await inc.waitForExist({ timeout: STEP_TIMEOUT });
     await inc.waitForClickable({ timeout: STEP_TIMEOUT });
 
     const stepperBefore = await stablePosition(INT_INC, WIZARD);
-    const hintBefore = await stablePosition(INCOMPLETE_HINT, WIZARD);
     expect(stepperBefore).not.toBe(null);
-    expect(hintBefore.height).toBeGreaterThan(0);
 
     await inc.click();
 
     // Wait for the state change that used to move the surface: the phase is complete,
-    // so the note goes quiet.
-    await browser.waitUntil(async () => !(await hint.isDisplayed()), {
+    // so the rail drops its untouched mark.
+    await browser.waitUntil(async () => !(await railStep.getAttribute('data-incomplete')), {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'recording a Characteristic did not quieten the incomplete-step note',
+      timeoutMsg: 'recording a Characteristic did not clear the untouched mark on the step',
     });
     expect(await $('[data-testid="char-value-int"]').getText()).toContain('1');
-
-    // The note is hidden but still in the flow, holding exactly the box it held.
-    expect(await hint.isExisting()).toBe(true);
-    // Hidden content that has stopped being true must not be announced either.
-    expect(await hint.getAttribute('aria-hidden')).toBe('true');
-    const hintAfter = await stablePosition(INCOMPLETE_HINT, WIZARD);
-    expect(hintAfter).toEqual(hintBefore);
 
     // The claim of the slice: the control the user clicked has not moved.
     const stepperAfter = await stablePosition(INT_INC, WIZARD);

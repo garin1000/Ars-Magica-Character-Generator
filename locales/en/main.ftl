@@ -81,97 +81,9 @@ wizard-step-pending-label = has open warnings
 # Marks a step in the rail nothing has been recorded for yet. Legal is not the
 # same as finished: an empty step is marked, never blocked.
 wizard-step-incomplete-label = not started
-# The same reading, said on the step itself.
-wizard-step-incomplete-hint = Nothing has been recorded on this step yet. It does not block: you can continue and come back to it.
 # Shown while the validation mode is Advisory or Silent: nothing is enforced, so
 # no step gates and Finish is always available.
 wizard-unchecked-hint = Validation is not enforced, so no step blocks progress.
-
-# Per-step guidance: what the player decides on this step, and what the rules say
-# about it. Keyed by the engine's `CreationPhase` slug, one line per phase, so a
-# new phase without copy fails the locale-parity test. Instructional chrome about
-# the flow, not catalogue text keyed by item ID — hence Fluent, not
-# `rules/i18n/`. Every factual claim is sourced from
-# `Ars Magica - Definitive Edition (Core Rules).md`; the line ranges are recorded
-# in `crates/arm-rules/RULES.md`. Numbers the ruleset already carries are
-# interpolated ({ $points }, { $flaws }, { $virtues }) and never written out.
-wizard-guidance-concept = Start from a concept: who this character is, and what they are in the saga. A magus might be a fire wizard, a companion a scholar far from home, a grog any sort of warrior or member of the covenant staff.
-wizard-guidance-characteristics = Characteristics are your character's inborn attributes, and normal means never raise them later. You have { $points } points to spend, and a score below zero gives points back.
-wizard-guidance-virtues_flaws = Flaws pay for Virtues: up to { $flaws } points of Flaws fund up to { $virtues } points of Virtues. You need not take the maximum, and every character takes a Social Status.
-wizard-guidance-experience = Experience is acquired in blocks: the first five years of childhood, then later life a year at a time — for a magus, apprenticeship and the years after it as well. Enter one total yourself, or let those life stages earn it from the character's age.
-wizard-guidance-abilities = Abilities are learned skills, bought with the experience the previous step supplies. Your character's age sets the highest score any Ability may reach at creation.
-wizard-guidance-arts = Techniques and Forms are the magus's magic: every spell combines one of each. The same apprenticeship experience buys Arts and Abilities, so what is spent here is not spent there.
-wizard-guidance-spells = Apprenticeship grants levels of spells rather than experience points, and they are spent here. No spell may be of a higher level than the magus's Technique, Form, Intelligence and Magic Theory allow.
-wizard-guidance-house_specialisation = Every Hermetic magus belongs to exactly one House, which grants a benefit at creation. It comes before Virtues and Flaws because that benefit is a free Minor Virtue, which needs no Flaw to fund it.
-wizard-guidance-mythic_type = A Mythic Companion's type is a free Virtue saying what he is. The types are incompatible with one another and with The Gift, and one normally brings a free Minor Virtue with it.
-wizard-guidance-personality_reputations = Pick a few words for the character's personality and give each a score from +3 to -3. Grogs should have a score in Loyal, and warriors one in Brave. A Reputation belongs here only if a Virtue or Flaw granted one.
-wizard-guidance-aging = A character over 35 makes an aging roll for every year before play begins, which may cost apparent age or Characteristic points. Aging Points build up in a Characteristic until they exceed it, and it then drops by one.
-# No rules passage describes a review step — it is this application's own closing
-# step, so this line makes no rules claim.
-wizard-guidance-review = Nothing new is chosen here — this is the last look before the character leaves the guided flow. Everything stays editable after finishing.
-
-# The per-type Virtue/Flaw advice appended to `wizard-guidance-virtues_flaws`
-# (guided-creation-review-2026-08 #7). One whole sentence per clause rather than one
-# nested select inside the main message, so a translator reads sentences and not
-# fragments; `derive.ts`'s `flawCapNotes` picks the key and supplies the args.
-#
-# `$cap` is the profile's own `flaw_category_caps` maximum and arrives as a NUMBER, so
-# the variants below select on it: a cap of 0 forbids the category outright ("You
-# should not take Story Flaws", Core Rules :2826), while a cap of 1 or more limits it
-# ("not more than one Story Flaw", :2818, :2837). The `[1]` variant exists for the
-# plural agreement alone — the figure itself is always interpolated, never written out.
-#
-# `$rule` is the cap's `hard` flag: the rules' own distinction between "may not"
-# (enforced, and reported as an error by the validator) and "should not" (a guideline
-# the troupe may set aside, :2818).
-#
-# There is deliberately NO "at least one Story Flaw" wording anywhere: Story Flaws
-# have a recommended ceiling and no minimum. The only "at least one" the rules state
-# is the magus's Hermetic Flaw, below.
-wizard-guidance-story-flaw-cap =
-    { $rule ->
-        [hard]
-            { $cap ->
-                [0] You may not take Story Flaws.
-                [1] You may not take more than { $cap } Story Flaw.
-               *[other] You may not take more than { $cap } Story Flaws.
-            }
-       *[soft]
-            { $cap ->
-                [0] You should not take Story Flaws.
-                [1] You should not take more than { $cap } Story Flaw.
-               *[other] You should not take more than { $cap } Story Flaws.
-            }
-    }
-wizard-guidance-personality-flaw-cap =
-    { $rule ->
-        [hard]
-            { $cap ->
-                [0] You may not take Personality Flaws.
-                [1] You may not take more than { $cap } Personality Flaw.
-               *[other] You may not take more than { $cap } Personality Flaws.
-            }
-       *[soft]
-            { $cap ->
-                [0] You should not take Personality Flaws.
-                [1] You should not take more than { $cap } Personality Flaw.
-               *[other] You should not take more than { $cap } Personality Flaws.
-            }
-    }
-# Core Rules :2860. Worded exactly as `issue-missing_hermetic_flaw`, the engine
-# warning for the same guideline, so the advice and the finding read alike.
-wizard-guidance-hermetic-flaw = A magus should take at least one Hermetic Flaw.
-
-# What the chosen character type commits this character to, stated on the banner
-# above both the editor and the guided wizard. Relocated from the deleted
-# `type` creation step (guided-creation review #1), which asked for nothing: the
-# type is fixed when the character is created and can never change. Re-keyed to
-# `character-type-*` so no key names a creation phase that no longer exists.
-character-type-explainer = The character type is fixed for this character. It sets the Virtue and Flaw budget, which categories may be taken, and which creation steps follow.
-character-type-budget = Up to { $flaws } points of Flaws, funding up to { $virtues } points of Virtues.
-character-type-gift-required = This type has The Gift, granted automatically.
-character-type-gift-forbidden = This type cannot have The Gift.
-character-type-gift-optional = This type may take The Gift.
 
 # The wizard's closing step.
 wizard-review-title = Review
@@ -323,8 +235,6 @@ xp-pool-later_life = Later life (Abilities only)
 ability-funding-label = Source of experience
 ability-funding-pool = Experience pool
 ability-funding-life_stages = Life stages
-ability-funding-pool-hint = Enter one total yourself and spend it on any Ability.
-ability-funding-life_stages-hint = Early childhood and later life earn the experience: age sets the later-life total, while a native language and a sample Childhood fill the childhood blocks.
 life-stage-no-budget = No life-stage experience yet.
 # THE LIFE-STAGE BLOCK CHIPS — one chip per block, in the order the character lived
 # them (guided-creation-review-2026-08 #14). The rules state the blocks as an ordered
@@ -373,28 +283,12 @@ xp-pool-block-after-gauntlet = After the Gauntlet: { $years } × { $rate } - { $
 # Age is repeated inside the panel because later life is measured in years, so it
 # is edited here as well as on the Details tab.
 life-stage-age-label = Age
-# What the two ages mean for a magus, which neither field can say for itself. The
-# age is how old the magus is NOW; the Gauntlet age is when its apprenticeship
-# ended — the fifteen years before it (Core Rules.md:2435), with every year before
-# those earning later-life experience (`:2214`). The years between the two are life
-# as a magus, worth "30 points" each (`:2216`, `:2471`). Nothing is stored for a
-# blank field: the engine reads it as the ruleset's own baseline magus, "25 years
-# old and just out of apprenticeship" (`:1601`), clamped to a younger character's
-# age — which is the number the empty field shows as its placeholder.
-life-stage-gauntlet-note = For a magus the age is how old it is now, and the Gauntlet age is when its apprenticeship ended: apprenticeship is the fifteen years before the Gauntlet, every year before those earns later-life experience, and every year from the Gauntlet to today is worth 30 points. Leave the Gauntlet age blank and the magus takes the usual age for one just out of apprenticeship, which the empty field shows.
-# The years a magus has lived since its Gauntlet. Only the Gauntlet age is stored;
-# the years, the points and the experience all follow from it and the age. Each
-# point "can be an experience point in an Art or Ability or one level of spell"
-# (Core Rules.md:2471), and a season of lab work costs 10 of that year's 30 — but
-# only three seasons a year are charged, because the third has already taken the
-# whole 30 (`:2482`).
 life-stage-gauntlet-age-label = Gauntlet age
-life-stage-gauntlet-age-hint = The age the apprenticeship ended at. Left blank it takes the age the empty field shows: the usual age for a magus just out of apprenticeship, or this character's own age if it is younger than that.
 life-stage-lab-seasons-label = Lab seasons
-life-stage-lab-seasons-hint = Seasons of lab work, totalled over all the years as a magus: each costs 10 of that year's 30 points, and only three a year are charged — the third already takes the whole 30, so a fourth is free.
 life-stage-spell-levels-label = Levels of spells
-life-stage-spell-levels-hint = How many of the points to take as levels of spells rather than experience.
-life-stage-post-gauntlet-no-years-note = No years as a magus yet, so lab seasons and levels of spells can take nothing. Those years run from the Gauntlet age to the character's age.
+# Why both fields above are read-only: it states a read-only state the controls
+# cannot state for themselves, and it is the `aria-describedby` target of both.
+life-stage-post-gauntlet-no-years-note = No years as a magus yet, so lab seasons and levels of spells can take nothing.
 life-stage-post-gauntlet-summary = { $years } years as a magus: { $points } points = { $xp } XP + { $levels } levels of spells
 # Escape hatch for a hand-edited save: a character funded by its life stages must
 # not also carry an entered pool, and guided mode offers no field to correct one,
@@ -419,7 +313,6 @@ childhood-entry = { $name } { $score }
 childhood-slot-label = { $name }
 childhood-slot-label-nth = { $name } ({ $index })
 childhood-apply = Take this childhood
-childhood-apply-hint = The package fills in these Ability scores; they stay editable afterwards.
 # Why taking the package is blocked. Two slots of one Ability sharing a value would
 # merge into a single row and waste the other's experience; a childhood language
 # must differ from the native language, which has a block of its own.
@@ -441,7 +334,6 @@ magus-minimums-summary = Ability requirements: { $unmet } of { $total } still un
 magus-minimum-met = { $ability } { $min }{ $qualifier } is met: this character has { $score }.
 magus-minimum-unmet = { $ability } { $min }{ $qualifier } is not met: this character has { $score }.
 magus-recommended-label = Recommended minimum Abilities
-magus-recommended-hint = The recommended Abilities cost { $xp } experience points in total; below them the magus is weak relative to other magi.
 ability-score-label = Score
 ability-specialty-label = Specialty
 # Heading for the rulebook's list of example specialties shown in the picker.
@@ -542,14 +434,12 @@ remove-item = Remove { $name }
 # Details tab: age, Confidence (read-only, derived), Personality Traits, Reputations.
 age-label = Age
 apparent-age-label = Apparent age
-age-cap-note = Max Ability score: { $cap }
 confidence-label = Confidence
 confidence-readout = Score { $score }, { $points } points
 warping-label = Warping
 warping-readout = Score { $score }, { $points } points
 warping-effect-label = Warping effect
 warping-owed-label = Warping Virtues & Flaws
-warping-owed-hint = Your Warping Score grants these Virtues and Flaws (off-budget). Choose one for each.
 warping-owed-minor-flaws = { $count ->
     [one] { $count } Minor Flaw
    *[other] { $count } Minor Flaws
@@ -585,10 +475,8 @@ identity-gender = Gender
 identity-birth-year = Birth year
 # The saga year (guided-creation-review-2026-08 #25): an app-wide setting, not part
 # of any character, against which the age and the birth year are two views of one
-# fact. Changing it rewrites nothing — advancing a saga means aging rolls, not
-# subtraction — so the hint says what it does and what it does not.
+# fact.
 saga-year-label = Saga year
-saga-year-hint = The year your saga is set in. It links the age and the birth year while you type; changing it leaves both as they are.
 identity-sigil = Wizard's sigil
 identity-covenant = Covenant
 identity-parens = Parens
@@ -596,7 +484,6 @@ identity-parens = Parens
 # are computed by the engine from these points, never recomputed here.
 aging-label = Aging
 aging-points-heading = Aging points per Characteristic
-aging-points-note = Characteristic drops are applied automatically once accrued points exceed the Characteristic's score; the drop shows in the derived totals.
 warping-points-label = Warping points
 twilight-scars-label = Twilight Scars
 twilight-scar-placeholder = Describe the scar
@@ -647,14 +534,11 @@ aging-rolls-recorded = { $recorded } of { $owed } recorded
 # the right of the `=` includes — without it the sentence did not add up. Worded
 # exactly as `aging-total-parts` below words it, so the two read-outs agree.
 aging-total-formula = Stress die { $age } (age) { $conditions } (living conditions) { $longevity } (Longevity Ritual) { $traits } (Virtues and Flaws) = stress die { $fixed }
-aging-longevity-clamp = A Longevity Ritual is in force: while it lasts, no total reaches the aging table's first result, so these rolls cannot age the character.
 # The Living Conditions checklist (Core Rules.md:16581-16594). The total shown is
 # the engine's own resolved modifier — it also carries the Virtue/Flaw
 # contributions, which are not rows in this list.
 living-conditions-label = Living Conditions
-living-conditions-hint = The aging total subtracts this modifier, so a higher modifier means a longer life. With nothing chosen the character counts as an average peasant (0).
 living-conditions-total = Living Conditions modifier: { $modifier }
-living-conditions-cumulative-note = Conditions marked cumulative stack with each other; the rest are alternatives, so take at most one of those.
 living-conditions-cumulative-label = cumulative
 # The aging roll calculator (Core Rules.md:16567-16615). The player rolls a stress
 # die at the table and types it here — the app never rolls, and the die is never
@@ -671,7 +555,6 @@ aging-year-option-dated = { $recorded ->
    *[no] Age { $age } ({ $year })
 }
 aging-die-label = Stress die
-aging-die-hint = Roll a stress die (no botch) at the table and type it here — the app never rolls for you. A stress die explodes, so there is no upper value.
 aging-total-readout = Aging total: { $total }
 aging-total-parts = { $die } (stress die) { $age } (age) { $conditions } (living conditions) { $longevity } (Longevity Ritual) { $traits } (Virtues and Flaws)
 aging-die-capped = The Longevity Ritual caps this roll: { $uncapped } counts as { $total }.
@@ -687,14 +570,12 @@ aging-outcome-points_fixed = { $points ->
 }
 aging-outcome-decrepitude_and_crisis = { $points } Aging Points — enough to reach the next level of Decrepitude — and a Crisis.
 aging-outcome-decrepitude_unpriceable = Enough Aging Points to reach the next level of Decrepitude, and a Crisis. The advancement table does not reach that level, so agree the number at the table.
-aging-outcome-crisis-note = This roll is a Crisis. Place the Aging Points first, then roll the Crisis die below — the Decrepitude those points raise counts towards the crisis total.
 # The Crisis (Core Rules.md:16619-16638). Two dice, both the player's: the stress
 # die above sent the year here, and a simple die is thrown at the Crisis Table.
 # The app never rolls either, never throws the survival roll, and never decides
 # whether the character lives.
 crisis-label = Crisis
 crisis-die-label = Simple die
-crisis-die-hint = Roll a simple die at the table and type it here — the app never rolls for you. A zero counts as ten.
 crisis-die-unrolled = Until the simple die is entered, applying this year records the Crisis as owed and unrolled.
 crisis-total-readout = Crisis total: { $total }
 # The same quantity as a bare column label, for the exported sheet.
@@ -717,7 +598,6 @@ crisis-modifier-row = { $source } { $amount }
 crisis-modifier-bronze_cord = Bronze cord
 crisis-modifier-total = Modifiers to the survival roll: { $total }
 crisis-allowance-attendant = An attending doctor may roll { $characteristic } + { $ability } against an Ease Factor of { $ease }; on a success their { $ability } score is added to the survival roll, and on a botch { $botch } applies. Only one doctor may usefully attend.
-crisis-note = The app never makes the survival roll and never decides whether the character lives; resolve that at the table.
 # What an applied year has to tell the player, as opposed to what it wrote.
 aging-note-longevity_ritual_spent = The Crisis spends the Longevity Ritual: it assures the character survives, but its power is gone and the focal ritual must be performed again. The entry is left as it stands — record the new ritual yourself.
 aging-note-heavy_wound = This character sustains a Heavy Wound from the Crisis, in addition to any other result. The app records no wound — mark it on the health track yourself.
@@ -729,7 +609,6 @@ aging-distribute-remaining = { $placed } of { $owed } placed
 aging-apply = Apply this year
 aging-revert = Take back age { $age }
 aging-calculator-clear = Clear this roll
-aging-calculator-note = Nothing shown here is recorded on the character until you press Apply; the die itself is never saved.
 personality-label = Personality Traits
 personality-name-placeholder = Trait
 # Accessible name for the bound value input (S29, full-audit UX): each row's
@@ -805,7 +684,6 @@ familiar-might-clear = Remove Magic Might
 familiar-might-empty = No Magic Might entered.
 familiar-characteristics-note = The beast's own scores — not bought from the magus's Characteristic points.
 familiar-powers-label = Invested Powers
-familiar-powers-note = There is no limit to the number of powers invested in a familiar bond.
 familiar-bond-note = The bond grants both partners the Minor Virtue True Friend and the Personality Trait Loyal (partner) +3. A familiar lacking human intelligence gains it at Intelligence -3. These are not applied automatically.
 # Talisman: the magus's personal enchanted item. Its capacity is engine-derived
 # guidance (highest Technique + highest Form, in pawns of Vim vis) and is never
@@ -857,7 +735,6 @@ longevity-hint = A ritual made now: aging bonus { $bonus } (Creo Corpus Lab Tota
 longevity-hint-halved = halved
 longevity-focus-label = Focus
 longevity-focus-placeholder = How the ritual culminates
-longevity-sterility-note = The ritual's anchor stops the magus expending his life force in normal human fashion, so he becomes permanently sterile.
 # Shown as the reason a Supernatural Ability is greyed in the picker.
 ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Ability)
 # Screen-reader-only text on a selected Ability row an error-severity issue
