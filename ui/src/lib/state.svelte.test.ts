@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AgingApplication, AgingProjection } from './ipc';
 import type {
   Ability,
+  AgingLogEntry,
   CreationPhase,
   Entity,
   EntityTypeProfile,
@@ -4072,5 +4073,140 @@ describe('the aging roll draft', () => {
     await stale;
 
     expect(store.agingPreview?.total.total).toBe(14);
+  });
+});
+
+// --- the aging log's remove button (manual-testing-findings #23) ------------
+
+describe('the aging log’s remove button', () => {
+  /**
+   * The row the engine writes when a year is resolved: the age it was rolled for
+   * (the key `aging::revert_year` addresses entries by), the points it placed and
+   * whether it advanced the appearance. Deleting such a row on its own leaves
+   * every one of those effects standing on the character with nothing left to
+   * explain them — which is the corruption these tests pin.
+   */
+  function recorded(age: number, year: number): AgingLogEntry {
+    return {
+      year,
+      age,
+      effect: '',
+      die: 9,
+      total: 13,
+      points: { sta: 1 },
+      apparent_age_increased: true,
+    };
+  }
+
+  /** A hand-written row: free text and no age, so there is nothing mechanical to
+   *  undo and `revert_year` cannot reach it (aging.rs:1537-1541). */
+  const handWritten: AgingLogEntry = { year: 1219, effect: 'A hard winter' };
+
+  /** The engine's refusal for an age nothing records (`AgingError::YearNotRecorded`). */
+  const notRecorded: ValidationIssue = {
+    severity: 'error',
+    code: 'aging_year_not_recorded',
+    phase: 'aging',
+    args: { age: '40' },
+  };
+
+  beforeEach(() => {
+    store.clearAgingDraft();
+    store.error = null;
+    vi.mocked(ipc.agingRevert).mockReset();
+  });
+
+  it('takes an engine-recorded year off the character, not just off the log', async () => {
+    // One resolved year: 1 Aging Point in Stamina and a year of apparent age.
+    store.entity.aging_points = { sta: 1 };
+    store.entity.apparent_age = 41;
+    store.entity.aging_log = [recorded(40, 1220)];
+
+    // What `aging::revert_year` hands back for age 40: the character exactly as
+    // he stood before that year was applied.
+    const unaged: Entity = {
+      ...($state.snapshot(store.entity) as Entity),
+      aging_points: {},
+      apparent_age: null,
+      aging_log: [],
+    };
+    vi.mocked(ipc.agingRevert).mockResolvedValue({ status: 'reverted', entity: unaged });
+
+    await store.removeAgingLogEntryAt(0);
+
+    // The year's effects come back off with its row. A plain array filter left
+    // both applied and deleted the only record of where they came from.
+    expect(store.entity.aging_points).toEqual({});
+    expect(store.entity.apparent_age).toBeNull();
+    expect(store.entity.aging_log).toEqual([]);
+    // Addressed by the entry's age, which is the engine's key.
+    expect(vi.mocked(ipc.agingRevert).mock.lastCall?.[1]).toBe(40);
+  });
+
+  it('takes back the row that was clicked, by its age and not by its index', async () => {
+    // A hand-written row first, so the clicked row's index (1) is neither of the
+    // recorded ages (40, 41) — sending the index would revert the wrong year, or
+    // no year at all.
+    store.entity.aging_points = { sta: 2 };
+    store.entity.apparent_age = 42;
+    store.entity.aging_log = [handWritten, recorded(40, 1220), recorded(41, 1221)];
+
+    const without40: Entity = {
+      ...($state.snapshot(store.entity) as Entity),
+      aging_points: { sta: 1 },
+      apparent_age: 41,
+      aging_log: [handWritten, recorded(41, 1221)],
+    };
+    vi.mocked(ipc.agingRevert).mockResolvedValue({ status: 'reverted', entity: without40 });
+
+    await store.removeAgingLogEntryAt(1);
+
+    expect(vi.mocked(ipc.agingRevert).mock.lastCall?.[1]).toBe(40);
+    expect(store.entity.aging_points).toEqual({ sta: 1 });
+    expect(store.entity.apparent_age).toBe(41);
+    expect(store.entity.aging_log).toEqual([handWritten, recorded(41, 1221)]);
+  });
+
+  it('drops a hand-written row without asking the engine', async () => {
+    // No age, so nothing mechanical was ever applied and there is nothing to
+    // undo: the ordinary log editor is the right home for it.
+    store.entity.aging_points = { sta: 1 };
+    store.entity.apparent_age = 41;
+    store.entity.aging_log = [handWritten, recorded(40, 1220)];
+
+    await store.removeAgingLogEntryAt(0);
+
+    expect(ipc.agingRevert).not.toHaveBeenCalled();
+    expect(store.entity.aging_log).toEqual([recorded(40, 1220)]);
+    // And the recorded year it sat next to is untouched.
+    expect(store.entity.aging_points).toEqual({ sta: 1 });
+    expect(store.entity.apparent_age).toBe(41);
+  });
+
+  it('keeps the row and reports the refusal when the engine will not take the year back', async () => {
+    store.entity.aging_points = { sta: 1 };
+    store.entity.apparent_age = 41;
+    store.entity.aging_log = [recorded(40, 1220)];
+    vi.mocked(ipc.agingRevert).mockResolvedValue({ status: 'rejected', issues: [notRecorded] });
+
+    await store.removeAgingLogEntryAt(0);
+
+    // A × that deleted the row anyway would claim an undo that never happened,
+    // and the effects it did not take off would have no record left.
+    expect(store.entity.aging_log).toEqual([recorded(40, 1220)]);
+    expect(store.entity.aging_points).toEqual({ sta: 1 });
+    expect(store.agingRejections).toEqual([notRecorded]);
+  });
+
+  it('surfaces a failed undo in the error banner rather than dropping the row', async () => {
+    store.entity.aging_points = { sta: 1 };
+    store.entity.aging_log = [recorded(40, 1220)];
+    vi.mocked(ipc.agingRevert).mockRejectedValue({ kind: 'io' });
+
+    await store.removeAgingLogEntryAt(0);
+
+    expect(store.error).toEqual({ kind: 'io' });
+    expect(store.entity.aging_log).toEqual([recorded(40, 1220)]);
+    expect(store.entity.aging_points).toEqual({ sta: 1 });
   });
 });

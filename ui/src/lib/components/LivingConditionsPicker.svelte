@@ -110,16 +110,10 @@
 
 <style>
   /* `.detail-section`, `.checkbox.inline`, `.hint`, `.empty` and `.sr-only` are
-     shared globals in app.css. */
-
-  .living-conditions-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-  }
+     shared globals in app.css — and so, since #24/#25, is `.living-conditions-list`
+     itself: the checklist's column flow is the aging stage's layout rather than this
+     component's own decoration, and app.css is where a layout rule no rendered markup
+     can reveal is guarded by a test. Only the row and its parts are styled here. */
 
   .living-conditions-list li {
     display: flex;

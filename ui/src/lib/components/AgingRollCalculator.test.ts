@@ -551,11 +551,19 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     expect(body).not.toContain('−');
   });
 
-  it('offers a revert for each year already recorded, and only those', () => {
+  // manual-testing-findings-2026-09-03 #19: the calculator used to end in a list of
+  // "Take back age N" buttons, one per recorded year. That is fine at three and
+  // unusable at forty — an unbounded control list on the surface whose whole problem
+  // was height. Nothing is lost: every recorded year IS a log row, and that row's ×
+  // hands the year to the very same `aging::revert_year` through
+  // `store.removeAgingLogEntryAt`, carrying the calculator's own `aging-revert`
+  // wording as its accessible name (AgingRecordPanel). `revert_year` takes ANY
+  // recorded year, not only the latest, so per-year undo survives intact.
+  it('leaves taking a year back to the log row that records it', () => {
     setSchedule(schedule([36, 37, 38, 39, 40], [36, 37]));
     const body = html();
-    expect(has(body, 'aging-revert-36')).toBe(true);
-    expect(has(body, 'aging-revert-37')).toBe(true);
-    expect(has(body, 'aging-revert-38')).toBe(false);
+    expect(has(body, 'aging-revert-36')).toBe(false);
+    expect(has(body, 'aging-revert-37')).toBe(false);
+    expect(body).not.toContain('aging-reverts');
   });
 });

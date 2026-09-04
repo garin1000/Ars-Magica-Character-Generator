@@ -11,8 +11,10 @@
      rules owe this character (the schedule and the standing half of the aging
      total), the Living Conditions that are the one term of that total the player
      chooses, the roll itself (the die, the total it makes, and applying it), then
-     what aging has already done to the character (apparent age, Decrepitude,
-     points, log), and finally the Longevity Ritual, whose bonus is subtracted from
+     what aging has already done to the character — the per-year log first, since
+     that is what the roll has just written to and where a year is taken back, then
+     the running totals it explains (apparent age, Decrepitude, points) — and finally
+     the Longevity Ritual, whose bonus is subtracted from
      every aging total this character will ever roll
      (Ars Magica - Definitive Edition (Core Rules).md:16567-16569). Composed once so
      the editor's Aging tab and the guided aging step mount the same thing and can
@@ -28,7 +30,15 @@
      Rituals for others, even for non-magi" (Core Rules.md:10672).
 
      `display: contents` inside `.character-details` (see app.css) keeps each block
-     its own item of that grid. -->
+     its own item of that grid, and each of those items takes a FULL-WIDTH ROW
+     (manual-testing-findings-2026-09-03 #22): a grid row is as tall as its tallest
+     item, so pairing any of these blocks with the roll calculator left the short one
+     padded out with the calculator's height. One block per row is the only
+     arrangement in which that cannot happen — and it makes DOM order literally the
+     order on screen, so reading, tab and focus order cannot disagree with it. The
+     width is spent inside the stages instead (`.living-conditions-list`,
+     `.aging-state`), which is what keeps the stack shorter than the columns it
+     replaced rather than taller. -->
 <div class="aging-panel" data-testid="aging-panel">
   <!-- S17 (full-audit a11y): the tab's own <h2> — every block below opened at
        <h3> directly under the app's single <h1> with no <h2> between (a

@@ -26,7 +26,14 @@
 
   const aging = $derived(store.effective?.aging ?? null);
   const schedule = $derived(aging?.schedule ?? []);
-  const recorded = $derived(schedule.filter((year) => year.recorded));
+
+  // There is deliberately no per-year "Take back age N" list here any more
+  // (manual-testing-findings-2026-09-03 #19). One button per recorded year is fine
+  // at three and unusable at forty, on the one surface whose complaint was its
+  // height. Every recorded year already has a row in the aging log, and that row's ×
+  // hands the year to the same `aging::revert_year` (`store.removeAgingLogEntryAt`)
+  // under the same `aging-revert` wording — and `revert_year` takes any recorded
+  // year, not only the latest, so nothing about the undo is narrowed.
 
   const draft = $derived(store.agingDraft);
   const preview = $derived(store.agingPreview);
@@ -281,25 +288,6 @@
         {/each}
       </ul>
     {/if}
-
-    {#if recorded.length > 0}
-      <!-- An exact undo per recorded year: a 25-roll pre-play catch-up with no way
-           back would not be shippable, and `revert_year` subtracts precisely what
-           the log entry recorded. -->
-      <ul class="aging-reverts">
-        {#each recorded as year (year.age)}
-          <li>
-            <button
-              type="button"
-              onclick={() => store.revertAgingRoll(year.age)}
-              data-testid="aging-revert-{year.age}"
-            >
-              {store.t('aging-revert', { age: String(year.age) })}
-            </button>
-          </li>
-        {/each}
-      </ul>
-    {/if}
   </div>
 {/if}
 
@@ -327,8 +315,7 @@
     margin: 0.15rem 0;
   }
 
-  .aging-distribute-list,
-  .aging-reverts {
+  .aging-distribute-list {
     list-style: none;
     margin: 0;
     padding: 0;
