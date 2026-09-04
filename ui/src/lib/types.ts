@@ -179,11 +179,15 @@ export interface PointItem {
   id: string;
   kind: ItemKind;
   magnitude: Magnitude;
-  // Every grouping category the rulebook descriptor lists, in its own order, so
-  // `categories[0]` is the PRIMARY one. Mirrors the engine's `PointItem`
-  // (`crates/arm-rules/src/types.rs`), which rejects an empty list at load.
-  // Membership tests (filters, grant constraints) read the whole list; display
-  // and grouping read the primary alone.
+  // Every grouping category the rulebook descriptor lists, in its own order.
+  // Mirrors the engine's `PointItem` (`crates/arm-rules/src/types.rs`), which
+  // rejects an empty list at load. All of them are equally real: membership tests
+  // (filters, grant constraints) read the whole list, and so does the Available
+  // picker's grouping — the book's own indexes list a dual-category item under
+  // both headings. `categories[0]` carries no rules meaning; it is only a
+  // tie-break where exactly one bucket is structurally required (a Selected row,
+  // whose removal is addressed by index) or one label is (the badge order, the
+  // `category_not_permitted` message parameter).
   categories: string[];
   classification: Classification;
   // Descriptor "Type" tag: a Tainted (Infernal-associated) V/F. Omitted when false.

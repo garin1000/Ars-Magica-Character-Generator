@@ -3778,7 +3778,7 @@ describe('exportMarkdown', () => {
         }),
         item({ id: 'flaw.optimistic', kind: 'flaw', categories: ['personality'] }),
         // A dual-category item, so the composed `category-<id>` family has to
-        // cover a category that is no item's PRIMARY one.
+        // cover a category no item lists first.
         item({ id: 'flaw.visions', kind: 'flaw', categories: ['story', 'supernatural'] }),
       ],
       [ability('ability.area_lore', 'area')],

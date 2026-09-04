@@ -45,9 +45,11 @@ pub(crate) fn validate_permitted_categories(
                 CreationPhase::VirtuesFlaws,
                 args([
                     ("item", selection.item_ref.to_string()),
-                    // Every category failed the test, so the primary one — the
-                    // descriptor's own first-listed — represents the item.
-                    ("category", item.primary_category().to_string()),
+                    // Every category failed the test, and the message has room
+                    // for one, so the descriptor's first-listed represents the
+                    // item — a deterministic pick, not a claim that it is the
+                    // item's "real" category.
+                    ("category", item.first_listed_category().to_string()),
                 ]),
                 Some(selection.item_ref.clone()),
             ));

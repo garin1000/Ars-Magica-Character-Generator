@@ -44,8 +44,8 @@ const ITEMS: PointItem[] = [
   item({ id: 'virtue.hermetic_prestige', categories: ['hermetic'] }),
   item({ id: 'virtue.second_sight', categories: ['supernatural'] }),
   // The shipped dual-category case: Sufi's descriptor reads "Minor, Social
-  // Status, Supernatural", so `social_status` is its primary and `supernatural`
-  // its secondary.
+  // Status, Supernatural", and the book's index lists it under both headings
+  // (Core Rules :3230 Social Status, Minor and :3179 Supernatural, Minor).
   item({ id: 'virtue.sufi', categories: ['social_status', 'supernatural'] }),
 ];
 
@@ -151,6 +151,27 @@ function columnOutline(body: string): string[] {
   return out;
 }
 
+/** The Virtues *source* (Available) picker's markup: its filter bar through to the Flaws one. */
+function virtueSourceColumn(body: string): string {
+  const start = body.indexOf('data-testid="vf-search-virtue"');
+  if (start < 0) throw new Error('no Virtues source picker');
+  const end = body.indexOf('data-testid="vf-search-flaw"');
+  return body.slice(start, end < 0 ? undefined : end);
+}
+
+/** `columnOutline`, but over the Available picker instead of the Selected column. */
+function sourceOutline(body: string): string[] {
+  const column = virtueSourceColumn(body);
+  const out: string[] = [];
+  for (const m of column.matchAll(
+    /<h3 class="category"[^>]*>([\s\S]*?)<\/h3>|<span class="item-name">([\s\S]*?)<\/span>/g,
+  )) {
+    if (m[1] !== undefined) out.push(`# ${m[1].replace(/<[^>]*>/g, '').trim()}`);
+    else out.push(clean(m[2].replace(/<[^>]*>/g, '')).trim());
+  }
+  return out;
+}
+
 /** Every `<ul>` start tag in the Virtues column, with the heading (if any) before it. */
 function listsWithHeaders(body: string): { header: string | null }[] {
   const column = virtueColumn(body);
@@ -238,11 +259,58 @@ describe('VirtueFlawTab merges granted Virtues into the category list (#9)', () 
   });
 });
 
+// The rulebook's Virtue index lists Sufi twice — at
+// `Ars Magica - Definitive Edition (Core Rules).md:3179` under
+// "### Supernatural, Minor" and at :3230 under "### Social Status, Minor" — so
+// the Available list offers it under both headings, exactly as the book does.
+// The Selected list cannot: its rows are removed by `entity.selections` index.
+describe('VirtueFlawTab offers a dual-category item under every heading', () => {
+  it('lists Sufi under both of its categories in the Available picker', () => {
+    const outline = sourceOutline(html());
+    expect(outline).toEqual([
+      '# General',
+      'Affinity with Art',
+      '# Hermetic',
+      'Heartbeast',
+      'Hermetic Prestige',
+      '# Social Status',
+      'Sufi',
+      '# Supernatural',
+      'Second Sight',
+      'Sufi',
+    ]);
+  });
+
+  it('still lists a bought Sufi as a single Selected row', () => {
+    resetEntity([{ ref: 'virtue.sufi' }]);
+    expect(columnOutline(html())).toEqual(['# Social Status', 'Sufi']);
+  });
+
+  // Listing an item under both headings makes the category FILTER's job explicit:
+  // narrowing to Supernatural must show the Supernatural section only. Otherwise
+  // Sufi — which passes a membership filter on either category — would come back
+  // twice, once under a "Social Status" heading the player just filtered away.
+  it('shows only the chosen category section when the filter narrows', () => {
+    store.filters.vf.virtue.category = 'supernatural';
+    try {
+      expect(sourceOutline(html())).toEqual(['# Supernatural', 'Second Sight', 'Sufi']);
+    } finally {
+      store.filters.vf.virtue.category = '';
+    }
+  });
+
+  it('offers every carried category in the filter dropdown', () => {
+    const select = /data-testid="vf-category-filter-virtue"[\s\S]*?<\/select>/.exec(html());
+    const options = [...(select?.[0] ?? '').matchAll(/<option value="([^"]*)"/g)].map((m) => m[1]);
+    expect(options).toEqual(['', 'general', 'hermetic', 'social_status', 'supernatural']);
+  });
+});
+
 // A descriptor may name two categories, and both are mechanically real (either
 // one can make the item permitted or forbidden). The badge row therefore shows
-// one `category-<id>` badge per category, in the descriptor's own order so the
-// FIRST badge is the primary — which is also what the group heading above the row
-// says, and what `houses.e2e.js` compares that heading against.
+// one `category-<id>` badge per category, in the descriptor's own order — so the
+// FIRST badge names the category the Selected row's heading uses, which is what
+// `houses.e2e.js` compares that heading against.
 describe('VirtueFlawTab badges every category an item carries', () => {
   /** The `.badge.type` texts of the Virtues selection column, in document order. */
   function typeBadges(body: string): string[] {
@@ -266,8 +334,9 @@ describe('VirtueFlawTab badges every category an item carries', () => {
     expect(typeBadges(html())).toEqual(['Hermetic']);
   });
 
-  // The heading a dual-category row sits under is its PRIMARY category — the same
-  // one its first badge names, which is the invariant houses.e2e.js asserts.
+  // A Selected row sits under ONE heading — the descriptor's first-listed
+  // category, the same one its first badge names, which is the invariant
+  // houses.e2e.js asserts.
   it('puts a dual-category row under the heading its first badge names', () => {
     resetEntity([{ ref: 'virtue.sufi' }]);
     expect(columnOutline(html())).toEqual(['# Social Status', 'Sufi']);
