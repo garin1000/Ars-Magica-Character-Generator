@@ -3553,9 +3553,16 @@ Abilities are bought with experience earned in blocks, not from one bank:
   string enters the mechanics file. `MagusMinimumAbility` carries it through to the
   frontend and both validators emit it as an **optional** `exemplar` arg, so the
   minimums row and the `issue-magus_minimum_ability` /
+  `issue-magus_recommended_ability` /
   `issue-academic_ability_without_scholarly_language` messages read identically:
-  *"Dead Language (e.g. Latin) 1 is not met"*. The one shared label path is
-  `requirementAbilityLabel` in `ui/src/lib/derive.ts`. **The enforced check is
+  *"Latin 1 (any Dead Language) is not met"*. The exemplar **heads** the requirement so
+  the score follows it directly, exactly as `:2437` states it, and the widening trails
+  the score as a note; it used to read *"Dead Language (e.g. Latin) 1"*, which put the
+  example between the Ability and its score and buried the demand
+  (guided-creation-review-2026-08 #12). The one shared label path is
+  `requirementAbilityLabel` + `requirementExemplarNote` in `ui/src/lib/derive.ts`,
+  joined by the `requirement-exemplar` Fluent string and a `qualifier` message
+  variable. **The enforced check is
   unchanged** — still any Dead Language ≥ N. The exemplar is one *named example*, never
   an enumeration of languages.
 - **The exemplar slug is a LABEL KEY, not a referential-integrity `ref`.** It resolves

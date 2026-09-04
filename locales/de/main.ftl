@@ -455,8 +455,8 @@ magus-minimums-label = Mindestfertigkeiten
 # keine Zeile unter der Überschrift „Mindestfertigkeiten" mehr, und { $total } zählt
 # jede Zeile darunter — die verlangten wie die empfohlenen.
 magus-minimums-summary = Anforderungen an Fertigkeiten: { $unmet } von { $total } noch nicht erfüllt
-magus-minimum-met = { $ability } { $min } ist erfüllt: dieser Charakter hat { $score }.
-magus-minimum-unmet = { $ability } { $min } ist nicht erfüllt: dieser Charakter hat { $score }.
+magus-minimum-met = { $ability } { $min }{ $qualifier } ist erfüllt: dieser Charakter hat { $score }.
+magus-minimum-unmet = { $ability } { $min }{ $qualifier } ist nicht erfüllt: dieser Charakter hat { $score }.
 magus-recommended-label = Empfohlene Mindestfertigkeiten
 magus-recommended-hint = Die empfohlenen Fertigkeiten kosten zusammen { $xp } Erfahrungspunkte; darunter ist der Magus relativ zu anderen Magi schwach.
 ability-score-label = Wert
@@ -941,11 +941,14 @@ app-document-unsaved-dirty = *Ungespeichertes Dokument
 
 # Hinweis für einen nicht ausgefüllten Parameter-Platzhalter im Namen, z. B. „Begabung in (Fertigkeit)“.
 param-hint = ({ $label })
-# Eine Forderung, die die Engine weiter prüft, als die Regeln sie formulieren, gezeigt
-# mit dem einen Beispiel, das die Regeln selbst nennen: „Tote Sprache (z. B. Latein) 1“.
-# Das Beispiel stammt aus den Regeldaten, nie aus dieser Datei — nur die verbindende
-# Formulierung ist UI-Text.
-requirement-exemplar = { $ability } (z. B. { $exemplar })
+# Eine Forderung, die die Engine weiter prüft, als die Regeln sie formulieren. Das
+# Beispiel der Regeln steht vorn, damit der Wert unmittelbar folgt („Latein 1“, wie
+# das Regelwerk es schreibt), und DIESER Zusatz folgt dem Wert und nennt, was die
+# Engine wirklich prüft: „unter Latein 1 (Tote Sprache genügt)“. Er bringt ein
+# eigenes Leerzeichen mit, weil die tragenden Meldungen ihn ohne Trenner einsetzen —
+# bei einer Forderung ohne Beispiel ist er leer. Ohne Artikel und ohne Adjektiv
+# formuliert, damit das eingesetzte Fertigkeitswort in jedem Genus passt.
+requirement-exemplar = { " " }({ $ability } genügt)
 # Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine. Dienen auch
 # als typbezogener Platzhalter/Hinweis für ein leeres Parameter-Eingabefeld.
 param-label-ability = Fertigkeit
@@ -1053,7 +1056,7 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } von { $amount } eingesch
 issue-general_xp_unspent = { $unspent } von { $pool } Erfahrungspunkten sind noch nicht ausgegeben.
 issue-spell_levels_unspent = { $unspent } von { $budget } Stufen Zauber sind noch nicht ausgegeben.
 issue-ability_category_requires_virtue = { $ability } ist { $category } und benötigt eine Tugend, die den Zugang bei der Charaktererschaffung gewährt.
-issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $ability } auf { $min } oder höher.
+issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $ability }{ $qualifier } auf { $min } oder höher.
 issue-life_stage_age_unset = Trage das Alter des Charakters ein: das spätere Leben erbringt Erfahrungspunkte pro Jahr, ohne Alter zählen daher nur die Blöcke der Kindheit.
 issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindheit, die { $min } Jahre dauert — es gibt keine späteren Lebensjahre, in denen Erfahrung erworben wird.
 issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit { $age } Jahren ab: Sie kommt frühestens mit { $min } — Kindheit plus fünfzehn Jahre Lehrlingszeit.
@@ -1062,8 +1065,8 @@ issue-life_stage_lab_seasons_out_of_range = { $seasons } Quartale Laborarbeit we
 issue-life_stage_spell_level_split_exceeds_points = { $levels } Zauberstufen aus den Jahren als Magus zu nehmen übersteigt, was diese Jahre gewähren: Sie sind { $points } Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.
 issue-life_stage_native_language_unset = Wähle eine Muttersprache: der größte Erfahrungsblock der Kindheit kann für nichts anderes ausgegeben werden.
 issue-life_stage_native_language_missing_score = Kein Wert in { $language } gekauft, daher bleibt die Erfahrung der Kindheit für die Muttersprache unausgegeben.
-issue-magus_minimum_ability = Kein Magus wird unter { $ability } { $min } in den Orden aufgenommen; dieser Charakter hat { $score }.
-issue-magus_recommended_ability = { $ability } { $min } wird für einen Magus empfohlen, der gerade aus der Lehrlingszeit kommt; dieser Charakter hat { $score }.
+issue-magus_minimum_ability = Kein Magus wird unter { $ability } { $min }{ $qualifier } in den Orden aufgenommen; dieser Charakter hat { $score }.
+issue-magus_recommended_ability = { $ability } { $min }{ $qualifier } wird für einen Magus empfohlen, der gerade aus der Lehrlingszeit kommt; dieser Charakter hat { $score }.
 issue-childhood_package_unknown = Unbekanntes Fertigkeitspaket der Kindheit: { $package }.
 issue-childhood_slot_unfilled = Trage { $key } für { $ability } ein, bevor das Fertigkeitspaket der Kindheit angewendet wird.
 issue-childhood_slot_is_native_language = { $key } für { $ability } muss sich von der Muttersprache { $language } unterscheiden.

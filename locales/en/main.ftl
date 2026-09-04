@@ -435,8 +435,8 @@ magus-minimums-label = Minimum Abilities
 # under the "Minimum Abilities" heading, and { $total } counts every row it heads —
 # the demanded ones and the recommended ones alike.
 magus-minimums-summary = Ability requirements: { $unmet } of { $total } still unmet
-magus-minimum-met = { $ability } { $min } is met: this character has { $score }.
-magus-minimum-unmet = { $ability } { $min } is not met: this character has { $score }.
+magus-minimum-met = { $ability } { $min }{ $qualifier } is met: this character has { $score }.
+magus-minimum-unmet = { $ability } { $min }{ $qualifier } is not met: this character has { $score }.
 magus-recommended-label = Recommended minimum Abilities
 magus-recommended-hint = The recommended Abilities cost { $xp } experience points in total; below them the magus is weak relative to other magi.
 ability-score-label = Score
@@ -928,11 +928,13 @@ app-document-unsaved-dirty = *Unsaved document
 
 # Hint shown for an unfilled parameter slot in an item name, e.g. "Puissant (Ability)".
 param-hint = ({ $label })
-# A requirement the engine enforces more widely than the rules word it, shown with
-# the one example the rules themselves name: "Dead Language (e.g. Latin) 1". The
-# exemplar comes from the rules data, never from this file — only the joining
-# wording is UI chrome.
-requirement-exemplar = { $ability } (e.g. { $exemplar })
+# A requirement the engine enforces more widely than the rules word it. The rules'
+# own example heads the requirement so its score follows it directly ("Latin 1", as
+# the rulebook states it) and THIS note trails the score, saying what the engine
+# really checks: "below Latin 1 (any Dead Language)". It leads with a space of its
+# own because the messages carrying it interpolate it with no separator — it is
+# empty for a requirement that names no example.
+requirement-exemplar = { " " }(any { $ability })
 # Localized parameter labels, keyed by the engine's parameter key. Also used as the
 # type-aware placeholder/prompt for an empty parameter input.
 param-label-ability = Ability
@@ -1036,7 +1038,7 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } of { $amount } restricte
 issue-general_xp_unspent = { $unspent } of { $pool } experience points are still unspent.
 issue-spell_levels_unspent = { $unspent } of { $budget } levels of spells are still unspent.
 issue-ability_category_requires_virtue = { $ability } is { $category }, which needs a Virtue granting access at character creation.
-issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $ability } at { $min } or better.
+issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $ability }{ $qualifier } at { $min } or better.
 issue-life_stage_age_unset = Enter the character's age: later life earns experience per year, so with no age only childhood's blocks can be counted.
 issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, which lasts { $min } years — there are no later-life years to earn experience in.
 issue-life_stage_age_before_gauntlet = No magus is gauntleted at { $age }: the Gauntlet comes no earlier than { $min } — childhood plus fifteen years of apprenticeship.
@@ -1045,8 +1047,8 @@ issue-life_stage_lab_seasons_out_of_range = { $seasons } lab seasons are charged
 issue-life_stage_spell_level_split_exceeds_points = Taking { $levels } levels of spells out of the years as a magus is more than those years grant: they are worth { $points } points, to be divided between experience and levels of spells.
 issue-life_stage_native_language_unset = Choose a native language: childhood's largest block of experience can be spent on nothing else.
 issue-life_stage_native_language_missing_score = No { $language } score is bought, so childhood's native-language experience is unspent.
-issue-magus_minimum_ability = No magus is admitted to the Order below { $ability } { $min }; this character has { $score }.
-issue-magus_recommended_ability = { $ability } { $min } is recommended for a magus just out of apprenticeship; this character has { $score }.
+issue-magus_minimum_ability = No magus is admitted to the Order below { $ability } { $min }{ $qualifier }; this character has { $score }.
+issue-magus_recommended_ability = { $ability } { $min }{ $qualifier } is recommended for a magus just out of apprenticeship; this character has { $score }.
 issue-childhood_package_unknown = Unknown childhood package: { $package }.
 issue-childhood_slot_unfilled = Fill in the { $key } for { $ability } before applying the childhood package.
 issue-childhood_slot_is_native_language = The { $key } for { $ability } must differ from the native language { $language }.

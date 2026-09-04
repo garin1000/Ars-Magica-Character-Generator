@@ -875,17 +875,27 @@ export function exemplarLabel(
 }
 
 /**
- * An Ability requirement's label, naming the one example the rules themselves name.
+ * An Ability requirement's label — the example the rules themselves name, where they
+ * name one.
  *
  * The Core Rules demand "Latin 1" of every magus (Core Rules `:2437`), but
  * `ability.dead_language` takes a **free-text** instance — a troupe decides which
  * languages exist and which are dead — so the engine can only enforce "any Dead
  * Language ≥ N". That widening is permanent (see `crates/arm-rules/RULES.md`), so the
- * honest presentation is to enforce the wide check and *say* what the rules mean:
- * "Dead Language (e.g. Latin) 1".
+ * honest presentation is to enforce the wide check and *say* what the rules mean.
+ *
+ * The label is the **exemplar alone** so the score can follow it directly and the
+ * sentence reads "Latin 1", as the rulebook states it. It used to read "Dead Language
+ * (e.g. Latin)", which put the example between the Ability and its score — "below Dead
+ * Language (e.g. Latin) 1" reads as though "e.g. Latin" were being scored, and buries
+ * the demand. The widening itself is not dropped: it trails the score as
+ * [`requirementExemplarNote`]. The bought instance is deliberately ignored when the
+ * rules name an exemplar — the requirement is "Latin 1" whichever dead language the
+ * character happens to hold, and the score in the same sentence says what they hold.
  *
  * The single label path for both surfaces that show such a requirement — the magus
  * minimums checklist and the `issue-magus_minimum_ability` /
+ * `issue-magus_recommended_ability` /
  * `issue-academic_ability_without_scholarly_language` messages — so the two can never
  * word the same demand differently.
  */
@@ -896,10 +906,34 @@ export function requirementAbilityLabel(
   exemplar: string | null | undefined,
   t: Translate,
 ): string {
-  const ability = abilityDisplayName(localized, abilityId, instance, paramHint(t));
   const example = exemplarLabel(localized, exemplar);
-  if (!example) return ability;
-  return t('requirement-exemplar', { ability, exemplar: example });
+  if (example) return example;
+  return abilityDisplayName(localized, abilityId, instance, paramHint(t));
+}
+
+/**
+ * The note that trails a widened requirement's score — " (any Dead Language)" — or
+ * the empty string when the requirement names no exemplar.
+ *
+ * The companion of [`requirementAbilityLabel`]: that one names the rules' example so
+ * "Latin 1" reads as one phrase, this one says what the engine actually enforces, in
+ * the one place where it cannot be mistaken for part of the score. It names the
+ * **general** Ability with no instance filled in, so it stays true of every dead
+ * language a troupe invents.
+ *
+ * Empty rather than absent, because every message interpolating it does so
+ * unconditionally and Fluent throws on a variable the args map does not carry.
+ */
+export function requirementExemplarNote(
+  localized: LocalizedRuleset,
+  abilityId: string,
+  exemplar: string | null | undefined,
+  t: Translate,
+): string {
+  if (!exemplarLabel(localized, exemplar)) return '';
+  return t('requirement-exemplar', {
+    ability: abilityDisplayName(localized, abilityId, null, paramHint(t)),
+  });
 }
 
 /**
@@ -1131,14 +1165,18 @@ export function resolveIssueArgValue(
  * Every value in a validation-issue arg map, localized via `resolveIssueArgValue`.
  *
  * One arg is not independent of the others: an `exemplar` **qualifies** the `ability`
- * it accompanies ("Dead Language (e.g. Latin)") rather than standing alone, so the
- * pair is folded into a single `ability` label and `exemplar` is dropped from the
- * result. Two consequences worth keeping in mind:
- *  - the `issue-<code>` Fluent message stays `{ $ability } { $min }` and must NOT
- *    interpolate `$exemplar` — the arg is optional in the engine's output (only where
- *    the rules data states one), and Fluent reports a missing variable;
+ * it accompanies rather than standing alone, so it never reaches a message under its
+ * own name. It becomes two args instead — the `ability` label ("Latin") and a
+ * `qualifier` note (" (any Dead Language)") the message places AFTER the score, so the
+ * requirement reads "Latin 1" as the rulebook states it. Two consequences worth
+ * keeping in mind:
+ *  - a message must NOT interpolate `$exemplar` — the arg is optional in the engine's
+ *    output (only where the rules data states one), and Fluent reports a missing
+ *    variable. `$qualifier` is safe to interpolate because it is emitted for every
+ *    `ability` arg, empty when there is no exemplar;
  *  - the message and the magus-minimums checklist go through the one
- *    `requirementAbilityLabel`, which is what makes them read identically.
+ *    `requirementAbilityLabel` / `requirementExemplarNote` pair, which is what makes
+ *    them read identically.
  */
 export function resolveIssueArgs(
   localized: LocalizedRuleset,
@@ -1149,6 +1187,11 @@ export function resolveIssueArgs(
   for (const [key, value] of Object.entries(args)) {
     if (key === 'exemplar') continue;
     resolved[key] = resolveIssueArgValue(localized, key, value, t);
+  }
+  if (args.ability) {
+    // Emitted for every `ability` arg, empty where the rules name no exemplar: a
+    // message interpolates it unconditionally, and Fluent throws on a missing one.
+    resolved.qualifier = requirementExemplarNote(localized, args.ability, args.exemplar, t);
   }
   if (args.exemplar && args.ability) {
     resolved.ability = requirementAbilityLabel(localized, args.ability, null, args.exemplar, t);

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { requirementAbilityLabel } from '../derive';
+  import { requirementAbilityLabel, requirementExemplarNote } from '../derive';
   import type { MagusMinimumAbility } from '../types';
 
   // What the Order demands of every magus, as a checklist.
@@ -58,7 +58,8 @@
    * `issue-magus_minimum_ability` message takes, so the checklist and the finding
    * word the demand identically. That is also where the rules' own exemplar is
    * named — `:2437` says "Latin 1" while the enforced check is "any Dead
-   * Language 1", so a magus is told what the rules mean by it.
+   * Language 1", so the row states the demand as the rulebook does and trails the
+   * widening as `requirementExemplarNote`, clear of the score.
    */
   function statusOf(row: MagusMinimumAbility): string {
     if (!localized) return '';
@@ -70,6 +71,7 @@
         row.exemplar,
         store.t,
       ),
+      qualifier: requirementExemplarNote(localized, row.ability, row.exemplar, store.t),
       min: String(row.min_score),
       score: String(row.score),
     });

@@ -244,7 +244,9 @@ describe('MagusMinimumAbilities checklist (slice 6b4)', () => {
     store.entity.ability_scores = [
       { ability: 'ability.dead_language', parameter: 'Latin', score: 4 },
     ] as Entity['ability_scores'];
-    setChecklist(shippedChecklist({ 'ability.dead_language': 4 }));
+    // A requirement naming NO exemplar, which is the case the instance labels: where
+    // the rules do name one it heads the row instead (see the exemplar suite below).
+    setChecklist([row('ability.dead_language', 1, 4, 'required')]);
     const body = html();
     const latin = element(body, 'magus-minimum-ability.dead_language');
     // The instance comes from the character's own row, so the checklist reads as the
@@ -260,7 +262,7 @@ describe('MagusMinimumAbilities checklist (slice 6b4)', () => {
     // the template's own "(Dead Language)" literal, reading
     // "(Language) (Dead Language) 1 is not met". The entry's `name_unfilled` is the
     // opt-out; the token must still never appear.
-    setChecklist(shippedChecklist());
+    setChecklist([row('ability.dead_language', 1, 0, 'required')]);
     const latin = element(html(), 'magus-minimum-ability.dead_language');
     expect(clean(latin.text)).toContain('Dead Language');
     expect(clean(latin.text)).not.toContain('(Language)');
@@ -338,57 +340,118 @@ describe('MagusMinimumAbilities collapsed to a summary (slice 11, #12)', () => {
 });
 
 describe('MagusMinimumAbilities and its validation message (slice 7, #13 + #32)', () => {
-  /** The one `<li>` of a ValidationPanel showing the magus-minimum error. */
-  function issueText(): string {
+  /** The one `<li>` of a ValidationPanel showing a finding about a dead language. */
+  function findingText(
+    code: string,
+    // Exactly what the engine emits: the Ability id, the rules' exemplar slug, and
+    // whichever scores the finding carries.
+    args: Record<string, string> = {
+      ability: 'ability.dead_language',
+      exemplar: 'latin',
+      min: '1',
+      score: '0',
+    },
+  ): string {
     store.result = {
-      issues: [
-        {
-          severity: 'error',
-          code: 'magus_minimum_ability',
-          phase: 'abilities',
-          // Exactly what the engine emits: the Ability id, the rules' exemplar slug,
-          // and the two scores.
-          args: { ability: 'ability.dead_language', exemplar: 'latin', min: '1', score: '0' },
-        },
-      ],
+      issues: [{ severity: 'error', code, phase: 'abilities', args }],
     } as unknown as NonNullable<typeof store.result>;
     const body = render(ValidationPanel, { props: { phase: 'abilities' } }).body;
-    const match = /<li[^>]*data-code="magus_minimum_ability"[^>]*>([\s\S]*?)<\/li>/.exec(body);
-    if (!match) throw new Error('no <li> for magus_minimum_ability');
+    const match = new RegExp(`<li[^>]*data-code="${code}"[^>]*>([\\s\\S]*?)</li>`).exec(body);
+    if (!match) throw new Error(`no <li> for ${code}`);
     return clean(match[1].replace(/<[^>]*>/g, '')).trim();
   }
 
-  it('names the rules exemplar beside the widened requirement, in both surfaces', () => {
-    // `:2437` says "Latin 1"; the engine can only enforce "any Dead Language 1", so
-    // the exemplar is shown as a label. Shared label path -> both surfaces agree.
-    setChecklist(shippedChecklist());
-    const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
-    expect(rowText).toContain('Dead Language (e.g. Latin)');
-    expect(issueText()).toContain('Dead Language (e.g. Latin)');
-    // Never the slug, in either surface.
-    expect(rowText).not.toContain('latin"');
-    expect(issueText()).not.toContain('exemplar.latin');
-  });
+  /** The magus-minimum error, the finding this suite is mostly about. */
+  function issueText(): string {
+    return findingText('magus_minimum_ability');
+  }
 
-  it('reads the requirement identically in the row and the message', () => {
-    setChecklist(shippedChecklist());
-    const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
-    // One shared label path, so the phrase naming the requirement is byte-identical.
-    const phrase = 'Dead Language (e.g. Latin) 1';
-    expect(rowText.startsWith(phrase)).toBe(true);
-    expect(issueText()).toContain(phrase);
-  });
-
-  it('names the exemplar in German too', () => {
+  /** Install the German rules text the exemplar rows need, and switch the bundle. */
+  function speakGerman(): void {
     store.lang = 'de';
     store.ruleset!.i18n['exemplar.latin'] = { name: 'Latein' };
     store.ruleset!.i18n['ability.dead_language'] = {
       name: '{language} (Tote Sprache)',
       name_unfilled: 'Tote Sprache',
     };
+  }
+
+  // guided-creation-review-2026-08 #12: the exemplar used to sit BETWEEN the Ability
+  // and its score — "below Dead Language (e.g. Latin) 1" — so the sentence read as
+  // though "e.g. Latin" were the thing being scored, and the demand the rules
+  // actually make ("Latin 1", `:2437`) was buried. The example now heads the
+  // requirement with the score right after it, and the widening the engine really
+  // enforces trails as one short note.
+  it('states the demand as "Latin 1", with the widening trailing it', () => {
     setChecklist(shippedChecklist());
     const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
-    expect(rowText).toContain('Tote Sprache (z. B. Latein)');
-    expect(issueText()).toContain('Tote Sprache (z. B. Latein)');
+    expect(rowText).toBe('Latin 1 (any Dead Language) is not met: this character has 0.');
+    // `toContain`, not `toBe`: the panel prefixes each finding with its severity.
+    expect(issueText()).toContain(
+      'No magus is admitted to the Order below Latin 1 (any Dead Language); this character has 0.',
+    );
+    // The example never separates the requirement from its score again.
+    for (const text of [rowText, issueText()]) {
+      expect(text).toContain('Latin 1');
+      expect(text).not.toContain('e.g.');
+      // Never a slug, in either surface.
+      expect(text).not.toContain('ability.dead_language');
+      expect(text).not.toContain('exemplar.latin');
+    }
+  });
+
+  it('states the recommended demand the same way', () => {
+    setChecklist(shippedChecklist());
+    const rowText = clean(element(html(), 'magus-recommended-ability.dead_language').text);
+    expect(rowText).toBe('Latin 4 (any Dead Language) is not met: this character has 0.');
+  });
+
+  // The warning twin and the Academic-Ability warning fold the same `exemplar` arg
+  // through the same path, so they carried the same defect and are fixed with it.
+  it('states the sibling findings the same way', () => {
+    expect(
+      findingText('magus_recommended_ability', {
+        ability: 'ability.dead_language',
+        exemplar: 'latin',
+        min: '4',
+        score: '0',
+      }),
+    ).toContain(
+      'Latin 4 (any Dead Language) is recommended for a magus just out of apprenticeship; this character has 0.',
+    );
+    expect(
+      findingText('academic_ability_without_scholarly_language', {
+        ability: 'ability.dead_language',
+        exemplar: 'latin',
+        min: '3',
+      }),
+    ).toContain('An Academic Ability normally requires Latin (any Dead Language) at 3 or better.');
+  });
+
+  it('reads the requirement identically in the row and the message', () => {
+    setChecklist(shippedChecklist());
+    const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
+    // One shared label path, so the phrase naming the requirement is byte-identical.
+    const phrase = 'Latin 1 (any Dead Language)';
+    expect(rowText.startsWith(phrase)).toBe(true);
+    expect(issueText()).toContain(phrase);
+  });
+
+  it('states the demand as "Latein 1" in German too', () => {
+    speakGerman();
+    setChecklist(shippedChecklist());
+    const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
+    expect(rowText).toBe(
+      'Latein 1 (Tote Sprache genügt) ist nicht erfüllt: dieser Charakter hat 0.',
+    );
+    expect(issueText()).toContain(
+      'Kein Magus wird unter Latein 1 (Tote Sprache genügt) in den Orden aufgenommen; dieser Charakter hat 0.',
+    );
+    for (const text of [rowText, issueText()]) {
+      expect(text).toContain('Latein 1');
+      expect(text).not.toContain('z. B.');
+      expect(text).not.toContain('ability.dead_language');
+      expect(text).not.toContain('exemplar.latin');
+    }
   });
 });

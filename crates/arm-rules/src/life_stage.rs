@@ -206,7 +206,8 @@ pub struct MagusMinimumAbility {
     pub ability: Id,
     /// One example instance the rules name for this requirement, carried straight
     /// through from [`AbilityRequirement::exemplar`] so the checklist and the
-    /// validation finding can show the same "(e.g. Latin)" beside the same demand.
+    /// validation finding state the same demand the same way — "Latin 1", with the
+    /// wider check the engine really performs trailing the score as a note.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exemplar: Option<String>,
     /// The instance demanded, when the requirement names one (`None` throughout the
