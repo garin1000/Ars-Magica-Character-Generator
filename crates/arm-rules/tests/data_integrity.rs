@@ -4257,3 +4257,183 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
         "a Hermetic Flaw must still count as having The Gift for a grog"
     );
 }
+
+// --- Repeatable Virtues and Flaws (GitHub issue 3) ---
+//
+// "A Virtue or Flaw may be taken more than once only if the description
+// explicitly allows it. Most Virtues and Flaws may only be taken once."
+// Ars Magica - Definitive Edition (Core Rules).md:2814.
+//
+// The engine keys duplicate selections on `(item_ref, params)` and permits
+// `max_per_target` copies of each key. An item whose descriptor allows repeats
+// but that carries no target parameter therefore needs its ceiling raised in the
+// data, or the app blocks a legal build.
+
+/// Every core-rules item whose descriptor allows repetition **without naming a
+/// ceiling**, paired with the line that says so. The convention for "the
+/// rulebook states no limit" is `u8::MAX`: the V/F point budget
+/// (Ars Magica - Definitive Edition (Core Rules).md:2638) caps the real count
+/// far below it, so the number is unreachable rather than arbitrary.
+const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
+    ("virtue.demonic_might", 3665),
+    ("virtue.demonic_powers", 3669),
+    ("virtue.focus_power", 3903),
+    ("virtue.greater_immunity", 4015),
+    ("virtue.greater_power", 4021),
+    ("virtue.improved_characteristics", 4105),
+    ("virtue.lesser_power", 4283),
+    ("virtue.magic_items", 4349),
+    ("virtue.mastered_spells", 4474),
+    ("virtue.mentored_by_demons", 4498),
+    ("virtue.minor_enchantments", 4534),
+    ("virtue.personal_power", 4724),
+    ("virtue.ritual_power", 4874),
+    ("virtue.social_contacts", 4990),
+    ("virtue.special_circumstances", 5000),
+    ("virtue.strong_angelic_heritage", 5030),
+    ("virtue.variable_power", 5205),
+    ("virtue.withstand_casting", 5265),
+    ("flaw.deteriorating_power", 5948),
+    ("flaw.flawed_parma_magica", 6144),
+    ("flaw.limited_magic_resistance", 6348),
+    ("flaw.slow_power", 6761),
+    ("flaw.vulnerable_casting", 6997),
+    ("flaw.vulnerable_magic", 7009),
+];
+
+/// Items whose descriptor states a ceiling of exactly two copies, paired with
+/// the line that says so.
+const TWICE_ONLY_REPEAT_ITEMS: &[(&str, u32)] = &[
+    ("virtue.great_characteristic", 3989),
+    ("virtue.quiet_magic", 4826),
+    ("flaw.poor_characteristic", 6600),
+    ("flaw.weak_characteristics", 7058),
+];
+
+/// Items whose descriptor **forbids** repetition — the controls for the sweep.
+const ONCE_ONLY_ITEMS: &[(&str, u32)] = &[
+    ("virtue.inoffensive_to_beings", 4139),
+    ("flaw.corrupted_abilities", 5851),
+    ("flaw.corrupted_arts", 5857),
+    ("flaw.corrupted_spells", 5863),
+    ("flaw.fish_out_of_water_terrain", 6132),
+    ("flaw.offensive_to_beings", 6530),
+    ("flaw.unbearable_to_beings", 6897),
+];
+
+#[test]
+fn shipped_repeatable_items_carry_their_rulebook_ceiling() {
+    let rs = load_ruleset();
+
+    for (id, line) in UNLIMITED_REPEAT_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert_eq!(
+            item.max_per_target,
+            u8::MAX,
+            "{id} may be taken more than once with no stated ceiling \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+        assert!(
+            item.parameters.is_empty(),
+            "{id} carries no target parameter, so every copy shares one \
+             duplicate key and only max_per_target can permit the repeat"
+        );
+    }
+
+    for (id, line) in TWICE_ONLY_REPEAT_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert_eq!(
+            item.max_per_target, 2,
+            "{id} may be taken exactly twice \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+    }
+}
+
+#[test]
+fn shipped_once_only_items_stay_non_repeatable() {
+    let rs = load_ruleset();
+
+    for (id, line) in ONCE_ONLY_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert_eq!(
+            item.max_per_target, 1,
+            "{id} may not be taken more than once \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+    }
+
+    // False Power repeats, but "in each subsequent instance as a Minor Flaw
+    // rather than a Major one" (:6096). Magnitude is a property of the
+    // catalogue entry, not of a selection, so a second copy would silently be
+    // charged as Major. Blocking the repeat is the honest state until the
+    // catalogue grows a Minor variant; wrong point arithmetic would be worse.
+    assert_eq!(
+        rs.item(&Id::new("flaw.false_power"))
+            .expect("flaw.false_power must ship")
+            .max_per_target,
+        1,
+        "False Power's per-copy magnitude change is not expressible as data"
+    );
+}
+
+#[test]
+fn repeated_selections_are_not_reported_as_duplicates() {
+    let rs = load_ruleset();
+    let twice = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("virtue.improved_characteristics")),
+            Selection::new(Id::new("virtue.improved_characteristics")),
+        ],
+    );
+
+    let codes = issue_codes(&twice, &rs);
+    assert!(
+        !codes.contains(&"duplicate_selection".to_string()),
+        "Improved Characteristics may be taken multiple times \
+         (Ars Magica - Definitive Edition (Core Rules).md:4105): {codes:?}"
+    );
+}
+
+#[test]
+fn repeated_selections_stack_their_effects() {
+    use arm_rules::{characteristic_points_granted, power_levels_budget};
+    let rs = load_ruleset();
+
+    // "You have an additional three points to spend on buying Characteristics
+    // ... You may take this Virtue multiple times." (:4105)
+    let two_improved = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("virtue.improved_characteristics")),
+            Selection::new(Id::new("virtue.improved_characteristics")),
+        ],
+    );
+    assert_eq!(
+        characteristic_points_granted(&two_improved, &rs),
+        6,
+        "two copies of Improved Characteristics grant 3 + 3 points"
+    );
+
+    // "He gains an extra 20 levels of Infernal Powers ... You may also take
+    // this Virtue more than once" (:3669).
+    let two_demonic = entity(
+        "mythic_companion",
+        vec![
+            Selection::new(Id::new("virtue.demonic_powers")),
+            Selection::new(Id::new("virtue.demonic_powers")),
+        ],
+    );
+    assert_eq!(
+        power_levels_budget(&two_demonic, &rs),
+        40,
+        "two copies of Demonic Powers grant 20 + 20 levels"
+    );
+}

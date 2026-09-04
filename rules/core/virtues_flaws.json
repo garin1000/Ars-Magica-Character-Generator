@@ -687,6 +687,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5944, 5949] }
   },
   {
@@ -1099,6 +1100,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "magic_total_halving", "total": "magic_resistance" }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6142, 6145] }
   },
   {
@@ -1585,6 +1587,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus" }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6346, 6349] }
   },
   {
@@ -2547,6 +2550,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6759, 6762] }
   },
   {
@@ -3015,6 +3019,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "health_mod", "track": "casting_fatigue", "amount": -1 }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6993, 7004] }
   },
   {
@@ -3024,6 +3029,7 @@
     "categories": ["hermetic"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7005, 7010] }
   },
   {
@@ -3767,6 +3773,7 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "might_grant", "realm": "infernal", "score": 2 }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3663, 3666] }
   },
   {
@@ -3778,6 +3785,7 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "power_levels", "amount": 20 }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3667, 3670] }
   },
   {
@@ -4164,6 +4172,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3895, 3906] }
   },
   {
@@ -4344,6 +4353,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4009, 4016] }
   },
   {
@@ -4353,6 +4363,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4017, 4026] }
   },
   {
@@ -4515,6 +4526,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "characteristic_points", "amount": 3 }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4103, 4105] }
   },
   {
@@ -4802,6 +4814,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4279, 4286] }
   },
   {
@@ -4944,6 +4957,7 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.redcap" },
     "effects": [{ "type": "item_level_budget", "amount": 25 }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4347, 4350] }
   },
   {
@@ -5118,6 +5132,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "spell_mastery_xp", "amount": 50 }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4471, 4475] }
   },
   {
@@ -5157,6 +5172,7 @@
     "tainted": true,
     "entity_kinds": ["character"],
     "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["academic", "arcane", "general", "martial", "supernatural"] }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4496, 4499] }
   },
   {
@@ -5226,6 +5242,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4532, 4535] }
   },
   {
@@ -5396,6 +5413,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4714, 4727] }
   },
   {
@@ -5550,6 +5568,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "special_casting_mod", "kind": "quiet_words" }],
+    "max_per_target": 2,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4822, 4827] }
   },
   {
@@ -5644,6 +5663,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4870, 4877] }
   },
   {
@@ -5867,6 +5887,7 @@
     "categories": ["general"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4988, 4991] }
   },
   {
@@ -5889,6 +5910,7 @@
       { "type": "casting_total_mod", "amount": 3, "scope": "all" },
       { "type": "magic_resistance_mod", "kind": "aura_bonus" }
     ],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4998, 5001] }
   },
   {
@@ -5933,6 +5955,7 @@
       { "type": "might_grant", "realm": "divine", "score": 0 },
       { "type": "power_levels", "amount": 30 }
     ],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5022, 5031] }
   },
   {
@@ -6260,6 +6283,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5199, 5206] }
   },
   {
@@ -6396,6 +6420,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "health_mod", "track": "casting_fatigue", "amount": 1 }],
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5261, 5282] }
   }
 ]
