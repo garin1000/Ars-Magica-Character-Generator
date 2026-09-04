@@ -691,7 +691,9 @@ bleed onto the character's other areas.
   `category: hermetic`, `art`-domain param, `effects: [{ art_bonus, param: "art",
   amount: 3 }]`; `max_per_target` defaults to 1 ("once for a given Art"). Taking
   it for two Arts is two selections with different targets (repeatable by the
-  parameterized-item rule). Being Hermetic, only magus profiles permit it.
+  parameterized-item rule). Being Hermetic, only magus profiles permit it. The
+  "twice" is a cap on the *total* number of copies, which the model cannot
+  express (`max_per_target` is per-target); see *Selection multiplicity* above.
 - The `art_bonus` effect adds to an Art's *effective* score (Arts are not
   parameterized, so the target is matched by id alone). Implementation:
   `effective/art.rs::art_bonus`, `effective_art_score`, `art_bonuses` (serialized to
@@ -747,13 +749,113 @@ The exact sign-mirror of Great: a `flaw`, `amount: -1`, lowering the buy *floor*
   flags a target base above the base floor (`characteristic_min_base_too_high`).
 
 #### Selection multiplicity — `max_per_target`
+> "A Virtue or Flaw may be taken more than once only if the description
+> explicitly allows it. Most Virtues and Flaws may only be taken once."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2814`.
+
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :107) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :121) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`:4816`) and "Great twice per Characteristic" (`:3989`). Effect
 integrity (`ruleset/integrity.rs::validate_effect_refs`) rejects at load any effect whose
 `param` is undeclared or whose domain mismatches the effect kind.
+
+Two independent shapes of "repeatable" therefore exist, and an item may need
+both:
+
+1. **Repeats with a different target each time** — modelled by a *parameter*.
+   Two selections with different `params` are different duplicate keys, so they
+   never collide; `max_per_target` stays 1 ("once for a given Ability", `:3374`,
+   `:4816`). Items already covered this way: `virtue.affinity_ability`,
+   `virtue.affinity_art`, `virtue.puissant_ability`, `virtue.puissant_art`,
+   `virtue.extractor_of_form_vis` (`:3781`),
+   `virtue.master_of_form_creatures` (`:4465`), `virtue.student_of_realm`
+   (`:5054`), `virtue.ways_of_the_land` (`:5233`),
+   `flaw.careless_with_ability` (`:5775`).
+2. **Repeats with no target at all** — the item carries no parameter, so every
+   copy shares the one empty duplicate key and only `max_per_target` can permit
+   the repeat. This is the case GitHub issue 3 reported against Improved
+   Characteristics.
+
+**"No stated ceiling" is encoded as `max_per_target: 255` (`u8::MAX`).** The
+model has no "unlimited" sentinel and does not need one: a repeatable Virtue
+costs at least one point per copy and the largest V/F budget in the rules is 21
+Virtue / 10 Flaw points (`:2638`), so 255 is unreachable by any legal build and
+behaves exactly as "no limit" without overloading the field's meaning. A stated
+ceiling is encoded literally (Quiet Magic 2, `:4826`).
+
+Items whose descriptor states no ceiling, each with the line that says so — all
+carry `max_per_target: 255` in `rules/core/virtues_flaws.json`:
+
+| Item | Line | Rule text (abridged) |
+|---|---|---|
+| `virtue.demonic_might` | `:3665` | "may take this Virtue more than once, though it can account for no more than half of the character's total Virtues" |
+| `virtue.demonic_powers` | `:3669` | "may also take this Virtue more than once, though it can account for no more than half of the character's total Virtues" |
+| `virtue.focus_power` | `:3903` | "may be taken more than once, and the points gained may be combined" |
+| `virtue.greater_immunity` | `:4015` | "more than once, with a different immunity each time" |
+| `virtue.greater_power` | `:4021` | "more than once, and the levels added together" |
+| `virtue.improved_characteristics` | `:4105` | "You may take this Virtue multiple times." |
+| `virtue.lesser_power` | `:4283` | "more than once, and the levels added together" |
+| `virtue.magic_items` | `:4349` | "you may take it more than once, though no single effect in any of your items can be greater than Level 30" |
+| `virtue.mastered_spells` | `:4474` | "You may take this Virtue multiple times." |
+| `virtue.mentored_by_demons` | `:4498` | "may purchase this Virtue multiple times, and gain 50 further experience points each time" |
+| `virtue.minor_enchantments` | `:4534` | "more than once: add the total levels together" |
+| `virtue.personal_power` | `:4724` | "more than once, and the levels added together" |
+| `virtue.ritual_power` | `:4874` | "more than once, and the levels added together" |
+| `virtue.social_contacts` | `:4990` | "more than once, each time specifying a different social group" |
+| `virtue.special_circumstances` | `:5000` | "more than once, but you only gain a +3 bonus even if more than one set of circumstances applies" |
+| `virtue.strong_angelic_heritage` | `:5030` | "multiple times. Each additional time … increases by thirty the number of levels of holy powers" |
+| `virtue.variable_power` | `:5205` | "more than once, if the character has more than one power" |
+| `virtue.withstand_casting` | `:5265` | "more than once, and withstand 1 Fatigue level for each level of the Virtue" |
+| `flaw.deteriorating_power` | `:5948` | "more than once, if the character has more than one Power" |
+| `flaw.flawed_parma_magica` | `:6144` | "may purchase this Flaw more than once for different Forms" |
+| `flaw.limited_magic_resistance` | `:6348` | "multiple times, for multiple Forms" |
+| `flaw.slow_power` | `:6761` | "more than once, if the character has multiple powers, but not more than once for a single power" |
+| `flaw.vulnerable_casting` | `:6997` | "may have, or acquire, this Flaw more than once, losing 1 extra Fatigue level for each level" |
+| `flaw.vulnerable_magic` | `:7009` | "multiple times, so long as a different condition is specified for each" |
+
+Items with a stated ceiling of two: `virtue.great_characteristic` (`:3989`),
+`virtue.quiet_magic` ("You may take this Virtue twice, and eliminate the penalty
+altogether", `:4826`), `flaw.poor_characteristic` (`:6600`),
+`flaw.weak_characteristics` (`:7058`) — all `max_per_target: 2`.
+
+Repeat rules the data model cannot express (deliberately left unenforced rather
+than approximated):
+
+- **Per-copy magnitude change.** `flaw.false_power` (`:6096`) "may be taken
+  multiple times … but in each subsequent instance as a Minor Flaw rather than a
+  Major one". `magnitude` belongs to the catalogue entry, not the selection, so
+  every copy would be charged as Major. It stays `max_per_target: 1`: blocking a
+  legal build is preferable to silently wrong point arithmetic.
+- **Proportional per-item caps.** Demonic Might / Demonic Powers "can account
+  for no more than half of the character's total Virtues" (`:3665`, `:3669`).
+  The engine has absolute category caps but no proportional per-item cap; this
+  is a whole-build ratio and is left to the troupe.
+- **A cap on total copies regardless of target.** Two shapes need it and neither
+  is expressible: items that repeat "twice, for two different Arts"
+  (`virtue.affinity_art` `:3378`, `virtue.puissant_art` `:4820`) admit one copy
+  per Art today, and items that *forbid* repetition while carrying a target
+  parameter (`virtue.inoffensive_to_beings` `:4139`,
+  `flaw.offensive_to_beings` `:6530`, `flaw.unbearable_to_beings` `:6897`,
+  `flaw.fish_out_of_water_terrain` `:6132`) admit one copy per target where the
+  rules allow exactly one in total. `max_per_target` is per-target by
+  construction; a `max_selections` (per-item, all targets) field would be needed.
+- **"A different X each time" where X is free text.** Greater Immunity's
+  immunity, Social Contacts' social group and Vulnerable Magic's condition are
+  not recorded, so distinctness is not enforced. These items record no target at
+  all today; adding a `Text` parameter would enforce it but would invalidate
+  existing saves whose selections carry no such parameter.
+
+Repeated copies stack through the normal effect sum — `for_each_effect!` walks
+every selection, so two Improved Characteristics yield
+`characteristic_points_granted == 6` and two Demonic Powers yield
+`power_levels_budget == 40`. Covered by
+`tests/data_integrity.rs::repeated_selections_stack_their_effects`,
+`::repeated_selections_are_not_reported_as_duplicates`,
+`::shipped_repeatable_items_carry_their_rulebook_ceiling` and
+`::shipped_once_only_items_stay_non_repeatable`.
 
 #### Affinity with (Ability) — creation XP counts for half again
 > "All Advancement Totals for one Ability are increased by half, rounded up, as
@@ -863,7 +965,10 @@ approximation of "Latin").
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:4103-4105`.
 - Data: `rules/core/virtues_flaws.json` `virtue.improved_characteristics` —
-  `effects: [{ characteristic_points, amount: 3 }]`. The `3` lives here.
+  `effects: [{ characteristic_points, amount: 3 }]`, `max_per_target: 255`. The
+  `3` lives here; the repeat allowance ("multiple times", no stated ceiling) is
+  the `max_per_target` — see *Selection multiplicity* above. Copies stack: two
+  grant 6 points.
 - Implementation: `effective/characteristic.rs::characteristic_points_granted` sums the grants;
   `validation/scores.rs::validate_characteristics` (:33) budget = `start_points + granted`. The
   per-characteristic +3 *cap* is unchanged (only Great Characteristic widens it).
@@ -1000,7 +1105,9 @@ approximation of "Latin").
   the same floor + doubling charge in `derive.ts::spellMasteryXpSpent`, driven by
   `EffectiveScores.spell_mastery_{xp,floor}` and `spell_mastery_advancement_doubled`;
   the SpellPicker mastery spinner shows for every magus (buyable from the general
-  pool). "May take multiple times" follows the `max_per_target: 1` convention.
+  pool). "You may take this Virtue multiple times" (`:4474`) states no ceiling, so
+  `virtue.mastered_spells` carries `max_per_target: 255` — see *Selection
+  multiplicity* above. (It formerly sat at the default 1, which blocked the repeat.)
 
 #### Mastered Spell Special Abilities — choosable per-spell mastery options (`spell_mastery_abilities`)
 > "For every level in the Mastery Ability, the maga may also choose one special
