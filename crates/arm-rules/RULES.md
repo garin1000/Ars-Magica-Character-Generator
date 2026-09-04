@@ -3368,7 +3368,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
     `PostApprenticeshipRules` on `LifeStageRules`), pinned by
     `every_life_stage_field_is_mirrored_in_the_frontend_types`. The views that render
     them are **M6/6b5b**.
-- **Four findings, and the reason the clamps stay.** The first three are
+- **Five findings, and the reason the clamps stay.** The first four are
   `validate_post_gauntlet_choices` in `validation/life_stage.rs`, all
   `error`/`experience`, all magus-gated because `:2216` is "**Hermetic Magi Only
   (Optional)**" and on any other plan the values are ignored outright:
@@ -3376,12 +3376,20 @@ Abilities are bought with experience earned in blocks, not from one bank:
     character's future.
   - `life_stage_lab_seasons_out_of_range` (`seasons`, `max`, `years`) — more charged
     seasons than `max_charged_lab_seasons_per_year × post_gauntlet_years` (`:2482`).
-    The message spells out the *charged* reading, which is the one thing a player
-    misreads: the deduction is exhausted by the third season of a year, so a fourth
-    is free and never counted here.
+  - `life_stage_lab_seasons_without_years` (`seasons`) — the same rule (`:2482`) on a
+    plan with **no** post-Gauntlet year, which is a different fault told a different
+    way. The branch is on `post_gauntlet_years == 0`, not on the ceiling being 0: a
+    zero span means the seasons have nowhere to happen, and the per-year charging
+    limit the sibling message used to recite explains nothing about it. (A ruleset
+    with `max_charged_lab_seasons_per_year` of 0 still has years, so it keeps the
+    sibling and its "more than the 0 those years hold" reading stays true.) Both
+    messages were shortened at the same time — the "the third already takes the whole
+    30, so a fourth is free" gloss belongs to
+    `life-stage-lab-seasons-hint`, which states it beside the field, not to a
+    finding.
   - `life_stage_spell_level_split_exceeds_points` (`levels`, `points`) — a spell-level
     share larger than the points the years granted (`:2471`).
-  - The fourth is `aging_rolls_pending` (warning, `aging`), which the
+  - The fifth is `aging_rolls_pending` (warning, `aging`), which the
     post-Gauntlet years make reachable at all: a magus generated years out of
     apprenticeship is routinely over 35, and "a character over the age of 35 must make
     aging rolls before the game begins" (`:2232`, `:16565`). It is emitted from

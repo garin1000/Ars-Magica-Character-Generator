@@ -411,6 +411,7 @@ life-stage-lab-seasons-label = Laborquartale
 life-stage-lab-seasons-hint = Quartale Laborarbeit, über alle Jahre als Magus zusammengezählt: jedes kostet 10 der 30 Punkte des jeweiligen Jahres, und nur drei pro Jahr werden angerechnet — das dritte nimmt bereits die vollen 30, ein viertes ist kostenlos.
 life-stage-spell-levels-label = Zauberstufen
 life-stage-spell-levels-hint = Wie viele der Punkte als Zauberstufen statt als Erfahrungspunkte genommen werden.
+life-stage-post-gauntlet-no-years-note = Noch keine Jahre als Magus, daher können Laborquartale und Zauberstufen nichts aufnehmen. Diese Jahre laufen vom Alter bei der Lehrlingsprüfung bis zum Alter des Charakters.
 life-stage-post-gauntlet-summary = { $years } Jahre als Magus: { $points } Punkte = { $xp } EP + { $levels } Zauberstufen
 # Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
 # Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
@@ -1062,7 +1063,8 @@ issue-life_stage_age_unset = Trage das Alter des Charakters ein: das spätere Le
 issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindheit, die { $min } Jahre dauert — es gibt keine späteren Lebensjahre, in denen Erfahrung erworben wird.
 issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit { $age } Jahren ab: Sie kommt frühestens mit { $min } — Kindheit plus fünfzehn Jahre Lehrlingszeit.
 issue-life_stage_gauntlet_age_after_age = Die Lehrlingsprüfung mit { $gauntlet_age } liegt für diesen Magus mit { $age } Jahren noch in der Zukunft; die Jahre als Magus werden ab der Lehrlingsprüfung gezählt.
-issue-life_stage_lab_seasons_out_of_range = { $seasons } Quartale Laborarbeit werden { $years } Jahren als Magus angerechnet, mehr als die { $max }, die diese Jahre tragen können: nur drei Quartale pro Jahr kosten etwas, denn das dritte nimmt dem Jahr bereits die vollen 30 Punkte — ein viertes ist kostenlos.
+issue-life_stage_lab_seasons_out_of_range = { $seasons } Quartale Laborarbeit sind mehr als die { $max }, die { $years } Jahre als Magus tragen können.
+issue-life_stage_lab_seasons_without_years = { $seasons } Quartale Laborarbeit sind eingetragen, aber dieser Charakter hat keine Jahre als Magus, in denen sie stattfinden könnten.
 issue-life_stage_spell_level_split_exceeds_points = { $levels } Zauberstufen aus den Jahren als Magus zu nehmen übersteigt, was diese Jahre gewähren: Sie sind { $points } Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.
 issue-life_stage_native_language_unset = Wähle eine Muttersprache: der größte Erfahrungsblock der Kindheit kann für nichts anderes ausgegeben werden.
 issue-life_stage_native_language_missing_score = Kein Wert in { $language } gekauft, daher bleibt die Erfahrung der Kindheit für die Muttersprache unausgegeben.

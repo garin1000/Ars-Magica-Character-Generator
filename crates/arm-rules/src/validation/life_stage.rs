@@ -39,6 +39,9 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 /// - `life_stage_lab_seasons_out_of_range`: more lab seasons charged against the
 ///   post-Gauntlet years than three per year (`:2482`), which is all a year can be
 ///   charged for. Capped by [`crate::life_stage::LifeStageRules::budget`].
+/// - `life_stage_lab_seasons_without_years`: lab seasons on a plan with no year as a
+///   magus to work them in. The same rule (`:2482`), reported separately because the
+///   per-year charging limit is not what makes the ceiling zero here.
 /// - `life_stage_spell_level_split_exceeds_points`: more of the post-Gauntlet points
 ///   taken as levels of spells than the years granted (`:2471`). Held to the points
 ///   by [`crate::life_stage::LifeStageRules::budget`]. Filed under `abilities`, the
@@ -286,21 +289,39 @@ fn validate_post_gauntlet_choices(
     // ceiling `budget()` caps the stored total at. Past the cap the extra seasons
     // are simply free, so without this finding an impossible plan looks like a
     // bargain.
+    //
+    // **Two codes, one rule.** The branch is on the *years*, not on the ceiling
+    // being zero: with no year as a magus the per-year charging rule explains
+    // nothing — the plan has no span to charge against at all — and a message
+    // reciting it names a cause that is not the cause. A ruleset that charges no
+    // season at all (`max_charged_lab_seasons_per_year` of 0) still has years, so it
+    // keeps the general finding and its "more than the 0 those years hold" reading
+    // stays true.
     if let Some(post_apprenticeship) = rules.post_apprenticeship.as_ref() {
         let max = post_apprenticeship
             .max_charged_lab_seasons_per_year
             .saturating_mul(budget.post_gauntlet_years);
         if plan.post_gauntlet_lab_seasons > max {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE,
-                CreationPhase::Experience,
-                args([
-                    ("max", max.to_string()),
-                    ("seasons", plan.post_gauntlet_lab_seasons.to_string()),
-                    ("years", budget.post_gauntlet_years.to_string()),
-                ]),
-                None,
-            ));
+            let seasons = plan.post_gauntlet_lab_seasons.to_string();
+            issues.push(if budget.post_gauntlet_years == 0 {
+                ValidationIssue::error(
+                    ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS,
+                    CreationPhase::Experience,
+                    args([("seasons", seasons)]),
+                    None,
+                )
+            } else {
+                ValidationIssue::error(
+                    ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE,
+                    CreationPhase::Experience,
+                    args([
+                        ("max", max.to_string()),
+                        ("seasons", seasons),
+                        ("years", budget.post_gauntlet_years.to_string()),
+                    ]),
+                    None,
+                )
+            });
         }
     }
 
@@ -309,6 +330,13 @@ fn validate_post_gauntlet_choices(
     // points the years granted, so a stored share beyond them is not a split at all.
     // `budget()` holds it to the points, which quietly rewrites "600 levels" as "all
     // of them" and hands the rest to nobody.
+    //
+    // **Not split the way the lab seasons above are**, deliberately. A zero ceiling
+    // here has two possible causes — no years at all, or lab work that consumed the
+    // whole span — so a message naming either would be wrong half the time. And it
+    // needs none: this message states the ceiling and the split rule, both of which
+    // stay true at 0 points, where the lab-seasons message used to recite a per-year
+    // charging limit that explained nothing.
     //
     // **Phase `abilities`, deliberately not `spells`**, although the figure feeds the
     // spell-levels budget. 6b1a's rule is that a finding belongs to the phase whose
@@ -843,17 +871,38 @@ mod tests {
             !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE.into()),
             "issues: {issues:?}"
         );
+    }
 
-        // A magus standing at its Gauntlet has lived no year to work in, so a single
-        // season is already one too many.
+    /// A magus standing at its Gauntlet has lived no year to work in. The ceiling is
+    /// 0 there, and the over-the-ceiling message becomes a non-sequitur: it explains
+    /// the three-a-year charging rule, which has nothing to do with why the cap is
+    /// zero. The cause is that the character has no years as a magus at all, so that
+    /// is a finding of its own.
+    #[test]
+    fn lab_seasons_without_a_year_as_a_magus_name_the_missing_years() {
         let result = validate(&out_of_apprenticeship(25, 25, 1, 0), &rs());
         let issue = result
             .issues
             .iter()
-            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE)
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS)
             .expect("a season without a year is reported");
-        assert_eq!(issue.args.get("max").map(String::as_str), Some("0"));
-        assert_eq!(issue.args.get("years").map(String::as_str), Some("0"));
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Experience);
+        assert_eq!(issue.args.get("seasons").map(String::as_str), Some("1"));
+
+        // One fault, one finding: the general over-the-ceiling code stays silent.
+        let issues = codes(&result);
+        assert!(
+            !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE.into()),
+            "issues: {issues:?}"
+        );
+
+        // And with years to work in, the general finding is the one that speaks.
+        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 200, 0), &rs()));
+        assert!(
+            !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS.into()),
+            "issues: {issues:?}"
+        );
     }
 
     /// More of the yearly points taken as levels of spells than the years granted.
