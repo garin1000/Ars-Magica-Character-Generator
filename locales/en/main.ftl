@@ -110,6 +110,7 @@ abilities-title = Abilities
 # Virtue/Flaw category (type) labels, keyed by the engine's category id.
 category-general = General
 category-hermetic = Hermetic
+category-mythic_companion = Mythic Companion
 category-personality = Personality
 category-social_status = Social Status
 category-special = Special

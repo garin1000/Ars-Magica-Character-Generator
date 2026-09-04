@@ -3975,6 +3975,93 @@ fn items_by_category_finds_an_item_through_its_secondary_category() {
     );
 }
 
+// --- Mythic Companion is a category, not a marker ---------------------------
+//
+// `## List of Virtues` groups its entries under `### <Category>, <Magnitude>`
+// headings, and one of those headings is `### Mythic Companion, Free`
+// (Ars Magica - Definitive Edition (Core Rules).md:3329-3334), listing Devil
+// Child, Faerie Doctor, Nephilim and Spirit Votary — none of which appears under
+// `### Social Status, Free` (:3336-3354). Their descriptors read
+// "*Free, Mythic Companion*" (:3672, :3822, :4595, :5007), which is the
+// magnitude-then-category shape every other descriptor uses. `Tainted` never
+// occupies that slot — it is always a third token after a real category — which
+// is why it is a flag and this is not.
+
+/// The four Mythic Companion Virtues carry `mythic_companion` as their category,
+/// and none of them is a Social Status Virtue.
+#[test]
+fn the_mythic_companion_virtues_carry_the_mythic_companion_category() {
+    let rs = load_ruleset();
+    for id in [
+        "virtue.devil_child",
+        "virtue.faerie_doctor",
+        "virtue.nephilim",
+        "virtue.spirit_votary",
+    ] {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship in the catalogue"));
+        assert_eq!(
+            item.categories,
+            vec!["mythic_companion".to_string()],
+            "{id} is indexed under `### Mythic Companion, Free` alone"
+        );
+        assert!(
+            !item.has_category("social_status"),
+            "{id} is not listed under `### Social Status, Free`"
+        );
+    }
+}
+
+/// "All Mythic Companions take a Free Virtue which specifies their status. These
+/// Virtues are incompatible with each other, and with The Gift, and are not
+/// available to grogs." (`:2637`) — and each descriptor says the Virtue *makes*
+/// the character a Mythic Companion (`:3673`, `:3823`, `:4596`, `:5008`). So the
+/// category is permitted to the mythic-companion profile and to no other.
+#[test]
+fn only_the_mythic_companion_profile_permits_the_mythic_companion_category() {
+    let rs = load_ruleset();
+    let mythic = Id::new("mythic_companion");
+    let mut checked = 0;
+    for profile in rs.profiles() {
+        let permitted = profile.permitted_categories.contains("mythic_companion");
+        assert_eq!(
+            permitted,
+            profile.id == mythic,
+            "{} must {} the mythic_companion category",
+            profile.id,
+            if profile.id == mythic {
+                "permit"
+            } else {
+                "not permit"
+            }
+        );
+        checked += 1;
+    }
+    assert!(checked > 1, "the shipped ruleset must declare profiles");
+}
+
+/// The consequence on a real character: a grog may not take a Mythic Companion
+/// Virtue (`:2637`), which the `social_status` mapping used to allow outright.
+#[test]
+fn a_grog_may_not_take_a_mythic_companion_virtue() {
+    let rs = load_ruleset();
+    let devil_child = Id::new("virtue.devil_child");
+    let result = validate(
+        &entity("grog", vec![Selection::new(devil_child.clone())]),
+        &rs,
+    );
+    let issue = result
+        .issues
+        .iter()
+        .find(|i| i.code == "category_not_permitted" && i.context.as_ref() == Some(&devil_child))
+        .expect("a grog's permitted categories exclude mythic_companion");
+    assert_eq!(
+        issue.args.get("category").map(String::as_str),
+        Some("mythic_companion")
+    );
+}
+
 /// The Gift-category test is a membership query as well, so it still recognises
 /// a Flaw through the `hermetic` category it now shares with `story`: a grog
 /// forbids The Gift, and Suppressed Gift is Hermetic.

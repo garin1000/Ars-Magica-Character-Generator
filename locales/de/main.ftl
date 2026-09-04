@@ -115,6 +115,7 @@ abilities-title = Fertigkeiten
 # Kategorie- (Typ-)Bezeichnungen für Tugenden/Fehler, je Kategorie-ID der Engine.
 category-general = Allgemein
 category-hermetic = Hermetisch
+category-mythic_companion = Mythischer Gefährte
 category-personality = Persönlichkeit
 category-social_status = Sozialer Status
 category-special = Spezial
