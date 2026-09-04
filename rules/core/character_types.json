@@ -121,7 +121,14 @@
         { "category": "story", "max": 1 }
       ]
     },
-    "permitted_categories": ["general", "personality", "social_status", "story", "supernatural"],
+    "permitted_categories": [
+      "general",
+      "mythic_companion",
+      "personality",
+      "social_status",
+      "story",
+      "supernatural"
+    ],
     "forbidden_categories": ["hermetic"],
     "required_traits": [],
     "forbidden_traits": ["flaw.poor", "virtue.wealthy"],

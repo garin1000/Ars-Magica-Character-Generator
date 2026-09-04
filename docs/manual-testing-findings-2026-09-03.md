@@ -34,7 +34,8 @@ WP5 → WP6 → WP7, one finding at a time.
 | 2026-09-04 | WP3 | Finding 5 done: the ability parameter picker offers the whole catalogue plus an instance field for parameterized abilities, and `ability_bonus_dangling_target` moved to the `abilities` phase, so the wizard runs forward and the rail keeps flagging what is owed. Finding 12 done: the exemplar now leads the requirement ("below Latin 1 (any Dead Language)"), fixed alongside the recommended-ability warning, the scholarly-language finding and the checklist. **WP3 complete.** | Full gate green including `cargo tauri build --no-bundle`; e2e run at package end |
 | 2026-09-04 | WP5 | Finding 16 done: `AppStore.#effectiveBasis` + `readSettled()` pin a badge's bought score to the generation its modifiers were computed for, so the Art/Ability/Characteristic badges make one transition per committed edit instead of rendering `newScore + oldBonus` for the length of the debounce. Three new `client` tests. | `npm run test:unit` (1259 tests), `check`, `lint`, `format:check`, `cargo test --workspace` — all green; release build and e2e **not** run, an e2e suite held `target/release` |
 | 2026-09-04 | WP7 | Findings 21, 2 and 3 done: the project-wide prose sweep. 43 Fluent keys deleted from both locales (rendering site, EN, DE and the tests that pinned them), one sentence trimmed, one `familiar-powers-note` swept in beyond the brief; every `aria-describedby` that named a deleted node removed with it; `wizardGuidance` and the whole guidance machinery deleted from `derive.ts`; RULES.md re-written where it cited the removed keys. | `npm run test:unit` (1239 tests), `check`, `lint`, `format:check`, `cargo test --workspace`, `clippy --all-targets -D warnings`, `cargo fmt --check` — all green; release build and e2e **not** run, an e2e suite held `target/release` |
-| 2026-09-04 | WP4/WP6/WP7 | Findings 11, 15, 19, 20, 22–27, 1 done and committed; statuses corrected across the document. **All 25 findings from the session are resolved** — 22 fixed, 13 withdrawn, 10 and 14 closed. Only finding 28, raised here as a by-product, is still open and needs a decision. | Full gate green per package; e2e green after WP3 (43/43), WP4, WP5, WP6 |
+| 2026-09-04 | WP4/WP6/WP7 | Findings 11, 15, 19, 20, 22–27, 1 done and committed; statuses corrected across the document. **All 25 findings from the session are resolved** — 22 fixed, 13 withdrawn, 10 and 14 closed. (10 was reopened the same day and fixed; see the row below.) Only finding 28, raised here as a by-product, is still open and needs a decision. | Full gate green per package; e2e green after WP3 (43/43), WP4, WP5, WP6 |
+| 2026-09-04 | WP1 correction | **Finding 10 reopened and done.** The 2026-09-03 closure was wrong: `Mythic Companion` is one of the `### <Category>, <Magnitude>` headings the `## List of Virtues` index groups by (:3329), not a `Tainted`-style marker. `mythic_companion` is now a real category on the four Virtues, permitted to the `mythic_companion` profile alone — which stops a grog taking Devil Child, as :2637 requires. `category-mythic_companion` added to both locales; RULES.md's marker note replaced by the corrected one. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `fmt --check`, full UI gate, `cargo tauri build --no-bundle` — all green |
 | 2026-09-04 | follow-up | Two real e2e failures from WP6/WP7 fixed: the Living Conditions checklist overflowed its column by 15px (rows inherit `nowrap`, widest label 358px against a 325px track — floor raised to 24rem, labels may wrap), and the new German tab-strip test read `''` for every tab because this WebKitGTK driver's `getText()` returns the empty string for any `overflow: hidden` element, clipped or not. Both locked with unit-level assertions. | `aging`, `aging-crisis`, `tab-area`, `i18n-german` specs green individually; full suite re-run after |
 
 **Caution for the next session:** `npm run test:e2e` exited **0** with
@@ -113,15 +114,61 @@ keeps `flaw.tainted_with_evil` as a control.
 
 ### 10 — Four "Free, Mythic Companion" virtues are stored as `social_status`
 
-**Status:** closed — deliberate mapping, documented
+**Status:** done (2026-09-04) — reopened after being closed on a wrong reading,
+then fixed
 
 Devil Child (:3671), Faerie Doctor (:3821), Nephilim (:4594) and Spirit Votary
-(:5006) are tagged *Free, Mythic Companion* in the source. "Mythic Companion" is
-not one of the six category headings the rules define (Hermetic :2878, Social
-Status :2884, Supernatural :2958, Personality :2964, Story :2980, General
-:2994) — it is a marker, exactly like `Tainted`. No rule keys off it, so
-inventing a category (or a flag) for it would be speculative. The
-`social_status` mapping stands and is recorded in `RULES.md`.
+(:5006) are tagged *Free, Mythic Companion* in the source.
+
+**The first ruling was wrong.** It read "Mythic Companion" as a marker like
+`Tainted`, on the grounds that the chapter's prose defines six categories
+(Hermetic :2878, Social Status :2884, Supernatural :2958, Personality :2964,
+Story :2980, General :2994) and this is not among them — so the four stayed
+`social_status`. That argument mistook a set of *explanatory sections* for the
+taxonomy. The taxonomy is the index: `## List of Virtues` (:3004) groups every
+entry under a `### <Category>, <Magnitude>` heading, and one of those headings is
+**`### Mythic Companion, Free`** (:3329), listing exactly these four
+(:3331-3334). None of them appears under `### Social Status, Free`
+(:3336-3354), whose seventeen entries are Apprentice, Bard, Covenfolk and the
+rest. The descriptors settle it: `*Free, Mythic Companion*` (:3672, :3822,
+:4595, :5007) is magnitude-then-category, the same shape as `*Minor, Social
+Status*` — while `Tainted` never occupies that slot, appearing only as a third
+token *after* a real category (`*Major, Supernatural, Tainted*`, :3650). That
+asymmetry is what the earlier argument missed.
+
+**Resolution.** `mythic_companion` is a real category. The four carry it alone —
+each is listed under one heading only, so none of them is dual-category — with
+`category-mythic_companion` in both locales (DE *Mythischer Gefährte*, the German
+index heading at `Basisregeln.md:3329` and `translation-tables/grundbegriffe.md:83`,
+the same string `type-mythic_companion` already used).
+
+The move is not cosmetic: it changes who may take them, correctly. Only the
+`mythic_companion` profile lists the category in `permitted_categories`, because
+":2637 All Mythic Companions take a Free Virtue which specifies their status.
+These Virtues are incompatible with each other, and with The Gift, and are **not
+available to grogs**", and each descriptor says the Virtue *makes* its bearer a
+Mythic Companion (:3673 "can only be taken for a Mythic Companion", :3823, :4596,
+:5008). Under the old mapping a **grog** could legally take Devil Child, since
+grogs may take Social Status Virtues — a wrong-rules-output defect the mis-ruling
+carried with it. A companion could too, acquiring a Mythic Companion's status
+without its type; both are now `category_not_permitted`. A magus was already
+blocked by the `incompatible_with: virtue.the_gift` its profile requires, and now
+fails the category check as well.
+
+No other consumer moved: the shipped category caps name only `personality`,
+`story` and `hermetic`; `gift_categories` is `["hermetic"]`; the House grant
+constraints in `houses.json` name only `hermetic` (and match on Minor/Major, never
+Free); and the mythic-type constraints in `mythic_companion_types.json` name
+`supernatural`, `story` and `personality`. The UI needed no change — its category
+headings, badges, filter dropdown and the export's Type cell are all built from
+the catalogue's own categories through `category-<id>`.
+
+Locked by `the_mythic_companion_virtues_carry_the_mythic_companion_category`,
+`only_the_mythic_companion_profile_permits_the_mythic_companion_category` and
+`a_grog_may_not_take_a_mythic_companion_virtue` in
+`crates/arm-rules/tests/data_integrity.rs`, plus the locale check in
+`ui/src/lib/i18n.test.ts`. `crates/arm-rules/RULES.md` records the corrected
+reasoning where it previously recorded the wrong one.
 
 ---
 

@@ -211,6 +211,24 @@ describe('German UI bundle', () => {
     expect(restricted.toLowerCase()).toMatch(/wast|verfall/);
   });
 
+  // manual-testing-findings-2026-09-03 #10 (reopened): `mythic_companion` is a
+  // real Virtue category — `### Mythic Companion, Free` is one of the headings the
+  // `## List of Virtues` index groups by (Core Rules.md:3329). A category with no
+  // `category-<id>` message renders as its own slug in the badge, the filter
+  // dropdown and the exported Type cell, and parity alone would not catch it
+  // because a key missing from BOTH locales is perfectly symmetrical.
+  it('names the Mythic Companion Virtue category in both locales', () => {
+    for (const lang of ['en', 'de']) {
+      expect(messageKeys(sourceForLang(lang))).toContain('category-mythic_companion');
+    }
+    // The German term is the rulebook's own heading (Basisregeln.md:3329) and the
+    // glossary's (translation-tables/grundbegriffe.md:83) — and the same string the
+    // character-type label already uses, so one concept reads one way everywhere.
+    const de = buildBundle('de');
+    expect(translate(de, 'category-mythic_companion')).toBe('Mythischer Gefährte');
+    expect(translate(de, 'category-mythic_companion')).toBe(translate(de, 'type-mythic_companion'));
+  });
+
   it('has full message-key parity between English and German', () => {
     // A missing German key silently falls back to English (or the key) at
     // runtime, so drift is invisible without this check — the same class of gap

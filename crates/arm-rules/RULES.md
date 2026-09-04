@@ -286,9 +286,9 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   the two surfaces that have room for exactly one (below).
 
   No core descriptor names three real categories. `Tainted` is **not** a category
-  (it is `PointItem.tainted: bool`) and neither is `Mythic Companion` (see the
-  marker note below), so descriptors such as `*Minor, Story, Tainted*` stay
-  single-category.
+  (it is `PointItem.tainted: bool`), so descriptors such as `*Minor, Story,
+  Tainted*` stay single-category. `Mythic Companion` **is** one (see its own note
+  below).
 - **Membership uses the whole list, and so does browsing.** Every rule that asks
   "is this item of category X" is a membership test over all of `categories`
   (`PointItem::has_category` / `any_category_in`): permitted and forbidden
@@ -336,17 +336,39 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   **no serde alias**. No save migration and no `SCHEMA_VERSION` bump came with this:
   saves store `Selection { ref, params }` (`types.rs`) and never an item's category,
   so no save file mentions one.
-- **`Mythic Companion` is a marker, not a category.** Four Free virtues are tagged
-  `*Free, Mythic Companion*` — Devil Child (`:3671`), Faerie Doctor (`:3821`),
-  Nephilim (`:4594`), Spirit Votary (`:5006`). The rules define exactly six
-  category headings (Hermetic `:2878`, Social Status `:2884`, Supernatural
-  `:2958`, Personality `:2964`, Story `:2980`, General `:2994`), and Mythic
-  Companion is not among them; it names who may take the virtue, the same way
-  `Tainted` names a realm association. These four are therefore stored as
-  `social_status` — the closest real category, matching the other
-  who-you-are virtues — and the tag itself is deliberately **not** modelled: no
-  rule keys off it, so a category or a flag for it would be speculative (YAGNI).
-  Revisit only if a rule starts depending on it.
+- **`Mythic Companion` is a category.** Four Free Virtues carry it — Devil Child
+  (`:3671-3672`), Faerie Doctor (`:3821-3822`), Nephilim (`:4594-4595`), Spirit
+  Votary (`:5006-5007`), stored as `categories: ["mythic_companion"]` in
+  `rules/core/virtues_flaws.json`. The `## List of Virtues` index (`:3004`) groups
+  its entries under `### <Category>, <Magnitude>` headings, and
+  `### Mythic Companion, Free` (`:3329`) is one of them, listing exactly these four
+  (`:3331-3334`). None of them appears under `### Social Status, Free`
+  (`:3336-3354`). Their descriptors read `*Free, Mythic Companion*` — magnitude then
+  category, the same shape as `*Minor, Social Status*` — whereas `Tainted` never
+  occupies that slot, only ever appearing as a **third** token after a real
+  category (`*Major, Supernatural, Tainted*`, `:3650`). That asymmetry is what
+  separates the two: `Tainted` is a cross-cutting flag, `Mythic Companion` is a
+  heading of the index itself. The chapter's prose sections (`:2878` Hermetic,
+  `:2884` Social Status, `:2958` Supernatural, `:2964` Personality, `:2980` Story,
+  `:2994` General) explain six categories; they are not an exhaustive list of the
+  index's headings, and reading them as one is what produced the earlier, wrong
+  `social_status` mapping (manual-testing-findings-2026-09-03 #10).
+
+  Only the `mythic_companion` profile lists the category in `permitted_categories`
+  (`rules/core/character_types.json`), so the other three types get
+  `category_not_permitted`. That is the rules' own restriction, not a convenience:
+  `:2637` — "All Mythic Companions take a Free Virtue which specifies their status.
+  These Virtues are incompatible with each other, and with The Gift, and are **not
+  available to grogs**" — and each descriptor says the Virtue *makes* its bearer a
+  Mythic Companion (`:3673` "can only be taken for a Mythic Companion", `:3823`,
+  `:4596`, `:5008`). A magus is doubly excluded, its profile requiring The Gift the
+  four are `incompatible_with`. Locked by
+  `the_mythic_companion_virtues_carry_the_mythic_companion_category`,
+  `only_the_mythic_companion_profile_permits_the_mythic_companion_category` and
+  `a_grog_may_not_take_a_mythic_companion_virtue` in `tests/data_integrity.rs`;
+  labelled by `category-mythic_companion` in both locales (DE *Mythischer
+  Gefährte*, the German index heading at `Basisregeln.md:3329` and
+  `translation-tables/grundbegriffe.md:83`).
 - **Dual-magnitude split.** A `*Major or Minor*` item becomes two entries,
   `<id>_minor` and `<id>_major`, marked mutually `incompatible_with` (so exactly
   one magnitude is chosen), disambiguated in i18n as "Name (Minor/Major)" /
@@ -402,6 +424,7 @@ source:
 | magus | `virtue_category_caps`: hermetic major_only/hard `max: 1` | `:2857` ("may not have more than one Major Hermetic Virtue") — see the Houses section |
 | mythic_companion | `virtue_points: 20`, `flaw_points: 10`, `virtue_points_per_flaw_point: 2` | `:2638` ("up to ten points of Flaws, and each point of Flaws is worth two points of Virtues. This produces a maximum of 21 points of Virtues and 10 points of Flaws") |
 | mythic_companion | `forbidden_categories: [hermetic]`, `gift_policy: forbidden` | `:2637` (Mythic Companion status Virtues "are incompatible … with The Gift"); generated as Companions `:2635` |
+| mythic_companion | `permitted_categories` includes `mythic_companion`, and no other profile's does | `:2637` ("All Mythic Companions take a Free Virtue which specifies their status … are not available to grogs"); each status Virtue makes its bearer a Mythic Companion (`:3673`, `:3823`, `:4596`, `:5008`) — see the V/F category note |
 
 Landed for `magus` in M4/4b (Houses; see the Houses section): the `≤1 Major
 Hermetic Virtue` cap (`:2857`) via `virtue_category_caps`, the free Minor House
@@ -1756,8 +1779,10 @@ Rules.md `:2635-2639`; the V/F guidelines `:2842-2851`.
 > Flaws, these count against your maximum."
 
 The four status Virtues carry a symmetric `incompatible_with` web (each other +
-`virtue.the_gift`). The free status Virtue's category is `social_status` (a
-"status" Virtue); the free Minor and required Virtues keep their own book
+`virtue.the_gift`). The free status Virtue's category is `mythic_companion` — the
+index heading these four are listed under (`:3329-3334`), and one the
+`mythic_companion` profile alone permits, which is how "not available to grogs"
+(`:2637`) is enforced; the free Minor and required Virtues keep their own book
 categories. Per-type bonus points fold into the balance ceilings via
 `EffectiveBudget` (`validation/balance.rs`, :89): `flaw_ceiling = base + bonus_flaw`,
 `virtue_ceiling = base + bonus_flaw·rate + bonus_free_virtue`,
