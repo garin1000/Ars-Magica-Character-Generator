@@ -500,6 +500,98 @@ describe('app.css', () => {
     expect(block![1]).toMatch(/max-width:\s*100%;/);
   });
 
+  // ── The Abilities tab's selected-row grid ───────────────────────────────────
+  //
+  // manual-testing-findings-2026-09 #31. `.ability-selection li` is a flex line
+  // with TWO GROWING items — `.item-name` (`flex: 1`) and the trailing
+  // `.specialty` / `.ability-unbought` (`flex: 1 1 6rem`) — so a fixed-width item
+  // the row omits is not merely absent, it is REDISTRIBUTED between those two.
+  // The display-only (unbought) row drops the 1.9rem remove button and its 0.4rem
+  // flex gap, i.e. 2.3rem = 29.3px, which the two growers split: `.item-name` came
+  // out ~14.7px wider and carried the spinner, the effective badge and the marker
+  // that far right of every bought row above and below it.
+  //
+  // None of this is observable by rendering — `render` from `svelte/server`
+  // attaches no stylesheet and happy-dom performs no layout, so there is no box to
+  // measure at any level below e2e. The stylesheet contract is the guard, and the
+  // markup half (that the unbought branch actually emits the slot, aria-hidden and
+  // unfocusable) is pinned in `lib/components/AbilityTab.test.ts`.
+
+  /** The declaration block of a descendant-selector rule, comments stripped. */
+  function selectorBody(selector: string): string {
+    const pattern = new RegExp(`^${selector.replace(/\./g, '\\.')}\\s*\\{([^}]*)\\}`, 'm');
+    const block = pattern.exec(cssWithoutComments);
+    expect(block, `app.css should declare ${selector}`).not.toBeNull();
+    return block![1];
+  }
+
+  /** A rule's own `width`, in CSS pixels. */
+  function widthPx(body: string): number {
+    const declared = /width:\s*([^;]+);/.exec(body);
+    expect(declared, 'the rule should declare its own width').not.toBeNull();
+    return lengthPx(declared![1]);
+  }
+
+  // The idiom the fix below copies, and which had no contract of its own either:
+  // the badge slot is rendered on EVERY row, empty when no bonus applies, so the
+  // controls after it do not move when a Puissant virtue is added or removed.
+  it('reserves a fixed box for an absent effective-score badge', () => {
+    const slot = ruleBody('eff-slot');
+    // Neither grows nor shrinks — a slot that flexed would defeat its own purpose.
+    expect(slot).toMatch(/flex:\s*0\s+0\s+auto;/);
+    expect(widthPx(slot)).toBeGreaterThan(0);
+  });
+
+  it('reserves the same fixed box for the remove button an unbought row lacks', () => {
+    const slot = ruleBody('remove-slot');
+    // `.eff-slot`'s construction exactly, for the same reason.
+    expect(slot).toMatch(/flex:\s*0\s+0\s+auto;/);
+    // …and it is the width of the control it stands in for, read from that
+    // control's own rule rather than restated, so the two cannot drift apart.
+    expect(widthPx(slot)).toBe(widthPx(ruleBody('icon-btn')));
+  });
+
+  it('leaves an unbought ability row zero horizontal drift from a bought one', () => {
+    const row = selectorBody('.ability-selection li');
+    expect(row).toMatch(/display:\s*flex;/);
+    const gapPx = lengthPx(/gap:\s*([^;]+);/.exec(row)![1]);
+
+    // What the two row kinds spend to the right of the growing name column on the
+    // items where they DIFFER: a remove button on a bought row, the slot standing
+    // in for it on an unbought one. One flex gap each, because each is one item.
+    const bought = gapPx + widthPx(ruleBody('icon-btn'));
+    const unbought = gapPx + widthPx(ruleBody('remove-slot'));
+    // Zero, not "smaller": free space is what the growers split, so any remainder
+    // reappears as drift on `.item-name` at half its size.
+    expect(unbought - bought).toBe(0);
+
+    // The other half of the invariant: the marker must keep the specialty box's
+    // exact flex share, or the split changes shape even with the width reserved.
+    //
+    // `.item-name` is declared twice at the top level (a wrapping block for the
+    // Available picker's tagged rows, then the flex share these rows use), so the
+    // grow factor is looked for across both rather than in whichever comes first.
+    const nameFlex = [...cssWithoutComments.matchAll(/^\.item-name\s*\{([^}]*)\}/gm)]
+      .map((block) => /flex:\s*([^;]+);/.exec(block[1])?.[1])
+      .filter((declared) => declared !== undefined);
+    expect(nameFlex).toEqual(['1']);
+    const specialty = selectorBody('.ability-selection .specialty');
+    const marker = selectorBody('.ability-selection .ability-unbought');
+    for (const property of ['flex', 'min-width']) {
+      const declared = new RegExp(`${property}:\\s*([^;]+);`);
+      expect(declared.exec(marker)![1], property).toBe(declared.exec(specialty)![1]);
+    }
+  });
+
+  it('sizes the unbought row marker with the scale step meant for row markers', () => {
+    // `--font-chrome` is what the scale's own taxonomy assigns to row markers (see
+    // the `:root` comment); the marker shipped one step up, on `--font-small`, the
+    // step for secondary running text.
+    expect(selectorBody('.ability-selection .ability-unbought')).toMatch(
+      /font-size:\s*var\(--font-chrome\);/,
+    );
+  });
+
   // ── The edit-mode tab strip has to fit its widest label set ─────────────────
   //
   // manual-testing-findings-2026-09 #1: at the default 1100x800 window the strip

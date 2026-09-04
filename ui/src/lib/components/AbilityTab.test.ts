@@ -408,6 +408,32 @@ describe('AbilityTab unbought bonus rows (#17)', () => {
     );
   });
 
+  // manual-testing-findings-2026-09 #31: withholding the × (above) also withdrew
+  // its 1.9rem box and one 0.4rem flex gap from a row whose name column and
+  // trailing marker BOTH grow — so the two split the 2.3rem between them and every
+  // column on this row sat ~14.7px right of the bought rows around it. The width is
+  // reserved instead, the way `.eff-slot` already reserves an absent badge. The
+  // geometry itself is pinned in `app.css.test.ts`; this is the markup half.
+  it('reserves the withheld remove button its width, hidden from assistive tech', () => {
+    setModifiers([{ ability: 'ability.parma_magica', bonus: 2 }]);
+    const body = html();
+    const slot = /<span class="remove-slot"[^>]*>\s*<\/span>/.exec(body);
+    expect(slot).not.toBeNull();
+    // It is spacing and nothing else: empty (matched above), out of the
+    // accessibility tree so no screen reader announces a blank cell, and with
+    // nothing that could put it in the tab order.
+    expect(slot![0]).toContain('aria-hidden="true"');
+    expect(slot![0]).not.toContain('tabindex');
+  });
+
+  it('adds no such slot to a bought row, which has the button itself', () => {
+    store.entity.ability_scores = [{ ability: 'ability.athletics', score: 3 }];
+    setModifiers([]);
+    const body = html();
+    expect(body).toContain('data-testid="remove-ability.athletics-0"');
+    expect(body).not.toContain('remove-slot');
+  });
+
   it('adds no row when the target already has a bought row to carry the badge', () => {
     store.entity.ability_scores = [{ ability: 'ability.parma_magica', score: 1 }];
     setModifiers([{ ability: 'ability.parma_magica', bonus: 2 }]);

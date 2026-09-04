@@ -361,6 +361,11 @@
                 <!-- Why the row is inert, in words rather than by greyed controls
                      alone (WCAG 1.4.1) — and where the user buys it. -->
                 <span class="ability-unbought muted">{store.t('ability-unbought-marker')}</span>
+                <!-- Spacing only, standing in for the × this row does not have, so
+                     its columns line up with the bought rows around it (#31).
+                     `aria-hidden` because an empty box is not content to announce;
+                     a span holds nothing focusable. -->
+                <span class="remove-slot" aria-hidden="true"></span>
               {:else}
                 <input
                   type="text"
