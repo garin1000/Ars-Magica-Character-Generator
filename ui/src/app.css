@@ -1579,15 +1579,37 @@ ul {
    Placement is row-major, so the book's own best-conditions-first order (`:16583`)
    reads across each row and then down — the same order the DOM and the keyboard
    take. Column-major (`grid-auto-flow: column`) would read better as a ranking and
-   is exactly the reordering that leaves the tab order scrambled, so it is not used. */
+   is exactly the reordering that leaves the tab order scrambled, so it is not used.
+
+   THE FLOOR IS THE PANEL'S 24rem, not a narrower number of its own. A checklist row
+   is one of the three things that floor was measured from (see `.character-details`
+   above), so anything under it contradicts the only measurement taken of this
+   content — and did: at the 1100px default window an 18rem floor fitted THREE 325px
+   tracks under a 358px row ("Typical Summer or Autumn covenant (mundane)"), so the
+   long rows ran across their neighbours and 15px past the panel's own edge. At 24rem
+   the same stage takes two ~499px columns, which holds the longest German name
+   ("Typischer Sommer- oder Herbst-Konvent (Sterblicher)") on one line as well. */
 .living-conditions-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
   column-gap: 1.5rem;
   row-gap: 0.15rem;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* A floor is a floor, not a promise. A longer localized name, a larger system font
+   or a narrower window puts a row over its column again, and a `minmax()` track does
+   NOT grow to fit an item that cannot break — it just lets it spill. So the row is
+   allowed to wrap, which is what makes the overflow impossible at any width in any
+   language rather than merely unlikely at this one.
+   The `nowrap` being undone belongs to `.checkbox.inline`, shared with the Equipped
+   toggle, whose two-word label genuinely must never break. These rows are full
+   sentences, so they inherit the wrong half of that rule; only the wrapping is
+   dropped, and the inline-flex box/gap that aligns the control with its text stays. */
+.living-conditions-list .checkbox.inline {
+  white-space: normal;
 }
 
 .char-name {

@@ -107,6 +107,42 @@ describe('app.css', () => {
     expect(rule![1]).toMatch(/grid-template-columns:\s*repeat\(auto-fill,\s*minmax\(/);
   });
 
+  /** The `rem` floor of the first `minmax()` in a rule body. */
+  const columnFloorRem = (body: string): number =>
+    parseFloat(/minmax\(\s*([\d.]+)rem/.exec(body)![1]);
+
+  // Why this test exists: the #24/#25 reflow gave the checklist its own column floor
+  // (18rem) while the row it has to hold was never re-measured — and a checklist
+  // column is exactly one of the three things `.character-details`' own 24rem floor
+  // was CHOSEN from ("a Living Conditions row … plus the checkbox and the signed
+  // modifier column", see the comment on that rule). A narrower floor therefore
+  // contradicts the only measurement anyone has taken of this content, and it did:
+  // at the 1100px default window the 18rem floor fitted three 325px tracks under a
+  // 358px row, so the widest names ran into the next column and 15px past the panel.
+  // Coupling the two floors is the point — the number lives in one place, so the
+  // checklist cannot drift narrower than the row it was sized for again.
+  it('never flows the checklist into columns narrower than a row was measured for', () => {
+    const list = /^\.living-conditions-list\s*\{([^}]*)\}/m.exec(appCss);
+    const panel = /^\.character-details\s*\{([^}]*)\}/m.exec(appCss);
+    expect(list).not.toBeNull();
+    expect(panel).not.toBeNull();
+    expect(columnFloorRem(list![1])).toBeGreaterThanOrEqual(columnFloorRem(panel![1]));
+  });
+
+  // …and a floor is a floor, not a guarantee: a longer localized name (German's are
+  // half again as long as English's), a larger system font or a narrower window all
+  // put a row over its column again. `.checkbox.inline` is shared with the
+  // Equipped toggle, whose whole point is a two-word label that never breaks, so its
+  // `white-space: nowrap` is inherited here by a checklist of full sentences — and a
+  // grid track sized by `minmax()` does not grow to fit an unbreakable item, so the
+  // row simply spills over its neighbour. Wrapping is what makes the overflow
+  // impossible at ANY width in ANY language, rather than merely unlikely at this one.
+  it('lets a long Living Conditions row wrap rather than spill out of its column', () => {
+    const rule = /^\.living-conditions-list \.checkbox\.inline\s*\{([^}]*)\}/m.exec(appCss);
+    expect(rule).not.toBeNull();
+    expect(rule![1]).toMatch(/white-space:\s*normal;/);
+  });
+
   // #26: the log grows one row per aging year and a magus can owe forty. The bound
   // is the log's OWN property, not something a layout class lends it — qualifying it
   // with `.character-details` made a correctness guarantee (nothing may push the rest
