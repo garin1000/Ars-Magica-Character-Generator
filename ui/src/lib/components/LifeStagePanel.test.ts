@@ -42,12 +42,30 @@ function lifeStageRules(): LifeStageRules {
       spread_abilities: ['ability.athletics', 'ability.awareness'],
     },
     later_life: { xp_per_year: 15 },
+    // The block the Gauntlet-age placeholder reads its baseline off — "25 years old
+    // and just out of apprenticeship" (`:1601`), which is what leaving the field
+    // blank now means.
+    apprenticeship: {
+      default_gauntlet_age: 25,
+      minimum_abilities: [],
+      recommended_abilities: [],
+      recommended_xp: 0,
+      xp: 240,
+      years: 15,
+    },
     post_apprenticeship: {
       points_per_year: 30,
       lab_season_cost: 10,
       max_charged_lab_seasons_per_year: 3,
     },
   };
+}
+
+/** The same rules as a ruleset stating no baseline Gauntlet age ships them. */
+function rulesWithoutDefaultGauntletAge(): LifeStageRules {
+  const rules = lifeStageRules();
+  delete rules.apprenticeship!.default_gauntlet_age;
+  return rules;
 }
 
 /** The same rules as a ruleset predating the post-Gauntlet block ships them. */
@@ -420,7 +438,7 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
     expect(has(body, 'age-readout')).toBe(true);
   });
 
-  it('carries the plan values, and offers the entered age as the Gauntlet placeholder', () => {
+  it('carries the plan values, and offers the ruleset default as the Gauntlet placeholder', () => {
     installGuidedMagus({
       gauntlet_age: 25,
       post_gauntlet_lab_seasons: 6,
@@ -430,17 +448,41 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
     const body = html();
     const gauntlet = element(body, 'life-stage-gauntlet-age-input');
     expect(gauntlet.open).toMatch(/value="25"/);
-    // "Leave it blank and the magus stands at its Gauntlet" made visible: blank
-    // reads as the age itself.
-    expect(gauntlet.open).toMatch(/placeholder="40"/);
+    // The placeholder says what blank MEANS, and blank no longer means "this magus
+    // stands at its Gauntlet" — it means the ruleset's baseline magus, gauntleted at
+    // `apprenticeship.default_gauntlet_age`. Showing the age here (it used to show
+    // 40) told the player the opposite of what the engine would do.
+    expect(gauntlet.open).toMatch(/placeholder="25"/);
     expect(element(body, 'life-stage-lab-seasons-input').open).toMatch(/value="6"/);
     expect(element(body, 'life-stage-spell-levels-input').open).toMatch(/value="40"/);
   });
 
-  it('leaves every field empty for a magus standing at its Gauntlet', () => {
+  it('clamps the Gauntlet placeholder to a magus younger than the default', () => {
+    installGuidedMagus();
+    store.entity.age = 22;
+    // The engine clamps the baseline to the character's own age, so a magus of 22
+    // does stand at its Gauntlet — and the placeholder has to say 22, not 25, or it
+    // would name an age the character has not reached.
+    expect(element(html(), 'life-stage-gauntlet-age-input').open).toMatch(/placeholder="22"/);
+  });
+
+  it('falls back to the age for a ruleset stating no default Gauntlet age', () => {
+    installRuleset(rulesWithoutDefaultGauntletAge(), profile('magus', true));
+    resetEntity('magus');
+    installPlan();
+    store.entity.age = 40;
+    // No baseline in the data means the older reading stands: blank is "stands at its
+    // Gauntlet", and the placeholder still says so.
+    expect(element(html(), 'life-stage-gauntlet-age-input').open).toMatch(/placeholder="40"/);
+  });
+
+  it('leaves every field empty for a magus that has entered nothing', () => {
     installGuidedMagus();
     store.entity.age = 25;
     const body = html();
+    // Empty VALUES — nothing is written into the plan on the player's behalf, so the
+    // save records no Gauntlet age and the dirty flag is untouched. What blank means
+    // is the placeholder's job (above), not a prefill's.
     for (const testid of inputs) expect(element(body, testid).open).toMatch(/value=""/);
   });
 

@@ -2142,6 +2142,10 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
     };
     let rules = arm_rules::LifeStageRules {
         apprenticeship: Some(arm_rules::ApprenticeshipRules {
+            // Populated on purpose, like every other optional field here: the
+            // Gauntlet-age field's placeholder is what blank means, and it reads the
+            // baseline off this key.
+            default_gauntlet_age: Some(25),
             minimum_abilities: vec![arm_rules::AbilityRequirement {
                 ability: Id::new("ability.parma_magica"),
                 exemplar: None,

@@ -484,6 +484,16 @@ fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
         apprenticeship.recommended_xp, 90,
         "\"Total Cost: 90 experience points\" (:2461)"
     );
+
+    // The baseline a plan naming no Gauntlet age is read at: "These templates are of
+    // a stereotypical member of each House, 25 years old and just out of
+    // apprenticeship" (:1601). A literal for the same reason the rest are — the only
+    // outside witness that the shipped number is the rulebook's.
+    assert_eq!(
+        apprenticeship.default_gauntlet_age,
+        Some(25),
+        "\"25 years old and just out of apprenticeship\" (:1601)"
+    );
 }
 
 /// Eleven Virtues that read like sourcebook material — angelic/demonic heritage,

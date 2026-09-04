@@ -394,10 +394,11 @@ life-stage-age-label = Alter
 # Lehrlingsprüfung ist der Zeitpunkt, an dem die Lehrlingszeit endete — die
 # fünfzehn Jahre davor (Basisregeln.md:2435), wobei jedes Jahr davor Erfahrung des
 # späteren Lebens erbringt (`:2214`). Die Jahre zwischen beiden sind das Leben als
-# Magus und je „30 Punkte“ wert (`:2216`, `:2471`). Leer bedeutet, dass der Magus
-# zum Zeitpunkt seiner Lehrlingsprüfung steht — genau das speichert ein fehlendes
-# Prüfungsalter.
-life-stage-gauntlet-note = Bei einem Magus ist das Alter sein heutiges Alter, und das Alter bei der Lehrlingsprüfung ist der Zeitpunkt, an dem seine Lehrlingszeit endete: Die Lehrlingszeit sind die fünfzehn Jahre vor der Prüfung, jedes Jahr davor erbringt Erfahrung des späteren Lebens, und jedes Jahr von der Prüfung bis heute ist 30 Punkte wert. Bleibt das Alter bei der Lehrlingsprüfung leer, steht der Magus zum Zeitpunkt seiner Lehrlingsprüfung.
+# Magus und je „30 Punkte“ wert (`:2216`, `:2471`). Ein leeres Feld speichert
+# nichts: Die Engine liest es als den Standard-Magus des Regelwerks, „25 years old
+# and just out of apprenticeship“ (`:1601`), begrenzt auf das Alter einer jüngeren
+# Figur — und genau diese Zahl zeigt das leere Feld als Platzhalter.
+life-stage-gauntlet-note = Bei einem Magus ist das Alter sein heutiges Alter, und das Alter bei der Lehrlingsprüfung ist der Zeitpunkt, an dem seine Lehrlingszeit endete: Die Lehrlingszeit sind die fünfzehn Jahre vor der Prüfung, jedes Jahr davor erbringt Erfahrung des späteren Lebens, und jedes Jahr von der Prüfung bis heute ist 30 Punkte wert. Bleibt das Alter bei der Lehrlingsprüfung leer, gilt das übliche Alter eines Magus frisch nach der Lehrlingszeit, das im leeren Feld steht.
 # Die Jahre, die ein Magus seit seiner Lehrlingsprüfung gelebt hat. Gespeichert wird
 # nur das Prüfungsalter; Jahre, Punkte und Erfahrung folgen daraus und aus dem Alter.
 # Jeder Punkt kann ein Erfahrungspunkt in einer Kunst oder Fertigkeit oder eine
@@ -405,7 +406,7 @@ life-stage-gauntlet-note = Bei einem Magus ist das Alter sein heutiges Alter, un
 # 30 Punkte des Jahres — angerechnet werden aber nur drei Quartale pro Jahr, denn das
 # dritte hat die vollen 30 bereits aufgezehrt (`:2482`).
 life-stage-gauntlet-age-label = Alter bei der Lehrlingsprüfung
-life-stage-gauntlet-age-hint = Das Alter, mit dem die Lehrlingszeit endete. Leer bedeutet, dass der Magus zum Zeitpunkt seiner Lehrlingsprüfung steht, ohne Jahre als Magus dahinter.
+life-stage-gauntlet-age-hint = Das Alter, mit dem die Lehrlingszeit endete. Bleibt das Feld leer, gilt das darin angezeigte Alter: das übliche Alter eines Magus frisch nach der Lehrlingszeit, oder das eigene Alter dieser Figur, falls sie jünger ist.
 life-stage-lab-seasons-label = Laborquartale
 life-stage-lab-seasons-hint = Quartale Laborarbeit, über alle Jahre als Magus zusammengezählt: jedes kostet 10 der 30 Punkte des jeweiligen Jahres, und nur drei pro Jahr werden angerechnet — das dritte nimmt bereits die vollen 30, ein viertes ist kostenlos.
 life-stage-spell-levels-label = Zauberstufen

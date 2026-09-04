@@ -3124,9 +3124,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
   after that"), and the Darius example at `:2439-2449` — whose master "picks 10 as a
   nice, round number" for the start of apprenticeship (`:2402`) and who spends "his
   last 5 exp on Parma Magica 1" "just before Gauntlet" (`:2449`).
-- Data: `rules/core/life_stages.json` → `apprenticeship`: `years` 15, `xp` 240, plus
-  the two Ability lists (below). Canonically sorted, so `apprenticeship` leads the
-  file.
+- Data: `rules/core/life_stages.json` → `apprenticeship`: `years` 15, `xp` 240,
+  `default_gauntlet_age` 25 (below), plus the two Ability lists (below). Canonically
+  sorted, so `apprenticeship` leads the file.
 - Implementation: `life_stage.rs` — `ApprenticeshipRules`,
   `LifeStageRules::apprenticeship_of` (the block for a magus, `None` for anyone else,
   read off the profile's `is_magus` flag) and `budget`, which reports
@@ -3164,9 +3164,10 @@ Abilities are bought with experience earned in blocks, not from one bank:
   against `:2402`, where a boy apprenticed at 10 has "75 experience points to spend from
   those five years" — exactly what a magus gauntleted at 25 earns here, whatever its age
   now. In M6/6b4 the Gauntlet age *was* the age, because a magus was generated standing
-  at its Gauntlet; **M6/6b5** stores it as `LifeStagePlan::gauntlet_age` (absent = at the
-  Gauntlet, so the numbers are unchanged) and counts the years after it separately — see
-  the next section. `SCHEMA_VERSION` is unchanged (14) throughout and no save migrates.
+  at its Gauntlet; **M6/6b5** stores it as `LifeStagePlan::gauntlet_age` and counts the
+  years after it separately — see the next section. An absent value read as the age
+  itself until **Default Gauntlet age** (below) gave it the rulebook's own baseline
+  instead. `SCHEMA_VERSION` is unchanged (14) throughout and no save migrates.
 - Load-time gate (an engine invariant, not a sourced rule): a ruleset that declares an
   `is_magus` profile **and** ships life-stage rules must declare an apprenticeship
   block — `Ruleset::validate_apprenticeship_refs`, gated exactly like
@@ -3174,6 +3175,48 @@ Abilities are bought with experience earned in blocks, not from one bank:
   magus as a companion, counting every year to its age. **This replaces the 6b2
   runtime refusal** (`life_stage_magus_guided_unsupported`, now deleted): the limit was
   never a property of a character, it was missing data.
+
+#### Default Gauntlet age — 25, the baseline a blank field reads as
+
+> These templates are of a stereotypical member of each House, 25 years old and just
+> out of apprenticeship.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:1601` (the Magus Templates
+  preamble, under `### Magus Templates` at `:1599`). This is the **strongest** citation
+  available: it is the only line that states the number 25 and ties it to "just out of
+  apprenticeship" in one sentence, rather than leaving it to be added up. Two passages
+  corroborate it and neither replaces it — the Darius example apprentices the boy at
+  10 ("he picks 10 as a nice, round number", `:2402`) which plus "the fifteen years of
+  apprenticeship" (`:2435`) lands on 25, and the same example then counts his years as
+  a magus "from 26 to 33" (`:2486`), i.e. forward from a Gauntlet at 25. The templates
+  themselves carry `Age: 25 (25)` (e.g. `:1609`).
+- Data: `rules/core/life_stages.json` → `apprenticeship.default_gauntlet_age` 25.
+- Implementation: `life_stage.rs` — `ApprenticeshipRules::default_gauntlet_age`, read
+  by `LifeStageRules::budget` as `plan.gauntlet_age.or(block.default_gauntlet_age)`,
+  then clamped to `Entity::age` exactly as a stored value is. Surfaced to the frontend
+  through the whole `life_stages` block (`ui/src/lib/types.ts` →
+  `ApprenticeshipRules.default_gauntlet_age`), where
+  `LifeStagePanel.svelte` shows `min(default, age)` as the Gauntlet-age field's
+  **placeholder** — so the empty field states what the engine will do with it.
+- **Why it is a default and not a prefill.** Nothing is written into
+  `LifeStagePlan::gauntlet_age`, so the save still stores only the player's own choice
+  and an untouched field leaves the entity — and the unsaved-changes dirty flag —
+  alone. A prefill would also have to be written *before* the age is known, and a
+  stored 25 against an age of 22 typed later would raise
+  `life_stage_gauntlet_age_after_age`, a blocking error the blank field never
+  produced.
+- **No new finding becomes reachable.** `life_stage_gauntlet_age_after_age` tests
+  `plan.gauntlet_age` — the stored `Option`, still `None` here — so the baseline
+  cannot trip it. `life_stage_age_before_gauntlet` compares
+  `LifeStageBudget::gauntlet_age` against `minimum_gauntlet_age()` (20), and the clamp
+  keeps that value at `min(25, age)`: for `age < 25` it is the age, exactly what the
+  validator saw before, and for `age >= 25` it is 25, which clears the floor. The
+  lab-season and spell-level ceilings both *rise* with the post-Gauntlet years the
+  baseline grants, so they refuse strictly less than before.
+- **Optional, so nothing migrates.** `None` for a ruleset that states no baseline,
+  which then keeps the pre-existing reading (a plan with no Gauntlet age means the
+  magus stands at its Gauntlet). `SCHEMA_VERSION` is untouched: this is ruleset data,
+  not save data.
 
 #### Life as a magus after the Gauntlet — 30 points per year (M6/6b5)
 
