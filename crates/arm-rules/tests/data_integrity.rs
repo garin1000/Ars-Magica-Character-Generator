@@ -11,19 +11,23 @@ use arm_rules::validation::{compute_balance, validate};
 use arm_rules::{AgingRowEffect, AgingRules};
 use std::collections::BTreeMap;
 
+/// The shipped House registry. Every helper below loads it, because the four
+/// Outer-Mystery Virtues carry a `House` prerequisite that referential integrity
+/// resolves against it — exactly as the production loader does
+/// (`arm-app/src/ruleset_io.rs` lists `core/houses.json` as required).
+const SHIPPED_HOUSES: &str = include_str!("../../../rules/core/houses.json");
+
 fn load_ruleset() -> Ruleset {
-    let items = include_str!("../../../rules/core/virtues_flaws.json");
-    let types = include_str!("../../../rules/core/character_types.json");
-    let abilities = include_str!("../../../rules/core/abilities.json");
-    let characteristics = include_str!("../../../rules/core/characteristics.json");
-    Ruleset::from_core_json(
-        "arm5-core",
-        "2024.1",
-        items,
-        types,
-        abilities,
-        Some(characteristics),
-    )
+    Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+        type_profiles: include_str!("../../../rules/core/character_types.json"),
+        abilities: Some(include_str!("../../../rules/core/abilities.json")),
+        houses: Some(SHIPPED_HOUSES),
+        characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+        ..RulesetSources::default()
+    })
     .unwrap()
 }
 
@@ -37,7 +41,7 @@ fn load_ruleset_with_spells() -> Ruleset {
         type_profiles: include_str!("../../../rules/core/character_types.json"),
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         arts: Some(include_str!("../../../rules/core/arts.json")),
-        houses: None,
+        houses: Some(SHIPPED_HOUSES),
         mythic_types: None,
         spells: Some(include_str!("../../../rules/core/spells.json")),
         spell_mastery_abilities: None,
@@ -60,7 +64,7 @@ fn load_ruleset_with_mastery_abilities() -> Ruleset {
         type_profiles: include_str!("../../../rules/core/character_types.json"),
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         arts: Some(include_str!("../../../rules/core/arts.json")),
-        houses: None,
+        houses: Some(SHIPPED_HOUSES),
         mythic_types: None,
         spells: None,
         spell_mastery_abilities: Some(include_str!(
@@ -85,7 +89,7 @@ fn load_ruleset_with_equipment() -> Ruleset {
         type_profiles: include_str!("../../../rules/core/character_types.json"),
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         arts: Some(include_str!("../../../rules/core/arts.json")),
-        houses: None,
+        houses: Some(SHIPPED_HOUSES),
         mythic_types: None,
         spells: None,
         spell_mastery_abilities: None,
@@ -589,6 +593,171 @@ fn core_rules_tainted_virtues_carry_the_tainted_flag() {
     }
 }
 
+/// The four Outer-Mystery Virtues whose descriptors state that taking them makes
+/// the character a member of a particular House must carry that House as their
+/// prerequisite, so a magus of another House cannot simply buy one.
+///
+/// > You have been initiated into the Outer Mystery of the Heartbeast (see page
+/// > 233), and thus are a member of House Bjornaer.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:4059-4061 (Heartbeast
+/// → Bjornaer), `:3761` (The Enigma → Criamon), `:3827` (Faerie Magic →
+/// Merinita), `:5217` (Verditius Magic → Verditius). No other free-Virtue
+/// descriptor in the core rules makes that claim, so `virtue.hermetic_prestige`
+/// (Guernicus) is the control: its House grants it, but the Virtue itself says
+/// nothing about membership and must stay House-free.
+#[test]
+fn outer_mystery_virtues_require_the_house_their_descriptor_confers() {
+    let rs = load_full_ruleset();
+
+    let expected = [
+        ("virtue.heartbeast", "house.bjornaer"),
+        ("virtue.the_enigma", "house.criamon"),
+        ("virtue.faerie_magic", "house.merinita"),
+        ("virtue.verditius_magic", "house.verditius"),
+    ];
+
+    for (virtue, house) in expected {
+        let item = rs
+            .item(&Id::new(virtue))
+            .unwrap_or_else(|| panic!("{virtue} ships"));
+        assert_eq!(
+            item.prerequisites,
+            Some(Prereq::House(Id::new(house))),
+            "{virtue} states it makes you a member of {house}, so it must require that House"
+        );
+    }
+
+    let control = rs
+        .item(&Id::new("virtue.hermetic_prestige"))
+        .expect("virtue.hermetic_prestige ships");
+    assert_eq!(
+        control.prerequisites, None,
+        "a free Virtue whose descriptor claims no House membership must stay House-free"
+    );
+}
+
+/// Every issue code the shipped ruleset raises against `virtue.heartbeast`.
+/// Scoped by the issue's `context`, so a build's unrelated findings (points
+/// balance, missing Abilities, …) never mask or fake the prerequisite result.
+fn heartbeast_issue_codes(rs: &Ruleset, e: &Entity) -> Vec<String> {
+    validate(e, rs)
+        .issues
+        .iter()
+        .filter(|i| i.context.as_ref() == Some(&Id::new("virtue.heartbeast")))
+        .map(|i| i.code.clone())
+        .collect()
+}
+
+/// A Bjornaer magus's *granted* Heartbeast stays legal once Heartbeast requires
+/// House Bjornaer: `validate_prerequisites` walks bought `entity.selections`
+/// only, so a granted row is never prereq-checked — and the House's own fixed
+/// grant satisfies the prerequisite in any case. Pinned because the House-prereq
+/// data would be actively harmful if it fired on the grant that House makes.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:4061 ("all Bjornaer
+/// magi gain this Virtue for free at character creation").
+#[test]
+fn a_bjornaer_magus_keeps_the_house_granted_heartbeast() {
+    let rs = load_full_ruleset();
+    let mut e = entity("magus", vec![]);
+    e.house = Some(Id::new("house.bjornaer"));
+
+    assert!(
+        heartbeast_issue_codes(&rs, &e).is_empty(),
+        "Bjornaer's own granted Heartbeast must raise nothing: {:?}",
+        heartbeast_issue_codes(&rs, &e)
+    );
+}
+
+/// A magus who has not chosen a House yet gets the *unevaluated* warning, not an
+/// error: `Prereq::House` against an absent house is genuinely Unknown, and the
+/// House step may simply come later. Pinned so the new data cannot turn an
+/// in-progress build into a blocking failure.
+#[test]
+fn heartbeast_without_a_house_warns_rather_than_failing() {
+    let rs = load_full_ruleset();
+    let e = entity("magus", vec![Selection::new(Id::new("virtue.heartbeast"))]);
+    assert!(e.house.is_none(), "the fixture must set no House");
+
+    let codes = heartbeast_issue_codes(&rs, &e);
+    assert!(
+        codes.contains(&"prereq_unevaluated".to_string()),
+        "an unset House leaves the prerequisite undecided: {codes:?}"
+    );
+    assert!(
+        !codes.contains(&"prereq_not_met".to_string()),
+        "an unset House must not be reported as a failed prerequisite: {codes:?}"
+    );
+}
+
+/// The finding itself: a magus of another House who *buys* Heartbeast is now an
+/// error naming the item, where before nothing at all was raised.
+#[test]
+fn a_bonisagus_magus_cannot_buy_heartbeast() {
+    let rs = load_full_ruleset();
+    let mut e = entity("magus", vec![Selection::new(Id::new("virtue.heartbeast"))]);
+    e.house = Some(Id::new("house.bonisagus"));
+
+    let codes = heartbeast_issue_codes(&rs, &e);
+    assert!(
+        codes.contains(&"prereq_not_met".to_string()),
+        "Heartbeast makes you a Bjornaer, so a Bonisagus may not buy it: {codes:?}"
+    );
+}
+
+/// The open-grant half of the same rule. Jerbiton's free Minor Virtue and Ex
+/// Miscellanea's free Minor Hermetic Virtue are *open* menus, and all four
+/// Outer-Mystery Virtues are Minor and Hermetic — so before this change both
+/// menus offered them, and a pick made through a grant is never prereq-checked,
+/// leaving a Jerbiton with a Heartbeast and no complaint at all. The open-pick
+/// constraint now also refuses an item whose House prerequisite the character's
+/// own House contradicts.
+#[test]
+fn a_jerbiton_magus_cannot_take_heartbeast_as_the_free_minor_virtue() {
+    let rs = load_full_ruleset();
+    let mut e = entity("magus", vec![]);
+    e.house = Some(Id::new("house.jerbiton"));
+    e.house_choices = BTreeMap::from([(
+        "jerbiton_minor_virtue".to_string(),
+        Selection::new(Id::new("virtue.heartbeast")),
+    )]);
+
+    let codes: Vec<String> = validate(&e, &rs)
+        .issues
+        .iter()
+        .filter(|i| i.context.as_ref() == Some(&Id::new("virtue.heartbeast")))
+        .map(|i| i.code.clone())
+        .collect();
+    assert!(
+        codes.contains(&"house_grant_constraint".to_string()),
+        "an open House grant must not admit a Virtue that confers a different House: {codes:?}"
+    );
+}
+
+/// The same open menu must still admit a Virtue that names no House at all —
+/// the filter is on House prerequisites, not on prerequisites in general.
+#[test]
+fn a_jerbiton_magus_may_still_take_an_ordinary_free_minor_virtue() {
+    let rs = load_full_ruleset();
+    let mut e = entity("magus", vec![]);
+    e.house = Some(Id::new("house.jerbiton"));
+    e.house_choices = BTreeMap::from([(
+        "jerbiton_minor_virtue".to_string(),
+        Selection::new(Id::new("virtue.self_confident")),
+    )]);
+
+    let codes: Vec<String> = validate(&e, &rs)
+        .issues
+        .iter()
+        .map(|i| i.code.clone())
+        .collect();
+    assert!(
+        !codes.contains(&"house_grant_constraint".to_string()),
+        "a House-free Minor Virtue must stay eligible for the open grant: {codes:?}"
+    );
+}
+
 /// Two known packages load with their entries and provenance intact — never a
 /// package total, which is data (a ruleset may ship any number of packages).
 /// Athletic is the plain shape, Traveling the one that exercises every feature at
@@ -855,7 +1024,7 @@ fn weapon_with_non_combat_ability_rejected_at_load() {
         type_profiles: include_str!("../../../rules/core/character_types.json"),
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         arts: None,
-        houses: None,
+        houses: Some(SHIPPED_HOUSES),
         mythic_types: None,
         spells: None,
         spell_mastery_abilities: None,
@@ -886,7 +1055,7 @@ fn weapon_with_unknown_ability_rejected_at_load() {
         type_profiles: include_str!("../../../rules/core/character_types.json"),
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         arts: None,
-        houses: None,
+        houses: Some(SHIPPED_HOUSES),
         mythic_types: None,
         spells: None,
         spell_mastery_abilities: None,
@@ -3748,7 +3917,7 @@ fn an_exemplar_slug_is_not_treated_as_a_referential_integrity_ref() {
             type_profiles: include_str!("../../../rules/core/character_types.json"),
             abilities: Some(include_str!("../../../rules/core/abilities.json")),
             arts: None,
-            houses: None,
+            houses: Some(SHIPPED_HOUSES),
             mythic_types: None,
             spells: None,
             spell_mastery_abilities: None,

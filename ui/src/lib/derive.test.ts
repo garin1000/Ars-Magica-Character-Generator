@@ -2525,25 +2525,33 @@ describe('eligibleForConstraint', () => {
   const ruleset = makeRuleset(items);
 
   it('keeps only the constraint kind and magnitude', () => {
-    const ids = eligibleForConstraint(ruleset, { kind: 'flaw', magnitude: 'minor' }).map(
+    const ids = eligibleForConstraint(ruleset, { kind: 'flaw', magnitude: 'minor' }, null).map(
       (it) => it.id,
     );
     expect(ids).toEqual(['flaw.minor_general']);
   });
 
   it('applies the required- and forbidden-category lists', () => {
-    const required = eligibleForConstraint(ruleset, {
-      kind: 'virtue',
-      magnitude: 'minor',
-      require_categories: ['supernatural'],
-    }).map((it) => it.id);
+    const required = eligibleForConstraint(
+      ruleset,
+      {
+        kind: 'virtue',
+        magnitude: 'minor',
+        require_categories: ['supernatural'],
+      },
+      null,
+    ).map((it) => it.id);
     expect(required).toEqual(['virtue.minor_super', 'virtue.minor_super_warping']);
 
-    const forbidden = eligibleForConstraint(ruleset, {
-      kind: 'virtue',
-      magnitude: 'minor',
-      forbid_categories: ['supernatural'],
-    }).map((it) => it.id);
+    const forbidden = eligibleForConstraint(
+      ruleset,
+      {
+        kind: 'virtue',
+        magnitude: 'minor',
+        forbid_categories: ['supernatural'],
+      },
+      null,
+    ).map((it) => it.id);
     expect(forbidden).toEqual(['virtue.minor_general']);
   });
 
@@ -2554,7 +2562,7 @@ describe('eligibleForConstraint', () => {
       require_categories: ['supernatural'],
     };
     expect(
-      eligibleForConstraint(ruleset, constraint, { excludeWarpingSources: true }).map(
+      eligibleForConstraint(ruleset, constraint, null, { excludeWarpingSources: true }).map(
         (it) => it.id,
       ),
     ).toEqual(['virtue.minor_super']);
@@ -2581,18 +2589,74 @@ describe('eligibleForConstraint', () => {
     ]);
 
     expect(
-      eligibleForConstraint(dualRuleset, {
-        kind: 'virtue',
-        require_categories: ['supernatural'],
-      }).map((it) => it.id),
+      eligibleForConstraint(
+        dualRuleset,
+        {
+          kind: 'virtue',
+          require_categories: ['supernatural'],
+        },
+        null,
+      ).map((it) => it.id),
     ).toEqual(['virtue.sufi']);
 
     expect(
-      eligibleForConstraint(dualRuleset, {
-        kind: 'virtue',
-        forbid_categories: ['supernatural'],
-      }).map((it) => it.id),
+      eligibleForConstraint(
+        dualRuleset,
+        {
+          kind: 'virtue',
+          forbid_categories: ['supernatural'],
+        },
+        null,
+      ).map((it) => it.id),
     ).toEqual(['virtue.plain_status']);
+  });
+
+  // Mirrors the engine's `open_pick_satisfies` House check: an open grant menu
+  // must not offer a Virtue whose own descriptor makes its bearer a member of a
+  // DIFFERENT House (Heartbeast → Bjornaer, Core:4059-4061). A grant pick is
+  // never prerequisite-checked, so if the menu offers it nothing else will
+  // complain. Only `house` prerequisites filter; a `has` prerequisite resolves as
+  // the build progresses and must stay on the menu.
+  describe('house prerequisites', () => {
+    const houseRuleset = makeRuleset([
+      item({
+        id: 'virtue.heartbeast',
+        kind: 'virtue',
+        magnitude: 'minor',
+        categories: ['hermetic'],
+        prerequisites: { kind: 'house', value: 'house.bjornaer' },
+      }),
+      item({
+        id: 'virtue.needs_the_gift',
+        kind: 'virtue',
+        magnitude: 'minor',
+        categories: ['hermetic'],
+        prerequisites: { kind: 'has', value: 'virtue.the_gift' },
+      }),
+      item({
+        id: 'virtue.plain',
+        kind: 'virtue',
+        magnitude: 'minor',
+        categories: ['hermetic'],
+      }),
+    ]);
+    const minorHermetic = { kind: 'virtue' as const, magnitude: 'minor' as const };
+
+    it('drops an item that confers a different House', () => {
+      const ids = eligibleForConstraint(houseRuleset, minorHermetic, 'house.jerbiton').map(
+        (it) => it.id,
+      );
+      expect(ids).toEqual(['virtue.needs_the_gift', 'virtue.plain']);
+    });
+
+    it('keeps it for the House it confers, and while no House is chosen', () => {
+      expect(
+        eligibleForConstraint(houseRuleset, minorHermetic, 'house.bjornaer').map((it) => it.id),
+      ).toContain('virtue.heartbeast');
+      expect(eligibleForConstraint(houseRuleset, minorHermetic, null).map((it) => it.id)).toContain(
+        'virtue.heartbeast',
+      );
+    });
   });
 
   it('sorts a brace-led name by its unwrapped word, not the brace glyph', () => {
@@ -2610,7 +2674,7 @@ describe('eligibleForConstraint', () => {
         },
       },
     );
-    const ids = eligibleForConstraint(localized, { kind: 'virtue' }).map((it) => it.id);
+    const ids = eligibleForConstraint(localized, { kind: 'virtue' }, null).map((it) => it.id);
     // "{zebra} Mastery" sorts under Z, after Alpha and Beta — sorting by the raw
     // "{" would have clustered it first instead.
     expect(ids).toEqual(['virtue.alpha', 'virtue.beta', 'virtue.zebra_mastery']);

@@ -119,7 +119,7 @@ fn validate_warping_fill_picks(
             ));
             continue;
         }
-        if !open_pick_satisfies(pick, constraint, ruleset) {
+        if !open_pick_satisfies(pick, constraint, ruleset, entity.house.as_ref()) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_WARPING_FILL_CONSTRAINT,
                 CreationPhase::Review,

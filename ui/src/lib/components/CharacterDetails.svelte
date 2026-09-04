@@ -51,7 +51,9 @@
   // the engine's ineligibility rule).
   function eligibleForWarping(c: GrantConstraint): PointItem[] {
     const rs = store.ruleset;
-    return rs ? eligibleForConstraint(rs, c, { excludeWarpingSources: true }) : [];
+    return rs
+      ? eligibleForConstraint(rs, c, store.entity.house ?? null, { excludeWarpingSources: true })
+      : [];
   }
 
   // The Selection filling one owed slot (undefined while unchosen). The whole

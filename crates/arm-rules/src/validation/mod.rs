@@ -1539,12 +1539,20 @@ mod tests {
         { "id": "flaw.driven", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
           "categories": ["general"], "entity_kinds": ["character"] },
         { "id": "flaw.deficient_technique", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-          "categories": ["hermetic"], "entity_kinds": ["character"] }
+          "categories": ["hermetic"], "entity_kinds": ["character"] },
+        { "id": "virtue.heartbeast", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+          "categories": ["general"], "entity_kinds": ["character"],
+          "prerequisites": { "kind": "house", "value": "house.bjornaer" } },
+        { "id": "virtue.needs_self_confident", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+          "categories": ["general"], "entity_kinds": ["character"],
+          "prerequisites": { "kind": "has", "value": "virtue.self_confident" } }
     ]"#;
 
-    /// Two Houses exercising the player-choice grant kinds: Flambeau's Choice
-    /// between two Puissant Arts, and Jerbiton's Open Minor Virtue.
+    /// Three Houses exercising the player-choice grant kinds: Flambeau's Choice
+    /// between two Puissant Arts, Jerbiton's Open Minor Virtue, and Bjornaer —
+    /// present only so `virtue.heartbeast`'s House prerequisite resolves at load.
     const HOUSE_VALIDATE_HOUSES: &str = r#"{ "houses": [
+        { "id": "house.bjornaer", "lineage_type": "mystery_cult" },
         { "id": "house.flambeau", "lineage_type": "societas",
           "grants": [ { "kind": "choice", "choice_key": "flambeau_puissant", "options": [
             { "ref": "virtue.puissant_art", "params": { "art": "art.perdo" } },
@@ -1824,13 +1832,19 @@ mod tests {
             require_categories: BTreeSet::from(["general".to_string()]),
             forbid_categories: BTreeSet::new(),
         };
-        assert!(open_pick_satisfies(&sel("virtue.self_confident"), &ok, &rs));
+        assert!(open_pick_satisfies(
+            &sel("virtue.self_confident"),
+            &ok,
+            &rs,
+            None
+        ));
 
         // 1. Unresolvable pick: the item id is not in the ruleset.
         assert!(!open_pick_satisfies(
             &sel("virtue.does_not_exist"),
             &ok,
-            &rs
+            &rs,
+            None
         ));
 
         // 2. Wrong kind: a Virtue pick against a Flaw constraint.
@@ -1843,7 +1857,8 @@ mod tests {
         assert!(!open_pick_satisfies(
             &sel("virtue.self_confident"),
             &wants_flaw,
-            &rs
+            &rs,
+            None
         ));
 
         // 3. Category absent from a non-empty require list.
@@ -1856,7 +1871,8 @@ mod tests {
         assert!(!open_pick_satisfies(
             &sel("virtue.self_confident"),
             &wants_hermetic,
-            &rs
+            &rs,
+            None
         ));
 
         // 4. Category on the forbid list.
@@ -1869,7 +1885,42 @@ mod tests {
         assert!(!open_pick_satisfies(
             &sel("virtue.self_confident"),
             &forbids_general,
-            &rs
+            &rs,
+            None
+        ));
+
+        // 5. The item demands a House the character is not in. Heartbeast makes
+        //    its bearer a Bjornaer, so no other House's open menu may offer it.
+        assert!(!open_pick_satisfies(
+            &sel("virtue.heartbeast"),
+            &ok,
+            &rs,
+            Some(&Id::new("house.jerbiton"))
+        ));
+
+        // 6. …but the House it demands admits it, and so does an unknown House
+        //    (undecided, exactly as the full evaluator treats it).
+        assert!(open_pick_satisfies(
+            &sel("virtue.heartbeast"),
+            &ok,
+            &rs,
+            Some(&Id::new("house.bjornaer"))
+        ));
+        assert!(open_pick_satisfies(
+            &sel("virtue.heartbeast"),
+            &ok,
+            &rs,
+            None
+        ));
+
+        // 7. A non-House prerequisite never filters a menu, satisfied or not:
+        //    those resolve as the build progresses, so excluding them would be an
+        //    order-dependent exclusion the engine models as an error instead.
+        assert!(open_pick_satisfies(
+            &sel("virtue.needs_self_confident"),
+            &ok,
+            &rs,
+            Some(&Id::new("house.jerbiton"))
         ));
     }
 

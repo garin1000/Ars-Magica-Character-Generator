@@ -22,6 +22,7 @@ import type {
   LocalizedRuleset,
   Magnitude,
   PointItem,
+  Prereq,
   RestrictedXpPool,
   Selection,
   Spell,
@@ -377,15 +378,77 @@ export interface EligibilityOptions {
 }
 
 /**
+ * How deeply a prerequisite expression may nest. Mirrors the engine's
+ * `PREREQ_MAX_DEPTH` (`crates/arm-rules/src/types.rs`), which rejects a deeper
+ * tree at load — so this is defence in depth for a ruleset that somehow reached
+ * the frontend unvalidated, not a limit the UI enforces on its own.
+ */
+const PREREQ_MAX_DEPTH = 32;
+
+/**
+ * Whether `prereq` is DEFINITELY unsatisfiable for a character in `house`,
+ * judging `house` leaves alone and treating every other leaf as undecided.
+ *
+ * The exact mirror of the engine's `Prereq::conflicts_with_house`
+ * (`crates/arm-rules/src/types.rs`) — a deliberate matched pair, since the menu
+ * this filters and the validation that would otherwise catch the pick must agree
+ * on what is offerable. Returns `undefined` for "undecided", which is why an
+ * unknown House and a non-`house` prerequisite both leave an item on the menu.
+ */
+function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): boolean | undefined {
+  if (depth > PREREQ_MAX_DEPTH) return undefined;
+
+  // AND: one false child sinks it; all-true makes it true.
+  // OR:  one true child carries it; all-false makes it false.
+  // NOR: one true child sinks it; all-false makes it true.
+  const fold = (
+    children: Prereq[],
+    trigger: boolean,
+    shortCircuit: boolean,
+    allKnown: boolean,
+  ): boolean | undefined => {
+    let sawUndecided = false;
+    for (const child of children) {
+      const value = houseOnlyValue(child, house, depth + 1);
+      if (value === trigger) return shortCircuit;
+      if (value === undefined) sawUndecided = true;
+    }
+    return sawUndecided ? undefined : allKnown;
+  };
+
+  switch (prereq.kind) {
+    case 'all':
+      return fold(prereq.value, false, false, true);
+    case 'any':
+      return fold(prereq.value, true, true, false);
+    case 'none':
+      return fold(prereq.value, true, false, true);
+    case 'house':
+      return house === null ? undefined : house === prereq.value;
+    default:
+      // `has`, `ability_min`, `art_min`, `is_magus`: outside this question's
+      // remit, so they can neither exclude an item nor rescue one.
+      return undefined;
+  }
+}
+
+/**
  * Point items an open grant admits: matching kind, matching magnitude (when the
  * constraint fixes one), inside any required-category allow-list and outside the
- * forbid-list — mirroring the engine's `open_pick_satisfies`, so a picker offers
- * exactly the legal choices and nothing more. Both category lists are matched
+ * forbid-list, and not demanding a House other than `house` — mirroring the
+ * engine's `open_pick_satisfies`, so a picker offers exactly the legal choices
+ * and nothing more. Both category lists are matched
  * against EVERY category the item carries (`require_categories` needs a non-empty
  * intersection, `forbid_categories` an empty one), so a descriptor's secondary
  * category both admits a pick and rules one out. The rules name no fixed menu for a
  * Warping-owed slot (the pick is storyguide judgement, Core:16553-16561), so the
  * constraint is the only filter.
+ *
+ * `house` is the character's own Hermetic House (`store.entity.house`), or `null`
+ * when there is none. It is a required argument rather than an option so that
+ * every picker must state what it knows: an open grant pick is never
+ * prerequisite-checked by the engine, so a menu that quietly forgot the House
+ * would be the only thing standing between a Jerbiton magus and a Heartbeast.
  *
  * Sorted by localized name, with `{param}` braces unwrapped, so a parameterized
  * entry sorts by its visible word instead of clustering under "{".
@@ -393,6 +456,7 @@ export interface EligibilityOptions {
 export function eligibleForConstraint(
   localized: LocalizedRuleset,
   constraint: GrantConstraint,
+  house: string | null,
   opts: EligibilityOptions = {},
 ): PointItem[] {
   const items = Object.values(localized.ruleset.point_items ?? {});
@@ -406,6 +470,7 @@ export function eligibleForConstraint(
         !(constraint.forbid_categories ?? []).some((c) => it.categories.includes(c)) &&
         !(opts.excludeWarpingSources && (it.effects ?? []).some((e) => e.type === 'warping_grant')),
     )
+    .filter((it) => !it.prerequisites || houseOnlyValue(it.prerequisites, house, 1) !== false)
     .sort((a, b) =>
       localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
     );
