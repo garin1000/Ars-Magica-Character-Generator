@@ -4028,6 +4028,7 @@
     "categories": ["hermetic"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "house", "value": "house.merinita" },
     "effects": [{ "type": "ability_score_grant", "ability": "ability.faerie_magic", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3825, 3827] }
   },
@@ -4424,6 +4425,7 @@
     "categories": ["hermetic"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "house", "value": "house.bjornaer" },
     "effects": [{ "type": "ability_score_grant", "ability": "ability.heartbeast", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4059, 4061] }
   },
@@ -6122,6 +6124,7 @@
     "categories": ["hermetic"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "house", "value": "house.criamon" },
     "effects": [{ "type": "ability_score_grant", "ability": "ability.enigmatic_wisdom", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3759, 3761] }
   },
@@ -6285,6 +6288,7 @@
     "categories": ["hermetic"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "house", "value": "house.verditius" },
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5215, 5217] }
   },
   {

@@ -280,11 +280,91 @@ pub enum Prereq {
     IsMagus,
 }
 
+impl Prereq {
+    /// Whether this prerequisite is *definitely* unsatisfiable for a character
+    /// belonging to `house`, judging [`Prereq::House`] leaves alone.
+    ///
+    /// This is deliberately **not** the full evaluator
+    /// (`validation::prereq::evaluate_prereq`), which needs an entity, a ruleset,
+    /// and a type profile. It answers the narrower question an *open grant menu*
+    /// asks: "could this item ever be legal for a character of this House?" —
+    /// which depends on the expression and the House and nothing else. Every
+    /// non-House leaf is therefore treated as undecided rather than as false, so
+    /// a `Has`/`AbilityMin`/`ArtMin`/`IsMagus` prerequisite never excludes an
+    /// item from a menu: those resolve as the build progresses, and dropping
+    /// them would be an order-dependent exclusion, harsher than the
+    /// error-that-resolves model the engine uses everywhere else. A House does
+    /// not resolve that way — a magus has exactly one, and picking a Virtue that
+    /// confers a *different* House is not something a later step can fix.
+    ///
+    /// An unknown house (`None`) leaves every House leaf undecided too, mirroring
+    /// the full evaluator's `Unknown` for a magus who has not chosen one yet.
+    pub fn conflicts_with_house(&self, house: Option<&Id>) -> bool {
+        self.house_only_value(house, 1) == Some(false)
+    }
+
+    /// Tri-state evaluation (`None` = undecided) of this expression against
+    /// `house` alone. `depth` is 1 at the top level and increments once per
+    /// `All`/`Any`/`Nor` level; past [`PREREQ_MAX_DEPTH`] the expression counts
+    /// as undecided rather than recursing further — the same K8 defense in depth
+    /// the full evaluator applies, and equally unreachable for any ruleset that
+    /// passed `Ruleset::validate_prereq_refs` at load.
+    fn house_only_value(&self, house: Option<&Id>, depth: usize) -> Option<bool> {
+        if depth > PREREQ_MAX_DEPTH {
+            return None;
+        }
+        match self {
+            // AND: one false child sinks it; all-true makes it true.
+            Prereq::All(children) => {
+                Self::fold_house_only(children, house, depth, false, false, true)
+            }
+            // OR: one true child carries it; all-false makes it false.
+            Prereq::Any(children) => {
+                Self::fold_house_only(children, house, depth, true, true, false)
+            }
+            // NOR: one true child sinks it; all-false makes it true.
+            Prereq::Nor(children) => {
+                Self::fold_house_only(children, house, depth, true, false, true)
+            }
+            Prereq::House(required) => house.map(|h| h == required),
+            // Everything else is outside this question's remit: undecided, so it
+            // can neither exclude an item nor rescue one.
+            Prereq::Has(_)
+            | Prereq::AbilityMin { .. }
+            | Prereq::ArtMin { .. }
+            | Prereq::IsMagus => None,
+        }
+    }
+
+    /// Tri-state fold shared by the three quantifiers: a child evaluating to
+    /// `trigger` short-circuits the whole expression to `short_circuit`; with no
+    /// trigger and no undecided child the result is `all_known`; anything else is
+    /// undecided.
+    fn fold_house_only(
+        children: &[Prereq],
+        house: Option<&Id>,
+        depth: usize,
+        trigger: bool,
+        short_circuit: bool,
+        all_known: bool,
+    ) -> Option<bool> {
+        let mut saw_undecided = false;
+        for child in children {
+            match child.house_only_value(house, depth + 1) {
+                Some(value) if value == trigger => return Some(short_circuit),
+                Some(_) => {}
+                None => saw_undecided = true,
+            }
+        }
+        (!saw_undecided).then_some(all_known)
+    }
+}
+
 /// Engineering limit (not a rules mechanic — needs no source citation) on how
 /// deeply a [`Prereq`] boolean expression may nest (K8).
 ///
 /// Every prerequisite currently shipped in `rules/core/*.json` is a single
-/// flat `Has` — depth 1 — so this is generous headroom for compound
+/// flat `Has` or `House` — depth 1 — so this is generous headroom for compound
 /// `All`/`Any`/`Nor` trees the rules could reasonably grow into (a handful of
 /// nested clauses), while staying far short of anything that could threaten
 /// the stack. Without a bound, a `rules/` directory carrying a
@@ -301,6 +381,8 @@ pub enum Prereq {
 ///   depth): should be unreachable for any ruleset that passed the load-time
 ///   guard, but degrades to "unevaluable" rather than recursing further if it
 ///   is ever reached some other way.
+/// - [`Prereq::conflicts_with_house`] (open-grant menu filtering), for the same
+///   reason and with the same "undecided rather than recurse" degradation.
 pub const PREREQ_MAX_DEPTH: usize = 32;
 
 /// The kind of value a parameter slot carries.
@@ -3462,6 +3544,101 @@ impl fmt::Display for ValidationMode {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+
+    fn house(id: &str) -> Prereq {
+        Prereq::House(Id::new(id))
+    }
+
+    /// A bare `House` leaf — the shape all four Outer-Mystery Virtues ship —
+    /// excludes only a character known to be in a *different* House. A matching
+    /// House and an unknown House both leave the item admissible, the latter
+    /// mirroring the full evaluator's `Unknown` for a magus with no House yet.
+    #[test]
+    fn a_house_leaf_conflicts_only_with_a_known_different_house() {
+        let bjornaer = house("house.bjornaer");
+        assert!(bjornaer.conflicts_with_house(Some(&Id::new("house.jerbiton"))));
+        assert!(!bjornaer.conflicts_with_house(Some(&Id::new("house.bjornaer"))));
+        assert!(!bjornaer.conflicts_with_house(None));
+    }
+
+    /// Every leaf that is not a `House` is undecided here, so it can neither
+    /// exclude an item from an open menu nor rescue one that a `House` leaf
+    /// beside it has already ruled out.
+    #[test]
+    fn a_non_house_prerequisite_never_conflicts() {
+        assert!(!Prereq::Has(Id::new("virtue.x")).conflicts_with_house(None));
+        assert!(!Prereq::IsMagus.conflicts_with_house(Some(&Id::new("house.bjornaer"))));
+        assert!(
+            !Prereq::AbilityMin {
+                ability: Id::new("ability.awareness"),
+                score: 1,
+            }
+            .conflicts_with_house(Some(&Id::new("house.bjornaer")))
+        );
+        assert!(
+            !Prereq::ArtMin {
+                art: Id::new("art.creo"),
+                score: 1,
+            }
+            .conflicts_with_house(Some(&Id::new("house.bjornaer")))
+        );
+    }
+
+    /// The three quantifiers fold the house-only tri-state the way their boolean
+    /// meaning demands, with an undecided child blocking a verdict wherever it
+    /// could still change the answer.
+    #[test]
+    fn quantifiers_fold_the_house_only_tri_state() {
+        let elsewhere = Some(Id::new("house.jerbiton"));
+        let elsewhere = elsewhere.as_ref();
+        let home = Some(Id::new("house.bjornaer"));
+        let home = home.as_ref();
+        let has = Prereq::Has(Id::new("virtue.x"));
+
+        // All: one conflicting child sinks the whole expression, even beside an
+        // undecided sibling; a satisfiable one leaves the verdict to that sibling.
+        let all = Prereq::All(vec![house("house.bjornaer"), has.clone()]);
+        assert!(all.conflicts_with_house(elsewhere));
+        assert!(!all.conflicts_with_house(home));
+
+        // Any: only conflicts when EVERY branch does — an undecided branch keeps
+        // the door open.
+        let either = Prereq::Any(vec![house("house.bjornaer"), house("house.criamon")]);
+        assert!(either.conflicts_with_house(elsewhere));
+        assert!(!either.conflicts_with_house(home));
+        assert!(
+            !Prereq::Any(vec![house("house.bjornaer"), has.clone()])
+                .conflicts_with_house(elsewhere)
+        );
+
+        // Nor: a satisfied child is what sinks it, so "not a Bjornaer" conflicts
+        // for a Bjornaer and not for anyone else.
+        let not_bjornaer = Prereq::Nor(vec![house("house.bjornaer")]);
+        assert!(not_bjornaer.conflicts_with_house(home));
+        assert!(!not_bjornaer.conflicts_with_house(elsewhere));
+        assert!(!not_bjornaer.conflicts_with_house(None));
+    }
+
+    /// K8 defense in depth, mirroring `evaluate_prereq`'s own guard: past
+    /// [`PREREQ_MAX_DEPTH`] the expression counts as undecided rather than
+    /// recursing further. Unreachable for any ruleset that passed
+    /// `Ruleset::validate_prereq_refs`, so the guard is exercised by calling the
+    /// private walker with a depth already over the limit.
+    #[test]
+    fn house_only_evaluation_stops_at_the_depth_limit() {
+        let bjornaer = house("house.bjornaer");
+        let elsewhere = Id::new("house.jerbiton");
+        assert_eq!(
+            bjornaer.house_only_value(Some(&elsewhere), PREREQ_MAX_DEPTH),
+            Some(false),
+            "at exactly the limit the leaf still evaluates"
+        );
+        assert_eq!(
+            bjornaer.house_only_value(Some(&elsewhere), PREREQ_MAX_DEPTH + 1),
+            None,
+            "past the limit the expression is undecided, not a conflict"
+        );
+    }
 
     /// Guards against drift between a scalar enum's hand-written `Display` and
     /// its `#[serde(rename_all = "snake_case")]` scalar form. Both feed the

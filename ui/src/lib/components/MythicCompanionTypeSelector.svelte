@@ -49,7 +49,7 @@
   // `open` free-Virtue grant.
   function eligibleForConstraint(c: GrantConstraint): PointItem[] {
     const rs = store.ruleset;
-    return rs ? eligibleItems(rs, c) : [];
+    return rs ? eligibleItems(rs, c, store.entity.house ?? null) : [];
   }
 
   // Index of the currently-picked option for a `choice` grant (−1 if none).

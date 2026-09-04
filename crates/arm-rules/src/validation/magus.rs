@@ -79,7 +79,12 @@ pub(crate) fn validate_house(
         return;
     };
 
-    for outcome in grant_pick_outcomes(&house.grants, &entity.house_choices, ruleset) {
+    for outcome in grant_pick_outcomes(
+        &house.grants,
+        &entity.house_choices,
+        ruleset,
+        entity.house.as_ref(),
+    ) {
         match outcome {
             GrantPickOutcome::Resolved => {}
             GrantPickOutcome::Unresolved { choice_key } => issues.push(ValidationIssue::error(
@@ -154,10 +159,15 @@ enum GrantPickOutcome<'a> {
 /// report each [`GrantPickOutcome`] with their own issue code/phase, so the
 /// walk itself — which pick a `Choice`/`Open` grant resolves to, and whether
 /// an `Open` pick satisfies its constraint — exists exactly once.
+///
+/// `house` is the character's own Hermetic House, which the open-pick check
+/// needs so a menu cannot offer a Virtue that confers a *different* House (see
+/// [`open_pick_satisfies`]).
 fn grant_pick_outcomes<'a>(
     grants: &'a [Grant],
     picks: &'a BTreeMap<String, Selection>,
     ruleset: &Ruleset,
+    house: Option<&Id>,
 ) -> Vec<GrantPickOutcome<'a>> {
     grants
         .iter()
@@ -182,7 +192,7 @@ fn grant_pick_outcomes<'a>(
                 Some(pick) => GrantPickOutcome::OpenPick {
                     choice_key,
                     pick,
-                    satisfies_constraint: open_pick_satisfies(pick, constraint, ruleset),
+                    satisfies_constraint: open_pick_satisfies(pick, constraint, ruleset, house),
                 },
             },
         })
@@ -302,7 +312,12 @@ pub(crate) fn validate_mythic_type(
     };
 
     // --- Free-Virtue grant picks (Choice/Open), mirroring validate_house. ---
-    for outcome in grant_pick_outcomes(&mtype.grants, &entity.mythic_choices, ruleset) {
+    for outcome in grant_pick_outcomes(
+        &mtype.grants,
+        &entity.mythic_choices,
+        ruleset,
+        entity.house.as_ref(),
+    ) {
         match outcome {
             GrantPickOutcome::Resolved => {}
             GrantPickOutcome::Unresolved { choice_key } => issues.push(ValidationIssue::error(
@@ -360,7 +375,7 @@ pub(crate) fn validate_mythic_type(
         let satisfied = entity
             .selections
             .iter()
-            .any(|s| open_pick_satisfies(s, &flaw.constraint, ruleset));
+            .any(|s| open_pick_satisfies(s, &flaw.constraint, ruleset, entity.house.as_ref()));
         if !satisfied {
             issues.push(missing(&flaw.default.item_ref));
         }

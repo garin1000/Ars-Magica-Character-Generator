@@ -40,9 +40,11 @@
 
   // Point items an open grant admits — the shared constraint filter, mirroring
   // the engine's `validate_house` check so the picker offers only legal choices.
+  // The character's House goes in too: a Virtue that confers a different House
+  // (Heartbeast makes you a Bjornaer) must never appear on another House's menu.
   function eligibleForOpen(c: GrantConstraint): PointItem[] {
     const rs = store.ruleset;
-    return rs ? eligibleForConstraint(rs, c) : [];
+    return rs ? eligibleForConstraint(rs, c, store.entity.house ?? null) : [];
   }
 
   // Index of the currently-picked option for a choice grant (−1 if none), so the

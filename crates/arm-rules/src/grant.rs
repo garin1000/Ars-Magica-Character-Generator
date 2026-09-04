@@ -110,17 +110,28 @@ fn resolve_grant(grant: &Grant, choices: &BTreeMap<String, Selection>) -> Option
 
 /// Whether an Open grant's pick satisfies its constraint: the picked item must
 /// resolve and match the required kind, the magnitude (when the constraint fixes
-/// one), and the category allow/deny lists. An unresolvable pick fails — it
-/// cannot satisfy anything.
+/// one), and the category allow/deny lists, and it must not demand a House other
+/// than `house` — the character's own. An unresolvable pick fails; it cannot
+/// satisfy anything.
 ///
 /// Both category lists are matched against *every* category the item carries:
 /// `require_categories` needs a non-empty intersection, `forbid_categories` an
 /// empty one. So a descriptor's secondary category both admits a pick and rules
 /// one out, which is what "the item is of that category" means in the rulebook.
+///
+/// The House check exists because an open grant's pick is *never* prerequisite-
+/// checked: `validate_prerequisites` walks `entity.selections`, and a grant pick
+/// lives in `house_choices`/`mythic_choices`/`warping_choices` instead. Without
+/// this, a Jerbiton magus could take Heartbeast — a Virtue whose own descriptor
+/// makes its bearer a Bjornaer — through the House's free-Minor-Virtue menu with
+/// no complaint at all. Only [`Prereq::House`] is consulted (see
+/// [`Prereq::conflicts_with_house`]); a `Has`/`AbilityMin`/… prerequisite stays
+/// out of it deliberately, since those resolve as the build progresses.
 pub fn open_pick_satisfies(
     pick: &Selection,
     constraint: &GrantConstraint,
     ruleset: &Ruleset,
+    house: Option<&Id>,
 ) -> bool {
     let Some(item) = ruleset.point_items.get(&pick.item_ref) else {
         return false;
@@ -139,6 +150,13 @@ pub fn open_pick_satisfies(
         return false;
     }
     if item.any_category_in(&constraint.forbid_categories) {
+        return false;
+    }
+    if item
+        .prerequisites
+        .as_ref()
+        .is_some_and(|p| p.conflicts_with_house(house))
+    {
         return false;
     }
     true

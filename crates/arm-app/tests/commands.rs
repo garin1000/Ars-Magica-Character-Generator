@@ -589,14 +589,16 @@ fn over_budget_virtues_is_reported() {
     let abilities = fs::read_to_string(core.join("abilities.json")).unwrap();
     let arts = fs::read_to_string(core.join("arts.json")).unwrap();
     let characteristics = fs::read_to_string(core.join("characteristics.json")).unwrap();
+    let houses = fs::read_to_string(core.join("houses.json")).unwrap();
     let tiny_type = r#"[{
         "id": "tiny",
         "budget": { "virtue_points": 1, "flaw_points": 10 },
         "permitted_categories": ["general"],
         "creation_phases": ["virtues_flaws"]
     }]"#;
-    // The catalogue's ability_score_grant effects reference abilities, so the
-    // ruleset must carry the ability registry for referential integrity to pass.
+    // The catalogue's ability_score_grant effects reference abilities, and the
+    // four Outer-Mystery Virtues carry a `House` prerequisite, so the ruleset
+    // must carry both registries for referential integrity to pass.
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,
         version: RULESET_VERSION,
@@ -604,6 +606,7 @@ fn over_budget_virtues_is_reported() {
         type_profiles: tiny_type,
         abilities: Some(&abilities),
         arts: Some(&arts),
+        houses: Some(&houses),
         characteristics: Some(characteristics.as_str()),
         ..RulesetSources::default()
     })

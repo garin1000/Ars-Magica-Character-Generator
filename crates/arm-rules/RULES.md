@@ -1725,7 +1725,9 @@ resolved values); the free Virtue is **derived** at eval by
 - `house_choice_unresolved` (error): a `Choice` pick missing or not among its
   `options`, or an `Open` pick missing.
 - `house_grant_constraint` (error): an `Open` pick violating its `GrantConstraint`
-  (kind / magnitude / require- / forbid-categories, all read from data).
+  (kind / magnitude / require- / forbid-categories, all read from data), or
+  demanding a different House than the character's (see "The four Outer-Mystery
+  Virtues confer House membership" below).
 - `house_unset` (warning): a magus with no House chosen.
 
 #### House-granted Virtue/Ability definitions
@@ -1747,6 +1749,43 @@ The named Virtues a House grants, and the Mystery Abilities their
 | `ability.enigmatic_wisdom` (requires_training) | Arcane | `:7454-7455` |
 | `ability.faerie_magic` (requires_training) | Arcane | `:7478-7479` |
 | `ability.heartbeast` (requires_training) | Arcane | `:7501-7502` |
+
+#### The four Outer-Mystery Virtues confer House membership
+> "You have been initiated into the Outer Mystery of the Heartbeast (see page
+> 233), **and thus are a member of House Bjornaer**. You start with the Ability
+> Heartbeast 1."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:4059-4061` (Heartbeast
+  → Bjornaer), `:3759-3761` (The Enigma → Criamon), `:3825-3827` (Faerie Magic →
+  Merinita), `:5215-5217` (Verditius Magic → Verditius). These are the **only**
+  four V/F descriptors in the core rules carrying the "and thus are a member of
+  House X" clause; the other eight Houses' free Virtues make no such claim and
+  carry no House prerequisite (`virtue.hermetic_prestige`,
+  `virtue.self_confident`, `virtue.minor_magical_focus`, the two Puissants).
+- Data: `rules/core/virtues_flaws.json` — each of the four carries
+  `"prerequisites": { "kind": "house", "value": "house.<x>" }`. The House ids come
+  from `rules/core/houses.json`; load-time integrity
+  (`ruleset/integrity.rs::validate_prereq_refs`) rejects an unresolvable one, so
+  the shipped catalogue can only be loaded alongside the House registry.
+- Implementation, bought rows: nothing new — `validation/prereq.rs` already
+  evaluates `Prereq::House` against `Entity::house`. A magus of another House who
+  *buys* one gets `prereq_not_met`; a magus with **no House chosen yet** gets the
+  `prereq_unevaluated` warning, because an absent House is genuinely Unknown, not
+  a failure. The House's own *granted* row is never prereq-checked
+  (`validate_prerequisites` walks `entity.selections` only) and would satisfy the
+  prerequisite anyway, so Bjornaer's free Heartbeast stays legal.
+- Implementation, **open grants**: `grant.rs::open_pick_satisfies` also refuses a
+  pick whose prerequisite `Prereq::conflicts_with_house` rules out for the
+  character's own House. Without it, Jerbiton's `jerbiton_minor_virtue` and Ex
+  Miscellanea's `ex_misc_minor_virtue` — both open menus for a Minor (Hermetic)
+  Virtue, which all four of these are — would offer them, and a grant pick is
+  never prerequisite-checked, so a Jerbiton could hold a Heartbeast with no
+  complaint at all. Only `House` leaves filter: a `Has`/`AbilityMin`/… prerequisite
+  stays on the menu, since those resolve as the build progresses and excluding
+  them would be an order-dependent exclusion rather than the error-that-resolves
+  model used everywhere else. `ui/src/lib/derive.ts::eligibleForConstraint`
+  mirrors the same predicate (`houseOnlyValue`) so the picker and the validator
+  agree; `house` is a required argument there so no picker can silently omit it.
 
 All four Mystery Virtues (The Enigma, Faerie Magic, Heartbeast, Verditius Magic)
 are **Minor** — the free House Virtue is Minor per `:2859`, so none of them can
