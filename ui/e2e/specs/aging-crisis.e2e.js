@@ -55,7 +55,11 @@ const AGING_TOTAL = '[data-testid="aging-total"]';
 const OUTCOME_CRISIS = '[data-testid="aging-outcome-crisis"]';
 const DISTRIBUTE_STA = '[data-testid="aging-distribute-sta"]';
 const APPLY = '[data-testid="aging-apply"]';
-const REVERT_36 = '[data-testid="aging-revert-36"]';
+// manual-testing-findings-2026-09-03 #19: the calculator's per-year "Take back age N"
+// list is gone (unusable once a magus owes forty years). The undo is the log row's
+// own ×, which on an engine-recorded row calls the same `aging::revert_year`. This
+// character has exactly one recorded year (age 36), so row 0 is that year.
+const REVERT_FIRST_YEAR = '[data-testid="aging-log-remove-0"]';
 const LONGEVITY_ADD = '[data-testid="longevity-add"]';
 const LONGEVITY_BONUS = '[data-testid="longevity-bonus"]';
 
@@ -248,7 +252,7 @@ describe('the aging crisis', () => {
 
     // A mistyped die has to be recoverable, and a Crisis is undone with the year that
     // caused it — never by editing a figure out from under the entry.
-    await $(REVERT_36).click();
+    await $(REVERT_FIRST_YEAR).click();
     await browser.waitUntil(
       async () => (await $('[data-testid="aging-points-sta"]').getValue()) === '0',
       {

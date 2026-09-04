@@ -428,7 +428,7 @@ dead code. Nothing tests this today.
 
 ### 23 — The log's × and the take-back button are not the same function
 
-**Status:** open — data-corruption defect
+**Status:** done (2026-09-04) — data-corruption defect
 
 Reported as a duplicate control. It is worse than that: the log row's ×
 (`ui/src/lib/components/AgingRecordPanel.svelte:174`) calls
@@ -444,9 +444,24 @@ keeping plain deletion only for legacy free-text rows that carry no age (which
 `revert_year` documents as out of its reach). Only then remove the duplicate
 control (finding 19).
 
+**Fixed as decided.** `AppStore.removeAgingLogEntryAt` now reads the row at the
+clicked index and dispatches on it: a row carrying an `age` goes to
+`revertAgingRoll(entry.age)` — the calculator's own path — and a row without one
+is dropped as before. The index is the UI's address and the age is the engine's,
+so reading the entry is what translates between them; `age` is exactly the key
+`revert_year` addresses and `retain`s on, which is why nothing narrower would be
+correct. Refusals behave as the calculator's do: a rejected revert leaves both the
+character and the row untouched and lands in `agingRejections`, a failed IPC call
+in the error banner — the row is never dropped on a revert that did not happen.
+The ×'s accessible name follows the row: `aging-revert` ("Take back age N") for a
+recorded row, `remove-item` for a hand-written one. Covered by five cases in
+`state.svelte.test.ts` (undo, age-not-index addressing across a hand-written row,
+the hand-written row itself, rejection, IPC failure) and one in
+`AgingRecordPanel.client.test.ts` that presses the real button.
+
 ### 19 — One take-back button per recorded year
 
-**Status:** open
+**Status:** done (2026-09-04)
 
 Fine at three recorded years, unusable at thirty or fifty: the button list
 (`AgingRollCalculator.svelte:285-302`) renders one per recorded year, wrapping
@@ -454,9 +469,18 @@ across the panel with no ordering cue. Removing arbitrary years is legitimate �
 `revert_year` addresses entries by age and is exact rather than recomputed — so
 the capability is kept, in the log where the years are already listed.
 
+**Fixed as decided.** The list and its `recorded` derived value are gone from
+`AgingRollCalculator.svelte`. Nothing is lost: finding 23 had already re-pointed
+the log row's × at `revert_year` through `AppStore.removeAgingLogEntryAt`, under
+the same `aging-revert` accessible name, and `revert_year` addresses any recorded
+year rather than only the latest — so per-year undo survives with one control per
+year instead of two. The e2e specs that clicked `aging-revert-36`
+(`aging.e2e.js`, `aging-crisis.e2e.js`) now click `aging-log-remove-0`, which is
+that same year's row and the same engine call.
+
 ### 22, 20 — Layout is awkward and wastes a screen-third
 
-**Status:** open
+**Status:** done (2026-09-04)
 
 The panel is an `auto-fit` grid (`ui/src/app.css:1308-1313`) with a full-width
 row below it, which reads as a header band plus an orphan row. The large vertical
@@ -464,21 +488,52 @@ gap above the "Aging" heading is not an empty element: `align-items: start` mean
 a short block leaves the rest of its row's height bare, and the tall roll
 calculator sets that height.
 
+**Fixed at the cause.** A grid row is as tall as its tallest item, so *any*
+pairing of a short block with the roll calculator reproduces the gap somewhere;
+capping the calculator or stretching the short block would only move it. So the
+aging surface no longer pairs at all: every one of its blocks takes a full-width
+row (`.character-details .aging-panel > *`, `.character-details .aging-record > *`
+in `app.css`), which is the one arrangement in which the gap cannot arise at any
+width or content length. The width is reclaimed *inside* the stages instead of
+between them — the Living Conditions checklist flows into as many readable columns
+as fit (`.living-conditions-list`), and the four accumulated read-outs are one
+stage laid out across its own width (`.aging-state`) rather than four items
+scattered around the calculator, which was the other half of the "band of
+columns". The surface is therefore shorter than the columns it replaces, not
+taller. Reading order is now literally DOM order — one column, nothing moved by
+CSS — so eye, caret and screen reader agree. The rest of `.character-details`
+(the Details and Personality tabs) keeps the auto-fit columns unchanged; their
+blocks are of comparable height and never had this problem.
+
 ### 24, 25 — The aging log is below the fold; longevity is below that
 
-**Status:** open
+**Status:** done (2026-09-04)
 
 Even on a large monitor the log scrolls out of view, so its existence is not
 apparent, and the longevity-potion section sits past it. Reading order becomes
 schedule → living conditions → roll → log → longevity.
 
+**Fixed as decided.** The log now leads `AgingRecordPanel` instead of trailing it,
+so the surface reads schedule → living conditions → roll → log → accumulated
+totals → ritual, and the three stages above the log are all shorter than they were
+(no per-year revert list, a multi-column conditions checklist). Guarded by
+`AgingPanel.test.ts`'s reading-order test, which asserts the order over the real
+composition rather than over any one child.
+
 ### 26 — The aging-effects list grows one row per year, unbounded
 
-**Status:** open
+**Status:** done (2026-09-04)
 
 A magus aged forty years renders forty stacked rows, which is what pushes
 everything else off screen. A bounded scrollport already exists
 (`app.css:1359-1377`); it contains the growth once the block is not last.
+
+**Fixed as decided.** The block is no longer last — the log leads the record (see
+24/25) — so its bounded scrollport is what absorbs the growth: a fortieth year
+scrolls in place and moves nothing. The bound itself was also unqualified: it read
+`.character-details .aging-log-scroll`, which made a correctness guarantee
+conditional on a layout class, while `AgingPanel`'s own comment contemplates a
+mount without that wrapper. It is now the log's own property.
 
 ### 27 — The log is not prefilled from the stress roll
 

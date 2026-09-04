@@ -133,6 +133,29 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
     expect(has(body, 'aging-log-add')).toBe(true);
   });
 
+  // manual-testing-findings-2026-09-03 #22/#24: the four accumulated-record blocks
+  // (apparent age, the Decrepitude read-out, its narrative, the Aging Points) were
+  // four separate items of the `.character-details` grid, auto-placed into whatever
+  // cells were left around the tall roll calculator — the "band of columns". They are
+  // one stage now, laid out across its own width (app.css `.aging-state`). And the
+  // per-year log leads it: the log is the thing a player has just written to and the
+  // one that must be reachable without scrolling, while these are its running totals.
+  it('leads with the per-year log, then the accumulated totals as one block', () => {
+    store.entity.aging_log = [{ year: 1220, effect: 'A hard winter' }];
+    const body = html();
+    expect(has(body, 'aging-state')).toBe(true);
+    const at = (testid: string): number => {
+      const index = body.indexOf(`data-testid="${testid}"`);
+      expect(index, `no element with data-testid="${testid}"`).toBeGreaterThanOrEqual(0);
+      return index;
+    };
+    expect(at('aging-log-block')).toBeLessThan(at('aging-state'));
+    // Every accumulated read-out sits inside that one block, not scattered beside it.
+    for (const testid of ['apparent-age-input', 'decrepitude-effect-input', 'aging-points-list']) {
+      expect(at('aging-state')).toBeLessThan(at(testid));
+    }
+  });
+
   // guided-creation-review-2026-08 #26: `decrepitude_effect` is the cumulative
   // overall aging/decrepitude narrative (RULES.md, Core Rules.md:16563-16577), so it
   // grows over a character's life — its analogue `warping_effect` has always been a
@@ -220,6 +243,136 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
       expect(labelTag, `no span with id ${labelledby![1]}`).not.toBeNull();
       expect(labelTag![1]).toBe(store.t(`characteristic-${characteristic}`));
     }
+  });
+
+  // manual-testing-findings-2026-09-03 #23: the × on an engine-recorded row no longer
+  // merely deletes the row — it hands the year to `aging::revert_year`, which takes
+  // the points and the apparent age back off with it. The accessible name has to
+  // say so, or the control announces itself as something it is not. It reuses
+  // `aging-revert`, the wording the calculator's own take-back button carries, so
+  // the two controls read the same and no new string is invented.
+  it('names the remove button after what it does to the row it sits on (#23)', () => {
+    store.entity.aging_log = [
+      { year: 1220, age: 40, effect: '', die: 9, total: 13, points: { sta: 1 } },
+      { year: 1219, effect: 'A hard winter' },
+    ];
+    const body = html();
+    const label = (testid: string): string => {
+      const opening = new RegExp(`<button[^>]*data-testid="${testid}"[^>]*>`).exec(body);
+      expect(opening, `no button ${testid}`).not.toBeNull();
+      return /aria-label="([^"]*)"/.exec(opening![0])?.[1] ?? '';
+    };
+    // The recorded year: taken back, exactly as the calculator's button says it.
+    expect(label('aging-log-remove-0').replace(/[⁨⁩]/g, '')).toBe(
+      store.t('aging-revert', { age: '40' }).replace(/[⁨⁩]/g, ''),
+    );
+    // The hand-written row has nothing mechanical to undo, so it is still removed.
+    expect(label('aging-log-remove-1').replace(/[⁨⁩]/g, '')).toBe(
+      store.t('remove-item', { name: 'A hard winter' }).replace(/[⁨⁩]/g, ''),
+    );
+  });
+
+  // guided-creation-review-2026-08 #27: the engine records the whole roll — the die,
+  // the total, the points it awarded and whether the apparent age advanced — and the
+  // row showed none of it, leaving the player to write by hand what the roll had just
+  // done. The summary is RENDERED from the structured fields, never stored: prose in
+  // the save would freeze one language into the file.
+  it('reads the roll back off an engine-recorded row (#27)', () => {
+    store.entity.aging_log = [
+      {
+        year: 1220,
+        age: 40,
+        effect: '',
+        die: 9,
+        total: 13,
+        points: { qik: 1, sta: 2 },
+        apparent_age_increased: true,
+      },
+    ];
+    const body = html();
+    const summary = text(body, 'aging-log-summary-0');
+
+    // The roll that was made: both figures, worded as the Crisis line words its own.
+    expect(summary).toContain('13');
+    expect(summary).toContain('9');
+    // Every awarded Characteristic, in words and with its count — never the slug.
+    expect(summary).toContain('Quickness');
+    expect(summary).toContain('Stamina');
+    expect(summary).toContain('1 Aging Point in');
+    expect(summary).toContain('2 Aging Points in');
+    expect(summary).not.toContain('qik');
+    expect(summary).not.toContain('sta');
+    // And the year of apparent age the roll cost.
+    expect(summary).toContain('Apparent age increases by one year.');
+
+    // NOTHING IS WRITTEN BACK. The summary is display only; the stored free text is
+    // still the player's, still empty.
+    expect(store.entity.aging_log[0].effect).toBe('');
+  });
+
+  it('says so when a roll awarded nothing at all (#27)', () => {
+    // A good roll is a real outcome, not a blank row: it awarded no points and did
+    // not advance the apparent age, and both halves are stated rather than left to
+    // silence — silence is indistinguishable from "not recorded".
+    store.entity.aging_log = [
+      { year: 1220, age: 40, effect: '', die: 1, total: 2, apparent_age_increased: false },
+    ];
+    const summary = text(html(), 'aging-log-summary-0');
+    expect(summary).toContain('2');
+    expect(summary).toContain('No Aging Points.');
+    expect(summary).toContain('Apparent age does not advance.');
+  });
+
+  it('leaves a hand-written row without a summary (#27)', () => {
+    // Nothing was rolled, so there is nothing to read back — `effect` stays the whole
+    // record of such a row.
+    store.entity.aging_log = [{ year: 1219, effect: 'A hard winter' }];
+    const body = html();
+    expect(has(body, 'aging-log-summary-0')).toBe(false);
+    expect(has(body, 'aging-log-effect-0')).toBe(true);
+  });
+
+  it('keeps the Crisis on its own line after the roll summary (#27)', () => {
+    // Two rolls against two tables, resolved in that order (`:16619`: the points
+    // first, then the Crisis Table), so two lines rather than one run-on sentence.
+    installRuleset();
+    store.entity.aging_log = [
+      {
+        year: 1220,
+        age: 40,
+        effect: '',
+        die: 9,
+        total: 13,
+        points: { sta: 1 },
+        apparent_age_increased: true,
+        crisis: true,
+        crisis_die: 10,
+        crisis_total: 15,
+        crisis_row: 'crisis.minor_illness',
+        crisis_severity: 'minor',
+      },
+    ];
+    const body = html();
+    expect(text(body, 'aging-log-summary-0')).toContain('Stamina');
+    expect(text(body, 'aging-log-crisis-0')).toContain('Minor illness');
+    expect(body.indexOf('aging-log-summary-0')).toBeLessThan(body.indexOf('aging-log-crisis-0'));
+  });
+
+  it('offers the free text as an optional note once a summary states the roll (#27)', () => {
+    // The box stays — the player's colour ("a hard winter") is worth keeping — but on
+    // an engine-recorded row it must stop ASKING for what the summary already says.
+    store.entity.aging_log = [
+      { year: 1220, age: 40, effect: '', die: 9, total: 13 },
+      { year: 1219, effect: 'A hard winter' },
+    ];
+    const body = html();
+    const placeholder = (testid: string): string => {
+      const opening = new RegExp(`<input[^>]*data-testid="${testid}"[^>]*>`).exec(body);
+      expect(opening, `no input ${testid}`).not.toBeNull();
+      return /placeholder="([^"]*)"/.exec(opening![0])?.[1] ?? '';
+    };
+    expect(placeholder('aging-log-effect-0')).toBe(store.t('aging-log-note-placeholder'));
+    expect(placeholder('aging-log-effect-1')).toBe(store.t('aging-log-effect-placeholder'));
   });
 
   it('labels every control through Fluent, never as a raw slug', () => {

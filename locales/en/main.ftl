@@ -607,6 +607,16 @@ aging-log-year-label = Year
 aging-log-effect-placeholder = Describe the aging roll's effect
 aging-log-add = Add aging entry
 aging-log-empty = No aging entries yet.
+# What a resolved year did, read back off the fields the engine recorded — the die
+# the player typed, the total it made, the points it awarded and the year of
+# apparent age it cost. Rendered, never stored: a save keeps choices, and stored
+# prose would freeze one language into the file. The points and the apparent-age
+# sentence are the calculator's own (`aging-outcome-*`), so a roll and its record
+# read the same. On such a row the free-text box stops asking for what this line
+# already says and offers itself as a note.
+aging-log-roll = Aging total { $total } on a stress die of { $die }.
+aging-log-points-none = No Aging Points.
+aging-log-note-placeholder = Note (optional)
 # A logged Crisis, read back off the entry that recorded it. Three states are
 # tellable apart: no Crisis at all, one the table demanded that nobody has rolled,
 # and one resolved against the Crisis Table (Core Rules.md:16619-16632).

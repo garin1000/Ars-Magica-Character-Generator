@@ -609,6 +609,15 @@ aging-log-year-label = Jahr
 aging-log-effect-placeholder = Beschreibe die Wirkung des Alterungswurfs
 aging-log-add = Alterungseintrag hinzufügen
 aging-log-empty = Noch keine Alterungseinträge.
+# Was ein aufgelöstes Jahr bewirkt hat, gelesen aus den Feldern, die die Engine
+# festgehalten hat: der geworfene Würfel, der Gesamtwert, die vergebenen
+# Alterungspunkte und das Jahr scheinbaren Alters. Wird angezeigt, nie gespeichert —
+# ein Spielstand hält Entscheidungen fest, und gespeicherter Text würde eine Sprache
+# in die Datei einfrieren. Punkte und Satz zum scheinbaren Alter stammen aus dem
+# Rechner (`aging-outcome-*`), damit Wurf und Eintrag gleich lauten.
+aging-log-roll = Alterungswurf gesamt { $total } bei einem Stresswürfel von { $die }.
+aging-log-points-none = Keine Alterungspunkte.
+aging-log-note-placeholder = Notiz (optional)
 # Eine eingetragene Krise, gelesen aus dem Eintrag, der sie festgehalten hat. Drei
 # Zustände sind unterscheidbar: keine Krise, eine von der Tabelle geforderte, die
 # niemand gewürfelt hat, und eine auf der Krisentabelle aufgelöste

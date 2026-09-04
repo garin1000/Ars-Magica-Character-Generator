@@ -26,6 +26,7 @@ vi.mock('../ipc', () => ({
   agingRevert: vi.fn(),
 }));
 
+import * as ipc from '../ipc';
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import AgingRecordPanel from './AgingRecordPanel.svelte';
 
@@ -61,6 +62,50 @@ afterEach(() => {
   if (app) unmount(app);
   app = undefined;
   target?.remove();
+});
+
+// manual-testing-findings-2026-09-03 #23: the × on an engine-recorded row used to be a
+// plain array filter — it deleted the RECORD and left that year's Aging Points and
+// its year of apparent age applied to the character, so the sheet kept effects with
+// nothing left to explain them. Pressing the real button is the only way to observe
+// the whole chain (handler -> store -> `aging_revert`), so it belongs in the client
+// project.
+describe('AgingRecordPanel aging-log undo (#23)', () => {
+  /** The engine-recorded row for the year rolled at age 40. */
+  const recorded = {
+    year: 1220,
+    age: 40,
+    effect: '',
+    die: 9,
+    total: 13,
+    points: { sta: 1 },
+    apparent_age_increased: true,
+  };
+
+  it('takes the year back off the character when its × is pressed', async () => {
+    store.entity.aging_points = { sta: 1 };
+    store.entity.apparent_age = 41;
+    store.entity.aging_log = [recorded];
+
+    // What `aging::revert_year` hands back for age 40 — the character before it.
+    vi.mocked(ipc.agingRevert).mockResolvedValue({
+      status: 'reverted',
+      entity: { ...store.entity, aging_points: {}, apparent_age: null, aging_log: [] },
+    });
+
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(AgingRecordPanel, { target });
+    flushSync();
+
+    target.querySelector<HTMLButtonElement>('[data-testid="aging-log-remove-0"]')!.click();
+
+    await vi.waitFor(() => expect(store.entity.aging_log).toEqual([]));
+    // The row is gone AND so is everything the year did — the whole point.
+    expect(store.entity.aging_points).toEqual({});
+    expect(store.entity.apparent_age).toBeNull();
+    expect(vi.mocked(ipc.agingRevert).mock.lastCall?.[1]).toBe(40);
+  });
 });
 
 describe('AgingRecordPanel decrepitude narrative (#26)', () => {

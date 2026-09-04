@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity, LocalizedRuleset } from '../types';
+import type { AgingReadout, EffectiveScores, Entity, LocalizedRuleset } from '../types';
 
 // The panel is a composition over the shared store singleton. The store schedules
 // a debounced revalidate over the Tauri IPC bridge; mock the bridge so nothing
@@ -69,9 +69,54 @@ function resetEntity(typeId: string): void {
   store.derived = null;
 }
 
+/**
+ * Everything the four gated blocks need before they render: a Living Conditions
+ * table on the ruleset and an aging read-out (with owed years) on the effective
+ * scores. Without it only the record and the ritual stand, which is enough for the
+ * tests above but not for a statement about the surface's ORDER.
+ */
+function installAgingSurface(): void {
+  const localized = store.ruleset!;
+  localized.ruleset.aging = {
+    start_age: 35,
+    age_divisor: 10,
+    apparent_age_increase_min: 3,
+    living_conditions: [
+      { id: 'living_condition.castle', modifier: 1, cumulative: false },
+      { id: 'living_condition.leper_colony', modifier: -1, cumulative: true },
+    ],
+    outcomes: [],
+    crisis: { rows: [], die: { min: 1, max: 10 } },
+  } as unknown as NonNullable<LocalizedRuleset['ruleset']['aging']>;
+  localized.i18n['living_condition.castle'] = { name: 'Live in a castle' };
+  localized.i18n['living_condition.leper_colony'] = { name: 'Live in a leper colony' };
+
+  const aging: AgingReadout = {
+    first_roll_age: 36,
+    begins_after_age: 35,
+    schedule: [{ age: 36, year: null, recorded: false }],
+    rolls_owed: 1,
+    rolls_recorded: 0,
+    age_modifier: 4,
+    living_conditions_modifier: 0,
+    longevity_modifier: 0,
+    trait_modifier: 0,
+    longevity_clamp_active: false,
+    fixed_total: 4,
+  };
+  store.effective = { ...(store.effective ?? {}), aging } as unknown as EffectiveScores;
+}
+
 /** Render the panel to an HTML string (node env, no DOM). */
 function html(): string {
   return render(AgingPanel, { props: {} }).body;
+}
+
+/** Where a testid first appears in the markup — i.e. its place in reading order. */
+function positionOf(body: string, testid: string): number {
+  const at = body.indexOf(`data-testid="${testid}"`);
+  expect(at, `no element with data-testid="${testid}"`).toBeGreaterThanOrEqual(0);
+  return at;
 }
 
 /** Whether any element carries the exact data-testid. */
@@ -127,6 +172,31 @@ describe('AgingPanel and the Longevity Ritual', () => {
     // The schedule, the conditions and the roll all gate on engine read-outs this
     // fixture has none of, so the record is the surface that always stands.
     expect(has(html(), 'aging-record')).toBe(true);
+  });
+});
+
+// manual-testing-findings-2026-09-03 #22/#24/#25: the surface read as a band of
+// columns with the log orphaned in a full-width row far below the fold, and the
+// Longevity Ritual buried past even that — so a player never found either. The
+// order a year is actually resolved in is schedule → living conditions → roll →
+// log → ritual, and since every block is now a full-width row of the grid (app.css),
+// DOM order IS the order on screen and the order the keyboard walks. Asserted here
+// rather than in the children because the composition is what owns it.
+describe('AgingPanel reading order', () => {
+  it('reads schedule, living conditions, roll, log, then the ritual', () => {
+    installAgingSurface();
+    const body = html();
+    const at = (testid: string): number => positionOf(body, testid);
+
+    expect(at('aging-schedule')).toBeLessThan(at('living-conditions'));
+    expect(at('living-conditions')).toBeLessThan(at('aging-calculator'));
+    expect(at('aging-calculator')).toBeLessThan(at('aging-log-block'));
+    // The per-year log comes BEFORE the running totals it explains: the log is what
+    // the player has just written to and needs to see without scrolling, while the
+    // apparent age and the Aging Points are the engine's own bookkeeping.
+    expect(at('aging-log-block')).toBeLessThan(at('apparent-age-input'));
+    // And the ritual closes the surface, as the term subtracted from every total.
+    expect(at('apparent-age-input')).toBeLessThan(at('longevity-add'));
   });
 });
 

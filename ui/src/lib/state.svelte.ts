@@ -1748,7 +1748,44 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  removeAgingLogEntryAt(index: number): void {
+  /**
+   * Take one aging-log row back off — the log's own undo, and the only thing the
+   * row's × may mean.
+   *
+   * **An engine-recorded row goes through the engine.** Such a row is the record
+   * of a year that placed Aging Points and may have advanced the apparent age, so
+   * dropping the row alone leaves every one of those effects standing on the
+   * character with nothing on the sheet left to explain them — silent corruption,
+   * and a log that no longer says where the points came from. It is handed to
+   * `aging::revert_year` (via {@link revertAgingRoll}), which subtracts exactly
+   * what the entry recorded, steps the appearance back if that year moved it, and
+   * removes the entry itself. That is the same path the calculator's "take back"
+   * button uses, so the two controls cannot disagree about what an undo is.
+   *
+   * **The key is `age`, and nothing narrower.** `age` is precisely what
+   * `revert_year` addresses entries by (aging.rs:1535-1541) and what its `retain`
+   * removes, so "carries an age" is the engine's own definition of a row within
+   * its reach — a stricter test (a recorded die, say) would plain-filter a row the
+   * engine would have reverted, which is the corruption again. A hand-written row
+   * carries no age by construction (`addAgingLogEntry` writes only `year` and
+   * `effect`), has nothing mechanical to undo, and is simply dropped here.
+   *
+   * The index is the UI's address; the age is the engine's. Reading the entry
+   * first is what translates between them, so the clicked row is the one taken
+   * back even when hand-written rows sit among the recorded ones.
+   *
+   * Refusals and failures are the calculator's: a rejected revert leaves the
+   * character (and the row) untouched and lands in {@link agingRejections}; a
+   * failed IPC call goes to the error banner. Neither claims an undo that did not
+   * happen.
+   */
+  async removeAgingLogEntryAt(index: number): Promise<void> {
+    const entry = (this.entity.aging_log ?? [])[index];
+    if (entry == null) return;
+    if (entry.age != null) {
+      await this.revertAgingRoll(entry.age);
+      return;
+    }
     this.entity.aging_log = (this.entity.aging_log ?? []).filter((_, i) => i !== index);
     this.#scheduleValidate();
   }

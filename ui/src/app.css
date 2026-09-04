@@ -1394,13 +1394,55 @@ ul {
   display: contents;
 }
 
-/* The aging log takes a full-width row of its own. It is the only block here that
-   grows without bound — one row per aging roll, and a pre-play catch-up can owe 25
-   (Core Rules.md:2232) — so in a column it both pushed its neighbours down and was
-   too narrow for its own fields ("Describe the aging roll's e…"). Full width fixes
-   the second; the bounded scrollport below fixes the first. */
-.character-details .aging-log-block {
+/* EVERY aging block takes a full-width row — the surface is a stack of stages, not
+   a band of columns (manual-testing-findings-2026-09-03 #20/#22/#24/#25).
+   Previously only `.aging-log-block` spanned, and the rest were auto-placed into the
+   `auto-fit` tracks. That paired SHORT blocks (the schedule, the apparent age) with
+   the TALL roll calculator, and because a grid row is as tall as its tallest item
+   while `align-items: start` leaves the short one at the top of it, the leftover
+   showed as roughly a screen-third of emptiness above the next block — with the log
+   orphaned in a full-width row far below the fold and the Longevity Ritual past even
+   that. One item per row is the only arrangement in which that gap cannot arise at
+   all, at any window width, for any content.
+   The width is not thrown away: it is reclaimed INSIDE the stages instead of between
+   them (`.aging-state` and `.living-conditions-list` below), which is what keeps the
+   stack from simply being taller than the columns it replaces — the surface is
+   shorter now, so the log sits above the fold and the ritual just below it.
+   Reading order is unchanged and, being one column, is exactly DOM order: nothing is
+   moved by CSS, so the eye, the caret and the screen reader agree.
+   `> *` rather than a list of block classes so a block added later cannot silently
+   opt out and reintroduce the pairing; both wrappers are `display: contents` (above),
+   so these ARE the grid's items. The rest of `.character-details` — the editor's
+   Details and Personality tabs — keeps the auto-fit columns, whose blocks are of
+   comparable height and never had this problem. */
+.character-details .aging-panel > *,
+.character-details .aging-record > * {
   grid-column: 1 / -1;
+}
+
+/* A full-width stage would otherwise stretch a `<select>` (the aging year), a text
+   input (the ritual's focus) or a textarea across the whole panel — unreadable, and
+   a needlessly long pointer trip to the end of a control. `.field` is the shared
+   label+control wrapper, so one cap covers every one of them. The log row's own
+   fields are deliberately NOT `.field`: the effect input is meant to take the row's
+   free width (its placeholder used to truncate to "…roll's e…"). */
+.character-details .aging-panel .field,
+.character-details .aging-record .field {
+  max-width: 26rem;
+}
+
+/* The accumulated record — apparent age, the Decrepitude read-out, its narrative,
+   the eight Aging Points — as ONE stage that spends its own width, instead of four
+   grid items scattered around the calculator. `auto-fit` again, so it is two columns
+   on a wide window and one on a narrow one with no breakpoint to keep in step with
+   the container's. `align-items: start` matters far less here than it did outside:
+   these four are all short, so the worst ragged edge this can leave is the height of
+   the tallest of them, not the height of the roll calculator. */
+.character-details .aging-state {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  align-items: start;
+  gap: 0.75rem 1.5rem;
 }
 
 /* S17 (full-audit a11y): CharacterDetails' own <h2> and AgingPanel's shared
@@ -1421,8 +1463,14 @@ ul {
    VERTICAL OVERFLOW ONLY, and deliberately no `overflow-x`: WebKitGTK's overlay
    horizontal scrollbar claims hit area without taking layout height, which has
    already made the lower half of a control unclickable in this app. The rows wrap
-   instead (see AgingRecordPanel's own styles). */
-.character-details .aging-log-scroll {
+   instead (see AgingRecordPanel's own styles).
+   UNQUALIFIED, deliberately (#26): the bound is the log's own property, not
+   something a layout class lends it. While this selector was still qualified by the
+   detail-panel class, a correctness guarantee — that forty recorded years cannot
+   push the rest of the surface off screen — held only where the panel happened to be
+   wrapped in that class, and `AgingPanel`'s own comment contemplates a mount without
+   it. */
+.aging-log-scroll {
   max-height: 14rem;
   overflow-y: auto;
   /* Reserve the scrollbar's width instead of letting it overlay the rows, exactly as
@@ -1509,6 +1557,32 @@ ul {
 
 .aging-list li {
   display: contents;
+}
+
+/* The Living Conditions checklist, flowed into as many readable columns as the
+   stage's width allows (manual-testing-findings-2026-09-03 #24/#25). It is a dozen
+   single-line rows, and stacked in one column it was the tallest thing between the
+   top of the aging surface and the log — the height that kept the log, and the
+   Longevity Ritual after it, below the fold. It lives here rather than in
+   `LivingConditionsPicker`'s scoped block for the same reason `.aging-list` does:
+   it is the stage's layout, and the app.css tests are what guard a layout rule that
+   no rendered markup can reveal.
+   `auto-fill`, not `auto-fit`: with fewer rows than columns `auto-fit` would collapse
+   the empty tracks and stretch the remaining rows to the full width, putting the
+   modifier column an inch from its own label. Empty tracks held open keep every row
+   the same measure. It degrades to one column on a narrow window with no breakpoint.
+   Placement is row-major, so the book's own best-conditions-first order (`:16583`)
+   reads across each row and then down — the same order the DOM and the keyboard
+   take. Column-major (`grid-auto-flow: column`) would read better as a ranking and
+   is exactly the reordering that leaves the tab order scrambled, so it is not used. */
+.living-conditions-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  column-gap: 1.5rem;
+  row-gap: 0.15rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .char-name {

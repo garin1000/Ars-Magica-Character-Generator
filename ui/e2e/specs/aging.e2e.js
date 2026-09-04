@@ -69,7 +69,12 @@ const AGING_TOTAL = '[data-testid="aging-total"]';
 const TOTAL_PARTS = '[data-testid="aging-total-parts"]';
 const OUTCOME = '[data-testid="aging-outcome"]';
 const APPLY = '[data-testid="aging-apply"]';
-const REVERT_36 = '[data-testid="aging-revert-36"]';
+// manual-testing-findings-2026-09-03 #19: the calculator's list of per-year "Take
+// back age N" buttons is gone — one button per recorded year is fine at three and
+// unusable at forty. The undo is the log row's own ×, which on an engine-recorded
+// row hands the year to the very same `aging::revert_year`. This grog has exactly
+// one recorded year (age 36), so row 0 IS that year.
+const REVERT_FIRST_YEAR = '[data-testid="aging-log-remove-0"]';
 const LOG_EMPTY = '[data-testid="aging-log-empty"]';
 const LOG_EFFECT_0 = '[data-testid="aging-log-effect-0"]';
 const NEXT = '[data-testid="wizard-next"]';
@@ -290,22 +295,30 @@ describe('the guided aging step', () => {
     expect(stated).toBe(7);
   });
 
-  // guided-creation-review-2026-08 #20. The surface was a CSS multi-column flow, in
-  // which content FLOWS between columns: every height change moved the column break
-  // and blocks migrated to another column, so ticking one checkbox relaid the whole
-  // panel out and `AgingRecordPanel` sat permanently split across the break. Grid
-  // auto-placement is order-stable — each block owns its cell. Geometry is the
+  // guided-creation-review-2026-08 #20, extended by manual-testing-findings-2026-09-03
+  // #22/#24. The surface was a CSS multi-column flow, in which content FLOWS between
+  // columns: every height change moved the column break and blocks migrated to another
+  // column, so ticking one checkbox relaid the whole panel out and `AgingRecordPanel`
+  // sat permanently split across the break. Grid auto-placement fixed the migration —
+  // but it still PAIRED blocks in a row, and a row is as tall as its tallest item, so
+  // the short schedule sitting beside the tall roll calculator left a screen-third of
+  // emptiness under it. Every aging block now takes a full-width row of its own, which
+  // is the only arrangement in which that gap cannot arise at all. Geometry is the
   // subject, so only a real layout engine can check it.
   it('keeps every block in place when the aging log grows, and clips nothing', async () => {
     const before = await detailsMetrics('[data-testid="aging-step"]');
     expect(before).not.toBe(null);
 
-    // 1. A grid, responding by available width rather than by a breakpoint list. The
-    //    window is the configured default of 1100px, where the 24rem (360px) floor
-    //    admits two columns.
+    // 1. A grid still, but with one block per row: no block shares a row with another,
+    //    so none can be padded out by a taller neighbour. Every block therefore starts
+    //    at the same left edge and spans the whole content box. (`left` is measured
+    //    from the panel's border box, so the shared value is its padding, not 0.)
     expect(before.display).toBe('grid');
-    expect(before.tracks.length).toBeGreaterThanOrEqual(2);
-    for (const track of before.tracks) expect(track).toBeGreaterThanOrEqual(360);
+    const stageLeft = before.blocks[0].left;
+    for (const block of before.blocks) {
+      expect(block.left).toBe(stageLeft);
+      expect(block.width).toBeGreaterThanOrEqual(before.contentWidth - 2);
+    }
 
     // 2. Nothing is cut off: no block's content is wider than the cell it was given.
     //    A too-tight `minmax` floor shows up here, which is what bounds the judgement
@@ -328,8 +341,9 @@ describe('the guided aging step', () => {
     await $('[data-testid="aging-log-year-9"]').waitForExist({ timeout: STEP_TIMEOUT });
     const grown = await detailsMetrics('[data-testid="aging-step"]');
 
-    // NOTHING MIGRATED: every block is in the same column it started in. This is the
-    // whole of #20 — under multi-column a height change moved blocks sideways.
+    // NOTHING MIGRATED: every block is where it started horizontally. This is the
+    // whole of #20 — under multi-column a height change moved blocks sideways. With
+    // one block per row there is nowhere sideways left to move, which is the point.
     expect(grown.blocks.map((b) => [b.id, b.left])).toEqual(
       before.blocks.map((b) => [b.id, b.left]),
     );
@@ -460,7 +474,7 @@ describe('the guided aging step', () => {
   it('reverts it exactly', async () => {
     // A pre-play catch-up can run to 25 rolls; one without an undo is not
     // shippable. `revert_year` subtracts precisely what the entry recorded.
-    await $(REVERT_36).click();
+    await $(REVERT_FIRST_YEAR).click();
 
     await browser.waitUntil(async () => (await agingPoints()).qik === '0', {
       timeout: STEP_TIMEOUT,
@@ -584,7 +598,11 @@ describe('the guided aging step', () => {
   // Personality & Reputations component that is both the wizard's step and the
   // editor's tab. #20 was reported against the aging step alone, but the class is
   // shared, so Slice 6 relays out all four — which is a win everywhere, and is
-  // therefore verified everywhere rather than assumed.
+  // therefore verified everywhere rather than assumed. Since #22 the AGING surface
+  // spans every one of those tracks with each of its blocks (see the geometry spec
+  // above), so what this checks there is that the track sizing itself is unchanged —
+  // the container is still the shared auto-fit grid, and the Details and Personality
+  // tabs still use its columns as before.
   it('lays out every character-details surface as the same grid, clipping nothing', async () => {
     // Collected rather than asserted per tab, so a failure names the surface and the
     // block instead of just the first number that went wrong.

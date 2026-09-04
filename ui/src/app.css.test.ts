@@ -55,21 +55,73 @@ describe('app.css', () => {
     expect(appCss).not.toMatch(/^\s*columns:\s*\d/m);
   });
 
-  // The aging log is the one block on the surface that grows without bound (one row
-  // per aging roll, and a pre-play catch-up can owe 25), and the narrow column was
-  // truncating its "effect" field. It gets a full-width row of its own with a bounded
-  // scrollport. Vertical overflow only: WebKitGTK's overlay horizontal scrollbar
-  // claims hit area without taking layout height, which has already cost this project
-  // an unclickable control.
-  it('gives the aging log a full-width row with its own bounded scrollport', () => {
-    const block = /^\.character-details\s+\.aging-log-block\s*\{([^}]*)\}/m.exec(appCss);
-    expect(block).not.toBeNull();
-    expect(block![1]).toMatch(/grid-column:\s*1\s*\/\s*-1;/);
-    const scroll = /^\.character-details\s+\.aging-log-scroll\s*\{([^}]*)\}/m.exec(appCss);
+  // manual-testing-findings-2026-09-03 #20/#22: on the aging surface the auto-fit
+  // grid put SHORT blocks beside the TALL roll calculator, and `align-items: start`
+  // then left the short block's cell with the calculator's height under it — the
+  // "screen-third of empty space above the Aging heading". A grid row can only be as
+  // tall as its tallest item, so the only construction that cannot produce that gap
+  // is one item per row. Every aging block therefore takes the whole row, and the
+  // horizontal space is reclaimed INSIDE each block (see the two rules below)
+  // instead of between them. `> *` rather than a list of block classes so a block
+  // added later cannot silently opt out and reintroduce the pairing.
+  it('gives every aging stage a full-width row of its own', () => {
+    const rule =
+      /\.character-details \.aging-panel > \*,\s*\.character-details \.aging-record > \*\s*\{([^}]*)\}/.exec(
+        appCss,
+      );
+    expect(rule).not.toBeNull();
+    expect(rule![1]).toMatch(/grid-column:\s*1\s*\/\s*-1;/);
+  });
+
+  // A full-width stage would stretch a `<select>` or a text input across the whole
+  // panel, which is neither readable nor pointable. The controls keep a measure.
+  it('keeps a control on a full-width aging stage to a readable measure', () => {
+    const rule =
+      /\.character-details \.aging-panel \.field,\s*\.character-details \.aging-record \.field\s*\{([^}]*)\}/.exec(
+        appCss,
+      );
+    expect(rule).not.toBeNull();
+    expect(rule![1]).toMatch(/max-width:/);
+  });
+
+  // The accumulated record (apparent age, Decrepitude, its narrative, the eight
+  // Aging Points) used to be four separate grid items scattered around the tall
+  // calculator — half of the "band of columns" complaint. They are one stage now,
+  // and that stage spends its width on its own fields rather than on a neighbour.
+  it('lays the accumulated aging record out across its own stage width', () => {
+    const rule = /^\.character-details \.aging-state\s*\{([^}]*)\}/m.exec(appCss);
+    expect(rule).not.toBeNull();
+    expect(rule![1]).toMatch(/display:\s*grid;/);
+    expect(rule![1]).toMatch(/grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(/);
+  });
+
+  // The Living Conditions checklist is ten-plus single-line rows. Stacked in one
+  // column on a full-width stage it is the tallest thing between the top of the
+  // surface and the log, which is exactly what #24/#25 asked to shorten. Flowed into
+  // as many readable columns as the width allows it is a quarter of the height, and
+  // `auto-fill` collapses to one column on a narrow window with no breakpoint.
+  it('flows the Living Conditions checklist into as many columns as fit', () => {
+    const rule = /^\.living-conditions-list\s*\{([^}]*)\}/m.exec(appCss);
+    expect(rule).not.toBeNull();
+    expect(rule![1]).toMatch(/display:\s*grid;/);
+    expect(rule![1]).toMatch(/grid-template-columns:\s*repeat\(auto-fill,\s*minmax\(/);
+  });
+
+  // #26: the log grows one row per aging year and a magus can owe forty. The bound
+  // is the log's OWN property, not something a layout class lends it — qualifying it
+  // with `.character-details` made a correctness guarantee (nothing may push the rest
+  // of the surface off screen) conditional on where the panel happens to be mounted,
+  // and `AgingPanel`'s own comment contemplates a mount outside that wrapper.
+  // Vertical overflow only: WebKitGTK's overlay horizontal scrollbar claims hit area
+  // without taking layout height, which has already cost this project an unclickable
+  // control.
+  it('bounds the aging log scrollport wherever the panel is mounted', () => {
+    const scroll = /^\.aging-log-scroll\s*\{([^}]*)\}/m.exec(appCss);
     expect(scroll).not.toBeNull();
     expect(scroll![1]).toMatch(/max-height:/);
     expect(scroll![1]).toMatch(/overflow-y:\s*auto;/);
     expect(scroll![1]).not.toMatch(/overflow-x:/);
+    expect(appCss).not.toMatch(/\.character-details\s+\.aging-log-scroll/);
   });
 
   // guided-creation-review-2026-08 #16 (HIGH — the user had to "change them
