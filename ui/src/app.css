@@ -1184,6 +1184,22 @@ ul {
   white-space: nowrap;
 }
 
+/* The same reservation, one column further right: a display-only Ability row has
+   no stored row to delete, so it withholds the × — and `.ability-selection li` is
+   a flex line with TWO growing items (`.item-name` and the trailing
+   `.specialty`/`.ability-unbought`), which means an omitted control is not merely
+   absent but REDISTRIBUTED between them. Dropping the button gave the row 1.9rem
+   plus one 0.4rem gap of free space, half of which widened the name column and
+   carried the spinner, the badge and the marker ~14.7px right of every bought row
+   above and below (manual-testing-findings-2026-09 #31). Standing an empty box of
+   the button's own width in its place makes both row kinds spend the same width,
+   so the drift is zero rather than merely smaller. Purely spacing: mounted
+   `aria-hidden` and holding nothing focusable. Pinned by `src/app.css.test.ts`. */
+.remove-slot {
+  flex: 0 0 auto;
+  width: 1.9rem;
+}
+
 /* A selected row the engine reports an ERROR for — an Ability or spell that became
    illegal after it was chosen (a granting Virtue removed, an Art lowered below the
    spell's cap). Red text marks the offending row itself, so the violation is
@@ -1224,13 +1240,15 @@ ul {
 
 /* The marker on a display-only Ability row (#17) — one a Virtue gives a bonus or a
    free starting score but that has no bought score. It sits where the specialty
-   box and × of a bought row would, and takes the same flex share, so the columns
-   to its left (name, stepper, effective badge) stay aligned with the rows above
-   and below it. */
+   box of a bought row would and takes the same flex share, with `.remove-slot`
+   after it standing in for that row's ×, so the columns to its left (name,
+   stepper, effective badge) stay aligned with the rows above and below it. Sized
+   on `--font-chrome`, the scale step whose taxonomy covers row markers — it read
+   as running text on `--font-small`. */
 .ability-selection .ability-unbought {
   flex: 1 1 6rem;
   min-width: 5rem;
-  font-size: var(--font-small);
+  font-size: var(--font-chrome);
   font-style: italic;
 }
 
