@@ -749,7 +749,9 @@ columns.
 
 ### 34 — A Virtue the rules let you take repeatedly can only be taken once
 
-**Status:** open — reported externally, GitHub issue #3 (Windows, .exe, v0.2.0)
+**Status:** done (2026-09-05) — reported externally, GitHub issue #3 (Windows,
+.exe, v0.2.0); swept catalogue-wide, with two exceptions recorded below and a
+mirror defect opened as finding 35
 
 > "I tried to build a character using the 'Improved Characteristics' virtue. This
 > is a virtue that can be taken multiple times. However, the system only allows
@@ -782,6 +784,54 @@ Note three of those carry a *limit* in the same sentence, so a blanket "repeat
 freely" flag would be wrong for them — the fix needs to say what each item's
 ceiling is, and whether stacking multiplies the effect (Improved Characteristics:
 yes, +3 each; Special Circumstances: explicitly no).
+
+**Resolution.** A sweep of the whole chapter — three grep passes over every
+phrasing, each hit mapped to its id through the item's own `source` range —
+found **25** items in this position, not the six first estimated. All now carry
+their ceiling as data: the rulebook's stated number where it gives one
+(`virtue.quiet_magic` "twice"), otherwise a bound no legal build can reach, since
+every copy costs at least one point against a 21-point budget. `Greater Immunity`
+(:4015) turned out to be affected too — it repeats "with a different immunity
+each time" but records no target, so its copies collided. Stacking was verified
+rather than assumed: two Improved Characteristics really do grant 6 points, two
+Demonic Powers 40 levels.
+
+**Two things deliberately not encoded:**
+
+- *"No more than half of the character's total Virtues"* (Demonic Might :3665,
+  Demonic Powers :3669) is a whole-build ratio, not an absolute cap; the engine
+  has only absolute caps, and it is a troupe judgement.
+- `flaw.false_power` (:6096) repeats "in each subsequent instance as a Minor Flaw
+  rather than a Major one". Magnitude belongs to the catalogue entry, not the
+  selection, so every copy would be charged 3 points instead of 3-then-1. Left
+  non-repeatable: blocking a legal build beats silently wrong point totals. The
+  catalogue already has the clean fix as a precedent — the
+  `virtue.amorphous_major` / `virtue.amorphous_minor` split — so a second entry
+  plus its EN/DE text would resolve it as data.
+
+### 35 — The mirror defect: items the rules forbid repeating can be repeated
+
+**Status:** open — found while fixing 34
+
+`max_per_target` is per *target* by construction, and the duplicate check keys on
+`(item, params)` (`crates/arm-rules/src/validation/selections.rs:121-144`). So an
+item that carries a target parameter can always be taken once per target, however
+firmly the rules forbid repetition. Four entries say so in as many words and are
+repeatable anyway:
+
+- Inoffensive to (Beings) :4139 — "You may not take this Virtue more than once"
+- Fish out of Water :6132 — "may only be taken once, because taking it more than
+  once makes it less serious, rather than more"
+- Offensive to (Beings) :6530 — "You may not take this Flaw more than once"
+- Unbearable to (Beings) :6897 — "You may not take this Flaw more than once"
+
+Two more are over-permissive by a different amount: `virtue.affinity_art` (:3378)
+and `virtue.puissant_art` (:4820) say "twice, for two different Arts", and the
+app allows one per Art — up to fifteen.
+
+All six need a cap on **total copies across all targets**, which the model has no
+field for. That is the whole finding: a `max_selections` beside `max_per_target`,
+or an equivalent, plus the data.
 
 ### 33 — The Aging tab lost its columns; it should keep three, done properly
 
