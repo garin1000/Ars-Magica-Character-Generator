@@ -610,6 +610,18 @@ bleed onto the character's other areas.
   (serialized directly to the frontend by `arm-app::ruleset_io`). `validation/scores.rs`
   folds the per-instance bonus into the score map so `AbilityMin` is met by the
   strongest instance.
+- `ability_bonuses` iterates the **union of the Ability catalogue and the bought
+  instances**, deduped on `(id, parameter)` (Issue 17 — the Ability twin of the
+  Art fix below). The catalogue half surfaces a Puissant on a plain ability at 0
+  bought points, which a bought-rows-only list hid entirely: a character with
+  Puissant Magic Theory and no Magic Theory row saw nothing on the Abilities
+  surface. The bought half is what the Art code needs no equivalent of — every
+  catalogue entry carries `parameter: None`, and the match is exact, so iterating
+  definitions alone would report 0 for Puissant "(Area) Lore: Brandenburg" on a
+  bought Brandenburg row. A Puissant on a parameterized ability therefore surfaces
+  only once its instance is bought (an unnamed instance scores 0 by the rule
+  above; a named-but-unbought one is in neither half) — reported instead by
+  `ability_bonus_dangling_target`, below.
 - Validation: `validate_parameters` makes the expected param-key set
   target-aware — a parameterized ability target also expects its instance key
   (else `missing_param`; a stray instance key on a plain target is

@@ -49,6 +49,8 @@ import {
   orderSelectedSpells,
   usedSpellForms,
   groupAbilitySelectionsByCategory,
+  unboughtModifiedAbilities,
+  UNBOUGHT_ROW_INDEX,
   mandatoryTraitRefs,
   maxAbilityScore,
   maxArtScore,
@@ -2020,6 +2022,63 @@ describe('groupAbilitySelectionsByCategory', () => {
       { entry: { ability: 'ability.nope', score: 1 }, index: 0 },
     ]);
     expect(groups).toEqual([]);
+  });
+});
+
+// Issue 17: the engine reports a Puissant bonus (and a granted floor) for an
+// Ability the character has not bought, but the Selected list is built from bought
+// rows, so the Abilities surface said nothing about it. These are the rows that
+// carry it — display-only, hence UNBOUGHT_ROW_INDEX rather than an entity index.
+describe('unboughtModifiedAbilities', () => {
+  const bought = [{ ability: 'ability.awareness', score: 2 }];
+
+  it('yields a display-only row for a bonus with no bought score', () => {
+    expect(
+      unboughtModifiedAbilities(bought, [{ ability: 'ability.magic_theory', bonus: 2 }], []),
+    ).toEqual([
+      { entry: { ability: 'ability.magic_theory', score: 0 }, index: UNBOUGHT_ROW_INDEX },
+    ]);
+  });
+
+  it('yields one for a granted free floor with no bought score', () => {
+    // Second Sight's grant is the same shape of "the character has it and the tab
+    // is silent", so the floor path gets the same row.
+    expect(unboughtModifiedAbilities(bought, [], [{ ability: 'ability.swim', floor: 1 }])).toEqual([
+      { entry: { ability: 'ability.swim', score: 0 }, index: UNBOUGHT_ROW_INDEX },
+    ]);
+  });
+
+  it('omits an ability that already has a bought row to hang the badge on', () => {
+    expect(
+      unboughtModifiedAbilities(
+        bought,
+        [{ ability: 'ability.awareness', bonus: 2 }],
+        [{ ability: 'ability.awareness', floor: 1 }],
+      ),
+    ).toEqual([]);
+  });
+
+  it('emits one row when a bonus and a floor name the same unbought ability', () => {
+    expect(
+      unboughtModifiedAbilities(
+        [],
+        [{ ability: 'ability.swim', bonus: 2 }],
+        [{ ability: 'ability.swim', floor: 1 }],
+      ),
+    ).toEqual([{ entry: { ability: 'ability.swim', score: 0 }, index: UNBOUGHT_ROW_INDEX }]);
+  });
+
+  it('omits a parameterized instance, which the row could not name', () => {
+    // The engine only reports a parameterized instance that IS bought (its
+    // catalogue entries all carry no parameter), so such a row never needs
+    // inventing — and could not be rendered, having no parameter field to edit.
+    expect(
+      unboughtModifiedAbilities(
+        [{ ability: 'ability.area_lore', score: 2, parameter: 'Brandenburg' }],
+        [{ ability: 'ability.area_lore', parameter: 'Bavaria', bonus: 2 }],
+        [],
+      ),
+    ).toEqual([]);
   });
 });
 

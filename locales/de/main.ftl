@@ -863,6 +863,12 @@ ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie
 # sichtbares Symbol, damit die Ungültigkeit nie allein über die Farbe vermittelt
 # wird (WCAG 1.4.1).
 ability-invalid-selection = Ungültige Auswahl
+# Kennzeichnet eine reine Anzeigezeile einer Fertigkeit (#17): eine Tugend gewährt
+# dieser Fertigkeit einen Bonus oder einen freien Startwert, es wurde aber kein Wert
+# gekauft — die Zeile zeigt daher nur den Bonus und bietet keine Bedienelemente. Der
+# Grund steht in Worten da; der ausgegraute Regler allein ist keine Begründung
+# (WCAG 1.4.1). Zum Kaufen die Fertigkeit aus der Liste „Verfügbar" hinzufügen.
+ability-unbought-marker = Nicht gekauft
 # Je Zeile benannt ($name ist der Anzeigename der Eigenschaft bzw. des
 # Persönlichkeitsmerkmals — dieser Schlüssel wird von CharacteristicPicker, dem
 # Persönlichkeitsmerkmal-Regler in FamiliarPanel und von PersonalityTraits

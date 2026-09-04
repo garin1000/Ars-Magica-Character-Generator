@@ -126,23 +126,58 @@ pub(crate) fn granted_ability_floor(
     floor
 }
 
-/// Non-zero ability bonuses, one per bought ability *instance*, for the UI to add
-/// onto each displayed bought score. A parameterized ability ((Area) Lore) yields
-/// one entry per instance so a Puissant bonus attaches to exactly the targeted
-/// row. Instances with no bonus are omitted. Order follows `ability_scores`.
+/// Non-zero ability bonuses, one per ability *instance*, for the UI to add onto
+/// each displayed bought score. A parameterized ability ((Area) Lore) yields one
+/// entry per instance so a Puissant bonus attaches to exactly the targeted row.
+/// Instances with no bonus are omitted.
+///
+/// Iterates the **union** of the Ability catalogue and the entity's bought
+/// instances, deduped on `(id, parameter)` — the same reasoning as
+/// [`crate::art_bonuses`] (Issue 13), plus one wrinkle Arts do not have:
+///
+/// * Catalogue, not just `ability_scores` (Issue 17): a Puissant Ability applies
+///   at 0 bought points, and the Abilities tab hangs its badge on a row, so
+///   gating on bought rows hid the bonus entirely until the first point was
+///   bought — the character had Puissant Magic Theory and nothing said so.
+/// * Bought instances too, not just the catalogue: a catalogue entry carries
+///   `parameter: None`, and [`ability_bonus`] matches `(ability, parameter)`
+///   exactly, so iterating definitions alone would report 0 for Puissant
+///   "(Area) Lore: Brandenburg" on a bought Brandenburg row.
+///
+/// A Puissant naming a parameterized ability therefore surfaces only once the
+/// instance is bought: with no instance named the target is `(id, None)`, which
+/// [`ability_bonus`] scores 0 by design, and a named-but-unbought instance is in
+/// neither the catalogue nor `ability_scores`. Both cases are reported instead by
+/// `ability_bonus_dangling_target` on the Abilities phase, which is where the fix
+/// (buying the instance) lives.
+///
+/// Order: catalogue (id) order, then any bought instance the catalogue does not
+/// already name, in `ability_scores` order.
 pub fn ability_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityBonus> {
-    let mut out = Vec::new();
-    for a in &entity.ability_scores {
-        let bonus = ability_bonus(entity, ruleset, &a.ability, a.parameter.as_deref());
-        if bonus != 0 {
-            out.push(AbilityBonus {
-                ability: a.ability.clone(),
-                parameter: a.parameter.clone(),
-                bonus,
-            });
+    let mut seen: BTreeSet<(&Id, Option<&str>)> = BTreeSet::new();
+    let mut instances: Vec<(&Id, Option<&str>)> = Vec::new();
+    for ability in ruleset.abilities() {
+        if seen.insert((&ability.id, None)) {
+            instances.push((&ability.id, None));
         }
     }
-    out
+    for score in &entity.ability_scores {
+        let instance = (&score.ability, score.parameter.as_deref());
+        if seen.insert(instance) {
+            instances.push(instance);
+        }
+    }
+    instances
+        .into_iter()
+        .filter_map(|(ability, parameter)| {
+            let bonus = ability_bonus(entity, ruleset, ability, parameter);
+            (bonus != 0).then(|| AbilityBonus {
+                ability: ability.clone(),
+                parameter: parameter.map(str::to_owned),
+                bonus,
+            })
+        })
+        .collect()
 }
 
 /// A free starting-score floor a virtue grants to one ability (e.g. Second Sight

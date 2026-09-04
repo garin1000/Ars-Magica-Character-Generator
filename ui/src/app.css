@@ -978,7 +978,11 @@ ul {
   color: inherit;
 }
 
-.pick-row:hover:not(:disabled) {
+/* Qualified on `[aria-disabled]`, not on `:disabled`: a `.pick-row` is NEVER
+   natively disabled (see the blocked rules below), so `:not(:disabled)` — what
+   this rule used to say — excluded nothing and the hover highlight promised a
+   click that a blocked row ignores. */
+.pick-row:hover:not([aria-disabled='true']) {
   background: var(--divider);
 }
 
@@ -988,7 +992,35 @@ ul {
   color: var(--accent);
 }
 
-.pick-row:disabled .pick-plus {
+/* A SOURCE ROW THAT CANNOT BE TAKEN (finding #18).
+   `SourcePicker.svelte` marks a blocked row with `aria-disabled="true"` rather
+   than the native `disabled` attribute, deliberately: a natively disabled button
+   is not focusable, and the row has to stay focusable or the tooltip explaining
+   WHY it is blocked becomes unreachable by keyboard (`use:tooltip` opens on
+   `focusin` and points `aria-describedby` at it). The cost is that the generic
+   `button:disabled { opacity: 0.45 }` above stops applying — which is how the
+   greyed-out look was lost, leaving the "+" glyph's `--accent`→`--muted` swap as
+   the only cue. `--muted` (#c3bfde) sits right beside the normal ink `--ink`
+   (#f3f1fb) in this dark theme, so a blocked row read as takeable; and a hue swap
+   alone fails WCAG 1.4.1 whatever the two hues are. A `:disabled` variant of the
+   glyph rule also sat here, matching nothing for the same reason; it is gone, and
+   `src/app.css.test.ts` now fails if any `:disabled` qualifier returns.
+
+   So the primary cue is a luminance drop and the muted glyph is the secondary one.
+   The dim goes on the row's CHILDREN, not on the button box: `opacity` fades an
+   element's focus ring along with its content, and fading the focus ring of the one
+   control a keyboard user must reach to learn why the row is blocked would give back
+   exactly what `aria-disabled` bought. 0.55 keeps `--ink` over `--panel` at ~5.1:1
+   (0.45, matching `button:disabled`, would drop it to ~4.0:1 — under AA). */
+.pick-row[aria-disabled='true'] {
+  cursor: default;
+}
+
+.pick-row[aria-disabled='true'] > * {
+  opacity: 0.55;
+}
+
+.pick-row[aria-disabled='true'] .pick-plus {
   color: var(--muted);
 }
 
@@ -1128,6 +1160,18 @@ ul {
 .ability-selection .specialty {
   flex: 1 1 6rem;
   min-width: 5rem;
+}
+
+/* The marker on a display-only Ability row (#17) — one a Virtue gives a bonus or a
+   free starting score but that has no bought score. It sits where the specialty
+   box and × of a bought row would, and takes the same flex share, so the columns
+   to its left (name, stepper, effective badge) stay aligned with the rows above
+   and below it. */
+.ability-selection .ability-unbought {
+  flex: 1 1 6rem;
+  min-width: 5rem;
+  font-size: 0.9rem;
+  font-style: italic;
 }
 
 /* The (Area)/Craft/etc. parameter field gets its own full-width line beneath

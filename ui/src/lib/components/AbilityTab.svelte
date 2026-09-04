@@ -8,10 +8,12 @@
     groupAbilitySelectionsByCategory,
     invalidSelectionIds,
     maxAbilityScore,
+    unboughtModifiedAbilities,
+    UNBOUGHT_ROW_INDEX,
     type IndexedAbilityScore,
   } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
-  import type { Ability, AbilityCategory } from '../types';
+  import type { Ability, AbilityCategory, AbilityScore } from '../types';
   import MagusMinimumAbilities from './MagusMinimumAbilities.svelte';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
@@ -128,14 +130,28 @@
   const max = $derived(maxAbilityScore(advancement));
   const scores = $derived(store.entity.ability_scores ?? []);
 
-  // Bought abilities grouped by category and alpha-sorted within each group
-  // (mirroring the picker). Original indices ride along for spinner/remove wiring.
+  // Display-only rows for an Ability the engine reports a bonus or a granted floor
+  // for that has no bought row to carry it (#17) — a Puissant Ability applies at 0
+  // bought points, and without this the tab was silent about it. They go through
+  // the same grouping below, so each lands under its own category header exactly
+  // where its bought row will appear once it is bought.
+  const unboughtRows = $derived(
+    unboughtModifiedAbilities(
+      scores,
+      store.effective?.ability_bonuses ?? [],
+      store.effective?.ability_score_floors ?? [],
+    ),
+  );
+
+  // Bought abilities (plus the unbought-but-modified rows) grouped by category and
+  // alpha-sorted within each group (mirroring the picker). Original indices ride
+  // along for spinner/remove wiring.
   const groupedScores = $derived(
     store.ruleset
-      ? groupAbilitySelectionsByCategory(
-          store.ruleset,
-          scores.map((entry, index) => ({ entry, index })),
-        )
+      ? groupAbilitySelectionsByCategory(store.ruleset, [
+          ...scores.map((entry, index) => ({ entry, index })),
+          ...unboughtRows,
+        ])
       : [],
   );
 
@@ -146,17 +162,33 @@
   const selectedColumns = $derived([
     {
       key: 'abilities',
-      empty: scores.length === 0,
+      // An unbought-but-modified row is still something to show, so the "nothing
+      // selected" message yields to it.
+      empty: scores.length === 0 && unboughtRows.length === 0,
       emptyText: store.t('empty-selections-side'),
       emptyClass: 'empty',
       groups: groupedScores.map((g) => ({
         key: g.category,
         header: store.t(`ability-category-${g.category}`),
         listClass: 'selection-list ability-selection',
-        rows: g.entries.map((e) => ({ key: e.index, item: e })),
+        // Unbought rows all share UNBOUGHT_ROW_INDEX, so they are keyed by ability
+        // id instead — `{#each}` keys must stay unique.
+        rows: g.entries.map((e) => ({ key: rowKey(e), item: e })),
       })),
     },
   ]);
+
+  // A row's identity in `{#each}` keys and in test ids: its entity-array index, or
+  // the ability id / the literal `unbought` for a display-only row, which has no
+  // index. Never a bare index for those — `ability-eff-<id>-0` must keep meaning
+  // "the first bought row", which several e2e specs address by exact index.
+  function rowKey(item: IndexedAbilityScore): string | number {
+    return item.index === UNBOUGHT_ROW_INDEX ? `unbought-${item.entry.ability}` : item.index;
+  }
+
+  function rowSuffix(index: number): string {
+    return index === UNBOUGHT_ROW_INDEX ? 'unbought' : String(index);
+  }
 
   function paramKey(abilityId: string): string | undefined {
     return store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
@@ -191,6 +223,21 @@
     parameter: string | null | undefined,
   ): number {
     return Math.max(score, floorOf(abilityId, parameter)) + bonusOf(abilityId, parameter);
+  }
+
+  // The bought score `bonusOf`/`floorOf` were computed against — NOT the live one
+  // the spinner shows (#16). The spinner is direct feedback and moves on the
+  // keystroke; the badge is a bought+modifier pair, and mixing a fresh half with a
+  // stale one renders a total true of no character. Matched by ability + parameter
+  // rather than by row index, so the pairing survives a row being removed above it.
+  // @see AppStore.readSettled
+  function settledScoreOf(entry: AbilityScore): number {
+    return store.readSettled(
+      (e) =>
+        e.ability_scores?.find(
+          (a) => a.ability === entry.ability && (a.parameter ?? null) === (entry.parameter ?? null),
+        )?.score ?? 0,
+    );
   }
 
   // Description + example specialties as a hover/focus tooltip, matching the picker.
@@ -271,8 +318,19 @@
           {#snippet row(item: IndexedAbilityScore)}
             {@const entry = item.entry}
             {@const i = item.index}
+            <!-- A display-only row (#17): the character has a bonus or a granted
+                 floor for this Ability but has not bought it, so there is no
+                 entity row behind it. Every mutator below is index-addressed and
+                 no-ops at UNBOUGHT_ROW_INDEX (no array position matches), but the
+                 controls are withheld rather than left to fail silently. -->
+            {@const unbought = i === UNBOUGHT_ROW_INDEX}
+            {@const id = rowSuffix(i)}
             {@const key = paramKey(entry.ability)}
             {@const invalid = invalidIds.has(entry.ability)}
+            <!-- The bought score the badge below is paired with (#16) — held to the
+                 generation the modifiers were computed for, while `entry.score`
+                 stays live for the spinner. -->
+            {@const settledScore = settledScoreOf(entry)}
             <li class:invalid-selection={invalid}>
               {#if invalid}
                 <!-- WCAG 1.4.1: the red tint on `.invalid-selection` is not the only
@@ -288,55 +346,61 @@
                 decLabel={store.t('ability-decrement', {
                   name: selectedName(entry.ability, entry.parameter),
                 })}
-                decTestid="ability-dec-{entry.ability}-{i}"
-                decDisabled={entry.score <= 0}
+                decTestid="ability-dec-{entry.ability}-{id}"
+                decDisabled={unbought || entry.score <= 0}
                 onDec={() => store.adjustAbilityAt(i, -1, max)}
                 incLabel={store.t('ability-increment', {
                   name: selectedName(entry.ability, entry.parameter),
                 })}
-                incTestid="ability-inc-{entry.ability}-{i}"
-                incDisabled={entry.score >= max}
+                incTestid="ability-inc-{entry.ability}-{id}"
+                incDisabled={unbought || entry.score >= max}
                 onInc={() => store.adjustAbilityAt(i, 1, max)}
               >
                 {#snippet children()}
-                  <span class="spinner-value" data-testid="ability-score-{entry.ability}-{i}">
+                  <span class="spinner-value" data-testid="ability-score-{entry.ability}-{id}">
                     {entry.score}
                   </span>
                 {/snippet}
               </Spinner>
-              {#if effectiveOf(entry.score, entry.ability, entry.parameter) !== entry.score}
+              {#if effectiveOf(settledScore, entry.ability, entry.parameter) !== settledScore}
                 <span class="eff-slot">
-                  <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{i}">
+                  <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{id}">
                     {store.t('effective-score', {
-                      score: String(effectiveOf(entry.score, entry.ability, entry.parameter)),
+                      score: String(effectiveOf(settledScore, entry.ability, entry.parameter)),
                     })}
                   </span>
                 </span>
               {:else}
                 <span class="eff-slot" aria-hidden="true"></span>
               {/if}
-              <input
-                type="text"
-                class="specialty"
-                placeholder={store.t('ability-specialty-label')}
-                aria-invalid={invalid ? 'true' : undefined}
-                value={entry.specialty ?? ''}
-                oninput={(e) =>
-                  store.setAbilitySpecialtyAt(i, (e.currentTarget as HTMLInputElement).value)}
-                data-testid="ability-specialty-{entry.ability}-{i}"
-              />
-              <button
-                type="button"
-                class="icon-btn"
-                aria-label={store.t('remove-item', {
-                  name: selectedName(entry.ability, entry.parameter),
-                })}
-                onclick={() => store.removeAbilityAt(i)}
-                data-testid="remove-{entry.ability}-{i}"
-              >
-                ×
-              </button>
-              {#if key}
+              {#if unbought}
+                <!-- Why the row is inert, in words rather than by greyed controls
+                     alone (WCAG 1.4.1) — and where the user buys it. -->
+                <span class="ability-unbought muted">{store.t('ability-unbought-marker')}</span>
+              {:else}
+                <input
+                  type="text"
+                  class="specialty"
+                  placeholder={store.t('ability-specialty-label')}
+                  aria-invalid={invalid ? 'true' : undefined}
+                  value={entry.specialty ?? ''}
+                  oninput={(e) =>
+                    store.setAbilitySpecialtyAt(i, (e.currentTarget as HTMLInputElement).value)}
+                  data-testid="ability-specialty-{entry.ability}-{id}"
+                />
+                <button
+                  type="button"
+                  class="icon-btn"
+                  aria-label={store.t('remove-item', {
+                    name: selectedName(entry.ability, entry.parameter),
+                  })}
+                  onclick={() => store.removeAbilityAt(i)}
+                  data-testid="remove-{entry.ability}-{id}"
+                >
+                  ×
+                </button>
+              {/if}
+              {#if key && !unbought}
                 <input
                   type="text"
                   class="ability-param"

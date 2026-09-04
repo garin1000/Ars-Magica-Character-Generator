@@ -68,6 +68,14 @@
           {#each group.items as item (getId(item))}
             {@const blocked = disabled?.(item) ?? false}
             <li>
+              <!-- `aria-disabled`, never the native `disabled` attribute: a
+                   natively disabled button is not focusable, and the row must stay
+                   focusable or the tooltip explaining WHY it is blocked (opened on
+                   `focusin` by `use:tooltip`, which also points `aria-describedby`
+                   at it) becomes unreachable by keyboard. It is also the single
+                   marker every blocked treatment keys on — screen readers announce
+                   it as "unavailable", and `app.css` hangs the dim, the muted glyph
+                   and the suppressed hover off the same attribute. -->
               <button
                 type="button"
                 class="pick-row"
@@ -92,23 +100,12 @@
 </section>
 
 <style>
-  /* The "why is this greyed out" tooltip must stay reachable by keyboard and
-     screen-reader users, so a blocked row uses `aria-disabled` (button stays
-     focusable and keeps firing `focusin`) rather than native `disabled` — see
-     `actions.ts`'s `tooltip` action, which shows on `mouseenter`/`focusin`.
-     These rules mirror app.css's `.pick-row:disabled` look for the
-     `aria-disabled="true"` state, using `:global()` so they apply regardless of
-     Svelte's per-component style scoping (app.css itself is out of this
-     component's scope, so the equivalent selector lives here instead). */
-  :global(.pick-row[aria-disabled='true']) {
-    cursor: default;
-  }
-  :global(.pick-row[aria-disabled='true']:hover) {
-    background: transparent;
-  }
-  :global(.pick-row[aria-disabled='true'] .pick-plus) {
-    color: var(--muted);
-  }
+  /* The blocked-row treatment (dim + muted glyph + no hover highlight) is NOT
+     here: it belongs with `.pick-row`/`.pick-plus` themselves, which live in
+     `app.css`, and splitting one look across two files is what let a dead
+     `.pick-row:disabled` rule sit there unnoticed. See the
+     `.pick-row[aria-disabled='true']` block in `app.css` (and
+     `src/app.css.test.ts`, which guards it) for the treatment and the reasoning. */
 
   /* Matches the `.empty` treatment other lists give their own empty state
      (AbilityTab's Selected side, EquipmentTab, Reputations); each keeps its own

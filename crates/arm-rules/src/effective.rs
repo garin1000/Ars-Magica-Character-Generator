@@ -760,8 +760,34 @@ mod tests {
         );
     }
 
+    /// Regression (Issue 17 — the Ability twin of the Art fix above): a Puissant
+    /// Ability whose target has 0 bought points has no `ability_scores` row, yet
+    /// the character genuinely holds the Virtue, so the bonus must still surface
+    /// or the Abilities surface is silent about it.
     #[test]
-    fn ability_bonuses_still_omit_zero_entries() {
+    fn ability_bonuses_include_puissant_ability_at_bought_zero() {
+        let rs = ruleset();
+        let e = entity(vec![puissant("ability.awareness")]);
+        assert!(e.ability_scores.is_empty());
+        assert_eq!(
+            ability_bonuses(&e, &rs),
+            vec![AbilityBonus {
+                ability: Id::new("ability.awareness"),
+                parameter: None,
+                bonus: 2,
+            }]
+        );
+    }
+
+    /// Supersedes `ability_bonuses_still_omit_zero_entries`, whose name pinned the
+    /// bought-only iteration Issue 17 replaced ("still omit" meant "only bought
+    /// rows are considered at all"). What that test was really guarding survives
+    /// unchanged and is asserted here over the wider source: an instance with no
+    /// bonus is omitted — the bought-but-unboosted Stealth row just as before, and
+    /// now also every unboosted *catalogue* entry the union newly walks, which
+    /// must not turn the list into "one entry per Ability in the game".
+    #[test]
+    fn ability_bonuses_omit_instances_with_no_bonus() {
         let rs = ruleset();
         let mut e = entity(vec![puissant("ability.awareness")]);
         e.ability_scores = vec![
@@ -787,6 +813,34 @@ mod tests {
                 parameter: None,
                 bonus: 2,
             }]
+        );
+    }
+
+    /// The two ways a Puissant can name a parameterized ability with no bought
+    /// instance, and the deliberate answer for both: no entry. With no instance
+    /// named the target is `(id, None)`, which `ability_bonus` scores 0 (see
+    /// `puissant_without_instance_key_matches_no_parameterized_instance`); a
+    /// named-but-unbought instance is in neither the catalogue (whose entries all
+    /// carry `parameter: None`) nor `ability_scores`, so the union does not reach
+    /// it. Neither silently swallows the problem: both are reported by
+    /// `ability_bonus_dangling_target` on the Abilities phase.
+    #[test]
+    fn ability_bonuses_omit_parameterized_targets_with_no_bought_instance() {
+        let rs = ruleset();
+        assert_eq!(
+            ability_bonuses(&entity(vec![puissant("ability.area_lore")]), &rs),
+            vec![]
+        );
+        assert_eq!(
+            ability_bonuses(
+                &entity(vec![puissant_instance(
+                    "ability.area_lore",
+                    "area",
+                    "Brandenburg"
+                )]),
+                &rs
+            ),
+            vec![]
         );
     }
 

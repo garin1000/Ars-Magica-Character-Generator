@@ -854,6 +854,11 @@ ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Abi
 # points at (S7, full-audit a11y) — pairs with a visible glyph so the row's
 # invalidity is never colour-only (WCAG 1.4.1).
 ability-invalid-selection = Invalid selection
+# Marks a display-only Ability row (#17): a Virtue gives this Ability a bonus or a
+# free starting score, but no score has been bought, so the row shows the bonus and
+# offers no controls. Says why in words — the greyed stepper alone is not a reason
+# (WCAG 1.4.1). Add the Ability from the Available list to start buying it.
+ability-unbought-marker = Not bought
 # Named per row ($name is the characteristic's, or personality trait's, own
 # display name — this key is shared by CharacteristicPicker, FamiliarPanel's
 # personality-trait spinner, and PersonalityTraits) — same reasoning as

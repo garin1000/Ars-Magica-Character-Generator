@@ -32,6 +32,7 @@ WP5 → WP6 → WP7, one finding at a time.
 | 2026-09-03 | WP2 | Findings 6 and 7 done: `categories: Vec<String>` end to end — engine, rules data, export, UI grouping/filtering/badges; legacy `category:` fails loudly; `$category` no longer renders a raw slug. **WP2 complete.** | Full gate green including `cargo tauri build --no-bundle`; e2e not yet run |
 | 2026-09-03 | WP3 | Finding 4 done, engine untouched: `issuesForStep` + `phaseSelectedItemIds` let the docked panel show a foreign-phase finding whose `context` was chosen on this step, marked `data-elsewhere` with a dashed bar and the `issue-other-step` sentence naming the owning step (4a/4b); a `data-pending` rail marker with its own glyph and `.sr-only` label carries an open warning forward, gated to steps already reached after measuring 7 warnings over 4 of 11 unopened steps on a fresh magus (4c). | Full gate green including `cargo tauri build --no-bundle`; e2e not run |
 | 2026-09-04 | WP3 | Finding 5 done: the ability parameter picker offers the whole catalogue plus an instance field for parameterized abilities, and `ability_bonus_dangling_target` moved to the `abilities` phase, so the wizard runs forward and the rail keeps flagging what is owed. Finding 12 done: the exemplar now leads the requirement ("below Latin 1 (any Dead Language)"), fixed alongside the recommended-ability warning, the scholarly-language finding and the checklist. **WP3 complete.** | Full gate green including `cargo tauri build --no-bundle`; e2e run at package end |
+| 2026-09-04 | WP5 | Finding 16 done: `AppStore.#effectiveBasis` + `readSettled()` pin a badge's bought score to the generation its modifiers were computed for, so the Art/Ability/Characteristic badges make one transition per committed edit instead of rendering `newScore + oldBonus` for the length of the debounce. Three new `client` tests. | `npm run test:unit` (1259 tests), `check`, `lint`, `format:check`, `cargo test --workspace` — all green; release build and e2e **not** run, an e2e suite held `target/release` |
 
 ---
 
@@ -380,7 +381,7 @@ Puissant "(Area) Lore: Brandenburg" that *is* bought.
 
 ### 16 — Effective badges flicker while editing
 
-**Status:** open
+**Status:** done
 
 Changing an elemental Form makes the other three Forms' effective badges cycle
 through intermediate values before settling. The score is written synchronously
@@ -392,6 +393,21 @@ characteristic badges.
 
 **Decision.** Hold the badge's previous value while a revalidation is in flight,
 so there is one transition per committed edit.
+
+**Landed.** `AppStore` now retains `#effectiveBasis` — the very
+`$state.snapshot(entity)` that produced the currently-published
+`effective`/`derived`, assigned inside `revalidate`'s existing `#seq` guard so
+basis and payload can never drift apart, out-of-order responses included. The
+badges read their bought score through `store.readSettled(read)` instead of off
+the live entity, which pins both halves of the `bought + modifier` pair to one
+generation; the spinners keep reading the live entity, so direct feedback is
+unchanged. Applied in `ArtGrid.svelte`, `AbilityTab.svelte` (matched by
+ability + parameter, so the pairing survives a row removed above it) and
+`CharacteristicPicker.svelte` (where the stale pair also flashed a phantom
+"→ +0" badge, since its gate compares effective against bought). Covered by
+`ArtGrid.client.test.ts`, `AbilityTab.client.test.ts` and
+`CharacteristicPicker.client.test.ts` — `client` tests because the defect is a
+mid-flight frame the SSR renderer can never show.
 
 ### 18 — Non-takable rows are effectively invisible
 

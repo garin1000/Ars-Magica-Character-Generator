@@ -40,7 +40,10 @@ const emptySnippet = createRawSnippet(() => ({
   render: () => '<span></span>',
 }));
 
-function html(groups: { key: string; header: string; items: string[] }[]): string {
+function html(
+  groups: { key: string; header: string; items: string[] }[],
+  disabled?: (item: string) => boolean,
+): string {
   return render(SourcePicker, {
     props: {
       groups,
@@ -49,10 +52,18 @@ function html(groups: { key: string; header: string; items: string[] }[]): strin
       // fought, since `groups` is always `string[]` items in this file.
       getId: (item: unknown) => item as string,
       onAdd: () => {},
+      disabled: disabled && ((item: unknown) => disabled(item as string)),
       row: emptySnippet,
       filters: emptySnippet,
     },
   }).body;
+}
+
+/** The opening `<button>` tag of the row whose add-testid is `add-{id}`. */
+function rowTag(body: string, id: string): string {
+  const match = new RegExp(`<button[^>]*data-testid="add-${id}"[^>]*>`).exec(body);
+  expect(match, `no row rendered for ${id}`).not.toBeNull();
+  return match![0];
 }
 
 beforeEach(() => {
@@ -80,5 +91,36 @@ describe('SourcePicker empty state (S25)', () => {
     const body = html([]);
     expect(body).toContain('data-testid="source-no-results"');
     expect(body).not.toContain('filter-no-results');
+  });
+});
+
+// Finding #18: every blocked treatment — the dim, the muted glyph, the suppressed
+// hover, and the screen-reader "unavailable" announcement — hangs off ONE marker
+// emitted here, for all three lists that mount this component (Abilities, Spells,
+// Virtues/Flaws). The marker is `aria-disabled`, never the native `disabled`
+// attribute: a natively disabled button is not focusable, and the row has to stay
+// focusable or the tooltip explaining WHY it is blocked becomes unreachable by
+// keyboard (`use:tooltip` opens on `focusin` and sets `aria-describedby`).
+describe('SourcePicker blocked rows (#18)', () => {
+  const twoRows = [{ key: 'general', header: 'General', items: ['takeable', 'blocked'] }];
+
+  it('marks a non-takeable row aria-disabled', () => {
+    const body = html(twoRows, (item) => item === 'blocked');
+    expect(rowTag(body, 'blocked')).toContain('aria-disabled="true"');
+  });
+
+  it('leaves a takeable row not aria-disabled', () => {
+    const body = html(twoRows, (item) => item === 'blocked');
+    expect(rowTag(body, 'takeable')).toContain('aria-disabled="false"');
+  });
+
+  it('never natively disables a row, which would take it out of the tab order', () => {
+    const body = html(twoRows, () => true);
+    expect(body).not.toMatch(/<button[^>]*\sdisabled/);
+  });
+
+  it('marks nothing when the caller supplies no disabled predicate', () => {
+    const body = html(twoRows);
+    expect(body).not.toContain('aria-disabled="true"');
   });
 });
