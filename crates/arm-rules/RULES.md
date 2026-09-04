@@ -2508,6 +2508,16 @@ reputation-granting `creation_effect` V/F is wired in slice 5a-wire (see below).
 Artibus/Medicina, Failed Student) confer an "Academic Reputation" — a named type
 in the source. Fluent `reputation-type-academic` (en `Academic`, de `Akademisch`).
 
+`reputation_grants` (`effective/reputation_and_caps.rs`) returns one
+`ReputationGrant { source, reputation_type, score }` per `GrantsReputation`
+effect, where `source` is the id of the granting Virtue/Flaw — provenance for the
+UI, not a rule value, so a granted row can say *which* V/F put it there. The app
+layer passes each grant through unchanged (`reputation_grants_for_ui`,
+`arm-app/src/ruleset_io.rs`) and the panel renders one row per grant, a
+`<select>` over `Ruleset::reputation_type_order` for the wildcard. It used to
+**flatten** a wildcard into one entry per type, which offered four slots where
+`validate_reputations` allows one; the counts now agree.
+
 ---
 
 ## Virtue/Flaw classification (M5/5a)

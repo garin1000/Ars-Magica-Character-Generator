@@ -357,11 +357,20 @@ fn aging_readout(entity: &Entity, ruleset: &Ruleset) -> Option<AgingReadout> {
     })
 }
 
-/// A Reputation a Virtue/Flaw authorizes the character to start with (the UI
-/// pre-fills a new Reputation row from this; content is player-supplied).
+/// A Reputation a Virtue/Flaw authorizes the character to start with. The UI
+/// renders one row per grant — kind and score come from here, `content` is
+/// player-supplied — so a grant is a slot waiting to be described, never an
+/// "Add" button that can be pressed twice.
+///
+/// `kind` is `None` for a player-chosen-type grant (Famous), which the panel
+/// renders as a type `<select>`. Renamed from the engine's `reputation_type`
+/// only; `source` and `score` pass through untouched.
 #[derive(Debug, Clone, Serialize)]
 pub struct ReputationGrant {
-    pub kind: ReputationType,
+    /// The Virtue/Flaw that opened this slot, so the row can say why it exists.
+    pub source: Id,
+    /// The Reputation type the grant fixes, or `None` when player-chosen.
+    pub kind: Option<ReputationType>,
     pub score: u8,
 }
 
@@ -473,26 +482,21 @@ fn warping_fields(entity: &Entity, ruleset: &Ruleset) -> WarpingFields {
     }
 }
 
-/// Flattens the engine's Reputation grants into one [`ReputationGrant`] per
-/// concrete type: a player-chosen-kind grant (`kind == None`, e.g. Famous)
-/// authorizes any type, so it becomes one add-control per Reputation type;
-/// concrete-kind grants pass through unchanged. Validation still enforces the
-/// single-slot count (see `validate_reputations`).
+/// The engine's Reputation grants, one UI slot each — the field rename
+/// (`reputation_type` → `kind`) and nothing else.
+///
+/// This used to FLATTEN a player-chosen-kind grant (Famous) into one entry per
+/// Reputation type, which offered four slots where `validate_reputations`
+/// allows exactly one. The wildcard now travels as `kind: None` and the panel
+/// renders a single row with a type `<select>`, so the offered slots and the
+/// legal slots are the same count.
 fn reputation_grants_for_ui(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
     reputation_grants(entity, ruleset)
         .into_iter()
-        .flat_map(|grant| match grant.reputation_type {
-            Some(kind) => vec![ReputationGrant {
-                kind,
-                score: grant.score,
-            }],
-            None => ReputationType::ALL
-                .into_iter()
-                .map(|kind| ReputationGrant {
-                    kind,
-                    score: grant.score,
-                })
-                .collect(),
+        .map(|grant| ReputationGrant {
+            source: grant.source,
+            kind: grant.reputation_type,
+            score: grant.score,
         })
         .collect()
 }

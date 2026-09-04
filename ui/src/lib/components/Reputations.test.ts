@@ -34,8 +34,14 @@ function installRuleset(): void {
       magnitude_points: { free: 0, minor: 1, major: 3 },
       ability_category_order: ['general'],
       art_type_order: ['technique', 'form'],
+      reputation_type_order: ['local', 'ecclesiastical', 'hermetic', 'academic'],
     },
-    i18n: {},
+    i18n: {
+      'flaw.infamous': { name: 'Infamous' },
+      'virtue.famous': { name: 'Famous' },
+      'flaw.apostate': { name: 'Apostate' },
+      'virtue.senior_clergy': { name: 'Senior Clergy' },
+    },
   } as unknown as LocalizedRuleset;
 }
 
@@ -59,6 +65,10 @@ function resetEntity(): void {
   store.effective = null;
 }
 
+function grants(...list: { source: string; kind: string | null; score: number }[]): void {
+  store.effective = { reputation_grants: list } as unknown as EffectiveScores;
+}
+
 function html(): string {
   return render(Reputations, { props: {} }).body;
 }
@@ -71,75 +81,109 @@ beforeEach(() => {
 });
 
 describe('Reputations grant gating', () => {
-  it('shows the empty message and no add button when nothing grants a Reputation', () => {
+  it('shows the empty message and no rows when nothing grants a Reputation', () => {
     const body = html();
     expect(body).toContain('data-testid="reputation-empty"');
-    expect(body).not.toMatch(/data-testid="reputation-add-/);
+    expect(body).not.toContain('data-testid="reputation-content-0"');
   });
 
-  it('offers an add button per granting kind, naming the kind and level', () => {
-    store.effective = {
-      reputation_grants: [{ kind: 'hermetic', score: 2 }],
-    } as unknown as EffectiveScores;
+  it('never offers an add control — a grant IS the row', () => {
+    grants({ source: 'flaw.infamous', kind: 'local', score: 4 });
+    const body = html();
+    expect(body).not.toMatch(/data-testid="reputation-add/);
+    expect(body).toContain('data-testid="reputation-content-0"');
+  });
+
+  it('renders a granted slot with its kind, level and the Flaw that granted it', () => {
+    grants({ source: 'flaw.infamous', kind: 'local', score: 4 });
     const body = html();
     expect(body).not.toContain('data-testid="reputation-empty"');
-    const button =
-      /<button[^>]*data-testid="reputation-add-hermetic"[^>]*>([\s\S]*?)<\/button>/.exec(body);
-    expect(button).not.toBeNull();
-    expect(button![1]).toContain('Hermetic');
-    expect(button![1]).toContain('2');
+    const source = /data-testid="reputation-source-0"[^>]*>([\s\S]*?)<\/span>/.exec(body);
+    expect(source).not.toBeNull();
+    expect(source![1]).toContain('Infamous');
+    expect(source![1]).toContain('4');
+    expect(body).toContain('Local');
   });
 
-  it('offers one add button per distinct granting kind, in grant order', () => {
-    store.effective = {
-      reputation_grants: [
-        { kind: 'hermetic', score: 2 },
-        { kind: 'local', score: 1 },
-      ],
-    } as unknown as EffectiveScores;
+  it('names the granting item, never its raw id', () => {
+    grants({ source: 'flaw.infamous', kind: 'local', score: 4 });
+    expect(html()).not.toContain('flaw.infamous');
+  });
+
+  it('gives a granted row no remove control — the grant is not the player&#39;s to drop', () => {
+    grants({ source: 'flaw.infamous', kind: 'local', score: 4 });
+    expect(html()).not.toContain('data-testid="reputation-remove-0"');
+  });
+
+  it('offers a type picker on a wildcard grant, from the engine taxonomy', () => {
+    grants({ source: 'virtue.famous', kind: null, score: 4 });
     const body = html();
-    const hermeticIndex = body.indexOf('data-testid="reputation-add-hermetic"');
-    const localIndex = body.indexOf('data-testid="reputation-add-local"');
-    expect(hermeticIndex).toBeGreaterThan(-1);
-    expect(localIndex).toBeGreaterThan(hermeticIndex);
+    const select = /<select[^>]*data-testid="reputation-kind-0"[\s\S]*?<\/select>/.exec(body);
+    expect(select).not.toBeNull();
+    // The empty prompt plus one option per engine-declared Reputation type.
+    expect(select![0]).toContain('Choose a type');
+    for (const label of ['Local', 'Ecclesiastical', 'Hermetic', 'Academic']) {
+      expect(select![0]).toContain(label);
+    }
+  });
+
+  it('renders one row per grant, in grant order', () => {
+    grants(
+      { source: 'flaw.apostate', kind: 'ecclesiastical', score: 4 },
+      { source: 'virtue.famous', kind: null, score: 4 },
+    );
+    const body = html();
+    expect(body.indexOf('data-testid="reputation-content-0"')).toBeGreaterThan(-1);
+    expect(body.indexOf('data-testid="reputation-content-1"')).toBeGreaterThan(
+      body.indexOf('data-testid="reputation-content-0"'),
+    );
+    // The wildcard is the second row, so only IT carries a type picker.
+    expect(body).not.toContain('data-testid="reputation-kind-0"');
+    expect(body).toContain('data-testid="reputation-kind-1"');
   });
 });
 
-describe('Reputations already-taken list', () => {
-  it('lists a Reputation added via store.addReputation, with its type and score', () => {
-    store.addReputation('academic', 3);
-    const body = html();
-    expect(body).toContain('data-testid="reputation-list"');
-    expect(body).toMatch(/<li>[\s\S]*Academic[\s\S]*3[\s\S]*<\/li>/);
-  });
-
-  it('reads the stored content back into the content input', () => {
-    store.addReputation('local', 1);
-    store.setReputationContent(0, 'known among the fishermen');
+describe('Reputations stored rows', () => {
+  it('reads a stored description back into its granted slot', () => {
+    grants({ source: 'flaw.infamous', kind: 'local', score: 4 });
+    store.addReputation('local', 4, 'dragon slayer');
     const input = /<input[^>]*data-testid="reputation-content-0"[^>]*>/.exec(html());
     expect(input).not.toBeNull();
-    expect(input![0]).toContain('value="known among the fishermen"');
+    expect(input![0]).toContain('value="dragon slayer"');
   });
 
-  it('gives the content input an accessible name', () => {
-    store.addReputation('local', 1);
+  it('gives the description input an accessible name', () => {
+    grants({ source: 'flaw.infamous', kind: 'local', score: 4 });
     const input = /<input[^>]*data-testid="reputation-content-0"[^>]*>/.exec(html());
     expect(input![0]).toContain('aria-label="What it is for"');
   });
 
-  it('renders a remove button for each Reputation, one per row', () => {
-    store.addReputation('local', 1);
-    store.addReputation('hermetic', 2);
+  it('fills both rows when two grants share a kind and score', () => {
+    // Apostate and Senior Clergy each grant Ecclesiastical 4. Which row is
+    // attributed to which Virtue/Flaw is arbitrary; both must be described.
+    grants(
+      { source: 'flaw.apostate', kind: 'ecclesiastical', score: 4 },
+      { source: 'virtue.senior_clergy', kind: 'ecclesiastical', score: 4 },
+    );
+    store.addReputation('ecclesiastical', 4, 'archdeacon of Reims');
+    store.addReputation('ecclesiastical', 4, 'renounced his vows');
     const body = html();
-    expect(body).toContain('data-testid="reputation-remove-0"');
-    expect(body).toContain('data-testid="reputation-remove-1"');
+    expect(body).toContain('value="archdeacon of Reims"');
+    expect(body).toContain('value="renounced his vows"');
   });
 
-  it('renders both rows independently when two Reputations of the same kind are taken', () => {
-    store.addReputation('local', 1);
-    store.addReputation('local', 1);
+  it('still renders a Reputation no grant covers, with a remove control', () => {
+    // A legacy or hand-edited save. The engine keeps reporting
+    // `reputation_not_granted` for it; the panel lets the player clear it.
+    store.addReputation('academic', 2, 'a legacy row');
     const body = html();
-    expect(body).toContain('data-testid="reputation-content-0"');
-    expect(body).toContain('data-testid="reputation-content-1"');
+    expect(body).toContain('value="a legacy row"');
+    expect(body).toContain('data-testid="reputation-remove-0"');
+  });
+
+  it('disables the description of a wildcard slot until a type is chosen', () => {
+    grants({ source: 'virtue.famous', kind: null, score: 4 });
+    const input = /<input[^>]*data-testid="reputation-content-0"[^>]*>/.exec(html());
+    expect(input![0]).toContain('disabled');
   });
 });

@@ -626,7 +626,15 @@ personality-add = Eigenschaft hinzufügen
 personality-empty = Noch keine Persönlichkeitseigenschaften.
 reputations-label = Reputationen
 reputation-content-placeholder = Wofür
-reputation-add = { $kind }-Reputation hinzufügen (Stufe { $score })
+# Eine verliehene Reputation nennt die Tugend bzw. den Fehler, die den Platz
+# eröffnet hat — „Kirchlich 4" steht nie unerklärt da. Es gibt keine
+# Hinzufügen-Schaltfläche mehr: die Verleihung IST die Zeile.
+reputation-granted-by = Stufe { $score } von { $source }
+# Eine Verleihung ohne festen Typ (Berühmt) überlässt den Typ dem Spieler.
+# Glossar: „Typ" für type (of a Reputation), nicht „Art"
+# (rules/source/de/translation-tables/reputationen.md:24).
+reputation-kind-label = Typ
+reputation-kind-choose = Typ wählen
 reputation-empty = Keine Reputation verfügbar (nimm eine Tugend oder einen Fehler, der eine verleiht).
 reputation-type-local = Lokal
 reputation-type-ecclesiastical = Kirchlich

@@ -4398,6 +4398,43 @@ mod tests {
         assert_eq!(entity, back);
     }
 
+    /// Two Reputations that share a kind AND a score — the shape a character with
+    /// both Apostate and Senior Clergy has, since each grants Ecclesiastical 4 —
+    /// survive `normalize` + a save/load round-trip as two distinct rows. Only the
+    /// `content` tells them apart, and `normalize` sorts on `(kind, score,
+    /// content)`, so the pair must neither collapse nor swap contents. Which grant
+    /// the panel attributes each row to is arbitrary (see `reputationRows` in
+    /// `ui/src/lib/derive.ts`); that both rows come back intact is not.
+    #[test]
+    fn two_reputations_of_one_kind_and_score_roundtrip_as_distinct_rows() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.reputations = vec![
+            Reputation {
+                kind: ReputationType::Ecclesiastical,
+                score: 4,
+                content: "renounced his vows".into(),
+            },
+            Reputation {
+                kind: ReputationType::Ecclesiastical,
+                score: 4,
+                content: "archdeacon of Reims".into(),
+            },
+        ];
+        entity.normalize();
+        // Sorted on `content`, the only differing field.
+        assert_eq!(entity.reputations[0].content, "archdeacon of Reims");
+        assert_eq!(entity.reputations[1].content, "renounced his vows");
+
+        let json = serde_json::to_string(&entity).unwrap();
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.reputations.len(), 2);
+        assert_eq!(entity, back);
+    }
+
     /// ReputationType serializes to its snake_case scalar for every variant.
     #[test]
     fn reputation_type_serde_roundtrip() {

@@ -1249,17 +1249,31 @@ fn effective_scores_surface_confidence_and_supernatural_slots() {
         1
     );
 
-    // Infamous surfaces a Local reputation grant for the UI add-control.
+    // Infamous surfaces a Local reputation slot naming the Flaw that opened it.
     companion
         .selections
         .push(Selection::new(Id::new("flaw.infamous")));
     let grants = effective_scores_loaded(&companion, &ruleset).reputation_grants;
-    assert!(
-        grants
-            .iter()
-            .any(|g| g.kind == arm_rules::ReputationType::Local && g.score == 4),
-        "Infamous grants a level-4 Local reputation"
-    );
+    assert_eq!(grants.len(), 1, "one grant per granting V/F: {grants:?}");
+    assert_eq!(grants[0].kind, Some(arm_rules::ReputationType::Local));
+    assert_eq!(grants[0].score, 4);
+    assert_eq!(grants[0].source, Id::new("flaw.infamous"));
+
+    // Famous leaves the type to the player. That is ONE slot the player types
+    // themselves, not one slot per Reputation type — `validate_reputations`
+    // allows exactly one wildcard Reputation, so flattening it into four
+    // offered four ways to overspend a single legal slot.
+    companion
+        .selections
+        .push(Selection::new(Id::new("virtue.famous")));
+    let grants = effective_scores_loaded(&companion, &ruleset).reputation_grants;
+    assert_eq!(grants.len(), 2, "one grant per granting V/F: {grants:?}");
+    let wildcard = grants
+        .iter()
+        .find(|g| g.source == Id::new("virtue.famous"))
+        .expect("Famous surfaces a grant");
+    assert_eq!(wildcard.kind, None, "Famous fixes no Reputation type");
+    assert_eq!(wildcard.score, 4);
 
     // A magus gets no free Supernatural slot (his free ability is Hermetic magic).
     let magus = Entity::new(

@@ -10,9 +10,17 @@ use super::*;
 
 /// A Reputation a character's Virtue/Flaw authorizes them to start with. A
 /// `reputation_type` of `None` means the grant leaves the type to the player
-/// (e.g. Famous). Serializes as `{ "reputation_type": <type>|null, "score": N }`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// (e.g. Famous). Serializes as
+/// `{ "source": <item id>, "reputation_type": <type>|null, "score": N }`.
+///
+/// `source` is the id of the Virtue/Flaw whose [`Effect::GrantsReputation`]
+/// produced this grant. Without it a granted Reputation cannot say why it
+/// exists — the player sees "Ecclesiastical 4" with no hint that Apostate put
+/// it there. Carrying an owned [`Id`] is why this type is not `Copy`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReputationGrant {
+    /// The Virtue/Flaw that granted this Reputation slot.
+    pub source: Id,
     /// The Reputation type the grant fixes, or `None` when player-chosen.
     pub reputation_type: Option<ReputationType>,
     /// The starting Reputation score the grant confers.
@@ -24,9 +32,10 @@ pub struct ReputationGrant {
 /// (Core Rules).md:2512-2514.
 pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
     let mut grants = Vec::new();
-    for_each_effect!(entity, ruleset, |_selection, effect| {
+    for_each_effect!(entity, ruleset, |selection, effect| {
         if let Effect::GrantsReputation { kind, score } = effect {
             grants.push(ReputationGrant {
+                source: selection.item_ref.clone(),
                 reputation_type: *kind,
                 score: *score,
             });

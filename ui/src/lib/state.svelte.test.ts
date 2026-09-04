@@ -1427,6 +1427,32 @@ describe('reputations', () => {
     store.removeReputationAt(0);
     expect(store.entity.reputations).toEqual([]);
   });
+
+  it('writes the description a granted slot is filled with in one go', () => {
+    // The panel has no add button: the first keystroke in an empty granted slot
+    // is what creates the row, description and all.
+    store.addReputation('local', 4, 'dragon slayer');
+    expect(store.entity.reputations).toEqual([
+      { kind: 'local', score: 4, content: 'dragon slayer' },
+    ]);
+  });
+
+  it('deletes the row when its description is emptied', () => {
+    // An empty row is not a choice — and `Entity::normalize` sorts on content, so
+    // a surviving empty row would re-sort ahead of every described one on reload.
+    store.addReputation('local', 4, 'dragon slayer');
+    store.setReputationContent(0, '');
+    expect(store.entity.reputations).toEqual([]);
+  });
+
+  it('sets the kind a wildcard slot was resolved to, keeping the description', () => {
+    // Famous fixes no type, so picking one IS a choice and persists on its own.
+    store.addReputation('local', 4, 'dragon slayer');
+    store.setReputationKind(0, 'hermetic');
+    expect(store.entity.reputations).toEqual([
+      { kind: 'hermetic', score: 4, content: 'dragon slayer' },
+    ]);
+  });
 });
 
 describe('magic possessions', () => {

@@ -415,7 +415,7 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         aging_rules,
     } = parsed;
 
-    // The six engine-derived fields below (magnitude_points through
+    // The seven engine-derived fields below (magnitude_points through
     // aura_modifier_max) are placeholders, immediately overwritten by
     // `apply_derived_fields` — the same single derivation
     // `Ruleset::from_serialized` calls (V46), so the two construction paths
@@ -439,6 +439,7 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         arts: index_by_id(arts_file.arts, |a| a.id.clone()),
         art_advancement: arts_file.advancement,
         art_type_order: Vec::new(),
+        reputation_type_order: Vec::new(),
         ritual_min_level: 0,
         aura_modifier_min: 0,
         aura_modifier_max: 0,
