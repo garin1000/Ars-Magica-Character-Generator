@@ -283,7 +283,9 @@ finding 5 requires; the step simply stops being silent about it.
 
 ### 12 — "below Dead Language (e.g. Latin) 1" reads wrong
 
-**Status:** open
+**Status:** done (2026-09-04) — reads "below Latin 1 (any Dead Language)"; the
+recommended-ability warning, the scholarly-language finding and the
+minimum-abilities checklist carried the same shape and were fixed with it
 
 `issue-magus_minimum_ability` composes `requirement-exemplar`
 (`locales/en/main.ftl:930`) into its `$ability` argument and then appends the
@@ -325,7 +327,8 @@ experience points" (:2461) only adds up for purchased scores.
 
 ### 15 — Gauntlet age defaults to the character's age
 
-**Status:** open
+**Status:** done (2026-09-04) — `apprenticeship.default_gauntlet_age: 25` in
+`rules/core/life_stages.json`, clamped to the age, nothing written to the save
 
 Leaving the Gauntlet-age field blank makes the engine read the character's own
 age as the Gauntlet age (`crates/arm-rules/src/life_stage.rs:505-509`), i.e. zero
@@ -345,7 +348,8 @@ type is chosen, and a stored 25 against a later-typed age of 22 would raise
 
 ### 11 — The lab-seasons warning is incomprehensible at zero post-Gauntlet years
 
-**Status:** open
+**Status:** done (2026-09-04) — own code and message for the zero-year case, the
+general one shortened, and both per-year fields read-only while the span is empty
 
 Observed: "5 lab seasons are charged against 0 year(s) as a magus, more than the
 0 those years can be charged for: only three seasons a year cost anything,
@@ -365,7 +369,9 @@ default.
 
 ### 17 — Puissant Magic Theory does not appear in the Abilities section
 
-**Status:** open
+**Status:** done (2026-09-04) — bonuses walk the catalogue and the bought
+instances as a deduped union, and the tab renders a read-only "not bought" row;
+granted floors such as Bjornaer's Heartbeast surface the same way
 
 `ability_bonuses` iterates `entity.ability_scores`
 (`crates/arm-rules/src/effective/ability.rs:133-146`), so a Puissant target with
@@ -412,7 +418,10 @@ mid-flight frame the SSR renderer can never show.
 
 ### 18 — Non-takable rows are effectively invisible
 
-**Status:** open
+**Status:** done (2026-09-04) — the row's contents dim (brightness, not hue),
+the recolour is demoted to a redundant cue, the focus ring is deliberately left
+unfaded, and the dead `.pick-row:disabled` rule is gone. The blocked reason was
+already announced through `use:tooltip`'s `aria-describedby`, not a `title`
 
 Rows that cannot be taken are no longer greyed; the only cue is the "+" turning
 from gold (`--accent`) to `--muted`, which is close to the normal ink colour.
@@ -538,7 +547,9 @@ mount without that wrapper. It is now the log's own property.
 
 ### 27 — The log is not prefilled from the stress roll
 
-**Status:** open
+**Status:** done (2026-09-04) — a recorded row reads back total, die, points per
+Characteristic and apparent age, localized at render from the stored fields;
+nothing generated is written to the save, and the free text stays as a note
 
 `resolve_year` writes `effect: String::new()` deliberately
 (`crates/arm-rules/src/aging.rs:1471-1488`, doc `:1396-1402`: "the structured
@@ -558,7 +569,10 @@ into the file.
 
 ### 1 — Edit-mode tab titles ellipsize at the default window size
 
-**Status:** open
+**Status:** done (2026-09-04) — `.tab` gets its own 0.75rem type, tighter side
+padding, and a narrower strip gap, sized so the widest set (a magus in German,
+146 characters over thirteen tabs) fits the default window. The `title` fallback
+stays: at the 900px minimum width German still truncates
 
 The tabs eat too much horizontal space and their titles ellipsize; German is
 worse, its labels being longer. `.tab` sets no `font-size` (it inherits 15px) and
