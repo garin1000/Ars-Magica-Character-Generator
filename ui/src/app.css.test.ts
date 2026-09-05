@@ -174,31 +174,59 @@ describe('app.css', () => {
     expect(appCss).not.toMatch(/^\s*columns:\s*\d/m);
   });
 
-  // manual-testing-findings-2026-09-03 #20/#22: on the aging surface the auto-fit
-  // grid put SHORT blocks beside the TALL roll calculator, and `align-items: start`
-  // then left the short block's cell with the calculator's height under it — the
-  // "screen-third of empty space above the Aging heading". A grid row can only be as
-  // tall as its tallest item, so the only construction that cannot produce that gap
-  // is one item per row. Every aging block therefore takes the whole row, and the
-  // horizontal space is reclaimed INSIDE each block (see the two rules below)
-  // instead of between them. `> *` rather than a list of block classes so a block
-  // added later cannot silently opt out and reintroduce the pairing.
-  it('gives every aging stage a full-width row of its own', () => {
-    const rule =
-      /\.character-details \.aging-panel > \*,\s*\.character-details \.aging-record > \*\s*\{([^}]*)\}/.exec(
-        appCss,
-      );
+  // manual-testing-findings-2026-09-03 #20/#22/#33. Three passes over one problem,
+  // and this is the third:
+  //
+  //  1. The blocks were auto-placed items of the `.character-details` grid, so a
+  //     SHORT block (the schedule) shared a row with the TALL roll calculator. A grid
+  //     row is as tall as its tallest item and `align-items: start` leaves the short
+  //     one at the top of it, so the leftover showed as a screen-third of emptiness.
+  //  2. #22 answered that by spanning every block full width — which removed the
+  //     columns instead of the gap, and left a single tall stack.
+  //  3. #33 puts the columns back as WRAPPERS. Each wrapper is one grid item and its
+  //     own independent block container, so its height is its own content's and a
+  //     short column never pays for a tall neighbour. The row-height coupling that
+  //     caused (1) cannot arise, because no two aging blocks are siblings in the grid
+  //     any more — only the three wrappers are.
+  //
+  // The wrapper is a flex column with its own `gap`: `.character-details` zeroes the
+  // `.detail-section + .detail-section` margin (blocks there are grid items held
+  // apart by the grid's gap), so blocks stacked inside a plain wrapper would touch.
+  it('lays the aging surface out as independent column wrappers', () => {
+    const rule = /\.character-details \.aging-column\s*\{([^}]*)\}/.exec(cssWithoutComments);
     expect(rule).not.toBeNull();
-    expect(rule![1]).toMatch(/grid-column:\s*1\s*\/\s*-1;/);
+    // A block container of its own — not `display: contents`, which would put the
+    // blocks straight back into the outer grid and restore the row coupling.
+    expect(rule![1]).toMatch(/display:\s*flex;/);
+    expect(rule![1]).toMatch(/flex-direction:\s*column;/);
+    // Its own vertical rhythm, since the grid's gap does not reach inside it.
+    expect(rule![1]).toMatch(/gap:\s*[\d.]+rem;/);
+    // A grid item's automatic minimum is min-content, so one unbreakable token
+    // (German's "(Langlebigkeitsritual)") would otherwise force the track wider than
+    // its 1fr share and push the third column onto a second row.
+    expect(rule![1]).toMatch(/min-width:\s*0;/);
   });
 
-  // A full-width stage would stretch a `<select>` or a text input across the whole
-  // panel, which is neither readable nor pointable. The controls keep a measure.
-  it('keeps a control on a full-width aging stage to a readable measure', () => {
-    const rule =
-      /\.character-details \.aging-panel \.field,\s*\.character-details \.aging-record \.field\s*\{([^}]*)\}/.exec(
-        appCss,
-      );
+  // …and the #22 full-width span is GONE. It is the one rule that would silently undo
+  // the wrappers: with it in place every block inside a wrapper that is not itself a
+  // grid item is unaffected, but a re-added `> *` span on the panel would collapse the
+  // three tracks back to one. Asserted as an absence because that is the regression.
+  it('no longer spans every aging stage across the whole panel', () => {
+    expect(cssWithoutComments).not.toMatch(
+      /\.character-details \.aging-(panel|record) > \*[^{]*\{[^}]*grid-column:\s*1\s*\/\s*-1/,
+    );
+  });
+
+  // A `<select>` (the aging year), a text input (the ritual's focus) or a textarea
+  // stretched across a whole track is neither readable nor pointable. The cap is
+  // still wanted after #33 — the panel degrades to two tracks and then one as the
+  // window narrows, and a one-track wrapper at the 900px minimum window is ~840px
+  // wide, which is exactly the case the cap was written for. At three tracks it is
+  // barely binding (26rem = 331px against a 431px track), which is the right shape
+  // for a maximum. One selector, not two: `.aging-record` renders inside
+  // `.aging-panel`, so the second was always redundant.
+  it('keeps a control on an aging stage to a readable measure', () => {
+    const rule = /\.character-details \.aging-panel \.field\s*\{([^}]*)\}/.exec(cssWithoutComments);
     expect(rule).not.toBeNull();
     expect(rule![1]).toMatch(/max-width:/);
   });
@@ -594,9 +622,9 @@ describe('app.css', () => {
 
   // ── The edit-mode tab strip has to fit its widest label set ─────────────────
   //
-  // manual-testing-findings-2026-09 #1: at the default 1100x800 window the strip
-  // ran out of room and the tab titles ellipsized — which is why every tab also
-  // carries its full label in `title` (App.svelte). GERMAN is the binding case,
+  // manual-testing-findings-2026-09 #1: at the then-default 1100x800 window the
+  // strip ran out of room and the tab titles ellipsized — which is why every tab
+  // also carries its full label in `title` (App.svelte). GERMAN is the binding case,
   // not English: the magus tab set (thirteen tabs, the longest any type gets) is
   // ~146 characters of label where English is ~130.
   //
@@ -618,7 +646,17 @@ describe('app.css', () => {
   // or a loosened rule long before the binary is built.
   const ROOT_FONT_PX = 12.75; // `:root { font-size: 12.75px }` — see the type scale above
   const EM_PER_CHARACTER = 0.53;
-  const DEFAULT_WINDOW_PX = 1100; // crates/arm-app/tauri.conf.json
+  // The budget stays at 1100 even though #33 widened the default window to 1400
+  // (crates/arm-app/tauri.conf.json), and that is deliberate: the strip is a
+  // separate concern from the aging surface, and letting an unrelated window change
+  // loosen its budget by 300px would silently retire the guard #1 bought. 1100 is
+  // where the strip was measured to fit and is a realistic narrow working width —
+  // the window is resizable, and its `minWidth` is 900. It is NOT pinned to 900
+  // because the strip does not fit there and never has: the German thirteen-tab set
+  // models at ~1020px of labels, padding and gaps against an 881px strip, so at 900
+  // the labels ellipsize and fall back on their `title`. Tightening this to 900
+  // would be a real finding about the tab strip, not a side effect of this change.
+  const NARROW_WINDOW_PX = 1100;
 
   // The magus set, in App.svelte's order. Spelled out rather than derived: the
   // point is precisely which thirteen labels share one strip, and a type whose set
@@ -728,7 +766,7 @@ describe('app.css', () => {
     expect(shortest * EM_PER_CHARACTER * fontPx + 2 * horizontal).toBeGreaterThanOrEqual(24);
   });
 
-  it('fits the widest (German) tab set inside the default window', () => {
+  it('fits the widest (German) tab set inside a 1100px-wide window', () => {
     const tab = ruleBody('tab');
     const tabbar = ruleBody('tabbar');
 
@@ -746,7 +784,7 @@ describe('app.css', () => {
     const labels = characters * EM_PER_CHARACTER * fontPx;
     const padding = 2 * horizontal * MAGUS_TAB_KEYS.length;
     const gaps = gapPx * (MAGUS_TAB_KEYS.length - 1);
-    const strip = DEFAULT_WINDOW_PX - 2 * barHorizontal;
+    const strip = NARROW_WINDOW_PX - 2 * barHorizontal;
 
     expect(labels + padding + gaps).toBeLessThanOrEqual(strip);
 

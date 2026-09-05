@@ -141,9 +141,10 @@
      editor and the guided aging step mount the one surface and can never drift
      apart.
      `display: contents` inside `.character-details` (see app.css) keeps each of the
-     two blocks below its own item of that grid — a wrapper box here would make the
-     whole cluster one grid item, stacked in a single cell. Each of them then takes a
-     full-width row of that grid, as every aging block does since #22. -->
+     two blocks below a layout item in its own right — a box here would make the pair
+     one item and stack them with no gap between. Since #33 the item they become is a
+     flex item of `AgingPanel`'s record column, which is where both belong, so the
+     transparency needed no change when the columns came back. -->
 <div class="aging-record" data-testid="aging-record">
   <!-- The log LEADS the record (manual-testing-findings-2026-09-03 #22/#24): it is
        what the player has just written to, it is where a year is taken back, and it
@@ -233,9 +234,10 @@
   <!-- The running totals, as ONE stage rather than four separate items of the
        `.character-details` grid. Auto-placed individually they were scattered into
        whatever cells were left around the tall roll calculator, which is half of the
-       "band of columns" #22 reported; grouped, they are a single full-width row that
-       lays its own fields out across it (`.aging-state`, app.css). This wrapper DOES
-       generate a box, unlike `.aging-record` above — that is the point of it. -->
+       "band of columns" #22 reported; grouped, they are one block that lays its own
+       fields out across whatever width it is given (`.aging-state`, app.css). This
+       wrapper DOES generate a box, unlike `.aging-record` above — that is the point
+       of it. -->
   <div class="aging-state" data-testid="aging-state">
     <div class="detail-field">
       <label class="field">
@@ -309,9 +311,7 @@
      beneath them. The row must be a flex line for that `flex-basis: 100%` to mean
      anything, and it is what lets the effect field claim the rest of the row instead
      of keeping an `<input>`'s ~20-character default width, which was clipping the
-     placeholder to "Describe the aging roll's e…". `min-width: 0` because a flex
-     item's automatic minimum size is its content, which an input resists shrinking
-     below. */
+     placeholder to "Describe the aging roll's e…". */
   .aging-log-block li {
     display: flex;
     align-items: center;
@@ -319,9 +319,32 @@
     flex-wrap: wrap;
   }
 
+  /* THE EFFECT INPUT'S WIDTH FLOOR (manual-testing-findings-2026-09-03 #33).
+     This was `flex: 1; min-width: 0`, which is not a floor at all: a flex item
+     allowed to shrink to nothing never triggers a wrap, it just keeps getting
+     narrower. That was invisible while the log had a full-width row to itself, and
+     reappeared the moment the log moved into a 431px column — the placeholder went
+     straight back to "Describe the aging roll's e…".
+
+     22rem is the WIDEST SHIPPED PLACEHOLDER plus the input's own chrome, measured
+     in the shipped WebKitGTK rather than modelled: German's "Beschreibe die Wirkung
+     des Alterungswurfs" advances 257.75px at the 12.75px root (English's is
+     178.375px), and the input adds 0.5rem of padding either side and a 1px border,
+     14.75px in all — 272.5px, against 22rem = 280.5px. So the floor means "the label
+     the field is showing you fits inside it", in either shipped language, and not a
+     number that happened to pass. `aging.e2e.js` re-measures the real placeholder
+     against the real input every run rather than trusting this arithmetic.
+
+     `min()` against the line, so the floor can never become an overflow. The row's
+     `flex-wrap` gives the input its own line as soon as `year + ×` leave it less
+     than 22rem — intended, since a wrapped line is the full width of the log. But a
+     genuinely narrow line (a small window, a large system font) must shrink the input
+     instead of pushing it out sideways: `.aging-log-scroll` scrolls on ONE axis on
+     purpose, because WebKitGTK's horizontal overlay scrollbar claims hit area from
+     the row's own × button without taking layout height. */
   .aging-log-block .twilight-desc {
-    flex: 1;
-    min-width: 0;
+    flex: 1 1 22rem;
+    min-width: min(22rem, 100%);
   }
 
   /* The engine's record of a resolved year — the roll, and beneath it a Crisis where

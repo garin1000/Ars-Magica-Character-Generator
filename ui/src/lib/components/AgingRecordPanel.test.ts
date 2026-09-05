@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
@@ -101,10 +103,36 @@ function installRuleset(): void {
   } as unknown as LocalizedRuleset;
 }
 
+/** The component's own source, for the scoped style rule markup cannot reveal. */
+const source = readFileSync(
+  fileURLToPath(new URL('./AgingRecordPanel.svelte', import.meta.url)),
+  'utf-8',
+);
+
 beforeEach(() => {
   vi.useFakeTimers();
   store.lang = 'en';
   resetEntity();
+});
+
+// manual-testing-findings-2026-09-03 #33. The log row is a wrapping flex line —
+// `year, effect, ×` — and the effect input was `flex: 1; min-width: 0`. A zero
+// minimum is not a floor: a flex item that may shrink to nothing never triggers a
+// wrap, it just gets narrower and narrower, so on a column-width row the placeholder
+// went back to reading "Describe the aging roll's e…". The floor has to be a real
+// length, and `min()` against the line so a genuinely narrow window shrinks the input
+// rather than overflowing the log sideways — WebKitGTK's horizontal overlay scrollbar
+// steals hit area from the row's own × button, which is why `.aging-log-scroll`
+// scrolls on one axis only. The e2e measures the rendered placeholder against the
+// rendered input; this is the fast guard that the declaration exists at all.
+describe('AgingRecordPanel log row width floor', () => {
+  it('gives the effect input a real minimum width, not a zero one', () => {
+    const rule = /\.aging-log-block \.twilight-desc\s*\{([^}]*)\}/.exec(source);
+    expect(rule).not.toBeNull();
+    expect(rule![1]).not.toMatch(/min-width:\s*0;/);
+    // A rem length, capped at the line so it can never overflow it.
+    expect(rule![1]).toMatch(/min-width:\s*min\(\s*[\d.]+rem,\s*100%\s*\);/);
+  });
 });
 
 describe('AgingRecordPanel (slice 6b6b)', () => {

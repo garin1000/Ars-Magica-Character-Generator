@@ -19,11 +19,12 @@ import { $, browser, expect } from '@wdio/globals';
 
 import { startCharacter } from '../helpers.js';
 
-// The default window is 1100x800 (crates/arm-app/tauri.conf.json). 600 is a
-// plausible short window — a laptop screen with OS panels — and is where the source
-// list measured zero.
+// The default window is 1400x900 (crates/arm-app/tauri.conf.json — widened from
+// 1100x800 by manual-testing-findings-2026-09-03 #33, so the aging surface's three
+// column tracks fit at the default size). 600 is a plausible short window — a laptop
+// screen with OS panels — and is where the source list measured zero.
 const SHORT_HEIGHT = 600;
-const DEFAULT_SIZE = { width: 1100, height: 800 };
+const DEFAULT_SIZE = { width: 1400, height: 900 };
 
 // Under two source rows: this rejects the collapse, not a particular row height.
 const MIN_USABLE_LIST = 60;

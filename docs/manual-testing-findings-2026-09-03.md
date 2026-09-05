@@ -835,7 +835,7 @@ or an equivalent, plus the data.
 
 ### 33 — The Aging tab lost its columns; it should keep three, done properly
 
-**Status:** open — corrects findings 22/20/24/25 as delivered
+**Status:** done (2026-09-05) — corrects findings 22/20/24/25 as delivered
 
 Findings 22 and 20 asked for the awkward layout and its screen-third of white
 space to be fixed. What landed instead **removed the multi-column layout**: every
@@ -865,6 +865,62 @@ Approaches to weigh at fix time — not yet decided:
   window, DOM order equal to visual order, and no horizontal clipping (the
   Living Conditions row overflowed by 15px and is now held by a 360px column
   floor plus wrapping).
+
+**Fixed by the second approach — explicit grouping, as COLUMN WRAPPERS.** CSS
+multi-column was not weighed again: it is the arrangement finding 20 already
+reverted, because content *flows* between columns, so any height change moves the
+break (ticking one Living Condition relaid the whole panel and split the record
+block). `app.css.test.ts` bans `columns:` outright as a result.
+
+`AgingPanel` now groups its blocks into three `.aging-column` divs, and only those
+three — plus the tab heading, which spans them — are items of the
+`.character-details` grid:
+
+| Column | Blocks |
+|---|---|
+| 1 | aging schedule, living conditions |
+| 2 | roll calculator (the tall one, alone) |
+| 3 | aging log, accumulated read-outs, longevity ritual |
+
+Each wrapper is a flex column with its own `gap` (the grid's gap stops at the
+wrapper, and `.character-details` deliberately zeroes the `.detail-section`
+margins), so a wrapper's height is its own content's and never a neighbour's. The
+gap of findings 22/20 needed *two blocks in one row*; no two aging blocks are
+siblings in the grid any more, so it cannot arise. `.aging-record` stays
+`display: contents` — both of its blocks belong in column 3.
+
+Five supporting changes, each of which the layout needs:
+
+1. **The default window is 1400x900** (`crates/arm-app/tauri.conf.json`, was
+   1100x800). With the measured 360px content floor a 1100px window fits only two
+   tracks, so the third wrapper would have wrapped below the taller of the other
+   two — reintroducing 24/25. `minWidth` stays 900 and the two- and one-column
+   degradation is unchanged. The floor was **not** lowered to force three columns
+   at 1100px: it is a content measurement (`app.css:1416-1435`) and
+   `app.css.test.ts` asserts it.
+2. **Each wrapper renders only when it has content.** All three wrapped blocks are
+   `{#if}`-gated on engine read-outs; a starting character too young to owe a roll
+   would otherwise get an empty middle track. Covered by `AgingPanel.test.ts`.
+3. **The wrappers carry their own vertical rhythm** (`gap: 1rem`, matching the
+   grid's row gap).
+4. **The log's effect input has a real width floor.** It was `flex: 1;
+   min-width: 0`, which is not a floor at all — a flex item that may shrink to
+   nothing never triggers a wrap — so in a 431px column the placeholder truncated
+   again. It is now `min-width: min(22rem, 100%)`, 22rem being the widest shipped
+   placeholder plus the input's chrome as measured in the shipped WebKitGTK
+   (German 257.75px + 14.75px = 272.5px). `aging.e2e.js` no longer asserts a bare
+   `> 300`: it measures the live placeholder in the input's own font and requires
+   the input to be at least that wide, so the assertion states the actual guarantee
+   and holds in either language.
+5. **The `grid-column: 1 / -1` span is gone.** The `.field { max-width: 26rem }`
+   cap stays, re-derived: it is barely binding inside a 431px track but is exactly
+   right once the panel degrades to one ~840px track at the 900px minimum window.
+
+Measured in the shipped binary at the new default window: three tracks of 431px
+each; the columns are 422px, 136px and 612px tall; growing the log to sixteen rows
+takes the record column to 773px and leaves the other two **byte-identical** in
+position, width and height. The log block runs 326-404px down a 900px viewport,
+well clear of the fold.
 
 ### 32 — Heartbeast is offered to a magus of any House
 

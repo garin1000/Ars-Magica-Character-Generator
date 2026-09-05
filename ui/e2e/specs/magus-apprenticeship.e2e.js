@@ -276,6 +276,22 @@ describe('magus apprenticeship through the life stages', () => {
   // 538px of content.
   it('keeps the XP bar on screen while the abilities step scrolls', async () => {
     try {
+      // The overflow is MADE, not hoped for. This test used to rely on the step
+      // happening to be taller than the window, and the 2026-09-04 type rebase
+      // (root 15px -> 12.75px) plus the wider default window took that away: with
+      // nothing scrolling, `stickyBarMetrics` found no scrollport and died on
+      // `port.getBoundingClientRect`. Shrinking the window restores the condition
+      // the guarantee is about, instead of testing whether today's content happens
+      // to be long enough.
+      // 600 is the window's own `minHeight` (tauri.conf.json), i.e. the shortest
+      // the app can legally be — so this is the real worst case, not an arbitrary
+      // number, and `tab-area.e2e.js` already exercises the same height.
+      await browser.setWindowSize(1400, 600);
+      await browser.waitUntil(
+        async () => (await browser.execute(() => window.innerHeight)) === 600,
+        { timeout: 10000, timeoutMsg: 'the window should shrink so the step scrolls' },
+      );
+
       const before = await stickyBarMetrics();
       // Sticky at all, and pinned to a box that really scrolls.
       expect(before.barPosition).toBe('sticky');
@@ -300,6 +316,7 @@ describe('magus apprenticeship through the life stages', () => {
         while (port && port.scrollTop === 0) port = port.parentElement;
         if (port) port.scrollTop = 0;
       });
+      await browser.setWindowSize(1400, 900);
     }
   });
 
