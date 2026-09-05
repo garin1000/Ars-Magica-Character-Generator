@@ -33,8 +33,8 @@ import { isRowBlocked, startCharacter } from '../helpers.js';
 const FRAME = '.region-selected > .selected-frame';
 const TAB_CONTENT = 'main.tab-content';
 
-// Enough rows that the list cannot possibly fit: the window is 1100x800 (see
-// crates/arm-app/tauri.conf.json), which leaves the frame well under 500px, while
+// Enough rows that the list cannot possibly fit: the window is 1400x900 (see
+// crates/arm-app/tauri.conf.json), which leaves the frame well under 700px, while
 // a selected V/F row is ~44px and an equipment row ~34px. The exact numbers do not
 // matter — `expectContainedScrollport` asserts the overflow really happened, so an
 // insufficient count fails loudly instead of passing vacuously.

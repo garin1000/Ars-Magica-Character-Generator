@@ -107,12 +107,27 @@ async function agingPoints() {
 }
 
 /**
+ * Put every scrollport on the surface back to the top, so a "clears the fold"
+ * measurement is the unscrolled one. Earlier tests in this file click controls, and
+ * a click can scroll its ancestor to bring the target into view.
+ */
+function scrollSurfaceToTop() {
+  return browser.execute(() => {
+    for (const box of document.querySelectorAll('.tab-content, .vf-tab, .tab-scroll')) {
+      box.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  });
+}
+
+/**
  * Geometry of one `.character-details` surface: how it is laid out, where each of
  * its blocks sits, and whether any of them overflows the cell it was given.
  *
  * The blocks are not the section's DOM children. `AgingPanel` and `AgingRecordPanel`
- * are `display: contents` (app.css), so their children are the grid's items — which
- * is why this walks through any `contents` box rather than reading `.children` once.
+ * are `display: contents` (app.css), so this walks through any `contents` box rather
+ * than reading `.children` once. Since #33 what that walk finds on the aging surface
+ * is the heading and the three `.aging-column` wrappers — the grid's actual items.
  */
 function detailsMetrics(selector) {
   return browser.execute((sel) => {
@@ -152,9 +167,48 @@ function detailsMetrics(selector) {
         top: Math.round(block.getBoundingClientRect().top - origin.top),
         left: Math.round(block.getBoundingClientRect().left - origin.left),
         width: Math.round(block.getBoundingClientRect().width),
+        // HEIGHT is what the column independence claim is made of (#33): a column
+        // that grows must leave its neighbours' heights untouched, which is only
+        // observable if the height is measured.
+        height: Math.round(block.getBoundingClientRect().height),
         // Wider content than cell = something is cut off with no way to reach it.
         overflowX: block.scrollWidth - block.clientWidth,
       })),
+      // Whether the log is on screen without scrolling — the #24/#25 guarantee, and
+      // the reason the record column leads with it. Viewport-relative on purpose:
+      // "above the fold" is a claim about the window, not about the panel.
+      viewportHeight: window.innerHeight,
+      logBlockTop: logBlock ? Math.round(logBlock.getBoundingClientRect().top) : null,
+      logBlockBottom: logBlock ? Math.round(logBlock.getBoundingClientRect().bottom) : null,
+      // The width the effect input would need for its own placeholder to render
+      // whole: the string's advance in the input's OWN resolved font, plus the
+      // input's horizontal padding and border. Measured rather than assumed, so the
+      // floor holds in German (the longer string) and under whatever `system-ui`
+      // resolves to on the box running this.
+      effectPlaceholderPx: (() => {
+        if (!effect) return null;
+        const style = getComputedStyle(effect);
+        const probe = document.createElement('span');
+        probe.style.position = 'absolute';
+        probe.style.visibility = 'hidden';
+        probe.style.whiteSpace = 'pre';
+        probe.style.fontFamily = style.fontFamily;
+        probe.style.fontSize = style.fontSize;
+        probe.style.fontWeight = style.fontWeight;
+        probe.style.fontStyle = style.fontStyle;
+        probe.style.letterSpacing = style.letterSpacing;
+        probe.textContent = effect.placeholder;
+        document.body.appendChild(probe);
+        const advance = probe.getBoundingClientRect().width;
+        probe.remove();
+        return Math.ceil(
+          advance +
+            parseFloat(style.paddingLeft) +
+            parseFloat(style.paddingRight) +
+            parseFloat(style.borderLeftWidth) +
+            parseFloat(style.borderRightWidth),
+        );
+      })(),
       logWidth: logBlock ? Math.round(logBlock.getBoundingClientRect().width) : null,
       logClientHeight: log ? log.clientHeight : null,
       logScrollHeight: log ? log.scrollHeight : null,
@@ -306,31 +360,57 @@ describe('the guided aging step', () => {
   });
 
   // guided-creation-review-2026-08 #20, extended by manual-testing-findings-2026-09-03
-  // #22/#24. The surface was a CSS multi-column flow, in which content FLOWS between
-  // columns: every height change moved the column break and blocks migrated to another
-  // column, so ticking one checkbox relaid the whole panel out and `AgingRecordPanel`
-  // sat permanently split across the break. Grid auto-placement fixed the migration —
-  // but it still PAIRED blocks in a row, and a row is as tall as its tallest item, so
-  // the short schedule sitting beside the tall roll calculator left a screen-third of
-  // emptiness under it. Every aging block now takes a full-width row of its own, which
-  // is the only arrangement in which that gap cannot arise at all. Geometry is the
-  // subject, so only a real layout engine can check it.
-  it('keeps every block in place when the aging log grows, and clips nothing', async () => {
+  // #22/#24 and again by #33. Three arrangements, two of them reverted:
+  //
+  //  * CSS multi-column FLOWS content between columns, so every height change moved
+  //    the break and blocks migrated to another column — ticking one checkbox relaid
+  //    the whole panel and `AgingRecordPanel` sat permanently split across the break.
+  //  * Grid auto-placement stopped the migration but still PAIRED blocks in a row, and
+  //    a row is as tall as its tallest item, so the short schedule beside the tall roll
+  //    calculator left a screen-third of emptiness. #22 answered that by spanning every
+  //    block full width, which removed the columns rather than the gap.
+  //  * #33 groups the blocks into three `.aging-column` WRAPPERS. Only the wrappers are
+  //    grid items, so no two aging blocks share a row and the pairing cannot recur;
+  //    nothing flows between wrappers, so the migration cannot either.
+  //
+  // What this test therefore proves is COLUMN INDEPENDENCE: growing one column changes
+  // nothing about the other two, in either axis. Geometry is the subject, so only a
+  // real layout engine can check it.
+  it('keeps the columns independent when the aging log grows, and clips nothing', async () => {
+    await scrollSurfaceToTop();
     const before = await detailsMetrics('[data-testid="aging-step"]');
     expect(before).not.toBe(null);
 
-    // 1. A grid still, but with one block per row: no block shares a row with another,
-    //    so none can be padded out by a taller neighbour. Every block therefore starts
-    //    at the same left edge and spans the whole content box. (`left` is measured
-    //    from the panel's border box, so the shared value is its padding, not 0.)
+    // 1. THREE TRACKS at the default window — which is what the window was widened to
+    //    1400x900 for (crates/arm-app/tauri.conf.json). At 1100px the 360px content
+    //    floor admitted only two, so the third wrapper wrapped onto a second row below
+    //    the taller of the other two, which is the below-the-fold problem #24/#25 was
+    //    about. None of the tracks may be under the measured 360px floor.
     expect(before.display).toBe('grid');
-    const stageLeft = before.blocks[0].left;
-    for (const block of before.blocks) {
-      expect(block.left).toBe(stageLeft);
-      expect(block.width).toBeGreaterThanOrEqual(before.contentWidth - 2);
+    expect(before.tracks).toHaveLength(3);
+    for (const track of before.tracks) expect(track).toBeGreaterThanOrEqual(360);
+
+    // 2. The three wrappers are the grid's items, side by side in source order, each
+    //    filling its own track. (`left` is measured from the panel's border box, so
+    //    the first column's value is its padding, not 0.) The heading spans them all,
+    //    so it is excluded — it is the one item that is not a column.
+    const columnsOf = (metrics) => metrics.blocks.filter((b) => b.id.startsWith('aging-column-'));
+    const columns = columnsOf(before);
+    expect(columns.map((c) => c.id)).toEqual([
+      'aging-column-schedule',
+      'aging-column-roll',
+      'aging-column-record',
+    ]);
+    // Strictly left to right: DOM order IS visual order, so reading, tab and focus
+    // order cannot disagree with what the eye does.
+    for (let i = 1; i < columns.length; i += 1) {
+      expect(columns[i].left).toBeGreaterThan(columns[i - 1].left);
+    }
+    for (const [i, column] of columns.entries()) {
+      expect(Math.abs(column.width - before.tracks[i])).toBeLessThanOrEqual(1);
     }
 
-    // 2. Nothing is cut off: no block's content is wider than the cell it was given.
+    // 3. Nothing is cut off: no block's content is wider than the cell it was given.
     //    A too-tight `minmax` floor shows up here, which is what bounds the judgement
     //    call behind it — the review's own complaint was a column too narrow to show
     //    a field.
@@ -338,47 +418,74 @@ describe('the guided aging step', () => {
       expect(block.overflowX).toBeLessThanOrEqual(1);
     }
 
-    // 3. The log has a full-width row of its own and a bounded scrollport, scrolling
-    //    vertically only.
-    expect(before.logWidth).toBeGreaterThanOrEqual(before.contentWidth - 2);
+    // 4. The log fills its own column and keeps its bounded scrollport, scrolling
+    //    vertically only — and it is ON SCREEN WITHOUT SCROLLING, which is what
+    //    leading the record column with it buys.
+    const recordColumn = columns[2];
+    expect(before.logWidth).toBeGreaterThanOrEqual(recordColumn.width - 2);
     expect(before.logOverflowY).toBe('auto');
     expect(before.logOverflowX).toBeLessThanOrEqual(1);
+    expect(before.logBlockTop).toBeGreaterThanOrEqual(0);
+    expect(before.logBlockBottom).toBeLessThanOrEqual(before.viewportHeight);
 
-    // 4. THE LOAD-BEARING ASSERTION. Ten rows is a real height change of the kind
-    //    that used to move blocks between columns — and past what the scrollport
-    //    shows, so the log is now at its ceiling.
+    // 5. THE LOAD-BEARING ASSERTION. Ten rows is a real height change of the kind that
+    //    used to move blocks between columns — and past what the scrollport shows, so
+    //    the log is now at its ceiling.
     for (let i = 0; i < 10; i += 1) await $('[data-testid="aging-log-add"]').click();
     await $('[data-testid="aging-log-year-9"]').waitForExist({ timeout: STEP_TIMEOUT });
+    await scrollSurfaceToTop();
     const grown = await detailsMetrics('[data-testid="aging-step"]');
 
-    // NOTHING MIGRATED: every block is where it started horizontally. This is the
-    // whole of #20 — under multi-column a height change moved blocks sideways. With
-    // one block per row there is nowhere sideways left to move, which is the point.
-    expect(grown.blocks.map((b) => [b.id, b.left])).toEqual(
-      before.blocks.map((b) => [b.id, b.left]),
-    );
-    // And every block ABOVE the log is exactly where it was, to the pixel. Those
-    // below it move down once, by the row's growth, and only until the ceiling — a
-    // row height change, which is all grid allows.
-    const logRow = grown.blocks.findIndex((b) => b.id === 'aging-log-block');
-    expect(logRow).toBeGreaterThan(0);
-    expect(grown.blocks.slice(0, logRow)).toEqual(before.blocks.slice(0, logRow));
+    // The two columns that did not change are UNTOUCHED — position, width AND height.
+    // Height is the new half of the claim and the whole point of #33: under the old
+    // auto-placement a taller neighbour dictated a short block's row height, and under
+    // #22's full-width rows a block above pushed everything below it down. A wrapper
+    // owns its height, so the record column growing is invisible to the other two.
+    const unchanged = (metrics) => metrics.blocks.filter((b) => b.id !== 'aging-column-record');
+    expect(unchanged(grown)).toEqual(unchanged(before));
+    // The record column itself keeps its place and its width; only its height is its
+    // own business.
+    const grownRecord = columnsOf(grown)[2];
+    expect([grownRecord.id, grownRecord.left, grownRecord.width]).toEqual([
+      recordColumn.id,
+      recordColumn.left,
+      recordColumn.width,
+    ]);
 
-    // 5. The log scrolls in place rather than pushing anything further: it is at its
-    //    bounded height, so six more rows move NOTHING at all.
+    // 6. The log scrolls in place rather than pushing anything further: it is at its
+    //    bounded height, so six more rows move NOTHING at all — the record column's
+    //    own height included.
     expect(grown.logScrollHeight).toBeGreaterThan(grown.logClientHeight);
     // Vertically, and only vertically: the rows wrap rather than scroll sideways,
     // even once the vertical scrollbar has taken its width out of the row.
     expect(grown.logOverflowX).toBeLessThanOrEqual(1);
     for (let i = 0; i < 6; i += 1) await $('[data-testid="aging-log-add"]').click();
     await $('[data-testid="aging-log-year-15"]').waitForExist({ timeout: STEP_TIMEOUT });
+    await scrollSurfaceToTop();
     const after = await detailsMetrics('[data-testid="aging-step"]');
     expect(after.logClientHeight).toBe(grown.logClientHeight);
     expect(after.blocks).toEqual(grown.blocks);
+    // Still above the fold with sixteen rows in it.
+    expect(after.logBlockBottom).toBeLessThanOrEqual(after.viewportHeight);
 
-    // The effect field is wide enough for its own placeholder ("Describe the aging
-    // roll's effect"), which the narrow column used to truncate to "…roll's e…".
-    expect(after.effectWidth).toBeGreaterThan(300);
+    // 7. THE EFFECT FIELD'S WIDTH FLOOR, re-derived for #33. The old threshold was a
+    //    bare `> 300`, which only ever held because the log had the whole panel width;
+    //    inside a 431px column the input is `year, effect, ×` on one wrapping flex
+    //    line, and `min-width: 0` let it shrink without ever triggering the wrap, so
+    //    the placeholder went back to "Describe the aging roll's e…".
+    //    The floor is now the CONTENT's: the placeholder the field is currently
+    //    showing, measured in the input's own resolved font, plus the input's own
+    //    padding and border. That is the actual guarantee — "the label in the box fits
+    //    in the box" — and it needs no second magic number to hold in whichever
+    //    language is running. The CSS floor that delivers it is
+    //    `min-width: min(22rem, 100%)` on `.aging-log-block .twilight-desc`: measured
+    //    here, the two shipped placeholders advance 178.375px (English) and 257.75px
+    //    (German), the input's padding and border add 14.75px, and 22rem = 280.5px
+    //    clears the German 272.5px. English measures 194px against a 326px field, so
+    //    the assertion has real headroom in the locale it runs in and the binding case
+    //    is pinned by the CSS comment beside the rule.
+    expect(after.effectPlaceholderPx).toBeGreaterThan(0);
+    expect(after.effectWidth).toBeGreaterThanOrEqual(after.effectPlaceholderPx);
 
     // Put the log back as it was: every added row is blank and identical, so
     // removing the first one sixteen times empties it again.
@@ -395,9 +502,12 @@ describe('the guided aging step', () => {
     await $(LONGEVITY_BONUS).waitForExist({ timeout: STEP_TIMEOUT });
     // Scroll it in, then wait for CLICKABLE, not merely existing. The guided aging
     // step nests three scrollports (`.tab-content` > `.vf-tab` > `.tab-scroll`) and
-    // the innermost measures 218px for 1340px of content in an 800px window (measured
-    // again at Slice 11; it was ~254px when #34 was filed), so this field sits below
-    // the fold: its centre falls outside the visible box, the driver's hit-test lands
+    // the ritual is the LAST block of the record column, so it is the one thing on
+    // this surface still below the fold. #33 narrowed the margin but did not close it:
+    // the record column starts 326px down and is 612px tall with an empty log, so its
+    // foot lands at ~938px in a 900px window (before #33 the innermost scrollport
+    // showed 218px of 1340px of content at 800px, so this is a large improvement and
+    // still not enough). Its centre falls outside the visible box, the driver's hit-test lands
     // on an ancestor — `MAIN.tab-content.wizard-body` — and `setValue` reports the
     // element as never becoming interactable. A human scrolls to it, so the spec does
     // too. This stays the fix: Slice 11 measured removing the inner scrollport and it
@@ -608,11 +718,12 @@ describe('the guided aging step', () => {
   // Personality & Reputations component that is both the wizard's step and the
   // editor's tab. #20 was reported against the aging step alone, but the class is
   // shared, so Slice 6 relays out all four — which is a win everywhere, and is
-  // therefore verified everywhere rather than assumed. Since #22 the AGING surface
-  // spans every one of those tracks with each of its blocks (see the geometry spec
-  // above), so what this checks there is that the track sizing itself is unchanged —
-  // the container is still the shared auto-fit grid, and the Details and Personality
-  // tabs still use its columns as before.
+  // therefore verified everywhere rather than assumed. Since #33 the AGING surface
+  // fills those tracks with three column wrappers instead of its raw blocks (see the
+  // geometry spec above), so it is back to using the shared columns exactly as the
+  // Details and Personality tabs do — and what this checks on all three is the one
+  // thing they have in common: the same auto-fit grid, no track under the floor, and
+  // nothing clipped.
   it('lays out every character-details surface as the same grid, clipping nothing', async () => {
     // Collected rather than asserted per tab, so a failure names the surface and the
     // block instead of just the first number that went wrong.
@@ -626,9 +737,14 @@ describe('the guided aging step', () => {
         continue;
       }
       if (m.display !== 'grid') problems.push(`${tab}: display is ${m.display}, not grid`);
-      // No breakpoint list: `auto-fit` against the 24rem (360px) floor decides the
-      // column count, so no track may come out under the floor.
-      for (const track of m.tracks) {
+      // No breakpoint list: `auto-fit` against the 28.25rem (360px) floor decides the
+      // column count, so no track HOLDING ANYTHING may come out under the floor.
+      // A 0px track is not a violation but `auto-fit` working: it collapses the tracks
+      // no item was placed into and shares their width among the rest. That surfaced
+      // the moment #33 widened the window to 1400 — Personality & Reputations has two
+      // blocks and the wider panel offers three tracks, so the third reports 0px.
+      // Anything strictly between 0 and the floor is the real failure, and still fails.
+      for (const track of m.tracks.filter((width) => width > 0)) {
         if (track < 360) problems.push(`${tab}: a ${track}px track is under the floor`);
       }
       // Nothing overlapping, orphaned or wider than the cell it was given.

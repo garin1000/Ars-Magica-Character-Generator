@@ -15,8 +15,8 @@
       {
         "label": "main",
         "title": "Ars Magica Character Generator",
-        "width": 1100,
-        "height": 800,
+        "width": 1400,
+        "height": 900,
         "minWidth": 900,
         "minHeight": 600
       }

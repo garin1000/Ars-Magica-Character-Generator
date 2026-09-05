@@ -1466,63 +1466,84 @@ ul {
 /* The aging cluster is composed from child components (AgingPanel →
    AgingSchedulePanel + AgingRecordPanel), so on the Aging tab and the guided aging
    step its blocks sit one or two levels below the `.character-details` section
-   wrapping them. A real wrapper box there would become ONE grid item, stacking the
-   whole cluster into a single cell, so the wrappers generate no box at all and each
-   block inside is a grid item of the section — exactly as it was before the
-   extraction, and the reason the switch from multi-column to grid needed no change
-   here. The container's `gap` reaches these items too, so no spacing needs
-   restating. Every surface mounting the cluster provides that section wrapper, so
-   both selectors below always apply; a mount outside one would get the wrappers'
-   own plain block stack instead. */
+   wrapping them. Neither component root may generate a box, for two different
+   reasons:
+
+     `.aging-panel` — a box here would be ONE grid item holding the whole cluster in
+     a single cell. Transparent, its own children are the grid's items: the heading,
+     and the three `.aging-column` wrappers (#33).
+
+     `.aging-record` — a box here would be one item of the column wrapper it sits in,
+     stacking its two blocks with no gap between them. Transparent, the log block and
+     the accumulated read-outs are flex items of that column and take its `gap`.
+
+   Every surface mounting the cluster provides the `.character-details` section, so
+   both selectors always apply; a mount outside one would get the components' own
+   plain block stack instead. */
 .character-details .aging-panel,
 .character-details .aging-record {
   display: contents;
 }
 
-/* EVERY aging block takes a full-width row — the surface is a stack of stages, not
-   a band of columns (manual-testing-findings-2026-09-03 #20/#22/#24/#25).
-   Previously only `.aging-log-block` spanned, and the rest were auto-placed into the
-   `auto-fit` tracks. That paired SHORT blocks (the schedule, the apparent age) with
-   the TALL roll calculator, and because a grid row is as tall as its tallest item
-   while `align-items: start` leaves the short one at the top of it, the leftover
-   showed as roughly a screen-third of emptiness above the next block — with the log
-   orphaned in a full-width row far below the fold and the Longevity Ritual past even
-   that. One item per row is the only arrangement in which that gap cannot arise at
-   all, at any window width, for any content.
-   The width is not thrown away: it is reclaimed INSIDE the stages instead of between
-   them (`.aging-state` and `.living-conditions-list` below), which is what keeps the
-   stack from simply being taller than the columns it replaces — the surface is
-   shorter now, so the log sits above the fold and the ritual just below it.
-   Reading order is unchanged and, being one column, is exactly DOM order: nothing is
-   moved by CSS, so the eye, the caret and the screen reader agree.
-   `> *` rather than a list of block classes so a block added later cannot silently
-   opt out and reintroduce the pairing; both wrappers are `display: contents` (above),
-   so these ARE the grid's items. The rest of `.character-details` — the editor's
-   Details and Personality tabs — keeps the auto-fit columns, whose blocks are of
-   comparable height and never had this problem. */
-.character-details .aging-panel > *,
-.character-details .aging-record > * {
-  grid-column: 1 / -1;
+/* ONE AGING COLUMN — the third arrangement this surface has had, and the one that
+   keeps the columns AND closes the gap (manual-testing-findings-2026-09-03
+   #20/#22/#24/#25/#33).
+
+   #20 replaced a multi-column flow with this grid. #22 then found the real complaint:
+   a grid row is as tall as its tallest item, and `align-items: start` leaves a short
+   item at the top of it, so the schedule auto-placed beside the TALL roll calculator
+   showed roughly a screen-third of emptiness under it. #22's answer was to span every
+   block full width — which removed the columns instead of the gap and left one tall
+   stack.
+
+   #33 restores three columns as WRAPPERS. `AgingPanel` groups its blocks into three
+   `.aging-column` divs and only THOSE are the grid's items, so the pairing #22
+   diagnosed cannot happen: no two aging blocks are siblings in this grid, and a
+   wrapper's height is its own content's, never a neighbour's. Nothing flows between
+   wrappers either, so #20's migration cannot come back. The tall calculator gets a
+   column of its own, which is what turns its height from everyone's problem into
+   nobody's.
+
+   A flex column with its OWN gap, because the grid's `gap` stops at the wrapper and
+   `.character-details` deliberately zeroes the `.detail-section + .detail-section`
+   margin (see below) — blocks stacked inside a plain block wrapper would touch.
+   1rem matches the grid's own row gap, so the rhythm inside a column reads as the
+   rhythm between them.
+
+   `min-width: 0` because a grid item's automatic minimum is min-content: one
+   unbreakable token (German's "(Langlebigkeitsritual)") would otherwise push a track
+   past its 1fr share and wrap the third column onto a second row. */
+.character-details .aging-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
 }
 
-/* A full-width stage would otherwise stretch a `<select>` (the aging year), a text
-   input (the ritual's focus) or a textarea across the whole panel — unreadable, and
-   a needlessly long pointer trip to the end of a control. `.field` is the shared
-   label+control wrapper, so one cap covers every one of them. The log row's own
-   fields are deliberately NOT `.field`: the effect input is meant to take the row's
-   free width (its placeholder used to truncate to "…roll's e…"). */
-.character-details .aging-panel .field,
-.character-details .aging-record .field {
+/* A stretched `<select>` (the aging year), text input (the ritual's focus) or
+   textarea is neither readable nor a short pointer trip, so `.field` — the shared
+   label+control wrapper — keeps a measure. Written for #22's full-width stages and
+   re-derived for #33's columns: it is still wanted, because the panel degrades to two
+   tracks and then to one as the window narrows, and a single track at the 900px
+   minimum window is ~840px wide. At three tracks it is barely binding (26rem = 331px
+   inside a 431px track), which is the right shape for a maximum — it costs the
+   common case almost nothing and catches the degraded ones.
+   The log row's own fields are deliberately NOT `.field`: the effect input is meant
+   to take the row's free width (its placeholder used to truncate to "…roll's e…").
+   One selector, not the two this had: `.aging-record` renders inside `.aging-panel`,
+   so the second never matched anything the first did not. */
+.character-details .aging-panel .field {
   max-width: 26rem;
 }
 
 /* The accumulated record — apparent age, the Decrepitude read-out, its narrative,
-   the eight Aging Points — as ONE stage that spends its own width, instead of four
-   grid items scattered around the calculator. `auto-fit` again, so it is two columns
-   on a wide window and one on a narrow one with no breakpoint to keep in step with
-   the container's. `align-items: start` matters far less here than it did outside:
-   these four are all short, so the worst ragged edge this can leave is the height of
-   the tallest of them, not the height of the roll calculator. */
+   the eight Aging Points — as ONE stage, instead of four grid items scattered around
+   the calculator. `auto-fit` again, so the arrangement follows whatever width the
+   stage is given with no breakpoint to keep in step with the container's: two columns
+   when the panel has degraded to one wide track, one inside a 431px `.aging-column`
+   at the default window (#33). `align-items: start` matters far less here than it did
+   outside: these four are all short, so the worst ragged edge this can leave is the
+   height of the tallest of them, not the height of the roll calculator. */
 .character-details .aging-state {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
@@ -1534,8 +1555,9 @@ ul {
    <h2> (both fixing the same heading-hierarchy gap — every subsection here
    used to open at <h3> directly under the app's single <h1>) must read as a
    banner over the WHOLE panel, not squeeze into one column-width grid cell
-   like every other block here. Same technique as `.aging-log-block` above,
-   and a `.character-details` DESCENDANT selector (not `>`) on purpose:
+   like every other item here. This is now the ONLY spanning rule on the
+   surface — #33 removed the one that spanned every aging block — and a
+   `.character-details` DESCENDANT selector (not `>`) on purpose:
    AgingPanel's <h2> sits one level below this section through the
    `display: contents` wrapper at `.character-details .aging-panel` above,
    which promotes it into this SAME grid without changing its DOM ancestry. */
@@ -1606,11 +1628,13 @@ ul {
 }
 
 /* …except inside `.character-details` (the editor's Details, Personality and Aging
-   tabs and the guided steps mirroring them), where these blocks are grid items and
-   the grid's own `gap: 1rem` already holds them apart. A margin on a grid item ADDS
-   to the gap, so leaving the fallback in place would space them 1.75rem — more than
-   the 1rem the layout is designed around, and the aging step's whitespace is the
-   very thing #23 was about. */
+   tabs and the guided steps mirroring them), where these blocks are items of a grid
+   — or, on the aging surface since #33, of an `.aging-column` flex box — and the
+   container's own `gap: 1rem` already holds them apart. A margin on a grid or flex
+   item ADDS to the gap, so leaving the fallback in place would space them 1.75rem —
+   more than the 1rem the layout is designed around, and the aging step's whitespace
+   is the very thing #23 was about. This zeroing is also why `.aging-column` has to
+   declare a `gap` of its own rather than relying on these margins. */
 .character-details .detail-section + .detail-section,
 .character-details .detail-field + .detail-section {
   margin-top: 0;
@@ -1662,12 +1686,19 @@ ul {
    the only measurement taken of this content — and did: at the 1100px default window
    an 18rem floor fitted THREE 325px tracks under a 358px row ("Typical Summer or
    Autumn covenant (mundane)"), so the long rows ran across their neighbours and 15px
-   past the panel's own edge. At 360px the same stage takes two ~499px columns, which
-   holds the longest German name ("Typischer Sommer- oder Herbst-Konvent
+   past the panel's own edge. At 360px a full-width stage takes two ~499px columns,
+   which holds the longest German name ("Typischer Sommer- oder Herbst-Konvent
    (Sterblicher)") on one line as well — and that row's text is BODY size, so the
    12.75px rebase shrank the 358px measurement to ~304px while the floor stayed put.
    The two floors are asserted equal by `src/app.css.test.ts`, so they cannot drift
-   apart in a later rebase either. */
+   apart in a later rebase either.
+
+   Since #33 the checklist sits inside a 431px `.aging-column` at the default window,
+   so it renders as ONE track there and this rule is doing nothing visible — which is
+   fine and is why it stays: the height it was added to save is now saved by the
+   column beside it instead, and the rule still fires the moment the panel degrades to
+   one wide track on a narrower window. Removing it would only have to be rediscovered
+   there. */
 .living-conditions-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(28.25rem, 1fr));

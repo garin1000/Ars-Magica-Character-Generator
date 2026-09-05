@@ -175,12 +175,86 @@ describe('AgingPanel and the Longevity Ritual', () => {
   });
 });
 
+// manual-testing-findings-2026-09-03 #33. #22 answered "a band of columns with a
+// screen-third of white space" by removing the columns — every block became a
+// full-width row — which fixed the gap by spending the width instead of using it.
+// The columns come back as WRAPPERS: three grid items of `.character-details`, each
+// an independent block container, so a short column never inherits a tall
+// neighbour's height (the row-height coupling that caused the gap needs two blocks
+// in ONE row, and no two aging blocks share a row any more).
+//
+// The membership is chosen so the tall block is alone: schedule + living conditions,
+// then the roll calculator on its own, then the log + its running totals + the
+// ritual. That is the same sequence the blocks were already in, so DOM order is
+// unchanged and the reading-order test below still holds.
+describe('AgingPanel column wrappers', () => {
+  it('groups the blocks into three independent columns', () => {
+    installAgingSurface();
+    const body = html();
+    for (const name of ['schedule', 'roll', 'record']) {
+      expect(has(body, `aging-column-${name}`), `column ${name}`).toBe(true);
+    }
+
+    // Membership, stated as the order in which each wrapper opens relative to the
+    // blocks it owns: a block belongs to the last wrapper opened before it.
+    const at = (testid: string): number => positionOf(body, testid);
+    const schedule = at('aging-column-schedule');
+    const roll = at('aging-column-roll');
+    const record = at('aging-column-record');
+    expect(schedule).toBeLessThan(roll);
+    expect(roll).toBeLessThan(record);
+
+    // Column 1: the schedule and the Living Conditions checklist.
+    expect(at('aging-schedule')).toBeGreaterThan(schedule);
+    expect(at('living-conditions')).toBeLessThan(roll);
+    // Column 2: the roll calculator alone — the tall block, paired with nothing.
+    expect(at('aging-calculator')).toBeGreaterThan(roll);
+    expect(at('aging-calculator')).toBeLessThan(record);
+    // Column 3: the log, the accumulated read-outs, the ritual.
+    expect(at('aging-log-block')).toBeGreaterThan(record);
+    expect(at('aging-state')).toBeGreaterThan(record);
+    expect(at('longevity-add')).toBeGreaterThan(record);
+  });
+
+  // A wrapper that renders when its blocks do not is an EMPTY grid track — a
+  // column-wide hole in the middle of the surface. All three wrapped blocks are
+  // `{#if}`-gated on engine read-outs, and the character who trips it is the
+  // ordinary one: a starting character too young to owe an aging roll has an empty
+  // schedule, so the calculator does not render.
+  it('drops the roll column for a character who owes no roll yet', () => {
+    installAgingSurface();
+    const aging = store.effective!.aging!;
+    aging.schedule = [];
+    aging.rolls_owed = 0;
+    const body = html();
+
+    expect(has(body, 'aging-calculator')).toBe(false);
+    expect(has(body, 'aging-column-roll')).toBe(false);
+    // The other two still stand: the schedule states what is owed and when, and the
+    // record and ritual are always editable.
+    expect(has(body, 'aging-column-schedule')).toBe(true);
+    expect(has(body, 'aging-column-record')).toBe(true);
+  });
+
+  // …and a ruleset shipping no aging table at all stands the whole first column down
+  // too, rather than leaving a track holding nothing.
+  it('drops the schedule column when the ruleset ships no aging table', () => {
+    const body = html();
+    expect(has(body, 'aging-schedule')).toBe(false);
+    expect(has(body, 'living-conditions')).toBe(false);
+    expect(has(body, 'aging-column-schedule')).toBe(false);
+    expect(has(body, 'aging-column-roll')).toBe(false);
+    expect(has(body, 'aging-column-record')).toBe(true);
+  });
+});
+
 // manual-testing-findings-2026-09-03 #22/#24/#25: the surface read as a band of
 // columns with the log orphaned in a full-width row far below the fold, and the
 // Longevity Ritual buried past even that — so a player never found either. The
 // order a year is actually resolved in is schedule → living conditions → roll →
-// log → ritual, and since every block is now a full-width row of the grid (app.css),
-// DOM order IS the order on screen and the order the keyboard walks. Asserted here
+// log → ritual, and the column wrappers (#33) preserve exactly that DOM order, so
+// reading, tab and focus order still agree with what the eye sees: the columns are
+// read top-to-bottom, left-to-right, and nothing is moved by CSS. Asserted here
 // rather than in the children because the composition is what owns it.
 describe('AgingPanel reading order', () => {
   it('reads schedule, living conditions, roll, log, then the ritual', () => {
