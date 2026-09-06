@@ -27,8 +27,8 @@ use crate::spell::{RITUAL_MIN_LEVEL, Spell, SpellDuration, SpellTarget, SpellsFi
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, CreationPhase, Effect, EntityTypeProfile, I18nEntry, Id,
-    ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDomain, PointItem, Prereq, ReputationType,
-    RulesetRef, SourceRef, SpecialCasting,
+    ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef, ParameterDomain, PointItem, Prereq,
+    ReputationType, RulesetRef, SourceRef, SpecialCasting,
 };
 
 mod accessors;
@@ -2047,6 +2047,93 @@ mod tests {
             msg.contains("special_casting_mod")
                 && msg.contains("deft_form")
                 && msg.contains("requires a param naming the affected Form"),
+            "{msg}"
+        );
+    }
+
+    /// Builds a one-item ruleset whose single parameter is spelled by `param`,
+    /// so the enumerated-domain shape checks can each state just their own
+    /// parameter JSON.
+    fn ruleset_with_param(param: &str) -> Result<Ruleset, RulesetError> {
+        let items = format!(
+            r#"[
+              {{ "id": "virtue.folk_magic", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+                 "parameters": [{param}] }},
+              {{ "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+                 "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }}
+            ]"#
+        );
+        Ruleset::from_json("test", "1", &items, "[]")
+    }
+
+    #[test]
+    fn enumerated_param_without_values_is_rejected() {
+        // An `enumerated` domain is defined by nothing but its list, so an empty
+        // one resolves no value at all — every selection would raise
+        // `unknown_param_value` forever. Fail the load naming item and key.
+        let err = ruleset_with_param(
+            r#"{ "key": "category", "type": "ref", "domain": "enumerated", "values": [] }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.folk_magic") && msg.contains("category") && msg.contains("values"),
+            "{msg}"
+        );
+    }
+
+    #[test]
+    fn enumerated_param_with_duplicate_values_is_rejected() {
+        let err = ruleset_with_param(
+            r#"{ "key": "category", "type": "ref", "domain": "enumerated",
+                 "values": ["folk_magic.healing", "folk_magic.healing"] }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.folk_magic")
+                && msg.contains("category")
+                && msg.contains("folk_magic.healing"),
+            "{msg}"
+        );
+    }
+
+    #[test]
+    fn values_on_a_non_enumerated_param_are_rejected() {
+        // `param_value_resolves` reads `values` for the `enumerated` domain only,
+        // so a list on any other domain is silently ignored — it would LOOK
+        // enforced in the data and never be. Reject it at load instead.
+        let err = ruleset_with_param(
+            r#"{ "key": "category", "type": "ref", "domain": "text",
+                 "values": ["folk_magic.healing"] }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.folk_magic")
+                && msg.contains("category")
+                && msg.contains("text")
+                && msg.contains("values"),
+            "{msg}"
+        );
+    }
+
+    #[test]
+    fn enumerated_spell_parameter_obeys_the_same_shape_rule() {
+        // `param_value_resolves` is shared with spell parameter validation, so
+        // the shape rule must hold wherever a ParameterDef appears — a spell may
+        // declare `enumerated`, under exactly the same terms.
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.bad", "technique": "art.creo", "form": "art.vim", "level": 5,
+                "parameters": [{ "key": "form", "type": "ref", "domain": "enumerated", "values": [] }] }
+            ] }"#,
+        )
+        .unwrap_err();
+        let msg = format!("{err:?}");
+        assert!(
+            msg.contains("spell.bad") && msg.contains("form") && msg.contains("values"),
             "{msg}"
         );
     }
@@ -4422,6 +4509,11 @@ mod tests {
         assert!(ParameterDomain::Item.resolves_against_items());
         assert!(!ParameterDomain::Ability.resolves_against_items());
         assert!(!ParameterDomain::Art.resolves_against_items());
+        // `resolves_against_items` is a `matches!`, so a new variant answers
+        // `false` with no compiler nudge. Enumerated resolves against the
+        // parameter's own declared list, never the point-item registry — pinned
+        // here because nothing else would catch it being wired up wrongly.
+        assert!(!ParameterDomain::Enumerated.resolves_against_items());
     }
 
     #[test]

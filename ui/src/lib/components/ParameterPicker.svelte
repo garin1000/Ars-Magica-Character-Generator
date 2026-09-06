@@ -374,12 +374,39 @@
           </option>
         {/each}
       </select>
+    {:else if param.domain === 'enumerated'}
+      <!-- The parameter carries its own closed list, so the menu is the DATA's
+           `values` and nothing narrows a catalogue: Folk Magic's four spell
+           categories, the (Beings) classes. Each id is mapped through the rules
+           i18n here — options do NOT get localized for free (`resolveIssueArgValue`
+           localizes validation-issue arguments, not picker options), and rendering
+           the slug would be the same violation as hardcoding a string.
+           `max_per_target` greys out a value another copy already holds, which is
+           what caps Folk Magic at one copy per category. -->
+      <select
+        aria-label={typeLabel}
+        value={selection.params?.[param.key] ?? ''}
+        onchange={(e) => onSelect(param.key, e)}
+        data-testid="param-{selection.ref}-{param.key}-{suffix}"
+      >
+        <option value="" disabled>{typeLabel}</option>
+        {#each param.values ?? [] as value (value)}
+          <option {value} disabled={full(used, value)}>
+            {store.ruleset
+              ? displayName(store.ruleset, value, undefined, (key) =>
+                  store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+                )
+              : value}
+          </option>
+        {/each}
+      </select>
     {:else}
       <!-- `text` alone, and only `text`: the domain references no registry, so any
            non-empty value is legal and free text is the correct control. Every other
            variant has its own select above — the engine's `ParameterDomain` doc
            comment says as much, and #4 was exactly this fall-through catching four
-           of them. -->
+           of them. Keep that true: the domain union is closed, so a new variant
+           belongs in a branch of its own, never here. -->
       <input
         type="text"
         aria-label={typeLabel}

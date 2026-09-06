@@ -1,4 +1,22 @@
 {
+  "being.animals": {
+    "name": "Tiere"
+  },
+  "being.demons": {
+    "name": "Dämonen"
+  },
+  "being.divine": {
+    "name": "Göttliche Wesen"
+  },
+  "being.faeries": {
+    "name": "Feen"
+  },
+  "being.magical_creatures": {
+    "name": "Magische Kreaturen"
+  },
+  "being.mundane_humans": {
+    "name": "Sterbliche Menschen"
+  },
   "flaw.a_deal_with_the_devil": {
     "name": "Ein Pakt mit dem Teufel",
     "summary": "Der Charakter hat seine Seele dem Teufel verkauft und sieht sich nun der ewigen Verdammnis geweiht."
@@ -1351,6 +1369,18 @@
     "name": "Jähzornig (Klein)",
     "summary": "Du neigst dazu, über die kleinsten Angelegenheiten in Wut zu geraten, und deine Raserei, wenn du in einer wichtigen Sache durchkreuzt wirst, ist fürchterlich anzusehen."
   },
+  "folk_magic.abjuration": {
+    "name": "Abwehr"
+  },
+  "folk_magic.divination": {
+    "name": "Divination"
+  },
+  "folk_magic.evil_eye": {
+    "name": "Böser Blick"
+  },
+  "folk_magic.healing": {
+    "name": "Heilung"
+  },
   "virtue.academic_concentration_subject": {
     "name": "Akademische Vertiefung {subject}",
     "summary": "Der Charakter hat sich auf eines der sieben Fächer der Artes Liberales spezialisiert und die anderen sechs dabei vernachlässigt."
@@ -1720,7 +1750,7 @@
     "summary": "Der Charakter besitzt eine übernatürliche Macht mit einem engen Wirkungsbereich, wie beispielsweise die Fähigkeit, Spontane Zauber zu wirken, die mit einem einzigen Magietyp verbunden sind."
   },
   "virtue.folk_magic": {
-    "name": "Volksmagie",
+    "name": "Volksmagie {category}",
     "summary": "Der Charakter ist in der Lage, durch sein Wissen von Bruchstücken okkulten Wissens sehr geringe Magie zu wirken."
   },
   "virtue.font_of_knowledge": {
@@ -1884,7 +1914,7 @@
     "summary": "Infernale Erbstücke sind magische Gegenstände, die der Charakter von einem Diabolisten erbt oder, seltener, findet."
   },
   "virtue.inoffensive_to_beings": {
-    "name": "Für {being} ungefährlich",
+    "name": "Unauffällig für {being}",
     "summary": "Diese Tugend ist mit einer von fünf Klassen von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen oder magischen Kreaturen."
   },
   "virtue.inspirational": {

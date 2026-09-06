@@ -4388,6 +4388,286 @@ const PER_POWER_ITEMS: &[(&str, u32)] = &[
     ("flaw.slow_power", 6761),
 ];
 
+/// Items whose target parameter is a **closed list the rulebook prints in full**
+/// — `(id, param key, the line that prints the list, the value ids)`.
+///
+/// The value ids are asserted here rather than merely counted, because the whole
+/// point of the `enumerated` domain is that the *book's* list is the domain: a
+/// value the book does not name must not resolve, and one it does name must.
+/// The three (Beings) lists are genuinely different subsets of one another, which
+/// is why the enumeration is declared per parameter and not once globally.
+///
+/// **No count is written down anywhere.** Folk Magic may be picked "more than
+/// once, to acquire expertise in a different category of spells" (`:3919`) and
+/// carries neither `max_total` nor `max_per_target`: the default of one copy per
+/// target plus this list means a further copy must repeat a category, which the
+/// duplicate check already rejects. So the ceiling is *implied by the list* and a
+/// supplement adding a fifth category raises it with no code or cap edit — which
+/// is exactly why this was the recorded fix rather than `max_per_target: 4`.
+///
+/// `flaw.fish_out_of_water_terrain` is deliberately **absent**: its terrain list
+/// ends "…, etc." (`:6130`), so open-endedness is what the book means there. The
+/// control test below pins that it stays free text.
+const ENUMERATED_PARAM_ITEMS: &[(&str, &str, u32, &[&str])] = &[
+    // "He can only create spells in one narrow area, which must be one of the
+    // following four options" (:3909), printed :3911-3917.
+    (
+        "virtue.folk_magic",
+        "category",
+        3909,
+        &[
+            "folk_magic.abjuration",
+            "folk_magic.divination",
+            "folk_magic.evil_eye",
+            "folk_magic.healing",
+        ],
+    ),
+    // "associated with one of five classes of beings: animals, divine beings,
+    // faeries, demons, or magical creatures" (:4135).
+    (
+        "virtue.inoffensive_to_beings",
+        "being",
+        4135,
+        &[
+            "being.animals",
+            "being.demons",
+            "being.divine",
+            "being.faeries",
+            "being.magical_creatures",
+        ],
+    ),
+    // "one of six classes of beings: animals, mundane humans, divine beings,
+    // faeries, demons, or magical creatures" (:6526) — the five above plus
+    // mundane humans.
+    (
+        "flaw.offensive_to_beings",
+        "being",
+        6526,
+        &[
+            "being.animals",
+            "being.demons",
+            "being.divine",
+            "being.faeries",
+            "being.magical_creatures",
+            "being.mundane_humans",
+        ],
+    ),
+    // "one of three classes of beings: mundane humans, demons, or divine
+    // beings" (:6893) — a strict subset of the other two.
+    (
+        "flaw.unbearable_to_beings",
+        "being",
+        6893,
+        &["being.demons", "being.divine", "being.mundane_humans"],
+    ),
+];
+
+#[test]
+fn shipped_enumerated_params_declare_exactly_their_book_values() {
+    let rs = load_ruleset();
+
+    for (id, key, line, values) in ENUMERATED_PARAM_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        let param = item
+            .parameters
+            .iter()
+            .find(|p| p.key == *key)
+            .unwrap_or_else(|| {
+                panic!(
+                    "{id} must declare a '{key}' parameter, not {:?}",
+                    item.parameters
+                )
+            });
+        assert_eq!(
+            param.domain,
+            ParameterDomain::Enumerated,
+            "{id}'s '{key}' is one of a closed list the book prints \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line}), not free text"
+        );
+        let declared: Vec<String> = param.values.iter().map(|v| v.to_string()).collect();
+        assert_eq!(
+            declared,
+            values.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+            "{id}'s '{key}' must offer exactly the classes named at \
+             Ars Magica - Definitive Edition (Core Rules).md:{line}"
+        );
+    }
+}
+
+#[test]
+fn fish_out_of_water_keeps_a_free_text_terrain() {
+    // The control for the sweep above: this list ends "…, etc." (:6130), so the
+    // book means it to be open. Tightening it to `enumerated` would be a wrong
+    // rules output, not a UI improvement.
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("flaw.fish_out_of_water_terrain"))
+        .expect("flaw.fish_out_of_water_terrain must ship");
+    let [param] = item.parameters.as_slice() else {
+        panic!("expected exactly one parameter, got {:?}", item.parameters);
+    };
+    assert_eq!(
+        param.domain,
+        ParameterDomain::Text,
+        "the terrain list ends '…, etc.' \
+         (Ars Magica - Definitive Edition (Core Rules).md:6130), so it stays open"
+    );
+}
+
+/// Every value id any shipped `enumerated` parameter declares, deduplicated and
+/// in canonical order.
+fn shipped_enumerated_value_ids(rs: &Ruleset) -> Vec<Id> {
+    let mut ids: Vec<Id> = rs
+        .items()
+        .flat_map(|item| item.parameters.iter())
+        .filter(|p| p.domain == ParameterDomain::Enumerated)
+        .flat_map(|p| p.values.iter().cloned())
+        .collect();
+    ids.sort();
+    ids.dedup();
+    ids
+}
+
+/// The value ids sit outside every other coverage check — they are neither point
+/// items nor abilities nor spells — so without this test a missing German label
+/// would ship in silence and the picker would render the raw slug, which the
+/// "no user-facing string is a raw ID" invariant forbids outright.
+#[test]
+fn every_enumerated_value_id_has_english_and_german_text() {
+    let rs = load_ruleset();
+    let values = shipped_enumerated_value_ids(&rs);
+    assert!(
+        !values.is_empty(),
+        "the shipped catalogue must declare at least one enumerated parameter"
+    );
+
+    for (lang, i18n) in [
+        (
+            "English",
+            include_str!("../../../rules/i18n/en/virtues_flaws.json"),
+        ),
+        (
+            "German",
+            include_str!("../../../rules/i18n/de/virtues_flaws.json"),
+        ),
+    ] {
+        let loc = LocalizedRuleset::new(rs.clone(), i18n).unwrap();
+        for value in &values {
+            assert!(
+                loc.display_name(value).is_some(),
+                "{lang} i18n missing enumerated parameter value '{value}'"
+            );
+        }
+    }
+}
+
+/// Builds a companion holding one copy of `id` per entry of `values`, each
+/// naming that value under `key`.
+fn entity_with_param_values(id: &str, key: &str, values: &[&str]) -> Entity {
+    let selections = values
+        .iter()
+        .map(|value| {
+            Selection::with_params(
+                Id::new(id),
+                BTreeMap::from([(key.to_string(), Id::new(*value))]),
+            )
+        })
+        .collect();
+    entity("companion", selections)
+}
+
+#[test]
+fn a_value_outside_an_enumerated_list_does_not_resolve() {
+    let rs = load_ruleset();
+
+    for (id, key, line, _) in ENUMERATED_PARAM_ITEMS {
+        // Exactly the free text these slots used to accept, and the shape an
+        // older save still holds.
+        let codes = issue_codes(&entity_with_param_values(id, key, &["dragons"]), &rs);
+        assert!(
+            codes.contains(&"unknown_param_value".to_string()),
+            "{id}'s '{key}' takes only the classes the book names \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+        );
+    }
+}
+
+#[test]
+fn every_declared_enumerated_value_resolves() {
+    let rs = load_ruleset();
+
+    for (id, key, line, values) in ENUMERATED_PARAM_ITEMS {
+        for value in *values {
+            let codes = issue_codes(&entity_with_param_values(id, key, &[value]), &rs);
+            assert!(
+                !codes.contains(&"unknown_param_value".to_string()),
+                "{id}'s declared value '{value}' must resolve \
+                 (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn folk_magic_repeats_across_categories_but_never_within_one() {
+    // "You may pick this Virtue more than once, to acquire expertise in a
+    // different category of spells." (:3919)
+    let rs = load_ruleset();
+    let (id, key, _, values) = ENUMERATED_PARAM_ITEMS[0];
+    assert_eq!(id, "virtue.folk_magic");
+
+    let different = issue_codes(&entity_with_param_values(id, key, &values[..2]), &rs);
+    assert!(
+        !different.contains(&"duplicate_selection".to_string()),
+        "two copies in different categories are what :3919 permits: {different:?}"
+    );
+
+    let same = issue_codes(
+        &entity_with_param_values(id, key, &[values[0], values[0]]),
+        &rs,
+    );
+    assert!(
+        same.contains(&"duplicate_selection".to_string()),
+        "a second copy in the SAME category is a repeat, not an expertise: {same:?}"
+    );
+}
+
+#[test]
+fn folk_magics_ceiling_is_the_length_of_its_own_list() {
+    // The cap on copies is stated nowhere and is written nowhere: one copy per
+    // declared category is clean, and a further copy can only repeat one of
+    // them, which the duplicate check rejects. No number appears in this test
+    // either — it is derived from the declared list, so a supplement adding a
+    // category raises the ceiling with no edit here.
+    let rs = load_ruleset();
+    let (id, key, _, values) = ENUMERATED_PARAM_ITEMS[0];
+
+    let full_house = issue_codes(&entity_with_param_values(id, key, values), &rs);
+    for code in [
+        "duplicate_selection",
+        "too_many_selections",
+        "unknown_param_value",
+    ] {
+        assert!(
+            !full_house.contains(&code.to_string()),
+            "one copy per declared category must be legal: {full_house:?}"
+        );
+    }
+
+    // Every further copy repeats a category, whichever one it names.
+    for value in values {
+        let mut one_too_many = values.to_vec();
+        one_too_many.push(value);
+        let codes = issue_codes(&entity_with_param_values(id, key, &one_too_many), &rs);
+        assert!(
+            codes.contains(&"duplicate_selection".to_string()),
+            "a copy beyond the list must repeat '{value}': {codes:?}"
+        );
+    }
+}
+
 #[test]
 fn shipped_per_power_items_carry_a_power_target() {
     let rs = load_ruleset();

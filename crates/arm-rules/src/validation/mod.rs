@@ -17,8 +17,8 @@ use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
     AbilityFunding, CategoryCap, CreationPhase, Effect, Entity, EntityKind, EntityTypeProfile,
-    GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDomain, PointItem, Prereq,
-    Selection, ValidationMode,
+    GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef, ParameterDomain,
+    PointItem, Prereq, Selection, ValidationMode,
 };
 
 mod aging;
@@ -6672,6 +6672,56 @@ mod tests {
         assert!(
             !codes(&validate(&e, &rs)).contains(&"unknown_param_value".to_string()),
             "a free-text value must not be resolved against any registry"
+        );
+    }
+
+    #[test]
+    fn enumerated_domain_param_resolves_only_against_its_declared_values() {
+        // An `enumerated` domain IS its list: the book prints Folk Magic's four
+        // spell categories as a closed set ("must be one of the following four
+        // options", Ars Magica - Definitive Edition (Core Rules).md:3909, listed
+        // :3911-3917), so a declared id resolves and anything else raises
+        // `unknown_param_value` exactly as an unknown Art id would.
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          {"id": "virtue.folk_magic", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "parameters": [{"key": "category", "type": "ref", "domain": "enumerated",
+                           "values": ["folk_magic.abjuration", "folk_magic.healing"]}]}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+
+        let declared = make_entity(
+            "test_type",
+            vec![Selection::with_params(
+                Id::new("virtue.folk_magic"),
+                BTreeMap::from([("category".into(), Id::new("folk_magic.healing"))]),
+            )],
+        );
+        assert!(
+            !codes(&validate(&declared, &rs))
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "a value the parameter declares must resolve: {:?}",
+            codes(&validate(&declared, &rs))
+        );
+
+        let undeclared = make_entity(
+            "test_type",
+            vec![Selection::with_params(
+                Id::new("virtue.folk_magic"),
+                BTreeMap::from([("category".into(), Id::new("folk_magic.evil_eye"))]),
+            )],
+        );
+        assert!(
+            codes(&validate(&undeclared, &rs))
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "a value outside the declared list must not resolve: {:?}",
+            codes(&validate(&undeclared, &rs))
         );
     }
 
