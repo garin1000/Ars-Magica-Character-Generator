@@ -4291,13 +4291,10 @@ const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.social_contacts", 4990),
     ("virtue.special_circumstances", 5000),
     ("virtue.strong_angelic_heritage", 5030),
-    ("virtue.variable_power", 5205),
     ("virtue.withstand_casting", 5265),
     ("flaw.deteriorating_power", 5948),
     ("flaw.flawed_parma_magica", 6144),
     ("flaw.limited_magic_resistance", 6348),
-    ("flaw.restricted_power", 6689),
-    ("flaw.slow_power", 6761),
     ("flaw.vulnerable_casting", 6997),
     ("flaw.vulnerable_magic", 7009),
 ];
@@ -4354,6 +4351,121 @@ const SHARE_CAPPED_ITEMS: &[(&str, u32, u8, u8)] = &[
     ("virtue.demonic_might", 3665, 1, 2),
     ("virtue.demonic_powers", 3669, 1, 2),
 ];
+
+/// Items whose descriptor allows one copy **per supernatural power the
+/// character possesses**, paired with the line that says so.
+///
+/// These sit between `UNLIMITED_REPEAT_ITEMS` and `ONCE_ONLY_ITEMS` and belong
+/// to neither. The rulebook allows the repeat, but only across *different*
+/// powers — "not more than once for a single power" (`flaw.slow_power`,
+/// `:6761`). That shape is expressed entirely in data: a free-text `power`
+/// parameter makes each copy's target part of the `(item_ref, params)`
+/// duplicate key, `max_per_target` stays at its default of 1 so a second copy
+/// naming the SAME power collides, and `max_total` stays absent (`u8::MAX`)
+/// because the book states no ceiling on the number of powers.
+///
+/// The target must be free text rather than `domain: "item"`: a "power" is an
+/// *instance* of one of the Focus/Greater/Lesser/Personal/Ritual Power Virtues
+/// (`:6689`), and those Virtues are themselves unparameterized and repeatable,
+/// so naming the Virtue would wrongly cap a magus at one copy across all three
+/// of his Greater Powers.
+const PER_POWER_ITEMS: &[(&str, u32)] = &[
+    ("virtue.variable_power", 5205),
+    ("flaw.restricted_power", 6689),
+    ("flaw.slow_power", 6761),
+];
+
+#[test]
+fn shipped_per_power_items_carry_a_power_target() {
+    let rs = load_ruleset();
+
+    for (id, line) in PER_POWER_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+
+        assert_eq!(
+            item.max_per_target, 1,
+            "{id} may not be taken twice for the SAME power \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+        assert_eq!(
+            item.max_total,
+            u8::MAX,
+            "{id} states no ceiling on the number of DIFFERENT powers it may \
+             name (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+
+        let [param] = item.parameters.as_slice() else {
+            panic!(
+                "{id} must declare exactly one parameter naming the power, \
+                 not {:?}",
+                item.parameters
+            );
+        };
+        assert_eq!(
+            param.key, "power",
+            "{id}'s per-copy target is keyed `power`"
+        );
+        assert_eq!(
+            param.domain,
+            ParameterDomain::Text,
+            "a power is an anonymous instance of a Power Virtue, so its name \
+             is free text the player types, not a registry ref"
+        );
+    }
+}
+
+/// Builds a companion holding one copy of `id` per entry of `powers`, each
+/// naming that power.
+fn entity_with_powers(id: &str, powers: &[&str]) -> Entity {
+    let selections = powers
+        .iter()
+        .map(|power| {
+            Selection::with_params(
+                Id::new(id),
+                BTreeMap::from([("power".to_string(), Id::new(*power))]),
+            )
+        })
+        .collect();
+    entity("companion", selections)
+}
+
+#[test]
+fn per_power_items_repeated_on_one_power_are_duplicates() {
+    let rs = load_ruleset();
+
+    for (id, line) in PER_POWER_ITEMS {
+        let codes = issue_codes(&entity_with_powers(id, &["Wolf Shape", "Wolf Shape"]), &rs);
+        assert!(
+            codes.contains(&"duplicate_selection".to_string()),
+            "{id} may not be taken twice for the same power \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+        );
+    }
+}
+
+#[test]
+fn per_power_items_repeated_across_powers_are_clean() {
+    let rs = load_ruleset();
+
+    for (id, line) in PER_POWER_ITEMS {
+        let codes = issue_codes(
+            &entity_with_powers(id, &["Wolf Shape", "Curse of Sleep", "Summon Mist"]),
+            &rs,
+        );
+        assert!(
+            !codes.contains(&"duplicate_selection".to_string()),
+            "{id} may be taken once for each power the character possesses \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+        );
+        assert!(
+            !codes.contains(&"too_many_selections".to_string()),
+            "{id} states no ceiling on the number of different powers \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+        );
+    }
+}
 
 #[test]
 fn shipped_share_capped_items_carry_their_rulebook_ratio() {

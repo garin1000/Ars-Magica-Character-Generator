@@ -2396,7 +2396,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "max_per_target": 255,
+    "parameters": [{ "key": "power", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6687, 6690] }
   },
   {
@@ -2553,7 +2553,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "max_per_target": 255,
+    "parameters": [{ "key": "power", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6759, 6762] }
   },
   {
@@ -6292,7 +6292,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "max_per_target": 255,
+    "parameters": [{ "key": "power", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5199, 5206] }
   },
   {

@@ -860,13 +860,10 @@ carry `max_per_target: 255` in `rules/core/virtues_flaws.json`:
 | `virtue.social_contacts` | `:4990` | "more than once, each time specifying a different social group" |
 | `virtue.special_circumstances` | `:5000` | "more than once, but you only gain a +3 bonus even if more than one set of circumstances applies" |
 | `virtue.strong_angelic_heritage` | `:5030` | "multiple times. Each additional time … increases by thirty the number of levels of holy powers" |
-| `virtue.variable_power` | `:5205` | "more than once, if the character has more than one power" |
 | `virtue.withstand_casting` | `:5265` | "more than once, and withstand 1 Fatigue level for each level of the Virtue" |
 | `flaw.deteriorating_power` | `:5948` | "more than once, if the character has more than one Power" |
 | `flaw.flawed_parma_magica` | `:6144` | "may purchase this Flaw more than once for different Forms" |
 | `flaw.limited_magic_resistance` | `:6348` | "multiple times, for multiple Forms" |
-| `flaw.restricted_power` | `:6689` | "may be taken once for each power the character possesses" |
-| `flaw.slow_power` | `:6761` | "more than once, if the character has multiple powers, but not more than once for a single power" |
 | `flaw.vulnerable_casting` | `:6997` | "may have, or acquire, this Flaw more than once, losing 1 extra Fatigue level for each level" |
 | `flaw.vulnerable_magic` | `:7009` | "multiple times, so long as a different condition is specified for each" |
 
@@ -921,6 +918,75 @@ that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
 | `virtue.affinity_art` | `:3378` | "You may take this Virtue twice, for two different Arts" |
 | `virtue.puissant_art` | `:4820` | "You may take this Virtue twice, for two different Arts" |
 
+#### Selection multiplicity — one copy per named power
+> "This Flaw may be taken once for each power the character possesses."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:6689` (Restricted
+  Power), `:6761` (Slow Power, "may be taken more than once, if the character
+  has multiple powers, but not more than once for a single power"), `:5205`
+  (Variable Power, "may be taken more than once, if the character has more than
+  one power, but it only applies once to a single power").
+- Data: `rules/core/virtues_flaws.json` — `flaw.restricted_power`,
+  `flaw.slow_power`, `virtue.variable_power`.
+- Tests: `shipped_per_power_items_carry_a_power_target`,
+  `per_power_items_repeated_on_one_power_are_duplicates`,
+  `per_power_items_repeated_across_powers_are_clean`
+  (`crates/arm-rules/tests/data_integrity.rs`, table `PER_POWER_ITEMS`).
+
+All three say the same thing: repeat freely across *different* powers, never
+twice on the *same* one. That is neither `max_per_target: 255` (which permits
+stacking every copy on one power) nor `max_total: 1` (which forbids the repeat
+the book grants), so it needs a recorded per-copy **target**. Each item
+therefore declares a single free-text parameter
+
+```json
+"parameters": [{ "key": "power", "type": "ref", "domain": "text" }]
+```
+
+and leaves `max_per_target` at its default of 1 and `max_total` absent
+(`u8::MAX`). The power name becomes part of the `(item_ref, params)` duplicate
+key (`validation/selections.rs`), so two copies naming the same power collide
+as `duplicate_selection` while copies naming different powers are distinct keys
+under no ceiling. **No engine change was needed** — the `text` domain and the
+existing duplicate key already express the rule.
+
+**Why the target is free text and not `domain: "item"`.** A "power" is an
+*instance* of one of the Power Virtues Restricted Power enumerates — "those
+granted by the Focus Power, Greater Power, Lesser Power, Personal Power, and
+Ritual Power Virtues" (`:6689`; Variable Power says "(Greater, Lesser,
+Personal, or Ritual)", `:5201`). Those Virtues are themselves unparameterized
+and repeatable (`virtue.greater_power`, `max_per_target: 255`), so a magus with
+three Greater Powers holds three *indistinguishable* rows. An `item` domain
+would name the power Virtue, wrongly capping him at one Restricted Power across
+all three.
+
+**What this does NOT enforce — the residual gap, stated plainly.**
+
+1. **The typed name is unverified.** Nothing checks that the string names a
+   power the character actually possesses, precisely because the power rows are
+   anonymous (see above). Giving the five Power Virtues their own free-text
+   `name` parameter would make them addressable and let the picker offer a
+   dropdown; that is a larger change with its own save impact and is not done.
+2. **The duplicate key is byte-for-byte.** It is exact `(item_ref, params)`
+   equality (`validation/selections.rs:135-140`) and `ParameterDomain::Text`
+   accepts any string (`selections.rs:270`), the empty one included — note that
+   `types.rs:443-446` documents "any non-empty value is legal", which the code
+   does not enforce; that doc/code mismatch predates this rule. So "Wolf Shape",
+   "wolf shape" and "Wolf Shape " read as three distinct targets and a blank
+   power name is accepted. Trimming or case-folding the key would change
+   behaviour for *every* existing text parameter (`terrain`, `land`, `realm`,
+   `role`, …) and is deliberately not done here.
+
+So the cap stops an honest mistake — the player who takes Slow Power twice for
+one power without noticing — not a determined evasion. That is a real
+improvement over the previous state (where the same-power repeat was not
+detectable at all), and it is the whole of what is claimed.
+
+**Save impact.** An existing save holding a paramless `flaw.slow_power`,
+`flaw.restricted_power` or `virtue.variable_power` row now raises
+`missing_param` on open. No data is lost — saves store choices and the engine
+only reports — and the player clears it by naming the power.
+
 Repeat rules the data model cannot express (deliberately left unenforced rather
 than approximated):
 
@@ -937,17 +1003,11 @@ than approximated):
   immunity, Social Contacts' social group and Vulnerable Magic's condition are
   not recorded, so distinctness is not enforced. These items record no target at
   all today; adding a `Text` parameter would enforce it but would invalidate
-  existing saves whose selections carry no such parameter. The same gap applies
-  to the **per-power caps** on `flaw.slow_power` (`:6761`, "more than once, if
-  the character has multiple powers, but not more than once for a single
-  power"), `virtue.variable_power` (`:5205`, "more than once, if the
-  character has more than one power"), and `flaw.restricted_power` (`:6689`,
-  "may be taken once for each power the character possesses"): all three are
-  `max_per_target: 255` with no parameter naming *which* power, so a build
-  could legally stack any of them onto the same single power today. Neither
-  `max_per_target` nor `max_total` can fix this without a recorded per-copy
-  target — `max_total` caps the item's grand total, not "at most one per
-  power", so it is the wrong tool here.
+  existing saves whose selections carry no such parameter. The three **per-power
+  caps** used to sit in this bullet; they are now expressed — see *Selection
+  multiplicity — one copy per named power* above — and adding their `power`
+  parameter did carry exactly the save cost described here, which is the price
+  of closing the gap rather than an argument against it.
 - **Enumerated parameter domain, not free text.** `virtue.folk_magic` (`:3919`,
   "You may pick this Virtue more than once, to acquire expertise in a
   different category of spells") repeats over a *closed* list — the spell
