@@ -130,6 +130,7 @@ impl fmt::Display for IssueSeverity {
 /// | `too_many_minor_flaws` | error | virtues_flaws | `count`, `max` |
 /// | `too_many_tainted_virtues` | warning | virtues_flaws | `tainted`, `total` |
 /// | `too_many_tainted_flaws` | warning | virtues_flaws | `tainted`, `total` |
+/// | `too_large_share` | warning | virtues_flaws | `item`, `points`, `total` |
 /// | `too_many_major_<category>_flaws`† | error or warning | virtues_flaws | `count`, `max` |
 /// | `too_many_<category>_flaws`† | error or warning | virtues_flaws | `count`, `max` |
 /// | `too_many_major_<category>_virtues`† | error or warning | virtues_flaws | `count`, `max` |
@@ -318,6 +319,12 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: more than half a
     /// character's Flaw points are Tainted (Ars Magica - Definitive Edition (Core Rules).md:2998-3002).
     pub const CODE_TOO_MANY_TAINTED_FLAWS: &'static str = "too_many_tainted_flaws";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: this item's copies
+    /// account for more than the share of its own kind's point total that its
+    /// descriptor allows — Demonic Might / Demonic Powers, "no more than half of
+    /// the character's total Virtues"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:3665, :3669).
+    pub const CODE_TOO_LARGE_SHARE: &'static str = "too_large_share";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_PREREQ_NOT_MET: &'static str = "prereq_not_met";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -864,6 +871,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_balance(entity, ruleset, type_profile, &mut issues);
     validate_caps(entity, ruleset, type_profile, &mut issues);
     validate_tainted_cap(entity, ruleset, &mut issues);
+    validate_share_of_kind_cap(&effective_selections, ruleset, &mut issues);
     validate_prerequisites(
         entity,
         ruleset,
@@ -1541,6 +1549,134 @@ mod tests {
         assert!(
             !all_codes(&result).contains(&"too_many_tainted_virtues".to_string()),
             "tainted points at exactly half of those taken must not warn: {:?}",
+            result.issues
+        );
+    }
+
+    // --- Share-of-kind ratio cap (Ars Magica - Definitive Edition (Core Rules).md:3665, :3669) ---
+
+    /// Items for the share-of-kind cap: one Virtue and one Flaw carrying a
+    /// 1/2 `max_share_of_kind` (both repeatable, as the Demonic entries are),
+    /// plus uncapped controls of each kind.
+    const SHARE_ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+        { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
+          "categories": ["special"], "entity_kinds": ["character"] },
+        { "id": "virtue.half_capped", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+          "categories": ["supernatural"], "entity_kinds": ["character"],
+          "max_per_target": 255, "max_share_of_kind": { "numerator": 1, "denominator": 2 } },
+        { "id": "virtue.one_point_plain", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+          "categories": ["general"], "entity_kinds": ["character"] },
+        { "id": "virtue.three_point_plain", "kind": "virtue", "classification": "narrative", "magnitude": "major",
+          "categories": ["general"], "entity_kinds": ["character"], "max_per_target": 255 },
+        { "id": "flaw.half_capped", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
+          "categories": ["general"], "entity_kinds": ["character"],
+          "max_per_target": 255, "max_share_of_kind": { "numerator": 1, "denominator": 2 } },
+        { "id": "flaw.three_point_plain", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+          "categories": ["general"], "entity_kinds": ["character"] }
+    ]"#;
+
+    /// A companion profile permitting the share-cap test categories.
+    const SHARE_TYPE: &str = r#"[{
+        "id": "companion",
+        "budget": { "virtue_points": 30, "flaw_points": 30 },
+        "permitted_categories": ["general", "supernatural", "special", "story", "personality"],
+        "creation_phases": []
+    }]"#;
+
+    #[test]
+    fn share_capped_virtue_over_half_of_taken_points_warns() {
+        // 2 capped Minor Virtue points against a 3-point Virtue total:
+        // 2·2 > 3·1, so the copies account for more than half.
+        let rs = rs_with_houses(SHARE_ITEMS, SHARE_TYPE);
+        let entity = make_entity(
+            "companion",
+            vec![
+                sel("virtue.half_capped"),
+                sel("virtue.half_capped"),
+                sel("virtue.one_point_plain"),
+            ],
+        );
+        let result = validate(&entity, &rs);
+        assert!(
+            all_codes(&result).contains(&"too_large_share".to_string()),
+            "a capped Virtue over half the Virtue points taken should warn: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn share_capped_virtue_at_exactly_half_is_clean() {
+        // 1 capped point against a 2-point total: 1·2 == 2·1, and "no more than
+        // half" permits exactly half.
+        let rs = rs_with_houses(SHARE_ITEMS, SHARE_TYPE);
+        let entity = make_entity(
+            "companion",
+            vec![sel("virtue.half_capped"), sel("virtue.one_point_plain")],
+        );
+        let result = validate(&entity, &rs);
+        assert!(
+            !all_codes(&result).contains(&"too_large_share".to_string()),
+            "a capped Virtue at exactly half must not warn: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn an_item_without_a_share_cap_is_unaffected() {
+        // Two copies of an uncapped Virtue are the whole Virtue total — which
+        // would trip any share ceiling — but the item declares none.
+        let rs = rs_with_houses(SHARE_ITEMS, SHARE_TYPE);
+        let entity = make_entity(
+            "companion",
+            vec![
+                sel("virtue.three_point_plain"),
+                sel("virtue.three_point_plain"),
+            ],
+        );
+        let result = validate(&entity, &rs);
+        assert!(
+            !all_codes(&result).contains(&"too_large_share".to_string()),
+            "an item with no max_share_of_kind must never warn: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn flaw_share_is_measured_against_flaw_points_not_virtue_points() {
+        let rs = rs_with_houses(SHARE_ITEMS, SHARE_TYPE);
+
+        // 1 capped Flaw point against a 4-point Flaw total is clean — and the
+        // character has NO Virtue points at all, so measuring against the
+        // Virtue side would divide by a zero total and warn.
+        let clean = make_entity(
+            "companion",
+            vec![sel("flaw.half_capped"), sel("flaw.three_point_plain")],
+        );
+        let result = validate(&clean, &rs);
+        assert!(
+            !all_codes(&result).contains(&"too_large_share".to_string()),
+            "a capped Flaw at a quarter of the Flaw points must not warn: {:?}",
+            result.issues
+        );
+
+        // 3 capped Flaw points are the whole 3-point Flaw total, so the Flaw
+        // side warns — while the 6 Virtue points taken alongside would make
+        // 3·2 > 6·1 false, so a Virtue-side comparison would stay silent.
+        let warns = make_entity(
+            "companion",
+            vec![
+                sel("flaw.half_capped"),
+                sel("flaw.half_capped"),
+                sel("flaw.half_capped"),
+                sel("virtue.three_point_plain"),
+                sel("virtue.three_point_plain"),
+            ],
+        );
+        let result = validate(&warns, &rs);
+        assert!(
+            all_codes(&result).contains(&"too_large_share".to_string()),
+            "a capped Flaw over half the Flaw points taken should warn: {:?}",
             result.issues
         );
     }

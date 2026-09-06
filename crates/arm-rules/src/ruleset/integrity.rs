@@ -94,6 +94,7 @@ impl Ruleset {
     fn validate_point_items(&self, errors: &mut Vec<String>) {
         for (id, item) in &self.point_items {
             self.validate_item_categories(id, item, errors);
+            Self::validate_item_share(id, item, errors);
 
             if let Some(ref prereq) = item.prerequisites {
                 self.validate_prereq_refs(prereq, id, 1, errors);
@@ -139,6 +140,32 @@ impl Ruleset {
             if !seen.insert(category.as_str()) {
                 errors.push(format!("{id}: 'categories' repeats '{category}'"));
             }
+        }
+    }
+
+    /// Checks that an item's `max_share_of_kind` is a usable fraction: a zero
+    /// denominator is not a fraction of anything (and would make the cap's
+    /// comparison meaningless), and a numerator above its denominator states a
+    /// ceiling larger than the whole, which can never be exceeded and so is a
+    /// silently inert rule rather than an enforced one. Both are authoring
+    /// slips, so they fail the load naming the offending item.
+    fn validate_item_share(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
+        let Some(share) = item.max_share_of_kind else {
+            return;
+        };
+        if share.denominator == 0 {
+            errors.push(format!(
+                "{id}: 'max_share_of_kind' has a denominator of 0; a share must \
+                 be a fraction of a non-zero whole"
+            ));
+            return;
+        }
+        if share.numerator > share.denominator {
+            errors.push(format!(
+                "{id}: 'max_share_of_kind' numerator {} exceeds its denominator \
+                 {}; a share cannot be larger than the whole",
+                share.numerator, share.denominator
+            ));
         }
     }
 

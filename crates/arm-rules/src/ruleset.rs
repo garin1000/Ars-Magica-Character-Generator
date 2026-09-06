@@ -2396,6 +2396,53 @@ mod tests {
         assert!(err.to_string().contains("virtue.tester"));
     }
 
+    /// Loads a two-item catalogue whose first item carries the given
+    /// `max_share_of_kind` object. The filler flaw satisfies the unrelated
+    /// "the catalogue carries a personality-category item" invariant, which
+    /// would otherwise fail first and mask the share assertion.
+    fn load_with_share(share_json: &str) -> Result<Ruleset, RulesetError> {
+        let items = format!(
+            r#"[
+              {{ "id": "virtue.tester", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["general"],
+                 "max_share_of_kind": {share_json} }},
+              {{ "id": "flaw.personality_filler", "kind": "flaw", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["personality"] }}
+            ]"#
+        );
+        Ruleset::from_json("t", "1", &items, "[]")
+    }
+
+    #[test]
+    fn a_share_with_a_zero_denominator_fails_the_load_naming_the_item() {
+        let err = load_with_share(r#"{ "numerator": 1, "denominator": 0 }"#)
+            .expect_err("a zero denominator is not a fraction of anything");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("max_share_of_kind"),
+            "expected an item-naming share error, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn a_share_numerator_above_its_denominator_fails_the_load_naming_the_item() {
+        let err = load_with_share(r#"{ "numerator": 3, "denominator": 2 }"#)
+            .expect_err("a share cannot exceed the whole it is a share of");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("max_share_of_kind"),
+            "expected an item-naming share error, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn a_share_equal_to_the_whole_loads() {
+        assert!(
+            load_with_share(r#"{ "numerator": 2, "denominator": 2 }"#).is_ok(),
+            "numerator == denominator is a legal (if permissive) share"
+        );
+    }
+
     #[test]
     fn from_json_invalid_json() {
         let result = Ruleset::from_json("test", "1", "NOT VALID JSON", "[]");

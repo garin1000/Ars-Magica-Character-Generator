@@ -153,6 +153,59 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   type-label rule). The parenthetical "(five points ... ten for a Mythic
   Companion ...)" is illustrative of a maxed build, not a separate flat cap.
 
+#### Demonic Might / Demonic Powers — the half-of-Virtues ratio
+> "You may take this Virtue more than once, though it can account for no more
+> than half of the character's total Virtues." (`:3665`, Demonic Might)
+
+> "You may also take this Virtue more than once, though it can account for no
+> more than half of the character's total Virtues." (`:3669`, Demonic Powers)
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3663-3666` (Demonic
+  Might) and `:3667-3670` (Demonic Powers).
+- **Each sentence says "this Virtue", so the two ceilings are independent**, not
+  a shared Demonic pool. A character may hold half his Virtue points in Demonic
+  Might *and* half in Demonic Powers as far as these two sentences go.
+- Data: `"max_share_of_kind": { "numerator": 1, "denominator": 2 }` on
+  `virtue.demonic_might` and `virtue.demonic_powers` in
+  `rules/core/virtues_flaws.json`. The ratio is a *value the rulebook states*, so
+  it lives in the JSON rather than as two hardcoded ids in engine code — the same
+  reason the Tainted cap is driven by the `tainted` flag.
+- Implementation: `crates/arm-rules/src/validation/caps.rs` —
+  `validate_share_of_kind_cap`, registered in `validate()` right after
+  `validate_tainted_cap`. Code `too_large_share` (Fluent `issue-too_large_share`,
+  args `$item`/`$points`/`$total`).
+- **Measured in points, and that is an interpretation.** The engine reads "total
+  Virtues" as Virtue *points*, weighed against the points actually taken and
+  split by kind (a Virtue's copies against Virtue points, a Flaw's against Flaw
+  points), matching `validate_tainted_cap`. The Tainted rule can lean on the
+  book's own gloss — "That is, no more than five points…" (`:3000`) — which
+  settles points-vs-headcount for it. **These two sentences carry no such
+  gloss**, so a headcount reading is at least as natural and this choice is a
+  judgement call, not a deduction.
+- **Warning, not error**, for two reasons: the ratio flickers while a build is
+  mid-edit, and the points reading above is debatable — blocking a build on a
+  debatable reading is worse than flagging it.
+- The comparison is the integer form `part · denominator > total · numerator`,
+  so "no more than half" permits exactly half with no rounding choice; with 1/2
+  it is literally `2·part > total`, the form `validate_tainted_cap` uses.
+- **Granted copies count here, and that is a deliberate divergence from the
+  Tainted precedent.** `validate_share_of_kind_cap` takes the **folded**
+  selection list (bought ++ granted), because **Devil Child grants a free
+  Demonic Might or Demonic Powers** (`:3673`) and a granted copy is still a copy
+  of the Virtue. `validate_tainted_cap` reads raw `entity.selections`
+  (`caps.rs:162`) and so counts only bought ones — arguably right for Tainted,
+  which the book frames as a character-generation guideline. Two identically
+  worded "half" rules therefore disagree about grants **on purpose**; do not
+  "fix" one to match the other without deciding the question again.
+- One transient state warns by design and is pinned by
+  `a_devil_child_without_demonic_blood_yet_warns_on_the_ratio` in
+  `crates/arm-app/tests/commands.rs`: a Devil Child whose free-Minor choice is
+  Demonic Might but who has not yet bought Demonic Blood holds 1 granted point
+  of a 1-point Virtue total (Devil Child itself is Free and lifts no
+  denominator), so `2·1 > 1` fires. A finished build is clean — both Demonic
+  entries require Demonic Blood (Major, 3 points), so one Minor copy sits at 1
+  against a total of at least 4.
+
 #### Parameterized Virtues/Flaws — `{param}` slots
 The picker binds a value for items whose name carries a `{param}` placeholder
 (resolved by `displayName`), via a `parameters` entry (`{ key, type: "ref",
