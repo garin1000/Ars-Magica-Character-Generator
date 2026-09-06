@@ -4491,3 +4491,93 @@ fn repeated_selections_stack_their_effects() {
         "two copies of Demonic Powers grant 20 + 20 levels"
     );
 }
+
+// --- Regression: a House-granted Puissant Art must count against a bought one ---
+//
+// Commits 8801b03 / bb305fd / a2dc130 fixed a wrong-rules-output bug: House
+// Flambeau grants a free choice of Puissant Perdo OR Puissant Ignem
+// (`rules/core/houses.json`, `choice_key` `flambeau_puissant`); granted
+// selections are resolved at evaluation time and never stored on
+// `entity.selections`, so the duplicate/total-cap checks — which used to read
+// `entity.selections` alone — could not see them. A Flambeau magus granted
+// Puissant Ignem who also BOUGHT Puissant Ignem therefore validated clean and
+// stacked +6 onto Ignem, against Ars Magica - Definitive Edition (Core
+// Rules).md:4820 ("You may take this Virtue twice, for two different Arts").
+// The three tests below pin the fix against the SHIPPED ruleset
+// (`load_full_ruleset()`), not a synthetic one, since the bug lived in the real
+// `rules/core/houses.json` grant data and a future data edit (e.g. raising
+// `virtue.puissant_art`'s `max_total` past 2) could silently reopen it.
+
+/// Builds a Flambeau magus whose granted `flambeau_puissant` pick is Puissant
+/// `granted_art`, plus one bought Puissant Art selection per entry of
+/// `bought_arts`.
+fn flambeau_magus_with_puissant_arts(granted_art: &str, bought_arts: &[&str]) -> Entity {
+    let puissant_art = |art: &str| {
+        Selection::with_params(
+            Id::new("virtue.puissant_art"),
+            BTreeMap::from([("art".to_string(), Id::new(art))]),
+        )
+    };
+
+    let selections = bought_arts.iter().map(|art| puissant_art(art)).collect();
+    let mut e = entity("magus", selections);
+    e.house = Some(Id::new("house.flambeau"));
+    e.house_choices =
+        BTreeMap::from([("flambeau_puissant".to_string(), puissant_art(granted_art))]);
+    e
+}
+
+/// The regression that matters most: a Flambeau magus granted Puissant Ignem
+/// who ALSO buys Puissant Ignem is taking the same Virtue for the same Art
+/// twice, which the descriptor forbids.
+#[test]
+fn flambeau_granted_and_bought_same_art_is_a_duplicate() {
+    let rs = load_full_ruleset();
+    let e = flambeau_magus_with_puissant_arts("art.ignem", &["art.ignem"]);
+
+    let codes = issue_codes(&e, &rs);
+    assert!(
+        codes.contains(&"duplicate_selection".to_string()),
+        "a granted Puissant Ignem plus a bought Puissant Ignem must be flagged \
+         as a duplicate of virtue.puissant_art: {codes:?}"
+    );
+}
+
+/// The guard against over-correcting: a Flambeau magus granted Puissant Ignem
+/// who buys Puissant Perdo instead holds two DIFFERENT Arts — exactly what
+/// "twice, for two different Arts" (:4820) allows. Neither the per-target
+/// duplicate check nor the total cap (`max_total` 2, and this is only 2
+/// copies) may fire.
+#[test]
+fn flambeau_granted_and_bought_different_art_is_clean() {
+    let rs = load_full_ruleset();
+    let e = flambeau_magus_with_puissant_arts("art.ignem", &["art.perdo"]);
+
+    let codes = issue_codes(&e, &rs);
+    assert!(
+        !codes.contains(&"duplicate_selection".to_string()),
+        "granted Puissant Ignem and bought Puissant Perdo are different \
+         targets, not a duplicate: {codes:?}"
+    );
+    assert!(
+        !codes.contains(&"too_many_selections".to_string()),
+        "two total copies across two different Arts stays within max_total: {codes:?}"
+    );
+}
+
+/// A Flambeau magus granted Puissant Ignem who ALSO buys Puissant Perdo AND
+/// Puissant Muto holds three copies of `virtue.puissant_art` across three
+/// different Arts — over its `max_total` of 2 — even though no two copies
+/// share a target, so the per-target duplicate check never fires.
+#[test]
+fn flambeau_granted_plus_two_bought_arts_exceeds_the_total_cap() {
+    let rs = load_full_ruleset();
+    let e = flambeau_magus_with_puissant_arts("art.ignem", &["art.perdo", "art.muto"]);
+
+    let codes = issue_codes(&e, &rs);
+    assert!(
+        codes.contains(&"too_many_selections".to_string()),
+        "three total copies of virtue.puissant_art must exceed its max_total \
+         of 2: {codes:?}"
+    );
+}
