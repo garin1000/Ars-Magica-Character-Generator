@@ -76,8 +76,13 @@ pub enum Grant {
 /// Resolves a list of grants against the player's stored `choice_key` picks into
 /// the free-Virtue [`Selection`] rows they contribute. The single source of the
 /// derived grant model; every effect / prerequisite consumer folds this list
-/// into `entity.selections` (see [`crate::effective`]), while balance and caps
-/// stay on the bought selections alone so grants are free and uncapped.
+/// into `entity.selections` (see [`crate::effective`]), while balance and the
+/// category/major-count caps stay on the bought selections alone so grants are
+/// free of the point budget and exempt from THOSE caps. Legality limits on the
+/// item itself — `max_per_target` / `max_total` — are not exempt: a granted
+/// copy still counts as a copy (see `validation::validate_duplicate_selections`
+/// / `validation::validate_total_selection_cap`), because a free Virtue is
+/// still the same Virtue the rulebook says may not be doubled up.
 ///
 /// Resolution per grant kind:
 /// - **Fixed** → the granted item with its fixed params.
@@ -127,6 +132,15 @@ fn resolve_grant(grant: &Grant, choices: &BTreeMap<String, Selection>) -> Option
 /// no complaint at all. Only [`Prereq::House`] is consulted (see
 /// [`Prereq::conflicts_with_house`]); a `Has`/`AbilityMin`/… prerequisite stays
 /// out of it deliberately, since those resolve as the build progresses.
+///
+/// No longer a strict mirror of the final legality check: this predicate judges
+/// ONE pick against its constraint in isolation, so it cannot see how many other
+/// copies of the same item the character already holds. An open pick that
+/// satisfies every check here can still push the item's total over its
+/// `max_total` — that surfaces through `validation::validate_total_selection_cap`
+/// instead, once the pick is folded into the entity's effective selections. The
+/// UI's mirror of this predicate (`ui/src/lib/derive.ts` `openPickSatisfies`)
+/// carries the same caveat.
 pub fn open_pick_satisfies(
     pick: &Selection,
     constraint: &GrantConstraint,

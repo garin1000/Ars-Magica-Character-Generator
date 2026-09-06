@@ -118,14 +118,23 @@ pub(crate) fn validate_entity_kind_applicability(
     }
 }
 
+/// Enforces `max_per_target`: how many copies of an item may share one
+/// identical `(id, params)` target. Grant-aware — `selections` is the folded
+/// bought-plus-granted list ([`crate::effective::selections_for_effects`]), so
+/// a House-granted copy of a target counts the same as a bought one. This
+/// closes a wrong-rules-output bug: a Flambeau magus granted a free Puissant
+/// Ignem who also BUYS Puissant Ignem is taking the same Virtue for the same
+/// target twice — illegal (Ars Magica - Definitive Edition (Core Rules).md:4820,
+/// "twice, for two different Arts") — but validated clean, and stacked +6 to
+/// Ignem, before grants were folded in here.
 pub(crate) fn validate_duplicate_selections(
-    entity: &Entity,
+    selections: &[Selection],
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let mut seen: BTreeMap<(&Id, &BTreeMap<String, Id>), usize> = BTreeMap::new();
 
-    for selection in &entity.selections {
+    for selection in selections {
         let key = (&selection.item_ref, &selection.params);
         *seen.entry(key).or_insert(0) += 1;
     }
@@ -144,6 +153,47 @@ pub(crate) fn validate_duplicate_selections(
         }
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_DUPLICATE_SELECTION,
+            CreationPhase::VirtuesFlaws,
+            args([
+                ("item", item_ref.to_string()),
+                ("count", count.to_string()),
+                ("max", max.to_string()),
+            ]),
+            Some((*item_ref).clone()),
+        ));
+    }
+}
+
+/// Enforces `max_total`: how many copies of an item may exist TOTAL, across
+/// EVERY distinct parameter target, counting granted copies. Complements
+/// [`validate_duplicate_selections`] (`max_per_target`, one identical target):
+/// this groups by `item_ref` alone, so e.g. a magus granted a free Puissant
+/// Ignem who also buys a Puissant Perdo — two DIFFERENT targets, so
+/// `max_per_target` never fires — still trips this validator if the item's
+/// `max_total` says only one copy of Puissant Art may ever be held.
+/// Grant-aware for the same reason as `validate_duplicate_selections`: a free
+/// copy is still a copy.
+pub(crate) fn validate_total_selection_cap(
+    selections: &[Selection],
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let mut counts: BTreeMap<&Id, usize> = BTreeMap::new();
+
+    for selection in selections {
+        *counts.entry(&selection.item_ref).or_insert(0) += 1;
+    }
+
+    for (item_ref, count) in &counts {
+        let Some(item) = ruleset.point_items.get(*item_ref) else {
+            continue;
+        };
+        let max = usize::from(item.max_total);
+        if *count <= max {
+            continue;
+        }
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_TOO_MANY_SELECTIONS,
             CreationPhase::VirtuesFlaws,
             args([
                 ("item", item_ref.to_string()),
@@ -397,13 +447,18 @@ pub(crate) fn validate_ability_bonus_targets(
 /// rather than using pairwise `incompatible_with`, so it also catches two Minor
 /// Foci with different descriptors (distinct selections that no incompatibility
 /// pair would flag). Effect-driven — no virtue id is hardcoded.
+///
+/// `selections` is the caller's already-folded bought-plus-granted list
+/// ([`crate::effective::selections_for_effects`]), computed once in
+/// [`super::validate`] and shared with the other grant-aware sub-validators
+/// rather than re-resolved here.
 pub(crate) fn validate_magical_focus(
-    entity: &Entity,
+    selections: &[Selection],
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let mut foci = 0usize;
-    for selection in crate::effective::selections_for_effects(entity, ruleset).iter() {
+    for selection in selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };

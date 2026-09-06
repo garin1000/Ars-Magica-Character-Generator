@@ -454,6 +454,12 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
  *
  * Sorted by localized name, with `{param}` braces unwrapped, so a parameterized
  * entry sorts by its visible word instead of clustering under "{".
+ *
+ * No longer a strict mirror of final legality: this filters by the constraint
+ * alone, so it cannot see how many copies of an item the character already
+ * holds. A listed choice that would push the item's total over its
+ * `max_total` still surfaces as an error through the engine's
+ * `validate_total_selection_cap`, once picked.
  */
 export function eligibleForConstraint(
   localized: LocalizedRuleset,
