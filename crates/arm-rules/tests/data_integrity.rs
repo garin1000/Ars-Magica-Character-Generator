@@ -4321,6 +4321,29 @@ const ONCE_ONLY_ITEMS: &[(&str, u32)] = &[
     ("flaw.unbearable_to_beings", 6897),
 ];
 
+/// Items whose descriptor caps the TOTAL number of copies across every
+/// distinct parameter target — `(id, line, expected max_total)`. Distinct
+/// from `max_per_target`, which caps copies sharing one identical target.
+///
+/// Four of these — `virtue.inoffensive_to_beings`, `flaw.offensive_to_beings`,
+/// `flaw.unbearable_to_beings`, `flaw.fish_out_of_water_terrain` — also
+/// appear in `ONCE_ONLY_ITEMS` above. That is deliberate, not a leftover to
+/// tidy away: each carries a free-text target parameter (`being`/`terrain`)
+/// so two selections could otherwise carry two different target strings and
+/// slip past `max_per_target` entirely, even though the rulebook flatly
+/// forbids taking the item more than once, period. `max_per_target == 1`
+/// blocks a second copy at the SAME target; `max_total == 1` is what actually
+/// blocks a second copy at a DIFFERENT one. Both fields are needed and they
+/// say different things, so both tables list the item.
+const TOTAL_CAP_ITEMS: &[(&str, u32, u8)] = &[
+    ("virtue.inoffensive_to_beings", 4139, 1),
+    ("flaw.offensive_to_beings", 6530, 1),
+    ("flaw.unbearable_to_beings", 6897, 1),
+    ("flaw.fish_out_of_water_terrain", 6132, 1),
+    ("virtue.affinity_art", 3378, 2),
+    ("virtue.puissant_art", 4820, 2),
+];
+
 #[test]
 fn shipped_repeatable_items_carry_their_rulebook_ceiling() {
     let rs = load_ruleset();
@@ -4381,6 +4404,36 @@ fn shipped_once_only_items_stay_non_repeatable() {
         1,
         "False Power's per-copy magnitude change is not expressible as data"
     );
+}
+
+#[test]
+fn shipped_total_cap_items_carry_their_rulebook_ceiling() {
+    let rs = load_ruleset();
+
+    for (id, line, expected_max_total) in TOTAL_CAP_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert_eq!(
+            item.max_total, *expected_max_total,
+            "{id} is capped at {expected_max_total} total across all targets \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+    }
+
+    // "You may take this Virtue twice, for two different Arts"
+    // (Ars Magica - Definitive Edition (Core Rules).md:3378, :4820): one copy
+    // per Art, two Arts total. If `max_per_target` were ever raised here, the
+    // same Art could be doubled up — this guards that it stays 1.
+    for id in ["virtue.affinity_art", "virtue.puissant_art"] {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert_eq!(
+            item.max_per_target, 1,
+            "{id} may not be taken twice for the SAME Art"
+        );
+    }
 }
 
 #[test]
