@@ -8,7 +8,9 @@
 //! [`crate::grant`] model, **plus** a required V/F package that counts against
 //! the point budget normally, **plus** per-type budget bonuses.
 //!
-//! Free grants are budget/cap-exempt (resolved, never stored). The required
+//! Free grants are budget-exempt (resolved, never stored) but **not**
+//! cap-exempt: they fold into the list [`crate::validation::validate`] checks,
+//! so a granted copy counts toward the selection caps. The required
 //! package is ordinary bought [`Selection`]s the UI auto-seeds; the required
 //! Flaws are swappable for a "suitable substitute agreed with the troupe", so
 //! a missing/removed required slot is a non-blocking warning, never a hard
