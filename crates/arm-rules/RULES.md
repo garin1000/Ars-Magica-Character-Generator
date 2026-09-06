@@ -429,6 +429,10 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   `ruleset/integrity.rs` `validate_magnitude_variant_exclusivity` (see the Magical Focus
   section), which also covers the sole prefix-form pair
   `virtue.major_magical_focus` / `virtue.minor_magical_focus` (Ars Magica - Definitive Edition (Core Rules).md:4405).
+  **`flaw.false_power` / `flaw.false_power_minor` is deliberately NOT such a
+  pair** — its two entries must be held together, and its asymmetric ids are what
+  keep it out of that check. Do not rename them; see *Selection multiplicity —
+  False Power's subsequent copies are Minor*.
 - **German provenance.** DE names/summaries come from the line-mirrored German
   source (`Ars Magica Definitive Edition Basisregeln.md`, same line positions),
   cross-checked against `rules/source/de/translation-tables/tugenden-fehler.md`
@@ -917,6 +921,75 @@ that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
 | `flaw.fish_out_of_water_terrain` | `:6132` | "This Flaw may only be taken once, because taking it more than once makes it less serious, rather than more" |
 | `virtue.affinity_art` | `:3378` | "You may take this Virtue twice, for two different Arts" |
 | `virtue.puissant_art` | `:4820` | "You may take this Virtue twice, for two different Arts" |
+| `flaw.false_power` | `:6096` | "in each subsequent instance as a Minor Flaw rather than a Major one" — only the FIRST instance is this (Major) entry; see the section below |
+
+#### Selection multiplicity — False Power's subsequent copies are Minor
+> "This Flaw may be taken multiple times, once for each appropriate
+> Supernatural Virtue that the character possesses, but in each subsequent
+> instance as a Minor Flaw rather than a Major one."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:6096` (the repeat
+  sentence; the entry runs `:6080-6096`, and both catalogue entries carry
+  `source.lines = [6080, 6097]`).
+- Data: `rules/core/virtues_flaws.json` — `flaw.false_power` (Major,
+  `max_total: 1`) and `flaw.false_power_minor` (Minor, `max_per_target: 255`,
+  `prerequisites: { kind: has, value: flaw.false_power }`, no
+  `incompatible_with`). Text in `rules/i18n/en|de/virtues_flaws.json`.
+- Tests: `false_power_ships_as_a_coexisting_major_plus_minor_pair`,
+  `a_second_major_false_power_is_capped`,
+  `a_minor_false_power_without_the_major_is_a_missing_prerequisite`,
+  `false_power_taken_three_times_costs_three_plus_one_plus_one`,
+  `a_granted_major_false_power_satisfies_the_minor_prerequisite`
+  (`crates/arm-rules/tests/data_integrity.rs`; the pair also sits in
+  `TOTAL_CAP_ITEMS` and `UNLIMITED_REPEAT_ITEMS`).
+
+`magnitude` is a property of the **catalogue entry**, never of a selection, so a
+single repeatable entry cannot change price between copies — a second copy of a
+Major entry is charged 3 points, not the 1 the book asks for. The rule is
+therefore expressed as a **pair of entries**, the same shape the `*Major or
+Minor*` items use: the first instance is `flaw.false_power` (Major, 3 points,
+capped at one copy by `max_total: 1`), and every subsequent instance is
+`flaw.false_power_minor` (Minor, 1 point, freely repeatable). One Major plus two
+Minors therefore costs 3 + 1 + 1 = 5 Flaw points, which is exactly what `:6096`
+prices. Both entries carry `tainted: true` (the descriptor is *Major,
+Supernatural, Tainted*, `:6081`), so every copy feeds the half-of-Flaw-points
+Tainted cap.
+
+**The two must coexist, so they are NOT mutually `incompatible_with`.** This is
+the one place the pair diverges from the dual-magnitude convention above: a
+Major/Minor *variant* pair (Amorphous, Magical Focus) offers a choice of one
+magnitude, whereas False Power's Minor copies exist only *after* the Major one.
+The `has` prerequisite is what encodes that ordering, and because
+`validate_prerequisites` is handed the folded grant list, a **granted** Major
+(e.g. a warping-owed Major Flaw slot filled with False Power, `:16561`)
+satisfies it just as a bought one does.
+
+**Why the ids are asymmetric (`flaw.false_power` + `flaw.false_power_minor`),
+and why a later sweep must not "tidy" them into `_major`/`_minor`.** Two
+independent reasons, either one sufficient:
+
+1. **Saves.** `flaw.false_power` is already shipped and held by existing saves.
+   Saves store choices, not resolved values, so renaming the id would orphan
+   every row that holds it — for cosmetic symmetry only.
+2. **The load would fail.** `validate_magnitude_variant_exclusivity`
+   (`ruleset/integrity.rs`) detects a variant pair purely by id shape: for every
+   item whose name ends in `_major` (or starts with `major_`) it looks up the
+   `_minor` sibling and, when **both** exist, *requires* each to list the other
+   in `incompatible_with`, failing the ruleset load otherwise. Naming this pair
+   `flaw.false_power_major` / `flaw.false_power_minor` would therefore demand a
+   mutual incompatibility that would make the rule unimplementable — the two
+   entries must be selectable together. The asymmetric ids are what keep the pair
+   outside that check.
+
+**What this does NOT enforce.** "Once for each appropriate Supernatural Virtue
+that the character possesses" (`:6096`) also means each copy must name a
+*different* Supernatural Virtue, and that nothing may be named that the
+character does not have. Expressing it needs a parameter domain meaning "an item
+of category X that this character possesses"; `ParameterDomain::Item` resolves
+against the whole point-item registry with no category narrowing and no
+is-possessed predicate, so the picker would list every catalogue item. Not
+built — same family as the per-power residual gap below. So the copy count is
+bounded only by the Flaw budget, not by the character's Supernatural Virtues.
 
 #### Selection multiplicity — one copy per named power
 > "This Flaw may be taken once for each power the character possesses."
@@ -990,11 +1063,12 @@ only reports — and the player clears it by naming the power.
 Repeat rules the data model cannot express (deliberately left unenforced rather
 than approximated):
 
-- **Per-copy magnitude change.** `flaw.false_power` (`:6096`) "may be taken
-  multiple times … but in each subsequent instance as a Minor Flaw rather than a
-  Major one". `magnitude` belongs to the catalogue entry, not the selection, so
-  every copy would be charged as Major. It stays `max_per_target: 1`: blocking a
-  legal build is preferable to silently wrong point arithmetic.
+- **"Once for each Supernatural Virtue the character possesses."** False Power's
+  copies (`:6096`) must each name a *different* Supernatural Virtue the character
+  actually holds, which needs a parameter domain meaning "an item of category X
+  that this character possesses" — see *Selection multiplicity — False Power's
+  subsequent copies are Minor* above, where the per-copy magnitude change itself
+  is now expressed as a Major + Minor entry pair.
 - **Proportional per-item caps.** Demonic Might / Demonic Powers "can account
   for no more than half of the character's total Virtues" (`:3665`, `:3669`).
   The engine has absolute category caps but no proportional per-item cap; this

@@ -1006,6 +1006,19 @@
     "classification": "narrative",
     "tainted": true,
     "entity_kinds": ["character"],
+    "max_total": 1,
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6080, 6097] }
+  },
+  {
+    "id": "flaw.false_power_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "categories": ["supernatural"],
+    "classification": "narrative",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "flaw.false_power" },
+    "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6080, 6097] }
   },
   {

@@ -416,7 +416,11 @@
     "summary": "Der Charakter hat für eine bestimmte Universitätslizenz studiert und sein Abschlussexamen nicht bestanden."
   },
   "flaw.false_power": {
-    "name": "Falsche Macht",
+    "name": "Falsche Macht (Groß)",
+    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen"
+  },
+  "flaw.false_power_minor": {
+    "name": "Falsche Macht (Klein)",
     "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen"
   },
   "flaw.favors": {

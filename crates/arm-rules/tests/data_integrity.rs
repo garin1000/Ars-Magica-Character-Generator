@@ -4274,6 +4274,13 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 /// rulebook states no limit" is `u8::MAX`: the V/F point budget
 /// (Ars Magica - Definitive Edition (Core Rules).md:2638) caps the real count
 /// far below it, so the number is unreachable rather than arbitrary.
+///
+/// `flaw.false_power_minor` sits here for a narrower reason: its descriptor DOES
+/// imply a ceiling — one copy "for each appropriate Supernatural Virtue that the
+/// character possesses" (`:6096`) — but that ceiling is a per-Virtue target the
+/// data model cannot yet express (there is no parameter domain meaning "an item
+/// of category X that this character possesses"), so no number is asserted here.
+/// See `RULES.md`, *False Power — a Major entry plus a Minor one*.
 const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.demonic_might", 3665),
     ("virtue.demonic_powers", 3669),
@@ -4293,6 +4300,7 @@ const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.strong_angelic_heritage", 5030),
     ("virtue.withstand_casting", 5265),
     ("flaw.deteriorating_power", 5948),
+    ("flaw.false_power_minor", 6096),
     ("flaw.flawed_parma_magica", 6144),
     ("flaw.limited_magic_resistance", 6348),
     ("flaw.vulnerable_casting", 6997),
@@ -4338,6 +4346,11 @@ const TOTAL_CAP_ITEMS: &[(&str, u32, u8)] = &[
     ("flaw.offensive_to_beings", 6530, 1),
     ("flaw.unbearable_to_beings", 6897, 1),
     ("flaw.fish_out_of_water_terrain", 6132, 1),
+    // False Power's FIRST instance is the Major one and there is only ever one
+    // of it — "in each subsequent instance as a Minor Flaw rather than a Major
+    // one" (`:6096`). Every subsequent copy is the separate
+    // `flaw.false_power_minor` entry, so the Major is capped at one copy total.
+    ("flaw.false_power", 6096, 1),
     ("virtue.affinity_art", 3378, 2),
     ("virtue.puissant_art", 4820, 2),
 ];
@@ -4535,19 +4548,6 @@ fn shipped_once_only_items_stay_non_repeatable() {
              (Ars Magica - Definitive Edition (Core Rules).md:{line})"
         );
     }
-
-    // False Power repeats, but "in each subsequent instance as a Minor Flaw
-    // rather than a Major one" (:6096). Magnitude is a property of the
-    // catalogue entry, not of a selection, so a second copy would silently be
-    // charged as Major. Blocking the repeat is the honest state until the
-    // catalogue grows a Minor variant; wrong point arithmetic would be worse.
-    assert_eq!(
-        rs.item(&Id::new("flaw.false_power"))
-            .expect("flaw.false_power must ship")
-            .max_per_target,
-        1,
-        "False Power's per-copy magnitude change is not expressible as data"
-    );
 }
 
 #[test]
@@ -4578,6 +4578,178 @@ fn shipped_total_cap_items_carry_their_rulebook_ceiling() {
             "{id} may not be taken twice for the SAME Art"
         );
     }
+}
+
+/// False Power "may be taken multiple times, once for each appropriate
+/// Supernatural Virtue that the character possesses, but in each subsequent
+/// instance as a Minor Flaw rather than a Major one"
+/// (Ars Magica - Definitive Edition (Core Rules).md:6096; entry :6080-6096).
+///
+/// `magnitude` belongs to the catalogue entry, never to a selection, so the
+/// per-copy magnitude change is expressed as a PAIR of entries — the shipped
+/// Major, capped at one copy, plus `flaw.false_power_minor` for every subsequent
+/// instance, gated on the Major by prerequisite so a Minor copy can never stand
+/// alone. Unlike the `virtue.amorphous_major` / `virtue.amorphous_minor` pair the
+/// two must **coexist**, so neither may list the other in `incompatible_with`.
+#[test]
+fn false_power_ships_as_a_coexisting_major_plus_minor_pair() {
+    let rs = load_ruleset();
+    let major_id = Id::new("flaw.false_power");
+    let minor_id = Id::new("flaw.false_power_minor");
+    let major = rs.item(&major_id).expect("flaw.false_power must ship");
+    let minor = rs
+        .item(&minor_id)
+        .expect("flaw.false_power_minor must ship — the subsequent instances");
+
+    assert_eq!(
+        major.magnitude,
+        Magnitude::Major,
+        "the first instance of False Power is a Major Flaw (:6081)"
+    );
+    assert_eq!(
+        minor.magnitude,
+        Magnitude::Minor,
+        "each subsequent instance is a Minor Flaw rather than a Major one (:6096)"
+    );
+    assert_eq!(minor.kind, ItemKind::Flaw);
+    assert_eq!(
+        minor.categories, major.categories,
+        "both entries are the same descriptor's Flaw (*Major, Supernatural, Tainted*, :6081)"
+    );
+    assert_eq!(minor.classification, major.classification);
+    assert_eq!(minor.entity_kinds, major.entity_kinds);
+    assert_eq!(
+        minor.source, major.source,
+        "both entries are read off the same rulebook entry (:6080-6096)"
+    );
+    assert!(
+        major.tainted && minor.tainted,
+        "False Power is a *Tainted* Flaw in both magnitudes (:6081), so both \
+         copies must feed the half-of-Flaw-points Tainted cap"
+    );
+    assert_eq!(
+        minor.prerequisites,
+        Some(Prereq::Has(major_id.clone())),
+        "a Minor copy is a SUBSEQUENT instance, so it presupposes the Major one"
+    );
+    assert!(
+        !major.incompatible_with.contains(&minor_id)
+            && !minor.incompatible_with.contains(&major_id),
+        "unlike a Major/Minor variant pair the two must coexist: the Minor copies \
+         only exist once the Major one has been taken"
+    );
+}
+
+#[test]
+fn a_second_major_false_power_is_capped() {
+    let rs = load_ruleset();
+    let twice = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("flaw.false_power")),
+            Selection::new(Id::new("flaw.false_power")),
+        ],
+    );
+
+    let codes = issue_codes(&twice, &rs);
+    assert!(
+        codes.contains(&"too_many_selections".to_string()),
+        "only the FIRST instance of False Power is the Major one \
+         (Ars Magica - Definitive Edition (Core Rules).md:6096): {codes:?}"
+    );
+}
+
+#[test]
+fn a_minor_false_power_without_the_major_is_a_missing_prerequisite() {
+    let rs = load_ruleset();
+    let orphan = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.false_power_minor"))],
+    );
+
+    let codes = issue_codes(&orphan, &rs);
+    assert!(
+        codes.contains(&"prereq_not_met".to_string()),
+        "a Minor False Power is a SUBSEQUENT instance and cannot be the first \
+         (Ars Magica - Definitive Edition (Core Rules).md:6096): {codes:?}"
+    );
+}
+
+/// The whole point of the entry pair: the second and third copies cost 1 Flaw
+/// point each, not 3. A single repeatable Major entry would have charged 9.
+#[test]
+fn false_power_taken_three_times_costs_three_plus_one_plus_one() {
+    let rs = load_ruleset();
+    let thrice = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("flaw.false_power")),
+            Selection::new(Id::new("flaw.false_power_minor")),
+            Selection::new(Id::new("flaw.false_power_minor")),
+        ],
+    );
+
+    assert_eq!(
+        compute_balance(&thrice, &rs).flaw_points,
+        3 + 1 + 1,
+        "the first instance is Major (3) and each subsequent one Minor (1) \
+         (Ars Magica - Definitive Edition (Core Rules).md:6096)"
+    );
+
+    let codes = issue_codes(&thrice, &rs);
+    for blocker in [
+        "too_many_selections",
+        "duplicate_selection",
+        "prereq_not_met",
+        "incompatible",
+    ] {
+        assert!(
+            !codes.contains(&blocker.to_string()),
+            "one Major plus two Minor False Powers is a legal build \
+             (Ars Magica - Definitive Edition (Core Rules).md:6096): {codes:?}"
+        );
+    }
+}
+
+/// The Minor entry rests entirely on its `has` prerequisite, and a False Power
+/// can arrive as an off-budget grant rather than a bought row — a warping-owed
+/// Major Flaw slot (Ars Magica - Definitive Edition (Core Rules).md:16561) is
+/// filled by choosing a real item. `validate_prerequisites` is handed the folded
+/// grant list, so such a copy satisfies the Minor's prerequisite; asserted here
+/// rather than assumed, because the whole entry pair rests on it.
+#[test]
+fn a_granted_major_false_power_satisfies_the_minor_prerequisite() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.false_power_minor"))],
+    );
+    // Warping Score 6 (105 Warping Points on the 5-per-score advancement curve)
+    // owes one Major Flaw (:16561).
+    e.warping_points = 105;
+    e.warping_choices = BTreeMap::from([(
+        "warping.major_flaw.0".to_string(),
+        Selection::new(Id::new("flaw.false_power")),
+    )]);
+
+    assert_eq!(
+        arm_rules::warping_owed(&e, &rs).major_flaws,
+        1,
+        "the fixture must actually owe a Major Flaw slot for the grant to exist"
+    );
+    assert!(
+        arm_rules::entity_grants(&e, &rs)
+            .iter()
+            .any(|s| s.item_ref == Id::new("flaw.false_power")),
+        "the warping fill must fold into the grant list"
+    );
+
+    let codes = issue_codes(&e, &rs);
+    assert!(
+        !codes.contains(&"prereq_not_met".to_string()),
+        "a GRANTED Major False Power is still a first instance, so the Minor \
+         copy that follows it is legal: {codes:?}"
+    );
 }
 
 #[test]
