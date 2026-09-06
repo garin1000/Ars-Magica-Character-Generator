@@ -7,6 +7,7 @@
 //! contract on [`ValidationIssue`] for the Fluent frontend.
 
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
@@ -120,6 +121,7 @@ impl fmt::Display for IssueSeverity {
 /// | `unknown_ref` | error | virtues_flaws | `item` |
 /// | `wrong_entity_kind` | error | virtues_flaws | `item`, `entity_kind` |
 /// | `duplicate_selection` | error | virtues_flaws | `item`, `count`, `max` |
+/// | `too_many_selections` | error | virtues_flaws | `item`, `count`, `max` |
 /// | `over_budget_virtues` | error | virtues_flaws | `points`, `budget` |
 /// | `over_budget_flaws` | error | virtues_flaws | `points`, `budget` |
 /// | `unbalanced_virtues` | error | virtues_flaws | `virtue_points`, `flaw_points` |
@@ -293,6 +295,11 @@ impl ValidationIssue {
     pub const CODE_WRONG_ENTITY_KIND: &'static str = "wrong_entity_kind";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_DUPLICATE_SELECTION: &'static str = "duplicate_selection";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: `PointItem::max_total`
+    /// caps the TOTAL copies of an item across every distinct parameter target
+    /// (counting granted copies), unlike [`Self::CODE_DUPLICATE_SELECTION`],
+    /// which caps copies sharing one identical target.
+    pub const CODE_TOO_MANY_SELECTIONS: &'static str = "too_many_selections";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_OVER_BUDGET_VIRTUES: &'static str = "over_budget_virtues";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -836,14 +843,35 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     // Computed once and shared by membership-test sub-validators.
     let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
 
+    // Computed once and shared by grant-aware sub-validators: `granted` is the
+    // bare House/Mythic-type/`grants_selection` grant list (needed by
+    // `validate_prerequisites` to build its `Has`-satisfying id set), and
+    // `effective_selections` is the same list folded onto the bought selections
+    // (`bought ++ granted`, matching `crate::effective::selections_for_effects`).
+    // Without this, `validate_duplicate_selections`, `validate_total_selection_cap`,
+    // `validate_magical_focus`, and `validate_might` would each re-resolve grants
+    // independently — five folds per `validate()` call instead of one, and
+    // `validate()` runs on every edit.
+    let granted = crate::effective::entity_grants(entity, ruleset);
+    let effective_selections: Cow<[Selection]> =
+        crate::effective::fold_granted_selections(entity, &granted);
+
     validate_known_type(entity, type_profile, &mut issues);
     validate_known_refs(entity, ruleset, &mut issues);
     validate_entity_kind_applicability(entity, ruleset, &mut issues);
-    validate_duplicate_selections(entity, ruleset, &mut issues);
+    validate_duplicate_selections(&effective_selections, ruleset, &mut issues);
+    validate_total_selection_cap(&effective_selections, ruleset, &mut issues);
     validate_balance(entity, ruleset, type_profile, &mut issues);
     validate_caps(entity, ruleset, type_profile, &mut issues);
     validate_tainted_cap(entity, ruleset, &mut issues);
-    validate_prerequisites(entity, ruleset, type_profile, &selected_ids, &mut issues);
+    validate_prerequisites(
+        entity,
+        ruleset,
+        type_profile,
+        &selected_ids,
+        &granted,
+        &mut issues,
+    );
     validate_incompatibilities(entity, ruleset, &selected_ids, &mut issues);
     validate_permitted_categories(entity, ruleset, type_profile, &mut issues);
     validate_forbidden_categories(entity, ruleset, type_profile, &mut issues);
@@ -851,7 +879,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
     validate_ability_bonus_targets(entity, ruleset, &mut issues);
-    validate_magical_focus(entity, ruleset, &mut issues);
+    validate_magical_focus(&effective_selections, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
     validate_house(entity, ruleset, type_profile, &mut issues);
     validate_mythic_type(entity, ruleset, type_profile, &mut issues);
@@ -870,7 +898,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_reputations(entity, ruleset, &mut issues);
         validate_devices(entity, ruleset, &mut issues);
         validate_powers(entity, ruleset, &mut issues);
-        validate_might(entity, ruleset, &mut issues);
+        validate_might(entity, ruleset, &effective_selections, &mut issues);
         validate_equipment(entity, ruleset, &mut issues);
         validate_aging(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
@@ -6179,6 +6207,209 @@ mod tests {
             !codes(&result).contains(&"duplicate_selection".to_string()),
             "same item with different params is legal: {:?}",
             codes(&result)
+        );
+    }
+
+    // --- Total selection cap (`max_total`), and its grant-aware plumbing -----
+
+    const TOTAL_CAP_ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "virtue.repeatable_capped", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+        "categories": ["general"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "target", "type": "ref", "domain": "text" }],
+        "max_total": 2 }
+    ]"#;
+
+    const TOTAL_CAP_TYPES: &str = r#"[{
+        "id": "test_type",
+        "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general"],
+        "creation_phases": []
+    }]"#;
+
+    #[test]
+    fn too_many_selections_over_cap_across_different_targets() {
+        let rs = Ruleset::from_json("test", "1", TOTAL_CAP_ITEMS, TOTAL_CAP_TYPES).unwrap();
+        let entity = make_entity(
+            "test_type",
+            vec![
+                Selection::with_params(
+                    Id::new("virtue.repeatable_capped"),
+                    BTreeMap::from([("target".into(), Id::new("a"))]),
+                ),
+                Selection::with_params(
+                    Id::new("virtue.repeatable_capped"),
+                    BTreeMap::from([("target".into(), Id::new("b"))]),
+                ),
+                Selection::with_params(
+                    Id::new("virtue.repeatable_capped"),
+                    BTreeMap::from([("target".into(), Id::new("c"))]),
+                ),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"too_many_selections".to_string()),
+            "3 copies across 3 distinct targets must exceed max_total 2: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn total_selection_cap_exactly_at_max_is_clean() {
+        let rs = Ruleset::from_json("test", "1", TOTAL_CAP_ITEMS, TOTAL_CAP_TYPES).unwrap();
+        let entity = make_entity(
+            "test_type",
+            vec![
+                Selection::with_params(
+                    Id::new("virtue.repeatable_capped"),
+                    BTreeMap::from([("target".into(), Id::new("a"))]),
+                ),
+                Selection::with_params(
+                    Id::new("virtue.repeatable_capped"),
+                    BTreeMap::from([("target".into(), Id::new("b"))]),
+                ),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"too_many_selections".to_string()),
+            "exactly at max_total must be clean: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn item_with_no_max_total_is_unaffected() {
+        let rs = test_ruleset();
+        let entity = make_entity(
+            "companion",
+            vec![
+                Selection::with_params(
+                    Id::new("virtue.puissant_ability"),
+                    BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+                ),
+                Selection::with_params(
+                    Id::new("virtue.puissant_ability"),
+                    BTreeMap::from([("ability".into(), Id::new("ability.brawl"))]),
+                ),
+                Selection::with_params(
+                    Id::new("virtue.puissant_ability"),
+                    BTreeMap::from([("ability".into(), Id::new("ability.folk_ken"))]),
+                ),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"too_many_selections".to_string()),
+            "an item with no stated max_total must never trip the total cap: {:?}",
+            result.issues
+        );
+    }
+
+    /// Items for the grant-aware `max_total` tests: a Puissant Ability item
+    /// shaped after the real one — "once for a given Ability, but more than once
+    /// for different Abilities" (Ars Magica - Definitive Edition (Core
+    /// Rules).md:4816), which is what `max_per_target: 1` (the default) already
+    /// encodes — but with a test-only `max_total: 1` layered on top, so a
+    /// House-granted copy plus a bought copy of a DIFFERENT target trips
+    /// `too_many_selections`, while a bought copy of the SAME target the House
+    /// grants trips `duplicate_selection` instead. The real Puissant Ability
+    /// carries no `max_total` (unbounded across different Abilities); this cap
+    /// is a fixture-only stand-in for the mechanism, mirroring the shape of the
+    /// House Flambeau Puissant-Perdo-or-Ignem scenario this slice's brief cites.
+    const TOTAL_CAP_GRANT_ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
+      { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+        "categories": ["hermetic"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+        "max_total": 1 }
+    ]"#;
+
+    const TOTAL_CAP_GRANT_ABILITIES: &str = r#"{ "abilities": [
+        { "id": "ability.ignem", "category": "arcane" },
+        { "id": "ability.perdo", "category": "arcane" },
+        { "id": "ability.artes_liberales", "category": "academic" },
+        { "id": "ability.magic_theory", "category": "arcane" },
+        { "id": "ability.parma_magica", "category": "arcane" },
+        { "id": "ability.penetration", "category": "arcane" },
+        { "id": "ability.philosophiae", "category": "academic" }
+    ] }"#;
+
+    /// A Flambeau-shaped House: grants a fixed Puissant (ability.ignem), mirroring
+    /// the real House Flambeau's free Puissant Perdo-or-Ignem.
+    const TOTAL_CAP_GRANT_HOUSES: &str = r#"{ "houses": [
+        { "id": "house.flambeau", "lineage_type": "societas",
+          "grants": [ { "kind": "fixed", "item": "virtue.puissant_ability", "params": { "ability": "ability.ignem" } } ] }
+    ] }"#;
+
+    fn rs_total_cap_with_grants(items: &str, types: &str) -> Ruleset {
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(TOTAL_CAP_GRANT_ABILITIES),
+            arts: None,
+            houses: Some(TOTAL_CAP_GRANT_HOUSES),
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+            life_stages: None,
+            childhoods: None,
+            aging: None,
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn granted_copy_counts_toward_total_selection_cap() {
+        let rs = rs_total_cap_with_grants(TOTAL_CAP_GRANT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity(
+            "magus",
+            vec![Selection::with_params(
+                Id::new("virtue.puissant_ability"),
+                BTreeMap::from([("ability".into(), Id::new("ability.perdo"))]),
+            )],
+        );
+        entity.house = Some(Id::new("house.flambeau"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"too_many_selections".to_string()),
+            "a House-granted copy must count toward max_total: {:?}",
+            result.issues
+        );
+        assert!(
+            !codes(&result).contains(&"duplicate_selection".to_string()),
+            "distinct targets (granted ignem, bought perdo) must not collide as duplicates: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn granted_copy_plus_bought_copy_of_same_target_is_duplicate_selection() {
+        let rs = rs_total_cap_with_grants(TOTAL_CAP_GRANT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity(
+            "magus",
+            vec![Selection::with_params(
+                Id::new("virtue.puissant_ability"),
+                BTreeMap::from([("ability".into(), Id::new("ability.ignem"))]),
+            )],
+        );
+        entity.house = Some(Id::new("house.flambeau"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"duplicate_selection".to_string()),
+            "buying the same target the House already grants must be a duplicate: {:?}",
+            result.issues
         );
     }
 

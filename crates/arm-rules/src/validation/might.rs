@@ -8,15 +8,21 @@ use super::*;
 /// Sanity-checks a being's Might: its entered base Realm must agree with the Realm
 /// its Might Virtues grant (a being belongs to exactly one Realm; Ars Magica - Definitive Edition (Core Rules).md:2623-2625).
 /// A warning, never a block — the troupe may be modelling an unusual creature.
+///
+/// `selections` is the caller's already-folded bought-plus-granted list
+/// ([`crate::effective::selections_for_effects`]), computed once in
+/// [`super::validate`] and shared with the other grant-aware sub-validators
+/// rather than re-resolved here.
 pub(crate) fn validate_might(
     entity: &Entity,
     ruleset: &Ruleset,
+    selections: &[Selection],
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(base) = entity.might else {
         return;
     };
-    let Some(granted) = ruleset_might_grant_realm(entity, ruleset) else {
+    let Some(granted) = ruleset_might_grant_realm(selections, ruleset) else {
         return;
     };
     if granted != base.realm {
@@ -34,8 +40,11 @@ pub(crate) fn validate_might(
 
 /// The Realm of the first [`Effect::MightGrant`] the being's Virtues confer, if
 /// any. Used only for the [`validate_might`] realm-agreement sanity check.
-fn ruleset_might_grant_realm(entity: &Entity, ruleset: &Ruleset) -> Option<crate::types::Realm> {
-    for selection in crate::effective::selections_for_effects(entity, ruleset).iter() {
+fn ruleset_might_grant_realm(
+    selections: &[Selection],
+    ruleset: &Ruleset,
+) -> Option<crate::types::Realm> {
+    for selection in selections {
         // A dangling selection ref (legal in direct/unchecked entry) must not
         // abort the whole scan — skip it, mirroring the sibling validators
         // (`effective::spell_mastery_floor` et al.).

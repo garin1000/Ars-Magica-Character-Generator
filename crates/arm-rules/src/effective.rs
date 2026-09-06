@@ -55,20 +55,38 @@ pub use reputation_and_caps::*;
 /// whose House has no resolved grant), so no allocation. Otherwise returns the
 /// concatenation `bought ++ granted`.
 ///
-/// Balance and caps deliberately do **not** route through this — they stay on
-/// `entity.selections` so House grants are free of the point budget and exempt
-/// from the count caps (a granted Major Hermetic Virtue cannot trip the
-/// `≤1 Major Hermetic Virtue` cap).
+/// Balance and category/major-count caps deliberately do **not** route through
+/// this — they stay on `entity.selections` so House grants are free of the
+/// point budget and exempt from those caps (a granted Major Hermetic Virtue
+/// cannot trip the `≤1 Major Hermetic Virtue` cap). This is narrower than
+/// *uncapped outright*: the per-target and total-copy ceilings
+/// (`max_per_target` / `max_total`) DO fold grants in (see
+/// `validation::validate_duplicate_selections` /
+/// `validation::validate_total_selection_cap`), because those are legality
+/// limits ("this Virtue may not be taken twice"), not point-budget or
+/// category-count limits — a free copy is still a copy.
 pub(crate) fn selections_for_effects<'a>(
     entity: &'a Entity,
     ruleset: &Ruleset,
 ) -> Cow<'a, [Selection]> {
     let granted = entity_grants(entity, ruleset);
+    fold_granted_selections(entity, &granted)
+}
+
+/// Combines `entity.selections` with an ALREADY-RESOLVED `granted` list into the
+/// same `bought ++ granted` shape [`selections_for_effects`] returns. Split out
+/// so a caller that reaches [`entity_grants`] for its own purposes (`validate`,
+/// which also needs the bare grant list to build its `Has`-prerequisite id set)
+/// can fold the two together without resolving grants a second time.
+pub(crate) fn fold_granted_selections<'a>(
+    entity: &'a Entity,
+    granted: &[Selection],
+) -> Cow<'a, [Selection]> {
     if granted.is_empty() {
         Cow::Borrowed(&entity.selections)
     } else {
         let mut combined = entity.selections.clone();
-        combined.extend(granted);
+        combined.extend(granted.iter().cloned());
         Cow::Owned(combined)
     }
 }

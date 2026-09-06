@@ -1680,6 +1680,21 @@ pub struct PointItem {
         skip_serializing_if = "is_default_max_per_target"
     )]
     pub max_per_target: u8,
+    /// Maximum number of copies of this item, TOTAL across every distinct
+    /// parameter target, that may appear in the finished character — counting
+    /// granted copies (a House-granted Puissant Ignem counts against the same
+    /// ceiling as one the player buys). Default `u8::MAX` (255) = "no ceiling
+    /// the rules state" (the same sentinel convention as `max_per_target`; see
+    /// `RULES.md:782-787`). Distinct from `max_per_target`, which caps copies
+    /// sharing one identical `(id, params)` target: e.g. a Virtue repeatable
+    /// "with a different target each time" may need `max_per_target: 1` (no
+    /// repeat of the same target) alongside a stated `max_total` (an overall
+    /// cap across all targets), or no `max_total` at all (unlimited targets).
+    #[serde(
+        default = "default_max_total",
+        skip_serializing_if = "is_default_max_total"
+    )]
+    pub max_total: u8,
     /// Provenance into the Markdown source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -1703,6 +1718,17 @@ fn default_max_per_target() -> u8 {
 
 fn is_default_max_per_target(value: &u8) -> bool {
     *value == default_max_per_target()
+}
+
+/// The default total-selection ceiling: no stated limit. See
+/// `PointItem::max_total`'s doc comment and `RULES.md:782-787` for the
+/// `u8::MAX` sentinel convention.
+fn default_max_total() -> u8 {
+    u8::MAX
+}
+
+fn is_default_max_total(value: &u8) -> bool {
+    *value == default_max_total()
 }
 
 /// The default virtue/flaw conversion: one Flaw point funds one Virtue point.
@@ -1748,6 +1774,8 @@ struct PointItemRepr {
     effects: Vec<Effect>,
     #[serde(default = "default_max_per_target")]
     max_per_target: u8,
+    #[serde(default = "default_max_total")]
+    max_total: u8,
     #[serde(default)]
     source: Option<SourceRef>,
 }
@@ -1770,6 +1798,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             parameters,
             effects,
             max_per_target,
+            max_total,
             source,
         } = repr;
 
@@ -1800,6 +1829,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             parameters,
             effects,
             max_per_target,
+            max_total,
             source,
         })
     }
@@ -6287,6 +6317,39 @@ mod tests {
         assert!(
             !out.contains("effects"),
             "empty effects should be skipped: {out}"
+        );
+    }
+
+    #[test]
+    fn max_total_deserializes() {
+        let json = r#"{
+          "id": "virtue.greater_power",
+          "kind": "virtue",
+          "classification": "narrative",
+          "magnitude": "major",
+          "categories": ["general"],
+          "max_total": 3
+        }"#;
+        let item: PointItem = serde_json::from_str(json).unwrap();
+        assert_eq!(item.max_total, 3);
+    }
+
+    #[test]
+    fn max_total_defaults_to_255_and_is_omitted_when_default() {
+        let json = r#"{
+          "id": "virtue.keen_vision",
+          "kind": "virtue",
+          "classification": "narrative",
+          "magnitude": "minor",
+          "categories": ["general"]
+        }"#;
+        let item: PointItem = serde_json::from_str(json).unwrap();
+        assert_eq!(item.max_total, u8::MAX);
+        // The default must not appear in canonical output (zero-noise diffs).
+        let out = serde_json::to_string(&item).unwrap();
+        assert!(
+            !out.contains("max_total"),
+            "default should be skipped: {out}"
         );
     }
 

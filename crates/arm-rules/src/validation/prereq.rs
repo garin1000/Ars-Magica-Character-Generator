@@ -21,6 +21,7 @@ pub(crate) fn validate_prerequisites(
     ruleset: &Ruleset,
     type_profile: Option<&EntityTypeProfile>,
     selected_ids: &BTreeSet<&Id>,
+    granted: &[Selection],
     issues: &mut Vec<ValidationIssue>,
 ) {
     let is_magus = type_profile.map(|p| p.is_magus);
@@ -65,13 +66,13 @@ pub(crate) fn validate_prerequisites(
 
     // `Prereq::Has` resolves against bought AND granted rows (a granted
     // Heartbeast/Dowsing satisfies `Has(...)`), so build a grants-inclusive id
-    // set spanning House and Mythic-Companion-type grants. This is deliberately
-    // distinct from the bought-only `selected_ids` that the forbidden-trait /
+    // set spanning House and Mythic-Companion-type grants (`granted`, computed
+    // once by the caller — see `super::validate`). This is deliberately distinct
+    // from the bought-only `selected_ids` that the forbidden-trait /
     // incompatibility validators use — grants must never reach those (review
     // finding B1).
-    let granted = crate::effective::entity_grants(entity, ruleset);
     let mut present_ids: BTreeSet<&Id> = selected_ids.iter().copied().collect();
-    for g in &granted {
+    for g in granted {
         present_ids.insert(&g.item_ref);
     }
 

@@ -911,6 +911,7 @@ issue-forbidden_category = { $item } belongs to a forbidden category ({ $categor
 issue-category_not_permitted = { $item } is not in a permitted category ({ $category }).
 issue-wrong_entity_kind = { $item } cannot be taken by a { $entity_kind }.
 issue-duplicate_selection = { $item } is selected { $count } times, but may be taken at most { $max } time(s) for the same target.
+issue-too_many_selections = { $item } is selected { $count } times in total across all targets, but may be taken at most { $max } time(s) altogether.
 issue-missing_required_trait = A required trait is missing: { $item }.
 issue-forbidden_trait = A forbidden trait is present: { $item }.
 issue-missing_param = { $item } is missing the parameter { $key }.
