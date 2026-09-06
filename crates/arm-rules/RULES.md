@@ -1173,8 +1173,8 @@ all three.
    dropdown; that is a larger change with its own save impact and is not done.
 2. **The duplicate key is byte-for-byte.** It is exact `(item_ref, params)`
    equality (`validation/selections.rs:135-140`) and `ParameterDomain::Text`
-   accepts any string (`selections.rs:270`), the empty one included — note that
-   `types.rs:443-446` documents "any non-empty value is legal", which the code
+   accepts any string (`selections.rs:277`), the empty one included — note that
+   `types.rs:455-458` documents "any non-empty value is legal", which the code
    does not enforce; that doc/code mismatch predates this rule. So "Wolf Shape",
    "wolf shape" and "Wolf Shape " read as three distinct targets and a blank
    power name is accepted. Trimming or case-folding the key would change
@@ -1200,10 +1200,14 @@ than approximated):
   that this character possesses" — see *Selection multiplicity — False Power's
   subsequent copies are Minor* above, where the per-copy magnitude change itself
   is now expressed as a Major + Minor entry pair.
-- **Proportional per-item caps.** Demonic Might / Demonic Powers "can account
-  for no more than half of the character's total Virtues" (`:3665`, `:3669`).
-  The engine has absolute category caps but no proportional per-item cap; this
-  is a whole-build ratio and is left to the troupe.
+- **Proportional per-item caps used to sit in this list.** Demonic Might /
+  Demonic Powers "can account for no more than half of the character's total
+  Virtues" (`:3665`, `:3669`) is now expressed — the ratio is data
+  (`max_share_of_kind`) and `validate_share_of_kind_cap` warns on it; see
+  *Demonic Might / Demonic Powers — the half-of-Virtues ratio* above. Nothing
+  about it is deferred any more. What is a judgement rather than a gap — reading
+  "total Virtues" as Virtue *points* rather than a headcount, which is why the
+  check warns instead of blocking — is recorded there.
 - **"A different X each time" where X is free text.** Greater Immunity's
   immunity, Social Contacts' social group and Vulnerable Magic's condition are
   not recorded, so distinctness is not enforced. These items record no target at

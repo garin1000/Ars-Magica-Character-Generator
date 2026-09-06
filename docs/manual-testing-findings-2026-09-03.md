@@ -15,6 +15,10 @@ Findings are grouped by the work package that implements them. Two numbers are
 absent by decision: 13 was withdrawn, 14 was closed after the rules check
 contradicted its premise.
 
+The last section, *Third pass — the four carried decisions*, is numbered by
+`docs/open-todos.md` **row** rather than by finding: those four were decisions
+carried out of earlier findings, not new observations from a test session.
+
 ---
 
 ## Progress log
@@ -41,6 +45,11 @@ WP5 → WP6 → WP7, one finding at a time.
 | 2026-09-05 | second pass | Finding 33 done: the Aging tab's three columns restored as explicit `.aging-column` wrappers (schedule + living conditions, roll calculator alone, log + accumulated read-outs + longevity ritual) rather than the CSS multi-column approach findings 22/20 had already reverted; default window raised to 1400x900 so the three ~431px tracks fit. `docs/open-todos.md` refreshed (two items closed, three raised); the German tab-strip labels (11.25px) checked in the running app and left as they are. | Not re-run for this row: written during the 2026-09-06 reconciliation, so the gate is assumed from the project's pre-commit rule rather than observed |
 | 2026-09-06 | — | Finding 28 closed: Spirit Votary's +7 Flaw points confirmed as the standard Mythic Companion arithmetic (`:2638` ten Flaw points at 2:1, minus the 3 Pagan funds toward the 6 budgeted points its required Virtues cost) — Core does state the number, just not as a digit; only the RULES.md provenance note was wrong. No data change. | n/a (docs only) |
 | 2026-09-06 | max_total | Finding 35 done, finding 36 done, finding 37 opened deliberately: `PointItem::max_total` (total copies across all targets, default 255 = no stated ceiling) added alongside `max_per_target`, with a new `too_many_selections` validation error; `validate_duplicate_selections` made grant-aware in the same slice, closing a second hole where a House-granted Puissant Ignem stacked invisibly with a bought one; the four once-only items get `max_total: 1`, Affinity/Puissant Art get `max_total: 2`; the Available list, open grant menus and `ParameterPicker` all consult the new ceiling; `flaw.restricted_power` unblocked (`max_per_target: 255`, matching `flaw.slow_power`); `virtue.folk_magic` left capped, pending an enumerated parameter domain. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `cargo fmt --check`, full UI gate (`test:unit`, `check`, `lint`, `format:check`) and `cargo tauri build --no-bundle` all green per slice; the full 43-spec e2e suite ran 42 passing, 1 failure — a test defect in the new `repeat-virtues.e2e.js` spec (a hardcoded selections index invalid for a magus, whose mandatory traits occupy the first slots) — fixed and re-verified for that spec |
+| 2026-09-06 | third pass | To-do 5 done: `PointItem.max_share_of_kind` (a `Share { numerator, denominator }`, rejected at load if the denominator is zero or the numerator exceeds it) plus `validate_share_of_kind_cap`, a **warning** keyed `too_large_share` with `issue-too_large_share` in both locales; Demonic Might and Demonic Powers carry `1/2`. Reads the folded (bought + granted) selection list, unlike `validate_tainted_cap`, because Devil Child grants a free copy (`042acba`). | Not observed in this row's session: the plan's per-slice gate was the orchestrator's to run between slices, and the bookkeeping pass that wrote this row ran only `cargo test --workspace` and the UI `format:check` |
+| 2026-09-06 | third pass | To-do 7 done: a free-text `power` parameter on `flaw.slow_power`, `flaw.restricted_power` and `virtue.variable_power`, `max_per_target: 255` removed so the default ceiling of 1 applies per named power; `param-label-power` in both locales, the three `name` templates take `{power}`, and `flaw.restricted_power`'s German name corrected to "Eingeschränkte Kraft". Data only. Save impact: a paramless copy now reports `missing_param` (`2380322`). | As above — not observed in this row's session |
+| 2026-09-06 | third pass | To-do 4 done: `flaw.false_power` keeps its id, stays Major and gains `max_total: 1`; new `flaw.false_power_minor` (Minor, `tainted`, prerequisite `flaw.false_power`, repeats freely), so Major + two Minors costs 3 + 1 + 1. EN/DE labels gain the "(Major)"/"(Minor)" suffix; the ids stay asymmetric on purpose, since `validate_magnitude_variant_exclusivity` would force a `_major`/`_minor` pair to be mutually incompatible, which these two must not be (`7b95ca0`). | As above — not observed in this row's session |
+| 2026-09-06 | third pass | To-do 6 done, finding 37 closed with it: `ParameterDomain::Enumerated` carrying its `values` on the `ParameterDef`, with load-time integrity on both directions (an enumerated param needs a non-empty duplicate-free list; every other domain must carry none); a value outside the list raises the existing `unknown_param_value`, so open grants and Warping fills are covered free. Folk Magic gains a `category` parameter and repeats once per category; the three (Beings) items become dropdowns; nine value ids ship with EN + DE text and a new coverage test; `ParameterPicker.svelte` gains an `enumerated` branch. Save impact accepted, not migrated (`b86889c`). | As above — not observed in this row's session |
+| 2026-09-06 | bookkeeping | The third-pass section above written, the progress log extended, and findings 34, 36 and 37 re-pointed at it; `docs/open-todos.md` rows 4–7 closed and replaced by seven narrowed rows (9–15). Two stale docs defects fixed in `crates/arm-rules/RULES.md`: the "Proportional per-item caps" deferral, which `042acba` had implemented, and two moved source citations (`types.rs:443-446` → `:455-458`, `selections.rs:270` → `:277`). `README.md` checked and left alone — it describes stack, commands and features, none of which these four changes touch. | `cargo test --workspace` green (exit 0) and `cd ui && npm run format:check` green, both observed. Nothing else re-run: this pass changed Markdown only. Note the edited docs sit **outside** prettier's scope — it runs from `ui/`, and `README.md`, `CLAUDE.md`, `PLAN.md` and `crates/arm-rules/RULES.md` are all equally unformatted by it |
 
 **Caution for the next session:** `npm run test:e2e` exited **0** with
 `41 passed, 2 retries, 2 failed, 43 total`. The exit status is not a verdict —
@@ -862,6 +871,10 @@ Demonic Powers 40 levels.
   `virtue.amorphous_major` / `virtue.amorphous_minor` split — so a second entry
   plus its EN/DE text would resolve it as data.
 
+**Both were carried to `docs/open-todos.md` (rows 5 and 4) and are now encoded**
+— the half-of-Virtues ratio by `042acba`, False Power's Major/Minor split by
+`7b95ca0`. See *Third pass — the four carried decisions* below.
+
 ### 35 — The mirror defect: items the rules forbid repeating can be repeated
 
 **Status:** done (2026-09-06) — found while fixing 34
@@ -1065,9 +1078,15 @@ same recorded limitation as `flaw.slow_power` (`:6761`) and
 `virtue.variable_power` (`:5205`); see the "Repeat rules the data model cannot
 express" section of `crates/arm-rules/RULES.md`.
 
+**That residual gap is closed** — carried as `docs/open-todos.md` row 7 and
+fixed by `2380322`, which gave all three items a free-text `power` parameter.
+See *Third pass — the four carried decisions* below for what the parameter does
+and does not guarantee.
+
 ### 37 — `virtue.folk_magic` still caps at one copy
 
-**Status:** open — deliberately (2026-09-06)
+**Status:** done (2026-09-06) — opened deliberately, closed by the enumerated
+parameter domain it asked for
 
 Also an escapee from finding 34's sweep. `:3919` "You may pick this Virtue
 more than once, to acquire expertise in a different category of spells" — the
@@ -1090,3 +1109,205 @@ registries (Ability, Art, Technique, Form, Characteristic, Item, Text) with no
 such variant today; building one is out of scope for this fix. See the
 deferral recorded in `crates/arm-rules/RULES.md` ("Enumerated parameter
 domain, not free text").
+
+**Resolution.** Built, as `docs/open-todos.md` row 6 and commit `b86889c` —
+`ParameterDomain::Enumerated` with the list on the `ParameterDef` itself. Folk
+Magic now repeats once per category with no number written anywhere. The full
+entry is *To-do 6* in the third pass below.
+
+---
+
+## Third pass — the four carried decisions, 2026-09-06
+
+These four are **not** findings from a manual-testing session, and they are
+numbered by their `docs/open-todos.md` **row** rather than as new findings,
+because nothing new was observed. Each was a deferral already written down
+inside an earlier finding, parked as `waiting on: decision`, and then authorised:
+finding 34 left the Demonic half-of-Virtues ratio (row 5) and False Power's
+per-copy magnitude change (row 4) deliberately unencoded, finding 36 recorded the
+missing per-power target (row 7), and finding 37 asked for the enumerated
+parameter domain by name (row 6). All four rows are now closed; what each one
+leaves behind is listed here and carried back into `docs/open-todos.md` in a
+narrowed form.
+
+Rules citations are into `Ars Magica - Definitive Edition (Core Rules).md` and
+were re-read in the file while this section was written, not recalled.
+
+### To-do 5 — Demonic Might and Demonic Powers cap at half the character's Virtues
+
+**Status:** done (2026-09-06) — `042acba`; deferred by finding 34
+
+> "You may take this Virtue more than once, though it can account for no more
+> than half of the character's total Virtues." (`:3665`, Demonic Might)
+
+> "You may also take this Virtue more than once, though it can account for no
+> more than half of the character's total Virtues." (`:3669`, Demonic Powers)
+
+Both shipped with `max_per_target: 255` and repeated freely, so neither ceiling
+existed. Finding 34 left it out as "a whole-build ratio, not an absolute cap".
+
+**Resolution.** The ratio is data, not code: `PointItem.max_share_of_kind`
+carries a `Share { numerator, denominator }`, rejected at load if the
+denominator is zero or the numerator exceeds it, and both Demonic entries carry
+`1/2` in `rules/core/virtues_flaws.json`. `validate_share_of_kind_cap`
+(`crates/arm-rules/src/validation/caps.rs`) follows `validate_tainted_cap`, the
+same sentence shape already implemented: points rather than a headcount, the
+integer form `part · denominator > total · numerator` so no rounding rule is
+needed, and measured against the item's own kind. New code `too_large_share`
+with `issue-too_large_share` in both locales.
+
+Two things are deliberate rather than incidental, and both are written into
+`crates/arm-rules/RULES.md`. It is a **warning, not an error**: each sentence
+says "this Virtue", so the two ceilings are independent, and reading "total
+Virtues" as Virtue *points* is an interpretation — the Tainted rule has the
+book's own gloss at `:3000` to settle points-vs-headcount, these two sentences
+have none. And it reads the **folded** selection list, not raw
+`entity.selections`, because Devil Child grants a free Demonic Might or Powers
+(`:3673`) and a granted copy is still a copy; `validate_tainted_cap` counts only
+bought ones, so two identically-worded "half" rules now disagree about grants on
+purpose.
+
+### To-do 7 — Slow, Restricted and Variable Power name the power they limit
+
+**Status:** done (2026-09-06) — `2380322`; residual gap recorded by finding 36
+
+> "This Flaw may be taken once for each power the character possesses."
+> (`:6689`, Restricted Power)
+
+> "This Flaw may be taken more than once, if the character has multiple powers,
+> but not more than once for a single power." (`:6761`, Slow Power)
+
+> "This Virtue may be taken more than once, if the character has more than one
+> power, but it only applies once to a single power." (`:5205`, Variable Power)
+
+All three shipped unparameterized with `max_per_target: 255`, so every copy
+shared one duplicate key and nothing distinguished two copies aimed at one power
+from two aimed at different ones — the cap was unenforced in the permissive
+direction.
+
+**Resolution.** A free-text `power` parameter on each of the three, with
+`max_per_target` removed so it falls back to its default of 1: one copy per named
+power, no ceiling across different powers. Data only — the `text` domain and the
+`(item_ref, params)` duplicate key already did the work. A power cannot be a
+`ref`, because Focus, Greater, Lesser, Personal and Ritual Power are themselves
+repeatable and unparameterized, so a magus with three Greater Powers holds three
+indistinguishable rows with nothing to point at. `param-label-power` added to
+both locales, and the three `name` templates take the `{power}` placeholder;
+`flaw.restricted_power`'s German name was corrected from "Eingeschränkte
+**Macht**" to "Eingeschränkte **Kraft**" per `tugenden-fehler.md:350` in the same
+edit.
+
+**Save impact, accepted:** an existing save holding a paramless copy raises
+`missing_param` on open. No data is lost — saves store choices and the engine
+only reports — and the player clears it by naming the power.
+
+**What this does not claim.** Nothing checks the typed string against a power the
+character actually holds, and the duplicate key is byte-for-byte, so "Wolf
+Shape", "wolf shape" and "Wolf Shape " are three targets and an empty name is
+accepted. It stops an honest mistake, not a determined evasion. Both halves go
+back into `docs/open-todos.md` as narrowed rows.
+
+### To-do 4 — False Power repeats, and every copy after the first is Minor
+
+**Status:** done (2026-09-06) — `7b95ca0`; deferred by finding 34
+
+> "This Flaw may be taken multiple times, once for each appropriate Supernatural
+> Virtue that the character possesses, but in each subsequent instance as a Minor
+> Flaw rather than a Major one." (`:6096`)
+
+Magnitude belongs to the catalogue entry, never to a selection, so a second copy
+of one entry would be charged 3 points instead of 1. Finding 34 blocked the
+repeat outright rather than ship wrong point totals.
+
+**Resolution.** Two entries, the way `virtue.amorphous_major` /
+`virtue.amorphous_minor` already does it: `flaw.false_power` keeps its id, stays
+Major and gains `max_total: 1`; the new `flaw.false_power_minor` is Minor,
+requires `flaw.false_power` and repeats freely. Major plus two Minors costs
+3 + 1 + 1, which is the whole point of the change and is what the new test
+asserts. Labels changed on an existing entry — "False Power" became "False Power
+(Major)" in English and "Falsche Macht (Groß)" in German — because an unsuffixed
+name sitting beside "(Minor)" reads worse.
+
+**The asymmetric id pair is deliberate**, and `RULES.md` says so twice over.
+Renaming to `_major` would break every save holding the Flaw for cosmetic
+symmetry, and it would fail the load outright:
+`validate_magnitude_variant_exclusivity` requires a `_major`/`_minor` pair to be
+mutually incompatible, which these two must **not** be, since the Minor copies
+only exist once the Major one does.
+
+**Still not expressed:** "once for each appropriate Supernatural Virtue" also
+means the copies must name *different* Supernatural Virtues, and no copy names
+any. That needs a parameter domain meaning "an item of category X that this
+character possesses"; recorded, not built.
+
+### To-do 6 — closed lists in the rulebook become closed lists in the picker
+
+**Status:** done (2026-09-06) — `b86889c`; asked for by name in finding 37
+
+> "He can only create spells in one narrow area, which must be one of the
+> following four options" (`:3909`, enumerated at `:3911-3917` as *Abjuration*,
+> *Divination*, *Healing*, *Evil Eye*), and "You may pick this Virtue more than
+> once, to acquire expertise in a different category of spells." (`:3919`)
+
+> "associated with one of five classes of beings: animals, divine beings,
+> faeries, demons, or magical creatures" (`:4135`, Inoffensive to (Beings));
+> "one of six classes of beings: animals, mundane humans, divine beings,
+> faeries, demons, or magical creatures" (`:6526`, Offensive to (Beings));
+> "one of three classes of beings: mundane humans, demons, or divine beings"
+> (`:6893`, Unbearable to (Beings))
+
+All four stored free text, so any string was legal, and Folk Magic — carrying no
+parameter at all — could not repeat.
+
+**Resolution.** `ParameterDomain::Enumerated`, with the list on the
+`ParameterDef` itself (`values`) rather than in a global registry, because the
+three being lists are different subsets and no single enumeration could serve
+them. Load-time integrity rejects an `Enumerated` parameter with an empty or
+duplicated list and any other domain carrying one, naming the item and key. A
+value outside the list simply fails to resolve in its domain, so the existing
+`unknown_param_value` covers it and no new issue code or Fluent key was needed —
+which also means open grants and Warping fills come along free, since they share
+`validate_selection_parameters`. `ParameterPicker.svelte` gained an
+`enumerated` branch rendering a `<select>` whose options run through
+`displayName`, reusing the existing grant-aware already-taken greying.
+
+Folk Magic now repeats "to acquire expertise in a different category" with **no
+ceiling written anywhere**: one copy per category, four categories, so a fifth
+copy must repeat one and is rejected as a duplicate. A supplement adding a fifth
+category would raise the ceiling on its own — which is exactly why this was the
+recorded fix rather than `max_per_target: 4`. `flaw.fish_out_of_water_terrain`
+stays free text; its list ends "…, etc." (`:6130`), which is what the book means.
+
+Nine value ids ship with EN and DE text, locked by a new coverage test:
+`being.animals`, `being.demons`, `being.divine`, `being.faeries`,
+`being.magical_creatures`, `being.mundane_humans`, `folk_magic.abjuration`,
+`folk_magic.divination`, `folk_magic.evil_eye`, `folk_magic.healing`. The German
+labels came from the German rulebook rather than being invented, since the
+curated glossary tables do not cover them. `param-label-category` was added to
+both locales; `virtue.inoffensive_to_beings`'s German name was corrected from
+"Für {being} ungefährlich" to "Unauffällig für {being}" per
+`tugenden-fehler.md:180`.
+
+**Save impact, accepted and not migrated:** a save holding a typed `being` value
+now reports `unknown_param_value`, and one holding `virtue.folk_magic` reports
+`missing_param`. The old values were unconstrained free text, so no mapping would
+be honest; `SCHEMA_VERSION` does not apply, since the save bytes are untouched
+and this is a ruleset change. Nothing is lost — the player re-picks from a
+dropdown.
+
+**Adjudicated, not silently fixed.** The three (Beings) items carry
+dual-category descriptors joined by *and*/*or* ("General and Hermetic" `:4134`,
+"Hermetic and General" `:6525`, "Hermetic or General" `:6892`) yet ship with one
+category each. The dual-category sweep (`5729e6d`) covered only the four items
+whose descriptors use a **comma** — Sufi, Visions, Raised from the Dead,
+Suppressed Gift — so *and*/*or* descriptors were never in its scope and nothing
+was missed. Two further items are in the same position (`:5882` Curse of
+Slander, `:6635` Primogeniture Lineage), and the *or* cases raise a separate
+semantic question, so all five go to `docs/open-todos.md` as one row rather than
+being changed here.
+
+**Also found, not changed:** the German rulebook heads Inoffensive to (Beings)
+"Für (Wesen) ungefährlich" (`rules/source/de/…Basisregeln.md:4133`) while
+`tugenden-fehler.md:180` gives "Unauffällig für (Wesen)". The tables are
+canonical for i18n labels, so the table won — but the two German sources
+disagree, and that is now a to-do row.
