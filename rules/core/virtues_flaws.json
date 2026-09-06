@@ -1081,6 +1081,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "terrain", "type": "ref", "domain": "text" }],
+    "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6126, 6133] }
   },
   {
@@ -1948,6 +1949,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
+    "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6524, 6533] }
   },
   {
@@ -2833,6 +2835,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
+    "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6891, 6898] }
   },
   {
@@ -3283,6 +3286,7 @@
     "effects": [
       { "type": "affinity_art_cost", "param": "art", "counts_as_num": 3, "counts_as_den": 2 }
     ],
+    "max_total": 2,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3376, 3378] }
   },
   {
@@ -4592,6 +4596,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
+    "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4133, 4142] }
   },
   {
@@ -5558,6 +5563,7 @@
     "entity_kinds": ["character"],
     "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
     "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }],
+    "max_total": 2,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4818, 4820] }
   },
   {

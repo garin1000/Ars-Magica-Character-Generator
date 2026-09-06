@@ -821,6 +821,52 @@ Items with a stated ceiling of two: `virtue.great_characteristic` (`:3989`),
 altogether", `:4826`), `flaw.poor_characteristic` (`:6600`),
 `flaw.weak_characteristics` (`:7058`) — all `max_per_target: 2`.
 
+#### Selection multiplicity — `max_total`
+> "You may take this Virtue twice, for two different Arts."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3378` (Affinity with
+  Art), `:4820` (Puissant Art).
+
+The per-item, ALL-targets selection cap — distinct from `max_per_target`
+above, which only catches copies sharing one identical `(item, params)`
+target. `validate_total_selection_cap` (`validation/selections.rs`) counts
+every copy of an item across every distinct parameter target, over the folded
+bought-plus-granted selection list (`effective.rs`) — so a House-granted copy
+counts against the same ceiling as one the player buys — and errors when the
+count exceeds `max_total`.
+
+Two shapes need it, and neither was expressible with `max_per_target` alone:
+
+1. **"Twice, for two different Arts."** One copy per Art is legal
+   (`max_per_target: 1`), but the item as a whole may only appear twice
+   (`max_total: 2`). Without the total cap, a build could legally take
+   Affinity/Puissant copies for three or more different Arts, since each Art
+   is a distinct duplicate key.
+2. **Forbidden repetition with a free-text target.** `virtue.inoffensive_to_beings`,
+   `flaw.offensive_to_beings`, `flaw.unbearable_to_beings`, and
+   `flaw.fish_out_of_water_terrain` each carry a `being`/`terrain` parameter, so
+   two selections naming two different targets are two different duplicate
+   keys and do not collide under `max_per_target` — even though the rulebook
+   forbids taking the item more than once at all, full stop. `max_total: 1` is
+   what actually enforces "not more than once"; `max_per_target` is left at its
+   default of 1 too (no repeat at the *same* target either), so both fields are
+   set on these four items and both are load-bearing.
+
+**Same sentinel convention as `max_per_target`: absent = `u8::MAX` (255) = "no
+stated ceiling"** (see the box above). A stated ceiling is encoded literally.
+
+Items whose descriptor caps the TOTAL number of copies, each with the line
+that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
+
+| Item | Line | Rule text (abridged) |
+|---|---|---|
+| `virtue.inoffensive_to_beings` | `:4139` | "You may not take this Virtue more than once" |
+| `flaw.offensive_to_beings` | `:6530` | "You may not take this Flaw more than once" |
+| `flaw.unbearable_to_beings` | `:6897` | "You may not take this Flaw more than once" |
+| `flaw.fish_out_of_water_terrain` | `:6132` | "This Flaw may only be taken once, because taking it more than once makes it less serious, rather than more" |
+| `virtue.affinity_art` | `:3378` | "You may take this Virtue twice, for two different Arts" |
+| `virtue.puissant_art` | `:4820` | "You may take this Virtue twice, for two different Arts" |
+
 Repeat rules the data model cannot express (deliberately left unenforced rather
 than approximated):
 
@@ -833,20 +879,19 @@ than approximated):
   for no more than half of the character's total Virtues" (`:3665`, `:3669`).
   The engine has absolute category caps but no proportional per-item cap; this
   is a whole-build ratio and is left to the troupe.
-- **A cap on total copies regardless of target.** Two shapes need it and neither
-  is expressible: items that repeat "twice, for two different Arts"
-  (`virtue.affinity_art` `:3378`, `virtue.puissant_art` `:4820`) admit one copy
-  per Art today, and items that *forbid* repetition while carrying a target
-  parameter (`virtue.inoffensive_to_beings` `:4139`,
-  `flaw.offensive_to_beings` `:6530`, `flaw.unbearable_to_beings` `:6897`,
-  `flaw.fish_out_of_water_terrain` `:6132`) admit one copy per target where the
-  rules allow exactly one in total. `max_per_target` is per-target by
-  construction; a `max_selections` (per-item, all targets) field would be needed.
 - **"A different X each time" where X is free text.** Greater Immunity's
   immunity, Social Contacts' social group and Vulnerable Magic's condition are
   not recorded, so distinctness is not enforced. These items record no target at
   all today; adding a `Text` parameter would enforce it but would invalidate
-  existing saves whose selections carry no such parameter.
+  existing saves whose selections carry no such parameter. The same gap applies
+  to the **per-power caps** on `flaw.slow_power` (`:6761`, "more than once, if
+  the character has multiple powers, but not more than once for a single
+  power") and `virtue.variable_power` (`:5205`, "more than once, if the
+  character has more than one power"): both are `max_per_target: 255` with no
+  parameter naming *which* power, so a build could legally stack either onto
+  the same single power today. Neither `max_per_target` nor `max_total` can
+  fix this without a recorded per-copy target — `max_total` caps the item's
+  grand total, not "at most one per power", so it is the wrong tool here.
 
 Repeated copies stack through the normal effect sum — `for_each_effect!` walks
 every selection, so two Improved Characteristics yield
