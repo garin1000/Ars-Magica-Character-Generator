@@ -37,6 +37,10 @@ WP5 → WP6 → WP7, one finding at a time.
 | 2026-09-04 | WP4/WP6/WP7 | Findings 11, 15, 19, 20, 22–27, 1 done and committed; statuses corrected across the document. **All 25 findings from the session are resolved** — 22 fixed, 13 withdrawn, 10 and 14 closed. (10 was reopened the same day and fixed; see the row below.) Only finding 28, raised here as a by-product, is still open and needs a decision. | Full gate green per package; e2e green after WP3 (43/43), WP4, WP5, WP6 |
 | 2026-09-04 | WP1 correction | **Finding 10 reopened and done.** The 2026-09-03 closure was wrong: `Mythic Companion` is one of the `### <Category>, <Magnitude>` headings the `## List of Virtues` index groups by (:3329), not a `Tainted`-style marker. `mythic_companion` is now a real category on the four Virtues, permitted to the `mythic_companion` profile alone — which stops a grog taking Devil Child, as :2637 requires. `category-mythic_companion` added to both locales; RULES.md's marker note replaced by the corrected one. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `fmt --check`, full UI gate, `cargo tauri build --no-bundle` — all green |
 | 2026-09-04 | follow-up | Two real e2e failures from WP6/WP7 fixed: the Living Conditions checklist overflowed its column by 15px (rows inherit `nowrap`, widest label 358px against a 325px track — floor raised to 24rem, labels may wrap), and the new German tab-strip test read `''` for every tab because this WebKitGTK driver's `getText()` returns the empty string for any `overflow: hidden` element, clipped or not. Both locked with unit-level assertions. | `aging`, `aging-crisis`, `tab-area`, `i18n-german` specs green individually; full suite re-run after |
+| 2026-09-04 | second pass | Findings 32, 31 done: the four Outer-Mystery Virtues (Heartbeast, The Enigma, Faerie Magic, Verditius Magic) now require their House via `Prereq::House`, including the open House-grant menus that let a Jerbiton or Ex Miscellanea pick around it; the not-bought Ability row's dropped remove button was redistributing its width onto the name column, now reserved in an empty `.remove-slot`. Findings 29, 30 done: granted Reputations are listed rather than added by a button, each row naming its granting Virtue/Flaw; Famous's wildcard stopped flattening into four rows. Finding 34 done: the whole V/F chapter swept for repeatability, 25 items given a data-declared ceiling; finding 35 opened as the mirror defect (a total-copy cap the model has no field for) and recorded in `docs/open-todos.md`. | Not re-run for this row: written when the statuses were reconciled on 2026-09-06, so the gate is assumed from the project's pre-commit rule rather than observed |
+| 2026-09-05 | second pass | Finding 33 done: the Aging tab's three columns restored as explicit `.aging-column` wrappers (schedule + living conditions, roll calculator alone, log + accumulated read-outs + longevity ritual) rather than the CSS multi-column approach findings 22/20 had already reverted; default window raised to 1400x900 so the three ~431px tracks fit. `docs/open-todos.md` refreshed (two items closed, three raised); the German tab-strip labels (11.25px) checked in the running app and left as they are. | Not re-run for this row: written during the 2026-09-06 reconciliation, so the gate is assumed from the project's pre-commit rule rather than observed |
+| 2026-09-06 | — | Finding 28 closed: Spirit Votary's +7 Flaw points confirmed as the standard Mythic Companion arithmetic (`:2638` ten Flaw points at 2:1, minus the 3 Pagan funds toward the 6 budgeted points its required Virtues cost) — Core does state the number, just not as a digit; only the RULES.md provenance note was wrong. No data change. | n/a (docs only) |
+| 2026-09-06 | max_total | Finding 35 done, finding 36 done, finding 37 opened deliberately: `PointItem::max_total` (total copies across all targets, default 255 = no stated ceiling) added alongside `max_per_target`, with a new `too_many_selections` validation error; `validate_duplicate_selections` made grant-aware in the same slice, closing a second hole where a House-granted Puissant Ignem stacked invisibly with a bought one; the four once-only items get `max_total: 1`, Affinity/Puissant Art get `max_total: 2`; the Available list, open grant menus and `ParameterPicker` all consult the new ceiling; `flaw.restricted_power` unblocked (`max_per_target: 255`, matching `flaw.slow_power`); `virtue.folk_magic` left capped, pending an enumerated parameter domain. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `cargo fmt --check`, full UI gate (`test:unit`, `check`, `lint`, `format:check`) and `cargo tauri build --no-bundle` all green per slice; the full 43-spec e2e suite ran 42 passing, 1 failure — a test defect in the new `repeat-virtues.e2e.js` spec (a hardcoded selections index invalid for a magus, whose mandatory traits occupy the first slots) — fixed and re-verified for that spec |
 
 **Caution for the next session:** `npm run test:e2e` exited **0** with
 `41 passed, 2 retries, 2 failed, 43 total`. The exit status is not a verdict —
@@ -708,13 +712,14 @@ pinned by `app.css.test.ts`.
 
 ## Second pass — 2026-09-05
 
-Findings from a further session against the Windows build. **Collected only;
-nothing here is implemented, and no approach is decided.** Numbering continues
-the first pass.
+Findings from a further session against the Windows build. Originally
+collected only, with nothing implemented and no approach decided; see each
+entry's own **Status** for where it stands now. Numbering continues the first
+pass.
 
 ### 29 — Granted Reputations are added by a button instead of being listed
 
-**Status:** open
+**Status:** done (2026-09-04)
 
 A character whose Virtue or Flaw grants a Reputation gets a button reading
 "Add Ecclesiastical Reputation (level 4)". Pressing it twice produces two
@@ -731,9 +736,24 @@ To settle at fix time: whether any V/F can grant the same Reputation kind twice
 legitimately (two separate reputations of one kind), and what a save holds for a
 granted-but-undescribed reputation.
 
+**Resolution.** The Reputations panel now lists a row per grant directly —
+description empty and waiting, no add button, nothing to duplicate (`66d46c6`).
+Both open questions are answered: yes, a character can legitimately hold two
+Reputations of the same kind and score (Apostate and Senior Clergy both grant
+Ecclesiastical 4) — pinned by
+`two_reputations_of_one_kind_and_score_roundtrip_as_distinct_rows`
+(`crates/arm-rules/src/types.rs`), where only `content` (the free-text
+description) tells the two rows apart; and a granted-but-undescribed
+Reputation writes nothing to the save at all — the rows are derived from the
+character's Virtues/Flaws each time the file is opened, so their presence
+never marks the save dirty. Famous's wildcard grant (type left to the player)
+was fixed alongside: it used to flatten into one row per Reputation type
+(four), where `validate_reputations` had always counted it as the single slot
+it is; it now renders as one row with a type `<select>`.
+
 ### 30 — A granted Reputation never says which Virtue or Flaw granted it
 
-**Status:** open
+**Status:** done (2026-09-04)
 
 Asked as "Why Ecclesiastical at all??" — the app offers an Ecclesiastical
 Reputation with no indication of where it came from. Three shipped items grant
@@ -747,9 +767,17 @@ character's Social Status is not the source.
 Related to 29: if the list were prefilled from the grants, the row could name its
 source directly.
 
+**Resolution.** `ReputationGrant` gained a `source: Id` field naming the
+granting Virtue/Flaw (`crates/arm-rules/src/effective/reputation_and_caps.rs`),
+populated from the selection `for_each_effect!` hands to `reputation_grants`
+instead of being dropped on the floor; the app layer
+(`crates/arm-app/src/ruleset_io.rs`) passes it through unchanged and each row
+now names its source (`66d46c6`). Landed together with 29, since both needed
+the same prefilled-row mechanism.
+
 ### 31 — Alignment breaks on the not-bought Ability rows
 
-**Status:** open
+**Status:** done (2026-09-04)
 
 The read-only "not bought" rows added for finding 17 (an Ability carrying a
 Puissant bonus or a granted floor but no bought score) do not line up with the
@@ -758,6 +786,19 @@ current scale: the marker occupies the specialty column
 (`.ability-selection .ability-unbought`) and the row omits the specialty input,
 the parameter field and the remove button, any of which may be what shifts the
 columns.
+
+**Resolution.** The remove button, not the specialty input or parameter
+field, was the cause: `.ability-selection li` is a flex line with two
+growing items (`.item-name` and the trailing `.specialty`/`.ability-unbought`),
+so omitting the button redistributed its width (1.9rem plus a 0.4rem gap)
+between them — about 15px that pushed the spinner, badge and marker right on
+exactly the not-bought rows. Fixed by reserving the button's width in an
+empty, `aria-hidden` `.remove-slot` box, the same trade the effective-score
+slot already makes for an absent badge, so both row kinds spend identical
+width (`37a3a36`; `ui/src/app.css`, `ui/src/lib/components/AbilityTab.svelte`).
+The marker's type size also moved from `--font-small` to `--font-chrome`, the
+scale step row markers actually use. Pinned by geometry assertions in
+`ui/src/app.css.test.ts` and `AbilityTab.test.ts` — neither existed before.
 
 ### 34 — A Virtue the rules let you take repeatedly can only be taken once
 
@@ -823,7 +864,7 @@ Demonic Powers 40 levels.
 
 ### 35 — The mirror defect: items the rules forbid repeating can be repeated
 
-**Status:** open — found while fixing 34
+**Status:** done (2026-09-06) — found while fixing 34
 
 `max_per_target` is per *target* by construction, and the duplicate check keys on
 `(item, params)` (`crates/arm-rules/src/validation/selections.rs:121-144`). So an
@@ -844,6 +885,40 @@ app allows one per Art — up to fifteen.
 All six need a cap on **total copies across all targets**, which the model has no
 field for. That is the whole finding: a `max_selections` beside `max_per_target`,
 or an equivalent, plus the data.
+
+**Resolution.** `PointItem` gained `max_total` — total copies across every
+distinct parameter target, default 255 = no stated ceiling — alongside the
+existing `max_per_target`, and a new `too_many_selections` validation error
+fires when the count exceeds it (`8801b03`). The four once-only items
+(Inoffensive to (Beings) `:4139`, Fish out of Water `:6132`, Offensive to
+(Beings) `:6530`, Unbearable to (Beings) `:6897`) now carry `max_total: 1`;
+`virtue.affinity_art` (`:3378`) and `virtue.puissant_art` (`:4820`) carry
+`max_total: 2`, keeping their `max_per_target: 1` too, so "twice, for two
+different Arts" enforces both halves of the sentence (`bb305fd`). The
+Available list greys an at-cap row with a reason, open grant menus drop an
+at-cap item (excluding the menu's own current occupant, so a pick never
+vanishes from its own dropdown), and `ParameterPicker` counts granted copies
+alongside bought ones (`a2dc130`).
+
+The fix turned out larger than the finding described. `validate_duplicate_selections`
+read only bought selections, so a House-granted copy was invisible to the
+*per-target* check as well as the new total one: a Flambeau magus granted a
+free Puissant Ignem who also bought Puissant Ignem validated clean while
+quietly stacking +6 onto Ignem — two copies of the same Virtue for the same
+Art, against `:4820`'s "twice, for **two different** Arts" taken literally.
+`validate()` now folds bought-plus-granted selections once per run, and both
+the per-target and the total check read that folded list (`8801b03`).
+
+One leg is deliberately report-only: a mandatory House choice (e.g.
+Flambeau's Puissant Perdo/Ignem) can itself push a character over
+`max_total`, since that grant is unconditional — gating it would deadlock
+the build with no way forward. The validator reports `too_many_selections`;
+the player resolves it by removing a bought copy (`a2dc130`).
+
+Accepted consequence: an existing save holding two bought Puissant Arts plus
+a House-granted one now opens showing an error it did not show before. No
+data loss — saves store choices (`Selection { ref, params }`), never
+resolved legality, and the engine only reports.
 
 ### 33 — The Aging tab lost its columns; it should keep three, done properly
 
@@ -936,7 +1011,7 @@ well clear of the fold.
 
 ### 32 — Heartbeast is offered to a magus of any House
 
-**Status:** open
+**Status:** done (2026-09-04)
 
 A Bonisagus magus can select `virtue.heartbeast`. The entry carries no
 `prerequisites` (`rules/core/virtues_flaws.json:4421-4429`), while the source
@@ -952,3 +1027,66 @@ deciding is whether the correct model is a House prerequisite, a
 mutual-exclusion with the other Houses' free Virtues, or something that changes
 the House. Worth checking the other Houses' Outer Mystery Virtues for the same
 gap while fixing it.
+
+**Resolution.** Fixed as a House prerequisite: `Prereq::House` already
+existed in the engine, unused by any shipped data. The other Houses' Outer
+Mystery Virtues did carry the same gap, as flagged: The Enigma (`:3759-3761`,
+Criamon), Faerie Magic (`:3825-3827`, Merinita) and Verditius Magic
+(`:5215-5217`, Verditius) are, with Heartbeast, the only four core-rules V/F
+descriptors carrying the "and thus are a member of House X" clause. All four
+now carry `"prerequisites": { "kind": "house", "value": "house.<x>" }`
+(`rules/core/virtues_flaws.json`). On a bought row, a magus of another House
+gets `prereq_not_met`; a magus with no House chosen yet gets the
+`prereq_unevaluated` warning rather than a block, since an absent House is
+genuinely undecided, not a failure. The House's own granted row is never
+prerequisite-checked, so Bjornaer's free Heartbeast stays legal. The open
+House-grant menus were the real hole: Jerbiton's `jerbiton_minor_virtue` and
+Ex Miscellanea's `ex_misc_minor_virtue` both offer any Minor Hermetic Virtue,
+and a grant pick is never prerequisite-checked, so a Jerbiton could have
+acquired Heartbeast with nothing said at all — `grant.rs::open_pick_satisfies`
+and `ui/src/lib/derive.ts::eligibleForConstraint`'s `houseOnlyValue` now both
+filter House-prerequisite items out of those menus (`8c1ee42`).
+
+### 36 — `flaw.restricted_power` was capped at one, not one per power
+
+**Status:** done (2026-09-06)
+
+An escapee from finding 34's sweep, not part of 35. `:6689` "This Flaw may be
+taken once for each power the character possesses" — but the entry carried
+neither a parameter nor a raised `max_per_target`, so the app allowed exactly
+one copy.
+
+**Resolution.** `max_per_target: 255` added
+(`rules/core/virtues_flaws.json:2399`), the same "no stated ceiling" treatment
+`flaw.slow_power` already had (`98a2a0d`). Residual gap, written down rather
+than papered over: the rule caps *per power*, and no selection records which
+power a copy names, so nothing stops two copies naming the same one — the
+same recorded limitation as `flaw.slow_power` (`:6761`) and
+`virtue.variable_power` (`:5205`); see the "Repeat rules the data model cannot
+express" section of `crates/arm-rules/RULES.md`.
+
+### 37 — `virtue.folk_magic` still caps at one copy
+
+**Status:** open — deliberately (2026-09-06)
+
+Also an escapee from finding 34's sweep. `:3919` "You may pick this Virtue
+more than once, to acquire expertise in a different category of spells" — the
+entry carries no parameter, so it stays at the default `max_per_target: 1`.
+
+`:3909` restricts the category to "one of the following four options",
+enumerated at `:3911-3917` (Abjuration, Divination, Healing, Evil Eye). A
+`max_per_target: 4` ceiling was considered and rejected (`98a2a0d`): it
+hardcodes a count the list already implies, and would still allow two copies
+naming the same category.
+
+**Decision.** The right fix is a data-declared enumerated parameter domain: a
+category parameter whose legal values are exactly the four listed spell
+categories, after which `max_per_target: 1` on that parameter gives
+distinctness per category, the total-of-four falls out of the list's length
+instead of being stated separately, and a future supplement adding a fifth
+category needs no engine change. `ParameterDomain`
+(`crates/arm-rules/src/types.rs:424-447`) is a fixed enum over existing
+registries (Ability, Art, Technique, Form, Characteristic, Item, Text) with no
+such variant today; building one is out of scope for this fix. See the
+deferral recorded in `crates/arm-rules/RULES.md` ("Enumerated parameter
+domain, not free text").
