@@ -4296,6 +4296,7 @@ const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("flaw.deteriorating_power", 5948),
     ("flaw.flawed_parma_magica", 6144),
     ("flaw.limited_magic_resistance", 6348),
+    ("flaw.restricted_power", 6689),
     ("flaw.slow_power", 6761),
     ("flaw.vulnerable_casting", 6997),
     ("flaw.vulnerable_magic", 7009),

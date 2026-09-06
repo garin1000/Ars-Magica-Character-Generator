@@ -812,6 +812,7 @@ carry `max_per_target: 255` in `rules/core/virtues_flaws.json`:
 | `flaw.deteriorating_power` | `:5948` | "more than once, if the character has more than one Power" |
 | `flaw.flawed_parma_magica` | `:6144` | "may purchase this Flaw more than once for different Forms" |
 | `flaw.limited_magic_resistance` | `:6348` | "multiple times, for multiple Forms" |
+| `flaw.restricted_power` | `:6689` | "may be taken once for each power the character possesses" |
 | `flaw.slow_power` | `:6761` | "more than once, if the character has multiple powers, but not more than once for a single power" |
 | `flaw.vulnerable_casting` | `:6997` | "may have, or acquire, this Flaw more than once, losing 1 extra Fatigue level for each level" |
 | `flaw.vulnerable_magic` | `:7009` | "multiple times, so long as a different condition is specified for each" |
@@ -886,12 +887,54 @@ than approximated):
   existing saves whose selections carry no such parameter. The same gap applies
   to the **per-power caps** on `flaw.slow_power` (`:6761`, "more than once, if
   the character has multiple powers, but not more than once for a single
-  power") and `virtue.variable_power` (`:5205`, "more than once, if the
-  character has more than one power"): both are `max_per_target: 255` with no
-  parameter naming *which* power, so a build could legally stack either onto
-  the same single power today. Neither `max_per_target` nor `max_total` can
-  fix this without a recorded per-copy target — `max_total` caps the item's
-  grand total, not "at most one per power", so it is the wrong tool here.
+  power"), `virtue.variable_power` (`:5205`, "more than once, if the
+  character has more than one power"), and `flaw.restricted_power` (`:6689`,
+  "may be taken once for each power the character possesses"): all three are
+  `max_per_target: 255` with no parameter naming *which* power, so a build
+  could legally stack any of them onto the same single power today. Neither
+  `max_per_target` nor `max_total` can fix this without a recorded per-copy
+  target — `max_total` caps the item's grand total, not "at most one per
+  power", so it is the wrong tool here.
+- **Enumerated parameter domain, not free text.** `virtue.folk_magic` (`:3919`,
+  "You may pick this Virtue more than once, to acquire expertise in a
+  different category of spells") repeats over a *closed* list — the spell
+  category must be "one of the following four options" (`:3909`), enumerated
+  at `:3911-3917` as Abjuration, Divination, Healing, and Evil Eye — yet the
+  item carries no parameter at all today, so it is stuck at `max_per_target: 1`
+  (one copy total) rather than one copy per category. Encoding
+  `max_per_target: 4` was considered and rejected: it hardcodes a count the
+  category list already implies, and it would not stop two copies from naming
+  the *same* category, which the rulebook does not allow either. The correct
+  fix is a data-declared enumerated parameter domain — a category parameter
+  whose legal values are exactly the four listed spell categories — after
+  which `max_per_target: 1` on that parameter gives distinctness for free, the
+  total-of-four falls out of the list's length instead of being stated
+  separately, and a supplement that adds a fifth category needs no engine
+  change. `ParameterDomain` (`crates/arm-rules/src/types.rs:424-447`) has no
+  such variant today — it is a fixed seven-variant enum resolving against
+  existing registries (abilities, arts — with the Technique and Form
+  narrowings — characteristics, and point items, plus free `text`), with no way
+  for a rules entry to declare its own closed value list. Building that variant is out of
+  scope for this fix; `virtue.folk_magic` stays unparameterized and capped at
+  one copy until it exists.
+
+  Three shipped items already show the same shape from the other direction —
+  they carry a free-text `domain: "text"` parameter for a slot the rulebook
+  actually enumerates, though none of them repeat (each is independently
+  capped at one copy total via `max_total: 1`, see *Selection multiplicity —
+  `max_total`* above): `virtue.inoffensive_to_beings`'s `being` (`:4135`, "one
+  of five classes of beings: animals, divine beings, faeries, demons, or
+  magical creatures"), `flaw.offensive_to_beings`'s `being` (`:6526`, "one of
+  six classes of beings: animals, mundane humans, divine beings, faeries,
+  demons, or magical creatures"), and `flaw.unbearable_to_beings`'s `being`
+  (`:6893`, "one of three classes of beings: mundane humans, demons, or divine
+  beings"). All three would benefit from the same enumerated-domain variant if
+  it is ever built, so the being lists stay authoritative in one place instead
+  of copied into free text at selection time.
+  `flaw.fish_out_of_water_terrain`'s `terrain` parameter is different: `:6130`
+  lists example terrains and ends "…, etc.", so the rulebook leaves the set
+  open-ended on purpose — free text is the right encoding there, and it is NOT
+  a candidate for the enumerated-domain fix.
 
 Repeated copies stack through the normal effect sum — `for_each_effect!` walks
 every selection, so two Improved Characteristics yield
