@@ -242,7 +242,10 @@ fn warping_open_grant(
 
 /// The off-budget owed warping V/F fills the player has chosen, resolved to real
 /// [`Selection`]s so they fold through [`entity_grants`] for prereq/effect
-/// purposes. Budget- and cap-exempt, exactly like House grants. A pick carrying
+/// purposes. Budget-exempt, exactly like House grants — but **not** cap-exempt:
+/// these folded copies count toward `max_per_target`, `max_total` and
+/// `max_share_of_kind`, because [`crate::validation::validate`] runs those checks
+/// against the folded bought-plus-granted list. A pick carrying
 /// [`Effect::WarpingGrant`] is dropped (ineligible — the recursion guard), so a
 /// warping fill can never feed Warping Points back into the owed count.
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:16553-16561.
