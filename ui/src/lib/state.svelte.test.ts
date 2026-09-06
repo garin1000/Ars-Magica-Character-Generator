@@ -7,6 +7,7 @@ import type {
   CreationPhase,
   Entity,
   EntityTypeProfile,
+  EffectiveScores,
   House,
   LocalizedRuleset,
   PointItem,
@@ -1130,6 +1131,56 @@ describe('addSelection', () => {
     store.addSelection('virtue.unknown');
     store.addSelection('virtue.unknown');
     expect(store.entity.selections).toEqual([{ ref: 'virtue.unknown' }]);
+  });
+
+  // max_total slice: the store itself must not exceed an item's total ceiling,
+  // even though VirtueFlawTab's disabled predicate is its only production
+  // caller today — this is the model-level guard, not a UI-only one.
+  describe('max_total ceiling', () => {
+    function installCapped(maxTotal?: number): void {
+      installRuleset([
+        item({
+          id: 'virtue.puissant_art',
+          parameters: [{ key: 'art', type: 'ref', domain: 'art' }],
+          ...(maxTotal !== undefined ? { max_total: maxTotal } : {}),
+        }),
+      ]);
+    }
+
+    it('allows adding up to max_total', () => {
+      installCapped(2);
+      store.addSelection('virtue.puissant_art');
+      store.addSelection('virtue.puissant_art');
+      expect(store.entity.selections).toHaveLength(2);
+    });
+
+    it('refuses a further bought copy once bought copies alone reach max_total', () => {
+      installCapped(2);
+      store.addSelection('virtue.puissant_art');
+      store.addSelection('virtue.puissant_art');
+      store.addSelection('virtue.puissant_art');
+      expect(store.entity.selections).toHaveLength(2);
+    });
+
+    it('counts a granted copy toward the same cap as a bought one', () => {
+      installCapped(2);
+      store.effective = {
+        granted_selections: [{ ref: 'virtue.puissant_art', params: { art: 'art.perdo' } }],
+      } as unknown as EffectiveScores;
+      // One bought copy + one granted copy already sits AT the cap of 2.
+      store.addSelection('virtue.puissant_art');
+      expect(store.entity.selections).toHaveLength(1);
+      store.addSelection('virtue.puissant_art');
+      expect(store.entity.selections).toHaveLength(1);
+    });
+
+    it('never caps an item with no stated max_total (default unlimited)', () => {
+      installCapped(undefined);
+      store.addSelection('virtue.puissant_art');
+      store.addSelection('virtue.puissant_art');
+      store.addSelection('virtue.puissant_art');
+      expect(store.entity.selections).toHaveLength(3);
+    });
   });
 });
 

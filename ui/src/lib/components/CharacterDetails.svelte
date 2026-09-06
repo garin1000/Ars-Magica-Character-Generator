@@ -1,7 +1,9 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import {
+    atMaxTotalRefs,
     eligibleForConstraint,
+    excludeSelection,
     grantItemLabel,
     groupWarpingOwedGrants,
     U32_MAX,
@@ -48,12 +50,24 @@
 
   // Point items an owed slot admits: the constraint's kind/magnitude/category,
   // AND never an item that itself grants Warping (the recursion guard — mirrors
-  // the engine's ineligibility rule).
-  function eligibleForWarping(c: GrantConstraint): PointItem[] {
+  // the engine's ineligibility rule), AND never an item already AT its
+  // `max_total` ceiling (see `atMaxTotalRefs`), so the menu never offers a pick
+  // the engine's `too_many_selections` validator would immediately reject.
+  //
+  // `currentPick` (this slot's OWN current fill, once resolved) is excluded
+  // from the granted count first: once stored, an owed fill is itself folded
+  // into `effective.granted_selections` like any other grant, so an item whose
+  // max_total is reached BY THIS VERY FILL would otherwise vanish from its own
+  // `<select>`'s option list.
+  function eligibleForWarping(c: GrantConstraint, currentPick: Selection | undefined): PointItem[] {
     const rs = store.ruleset;
-    return rs
-      ? eligibleForConstraint(rs, c, store.entity.house ?? null, { excludeWarpingSources: true })
-      : [];
+    if (!rs) return [];
+    const granted = excludeSelection(store.effective?.granted_selections ?? [], currentPick);
+    const atCapRefs = atMaxTotalRefs(rs, store.entity.selections ?? [], granted);
+    return eligibleForConstraint(rs, c, store.entity.house ?? null, {
+      excludeWarpingSources: true,
+      atCapRefs,
+    });
   }
 
   // The Selection filling one owed slot (undefined while unchosen). The whole
@@ -166,7 +180,7 @@
                       data-testid="warping-fill-{slot.choice_key}"
                     >
                       <option value="">{store.t('warping-choose-prompt')}</option>
-                      {#each eligibleForWarping(slot.constraint) as item (item.id)}
+                      {#each eligibleForWarping(slot.constraint, pick) as item (item.id)}
                         <option value={item.id}>{warpingItemName(item.id)}</option>
                       {/each}
                     </select>

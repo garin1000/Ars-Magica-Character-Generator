@@ -22,7 +22,9 @@ import {
   childhoodSlotFault,
   childhoodSlots,
   combatRowLabel,
+  atMaxTotalRefs,
   displayName,
+  excludeSelection,
   eligibleForConstraint,
   exemplarLabel,
   filterAbilities,
@@ -65,6 +67,7 @@ import {
   RITUAL_MINIMUM_LEVEL_FALLBACK,
   spellDisplayName,
   spellLevelAllocation,
+  totalCopies,
 } from './derive';
 import type {
   Ability,
@@ -960,6 +963,122 @@ describe('paramValueUsage', () => {
     const usage = paramValueUsage(selections, 'virtue.great', 'characteristic', 0);
     expect(usage.get('characteristic.per')).toBe(1);
     expect(usage.size).toBe(1);
+  });
+});
+
+// --- totalCopies() -----------------------------------------------------------
+
+// Companion to paramValueUsage: that one is keyed by parameter VALUE for one
+// target's `max_per_target` cap, this one is keyed by item ref alone for the
+// item's TOTAL `max_total` ceiling across every target — bought plus granted
+// copies, mirroring the engine's `validate_total_selection_cap`
+// (`crates/arm-rules/src/validation/selections.rs`).
+describe('totalCopies', () => {
+  it('counts bought copies of an item across different parameter targets', () => {
+    const bought = [
+      { ref: 'virtue.puissant_art', params: { art: 'art.ignem' } },
+      { ref: 'virtue.puissant_art', params: { art: 'art.perdo' } },
+      { ref: 'virtue.other' },
+    ];
+    expect(totalCopies(bought, [], 'virtue.puissant_art')).toBe(2);
+  });
+
+  it('folds in granted copies alongside bought ones', () => {
+    const bought = [{ ref: 'virtue.puissant_art', params: { art: 'art.ignem' } }];
+    const granted = [{ ref: 'virtue.puissant_art', params: { art: 'art.perdo' } }];
+    expect(totalCopies(bought, granted, 'virtue.puissant_art')).toBe(2);
+  });
+
+  it('counts a granted-only item with no bought copies', () => {
+    const granted = [{ ref: 'virtue.puissant_art', params: { art: 'art.ignem' } }];
+    expect(totalCopies([], granted, 'virtue.puissant_art')).toBe(1);
+  });
+
+  it('is zero for an item with neither bought nor granted copies', () => {
+    expect(totalCopies([{ ref: 'virtue.other' }], [{ ref: 'virtue.other' }], 'virtue.absent')).toBe(
+      0,
+    );
+  });
+});
+
+// --- atMaxTotalRefs() --------------------------------------------------------
+
+describe('atMaxTotalRefs', () => {
+  const items = [
+    item({ id: 'virtue.puissant_art', max_total: 2 }),
+    item({ id: 'virtue.uncapped' }),
+  ];
+  const ruleset = makeRuleset(items);
+
+  it('flags an item whose bought+granted total has reached its max_total', () => {
+    const bought = [
+      { ref: 'virtue.puissant_art', params: { art: 'art.ignem' } },
+      { ref: 'virtue.puissant_art', params: { art: 'art.perdo' } },
+    ];
+    expect(atMaxTotalRefs(ruleset, bought, []).has('virtue.puissant_art')).toBe(true);
+  });
+
+  it('does not flag an item still under its max_total', () => {
+    const bought = [{ ref: 'virtue.puissant_art', params: { art: 'art.ignem' } }];
+    expect(atMaxTotalRefs(ruleset, bought, []).has('virtue.puissant_art')).toBe(false);
+  });
+
+  it('counts a granted copy toward the same cap as a bought one', () => {
+    const bought = [{ ref: 'virtue.puissant_art', params: { art: 'art.ignem' } }];
+    const granted = [{ ref: 'virtue.puissant_art', params: { art: 'art.perdo' } }];
+    expect(atMaxTotalRefs(ruleset, bought, granted).has('virtue.puissant_art')).toBe(true);
+  });
+
+  it('never flags an item with no stated max_total, however many copies exist', () => {
+    const bought = [
+      { ref: 'virtue.uncapped' },
+      { ref: 'virtue.uncapped' },
+      { ref: 'virtue.uncapped' },
+    ];
+    expect(atMaxTotalRefs(ruleset, bought, []).has('virtue.uncapped')).toBe(false);
+  });
+
+  it('leaves an item with zero copies unflagged (never over-filters)', () => {
+    expect(atMaxTotalRefs(ruleset, [], []).has('virtue.puissant_art')).toBe(false);
+  });
+});
+
+// --- excludeSelection() ------------------------------------------------------
+
+// A grant picker's OWN current pick, once resolved, is folded into
+// `granted_selections` like any other grant — so without this, a slot whose
+// current occupant alone reaches an item's `max_total` would see that very
+// occupant vanish from its own menu (`atMaxTotalRefs` would flag it as AT
+// cap). Excluding one matching occurrence before computing the cap keeps the
+// slot's current value selectable, without hiding a genuinely different
+// at-cap item.
+describe('excludeSelection', () => {
+  it('removes one occurrence matching ref and params', () => {
+    const list = [
+      { ref: 'virtue.puissant_art', params: { art: 'art.ignem' } },
+      { ref: 'virtue.puissant_art', params: { art: 'art.perdo' } },
+    ];
+    const out = excludeSelection(list, {
+      ref: 'virtue.puissant_art',
+      params: { art: 'art.ignem' },
+    });
+    expect(out).toEqual([{ ref: 'virtue.puissant_art', params: { art: 'art.perdo' } }]);
+  });
+
+  it('removes only ONE occurrence when duplicates exist, leaving the other', () => {
+    const list = [{ ref: 'virtue.heartbeast' }, { ref: 'virtue.heartbeast' }];
+    const out = excludeSelection(list, { ref: 'virtue.heartbeast' });
+    expect(out).toEqual([{ ref: 'virtue.heartbeast' }]);
+  });
+
+  it('is a no-op when the selection is undefined', () => {
+    const list = [{ ref: 'virtue.heartbeast' }];
+    expect(excludeSelection(list, undefined)).toBe(list);
+  });
+
+  it('is a no-op when nothing matches', () => {
+    const list = [{ ref: 'virtue.heartbeast' }];
+    expect(excludeSelection(list, { ref: 'virtue.absent' })).toEqual(list);
   });
 });
 
@@ -2569,6 +2688,30 @@ describe('eligibleForConstraint', () => {
         (it) => it.id,
       ),
     ).toEqual(['virtue.minor_super']);
+  });
+
+  // Guided-creation slice (max_total): an open grant menu must not re-offer an
+  // item already at its `max_total` ceiling — the engine's
+  // `too_many_selections` validator would reject it the instant it were picked.
+  // Only a genuinely AT-cap ref is dropped; an item with zero copies (or under
+  // its cap) stays offered, exactly as houses.e2e.js's Ex Miscellanea case needs
+  // (a character holding zero Puissant Art copies must still see it).
+  it('drops an item whose ref is in atCapRefs, and keeps everything else', () => {
+    const ids = eligibleForConstraint(ruleset, { kind: 'virtue', magnitude: 'minor' }, null, {
+      atCapRefs: new Set(['virtue.minor_general']),
+    }).map((it) => it.id);
+    expect(ids).toEqual(['virtue.minor_super', 'virtue.minor_super_warping']);
+  });
+
+  it('offers everything when atCapRefs is omitted', () => {
+    const ids = eligibleForConstraint(ruleset, { kind: 'virtue', magnitude: 'minor' }, null).map(
+      (it) => it.id,
+    );
+    expect(ids).toEqual([
+      'virtue.minor_general',
+      'virtue.minor_super',
+      'virtue.minor_super_warping',
+    ]);
   });
 
   // Mirrors the engine's `open_pick_satisfies`: both lists are matched against

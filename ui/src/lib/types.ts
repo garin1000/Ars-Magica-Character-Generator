@@ -203,6 +203,12 @@ export interface PointItem {
   effects?: Effect[];
   // Max selections per (id, params) target. Omitted when the default (1).
   max_per_target?: number;
+  // Max copies of this item TOTAL, across every distinct parameter target,
+  // counting granted copies — distinct from `max_per_target`, which caps copies
+  // sharing one identical (id, params) target. Omitted when the engine's
+  // default (255) applies, i.e. "no ceiling the rules state". Mirrors the
+  // engine's `PointItem::max_total` (`crates/arm-rules/src/types.rs`).
+  max_total?: number;
 }
 
 // One ability-score bonus, targeting a single ability instance. A parameterized
@@ -501,8 +507,12 @@ export interface EffectiveScores {
   characteristic_effective: Partial<Record<Characteristic, number>>;
   // Aging-drop count per characteristic (only non-zero entries), for the tooltip.
   characteristic_aging_drops: Partial<Record<Characteristic, number>>;
-  // Virtue/Flaw Selections the entity's House grants (derived, never persisted),
-  // in the House's declared grant order, so the V/F view renders them read-only.
+  // Virtue/Flaw Selections granted onto the entity (derived, never persisted), in
+  // declared grant order, so the V/F view renders them read-only. Fed by the
+  // engine's `entity_grants` (`crates/arm-app/src/ruleset_io.rs`), which folds
+  // together House grants, Mythic Companion type grants, `grants_selection`
+  // grants (a bought item granting a further free item), and warping grants —
+  // NOT House grants alone.
   granted_selections: Selection[];
   // Effective virtue/flaw point ceilings (base budget + Mythic Companion type
   // bonus), so the balance bar shows the true budget (Devil Child 37/17).

@@ -1,6 +1,12 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { eligibleForConstraint as eligibleItems, grantItemLabel, sameSelection } from '../derive';
+  import {
+    atMaxTotalRefs,
+    eligibleForConstraint as eligibleItems,
+    excludeSelection,
+    grantItemLabel,
+    sameSelection,
+  } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
   import { tooltip, type TooltipContent } from '../actions';
   import type {
@@ -45,8 +51,10 @@
   }
 
   // Items a constraint admits — the shared filter, mirroring the engine's
-  // `open_pick_satisfies`. Serves both the required-Flaw substitute menu and an
-  // `open` free-Virtue grant.
+  // `open_pick_satisfies`. Used for pure constraint eligibility (deciding
+  // WHICH bought Flaw currently satisfies a slot); never max_total-aware,
+  // since a cap check here could hide the very row that already satisfies the
+  // slot and make `currentRequiredFlaw` fall back to the wrong default.
   function eligibleForConstraint(c: GrantConstraint): PointItem[] {
     const rs = store.ruleset;
     return rs ? eligibleItems(rs, c, store.entity.house ?? null) : [];
@@ -70,6 +78,43 @@
     const eligible = new Set(eligibleForConstraint(flaw.constraint).map((it) => it.id));
     const chosen = (store.entity.selections ?? []).find((s) => eligible.has(s.ref));
     return chosen?.ref ?? flaw.default.ref;
+  }
+
+  // Items an `open` free-Virtue grant admits: the shared constraint filter,
+  // reduced by any item already AT its `max_total` ceiling (see
+  // `atMaxTotalRefs`), so the menu never offers a pick the engine's
+  // `too_many_selections` validator would immediately reject.
+  //
+  // `currentPick` (this slot's OWN current value, once resolved) is excluded
+  // from the granted count first: once stored, an open pick is itself folded
+  // into `effective.granted_selections` like any other grant, so an item
+  // whose max_total is reached BY THIS VERY PICK would otherwise vanish from
+  // its own `<select>`'s option list.
+  function eligibleForOpenGrant(
+    c: GrantConstraint,
+    currentPick: Selection | undefined,
+  ): PointItem[] {
+    const rs = store.ruleset;
+    if (!rs) return [];
+    const granted = excludeSelection(store.effective?.granted_selections ?? [], currentPick);
+    const atCapRefs = atMaxTotalRefs(rs, store.entity.selections ?? [], granted);
+    return eligibleItems(rs, c, store.entity.house ?? null, { atCapRefs });
+  }
+
+  // Items a required-Flaw substitute menu offers: the shared constraint filter,
+  // reduced by max_total — excluding the SLOT'S OWN current occupant (a bought
+  // selection, unlike the open-grant case above) from the cap count first, so
+  // a Flaw whose max_total is reached only by already sitting in this exact
+  // slot stays offered (and selected) rather than vanishing from its own menu.
+  function eligibleForFlawSubstitute(flaw: RequiredFlaw): PointItem[] {
+    const rs = store.ruleset;
+    if (!rs) return [];
+    const currentRef = currentRequiredFlaw(flaw);
+    const bought = store.entity.selections ?? [];
+    const selfIndex = bought.findIndex((s) => s.ref === currentRef);
+    const withoutSelf = selfIndex === -1 ? bought : bought.filter((_, i) => i !== selfIndex);
+    const atCapRefs = atMaxTotalRefs(rs, withoutSelf, store.effective?.granted_selections ?? []);
+    return eligibleItems(rs, flaw.constraint, store.entity.house ?? null, { atCapRefs });
   }
 
   function onType(event: Event) {
@@ -156,7 +201,7 @@
                 data-testid="mythic-open-{grant.choice_key}"
               >
                 <option value="">{store.t('mythic-choose-prompt')}</option>
-                {#each eligibleForConstraint(grant.constraint) as item (item.id)}
+                {#each eligibleForOpenGrant(grant.constraint, pick) as item (item.id)}
                   <option value={item.id}>{label(item.id)}</option>
                 {/each}
               </select>
@@ -192,7 +237,7 @@
                 aria-labelledby="mythic-required-flaw-label-{flaw.default.ref}"
                 data-testid="mythic-required-flaw-{flaw.default.ref}"
               >
-                {#each eligibleForConstraint(flaw.constraint) as item (item.id)}
+                {#each eligibleForFlawSubstitute(flaw) as item (item.id)}
                   <option value={item.id}>{label(item.id)}</option>
                 {/each}
               </select>

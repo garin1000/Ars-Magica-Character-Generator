@@ -25,7 +25,7 @@ import {
   defaultChildhoodDraft,
   type ChildhoodDraft,
 } from './childhood-workflow.svelte';
-import { mandatoryTraitRefs, sameSelection } from './derive';
+import { mandatoryTraitRefs, sameSelection, totalCopies } from './derive';
 import { FileOperations } from './file-operations.svelte';
 import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
@@ -654,12 +654,27 @@ class AppStore {
    * (e.g. Great Characteristic) or with `max_per_target > 1` — can be added
    * several times, each instance choosing its own target; a plain item is added
    * once. Mirrors {@link addAbility}.
+   *
+   * Also refuses once the item's bought+granted total already sits at its
+   * `max_total` ceiling (Puissant Art, capped at two total across every Art
+   * target) — the model-level guard behind the engine's
+   * `too_many_selections` validator, so the store itself cannot be pushed past
+   * it even though `VirtueFlawTab`'s disabled predicate is its only production
+   * caller today.
    */
   addSelection(ref: string): void {
     const item = this.ruleset?.ruleset.point_items[ref];
     const repeatable = !!item?.parameters?.length || (item?.max_per_target ?? 1) > 1;
     const present = (this.entity.selections ?? []).some((s) => s.ref === ref);
     if (!repeatable && present) return;
+    if (item?.max_total !== undefined) {
+      const count = totalCopies(
+        this.entity.selections ?? [],
+        this.effective?.granted_selections ?? [],
+        ref,
+      );
+      if (count >= item.max_total) return;
+    }
     this.entity.selections = [...(this.entity.selections ?? []), { ref }];
     this.#scheduleValidate();
   }

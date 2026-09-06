@@ -130,6 +130,13 @@ vf-tag-tainted = Tainted
 # Gift, …). { $other } is the selected item that blocks it.
 vf-blocked-incompatible = Incompatible with { $other }
 
+# Reason shown on a Virtue/Flaw the Available list greys out because its
+# bought + granted copies have already reached its total ceiling (e.g.
+# Puissant Art, capped at two total across every Art target). Unlike
+# vf-blocked-incompatible this applies in every ValidationMode. { $max } is the
+# item's stated maximum.
+vf-blocked-max-total = Maximum of { $max } already reached
+
 # Filter/search controls for long selectable lists.
 filter-search-placeholder = Search…
 filter-magnitude-all = All levels

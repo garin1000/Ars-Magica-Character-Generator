@@ -331,6 +331,50 @@ export function paramValueUsage(
   return counts;
 }
 
+/**
+ * How many copies of `itemRef` exist TOTAL, across every distinct parameter
+ * target — bought selections plus granted ones — the pool `max_total` bounds.
+ * Companion to `paramValueUsage`: that one is keyed by parameter VALUE for one
+ * target's `max_per_target` cap, this one is keyed by item ref alone for the
+ * item's overall ceiling. Mirrors the engine's `validate_total_selection_cap`
+ * (`crates/arm-rules/src/validation/selections.rs`), which is likewise
+ * grant-aware — a House-granted Puissant Ignem counts against the same ceiling
+ * as one the player buys.
+ */
+export function totalCopies(
+  bought: { ref: string }[],
+  granted: { ref: string }[],
+  itemRef: string,
+): number {
+  const count = (list: { ref: string }[]) =>
+    list.reduce((n, s) => n + (s.ref === itemRef ? 1 : 0), 0);
+  return count(bought) + count(granted);
+}
+
+/**
+ * Item ids already AT (or somehow over) their `max_total` ceiling, counting
+ * bought selections plus every grant source `entity_grants` folds in (House,
+ * Mythic Companion, `grants_selection`, warping) — the same pool
+ * `validate_total_selection_cap` sums. Feeds both the Available picker's
+ * `disabled` predicate (C) and an open grant menu's `atCapRefs` option (E), so
+ * neither offers a pick the engine's `too_many_selections` validator would
+ * immediately reject. An item with no stated `max_total` (the 255 "no ceiling"
+ * sentinel — `max_total` absent here) can never appear in the result, and an
+ * item with zero copies never does either (it cannot be AT a cap of at least 1).
+ */
+export function atMaxTotalRefs(
+  localized: LocalizedRuleset,
+  bought: { ref: string }[],
+  granted: { ref: string }[],
+): Set<string> {
+  const refs = new Set<string>();
+  for (const item of Object.values(localized.ruleset.point_items)) {
+    if (item.max_total === undefined) continue;
+    if (totalCopies(bought, granted, item.id) >= item.max_total) refs.add(item.id);
+  }
+  return refs;
+}
+
 export interface CategoryGroup {
   category: string;
   items: PointItem[];
@@ -377,6 +421,18 @@ export interface EligibilityOptions {
    * `warping_fill_ineligible`). No other grant has that constraint.
    */
   excludeWarpingSources?: boolean;
+  /**
+   * Item ids already AT their `max_total` ceiling (see `atMaxTotalRefs`),
+   * dropped from the menu so an open grant pick never offers a choice the
+   * engine's `too_many_selections` validator would immediately reject. The
+   * caller computes this from its own view of bought + granted selections
+   * (`eligibleForConstraint` itself sees only the constraint, not the entity),
+   * so it stays optional and every existing caller is unaffected until it opts
+   * in. Only an item genuinely AT its cap is dropped — one with zero copies (or
+   * under the cap) stays offered, so an Ex Miscellanea open grant still offers
+   * `virtue.puissant_art` to a character holding none of it.
+   */
+  atCapRefs?: Set<string>;
 }
 
 /**
@@ -455,9 +511,11 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
  * Sorted by localized name, with `{param}` braces unwrapped, so a parameterized
  * entry sorts by its visible word instead of clustering under "{".
  *
- * No longer a strict mirror of final legality: this filters by the constraint
- * alone, so it cannot see how many copies of an item the character already
- * holds. A listed choice that would push the item's total over its
+ * Filters by the constraint AND, when the caller supplies `opts.atCapRefs`, by
+ * the item's own `max_total` ceiling — dropping only a ref genuinely AT that
+ * ceiling (see `atMaxTotalRefs`). Without `atCapRefs` this is a strict mirror
+ * of the constraint alone, unaware of how many copies of an item the character
+ * already holds; a listed choice that would push the item's total over its
  * `max_total` still surfaces as an error through the engine's
  * `validate_total_selection_cap`, once picked.
  */
@@ -476,7 +534,10 @@ export function eligibleForConstraint(
         (!constraint.require_categories?.length ||
           constraint.require_categories.some((c) => it.categories.includes(c))) &&
         !(constraint.forbid_categories ?? []).some((c) => it.categories.includes(c)) &&
-        !(opts.excludeWarpingSources && (it.effects ?? []).some((e) => e.type === 'warping_grant')),
+        !(
+          opts.excludeWarpingSources && (it.effects ?? []).some((e) => e.type === 'warping_grant')
+        ) &&
+        !opts.atCapRefs?.has(it.id),
     )
     .filter((it) => !it.prerequisites || houseOnlyValue(it.prerequisites, house, 1) !== false)
     .sort((a, b) =>
@@ -742,6 +803,29 @@ export function sameSelection(a: Selection, b: Selection): boolean {
   const kb = Object.keys(pb).sort();
   if (ka.length !== kb.length) return false;
   return ka.every((k, i) => k === kb[i] && pa[k] === pb[k]);
+}
+
+/**
+ * `list` with ONE occurrence matching `selection` (by `sameSelection`)
+ * removed, or `list` itself unchanged when `selection` is absent or matches
+ * nothing. Used to keep a grant picker's OWN current occupant from
+ * disappearing from its own menu: once resolved, an open-grant pick (a
+ * House/Mythic free-item choice, a warping-owed fill) is folded into
+ * `granted_selections` exactly like any other grant, so if that pick's item is
+ * genuinely AT its `max_total` ceiling BECAUSE of this one pick,
+ * `atMaxTotalRefs` would otherwise flag it and the currently-selected
+ * `<option>` would vanish from its own `<select>`. Removing only one
+ * occurrence (not every matching one) is deliberate: a genuinely separate
+ * second copy elsewhere must still count toward the cap.
+ */
+export function excludeSelection(
+  list: Selection[],
+  selection: Selection | null | undefined,
+): Selection[] {
+  if (!selection) return list;
+  const idx = list.findIndex((s) => sameSelection(s, selection));
+  if (idx === -1) return list;
+  return list.filter((_, i) => i !== idx);
 }
 
 /**

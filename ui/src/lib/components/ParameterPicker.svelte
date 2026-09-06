@@ -5,6 +5,7 @@
     artLabel,
     artsOfType,
     displayName,
+    excludeSelection,
     groupArtsByType,
     localizedSortKey,
     paramValueUsage,
@@ -204,28 +205,75 @@
     store.ruleset?.ruleset.point_items[selection.ref]?.max_per_target ?? 1,
   );
 
-  // A grant pick passes no index (-1 excludes nothing), so it reads the bought
-  // rows without excluding one of them — a grant pick is not itself a bought row.
+  // Granted rows of THIS item, folded in alongside the bought ones so a
+  // House/Mythic/warping-granted copy counts against the same `max_per_target`
+  // cap as a bought one (the UI half of the engine's grant-aware
+  // `validate_duplicate_selections`/`validate_total_selection_cap`) — a
+  // granted Puissant Ignem used to leave a bought Puissant Perdo's Art target
+  // list blind to it.
+  //
+  // A grant pick (`commit` set, `index === -1`) is itself one of these granted
+  // rows once resolved — `entity_grants`/`resolve_grants` folds a stored open
+  // pick straight into `granted_selections`, unmodified — so it is excluded
+  // here (by value, via `excludeSelection`) or it would count against its own
+  // current target and greys out the very value it already holds. A bought
+  // row being edited (`index` >= 0) carries no granted counterpart of its own,
+  // so nothing is excluded in that case.
+  function grantedForUsage(): { ref: string; params?: Record<string, string> }[] {
+    const granted = store.effective?.granted_selections ?? [];
+    return excludeSelection(granted, index === -1 ? selection : undefined);
+  }
+
+  // Sums two per-value usage maps (bought + granted), so counting each source
+  // separately still yields one combined total per target value.
+  function mergeUsage(a: Map<string, number>, b: Map<string, number>): Map<string, number> {
+    const out = new Map(a);
+    for (const [value, count] of b) out.set(value, (out.get(value) ?? 0) + count);
+    return out;
+  }
+
+  // A grant pick passes no index (-1 excludes nothing FROM entity.selections),
+  // so it reads the bought rows without excluding one of them — a grant pick is
+  // not itself a bought row (see `grantedForUsage` for its own self-exclusion).
+  //
+  // The bought and granted counts are computed as TWO separate
+  // `paramValueUsage` passes rather than one pass over a concatenated array:
+  // `index` addresses a position in `entity.selections` specifically, and
+  // reusing it against a combined array would misfire whenever the bought list
+  // is shorter than `index` implies — the granted list would start at position
+  // `index` too, so `index` would silently exclude the wrong (granted) row
+  // instead of the bought one it was meant for.
   function usage(key: string): Map<string, number> {
-    return paramValueUsage(store.entity.selections ?? [], selection.ref, key, index);
+    const bought = paramValueUsage(store.entity.selections ?? [], selection.ref, key, index);
+    const granted = paramValueUsage(grantedForUsage(), selection.ref, key, -1);
+    return mergeUsage(bought, granted);
   }
 
   function full(usageCounts: Map<string, number>, value: string): boolean {
     return (usageCounts.get(value) ?? 0) >= maxPerTarget;
   }
 
-  // Composite ability targets already claimed by other selections of this item.
+  // Composite ability targets already claimed by other selections of this item
+  // — bought plus granted, mirroring `usage()` above (same two-pass reasoning:
+  // a granted row must never be excluded by a bought row's `index`).
   const usedAbilityTargets = $derived.by(() => {
     const counts = new Map<string, number>();
-    (store.entity.selections ?? []).forEach((s, i) => {
-      if (i === index || s.ref !== selection.ref) return;
-      const abilityId = s.params?.ability;
-      if (!abilityId) return;
-      const key = store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
-      const instance = key ? s.params?.[key] : undefined;
-      const value = instance ? `${abilityId}${SEP}${instance}` : abilityId;
-      counts.set(value, (counts.get(value) ?? 0) + 1);
-    });
+    const addFrom = (
+      list: { ref: string; params?: Record<string, string> }[],
+      exceptIndex: number,
+    ): void => {
+      list.forEach((s, i) => {
+        if (i === exceptIndex || s.ref !== selection.ref) return;
+        const abilityId = s.params?.ability;
+        if (!abilityId) return;
+        const key = store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
+        const instance = key ? s.params?.[key] : undefined;
+        const value = instance ? `${abilityId}${SEP}${instance}` : abilityId;
+        counts.set(value, (counts.get(value) ?? 0) + 1);
+      });
+    };
+    addFrom(store.entity.selections ?? [], index);
+    addFrom(grantedForUsage(), -1);
     return counts;
   });
 </script>
