@@ -136,6 +136,13 @@ vf-tag-tainted = Befleckt
 # die gewählte Auswahl, die sie blockiert.
 vf-blocked-incompatible = Unvereinbar mit { $other }
 
+# Grund, der bei einer in der Verfügbar-Liste ausgegrauten Tugend/einem Fehler
+# angezeigt wird, weil die gekauften + gewährten Exemplare bereits die
+# Gesamtobergrenze erreicht haben (z. B. Kraftvoll (Kunst), auf insgesamt zwei
+# begrenzt). Anders als vf-blocked-incompatible gilt dies in jedem
+# ValidationMode. { $max } ist das für die Auswahl geltende Maximum.
+vf-blocked-max-total = Maximum von { $max } bereits erreicht
+
 # Filter-/Suchsteuerung für lange Auswahllisten.
 filter-search-placeholder = Suchen…
 filter-magnitude-all = Alle Stufen

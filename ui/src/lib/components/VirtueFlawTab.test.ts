@@ -429,3 +429,91 @@ describe('VirtueFlawTab filter selects', () => {
     expect(clean(input![0])).toContain('aria-label="Search…"');
   });
 });
+
+// max_total slice: an item's bought+granted copies must not exceed its
+// `max_total` ceiling (Puissant Art, capped at two total across every Art
+// target) — the UI half of the engine's `too_many_selections` validator
+// (`crates/arm-rules/src/validation/selections.rs`). This describe block
+// installs its own small ruleset so the shared ITEMS fixture (and the exact
+// category-list assertions above) stay untouched.
+describe('VirtueFlawTab enforces max_total on the Available list', () => {
+  const CAPPED: PointItem = item({
+    id: 'virtue.puissant_art',
+    categories: ['hermetic'],
+    parameters: [{ key: 'art', type: 'ref', domain: 'art' }],
+    max_total: 2,
+  });
+
+  function installCappedRuleset(): void {
+    store.ruleset = {
+      ruleset: {
+        id: 'test',
+        version: '1',
+        point_items: { 'virtue.puissant_art': CAPPED },
+        type_profiles: {
+          magus: {
+            id: 'magus',
+            budget: { virtue_points: 10, flaw_points: 10 },
+            is_magus: true,
+            gift_policy: 'required',
+            creation_phases: [],
+          },
+        },
+        abilities: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+      },
+      i18n: { 'virtue.puissant_art': { name: 'Puissant {art}' } },
+    } as unknown as LocalizedRuleset;
+  }
+
+  beforeEach(() => {
+    installCappedRuleset();
+  });
+
+  /** The Available list's `add-virtue.puissant_art` button's opening tag. */
+  function addRow(body: string): string {
+    return /<button[^>]*data-testid="add-virtue\.puissant_art"[^>]*>/.exec(body)![0];
+  }
+
+  it('leaves the row enabled below max_total', () => {
+    resetEntity([{ ref: 'virtue.puissant_art', params: { art: 'art.ignem' } }]);
+    expect(addRow(html())).toContain('aria-disabled="false"');
+  });
+
+  it('greys out the row once bought copies alone reach max_total', () => {
+    resetEntity([
+      { ref: 'virtue.puissant_art', params: { art: 'art.ignem' } },
+      { ref: 'virtue.puissant_art', params: { art: 'art.perdo' } },
+    ]);
+    expect(addRow(html())).toContain('aria-disabled="true"');
+  });
+
+  it('counts a granted copy toward the same cap as a bought one', () => {
+    resetEntity([{ ref: 'virtue.puissant_art', params: { art: 'art.ignem' } }]);
+    grant({ ref: 'virtue.puissant_art', params: { art: 'art.perdo' } });
+    expect(addRow(html())).toContain('aria-disabled="true"');
+  });
+
+  // The once-only leg beside it already ignores ValidationMode, and a
+  // copy-count cap is the same class of rule — only the incompatibility leg
+  // stays mode-aware.
+  it('stays disabled in advisory mode, unlike the mode-aware incompatibility leg', () => {
+    resetEntity([
+      { ref: 'virtue.puissant_art', params: { art: 'art.ignem' } },
+      { ref: 'virtue.puissant_art', params: { art: 'art.perdo' } },
+    ]);
+    store.mode = 'advisory';
+    try {
+      expect(addRow(html())).toContain('aria-disabled="true"');
+    } finally {
+      store.mode = 'enforced';
+    }
+  });
+
+  it('leaves an item with zero copies enabled (never over-filters)', () => {
+    resetEntity([]);
+    expect(addRow(html())).toContain('aria-disabled="false"');
+  });
+});

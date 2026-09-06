@@ -4,6 +4,7 @@ import { render } from 'svelte/server';
 import type {
   Ability,
   Art,
+  EffectiveScores,
   Entity,
   LocalizedRuleset,
   ParameterDef,
@@ -144,6 +145,26 @@ function pickerBody(ref: string, index = 0, params?: Record<string, string>): st
   const selection: Selection = params ? { ref, params } : { ref };
   return render(ParameterPicker, {
     props: { selection, index, params: ITEMS[ref].parameters! },
+  }).body;
+}
+
+/**
+ * Render the picker in GRANT-PICK mode: `index === -1` and a `commit` callback,
+ * exactly as HouseSelector/MythicCompanionTypeSelector/CharacterDetails mount it
+ * for an open-grant/warping-owed fill (see the doc comment above `usage()` in
+ * ParameterPicker.svelte). `commit` is never invoked under SSR (no interaction
+ * fires), so a no-op stands in for the real store mutator.
+ */
+function pickerBodyGrant(ref: string, params: Record<string, string>, idSuffix = 'grant'): string {
+  const selection: Selection = { ref, params };
+  return render(ParameterPicker, {
+    props: {
+      selection,
+      index: -1,
+      params: ITEMS[ref].parameters!,
+      idSuffix,
+      commit: () => {},
+    },
   }).body;
 }
 
@@ -383,5 +404,73 @@ describe('ParameterPicker on both mounts (slice 7, #4 — shared component)', ()
     );
     expect(select).not.toBeNull();
     expect(optionTexts(select!)).toEqual(['Form', 'Aquam', 'Ignem']);
+  });
+});
+
+// The UI half of the max_total slice's engine fix (`too_many_selections` is now
+// grant-aware): `usage()`/`usedAbilityTargets` used to read ONLY
+// `entity.selections`, so a House-granted Puissant Ignem never counted against
+// a bought Puissant Art's per-target cap — the same illegal state
+// `validate_duplicate_selections` now catches on the engine side, reachable
+// through the UI a moment before revalidation caught up.
+describe('ParameterPicker folds granted rows into per-target usage (grant-awareness)', () => {
+  afterEach(() => {
+    store.effective = null;
+  });
+
+  it('disables an art-domain target already claimed by a GRANTED copy of the same item', () => {
+    store.effective = {
+      granted_selections: [{ ref: 'virtue.deft_form', params: { form: 'art.ignem' } }],
+    } as unknown as EffectiveScores;
+    const select = selectFor(pickerBody('virtue.deft_form', 0), 'param-virtue.deft_form-form-0');
+    expect(optionByText(select!, 'Ignem')).toContain('disabled');
+    expect(optionByText(select!, 'Aquam')).not.toContain('disabled');
+  });
+
+  it('disables an ability-domain target already claimed by a GRANTED copy of the same item', () => {
+    store.effective = {
+      granted_selections: [
+        { ref: 'virtue.puissant_ability', params: { ability: 'ability.awareness' } },
+      ],
+    } as unknown as EffectiveScores;
+    const select = selectFor(
+      pickerBody('virtue.puissant_ability', 0),
+      'param-virtue.puissant_ability-ability-0',
+    );
+    expect(optionByText(select!, 'Awareness')).toContain('disabled');
+    expect(optionByText(select!, 'Stealth')).not.toContain('disabled');
+  });
+
+  // A grant pick passes `index === -1`, which excludes nothing from
+  // `entity.selections` — so without excluding the pick from the GRANTED list
+  // too, it would count against its own current target and greys out its own
+  // value the instant it is set (see the comment above `usage()`).
+  it('does not grey out a grant pick’s own current target against itself', () => {
+    store.effective = {
+      granted_selections: [{ ref: 'virtue.deft_form', params: { form: 'art.ignem' } }],
+    } as unknown as EffectiveScores;
+    const select = selectFor(
+      pickerBodyGrant('virtue.deft_form', { form: 'art.ignem' }),
+      'param-virtue.deft_form-form-grant',
+    );
+    expect(optionByText(select!, 'Ignem')).not.toContain('disabled');
+    expect(optionByText(select!, 'Aquam')).not.toContain('disabled');
+  });
+
+  // A DIFFERENT granted copy (not this grant pick's own) must still count —
+  // self-exclusion removes only the ONE occurrence matching this pick's value.
+  it('still disables a target a DIFFERENT granted copy of the same item claims', () => {
+    store.effective = {
+      granted_selections: [
+        { ref: 'virtue.deft_form', params: { form: 'art.ignem' } },
+        { ref: 'virtue.deft_form', params: { form: 'art.aquam' } },
+      ],
+    } as unknown as EffectiveScores;
+    const select = selectFor(
+      pickerBodyGrant('virtue.deft_form', { form: 'art.ignem' }),
+      'param-virtue.deft_form-form-grant',
+    );
+    expect(optionByText(select!, 'Ignem')).not.toContain('disabled');
+    expect(optionByText(select!, 'Aquam')).toContain('disabled');
   });
 });

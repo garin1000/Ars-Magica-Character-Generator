@@ -2,6 +2,7 @@
   import { store } from '../state.svelte';
   import {
     abilityDisplayName,
+    atMaxTotalRefs,
     displayName,
     filterItems,
     grantedSelectionsForSide,
@@ -93,6 +94,23 @@
       : new Map<string, string>(),
   );
 
+  // Item refs whose bought+granted total has already reached its `max_total`
+  // ceiling (Puissant Art, capped at two total across every Art target) — the
+  // same pool the engine's `too_many_selections` validator sums
+  // (`validate_total_selection_cap`). Unlike `blocked` this is NOT gated by
+  // `ValidationMode`: it joins the Add button's unconditional "already taken"
+  // leg below, since a hard copy-count cap is the same class of rule as the
+  // once-only check that leg already applies regardless of mode.
+  const atCap = $derived(
+    store.ruleset
+      ? atMaxTotalRefs(
+          store.ruleset,
+          store.entity.selections ?? [],
+          store.effective?.granted_selections ?? [],
+        )
+      : new Set<string>(),
+  );
+
   // Tooltip from the item's localized rules text (full description if present,
   // else the short summary). A no-op when neither exists.
   function tip(itemId: string): TooltipContent {
@@ -100,9 +118,17 @@
     return { text: entry?.description ?? entry?.summary ?? undefined };
   }
 
-  // A blocked source row explains WHY above its normal description, naming the
-  // selected item that excludes it. Undefined for a takeable row.
+  // A blocked source row explains WHY above its normal description: the
+  // at-cap reason takes priority (a hard ceiling reached), else the selected
+  // item that excludes it. Undefined for a takeable row.
   function sourceTip(itemId: string): TooltipContent {
+    if (atCap.has(itemId)) {
+      const max = store.ruleset?.ruleset.point_items[itemId]?.max_total;
+      return withReason(
+        tip(itemId),
+        max !== undefined ? store.t('vf-blocked-max-total', { max: String(max) }) : undefined,
+      );
+    }
     const blocker = blocked.get(itemId);
     return withReason(
       tip(itemId),
@@ -267,7 +293,7 @@
           getId={(it: PointItem) => it.id}
           onAdd={(it: PointItem) => store.addSelection(it.id)}
           disabled={(it: PointItem) =>
-            (!repeatable(it) && selectedRefs.has(it.id)) || blocked.has(it.id)}
+            (!repeatable(it) && selectedRefs.has(it.id)) || atCap.has(it.id) || blocked.has(it.id)}
           tip={(it: PointItem) => sourceTip(it.id)}
         >
           {#snippet filters()}

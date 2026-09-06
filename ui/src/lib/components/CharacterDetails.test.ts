@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity, LocalizedRuleset } from '../types';
+import type { EffectiveScores, Entity, LocalizedRuleset } from '../types';
 
 // The Details tab reads the shared store singleton (ruleset + entity + the
 // engine-derived scores) and the Fluent bundle. The store schedules a debounced
@@ -162,5 +162,62 @@ describe('CharacterDetails heading hierarchy (S17)', () => {
       if (rule) return;
     }
     throw new Error(`no grid-column: 1 / -1 rule found for classes "${cls}" in app.css`);
+  });
+});
+
+// max_total slice: an owed-Warping fill's menu must not re-offer an item
+// already at its total ceiling — mirroring HouseSelector/
+// MythicCompanionTypeSelector's open-grant fix.
+describe('CharacterDetails warping-owed fill respects max_total', () => {
+  const CAPPED = 'flaw.capped';
+
+  function installCappedFlaw(): void {
+    store.ruleset!.ruleset.point_items[CAPPED] = {
+      id: CAPPED,
+      kind: 'flaw',
+      magnitude: 'minor',
+      categories: ['general'],
+      classification: 'narrative',
+      entity_kinds: ['character'],
+      max_total: 1,
+    } as unknown as LocalizedRuleset['ruleset']['point_items'][string];
+    store.ruleset!.i18n[CAPPED] = { name: 'Capped Flaw' };
+  }
+
+  function installOwedGrant(): void {
+    store.effective = {
+      warping_owed_grants: [{ kind: 'open', choice_key: 'warp1', constraint: { kind: 'flaw' } }],
+    } as unknown as EffectiveScores;
+  }
+
+  function fillSelect(): string {
+    return /<select[^>]*data-testid="warping-fill-warp1"[\s\S]*?<\/select>/.exec(html())![0];
+  }
+
+  it('drops an item whose bought copies already reached max_total', () => {
+    installCappedFlaw();
+    installOwedGrant();
+    store.entity.selections = [{ ref: CAPPED }];
+    expect(fillSelect()).not.toContain('Capped Flaw');
+  });
+
+  it('still offers it while the character holds zero copies', () => {
+    installCappedFlaw();
+    installOwedGrant();
+    expect(fillSelect()).toContain('Capped Flaw');
+  });
+
+  // Self-exclusion: once resolved, THIS owed slot's own fill is itself folded
+  // into `effective.granted_selections` (mirroring `resolve_grants`). Without
+  // excluding it, an item whose max_total is reached BY THIS VERY FILL ALONE
+  // would vanish from its own menu.
+  it('keeps the slot’s own current fill offered even though it alone reaches max_total', () => {
+    installCappedFlaw();
+    store.entity.warping_choices = { warp1: { ref: CAPPED } };
+    store.effective = {
+      warping_owed_grants: [{ kind: 'open', choice_key: 'warp1', constraint: { kind: 'flaw' } }],
+      granted_selections: [{ ref: CAPPED }],
+    } as unknown as EffectiveScores;
+    expect(fillSelect()).toContain('Capped Flaw');
   });
 });

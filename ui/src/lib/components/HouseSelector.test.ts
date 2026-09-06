@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity, LocalizedRuleset } from '../types';
+import type { EffectiveScores, Entity, LocalizedRuleset } from '../types';
 
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import HouseSelector from './HouseSelector.svelte';
@@ -204,5 +204,49 @@ describe('HouseSelector grant kinds and selection state', () => {
     expect(select).toContain('Affinity with an Art');
     expect(select).not.toContain('The Gentle Gift');
     expect(select).not.toContain('Privileged Upbringing');
+  });
+});
+
+// max_total slice: the open-grant menu must not re-offer an item already at
+// its total ceiling — the engine's `too_many_selections` validator would
+// reject the pick the instant it landed. Mirrors houses.e2e.js's Ex
+// Miscellanea case (an item with ZERO copies must stay offered), which the
+// second test below guards directly.
+describe('HouseSelector open grant respects max_total', () => {
+  function capOpenVirtue(maxTotal: number): void {
+    store.ruleset!.ruleset.point_items[OPEN_VIRTUE] = {
+      ...store.ruleset!.ruleset.point_items[OPEN_VIRTUE],
+      max_total: maxTotal,
+    };
+  }
+
+  function openSelect(body: string): string {
+    return /<select[^>]*data-testid="house-open-house_open"[\s\S]*?<\/select>/.exec(body)![0];
+  }
+
+  it('drops an item whose bought copies already reached max_total', () => {
+    capOpenVirtue(1);
+    store.entity.selections = [{ ref: OPEN_VIRTUE }];
+    expect(openSelect(html())).not.toContain('Affinity with an Art');
+  });
+
+  it('still offers it while the character holds zero copies', () => {
+    capOpenVirtue(1);
+    expect(openSelect(html())).toContain('Affinity with an Art');
+  });
+
+  // Self-exclusion: once resolved, this OPEN grant's own pick is itself folded
+  // into `effective.granted_selections` (mirroring the engine's
+  // `resolve_grants`). Without excluding it from the cap count, an item whose
+  // max_total is reached BY THIS VERY PICK ALONE would vanish from its own
+  // `<select>`'s option list, leaving the control showing no selection even
+  // though the pick is still stored.
+  it('keeps the slot’s own current pick offered even though it alone reaches max_total', () => {
+    capOpenVirtue(1);
+    store.entity.house_choices = { house_open: { ref: OPEN_VIRTUE } };
+    store.effective = {
+      granted_selections: [{ ref: OPEN_VIRTUE }],
+    } as unknown as EffectiveScores;
+    expect(openSelect(html())).toContain('Affinity with an Art');
   });
 });

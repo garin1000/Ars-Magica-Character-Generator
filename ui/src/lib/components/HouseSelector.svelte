@@ -1,6 +1,12 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { eligibleForConstraint, grantItemLabel, sameSelection } from '../derive';
+  import {
+    atMaxTotalRefs,
+    eligibleForConstraint,
+    excludeSelection,
+    grantItemLabel,
+    sameSelection,
+  } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
   import { tooltip, type TooltipContent } from '../actions';
   import type { GrantConstraint, House, PointItem, Selection } from '../types';
@@ -42,9 +48,22 @@
   // the engine's `validate_house` check so the picker offers only legal choices.
   // The character's House goes in too: a Virtue that confers a different House
   // (Heartbeast makes you a Bjornaer) must never appear on another House's menu.
-  function eligibleForOpen(c: GrantConstraint): PointItem[] {
+  // Also drops any item already AT its `max_total` ceiling (see `atMaxTotalRefs`),
+  // so the menu never offers a pick the engine's `too_many_selections`
+  // validator would immediately reject.
+  //
+  // `currentPick` (this slot's OWN current value, once resolved) is excluded
+  // from the granted count before checking the cap: once stored, an open pick
+  // is itself folded into `effective.granted_selections` like any other grant,
+  // so an item whose max_total is reached BY THIS VERY PICK would otherwise
+  // vanish from its own `<select>`'s option list — leaving the control showing
+  // no selection even though the pick is still stored.
+  function eligibleForOpen(c: GrantConstraint, currentPick: Selection | undefined): PointItem[] {
     const rs = store.ruleset;
-    return rs ? eligibleForConstraint(rs, c, store.entity.house ?? null) : [];
+    if (!rs) return [];
+    const granted = excludeSelection(store.effective?.granted_selections ?? [], currentPick);
+    const atCapRefs = atMaxTotalRefs(rs, store.entity.selections ?? [], granted);
+    return eligibleForConstraint(rs, c, store.entity.house ?? null, { atCapRefs });
   }
 
   // Index of the currently-picked option for a choice grant (−1 if none), so the
@@ -116,6 +135,16 @@
                         {label(grant.item, grant.params)}
                       </span>
                     {:else if grant.kind === 'choice'}
+                      <!-- Deliberately NOT filtered by max_total: a `choice` grant's
+                           options are the House's own MANDATORY menu (Flambeau's
+                           Puissant Perdo/Ignem, rules/core/houses.json), and every
+                           option can be legitimately at cap already (e.g. a bought
+                           Puissant Ignem plus this same free pick would tie Puissant
+                           Art at its 2-total ceiling). Gating a required choice would
+                           deadlock character creation with no option left to pick;
+                           the engine's `too_many_selections` still reports the
+                           overage, and the player resolves it by removing a bought
+                           row. Report-only, by design. -->
                       <span class="house-granted-label" id="house-choice-label-{grant.choice_key}"
                         >{store.t('house-granted-label')}</span
                       >
@@ -142,7 +171,7 @@
                         data-testid="house-open-{grant.choice_key}"
                       >
                         <option value="">{store.t('house-choose-prompt')}</option>
-                        {#each eligibleForOpen(grant.constraint) as item (item.id)}
+                        {#each eligibleForOpen(grant.constraint, pick) as item (item.id)}
                           <option value={item.id}>{label(item.id)}</option>
                         {/each}
                       </select>

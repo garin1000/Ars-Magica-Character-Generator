@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity, LocalizedRuleset } from '../types';
+import type { EffectiveScores, Entity, LocalizedRuleset } from '../types';
 
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import MythicCompanionTypeSelector from './MythicCompanionTypeSelector.svelte';
@@ -211,6 +211,63 @@ describe('MythicCompanionTypeSelector type selection and grants', () => {
     const select = new RegExp(
       `<select[^>]*data-testid="mythic-required-flaw-${FLAW_DEFAULT}"[\\s\\S]*?</select>`,
     ).exec(body)![0];
+    expect(select).toMatch(new RegExp(`<option value="${FLAW_SUBSTITUTE}" selected`));
+  });
+});
+
+// max_total slice: neither the open-grant menu nor the required-Flaw
+// substitute menu may re-offer an item already at its total ceiling. Each has
+// its own eligibility helper in the component (an open-grant pick's
+// self-exclusion works against the GRANTED list, a required-Flaw's against the
+// BOUGHT list — see the comments in MythicCompanionTypeSelector.svelte).
+describe('MythicCompanionTypeSelector eligibility respects max_total', () => {
+  function capItem(ref: string, maxTotal: number): void {
+    store.ruleset!.ruleset.point_items[ref] = {
+      ...store.ruleset!.ruleset.point_items[ref],
+      max_total: maxTotal,
+    };
+  }
+
+  function openSelect(): string {
+    return new RegExp(`<select[^>]*data-testid="mythic-open-mythic_open"[\\s\\S]*?</select>`).exec(
+      html(),
+    )![0];
+  }
+
+  it('drops an open-grant option whose bought copies already reached max_total', () => {
+    capItem(OPEN_VIRTUE, 1);
+    store.entity.selections = [{ ref: OPEN_VIRTUE }];
+    expect(openSelect()).not.toContain('Blessing of the Divine');
+  });
+
+  it('still offers the open-grant option while the character holds zero copies', () => {
+    capItem(OPEN_VIRTUE, 1);
+    expect(openSelect()).toContain('Blessing of the Divine');
+  });
+
+  // Self-exclusion: once resolved, THIS open grant's own pick is itself folded
+  // into `effective.granted_selections` (mirroring HouseSelector's identical
+  // fix). Without excluding it, an item whose max_total is reached BY THIS
+  // VERY PICK ALONE would vanish from its own menu.
+  it('keeps the open grant’s own current pick offered even though it alone reaches max_total', () => {
+    capItem(OPEN_VIRTUE, 1);
+    store.entity.mythic_choices = { mythic_open: { ref: OPEN_VIRTUE } };
+    store.effective = {
+      granted_selections: [{ ref: OPEN_VIRTUE }],
+    } as unknown as EffectiveScores;
+    expect(openSelect()).toContain('Blessing of the Divine');
+  });
+
+  // Self-exclusion, BOUGHT side: the required-Flaw slot's current occupant
+  // lives in `entity.selections`, not `granted_selections` — it must stay
+  // offered (and selected) even though holding it alone reaches max_total.
+  it('keeps the required-Flaw slot’s own bought pick offered even though it alone reaches max_total', () => {
+    capItem(FLAW_SUBSTITUTE, 1);
+    store.entity.selections = [{ ref: FLAW_SUBSTITUTE }];
+    const select = new RegExp(
+      `<select[^>]*data-testid="mythic-required-flaw-${FLAW_DEFAULT}"[\\s\\S]*?</select>`,
+    ).exec(html())![0];
+    expect(select).toContain('Pride');
     expect(select).toMatch(new RegExp(`<option value="${FLAW_SUBSTITUTE}" selected`));
   });
 });

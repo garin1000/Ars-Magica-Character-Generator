@@ -5,7 +5,7 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
-import { startCharacter } from '../helpers.js';
+import { isRowBlocked, startCharacter, STEP_TIMEOUT } from '../helpers.js';
 
 const MISSING_PARAM = 'missing the parameter';
 
@@ -72,5 +72,64 @@ describe('repeated parameterized virtues', () => {
         timeoutMsg: 'missing-parameter error did not clear after all targets were set',
       },
     );
+  });
+});
+
+// Mirror of finding 34's spec above, for the OTHER cap: max_total bounds copies
+// of an item TOTAL across every distinct parameter target (Puissant Art, capped
+// at two — rules/core/virtues_flaws.json), distinct from max_per_target (one
+// copy per identical target, which virtue.great_characteristic above tests and
+// which carries no max_total of its own — its Add button must stay enabled
+// indefinitely, unaffected by this cap).
+//
+// A magus, not a companion: Puissant Art is Hermetic-categoried, and the
+// companion profile forbids that category (rules/core/character_types.json) —
+// the Available row would still render (categories are not filtered there),
+// but taking it would raise an unrelated category_not_permitted finding. Magus
+// permits Hermetic, so this stays a clean test of the max_total cap alone.
+describe('max_total copy cap on the Available list', () => {
+  it('greys out Puissant Art once both of its two total copies are taken', async () => {
+    await startCharacter('magus');
+
+    const vfTab = await $('[data-testid="tab-virtues_flaws"]');
+    await vfTab.waitForExist({ timeout: 30000 });
+    await vfTab.click();
+
+    const add = await $('[data-testid="add-virtue.puissant_art"]');
+    await add.waitForExist({ timeout: 10000 });
+
+    // The param selects are named `param-virtue.puissant_art-art-{index}`, where
+    // {index} is the position in entity.selections — NOT a per-virtue counter. A
+    // magus's mandatory free traits (Hermetic Magus + The Gift, seeded on
+    // creation from the type profile — see arts.e2e.js) already occupy the first
+    // slots, so the two Puissant Art instances land at whatever index follows
+    // them, never 0 and 1. Match by prefix and pick by how many exist so far,
+    // rather than hardcoding an offset.
+    const puissantArtParams = () => $$('[data-testid^="param-virtue.puissant_art-art-"]');
+
+    // First copy, targeting Ignem — one of two, so the row must stay takeable.
+    await add.click();
+    await browser.waitUntil(async () => (await puissantArtParams()).length === 1, {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'expected one Puissant Art param select after the first Add click',
+    });
+    const firstArt = (await puissantArtParams())[0];
+    await firstArt.selectByAttribute('value', 'art.ignem');
+    expect(await isRowBlocked(add)).toBe(false);
+
+    // Second copy, targeting Perdo — a DIFFERENT target, so max_per_target (one
+    // copy per identical target) never fires; only max_total (two total) does.
+    await add.click();
+    await browser.waitUntil(async () => (await puissantArtParams()).length === 2, {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'expected two Puissant Art param selects after the second Add click',
+    });
+    const secondArt = (await puissantArtParams())[1];
+    await secondArt.selectByAttribute('value', 'art.perdo');
+
+    await browser.waitUntil(async () => isRowBlocked(add), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'Puissant Art did not grey out once both of its two total copies were taken',
+    });
   });
 });
