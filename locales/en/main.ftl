@@ -871,6 +871,7 @@ param-label-sin = Sin
 param-label-faculty = Faculty
 param-label-commodity = Commodity
 param-label-role = Role
+param-label-power = Power
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }

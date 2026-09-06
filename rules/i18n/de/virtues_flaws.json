@@ -988,7 +988,7 @@
     "summary": "Der Charakter ist unfähig, ohne Unterstützung neue Dinge zu erlernen."
   },
   "flaw.restricted_power": {
-    "name": "Eingeschränkte Macht",
+    "name": "Eingeschränkte Kraft ({power})",
     "summary": "Dieser Fehler schränkt die Nutzung einer übernatürlichen Kraft ein, die normalerweise nach Belieben eingesetzt werden kann, wie etwa jene, die durch die Tugenden Fokussierte Macht, Große Macht, Mindere Macht, Persönliche Kraft und Ritualmac"
   },
   "flaw.restriction": {
@@ -1056,7 +1056,7 @@
     "summary": "Deine Magie benötigt mehr Zeit zur Vorbereitung und Ausführung als die anderer Magi."
   },
   "flaw.slow_power": {
-    "name": "Langsame Kraft",
+    "name": "Langsame Kraft ({power})",
     "summary": "Eine der übernatürlichen Kräfte des Charakters ist sehr langsam, sodass sie eine zusätzliche Vorbereitungsrunde zur Aktivierung benötigt."
   },
   "flaw.slow_reflexes": {
@@ -2556,7 +2556,7 @@
     "summary": "Der Charakter ist von einer Universität angestellt, um deren jüngeren Mitgliedern Grammatik zu unterrichten."
   },
   "virtue.variable_power": {
-    "name": "Variable Kraft",
+    "name": "Variable Kraft ({power})",
     "summary": "Eine der magischen Kräfte des Charakters (Groß, Gering, Persönlich oder Ritual) wird im Laufe der Zeit stärker, basierend auf entweder (Alter / 10), (Machtwert / 5), dem Verzerrungswert oder seinem Wert in einer passenden Fertigkeit."
   },
   "virtue.venditor": {

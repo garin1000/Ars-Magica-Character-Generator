@@ -889,6 +889,10 @@ param-label-sin = Sünde
 param-label-faculty = Fakultät
 param-label-commodity = Ware
 param-label-role = Rolle
+# Übernatürliche Kraft eines Charakters (Große/Mindere/Persönliche/Rituelle Kraft).
+# Begriff aus rules/source/de/translation-tables/tiere-kreaturen.md:144
+# („Power“ → „Kraft“).
+param-label-power = Kraft
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }
