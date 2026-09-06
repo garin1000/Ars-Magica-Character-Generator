@@ -247,14 +247,20 @@ pub(crate) fn validate_forbidden_traits(
     }
 }
 
-/// Whether a parameter `value` resolves against its `domain`'s registry: `Item`
+/// Whether a parameter `value` resolves against its domain's registry: `Item`
 /// → point items, `Ability` → the ability catalogue, `Art` → the art catalogue,
 /// `Technique`/`Form` → the art catalogue *and* the required art class (so
 /// Deficient Technique cannot target a Form; Ars Magica - Definitive Edition (Core Rules).md:5909-5915),
-/// `Characteristic` → [`Characteristic::from_id`], `Text` → always (no registry).
+/// `Characteristic` → [`Characteristic::from_id`], `Enumerated` → the definition's
+/// own declared `values`, `Text` → always (no registry).
+///
+/// Takes the whole [`ParameterDef`] rather than its `domain` alone because the
+/// `Enumerated` domain's registry IS the definition: its legal values are data on
+/// the parameter, not a catalogue the ruleset holds.
+///
 /// Shared by virtue/flaw parameter validation and spell parameter validation.
-pub(crate) fn param_value_resolves(ruleset: &Ruleset, domain: ParameterDomain, value: &Id) -> bool {
-    match domain {
+pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, value: &Id) -> bool {
+    match param.domain {
         ParameterDomain::Item => ruleset.point_items.contains_key(value),
         ParameterDomain::Ability => ruleset.abilities.contains_key(value),
         ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
@@ -267,6 +273,7 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, domain: ParameterDomain, v
             .arts
             .get(value)
             .is_some_and(|a| a.art_type == crate::art::ArtType::Form),
+        ParameterDomain::Enumerated => param.values.contains(value),
         ParameterDomain::Text => true,
     }
 }
@@ -357,7 +364,7 @@ pub(crate) fn validate_selection_parameters(
         let Some(value) = selection.params.get(&param.key) else {
             continue; // missing already reported above
         };
-        let resolves = param_value_resolves(ruleset, param.domain, value);
+        let resolves = param_value_resolves(ruleset, param, value);
         if !resolves {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,

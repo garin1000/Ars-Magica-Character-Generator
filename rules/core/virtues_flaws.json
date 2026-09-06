@@ -1961,7 +1961,7 @@
     "categories": ["hermetic"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "being", "type": "ref", "domain": "enumerated", "values": ["being.animals", "being.demons", "being.divine", "being.faeries", "being.magical_creatures", "being.mundane_humans"] }],
     "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6524, 6533] }
   },
@@ -2848,7 +2848,7 @@
     "categories": ["hermetic"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "being", "type": "ref", "domain": "enumerated", "values": ["being.demons", "being.divine", "being.mundane_humans"] }],
     "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6891, 6898] }
   },
@@ -4202,6 +4202,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "category", "type": "ref", "domain": "enumerated", "values": ["folk_magic.abjuration", "folk_magic.divination", "folk_magic.evil_eye", "folk_magic.healing"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3907, 3920] }
   },
   {
@@ -4611,7 +4612,7 @@
     "categories": ["general"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "being", "type": "ref", "domain": "enumerated", "values": ["being.animals", "being.demons", "being.divine", "being.faeries", "being.magical_creatures"] }],
     "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4133, 4142] }
   },

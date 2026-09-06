@@ -416,9 +416,15 @@ impl fmt::Display for ParamType {
 ///
 /// Every domain is resolved when a selection's parameter values are validated:
 /// `Item` against the point-item registry, `Ability` against the ability
-/// catalogue, `Art` against the art catalogue, and `Characteristic` by parsing
-/// into [`crate::characteristics::Characteristic`]. A value that does not resolve
-/// raises `unknown_param_value` (see `validation::validate_parameters`).
+/// catalogue, `Art` against the art catalogue, `Characteristic` by parsing
+/// into [`crate::characteristics::Characteristic`], and `Enumerated` against the
+/// parameter definition's own [`ParameterDef::values`] list. A value that does not
+/// resolve raises `unknown_param_value` (see `validation::validate_parameters`).
+///
+/// Adding a variant is **not** caught everywhere by the compiler: only the
+/// [`fmt::Display`] impl below is an exhaustive `match`. [`Self::resolves_against_items`]
+/// is a `matches!` that silently answers `false`, and the load-time domain checks in
+/// `ruleset::integrity` compare with `==`/`!=`. Enumerate those sites by hand.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ParameterDomain {
@@ -440,6 +446,12 @@ pub enum ParameterDomain {
     Characteristic,
     /// Value is a point-item id; resolved against the ruleset's point items.
     Item,
+    /// Value is one of a closed list the parameter itself declares in
+    /// [`ParameterDef::values`] — the domain IS that list, so it lives in the
+    /// rules data and no catalogue is consulted. Used where the book prints an
+    /// exhaustive set of choices (Folk Magic's four spell categories, the
+    /// (Beings) classes), which the picker then shows as a dropdown.
+    Enumerated,
     /// Value is free text the player types (e.g. Aptitude for (Sin), Necessary
     /// (Realm) Aura, a (Land)). It references no registry, so any non-empty value
     /// is legal — the picker shows a text input rather than a dropdown.
@@ -465,6 +477,7 @@ impl fmt::Display for ParameterDomain {
             ParameterDomain::Form => f.write_str("form"),
             ParameterDomain::Characteristic => f.write_str("characteristic"),
             ParameterDomain::Item => f.write_str("item"),
+            ParameterDomain::Enumerated => f.write_str("enumerated"),
             ParameterDomain::Text => f.write_str("text"),
         }
     }
@@ -482,15 +495,33 @@ pub struct ParameterDef {
     pub param_type: ParamType,
     /// The domain the parameter value's id must belong to.
     pub domain: ParameterDomain,
+    /// The closed list of legal values, for [`ParameterDomain::Enumerated`] only.
+    /// Absent from the JSON — and from the serialized form — for every other
+    /// domain, where a list would be silently ignored; load-time integrity
+    /// rejects both the empty list here and a list anywhere else.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub values: Vec<Id>,
 }
 
 impl ParameterDef {
-    /// Creates a parameter definition.
+    /// Creates a parameter definition. Use [`Self::enumerated`] for the one
+    /// domain that carries its own value list.
     pub fn new(key: impl Into<String>, param_type: ParamType, domain: ParameterDomain) -> Self {
         Self {
             key: key.into(),
             param_type,
             domain,
+            values: Vec::new(),
+        }
+    }
+
+    /// Creates an [`ParameterDomain::Enumerated`] parameter over `values`.
+    pub fn enumerated(key: impl Into<String>, values: impl IntoIterator<Item = Id>) -> Self {
+        Self {
+            key: key.into(),
+            param_type: ParamType::Ref,
+            domain: ParameterDomain::Enumerated,
+            values: values.into_iter().collect(),
         }
     }
 }
@@ -3746,6 +3777,7 @@ mod tests {
         check(ParameterDomain::Form);
         check(ParameterDomain::Item);
         check(ParameterDomain::Characteristic);
+        check(ParameterDomain::Enumerated);
         check(ParameterDomain::Text);
         check(CastingScope::All);
         check(CastingScope::Formulaic);
@@ -6462,6 +6494,7 @@ mod tests {
             "characteristic"
         );
         assert_eq!(format!("{}", ParameterDomain::Item), "item");
+        assert_eq!(format!("{}", ParameterDomain::Enumerated), "enumerated");
     }
 
     #[test]

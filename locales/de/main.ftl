@@ -893,6 +893,10 @@ param-label-role = Rolle
 # Begriff aus rules/source/de/translation-tables/tiere-kreaturen.md:144
 # („Power“ → „Kraft“).
 param-label-power = Kraft
+# Der enge Zauberbereich der Volksmagie — eine der vier Optionen, die das Buch
+# nennt. Begriff aus rules/source/de/Ars Magica Definitive Edition
+# Basisregeln.md:3919 („Zauberkategorie"); der Schlüssel selbst ist allgemein.
+param-label-category = Kategorie
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }

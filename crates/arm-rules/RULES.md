@@ -255,12 +255,20 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   point-item id must never be typed by hand); its menu is the whole point-item
   registry, because nothing in the data narrows it. No catalogue data was invented
   for it.
+- **Enumerated domain** (`ParameterDomain::Enumerated`, serde `"enumerated"`): the
+  parenthetical is a **closed list the rulebook prints in full**, declared on the
+  parameter itself as `values` — `(Beings)` on the three Inoffensive/Offensive/
+  Unbearable items, and Folk Magic's spell `category`. The domain is its list, so
+  the picker shows a dropdown and a value outside it raises `unknown_param_value`.
+  See *Enumerated parameter domain — a closed list the rulebook prints* below for
+  the rule, the four value tables and the save impact.
 - **Free-text domain** (`ParameterDomain::Text`, serde `"text"`): the parenthetical
   is a free choice with no registry — `(Realm)`, `(Land)`, `(Subject)`, `(Sin)`,
-  `(Beings)`, `(Terrain)`, `(Commodity)`, `(Faculty)`, `(Role)`, plus the mixed
+  `(Terrain)`, `(Commodity)`, `(Faculty)`, `(Role)`, `(Power)`, plus the mixed
   `Necessary (Realm) Aura for (Ability)` (a `text` + an `ability`). `validate_parameters`
   accepts any value for a `text` param (no resolution); the UI text input already
-  existed. Param hints come from Fluent `param-label-<key>`.
+  existed. Param hints come from Fluent `param-label-<key>`. `(Terrain)` is here
+  rather than under `enumerated` on purpose — its list ends "…, etc." (`:6130`).
 - **Name-qualifiers — not params, stay literal by design:** `(Dove)`, `(the Wolf)`,
   `(Muq-Ta')`, `(Hermetic)`, `(PC)`, and the `(positive)`/`(negative)` Cyclic Magic
   disambiguators.
@@ -897,7 +905,7 @@ Two shapes need it, and neither was expressible with `max_per_target` alone:
    (`max_total: 2`). Without the total cap, a build could legally take
    Affinity/Puissant copies for three or more different Arts, since each Art
    is a distinct duplicate key.
-2. **Forbidden repetition with a free-text target.** `virtue.inoffensive_to_beings`,
+2. **Forbidden repetition with a per-copy target.** `virtue.inoffensive_to_beings`,
    `flaw.offensive_to_beings`, `flaw.unbearable_to_beings`, and
    `flaw.fish_out_of_water_terrain` each carry a `being`/`terrain` parameter, so
    two selections naming two different targets are two different duplicate
@@ -905,7 +913,11 @@ Two shapes need it, and neither was expressible with `max_per_target` alone:
    forbids taking the item more than once at all, full stop. `max_total: 1` is
    what actually enforces "not more than once"; `max_per_target` is left at its
    default of 1 too (no repeat at the *same* target either), so both fields are
-   set on these four items and both are load-bearing.
+   set on these four items and both are load-bearing. (The three `being`
+   parameters are `enumerated` and the `terrain` one is `text` — see *Enumerated
+   parameter domain* below — but that distinction is irrelevant here: both
+   domains make the target part of the duplicate key, which is the only property
+   `max_total` is compensating for.)
 
 **Same sentinel convention as `max_per_target`: absent = `u8::MAX` (255) = "no
 stated ceiling"** (see the box above). A stated ceiling is encoded literally.
@@ -990,6 +1002,125 @@ against the whole point-item registry with no category narrowing and no
 is-possessed predicate, so the picker would list every catalogue item. Not
 built — same family as the per-power residual gap below. So the copy count is
 bounded only by the Flaw budget, not by the character's Supernatural Virtues.
+
+#### Enumerated parameter domain — a closed list the rulebook prints
+> "He can only create spells in one narrow area, which must be one of the
+> following four options" — Folk Magic, `:3909`, the options printed
+> `:3911-3917`; and "You may pick this Virtue more than once, to acquire
+> expertise in a different category of spells" — `:3919`.
+
+> "This Virtue is associated with one of five classes of beings: animals, divine
+> beings, faeries, demons, or magical creatures." — Inoffensive to (Beings),
+> `:4135`.
+
+> "This Flaw is associated with one of six classes of beings: animals, mundane
+> humans, divine beings, faeries, demons, or magical creatures." — Offensive to
+> (Beings), `:6526`.
+
+> "This Flaw is associated with one of three classes of beings: mundane humans,
+> demons, or divine beings." — Unbearable to (Beings), `:6893`.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3909`, `:3911-3917`,
+  `:3919`, `:4135`, `:6526`, `:6893`.
+- Engine: `ParameterDomain::Enumerated` and `ParameterDef.values`
+  (`crates/arm-rules/src/types.rs`); resolution in
+  `validation/selections.rs::param_value_resolves`; the load-time shape check in
+  `ruleset/integrity.rs::validate_parameter_defs`.
+- Data: `rules/core/virtues_flaws.json` — `virtue.folk_magic` (`category`),
+  `virtue.inoffensive_to_beings`, `flaw.offensive_to_beings`,
+  `flaw.unbearable_to_beings` (`being`). Value labels in
+  `rules/i18n/en|de/virtues_flaws.json`; the picker's control name is the Fluent
+  `param-label-category` / `param-label-being`.
+- Tests: `shipped_enumerated_params_declare_exactly_their_book_values`,
+  `a_value_outside_an_enumerated_list_does_not_resolve`,
+  `every_declared_enumerated_value_resolves`,
+  `folk_magic_repeats_across_categories_but_never_within_one`,
+  `folk_magics_ceiling_is_the_length_of_its_own_list`,
+  `every_enumerated_value_id_has_english_and_german_text`,
+  `fish_out_of_water_keeps_a_free_text_terrain`
+  (`crates/arm-rules/tests/data_integrity.rs`, table `ENUMERATED_PARAM_ITEMS`).
+
+Four items take a target the rulebook prints **in full**. Free text could not
+express that: it accepts any string, so "dragons" was as legal as "demons" and
+the book's own list lived nowhere the engine could see it. The domain is
+therefore the list itself — declared on the parameter, in the rules JSON:
+
+```json
+"parameters": [{ "key": "category", "type": "ref", "domain": "enumerated",
+                 "values": ["folk_magic.abjuration", "folk_magic.divination",
+                            "folk_magic.evil_eye", "folk_magic.healing"] }]
+```
+
+A value outside `values` raises the **existing** `unknown_param_value` — it
+simply does not resolve in its domain, which is what that code already means, so
+there is no new issue code and no new Fluent key. Because the check lives in
+`validate_selection_parameters`, it covers House/Mythic open-grant picks and
+Warping fills for free, exactly as it covers a bought row.
+
+The value ids are slug-style and never translated (`being.mundane_humans`,
+`folk_magic.evil_eye`); their user-facing labels are ordinary
+`rules/i18n/<lang>/` entries, so the picker and the Markdown export both render
+a localized name and never the slug.
+
+**The three being lists are different subsets of one another** — five classes,
+six, and three — which is why the enumeration is declared per *parameter* rather
+than once globally under the shared `being` key.
+
+**Why Folk Magic's ceiling is written nowhere.** `:3919` grants the repeat "to
+acquire expertise in a *different* category", so the item carries **no
+`max_total` and no `max_per_target`**: the default of one copy per target plus a
+four-value list means a further copy must repeat a category, which
+`validate_duplicate_selections` already rejects. The ceiling of four is
+*implied by the list*, so a supplement that adds a fifth category raises it with
+no code, cap or test edit. `max_per_target: 4` was rejected for exactly that
+reason — it states a number the list already carries, and it would still permit
+two copies naming the same category.
+
+**Load-time integrity** (`validate_parameter_defs`, applied to point items *and*
+spells, since both hold `ParameterDef`s and both resolve through the same
+`param_value_resolves`): an `enumerated` parameter must declare a non-empty,
+duplicate-free `values` list, and every *other* domain must declare none. The
+second half is the one that is easy to miss — a `values` list on a `text`
+parameter is read by nothing, so it would look like an enforced restriction in
+the data and silently not be one. Both failures name the offending item id and
+parameter key.
+
+**Why `flaw.fish_out_of_water_terrain` is NOT one of these.** Its terrain list
+ends "…, etc." (`:6130`), so the rulebook means the set to be open. Free text is
+the correct encoding there, and `fish_out_of_water_keeps_a_free_text_terrain`
+pins it against a future sweep that "finishes the job".
+
+**Save impact.** Tightening `text` → `enumerated` invalidates the free-text
+values older saves may hold: a save carrying `being: "dragons"` now raises
+`unknown_param_value`, and a save carrying `virtue.folk_magic` raises
+`missing_param` because the parameter is new. This is accepted and **no value
+migration is written**: the old values were unconstrained text, so no mapping is
+reliable (an English word list misses every German-typed save and silently
+mis-maps the rest), `SCHEMA_VERSION` does not apply because it versions the save
+*format* and no save byte changed, and the failure is a visible, self-explaining
+validation issue the player clears with one dropdown pick. No data is lost.
+
+**What this does NOT model — the residual gap, stated plainly.** Folk Magic has
+a *second* choice axis: each copy also aligns to a `(Realm) Lore`, freely
+re-chosen per copy, "although a character cannot have access to both the Divine
+and Infernal Realms" (`:3919`, the tail of the same sentence that grants the
+repeat). The `category` parameter is the right and sufficient fix for the copy
+cap; the realm axis and its Divine/Infernal exclusion stay unmodelled.
+
+**Adjacent, adjudicated, and deliberately not fixed here.** The book gives
+Inoffensive "General **and** Hermetic" (`:4134`), Offensive "Hermetic **and**
+General" (`:6525`) and Unbearable "Hermetic **or** General" (`:6892`), yet all
+three ship with a single category. That is not an oversight of the dual-category
+sweep so much as a class the sweep never covered: `5729e6d` states "The rulebook
+gives four core Virtues and Flaws two categories each" and names Sufi, Visions,
+Raised from the Dead and Suppressed Gift — all four written with a **comma**
+(`*Minor, Social Status, Supernatural*`). Every descriptor joined by *and*/*or*
+was left alone, and there are five of them: `:4134`, `:5882` (Curse of Slander,
+"General or Supernatural"), `:6525`, `:6635` (Primogeniture Lineage, "Story and
+Hermetic") and `:6892`. Fixing three of the five here would leave the same claim
+false and would not settle what *or* even means (Curse of Slander's "General or
+Supernatural" reads as an either/or origin, not membership in both). So the
+categories are untouched and the whole family is recorded as one to-do.
 
 #### Selection multiplicity — one copy per named power
 > "This Flaw may be taken once for each power the character possesses."
@@ -1082,46 +1213,13 @@ than approximated):
   multiplicity — one copy per named power* above — and adding their `power`
   parameter did carry exactly the save cost described here, which is the price
   of closing the gap rather than an argument against it.
-- **Enumerated parameter domain, not free text.** `virtue.folk_magic` (`:3919`,
-  "You may pick this Virtue more than once, to acquire expertise in a
-  different category of spells") repeats over a *closed* list — the spell
-  category must be "one of the following four options" (`:3909`), enumerated
-  at `:3911-3917` as Abjuration, Divination, Healing, and Evil Eye — yet the
-  item carries no parameter at all today, so it is stuck at `max_per_target: 1`
-  (one copy total) rather than one copy per category. Encoding
-  `max_per_target: 4` was considered and rejected: it hardcodes a count the
-  category list already implies, and it would not stop two copies from naming
-  the *same* category, which the rulebook does not allow either. The correct
-  fix is a data-declared enumerated parameter domain — a category parameter
-  whose legal values are exactly the four listed spell categories — after
-  which `max_per_target: 1` on that parameter gives distinctness for free, the
-  total-of-four falls out of the list's length instead of being stated
-  separately, and a supplement that adds a fifth category needs no engine
-  change. `ParameterDomain` (`crates/arm-rules/src/types.rs:424-447`) has no
-  such variant today — it is a fixed seven-variant enum resolving against
-  existing registries (abilities, arts — with the Technique and Form
-  narrowings — characteristics, and point items, plus free `text`), with no way
-  for a rules entry to declare its own closed value list. Building that variant is out of
-  scope for this fix; `virtue.folk_magic` stays unparameterized and capped at
-  one copy until it exists.
-
-  Three shipped items already show the same shape from the other direction —
-  they carry a free-text `domain: "text"` parameter for a slot the rulebook
-  actually enumerates, though none of them repeat (each is independently
-  capped at one copy total via `max_total: 1`, see *Selection multiplicity —
-  `max_total`* above): `virtue.inoffensive_to_beings`'s `being` (`:4135`, "one
-  of five classes of beings: animals, divine beings, faeries, demons, or
-  magical creatures"), `flaw.offensive_to_beings`'s `being` (`:6526`, "one of
-  six classes of beings: animals, mundane humans, divine beings, faeries,
-  demons, or magical creatures"), and `flaw.unbearable_to_beings`'s `being`
-  (`:6893`, "one of three classes of beings: mundane humans, demons, or divine
-  beings"). All three would benefit from the same enumerated-domain variant if
-  it is ever built, so the being lists stay authoritative in one place instead
-  of copied into free text at selection time.
-  `flaw.fish_out_of_water_terrain`'s `terrain` parameter is different: `:6130`
-  lists example terrains and ends "…, etc.", so the rulebook leaves the set
-  open-ended on purpose — free text is the right encoding there, and it is NOT
-  a candidate for the enumerated-domain fix.
+- **Folk Magic's realm alignment.** The category axis is now expressed — see
+  *Enumerated parameter domain — a closed list the rulebook prints* above, which
+  is also where the three (Beings) items' closed lists live. What is still not
+  modelled is Folk Magic's *second* axis: each copy also aligns to a `(Realm)
+  Lore`, re-choosable per copy, except that "a character cannot have access to
+  both the Divine and Infernal Realms" (`:3919`). Expressing it needs a second
+  parameter plus a cross-copy exclusion rule, and is not done.
 
 Repeated copies stack through the normal effect sum — `for_each_effect!` walks
 every selection, so two Improved Characteristics yield

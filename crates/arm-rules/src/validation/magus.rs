@@ -502,7 +502,7 @@ fn validate_spell_parameter(
         )),
         Some(value) => {
             let value_id = Id::new(value.as_str());
-            if !super::selections::param_value_resolves(ruleset, def.domain, &value_id) {
+            if !super::selections::param_value_resolves(ruleset, def, &value_id) {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
                     CreationPhase::Spells,

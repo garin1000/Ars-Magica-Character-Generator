@@ -110,7 +110,10 @@ impl Ruleset {
 
             // Parameter domains are validated at parse time by the
             // ParameterDomain enum; concrete param VALUES are resolved per
-            // selection in validation::validate_parameters.
+            // selection in validation::validate_parameters. What is checked
+            // here is the SHAPE of a declared value list — the one piece of a
+            // parameter that is neither a closed enum nor a per-selection value.
+            validate_parameter_defs(&item.parameters, &format!("{id}"), errors);
             self.validate_effect_refs(item, id, errors);
 
             validate_source_range(&item.source, &format!("{id}"), errors);
@@ -1328,6 +1331,7 @@ impl Ruleset {
                 ));
             }
         }
+        validate_parameter_defs(&spell.parameters, &format!("spell '{id}'"), errors);
         validate_source_range(&spell.source, &format!("spell '{id}'"), errors);
     }
 
@@ -1742,6 +1746,51 @@ impl Ruleset {
 /// (e.g. `"spell 'spell.foo'"`), while the point-item site passes the bare id
 /// with no label — so every site's message text is byte-identical to before
 /// this extraction; only the duplicated check is shared.
+/// Checks the shape of every declared parameter's value list, for whatever
+/// carries parameters — a point item or a spell (both hold [`ParameterDef`]s and
+/// both are resolved by the same `validation::selections::param_value_resolves`,
+/// so a spell may declare `enumerated` under exactly the same terms). `subject`
+/// is the caller's own message prefix, as with [`validate_source_range`].
+///
+/// Two halves, both authoring slips that would otherwise be invisible:
+///
+/// - An `enumerated` domain IS its list, so an **empty** one resolves nothing:
+///   every selection naming that parameter would raise `unknown_param_value`
+///   forever, and a **repeated** value is a transcription slip that would show
+///   the same option twice in the picker.
+/// - A `values` list on any **other** domain is read by nothing — it would look
+///   like an enforced restriction in the data and silently not be one.
+fn validate_parameter_defs(params: &[ParameterDef], subject: &str, errors: &mut Vec<String>) {
+    for param in params {
+        let key = &param.key;
+        if param.domain != ParameterDomain::Enumerated {
+            if !param.values.is_empty() {
+                errors.push(format!(
+                    "{subject}: parameter '{key}' has domain '{}' but declares \
+                     'values'; only an 'enumerated' domain reads them",
+                    param.domain
+                ));
+            }
+            continue;
+        }
+        if param.values.is_empty() {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has domain 'enumerated' but declares \
+                 no 'values'; an enumerated domain is nothing but its list"
+            ));
+            continue;
+        }
+        let mut seen: BTreeSet<&Id> = BTreeSet::new();
+        for value in &param.values {
+            if !seen.insert(value) {
+                errors.push(format!(
+                    "{subject}: parameter '{key}' repeats the enumerated value '{value}'"
+                ));
+            }
+        }
+    }
+}
+
 fn validate_source_range(source: &Option<SourceRef>, subject: &str, errors: &mut Vec<String>) {
     if let Some(source) = source
         && !source.lines.is_valid()

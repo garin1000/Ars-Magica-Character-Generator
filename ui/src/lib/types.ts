@@ -39,12 +39,18 @@ export type ParameterDomain =
   | 'form'
   | 'characteristic'
   | 'item'
+  | 'enumerated'
   | 'text';
 
 export interface ParameterDef {
   key: string;
   type: ParamType;
   domain: ParameterDomain;
+  // The closed list of legal value ids, for the `enumerated` domain only — the
+  // domain IS its list, so it travels with the parameter rather than naming a
+  // catalogue. Omitted from the JSON for every other domain, where the engine
+  // rejects it at load.
+  values?: string[];
 }
 
 // Mechanical effect a virtue/flaw applies. `ability_bonus` adds to an ability's

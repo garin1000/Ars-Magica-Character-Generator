@@ -872,6 +872,8 @@ param-label-faculty = Faculty
 param-label-commodity = Commodity
 param-label-role = Role
 param-label-power = Power
+# Folk Magic's narrow area of spells — one of the four the book prints.
+param-label-category = Category
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }

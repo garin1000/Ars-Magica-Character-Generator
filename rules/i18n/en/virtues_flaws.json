@@ -1,4 +1,22 @@
 {
+  "being.animals": {
+    "name": "Animals"
+  },
+  "being.demons": {
+    "name": "Demons"
+  },
+  "being.divine": {
+    "name": "Divine Beings"
+  },
+  "being.faeries": {
+    "name": "Faeries"
+  },
+  "being.magical_creatures": {
+    "name": "Magical Creatures"
+  },
+  "being.mundane_humans": {
+    "name": "Mundane Humans"
+  },
   "flaw.a_deal_with_the_devil": {
     "name": "A Deal with the Devil",
     "summary": "The character has sold his soul to the devil and now finds himself destined to infernal damnation."
@@ -1351,6 +1369,18 @@
     "name": "Wrathful (Minor)",
     "summary": "You are prone to anger over the smallest issues, and your rage when you are thwarted in something major is terrible to behold."
   },
+  "folk_magic.abjuration": {
+    "name": "Abjuration"
+  },
+  "folk_magic.divination": {
+    "name": "Divination"
+  },
+  "folk_magic.evil_eye": {
+    "name": "Evil Eye"
+  },
+  "folk_magic.healing": {
+    "name": "Healing"
+  },
   "virtue.academic_concentration_subject": {
     "name": "Academic Concentration {subject}",
     "summary": "The character has concentrated in one of the seven subjects of Artes Liberales, in preference to the other six."
@@ -1720,7 +1750,7 @@
     "summary": "The character has a supernatural power with a narrow range of effects, like the ability to cast Spontaneous spells that are associated with a single type of magic."
   },
   "virtue.folk_magic": {
-    "name": "Folk Magic",
+    "name": "Folk Magic {category}",
     "summary": "The character is capable of performing very minor acts of magic through his knowledge of scraps of occult lore."
   },
   "virtue.font_of_knowledge": {

@@ -76,6 +76,17 @@ const ITEMS: Record<string, PointItem> = {
   'virtue.puissant_ability': pointItem('virtue.puissant_ability', [
     { key: 'ability', type: 'ref', domain: 'ability' },
   ]),
+  // The `enumerated` domain declares its own closed list, so the option set comes
+  // from the DATA, not from any catalogue the store holds. Three values, so a
+  // taken one can be seen greyed while others stay offered.
+  'virtue.folk_magic': pointItem('virtue.folk_magic', [
+    {
+      key: 'category',
+      type: 'ref',
+      domain: 'enumerated',
+      values: ['folk_magic.abjuration', 'folk_magic.divination', 'folk_magic.healing'],
+    },
+  ]),
 };
 
 function installRuleset(): void {
@@ -115,6 +126,10 @@ function installRuleset(): void {
       'ability.awareness': { name: 'Awareness' },
       'ability.stealth': { name: 'Stealth' },
       'ability.area_lore': { name: '{area} Lore' },
+      'virtue.folk_magic': { name: 'Folk Magic {category}' },
+      'folk_magic.abjuration': { name: 'Abjuration' },
+      'folk_magic.divination': { name: 'Divination' },
+      'folk_magic.healing': { name: 'Healing' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -279,6 +294,62 @@ describe('ParameterPicker domain branches (slice 7, #4)', () => {
       'param-virtue.item_domain_probe-item-0',
     );
     expect(ariaLabel(item!)).toBe('Gegenstand');
+    const category = selectFor(
+      pickerBody('virtue.folk_magic'),
+      'param-virtue.folk_magic-category-0',
+    );
+    expect(ariaLabel(category!)).toBe('Kategorie');
+  });
+});
+
+// Folk Magic's spell category and the three (Beings) classes are closed lists the
+// rulebook prints in full, declared on the parameter itself. The picker's option
+// set is therefore the DATA's list — nothing narrows a catalogue.
+describe('ParameterPicker enumerated domain', () => {
+  const TESTID = 'param-virtue.folk_magic-category-0';
+
+  it('offers exactly the values the parameter declares, in order', () => {
+    const body = pickerBody('virtue.folk_magic');
+    // Free text was the old control and is exactly what this domain replaces.
+    expect(hasInput(body, TESTID)).toBe(false);
+    const select = selectFor(body, TESTID);
+    expect(select).not.toBeNull();
+    expect(optionTexts(select!)).toEqual(['Category', 'Abjuration', 'Divination', 'Healing']);
+  });
+
+  it('labels each option through the rules i18n, never as its raw id', () => {
+    const select = selectFor(pickerBody('virtue.folk_magic'), TESTID);
+    // The value attribute carries the id; the text a player reads must not.
+    expect(select!).toContain('value="folk_magic.abjuration"');
+    expect(optionTexts(select!).join(' ')).not.toContain('folk_magic.');
+  });
+
+  it('greys out a value another selection of the same item already holds', () => {
+    store.entity.selections = [
+      { ref: 'virtue.folk_magic', params: { category: 'folk_magic.healing' } },
+      { ref: 'virtue.folk_magic' },
+    ];
+    const select = selectFor(
+      pickerBody('virtue.folk_magic', 1),
+      'param-virtue.folk_magic-category-1',
+    );
+    expect(optionByText(select!, 'Healing')).toContain('disabled');
+    expect(optionByText(select!, 'Abjuration')).not.toContain('disabled');
+  });
+
+  it('counts a GRANTED copy against the same list', () => {
+    // The greying path is domain-agnostic and grant-aware: `usage()` merges bought
+    // rows with `store.effective.granted_selections`, so a House-granted category
+    // must disappear from a bought row's menu exactly as a bought one does.
+    store.entity.selections = [{ ref: 'virtue.folk_magic' }];
+    store.effective = {
+      granted_selections: [
+        { ref: 'virtue.folk_magic', params: { category: 'folk_magic.healing' } },
+      ],
+    } as unknown as EffectiveScores;
+    const select = selectFor(pickerBody('virtue.folk_magic'), TESTID);
+    expect(optionByText(select!, 'Healing')).toContain('disabled');
+    expect(optionByText(select!, 'Divination')).not.toContain('disabled');
   });
 });
 
