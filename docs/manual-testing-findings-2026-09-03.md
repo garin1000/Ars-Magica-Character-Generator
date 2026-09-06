@@ -85,7 +85,8 @@ After the fix no file under `rules/core/` cites a Realms of Power book at all.
 
 ### 28 — `virtue.spirit_votary`'s +7 Flaw points is cited to a core passage that does not state it
 
-**Status:** open — found while fixing 8, not part of the manual session
+**Status:** closed (2026-09-06) — the value is sound and Core-derived; only its
+provenance note was wrong
 
 `rules/core/mythic_companion_types.json` gives Spirit Votary a +7 Flaw-point
 budget and cites core `:2741-2764`. Those lines are silent on the number; only
@@ -93,6 +94,17 @@ budget and cites core `:2741-2764`. Those lines are silent on the number; only
 already notes the discrepancy. Since English core is the source of truth for
 values as well as ids, either the citation is wrong or the value is unsourced —
 it needs a decision, not a silent fix.
+
+**Resolution.** Neither: the 7 is the standard Mythic Companion arithmetic, so
+Core does state it, just not as a number. `:2638` gives every Mythic Companion
+ten points of Flaws at two Virtue points each. Spirit Votary's required Virtues
+cost 6 budgeted points — Spiritual Pact (Major, 3) plus "one more Major
+Supernatural Virtue or three Minor Supernatural Virtues" (3), :2750-2751 — and
+its required Flaw, Pagan (Major, 3) at :2756, funds exactly those 6 at 2:1. What
+remains of the ten-point allowance is 7, the same way every other type's bonus
+falls out. *RoP: Magic* :5486 states the same number independently, so there was
+never a discrepancy — only an incomplete note, now rewritten in RULES.md with the
+derivation and the second citation. No data change.
 
 ### 9 — `virtue.demonic_blood` is missing `tainted: true`
 

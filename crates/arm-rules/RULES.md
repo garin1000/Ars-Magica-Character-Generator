@@ -1940,15 +1940,23 @@ so the check reduces exactly to the base budget.
 | Devil Child | `virtue.devil_child` | Demonic Might **or** Powers | Demonic Blood, Puissant (Guile) | Tragic Life | +7 F, **+3 free V** | Ars Magica - Definitive Edition (Core Rules).md `:2643-2666` |
 | Faerie Doctor | `virtue.faerie_doctor` | Dowsing | Wise One, Curse-Throwing | Faerie Friend, Dutybound | none | Ars Magica - Definitive Edition (Core Rules).md `:2668-2704` |
 | Nephilim | `virtue.nephilim` | Strong Angelic Heritage | Blood of the Nephilim, Greater Immunity, Great Sta, Great Str, Improved Characteristics, Sense Holiness | — (5 F fund the +10 V) | none | Ars Magica - Definitive Edition (Core Rules).md `:2714-2739` |
-| Spirit Votary | `virtue.spirit_votary` | Second Sight | Spiritual Pact (+ 1 Major/3 Minor Supernatural, **advisory**) | Pagan | +7 F | Ars Magica - Definitive Edition (Core Rules).md `:2741-2764` |
+| Spirit Votary | `virtue.spirit_votary` | Second Sight | Spiritual Pact (+ 1 Major/3 Minor Supernatural, **advisory**) | Pagan | +7 F (derived, see below) | Ars Magica - Definitive Edition (Core Rules).md `:2741-2764` + `:2638` |
 
 - Devil Child's **+3 free V / +7 F**: Ars Magica - Definitive Edition (Core Rules).md `:2664` ("three more points of Virtues
   at no cost… and an additional seven points of Flaws"). Verified maxed budget:
   flaw 17, virtue `20 + 14 + 3 = 37`.
-- Spirit Votary's **+7 F**: *Ars Magica 5e - Realms of Power - Magic.md*`:5486` ("may take up to 7
-  more points of Flaws, each point granting 2 points"). The Core mythic section
-  is silent on this bonus — RoP Magic is the authority; the discrepancy is noted
-  here.
+- Spirit Votary's **+7 F** is **derived from Core, not borrowed**. The type's
+  section (`:2741-2764`) states no bonus because it does not need one: the number
+  falls out of the general Mythic Companion budget at `:2638` ("you may take up to
+  ten points of Flaws, and each point of Flaws is worth two points of Virtues").
+  Its required Virtues cost **6** budgeted points — Spiritual Pact (Major, 3) plus
+  "either one more Major Supernatural Virtue or three Minor Supernatural Virtues"
+  (3) at `:2750-2751`; the free status Virtue and Second Sight are grants and cost
+  nothing. Its required Flaw, Pagan (Major, 3) at `:2756`, funds exactly those 6 at
+  the 2:1 rate. That leaves `10 − 3 = 7` points of the Flaw allowance unspent —
+  which is what `bonus_flaw_points: 7` records, and it is the same arithmetic every
+  other type follows. *Realms of Power: Magic* `:5486` states the same 7
+  independently; Core remains the source of truth and there is no discrepancy.
 - **Nephilim** has no bonus: its "5 points of Flaws to pay for these virtues"
   (`:2731`) is a consequence of funding 10 pts of required Virtues at 2:1 within
   the base 10 F / 20 V, not a budget change.
