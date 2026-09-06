@@ -1609,6 +1609,23 @@ impl SourceRef {
     }
 }
 
+/// A ceiling expressed as a fraction — `numerator`/`denominator` — of some
+/// whole, kept as an exact integer pair rather than a float so the comparison
+/// that uses it (`part · denominator > total · numerator`) needs no rounding
+/// choice and no floating-point equality.
+///
+/// The rules state such ceilings in words ("no more than half"), and a *value*
+/// a rulebook states belongs in the rules JSON rather than in engine code, so
+/// the fraction is data. Load-time integrity rejects a zero denominator and a
+/// numerator above its denominator.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Share {
+    /// How many parts of the whole the ceiling permits.
+    pub numerator: u8,
+    /// How many parts the whole is divided into. Never zero.
+    pub denominator: u8,
+}
+
 /// A virtue, flaw, boon, or hook with its mechanical metadata.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(try_from = "PointItemRepr")]
@@ -1695,6 +1712,21 @@ pub struct PointItem {
         skip_serializing_if = "is_default_max_total"
     )]
     pub max_total: u8,
+    /// The largest share of its **own kind's** point total that all copies of
+    /// this item — bought and granted alike — may account for. `None` (the
+    /// default, and the case for almost every entry) means the rules state no
+    /// such ratio.
+    ///
+    /// Measured in points, against the points actually taken, and split by kind:
+    /// a Virtue's copies are weighed against Virtue points, a Flaw's against
+    /// Flaw points. Drives the share-of-kind cap in
+    /// `validation::caps::validate_share_of_kind_cap`.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3665 and :3669
+    /// (Demonic Might / Demonic Powers, "no more than half of the character's
+    /// total Virtues").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_share_of_kind: Option<Share>,
     /// Provenance into the Markdown source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -1777,6 +1809,8 @@ struct PointItemRepr {
     #[serde(default = "default_max_total")]
     max_total: u8,
     #[serde(default)]
+    max_share_of_kind: Option<Share>,
+    #[serde(default)]
     source: Option<SourceRef>,
 }
 
@@ -1799,6 +1833,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             effects,
             max_per_target,
             max_total,
+            max_share_of_kind,
             source,
         } = repr;
 
@@ -1830,6 +1865,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             effects,
             max_per_target,
             max_total,
+            max_share_of_kind,
             source,
         })
     }
@@ -6350,6 +6386,43 @@ mod tests {
         assert!(
             !out.contains("max_total"),
             "default should be skipped: {out}"
+        );
+    }
+
+    #[test]
+    fn max_share_of_kind_deserializes_and_is_absent_by_default() {
+        let with_share = r#"{
+          "id": "virtue.demonic_might",
+          "kind": "virtue",
+          "classification": "narrative",
+          "magnitude": "minor",
+          "categories": ["supernatural"],
+          "max_share_of_kind": { "numerator": 1, "denominator": 2 }
+        }"#;
+        let item: PointItem = serde_json::from_str(with_share).unwrap();
+        assert_eq!(
+            item.max_share_of_kind,
+            Some(Share {
+                numerator: 1,
+                denominator: 2,
+            })
+        );
+
+        let without_share = r#"{
+          "id": "virtue.keen_vision",
+          "kind": "virtue",
+          "classification": "narrative",
+          "magnitude": "minor",
+          "categories": ["general"]
+        }"#;
+        let plain: PointItem = serde_json::from_str(without_share).unwrap();
+        assert_eq!(plain.max_share_of_kind, None);
+        // Absent must stay absent in canonical output (zero-noise diffs): the
+        // field exists on two catalogue entries, not on the 500-odd others.
+        let out = serde_json::to_string(&plain).unwrap();
+        assert!(
+            !out.contains("max_share_of_kind"),
+            "an absent share must be skipped: {out}"
         );
     }
 

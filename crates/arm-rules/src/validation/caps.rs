@@ -203,3 +203,76 @@ pub(crate) fn validate_tainted_cap(
         ValidationIssue::CODE_TOO_MANY_TAINTED_FLAWS,
     );
 }
+
+/// Warns when the copies of one item account for more of its own kind's point
+/// total than its descriptor allows — the ratio each item states as data in
+/// [`PointItem::max_share_of_kind`].
+///
+/// Modelled on [`validate_tainted_cap`], which implements the same sentence
+/// shape for the Tainted guideline, and identical to it in three respects:
+/// points rather than headcount, the rounding-free integer comparison, and
+/// **warning** severity. It differs in one: it takes the **folded** selection
+/// list (bought ++ granted) rather than `entity.selections`, because a granted
+/// copy is still a copy — Devil Child hands out a free Demonic Might or Demonic
+/// Powers (Ars Magica - Definitive Edition (Core Rules).md:3673). See RULES.md
+/// for why that divergence from the Tainted precedent is deliberate.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:3665 (Demonic Might)
+/// and :3669 (Demonic Powers) — "no more than half of the character's total
+/// Virtues", read as points, which is an interpretation (see RULES.md) and the
+/// second reason this is a warning rather than an error.
+pub(crate) fn validate_share_of_kind_cap(
+    selections: &[Selection],
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let (mut total_virtue, mut total_flaw) = (0i64, 0i64);
+    // Points held per share-capped item; ordered so the issue order is stable.
+    let mut capped_points: BTreeMap<&Id, i64> = BTreeMap::new();
+
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        let pts = item.magnitude.points() as i64;
+        if item.kind.is_positive() {
+            total_virtue += pts;
+        } else {
+            total_flaw += pts;
+        }
+        if item.max_share_of_kind.is_some() {
+            *capped_points.entry(&selection.item_ref).or_insert(0) += pts;
+        }
+    }
+
+    for (item_ref, points) in capped_points {
+        let Some(item) = ruleset.point_items.get(item_ref) else {
+            continue;
+        };
+        let Some(share) = item.max_share_of_kind else {
+            continue;
+        };
+        let total = if item.kind.is_positive() {
+            total_virtue
+        } else {
+            total_flaw
+        };
+        // "No more than <share>": the item's copies may equal the share but not
+        // exceed it. The integer form `part · denominator > total · numerator`
+        // sidesteps any rounding choice, and with 1/2 it is the `2·part > total`
+        // the Tainted cap already uses.
+        if points * i64::from(share.denominator) <= total * i64::from(share.numerator) {
+            continue;
+        }
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_TOO_LARGE_SHARE,
+            CreationPhase::VirtuesFlaws,
+            args([
+                ("item", item_ref.to_string()),
+                ("points", points.to_string()),
+                ("total", total.to_string()),
+            ]),
+            Some(item_ref.clone()),
+        ));
+    }
+}

@@ -4345,6 +4345,37 @@ const TOTAL_CAP_ITEMS: &[(&str, u32, u8)] = &[
     ("virtue.puissant_art", 4820, 2),
 ];
 
+/// Items whose descriptor caps the share of their own kind's point total that
+/// their copies may account for — `(id, line, numerator, denominator)`. Both
+/// Demonic entries say a repeat "can account for no more than half of the
+/// character's total Virtues", each about *this* Virtue, so the two ceilings
+/// are independent rather than a shared pool.
+const SHARE_CAPPED_ITEMS: &[(&str, u32, u8, u8)] = &[
+    ("virtue.demonic_might", 3665, 1, 2),
+    ("virtue.demonic_powers", 3669, 1, 2),
+];
+
+#[test]
+fn shipped_share_capped_items_carry_their_rulebook_ratio() {
+    let rs = load_ruleset();
+
+    for (id, line, numerator, denominator) in SHARE_CAPPED_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert_eq!(
+            item.max_share_of_kind,
+            Some(Share {
+                numerator: *numerator,
+                denominator: *denominator,
+            }),
+            "{id} may account for no more than {numerator}/{denominator} of its \
+             kind's point total \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+    }
+}
+
 #[test]
 fn shipped_repeatable_items_carry_their_rulebook_ceiling() {
     let rs = load_ruleset();

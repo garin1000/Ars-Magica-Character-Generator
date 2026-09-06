@@ -3779,6 +3779,7 @@
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "might_grant", "realm": "infernal", "score": 2 }],
     "max_per_target": 255,
+    "max_share_of_kind": { "numerator": 1, "denominator": 2 },
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3663, 3666] }
   },
   {
@@ -3791,6 +3792,7 @@
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "power_levels", "amount": 20 }],
     "max_per_target": 255,
+    "max_share_of_kind": { "numerator": 1, "denominator": 2 },
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3667, 3670] }
   },
   {

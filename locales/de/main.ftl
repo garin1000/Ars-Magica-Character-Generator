@@ -930,6 +930,7 @@ issue-too_many_personality_flaws = Mehr Persönlichkeitsfehler als empfohlen ({ 
 issue-too_many_story_flaws = Mehr Geschichte-Fehler als empfohlen ({ $count } von { $max }).
 issue-too_many_tainted_virtues = Mehr als die Hälfte deiner Tugendpunkte sind befleckt ({ $tainted } von { $total }).
 issue-too_many_tainted_flaws = Mehr als die Hälfte deiner Fehlerpunkte sind befleckt ({ $tainted } von { $total }).
+issue-too_large_share = { $item } macht einen größeren Anteil deiner Punkte aus, als die Regeln erlauben ({ $points } von { $total }).
 issue-prereq_not_met = Voraussetzung für { $item } nicht erfüllt.
 issue-prereq_unevaluated = Voraussetzung für { $item } konnte noch nicht geprüft werden.
 issue-incompatible = { $item } ist mit { $other } unvereinbar.

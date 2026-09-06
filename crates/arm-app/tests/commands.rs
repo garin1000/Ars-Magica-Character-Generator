@@ -1783,6 +1783,83 @@ fn devil_child_resolves_infernal_might_and_power_budget_end_to_end() {
     assert_eq!(scores.power_levels_budget, 30); // Demonic Blood's 30 levels
 }
 
+/// A Devil Child, mid-build against the shipped rules.
+fn devil_child(bought_demonic_might: usize, demonic_blood: bool) -> Entity {
+    let mut entity = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("mythic_companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    entity.mythic_type = Some(Id::new("mythic_type.devil_child"));
+    if demonic_blood {
+        entity
+            .selections
+            .push(Selection::new(Id::new("virtue.demonic_blood")));
+    }
+    for _ in 0..bought_demonic_might {
+        entity
+            .selections
+            .push(Selection::new(Id::new("virtue.demonic_might")));
+    }
+    entity
+}
+
+fn issue_codes(result: &arm_rules::ValidationResult) -> Vec<String> {
+    result.issues.iter().map(|i| i.code.clone()).collect()
+}
+
+#[test]
+fn a_granted_demonic_might_counts_toward_its_own_half_of_virtues_ratio() {
+    // Demonic Blood (Major, 3) + three bought Demonic Might (1 each) is 3 capped
+    // points of a 6-point Virtue total — exactly half, so bought copies alone are
+    // clean. Devil Child's free Demonic Might makes it 4 of 7, which is over half.
+    // Whether this warns is therefore exactly the question of whether a *granted*
+    // copy counts (Ars Magica - Definitive Edition (Core Rules).md:3665, :3673).
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+
+    let bought_only = devil_child(3, true);
+    let result = validate_loaded(&bought_only, &ruleset, ValidationMode::Enforced);
+    assert!(
+        !issue_codes(&result).contains(&"too_large_share".to_string()),
+        "three bought Demonic Might of six Virtue points is exactly half: {:?}",
+        result.issues
+    );
+
+    let mut with_grant = bought_only;
+    with_grant.mythic_choices.insert(
+        "devil_child_free_minor".into(),
+        Selection::new(Id::new("virtue.demonic_might")),
+    );
+    let result = validate_loaded(&with_grant, &ruleset, ValidationMode::Enforced);
+    assert!(
+        issue_codes(&result).contains(&"too_large_share".to_string()),
+        "the granted Demonic Might must count toward the ratio: {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn a_devil_child_without_demonic_blood_yet_warns_on_the_ratio() {
+    // Intended, pinned behaviour, not an accident: before Demonic Blood is
+    // bought, the granted Demonic Might is 1 point of a 1-point Virtue total
+    // (Devil Child itself is Free and lifts no denominator), so the ratio warns.
+    // This is transient mid-edit noise that warning severity exists to absorb,
+    // and the missing prerequisite is reported alongside it.
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = devil_child(0, false);
+    entity.mythic_choices.insert(
+        "devil_child_free_minor".into(),
+        Selection::new(Id::new("virtue.demonic_might")),
+    );
+
+    let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
+    assert!(
+        issue_codes(&result).contains(&"too_large_share".to_string()),
+        "a granted Demonic Might with no other Virtue points is all of them: {:?}",
+        result.issues
+    );
+}
+
 /// The real UI strings for a language, keyed by Fluent message name — the map the
 /// frontend hands to the Markdown export. Only argument-free single-line messages
 /// are usable: the engine links no Fluent formatter, so a message interpolating

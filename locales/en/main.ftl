@@ -911,6 +911,7 @@ issue-too_many_personality_flaws = More Personality Flaws than recommended ({ $c
 issue-too_many_story_flaws = More Story Flaws than recommended ({ $count } of { $max }).
 issue-too_many_tainted_virtues = More than half your Virtue points are Tainted ({ $tainted } of { $total }).
 issue-too_many_tainted_flaws = More than half your Flaw points are Tainted ({ $tainted } of { $total }).
+issue-too_large_share = { $item } accounts for more of your points than the rules allow it to ({ $points } of { $total }).
 issue-prereq_not_met = Prerequisite not met for { $item }.
 issue-prereq_unevaluated = Prerequisite for { $item } could not be checked yet.
 issue-incompatible = { $item } is incompatible with { $other }.
