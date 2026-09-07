@@ -10,15 +10,38 @@ It parses the Spells chapter of
 
   * rules/core/spells.json       — language-neutral mechanics (id, technique,
                                     form, level, requisites, ritual, R/D/T,
-                                    creates_lasting, source line-range)
+                                    creates_lasting, parameter slots, source
+                                    line-range)
   * rules/i18n/en/spells.json    — English name + description prose, keyed by id
   * rules/i18n/de/spells.json    — German names from the canonical translation
                                     table (zauber-nach-form.md); EN fallback
                                     (documented policy) when a spell is absent.
+                                    Existing German `description` prose is
+                                    *preserved*, never regenerated (see below).
 
 Output is canonically sorted by id with stable, deterministic formatting so
 re-runs produce zero-noise diffs. In-loop checks fail loudly; the real trust
 gate is the engine's load-time referential-integrity + ritual-legality check.
+
+Three properties of this generator are load-bearing and easy to break:
+
+* **Tables are not description prose.** Where the rulebook interrupts a spell's
+  body with a Markdown table (*Mists of Change*, *The Shadow of Life Renewed*,
+  *Visions of the Infernal Terrors*), the rows are deliberately left out of the
+  `description`. That field is prose rendered as prose by the UI, which cannot
+  lay out a raw Markdown table; the authoritative tabular text stays in
+  `rules/source/<lang>/`. The prose *around* the table is still collected, and
+  the entry's `source` range still spans the table, so provenance is complete.
+  `no_spell_description_carries_markdown_table` in
+  `crates/arm-rules/tests/data_integrity.rs` is the witness.
+* **Rewrites are non-destructive.** This script cannot author German prose, so
+  it carries every existing German `description` (and any other hand-authored
+  per-id field) across a rewrite. Before writing, it audits the regenerated
+  content against the files on disk and aborts if any field or id would be
+  lost, rather than silently deleting curated data.
+* **Bounds are asserted, loudly.** `CHAPTER_START`/`CHAPTER_END` are checked
+  against the actual heading text in `main()`; a shifted source aborts the run
+  and names the line it found.
 """
 
 from __future__ import annotations
@@ -104,9 +127,46 @@ TARGET_MAP = {
 }
 ART_NAMES = TECHNIQUES | FORMS
 
+# A parenthetical in a spell name that is a bare Art-*class* word — "(Form)",
+# "(form)", "(Technique)" — is not literal text: it marks a parameter slot the
+# character sheet fills in with one concrete Art. There are ten *Wizard's Boost*
+# spells, one per Form, and the catalogue carries a single entry with a `form`
+# slot. The class words are exactly the `art_type` values in
+# rules/core/arts.json, spelled per language: the German translation table
+# writes the same marker in German ("Das (Form)-Gefüge auflösen").
+SLOT_WORDS = {
+    "form": "form",  # EN + DE (identical spelling)
+    "technique": "technique",  # EN
+    "technik": "technique",  # DE
+}
+SLOT_RE = re.compile(r"\(([A-Za-z]+)\)")
+
 
 class ExtractError(Exception):
     pass
+
+
+def parameter_slots(name: str):
+    """Return (parameters, display_name) for a spell name with Art-class slots.
+
+    The parenthetical is replaced by a `{key}` placeholder *inside* the
+    parentheses ("Wizard's Boost ({form})"), which is the shape the i18n files
+    ship and the UI substitutes into. A name with no Art-class parenthetical is
+    returned unchanged with no parameters, so this is a no-op for the other 356
+    spells. Deliberately narrow: only the closed `SLOT_WORDS` set qualifies, so
+    an ordinary parenthetical in a spell name is never rewritten.
+    """
+    params: list[dict[str, str]] = []
+
+    def substitute(match: re.Match) -> str:
+        key = SLOT_WORDS.get(match.group(1).lower())
+        if key is None:
+            return match.group(0)
+        if all(p["key"] != key for p in params):
+            params.append({"key": key, "type": "ref", "domain": key})
+        return "({%s})" % key
+
+    return params, SLOT_RE.sub(substitute, name)
 
 
 def snake_id(name: str) -> str:
@@ -235,7 +295,11 @@ def extract(lines):
                     requisites.extend(parse_requisites(rq.group(1)))
                 k += 1
             # description prose: paragraphs until the "(Base ...)" design line or
-            # the next heading.
+            # the next heading. A Markdown table inside the body is skipped for
+            # the description but still counted in the source range — see the
+            # module docstring: the description is prose the UI renders as
+            # prose, and a raw table cannot be rendered there, so the
+            # authoritative tabular text stays in the Markdown source.
             desc_paras = []
             end = j  # track last content line for source range
             while k < n:
@@ -249,10 +313,19 @@ def extract(lines):
                 if stripped.startswith("("):
                     end = k + 1
                     break
+                if stripped.startswith("|"):
+                    # A table row: excluded from the prose, included in the
+                    # source range. Collection continues rather than stopping,
+                    # because prose can resume after the table (Mists of Change
+                    # closes with a full paragraph below its table).
+                    end = k + 1
+                    k += 1
+                    continue
                 desc_paras.append(strip_br(stripped))
                 end = k + 1
                 k += 1
             spell_id = snake_id(name)
+            parameters, display_name = parameter_slots(name)
             requisites = sorted(set(requisites))
             creates_lasting = ritual and te == "art.creo" and dur == "momentary"
             rec = {
@@ -266,11 +339,12 @@ def extract(lines):
                 "duration": dur,
                 "target": tgt,
                 "creates_lasting": creates_lasting,
+                "parameters": parameters,
                 "source_lines": [start, end],
             }
             spells.append(rec)
             desc = "\n\n".join(p for p in desc_paras if p).strip()
-            entry = {"name": name}
+            entry = {"name": display_name}
             if desc:
                 entry["description"] = desc
             i18n_en[spell_id] = entry
@@ -404,6 +478,14 @@ def write_core(spells):
             parts.append(f'"target": {json.dumps(s["target"])}')
         if s["creates_lasting"]:
             parts.append('"creates_lasting": true')
+        if s["parameters"]:
+            slots = ", ".join(
+                "{ "
+                + ", ".join(f"{json.dumps(pk)}: {json.dumps(pv)}" for pk, pv in p.items())
+                + " }"
+                for p in s["parameters"]
+            )
+            parts.append(f'"parameters": [{slots}]')
         a, b = s["source_lines"]
         parts.append(
             f'"source": {{ "file": {json.dumps(CORE_FILE)}, "lines": [{a}, {b}] }}'
@@ -426,12 +508,59 @@ def write_i18n(entries):
     return "\n".join(out) + "\n"
 
 
+def load_existing(path: Path):
+    """Parse an output file already on disk, so a rewrite can preserve it."""
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text())
+
+
+def by_id(doc):
+    """Normalize either output shape to an id -> entry map for the drop audit."""
+    if isinstance(doc, dict) and "spells" in doc:
+        return {s["id"]: s for s in doc["spells"]}
+    return doc or {}
+
+
+def dropped_data(existing, new_text: str):
+    """Fields/ids present on disk that the regenerated content would delete.
+
+    Compares against the *serialized* output (re-parsed), so it audits exactly
+    the bytes about to be written — including fields the writer omits when
+    falsy — rather than the in-memory records.
+    """
+    old = by_id(existing)
+    new = by_id(json.loads(new_text))
+    lost = []
+    for sid in sorted(old):
+        entry = old[sid]
+        if not isinstance(entry, dict):
+            continue
+        if sid not in new:
+            lost.append(f"{sid}: whole entry")
+            continue
+        for field in entry:
+            if field not in new[sid]:
+                lost.append(f"{sid}.{field}")
+    return lost
+
+
+def assert_chapter_bounds(lines):
+    """Fail loudly if the Spells chapter has moved in the source Markdown."""
+    for lineno, expected in ((CHAPTER_START, "## Animal Spells"),
+                             (CHAPTER_END + 1, "# Chapter 10")):
+        found = lines[lineno - 1].rstrip()
+        if not found.startswith(expected):
+            raise ExtractError(
+                f"chapter bound moved: {CORE_FILE} line {lineno} should start with "
+                f"{expected!r} but is {found!r} — re-locate CHAPTER_START/CHAPTER_END "
+                "against the source before regenerating"
+            )
+
+
 def main():
     lines = SOURCE.read_text().splitlines(keepends=True)
-    # sanity: chapter bounds
-    if not lines[CHAPTER_END].startswith("# Chapter 10"):
-        # allow +/- : find it
-        pass
+    assert_chapter_bounds(lines)
     spells, i18n_en = extract(lines)
     art_types = load_art_types()
     errors = check(spells, art_types)
@@ -441,24 +570,55 @@ def main():
             print("  - " + e, file=sys.stderr)
         sys.exit(1)
 
-    # DE i18n
+    # DE i18n. Names come from the canonical translation table; German
+    # `description` prose is hand-authored and CANNOT be regenerated, so it is
+    # carried across from the file on disk (as is any other hand-added field).
     de_table = load_de_table()
+    existing_de = load_existing(OUT_I18N_DE)
     i18n_de = {}
     de_fallbacks = []
+    de_new_ids = []
     for sid, entry in i18n_en.items():
+        # de_match_key strips every non-alphanumeric run, so the "({form})"
+        # placeholder in the display name normalizes to the same key as the
+        # table's "(Form)" marker.
         key = de_match_key(entry["name"])
         key = DE_KEY_ALIASES.get(key, key)
         de = de_table.get(key)
         if de:
-            i18n_de[sid] = {"name": de}
+            _, de_name = parameter_slots(de)
+            i18n_de[sid] = {"name": de_name}
         else:
             i18n_de[sid] = {"name": entry["name"]}  # documented EN fallback
             de_fallbacks.append((sid, entry["name"]))
+        preserved = {k: v for k, v in existing_de.get(sid, {}).items() if k != "name"}
+        i18n_de[sid].update(preserved)
+        if sid not in existing_de:
+            de_new_ids.append((sid, entry["name"]))
 
-    OUT_CORE.write_text(write_core(spells))
+    core_text = write_core(spells)
+    en_text = write_i18n(i18n_en)
+    de_text = write_i18n(i18n_de)
+
+    # Non-destructive gate: never overwrite curated data with less data.
+    losses = []
+    for path, new_text in ((OUT_CORE, core_text),
+                           (OUT_I18N_EN, en_text),
+                           (OUT_I18N_DE, de_text)):
+        for item in dropped_data(load_existing(path), new_text):
+            losses.append(f"{path.relative_to(REPO)}: {item}")
+    if losses:
+        print("REWRITE WOULD DELETE EXISTING DATA — nothing written:", file=sys.stderr)
+        for item in losses:
+            print("  - " + item, file=sys.stderr)
+        print("Teach the generator to produce or preserve these, or remove the "
+              "stale entries deliberately.", file=sys.stderr)
+        sys.exit(1)
+
+    OUT_CORE.write_text(core_text)
     # EN i18n: names + description
-    OUT_I18N_EN.write_text(write_i18n(i18n_en))
-    OUT_I18N_DE.write_text(write_i18n(i18n_de))
+    OUT_I18N_EN.write_text(en_text)
+    OUT_I18N_DE.write_text(de_text)
 
     # -------- report --------
     from collections import Counter
@@ -473,6 +633,12 @@ def main():
     if de_fallbacks:
         print("EN fallbacks (no DE table entry):")
         for sid, name in de_fallbacks:
+            print(f"  - {sid}  ({name})")
+    if de_new_ids:
+        print(f"New spell ids ({len(de_new_ids)}): written name-only in "
+              "rules/i18n/de/spells.json — German description prose is "
+              "hand-authored and must be added by a translator:")
+        for sid, name in de_new_ids:
             print(f"  - {sid}  ({name})")
 
 

@@ -1597,9 +1597,12 @@ fn german_i18n_covers_all_items() {
 /// terminator check is enough to separate the two cases without hardcoding any
 /// length — the cap was the bug, so no length limit is asserted here.
 ///
-/// Scoped to `virtues_flaws.json` on purpose: `rules/i18n/*/spells.json`
-/// descriptions carry a separate, unrelated extraction defect (leaked Markdown
-/// table pipes and column padding) which this guard must not be made to police.
+/// Scoped to `virtues_flaws.json` on purpose: the sentence-boundary convention
+/// is a property of that file's summaries. Spell descriptions are policed by
+/// their own witness, `no_spell_description_carries_markdown_table`, which
+/// guards the defect they actually had (leaked Markdown table rows) rather than
+/// end punctuation — two spell descriptions legitimately end mid-sentence
+/// because the rulebook itself does.
 #[test]
 fn no_virtue_flaw_summary_ends_mid_sentence() {
     /// Punctuation a complete first sentence may end on: the three sentence
@@ -1663,6 +1666,76 @@ fn no_virtue_flaw_summary_ends_mid_sentence() {
         offenders.is_empty(),
         "{} summary/summaries end mid-sentence — restore each one's full first \
          sentence from its `source` range in rules/source/<lang>/:\n{}",
+        offenders.len(),
+        offenders.join("\n")
+    );
+}
+
+/// No spell `description` in either locale may carry Markdown table markup.
+///
+/// `scripts/extract_spells.py` accumulated every non-blank line of a spell's
+/// body into its description, so where the rulebook interrupts the prose with a
+/// table (e.g. *Mists of Change*'s shape-change list) the raw rows arrived
+/// complete with `|` cell delimiters and column padding — markup rendered
+/// verbatim in the UI, which shows the description as prose and cannot lay out
+/// a table. The authoritative tabular text stays in the Markdown source; the
+/// description field carries only the surrounding prose.
+///
+/// The witness is the pipe character, deliberately *not* end punctuation: a
+/// leaked row can sit in the middle of a description (*Mists of Change* has a
+/// genuine closing paragraph after its table), which an end-of-string check
+/// would miss, and two descriptions legitimately end without a full stop
+/// because their source lines do — `spell.notes_of_a_delightful_sound`
+/// (Ars Magica - Definitive Edition (Core Rules).md:14676) and
+/// `spell.scent_of_peaceful_slumber` (:15171). Those are faithful extractions
+/// of typographic slips in the rulebook and must not be "corrected" here.
+#[test]
+fn no_spell_description_carries_markdown_table() {
+    // Every offender is collected before asserting, so one run names the whole
+    // set instead of stopping at whichever id happens to sort first.
+    let mut offenders: Vec<String> = Vec::new();
+    let mut descriptions_seen = 0usize;
+
+    for (lang, i18n) in [
+        ("en", include_str!("../../../rules/i18n/en/spells.json")),
+        ("de", include_str!("../../../rules/i18n/de/spells.json")),
+    ] {
+        let file: serde_json::Value =
+            serde_json::from_str(i18n).expect("the shipped i18n file is valid JSON");
+        let entries = file
+            .as_object()
+            .expect("the i18n file is a map of id -> text");
+        assert!(!entries.is_empty(), "i18n/{lang}/spells.json is empty");
+
+        for (id, text) in entries {
+            let Some(description) = text.get("description").and_then(serde_json::Value::as_str)
+            else {
+                continue;
+            };
+            descriptions_seen += 1;
+            if !description.contains('|') {
+                continue;
+            }
+            // Char-counted, not byte-sliced: the German text is full of
+            // multi-byte codepoints, and a byte slice would panic on a
+            // non-boundary index instead of reporting the offender.
+            let excerpt: String = description
+                .chars()
+                .skip_while(|c| *c != '|')
+                .take(60)
+                .collect();
+            offenders.push(format!("[{lang}] {id} — leaked table markup: {excerpt}"));
+        }
+    }
+
+    assert!(
+        descriptions_seen > 0,
+        "neither locale's spells.json carries any description at all"
+    );
+    assert!(
+        offenders.is_empty(),
+        "{} spell description(s) carry Markdown table markup — the table belongs \
+         in rules/source/<lang>/, not in the prose description:\n{}",
         offenders.len(),
         offenders.join("\n")
     );

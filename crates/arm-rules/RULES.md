@@ -2642,6 +2642,40 @@ remain. German spell names come from
 fallbacks; two book-vs-table spelling variants — "Thread"/"Tread",
 "Unravelling"/"Unraveling" — are bridged by an explicit alias in the extractor).
 
+**Roll tables inside a spell body are not description prose.** Three entries
+interleave a Markdown table with their prose — *The Shadow of Life Renewed*
+(`:13442-13457`, table `:13447-13455`), *Mists of Change* (`:13633-13652`, table
+`:13638-13649`, closing paragraph `:13651`) and *Visions of the Infernal
+Terrors* (`:15176-15188`, table `:15180-15186`):
+
+> `:13638-13639` "| Roll | Animal | | ---- | ----…"
+
+The extractor skips those rows when building `description` and keeps collecting
+the prose that follows, so *Mists of Change* retains its closing paragraph. The
+`description` is prose the UI renders as prose and cannot lay out a table; the
+authoritative tabular text stays in `rules/source/<lang>/`, and the entry's
+`source` range still spans the table so provenance is complete. Witness:
+`no_spell_description_carries_markdown_table` in `tests/data_integrity.rs`. Two
+descriptions legitimately end without sentence punctuation because the source
+lines do (`:14676` "…more distinct<br>", `:15171` "…in their nostrils<br>"), so
+the guard keys on the pipe character, never on end punctuation.
+
+**An Art-class parenthetical in a spell name is a parameter slot.** Four names
+end (or, in German, embed) a bare Art-class word — *Mirror of Opposition (form)*
+`:15776`, *Wizard's Boost (Form)* `:15791`, *Wizard's Reach (Form)* `:15801`,
+*Unravelling the Fabric of (Form)* `:15843` — each standing for ten spells, one
+per Hermetic Form:
+
+> `:15793` "There are ten versions of this spell, one for each Hermetic Form."
+
+The extractor recognises the closed set of class words (the `art_type` values in
+`rules/core/arts.json`, plus their German spellings, since the translation table
+writes the same marker in German — "Das (Form)-Gefüge auflösen") and emits both
+halves itself: `"parameters": [{ "key": "form", "type": "ref", "domain": "form" }]`
+in `rules/core/spells.json` (`Spell::parameters`, a `Vec<ParameterDef>` in
+`spell.rs`) and the matching
+`({form})` placeholder in the localized name in both i18n files.
+
 ---
 
 ## Equipment: weapons / shields / armor (M5/5h)

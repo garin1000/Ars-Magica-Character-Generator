@@ -14,13 +14,14 @@ Extracts the full Hermetic spell catalogue from the Spells chapter of
 `rules/source/en/Ars Magica - Definitive Edition (Core Rules).md` and writes:
 
 - `rules/core/spells.json` — language-neutral mechanics (id, technique, form,
-  level, requisites, ritual, range/duration/target, creates_lasting, source
-  line-range).
+  level, requisites, ritual, range/duration/target, creates_lasting, parameter
+  slots, source line-range).
 - `rules/i18n/en/spells.json` — English name + description prose, keyed by id.
 - `rules/i18n/de/spells.json` — German names from the canonical translation table
   `rules/source/de/translation-tables/zauber-nach-form.md`. A spell absent from
   the table falls back to its English name (documented policy — the extractor
-  reports every fallback); German is never invented.
+  reports every fallback); German is never invented. Existing German
+  `description` prose is carried across untouched (see "Non-destructive" below).
 
 Run it from anywhere:
 
@@ -32,6 +33,32 @@ Properties:
 
 - **Deterministic & canonical.** Output is sorted by id with stable formatting,
   so re-running produces a zero-noise diff.
+- **Non-destructive.** The script cannot author German prose, so a rewrite
+  preserves every existing German `description` (and any other hand-authored
+  per-id field) instead of replacing the entry with a bare name. Before writing
+  anything it audits the regenerated content against the three files on disk and
+  aborts, naming every field or id at risk, if the rewrite would delete data.
+  A spell id with no German entry yet is written name-only and listed in the run
+  report as owing a translation.
+- **Tables are not description prose.** Where the rulebook interrupts a spell's
+  body with a Markdown table (*Mists of Change*, *The Shadow of Life Renewed*,
+  *Visions of the Infernal Terrors*), the rows are left out of the
+  `description` — that field is prose and the UI renders it as prose, so raw
+  table markup cannot appear there; the authoritative tabular text stays in the
+  Markdown. Prose *after* a table is still collected, and the entry's `source`
+  range still spans the table, so provenance stays complete.
+  `no_spell_description_carries_markdown_table` in
+  `crates/arm-rules/tests/data_integrity.rs` is the witness.
+- **Art-class parentheticals become parameter slots.** A name whose
+  parenthetical is a bare Art-class word — *Wizard's Boost (Form)* — denotes one
+  catalogue entry with a slot, not literal text, so the script emits both the
+  `parameters` block in `rules/core/spells.json` and the matching `{form}`
+  placeholder in the localized name (in both locales: the German table writes
+  the same marker in German). The word set is closed, so ordinary parentheticals
+  are never rewritten.
+- **Chapter bounds are asserted.** `CHAPTER_START`/`CHAPTER_END` are checked
+  against the actual heading text; a shifted source aborts and names the line it
+  found instead of extracting the wrong range.
 - **In-loop checks fail loudly.** Technique resolves to a Technique-class Art and
   Form to a Form-class Art (against `rules/core/arts.json`); requisites are known
   arts; ritual ⇒ level ≥ 20; non-ritual ⇒ level ≤ 50; Year ⇒ ritual; Boundary ⇒
