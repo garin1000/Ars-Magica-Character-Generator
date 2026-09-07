@@ -1580,6 +1580,94 @@ fn german_i18n_covers_all_items() {
     }
 }
 
+/// Every `summary` in both locales' `virtues_flaws.json` must end on a
+/// sentence boundary.
+///
+/// The convention these files follow is "the first sentence of the rulebook
+/// entry's body text, verbatim" (compare `virtue.inoffensive_to_beings` against
+/// Ars Magica - Definitive Edition (Core Rules).md:4135). An earlier generation
+/// pass capped every summary at roughly 240 characters, which silently cut 20
+/// strings across 16 entries off **mid-word** — user-facing rules text truncated
+/// to nonsense, and nothing in the suite noticed. This is that missing witness.
+///
+/// The accepted terminators are deliberately a *set*, not just `.`: two entries
+/// legitimately end in `!` (`flaw.gullible`, "There is one born every minute -
+/// and it is this character!"), and a first sentence can equally close on a
+/// parenthesis or a quotation mark. A cut-off string ends on a letter, so a
+/// terminator check is enough to separate the two cases without hardcoding any
+/// length — the cap was the bug, so no length limit is asserted here.
+///
+/// Scoped to `virtues_flaws.json` on purpose: `rules/i18n/*/spells.json`
+/// descriptions carry a separate, unrelated extraction defect (leaked Markdown
+/// table pipes and column padding) which this guard must not be made to police.
+#[test]
+fn no_virtue_flaw_summary_ends_mid_sentence() {
+    /// Punctuation a complete first sentence may end on: the three sentence
+    /// terminators, plus the closers a terminated sentence can hide behind
+    /// (`)`, and the ASCII/typographic quotation marks — German closing quotes
+    /// included, since the German file is translated prose).
+    const SENTENCE_ENDINGS: [char; 8] =
+        ['.', '!', '?', ')', '"', '\u{201c}', '\u{201d}', '\u{00bb}'];
+
+    // Every offender is collected before asserting, so one run names the whole
+    // set instead of stopping at whichever id happens to sort first.
+    let mut offenders: Vec<String> = Vec::new();
+    let mut summaries_seen = 0usize;
+
+    for (lang, i18n) in [
+        (
+            "en",
+            include_str!("../../../rules/i18n/en/virtues_flaws.json"),
+        ),
+        (
+            "de",
+            include_str!("../../../rules/i18n/de/virtues_flaws.json"),
+        ),
+    ] {
+        let file: serde_json::Value =
+            serde_json::from_str(i18n).expect("the shipped i18n file is valid JSON");
+        let entries = file
+            .as_object()
+            .expect("the i18n file is a map of id -> text");
+        assert!(
+            !entries.is_empty(),
+            "i18n/{lang}/virtues_flaws.json is empty"
+        );
+
+        for (id, text) in entries {
+            let Some(summary) = text.get("summary").and_then(serde_json::Value::as_str) else {
+                continue;
+            };
+            summaries_seen += 1;
+            let last = summary
+                .chars()
+                .next_back()
+                .unwrap_or_else(|| panic!("[{lang}] '{id}' has an empty summary"));
+            if SENTENCE_ENDINGS.contains(&last) {
+                continue;
+            }
+            // Char-counted, not byte-sliced: the German text is full of
+            // multi-byte codepoints, and a byte slice would panic on a
+            // non-boundary index instead of reporting the offender.
+            let tail: Vec<char> = summary.chars().rev().take(50).collect();
+            let tail: String = tail.into_iter().rev().collect();
+            offenders.push(format!("[{lang}] {id} — ends on '{last}': ...{tail}"));
+        }
+    }
+
+    assert!(
+        summaries_seen > 0,
+        "neither locale's virtues_flaws.json carries any summary at all"
+    );
+    assert!(
+        offenders.is_empty(),
+        "{} summary/summaries end mid-sentence — restore each one's full first \
+         sentence from its `source` range in rules/source/<lang>/:\n{}",
+        offenders.len(),
+        offenders.join("\n")
+    );
+}
+
 #[test]
 fn companion_balanced_entity_validates() {
     let rs = load_ruleset();
