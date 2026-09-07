@@ -427,7 +427,7 @@
   },
   "flaw.failed_monk": {
     "name": "Gescheiterter Mönch",
-    "summary": "Du warst einst Mitglied eines klösterlichen Ordens, wurdest aber wegen einer großen Sünde oder groben Unfähigkeit ausgestoßen, oder du bist vielleicht geflohen und dein Abt würde dich nach einer angemessenen Buße möglicherweise zurückkehren"
+    "summary": "Du warst einst Mitglied eines klösterlichen Ordens, wurdest aber wegen einer großen Sünde oder groben Unfähigkeit ausgestoßen, oder du bist vielleicht geflohen und dein Abt würde dich nach einer angemessenen Buße möglicherweise zurückkehren lassen."
   },
   "flaw.failed_student": {
     "name": "Gescheiterter Student",
@@ -435,11 +435,11 @@
   },
   "flaw.false_power": {
     "name": "Falsche Macht (Groß)",
-    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen"
+    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen Untersuchung unterzogen wird."
   },
   "flaw.false_power_minor": {
     "name": "Falsche Macht (Klein)",
-    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen"
+    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen Untersuchung unterzogen wird."
   },
   "flaw.favors": {
     "name": "Gefälligkeiten",
@@ -471,11 +471,11 @@
   },
   "flaw.fish_out_of_water_terrain": {
     "name": "Fremd im {terrain}",
-    "summary": "Dieser Charakter hat eine Affinität zu einer Art von Gelände, sei es auf dem Meer, im Wald, in den Hügeln oder in der städtischen Landschaft von Städten und Gemeinden, und fühlt sich unwohl und unbeholfen, wenn er sich fernab von seinem bev"
+    "summary": "Dieser Charakter hat eine Affinität zu einer Art von Gelände, sei es auf dem Meer, im Wald, in den Hügeln oder in der städtischen Landschaft von Städten und Gemeinden, und fühlt sich unwohl und unbeholfen, wenn er sich fernab von seinem bevorzugten Umfeld befindet."
   },
   "flaw.flashbacks": {
     "name": "Rückblenden",
-    "summary": "Wenn der Charakter in einen Kampf oder eine ähnlich gewalttätige und angespannte Situation verwickelt wird, könnte der Stress eine Rückblende auf die Schrecken vergangener Schlachten auslösen, durch die dieser Charakter seelische Narben dav"
+    "summary": "Wenn der Charakter in einen Kampf oder eine ähnlich gewalttätige und angespannte Situation verwickelt wird, könnte der Stress eine Rückblende auf die Schrecken vergangener Schlachten auslösen, durch die dieser Charakter seelische Narben davongetragen hat."
   },
   "flaw.flawed_parma_magica": {
     "name": "Fehlerhafte Parma Magica",
@@ -559,7 +559,7 @@
   },
   "flaw.harmless_magic": {
     "name": "Harmlose Magie",
-    "summary": "Die Perdo-Zauber des Charakters können nichts dauerhaft zerstören; sie stören das Ziel vorübergehend, ähnlich wie Perdo-Imaginem-Magie, aber sobald die Dauer verstrichen ist, kehrt das Ziel in seinen natürlichen Zustand zurück, als wäre nic"
+    "summary": "Die Perdo-Zauber des Charakters können nichts dauerhaft zerstören; sie stören das Ziel vorübergehend, ähnlich wie Perdo-Imaginem-Magie, aber sobald die Dauer verstrichen ist, kehrt das Ziel in seinen natürlichen Zustand zurück, als wäre nichts geschehen – wie bei einem Muto-Effekt."
   },
   "flaw.hatred_major": {
     "name": "Hass (Groß)",
@@ -763,7 +763,7 @@
   },
   "flaw.mistaken_identity": {
     "name": "Verwechslung",
-    "summary": "Jemand, der genau so aussieht wie du und dem du und deine Gefährten höchstwahrscheinlich nie begegnen werdet, lebt in deiner Nähe und ist für eine Vielzahl anhaltender Gewalttaten, Gesetzesbrüche, Obszönitäten oder peinlicher Vorfälle veran"
+    "summary": "Jemand, der genau so aussieht wie du und dem du und deine Gefährten höchstwahrscheinlich nie begegnen werdet, lebt in deiner Nähe und ist für eine Vielzahl anhaltender Gewalttaten, Gesetzesbrüche, Obszönitäten oder peinlicher Vorfälle verantwortlich."
   },
   "flaw.monastic_vows": {
     "name": "Klostergelübde",
@@ -1011,7 +1011,7 @@
   },
   "flaw.restricted_power": {
     "name": "Eingeschränkte Kraft ({power})",
-    "summary": "Dieser Fehler schränkt die Nutzung einer übernatürlichen Kraft ein, die normalerweise nach Belieben eingesetzt werden kann, wie etwa jene, die durch die Tugenden Fokussierte Macht, Große Macht, Mindere Macht, Persönliche Kraft und Ritualmac"
+    "summary": "Dieser Fehler schränkt die Nutzung einer übernatürlichen Kraft ein, die normalerweise nach Belieben eingesetzt werden kann, wie etwa jene, die durch die Tugenden Fokussierte Macht, Große Macht, Mindere Macht, Persönliche Kraft und Ritualmacht gewährt werden."
   },
   "flaw.restriction": {
     "name": "Einschränkung",
@@ -1195,7 +1195,7 @@
   },
   "flaw.unbaptized": {
     "name": "Ungetauft",
-    "summary": "Du bist ein Christ, der aus welchem Grund auch immer nie getauft wurde, vielleicht weil du einen übernatürlichen Hintergrund hast, der durch die Zeremonie zunichte gemacht werden könnte — viele Magi glauben, dass die Taufe die Gabe beeinträ"
+    "summary": "Du bist ein Christ, der aus welchem Grund auch immer nie getauft wurde, vielleicht weil du einen übernatürlichen Hintergrund hast, der durch die Zeremonie zunichte gemacht werden könnte — viele Magi glauben, dass die Taufe die Gabe beeinträchtigt."
   },
   "flaw.unbearable_to_beings": {
     "name": "Unerträglich für {being}",
@@ -1203,7 +1203,7 @@
   },
   "flaw.uncertain_faith": {
     "name": "Unsicherer Glaube",
-    "summary": "Ob durch einen Mangel im Verständnis der Lehre des Charakters, eine moralische Zerrissenheit, die entmutigende Absolution wiederholter Sünden oder die Exposition gegenüber widersprüchlichen Philosophien — er hat Schwierigkeiten, seine Hinga"
+    "summary": "Ob durch einen Mangel im Verständnis der Lehre des Charakters, eine moralische Zerrissenheit, die entmutigende Absolution wiederholter Sünden oder die Exposition gegenüber widersprüchlichen Philosophien — er hat Schwierigkeiten, seine Hingabe an seinen Glauben vollständig auszudrücken."
   },
   "flaw.uncontrollable_strength": {
     "name": "Unkontrollierbare Stärke",
@@ -1707,7 +1707,7 @@
   },
   "virtue.falls_like_a_cat": {
     "name": "Fällt wie eine Katze",
-    "summary": "Der Charakter wird durch Stürze aus bis zur dreifachen eigenen Körperhöhe nicht verletzt, oder bis zur sechsfachen Höhe, wenn er seinen Fall abfedern kann, indem er sich an Fenstersimsen festhält, durch Markisen bricht oder auf dem Weg nach"
+    "summary": "Der Charakter wird durch Stürze aus bis zur dreifachen eigenen Körperhöhe nicht verletzt, oder bis zur sechsfachen Höhe, wenn er seinen Fall abfedern kann, indem er sich an Fenstersimsen festhält, durch Markisen bricht oder auf dem Weg nach unten an Ästen hängenbleibt."
   },
   "virtue.familiarity_with_the_fae": {
     "name": "Vertrautheit mit den Feen",
@@ -1971,7 +1971,7 @@
   },
   "virtue.land_regio_network": {
     "name": "{land}Regio-Netz",
-    "summary": "Der Charakter hat Zugang zu einem ausgedehnten Netz von Regiones, die sich vielleicht in den Tiefen vieler Seen im Mythischen Europa befinden, hoch über den Wolken am Himmel verborgen sind oder in unterirdischen Höhlen unter der Erde liegen"
+    "summary": "Der Charakter hat Zugang zu einem ausgedehnten Netz von Regiones, die sich vielleicht in den Tiefen vieler Seen im Mythischen Europa befinden, hoch über den Wolken am Himmel verborgen sind oder in unterirdischen Höhlen unter der Erde liegen."
   },
   "virtue.landed_noble": {
     "name": "Landadliger",
@@ -2107,7 +2107,7 @@
   },
   "virtue.maker_of_water_vessels": {
     "name": "Hersteller von Wassergefäßen",
-    "summary": "Ein Charakter, der aus einem magischen Wassergefäß trinkt, das von einem Charakter mit dieser Tugend hergestellt wurde, darf einen Fertigkeitswert gegen den Handwerk: Töpfer-Wert des Herstellers zum Zeitpunkt der Herstellung des Gefäßes tau"
+    "summary": "Ein Charakter, der aus einem magischen Wassergefäß trinkt, das von einem Charakter mit dieser Tugend hergestellt wurde, darf einen Fertigkeitswert gegen den Handwerk: Töpfer-Wert des Herstellers zum Zeitpunkt der Herstellung des Gefäßes tauschen."
   },
   "virtue.male_guild_sponsor": {
     "name": "Männlicher Gildensponsor",
@@ -2523,7 +2523,7 @@
   },
   "virtue.templar_specialist": {
     "name": "Templerexperte",
-    "summary": "Der Charakter arbeitet als qualifizierter Angestellter der Armen Ritter Christi und des Tempels zu Salomon und füllt eine entscheidende Rolle aus, für die die Tempelritter kein Voll- oder assoziiertes Mitglied haben, etwa als Handwerker, Sc"
+    "summary": "Der Charakter arbeitet als qualifizierter Angestellter der Armen Ritter Christi und des Tempels zu Salomon und füllt eine entscheidende Rolle aus, für die die Tempelritter kein Voll- oder assoziiertes Mitglied haben, etwa als Handwerker, Schmied, Kunsthandwerker, Notar, Knappe, Soldat, Schreiber oder Übersetzer."
   },
   "virtue.temporal_influence": {
     "name": "Zeitlicher Einfluss",
@@ -2607,7 +2607,7 @@
   },
   "virtue.voice_of_the_land": {
     "name": "Stimme des {land}",
-    "summary": "Der Charakter kann mit jedem Wesen sprechen, dessen natürlicher Lebensraum eine bestimmte, mit dieser Tugend verknüpfte Umgebung ist (einschließlich Tieren und magischen Wesen), und der Charakter wird von diesen Wesen normalerweise weder al"
+    "summary": "Der Charakter kann mit jedem Wesen sprechen, dessen natürlicher Lebensraum eine bestimmte, mit dieser Tugend verknüpfte Umgebung ist (einschließlich Tieren und magischen Wesen), und der Charakter wird von diesen Wesen normalerweise weder als Bedrohung noch als Beute wahrgenommen."
   },
   "virtue.wanderer": {
     "name": "Wanderer",
@@ -2647,6 +2647,6 @@
   },
   "virtue.withstand_casting": {
     "name": "Zaubern aushalten",
-    "summary": "Wenn ein Magus diese Tugend besitzt, verliert er, wann immer er durch das Zaubern eines Spruchs eine Erschöpfungsstufe zu verlieren droht, eine Erschöpfungsstufe weniger als üblich, mit einem Minimum von 1 Erschöpfungsstufe – wenn der Zaube"
+    "summary": "Wenn ein Magus diese Tugend besitzt, verliert er, wann immer er durch das Zaubern eines Spruchs eine Erschöpfungsstufe zu verlieren droht, eine Erschöpfungsstufe weniger als üblich, mit einem Minimum von 1 Erschöpfungsstufe – wenn der Zauber jedoch ohne Erschöpfungsverlust gewirkt worden wäre, erleidet er trotzdem keinen Erschöpfungsverlust."
   }
 }

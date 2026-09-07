@@ -559,7 +559,7 @@
   },
   "flaw.harmless_magic": {
     "name": "Harmless Magic",
-    "summary": "The character's Perdo spells cannot permanently destroy anything; they temporarily disrupt the target, like Perdo Imaginem magic, but as soon as the duration has passed the target returns to its natural state as if nothing had happened, lik"
+    "summary": "The character's Perdo spells cannot permanently destroy anything; they temporarily disrupt the target, like Perdo Imaginem magic, but as soon as the duration has passed the target returns to its natural state as if nothing had happened, like a Muto effect."
   },
   "flaw.hatred_major": {
     "name": "Hatred (Major)",
@@ -2523,7 +2523,7 @@
   },
   "virtue.templar_specialist": {
     "name": "Templar Specialist",
-    "summary": "The character works as a skilled employee of the Poor Knights of the Temple of Solomon, filling a crucial role for which the Templars have no full or associate member, such as craftsmen, blacksmiths, artisans, notaries, squires, soldiers, s"
+    "summary": "The character works as a skilled employee of the Poor Knights of the Temple of Solomon, filling a crucial role for which the Templars have no full or associate member, such as craftsmen, blacksmiths, artisans, notaries, squires, soldiers, scribes, or translators."
   },
   "virtue.temporal_influence": {
     "name": "Temporal Influence",
@@ -2607,7 +2607,7 @@
   },
   "virtue.voice_of_the_land": {
     "name": "Voice of the {land}",
-    "summary": "The character can speak with any creature whose natural habitat is a particular environment associated with this Virtue (including animals and magic beings), and the character is not normally perceived as either a threat or a prey object by"
+    "summary": "The character can speak with any creature whose natural habitat is a particular environment associated with this Virtue (including animals and magic beings), and the character is not normally perceived as either a threat or a prey object by these creatures."
   },
   "virtue.wanderer": {
     "name": "Wanderer",
@@ -2647,6 +2647,6 @@
   },
   "virtue.withstand_casting": {
     "name": "Withstand Casting",
-    "summary": "If a magus has this Virtue, then whenever he is about to lose Fatigue from casting a spell, he loses 1 less Fatigue level than normal, with a minimum of 1 Fatigue level — but if the spell would have been cast without Fatigue loss, then he s"
+    "summary": "If a magus has this Virtue, then whenever he is about to lose Fatigue from casting a spell, he loses 1 less Fatigue level than normal, with a minimum of 1 Fatigue level — but if the spell would have been cast without Fatigue loss, then he still loses no Fatigue."
   }
 }
