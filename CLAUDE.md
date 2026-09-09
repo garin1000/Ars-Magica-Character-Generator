@@ -132,7 +132,7 @@ IDs (or wait until the English source is added).
 
 ### German translation tables
 
-`rules/source/de/translation-tables/` holds 18 thematic, hand-curated **EN↔DE
+`rules/source/de/translation-tables/` holds 16 thematic, hand-curated **EN↔DE
 glossary tables** (Markdown tables: `Englisch (EN) | Deutsch (DE) | Anmerkung`),
 distilled from three master tables (main glossary of 22 sections, 30 additional
 terms, 362 spell names). These are the **canonical EN→DE terminology mapping**:

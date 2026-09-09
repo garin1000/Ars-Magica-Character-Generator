@@ -236,12 +236,12 @@ focus.
 
 - **In-play effects and the totals read-out.** Every in-play Virtue/Flaw effect
   (Magical Focus, Method Caster, Deficient Technique/Form, Tough, and the rest of
-  the 653-entry catalogue) is modelled, and a read-out panel computes the full
-  in-play totals in-engine from a numeric aura input — per-Technique/Form Lab and
-  Casting Totals, per-spell Penetration, per-Form Magic Resistance, combat lines
-  (a one-handed weapon reads out twice while a shield is equipped: with the
-  shield, and bare), Soak, Encumbrance, fatigue and wound ranges, and the stored
-  Longevity bonus beside the suggestion for a ritual made today.
+  the Core Rules Virtue/Flaw catalogue) is modelled, and a read-out panel computes
+  the full in-play totals in-engine from a numeric aura input — per-Technique/Form
+  Lab and Casting Totals, per-spell Penetration, per-Form Magic Resistance,
+  combat lines (a one-handed weapon reads out twice while a shield is equipped:
+  with the shield, and bare), Soak, Encumbrance, fatigue and wound ranges, and the
+  stored Longevity bonus beside the suggestion for a ritual made today.
 
 - **Markdown export.** A finished character exports as a formatted Markdown
   sheet: the engine assembles the document from the character and the localized

@@ -15,6 +15,8 @@ Thematisch gegliederte Übersetzungstabellen für die deutsche Ausgabe von Ars M
 
 ## Übersicht der Tabellendateien
 
+16 thematische Glossartabellen, dazu `uebersetzungsregeln.md` als Regeldokument (kein Glossar). Der Index ist vollständig: jede hier gelistete Datei liegt im Verzeichnis, und jede Datei im Verzeichnis ist hier gelistet.
+
 | Datei | Inhalt | Quellsektionen |
 |---|---|---|
 | [grundbegriffe.md](grundbegriffe.md) | Allgemeine Spielbegriffe, Eigenschaften, Wunden, Erschöpfung, Maßeinheiten | Sek. 1, 4–6 + Zusatztermini |
@@ -34,11 +36,6 @@ Thematisch gegliederte Übersetzungstabellen für die deutsche Ausgabe von Ars M
 | [konvent-boons-hooks.md](konvent-boons-hooks.md) | Konventsvorzüge und -haken: Mechanik, vollständige Liste aller Kleinen/Großen Vorzüge und Haken nach Kategorie | Core Rules + ArsMagica_DE_Gesamt_work.md |
 | [tiere-kreaturen.md](tiere-kreaturen.md) | Tiere und Kreaturen: Statblock-Begriffe, Größentabelle, vollständige Eigenschaftsliste (Tiertugenden), natürliche Waffen, Grundfertigkeiten | Core Rules + ArsMagica_DE_Gesamt_work.md |
 | [magische-qualitaeten.md](magische-qualitaeten.md) | Magische Qualitäten und Mängel: alle Großen/Kleinen Qualitäten und Mängel | RoP:M Kap. 4 |
-| [kreaturenkraefte.md](kreaturenkraefte.md) | Häufige Kreaturenkräfte (sphärenunabhängig) | RoP:M |
-| [goettliche-kraefte.md](goettliche-kraefte.md) | Göttliche Kräfte: Engelskräfte nach Chor, allgemeine Engel-Mechaniken, Reliquienkräfte | RoP:D |
-| [infernale-kraefte.md](infernale-kraefte.md) | Infernale Kräfte und Wesen: Dämonenkräfte nach Ordnung/Familie, Dämonentypen | RoP:I |
-| [islamische-begriffe.md](islamische-begriffe.md) | Islamische Fachbegriffe: religiöse Grundbegriffe, Fünf Säulen, Recht, Mystik, Konfessionen | RoP:D Kap. 5 |
-| [juedische-begriffe.md](juedische-begriffe.md) | Jüdische Fachbegriffe: Feiertage, religiöse/gesellschaftliche Begriffe, Personen, Orte/Texte | RoP:D Kap. 6 |
 
 ---
 
@@ -52,6 +49,13 @@ Der Flaw-Name „Depraved" → DE „Verdorben" bleibt unverändert.
 - **league** (Entfernungsmaß) → **Wegstunde** (ca. 5 km) wenn km-Angabe vorhanden; sonst Kontext-Entscheidung
 - **league** im Eigennamen „Seven-League Stride" → **Sieben-Meilen-Schritt** (bewusste Abweichung, Referenz auf Volksmärchen)
 - **pace** → **Schritt** (1 Schritt = 1,5 m; ABWEICHUNG vom EN-Original 0,91 m)
+
+### Tugendname „Inoffensive to (Beings)"
+Das Regelwerk überschreibt den Eintrag mit **„Für (Wesen) ungefährlich"** (`Ars Magica Definitive Edition Basisregeln.md:4133`), die Glossartabelle gibt **„Unauffällig für (Wesen)"** (`tugenden-fehler.md:180`). Kanonisch ist die Tabelle: `CLAUDE.md` erklärt die Übersetzungstabellen zur verbindlichen EN→DE-Zuordnung für die Labels in `rules/i18n/de/`, und `b86889c` hat den deutschen Namen entsprechend auf „Unauffällig für {being}" gesetzt.
+
+Die Abweichung erklärt die Tabellenzeile selbst: sie trägt die Buchmarkierung **SdM:M** — *Sphären der Macht: Magie*, EN RoP:M (`grundbegriffe.md:215`). Die Zeile steht dabei in `### Allgemeine Tugenden, Klein` (`tugenden-fehler.md:173`), nicht in einem eigenen Ergänzungsblock, und die Tugend ist auch **nicht** SdM:M-exklusiv: die Basisregeln führen sie ebenfalls, an der zeilengleichen Stelle der englischen Quelle (`rules/source/en/Ars Magica - Definitive Edition (Core Rules).md:4133`). Es handelt sich also um **eine** Tugend, deren Glossarformulierung aus der Fassung eines anderen Buches destilliert wurde — nicht um zwei verschiedene Tugenden und nicht um einen Eintrag, den nur ein Ergänzungsband kennt.
+
+Die deutschen Quelldateien werden dafür **nicht** angepasst: `rules/source/de/` gibt die Bücher wieder, wie sie gedruckt sind. Der Konflikt ist damit entschieden, nicht offen.
 
 ### Gelöste Übersetzungskonflikte (Zaubernamen)
 | Englisch | Kanonisch (DE) | Verworfene Variante |
