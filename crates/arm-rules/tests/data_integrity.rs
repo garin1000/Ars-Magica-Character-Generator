@@ -5337,3 +5337,131 @@ fn flambeau_granted_plus_two_bought_arts_exceeds_the_total_cap() {
          of 2: {codes:?}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// Opening a v0.2.x save (Slice 0)
+//
+// Three shipped rounds each recorded an "accepted save impact", so a character
+// built with v0.2.0 lit up with errors on the first open under 0.3. The `being`
+// fold in `load_entity_migrating` recovers what is mechanically recoverable; the
+// tests below pin what it recovers, what it must NOT invent, and the one class of
+// error that is a genuine rules finding rather than a format problem.
+// ---------------------------------------------------------------------------
+
+/// A save in exactly the shape v0.2.x wrote: `schema_version` 14, no
+/// `ability_funding` key, and typed free text in the three `being` slots that are
+/// enumerated today. Hand-written, because current code cannot produce it.
+const V0_2_X_MAGUS_SAVE: &str = r#"{
+  "schema_version": 14,
+  "ruleset": { "id": "arm5-core", "version": "2024.1" },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "name": "Iohannes filius Bonisagi",
+  "xp_pool": 240,
+  "selections": [
+    { "ref": "virtue.the_gift" },
+    { "ref": "virtue.hermetic_magus" },
+    { "ref": "flaw.offensive_to_beings", "params": { "being": "Mundane Humans" } },
+    { "ref": "flaw.unbearable_to_beings", "params": { "being": "  dämonen " } },
+    { "ref": "virtue.inoffensive_to_beings", "params": { "being": "Göttliche Wesen" } },
+    { "ref": "flaw.slow_power" },
+    { "ref": "virtue.folk_magic" }
+  ]
+}"#;
+
+/// The `missing_param` issues a validation result carries, as `(item, key)` pairs.
+fn missing_param_targets(entity: &Entity, rs: &Ruleset) -> Vec<(String, String)> {
+    let mut targets: Vec<(String, String)> = validate(entity, rs)
+        .issues
+        .into_iter()
+        .filter(|issue| issue.code == "missing_param")
+        .map(|issue| {
+            (
+                issue.args.get("item").cloned().unwrap_or_default(),
+                issue.args.get("key").cloned().unwrap_or_default(),
+            )
+        })
+        .collect();
+    targets.sort();
+    targets
+}
+
+/// The recoverable half: every typed `being` label the app or the rulebook printed
+/// resolves in its enumerated domain after the fold, in both shipped languages, so
+/// no `unknown_param_value` is left for the player to puzzle over.
+#[test]
+fn a_v0_2_x_saves_typed_being_values_resolve_after_migration() {
+    let rs = load_ruleset();
+    let entity = arm_rules::load_entity_migrating(V0_2_X_MAGUS_SAVE)
+        .expect("a v0.2.x save still loads")
+        .entity;
+
+    let codes = issue_codes(&entity, &rs);
+    assert!(
+        !codes.contains(&"unknown_param_value".to_string()),
+        "the being fold must leave no unresolved param value: {codes:?}"
+    );
+}
+
+/// The unrecoverable half, and the reason nothing is faked: v0.2.x declared no
+/// `power` on the three per-power Flaws and no `category` on Folk Magic, so there
+/// is nothing to migrate *from*. Each stays exactly one actionable `missing_param`
+/// naming the item and the key the player must supply — inventing a placeholder
+/// would invent a character's rules choices.
+#[test]
+fn the_two_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each() {
+    let rs = load_ruleset();
+    let entity = arm_rules::load_entity_migrating(V0_2_X_MAGUS_SAVE)
+        .expect("a v0.2.x save still loads")
+        .entity;
+
+    assert_eq!(
+        missing_param_targets(&entity, &rs),
+        vec![
+            ("flaw.slow_power".to_string(), "power".to_string()),
+            ("virtue.folk_magic".to_string(), "category".to_string()),
+        ],
+        "exactly one issue per unstored choice, each naming its item and key"
+    );
+}
+
+/// A Flambeau magus granted Puissant Perdo who also bought Puissant Creo and
+/// Puissant Muto is over `virtue.puissant_art`'s `max_total` of 2. That is a
+/// **genuine rules violation** the engine was previously blind to, not a save-format
+/// problem, so the migration must leave it standing while still folding the save's
+/// typed `being` value. Nobody may later "fix" this by suppressing it on load.
+#[test]
+fn a_genuine_too_many_selections_survives_the_being_migration() {
+    let rs = load_full_ruleset();
+    let save = r#"{
+      "schema_version": 14,
+      "ruleset": { "id": "arm5-core", "version": "2024.1" },
+      "entity_kind": "character",
+      "type_id": "magus",
+      "house": "house.flambeau",
+      "house_choices": {
+        "flambeau_puissant": { "ref": "virtue.puissant_art", "params": { "art": "art.perdo" } }
+      },
+      "selections": [
+        { "ref": "virtue.the_gift" },
+        { "ref": "virtue.hermetic_magus" },
+        { "ref": "virtue.puissant_art", "params": { "art": "art.creo" } },
+        { "ref": "virtue.puissant_art", "params": { "art": "art.muto" } },
+        { "ref": "flaw.unbearable_to_beings", "params": { "being": "Demons" } }
+      ]
+    }"#;
+    let entity = arm_rules::load_entity_migrating(save)
+        .expect("a v0.2.x save still loads")
+        .entity;
+
+    let codes = issue_codes(&entity, &rs);
+    assert!(
+        codes.contains(&"too_many_selections".to_string()),
+        "the over-cap Puissant Arts are a rules finding the migration must not \
+         paper over: {codes:?}"
+    );
+    assert!(
+        !codes.contains(&"unknown_param_value".to_string()),
+        "and the being value in the same save is still folded: {codes:?}"
+    );
+}

@@ -3457,6 +3457,135 @@ fn fold_legacy_talisman(
     Ok(())
 }
 
+/// The three items whose `being` parameter changed from a free-text domain to an
+/// enumerated one, so a save written before that change holds a typed label where
+/// a `being.*` id now belongs.
+///
+/// `virtue.alluring_to_beings` and `flaw.magical_being_companion` carry a `being`
+/// parameter too and are deliberately **absent**: both are still `text` domains
+/// (their value is the player's own description), so folding them would rewrite a
+/// perfectly legal value into an id their domain never declared.
+const REFOLDED_BEING_ITEMS: &[&str] = &[
+    "flaw.offensive_to_beings",
+    "flaw.unbearable_to_beings",
+    "virtue.inoffensive_to_beings",
+];
+
+/// The parameter key [`REFOLDED_BEING_ITEMS`] all share.
+const BEING_PARAM_KEY: &str = "being";
+
+/// The labels a pre-enumeration save can hold in a `being` slot, mapped to the id
+/// each one names: six classes of being × the two shipped languages, plus the three
+/// German **dative** forms the rulebook itself prints.
+///
+/// **These strings are matched, never rendered**, so they are not a breach of the
+/// no-hardcoded-user-facing-strings rule: nothing here reaches a user, and the
+/// localized labels the UI *does* render still live only in
+/// `rules/i18n/<lang>/virtues_flaws.json`.
+///
+/// The table is frozen on purpose rather than read from those files. Two reasons:
+/// [`load_entity_migrating`] holds neither a [`Ruleset`](crate::ruleset::Ruleset)
+/// nor an i18n map, so a live lookup is impossible without an API change; and it
+/// would be wrong even then, because editing a label later would silently change
+/// what a decade-old save migrates *to*. What a v0.2.x app printed is history, and
+/// history does not move.
+///
+/// Sources, all three read at implementation time. The i18n files supply the labels
+/// the picker showed:
+/// `rules/i18n/en/virtues_flaws.json` and `rules/i18n/de/virtues_flaws.json`, both
+/// at the `being.*` entries. The rulebook supplies the wording a player copying
+/// from the page would have typed:
+/// Ars Magica - Definitive Edition (Core Rules).md:4135, :6526, :6893, and the
+/// German mirror at the same line numbers. The English lists and the German lists
+/// at `:6526` / `:6893` fold onto the i18n labels exactly; the German `:4135` list
+/// is in the dative, which contributes the three extra keys below. No synonym
+/// beyond what those print is invented — an unrecognised value is left exactly as
+/// typed.
+///
+/// Every key is distinct under [`fold_being_label`], and no key is ever equal to a
+/// `being.*` id, which is what makes the fold both unambiguous and idempotent.
+const LEGACY_BEING_LABELS: &[(&str, &str)] = &[
+    // rules/i18n/en/virtues_flaws.json
+    ("Animals", "being.animals"),
+    ("Demons", "being.demons"),
+    ("Divine Beings", "being.divine"),
+    ("Faeries", "being.faeries"),
+    ("Magical Creatures", "being.magical_creatures"),
+    ("Mundane Humans", "being.mundane_humans"),
+    // rules/i18n/de/virtues_flaws.json
+    ("Tiere", "being.animals"),
+    ("Dämonen", "being.demons"),
+    ("Göttliche Wesen", "being.divine"),
+    ("Feen", "being.faeries"),
+    ("Magische Kreaturen", "being.magical_creatures"),
+    ("Sterbliche Menschen", "being.mundane_humans"),
+    // The German **dative** forms, printed by the Inoffensive entry at
+    // `:4135` — "…von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen
+    // oder magischen Kreaturen." A player filling the old free-text box while
+    // reading that page copied the inflected form off it, so these are recovered
+    // too. Transcribed, not declined: "Feen" and "Dämonen" are identical in the
+    // dative and are already above, and the fourth class has no dative form here
+    // to take — `sterbliche Menschen` appears only in the two entries that print
+    // the nominative (`:6526`, `:6893`), so no "sterblichen Menschen" key is
+    // invented.
+    ("Tieren", "being.animals"),
+    ("göttlichen Wesen", "being.divine"),
+    ("magischen Kreaturen", "being.magical_creatures"),
+];
+
+/// Folds a typed `being` label for comparison: lowercased and stripped of all
+/// whitespace, so "  Divine  beings " and "Divine Beings" are one value. The old
+/// slot was a free-text box, and case and spacing were never part of the choice.
+fn fold_being_label(text: &str) -> String {
+    text.chars()
+        .filter(|c| !c.is_whitespace())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+/// Rewrites a legacy typed `being` label into the `being.*` id it names, in place.
+///
+/// A no-op for anything else: another item, a missing `being` key, a value already
+/// holding an id, or a label the frozen table does not recognise. That last case is
+/// the deliberate one — the player re-picks it once, and nothing is guessed on
+/// their behalf.
+fn fold_legacy_being_param(selection: &mut Selection) {
+    if !REFOLDED_BEING_ITEMS.contains(&selection.item_ref.as_str()) {
+        return;
+    }
+    let Some(typed) = selection.params.get(BEING_PARAM_KEY) else {
+        return;
+    };
+    let folded = fold_being_label(typed.as_str());
+    let Some((_, id)) = LEGACY_BEING_LABELS
+        .iter()
+        .find(|(label, _)| fold_being_label(label) == folded)
+    else {
+        return;
+    };
+    selection
+        .params
+        .insert(BEING_PARAM_KEY.to_string(), Id::new(*id));
+}
+
+/// Applies [`fold_legacy_being_param`] everywhere a save can hold a [`Selection`]:
+/// the bought list plus the three resolved-pick maps, since a House choice, a
+/// mythic-type pick or a Warping fill can name one of these items too.
+fn fold_legacy_being_params(entity: &mut Entity) {
+    for selection in &mut entity.selections {
+        fold_legacy_being_param(selection);
+    }
+    for choices in [
+        &mut entity.house_choices,
+        &mut entity.mythic_choices,
+        &mut entity.warping_choices,
+    ] {
+        for selection in choices.values_mut() {
+            fold_legacy_being_param(selection);
+        }
+    }
+}
+
 /// Deserializes an entity from JSON, applying backward-compatible save
 /// migrations, and reports what was migrated.
 ///
@@ -3480,6 +3609,26 @@ fn fold_legacy_talisman(
 /// the key is always written (see [`Entity::ability_funding`]), so its absence is
 /// exactly the pre-16 signal and nothing else. `wizard_furthest_phase` needs no fold:
 /// absent stays `None`, which its reader treats as "no wizard progress recorded".
+///
+/// Saves written before the three `being` parameters became enumerated domains hold
+/// a **typed label** where a `being.*` id now belongs, so every such save reported
+/// `unknown_param_value` on open. Those labels are folded back onto their ids by
+/// [`fold_legacy_being_params`]. This one is unlike every fold above it: it has **no
+/// version signal at all**, because the closed lists were a *ruleset* change, not a
+/// save-format change — nothing in a save distinguishes the two eras, and no
+/// `SCHEMA_VERSION` bump could. So the fold is **value-driven and idempotent**: it
+/// rewrites the twelve labels it recognises and leaves everything else, an id
+/// included, exactly as written. For the same reason it does **not** stamp
+/// `SCHEMA_VERSION` — no schema moved, and stamping would rewrite the version of a
+/// save that was already current.
+///
+/// What it deliberately does not do: Folk Magic's `category` and the three per-power
+/// Flaws' `power` were never *stored* in the old shape, so there is nothing to
+/// migrate from. They stay a visible `missing_param` naming the item and key rather
+/// than a fabricated placeholder — inventing one would invent a character's rules
+/// choices. Likewise a genuine `too_many_selections` (an over-cap Puissant Art the
+/// engine was previously blind to) is a rules finding, not a format problem, and
+/// survives untouched.
 ///
 /// Dispatch is on legacy-key *presence*, never on the recorded version: a
 /// hand-edited save may carry any `schema_version` alongside either shape. Plain
@@ -3506,6 +3655,10 @@ pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Err
         .as_object()
         .is_some_and(|obj| obj.contains_key("ability_funding"));
     let mut entity: Entity = serde_json::from_value(value)?;
+
+    // Value-driven and idempotent, and deliberately no version stamp — see the
+    // `being` paragraph above.
+    fold_legacy_being_params(&mut entity);
 
     if let Some(legacy_attunements) = legacy_attunements {
         fold_legacy_talisman(&mut entity, legacy_attunements)?;
@@ -6158,6 +6311,238 @@ mod tests {
         assert_eq!(loaded.entity.ability_funding, AbilityFunding::Pool);
         assert_eq!(loaded.entity.xp_pool, 240, "the typed pool is kept");
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+    }
+
+    /// A hand-written save in exactly the shape v0.2.x wrote (`schema_version` 14,
+    /// no `ability_funding` key), holding every case the `being` fold has to decide:
+    ///
+    /// - `flaw.offensive_to_beings` — a typed **English** label;
+    /// - `flaw.unbearable_to_beings` — a typed **German** label, with stray
+    ///   whitespace and the wrong case, since a text box accepted anything;
+    /// - `virtue.inoffensive_to_beings` — a value that is **already** an id, i.e. a
+    ///   save someone re-picked by hand, or the second load of a migrated one;
+    /// - `virtue.alluring_to_beings` — an English *being* label on an item whose
+    ///   `being` parameter is **still** free text today, so the fold must not touch
+    ///   it however well the value matches;
+    /// - `flaw.slow_power` — paramless, because v0.2.x declared no `power`;
+    /// - `virtue.folk_magic` — paramless, because v0.2.x declared no `category`.
+    ///
+    /// Deliberately not round-tripped through `Entity`: a save the current code
+    /// wrote could never carry the legacy shapes this fixture exists to exercise.
+    const V0_2_X_SAVE: &str = r#"{
+      "schema_version": 14,
+      "ruleset": { "id": "arm5-core", "version": "2024.1" },
+      "entity_kind": "character",
+      "type_id": "magus",
+      "name": "Iohannes filius Bonisagi",
+      "xp_pool": 240,
+      "selections": [
+        { "ref": "flaw.offensive_to_beings", "params": { "being": "Mundane Humans" } },
+        { "ref": "flaw.unbearable_to_beings", "params": { "being": "  dämonen " } },
+        { "ref": "virtue.inoffensive_to_beings", "params": { "being": "being.faeries" } },
+        { "ref": "virtue.alluring_to_beings", "params": { "being": "Faeries" } },
+        { "ref": "flaw.slow_power" },
+        { "ref": "virtue.folk_magic" }
+      ]
+    }"#;
+
+    /// The `being` value the loaded fixture holds for `item_ref`.
+    fn being_param(entity: &Entity, item_ref: &str) -> String {
+        entity
+            .selections
+            .iter()
+            .find(|selection| selection.item_ref.as_str() == item_ref)
+            .and_then(|selection| selection.params.get("being"))
+            .map(|value| value.as_str().to_string())
+            .unwrap_or_else(|| panic!("{item_ref} must be in the fixture with a `being` param"))
+    }
+
+    /// The three items whose `being` parameter became an enumerated domain carry a
+    /// typed label in every v0.2.x save. The fold maps the labels the app and the
+    /// rulebook printed — in **both** shipped languages — onto the `being.*` ids,
+    /// case- and whitespace-insensitively.
+    #[test]
+    fn a_v0_2_x_save_migrates_its_typed_being_values_in_both_languages() {
+        let loaded = load_entity_migrating(V0_2_X_SAVE).unwrap();
+        let entity = &loaded.entity;
+
+        assert_eq!(
+            being_param(entity, "flaw.offensive_to_beings"),
+            "being.mundane_humans"
+        );
+        assert_eq!(
+            being_param(entity, "flaw.unbearable_to_beings"),
+            "being.demons",
+            "a German label, mis-cased and padded, is still the same choice"
+        );
+    }
+
+    /// German `:4135` — the Inoffensive entry — prints its list of classes in the
+    /// **dative** ("Tieren, göttlichen Wesen, … magischen Kreaturen"), so a player
+    /// copying the class straight off the page typed an inflected form. Those three
+    /// forms are printed by the source, not invented, and all three name a class
+    /// `virtue.inoffensive_to_beings` actually declares — which is why this test
+    /// exercises them on exactly that item.
+    #[test]
+    fn the_german_dative_forms_the_rulebook_prints_fold_too() {
+        for (typed, expected) in [
+            ("Tieren", "being.animals"),
+            ("göttlichen Wesen", "being.divine"),
+            // Mis-cased and padded, so the dative keys go through the same
+            // case/whitespace folding as every other key.
+            ("  MAGISCHEN   KREATUREN ", "being.magical_creatures"),
+        ] {
+            let json = format!(
+                r#"{{
+                  "schema_version": 14,
+                  "ruleset": {{ "id": "arm5-core", "version": "2024.1" }},
+                  "entity_kind": "character",
+                  "type_id": "magus",
+                  "selections": [
+                    {{ "ref": "virtue.inoffensive_to_beings", "params": {{ "being": "{typed}" }} }}
+                  ]
+                }}"#
+            );
+            let loaded = load_entity_migrating(&json).unwrap();
+            assert_eq!(
+                being_param(&loaded.entity, "virtue.inoffensive_to_beings"),
+                expected,
+                "the dative form '{typed}' printed at Core Rules (de):4135 must fold"
+            );
+        }
+    }
+
+    /// The property the whole fold rests on, asserted rather than eyeballed: no two
+    /// frozen labels collapse onto one another under [`fold_being_label`], and no
+    /// label is ever equal to a `being.*` id. The first makes the mapping
+    /// unambiguous; the second makes it idempotent, since an already-migrated value
+    /// can then never be a key.
+    #[test]
+    fn every_frozen_being_label_is_distinct_and_is_never_an_id() {
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
+        for (label, id) in LEGACY_BEING_LABELS {
+            let folded = fold_being_label(label);
+            if let Some(previous) = seen.insert(folded.clone(), label) {
+                panic!("'{label}' and '{previous}' fold onto the same key '{folded}'");
+            }
+            assert!(
+                !label.starts_with("being."),
+                "'{label}' is an id, not a label, so the fold would stop being idempotent"
+            );
+            assert!(
+                fold_being_label(id) != folded,
+                "'{label}' folds onto its own id '{id}'"
+            );
+        }
+        assert_eq!(
+            seen.len(),
+            LEGACY_BEING_LABELS.len(),
+            "every frozen label must survive folding as its own key"
+        );
+    }
+
+    /// A value that is already an id is not in the legacy map, so it is left exactly
+    /// as written — which is also what makes the fold idempotent.
+    #[test]
+    fn an_already_migrated_being_value_is_left_alone() {
+        let loaded = load_entity_migrating(V0_2_X_SAVE).unwrap();
+        assert_eq!(
+            being_param(&loaded.entity, "virtue.inoffensive_to_beings"),
+            "being.faeries"
+        );
+    }
+
+    /// `virtue.alluring_to_beings` and `flaw.magical_being_companion` also carry a
+    /// `being` parameter, and both are **still** `text` domains — their value is a
+    /// player's free description, not one of the closed lists. Folding them would
+    /// silently rewrite a legal value into an id the item's domain never declared,
+    /// so the fold is keyed on the three items that actually changed.
+    #[test]
+    fn a_being_param_that_is_still_free_text_is_never_folded() {
+        let loaded = load_entity_migrating(V0_2_X_SAVE).unwrap();
+        assert_eq!(
+            being_param(&loaded.entity, "virtue.alluring_to_beings"),
+            "Faeries",
+            "a text-domain being value stays exactly as the player typed it"
+        );
+    }
+
+    /// A typed value the frozen map does not recognise is left exactly as written,
+    /// on every one of the three folded items. The player re-picks it once; nothing
+    /// is guessed on their behalf.
+    #[test]
+    fn an_unrecognised_being_value_is_left_exactly_as_typed() {
+        for item_ref in [
+            "flaw.offensive_to_beings",
+            "flaw.unbearable_to_beings",
+            "virtue.inoffensive_to_beings",
+        ] {
+            let json = format!(
+                r#"{{
+                  "schema_version": 14,
+                  "ruleset": {{ "id": "arm5-core", "version": "2024.1" }},
+                  "entity_kind": "character",
+                  "type_id": "magus",
+                  "selections": [
+                    {{ "ref": "{item_ref}", "params": {{ "being": "dragons" }} }}
+                  ]
+                }}"#
+            );
+            let loaded = load_entity_migrating(&json).unwrap();
+            assert_eq!(being_param(&loaded.entity, item_ref), "dragons");
+        }
+    }
+
+    /// The two choices v0.2.x never stored stay unfilled: `flaw.slow_power` has no
+    /// `power` and `virtue.folk_magic` no `category`. There is nothing to migrate
+    /// *from*, so inventing a placeholder would invent a rules choice — the visible
+    /// `missing_param` is the correct outcome and the player supplies it once.
+    #[test]
+    fn a_choice_the_old_save_never_stored_is_not_invented() {
+        let loaded = load_entity_migrating(V0_2_X_SAVE).unwrap();
+        for item_ref in ["flaw.slow_power", "virtue.folk_magic"] {
+            let selection = loaded
+                .entity
+                .selections
+                .iter()
+                .find(|selection| selection.item_ref.as_str() == item_ref)
+                .expect("the fixture holds it");
+            assert!(
+                selection.params.is_empty(),
+                "{item_ref} must stay unfilled, not carry a made-up value: {:?}",
+                selection.params
+            );
+        }
+    }
+
+    /// No `schema_version` distinguishes a v0.2.x save from a current one — the
+    /// `being` lists were a **ruleset** change, not a save-format one — so the fold
+    /// is value-driven and must be idempotent. Loading a migrated save again changes
+    /// nothing.
+    #[test]
+    fn migrating_a_v0_2_x_save_twice_changes_nothing() {
+        let once = load_entity_migrating(V0_2_X_SAVE).unwrap().entity;
+        let json = serde_json::to_string(&once).unwrap();
+        let twice = load_entity_migrating(&json).unwrap().entity;
+        assert_eq!(once, twice);
+    }
+
+    /// A migrated save must not churn on every open: after the fold and
+    /// `normalize()`, a save→load→save cycle is byte-identical. (`normalize` sorts
+    /// selections by `(ref, params)`, so a fold that changed a param value could in
+    /// principle reorder rows — this pins that the reordering settles at the first
+    /// save rather than repeating.)
+    #[test]
+    fn a_migrated_save_is_byte_stable_across_a_save_load_save_cycle() {
+        let mut first = load_entity_migrating(V0_2_X_SAVE).unwrap().entity;
+        first.normalize();
+        let first_bytes = serde_json::to_string_pretty(&first).unwrap();
+
+        let mut second = load_entity_migrating(&first_bytes).unwrap().entity;
+        second.normalize();
+        let second_bytes = serde_json::to_string_pretty(&second).unwrap();
+
+        assert_eq!(first_bytes, second_bytes);
     }
 
     /// `ability_funding` is written **even when it holds its default**, which departs
