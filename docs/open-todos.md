@@ -62,3 +62,9 @@ these should be tagged over silently.
   fails on any summary that does not end on sentence punctuation, naming every
   offender and its locale in one run — `6f06679`, 2026-09-07. The same class of
   defect in `spells.json` is row 15 above.
+- The visual pass on the audit-tier work came back green (2026-09-09). Checked
+  in the running app: the at-cap Virtue/Flaw row dims with its reason tooltip at
+  the current type scale, and the new enumerated dropdowns — Folk Magic's four
+  categories and the three (Beings) lists — render and fit in both locales. No
+  layout or label changes owed, so `max_total`'s UI mirror and
+  `ParameterDomain::Enumerated` are closed end to end.
