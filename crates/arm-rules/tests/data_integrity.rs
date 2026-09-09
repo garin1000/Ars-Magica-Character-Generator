@@ -4201,14 +4201,20 @@ fn a_two_category_flaw_counts_against_its_secondary_category_cap() {
     );
 }
 
-/// Permitting is an ANY test over the item's categories: a companion may take
-/// Story Flaws, so Suppressed Gift's *secondary* Story category clears the
-/// permitted-categories check that its sole `hermetic` category used to fail.
+/// Permitting is an ANY test over the item's categories and forbidding is the
+/// mirror of it — an EVERY test — so the two agree instead of contradicting each
+/// other. A companion may take Story Flaws, and Suppressed Gift ("*Major,
+/// Hermetic, Story*") reaches them through its secondary Story category: neither
+/// the permitted nor the forbidden check rules it out.
 ///
-/// It is still rejected for a companion — the profile forbids `hermetic`
-/// outright — but by the forbidden-categories rule, which is the honest reason.
+/// The book backs the outcome. `:2840` bars a companion from Hermetic Virtues and
+/// Flaws "unless you have The Gift" — and a Suppressed-Gift character *does* have
+/// The Gift (`:6805`: it "does not function", but the social penalties remain),
+/// which is why `has_the_gift` flags them through the same `hermetic` category.
+/// `:6809` then describes the Flaw as a companion's: "If he replaces a companion,
+/// he will become much more powerful when the Story Flaw is resolved."
 #[test]
-fn a_secondary_category_satisfies_the_permitted_category_check() {
+fn a_secondary_category_clears_both_the_permitted_and_the_forbidden_check() {
     let rs = load_ruleset();
     let companion = rs
         .profile(&Id::new("companion"))
@@ -4218,11 +4224,16 @@ fn a_secondary_category_satisfies_the_permitted_category_check() {
         "a companion may take Story Flaws"
     );
     assert!(
-        !companion.permitted_categories.contains("hermetic"),
-        "a companion may not take Hermetic Flaws"
+        companion.forbidden_categories.contains("hermetic"),
+        "and the companion profile forbids the Hermetic category"
     );
 
     let suppressed = Id::new("flaw.suppressed_gift");
+    let item = rs
+        .item(&suppressed)
+        .expect("flaw.suppressed_gift must ship in the catalogue");
+    assert!(item.has_category("hermetic") && item.has_category("story"));
+
     let result = validate(
         &entity("companion", vec![Selection::new(suppressed.clone())]),
         &rs,
@@ -4234,48 +4245,56 @@ fn a_secondary_category_satisfies_the_permitted_category_check() {
             .any(|i| i.code == "category_not_permitted" && i.context.as_ref() == Some(&suppressed)),
         "a permitted secondary category must clear the permitted-categories check"
     );
-    let forbidden = result
-        .issues
-        .iter()
-        .find(|i| i.code == "forbidden_category" && i.context.as_ref() == Some(&suppressed))
-        .expect("the companion profile still forbids the Hermetic category outright");
-    assert_eq!(
-        forbidden.args.get("category").map(String::as_str),
-        Some("hermetic"),
-        "the issue names the category that actually tripped"
+    assert!(
+        !result
+            .issues
+            .iter()
+            .any(|i| i.code == "forbidden_category" && i.context.as_ref() == Some(&suppressed)),
+        "and a NON-forbidden secondary category must clear the forbidden one: \
+         forbidding fires only when EVERY category is forbidden: {:?}",
+        result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
 }
 
-/// The `category` issue argument names the category that failed, which for a
-/// forbidden-category issue may be the item's SECONDARY one. A grog forbids
-/// `supernatural` and does not permit `story`; Visions is "*Minor, Story,
-/// Supernatural*" (Ars Magica - Definitive Edition (Core Rules).md:6985-6986),
-/// so the two issues name two different categories for the same item.
+/// Under the conjunction there is no distinguished offender, so the
+/// `forbidden_category` issue joins `category_not_permitted` in naming the
+/// descriptor's first-listed category as a deterministic tie-break.
+///
+/// **And no shipped item can produce the old "secondary-position forbidden hit"
+/// case at all** — the second half of this test proves it structurally rather
+/// than leaving a fixture that silently proves nothing: for a multi-category item
+/// to raise the issue, *every* one of its categories must be forbidden, and then
+/// the first-listed is forbidden too. The sweep asserts no shipped profile
+/// forbids every category of any shipped multi-category item, which is why the
+/// grog/Visions fixture below now raises only the permitted-side issue.
 #[test]
-fn the_forbidden_category_issue_names_the_offending_category_not_the_first_listed() {
+fn forbidding_fires_only_when_every_category_is_forbidden() {
     let rs = load_ruleset();
     let grog = rs
         .profile(&Id::new("grog"))
         .expect("the grog profile must ship");
     assert!(grog.forbidden_categories.contains("supernatural"));
+    assert!(!grog.forbidden_categories.contains("story"));
     assert!(!grog.permitted_categories.contains("story"));
 
+    // Visions is "*Minor, Story, Supernatural*"
+    // (Ars Magica - Definitive Edition (Core Rules).md:6985-6986). A grog forbids
+    // only the second of those, so the item survives the forbidden check — and is
+    // still blocked, by the honest reason: neither category is on the grog's
+    // permitted list.
     let visions = Id::new("flaw.visions");
     let item = rs.item(&visions).expect("flaw.visions must ship");
     assert_eq!(item.first_listed_category(), "story");
 
     let result = validate(&entity("grog", vec![Selection::new(visions.clone())]), &rs);
-    let forbidden = result
-        .issues
-        .iter()
-        .find(|i| i.code == "forbidden_category" && i.context.as_ref() == Some(&visions))
-        .expect("a grog may not take a Supernatural Flaw, secondary category or not");
-    assert_eq!(
-        forbidden.args.get("category").map(String::as_str),
-        Some("supernatural"),
-        "the forbidden-category issue names the secondary category that tripped"
+    assert!(
+        !result
+            .issues
+            .iter()
+            .any(|i| i.code == "forbidden_category" && i.context.as_ref() == Some(&visions)),
+        "one forbidden category out of two must no longer rule the item out: {:?}",
+        result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
-
     let not_permitted = result
         .issues
         .iter()
@@ -4284,7 +4303,388 @@ fn the_forbidden_category_issue_names_the_offending_category_not_the_first_liste
     assert_eq!(
         not_permitted.args.get("category").map(String::as_str),
         Some("story"),
-        "when every category failed, the issue names the primary"
+        "when every category failed, the issue names the first-listed"
+    );
+
+    // The structural half: the secondary-position forbidden hit is unreachable
+    // for the shipped catalogue. Catalogue size stays data — this counts nothing
+    // and asserts a property of every item it finds.
+    let mut multi_category_items = 0;
+    for item in rs.items() {
+        if item.categories.len() < 2 {
+            continue;
+        }
+        multi_category_items += 1;
+        for profile in rs.profiles() {
+            assert!(
+                !item
+                    .categories
+                    .iter()
+                    .all(|c| profile.forbidden_categories.contains(c)),
+                "no shipped profile forbids every category of a multi-category \
+                 item, so the `forbidden_category` issue can never name anything \
+                 but the first-listed: {} vs profile {}",
+                item.id,
+                profile.id
+            );
+        }
+    }
+    assert!(
+        multi_category_items > 0,
+        "the shipped catalogue must contain multi-category descriptors"
+    );
+}
+
+/// The newly-allowed cell the conjunction produces, and the one the book states
+/// outright. Sufi is "*Minor, Social Status, Supernatural*"; a grog forbids
+/// `supernatural` but permits `social_status`, so the mundane reading of the
+/// Virtue is open to him:
+///
+/// > "It is also possible to be an entirely mundane Sufi, in which case you
+/// > should take this Virtue as a Social Status Virtue" — `:5079`
+///
+/// > "either as a Minor Social Status Virtue **or** a Minor Supernatural Virtue"
+/// > — `:5083`
+///
+/// (Ars Magica - Definitive Edition (Core Rules).md:5079, :5083.)
+#[test]
+fn a_grog_may_take_sufi_through_its_social_status_category() {
+    let rs = load_ruleset();
+    let sufi = Id::new("virtue.sufi");
+    let item = rs.item(&sufi).expect("virtue.sufi must ship");
+    assert!(item.has_category("social_status") && item.has_category("supernatural"));
+
+    let result = validate(&entity("grog", vec![Selection::new(sufi.clone())]), &rs);
+    let category_issues: Vec<&String> = result
+        .issues
+        .iter()
+        .filter(|i| {
+            i.context.as_ref() == Some(&sufi)
+                && (i.code == "forbidden_category" || i.code == "category_not_permitted")
+        })
+        .map(|i| &i.code)
+        .collect();
+    assert!(
+        category_issues.is_empty(),
+        "a mundane Sufi is a Social Status Virtue a grog may take: {category_issues:?}"
+    );
+}
+
+// --- Two Flaws the book indexes under General were magus-only (row 13) -------
+//
+// "Hermetic" gates on The Gift, not on magus-hood: "Only characters with The
+// Gift can take these Virtues and Flaws, and some are only applicable to
+// Hermetic magi who have already completed their training." (`:2880`) A
+// companion "may not take Hermetic Virtues and Flaws, unless you have The Gift"
+// (`:2840`); a grog may not at all (`:2829`) and is barred from The Gift itself
+// (`:2830`).
+//
+// Offensive to (Beings) is "*Minor, Hermetic and General*" (`:6525`) and
+// Unbearable to (Beings) "*Minor, Hermetic or General*" (`:6892`) — dual-indexed
+// in the book's own lists (Offensive at `:5445` Hermetic and `:5608` General;
+// Unbearable at `:5455` and `:5629`). Both shipped `["hermetic"]` alone, and
+// `hermetic` is forbidden for grog, companion and mythic companion, so only a
+// magus could take them.
+//
+// They cannot carry `hermetic` as a SECOND category either, because
+// `gift_categories` is `["hermetic"]` for every shipped profile and
+// `effective::has_the_gift` reads any such category as "has The Gift" — see
+// `a_companion_holding_offensive_to_beings_is_not_gifted` below. So the
+// eligibility the category was enforcing by accident is modelled explicitly, as
+// prerequisites.
+
+/// The two Flaws carry the permissive `general` category alone, plus the
+/// eligibility the rulebook states in prose:
+///
+/// > "Only characters with The Gift or Magical Air may take this Flaw, and it
+/// > cannot be combined with the Blatant Gift." — Unbearable, `:6895`
+///
+/// > "Characters with The Gift may take this Flaw only if they have the Gentle
+/// > Gift … Characters with Magical Air may not take it at all." — Offensive,
+/// > `:6530`
+///
+/// > "UnGifted characters may take this Virtue only if they have the Flaw
+/// > Magical Air." — Inoffensive, `:4139`
+///
+/// (Ars Magica - Definitive Edition (Core Rules).md:6895, :6530, :4139.)
+#[test]
+fn the_beings_items_carry_general_plus_an_explicit_eligibility_gate() {
+    let rs = load_ruleset();
+    let the_gift = Prereq::Has(Id::new("virtue.the_gift"));
+    let gifted_or_magical_air = Prereq::Any(vec![
+        the_gift.clone(),
+        Prereq::Has(Id::new("flaw.magical_air")),
+    ]);
+
+    for (id, expected_prereq, expected_incompatible) in [
+        (
+            "flaw.unbearable_to_beings",
+            gifted_or_magical_air.clone(),
+            vec!["flaw.blatant_gift"],
+        ),
+        (
+            "flaw.offensive_to_beings",
+            // "unGifted, or Gifted with the Gentle Gift". The `Nor` variant's
+            // wire tag is `"none"`; it is the boolean NOR, not "no prereq".
+            Prereq::Any(vec![
+                Prereq::Nor(vec![the_gift.clone()]),
+                Prereq::Has(Id::new("virtue.gentle_gift")),
+            ]),
+            vec!["flaw.magical_air"],
+        ),
+        (
+            "virtue.inoffensive_to_beings",
+            gifted_or_magical_air.clone(),
+            vec![],
+        ),
+    ] {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship in the catalogue"));
+        assert_eq!(
+            item.categories,
+            vec!["general".to_string()],
+            "{id} is indexed under General, and must not carry `hermetic`: that \
+             slug is the profiles' `gift_categories` and would make an unGifted \
+             bearer count as Gifted"
+        );
+        assert_eq!(
+            item.prerequisites.as_ref(),
+            Some(&expected_prereq),
+            "{id} must state its eligibility as a prerequisite now that the \
+             category no longer enforces it by accident"
+        );
+        assert_eq!(
+            item.incompatible_with
+                .iter()
+                .map(Id::as_str)
+                .collect::<Vec<_>>(),
+            expected_incompatible,
+            "{id}'s stated incompatibilities"
+        );
+    }
+}
+
+/// A companion is neither a magus nor Gifted, and the book lets him take both:
+/// Offensive because he is unGifted (`:6530` restricts only the *Gifted* case,
+/// which proves the unGifted case is the default), Unbearable because he has
+/// Magical Air (`:6895`).
+#[test]
+fn a_companion_may_take_the_two_beings_flaws() {
+    let rs = load_ruleset();
+    let offensive = Id::new("flaw.offensive_to_beings");
+    let unbearable = Id::new("flaw.unbearable_to_beings");
+    let e = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("flaw.magical_air")),
+            Selection::with_params(
+                offensive.clone(),
+                BTreeMap::from([("being".to_string(), Id::new("being.animals"))]),
+            ),
+        ],
+    );
+    // Offensive is incompatible with Magical Air (`:6530`), so the two are tested
+    // on separate characters.
+    let offensive_alone = entity(
+        "companion",
+        vec![Selection::with_params(
+            offensive.clone(),
+            BTreeMap::from([("being".to_string(), Id::new("being.animals"))]),
+        )],
+    );
+    let unbearable_with_air = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("flaw.magical_air")),
+            Selection::with_params(
+                unbearable.clone(),
+                BTreeMap::from([("being".to_string(), Id::new("being.demons"))]),
+            ),
+        ],
+    );
+
+    for (case, target) in [
+        (&offensive_alone, &offensive),
+        (&unbearable_with_air, &unbearable),
+    ] {
+        let issues = validate(case, &rs).issues;
+        let blocking: Vec<&String> = issues
+            .iter()
+            .filter(|i| {
+                i.context.as_ref() == Some(target)
+                    && matches!(
+                        i.code.as_str(),
+                        "forbidden_category"
+                            | "category_not_permitted"
+                            | "prereq_not_met"
+                            | "incompatible"
+                    )
+            })
+            .map(|i| &i.code)
+            .collect();
+        assert!(
+            blocking.is_empty(),
+            "a companion must be able to take {target}: {blocking:?}"
+        );
+    }
+
+    // And the pairing the book forbids is still caught, by the honest reason.
+    assert!(
+        validate(&e, &rs)
+            .issues
+            .iter()
+            .any(|i| i.code == "incompatible"),
+        "Magical Air plus Offensive to (Beings) is barred by :6530"
+    );
+}
+
+/// The other half of dropping `hermetic`: without the prerequisites, a grog
+/// could take Unbearable to (Beings) with neither The Gift nor Magical Air —
+/// trading one wrong output for another. `:6895` bars it, and a grog can have
+/// neither (`:2830`).
+#[test]
+fn a_grog_may_not_take_unbearable_to_beings_without_the_gift_or_magical_air() {
+    let rs = load_ruleset();
+    let unbearable = Id::new("flaw.unbearable_to_beings");
+    let result = validate(
+        &entity(
+            "grog",
+            vec![Selection::with_params(
+                unbearable.clone(),
+                BTreeMap::from([("being".to_string(), Id::new("being.demons"))]),
+            )],
+        ),
+        &rs,
+    );
+    assert!(
+        result
+            .issues
+            .iter()
+            .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&unbearable)),
+        "the Gift-or-Magical-Air gate (:6895) must fire on its own now that the \
+         `hermetic` category no longer blocks the Flaw: {:?}",
+        result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
+    );
+}
+
+/// The find that belongs in the same slice: `virtue.inoffensive_to_beings` ships
+/// the permissive `general` category and shipped **no** eligibility gate at all,
+/// so an unGifted character with no Magical Air took it clean.
+/// `:4139`: "UnGifted characters may take this Virtue only if they have the Flaw
+/// Magical Air."
+#[test]
+fn an_ungifted_character_needs_magical_air_for_inoffensive_to_beings() {
+    let rs = load_ruleset();
+    let inoffensive = Id::new("virtue.inoffensive_to_beings");
+    let being = BTreeMap::from([("being".to_string(), Id::new("being.animals"))]);
+
+    let ungifted = validate(
+        &entity(
+            "companion",
+            vec![Selection::with_params(inoffensive.clone(), being.clone())],
+        ),
+        &rs,
+    );
+    assert!(
+        ungifted
+            .issues
+            .iter()
+            .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&inoffensive)),
+        "an unGifted companion with no Magical Air may not take it (:4139): {:?}",
+        ungifted.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
+    );
+
+    let with_air = validate(
+        &entity(
+            "companion",
+            vec![
+                Selection::new(Id::new("flaw.magical_air")),
+                Selection::with_params(inoffensive.clone(), being),
+            ],
+        ),
+        &rs,
+    );
+    assert!(
+        !with_air
+            .issues
+            .iter()
+            .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&inoffensive)),
+        "and Magical Air satisfies it: {:?}",
+        with_air.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
+    );
+}
+
+/// Why `hermetic` may NOT be added back as a second category, pinned so a later
+/// "completion" of the dual-category data fails loudly. `has_the_gift`
+/// (`effective/gift_confidence.rs`) counts any selection carrying a category in
+/// the profile's `gift_categories` — `["hermetic"]` everywhere — so tagging these
+/// Flaws Hermetic would make an unGifted companion count as Gifted and silently
+/// hand him the Gift's free Supernatural-Ability slot
+/// (Ars Magica - Definitive Edition (Core Rules).md:2874).
+#[test]
+fn a_companion_holding_offensive_to_beings_is_not_gifted() {
+    let rs = load_ruleset();
+    let profile = rs
+        .profile(&Id::new("companion"))
+        .expect("the companion profile must ship");
+    assert!(
+        profile.gift_categories.contains("hermetic"),
+        "the companion profile detects The Gift by the hermetic category"
+    );
+
+    let e = entity(
+        "companion",
+        vec![Selection::with_params(
+            Id::new("flaw.offensive_to_beings"),
+            BTreeMap::from([("being".to_string(), Id::new("being.animals"))]),
+        )],
+    );
+    assert_eq!(
+        arm_rules::supernatural_free_slots(&e, &rs, profile).total,
+        0,
+        "Offensive to (Beings) is not a Gift Flaw, so it must confer no free \
+         Supernatural-Ability slot"
+    );
+}
+
+/// **Accepted regression, decided rather than discovered.** `validate_house`
+/// decides what counts as a "Hermetic Flaw" for the `missing_hermetic_flaw`
+/// guideline (`:2860`) using the same overloaded `gift_categories`. So a magus
+/// whose only Hermetic Flaw is Unbearable to (Beings) — a legal build; any magus
+/// may take it (`:6895`) — now warns that he has none, even though the book lists
+/// it in the Hermetic Flaws index (`:5455`; Offensive at `:5445`).
+///
+/// `gift_categories` serves three masters — Gift detection, the free-slot grant,
+/// and this guideline — and only the first two force dropping `hermetic`. This is
+/// collateral, and it is a **warning**, not an error. The guideline wants its own
+/// notion of "Hermetic Flaw", independent of Gift detection; see RULES.md.
+#[test]
+fn the_hermetic_flaw_guideline_no_longer_counts_the_two_beings_flaws() {
+    let rs = load_ruleset();
+    let result = validate(
+        &entity(
+            "magus",
+            vec![
+                Selection::new(Id::new("virtue.the_gift")),
+                Selection::new(Id::new("virtue.hermetic_magus")),
+                Selection::with_params(
+                    Id::new("flaw.unbearable_to_beings"),
+                    BTreeMap::from([("being".to_string(), Id::new("being.demons"))]),
+                ),
+            ],
+        ),
+        &rs,
+    );
+    let warning = result
+        .issues
+        .iter()
+        .find(|i| i.code == "missing_hermetic_flaw")
+        .expect("the guideline reads `general` as not-Hermetic — accepted regression");
+    assert_eq!(
+        warning.severity,
+        arm_rules::validation::IssueSeverity::Warning,
+        "and it stays a guideline warning, never an error"
     );
 }
 

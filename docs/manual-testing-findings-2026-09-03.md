@@ -244,11 +244,25 @@ beside a new binary is the portable layout's real hazard. No save migration and
 no `SCHEMA_VERSION` bump: saves store `Selection { ref, params }`, never a
 category.
 
-Two corrections to the finding as written above:
+Two notes on the finding as written above:
 
-- Suppressed Gift does **not** become legal for a companion. The permitted check
-  now passes via `story`, but the companion profile also forbids `hermetic`, so
-  `forbidden_category` still fires — correctly, it being a Hermetic flaw.
+- **Suppressed Gift *does* become legal for a companion** — superseded 2026-09-09
+  by open-to-dos row 13. This entry previously recorded the opposite ("the
+  companion profile also forbids `hermetic`, so `forbidden_category` still fires
+  — correctly, it being a Hermetic flaw"). That was wrong twice over. The
+  forbidden check fired on *any* forbidden category while the permitted check
+  passed on *any* permitted one, so the two contradicted each other: one granted
+  the Story route and the other took it straight back. `validate_forbidden_categories`
+  is now the true mirror and fires only when **every** category is forbidden. And
+  the outcome is what the book says: `:2840` bars a companion from Hermetic
+  Virtues and Flaws "unless you have The Gift", and a Suppressed-Gift character
+  *does* have The Gift (`:6805` — it does not function, but the social penalties
+  remain), which is why `has_the_gift` flags them; `:6809` then describes the Flaw
+  as a companion's, "If he replaces a companion, he will become much more
+  powerful when the Story Flaw is resolved". A mythic companion is still refused
+  it, now by `gift_forbidden` (`:2637`) rather than by category — the same
+  outcome, the honest reason. See `crates/arm-rules/RULES.md`, *Two Flaws the book
+  indexes under General were magus-only*.
 - The Markdown export's Type cell now lists every category, joined through the
   localized separator, each still resolved via `category-<id>` — no raw slug.
 

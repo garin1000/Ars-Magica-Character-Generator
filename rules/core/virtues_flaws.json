@@ -189,7 +189,7 @@
     "categories": ["hermetic"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "incompatible_with": ["virtue.gentle_gift"],
+    "incompatible_with": ["flaw.unbearable_to_beings", "virtue.gentle_gift"],
     "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5711, 5714] }
   },
@@ -1680,6 +1680,7 @@
     "categories": ["general"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.offensive_to_beings"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6382, 6385] }
   },
   {
@@ -1958,9 +1959,11 @@
     "id": "flaw.offensive_to_beings",
     "kind": "flaw",
     "magnitude": "minor",
-    "categories": ["hermetic"],
+    "categories": ["general"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.magical_air"],
+    "prerequisites": { "kind": "any", "value": [{ "kind": "none", "value": [{ "kind": "has", "value": "virtue.the_gift" }] }, { "kind": "has", "value": "virtue.gentle_gift" }] },
     "parameters": [{ "key": "being", "type": "ref", "domain": "enumerated", "values": ["being.animals", "being.demons", "being.divine", "being.faeries", "being.magical_creatures", "being.mundane_humans"] }],
     "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6524, 6533] }
@@ -2845,9 +2848,11 @@
     "id": "flaw.unbearable_to_beings",
     "kind": "flaw",
     "magnitude": "minor",
-    "categories": ["hermetic"],
+    "categories": ["general"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.blatant_gift"],
+    "prerequisites": { "kind": "any", "value": [{ "kind": "has", "value": "virtue.the_gift" }, { "kind": "has", "value": "flaw.magical_air" }] },
     "parameters": [{ "key": "being", "type": "ref", "domain": "enumerated", "values": ["being.demons", "being.divine", "being.mundane_humans"] }],
     "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6891, 6898] }
@@ -4612,6 +4617,7 @@
     "categories": ["general"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "any", "value": [{ "kind": "has", "value": "virtue.the_gift" }, { "kind": "has", "value": "flaw.magical_air" }] },
     "parameters": [{ "key": "being", "type": "ref", "domain": "enumerated", "values": ["being.animals", "being.demons", "being.divine", "being.faeries", "being.magical_creatures"] }],
     "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4133, 4142] }
