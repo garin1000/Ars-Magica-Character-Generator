@@ -11,7 +11,6 @@ these should be tagged over silently.
 |---|---|---|---|
 | 8 | **GitHub issue #3 is fixed but not yet answered or closed on GitHub.** Finding 34 fixed the repeatable-Virtues bug it reported (Improved Characteristics and 24 others); the issue itself still needs a reply and closing. | reply + close on GitHub | 2026-09-06 |
 | 9 | **Per-power targets are unverified strings.** `flaw.slow_power`, `flaw.restricted_power` and `virtue.variable_power` now name the power they limit, but nothing checks the typed name against a power the character actually holds — Greater, Lesser, Personal, Ritual and Focus Power are themselves unparameterized and repeatable, so their rows are anonymous and there is nothing to point at. Giving those five a free-text `name` parameter would make them addressable and let the picker offer a dropdown; larger change, own save impact. Narrowed from the old row 7. | decision | 2026-09-06 |
-| 10 | **Text-param values are compared byte-for-byte.** The duplicate key is exact `(item_ref, params)` equality (`crates/arm-rules/src/validation/selections.rs:135-140`), so "Wolf Shape", "wolf shape" and "Wolf Shape " read as three distinct targets, and an empty string is accepted — the per-power cap stops an honest mistake, not a determined evasion. Whether to trim/case-fold text parameter values is an engine-wide decision affecting every existing text param (`power`, `terrain`, `land`, `realm`, `role`, …). Related and verified today: `crates/arm-rules/src/types.rs:455-458` documents text values as "any non-empty value is legal", while `crates/arm-rules/src/validation/selections.rs:277` (`ParameterDomain::Text => true`) enforces no such thing. | decision | 2026-09-06 |
 | 11 | **False Power's copies do not name which Supernatural Virtue they taint.** ":6096" says the Flaw is taken "once for each appropriate Supernatural Virtue that the character possesses", so the copies must name *different* Virtues; none names any. Expressing it needs a parameter domain meaning "an item of category X that this character possesses" — `ParameterDomain::Item` has no category narrowing and no is-possessed predicate, so the picker would list every item in the catalogue. Narrowed from the old row 4. | decision | 2026-09-06 |
 | 12 | **Folk Magic's realm alignment is unmodelled.** The category axis is now a dropdown, but each copy *also* aligns to a `(Realm) Lore`, re-choosable per copy, "although a character cannot have access to both the Divine and Infernal Realms" (:3919, the tail of the same line that grants the repeat). Neither the second axis nor its exclusion is expressed. Narrowed from the old row 6. | decision | 2026-09-06 |
 | 13 | **Five Virtues/Flaws carry a dual-category descriptor joined by *and*/*or* but ship with one category.** :4134 Inoffensive to (Beings) "General and Hermetic" (ships `["general"]`), :5882 Curse of Slander "General or Supernatural" (`["general"]`), :6525 Offensive to (Beings) "Hermetic and General" (`["hermetic"]`), :6635 Primogeniture Lineage "Story and Hermetic" (`["story"]`), :6892 Unbearable to (Beings) "Hermetic or General" (`["hermetic"]`). The dual-category sweep (`5729e6d`) covered only the four **comma**-joined descriptors (Sufi, Visions, Raised from the Dead, Suppressed Gift), so these were never in its scope rather than missed. The *or* cases raise a separate question: "General or Supernatural" reads as an either/or origin, not dual membership. | decision | 2026-09-06 |
@@ -21,6 +20,16 @@ these should be tagged over silently.
 
 ## Done since this list was started
 
+- Text-param values are trimmed, and a blank one is rejected (old row 10). The
+  decision taken was **trim, do not case-fold**: trimming makes
+  `ParameterDomain::Text`'s own "any non-empty value is legal" true and costs
+  nothing a player meant, so "Wolf Shape " is the same power as "Wolf Shape",
+  while capitalisation stays theirs to distinguish — "wolf shape" is still a
+  separate target, deliberately, since the rulebook asks for no folding.
+  Normalization happens on **load** (`load_entity_migrating`), not in
+  `Entity::normalize`, so an opened file is not silently reordered at save time;
+  an empty or whitespace-only value now raises `missing_param` naming the box to
+  fill. RULES.md carries the reasoning (2026-09-09).
 - Dual-category Virtues/Flaws now appear under every category heading in the
   Available list (the rulebook indexes each of them twice); "primary" survives
   only as a tie-break where a surface structurally holds one value.

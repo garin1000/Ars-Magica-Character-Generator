@@ -493,7 +493,15 @@ fn validate_spell_parameter(
     let Some(def) = spell.parameters.first() else {
         return;
     };
-    match &sel.parameter {
+    // A blank parameter is the same state as an absent one — a choice not yet made,
+    // reported as `missing_param` rather than an `unknown_param_value` with nothing
+    // to print. Mirrors `validate_selection_parameters`, which shares
+    // `param_value_resolves` with this validator.
+    match sel
+        .parameter
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+    {
         None => issues.push(ValidationIssue::error(
             ValidationIssue::CODE_MISSING_PARAM,
             CreationPhase::Spells,
@@ -501,7 +509,7 @@ fn validate_spell_parameter(
             Some(sel.spell.clone()),
         )),
         Some(value) => {
-            let value_id = Id::new(value.as_str());
+            let value_id = Id::new(value);
             if !super::selections::param_value_resolves(ruleset, def, &value_id) {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
@@ -509,7 +517,7 @@ fn validate_spell_parameter(
                     args([
                         ("item", sel.spell.to_string()),
                         ("key", def.key.clone()),
-                        ("value", value.clone()),
+                        ("value", value.to_string()),
                         ("domain", def.domain.to_string()),
                     ]),
                     Some(sel.spell.clone()),

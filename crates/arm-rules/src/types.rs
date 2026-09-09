@@ -453,8 +453,15 @@ pub enum ParameterDomain {
     /// (Beings) classes), which the picker then shows as a dropdown.
     Enumerated,
     /// Value is free text the player types (e.g. Aptitude for (Sin), Necessary
-    /// (Realm) Aura, a (Land)). It references no registry, so any non-empty value
-    /// is legal — the picker shows a text input rather than a dropdown.
+    /// (Realm) Aura, a (Land)). It references no registry, so any value with
+    /// non-whitespace content is legal — the picker shows a text input rather than a
+    /// dropdown. **Enforced**, not merely documented: an empty or whitespace-only
+    /// value resolves to nothing and is reported as `missing_param`, the same issue
+    /// an absent key raises, since a blank text box is a choice not yet made rather
+    /// than an unknown value (there is nothing to print). Values are trimmed at
+    /// load ([`load_entity_migrating`]) and at every write path, so a padded
+    /// descriptor is the same choice as an unpadded one — but case is the player's,
+    /// and is never folded.
     Text,
 }
 
@@ -3586,6 +3593,57 @@ fn fold_legacy_being_params(entity: &mut Entity) {
     }
 }
 
+/// Trims surrounding whitespace off every parameter value of one selection.
+///
+/// Parameter values establish a selection's **identity** in four places that all
+/// compare them byte-for-byte: the duplicate-selection key (the whole params map),
+/// a grant's `options.contains(pick)`, a mythic type's required-Virtue check, and
+/// [`Entity::normalize`]'s sort. So "Wolf Shape ", "Wolf Shape" and " Wolf Shape"
+/// were three distinct targets, and the per-power cap counted them separately.
+///
+/// Every domain is trimmed, not just [`ParameterDomain::Text`] — this function has
+/// no ruleset to ask, and no domain has a legal value with an edge of whitespace:
+/// an id never does, and a `text` value's padding was never part of the player's
+/// choice. Case is deliberately **left alone**: the rules ask for no case-folding,
+/// and two powers a player capitalised differently are their own business.
+///
+/// A value that trims to nothing is kept as the empty string rather than deleted,
+/// so the player sees `missing_param` naming the box to fill — the same issue an
+/// absent key raises, which is what makes a blank power and an unrecorded one read
+/// identically.
+fn trim_selection_params(selection: &mut Selection) {
+    let padded: Vec<String> = selection
+        .params
+        .iter()
+        .filter(|(_, value)| value.as_str().trim() != value.as_str())
+        .map(|(key, _)| key.clone())
+        .collect();
+    for key in padded {
+        let trimmed = Id::new(selection.params[&key].as_str().trim());
+        selection.params.insert(key, trimmed);
+    }
+}
+
+/// Applies [`trim_selection_params`] everywhere a save can hold a [`Selection`]:
+/// the bought list plus the three resolved-pick maps, exactly as
+/// [`fold_legacy_being_params`] does — a House choice, a mythic-type pick or a
+/// Warping fill carries params of its own, and a padded one falls off its own menu
+/// (`options.contains(pick)` is full [`Selection`] equality).
+fn trim_all_selection_params(entity: &mut Entity) {
+    for selection in &mut entity.selections {
+        trim_selection_params(selection);
+    }
+    for choices in [
+        &mut entity.house_choices,
+        &mut entity.mythic_choices,
+        &mut entity.warping_choices,
+    ] {
+        for selection in choices.values_mut() {
+            trim_selection_params(selection);
+        }
+    }
+}
+
 /// Deserializes an entity from JSON, applying backward-compatible save
 /// migrations, and reports what was migrated.
 ///
@@ -3622,6 +3680,16 @@ fn fold_legacy_being_params(entity: &mut Entity) {
 /// `SCHEMA_VERSION` — no schema moved, and stamping would rewrite the version of a
 /// save that was already current.
 ///
+/// Every parameter value is also **trimmed** here, by
+/// [`trim_all_selection_params`]. Nothing trimmed a value arriving from a save
+/// file, and parameter values are compared byte-for-byte wherever a selection's
+/// identity is decided, so a padded descriptor was a target of its own. This too is
+/// value-driven, idempotent and version-free, and it belongs at **load** rather than
+/// in [`Entity::normalize`]: normalize runs on every *save* and sorts selections by
+/// `(ref, params)`, so trimming there would silently reorder the rows of a file the
+/// player had merely opened — against the zero-noise-diff convention. Trimming on
+/// load lets the reordering settle once, at open.
+///
 /// What it deliberately does not do: Folk Magic's `category` and the three per-power
 /// Flaws' `power` were never *stored* in the old shape, so there is nothing to
 /// migrate from. They stay a visible `missing_param` naming the item and key rather
@@ -3656,8 +3724,10 @@ pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Err
         .is_some_and(|obj| obj.contains_key("ability_funding"));
     let mut entity: Entity = serde_json::from_value(value)?;
 
-    // Value-driven and idempotent, and deliberately no version stamp — see the
-    // `being` paragraph above.
+    // Both folds below are value-driven and idempotent, and deliberately stamp no
+    // version — see the `being` and whitespace paragraphs above. The trim runs
+    // first, so the being fold sees canonical values.
+    trim_all_selection_params(&mut entity);
     fold_legacy_being_params(&mut entity);
 
     if let Some(legacy_attunements) = legacy_attunements {
@@ -6542,6 +6612,123 @@ mod tests {
         second.normalize();
         let second_bytes = serde_json::to_string_pretty(&second).unwrap();
 
+        assert_eq!(first_bytes, second_bytes);
+    }
+
+    /// A save carrying padded parameter values, in every place a [`Selection`] can
+    /// live. Written by hand for the same reason [`V0_2_X_SAVE`] is: the current code
+    /// trims on load, so it can no longer *produce* the shape under test.
+    ///
+    /// `flaw.lesser_power` and `virtue.minor_magical_focus` are the case row 10 is
+    /// about — a padded free-text descriptor is the same choice as an unpadded one.
+    /// `virtue.puissant_ability` shows that a padded *id* is recovered too, and
+    /// `flaw.slow_power` holds a whitespace-only value, i.e. a box the player left
+    /// blank.
+    const PADDED_PARAMS_SAVE: &str = r#"{
+      "schema_version": 16,
+      "ruleset": { "id": "arm5-core", "version": "2024.1" },
+      "entity_kind": "character",
+      "type_id": "magus",
+      "ability_funding": "pool",
+      "selections": [
+        { "ref": "flaw.lesser_power", "params": { "power": "  Wolf Shape " } },
+        { "ref": "virtue.academic_concentration", "params": { "subject": "\tTheology\n" } },
+        { "ref": "virtue.puissant_ability", "params": { "ability": " ability.awareness " } },
+        { "ref": "flaw.slow_power", "params": { "power": "   " } }
+      ],
+      "house_choices": {
+        "virtue.bjornaer_heartbeast": { "ref": "virtue.minor_magical_focus", "params": { "focus": " Wolf Shape " } }
+      },
+      "mythic_choices": {
+        "virtue.mythic_blood": { "ref": "virtue.puissant_art", "params": { "art": "art.ignem " } }
+      },
+      "warping_choices": {
+        "0": { "ref": "flaw.magical_air", "params": { "being": " Faeries" } }
+      }
+    }"#;
+
+    /// The value `item_ref`'s `key` holds in the loaded fixture's bought list.
+    fn param_of(entity: &Entity, item_ref: &str, key: &str) -> String {
+        entity
+            .selections
+            .iter()
+            .find(|selection| selection.item_ref.as_str() == item_ref)
+            .and_then(|selection| selection.params.get(key))
+            .map(|value| value.as_str().to_string())
+            .unwrap_or_else(|| panic!("{item_ref} must be in the fixture with a `{key}` param"))
+    }
+
+    /// Row 10: parameter values are compared byte-for-byte everywhere that matters —
+    /// the duplicate-selection key, a grant's `options.contains(pick)`, a mythic
+    /// type's required-Virtue check, `normalize()`'s sort — so "Wolf Shape " and
+    /// "Wolf Shape" were two different powers. Nothing trimmed a value arriving from
+    /// a save file, so the fix lands **at load**: every param value in every place a
+    /// selection can live is trimmed before the entity reaches anyone.
+    #[test]
+    fn load_trims_the_whitespace_around_every_param_value() {
+        let entity = load_entity_migrating(PADDED_PARAMS_SAVE).unwrap().entity;
+
+        assert_eq!(
+            param_of(&entity, "flaw.lesser_power", "power"),
+            "Wolf Shape"
+        );
+        assert_eq!(
+            param_of(&entity, "virtue.academic_concentration", "subject"),
+            "Theology",
+            "tabs and newlines are whitespace too"
+        );
+        assert_eq!(
+            param_of(&entity, "virtue.puissant_ability", "ability"),
+            "ability.awareness",
+            "a padded id resolves against its catalogue again"
+        );
+        assert_eq!(
+            param_of(&entity, "flaw.slow_power", "power"),
+            "",
+            "a blank box stays blank — and is reported as `missing_param`, not filled in"
+        );
+
+        for (map, key, param, expected) in [
+            (
+                &entity.house_choices,
+                "virtue.bjornaer_heartbeast",
+                "focus",
+                "Wolf Shape",
+            ),
+            (
+                &entity.mythic_choices,
+                "virtue.mythic_blood",
+                "art",
+                "art.ignem",
+            ),
+            (&entity.warping_choices, "0", "being", "Faeries"),
+        ] {
+            assert_eq!(
+                map.get(key)
+                    .and_then(|selection| selection.params.get(param))
+                    .map(|value| value.as_str()),
+                Some(expected),
+                "a resolved pick's params are trimmed too ({key})"
+            );
+        }
+    }
+
+    /// The trim has no version signal either (a padded value is legal JSON at any
+    /// `schema_version`), so it is value-driven like the `being` fold: a second load
+    /// changes nothing, and a save→load→save cycle is byte-identical. Trimming
+    /// reorders `normalize()`'s selection sort, so this pins that the reordering
+    /// settles at the first save instead of churning the file on every open.
+    #[test]
+    fn trimming_params_at_load_is_idempotent_and_byte_stable() {
+        let mut first = load_entity_migrating(PADDED_PARAMS_SAVE).unwrap().entity;
+        first.normalize();
+        let first_bytes = serde_json::to_string_pretty(&first).unwrap();
+
+        let mut second = load_entity_migrating(&first_bytes).unwrap().entity;
+        second.normalize();
+        let second_bytes = serde_json::to_string_pretty(&second).unwrap();
+
+        assert_eq!(first, second);
         assert_eq!(first_bytes, second_bytes);
     }
 

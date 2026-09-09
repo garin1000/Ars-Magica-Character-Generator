@@ -654,6 +654,39 @@ describe('the unsaved-changes guard mirrors wizard progress (S5/#31)', () => {
     expect(store.entity.selections).toEqual(migrated.selections);
   });
 
+  it('opens a save whose params the frontend does not renormalize, so no prompt appears (Slice 2)', async () => {
+    // Slice 2 trims every parameter value, and — like slice 0's fold — it does so
+    // in Rust's `load_entity_migrating`, BEFORE the entity crosses IPC. That
+    // placement is the whole point: `Entity::normalize()` runs on every *save*, so
+    // trimming there would reorder rows in an existing file at save time, and
+    // trimming in the frontend's `open()` would rewrite the entity AFTER `#snapshot()`
+    // takes the baseline — making every such save open dirty and prompt to discard
+    // changes the user never made. The unsaved-changes guard is a mandatory product
+    // behavior (CLAUDE.md), so this is asserted, not assumed.
+    //
+    // The fixture deliberately carries a value that is STILL padded: whatever the
+    // engine hands over is by definition the baseline, and the frontend must pass it
+    // through untouched. If a well-meaning trim were ever added to the load path
+    // after the snapshot, `dirty` would flip to true here.
+    await mountApp();
+    store.view = 'editor';
+    const loaded: Entity = {
+      ...loadableEntity(),
+      selections: [{ ref: 'flaw.lesser_power', params: { power: ' Wolf Shape ' } }],
+    };
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/padded-character.armc.json',
+      entity: loaded,
+    });
+
+    await store.open();
+    flushSync();
+
+    expect(store.dirty).toBe(false);
+    expect(lastMirroredDirty()).toBe(false);
+    expect(store.entity.selections).toEqual(loaded.selections);
+  });
+
   it('does not re-mirror as dirty for rail navigation', async () => {
     await mountApp();
     store.view = 'editor';

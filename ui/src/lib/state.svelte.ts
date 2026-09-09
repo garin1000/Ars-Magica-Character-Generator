@@ -685,9 +685,22 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /**
+   * Set one parameter of one selection row.
+   *
+   * The value is **trimmed**, never case-folded. Parameter values decide a
+   * selection's identity — the engine's duplicate key is the whole params map, and
+   * `sameSelection` compares values byte-for-byte — so 'Wolf Shape ' would be a
+   * second, distinct power, and the per-power cap would count them separately. The
+   * engine trims the same way when a save is loaded
+   * (`load_entity_migrating`), so the store and the file agree; capitalisation stays
+   * the player's, since the rules ask for no folding. A value that trims to nothing
+   * is kept as the empty string, which the engine reports as `missing_param`.
+   */
   setParamAt(index: number, key: string, value: string): void {
+    const trimmed = value.trim();
     this.entity.selections = (this.entity.selections ?? []).map((s, i) =>
-      i === index ? { ...s, params: { ...(s.params ?? {}), [key]: value } } : s,
+      i === index ? { ...s, params: { ...(s.params ?? {}), [key]: trimmed } } : s,
     );
     this.#scheduleValidate();
   }
@@ -698,11 +711,19 @@ class AppStore {
    * parameterized ability the instance value (the area/language) goes under the
    * ability's own param key (so the bonus attaches to that one row). Switching to
    * a plain ability drops any stale instance key.
+   *
+   * The instance value is free text the player typed, so it is trimmed for the same
+   * identity reason as {@link setParamAt}: ' Rhine ' and 'Rhine' are one Area Lore,
+   * and `usedAbilityTargets` composes the instance into the target key it caps on.
+   * A value that is nothing but whitespace names no instance, so it is dropped
+   * rather than stored blank — leaving the engine's `missing_param` to name the key,
+   * exactly as an unfilled instance box already does.
    */
   setAbilityBonusTarget(index: number, abilityId: string, parameter?: string | null): void {
     const instanceKey = this.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
-    const params: Record<string, string> = { ability: abilityId };
-    if (instanceKey && parameter) params[instanceKey] = parameter;
+    const params: Record<string, string> = { ability: abilityId.trim() };
+    const instance = parameter?.trim();
+    if (instanceKey && instance) params[instanceKey] = instance;
     this.entity.selections = (this.entity.selections ?? []).map((s, i) =>
       i === index ? { ...s, params } : s,
     );
@@ -1027,10 +1048,15 @@ class AppStore {
    * an Art-domain parameter may be keyed otherwise (Master of (Form) Creatures
    * declares `form` over the Art catalogue), and the value must land under the
    * key the item declared or the engine reports it missing.
+   *
+   * Trimmed like every other parameter write path. An Art id comes from a
+   * `<select>` and so is already canonical — this is defence in depth, kept only so
+   * that no write path is the odd one out.
    */
   setArtBonusTarget(index: number, key: string, artId: string): void {
+    const trimmed = artId.trim();
     this.entity.selections = (this.entity.selections ?? []).map((s, i) =>
-      i === index ? { ...s, params: { ...(s.params ?? {}), [key]: artId } } : s,
+      i === index ? { ...s, params: { ...(s.params ?? {}), [key]: trimmed } } : s,
     );
     this.#scheduleValidate();
   }
