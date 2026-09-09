@@ -383,8 +383,9 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   would change no outcome. `flaw.primogeniture_lineage` keeps `story` for the
   opposite reason: adding `hermetic` would corrupt Gift detection, because
   `gift_categories` is `["hermetic"]` on every shipped profile — see the
-  overloading note below. Its magi-only restriction ("This Flaw can only be taken
-  by magi of House Verditius", `:6636`) is a House matter, not a category one.
+  overloading note below. Its magi-only restriction is a House matter, not a
+  category one, and is now enforced as a prerequisite — see *Primogeniture
+  Lineage is for magi of House Verditius only* below.
 
   **Unmodelled, and recorded rather than resolved:** the *and* / *or* / comma
   distinction itself. `Vec<String>` cannot express it, and whether *and* means
@@ -395,6 +396,56 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   Social Status Virtue or a Minor Supernatural Virtue"): a grog Sufi still counts
   as holding a Supernatural Virtue for every `has_category` rule — caps, Gift
   categories, grant constraints.
+
+- **Primogeniture Lineage is for magi of House Verditius only, and that is a
+  prerequisite, not a category.**
+
+  > "This Flaw can only be taken by magi of House Verditius, as a maga who has
+  > left the House is no longer a candidate for Primus. In her case, it would be
+  > no more than an interesting feature of her background."
+  > — Ars Magica - Definitive Edition (Core Rules).md:6636 (entry `:6634-6637`)
+
+  Data: `rules/core/virtues_flaws.json` — `flaw.primogeniture_lineage` carries
+  `prerequisites: All([IsMagus, House(house.verditius)])`. Evaluated by
+  `validation/prereq.rs::evaluate_prereq`; no engine code changed for it.
+
+  Before this the restriction was enforced by **nothing**. The Flaw ships
+  `categories: ["story"]`, which the companion, mythic-companion and magus
+  profiles all permit, so a companion, a mythic companion and a magus of any
+  House could take it; only the grog was refused, and merely because `story` is
+  not on its permitted list — the wrong reason for the right outcome.
+
+  **`Prereq::House` alone would not have done it, and the `IsMagus` conjunct is
+  not redundant.** The House leaf is tri-state (`types.rs`, `Prereq::House`): a
+  matching house is True, a differing one False, and **no house at all is
+  `Unknown`** — which surfaces as the non-blocking `prereq_unevaluated` warning,
+  not an error. A companion has no house, so a bare House leaf would merely have
+  warned him. Nor does the engine forbid the value: `validate_house` returns
+  early for a profile whose `is_magus` is false, so a hand-edited save can put
+  `house: house.verditius` on a companion, and a bare House leaf would then have
+  evaluated True and waved it through. `All([IsMagus, House(...)])`
+  short-circuits to False on any non-magus while still leaving a magus who has
+  not reached the House step on the warning — the engine's error-that-resolves
+  model, and exactly how the four Outer-Mystery Virtues behave. This is also why
+  the four existing House-prereq items (`virtue.faerie_magic`,
+  `virtue.heartbeast`, `virtue.the_enigma`, `virtue.verditius_magic`) can use the
+  bare leaf and this one cannot: all four are `categories: ["hermetic"]`, which
+  every non-magus profile forbids, so magus-hood was already enforced beside
+  them.
+
+  `Prereq::conflicts_with_house` handles the conjunction correctly for open grant
+  menus (the owed-Warping Minor-Flaw menu can offer this Flaw): `IsMagus` is
+  undecided there by design, and a House leaf naming a different House sinks the
+  `All`, so the item is excluded from a non-Verditius magus's menu. The UI mirror
+  `houseOnlyValue` in `ui/src/lib/derive.ts` folds `all` the same way.
+
+  **What the prerequisite cannot express**, and is not claimed to: the passage's
+  own reasoning about a maga who has *left* the House (the engine models only
+  current membership and has no notion of a former House), and the entry's "She
+  is at least three places removed from the Primus", which is narrative
+  positioning with no mechanical hook. Locked by
+  `primogeniture_lineage_requires_a_magus_of_house_verditius` and the five
+  behavioural tests beside it in `tests/data_integrity.rs`.
 - **Membership uses the whole list, and so does browsing.** Every rule that asks
   "is this item of category X" is a membership test over all of `categories`
   (`PointItem::has_category` / `any_category_in`): permitted and forbidden
@@ -451,6 +502,19 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   Gift) stop emitting a redundant *second* issue while staying blocked by the
   permitted check — the honest reason, since neither of their categories is on a
   grog's permitted list.
+
+  **Superseded in part by the grog profile's Supernatural removal** (see the
+  profile table's grog rows): a grog no longer forbids `supernatural` and now
+  permits it, so the first table row's *mechanism* is obsolete even though its
+  outcome stands — Sufi is open to a grog through **either** of its categories
+  now, not rescued by `social_status` against a forbidden `supernatural`. Of the
+  three further cells, Raised from the Dead and Visions (both *Story,
+  Supernatural*) are no longer blocked by the category checks at all; they are
+  refused by the sourced Story-Flaw cap (`:2826`, `flaw_category_caps` story
+  `max: 0`) instead. Suppressed Gift (*Hermetic, Story*) is unaffected and is now
+  the only shipped pairing that still exercises the conjunction for a grog, which
+  is why `forbidding_fires_only_when_every_category_is_forbidden` uses it as its
+  fixture rather than Visions.
 - **`categories` is order-significant and therefore exempt from canonical sorting** —
   the same deliberate exception the crisis table's `crisis.rows` takes (see the
   aging section's "Three things a later sweep must not undo"), and the reason it is
@@ -629,7 +693,7 @@ source:
 | grog | `max_minor_flaws: 3` | `:1009` ("no more than three Minor Flaws") |
 | grog | `flaw_category_caps`: personality major_only/hard `max: 0`; personality `max: 1`; story `max: 0` | grogs take one Minor Personality Flaw, no Major Flaws, no Story Flaws `:1009`, `:2824-2830` |
 | grog | `forbidden_categories` includes `hermetic`; `gift_policy: forbidden` | `:2829` ("You may not take Hermetic Virtues and Flaws"), `:2830` ("You may not take The Gift"), `:2876` ("Grogs can never have The Gift"), `:1009` ("grogs can never have The Gift") |
-| grog | `forbidden_categories` also includes `supernatural` | **No source found.** `:2824-2830` and `:1009` list a grog's restrictions and neither bars Supernatural Virtues/Flaws; the `### Supernatural` prose (`:2958-2962`) sets no type restriction either. Recorded as an unsourced interpretation to resolve, not as a cited rule |
+| grog | `permitted_categories` includes `supernatural`, and `forbidden_categories` does **not** | **Removed as unsourced** — the entry it replaces forbade `supernatural`, and no passage supports that. `:2822-2830` is the grog guidelines in full (up to 3 points of Flaws and an equal number of Virtues; must take one Social Status; should not take Story Flaws; not more than one Personality Flaw; may not take Major Virtues or Flaws; may not take Hermetic Virtues and Flaws; may not take The Gift) and Supernatural appears nowhere in it; `:1009` likewise; the `### Supernatural` prose (`:2958-2962`) explains realm association and Warping immunity and sets no character-type restriction. **Both halves had to go**: permitting is ANY, so removing only the forbid would have left every single-category Supernatural item refused with `category_not_permitted` — a change that looks like a fix and does nothing. `hermetic` stays forbidden (`:2829`, row above). What still bounds a grog here is sourced: `:2828`'s Major cap (`max_major_virtues`/`max_major_flaws: 0`), which catches every Major Supernatural item and so does most of the real work; `:2830`'s Gift policy, untouched because Gift detection reads `gift_categories: ["hermetic"]`, so a Supernatural Virtue never confers The Gift; `:2824`'s 3-point budget; and `:2826`'s Story cap, which still refuses the two *Story, Supernatural* Flaws |
 | companion | `virtue_points: 10`, `flaw_points: 10` | `:2297`, `:2834-2840` |
 | companion | `forbidden_categories: [hermetic]` | `:2840` ("You may not take Hermetic Virtues and Flaws, unless you have The Gift (this would be highly unusual)") — the conditional itself is **unmodelled**; the profile forbids the category unconditionally, so a Gifted companion is refused it. See *Two Flaws the book indexes under General were magus-only* |
 | companion | `max_major_virtues: null`, `max_major_flaws: null` (no count cap) | no Major-count cap for companions in the book |

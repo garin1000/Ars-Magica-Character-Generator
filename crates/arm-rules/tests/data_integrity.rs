@@ -4266,43 +4266,56 @@ fn a_secondary_category_clears_both_the_permitted_and_the_forbidden_check() {
 /// to raise the issue, *every* one of its categories must be forbidden, and then
 /// the first-listed is forbidden too. The sweep asserts no shipped profile
 /// forbids every category of any shipped multi-category item, which is why the
-/// grog/Visions fixture below now raises only the permitted-side issue.
+/// grog/Suppressed-Gift fixture below now raises only the permitted-side issue.
+///
+/// The fixture used to be grog/Visions ("*Minor, Story, Supernatural*"), which
+/// stopped demonstrating anything once the grog profile's unsourced
+/// `supernatural` restriction was removed (open-to-dos row 20): `supernatural`
+/// is on a grog's permitted list now, so Visions clears both category checks and
+/// is refused by the sourced Story-Flaw cap instead (`:2826`). Suppressed Gift
+/// replaces it as the one shipped pairing that still exercises the conjunction
+/// for a grog.
 #[test]
 fn forbidding_fires_only_when_every_category_is_forbidden() {
     let rs = load_ruleset();
     let grog = rs
         .profile(&Id::new("grog"))
         .expect("the grog profile must ship");
-    assert!(grog.forbidden_categories.contains("supernatural"));
+    assert!(grog.forbidden_categories.contains("hermetic"));
     assert!(!grog.forbidden_categories.contains("story"));
     assert!(!grog.permitted_categories.contains("story"));
 
-    // Visions is "*Minor, Story, Supernatural*"
-    // (Ars Magica - Definitive Edition (Core Rules).md:6985-6986). A grog forbids
-    // only the second of those, so the item survives the forbidden check — and is
+    // Suppressed Gift is "*Major, Hermetic, Story*"
+    // (Ars Magica - Definitive Edition (Core Rules).md:6804, entry :6803-6810). A grog forbids
+    // only the first of those, so the item survives the forbidden check — and is
     // still blocked, by the honest reason: neither category is on the grog's
     // permitted list.
-    let visions = Id::new("flaw.visions");
-    let item = rs.item(&visions).expect("flaw.visions must ship");
-    assert_eq!(item.first_listed_category(), "story");
+    let suppressed = Id::new("flaw.suppressed_gift");
+    let item = rs
+        .item(&suppressed)
+        .expect("flaw.suppressed_gift must ship");
+    assert_eq!(item.first_listed_category(), "hermetic");
 
-    let result = validate(&entity("grog", vec![Selection::new(visions.clone())]), &rs);
+    let result = validate(
+        &entity("grog", vec![Selection::new(suppressed.clone())]),
+        &rs,
+    );
     assert!(
         !result
             .issues
             .iter()
-            .any(|i| i.code == "forbidden_category" && i.context.as_ref() == Some(&visions)),
+            .any(|i| i.code == "forbidden_category" && i.context.as_ref() == Some(&suppressed)),
         "one forbidden category out of two must no longer rule the item out: {:?}",
         result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
     let not_permitted = result
         .issues
         .iter()
-        .find(|i| i.code == "category_not_permitted" && i.context.as_ref() == Some(&visions))
-        .expect("neither of Visions' categories is on the grog's permitted list");
+        .find(|i| i.code == "category_not_permitted" && i.context.as_ref() == Some(&suppressed))
+        .expect("neither of Suppressed Gift's categories is on the grog's permitted list");
     assert_eq!(
         not_permitted.args.get("category").map(String::as_str),
-        Some("story"),
+        Some("hermetic"),
         "when every category failed, the issue names the first-listed"
     );
 
@@ -4335,10 +4348,8 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
     );
 }
 
-/// The newly-allowed cell the conjunction produces, and the one the book states
-/// outright. Sufi is "*Minor, Social Status, Supernatural*"; a grog forbids
-/// `supernatural` but permits `social_status`, so the mundane reading of the
-/// Virtue is open to him:
+/// The cell the book states outright. Sufi is "*Minor, Social Status,
+/// Supernatural*", and either category now opens it to a grog:
 ///
 /// > "It is also possible to be an entirely mundane Sufi, in which case you
 /// > should take this Virtue as a Social Status Virtue" — `:5079`
@@ -4347,6 +4358,17 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
 /// > — `:5083`
 ///
 /// (Ars Magica - Definitive Edition (Core Rules).md:5079, :5083.)
+///
+/// This test no longer exercises the ANY/EVERY conjunction, and says so rather
+/// than pretending to: it did when a grog forbade `supernatural` and only
+/// `social_status` could rescue the Virtue, but that restriction had no source
+/// and is gone (open-to-dos row 20), so `social_status` is not carrying the item
+/// alone any more. The conjunction's grog case now lives in
+/// `forbidding_fires_only_when_every_category_is_forbidden` (Suppressed Gift)
+/// and its companion case in
+/// `a_secondary_category_clears_both_the_permitted_and_the_forbidden_check`.
+/// What remains here is still worth pinning: `:5079` names a mundane Sufi
+/// explicitly, and a grog may be one.
 #[test]
 fn a_grog_may_take_sufi_through_its_social_status_category() {
     let rs = load_ruleset();
@@ -4702,6 +4724,345 @@ fn items_by_category_finds_an_item_through_its_secondary_category() {
     assert!(
         rs.items_by_category("supernatural").any(|i| i.id == sufi),
         "Sufi is listed under its secondary category too"
+    );
+}
+
+// --- Primogeniture Lineage is for magi of House Verditius only (row 13) -----
+//
+// > "This Flaw can only be taken by magi of House Verditius, as a maga who has
+// > left the House is no longer a candidate for Primus. In her case, it would be
+// > no more than an interesting feature of her background."
+// > — Ars Magica - Definitive Edition (Core Rules).md:6636
+//
+// The Flaw ships `categories: ["story"]`, which the companion, mythic-companion
+// and magus profiles all permit, so the restriction was enforced by nothing:
+// only the grog was refused, and merely because `story` is not on its permitted
+// list. This is a House matter, not a category one — adding `hermetic` as a
+// second category would corrupt Gift detection, since `gift_categories` is
+// `["hermetic"]` on every shipped profile (open-to-dos row 18) — so it is
+// modelled as a prerequisite.
+//
+// `Prereq::House` ALONE would not do it. That leaf is tri-state: an absent house
+// evaluates to `Unknown`, which is the non-blocking `prereq_unevaluated`
+// warning, and nothing stops a non-magus entity from carrying a `house` value
+// (`validate_house` returns early for a profile whose `is_magus` is false, so a
+// hand-edited save could set one). A companion would therefore have been merely
+// warned, or — with a house in the file — waved through. `All([IsMagus,
+// House(house.verditius)])` makes every non-magus a definite error while leaving
+// a magus who has not reached the House step yet on the warning, exactly as the
+// four Outer-Mystery Virtues behave.
+
+/// The issue codes raised against `flaw.primogeniture_lineage` itself.
+fn primogeniture_codes(rs: &Ruleset, e: &Entity) -> Vec<String> {
+    let id = Id::new("flaw.primogeniture_lineage");
+    validate(e, rs)
+        .issues
+        .into_iter()
+        .filter(|i| i.context.as_ref() == Some(&id))
+        .map(|i| i.code)
+        .collect()
+}
+
+/// The data itself, pinned so a later sweep cannot quietly drop the `IsMagus`
+/// conjunct and silently demote the companion case back to a warning.
+#[test]
+fn primogeniture_lineage_requires_a_magus_of_house_verditius() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("flaw.primogeniture_lineage"))
+        .expect("flaw.primogeniture_lineage must ship in the catalogue");
+    assert_eq!(
+        item.prerequisites.as_ref(),
+        Some(&Prereq::All(vec![
+            Prereq::IsMagus,
+            Prereq::House(Id::new("house.verditius")),
+        ])),
+        "`:6636` restricts the Flaw to magi of House Verditius, and the House \
+         leaf alone leaves a non-magus merely warned"
+    );
+}
+
+/// The character the Flaw is written for.
+#[test]
+fn a_verditius_magus_may_take_primogeniture_lineage() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "magus",
+        vec![Selection::new(Id::new("flaw.primogeniture_lineage"))],
+    );
+    e.house = Some(Id::new("house.verditius"));
+
+    let codes = primogeniture_codes(&rs, &e);
+    assert!(
+        codes.is_empty(),
+        "a Verditius magus is exactly who may take it: {codes:?}"
+    );
+}
+
+/// The finding: any other House is now an error naming the item, where before
+/// nothing at all was raised.
+#[test]
+fn a_magus_of_another_house_may_not_take_primogeniture_lineage() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "magus",
+        vec![Selection::new(Id::new("flaw.primogeniture_lineage"))],
+    );
+    e.house = Some(Id::new("house.flambeau"));
+
+    let codes = primogeniture_codes(&rs, &e);
+    assert!(
+        codes.contains(&"prereq_not_met".to_string()),
+        "a Flambeau is not in line for Primus of Verditius: {codes:?}"
+    );
+}
+
+/// The half a bare `Prereq::House` could not deliver: a companion has no House
+/// at all, so the House leaf is `Unknown` and only `IsMagus` can turn the
+/// verdict into an error.
+#[test]
+fn a_companion_may_not_take_primogeniture_lineage() {
+    let rs = load_ruleset();
+    let e = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.primogeniture_lineage"))],
+    );
+    assert!(e.house.is_none(), "the fixture must set no House");
+
+    let codes = primogeniture_codes(&rs, &e);
+    assert!(
+        codes.contains(&"prereq_not_met".to_string()),
+        "`:6636` says magi, and `story` is on a companion's permitted list, so \
+         the prerequisite is the only thing that can refuse this: {codes:?}"
+    );
+}
+
+/// And the same for a mythic companion, whose profile also permits `story`.
+#[test]
+fn a_mythic_companion_may_not_take_primogeniture_lineage() {
+    let rs = load_ruleset();
+    let e = entity(
+        "mythic_companion",
+        vec![Selection::new(Id::new("flaw.primogeniture_lineage"))],
+    );
+
+    let codes = primogeniture_codes(&rs, &e);
+    assert!(
+        codes.contains(&"prereq_not_met".to_string()),
+        "a mythic companion is not a magus either: {codes:?}"
+    );
+}
+
+/// Even a *house-carrying* non-magus is refused. Nothing in the engine forbids
+/// the value, so this pins the conjunct against the one case a bare House leaf
+/// would have waved straight through.
+#[test]
+fn a_companion_carrying_a_house_value_is_still_refused_primogeniture_lineage() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.primogeniture_lineage"))],
+    );
+    e.house = Some(Id::new("house.verditius"));
+
+    let codes = primogeniture_codes(&rs, &e);
+    assert!(
+        codes.contains(&"prereq_not_met".to_string()),
+        "magus-hood is a separate question from the house field: {codes:?}"
+    );
+}
+
+/// A magus who has not reached the House step yet is warned, not blocked — the
+/// engine's error-that-resolves model, and the same behaviour the Outer-Mystery
+/// Virtues have.
+#[test]
+fn a_magus_with_no_house_yet_only_warns_on_primogeniture_lineage() {
+    let rs = load_ruleset();
+    let e = entity(
+        "magus",
+        vec![Selection::new(Id::new("flaw.primogeniture_lineage"))],
+    );
+    assert!(e.house.is_none(), "the fixture must set no House");
+
+    let codes = primogeniture_codes(&rs, &e);
+    assert!(
+        codes.contains(&"prereq_unevaluated".to_string()),
+        "an unset House leaves the conjunction undecided: {codes:?}"
+    );
+    assert!(
+        !codes.contains(&"prereq_not_met".to_string()),
+        "an in-progress build must not be reported as a failed prerequisite: \
+         {codes:?}"
+    );
+}
+
+// --- A grog's Supernatural restriction had no source, and is gone (row 20) ---
+//
+// The grog profile forbade `supernatural` and left it off `permitted_categories`
+// as well. Neither half has a source. The grog guidelines are a list of
+// restrictions and Supernatural is not among them:
+//
+// > - You may take up to 3 points of Flaws, and an equal number of points of
+// >   Virtues
+// > - You must take one Social Status
+// > - You should not take Story Flaws
+// > - You should not take more than one Personality Flaw
+// > - You may not take Major Virtues or Flaws
+// > - You may not take Hermetic Virtues and Flaws
+// > - You may not take The Gift
+// > — Ars Magica - Definitive Edition (Core Rules).md:2824-2830
+//
+// and the `### Supernatural` prose (`:2958-2962`) explains realm association and
+// Warping immunity, setting no character-type restriction at all.
+//
+// Removing only the forbid would have changed nothing, because permitting is an
+// ANY test: a single-category Supernatural Virtue would still have been refused
+// with `category_not_permitted`. Both halves went. `hermetic` stays forbidden —
+// `:2829` sources it explicitly.
+
+/// Category-gate issue codes raised against one item.
+fn category_gate_codes(rs: &Ruleset, e: &Entity, item: &Id) -> Vec<String> {
+    validate(e, rs)
+        .issues
+        .into_iter()
+        .filter(|i| {
+            i.context.as_ref() == Some(item)
+                && (i.code == "forbidden_category" || i.code == "category_not_permitted")
+        })
+        .map(|i| i.code)
+        .collect()
+}
+
+/// The grog profile's category lists carry only what the book states.
+#[test]
+fn the_grog_profile_restricts_only_the_categories_the_book_names() {
+    let rs = load_ruleset();
+    let grog = rs
+        .profile(&Id::new("grog"))
+        .expect("the grog profile must ship");
+    assert_eq!(
+        grog.forbidden_categories
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>(),
+        vec!["hermetic"],
+        "`:2829` is the only category restriction the grog guidelines state"
+    );
+    assert!(
+        grog.permitted_categories.contains("supernatural"),
+        "and permitting is ANY, so the slug must be on the permitted list too or \
+         a single-category Supernatural item stays blocked"
+    );
+}
+
+/// Second Sight is "*Minor, Supernatural*"
+/// (Ars Magica - Definitive Edition (Core Rules).md:4889, entry :4888-4890) and
+/// carries that one category, so nothing else can rescue it: it is open to a
+/// grog only because the profile no longer bars Supernatural.
+#[test]
+fn a_grog_may_take_a_minor_supernatural_virtue() {
+    let rs = load_ruleset();
+    let second_sight = Id::new("virtue.second_sight");
+    let item = rs
+        .item(&second_sight)
+        .expect("virtue.second_sight must ship in the catalogue");
+    assert_eq!(item.magnitude, Magnitude::Minor);
+    assert_eq!(
+        item.categories,
+        vec!["supernatural".to_string()],
+        "the fixture must be single-category, or it proves nothing"
+    );
+
+    let codes = category_gate_codes(
+        &rs,
+        &entity("grog", vec![Selection::new(second_sight.clone())]),
+        &second_sight,
+    );
+    assert!(
+        codes.is_empty(),
+        "no sourced restriction bars a grog from a Minor Supernatural Virtue: \
+         {codes:?}"
+    );
+}
+
+/// The restriction that does the real work, and this one *is* sourced: `:2828`
+/// "You may not take Major Virtues or Flaws". Bee King is "*Major,
+/// Supernatural*" (`:3485`, entry `:3484-3499`), so the category gate lets it
+/// through and the magnitude cap refuses it — the honest issue code.
+#[test]
+fn a_grog_still_may_not_take_a_major_supernatural_virtue() {
+    let rs = load_ruleset();
+    let bee_king = Id::new("virtue.bee_king");
+    let item = rs
+        .item(&bee_king)
+        .expect("virtue.bee_king must ship in the catalogue");
+    assert_eq!(item.magnitude, Magnitude::Major);
+    assert!(item.has_category("supernatural"));
+
+    let e = entity("grog", vec![Selection::new(bee_king.clone())]);
+    assert!(
+        category_gate_codes(&rs, &e, &bee_king).is_empty(),
+        "the category is no longer the thing that blocks it"
+    );
+    let codes: Vec<String> = validate(&e, &rs)
+        .issues
+        .into_iter()
+        .map(|i| i.code)
+        .collect();
+    assert!(
+        codes.contains(&"too_many_major_virtues".to_string()),
+        "`:2828` still bars every Major Virtue, Supernatural included: {codes:?}"
+    );
+}
+
+/// `:2830` "You may not take The Gift" is untouched: Gift-hood is detected
+/// through the profile's `gift_categories` (`["hermetic"]`), so a Supernatural
+/// Virtue never confers it. The free Supernatural-Ability slot is the observable
+/// consequence of being Gifted, and a grog gets none.
+#[test]
+fn a_grog_with_a_supernatural_virtue_is_not_thereby_gifted() {
+    let rs = load_ruleset();
+    let profile = rs
+        .profile(&Id::new("grog"))
+        .expect("the grog profile must ship");
+    let e = entity("grog", vec![Selection::new(Id::new("virtue.second_sight"))]);
+
+    let codes: Vec<String> = validate(&e, &rs)
+        .issues
+        .into_iter()
+        .map(|i| i.code)
+        .collect();
+    assert!(
+        !codes.contains(&"gift_forbidden".to_string()),
+        "a Supernatural Virtue is not The Gift: {codes:?}"
+    );
+    assert_eq!(
+        arm_rules::supernatural_free_slots(&e, &rs, profile).total,
+        0,
+        "the free slot belongs to the Gifted, and `:2830` bars a grog from The \
+         Gift"
+    );
+}
+
+/// `:2824`'s 3-point budget is untouched too: four Minor Supernatural Virtues
+/// now clear the category gate and are refused on points instead.
+#[test]
+fn the_three_point_grog_budget_still_bounds_supernatural_virtues() {
+    let rs = load_ruleset();
+    let e = entity(
+        "grog",
+        vec![
+            Selection::new(Id::new("virtue.second_sight")),
+            Selection::new(Id::new("virtue.premonitions")),
+            Selection::new(Id::new("virtue.dowsing")),
+            Selection::new(Id::new("virtue.magic_sensitivity")),
+        ],
+    );
+
+    let codes: Vec<String> = validate(&e, &rs).errors().map(|i| i.code.clone()).collect();
+    assert!(
+        codes.contains(&"over_budget_virtues".to_string()),
+        "four Minor Virtues exceed `:2824`'s 3 points: {codes:?}"
     );
 }
 

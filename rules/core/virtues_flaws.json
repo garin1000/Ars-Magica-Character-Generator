@@ -2260,6 +2260,7 @@
     "categories": ["story"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [{ "kind": "is_magus" }, { "kind": "house", "value": "house.verditius" }] },
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6634, 6637] }
   },
   {
