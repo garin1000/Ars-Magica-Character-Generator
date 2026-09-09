@@ -1011,6 +1011,7 @@
   },
   "flaw.restricted_power": {
     "name": "Restricted Power ({power})",
+    "name_unfilled": "Restricted Power",
     "summary": "This Flaw limits the use of a supernatural power that can normally be used at will, such as those granted by the Focus Power, Greater Power, Lesser Power, Personal Power, and Ritual Power Virtues."
   },
   "flaw.restriction": {
@@ -1079,6 +1080,7 @@
   },
   "flaw.slow_power": {
     "name": "Slow Power ({power})",
+    "name_unfilled": "Slow Power",
     "summary": "One of the character's supernatural powers is very slow, so that it requires an additional round of preparation to activate."
   },
   "flaw.slow_reflexes": {
@@ -2591,6 +2593,7 @@
   },
   "virtue.variable_power": {
     "name": "Variable Power ({power})",
+    "name_unfilled": "Variable Power",
     "summary": "One of the character's magic powers (Greater, Lesser, Personal, or Ritual) becomes more powerful over time, based on either (age / 10), (Might Score / 5), Warping Score, or his score in an appropriate Ability."
   },
   "virtue.venditor": {

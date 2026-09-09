@@ -616,6 +616,44 @@ describe('the unsaved-changes guard mirrors wizard progress (S5/#31)', () => {
     expect(lastMirroredDirty()).toBe(true);
   });
 
+  it('opens a migrated legacy save clean, so no spurious discard prompt appears (Slice 0)', async () => {
+    // Slice 0 folds a v0.2.x save's typed `being` labels onto `being.*` ids. That
+    // fold REWRITES the entity, and the unsaved-changes guard is a mandatory
+    // product behavior (CLAUDE.md) — so if the rewrite landed anywhere after the
+    // baseline snapshot, every migrated save would open dirty and prompt to
+    // discard changes the user never made. It happens inside Rust's
+    // `load_entity_migrating`, i.e. before the entity crosses the IPC boundary, so
+    // the frontend only ever sees the post-migration shape; `open()` must snapshot
+    // THAT and nothing earlier. Asserted rather than assumed, and asserted here
+    // because the mirror is an `$effect` that only a mounted component runs.
+    await mountApp();
+    store.view = 'editor';
+    const migrated: Entity = {
+      ...loadableEntity(),
+      selections: [
+        { ref: 'flaw.offensive_to_beings', params: { being: 'being.mundane_humans' } },
+        { ref: 'flaw.unbearable_to_beings', params: { being: 'being.demons' } },
+        // The two choices the migration cannot know stay unfilled — a paramless
+        // row must not make the document dirty either.
+        { ref: 'virtue.folk_magic' },
+        { ref: 'flaw.slow_power' },
+      ],
+    };
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/v0.2.0-character.armc.json',
+      entity: migrated,
+    });
+
+    await store.open();
+    flushSync();
+
+    expect(store.dirty).toBe(false);
+    expect(lastMirroredDirty()).toBe(false);
+    // And the frontend passed the migrated values through untouched, so the
+    // baseline it snapshotted is the file's own content.
+    expect(store.entity.selections).toEqual(migrated.selections);
+  });
+
   it('does not re-mirror as dirty for rail navigation', async () => {
     await mountApp();
     store.view = 'editor';

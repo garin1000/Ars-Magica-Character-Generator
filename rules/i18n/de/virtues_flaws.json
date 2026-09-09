@@ -1011,6 +1011,7 @@
   },
   "flaw.restricted_power": {
     "name": "Eingeschränkte Kraft ({power})",
+    "name_unfilled": "Eingeschränkte Kraft",
     "summary": "Dieser Fehler schränkt die Nutzung einer übernatürlichen Kraft ein, die normalerweise nach Belieben eingesetzt werden kann, wie etwa jene, die durch die Tugenden Fokussierte Macht, Große Macht, Mindere Macht, Persönliche Kraft und Ritualmacht gewährt werden."
   },
   "flaw.restriction": {
@@ -1079,6 +1080,7 @@
   },
   "flaw.slow_power": {
     "name": "Langsame Kraft ({power})",
+    "name_unfilled": "Langsame Kraft",
     "summary": "Eine der übernatürlichen Kräfte des Charakters ist sehr langsam, sodass sie eine zusätzliche Vorbereitungsrunde zur Aktivierung benötigt."
   },
   "flaw.slow_reflexes": {
@@ -2591,6 +2593,7 @@
   },
   "virtue.variable_power": {
     "name": "Variable Kraft ({power})",
+    "name_unfilled": "Variable Kraft",
     "summary": "Eine der magischen Kräfte des Charakters (Groß, Gering, Persönlich oder Ritual) wird im Laufe der Zeit stärker, basierend auf entweder (Alter / 10), (Machtwert / 5), dem Verzerrungswert oder seinem Wert in einer passenden Fertigkeit."
   },
   "virtue.venditor": {

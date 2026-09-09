@@ -1295,6 +1295,22 @@ be honest; `SCHEMA_VERSION` does not apply, since the save bytes are untouched
 and this is a ruleset change. Nothing is lost — the player re-picks from a
 dropdown.
 
+> **Superseded for the `being` half (Slice 0, before 0.3).** Three rounds each
+> accepted a save impact of their own, and together they meant a v0.2.0 player
+> upgraded into a wall of errors on their own character. The typed `being` labels
+> **are** migrated now: `fold_legacy_being_params`
+> (`crates/arm-rules/src/types.rs`) maps the fifteen labels a v0.2.x player could
+> have typed — six classes × both shipped languages, plus the three German dative
+> forms the Inoffensive entry prints at `:4135` — onto the `being.*` ids, case- and
+> whitespace-insensitively, which answers the "no mapping would be honest"
+> objection by carrying German as well as English. `SCHEMA_VERSION` still does not
+> apply, exactly as reasoned above, so the fold is value-driven and idempotent.
+> Folk Magic's `category` and the per-power `power` remain un-migrated on purpose
+> — they were never *stored*, so there is nothing to migrate from — and a genuine
+> `too_many_selections` is a rules finding that survives untouched. See
+> `crates/arm-rules/RULES.md`, "Save impact, and the migration that now absorbs
+> it".
+
 **Adjudicated, not silently fixed.** The three (Beings) items carry
 dual-category descriptors joined by *and*/*or* ("General and Hermetic" `:4134`,
 "Hermetic and General" `:6525`, "Hermetic or General" `:6892`) yet ship with one

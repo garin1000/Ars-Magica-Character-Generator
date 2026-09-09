@@ -1090,15 +1090,87 @@ ends "…, etc." (`:6130`), so the rulebook means the set to be open. Free text 
 the correct encoding there, and `fish_out_of_water_keeps_a_free_text_terrain`
 pins it against a future sweep that "finishes the job".
 
-**Save impact.** Tightening `text` → `enumerated` invalidates the free-text
-values older saves may hold: a save carrying `being: "dragons"` now raises
-`unknown_param_value`, and a save carrying `virtue.folk_magic` raises
-`missing_param` because the parameter is new. This is accepted and **no value
-migration is written**: the old values were unconstrained text, so no mapping is
-reliable (an English word list misses every German-typed save and silently
-mis-maps the rest), `SCHEMA_VERSION` does not apply because it versions the save
-*format* and no save byte changed, and the failure is a visible, self-explaining
-validation issue the player clears with one dropdown pick. No data is lost.
+**Save impact, and the migration that now absorbs it.** Tightening `text` →
+`enumerated` invalidated the free-text values older saves hold: a v0.2.x save
+carrying `being: "Demons"` raised `unknown_param_value`, and one carrying
+`virtue.folk_magic` raises `missing_param` because the parameter is new. That was
+accepted when the domains landed and is no longer, because 0.3 ships to players
+already running v0.2.0 — "open your character, get four errors" is not a release.
+
+- **The `being` labels are migrated.** `fold_legacy_being_params`
+  (`crates/arm-rules/src/types.rs`, called from `load_entity_migrating`) maps the
+  fifteen labels a v0.2.x player could have typed — six classes × the two shipped
+  languages, taken from `rules/i18n/en|de/virtues_flaws.json`, plus the three
+  German dative forms `:4135` prints (see below); all cross-checked against
+  `:4135` / `:6526` / `:6893` and their German mirrors — onto the
+  `being.*` ids, case- and whitespace-insensitively. The earlier objection that
+  "an English word list misses every German-typed save" is answered by carrying
+  both locales; the table is frozen in Rust rather than read from the i18n files
+  because the migration point holds no ruleset, and because editing a label later
+  must not change what an old save migrates *to*. The strings are **matched, never
+  rendered**, so no user-facing string is hardcoded.
+- **`SCHEMA_VERSION` neither moves nor could.** These were *ruleset* changes, so
+  nothing in a save distinguishes the two eras. The fold is therefore value-driven
+  and idempotent, and it deliberately does not stamp the version: a value already
+  equal to an id is not a key in the table, so a second load is a no-op, and
+  `a_migrated_save_is_byte_stable_across_a_save_load_save_cycle` pins that a
+  migrated save does not churn on every open.
+- **Nothing unrecoverable is faked.** Folk Magic's `category` and the three
+  per-power Flaws' `power` were never *stored*, so there is nothing to migrate
+  from; each stays exactly one `missing_param` naming its item and key, which the
+  player clears with one pick. `virtue.alluring_to_beings` and
+  `flaw.magical_being_companion` carry a `being` parameter that is still `text`,
+  and are excluded from the fold for that reason.
+- **One class this does not and must not fix.** A save whose bought Puissant Arts
+  plus a House grant exceed `max_total` reports `too_many_selections`. That is a
+  genuine rules violation the engine was previously blind to, not a format
+  problem, and it survives migration —
+  `a_genuine_too_many_selections_survives_the_being_migration` pins it. So
+  "v0.2.x saves open clean" is true of the format changes and false of that one.
+- Tests: `a_v0_2_x_save_migrates_its_typed_being_values_in_both_languages`,
+  `an_already_migrated_being_value_is_left_alone`,
+  `a_being_param_that_is_still_free_text_is_never_folded`,
+  `an_unrecognised_being_value_is_left_exactly_as_typed`,
+  `a_choice_the_old_save_never_stored_is_not_invented`,
+  `migrating_a_v0_2_x_save_twice_changes_nothing`,
+  `a_migrated_save_is_byte_stable_across_a_save_load_save_cycle`
+  (`crates/arm-rules/src/types.rs`);
+  `a_v0_2_x_saves_typed_being_values_resolve_after_migration`,
+  `the_two_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each`,
+  `a_genuine_too_many_selections_survives_the_being_migration`
+  (`crates/arm-rules/tests/data_integrity.rs`); and the unsaved-changes guard's
+  half, `opens a migrated legacy save clean…` (`ui/src/App.client.test.ts`) —
+  migration happens in Rust before the entity crosses IPC, so `open()`'s baseline
+  snapshot is already post-migration and a migrated save opens **not** dirty.
+
+**Both the nominative and the dative fold, and why the table has fifteen keys and
+not twelve.** The uninflected-standalone-label convention governs what the app
+*renders*; this table governs what a player *typed*. German `:4135` — the
+Inoffensive entry — prints its classes in the **dative** ("…verbunden: Tieren,
+göttlichen Wesen, Feen, Dämonen oder magischen Kreaturen"), so a player filling
+the old free-text box while reading that page copied an inflected form straight
+off it. Those three forms are therefore keys too: `Tieren`, `göttlichen Wesen`,
+`magischen Kreaturen`. They are transcribed, not declined — `Feen` and `Dämonen`
+are identical in the dative and are already present, and no `sterblichen Menschen`
+key exists because the source never prints one (`:6526` and `:6893`, the two
+entries where that class is legal, both print the nominative). The English lists
+(`:4135`, `:6526`, `:6893`) fold onto the six English i18n labels exactly, so they
+add no key.
+
+`every_frozen_being_label_is_distinct_and_is_never_an_id`
+(`crates/arm-rules/src/types.rs`) asserts the two properties the whole fold rests
+on over whatever the table holds: no two keys collapse onto one another under the
+case/whitespace folding, and no key equals a `being.*` id. So growing the table
+cannot silently introduce an ambiguity or break idempotency.
+
+**One German wording deliberately left out.** `:4141` renders the mundane-humans
+class as *"gewöhnliche Menschen"* rather than the *"sterbliche Menschen"* of
+`:6526`/`:6893` — a different lexical choice, not an inflection. It is not a key,
+because it appears only inside the Inoffensive entry, in the sentence stating that
+that class is **not available** there, and `being.mundane_humans` is not among
+`virtue.inoffensive_to_beings`'s five declared values. Folding it could therefore
+only turn one visible issue into another, and the two items where the class *is*
+legal never print it.
 
 **What this does NOT model — the residual gap, stated plainly.** Folk Magic has
 a *second* choice axis: each copy also aligns to a `(Realm) Lore`, freely

@@ -753,10 +753,15 @@ describe('displayName', () => {
 // --- displayName() and the optional unfilled form (slice 7, #13) -------------
 
 describe('displayName with name_unfilled', () => {
-  // Two catalogue entries — and only two — carry BOTH a `{token}` and a
-  // parenthetical literal, which is the one shape whose hint substitution doubles:
-  // "{language} (Dead Language)" + the "(Language)" hint reads
-  // "(Language) (Dead Language)". They opt out by naming their unfilled form.
+  // Two shapes make hint substitution read badly, and both opt out by naming their
+  // unfilled form. First, an entry carrying BOTH a `{token}` and a parenthetical
+  // literal: "{language} (Dead Language)" + the "(Language)" hint reads
+  // "(Language) (Dead Language)" — the two Language Abilities below. Second, an
+  // entry whose token sits INSIDE literal parens: "Slow Power ({power})" renders
+  // the nested "Slow Power ((Power))" — the three per-power items, covered against
+  // the shipped data further down. Five shipped entries in all; the count is
+  // asserted nowhere on purpose (catalogue size is data, never code), so treat this
+  // as the reason the field exists rather than as an inventory.
   const abilities = makeRuleset([], {
     i18n: {
       'ability.dead_language': {
@@ -806,6 +811,45 @@ describe('displayName with name_unfilled', () => {
   // "Affinity with", and German worse still (a dangling inflected adjective with no
   // noun to agree with). These pass today; they are written down so that they keep
   // passing after option (d) lands, and so nobody re-proposes blanket suppression.
+  // The three per-power items are the case that made this matter for a release
+  // rather than for tidiness. Their `power` parameter is one of exactly two things
+  // the v0.2.x save migration CANNOT recover — the old save never stored a power
+  // name, so there is nothing to migrate from and the row stays unfilled — which
+  // means this string is what a migrating player sees first. Their template wraps
+  // the token in literal parens ("Slow Power ({power})"), so hint substitution
+  // renders the nested "Slow Power ((Power))".
+  //
+  // Read from the SHIPPED i18n rather than a fixture, in both locales, so this
+  // pins the actual data a user gets and fails if an entry loses its unfilled form.
+  it('renders the three per-power items with no nested parentheses, in both locales', () => {
+    const powerItems = ['flaw.slow_power', 'flaw.restricted_power', 'virtue.variable_power'];
+    const hint = (key: string) => `(${key.charAt(0).toUpperCase()}${key.slice(1)})`;
+
+    for (const lang of ['en', 'de']) {
+      const shipped = JSON.parse(
+        readFileSync(
+          fileURLToPath(new URL(`../../../rules/i18n/${lang}/virtues_flaws.json`, import.meta.url)),
+          'utf-8',
+        ),
+      ) as LocalizedRuleset['i18n'];
+      const localized = makeRuleset([], { i18n: shipped });
+
+      for (const id of powerItems) {
+        // The doubling shape has to still be there, or this test would pass
+        // vacuously the day someone rewrites the template instead.
+        expect(shipped[id]?.name, `${lang} ${id}`).toContain('({power})');
+
+        const rendered = displayName(localized, id, undefined, hint);
+        expect(rendered, `${lang} ${id} unfilled`).not.toContain('((');
+        expect(rendered, `${lang} ${id} unfilled`).not.toContain('))');
+        expect(rendered, `${lang} ${id} unfilled`).toBe(shipped[id]?.name_unfilled);
+        // And the filled form still carries the qualifier, which is why the
+        // parenthetical stays in the template at all.
+        expect(displayName(localized, id, { power: 'Wolf Shape' }, hint)).toContain('(Wolf Shape)');
+      }
+    }
+  });
+
   it('an unfilled template without name_unfilled still renders the param hint', () => {
     const ruleset = makeRuleset([], {
       i18n: {
