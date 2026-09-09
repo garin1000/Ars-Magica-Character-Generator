@@ -76,18 +76,38 @@ pub(crate) fn validate_forbidden_categories(
             continue;
         };
 
-        // Forbidding is the mirror of permitting: *any* forbidden category on the
-        // item rules it out, and the issue names the category that actually
-        // tripped — not the item's primary, which may be innocent.
-        let Some(offending) = item.first_category_in(&profile.forbidden_categories) else {
+        // Forbidding is the true mirror of permitting: *every* one of the item's
+        // categories must be forbidden before it is ruled out. A descriptor
+        // naming two categories offers two routes to the same Virtue/Flaw, so one
+        // forbidden route leaves the other open — otherwise the two checks
+        // contradict each other, with permitting granting a route that forbidding
+        // takes straight back. Suppressed Gift is "*Major, Hermetic, Story*", so a
+        // companion — who may take Story but not Hermetic — may take it; and Sufi
+        // is "*Minor, Social Status, Supernatural*", the mundane reading of which
+        // is open to a grog who forbids only the Supernatural one.
+        // For a single-category item "every" is identical to "any", so this
+        // loosens nothing else in the catalogue.
+        // Source: Ars Magica - Definitive Edition (Core Rules).md:6803-6804
+        // (Suppressed Gift's descriptor), :6809 (a companion's Flaw), :5079 and
+        // :5083 (Sufi "either as a Minor Social Status Virtue or a Minor
+        // Supernatural Virtue").
+        if !item
+            .categories
+            .iter()
+            .all(|c| profile.forbidden_categories.contains(c))
+        {
             continue;
-        };
+        }
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_FORBIDDEN_CATEGORY,
             CreationPhase::VirtuesFlaws,
             args([
                 ("item", selection.item_ref.to_string()),
-                ("category", offending.to_string()),
+                // Every category is forbidden, and the message has room for one,
+                // so the descriptor's first-listed represents the item — the same
+                // deterministic tie-break `category_not_permitted` uses, not a
+                // claim that it is the offending category.
+                ("category", item.first_listed_category().to_string()),
             ]),
             Some(selection.item_ref.clone()),
         ));

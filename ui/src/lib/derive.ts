@@ -632,7 +632,10 @@ function firstListedCategory(item: PointItem): string {
  * Supernatural, Major) and Visions (:5517 Story, Minor / :5561 Supernatural,
  * Minor). Filing such an item under one heading only hid it from a player
  * browsing the other category — the very category that may be the one making it
- * legal for their character (`validation/selections.rs` permits on ANY category).
+ * legal for their character. The engine's two category checks are mirrors of each
+ * other, so a single carried category really can be what makes an item legal:
+ * `validation/selections.rs` permits on ANY category and forbids only when EVERY
+ * category is forbidden.
  *
  * This also makes the grouping the complete source of category names, which
  * `VirtueFlawTab.categoriesFor` relies on for the filter dropdown's options.

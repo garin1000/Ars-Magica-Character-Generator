@@ -319,9 +319,12 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   **every** category the descriptor lists, in the descriptor's own order. The
   extraction used to keep only the earliest-listed one and drop the rest, which
   silently made a Flaw invisible to the other category's cap and to the other
-  category's permit/forbid list. Four core items are affected — the complete set of
-  multi-category descriptors in `rules/source/en/` that are not the `Tainted`
-  marker (see the Tainted note):
+  category's permit/forbid list. Four core items carry two categories in the data
+  — **not** the complete set of multi-category descriptors, which is nine; see
+  *Nine descriptors name two categories, and only four were extracted as such*
+  below. These four are the ones whose descriptor separates the categories with a
+  **comma**, which is all the extraction recognised (`Tainted` is not a category —
+  see the Tainted note):
 
   | id | descriptor | `categories` | source |
   |---|---|---|---|
@@ -344,12 +347,54 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
 
   So `categories[0]` is **not** a rule and must never be documented as one. It is
   only the descriptor's own first-listed slug, used as a deterministic tie-break by
-  the two surfaces that have room for exactly one (below).
+  the three surfaces that have room for exactly one (below).
 
   No core descriptor names three real categories. `Tainted` is **not** a category
   (it is `PointItem.tainted: bool`), so descriptors such as `*Minor, Story,
   Tainted*` stay single-category. `Mythic Companion` **is** one (see its own note
   below).
+
+- **Nine descriptors name two categories, and only four were extracted as such.**
+  The sweep's extraction recognised **comma**-separated category lists only, so
+  the five descriptors that join their two categories with *and* or *or* were
+  extracted single-category:
+
+  | id | descriptor | source | `categories` | indexed at |
+  |---|---|---|---|---|
+  | `virtue.inoffensive_to_beings` | *Minor, General and Hermetic* | `:4134` | `["general"]` | `:3110` (`### Hermetic, Minor` `:3087`) and `:3276` (`### General, Minor` `:3239`) |
+  | `flaw.curse_of_slander` | *Minor, General or Supernatural* | `:5882` | `["general"]` | `:5538` (`### Supernatural, Minor` `:5534`) and `:5575` (`### General, Minor` `:5564`) |
+  | `flaw.offensive_to_beings` | *Minor, Hermetic and General* | `:6525` | `["general"]` | `:5445` (`### Hermetic, Minor` `:5417`) and `:5608` (`### General, Minor` `:5564`) |
+  | `flaw.primogeniture_lineage` | *Minor, Story and Hermetic* | `:6635` | `["story"]` | `:5447` (`### Hermetic, Minor` `:5417`) and `:5516` (`### Story, Minor` `:5501`) |
+  | `flaw.unbearable_to_beings` | *Minor, Hermetic or General* | `:6892` | `["general"]` | `:5455` (`### Hermetic, Minor` `:5417`) and `:5629` (`### General, Minor` `:5564`) |
+
+  All five are dual-indexed in the book's own lists, exactly like the four above,
+  so the book treats both of their categories as equals here too.
+
+  **Two of the five were a wrong-output bug, and are fixed** (open-to-dos row 13):
+  `flaw.offensive_to_beings` and `flaw.unbearable_to_beings` shipped `["hermetic"]`
+  alone, and `hermetic` is forbidden for grog, companion and mythic companion — so
+  only a magus could take two Flaws the book also indexes under General. See *Two
+  Flaws the book indexes under General were magus-only* below.
+
+  **The remaining three keep one category deliberately, and the reason differs per
+  item.** `flaw.curse_of_slander` and `virtue.inoffensive_to_beings` already carry
+  the *permissive* category (`general` is on every profile's permitted list and no
+  profile's forbidden list), so nothing is blocked and adding the second category
+  would change no outcome. `flaw.primogeniture_lineage` keeps `story` for the
+  opposite reason: adding `hermetic` would corrupt Gift detection, because
+  `gift_categories` is `["hermetic"]` on every shipped profile — see the
+  overloading note below. Its magi-only restriction ("This Flaw can only be taken
+  by magi of House Verditius", `:6636`) is a House matter, not a category one.
+
+  **Unmodelled, and recorded rather than resolved:** the *and* / *or* / comma
+  distinction itself. `Vec<String>` cannot express it, and whether *and* means
+  "either route" (the reading the engine takes) or "both, hence both categories'
+  restrictions" is a genuine interpretive question the book does not settle.
+  Likewise the engine has no notion of a Virtue **taken as** one of its
+  categories, which `:5083` makes an explicit player choice ("either as a Minor
+  Social Status Virtue or a Minor Supernatural Virtue"): a grog Sufi still counts
+  as holding a Supernatural Virtue for every `has_category` rule — caps, Gift
+  categories, grant constraints.
 - **Membership uses the whole list, and so does browsing.** Every rule that asks
   "is this item of category X" is a membership test over all of `categories`
   (`PointItem::has_category` / `any_category_in`): permitted and forbidden
@@ -369,7 +414,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   Suppressed Gift counts against the **Story** Flaw cap as well as being Hermetic,
   and Sufi is returned by `items_by_category("supernatural")` as well as by
   `"social_status"`.
-- **Two surfaces have room for exactly one category, and both use
+- **Three surfaces have room for exactly one category, and all use
   `PointItem::first_listed_category` as a tie-break** (renamed from
   `primary_category`, which asserted a rule the book does not have):
   the `category_not_permitted` issue's `category` argument
@@ -380,8 +425,32 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   headings would delete each other and make one selection read as two against the
   point budget. Picking the first-listed slug also keeps that heading agreeing with
   the row's first category badge, which `ui/e2e/specs/houses.e2e.js:148,165`
-  asserts. The `forbidden_category` issue is *not* one of these surfaces — it names
-  the category that actually offended, whichever position it holds.
+  asserts. The **third** is the `forbidden_category` issue's `category` argument:
+  it used to name "the category that actually offended, whichever position it
+  holds", but under the conjunction below there is no distinguished offender —
+  either every category is forbidden or the issue is not raised at all — so it is
+  the same deterministic tie-break as `category_not_permitted`.
+- **Permitting is ANY, and forbidding is EVERY — the two are mirrors**
+  (`validation/selections.rs`: `validate_permitted_categories`,
+  `validate_forbidden_categories`). An item is permitted when **any** of its
+  categories is on the profile's permitted list, and ruled out only when **every**
+  one of them is on its forbidden list. Both readings follow from the same fact:
+  a descriptor naming two categories offers two routes to the same Virtue/Flaw, and
+  one blocked route leaves the other open. Forbidding used to fire on *any*
+  forbidden category, which contradicted the permitted side — it granted a route
+  and then took it straight back. For a single-category item "every" is identical
+  to "any", so the change loosened these cells and nothing else:
+
+  | item | type | before | after | source |
+  |---|---|---|---|---|
+  | `virtue.sufi` (*Minor, Social Status, Supernatural*) | grog | blocked | **allowed** | `:5079` "It is also possible to be an entirely mundane Sufi, in which case you should take this Virtue as a Social Status Virtue"; `:5083` "either as a Minor Social Status Virtue **or** a Minor Supernatural Virtue" |
+  | `flaw.suppressed_gift` (*Major, Hermetic, Story*) | companion | blocked | **allowed** | `:2840` bars a companion from Hermetic V/F "unless you have The Gift", and a Suppressed-Gift character *does* have it (`:6805` — it does not function, but the social penalties remain); `:6809` "If he replaces a companion, he will become much more powerful when the Story Flaw is resolved" |
+  | `flaw.suppressed_gift` | mythic companion | blocked by category | **blocked by `gift_forbidden`** | `:2637` — the status Virtues "are incompatible … with The Gift". Same outcome, honest issue code |
+
+  Three further cells (a grog taking Raised from the Dead, Visions, or Suppressed
+  Gift) stop emitting a redundant *second* issue while staying blocked by the
+  permitted check — the honest reason, since neither of their categories is on a
+  grog's permitted list.
 - **`categories` is order-significant and therefore exempt from canonical sorting** —
   the same deliberate exception the crisis table's `crisis.rows` takes (see the
   aging section's "Three things a later sweep must not undo"), and the reason it is
@@ -450,6 +519,87 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   `tests/data_integrity.rs` (`shipped_data_passes_integrity_check`,
   `english/german_i18n_covers_all_items`) — never an exact catalogue total.
 
+#### Two Flaws the book indexes under General were magus-only (open-to-dos row 13)
+> **Hermetic** — "Only characters with The Gift can take these Virtues and Flaws,
+> and some are only applicable to Hermetic magi who have already completed their
+> training." — `:2880`
+
+The `hermetic` category gates on **The Gift, not magus-hood**. `:2882` goes
+further and lets a troupe read Hermetic Flaws as Supernatural Flaws for a
+sufficiently supernatural character. `:2840`: a companion "may not take Hermetic
+Virtues and Flaws, **unless you have The Gift**". `:2829`: grogs may not, and
+`:2830` bars them from The Gift entirely.
+
+Two Flaws the book also indexes under General shipped `["hermetic"]` alone, and
+`hermetic` is on the forbidden list of the grog, companion and mythic-companion
+profiles — so only a magus could take them. That was **wrong output**:
+
+> **Offensive to (Beings)** *Minor, Hermetic and General* (`:6525`) — "You may not
+> take this Flaw more than once, characters who are Offensive to more than one
+> kind of being should take Magical Air instead. **Characters with The Gift may
+> take this Flaw only if they have the Gentle Gift**, which makes this type of
+> being react to them negatively while others are unaffected. **Characters with
+> Magical Air may not take it at all.**" — `:6530`
+
+> **Unbearable to (Beings)** *Minor, Hermetic or General* (`:6892`) — "**Only
+> characters with The Gift or Magical Air may take this Flaw, and it cannot be
+> combined with the Blatant Gift.**" — `:6895`
+
+`:6530` restricting *the Gifted case* is the proof: the unGifted case is the
+default, so the Flaw cannot be magi-only.
+
+**Fixed as data, not as a second category.** Both are `categories: ["general"]`
+in `rules/core/virtues_flaws.json`, and the eligibility the `hermetic` category
+was enforcing **by accident** is now stated explicitly. A third item from the
+same block of the same page had the eligibility gate missing outright:
+
+| item | `prerequisites` | `incompatible_with` | source |
+|---|---|---|---|
+| `flaw.unbearable_to_beings` | `Any([Has(virtue.the_gift), Has(flaw.magical_air)])` | `[flaw.blatant_gift]` | `:6895` |
+| `flaw.offensive_to_beings` | `Any([Nor([Has(virtue.the_gift)]), Has(virtue.gentle_gift)])` — "unGifted, or Gifted with the Gentle Gift" | `[flaw.magical_air]` | `:6530` |
+| `virtue.inoffensive_to_beings` | `Any([Has(virtue.the_gift), Has(flaw.magical_air)])` | — | `:4139` "UnGifted characters may take this Virtue only if they have the Flaw Magical Air." |
+
+`Nor`'s wire tag is `"none"` (see the `Prereq` doc comment in `types.rs`) — it is
+the boolean NOR, not "no prerequisite". `validate_incompatibility_symmetry`
+requires the reverse edges, so `flaw.blatant_gift` and `flaw.magical_air` carry
+theirs; they are behaviourally inert but mandatory at load.
+
+**`hermetic` must NOT be added back as a second category**, and this is the
+reason the obvious "completion" of the dual-category data is a trap:
+`effective::has_the_gift` (`effective/gift_confidence.rs`) defines "has The Gift"
+as the profile's `gift_id` **or any selection carrying any category in
+`gift_categories`** — and every shipped profile sets
+`gift_categories: ["hermetic"]`. That is right for Suppressed Gift, which *is* a
+Gift Flaw (`:6805`). It would be flatly wrong here: an unGifted companion taking
+Offensive to (Beings) would count as Gifted, changing `validate_gift_policy` and
+silently handing him the Gift's free Supernatural-Ability slot via
+`supernatural_free_slots` (`:2874`). Pinned by
+`a_companion_holding_offensive_to_beings_is_not_gifted` in
+`tests/data_integrity.rs`, so a later "completion" fails loudly.
+
+**Accepted regression: `missing_hermetic_flaw`.** `gift_categories` serves
+**three** masters — Gift detection, the free-slot grant, and `validate_house`'s
+"a magus should take at least one Hermetic Flaw" guideline (`:2860`), which
+decides what counts as Hermetic with `any_category_in(&profile.gift_categories)`
+(`validation/magus.rs`). Only the first two force dropping `hermetic`. The third
+is collateral: a magus whose only Hermetic Flaw is one of these two — a legal
+build; any magus may take Unbearable (`:6895`), and a Gentle-Gift magus may take
+Offensive (`:6530`) — now warns that he has none, though the book lists both in
+its Hermetic Flaws index (`:5445`, `:5455`). It is a **warning, not an error**,
+so the build still validates. Recorded deliberately rather than discovered, and
+pinned by `the_hermetic_flaw_guideline_no_longer_counts_the_two_beings_flaws`.
+The narrowed to-do: the guideline wants its own notion of "Hermetic Flaw",
+independent of Gift detection.
+
+**Known divergence, recorded rather than resolved.**
+`Prereq::Has(virtue.the_gift)` is **id**-based; the engine's own `has_the_gift` is
+**category**-based. A Suppressed-Gift companion is Gifted by the engine's
+reckoning (and by `:6805`, still suffering the Gift's social penalties) yet
+satisfies Offensive's `Nor([Has(the_gift)])` arm without the Gentle Gift, and
+fails Unbearable's Gift arm. Both readings diverge from a literal `:6530` /
+`:6895`. Relatedly, `:2840`'s "unless you have The Gift" conditional stays
+unmodelled in general: the companion profile forbids `hermetic` unconditionally.
+
 #### The Gift policy — required / forbidden by type
 > "all magi must have this Virtue" ... "Grogs can never have The Gift".
 
@@ -478,7 +628,10 @@ source:
 | grog | `max_major_virtues: 0`, `max_major_flaws: 0` | `:2824-2830` ("may not take Major Virtues or Flaws"), `:1009` |
 | grog | `max_minor_flaws: 3` | `:1009` ("no more than three Minor Flaws") |
 | grog | `flaw_category_caps`: personality major_only/hard `max: 0`; personality `max: 1`; story `max: 0` | grogs take one Minor Personality Flaw, no Major Flaws, no Story Flaws `:1009`, `:2824-2830` |
+| grog | `forbidden_categories` includes `hermetic`; `gift_policy: forbidden` | `:2829` ("You may not take Hermetic Virtues and Flaws"), `:2830` ("You may not take The Gift"), `:2876` ("Grogs can never have The Gift"), `:1009` ("grogs can never have The Gift") |
+| grog | `forbidden_categories` also includes `supernatural` | **No source found.** `:2824-2830` and `:1009` list a grog's restrictions and neither bars Supernatural Virtues/Flaws; the `### Supernatural` prose (`:2958-2962`) sets no type restriction either. Recorded as an unsourced interpretation to resolve, not as a cited rule |
 | companion | `virtue_points: 10`, `flaw_points: 10` | `:2297`, `:2834-2840` |
+| companion | `forbidden_categories: [hermetic]` | `:2840` ("You may not take Hermetic Virtues and Flaws, unless you have The Gift (this would be highly unusual)") — the conditional itself is **unmodelled**; the profile forbids the category unconditionally, so a Gifted companion is refused it. See *Two Flaws the book indexes under General were magus-only* |
 | companion | `max_major_virtues: null`, `max_major_flaws: null` (no count cap) | no Major-count cap for companions in the book |
 | companion | `max_minor_flaws: 5` | `:2774`, `:2835` |
 | companion | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `:2820`, `:2838` (Major Personality hard); `:2820`/`:2976` (Personality total); `:2818`/`:2837` (Story) |
@@ -5804,8 +5957,6 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Category permit/forbid (`validation/selections.rs` — `validate_permitted_categories` (:8),
-  `validate_forbidden_categories` (:50))
 - Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:144),
   `validate_forbidden_traits` (:165))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
