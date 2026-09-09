@@ -8,6 +8,7 @@ dist-linux/
 *.swo
 tmp/
 .claude/settings.local.json
+.claude/memory/
 
 # Local, machine-specific Claude guidance (imported by CLAUDE.md)
 CLAUDE.local.md
