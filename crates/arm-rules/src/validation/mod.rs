@@ -6725,6 +6725,64 @@ mod tests {
         );
     }
 
+    /// A `text` parameter left blank is a *missing* choice, not an unknown value.
+    ///
+    /// `ParameterDomain::Text` documents itself as "any non-empty value is legal",
+    /// and the empty string used to resolve anyway, so an unnamed Power validated
+    /// clean. It is rejected now — and reported as `missing_param`, because
+    /// `unknown_param_value` renders the offending value and there is nothing to
+    /// render: "has unknown text value " names no problem the player can act on,
+    /// where "is missing the parameter power" names exactly the box to fill. It also
+    /// makes a blank value and an absent key report identically, which is what the
+    /// migration story wants: a v0.2.x save's unnamed power reads the same either way.
+    #[test]
+    fn a_blank_text_param_reads_as_a_missing_choice() {
+        let items = r#"[
+          { "id": "flaw.lesser_power", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
+            "categories": ["general"], "entity_kinds": ["character"],
+            "parameters": [{"key": "power", "type": "ref", "domain": "text"}] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "categories": ["personality"], "entity_kinds": ["character"] }
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+
+        let blank = |value: &str| {
+            make_entity(
+                "test_type",
+                vec![Selection::with_params(
+                    Id::new("flaw.lesser_power"),
+                    BTreeMap::from([("power".into(), Id::new(value))]),
+                )],
+            )
+        };
+
+        for value in ["", "   ", "\t\n"] {
+            let found = codes(&validate(&blank(value), &rs));
+            assert!(
+                found.contains(&ValidationIssue::CODE_MISSING_PARAM.to_string()),
+                "a blank text param must name the unfilled key ({value:?}): {found:?}"
+            );
+            assert!(
+                !found.contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+                "and must NOT report an unknown value it cannot print ({value:?}): {found:?}"
+            );
+        }
+
+        let named = blank("Wolf Shape");
+        let found = codes(&validate(&named, &rs));
+        assert!(
+            !found.contains(&ValidationIssue::CODE_MISSING_PARAM.to_string())
+                && !found.contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "a named power is legal: {found:?}"
+        );
+    }
+
     #[test]
     fn art_domain_param_value_resolves_against_registry() {
         // Art-domain parameter values are now resolved against the Art catalogue:

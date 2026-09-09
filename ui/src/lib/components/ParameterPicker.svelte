@@ -402,11 +402,17 @@
       </select>
     {:else}
       <!-- `text` alone, and only `text`: the domain references no registry, so any
-           non-empty value is legal and free text is the correct control. Every other
-           variant has its own select above — the engine's `ParameterDomain` doc
-           comment says as much, and #4 was exactly this fall-through catching four
-           of them. Keep that true: the domain union is closed, so a new variant
-           belongs in a branch of its own, never here. -->
+           value with non-whitespace content is legal and free text is the correct
+           control. That "non-empty" claim is now ENFORCED rather than merely
+           asserted here: `onTypeText` trims (as does `store.setParamAt`, and the
+           engine again on load), and a value that trims to nothing raises the
+           engine's `missing_param` naming this box — so a blank descriptor no
+           longer validates clean, and 'Wolf Shape ' is the same power as
+           'Wolf Shape'. Case is deliberately untouched. Every other domain has its
+           own select above — the engine's `ParameterDomain` doc comment says as
+           much, and #4 was exactly this fall-through catching four of them. Keep
+           that true: the domain union is closed, so a new variant belongs in a
+           branch of its own, never here. -->
       <input
         type="text"
         aria-label={typeLabel}

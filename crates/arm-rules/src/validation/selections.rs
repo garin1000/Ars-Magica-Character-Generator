@@ -272,7 +272,9 @@ pub(crate) fn validate_forbidden_traits(
 /// `Technique`/`Form` → the art catalogue *and* the required art class (so
 /// Deficient Technique cannot target a Form; Ars Magica - Definitive Edition (Core Rules).md:5909-5915),
 /// `Characteristic` → [`Characteristic::from_id`], `Enumerated` → the definition's
-/// own declared `values`, `Text` → always (no registry).
+/// own declared `values`, `Text` → any value with non-whitespace content (no
+/// registry, but the domain's own documentation says "non-empty", and an empty
+/// string used to resolve — so an unnamed Power validated clean).
 ///
 /// Takes the whole [`ParameterDef`] rather than its `domain` alone because the
 /// `Enumerated` domain's registry IS the definition: its legal values are data on
@@ -294,8 +296,19 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
             .get(value)
             .is_some_and(|a| a.art_type == crate::art::ArtType::Form),
         ParameterDomain::Enumerated => param.values.contains(value),
-        ParameterDomain::Text => true,
+        ParameterDomain::Text => !value.as_str().trim().is_empty(),
     }
+}
+
+/// Whether a parameter value is blank — empty, or nothing but whitespace.
+///
+/// A blank value in ANY domain is a choice not yet made, not a wrong one: no
+/// registry has a blank id either. Both parameter validators treat it as if the key
+/// were absent, so it raises `missing_param` naming the key to fill rather than
+/// `unknown_param_value`, which would render "has unknown text value " with nothing
+/// where the offending value belongs.
+pub(crate) fn param_value_is_blank(value: &Id) -> bool {
+    value.as_str().trim().is_empty()
 }
 
 /// Validates that each selection of a parameterized item supplies exactly the
@@ -316,7 +329,8 @@ pub(crate) fn validate_parameters(
 
 /// The parameter checks for ONE selection: declared-vs-provided keys
 /// (`missing_param` / `unexpected_param`) and each value's domain resolution
-/// (`unknown_param_value`).
+/// (`unknown_param_value`). A key whose value is **blank** counts as unfilled, so
+/// it raises `missing_param` — see [`param_value_is_blank`].
 ///
 /// Shared by bought selections ([`validate_parameters`]) and the *derived* picks
 /// that never live on `entity.selections` — House / Mythic-type Open grants and
@@ -338,6 +352,16 @@ pub(crate) fn validate_selection_parameters(
 
     let declared: BTreeSet<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
     let provided: BTreeSet<&str> = selection.params.keys().map(String::as_str).collect();
+    // A key present with a BLANK value has supplied nothing, so it counts as
+    // unfilled below: an empty text box is a choice not yet made. `provided` still
+    // holds it, so a blank value under an *undeclared* key is still reported as the
+    // stray key it is rather than vanishing.
+    let filled: BTreeSet<&str> = selection
+        .params
+        .iter()
+        .filter(|(_, value)| !param_value_is_blank(value))
+        .map(|(key, _)| key.as_str())
+        .collect();
 
     // A parameter targeting a PARAMETERIZED ability also expects the instance
     // discriminator, supplied under the target ability's own param key
@@ -354,7 +378,7 @@ pub(crate) fn validate_selection_parameters(
         }
     }
 
-    for missing in expected.difference(&provided) {
+    for missing in expected.difference(&filled) {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_MISSING_PARAM,
             phase,
@@ -384,6 +408,9 @@ pub(crate) fn validate_selection_parameters(
         let Some(value) = selection.params.get(&param.key) else {
             continue; // missing already reported above
         };
+        if param_value_is_blank(value) {
+            continue; // reported as `missing_param` above, not as an unprintable value
+        }
         let resolves = param_value_resolves(ruleset, param, value);
         if !resolves {
             issues.push(ValidationIssue::error(

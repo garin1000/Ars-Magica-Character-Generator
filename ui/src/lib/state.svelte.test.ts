@@ -2248,6 +2248,22 @@ describe('setParamAt', () => {
     store.setParamAt(0, 'b', '2');
     expect(store.entity.selections![0].params).toEqual({ a: '1', b: '2' });
   });
+
+  it('trims the value, so a padded descriptor is the same target as an unpadded one', () => {
+    // Row 10: parameter values establish selection identity — the engine's
+    // duplicate key is the whole params map — so 'Wolf Shape ' would otherwise be
+    // a second, distinct power. `ParameterPicker`'s own text handler already
+    // trimmed; this is the store method every other write path goes through, and
+    // the two must not disagree. Case is left alone: two powers deliberately
+    // capitalised differently are the player's business.
+    installRuleset([item({ id: 'flaw.lesser_power' })]);
+    store.addSelection('flaw.lesser_power');
+    store.setParamAt(0, 'power', '  Wolf Shape \t');
+    expect(store.entity.selections![0].params).toEqual({ power: 'Wolf Shape' });
+
+    store.setParamAt(0, 'power', 'wolf shape');
+    expect(store.entity.selections![0].params).toEqual({ power: 'wolf shape' });
+  });
 });
 
 // --- setAbilityBonusTarget() ------------------------------------------------
@@ -2263,6 +2279,17 @@ describe('setAbilityBonusTarget', () => {
 
   it('stores the instance key for a parameterized ability', () => {
     store.setAbilityBonusTarget(0, 'ability.area_lore', 'Rhine');
+    expect(store.entity.selections![0].params).toEqual({
+      ability: 'ability.area_lore',
+      area: 'Rhine',
+    });
+  });
+
+  it('trims the instance value, which is free text the player types', () => {
+    // The area/language discriminator is part of the ability-bonus target's
+    // identity (`usedAbilityTargets` composes `ability + SEP + instance`), so a
+    // padded 'Rhine ' would read as a second instance of the same Lore.
+    store.setAbilityBonusTarget(0, 'ability.area_lore', ' Rhine ');
     expect(store.entity.selections![0].params).toEqual({
       ability: 'ability.area_lore',
       area: 'Rhine',

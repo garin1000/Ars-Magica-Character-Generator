@@ -5969,6 +5969,56 @@ carry no source citation:
   defense in depth, at evaluation (`validation/prereq.rs` —
   `evaluate_prereq`)
 
+### Parameter-value identity: trimmed, never case-folded (row 10)
+
+Also framework, and also uncited — no passage says how a typed descriptor is
+compared. But the comparison decides **rules output**, so it is recorded here.
+
+A selection's identity is `(item_ref, params)` compared **byte-for-byte** in four
+places: `validate_duplicate_selections` (`validation/selections.rs`, whose
+`BTreeMap` key is the whole params map), `options.contains(pick)` in
+`grant.rs`, `entity.selections.contains(req)` for a mythic type's required
+Virtues (`validation/magus.rs`), and `Entity::normalize`'s `selections.sort()`.
+So `"Wolf Shape"`, `"wolf shape"` and `"Wolf Shape "` were three distinct
+targets, and the per-power cap counted them separately.
+
+**The decision: trim, do not case-fold.** Trimming makes
+`ParameterDomain::Text`'s own documentation true ("any non-empty value is
+legal") and costs nothing a player intended — leading and trailing space was
+never part of a choice. Case-folding is a judgement the rulebook does not ask
+for, and two Powers a player deliberately capitalised differently are theirs to
+distinguish. `virtue.puissant_ability`-style id domains are trimmed too, because
+no domain has a legal value with an edge of whitespace.
+
+**Where it happens:** at **load**, in `load_entity_migrating`
+(`types.rs::trim_all_selection_params`) — covering the bought list plus
+`house_choices` / `mythic_choices` / `warping_choices`, exactly like the `being`
+fold — and at every frontend write path (`AppStore.setParamAt`,
+`setAbilityBonusTarget`, `setArtBonusTarget`, and `ParameterPicker`'s
+`onTypeText`, which already did). **Not** in `Entity::normalize`: normalize runs
+on every save and sorts selections by `(ref, params)`, so trimming there would
+reorder the rows of a file the player had only opened, against the
+zero-noise-diff convention. On load the reordering settles once.
+
+**A blank value is a missing choice, not an unknown one.**
+`param_value_resolves` now rejects an empty or whitespace-only `Text` value, and
+both parameter validators (`validate_selection_parameters`, and
+`validate_spell_parameter` for a `SpellSelection`) treat a blank value in **any**
+domain as if the key were absent — so it raises `missing_param` naming the box to
+fill, not `unknown_param_value`, which renders the offending value and would
+print nothing at all. This also makes an unnamed Power read identically whether
+the save stored a blank `power` or no `power` key, which is what the v0.2.x
+migration wants. No new issue code and no new Fluent key.
+
+Tests: `a_blank_text_param_reads_as_a_missing_choice` (`validation/mod.rs`),
+`load_trims_the_whitespace_around_every_param_value` and
+`trimming_params_at_load_is_idempotent_and_byte_stable` (`types.rs`),
+`a_padded_ability_roll_mod_subject_surfaces_trimmed` (`derived.rs` — the
+`text`-domain parameter of `Effect::AbilityRollMod` reaches the sheet verbatim),
+plus `setParamAt` / `setAbilityBonusTarget` trim cases in
+`ui/src/lib/state.svelte.test.ts` and the dirty-flag guard in
+`ui/src/App.client.test.ts`.
+
 ### The saga year (Slice 12, #25) — `validation/saga.rs`
 
 **One rules value, wrapped in an editing aid.** The saga year — the calendar year

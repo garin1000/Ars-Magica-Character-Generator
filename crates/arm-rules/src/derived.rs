@@ -2812,6 +2812,37 @@ mod tests {
             && m.amount == 3));
     }
 
+    /// `Effect::AbilityRollMod` (and `Effect::MagicalFocus`) carry a `text`-domain
+    /// parameter, so its value reaches the sheet verbatim as a surfaced modifier's
+    /// detail. Row 10: a padded descriptor is the same descriptor, and the load-time
+    /// trim is what makes that true here — so a save holding " Theology " surfaces
+    /// exactly the same row as one holding "Theology", instead of a detail with
+    /// stray whitespace baked into the display.
+    #[test]
+    fn a_padded_ability_roll_mod_subject_surfaces_trimmed() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.academic_concentration"),
+            BTreeMap::from([("subject".into(), Id::new(" \tTheology  "))]),
+        )];
+        // Through the real load door, because that is where the trim lives.
+        let loaded = crate::load_entity_migrating(&serde_json::to_string(&e).unwrap())
+            .unwrap()
+            .entity;
+        let s = surfaced_modifiers(&loaded, &rs);
+        assert!(
+            s.iter().any(|m| m.family == ModifierFamily::AbilityRoll
+                // Trimmed, and NOT case-folded: capitalisation is the player's.
+                && m.detail == "Theology"
+                && m.amount == 3),
+            "the padded subject must surface trimmed: {:?}",
+            s.iter()
+                .filter(|m| m.family == ModifierFamily::AbilityRoll)
+                .collect::<Vec<_>>()
+        );
+    }
+
     /// Weak Spontaneous Magic (GD2, round 2): "You may not exert yourself when
     /// casting spontaneous magic, so you always divide your Casting Score by
     /// five" (Ars Magica - Definitive Edition (Core Rules).md:7084-7086, not
