@@ -711,10 +711,11 @@ fn minor_variant_sibling(id: &Id) -> Option<Id> {
     };
     let minor_name = if let Some(stem) = name.strip_suffix("_major") {
         format!("{stem}_minor")
-    } else if let Some(stem) = name.strip_prefix("major_") {
-        format!("minor_{stem}")
     } else {
-        return None;
+        // `?` rather than a third `else { return None }` arm: clippy::question_mark
+        // (as of Rust 1.98) rejects that shape, and it is the same control flow.
+        let stem = name.strip_prefix("major_")?;
+        format!("minor_{stem}")
     };
     let minor_id = match namespace {
         Some(ns) => format!("{ns}.{minor_name}"),
