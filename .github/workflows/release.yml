@@ -95,6 +95,23 @@ jobs:
           ./scripts/test-appimage-wayland-patch.sh
           ./scripts/patch-appimage-wayland.sh
 
+      # Tauri's MSI bundler hardcodes the WiX *installer chrome* language into the
+      # filename (`..._x64_en-US.msi`) with no template to override it. That reads
+      # as an English-only build, which is wrong — the app ships English and German
+      # UI strings and rules text in every bundle — and it is the only artifact
+      # carrying a locale segment (.deb/.rpm/.AppImage/NSIS .exe all omit one). Strip
+      # it so the Windows installer name aligns with the rest. If a future change adds
+      # a second entry to bundle.windows.wix.language, two MSIs would collide on one
+      # name and Rename-Item fails the step loudly rather than silently dropping one.
+      - name: Align the MSI filename with the other bundles
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          Get-ChildItem target/release/bundle/msi/*_en-US.msi -ErrorAction SilentlyContinue |
+            ForEach-Object {
+              Rename-Item -LiteralPath $_.FullName -NewName ($_.Name -replace '_en-US\.msi$', '.msi')
+            }
+
       # For manual/dispatch test runs: download these from the run summary and
       # install/run them — no Release is created.
       - name: Upload build artifacts (for testing)
