@@ -47,8 +47,8 @@
         { "category": "story", "max": 0 }
       ]
     },
-    "permitted_categories": ["general", "personality", "social_status"],
-    "forbidden_categories": ["hermetic", "supernatural"],
+    "permitted_categories": ["general", "personality", "social_status", "supernatural"],
+    "forbidden_categories": ["hermetic"],
     "required_traits": [],
     "forbidden_traits": ["virtue.the_gift"],
     "is_magus": false,
