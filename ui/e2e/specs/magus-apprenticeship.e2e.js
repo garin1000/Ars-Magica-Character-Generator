@@ -32,6 +32,7 @@ import {
   advanceWizardTo,
   BOOT_TIMEOUT,
   clean,
+  resizeWindowTo,
   satisfyMagusMinimums,
   setWizardAge,
   startWizard,
@@ -296,11 +297,7 @@ describe('magus apprenticeship through the life stages', () => {
       // 600 is the window's own `minHeight` (tauri.conf.json), i.e. the shortest
       // the app can legally be — so this is the real worst case, not an arbitrary
       // number, and `tab-area.e2e.js` already exercises the same height.
-      await browser.setWindowSize(1400, 600);
-      await browser.waitUntil(
-        async () => (await browser.execute(() => window.innerHeight)) === 600,
-        { timeout: 10000, timeoutMsg: 'the window should shrink so the step scrolls' },
-      );
+      await resizeWindowTo(1400, 600);
 
       const before = await stickyBarMetrics();
       // Sticky at all, and pinned to a box that really scrolls.

@@ -48,6 +48,11 @@ vi.mock('./ipc', () => ({
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
   updateCloseGuard: vi.fn(),
+  // C3b: New/Open confirm a discard through the SAME native dialog close/quit
+  // uses. The default answer is "discard", so the many setup helpers below that
+  // start from a possibly-dirty shared singleton reach their load unchanged; the
+  // tests that care override it per case.
+  confirmDiscard: vi.fn().mockResolvedValue(true),
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
@@ -3828,42 +3833,165 @@ describe('document file model', () => {
     expect(store.entity.name).toBeUndefined();
   });
 
-  it('newDocument() on a dirty document waits for the discard prompt', async () => {
+  it('newDocument() on a dirty document waits for the discard confirmation', async () => {
     await openFile('/tmp/marcus.armc');
     store.setIdentity('name', 'Marcus');
 
-    // Cancelling the prompt aborts: the edited document is kept.
-    const cancelled = store.newDocument();
-    expect(store.discardPromptOpen).toBe(true);
-    store.resolveDiscardPrompt(false);
-    await cancelled;
+    // Cancelling aborts: the edited document is kept.
+    vi.mocked(ipc.confirmDiscard).mockResolvedValueOnce(false);
+    await store.newDocument();
     expect(store.entity.name).toBe('Marcus');
     expect(store.currentPath).toBe('/tmp/marcus.armc');
 
     // Confirming discards and resets to a fresh document.
-    const confirmed = store.newDocument();
-    expect(store.discardPromptOpen).toBe(true);
-    store.resolveDiscardPrompt(true);
-    await confirmed;
+    vi.mocked(ipc.confirmDiscard).mockResolvedValueOnce(true);
+    await store.newDocument();
     expect(store.entity.name).toBeUndefined();
     expect(store.currentPath).toBeNull();
     expect(store.dirty).toBe(false);
   });
 
-  it('open() on a dirty document honors the discard prompt', async () => {
+  it('open() on a dirty document honors a cancelled discard confirmation', async () => {
     await openFile('/tmp/marcus.armc');
     store.setIdentity('name', 'Marcus');
 
     // Ignore the setup helper's load; only the cancelled open below matters.
     vi.mocked(ipc.loadEntity).mockClear();
     vi.mocked(ipc.loadEntity).mockResolvedValue({ path: '/tmp/other.armc', entity: cleanEntity() });
-    const opening = store.open();
-    expect(store.discardPromptOpen).toBe(true);
-    store.resolveDiscardPrompt(false);
-    await opening;
+    vi.mocked(ipc.confirmDiscard).mockResolvedValueOnce(false);
+    await store.open();
     // Cancelled: the current file is unchanged and loadEntity was never called.
     expect(store.currentPath).toBe('/tmp/marcus.armc');
     expect(ipc.loadEntity).not.toHaveBeenCalled();
+  });
+
+  // --- C3b: one discard confirmation, and it is the native one --------------
+
+  /**
+   * Let the awaited `confirm_discard` round-trip settle. Microtasks only: this
+   * file runs on fake timers, so a `setTimeout(0)` tick would never fire.
+   */
+  async function settleConfirmation(): Promise<void> {
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+  }
+
+  it('asks the backend to confirm the discard, with the localized discard labels', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    vi.mocked(ipc.confirmDiscard).mockClear();
+
+    await store.newDocument();
+
+    expect(ipc.confirmDiscard).toHaveBeenCalledTimes(1);
+    // No user-facing string is authored in Rust: every word arrives resolved
+    // from Fluent, exactly as `closeGuardPayload()` supplies the close dialog's.
+    expect(vi.mocked(ipc.confirmDiscard).mock.calls[0][0]).toEqual({
+      title: store.t('discard-changes-title'),
+      message: store.t('discard-changes-message'),
+      discard: store.t('discard-changes-confirm'),
+      cancel: store.t('discard-changes-cancel'),
+    });
+  });
+
+  it('never confirms a discard on a clean document', async () => {
+    await openFile('/tmp/marcus.armc');
+    vi.mocked(ipc.confirmDiscard).mockClear();
+
+    await store.newDocument();
+
+    expect(ipc.confirmDiscard).not.toHaveBeenCalled();
+  });
+
+  // TRAP 2. `CloseGuardState::confirmed` (Rust) is a one-shot LATCH that is
+  // never reset until the frontend reports a fresh dirty state, and it exists so
+  // a re-issued *quit* does not prompt twice. A non-terminal action must not
+  // ride on it: if it did, the first confirmed New would silence every later
+  // one, and the second New would destroy the player's work with no prompt at
+  // all. So this test confirms TWICE in one session and insists the second New
+  // asked again.
+  it('asks again on the second discard of the same session (no confirmation latch)', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    vi.mocked(ipc.confirmDiscard).mockClear();
+    vi.mocked(ipc.confirmDiscard).mockResolvedValue(true);
+
+    await store.newDocument();
+    expect(ipc.confirmDiscard).toHaveBeenCalledTimes(1);
+    expect(store.entity.name).toBeUndefined();
+
+    // A second document, dirtied again, discarded again — the case the latch
+    // would have swallowed.
+    await openFile('/tmp/aelius.armc');
+    store.setIdentity('name', 'Aelius');
+    expect(store.dirty).toBe(true);
+
+    await store.newDocument();
+    expect(ipc.confirmDiscard).toHaveBeenCalledTimes(2);
+    expect(store.entity.name).toBeUndefined();
+  });
+
+  it('falls back to the in-app prompt when the build offers no native dialog', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    // What the `e2e-testing` build answers: no native dialog here, so the
+    // frontend must raise the one WebDriver can click.
+    vi.mocked(ipc.confirmDiscard).mockResolvedValueOnce(null);
+
+    const pending = store.newDocument();
+    await settleConfirmation();
+    expect(store.discardPromptOpen).toBe(true);
+
+    store.resolveDiscardPrompt(false);
+    await pending;
+    expect(store.entity.name).toBe('Marcus');
+    expect(store.discardPromptOpen).toBe(false);
+  });
+
+  // A rejected IPC call must never read as "yes, discard". The in-app prompt is
+  // the safety net for a broken bridge, not only for the e2e build: losing an
+  // unsaved character to a failed `invoke` is the highest-severity class of bug
+  // this project has (CLAUDE.md).
+  it('falls back to the in-app prompt when the confirmation call fails', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    vi.mocked(ipc.confirmDiscard).mockRejectedValueOnce({ kind: 'io' });
+
+    const pending = store.newDocument();
+    await settleConfirmation();
+    expect(store.discardPromptOpen).toBe(true);
+
+    store.resolveDiscardPrompt(false);
+    await pending;
+    expect(store.entity.name).toBe('Marcus');
+  });
+
+  it('blocks a second New while a discard confirmation is already pending', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    vi.mocked(ipc.confirmDiscard).mockClear();
+    // The setup helper above already loaded once; only the blocked Open counts.
+    vi.mocked(ipc.loadEntity).mockClear();
+    // A confirmation that has not answered yet models a dialog still on screen.
+    let answer: (discard: boolean | null) => void = () => {};
+    vi.mocked(ipc.confirmDiscard).mockReturnValueOnce(
+      new Promise<boolean | null>((resolve) => {
+        answer = resolve;
+      }),
+    );
+
+    const first = store.newDocument();
+    expect(store.discardConfirmPending).toBe(true);
+
+    void store.newDocument();
+    void store.open();
+
+    expect(ipc.confirmDiscard).toHaveBeenCalledTimes(1);
+    expect(ipc.loadEntity).not.toHaveBeenCalled();
+
+    // Answer it so the flag does not leak into the next test.
+    answer(false);
+    await first;
+    expect(store.discardConfirmPending).toBe(false);
   });
 });
 

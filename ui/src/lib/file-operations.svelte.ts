@@ -118,24 +118,91 @@ export class FileOperations {
   // one of this module's own commands.
   busy = $state(false);
 
-  /** Whether the New/Open discard-confirmation prompt is currently shown. */
+  /**
+   * A discard confirmation — native or in-app — is currently on screen and
+   * unanswered.
+   *
+   * Distinct from {@link discardPromptOpen}, which is true only for the in-app
+   * fallback modal. This is the one the rest of the app reacts to: it makes the
+   * shell `inert` (the native dialog is parented to the window but not
+   * input-modal on Linux, exactly like the file dialogs `busy` covers), it is
+   * what New/Open re-enter against, and it drives the focus restoration around
+   * the dialog. It is raised SYNCHRONOUSLY, before the confirmation round-trip
+   * is even sent, so a second Ctrl+N in the same frame cannot stack a second
+   * dialog.
+   */
+  discardConfirmPending = $state(false);
+
+  /** Whether the in-app fallback discard modal is currently shown. */
   discardPromptOpen = $state(false);
-  // Resolver for the in-flight discard prompt (`true` = discard and proceed).
+  // Resolver for the in-flight in-app prompt (`true` = discard and proceed).
   #discardResolve: ((discard: boolean) => void) | null = null;
 
   /**
-   * Show the discard-changes prompt and resolve once the user answers via
-   * {@link resolveDiscardPrompt}. Resolves `true` to discard and proceed, `false`
-   * to cancel. The UI renders a modal keyed off {@link discardPromptOpen}.
+   * Ask the user whether to discard unsaved changes, and resolve `true` to
+   * discard and proceed, `false` to cancel.
+   *
+   * **The confirmation is the NATIVE dialog** — the very one the close/quit
+   * guard shows (`crates/arm-app/src/main.rs`) — so the app asks this question
+   * exactly one way whatever triggered it. It used to ask two ways: a native
+   * dialog on close/quit and a Svelte modal on New/Open, which meant two
+   * wordings to keep in step, two focus behaviours, and one of them not looking
+   * like the desktop it runs on.
+   *
+   * The in-app modal survives as the fallback for the two cases where no native
+   * answer arrives:
+   *
+   *  * the `e2e-testing` build deliberately declines to show one, because no
+   *    WebDriver capability can dismiss a native GTK dialog and New sits in
+   *    essentially every spec's setup (`ui/e2e/helpers.js`); and
+   *  * the IPC call failed, where treating a broken bridge as "yes, discard"
+   *    would silently destroy an unsaved character.
+   *
+   * Labels are resolved from Fluent here and passed down, so Rust authors no
+   * user-facing text — the same division {@link ipc.updateCloseGuard} uses.
    */
-  confirmDiscard(): Promise<boolean> {
+  async confirmDiscard(): Promise<boolean> {
+    this.discardConfirmPending = true;
+    try {
+      const native = await this.#confirmDiscardNatively();
+      return native ?? (await this.#promptToDiscardInApp());
+    } finally {
+      this.discardConfirmPending = false;
+    }
+  }
+
+  /**
+   * The native half: the user's answer, or `null` when this build offers no
+   * native dialog *or* the call failed — both meaning "ask in-app instead".
+   */
+  async #confirmDiscardNatively(): Promise<boolean | null> {
+    try {
+      return (
+        (await ipc.confirmDiscard({
+          title: this.#host.t('discard-changes-title'),
+          message: this.#host.t('discard-changes-message'),
+          discard: this.#host.t('discard-changes-confirm'),
+          cancel: this.#host.t('discard-changes-cancel'),
+        })) ?? null
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * The fallback half: show the in-app modal and resolve once the user answers
+   * via {@link resolveDiscardPrompt}. The UI renders it keyed off
+   * {@link discardPromptOpen}.
+   */
+  #promptToDiscardInApp(): Promise<boolean> {
     return new Promise((resolve) => {
       this.#discardResolve = resolve;
       this.discardPromptOpen = true;
     });
   }
 
-  /** Answer the open discard prompt (called by the modal's buttons). */
+  /** Answer the open in-app discard prompt (called by the modal's buttons). */
   resolveDiscardPrompt(discard: boolean): void {
     this.discardPromptOpen = false;
     const resolve = this.#discardResolve;

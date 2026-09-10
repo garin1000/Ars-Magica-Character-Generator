@@ -24,6 +24,7 @@ import {
   BOOT_TIMEOUT,
   clean,
   currentWizardPhase,
+  resizeWindowTo,
   returnToStartScreen,
   satisfyMagusMinimums,
   standOnWizardStep,
@@ -443,16 +444,9 @@ describe('guided guidance and unspent-budget findings (slice 11)', () => {
     return clean(await $(`[data-testid="issue-list"] li[data-code="${code}"]`).getText());
   }
 
-  async function setWindowHeight(height) {
-    await browser.setWindowSize(1100, height);
-    await browser.waitUntil(
-      async () => (await browser.execute(() => window.innerHeight)) === height,
-      {
-        timeout: STEP_TIMEOUT,
-        timeoutMsg: `the window should resize to ${height}px tall`,
-      },
-    );
-  }
+  // Shared with the other resizing describes; see `helpers.js` for why the
+  // viewport is no longer the same number as the window height.
+  const setWindowHeight = (height) => resizeWindowTo(1100, height);
 
   // A2: this describe used to leave the window at 1100x800 for whatever ran next.
   // Restore the shipped default (crates/arm-app/tauri.conf.json), mirroring
@@ -1000,16 +994,7 @@ describe('tab area at a short window height', () => {
     }, id);
   }
 
-  async function setWindowHeight(height) {
-    await browser.setWindowSize(DEFAULT_SIZE.width, height);
-    await browser.waitUntil(
-      async () => (await browser.execute(() => window.innerHeight)) === height,
-      {
-        timeout: 10000,
-        timeoutMsg: `the window should resize to ${height}px tall`,
-      },
-    );
-  }
+  const setWindowHeight = (height) => resizeWindowTo(DEFAULT_SIZE.width, height);
 
   before(async () => {
     // A magus, whose Virtues & Flaws source list is the longest one the picker

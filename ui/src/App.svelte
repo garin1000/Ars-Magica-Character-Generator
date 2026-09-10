@@ -301,23 +301,27 @@
     });
   });
 
-  // Focus restoration for the New/Open discard-changes prompt (the WAI-ARIA
+  // Focus restoration for the New/Open discard confirmation (the WAI-ARIA
   // dialog pattern: "when it closes, focus returns to the element that
-  // triggered it"). `DiscardPrompt` itself moves focus onto Cancel the instant
-  // it opens, so capturing `document.activeElement` reactively off
-  // `discardPromptOpen` would race that effect. Tracking real `focusin` events
-  // instead sidesteps the race entirely: while the prompt is open every focus
+  // triggered it"). The in-app fallback prompt moves focus onto Cancel the
+  // instant it opens, so capturing `document.activeElement` reactively off the
+  // open flag would race that effect. Tracking real `focusin` events instead
+  // sidesteps the race entirely: while a confirmation is pending every focus
   // move happens *inside* it (the rest of the shell is `inert`), so those
   // events are ignored and `lastFocusOutsideDialog` keeps whatever had focus
-  // just before New/Open (or Ctrl+N/Ctrl+O) opened it — the button clicked, or
+  // just before New/Open (or Ctrl+N/Ctrl+O) raised it — the button clicked, or
   // wherever the keyboard shortcut left focus.
+  //
+  // Keyed on `discardConfirmPending`, not on the in-app modal: since C3b the
+  // confirmation is normally the NATIVE dialog, which has no in-app flag at all,
+  // and focus must come back the same way once that one closes.
   let lastFocusOutsideDialog: HTMLElement | null = null;
   function trackFocus(event: FocusEvent): void {
-    if (store.discardPromptOpen) return;
+    if (store.discardConfirmPending) return;
     if (event.target instanceof HTMLElement) lastFocusOutsideDialog = event.target;
   }
   $effect(() => {
-    if (store.discardPromptOpen) return;
+    if (store.discardConfirmPending) return;
     const toFocus = lastFocusOutsideDialog;
     // Cancel leaves the document exactly as it was, so the trigger is still
     // there; Discard/confirm may have navigated away (e.g. New resets to the
@@ -336,13 +340,14 @@
      cross-platform Window has no `set_enabled`), so without this the user could
      keep editing the character behind an open Save/Open/Export dialog. `inert`
      drops focus and assistive-tech access; the overlay below swallows the clicks.
-     Also inert while the discard-changes prompt is open (a plain HTML dialog with
-     no native modality of its own): otherwise a keyboard user tabbing forward
-     would walk through the whole live, visually-obscured app before ever
-     reaching the prompt's own Cancel/Discard buttons. -->
+     Also inert while a discard confirmation is pending — for the native dialog
+     because it is no more input-modal than the file dialogs above, and for the
+     in-app fallback because otherwise a keyboard user tabbing forward would walk
+     through the whole live, visually-obscured app before ever reaching the
+     prompt's own Cancel/Discard buttons. -->
 <div
   class="app-shell"
-  inert={store.busy || store.discardPromptOpen}
+  inert={store.busy || store.discardConfirmPending}
   aria-busy={store.busy}
   data-testid="app-shell"
 >
@@ -542,7 +547,11 @@
   <div class="busy-overlay" data-testid="busy-overlay" aria-hidden="true"></div>
 {/if}
 
-<!-- Discard-changes confirmation for New/Open (close/quit uses the Rust dialog).
+<!-- The FALLBACK discard confirmation. Since C3b every discard — New, Open,
+     close, quit — is confirmed by the native dialog Rust owns; this renders only
+     where no native answer arrives: the `e2e-testing` build, which declines so
+     WebDriver has something it can click, and an IPC failure, where treating a
+     broken bridge as "yes, discard" would silently destroy unsaved work.
      Outside the shell: it is the one modal the user must still be able to answer
      (it never overlaps a native dialog — `busy` is false while it is open). -->
 <DiscardPrompt />

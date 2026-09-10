@@ -1,9 +1,21 @@
 <script lang="ts">
   import { store } from '../state.svelte';
 
-  // Discard-changes confirmation for New/Open (window close/quit uses the native
-  // Rust dialog instead). A single, non-stacking modal driven by the store's
-  // `discardPromptOpen` flag; the buttons resolve the pending promise.
+  // The FALLBACK discard-changes confirmation. Every discard — New, Open,
+  // window close, app quit — is confirmed by the native dialog Rust owns
+  // (C3b); this modal renders only where no native answer arrives, and the
+  // store's `discardPromptOpen` flag is true for exactly those two cases:
+  //
+  //  * the `e2e-testing` build declines to show a native dialog, because no
+  //    WebDriver capability can dismiss one and New sits in essentially every
+  //    spec's setup (`ui/e2e/helpers.js`'s `returnToStartScreen`). Its
+  //    `data-testid`s below are that seam's entire surface — see
+  //    ConfirmPrompt.svelte's header for the standing warning against
+  //    refactoring them away;
+  //  * the confirmation IPC call failed, where treating a broken bridge as
+  //    "yes, discard" would silently destroy an unsaved character.
+  //
+  // A single, non-stacking modal; the buttons resolve the pending promise.
 
   // Initial focus on the non-destructive default (Cancel), mirroring
   // StartScreen.svelte's `openButton?.focus()` effect — the a11y lint rejects

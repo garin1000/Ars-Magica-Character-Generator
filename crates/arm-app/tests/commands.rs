@@ -2606,6 +2606,103 @@ fn a_fresh_dirty_state_report_clears_the_confirmed_discard_latch() {
     );
 }
 
+/// C3b: the New/Open discard confirmation is the SAME native dialog the
+/// close/quit guard shows, and `native_discard_confirmation_enabled()` is the
+/// single switch deciding whether this build owns one.
+///
+/// The polarity is the inverse of [`e2e_file_override`]'s, and deliberately so.
+/// There the seam is the *affordance* (a path override), so the shipped build
+/// must not have it. Here the seam is the *bypass*: the shipped build is the one
+/// that must act — it always shows the real dialog and never hands the decision
+/// back to the webview — while the `e2e-testing` build declines, because no
+/// WebDriver capability available to this project can dismiss a native GTK
+/// dialog (the dirty-quit specs leave one open for the app's whole lifetime,
+/// which is why they are pinned as the tail spec of their file). This test runs
+/// under the plain `cargo test -p arm-app` gate, which is exactly the build
+/// users receive.
+#[cfg(not(feature = "e2e-testing"))]
+#[test]
+fn the_discard_confirmation_is_native_in_the_default_build() {
+    assert!(
+        arm_app::commands::native_discard_confirmation_enabled(),
+        "the shipped build must confirm a discard with the native dialog; \
+         returning `None` there would hand a load-bearing data-loss guard to a \
+         fallback that exists only so the e2e suite can answer it"
+    );
+}
+
+/// Mirror of the above, proving the gate actually opens rather than staying
+/// permanently shut — compiled WITH the `e2e-testing` feature (exactly what
+/// `ui/e2e/wdio.conf.js` passes to `cargo tauri build --no-bundle --features
+/// e2e-testing`), the native confirmation must stand down, or every spec's
+/// `returnToStartScreen()` setup hangs on a dialog WebDriver cannot answer.
+#[cfg(feature = "e2e-testing")]
+#[test]
+fn the_discard_confirmation_stands_down_under_the_e2e_feature() {
+    assert!(
+        !arm_app::commands::native_discard_confirmation_enabled(),
+        "under `e2e-testing` the backend must return no native answer, so the \
+         frontend falls back to the in-app prompt the specs can click"
+    );
+}
+
+/// C3b, trap 2: the New/Open confirmation must not ride on
+/// `CloseGuardState::confirmed`. That flag is a one-shot LATCH — set in
+/// `main.rs`'s dialog callback so the re-issued close/quit belonging to the same
+/// confirmed action passes straight through — and reusing it for a NON-terminal
+/// action would suppress every later confirmation in the session, silently
+/// discarding the user's work on the second New.
+///
+/// Structurally that cannot happen: `confirm_discard` takes no
+/// `State<'_, AppState>` at all, so it cannot read or write the latch. This test
+/// pins the observable half — a guard already latched by a confirmed quit
+/// changes nothing about whether the next New/Open gets its dialog. The
+/// behavioural half (that a second New really does ask again) is the frontend's
+/// `state.svelte.test.ts`, which confirms twice in one session.
+#[test]
+fn a_latched_close_guard_cannot_suppress_a_discard_confirmation() {
+    use arm_app::commands::CloseGuardState;
+
+    let latched = CloseGuardState {
+        dirty: true,
+        confirmed: true,
+        ..CloseGuardState::default()
+    };
+
+    assert!(latched.confirmed, "sanity: the latch really is set");
+    assert_eq!(
+        arm_app::commands::native_discard_confirmation_enabled(),
+        cfg!(not(feature = "e2e-testing")),
+        "whether a discard is confirmed natively is a property of the BUILD, \
+         never of the close-guard latch; if this ever starts reading the guard, \
+         a confirmed quit would silence the next New"
+    );
+}
+
+/// The command name is a string literal in `ui/src/lib/ipc.ts` and a function
+/// name in `commands.rs`, with nothing but this test holding them together —
+/// the same gap `main.rs`'s `the_shadow_script_invokes_the_registered_request_close_command`
+/// closes for the window-close shadow. A rename on one side would leave New/Open
+/// invoking a command that does not exist; the frontend would swallow the
+/// rejection and fall back to the in-app prompt, so the app would keep working
+/// while quietly shipping the seam's fallback as its production dialog.
+#[test]
+fn the_frontend_invokes_the_registered_discard_confirmation_command() {
+    let ipc = fs::read_to_string(repo_root().join("ui/src/lib/ipc.ts")).unwrap();
+    assert!(
+        ipc.contains("invoke('confirm_discard'"),
+        "ui/src/lib/ipc.ts must invoke the `confirm_discard` command by that \
+         exact name"
+    );
+
+    let main_rs = fs::read_to_string(repo_root().join("crates/arm-app/src/main.rs")).unwrap();
+    assert!(
+        main_rs.contains("commands::confirm_discard"),
+        "`confirm_discard` must be registered in main.rs's invoke_handler, or \
+         the frontend's call can never reach it"
+    );
+}
+
 /// K5/VA5: `ARM_E2E_FILE` must be inert unless the crate is built with the
 /// `e2e-testing` Cargo feature. Without that gate this override compiled
 /// unconditionally into the exact release binary end users install, letting

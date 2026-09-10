@@ -372,6 +372,39 @@ export async function returnToStartScreen() {
 }
 
 /**
+ * Resize the window and wait for the VIEWPORT to follow.
+ *
+ * The three copies this replaces all waited for `window.innerHeight === height`,
+ * i.e. they assumed the window's outer height and its viewport were the same
+ * number. That held until C3a (`44b005a`) gave the app a native menu bar: on
+ * GTK the menubar lives INSIDE the window, so a window resized to 600 reports a
+ * viewport of 573 and the equality can never be satisfied again. The three
+ * specs that resize (`wizard-flow`'s two describes and `magus-apprenticeship`)
+ * therefore timed out on the resize itself, before reaching a single assertion.
+ *
+ * The inset is measured rather than hardcoded — it is chrome the platform
+ * decides, and a macOS build puts the same menu in the system bar and has none
+ * — so the wait keeps its exact equality instead of degrading to a tolerance.
+ * Measuring before the resize is safe: the inset is a property of the chrome,
+ * not of the height.
+ *
+ * @param {number} width
+ * @param {number} height outer window height to resize to
+ */
+export async function resizeWindowTo(width, height) {
+  const before = await browser.getWindowSize();
+  const inset = before.height - (await browser.execute(() => window.innerHeight));
+  await browser.setWindowSize(width, height);
+  await browser.waitUntil(
+    async () => (await browser.execute(() => window.innerHeight)) === height - inset,
+    {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: `the window should resize to ${height}px tall (viewport ${height - inset}px)`,
+    },
+  );
+}
+
+/**
  * Whether a `SourcePicker` row (an `add-*` button — V/F, Abilities, Spells,
  * Equipment) is greyed out. These rows stay natively enabled and signal
  * "blocked" through `aria-disabled` instead of the `disabled` attribute, so

@@ -24,6 +24,7 @@ fn main() {
             commands::export_markdown,
             commands::export_label_keys,
             commands::update_close_guard,
+            commands::confirm_discard,
             commands::set_app_menu,
             commands::saga_year,
             commands::set_saga_year,

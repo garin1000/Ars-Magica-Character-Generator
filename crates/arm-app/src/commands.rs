@@ -6,7 +6,7 @@ use std::sync::{Mutex, RwLock, RwLockReadGuard};
 use arm_rules::{Characteristic, Entity, Id, LocalizedRuleset, ValidationMode, ValidationResult};
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager, State};
-use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
+use tauri_plugin_dialog::{DialogExt, FileDialogBuilder, MessageDialogButtons, MessageDialogKind};
 
 use arm_rules::DerivedTotals;
 
@@ -416,6 +416,91 @@ pub fn e2e_file_override() -> Option<std::path::PathBuf> {
 #[cfg(not(feature = "e2e-testing"))]
 pub fn e2e_file_override() -> Option<std::path::PathBuf> {
     None
+}
+
+/// Asks the user whether to discard unsaved changes before a NON-TERMINAL
+/// document action — New or Open — replaces the character being edited.
+///
+/// This is the same native dialog the close/quit guard shows (`main.rs`'s
+/// `guard_blocks_quit`), so the app confirms a discard exactly one way whatever
+/// triggered it. It used to confirm it two ways: a native dialog on close/quit
+/// and an in-app Svelte modal on New/Open, which meant two dialogs to keep
+/// worded alike, two focus behaviours, and only one of them looking like the
+/// desktop it runs on.
+///
+/// **It deliberately touches no [`CloseGuardState`].** It takes no
+/// `State<'_, AppState>`, so it structurally cannot: `confirmed` there is a
+/// one-shot latch that lets a re-issued *close/quit* through without a second
+/// dialog, and it is never reset until the frontend reports a fresh dirty state.
+/// Riding a New or an Open on that latch would suppress every later
+/// confirmation in the session and silently destroy the user's work on the
+/// second New. Neither is `dirty` consulted: whether there is anything to
+/// discard is the frontend's question, and it only calls this when there is.
+///
+/// `labels` carries every word, resolved from Fluent by the caller, exactly as
+/// [`update_close_guard`] and [`set_app_menu`] do — Rust authors no user-facing
+/// text.
+///
+/// Returns `Some(true)` to discard, `Some(false)` to cancel, and `None` when
+/// this build has no native confirmation to offer, which is the test seam: see
+/// [`native_discard_confirmation_enabled`].
+#[tauri::command]
+pub async fn confirm_discard(labels: CloseGuardLabels, app: AppHandle) -> Option<bool> {
+    if !native_discard_confirmation_enabled() {
+        return None;
+    }
+    let mut dialog = app
+        .dialog()
+        .message(labels.message)
+        .title(labels.title)
+        .kind(MessageDialogKind::Warning)
+        .buttons(MessageDialogButtons::OkCancelCustom(
+            labels.discard,
+            labels.cancel,
+        ));
+    // Tie the confirmation to the window it is about, so it cannot be lost
+    // behind it. Parenting IS the modality mechanism the dialog plugin offers —
+    // the same call `guard_blocks_quit` makes for the close/quit dialog.
+    if let Some(window) = app.get_webview_window("main") {
+        dialog = dialog.parent(&window);
+    }
+    // `blocking_show` off the main thread, exactly as [`save_entity`] calls
+    // `blocking_save_file`: an async command runs on Tauri's async runtime, not
+    // on the UI thread, so blocking here waits for the answer without stalling
+    // the event loop that has to draw the dialog.
+    Some(dialog.blocking_show())
+}
+
+/// Whether this build owns a native discard confirmation. The single switch
+/// [`confirm_discard`] consults, and the whole of the C3b test seam.
+///
+/// **The polarity is the inverse of [`e2e_file_override`]'s, on purpose.** There
+/// the seam is an *affordance* (redirect a save away from its dialog), so the
+/// shipped build must not have it. Here the seam is the *bypass*, so the shipped
+/// build is the one that must act: it always shows the real dialog and never
+/// hands a load-bearing data-loss decision back to the webview.
+///
+/// The `e2e-testing` build declines instead, because no WebDriver capability
+/// available to this project can dismiss a native GTK dialog — proven, not
+/// theoretical: the dirty-quit specs leave one open for the app's entire
+/// lifetime, which is why they are pinned as the tail spec of their file. New is
+/// reached from `returnToStartScreen()` in essentially every spec's setup
+/// (`ui/e2e/helpers.js`), so without this the whole suite would hang on its
+/// first `beforeEach`. Returning `None` sends the frontend to its in-app
+/// fallback prompt, whose buttons WebDriver can click
+/// (`ui/src/lib/components/DiscardPrompt.svelte`).
+///
+/// Both halves are proved: `the_discard_confirmation_is_native_in_the_default_build`
+/// and `the_discard_confirmation_stands_down_under_the_e2e_feature` in
+/// `tests/commands.rs`.
+#[cfg(not(feature = "e2e-testing"))]
+pub fn native_discard_confirmation_enabled() -> bool {
+    true
+}
+
+#[cfg(feature = "e2e-testing")]
+pub fn native_discard_confirmation_enabled() -> bool {
+    false
 }
 
 /// Ties a file dialog to the app's main window, so it opens centred on the app and

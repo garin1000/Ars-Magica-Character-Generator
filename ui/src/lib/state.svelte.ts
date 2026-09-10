@@ -429,7 +429,16 @@ class AppStore {
     return this.#fileOps.busy;
   }
 
-  /** Whether the New/Open discard-confirmation prompt is currently shown. */
+  /**
+   * Whether a New/Open discard confirmation is on screen and unanswered —
+   * the native dialog or, where there is none, the in-app fallback.
+   * @see FileOperations.discardConfirmPending
+   */
+  get discardConfirmPending(): boolean {
+    return this.#fileOps.discardConfirmPending;
+  }
+
+  /** Whether the in-app fallback discard modal is currently shown. */
   get discardPromptOpen(): boolean {
     return this.#fileOps.discardPromptOpen;
   }
@@ -2247,7 +2256,7 @@ class AppStore {
    * entering the wizard on the character that was already there.
    */
   async open(): Promise<boolean> {
-    if (this.#fileOps.busy || this.discardPromptOpen) return false;
+    if (this.#fileOps.busy || this.discardConfirmPending) return false;
     if (this.dirty && !(await this.#fileOps.confirmDiscard())) return false;
     this.#fileOps.busy = true;
     this.error = null;
@@ -2296,7 +2305,7 @@ class AppStore {
    * again, so no type may be implied).
    */
   async newDocument(): Promise<void> {
-    if (this.#fileOps.busy || this.discardPromptOpen) return;
+    if (this.#fileOps.busy || this.discardConfirmPending) return;
     if (this.dirty && !(await this.#fileOps.confirmDiscard())) return;
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
     this.entity = newEntity(id, version, '');

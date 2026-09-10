@@ -102,7 +102,9 @@ yourself.
   and Settings where each desktop expects it.
 - **Never lose work by accident.** Closing or quitting the app with unsaved
   changes — including via macOS Cmd+Q — prompts for confirmation before
-  discarding, as does starting a new document or opening another file.
+  discarding, as does starting a new document or opening another file. It is one
+  and the same confirmation, and it is your desktop's own dialog rather than a
+  panel drawn inside the window.
 - **Light and dark, following your desktop.** The app ships both palettes and
   picks whichever one your operating system is set to, switching live if you
   change that setting while it is open — no restart, and nothing to configure.

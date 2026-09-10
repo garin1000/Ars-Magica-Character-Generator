@@ -370,6 +370,23 @@ export function updateCloseGuard(dirty: boolean, labels: CloseGuardLabels): Prom
 }
 
 /**
+ * Ask the backend to confirm discarding unsaved changes before New or Open
+ * replaces the document — the SAME native dialog the close/quit guard shows, so
+ * the app confirms a discard exactly one way whatever triggered it. `labels`
+ * carries every word, resolved from Fluent here, exactly as
+ * {@link updateCloseGuard} does.
+ *
+ * Resolves `true` to discard, `false` to cancel, and **`null` when this build
+ * offers no native confirmation** — the C3b test seam. A native dialog is
+ * un-dismissable by WebDriver, so the `e2e-testing` build declines and the
+ * caller falls back to the in-app prompt the specs can click
+ * (see `crates/arm-app/src/commands.rs`'s `native_discard_confirmation_enabled`).
+ */
+export function confirmDiscard(labels: CloseGuardLabels): Promise<boolean | null> {
+  return invoke('confirm_discard', { labels });
+}
+
+/**
  * Install (or reinstall) the native application menu.
  *
  * Rust owns the menu's shape and platform placement; `labels` carries every

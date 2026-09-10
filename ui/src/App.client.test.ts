@@ -38,6 +38,7 @@ vi.mock('./lib/ipc', () => ({
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
   updateCloseGuard: vi.fn(),
+  confirmDiscard: vi.fn(),
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
@@ -150,6 +151,11 @@ beforeEach(() => {
   vi.mocked(ipc.updateCloseGuard).mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.saveEntity).mockReset().mockResolvedValue(null);
   vi.mocked(ipc.loadEntity).mockReset().mockResolvedValue(null);
+  // `null` = "this build has no native discard dialog", which is what the
+  // `e2e-testing` binary answers and what sends the frontend to the in-app
+  // fallback modal — the one the focus tests below are about. A test wanting the
+  // native path overrides this.
+  vi.mocked(ipc.confirmDiscard).mockReset().mockResolvedValue(null);
   vi.mocked(ipc.loadRuleset).mockReset().mockResolvedValue(localizedRuleset());
   store.lang = 'en';
   store.error = null;
@@ -250,6 +256,32 @@ function loadableEntity(): Entity {
   };
 }
 
+/**
+ * Wait for the in-app fallback modal to actually be on screen. Since C3b the
+ * confirmation starts with an IPC round-trip to the native dialog, so the modal
+ * no longer appears in the same synchronous turn as the New/Open click.
+ */
+async function awaitInAppPrompt(): Promise<void> {
+  await vi.waitFor(() => {
+    flushSync();
+    expect(store.discardPromptOpen).toBe(true);
+  });
+}
+
+/**
+ * Wait for the confirmation to be fully over. Answering the modal resolves the
+ * user's choice, but `discardConfirmPending` — what the focus-restoring
+ * `$effect` and the shell's `inert` read — only drops on the `finally` a
+ * microtask later, so asserting on focus before this would read the state
+ * mid-flight and pass whether or not the effect ever ran.
+ */
+async function awaitConfirmationSettled(): Promise<void> {
+  await vi.waitFor(() => {
+    flushSync();
+    expect(store.discardConfirmPending).toBe(false);
+  });
+}
+
 describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
   it('returns focus to the New button once a cancelled prompt closes', async () => {
     await mountApp();
@@ -265,11 +297,10 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
     flushSync();
 
     void store.newDocument();
-    flushSync();
-    expect(store.discardPromptOpen).toBe(true);
+    await awaitInAppPrompt();
 
     store.resolveDiscardPrompt(false);
-    flushSync();
+    await awaitConfirmationSettled();
 
     expect(document.activeElement).toBe(newButton);
   });
@@ -292,11 +323,10 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
     flushSync();
 
     void store.open();
-    flushSync();
-    expect(store.discardPromptOpen).toBe(true);
+    await awaitInAppPrompt();
 
     store.resolveDiscardPrompt(true);
-    flushSync();
+    await awaitConfirmationSettled();
 
     // open() sets view = 'editor', which it already was, so the Open button is
     // never unmounted — this is the "trigger survives" half of the fix.
@@ -317,8 +347,7 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
     flushSync();
 
     void store.newDocument();
-    flushSync();
-    expect(store.discardPromptOpen).toBe(true);
+    await awaitInAppPrompt();
 
     // Simulate the trigger having left the document by the time the prompt
     // resolves — App.svelte's own comment describes exactly this case: "the
@@ -326,9 +355,50 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
     newButton.remove();
 
     store.resolveDiscardPrompt(false);
-    flushSync();
+    await awaitConfirmationSettled();
 
     expect(focusSpy).not.toHaveBeenCalled();
+  });
+
+  // C3b: the native dialog is parented to the window but NOT input-modal on
+  // Linux (the same limitation `busy` covers for the native file dialogs), so
+  // the shell has to be switched off for it too — otherwise the user can keep
+  // editing the character behind the very dialog asking whether to throw those
+  // edits away. `discardPromptOpen` cannot carry this: there is no in-app modal
+  // on the native path.
+  it('switches the shell off while the NATIVE discard confirmation is pending', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    // A confirmation that has not answered yet models a native dialog still on
+    // screen. Resolvable, so the pending flag cannot leak into the next test —
+    // the store is a module singleton, and a permanently-pending confirmation
+    // would leave every later test's shell inert.
+    let answer: (discard: boolean | null) => void = () => {};
+    vi.mocked(ipc.confirmDiscard).mockReturnValue(
+      new Promise<boolean | null>((resolve) => {
+        answer = resolve;
+      }),
+    );
+    store.entity.name = 'a dirtying edit';
+    flushSync();
+
+    const shell = document.querySelector('[data-testid="app-shell"]') as HTMLElement;
+    expect(shell.inert).toBe(false);
+
+    const pending = store.newDocument();
+    flushSync();
+
+    expect(store.discardConfirmPending).toBe(true);
+    // Nothing in-app is showing: this is the native dialog's own pending state.
+    expect(store.discardPromptOpen).toBe(false);
+    expect(shell.inert).toBe(true);
+
+    answer(false);
+    await pending;
+    await awaitConfirmationSettled();
+    expect(shell.inert).toBe(false);
   });
 });
 

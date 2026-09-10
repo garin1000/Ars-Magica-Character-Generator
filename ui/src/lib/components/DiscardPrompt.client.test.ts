@@ -20,6 +20,11 @@ vi.mock('../ipc', () => ({
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
   updateCloseGuard: vi.fn(),
+  // `null` = "this build has no native discard dialog". Since C3b that is the
+  // ONLY way this component ever renders — the shipped build confirms a discard
+  // with the native dialog, and this modal is the fallback the `e2e-testing`
+  // build (and a failed IPC call) falls back to.
+  confirmDiscard: vi.fn().mockResolvedValue(null),
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
@@ -68,12 +73,15 @@ let target: HTMLElement;
 let app: Record<string, unknown> | undefined;
 
 /** Opens the prompt exactly the way the app does: a New/Open action while
- * dirty (`AppStore.newDocument`). Not awaited — `confirmDiscard()` sets
- * `discardPromptOpen` synchronously inside its Promise executor before
- * suspending on the `await`, so it is already true by the next flush. */
-function openPrompt(): void {
+ * dirty (`AppStore.newDocument`). Awaited now — since C3b the confirmation
+ * starts with an IPC round-trip to the native dialog, and only the `null`
+ * answer mocked above brings this modal up, one microtask later. */
+async function openPrompt(): Promise<void> {
   void store.newDocument();
-  flushSync();
+  await vi.waitFor(() => {
+    flushSync();
+    expect(store.discardPromptOpen).toBe(true);
+  });
 }
 
 beforeEach(() => {
@@ -92,7 +100,7 @@ afterEach(() => {
 });
 
 describe('DiscardPrompt focus management (E1)', () => {
-  it('moves initial focus to the safe Cancel control, never the destructive Discard one', () => {
+  it('moves initial focus to the safe Cancel control, never the destructive Discard one', async () => {
     expect(store.dirty).toBe(true); // sanity: newDocument() only prompts when dirty
 
     target = document.createElement('div');
@@ -100,8 +108,7 @@ describe('DiscardPrompt focus management (E1)', () => {
     app = mount(DiscardPrompt, { target });
     flushSync();
 
-    openPrompt();
-    expect(store.discardPromptOpen).toBe(true);
+    await openPrompt();
 
     const cancel = target.querySelector('[data-testid="discard-cancel"]');
     const discard = target.querySelector('[data-testid="discard-confirm"]');
@@ -116,8 +123,7 @@ describe('DiscardPrompt focus management (E1)', () => {
     app = mount(DiscardPrompt, { target });
     flushSync();
 
-    openPrompt();
-    expect(store.discardPromptOpen).toBe(true);
+    await openPrompt();
 
     const dialog = target.querySelector('[role="alertdialog"]') as HTMLElement;
     expect(dialog).toBeTruthy();
