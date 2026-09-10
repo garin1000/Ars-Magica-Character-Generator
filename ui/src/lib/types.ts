@@ -945,8 +945,9 @@ export interface EntityTypeProfile {
   // guideline (`:2860`); `hermetic` on the magus profile only. A separate field
   // from `gift_categories` on purpose — "is this character Gifted?" and "does
   // this Flaw count as Hermetic?" are different questions with, for the two
-  // Beings Flaws, different answers. Any wizard advice about Hermetic Flaws
-  // keys off THIS one, exactly as the engine's `missing_hermetic_flaw` does.
+  // Beings Flaws, different answers. No frontend code reads either field today;
+  // when the guided wizard advises on Hermetic Flaws it must key off THIS one,
+  // exactly as the engine's `missing_hermetic_flaw` does.
   hermetic_flaw_categories?: string[];
   // Ordered: the guided wizard walks these in sequence. Typed in the engine too,
   // so a phase string it has no variant for fails the ruleset load.

@@ -1991,7 +1991,8 @@ pub struct PointItem {
     /// granted copies (a House-granted Puissant Ignem counts against the same
     /// ceiling as one the player buys). Default `u8::MAX` (255) = "no ceiling
     /// the rules state" (the same sentinel convention as `max_per_target`; see
-    /// `RULES.md:782-787`). Distinct from `max_per_target`, which caps copies
+    /// RULES.md, "Selection multiplicity — `max_total`").
+    /// Distinct from `max_per_target`, which caps copies
     /// sharing one identical `(id, params)` target: e.g. a Virtue repeatable
     /// "with a different target each time" may need `max_per_target: 1` (no
     /// repeat of the same target) alongside a stated `max_total` (an overall
@@ -2042,8 +2043,8 @@ fn is_default_max_per_target(value: &u8) -> bool {
 }
 
 /// The default total-selection ceiling: no stated limit. See
-/// `PointItem::max_total`'s doc comment and `RULES.md:782-787` for the
-/// `u8::MAX` sentinel convention.
+/// [`PointItem::max_total`]'s doc comment and RULES.md, "Selection
+/// multiplicity — `max_total`", for the `u8::MAX` sentinel convention.
 fn default_max_total() -> u8 {
     u8::MAX
 }

@@ -58,7 +58,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2774`, `:2297`
   (companions), `:2303` (magi).
 - Implementation: `crates/arm-rules/src/validation/balance.rs` — `validate_balance`
-  (:23), `compute_balance` (:168). Emits `unbalanced_virtues` (error) when spent virtue points
+  (:23), `compute_balance` (:169). Emits `unbalanced_virtues` (error) when spent virtue points
   exceed flaw points granted, plus the `over_budget_*` totals. (Per-type point
   totals are data; see below.)
 
@@ -142,7 +142,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   below under-count their points; `core_rules_tainted_virtues_carry_the_tainted_flag`
   in `crates/arm-rules/tests/data_integrity.rs` now pins a sample of tagged
   entries plus that control.
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:150).
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:168).
   The book frames the limit as a "should", so it is a **non-blocking warning**,
   measured against the points **actually taken** (not the type budget): a side
   warns when `2·tainted_points > total_points` for that side (Virtue / Flaw).
@@ -192,8 +192,8 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   Tainted precedent.** `validate_share_of_kind_cap` takes the **folded**
   selection list (bought ++ granted), because **Devil Child grants a free
   Demonic Might or Demonic Powers** (`:3673`) and a granted copy is still a copy
-  of the Virtue. `validate_tainted_cap` reads raw `entity.selections`
-  (`caps.rs:162`) and so counts only bought ones — arguably right for Tainted,
+  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :168) reads raw
+  `entity.selections` and so counts only bought ones — arguably right for Tainted,
   which the book frames as a character-generation guideline. Two identically
   worded "half" rules therefore disagree about grants **on purpose**; do not
   "fix" one to match the other without deciding the question again.
@@ -266,8 +266,10 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   is a free choice with no registry — `(Realm)`, `(Land)`, `(Subject)`, `(Sin)`,
   `(Terrain)`, `(Commodity)`, `(Faculty)`, `(Role)`, `(Power)`, plus the mixed
   `Necessary (Realm) Aura for (Ability)` (a `text` + an `ability`). `validate_parameters`
-  accepts any value for a `text` param (no resolution); the UI text input already
-  existed. Param hints come from Fluent `param-label-<key>`. `(Terrain)` is here
+  resolves a `text` param against no registry, so any value with non-whitespace
+  content is legal; an empty or whitespace-only one is **not** — it reads as a
+  choice not yet made and raises `missing_param` (see *Parameter-value identity:
+  trimmed, never case-folded*). The UI text input already existed. Param hints come from Fluent `param-label-<key>`. `(Terrain)` is here
   rather than under `enumerated` on purpose — its list ends "…, etc." (`:6130`).
 - **Name-qualifiers — not params, stay literal by design:** `(Dove)`, `(the Wolf)`,
   `(Muq-Ta')`, `(Hermetic)`, `(PC)`, and the `(positive)`/`(negative)` Cyclic Magic
@@ -907,8 +909,10 @@ two.** `gift_categories` used to serve **three** masters — Gift detection, the
 free-slot grant, and `validate_house`'s "a magus should take at least one
 Hermetic Flaw" guideline (`:2860`). Only the first two forced dropping
 `hermetic`, so the third became collateral: a magus whose only Hermetic Flaw was
-one of these two — a legal build; any magus may take Unbearable (`:6895`), and a
-Gentle-Gift magus may take Offensive (`:6530`) — was told he had none, though the
+one of these two — a legal build; a magus without the Blatant Gift may take
+Unbearable (`:6895` — "Only characters with The Gift or Magical Air may take this
+Flaw, and it cannot be combined with the Blatant Gift"), and a Gentle-Gift magus
+may take Offensive (`:6530`) — was told he had none, though the
 book lists both in its Hermetic Flaws index (`:5445`, `:5455`).
 
 Two fields now carry the two meanings, and `hermetic` is still **not** a
@@ -1007,7 +1011,7 @@ reason: a category condition would license itself.
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2868-2877` (The Gift),
   `:2858` (magi must take The Gift + Hermetic Magus status), `:2293` and
   `:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:459).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:900).
   The Gift policy is independent of the `is_magus` flag (an unGifted Redcap is a
   companion; a Gifted hedge wizard is not a magus).
 
@@ -1098,7 +1102,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
   `base_max_score`, `base_min_score`, `effective_max_score`,
   `effective_min_score`); enforced in `validation/scores.rs` —
-  `validate_characteristics` (:31) (off-table out-of-range error, above-cap /
+  `validate_characteristics` (:33) (off-table out-of-range error, above-cap /
   below-floor errors against the per-characteristic buy range, overspent error,
   points-unspent warning). See the Great/Poor (Characteristic) layer below.
 
@@ -1375,7 +1379,7 @@ The exact sign-mirror of Great: a `flaw`, `amount: -1`, lowering the buy *floor*
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :121) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :237) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`:4816`) and "Great twice per Characteristic" (`:3989`). Effect
@@ -2237,7 +2241,7 @@ i.e. `charged = ceil(T·2/3)`. The cap exemption is read off the effect's presen
   param: "ability", counts_as_num: 3, counts_as_den: 2 }]`.
 - Implementation: `effective/xp.rs::charged_cost` (the `ceil(T·den/num)` arithmetic,
   verified against the worked example below) + `ability_affinity`, folded into
-  `effective/xp.rs::xp_allocation` and so into `validation/magus.rs::validate_xp_pool` (:731).
+  `effective/xp.rs::xp_allocation` and so into `validation/magus.rs::validate_xp_pool` (:780).
 
 #### Affinity with (Art) — creation XP counts for half again
 > "Your Advancement Totals for one Hermetic Art are increased by one half, rounded
@@ -2281,7 +2285,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:731) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:780) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -2545,7 +2549,7 @@ approximation of "Latin").
   Vec<EnchantedDevice { name, level: u16 }>` records the player's chosen starting
   devices; the total `level` is charged against `item_level_budget()`.
   `effective/gift_confidence.rs::item_level_used` sums the device levels (surfaced as
-  `EffectiveScores.item_level_used`), and `validation/might.rs::validate_devices` (:85) emits
+  `EffectiveScores.item_level_used`), and `validation/might.rs::validate_devices` (:95) emits
   `over_item_level` (Fluent `issue-over_item_level`) when `used > budget`. A device
   therefore requires a granting Virtue, exactly as a starting Reputation does.
 
@@ -3299,7 +3303,7 @@ index heading these four are listed under (`:3329-3334`), and one the
 `mythic_companion` profile alone permits, which is how "not available to grogs"
 (`:2637`) is enforced; the free Minor and required Virtues keep their own book
 categories. Per-type bonus points fold into the balance ceilings via
-`EffectiveBudget` (`validation/balance.rs`, :89): `flaw_ceiling = base + bonus_flaw`,
+`EffectiveBudget` (`validation/balance.rs`, :90): `flaw_ceiling = base + bonus_flaw`,
 `virtue_ceiling = base + bonus_flaw·rate + bonus_free_virtue`,
 `funded = flaw·rate + bonus_free_virtue` (rate = 2). Zero for a non-mythic type,
 so the check reduces exactly to the base budget.
@@ -3561,7 +3565,7 @@ Two-level enforcement:
   `level`, ritual ⇒ `level ≥ 20`, non-ritual ⇒ `level ≤ 50`; a non-ritual spell
   may not have `duration = Year` or `target = Boundary`, nor be a Momentary Creo
   spell with `creates_lasting`. Vision target is exempt from the Boundary rule.
-- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :524, called
+- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :573, called
   from `validate_spells`, V51 split it into a named sub-check): the *resolved* learned
   level (General chosen level or fixed) must obey the same ≥20 / ≤50 bounds — a
   violation emits `spell_ritual_legality` (`CODE_SPELL_RITUAL_LEGALITY`). This
@@ -6727,17 +6731,46 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:228),
-  `validate_forbidden_traits` (:249))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:376),
+  `validate_forbidden_traits` (:397))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:117),
-  `validate_parameters` (:320), `validate_duplicate_selections` (:150))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:204),
+  `validate_parameters` (:507), `validate_duplicate_selections` (:237))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,
   enforced at load (`ruleset/integrity.rs` — `validate_prereq_refs`) and, as
   defense in depth, at evaluation (`validation/prereq.rs` —
   `evaluate_prereq`)
+
+### Provenance is guarded, not merely conventional (B11)
+
+Three tests keep the citations in this file and in the tree honest, because
+line numbers rot silently and a stale one is worse than none — it sends a
+reader confidently to the wrong passage.
+
+- **Outward, into the rulebooks.** `tests/rules_source_provenance.rs` walks
+  every `source: { file, lines }` block in `rules/core/*.json` and asserts the
+  named English file exists and the range brackets real, non-blank content.
+- **Inward, into Rust.** `tests/rules_md_citations.rs` —
+  `every_implementation_site_citation_in_rules_md_points_at_the_named_item`
+  parses this file's `` `symbol` (:NNN) `` implementation-site citations and
+  asserts each cited line actually defines the symbol it names. The B11 sweep
+  found **15 of them stale**, every one a function that had simply moved; the
+  failure message now names the line the symbol is really on, so the fix is
+  mechanical. A floor of 20 parsed citations keeps the test from silently
+  degrading to a no-op if the citation wording is ever reworked.
+- **No code cites this file by line.** `no_source_comment_cites_rules_md_by_line_number`
+  bans `RULES.md:<line>` in Rust comments outright. RULES.md gained over a
+  thousand lines in Phase B alone, so such a citation is wrong within days —
+  all three that existed pointed at unrelated sections. **Cite a section
+  heading instead**; headings are stable and greppable.
+
+Deliberately *not* guarded: the rulebook citations in this file's own prose.
+A bare `` `:2860` `` inherits its book from the surrounding section, so
+resolving one needs a heuristic, and the only defect a bounds check could catch
+(a line past EOF) is not the defect that actually happens — an off-by-one,
+which lands on a real line and passes. Those are verified by reading.
 
 ### Parameter-value identity: trimmed, never case-folded (row 10)
 
