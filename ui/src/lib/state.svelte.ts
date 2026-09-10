@@ -183,8 +183,30 @@ function newEntity(rulesetId: string, version: string, typeId: string): Entity {
 // `import { type AbilityFunding } from '../state.svelte'` keeps working.
 export type { AbilityFunding };
 
+/**
+ * Which palette the app paints with. `auto` follows the OS, and it is the
+ * default, so a fresh install is already correct with no settings surface at all
+ * — the user-facing control and the persistence of an explicit choice are C4's.
+ */
+export type Theme = 'auto' | 'light' | 'dark';
+
+/**
+ * Deliberately the LIGHT query and not the dark one. The app's own default is
+ * dark, so an engine that does not know the feature reports `matches: false` and
+ * lands exactly where an un-themed app lands, rather than flipping to a palette
+ * nobody asked for.
+ */
+const PREFERS_LIGHT = '(prefers-color-scheme: light)';
+
 class AppStore {
   lang = $state<Lang>('en');
+  /** @see Theme */
+  theme = $state<Theme>('auto');
+  /**
+   * The OS's colour-scheme preference, mirrored into reactive state by
+   * {@link watchSystemTheme}. Written by that watcher and by nothing else.
+   */
+  osPrefersLight = $state(false);
   ruleset = $state<LocalizedRuleset | null>(null);
   // The startup screen's placeholder: no character exists yet, so its type is
   // empty. A real one is only ever built by {@link createCharacter} or a load.
@@ -499,6 +521,44 @@ class AppStore {
     this.lang = lang;
     // Rules display text is per-language, so reload the ruleset too.
     await this.#reloadRuleset(false);
+  }
+
+  /**
+   * The palette `<html data-theme>` names — resolved, so never `auto`: the
+   * stylesheet has a `:root` and a `:root[data-theme='light']` and no rule at
+   * all for a theme that has not been decided yet.
+   */
+  get resolvedTheme(): 'light' | 'dark' {
+    if (this.theme !== 'auto') return this.theme;
+    return this.osPrefersLight ? 'light' : 'dark';
+  }
+
+  /**
+   * Track the OS colour-scheme preference for as long as the returned teardown
+   * has not been called.
+   *
+   * A ONE-SHOT read at startup is the tempting shape and the wrong one: the user
+   * switching their desktop to light mid-session would leave this app dark for
+   * the rest of the session, which is precisely what `auto` promises not to do.
+   * So it subscribes — and hands back the unsubscribe rather than keeping it,
+   * because a listener on a `MediaQueryList` outlives whatever registered it and
+   * a leaked one keeps writing into a store the caller has finished with.
+   *
+   * Returns a no-op teardown where there is no media-query API at all: this
+   * module is imported by the whole node-environment SSR test suite, and by the
+   * app itself before the webview has run anything.
+   */
+  watchSystemTheme(): () => void {
+    const query =
+      typeof globalThis.matchMedia === 'function' ? globalThis.matchMedia(PREFERS_LIGHT) : null;
+    if (query === null) return () => {};
+
+    this.osPrefersLight = query.matches;
+    const onPreferenceChanged = (event: MediaQueryListEvent): void => {
+      this.osPrefersLight = event.matches;
+    };
+    query.addEventListener('change', onPreferenceChanged);
+    return () => query.removeEventListener('change', onPreferenceChanged);
   }
 
   async setMode(mode: ValidationMode): Promise<void> {

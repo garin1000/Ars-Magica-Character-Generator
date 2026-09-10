@@ -534,6 +534,117 @@ describe('document language attribute tracks the active UI language (S3)', () =>
   });
 });
 
+// `app.css` ships two palettes and picks between them on `<html data-theme>`, so
+// the whole light/dark/auto mechanism is one `$effect` writing that attribute and
+// one subscription to the OS preference. Neither is observable under SSR: an
+// effect body never runs there, and an assertion placed after one that never
+// fires still reports green — the exact silent gap the `client` project was
+// created for.
+describe('the palette follows the OS unless told otherwise', () => {
+  /** A `MediaQueryList` stand-in whose listeners the test can inspect and fire. */
+  interface FakeQuery {
+    matches: boolean;
+    readonly listeners: Set<(event: MediaQueryListEvent) => void>;
+  }
+
+  let realMatchMedia: typeof globalThis.matchMedia | undefined;
+  let query: FakeQuery;
+
+  /** Install a fake `matchMedia` reporting `prefersLight`, and return the query. */
+  function stubMatchMedia(prefersLight: boolean): FakeQuery {
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    const fake: FakeQuery = { matches: prefersLight, listeners };
+    globalThis.matchMedia = ((media: string) => ({
+      media,
+      matches: fake.matches,
+      addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
+        listeners.add(listener);
+      },
+      removeEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
+        listeners.delete(listener);
+      },
+    })) as unknown as typeof globalThis.matchMedia;
+    return fake;
+  }
+
+  /** What the OS would deliver when the user switches their desktop theme. */
+  function emitOsChange(matches: boolean): void {
+    query.matches = matches;
+    for (const listener of query.listeners) listener({ matches } as MediaQueryListEvent);
+    flushSync();
+  }
+
+  beforeEach(() => {
+    realMatchMedia = globalThis.matchMedia;
+    query = stubMatchMedia(false);
+    store.theme = 'auto';
+    store.osPrefersLight = false;
+  });
+
+  afterEach(() => {
+    if (realMatchMedia) globalThis.matchMedia = realMatchMedia;
+    store.theme = 'auto';
+    store.osPrefersLight = false;
+    document.documentElement.removeAttribute('data-theme');
+  });
+
+  it('names the resolved palette on <html>, never the unresolved choice', async () => {
+    await mountApp();
+
+    // 'auto' is a preference, not a palette: the stylesheet has a `:root` and a
+    // `:root[data-theme='light']` and no rule whatsoever for 'auto'.
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+  });
+
+  it('starts on the light palette when that is what the OS already prefers', async () => {
+    query = stubMatchMedia(true);
+    await mountApp();
+
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+  });
+
+  // The point of `auto`, and the half a startup-only read silently drops: a user
+  // whose desktop flips to light at dusk would otherwise sit in a dark app until
+  // they restarted it.
+  it('repaints on a LIVE OS switch rather than reading the preference once', async () => {
+    await mountApp();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+
+    emitOsChange(true);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+
+    emitOsChange(false);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+  });
+
+  it('stops following the OS the moment the choice becomes explicit', async () => {
+    await mountApp();
+
+    store.theme = 'light';
+    flushSync();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+
+    // The subscription stays live — 'auto' must still work if the user goes back
+    // to it — but it may no longer decide the palette.
+    emitOsChange(false);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+  });
+
+  it('unsubscribes from the OS preference when the app goes away', async () => {
+    await mountApp();
+    expect(query.listeners.size).toBe(1);
+
+    unmount(app!);
+    app = undefined;
+    flushSync();
+
+    // A `MediaQueryList` outlives the component that subscribed to it, so a
+    // listener left behind keeps writing into the store forever — and every
+    // remount adds another.
+    expect(query.listeners.size).toBe(0);
+  });
+});
+
 // S4 (full-audit UX): App.svelte already computed the right localized title
 // string into `document.title` (the `app-title-document(-dirty)` Fluent
 // keys — NOT `app-document-name(-dirty)`, which are shaped for the on-screen

@@ -55,15 +55,32 @@
   --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.55);
   --shadow-modal: 0 10px 40px rgba(0, 0, 0, 0.35);
 
-  /* SEVERITY ROW TINTS — CARRIED OVER AT THEIR EXACT CURRENT VALUES, AND A KNOWN
-     HAZARD FOR THE LIGHT THEME. These are hand-mixed washes that are NOT derived
-     from `--error`/`--warning`: #e2657a and #d8a657 respectively, neither of
-     which is a token. Both are a 12% wash, which reads as a faint DARKENING here
-     and would read as a faint lightening — i.e. the opposite emphasis — against a
-     light background. Tokenized now so the palette can reach them; re-deriving
-     them from the severity colours is the light theme's job, not this change's. */
-  --tint-error: rgba(226, 101, 122, 0.12);
-  --tint-warning: rgba(216, 166, 87, 0.12);
+  /* SEVERITY ROW TINTS, now genuinely DERIVED: each is a wash of that palette's
+     own `--error`/`--warning`, so a row's fill and its left border can never
+     drift apart. (C1 carried these over as hand-mixed washes of #e2657a and
+     #d8a657 — near neighbours of the severity colours, but not them; the change
+     to the rendered row is at most 3/255 per channel.) The alpha stays 12% on
+     both here, because that is what makes each row 1.19:1 / 1.25:1 against
+     `--bg`; the light palette needs two DIFFERENT alphas to land on the same two
+     steps, which is exactly why the alpha belongs in the token. */
+  --tint-error: rgba(240, 122, 141, 0.12);
+  --tint-warning: rgba(230, 180, 102, 0.12);
+
+  /* THE ONE NON-COLOUR TOKEN THAT IS STILL PER-THEME. An opacity is not a
+     colour, but what it MEANS is: the same fraction moves ink toward a light
+     background far faster in luminance terms than toward a dark one, so a single
+     value cannot carry the same cue in both palettes. `--ink` at 0.55 over
+     `--panel` clears 4.5:1 here (5.11:1) and fails on light (3.35:1). Each
+     palette therefore names the strongest dim that still clears AA against its
+     own surfaces, and `src/app.css.test.ts` computes both rather than trusting
+     this sentence. */
+  --dim-blocked: 0.55;
+  /* The other dim, and a far gentler one: a secondary fragment held back WITHIN
+     its own line — the wizard rail's step number before its label, the character
+     banner's input placeholders. Both already dim the QUIET token
+     (`--ink-dim`, `--muted`), which this palette can afford (5.08:1 and 4.91:1)
+     and the light one cannot. */
+  --dim-chrome: 0.7;
 
   /* Single source of truth for the width of derived read-outs, so the
      two-column lists/grids and the multi-column tables stay readable instead of
@@ -106,6 +123,119 @@
      smaller than it did before this change; only body text and above shrink. */
   font-size: 12.75px;
   color-scheme: dark;
+}
+
+/* THE LIGHT PALETTE — the same token names, nothing else.
+   Only the theme-dependent tokens are re-declared: the type scale, the read-out
+   widths and the root font size are palette-independent and stay above, declared
+   once. `src/app.css.test.ts` fails if this block forgets a colour the dark
+   palette declares (a forgotten token silently inherits its DARK value, which is
+   how one white-on-white label ships unnoticed) or invents one the dark palette
+   lacks (undefined whenever the app is dark).
+
+   Selection is an ATTRIBUTE, not a media query: `<html data-theme>` is written by
+   the frontend, which resolves `auto` against the OS itself. So the light values
+   live in exactly ONE place, `auto` and an explicit choice go down the same code
+   path, and there is no second copy of the palette inside a
+   `prefers-color-scheme` block to drift from this one.
+
+   The values ANCHOR on the sibling arm-de-translation rulebook renderer
+   (`tools/build-html/md_to_html.py`, `get_css()`), so the two projects read as
+   one family: `--bg`/`--panel`/`--surface-raised` are its three warm off-whites,
+   `--ink` and `--muted` its two greys, `--accent` its saddle brown, and
+   `--region-border` its hairline. Everything else is derived from those, and the
+   derivation is written next to each one. */
+:root[data-theme='light'] {
+  /* Backgrounds, and the dark palette's ORDER is preserved rather than its
+     direction: there, `--bg` is the window and `--panel` the lighter content
+     surface above it, with `--surface-raised` between them and
+     `--surface-overlay` outside the pair. The light palette keeps exactly that
+     ladder, mirrored — window, raised, panel — and puts the floating tooltip
+     outside it on the bright side, at pure white, where the dark palette puts it
+     outside on the dark side. Its edge is defined by its `--accent` border and
+     `--shadow-pop`, the same two things that define it in the dark. */
+  --bg: #f0eeea;
+  --panel: #fafaf8;
+  --surface-raised: #f5f4f0;
+  --surface-overlay: #ffffff;
+
+  /* Text. `--ink-hover` is the LIFT a dimmed control gets when pointed at, so on
+     light it is the darkest ink rather than the brightest — the direction flips,
+     the meaning does not. `--ink-dim` stays quieter than `--muted`, as it is in
+     the dark, but only just: on the darkest light surface (`--bg`) a grey lighter
+     than #6b6b6b drops the wizard rail's own step labels under 4.5:1
+     (#767676 measures 3.92:1), and the rail is running text, not decoration. */
+  --ink: #2c2c2c;
+  --ink-hover: #1a1a1a;
+  --muted: #666666;
+  --ink-dim: #6b6b6b;
+
+  --accent: #8b4513;
+  /* The severity pair keeps the dark palette's HUES (error ≈ 350°, warning ≈ 37°)
+     and inverts their lightness, except that `--warning` is pushed to a clearly
+     yellower 47°: at light-theme lightness a 37° amber IS brown, and it would
+     have landed on top of `--accent`'s red-brown instead of reading as a second
+     severity. `--error-strong` stays the STRONGER of the two errors, which on
+     light means darker (9.5:1 against `--bg`, against `--error`'s 7.2:1) — the
+     same relationship the dark palette expresses by making it brighter. */
+  --error: #99192e;
+  --error-strong: #7a0f21;
+  --warning: #7a6000;
+
+  /* The three separators keep their order of prominence — divider strongest,
+     region-border faintest — around the sibling project's own #ddd hairline. Each
+     lands at ~0.75-0.80x the WCAG ratio its dark counterpart has (1.69 / 1.33 /
+     1.17 against 2.10 / 1.81 / 1.55): a dark hairline on a light ground reads
+     harder than the same ratio does the other way round, so matching the numbers
+     exactly would have made the light theme the noisier of the two. */
+  --divider: #c3c3c3;
+  --border: #d0d0d0;
+  --region-border: #dddddd;
+
+  /* Both scrims stay black and keep their 0.7 strength ratio, at roughly a third
+     less alpha. The same alpha does far more work here: 35% black takes `--bg`
+     from 240 to 156, a change the dark palette's 22 → 14 does not come close to,
+     and the app would look switched off rather than pushed back. */
+  --scrim: rgba(0, 0, 0, 0.22);
+  --scrim-modal: rgba(0, 0, 0, 0.32);
+
+  /* Shadows are re-cut, not merely re-alpha'd — geometry is in the token for this
+     reason. A light theme needs a tighter, shorter shadow: the same 24-40px blur
+     at any legible alpha spreads into a grey haze against an off-white ground
+     instead of reading as an edge. `--shadow-pop` carries more of its panel's
+     separation than the modal's does, because the tooltip is white on near-white
+     with only a hairline border, where the modal already has a scrim under it. */
+  --shadow-pop: 0 4px 16px rgba(0, 0, 0, 0.22);
+  --shadow-modal: 0 6px 28px rgba(0, 0, 0, 0.16);
+
+  /* Washes of THIS palette's severity colours, and the two alphas differ on
+     purpose. The dark palette's 12% is not transferable in either direction: a
+     12% wash of a colour whose luminance is far from its background moves the
+     row much further than one whose luminance is near it, and #99192e sits far
+     below `--bg` where #7a6000 sits closer. 10% and 17% put the two rows at
+     1.18:1 and 1.25:1 against `--bg` — the dark palette's own 1.19:1 and 1.25:1,
+     i.e. the same emphasis rather than the same number. Carrying the dark values
+     over verbatim would have given 1.12:1 and 1.08:1, the warning row barely
+     distinguishable from an untinted one. */
+  --tint-error: rgba(153, 25, 46, 0.1);
+  --tint-warning: rgba(122, 96, 0, 0.17);
+
+  /* 0.68, not the dark palette's 0.55: `--ink` at 0.55 over this `--panel`
+     measures 3.35:1, under the 4.5:1 floor the blocked row's own comment claims.
+     0.68 measures 4.88:1 — and lands at 36.5% of undimmed `--ink`'s contrast,
+     against the dark palette's 38.1%, so the two palettes deliver the same
+     PERCEIVED "off" while each stays legible. */
+  --dim-blocked: 0.68;
+  /* 1, i.e. no dim at all, because this palette has no room for one. Both users
+     of `--dim-chrome` dim a token that is ALREADY at the light AA floor —
+     `--ink-dim` measures 4.60:1 on `--bg` and `--muted` 5.49:1 on `--panel` — so
+     the dark palette's 0.7 takes them to 2.68:1 and 2.96:1, both failures. The
+     de-emphasis those two fragments get here is the token choice itself
+     (`--ink-dim`/`--muted` against the `--ink` around them), which is all the
+     contrast budget a light background leaves. */
+  --dim-chrome: 1;
+
+  color-scheme: light;
 }
 
 * {
@@ -505,7 +635,7 @@ button:disabled {
 .char-banner .name-input::placeholder,
 .char-banner .desc-input::placeholder {
   color: var(--muted);
-  opacity: 0.7;
+  opacity: var(--dim-chrome);
 }
 
 /* Multi-line free-text fields (character concept and the warping effect on the
@@ -711,7 +841,7 @@ button:disabled {
 
 .wizard-rail-step::before {
   content: counter(wizard-step) '. ';
-  opacity: 0.7;
+  opacity: var(--dim-chrome);
 }
 
 .wizard-rail-step:hover:not(:disabled) {
@@ -1122,14 +1252,21 @@ ul {
    The dim goes on the row's CHILDREN, not on the button box: `opacity` fades an
    element's focus ring along with its content, and fading the focus ring of the one
    control a keyboard user must reach to learn why the row is blocked would give back
-   exactly what `aria-disabled` bought. 0.55 keeps `--ink` over `--panel` at ~5.1:1
-   (0.45, matching `button:disabled`, would drop it to ~4.0:1 — under AA). */
+   exactly what `aria-disabled` bought.
+
+   THE DIM IS PER-PALETTE (`--dim-blocked`), because an opacity is not palette-
+   independent. Dark: 0.55 keeps `--ink` over `--panel` at 5.11:1 (0.45, matching
+   `button:disabled`, would drop it to ~3.9:1 — under AA). Light: the SAME 0.55
+   measures only 3.35:1, so that palette uses 0.68 and measures 4.88:1. Both land
+   at ~37% of the same ink undimmed (13.40:1 dark, 13.36:1 light), i.e. the same
+   "off" at the same legibility; `src/app.css.test.ts` computes both ratios from
+   the tokens rather than trusting these numbers. */
 .pick-row[aria-disabled='true'] {
   cursor: default;
 }
 
 .pick-row[aria-disabled='true'] > * {
-  opacity: 0.55;
+  opacity: var(--dim-blocked);
 }
 
 .pick-row[aria-disabled='true'] .pick-plus {

@@ -100,6 +100,9 @@ yourself.
 - **Never lose work by accident.** Closing or quitting the app with unsaved
   changes — including via macOS Cmd+Q — prompts for confirmation before
   discarding, as does starting a new document or opening another file.
+- **Light and dark, following your desktop.** The app ships both palettes and
+  picks whichever one your operating system is set to, switching live if you
+  change that setting while it is open — no restart, and nothing to configure.
 - **Age and birth year are two views of one fact.** Set the year your saga is
   played in — 1220 by default, the year the published setting stands in — and the
   guided wizard links the two: type an age and the birth year follows, type a birth

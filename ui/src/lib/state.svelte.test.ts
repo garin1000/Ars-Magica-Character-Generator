@@ -4321,3 +4321,52 @@ describe('the aging log’s remove button', () => {
     expect(store.entity.aging_points).toEqual({ sta: 1 });
   });
 });
+
+// The palette the app paints with is chosen HERE, not in CSS: `app.css` declares
+// a dark `:root` and a light `:root[data-theme='light']`, and the store decides
+// which of the two `<html>` names. Putting the decision in one place is what lets
+// `auto` and an explicit choice take the same path — a `prefers-color-scheme`
+// media query would have needed a second copy of the whole light palette, and
+// two copies drift.
+describe('the active theme', () => {
+  afterEach(() => {
+    store.theme = 'auto';
+    store.osPrefersLight = false;
+  });
+
+  it('follows the OS by default, so a correct palette needs no settings UI', () => {
+    expect(store.theme).toBe('auto');
+  });
+
+  it('resolves auto against what the OS currently prefers', () => {
+    store.theme = 'auto';
+
+    store.osPrefersLight = false;
+    expect(store.resolvedTheme).toBe('dark');
+
+    // The resolved value is what `<html data-theme>` is set to, so it is never
+    // 'auto': CSS has no rule for a theme that has not been decided.
+    store.osPrefersLight = true;
+    expect(store.resolvedTheme).toBe('light');
+  });
+
+  it('lets an explicit choice override the OS in either direction', () => {
+    store.osPrefersLight = true;
+    store.theme = 'dark';
+    expect(store.resolvedTheme).toBe('dark');
+
+    store.osPrefersLight = false;
+    store.theme = 'light';
+    expect(store.resolvedTheme).toBe('light');
+  });
+
+  // The store module is imported by the whole SSR suite, which runs under `node`
+  // with no `window` at all — and the shipped app itself evaluates this module
+  // before the webview has done anything. Reaching for `matchMedia` unguarded
+  // would take the store's import down with it, so the watcher degrades to a
+  // no-op instead and the app simply stays on its default palette.
+  it('degrades to a no-op where no media-query API exists at all', () => {
+    expect(() => store.watchSystemTheme()()).not.toThrow();
+    expect(store.resolvedTheme).toBe('dark');
+  });
+});

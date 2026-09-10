@@ -149,6 +149,27 @@ describe('app.css', () => {
     ...svelteSources(),
   ];
 
+  /** The dark palette's selector — the bare root, i.e. the app's default. */
+  const DARK = ':root';
+  /** The light palette's selector. */
+  const LIGHT = ":root[data-theme='light']";
+  /** The two selectors allowed to hold colour literals, and no others. */
+  const PALETTES: ReadonlySet<string> = new Set([DARK, LIGHT]);
+
+  /** Every `:root…` declaration block in the stylesheet, as `[selector, body]`. */
+  const paletteBlocks = (): Array<[string, string]> =>
+    [...cssWithoutComments.matchAll(/^(:root[^{]*)\{([^}]*)\}/gm)].map(([, selector, body]) => [
+      selector.trim(),
+      body,
+    ]);
+
+  /** One palette's declaration block. */
+  const paletteBody = (selector: string): string => {
+    const found = paletteBlocks().find(([declared]) => declared === selector);
+    expect(found, `app.css should declare a ${selector} palette block`).not.toBeUndefined();
+    return found![1];
+  };
+
   it('resolves every var() reference to a token declared on :root', () => {
     const declared = new Set(
       [...rootBlock().matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) => match[1]),
@@ -164,21 +185,272 @@ describe('app.css', () => {
     expect(undeclared.sort()).toEqual([]);
   });
 
-  it('keeps every colour literal inside the :root token block', () => {
+  it('keeps every colour literal inside a :root palette block', () => {
     // One rule, so one test: a component's scoped `<style>` cannot declare a
     // `:root` block of its own, but it INHERITS the global tokens — that is the
     // whole point of putting them on the root — so its literal budget is simply
     // zero, and the two files are checked by the same assertion rather than by a
     // sibling test that could drift from it.
+    //
+    // EVERY palette block is exempt, not merely the first: the light palette is a
+    // second `:root…` rule of nothing but literals, and a strip anchored on the
+    // dark one alone reported all twenty-one of them. The exemption is by
+    // SELECTOR NAME, so it cannot widen by accident — a rule that merely happens
+    // to begin `:root` (`:root .banner`, say) still has a literal budget of zero.
     const colourLiteral = /#[0-9a-fA-F]{3,8}\b|\brgba?\(/g;
     const sources = styledSources();
-    sources[0] = ['app.css', cssWithoutComments.replace(/^:root\s*\{[^}]*\}/m, '')];
+    sources[0] = [
+      'app.css',
+      paletteBlocks()
+        .filter(([selector]) => PALETTES.has(selector))
+        .reduce((css, [, body]) => css.replace(body, ''), cssWithoutComments),
+    ];
 
     const offenders: string[] = [];
     for (const [name, source] of sources) {
       for (const match of source.matchAll(colourLiteral)) offenders.push(`${name}: ${match[0]}`);
     }
     expect(offenders).toEqual([]);
+  });
+
+  // ── THE TWO PALETTES ────────────────────────────────────────────────────────
+  //
+  // The app ships a dark palette (the bare `:root` block) and a light one
+  // (`:root[data-theme='light']`), and the frontend puts `data-theme` on <html>
+  // — resolving `auto` against the OS itself, so CSS never has to know about
+  // `prefers-color-scheme`. Everything below pins the properties that make that
+  // swap safe rather than merely present.
+
+  /** The custom properties a block declares, as name → value. */
+  const declarations = (body: string): Map<string, string> =>
+    new Map(
+      [...body.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/g)].map((match) => [
+        match[1],
+        match[2].trim().toLowerCase(),
+      ]),
+    );
+
+  /** Does this token's value carry a colour, as against a length or a number? */
+  const isColourValued = (value: string): boolean => /#[0-9a-f]{3,8}\b|\brgba?\(/.test(value);
+
+  /**
+   * A token's value under `selector`, falling back to `:root` exactly as the
+   * cascade does — so a token the light palette forgets is READ at its dark
+   * value here, which is precisely what the contrast assertions below must see
+   * in order to fail on it.
+   */
+  const tokenValue = (selector: string, name: string): string => {
+    const value =
+      declarations(paletteBody(selector)).get(name) ?? declarations(paletteBody(DARK)).get(name);
+    expect(value, `${name} should be reachable from ${selector}`).not.toBeUndefined();
+    return value!;
+  };
+
+  it('declares a light palette holding every colour the dark palette declares', () => {
+    const dark = declarations(paletteBody(DARK));
+    const light = declarations(paletteBody(LIGHT));
+
+    // A HALF-FILLED palette is the failure mode a theme switch actually has: the
+    // missing token simply inherits its DARK value, so one white-on-white label
+    // or one invisible border ships and nothing anywhere says so.
+    const unthemed = [...dark]
+      .filter(([, value]) => isColourValued(value))
+      .map(([name]) => name)
+      .filter((name) => !light.has(name));
+    expect(unthemed.sort()).toEqual([]);
+
+    // …and the reverse: a token the light block invents is simply UNDEFINED
+    // whenever the app is dark, which is the `var(--surface, #fff)` bug C1 found,
+    // reintroduced from the other side.
+    const orphans = [...light.keys()].filter((name) => !dark.has(name));
+    expect(orphans.sort()).toEqual([]);
+  });
+
+  it('switches color-scheme with the palette', () => {
+    // This is not decoration. The stylesheet declares no `:focus-visible` rule
+    // and styles no scrollbar, so `color-scheme` is the app's ENTIRE strategy for
+    // the focus ring, the scrollbars and the native <select> popup — all three
+    // are drawn by the engine from this one keyword. A light palette left under
+    // `color-scheme: dark` gets a dark scrollbar, a dark dropdown and a focus
+    // ring tuned for the wrong background.
+    expect(paletteBody(DARK)).toMatch(/color-scheme:\s*dark;/);
+    expect(paletteBody(LIGHT)).toMatch(/color-scheme:\s*light;/);
+  });
+
+  // ── CONTRAST, COMPUTED RATHER THAN ASSERTED IN A COMMENT ────────────────────
+  //
+  // Every accessibility claim this stylesheet makes about a colour used to live
+  // in prose, derived by hand from the DARK palette. A second palette turns each
+  // of those into a claim that can be false while its test stays green, so they
+  // are computed here instead, per palette, from the tokens themselves.
+
+  /** The 0-1 sRGB channels of a `#rrggbb` literal. */
+  const channels = (hex: string): [number, number, number] => {
+    const parsed = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/.exec(hex.trim().toLowerCase());
+    expect(parsed, `'${hex}' should be a six-digit hex colour`).not.toBeNull();
+    return [1, 2, 3].map((group) => parseInt(parsed![group], 16) / 255) as [number, number, number];
+  };
+
+  /** WCAG 2.x relative luminance of an opaque `#rrggbb` colour. */
+  const luminance = (hex: string): number => {
+    const linear = channels(hex).map((value) =>
+      value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
+    );
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+  };
+
+  /** WCAG 2.x contrast ratio between two opaque `#rrggbb` colours. */
+  const contrastRatio = (one: string, other: string): number => {
+    const [lighter, darker] = [luminance(one), luminance(other)].sort((a, b) => b - a);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+
+  /** `over` at `alpha` composited on opaque `under`, as `#rrggbb`. */
+  const composite = (over: string, under: string, alpha: number): string => {
+    const top = channels(over);
+    const bottom = channels(under);
+    const mixed = top.map((value, index) =>
+      Math.round(255 * (alpha * value + (1 - alpha) * bottom[index]))
+        .toString(16)
+        .padStart(2, '0'),
+    );
+    return `#${mixed.join('')}`;
+  };
+
+  /**
+   * The `opacity` that `rule` declares, resolved under `selector` — whether the
+   * rule spells the number out or routes it through a palette token.
+   */
+  const dimDeclaredBy = (rule: RegExp, selector: string, what: string): number => {
+    const block = rule.exec(cssWithoutComments);
+    expect(block, `app.css should declare ${what}`).not.toBeNull();
+    const declared = /opacity:\s*([^;]+);/.exec(block![1]);
+    expect(declared, `${what} should declare an opacity`).not.toBeNull();
+    const token = /^var\((--[a-z0-9-]+)\)$/.exec(declared![1].trim());
+    return Number(token ? tokenValue(selector, token[1]) : declared![1]);
+  };
+
+  /** The blocked source row's dim, under `selector`. */
+  const blockedDim = (selector: string): number =>
+    dimDeclaredBy(
+      /^\.pick-row\[aria-disabled='true'\] > \*\s*\{([^}]*)\}/m,
+      selector,
+      'the blocked source row dim',
+    );
+
+  // Finding #18's dim (see `.pick-row[aria-disabled='true']` below) was chosen
+  // against the dark palette and its AA claim was recorded in a comment: "`--ink`
+  // composited over `--panel` still clears 4.5:1". That derivation does not
+  // survive a second palette — the SAME opacity moves dark ink toward a light
+  // panel far faster in luminance terms than it moves light ink toward a dark
+  // one, so 0.55 measures 5.11:1 dark and only 3.35:1 light, a WCAG 1.4.3
+  // failure that no opacity band could ever have reported. The claim is computed
+  // here, per palette, so it cannot rot again.
+  it('keeps a dimmed blocked row above AA in BOTH palettes, and still reading as off', () => {
+    for (const selector of [DARK, LIGHT]) {
+      const ink = tokenValue(selector, '--ink');
+      const panel = tokenValue(selector, '--panel');
+      const dimmed = contrastRatio(composite(ink, panel, blockedDim(selector)), panel);
+
+      expect(dimmed, `${selector}: dimmed --ink over --panel`).toBeGreaterThanOrEqual(4.5);
+      // The other half of finding #18: the dim is the row's PRIMARY "you cannot
+      // take this" cue, so it has to be a real luminance drop and not a token
+      // one. Expressed against the same ink undimmed rather than as an opacity
+      // number, because an opacity means different things on the two palettes —
+      // which is the whole reason the first assertion needed re-deriving.
+      expect(dimmed, `${selector}: dimmed vs full --ink`).toBeLessThanOrEqual(
+        0.5 * contrastRatio(ink, panel),
+      );
+    }
+  });
+
+  // Every OTHER place the stylesheet dims live text with an opacity, as
+  // `[what, rule, the token it dims, the surface it sits on]`. Both entries have
+  // the blocked row's problem: they dim a token that already sits close to the
+  // light palette's AA floor (`--ink-dim` is 4.60:1 on `--bg`, `--muted` 5.49:1
+  // on `--panel`), so ANY fraction under 1 takes them below it — where the dark
+  // palette, whose same two tokens measure 9.13:1 and 8.44:1, has room to spare.
+  //
+  // `:disabled` rules are deliberately absent: WCAG 1.4.3 exempts an inactive
+  // control, and a disabled wizard step that still measured 4.5:1 would not read
+  // as disabled at all.
+  const DIMMED_TEXT: Array<[string, RegExp, string, string]> = [
+    [
+      'the wizard rail step number',
+      /^\.wizard-rail-step::before\s*\{([^}]*)\}/m,
+      '--ink-dim',
+      '--bg',
+    ],
+    [
+      'the character banner placeholders',
+      /^\.char-banner \.name-input::placeholder,[^{]*\{([^}]*)\}/m,
+      '--muted',
+      '--panel',
+    ],
+  ];
+
+  it('keeps every other dimmed text rule above AA in BOTH palettes', () => {
+    for (const [what, rule, token, surface] of DIMMED_TEXT) {
+      for (const selector of [DARK, LIGHT]) {
+        const ink = tokenValue(selector, token);
+        const under = tokenValue(selector, surface);
+        const dim = dimDeclaredBy(rule, selector, what);
+        expect(
+          contrastRatio(composite(ink, under, dim), under),
+          `${selector}: ${what}`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
+  /** An `rgba(r, g, b, a)` token, as `[#rrggbb, alpha]`. */
+  const parseRgba = (value: string): [string, number] => {
+    const parsed = /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)$/.exec(
+      value.trim().toLowerCase(),
+    );
+    expect(parsed, `'${value}' should be an rgba() wash`).not.toBeNull();
+    const hex = [1, 2, 3]
+      .map((group) => Number(parsed![group]).toString(16).padStart(2, '0'))
+      .join('');
+    return [`#${hex}`, Number(parsed![4])];
+  };
+
+  // The severity row tints were the one thing C1 could not carry over honestly,
+  // and it said so in place: they are hand-mixed washes of #e2657a and #d8a657 —
+  // colours that are NOT `--error` and `--warning`, merely near them. That is a
+  // bug with two halves. The wash is not the severity colour it claims to be,
+  // and a single alpha shared by both severities cannot produce the same cue for
+  // both, because the two colours sit at different luminances against their own
+  // background. Both halves are pinned here, per palette.
+  //
+  // `--bg`, not `--panel`: `.validation-bar` declares no background of its own,
+  // so an issue row composites straight onto the window.
+  it('washes a severity row with that palette own severity colour, at a matched strength', () => {
+    for (const [tint, severity] of [
+      ['--tint-error', '--error'],
+      ['--tint-warning', '--warning'],
+    ]) {
+      const steps = [DARK, LIGHT].map((selector) => {
+        const background = tokenValue(selector, '--bg');
+        const [wash, alpha] = parseRgba(tokenValue(selector, tint));
+        // Derived, never hand-mixed: the row's tint IS its border colour, so the
+        // two channels of the severity cue can never drift apart.
+        expect(wash, `${selector}: ${tint}`).toBe(tokenValue(selector, severity));
+        return contrastRatio(composite(wash, background, alpha), background);
+      });
+
+      for (const [index, step] of steps.entries()) {
+        const selector = [DARK, LIGHT][index];
+        // Visible as a severity cue at a glance…
+        expect(step, `${selector}: ${tint} step`).toBeGreaterThan(1.1);
+        // …and never a smudge: the row's meaning is carried by its uppercase
+        // badge and its left border, so the fill only has to group them.
+        expect(step, `${selector}: ${tint} step`).toBeLessThan(1.4);
+      }
+      // The SAME cue in both palettes — which a shared alpha cannot deliver, and
+      // is the reason each palette tunes its own.
+      expect(steps[1], `${tint}: light vs dark step`).toBeCloseTo(steps[0], 1);
+    }
   });
 
   // WCAG 2.5.8 (AA) puts the pointer-target floor at 24x24 CSS px, and `.icon-btn`
@@ -559,14 +831,16 @@ describe('app.css', () => {
   // because a stylesheet rule with no visible owner is exactly what a later cleanup
   // deletes — as the dead `.pick-row:disabled .pick-plus` rule this replaces shows.
   it('dims a blocked source row rather than only recolouring its glyph', () => {
-    const dimmed = /^\.pick-row\[aria-disabled='true'\] > \*\s*\{([^}]*)\}/m.exec(appCss);
-    expect(dimmed).not.toBeNull();
-    const opacity = /opacity:\s*([\d.]+);/.exec(dimmed![1]);
-    expect(opacity).not.toBeNull();
-    // Low enough to read as "off" at a glance, high enough that `--ink` composited
-    // over `--panel` still clears 4.5:1 (at 0.55 it is ~5.1:1; at 0.45 it is ~4.0:1).
-    expect(Number(opacity![1])).toBeGreaterThanOrEqual(0.5);
-    expect(Number(opacity![1])).toBeLessThanOrEqual(0.6);
+    // The band is the DARK palette's, unchanged: 0.55 is low enough to read as
+    // "off" at a glance and high enough that `--ink` over `--panel` still clears
+    // 4.5:1 (5.09:1 at 0.55; 3.90:1 at 0.45). It is read through `blockedDim`
+    // rather than off the rule because the number now lives in `--dim-blocked` —
+    // the light palette needs a different one, and "keeps a dimmed blocked row
+    // above AA in BOTH palettes" above derives each from the tokens instead of
+    // restating a hand-computed ratio that only ever held for one of them.
+    const dim = blockedDim(DARK);
+    expect(dim).toBeGreaterThanOrEqual(0.5);
+    expect(dim).toBeLessThanOrEqual(0.6);
   });
 
   // The dim goes on the row's CONTENT, not on the button box. `opacity` fades an

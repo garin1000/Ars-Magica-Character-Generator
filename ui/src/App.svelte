@@ -158,6 +158,29 @@
     document.documentElement.lang = store.lang;
   });
 
+  // Name the RESOLVED palette on <html>. `app.css` ships a dark `:root` and a
+  // light `:root[data-theme='light']`, and this attribute is the entire switch
+  // between them — `color-scheme` included, which matters more than it looks:
+  // the stylesheet declares no `:focus-visible` rule and styles no scrollbar, so
+  // that one keyword is what tells the engine which focus ring, which scrollbars
+  // and which native <select> popup to draw.
+  //
+  // The decision is made HERE rather than by a `prefers-color-scheme` media
+  // query so that `auto` and an explicit choice take the same path and the light
+  // palette exists in exactly one place. A media query would have needed a
+  // second copy of it, and two copies drift.
+  $effect(() => {
+    document.documentElement.dataset.theme = store.resolvedTheme;
+  });
+
+  // …and `auto` means LIVE. Reading the OS preference once at startup would
+  // leave a user whose desktop flips to light at dusk sitting in a dark app
+  // until they restarted it, which is the one thing `auto` promises not to do.
+  // The effect returns the store's own teardown so Svelte unsubscribes on
+  // destroy: a `MediaQueryList` outlives whatever registered a listener on it,
+  // so a leaked one keeps writing into the store for the life of the webview.
+  $effect(() => store.watchSystemTheme());
+
   // Keep the document title localized rather than hardcoded in HTML. Once a file
   // is being tracked, show "name — app" (with an ASCII dirty marker for unsaved
   // edits) via a parametrized Fluent key — never string-composed here.
