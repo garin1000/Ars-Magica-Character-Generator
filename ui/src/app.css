@@ -1,12 +1,70 @@
 :root {
+  /* THE PALETTE. Every colour the app paints is one of these, and nothing below
+     this block may hold a hex or `rgb()`/`rgba()` literal — `src/app.css.test.ts`
+     fails if one reappears, in this file or in any component's scoped `<style>`.
+     A component cannot declare a `:root` of its own, but custom properties
+     inherit, so it reads these the same way this file does. The point is that a
+     palette change is an edit to this block and to nothing else.
+     Names say what a colour MEANS, not what it looks like, so the light theme can
+     invert a value without the name turning into a lie. */
+
+  /* Backgrounds, darkest first. `--bg` is the window, `--panel` the content
+     surfaces on it; `--surface-raised` sits ABOVE the background (the active
+     wizard rail step, the modal panel) and `--surface-overlay` is the floating
+     tooltip, which is darker than the window on purpose and relies on its
+     `--accent` border to define its edge. */
   --bg: #16152a;
   --panel: #26243d;
+  --surface-raised: #201d38;
+  --surface-overlay: #100f1f;
+
+  /* Text, brightest first. `--ink-hover` is the lift a dimmed control gets when
+     pointed at; `--ink-dim` is quieter than `--muted` and is what the wizard
+     chrome (rail steps, progress line, outstanding list) rests at. */
   --ink: #f3f1fb;
+  --ink-hover: #efeeff;
   --muted: #c3bfde;
+  --ink-dim: #b9b6d6;
+
   --accent: #d0ac63;
   --error: #f07a8d;
+  /* The blocked-step "!" in the wizard rail. Brighter than `--error` because it
+     is a single glyph appended to `--ink-dim` text on chrome, not a whole row. */
+  --error-strong: #ff9a9a;
   --warning: #e6b466;
+
+  /* Three separators, and they are not interchangeable. `--divider` is the
+     lightest and separates ROWS inside a list; `--border` is the edge of a form
+     control or a set-apart block; `--region-border` is the darkest and draws the
+     boundaries between the app's chrome regions — header, banner, tab strip,
+     wizard rail and nav, validation bar. */
   --divider: #57537e;
+  --border: #423f63;
+  --region-border: #38355a;
+
+  /* Two scrims, deliberately kept at their two different strengths: the busy
+     overlay only has to say "wait", while a modal has to push the whole app back
+     behind it. Collapsing them into one value would change what is rendered. */
+  --scrim: rgba(0, 0, 0, 0.35);
+  --scrim-modal: rgba(0, 0, 0, 0.5);
+
+  /* Full shadow values, geometry included — a light theme needs a different
+     spread and softness, not merely a different alpha, so the whole thing is the
+     token. `--shadow-pop` is the tooltip, `--shadow-modal` the two prompt
+     dialogs. */
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-modal: 0 10px 40px rgba(0, 0, 0, 0.35);
+
+  /* SEVERITY ROW TINTS — CARRIED OVER AT THEIR EXACT CURRENT VALUES, AND A KNOWN
+     HAZARD FOR THE LIGHT THEME. These are hand-mixed washes that are NOT derived
+     from `--error`/`--warning`: #e2657a and #d8a657 respectively, neither of
+     which is a token. Both are a 12% wash, which reads as a faint DARKENING here
+     and would read as a faint lightening — i.e. the opposite emphasis — against a
+     light background. Tokenized now so the palette can reach them; re-deriving
+     them from the severity colours is the light theme's job, not this change's. */
+  --tint-error: rgba(226, 101, 122, 0.12);
+  --tint-warning: rgba(216, 166, 87, 0.12);
+
   /* Single source of truth for the width of derived read-outs, so the
      two-column lists/grids and the multi-column tables stay readable instead of
      splaying across a wide window. `--readout-max-width` bounds the narrow
@@ -118,13 +176,13 @@ h6 {
   position: fixed;
   inset: 0;
   z-index: 2000;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--scrim);
   cursor: progress;
 }
 
 .app-header {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #38355a;
+  border-bottom: 1px solid var(--region-border);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -186,7 +244,7 @@ button {
   font: inherit;
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
-  border: 1px solid #423f63;
+  border: 1px solid var(--border);
   background: var(--panel);
   color: var(--ink);
 }
@@ -299,7 +357,7 @@ button:disabled {
      left edge lands at 9.56 + 4.78 = ~14px rather than the header's 19px — a
      small alignment cost, paid because the alternative is truncated tab titles. */
   padding: 0 0.75rem;
-  border-bottom: 1px solid #38355a;
+  border-bottom: 1px solid var(--region-border);
   flex: 0 0 auto;
 }
 
@@ -391,7 +449,7 @@ button:disabled {
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.5rem 1.5rem;
-  border-bottom: 1px solid #38355a;
+  border-bottom: 1px solid var(--region-border);
 }
 
 /* Read-only character type, above the name: chosen once at creation, so it is
@@ -440,7 +498,7 @@ button:disabled {
 .char-banner .desc-input:hover,
 .char-banner .name-input:focus,
 .char-banner .desc-input:focus {
-  border-color: #423f63;
+  border-color: var(--border);
   background: var(--panel);
 }
 
@@ -460,7 +518,7 @@ button:disabled {
   font: inherit;
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
-  border: 1px solid #423f63;
+  border: 1px solid var(--border);
   background: var(--panel);
   color: var(--ink);
   resize: vertical;
@@ -620,7 +678,7 @@ button:disabled {
 /* The step rail: the flow's phases in order, current one highlighted, steps not
    yet reached disabled, a blocked one marked. */
 .wizard-rail {
-  border-bottom: 1px solid #38355a;
+  border-bottom: 1px solid var(--region-border);
   padding: 0.5rem 1.5rem 0;
 }
 
@@ -645,7 +703,7 @@ button:disabled {
   border: 1px solid transparent;
   border-bottom: none;
   border-radius: 6px 6px 0 0;
-  color: #b9b6d6;
+  color: var(--ink-dim);
   cursor: pointer;
   padding: 0.35rem 0.8rem;
   font: inherit;
@@ -657,13 +715,13 @@ button:disabled {
 }
 
 .wizard-rail-step:hover:not(:disabled) {
-  color: #efeeff;
+  color: var(--ink-hover);
 }
 
 .wizard-rail-step.active {
-  background: #201d38;
-  border-color: #38355a;
-  color: #efeeff;
+  background: var(--surface-raised);
+  border-color: var(--region-border);
+  color: var(--ink-hover);
 }
 
 .wizard-rail-step:disabled {
@@ -676,7 +734,7 @@ button:disabled {
    aria-describedby for assistive tech. */
 .wizard-rail-step[data-blocked='true']::after {
   content: ' !';
-  color: #ff9a9a;
+  color: var(--error-strong);
   font-weight: 700;
 }
 
@@ -703,12 +761,12 @@ button:disabled {
 
 .wizard-progress {
   padding: 0.4rem 1.5rem 0;
-  color: #b9b6d6;
+  color: var(--ink-dim);
   font-size: var(--font-small);
 }
 
 .wizard-nav {
-  border-top: 1px solid #38355a;
+  border-top: 1px solid var(--region-border);
   padding: 0.6rem 1.5rem;
   display: flex;
   align-items: center;
@@ -747,14 +805,14 @@ button:disabled {
 .wizard-review-outstanding {
   margin: 0.2rem 0 0.6rem;
   padding-left: 1.2rem;
-  color: #b9b6d6;
+  color: var(--ink-dim);
   font-size: var(--font-small);
 }
 
 /* Shared issues panel, pinned below the tabs at the bottom of the viewport. It
    shows every error/warning for the whole character, not just the active tab. */
 .validation-bar {
-  border-top: 1px solid #38355a;
+  border-top: 1px solid var(--region-border);
   padding: 0.4rem 1.5rem;
   max-height: 30vh;
   overflow-y: auto;
@@ -1169,7 +1227,7 @@ ul {
   font-size: 1.05rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--accent, #3b6fd4);
+  color: var(--accent);
   white-space: nowrap;
 }
 
@@ -1300,7 +1358,7 @@ ul {
 
 .art-abbr {
   margin-left: 0.35rem;
-  color: var(--muted, #6b7280);
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1751,7 +1809,7 @@ ul {
 }
 
 .reputation-tag {
-  color: var(--muted, #6b7280);
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -1760,7 +1818,7 @@ ul {
    all?". Muted like the type tag it sits beside; it explains the row rather than
    competing with the description the player writes. */
 .reputation-source {
-  color: var(--muted, #6b7280);
+  color: var(--muted);
   font-size: 0.85em;
   white-space: nowrap;
 }
@@ -1792,7 +1850,7 @@ ul {
 .xp-pool-used::after {
   content: '/';
   margin-left: 0.4rem;
-  color: var(--muted, #6b7280);
+  color: var(--muted);
 }
 
 /* The editable total, styled as an inline bracketed value like "[200]". The
@@ -1804,12 +1862,12 @@ ul {
 
 .xp-pool-total::before {
   content: '[';
-  color: var(--muted, #6b7280);
+  color: var(--muted);
 }
 
 .xp-pool-total::after {
   content: ']';
-  color: var(--muted, #6b7280);
+  color: var(--muted);
 }
 
 .xp-pool-total input {
@@ -1839,7 +1897,7 @@ ul {
    total, and the hint beside the clear-pool escape hatch. Both are secondary
    text, so they read muted next to the figures. */
 .xp-summary .xp-life-stage {
-  color: var(--muted, #6b7280);
+  color: var(--muted);
 }
 
 .xp-summary .over {
@@ -1867,7 +1925,7 @@ ul {
 .life-stage-panel fieldset {
   margin: 0;
   padding: 0.4rem 0.75rem 0.6rem;
-  border: 1px solid #423f63;
+  border: 1px solid var(--border);
   border-radius: 6px;
   display: flex;
   flex-wrap: wrap;
@@ -1896,7 +1954,7 @@ ul {
 }
 
 .funding-hint {
-  color: var(--muted, #6b7280);
+  color: var(--muted);
   font-size: var(--font-small);
 }
 
@@ -1921,7 +1979,7 @@ ul {
 
 /* The engine's read-out of the years past the Gauntlet: a figure, not a warning. */
 .post-gauntlet-summary {
-  color: var(--muted, #6b7280);
+  color: var(--muted);
   font-size: var(--font-small);
 }
 
@@ -2154,12 +2212,12 @@ ul {
 
 .issue.error {
   border-left-color: var(--error);
-  background: rgba(226, 101, 122, 0.12);
+  background: var(--tint-error);
 }
 
 .issue.warning {
   border-left-color: var(--warning);
-  background: rgba(216, 166, 87, 0.12);
+  background: var(--tint-warning);
 }
 
 /* Visible severity badge (WCAG 1.4.1): the bold, uppercase word itself ("ERROR"
@@ -2248,14 +2306,14 @@ ul {
   position: fixed;
   z-index: 1000;
   max-width: 24rem;
-  background: #100f1f;
+  background: var(--surface-overlay);
   color: var(--ink);
   border: 1px solid var(--accent);
   border-radius: 8px;
   padding: 0.6rem 0.75rem;
   font-size: var(--font-small);
   line-height: 1.45;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--shadow-pop);
   pointer-events: none;
 }
 

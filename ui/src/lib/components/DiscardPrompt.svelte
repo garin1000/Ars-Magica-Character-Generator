@@ -67,16 +67,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--scrim-modal);
     z-index: 1000;
   }
   .modal {
-    background: var(--surface, #fff);
+    /* `--surface-raised`, not the darker `--surface-overlay`: this panel has no
+       border, only a shadow, so it needs to sit LIGHTER than the scrimmed app
+       behind it to read as raised at all. It used to name an undeclared
+       `--surface` with a `#fff` fallback, which is what the browser actually
+       painted — a white panel under `color: inherit` ink, i.e. white on white. */
+    background: var(--surface-raised);
     color: inherit;
     border-radius: 8px;
     padding: 1.5rem;
     max-width: 28rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-modal);
   }
   .modal h2 {
     margin: 0 0 0.5rem;

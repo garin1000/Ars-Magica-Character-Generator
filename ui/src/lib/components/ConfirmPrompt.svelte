@@ -98,16 +98,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--scrim-modal);
     z-index: 1000;
   }
   .modal {
-    background: var(--surface, #fff);
+    background: var(--surface-raised);
     color: inherit;
     border-radius: 8px;
     padding: 1.5rem;
     max-width: 28rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-modal);
   }
   .modal h2 {
     margin: 0 0 0.5rem;

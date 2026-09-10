@@ -15,7 +15,14 @@ const appCss = readFileSync(fileURLToPath(new URL('./app.css', import.meta.url))
 // stops at the first closing brace, and app.css comments quote CSS at length — one
 // `button { font: inherit }` inside a comment truncated the `.tab` body and made
 // these assertions read a rule that was right there in the file.
-const cssWithoutComments = appCss.replace(/\/\*[\s\S]*?\*\//g, '');
+//
+// The same strip serves the colour-token scan further down for a second reason:
+// this file's comments quote hex values in prose (the `--muted` (#c3bfde) note on
+// the blocked source row), and a literal a browser never parses is not a literal
+// the palette has to reach.
+const stripBlockComments = (source: string): string => source.replace(/\/\*[\s\S]*?\*\//g, '');
+
+const cssWithoutComments = stripBlockComments(appCss);
 
 // A base typography reset is not observable by rendering: `render()` from
 // `svelte/server` emits markup with no stylesheet attached, and even a mounted
@@ -100,6 +107,76 @@ describe('app.css', () => {
       for (const match of source.matchAll(/font-size:\s*(0?\.\d+)rem/g)) {
         offenders.push(`${name}: font-size: ${match[1]}rem`);
       }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  // ── THE COLOUR TOKEN SYSTEM ─────────────────────────────────────────────────
+  //
+  // Every colour the app paints comes from a semantic custom property declared on
+  // `:root` in this file, so swapping the palette is an edit to that one block and
+  // to nothing else. Both halves of that sentence are pinned below, because both
+  // were broken when the tokens were introduced:
+  //
+  //  * A `var()` naming a token nobody declared is not a harmless no-op. WITH a
+  //    fallback it silently paints the fallback — `var(--surface, #fff)` gave both
+  //    modals a white panel inside a dark app, so their `color: inherit` text came
+  //    out white on white. WITHOUT one the declaration is invalid at
+  //    computed-value time and resets to its initial value, which is why
+  //    `border-left: 2px solid var(--border)` on the Crisis block drew no border
+  //    at all: the unresolvable shorthand took `border-left-style` back to `none`.
+  //  * A raw literal outside the token block is a colour the palette swap cannot
+  //    reach, so it survives the swap and lands wrong against the new background.
+
+  /** Every `.svelte` source under `src/`, comment-stripped, as `[fileName, text]`. */
+  const svelteSources = (): Array<[string, string]> => {
+    const found: Array<[string, string]> = [];
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const path = `${dir}${entry.name}`;
+        if (entry.isDirectory()) walk(`${path}/`);
+        else if (entry.name.endsWith('.svelte'))
+          found.push([entry.name, stripBlockComments(readFileSync(path, 'utf-8'))]);
+      }
+    };
+    walk(fileURLToPath(new URL('./', import.meta.url)));
+    return found;
+  };
+
+  /** Every source a colour can hide in: the stylesheet plus every component. */
+  const styledSources = (): Array<[string, string]> => [
+    ['app.css', cssWithoutComments],
+    ...svelteSources(),
+  ];
+
+  it('resolves every var() reference to a token declared on :root', () => {
+    const declared = new Set(
+      [...rootBlock().matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) => match[1]),
+    );
+
+    const undeclared: string[] = [];
+    for (const [name, source] of styledSources()) {
+      for (const match of source.matchAll(/var\(\s*(--[a-z0-9-]+)/g)) {
+        const reference = `${name}: ${match[1]}`;
+        if (!declared.has(match[1]) && !undeclared.includes(reference)) undeclared.push(reference);
+      }
+    }
+    expect(undeclared.sort()).toEqual([]);
+  });
+
+  it('keeps every colour literal inside the :root token block', () => {
+    // One rule, so one test: a component's scoped `<style>` cannot declare a
+    // `:root` block of its own, but it INHERITS the global tokens — that is the
+    // whole point of putting them on the root — so its literal budget is simply
+    // zero, and the two files are checked by the same assertion rather than by a
+    // sibling test that could drift from it.
+    const colourLiteral = /#[0-9a-fA-F]{3,8}\b|\brgba?\(/g;
+    const sources = styledSources();
+    sources[0] = ['app.css', cssWithoutComments.replace(/^:root\s*\{[^}]*\}/m, '')];
+
+    const offenders: string[] = [];
+    for (const [name, source] of sources) {
+      for (const match of source.matchAll(colourLiteral)) offenders.push(`${name}: ${match[0]}`);
     }
     expect(offenders).toEqual([]);
   });
