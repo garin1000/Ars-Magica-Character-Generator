@@ -202,6 +202,13 @@ export interface PointItem {
   // whose removal is addressed by index) or one label is (the badge order, the
   // `category_not_permitted` message parameter).
   categories: string[];
+  // Headings the book's own INDEX files this entry under beyond its membership
+  // `categories`. Provenance, not membership — the engine's
+  // `validate_house` Hermetic-Flaw guideline is its only reader, and no UI
+  // surface may render, filter, group or badge by it (it is a raw slug and it
+  // is not what the character *is*). Omitted from JSON when empty, which is the
+  // case for all but a handful of entries.
+  index_categories?: string[];
   classification: Classification;
   // Descriptor "Type" tag: a Tainted (Infernal-associated) V/F. Omitted when false.
   tainted?: boolean;
@@ -902,10 +909,15 @@ export interface EntityTypeProfile {
   gift_policy?: 'required' | 'allowed' | 'forbidden';
   gift_id?: string;
   // The V/F categories that count as carrying The Gift (the magus profile names
-  // `hermetic`). Omitted from JSON when empty, so optional here. The wizard's
-  // Hermetic-Flaw advice keys off it rather than off the slug, exactly as the
-  // engine's `missing_hermetic_flaw` does.
+  // `hermetic`). Omitted from JSON when empty, so optional here.
   gift_categories?: string[];
+  // The V/F categories whose Flaws satisfy the "at least one Hermetic Flaw"
+  // guideline (`:2860`); `hermetic` on the magus profile only. A separate field
+  // from `gift_categories` on purpose — "is this character Gifted?" and "does
+  // this Flaw count as Hermetic?" are different questions with, for the two
+  // Beings Flaws, different answers. Any wizard advice about Hermetic Flaws
+  // keys off THIS one, exactly as the engine's `missing_hermetic_flaw` does.
+  hermetic_flaw_categories?: string[];
   // Ordered: the guided wizard walks these in sequence. Typed in the engine too,
   // so a phase string it has no variant for fails the ruleset load.
   creation_phases: CreationPhase[];

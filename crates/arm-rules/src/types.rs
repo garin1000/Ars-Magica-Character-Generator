@@ -1730,6 +1730,35 @@ pub struct PointItem {
     /// and the crisis table's rows). Load-time integrity rejects an empty list or
     /// a repeated slug.
     pub categories: Vec<String>,
+    /// Headings the book's own **index** files this entry under, *in addition
+    /// to* the ones its descriptor makes membership [`Self::categories`]. This
+    /// is **provenance, not membership**.
+    ///
+    /// The two can legitimately disagree. `hermetic` is the slug the engine
+    /// also uses to decide a character has The Gift
+    /// ([`EntityTypeProfile::gift_categories`]), so the two Beings Flaws the
+    /// book indexes under *both* Hermetic and General
+    /// (Ars Magica - Definitive Edition (Core Rules).md:5445 and :5455, against
+    /// `### Hermetic, Minor` at `:5417`) may not carry `hermetic` as a
+    /// membership category — an unGifted companion holding one would count as
+    /// Gifted and be handed the Gift's free Supernatural-Ability slot. Recording
+    /// the index heading here keeps the book's placement without granting
+    /// membership anywhere.
+    ///
+    /// **Exactly one consumer**: `validation::magus::validate_house`'s
+    /// `:2860` "at least one Hermetic Flaw" guideline, which is a question about
+    /// what the book lists, not about what the character *is*. Every membership
+    /// surface — permitted/forbidden categories, category caps, grant
+    /// constraints, Gift detection, [`Self::categories_for`] — and every
+    /// browsing surface, `Ruleset::items_by_category` and the Markdown export's
+    /// Type cell included, is deliberately blind to it.
+    ///
+    /// Unlike `categories`, the list carries no authored emphasis (an index is
+    /// alphabetical), so it IS canonically sorted by [`Self::normalize`].
+    /// Load-time integrity rejects a repeat and rejects a slug the item already
+    /// carries in `categories`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub index_categories: Vec<String>,
     /// How this V/F impacts a character mechanically (M5 slice 5a). Required (no
     /// serde default): an unclassified entry fails to load. See [`Classification`].
     pub classification: Classification,
@@ -1860,6 +1889,8 @@ struct PointItemRepr {
     /// rejected by name. Never stored.
     #[serde(default)]
     category: Option<String>,
+    #[serde(default)]
+    index_categories: Vec<String>,
     classification: Classification,
     #[serde(default)]
     tainted: bool,
@@ -1893,6 +1924,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             magnitude,
             categories,
             category,
+            index_categories,
             classification,
             tainted,
             entity_kinds,
@@ -1925,6 +1957,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             kind,
             magnitude,
             categories,
+            index_categories,
             classification,
             tainted,
             entity_kinds,
@@ -1941,12 +1974,15 @@ impl TryFrom<PointItemRepr> for PointItem {
 }
 
 impl PointItem {
-    /// Sorts the `parameters` vector by key for canonical serialization.
+    /// Sorts the `parameters` vector by key, and `index_categories` by slug,
+    /// for canonical serialization.
     ///
     /// `categories` is order-significant (the descriptor's own order) and so is
-    /// deliberately left untouched.
+    /// deliberately left untouched. `index_categories` is not: an index has no
+    /// authored emphasis to preserve, so it sorts like any other unordered list.
     pub fn normalize(&mut self) {
         self.parameters.sort_by(|a, b| a.key.cmp(&b.key));
+        self.index_categories.sort();
     }
 
     /// The category the item's rulebook descriptor lists **first**.
@@ -2276,6 +2312,25 @@ pub struct EntityTypeProfile {
     /// Categories that count as carrying The Gift (e.g. `hermetic`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub gift_categories: BTreeSet<String>,
+    /// Categories whose Flaws satisfy this type's "at least one Hermetic Flaw"
+    /// guideline. `["hermetic"]` on the magus profile; empty everywhere else,
+    /// which switches the guideline off entirely.
+    ///
+    /// > You should take at least one Hermetic Flaw
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2860 (a bullet
+    /// under `#### Magi`, `:2853`).
+    ///
+    /// Deliberately **not** [`Self::gift_categories`], though both name
+    /// `hermetic` today. They answer different questions — "is this character
+    /// Gifted?" versus "does this Flaw count as a Hermetic Flaw?" — and the two
+    /// Beings Flaws prove the answers can differ: the book indexes them under
+    /// Hermetic (so the guideline counts them) while the engine must not read
+    /// them as Gift-bearing (so they carry `general`, with the index heading in
+    /// [`PointItem::index_categories`]). One field serving both meant fixing
+    /// Gift detection silently broke the guideline.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub hermetic_flaw_categories: BTreeSet<String>,
     /// Ordered creation phases the guided wizard walks through. Typed, so serde
     /// itself is the load-time validator: a profile naming a phase the engine has
     /// no [`CreationPhase`] for fails the ruleset load rather than reaching the
@@ -4573,6 +4628,58 @@ mod tests {
         item.normalize();
         let keys: Vec<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
         assert_eq!(keys, vec!["first", "second"]);
+    }
+
+    /// `index_categories` is provenance — the headings the book's own index
+    /// files an entry under beyond the ones its descriptor makes membership
+    /// categories. The index has no meaningful order (unlike a descriptor,
+    /// whose order carries its emphasis), so the list IS canonically sorted,
+    /// and `normalize` is where that happens.
+    #[test]
+    fn point_item_normalize_sorts_index_categories() {
+        let mut item: PointItem = serde_json::from_str(
+            r#"{
+              "id": "flaw.unbearable_to_beings",
+              "kind": "flaw",
+              "classification": "narrative",
+              "magnitude": "minor",
+              "categories": ["general"],
+              "index_categories": ["hermetic", "another"],
+              "entity_kinds": ["character"]
+            }"#,
+        )
+        .unwrap();
+
+        // Membership order is the descriptor's own and stays untouched.
+        assert_eq!(item.categories, vec!["general"]);
+
+        item.normalize();
+        assert_eq!(item.index_categories, vec!["another", "hermetic"]);
+    }
+
+    /// The field is optional and absent by default — the overwhelming majority
+    /// of entries are indexed exactly where their descriptor says, so they
+    /// carry no `index_categories` key at all and must not gain an empty one on
+    /// a round trip.
+    #[test]
+    fn point_item_index_categories_default_empty_and_are_omitted() {
+        let item: PointItem = serde_json::from_str(
+            r#"{
+              "id": "flaw.optimistic",
+              "kind": "flaw",
+              "classification": "narrative",
+              "magnitude": "minor",
+              "categories": ["personality"]
+            }"#,
+        )
+        .unwrap();
+        assert!(item.index_categories.is_empty());
+
+        let reserialized = serde_json::to_string(&item).unwrap();
+        assert!(
+            !reserialized.contains("index_categories"),
+            "an empty provenance list is omitted: {reserialized}"
+        );
     }
 
     #[test]

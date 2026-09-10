@@ -102,6 +102,7 @@
     "gift_policy": "required",
     "gift_id": "virtue.the_gift",
     "gift_categories": ["hermetic"],
+    "hermetic_flaw_categories": ["hermetic"],
     "creation_phases": [
       "concept",
       "characteristics",

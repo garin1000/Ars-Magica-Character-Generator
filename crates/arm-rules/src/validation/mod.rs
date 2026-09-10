@@ -1721,23 +1721,34 @@ mod tests {
             "constraint": { "kind": "virtue", "magnitude": "minor" } } ] }
     ] }"#;
 
-    /// A magus profile whose Hermetic gift category tells `missing_hermetic_flaw`
-    /// which category is Hermetic, permitting the test categories.
+    /// A magus profile carrying both Hermetic category fields — `gift_categories`
+    /// for Gift detection and `hermetic_flaw_categories` for the `:2860`
+    /// guideline — and permitting the test categories. The two are separate
+    /// fields on purpose (see `EntityTypeProfile::hermetic_flaw_categories`);
+    /// the shipped magus profile sets both to `["hermetic"]` likewise.
     const HOUSE_MAGUS_TYPE: &str = r#"[{
         "id": "magus",
         "budget": { "virtue_points": 30, "flaw_points": 30 },
         "permitted_categories": ["general", "hermetic", "special", "social_status"],
         "is_magus": true,
         "gift_categories": ["hermetic"],
+        "hermetic_flaw_categories": ["hermetic"],
         "creation_phases": []
     }]"#;
 
     fn rs_for_house_validation() -> Ruleset {
+        rs_for_house_validation_with(HOUSE_MAGUS_TYPE)
+    }
+
+    /// The same House fixture over a caller-supplied profile list, so a test can
+    /// vary the profile's Gift/guideline category fields without restating the
+    /// items and Houses.
+    fn rs_for_house_validation_with(type_profiles: &str) -> Ruleset {
         Ruleset::from_sources(crate::ruleset::RulesetSources {
             id: "arm5-core",
             version: "2024.1",
             point_items: HOUSE_ITEMS,
-            type_profiles: HOUSE_MAGUS_TYPE,
+            type_profiles,
             abilities: None,
             arts: None,
             houses: Some(HOUSE_VALIDATE_HOUSES),
@@ -2178,6 +2189,66 @@ mod tests {
             !warning_codes(&result).contains(&"missing_hermetic_flaw".to_string()),
             "a magus with a Hermetic Flaw must not warn missing_hermetic_flaw: {:?}",
             result.issues
+        );
+    }
+
+    /// A magus profile stating no `hermetic_flaw_categories` states no
+    /// guideline, and `gift_categories` does not stand in for it. The two
+    /// answer different questions — "is this character Gifted?" versus "does
+    /// this Flaw count as a Hermetic Flaw?" — and `7ea4f5b` proved they can
+    /// need different answers for the same item.
+    #[test]
+    fn the_guideline_is_skipped_when_the_profile_names_no_hermetic_flaw_categories() {
+        let rs = rs_for_house_validation_with(
+            r#"[{
+                "id": "magus",
+                "budget": { "virtue_points": 30, "flaw_points": 30 },
+                "permitted_categories": ["general", "hermetic", "special", "social_status"],
+                "is_magus": true,
+                "gift_categories": ["hermetic"],
+                "creation_phases": []
+            }]"#,
+        );
+        let entity = make_entity("magus", vec![sel("flaw.driven")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !warning_codes(&result).contains(&"missing_hermetic_flaw".to_string()),
+            "gift_categories must not stand in for the guideline's own field: {:?}",
+            result.issues
+        );
+    }
+
+    /// And the mirror: the guideline fires off its own field alone, with no
+    /// Gift category declared at all.
+    #[test]
+    fn the_guideline_fires_off_hermetic_flaw_categories_alone() {
+        let rs = rs_for_house_validation_with(
+            r#"[{
+                "id": "magus",
+                "budget": { "virtue_points": 30, "flaw_points": 30 },
+                "permitted_categories": ["general", "hermetic", "special", "social_status"],
+                "is_magus": true,
+                "hermetic_flaw_categories": ["hermetic"],
+                "creation_phases": []
+            }]"#,
+        );
+
+        let bare = validate(&make_entity("magus", vec![sel("flaw.driven")]), &rs);
+        assert!(
+            warning_codes(&bare).contains(&"missing_hermetic_flaw".to_string()),
+            "the guideline reads hermetic_flaw_categories: {:?}",
+            bare.issues
+        );
+
+        let with_flaw = validate(
+            &make_entity("magus", vec![sel("flaw.deficient_technique")]),
+            &rs,
+        );
+        assert!(
+            !warning_codes(&with_flaw).contains(&"missing_hermetic_flaw".to_string()),
+            "and a Hermetic Flaw satisfies it: {:?}",
+            with_flaw.issues
         );
     }
 

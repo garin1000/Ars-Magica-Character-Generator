@@ -19,8 +19,8 @@ use crate::types::SpellSelection;
 ///   and satisfy the grant's declarative `GrantConstraint` (kind, magnitude,
 ///   category allow/deny lists), else `house_grant_constraint`.
 /// - A magus with no Flaw in a Hermetic category gets a soft
-///   `missing_hermetic_flaw` warning. "Hermetic" is the type's `gift_categories`
-///   (data), so no category slug is hardcoded.
+///   `missing_hermetic_flaw` warning. "Hermetic" is the type's
+///   `hermetic_flaw_categories` (data), so no category slug is hardcoded.
 ///
 /// The picks are validated here rather than as ordinary selections because the
 /// derived grant is never stored on `entity.selections`; the grant option refs
@@ -42,14 +42,40 @@ pub(crate) fn validate_house(
         return;
     }
 
-    // A magus should take at least one Hermetic Flaw. "Hermetic" is the type's
-    // declared gift category (data), so no slug is hardcoded here; skip the
-    // guideline entirely when the type names no gift category.
-    if !profile.gift_categories.is_empty() {
+    // A magus should take at least one Hermetic Flaw
+    // (Ars Magica - Definitive Edition (Core Rules).md:2860, a bullet under
+    // `#### Magi` at :2853: "You should take at least one Hermetic Flaw").
+    //
+    // "Hermetic" is the type's declared `hermetic_flaw_categories` (data), so no
+    // slug is hardcoded here; a type naming none states no guideline and is
+    // skipped entirely.
+    //
+    // Deliberately NOT `gift_categories`, though both name `hermetic` today.
+    // This asks "does the book list this Flaw as a Hermetic Flaw?", which is a
+    // question about the book, not about the character — so it is also the ONE
+    // reader of `PointItem::index_categories`, the headings the book's index
+    // files an entry under beyond its membership categories. The two Beings
+    // Flaws are exactly that case: `general` for membership (so an unGifted
+    // companion holding one is not read as Gifted), and indexed under
+    // `### Hermetic, Minor` all the same (:5445, :5455).
+    //
+    // Membership, not the taken-as-narrowed `categories_for`: an index heading
+    // is provenance, and the descriptor's whole list is provenance too, so the
+    // player's presentation choice must not remove a Flaw from the book's own
+    // Hermetic list.
+    if !profile.hermetic_flaw_categories.is_empty() {
+        let counts_as_hermetic = |item: &crate::types::PointItem| {
+            item.any_category_in(&profile.hermetic_flaw_categories)
+                || item
+                    .index_categories
+                    .iter()
+                    .any(|c| profile.hermetic_flaw_categories.contains(c))
+        };
         let has_hermetic_flaw = entity.selections.iter().any(|s| {
-            ruleset.point_items.get(&s.item_ref).is_some_and(|item| {
-                item.kind == ItemKind::Flaw && item.any_category_in(&profile.gift_categories)
-            })
+            ruleset
+                .point_items
+                .get(&s.item_ref)
+                .is_some_and(|item| item.kind == ItemKind::Flaw && counts_as_hermetic(item))
         });
         if !has_hermetic_flaw {
             issues.push(ValidationIssue::warning(

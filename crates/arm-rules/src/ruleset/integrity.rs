@@ -94,6 +94,7 @@ impl Ruleset {
     fn validate_point_items(&self, errors: &mut Vec<String>) {
         for (id, item) in &self.point_items {
             self.validate_item_categories(id, item, errors);
+            Self::validate_index_categories(id, item, errors);
             Self::validate_item_share(id, item, errors);
 
             if let Some(ref prereq) = item.prerequisites {
@@ -148,6 +149,34 @@ impl Ruleset {
         for category in &item.categories {
             if !seen.insert(category.as_str()) {
                 errors.push(format!("{id}: 'categories' repeats '{category}'"));
+            }
+        }
+    }
+
+    /// Checks the shape of one item's `index_categories` — the headings the
+    /// book's index files the entry under *beyond* its membership
+    /// [`PointItem::categories`] (see that field's doc comment).
+    ///
+    /// Two ways to author it wrongly, both silent otherwise:
+    /// - a **repeat**, exactly as in `categories`: always a slip, and it changes
+    ///   no answer while doubling the entry;
+    /// - a slug the item **already carries as a membership category**. That is
+    ///   not a divergence between the index and the descriptor, which is the
+    ///   only thing this field records. Left in, it would let a reader satisfy
+    ///   itself from either list and quietly blur the membership/provenance
+    ///   line the field exists to draw.
+    fn validate_index_categories(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        for category in &item.index_categories {
+            if !seen.insert(category.as_str()) {
+                errors.push(format!("{id}: 'index_categories' repeats '{category}'"));
+            }
+            if item.has_category(category) {
+                errors.push(format!(
+                    "{id}: 'index_categories' names '{category}', which the item \
+                     already carries in 'categories'; the field records only \
+                     index headings the descriptor's categories do NOT cover"
+                ));
             }
         }
     }

@@ -122,7 +122,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   Flaws a recommended *ceiling* of one and no minimum whatsoever. The only "at
   least one" the rules state is the magus's **Hermetic** Flaw (`:2860`), carried
   by the `missing_hermetic_flaw` warning under the condition that the profile
-  names at least one `gift_categories` entry.
+  names at least one `hermetic_flaw_categories` entry.
 
 #### Tainted Virtues/Flaws — the "Type" tag + half-of-taken cap
 > "Tainted Virtues and Flaws are associated with the Infernal realm ... no more
@@ -391,16 +391,22 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   what changed is that the bearer's category is now *recorded* rather than
   guessed.
 
-  **The remaining two keep one category deliberately, and the reason differs per
-  item.** `virtue.inoffensive_to_beings` already carries the *permissive*
-  category (`general` is on every profile's permitted list and no profile's
-  forbidden list), so nothing is blocked and adding the second category would
-  change no outcome. `flaw.primogeniture_lineage` keeps `story` for the
-  opposite reason: adding `hermetic` would corrupt Gift detection, because
-  `gift_categories` is `["hermetic"]` on every shipped profile — see the
-  overloading note below. Its magi-only restriction is a House matter, not a
-  category one, and is now enforced as a prerequisite — see *Primogeniture
+  **The remaining two keep one MEMBERSHIP category deliberately, and the reason
+  differs per item.** `virtue.inoffensive_to_beings` already carries the
+  *permissive* category (`general` is on every profile's permitted list and no
+  profile's forbidden list), so nothing is blocked and adding the second
+  category would change no outcome. `flaw.primogeniture_lineage` keeps `story`
+  for the opposite reason: adding `hermetic` would corrupt Gift detection,
+  because `gift_categories` is `["hermetic"]` on every shipped profile — see
+  the overloading note below. Its magi-only restriction is a House matter, not
+  a category one, and is now enforced as a prerequisite — see *Primogeniture
   Lineage is for magi of House Verditius only* below.
+
+  **Both nevertheless record the book's index heading (row 18).** Keeping
+  `hermetic` out of `categories` is a membership decision; it must not also
+  erase what the book's index does. Both — and both Beings Flaws — carry
+  `index_categories: ["hermetic"]`, which exactly one consumer reads (the
+  `:2860` Hermetic-Flaw guideline). See *Resolved (row 18)* below.
 
   **Still unmodelled, and recorded rather than resolved (row 19, half b): the
   *and*-joined descriptors.** `taken_as` models ***or***, and only *or*. An *or*
@@ -438,6 +444,13 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   the Gift-detection corruption that fix removed. `virtue.inoffensive_to_beings`
   and `flaw.offensive_to_beings` sit behind the same `hermetic` overload on top
   of the *and* question.
+
+  **Row 18's split does not reopen this, and makes the reason structural.**
+  `index_categories` is provenance, not a membership category, and load-time
+  integrity requires a `taken_as` parameter's declared values to be a subset of
+  the item's own `categories` (`validate_parameter_defs`). So `hermetic` is not
+  an expressible `taken_as` value for any of these items, and the answer no
+  longer rests on remembering why.
 
   **Row 19, half (a), resolved: "taken as" is now modelled.** `:5083` makes
   Sufi's dual category an explicit player CHOICE ("either as a Minor Social
@@ -889,28 +902,104 @@ silently handing him the Gift's free Supernatural-Ability slot via
 `a_companion_holding_offensive_to_beings_is_not_gifted` in
 `tests/data_integrity.rs`, so a later "completion" fails loudly.
 
-**Accepted regression: `missing_hermetic_flaw`.** `gift_categories` serves
-**three** masters — Gift detection, the free-slot grant, and `validate_house`'s
-"a magus should take at least one Hermetic Flaw" guideline (`:2860`), which
-decides what counts as Hermetic with `any_category_in(&profile.gift_categories)`
-(`validation/magus.rs`). Only the first two force dropping `hermetic`. The third
-is collateral: a magus whose only Hermetic Flaw is one of these two — a legal
-build; any magus may take Unbearable (`:6895`), and a Gentle-Gift magus may take
-Offensive (`:6530`) — now warns that he has none, though the book lists both in
-its Hermetic Flaws index (`:5445`, `:5455`). It is a **warning, not an error**,
-so the build still validates. Recorded deliberately rather than discovered, and
-pinned by `the_hermetic_flaw_guideline_no_longer_counts_the_two_beings_flaws`.
-The narrowed to-do: the guideline wants its own notion of "Hermetic Flaw",
-independent of Gift detection.
+**Resolved (row 18): the regression above is repaired by splitting the field in
+two.** `gift_categories` used to serve **three** masters — Gift detection, the
+free-slot grant, and `validate_house`'s "a magus should take at least one
+Hermetic Flaw" guideline (`:2860`). Only the first two forced dropping
+`hermetic`, so the third became collateral: a magus whose only Hermetic Flaw was
+one of these two — a legal build; any magus may take Unbearable (`:6895`), and a
+Gentle-Gift magus may take Offensive (`:6530`) — was told he had none, though the
+book lists both in its Hermetic Flaws index (`:5445`, `:5455`).
 
-**Known divergence, recorded rather than resolved.**
-`Prereq::Has(virtue.the_gift)` is **id**-based; the engine's own `has_the_gift` is
-**category**-based. A Suppressed-Gift companion is Gifted by the engine's
-reckoning (and by `:6805`, still suffering the Gift's social penalties) yet
-satisfies Offensive's `Nor([Has(the_gift)])` arm without the Gentle Gift, and
-fails Unbearable's Gift arm. Both readings diverge from a literal `:6530` /
-`:6895`. Relatedly, `:2840`'s "unless you have The Gift" conditional stays
-unmodelled in general: the companion profile forbids `hermetic` unconditionally.
+Two fields now carry the two meanings, and `hermetic` is still **not** a
+membership category on either Flaw:
+
+| field | question | reader |
+|---|---|---|
+| `PointItem::index_categories` | *Under which headings does the book's own index file this entry, beyond its descriptor's categories?* — provenance | `validate_house` **only** |
+| `EntityTypeProfile::hermetic_flaw_categories` | *Which categories does this type's `:2860` guideline count?* — `["hermetic"]` on the magus profile, empty elsewhere | `validate_house` **only** |
+
+> You should take at least one Hermetic Flaw
+> — `Ars Magica - Definitive Edition (Core Rules).md:2860` (a bullet under
+> `#### Magi`, `:2853`)
+
+`validate_house` counts a selected Flaw when the profile's
+`hermetic_flaw_categories` meets the item's `categories` **or** its
+`index_categories`. Everything else stays blind to `index_categories`: Gift
+detection, the free-slot grant, permitted/forbidden categories, the category
+caps, grant constraints, `PointItem::categories_for`, `items_by_category`, the UI
+pickers and the Markdown export's Type cell. That is a leak guard, not a
+convention — `gift_detection_ignores_index_categories` and
+`index_categories_are_invisible_to_every_membership_surface`
+(`tests/data_integrity.rs`) fail loudly if any of them starts reading it.
+
+The guideline reads the item's whole `categories` list, **not** the taken-as
+narrowed `categories_for`. Both lists are provenance for this question — "does
+the book list this Flaw as Hermetic?" — so a player's presentation choice must
+not strike an entry off the book's own Hermetic index.
+
+Four shipped items carry `index_categories`, all naming `hermetic`, all
+hand-verified against the `### Hermetic, Minor` block at `:5417` (Flaws) and
+`:3087` (Virtues). The frozen `INDEX_CATEGORY_ITEMS` table in
+`tests/data_integrity.rs` pins the set with the index line each was verified at:
+
+| item | descriptor | membership `categories` | indexed under Hermetic at |
+|---|---|---|---|
+| `flaw.offensive_to_beings` | *Minor, Hermetic and General* `:6525` | `["general"]` | `:5445` |
+| `flaw.primogeniture_lineage` | *Minor, Story and Hermetic* `:6635` | `["story"]` | `:5447` |
+| `flaw.unbearable_to_beings` | *Minor, Hermetic or General* `:6892` | `["general"]` | `:5455` |
+| `virtue.inoffensive_to_beings` | *Minor, General and Hermetic* `:4134` | `["general"]` | `:3110` |
+
+`virtue.inoffensive_to_beings` is a **Virtue**, so it can never satisfy a
+Hermetic-*Flaw* guideline; it carries the heading because the field records what
+the book's index does, and a provenance record that is populated only where some
+consumer happens to need it is not provenance.
+
+Load-time integrity (`ruleset::integrity::validate_index_categories`) rejects a
+repeated heading and rejects a heading the item already carries in `categories`
+— the field records only the divergence, and a slug in both lists would let a
+reader satisfy itself from either and blur the line. Unlike `categories`, whose
+order is the descriptor's own emphasis, `index_categories` is canonically sorted
+by `PointItem::normalize`: an index has no authored order.
+
+`SCHEMA_VERSION` is untouched (16). Both fields are **ruleset** shape, not save
+shape, so there is no migration.
+
+**Known divergence, recorded rather than resolved: id-based vs category-based
+Giftedness.** `Prereq::Has(virtue.the_gift)` is **id**-based; the engine's own
+`has_the_gift` is `gift_id` **or** any selection in a `gift_categories`
+category. The two can disagree in both directions:
+
+- A Suppressed-Gift companion is Gifted by the engine's reckoning (and by
+  `:6805`, still suffering the Gift's social penalties) yet satisfies
+  Offensive's `Nor([Has(the_gift)])` arm without the Gentle Gift, and fails
+  Unbearable's Gift arm. Both readings diverge from a literal `:6530` / `:6895`.
+- A magus can satisfy `gift_policy: required` through the **category** arm alone
+  — any `hermetic` selection with no `virtue.the_gift` row — and then sees
+  `prereq_not_met` on `virtue.gentle_gift` and `flaw.blatant_gift`, which gate
+  on the **id** (`Has(virtue.the_gift)`). Told he is Gifted by one validator and
+  not Gifted by the next.
+
+**They ought to agree, and the source says which way.** `:2858` ("You must take
+The Gift *and* the Hermetic Magus Social Status Virtue") and `:2870` ("all magi
+must have this Virtue") make The Gift a specific **row**, not a category. And
+`:2880` — "Only characters with The Gift can take these Virtues and Flaws" —
+states a *requirement on* Hermetic items, not an implication *from* holding one;
+the category arm reads it backwards. So the correct shape is: Giftedness is
+`gift_id` alone, and `:2880` is expressed as `Has(virtue.the_gift)`
+prerequisites on the Hermetic items themselves (B5 already did exactly that for
+`flaw.suppressed_gift`, `virtue.gentle_gift`, `flaw.blatant_gift` and
+`virtue.apprentice`, which is what makes the category arm redundant for them).
+
+Not done here: dropping the category arm changes Gift detection, the
+`supernatural_free_slots` grant and `validate_gift_policy` for every profile,
+and needs a `Has(virtue.the_gift)` audit across every `hermetic` item — a rules
+sweep, not a consequence of this field split. Recorded as owed.
+
+Relatedly, `:2840`'s "unless you have The Gift" conditional is now modelled for
+the companion profile (see *A category rule may carry a condition*), and its
+`when` leaf is deliberately the **id** `Has(virtue.the_gift)` for exactly this
+reason: a category condition would license itself.
 
 #### The Gift policy — required / forbidden by type
 > "all magi must have this Virtue" ... "Grogs can never have The Gift".
@@ -952,6 +1041,7 @@ source:
 | magus | `is_magus: true`, `gift_policy: required`, `required_traits: [virtue.hermetic_magus]` | `:2858` ("must take The Gift and the Hermetic Magus Social Status Virtue"), `:2293` (only magi may take the Hermetic Magus Status) |
 | magus | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `:2862` ("should not take more than two Personality Flaws, and may not take more than one Major Personality Flaw"); `:2861` ("should not take more than one Story Flaw") |
 | magus | `virtue_category_caps`: hermetic major_only/hard `max: 1` | `:2857` ("may not have more than one Major Hermetic Virtue") — see the Houses section |
+| magus | `hermetic_flaw_categories: [hermetic]`, and **no other profile carries the key** | `:2860` ("You should take at least one Hermetic Flaw"), a bullet under `#### Magi` (`:2853`). Its own field rather than a second read of `gift_categories`: the guideline asks what the BOOK lists as Hermetic, Gift detection asks what the CHARACTER is, and the two Beings Flaws answer those differently — see *Resolved (row 18)* |
 | mythic_companion | `virtue_points: 20`, `flaw_points: 10`, `virtue_points_per_flaw_point: 2` | `:2638` ("up to ten points of Flaws, and each point of Flaws is worth two points of Virtues. This produces a maximum of 21 points of Virtues and 10 points of Flaws") |
 | mythic_companion | `forbidden_categories: [hermetic]`, `gift_policy: forbidden` | `:2637` (Mythic Companion status Virtues "are incompatible … with The Gift"); generated as Companions `:2635` |
 | mythic_companion | `permitted_categories` includes `mythic_companion`, and no other profile's does | `:2637` ("All Mythic Companions take a Free Virtue which specifies their status … are not available to grogs"); each status Virtue makes its bearer a Mythic Companion (`:3673`, `:3823`, `:4596`, `:5008`) — see the V/F category note |
@@ -2735,12 +2825,18 @@ resolved values); the free Virtue is **derived** at eval by
   in both locales; `dynamic_virtue_cap_codes()` extends the Fluent-coverage test.
 
 #### ≥1 Hermetic Flaw (magus guideline)
-> "You should take at least one Hermetic Flaw."
+> You should take at least one Hermetic Flaw
 
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:2860`.
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2860` — verbatim, a
+  bullet under `#### Magi` (`:2853`), hence no closing period.
 - A "should", so a **soft warning** — `validation/magus.rs::validate_house` (:31) emits
-  `missing_hermetic_flaw` when a magus has no selected Flaw whose category is in
-  the profile's Gift categories (data-driven, not a hardcoded `"hermetic"`).
+  `missing_hermetic_flaw` when a magus has no selected Flaw counting as Hermetic.
+- "Counting as Hermetic" is two data lookups, never a hardcoded `"hermetic"`:
+  the profile's **`hermetic_flaw_categories`** (`["hermetic"]` on the magus
+  profile only) met against the item's `categories` **or** its
+  `index_categories`. It is deliberately NOT `gift_categories` and NOT the
+  taken-as-narrowed `categories_for` — see *Resolved (row 18)* in the Hermetic
+  category section for why all three distinctions are load-bearing.
 
 #### `validate_house` — specialisation resolution
 - `house_choice_unresolved` (error): a `Choice` pick missing or not among its

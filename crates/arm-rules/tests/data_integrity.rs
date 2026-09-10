@@ -5639,43 +5639,315 @@ fn a_companion_holding_offensive_to_beings_is_not_gifted() {
     );
 }
 
-/// **Accepted regression, decided rather than discovered.** `validate_house`
-/// decides what counts as a "Hermetic Flaw" for the `missing_hermetic_flaw`
-/// guideline (`:2860`) using the same overloaded `gift_categories`. So a magus
-/// whose only Hermetic Flaw is Unbearable to (Beings) — a legal build; any magus
-/// may take it (`:6895`) — now warns that he has none, even though the book lists
-/// it in the Hermetic Flaws index (`:5455`; Offensive at `:5445`).
-///
-/// `gift_categories` serves three masters — Gift detection, the free-slot grant,
-/// and this guideline — and only the first two force dropping `hermetic`. This is
-/// collateral, and it is a **warning**, not an error. The guideline wants its own
-/// notion of "Hermetic Flaw", independent of Gift detection; see RULES.md.
+// --- `index_categories`: the book's index, kept apart from membership (row 18) -
+//
+// `7ea4f5b` moved the two Beings Flaws from `categories: ["hermetic"]` to
+// `["general"]` because `hermetic` is what `effective::has_the_gift` reads, and
+// an unGifted companion holding one was thereby counted as Gifted. That was
+// right, but it also silently changed the answer to a second, unrelated
+// question: `validate_house`'s "a magus should take at least one Hermetic Flaw"
+// guideline (`:2860`) read the very same `gift_categories`, so a magus whose one
+// Hermetic Flaw was Unbearable to (Beings) was told he had none — though the
+// book's own Flaw index lists it under `### Hermetic, Minor` (`:5455`).
+//
+// The two questions now have two fields. `PointItem::index_categories` records
+// the headings the book's index files an entry under BEYOND its membership
+// `categories`; it is provenance, never membership.
+// `EntityTypeProfile::hermetic_flaw_categories` says which categories the
+// guideline counts. `validate_house` is the ONLY reader of `index_categories` —
+// Gift detection, caps, permitted/forbidden lists, grants, `items_by_category`
+// and the Markdown export all stay blind to it, which the leak guards below pin.
+
+/// Every shipped item carrying `index_categories`, with the index heading and
+/// the line the book lists it at. Frozen, in the manner of `TAKEN_AS_ITEMS`: the
+/// set is small, hand-verified against the `### <Category>, <Magnitude>` blocks
+/// under `## List of Virtues` (`:3004`) and `## List of Flaws` (`:5283`), and a
+/// silent addition must fail rather than pass.
+/// In id order, which is both the shipped file's canonical order and the order
+/// `Ruleset::items()` walks its `BTreeMap`.
+const INDEX_CATEGORY_ITEMS: [(&str, &str, u32); 4] = [
+    // *Minor, Hermetic and General* (:6525) — `### Hermetic, Minor` is :5417.
+    ("flaw.offensive_to_beings", "hermetic", 5445),
+    // *Minor, Story and Hermetic* (:6635) — `### Hermetic, Minor` is :5417.
+    ("flaw.primogeniture_lineage", "hermetic", 5447),
+    // *Minor, Hermetic or General* (:6892) — `### Hermetic, Minor` is :5417.
+    ("flaw.unbearable_to_beings", "hermetic", 5455),
+    // *Minor, General and Hermetic* (:4134) — `### Hermetic, Minor` is :3087.
+    ("virtue.inoffensive_to_beings", "hermetic", 3110),
+];
+
+/// The provenance data itself: each of the four items the book indexes under a
+/// heading its `categories` deliberately omit carries that heading in
+/// `index_categories`, and nowhere else.
 #[test]
-fn the_hermetic_flaw_guideline_no_longer_counts_the_two_beings_flaws() {
+fn the_shipped_catalogue_records_the_books_own_index_headings() {
     let rs = load_ruleset();
-    let result = validate(
+
+    for (id, heading, line) in INDEX_CATEGORY_ITEMS {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert!(
+            item.index_categories.iter().any(|c| c == heading),
+            "{id} is listed under `### {heading}` at \
+             Ars Magica - Definitive Edition (Core Rules).md:{line}"
+        );
+        assert!(
+            !item.has_category(heading),
+            "{id}'s index heading must stay OUT of its membership categories — \
+             that is exactly what 7ea4f5b removed"
+        );
+    }
+
+    let recorded: Vec<&str> = INDEX_CATEGORY_ITEMS.iter().map(|(id, ..)| *id).collect();
+    let shipped: Vec<String> = rs
+        .items()
+        .filter(|i| !i.index_categories.is_empty())
+        .map(|i| i.id.to_string())
+        .collect();
+    assert_eq!(
+        shipped, recorded,
+        "a new index_categories entry must be added to this frozen table with \
+         the index line it was verified against"
+    );
+}
+
+/// The leak guard row 18 asks for by name. `index_categories` is provenance, so
+/// Gift detection must not see it: a companion holding Offensive to (Beings) —
+/// which now records `hermetic` as an index heading — is still unGifted and
+/// still gets no free Supernatural-Ability slot (`:2874`).
+#[test]
+fn gift_detection_ignores_index_categories() {
+    let rs = load_ruleset();
+    let offensive = Id::new("flaw.offensive_to_beings");
+    let profile = rs
+        .profile(&Id::new("companion"))
+        .expect("the companion profile must ship");
+    assert!(
+        profile.gift_categories.contains("hermetic"),
+        "the companion profile detects The Gift by the hermetic category"
+    );
+    assert!(
+        rs.item(&offensive)
+            .expect("Offensive to (Beings) must ship")
+            .index_categories
+            .iter()
+            .any(|c| c == "hermetic"),
+        "the item under test must actually carry the index heading"
+    );
+
+    let e = entity(
+        "companion",
+        vec![Selection::with_params(
+            offensive,
+            BTreeMap::from([("being".to_string(), Id::new("being.animals"))]),
+        )],
+    );
+    assert_eq!(
+        arm_rules::supernatural_free_slots(&e, &rs, profile).total,
+        0,
+        "an index heading is not membership, so it may not confer The Gift"
+    );
+}
+
+/// The rest of the leak guard: no membership or browsing surface may read
+/// `index_categories`. A grog forbids `hermetic` outright and no profile permits
+/// `mythic_companion` except the mythic one, so an index heading leaking into
+/// either gate would show up as a refusal; `items_by_category` is the browsing
+/// half.
+#[test]
+fn index_categories_are_invisible_to_every_membership_surface() {
+    let rs = load_ruleset();
+    let unbearable = Id::new("flaw.unbearable_to_beings");
+
+    assert!(
+        !rs.items_by_category("hermetic").any(|i| i.id == unbearable),
+        "items_by_category is a membership query over `categories` alone"
+    );
+
+    // A grog forbids `hermetic`; the Flaw is `general`, so the only thing that
+    // could refuse it on category grounds is a leak of the index heading. (The
+    // Gift-or-Magical-Air prerequisite still fires — that is `:6895`, not a
+    // category rule.)
+    let codes = issue_codes(
         &entity(
-            "magus",
-            vec![
-                Selection::new(Id::new("virtue.the_gift")),
-                Selection::new(Id::new("virtue.hermetic_magus")),
-                Selection::with_params(
-                    Id::new("flaw.unbearable_to_beings"),
-                    BTreeMap::from([("being".to_string(), Id::new("being.demons"))]),
-                ),
-            ],
+            "grog",
+            vec![Selection::with_params(
+                unbearable,
+                BTreeMap::from([("being".to_string(), Id::new("being.demons"))]),
+            )],
         ),
         &rs,
     );
-    let warning = result
-        .issues
-        .iter()
-        .find(|i| i.code == "missing_hermetic_flaw")
-        .expect("the guideline reads `general` as not-Hermetic — accepted regression");
+    for code in ["forbidden_category", "category_not_permitted"] {
+        assert!(
+            !codes.contains(&code.to_string()),
+            "the grog's forbidden `hermetic` must not see an index heading: {codes:?}"
+        );
+    }
+}
+
+/// **The positive form, restored on purpose.** The book indexes both Beings
+/// Flaws under Hermetic, so the `:2860` guideline — "You should take at least
+/// one Hermetic Flaw" — counts them again. It reads
+/// `EntityTypeProfile::hermetic_flaw_categories` against the item's
+/// `categories` PLUS its `index_categories`, which is why this can be true
+/// while `gift_detection_ignores_index_categories` above is also true.
+#[test]
+fn the_hermetic_flaw_guideline_counts_the_two_beings_flaws() {
+    let rs = load_ruleset();
+    let magus_base = || {
+        vec![
+            Selection::new(Id::new("virtue.the_gift")),
+            Selection::new(Id::new("virtue.hermetic_magus")),
+        ]
+    };
+
+    // Unbearable to (Beings): any magus may take it (`:6895`).
+    let mut selections = magus_base();
+    selections.push(Selection::with_params(
+        Id::new("flaw.unbearable_to_beings"),
+        BTreeMap::from([("being".to_string(), Id::new("being.demons"))]),
+    ));
+    let codes = issue_codes(&entity("magus", selections), &rs);
+    assert!(
+        !codes.contains(&"missing_hermetic_flaw".to_string()),
+        "the book lists Unbearable to (Beings) under `### Hermetic, Minor` \
+         (:5455), so it satisfies :2860: {codes:?}"
+    );
+
+    // Offensive to (Beings): a Gifted character needs the Gentle Gift (`:6530`).
+    let mut selections = magus_base();
+    selections.push(Selection::new(Id::new("virtue.gentle_gift")));
+    selections.push(Selection::with_params(
+        Id::new("flaw.offensive_to_beings"),
+        BTreeMap::from([("being".to_string(), Id::new("being.animals"))]),
+    ));
+    let codes = issue_codes(&entity("magus", selections), &rs);
+    assert!(
+        !codes.contains(&"missing_hermetic_flaw".to_string()),
+        "and Offensive to (Beings) is indexed there too (:5445): {codes:?}"
+    );
+
+    // The guideline still bites when there is genuinely no Hermetic Flaw.
+    let codes = issue_codes(&entity("magus", magus_base()), &rs);
+    assert!(
+        codes.contains(&"missing_hermetic_flaw".to_string()),
+        "a magus with no Hermetic Flaw at all is still advised: {codes:?}"
+    );
+}
+
+/// The magus profile is the one that states the guideline, because `:2860` is a
+/// magus bullet. No other shipped profile may claim it: `validate_house`
+/// returns early for a non-magus, and a stray field would be a silent lie.
+#[test]
+fn only_the_magus_profile_names_hermetic_flaw_categories() {
+    let rs = load_ruleset();
+    for profile in rs.profiles() {
+        let expected: &[&str] = if profile.is_magus { &["hermetic"] } else { &[] };
+        let actual: Vec<&str> = profile
+            .hermetic_flaw_categories
+            .iter()
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            actual,
+            expected.to_vec(),
+            "profile '{}' (Ars Magica - Definitive Edition (Core Rules).md:2860 \
+             is a magus bullet)",
+            profile.id
+        );
+    }
+}
+
+/// Load gate 1: an index heading the item already carries as a membership
+/// category is not a divergence — it is a duplicate that would double-count the
+/// entry and blur the very distinction the field exists to draw.
+#[test]
+fn an_index_category_repeating_a_membership_category_fails_the_load() {
+    let err = Ruleset::from_sources(RulesetSources {
+        id: "test",
+        version: "1",
+        point_items: r#"[
+          { "id": "flaw.x", "kind": "flaw", "magnitude": "minor",
+            "classification": "narrative",
+            "categories": ["general", "story"],
+            "index_categories": ["story"] },
+          { "id": "flaw.filler", "kind": "flaw", "magnitude": "minor",
+            "classification": "narrative", "categories": ["personality"] }
+        ]"#,
+        type_profiles: r#"[{ "id": "grog",
+            "budget": { "virtue_points": 3, "flaw_points": 3 },
+            "creation_phases": [] }]"#,
+        ..RulesetSources::default()
+    })
+    .unwrap_err()
+    .to_string();
+    assert!(err.contains("flaw.x"), "names the item: {err}");
+    assert!(err.contains("index_categories"), "names the field: {err}");
+    assert!(err.contains("story"), "names the offending slug: {err}");
+}
+
+/// Load gate 2: a repeated index heading is an authoring slip, exactly as a
+/// repeated membership category is.
+#[test]
+fn a_repeated_index_category_fails_the_load() {
+    let err = Ruleset::from_sources(RulesetSources {
+        id: "test",
+        version: "1",
+        point_items: r#"[
+          { "id": "flaw.x", "kind": "flaw", "magnitude": "minor",
+            "classification": "narrative",
+            "categories": ["general"],
+            "index_categories": ["hermetic", "hermetic"] },
+          { "id": "flaw.filler", "kind": "flaw", "magnitude": "minor",
+            "classification": "narrative", "categories": ["personality"] }
+        ]"#,
+        type_profiles: r#"[{ "id": "grog",
+            "budget": { "virtue_points": 3, "flaw_points": 3 },
+            "creation_phases": [] }]"#,
+        ..RulesetSources::default()
+    })
+    .unwrap_err()
+    .to_string();
+    assert!(err.contains("flaw.x"), "names the item: {err}");
+    assert!(err.contains("index_categories"), "names the field: {err}");
+    assert!(err.contains("hermetic"), "names the offending slug: {err}");
+}
+
+/// Carry-over (a) from B4, checked rather than assumed: a **non-Gifted**
+/// character who qualifies for Unbearable to (Beings) through Magical Air
+/// (`:6895`) must not be detected as Gifted. Both `flaw.magical_air` and
+/// `flaw.unbearable_to_beings` are `categories: ["general"]`, so nothing in the
+/// pair reaches `gift_categories` — and the new index heading must not change
+/// that.
+#[test]
+fn magical_air_plus_unbearable_to_beings_is_not_gifted() {
+    let rs = load_ruleset();
+    let profile = rs
+        .profile(&Id::new("companion"))
+        .expect("the companion profile must ship");
+    let e = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("flaw.magical_air")),
+            Selection::with_params(
+                Id::new("flaw.unbearable_to_beings"),
+                BTreeMap::from([("being".to_string(), Id::new("being.demons"))]),
+            ),
+        ],
+    );
+
     assert_eq!(
-        warning.severity,
-        arm_rules::validation::IssueSeverity::Warning,
-        "and it stays a guideline warning, never an error"
+        arm_rules::supernatural_free_slots(&e, &rs, profile).total,
+        0,
+        "Magical Air is not The Gift (:6895 names them as alternatives), so \
+         neither Flaw may confer the Gift's free Supernatural-Ability slot"
+    );
+    let codes = issue_codes(&e, &rs);
+    assert!(
+        !codes.contains(&"prereq_not_met".to_string()),
+        "and Magical Air satisfies Unbearable's own gate: {codes:?}"
     );
 }
 
