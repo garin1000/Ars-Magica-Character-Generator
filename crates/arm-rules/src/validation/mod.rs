@@ -7110,6 +7110,124 @@ mod tests {
         );
     }
 
+    /// A one-item-domain-parameter ruleset for the `require_categories` tests.
+    ///
+    /// `virtue.probe` names another point item; `require_categories` (when given)
+    /// narrows which. The three targets differ in exactly the axis under test:
+    /// `virtue.supernatural_target` carries the required category as its only one,
+    /// `virtue.plain_target` does not carry it at all, and
+    /// `virtue.dual_target` carries it as its SECOND category.
+    fn item_param_rs(require: &str) -> Ruleset {
+        let items = format!(
+            r#"[
+              {{ "id": "virtue.probe", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+                 "parameters": [{{ "key": "target", "type": "ref", "domain": "item"{require} }}] }},
+              {{ "id": "virtue.supernatural_target", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"] }},
+              {{ "id": "virtue.dual_target", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["social_status", "supernatural"],
+                 "entity_kinds": ["character"] }},
+              {{ "id": "virtue.indexed_target", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["general"],
+                 "index_categories": ["supernatural"], "entity_kinds": ["character"] }},
+              {{ "id": "virtue.plain_target", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"] }},
+              {{ "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+                 "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }}
+            ]"#
+        );
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "creation_phases": []
+        }]"#;
+        Ruleset::from_json("test", "1", &items, types).unwrap()
+    }
+
+    /// The codes raised when `virtue.probe` targets `target`.
+    fn probe_codes(rs: &Ruleset, target: &str) -> Vec<String> {
+        let entity = make_entity(
+            "test_type",
+            vec![Selection::with_params(
+                Id::new("virtue.probe"),
+                BTreeMap::from([("target".into(), Id::new(target))]),
+            )],
+        );
+        codes(&validate(&entity, rs))
+    }
+
+    /// `require_categories` narrows the `item` domain to a category, exactly as
+    /// `technique`/`form` narrow the `art` domain to one Art class — so a value
+    /// naming a real point item OUTSIDE the required categories is not in this
+    /// parameter's domain and raises the existing `unknown_param_value`.
+    #[test]
+    fn an_item_value_outside_require_categories_is_flagged() {
+        let rs = item_param_rs(r#", "require_categories": ["supernatural"]"#);
+        assert!(
+            !probe_codes(&rs, "virtue.supernatural_target")
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "an item of the required category must resolve: {:?}",
+            probe_codes(&rs, "virtue.supernatural_target")
+        );
+        assert!(
+            probe_codes(&rs, "virtue.plain_target")
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "an item outside the required categories must be flagged: {:?}",
+            probe_codes(&rs, "virtue.plain_target")
+        );
+    }
+
+    /// An empty `require_categories` — the shape of every parameter shipped today
+    /// — narrows nothing: the whole point-item registry stays the domain.
+    #[test]
+    fn an_item_param_without_require_categories_admits_any_item() {
+        let rs = item_param_rs("");
+        for target in ["virtue.supernatural_target", "virtue.plain_target"] {
+            assert!(
+                !probe_codes(&rs, target)
+                    .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+                "{target} must resolve when nothing narrows the domain: {:?}",
+                probe_codes(&rs, target)
+            );
+        }
+    }
+
+    /// Which notion of "category" `require_categories` consults: **membership**,
+    /// the item's whole `categories` list.
+    ///
+    /// A parameter value is a bare `Id` naming an *item*, not a `Selection` of
+    /// one, so there is no `params` map to read a `taken_as` choice from — the
+    /// character need not even hold the item. `PointItem::categories_for` is
+    /// therefore not applicable here, and a multi-category item satisfies the
+    /// requirement through ANY of its categories, in the same non-empty-
+    /// intersection sense as `GrantConstraint::require_categories`.
+    #[test]
+    fn a_multi_category_item_satisfies_require_categories_by_any_of_its_categories() {
+        let rs = item_param_rs(r#", "require_categories": ["supernatural"]"#);
+        assert!(
+            !probe_codes(&rs, "virtue.dual_target")
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "the required category as a SECOND category still satisfies: {:?}",
+            probe_codes(&rs, "virtue.dual_target")
+        );
+    }
+
+    /// `index_categories` is provenance — the headings the book files an entry
+    /// under — and must stay invisible to every membership surface, this one
+    /// included. An item the index files under Supernatural but whose descriptor
+    /// does not carry it is NOT a Supernatural Virtue here.
+    #[test]
+    fn index_categories_do_not_satisfy_require_categories() {
+        let rs = item_param_rs(r#", "require_categories": ["supernatural"]"#);
+        assert!(
+            probe_codes(&rs, "virtue.indexed_target")
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "an index-only category must not satisfy membership: {:?}",
+            probe_codes(&rs, "virtue.indexed_target")
+        );
+    }
+
     #[test]
     fn compute_balance_major_and_free() {
         let items = r#"[

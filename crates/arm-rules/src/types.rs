@@ -588,6 +588,40 @@ pub struct ParameterDef {
     /// copies. See `crates/arm-rules/RULES.md`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub at_most_one_of: Vec<BTreeSet<Id>>,
+    /// Narrows an [`ParameterDomain::Item`] parameter to a category: if non-empty,
+    /// the point item the value names must carry at least one of these categories.
+    /// Empty (the default, and the shape of every parameter shipped today) means
+    /// "any point item", exactly as before this field existed.
+    ///
+    /// The deliberate mirror of [`crate::grant::GrantConstraint::require_categories`],
+    /// which narrows an *open grant's* pick the same way and with the same
+    /// non-empty-intersection semantics — one notion of "a Virtue of category X",
+    /// spelled the same in both places, rather than two parallel concepts.
+    ///
+    /// **Which notion of category.** Membership only: the item's own
+    /// [`PointItem::categories`], via [`PointItem::has_category`]. NOT
+    /// [`PointItem::categories_for`], and NOT [`PointItem::index_categories`].
+    /// A parameter value is a bare [`Id`] naming an *item*, not a
+    /// [`Selection`] of one, so there is no `params` map to read a `taken_as`
+    /// choice out of — the character need not even hold the item. That puts this
+    /// check in the same family as `Ruleset::items_by_category` and the picker's
+    /// browsing lists, which are whole-list for the same reason. And
+    /// `index_categories` is provenance (where the book indexes an entry), never
+    /// membership, so it is invisible here as it is everywhere else.
+    ///
+    /// Enforced by `validation::selections::param_value_resolves`, which narrows
+    /// the `Item` domain by this list exactly as [`ParameterDomain::Technique`]
+    /// narrows `Art` to one Art class — so a value outside the required
+    /// categories raises the existing
+    /// [`crate::validation::ValidationIssue::CODE_UNKNOWN_PARAM_VALUE`], not a
+    /// code of its own: the value is not in this parameter's domain.
+    ///
+    /// Load-time integrity rejects the two authoring slips that would otherwise
+    /// look enforced and not be (`ruleset::integrity`): the field on any domain
+    /// but `item` (nothing would read it), and a category no point item in the
+    /// catalogue carries (nothing could ever satisfy it).
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub require_categories: BTreeSet<String>,
 }
 
 impl ParameterDef {
@@ -600,6 +634,7 @@ impl ParameterDef {
             domain,
             values: Vec::new(),
             at_most_one_of: Vec::new(),
+            require_categories: Default::default(),
         }
     }
 
@@ -611,6 +646,7 @@ impl ParameterDef {
             domain: ParameterDomain::Enumerated,
             values: values.into_iter().collect(),
             at_most_one_of: Vec::new(),
+            require_categories: Default::default(),
         }
     }
 }
@@ -7567,6 +7603,35 @@ mod tests {
         assert_eq!(p.key, "ability");
         assert_eq!(p.param_type, ParamType::Ref);
         assert_eq!(p.domain, ParameterDomain::Ability);
+    }
+
+    #[test]
+    fn require_categories_defaults_to_empty_and_is_omitted_when_empty() {
+        // Additive field: every ParameterDef already in `rules/` omits it, so it
+        // must default to "no narrowing" AND stay out of canonical output, or the
+        // shipped files would no longer re-serialize byte-identically.
+        let json = r#"{ "key": "target", "type": "ref", "domain": "item" }"#;
+        let param: ParameterDef = serde_json::from_str(json).unwrap();
+        assert!(param.require_categories.is_empty());
+        let out = serde_json::to_string(&param).unwrap();
+        assert!(
+            !out.contains("require_categories"),
+            "empty require_categories should be skipped: {out}"
+        );
+    }
+
+    #[test]
+    fn require_categories_serializes_sorted() {
+        // Canonical serialization: the set of required categories is unordered
+        // data, so an authoring order must not survive into the output.
+        let json = r#"{ "key": "target", "type": "ref", "domain": "item",
+                        "require_categories": ["supernatural", "hermetic"] }"#;
+        let param: ParameterDef = serde_json::from_str(json).unwrap();
+        let out = serde_json::to_string(&param).unwrap();
+        assert!(
+            out.contains(r#""require_categories":["hermetic","supernatural"]"#),
+            "{out}"
+        );
     }
 
     #[test]

@@ -2180,6 +2180,91 @@ mod tests {
         }
     }
 
+    /// `require_categories` narrows the `item` domain and nothing else: no other
+    /// domain resolves against the point-item catalogue, so a list there is read
+    /// by no one. Left in, it would sit in the data looking like an enforced
+    /// restriction and silently not be — the same reasoning that rejects a
+    /// `values` list on a `realm` parameter.
+    #[test]
+    fn require_categories_on_a_non_item_param_is_rejected() {
+        for domain in ["realm", "text", "ability", "enumerated"] {
+            let values = if domain == "enumerated" {
+                r#", "values": ["x"]"#
+            } else {
+                ""
+            };
+            let err = ruleset_with_param(&format!(
+                r#"{{ "key": "target", "type": "ref", "domain": "{domain}"{values},
+                      "require_categories": ["general"] }}"#
+            ))
+            .unwrap_err();
+            let msg = err.to_string();
+            assert!(
+                msg.contains("virtue.folk_magic")
+                    && msg.contains("target")
+                    && msg.contains(domain)
+                    && msg.contains("require_categories"),
+                "{msg}"
+            );
+        }
+    }
+
+    /// A required category no point item in the catalogue carries admits nothing:
+    /// every value the parameter could ever name would raise
+    /// `unknown_param_value`, so the declaring item is unfillable. That is the
+    /// `at_most_one_of` "excludes nothing" slip in its mirror form, and it fails
+    /// the load naming the offending category.
+    #[test]
+    fn require_categories_naming_an_uncatalogued_category_is_rejected() {
+        let err = ruleset_with_param(
+            r#"{ "key": "target", "type": "ref", "domain": "item",
+                 "require_categories": ["personality", "no_such_category"] }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.folk_magic")
+                && msg.contains("target")
+                && msg.contains("no_such_category"),
+            "{msg}"
+        );
+        assert!(
+            !msg.contains("'personality'"),
+            "a category the catalogue does carry must not be reported: {msg}"
+        );
+    }
+
+    /// The positive half: a category some point item carries loads clean.
+    #[test]
+    fn require_categories_naming_a_catalogued_category_loads() {
+        let rs = ruleset_with_param(
+            r#"{ "key": "target", "type": "ref", "domain": "item",
+                 "require_categories": ["personality"] }"#,
+        )
+        .unwrap();
+        let param = &rs.point_items[&Id::new("virtue.folk_magic")].parameters[0];
+        assert!(param.require_categories.contains("personality"));
+    }
+
+    /// The catalogue gate is on `Ruleset`, not in the free shape check, so it
+    /// needs wiring at each site that holds `ParameterDef`s — spells included.
+    #[test]
+    fn a_spell_parameter_obeys_the_require_categories_rule() {
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.bad", "technique": "art.creo", "form": "art.vim", "level": 5,
+                "parameters": [{ "key": "target", "type": "ref", "domain": "item",
+                                 "require_categories": ["no_such_category"] }] }
+            ] }"#,
+        )
+        .unwrap_err();
+        let msg = format!("{err:?}");
+        assert!(
+            msg.contains("spell.bad") && msg.contains("target") && msg.contains("no_such_category"),
+            "{msg}"
+        );
+    }
+
     #[test]
     fn enumerated_spell_parameter_obeys_the_same_shape_rule() {
         // `param_value_resolves` is shared with spell parameter validation, so

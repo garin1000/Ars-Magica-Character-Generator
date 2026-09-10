@@ -6560,6 +6560,99 @@ plus `setParamAt` / `setAbilityBonusTarget` trim cases in
 `ui/src/lib/state.svelte.test.ts` and the dirty-flag guard in
 `ui/src/App.client.test.ts`.
 
+### An `item` parameter narrowed to a category (B8) — `ParameterDef::require_categories`
+
+Framework, **not** a rule: no passage is cited because none is implemented here.
+This is a mechanism the data can now use — the vocabulary for "this parameter
+names a *Virtue of category X*" rather than any point item in the catalogue —
+and the shipped catalogue does not use it yet. Verified at the time of writing:
+**no `rules/core/*.json` entry declares an `item`-domain parameter at all** (the
+domains in use are `ability`, `art`, `category`, `characteristic`, `enumerated`,
+`form`, `realm`, `technique`, `text`), so nothing shipped changes behaviour and
+every `rules/` file re-serializes byte-identically.
+
+- Engine: `ParameterDef::require_categories` (`types.rs`), enforced in
+  `validation/selections.rs::param_value_resolves` via
+  `item_matches_required_categories`; load-time gates in
+  `ruleset/integrity.rs::validate_parameter_defs` (domain) and
+  `ruleset/integrity.rs::Ruleset::validate_require_categories` (catalogue).
+- Frontend: `ParameterDef.require_categories` (`ui/src/lib/types.ts`) and
+  `itemOptionsFor` (`ui/src/lib/components/ParameterPicker.svelte`).
+- Tests: `require_categories_defaults_to_empty_and_is_omitted_when_empty`,
+  `require_categories_serializes_sorted` (`types.rs`);
+  `an_item_value_outside_require_categories_is_flagged`,
+  `an_item_param_without_require_categories_admits_any_item`,
+  `a_multi_category_item_satisfies_require_categories_by_any_of_its_categories`,
+  `index_categories_do_not_satisfy_require_categories` (`validation/mod.rs`);
+  `require_categories_on_a_non_item_param_is_rejected`,
+  `require_categories_naming_an_uncatalogued_category_is_rejected`,
+  `require_categories_naming_a_catalogued_category_loads`,
+  `a_spell_parameter_obeys_the_require_categories_rule` (`ruleset.rs`); and
+  `offers only items of the required category when the parameter narrows the
+  domain` / `leaves an un-narrowed item-domain parameter offering the whole
+  registry` (`ui/src/lib/components/ParameterPicker.test.ts`).
+
+**The deliberate mirror of `GrantConstraint::require_categories`.** An open
+grant's pick is already narrowed by a set of categories with non-empty-
+intersection semantics (`grant.rs`). A parameter narrowed to a category is the
+same question asked of a different carrier, so it takes the same field name and
+the same semantics rather than inventing a parallel concept ("category_filter",
+an allow *and* deny pair, a single category). `forbid_categories` is **not**
+mirrored: nothing needs it yet, and YAGNI.
+
+**No new issue code.** A value naming an item outside the required categories
+raises the existing `unknown_param_value`. The precedent is exact:
+`ParameterDomain::Technique` narrows the Art catalogue to one Art class, and a
+Form named where a Technique is required is reported as an unknown *technique*
+value, not with a code of its own — because the narrowing IS the domain. So
+there is no new Fluent message in either locale, and
+`every_validation_code_has_a_fluent_key_in_each_locale` (`arm-app`) has nothing
+new to cover.
+
+**Which notion of "category" — membership, whole list.** B2's
+`PointItem::categories_for` narrows a *selection* of a multi-category item to
+the one category it was `taken_as`. It is **not** consulted here, and cannot be:
+a parameter value is a bare `Id` naming an **item**, not a `Selection` of one,
+so there is no `params` map from which to read a `taken_as` choice — the
+character need not even hold the item, and the picker offering the value has no
+selection of it to inspect. Where no `taken_as` choice is available, the answer
+is the whole `categories` list, which is what `categories_for` itself falls back
+to and what `items_by_category` and every browsing surface already use. A
+multi-category item therefore satisfies the requirement through *any* of its
+categories. B6's `index_categories` stays invisible, as at every other
+membership surface: it records where the book's index files an entry, never what
+the entry *is*.
+
+**Both load-time gates, and why each is loud.** `require_categories` on any
+domain but `item` is rejected: nothing else resolves against the point-item
+catalogue, so the list would be read by no one while looking enforced in the
+data — the reasoning `values_on_a_realm_param_are_rejected` established. And a
+required category that **no point item carries** is rejected: it admits nothing,
+so every value the parameter could name raises `unknown_param_value` and the
+declaring item is unfillable — the mirror of `at_most_one_of`'s "a group of one
+excludes nothing". Note this is deliberately *stricter* than the treatment of a
+type profile's `permitted_categories`, which are **not** checked against the
+catalogue because categories are an open, forward-declared namespace: a profile
+naming a not-yet-extracted category merely permits nothing extra, which is
+harmless and forward-looking, whereas a parameter narrowed to an empty category
+takes a working item away. Both gates apply to spells as well as point items,
+since both carry `ParameterDef`s.
+
+**Canonical serialization** comes from the type: a `BTreeSet<String>`, so the
+authoring order of the JSON list never survives into the output, and
+`skip_serializing_if` keeps the empty default — every parameter shipped today —
+out of the file entirely.
+
+**The picker narrows with it.** `ParameterPicker`'s `item` branch offered the
+whole registry; with `require_categories` it offers only matching items, the
+same way the `technique`/`form` branches offer one Art class. Offering an item
+the engine will refuse as `unknown_param_value` is offering an illegal choice.
+
+**Not implemented here (B9):** whether the named item is one the character
+actually *possesses*. That question needs `&Entity`, which `param_value_resolves`
+does not have and deliberately does not take; this half needs only `&Ruleset`
+and `&ParameterDef`.
+
 ### The saga year (Slice 12, #25) — `validation/saga.rs`
 
 **One rules value, wrapped in an editing aid.** The saga year — the calendar year

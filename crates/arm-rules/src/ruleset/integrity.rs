@@ -123,6 +123,7 @@ impl Ruleset {
             );
             Self::validate_taken_as_max_total(id, item, errors);
             self.validate_at_most_one_of(&item.parameters, &format!("{id}"), errors);
+            self.validate_require_categories(&item.parameters, &format!("{id}"), errors);
             self.validate_effect_refs(item, id, errors);
 
             validate_source_range(&item.source, &format!("{id}"), errors);
@@ -249,6 +250,42 @@ impl Ruleset {
                             param.domain
                         ));
                     }
+                }
+            }
+        }
+    }
+
+    /// Checks that every [`ParameterDef::require_categories`] entry names a
+    /// category some point item in the catalogue actually carries. Applied to
+    /// point items *and* spells, since both hold [`ParameterDef`]s.
+    ///
+    /// A required category nothing carries admits **nothing**: every value the
+    /// parameter could ever name would raise `unknown_param_value`, so the
+    /// declaring item is unfillable while its data reads like a working
+    /// restriction. That is the [`Self::validate_at_most_one_of`] "excludes
+    /// nothing" slip in mirror form, and it fails the load the same way.
+    ///
+    /// This is deliberately *stricter* than the treatment of a type profile's
+    /// `permitted_categories`/`forbidden_categories`, which are NOT checked
+    /// against the catalogue (see [`Self::validate_type_profile_refs`]):
+    /// categories are an open, forward-declared namespace, and a profile naming
+    /// a category before any item in it has been extracted merely permits
+    /// nothing extra — harmless and forward-looking. A *parameter* narrowed to
+    /// an empty category is the opposite: it takes a working item away.
+    fn validate_require_categories(
+        &self,
+        params: &[ParameterDef],
+        subject: &str,
+        errors: &mut Vec<String>,
+    ) {
+        for param in params {
+            let key = &param.key;
+            for category in &param.require_categories {
+                if !self.point_items.values().any(|i| i.has_category(category)) {
+                    errors.push(format!(
+                        "{subject}: parameter '{key}' requires category '{category}', \
+                         which no point item carries; the parameter could never be filled"
+                    ));
                 }
             }
         }
@@ -1509,6 +1546,7 @@ impl Ruleset {
         }
         validate_parameter_defs(&spell.parameters, &format!("spell '{id}'"), None, errors);
         self.validate_at_most_one_of(&spell.parameters, &format!("spell '{id}'"), errors);
+        self.validate_require_categories(&spell.parameters, &format!("spell '{id}'"), errors);
         validate_source_range(&spell.source, &format!("spell '{id}'"), errors);
     }
 
@@ -1934,8 +1972,16 @@ impl Ruleset {
 /// so a spell may declare `enumerated` under exactly the same terms). `subject`
 /// is the caller's own message prefix, as with [`validate_source_range`].
 ///
-/// Two halves, both authoring slips that would otherwise be invisible:
+/// Three halves, all authoring slips that would otherwise be invisible:
 ///
+/// - A [`ParameterDef::require_categories`] list on any domain but `item`:
+///   nothing else resolves against the point-item catalogue, so no category
+///   test would ever read it. A `realm` or `text` parameter has no categories
+///   at all, and silently ignoring the field would make it look enforced when
+///   it is not — the same reasoning as the `values`-on-a-`realm`-param gate
+///   below. (The *catalogue* half of the check — that a required category is
+///   one some point item carries — needs the registry and so lives in
+///   [`Ruleset::validate_require_categories`].)
 /// - An `enumerated`/`category` domain IS its list, so an **empty** one
 ///   resolves nothing: every selection naming that parameter would raise
 ///   `unknown_param_value` forever, and a **repeated** value is a
@@ -1959,6 +2005,14 @@ fn validate_parameter_defs(
 ) {
     for param in params {
         let key = &param.key;
+        if !param.require_categories.is_empty() && param.domain != ParameterDomain::Item {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has domain '{}' but declares \
+                 'require_categories'; only an 'item' domain resolves against the \
+                 point-item catalogue, so the list would narrow nothing",
+                param.domain
+            ));
+        }
         let declares_values = matches!(
             param.domain,
             ParameterDomain::Enumerated | ParameterDomain::Category

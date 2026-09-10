@@ -49,12 +49,12 @@ const ABILITIES: Record<string, Ability> = {
   'ability.area_lore': { id: 'ability.area_lore', category: 'general', parameter: 'area' },
 };
 
-function pointItem(id: string, parameters: ParameterDef[]): PointItem {
+function pointItem(id: string, parameters: ParameterDef[], categories = ['hermetic']): PointItem {
   return {
     id,
     kind: 'virtue',
     magnitude: 'minor',
-    categories: ['hermetic'],
+    categories,
     classification: 'narrative',
     entity_kinds: ['character'],
     parameters,
@@ -70,6 +70,15 @@ const ITEMS: Record<string, PointItem> = {
   'virtue.item_domain_probe': pointItem('virtue.item_domain_probe', [
     { key: 'item', type: 'ref', domain: 'item' },
   ]),
+  // The same domain narrowed to a category (`require_categories`): the engine
+  // resolves a value outside it to `unknown_param_value`, so offering the whole
+  // registry would offer an illegal choice.
+  'virtue.narrowed_probe': pointItem('virtue.narrowed_probe', [
+    { key: 'item', type: 'ref', domain: 'item', require_categories: ['supernatural'] },
+  ]),
+  // The one catalogue item of the required category, so a filter can be caught
+  // filtering — every other fixture item is `hermetic`.
+  'virtue.second_sight': pointItem('virtue.second_sight', [], ['supernatural']),
   'virtue.ways_of_the_land': pointItem('virtue.ways_of_the_land', [
     { key: 'land', type: 'ref', domain: 'text' },
   ]),
@@ -142,6 +151,8 @@ function installRuleset(): void {
       'virtue.deft_form': { name: 'Deft {form}' },
       'flaw.deficient_technique': { name: 'Deficient {technique}' },
       'virtue.item_domain_probe': { name: 'Probe {item}' },
+      'virtue.narrowed_probe': { name: 'Narrowed Probe {item}' },
+      'virtue.second_sight': { name: 'Second Sight' },
       'virtue.ways_of_the_land': { name: 'Ways Of The {land}' },
       'virtue.puissant_ability': { name: 'Puissant {ability}' },
       'ability.awareness': { name: 'Awareness' },
@@ -292,6 +303,28 @@ describe('ParameterPicker domain branches (slice 7, #4)', () => {
     expect(select).not.toBeNull();
     expect(optionTexts(select!)).toContain('Item');
     expect(optionTexts(select!).join(' ')).not.toContain('virtue.');
+  });
+
+  it('offers only items of the required category when the parameter narrows the domain', () => {
+    const select = selectFor(
+      pickerBody('virtue.narrowed_probe'),
+      'param-virtue.narrowed_probe-item-0',
+    );
+    expect(select).not.toBeNull();
+    // `require_categories: ['supernatural']` — the engine refuses anything else
+    // as `unknown_param_value`, so the menu must not offer it either.
+    expect(optionTexts(select!)).toEqual(['Item', 'Second Sight']);
+  });
+
+  it('leaves an un-narrowed item-domain parameter offering the whole registry', () => {
+    // The filter is per parameter, not global: the probe that declares no
+    // `require_categories` still lists the supernatural item alongside the rest.
+    const select = selectFor(
+      pickerBody('virtue.item_domain_probe'),
+      'param-virtue.item_domain_probe-item-0',
+    );
+    expect(optionTexts(select!)).toContain('Second Sight');
+    expect(optionTexts(select!).length).toBeGreaterThan(2);
   });
 
   it('renders a text input only for the text domain', () => {

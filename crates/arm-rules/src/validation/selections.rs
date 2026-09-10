@@ -431,7 +431,17 @@ pub(crate) fn validate_forbidden_traits(
 /// Shared by virtue/flaw parameter validation and spell parameter validation.
 pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, value: &Id) -> bool {
     match param.domain {
-        ParameterDomain::Item => ruleset.point_items.contains_key(value),
+        // `require_categories` narrows this domain to a category, exactly as
+        // `Technique`/`Form` narrow `Art` to one Art class: an item outside it is
+        // not in this parameter's domain, so it raises the same
+        // `unknown_param_value` rather than a code of its own. Membership is read
+        // from the item's own `categories` (`has_category`) — a bare value names
+        // an ITEM, not a `Selection` of one, so there is no `taken_as` choice to
+        // narrow against, and `index_categories` is provenance, never membership.
+        ParameterDomain::Item => ruleset
+            .point_items
+            .get(value)
+            .is_some_and(|item| item_matches_required_categories(item, param)),
         ParameterDomain::Ability => ruleset.abilities.contains_key(value),
         ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
         ParameterDomain::Art => ruleset.arts.contains_key(value),
@@ -455,6 +465,20 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         ParameterDomain::Realm => Realm::from_id(value).is_some(),
         ParameterDomain::Text => !value.as_str().trim().is_empty(),
     }
+}
+
+/// Whether `item` satisfies `param`'s [`ParameterDef::require_categories`]:
+/// vacuously true when the list is empty (the shape of every parameter shipped
+/// today), otherwise a non-empty intersection with the item's own membership
+/// categories — the same "the item is of that category" test
+/// [`crate::grant::GrantConstraint::require_categories`] applies to an open
+/// grant's pick.
+fn item_matches_required_categories(item: &PointItem, param: &ParameterDef) -> bool {
+    param.require_categories.is_empty()
+        || param
+            .require_categories
+            .iter()
+            .any(|category| item.has_category(category))
 }
 
 /// Whether a parameter value is blank — empty, or nothing but whitespace.

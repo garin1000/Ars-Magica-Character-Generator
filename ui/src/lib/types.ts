@@ -70,6 +70,13 @@ export interface ParameterDef {
   // (`exclusive_param_values`); which values exclude each other is data, so no
   // id is named in the frontend either.
   at_most_one_of?: string[][];
+  // Narrows the `item` domain to a category: the point item the value names must
+  // carry at least one of these, so the picker offers only those. Membership
+  // (`PointItem.categories`) and nothing else — a value names an ITEM, not a
+  // selection of one, so there is no `taken_as` reading to narrow against, and
+  // `index_categories` is provenance. Absent on every other domain, where the
+  // engine rejects it at load.
+  require_categories?: string[];
 }
 
 // Mechanical effect a virtue/flaw applies. `ability_bonus` adds to an ability's

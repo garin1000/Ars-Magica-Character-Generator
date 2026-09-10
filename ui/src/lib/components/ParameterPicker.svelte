@@ -179,8 +179,7 @@
 
   // The `item` domain resolves against the point-item registry, so a typed string
   // could only ever be an internal slug. No shipped catalogue entry declares it
-  // today — the branch exists because the domain enum is exhaustive, and the whole
-  // registry is the only menu the data supports (nothing narrows it further).
+  // today — the branch exists because the domain enum is exhaustive.
   const itemOptions = $derived(
     store.ruleset
       ? Object.keys(store.ruleset.ruleset.point_items)
@@ -197,6 +196,21 @@
           )
       : [],
   );
+
+  // `require_categories` narrows that registry to a category, the way `technique`
+  // and `form` narrow the Art catalogue: the engine resolves a value outside it to
+  // `unknown_param_value` (`param_value_resolves`), so offering it would only
+  // offer an illegal choice. Membership categories only — `has_category` in the
+  // engine — since a value names an item, not a selection of one, and
+  // `index_categories` is provenance rather than membership.
+  function itemOptionsFor(param: ParameterDef): { value: string; label: string }[] {
+    const required = param.require_categories;
+    if (!required?.length || !store.ruleset) return itemOptions;
+    const items = store.ruleset.ruleset.point_items;
+    return itemOptions.filter((option) =>
+      required.some((category) => items[option.value]?.categories.includes(category)),
+    );
+  }
 
   // How many other selections of this same item already claim each target, so a
   // target at max_per_target is offered no further (e.g. a Characteristic already
@@ -372,9 +386,10 @@
       </select>
     {:else if param.domain === 'item'}
       <!-- Targets another catalogue item by id. Latent: no shipped entry declares
-           this domain, so the menu is the whole point-item registry — nothing in the
-           data narrows it. The branch exists because the domain enum is exhaustive
-           and a slug must never be typed by hand. -->
+           this domain. The menu is the point-item registry, narrowed to the
+           parameter's `require_categories` when it declares any. The branch exists
+           because the domain enum is exhaustive and a slug must never be typed by
+           hand. -->
       <select
         aria-label={typeLabel}
         value={selection.params?.[param.key] ?? ''}
@@ -382,7 +397,7 @@
         data-testid="param-{selection.ref}-{param.key}-{suffix}"
       >
         <option value="" disabled>{typeLabel}</option>
-        {#each itemOptions as option (option.value)}
+        {#each itemOptionsFor(param) as option (option.value)}
           <option value={option.value} disabled={full(used, option.value)}>
             {option.label}
           </option>
