@@ -5053,6 +5053,56 @@ mod tests {
         );
     }
 
+    /// Row 19 "taken as": a `category`-domain parameter's `values` must be a
+    /// SUBSET of the declaring item's own `categories`, since the whole point
+    /// of the domain is "one of the categories THIS item already carries"
+    /// (Sufi's `taken_as`, `:5083`). A value the item's own descriptor never
+    /// lists is an authoring slip, not a value the picker could ever offer.
+    #[test]
+    fn category_domain_value_outside_the_items_own_categories_fails_integrity() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "virtue.sufi", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["social_status", "supernatural"],
+            "entity_kinds": ["character"], "max_total": 1,
+            "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
+                              "values": ["social_status", "hermetic"] }] }
+        ]"#;
+        let err = Ruleset::from_json("t", "1", items, VALID_TYPES)
+            .expect_err("a category value outside the item's own categories must fail integrity");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.sufi") && msg.contains("hermetic"),
+            "the error must name the offending item and the stray value, got: {msg}"
+        );
+    }
+
+    /// Row 19 "taken as": every item declaring a `category`-domain parameter
+    /// must cap `max_total` at 1 — `:5083` offers a choice between two
+    /// READINGS of one item, not two items, and `taken_as` sitting inside the
+    /// `(item_ref, params)` duplicate key means a missing cap would let both
+    /// readings be held at once.
+    #[test]
+    fn taken_as_item_without_max_total_one_fails_integrity() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "virtue.sufi", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["social_status", "supernatural"],
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
+                              "values": ["social_status", "supernatural"] }] }
+        ]"#;
+        let err = Ruleset::from_json("t", "1", items, VALID_TYPES)
+            .expect_err("a taken_as item without max_total: 1 must fail integrity");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.sufi") && msg.contains("max_total"),
+            "the error must name the offending item and the field, got: {msg}"
+        );
+    }
+
     // --- Negative "fail loudly" tests for effect / grant / source-range refs. ---
     // Each fixture is otherwise integrity-valid (a personality-category Flaw is
     // present, no magus profile / Arts) so ONLY the intended defect triggers.

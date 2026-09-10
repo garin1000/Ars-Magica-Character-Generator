@@ -87,6 +87,19 @@ const ITEMS: Record<string, PointItem> = {
       values: ['folk_magic.abjuration', 'folk_magic.divination', 'folk_magic.healing'],
     },
   ]),
+  // Row 19 "taken as": Sufi (Ars Magica - Definitive Edition (Core
+  // Rules).md:5083) "either as a Minor Social Status Virtue or a Minor
+  // Supernatural Virtue" — the `category` domain's own values are a subset of
+  // the item's `categories`, labelled through the SAME `category-<id>` Fluent
+  // family the V/F badge uses, never through rules i18n.
+  'virtue.sufi': pointItem('virtue.sufi', [
+    {
+      key: 'taken_as',
+      type: 'ref',
+      domain: 'category',
+      values: ['social_status', 'supernatural'],
+    },
+  ]),
 };
 
 function installRuleset(): void {
@@ -130,6 +143,7 @@ function installRuleset(): void {
       'folk_magic.abjuration': { name: 'Abjuration' },
       'folk_magic.divination': { name: 'Divination' },
       'folk_magic.healing': { name: 'Healing' },
+      'virtue.sufi': { name: 'Sufi' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -350,6 +364,49 @@ describe('ParameterPicker enumerated domain', () => {
     const select = selectFor(pickerBody('virtue.folk_magic'), TESTID);
     expect(optionByText(select!, 'Healing')).toContain('disabled');
     expect(optionByText(select!, 'Divination')).not.toContain('disabled');
+  });
+});
+
+// Row 19 "taken as": the `category` domain's menu is the item's own declared
+// `values` (a subset of `categories`, enforced at load), but options are
+// labelled through the `category-<id>` Fluent family rather than rules i18n —
+// the sharp edge the comment at ParameterPicker.svelte:412-415 exists to
+// prevent, since a bare category slug has no rules-i18n entry of its own.
+describe('ParameterPicker category domain (row 19 "taken as")', () => {
+  const TESTID = 'param-virtue.sufi-taken_as-0';
+
+  it('offers exactly the values the parameter declares, labelled via category-<id>', () => {
+    const body = pickerBody('virtue.sufi');
+    // A `text` input was never this domain's control; the enumerated-style
+    // select is.
+    expect(hasInput(body, TESTID)).toBe(false);
+    const select = selectFor(body, TESTID);
+    expect(select).not.toBeNull();
+    expect(optionTexts(select!)).toEqual(['Taken as', 'Social Status', 'Supernatural']);
+  });
+
+  it('labels each option through category-<id>, never as its raw slug', () => {
+    const select = selectFor(pickerBody('virtue.sufi'), TESTID);
+    expect(select!).toContain('value="social_status"');
+    expect(optionTexts(select!).join(' ')).not.toContain('social_status');
+    expect(optionTexts(select!).join(' ')).not.toContain('supernatural');
+  });
+
+  it('names the control via param-label-taken_as, in the active language', () => {
+    store.lang = 'de';
+    const select = selectFor(pickerBody('virtue.sufi'), TESTID);
+    expect(ariaLabel(select!)).toBe('Gewählt als');
+    expect(optionTexts(select!)).toEqual(['Gewählt als', 'Sozialer Status', 'Übernatürlich']);
+  });
+
+  it('greys out a reading another selection of the same item already holds', () => {
+    store.entity.selections = [
+      { ref: 'virtue.sufi', params: { taken_as: 'social_status' } },
+      { ref: 'virtue.sufi' },
+    ];
+    const select = selectFor(pickerBody('virtue.sufi', 1), 'param-virtue.sufi-taken_as-1');
+    expect(optionByText(select!, 'Social Status')).toContain('disabled');
+    expect(optionByText(select!, 'Supernatural')).not.toContain('disabled');
   });
 });
 

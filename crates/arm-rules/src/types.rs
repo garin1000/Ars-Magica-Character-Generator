@@ -417,8 +417,10 @@ impl fmt::Display for ParamType {
 /// Every domain is resolved when a selection's parameter values are validated:
 /// `Item` against the point-item registry, `Ability` against the ability
 /// catalogue, `Art` against the art catalogue, `Characteristic` by parsing
-/// into [`crate::characteristics::Characteristic`], and `Enumerated` against the
-/// parameter definition's own [`ParameterDef::values`] list. A value that does not
+/// into [`crate::characteristics::Characteristic`], and `Enumerated`/`Category`
+/// against the parameter definition's own [`ParameterDef::values`] list (for
+/// `Category`, load-time integrity additionally requires that list to be a
+/// subset of the declaring item's own `categories`). A value that does not
 /// resolve raises `unknown_param_value` (see `validation::validate_parameters`).
 ///
 /// Adding a variant is **not** caught everywhere by the compiler: only the
@@ -452,6 +454,29 @@ pub enum ParameterDomain {
     /// exhaustive set of choices (Folk Magic's four spell categories, the
     /// (Beings) classes), which the picker then shows as a dropdown.
     Enumerated,
+    /// Value is one of the *declaring item's own* [`PointItem::categories`] —
+    /// records which single category reading of a multi-category Virtue/Flaw
+    /// the player chose. Sufi is "*Minor, Social Status, Supernatural*"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:5078) and `:5083`
+    /// makes the choice explicit: "either as a Minor Social Status Virtue or a
+    /// Minor Supernatural Virtue". Structurally identical to [`Self::Enumerated`]
+    /// at resolution time (`param.values.contains(value)`), but load-time
+    /// integrity additionally requires every declared value to be a member of
+    /// the SAME item's `categories` (see `ruleset::integrity`), and the picker
+    /// labels options through the existing `category-<id>` Fluent family
+    /// instead of the rules-i18n `displayName` lookup `Enumerated` uses — a
+    /// bare category slug has no rules-i18n entry of its own. Every item
+    /// declaring this domain must also cap `max_total` at 1: `:5083` offers a
+    /// choice between two readings of ONE item, not two items. See
+    /// [`PointItem::categories_for`] — the single place every "is this item of
+    /// category X" test resolves a `taken_as` selection against, so the five
+    /// membership sites (permitted categories, forbidden categories, category
+    /// caps, Gift detection, grant-constraint filtering) cannot silently
+    /// disagree. Deliberately NOT consulted by browsing/catalogue surfaces —
+    /// `Ruleset::items_by_category`, the UI's Available-item picker, and the
+    /// Markdown export's Type cell all stay whole-list, since there is no
+    /// selection (hence no `taken_as`) to narrow against.
+    Category,
     /// Value is free text the player types (e.g. Aptitude for (Sin), Necessary
     /// (Realm) Aura, a (Land)). It references no registry, so any value with
     /// non-whitespace content is legal — the picker shows a text input rather than a
@@ -470,6 +495,11 @@ impl ParameterDomain {
     /// point-item registry specifically (i.e. `Item`). Other domains resolve
     /// against their own registries (ability / art catalogue, Characteristic
     /// parsing); see `validation::validate_parameters`.
+    ///
+    /// `Category` was considered and is correctly `false` here: its values are
+    /// a subset of the declaring item's OWN `categories`, not a reference to a
+    /// *different* item, so it belongs with `Enumerated`/`Text` rather than
+    /// `Item`.
     pub fn resolves_against_items(self) -> bool {
         matches!(self, ParameterDomain::Item)
     }
@@ -485,6 +515,7 @@ impl fmt::Display for ParameterDomain {
             ParameterDomain::Characteristic => f.write_str("characteristic"),
             ParameterDomain::Item => f.write_str("item"),
             ParameterDomain::Enumerated => f.write_str("enumerated"),
+            ParameterDomain::Category => f.write_str("category"),
             ParameterDomain::Text => f.write_str("text"),
         }
     }
@@ -1959,6 +1990,52 @@ impl PointItem {
     /// Whether any of the item's categories is a member of `set`.
     pub fn any_category_in(&self, set: &BTreeSet<String>) -> bool {
         self.first_category_in(set).is_some()
+    }
+
+    /// The category or categories "in force" for a selection of this item —
+    /// the single resolution every taken-as-aware membership test calls,
+    /// so the answer cannot drift between call sites (the risk row 19's plan
+    /// names as the largest correctness hazard in this phase).
+    ///
+    /// If `params` records a value for one of this item's [`ParameterDomain::Category`]
+    /// parameters (Sufi's `taken_as`), only THAT chosen category is in force —
+    /// `:5083` is an explicit "either/or" choice between two readings of one
+    /// item, not membership in both at once. Otherwise every category the
+    /// descriptor lists is in force, exactly as before `taken_as` existed.
+    ///
+    /// A recorded value that is not one of this item's own categories cannot
+    /// happen through the picker (load-time integrity requires the param's
+    /// `values` to be a subset of `categories`, and `param_value_resolves`
+    /// rejects anything outside `values`), but a hand-edited save could still
+    /// carry a stale one. Falling back to the whole list in that case — rather
+    /// than resolving to nothing — is deliberate: the value already fails
+    /// `unknown_param_value` on its own, and a membership test silently seeing
+    /// "no categories" would UNDER-count (e.g. wrongly clearing a forbidden or
+    /// capped category) rather than over-count.
+    ///
+    /// Callers: `validate_permitted_categories` / `validate_forbidden_categories`
+    /// (`validation/selections.rs`), the category caps (`validation/caps.rs`),
+    /// Gift detection (`effective/gift_confidence.rs`), and grant-constraint
+    /// filtering (`grant.rs`). Deliberately NOT called by `items_by_category`
+    /// (`ruleset/accessors.rs`) or any UI browsing surface — those have no
+    /// selection to narrow against.
+    pub(crate) fn categories_for(&self, params: &BTreeMap<String, Id>) -> &[String] {
+        for param in &self.parameters {
+            if param.domain != ParameterDomain::Category {
+                continue;
+            }
+            let Some(value) = params.get(&param.key) else {
+                continue;
+            };
+            if let Some(pos) = self
+                .categories
+                .iter()
+                .position(|c| c.as_str() == value.as_str())
+            {
+                return &self.categories[pos..=pos];
+            }
+        }
+        &self.categories
     }
 }
 

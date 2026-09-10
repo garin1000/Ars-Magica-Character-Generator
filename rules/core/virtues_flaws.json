@@ -6056,6 +6056,15 @@
     "categories": ["social_status", "supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [
+      {
+        "key": "taken_as",
+        "type": "ref",
+        "domain": "category",
+        "values": ["social_status", "supernatural"]
+      }
+    ],
+    "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5077, 5084] }
   },
   {

@@ -400,6 +400,30 @@
           </option>
         {/each}
       </select>
+    {:else if param.domain === 'category'}
+      <!-- The item is "taken as" one of its OWN listed categories — Sufi
+           (Ars Magica - Definitive Edition (Core Rules).md:5083) "either as a
+           Minor Social Status Virtue or a Minor Supernatural Virtue". The menu
+           is the item's own declared `values` (a subset of its `categories`,
+           enforced at load), labelled through the same `category-<id>` Fluent
+           family the V/F badge and the category filter already use — NOT
+           `displayName`, which resolves rules ids and would find no i18n entry
+           for a bare category slug. `max_per_target` (default 1, and every
+           `taken_as` item's `max_total` is forced to 1 too) greys out a
+           reading another copy already holds. -->
+      <select
+        aria-label={typeLabel}
+        value={selection.params?.[param.key] ?? ''}
+        onchange={(e) => onSelect(param.key, e)}
+        data-testid="param-{selection.ref}-{param.key}-{suffix}"
+      >
+        <option value="" disabled>{typeLabel}</option>
+        {#each param.values ?? [] as value (value)}
+          <option {value} disabled={full(used, value)}>
+            {store.t(`category-${value}`)}
+          </option>
+        {/each}
+      </select>
     {:else}
       <!-- `text` alone, and only `text`: the domain references no registry, so any
            value with non-whitespace content is legal and free text is the correct

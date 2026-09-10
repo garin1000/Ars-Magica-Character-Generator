@@ -39,7 +39,18 @@ pub(crate) fn validate_permitted_categories(
         // Hermetic, Story*", so a companion — who may take Story but not
         // Hermetic — may take it.
         // Source: Ars Magica - Definitive Edition (Core Rules).md:6803-6804.
-        if !item.any_category_in(&profile.permitted_categories) {
+        //
+        // Taken-as aware: if the selection recorded which category it was
+        // taken as (Sufi's `taken_as`, `:5083`), only that ONE category is
+        // "in force" here — a player who took Sufi as Social Status has
+        // declared they are NOT taking the Supernatural reading, so the
+        // Supernatural category must not rescue them from a profile that
+        // forbids it. See `PointItem::categories_for`.
+        if !item
+            .categories_for(&selection.params)
+            .iter()
+            .any(|c| profile.permitted_categories.contains(c))
+        {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_CATEGORY_NOT_PERMITTED,
                 CreationPhase::VirtuesFlaws,
@@ -91,8 +102,15 @@ pub(crate) fn validate_forbidden_categories(
         // (Suppressed Gift's descriptor), :6809 (a companion's Flaw), :5079 and
         // :5083 (Sufi "either as a Minor Social Status Virtue or a Minor
         // Supernatural Virtue").
+        //
+        // Taken-as aware, via the same `categories_for` resolution the
+        // permitted check above uses: a selection recording `taken_as` is
+        // narrowed to that single category, so "every" degenerates to "is
+        // that one forbidden" — a player who took Sufi as Social Status is
+        // forbidden only if Social Status itself is forbidden, regardless of
+        // whether Supernatural also is.
         if !item
-            .categories
+            .categories_for(&selection.params)
             .iter()
             .all(|c| profile.forbidden_categories.contains(c))
         {
@@ -296,6 +314,11 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
             .get(value)
             .is_some_and(|a| a.art_type == crate::art::ArtType::Form),
         ParameterDomain::Enumerated => param.values.contains(value),
+        // Same resolution as `Enumerated` — the domain IS the declared list —
+        // but load-time integrity additionally requires that list to be a
+        // subset of the declaring item's own `categories`
+        // (`ruleset::integrity::validate_parameter_defs`).
+        ParameterDomain::Category => param.values.contains(value),
         ParameterDomain::Text => !value.as_str().trim().is_empty(),
     }
 }

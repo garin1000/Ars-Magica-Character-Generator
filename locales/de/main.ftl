@@ -897,6 +897,11 @@ param-label-power = Kraft
 # nennt. Begriff aus rules/source/de/Ars Magica Definitive Edition
 # Basisregeln.md:3919 („Zauberkategorie"); der Schlüssel selbst ist allgemein.
 param-label-category = Kategorie
+# Als welche der eigenen Kategorien eine Tugend/ein Fehler gewählt wurde — Sufi,
+# "entweder als Kleine Sozialer-Status-Tugend oder als Kleine Übernatürliche
+# Tugend" (rules/source/de/Ars Magica Definitive Edition Basisregeln.md:5083),
+# wörtlich "gewählt werden, entweder als ... oder als ...".
+param-label-taken_as = Gewählt als
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }

@@ -22,12 +22,18 @@ pub(crate) fn has_the_gift(
         .gift_id
         .as_ref()
         .is_some_and(|gid| entity.selections.iter().any(|s| &s.item_ref == gid));
+    // Taken-as aware, via `PointItem::categories_for`: a selection recording
+    // which category it was taken as counts as Gift-bearing only if THAT
+    // category is a Gift category — no shipped item pairs a `taken_as` param
+    // with a `hermetic` category yet, but a future one must not silently gift
+    // a character through a reading the player did not choose.
     let by_category = !profile.gift_categories.is_empty()
         && entity.selections.iter().any(|s| {
-            ruleset
-                .point_items
-                .get(&s.item_ref)
-                .is_some_and(|item| item.any_category_in(&profile.gift_categories))
+            ruleset.point_items.get(&s.item_ref).is_some_and(|item| {
+                item.categories_for(&s.params)
+                    .iter()
+                    .any(|c| profile.gift_categories.contains(c))
+            })
         });
     by_id || by_category
 }

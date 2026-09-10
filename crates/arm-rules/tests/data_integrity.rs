@@ -4392,6 +4392,451 @@ fn a_grog_may_take_sufi_through_its_social_status_category() {
     );
 }
 
+// --- Row 19: "taken as" (B2) -------------------------------------------------
+//
+// `:5083` makes Sufi's dual category an explicit player CHOICE, not membership
+// in both at once: "This Virtue may be taken by both male and female
+// characters, either as a Minor Social Status Virtue or a Minor Supernatural
+// Virtue." Recorded as a `params` entry under `ParameterDomain::Category`
+// (`taken_as`), resolved everywhere by `PointItem::categories_for` so the five
+// membership sites — permitted/forbidden categories, category caps, Gift
+// detection, grant-constraint filtering — cannot silently disagree about which
+// category a taken-as selection counts as. See `RULES.md`, "Full core
+// Virtue/Flaw catalogue".
+
+/// Every shipped item declaring a `taken_as` (`ParameterDomain::Category`)
+/// parameter, paired with its key and the line making the choice explicit —
+/// `(id, param key, line)`.
+const TAKEN_AS_ITEMS: &[(&str, &str, u32)] = &[("virtue.sufi", "taken_as", 5083)];
+
+#[test]
+fn shipped_taken_as_items_declare_only_their_own_categories() {
+    let rs = load_ruleset();
+
+    for (id, key, line) in TAKEN_AS_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        let param = item
+            .parameters
+            .iter()
+            .find(|p| p.key == *key)
+            .unwrap_or_else(|| {
+                panic!(
+                    "{id} must declare a '{key}' parameter, not {:?}",
+                    item.parameters
+                )
+            });
+        assert_eq!(
+            param.domain,
+            ParameterDomain::Category,
+            "{id}'s '{key}' records which of its OWN categories was chosen \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line}), not a \
+             closed list of its own"
+        );
+        assert!(
+            !param.values.is_empty(),
+            "{id}'s '{key}' must declare at least one value"
+        );
+        for value in &param.values {
+            assert!(
+                item.categories.iter().any(|c| c == value.as_str()),
+                "{id}'s '{key}' value '{value}' must be one of its own \
+                 categories {:?} (Ars Magica - Definitive Edition (Core \
+                 Rules).md:{line})",
+                item.categories
+            );
+        }
+    }
+}
+
+#[test]
+fn shipped_taken_as_items_cap_at_one_copy() {
+    let rs = load_ruleset();
+
+    for (id, _key, line) in TAKEN_AS_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert_eq!(
+            item.max_total, 1,
+            "{id} offers a choice between readings of ONE item, not several \
+             items (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+    }
+}
+
+/// A minimal synthetic ruleset for the taken-as cap half below: no shipped
+/// profile caps the `supernatural` category (the magus's own
+/// `virtue_category_caps` entry is `hermetic`, major-only), so this proves the
+/// resolution against a profile that does, rather than asserting nothing.
+fn ruleset_with_supernatural_cap() -> Ruleset {
+    let items = r#"[
+        {
+            "id": "virtue.sufi",
+            "kind": "virtue",
+            "magnitude": "minor",
+            "categories": ["social_status", "supernatural"],
+            "classification": "narrative",
+            "parameters": [
+                { "key": "taken_as", "type": "ref", "domain": "category",
+                  "values": ["social_status", "supernatural"] }
+            ],
+            "max_total": 1
+        },
+        {
+            "id": "virtue.filler_personality",
+            "kind": "virtue",
+            "magnitude": "free",
+            "categories": ["personality"],
+            "classification": "narrative"
+        }
+    ]"#;
+    let type_profiles = r#"[
+        {
+            "id": "grog",
+            "budget": {
+                "virtue_points": 50,
+                "flaw_points": 50,
+                "virtue_category_caps": [
+                    { "category": "supernatural", "max": 0, "hard": true }
+                ]
+            },
+            "permitted_categories": ["social_status", "supernatural", "personality"],
+            "creation_phases": ["virtues_flaws"]
+        }
+    ]"#;
+    Ruleset::from_sources(RulesetSources {
+        id: "taken-as-test",
+        version: "1.0",
+        point_items: items,
+        type_profiles,
+        ..RulesetSources::default()
+    })
+    .unwrap()
+}
+
+/// The first-failing test for row 19 (B2): a grog Sufi taken as Social Status
+/// must not count as a Supernatural Virtue for any membership rule — the
+/// defect `RULES.md`'s "Unmodelled, and recorded rather than resolved" note
+/// used to record. Both categories are open to a grog either way (`:5079`,
+/// `:5083`), so the permitted/forbidden half is exercised against the real
+/// shipped catalogue to pin "still legal"; the cap half needs the synthetic
+/// ruleset above since no shipped profile caps `supernatural`.
+#[test]
+fn a_grog_sufi_taken_as_social_status_is_not_a_supernatural_virtue() {
+    let rs = load_ruleset();
+    let sufi = Id::new("virtue.sufi");
+    let taken_as_social_status = Selection::with_params(
+        sufi.clone(),
+        BTreeMap::from([("taken_as".to_string(), Id::new("social_status"))]),
+    );
+    let codes = issue_codes(&entity("grog", vec![taken_as_social_status]), &rs);
+    for code in ["category_not_permitted", "forbidden_category"] {
+        assert!(
+            !codes.contains(&code.to_string()),
+            "Social Status is open to a grog either way \
+             (Ars Magica - Definitive Edition (Core Rules).md:5083): {codes:?}"
+        );
+    }
+
+    let capped_rs = ruleset_with_supernatural_cap();
+    let clean_selection = Selection::with_params(
+        sufi.clone(),
+        BTreeMap::from([("taken_as".to_string(), Id::new("social_status"))]),
+    );
+    let clean = issue_codes(&entity("grog", vec![clean_selection]), &capped_rs);
+    assert!(
+        !clean.iter().any(|c| c.starts_with("too_many_supernatural")),
+        "taken as Social Status must not count against a Supernatural cap: {clean:?}"
+    );
+
+    let capped_selection = Selection::with_params(
+        sufi,
+        BTreeMap::from([("taken_as".to_string(), Id::new("supernatural"))]),
+    );
+    let capped = issue_codes(&entity("grog", vec![capped_selection]), &capped_rs);
+    assert!(
+        capped
+            .iter()
+            .any(|c| c.starts_with("too_many_supernatural")),
+        "taken as Supernatural must still count against the cap: {capped:?}"
+    );
+}
+
+/// Old-save regression: a `virtue.sufi` selection with no `taken_as` at all
+/// (every save written before this slice) must still validate as a legal item
+/// — `taken_as` is a newly-declared param on an already-shipped item, so the
+/// accepted precedent (`types.rs:3671-3681`, `RULES.md:1478-1481`) is a
+/// non-blocking `missing_param`, never a hard failure or a silently invented
+/// choice — and must still resolve BOTH categories for every membership test,
+/// exactly as before this slice.
+#[test]
+fn a_pre_existing_sufi_selection_with_no_taken_as_reports_missing_param_only() {
+    let rs = load_ruleset();
+    let sufi = Id::new("virtue.sufi");
+    let codes = issue_codes(&entity("grog", vec![Selection::new(sufi)]), &rs);
+    assert!(
+        codes.contains(&"missing_param".to_string()),
+        "an old save naming no taken_as value must be flagged so the player \
+         can make the choice explicit: {codes:?}"
+    );
+    for code in ["category_not_permitted", "forbidden_category"] {
+        assert!(
+            !codes.contains(&code.to_string()),
+            "an unresolved taken_as must fall back to the whole category list, \
+             not narrow to nothing: {codes:?}"
+        );
+    }
+}
+
+/// `max_total: 1` is a real behaviour change for a save holding two Sufis
+/// (however they were reached — a hand-edited file, or a pre-slice save from
+/// before `max_total` existed on this item): the two selections' `params`
+/// differ (`taken_as: "social_status"` vs `"supernatural"`), so they are
+/// DIFFERENT targets and `max_per_target` (the `(item_ref, params)` duplicate
+/// key) never fires — only `validate_total_selection_cap`, keyed on
+/// `item_ref` alone, does. This must surface as `too_many_selections`, loud
+/// and actionable, never a silent drop of the second copy.
+#[test]
+fn two_sufis_with_different_taken_as_trip_the_total_cap_not_a_silent_drop() {
+    let rs = load_ruleset();
+    let sufi = Id::new("virtue.sufi");
+    let two_sufis = entity(
+        "grog",
+        vec![
+            Selection::with_params(
+                sufi.clone(),
+                BTreeMap::from([("taken_as".to_string(), Id::new("social_status"))]),
+            ),
+            Selection::with_params(
+                sufi,
+                BTreeMap::from([("taken_as".to_string(), Id::new("supernatural"))]),
+            ),
+        ],
+    );
+    let codes = issue_codes(&two_sufis, &rs);
+    assert!(
+        !codes.contains(&"duplicate_selection".to_string()),
+        "different taken_as values are different targets, so max_per_target \
+         must not be the mechanism that catches this: {codes:?}"
+    );
+    assert!(
+        codes.contains(&"too_many_selections".to_string()),
+        "two readings of the SAME Virtue must still be capped at one \
+         (Ars Magica - Definitive Edition (Core Rules).md:5083): {codes:?}"
+    );
+}
+
+/// A synthetic ruleset isolating each of the FOUR `PointItem::categories_for`
+/// call sites data_integrity.rs can reach through the public `validate()` API
+/// (permitted categories, forbidden categories, category caps, Gift
+/// detection — the fifth, grant-constraint filtering, is unreachable without a
+/// full House/grant fixture and is instead pinned directly against
+/// `open_pick_satisfies` by `open_pick_satisfies_is_taken_as_aware` in
+/// `validation/mod.rs`'s own test module).
+///
+/// Four unrelated dual-category items, each with its own made-up category
+/// pair, so the four tests below cannot cross-contaminate: `permcheck`'s
+/// `p_no` is the only category excluded from `permitted_categories`;
+/// `forbidcheck`'s `f_yes` is the only one in `forbidden_categories`;
+/// `capcheck`'s `c_capped` is the only one under `virtue_category_caps`;
+/// `giftcheck`'s `g_gift` is the only one in `gift_categories`. Every OTHER
+/// category is deliberately permitted and uncapped, so each test observes
+/// exactly one mechanism.
+fn ruleset_with_isolated_taken_as_categories() -> Ruleset {
+    let items = r#"[
+        { "id": "virtue.permcheck", "kind": "virtue", "magnitude": "minor",
+          "categories": ["p_yes", "p_no"], "classification": "narrative",
+          "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
+                            "values": ["p_yes", "p_no"] }],
+          "max_total": 1 },
+        { "id": "virtue.forbidcheck", "kind": "virtue", "magnitude": "minor",
+          "categories": ["f_no", "f_yes"], "classification": "narrative",
+          "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
+                            "values": ["f_no", "f_yes"] }],
+          "max_total": 1 },
+        { "id": "virtue.capcheck", "kind": "virtue", "magnitude": "minor",
+          "categories": ["c_free", "c_capped"], "classification": "narrative",
+          "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
+                            "values": ["c_free", "c_capped"] }],
+          "max_total": 1 },
+        { "id": "virtue.giftcheck", "kind": "virtue", "magnitude": "minor",
+          "categories": ["g_plain", "g_gift"], "classification": "narrative",
+          "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
+                            "values": ["g_plain", "g_gift"] }],
+          "max_total": 1 },
+        { "id": "virtue.filler_personality", "kind": "virtue", "magnitude": "free",
+          "categories": ["personality"], "classification": "narrative" }
+    ]"#;
+    let type_profiles = r#"[
+        {
+            "id": "testtype",
+            "budget": { "virtue_points": 50, "flaw_points": 50,
+                "virtue_category_caps": [
+                    { "category": "c_capped", "max": 0, "hard": true }
+                ]
+            },
+            "permitted_categories": [
+                "p_yes", "f_no", "f_yes", "c_free", "c_capped", "g_plain",
+                "g_gift", "personality"
+            ],
+            "forbidden_categories": ["f_yes"],
+            "gift_policy": "forbidden",
+            "gift_categories": ["g_gift"],
+            "creation_phases": ["virtues_flaws"]
+        }
+    ]"#;
+    Ruleset::from_sources(RulesetSources {
+        id: "taken-as-test",
+        version: "1.0",
+        point_items: items,
+        type_profiles,
+        ..RulesetSources::default()
+    })
+    .unwrap()
+}
+
+fn taken_as(item: &str, value: &str) -> Selection {
+    Selection::with_params(
+        Id::new(item),
+        BTreeMap::from([("taken_as".to_string(), Id::new(value))]),
+    )
+}
+
+/// Site 1/5: `validate_permitted_categories` (`validation/selections.rs`).
+#[test]
+fn validate_permitted_categories_is_taken_as_aware() {
+    let rs = ruleset_with_isolated_taken_as_categories();
+    const CODE: &str = "category_not_permitted";
+
+    let whole_list = issue_codes(
+        &entity(
+            "testtype",
+            vec![Selection::new(Id::new("virtue.permcheck"))],
+        ),
+        &rs,
+    );
+    assert!(
+        !whole_list.contains(&CODE.to_string()),
+        "no taken_as recorded must still resolve the whole list (legacy ANY \
+         semantics), passing via p_yes: {whole_list:?}"
+    );
+
+    let permitted = issue_codes(
+        &entity("testtype", vec![taken_as("virtue.permcheck", "p_yes")]),
+        &rs,
+    );
+    assert!(
+        !permitted.contains(&CODE.to_string()),
+        "taken as p_yes must pass: {permitted:?}"
+    );
+
+    let not_permitted = issue_codes(
+        &entity("testtype", vec![taken_as("virtue.permcheck", "p_no")]),
+        &rs,
+    );
+    assert!(
+        not_permitted.contains(&CODE.to_string()),
+        "taken as p_no must be judged on p_no ALONE, not rescued by the whole \
+         list's p_yes: {not_permitted:?}"
+    );
+}
+
+/// Site 2/5: `validate_forbidden_categories` (`validation/selections.rs`).
+#[test]
+fn validate_forbidden_categories_is_taken_as_aware() {
+    let rs = ruleset_with_isolated_taken_as_categories();
+    const CODE: &str = "forbidden_category";
+
+    let whole_list = issue_codes(
+        &entity(
+            "testtype",
+            vec![Selection::new(Id::new("virtue.forbidcheck"))],
+        ),
+        &rs,
+    );
+    assert!(
+        !whole_list.contains(&CODE.to_string()),
+        "no taken_as recorded must still resolve the whole list (legacy EVERY \
+         semantics): only f_yes is forbidden, and f_no survives as the other \
+         reading: {whole_list:?}"
+    );
+
+    let clean = issue_codes(
+        &entity("testtype", vec![taken_as("virtue.forbidcheck", "f_no")]),
+        &rs,
+    );
+    assert!(
+        !clean.contains(&CODE.to_string()),
+        "taken as f_no must not be blocked: {clean:?}"
+    );
+
+    let blocked = issue_codes(
+        &entity("testtype", vec![taken_as("virtue.forbidcheck", "f_yes")]),
+        &rs,
+    );
+    assert!(
+        blocked.contains(&CODE.to_string()),
+        "taken as f_yes narrows the 'every category is forbidden' test to a \
+         singleton that IS forbidden, even though the whole-list case above is \
+         clean: {blocked:?}"
+    );
+}
+
+/// Site 3/5: the category caps (`validation/caps.rs`).
+#[test]
+fn category_caps_are_taken_as_aware() {
+    let rs = ruleset_with_isolated_taken_as_categories();
+    const CODE: &str = "too_many_c_capped_virtues";
+
+    let taken_as_free = issue_codes(
+        &entity("testtype", vec![taken_as("virtue.capcheck", "c_free")]),
+        &rs,
+    );
+    assert!(
+        !taken_as_free.contains(&CODE.to_string()),
+        "taken as c_free must not count against the c_capped cap, even though \
+         the item's whole category list carries c_capped too: {taken_as_free:?}"
+    );
+
+    let taken_as_capped = issue_codes(
+        &entity("testtype", vec![taken_as("virtue.capcheck", "c_capped")]),
+        &rs,
+    );
+    assert!(
+        taken_as_capped.contains(&CODE.to_string()),
+        "taken as c_capped must still trip the cap: {taken_as_capped:?}"
+    );
+}
+
+/// Site 4/5: Gift detection (`effective/gift_confidence.rs`).
+#[test]
+fn gift_detection_is_taken_as_aware() {
+    let rs = ruleset_with_isolated_taken_as_categories();
+    const CODE: &str = "gift_forbidden";
+
+    let taken_as_plain = issue_codes(
+        &entity("testtype", vec![taken_as("virtue.giftcheck", "g_plain")]),
+        &rs,
+    );
+    assert!(
+        !taken_as_plain.contains(&CODE.to_string()),
+        "taken as g_plain must not read as holding The Gift, even though the \
+         item's whole category list carries g_gift too: {taken_as_plain:?}"
+    );
+
+    let taken_as_gift = issue_codes(
+        &entity("testtype", vec![taken_as("virtue.giftcheck", "g_gift")]),
+        &rs,
+    );
+    assert!(
+        taken_as_gift.contains(&CODE.to_string()),
+        "taken as g_gift must still read as holding The Gift, which this \
+         profile forbids: {taken_as_gift:?}"
+    );
+}
+
 // --- Two Flaws the book indexes under General were magus-only (row 13) -------
 //
 // "Hermetic" gates on The Gift, not on magus-hood: "Only characters with The

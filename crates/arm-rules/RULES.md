@@ -387,15 +387,65 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   category one, and is now enforced as a prerequisite — see *Primogeniture
   Lineage is for magi of House Verditius only* below.
 
-  **Unmodelled, and recorded rather than resolved:** the *and* / *or* / comma
-  distinction itself. `Vec<String>` cannot express it, and whether *and* means
-  "either route" (the reading the engine takes) or "both, hence both categories'
-  restrictions" is a genuine interpretive question the book does not settle.
-  Likewise the engine has no notion of a Virtue **taken as** one of its
-  categories, which `:5083` makes an explicit player choice ("either as a Minor
-  Social Status Virtue or a Minor Supernatural Virtue"): a grog Sufi still counts
-  as holding a Supernatural Virtue for every `has_category` rule — caps, Gift
-  categories, grant constraints.
+  **Still unmodelled, and recorded rather than resolved (row 19, half b):** the
+  *and* / *or* / comma distinction itself. `Vec<String>` cannot express it, and
+  whether *and* means "either route" (the reading the engine takes) or "both,
+  hence both categories' restrictions" is a genuine interpretive question the
+  book does not settle. This is a DIFFERENT question from "taken as" below —
+  "taken as" is an *or* mechanism (a stated choice between two readings of one
+  item); the *and*-joined descriptors (`virtue.inoffensive_to_beings`,
+  `flaw.offensive_to_beings`, `flaw.primogeniture_lineage`,
+  `flaw.unbearable_to_beings`) stay open. `flaw.curse_of_slander` (row 13, "*or*")
+  is likewise deferred, to B4.
+
+  **Row 19, half (a), resolved: "taken as" is now modelled.** `:5083` makes
+  Sufi's dual category an explicit player CHOICE ("either as a Minor Social
+  Status Virtue or a Minor Supernatural Virtue"), not membership in both at
+  once. Storage: a `params` entry under a new [`ParameterDomain::Category`]
+  (`taken_as`) — not a new `Selection` field, because `params` already joins
+  every byte-identity site (the duplicate key at `validation/selections.rs`'s
+  `validate_duplicate_selections`) that a new field would sit outside of, and
+  needs no `Ord`/`normalize`/canonical-output change. `virtue.sufi` additionally
+  carries `max_total: 1`: `:5083` offers a choice between two READINGS of one
+  item, not two items, and load-time integrity
+  (`ruleset::integrity::validate_taken_as_max_total`) now rejects any
+  `taken_as`-declaring item that omits this cap.
+
+  The resolution is centralized in one place, `PointItem::categories_for`
+  (`crates/arm-rules/src/types.rs`): given a selection's `params`, it returns
+  the ONE category the selection recorded (`taken_as`) if present, otherwise
+  the whole `categories` list exactly as before this mechanism existed. Every
+  membership test that reads "is this item of category X for THIS entity" now
+  calls it, so a grog Sufi taken as Social Status no longer counts as holding a
+  Supernatural Virtue:
+
+  | site | file:function |
+  |---|---|
+  | permitted categories | `validation/selections.rs::validate_permitted_categories` |
+  | forbidden categories | `validation/selections.rs::validate_forbidden_categories` |
+  | category caps | `validation/caps.rs::validate_caps` |
+  | Gift detection | `effective/gift_confidence.rs::has_the_gift` |
+  | grant-constraint filtering | `grant.rs::open_pick_satisfies` (reads the *pick's own* `params` — set by the player exactly like any other parameter on that pick, whether the pick came from a `Fixed`/`Choice` grant's own data or a player's `Open` choice) |
+
+  Deliberately whole-list still, and commented as such at each site: a
+  catalogue query with no entity (`Ruleset::items_by_category`) and every UI
+  *browsing* surface (`derive.ts`'s `groupByCategory`/`filterItems`,
+  `VirtueFlawTab.categoriesFor`) and the Markdown export's Type cell
+  (`export/sections.rs`) — there is no selection to narrow against for the
+  first, and the book itself indexes a dual-category item under both headings
+  for the rest, so hiding it from one heading would hide it from the very
+  category that may be the one making it legal. The `category_not_permitted`/
+  `forbidden_category` issue arguments still name the deterministic
+  `first_listed_category` tie-break rather than the chosen category, and the
+  Selected-list heading/badge still follow that same tie-break — both are B3's
+  job, not B2's.
+
+  No shipped House or mythic-companion-type `Grant::Choice` offers
+  `virtue.sufi` (verified by grep across `rules/core/`): a `taken_as` item in a
+  `Choice` options list would need one option per value, since `Grant::Choice`
+  matches the player's pick by full `Selection` equality (`grant.rs`) — this is
+  a real hazard for a *future* `taken_as` item that also wants a `Choice` menu,
+  not one this catalogue hits today.
 
 - **Primogeniture Lineage is for magi of House Verditius only, and that is a
   prerequisite, not a category.**
@@ -446,25 +496,35 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   positioning with no mechanical hook. Locked by
   `primogeniture_lineage_requires_a_magus_of_house_verditius` and the five
   behavioural tests beside it in `tests/data_integrity.rs`.
-- **Membership uses the whole list, and so does browsing.** Every rule that asks
-  "is this item of category X" is a membership test over all of `categories`
-  (`PointItem::has_category` / `any_category_in`): permitted and forbidden
-  categories (`validation/selections.rs`), the data-driven per-category caps
-  (`validation/caps.rs`), Open-grant `require_categories`/`forbid_categories`
-  (`grant.rs`), the Gift categories (`effective/gift_confidence.rs`,
-  `validation/magus.rs`), the engine-required `personality` category
-  (`validation/scores.rs`, `ruleset/integrity.rs`), and `Ruleset::items_by_category`.
-  The UI's **Available (source) V/F picker** mirrors the book's indexes: `derive.ts`
-  `groupByCategory` emits the item once per category it carries, so Sufi is offered
-  under *both* Social Status and Supernatural. That grouping is also the sole source
-  of the category-filter dropdown's options
+- **Membership uses the whole list, unless a `taken_as` selection narrows it —
+  and browsing always uses the whole list.** Every rule that asks "is this item
+  of category X" is a membership test over `PointItem::categories_for` (row 19,
+  above), which returns all of `categories` (`PointItem::has_category` /
+  `any_category_in`) UNLESS the selection recorded which one it was taken as:
+  permitted and forbidden categories (`validation/selections.rs`), the
+  data-driven per-category caps (`validation/caps.rs`), Open-grant
+  `require_categories`/`forbid_categories` (`grant.rs`), and the Gift categories
+  (`effective/gift_confidence.rs`). `validation/magus.rs`'s Hermetic-Flaw-guideline
+  read of `gift_categories`, the engine-required `personality` category
+  (`validation/scores.rs`, `ruleset/integrity.rs`), and `Ruleset::items_by_category`
+  stay whole-list unconditionally — none of the shipped catalogue's `taken_as`
+  items carries `hermetic`/`personality`, and `items_by_category` is a catalogue
+  query with no entity to narrow against in the first place. The UI's
+  **Available (source) V/F picker** mirrors the book's indexes and ALSO stays
+  whole-list, deliberately: `derive.ts` `groupByCategory` emits the item once
+  per category it carries, so Sufi is offered under *both* Social Status and
+  Supernatural regardless of any `taken_as` a later selection might record —
+  there is no selection yet to narrow against while browsing. That grouping is
+  also the sole source of the category-filter dropdown's options
   (`VirtueFlawTab.svelte` `categoriesFor`), so a category carried only in second
-  position is still filterable. The Markdown export's "Type" cell renders them all,
-  joined with the shared localized list separator, each through its own
-  `category-<id>` Fluent key (`export/sections.rs`). Consequences worth naming:
-  Suppressed Gift counts against the **Story** Flaw cap as well as being Hermetic,
-  and Sufi is returned by `items_by_category("supernatural")` as well as by
-  `"social_status"`.
+  position is still filterable. The Markdown export's "Type" cell renders them
+  all too, joined with the shared localized list separator, each through its
+  own `category-<id>` Fluent key (`export/sections.rs`) — the exported
+  descriptor is provenance, not the player's choice; B3 adds the chosen reading
+  to the exported *name* instead. Consequences worth naming: Suppressed Gift
+  counts against the **Story** Flaw cap as well as being Hermetic, and Sufi
+  (absent a `taken_as`, or browsed rather than selected) is returned by
+  `items_by_category("supernatural")` as well as by `"social_status"`.
 - **Three surfaces have room for exactly one category, and all use
   `PointItem::first_listed_category` as a tie-break** (renamed from
   `primary_category`, which asserted a rule the book does not have):

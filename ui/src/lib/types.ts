@@ -40,6 +40,13 @@ export type ParameterDomain =
   | 'characteristic'
   | 'item'
   | 'enumerated'
+  // Value is one of the declaring item's OWN `categories` — records which
+  // single reading of a multi-category Virtue/Flaw was chosen (Sufi, "either
+  // as a Minor Social Status Virtue or a Minor Supernatural Virtue",
+  // Ars Magica - Definitive Edition (Core Rules).md:5083). Same shape as
+  // `enumerated` (the domain IS `values`), but the picker labels options
+  // through `category-<id>` rather than `displayName`.
+  | 'category'
   | 'text';
 
 export interface ParameterDef {

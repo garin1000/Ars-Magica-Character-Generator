@@ -113,7 +113,13 @@ impl Ruleset {
             // selection in validation::validate_parameters. What is checked
             // here is the SHAPE of a declared value list — the one piece of a
             // parameter that is neither a closed enum nor a per-selection value.
-            validate_parameter_defs(&item.parameters, &format!("{id}"), errors);
+            validate_parameter_defs(
+                &item.parameters,
+                &format!("{id}"),
+                Some(&item.categories),
+                errors,
+            );
+            Self::validate_taken_as_max_total(id, item, errors);
             self.validate_effect_refs(item, id, errors);
 
             validate_source_range(&item.source, &format!("{id}"), errors);
@@ -143,6 +149,28 @@ impl Ruleset {
             if !seen.insert(category.as_str()) {
                 errors.push(format!("{id}: 'categories' repeats '{category}'"));
             }
+        }
+    }
+
+    /// Checks the "mandatory companion change" for a `taken_as` item: any item
+    /// declaring a [`ParameterDomain::Category`] parameter must cap `max_total`
+    /// at 1. `:5083` ("either as a Minor Social Status Virtue or a Minor
+    /// Supernatural Virtue") offers a choice between two READINGS of one item,
+    /// not two items — without this cap, `taken_as` sitting inside the
+    /// `(item_ref, params)` duplicate key would let a character hold Sufi
+    /// taken as Social Status AND Sufi taken as Supernatural as two legal,
+    /// simultaneous targets.
+    fn validate_taken_as_max_total(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
+        let has_taken_as = item
+            .parameters
+            .iter()
+            .any(|p| p.domain == ParameterDomain::Category);
+        if has_taken_as && item.max_total != 1 {
+            errors.push(format!(
+                "{id}: declares a 'category' (taken-as) parameter, so 'max_total' \
+                 must be 1 (one choice among several readings of ONE item), not {}",
+                item.max_total
+            ));
         }
     }
 
@@ -1331,7 +1359,7 @@ impl Ruleset {
                 ));
             }
         }
-        validate_parameter_defs(&spell.parameters, &format!("spell '{id}'"), errors);
+        validate_parameter_defs(&spell.parameters, &format!("spell '{id}'"), None, errors);
         validate_source_range(&spell.source, &format!("spell '{id}'"), errors);
     }
 
@@ -1754,20 +1782,38 @@ impl Ruleset {
 ///
 /// Two halves, both authoring slips that would otherwise be invisible:
 ///
-/// - An `enumerated` domain IS its list, so an **empty** one resolves nothing:
-///   every selection naming that parameter would raise `unknown_param_value`
-///   forever, and a **repeated** value is a transcription slip that would show
-///   the same option twice in the picker.
+/// - An `enumerated`/`category` domain IS its list, so an **empty** one
+///   resolves nothing: every selection naming that parameter would raise
+///   `unknown_param_value` forever, and a **repeated** value is a
+///   transcription slip that would show the same option twice in the picker.
 /// - A `values` list on any **other** domain is read by nothing — it would look
 ///   like an enforced restriction in the data and silently not be one.
-fn validate_parameter_defs(params: &[ParameterDef], subject: &str, errors: &mut Vec<String>) {
+///
+/// `categories` is the declaring record's own category list (a point item's;
+/// `None` for a spell, which has no `categories` field at all) — a third
+/// authoring slip specific to `category`: its `values` must be a SUBSET of
+/// that list, since the whole point of the domain is "one of the categories
+/// THIS item already carries" (Sufi's `taken_as`, `:5083`). Declaring
+/// `category` on a spell, or a value the item's own descriptor never lists, is
+/// rejected here rather than silently resolving to a slug the picker cannot
+/// label.
+fn validate_parameter_defs(
+    params: &[ParameterDef],
+    subject: &str,
+    categories: Option<&[String]>,
+    errors: &mut Vec<String>,
+) {
     for param in params {
         let key = &param.key;
-        if param.domain != ParameterDomain::Enumerated {
+        let declares_values = matches!(
+            param.domain,
+            ParameterDomain::Enumerated | ParameterDomain::Category
+        );
+        if !declares_values {
             if !param.values.is_empty() {
                 errors.push(format!(
                     "{subject}: parameter '{key}' has domain '{}' but declares \
-                     'values'; only an 'enumerated' domain reads them",
+                     'values'; only an 'enumerated' or 'category' domain reads them",
                     param.domain
                 ));
             }
@@ -1775,8 +1821,9 @@ fn validate_parameter_defs(params: &[ParameterDef], subject: &str, errors: &mut 
         }
         if param.values.is_empty() {
             errors.push(format!(
-                "{subject}: parameter '{key}' has domain 'enumerated' but declares \
-                 no 'values'; an enumerated domain is nothing but its list"
+                "{subject}: parameter '{key}' has domain '{}' but declares \
+                 no 'values'; that domain is nothing but its list",
+                param.domain
             ));
             continue;
         }
@@ -1784,7 +1831,26 @@ fn validate_parameter_defs(params: &[ParameterDef], subject: &str, errors: &mut 
         for value in &param.values {
             if !seen.insert(value) {
                 errors.push(format!(
-                    "{subject}: parameter '{key}' repeats the enumerated value '{value}'"
+                    "{subject}: parameter '{key}' repeats the {} value '{value}'",
+                    param.domain
+                ));
+            }
+        }
+        if param.domain != ParameterDomain::Category {
+            continue;
+        }
+        let Some(categories) = categories else {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has domain 'category' but this \
+                 record has no categories to choose among"
+            ));
+            continue;
+        };
+        for value in &param.values {
+            if !categories.iter().any(|c| c.as_str() == value.as_str()) {
+                errors.push(format!(
+                    "{subject}: parameter '{key}' declares category value '{value}' \
+                     which is not one of this item's own categories {categories:?}"
                 ));
             }
         }

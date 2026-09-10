@@ -2082,6 +2082,71 @@ mod tests {
         ));
     }
 
+    /// The grant-constraint site of `PointItem::categories_for` (row 19,
+    /// "taken as"): a pick's OWN `params` — set by the player exactly like any
+    /// other parameter on an open grant pick — narrow which category is "in
+    /// force" here, not the item's whole category list. Modelled on Sufi
+    /// ("Minor, Social Status, Supernatural", `:5083`) but with made-up
+    /// category names so the test does not ride on the shipped catalogue.
+    #[test]
+    fn open_pick_satisfies_is_taken_as_aware() {
+        use std::collections::BTreeSet;
+        let items = r#"[
+            { "id": "virtue.dual", "kind": "virtue", "magnitude": "minor",
+              "categories": ["alpha", "beta"], "classification": "narrative",
+              "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
+                                "values": ["alpha", "beta"] }],
+              "max_total": 1 },
+            { "id": "virtue.filler_personality", "kind": "virtue", "magnitude": "free",
+              "categories": ["personality"], "classification": "narrative" }
+        ]"#;
+        let types = r#"[{ "id": "companion",
+                           "budget": { "virtue_points": 50, "flaw_points": 50 },
+                           "creation_phases": ["virtues_flaws"] }]"#;
+        let rs = rs_with_houses(items, types);
+
+        let taken_as_alpha = Selection::with_params(
+            Id::new("virtue.dual"),
+            BTreeMap::from([("taken_as".to_string(), Id::new("alpha"))]),
+        );
+        let taken_as_beta = Selection::with_params(
+            Id::new("virtue.dual"),
+            BTreeMap::from([("taken_as".to_string(), Id::new("beta"))]),
+        );
+
+        let requires_beta = GrantConstraint {
+            kind: ItemKind::Virtue,
+            magnitude: None,
+            require_categories: BTreeSet::from(["beta".to_string()]),
+            forbid_categories: BTreeSet::new(),
+        };
+        assert!(
+            open_pick_satisfies(&taken_as_beta, &requires_beta, &rs, None),
+            "taken as beta must satisfy a menu requiring beta"
+        );
+        assert!(
+            !open_pick_satisfies(&taken_as_alpha, &requires_beta, &rs, None),
+            "taken as alpha must NOT satisfy a menu requiring beta, even though \
+             the item's whole category list carries beta too"
+        );
+
+        let forbids_beta = GrantConstraint {
+            kind: ItemKind::Virtue,
+            magnitude: None,
+            require_categories: BTreeSet::new(),
+            forbid_categories: BTreeSet::from(["beta".to_string()]),
+        };
+        assert!(
+            open_pick_satisfies(&taken_as_alpha, &forbids_beta, &rs, None),
+            "taken as alpha must clear a menu forbidding beta, even though the \
+             item's whole category list carries beta too"
+        );
+        assert!(
+            !open_pick_satisfies(&taken_as_beta, &forbids_beta, &rs, None),
+            "taken as beta must still be excluded from a menu forbidding beta"
+        );
+    }
+
     #[test]
     fn a_magus_with_no_hermetic_flaw_is_warned() {
         let rs = rs_for_house_validation();

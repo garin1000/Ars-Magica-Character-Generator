@@ -29,12 +29,18 @@ pub(crate) fn validate_caps(
         return;
     };
 
-    // Counts selections whose resolved point item matches `pred`.
-    let count = |pred: &dyn Fn(&PointItem) -> bool| -> usize {
+    // Counts selections whose resolved point item (and that selection's own
+    // params, so a taken-as-aware predicate can read `s.params`) matches `pred`.
+    let count = |pred: &dyn Fn(&PointItem, &Selection) -> bool| -> usize {
         entity
             .selections
             .iter()
-            .filter(|s| ruleset.point_items.get(&s.item_ref).is_some_and(pred))
+            .filter(|s| {
+                ruleset
+                    .point_items
+                    .get(&s.item_ref)
+                    .is_some_and(|item| pred(item, s))
+            })
             .count()
     };
 
@@ -71,7 +77,7 @@ pub(crate) fn validate_caps(
     ];
     for (max, kind, magnitude, code) in hard_caps {
         let Some(max) = max else { continue };
-        let n = count(&|i| i.kind == kind && i.magnitude == magnitude);
+        let n = count(&|i, _s| i.kind == kind && i.magnitude == magnitude);
         if n > max as usize {
             issues.push(ValidationIssue::error(
                 code,
@@ -102,9 +108,16 @@ pub(crate) fn validate_caps(
             // Hermetic, Story*" (Ars Magica - Definitive Edition (Core
             // Rules).md:6803-6804), so it is a Story Flaw for the Story cap just
             // as much as it is a Hermetic one.
-            let n = count(&|i| {
+            //
+            // Taken-as aware, via `PointItem::categories_for`: a Sufi taken as
+            // Social Status must not count against a Supernatural cap, and vice
+            // versa — `:5083` is a choice between the two readings, not both at
+            // once.
+            let n = count(&|i, s| {
                 i.kind == kind
-                    && i.has_category(&cap.category)
+                    && i.categories_for(&s.params)
+                        .iter()
+                        .any(|c| c == &cap.category)
                     && (!cap.major_only || i.magnitude == Magnitude::Major)
             });
             if n <= cap.max as usize {

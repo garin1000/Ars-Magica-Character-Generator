@@ -158,12 +158,23 @@ pub fn open_pick_satisfies(
     {
         return false;
     }
+    // Taken-as aware, via `PointItem::categories_for`: the pick's OWN `params`
+    // (set by the player when they made this open pick, exactly like any other
+    // parameter on it) narrow which category is in force, so a Sufi picked as
+    // Social Status cannot satisfy a menu that requires — or is closed to —
+    // Supernatural on the strength of its other reading alone.
+    let categories = item.categories_for(&pick.params);
     if !constraint.require_categories.is_empty()
-        && !item.any_category_in(&constraint.require_categories)
+        && !categories
+            .iter()
+            .any(|c| constraint.require_categories.contains(c))
     {
         return false;
     }
-    if item.any_category_in(&constraint.forbid_categories) {
+    if categories
+        .iter()
+        .any(|c| constraint.forbid_categories.contains(c))
+    {
         return false;
     }
     if item

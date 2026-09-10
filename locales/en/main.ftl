@@ -874,6 +874,10 @@ param-label-role = Role
 param-label-power = Power
 # Folk Magic's narrow area of spells — one of the four the book prints.
 param-label-category = Category
+# Which of an item's own listed categories it was taken as — Sufi, "either as
+# a Minor Social Status Virtue or a Minor Supernatural Virtue" (Ars Magica -
+# Definitive Edition (Core Rules).md:5083).
+param-label-taken_as = Taken as
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }
