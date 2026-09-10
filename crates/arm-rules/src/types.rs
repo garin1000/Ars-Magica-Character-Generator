@@ -622,6 +622,72 @@ pub struct ParameterDef {
     /// catalogue carries (nothing could ever satisfy it).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub require_categories: BTreeSet<String>,
+    /// The point item an [`ParameterDomain::Item`] value names must be one the
+    /// entity actually **holds**. `false` (the default, and the shape of every
+    /// parameter shipped before False Power) means the target need not be on
+    /// the sheet — the position `ParameterDomain::Ability` targets are in, where
+    /// Puissant Ability may name an Ability bought on a later step.
+    ///
+    /// False Power is the case the rules state: the Flaw is taken "once for each
+    /// appropriate Supernatural Virtue that the character **possesses**"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:6096), so a target the
+    /// character does not hold is a Flaw attached to nothing.
+    ///
+    /// **Which notion of possession.** The grants-inclusive one:
+    /// `validation::prereq::PrereqCtx::present_ids`, the very set
+    /// [`Prereq::Has`] consults — bought selections ++ House / Mythic-type /
+    /// warping-fill grants. A House-granted Supernatural Virtue is genuinely
+    /// held, so it is a legal target; there is deliberately no second notion of
+    /// "possessed" in the engine. Possession is by **id**: a `taken_as`
+    /// selection's chosen reading is not consulted, exactly as
+    /// [`Self::require_categories`] cannot consult it (a parameter value is a
+    /// bare [`Id`], not a [`Selection`]) — see `crates/arm-rules/RULES.md`.
+    ///
+    /// **A possessed target is claimed exclusively.** The same sentence says
+    /// "**once** for each appropriate Supernatural Virtue", so two selections
+    /// may not name the same held Virtue. That cannot be expressed with
+    /// [`PointItem::max_per_target`], whose duplicate key is `(item_ref, params)`
+    /// and so is blind to one Major *and* one Minor False Power — two different
+    /// ids — naming the same target. It rides on this one flag rather than a
+    /// second field because it is one idea: the parameter claims a Virtue the
+    /// character holds.
+    ///
+    /// Enforced by `validation::selections::validate_possessed_param_targets`,
+    /// which raises
+    /// [`crate::validation::ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED`]
+    /// and
+    /// [`crate::validation::ValidationIssue::CODE_PARAM_TARGET_ALREADY_CLAIMED`]
+    /// — codes of their own, not `unknown_param_value`: the value IS in the
+    /// parameter's domain, it is this *character* who cannot name it.
+    ///
+    /// Load-time integrity rejects the flag on any domain but `item`, for the
+    /// same reason it rejects a stray `require_categories`: nothing else
+    /// resolves against the point-item catalogue, so the restriction would look
+    /// enforced and be read by no one.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub require_possessed: bool,
+    /// An [`ParameterDomain::Item`] value may not name a [`PointItem::tainted`]
+    /// item. `false` (the default) means the flag is not consulted at all.
+    ///
+    /// "This Flaw cannot apply to Supernatural Virtues that are affiliated to
+    /// the Infernal realm in the first place"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:6096). Infernal
+    /// affiliation is exactly what [`PointItem::tainted`] records — the
+    /// descriptor's *Tainted* type tag, "associated with the Infernal realm"
+    /// (`:2998-3002`) — so no new field and no id list is needed.
+    ///
+    /// Enforced by `validation::selections::param_value_resolves` and reported
+    /// as the existing
+    /// [`crate::validation::ValidationIssue::CODE_UNKNOWN_PARAM_VALUE`], on
+    /// [`Self::require_categories`]'s precedent: the narrowing IS the domain,
+    /// it needs no entity, and a second code would split one idea across two
+    /// messages. That is also what separates it from
+    /// [`Self::require_possessed`], which genuinely cannot answer without the
+    /// entity.
+    ///
+    /// Load-time integrity rejects the flag on any domain but `item`.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub forbid_tainted: bool,
 }
 
 impl ParameterDef {
@@ -635,6 +701,8 @@ impl ParameterDef {
             values: Vec::new(),
             at_most_one_of: Vec::new(),
             require_categories: Default::default(),
+            require_possessed: false,
+            forbid_tainted: false,
         }
     }
 
@@ -647,6 +715,8 @@ impl ParameterDef {
             values: values.into_iter().collect(),
             at_most_one_of: Vec::new(),
             require_categories: Default::default(),
+            require_possessed: false,
+            forbid_tainted: false,
         }
     }
 }
@@ -7631,6 +7701,23 @@ mod tests {
         assert!(
             out.contains(r#""require_categories":["hermetic","supernatural"]"#),
             "{out}"
+        );
+    }
+
+    #[test]
+    fn require_possessed_and_forbid_tainted_default_false_and_are_omitted_when_false() {
+        // Additive booleans, same contract as `require_categories` above: every
+        // ParameterDef already in `rules/` omits them, so they must default to
+        // "no restriction" AND stay out of canonical output, or the shipped
+        // files would no longer re-serialize byte-identically.
+        let json = r#"{ "key": "virtue", "type": "ref", "domain": "item" }"#;
+        let param: ParameterDef = serde_json::from_str(json).unwrap();
+        assert!(!param.require_possessed);
+        assert!(!param.forbid_tainted);
+        let out = serde_json::to_string(&param).unwrap();
+        assert!(
+            !out.contains("require_possessed") && !out.contains("forbid_tainted"),
+            "false flags should be skipped: {out}"
         );
     }
 

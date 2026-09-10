@@ -1499,16 +1499,18 @@ that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
   sentence; the entry runs `:6080-6096`, and both catalogue entries carry
   `source.lines = [6080, 6097]`).
 - Data: `rules/core/virtues_flaws.json` — `flaw.false_power` (Major,
-  `max_total: 1`) and `flaw.false_power_minor` (Minor, `max_per_target: 255`,
+  `max_total: 1`) and `flaw.false_power_minor` (Minor,
   `prerequisites: { kind: has, value: flaw.false_power }`, no
-  `incompatible_with`). Text in `rules/i18n/en|de/virtues_flaws.json`.
+  `incompatible_with`). Both carry the `virtue` target parameter and the default
+  `max_per_target: 1`; see *False Power names the Virtue it taints* below. Text
+  in `rules/i18n/en|de/virtues_flaws.json`.
 - Tests: `false_power_ships_as_a_coexisting_major_plus_minor_pair`,
   `a_second_major_false_power_is_capped`,
   `a_minor_false_power_without_the_major_is_a_missing_prerequisite`,
   `false_power_taken_three_times_costs_three_plus_one_plus_one`,
   `a_granted_major_false_power_satisfies_the_minor_prerequisite`
-  (`crates/arm-rules/tests/data_integrity.rs`; the pair also sits in
-  `TOTAL_CAP_ITEMS` and `UNLIMITED_REPEAT_ITEMS`).
+  (`crates/arm-rules/tests/data_integrity.rs`; the Major also sits in
+  `TOTAL_CAP_ITEMS`).
 
 `magnitude` is a property of the **catalogue entry**, never of a selection, so a
 single repeatable entry cannot change price between copies — a second copy of a
@@ -1548,15 +1550,139 @@ independent reasons, either one sufficient:
    entries must be selectable together. The asymmetric ids are what keep the pair
    outside that check.
 
-**What this does NOT enforce.** "Once for each appropriate Supernatural Virtue
-that the character possesses" (`:6096`) also means each copy must name a
-*different* Supernatural Virtue, and that nothing may be named that the
-character does not have. Expressing it needs a parameter domain meaning "an item
-of category X that this character possesses"; `ParameterDomain::Item` resolves
-against the whole point-item registry with no category narrowing and no
-is-possessed predicate, so the picker would list every catalogue item. Not
-built — same family as the per-power residual gap below. So the copy count is
-bounded only by the Flaw budget, not by the character's Supernatural Virtues.
+**The rest of `:6096` is enforced separately**, by the target parameter both
+entries now carry — see *False Power names the Virtue it taints* immediately
+below. Between them the two sections cover the whole sentence: the per-copy
+magnitude change here, the per-Virtue target there.
+
+#### False Power names the Virtue it taints (B9)
+> "This Flaw may be taken multiple times, once for each appropriate
+> Supernatural Virtue that the character possesses, but in each subsequent
+> instance as a Minor Flaw rather than a Major one. Also note that this Flaw
+> cannot apply to Supernatural Virtues that are affiliated to the Infernal realm
+> in the first place, and the troupe may not allow it to apply to Virtues
+> derived from the Divine."
+
+> "This Flaw can apply to Supernatural Virtues that define the character's
+> background, like Faerie Blood, Diedne Magic, or even The Gift."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:6096` (the repeat,
+  possession and Infernal clauses) and `:6082` (which Virtues count).
+- Data: `rules/core/virtues_flaws.json` — both False Power entries declare
+  `parameters: [{ key: "virtue", domain: "item", require_categories:
+  ["hermetic", "special", "supernatural"], require_possessed: true,
+  forbid_tainted: true }]`, and the Minor entry's `max_per_target` dropped from
+  `255` to the default `1`. Label `param-label-virtue` in
+  `locales/en|de/main.ftl`.
+- Engine: `ParameterDef::require_possessed` / `::forbid_tainted` (`types.rs`);
+  `validation/selections.rs::validate_possessed_param_targets` (possession and
+  the one-claim-per-Virtue rule) and `::param_value_resolves` (the Tainted
+  narrowing); load gate in `ruleset/integrity.rs::validate_parameter_defs`.
+- Frontend: `ParameterDef.require_possessed` / `.forbid_tainted`
+  (`ui/src/lib/types.ts`), `itemOptionsFor` + `heldItemRefs`
+  (`ui/src/lib/components/ParameterPicker.svelte`).
+- Tests: `false_power_names_the_supernatural_virtue_it_taints`,
+  `false_power_cannot_taint_a_virtue_the_character_lacks`,
+  `false_power_cannot_taint_an_already_infernal_virtue`,
+  `a_major_and_a_minor_false_power_cannot_taint_the_same_virtue`,
+  `a_sufi_taken_as_social_status_is_still_a_possessed_false_power_target`
+  (`tests/data_integrity.rs`);
+  `a_require_possessed_target_the_character_lacks_is_flagged`,
+  `an_unpossessed_target_is_filed_on_the_virtues_flaws_step`,
+  `a_house_granted_target_counts_as_possessed`,
+  `two_different_items_cannot_claim_the_same_possessed_target`,
+  `two_items_claiming_different_possessed_targets_are_clean`,
+  `a_param_without_require_possessed_admits_an_unheld_target`,
+  `a_tainted_item_is_outside_a_forbid_tainted_domain`,
+  `a_tainted_item_resolves_when_forbid_tainted_is_not_declared`
+  (`validation/mod.rs`);
+  `require_possessed_and_forbid_tainted_default_false_and_are_omitted_when_false`
+  (`types.rs`); `possession_and_taint_flags_on_a_non_item_param_are_rejected`,
+  `possession_and_taint_flags_load_on_an_item_param` (`ruleset.rs`); and
+  `offers only Virtues the character holds when the parameter requires
+  possession` / `counts a granted row as possessed in the picker`
+  (`ui/src/lib/components/ParameterPicker.test.ts`).
+
+**Which Virtues the parameter admits, and why three categories.** `:6096` says
+"Supernatural Virtue", but `:6082` names three examples outright — "Faerie
+Blood, Diedne Magic, or even The Gift" — and in this catalogue those carry
+`supernatural`, `hermetic` and `special` respectively. A bare
+`require_categories: ["supernatural"]` would have refused two Virtues the source
+explicitly permits, which is wrong rules output; the three-category list is read
+straight off the book's own three examples, one category each. `special` is
+The Gift alone.
+
+**Possession is `Prereq::Has`'s notion, not a second one.** The check reads
+`validation::prereq::PrereqCtx::present_ids` — bought selections ++ granted rows
+— hoisted to `pub(crate)` by B1 for exactly this. A House-granted, Mythic-type
+or warping-filled Supernatural Virtue is genuinely held, so it is a legal
+target, and the engine keeps one definition of "held" rather than two that can
+drift.
+
+**A `taken_as` reading is not consulted, deliberately.** Sufi is "either as a
+Minor Social Status Virtue or a Minor Supernatural Virtue" (`:5083`). A Sufi
+taken as Social Status is still a Virtue the character *possesses*, so False
+Power may name it, and `require_categories` admits it through its Supernatural
+membership either way — B8 already established that a parameter value is a bare
+`Id` naming an item, not a `Selection` of one, so `PointItem::categories_for`
+cannot be reached from the domain half. Making the *possession* half stricter
+than the *domain* half would put two different answers to "is this Virtue
+Supernatural for this character" inside one parameter. One lenient answer, with
+the troupe adjudicating the rest, is the better trade;
+`a_sufi_taken_as_social_status_is_still_a_possessed_false_power_target` pins it.
+
+**Why a second code rather than `max_per_target`.** "**Once** for each
+appropriate Supernatural Virtue" forbids two copies naming one Virtue.
+`max_per_target` cannot express it: its duplicate key is `(item_ref, params)`,
+and `flaw.false_power` / `flaw.false_power_minor` are different ids, so a Major
+and a Minor both naming Second Sight collide in no key at all. Hence
+`param_target_already_claimed`, raised by the same validator against the
+**later** selection — one decision, one finding. A repeat of the *same* id is
+left to `max_per_target` (now 1 on both entries), or one mistake would draw two
+findings.
+
+**Why the Tainted refusal is `unknown_param_value` and not a code of its own.**
+"Cannot apply to Supernatural Virtues that are affiliated to the Infernal realm
+in the first place" is a statement about the *catalogue entry*, not about the
+character: `PointItem::tainted` already records exactly that affiliation
+(`:2998-3002`). It needs no `&Entity`, so it narrows the domain in
+`param_value_resolves` on `require_categories`' precedent — the narrowing IS the
+domain — while `require_possessed` genuinely cannot answer without the entity
+and therefore gets codes of its own.
+
+**Filed on `virtues_flaws`, and why that is safe here.**
+`validate_ability_bonus_targets` files its dangling-target error on
+`CreationPhase::Abilities` even though the offending value is a Virtue's
+parameter, because Puissant Ability's target is bought on a *later* step and
+filing on V/F blocked a step that could not offer the remedy. Both remedies for
+this issue — name a different Virtue, or buy the one named — are on the V/F step
+itself, so same-step filing cannot deadlock the wizard. Do not "align" the two
+validators' phases; that reintroduces the deadlock.
+
+**Deliberately NOT implemented: the Divine clause.** The same sentence ends "and
+the troupe may not allow it to apply to Virtues derived from the Divine"
+(`:6096`). *May not allow* is troupe discretion, not a rule the engine can
+decide — there is no Divine-affiliation flag on a Virtue in the first place, and
+inventing one would encode a ruling the book leaves open. Recorded here rather
+than implemented.
+
+**The name says which Virtue.** Both i18n names gained a `{virtue}`
+placeholder — "False Power (Major): {virtue}" / "Falsche Macht (Groß):
+{virtue}" — because the defect this row records is precisely that the copies
+"do not name which Supernatural Virtue they taint". Without it the in-app row
+would read "False Power (Minor)" three times over: `selectionDisplayName`
+(`ui/src/lib/derive.ts`) fills placeholders and has no extras-append path. The
+Markdown sheet would have shown the Virtue either way — `Doc::fill_template`
+appends a value the template never mentions — so the placeholder is what keeps
+app and sheet reading identically. Pinned by
+`both_locales_name_the_virtue_a_false_power_taints`.
+
+**Save impact.** An existing save holding a paramless False Power row now raises
+`missing_param` on open, and the Minor entry's tightened `max_per_target` can
+raise `duplicate_selection` on a save with two unnamed Minor copies. No data is
+lost — saves store choices and the engine only reports — and the player clears
+both by naming the Virtue each copy taints. No migration: `SCHEMA_VERSION` stays
+16, because nothing about the save *shape* changed.
 
 #### Enumerated parameter domain — a closed list the rulebook prints
 > "He can only create spells in one narrow area, which must be one of the
@@ -1954,12 +2080,13 @@ only reports — and the player clears it by naming the power.
 Repeat rules the data model cannot express (deliberately left unenforced rather
 than approximated):
 
-- **"Once for each Supernatural Virtue the character possesses."** False Power's
-  copies (`:6096`) must each name a *different* Supernatural Virtue the character
-  actually holds, which needs a parameter domain meaning "an item of category X
-  that this character possesses" — see *Selection multiplicity — False Power's
-  subsequent copies are Minor* above, where the per-copy magnitude change itself
-  is now expressed as a Major + Minor entry pair.
+- **"Once for each Supernatural Virtue the character possesses" used to sit in
+  this list.** False Power's copies (`:6096`) now each name the Virtue they
+  taint, through an `item` parameter carrying `require_categories`,
+  `require_possessed` and `forbid_tainted` — see *False Power names the Virtue
+  it taints (B9)* above. Nothing about the repeat rule is deferred any more; the
+  one clause left unimplemented there is the Divine one, which the book itself
+  leaves to the troupe.
 - **Proportional per-item caps used to sit in this list.** Demonic Might /
   Demonic Powers "can account for no more than half of the character's total
   Virtues" (`:3665`, `:3669`) is now expressed — the ratio is data
@@ -6565,11 +6692,12 @@ plus `setParamAt` / `setAbilityBonusTarget` trim cases in
 Framework, **not** a rule: no passage is cited because none is implemented here.
 This is a mechanism the data can now use — the vocabulary for "this parameter
 names a *Virtue of category X*" rather than any point item in the catalogue —
-and the shipped catalogue does not use it yet. Verified at the time of writing:
-**no `rules/core/*.json` entry declares an `item`-domain parameter at all** (the
-domains in use are `ability`, `art`, `category`, `characteristic`, `enumerated`,
-`form`, `realm`, `technique`, `text`), so nothing shipped changes behaviour and
-every `rules/` file re-serializes byte-identically.
+and the shipped catalogue did not use it when it landed. Verified at the time of
+writing: **no `rules/core/*.json` entry declared an `item`-domain parameter at
+all** (the domains in use were `ability`, `art`, `category`, `characteristic`,
+`enumerated`, `form`, `realm`, `technique`, `text`), so nothing shipped changed
+behaviour and every `rules/` file re-serialized byte-identically. B9 supplied the
+first user: the two False Power entries.
 
 - Engine: `ParameterDef::require_categories` (`types.rs`), enforced in
   `validation/selections.rs::param_value_resolves` via
@@ -6648,10 +6776,15 @@ whole registry; with `require_categories` it offers only matching items, the
 same way the `technique`/`form` branches offer one Art class. Offering an item
 the engine will refuse as `unknown_param_value` is offering an illegal choice.
 
-**Not implemented here (B9):** whether the named item is one the character
+**The other half landed in B9:** whether the named item is one the character
 actually *possesses*. That question needs `&Entity`, which `param_value_resolves`
 does not have and deliberately does not take; this half needs only `&Ruleset`
-and `&ParameterDef`.
+and `&ParameterDef`. B9 added `ParameterDef::require_possessed` and a validator
+of its own for it, plus `forbid_tainted` — which, being another entity-free
+narrowing, folded into `param_value_resolves` beside `require_categories`. Both
+are described under *False Power names the Virtue it taints (B9)*, and False
+Power is now the first shipped entry to declare an `item`-domain parameter, so
+the "nothing shipped uses it" note above is history rather than current fact.
 
 ### The saga year (Slice 12, #25) — `validation/saga.rs`
 

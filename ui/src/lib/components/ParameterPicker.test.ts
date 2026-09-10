@@ -49,7 +49,12 @@ const ABILITIES: Record<string, Ability> = {
   'ability.area_lore': { id: 'ability.area_lore', category: 'general', parameter: 'area' },
 };
 
-function pointItem(id: string, parameters: ParameterDef[], categories = ['hermetic']): PointItem {
+function pointItem(
+  id: string,
+  parameters: ParameterDef[],
+  categories = ['hermetic'],
+  tainted = false,
+): PointItem {
   return {
     id,
     kind: 'virtue',
@@ -57,6 +62,7 @@ function pointItem(id: string, parameters: ParameterDef[], categories = ['hermet
     categories,
     classification: 'narrative',
     entity_kinds: ['character'],
+    tainted,
     parameters,
   } as unknown as PointItem;
 }
@@ -79,6 +85,19 @@ const ITEMS: Record<string, PointItem> = {
   // The one catalogue item of the required category, so a filter can be caught
   // filtering — every other fixture item is `hermetic`.
   'virtue.second_sight': pointItem('virtue.second_sight', [], ['supernatural']),
+  // False Power's shape: the target must be a Virtue the character HOLDS
+  // (`require_possessed`) and must not already be Infernal (`forbid_tainted`) —
+  // Core Rules.md:6096. The engine refuses either, so the menu must not offer
+  // them.
+  'flaw.possessed_probe': pointItem('flaw.possessed_probe', [
+    { key: 'virtue', type: 'ref', domain: 'item', require_possessed: true, forbid_tainted: true },
+  ]),
+  // Held but already Infernal — offered by neither the narrowed nor the
+  // possession filter, and the control for `forbid_tainted`.
+  'virtue.demonic_blood': pointItem('virtue.demonic_blood', [], ['supernatural'], true),
+  // Reachable only as a House grant, so "possessed" can be seen counting a row
+  // the player never bought.
+  'virtue.granted_gift': pointItem('virtue.granted_gift', [], ['supernatural']),
   'virtue.ways_of_the_land': pointItem('virtue.ways_of_the_land', [
     { key: 'land', type: 'ref', domain: 'text' },
   ]),
@@ -153,6 +172,9 @@ function installRuleset(): void {
       'virtue.item_domain_probe': { name: 'Probe {item}' },
       'virtue.narrowed_probe': { name: 'Narrowed Probe {item}' },
       'virtue.second_sight': { name: 'Second Sight' },
+      'flaw.possessed_probe': { name: 'Possessed Probe' },
+      'virtue.demonic_blood': { name: 'Demonic Blood' },
+      'virtue.granted_gift': { name: 'Granted Gift' },
       'virtue.ways_of_the_land': { name: 'Ways Of The {land}' },
       'virtue.puissant_ability': { name: 'Puissant {ability}' },
       'ability.awareness': { name: 'Awareness' },
@@ -312,18 +334,50 @@ describe('ParameterPicker domain branches (slice 7, #4)', () => {
     );
     expect(select).not.toBeNull();
     // `require_categories: ['supernatural']` — the engine refuses anything else
-    // as `unknown_param_value`, so the menu must not offer it either.
-    expect(optionTexts(select!)).toEqual(['Item', 'Second Sight']);
+    // as `unknown_param_value`, so the menu must not offer it either. All three
+    // supernatural fixture items are offered, held or not and Tainted or not:
+    // this parameter narrows by category ALONE.
+    expect(optionTexts(select!)).toEqual(['Item', 'Demonic Blood', 'Granted Gift', 'Second Sight']);
+  });
+
+  it('offers only Virtues the character holds when the parameter requires possession', () => {
+    // False Power taints "one of the character's Supernatural Virtues", taken
+    // "once for each appropriate Supernatural Virtue that the character
+    // possesses" (Core Rules.md:6096). Both non-offers matter: Demonic Blood is
+    // HELD but already Infernal, and Granted Gift is un-held here.
+    store.entity.selections = [{ ref: 'virtue.second_sight' }, { ref: 'virtue.demonic_blood' }];
+    const select = selectFor(
+      pickerBody('flaw.possessed_probe'),
+      'param-flaw.possessed_probe-virtue-0',
+    );
+    expect(select).not.toBeNull();
+    expect(optionTexts(select!)).toEqual(['Virtue', 'Second Sight']);
+  });
+
+  it('counts a granted row as possessed in the picker', () => {
+    // The engine reads possession off the grants-inclusive `present_ids`, so a
+    // House-granted Virtue is a legal target and must be offered as one.
+    store.effective = {
+      granted_selections: [{ ref: 'virtue.granted_gift' }],
+    } as unknown as EffectiveScores;
+    const select = selectFor(
+      pickerBody('flaw.possessed_probe'),
+      'param-flaw.possessed_probe-virtue-0',
+    );
+    expect(optionTexts(select!)).toEqual(['Virtue', 'Granted Gift']);
   });
 
   it('leaves an un-narrowed item-domain parameter offering the whole registry', () => {
     // The filter is per parameter, not global: the probe that declares no
-    // `require_categories` still lists the supernatural item alongside the rest.
+    // `require_categories`, `require_possessed` or `forbid_tainted` still lists
+    // the supernatural item, the Tainted one, and an item nobody holds.
     const select = selectFor(
       pickerBody('virtue.item_domain_probe'),
       'param-virtue.item_domain_probe-item-0',
     );
     expect(optionTexts(select!)).toContain('Second Sight');
+    expect(optionTexts(select!)).toContain('Demonic Blood');
+    expect(optionTexts(select!)).toContain('Granted Gift');
     expect(optionTexts(select!).length).toBeGreaterThan(2);
   });
 

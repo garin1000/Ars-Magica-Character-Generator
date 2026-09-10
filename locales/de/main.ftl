@@ -893,6 +893,12 @@ param-label-role = Rolle
 # Begriff aus rules/source/de/translation-tables/tiere-kreaturen.md:144
 # („Power“ → „Kraft“).
 param-label-power = Kraft
+# Die Übernatürliche Tugend, die eine Falsche Macht befleckt — "einmal für jede
+# geeignete Übernatürliche Tugend, die der Charakter besitzt"
+# (rules/source/de/Ars Magica Definitive Edition Basisregeln.md:6096).
+# Begriff aus rules/source/de/translation-tables/tugenden-fehler.md
+# („Virtue" → „Tugend").
+param-label-virtue = Tugend
 # Der enge Zauberbereich der Volksmagie — eine der vier Optionen, die das Buch
 # nennt. Begriff aus rules/source/de/Ars Magica Definitive Edition
 # Basisregeln.md:3919 („Zauberkategorie"); der Schlüssel selbst ist allgemein.
@@ -962,6 +968,12 @@ issue-unknown_param_value = { $item }: Parameter { $key } hat unbekannten { $dom
 # Regeldaten (`ParameterDef.at_most_one_of`) und nie fest im Text — daher nennt
 # diese Meldung Element und Feld und zählt die Kopien, statt die Werte zu nennen.
 issue-exclusive_param_values = { $item } nennt { $count } Werte für { $key }, von denen die Regeln nur einen zulassen.
+# Basisregeln.md:6096 — die Falsche Macht wird "einmal für jede geeignete
+# Übernatürliche Tugend, die der Charakter besitzt" genommen. Die erste Meldung
+# betrifft ein Ziel, das der Charakter nicht hat, die zweite eine Tugend, die
+# bereits eine andere Kopie beansprucht.
+issue-param_target_not_possessed = { $item }: { $key } nennt { $value }, was der Charakter nicht besitzt.
+issue-param_target_already_claimed = { $item }: { $key } nennt { $value }, was bereits von { $other } genannt wird.
 issue-multiple_magical_foci = Ein Magus darf nur einen Magischen Fokus haben, es sind aber { $count } gewählt.
 issue-gift_required = Dieser Typ erfordert die Gabe.
 issue-gift_forbidden = Dieser Typ darf die Gabe nicht haben.

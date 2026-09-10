@@ -6445,12 +6445,13 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 /// (Ars Magica - Definitive Edition (Core Rules).md:2638) caps the real count
 /// far below it, so the number is unreachable rather than arbitrary.
 ///
-/// `flaw.false_power_minor` sits here for a narrower reason: its descriptor DOES
-/// imply a ceiling — one copy "for each appropriate Supernatural Virtue that the
-/// character possesses" (`:6096`) — but that ceiling is a per-Virtue target the
-/// data model cannot yet express (there is no parameter domain meaning "an item
-/// of category X that this character possesses"), so no number is asserted here.
-/// See `RULES.md`, *False Power — a Major entry plus a Minor one*.
+/// `flaw.false_power_minor` used to sit here, because its ceiling — one copy
+/// "for each appropriate Supernatural Virtue that the character possesses"
+/// (`:6096`) — was a per-Virtue target the data model could not express. It now
+/// can: the entry carries a `require_possessed` item parameter naming the
+/// Virtue, so the ceiling is `max_per_target: 1` per named Virtue plus an
+/// unbounded `max_total` across different ones. Pinned by
+/// `false_power_names_the_supernatural_virtue_it_taints` instead.
 const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.demonic_might", 3665),
     ("virtue.demonic_powers", 3669),
@@ -6470,7 +6471,6 @@ const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.strong_angelic_heritage", 5030),
     ("virtue.withstand_casting", 5265),
     ("flaw.deteriorating_power", 5948),
-    ("flaw.false_power_minor", 6096),
     ("flaw.flawed_parma_magica", 6144),
     ("flaw.limited_magic_resistance", 6348),
     ("flaw.vulnerable_casting", 6997),
@@ -7264,15 +7264,23 @@ fn a_minor_false_power_without_the_major_is_a_missing_prerequisite() {
 
 /// The whole point of the entry pair: the second and third copies cost 1 Flaw
 /// point each, not 3. A single repeatable Major entry would have charged 9.
+///
+/// Each copy names a Virtue of its own, and the character holds all three —
+/// "once for each appropriate Supernatural Virtue that the character possesses"
+/// (`:6096`) is what makes three copies legal in the first place, so a fixture
+/// of three unnamed copies would no longer be the legal build this asserts.
 #[test]
 fn false_power_taken_three_times_costs_three_plus_one_plus_one() {
     let rs = load_ruleset();
     let thrice = entity(
         "companion",
         vec![
-            Selection::new(Id::new("flaw.false_power")),
-            Selection::new(Id::new("flaw.false_power_minor")),
-            Selection::new(Id::new("flaw.false_power_minor")),
+            Selection::new(Id::new("virtue.second_sight")),
+            Selection::new(Id::new("virtue.premonitions")),
+            Selection::new(Id::new("virtue.dowsing")),
+            false_power("flaw.false_power", "virtue.second_sight"),
+            false_power("flaw.false_power_minor", "virtue.premonitions"),
+            false_power("flaw.false_power_minor", "virtue.dowsing"),
         ],
     );
 
@@ -7289,6 +7297,8 @@ fn false_power_taken_three_times_costs_three_plus_one_plus_one() {
         "duplicate_selection",
         "prereq_not_met",
         "incompatible",
+        "param_target_not_possessed",
+        "param_target_already_claimed",
     ] {
         assert!(
             !codes.contains(&blocker.to_string()),
@@ -7336,6 +7346,255 @@ fn a_granted_major_false_power_satisfies_the_minor_prerequisite() {
         !codes.contains(&"prereq_not_met".to_string()),
         "a GRANTED Major False Power is still a first instance, so the Minor \
          copy that follows it is legal: {codes:?}"
+    );
+}
+
+/// One copy of a False Power entry, naming the Virtue it taints.
+fn false_power(item: &str, target: &str) -> Selection {
+    Selection::with_params(
+        Id::new(item),
+        BTreeMap::from([("virtue".to_string(), Id::new(target))]),
+    )
+}
+
+/// "One of the character's Supernatural Virtues is associated with the Infernal
+/// realm" (Ars Magica - Definitive Edition (Core Rules).md:6082), taken "once
+/// for each appropriate Supernatural Virtue that the character possesses"
+/// (`:6096`) — so every copy must NAME its Virtue, and that Virtue must be one
+/// the character actually holds and is not already Infernal.
+///
+/// The three required categories are read off the book's own three examples at
+/// `:6082` — "Faerie Blood, Diedne Magic, or even The Gift" — which in this
+/// catalogue carry `supernatural`, `hermetic` and `special` respectively. A
+/// bare `supernatural` would have excluded two Virtues the source names
+/// outright.
+#[test]
+fn false_power_names_the_supernatural_virtue_it_taints() {
+    let rs = load_ruleset();
+
+    for id in ["flaw.false_power", "flaw.false_power_minor"] {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        let [param] = item.parameters.as_slice() else {
+            panic!(
+                "{id} must declare exactly one parameter naming the tainted \
+                 Virtue, not {:?}",
+                item.parameters
+            );
+        };
+        assert_eq!(param.key, "virtue");
+        assert_eq!(
+            param.domain,
+            ParameterDomain::Item,
+            "the target is a catalogue Virtue, not free text (:6096)"
+        );
+        assert_eq!(
+            param.require_categories,
+            BTreeSet::from([
+                "hermetic".to_string(),
+                "special".to_string(),
+                "supernatural".to_string(),
+            ]),
+            "the Flaw applies to Supernatural Virtues, and :6082 names Diedne \
+             Magic (hermetic) and The Gift (special) among them"
+        );
+        assert!(
+            param.require_possessed,
+            "{id} taints a Virtue the character POSSESSES (:6096)"
+        );
+        assert!(
+            param.forbid_tainted,
+            "{id} cannot apply to a Virtue already affiliated to the Infernal \
+             realm (:6096)"
+        );
+        assert_eq!(
+            item.max_per_target, 1,
+            "{id} is taken once for EACH Virtue (:6096), so no two copies may \
+             name the same one"
+        );
+    }
+
+    // The other half of ":6096"'s ceiling, and why the Minor entry no longer
+    // belongs in UNLIMITED_REPEAT_ITEMS: one copy per Virtue, but no stated
+    // ceiling on how many DIFFERENT Virtues may be tainted. The Major entry
+    // keeps its own `max_total: 1` — only the first instance is Major.
+    assert_eq!(
+        rs.item(&Id::new("flaw.false_power_minor"))
+            .unwrap()
+            .max_total,
+        u8::MAX,
+        "the book states no limit on the number of different Virtues tainted \
+         (Ars Magica - Definitive Edition (Core Rules).md:6096)"
+    );
+}
+
+/// The row's original complaint was that the copies "do not name which
+/// Supernatural Virtue they taint", so the *name* has to say it: without a
+/// `{virtue}` placeholder the app's row would read "False Power (Minor)" three
+/// times over, telling the player nothing. Both locales, since a placeholder in
+/// one and not the other is a sheet that changes meaning with the language.
+#[test]
+fn both_locales_name_the_virtue_a_false_power_taints() {
+    for (lang, json) in [
+        (
+            "en",
+            include_str!("../../../rules/i18n/en/virtues_flaws.json"),
+        ),
+        (
+            "de",
+            include_str!("../../../rules/i18n/de/virtues_flaws.json"),
+        ),
+    ] {
+        let i18n: serde_json::Value = serde_json::from_str(json).unwrap();
+        for id in ["flaw.false_power", "flaw.false_power_minor"] {
+            let name = i18n[id]["name"].as_str().unwrap_or_else(|| {
+                panic!("{lang} i18n must name {id}");
+            });
+            assert!(
+                name.contains("{virtue}"),
+                "{lang} name for {id} must show the Virtue it taints, got {name:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn false_power_cannot_taint_a_virtue_the_character_lacks() {
+    let rs = load_ruleset();
+
+    let lacking = entity(
+        "companion",
+        vec![false_power("flaw.false_power", "virtue.second_sight")],
+    );
+    assert!(
+        issue_codes(&lacking, &rs).contains(&"param_target_not_possessed".to_string()),
+        "the Flaw taints a Virtue the character possesses \
+         (Ars Magica - Definitive Edition (Core Rules).md:6096): {:?}",
+        issue_codes(&lacking, &rs)
+    );
+
+    let holding = entity(
+        "companion",
+        vec![
+            false_power("flaw.false_power", "virtue.second_sight"),
+            Selection::new(Id::new("virtue.second_sight")),
+        ],
+    );
+    assert!(
+        !issue_codes(&holding, &rs).contains(&"param_target_not_possessed".to_string()),
+        "(False) Second Sight is the book's own example (:6086): {:?}",
+        issue_codes(&holding, &rs)
+    );
+}
+
+/// "Also note that this Flaw cannot apply to Supernatural Virtues that are
+/// affiliated to the Infernal realm in the first place" (`:6096`). Infernal
+/// affiliation is the descriptor's *Tainted* tag, so Demonic Blood — held or
+/// not — is outside the parameter's domain.
+#[test]
+fn false_power_cannot_taint_an_already_infernal_virtue() {
+    let rs = load_ruleset();
+    let e = entity(
+        "companion",
+        vec![
+            false_power("flaw.false_power", "virtue.demonic_blood"),
+            Selection::new(Id::new("virtue.demonic_blood")),
+        ],
+    );
+    assert!(
+        issue_codes(&e, &rs).contains(&"unknown_param_value".to_string()),
+        "a Tainted Virtue is already Infernal and cannot be made falser (:6096): {:?}",
+        issue_codes(&e, &rs)
+    );
+}
+
+/// The gap `max_per_target` is structurally blind to: its duplicate key is
+/// `(item_ref, params)`, and the Major and Minor entries are different ids, so
+/// nothing stopped both from naming one Virtue. "Once for each appropriate
+/// Supernatural Virtue" (`:6096`) says they may not.
+#[test]
+fn a_major_and_a_minor_false_power_cannot_taint_the_same_virtue() {
+    let rs = load_ruleset();
+
+    let same = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("virtue.second_sight")),
+            false_power("flaw.false_power", "virtue.second_sight"),
+            false_power("flaw.false_power_minor", "virtue.second_sight"),
+        ],
+    );
+    let claimed: Vec<_> = validate(&same, &rs)
+        .issues
+        .into_iter()
+        .filter(|i| i.code == "param_target_already_claimed")
+        .collect();
+    assert_eq!(
+        claimed.len(),
+        1,
+        "one Virtue tainted twice is one mistake, reported against the second \
+         copy: {claimed:?}"
+    );
+    assert_eq!(claimed[0].context, Some(Id::new("flaw.false_power_minor")));
+
+    let different = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("virtue.second_sight")),
+            Selection::new(Id::new("virtue.premonitions")),
+            false_power("flaw.false_power", "virtue.second_sight"),
+            false_power("flaw.false_power_minor", "virtue.premonitions"),
+        ],
+    );
+    assert!(
+        !issue_codes(&different, &rs).contains(&"param_target_already_claimed".to_string()),
+        "one copy per Virtue is exactly what :6096 permits: {:?}",
+        issue_codes(&different, &rs)
+    );
+}
+
+/// Possession is by **id**, the `Prereq::Has` notion — a `taken_as` reading is
+/// not consulted. Sufi is "either as a Minor Social Status Virtue or a Minor
+/// Supernatural Virtue" (`:5083`), and a Sufi taken as Social Status is still a
+/// Virtue the character holds, so False Power may name it.
+///
+/// Deliberate, and the same answer the *domain* half already gives: a parameter
+/// value is a bare id naming an item, not a `Selection` of one, so
+/// `require_categories` reads `PointItem::categories` and admits Sufi through
+/// its Supernatural membership whichever reading was taken. Two notions of
+/// "is this Virtue Supernatural for this character" inside one parameter would
+/// be worse than one lenient one; the troupe adjudicates the rest.
+#[test]
+fn a_sufi_taken_as_social_status_is_still_a_possessed_false_power_target() {
+    let rs = load_ruleset();
+    let e = entity(
+        "companion",
+        vec![
+            Selection::with_params(
+                Id::new("virtue.sufi"),
+                BTreeMap::from([("taken_as".to_string(), Id::new("social_status"))]),
+            ),
+            false_power("flaw.false_power", "virtue.sufi"),
+        ],
+    );
+    assert!(
+        !issue_codes(&e, &rs).contains(&"param_target_not_possessed".to_string()),
+        "a held Virtue is held whichever category it was taken as: {:?}",
+        issue_codes(&e, &rs)
+    );
+
+    // The arm that makes the one above mean something: drop the Sufi row and
+    // the very same target IS flagged, so the clean result is possession
+    // answering "yes", not the check being absent.
+    let without_sufi = entity(
+        "companion",
+        vec![false_power("flaw.false_power", "virtue.sufi")],
+    );
+    assert!(
+        issue_codes(&without_sufi, &rs).contains(&"param_target_not_possessed".to_string()),
+        "an unheld Sufi is no target at all: {:?}",
+        issue_codes(&without_sufi, &rs)
     );
 }
 

@@ -434,11 +434,11 @@
     "summary": "The character has studied for a specific university license and failed his final examination."
   },
   "flaw.false_power": {
-    "name": "False Power (Major)",
+    "name": "False Power (Major): {virtue}",
     "summary": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation."
   },
   "flaw.false_power_minor": {
-    "name": "False Power (Minor)",
+    "name": "False Power (Minor): {virtue}",
     "summary": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation."
   },
   "flaw.favors": {

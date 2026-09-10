@@ -1015,6 +1015,7 @@
     "classification": "narrative",
     "tainted": true,
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "virtue", "type": "ref", "domain": "item", "require_categories": ["hermetic", "special", "supernatural"], "require_possessed": true, "forbid_tainted": true }],
     "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6080, 6097] }
   },
@@ -1027,7 +1028,7 @@
     "tainted": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "flaw.false_power" },
-    "max_per_target": 255,
+    "parameters": [{ "key": "virtue", "type": "ref", "domain": "item", "require_categories": ["hermetic", "special", "supernatural"], "require_possessed": true, "forbid_tainted": true }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6080, 6097] }
   },
   {

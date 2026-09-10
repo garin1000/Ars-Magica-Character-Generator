@@ -438,10 +438,16 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // from the item's own `categories` (`has_category`) — a bare value names
         // an ITEM, not a `Selection` of one, so there is no `taken_as` choice to
         // narrow against, and `index_categories` is provenance, never membership.
-        ParameterDomain::Item => ruleset
-            .point_items
-            .get(value)
-            .is_some_and(|item| item_matches_required_categories(item, param)),
+        //
+        // `forbid_tainted` narrows it the same way and for the same reason:
+        // "this Flaw cannot apply to Supernatural Virtues that are affiliated to
+        // the Infernal realm in the first place"
+        // (Ars Magica - Definitive Edition (Core Rules).md:6096), and the
+        // descriptor's *Tainted* tag is precisely that affiliation. Entity-free,
+        // so it belongs here rather than in `validate_possessed_param_targets`.
+        ParameterDomain::Item => ruleset.point_items.get(value).is_some_and(|item| {
+            item_matches_required_categories(item, param) && !(param.forbid_tainted && item.tainted)
+        }),
         ParameterDomain::Ability => ruleset.abilities.contains_key(value),
         ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
         ParameterDomain::Art => ruleset.arts.contains_key(value),
@@ -670,6 +676,110 @@ pub(crate) fn validate_ability_bonus_targets(
                     ]),
                     Some(selection.item_ref.clone()),
                 ));
+            }
+        }
+    }
+}
+
+/// Validates every [`ParameterDef::require_possessed`] target against what the
+/// entity actually holds, and against the claims its other selections have
+/// already staked.
+///
+/// False Power is the case the rules state: the Flaw is taken "once for each
+/// appropriate Supernatural Virtue that the character possesses"
+/// (Ars Magica - Definitive Edition (Core Rules).md:6096). Two failures follow
+/// from that one sentence, so both live here:
+///
+/// - **possesses** → [`ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED`] when
+///   the named Virtue is held by nobody. Possession is read straight off
+///   [`PrereqCtx::present_ids`] — bought selections ++ granted rows, the very
+///   set `Prereq::Has` consults, so a House-granted Supernatural Virtue counts
+///   as possessed and the engine keeps exactly one notion of "held".
+/// - **once for each** → [`ValidationIssue::CODE_PARAM_TARGET_ALREADY_CLAIMED`]
+///   when a second selection names a Virtue an earlier one already claims. This
+///   is the gap [`validate_duplicate_selections`] cannot close: its duplicate
+///   key is `(item_ref, params)`, and `flaw.false_power` / `flaw.false_power_minor`
+///   are different ids, so one Major and one Minor naming the same Virtue
+///   collide in no key. A repeat of the SAME id is deliberately left to
+///   `max_per_target`, or one mistake would draw two findings.
+///
+/// Filed on [`CreationPhase::VirtuesFlaws`], the step that raised it —
+/// deliberately unlike [`validate_ability_bonus_targets`], which had to move to
+/// [`CreationPhase::Abilities`]. The distinction is where the *fix* lives, not
+/// where the value lives: Puissant Ability's target is bought on a later step,
+/// so filing on V/F blocked a step that could not offer the remedy, whereas both
+/// remedies here — name a different Virtue, or buy the one named — are on the
+/// V/F step itself. Do not "align" this with its neighbour; that reintroduces
+/// the wizard deadlock.
+///
+/// `selections` is the caller's folded bought-plus-granted list, for the same
+/// reason [`validate_duplicate_selections`] takes it: a warping-owed Major Flaw
+/// slot (`:16561`) or an open House grant is filled with a player-chosen
+/// [`Selection`], parameters and all, and such a copy claims its target exactly
+/// as a bought one does.
+pub(crate) fn validate_possessed_param_targets(
+    selections: &[Selection],
+    ruleset: &Ruleset,
+    ctx: &PrereqCtx,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    // Which selection already claims each `(parameter key, target)` pair, in
+    // selection order — so the FIRST claimant keeps the claim and only later
+    // ones are reported.
+    let mut claimed: BTreeMap<(&str, &Id), &Id> = BTreeMap::new();
+
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue; // unknown_ref already reported
+        };
+        for param in &item.parameters {
+            if !param.require_possessed {
+                continue;
+            }
+            let Some(value) = selection.params.get(&param.key) else {
+                continue; // missing_param already reported
+            };
+            // A value that is not in the parameter's domain at all — unknown,
+            // wrong category, Tainted — is already `unknown_param_value`, and
+            // asking whether the character "holds" it on top of that would only
+            // repeat one mistake.
+            if param_value_is_blank(value) || !param_value_resolves(ruleset, param, value) {
+                continue;
+            }
+            if !ctx.present_ids.contains(value) {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED,
+                    CreationPhase::VirtuesFlaws,
+                    args([
+                        ("item", selection.item_ref.to_string()),
+                        ("key", param.key.clone()),
+                        ("value", value.to_string()),
+                    ]),
+                    Some(selection.item_ref.clone()),
+                ));
+                continue;
+            }
+            match claimed.entry((param.key.as_str(), value)) {
+                std::collections::btree_map::Entry::Vacant(slot) => {
+                    slot.insert(&selection.item_ref);
+                }
+                std::collections::btree_map::Entry::Occupied(slot) => {
+                    let other = *slot.get();
+                    if other == &selection.item_ref {
+                        continue; // a same-id repeat is `max_per_target`'s finding
+                    }
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_PARAM_TARGET_ALREADY_CLAIMED,
+                        CreationPhase::VirtuesFlaws,
+                        args([
+                            ("item", selection.item_ref.to_string()),
+                            ("key", param.key.clone()),
+                            ("value", value.to_string()),
+                            ("other", other.to_string()),
+                        ]),
+                        Some(selection.item_ref.clone()),
+                    ));
+                }
             }
         }
     }

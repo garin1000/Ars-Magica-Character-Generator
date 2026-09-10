@@ -872,6 +872,9 @@ param-label-faculty = Faculty
 param-label-commodity = Commodity
 param-label-role = Role
 param-label-power = Power
+# The Supernatural Virtue a False Power taints (Ars Magica - Definitive Edition
+# (Core Rules).md:6096).
+param-label-virtue = Virtue
 # Folk Magic's narrow area of spells — one of the four the book prints.
 param-label-category = Category
 # Which of an item's own listed categories it was taken as — Sufi, "either as
@@ -939,6 +942,11 @@ issue-unknown_param_value = { $item } parameter { $key } has unknown { $domain }
 # value's label depends on its domain, and a per-domain argument would make
 # Fluent throw wherever that domain does not supply it.
 issue-exclusive_param_values = { $item } names { $count } values for { $key } that the rules allow only one of.
+# Core Rules.md:6096 — False Power is taken "once for each appropriate
+# Supernatural Virtue that the character possesses". The first message is the
+# unheld target, the second a Virtue two copies both claim.
+issue-param_target_not_possessed = { $item }: { $key } names { $value }, which the character does not have.
+issue-param_target_already_claimed = { $item }: { $key } names { $value }, which { $other } already names.
 issue-multiple_magical_foci = A magus may have only one Magical Focus, but { $count } are selected.
 issue-gift_required = This type requires The Gift.
 issue-gift_forbidden = This type cannot have The Gift.

@@ -149,6 +149,8 @@ impl fmt::Display for IssueSeverity {
 /// | `unexpected_param` | error | virtues_flaws, house_specialisation, mythic_type, review | `item`, `key` |
 /// | `unknown_param_value` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key`, `value`, `domain` |
 /// | `exclusive_param_values` | error | virtues_flaws | `item`, `key`, `count` |
+/// | `param_target_not_possessed` | error | virtues_flaws | `item`, `key`, `value` |
+/// | `param_target_already_claimed` | error | virtues_flaws | `item`, `key`, `value`, `other` |
 /// | `gift_required` | error | virtues_flaws | (none) |
 /// | `gift_forbidden` | error | virtues_flaws | (none) |
 /// | `characteristic_out_of_range` | error | characteristics | `characteristic`, `score`, `min`, `max` |
@@ -413,6 +415,28 @@ impl ValidationIssue {
         "characteristic_min_base_too_high";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_ABILITY_BONUS_DANGLING_TARGET: &'static str = "ability_bonus_dangling_target";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a parameter declaring
+    /// [`ParameterDef::require_possessed`](crate::types::ParameterDef::require_possessed)
+    /// names a point item the entity does not hold. False Power is taken "once
+    /// for each appropriate Supernatural Virtue that the character possesses"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:6096), so a target
+    /// nobody holds is a Flaw attached to nothing.
+    ///
+    /// Distinct from
+    /// [`Self::CODE_UNKNOWN_PARAM_VALUE`]: the value IS in the parameter's
+    /// domain (it is a real point item, of the required categories, untainted)
+    /// — it is this *character* who cannot name it.
+    pub const CODE_PARAM_TARGET_NOT_POSSESSED: &'static str = "param_target_not_possessed";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: two selections name
+    /// the same possessed target under a
+    /// [`ParameterDef::require_possessed`](crate::types::ParameterDef::require_possessed)
+    /// parameter — "**once** for each appropriate Supernatural Virtue" (`:6096`).
+    ///
+    /// Not expressible as [`crate::types::PointItem::max_per_target`], whose
+    /// duplicate key is `(item_ref, params)`: `flaw.false_power` and
+    /// `flaw.false_power_minor` are different ids, so one Major and one Minor
+    /// both naming the same Virtue collide in neither key.
+    pub const CODE_PARAM_TARGET_ALREADY_CLAIMED: &'static str = "param_target_already_claimed";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a restricted XP pool — a
     /// grant (Educated/Warrior/Privileged) or a life-stage block — has experience the
     /// character left unspent on its eligible Abilities; the rules waste it.
@@ -902,6 +926,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
     validate_ability_bonus_targets(entity, ruleset, &mut issues);
+    validate_possessed_param_targets(&effective_selections, ruleset, &prereq_ctx, &mut issues);
     validate_magical_focus(&effective_selections, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
     validate_house(entity, ruleset, type_profile, &mut issues);
@@ -7133,6 +7158,9 @@ mod tests {
                  "index_categories": ["supernatural"], "entity_kinds": ["character"] }},
               {{ "id": "virtue.plain_target", "kind": "virtue", "classification": "narrative",
                  "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"] }},
+              {{ "id": "virtue.tainted_target", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["supernatural"], "tainted": true,
+                 "entity_kinds": ["character"] }},
               {{ "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
                  "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }}
             ]"#
@@ -7226,6 +7254,259 @@ mod tests {
             "an index-only category must not satisfy membership: {:?}",
             probe_codes(&rs, "virtue.indexed_target")
         );
+    }
+
+    /// "This Flaw cannot apply to Supernatural Virtues that are affiliated to
+    /// the Infernal realm in the first place"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:6096). Infernal
+    /// affiliation is the descriptor's *Tainted* tag (`PointItem::tainted`), so
+    /// `forbid_tainted` takes those items out of the parameter's domain — and,
+    /// on `require_categories`' precedent, reports them as
+    /// `unknown_param_value` rather than inventing a second code for a value
+    /// that simply is not in the domain.
+    #[test]
+    fn a_tainted_item_is_outside_a_forbid_tainted_domain() {
+        let rs = item_param_rs(r#", "forbid_tainted": true"#);
+        assert!(
+            probe_codes(&rs, "virtue.tainted_target")
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "an already-Infernal Virtue must not resolve: {:?}",
+            probe_codes(&rs, "virtue.tainted_target")
+        );
+        assert!(
+            !probe_codes(&rs, "virtue.supernatural_target")
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "an untainted item of the same category must still resolve: {:?}",
+            probe_codes(&rs, "virtue.supernatural_target")
+        );
+    }
+
+    /// The control: `forbid_tainted` defaults to false, and a parameter that
+    /// does not declare it is blind to the flag — every item shipped before
+    /// False Power keeps the domain it had.
+    #[test]
+    fn a_tainted_item_resolves_when_forbid_tainted_is_not_declared() {
+        let rs = item_param_rs("");
+        assert!(
+            !probe_codes(&rs, "virtue.tainted_target")
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "nothing narrows this domain, so a Tainted item is a legal value: {:?}",
+            probe_codes(&rs, "virtue.tainted_target")
+        );
+    }
+
+    /// The `require_possessed` fixture. Two DIFFERENT probe ids declare the same
+    /// parameter — the False Power Major/Minor shape, which `max_per_target`'s
+    /// `(item_ref, params)` duplicate key is structurally blind to — and
+    /// `virtue.heartbeast` is reachable only as a Bjornaer *grant*, so
+    /// "possessed" can be tested against a row the player never bought.
+    fn possessed_param_rs(require: &str) -> Ruleset {
+        let items = format!(
+            r#"[
+              {{ "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+                 "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }},
+              {{ "id": "virtue.probe", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+                 "parameters": [{{ "key": "target", "type": "ref", "domain": "item"{require} }}] }},
+              {{ "id": "virtue.probe_minor", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+                 "parameters": [{{ "key": "target", "type": "ref", "domain": "item"{require} }}] }},
+              {{ "id": "virtue.supernatural_target", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"] }},
+              {{ "id": "virtue.heartbeast", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "major", "categories": ["supernatural"], "entity_kinds": ["character"] }}
+            ]"#
+        );
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 20, "flaw_points": 20 },
+          "creation_phases": []
+        }]"#;
+        rs_with_grant_houses(&items, types)
+    }
+
+    /// One probe selection of `item` pointed at `target`.
+    fn probe_at(item: &str, target: &str) -> Selection {
+        Selection::with_params(
+            Id::new(item),
+            BTreeMap::from([("target".into(), Id::new(target))]),
+        )
+    }
+
+    /// False Power is taken "once for each appropriate Supernatural Virtue that
+    /// the character **possesses**"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:6096), so a target the
+    /// character does not hold is a Flaw attached to nothing.
+    #[test]
+    fn a_require_possessed_target_the_character_lacks_is_flagged() {
+        let rs = possessed_param_rs(r#", "require_possessed": true"#);
+        let lacking = make_entity(
+            "test_type",
+            vec![probe_at("virtue.probe", "virtue.supernatural_target")],
+        );
+        assert!(
+            codes(&validate(&lacking, &rs))
+                .contains(&ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED.to_string()),
+            "a target the character does not hold must be flagged: {:?}",
+            codes(&validate(&lacking, &rs))
+        );
+
+        let holding = make_entity(
+            "test_type",
+            vec![
+                probe_at("virtue.probe", "virtue.supernatural_target"),
+                sel("virtue.supernatural_target"),
+            ],
+        );
+        assert!(
+            !codes(&validate(&holding, &rs))
+                .contains(&ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED.to_string()),
+            "a bought target is possessed: {:?}",
+            codes(&validate(&holding, &rs))
+        );
+    }
+
+    /// The issue is filed on the V/F step that raised it, unlike
+    /// `ability_bonus_dangling_target`: both fixes — pick a different Virtue, or
+    /// buy the one named — are available on that very step, so same-step filing
+    /// cannot deadlock the guided wizard.
+    #[test]
+    fn an_unpossessed_target_is_filed_on_the_virtues_flaws_step() {
+        let rs = possessed_param_rs(r#", "require_possessed": true"#);
+        let lacking = make_entity(
+            "test_type",
+            vec![probe_at("virtue.probe", "virtue.supernatural_target")],
+        );
+        let result = validate(&lacking, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED)
+            .expect("the unpossessed-target issue must be raised");
+        assert_eq!(issue.phase, CreationPhase::VirtuesFlaws);
+        assert_eq!(issue.context, Some(Id::new("virtue.probe")));
+    }
+
+    /// Possession is the grants-inclusive `PrereqCtx::present_ids` set, the very
+    /// one `Prereq::Has` consults — a House-granted Supernatural Virtue is
+    /// genuinely held, so it is a legal target. There is deliberately no second
+    /// notion of "possessed" in the engine.
+    #[test]
+    fn a_house_granted_target_counts_as_possessed() {
+        let rs = possessed_param_rs(r#", "require_possessed": true"#);
+        let mut granted = make_entity(
+            "test_type",
+            vec![probe_at("virtue.probe", "virtue.heartbeast")],
+        );
+        granted.house = Some(Id::new("house.bjornaer"));
+        assert!(
+            !codes(&validate(&granted, &rs))
+                .contains(&ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED.to_string()),
+            "a House-granted Virtue is possessed: {:?}",
+            codes(&validate(&granted, &rs))
+        );
+
+        let ungranted = make_entity(
+            "test_type",
+            vec![probe_at("virtue.probe", "virtue.heartbeast")],
+        );
+        assert!(
+            codes(&validate(&ungranted, &rs))
+                .contains(&ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED.to_string()),
+            "without the House the same target is held by nobody: {:?}",
+            codes(&validate(&ungranted, &rs))
+        );
+    }
+
+    /// "**Once** for each appropriate Supernatural Virtue" (`:6096`): one held
+    /// Virtue may be claimed by one selection only. The two probes are different
+    /// ids — the Major/Minor False Power shape — so `max_per_target`, whose key
+    /// is `(item_ref, params)`, cannot see the collision at all.
+    ///
+    /// Exactly one issue fires, against the LATER selection: the earlier one
+    /// holds the claim, so flagging both would blame a row that is fine on its
+    /// own and give the player two findings for one decision.
+    #[test]
+    fn two_different_items_cannot_claim_the_same_possessed_target() {
+        let rs = possessed_param_rs(r#", "require_possessed": true"#);
+        let entity = make_entity(
+            "test_type",
+            vec![
+                sel("virtue.supernatural_target"),
+                probe_at("virtue.probe", "virtue.supernatural_target"),
+                probe_at("virtue.probe_minor", "virtue.supernatural_target"),
+            ],
+        );
+        let result = validate(&entity, &rs);
+        let claimed: Vec<&ValidationIssue> = result
+            .issues
+            .iter()
+            .filter(|i| i.code == ValidationIssue::CODE_PARAM_TARGET_ALREADY_CLAIMED)
+            .collect();
+        assert_eq!(
+            claimed.len(),
+            1,
+            "one decision, one finding: {:?}",
+            result.issues
+        );
+        assert_eq!(claimed[0].context, Some(Id::new("virtue.probe_minor")));
+        assert_eq!(
+            claimed[0].args.get("other").map(String::as_str),
+            Some("virtue.probe"),
+            "the message must name the selection already holding the claim"
+        );
+        assert!(
+            !codes(&result).contains(&ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED.to_string()),
+            "the target IS held; only the second claim on it is wrong: {:?}",
+            result.issues
+        );
+    }
+
+    /// Two probes naming two DIFFERENT held Virtues is the legal build the
+    /// rules describe, and must stay clean.
+    #[test]
+    fn two_items_claiming_different_possessed_targets_are_clean() {
+        let rs = possessed_param_rs(r#", "require_possessed": true"#);
+        let mut entity = make_entity(
+            "test_type",
+            vec![
+                sel("virtue.supernatural_target"),
+                probe_at("virtue.probe", "virtue.supernatural_target"),
+                probe_at("virtue.probe_minor", "virtue.heartbeast"),
+            ],
+        );
+        entity.house = Some(Id::new("house.bjornaer"));
+        assert!(
+            !codes(&validate(&entity, &rs))
+                .contains(&ValidationIssue::CODE_PARAM_TARGET_ALREADY_CLAIMED.to_string()),
+            "different targets are different claims: {:?}",
+            codes(&validate(&entity, &rs))
+        );
+    }
+
+    /// The control: `require_possessed` defaults to false, so every parameter
+    /// shipped before False Power keeps naming targets the character need not
+    /// hold — Puissant Ability's position exactly.
+    #[test]
+    fn a_param_without_require_possessed_admits_an_unheld_target() {
+        let rs = possessed_param_rs("");
+        let entity = make_entity(
+            "test_type",
+            vec![
+                probe_at("virtue.probe", "virtue.supernatural_target"),
+                probe_at("virtue.probe_minor", "virtue.supernatural_target"),
+            ],
+        );
+        for code in [
+            ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED,
+            ValidationIssue::CODE_PARAM_TARGET_ALREADY_CLAIMED,
+        ] {
+            assert!(
+                !codes(&validate(&entity, &rs)).contains(&code.to_string()),
+                "{code} must not fire on a parameter that never asked: {:?}",
+                codes(&validate(&entity, &rs))
+            );
+        }
     }
 
     #[test]

@@ -77,6 +77,17 @@ export interface ParameterDef {
   // `index_categories` is provenance. Absent on every other domain, where the
   // engine rejects it at load.
   require_categories?: string[];
+  // The `item` the value names must be one the character HOLDS — bought or
+  // granted, the engine's grants-inclusive `present_ids`. False Power is taken
+  // "once for each appropriate Supernatural Virtue that the character
+  // possesses" (Core Rules.md:6096), and the same flag makes each held Virtue
+  // claimable once. Absent on every other domain, where the engine rejects it
+  // at load.
+  require_possessed?: boolean;
+  // The `item` the value names may not be Tainted: "this Flaw cannot apply to
+  // Supernatural Virtues that are affiliated to the Infernal realm in the first
+  // place" (Core Rules.md:6096).
+  forbid_tainted?: boolean;
 }
 
 // Mechanical effect a virtue/flaw applies. `ability_bonus` adds to an ability's

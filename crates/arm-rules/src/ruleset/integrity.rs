@@ -1972,8 +1972,14 @@ impl Ruleset {
 /// so a spell may declare `enumerated` under exactly the same terms). `subject`
 /// is the caller's own message prefix, as with [`validate_source_range`].
 ///
-/// Three halves, all authoring slips that would otherwise be invisible:
+/// Four halves, all authoring slips that would otherwise be invisible:
 ///
+/// - A [`ParameterDef::require_possessed`] or [`ParameterDef::forbid_tainted`]
+///   flag on any domain but `item`: both restrict which *point item* a value may
+///   name — one against the entity's held selections, the other against the
+///   item's own Tainted tag — and no other domain names a point item, so
+///   neither would be read. Same reasoning as the `require_categories` gate
+///   immediately below, which they sit beside for exactly that reason.
 /// - A [`ParameterDef::require_categories`] list on any domain but `item`:
 ///   nothing else resolves against the point-item catalogue, so no category
 ///   test would ever read it. A `realm` or `text` parameter has no categories
@@ -2012,6 +2018,23 @@ fn validate_parameter_defs(
                  point-item catalogue, so the list would narrow nothing",
                 param.domain
             ));
+        }
+        // `require_possessed` and `forbid_tainted` restrict which POINT ITEM a
+        // value may name — one against the entity's held selections, the other
+        // against the item's own Tainted flag — so both read the point-item
+        // catalogue and neither means anything on a domain that does not.
+        for (flag, set) in [
+            ("require_possessed", param.require_possessed),
+            ("forbid_tainted", param.forbid_tainted),
+        ] {
+            if set && param.domain != ParameterDomain::Item {
+                errors.push(format!(
+                    "{subject}: parameter '{key}' has domain '{}' but declares \
+                     '{flag}'; only an 'item' domain names a point item, so the \
+                     restriction would be read by no one",
+                    param.domain
+                ));
+            }
         }
         let declares_values = matches!(
             param.domain,

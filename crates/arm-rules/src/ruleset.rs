@@ -2234,6 +2234,50 @@ mod tests {
         );
     }
 
+    /// `require_possessed` and `forbid_tainted` restrict which POINT ITEM a
+    /// value may name, so they read the point-item catalogue exactly as
+    /// `require_categories` does — and are meaningless anywhere else. A Realm,
+    /// an Ability or a free-text value is not a point item, has no `tainted`
+    /// flag, and is never "held" as a selection, so the flag would sit in the
+    /// data looking enforced while nothing read it.
+    #[test]
+    fn possession_and_taint_flags_on_a_non_item_param_are_rejected() {
+        for flag in ["require_possessed", "forbid_tainted"] {
+            for domain in ["realm", "text", "ability", "enumerated"] {
+                let values = if domain == "enumerated" {
+                    r#", "values": ["x"]"#
+                } else {
+                    ""
+                };
+                let err = ruleset_with_param(&format!(
+                    r#"{{ "key": "target", "type": "ref", "domain": "{domain}"{values},
+                          "{flag}": true }}"#
+                ))
+                .unwrap_err();
+                let msg = err.to_string();
+                assert!(
+                    msg.contains("virtue.folk_magic")
+                        && msg.contains("target")
+                        && msg.contains(domain)
+                        && msg.contains(flag),
+                    "{msg}"
+                );
+            }
+        }
+    }
+
+    /// The positive half: both flags load clean on an `item` parameter.
+    #[test]
+    fn possession_and_taint_flags_load_on_an_item_param() {
+        let rs = ruleset_with_param(
+            r#"{ "key": "target", "type": "ref", "domain": "item",
+                 "require_possessed": true, "forbid_tainted": true }"#,
+        )
+        .unwrap();
+        let param = &rs.point_items[&Id::new("virtue.folk_magic")].parameters[0];
+        assert!(param.require_possessed && param.forbid_tainted);
+    }
+
     /// The positive half: a category some point item carries loads clean.
     #[test]
     fn require_categories_naming_a_catalogued_category_loads() {

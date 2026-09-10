@@ -203,13 +203,39 @@
   // offer an illegal choice. Membership categories only — `has_category` in the
   // engine — since a value names an item, not a selection of one, and
   // `index_categories` is provenance rather than membership.
+  //
+  // `require_possessed` and `forbid_tainted` narrow it further, and for the
+  // same reason: the engine raises `param_target_not_possessed` for a Virtue
+  // nobody holds and `unknown_param_value` for a Tainted one, so offering
+  // either is offering a choice the engine will refuse. Possession is the
+  // grants-inclusive set the engine reads (`PrereqCtx::present_ids`), so a
+  // House/warping-granted row counts exactly as a bought one does.
   function itemOptionsFor(param: ParameterDef): { value: string; label: string }[] {
-    const required = param.require_categories;
-    if (!required?.length || !store.ruleset) return itemOptions;
+    if (!store.ruleset) return itemOptions;
     const items = store.ruleset.ruleset.point_items;
-    return itemOptions.filter((option) =>
-      required.some((category) => items[option.value]?.categories.includes(category)),
-    );
+    const required = param.require_categories;
+    let options = itemOptions;
+    if (required?.length) {
+      options = options.filter((option) =>
+        required.some((category) => items[option.value]?.categories.includes(category)),
+      );
+    }
+    if (param.forbid_tainted) {
+      options = options.filter((option) => !items[option.value]?.tainted);
+    }
+    if (param.require_possessed) {
+      options = options.filter((option) => heldItemRefs().has(option.value));
+    }
+    return options;
+  }
+
+  // Every point item the character holds: bought rows plus granted ones, the
+  // frontend mirror of the engine's `present_ids`.
+  function heldItemRefs(): Set<string> {
+    const held = new Set<string>();
+    for (const s of store.entity.selections ?? []) held.add(s.ref);
+    for (const s of store.effective?.granted_selections ?? []) held.add(s.ref);
+    return held;
   }
 
   // How many other selections of this same item already claim each target, so a
