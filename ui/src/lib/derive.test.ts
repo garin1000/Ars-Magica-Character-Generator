@@ -65,10 +65,15 @@ import {
   resolveIssueArgs,
   restrictedPoolLabel,
   RITUAL_MINIMUM_LEVEL_FALLBACK,
+  selectionDisplayName,
   spellDisplayName,
   spellLevelAllocation,
   totalCopies,
+  type Translate,
 } from './derive';
+// Aliased: this file already declares a `translate` stub of its own further down.
+import { buildBundle, translate as formatMessage } from './i18n';
+import type { Lang } from './i18n';
 import type {
   Ability,
   Art,
@@ -872,6 +877,96 @@ describe('displayName with name_unfilled', () => {
     expect(displayName(ruleset, 'virtue.ways_of_the_land', undefined, label)).toBe(
       'Ways Of The (Land)',
     );
+  });
+});
+
+// --- selectionDisplayName() — the name a V/F row shows (B7b) -----------------
+
+describe('selectionDisplayName', () => {
+  /** The shipped rules i18n for one language, so these pin the data a user gets. */
+  function shippedItems(lang: string): LocalizedRuleset['i18n'] {
+    return JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL(`../../../rules/i18n/${lang}/virtues_flaws.json`, import.meta.url)),
+        'utf-8',
+      ),
+    ) as LocalizedRuleset['i18n'];
+  }
+
+  /** A translator over the REAL shipped Fluent bundle, as the app builds it. */
+  function translator(lang: Lang): Translate {
+    const bundle = buildBundle(lang);
+    return (key, args) => formatMessage(bundle, key, args);
+  }
+
+  const folkMagic = item({ id: 'virtue.folk_magic', categories: ['supernatural'] });
+
+  // The row is the surface a player actually reads, so a parameter value that is
+  // a bare engine-taxonomy slug has to resolve there exactly as it does in the
+  // picker and on the exported sheet. `characteristic.<slug>` was the first such
+  // value and is pinned here so the extraction cannot lose it.
+  it('resolves a characteristic value to its localized label', () => {
+    const localized = makeRuleset([item({ id: 'virtue.great_characteristic' })], {
+      i18n: { 'virtue.great_characteristic': { name: 'Great {characteristic}' } },
+    });
+    expect(
+      selectionDisplayName(
+        localized,
+        'virtue.great_characteristic',
+        { characteristic: 'characteristic.per' },
+        translator('en'),
+      ),
+    ).toBe('Great Perception');
+  });
+
+  // B7 recorded WHICH supernatural realm a copy of Folk Magic is aligned to
+  // ("The choice of (Realm) Lore also determines which supernatural realm his
+  // magic is aligned to for the purposes of aura modifiers" —
+  // `Ars Magica - Definitive Edition (Core Rules).md:3909`), and surfaced it in
+  // the picker and the Markdown export — but not on the row, because the name
+  // template mentioned only `{category}` and `displayName` substitutes nothing
+  // else. Both halves are asserted: the template must name the Realm, and the
+  // value must arrive localized rather than as `realm.divine`.
+  it('names the Realm a Folk Magic copy is aligned to (English)', () => {
+    const localized = makeRuleset([folkMagic], { i18n: shippedItems('en') });
+    const name = selectionDisplayName(
+      localized,
+      'virtue.folk_magic',
+      { category: 'folk_magic.healing', realm: 'realm.divine' },
+      translator('en'),
+    );
+    expect(name).toBe('Folk Magic Healing, Divine');
+    expect(name).not.toContain('realm.');
+  });
+
+  // German is where a missing or wrong Realm shows loudest: an English slug
+  // hides in an English row and cannot hide in a German one. "Das Göttliche" is
+  // the glossary's own rendering (`rules/source/de/translation-tables/
+  // sphären-mächte.md:20`), and the apposition takes it uninflected.
+  it('names the Realm a Folk Magic copy is aligned to (German)', () => {
+    const localized = makeRuleset([folkMagic], { i18n: shippedItems('de') });
+    const name = selectionDisplayName(
+      localized,
+      'virtue.folk_magic',
+      { category: 'folk_magic.healing', realm: 'realm.divine' },
+      translator('de'),
+    );
+    expect(name).toBe('Volksmagie Heilung, Das Göttliche');
+    expect(name).not.toContain('realm.');
+  });
+
+  // The Realm token must not sit inside literal parentheses: the unfilled hint
+  // is itself "(Realm)", so a "… ({realm})" template would render the nested
+  // "((Realm))" the three per-power items needed `name_unfilled` to escape. A
+  // freshly added row has neither value yet, so this is the FIRST thing a player
+  // sees of Folk Magic.
+  it('renders an unfilled Folk Magic row without nesting the parameter hints', () => {
+    for (const lang of ['en', 'de'] as const) {
+      const localized = makeRuleset([folkMagic], { i18n: shippedItems(lang) });
+      const name = selectionDisplayName(localized, 'virtue.folk_magic', {}, translator(lang));
+      expect(name, lang).not.toContain('((');
+      expect(name, lang).not.toContain('))');
+    }
   });
 });
 

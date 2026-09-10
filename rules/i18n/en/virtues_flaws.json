@@ -1752,7 +1752,7 @@
     "summary": "The character has a supernatural power with a narrow range of effects, like the ability to cast Spontaneous spells that are associated with a single type of magic."
   },
   "virtue.folk_magic": {
-    "name": "Folk Magic {category}",
+    "name": "Folk Magic {category}, {realm}",
     "summary": "The character is capable of performing very minor acts of magic through his knowledge of scraps of occult lore."
   },
   "virtue.font_of_knowledge": {

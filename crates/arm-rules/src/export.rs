@@ -753,7 +753,7 @@ mod tests {
           "virtue.educated": { "name": "Educated" },
           "virtue.malformed_name": { "name": "Malformed {template" },
           "virtue.sufi": { "name": "Sufi" },
-          "virtue.folk_magic": { "name": "Folk Magic" },
+          "virtue.folk_magic": { "name": "Folk Magic, {realm}" },
           "flaw.optimistic": { "name": "Optimistic" },
           "boon.rich_vis_source": { "name": "Rich Vis Source" },
           "ability.awareness": { "name": "Awareness" },
@@ -1609,9 +1609,14 @@ mod tests {
     /// already reads, so no new key is needed.
     ///
     /// German for the same reason B3's `taken_as` case is German: an English
-    /// slug hides in an English sheet and cannot hide in a German one. The Realm
-    /// is not in the name template, so it is appended in parentheses — the
-    /// "a chosen parameter can never be silently dropped" rule.
+    /// slug hides in an English sheet and cannot hide in a German one.
+    ///
+    /// The fixture template *mentions* `{realm}`, as the shipped one now does
+    /// (`rules/i18n/en|de/virtues_flaws.json`, `virtue.folk_magic`): the Realm a
+    /// copy is aligned to belongs in the name on every surface, so the sheet
+    /// substitutes it in place rather than appending it as an unmentioned
+    /// parameter. The append path is a fallback and stays covered by the
+    /// `taken_as` case above.
     #[test]
     fn a_realm_param_value_is_localized_rather_than_printed_as_its_slug() {
         let mut e = magus();
@@ -1630,7 +1635,7 @@ mod tests {
                 ("realm-divine", "Das G\u{f6}ttliche"),
             ]),
         );
-        assert!(doc.contains("| Folk Magic (Das G\u{f6}ttliche) |"), "{doc}");
+        assert!(doc.contains("| Folk Magic, Das G\u{f6}ttliche |"), "{doc}");
         assert!(!doc.contains("realm.divine"), "no raw realm slug: {doc}");
     }
 

@@ -1777,7 +1777,10 @@ categories are untouched and the whole family is recorded as one to-do.
   parameter, `{ "key": "realm", "domain": "realm", "at_most_one_of":
   [["realm.divine", "realm.infernal"]] }`. Labels are the Fluent `realm-<id>`
   family (`locales/en|de/main.ftl`), which already shipped for Might; the
-  control's name is the existing `param-label-realm`.
+  control's name is the existing `param-label-realm`. The item's display name
+  is a two-token template naming both axes — `rules/i18n/en/virtues_flaws.json`
+  `"Folk Magic {category}, {realm}"` and `rules/i18n/de/virtues_flaws.json`
+  `"Volksmagie {category}, {realm}"`.
 - Tests: `a_realm_id_round_trips_through_from_id` (`types.rs`),
   `realm_domain_param_resolves_only_against_the_four_realms`,
   `two_copies_may_not_name_two_values_the_data_keeps_apart`
@@ -1789,7 +1792,10 @@ categories are untouched and the whole family is recorded as one to-do.
   `folk_magic_repeats_along_either_axis_and_never_across_the_excluded_realms`
   (`tests/data_integrity.rs`), plus the frontend's
   `ParameterPicker realm domain (row 12)` (`ui/src/lib/components/ParameterPicker.test.ts`),
-  `paramValueUsage > counts only rows that agree on the OTHER parameters`
+  `paramValueUsage > counts only rows that agree on the OTHER parameters`,
+  `selectionDisplayName > names the Realm a Folk Magic copy is aligned to
+  (English)` / `(German)`, `selectionDisplayName > renders an unfilled Folk
+  Magic row without nesting the parameter hints`
   (`ui/src/lib/derive.test.ts`) and `names the exclusive-values finding in both
   locales, without naming a Realm` (`ui/src/lib/i18n.test.ts`).
 
@@ -1846,6 +1852,28 @@ a category another copy held regardless of Realm, refusing a legal build; the
 frontend's `paramValueUsage` now takes the editing row's other parameter values
 and counts only rows that agree on them, which is the same duplicate key. For a
 single-parameter item there is nothing to disagree about and nothing changes.
+
+**The Realm is named on the row, not only in the picker.** A parameter reaches a
+display name only where the item's own template *mentions* it, so a Realm
+recorded against a `"Folk Magic {category}"` template was visible in the picker
+and on the exported sheet and nowhere the player actually reads a chosen Virtue.
+The template therefore names both axes in apposition — "Folk Magic Healing,
+Divine" / "Volksmagie Heilung, Das Göttliche" — and the frontend's
+`selectionDisplayName` (`ui/src/lib/derive.ts`) resolves the stored
+`realm.<slug>` through the `realm-<id>` Fluent family, the counterpart of the
+export's `Doc::taxonomy_label`, so no surface can print the slug.
+
+Two constraints fixed the wording. The Realm token carries **no literal
+parentheses**: an unfilled slot renders the hint "(Realm)", so a
+`"… ({realm})"` template would render the nested "((Realm))" the three
+per-power items needed `name_unfilled` to escape — and a freshly added row is
+exactly the unfilled case. And no noun follows the Realm label, because German
+takes it uninflected from the glossary
+(`rules/source/de/translation-tables/sphären-mächte.md:18-21`: Magie, Fee, Das
+Göttliche, Das Infernale); "… Göttliche Sphäre" would need the inflected
+adjective the label does not carry. Since the sheet appends an unmentioned
+parameter in parentheses, the exported string changed shape with the template,
+from "Folk Magic Healing (Divine)" to "Folk Magic Healing, Divine".
 
 **Save impact — accepted, not migrated.** `ParameterDef` and `ParameterDomain`
 are *ruleset* shape, not save shape, so `SCHEMA_VERSION` neither moves nor could

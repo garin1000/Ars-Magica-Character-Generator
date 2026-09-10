@@ -1752,7 +1752,7 @@
     "summary": "Der Charakter besitzt eine übernatürliche Macht mit einem engen Wirkungsbereich, wie beispielsweise die Fähigkeit, Spontane Zauber zu wirken, die mit einem einzigen Magietyp verbunden sind."
   },
   "virtue.folk_magic": {
-    "name": "Volksmagie {category}",
+    "name": "Volksmagie {category}, {realm}",
     "summary": "Der Charakter ist in der Lage, durch sein Wissen von Bruchstücken okkulten Wissens sehr geringe Magie zu wirken."
   },
   "virtue.font_of_knowledge": {

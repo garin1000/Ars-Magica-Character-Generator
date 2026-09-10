@@ -1,7 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import {
-    abilityDisplayName,
     atMaxTotalRefs,
     displayName,
     filterItems,
@@ -11,6 +10,7 @@
     incompatibleRefs,
     mandatoryTraitRefs,
     selectionCategories,
+    selectionDisplayName,
     type SelectionRow,
   } from '../derive';
   import { reserveTagSpace, tooltip, withReason, type TooltipContent } from '../actions';
@@ -218,26 +218,13 @@
     return store.t('param-hint', { label: store.t(`param-label-${key}`) });
   }
 
-  // Resolve a filled param value (a ref slug) to its display label so the tag
-  // reads "Great Perception" / "Puissant Brandenburg Lore", not the raw slug.
-  // `params` is the whole selection's params so an ability target can pull in its
-  // sibling instance value (the area/language).
-  function resolveParamValue(params: Record<string, string> | undefined, value: string): string {
-    if (!store.ruleset) return value;
-    if (value.startsWith('characteristic.')) {
-      return store.t(`characteristic-${value.slice('characteristic.'.length)}`);
-    }
-    const ability = store.ruleset.ruleset.abilities?.[value];
-    if (ability) {
-      // A parameterized ability target ((Area) Lore) fills its instance value.
-      const instanceKey = ability.parameter ?? undefined;
-      const instanceValue = instanceKey ? params?.[instanceKey] : undefined;
-      return abilityDisplayName(store.ruleset, value, instanceValue, hint);
-    }
-    if (store.ruleset.i18n[value]) {
-      return displayName(store.ruleset, value, undefined, hint);
-    }
-    return value;
+  // The name a chosen row shows, with every `{param}` filled and each filled
+  // value resolved to its own localized label ("Great Perception", "Folk Magic
+  // Healing, Divine"), never a raw slug. Shared with the remove button's
+  // accessible name, and unit-tested as `selectionDisplayName` in `derive.ts` —
+  // it used to be a local resolver here, which no test could reach.
+  function selectionName(ref: string, params: Record<string, string> | undefined): string {
+    return store.ruleset ? selectionDisplayName(store.ruleset, ref, params, store.t) : ref;
   }
 </script>
 
@@ -285,11 +272,7 @@
       </span>
     {/if}
     <span class="item-name">
-      {store.ruleset
-        ? displayName(store.ruleset, ref, params, hint, (_key, value) =>
-            resolveParamValue(params, value),
-          )
-        : ref}
+      {selectionName(ref, params)}
     </span>
   </span>
 {/snippet}
@@ -385,15 +368,7 @@
                       type="button"
                       class="icon-btn"
                       aria-label={store.t('remove-item', {
-                        name: store.ruleset
-                          ? displayName(
-                              store.ruleset,
-                              selection.ref,
-                              selection.params,
-                              hint,
-                              (_key, value) => resolveParamValue(selection.params, value),
-                            )
-                          : selection.ref,
+                        name: selectionName(selection.ref, selection.params),
                       })}
                       onclick={() => store.removeSelectionAt(index)}
                       data-testid="remove-{selection.ref}-{index}"

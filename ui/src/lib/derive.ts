@@ -33,6 +33,7 @@ import type {
   ValidationMode,
   ValidationResult,
 } from './types';
+import { REALMS } from './types';
 
 /**
  * Case- and diacritic-insensitive search normalization, so "Übernatürlich"
@@ -306,6 +307,87 @@ export function displayName(
     }
     return placeholderLabel?.(key) ?? `{${key}}`;
   });
+}
+
+/** Id prefix of a Characteristic parameter value (`characteristic.per`). */
+const CHARACTERISTIC_ID_PREFIX = 'characteristic.';
+
+/** Id prefix of a Realm parameter value (`realm.divine`). */
+const REALM_ID_PREFIX = 'realm.';
+
+/**
+ * The `realm-<slug>` Fluent label for a Realm parameter value, or `null` when
+ * the value names no Realm.
+ *
+ * Folk Magic's second axis (`Ars Magica - Definitive Edition (Core
+ * Rules).md:3909`) stores `realm.<slug>`. The four Realms are a closed engine
+ * taxonomy with no rules-i18n entry of their own, so their labels come from the
+ * same `realm-<id>` family the Might picker and the Markdown export
+ * (`Doc::taxonomy_label`) already read. Membership is tested against `REALMS`
+ * rather than the prefix alone, so a free-text value that merely starts with
+ * "realm." cannot ask Fluent for a key that does not exist.
+ */
+function realmLabel(value: string, t: Translate): string | null {
+  if (!value.startsWith(REALM_ID_PREFIX)) return null;
+  const slug = value.slice(REALM_ID_PREFIX.length);
+  return (REALMS as readonly string[]).includes(slug) ? t(`realm-${slug}`) : null;
+}
+
+/**
+ * The display label for one filled parameter value of a *selection* — the slug
+ * turned into something a player reads, so a row says "Great Perception" and
+ * never "Great characteristic.per".
+ *
+ * `params` is the whole selection's parameter map, so a parameterized Ability
+ * target can pull in its sibling instance value (the area, the language) and
+ * render "Puissant Brandenburg Lore".
+ *
+ * A value whose id resolves against nothing — free text such as a Magical
+ * Focus's field — is returned as it stands, which is exactly what free text is.
+ */
+function selectionParamLabel(
+  localized: LocalizedRuleset,
+  params: Record<string, string> | undefined,
+  value: string,
+  t: Translate,
+): string {
+  if (value.startsWith(CHARACTERISTIC_ID_PREFIX)) {
+    return t(`characteristic-${value.slice(CHARACTERISTIC_ID_PREFIX.length)}`);
+  }
+  const realm = realmLabel(value, t);
+  if (realm !== null) return realm;
+  const ability = localized.ruleset.abilities?.[value];
+  if (ability) {
+    const instanceKey = ability.parameter ?? undefined;
+    const instanceValue = instanceKey ? params?.[instanceKey] : undefined;
+    return abilityDisplayName(localized, value, instanceValue, paramHint(t));
+  }
+  if (localized.i18n[value]) {
+    return displayName(localized, value, undefined, paramHint(t));
+  }
+  return value;
+}
+
+/**
+ * The name a *chosen* Virtue/Flaw row shows: the item's localized template with
+ * every `{param}` filled from the selection — an unfilled slot becoming the
+ * localized hint ("(Realm)"), a filled one its own localized label.
+ *
+ * The single resolution for every surface that names a selection (the row, and
+ * its remove button's accessible name), so the two can never word the same
+ * choice differently. The counterpart of the engine's
+ * `Doc::parameterized_name` (`crates/arm-rules/src/export/resolve.rs`), which
+ * does the same job for the Markdown sheet.
+ */
+export function selectionDisplayName(
+  localized: LocalizedRuleset,
+  ref: string,
+  params: Record<string, string> | undefined,
+  t: Translate,
+): string {
+  return displayName(localized, ref, params, paramHint(t), (_key, value) =>
+    selectionParamLabel(localized, params, value, t),
+  );
 }
 
 /**
