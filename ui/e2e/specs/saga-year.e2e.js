@@ -26,10 +26,16 @@
 // (Ars Magica - Definitive Edition (Core Rules).md:597) — so 1220 is asserted as the
 // year a fresh installation reports, never typed in as a magic number first.
 //
-// SIDE EFFECT, DELIBERATELY RESTORED. The saga year is real persisted app state, so
-// this spec writes the developer's own settings file, exactly as the shipped app
-// would. The `after` hook puts it back to 1220 so a later run starts where this one
-// found it.
+// SETTINGS ISOLATION. The saga year is real persisted app state, so this spec writes
+// a settings file exactly as the shipped app would — but each worker gets its own
+// XDG_CONFIG_HOME (`driver.js`'s `workerConfigHome`, wired in by both wdio configs'
+// `beforeSession`), so it is never the developer's own settings file. Every run of
+// this spec therefore starts from a guaranteed-clean directory rather than from
+// whatever the machine happened to hold, which is both safer and strictly more
+// deterministic than the developer-file side effect this replaced. The `after` hook
+// still resets the saga year to 1220: the per-worker directory persists across runs
+// (it is created once, not wiped per run), so without this a later run in the same
+// worker slot would inherit whatever value the previous run left behind.
 //
 // NOTE: requires the production binary; the display comes from your desktop session
 // or, when DISPLAY is unset, the Xvfb one WebdriverIO starts (see e2e/README.md). The
@@ -81,7 +87,8 @@ describe('the saga year', () => {
     await $(AGE_INPUT).waitForExist({ timeout: BOOT_TIMEOUT });
   });
 
-  // Leave the machine's real settings where they were found.
+  // Leave this worker's settings directory as later runs expect to find it — see
+  // the SETTINGS ISOLATION note above.
   after(async () => {
     await standOnWizardStep('concept');
     await type(SAGA_YEAR_INPUT, DEFAULT_SAGA_YEAR);

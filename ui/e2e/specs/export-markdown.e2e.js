@@ -11,6 +11,7 @@
 
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { clean, isRowBlocked, startCharacter } from '../helpers.js';
 import { e2eExportFile as exportFile, e2eFile as saveFile } from '../wdio.conf.js';
@@ -256,7 +257,9 @@ describe('markdown export', () => {
     await browser.waitUntil(
       async () => {
         const text = clean(await status.getText());
-        return text.includes('arm-e2e-character.json') && !text.startsWith('*');
+        // Derived, never literal — the fixture name carries a per-worker
+        // suffix (see header-status.e2e.js for the same reasoning).
+        return text.includes(path.basename(saveFile)) && !text.startsWith('*');
       },
       { timeout: 5000, timeoutMsg: 'the header should show the saved file with no dirty marker' },
     );

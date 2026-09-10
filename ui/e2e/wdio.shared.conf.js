@@ -10,6 +10,25 @@
 
 import path from 'node:path';
 
+import { driverPorts } from './driver.js';
+
+/**
+ * How many spec files run at once.
+ *
+ * Each spec file gets its own WebDriver session — its own app launch and
+ * teardown — and that launch is ~30s of the ~40s cycle, so the suite's wall
+ * clock is almost entirely startup. The launches are independent (every spec
+ * drives a fresh app from the start screen), so concurrency is the lever that
+ * actually scales, and four is a deliberate middle: each worker carries a full
+ * WebKit process, and the machine this runs on has 8 cores.
+ *
+ * This is only safe because every shared resource a second worker could
+ * collide on has been given a per-worker identity — the tauri-driver and
+ * native WebDriver ports (`driver.js`), the save/export fixtures, and the
+ * app's own settings file (see each config's `beforeSession`).
+ */
+const MAX_WORKERS = 4;
+
 /**
  * The fields both wdio configs share verbatim, plus the one `capabilities`
  * entry that differs only in which `application` it points `tauri:options` at.
@@ -20,25 +39,31 @@ import path from 'node:path';
 export function sharedWdioConfig(application) {
   return {
     runner: 'local',
-    maxInstances: 1,
-    // Specs run serially against one shared app instance and each passes in
-    // isolation, but the shared session occasionally emits a transient
+    maxInstances: MAX_WORKERS,
+    // Each spec file drives its own freshly launched app and passes in
+    // isolation, but a run occasionally emits a transient
     // interactability/timing flake that wanders between specs run-to-run. One
     // retry cleanly absorbs those without masking a real, deterministic failure
-    // (which fails both attempts).
+    // (which fails both attempts). Note a retry re-pays the whole ~40s cycle.
     specFileRetries: 1,
     specFileRetriesDeferred: true,
 
     // Connect to tauri-driver (classic WebDriver) rather than auto-starting a
-    // browser driver. tauri-driver listens on 4444 and forwards to the native
-    // WebKitWebDriver.
+    // browser driver. tauri-driver forwards to the native WebKitWebDriver.
+    //
+    // This port is only the default for a lone worker: each config's
+    // `beforeSession` overwrites `config.port` with the pair `driver.js`
+    // assigns that worker before the session is created (the runner calls
+    // `beforeSession` with the live config, then `_initSession` after it).
     hostname: '127.0.0.1',
-    port: 4444,
+    port: driverPorts(0).port,
     path: '/',
 
     capabilities: [
       {
-        maxInstances: 1,
+        // Must track the top-level cap: a per-capability 1 silently pins the
+        // whole run to one worker whatever `maxInstances` says.
+        maxInstances: MAX_WORKERS,
         // tauri-driver does not implement WebDriver BiDi.
         'wdio:enforceWebDriverClassic': true,
         'tauri:options': { application },

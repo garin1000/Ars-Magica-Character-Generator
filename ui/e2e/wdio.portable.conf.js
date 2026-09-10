@@ -16,12 +16,11 @@
 // display — the desktop session, or the Xvfb WebdriverIO starts when `DISPLAY` is
 // unset.
 
-import { spawn } from 'node:child_process';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { hasXvfbRun, preflightDisplay } from './display.js';
+import { startWorkerDriver, workerConfigHome } from './driver.js';
 import { portableApp, stagePortableApp } from './stage-portable.js';
 import { e2eLogDir, sharedWdioConfig } from './wdio.shared.conf.js';
 
@@ -58,14 +57,15 @@ export const config = {
   // fixture path — the standard suite's `e2eFile`/`e2eExportFile` (under
   // `os.tmpdir()`) could be reused as-is, since the seam itself is
   // layout-agnostic; only the build step and env wiring are missing here.
-  beforeSession: () =>
-    new Promise((resolve) => {
-      config.tauriDriver = spawn(path.resolve(os.homedir(), '.cargo', 'bin', 'tauri-driver'), [], {
-        stdio: [null, process.stdout, process.stderr],
-      });
-      // Give tauri-driver a moment to bind port 4444 before WDIO connects.
-      setTimeout(resolve, 2000);
-    }),
+  //
+  // It still needs the port and settings-file isolation the standard suite
+  // gets from `startWorkerDriver`/`workerConfigHome` (driver.js) — just not the
+  // file seams above.
+  beforeSession: async (config, capabilities, specs, cid) => {
+    config.tauriDriver = await startWorkerDriver(config, cid, {
+      XDG_CONFIG_HOME: workerConfigHome(repoRoot, process.env),
+    });
+  },
   afterSession: () => {
     if (config.tauriDriver) config.tauriDriver.kill();
   },

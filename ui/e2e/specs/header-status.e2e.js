@@ -4,6 +4,7 @@
 
 import { browser, $, expect } from '@wdio/globals';
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { clean, startCharacter } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
@@ -45,7 +46,10 @@ describe('header document status', () => {
     await browser.waitUntil(
       async () => {
         const t = clean(await status.getText());
-        return t.includes('arm-e2e-character.json') && !t.startsWith('*');
+        // Derived, never literal: the fixture carries a per-worker suffix so
+        // parallel workers cannot clobber each other's save file, so the name
+        // the header shows is only knowable from the path the config handed us.
+        return t.includes(path.basename(e2eFile)) && !t.startsWith('*');
       },
       {
         timeout: 5000,

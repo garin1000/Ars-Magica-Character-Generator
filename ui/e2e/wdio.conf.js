@@ -12,26 +12,38 @@
 // The native save/load dialogs can't be driven by WebDriver, so the app reads
 // the ARM_E2E_FILE seam (see crates/arm-app/src/commands.rs) for a fixed path.
 
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { hasXvfbRun, preflightDisplay } from './display.js';
+import { startWorkerDriver, workerConfigHome, workerSuffix } from './driver.js';
 import { e2eLogDir, sharedWdioConfig } from './wdio.shared.conf.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(dirname, '../..');
 const application = path.resolve(repoRoot, 'target/release/arm-app');
 
-// Fixed save/load target so the flow is deterministic and headless.
-export const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
+// Per-worker save/load target, so the flow stays deterministic and headless
+// while two concurrent workers no longer round-trip the same file. Specs
+// import this as a module constant and are evaluated inside the worker
+// process, where `WDIO_WORKER_ID` is already set on `process.env` before any
+// module loads (see `@wdio/local-runner`) — so `workerSuffix` here reads the
+// right value with no plumbing through the config needed.
+export const e2eFile = path.resolve(
+  os.tmpdir(),
+  `arm-e2e-character${workerSuffix(process.env)}.json`,
+);
 
-// Fixed Markdown-export target, deliberately a separate seam from `e2eFile`:
-// that one is the JSON save file the same specs round-trip, so sharing it would
-// have an export clobber the document on disk.
-export const e2eExportFile = path.resolve(os.tmpdir(), 'arm-e2e-character.md');
+// Per-worker Markdown-export target, deliberately a separate seam from
+// `e2eFile`: that one is the JSON save file the same specs round-trip, so
+// sharing it would have an export clobber the document on disk.
+export const e2eExportFile = path.resolve(
+  os.tmpdir(),
+  `arm-e2e-character${workerSuffix(process.env)}.md`,
+);
 
 let tauriDriver;
 
@@ -89,21 +101,27 @@ export const config = {
 
   // tauri-driver bridges WebDriver to the platform webdriver. The spawned app
   // inherits ARM_E2E_FILE and ARM_E2E_EXPORT_FILE so save/load and the Markdown
-  // export skip their native dialogs.
+  // export skip their native dialogs, and a per-worker XDG_CONFIG_HOME so
+  // concurrent app instances do not race on the settings file
+  // (`app.path().app_config_dir()`, `crates/arm-app/src/commands.rs`).
   //
   // This hook already runs inside the display WebdriverIO arranged — the real
   // one, or the `xvfb-run` wrapper around this worker — so `DISPLAY` is set
   // either way and everything spawned below (WebKitWebDriver, then the app)
   // inherits it. There is nothing to set up here beyond the driver itself.
-  beforeSession: () =>
-    new Promise((resolve) => {
-      tauriDriver = spawn(path.resolve(os.homedir(), '.cargo', 'bin', 'tauri-driver'), [], {
-        stdio: [null, process.stdout, process.stderr],
-        env: { ...process.env, ARM_E2E_FILE: e2eFile, ARM_E2E_EXPORT_FILE: e2eExportFile },
-      });
-      // Give tauri-driver a moment to bind port 4444 before WDIO connects.
-      setTimeout(resolve, 2000);
-    }),
+  //
+  // `startWorkerDriver` (driver.js) replaces a fixed port 4444 plus a
+  // hardcoded 2s sleep: it gives this worker its own port pair and polls until
+  // tauri-driver is actually listening. Mutating `config.port` here is safe —
+  // `@wdio/runner` calls `beforeSession` with the live config and only creates
+  // the session afterwards (`_initSession`).
+  beforeSession: async (config, capabilities, specs, cid) => {
+    tauriDriver = await startWorkerDriver(config, cid, {
+      ARM_E2E_FILE: e2eFile,
+      ARM_E2E_EXPORT_FILE: e2eExportFile,
+      XDG_CONFIG_HOME: workerConfigHome(repoRoot, process.env),
+    });
+  },
   afterSession: () => {
     if (tauriDriver) tauriDriver.kill();
   },
