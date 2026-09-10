@@ -18,7 +18,7 @@ use crate::ruleset::Ruleset;
 use crate::types::{
     AbilityFunding, CategoryCap, CategoryRule, CreationPhase, Effect, Entity, EntityKind,
     EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef,
-    ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
+    ParameterDomain, PointItem, Prereq, Realm, Selection, ValidationMode,
 };
 
 mod aging;
@@ -52,6 +52,9 @@ pub use aging::aging_error_issue;
 pub use balance::{Balance, PointCeilings, compute_balance, effective_point_ceilings};
 pub use life_stage::childhood_rejection_issues;
 pub use saga::{AgeInSagaYear, DEFAULT_SAGA_YEAR, age_in_saga_year, birth_year_in_saga_year};
+// Load-time integrity checks an `at_most_one_of` group's members against the
+// SAME resolution a selection's value goes through, so the two can never drift.
+pub(crate) use selections::param_value_resolves;
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -145,6 +148,7 @@ impl fmt::Display for IssueSeverity {
 /// | `missing_param` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key` |
 /// | `unexpected_param` | error | virtues_flaws, house_specialisation, mythic_type, review | `item`, `key` |
 /// | `unknown_param_value` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key`, `value`, `domain` |
+/// | `exclusive_param_values` | error | virtues_flaws | `item`, `key`, `count` |
 /// | `gift_required` | error | virtues_flaws | (none) |
 /// | `gift_forbidden` | error | virtues_flaws | (none) |
 /// | `characteristic_out_of_range` | error | characteristics | `characteristic`, `score`, `min`, `max` |
@@ -345,6 +349,22 @@ impl ValidationIssue {
     pub const CODE_UNEXPECTED_PARAM: &'static str = "unexpected_param";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_UNKNOWN_PARAM_VALUE: &'static str = "unknown_param_value";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: copies of one item name
+    /// two or more parameter values that a
+    /// [`ParameterDef::at_most_one_of`](crate::types::ParameterDef::at_most_one_of)
+    /// group allows only one of — Folk Magic's "a character cannot have access
+    /// to both the Divine and Infernal Realms"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:3919). The excluded
+    /// values live in the rules data, never in Rust.
+    ///
+    /// The message names the item, the parameter and how many group members are
+    /// in play, and deliberately **not** the offending values themselves: a
+    /// value's label depends on its domain (a Realm is a Fluent `realm-<id>`, an
+    /// enumerated id is a rules-i18n name), and a per-domain arg family would
+    /// make the Fluent message throw on the domains that do not supply it. The
+    /// player sees which Virtue and which slot; the copies themselves are on
+    /// screen beside the finding.
+    pub const CODE_EXCLUSIVE_PARAM_VALUES: &'static str = "exclusive_param_values";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_GIFT_REQUIRED: &'static str = "gift_required";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -869,6 +889,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_entity_kind_applicability(entity, ruleset, &mut issues);
     validate_duplicate_selections(&effective_selections, ruleset, &mut issues);
     validate_total_selection_cap(&effective_selections, ruleset, &mut issues);
+    validate_exclusive_param_values(&effective_selections, ruleset, &mut issues);
     validate_balance(entity, ruleset, type_profile, &mut issues);
     validate_caps(entity, ruleset, type_profile, &mut issues);
     validate_tainted_cap(entity, ruleset, &mut issues);
@@ -6852,6 +6873,123 @@ mod tests {
                 .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
             "a value outside the declared list must not resolve: {:?}",
             codes(&validate(&undeclared, &rs))
+        );
+    }
+
+    /// The `realm` domain resolves against the four-member [`Realm`] taxonomy —
+    /// no catalogue, no declared list — exactly as `characteristic` resolves
+    /// through `Characteristic::from_id`. Folk Magic's magic "is aligned to" a
+    /// supernatural realm (Ars Magica - Definitive Edition (Core Rules).md:3909),
+    /// and the Realms are the closed set the engine already models, so a value
+    /// outside it must raise `unknown_param_value` just as `dragons` does in an
+    /// enumerated slot.
+    #[test]
+    fn realm_domain_param_resolves_only_against_the_four_realms() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          {"id": "virtue.folk_magic", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "parameters": [{"key": "realm", "type": "ref", "domain": "realm"}]}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+
+        let with_realm = |value: &str| {
+            make_entity(
+                "test_type",
+                vec![Selection::with_params(
+                    Id::new("virtue.folk_magic"),
+                    BTreeMap::from([("realm".into(), Id::new(value))]),
+                )],
+            )
+        };
+
+        for realm in crate::types::Realm::ALL {
+            let e = with_realm(realm.id().as_str());
+            assert!(
+                !codes(&validate(&e, &rs))
+                    .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+                "{realm} is one of the four Realms and must resolve: {:?}",
+                codes(&validate(&e, &rs))
+            );
+        }
+
+        let bogus = with_realm("realm.hermetic");
+        assert!(
+            codes(&validate(&bogus, &rs))
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "a value outside the Realm taxonomy must not resolve: {:?}",
+            codes(&validate(&bogus, &rs))
+        );
+    }
+
+    /// Two copies of one item may not name two values the rules keep apart.
+    ///
+    /// "Each time you choose this Virtue, you can align it to the same Realm as
+    /// before or pick a different one, although a character cannot have access
+    /// to both the Divine and Infernal Realms."
+    /// (Ars Magica - Definitive Edition (Core Rules).md:3919)
+    ///
+    /// The excluded pair is **data** — `at_most_one_of` on the parameter — so
+    /// the engine names no realm id anywhere. A pair the group does not list
+    /// (Magic beside Faerie) is exactly what `:3919` permits and must stay
+    /// clean.
+    #[test]
+    fn two_copies_may_not_name_two_values_the_data_keeps_apart() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          {"id": "virtue.folk_magic", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "parameters": [{"key": "realm", "type": "ref", "domain": "realm",
+                           "at_most_one_of": [["realm.divine", "realm.infernal"]]}]}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+
+        let with_realms = |realms: &[&str]| {
+            make_entity(
+                "test_type",
+                realms
+                    .iter()
+                    .map(|realm| {
+                        Selection::with_params(
+                            Id::new("virtue.folk_magic"),
+                            BTreeMap::from([("realm".into(), Id::new(*realm))]),
+                        )
+                    })
+                    .collect(),
+            )
+        };
+        const CODE: &str = ValidationIssue::CODE_EXCLUSIVE_PARAM_VALUES;
+
+        let apart = with_realms(&["realm.magic", "realm.faerie"]);
+        assert!(
+            !codes(&validate(&apart, &rs)).contains(&CODE.to_string()),
+            "two Realms outside the excluded group are what :3919 permits: {:?}",
+            codes(&validate(&apart, &rs))
+        );
+
+        let both = with_realms(&["realm.divine", "realm.infernal"]);
+        assert!(
+            codes(&validate(&both, &rs)).contains(&CODE.to_string()),
+            "a character cannot have access to both the Divine and Infernal \
+             Realms (:3919): {:?}",
+            codes(&validate(&both, &rs))
+        );
+
+        let one_of_them = with_realms(&["realm.divine", "realm.magic"]);
+        assert!(
+            !codes(&validate(&one_of_them, &rs)).contains(&CODE.to_string()),
+            "one member of the group beside a Realm outside it is legal: {:?}",
+            codes(&validate(&one_of_them, &rs))
         );
     }
 

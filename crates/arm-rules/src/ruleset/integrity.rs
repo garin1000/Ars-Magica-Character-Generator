@@ -19,6 +19,7 @@
 //! it for the considered-and-rejected note.
 
 use super::*;
+use crate::validation::param_value_resolves;
 
 impl Ruleset {
     /// Checks referential integrity: prerequisite refs, incompatibility symmetry,
@@ -121,6 +122,7 @@ impl Ruleset {
                 errors,
             );
             Self::validate_taken_as_max_total(id, item, errors);
+            self.validate_at_most_one_of(&item.parameters, &format!("{id}"), errors);
             self.validate_effect_refs(item, id, errors);
 
             validate_source_range(&item.source, &format!("{id}"), errors);
@@ -200,6 +202,55 @@ impl Ruleset {
                  must be 1 (one choice among several readings of ONE item), not {}",
                 item.max_total
             ));
+        }
+    }
+
+    /// Checks the shape of every [`ParameterDef::at_most_one_of`] group a record
+    /// declares. Applied to point items *and* spells, since both hold
+    /// `ParameterDef`s.
+    ///
+    /// A group states "at most one of these values may be named across this
+    /// item's copies" (Folk Magic's Divine/Infernal exclusion, `:3919`). Two
+    /// authoring slips would otherwise sit in the data looking enforced:
+    ///
+    /// - a **member that does not resolve** in the parameter's own domain
+    ///   excludes nothing, because no selection can ever name it — the same
+    ///   reasoning that rejects an out-of-list `enumerated` value;
+    /// - a group of **fewer than two** members excludes nothing either: "at most
+    ///   one of {Divine}" is satisfied by every entity there is.
+    ///
+    /// Resolution goes through the very function validation uses
+    /// ([`param_value_resolves`]), so a group member is legal here exactly when a
+    /// selection naming it would be — no second, drifting notion of "resolves".
+    /// That is also why this lives on `Ruleset` rather than in the free
+    /// [`validate_parameter_defs`]: the registry domains need `self`.
+    fn validate_at_most_one_of(
+        &self,
+        params: &[ParameterDef],
+        subject: &str,
+        errors: &mut Vec<String>,
+    ) {
+        for param in params {
+            let key = &param.key;
+            for group in &param.at_most_one_of {
+                if group.len() < 2 {
+                    errors.push(format!(
+                        "{subject}: parameter '{key}' declares an 'at_most_one_of' \
+                         group of {} value(s); a group must name at least two, or \
+                         it excludes nothing",
+                        group.len()
+                    ));
+                }
+                for value in group {
+                    if !param_value_resolves(self, param, value) {
+                        errors.push(format!(
+                            "{subject}: parameter '{key}' declares 'at_most_one_of' \
+                             value '{value}', which does not resolve in domain '{}'",
+                            param.domain
+                        ));
+                    }
+                }
+            }
         }
     }
 
@@ -1457,6 +1508,7 @@ impl Ruleset {
             }
         }
         validate_parameter_defs(&spell.parameters, &format!("spell '{id}'"), None, errors);
+        self.validate_at_most_one_of(&spell.parameters, &format!("spell '{id}'"), errors);
         validate_source_range(&spell.source, &format!("spell '{id}'"), errors);
     }
 

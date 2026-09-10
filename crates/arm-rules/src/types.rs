@@ -477,6 +477,24 @@ pub enum ParameterDomain {
     /// Markdown export's Type cell all stay whole-list, since there is no
     /// selection (hence no `taken_as`) to narrow against.
     Category,
+    /// Value is one of the four [`Realm`]s, as `realm.<slug>` — resolved by
+    /// [`Realm::from_id`], with no catalogue and no declared `values` list,
+    /// exactly as [`Self::Characteristic`] is resolved by
+    /// `Characteristic::from_id`. The Realms are a closed engine taxonomy the
+    /// rules define, so the enum IS the registry.
+    ///
+    /// Folk Magic is the first user: "The choice of (Realm) Lore also determines
+    /// which supernatural realm his magic is aligned to for the purposes of aura
+    /// modifiers" (Ars Magica - Definitive Edition (Core Rules).md:3909), and
+    /// `:3919` lets each copy "align it to the same Realm as before or pick a
+    /// different one". What is stored is the **Realm**, not the (Realm) Lore
+    /// Ability: the Core Rules print no closed "(Realm) Lore" list, whereas the
+    /// four Realms are closed, already modelled, and already have Fluent labels.
+    ///
+    /// Labels come from the `realm-<id>` Fluent family (the picker, the Markdown
+    /// export's [`crate::export`] taxonomy label) — never from rules i18n, which
+    /// has no entry for a bare realm slug.
+    Realm,
     /// Value is free text the player types (e.g. Aptitude for (Sin), Necessary
     /// (Realm) Aura, a (Land)). It references no registry, so any value with
     /// non-whitespace content is legal — the picker shows a text input rather than a
@@ -500,6 +518,12 @@ impl ParameterDomain {
     /// a subset of the declaring item's OWN `categories`, not a reference to a
     /// *different* item, so it belongs with `Enumerated`/`Text` rather than
     /// `Item`.
+    ///
+    /// `Realm` likewise: its registry is the four-member [`Realm`] enum, not the
+    /// point-item catalogue, so `false` is the right answer here — checked
+    /// deliberately, since this is a `matches!` and a new variant answers
+    /// `false` with no compiler nudge. Pinned by
+    /// `ruleset::tests::domain_resolution_classification`.
     pub fn resolves_against_items(self) -> bool {
         matches!(self, ParameterDomain::Item)
     }
@@ -516,6 +540,7 @@ impl fmt::Display for ParameterDomain {
             ParameterDomain::Item => f.write_str("item"),
             ParameterDomain::Enumerated => f.write_str("enumerated"),
             ParameterDomain::Category => f.write_str("category"),
+            ParameterDomain::Realm => f.write_str("realm"),
             ParameterDomain::Text => f.write_str("text"),
         }
     }
@@ -539,6 +564,30 @@ pub struct ParameterDef {
     /// rejects both the empty list here and a list anywhere else.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub values: Vec<Id>,
+    /// Groups of values of which **at most one** may be named across all copies
+    /// of the declaring item. Empty for almost every parameter.
+    ///
+    /// Folk Magic's realm axis is the first and only user: `:3919` grants the
+    /// repeat *and* limits it — "you can align it to the same Realm as before or
+    /// pick a different one, although a character cannot have access to both the
+    /// Divine and Infernal Realms". The excluded pair is therefore **data**, not
+    /// a pair of ids hardcoded in Rust: a supplement (or another realm-axis
+    /// Virtue) declares its own groups and the engine needs no edit.
+    ///
+    /// Each group is a set, so `{divine, infernal}` and `{infernal, divine}` are
+    /// the same declaration and canonical output is stable. Load-time integrity
+    /// requires every member to resolve in the parameter's own domain and every
+    /// group to name at least two values (a group of one excludes nothing).
+    /// Enforced per entity by `validation::validate_exclusive_param_values`,
+    /// which raises [`crate::validation::ValidationIssue::CODE_EXCLUSIVE_PARAM_VALUES`].
+    ///
+    /// **Not** the shape for a *within-one-copy* cross-parameter restriction:
+    /// `:3915` ("Infernal Lore cannot be used to produce this type of effect",
+    /// Healing) and `:3917` (Divine Lore, Evil Eye) constrain one copy's realm
+    /// against that same copy's spell category, which excludes nothing *across*
+    /// copies. See `crates/arm-rules/RULES.md`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub at_most_one_of: Vec<BTreeSet<Id>>,
 }
 
 impl ParameterDef {
@@ -550,6 +599,7 @@ impl ParameterDef {
             param_type,
             domain,
             values: Vec::new(),
+            at_most_one_of: Vec::new(),
         }
     }
 
@@ -560,6 +610,7 @@ impl ParameterDef {
             param_type: ParamType::Ref,
             domain: ParameterDomain::Enumerated,
             values: values.into_iter().collect(),
+            at_most_one_of: Vec::new(),
         }
     }
 }
@@ -2575,6 +2626,29 @@ pub enum Realm {
     Divine,
     /// The Infernal Realm (demons, demon-blooded beings).
     Infernal,
+}
+
+impl Realm {
+    /// All four Realms, in canonical order.
+    pub const ALL: [Realm; 4] = [Realm::Magic, Realm::Faerie, Realm::Divine, Realm::Infernal];
+
+    /// The slug-style id for this Realm, e.g. `realm.divine`.
+    pub fn id(self) -> Id {
+        Id::new(format!("realm.{self}"))
+    }
+
+    /// Parses a `realm.<slug>` [`Id`] back into a Realm, or `None` if it is not
+    /// a valid realm id. The exact mirror of
+    /// [`crate::characteristics::Characteristic::from_id`], and the resolution
+    /// [`ParameterDomain::Realm`] uses: the Realms are a closed engine taxonomy,
+    /// so the "registry" a realm-domain parameter resolves against is this enum
+    /// rather than any catalogue.
+    pub fn from_id(id: &Id) -> Option<Self> {
+        let slug = id.as_str().strip_prefix("realm.")?;
+        Self::ALL
+            .into_iter()
+            .find(|realm| realm.to_string() == slug)
+    }
 }
 
 impl fmt::Display for Realm {
@@ -7381,6 +7455,21 @@ mod tests {
         );
         assert_eq!(format!("{}", ParameterDomain::Item), "item");
         assert_eq!(format!("{}", ParameterDomain::Enumerated), "enumerated");
+    }
+
+    /// The Realm taxonomy is addressable by id, exactly as
+    /// [`crate::characteristics::Characteristic`] is: `realm.<slug>` in, the
+    /// enum member out. That round trip is what lets a parameter value name a
+    /// Realm without any registry — Folk Magic's realm axis
+    /// (Ars Magica - Definitive Edition (Core Rules).md:3909, :3919).
+    #[test]
+    fn a_realm_id_round_trips_through_from_id() {
+        for realm in Realm::ALL {
+            assert_eq!(Realm::from_id(&realm.id()), Some(realm));
+        }
+        assert_eq!(Realm::from_id(&Id::new("realm.nope")), None);
+        assert_eq!(Realm::from_id(&Id::new("characteristic.str")), None);
+        assert_eq!(Realm::from_id(&Id::new("divine")), None);
     }
 
     #[test]

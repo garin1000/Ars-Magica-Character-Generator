@@ -1590,7 +1590,7 @@ bounded only by the Flaw budget, not by the character's Supernatural Virtues.
   `a_value_outside_an_enumerated_list_does_not_resolve`,
   `every_declared_enumerated_value_resolves`,
   `folk_magic_repeats_across_categories_but_never_within_one`,
-  `folk_magics_ceiling_is_the_length_of_its_own_list`,
+  `folk_magic_repeats_along_either_axis_and_never_across_the_excluded_realms`,
   `every_enumerated_value_id_has_english_and_german_text`,
   `fish_out_of_water_keeps_a_free_text_terrain`
   (`crates/arm-rules/tests/data_integrity.rs`, table `ENUMERATED_PARAM_ITEMS`).
@@ -1621,15 +1621,18 @@ a localized name and never the slug.
 six, and three — which is why the enumeration is declared per *parameter* rather
 than once globally under the shared `being` key.
 
-**Why Folk Magic's ceiling is written nowhere.** `:3919` grants the repeat "to
-acquire expertise in a *different* category", so the item carries **no
-`max_total` and no `max_per_target`**: the default of one copy per target plus a
-four-value list means a further copy must repeat a category, which
-`validate_duplicate_selections` already rejects. The ceiling of four is
-*implied by the list*, so a supplement that adds a fifth category raises it with
-no code, cap or test edit. `max_per_target: 4` was rejected for exactly that
-reason — it states a number the list already carries, and it would still permit
-two copies naming the same category.
+**Why Folk Magic has no ceiling at all.** `:3919` grants the repeat "to acquire
+expertise in a *different* category", so the item carries **no `max_total` and
+no `max_per_target`**. It used to follow that the ceiling was the length of the
+category list — a further copy had to repeat a category, which
+`validate_duplicate_selections` rejects. The **realm axis** (see the Row 12
+section below) retired that reading: the same sentence lets each copy "align it
+to the same Realm as before or pick a different one", so two copies may share a
+category as long as their Realms differ, and the duplicate key
+`(item_ref, params)` covers both axes at once. No number is written anywhere
+still, and `max_per_target: 4` remains rejected for the original reason — it
+states a number the data already carries, and it would still permit two copies
+naming the same target.
 
 **Load-time integrity** (`validate_parameter_defs`, applied to point items *and*
 spells, since both hold `ParameterDef`s and both resolve through the same
@@ -1670,10 +1673,10 @@ already running v0.2.0 — "open your character, get four errors" is not a relea
   equal to an id is not a key in the table, so a second load is a no-op, and
   `a_migrated_save_is_byte_stable_across_a_save_load_save_cycle` pins that a
   migrated save does not churn on every open.
-- **Nothing unrecoverable is faked.** Folk Magic's `category` and the three
-  per-power Flaws' `power` were never *stored*, so there is nothing to migrate
-  from; each stays exactly one `missing_param` naming its item and key, which the
-  player clears with one pick. `virtue.alluring_to_beings` and
+- **Nothing unrecoverable is faked.** Folk Magic's `category` and `realm` and the
+  three per-power Flaws' `power` were never *stored*, so there is nothing to
+  migrate from; each stays exactly one `missing_param` naming its item and key,
+  which the player clears with one pick. `virtue.alluring_to_beings` and
   `flaw.magical_being_companion` carry a `being` parameter that is still `text`,
   and are excluded from the fold for that reason.
 - **One class this does not and must not fix.** A save whose bought Puissant Arts
@@ -1691,7 +1694,7 @@ already running v0.2.0 — "open your character, get four errors" is not a relea
   `a_migrated_save_is_byte_stable_across_a_save_load_save_cycle`
   (`crates/arm-rules/src/types.rs`);
   `a_v0_2_x_saves_typed_being_values_resolve_after_migration`,
-  `the_two_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each`,
+  `the_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each`,
   `a_genuine_too_many_selections_survives_the_being_migration`
   (`crates/arm-rules/tests/data_integrity.rs`); and the unsaved-changes guard's
   half, `opens a migrated legacy save clean…` (`ui/src/App.client.test.ts`) —
@@ -1748,6 +1751,108 @@ Hermetic") and `:6892`. Fixing three of the five here would leave the same claim
 false and would not settle what *or* even means (Curse of Slander's "General or
 Supernatural" reads as an either/or origin, not membership in both). So the
 categories are untouched and the whole family is recorded as one to-do.
+
+#### Realm parameter domain, and mutually exclusive values (open-to-dos row 12)
+> "The character is capable of performing very minor acts of magic through his
+> knowledge of scraps of occult lore. Choose one (Realm) Lore that is the key
+> Ability for this magic, he may learn this Ability at Character Creation even
+> if he is normally unable to take Arcane Abilities. The choice of (Realm) Lore
+> also determines which supernatural realm his magic is aligned to for the
+> purposes of aura modifiers." — Folk Magic, `:3909`.
+
+> "You may pick this Virtue more than once, to acquire expertise in a different
+> category of spells. Each time you choose this Virtue, you can align it to the
+> same Realm as before or pick a different one, although a character cannot have
+> access to both the Divine and Infernal Realms." — `:3919`.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3909`, `:3919`.
+- Engine: `ParameterDomain::Realm` and `Realm::ALL` / `Realm::id` /
+  `Realm::from_id` (`crates/arm-rules/src/types.rs`); resolution in
+  `validation/selections.rs::param_value_resolves`; `ParameterDef::at_most_one_of`
+  (`types.rs`) enforced by `validation/selections.rs::validate_exclusive_param_values`
+  (issue code `exclusive_param_values`); load-time shape in
+  `ruleset/integrity.rs::Ruleset::validate_at_most_one_of`; the export label in
+  `export/resolve.rs::Doc::taxonomy_label`.
+- Data: `rules/core/virtues_flaws.json` — `virtue.folk_magic`'s second
+  parameter, `{ "key": "realm", "domain": "realm", "at_most_one_of":
+  [["realm.divine", "realm.infernal"]] }`. Labels are the Fluent `realm-<id>`
+  family (`locales/en|de/main.ftl`), which already shipped for Might; the
+  control's name is the existing `param-label-realm`.
+- Tests: `a_realm_id_round_trips_through_from_id` (`types.rs`),
+  `realm_domain_param_resolves_only_against_the_four_realms`,
+  `two_copies_may_not_name_two_values_the_data_keeps_apart`
+  (`validation/mod.rs`), `values_on_a_realm_param_are_rejected`,
+  `an_at_most_one_of_member_outside_its_domain_is_rejected`,
+  `an_at_most_one_of_group_of_one_is_rejected` (`ruleset.rs`),
+  `a_realm_param_value_is_localized_rather_than_printed_as_its_slug`
+  (`export.rs`), `folk_magic_records_the_realm_its_magic_is_aligned_to`,
+  `folk_magic_repeats_along_either_axis_and_never_across_the_excluded_realms`
+  (`tests/data_integrity.rs`), plus the frontend's
+  `ParameterPicker realm domain (row 12)` (`ui/src/lib/components/ParameterPicker.test.ts`),
+  `paramValueUsage > counts only rows that agree on the OTHER parameters`
+  (`ui/src/lib/derive.test.ts`) and `names the exclusive-values finding in both
+  locales, without naming a Realm` (`ui/src/lib/i18n.test.ts`).
+
+**The Realm is stored, not the (Realm) Lore Ability.** `:3909` names a *(Realm)
+Lore* and the Core Rules print no closed list of them, so an `enumerated` domain
+had nothing to enumerate and free text would accept anything. The sentence's own
+mechanical payload is the **Realm** — "determines which supernatural realm his
+magic is aligned to for the purposes of aura modifiers" — and the four Realms
+*are* closed, already modelled as `Realm`, and already labelled by the
+`realm-<id>` Fluent family the Might score reads. So the parameter records the
+Realm, and `realm.<slug>` resolves through `Realm::from_id` exactly as
+`characteristic.<slug>` resolves through `Characteristic::from_id`. No catalogue
+and no declared `values`: the enum *is* the registry, which is why a `values`
+list on a realm parameter is rejected at load by the same branch that rejects
+one on `text`.
+
+**The Divine/Infernal exclusion is data.** `at_most_one_of` is a list of value
+*groups*, of which at most one member may be named across all copies of the
+item. Folk Magic declares one group, `{realm.divine, realm.infernal}`, and no
+realm id appears anywhere in Rust — a supplement (or a second realm-axis Virtue)
+declares its own groups and the engine needs no edit. Each group is a
+`BTreeSet`, so the declaration is order-free and canonical output is stable, and
+load-time integrity requires every member to resolve *in the parameter's own
+domain* (through the very `param_value_resolves` validation uses, so the two
+notions of "resolves" cannot drift) and every group to name at least two values,
+since "at most one of {Divine}" excludes nothing.
+
+**Why `exclusive_param_values` names no value.** The message reports the item,
+the parameter and how many group members are in play. A value's *label* depends
+on its domain — a Realm is a Fluent `realm-<id>`, an enumerated id is a
+rules-i18n name — so naming the values would need a per-domain argument family,
+and Fluent throws on a message variable a caller does not supply. Spelling the
+realms into the string instead would freeze one item's group into text that
+every other item's group would then read wrongly, which is exactly what putting
+the constraint in data avoids.
+
+**Out of scope, and a different shape: the per-Realm effect restrictions.**
+`:3915` ("*Healing:* … Infernal Lore cannot be used to produce this type of
+effect") and `:3917` ("*Evil Eye:* … Divine Lore cannot be used to produce this
+type of effect") are **cross-parameter constraints within one copy** — this
+copy's realm against this copy's spell category. `at_most_one_of` excludes
+values *across* copies and cannot express them; stretching it to try would make
+one copy of Folk Magic Healing aligned to the Infernal look identical to two
+copies naming Divine and Infernal, which are different rules with different
+remedies. They stay unimplemented and are recorded here rather than approximated.
+
+**A second axis retires the "one copy per category" reading.** Before the realm
+axis, a second copy of Folk Magic had to differ in its spell category or be a
+duplicate. `:3919` says otherwise — "align it to the same Realm as before or
+pick a different one" — so two copies may share a category and differ only in
+Realm. The engine already had this right: `validate_duplicate_selections` keys
+on `(item_ref, params)`, the whole tuple. The **picker** did not, and greyed out
+a category another copy held regardless of Realm, refusing a legal build; the
+frontend's `paramValueUsage` now takes the editing row's other parameter values
+and counts only rows that agree on them, which is the same duplicate key. For a
+single-parameter item there is nothing to disagree about and nothing changes.
+
+**Save impact — accepted, not migrated.** `ParameterDef` and `ParameterDomain`
+are *ruleset* shape, not save shape, so `SCHEMA_VERSION` neither moves nor could
+(no save distinguishes the two eras) and there is no migration to write. An
+existing save holding Folk Magic reports `missing_param` for the newly declared
+`realm`, exactly as it already does for `category` — the standing policy, since
+a placeholder would invent someone's rules choice.
 
 #### Selection multiplicity — one copy per named power
 > "This Flaw may be taken once for each power the character possesses."

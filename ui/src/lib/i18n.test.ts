@@ -229,6 +229,28 @@ describe('German UI bundle', () => {
     expect(translate(de, 'category-mythic_companion')).toBe(translate(de, 'type-mythic_companion'));
   });
 
+  // B7 (Core Rules.md:3919): a new validation code, `exclusive_param_values`.
+  // A code with no `issue-<code>` message renders as its own slug, and parity
+  // alone would not catch it — a code missing from BOTH locales is perfectly
+  // symmetrical. The message must also stay free of any realm name: which
+  // values exclude each other is rules DATA (`at_most_one_of`), so a locale
+  // that spelled out "Divine"/"Infernal" would freeze one item's group into a
+  // string every other item's group would then read wrongly.
+  it('names the exclusive-values finding in both locales, without naming a Realm', () => {
+    for (const lang of ['en', 'de']) {
+      expect(messageKeys(sourceForLang(lang))).toContain('issue-exclusive_param_values');
+    }
+    for (const lang of ['en', 'de'] as const) {
+      const message = translate(buildBundle(lang), 'issue-exclusive_param_values', {
+        item: 'Folk Magic',
+        key: 'Realm',
+        count: '2',
+      }).replace(/[⁦-⁩]/g, '');
+      expect(message).toContain('2');
+      expect(message.toLowerCase()).not.toMatch(/divine|infernal|göttlich|infernal/);
+    }
+  });
+
   it('has full message-key parity between English and German', () => {
     // A missing German key silently falls back to English (or the key) at
     // runtime, so drift is invisible without this check — the same class of gap

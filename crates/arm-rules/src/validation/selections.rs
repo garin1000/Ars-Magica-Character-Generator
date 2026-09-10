@@ -312,6 +312,67 @@ pub(crate) fn validate_total_selection_cap(
     }
 }
 
+/// Enforces every parameter's [`ParameterDef::at_most_one_of`] groups across
+/// the copies of one item: at most one member of a group may be named, however
+/// many copies are held.
+///
+/// Folk Magic is the case the rules state: `:3919` grants the repeat and limits
+/// it in the same breath — "you can align it to the same Realm as before or
+/// pick a different one, although a character cannot have access to both the
+/// Divine and Infernal Realms". Which values exclude each other is **data**, so
+/// no realm id appears here.
+///
+/// Distinct from its two neighbours, and orthogonal to both:
+/// [`validate_duplicate_selections`] rejects copies that share an *identical*
+/// target, and [`validate_total_selection_cap`] counts copies; this one is
+/// about copies whose targets *differ* in a way the rules forbid. Grant-aware
+/// for the same reason they are — `selections` is the folded bought-plus-granted
+/// list, and a granted Divine alignment excludes a bought Infernal one just as
+/// surely as a bought pair would.
+pub(crate) fn validate_exclusive_param_values(
+    selections: &[Selection],
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    // Grouped by item so each item is judged over all of its own copies, and
+    // reported once per parameter rather than once per offending copy.
+    let mut values_by_item: BTreeMap<&Id, Vec<&BTreeMap<String, Id>>> = BTreeMap::new();
+    for selection in selections {
+        values_by_item
+            .entry(&selection.item_ref)
+            .or_default()
+            .push(&selection.params);
+    }
+
+    for (item_ref, params_of_copies) in values_by_item {
+        let Some(item) = ruleset.point_items.get(item_ref) else {
+            continue;
+        };
+        for param in &item.parameters {
+            for group in &param.at_most_one_of {
+                let named: BTreeSet<&Id> = params_of_copies
+                    .iter()
+                    .filter_map(|params| params.get(&param.key))
+                    .filter(|value| group.contains(*value))
+                    .collect();
+                if named.len() < 2 {
+                    continue;
+                }
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_EXCLUSIVE_PARAM_VALUES,
+                    CreationPhase::VirtuesFlaws,
+                    args([
+                        ("item", item_ref.to_string()),
+                        ("key", param.key.clone()),
+                        ("count", named.len().to_string()),
+                    ]),
+                    Some(item_ref.clone()),
+                ));
+            }
+        }
+    }
+}
+
 pub(crate) fn validate_required_traits(
     type_profile: Option<&EntityTypeProfile>,
     selected_ids: &BTreeSet<&Id>,
@@ -388,6 +449,10 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // subset of the declaring item's own `categories`
         // (`ruleset::integrity::validate_parameter_defs`).
         ParameterDomain::Category => param.values.contains(value),
+        // No catalogue and no declared list: the four-member `Realm` enum IS the
+        // registry, the same way `Characteristic` is for `characteristic`
+        // (Ars Magica - Definitive Edition (Core Rules).md:3909).
+        ParameterDomain::Realm => Realm::from_id(value).is_some(),
         ParameterDomain::Text => !value.as_str().trim().is_empty(),
     }
 }

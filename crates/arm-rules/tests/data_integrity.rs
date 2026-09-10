@@ -9,7 +9,7 @@ use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{compute_balance, validate};
 use arm_rules::{AgingRowEffect, AgingRules};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// The shipped House registry. Every helper below loads it, because the four
 /// Outer-Mystery Virtues carry a `House` prerequisite that referential integrity
@@ -6567,13 +6567,18 @@ const PER_POWER_ITEMS: &[(&str, u32)] = &[
 /// The three (Beings) lists are genuinely different subsets of one another, which
 /// is why the enumeration is declared per parameter and not once globally.
 ///
-/// **No count is written down anywhere.** Folk Magic may be picked "more than
-/// once, to acquire expertise in a different category of spells" (`:3919`) and
-/// carries neither `max_total` nor `max_per_target`: the default of one copy per
-/// target plus this list means a further copy must repeat a category, which the
-/// duplicate check already rejects. So the ceiling is *implied by the list* and a
-/// supplement adding a fifth category raises it with no code or cap edit — which
-/// is exactly why this was the recorded fix rather than `max_per_target: 4`.
+/// **No count is written down anywhere**, and Folk Magic no longer has a
+/// ceiling this list could imply. It may be picked "more than once, to acquire
+/// expertise in a different category of spells" (`:3919`) and carries neither
+/// `max_total` nor `max_per_target` — but the same sentence gives it a **second**
+/// axis ("you can align it to the same Realm as before or pick a different
+/// one"), so a further copy is legal as soon as it differs in *either* axis and
+/// two copies may legitimately share a category. The `(item_ref, params)`
+/// duplicate key covers both axes at once, so nothing here counts anything:
+/// `folk_magic_repeats_along_either_axis_and_never_across_the_excluded_realms`
+/// states the whole rule without a number, and a supplement adding a fifth
+/// category needs no edit — which is why this was the recorded fix rather than
+/// `max_per_target: 4`.
 ///
 /// `flaw.fish_out_of_water_terrain` is deliberately **absent**: its terrain list
 /// ends "…, etc." (`:6130`), so open-endedness is what the book means there. The
@@ -6804,38 +6809,170 @@ fn folk_magic_repeats_across_categories_but_never_within_one() {
     );
 }
 
+/// The `realm` parameter Folk Magic carries alongside its spell category, and
+/// the one exclusion the rulebook states over it.
+///
+/// > "The choice of (Realm) Lore also determines which supernatural realm his
+/// > magic is aligned to for the purposes of aura modifiers." (`:3909`)
+///
+/// > "Each time you choose this Virtue, you can align it to the same Realm as
+/// > before or pick a different one, although a character cannot have access to
+/// > both the Divine and Infernal Realms." (`:3919`)
+///
+/// What is stored is the **Realm**, not the (Realm) Lore Ability: the Core
+/// Rules print no closed "(Realm) Lore" list, while the four Realms are a
+/// closed taxonomy the engine already models and already labels. The exclusion
+/// is `at_most_one_of` **data**, so no realm id is named in engine code — the
+/// behavioural test below reads the pair out of the catalogue rather than
+/// spelling it out either.
+fn folk_magic_realm_param(rs: &Ruleset) -> &ParameterDef {
+    rs.item(&Id::new("virtue.folk_magic"))
+        .expect("virtue.folk_magic must ship")
+        .parameters
+        .iter()
+        .find(|p| p.key == "realm")
+        .expect("virtue.folk_magic must declare a 'realm' parameter")
+}
+
 #[test]
-fn folk_magics_ceiling_is_the_length_of_its_own_list() {
-    // The cap on copies is stated nowhere and is written nowhere: one copy per
-    // declared category is clean, and a further copy can only repeat one of
-    // them, which the duplicate check rejects. No number appears in this test
-    // either — it is derived from the declared list, so a supplement adding a
-    // category raises the ceiling with no edit here.
+fn folk_magic_records_the_realm_its_magic_is_aligned_to() {
     let rs = load_ruleset();
-    let (id, key, _, values) = ENUMERATED_PARAM_ITEMS[0];
+    let param = folk_magic_realm_param(&rs);
 
-    let full_house = issue_codes(&entity_with_param_values(id, key, values), &rs);
-    for code in [
-        "duplicate_selection",
-        "too_many_selections",
-        "unknown_param_value",
-    ] {
-        assert!(
-            !full_house.contains(&code.to_string()),
-            "one copy per declared category must be legal: {full_house:?}"
-        );
-    }
+    assert_eq!(
+        param.domain,
+        ParameterDomain::Realm,
+        "the realm is one of the four the engine models, not free text \
+         (Ars Magica - Definitive Edition (Core Rules).md:3909)"
+    );
+    assert!(
+        param.values.is_empty(),
+        "the Realm taxonomy IS the registry; a declared list would be read by \
+         nothing: {:?}",
+        param.values
+    );
+    assert_eq!(
+        param.at_most_one_of,
+        vec![BTreeSet::from([
+            Id::new("realm.divine"),
+            Id::new("realm.infernal")
+        ])],
+        "\"a character cannot have access to both the Divine and Infernal \
+         Realms\" (Ars Magica - Definitive Edition (Core Rules).md:3919)"
+    );
+}
 
-    // Every further copy repeats a category, whichever one it names.
-    for value in values {
-        let mut one_too_many = values.to_vec();
-        one_too_many.push(value);
-        let codes = issue_codes(&entity_with_param_values(id, key, &one_too_many), &rs);
-        assert!(
-            codes.contains(&"duplicate_selection".to_string()),
-            "a copy beyond the list must repeat '{value}': {codes:?}"
-        );
-    }
+/// Builds a companion holding one copy of Folk Magic per `(category, realm)`
+/// pair — the two axes `:3909` gives it.
+fn folk_magic_copies(pairs: &[(&Id, &Id)]) -> Entity {
+    let selections = pairs
+        .iter()
+        .map(|(category, realm)| {
+            Selection::with_params(
+                Id::new("virtue.folk_magic"),
+                BTreeMap::from([
+                    ("category".to_string(), (*category).clone()),
+                    ("realm".to_string(), (*realm).clone()),
+                ]),
+            )
+        })
+        .collect();
+    entity("companion", selections)
+}
+
+/// Folk Magic now repeats along **two** axes, and the rulebook says how each
+/// behaves.
+///
+/// > "You may pick this Virtue more than once, to acquire expertise in a
+/// > different category of spells. Each time you choose this Virtue, you can
+/// > align it to the same Realm as before or pick a different one, although a
+/// > character cannot have access to both the Divine and Infernal Realms."
+/// > (`:3919`)
+///
+/// So a further copy is legal as soon as it differs in **either** axis; it is a
+/// repeat only when it differs in neither; and the one pairing the book rules
+/// out is the excluded realm group. **No count appears anywhere in this test.**
+/// Both the spell categories and the excluded realms are read out of the
+/// catalogue, so a supplement that adds a category — or a second realm-axis
+/// Virtue with its own exclusion — needs no edit here. This replaces the old
+/// `folk_magics_ceiling_is_the_length_of_its_own_list`, whose "one copy per
+/// category is the ceiling" premise the realm axis retired: two copies may now
+/// legitimately share a category.
+#[test]
+fn folk_magic_repeats_along_either_axis_and_never_across_the_excluded_realms() {
+    let rs = load_ruleset();
+    let (id, key, _, categories) = ENUMERATED_PARAM_ITEMS[0];
+    assert_eq!((id, key), ("virtue.folk_magic", "category"));
+    let spell_categories: Vec<Id> = categories.iter().map(|v| Id::new(*v)).collect();
+    let group = folk_magic_realm_param(&rs)
+        .at_most_one_of
+        .first()
+        .expect("Folk Magic's realm axis carries :3919's exclusion")
+        .clone();
+    let excluded: Vec<Id> = group.iter().cloned().collect();
+    let free: Vec<Id> = Realm::ALL
+        .iter()
+        .map(|realm| realm.id())
+        .filter(|realm| !group.contains(realm))
+        .collect();
+    // Preconditions, not catalogue totals: the cases below need two of each to
+    // be expressible at all.
+    assert!(spell_categories.len() >= 2 && excluded.len() >= 2 && free.len() >= 2);
+
+    let clean = |what: &str, pairs: &[(&Id, &Id)]| {
+        let codes = issue_codes(&folk_magic_copies(pairs), &rs);
+        for code in [
+            "duplicate_selection",
+            "exclusive_param_values",
+            "unknown_param_value",
+            "missing_param",
+        ] {
+            assert!(
+                !codes.contains(&code.to_string()),
+                "{what} is what :3919 permits: {codes:?}"
+            );
+        }
+    };
+
+    clean(
+        "a second copy in a different category",
+        &[
+            (&spell_categories[0], &free[0]),
+            (&spell_categories[1], &free[0]),
+        ],
+    );
+    clean(
+        "a second copy aligned to a different Realm",
+        &[
+            (&spell_categories[0], &free[0]),
+            (&spell_categories[0], &free[1]),
+        ],
+    );
+
+    let same = issue_codes(
+        &folk_magic_copies(&[
+            (&spell_categories[0], &free[0]),
+            (&spell_categories[0], &free[0]),
+        ]),
+        &rs,
+    );
+    assert!(
+        same.contains(&"duplicate_selection".to_string()),
+        "a copy differing in NEITHER axis is a repeat, not an expertise: {same:?}"
+    );
+
+    let both = issue_codes(
+        &folk_magic_copies(&[
+            (&spell_categories[0], &excluded[0]),
+            (&spell_categories[1], &excluded[1]),
+        ]),
+        &rs,
+    );
+    assert!(
+        both.contains(&"exclusive_param_values".to_string()),
+        "a character cannot have access to both the Divine and Infernal Realms \
+         (Ars Magica - Definitive Edition (Core Rules).md:3919): {both:?}"
+    );
 }
 
 #[test]
@@ -7413,12 +7550,17 @@ fn a_v0_2_x_saves_typed_being_values_resolve_after_migration() {
 }
 
 /// The unrecoverable half, and the reason nothing is faked: v0.2.x declared no
-/// `power` on the three per-power Flaws and no `category` on Folk Magic, so there
-/// is nothing to migrate *from*. Each stays exactly one actionable `missing_param`
-/// naming the item and the key the player must supply — inventing a placeholder
-/// would invent a character's rules choices.
+/// `power` on the three per-power Flaws and neither `category` nor `realm` on
+/// Folk Magic, so there is nothing to migrate *from*. Each stays exactly one
+/// actionable `missing_param` naming the item and the key the player must
+/// supply — inventing a placeholder would invent a character's rules choices.
+///
+/// Folk Magic's `realm` (B7, `:3909`) joined the list on exactly the standing
+/// policy its `category` set: a `ParameterDef` is **ruleset** shape, not save
+/// shape, so `SCHEMA_VERSION` neither moves nor could, and no save distinguishes
+/// the two eras. The player is asked, not guessed at.
 #[test]
-fn the_two_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each() {
+fn the_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each() {
     let rs = load_ruleset();
     let entity = arm_rules::load_entity_migrating(V0_2_X_MAGUS_SAVE)
         .expect("a v0.2.x save still loads")
@@ -7429,6 +7571,7 @@ fn the_two_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each() {
         vec![
             ("flaw.slow_power".to_string(), "power".to_string()),
             ("virtue.folk_magic".to_string(), "category".to_string()),
+            ("virtue.folk_magic".to_string(), "realm".to_string()),
         ],
         "exactly one issue per unstored choice, each naming its item and key"
     );

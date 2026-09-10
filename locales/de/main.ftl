@@ -957,6 +957,11 @@ issue-forbidden_trait = Eine verbotene Eigenschaft ist vorhanden: { $item }.
 issue-missing_param = { $item } fehlt der Parameter { $key }.
 issue-unexpected_param = { $item } hat einen unerwarteten Parameter { $key }.
 issue-unknown_param_value = { $item }: Parameter { $key } hat unbekannten { $domain }-Wert { $value }.
+# Basisregeln — Core Rules.md:3919: "a character cannot have access to both the
+# Divine and Infernal Realms". Welche Werte einander ausschließen, steht in den
+# Regeldaten (`ParameterDef.at_most_one_of`) und nie fest im Text — daher nennt
+# diese Meldung Element und Feld und zählt die Kopien, statt die Werte zu nennen.
+issue-exclusive_param_values = { $item } nennt { $count } Werte für { $key }, von denen die Regeln nur einen zulassen.
 issue-multiple_magical_foci = Ein Magus darf nur einen Magischen Fokus haben, es sind aber { $count } gewählt.
 issue-gift_required = Dieser Typ erfordert die Gabe.
 issue-gift_forbidden = Dieser Typ darf die Gabe nicht haben.

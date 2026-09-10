@@ -47,6 +47,12 @@ export type ParameterDomain =
   // `enumerated` (the domain IS `values`), but the picker labels options
   // through `category-<id>` rather than `displayName`.
   | 'category'
+  // Value is one of the four Realms as `realm.<slug>` — Folk Magic's magic "is
+  // aligned to" one of them (Ars Magica - Definitive Edition (Core
+  // Rules).md:3909). A closed engine taxonomy, so the menu is `REALMS` and the
+  // labels come from the `realm-<id>` Fluent family, never from rules i18n
+  // (a bare realm slug has no entry there) and never from a declared list.
+  | 'realm'
   | 'text';
 
 export interface ParameterDef {
@@ -58,6 +64,12 @@ export interface ParameterDef {
   // catalogue. Omitted from the JSON for every other domain, where the engine
   // rejects it at load.
   values?: string[];
+  // Groups of values of which at most ONE may be named across all copies of the
+  // declaring item — Folk Magic's "a character cannot have access to both the
+  // Divine and Infernal Realms" (Core Rules.md:3919). Enforced by the engine
+  // (`exclusive_param_values`); which values exclude each other is data, so no
+  // id is named in the frontend either.
+  at_most_one_of?: string[][];
 }
 
 // Mechanical effect a virtue/flaw applies. `ability_bonus` adds to an ability's

@@ -71,8 +71,8 @@ use crate::effective::{
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AgingLogEntry, EnchantedDevice, Entity, EntityKind, Id,
-    ItemKind, MightScore, ParameterDomain, PersonalityTrait, PointItem, Selection, SpellSelection,
-    SupernaturalPower, TalismanEffect,
+    ItemKind, MightScore, ParameterDomain, PersonalityTrait, PointItem, Realm, Selection,
+    SpellSelection, SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 
@@ -609,7 +609,12 @@ mod tests {
             "entity_kinds": ["character"],
             "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
                              "values": ["social_status", "supernatural"] }],
-            "max_total": 1 }
+            "max_total": 1 },
+          { "id": "virtue.folk_magic", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["supernatural"],
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "realm", "type": "ref", "domain": "realm",
+                             "at_most_one_of": [["realm.divine", "realm.infernal"]] }] }
         ]"#;
         let types = r#"[
           { "id": "magus", "is_magus": true,
@@ -748,6 +753,7 @@ mod tests {
           "virtue.educated": { "name": "Educated" },
           "virtue.malformed_name": { "name": "Malformed {template" },
           "virtue.sufi": { "name": "Sufi" },
+          "virtue.folk_magic": { "name": "Folk Magic" },
           "flaw.optimistic": { "name": "Optimistic" },
           "boon.rich_vis_source": { "name": "Rich Vis Source" },
           "ability.awareness": { "name": "Awareness" },
@@ -1593,6 +1599,39 @@ mod tests {
             !doc.contains("social_status"),
             "no raw category slug: {doc}"
         );
+    }
+
+    /// A `realm` parameter's value is a member of the engine's Realm taxonomy
+    /// (`realm.divine`), not a catalogue entry, so the tolerant value path finds
+    /// no rules-i18n name for it and would fall through to the raw text —
+    /// printing an internal English slug onto the sheet, which CLAUDE.md forbids
+    /// outright. Its home is the `realm-<id>` Fluent family the Might score
+    /// already reads, so no new key is needed.
+    ///
+    /// German for the same reason B3's `taken_as` case is German: an English
+    /// slug hides in an English sheet and cannot hide in a German one. The Realm
+    /// is not in the name template, so it is appended in parentheses — the
+    /// "a chosen parameter can never be silently dropped" rule.
+    #[test]
+    fn a_realm_param_value_is_localized_rather_than_printed_as_its_slug() {
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.folk_magic"),
+            BTreeMap::from([("realm".to_string(), Id::new("realm.divine"))]),
+        )];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("items-virtues-title", "Tugenden"),
+                ("export-col-type", "Typ"),
+                ("category-supernatural", "\u{dc}bernat\u{fc}rlich"),
+                ("magnitude-minor", "Klein"),
+                ("realm-divine", "Das G\u{f6}ttliche"),
+            ]),
+        );
+        assert!(doc.contains("| Folk Magic (Das G\u{f6}ttliche) |"), "{doc}");
+        assert!(!doc.contains("realm.divine"), "no raw realm slug: {doc}");
     }
 
     #[test]

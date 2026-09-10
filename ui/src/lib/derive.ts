@@ -314,18 +314,32 @@ export function displayName(
  * `max_per_target` cap (e.g. Perception, once Great Characteristic was taken for
  * it twice). The selection at `exceptIndex` is excluded so its own current value
  * always stays selectable.
+ *
+ * `siblingParams` are the editing row's values for the item's *other* parameter
+ * keys. A target is the whole `(item_ref, params)` tuple — that is literally the
+ * engine's duplicate key (`validate_duplicate_selections`) — so a row that
+ * disagrees on any other key aims at a different target and must not count
+ * here. Folk Magic is why this exists: `:3919` lets a second copy "align it to
+ * the same Realm as before or pick a different one", so two copies may share a
+ * spell category as long as their Realms differ, and counting the category axis
+ * alone would grey out a legal choice. Omitted (or empty) for a
+ * single-parameter item, where there is nothing to disagree about and the
+ * behaviour is unchanged.
  */
 export function paramValueUsage(
   selections: { ref: string; params?: Record<string, string> }[],
   itemRef: string,
   key: string,
   exceptIndex: number,
+  siblingParams?: Record<string, string>,
 ): Map<string, number> {
+  const siblings = Object.entries(siblingParams ?? {}).filter(([k]) => k !== key);
   const counts = new Map<string, number>();
   selections.forEach((selection, i) => {
     if (i === exceptIndex || selection.ref !== itemRef) return;
     const value = selection.params?.[key];
     if (!value) return;
+    if (siblings.some(([k, v]) => selection.params?.[k] !== v)) return;
     counts.set(value, (counts.get(value) ?? 0) + 1);
   });
   return counts;

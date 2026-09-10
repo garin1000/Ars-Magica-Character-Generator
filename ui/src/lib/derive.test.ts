@@ -1008,6 +1008,52 @@ describe('paramValueUsage', () => {
     expect(usage.get('characteristic.per')).toBe(1);
     expect(usage.size).toBe(1);
   });
+
+  // B7: Folk Magic gained a second axis (Core Rules.md:3909, :3919 — "you can
+  // align it to the same Realm as before or pick a different one"), so a copy
+  // is a repeat only when it matches on EVERY parameter, exactly as the
+  // engine's `(item_ref, params)` duplicate key says. Counting one key in
+  // isolation greys out a category another copy holds in a DIFFERENT Realm —
+  // a legal build the picker would then refuse to offer. `siblingParams` is
+  // the editing row's other values; a row that disagrees on any of them aims
+  // at a different target and does not count.
+  it('counts only rows that agree on the OTHER parameters', () => {
+    const copy = (category: string, realm: string) => ({
+      ref: 'virtue.folk_magic',
+      params: { category, realm },
+    });
+    const selections = [
+      copy('folk_magic.healing', 'realm.magic'),
+      copy('folk_magic.healing', 'realm.faerie'),
+      copy('folk_magic.abjuration', 'realm.magic'),
+    ];
+    // Editing row 0 (Healing / Magic): row 2 shares the Realm and is the only
+    // row aiming at the same target but for its category, so Abjuration is
+    // taken and Healing is not.
+    const categories = paramValueUsage(selections, 'virtue.folk_magic', 'category', 0, {
+      realm: 'realm.magic',
+    });
+    expect(categories.get('folk_magic.abjuration')).toBe(1);
+    expect(categories.get('folk_magic.healing')).toBeUndefined();
+    // …and along the realm axis, only row 1 shares row 0's category.
+    const realms = paramValueUsage(selections, 'virtue.folk_magic', 'realm', 0, {
+      category: 'folk_magic.healing',
+    });
+    expect(realms.get('realm.faerie')).toBe(1);
+    expect(realms.get('realm.magic')).toBeUndefined();
+  });
+
+  // Omitting `siblingParams` keeps the single-parameter behaviour every other
+  // picker relies on: there are no other keys to disagree about.
+  it('counts every row when no sibling parameters are given', () => {
+    const selections = [
+      sel('virtue.great', 'characteristic.per'),
+      sel('virtue.great', 'characteristic.per'),
+    ];
+    expect(
+      paramValueUsage(selections, 'virtue.great', 'characteristic', 0).get('characteristic.per'),
+    ).toBe(1);
+  });
 });
 
 // --- totalCopies() -----------------------------------------------------------

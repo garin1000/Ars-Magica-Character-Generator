@@ -10,7 +10,7 @@
     localizedSortKey,
     paramValueUsage,
   } from '../derive';
-  import { CHARACTERISTICS, type ParameterDef, type Selection } from '../types';
+  import { CHARACTERISTICS, REALMS, type ParameterDef, type Selection } from '../types';
 
   // Two callers, two write paths. A *bought* selection lives at `index` in
   // `entity.selections` and is edited in place by the store's index-based
@@ -243,9 +243,23 @@
   // is shorter than `index` implies — the granted list would start at position
   // `index` too, so `index` would silently exclude the wrong (granted) row
   // instead of the bought one it was meant for.
+  //
+  // Both passes carry this row's OTHER parameter values, because a target is
+  // the whole `(ref, params)` tuple — the engine's own duplicate key. Folk
+  // Magic has two axes (Ars Magica - Definitive Edition (Core Rules).md:3909)
+  // and `:3919` lets a second copy "align it to the same Realm as before or
+  // pick a different one", so a copy sharing this row's spell category in a
+  // different Realm is legal and must not grey anything out here.
   function usage(key: string): Map<string, number> {
-    const bought = paramValueUsage(store.entity.selections ?? [], selection.ref, key, index);
-    const granted = paramValueUsage(grantedForUsage(), selection.ref, key, -1);
+    const siblings = selection.params;
+    const bought = paramValueUsage(
+      store.entity.selections ?? [],
+      selection.ref,
+      key,
+      index,
+      siblings,
+    );
+    const granted = paramValueUsage(grantedForUsage(), selection.ref, key, -1, siblings);
     return mergeUsage(bought, granted);
   }
 
@@ -422,6 +436,30 @@
           <option {value} disabled={full(used, value)}>
             {store.t(`category-${value}`)}
           </option>
+        {/each}
+      </select>
+    {:else if param.domain === 'realm'}
+      <!-- The supernatural realm the item is aligned to — Folk Magic
+           (Ars Magica - Definitive Edition (Core Rules).md:3909) "The choice of
+           (Realm) Lore also determines which supernatural realm his magic is
+           aligned to". The four Realms are a closed engine taxonomy, so the menu
+           is `REALMS` (the single frontend source of that order, never
+           re-hardcoded) and the labels are the `realm-<id>` Fluent family the
+           Might picker already reads — NOT `displayName`, which resolves rules
+           ids and would find no i18n entry for a bare realm slug.
+           Deliberately NOT greyed by `full()`: `:3919` says a further copy "can
+           align it to the same Realm as before or pick a different one", so a
+           Realm another copy holds stays offered. What may not be repeated is
+           the whole target, which `usage()` now judges across every axis. -->
+      <select
+        aria-label={typeLabel}
+        value={selection.params?.[param.key] ?? ''}
+        onchange={(e) => onSelect(param.key, e)}
+        data-testid="param-{selection.ref}-{param.key}-{suffix}"
+      >
+        <option value="" disabled>{typeLabel}</option>
+        {#each REALMS as realm (realm)}
+          <option value="realm.{realm}">{store.t(`realm-${realm}`)}</option>
         {/each}
       </select>
     {:else}

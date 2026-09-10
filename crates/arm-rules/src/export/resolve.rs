@@ -169,6 +169,17 @@ impl<'a> Doc<'a> {
         let domain = item.parameters.iter().find(|p| p.key == key)?.domain;
         match domain {
             ParameterDomain::Category => Some(self.label(&format!("category-{value}"))),
+            // Folk Magic's realm axis (Ars Magica - Definitive Edition
+            // (Core Rules).md:3909, :3919). The stored value is `realm.<slug>`
+            // and the Fluent family is keyed on the bare slug — the same
+            // `realm-<id>` keys `Doc::realm_score` reads for a Might score, so
+            // nothing new has to be declared. A value that is not a Realm at
+            // all cannot be labelled and falls through to the ordinary value
+            // path; it is already an `unknown_param_value` on the sheet's own
+            // validation, so the raw text is the honest thing to show.
+            ParameterDomain::Realm => {
+                Realm::from_id(value).map(|realm| self.label(&format!("realm-{realm}")))
+            }
             ParameterDomain::Ability
             | ParameterDomain::Art
             | ParameterDomain::Technique

@@ -76,15 +76,23 @@ const ITEMS: Record<string, PointItem> = {
   'virtue.puissant_ability': pointItem('virtue.puissant_ability', [
     { key: 'ability', type: 'ref', domain: 'ability' },
   ]),
-  // The `enumerated` domain declares its own closed list, so the option set comes
-  // from the DATA, not from any catalogue the store holds. Three values, so a
-  // taken one can be seen greyed while others stay offered.
+  // Two axes, exactly as the shipped entry has them (Core Rules.md:3909). The
+  // `enumerated` spell category declares its own closed list, so its option set
+  // comes from the DATA and not from any catalogue the store holds — three
+  // values, so a taken one can be seen greyed while others stay offered. The
+  // Realm its magic is aligned to is the closed `realm` taxonomy instead.
   'virtue.folk_magic': pointItem('virtue.folk_magic', [
     {
       key: 'category',
       type: 'ref',
       domain: 'enumerated',
       values: ['folk_magic.abjuration', 'folk_magic.divination', 'folk_magic.healing'],
+    },
+    {
+      key: 'realm',
+      type: 'ref',
+      domain: 'realm',
+      at_most_one_of: [['realm.divine', 'realm.infernal']],
     },
   ]),
   // Row 19 "taken as": Sufi (Ars Magica - Definitive Edition (Core
@@ -364,6 +372,74 @@ describe('ParameterPicker enumerated domain', () => {
     const select = selectFor(pickerBody('virtue.folk_magic'), TESTID);
     expect(optionByText(select!, 'Healing')).toContain('disabled');
     expect(optionByText(select!, 'Divination')).not.toContain('disabled');
+  });
+});
+
+// B7 (row 12): Folk Magic's magic "is aligned to" a supernatural realm
+// (Core Rules.md:3909), and the four Realms are a closed engine taxonomy with
+// Fluent labels of their own — so the picker offers them from `REALMS`, labelled
+// through `realm-<id>`, and never a text box in which only an internal slug
+// would validate.
+describe('ParameterPicker realm domain (row 12)', () => {
+  const TESTID = 'param-virtue.folk_magic-realm-0';
+
+  it('offers the four Realms, labelled via realm-<id>, never as a text box', () => {
+    const body = pickerBody('virtue.folk_magic');
+    expect(hasInput(body, TESTID)).toBe(false);
+    const select = selectFor(body, TESTID);
+    expect(select).not.toBeNull();
+    expect(optionTexts(select!)).toEqual(['Realm', 'Magic', 'Faerie', 'Divine', 'Infernal']);
+    // The value attribute carries the id; the text a player reads must not.
+    expect(select!).toContain('value="realm.divine"');
+    expect(optionTexts(select!).join(' ')).not.toContain('realm.');
+  });
+
+  it('names the control and its options in the active language', () => {
+    store.lang = 'de';
+    const select = selectFor(pickerBody('virtue.folk_magic'), TESTID);
+    expect(ariaLabel(select!)).toBe('Sphäre');
+    expect(optionTexts(select!)).toContain('Das Göttliche');
+  });
+
+  // ":3919 — you can align it to the same Realm as before or pick a different
+  // one". Greying a Realm another copy holds would forbid what that sentence
+  // explicitly permits, so neither axis is greyed on its own: a target is the
+  // whole parameter tuple, and these two copies differ in their category.
+  it('leaves both axes open when another copy differs in the other one', () => {
+    store.entity.selections = [
+      {
+        ref: 'virtue.folk_magic',
+        params: { category: 'folk_magic.healing', realm: 'realm.magic' },
+      },
+      {
+        ref: 'virtue.folk_magic',
+        params: { category: 'folk_magic.abjuration', realm: 'realm.faerie' },
+      },
+    ];
+    const body = pickerBody('virtue.folk_magic', 1, {
+      category: 'folk_magic.abjuration',
+      realm: 'realm.faerie',
+    });
+    const realms = selectFor(body, 'param-virtue.folk_magic-realm-1');
+    expect(optionByText(realms!, 'Magic')).not.toContain('disabled');
+    const categories = selectFor(body, 'param-virtue.folk_magic-category-1');
+    expect(optionByText(categories!, 'Healing')).not.toContain('disabled');
+  });
+
+  // …and the target that IS already taken whole still greys out, so the row
+  // above is a real distinction rather than greying simply having been removed.
+  it('greys a value another copy holds when every other axis matches too', () => {
+    store.entity.selections = [
+      {
+        ref: 'virtue.folk_magic',
+        params: { category: 'folk_magic.healing', realm: 'realm.magic' },
+      },
+      { ref: 'virtue.folk_magic', params: { realm: 'realm.magic' } },
+    ];
+    const body = pickerBody('virtue.folk_magic', 1, { realm: 'realm.magic' });
+    const categories = selectFor(body, 'param-virtue.folk_magic-category-1');
+    expect(optionByText(categories!, 'Healing')).toContain('disabled');
+    expect(optionByText(categories!, 'Abjuration')).not.toContain('disabled');
   });
 });
 

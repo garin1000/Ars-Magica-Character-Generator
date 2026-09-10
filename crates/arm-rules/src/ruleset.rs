@@ -2120,6 +2120,66 @@ mod tests {
         );
     }
 
+    /// A must-not-change guard, green the moment `ParameterDomain::Realm`
+    /// existed: the `realm` domain's registry is the four-member `Realm` enum,
+    /// so it declares no `values` and the existing "only an 'enumerated' or
+    /// 'category' domain reads them" branch already covers it. Pinned because
+    /// the alternative — widening that gate for the new domain — would have
+    /// made a `values` list on a realm parameter look enforced and never be.
+    #[test]
+    fn values_on_a_realm_param_are_rejected() {
+        let err = ruleset_with_param(
+            r#"{ "key": "realm", "type": "ref", "domain": "realm",
+                 "values": ["realm.divine"] }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.folk_magic") && msg.contains("realm") && msg.contains("values"),
+            "{msg}"
+        );
+    }
+
+    #[test]
+    fn an_at_most_one_of_member_outside_its_domain_is_rejected() {
+        // The group names values of the parameter's OWN domain, so a member that
+        // does not resolve there excludes nothing and would sit in the data
+        // looking like an enforced rule. `realm.hermetic` is no Realm.
+        let err = ruleset_with_param(
+            r#"{ "key": "realm", "type": "ref", "domain": "realm",
+                 "at_most_one_of": [["realm.divine", "realm.hermetic"]] }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.folk_magic")
+                && msg.contains("realm")
+                && msg.contains("realm.hermetic"),
+            "{msg}"
+        );
+    }
+
+    #[test]
+    fn an_at_most_one_of_group_of_one_is_rejected() {
+        // "At most one of {Divine}" is satisfied by every entity there is, so a
+        // one-member group excludes nothing while looking in the data exactly
+        // like a rule. The same holds for an empty one.
+        for group in ["[]", r#"["realm.divine"]"#] {
+            let err = ruleset_with_param(&format!(
+                r#"{{ "key": "realm", "type": "ref", "domain": "realm",
+                      "at_most_one_of": [{group}] }}"#
+            ))
+            .unwrap_err();
+            let msg = err.to_string();
+            assert!(
+                msg.contains("virtue.folk_magic")
+                    && msg.contains("realm")
+                    && msg.contains("at least two"),
+                "{msg}"
+            );
+        }
+    }
+
     #[test]
     fn enumerated_spell_parameter_obeys_the_same_shape_rule() {
         // `param_value_resolves` is shared with spell parameter validation, so
@@ -4589,6 +4649,11 @@ mod tests {
         // parameter's own declared list, never the point-item registry — pinned
         // here because nothing else would catch it being wired up wrongly.
         assert!(!ParameterDomain::Enumerated.resolves_against_items());
+        // Same silent-`false` hazard, same answer, and the answer happens to be
+        // right: a `realm` value names a member of the `Realm` enum, not an
+        // entry in the point-item registry. Pinned so the audit is recorded
+        // rather than repeated.
+        assert!(!ParameterDomain::Realm.resolves_against_items());
     }
 
     #[test]

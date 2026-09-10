@@ -932,6 +932,13 @@ issue-forbidden_trait = A forbidden trait is present: { $item }.
 issue-missing_param = { $item } is missing the parameter { $key }.
 issue-unexpected_param = { $item } has an unexpected parameter { $key }.
 issue-unknown_param_value = { $item } parameter { $key } has unknown { $domain } value { $value }.
+# Core Rules.md:3919 — "a character cannot have access to both the Divine and
+# Infernal Realms". Which values exclude each other is rules data
+# (`ParameterDef.at_most_one_of`), never a hardcoded pair, so this message names
+# the item and the slot and counts the copies rather than naming the values: a
+# value's label depends on its domain, and a per-domain argument would make
+# Fluent throw wherever that domain does not supply it.
+issue-exclusive_param_values = { $item } names { $count } values for { $key } that the rules allow only one of.
 issue-multiple_magical_foci = A magus may have only one Magical Focus, but { $count } are selected.
 issue-gift_required = This type requires The Gift.
 issue-gift_forbidden = This type cannot have The Gift.

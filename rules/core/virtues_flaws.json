@@ -4223,7 +4223,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "category", "type": "ref", "domain": "enumerated", "values": ["folk_magic.abjuration", "folk_magic.divination", "folk_magic.evil_eye", "folk_magic.healing"] }],
+    "parameters": [{ "key": "category", "type": "ref", "domain": "enumerated", "values": ["folk_magic.abjuration", "folk_magic.divination", "folk_magic.evil_eye", "folk_magic.healing"] }, { "key": "realm", "type": "ref", "domain": "realm", "at_most_one_of": [["realm.divine", "realm.infernal"]] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3907, 3920] }
   },
   {
