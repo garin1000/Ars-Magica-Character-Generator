@@ -9,7 +9,6 @@ these should be tagged over silently.
 
 | # | Item | Waiting on | Raised |
 |---|---|---|---|
-| 8 | **GitHub issue #3 is fixed but not yet answered or closed on GitHub.** Finding 34 fixed the repeatable-Virtues bug it reported (Improved Characteristics and 24 others); the issue itself still needs a reply and closing. | reply + close on GitHub | 2026-09-06 |
 | 9 | **Per-power targets are unverified strings.** `flaw.slow_power`, `flaw.restricted_power` and `virtue.variable_power` now name the power they limit, but nothing checks the typed name against a power the character actually holds — Greater, Lesser, Personal, Ritual and Focus Power are themselves unparameterized and repeatable, so their rows are anonymous and there is nothing to point at. Giving those five a free-text `name` parameter would make them addressable and let the picker offer a dropdown; larger change, own save impact. Narrowed from the old row 7. | decision | 2026-09-06 |
 | 11 | **False Power's copies do not name which Supernatural Virtue they taint.** ":6096" says the Flaw is taken "once for each appropriate Supernatural Virtue that the character possesses", so the copies must name *different* Virtues; none names any. Expressing it needs a parameter domain meaning "an item of category X that this character possesses" — `ParameterDomain::Item` has no category narrowing and no is-possessed predicate, so the picker would list every item in the catalogue. Narrowed from the old row 4. | decision | 2026-09-06 |
 | 12 | **Folk Magic's realm alignment is unmodelled.** The category axis is now a dropdown, but each copy *also* aligns to a `(Realm) Lore`, re-choosable per copy, "although a character cannot have access to both the Divine and Infernal Realms" (:3919, the tail of the same line that grants the repeat). Neither the second axis nor its exclusion is expressed. Narrowed from the old row 6. | decision | 2026-09-06 |
@@ -23,6 +22,11 @@ these should be tagged over silently.
 | 21 | **The e2e suite pays its startup cost 43 times.** Every spec file gets its own WebDriver session, so the app is launched and torn down once per file: 43 launches, strictly serial (`maxInstances: 1`, `ui/e2e/wdio.shared.conf.js:23`). Measured on the 2026-09-09 run from `tmp/e2e-logs/`, the blocking `POST /session` alone costs ~30s of a ~40s per-spec cycle (`app-quit-bridge-clean.e2e-0-3.log`: session posted at 21:13:12.020, first test command at 21:13:42.296, whole test body done by 21:13:44.067 — **30.3s of setup for 1.8s of testing**). Whole-suite: 41m43s. Consolidating the 43 spec files into ~10 larger ones removes ~33 startups at ~40s each, roughly **20 minutes**, with no infrastructure change and no loss of coverage — the specs already run serially against a fresh app each, so merging them only changes how many times that app is started. Worth doing independently of whether the 30s itself (see the finding on it) is ever fixed, since the two savings compound. Note `wdio.shared.conf.js:24` currently claims "Specs run serially against one shared app instance", which is wrong — every spec log carries its own session id and ends in `deleteSession()` — and should be corrected in the same pass. | decision on how to group the specs | 2026-09-09 |
 
 ## Done since this list was started
+
+- GitHub issues #1–#3 are answered and closed, alongside the public **v0.3.0**
+  release (old row 8). #3 reported the repeatable-Virtues bug that finding 34
+  had already fixed (Improved Characteristics and 24 others); the reply and the
+  close were made on GitHub (2026-09-10).
 
 - Primogeniture Lineage's House restriction is enforced (part of old row 13).
   `:6636` reads "This Flaw can only be taken by magi of House Verditius, as a
