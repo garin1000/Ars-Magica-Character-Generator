@@ -41,6 +41,8 @@ vi.mock('./lib/ipc', () => ({
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
+  setAppMenu: vi.fn(),
+  onMenuAction: vi.fn(),
 }));
 
 import * as ipc from './lib/ipc';
@@ -141,7 +143,13 @@ function lastMirroredDirty(): boolean {
 
 beforeEach(() => {
   setTitleMock.mockReset().mockResolvedValue(undefined);
+  vi.mocked(ipc.setAppMenu).mockReset().mockResolvedValue(undefined);
+  vi.mocked(ipc.onMenuAction)
+    .mockReset()
+    .mockResolvedValue(() => {});
   vi.mocked(ipc.updateCloseGuard).mockReset().mockResolvedValue(undefined);
+  vi.mocked(ipc.saveEntity).mockReset().mockResolvedValue(null);
+  vi.mocked(ipc.loadEntity).mockReset().mockResolvedValue(null);
   vi.mocked(ipc.loadRuleset).mockReset().mockResolvedValue(localizedRuleset());
   store.lang = 'en';
   store.error = null;
@@ -819,5 +827,177 @@ describe('the unsaved-changes guard mirrors wizard progress (S5/#31)', () => {
     flushSync();
 
     expect(lastMirroredDirty()).toBe(false);
+  });
+});
+
+// C3a: the native application menu. Its shape is Rust's, but its text and its
+// enabled state are pushed from here — and both change at runtime, so the push
+// is an `$effect` and the menu is REBUILT rather than installed once. Neither
+// half is observable under SSR: an effect body never runs there, so an
+// assertion placed after one that never fires still reports green.
+describe('the native application menu', () => {
+  /** The arguments of the most recent `set_app_menu` call. */
+  function lastMenu(): { labels: Record<string, string>; flags: Record<string, boolean> } {
+    const calls = vi.mocked(ipc.setAppMenu).mock.calls;
+    if (calls.length === 0) throw new Error('set_app_menu was never called');
+    const [labels, flags] = calls[calls.length - 1];
+    return { labels: labels as unknown as Record<string, string>, flags };
+  }
+
+  /** Deliver a menu click exactly as the Rust menu-event bridge would. */
+  function chooseMenuItem(id: string): void {
+    const calls = vi.mocked(ipc.onMenuAction).mock.calls;
+    expect(calls.length, 'the app never subscribed to menu events').toBeGreaterThan(0);
+    calls[calls.length - 1][0](id);
+    flushSync();
+  }
+
+  it('installs the menu on mount, in the active language', async () => {
+    await mountApp();
+
+    expect(ipc.setAppMenu).toHaveBeenCalled();
+    expect(lastMenu().labels.file).toBe(store.t('menu-file'));
+  });
+
+  // A menu built once at startup keeps the language it was built in forever,
+  // and the app lets the user switch language at runtime — so the whole menu
+  // bar would stay English behind a German UI.
+  it('rebuilds the whole menu when the UI language changes', async () => {
+    await mountApp();
+    expect(lastMenu().labels.file).toBe('File');
+    const before = vi.mocked(ipc.setAppMenu).mock.calls.length;
+
+    store.lang = 'de';
+    flushSync();
+
+    expect(vi.mocked(ipc.setAppMenu).mock.calls.length).toBeGreaterThan(before);
+    expect(lastMenu().labels.file).toBe('Datei');
+    expect(lastMenu().labels.saveAs).toBe('Speichern unter…');
+  });
+
+  // The menu has no `disabled` attribute and no window listener to gate it, so
+  // the store's availability predicate has to be pushed across as data — and
+  // pushed again whenever the answer changes.
+  it('re-pushes the enabled state when an action becomes available', async () => {
+    await mountApp();
+    store.view = 'start';
+    flushSync();
+    expect(lastMenu().flags).toEqual(store.menuFlags());
+    expect(lastMenu().flags.save).toBe(false);
+
+    store.view = 'editor';
+    flushSync();
+
+    expect(lastMenu().flags.save).toBe(true);
+    // Settings is present but inert until C4 gives it a screen.
+    expect(lastMenu().flags.settings).toBe(false);
+  });
+
+  it('runs the very store action the chosen item names', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+    vi.mocked(ipc.loadEntity).mockResolvedValue(null);
+
+    chooseMenuItem('menu.open');
+
+    await vi.waitFor(() => expect(ipc.loadEntity).toHaveBeenCalled());
+  });
+
+  it('obeys the same gate the toolbar and the shortcuts obey', async () => {
+    await mountApp();
+    store.view = 'start';
+    flushSync();
+
+    chooseMenuItem('menu.save');
+    chooseMenuItem('menu.settings');
+
+    expect(ipc.saveEntity).not.toHaveBeenCalled();
+  });
+
+  it('ignores an id it does not know, rather than throwing', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    expect(() => chooseMenuItem('menu.nonsense')).not.toThrow();
+    expect(ipc.saveEntity).not.toHaveBeenCalled();
+  });
+
+  // A menu that never appeared, with nothing said about it, reads as "this app
+  // has no menu" rather than "something went wrong". `AppError::Menu` exists so
+  // the banner can say which of the two it is.
+  it('surfaces a failed menu build instead of leaving it silent', async () => {
+    const failure = { kind: 'menu', message: 'the window system refused' };
+    vi.mocked(ipc.setAppMenu).mockReset().mockRejectedValue(failure);
+
+    await mountApp();
+
+    await vi.waitFor(() => expect(store.error).toEqual(failure));
+  });
+
+  it('unsubscribes from menu events when the app goes away', async () => {
+    const unlisten = vi.fn();
+    vi.mocked(ipc.onMenuAction).mockResolvedValue(unlisten);
+    await mountApp();
+    await vi.waitFor(() => expect(ipc.onMenuAction).toHaveBeenCalled());
+
+    unmount(app!);
+    app = undefined;
+    flushSync();
+
+    expect(unlisten).toHaveBeenCalled();
+  });
+});
+
+// The window-level Ctrl/Cmd shortcuts had their own hand-written copy of the
+// busy check, because `inert` on the shell does not reach a window listener.
+// They now read the store's single predicate instead — and nothing covered
+// them before, so a refactor could have silently retired them.
+describe('the document keyboard shortcuts', () => {
+  function press(key: string, options: KeyboardEventInit = {}): void {
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key,
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+        ...options,
+      }),
+    );
+    flushSync();
+  }
+
+  it('saves with Ctrl+S while a character is being edited', async () => {
+    await mountApp();
+    store.view = 'editor';
+    store.currentPath = '/tmp/example.armc.json';
+    flushSync();
+    vi.mocked(ipc.saveEntity).mockResolvedValue('/tmp/example.armc.json');
+
+    press('s');
+
+    await vi.waitFor(() => expect(ipc.saveEntity).toHaveBeenCalled());
+  });
+
+  it('does not save from the startup screen, which has no document', async () => {
+    await mountApp();
+    store.view = 'start';
+    flushSync();
+
+    press('s');
+
+    expect(ipc.saveEntity).not.toHaveBeenCalled();
+  });
+
+  it('opens with Ctrl+O from either screen', async () => {
+    await mountApp();
+    store.view = 'start';
+    flushSync();
+    vi.mocked(ipc.loadEntity).mockResolvedValue(null);
+
+    press('o');
+
+    await vi.waitFor(() => expect(ipc.loadEntity).toHaveBeenCalled());
   });
 });

@@ -96,7 +96,10 @@ yourself.
 - **Works like a standard document app.** A tracked current file with New, Open,
   Save and Save As — plus the usual Ctrl/Cmd+N/O/S (Shift+S for Save As)
   shortcuts. The window title shows the file name and marks unsaved edits; Save
-  writes straight to the current file while Save As always prompts.
+  writes straight to the current file while Save As always prompts. A native
+  menu bar offers the same actions, fully translated and greyed out exactly when
+  the buttons are — on macOS with the usual application, Edit and Window menus,
+  and Settings where each desktop expects it.
 - **Never lose work by accident.** Closing or quitting the app with unsaved
   changes — including via macOS Cmd+Q — prompts for confirmation before
   discarding, as does starting a new document or opening another file.

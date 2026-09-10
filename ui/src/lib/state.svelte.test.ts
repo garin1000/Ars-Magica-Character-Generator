@@ -4370,3 +4370,123 @@ describe('the active theme', () => {
     expect(store.resolvedTheme).toBe('dark');
   });
 });
+
+// C3a: the native menu can reach neither of the two mechanisms that gated the
+// document actions before it. The toolbar buttons carry `disabled`, and
+// `App.svelte`'s window-level keydown handler repeated the same check by hand
+// (`inert` does not reach a window listener) — a menu item obeys neither. So
+// "may this action run right now?" moved into the store as ONE predicate, and
+// the shortcut handler, the menu's enabled state and the dispatcher below all
+// read that single answer instead of each carrying a copy.
+describe('the document-action gate', () => {
+  /**
+   * Hold the store in its busy state — a native Save dialog left open — and
+   * return the release. Save As is the cleanest way in: it goes straight to
+   * the write path, with no unsaved-changes prompt in front of it.
+   */
+  function holdBusy(): () => Promise<void> {
+    let release: (value: string | null) => void = () => {};
+    vi.mocked(ipc.saveEntity).mockReturnValue(
+      new Promise((resolve) => {
+        release = resolve;
+      }),
+    );
+    const saving = store.saveAs();
+    return async () => {
+      release(null);
+      await saving;
+    };
+  }
+
+  beforeEach(() => {
+    store.view = 'editor';
+  });
+
+  it('offers every document action while a character is being edited', () => {
+    for (const action of ['new', 'open', 'save', 'saveAs', 'export'] as const) {
+      expect(store.documentActionEnabled(action), action).toBe(true);
+    }
+  });
+
+  // Save/Save As/Export write the document being edited, and the startup screen
+  // has none — only the placeholder entity. The toolbar simply is not rendered
+  // there; the menu is always there, so it has to say no itself.
+  it('withholds the document-writing actions on the startup screen', () => {
+    store.view = 'start';
+
+    expect(store.documentActionEnabled('new')).toBe(true);
+    expect(store.documentActionEnabled('open')).toBe(true);
+    for (const action of ['save', 'saveAs', 'export'] as const) {
+      expect(store.documentActionEnabled(action), action).toBe(false);
+    }
+  });
+
+  // Settings has no surface yet (that is C4). It is present so the menu has its
+  // conventional shape, and disabled so it makes no promise it cannot keep —
+  // rather than being wired to a placeholder that would have to say something.
+  it('keeps Settings inert until it has a screen to open', () => {
+    for (const view of ['start', 'editor'] as const) {
+      store.view = view;
+      expect(store.documentActionEnabled('settings'), view).toBe(false);
+    }
+  });
+
+  it('withholds every action while a native file dialog is open', async () => {
+    const release = holdBusy();
+    expect(store.busy).toBe(true);
+
+    for (const action of ['new', 'open', 'save', 'saveAs', 'export', 'settings'] as const) {
+      expect(store.documentActionEnabled(action), action).toBe(false);
+    }
+
+    await release();
+  });
+
+  it('runs the very store method the toolbar button calls', async () => {
+    const calls: string[] = [];
+    const spies = [
+      vi.spyOn(store, 'newDocument').mockImplementation(async () => void calls.push('new')),
+      vi.spyOn(store, 'open').mockImplementation(async () => {
+        calls.push('open');
+        return true;
+      }),
+      vi.spyOn(store, 'save').mockImplementation(async () => void calls.push('save')),
+      vi.spyOn(store, 'saveAs').mockImplementation(async () => void calls.push('saveAs')),
+      vi
+        .spyOn(store, 'exportMarkdown')
+        .mockImplementation(async () => void calls.push('exportMarkdown')),
+    ];
+
+    for (const action of ['new', 'open', 'save', 'saveAs', 'export'] as const) {
+      await store.runDocumentAction(action);
+    }
+
+    expect(calls).toEqual(['new', 'open', 'save', 'saveAs', 'exportMarkdown']);
+    for (const spy of spies) spy.mockRestore();
+  });
+
+  it('runs nothing the gate has withheld', async () => {
+    store.view = 'start';
+    const save = vi.spyOn(store, 'save').mockResolvedValue(undefined);
+
+    await store.runDocumentAction('save');
+    await store.runDocumentAction('settings');
+
+    expect(save).not.toHaveBeenCalled();
+    save.mockRestore();
+  });
+
+  it('reports the same answer to the menu as it gives the dispatcher', () => {
+    for (const view of ['start', 'editor'] as const) {
+      store.view = view;
+      expect(store.menuFlags()).toEqual({
+        new: store.documentActionEnabled('new'),
+        open: store.documentActionEnabled('open'),
+        save: store.documentActionEnabled('save'),
+        saveAs: store.documentActionEnabled('saveAs'),
+        export: store.documentActionEnabled('export'),
+        settings: store.documentActionEnabled('settings'),
+      });
+    }
+  });
+});

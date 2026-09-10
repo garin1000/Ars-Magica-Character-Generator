@@ -2,6 +2,8 @@
 // through here so the rest of the app never touches `invoke` directly.
 
 import { invoke } from '@tauri-apps/api/core';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { MENU_ACTION_EVENT, type MenuFlags, type MenuLabels } from './menu';
 import type {
   AgeInSagaYear,
   Characteristic,
@@ -365,4 +367,28 @@ export interface CloseGuardLabels {
  */
 export function updateCloseGuard(dirty: boolean, labels: CloseGuardLabels): Promise<void> {
   return invoke('update_close_guard', { dirty, labels });
+}
+
+/**
+ * Install (or reinstall) the native application menu.
+ *
+ * Rust owns the menu's shape and platform placement; `labels` carries every
+ * word of it, resolved from Fluent here, so no menu text is authored in Rust —
+ * the same division `updateCloseGuard` uses. `flags` mirrors the store's single
+ * document-action predicate, which the menu can consult no other way.
+ *
+ * Called again on every language switch and on every change of that predicate:
+ * a menu built once keeps the language and the enabled state it was built with.
+ */
+export function setAppMenu(labels: MenuLabels, flags: MenuFlags): Promise<void> {
+  return invoke('set_app_menu', { labels, flags });
+}
+
+/**
+ * Subscribe to menu clicks. Rust handles the native event and forwards the
+ * item's id; the frontend owns the document, so it owns what the id means.
+ * Resolves to the unsubscribe.
+ */
+export function onMenuAction(handler: (id: string) => void): Promise<UnlistenFn> {
+  return listen<string>(MENU_ACTION_EVENT, (event) => handler(event.payload));
 }

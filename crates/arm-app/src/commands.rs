@@ -11,6 +11,7 @@ use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 use arm_rules::DerivedTotals;
 
 use crate::error::AppError;
+use crate::menu::{MenuFlags, MenuLabels};
 use crate::ruleset_io;
 use crate::ruleset_io::{
     AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication, EffectiveScores,
@@ -86,6 +87,24 @@ impl CloseGuardState {
 pub fn update_close_guard(dirty: bool, labels: CloseGuardLabels, state: State<'_, AppState>) {
     let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
     guard.report_dirty_state(dirty, labels);
+}
+
+/// Installs (or reinstalls) the native application menu.
+///
+/// The frontend supplies every label — resolved from Fluent, exactly as
+/// [`update_close_guard`] does for the discard dialog — and the enabled state
+/// of each document action, which it reads from the one predicate its toolbar
+/// buttons and keyboard shortcuts also read. Rust contributes the menu's shape
+/// and its platform placement and nothing else (see [`crate::menu`]).
+///
+/// Called again on every UI-language switch and whenever that predicate
+/// changes, because a menu carries the text and the enabled state it was built
+/// with until it is replaced.
+#[tauri::command]
+pub fn set_app_menu(labels: MenuLabels, flags: MenuFlags, app: AppHandle) -> Result<(), AppError> {
+    crate::menu::install_menu(&app, &labels, &flags).map_err(|e| AppError::Menu {
+        message: e.to_string(),
+    })
 }
 
 /// Locks the cached ruleset for reading. Every command that needs a loaded

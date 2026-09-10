@@ -30,6 +30,7 @@ import { FileOperations } from './file-operations.svelte';
 import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
 import type { AgingNote, CloseGuardLabels } from './ipc';
+import type { DocumentAction, MenuFlags } from './menu';
 import type {
   AbilityFunding,
   AppError,
@@ -501,6 +502,81 @@ class AppStore {
         discard: this.t('close-unsaved-discard'),
         cancel: this.t('close-unsaved-cancel'),
       },
+    };
+  }
+
+  /**
+   * Whether `action` may run right now — the app's ONE answer to that question.
+   *
+   * Before the native menu (C3a) the answer existed twice: the toolbar buttons
+   * carried `disabled={store.busy}`, and `App.svelte`'s window-level keydown
+   * handler repeated the check by hand, because `inert` on the shell does not
+   * reach a window listener. A menu item obeys neither mechanism — it is
+   * neither a button in the shell nor a key event — so the choice was a third
+   * copy or one predicate. This is the predicate: the shortcut handler, the
+   * menu's enabled state ({@link menuFlags}) and {@link runDocumentAction} all
+   * read it.
+   *
+   * `settings` is deliberately never enabled: it has no screen to open until
+   * C4, and a menu item that opens nothing is worse than a greyed-out one.
+   */
+  documentActionEnabled(action: DocumentAction): boolean {
+    // A native file dialog is open: the shell is inert and the store actions
+    // no-op, so nothing may start a second one.
+    if (this.busy) return false;
+    switch (action) {
+      case 'new':
+      case 'open':
+        return true;
+      case 'save':
+      case 'saveAs':
+      case 'export':
+        // These write the document being edited. The startup screen has none —
+        // only the typeless placeholder — so writing there would save a
+        // character that does not exist.
+        return this.view !== 'start';
+      case 'settings':
+        return false;
+    }
+  }
+
+  /**
+   * Run `action` if {@link documentActionEnabled} allows it, through the very
+   * method the matching toolbar button calls. Nothing here reimplements a file
+   * operation.
+   */
+  async runDocumentAction(action: DocumentAction): Promise<void> {
+    if (!this.documentActionEnabled(action)) return;
+    switch (action) {
+      case 'new':
+        await this.newDocument();
+        return;
+      case 'open':
+        await this.open();
+        return;
+      case 'save':
+        await this.save();
+        return;
+      case 'saveAs':
+        await this.saveAs();
+        return;
+      case 'export':
+        await this.exportMarkdown();
+        return;
+      case 'settings':
+        return;
+    }
+  }
+
+  /** {@link documentActionEnabled} in the shape the native menu takes it in. */
+  menuFlags(): MenuFlags {
+    return {
+      new: this.documentActionEnabled('new'),
+      open: this.documentActionEnabled('open'),
+      save: this.documentActionEnabled('save'),
+      saveAs: this.documentActionEnabled('saveAs'),
+      export: this.documentActionEnabled('export'),
+      settings: this.documentActionEnabled('settings'),
     };
   }
 

@@ -828,6 +828,37 @@ action-export = Exportieren
 # angeboten, wo diese Erstellung durchlaufen werden kann.
 action-continue-in-wizard = In geführter Erstellung fortsetzen
 
+# Native Anwendungsmenüleiste. Die Struktur des Menüs liegt in Rust
+# (`crates/arm-app/src/menu.rs`); jedes Wort darin stammt von hier, wird von
+# `ui/src/lib/menu.ts` aufgelöst und über die IPC-Grenze gereicht — in Rust
+# entsteht kein einziger Menütext. Drei Punkte am Ende kennzeichnen einen
+# Eintrag, der einen Dialog öffnet, statt sofort zu handeln. Das
+# Anwendungsmenü unter macOS trägt `app-title` und braucht keinen eigenen
+# Schlüssel.
+menu-file = Datei
+menu-edit = Bearbeiten
+menu-window = Fenster
+menu-new = Neu
+menu-open = Öffnen…
+menu-save = Speichern
+menu-save-as = Speichern unter…
+menu-export = Als Markdown exportieren…
+menu-settings = Einstellungen…
+menu-quit = Beenden
+menu-services = Dienste
+menu-hide = Ausblenden
+menu-hide-others = Andere ausblenden
+menu-show-all = Alle einblenden
+menu-undo = Rückgängig
+menu-redo = Wiederherstellen
+menu-cut = Ausschneiden
+menu-copy = Kopieren
+menu-paste = Einfügen
+menu-select-all = Alles auswählen
+menu-minimize = Minimieren
+menu-fullscreen = Vollbild
+menu-close-window = Fenster schließen
+
 # Bestätigung beim Schließen oder Beenden der Anwendung mit ungespeicherten Änderungen.
 close-unsaved-title = Ungespeicherte Änderungen
 close-unsaved-message = Dieser Charakter hat ungespeicherte Änderungen. Wenn du jetzt schließt, gehen sie verloren.
@@ -1114,6 +1145,7 @@ error-ruleset = Das Regelwerk konnte nicht geladen werden.
 error-not_loaded = Es ist noch kein Regelwerk geladen.
 error-serialize = Die Charakterdatei konnte nicht verarbeitet werden.
 error-export = Das Charakterblatt konnte nicht exportiert werden: In der aktuellen Sprache fehlt Text für { $missing }. Versuchen Sie es mit Englisch als Sprache erneut, oder melden Sie dies als Fehler.
+error-menu = Die Menüleiste der Anwendung konnte nicht erstellt werden.
 
 # Abgeleitete Spielwerte (M5/5i). Schreibgeschützte, von der Engine berechnete
 # Werte; das Panel zeigt diese Zahlen nur an und berechnet keine Mechanik selbst.

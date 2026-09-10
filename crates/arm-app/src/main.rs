@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use arm_app::commands::{self, AppState};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 fn main() {
@@ -24,6 +24,7 @@ fn main() {
             commands::export_markdown,
             commands::export_label_keys,
             commands::update_close_guard,
+            commands::set_app_menu,
             commands::saga_year,
             commands::set_saga_year,
             commands::derive_age,
@@ -31,6 +32,15 @@ fn main() {
             request_close,
             request_exit,
         ])
+        // A native menu item was chosen. The item's id is forwarded to the
+        // frontend rather than acted on here: the document, the unsaved-changes
+        // state and the availability gate all live there, and the whole point of
+        // the menu is to reach the SAME store actions the toolbar buttons call
+        // (`ui/src/App.svelte`'s `runMenuAction`). Predefined items are handled
+        // by the OS and never reach this handler.
+        .on_menu_event(|app, event| {
+            let _ = app.emit(arm_app::menu::MENU_ACTION_EVENT, event.id().0.clone());
+        })
         // Window-close gestures (title-bar X, Alt+F4, Cmd+W).
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event

@@ -1762,4 +1762,8 @@ export type AppError =
   // reported in one round trip. Mirrors `AppError::Export` in
   // `crates/arm-app/src/error.rs`; the banner localizes it through
   // `error-export`, never by rendering the kind or the ids themselves.
-  | { kind: 'export'; missing: string[] };
+  | { kind: 'export'; missing: string[] }
+  // The native application menu could not be built or installed — a
+  // window-system failure, not a file one, so it carries its own kind and its
+  // own `error-menu` message rather than borrowing `error-io`'s.
+  | { kind: 'menu'; message: string };

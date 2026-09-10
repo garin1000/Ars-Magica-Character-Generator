@@ -812,6 +812,36 @@ action-export = Export
 # furthest step its file recorded. Offered only where that flow can be walked.
 action-continue-in-wizard = Continue in guided creation
 
+# Native application menu. The menu's shape lives in Rust
+# (`crates/arm-app/src/menu.rs`); every word of it comes from here, resolved by
+# `ui/src/lib/menu.ts` and pushed across the IPC boundary, so nothing about the
+# menu is authored in Rust. A trailing ellipsis marks an item that opens a
+# dialog rather than acting at once. The macOS application menu is titled with
+# `app-title` and needs no key of its own.
+menu-file = File
+menu-edit = Edit
+menu-window = Window
+menu-new = New
+menu-open = Open…
+menu-save = Save
+menu-save-as = Save As…
+menu-export = Export as Markdown…
+menu-settings = Settings…
+menu-quit = Quit
+menu-services = Services
+menu-hide = Hide
+menu-hide-others = Hide Others
+menu-show-all = Show All
+menu-undo = Undo
+menu-redo = Redo
+menu-cut = Cut
+menu-copy = Copy
+menu-paste = Paste
+menu-select-all = Select All
+menu-minimize = Minimize
+menu-fullscreen = Fullscreen
+menu-close-window = Close Window
+
 # Confirmation shown when closing or quitting the app with unsaved changes.
 close-unsaved-title = Unsaved changes
 close-unsaved-message = This character has unsaved changes. If you close now, they will be lost.
@@ -1080,6 +1110,7 @@ error-ruleset = The ruleset could not be loaded.
 error-not_loaded = No ruleset is loaded yet.
 error-serialize = The character file could not be processed.
 error-export = The character sheet could not be exported: the current language is missing text for { $missing }. Try switching to English and exporting again, or report this as a bug.
+error-menu = The application menu could not be built.
 
 # Derived play-stat read-out (M5/5i). Read-only totals computed by the engine;
 # the panel renders these numbers and computes no mechanics itself.

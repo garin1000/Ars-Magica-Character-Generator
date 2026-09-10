@@ -2,7 +2,8 @@
   import { onMount, tick } from 'svelte';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { store } from './lib/state.svelte';
-  import { updateCloseGuard } from './lib/ipc';
+  import { onMenuAction, setAppMenu, updateCloseGuard } from './lib/ipc';
+  import { MENU_ACTIONS, menuLabels, type DocumentAction } from './lib/menu';
   import type { AppError } from './lib/types';
   import LanguageSelector from './lib/components/LanguageSelector.svelte';
   import ModeToggle from './lib/components/ModeToggle.svelte';
@@ -148,6 +149,51 @@
 
   onMount(() => {
     void store.init();
+
+    // A menu click is a native event: Rust receives it and forwards the item's
+    // id, because the document — and therefore what the id means — lives here.
+    // The unsubscribe arrives asynchronously, so teardown may run before it
+    // does; `unlisten` is then set on a listener nobody holds any more, which
+    // is why it is also called from the `.then` when the component is already
+    // gone.
+    let unlisten: (() => void) | undefined;
+    let torndown = false;
+    void onMenuAction(runMenuAction).then((stop) => {
+      if (torndown) stop();
+      else unlisten = stop;
+    });
+    return () => {
+      torndown = true;
+      unlisten?.();
+    };
+  });
+
+  /** Route a native menu item to the store action it names, gate included. */
+  function runMenuAction(id: string): void {
+    const action = MENU_ACTIONS[id];
+    // An id this build does not know (a renamed item, a stale menu) is ignored
+    // rather than thrown: the menu is chrome, and a throw here would surface
+    // as an unhandled rejection with nothing the user could do about it.
+    if (action === undefined) return;
+    void store.runDocumentAction(action);
+  }
+
+  // Install the native menu, and REINSTALL it whenever its text or its enabled
+  // state changes. Reading `store.t` here is what subscribes this effect to the
+  // active language: a menu built once at startup would keep that language for
+  // the life of the session, behind a UI the user had already switched. The
+  // flags come from the store's single document-action predicate, which a
+  // native menu can consult no other way — it is neither a button carrying
+  // `disabled` nor a window key event.
+  //
+  // A rejection is surfaced rather than swallowed: a menu that simply never
+  // appeared reads as "this app has no menu", not as "something went wrong",
+  // and `AppError::Menu` exists precisely so the banner can tell the user which
+  // of the two it is.
+  $effect(() => {
+    void setAppMenu(menuLabels(store.t), store.menuFlags()).catch((e: unknown) => {
+      store.error = e as AppError;
+    });
   });
 
   // Keep `<html lang>` in sync with the active UI language: index.html's
@@ -211,37 +257,35 @@
   // with Shift+S for Save As. Cmd+Q keeps routing through the OS/close guard, so
   // it is deliberately not handled here.
   //
-  // `inert` on the shell does not reach window-level key handlers, so the busy
-  // check has to be here too: while a native dialog is open the shortcuts must be
-  // as dead as the buttons they mirror (the store actions no-op as well).
-  function handleShortcut(event: KeyboardEvent): void {
-    if (store.busy) return;
-    if (!(event.ctrlKey || event.metaKey)) return;
-    const key = event.key.toLowerCase();
-    if (key === 's') {
-      // Save/Save As write the document being edited. On the startup screen there
-      // is no document — only the placeholder entity — so an unguarded Ctrl+S
-      // there would write a file for a character that does not exist. The Save
-      // buttons are hidden on that screen; this window-level handler is not, so
-      // the gate has to be repeated here. It stays live in the wizard, whose
-      // character is a real one: the unsaved-changes guard promises the work can
-      // be saved rather than lost.
-      if (store.view === 'start') return;
-      event.preventDefault();
-      void (event.shiftKey ? store.saveAs() : store.save());
-    } else if (key === 'n') {
-      // Ctrl+N stays live on both screens. From the editor it discards (through
-      // the unsaved-changes guard) and returns to the type choice; on the startup
-      // screen it lands where it already is, which is harmless and keeps the
-      // shortcut's meaning the same everywhere.
-      event.preventDefault();
-      void store.newDocument();
-    } else if (key === 'o') {
-      // Ctrl+O works on both screens: opening a character is the startup screen's
-      // own first offer.
-      event.preventDefault();
-      void store.open();
+  // Which action a chord means; `null` for a chord this app does not claim.
+  // Ctrl+N and Ctrl+O stay live on both screens — from the editor New discards
+  // (through the unsaved-changes guard) and returns to the type choice, and on
+  // the startup screen it lands where it already is — while Save/Save As are
+  // gated on there being a document at all. That gate is NOT restated here: it
+  // is `store.documentActionEnabled`, the same predicate the menu's enabled
+  // state and the store's own dispatcher read. This handler used to carry its
+  // own copy of the busy check, because `inert` on the shell does not reach a
+  // window-level listener; with a third caller (the native menu) obeying
+  // neither mechanism, the question moved into the store and the copies went.
+  function shortcutAction(event: KeyboardEvent): DocumentAction | null {
+    if (!(event.ctrlKey || event.metaKey)) return null;
+    switch (event.key.toLowerCase()) {
+      case 's':
+        return event.shiftKey ? 'saveAs' : 'save';
+      case 'n':
+        return 'new';
+      case 'o':
+        return 'open';
+      default:
+        return null;
     }
+  }
+
+  function handleShortcut(event: KeyboardEvent): void {
+    const action = shortcutAction(event);
+    if (action === null || !store.documentActionEnabled(action)) return;
+    event.preventDefault();
+    void store.runDocumentAction(action);
   }
 
   // Mirror the unsaved-changes flag (and the localized dialog strings) to the

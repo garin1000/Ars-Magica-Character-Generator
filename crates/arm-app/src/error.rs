@@ -31,6 +31,11 @@ pub enum AppError {
     /// carries one message per offense, so the frontend can report every fix
     /// needed in one round trip rather than one failure at a time.
     Export { missing: Vec<String> },
+    /// The native application menu could not be built or installed — a window
+    /// -system failure, reported under its own kind rather than borrowed from
+    /// [`AppError::Io`], because the frontend maps `kind` straight to
+    /// `error-<kind>` and would otherwise blame a file.
+    Menu { message: String },
 }
 
 impl std::fmt::Display for AppError {
@@ -46,6 +51,7 @@ impl std::fmt::Display for AppError {
             AppError::Export { missing } => {
                 write!(f, "export error: {}", missing.join("; "))
             }
+            AppError::Menu { message } => write!(f, "menu error: {message}"),
         }
     }
 }
