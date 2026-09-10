@@ -24,6 +24,13 @@ import { startWorkerDriver, workerConfigHome } from './driver.js';
 import { portableApp, stagePortableApp } from './stage-portable.js';
 import { e2eLogDir, sharedWdioConfig } from './wdio.shared.conf.js';
 
+// Same fix as wdio.conf.js: Xvfb has no DRI3, so Mesa's hardware probe fails
+// and falls back to swrast noisily. Pin llvmpipe up front instead — this
+// config launches the app through the same `startWorkerDriver` env chain
+// (driver.js), so setting it here reaches tauri-driver and the staged app too.
+process.env.LIBGL_ALWAYS_SOFTWARE = '1';
+process.env.GALLIUM_DRIVER = 'llvmpipe';
+
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(dirname, '../..');
 

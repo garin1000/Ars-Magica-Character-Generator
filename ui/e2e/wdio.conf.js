@@ -22,6 +22,17 @@ import { hasXvfbRun, preflightDisplay } from './display.js';
 import { startWorkerDriver, workerConfigHome, workerSuffix } from './driver.js';
 import { e2eLogDir, sharedWdioConfig } from './wdio.shared.conf.js';
 
+// Xvfb offers no DRI3 extension and no GPU, so Mesa's EGL hardware probe fails
+// and falls back to swrast on its own — noisy (`libEGL warning: DRI3 ...`) and
+// discovered per worker rather than decided once. Pin the driver explicitly
+// instead: llvmpipe is the same software rasterizer the fallback would have
+// picked, just without the probe-then-fail step. `startWorkerDriver` spawns
+// tauri-driver with `{ ...process.env, ...extraEnv }`, and tauri-driver spawns
+// the app inheriting that same env, so setting this once here — before either
+// process exists — reaches both, headful or under `xvfb-run`.
+process.env.LIBGL_ALWAYS_SOFTWARE = '1';
+process.env.GALLIUM_DRIVER = 'llvmpipe';
+
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(dirname, '../..');
 const application = path.resolve(repoRoot, 'target/release/arm-app');
