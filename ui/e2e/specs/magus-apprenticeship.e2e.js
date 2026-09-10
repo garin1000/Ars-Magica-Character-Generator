@@ -142,6 +142,16 @@ async function checklistRow(testid) {
 }
 
 describe('magus apprenticeship through the life stages', () => {
+  // A2: the window-shrinking test below used to restore the size itself, inside a
+  // try/finally spanning only that one test. Moved to a describe-scoped `after` so
+  // the restore is guaranteed by mocha rather than by the test's own control flow —
+  // the same "always hand the following specs the window they expect, even on
+  // failure" reasoning as `wizard-flow.e2e.js`'s `tab area at a short window height`
+  // describe (ex-`tab-area.e2e.js`).
+  after(async () => {
+    await browser.setWindowSize(1400, 900);
+  });
+
   it('offers guided funding to a fresh wizard magus', async () => {
     await startWizard('magus');
     await advanceWizardTo('experience');
@@ -310,13 +320,14 @@ describe('magus apprenticeship through the life stages', () => {
       // midpoint hit-tests to the bar, which a transparent bar would not give.
       expect(after.ownsItsPixels).toBe(true);
     } finally {
+      // The window itself is restored by the describe's `after` hook, not here —
+      // see that hook's comment for why.
       await browser.execute(() => {
         const bar = document.querySelector('.xp-summary');
         let port = bar && bar.parentElement;
         while (port && port.scrollTop === 0) port = port.parentElement;
         if (port) port.scrollTop = 0;
       });
-      await browser.setWindowSize(1400, 900);
     }
   });
 

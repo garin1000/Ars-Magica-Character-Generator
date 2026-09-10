@@ -110,12 +110,13 @@ and anything importing `@wdio/globals` cannot resolve there. That is why
 
 ## Every spec builds its own character
 
-The suite runs **serially**, one spec file at a time, and since M6a the app boots on a
-startup choice screen where a character's **type is fixed at creation** — there is no
-type selector to switch, and creating a character discards whatever was being edited.
-So a spec can never inherit a character from an earlier `it`, and — since each spec
-file gets its own session and so its own app process — certainly not from an earlier
-spec file.
+The suite runs up to four spec files **in parallel** (`maxInstances`,
+`wdio.shared.conf.js`), and since M6a the app boots on a startup choice screen
+where a character's **type is fixed at creation** — there is no type selector to
+switch, and creating a character discards whatever was being edited. So a spec
+can never inherit a character from an earlier `it`, and — since each spec file
+gets its own worker, its own WebDriver session and so its own app process —
+certainly not from an earlier spec file.
 
 `helpers.js` exports the one function that follows from that:
 
@@ -136,53 +137,86 @@ the validation mode carry over, so a spec that depends on either must set it its
 
 ## Spec ordering
 
-wdio globs `specs/**/*.e2e.js` and runs the files in sorted order, one at a time
-(`maxInstances: 1`). `app-entry.e2e.js` was named to sort first, so that it — and only
-it — could assert the app's **boot** state.
+wdio globs `specs/**/*.e2e.js` and hands the files out to up to four workers
+(`maxInstances`, `wdio.shared.conf.js`) in parallel; which file lands on which
+worker, and in what order, is scheduling detail. Each worker spawns its own
+`tauri-driver` on its own port pair and its own app instance
+(`driver.js`'s per-worker isolation, milestone A1), so every spec file gets a
+**freshly launched app** in its own WebDriver session regardless of when it
+runs or beside which other file. `app-shell.e2e.js`'s `app entry` describe
+therefore does not need to sort first — any spec's first line sees a fresh
+app — and its own header comment explains why it is instead the first
+**describe** of its own file rather than relying on file-name sort order
+(established in M6/6b8d, ahead of the A2 spec consolidation).
 
-**Neither half of that is true any more, and it does not matter** (established in
-M6/6b8d):
+Do not write a spec that expects to inherit anything at all from the file
+before it — not even the app process — and do not assume a particular
+interleaving between files running in different workers.
 
-- It no longer sorts first. `aging-crisis.e2e.js` and `aging.e2e.js`, added in
-  6b6/6b7, sort ahead of it (`ag` before `ap`), so it runs **third**.
-- It does not need to. wdio spawns a **worker per spec file**, and each worker opens
-  its own WebDriver session — so every spec file gets a **freshly launched app**.
-  (Visible in the reporter as `#0-0 … #0-34`, one `Session ID` per file.) The boot
-  state is therefore not one file's privilege; any spec's first line sees a fresh app.
+**Within one file, order is not free.** A2 (spec consolidation) merged several
+single-purpose files into shared-setup files, each with multiple top-level
+`describe`s run in file order by the one worker that owns that file. Two kinds
+of ordering constraint recur across those merges:
 
-So do not rename a file believing the order protects an assertion, and do not write a
-spec that expects to inherit anything at all from the file before it — not even the
-app process.
+- **Terminal describes must be last.** `app-shell.e2e.js`'s
+  `window.close() bridge — no unsaved changes`,
+  `companion-editor.e2e.js`'s `window.close() bridge — unsaved changes`,
+  `wizard-walks.e2e.js`'s `RunEvent::ExitRequested bridge — no unsaved changes`
+  and `grog-wizard-aging.e2e.js`'s `RunEvent::ExitRequested bridge — unsaved
+changes` each end the app process or leave a native dialog WebDriver cannot
+  dismiss, so each is the final describe of its file and nothing may run after
+  it in the same worker.
+- **Session-scoped state (language, window size) must be restored**, either by
+  the describe's own `after` hook or by being the file's terminal describe, so
+  the describes after it are not silently affected. See each merged file's own
+  header comment for which describes do which.
 
 ## Specs
 
-- `app-entry.e2e.js` — M6a entry: the app boots on the startup screen; creating a
-  magus lands in the editor with its mandatory free traits and a read-only type
-  label; New returns to the startup screen through the discard guard; Open loads a
-  saved character with that file's type.
-- `create-character.e2e.js` — happy path: load rules, add a virtue, validate,
-  save, reload.
-- `character-types.e2e.js` — each created type carries its own profile budget and
-  category rules, and the type cannot be changed afterwards.
-- `validation-errors.e2e.js` — an illegal (forbidden-category) selection renders
-  a localized, error-severity issue in the validation panel.
-- `validation-modes.e2e.js` — the same illegal entity is reported differently
-  under each `ValidationMode`: Enforced keeps errors, Advisory downgrades them to
-  warnings, Silent clears the panel.
-- `wizard.e2e.js` — the guided flow's machinery on a magus: the rail's order, the
-  per-step gate and the validation mode that lifts it, back/forward navigation,
-  the untouched mark, and Finish landing in the editor.
-- `grog-wizard.e2e.js`, `companion-wizard.e2e.js`,
-  `mythic-companion-wizard.e2e.js`, `magus-wizard.e2e.js` — one per character
-  type, each walking that type from the startup screen to Finish with **every**
-  declared phase filled in, then asserting the character is complete (no phase
-  left marked untouched) and legal (no error-severity finding) and that it
-  survives a save and a reload. The phase list comes from
-  `rules/core/character_types.json`, and the shared driving from `wizard-walk.js`,
-  so a profile that gains a phase makes all four walks visit it.
-- …and the rest of `specs/`, one file per mechanic or reported defect (Arts,
-  Spells, Houses, familiar, talisman, longevity ritual, Markdown export, the
-  layout/geometry specs, …). Each file's header comment states what it is for.
+A2 (spec consolidation) merged 40 of the original 43 single-purpose files into 7
+shared-setup files by feature domain, to cut the suite's app-launch count; three
+files stayed as they were. Each file's own header comment, and each describe's,
+states what it covers and, where the merge left a hazard (session-scoped
+language/window state, a terminal describe), why it is ordered the way it is.
+
+- `app-shell.e2e.js` — app-wide chrome: boot entry (M6a — the startup screen,
+  creating a character, New's discard guard, Open loading a saved file's own
+  type), the header's document-status readout, German localization of the
+  chrome, and the `window.close()` bridge for a clean document (terminal).
+- `companion-editor.e2e.js` — the companion-shaped editor surface: Characteristic
+  caps and Ability bonuses, illegal-selection reporting and its per-`ValidationMode`
+  variants, mechanical Virtue/Flaw effects, mutual exclusion, warping-owed fills,
+  the core tabbed edit/save/reload flow, per-character fields, and the
+  `window.close()` bridge for a dirty document (terminal).
+- `magus-editor.e2e.js` — magus-only editor surfaces: Hermetic Arts, Hermetic
+  Houses, the selected-list frame's scroll containment, the Totals tab's
+  duplicate-key regression guard, repeated parameterized Virtues, Mythic
+  Companion types, and per-type profile budgets/category rules.
+- `magus-possessions.e2e.js` — a magus's possessions: Spells, the familiar
+  statblock, the talisman item, the Longevity Ritual, and the Markdown
+  character-sheet export.
+- `wizard-walks.e2e.js` — the four per-type guided-wizard walks (grog, companion,
+  mythic companion, magus), each driven from the startup screen to Finish with
+  **every** declared phase filled in, then asserted complete (no phase left
+  marked untouched) and legal (no error-severity finding) and saved/reloaded
+  unchanged — plus the `RunEvent::ExitRequested` bridge for a clean document
+  (terminal). The phase list comes from `rules/core/character_types.json` and
+  the shared driving from `wizard-walk.js`, so a profile that gains a phase
+  makes all four walks visit it.
+- `grog-wizard-aging.e2e.js` — the guided aging step and its crisis branch (both
+  on a grog, the shortest rail), the saga-year setting the aging arithmetic is
+  measured against, and the `RunEvent::ExitRequested` bridge for a dirty
+  document (terminal).
+- `magus-apprenticeship.e2e.js` — building a magus through its life stages:
+  guided funding, the Gauntlet-age floor, the life-stage XP chips, the Hermetic
+  minimums checklist, and the sticky XP bar at a short window height.
+- `magus-post-gauntlet.e2e.js` — a magus built past its Gauntlet.
+- `life-stage-childhood.e2e.js` — guided funding for a non-magus's childhood.
+- `wizard-flow.e2e.js` — the guided wizard's own machinery: rail order and
+  gating on a magus, resuming a saved mid-flow document, what the flow tells
+  the player (guidance text, the Hermetic-minimums disclosure, unspent-budget
+  warnings), layout stability under a step's first interaction, and the tab
+  area at a short window height.
 
 Every spec requires the same display + release-build prerequisites: none of them
 can run without `WebKitWebDriver` and a display.
