@@ -216,8 +216,29 @@ relevant surface MUST preserve them and keep their tests green.
 
 ## Engineering conventions
 
-- **TDD mandatory.** Red → green → refactor. No implementation code without a
-  preceding failing test. Commits should reflect the cycle.
+- **TDD mandatory, and strictly test-first.** Red → green → refactor, in that
+  order, for every unit of behavior — including pure helpers. No implementation
+  code without a preceding failing test. Commits should reflect the cycle.
+  - **Red must fail for the right reason.** Run the test and *read* the failure.
+    What fails must be the assertion about the behavior under test — not a typo,
+    a missing import, a wrong fixture path, an unrelated panic, or a test that
+    never ran because the file name does not match its vitest project (see
+    "Frontend test environments"). In Rust, a test naming a function that does
+    not exist yet fails to **compile**; that is a legitimate *first* red only
+    until the signature exists — you must still see the assertion itself fail
+    before writing the body. A red nobody read is not a red.
+  - **Green minimally.** Write the least implementation that turns that test
+    green, then run it and confirm it did.
+  - **Refactor green.** Restructure only with the suite passing, re-running it
+    as you go. A refactor changes structure, never behavior; wanting new
+    behavior means going back to red.
+  - **Delegated work must show its reds.** An implementation subagent's report
+    MUST contain the actual RED output for each test it wrote and the GREEN
+    output afterwards — pasted verbatim, not summarized, not "I followed TDD".
+    A report without them is rejected and the slice re-run. This is the repo's
+    *only* TDD enforcement: there are deliberately no git hooks and no
+    commit-shape checks, and CI can only ever prove the end state is green —
+    it cannot distinguish test-first from test-after.
 - **Human-readable code.** Intention-revealing names, small single-purpose
   functions, early returns over deep nesting. A domain expert should be able to
   follow the rules engine by reading it.

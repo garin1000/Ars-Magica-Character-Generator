@@ -448,8 +448,16 @@ for every slice:
      i18n keys, acceptance criteria) — do not paraphrase it;
    - the relevant `file:line` anchors, spelled as absolute paths;
    - the explicit instruction that **the failing test comes first and must be *seen*
-     failing** — run the test, paste the RED output, only then write implementation.
-     TDD in this repo is strictly test-first, including for pure helpers;
+     failing for the right reason** — run the test, read the failure, confirm it is
+     the behavioral assertion failing (not a typo, missing import, wrong fixture, or
+     a test the runner never picked up), paste the RED output, only then write
+     implementation. Then the minimal change to GREEN, pasted too, and only then any
+     refactor — with the suite re-run and still green after it. TDD in this repo is
+     strictly test-first, including for pure helpers;
+   - the requirement that **the agent's final report carry that RED and GREEN output
+     verbatim**, per test. A report asserting TDD without the transcripts is rejected
+     and the slice re-run — with no git hooks and no commit-shape check, this evidence
+     is the only thing standing between test-first and a plausible-sounding test-after;
    - the vitest project the frontend test belongs to (`ssr` vs `client`) and why;
    - the **LIVE command-hygiene block** (see 4c), pasted verbatim;
    - the standing rules: never write files through the shell (no `>`, `>>`, `tee`,
@@ -458,23 +466,29 @@ for every slice:
      artifacts under the repo-local **`tmp/`**, never `/tmp`; leave changes in the
      working tree and **never** run `git add`/`git commit` — committing is the
      orchestrator's call.
-2. **Run the gate yourself, first-hand.** After the subagent reports, the
+2. **Check the RED evidence before anything else.** Read the subagent's report for
+   the pasted RED output of each new test and the GREEN output after. Missing,
+   summarized, or a red that failed for the wrong reason (compile error where an
+   assertion was due, a test the runner silently skipped) means the slice is not
+   accepted: discard it and re-run with the omission called out. Do this *before*
+   the gate — a green gate says nothing about the order the code was written in.
+3. **Run the gate yourself, first-hand.** After the subagent reports, the
    orchestrator runs the full gate (4b) directly and reads the output. **A subagent's
    claim that the gate passed is never sufficient** — another session may share this
    repo, so only output the orchestrator observed counts.
-3. **Do the manual verification note.** Several of these are layout-shift bugs no
+4. **Do the manual verification note.** Several of these are layout-shift bugs no
    unit test catches. Launch the app (`./arm-char-gen.sh`, or `cargo tauri dev`) and
    perform the slice's stated click-path before calling the slice done.
-4. **Commit per slice, directly on `main`.** This repo's workflow commits to `main`;
+5. **Commit per slice, directly on `main`.** This repo's workflow commits to `main`;
    no branch and no PR unless the user asks. Message: what changed and which issue
    numbers it closes, ending with the trailer
    `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
-5. **Keep the docs current in the same slice.** `crates/arm-rules/RULES.md` for any
+6. **Keep the docs current in the same slice.** `crates/arm-rules/RULES.md` for any
    new or changed mechanic (verbatim excerpt → source `<book basename>.md:<lines>` →
    implementing function/file, plus the JSON value where a rule number lives).
    `README.md` whenever a change alters what the project does, its status, the stack,
    or the build/run commands.
-6. **Never batch two slices into one commit.** The dependency chain is the point; a
+7. **Never batch two slices into one commit.** The dependency chain is the point; a
    combined commit makes a bisect useless if a layout change turns out wrong.
 
 ### 4b. The standard gate
