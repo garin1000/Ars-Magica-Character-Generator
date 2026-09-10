@@ -537,9 +537,18 @@
     "id": "flaw.curse_of_slander",
     "kind": "flaw",
     "magnitude": "minor",
-    "categories": ["general"],
+    "categories": ["general", "supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [
+      {
+        "key": "taken_as",
+        "type": "ref",
+        "domain": "category",
+        "values": ["general", "supernatural"]
+      }
+    ],
+    "max_total": 1,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5881, 5884] }
   },
   {

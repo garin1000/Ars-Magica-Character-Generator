@@ -4407,7 +4407,10 @@ fn a_grog_may_take_sufi_through_its_social_status_category() {
 /// Every shipped item declaring a `taken_as` (`ParameterDomain::Category`)
 /// parameter, paired with its key and the line making the choice explicit —
 /// `(id, param key, line)`.
-const TAKEN_AS_ITEMS: &[(&str, &str, u32)] = &[("virtue.sufi", "taken_as", 5083)];
+const TAKEN_AS_ITEMS: &[(&str, &str, u32)] = &[
+    ("flaw.curse_of_slander", "taken_as", 5882),
+    ("virtue.sufi", "taken_as", 5083),
+];
 
 #[test]
 fn shipped_taken_as_items_declare_only_their_own_categories() {
@@ -4878,6 +4881,120 @@ fn gift_detection_is_taken_as_aware() {
         taken_as_gift.contains(&CODE.to_string()),
         "taken as g_gift must still read as holding The Gift, which this \
          profile forbids: {taken_as_gift:?}"
+    );
+}
+
+// --- Curse of Slander is General *or* Supernatural (row 13, B4) -------------
+//
+// `:5882` reads "*Minor, General or Supernatural*", and the book indexes the
+// Flaw under both of those headings: `:5538` under `### Supernatural, Minor`
+// (`:5534`) and `:5575` under `### General, Minor` (`:5564`). That "or" is the
+// same explicit either/or `:5083` spells out in prose for Sufi, so it is
+// modelled the same way — both categories shipped, plus a `taken_as` parameter
+// naming the reading in force, and `max_total: 1` because the book offers a
+// choice between two readings of ONE Flaw.
+//
+// The *and*-joined descriptors are a different question and are deliberately
+// NOT covered by this mechanism — see `RULES.md`, "row 19, half (b)".
+
+/// The shipped Virtue/Flaw catalogue against a synthetic profile that caps the
+/// `supernatural` FLAW category at zero. No shipped profile caps
+/// `supernatural` — every one of them merely permits it — so a cap has to be
+/// supplied for "does this count as a Supernatural Flaw?" to be observable at
+/// all. The item under test is nonetheless the REAL shipped
+/// `flaw.curse_of_slander`, not a synthetic stand-in.
+fn shipped_items_with_supernatural_flaw_cap() -> Ruleset {
+    let type_profiles = r#"[
+        {
+            "id": "captype",
+            "budget": {
+                "virtue_points": 50,
+                "flaw_points": 50,
+                "flaw_category_caps": [
+                    { "category": "supernatural", "max": 0, "hard": true }
+                ]
+            },
+            "permitted_categories": [
+                "general", "hermetic", "mythic_companion", "personality",
+                "social_status", "story", "supernatural"
+            ],
+            "creation_phases": ["virtues_flaws"]
+        }
+    ]"#;
+    Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+        type_profiles,
+        abilities: Some(include_str!("../../../rules/core/abilities.json")),
+        houses: Some(SHIPPED_HOUSES),
+        characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+        ..RulesetSources::default()
+    })
+    .unwrap()
+}
+
+/// The descriptor names two categories joined by *or*, so the parameter must
+/// offer exactly those two — a `taken_as` that offered only one would make the
+/// "choice" no choice at all, and integrity only checks that every offered
+/// value is one of the item's own categories, not that both are offered.
+#[test]
+fn curse_of_slander_offers_both_categories_its_descriptor_names() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("flaw.curse_of_slander"))
+        .expect("flaw.curse_of_slander must ship");
+    let offered: Vec<&str> = item
+        .parameters
+        .iter()
+        .find(|p| p.key == "taken_as")
+        .expect("flaw.curse_of_slander must declare a 'taken_as' parameter")
+        .values
+        .iter()
+        .map(|v| v.as_str())
+        .collect();
+    assert_eq!(
+        offered,
+        vec!["general", "supernatural"],
+        "\"*Minor, General or Supernatural*\" (Ars Magica - Definitive Edition \
+         (Core Rules).md:5882) offers exactly these two readings"
+    );
+}
+
+/// The first-failing behavioural test for row 13 (B4): the whole point of
+/// shipping `supernatural` alongside `general` is that it must NOT make every
+/// bearer count as holding a Supernatural Flaw — which is precisely the
+/// objection `docs/open-todos.md` row 13 raised against adding the second
+/// category flatly.
+#[test]
+fn curse_of_slander_taken_as_general_is_not_a_supernatural_flaw() {
+    let rs = shipped_items_with_supernatural_flaw_cap();
+    const CODE: &str = "too_many_supernatural_flaws";
+
+    let as_general = issue_codes(
+        &entity(
+            "captype",
+            vec![taken_as("flaw.curse_of_slander", "general")],
+        ),
+        &rs,
+    );
+    assert!(
+        !as_general.contains(&CODE.to_string()),
+        "taken as General, Curse of Slander is not a Supernatural Flaw \
+         (Ars Magica - Definitive Edition (Core Rules).md:5882): {as_general:?}"
+    );
+
+    let as_supernatural = issue_codes(
+        &entity(
+            "captype",
+            vec![taken_as("flaw.curse_of_slander", "supernatural")],
+        ),
+        &rs,
+    );
+    assert!(
+        as_supernatural.contains(&CODE.to_string()),
+        "taken as Supernatural, it must count against a Supernatural cap — \
+         otherwise the second category is decorative: {as_supernatural:?}"
     );
 }
 

@@ -362,7 +362,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   | id | descriptor | source | `categories` | indexed at |
   |---|---|---|---|---|
   | `virtue.inoffensive_to_beings` | *Minor, General and Hermetic* | `:4134` | `["general"]` | `:3110` (`### Hermetic, Minor` `:3087`) and `:3276` (`### General, Minor` `:3239`) |
-  | `flaw.curse_of_slander` | *Minor, General or Supernatural* | `:5882` | `["general"]` | `:5538` (`### Supernatural, Minor` `:5534`) and `:5575` (`### General, Minor` `:5564`) |
+  | `flaw.curse_of_slander` | *Minor, General or Supernatural* | `:5882` | `["general", "supernatural"]` | `:5538` (`### Supernatural, Minor` `:5534`) and `:5575` (`### General, Minor` `:5564`) |
   | `flaw.offensive_to_beings` | *Minor, Hermetic and General* | `:6525` | `["general"]` | `:5445` (`### Hermetic, Minor` `:5417`) and `:5608` (`### General, Minor` `:5564`) |
   | `flaw.primogeniture_lineage` | *Minor, Story and Hermetic* | `:6635` | `["story"]` | `:5447` (`### Hermetic, Minor` `:5417`) and `:5516` (`### Story, Minor` `:5501`) |
   | `flaw.unbearable_to_beings` | *Minor, Hermetic or General* | `:6892` | `["general"]` | `:5455` (`### Hermetic, Minor` `:5417`) and `:5629` (`### General, Minor` `:5564`) |
@@ -376,27 +376,68 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   only a magus could take two Flaws the book also indexes under General. See *Two
   Flaws the book indexes under General were magus-only* below.
 
-  **The remaining three keep one category deliberately, and the reason differs per
-  item.** `flaw.curse_of_slander` and `virtue.inoffensive_to_beings` already carry
-  the *permissive* category (`general` is on every profile's permitted list and no
-  profile's forbidden list), so nothing is blocked and adding the second category
-  would change no outcome. `flaw.primogeniture_lineage` keeps `story` for the
+  **One of the two *or*-joined descriptors is now modelled as a choice (row 13,
+  B4).**
+  `flaw.curse_of_slander` — "*Minor, General or Supernatural*" `:5882` — ships
+  both categories plus a `taken_as` parameter offering exactly those two, and
+  `max_total: 1`, the same shape `virtue.sufi` carries (see *Row 19, half (a)*
+  below). Its "or" is the same either/or `:5083` states in prose, so it gets the
+  same mechanism rather than flat dual membership: taken as General it must not
+  count as a Supernatural Flaw for any `has_category` rule, which is precisely
+  the objection open-to-dos row 13 raised against simply adding the second
+  category. Both readings were open to every profile before and still are —
+  `general` and `supernatural` are both on every profile's permitted list and
+  neither is on any forbidden list — so nothing that was legal became illegal;
+  what changed is that the bearer's category is now *recorded* rather than
+  guessed.
+
+  **The remaining two keep one category deliberately, and the reason differs per
+  item.** `virtue.inoffensive_to_beings` already carries the *permissive*
+  category (`general` is on every profile's permitted list and no profile's
+  forbidden list), so nothing is blocked and adding the second category would
+  change no outcome. `flaw.primogeniture_lineage` keeps `story` for the
   opposite reason: adding `hermetic` would corrupt Gift detection, because
   `gift_categories` is `["hermetic"]` on every shipped profile — see the
   overloading note below. Its magi-only restriction is a House matter, not a
   category one, and is now enforced as a prerequisite — see *Primogeniture
   Lineage is for magi of House Verditius only* below.
 
-  **Still unmodelled, and recorded rather than resolved (row 19, half b):** the
-  *and* / *or* / comma distinction itself. `Vec<String>` cannot express it, and
-  whether *and* means "either route" (the reading the engine takes) or "both,
-  hence both categories' restrictions" is a genuine interpretive question the
-  book does not settle. This is a DIFFERENT question from "taken as" below —
-  "taken as" is an *or* mechanism (a stated choice between two readings of one
-  item); the *and*-joined descriptors (`virtue.inoffensive_to_beings`,
-  `flaw.offensive_to_beings`, `flaw.primogeniture_lineage`,
-  `flaw.unbearable_to_beings`) stay open. `flaw.curse_of_slander` (row 13, "*or*")
-  is likewise deferred, to B4.
+  **Still unmodelled, and recorded rather than resolved (row 19, half b): the
+  *and*-joined descriptors.** `taken_as` models ***or***, and only *or*. An *or*
+  descriptor states a choice between two readings of one item — the book says so
+  outright for Sufi (`:5083`, "either as a Minor Social Status Virtue or a Minor
+  Supernatural Virtue") — so the parameter records which reading the player
+  picked and exactly one category is in force. An *and* descriptor makes no such
+  statement, and the book never settles what it means: "either route" (the
+  permissive reading, which is what the engine does today by resolving the whole
+  `categories` list) or "both, hence both categories' restrictions apply at
+  once" (the restrictive reading, which no current mechanism expresses —
+  `categories_for` returns a list, but every membership site asks *any*, never
+  *all*). Stretching `taken_as` over them would be worse than leaving them open:
+  it would hand the player a choice the book does not offer, and under the
+  restrictive reading it would silently *drop* half of a restriction meant to
+  bind. So the three *and*-joined descriptors stay as they are:
+  `virtue.inoffensive_to_beings` (*General and Hermetic*, `:4134`),
+  `flaw.offensive_to_beings` (*Hermetic and General*, `:6525`) and
+  `flaw.primogeniture_lineage` (*Story and Hermetic*, `:6635`). Resolving them
+  needs a rules *decision* first, not more code, and `docs/open-todos.md` row 19
+  half (b) is where that decision is owed.
+
+  **`flaw.unbearable_to_beings` is *or*-joined and still stays out, for a
+  separate reason.** Its descriptor is *Minor, Hermetic or General* (`:6892`), so
+  the *and*/*or* question above does not apply to it — but its second category is
+  `hermetic`, and `hermetic` is overloaded: `gift_categories` is `["hermetic"]`
+  on every shipped profile, so `effective::has_the_gift` reads any hermetic
+  category as "has The Gift" (see the overloading note below). Offering
+  `hermetic` as a selectable reading would therefore make the *choice itself*
+  decide whether the character is Gifted, which is not what `:6892` says. The
+  eligibility that category was standing in for is already modelled explicitly
+  and correctly, as `prerequisites: Any([Has(virtue.the_gift),
+  Has(flaw.magical_air)])` — see *Two Flaws the book indexes under General were
+  magus-only* below — so `taken_as` would add nothing here and would re-introduce
+  the Gift-detection corruption that fix removed. `virtue.inoffensive_to_beings`
+  and `flaw.offensive_to_beings` sit behind the same `hermetic` overload on top
+  of the *and* question.
 
   **Row 19, half (a), resolved: "taken as" is now modelled.** `:5083` makes
   Sufi's dual category an explicit player CHOICE ("either as a Minor Social
@@ -410,6 +451,22 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   item, not two items, and load-time integrity
   (`ruleset::integrity::validate_taken_as_max_total`) now rejects any
   `taken_as`-declaring item that omits this cap.
+
+  **Shipped `taken_as` items.** Two, both in `rules/core/virtues_flaws.json`,
+  both carrying `max_total: 1` and a parameter whose values are exactly the two
+  categories the descriptor names. The frozen `TAKEN_AS_ITEMS` table in
+  `crates/arm-rules/tests/data_integrity.rs` pins the set:
+
+  | item | descriptor | source | `taken_as` values |
+  |---|---|---|---|
+  | `flaw.curse_of_slander` | *Minor, General or Supernatural* | `:5882` | `["general", "supernatural"]` |
+  | `virtue.sufi` | *Minor, Social Status, Supernatural* (choice stated at `:5083`) | `:5077-5078` | `["social_status", "supernatural"]` |
+
+  A save written before an item gained its parameter reports the standing
+  non-blocking `missing_param` until the player states the choice, and is
+  deliberately **not** migrated: fabricating a placeholder would invent a
+  player's rules choice. `SCHEMA_VERSION` is unaffected — this is catalogue
+  data, not a save-shape change.
 
   The resolution is centralized in one place, `PointItem::categories_for`
   (`crates/arm-rules/src/types.rs`): given a selection's `params`, it returns
