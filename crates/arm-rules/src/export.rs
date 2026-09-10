@@ -220,6 +220,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "personality-label",
     "possessions-devices-label",
     "power-level-label",
+    "power-penetration-label",
     "realm-divine",
     "realm-faerie",
     "realm-infernal",
@@ -396,9 +397,11 @@ struct Doc<'a> {
     missing: RefCell<BTreeSet<MissingLabel>>,
 }
 
-/// A name-and-level table, built by [`Doc::leveled_rows`].
+/// A name-and-level table, built by [`Doc::leveled_rows`] — or, for a being's own
+/// powers, the name/level/Penetration table [`Doc::power_rows`] builds. The header
+/// list is therefore a `Vec`, not a fixed pair.
 struct LeveledTable {
-    headers: [String; 2],
+    headers: Vec<String>,
     rows: Vec<Vec<String>>,
 }
 
@@ -1067,6 +1070,7 @@ mod tests {
             powers: vec![SupernaturalPower {
                 name: "Wings of the Storm".to_string(),
                 level: 20,
+                penetration: 0,
             }],
         });
         e.warping_points = 6;
@@ -2720,6 +2724,7 @@ mod tests {
         e.powers = vec![SupernaturalPower {
             name: "Glamour".to_string(),
             level: 25,
+            penetration: 0,
         }];
         let doc = character_markdown(
             &e,
@@ -2735,6 +2740,43 @@ mod tests {
         assert!(doc.contains("- **Might Score**: Faerie 15\n"), "{doc}");
         assert!(doc.contains("### Supernatural Powers\n"), "{doc}");
         assert!(doc.contains("| Glamour | 25 |"), "{doc}");
+    }
+
+    /// The being's own powers print their Penetration, because the levels spent
+    /// on it come out of the same budget as the level itself (Ars Magica -
+    /// Definitive Edition (Core Rules).md:4019). Without the column the exported
+    /// sheet cannot be reconciled with the budget the app charged: the book's own
+    /// two-Greater-Power example (`:4021`) would read as 80 levels of powers
+    /// against a budget of 100.
+    #[test]
+    fn a_powers_table_prints_the_penetration_bought_from_the_same_budget() {
+        let mut e = magus();
+        e.powers = vec![
+            SupernaturalPower {
+                name: "Stormcall".to_string(),
+                level: 60,
+                penetration: 0,
+            },
+            SupernaturalPower {
+                name: "Wolf Shape".to_string(),
+                level: 20,
+                penetration: 20,
+            },
+        ];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-supernatural", "Supernatural"),
+                ("supernatural-powers-label", "Supernatural Powers"),
+                ("power-level-label", "Level"),
+                ("power-penetration-label", "Penetration"),
+                ("identity-name", "Name"),
+            ]),
+        );
+        assert!(doc.contains("| Name | Level | Penetration |"), "{doc}");
+        assert!(doc.contains("| Stormcall | 60 | 0 |"), "{doc}");
+        assert!(doc.contains("| Wolf Shape | 20 | 20 |"), "{doc}");
     }
 
     #[test]
@@ -3129,6 +3171,7 @@ mod tests {
             powers: vec![SupernaturalPower {
                 name: "Ghostly Whispers".to_string(),
                 level: 5,
+                penetration: 0,
             }],
             ..Familiar::default()
         });
@@ -3155,6 +3198,7 @@ mod tests {
         e.powers = vec![SupernaturalPower {
             name: "Second Sight".to_string(),
             level: 10,
+            penetration: 0,
         }];
         let doc = character_markdown(
             &e,

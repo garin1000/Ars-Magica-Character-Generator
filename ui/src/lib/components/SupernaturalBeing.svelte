@@ -92,6 +92,24 @@
               oninput={(e) => store.setPowerName(i, (e.currentTarget as HTMLInputElement).value)}
               data-testid="power-name-{i}"
             />
+            <!-- Levels spent one-for-one on Penetration, out of the SAME budget
+                 as the level (Core Rules.md:4019) — the engine's
+                 `power_levels_used` counts both, so the bar above already
+                 charges for this and it has to be enterable. Its own control
+                 rather than a third field inside LevelRemoveField, which is
+                 shared with four hosts that have no Penetration. -->
+            <label class="field inline">
+              <span>{store.t('power-penetration-label')}</span>
+              <input
+                type="number"
+                min="0"
+                max="65535"
+                value={power.penetration ?? 0}
+                oninput={(e) =>
+                  store.setPowerPenetration(i, Number((e.currentTarget as HTMLInputElement).value))}
+                data-testid="power-penetration-{i}"
+              />
+            </label>
             <LevelRemoveField
               levelLabel={store.t('power-level-label')}
               levelValue={power.level}

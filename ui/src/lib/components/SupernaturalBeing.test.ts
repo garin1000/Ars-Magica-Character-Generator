@@ -194,6 +194,26 @@ describe('SupernaturalBeing power list', () => {
     expect(has(body, 'power-remove-1')).toBe(true);
   });
 
+  // The budget bar charges for Penetration as well as level (Core Rules.md:4019,
+  // and the engine's `powers_used`), so the row must offer a control for it —
+  // otherwise the player is billed for a value nothing on screen can set.
+  it('reads a power row Penetration back from the entity, defaulting to 0', () => {
+    store.entity.powers = [
+      { name: 'Wolf Shape', level: 20, penetration: 20 },
+      { name: 'Stormcall', level: 60 },
+    ];
+    const body = html();
+    expect(element(body, 'power-penetration-0').open).toMatch(/value="20"/);
+    expect(element(body, 'power-penetration-1').open).toMatch(/value="0"/);
+  });
+
+  it("exposes the engine's [0, 65535] range on the Penetration input", () => {
+    store.entity.powers = [{ name: 'Wolf Shape', level: 20, penetration: 20 }];
+    const open = element(html(), 'power-penetration-0').open;
+    expect(open).toContain('min="0"');
+    expect(open).toContain('max="65535"');
+  });
+
   it('reads the power-levels budget/used readout from the engine, never recomputed locally', () => {
     store.entity.powers = [{ name: 'Fangs of the Beast', level: 20 }];
     store.effective = {

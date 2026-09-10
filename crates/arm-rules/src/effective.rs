@@ -1638,11 +1638,38 @@ mod tests {
         e.powers = vec![SupernaturalPower {
             name: "P".into(),
             level: 12,
+            penetration: 0,
         }];
         assert_eq!(effective_might(&e, &rs).unwrap().score, 6); // 4 base + 2 grant
         assert_eq!(powers_used(&e), 12);
         // No might at all → None.
         assert!(effective_might(&xp_entity(vec![]), &rs).is_none());
+    }
+
+    #[test]
+    fn powers_used_spends_penetration_from_the_same_pool_as_level() {
+        // "You may also spend levels one-for-one to give the power Penetration"
+        // (Ars Magica - Definitive Edition (Core Rules).md:4019), so Penetration
+        // is charged against the SAME budget as the level. The book's own worked
+        // example (`:4021`): two copies of Greater Power give 100 levels, spent as
+        // "a power with a level of 60 and a Penetration of 0, and a second power
+        // with a level and Penetration of 20 each" — 60 + 0 + 20 + 20 = 100, so a
+        // `powers_used` that ignored Penetration would report 80 and let the
+        // player buy 20 levels the book has already spent.
+        let mut e = xp_entity(vec![]);
+        e.powers = vec![
+            SupernaturalPower {
+                name: "Stormcall".into(),
+                level: 60,
+                penetration: 0,
+            },
+            SupernaturalPower {
+                name: "Wolf Shape".into(),
+                level: 20,
+                penetration: 20,
+            },
+        ];
+        assert_eq!(powers_used(&e), 100);
     }
 
     #[test]

@@ -105,7 +105,13 @@ fn arb_familiar() -> impl Strategy<Value = Familiar> {
         ),
         (0u8..6, 0u8..6, 0u8..6),
         prop::collection::vec(
-            (arb_name(), 0u16..4).prop_map(|(name, level)| SupernaturalPower { name, level }),
+            (arb_name(), 0u16..4, 0u16..4).prop_map(|(name, level, penetration)| {
+                SupernaturalPower {
+                    name,
+                    level,
+                    penetration,
+                }
+            }),
             0..5,
         ),
     )

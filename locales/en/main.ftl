@@ -664,6 +664,9 @@ supernatural-powers-label = Supernatural Powers
 power-levels-used = Power levels: { $used } / { $budget }
 power-name-placeholder = Power name
 power-level-label = Level
+# Levels spent one-for-one on Penetration, out of the SAME budget as the level
+# (Core Rules.md:4019), which is why the bar above counts both.
+power-penetration-label = Penetration
 power-add = Add power
 powers-empty = No supernatural powers yet.
 realm-magic = Magic
@@ -1022,6 +1025,9 @@ issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) 
 issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Virtue or Flaw that grants one.
 issue-over_item_level = Enchanted devices total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-over_power_levels = Supernatural powers total { $used } levels, over the budget of { $budget } (by { $over }).
+# The named power is free text the player typed on the Supernatural tab, so the
+# message quotes it back rather than trying to label it.
+issue-power_dangling_target = { $item } names the power { $power }, which this character does not have; add it under Supernatural Powers or correct the name.
 issue-might_realm_mismatch = The entered Might Realm ({ $base }) disagrees with the Realm its Virtues grant ({ $granted }).
 issue-excessive_aging_reduction = The aging drops to { $characteristic } ({ $reduction }) would fall below the minimum score ({ $min }); it is clamped there.
 # A character over 35 owes aging rolls before play begins (Core Rules.md:2232),

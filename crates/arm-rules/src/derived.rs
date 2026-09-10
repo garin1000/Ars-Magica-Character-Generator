@@ -1429,6 +1429,7 @@ mod tests {
             powers: vec![SupernaturalPower {
                 name: "Mental communication".into(),
                 level: 15,
+                penetration: 0,
             }],
         }
     }
@@ -1592,6 +1593,7 @@ mod tests {
         f.powers.push(SupernaturalPower {
             name: "Shapechanging".into(),
             level: 25,
+            penetration: 0,
         });
         assert_eq!(familiar_invested_power_levels(&f), 40);
     }

@@ -292,6 +292,7 @@ fn golden_magus() -> Entity {
         powers: vec![SupernaturalPower {
             name: "Wings of the Storm".to_string(),
             level: 20,
+            penetration: 0,
         }],
     });
     e.warping_points = 6;

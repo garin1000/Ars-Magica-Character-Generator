@@ -143,6 +143,7 @@ fn fully_populated_entity() -> Entity {
         powers: vec![SupernaturalPower {
             name: "Wings of the Storm".to_string(),
             level: 20,
+            penetration: 0,
         }],
     });
 
@@ -172,6 +173,7 @@ fn fully_populated_entity() -> Entity {
     e.powers = vec![SupernaturalPower {
         name: "Second Sight".to_string(),
         level: 5,
+        penetration: 2,
     }];
 
     e.normalize();

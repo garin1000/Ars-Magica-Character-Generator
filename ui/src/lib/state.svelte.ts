@@ -1364,6 +1364,22 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /**
+   * Levels spent one-for-one on the power's Penetration. Charged against the
+   * SAME power-levels budget as the level itself ("You may also spend levels
+   * one-for-one to give the power Penetration", Core Rules.md:4019), which is why
+   * the engine's `power_levels_used` counts both — so this must be editable, or
+   * the bar would charge for something no control can enter. Clamped to u16 like
+   * the level.
+   */
+  setPowerPenetration(index: number, penetration: number): void {
+    const clamped = clampInt(penetration, 0, U16_MAX);
+    this.entity.powers = (this.entity.powers ?? []).map((p, i) =>
+      i === index ? { ...p, penetration: clamped } : p,
+    );
+    this.#scheduleValidate();
+  }
+
   // --- Familiar: the creature statblock + the three bond cords ---
   //
   // Every edit below is guarded by `if (!this.entity.familiar) return;`: the panel

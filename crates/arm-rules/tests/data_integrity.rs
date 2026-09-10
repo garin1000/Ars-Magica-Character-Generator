@@ -2364,6 +2364,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
         powers: vec![SupernaturalPower {
             name: "Mental communication".to_string(),
             level: 20,
+            penetration: 0,
         }],
     });
     e.talisman = Some(Talisman {
@@ -6558,6 +6559,33 @@ const PER_POWER_ITEMS: &[(&str, u32)] = &[
     ("flaw.slow_power", 6761),
 ];
 
+/// The Power Virtues that fund `Entity::powers` — `(id, line, levels granted)`.
+///
+/// Each is "a supernatural power that he can activate at will" priced in *levels*
+/// of a Formulaic (or, for Ritual Power, a Ritual) Hermetic spell, and each spends
+/// those levels on the power's level and its Penetration alike, so all four grant
+/// into the one `power_levels_budget` the being's `powers` are charged against.
+///
+/// **Focus Power is deliberately absent.** Its 25 are a *different currency*: "This
+/// Virtue grants a pool of 25 points… It costs 2 points to raise the maximum level
+/// of effect by 1, and 1 point to raise the Penetration by 1" (`:3899`). Adding 25
+/// points to a budget denominated in levels would be wrong arithmetic — a Focus
+/// Power's 25 points buy at most 12 levels, not 25. The control test below pins
+/// that it stays out.
+const POWER_LEVEL_ITEMS: &[(&str, u32, u16)] = &[
+    // "equivalent to a Formulaic Hermetic spell with a level of 50 or lower"
+    // (:4019).
+    ("virtue.greater_power", 4019, 50),
+    // "equivalent to Formulaic Hermetic spells with total levels of 25 or lower"
+    // (:4281).
+    ("virtue.lesser_power", 4281, 25),
+    // "equivalent to a Formulaic Hermetic spell with a level of 25 or lower"
+    // (:4716).
+    ("virtue.personal_power", 4716, 25),
+    // "equivalent to a Ritual Hermetic spell with a level of 25 or lower" (:4872).
+    ("virtue.ritual_power", 4872, 25),
+];
+
 /// Items whose target parameter is a **closed list the rulebook prints in full**
 /// — `(id, param key, the line that prints the list, the value ids)`.
 ///
@@ -6976,6 +7004,45 @@ fn folk_magic_repeats_along_either_axis_and_never_across_the_excluded_realms() {
 }
 
 #[test]
+fn shipped_power_virtues_fund_the_power_levels_budget() {
+    use arm_rules::power_levels_budget;
+    let rs = load_ruleset();
+
+    for (id, line, levels) in POWER_LEVEL_ITEMS {
+        let one = entity("mythic_companion", vec![Selection::new(Id::new(*id))]);
+        assert_eq!(
+            power_levels_budget(&one, &rs),
+            u32::from(*levels),
+            "{id} grants {levels} levels of supernatural power \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+    }
+}
+
+/// Focus Power's 25 are POINTS, not levels — "It costs 2 points to raise the
+/// maximum level of effect by 1, and 1 point to raise the Penetration by 1"
+/// (Ars Magica - Definitive Edition (Core Rules).md:3899). Feeding them into the
+/// level-denominated budget would silently double what the Virtue actually buys,
+/// so the entry must grant nothing there.
+#[test]
+fn focus_power_funds_no_power_levels_because_its_pool_is_points() {
+    use arm_rules::power_levels_budget;
+    let rs = load_ruleset();
+
+    let focused = entity(
+        "mythic_companion",
+        vec![Selection::new(Id::new("virtue.focus_power"))],
+    );
+    assert_eq!(
+        power_levels_budget(&focused, &rs),
+        0,
+        "Focus Power's pool is 25 POINTS at 2 points per level of effect \
+         (Ars Magica - Definitive Edition (Core Rules).md:3899), a different \
+         currency from the level budget the other Power Virtues fund"
+    );
+}
+
+#[test]
 fn shipped_per_power_items_carry_a_power_target() {
     let rs = load_ruleset();
 
@@ -7012,6 +7079,69 @@ fn shipped_per_power_items_carry_a_power_target() {
             ParameterDomain::Text,
             "a power is an anonymous instance of a Power Virtue, so its name \
              is free text the player types, not a registry ref"
+        );
+        assert!(
+            param.require_power,
+            "{id} restricts a power the character HAS, so the typed name must \
+             match one of `entity.powers` \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+        );
+    }
+}
+
+/// Builds a mythic companion holding one copy of `id` naming `power`, plus the
+/// supernatural powers listed in `powers`.
+fn entity_naming_power(id: &str, power: &str, powers: &[(&str, u16)]) -> Entity {
+    let mut e = entity(
+        "mythic_companion",
+        vec![Selection::with_params(
+            Id::new(id),
+            BTreeMap::from([("power".to_string(), Id::new(power))]),
+        )],
+    );
+    e.powers = powers
+        .iter()
+        .map(|(name, level)| SupernaturalPower {
+            name: (*name).to_string(),
+            level: *level,
+            penetration: 0,
+        })
+        .collect();
+    e
+}
+
+#[test]
+fn a_per_power_item_naming_no_held_power_dangles() {
+    let rs = load_ruleset();
+
+    for (id, line) in PER_POWER_ITEMS {
+        let codes = issue_codes(&entity_naming_power(id, "Wolf Shape", &[]), &rs);
+        assert!(
+            codes.contains(&"power_dangling_target".to_string()),
+            "{id} restricts one of the character's own powers, so a name no \
+             power carries restricts nothing \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+        );
+    }
+}
+
+#[test]
+fn a_per_power_item_naming_a_held_power_is_clean() {
+    let rs = load_ruleset();
+
+    for (id, line) in PER_POWER_ITEMS {
+        let codes = issue_codes(
+            &entity_naming_power(
+                id,
+                "Wolf Shape",
+                &[("Wolf Shape", 10), ("Curse of Sleep", 5)],
+            ),
+            &rs,
+        );
+        assert!(
+            !codes.contains(&"power_dangling_target".to_string()),
+            "{id} may name any power the character holds \
+             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
         );
     }
 }

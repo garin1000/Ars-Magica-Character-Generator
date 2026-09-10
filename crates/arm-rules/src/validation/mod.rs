@@ -151,6 +151,7 @@ impl fmt::Display for IssueSeverity {
 /// | `exclusive_param_values` | error | virtues_flaws | `item`, `key`, `count` |
 /// | `param_target_not_possessed` | error | virtues_flaws | `item`, `key`, `value` |
 /// | `param_target_already_claimed` | error | virtues_flaws | `item`, `key`, `value`, `other` |
+/// | `power_dangling_target` | error | review | `item`, `key`, `power` |
 /// | `gift_required` | error | virtues_flaws | (none) |
 /// | `gift_forbidden` | error | virtues_flaws | (none) |
 /// | `characteristic_out_of_range` | error | characteristics | `characteristic`, `score`, `min`, `max` |
@@ -437,6 +438,18 @@ impl ValidationIssue {
     /// `flaw.false_power_minor` are different ids, so one Major and one Minor
     /// both naming the same Virtue collide in neither key.
     pub const CODE_PARAM_TARGET_ALREADY_CLAIMED: &'static str = "param_target_already_claimed";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a parameter declaring
+    /// [`ParameterDef::require_power`](crate::types::ParameterDef::require_power)
+    /// names a supernatural power the being does not hold. Restricted Power, Slow
+    /// Power and Variable Power each modify "one of the character's supernatural
+    /// powers" (Ars Magica - Definitive Edition (Core Rules).md:6689, :6761,
+    /// :5205), so a name matching no `Entity::powers` entry restricts nothing.
+    ///
+    /// The free-text sibling of [`Self::CODE_PARAM_TARGET_NOT_POSSESSED`]: same
+    /// idea, different registry. It gets a code of its own because the remedy is
+    /// different — add or rename a *power*, not buy a Virtue — and because the two
+    /// are filed on different phases.
+    pub const CODE_POWER_DANGLING_TARGET: &'static str = "power_dangling_target";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a restricted XP pool — a
     /// grant (Educated/Warrior/Privileged) or a life-stage block — has experience the
     /// character left unspent on its eligible Abilities; the rules waste it.
@@ -946,6 +959,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_reputations(entity, ruleset, &mut issues);
         validate_devices(entity, ruleset, &mut issues);
         validate_powers(entity, ruleset, &mut issues);
+        validate_power_targets(entity, &effective_selections, ruleset, &mut issues);
         validate_might(entity, ruleset, &effective_selections, &mut issues);
         validate_equipment(entity, ruleset, &mut issues);
         validate_aging(entity, ruleset, &mut issues);
@@ -2430,6 +2444,7 @@ mod tests {
         SupernaturalPower {
             name: name.into(),
             level,
+            penetration: 0,
         }
     }
 

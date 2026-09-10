@@ -688,6 +688,38 @@ pub struct ParameterDef {
     /// Load-time integrity rejects the flag on any domain but `item`.
     #[serde(default, skip_serializing_if = "is_false")]
     pub forbid_tainted: bool,
+    /// A [`ParameterDomain::Text`] value must name one of the supernatural powers
+    /// the entity holds — an `Entity::powers` entry with that exact name. `false`
+    /// (the default) leaves free text free.
+    ///
+    /// The three per-power items are the case the rules state: Restricted Power,
+    /// Slow Power and Variable Power each modify "one of the character's
+    /// supernatural powers" (Ars Magica - Definitive Edition (Core Rules).md:6689,
+    /// :6761, :5205), so a name no power carries restricts nothing. This is the
+    /// free-text sibling of [`Self::require_possessed`]: the same idea — the
+    /// target must be on the sheet — for the one domain that names no registry.
+    ///
+    /// **Why not a domain of its own.** A power is not a catalogue entry; it is an
+    /// anonymous instance the player types (a Greater Power's levels may be spent
+    /// on several powers, `:4021`), so there is nothing for a domain to resolve
+    /// against. The value stays free text and only the *entity* can judge it.
+    ///
+    /// Matching is exact on the trimmed strings the engine already stores:
+    /// `Entity::normalize` trims every parameter value, and case is deliberately
+    /// left alone there for the same reason it is left alone here — the rules ask
+    /// for no case-folding and two powers a player capitalised differently are
+    /// their own business.
+    ///
+    /// Enforced by `validation::selections::validate_power_targets`, which raises
+    /// [`crate::validation::ValidationIssue::CODE_POWER_DANGLING_TARGET`] on
+    /// [`crate::CreationPhase::Review`] — the step that owns `powers`, and so the
+    /// step where the fix lives.
+    ///
+    /// Load-time integrity rejects the flag on any domain but `text`, for the same
+    /// reason it rejects a stray [`Self::require_possessed`]: no other domain holds
+    /// a power's name, so the restriction would look enforced and be read by no one.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub require_power: bool,
 }
 
 impl ParameterDef {
@@ -703,6 +735,7 @@ impl ParameterDef {
             require_categories: Default::default(),
             require_possessed: false,
             forbid_tainted: false,
+            require_power: false,
         }
     }
 
@@ -717,6 +750,7 @@ impl ParameterDef {
             require_categories: Default::default(),
             require_possessed: false,
             forbid_tainted: false,
+            require_power: false,
         }
     }
 }
@@ -2806,6 +2840,23 @@ pub struct SupernaturalPower {
     pub name: String,
     /// Total power level, charged against the power-levels budget.
     pub level: u16,
+    /// Levels spent one-for-one to give the power Penetration; 0 when none were.
+    ///
+    /// "You may also spend levels one-for-one to give the power Penetration;
+    /// otherwise, it has a Penetration of zero" — so these levels come out of the
+    /// SAME pool as [`Self::level`] and are charged against the same budget by
+    /// [`crate::effective::powers_used`]. The book's own worked example (`:4021`)
+    /// spends two copies of Greater Power, 100 levels, as "a power with a level of
+    /// 60 and a Penetration of 0, and a second power with a level and Penetration
+    /// of 20 each": 60 + 0 + 20 + 20 = 100.
+    ///
+    /// Additive, so [`SCHEMA_VERSION`] is unchanged and no migration exists: a save
+    /// written before the field reads 0, and a power that bought no Penetration
+    /// serializes exactly as it did before.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4019, :4021.
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub penetration: u16,
 }
 
 /// A magus's familiar: the magical beast itself plus the three bond cords.
@@ -3218,6 +3269,11 @@ fn is_zero_i32(n: &i32) -> bool {
 
 /// `skip_serializing_if` predicate: omits a `u8` field when it is zero.
 fn is_zero_u8(n: &u8) -> bool {
+    *n == 0
+}
+
+/// `skip_serializing_if` predicate: omits a `u16` field when it is zero.
+fn is_zero_u16(n: &u16) -> bool {
     *n == 0
 }
 
@@ -4506,16 +4562,48 @@ mod tests {
             SupernaturalPower {
                 name: "Curse of Misfortune".into(),
                 level: 20,
+                penetration: 0,
             },
             SupernaturalPower {
                 name: "Coagulation".into(),
                 level: 10,
+                penetration: 5,
             },
         ];
         let json = serde_json::to_string(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
         assert!(json.contains("\"realm\":\"infernal\""));
+    }
+
+    #[test]
+    fn power_penetration_defaults_to_zero_and_is_omitted_when_unspent() {
+        // `penetration` is additive, so SCHEMA_VERSION stays put: a save written
+        // before the field existed carries no key and must read as 0, and a power
+        // that spent no levels on Penetration must round-trip without growing one
+        // (canonical serialization, zero-noise diffs). A power that DID buy
+        // Penetration keeps it (Ars Magica - Definitive Edition (Core Rules).md:4019).
+        let older: SupernaturalPower =
+            serde_json::from_str(r#"{"name":"Curse of Sleep","level":25}"#).unwrap();
+        assert_eq!(older.penetration, 0);
+
+        let json = serde_json::to_string(&older).unwrap();
+        assert!(
+            !json.contains("penetration"),
+            "an unspent Penetration must not appear in the save: {json}"
+        );
+
+        let spent = SupernaturalPower {
+            name: "Wolf Shape".into(),
+            level: 20,
+            penetration: 20,
+        };
+        let json = serde_json::to_string(&spent).unwrap();
+        assert!(json.contains("\"penetration\":20"), "{json}");
+        assert_eq!(
+            serde_json::from_str::<SupernaturalPower>(&json).unwrap(),
+            spent
+        );
     }
 
     #[test]
@@ -5726,6 +5814,7 @@ mod tests {
             powers: vec![SupernaturalPower {
                 name: "Mental communication".into(),
                 level: 15,
+                penetration: 0,
             }],
         };
         let json = serde_json::to_string(&filled).unwrap();
@@ -5813,10 +5902,12 @@ mod tests {
                 SupernaturalPower {
                     name: "Speech".into(),
                     level: 20,
+                    penetration: 0,
                 },
                 SupernaturalPower {
                     name: "Mental communication".into(),
                     level: 15,
+                    penetration: 0,
                 },
             ],
             ..Default::default()

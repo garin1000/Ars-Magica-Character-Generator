@@ -115,8 +115,22 @@ pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
 }
 
 /// The total power level the being's `powers` consume — the "used" side of the
-/// power-levels budget bar. Source: Ars Magica 5e - Realms of Power - The
-/// Infernal.md:4122.
+/// power-levels budget bar.
+///
+/// Level **and** Penetration, because they are spent from one pool: "You may also
+/// spend levels one-for-one to give the power Penetration; otherwise, it has a
+/// Penetration of zero" (Ars Magica - Definitive Edition (Core Rules).md:4019).
+/// The book's worked example (`:4021`) spends the 100 levels of two Greater Powers
+/// as "a power with a level of 60 and a Penetration of 0, and a second power with
+/// a level and Penetration of 20 each" — 60 + 0 + 20 + 20 = 100. Counting the
+/// levels alone would report 80 and let the player buy 20 levels already spent.
+///
+/// Source: Ars Magica 5e - Realms of Power - The Infernal.md:4122; Ars Magica -
+/// Definitive Edition (Core Rules).md:4019, :4021.
 pub fn powers_used(entity: &Entity) -> u32 {
-    entity.powers.iter().map(|p| u32::from(p.level)).sum()
+    entity
+        .powers
+        .iter()
+        .map(|p| u32::from(p.level) + u32::from(p.penetration))
+        .sum()
 }

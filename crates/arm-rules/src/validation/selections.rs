@@ -785,6 +785,73 @@ pub(crate) fn validate_possessed_param_targets(
     }
 }
 
+/// Validates every [`ParameterDef::require_power`] target against the powers the
+/// being actually holds.
+///
+/// Restricted Power, Slow Power and Variable Power each modify "one of the
+/// character's supernatural powers" (Ars Magica - Definitive Edition (Core
+/// Rules).md:6689, :6761, :5205). The target is free text because a power is an
+/// anonymous *instance* of a Power Virtue rather than a catalogue entry — a
+/// Greater Power's levels may be spent on "several powers" (`:4021`) — so only
+/// [`Entity::powers`] can say whether the named one exists. A name no power
+/// carries is a Flaw attached to nothing, exactly as a dangling Puissant is.
+///
+/// Filed on [`CreationPhase::Review`], the phase that owns "Might and powers",
+/// following [`validate_ability_bonus_targets`]'s rule: the finding goes where
+/// the *fix* is, not where the offending value is. The remedy — add the power, or
+/// correct its spelling — is on the Review step, and filing it on the V/F step
+/// that raised it would block a step which cannot offer that remedy. The names on
+/// both sides are already trimmed (`Entity::normalize` trims parameter values;
+/// this compares against a trimmed power name), and case is deliberately not
+/// folded, matching the engine's one existing decision about free-text identity.
+///
+/// `selections` is the caller's folded bought-plus-granted list, for the same
+/// reason [`validate_possessed_param_targets`] takes it: a warping-owed Major
+/// Flaw slot or an open House grant is filled with a player-chosen [`Selection`],
+/// parameters and all, and such a copy names a power exactly as a bought one does.
+pub(crate) fn validate_power_targets(
+    entity: &Entity,
+    selections: &[Selection],
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue; // unknown_ref already reported
+        };
+        for param in &item.parameters {
+            if !param.require_power {
+                continue;
+            }
+            let Some(value) = selection.params.get(&param.key) else {
+                continue; // missing_param already reported
+            };
+            // A blank descriptor is `missing_param`'s finding; asking which power
+            // it names on top of that would only repeat one mistake.
+            if param_value_is_blank(value) {
+                continue;
+            }
+            if entity
+                .powers
+                .iter()
+                .any(|power| power.name.trim() == value.as_str())
+            {
+                continue;
+            }
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_POWER_DANGLING_TARGET,
+                CreationPhase::Review,
+                args([
+                    ("item", selection.item_ref.to_string()),
+                    ("key", param.key.clone()),
+                    ("power", value.to_string()),
+                ]),
+                Some(selection.item_ref.clone()),
+            ));
+        }
+    }
+}
+
 /// Enforces the "one Magical Focus per magus" limit (Ars Magica - Definitive Edition (Core Rules).md:4542) by
 /// counting [`Effect::MagicalFocus`] across everything that feeds the effective
 /// layer (bought selections plus House / Mythic-type grants, e.g. Mythic Blood's

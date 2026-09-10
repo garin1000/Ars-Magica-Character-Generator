@@ -2266,6 +2266,48 @@ mod tests {
         }
     }
 
+    /// `require_power` matches a value against `Entity::powers`, whose names are
+    /// free text and nothing else. On any other domain the value is an id out of
+    /// some registry, never a power's name, so the flag would sit in the data
+    /// looking enforced while nothing read it — the same slip
+    /// `possession_and_taint_flags_on_a_non_item_param_are_rejected` guards
+    /// against, mirrored onto the one domain that has no registry.
+    #[test]
+    fn require_power_on_a_non_text_param_is_rejected() {
+        for domain in ["realm", "item", "ability", "enumerated"] {
+            let values = if domain == "enumerated" {
+                r#", "values": ["x"]"#
+            } else {
+                ""
+            };
+            let err = ruleset_with_param(&format!(
+                r#"{{ "key": "target", "type": "ref", "domain": "{domain}"{values},
+                      "require_power": true }}"#
+            ))
+            .unwrap_err();
+            let msg = err.to_string();
+            assert!(
+                msg.contains("virtue.folk_magic")
+                    && msg.contains("target")
+                    && msg.contains(domain)
+                    && msg.contains("require_power"),
+                "{msg}"
+            );
+        }
+    }
+
+    /// The positive half: `require_power` loads clean on a `text` parameter.
+    #[test]
+    fn require_power_loads_on_a_text_param() {
+        let rs = ruleset_with_param(
+            r#"{ "key": "target", "type": "ref", "domain": "text",
+                 "require_power": true }"#,
+        )
+        .unwrap();
+        let param = &rs.point_items[&Id::new("virtue.folk_magic")].parameters[0];
+        assert!(param.require_power);
+    }
+
     /// The positive half: both flags load clean on an `item` parameter.
     #[test]
     fn possession_and_taint_flags_load_on_an_item_param() {

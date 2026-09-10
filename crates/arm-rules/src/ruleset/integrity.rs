@@ -1972,8 +1972,12 @@ impl Ruleset {
 /// so a spell may declare `enumerated` under exactly the same terms). `subject`
 /// is the caller's own message prefix, as with [`validate_source_range`].
 ///
-/// Four halves, all authoring slips that would otherwise be invisible:
+/// Five halves, all authoring slips that would otherwise be invisible:
 ///
+/// - A [`ParameterDef::require_power`] flag on any domain but `text`: it matches
+///   a value against the being's own `Entity::powers`, whose names are free text,
+///   so on a domain that resolves against a registry it would narrow nothing. The
+///   mirror image of the point-item gate immediately above it.
 /// - A [`ParameterDef::require_possessed`] or [`ParameterDef::forbid_tainted`]
 ///   flag on any domain but `item`: both restrict which *point item* a value may
 ///   name — one against the entity's held selections, the other against the
@@ -2035,6 +2039,17 @@ fn validate_parameter_defs(
                     param.domain
                 ));
             }
+        }
+        // `require_power` is the mirror image: it matches a value against the
+        // being's own `powers`, whose names are free text, so only a `text`
+        // domain can carry one.
+        if param.require_power && param.domain != ParameterDomain::Text {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has domain '{}' but declares \
+                 'require_power'; only a 'text' domain holds a power's name, so \
+                 the restriction would be read by no one",
+                param.domain
+            ));
         }
         let declares_values = matches!(
             param.domain,

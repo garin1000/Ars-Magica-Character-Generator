@@ -672,6 +672,10 @@ supernatural-powers-label = Übernatürliche Kräfte
 power-levels-used = Kraftstufen: { $used } / { $budget }
 power-name-placeholder = Name der Kraft
 power-level-label = Stufe
+# Stufen, die eins zu eins in Penetration investiert werden, aus DEMSELBEN
+# Budget wie die Stufe (Basisregeln.md:4019) — deshalb zählt die Anzeige oben
+# beides. „Penetration“ bleibt unübersetzt (Glossar: sphären-mächte.md).
+power-penetration-label = Penetration
 power-add = Kraft hinzufügen
 powers-empty = Noch keine übernatürlichen Kräfte.
 realm-magic = Magie
@@ -1050,6 +1054,9 @@ issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ 
 issue-reputation_not_granted = Eine Reputation ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der sie verleiht.
 issue-over_item_level = Artefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-over_power_levels = Übernatürliche Kräfte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
+# Der genannte Kraftname ist Freitext, den der Spieler im Reiter „Übernatürlich“
+# eingetragen hat; die Meldung gibt ihn deshalb wörtlich wieder.
+issue-power_dangling_target = { $item } nennt die Kraft { $power }, die dieser Charakter nicht besitzt; trage sie unter „Übernatürliche Kräfte“ ein oder berichtige den Namen.
 issue-might_realm_mismatch = Die eingegebene Macht-Sphäre ({ $base }) stimmt nicht mit der von den Tugenden verliehenen Sphäre ({ $granted }) überein.
 issue-excessive_aging_reduction = Die Alterungsminderungen für { $characteristic } ({ $reduction }) würden unter den Mindestwert ({ $min }) fallen; er wird dort begrenzt.
 # Ein Charakter über 35 muss vor Spielbeginn Alterungswürfe ablegen

@@ -1733,6 +1733,21 @@ describe('magic possessions', () => {
     expect(store.entity.powers).toEqual([{ name: 'Curse', level: 20 }]);
   });
 
+  // Penetration is bought with levels out of the SAME budget as the level
+  // (Core Rules.md:4019), so it has to be editable or the budget bar charges for
+  // something the player cannot enter. Clamped to u16 like the level itself.
+  it('edits a power Penetration and clamps it to u16', () => {
+    store.addPower();
+    store.setPowerName(0, 'Wolf Shape');
+    store.setPowerLevel(0, 20);
+    store.setPowerPenetration(0, 20);
+    expect(store.entity.powers).toEqual([{ name: 'Wolf Shape', level: 20, penetration: 20 }]);
+    store.setPowerPenetration(0, -5);
+    expect(store.entity.powers?.[0].penetration).toBe(0);
+    store.setPowerPenetration(0, 70000);
+    expect(store.entity.powers?.[0].penetration).toBe(65535);
+  });
+
   it('adds a longevity ritual with nothing entered yet', () => {
     store.addLongevityRitual('self_made');
     expect(store.entity.longevity_ritual).toEqual({ source: 'self_made', bonus: null, focus: '' });

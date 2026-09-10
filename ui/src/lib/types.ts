@@ -1096,9 +1096,12 @@ export interface MightScore {
 
 // A supernatural power a Might-being holds. `level` is charged against the
 // power-levels budget the being's Might Virtues grant (like a device vs item level).
+// `penetration` is charged against the SAME budget — levels are spent on it
+// one-for-one (Core Rules.md:4019) — and is absent from the save when unspent.
 export interface SupernaturalPower {
   name: string;
   level: number;
+  penetration?: number;
 }
 
 // A magus's familiar: the magical beast itself plus the three bond cords. Field

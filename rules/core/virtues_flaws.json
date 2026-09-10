@@ -2425,7 +2425,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "power", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "power", "type": "ref", "domain": "text", "require_power": true }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6687, 6690] }
   },
   {
@@ -2582,7 +2582,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "power", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "power", "type": "ref", "domain": "text", "require_power": true }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6759, 6762] }
   },
   {
@@ -4404,8 +4404,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "power_levels", "amount": 50 }],
     "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4017, 4026] }
   },
@@ -4858,8 +4859,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "power_levels", "amount": 25 }],
     "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4279, 4286] }
   },
@@ -5457,8 +5459,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "power_levels", "amount": 25 }],
     "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4714, 4727] }
   },
@@ -5708,8 +5711,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "power_levels", "amount": 25 }],
     "max_per_target": 255,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4870, 4877] }
   },
@@ -6339,7 +6343,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "power", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "power", "type": "ref", "domain": "text", "require_power": true }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5199, 5206] }
   },
   {

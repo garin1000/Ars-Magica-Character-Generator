@@ -56,7 +56,7 @@ impl<'a> Doc<'a> {
     /// A supernatural being's effective Might and the powers it holds.
     pub(super) fn write_supernatural(&self, out: &mut String) {
         let might = effective_might(self.entity, self.rules());
-        let powers = self.leveled_rows(&self.entity.powers, "power-level-label");
+        let powers = self.power_rows(&self.entity.powers);
         if might.is_none() && powers.is_empty() {
             return;
         }
@@ -406,9 +406,41 @@ impl<'a> Doc<'a> {
     /// A name-and-level table for the three list types that share that shape:
     /// enchanted devices, supernatural powers, and instilled talisman effects. Each
     /// names its own "Level" key, since each is a different quantity.
+    /// The being's OWN supernatural powers: name, level, and the Penetration
+    /// bought with levels out of the same budget ("You may also spend levels
+    /// one-for-one to give the power Penetration",
+    /// Ars Magica - Definitive Edition (Core Rules).md:4019). Three columns rather
+    /// than the shared two, so the table reconciles with the power-levels budget
+    /// the app charged — otherwise the book's own worked example (`:4021`) would
+    /// print 80 levels of powers against a budget of 100.
+    ///
+    /// The familiar's invested powers keep [`Self::leveled_rows`]: they are
+    /// charged against no budget at all (`:10866`) and no surface sets their
+    /// Penetration, so a third column there would be a row of zeros implying a
+    /// field that does not exist.
+    fn power_rows(&self, powers: &[SupernaturalPower]) -> LeveledTable {
+        LeveledTable {
+            headers: vec![
+                self.label("identity-name"),
+                self.label("power-level-label"),
+                self.label("power-penetration-label"),
+            ],
+            rows: powers
+                .iter()
+                .map(|power| {
+                    vec![
+                        escape_cell(&power.name),
+                        power.level.to_string(),
+                        power.penetration.to_string(),
+                    ]
+                })
+                .collect(),
+        }
+    }
+
     fn leveled_rows<T: Leveled>(&self, items: &[T], level_key: &str) -> LeveledTable {
         LeveledTable {
-            headers: [self.label("identity-name"), self.label(level_key)],
+            headers: vec![self.label("identity-name"), self.label(level_key)],
             rows: items
                 .iter()
                 .map(|item| vec![escape_cell(item.leveled_name()), item.level().to_string()])

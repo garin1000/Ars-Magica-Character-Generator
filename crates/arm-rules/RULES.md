@@ -2052,20 +2052,25 @@ all three.
 
 **What this does NOT enforce — the residual gap, stated plainly.**
 
-1. **The typed name is unverified.** Nothing checks that the string names a
-   power the character actually possesses, precisely because the power rows are
-   anonymous (see above). Giving the five Power Virtues their own free-text
-   `name` parameter would make them addressable and let the picker offer a
-   dropdown; that is a larger change with its own save impact and is not done.
-2. **The duplicate key is byte-for-byte.** It is exact `(item_ref, params)`
-   equality (`validation/selections.rs:135-140`) and `ParameterDomain::Text`
-   accepts any string (`selections.rs:277`), the empty one included — note that
-   `types.rs:455-458` documents "any non-empty value is legal", which the code
-   does not enforce; that doc/code mismatch predates this rule. So "Wolf Shape",
-   "wolf shape" and "Wolf Shape " read as three distinct targets and a blank
-   power name is accepted. Trimming or case-folding the key would change
-   behaviour for *every* existing text parameter (`terrain`, `land`, `realm`,
-   `role`, …) and is deliberately not done here.
+1. **The typed name used to be unverified. It no longer is.** Nothing checked
+   that the string named a power the character possesses, and the recorded fix
+   here was to give the five Power Virtues a free-text `name` parameter of their
+   own. That fix is **wrong and was not taken**: a copy of a Power Virtue is not
+   a power (`:4021`, `:4283`, `:4874` all add copies' levels together to make
+   *several* powers or one stronger one), so a per-copy name would encode a 1:1
+   correspondence the book denies. What the registry always was is
+   `Entity::powers` — see *Power Virtues fund the power-levels budget (B10)*
+   below, which wires the Virtues to that budget and validates the `power`
+   parameter against `entity.powers[].name` (`require_power` →
+   `power_dangling_target`).
+2. **The duplicate key is byte-for-byte, but the values are trimmed.** Identity
+   is exact `(item_ref, params)` equality, and a `Text` value that trims to
+   nothing now raises `missing_param` rather than being accepted — see
+   *Parameter-value identity: trimmed, never case-folded (row 10)*. So
+   "Wolf Shape " and "Wolf Shape" are the same target, while "wolf shape" is a
+   different one: case is deliberately not folded, and `validate_power_targets`
+   makes the same choice when matching a `power` parameter against the power
+   rows, so the engine has exactly one notion of free-text identity.
 
 So the cap stops an honest mistake — the player who takes Slow Power twice for
 one power without noticing — not a determined evasion. That is a real
@@ -2120,6 +2125,100 @@ every selection, so two Improved Characteristics yield
 `::repeated_selections_are_not_reported_as_duplicates`,
 `::shipped_repeatable_items_carry_their_rulebook_ceiling` and
 `::shipped_once_only_items_stay_non_repeatable`.
+
+#### Power Virtues fund the power-levels budget (B10)
+> "The character has a supernatural power that he can activate at will. If you
+> take the Virtue once, this is a single power, equivalent to a Formulaic
+> Hermetic spell with a level of 50 or lower. You may also spend levels
+> one-for-one to give the power Penetration; otherwise, it has a Penetration of
+> zero."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:4019` (Greater Power,
+  **50** levels + the Penetration clause), `:4281` (Lesser Power, "total levels
+  of 25 or lower", same Penetration clause), `:4716` (Personal Power, **25**),
+  `:4872` (Ritual Power, **25**, "a Ritual Hermetic spell with a level of 25 or
+  lower").
+- Data: `rules/core/virtues_flaws.json` — `virtue.greater_power`,
+  `virtue.lesser_power`, `virtue.personal_power`, `virtue.ritual_power` each gain
+  `effects: [{ "type": "power_levels", "amount": … }]`, and with it the
+  `creation_effect` classification every effect-bearing entry must carry.
+- Implementation: `effective::power_levels_budget` (unchanged — it already sums
+  `Effect::PowerLevels`), `effective::powers_used` (now sums Penetration too),
+  `validation/might.rs::validate_powers` (`over_power_levels`).
+- Tests: `shipped_power_virtues_fund_the_power_levels_budget`,
+  `focus_power_funds_no_power_levels_because_its_pool_is_points`
+  (`crates/arm-rules/tests/data_integrity.rs`, table `POWER_LEVEL_ITEMS`),
+  `powers_used_spends_penetration_from_the_same_pool_as_level`
+  (`effective.rs`).
+
+`Entity::powers` was already the named-power registry and already budgeted; what
+was missing was the connection. Before this, a character could buy Greater Power
+and have a budget of 0, so every power he entered read as `over_power_levels`.
+The budget's only funders were the three Might Virtues (Demonic Blood 30,
+Demonic Powers +20, Strong Angelic Heritage 30), which is a *different* source
+and stacks rather than double-counts: a Might Score is not itself a grant —
+`power_levels_budget` starts at 0 and sums `Effect::PowerLevels` alone — so a
+demon-blooded companion who also buys Lesser Power legitimately has 30 + 25.
+
+**Focus Power is deliberately excluded.** "This Virtue grants a pool of 25
+points… It costs 2 points to raise the maximum level of effect by 1, and 1 point
+to raise the Penetration by 1" (`:3899`). Those 25 are a different currency: they
+buy at most 12 levels, or 25 Penetration, or a mix. Adding them to a
+level-denominated budget would let a Focus Power pay for 25 levels the Virtue
+cannot buy — wrong rules output, so `virtue.focus_power` carries no
+`power_levels` effect and a control test pins that it never gains one. Modelling
+its own point pool (with its 2:1 level rate) is a separate, unbuilt mechanic.
+
+**Penetration is charged against the same budget** — `SupernaturalPower` gains
+`penetration: u16`. `:4021` makes the arithmetic explicit: two copies of Greater
+Power give 100 levels, spent as "a power with a level of 60 and a Penetration of
+0, and a second power with a level and Penetration of 20 each" — 60 + 0 + 20 +
+20 = 100. `powers_used` summing levels alone reported 80 and let the player spend
+20 levels the book had already spent. The field is additive
+(`#[serde(default, skip_serializing_if = "is_zero_u16")]`), so `SCHEMA_VERSION`
+stays **16** and there is no migration: an older save reads 0, and a power with
+no Penetration serializes exactly as before.
+
+**Recorded, not enforced: the one-power-per-Virtue default.** "By default, there
+should be one power per Virtue, as this Virtue is intended for powers that are
+individually significant. … However, the troupe may allow the character to take
+more powers if they have a strong thematic link" (`:4021`). That is explicit
+troupe discretion, so the *number* of `powers` rows is unconstrained; only their
+total level (plus Penetration) is. Note also that `:4724` gives Personal Power
+the same "may be taken more than once, and the levels added together" clause as
+Greater and Lesser Power, despite `:4716` calling it "a single power" — so no
+Power Virtue is one-copy-one-power, and none of them is modelled as such.
+
+**The `power` parameter is now validated against the registry.** Restricted
+Power, Slow Power and Variable Power keep their free-text `power` parameter and
+add `require_power: true`; `validation/selections.rs::validate_power_targets`
+raises `power_dangling_target` when the typed name matches no
+`entity.powers[].name`. It is filed on `CreationPhase::Review` — the phase that
+owns "Might and powers", and therefore the step that can offer the fix —
+following `validate_ability_bonus_targets`'s rule rather than
+`validate_possessed_param_targets`'s, because powers are entered *after* the V/F
+step and filing there would deadlock the wizard. Matching is exact on trimmed
+strings, case not folded, per *Parameter-value identity: trimmed, never
+case-folded (row 10)*. The picker deliberately keeps a text input rather than a
+select over the held powers, for the same reason: at V/F time there may be no
+powers yet, and a select would be a dead end. Load-time integrity rejects
+`require_power` on any domain but `text`.
+
+**Save impact — accepted, not migrated.** Two visible changes on opening an old
+save. A character holding a Power Virtue now has a *budget* where he had none,
+so an existing `over_power_levels` error may simply clear. A character holding
+Restricted/Slow/Variable Power whose `power` names something not in his `powers`
+list now reports `power_dangling_target`; no migration can answer it, because
+the engine cannot know whether the player meant to add the power or mistyped the
+name. No data is lost either way — saves store choices and the engine only
+reports.
+
+**Markdown export.** The being's own powers table gained a Penetration column
+(`export/magic.rs::power_rows`, key `power-penetration-label`), so the sheet
+reconciles with the budget bar the app showed. The familiar's invested-powers
+table keeps the two-column `leveled_rows`: those powers are charged against no
+budget at all (`:10866`) and no surface sets their Penetration, so a third column
+there would be a row of zeros implying a field that does not exist.
 
 #### Affinity with (Ability) — creation XP counts for half again
 > "All Advancement Totals for one Ability are increased by half, rounded up, as
@@ -4213,9 +4312,12 @@ Score on every Form. `derived_totals` now surfaces Magic Resistance for a
 Might-being, not only a magus.
 
 **Data model.** `Entity.might: Option<MightScore{realm, score}>` is the base the
-player enters (may be 0); `Entity.powers: Vec<SupernaturalPower{name, level}>` are
-free-text powers charged against a power-levels budget (mirroring `devices` vs
-`item_level_budget` — the engine is not a power *designer*). Two additive `Effect`
+player enters (may be 0); `Entity.powers: Vec<SupernaturalPower{name, level,
+penetration}>` are free-text powers charged against a power-levels budget
+(mirroring `devices` vs `item_level_budget` — the engine is not a power
+*designer*); `penetration` is charged against the *same* budget as `level`, and
+the four core Power Virtues fund it — see *Power Virtues fund the power-levels
+budget (B10)*. Two additive `Effect`
 variants (SCHEMA_VERSION unchanged at 9 — both `#[serde(default)]`, old saves load):
 - `Effect::MightGrant{realm, score}` — summed (same Realm) on top of the entered
   base by `effective::effective_might`; a `score` 0 grant establishes the Realm

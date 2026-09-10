@@ -511,7 +511,14 @@
            engine again on load), and a value that trims to nothing raises the
            engine's `missing_param` naming this box — so a blank descriptor no
            longer validates clean, and 'Wolf Shape ' is the same power as
-           'Wolf Shape'. Case is deliberately untouched. Every other domain has its
+           'Wolf Shape'. Case is deliberately untouched. `require_power` does NOT
+           turn this into a select over the character's own powers, unlike the
+           way `require_possessed` narrows the `item` menu: powers are entered on
+           the Review step, AFTER Virtues and Flaws, so a select would be empty
+           and unfillable where the Flaw is taken — the deadlock
+           `ability_bonus_dangling_target` already taught us. The engine reports
+           `power_dangling_target` on Review instead, where the fix lives.
+           Every other domain has its
            own select above — the engine's `ParameterDomain` doc comment says as
            much, and #4 was exactly this fall-through catching four of them. Keep
            that true: the domain union is closed, so a new variant belongs in a
