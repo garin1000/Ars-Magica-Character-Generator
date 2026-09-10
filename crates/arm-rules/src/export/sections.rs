@@ -202,7 +202,7 @@ impl<'a> Doc<'a> {
                 if item.kind != kind {
                     return None;
                 }
-                let values = self.param_display_values(&selection.params);
+                let values = self.param_display_values(item, &selection.params);
                 Some(vec![
                     self.parameterized_name(&selection.item_ref, &values),
                     item.categories

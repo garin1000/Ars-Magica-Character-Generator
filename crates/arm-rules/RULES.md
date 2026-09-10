@@ -434,11 +434,39 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   (`export/sections.rs`) — there is no selection to narrow against for the
   first, and the book itself indexes a dual-category item under both headings
   for the rest, so hiding it from one heading would hide it from the very
-  category that may be the one making it legal. The `category_not_permitted`/
-  `forbidden_category` issue arguments still name the deterministic
-  `first_listed_category` tie-break rather than the chosen category, and the
-  Selected-list heading/badge still follow that same tie-break — both are B3's
-  job, not B2's.
+  category that may be the one making it legal.
+
+  **Row 19, half (a), presentation (B3): every user-facing surface now SAYS the
+  chosen category.** B2 made the engine decide by it while every surface still
+  reported the `first_listed_category` tie-break, which meant the app could
+  reject a Virtue and then name a category the player had not chosen. Four
+  surfaces changed, each reading the same single resolution:
+
+  | surface | file:function | now |
+  |---|---|---|
+  | `category_not_permitted` / `forbidden_category` argument | `validation/selections.rs::first_in_force` | names the first category *in force*, i.e. the chosen reading where one was recorded |
+  | Selected V/F grouping | `derive.ts::groupSelectionsByCategory` | files the row under the chosen reading, not `categories[0]` |
+  | Selected V/F category badge | `VirtueFlawTab.svelte` `nameWrap` snippet | badges the chosen reading alone, so badge and heading always agree |
+  | exported Virtue/Flaw **name** | `export/resolve.rs::taxonomy_label` | "Sufi (Social Status)" — the value is labelled through the `category-<id>` Fluent family instead of falling through to the raw slug |
+
+  `derive.ts`'s `selectionCategories` is the frontend's single mirror of
+  `PointItem::categories_for`, exported so the grouping and the badge cannot
+  re-derive the answer differently; it reads the parameter's **domain** off the
+  ruleset item rather than matching the key name `taken_as`. The export fix is
+  the sharp edge of the four: a `Category` value is an id like `social_status`
+  with no rules-i18n entry of its own, so the tolerant parameter-value path
+  printed the bare slug — a direct breach of the "never render a raw ID as a
+  user-facing label" rule. `taxonomy_label`'s `match` on `ParameterDomain` is
+  exhaustive so a future taxonomy domain (a `Realm`, labelled through the
+  existing `realm-<id>` family) must be answered explicitly. No new Fluent key
+  was needed: `category-*` already covers every shipped category in both
+  `locales/en/main.ftl` and `locales/de/main.ftl`, and the export label map is
+  composed from the catalogue's own categories
+  (`file-operations.svelte.ts::composedExportLabelKeys`), which load-time
+  integrity guarantees is a superset of any `Category` parameter's values.
+
+  The exported **Type** cell is deliberately unchanged and still lists both
+  categories: it is the descriptor, i.e. provenance, not the player's choice.
 
   No shipped House or mythic-companion-type `Grant::Choice` offers
   `virtue.sufi` (verified by grep across `rules/core/`): a `taken_as` item in a
@@ -520,27 +548,31 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   position is still filterable. The Markdown export's "Type" cell renders them
   all too, joined with the shared localized list separator, each through its
   own `category-<id>` Fluent key (`export/sections.rs`) — the exported
-  descriptor is provenance, not the player's choice; B3 adds the chosen reading
-  to the exported *name* instead. Consequences worth naming: Suppressed Gift
+  descriptor is provenance, not the player's choice; the chosen reading appears
+  in the exported *name* instead ("Sufi (Social Status)", via
+  `export/resolve.rs::taxonomy_label`). Consequences worth naming: Suppressed Gift
   counts against the **Story** Flaw cap as well as being Hermetic, and Sufi
   (absent a `taken_as`, or browsed rather than selected) is returned by
   `items_by_category("supernatural")` as well as by `"social_status"`.
-- **Three surfaces have room for exactly one category, and all use
-  `PointItem::first_listed_category` as a tie-break** (renamed from
-  `primary_category`, which asserted a rule the book does not have):
+- **Three surfaces have room for exactly one category, and all take the FIRST
+  category in force** — the chosen reading where a selection recorded one
+  (row 19, above), otherwise the descriptor's own first, which is a tie-break
+  and not a rule (hence `PointItem::first_listed_category`, renamed from
+  `primary_category`, which asserted a rule the book does not have). They are
   the `category_not_permitted` issue's `category` argument
-  (`validation/selections.rs` — only reached when *every* category failed, so any
-  of them would do), and the UI's **Selected** V/F list (`derive.ts`
-  `groupSelectionsByCategory`). The Selected list must not duplicate a row: bought
-  rows are removed by their `entity.selections` index, so the same row under two
-  headings would delete each other and make one selection read as two against the
-  point budget. Picking the first-listed slug also keeps that heading agreeing with
-  the row's first category badge, which `ui/e2e/specs/houses.e2e.js:148,165`
-  asserts. The **third** is the `forbidden_category` issue's `category` argument:
-  it used to name "the category that actually offended, whichever position it
-  holds", but under the conjunction below there is no distinguished offender —
-  either every category is forbidden or the issue is not raised at all — so it is
-  the same deterministic tie-break as `category_not_permitted`.
+  (`validation/selections.rs::first_in_force` — only reached when *every*
+  category in force failed, so any of them would do), the `forbidden_category`
+  issue's argument (same helper: it used to name "the category that actually
+  offended, whichever position it holds", but under the conjunction below there
+  is no distinguished offender — either every category in force is forbidden or
+  the issue is not raised at all), and the UI's **Selected** V/F list
+  (`derive.ts` `groupSelectionsByCategory`, via `selectionCategories`). The
+  Selected list must not duplicate a row: bought rows are removed by their
+  `entity.selections` index, so the same row under two headings would delete each
+  other and make one selection read as two against the point budget. That
+  heading always agrees with the row's first category badge, which renders the
+  same resolution and which
+  `ui/e2e/specs/magus-editor.e2e.js:317` asserts.
 - **Permitting is ANY, and forbidding is EVERY — the two are mirrors**
   (`validation/selections.rs`: `validate_permitted_categories`,
   `validate_forbidden_categories`). An item is permitted when **any** of its

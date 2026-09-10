@@ -4784,6 +4784,50 @@ fn validate_forbidden_categories_is_taken_as_aware() {
     );
 }
 
+/// The `category` argument of both category issues must name the category the
+/// player actually chose, not the descriptor's first-listed one.
+///
+/// The tie-break that picks a representative category is only defensible while
+/// EVERY category failed the test. Once a selection records `taken_as`, exactly
+/// one category was judged — and naming a different one tells the player their
+/// Virtue was rejected for a reading they explicitly did not take. Both
+/// fixtures below are arranged so the two answers differ: `permcheck` is
+/// `["p_yes", "p_no"]` and fails when taken as `p_no`; `forbidcheck` is
+/// `["f_no", "f_yes"]` and fails when taken as `f_yes`.
+#[test]
+fn taken_as_category_issues_name_the_chosen_category() {
+    let rs = ruleset_with_isolated_taken_as_categories();
+
+    let arg = |selection: Selection, code: &str| -> String {
+        validate(&entity("testtype", vec![selection]), &rs)
+            .issues
+            .into_iter()
+            .find(|i| i.code == code)
+            .unwrap_or_else(|| panic!("expected a {code} issue"))
+            .args
+            .get("category")
+            .cloned()
+            .unwrap_or_else(|| panic!("a {code} issue must carry a 'category' argument"))
+    };
+
+    assert_eq!(
+        arg(
+            taken_as("virtue.permcheck", "p_no"),
+            "category_not_permitted"
+        ),
+        "p_no",
+        "the rejected reading is p_no; p_yes is permitted and was not chosen"
+    );
+    assert_eq!(
+        arg(
+            taken_as("virtue.forbidcheck", "f_yes"),
+            "forbidden_category"
+        ),
+        "f_yes",
+        "the forbidden reading is f_yes; f_no is open and was not chosen"
+    );
+}
+
 /// Site 3/5: the category caps (`validation/caps.rs`).
 #[test]
 fn category_caps_are_taken_as_aware() {

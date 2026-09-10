@@ -71,8 +71,8 @@ use crate::effective::{
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AgingLogEntry, EnchantedDevice, Entity, EntityKind, Id,
-    ItemKind, MightScore, PersonalityTrait, Selection, SpellSelection, SupernaturalPower,
-    TalismanEffect,
+    ItemKind, MightScore, ParameterDomain, PersonalityTrait, PointItem, Selection, SpellSelection,
+    SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 
@@ -603,7 +603,13 @@ mod tests {
             "effects": [{ "type": "restricted_ability_xp", "amount": 50,
               "abilities": ["ability.artes_liberales", "ability.dead_language"] }] },
           { "id": "virtue.malformed_name", "kind": "virtue", "classification": "narrative",
-            "magnitude": "free", "categories": ["general"], "entity_kinds": ["character"] }
+            "magnitude": "free", "categories": ["general"], "entity_kinds": ["character"] },
+          { "id": "virtue.sufi", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["social_status", "supernatural"],
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
+                             "values": ["social_status", "supernatural"] }],
+            "max_total": 1 }
         ]"#;
         let types = r#"[
           { "id": "magus", "is_magus": true,
@@ -741,6 +747,7 @@ mod tests {
           "virtue.second_sight": { "name": "Second Sight" },
           "virtue.educated": { "name": "Educated" },
           "virtue.malformed_name": { "name": "Malformed {template" },
+          "virtue.sufi": { "name": "Sufi" },
           "flaw.optimistic": { "name": "Optimistic" },
           "boon.rich_vis_source": { "name": "Rich Vis Source" },
           "ability.awareness": { "name": "Awareness" },
@@ -1543,6 +1550,48 @@ mod tests {
         assert!(
             doc.contains("| Puissant Creo | Hermetic | Minor |"),
             "{doc}"
+        );
+    }
+
+    /// A `taken_as` value is a **category id** (`social_status`), not a catalogue
+    /// entry, so the tolerant value path finds no rules-i18n name for it and used
+    /// to fall through to the raw text — printing an internal English slug onto
+    /// the sheet, which CLAUDE.md forbids outright. Its home is the
+    /// `category-<id>` Fluent family the Type cell already uses.
+    ///
+    /// Written with the real German wording (`locales/de/main.ftl`) because that
+    /// is where an unlocalized slug shows loudest: everything around it is
+    /// German, so `social_status` cannot hide as plausible chrome. The Type cell
+    /// still lists BOTH categories — it is provenance, and the descriptor really
+    /// does name two — while the NAME carries the choice.
+    #[test]
+    fn a_taken_as_category_is_localized_rather_than_printed_as_its_slug() {
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.sufi"),
+            BTreeMap::from([("taken_as".to_string(), Id::new("social_status"))]),
+        )];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("items-virtues-title", "Tugenden"),
+                ("export-col-type", "Typ"),
+                ("category-social_status", "Sozialer Status"),
+                ("category-supernatural", "\u{dc}bernat\u{fc}rlich"),
+                ("magnitude-minor", "Klein"),
+                ("restricted-xp-list-separator", ","),
+            ]),
+        );
+        assert!(
+            doc.contains(
+                "| Sufi (Sozialer Status) | Sozialer Status, \u{dc}bernat\u{fc}rlich | Klein |"
+            ),
+            "{doc}"
+        );
+        assert!(
+            !doc.contains("social_status"),
+            "no raw category slug: {doc}"
         );
     }
 

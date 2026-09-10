@@ -306,11 +306,13 @@ describe('VirtueFlawTab offers a dual-category item under every heading', () => 
   });
 });
 
-// A descriptor may name two categories, and both are mechanically real (either
-// one can make the item permitted or forbidden). The badge row therefore shows
-// one `category-<id>` badge per category, in the descriptor's own order — so the
-// FIRST badge names the category the Selected row's heading uses, which is what
-// `houses.e2e.js` compares that heading against.
+// A descriptor may name two categories, and — while the player has chosen
+// neither reading — both are mechanically real (either one can make the item
+// permitted or forbidden). The badge row therefore shows one `category-<id>`
+// badge per category in force, in the descriptor's own order, so the FIRST
+// badge names the category the Selected row's heading uses, which is what
+// `magus-editor.e2e.js` compares that heading against. The narrowed case, where
+// a `taken_as` reading was chosen, is asserted in its own block below.
 describe('VirtueFlawTab badges every category an item carries', () => {
   /** The `.badge.type` texts of the Virtues selection column, in document order. */
   function typeBadges(body: string): string[] {
@@ -334,9 +336,9 @@ describe('VirtueFlawTab badges every category an item carries', () => {
     expect(typeBadges(html())).toEqual(['Hermetic']);
   });
 
-  // A Selected row sits under ONE heading — the descriptor's first-listed
-  // category, the same one its first badge names, which is the invariant
-  // houses.e2e.js asserts.
+  // A Selected row sits under ONE heading — with no reading chosen, the
+  // descriptor's first-listed category, the same one its first badge names,
+  // which is the invariant magus-editor.e2e.js asserts.
   it('puts a dual-category row under the heading its first badge names', () => {
     resetEntity([{ ref: 'virtue.sufi' }]);
     expect(columnOutline(html())).toEqual(['# Social Status', 'Sufi']);
@@ -367,6 +369,94 @@ describe('VirtueFlawTab badges every category an item carries', () => {
     expect(threeTall, 'the three-badge min-height rule is gone').not.toBeNull();
     // One more badge plus its gap, so strictly taller than the two-badge box.
     expect(Number(threeTall![1])).toBeGreaterThan(Number(twoTall![1]));
+  });
+});
+
+// Row 19: a dual-category Virtue can record WHICH of its own categories it was
+// taken as — Sufi, "either as a Minor Social Status Virtue or a Minor
+// Supernatural Virtue" (Ars Magica - Definitive Edition (Core Rules).md:5083).
+// Every engine category rule then judges that one reading alone, so the Selected
+// row must say the same thing: the badge and the heading both name the chosen
+// category, and neither mentions the reading the player declined. The Available
+// picker is untouched — it still offers Sufi under both headings, because there
+// no choice has been made yet.
+//
+// Own ruleset, like the max_total block below, so the shared ITEMS fixture and
+// its exact outline assertions above stay untouched.
+describe('VirtueFlawTab shows the category a dual item was taken as', () => {
+  const TAKEN_AS: PointItem = item({
+    id: 'virtue.sufi',
+    categories: ['social_status', 'supernatural'],
+    parameters: [
+      {
+        key: 'taken_as',
+        type: 'ref',
+        domain: 'category',
+        values: ['social_status', 'supernatural'],
+      },
+    ],
+    max_total: 1,
+  });
+
+  function installTakenAsRuleset(): void {
+    store.ruleset = {
+      ruleset: {
+        id: 'test',
+        version: '1',
+        point_items: { 'virtue.sufi': TAKEN_AS },
+        type_profiles: {
+          magus: {
+            id: 'magus',
+            budget: { virtue_points: 10, flaw_points: 10 },
+            is_magus: true,
+            gift_policy: 'required',
+            creation_phases: [],
+          },
+        },
+        abilities: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+      },
+      i18n: { 'virtue.sufi': { name: 'Sufi' } },
+    } as unknown as LocalizedRuleset;
+  }
+
+  /** The `.badge.type` texts of the Virtues selection column, in document order. */
+  function typeBadges(body: string): string[] {
+    return [...virtueColumn(body).matchAll(/<span class="badge type">([\s\S]*?)<\/span>/g)].map(
+      (m) => clean(m[1].replace(/<[^>]*>/g, '').trim()),
+    );
+  }
+
+  beforeEach(() => {
+    installTakenAsRuleset();
+  });
+
+  it('badges only the reading the player chose', () => {
+    resetEntity([{ ref: 'virtue.sufi', params: { taken_as: 'supernatural' } }]);
+    expect(typeBadges(html())).toEqual(['Supernatural']);
+  });
+
+  it('agrees with the heading its row sits under', () => {
+    resetEntity([{ ref: 'virtue.sufi', params: { taken_as: 'supernatural' } }]);
+    const body = html();
+    expect(columnOutline(body)).toEqual(['# Supernatural', 'Sufi']);
+    // The invariant `magus-editor.e2e.js` asserts: heading === first badge.
+    expect(typeBadges(body)[0]).toBe('Supernatural');
+  });
+
+  it('badges both readings while none is chosen', () => {
+    resetEntity([{ ref: 'virtue.sufi' }]);
+    expect(typeBadges(html())).toEqual(['Social Status', 'Supernatural']);
+    expect(columnOutline(html())).toEqual(['# Social Status', 'Sufi']);
+  });
+
+  // The taller row exists to contain a THIRD badge; a narrowed row has only two
+  // (one category plus the magnitude) and must not reserve the extra height.
+  it('drops the three-badge height once the row shows one category', () => {
+    resetEntity([{ ref: 'virtue.sufi', params: { taken_as: 'supernatural' } }]);
+    expect(virtueColumn(html())).not.toContain('tall-badges');
   });
 });
 

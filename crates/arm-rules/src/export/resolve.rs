@@ -112,13 +112,24 @@ impl<'a> Doc<'a> {
     /// with the sibling discriminators folded in ("Provence Lore"), and the keys a
     /// value swallowed are dropped from the map — otherwise the row would both leak the
     /// raw template and repeat the discriminator ("Puissant {area} Lore (Provence)").
+    ///
+    /// `item` is the selection's own catalogue entry, needed for the parameter
+    /// *domains*: a value whose domain is a fixed engine taxonomy rather than a
+    /// catalogue reference has no rules-i18n entry at all and must be labelled
+    /// through its own Fluent family instead of falling through to raw text
+    /// (see [`Doc::taxonomy_label`]).
     pub(super) fn param_display_values(
         &self,
+        item: &PointItem,
         params: &BTreeMap<String, Id>,
     ) -> BTreeMap<String, String> {
         let mut swallowed: BTreeSet<String> = BTreeSet::new();
         let mut rendered: BTreeMap<String, String> = BTreeMap::new();
         for (key, value) in params {
+            if let Some(label) = self.taxonomy_label(item, key, value) {
+                rendered.insert(key.clone(), label);
+                continue;
+            }
             // Only the value's own placeholders that a sibling parameter can fill; an
             // unfillable one keeps its slot label, as everywhere else.
             let fills: BTreeMap<String, String> = self
@@ -134,6 +145,39 @@ impl<'a> Doc<'a> {
         }
         rendered.retain(|key, _| !swallowed.contains(key));
         rendered
+    }
+
+    /// The localized label for a parameter value that names a member of a fixed
+    /// **engine taxonomy** rather than a catalogue entry — `None` for every domain
+    /// whose values are catalogue ids or free text, which the ordinary
+    /// [`Doc::param_value`] path already handles.
+    ///
+    /// A taxonomy member (a category id such as `social_status`) has no rules-i18n
+    /// entry of its own, so the tolerant value path would find nothing and print
+    /// the bare slug — the exact "raw ID as a user-facing label" breach the sheet's
+    /// chrome contract exists to prevent. Its label lives in the same
+    /// `category-<id>` Fluent family the Type cell and the in-app badge already
+    /// read, so nothing new has to be declared: the caller's map is composed from
+    /// the catalogue's own categories, and load-time integrity requires a
+    /// `Category` parameter's values to be a subset of its item's categories.
+    ///
+    /// The `match` is exhaustive on purpose: a future domain whose values are a
+    /// taxonomy (a `Realm`, say, labelled through the existing `realm-<id>` family
+    /// [`Doc::realm_score`] uses) belongs in a new arm here, and leaving it in the
+    /// `None` group is then a deliberate, visible choice rather than an oversight.
+    fn taxonomy_label(&self, item: &PointItem, key: &str, value: &Id) -> Option<String> {
+        let domain = item.parameters.iter().find(|p| p.key == key)?.domain;
+        match domain {
+            ParameterDomain::Category => Some(self.label(&format!("category-{value}"))),
+            ParameterDomain::Ability
+            | ParameterDomain::Art
+            | ParameterDomain::Technique
+            | ParameterDomain::Form
+            | ParameterDomain::Characteristic
+            | ParameterDomain::Item
+            | ParameterDomain::Enumerated
+            | ParameterDomain::Text => None,
+        }
     }
 
     /// The template text for a parameter *value* stored as an [`Id`] — which, like

@@ -5,6 +5,25 @@
 
 use super::*;
 
+/// The category an issue message names when it has room for exactly one, taken
+/// from the list [`PointItem::categories_for`] put *in force* for that
+/// selection rather than from the item's whole descriptor.
+///
+/// Both callers reach here only once every in-force category has failed their
+/// test, so any of them is a truthful representative and the first is simply
+/// the deterministic pick. The distinction that matters is *which list* it is
+/// the first of: for a `taken_as` selection the list is the single chosen
+/// category, so the message names the reading the player actually took (Sufi
+/// as Social Status is reported against Social Status), while
+/// [`PointItem::first_listed_category`] would have named the descriptor's
+/// first — a category they explicitly declined.
+///
+/// Empty only for a catalogue that failed load-time integrity, which rejects a
+/// categoryless item.
+fn first_in_force(in_force: &[String]) -> &str {
+    in_force.first().map(String::as_str).unwrap_or_default()
+}
+
 pub(crate) fn validate_permitted_categories(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -46,8 +65,8 @@ pub(crate) fn validate_permitted_categories(
         // declared they are NOT taking the Supernatural reading, so the
         // Supernatural category must not rescue them from a profile that
         // forbids it. See `PointItem::categories_for`.
-        if !item
-            .categories_for(&selection.params)
+        let in_force = item.categories_for(&selection.params);
+        if !in_force
             .iter()
             .any(|c| profile.permitted_categories.contains(c))
         {
@@ -56,11 +75,18 @@ pub(crate) fn validate_permitted_categories(
                 CreationPhase::VirtuesFlaws,
                 args([
                     ("item", selection.item_ref.to_string()),
-                    // Every category failed the test, and the message has room
-                    // for one, so the descriptor's first-listed represents the
+                    // Every category IN FORCE failed the test, and the message
+                    // has room for one, so the first of them represents the
                     // item — a deterministic pick, not a claim that it is the
-                    // item's "real" category.
-                    ("category", item.first_listed_category().to_string()),
+                    // item's "real" category. Reading it off `categories_for`
+                    // rather than the whole descriptor is what makes the
+                    // message honest for a `taken_as` selection: exactly one
+                    // category was judged there, so naming any other would tell
+                    // the player their Virtue was rejected for a reading they
+                    // explicitly did not take. Identical to
+                    // `first_listed_category` whenever nothing narrowed the
+                    // list.
+                    ("category", first_in_force(in_force).to_string()),
                 ]),
                 Some(selection.item_ref.clone()),
             ));
@@ -109,8 +135,8 @@ pub(crate) fn validate_forbidden_categories(
         // that one forbidden" — a player who took Sufi as Social Status is
         // forbidden only if Social Status itself is forbidden, regardless of
         // whether Supernatural also is.
-        if !item
-            .categories_for(&selection.params)
+        let in_force = item.categories_for(&selection.params);
+        if !in_force
             .iter()
             .all(|c| profile.forbidden_categories.contains(c))
         {
@@ -121,11 +147,13 @@ pub(crate) fn validate_forbidden_categories(
             CreationPhase::VirtuesFlaws,
             args([
                 ("item", selection.item_ref.to_string()),
-                // Every category is forbidden, and the message has room for one,
-                // so the descriptor's first-listed represents the item — the same
-                // deterministic tie-break `category_not_permitted` uses, not a
-                // claim that it is the offending category.
-                ("category", item.first_listed_category().to_string()),
+                // Every category in force is forbidden, and the message has room
+                // for one, so the first of them represents the item — the same
+                // deterministic tie-break `category_not_permitted` uses, over the
+                // same taken-as-narrowed list, so a Sufi taken as Social Status
+                // is reported against Social Status and never against the
+                // Supernatural reading the player declined.
+                ("category", first_in_force(in_force).to_string()),
             ]),
             Some(selection.item_ref.clone()),
         ));

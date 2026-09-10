@@ -2156,6 +2156,46 @@ describe('groupSelectionsByCategory', () => {
       { kind: 'sel', selection: { ref: 'virtue.sufi' }, index: 0 },
     ]);
   });
+
+  // Row 19: a dual-category item may record WHICH of its categories it was taken
+  // as (Sufi, "either as a Minor Social Status Virtue or a Minor Supernatural
+  // Virtue", Core Rules :5083). This list answers "what does this character
+  // actually have?", so the single bucket is the player's own choice — the
+  // first-listed tie-break above applies only when nothing was chosen. Filing a
+  // Sufi taken as Supernatural under Social Status would contradict the engine,
+  // which judges every category rule on the chosen reading alone.
+  const takenAsRs = makeRuleset([
+    item({
+      id: 'virtue.sufi',
+      categories: ['social_status', 'supernatural'],
+      parameters: [
+        {
+          key: 'taken_as',
+          type: 'ref',
+          domain: 'category',
+          values: ['social_status', 'supernatural'],
+        },
+      ],
+      max_total: 1,
+    }),
+  ]);
+
+  it('files a taken-as selection under the category it was taken as', () => {
+    const groups = groupSelectionsByCategory(takenAsRs, [
+      { selection: { ref: 'virtue.sufi', params: { taken_as: 'supernatural' } }, index: 0 },
+    ]);
+
+    expect(groups.map((g) => g.category)).toEqual(['supernatural']);
+    expect(groups.map((g) => g.category)).not.toContain('social_status');
+  });
+
+  it('falls back to the first-listed category when no reading was chosen yet', () => {
+    const groups = groupSelectionsByCategory(takenAsRs, [
+      { selection: { ref: 'virtue.sufi' }, index: 0 },
+    ]);
+
+    expect(groups.map((g) => g.category)).toEqual(['social_status']);
+  });
 });
 
 describe('groupAbilitySelectionsByCategory', () => {

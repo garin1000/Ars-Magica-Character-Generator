@@ -10,6 +10,7 @@
     groupSelectionsByCategory,
     incompatibleRefs,
     mandatoryTraitRefs,
+    selectionCategories,
     type SelectionRow,
   } from '../derive';
   import { reserveTagSpace, tooltip, withReason, type TooltipContent } from '../actions';
@@ -245,28 +246,39 @@
      separate inline chip in the row (see below), so nothing else ever joins the
      vertical stack.
 
-     The stack is therefore one tag per category plus one for the magnitude. Most
-     descriptors name a single category and the stack is two tall, as it always
-     was; the four that name two (e.g. Sufi, "Minor, Social Status,
-     Supernatural") make it three, and `.tall-badges` grows the row to contain
-     that third tag instead of letting it bleed over the row border into the
-     neighbours. Category order is the descriptor's own; no category outranks
-     another, but a SELECTED row can only sit under one heading (it is removed by
-     its entity index), and that heading is the first-listed category — the same
-     one the FIRST badge names, which is what houses.e2e.js compares the two
-     against. The Available picker has no such constraint and lists a
+     The stack is therefore one tag per category IN FORCE for this selection plus
+     one for the magnitude. Most descriptors name a single category and the stack
+     is two tall, as it always was; the four that name two (e.g. Sufi, "Minor,
+     Social Status, Supernatural") make it three, and `.tall-badges` grows the row
+     to contain that third tag instead of letting it bleed over the row border
+     into the neighbours.
+
+     "In force" is `selectionCategories`, the same resolution
+     `groupSelectionsByCategory` files the row by and the engine's
+     `PointItem::categories_for` judges every category rule by. So a Sufi taken as
+     Social Status (Core Rules :5083) badges Social Status alone: the row must not
+     advertise a reading the player declined and the engine no longer applies.
+     Where no reading was chosen, every category the descriptor names is in force
+     and every one is badged, in the descriptor's own order — no category outranks
+     another.
+
+     Either way a SELECTED row sits under exactly one heading (it is removed by
+     its entity index) and that heading is this list's first entry — the same one
+     the FIRST badge names, which is what magus-editor.e2e.js compares the two
+     against. The Available picker has no selection to narrow against and lists a
      dual-category item under both headings. -->
 {#snippet nameWrap(ref: string, params: Record<string, string> | undefined)}
   {@const item = store.ruleset?.ruleset.point_items[ref]}
+  {@const categories = item ? selectionCategories(item, params) : []}
   <span
     class="name-wrap"
-    class:tall-badges={(item?.categories.length ?? 1) > 1}
+    class:tall-badges={categories.length > 1}
     use:reserveTagSpace
     use:tooltip={tip(ref)}
   >
     {#if item}
       <span class="badges">
-        {#each item.categories as category (category)}
+        {#each categories as category (category)}
           <span class="badge type">{store.t(`category-${category}`)}</span>
         {/each}
         <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>

@@ -604,16 +604,43 @@ function warpingSlotKeys(constraint: GrantConstraint): { labelKey: string; count
 }
 
 /**
- * The category a *single-bucket* list files an item under: the one its rulebook
- * descriptor names first. This is a tie-break, not a rule — the book has no
- * notion of a primary category (see `groupByCategory`) — so it is used only where
- * exactly one bucket is structurally required, i.e. `groupSelectionsByCategory`.
- * Mirrors the engine's `PointItem::first_listed_category`. The engine rejects a
- * categoryless item at load, so the empty fallback is unreachable through a real
- * ruleset.
+ * The category or categories "in force" for one *selection* of `item` — the
+ * single frontend resolution of "which category did this character actually
+ * take it under", deliberately mirroring the engine's
+ * `PointItem::categories_for` (`crates/arm-rules/src/types.rs`) so the two
+ * cannot drift.
+ *
+ * A Virtue/Flaw whose descriptor names two categories may record which of them
+ * it was taken as, in a parameter of the `category` domain (Sufi's `taken_as`:
+ * "either as a Minor Social Status Virtue or a Minor Supernatural Virtue",
+ * `Ars Magica - Definitive Edition (Core Rules).md:5083`). Where such a value is
+ * recorded, ONLY that category is in force; otherwise the whole descriptor is,
+ * exactly as before `taken_as` existed. The domain is read off the ruleset's own
+ * parameter definition rather than matching the key name, so a second taken-as
+ * item may key its choice on anything it likes.
+ *
+ * A recorded value outside the item's own categories cannot arise through the
+ * picker (load-time integrity requires the parameter's `values` to be a subset
+ * of `categories`) but a hand-edited save could carry a stale one; falling back
+ * to the whole list then — rather than to nothing — matches the engine, whose
+ * own comment explains why under-counting would be the worse failure.
+ *
+ * **Entity-aware surfaces only.** Browsing surfaces — `filterItems`,
+ * `groupByCategory` and `VirtueFlawTab.categoriesFor` — must keep reading the
+ * whole list: they answer "which catalogue entries could I pick?", where there
+ * is no selection to narrow against and the rulebook itself indexes a dual item
+ * under both headings.
  */
-function firstListedCategory(item: PointItem): string {
-  return item.categories[0] ?? '';
+export function selectionCategories(
+  item: PointItem,
+  params: Record<string, string> | undefined,
+): string[] {
+  for (const param of item.parameters ?? []) {
+    if (param.domain !== 'category') continue;
+    const chosen = params?.[param.key];
+    if (chosen !== undefined && item.categories.includes(chosen)) return [chosen];
+  }
+  return item.categories;
 }
 
 /**
@@ -703,16 +730,21 @@ export interface SelectionGroup {
  * the absent remove button distinguish it, exactly as for a `Required` row.
  * Equal-name ties keep bought before granted (the sort is stable).
  *
- * Each row lands in exactly ONE group, keyed on its item's first-listed category
- * (`categories[0]`). This is the one place that deliberately DIVERGES from the
+ * Each row lands in exactly ONE group, keyed on the first category `selectionCategories`
+ * puts in force for it. This is the one place that deliberately DIVERGES from the
  * source picker, which lists a dual-category item under both of its headings:
  * a bought row carries its `entity.selections` index and `VirtueFlawTab` removes
  * by that index, so a row repeated under a second heading would show the player
  * two apparently independent rows that delete each other — and would make one
- * selection look like two against the point budget. The descriptor's own order
- * picks the bucket because it is the only ordering the data carries, and it keeps
- * the heading agreeing with the row's FIRST category badge (the invariant
- * `houses.e2e.js` asserts).
+ * selection look like two against the point budget.
+ *
+ * Which single category that is comes from the player where they said so — a
+ * `taken_as` reading (Sufi as Social Status) files the row under the reading they
+ * chose, the same one every engine category rule judges it by. Only where nothing
+ * was chosen does the descriptor's own order break the tie, because it is then the
+ * only ordering the data carries. Either way the heading agrees with the row's
+ * FIRST category badge, which renders the same resolution (the invariant
+ * `magus-editor.e2e.js` asserts).
  */
 export function groupSelectionsByCategory(
   localized: LocalizedRuleset,
@@ -723,7 +755,7 @@ export function groupSelectionsByCategory(
   const add = (row: SelectionRow): void => {
     const item = localized.ruleset.point_items[row.selection.ref];
     if (!item) return;
-    const key = firstListedCategory(item);
+    const key = selectionCategories(item, row.selection.params)[0] ?? '';
     const list = groups.get(key) ?? [];
     list.push(row);
     groups.set(key, list);
