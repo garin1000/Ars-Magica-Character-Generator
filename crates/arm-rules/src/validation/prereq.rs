@@ -6,8 +6,13 @@
 use super::*;
 
 /// Tri-state outcome of evaluating a prerequisite expression.
+///
+/// `pub(crate)`: sibling validators outside this module (B5's conditional
+/// category rules, B9's possessed-target check) call [`PrereqCtx::evaluate`],
+/// whose return type this appears in, so it must be at least as visible as
+/// that method.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Tri {
+pub(crate) enum Tri {
     /// Definitely satisfied.
     True,
     /// Definitely unsatisfied.
@@ -19,77 +24,16 @@ enum Tri {
 pub(crate) fn validate_prerequisites(
     entity: &Entity,
     ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    selected_ids: &BTreeSet<&Id>,
-    granted: &[Selection],
+    ctx: &PrereqCtx,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    let is_magus = type_profile.map(|p| p.is_magus);
-
-    // Effective score per ability: the max bought score (a parameterized ability
-    // may appear more than once with different specialties; the highest wins)
-    // plus any virtue bonus (Puissant Ability +2, which now includes a
-    // House-granted Puissant via the combined selection list). `AbilityMin`
-    // thresholds are checked against the effective score so a boosted ability
-    // satisfies them. Keyed by owned `Id` so House-granted ability *floors*
-    // (below) can be folded in even for abilities that were never bought.
-    let mut ability_scores: BTreeMap<Id, u8> = BTreeMap::new();
-    for a in &entity.ability_scores {
-        // Per-instance bonus (Puissant targets one (ability, parameter)); an
-        // `AbilityMin` is keyed by id, so the strongest instance wins.
-        let bonus =
-            crate::effective::ability_bonus(entity, ruleset, &a.ability, a.parameter.as_deref());
-        let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
-        let entry = ability_scores.entry(a.ability.clone()).or_insert(0);
-        *entry = (*entry).max(effective);
-    }
-    // A free ability-score floor from an `AbilityScoreGrant` effect — including a
-    // House-granted Mystery Ability (Bjornaer → Heartbeast 1) — counts toward
-    // `AbilityMin` even with no bought row, so fold each granted floor in.
-    for floor in crate::effective::ability_score_floors(entity, ruleset) {
-        let bonus = crate::effective::ability_bonus(entity, ruleset, &floor.ability, None);
-        let effective = (floor.floor + bonus).clamp(0, i32::from(u8::MAX)) as u8;
-        let entry = ability_scores.entry(floor.ability).or_insert(0);
-        *entry = (*entry).max(effective);
-    }
-
-    // Effective score per Art: max bought score plus any virtue bonus (Puissant
-    // Art +3, including a House-granted Puissant). `ArtMin` thresholds are
-    // checked against the effective score.
-    let mut art_scores: BTreeMap<Id, u8> = BTreeMap::new();
-    for a in &entity.art_scores {
-        let bonus = crate::effective::art_bonus(entity, ruleset, &a.art);
-        let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
-        let entry = art_scores.entry(a.art.clone()).or_insert(0);
-        *entry = (*entry).max(effective);
-    }
-
-    // `Prereq::Has` resolves against bought AND granted rows (a granted
-    // Heartbeast/Dowsing satisfies `Has(...)`), so build a grants-inclusive id
-    // set spanning House and Mythic-Companion-type grants (`granted`, computed
-    // once by the caller — see `super::validate`). This is deliberately distinct
-    // from the bought-only `selected_ids` that the forbidden-trait /
-    // incompatibility validators use — grants must never reach those (review
-    // finding B1).
-    let mut present_ids: BTreeSet<&Id> = selected_ids.iter().copied().collect();
-    for g in granted {
-        present_ids.insert(&g.item_ref);
-    }
-
-    let ctx = PrereqCtx {
-        present_ids: &present_ids,
-        is_magus,
-        house: entity.house.as_ref(),
-        ability_scores: &ability_scores,
-        art_scores: &art_scores,
-    };
     for selection in &entity.selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
 
         if let Some(ref prereq) = item.prerequisites {
-            let (outcome, depended_on_unknown) = evaluate_prereq(prereq, &ctx, 1);
+            let (outcome, depended_on_unknown) = ctx.evaluate(prereq);
             match outcome {
                 Tri::False => {
                     issues.push(ValidationIssue::error(
@@ -118,18 +62,121 @@ pub(crate) fn validate_prerequisites(
 /// maps the `AbilityMin`/`ArtMin` thresholds compare against. Bundled so the
 /// recursive evaluator and its fold helper take one context rather than a long
 /// positional argument list.
-struct PrereqCtx<'a> {
+///
+/// `pub(crate)`: built once in `validation::validate` (beside the `granted` /
+/// `effective_selections` locals it is derived from) and passed by reference
+/// into `validate_prerequisites`. Sibling validators in other modules build
+/// their own via [`PrereqCtx::build`] — B5's conditional category rules and
+/// B9's "is this Virtue actually possessed" check both need to evaluate a
+/// `Prereq` against the same entity without duplicating this fold.
+pub(crate) struct PrereqCtx<'a> {
     /// The grants-inclusive id set (bought selections ++ House-granted rows) that
     /// `Prereq::Has` tests against — NOT the bought-only `selected_ids` used by
     /// the forbidden-trait / incompatibility checks (review finding B1).
-    present_ids: &'a BTreeSet<&'a Id>,
+    ///
+    /// `pub(crate)`: B9's possessed-target validator reads this set directly
+    /// (a House-granted Supernatural Virtue counts as possessed) rather than
+    /// re-deriving it.
+    pub(crate) present_ids: BTreeSet<&'a Id>,
     is_magus: Option<bool>,
     /// The entity's own Hermetic House, if any. `Prereq::House` compares against
     /// it: matching → True, differing → False, absent → Unknown (mirrors how
     /// `is_magus` yields Unknown when the profile is missing).
     house: Option<&'a Id>,
-    ability_scores: &'a BTreeMap<Id, u8>,
-    art_scores: &'a BTreeMap<Id, u8>,
+    ability_scores: BTreeMap<Id, u8>,
+    art_scores: BTreeMap<Id, u8>,
+}
+
+impl<'a> PrereqCtx<'a> {
+    /// Builds the context once from an entity/ruleset pair: folds bought +
+    /// virtue-boosted Ability and Art scores, and unions bought selections
+    /// with `granted` rows into the `Has`-satisfying id set.
+    ///
+    /// This is the effective-score folding that used to run inside
+    /// `validate_prerequisites` on every call; hoisting it here lets
+    /// `validation::validate` build one `PrereqCtx` and share it with
+    /// `validate_prerequisites` and any later sibling validator, instead of
+    /// re-folding per caller.
+    pub(crate) fn build(
+        entity: &'a Entity,
+        ruleset: &Ruleset,
+        type_profile: Option<&EntityTypeProfile>,
+        selected_ids: &BTreeSet<&'a Id>,
+        granted: &'a [Selection],
+    ) -> Self {
+        let is_magus = type_profile.map(|p| p.is_magus);
+
+        // Effective score per ability: the max bought score (a parameterized
+        // ability may appear more than once with different specialties; the
+        // highest wins) plus any virtue bonus (Puissant Ability +2, which now
+        // includes a House-granted Puissant via the combined selection list).
+        // `AbilityMin` thresholds are checked against the effective score so a
+        // boosted ability satisfies them. Keyed by owned `Id` so House-granted
+        // ability *floors* (below) can be folded in even for abilities that
+        // were never bought.
+        let mut ability_scores: BTreeMap<Id, u8> = BTreeMap::new();
+        for a in &entity.ability_scores {
+            // Per-instance bonus (Puissant targets one (ability, parameter));
+            // an `AbilityMin` is keyed by id, so the strongest instance wins.
+            let bonus = crate::effective::ability_bonus(
+                entity,
+                ruleset,
+                &a.ability,
+                a.parameter.as_deref(),
+            );
+            let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
+            let entry = ability_scores.entry(a.ability.clone()).or_insert(0);
+            *entry = (*entry).max(effective);
+        }
+        // A free ability-score floor from an `AbilityScoreGrant` effect —
+        // including a House-granted Mystery Ability (Bjornaer → Heartbeast 1)
+        // — counts toward `AbilityMin` even with no bought row, so fold each
+        // granted floor in.
+        for floor in crate::effective::ability_score_floors(entity, ruleset) {
+            let bonus = crate::effective::ability_bonus(entity, ruleset, &floor.ability, None);
+            let effective = (floor.floor + bonus).clamp(0, i32::from(u8::MAX)) as u8;
+            let entry = ability_scores.entry(floor.ability).or_insert(0);
+            *entry = (*entry).max(effective);
+        }
+
+        // Effective score per Art: max bought score plus any virtue bonus
+        // (Puissant Art +3, including a House-granted Puissant). `ArtMin`
+        // thresholds are checked against the effective score.
+        let mut art_scores: BTreeMap<Id, u8> = BTreeMap::new();
+        for a in &entity.art_scores {
+            let bonus = crate::effective::art_bonus(entity, ruleset, &a.art);
+            let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
+            let entry = art_scores.entry(a.art.clone()).or_insert(0);
+            *entry = (*entry).max(effective);
+        }
+
+        // `Prereq::Has` resolves against bought AND granted rows (a granted
+        // Heartbeast/Dowsing satisfies `Has(...)`), so build a grants-inclusive
+        // id set spanning House and Mythic-Companion-type grants (`granted`,
+        // computed once by the caller — see `super::validate`). This is
+        // deliberately distinct from the bought-only `selected_ids` that the
+        // forbidden-trait / incompatibility validators use — grants must
+        // never reach those (review finding B1).
+        let mut present_ids: BTreeSet<&Id> = selected_ids.iter().copied().collect();
+        for g in granted {
+            present_ids.insert(&g.item_ref);
+        }
+
+        PrereqCtx {
+            present_ids,
+            is_magus,
+            house: entity.house.as_ref(),
+            ability_scores,
+            art_scores,
+        }
+    }
+
+    /// Evaluates a prerequisite expression to a tri-state against this
+    /// context. Thin wrapper over the free recursive [`evaluate_prereq`]
+    /// starting at depth 1 (the top level of the expression tree).
+    pub(crate) fn evaluate(&self, prereq: &Prereq) -> (Tri, bool) {
+        evaluate_prereq(prereq, self, 1)
+    }
 }
 
 /// Evaluates a prerequisite to a tri-state. Returns the outcome plus whether an
@@ -308,11 +355,11 @@ mod tests {
         let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
         let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
         let ctx = PrereqCtx {
-            present_ids: &present_ids,
+            present_ids,
             is_magus: None,
             house: None,
-            ability_scores: &ability_scores,
-            art_scores: &art_scores,
+            ability_scores,
+            art_scores,
         };
 
         // A single leaf, but evaluated as though it were already past the
@@ -330,16 +377,43 @@ mod tests {
         let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
         let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
         let ctx = PrereqCtx {
-            present_ids: &present_ids,
+            present_ids,
             is_magus: Some(true),
             house: None,
-            ability_scores: &ability_scores,
-            art_scores: &art_scores,
+            ability_scores,
+            art_scores,
         };
 
         let (outcome, depended_on_unknown) =
             evaluate_prereq(&Prereq::IsMagus, &ctx, PREREQ_MAX_DEPTH);
         assert_eq!(outcome, Tri::True);
         assert!(!depended_on_unknown);
+    }
+
+    /// B1: a sibling validator (B5's category rules, B9's possessed-target
+    /// check) needs to build a `PrereqCtx` and evaluate a `Prereq` without
+    /// going through `validate_prerequisites`. This is the RED for that
+    /// constructor + evaluate method: it fails to *compile* until
+    /// `PrereqCtx::build` and `PrereqCtx::evaluate` exist.
+    ///
+    /// A `Has` target present only in `granted` (never bought into
+    /// `entity.selections`) must still evaluate `Tri::True` — the whole point
+    /// of the grants-inclusive `present_ids` set (see the doc comment on
+    /// `PrereqCtx::present_ids`).
+    #[test]
+    fn prereq_ctx_is_constructible_by_a_sibling_validator() {
+        let ruleset = Ruleset::from_json("test", "1", "[]", "[]").unwrap();
+        let entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            crate::RulesetRef::new(Id::new("test"), "1"),
+        );
+        let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+        let granted = vec![Selection::new(Id::new("virtue.heartbeast"))];
+
+        let ctx = PrereqCtx::build(&entity, &ruleset, None, &selected_ids, &granted);
+
+        let (outcome, _) = ctx.evaluate(&Prereq::Has(Id::new("virtue.heartbeast")));
+        assert_eq!(outcome, Tri::True);
     }
 }

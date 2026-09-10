@@ -676,7 +676,7 @@ unmodelled in general: the companion profile forbids `hermetic` unconditionally.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :137) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :194) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -6021,11 +6021,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:144),
-  `validate_forbidden_traits` (:165))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:228),
+  `validate_forbidden_traits` (:249))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:83),
-  `validate_parameters` (:216), `validate_duplicate_selections` (:107))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:117),
+  `validate_parameters` (:320), `validate_duplicate_selections` (:150))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

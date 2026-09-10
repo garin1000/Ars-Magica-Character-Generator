@@ -862,6 +862,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     let granted = crate::effective::entity_grants(entity, ruleset);
     let effective_selections: Cow<[Selection]> =
         crate::effective::fold_granted_selections(entity, &granted);
+    let prereq_ctx = PrereqCtx::build(entity, ruleset, type_profile, &selected_ids, &granted);
 
     validate_known_type(entity, type_profile, &mut issues);
     validate_known_refs(entity, ruleset, &mut issues);
@@ -872,14 +873,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_caps(entity, ruleset, type_profile, &mut issues);
     validate_tainted_cap(entity, ruleset, &mut issues);
     validate_share_of_kind_cap(&effective_selections, ruleset, &mut issues);
-    validate_prerequisites(
-        entity,
-        ruleset,
-        type_profile,
-        &selected_ids,
-        &granted,
-        &mut issues,
-    );
+    validate_prerequisites(entity, ruleset, &prereq_ctx, &mut issues);
     validate_incompatibilities(entity, ruleset, &selected_ids, &mut issues);
     validate_permitted_categories(entity, ruleset, type_profile, &mut issues);
     validate_forbidden_categories(entity, ruleset, type_profile, &mut issues);
