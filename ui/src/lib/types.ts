@@ -852,6 +852,15 @@ export interface CategoryCap {
   hard?: boolean;
 }
 
+// One entry on a profile's `permitted_categories` / `forbidden_categories`
+// list. Mirrors the engine's untagged `CategoryRule`: a bare slug is
+// unconditional, and the object form applies only while `when` holds
+// (`:2840` — a companion may take Hermetic Virtues and Flaws "unless you have
+// The Gift"). Enforcement lives entirely in the engine; the frontend never
+// re-implements the resolution, and never renders either the slug or the
+// condition as a label.
+export type CategoryRule = string | { category: string; when: Prereq };
+
 export interface PointBudget {
   virtue_points: number;
   flaw_points: number;
@@ -871,8 +880,8 @@ export interface EntityTypeProfile {
   // Category allow/deny lists. Both are omitted when empty (the magus profile
   // forbids nothing, so it carries no `forbidden_categories` key); an absent
   // permit list means "no restriction".
-  permitted_categories?: string[];
-  forbidden_categories?: string[];
+  permitted_categories?: CategoryRule[];
+  forbidden_categories?: CategoryRule[];
   // Item ids that must / may never be selected. Omitted from JSON when empty.
   required_traits?: string[];
   forbidden_traits?: string[];

@@ -2140,6 +2140,65 @@ pub(crate) fn is_false(b: &bool) -> bool {
     !*b
 }
 
+/// One entry on an [`EntityTypeProfile`]'s `permitted_categories` or
+/// `forbidden_categories` list: either a bare category slug, or a slug guarded
+/// by a `when` prerequisite.
+///
+/// **An entry is in force iff `when` is absent, or `when` evaluates to
+/// [`Tri::True`](crate::validation) against the entity.** Both `False` and
+/// `Unknown` leave it out of force: `Unknown` resolves in the player's favour,
+/// matching the existing non-blocking `prereq_unevaluated` model, where an
+/// answer that hinges on data the entity does not carry yet never blocks.
+/// The resolution lives in exactly one place — `categories_in_force`
+/// (`validation/selections.rs`) — so the permitted and forbidden gates cannot
+/// disagree about which entries apply.
+///
+/// The rule this exists for is
+/// Ars Magica - Definitive Edition (Core Rules).md:2840 — "You may not take
+/// Hermetic Virtues and Flaws, unless you have The Gift (this would be highly
+/// unusual)" — which the companion profile could previously encode only as its
+/// unconditional half.
+///
+/// `#[serde(untagged)]` so a bare slug stays a bare slug in the JSON, both on
+/// the way in and on the way out: every pre-existing `rules/` file loads
+/// unchanged and the canonical writer re-emits it byte-identically.
+///
+/// The cost of admitting the object form is that the two fields can no longer be
+/// self-canonicalising `BTreeSet`s: [`EntityTypeProfile::normalize`] sorts them
+/// explicitly, and `ruleset/integrity.rs` rejects a repeated category, which
+/// the set made unrepresentable by construction.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CategoryRule {
+    /// A bare slug — unconditionally in force.
+    Always(String),
+    /// A slug in force only while `when` holds.
+    When {
+        /// The category this rule governs.
+        category: String,
+        /// The condition under which the rule applies.
+        when: Prereq,
+    },
+}
+
+impl CategoryRule {
+    /// The category this rule names, whatever its form.
+    pub fn category(&self) -> &str {
+        match self {
+            CategoryRule::Always(category) => category,
+            CategoryRule::When { category, .. } => category,
+        }
+    }
+
+    /// The rule's condition, or `None` for the unconditional form.
+    pub fn when(&self) -> Option<&Prereq> {
+        match self {
+            CategoryRule::Always(_) => None,
+            CategoryRule::When { when, .. } => Some(when),
+        }
+    }
+}
+
 /// Data-driven profile defining constraints for an entity type
 /// (grog, companion, magus, etc.).
 ///
@@ -2156,11 +2215,17 @@ pub struct EntityTypeProfile {
     /// Point budget and caps.
     pub budget: PointBudget,
     /// If non-empty, only items whose `category` is listed may be selected.
-    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-    pub permitted_categories: BTreeSet<String>,
-    /// Items whose `category` is listed may never be selected.
-    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-    pub forbidden_categories: BTreeSet<String>,
+    /// Each entry is a [`CategoryRule`] — a bare slug, or a slug conditional on
+    /// a `when` prerequisite.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permitted_categories: Vec<CategoryRule>,
+    /// Items whose `category` is listed may never be selected. Conditional in
+    /// the same way as `permitted_categories`, and note the two must be kept in
+    /// step: permitting is ANY and forbidding is EVERY, so relaxing a forbid
+    /// alone leaves a single-category item refused with `category_not_permitted`
+    /// instead.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub forbidden_categories: Vec<CategoryRule>,
     /// Item ids that must be selected.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub required_traits: BTreeSet<Id>,
@@ -2222,10 +2287,14 @@ pub struct EntityTypeProfile {
 
 impl EntityTypeProfile {
     /// Sorts the profile's unordered nested vectors for canonical
-    /// serialization. The category/trait sets are `BTreeSet`s (already
-    /// id-ordered), and `creation_phases` is order-significant and so left
-    /// untouched; the unordered vectors are the budget's `flaw_category_caps`
-    /// and `virtue_category_caps`, sorted here by category.
+    /// serialization. The trait sets are `BTreeSet`s (already id-ordered), and
+    /// `creation_phases` is order-significant and so left untouched. The
+    /// unordered vectors are the budget's `flaw_category_caps` and
+    /// `virtue_category_caps`, and — since [`CategoryRule`] made them `Vec`s
+    /// rather than self-ordering `BTreeSet`s — the two category lists, all
+    /// sorted here by category. A stable sort is enough to be deterministic
+    /// because `ruleset/integrity.rs` rejects a profile that names the same
+    /// category twice, so the key is unique.
     pub fn normalize(&mut self) {
         self.budget
             .flaw_category_caps
@@ -2233,6 +2302,28 @@ impl EntityTypeProfile {
         self.budget
             .virtue_category_caps
             .sort_by(|a, b| a.category.cmp(&b.category));
+        self.permitted_categories
+            .sort_by(|a, b| a.category().cmp(b.category()));
+        self.forbidden_categories
+            .sort_by(|a, b| a.category().cmp(b.category()));
+    }
+
+    /// Whether `permitted_categories` names this category **at all**, ignoring
+    /// any `when` guard. This is a question about what the profile declares, not
+    /// about what applies to a given character — for that, the validators
+    /// resolve the rules against a `PrereqCtx`.
+    pub fn names_permitted_category(&self, category: &str) -> bool {
+        self.permitted_categories
+            .iter()
+            .any(|rule| rule.category() == category)
+    }
+
+    /// Whether `forbidden_categories` names this category at all, ignoring any
+    /// `when` guard. Mirror of [`Self::names_permitted_category`].
+    pub fn names_forbidden_category(&self, category: &str) -> bool {
+        self.forbidden_categories
+            .iter()
+            .any(|rule| rule.category() == category)
     }
 }
 
@@ -4615,12 +4706,51 @@ mod tests {
         assert_eq!(profile.budget.max_major_virtues, Some(1));
         assert_eq!(profile.budget.max_major_flaws, None);
         assert_eq!(profile.gift_policy, Some(GiftPolicy::Forbidden));
-        assert!(profile.forbidden_categories.contains("hermetic"));
+        assert!(profile.names_forbidden_category("hermetic"));
+        // A bare slug stays the bare `Always` form — the untagged
+        // `CategoryRule` must not turn every existing rules file into the
+        // object shape on the way in or out.
+        assert_eq!(
+            profile.forbidden_categories,
+            vec![CategoryRule::Always("hermetic".to_string())]
+        );
         assert_eq!(profile.creation_phases.len(), 6);
 
         let reserialized = serde_json::to_string(&profile).unwrap();
         let roundtripped: EntityTypeProfile = serde_json::from_str(&reserialized).unwrap();
         assert_eq!(profile, roundtripped);
+    }
+
+    /// The category lists were `BTreeSet`s and canonicalised themselves;
+    /// [`CategoryRule`] made them `Vec`s, so `normalize` has to sort them
+    /// explicitly or the canonical writer emits authoring order. Both forms
+    /// sort on the same key — the category — so a conditional entry lands
+    /// exactly where its bare twin would.
+    #[test]
+    fn normalize_sorts_the_category_lists_by_category() {
+        let json = r#"{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": [
+            "supernatural",
+            "general",
+            { "category": "hermetic", "when": { "kind": "has", "value": "virtue.the_gift" } }
+          ],
+          "creation_phases": []
+        }"#;
+
+        let mut profile: EntityTypeProfile = serde_json::from_str(json).unwrap();
+        profile.normalize();
+
+        assert_eq!(
+            profile
+                .permitted_categories
+                .iter()
+                .map(CategoryRule::category)
+                .collect::<Vec<_>>(),
+            vec!["general", "hermetic", "supernatural"]
+        );
+        assert!(profile.permitted_categories[1].when().is_some());
     }
 
     #[test]

@@ -97,7 +97,7 @@ impl Ruleset {
             Self::validate_item_share(id, item, errors);
 
             if let Some(ref prereq) = item.prerequisites {
-                self.validate_prereq_refs(prereq, id, 1, errors);
+                self.validate_prereq_refs(prereq, id.as_str(), 1, errors);
             }
 
             for incompat_id in &item.incompatible_with {
@@ -226,6 +226,19 @@ impl Ruleset {
                     "type profile '{type_id}': gift_id references unknown ID '{gift_id}'"
                 ));
             }
+            Self::validate_category_rules(
+                type_id,
+                "permitted_categories",
+                &profile.permitted_categories,
+                errors,
+            );
+            Self::validate_category_rules(
+                type_id,
+                "forbidden_categories",
+                &profile.forbidden_categories,
+                errors,
+            );
+            self.validate_category_rule_conditions(type_id, profile, errors);
             // Intentionally unchecked: the profile's category-typed fields
             // (`permitted_categories`, `forbidden_categories`, `gift_categories`,
             // and the budget's `flaw_category_caps`) are NOT validated against the
@@ -236,7 +249,62 @@ impl Ruleset {
             // item in that category has been extracted yet — the shipped
             // `rules/core` data does exactly this. Requiring a backing item would
             // reject valid data, so this referential check is deliberately omitted
-            // (tracked here rather than left silent).
+            // (tracked here rather than left silent). What IS checked above is the
+            // list's own SHAPE, which only became expressible when `CategoryRule`
+            // turned the field from a `BTreeSet` into a `Vec`.
+        }
+    }
+
+    /// Rejects a category named twice in one of a profile's category lists.
+    ///
+    /// A `BTreeSet` made this unrepresentable; a `Vec<CategoryRule>` does not,
+    /// and a repeat is never meaningful — two unconditional entries are pure
+    /// duplication, and two conditional ones state a second, competing
+    /// condition for the same category, which the in-force resolution would
+    /// silently OR together. It is always an authoring slip, so it fails the
+    /// load naming the profile, the list and the category.
+    fn validate_category_rules(
+        type_id: &Id,
+        field: &str,
+        rules: &[CategoryRule],
+        errors: &mut Vec<String>,
+    ) {
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        for rule in rules {
+            if !seen.insert(rule.category()) {
+                errors.push(format!(
+                    "type profile '{type_id}': {field} repeats '{}'",
+                    rule.category()
+                ));
+            }
+        }
+    }
+
+    /// Walks every `when` condition on a profile's category rules through the
+    /// same [`Self::validate_prereq_refs`] gate an item's prerequisite passes.
+    ///
+    /// A profile-borne `Prereq` is authored in the `rules/` directory beside the
+    /// binary — the project's declared hostile-input surface — so it must fail
+    /// the load on a dangling ref rather than sit there permanently unevaluable,
+    /// and it must be bounded by [`PREREQ_MAX_DEPTH`] rather than recursing
+    /// until the stack gives out.
+    fn validate_category_rule_conditions(
+        &self,
+        type_id: &Id,
+        profile: &EntityTypeProfile,
+        errors: &mut Vec<String>,
+    ) {
+        for (field, rules) in [
+            ("permitted_categories", &profile.permitted_categories),
+            ("forbidden_categories", &profile.forbidden_categories),
+        ] {
+            for rule in rules {
+                let Some(when) = rule.when() else {
+                    continue;
+                };
+                let context = format!("type profile '{type_id}': {field} '{}'", rule.category());
+                self.validate_prereq_refs(when, &context, 1, errors);
+            }
         }
     }
 
@@ -1410,16 +1478,21 @@ impl Ruleset {
     /// whose prerequisites fail this check never loads, via either
     /// `Ruleset::from_sources` or `Ruleset::from_serialized` (both call
     /// `validate_integrity`, which calls this).
+    ///
+    /// `context` is the free-text prefix every error carries, rather than an
+    /// [`Id`], because a `Prereq` no longer only ever belongs to an item: a
+    /// type profile's [`CategoryRule`] carries one too, and "type profile
+    /// 'companion': permitted_categories 'hermetic'" is not an id.
     fn validate_prereq_refs(
         &self,
         prereq: &Prereq,
-        context_id: &Id,
+        context: &str,
         depth: usize,
         errors: &mut Vec<String>,
     ) {
         if depth > PREREQ_MAX_DEPTH {
             errors.push(format!(
-                "{context_id}: prerequisite nests more than {PREREQ_MAX_DEPTH} levels deep \
+                "{context}: prerequisite nests more than {PREREQ_MAX_DEPTH} levels deep \
                  (All/Any/Nor) — refusing to descend further; this is almost certainly a \
                  corrupt or hostile rules file, not a legitimate prerequisite"
             ));
@@ -1428,34 +1501,34 @@ impl Ruleset {
         match prereq {
             Prereq::All(children) | Prereq::Any(children) | Prereq::Nor(children) => {
                 for child in children {
-                    self.validate_prereq_refs(child, context_id, depth + 1, errors);
+                    self.validate_prereq_refs(child, context, depth + 1, errors);
                 }
             }
             Prereq::Has(ref_id) => {
                 if !self.point_items.contains_key(ref_id) {
                     errors.push(format!(
-                        "{context_id}: prerequisite references unknown ID '{ref_id}'"
+                        "{context}: prerequisite references unknown ID '{ref_id}'"
                     ));
                 }
             }
             Prereq::AbilityMin { ability, .. } => {
                 if !self.abilities.contains_key(ability) {
                     errors.push(format!(
-                        "{context_id}: prerequisite references unknown ability '{ability}'"
+                        "{context}: prerequisite references unknown ability '{ability}'"
                     ));
                 }
             }
             Prereq::ArtMin { art, .. } => {
                 if !self.arts.contains_key(art) {
                     errors.push(format!(
-                        "{context_id}: prerequisite references unknown art '{art}'"
+                        "{context}: prerequisite references unknown art '{art}'"
                     ));
                 }
             }
             Prereq::House(ref_id) => {
                 if !self.houses.contains_key(ref_id) {
                     errors.push(format!(
-                        "{context_id}: prerequisite references unknown house '{ref_id}'"
+                        "{context}: prerequisite references unknown house '{ref_id}'"
                     ));
                 }
             }

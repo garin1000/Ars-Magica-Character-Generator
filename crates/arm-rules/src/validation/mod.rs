@@ -16,9 +16,9 @@ use crate::completeness::{CompletenessReport, completeness};
 use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    AbilityFunding, CategoryCap, CreationPhase, Effect, Entity, EntityKind, EntityTypeProfile,
-    GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef, ParameterDomain,
-    PointItem, Prereq, Selection, ValidationMode,
+    AbilityFunding, CategoryCap, CategoryRule, CreationPhase, Effect, Entity, EntityKind,
+    EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef,
+    ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
 };
 
 mod aging;
@@ -875,8 +875,8 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_share_of_kind_cap(&effective_selections, ruleset, &mut issues);
     validate_prerequisites(entity, ruleset, &prereq_ctx, &mut issues);
     validate_incompatibilities(entity, ruleset, &selected_ids, &mut issues);
-    validate_permitted_categories(entity, ruleset, type_profile, &mut issues);
-    validate_forbidden_categories(entity, ruleset, type_profile, &mut issues);
+    validate_permitted_categories(entity, ruleset, type_profile, &prereq_ctx, &mut issues);
+    validate_forbidden_categories(entity, ruleset, type_profile, &prereq_ctx, &mut issues);
     validate_required_traits(type_profile, &selected_ids, &mut issues);
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);

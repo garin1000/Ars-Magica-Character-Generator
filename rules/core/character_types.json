@@ -13,8 +13,17 @@
         { "category": "story", "max": 1 }
       ]
     },
-    "permitted_categories": ["general", "personality", "social_status", "story", "supernatural"],
-    "forbidden_categories": ["hermetic"],
+    "permitted_categories": [
+      "general",
+      { "category": "hermetic", "when": { "kind": "has", "value": "virtue.the_gift" } },
+      "personality",
+      "social_status",
+      "story",
+      "supernatural"
+    ],
+    "forbidden_categories": [
+      { "category": "hermetic", "when": { "kind": "none", "value": [{ "kind": "has", "value": "virtue.the_gift" }] } }
+    ],
     "required_traits": [],
     "forbidden_traits": [],
     "is_magus": false,

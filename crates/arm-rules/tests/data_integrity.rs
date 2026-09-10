@@ -4213,6 +4213,15 @@ fn a_two_category_flaw_counts_against_its_secondary_category_cap() {
 /// which is why `has_the_gift` flags them through the same `hermetic` category.
 /// `:6809` then describes the Flaw as a companion's: "If he replaces a companion,
 /// he will become much more powerful when the Story Flaw is resolved."
+///
+/// The fixture deliberately stays **unGifted**, because that is the only state
+/// in which this still tests the conjunction: since B5 the companion's
+/// `hermetic` rules are conditional on `Has(virtue.the_gift)`, so a *Gifted*
+/// companion clears both checks through `hermetic` itself and `story` would be
+/// carrying nothing. The price is that the entity is incomplete for a different,
+/// correct reason — `:6805` gives the Flaw The Gift, so it now carries
+/// `prerequisites: Has(virtue.the_gift)` — which the last assertion pins rather
+/// than leaves as a surprise.
 #[test]
 fn a_secondary_category_clears_both_the_permitted_and_the_forbidden_check() {
     let rs = load_ruleset();
@@ -4220,11 +4229,11 @@ fn a_secondary_category_clears_both_the_permitted_and_the_forbidden_check() {
         .profile(&Id::new("companion"))
         .expect("the companion profile must ship");
     assert!(
-        companion.permitted_categories.contains("story"),
+        companion.names_permitted_category("story"),
         "a companion may take Story Flaws"
     );
     assert!(
-        companion.forbidden_categories.contains("hermetic"),
+        companion.names_forbidden_category("hermetic"),
         "and the companion profile forbids the Hermetic category"
     );
 
@@ -4254,6 +4263,14 @@ fn a_secondary_category_clears_both_the_permitted_and_the_forbidden_check() {
          forbidding fires only when EVERY category is forbidden: {:?}",
         result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
+    assert!(
+        result
+            .issues
+            .iter()
+            .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&suppressed)),
+        "the category gates are clear; what stops this unGifted companion is \
+         `:6805`'s own requirement, which is the honest reason"
+    );
 }
 
 /// Under the conjunction there is no distinguished offender, so the
@@ -4275,15 +4292,32 @@ fn a_secondary_category_clears_both_the_permitted_and_the_forbidden_check() {
 /// is refused by the sourced Story-Flaw cap instead (`:2826`). Suppressed Gift
 /// replaces it as the one shipped pairing that still exercises the conjunction
 /// for a grog.
+///
+/// **B5 qualified that claim rather than ending it, and the qualification is
+/// asserted below so it cannot lapse silently.** `flaw.suppressed_gift` now
+/// carries `prerequisites: Has(virtue.the_gift)` (`:6805`, "The character has
+/// The Gift but cannot access its power"), and a grog may never hold The Gift
+/// (`:2830`), so the pairing gained a *fourth* refusal on top of
+/// `category_not_permitted`, `gift_forbidden` and the Major cap. That does not
+/// weaken what this test demonstrates — the two category validators are
+/// independent of prerequisite evaluation and run regardless — but the pairing
+/// is emphatically not a build a player could ever complete, and the test does
+/// not pretend otherwise: it now asserts the `prereq_not_met` too.
+///
+/// **There is no replacement, and the sweep at the end proves why**: the
+/// conjunction needs a multi-category item at least one of whose categories a
+/// grog forbids, a grog forbids only `hermetic`, and `flaw.suppressed_gift` is
+/// the only multi-category item in the shipped catalogue carrying it. So this
+/// is the fixture or there is none.
 #[test]
 fn forbidding_fires_only_when_every_category_is_forbidden() {
     let rs = load_ruleset();
     let grog = rs
         .profile(&Id::new("grog"))
         .expect("the grog profile must ship");
-    assert!(grog.forbidden_categories.contains("hermetic"));
-    assert!(!grog.forbidden_categories.contains("story"));
-    assert!(!grog.permitted_categories.contains("story"));
+    assert!(grog.names_forbidden_category("hermetic"));
+    assert!(!grog.names_forbidden_category("story"));
+    assert!(!grog.names_permitted_category("story"));
 
     // Suppressed Gift is "*Major, Hermetic, Story*"
     // (Ars Magica - Definitive Edition (Core Rules).md:6804, entry :6803-6810). A grog forbids
@@ -4318,6 +4352,28 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
         Some("hermetic"),
         "when every category failed, the issue names the first-listed"
     );
+    assert!(
+        result
+            .issues
+            .iter()
+            .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&suppressed)),
+        "and since B5 the pairing is prereq-illegal as well: `:6805` gives the \
+         Flaw The Gift, `:2830` denies a grog one"
+    );
+
+    // No replacement fixture exists, so pin the fact rather than discovering it
+    // the next time this one is questioned: a grog forbids only `hermetic`, and
+    // this is the sole multi-category item in the catalogue that carries it.
+    let multi_category_hermetic: Vec<&Id> = rs
+        .items()
+        .filter(|item| item.categories.len() > 1 && item.has_category("hermetic"))
+        .map(|item| &item.id)
+        .collect();
+    assert_eq!(
+        multi_category_hermetic,
+        vec![&suppressed],
+        "the grog conjunction has exactly one possible fixture"
+    );
 
     // The structural half: the secondary-position forbidden hit is unreachable
     // for the shipped catalogue. Catalogue size stays data — this counts nothing
@@ -4333,7 +4389,7 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
                 !item
                     .categories
                     .iter()
-                    .all(|c| profile.forbidden_categories.contains(c)),
+                    .all(|c| profile.names_forbidden_category(c)),
                 "no shipped profile forbids every category of a multi-category \
                  item, so the `forbidden_category` issue can never name anything \
                  but the first-listed: {} vs profile {}",
@@ -4389,6 +4445,313 @@ fn a_grog_may_take_sufi_through_its_social_status_category() {
     assert!(
         category_issues.is_empty(),
         "a mundane Sufi is a Social Status Virtue a grog may take: {category_issues:?}"
+    );
+}
+
+// --- Row 20: conditional category rules (B5) ---------------------------------
+//
+// ":2840" — "You may not take Hermetic Virtues and Flaws, unless you have The
+// Gift (this would be highly unusual)" — is a CONDITIONAL category rule, and
+// the companion profile encoded only its unconditional half. Both halves of
+// the profile now carry a `when`: `hermetic` is permitted while
+// `Has(virtue.the_gift)` holds and forbidden while it does not. Permitting is
+// ANY and forbidding is EVERY, so relaxing only the forbid would have left
+// every single-category Hermetic item refused with `category_not_permitted` —
+// the same trap the grog `supernatural` removal recorded (RULES.md, the grog
+// profile rows).
+
+/// The cell ":2840" grants and the profile refused: a Gifted companion may take
+/// a Hermetic Flaw. `flaw.blatant_gift` is "*Major, Hermetic*" (`:5711-5712`)
+/// and already carries `prerequisites: Has(virtue.the_gift)`, so it is the
+/// shipped consumer of the conditional rule.
+#[test]
+fn a_gifted_companion_may_take_blatant_gift() {
+    let rs = load_ruleset();
+    let blatant = Id::new("flaw.blatant_gift");
+    let item = rs.item(&blatant).expect("flaw.blatant_gift must ship");
+    assert_eq!(
+        item.categories,
+        vec!["hermetic".to_string()],
+        "the fixture is only meaningful while Blatant Gift is single-category \
+         Hermetic: a secondary category would clear the permitted check on its own"
+    );
+
+    let result = validate(
+        &entity(
+            "companion",
+            vec![
+                Selection::new(Id::new("virtue.the_gift")),
+                Selection::new(blatant.clone()),
+            ],
+        ),
+        &rs,
+    );
+    let category_issues: Vec<&String> = result
+        .issues
+        .iter()
+        .filter(|i| {
+            i.context.as_ref() == Some(&blatant)
+                && (i.code == "forbidden_category" || i.code == "category_not_permitted")
+        })
+        .map(|i| &i.code)
+        .collect();
+    assert!(
+        category_issues.is_empty(),
+        "':2840' permits a Gifted companion the Hermetic category: {category_issues:?}"
+    );
+}
+
+/// The other side of the same conditional, which must not be lost while
+/// relaxing it: an *unGifted* companion is still refused. ":2840" grants the
+/// exception only to a Gifted character, and both halves of the profile are
+/// keyed on the same condition, so both issues still fire.
+#[test]
+fn an_ungifted_companion_still_may_not() {
+    let rs = load_ruleset();
+    let blatant = Id::new("flaw.blatant_gift");
+
+    let result = validate(
+        &entity("companion", vec![Selection::new(blatant.clone())]),
+        &rs,
+    );
+    for code in ["category_not_permitted", "forbidden_category"] {
+        assert!(
+            result
+                .issues
+                .iter()
+                .any(|i| i.code == code && i.context.as_ref() == Some(&blatant)),
+            "an unGifted companion must still be refused the Hermetic category \
+             ({code} missing): {:?}",
+            result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
+        );
+    }
+}
+
+/// Anti-circularity. The condition's leaf is the **id** `Has(virtue.the_gift)`,
+/// never a category test, and this pins why that matters.
+///
+/// `effective::has_the_gift` is category-based: it reads any selection carrying
+/// a `gift_categories` category (`["hermetic"]` on every shipped profile) as
+/// Gift-bearing. Had the profile's condition been "is this character Gifted?" in
+/// that sense, the rule would license itself — you may take a Hermetic item
+/// because you are Gifted, and you are Gifted because you hold a Hermetic item.
+///
+/// Two independent guards, so neither can lapse silently:
+/// (a) structural — `virtue.the_gift` is `special` and Free, carries none of the
+///     companion's `gift_categories`, and is itself always permitted, so
+///     satisfying the condition can never require the category it licenses;
+/// (b) behavioural — a companion holding *only* `flaw.blatant_gift` is exactly
+///     the character `has_the_gift` would call Gifted, and is still refused.
+#[test]
+fn a_companion_does_not_gift_himself_with_a_hermetic_virtue() {
+    let rs = load_ruleset();
+    let companion = rs
+        .profile(&Id::new("companion"))
+        .expect("the companion profile must ship");
+
+    let gift = rs
+        .item(&Id::new("virtue.the_gift"))
+        .expect("virtue.the_gift must ship");
+    assert_eq!(gift.magnitude, Magnitude::Free);
+    assert!(
+        !gift
+            .categories
+            .iter()
+            .any(|c| companion.gift_categories.contains(c)),
+        "the condition's leaf must not itself be a member of the category it \
+         licenses, or permission would be self-granting: {:?} vs {:?}",
+        gift.categories,
+        companion.gift_categories
+    );
+
+    let blatant = Id::new("flaw.blatant_gift");
+    assert!(
+        rs.item(&blatant)
+            .expect("flaw.blatant_gift must ship")
+            .categories
+            .iter()
+            .any(|c| companion.gift_categories.contains(c)),
+        "the fixture only proves anything while Blatant Gift is what the \
+         category-based Gift test would call Gift-bearing"
+    );
+
+    let result = validate(
+        &entity("companion", vec![Selection::new(blatant.clone())]),
+        &rs,
+    );
+    assert!(
+        result
+            .issues
+            .iter()
+            .any(|i| i.code == "category_not_permitted" && i.context.as_ref() == Some(&blatant)),
+        "holding a Hermetic item must not satisfy the condition that permits \
+         the Hermetic category: {:?}",
+        result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
+    );
+}
+
+/// Gentle Gift's prerequisite was `Has(virtue.hermetic_magus)`, which no line
+/// supports, and which left B5 half-done: a Gifted companion could take Blatant
+/// Gift but not its twin.
+///
+/// The two are a matched pair — mutually `incompatible_with`, both descriptors
+/// reading "*Major, Hermetic*" (`:3956` and `:5712`) with **no** prerequisite
+/// line in either, and both mentioning magi only in passing (Blatant Gift's own
+/// text says "even if they do not know you are a **magus**" and nonetheless
+/// ships `Has(virtue.the_gift)`). The magus requirement was inferred from the
+/// comparative at `:3957`, "Unlike other magi, whose Magical nature disturbs
+/// normal people and animals" — which compares, it does not restrict. And the
+/// penalty Gentle Gift cancels attaches to The Gift, not to Order membership:
+/// `:6805` describes a character who "continues to suffer the negative social
+/// penalties of The Gift".
+#[test]
+fn gentle_gift_requires_the_gift_and_not_the_order() {
+    let rs = load_ruleset();
+    let gentle = Id::new("virtue.gentle_gift");
+    assert_eq!(
+        rs.item(&gentle)
+            .expect("virtue.gentle_gift must ship")
+            .prerequisites,
+        Some(Prereq::Has(Id::new("virtue.the_gift"))),
+        "`:3956`/`:3957` state a Gift requirement, never an Order one"
+    );
+
+    let gifted = validate(
+        &entity(
+            "companion",
+            vec![
+                Selection::new(Id::new("virtue.the_gift")),
+                Selection::new(gentle.clone()),
+            ],
+        ),
+        &rs,
+    );
+    assert!(
+        !gifted
+            .issues
+            .iter()
+            .any(|i| i.context.as_ref() == Some(&gentle)),
+        "a Gifted companion may take Gentle Gift: {:?}",
+        gifted.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
+    );
+
+    let ungifted = validate(
+        &entity("companion", vec![Selection::new(gentle.clone())]),
+        &rs,
+    );
+    assert!(
+        ungifted
+            .issues
+            .iter()
+            .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&gentle)),
+        "and an unGifted one may not — there is no Gift for it to soften"
+    );
+}
+
+/// ":3845" — "You may not have The Gift, but if your Gift was not completely
+/// destroyed, you may have some Supernatural Abilities."
+///
+/// Expressed as a symmetric `incompatible_with`, not as a `Nor` prerequisite,
+/// because that is how this catalogue already states a flat "may not have The
+/// Gift": `virtue.devil_child`, `virtue.faerie_doctor`, `virtue.nephilim` and
+/// `virtue.spirit_votary` all do it that way, and `virtue.the_gift` lists each
+/// of them back. The one `Nor` in the data (`flaw.offensive_to_beings`, `:6530`)
+/// is there because that rule is *conditional* — "unless you have the Gentle
+/// Gift" — which an incompatibility cannot express. Failed Apprentice's is not.
+#[test]
+fn failed_apprentice_is_incompatible_with_the_gift() {
+    let rs = load_ruleset();
+    let failed = Id::new("virtue.failed_apprentice");
+    let gift = Id::new("virtue.the_gift");
+    assert!(
+        rs.item(&failed)
+            .expect("virtue.failed_apprentice must ship")
+            .incompatible_with
+            .contains(&gift),
+        "`:3845` bars the pairing outright"
+    );
+
+    let result = validate(
+        &entity(
+            "companion",
+            vec![Selection::new(gift), Selection::new(failed.clone())],
+        ),
+        &rs,
+    );
+    assert!(
+        result.issues.iter().any(|i| i.code == "incompatible"),
+        "a Failed Apprentice lost his Gift: {:?}",
+        result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
+    );
+}
+
+/// ":3420" — "This Virtue may be taken by a child character who has the Gift
+/// and who has been accepted by an experienced Hermetic magus, with the
+/// troupe's approval." (The descriptor line above it, ":3419", reads "*Free.
+/// Social Status*".)
+///
+/// Only the Gift half is modelled: acceptance by a magus and troupe approval
+/// are table decisions with nothing on the character sheet to check them
+/// against.
+#[test]
+fn the_apprentice_virtue_requires_the_gift() {
+    let rs = load_ruleset();
+    let apprentice = Id::new("virtue.apprentice");
+    assert_eq!(
+        rs.item(&apprentice)
+            .expect("virtue.apprentice must ship")
+            .prerequisites,
+        Some(Prereq::Has(Id::new("virtue.the_gift")))
+    );
+
+    let result = validate(
+        &entity("companion", vec![Selection::new(apprentice.clone())]),
+        &rs,
+    );
+    assert!(
+        result
+            .issues
+            .iter()
+            .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&apprentice)),
+        "an unGifted child is nobody's discipulus: {:?}",
+        result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
+    );
+}
+
+/// ":6805" — "The character has The Gift but cannot access its power, having
+/// temporarily lost his magical ability through mishap or some other
+/// misfortune." A Flaw that states outright that its bearer has The Gift must
+/// require it, and with `:2840` now conditional the pair is what makes a
+/// Suppressed-Gift **companion** — the character `:6809` describes — a legal
+/// build rather than one the profile refuses.
+#[test]
+fn a_gifted_companion_may_take_suppressed_gift() {
+    let rs = load_ruleset();
+    let suppressed = Id::new("flaw.suppressed_gift");
+    assert_eq!(
+        rs.item(&suppressed)
+            .expect("flaw.suppressed_gift must ship")
+            .prerequisites,
+        Some(Prereq::Has(Id::new("virtue.the_gift")))
+    );
+
+    let result = validate(
+        &entity(
+            "companion",
+            vec![
+                Selection::new(Id::new("virtue.the_gift")),
+                Selection::new(suppressed.clone()),
+            ],
+        ),
+        &rs,
+    );
+    assert!(
+        !result
+            .issues
+            .iter()
+            .any(|i| i.context.as_ref() == Some(&suppressed)),
+        "`:6809` puts this Flaw on a companion: {:?}",
+        result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
 }
 
@@ -5549,13 +5912,20 @@ fn the_grog_profile_restricts_only_the_categories_the_book_names() {
     assert_eq!(
         grog.forbidden_categories
             .iter()
-            .map(String::as_str)
+            .map(CategoryRule::category)
             .collect::<Vec<_>>(),
         vec!["hermetic"],
         "`:2829` is the only category restriction the grog guidelines state"
     );
     assert!(
-        grog.permitted_categories.contains("supernatural"),
+        grog.permitted_categories
+            .iter()
+            .all(|rule| rule.when().is_none()),
+        "a grog's restrictions are unconditional: `:2822-2830` states no \
+         'unless' the way `:2840` does for a companion"
+    );
+    assert!(
+        grog.names_permitted_category("supernatural"),
         "and permitting is ANY, so the slug must be on the permitted list too or \
          a single-category Supernatural item stays blocked"
     );
@@ -5721,7 +6091,7 @@ fn only_the_mythic_companion_profile_permits_the_mythic_companion_category() {
     let mythic = Id::new("mythic_companion");
     let mut checked = 0;
     for profile in rs.profiles() {
-        let permitted = profile.permitted_categories.contains("mythic_companion");
+        let permitted = profile.names_permitted_category("mythic_companion");
         assert_eq!(
             permitted,
             profile.id == mythic,

@@ -24,20 +24,54 @@ fn first_in_force(in_force: &[String]) -> &str {
     in_force.first().map(String::as_str).unwrap_or_default()
 }
 
+/// The categories a profile's list puts **in force** for this entity: every
+/// unconditional entry, plus every conditional one whose `when` evaluates to
+/// [`Tri::True`].
+///
+/// `Tri::False` and `Tri::Unknown` both leave an entry out of force. Unknown
+/// resolving in the player's favour is deliberate and matches the rest of the
+/// engine: an item whose prerequisite cannot be decided yields the non-blocking
+/// `prereq_unevaluated` warning rather than an error, so a category rule that
+/// cannot be decided must not silently grant or withhold. Which direction
+/// "in the player's favour" points differs per caller and needs no special
+/// case: dropping an undecided *permit* is the strict reading, dropping an
+/// undecided *forbid* is the lenient one, and the pair is authored as
+/// complements, so an undecided condition simply leaves the item to be judged
+/// by the profile's other, unconditional rules.
+///
+/// The single resolution point for both gates below, so they cannot disagree
+/// about which entries apply — the same "decide it once" discipline
+/// `PointItem::categories_for` applies to an item's own categories.
+fn categories_in_force<'a>(rules: &'a [CategoryRule], ctx: &PrereqCtx) -> BTreeSet<&'a str> {
+    rules
+        .iter()
+        .filter(|rule| match rule.when() {
+            None => true,
+            Some(when) => ctx.evaluate(when).0 == Tri::True,
+        })
+        .map(CategoryRule::category)
+        .collect()
+}
+
 pub(crate) fn validate_permitted_categories(
     entity: &Entity,
     ruleset: &Ruleset,
     type_profile: Option<&EntityTypeProfile>,
+    ctx: &PrereqCtx,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(profile) = type_profile else {
         return;
     };
 
-    // An empty permitted list means "no category restriction".
+    // An empty permitted list means "no category restriction". The test is on
+    // the DECLARED list, not on the in-force one: a profile that declares only
+    // conditional permits and satisfies none of them permits nothing, which is
+    // the opposite of declaring no restriction at all.
     if profile.permitted_categories.is_empty() {
         return;
     }
+    let permitted = categories_in_force(&profile.permitted_categories, ctx);
 
     for selection in &entity.selections {
         // The profile's own gift is governed solely by `validate_gift_policy`
@@ -65,11 +99,12 @@ pub(crate) fn validate_permitted_categories(
         // declared they are NOT taking the Supernatural reading, so the
         // Supernatural category must not rescue them from a profile that
         // forbids it. See `PointItem::categories_for`.
+        //
+        // Judged against the categories the PROFILE puts in force for this
+        // entity, so `:2840`'s "unless you have The Gift" opens `hermetic` to a
+        // Gifted companion and to nobody else.
         let in_force = item.categories_for(&selection.params);
-        if !in_force
-            .iter()
-            .any(|c| profile.permitted_categories.contains(c))
-        {
+        if !in_force.iter().any(|c| permitted.contains(c.as_str())) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_CATEGORY_NOT_PERMITTED,
                 CreationPhase::VirtuesFlaws,
@@ -98,6 +133,7 @@ pub(crate) fn validate_forbidden_categories(
     entity: &Entity,
     ruleset: &Ruleset,
     type_profile: Option<&EntityTypeProfile>,
+    ctx: &PrereqCtx,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(profile) = type_profile else {
@@ -107,6 +143,7 @@ pub(crate) fn validate_forbidden_categories(
     if profile.forbidden_categories.is_empty() {
         return;
     }
+    let forbidden = categories_in_force(&profile.forbidden_categories, ctx);
 
     for selection in &entity.selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -135,11 +172,15 @@ pub(crate) fn validate_forbidden_categories(
         // that one forbidden" — a player who took Sufi as Social Status is
         // forbidden only if Social Status itself is forbidden, regardless of
         // whether Supernatural also is.
+        //
+        // Conditional-rule aware in the same way the permitted gate is, and
+        // authored as its complement: `:2840` forbids a companion `hermetic`
+        // only while he lacks The Gift, so the forbid drops out for exactly the
+        // character the permit appears for. An empty in-force set therefore
+        // forbids nothing, which is what `all` over a non-empty category list
+        // already yields.
         let in_force = item.categories_for(&selection.params);
-        if !in_force
-            .iter()
-            .all(|c| profile.forbidden_categories.contains(c))
-        {
+        if !in_force.iter().all(|c| forbidden.contains(c.as_str())) {
             continue;
         }
         issues.push(ValidationIssue::error(

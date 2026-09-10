@@ -26,9 +26,9 @@ use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
 use crate::spell::{RITUAL_MIN_LEVEL, Spell, SpellDuration, SpellTarget, SpellsFile};
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
-    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, CreationPhase, Effect, EntityTypeProfile, I18nEntry, Id,
-    ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef, ParameterDomain, PointItem, Prereq,
-    ReputationType, RulesetRef, SourceRef, SpecialCasting,
+    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, CategoryRule, CreationPhase, Effect, EntityTypeProfile,
+    I18nEntry, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef, ParameterDomain, PointItem,
+    Prereq, ReputationType, RulesetRef, SourceRef, SpecialCasting,
 };
 
 mod accessors;
@@ -2376,6 +2376,80 @@ mod tests {
         assert!(
             msg.contains("virtue.nonexistent"),
             "should flag unknown forbidden_trait ref: {msg}"
+        );
+    }
+
+    /// B5: a type profile's category rule may carry a `when` prerequisite, and
+    /// that `Prereq` is authored in the same `rules/` directory the threat model
+    /// treats as hostile input. It must therefore reach the *same* load gate an
+    /// item's prerequisite does: a dangling ref fails the load, naming the
+    /// profile it came from rather than being silently unevaluable at runtime.
+    #[test]
+    fn a_conditional_category_referencing_an_unknown_item_fails_the_load() {
+        let types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": [
+            { "category": "hermetic", "when": { "kind": "has", "value": "virtue.nonexistent" } }
+          ],
+          "creation_phases": []
+        }]"#;
+
+        let err = Ruleset::from_json("test", "1", VALID_ITEMS, types).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.nonexistent") && msg.contains("companion"),
+            "a profile-borne `when` must be ref-checked like an item's \
+             prerequisite, naming the profile: {msg}"
+        );
+    }
+
+    /// A `BTreeSet` made a repeated category unrepresentable; the
+    /// [`CategoryRule`] `Vec` does not, so the load gate has to say no. Two
+    /// entries for one category are either pure duplication or two competing
+    /// conditions that the in-force resolution would silently OR together —
+    /// an authoring slip either way.
+    #[test]
+    fn a_profile_naming_one_category_twice_fails_the_load() {
+        let types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": [
+            "hermetic",
+            { "category": "hermetic", "when": { "kind": "is_magus" } }
+          ],
+          "creation_phases": []
+        }]"#;
+
+        let err = Ruleset::from_json("test", "1", VALID_ITEMS, types).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("companion") && msg.contains("permitted_categories repeats 'hermetic'"),
+            "a repeated category must fail the load naming profile, list and \
+             category: {msg}"
+        );
+    }
+
+    /// The other half of the same gate: [`PREREQ_MAX_DEPTH`] must apply to a
+    /// profile-borne `when` too, so a crafted `rules/` directory cannot blow the
+    /// stack through a category rule instead of through an item.
+    #[test]
+    fn a_pathologically_deep_conditional_category_is_rejected_cleanly() {
+        let mut rs = Ruleset::from_json("test", "1", VALID_ITEMS, VALID_TYPES).unwrap();
+        rs.type_profiles
+            .get_mut(&Id::new("companion"))
+            .unwrap()
+            .forbidden_categories
+            .push(CategoryRule::When {
+                category: "hermetic".to_string(),
+                when: nested_prereq(1_000),
+            });
+
+        let err = rs.validate_integrity().unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("companion") && msg.contains("nests more than"),
+            "expected a clear over-depth error naming the profile, got: {msg}"
         );
     }
 

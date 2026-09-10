@@ -2682,6 +2682,7 @@
     "categories": ["hermetic", "story"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6803, 6810] }
   },
   {
@@ -3403,6 +3404,7 @@
     "categories": ["social_status"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3418, 3421] }
   },
   {
@@ -4092,6 +4094,7 @@
     "categories": ["social_status"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.the_gift"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3843, 3846] }
   },
   {
@@ -4294,7 +4297,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.blatant_gift"],
-    "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
+    "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3955, 3958] }
   },
   {
@@ -6206,7 +6209,7 @@
     "categories": ["special"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.nephilim", "virtue.spirit_votary"],
+    "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.failed_apprentice", "virtue.nephilim", "virtue.spirit_votary"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3967, 3970] }
   },
   {

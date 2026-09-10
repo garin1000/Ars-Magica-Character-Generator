@@ -644,7 +644,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   | item | type | before | after | source |
   |---|---|---|---|---|
   | `virtue.sufi` (*Minor, Social Status, Supernatural*) | grog | blocked | **allowed** | `:5079` "It is also possible to be an entirely mundane Sufi, in which case you should take this Virtue as a Social Status Virtue"; `:5083` "either as a Minor Social Status Virtue **or** a Minor Supernatural Virtue" |
-  | `flaw.suppressed_gift` (*Major, Hermetic, Story*) | companion | blocked | **allowed** | `:2840` bars a companion from Hermetic V/F "unless you have The Gift", and a Suppressed-Gift character *does* have it (`:6805` — it does not function, but the social penalties remain); `:6809` "If he replaces a companion, he will become much more powerful when the Story Flaw is resolved" |
+  | `flaw.suppressed_gift` (*Major, Hermetic, Story*) | companion | blocked | **allowed** | `:2840` bars a companion from Hermetic V/F "unless you have The Gift", and a Suppressed-Gift character *does* have it (`:6805` — it does not function, but the social penalties remain); `:6809` "If he replaces a companion, he will become much more powerful when the Story Flaw is resolved". Since row 20 the "does have it" half is *modelled*: the Flaw carries `Has(virtue.the_gift)`, so the companion has to hold The Gift rather than merely be assumed to |
   | `flaw.suppressed_gift` | mythic companion | blocked by category | **blocked by `gift_forbidden`** | `:2637` — the status Virtues "are incompatible … with The Gift". Same outcome, honest issue code |
 
   Three further cells (a grog taking Raised from the Dead, Visions, or Suppressed
@@ -663,7 +663,15 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   `max: 0`) instead. Suppressed Gift (*Hermetic, Story*) is unaffected and is now
   the only shipped pairing that still exercises the conjunction for a grog, which
   is why `forbidding_fires_only_when_every_category_is_forbidden` uses it as its
-  fixture rather than Visions.
+  fixture rather than Visions. **Qualified again by row 20** (below): Suppressed
+  Gift now requires The Gift (`:6805`) and a grog may never hold one (`:2830`),
+  so the pairing carries a `prereq_not_met` on top of everything else. The
+  conjunction it demonstrates is untouched — the two category validators run
+  independently of prerequisite evaluation — but the pairing is no longer a build
+  anyone could complete, and the test says so and asserts the extra issue.
+  **No replacement exists and the test proves it**: a grog forbids only
+  `hermetic`, and `flaw.suppressed_gift` is the sole multi-category item in the
+  catalogue carrying that category.
 - **`categories` is order-significant and therefore exempt from canonical sorting** —
   the same deliberate exception the crisis table's `crisis.rows` takes (see the
   aging section's "Three things a later sweep must not undo"), and the reason it is
@@ -731,6 +739,97 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
 - Referential integrity + EN/DE i18n coverage are asserted structurally by
   `tests/data_integrity.rs` (`shipped_data_passes_integrity_check`,
   `english/german_i18n_covers_all_items`) — never an exact catalogue total.
+
+#### A category rule may carry a condition (open-to-dos row 20)
+> "You may not take Hermetic Virtues and Flaws, unless you have The Gift (this
+> would be highly unusual)" — `:2840`
+
+> "Only characters with The Gift can take these Virtues and Flaws, and some are
+> only applicable to Hermetic magi who have already completed their training."
+> — `:2880`
+
+The companion profile encoded only the unconditional half of `:2840`, so the
+exception the book grants a Gifted companion was unreachable. A profile's
+`permitted_categories` / `forbidden_categories` entry is now a
+`CategoryRule` (`types.rs`) — `#[serde(untagged)]` over either a bare slug or
+`{ category, when: <Prereq> }`, so every existing rules file loads and re-emits
+byte-identically.
+
+**Semantics, stated and implemented once.** An entry is in force **iff** `when`
+is absent or evaluates to `Tri::True`. `Tri::False` and `Tri::Unknown` both
+leave it out of force; Unknown resolving that way matches the engine's existing
+non-blocking `prereq_unevaluated` model. The single resolution point is
+`categories_in_force` (`validation/selections.rs`), which both gates call, so
+they cannot disagree — the same discipline `PointItem::categories_for` applies
+to an item's own categories. The `PrereqCtx` it evaluates against is the one
+`validation::validate` already builds for `validate_prerequisites`
+(hoisted for this purpose in `e2e35f3`), so there is no second evaluation path.
+
+**The leaf is `Has(virtue.the_gift)`, and it has to be.** A category-based Gift
+test would be circular: `effective::has_the_gift` reads
+`gift_categories: ["hermetic"]`, so "permit `hermetic` when Gifted" plus "Gifted
+because you hold a `hermetic` item" is a rule that licenses itself. The id leaf
+is non-circular because `virtue.the_gift` is `categories: ["special"]` and Free —
+it is in no Gift category and always permitted, so satisfying the condition can
+never require the category it licenses. Pinned by
+`a_companion_does_not_gift_himself_with_a_hermetic_virtue`
+(`tests/data_integrity.rs`), which asserts both the structural fact and that a
+companion holding *only* `flaw.blatant_gift` — exactly the character
+`has_the_gift` calls Gifted — is still refused.
+
+**Both halves of the profile carry the condition** (`rules/core/character_types.json`,
+the companion profile): `hermetic` is permitted when `Has(virtue.the_gift)` and
+forbidden when `Nor([Has(virtue.the_gift)])`. Permitting is ANY and forbidding
+is EVERY, so relaxing only the forbid leaves every single-category Hermetic item
+refused with `category_not_permitted` — the lesson the grog `supernatural` row
+records in the profile table above. The two conditions are complements, so an
+unGifted companion sees exactly the behaviour he saw before (both issues), and
+only the Gifted case moves.
+
+**Load gate.** A profile-borne `when` is authored in the `rules/` directory
+beside the binary — the declared hostile-input surface — so
+`ruleset/integrity.rs::validate_category_rule_conditions` walks each one through
+the same `validate_prereq_refs` an item's prerequisite passes: a dangling ref
+fails the load, and `PREREQ_MAX_DEPTH` bounds the recursion. `validate_prereq_refs`
+takes a free-text `context` rather than an `Id` for this reason. And because the
+two fields are `Vec`s now rather than self-canonicalising `BTreeSet`s,
+`EntityTypeProfile::normalize` sorts them explicitly and
+`validate_category_rules` rejects a category named twice — a case the set made
+unrepresentable. Three tests in `ruleset.rs`:
+`a_conditional_category_referencing_an_unknown_item_fails_the_load`,
+`a_pathologically_deep_conditional_category_is_rejected_cleanly`,
+`a_profile_naming_one_category_twice_fails_the_load`.
+
+**Not done, deliberately: a Gifted companion is not a magus.** The magus profile
+mandates Hermetic Magus status, a House and the Order's minimum Abilities *as
+errors*. The unschooled Gifted person `:2840` contemplates is none of those, and
+the point of the rule is that a **companion** may be Gifted.
+
+**Four prerequisite corrections shipped in the same change**, all in
+`rules/core/virtues_flaws.json`, because the conditional category is only half a
+fix if the Gift-bearing items around it state the wrong requirement:
+
+| item | before | after | source |
+|---|---|---|---|
+| `virtue.gentle_gift` | `Has(virtue.hermetic_magus)` | `Has(virtue.the_gift)` | `:3956` "*Major, Hermetic*" with no prerequisite line, matching its twin `flaw.blatant_gift` at `:5712`; `:2880` gates the whole category on The Gift, not on the Order. The magus requirement was inferred from the comparative at `:3957` ("Unlike other magi, whose Magical nature disturbs normal people and animals"), which compares rather than restricts, and the penalty it cancels attaches to The Gift — `:6805` has a possible non-member who "continues to suffer the negative social penalties of The Gift". Without this, B5 half-works: a Gifted companion could take Blatant Gift but not its twin |
+| `virtue.failed_apprentice` | — | `incompatible_with: [virtue.the_gift]` (symmetric) | `:3845` "You may not have The Gift, but if your Gift was not completely destroyed, you may have some Supernatural Abilities" |
+| `virtue.apprentice` | — | `Has(virtue.the_gift)` | `:3420` "This Virtue may be taken by a child character who has the Gift…" (the descriptor line `:3419` reads "*Free. Social Status*"). Acceptance by a magus and troupe approval are table decisions with nothing on the sheet to check |
+| `flaw.suppressed_gift` | — | `Has(virtue.the_gift)` | `:6805` "The character has The Gift but cannot access its power" |
+
+`incompatible_with` rather than a `Nor` prerequisite for Failed Apprentice
+because that is how this catalogue already states a flat "may not have The
+Gift" — `virtue.devil_child`, `virtue.faerie_doctor`, `virtue.nephilim` and
+`virtue.spirit_votary` all do, with `virtue.the_gift` listing each back. The one
+`Nor` in the data (`flaw.offensive_to_beings`, `:6530`) is there because that
+rule is *conditional* ("unless you have the Gentle Gift"), which an
+incompatibility cannot express; `:3845`'s is not.
+
+**Save impact: none, and none owed.** This is ruleset shape, not save shape, so
+`SCHEMA_VERSION` stays 16 and there is no migration. An existing save holding
+`flaw.suppressed_gift` (or Apprentice, or Gentle Gift) without
+`virtue.the_gift` now reports `prereq_not_met`. That is the accepted precedent
+of open-to-dos row 17(c): saves store choices, the engine only reports, and one
+selection clears it.
 
 #### Two Flaws the book indexes under General were magus-only (open-to-dos row 13)
 > **Hermetic** — "Only characters with The Gift can take these Virtues and Flaws,
@@ -844,7 +943,7 @@ source:
 | grog | `forbidden_categories` includes `hermetic`; `gift_policy: forbidden` | `:2829` ("You may not take Hermetic Virtues and Flaws"), `:2830` ("You may not take The Gift"), `:2876` ("Grogs can never have The Gift"), `:1009` ("grogs can never have The Gift") |
 | grog | `permitted_categories` includes `supernatural`, and `forbidden_categories` does **not** | **Removed as unsourced** — the entry it replaces forbade `supernatural`, and no passage supports that. `:2822-2830` is the grog guidelines in full (up to 3 points of Flaws and an equal number of Virtues; must take one Social Status; should not take Story Flaws; not more than one Personality Flaw; may not take Major Virtues or Flaws; may not take Hermetic Virtues and Flaws; may not take The Gift) and Supernatural appears nowhere in it; `:1009` likewise; the `### Supernatural` prose (`:2958-2962`) explains realm association and Warping immunity and sets no character-type restriction. **Both halves had to go**: permitting is ANY, so removing only the forbid would have left every single-category Supernatural item refused with `category_not_permitted` — a change that looks like a fix and does nothing. `hermetic` stays forbidden (`:2829`, row above). What still bounds a grog here is sourced: `:2828`'s Major cap (`max_major_virtues`/`max_major_flaws: 0`), which catches every Major Supernatural item and so does most of the real work; `:2830`'s Gift policy, untouched because Gift detection reads `gift_categories: ["hermetic"]`, so a Supernatural Virtue never confers The Gift; `:2824`'s 3-point budget; and `:2826`'s Story cap, which still refuses the two *Story, Supernatural* Flaws |
 | companion | `virtue_points: 10`, `flaw_points: 10` | `:2297`, `:2834-2840` |
-| companion | `forbidden_categories: [hermetic]` | `:2840` ("You may not take Hermetic Virtues and Flaws, unless you have The Gift (this would be highly unusual)") — the conditional itself is **unmodelled**; the profile forbids the category unconditionally, so a Gifted companion is refused it. See *Two Flaws the book indexes under General were magus-only* |
+| companion | `hermetic` is **permitted when** `Has(virtue.the_gift)` and **forbidden when** `Nor([Has(virtue.the_gift)])` | `:2840` ("You may not take Hermetic Virtues and Flaws, unless you have The Gift (this would be highly unusual)"). The conditional is now modelled — see *A category rule may carry a condition* below. **Both halves carry the condition**, because permitting is ANY and forbidding is EVERY: relaxing only the forbid would have left every single-category Hermetic item refused with `category_not_permitted`, the same trap the grog `supernatural` row records. The two conditions are exact complements, so behaviour for an unGifted companion is unchanged (both issues still fire) and only the Gifted case moves |
 | companion | `max_major_virtues: null`, `max_major_flaws: null` (no count cap) | no Major-count cap for companions in the book |
 | companion | `max_minor_flaws: 5` | `:2774`, `:2835` |
 | companion | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `:2820`, `:2838` (Major Personality hard); `:2820`/`:2976` (Personality total); `:2818`/`:2837` (Story) |

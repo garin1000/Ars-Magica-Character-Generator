@@ -96,9 +96,9 @@ pub use spell::{Spell, SpellDuration, SpellRange, SpellTarget};
 pub use spell_mastery::SpellMasteryAbility;
 pub use types::{
     AbilityFunding, AbilityScore, AdvancementSource, AgingEffect, AgingLogEntry, ArtScore,
-    CastingScope, CategoryCap, Classification, CombatStat, CreationPhase, Effect, EnchantedDevice,
-    Entity, EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, GiftPolicy, HalvableTotal,
-    HealthTrack, I18nEntry, Id, ItemKind, LineRange, LoadedEntity, LongevityRitual,
+    CastingScope, CategoryCap, CategoryRule, Classification, CombatStat, CreationPhase, Effect,
+    EnchantedDevice, Entity, EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, GiftPolicy,
+    HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind, LineRange, LoadedEntity, LongevityRitual,
     LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType, ParameterDef,
     ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm, Reputation,
     ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpecialCasting,
