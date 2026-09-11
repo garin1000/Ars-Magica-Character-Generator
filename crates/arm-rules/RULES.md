@@ -810,7 +810,7 @@ takes a free-text `context` rather than an `Id` for this reason. And because the
 two fields are `Vec`s now rather than self-canonicalising `BTreeSet`s,
 `EntityTypeProfile::normalize` sorts them explicitly and
 `validate_category_rules` rejects a category named twice — a case the set made
-unrepresentable. Three tests in `ruleset.rs`ArMDE:
+unrepresentable. Three tests in `ruleset.rs`:
 `a_conditional_category_referencing_an_unknown_item_fails_the_load`,
 `a_pathologically_deep_conditional_category_is_rejected_cleanly`,
 `a_profile_naming_one_category_twice_fails_the_load`.
@@ -1411,7 +1411,7 @@ behaves exactly as "no limit" without overloading the field's meaning. A stated
 ceiling is encoded literally (Quiet Magic 2, `ArMDE:4826`).
 
 Items whose descriptor states no ceiling, each with the line that says so — all
-carry `max_per_target: 255` in `rules/core/virtues_flaws.json`ArMDE:
+carry `max_per_target: 255` in `rules/core/virtues_flaws.json`:
 
 | Item | Line | Rule text (abridged) |
 |---|---|---|
@@ -1482,7 +1482,7 @@ Two shapes need it, and neither was expressible with `max_per_target` alone:
 stated ceiling"** (see the box above). A stated ceiling is encoded literally.
 
 Items whose descriptor caps the TOTAL number of copies, each with the line
-that says so — all carry `max_total` in `rules/core/virtues_flaws.json`ArMDE:
+that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
 
 | Item | Line | Rule text (abridged) |
 |---|---|---|
@@ -2763,7 +2763,7 @@ unchanged *and* writes byte-identical JSON — the `mastery_abilities` /
 `save_with_cords_only_familiar_loads_statblock_as_defaults`.
 
 **Two invariants that fall out of nesting**, each locked by a named regression test
-in `validation/mod.rs`ArMDE:
+in `validation/mod.rs`:
 
 - `familiar_characteristics_never_enter_the_magus_point_buy` — the familiar's
   Characteristics live in `Entity.familiar`, never in `Entity.characteristics`, so
@@ -3194,7 +3194,7 @@ resolved values); the free Virtue is **derived** at eval by
   bullet under `#### Magi` (`ArMDE:2853`), hence no closing period.
 - A "should", so a **soft warning** — `validation/magus.rs::validate_house` (:31) emits
   `missing_hermetic_flaw` when a magus has no selected Flaw counting as Hermetic.
-- "Counting as Hermetic" is two data lookups, never a hardcoded `"hermetic"`ArMDE:
+- "Counting as Hermetic" is two data lookups, never a hardcoded `"hermetic"`:
   the profile's **`hermetic_flaw_categories`** (`["hermetic"]` on the magus
   profile only) met against the item's `categories` **or** its
   `index_categories`. It is deliberately NOT `gift_categories` and NOT the
@@ -4907,7 +4907,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   after the Gauntlet would grant nothing back, so a magus would simply lose them. Both
   checks run from `validate_integrity`, so a cached ruleset returning through
   `Ruleset::from_serialized` is trusted no further than a freshly parsed one.
-- The arithmetic, in `LifeStageRules::budget` and `LifeStageRules::post_gauntlet_points`ArMDE:
+- The arithmetic, in `LifeStageRules::budget` and `LifeStageRules::post_gauntlet_points`:
 
   ```text
   gauntlet_age        = min(plan.gauntlet_age ?? age, age)     # magi only
@@ -5696,7 +5696,7 @@ end of this section.
   year's age.
 - **The signs, which are easy to get backwards.** `ArMDE:16571` works only because the
   formula *subtracts* the two named modifiers, so both are stored with the book's
-  own printed sign and negated exactly once, in `aging_total`ArMDE:
+  own printed sign and negated exactly once, in `aging_total`:
   - `Effect::AgingMod { kind: living_conditions }` and the table rows are
     **SUBTRACTED**. Mild Aging's `+1` (`ArMDE:4530`) therefore *lowers* the total, and
     Poor Living Conditions' `-1` (`ArMDE:6620`) *raises* it.
@@ -5736,7 +5736,7 @@ holding Faerie Blood (`ArMDE:3801`) it printed "+4 (age) 0 (living conditions) 0
 by `ui/src/lib/components/AgingSchedulePanel.svelte`, whose sibling
 `aging-total-parts` in `AgingRollCalculator.svelte` has always carried the term (off
 `AgingTotal::trait_modifier`); both strings now word it identically.
-`longevity_clamp_active` is deliberately **not** `AgingTotal::capped_by_longevity`ArMDE:
+`longevity_clamp_active` is deliberately **not** `AgingTotal::capped_by_longevity`:
 that one says a particular roll was cut down, this one that the `ArMDE:16575` clamp
 stands over the character at all.
 
@@ -6210,7 +6210,7 @@ doctor's Medicine roll and death, all out of scope by design.
   stored `amount` never means two different things depending on the carrier. Neither
   reaches the AGING TOTAL — `aging_total`'s no-op arm — and both are surfaced under
   `derived-detail-crisis_survival` / `derived-detail-crisis_heavy_wound`. The two data
-  fixes, in `rules/core/virtues_flaws.json`ArMDE:
+  fixes, in `rules/core/virtues_flaws.json`:
   - **`virtue.mild_aging`** gains `crisis_survival +3` beside its existing
     `living_conditions +1`. "The character's aging rolls benefit from a +1 bonus to
     the Living Conditions Modifier … Furthermore, he receives a +3 bonus to rolls to
@@ -6223,7 +6223,7 @@ doctor's Medicine roll and death, all out of scope by design.
     `a_crisis_survival_modifier_never_reaches_the_aging_total` (`data_integrity.rs`),
     the latter being `ArMDE:16636`'s converse — a survival-roll grant is not an aging-roll
     modifier either.
-  - **`flaw.leprosy`** gains `crisis_heavy_wound 0` beside its `living_conditions -2`ArMDE:
+  - **`flaw.leprosy`** gains `crisis_heavy_wound 0` beside its `living_conditions -2`:
     "whenever she undergoes an Aging Crisis (page 392) the leper sustains a Heavy
     Wound in addition to any other result" (`ArMDE:6340`). Guard:
     `leprosy_carries_its_crisis_wound_beside_its_living_conditions_penalty`.

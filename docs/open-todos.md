@@ -72,11 +72,11 @@ these should be tagged over silently.
   to a number that never referred to one. They were made non-bare instead, by
   naming their file explicitly; the residual risk is row 22 above.
 
-- **A 69-site prose corruption the sweep left behind is repaired (this slice,
+- **A 79-site prose corruption the sweep left behind is repaired (this slice,
   2026-09-11).** D1b's regex treated *every* colon immediately following a
   closing backtick as the start of a bare citation, so a prose colon after a code
   span became `` `ArMDE: `` — "`max_total: 1`ArMDE: `ArMDE:5083` offers…",
-  "`PointItem::normalize`ArMDE: an index has no authored order.". Fifty-seven
+  "`PointItem::normalize`ArMDE: an index has no authored order.". Sixty-seven
   sites in `crates/arm-rules/RULES.md`, eleven in
   `crates/arm-rules/tests/data_integrity.rs` and one in
   `crates/arm-app/tests/commands.rs`, all in prose and comments, none affecting
@@ -85,7 +85,17 @@ these should be tagged over silently.
   `` `ArMDE::…` ``, the two `` `:line` `` table-column headers became
   `` `ArMDE:line` ``, and the sentence describing `RULES.md`'s own
   implementation-site convention had its `` `symbol` (:NNN) `` example rewritten
-  into `(ArMDE:NNN)`, which describes the wrong thing entirely. All restored.
+  into `(ArMDE:NNN)`, which describes the wrong thing entirely. All restored
+  against the pre-sweep text rather than guessed at.
+  **The repair itself missed ten sites on the first pass, and that is the more
+  useful half of the lesson:** the verification scan keyed on a trailing space
+  after `ArMDE:`, so it shared the original regex's blind spot and reproduced
+  the same class of miss — the ten survivors were exactly the ones where the
+  corrupted colon was *line-terminal*, its continuation on the next line and no
+  space behind it. A pattern written to find the damage of a bad pattern must not
+  inherit that pattern's assumptions; the scan that finally came back clean looks
+  for an acronym-colon followed by a non-digit **or end of line**, across every
+  file type and with `grep -a` so nothing is skipped for looking binary.
   The guard never saw any of it: none of these shapes carries digits after the
   colon, so neither the bare-form nor the bounds check had anything to match —
   a reminder that the guard checks citations, not the prose a citation sweep
