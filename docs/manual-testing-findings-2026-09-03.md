@@ -39,21 +39,21 @@ WP5 → WP6 → WP7, one finding at a time.
 | 2026-09-04 | WP5 | Finding 16 done: `AppStore.#effectiveBasis` + `readSettled()` pin a badge's bought score to the generation its modifiers were computed for, so the Art/Ability/Characteristic badges make one transition per committed edit instead of rendering `newScore + oldBonus` for the length of the debounce. Three new `client` tests. | `npm run test:unit` (1259 tests), `check`, `lint`, `format:check`, `cargo test --workspace` — all green; release build and e2e **not** run, an e2e suite held `target/release` |
 | 2026-09-04 | WP7 | Findings 21, 2 and 3 done: the project-wide prose sweep. 43 Fluent keys deleted from both locales (rendering site, EN, DE and the tests that pinned them), one sentence trimmed, one `familiar-powers-note` swept in beyond the brief; every `aria-describedby` that named a deleted node removed with it; `wizardGuidance` and the whole guidance machinery deleted from `derive.ts`; RULES.md re-written where it cited the removed keys. | `npm run test:unit` (1239 tests), `check`, `lint`, `format:check`, `cargo test --workspace`, `clippy --all-targets -D warnings`, `cargo fmt --check` — all green; release build and e2e **not** run, an e2e suite held `target/release` |
 | 2026-09-04 | WP4/WP6/WP7 | Findings 11, 15, 19, 20, 22–27, 1 done and committed; statuses corrected across the document. **All 25 findings from the session are resolved** — 22 fixed, 13 withdrawn, 10 and 14 closed. (10 was reopened the same day and fixed; see the row below.) Only finding 28, raised here as a by-product, is still open and needs a decision. | Full gate green per package; e2e green after WP3 (43/43), WP4, WP5, WP6 |
-| 2026-09-04 | WP1 correction | **Finding 10 reopened and done.** The 2026-09-03 closure was wrong: `Mythic Companion` is one of the `### <Category>, <Magnitude>` headings the `## List of Virtues` index groups by (:3329), not a `Tainted`-style marker. `mythic_companion` is now a real category on the four Virtues, permitted to the `mythic_companion` profile alone — which stops a grog taking Devil Child, as :2637 requires. `category-mythic_companion` added to both locales; RULES.md's marker note replaced by the corrected one. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `fmt --check`, full UI gate, `cargo tauri build --no-bundle` — all green |
+| 2026-09-04 | WP1 correction | **Finding 10 reopened and done.** The 2026-09-03 closure was wrong: `Mythic Companion` is one of the `### <Category>, <Magnitude>` headings the `## List of Virtues` index groups by (ArMDE:3329), not a `Tainted`-style marker. `mythic_companion` is now a real category on the four Virtues, permitted to the `mythic_companion` profile alone — which stops a grog taking Devil Child, as :2637 requires. `category-mythic_companion` added to both locales; RULES.md's marker note replaced by the corrected one. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `fmt --check`, full UI gate, `cargo tauri build --no-bundle` — all green |
 | 2026-09-04 | follow-up | Two real e2e failures from WP6/WP7 fixed: the Living Conditions checklist overflowed its column by 15px (rows inherit `nowrap`, widest label 358px against a 325px track — floor raised to 24rem, labels may wrap), and the new German tab-strip test read `''` for every tab because this WebKitGTK driver's `getText()` returns the empty string for any `overflow: hidden` element, clipped or not. Both locked with unit-level assertions. | `aging`, `aging-crisis`, `tab-area`, `i18n-german` specs green individually; full suite re-run after |
 | 2026-09-04 | second pass | Findings 32, 31 done: the four Outer-Mystery Virtues (Heartbeast, The Enigma, Faerie Magic, Verditius Magic) now require their House via `Prereq::House`, including the open House-grant menus that let a Jerbiton or Ex Miscellanea pick around it; the not-bought Ability row's dropped remove button was redistributing its width onto the name column, now reserved in an empty `.remove-slot`. Findings 29, 30 done: granted Reputations are listed rather than added by a button, each row naming its granting Virtue/Flaw; Famous's wildcard stopped flattening into four rows. Finding 34 done: the whole V/F chapter swept for repeatability, 25 items given a data-declared ceiling; finding 35 opened as the mirror defect (a total-copy cap the model has no field for) and recorded in `docs/open-todos.md`. | Not re-run for this row: written when the statuses were reconciled on 2026-09-06, so the gate is assumed from the project's pre-commit rule rather than observed |
 | 2026-09-05 | second pass | Finding 33 done: the Aging tab's three columns restored as explicit `.aging-column` wrappers (schedule + living conditions, roll calculator alone, log + accumulated read-outs + longevity ritual) rather than the CSS multi-column approach findings 22/20 had already reverted; default window raised to 1400x900 so the three ~431px tracks fit. `docs/open-todos.md` refreshed (two items closed, three raised); the German tab-strip labels (11.25px) checked in the running app and left as they are. | Not re-run for this row: written during the 2026-09-06 reconciliation, so the gate is assumed from the project's pre-commit rule rather than observed |
-| 2026-09-06 | — | Finding 28 closed: Spirit Votary's +7 Flaw points confirmed as the standard Mythic Companion arithmetic (`:2638` ten Flaw points at 2:1, minus the 3 Pagan funds toward the 6 budgeted points its required Virtues cost) — Core does state the number, just not as a digit; only the RULES.md provenance note was wrong. No data change. | n/a (docs only) |
+| 2026-09-06 | — | Finding 28 closed: Spirit Votary's +7 Flaw points confirmed as the standard Mythic Companion arithmetic (`ArMDE:2638` ten Flaw points at 2:1, minus the 3 Pagan funds toward the 6 budgeted points its required Virtues cost) — Core does state the number, just not as a digit; only the RULES.md provenance note was wrong. No data change. | n/a (docs only) |
 | 2026-09-06 | max_total | Finding 35 done, finding 36 done, finding 37 opened deliberately: `PointItem::max_total` (total copies across all targets, default 255 = no stated ceiling) added alongside `max_per_target`, with a new `too_many_selections` validation error; `validate_duplicate_selections` made grant-aware in the same slice, closing a second hole where a House-granted Puissant Ignem stacked invisibly with a bought one; the four once-only items get `max_total: 1`, Affinity/Puissant Art get `max_total: 2`; the Available list, open grant menus and `ParameterPicker` all consult the new ceiling; `flaw.restricted_power` unblocked (`max_per_target: 255`, matching `flaw.slow_power`); `virtue.folk_magic` left capped, pending an enumerated parameter domain. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `cargo fmt --check`, full UI gate (`test:unit`, `check`, `lint`, `format:check`) and `cargo tauri build --no-bundle` all green per slice; the full 43-spec e2e suite ran 42 passing, 1 failure — a test defect in the new `repeat-virtues.e2e.js` spec (a hardcoded selections index invalid for a magus, whose mandatory traits occupy the first slots) — fixed and re-verified for that spec |
 | 2026-09-06 | third pass | To-do 5 done: `PointItem.max_share_of_kind` (a `Share { numerator, denominator }`, rejected at load if the denominator is zero or the numerator exceeds it) plus `validate_share_of_kind_cap`, a **warning** keyed `too_large_share` with `issue-too_large_share` in both locales; Demonic Might and Demonic Powers carry `1/2`. Reads the folded (bought + granted) selection list, unlike `validate_tainted_cap`, because Devil Child grants a free copy (`042acba`). | Not observed in this row's session: the plan's per-slice gate was the orchestrator's to run between slices, and the bookkeeping pass that wrote this row ran only `cargo test --workspace` and the UI `format:check` |
 | 2026-09-06 | third pass | To-do 7 done: a free-text `power` parameter on `flaw.slow_power`, `flaw.restricted_power` and `virtue.variable_power`, `max_per_target: 255` removed so the default ceiling of 1 applies per named power; `param-label-power` in both locales, the three `name` templates take `{power}`, and `flaw.restricted_power`'s German name corrected to "Eingeschränkte Kraft". Data only. Save impact: a paramless copy now reports `missing_param` (`2380322`). | As above — not observed in this row's session |
 | 2026-09-06 | third pass | To-do 4 done: `flaw.false_power` keeps its id, stays Major and gains `max_total: 1`; new `flaw.false_power_minor` (Minor, `tainted`, prerequisite `flaw.false_power`, repeats freely), so Major + two Minors costs 3 + 1 + 1. EN/DE labels gain the "(Major)"/"(Minor)" suffix; the ids stay asymmetric on purpose, since `validate_magnitude_variant_exclusivity` would force a `_major`/`_minor` pair to be mutually incompatible, which these two must not be (`7b95ca0`). | As above — not observed in this row's session |
 | 2026-09-06 | third pass | To-do 6 done, finding 37 closed with it: `ParameterDomain::Enumerated` carrying its `values` on the `ParameterDef`, with load-time integrity on both directions (an enumerated param needs a non-empty duplicate-free list; every other domain must carry none); a value outside the list raises the existing `unknown_param_value`, so open grants and Warping fills are covered free. Folk Magic gains a `category` parameter and repeats once per category; the three (Beings) items become dropdowns; nine value ids ship with EN + DE text and a new coverage test; `ParameterPicker.svelte` gains an `enumerated` branch. Save impact accepted, not migrated (`b86889c`). | As above — not observed in this row's session |
-| 2026-09-06 | bookkeeping | The third-pass section above written, the progress log extended, and findings 34, 36 and 37 re-pointed at it; `docs/open-todos.md` rows 4–7 closed and replaced by seven narrowed rows (9–15). Two stale docs defects fixed in `crates/arm-rules/RULES.md`: the "Proportional per-item caps" deferral, which `042acba` had implemented, and two moved source citations (`types.rs:443-446` → `:455-458`, `selections.rs:270` → `:277`). `README.md` checked and left alone — it describes stack, commands and features, none of which these four changes touch. | `cargo test --workspace` green (exit 0) and `cd ui && npm run format:check` green, both observed. Nothing else re-run: this pass changed Markdown only. Note the edited docs sit **outside** prettier's scope — it runs from `ui/`, and `README.md`, `CLAUDE.md`, `PLAN.md` and `crates/arm-rules/RULES.md` are all equally unformatted by it |
-| 2026-09-09 | backlog slice 0 | **v0.2.x saves open without a wall of errors** (`e443aaf`). The three preceding rounds each accepted a save impact of their own; together they meant a v0.2.0 player opened their own character into four findings. `fold_legacy_being_params` in `load_entity_migrating` (`crates/arm-rules/src/types.rs`) maps the fifteen `being` labels a v0.2.x player could have typed — six classes × both shipped locales, plus the three German dative forms `:4135` prints — onto the `being.*` ids, case- and whitespace-insensitively; the fold covers the House/Mythic/Warping pick maps as well as bought selections. No `SCHEMA_VERSION` bump and none possible: these were *ruleset* changes, so the fold is value-driven and idempotent, pinned byte-stable across save→load→save. `virtue.alluring_to_beings` and `flaw.magical_being_companion` are excluded because their `being` is still free text. Folk Magic's `category` and the three power items' `power` stay un-migrated on purpose — never stored, nothing to migrate from — and the three items gained `name_unfilled` so the message reads properly instead of "Slow Power ((Power))". A genuine `too_many_selections` deliberately survives. | Not observed in this row's session: this row was written by the 2026-09-09 bookkeeping pass, which ran `cargo test --workspace` and the UI `format:check` only. The slice's own gate is recorded in its commit, not here |
-| 2026-09-09 | backlog slice 1 | **To-do 13, three of five items: two Flaws the book indexes under General stop being magus-only** (`7ea4f5b`). `flaw.offensive_to_beings` and `flaw.unbearable_to_beings` shipped `["hermetic"]`, which grog, companion and mythic companion all forbid, so only a magus could take Flaws the book also lists under General (`:5445`/`:5608`, `:5455`/`:5629`); both are now `["general"]`. Adding `hermetic` beside it was the trap — `validate_forbidden_categories` ruled an item out if *any* category was forbidden, and `hermetic` doubles as the engine's Gift-detection category. So forbidding became the mirror of permitting and fires only when **every** category is forbidden: strictly loosening, and it lets a grog be a mundane Sufi (`:5079`) and a companion carry Suppressed Gift (`:6809`). The eligibility the category enforced by accident is now explicit — Unbearable needs The Gift or Magical Air and refuses the Blatant Gift (`:6895`), Offensive needs the Gentle Gift if Gifted and refuses Magical Air (`:6530`), and `virtue.inoffensive_to_beings` gained the gate it never had (`:4139`). One warning is accepted rather than avoided (`missing_hermetic_flaw`, now to-do row 18); the *and*/*or*/comma and "taken as" gaps went to row 19, the unsourced grog `supernatural` and `:2840`'s conditional to row 20. | As above — not observed in this row's session |
+| 2026-09-06 | bookkeeping | The third-pass section above written, the progress log extended, and findings 34, 36 and 37 re-pointed at it; `docs/open-todos.md` rows 4–7 closed and replaced by seven narrowed rows (9–15). Two stale docs defects fixed in `crates/arm-rules/RULES.md`: the "Proportional per-item caps" deferral, which `042acba` had implemented, and two moved source citations (`types.rs:443-446` → `types.rs:455-458`, `selections.rs:270` → `selections.rs:277`). `README.md` checked and left alone — it describes stack, commands and features, none of which these four changes touch. | `cargo test --workspace` green (exit 0) and `cd ui && npm run format:check` green, both observed. Nothing else re-run: this pass changed Markdown only. Note the edited docs sit **outside** prettier's scope — it runs from `ui/`, and `README.md`, `CLAUDE.md`, `PLAN.md` and `crates/arm-rules/RULES.md` are all equally unformatted by it |
+| 2026-09-09 | backlog slice 0 | **v0.2.x saves open without a wall of errors** (`e443aaf`). The three preceding rounds each accepted a save impact of their own; together they meant a v0.2.0 player opened their own character into four findings. `fold_legacy_being_params` in `load_entity_migrating` (`crates/arm-rules/src/types.rs`) maps the fifteen `being` labels a v0.2.x player could have typed — six classes × both shipped locales, plus the three German dative forms `Basisregeln.md:4135` prints — onto the `being.*` ids, case- and whitespace-insensitively; the fold covers the House/Mythic/Warping pick maps as well as bought selections. No `SCHEMA_VERSION` bump and none possible: these were *ruleset* changes, so the fold is value-driven and idempotent, pinned byte-stable across save→load→save. `virtue.alluring_to_beings` and `flaw.magical_being_companion` are excluded because their `being` is still free text. Folk Magic's `category` and the three power items' `power` stay un-migrated on purpose — never stored, nothing to migrate from — and the three items gained `name_unfilled` so the message reads properly instead of "Slow Power ((Power))". A genuine `too_many_selections` deliberately survives. | Not observed in this row's session: this row was written by the 2026-09-09 bookkeeping pass, which ran `cargo test --workspace` and the UI `format:check` only. The slice's own gate is recorded in its commit, not here |
+| 2026-09-09 | backlog slice 1 | **To-do 13, three of five items: two Flaws the book indexes under General stop being magus-only** (`7ea4f5b`). `flaw.offensive_to_beings` and `flaw.unbearable_to_beings` shipped `["hermetic"]`, which grog, companion and mythic companion all forbid, so only a magus could take Flaws the book also lists under General (`ArMDE:5445`/`ArMDE:5608`, `ArMDE:5455`/`ArMDE:5629`); both are now `["general"]`. Adding `hermetic` beside it was the trap — `validate_forbidden_categories` ruled an item out if *any* category was forbidden, and `hermetic` doubles as the engine's Gift-detection category. So forbidding became the mirror of permitting and fires only when **every** category is forbidden: strictly loosening, and it lets a grog be a mundane Sufi (`ArMDE:5079`) and a companion carry Suppressed Gift (`ArMDE:6809`). The eligibility the category enforced by accident is now explicit — Unbearable needs The Gift or Magical Air and refuses the Blatant Gift (`ArMDE:6895`), Offensive needs the Gentle Gift if Gifted and refuses Magical Air (`ArMDE:6530`), and `virtue.inoffensive_to_beings` gained the gate it never had (`ArMDE:4139`). One warning is accepted rather than avoided (`missing_hermetic_flaw`, now to-do row 18); the *and*/*or*/comma and "taken as" gaps went to row 19, the unsourced grog `supernatural` and `ArMDE:2840`'s conditional to row 20. | As above — not observed in this row's session |
 | 2026-09-09 | backlog slice 2 | **To-do 10 closed: a typed parameter is the value, not the whitespace around it** (`101e2bb`). `ParameterDomain::Text` documented "any non-empty value is legal" while `param_value_resolves` returned `true` for everything, blank included, so "Wolf Shape " was a different power from "Wolf Shape". Decision: **trim, do not case-fold** — trimming makes the documentation true and costs nothing a player meant; folding is a judgement the rulebook never asks for. Values are normalized at the boundaries (on **load**, in `load_entity_migrating`, plus the three store setters that were not trimming) rather than at the four byte-for-byte comparison sites, and not in `Entity::normalize`, which runs on save and would have reordered a file that was merely opened. A blank value reports `missing_param`, not `unknown_param_value`: there is no value to name, and it makes blank and absent read identically — which is what an old save with an unnamed power wants. Spell parameters come along for the same reason. | As above — not observed in this row's session |
-| 2026-09-09 | backlog slice 5 | **Documentation bookkeeping for the three slices above, plus to-dos 14 and 16 — Markdown only, no source, data, i18n or test change.** Row 14 **closed**: the Inoffensive to (Beings) rulebook-vs-glossary conflict is recorded as a prose subsection in `rules/source/de/translation-tables/README.md`, beside the "Tainted" note, with both citations and the per-row `SdM:M` provenance; the two paragraphs in this document that left it "now a to-do row" carry supersession notes. Row 16 **restated and left open** as a recorded policy: re-measured with `rg -a --count-matches` over `rules/source/de/` — **1425** mismatched `„…"` (1345 across all seven rulebooks, 80 across ten files under `translation-tables/`) against **6** correct `„…“` on five lines of *Sphären der Macht — Magie*, and **0** genuine inverse pairs; so the mismatch is the corpus's house style, the source is not touched, and normalization belongs in any future extractor. That README's index was over-counting by five files that are **not on disk and never were** in git history (`kreaturenkraefte`, `goettliche-kraefte`, `infernale-kraefte`, `islamische-begriffe`, `juedische-begriffe`): corrected to the 17 rows that exist — 16 thematic glossary tables plus `uebersetzungsregeln.md`, which is a rules document, not a glossary — and `CLAUDE.md:135`'s "18 thematic tables" corrected to **16** to match. Row 13 narrowed to its two remaining items, with the newly-noticed gap that `flaw.primogeniture_lineage`'s House Verditius restriction (`:6636`) is unenforced; the dangling "rows 9 and **10**" reference fixed; rows 18–20 added for what the three slices recorded as not-fixed; and row 17 records, as behaviour rather than as notes, the three findings an older save still legitimately reports. `README.md`'s "653-entry catalogue" corrected — the catalogue is 655 entries today, and CLAUDE.md's own "catalogue size is data" invariant makes a hardcoded total a drift trap, so it now reads "the Core Rules Virtue/Flaw catalogue" (all 655 entries cite that one book). | `cargo test --workspace` — **observed green**, 16 suites, 1357 passed, 0 failed. `cd ui && npm run format:check` — **observed green** ("All matched files use Prettier code style!"). Nothing else run: this pass changed Markdown only. Note prettier runs from `ui/`, so `docs/`, `rules/`, `README.md`, `CLAUDE.md` and `crates/arm-rules/RULES.md` are **outside its scope** and were not format-checked by it — the wrapping in each was matched by hand |
+| 2026-09-09 | backlog slice 5 | **Documentation bookkeeping for the three slices above, plus to-dos 14 and 16 — Markdown only, no source, data, i18n or test change.** Row 14 **closed**: the Inoffensive to (Beings) rulebook-vs-glossary conflict is recorded as a prose subsection in `rules/source/de/translation-tables/README.md`, beside the "Tainted" note, with both citations and the per-row `SdM:M` provenance; the two paragraphs in this document that left it "now a to-do row" carry supersession notes. Row 16 **restated and left open** as a recorded policy: re-measured with `rg -a --count-matches` over `rules/source/de/` — **1425** mismatched `„…"` (1345 across all seven rulebooks, 80 across ten files under `translation-tables/`) against **6** correct `„…“` on five lines of *Sphären der Macht — Magie*, and **0** genuine inverse pairs; so the mismatch is the corpus's house style, the source is not touched, and normalization belongs in any future extractor. That README's index was over-counting by five files that are **not on disk and never were** in git history (`kreaturenkraefte`, `goettliche-kraefte`, `infernale-kraefte`, `islamische-begriffe`, `juedische-begriffe`): corrected to the 17 rows that exist — 16 thematic glossary tables plus `uebersetzungsregeln.md`, which is a rules document, not a glossary — and `CLAUDE.md:135`'s "18 thematic tables" corrected to **16** to match. Row 13 narrowed to its two remaining items, with the newly-noticed gap that `flaw.primogeniture_lineage`'s House Verditius restriction (`ArMDE:6636`) is unenforced; the dangling "rows 9 and **10**" reference fixed; rows 18–20 added for what the three slices recorded as not-fixed; and row 17 records, as behaviour rather than as notes, the three findings an older save still legitimately reports. `README.md`'s "653-entry catalogue" corrected — the catalogue is 655 entries today, and CLAUDE.md's own "catalogue size is data" invariant makes a hardcoded total a drift trap, so it now reads "the Core Rules Virtue/Flaw catalogue" (all 655 entries cite that one book). | `cargo test --workspace` — **observed green**, 16 suites, 1357 passed, 0 failed. `cd ui && npm run format:check` — **observed green** ("All matched files use Prettier code style!"). Nothing else run: this pass changed Markdown only. Note prettier runs from `ui/`, so `docs/`, `rules/`, `README.md`, `CLAUDE.md` and `crates/arm-rules/RULES.md` are **outside its scope** and were not format-checked by it — the wrapping in each was matched by hand |
 
 **Caution for the next session:** `npm run test:e2e` exited **0** with
 `41 passed, 2 retries, 2 failed, 43 total`. The exit status is not a verdict —
@@ -72,17 +72,17 @@ Rules).md*, but `rules/core/virtues_flaws.json` cites a Realms of Power book:
 
 | ID | Correct core-rules line | Currently cited |
 |---|---|---|
-| `virtue.blood_of_the_nephilim` | :3504 | Divine |
-| `virtue.curse_throwing` | :3625 | Faerie |
-| `virtue.demonic_blood` | :3649 | Infernal |
-| `virtue.demonic_might` | :3663 | Infernal |
-| `virtue.demonic_powers` | :3667 | Infernal |
-| `virtue.devil_child` | :3671 | Infernal |
-| `virtue.faerie_doctor` | :3821 | Faerie |
-| `virtue.nephilim` | :4594 | Divine |
-| `virtue.spirit_votary` | :5006 | RoP: Magic |
-| `virtue.spiritual_pact` | :5010 | RoP: Magic |
-| `virtue.strong_angelic_heritage` | :5022 | Divine |
+| `virtue.blood_of_the_nephilim` | ArMDE:3504 | Divine |
+| `virtue.curse_throwing` | ArMDE:3625 | Faerie |
+| `virtue.demonic_blood` | ArMDE:3649 | Infernal |
+| `virtue.demonic_might` | ArMDE:3663 | Infernal |
+| `virtue.demonic_powers` | ArMDE:3667 | Infernal |
+| `virtue.devil_child` | ArMDE:3671 | Infernal |
+| `virtue.faerie_doctor` | ArMDE:3821 | Faerie |
+| `virtue.nephilim` | ArMDE:4594 | Divine |
+| `virtue.spirit_votary` | ArMDE:5006 | RoP:M |
+| `virtue.spiritual_pact` | ArMDE:5010 | RoP:M |
+| `virtue.strong_angelic_heritage` | ArMDE:5022 | Divine |
 
 Magnitudes and categories otherwise match the core tags. Every replacement range
 must be verified against the file before it is written:
@@ -106,20 +106,20 @@ After the fix no file under `rules/core/` cites a Realms of Power book at all.
 provenance note was wrong
 
 `rules/core/mythic_companion_types.json` gives Spirit Votary a +7 Flaw-point
-budget and cites core `:2741-2764`. Those lines are silent on the number; only
-*Realms of Power: Magic* `:5486` states it. `crates/arm-rules/RULES.md:1667`
+budget and cites core `ArMDE:2741-2764`. Those lines are silent on the number; only
+*Realms of Power: Magic* `RoP:M:5486` states it. `crates/arm-rules/RULES.md:1667`
 already notes the discrepancy. Since English core is the source of truth for
 values as well as ids, either the citation is wrong or the value is unsourced —
 it needs a decision, not a silent fix.
 
 **Resolution.** Neither: the 7 is the standard Mythic Companion arithmetic, so
-Core does state it, just not as a number. `:2638` gives every Mythic Companion
+Core does state it, just not as a number. `ArMDE:2638` gives every Mythic Companion
 ten points of Flaws at two Virtue points each. Spirit Votary's required Virtues
 cost 6 budgeted points — Spiritual Pact (Major, 3) plus "one more Major
 Supernatural Virtue or three Minor Supernatural Virtues" (3), :2750-2751 — and
 its required Flaw, Pagan (Major, 3) at :2756, funds exactly those 6 at 2:1. What
 remains of the ten-point allowance is 7, the same way every other type's bonus
-falls out. *RoP: Magic* :5486 states the same number independently, so there was
+falls out. RoP:M:5486 states the same number independently, so there was
 never a discrepancy — only an incomplete note, now rewritten in RULES.md with the
 derivation and the second citation. No data change.
 
@@ -127,16 +127,16 @@ derivation and the second citation. No data change.
 
 **Status:** done (2026-09-03) — widened by one
 
-The core rules tag it *Major, Supernatural, **Tainted*** (:3649-3650). Without
+The core rules tag it *Major, Supernatural, **Tainted*** (ArMDE:3649-3650). Without
 the flag the Tainted half-of-points cap (`validation/caps.rs`,
 `validate_tainted_cap`) under-counts it, so a character can carry more Tainted
 Virtue points than the rules allow — a wrong-rules-output defect, not cosmetic.
 
 **Resolution.** An audit of all 21 core-rules descriptor lines carrying the
 `Tainted` tag against the catalogue found a **second** entry missing it:
-`flaw.tragic_life` (:6855-6856, *Major, Story, Tainted*), which under-counted the
+`flaw.tragic_life` (ArMDE:6855-6856, *Major, Story, Tainted*), which under-counted the
 Flaw side of the same cap. Both fixed. `flaw.tainted_with_evil` correctly has no
-flag — its descriptor (:6844) is *Minor, General*, so the name is a false friend.
+flag — its descriptor (ArMDE:6844) is *Minor, General*, so the name is a false friend.
 Locked by `core_rules_tainted_virtues_carry_the_tainted_flag` in
 `crates/arm-rules/tests/data_integrity.rs`, which samples tagged entries and
 keeps `flaw.tainted_with_evil` as a control.
@@ -146,20 +146,20 @@ keeps `flaw.tainted_with_evil` as a control.
 **Status:** done (2026-09-04) — reopened after being closed on a wrong reading,
 then fixed
 
-Devil Child (:3671), Faerie Doctor (:3821), Nephilim (:4594) and Spirit Votary
-(:5006) are tagged *Free, Mythic Companion* in the source.
+Devil Child (ArMDE:3671), Faerie Doctor (ArMDE:3821), Nephilim (ArMDE:4594) and Spirit Votary
+(ArMDE:5006) are tagged *Free, Mythic Companion* in the source.
 
 **The first ruling was wrong.** It read "Mythic Companion" as a marker like
 `Tainted`, on the grounds that the chapter's prose defines six categories
 (Hermetic :2878, Social Status :2884, Supernatural :2958, Personality :2964,
 Story :2980, General :2994) and this is not among them — so the four stayed
 `social_status`. That argument mistook a set of *explanatory sections* for the
-taxonomy. The taxonomy is the index: `## List of Virtues` (:3004) groups every
+taxonomy. The taxonomy is the index: `## List of Virtues` (ArMDE:3004) groups every
 entry under a `### <Category>, <Magnitude>` heading, and one of those headings is
-**`### Mythic Companion, Free`** (:3329), listing exactly these four
-(:3331-3334). None of them appears under `### Social Status, Free`
-(:3336-3354), whose seventeen entries are Apprentice, Bard, Covenfolk and the
-rest. The descriptors settle it: `*Free, Mythic Companion*` (:3672, :3822,
+**`### Mythic Companion, Free`** (ArMDE:3329), listing exactly these four
+(ArMDE:3331-3334). None of them appears under `### Social Status, Free`
+(ArMDE:3336-3354), whose seventeen entries are Apprentice, Bard, Covenfolk and the
+rest. The descriptors settle it: `*Free, Mythic Companion*` (ArMDE:3672, :3822,
 :4595, :5007) is magnitude-then-category, the same shape as `*Minor, Social
 Status*` — while `Tainted` never occupies that slot, appearing only as a third
 token *after* a real category (`*Major, Supernatural, Tainted*`, :3650). That
@@ -176,7 +176,7 @@ The move is not cosmetic: it changes who may take them, correctly. Only the
 ":2637 All Mythic Companions take a Free Virtue which specifies their status.
 These Virtues are incompatible with each other, and with The Gift, and are **not
 available to grogs**", and each descriptor says the Virtue *makes* its bearer a
-Mythic Companion (:3673 "can only be taken for a Mythic Companion", :3823, :4596,
+Mythic Companion (ArMDE:3673 "can only be taken for a Mythic Companion", :3823, :4596,
 :5008). Under the old mapping a **grog** could legally take Devil Child, since
 grogs may take Social Status Virtues — a wrong-rules-output defect the mis-ruling
 carried with it. A companion could too, acquiring a Mythic Companion's status
@@ -220,10 +220,10 @@ three:
 
 | Name | Source line | Tag | Stored today |
 |---|---|---|---|
-| Sufi | :5077 | Minor, Social Status, Supernatural | `social_status` |
-| Raised from the Dead | :6646 | Major, Story, Supernatural | `story` |
-| Suppressed Gift | :6803 | Major, Hermetic, Story | `hermetic` |
-| Visions | :6985 | Minor, Story, Supernatural | `story` |
+| Sufi | ArMDE:5077 | Minor, Social Status, Supernatural | `social_status` |
+| Raised from the Dead | ArMDE:6646 | Major, Story, Supernatural | `story` |
+| Suppressed Gift | ArMDE:6803 | Major, Hermetic, Story | `hermetic` |
+| Visions | ArMDE:6985 | Minor, Story, Supernatural | `story` |
 
 `Tainted` is **not** affected: it is already a separate `tainted: bool`, which is
 correct. It is a cross-cutting property — every Tainted item also carries a real
@@ -259,13 +259,13 @@ Two notes on the finding as written above:
   passed on *any* permitted one, so the two contradicted each other: one granted
   the Story route and the other took it straight back. `validate_forbidden_categories`
   is now the true mirror and fires only when **every** category is forbidden. And
-  the outcome is what the book says: `:2840` bars a companion from Hermetic
+  the outcome is what the book says: `ArMDE:2840` bars a companion from Hermetic
   Virtues and Flaws "unless you have The Gift", and a Suppressed-Gift character
-  *does* have The Gift (`:6805` — it does not function, but the social penalties
-  remain), which is why `has_the_gift` flags them; `:6809` then describes the Flaw
+  *does* have The Gift (`ArMDE:6805` — it does not function, but the social penalties
+  remain), which is why `has_the_gift` flags them; `ArMDE:6809` then describes the Flaw
   as a companion's, "If he replaces a companion, he will become much more
   powerful when the Story Flaw is resolved". A mythic companion is still refused
-  it, now by `gift_forbidden` (`:2637`) rather than by category — the same
+  it, now by `gift_forbidden` (`ArMDE:2637`) rather than by category — the same
   outcome, the honest reason. See `crates/arm-rules/RULES.md`, *Two Flaws the book
   indexes under General were magus-only*.
 - The Markdown export's Type cell now lists every category, joined through the
@@ -280,7 +280,7 @@ entry.
 
 **Status:** done (2026-09-03) — subsumed by 7
 
-Reported from *Definitive Edition* p. 150 (`:6985-6986`, *Minor, Story,
+Reported from *Definitive Edition* p. 150 (`ArMDE:6985-6986`, *Minor, Story,
 Supernatural*). A symptom of 7, not a standalone data typo; corrected as part of
 it.
 
@@ -403,7 +403,7 @@ sets exist and the app already models both correctly:
 - **Hard minimum, error:** Parma Magica 1, Magic Theory 1, Latin 1 — ":2437
   Magi must have the following minimum Abilities … Characters with lower scores
   would not be admitted to the Order." An explicit bar.
-- **Recommended, warning:** Artes Liberales 1, Latin 4, Magic Theory 3 (:2451,
+- **Recommended, warning:** Artes Liberales 1, Latin 4, Magic Theory 3 (ArMDE:2451,
   "Total Cost: 90 experience points") — already emitted as a warning
   (`crates/arm-rules/src/validation/magus.rs:244-249`).
 
@@ -414,9 +414,9 @@ Only finding 12's wording fix remains.
 Proposed adding "Puissant does not count toward the minimum" to the Order-minimum
 message. Cut by the user: do not overcomplicate messages. The underlying
 behaviour is correct and unchanged — the minimum is judged on the *bought* score,
-because Puissant adds 2 "whenever you use it" (:4816) and meeting an
+because Puissant adds 2 "whenever you use it" (ArMDE:4816) and meeting an
 apprenticeship threshold is not a use, and because the book's own "Total Cost: 90
-experience points" (:2461) only adds up for purchased scores.
+experience points" (ArMDE:2461) only adds up for purchased scores.
 
 ---
 
@@ -430,8 +430,8 @@ experience points" (:2461) only adds up for purchased scores.
 Leaving the Gauntlet-age field blank makes the engine read the character's own
 age as the Gauntlet age (`crates/arm-rules/src/life_stage.rs:505-509`), i.e. zero
 years as a magus. The book's baseline is a magus "25 years old and just out of
-apprenticeship" (:1601), and the Darius example runs post-Gauntlet years from 26
-(:2486).
+apprenticeship" (ArMDE:1601), and the Darius example runs post-Gauntlet years from 26
+(ArMDE:2486).
 
 **Decision.** The default is data, not a frontend prefill:
 `apprenticeship.default_gauntlet_age: 25` in `rules/core/life_stages.json`, with
@@ -490,7 +490,7 @@ Puissant "(Area) Lore: Brandenburg" that *is* bought.
 Changing an elemental Form makes the other three Forms' effective badges cycle
 through intermediate values before settling. The score is written synchronously
 (`ui/src/lib/state.svelte.ts:988-1000`) while the bonus arrives from a 150 ms
-debounced IPC round-trip (`:62, 2206-2263`), and the badge renders
+debounced IPC round-trip (`state.svelte.ts:62, 2206-2263`), and the badge renders
 `currentScore + staleBonus`. Most visible with Elemental Magic because it is the
 only nonlinear cross-Art recompute, but the same shape affects the ability and
 characteristic badges.
@@ -649,7 +649,7 @@ Characteristic and apparent age, localized at render from the stored fields;
 nothing generated is written to the save, and the free text stays as a note
 
 `resolve_year` writes `effect: String::new()` deliberately
-(`crates/arm-rules/src/aging.rs:1471-1488`, doc `:1396-1402`: "the structured
+(`crates/arm-rules/src/aging.rs:1471-1488`, doc `aging.rs:1396-1402`: "the structured
 fields *are* the record, and the prose is the player's to add later") — while
 recording `die`, `total`, the resolved per-Characteristic `points` and
 `apparent_age_increased`, none of which the log row displays.
@@ -840,7 +840,7 @@ mirror defect opened as finding 35
 
 Correct, and the rules are explicit: *"You have an additional three points to
 spend on buying Characteristics… **You may take this Virtue multiple times**."*
-(`Ars Magica - Definitive Edition (Core Rules).md:4105`).
+(`ArMDE:4105`).
 
 **Cause.** Repeatability is not modelled; it is *inferred*. The engine keys
 duplicates on `(item_ref, params)` and allows `max_per_target` copies, defaulting
@@ -872,7 +872,7 @@ found **25** items in this position, not the six first estimated. All now carry
 their ceiling as data: the rulebook's stated number where it gives one
 (`virtue.quiet_magic` "twice"), otherwise a bound no legal build can reach, since
 every copy costs at least one point against a 21-point budget. `Greater Immunity`
-(:4015) turned out to be affected too — it repeats "with a different immunity
+(ArMDE:4015) turned out to be affected too — it repeats "with a different immunity
 each time" but records no target, so its copies collided. Stacking was verified
 rather than assumed: two Improved Characteristics really do grant 6 points, two
 Demonic Powers 40 levels.
@@ -882,7 +882,7 @@ Demonic Powers 40 levels.
 - *"No more than half of the character's total Virtues"* (Demonic Might :3665,
   Demonic Powers :3669) is a whole-build ratio, not an absolute cap; the engine
   has only absolute caps, and it is a troupe judgement.
-- `flaw.false_power` (:6096) repeats "in each subsequent instance as a Minor Flaw
+- `flaw.false_power` (ArMDE:6096) repeats "in each subsequent instance as a Minor Flaw
   rather than a Major one". Magnitude belongs to the catalogue entry, not the
   selection, so every copy would be charged 3 points instead of 3-then-1. Left
   non-repeatable: blocking a legal build beats silently wrong point totals. The
@@ -910,8 +910,8 @@ repeatable anyway:
 - Offensive to (Beings) :6530 — "You may not take this Flaw more than once"
 - Unbearable to (Beings) :6897 — "You may not take this Flaw more than once"
 
-Two more are over-permissive by a different amount: `virtue.affinity_art` (:3378)
-and `virtue.puissant_art` (:4820) say "twice, for two different Arts", and the
+Two more are over-permissive by a different amount: `virtue.affinity_art` (ArMDE:3378)
+and `virtue.puissant_art` (ArMDE:4820) say "twice, for two different Arts", and the
 app allows one per Art — up to fifteen.
 
 All six need a cap on **total copies across all targets**, which the model has no
@@ -922,9 +922,9 @@ or an equivalent, plus the data.
 distinct parameter target, default 255 = no stated ceiling — alongside the
 existing `max_per_target`, and a new `too_many_selections` validation error
 fires when the count exceeds it (`8801b03`). The four once-only items
-(Inoffensive to (Beings) `:4139`, Fish out of Water `:6132`, Offensive to
-(Beings) `:6530`, Unbearable to (Beings) `:6897`) now carry `max_total: 1`;
-`virtue.affinity_art` (`:3378`) and `virtue.puissant_art` (`:4820`) carry
+(Inoffensive to (Beings) `ArMDE:4139`, Fish out of Water `ArMDE:6132`, Offensive to
+(Beings) `ArMDE:6530`, Unbearable to (Beings) `ArMDE:6897`) now carry `max_total: 1`;
+`virtue.affinity_art` (`ArMDE:3378`) and `virtue.puissant_art` (`ArMDE:4820`) carry
 `max_total: 2`, keeping their `max_per_target: 1` too, so "twice, for two
 different Arts" enforces both halves of the sentence (`bb305fd`). The
 Available list greys an at-cap row with a reason, open grant menus drop an
@@ -937,7 +937,7 @@ read only bought selections, so a House-granted copy was invisible to the
 *per-target* check as well as the new total one: a Flambeau magus granted a
 free Puissant Ignem who also bought Puissant Ignem validated clean while
 quietly stacking +6 onto Ignem — two copies of the same Virtue for the same
-Art, against `:4820`'s "twice, for **two different** Arts" taken literally.
+Art, against `ArMDE:4820`'s "twice, for **two different** Arts" taken literally.
 `validate()` now folds bought-plus-granted selections once per run, and both
 the per-target and the total check read that folded list (`8801b03`).
 
@@ -1050,7 +1050,7 @@ A Bonisagus magus can select `virtue.heartbeast`. The entry carries no
 says: "You have been initiated into the Outer Mystery of the Heartbeast … and
 thus are a member of House Bjornaer. You start with the Ability Heartbeast 1.
 Note that all Bjornaer magi gain this Virtue for free at character creation."
-(`Ars Magica - Definitive Edition (Core Rules).md:4059-4061`).
+(`ArMDE:4059-4061`).
 
 So the Virtue is not merely *associated* with Bjornaer — taking it makes the
 character Bjornaer, which contradicts a House already chosen as Bonisagus. The
@@ -1062,9 +1062,9 @@ gap while fixing it.
 
 **Resolution.** Fixed as a House prerequisite: `Prereq::House` already
 existed in the engine, unused by any shipped data. The other Houses' Outer
-Mystery Virtues did carry the same gap, as flagged: The Enigma (`:3759-3761`,
-Criamon), Faerie Magic (`:3825-3827`, Merinita) and Verditius Magic
-(`:5215-5217`, Verditius) are, with Heartbeast, the only four core-rules V/F
+Mystery Virtues did carry the same gap, as flagged: The Enigma (`ArMDE:3759-3761`,
+Criamon), Faerie Magic (`ArMDE:3825-3827`, Merinita) and Verditius Magic
+(`ArMDE:5215-5217`, Verditius) are, with Heartbeast, the only four core-rules V/F
 descriptors carrying the "and thus are a member of House X" clause. All four
 now carry `"prerequisites": { "kind": "house", "value": "house.<x>" }`
 (`rules/core/virtues_flaws.json`). On a bought row, a magus of another House
@@ -1083,7 +1083,7 @@ filter House-prerequisite items out of those menus (`8c1ee42`).
 
 **Status:** done (2026-09-06)
 
-An escapee from finding 34's sweep, not part of 35. `:6689` "This Flaw may be
+An escapee from finding 34's sweep, not part of 35. `ArMDE:6689` "This Flaw may be
 taken once for each power the character possesses" — but the entry carried
 neither a parameter nor a raised `max_per_target`, so the app allowed exactly
 one copy.
@@ -1093,8 +1093,8 @@ one copy.
 `flaw.slow_power` already had (`98a2a0d`). Residual gap, written down rather
 than papered over: the rule caps *per power*, and no selection records which
 power a copy names, so nothing stops two copies naming the same one — the
-same recorded limitation as `flaw.slow_power` (`:6761`) and
-`virtue.variable_power` (`:5205`); see the "Repeat rules the data model cannot
+same recorded limitation as `flaw.slow_power` (`ArMDE:6761`) and
+`virtue.variable_power` (`ArMDE:5205`); see the "Repeat rules the data model cannot
 express" section of `crates/arm-rules/RULES.md`.
 
 **That residual gap is closed** — carried as `docs/open-todos.md` row 7 and
@@ -1107,12 +1107,12 @@ and does not guarantee.
 **Status:** done (2026-09-06) — opened deliberately, closed by the enumerated
 parameter domain it asked for
 
-Also an escapee from finding 34's sweep. `:3919` "You may pick this Virtue
+Also an escapee from finding 34's sweep. `ArMDE:3919` "You may pick this Virtue
 more than once, to acquire expertise in a different category of spells" — the
 entry carries no parameter, so it stays at the default `max_per_target: 1`.
 
-`:3909` restricts the category to "one of the following four options",
-enumerated at `:3911-3917` (Abjuration, Divination, Healing, Evil Eye). A
+`ArMDE:3909` restricts the category to "one of the following four options",
+enumerated at `ArMDE:3911-3917` (Abjuration, Divination, Healing, Evil Eye). A
 `max_per_target: 4` ceiling was considered and rejected (`98a2a0d`): it
 hardcodes a count the list already implies, and would still allow two copies
 naming the same category.
@@ -1157,10 +1157,10 @@ were re-read in the file while this section was written, not recalled.
 **Status:** done (2026-09-06) — `042acba`; deferred by finding 34
 
 > "You may take this Virtue more than once, though it can account for no more
-> than half of the character's total Virtues." (`:3665`, Demonic Might)
+> than half of the character's total Virtues." (`ArMDE:3665`, Demonic Might)
 
 > "You may also take this Virtue more than once, though it can account for no
-> more than half of the character's total Virtues." (`:3669`, Demonic Powers)
+> more than half of the character's total Virtues." (`ArMDE:3669`, Demonic Powers)
 
 Both shipped with `max_per_target: 255` and repeated freely, so neither ceiling
 existed. Finding 34 left it out as "a whole-build ratio, not an absolute cap".
@@ -1179,10 +1179,10 @@ Two things are deliberate rather than incidental, and both are written into
 `crates/arm-rules/RULES.md`. It is a **warning, not an error**: each sentence
 says "this Virtue", so the two ceilings are independent, and reading "total
 Virtues" as Virtue *points* is an interpretation — the Tainted rule has the
-book's own gloss at `:3000` to settle points-vs-headcount, these two sentences
+book's own gloss at `ArMDE:3000` to settle points-vs-headcount, these two sentences
 have none. And it reads the **folded** selection list, not raw
 `entity.selections`, because Devil Child grants a free Demonic Might or Powers
-(`:3673`) and a granted copy is still a copy; `validate_tainted_cap` counts only
+(`ArMDE:3673`) and a granted copy is still a copy; `validate_tainted_cap` counts only
 bought ones, so two identically-worded "half" rules now disagree about grants on
 purpose.
 
@@ -1191,13 +1191,13 @@ purpose.
 **Status:** done (2026-09-06) — `2380322`; residual gap recorded by finding 36
 
 > "This Flaw may be taken once for each power the character possesses."
-> (`:6689`, Restricted Power)
+> (`ArMDE:6689`, Restricted Power)
 
 > "This Flaw may be taken more than once, if the character has multiple powers,
-> but not more than once for a single power." (`:6761`, Slow Power)
+> but not more than once for a single power." (`ArMDE:6761`, Slow Power)
 
 > "This Virtue may be taken more than once, if the character has more than one
-> power, but it only applies once to a single power." (`:5205`, Variable Power)
+> power, but it only applies once to a single power." (`ArMDE:5205`, Variable Power)
 
 All three shipped unparameterized with `max_per_target: 255`, so every copy
 shared one duplicate key and nothing distinguished two copies aimed at one power
@@ -1232,7 +1232,7 @@ back into `docs/open-todos.md` as narrowed rows.
 
 > "This Flaw may be taken multiple times, once for each appropriate Supernatural
 > Virtue that the character possesses, but in each subsequent instance as a Minor
-> Flaw rather than a Major one." (`:6096`)
+> Flaw rather than a Major one." (`ArMDE:6096`)
 
 Magnitude belongs to the catalogue entry, never to a selection, so a second copy
 of one entry would be charged 3 points instead of 1. Finding 34 blocked the
@@ -1264,16 +1264,16 @@ character possesses"; recorded, not built.
 **Status:** done (2026-09-06) — `b86889c`; asked for by name in finding 37
 
 > "He can only create spells in one narrow area, which must be one of the
-> following four options" (`:3909`, enumerated at `:3911-3917` as *Abjuration*,
+> following four options" (`ArMDE:3909`, enumerated at `ArMDE:3911-3917` as *Abjuration*,
 > *Divination*, *Healing*, *Evil Eye*), and "You may pick this Virtue more than
-> once, to acquire expertise in a different category of spells." (`:3919`)
+> once, to acquire expertise in a different category of spells." (`ArMDE:3919`)
 
 > "associated with one of five classes of beings: animals, divine beings,
-> faeries, demons, or magical creatures" (`:4135`, Inoffensive to (Beings));
+> faeries, demons, or magical creatures" (`ArMDE:4135`, Inoffensive to (Beings));
 > "one of six classes of beings: animals, mundane humans, divine beings,
-> faeries, demons, or magical creatures" (`:6526`, Offensive to (Beings));
+> faeries, demons, or magical creatures" (`ArMDE:6526`, Offensive to (Beings));
 > "one of three classes of beings: mundane humans, demons, or divine beings"
-> (`:6893`, Unbearable to (Beings))
+> (`ArMDE:6893`, Unbearable to (Beings))
 
 All four stored free text, so any string was legal, and Folk Magic — carrying no
 parameter at all — could not repeat.
@@ -1295,7 +1295,7 @@ ceiling written anywhere**: one copy per category, four categories, so a fifth
 copy must repeat one and is rejected as a duplicate. A supplement adding a fifth
 category would raise the ceiling on its own — which is exactly why this was the
 recorded fix rather than `max_per_target: 4`. `flaw.fish_out_of_water_terrain`
-stays free text; its list ends "…, etc." (`:6130`), which is what the book means.
+stays free text; its list ends "…, etc." (`ArMDE:6130`), which is what the book means.
 
 Nine value ids ship with EN and DE text, locked by a new coverage test:
 `being.animals`, `being.demons`, `being.divine`, `being.faeries`,
@@ -1320,7 +1320,7 @@ dropdown.
 > **are** migrated now: `fold_legacy_being_params`
 > (`crates/arm-rules/src/types.rs`) maps the fifteen labels a v0.2.x player could
 > have typed — six classes × both shipped languages, plus the three German dative
-> forms the Inoffensive entry prints at `:4135` — onto the `being.*` ids, case- and
+> forms the Inoffensive entry prints at `Basisregeln.md:4135` — onto the `being.*` ids, case- and
 > whitespace-insensitively, which answers the "no mapping would be honest"
 > objection by carrying German as well as English. `SCHEMA_VERSION` still does not
 > apply, exactly as reasoned above, so the fold is value-driven and idempotent.
@@ -1331,13 +1331,13 @@ dropdown.
 > it".
 
 **Adjudicated, not silently fixed.** The three (Beings) items carry
-dual-category descriptors joined by *and*/*or* ("General and Hermetic" `:4134`,
-"Hermetic and General" `:6525`, "Hermetic or General" `:6892`) yet ship with one
+dual-category descriptors joined by *and*/*or* ("General and Hermetic" `ArMDE:4134`,
+"Hermetic and General" `ArMDE:6525`, "Hermetic or General" `ArMDE:6892`) yet ship with one
 category each. The dual-category sweep (`5729e6d`) covered only the four items
 whose descriptors use a **comma** — Sufi, Visions, Raised from the Dead,
 Suppressed Gift — so *and*/*or* descriptors were never in its scope and nothing
-was missed. Two further items are in the same position (`:5882` Curse of
-Slander, `:6635` Primogeniture Lineage), and the *or* cases raise a separate
+was missed. Two further items are in the same position (`ArMDE:5882` Curse of
+Slander, `ArMDE:6635` Primogeniture Lineage), and the *or* cases raise a separate
 semantic question, so all five go to `docs/open-todos.md` as one row rather than
 being changed here.
 
@@ -1346,7 +1346,7 @@ being changed here.
 > found the single `hermetic` category *was* a wrong-output bug, since the three
 > non-magus profiles forbid it, and set both to `["general"]` with the
 > eligibility gates the category had been enforcing by accident. Inoffensive to
-> (Beings) kept `["general"]` but gained the gate `:4139` requires. Only
+> (Beings) kept `["general"]` but gained the gate `ArMDE:4139` requires. Only
 > `flaw.curse_of_slander` and `flaw.primogeniture_lineage` remain on the row.
 
 **Also found, not changed:** the German rulebook heads Inoffensive to (Beings)
@@ -1360,7 +1360,7 @@ disagree, and that is now a to-do row.
 > RoP:M per `grundbegriffe.md:215`), so its wording was distilled from another
 > book's printing of the same Virtue — the row sits in `### Allgemeine Tugenden,
 > Klein` (`tugenden-fehler.md:173`), not a supplement block, and the Core Rules
-> carry the Virtue too, at the line-mirrored `…Core Rules.md:4133`.
+> carry the Virtue too, at the line-mirrored `ArMDE:4133`.
 > `rules/source/de/` is left as published; the decision and both citations now
 > live as a prose subsection in
 > `rules/source/de/translation-tables/README.md`, beside the "Tainted" note.

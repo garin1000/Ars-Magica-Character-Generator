@@ -19,7 +19,7 @@
   const auraMin = $derived(store.ruleset?.ruleset.aura_modifier_min ?? I32_MIN);
   const auraMax = $derived(store.ruleset?.ruleset.aura_modifier_max ?? I32_MAX);
   // A value outside the engine's bound is not rejected here — `Entity.normalize()`
-  // silently clamps it on save (Ars Magica - Definitive Edition (Core Rules).md:17390,
+  // silently clamps it on save (ArMDE:17390,
   // :17404-17409) — so this warns the player instead of letting the number change
   // out from under them with no explanation.
   const auraOutOfRange = $derived(aura < auraMin || aura > auraMax);

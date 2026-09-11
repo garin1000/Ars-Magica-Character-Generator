@@ -17,11 +17,17 @@
 //! This file is that guard.
 //!
 //! **D1a** scoped it to `crates/arm-rules/src` and `crates/arm-app/src`.
-//! **D1b** (this slice) widens [`citation_roots`] to `crates/arm-rules/tests`
-//! and `crates/arm-app/tests`, and adds [`markdown_citation_files`] +
+//! **D1b** widened [`citation_roots`] to `crates/arm-rules/tests` and
+//! `crates/arm-app/tests`, and added [`markdown_citation_files`] +
 //! [`markdown_blocks`] so `crates/arm-rules/RULES.md` — prose, not Rust
-//! comments — is covered too. A later slice (D1c) still owes `ui/src` and
-//! `docs/`.
+//! comments — is covered too. **D1c** (this slice) adds the last two roots:
+//! [`web_source_files`] (`ui/src`'s `.ts`/`.svelte`/`.css`, via the
+//! [`web_comment_blocks`] multi-comment-syntax pipeline) and
+//! [`docs_markdown_files`] (every `.md` directly under `docs/`, folded into
+//! [`markdown_citation_files`]). **The root list is now complete** — every
+//! Rust, TypeScript/Svelte/CSS, and Markdown source of a rulebook citation
+//! in this repository is scanned by one of the four pipelines above, and no
+//! further slice widens it.
 //!
 //! This is a different subject from `rules_md_citations.rs`, which guards
 //! *implementation-site* citations (`RULES.md` pointing at Rust code, and
@@ -204,11 +210,30 @@ fn collect_md_basenames(dir: &Path, out: &mut BTreeSet<String>) {
 /// see the module doc comment for why (`Societates.md` collision risk).
 const GERMAN_SHORTHAND_BASENAMES: &[&str] = &["Basisregeln.md"];
 
+/// Project-document basenames that are legitimately cross-referenced with a
+/// line number (`` `crates/arm-rules/RULES.md:NNNN` ``, `` `CLAUDE.md:NNNN` `` —
+/// spelled with a placeholder here rather than a real line number, since a
+/// real one would itself trip `rules_md_citations.rs`'s own
+/// `no_source_comment_cites_rules_md_by_line_number`, which has no
+/// self-exclusion and scans this file too)
+/// and so must not be flagged by [`find_dotmd_citations`] — a different class
+/// from the German-provenance exclusion below, but the same kind of
+/// deliberate carve-out. D1c's widening to `docs/` and `ui/src` is what
+/// surfaced these: `crates/*/src` and `crates/*/tests` comments never
+/// happened to cite either file by line number, so D1a/D1b never needed this
+/// entry, but project docs cross-reference both routinely.
+const NON_RULEBOOK_PROJECT_DOC_BASENAMES: &[&str] = &["RULES.md", "CLAUDE.md"];
+
 /// The full set of `.md` basenames that are a legitimate non-rulebook
 /// citation and must not be flagged by [`find_dotmd_citations`].
 fn non_rulebook_md_exclusions() -> BTreeSet<String> {
     let mut names = german_source_basenames();
     names.extend(GERMAN_SHORTHAND_BASENAMES.iter().map(|s| s.to_string()));
+    names.extend(
+        NON_RULEBOOK_PROJECT_DOC_BASENAMES
+            .iter()
+            .map(|s| s.to_string()),
+    );
     names
 }
 
@@ -242,8 +267,13 @@ const BOOK_ACRONYMS: &[(&str, &str)] = &[
 /// Near-miss spellings that must never appear in a citation, because they
 /// would otherwise silently coexist with the canonical acronym above and
 /// defeat "there is exactly one spelling". `ArM5` is the one
-/// `grundbegriffe.md:212` itself documents as an alternate.
-const REJECTED_SPELLINGS: &[&str] = &["ArM5"];
+/// `grundbegriffe.md:212` itself documents as an alternate. `Core` is a third
+/// shorthand D1c's `ui/src` sweep found still in use (`` (Core:2437) ``,
+/// `` (Core:16547-16561) ``) — exactly the `Core:NNNN` shape
+/// `docs/audit-2026-08.md:127` already names as one of the ad-hoc forms a
+/// prior pass thought it had normalised away; it survived in `ui/src`
+/// because that root was out of scope until now.
+const REJECTED_SPELLINGS: &[&str] = &["ArM5", "Core"];
 
 /// The two roots D1a scanned.
 fn src_roots() -> Vec<PathBuf> {
@@ -268,10 +298,164 @@ fn citation_roots() -> Vec<PathBuf> {
     roots
 }
 
-/// The Markdown files this guard scans in prose-scanning mode. Just
-/// `RULES.md` for D1b; `docs/` is D1c's.
+/// Every `.md` file directly under `docs/` (a flat directory as of D1c — no
+/// subdirectories to recurse into).
+fn docs_markdown_files() -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    let dir = repo_root().join("docs");
+    if let Ok(entries) = fs::read_dir(&dir) {
+        for entry in entries.filter_map(Result::ok) {
+            let path = entry.path();
+            if path.extension().is_some_and(|ext| ext == "md") {
+                files.push(path);
+            }
+        }
+    }
+    files.sort();
+    files
+}
+
+/// The Markdown files this guard scans in prose-scanning mode: `RULES.md`
+/// (D1b) plus every file under `docs/` (D1c, the guard's final root).
 fn markdown_citation_files() -> Vec<PathBuf> {
-    vec![repo_root().join("crates/arm-rules/RULES.md")]
+    let mut files = vec![repo_root().join("crates/arm-rules/RULES.md")];
+    files.extend(docs_markdown_files());
+    files
+}
+
+/// `ui/src` — D1c's non-Rust root. Its citations live in TypeScript/Svelte
+/// `//` and `/* */` comments, Svelte template `<!-- -->` comments, and CSS
+/// `/* */` comments — none of which [`comment_blocks`] recognises (it only
+/// knows Rust's `///`/`//!`/`//`) — so this root is walked and scanned by a
+/// dedicated pipeline ([`web_source_files`] + [`web_comment_blocks`]) rather
+/// than folded into [`citation_roots`].
+fn ui_src_root() -> PathBuf {
+    repo_root().join("ui/src")
+}
+
+fn web_source_files_in(dir: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.is_dir() {
+            web_source_files_in(&path, out);
+        } else if path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .is_some_and(|ext| matches!(ext, "ts" | "svelte" | "css"))
+        {
+            out.push(path);
+        }
+    }
+}
+
+/// Every `.ts`, `.svelte`, or `.css` file under [`ui_src_root`], recursively.
+fn web_source_files() -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    web_source_files_in(&ui_src_root(), &mut files);
+    files.sort();
+    files
+}
+
+/// Extracts every `open`..`close` delimited span from `content` — used for
+/// `/* */` block comments (including JSDoc `/** */`) and Svelte/HTML
+/// `<!-- -->` comments — pairing each with its 1-based starting line and a
+/// [`comment_blocks`]-style joined string (each inner line trimmed, blank
+/// lines dropped, joined with a single space; a whole span is naturally one
+/// block, unlike a `//` run, since the delimiters already bound it). Also
+/// returns a same-length copy of `content` with every matched span
+/// (delimiters included) blanked to spaces — newlines preserved — so line
+/// numbers stay valid for a follow-up scan over the remainder, and a `//`
+/// sequence that happens to sit inside an already-extracted span can never be
+/// independently re-matched. See [`web_comment_blocks`].
+fn extract_delimited_blocks(
+    content: &str,
+    open: &str,
+    close: &str,
+) -> (Vec<(usize, String)>, String) {
+    let mut blocks = Vec::new();
+    let mut masked = String::with_capacity(content.len());
+    let mut rest = content;
+    let mut line = 1usize;
+    loop {
+        let Some(open_rel) = rest.find(open) else {
+            masked.push_str(rest);
+            break;
+        };
+        let before = &rest[..open_rel];
+        masked.push_str(before);
+        line += before.matches('\n').count();
+        let start_line = line;
+        let after_open = &rest[open_rel + open.len()..];
+        let Some(close_rel) = after_open.find(close) else {
+            // Unterminated span: leave the remainder untouched (defensive; a
+            // well-formed source file never hits this).
+            masked.push_str(&rest[open_rel..]);
+            break;
+        };
+        let inner = &after_open[..close_rel];
+        let joined = inner
+            .lines()
+            .map(str::trim)
+            .filter(|l| !l.is_empty())
+            .collect::<Vec<_>>()
+            .join(" ");
+        if !joined.is_empty() {
+            blocks.push((start_line, joined));
+        }
+        let span_end = open_rel + open.len() + close_rel + close.len();
+        let span = &rest[open_rel..span_end];
+        for ch in span.chars() {
+            masked.push(if ch == '\n' { '\n' } else { ' ' });
+        }
+        line += span.matches('\n').count();
+        rest = &rest[span_end..];
+    }
+    (blocks, masked)
+}
+
+/// [`comment_blocks`]'s analogue for `ui/src`. Block and HTML comments are
+/// extracted first via [`extract_delimited_blocks`]; the masked remainder —
+/// same length, newlines intact — is then handed to [`comment_blocks`] to
+/// pick up every `//` line-comment run, which matches its Rust `//` handling
+/// exactly (a plain `//` line falls through `comment_blocks`'s `///`/`//!`
+/// checks to its `//` branch either way).
+fn web_comment_blocks(content: &str) -> Vec<(usize, String)> {
+    let (mut blocks, masked1) = extract_delimited_blocks(content, "/*", "*/");
+    let (html_blocks, masked2) = extract_delimited_blocks(&masked1, "<!--", "-->");
+    blocks.extend(html_blocks);
+    blocks.extend(comment_blocks(&masked2));
+    blocks.sort_by_key(|(line, _)| *line);
+    blocks
+}
+
+/// True when `cell` (already trimmed) is *exactly* a bare citation number —
+/// `:NNNN` or `:NNNN-MMMM`, nothing else — the shape a Markdown table cell
+/// uses (`| :5006 |`) instead of prose's backtick/paren wrapping. A table
+/// cell has no backtick or paren immediately before its colon for
+/// [`find_bare_citations`] to key off, so this is a separate, narrower check:
+/// requiring the *entire* cell to be the citation is what a real table row
+/// produces, and what an incidental colon (a time, a ratio) inside a longer
+/// cell does not.
+fn is_bare_table_cell_citation(cell: &str) -> bool {
+    if !cell.starts_with(':') {
+        return false;
+    }
+    matches!(parse_citation_number(cell, 0), Some((_, _, end)) if end == cell.len())
+}
+
+/// Finds every bare table-cell citation in a Markdown block — see
+/// [`is_bare_table_cell_citation`]. Splitting on `|` is meaningless for a
+/// non-table block (it simply yields the block's own text as a single
+/// "cell", which fails the check and contributes nothing).
+fn find_bare_table_cell_citations(text: &str) -> Vec<String> {
+    text.split('|')
+        .map(str::trim)
+        .filter(|cell| is_bare_table_cell_citation(cell))
+        .map(str::to_string)
+        .collect()
 }
 
 /// Every `.rs` file under `dir`, recursively.
@@ -312,6 +496,18 @@ fn test_root_rust_files() -> Vec<PathBuf> {
     all_rust_files()
         .into_iter()
         .filter(|f| test_roots().iter().any(|root| f.starts_with(root)))
+        .collect()
+}
+
+/// The subset of [`all_rust_files`] that live under one of [`src_roots`] — D1a's
+/// original two roots, which (unlike [`test_roots`], [`ui_src_root`], and
+/// [`docs_markdown_files`]) never got their own vacuous-pass floor when they were
+/// the only roots this guard scanned. D1c closes that gap while completing the
+/// root list.
+fn src_root_rust_files() -> Vec<PathBuf> {
+    all_rust_files()
+        .into_iter()
+        .filter(|f| src_roots().iter().any(|root| f.starts_with(root)))
         .collect()
 }
 
@@ -502,15 +698,25 @@ fn find_citations(text: &str) -> Vec<Citation> {
 }
 
 /// True when a citation in `text` uses one of [`REJECTED_SPELLINGS`] instead
-/// of the canonical acronym.
+/// of the canonical acronym. Requires an actual `:NNNN` number after the
+/// spelling (not just the word followed by a colon) — needed once `Core` was
+/// added to [`REJECTED_SPELLINGS`], because `docs/audit-2026-08.md` names
+/// `` `Core:NNNN` `` (literal placeholder letters, no digits) as an
+/// *illustrative example* of the old shorthand it once normalised away, which
+/// is prose about the convention, not a live citation using it.
 fn find_rejected_spellings(text: &str) -> Vec<&'static str> {
     let mut found = Vec::new();
     for &rejected in REJECTED_SPELLINGS {
         let needle = format!("{rejected}:");
-        if let Some(rel) = text.find(needle.as_str())
-            && word_boundary_before(text, rel)
-        {
-            found.push(rejected);
+        let mut search_from = 0usize;
+        while let Some(rel) = text[search_from..].find(needle.as_str()) {
+            let at = search_from + rel;
+            let colon_at = at + rejected.len();
+            if word_boundary_before(text, at) && parse_citation_number(text, colon_at).is_some() {
+                found.push(rejected);
+                break;
+            }
+            search_from = colon_at + 1;
         }
     }
     found
@@ -669,7 +875,7 @@ fn has_preceding_rs_backtick_token(text: &str, before: usize) -> bool {
 /// match is never dropped this way — RULES.md's implementation sites are
 /// exclusively paren- or comma-continuation-shaped, never backtick-wrapped.
 fn find_bare_rulebook_citations_in_markdown(text: &str) -> Vec<String> {
-    find_bare_citations(text)
+    let mut found: Vec<String> = find_bare_citations(text)
         .into_iter()
         .filter(|snippet| {
             if !snippet.starts_with('(') {
@@ -680,7 +886,9 @@ fn find_bare_rulebook_citations_in_markdown(text: &str) -> Vec<String> {
                 None => true,
             }
         })
-        .collect()
+        .collect();
+    found.extend(find_bare_table_cell_citations(text));
+    found
 }
 
 fn book_line_count(book_file: &str) -> usize {
@@ -719,6 +927,15 @@ fn collect_all_citations() -> (
         files_scanned += 1;
         let content = fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path:?}: {e}"));
         for (line, text) in markdown_blocks(&content) {
+            for citation in find_citations(&text) {
+                all.push((path.clone(), line, citation));
+            }
+        }
+    }
+    for path in web_source_files() {
+        files_scanned += 1;
+        let content = fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path:?}: {e}"));
+        for (line, text) in web_comment_blocks(&content) {
             for citation in find_citations(&text) {
                 all.push((path.clone(), line, citation));
             }
@@ -764,6 +981,30 @@ fn every_rulebook_acronym_resolves_to_a_file_under_rules_source_en() {
     for path in all_rust_files() {
         let content = fs::read_to_string(&path).unwrap();
         for (line, text) in comment_blocks(&content) {
+            for rejected in find_rejected_spellings(&text) {
+                offenders.insert(format!(
+                    "{}:{line}: cites the rulebook as `{rejected}`, which is not the canonical \
+                     spelling — use `ArMDE`",
+                    relative(&path)
+                ));
+            }
+        }
+    }
+    for path in web_source_files() {
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in web_comment_blocks(&content) {
+            for rejected in find_rejected_spellings(&text) {
+                offenders.insert(format!(
+                    "{}:{line}: cites the rulebook as `{rejected}`, which is not the canonical \
+                     spelling — use `ArMDE`",
+                    relative(&path)
+                ));
+            }
+        }
+    }
+    for path in markdown_citation_files() {
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in markdown_blocks(&content) {
             for rejected in find_rejected_spellings(&text) {
                 offenders.insert(format!(
                     "{}:{line}: cites the rulebook as `{rejected}`, which is not the canonical \
@@ -866,6 +1107,20 @@ fn no_source_comment_cites_a_rulebook_by_bare_line_number() {
             }
         }
     }
+    for path in web_source_files() {
+        scanned += 1;
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in web_comment_blocks(&content) {
+            for snippet in find_bare_citations(&text) {
+                offenders.insert(format!(
+                    "{}:{line}: bare rulebook citation {snippet} has no acronym — name the book \
+                     (e.g. ArMDE:{snippet})",
+                    relative(&path),
+                    snippet = snippet
+                ));
+            }
+        }
+    }
     assert!(
         scanned > 10,
         "expected to scan many source files, saw {scanned}"
@@ -900,6 +1155,19 @@ fn no_source_comment_spells_a_rulebook_by_full_basename() {
         let content = fs::read_to_string(&path).unwrap();
         for (line, text) in markdown_blocks(&content) {
             for basename in find_full_basename_citations(&text) {
+                offenders.insert(format!(
+                    "{}:{line}: spells the rulebook out by full basename ({basename}) instead of \
+                     its acronym",
+                    relative(&path)
+                ));
+            }
+        }
+    }
+    for path in web_source_files() {
+        scanned += 1;
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in web_comment_blocks(&content) {
+            for basename in find_full_basenames(&text) {
                 offenders.insert(format!(
                     "{}:{line}: spells the rulebook out by full basename ({basename}) instead of \
                      its acronym",
@@ -948,6 +1216,19 @@ fn no_source_comment_cites_a_rulebook_by_any_dot_md_path() {
         scanned += 1;
         let content = fs::read_to_string(&path).unwrap();
         for (line, text) in markdown_blocks(&content) {
+            for snippet in find_dotmd_citations(&text, &exclude) {
+                offenders.insert(format!(
+                    "{}:{line}: cites a rulebook as a `.md` path ({snippet}) instead of its \
+                     acronym",
+                    relative(&path)
+                ));
+            }
+        }
+    }
+    for path in web_source_files() {
+        scanned += 1;
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in web_comment_blocks(&content) {
             for snippet in find_dotmd_citations(&text, &exclude) {
                 offenders.insert(format!(
                     "{}:{line}: cites a rulebook as a `.md` path ({snippet}) instead of its \
@@ -1027,6 +1308,37 @@ fn not_a_comment() {}\n\
 // ---------------------------------------------------------------------------
 // D1b: widened-root and Markdown-scanning-mode fixture tests.
 // ---------------------------------------------------------------------------
+
+#[test]
+fn src_roots_scan_a_nonzero_floor() {
+    // D1a's original two roots (`crates/arm-rules/src`, `crates/arm-app/src`)
+    // never had a dedicated floor of their own — they were the only roots this
+    // guard scanned at the time, so `every_rulebook_acronym_resolves_to_a_file_under_rules_source_en`'s
+    // global floor covered them implicitly. Now that D1c completes the root
+    // list, every root gets the same explicit protection: a `src_roots` that
+    // resolved to an empty/nonexistent directory must not let this guard pass
+    // vacuously.
+    let src_files = src_root_rust_files();
+    assert!(
+        src_files.len() > 20,
+        "expected `crates/arm-rules/src` + `crates/arm-app/src` to contribute many .rs files, \
+         found {}",
+        src_files.len()
+    );
+
+    let mut src_citations = 0usize;
+    for path in &src_files {
+        let content = fs::read_to_string(path).unwrap();
+        for (_, text) in comment_blocks(&content) {
+            src_citations += find_citations(&text).len();
+        }
+    }
+    assert!(
+        src_citations > 100,
+        "expected many acronym'd rulebook citations across the original src roots, found {}",
+        src_citations
+    );
+}
 
 #[test]
 fn citation_roots_include_the_new_test_directories_and_scan_a_nonzero_floor() {
@@ -1255,6 +1567,73 @@ fn citation_finder_resolves_continuations_across_a_wrapped_block_to_the_inherite
 }
 
 #[test]
+fn a_continuation_wrapped_in_its_own_backticks_is_not_chained_and_reads_as_bare() {
+    // D1c found this exact shape live at `ipc.ts:280`:
+    // `` (`ArMDE:16626`, `:16627`) `` — unlike every other continuation in the
+    // codebase (e.g. the fixture above, or the real
+    // `(ArMDE:16602, :16611)` in `aging-workflow.svelte.ts`), the second
+    // number sits in its **own** pair of backticks rather than trailing
+    // inside the first citation's. [`find_citations`]'s continuation chase
+    // requires a literal `, :` immediately after the previous number — here
+    // the closing backtick of the first citation sits between the comma and
+    // the colon (`` `, `: ``), so the chase never fires: the acronym is
+    // resolved for the first number only, and the second is left exactly as
+    // bare as if no acronym had ever appeared in the block. This is
+    // deliberate, not a gap to special-case: [`find_bare_citations`] still
+    // catches the orphaned `` `:16627` `` (proved below), so the shape is
+    // already rejected by `no_source_comment_cites_a_rulebook_by_bare_line_number`
+    // without the continuation-chaser needing to learn a second syntax for
+    // "how do I know this trailing citation belongs to the one before it".
+    // The fix at the real site was to normalize to the established one-pair
+    // form (`` `ArMDE:16626, :16627` ``), matching every other continuation
+    // in this codebase, rather than teaching the parser a second accepted
+    // shape.
+    let double_backtick_form = "which is time rather than a roll (`ArMDE:16626`, `:16627`).";
+    let citations = find_citations(double_backtick_form);
+    assert_eq!(
+        citations,
+        vec![Citation {
+            acronym: "ArMDE",
+            book_file: "Ars Magica - Definitive Edition (Core Rules).md",
+            start: 16626,
+            end: 16626,
+        }],
+        "expected only the first number to resolve as a citation; the second is not chained"
+    );
+    assert_eq!(
+        find_bare_citations(double_backtick_form),
+        vec!["`:16627`".to_string()],
+        "expected the un-chained second number to still read as a bare citation, so the \
+         no-bare-citations guard rejects this shape on its own"
+    );
+
+    let normalized_one_pair_form = "which is time rather than a roll (`ArMDE:16626, :16627`).";
+    let citations = find_citations(normalized_one_pair_form);
+    assert_eq!(
+        citations,
+        vec![
+            Citation {
+                acronym: "ArMDE",
+                book_file: "Ars Magica - Definitive Edition (Core Rules).md",
+                start: 16626,
+                end: 16626,
+            },
+            Citation {
+                acronym: "ArMDE",
+                book_file: "Ars Magica - Definitive Edition (Core Rules).md",
+                start: 16627,
+                end: 16627,
+            },
+        ],
+        "the normalized single-backtick-pair form must chain both numbers to ArMDE"
+    );
+    assert!(
+        find_bare_citations(normalized_one_pair_form).is_empty(),
+        "the normalized form must leave no bare citation behind"
+    );
+}
+
+#[test]
 fn citation_finder_does_not_confuse_a_rejected_spelling_with_the_canonical_acronym() {
     assert_eq!(find_citations("ArM5:2774"), Vec::new());
     assert_eq!(find_rejected_spellings("ArM5:2774"), vec!["ArM5"]);
@@ -1346,5 +1725,195 @@ fn german_source_basenames_finds_the_german_core_rulebook_on_disk() {
     assert!(
         names.contains("grundbegriffe.md"),
         "expected a translation table among {names:?}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// D1c: `ui/src` (multi-comment-syntax) and `docs/` (Markdown, final root).
+// ---------------------------------------------------------------------------
+
+#[test]
+fn ui_src_files_scan_a_nonzero_floor() {
+    // The same vacuous-pass guard as `citation_roots_include_the_new_test_directories…`
+    // (D1b), applied to the new non-Rust root: a wrong `ui_src_root` or a
+    // `web_source_files` walker that silently finds nothing must not let this
+    // guard pass by default.
+    let files = web_source_files();
+    assert!(
+        files.len() > 20,
+        "expected `ui/src` to contribute many .ts/.svelte/.css files, found {}",
+        files.len()
+    );
+
+    let mut citations = 0usize;
+    for path in &files {
+        let content = fs::read_to_string(path).unwrap();
+        for (_, text) in web_comment_blocks(&content) {
+            citations += find_citations(&text).len();
+        }
+    }
+    assert!(
+        citations > 50,
+        "expected many acronym'd rulebook citations across ui/src, found {}",
+        citations
+    );
+}
+
+#[test]
+fn docs_markdown_files_scan_a_nonzero_floor() {
+    let files = docs_markdown_files();
+    assert!(
+        files.len() > 3,
+        "expected several files directly under docs/, found {}",
+        files.len()
+    );
+
+    let mut citations = 0usize;
+    for path in &files {
+        let content = fs::read_to_string(path).unwrap();
+        for (_, text) in markdown_blocks(&content) {
+            citations += find_citations(&text).len();
+        }
+    }
+    assert!(
+        citations > 100,
+        "expected many acronym'd rulebook citations across docs/, found {}",
+        citations
+    );
+}
+
+#[test]
+fn web_comment_blocks_finds_a_citation_in_a_line_comment_and_ignores_surrounding_prose() {
+    let source = "\
+const x = 1; // not a comment line, so this citation must be invisible: ArMDE:9999\n\
+// Source: ArMDE:2774 is inside a real line-comment run\n\
+// and continues onto a second line.\n\
+const y = 2;\n";
+    let mut citations = Vec::new();
+    for (_, text) in web_comment_blocks(source) {
+        citations.extend(find_citations(&text));
+    }
+    let starts: Vec<i64> = citations.iter().map(|c| c.start).collect();
+    assert_eq!(
+        starts,
+        vec![2774],
+        "expected only the `//`-comment citation, found {starts:?}"
+    );
+}
+
+#[test]
+fn web_comment_blocks_finds_a_citation_in_a_block_comment_and_ignores_surrounding_code() {
+    let source = "\
+const notACitation = 'ArMDE:9999';\n\
+/* A floor of about three rows (ArMDE:2774): this list is the only way to\n\
+   pick anything. */\n\
+.selector { color: red; }\n";
+    let mut citations = Vec::new();
+    for (_, text) in web_comment_blocks(source) {
+        citations.extend(find_citations(&text));
+    }
+    let starts: Vec<i64> = citations.iter().map(|c| c.start).collect();
+    assert_eq!(
+        starts,
+        vec![2774],
+        "expected only the block-comment citation, found {starts:?}"
+    );
+}
+
+#[test]
+fn web_comment_blocks_finds_a_citation_in_a_jsdoc_comment() {
+    let source = "\
+/**\n\
+ * One Crisis's total (ArMDE:2774). All three terms are added, and\n\
+ * the rest of this line is prose, not a citation: 9999.\n\
+ */\n\
+export interface CrisisTotal {}\n";
+    let mut citations = Vec::new();
+    for (_, text) in web_comment_blocks(source) {
+        citations.extend(find_citations(&text));
+    }
+    let starts: Vec<i64> = citations.iter().map(|c| c.start).collect();
+    assert_eq!(
+        starts,
+        vec![2774],
+        "expected only the JSDoc citation, found {starts:?}"
+    );
+}
+
+#[test]
+fn web_comment_blocks_finds_a_citation_in_an_html_comment_and_ignores_surrounding_markup() {
+    let source = "\
+<p data-testid=\"ArMDE:9999\">not a comment, must be invisible</p>\n\
+<!-- \"Terminal illness.\" (ArMDE:2774) —\n\
+     an absent Ease Factor is NO roll. -->\n\
+<p>rendered text</p>\n";
+    let mut citations = Vec::new();
+    for (_, text) in web_comment_blocks(source) {
+        citations.extend(find_citations(&text));
+    }
+    let starts: Vec<i64> = citations.iter().map(|c| c.start).collect();
+    assert_eq!(
+        starts,
+        vec![2774],
+        "expected only the HTML-comment citation, found {starts:?}"
+    );
+}
+
+#[test]
+fn web_comment_blocks_finds_a_citation_in_a_css_comment() {
+    let source = "\
+.selector {\n\
+  content: 'ArMDE:9999'; /* not a real comment body, this whole line is code */\n\
+}\n\
+/* Placement is row-major, so the book's own order (ArMDE:2774)\n\
+   reads across each row and then down. */\n\
+.other { display: grid; }\n";
+    let mut citations = Vec::new();
+    for (_, text) in web_comment_blocks(source) {
+        citations.extend(find_citations(&text));
+    }
+    let starts: Vec<i64> = citations.iter().map(|c| c.start).collect();
+    assert_eq!(
+        starts,
+        vec![2774],
+        "expected only the CSS block-comment citation, found {starts:?}"
+    );
+}
+
+#[test]
+fn find_bare_table_cell_citations_flags_a_pure_citation_cell_but_ignores_a_normal_cell() {
+    let table_row = "| `virtue.spirit_votary` | :5006 | RoP: Magic |";
+    assert_eq!(
+        find_bare_table_cell_citations(table_row),
+        vec![":5006".to_string()],
+        "expected exactly the pure-citation cell to be flagged"
+    );
+
+    let range_cell = "| Some Virtue | :3331-3334 | Core |";
+    assert_eq!(
+        find_bare_table_cell_citations(range_cell),
+        vec![":3331-3334".to_string()],
+        "a range-shaped pure-citation cell must be flagged too"
+    );
+
+    let non_citation_row = "| `virtue.something` | see :5006 in prose | Core |";
+    assert_eq!(
+        find_bare_table_cell_citations(non_citation_row),
+        Vec::<String>::new(),
+        "a cell that merely contains a bare citation amid other words is not this shape — \
+         `find_bare_citations` already handles a backtick/paren-preceded one, and prose \
+         inside a cell is not this guard's subject"
+    );
+}
+
+#[test]
+fn docs_markdown_files_includes_a_known_file_and_excludes_non_markdown() {
+    let names: BTreeSet<String> = docs_markdown_files()
+        .iter()
+        .filter_map(|f| f.file_name().and_then(|n| n.to_str()).map(String::from))
+        .collect();
+    assert!(
+        names.contains("open-todos.md"),
+        "expected docs/open-todos.md among {names:?}"
     );
 }

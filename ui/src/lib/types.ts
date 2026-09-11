@@ -43,13 +43,13 @@ export type ParameterDomain =
   // Value is one of the declaring item's OWN `categories` — records which
   // single reading of a multi-category Virtue/Flaw was chosen (Sufi, "either
   // as a Minor Social Status Virtue or a Minor Supernatural Virtue",
-  // Ars Magica - Definitive Edition (Core Rules).md:5083). Same shape as
+  // ArMDE:5083). Same shape as
   // `enumerated` (the domain IS `values`), but the picker labels options
   // through `category-<id>` rather than `displayName`.
   | 'category'
   // Value is one of the four Realms as `realm.<slug>` — Folk Magic's magic "is
-  // aligned to" one of them (Ars Magica - Definitive Edition (Core
-  // Rules).md:3909). A closed engine taxonomy, so the menu is `REALMS` and the
+  // aligned to" one of them (ArMDE:3909). A closed engine taxonomy, so the
+  // menu is `REALMS` and the
   // labels come from the `realm-<id>` Fluent family, never from rules i18n
   // (a bare realm slug has no entry there) and never from a declared list.
   | 'realm'
@@ -66,7 +66,7 @@ export interface ParameterDef {
   values?: string[];
   // Groups of values of which at most ONE may be named across all copies of the
   // declaring item — Folk Magic's "a character cannot have access to both the
-  // Divine and Infernal Realms" (Core Rules.md:3919). Enforced by the engine
+  // Divine and Infernal Realms" (ArMDE:3919). Enforced by the engine
   // (`exclusive_param_values`); which values exclude each other is data, so no
   // id is named in the frontend either.
   at_most_one_of?: string[][];
@@ -80,13 +80,13 @@ export interface ParameterDef {
   // The `item` the value names must be one the character HOLDS — bought or
   // granted, the engine's grants-inclusive `present_ids`. False Power is taken
   // "once for each appropriate Supernatural Virtue that the character
-  // possesses" (Core Rules.md:6096), and the same flag makes each held Virtue
+  // possesses" (ArMDE:6096), and the same flag makes each held Virtue
   // claimable once. Absent on every other domain, where the engine rejects it
   // at load.
   require_possessed?: boolean;
   // The `item` the value names may not be Tainted: "this Flaw cannot apply to
   // Supernatural Virtues that are affiliated to the Infernal realm in the first
-  // place" (Core Rules.md:6096).
+  // place" (ArMDE:6096).
   forbid_tainted?: boolean;
 }
 
@@ -597,8 +597,8 @@ export interface EffectiveScores {
   // Theory + 3), so the picker greys a spell above the magus's cap. Empty for a
   // non-magus. Engine-authoritative; the UI only reads it, never recomputes it.
   spell_level_caps: SpellLevelCap[];
-  // The Hermetic minimum-Ability checklist: what the Order demands (Core:2437) and
-  // what the rulebook recommends (Core:2451-2461), each with the character's bought
+  // The Hermetic minimum-Ability checklist: what the Order demands (ArMDE:2437) and
+  // what the rulebook recommends (ArMDE:2451-2461), each with the character's bought
   // score and whether it suffices. Empty for a non-magus, exactly like
   // `spell_level_caps` — admission to the Order is a magus's concern alone.
   // Engine-authoritative: the same reading the magus_minimum_ability /
@@ -892,7 +892,7 @@ export interface CategoryCap {
 // One entry on a profile's `permitted_categories` / `forbidden_categories`
 // list. Mirrors the engine's untagged `CategoryRule`: a bare slug is
 // unconditional, and the object form applies only while `when` holds
-// (`:2840` — a companion may take Hermetic Virtues and Flaws "unless you have
+// (`ArMDE:2840` — a companion may take Hermetic Virtues and Flaws "unless you have
 // The Gift"). Enforcement lives entirely in the engine; the frontend never
 // re-implements the resolution, and never renders either the slug or the
 // condition as a label.
@@ -942,7 +942,7 @@ export interface EntityTypeProfile {
   // `hermetic`). Omitted from JSON when empty, so optional here.
   gift_categories?: string[];
   // The V/F categories whose Flaws satisfy the "at least one Hermetic Flaw"
-  // guideline (`:2860`); `hermetic` on the magus profile only. A separate field
+  // guideline (`ArMDE:2860`); `hermetic` on the magus profile only. A separate field
   // from `gift_categories` on purpose — "is this character Gifted?" and "does
   // this Flaw count as Hermetic?" are different questions with, for the two
   // Beings Flaws, different answers. No frontend code reads either field today;
@@ -1098,7 +1098,7 @@ export interface MightScore {
 // A supernatural power a Might-being holds. `level` is charged against the
 // power-levels budget the being's Might Virtues grant (like a device vs item level).
 // `penetration` is charged against the SAME budget — levels are spent on it
-// one-for-one (Core Rules.md:4019) — and is absent from the save when unspent.
+// one-for-one (ArMDE:4019) — and is absent from the save when unspent.
 export interface SupernaturalPower {
   name: string;
   level: number;
@@ -1264,7 +1264,7 @@ export interface EquipmentSlot {
   item: string;
   equipped?: boolean;
   // Whether this weapon's combat Ability specialization applies to it, granting
-  // +1 to the weapon's Attack and Defense (Core:7122, :7139). Additive/optional.
+  // +1 to the weapon's Attack and Defense (ArMDE:7122, :7139). Additive/optional.
   specialization_applies?: boolean;
 }
 

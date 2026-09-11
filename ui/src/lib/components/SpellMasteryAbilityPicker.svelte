@@ -4,7 +4,7 @@
   import type { SpellMasteryAbility, SpellSelection } from '../types';
 
   // The Spell Mastery special-ability picker for one chosen spell row: one may
-  // be chosen per effective mastery level (Core:9524-9526). Extracted out of
+  // be chosen per effective mastery level (ArMDE:9524-9526). Extracted out of
   // `SpellTab.svelte` (G21, full-audit round) — the natural remaining cut once
   // V28 (full-audit) had already moved the eligibility helpers to `derive.ts`.
   // Self-sufficient off the global store, mirroring how `FamiliarPanel`/

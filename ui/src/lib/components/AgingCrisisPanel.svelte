@@ -15,17 +15,17 @@
   // local state, so there is nothing to thread through props.
   //
   // "Increase the character's Decrepitude first, and then roll on the Crisis
-  // Table." (Ars Magica - Definitive Edition (Core Rules).md:16619) — the
+  // Table." (ArMDE:16619) — the
   // parent still mounts this AFTER its own aging-points distribution UI for
   // that reason: the points placed there are the increase that comes first,
   // and they are a term of the total read below.
-  // Source: Ars Magica - Definitive Edition (Core Rules).md:16619-16638
+  // Source: ArMDE:16619-16638
 
   const preview = $derived(store.agingPreview);
   const draft = $derived(store.agingDraft);
   const crisis = $derived(preview?.crisis ?? null);
   // "Roll a ten-sided die. Each number counts for its value, except that a zero
-  // counts as ten." (`:474`) — the bounds are the ruleset's datum, not a literal.
+  // counts as ten." (`ArMDE:474`) — the bounds are the ruleset's datum, not a literal.
   const crisisDieBounds = $derived(store.ruleset?.ruleset.aging?.crisis?.die ?? null);
 
   /** A Characteristic's name in words — `characteristic-<slug>`, never the slug. */
@@ -46,7 +46,7 @@
       : store.t(`crisis-modifier-${modifier.source.kind}`);
   }
 
-  /** What the rules permit someone else to bring (`:16634`), stated in full. */
+  /** What the rules permit someone else to bring (`ArMDE:16634`), stated in full. */
   function allowanceText(allowance: CrisisAllowance): string {
     return store.t(`crisis-allowance-${allowance.kind}`, {
       ability: itemName(allowance.ability),
@@ -68,7 +68,7 @@
   <label class="field">
     <span>{store.t('crisis-die-label')}</span>
     <!-- Bounds from `rules/core/aging.json`, never a literal: "a zero
-         counts as ten" (`:474`) is the ruleset's datum. -->
+         counts as ten" (`ArMDE:474`) is the ruleset's datum. -->
     <input
       type="number"
       min={crisisDieBounds?.min}
@@ -113,7 +113,7 @@
             {store.t('crisis-survival-ease-factor', { ease: survival.ease_factor })}
           </p>
         {:else}
-          <!-- "Terminal illness. CrCo40 required to survive." (`:16632`) —
+          <!-- "Terminal illness. CrCo40 required to survive." (`ArMDE:16632`) —
                an absent Ease Factor is NO roll, not an unbeatable one. -->
           <p data-testid="crisis-survival-no-roll">{store.t('crisis-survival-no-roll')}</p>
         {/if}
@@ -144,12 +144,12 @@
 
         {#each survival.allowances as allowance, i (i)}
           <!-- Stated, never scored: the attendant's Medicine belongs to a
-               character this sheet does not hold (`:16634`). -->
+               character this sheet does not hold (`ArMDE:16634`). -->
           <p class="hint" data-testid="crisis-allowance-{i}">{allowanceText(allowance)}</p>
         {/each}
       </div>
     {:else}
-      <!-- "Bedridden for a week" (`:16626`) is time, not a roll: there is
+      <!-- "Bedridden for a week" (`ArMDE:16626`) is time, not a roll: there is
            no survival read-out to give, and an empty one would read as
            "survivable on a 0". -->
       <p class="hint" data-testid="crisis-bedridden">{store.t('crisis-bedridden')}</p>

@@ -16,7 +16,7 @@ export const U32_MAX = 4294967295;
 // and the rule is the bound that belongs at the point of entry — a value the
 // engine's consumers disagree about is worse than one it rejects outright.
 /** "The strength of each of these cords is rated from 0 to +5 … a score of +5
- * (the maximum)" — Source: Ars Magica - Definitive Edition (Core Rules).md:10836. */
+ * (the maximum)" — Source: ArMDE:10836. */
 export const CORD_MAX = 5;
 
 /** Truncate to an integer inside an inclusive range; a non-finite value becomes 0

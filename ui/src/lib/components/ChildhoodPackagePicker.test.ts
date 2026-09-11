@@ -224,7 +224,7 @@ describe('ChildhoodPackagePicker draft selection (slice 6b3b)', () => {
     );
     // Option 0 is the first-class choice of dividing the experience yourself, not
     // an opt-out: "Note that you can spend the 45 experience points for yourself".
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:2382
+    // Source: ArMDE:2382
     expect(options[0]).toContain('Spend');
     expect(options.slice(1)).toEqual(['Athletic Childhood', 'Traveling Childhood']);
     // Package ids are option values only; no id is ever readable.

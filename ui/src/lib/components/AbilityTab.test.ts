@@ -206,7 +206,7 @@ describe('AbilityTab mounts the magus minimums checklist (slice 6b4)', () => {
 
   it('renders it in both funding modes', () => {
     setChecklist();
-    // Flat pool: `:2437` is unconditional, so a magus owes the minimums either way …
+    // Flat pool: `ArMDE:2437` is unconditional, so a magus owes the minimums either way …
     expect(html()).toContain('data-testid="magus-minimums"');
     // … and under life-stage funding just the same. The mode is stored since schema
     // 16, so it is set alongside the plan.

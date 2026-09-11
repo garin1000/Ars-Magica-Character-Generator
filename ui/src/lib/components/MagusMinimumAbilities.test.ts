@@ -124,7 +124,7 @@ function row(
   return { ability, min_score, score, met: score >= min_score, requirement, exemplar };
 }
 
-/** The shipped checklist: three minimums of `:2437`, four recommendations of `:2451`. */
+/** The shipped checklist: three minimums of `ArMDE:2437`, four recommendations of `ArMDE:2451`. */
 function shippedChecklist(scores: Record<string, number> = {}): MagusMinimumAbility[] {
   const at = (ability: string) => scores[ability] ?? 0;
   return [
@@ -380,7 +380,7 @@ describe('MagusMinimumAbilities and its validation message (slice 7, #13 + #32)'
   // guided-creation-review-2026-08 #12: the exemplar used to sit BETWEEN the Ability
   // and its score — "below Dead Language (e.g. Latin) 1" — so the sentence read as
   // though "e.g. Latin" were the thing being scored, and the demand the rules
-  // actually make ("Latin 1", `:2437`) was buried. The example now heads the
+  // actually make ("Latin 1", `ArMDE:2437`) was buried. The example now heads the
   // requirement with the score right after it, and the widening the engine really
   // enforces trails as one short note.
   it('states the demand as "Latin 1", with the widening trailing it', () => {

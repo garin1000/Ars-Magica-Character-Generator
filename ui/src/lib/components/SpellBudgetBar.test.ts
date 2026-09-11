@@ -328,7 +328,7 @@ describe('SpellBudgetBar closing pair (#18)', () => {
 });
 
 // guided-creation-review-2026-08 #19 (DECIDED): the base is a fixed rules grant — 120
-// levels of spells from apprenticeship (Core Rules.md:2215) — so the wizard shows it
+// levels of spells from apprenticeship (ArMDE:2215) — so the wizard shows it
 // and does not offer it for editing, while the editor keeps it editable. Driven by an
 // explicit prop the mount passes, never by a store lookup of which flow is running.
 describe('SpellBudgetBar base ownership (#19)', () => {

@@ -18,8 +18,8 @@
 <!-- Familiar bond. Guidance only, like Masterpiece: the level the bond needs,
      the magus's best bonding Lab Total, what the cords cost, and the total
      level invested. The within-focus figure is conditional — whether this
-     beast falls inside the focus is a troupe judgment (Core:10818) — and the
-     invested levels deliberately get no budget bar (:10866, no limit). -->
+     beast falls inside the focus is a troupe judgment (ArMDE:10818) — and the
+     invested levels deliberately get no budget bar (ArMDE:10866, no limit). -->
 {#if d.familiar}
   <div class="detail-section">
     <h3 class="detail-label">{store.t('derived-section-familiar')}</h3>

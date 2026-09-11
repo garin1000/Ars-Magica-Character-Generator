@@ -6,7 +6,7 @@
      plan it is priced from: the age, a magus's Gauntlet age and post-Gauntlet
      seasons and spell-level split, the native language, and the sample childhood
      with its slot inputs and preview
-     (Ars Magica - Definitive Edition (Core Rules).md:2364, :2213-2216).
+     (ArMDE:2364, :2213-2216).
 
      Its own step rather than a preamble on the Abilities step (guided-creation
      review #11): three concerns shared one bounded flex column there — this panel

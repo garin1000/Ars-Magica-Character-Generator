@@ -922,7 +922,7 @@ describe('selectionDisplayName', () => {
   // B7 recorded WHICH supernatural realm a copy of Folk Magic is aligned to
   // ("The choice of (Realm) Lore also determines which supernatural realm his
   // magic is aligned to for the purposes of aura modifiers" —
-  // `Ars Magica - Definitive Edition (Core Rules).md:3909`), and surfaced it in
+  // `ArMDE:3909`), and surfaced it in
   // the picker and the Markdown export — but not on the row, because the name
   // template mentioned only `{category}` and `displayName` substitutes nothing
   // else. Both halves are asserted: the template must name the Realm, and the
@@ -1010,7 +1010,7 @@ describe('exemplarLabel / requirementAbilityLabel', () => {
   });
 
   it('heads the requirement with the exemplar, so its score follows it directly', () => {
-    // `:2437` demands "Latin 1". The label used to read "Dead Language (e.g. Latin)",
+    // `ArMDE:2437` demands "Latin 1". The label used to read "Dead Language (e.g. Latin)",
     // which put the example between the Ability and its score — "Dead Language
     // (e.g. Latin) 1" reads as though "e.g. Latin" were the thing being scored.
     expect(requirementAbilityLabel(rs, 'ability.dead_language', null, 'latin', t)).toBe('Latin');
@@ -1104,7 +1104,7 @@ describe('paramValueUsage', () => {
     expect(usage.size).toBe(1);
   });
 
-  // B7: Folk Magic gained a second axis (Core Rules.md:3909, :3919 — "you can
+  // B7: Folk Magic gained a second axis (ArMDE:3909, :3919 — "you can
   // align it to the same Realm as before or pick a different one"), so a copy
   // is a repeat only when it matches on EVERY parameter, exactly as the
   // engine's `(item_ref, params)` duplicate key says. Counting one key in
@@ -1314,9 +1314,9 @@ describe('groupByCategory', () => {
 
   // The rulebook's own Virtue/Flaw indexes list a dual-category item under BOTH
   // of its categories, with no notion of one being primary: Sufi appears at
-  // `Ars Magica - Definitive Edition (Core Rules).md:3179` under
-  // "### Supernatural, Minor" (:3135) and again at :3230 under
-  // "### Social Status, Minor" (:3187). The Available list mirrors that — an item
+  // `ArMDE:3179` under
+  // "### Supernatural, Minor" (ArMDE:3135) and again at ArMDE:3230 under
+  // "### Social Status, Minor" (ArMDE:3187). The Available list mirrors that — an item
   // is offered under every category that can make it legal for the character.
   it('lists a dual-category item under every category it carries', () => {
     const ruleset = makeRuleset([
@@ -2711,7 +2711,7 @@ describe('generalXpAllocation', () => {
 
   it('spends Skilled Parens before the base', () => {
     // "You gain an additional 60 experience points … during apprenticeship"
-    // (Core Rules.md:4966): a typed 240 becomes a pool of 300, of which 50 are
+    // (ArMDE:4966): a typed 240 becomes a pool of 300, of which 50 are
     // spent — all of them off the bonus, exactly as the engine drains a restricted
     // pool before the general one.
     const a = generalXpAllocation(50, 300, 60);
@@ -2984,7 +2984,7 @@ describe('eligibleForConstraint', () => {
 
   // Mirrors the engine's `open_pick_satisfies` House check: an open grant menu
   // must not offer a Virtue whose own descriptor makes its bearer a member of a
-  // DIFFERENT House (Heartbeast → Bjornaer, Core:4059-4061). A grant pick is
+  // DIFFERENT House (Heartbeast → Bjornaer, ArMDE:4059-4061). A grant pick is
   // never prerequisite-checked, so if the menu offers it nothing else will
   // complain. Only `house` prerequisites filter; a `has` prerequisite resolves as
   // the build progresses and must stay on the menu.
@@ -3683,7 +3683,7 @@ describe('childhoodSlots / childhoodEntryPreview / childhoodSlotFault', () => {
 
     it('faults a childhood language repeating the native language', () => {
       // Childhood's spread buys a Living Language *other than* the native one.
-      // Source: Ars Magica - Definitive Edition (Core Rules).md:2378
+      // Source: ArMDE:2378
       const slots = { area_a: 'Rhine', area_b: 'Provence', language: 'German' };
       expect(childhoodSlotFault(rs, traveling, 'language', slots, plan)).toBe('native');
     });

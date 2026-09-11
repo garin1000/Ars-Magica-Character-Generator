@@ -47,7 +47,7 @@ the same class of defect (38b, 38c). The overall complaint: **Mythic Companion i
 handled completely differently from Hermetic Magus**, and the magus treatment is
 the correct one.
 
-**Rules.** *Ars Magica - Definitive Edition (Core Rules).md*:2720-2730 —
+**Rules.** *ArMDE:2720-2730* —
 "**Required Virtues:** All Nephilim must take the following Virtues", then a
 closed list: Nephilim (free Mythic Companion Virtue), Blood of the Nephilim,
 Greater Immunity: Disease, Great Stamina, Great Strength, Improved
@@ -56,7 +56,7 @@ with Nephilim). "Must take" with a named list is not a menu — the Characterist
 are named (*Stamina*, *Strength*), so they are not the player's to re-point, and
 the Supernatural entries are not the player's to drop. Note the contrast the
 rules themselves draw: the **substitute** allowance is worded only for required
-*Flaws* ("or a suitable substitute agreed with the troupe", :2660, :2689, :2754),
+*Flaws* ("or a suitable substitute agreed with the troupe", ArMDE:2660, :2689, :2754),
 never for the required Virtues.
 
 **Root cause — 38a: required Virtues are seeded as ordinary budgeted selections.**
@@ -124,8 +124,8 @@ engine enforces it: `category_not_permitted` / `forbidden_category`, both
 the error the report saw.
 
 The UI never consults the gate. `VirtueFlawTab.svelte` builds its sections from
-`groupByCategory(rs, kindsFor(side))` (:67) — the whole catalogue, unfiltered by
-profile — and its `disabled` predicate (:295-296) covers only three things:
+`groupByCategory(rs, kindsFor(side))` (VirtueFlawTab.svelte:67) — the whole catalogue, unfiltered by
+profile — and its `disabled` predicate (VirtueFlawTab.svelte:295-296) covers only three things:
 already-selected, `atCap` (`max_total`), and `blocked` (incompatibilities). It
 tests neither `permitted_categories` nor `forbidden_categories`. Confirmed
 project-wide: outside the type declarations in `ui/src/lib/types.ts:867-868`,
@@ -137,9 +137,10 @@ offered the entire catalogue and learns what was illegal only after buying it.
 (`rules/core/virtues_flaws.json:6181`), and `special` is used by **no other item**
 and listed in **no profile's `permitted_categories`** — not even the magus's
 (`character_types.json:85`). The Gift is instead routed through
-`gift_policy`/`gift_id`/`gift_categories` (:93-95 magus `required`, :139-141
-mythic companion `forbidden`; grog and companion likewise `forbidden` at :23 and
-:55), enforced as `gift_required` / `gift_forbidden`
+`gift_policy`/`gift_id`/`gift_categories` (`character_types.json:93-95` magus `required`,
+`character_types.json:139-141` mythic companion `forbidden`; grog and companion likewise
+`forbidden` at `character_types.json:23` and `character_types.json:55`), enforced as
+`gift_required` / `gift_forbidden`
 (`validation/mod.rs:149`, :349-351). The single UI read of any of this is
 `derive.ts:754`, and it only handles the `required` direction (seeding the
 magus's Gift). Nothing reads `gift_policy === 'forbidden'` to suppress the row,
@@ -164,7 +165,7 @@ EN + DE Fluent keys.
 
 Raised as a by-product of 38, not from a separate observation.
 
-:2725 requires "**Greater Immunity: Disease** (Major, Supernatural)" — a named
+ArMDE:2725 requires "**Greater Immunity: Disease** (Major, Supernatural)" — a named
 target, not a free choice. `virtue.greater_immunity`
 (`rules/core/virtues_flaws.json:4371-4378`) carries **no `parameters`** and
 `max_per_target: 255`, and the Nephilim requirement references it bare —

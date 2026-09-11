@@ -31,7 +31,7 @@
   const twilightScars = $derived(store.entity.twilight_scars ?? []);
   const warpingEffect = $derived(store.entity.warping_effect ?? '');
 
-  // Off-budget Virtues/Flaws owed from the Warping Score (Core:16547-16561). The
+  // Off-budget Virtues/Flaws owed from the Warping Score (ArMDE:16547-16561). The
   // engine surfaces the per-kind counts and one OPEN grant (choice_key +
   // constraint) per owed slot; it returns an empty list for magi (exempt —
   // Twilight instead), so the section simply never renders for them.
@@ -161,7 +161,7 @@
       </label>
     </div>
 
-    <!-- Owed Warping Virtues & Flaws (Core:16547-16561). Non-magi only: the engine
+    <!-- Owed Warping Virtues & Flaws (ArMDE:16547-16561). Non-magi only: the engine
          returns no owed grants for magi (Twilight instead), so this never renders
          for them. The slots are grouped by what they expect (Minor Flaw,
          supernatural Minor Virtue, Major Flaw) and each one labelled, so a row of

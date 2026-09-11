@@ -261,7 +261,7 @@ describe('VirtueFlawTab merges granted Virtues into the category list (#9)', () 
 });
 
 // The rulebook's Virtue index lists Sufi twice — at
-// `Ars Magica - Definitive Edition (Core Rules).md:3179` under
+// `ArMDE:3179` under
 // "### Supernatural, Minor" and at :3230 under "### Social Status, Minor" — so
 // the Available list offers it under both headings, exactly as the book does.
 // The Selected list cannot: its rows are removed by `entity.selections` index.
@@ -375,7 +375,7 @@ describe('VirtueFlawTab badges every category an item carries', () => {
 
 // Row 19: a dual-category Virtue can record WHICH of its own categories it was
 // taken as — Sufi, "either as a Minor Social Status Virtue or a Minor
-// Supernatural Virtue" (Ars Magica - Definitive Edition (Core Rules).md:5083).
+// Supernatural Virtue" (ArMDE:5083).
 // Every engine category rule then judges that one reading alone, so the Selected
 // row must say the same thing: the badge and the heading both name the chosen
 // category, and neither mentions the reading the player declined. The Available

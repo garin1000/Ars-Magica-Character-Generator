@@ -75,7 +75,7 @@
   // Every catalogue Ability, plus the character's own instances of the
   // parameterized ones. Like the `art` domain below, the target need NOT already be
   // on the sheet: Puissant Ability is "choose one Ability" with no requirement that
-  // a score exists (Ars Magica - Definitive Edition (Core Rules).md:4814-4816), and
+  // a score exists (ArMDE:4814-4816), and
   // abilities are bought on a LATER step — so offering only owned rows left the
   // parameter unfillable where the Virtue is taken and deadlocked the wizard
   // (manual-testing-findings-2026-09-03 #5).
@@ -286,8 +286,8 @@
   //
   // Both passes carry this row's OTHER parameter values, because a target is
   // the whole `(ref, params)` tuple — the engine's own duplicate key. Folk
-  // Magic has two axes (Ars Magica - Definitive Edition (Core Rules).md:3909)
-  // and `:3919` lets a second copy "align it to the same Realm as before or
+  // Magic has two axes (ArMDE:3909)
+  // and `ArMDE:3919` lets a second copy "align it to the same Realm as before or
   // pick a different one", so a copy sharing this row's spell category in a
   // different Realm is legal and must not grey anything out here.
   function usage(key: string): Map<string, number> {
@@ -457,7 +457,7 @@
       </select>
     {:else if param.domain === 'category'}
       <!-- The item is "taken as" one of its OWN listed categories — Sufi
-           (Ars Magica - Definitive Edition (Core Rules).md:5083) "either as a
+           (ArMDE:5083) "either as a
            Minor Social Status Virtue or a Minor Supernatural Virtue". The menu
            is the item's own declared `values` (a subset of its `categories`,
            enforced at load), labelled through the same `category-<id>` Fluent
@@ -481,14 +481,14 @@
       </select>
     {:else if param.domain === 'realm'}
       <!-- The supernatural realm the item is aligned to — Folk Magic
-           (Ars Magica - Definitive Edition (Core Rules).md:3909) "The choice of
+           (ArMDE:3909) "The choice of
            (Realm) Lore also determines which supernatural realm his magic is
            aligned to". The four Realms are a closed engine taxonomy, so the menu
            is `REALMS` (the single frontend source of that order, never
            re-hardcoded) and the labels are the `realm-<id>` Fluent family the
            Might picker already reads — NOT `displayName`, which resolves rules
            ids and would find no i18n entry for a bare realm slug.
-           Deliberately NOT greyed by `full()`: `:3919` says a further copy "can
+           Deliberately NOT greyed by `full()`: `ArMDE:3919` says a further copy "can
            align it to the same Realm as before or pick a different one", so a
            Realm another copy holds stays offered. What may not be repeated is
            the whole target, which `usage()` now judges across every axis. -->

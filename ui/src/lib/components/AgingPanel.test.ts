@@ -136,7 +136,7 @@ beforeEach(() => {
 });
 
 // Slice 3 (#28). The ritual's bonus is a term of the AGING TOTAL
-// (Ars Magica - Definitive Edition (Core Rules).md:16567-16569), so its home is
+// (ArMDE:16567-16569), so its home is
 // the aging surface. It used to be mounted by `AgingStep` instead of here, and
 // separately by `MagicPossessions`, purely because the editor had no aging tab:
 // putting it inside this panel would then have shown it on the editor's Details
@@ -151,7 +151,7 @@ describe('AgingPanel and the Longevity Ritual', () => {
 
   it('renders it for a magus too, which is now its only home', () => {
     // "You can perform Longevity Rituals for others, even for non-magi."
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:10672 — the panel
+    // Source: ArMDE:10672 — the panel
     // is not type-gated, and with the Possessions mount gone this is the one
     // place a magus edits its ritual.
     resetEntity('magus');

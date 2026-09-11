@@ -177,8 +177,8 @@ pub struct EffectiveScores {
     /// without recomputing the derivation in JS. Empty for a non-magus (no Spells
     /// tab). Engine-authoritative; the UI only reads it.
     pub spell_level_caps: Vec<SpellLevelCap>,
-    /// The Hermetic minimum-Ability checklist: what the Order demands (Core:2437) and
-    /// what the rulebook recommends (Core:2451-2461), each with the character's bought
+    /// The Hermetic minimum-Ability checklist: what the Order demands (ArMDE:2437) and
+    /// what the rulebook recommends (ArMDE:2451-2461), each with the character's bought
     /// score and whether it suffices. Empty for a non-magus, exactly like
     /// [`Self::spell_level_caps`] — `ArMDE:2437` is about admission to the Order.
     /// Engine-authoritative: the same reading the `magus_minimum_ability` /

@@ -213,7 +213,7 @@ describe('German UI bundle', () => {
 
   // manual-testing-findings-2026-09-03 #10 (reopened): `mythic_companion` is a
   // real Virtue category — `### Mythic Companion, Free` is one of the headings the
-  // `## List of Virtues` index groups by (Core Rules.md:3329). A category with no
+  // `## List of Virtues` index groups by (ArMDE:3329). A category with no
   // `category-<id>` message renders as its own slug in the badge, the filter
   // dropdown and the exported Type cell, and parity alone would not catch it
   // because a key missing from BOTH locales is perfectly symmetrical.
@@ -229,7 +229,7 @@ describe('German UI bundle', () => {
     expect(translate(de, 'category-mythic_companion')).toBe(translate(de, 'type-mythic_companion'));
   });
 
-  // B7 (Core Rules.md:3919): a new validation code, `exclusive_param_values`.
+  // B7 (ArMDE:3919): a new validation code, `exclusive_param_values`.
   // A code with no `issue-<code>` message renders as its own slug, and parity
   // alone would not catch it — a code missing from BOTH locales is perfectly
   // symmetrical. The message must also stay free of any realm name: which

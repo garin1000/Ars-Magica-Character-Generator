@@ -82,8 +82,9 @@ as N ad-hoc patches.
 
 ### #3 — Validation footer is taller when empty than when showing a violation
 - **Severity** medium (layout shift)
-- **Where** `ValidationPanel.svelte:42` vs `:47`; `app.css:540` (`.validation-bar`),
-  `:1566` (`.validation-docked .issue-list`), `:1522` (`.issue`)
+- **Where** `ValidationPanel.svelte:42` vs `ValidationPanel.svelte:47`; `app.css:540`
+  (`.validation-bar`), `app.css:1566` (`.validation-docked .issue-list`),
+  `app.css:1522` (`.issue`)
 - **Cause** `ul` is globally margin-reset (`app.css:682-686`) but `p` is **not**
   — there is no base `p` rule. The empty-state `<p class="muted">` keeps the UA
   `margin: 1em 0` (≈3em total) while one `.issue` `<li>` is ≈1.75rem inside a
@@ -97,7 +98,7 @@ as N ad-hoc patches.
 - **Severity** **high** (field is effectively unfillable; leaks raw slugs)
 - **Where** `ui/src/lib/components/ParameterPicker.svelte:154-217` — branches
   exist for `characteristic`, `ability`, `art` only; everything else falls to the
-  `<input type="text">` at `:209`
+  `<input type="text">` at `ParameterPicker.svelte:209`
 - **Cause** `ParameterDomain` has seven variants
   (`crates/arm-rules/src/types.rs:319-342`, mirrored `ui/src/lib/types.ts:35-42`):
   `ability, art, technique, form, characteristic, item, text`. Only `text` is
@@ -109,8 +110,8 @@ as N ad-hoc patches.
   never be user-facing.
 - **Affected catalogue items** (exhaustive over `rules/core/`):
   - `virtue.deft_form` — `domain: form` (`virtues_flaws.json:3741`) ← the reported case
-  - `flaw.deficient_form` — `domain: form` (`:600`)
-  - `flaw.deficient_technique` — `domain: technique` (`:611`)
+  - `flaw.deficient_form` — `domain: form` (`virtues_flaws.json:600`)
+  - `flaw.deficient_technique` — `domain: technique` (`virtues_flaws.json:611`)
   - `item` domain: in the enum, unused by any catalogue entry today — latent only
 - **Fix** Reuse the proven control: `SpellTab.svelte:391-407` already renders a
   Forms-only `<select>` for the meta-magic Vim spells (also `domain: form`) and
@@ -120,7 +121,8 @@ as N ad-hoc patches.
 - **Severity** medium (wrong choices offered; the engine cannot catch it, since
   `art` accepts either Art type)
 - **Where** `rules/core/virtues_flaws.json`, `{ "key": "form", … "domain": "art" }`
-  on `flaw.form_monstrosity` (`:1147`), `flaw.hunger_for_form_magic` (`:1409`),
+  on `flaw.form_monstrosity` (`virtues_flaws.json:1147`), `flaw.hunger_for_form_magic`
+  (`virtues_flaws.json:1409`),
   `virtue.extractor_of_form_vis`, `virtue.imbued_with_the_spirit_of_form`,
   `virtue.master_of_form_creatures`. `ParameterPicker.svelte:193-194` even names
   Master of (Form) Creatures as declaring `form` under the `art` domain.
@@ -130,7 +132,7 @@ as N ad-hoc patches.
 
 ### #6 — Error rows render smaller and red-tinted vs warning rows
 - **Severity** medium (visual inconsistency; severity partly conveyed by size)
-- **Where** `app.css:1577-1580` vs `:1522-1537`; markup `ValidationPanel.svelte:50`
+- **Where** `app.css:1577-1580` vs `app.css:1522-1537`; markup `ValidationPanel.svelte:50`
 - **Cause** `<li class="issue {issue.severity}">` emits the bare class `error`,
   so the standalone `.error { color: var(--error); font-size: 0.85rem }` rule —
   written for banner text like `StartScreen.svelte:34` — also matches the row.
@@ -145,21 +147,21 @@ as N ad-hoc patches.
 - **Severity** medium (guided mode's purpose is to say what the rules advise)
 - **Where** `locales/en/main.ftl:82` (`wizard-guidance-virtues_flaws`) +
   `ui/src/lib/derive.ts:1154-1160` (passes only `virtues`/`flaws`)
-- **Source** Core Rules `:2822-2862` (per-type list), plus `:2818-2820`:
-  - Grog (`:2826-2827`): no Story Flaws; not more than one Personality Flaw
-  - Companion (`:2837-2838`): ≤1 Story Flaw; ≤2 Personality Flaws
-  - Mythic Companion (`:2850-2851`): as Companion
-  - Magus (`:2860-2862`): **should take at least one Hermetic Flaw**; ≤1 Story
+- **Source** Core Rules `ArMDE:2822-2862` (per-type list), plus `ArMDE:2818-2820`:
+  - Grog (`ArMDE:2826-2827`): no Story Flaws; not more than one Personality Flaw
+  - Companion (`ArMDE:2837-2838`): ≤1 Story Flaw; ≤2 Personality Flaws
+  - Mythic Companion (`ArMDE:2850-2851`): as Companion
+  - Magus (`ArMDE:2860-2862`): **should take at least one Hermetic Flaw**; ≤1 Story
     Flaw; ≤2 Personality Flaws
 - **Nothing new to author in the rules layer** — the profile already carries
   these as `flaw_category_caps` with a `hard` flag separating *may not* from
-  *should not* (`character_types.json:10-14`, `:44-48`), and the magus
-  Hermetic-Flaw guideline is already the `missing_hermetic_flaw` warning
-  (`RULES.md:227`, `:1467`). Generate the sentence from the profile the way the
+  *should not* (`character_types.json:10-14`, `character_types.json:44-48`), and
+  the magus Hermetic-Flaw guideline is already the `missing_hermetic_flaw` warning
+  (`RULES.md:227`, `RULES.md:1467`). Generate the sentence from the profile the way the
   budget numbers already are.
 - **Correction to the original request** The user's example was "at least one
   Story Flaw should be taken". The rules say the opposite direction: Story Flaws
-  have a recommended *ceiling* of one (`:2818`, `:2982`) and no minimum. The only
+  have a recommended *ceiling* of one (`ArMDE:2818`, `ArMDE:2982`) and no minimum. The only
   "at least one" is the magus's **Hermetic** Flaw.
 
 ### #8 — No separator between the last row of a group and a header-less group
@@ -187,7 +189,7 @@ as N ad-hoc patches.
   like any other row. No separate group.
 - **Notes** Grouping must key off each granted item's **own** category. Keep the
   row union (`{kind:'bought'|'granted'}`) — granted rows have no entity index and
-  no remove button, so the "Granted" marker at `:340-343` stays the only
+  no remove button, so the "Granted" marker at `VirtueFlawTab.svelte:340-343` stays the only
   distinction, matching how the in-list `Required` rows already behave. Needs a
   combined grouping path: `groupSelectionsByCategory` currently takes only bought
   selections, and the within-group localized-name sort must cover granted rows.
@@ -201,7 +203,7 @@ as N ad-hoc patches.
   fresh character every step carries it at once.
 - **Fix** Keep the span for assistive tech via the existing `.sr-only` utility
   (`app.css:1449`), drop it visually. The span sits *inside* the button
-  deliberately so the marker is part of its accessible name (`:52-54`); deleting
+  deliberately so the marker is part of its accessible name (`WizardShell.svelte:52-54`); deleting
   it outright would leave `data-incomplete` as a style hook only, risking a
   colour-only channel (WCAG 1.4.1).
 - **Not resolved by this** the on-step hint (#2) and the Review step's
@@ -210,13 +212,14 @@ as N ad-hoc patches.
 ### #11 — Abilities step packs three concerns into one bounded column — **DECIDED**
 - **Severity** **high** ("unusable from a UI/UX perspective")
 - **Where** `AbilityTab.svelte:207-217`; floors at `app.css:571-581`
-  (`.region-row` `min-height: 12rem`) and `:614-618` (`.list-scroll`, ~3 rows)
+  (`.region-row` `min-height: 12rem`) and `app.css:614-618` (`.list-scroll`, ~3 rows)
 - **Cause** Three concerns in one bounded flex column, only the third needing
   height: `LifeStagePanel` (funding model, age, gauntlet, lab seasons, spell
   levels, native language, childhood picker + preview + slot inputs, **six
   explanatory paragraphs**) ≈620px; `MagusMinimumAbilities` ≈200px; then
   `.region-row` gets what is left → its 12rem floor. Both preamble blocks *must*
-  be auto-height siblings or the row collapses (`:201-206`, `:209-215`).
+  be auto-height siblings or the row collapses (`AbilityTab.svelte:201-206`,
+  `AbilityTab.svelte:209-215`).
 - **The floors are prior symptom-patches for this exact bug.** `app.css:571-581`
   records: *"on the magus's Abilities step — the funding panel plus the
   Hermetic-minimums checklist — the row measured 0 in an 800px window, so both
@@ -236,18 +239,18 @@ as N ad-hoc patches.
 
 ### #12 — Magus minimums checklist duplicates the Validation panel — **DECIDED**
 - **Severity** medium
-- **Where** `MagusMinimumAbilities.svelte` (comment `:15-18` confirms the rows
+- **Where** `MagusMinimumAbilities.svelte` (comment `MagusMinimumAbilities.svelte:15-18` confirms the rows
   come from the same engine findings); `app.css:1328-1356`
 - **DECIDED** Collapse to the `magus-minimums-summary` line ("N of M still
   unmet"), expandable on demand. Validation stays the authoritative surface.
 - **Also fix while in there** the summary counts all rows but renders under the
-  *Minimum Abilities* heading, above only the required ones (`:65-74`) — it reads
+  *Minimum Abilities* heading, above only the required ones (`MagusMinimumAbilities.svelte:65-74`) — it reads
   as "7 of 7" for a list of 3.
 
 ### #13 — Parameterized ability requirements render as a doubled placeholder
 - **Severity** medium (confusing; placeholder leak into user-facing text)
 - **Symptom** "(Language) (Dead Language) 1 is not met" where the rules say
-  plainly "Latin 1" (Core Rules `:2437`)
+  plainly "Latin 1" (Core Rules `ArMDE:2437`)
 - **Where** `MagusMinimumAbilities.svelte:49-56` →
   `abilityDisplayName(…, instanceOf(row), paramHint(store.t))`. With no instance
   held, `instanceOf` returns `null` and the label falls back to the parenthetical
@@ -265,23 +268,25 @@ as N ad-hoc patches.
   the derivation, `Later life (Abilities only): 0 / 75` the restricted pool), and
   a left-to-right order that made "Later life" read as *post*-Gauntlet.
 - **Which pool is which** "Later life (Abilities only)" is the
-  early-childhood-end → apprenticeship-start pool. Source `:2214` — *"Later Life.
+  early-childhood-end → apprenticeship-start pool. Source `ArMDE:2214` — *"Later Life.
   15 experience points per year (until apprenticeship for magi)"* — implemented
   `life_stage.rs:527-550`. Gauntlet 25 − childhood 5 − apprenticeship 15 = 5
-  years × 15 = 75, matching the Darius example at `:2402`. "Abilities only"
+  years × 15 = 75, matching the Darius example at `ArMDE:2402`. "Abilities only"
   because a magus cannot spend pre-apprenticeship experience on Arts and the two
-  share one pool (`:533-538`).
+  share one pool (`ArMDE:2213-2214` [corrected 2026-09-11 — the original range
+  533-538 lands on the Ease Factor table, unrelated; the restriction is what the
+  Early Childhood/Later Life entries grant XP *for*, which never includes Arts]).
 - **DECIDED**
-  1. **Chronological order** per `:2213-2216` / `:2364`: Early childhood → Later
+  1. **Chronological order** per `ArMDE:2213-2216` / `ArMDE:2364`: Early childhood → Later
      life → Apprenticeship → After the Gauntlet.
   2. **One chip per block** — merge each block's derivation figure with its
      restricted-pool spent/total, so no label appears twice.
   3. **"Later life (ages N-M)"** — keep the rules term (preserves the German
      glossary mapping) and add the per-character span from `later_life_years`.
   4. **"After the Gauntlet"** replaces "As a magus" — ties the label to the
-     `Gauntlet age` field that drives it. Source-backed via `:2216`.
+     `Gauntlet age` field that drives it. Source-backed via `ArMDE:2216`.
   5. Native language + the 45-point spread group under one **Early childhood**
-     heading, per `:2378`.
+     heading, per `ArMDE:2378`.
 - **Target shape**
   ```
   XP pool 0 / [380]   Available: 380
@@ -305,8 +310,8 @@ as N ad-hoc patches.
   `LifeStagePlan` can override it.
 - **Why it is blocked** The rules price apprenticeship as a **flat lump**, not a
   rate: *"The fifteen years of apprenticeship give the character 240 experience
-  points, and 120 levels of spells"* (Core Rules `:2435`). There is **no**
-  XP-per-apprenticeship-year figure anywhere in the source. `:11018` acknowledges
+  points, and 120 levels of spells"* (Core Rules `ArMDE:2435`). There is **no**
+  XP-per-apprenticeship-year figure anywhere in the source. `ArMDE:11018` acknowledges
   variation (*"normally administered after fifteen years … traditionally for
   another year"*) but never prices it.
 - **Options** (a) leave fixed — the existing lever is **Gauntlet age**, which
@@ -333,12 +338,13 @@ as N ad-hoc patches.
 ### #17 — Mastery spinner shifts horizontally when mastery goes 0 → 1
 - **Severity** medium (mis-clicks on a repeated-click control)
 - **Where** `SpellTab.svelte:429-530`; `app.css:992-999` (`.spell-mastery-block`),
-  `:1001-1007` (`.mastery-abilities`)
+  `app.css:1001-1007` (`.mastery-abilities`)
 - **Cause** `.spell-mastery-block` is a `flex-direction: column` with
   `flex: 0 1 auto`, so its width is that of its widest child. At mastery 1 the
-  `.mastery-abilities` row appears (`:480`) carrying a label plus the "Add special
-  ability" `<select>` — much wider. The block widens, `.item-name` (which takes
-  the row's free width, `:982`) gives ground, and the spinner is repositioned.
+  `.mastery-abilities` row appears (`SpellTab.svelte:480`) carrying a label plus
+  the "Add special ability" `<select>` — much wider. The block widens, `.item-name`
+  (which takes the row's free width, `app.css:982`) gives ground, and the spinner
+  is repositioned.
   The `×` stays pinned at the row's right edge.
 - **Fix** Give `.mastery-abilities` its own full-width wrap line
   (`flex-basis: 100%`) so it sits below without widening the block. A `min-width`
@@ -351,7 +357,7 @@ as N ad-hoc patches.
   input shows `base = 120`, and `available = base + lifeStage − baseUsed =
   120 + 30 − 150 = 0`. Engine and Available are right, but the **displayed pair
   does not close**: `baseUsed` includes post-Gauntlet-funded levels while the
-  denominator beside it excludes them. The comment at `:65-67` claims they
+  denominator beside it excludes them. The comment at `SpellBudgetBar.svelte:65-67` claims they
   *"always close against the bracketed base"* — true only when `lifeStage == 0`.
   `derive.ts:932-933` is the honest version.
 - **OPEN** either show `150 / 150` (base + lifeStage as denominator, the field
@@ -371,11 +377,11 @@ as N ad-hoc patches.
   wizard reuses the direct-entry components as they are, so its steps and the
   editor's tabs can never drift apart"* — update that comment or the prop will
   read as a violation.
-- **Rationale** The 120 is a fixed rules grant (`:2215`), and every legitimate
+- **Rationale** The 120 is a fixed rules grant (`ArMDE:2215`), and every legitimate
   in-rules variation already arrives elsewhere: Skilled/Weak Parens as the
   `bonus` chip, post-Gauntlet levels as the `lifeStage` chip. Precedent in the
   same component: the post-Gauntlet input is deliberately absent here because
-  *"the Abilities step owns the choice"* (`:23-28`).
+  *"the Abilities step owns the choice"* (`SpellBudgetBar.svelte:23-28`).
 - **OPEN, out of scope unless requested** the XP pool's editable total on the
   Abilities step is the same shape of field. Left as-is; the inconsistency is
   noted.
@@ -427,11 +433,11 @@ as N ad-hoc patches.
   stress die +3"* — 4 + 0 + 0 ≠ 3
 - **Where** `locales/en/main.ftl:497` (`aging-total-formula`) has exactly three
   named terms, but `AgingSchedulePanel.svelte:32` fills `fixed` from
-  `aging.fixed_total`, which per `:23-25` is *"the engine's own sum of all of them
+  `aging.fixed_total`, which per `ruleset_io.rs:23-25` is *"the engine's own sum of all of them
   (including the Virtue/Flaw aging-roll modifiers the book's three lines do not
   name)"*. The character's Faerie Blood contributes −1 with no term in the
   sentence.
-- **Proof it is an oversight** the sibling string `aging-total-parts` (`:525`)
+- **Proof it is an oversight** the sibling string `aging-total-parts` (`main.ftl:525`)
   **does** carry a `{ $traits } (Virtues and Flaws)` term.
 - **Fix** Add the traits term to `aging-total-formula` in both locales, hidden or
   shown-as-0 when zero, matching the other terms.
@@ -455,7 +461,7 @@ as N ad-hoc patches.
 - **Facts** The Concept step mounts `IdentityFields`, which has **birth year**
   but deliberately no age (`IdentityFields.svelte:12`). The **editor** mounts
   `IdentityFields` at `CharacterDetails.svelte:85` and `AgeFields` immediately
-  after at `:87` — so in edit mode age already sits beside identity. Step 6 has a
+  after at `CharacterDetails.svelte:87` — so in edit mode age already sits beside identity. Step 6 has a
   *separate* input (`LifeStagePanel.svelte:117-127`, `life-stage-age-input`),
   rendered only under life-stage funding. Step 10 has `AgeFields` (`age-input`),
   added because *"under flat (pool) funding there is no age field anywhere in the
@@ -477,10 +483,10 @@ as N ad-hoc patches.
 ### #25 — Age and birth year are independent and mutually unchecked — **DECIDED**
 - **Severity** low-medium (feature; prevents a class of inconsistency)
 - **Today** the relationship runs one way only: the engine computes calendar year
-  as `birth_year + age` (`crates/arm-rules/src/aging.rs:148`, `:158-165`). There
+  as `birth_year + age` (`crates/arm-rules/src/aging.rs:148`, `aging.rs:158-165`). There
   is **no** current-year or saga-start field anywhere in the entity or ruleset.
 - **DECIDED** An app-level current-year setting (default **1220**, source: Core
-  Rules `:597`, also `:364`, `:440`), with age ↔ birth year as two views of one
+  Rules `ArMDE:597`, also `ArMDE:364`, `ArMDE:440`), with age ↔ birth year as two views of one
   fact on the Concept step — edit either, the other follows.
 - **Key simplification** `entity.age` and `entity.birth_year` are *both* already
   stored, so the setting is a pure **editing aid**, not new entity state. **No
@@ -502,7 +508,7 @@ as N ad-hoc patches.
 - **Where** `AgingRecordPanel.svelte:96-106` — `<input type="text">`
 - **Confirmation** `RULES.md:1243-1246`: the field is *"free-text overall
   aging/decrepitude narrative. Pure annotation"*, sourced to Core Rules
-  `:16563-16577`. It is the cumulative description, distinct from `aging_log`'s
+  `ArMDE:16563-16577`. It is the cumulative description, distinct from `aging_log`'s
   per-year one-liners, so it does grow over a character's life.
 - **Precedent** `warping_effect` is the same thing for Warping and is already
   `<textarea class="warping-effect" rows="3">` (`CharacterDetails.svelte:128-134`).
@@ -567,13 +573,13 @@ as N ad-hoc patches.
     package), plus `childhoodDraft`, `childhoodRejections`, the aging draft
 - A round trip loses everything typed on either side, with no prompt and no undo.
   The unsaved-changes guard governs quitting, not destructive in-app edits.
-- The code is explicit that this is intended (`:741-743`), while also arguing
+- The code is explicit that this is intended (`state.svelte.ts:741-743`), while also arguing
   correctly that bought `ability_scores` must survive because losing those would
   be worse — so the principle is already "don't discard the player's work"; the
   plan and pool just weren't held to it.
 - **Structural reason it is hard**
   `abilityFunding = $derived(this.entity.life_stages ? 'life_stages' : 'pool')`
-  (`:420`) — the *presence* of the plan **is** the mode.
+  (`state.svelte.ts:420`) — the *presence* of the plan **is** the mode.
 - **DECIDED** Add an explicit funding discriminator to the entity.
   `setAbilityFunding` becomes a pure mode set: no deletion, no zeroing.
 - **Fix-pass notes** (largest item on the list — engine + schema + UI, its own
@@ -583,7 +589,7 @@ as N ad-hoc patches.
     `life_stages` presence — today's rule, applied once at load.
   - `state.svelte.ts:420` reads the field instead of inferring.
   - **Retired invariant** the code states *"the engine makes a plan and a typed
-    pool mutually exclusive"* (`:740-741`). After this they coexist. Every site
+    pool mutually exclusive"* (`state.svelte.ts:740-741`). After this they coexist. Every site
     inferring the mode from plan presence must be found and switched to the
     field, starting with `life_stage.rs:453` (`entity.life_stages.as_ref()?`,
     where `None` means "pool"), plus the `not_enough_xp` / restricted-pool
@@ -597,16 +603,16 @@ as N ad-hoc patches.
     it back.
   - Keep pruning **drafts** (`childhoodDraft`, `childhoodRejections`, aging
     draft) per the existing blanket rule that an un-submitted draft never
-    outlives a change to how the document is built (`:756-759`). Only the plan
+    outlives a change to how the document is built (`state.svelte.ts:756-759`). Only the plan
     and pool stop being destroyed.
 
 ### #30 — No warning for unspent general XP or unspent spell levels
 - **Severity** medium (feature gap; asymmetric with existing findings)
 - **Today** (`crates/arm-rules/src/validation/mod.rs:126-176`) overspending is an
-  error on both (`not_enough_xp` `:139`, `over_spell_levels` `:176`), but
+  error on both (`not_enough_xp` `mod.rs:139`, `over_spell_levels` `mod.rs:176`), but
   underspending is warned only for characteristics
-  (`characteristic_points_unspent` `:136`) and for life-stage **restricted**
-  blocks (`restricted_xp_unspent` `:141`). Leaving 200 general XP or 60 spell
+  (`characteristic_points_unspent` `mod.rs:136`) and for life-stage **restricted**
+  blocks (`restricted_xp_unspent` `mod.rs:141`). Leaving 200 general XP or 60 spell
   levels unspent produces **silence** while one unspent characteristic point
   produces a warning.
 - **Fix** Two new warning codes, owned by the `abilities` and `spells` phases.

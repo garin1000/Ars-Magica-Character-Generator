@@ -58,7 +58,7 @@ function resetEntity(): void {
  * A minimal localized ruleset, so the crisis panel can resolve the two ids it
  * shows — the Crisis Table row and the attendant's Ability — through the rules
  * i18n rather than printing a slug. The Crisis die's own bounds ride along,
- * because "a zero counts as ten" (`:474`) is data, not a literal in the component.
+ * because "a zero counts as ten" (`ArMDE:474`) is data, not a literal in the component.
  */
 function installRuleset(): void {
   store.ruleset = {
@@ -290,7 +290,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     // "Gain sufficient Aging Points (in any Characteristics)" — plural, so the
     // player may spread them; forcing them into one target would force drops the
     // player could legally avoid.
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:16602
+    // Source: ArMDE:16602
     store.agingDraft = draft({ die: 9 });
     setPreview(
       total({ die: 9, total: 13 }),
@@ -327,7 +327,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     const body = html();
     expect(has(body, 'aging-outcome-crisis')).toBe(false);
     // "Roll a ten-sided die. Each number counts for its value, except that a zero
-    // counts as ten." (`:474`) — the bounds are the ruleset's, not a literal here.
+    // counts as ten." (`ArMDE:474`) — the bounds are the ruleset's, not a literal here.
     expect(has(body, 'crisis-die-input')).toBe(true);
     expect(open(body, 'crisis-die-input')).toContain('min="1"');
     expect(open(body, 'crisis-die-input')).toContain('max="10"');
@@ -339,7 +339,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
 
   it('reads the CRISIS TOTAL and names the row in words, never as a slug', () => {
     // "CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score"
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:16621
+    // Source: ArMDE:16621
     store.agingDraft = draft({ die: 9, crisisDie: 10 });
     setPreview(total({ die: 9, total: 13 }), crisisOutcome(), crisis());
     const body = html();
@@ -362,9 +362,9 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
 
   it('names every survival modifier separately, and invents none', () => {
     // "The character's aging rolls benefit from a +1 bonus … Furthermore, he
-    // receives a +3 bonus to rolls to survive an aging crisis" (`:4530`), and
+    // receives a +3 bonus to rolls to survive an aging crisis" (`ArMDE:4530`), and
     // "you can apply your bronze cord score as a bonus to … rolls to resist
-    // aging" (`:10844`). The panel has to NAME each, so they are never summed away.
+    // aging" (`ArMDE:10844`). The panel has to NAME each, so they are never summed away.
     store.agingDraft = draft({ die: 9, crisisDie: 10 });
     setPreview(
       total({ die: 9, total: 13 }),
@@ -384,7 +384,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     );
     let body = html();
     const survival = text(body, 'crisis-survival');
-    // Ease Factor 3 or CrCo20 (`:16628`), both offered.
+    // Ease Factor 3 or CrCo20 (`ArMDE:16628`), both offered.
     expect(survival).toContain('3');
     expect(survival).toContain('20');
     expect(text(body, 'crisis-modifier-0')).toContain('Mild Aging');
@@ -404,7 +404,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   it('states what an attending doctor may bring, without scoring it', () => {
     // "An Int + Medicine roll against an Ease Factor of 6 allows the character to
     // add the attendant's Medicine score … if the doctor botches the character
-    // must subtract 3." (`:16634`) The Medicine belongs to another character, so
+    // must subtract 3." (`ArMDE:16634`) The Medicine belongs to another character, so
     // the app states the allowance and no more.
     store.agingDraft = draft({ die: 9, crisisDie: 10 });
     setPreview(
@@ -439,7 +439,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   });
 
   it('says a bedridden Crisis is time rather than a roll', () => {
-    // "Bedridden for a week" (`:16626`) — no Stamina roll, no Ritual level, and
+    // "Bedridden for a week" (`ArMDE:16626`) — no Stamina roll, no Ritual level, and
     // no empty read-out that would say "survivable on a 0".
     store.agingDraft = draft({ die: 9, crisisDie: 4 });
     setPreview(
@@ -459,7 +459,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   });
 
   it('says the Terminal row offers no roll at all', () => {
-    // "**Terminal illness**. CrCo40 required to survive." (`:16632`) — an absent
+    // "**Terminal illness**. CrCo40 required to survive." (`ArMDE:16632`) — an absent
     // Ease Factor is no roll, never an unbeatable one.
     store.agingDraft = draft({ die: 9, crisisDie: 10 });
     setPreview(
@@ -480,7 +480,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
 
   it('reports the Longevity Ritual the applied year spent', () => {
     // "the ritual assures that the character survives, but its power is spent"
-    // (`:16573`) — reported, because the entity keeps the stored choice, so this
+    // (`ArMDE:16573`) — reported, because the entity keeps the stored choice, so this
     // is the only place the player can be told.
     store.agingNotes = [{ kind: 'longevity_ritual_spent' }];
     const body = html();

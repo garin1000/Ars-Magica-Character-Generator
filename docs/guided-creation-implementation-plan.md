@@ -28,16 +28,16 @@ should expect that asymmetry rather than treat it as drift.
 in §2 with their reasoning. No slice is blocked on a user decision any more.
 
 **Anchor spot-check.** 16 of the review doc's cited locations were re-read against
-the working tree while writing this plan (`app.css:540`, `:682-686`, `:705-712`,
-`:1037-1040`, `:1522-1537`, `:1577-1580`, `:337-353`; `AbilityTab.svelte:201-217`;
-`ParameterPicker.svelte:154-217`; `state.svelte.ts:420`, `:740-773`, `:1924-1929`;
-`wizard-navigation.svelte.ts:31-45`, `:112-117`; `WizardStep.svelte:38-57`;
-`SpellBudgetBar.svelte:65-90`; `ValidationPanel.svelte:42`, `:47`, `:50`;
+the working tree while writing this plan (`app.css:540`, `app.css:682-686`, `app.css:705-712`,
+`app.css:1037-1040`, `app.css:1522-1537`, `app.css:1577-1580`, `app.css:337-353`; `AbilityTab.svelte:201-217`;
+`ParameterPicker.svelte:154-217`; `state.svelte.ts:420`, `state.svelte.ts:740-773`, `state.svelte.ts:1924-1929`;
+`wizard-navigation.svelte.ts:31-45`, `wizard-navigation.svelte.ts:112-117`; `WizardStep.svelte:38-57`;
+`SpellBudgetBar.svelte:65-90`; `ValidationPanel.svelte:42`, `ValidationPanel.svelte:47`, `ValidationPanel.svelte:50`;
 `validation/mod.rs:126-176`; `life_stage.rs:453-494`;
-`character_types.json:10-14`, `:44-48`, `:26-34`, `:95-106`;
+`character_types.json:10-14`, `character_types.json:44-48`, `character_types.json:26-34`, `character_types.json:95-106`;
 `AgingRecordPanel.svelte:96-106`; `VirtueFlawTab.svelte:153-165`;
-`LifeStagePanel.svelte:126`, `:133`; `derive.ts:925-961`, `:1085`, `:1149-1169`;
-Core Rules `:2213-2216`, `:2433-2437`, `:2816-2862`, `:597`). **Zero drift found.**
+`LifeStagePanel.svelte:126`, `LifeStagePanel.svelte:133`; `derive.ts:925-961`, `derive.ts:1085`, `derive.ts:1149-1169`;
+Core Rules `ArMDE:2213-2216`, `ArMDE:2433-2437`, `ArMDE:2816-2862`, `ArMDE:597`). **Zero drift found.**
 Two clarifications are recorded in §8.
 
 ---
@@ -62,14 +62,14 @@ the `param-label-language` string — which is plainly `Language`
 `(Language)` and so the doubled *"(Language) (Dead Language) 1 is not met"*. **The
 parentheses live in `param-hint`, not in the label key** — worth knowing, because the
 fix site is the hint-wrapping decision, not the label's text. The Core Rules state the
-requirement plainly as *"Latin 1"* (Core Rules `:2437`). What should the shared
+requirement plainly as *"Latin 1"* (Core Rules `ArMDE:2437`). What should the shared
 label path emit for an unfilled instance?
 
 | Option | Renders | Cost | Notes |
 |---|---|---|---|
 | **(a)** Suppress the placeholder when unfilled | `(Dead Language) 1` | Small — one change in the shared `displayName`/`abilityDisplayName` path (`derive.ts:639`), fixes `MagusMinimumAbilities.svelte:49-56` **and** the `issue-magus_minimum_ability` message together | No data change, no new keys |
 | **(b)** Keep the hint, drop the template literal | `(Language) 1` | Small | Worse: loses which Ability it is |
-| **(c)** Give the requirement an exemplar in the ruleset | `Latin 1` | Larger — new optional field on `life_stages.json` `minimum_abilities` entries + an i18n'd label so no translatable string enters `rules/core/` | Matches the source's own wording (`:2437`) and is authorable from source |
+| **(c)** Give the requirement an exemplar in the ruleset | `Latin 1` | Larger — new optional field on `life_stages.json` `minimum_abilities` entries + an i18n'd label so no translatable string enters `rules/core/` | Matches the source's own wording (`ArMDE:2437`) and is authorable from source |
 
 **Why (a) is wrong — do not revisit it.** Suppressing the placeholder breaks every
 template where the token is the head of the name or sits mid-phrase, and that is the
@@ -130,7 +130,7 @@ is, and the two entries become indistinguishable in the catalogue list.
 **A new issue, not in the review doc.** Raised by the user while answering D1, verified
 against the source, and folded into Slice 7.
 
-**The gap.** Core Rules `:2437` (verified, read in full) says: *"Magi must have the
+**The gap.** Core Rules `ArMDE:2437` (verified, read in full) says: *"Magi must have the
 following minimum Abilities: Parma Magica 1, Magic Theory 1, **Latin** 1. Characters
 with lower scores would not be admitted to the Order. A character without a **Latin**
 score of least 4 and an Artes Liberales score of at least 1 is unable to read the books
@@ -173,13 +173,13 @@ Latin — it belongs in the rules layer rather than hardcoded into a Fluent mess
 
 - `rules/core/` gains a **language-neutral slug** on the requirement, e.g.
   `"exemplar": "latin"`. This is one named example the rules themselves name at
-  `:2437`; it is **not** an enumeration of languages, and it introduces no catalogue.
+  `ArMDE:2437`; it is **not** an enumeration of languages, and it introduces no catalogue.
 - `rules/i18n/<lang>/` maps that slug to `Latin` / `Latein`, keeping translatable text
   out of the mechanics file.
 - The minimums row and the validation message name the exemplar alongside the
   requirement, so the player sees what the rules actually demand while the engine keeps
   enforcing what it can defensibly enforce.
-- `RULES.md` records: the verified `:2437` citation, that the check is a **deliberate
+- `RULES.md` records: the verified `ArMDE:2437` citation, that the check is a **deliberate
   widening** of "Latin 1", that the widening exists because languages are troupe-defined
   free text, and that it must not be narrowed.
 
@@ -292,7 +292,7 @@ Reputations tab, but the **grog** profile does not declare the
 that surface at all.
 
 **The rules say grogs need it more than anyone.** Core Rules
-`Ars Magica - Definitive Edition (Core Rules).md:1073-1075` (verified, read in full):
+`ArMDE:1073-1075` (verified, read in full):
 
 > *"For major characters, such as magi and companions, they are normally nothing more
 > than an aide memoire … For grogs, they are more significant. As grogs are often
@@ -304,7 +304,7 @@ that surface at all.
 
 So the omission is backwards: the one type whose Personality Traits the rules treat as
 mechanically load-bearing is the one type whose guided flow cannot record them. The
-`:1165` character-sheet listing also names Personality Traits unconditionally.
+`ArMDE:1165` character-sheet listing also names Personality Traits unconditionally.
 
 **Why this is a decision and not a bug fix.** Adding `"personality_reputations"` to
 grog's `creation_phases` is a one-line data change — the phase, its component, its
@@ -360,7 +360,7 @@ internally consistent with the bonus chip but changes the meaning of the primary
 ### D3 — #25's open sub-questions → **ANSWERED, and reshaped by a future feature**
 
 #25's *core* was already DECIDED (an app-level current-year setting, default **1220**,
-Core Rules `:597` / `:364` / `:440`; age ↔ birth year as two views of one fact on
+Core Rules `ArMDE:597` / `ArMDE:364` / `ArMDE:440`; age ↔ birth year as two views of one fact on
 Concept; no schema bump because both values are already stored).
 
 **The decisive new constraint.** The user stated the intent to build **saga management**
@@ -422,7 +422,7 @@ field is what makes the future feature cheap or expensive.
 
 | Item | Why |
 |---|---|
-| **#15 — editable apprenticeship duration** | **Source-blocked.** The Core Rules price apprenticeship as a flat lump — *"The fifteen years of apprenticeship give the character 240 experience points, and 120 levels of spells"* (`Ars Magica - Definitive Edition (Core Rules).md:2435`, verified) — and there is **no** XP-per-apprenticeship-year figure anywhere in `rules/source/en/`. `:11018` acknowledges duration variation without pricing it. A per-character duration with scaled XP requires inventing 240 ÷ 15 = 16 XP/yr, which the rules-provenance rule in `CLAUDE.md` prohibits. **What would unblock it:** a passage in an English source book under `rules/source/en/` that states an experience rate per year of apprenticeship (or an explicit XP total for a non-15-year apprenticeship). Until such a source is added, the value stays the ruleset constant at `rules/core/life_stages.json:16`, read at `crates/arm-rules/src/life_stage.rs:456`. The only in-plan concession: Slice 8 may make it *visible* that 15 is a ruleset constant rather than an oversight (a hint string, no mechanic, no new rule). |
+| **#15 — editable apprenticeship duration** | **Source-blocked.** The Core Rules price apprenticeship as a flat lump — *"The fifteen years of apprenticeship give the character 240 experience points, and 120 levels of spells"* (`ArMDE:2435`, verified) — and there is **no** XP-per-apprenticeship-year figure anywhere in `rules/source/en/`. `ArMDE:11018` acknowledges duration variation without pricing it. A per-character duration with scaled XP requires inventing 240 ÷ 15 = 16 XP/yr, which the rules-provenance rule in `CLAUDE.md` prohibits. **What would unblock it:** a passage in an English source book under `rules/source/en/` that states an experience rate per year of apprenticeship (or an explicit XP total for a non-15-year apprenticeship). Until such a source is added, the value stays the ruleset constant at `rules/core/life_stages.json:16`, read at `crates/arm-rules/src/life_stage.rs:456`. The only in-plan concession: Slice 8 may make it *visible* that 15 is a ruleset constant rather than an oversight (a hint string, no mechanic, no new rule). |
 | **Backlog — aging for loaded characters** | Explicitly out of the review's fix list; "details to be discussed". #25 (Slice 12) is its groundwork — the current-year field it will need — so nothing here forecloses it. |
 | **Non-issue: the 10 blank aging-log rows** | Verified deliberate: user-added via `AgingRecordPanel.svelte:132`, not generated. Slice 6 bounds the log's *height* (#20's DECIDED full-width row with its own scrollport); it does not change row creation. |
 | **Non-issue: native language in the life-stage panel** | Load-bearing, not decoration: the engine needs the name to instantiate the right parameterized `ability.living_language`, to enforce the "other than the character's native language" clause (`childhood.rs:997`) and because every package lists `Native Language 5`. Its *visual* home is folded into #11 (Slice 2), which moves it to the new `experience` step; nothing is removed. |
@@ -526,7 +526,7 @@ Mandatory for:
 
 - **Slice 2** — the phase list is read by `ui/e2e/wizard-walk.js`, which derives phases
   from `rules/core/character_types.json` and fails loudly if a phase has no filler
-  (`FILLERS` at `wizard-walk.js:139`, dispatch at `:241-245`).
+  (`FILLERS` at `wizard-walk.js:139`, dispatch at `wizard-walk.js:241-245`).
 - **Slice 3** — tab ids and `aria-controls`; the specs that select a tab by name/id.
 - **Slice 4** — schema + migration + save/load.
 - **Slice 5** — #31: a new entry point, persisted state, and a dirty-flag interaction
@@ -880,11 +880,11 @@ the per-slice gate is the real pacing mechanism.
 - **Files to touch**
   - `ui/src/app.css` — add the base `p` / `h1`-`h6` margin reset; then audit the ~20
     existing rules that currently compensate for the UA default (start from
-    `:532` `.wizard-review-outstanding`, `:556` `.region-title`, `:670` `.category`,
-    `:1083-1087` `.detail-section`, `:1560-1564` `.validation-docked h2`) and remove
+    `app.css:532` `.wizard-review-outstanding`, `app.css:556` `.region-title`, `app.css:670` `.category`,
+    `app.css:1083-1087` `.detail-section`, `app.css:1560-1564` `.validation-docked h2`) and remove
     the ones that are now redundant rather than layering the reset on top of them.
-  - `ui/src/app.css:540` `.validation-bar`, `:1566-1569` `.validation-docked
-    .issue-list`, `:1522-1527` `.issue` — give the panel a `min-height` sized for the
+  - `ui/src/app.css:540` `.validation-bar`, `app.css:1566-1569` `.validation-docked
+    .issue-list`, `app.css:1522-1527` `.issue` — give the panel a `min-height` sized for the
     "No issues" line so both states start from the same box.
   - `ui/src/lib/components/ValidationPanel.svelte:36-60` — only if the min-height
     needs a wrapper; prefer a pure CSS change.
@@ -956,21 +956,21 @@ the per-slice gate is the real pacing mechanism.
     childhood picker + preview + slot inputs, six explanatory paragraphs),
     `MagusMinimumAbilities` (≈200px), then `.region-row` gets the remainder and hits
     its 12rem floor. Both preambles **must** be auto-height siblings of `.region-row`
-    or the row collapses (verified: `AbilityTab.svelte:201-206`, `:209-215`, and the
+    or the row collapses (verified: `AbilityTab.svelte:201-206`, `AbilityTab.svelte:209-215`, and the
     `.region-row` comment at `app.css:571-581` records this exact bug as the reason
     the floor exists).
 - **Files to touch** (the `#11` fix-pass checklist, verified)
   - `crates/arm-rules/src/types.rs:1367-1399` — `CreationPhase`: remove `Type`, add
-    `Experience`; `:1401-1420` `ALL` stays `[CreationPhase; 12]`.
+    `Experience`; `types.rs:1401-1420` `ALL` stays `[CreationPhase; 12]`.
   - `rules/core/character_types.json` — all four profiles' `creation_phases`:
-    companion `:26-34`, grog `:58-65`, magus `:95-106`, mythic companion `:134-143`.
+    companion `character_types.json:26-34`, grog `character_types.json:58-65`, magus `character_types.json:95-106`, mythic companion `character_types.json:134-143`.
     Remove `"type"`; insert `"experience"` before `"abilities"` **only where
     life-stage funding applies** (see open question below).
   - `ui/src/lib/types.ts` — the `CreationPhase` TS union.
   - `ui/src/lib/components/WizardStep.svelte:44-57` — `STEPS`; delete the `type`
     entry, add `experience: { component: ExperienceStep, scroll: true }`. The
     `satisfies Record<CreationPhase, StepDef>` makes a missing entry a type error.
-    Also update the reuse-rule comment at `:38-43` if this slice's split changes it.
+    Also update the reuse-rule comment at `WizardStep.svelte:38-43` if this slice's split changes it.
   - `ui/src/lib/derive.ts:1149-1169` — `GUIDANCE_ARGS`; same `satisfies` guard.
   - `locales/en/main.ftl:37-48` and `locales/de/main.ftl` (mirrored block) —
     `phase-type` → `phase-experience`; likewise `wizard-guidance-<id>`.
@@ -990,7 +990,7 @@ the per-slice gate is the real pacing mechanism.
   - `ui/src/lib/components/AbilityTab.svelte:201-217` — drop the `LifeStagePanel`
     mount; keep `MagusMinimumAbilities` (S11 collapses it) and `.region-row`. **Then
     re-measure and decide whether `app.css:571-581` (`min-height: 12rem`) and
-    `:614-618` (`.list-scroll`) floors are still needed** — they are prior
+    `app.css:614-618` (`.list-scroll`) floors are still needed** — they are prior
     symptom-patches for exactly this bug and should be **removed, not layered on**, if
     the split makes them unnecessary.
   - `ui/src/App.svelte:316` — **MANDATORY, do not skip: a temporary editor mount.**
@@ -1013,7 +1013,7 @@ the per-slice gate is the real pacing mechanism.
     acceptance criterion about the lists filling the height cannot be met in S2 and
     must move to S3 too. Pick one and say which in the commit message.)
   - `ui/e2e/wizard-walk.js:139` `FILLERS` — add an `experience` filler; remove the
-    `type` one. Dispatch at `:241-245` throws with the known-filler list if missing,
+    `type` one. Dispatch at `wizard-walk.js:241-245` throws with the known-filler list if missing,
     so a forgotten filler fails loudly.
   - `ui/e2e/helpers.js` (`wizardRailPhases`, `currentWizardPhase`) and the four
     per-type wizard specs' rail assertions.
@@ -1021,12 +1021,12 @@ the per-slice gate is the real pacing mechanism.
   The question was whether every profile gets the phase or only those where life-stage
   funding applies. Verified in the source:
   - `LifeStagePanel.svelte:66` gates the whole panel on `{#if rules}` —
-    `store.ruleset?.ruleset.life_stages` (`:15`), i.e. **the ruleset shipping
+    `store.ruleset?.ruleset.life_stages` (`LifeStagePanel.svelte:15`), i.e. **the ruleset shipping
     life-stage rules**. It does *not* gate on character type.
-  - The funding-mode chooser (`pool` / `life_stages`, `:48-50`, `:68-93`) therefore
+  - The funding-mode chooser (`pool` / `life_stages`, `LifeStagePanel.svelte:48-50`, `LifeStagePanel.svelte:68-93`) therefore
     renders for **every** character type. Only the detailed plan fields are behind
-    `{#if guided}` (`:95`), and only gauntlet age / lab seasons / spell levels are
-    behind `isMagus` (`:109`, `:136`, `:190`).
+    `{#if guided}` (`LifeStagePanel.svelte:95`), and only gauntlet age / lab seasons / spell levels are
+    behind `isMagus` (`LifeStagePanel.svelte:109`, `LifeStagePanel.svelte:136`, `LifeStagePanel.svelte:190`).
   - Childhood and later life apply to every character, not just magi — apprenticeship
     is the magus-only block.
 
@@ -1056,7 +1056,7 @@ the per-slice gate is the real pacing mechanism.
      Available/Selected regions.
   5. **RED (frontend, `ssr`)** — `ui/src/lib/i18n.test.ts`: `phase-experience` and
      `wizard-guidance-experience` exist in both locales and `phase-type` is gone
-     (the existing parity test at `:68` covers the both-locales half).
+     (the existing parity test at `i18n.test.ts:68` covers the both-locales half).
   6. **RED (frontend, `ssr`)** — `ui/src/lib/derive.test.ts`: `issuesForPhase` routes
      a `life_stage_age_unset` finding to `experience`, not `abilities`.
   7. Green, then e2e: `wizard-walk.js` filler + rail assertions.
@@ -1070,7 +1070,7 @@ the per-slice gate is the real pacing mechanism.
   `rules/source/de/translation-tables/grundbegriffe.md` for the sanctioned form before
   writing it, and confirm against the German rulebook's own life-stage headings
   (`Ars Magica Definitive Edition Basisregeln.md:2390` "Späteres Leben" is the
-  mirrored line of the English `:2390`).
+  mirrored line of the English `ArMDE:2390`).
 - **Schema/migration** none *in this slice* — but note this changes the set of legal
   `CreationPhase` slugs, which S4/S5 will persist. Recording that dependency here is
   the whole reason S4 comes after S2.
@@ -1159,7 +1159,7 @@ the per-slice gate is the real pacing mechanism.
   4. Green, then update the e2e selectors.
 - **i18n keys** en + de: `tab-experience`, **`tab-personality-reputations`**,
   `tab-aging`. **Hyphens, not underscores** — verified against the shipped keys
-  (`locales/en/main.ftl:196-206`, `:950`): `tab-virtues-flaws`,
+  (`locales/en/main.ftl:196-206`, `main.ftl:950`): `tab-virtues-flaws`,
   `tab-house-specialisation`, `tab-mythic-type`. The phase *slugs* use underscores
   (`personality_reputations`) but the `tab-*` Fluent keys do not, so the two do not
   spell alike and the mapping must not be generated by string-substituting one into
@@ -1211,7 +1211,7 @@ the per-slice gate is the real pacing mechanism.
   age, lab seasons, spell levels, childhood package) plus `childhoodDraft`,
   `childhoodRejections` and the aging draft. A round trip loses everything typed on
   either side. The unsaved-changes guard governs quitting, not destructive in-app
-  edits. The code's own doc comment (`:740-759`) says the destruction is intended
+  edits. The code's own doc comment (`state.svelte.ts:740-759`) says the destruction is intended
   while simultaneously arguing that bought `ability_scores` must survive because
   losing those would be worse — so the principle is already "don't discard the
   player's work"; the plan and pool just were not held to it.
@@ -1256,7 +1256,7 @@ the per-slice gate is the real pacing mechanism.
     `ui/src/lib/`, not just a compile. Known sites to sweep: `life_stage.rs:453`, the
     `not_enough_xp` and restricted-pool paths in
     `crates/arm-rules/src/validation/life_stage.rs` (`restricted_xp_unspent` at
-    `:647-648`) and `validation/scores.rs`, `completeness.rs`, and `export.rs`.
+    `validation/life_stage.rs:647-648`) and `validation/scores.rs`, `completeness.rs`, and `export.rs`.
   - `crates/arm-rules/src/validation/mod.rs:376`
     (`CODE_LIFE_STAGE_XP_POOL_CONFLICT`) and its emitter — the
     `life_stage_xp_pool_conflict` finding asserts a mutual exclusivity that no longer
@@ -1265,11 +1265,11 @@ the per-slice gate is the real pacing mechanism.
     it fires, invert the test.
   - `ui/src/lib/types.ts` — mirror both fields and the `AbilityFunding` enum.
   - `ui/src/lib/state.svelte.ts:420` — read the field instead of deriving it;
-    `:761-773` — `setAbilityFunding` becomes a **pure mode set**: no deletion, no
+    `state.svelte.ts:761-773` — `setAbilityFunding` becomes a **pure mode set**: no deletion, no
     zeroing. **Keep pruning drafts** (`childhoodDraft`, `childhoodRejections`, aging
     draft) per the existing blanket rule that an un-submitted draft never outlives a
-    change to how the document is built (`:756-759`); only the plan and pool stop
-    being destroyed. Rewrite the `:736-759` doc comment — it currently documents the
+    change to how the document is built (`state.svelte.ts:756-759`); only the plan and pool stop
+    being destroyed. Rewrite the `state.svelte.ts:736-759` doc comment — it currently documents the
     destruction as intentional.
   - `crates/arm-rules/RULES.md` — record the **deliberate departure from the
     sparse-save principle**: the save now keeps data the active mode ignores, so
@@ -1287,8 +1287,8 @@ the per-slice gate is the real pacing mechanism.
      `SCHEMA_VERSION` before assuming the set is complete; a guard left at 15 that
      someone "fixes" by weakening the assertion is worse than no guard.
      Note also that the anchors in this slice have drifted a few lines as Slices 2-3
-     landed: `SCHEMA_VERSION` is now `types.rs:2812` (not `:2808`) and
-     `load_entity_migrating` is `types.rs:3038` (not `:3034`). Re-verify before citing. 
+     landed: `SCHEMA_VERSION` is now `types.rs:2812` (not `types.rs:2808`) and
+     `load_entity_migrating` is `types.rs:3038` (not `types.rs:3034`). Re-verify before citing. 
      `entity_without_ability_funding_migrates_from_life_stages_presence` (a save with
      `life_stages` and no `ability_funding` loads as life-stage funding);
      `entity_without_ability_funding_or_plan_migrates_to_pool`;
@@ -1369,18 +1369,18 @@ the per-slice gate is the real pacing mechanism.
 - **"Ungated" needs TWO mechanisms, not one** — easy to half-implement. `goTo` refuses
   anything past `furthest` (`if (step < 0 || step > this.furthest) return`,
   `wizard-navigation.svelte.ts:136`) **and separately** clamps at
-  `firstBlockedPhaseIndex` (`:141`). So the absent-slug branch must both
+  `firstBlockedPhaseIndex` (`wizard-navigation.svelte.ts:141`). So the absent-slug branch must both
   (a) set `furthest` to the last declared phase index, or every step stays unreachable
   with `furthest` at 0, **and** (b) bypass the blocking clamp, or a manually-built
   character with any error becomes unable to reach the steps past it. Implementing only
   (a) yields a rail that looks reachable and still refuses to move; only (b) yields the
   reverse. Test both directions separately.
 - **Anchor drift (verified 2026-08-28)** Slices 2-4 moved these: `startWizard` is
-  `state.svelte.ts:1953-1956` (not `:1924-1929`); `step`/`furthest` are
-  `wizard-navigation.svelte.ts:41-45`; `next()` is `:113-116`; `goTo`'s guard `:136` and
-  its clamp `:141`. Re-verify before citing any of them.
+  `state.svelte.ts:1953-1956` (not `state.svelte.ts:1924-1929`); `step`/`furthest` are
+  `wizard-navigation.svelte.ts:41-45`; `next()` is `wizard-navigation.svelte.ts:113-116`; `goTo`'s guard `wizard-navigation.svelte.ts:136` and
+  its clamp `wizard-navigation.svelte.ts:141`. Re-verify before citing any of them.
 - **Files to touch**
-  - `ui/src/lib/wizard-navigation.svelte.ts:38-45` (`step`, `furthest`), `:112-117`
+  - `ui/src/lib/wizard-navigation.svelte.ts:38-45` (`step`, `furthest`), `wizard-navigation.svelte.ts:112-117`
     (`next()` — the **only** place `furthest` rises; `back()` and `goTo()` never touch
     it, which is why persisting it keeps rail browsing free) and the clamp path.
   - `ui/src/lib/state.svelte.ts:1924-1929` — a second entry point that skips
@@ -1472,7 +1472,7 @@ the per-slice gate is the real pacing mechanism.
     (`en:525`, verified) **does** carry a `{ $traits } (Virtues and Flaws)` term.
   - **#26**: `AgingRecordPanel.svelte:96-106` (verified) uses `<input type="text">`
     for `decrepitude_effect`, which `RULES.md:1243-1246` documents as *"free-text
-    overall aging/decrepitude narrative"* sourced to Core Rules `:16563-16577` — a
+    overall aging/decrepitude narrative"* sourced to Core Rules `ArMDE:16563-16577` — a
     cumulative description that grows over a character's life. Its analogue
     `warping_effect` is already `<textarea rows="3">`
     (`CharacterDetails.svelte:128-134`).
@@ -1481,9 +1481,9 @@ the per-slice gate is the real pacing mechanism.
     `display: grid; grid-template-columns: repeat(auto-fit, minmax(~22rem, 1fr));
     align-items: start`, and **replace** (not keep) the existing 720px `columns: 1`
     media query — `auto-fit` gives natural 1/2/3-column response. The
-    `display: contents` wrappers at `:1056-1059` keep working: children become grid
+    `display: contents` wrappers at `app.css:1056-1059` keep working: children become grid
     items exactly as they became column items. Re-target the
-    `break-inside: avoid; margin-bottom` rules at `:1042-1045` and `:1061-1065` to
+    `break-inside: avoid; margin-bottom` rules at `app.css:1042-1045` and `app.css:1061-1065` to
     grid semantics (`break-inside` is meaningless in grid; the margin may be replaced
     by `gap`).
     **`.character-details` is carried by FOUR mount sites, not one.** Re-verified
@@ -1609,8 +1609,8 @@ the per-slice gate is the real pacing mechanism.
   instance is unfilled (#13). All three are **shared-component / shared-data** issues
   and therefore edit-mode bugs too.
   - **#4** (verified): `ParameterPicker.svelte:154-217` has branches for
-    `characteristic` (`:154`), `ability` (`:171`) and `art` (`:191`) only; everything
-    else falls to the `<input type="text">` at `:209-216`. `ParameterDomain` has
+    `characteristic` (`ParameterPicker.svelte:154`), `ability` (`ParameterPicker.svelte:171`) and `art` (`ParameterPicker.svelte:191`) only; everything
+    else falls to the `<input type="text">` at `ParameterPicker.svelte:209-216`. `ParameterDomain` has
     **seven** variants (`crates/arm-rules/src/types.rs:319-342`, mirrored
     `ui/src/lib/types.ts:35-42`): `ability, art, technique, form, characteristic,
     item, text` — and only `text` is *meant* to be an input; its doc comment says so.
@@ -1621,7 +1621,7 @@ the per-slice gate is the real pacing mechanism.
     a raw ID must never be user-facing.
   - **Affected catalogue items, exhaustive over `rules/core/`**: `virtue.deft_form`
     (`domain: form`, `virtues_flaws.json:3741`) — the reported case;
-    `flaw.deficient_form` (`:600`); `flaw.deficient_technique` (`:611`). The `item`
+    `flaw.deficient_form` (`virtues_flaws.json:600`); `flaw.deficient_technique` (`virtues_flaws.json:611`). The `item`
     domain is in the enum but used by no catalogue entry today — **latent only**, so
     add the branch (the enum is exhaustive) but do not invent catalogue data for it.
   - **The proven control to reuse**: `SpellTab.svelte:391-407` already renders a
@@ -1630,7 +1630,7 @@ the per-slice gate is the real pacing mechanism.
   - **#5**: five V/F declare a Form-only parameter as `domain: "art"`, which the
     engine cannot catch because `art` accepts either Art type:
     `flaw.form_monstrosity` (`virtues_flaws.json:1147`),
-    `flaw.hunger_for_form_magic` (`:1409`), `virtue.extractor_of_form_vis`,
+    `flaw.hunger_for_form_magic` (`virtues_flaws.json:1409`), `virtue.extractor_of_form_vis`,
     `virtue.imbued_with_the_spirit_of_form`, `virtue.master_of_form_creatures` (the
     last is even named in `ParameterPicker.svelte:193-194` as declaring `form` under
     the `art` domain). **Verify each item's cited line range in its source book
@@ -1638,17 +1638,17 @@ the per-slice gate is the real pacing mechanism.
     one-word data change that #4's new branch then renders correctly.
   - **#13**: `MagusMinimumAbilities.svelte:49-56` calls
     `abilityDisplayName(…, instanceOf(row), paramHint(store.t))`; with no instance
-    held, `instanceOf` (`:36-46`) returns `null` and the label falls back to the
+    held, `instanceOf` (`MagusMinimumAbilities.svelte:36-46`) returns `null` and the label falls back to the
     parenthetical hint, stacked on the ability's own parenthesized template name —
     `rules/i18n/en/abilities.json:23` is `"{language} (Dead Language)"` and
     `param-label-language` is `"(Language)"` (`locales/en/main.ftl:772`). The same
     doubling appears in the **validation message**, so the fix belongs in the shared
-    label path (`ui/src/lib/derive.ts:57` `paramHint`, `:639` `abilityDisplayName`,
+    label path (`ui/src/lib/derive.ts:57` `paramHint`, `derive.ts:639` `abilityDisplayName`,
     and `displayName`), not the component.
 - **Files to touch**
   `ui/src/lib/components/ParameterPicker.svelte:154-217`;
   `ui/src/lib/components/SpellTab.svelte:391-407` (extract the Forms select, or its
-  option-building helper, into a shared place); `ui/src/lib/derive.ts:57`, `:639`;
+  option-building helper, into a shared place); `ui/src/lib/derive.ts:57`, `derive.ts:639`;
   `crates/arm-rules/RULES.md` (the #5 domain corrections are rules-data changes and
   need their source ranges recorded).
 
@@ -1656,22 +1656,22 @@ the per-slice gate is the real pacing mechanism.
   strictly apart; conflating them invites a subagent into "fixing" entries that are
   already right. Verified state of `rules/core/virtues_flaws.json`:
 
-  | Line | Entry | `key` | `domain` | Action |
+  | Line (`virtues_flaws.json`) | Entry | `key` | `domain` | Action |
   |---|---|---|---|---|
-  | `:600` | `flaw.deficient_form` | `form` | `form` | **Already correct — do not touch.** #4's new branch is what makes it render. |
-  | `:611` | `flaw.deficient_technique` | `technique` | `technique` | **Already correct — do not touch.** |
-  | `:3741` | `virtue.deft_form` | `form` | `form` | **Already correct — do not touch.** This is the *reported* case, and the bug is entirely in the picker. |
-  | `:1147` | `flaw.form_monstrosity` | `form` | `art` | **#5: change to `form`** if the source restricts it. |
-  | `:1409` | `flaw.hunger_for_form_magic` | `form` | `art` | **#5: change to `form`** if the source restricts it. |
-  | `:3970` | (Form-parameter V/F) | `form` | `art` | **#5: change to `form`** if the source restricts it. |
-  | `:4481` | (Form-parameter V/F) | `form` | `art` | **#5: change to `form`** if the source restricts it. |
-  | `:5092` | (Form-parameter V/F) | `form` | `art` | **#5: change to `form`** if the source restricts it. |
-  | `:3274`, `:5533` | `key: "art"`, `domain: "art"` | `art` | `art` | **Correct by design — either Art type is legal. Do not touch.** |
+  | `virtues_flaws.json:600` | `flaw.deficient_form` | `form` | `form` | **Already correct — do not touch.** #4's new branch is what makes it render. |
+  | `virtues_flaws.json:611` | `flaw.deficient_technique` | `technique` | `technique` | **Already correct — do not touch.** |
+  | `virtues_flaws.json:3741` | `virtue.deft_form` | `form` | `form` | **Already correct — do not touch.** This is the *reported* case, and the bug is entirely in the picker. |
+  | `virtues_flaws.json:1147` | `flaw.form_monstrosity` | `form` | `art` | **#5: change to `form`** if the source restricts it. |
+  | `virtues_flaws.json:1409` | `flaw.hunger_for_form_magic` | `form` | `art` | **#5: change to `form`** if the source restricts it. |
+  | `virtues_flaws.json:3970` | (Form-parameter V/F) | `form` | `art` | **#5: change to `form`** if the source restricts it. |
+  | `virtues_flaws.json:4481` | (Form-parameter V/F) | `form` | `art` | **#5: change to `form`** if the source restricts it. |
+  | `virtues_flaws.json:5092` | (Form-parameter V/F) | `form` | `art` | **#5: change to `form`** if the source restricts it. |
+  | `virtues_flaws.json:3274`, `virtues_flaws.json:5533` | `key: "art"`, `domain: "art"` | `art` | `art` | **Correct by design — either Art type is legal. Do not touch.** |
 
   Locate the five by **id**, not by line (a preceding edit shifts them), then re-verify
   the line before citing it. The three unnumbered ids from the review doc
   (`virtue.extractor_of_form_vis`, `virtue.imbued_with_the_spirit_of_form`,
-  `virtue.master_of_form_creatures`) are the `:3970` / `:4481` / `:5092` rows — confirm
+  `virtue.master_of_form_creatures`) are the `virtues_flaws.json:3970` / `virtues_flaws.json:4481` / `virtues_flaws.json:5092` rows — confirm
   the id↔line pairing yourself rather than trusting this ordering. And **verify each
   item's cited source range in its own book before changing its domain**: the change is
   only justified where the rules actually restrict the parameter to a Form.
@@ -1700,7 +1700,7 @@ the per-slice gate is the real pacing mechanism.
      two known ids, never on a count.
   3c. **RED (Rust)** — #32: `crates/arm-rules/tests/data_integrity.rs`:
      `the magus minimum dead-language requirement names its exemplar`, asserting the
-     `exemplar` slug is present on the three sites (`life_stages.json:4`, `:10`,
+     `exemplar` slug is present on the three sites (`life_stages.json:4`, `life_stages.json:10`,
      `abilities.json:32`) and resolves to an i18n entry in **both** locales. Plus
      `an exemplar slug is not treated as a referential-integrity ref` — the loader must
      not try to resolve it as a catalogue id.
@@ -1723,7 +1723,7 @@ the per-slice gate is the real pacing mechanism.
   `ability.dead_language` (`Dead Language` / `Tote Sprache`) and
   `ability.living_language` (`Living Language` / `Lebende Sprache`), and the exemplar
   label for `latin` (`Latin` / `Latein`). The German forms are the ones already in
-  `rules/i18n/de/abilities.json:23` and `:48` — **lift them from the existing templates,
+  `rules/i18n/de/abilities.json:23` and `rules/i18n/de/abilities.json:48` — **lift them from the existing templates,
   do not re-translate.** `Latein` is ordinary German for the language; check
   `rules/source/de/translation-tables/` for a sanctioned form first anyway, per the
   standing rule.
@@ -1747,7 +1747,7 @@ the per-slice gate is the real pacing mechanism.
     and must not have regressed the ~36 templates that were already correct.
   - Both surfaces name the rules' exemplar: a magus is told the minimum means **Latin**,
     in English and German, while the enforced check remains "any Dead Language ≥ N".
-  - `crates/arm-rules/RULES.md` records, for #32: the verified `:2437` citation; that
+  - `crates/arm-rules/RULES.md` records, for #32: the verified `ArMDE:2437` citation; that
     the check is a **deliberate widening** of "Latin 1"; that the widening is permanent
     because languages are troupe-defined free text and the rules publish no language
     list, so a `language.*` catalogue would require inventing rules data; and that the
@@ -1775,19 +1775,19 @@ the per-slice gate is the real pacing mechanism.
     75 XP` the derivation, `Later life (Abilities only): 0 / 75` the restricted pool)
     in an order that made "Later life" read as *post*-Gauntlet. **Which pool is which**
     (verified): "Later life (Abilities only)" is the early-childhood-end →
-    apprenticeship-start pool — source Core Rules `:2214`, *"Later Life. 15 experience
+    apprenticeship-start pool — source Core Rules `ArMDE:2214`, *"Later Life. 15 experience
     points per year (until apprenticeship for magi)"*, implemented
     `life_stage.rs:527-550`; Gauntlet 25 − childhood 5 − apprenticeship 15 = 5 years ×
-    15 = 75, matching the Darius example at `:2402`. "Abilities only" because a magus
+    15 = 75, matching the Darius example at `ArMDE:2402`. "Abilities only" because a magus
     cannot spend pre-apprenticeship experience on Arts and the two share one pool.
-    **DECIDED**: (1) chronological order per `:2213-2216` / `:2364` — Early childhood →
+    **DECIDED**: (1) chronological order per `ArMDE:2213-2216` / `ArMDE:2364` — Early childhood →
     Later life → Apprenticeship → After the Gauntlet; (2) **one chip per block**,
     merging each block's derivation figure with its restricted-pool spent/total so no
     label appears twice; (3) **"Later life (ages N-M)"**, keeping the rules term and
     adding the per-character span; (4) **"After the Gauntlet"** replaces "As a magus",
-    tying the label to the `Gauntlet age` field that drives it (source `:2216`);
+    tying the label to the `Gauntlet age` field that drives it (source `ArMDE:2216`);
     (5) native language + the 45-point spread group under one **Early childhood**
-    heading, per `:2378`. Target shape:
+    heading, per `ArMDE:2378`. Target shape:
     ```
     XP pool 0 / [380]   Available: 380
     Early childhood — Native language 0 / 75 · Other 0 / 45
@@ -1824,12 +1824,12 @@ the per-slice gate is the real pacing mechanism.
   - **#19** (DECIDED): the spell-levels base is **read-only when mounted by the
     wizard, editable when mounted by the editor**. Implement by passing an explicit
     prop (e.g. `readonlyBase`) via `WizardStep.svelte`'s **existing `barProps` seam**
-    (`WizardStep.svelte:30-31`, `:50` already uses it for `XpBar`'s prefix). **Do not
+    (`WizardStep.svelte:30-31`, `WizardStep.svelte:50` already uses it for `XpBar`'s prefix). **Do not
     sniff the flow from the store** — that is cross-cutting theme 3. Rationale: the 120
-    is a fixed rules grant (`:2215`), and every legitimate in-rules variation already
+    is a fixed rules grant (`ArMDE:2215`), and every legitimate in-rules variation already
     arrives elsewhere (Skilled/Weak Parens as the `bonus` chip, post-Gauntlet levels as
     the `lifeStage` chip); precedent in the same component is the post-Gauntlet input
-    being deliberately absent because *"the Abilities step owns the choice"* (`:23-28`).
+    being deliberately absent because *"the Abilities step owns the choice"* (`SpellBudgetBar.svelte:23-28`).
     **Consequence to document**: this is the first behavioral divergence between the
     two mounts, so the reuse-rule comment at `WizardStep.svelte:38-43` — *"the wizard
     reuses the direct-entry components as they are, so its steps and the editor's tabs
@@ -1837,7 +1837,7 @@ the per-slice gate is the real pacing mechanism.
 - **Files to touch** `ui/src/lib/components/XpBar.svelte`;
   `ui/src/lib/components/SpellBudgetBar.svelte:55-99`;
   `ui/src/lib/components/BalanceBar.svelte`;
-  `ui/src/lib/components/WizardStep.svelte:30-31`, `:38-43`, `:44-57`, `:86-88`;
+  `ui/src/lib/components/WizardStep.svelte:30-31`, `WizardStep.svelte:38-43`, `WizardStep.svelte:44-57`, `WizardStep.svelte:86-88`;
   `ui/src/lib/derive.ts:915-961` (`spellLevelAllocation`, incl. the corrected doc
   comment); `ui/src/app.css` (sticky rules; the `.xp-summary` / bar classes);
   `locales/en/main.ftl` + `locales/de/main.ftl` (`xp-pool-*`,
@@ -1891,7 +1891,7 @@ the per-slice gate is the real pacing mechanism.
   **German terms — verified provenance, and a correction to the review doc:** "Later
   Life" is **not** in `rules/source/de/translation-tables/`. Its German form comes from
   the German rulebook at the mirrored line: `Ars Magica Definitive Edition
-  Basisregeln.md:2214` and the heading at `:2390` give **"Späteres Leben"**, which
+  Basisregeln.md:2214` and the heading at `Basisregeln.md:2390` give **"Späteres Leben"**, which
   `locales/de/main.ftl:239` already uses — reuse it, do not re-translate. "Gauntlet" **is**
   in the tables: `rules/source/de/translation-tables/grundbegriffe.md:57` gives
   **"Lehrlingsprüfung"**, already used at `locales/de/main.ftl:286`. "Apprentice" →
@@ -1901,11 +1901,11 @@ the per-slice gate is the real pacing mechanism.
 - **Schema/migration** none.
 - **Provenance** #14's chip layout is a presentation change over existing engine
   numbers, but the *labels* now assert a chronology, so cite Core Rules
-  `:2213-2216` (the ordered creation summary), `:2364`/`:2378` (the childhood
-  grouping), `:2402` (the Darius worked example that validates the 5 × 15 = 75) and
-  `:2216` (the post-Gauntlet label) at the implementation site, and add/extend the
+  `ArMDE:2213-2216` (the ordered creation summary), `ArMDE:2364`/`ArMDE:2378` (the childhood
+  grouping), `ArMDE:2402` (the Darius worked example that validates the 5 × 15 = 75) and
+  `ArMDE:2216` (the post-Gauntlet label) at the implementation site, and add/extend the
   `RULES.md` entries for the life-stage blocks accordingly. All four ranges were
-  verified while writing this plan except `:2364`/`:2378`/`:2402` — **re-verify those
+  verified while writing this plan except `ArMDE:2364`/`ArMDE:2378`/`ArMDE:2402` — **re-verify those
   three before committing.**
 - **Acceptance criteria**
   - No label appears twice in the XP bar; blocks read chronologically; later life shows
@@ -1963,8 +1963,8 @@ the per-slice gate is the real pacing mechanism.
     `.region-row`'s Available/Selected columns collapse, and it also supplies the
     `gap: 1rem` between guidance, bar and body.
 - **Files to touch** `ui/src/lib/components/WizardShell.svelte:78-82`;
-  `ui/src/app.css` (a visibility-toggle utility for #2; `:982`, `:992-999`,
-  `:1001-1007` for #17; the `.char-panel` centering for #27);
+  `ui/src/app.css` (a visibility-toggle utility for #2; `app.css:982`, `app.css:992-999`,
+  `app.css:1001-1007` for #17; the `.char-panel` centering for #27);
   `ui/src/lib/components/SpellTab.svelte:429-530`.
 - **TDD steps**
   1. **RED (`ssr`)** — `ui/src/lib/components/WizardShell.test.ts`:
@@ -2011,12 +2011,12 @@ the per-slice gate is the real pacing mechanism.
     the bare class `error`, so the standalone `.error { color: var(--error);
     font-size: 0.85rem }` rule (`app.css:1577-1580`, written for banner text like
     `StartScreen.svelte:34`) **also matches the row**. There is no `.warning`
-    counterpart, and `.issue` (`:1522-1527`) never sets `font-size`/`color`, so
+    counterpart, and `.issue` (`app.css:1522-1527`) never sets `font-size`/`color`, so
     `.error` wins **by default, not by specificity** — error rows render smaller and
     red-tinted while warnings do not. Fix: set font-size and colour explicitly on
     `.issue` so neither severity inherits from elsewhere, keeping the colour coding in
     the left border + background tint + uppercase badge as designed
-    (`:1529-1555`). **Also scope or rename the global `.error` rule** — a bare
+    (`app.css:1529-1555`). **Also scope or rename the global `.error` rule** — a bare
     one-word class carrying typography will keep colliding.
   - **#8**: `.selection-list li { border-bottom }` + `.selection-list li:last-child {
     border-bottom: none }` (`app.css:703-712`, verified). `:last-child` is **scoped per
@@ -2034,11 +2034,11 @@ the per-slice gate is the real pacing mechanism.
     the normal category-grouped list, ordered like any other row. No separate group.**
     Grouping must key off each granted item's **own** category. Keep the row union
     (`{kind:'bought'|'granted'}`) — granted rows have no entity index and no remove
-    button, so the "Granted" marker at `:340-343` stays the only distinction, matching
+    button, so the "Granted" marker at `VirtueFlawTab.svelte:340-343` stays the only distinction, matching
     how the in-list `Required` rows already behave. Needs a combined grouping path:
     `groupSelectionsByCategory` currently takes only bought selections, and the
     within-group localized-name sort must cover granted rows. **Watch the key
-    collision the existing comment at `:158-162` documents**: the engine concatenates
+    collision the existing comment at `VirtueFlawTab.svelte:158-162` documents**: the engine concatenates
     House, Mythic Companion, `grants_selection` and warping grants **without dedup**
     (`effective.rs` `entity_grants`), so one `ref` can be granted twice and a duplicate
     `{#each}` key throws `each_key_duplicate` — in production too — aborting the whole
@@ -2047,15 +2047,15 @@ the per-slice gate is the real pacing mechanism.
     visually. `WizardShell.svelte:55-59`, `wizard-step-incomplete-label`
     (`en:64`), `app.css:477-482`. **Keep the span for assistive tech** via the existing
     `.sr-only` utility (`app.css:1449`): it sits *inside* the button deliberately so
-    the marker is part of its accessible name (`:52-54`), and deleting it outright
+    the marker is part of its accessible name (`WizardShell.svelte:52-54`), and deleting it outright
     would leave `data-incomplete` as a style hook only, risking a colour-only channel
     (WCAG 1.4.1). Note the flag is not "unopened" — it is
     `completeness.incomplete_phases`, so on a fresh character **every** step carries it
     at once. This does not resolve the on-step hint (#2, Slice 9) or the Review step's
     `wizard-review-incomplete` list; both stay.
-- **Files to touch** `ui/src/app.css:703-712`, `:1522-1537`, `:1577-1580`, `:477-482`;
+- **Files to touch** `ui/src/app.css:703-712`, `app.css:1522-1537`, `app.css:1577-1580`, `app.css:477-482`;
   `ui/src/lib/components/ValidationPanel.svelte:50`;
-  `ui/src/lib/components/VirtueFlawTab.svelte:120-170`, `:340-343`;
+  `ui/src/lib/components/VirtueFlawTab.svelte:120-170`, `VirtueFlawTab.svelte:340-343`;
   `ui/src/lib/components/SelectionList.svelte:79`;
   `ui/src/lib/components/WizardShell.svelte:52-59`;
   `ui/src/lib/derive.ts` (`groupSelectionsByCategory`);
@@ -2114,32 +2114,32 @@ the per-slice gate is the real pacing mechanism.
     is to say what the rules advise. **Nothing new to author in the rules layer** — the
     profile already carries these as `flaw_category_caps` with a `hard` flag separating
     *may not* from *should not* (verified: `character_types.json:10-14` companion,
-    `:44-48` grog, `:75-82` magus incl. `virtue_category_caps`, `:117-121` mythic
+    `character_types.json:44-48` grog, `character_types.json:75-82` magus incl. `virtue_category_caps`, `character_types.json:117-121` mythic
     companion), and the magus Hermetic-Flaw guideline is already the
-    `missing_hermetic_flaw` warning (`RULES.md:227`, `:1467`). **Generate the sentence
+    `missing_hermetic_flaw` warning (`RULES.md:227`, `RULES.md:1467`). **Generate the sentence
     from the profile** the way the budget numbers already are. Verified source
-    (`:2816-2862`): grog — no Story Flaws, not more than one Personality Flaw;
+    (`ArMDE:2816-2862`): grog — no Story Flaws, not more than one Personality Flaw;
     companion — ≤1 Story, ≤2 Personality; mythic companion — as companion; magus —
     **should take at least one Hermetic Flaw**, ≤1 Story, ≤2 Personality; plus the
-    general `:2818` (≤1 Story Flaw) and `:2820` (≤2 Personality, ≤1 Major
+    general `ArMDE:2818` (≤1 Story Flaw) and `ArMDE:2820` (≤2 Personality, ≤1 Major
     Personality). **Correction the review doc already records and this plan repeats
     because it is easy to get backwards:** there is **no** "at least one Story Flaw"
     rule. Story Flaws have a recommended *ceiling* of one and no minimum; the only "at
     least one" in the rules is the magus's **Hermetic** Flaw.
   - **#12** (DECIDED): `MagusMinimumAbilities.svelte` duplicates the Validation panel —
-    its own comment (`:15-18`, verified) confirms the rows come from the same engine
+    its own comment (`MagusMinimumAbilities.svelte:15-18`, verified) confirms the rows come from the same engine
     findings. **DECIDED: collapse to the `magus-minimums-summary` line ("N of M still
     unmet"), expandable on demand.** Validation stays the authoritative surface.
     **Also fix while in there**: the summary counts **all** rows
-    (`:23` `rows.filter(...)`, `:66` `total: String(rows.length)`) but renders under the
-    *Minimum Abilities* heading above only the `required` ones (`:68-74`) — so it reads
+    (`MagusMinimumAbilities.svelte:23` `rows.filter(...)`, `MagusMinimumAbilities.svelte:66` `total: String(rows.length)`) but renders under the
+    *Minimum Abilities* heading above only the `required` ones (`MagusMinimumAbilities.svelte:68-74`) — so it reads
     "7 of 7" for a list of 3. Verified: `rules/core/life_stages.json:3-13` declares 3
     minimum + 4 recommended abilities.
   - **#30**: verified against the finding-code contract table
     (`crates/arm-rules/src/validation/mod.rs:126-176`) — overspending is an error on
-    both budgets (`not_enough_xp` `:139`, `over_spell_levels` `:176`) but underspending
-    is warned only for characteristics (`characteristic_points_unspent` `:136`) and for
-    life-stage **restricted** blocks (`restricted_xp_unspent` `:141`). Leaving 200
+    both budgets (`not_enough_xp` `mod.rs:139`, `over_spell_levels` `mod.rs:176`) but underspending
+    is warned only for characteristics (`characteristic_points_unspent` `mod.rs:136`) and for
+    life-stage **restricted** blocks (`restricted_xp_unspent` `mod.rs:141`). Leaving 200
     general XP or 60 spell levels unspent produces **silence** while one unspent
     characteristic point produces a warning. Fix: **two new warning codes**, owned by
     the `abilities` and `spells` phases. Because `ValidationPanel` renders unfiltered on
@@ -2164,12 +2164,12 @@ the per-slice gate is the real pacing mechanism.
   - `locales/en/main.ftl:82` + `locales/de/main.ftl` mirror —
     `wizard-guidance-virtues_flaws` gains the per-type advice, driven by args so no
     rules number is frozen into a translated string.
-  - `ui/src/lib/components/MagusMinimumAbilities.svelte:20-28`, `:59-80` — collapse to
+  - `ui/src/lib/components/MagusMinimumAbilities.svelte:20-28`, `MagusMinimumAbilities.svelte:59-80` — collapse to
     the summary with a disclosure; fix the summary's denominator to match what it
     heads.
   - `crates/arm-rules/src/validation/mod.rs` — two new `CODE_*` constants (alongside
-    `:325` `CODE_NOT_ENOUGH_XP`, `:361` `CODE_RESTRICTED_XP_UNSPENT`, `:494`
-    `CODE_OVER_SPELL_LEVELS`) and two new rows in the contract table at `:126-176`.
+    `mod.rs:325` `CODE_NOT_ENOUGH_XP`, `mod.rs:361` `CODE_RESTRICTED_XP_UNSPENT`, `mod.rs:494`
+    `CODE_OVER_SPELL_LEVELS`) and two new rows in the contract table at `mod.rs:126-176`.
   - `crates/arm-rules/src/validation/scores.rs` (or wherever `not_enough_xp` is
     emitted) and the spells validator — the emitters.
   - `locales/en/main.ftl` + `locales/de/main.ftl` — `issue-<newcode>` × 2.
@@ -2181,7 +2181,7 @@ the per-slice gate is the real pacing mechanism.
      `does_not_double_report_restricted_blocks_as_general_unspent`,
      `warns_when_spell_levels_are_left_unspent`,
      `unspent_warnings_do_not_block_finishing` (severity is warning). Put them beside
-     the existing `not_enough_xp` tests in `validation/mod.rs` (around `:4590-4840`).
+     the existing `not_enough_xp` tests in `validation/mod.rs` (around `mod.rs:4590-4840`).
   2. **RED (Rust)** — the contract-table/consistency test that every emitted code has
      a table row (if one exists; if not, this slice is the place to add it — it is the
      cheapest possible guard for a table that is documentation-by-convention).
@@ -2212,11 +2212,11 @@ the per-slice gate is the real pacing mechanism.
 - **Schema/migration** none — new findings are computed, never stored.
 - **Provenance** #7's sentence and #30's two codes both need source citations at the
   implementation site with **verified** ranges. Verified while writing this plan:
-  `:2816` (one Social Status), `:2818` (Story Flaw ceiling), `:2820` (Personality Flaw
-  ceiling and Major cap), `:2822-2831` grog, `:2832-2840` companion, `:2842-2851`
-  mythic companion, `:2853-2862` magus incl. `:2860` "should take at least one Hermetic
-  Flaw". For #30, cite the *budget* sources (`:2215` for the 240 XP / 120 levels,
-  `:2216` for the post-Gauntlet points) and state in `RULES.md` that the **absence** of
+  `ArMDE:2816` (one Social Status), `ArMDE:2818` (Story Flaw ceiling), `ArMDE:2820` (Personality Flaw
+  ceiling and Major cap), `ArMDE:2822-2831` grog, `ArMDE:2832-2840` companion, `ArMDE:2842-2851`
+  mythic companion, `ArMDE:2853-2862` magus incl. `ArMDE:2860` "should take at least one Hermetic
+  Flaw". For #30, cite the *budget* sources (`ArMDE:2215` for the 240 XP / 120 levels,
+  `ArMDE:2216` for the post-Gauntlet points) and state in `RULES.md` that the **absence** of
   a waste rule is why the message is purely factual.
 - **Acceptance criteria**
   - Each character type's V/F guidance states its own Story and Personality Flaw
@@ -2229,7 +2229,7 @@ the per-slice gate is the real pacing mechanism.
     step and on Review; overspending still produces an error; Finish is unaffected.
   - The unspent warning does not double-count restricted life-stage blocks.
 - **Manual verification** For each of the four types, read the V/F step's guidance and
-  check it against Core Rules `:2822-2862`. As a magus, leave 200 XP and 60 spell
+  check it against Core Rules `ArMDE:2822-2862`. As a magus, leave 200 XP and 60 spell
   levels unspent and confirm one warning each appears on Abilities, on Spells and on
   Review, that Finish is still available, and that a life-stage-funded magus does not
   see the same points reported twice. Expand and collapse the minimums summary.
@@ -2247,9 +2247,9 @@ the per-slice gate is the real pacing mechanism.
   - **#24** (DECIDED) — verified facts: the Concept step mounts `IdentityFields`, which
     has **birth year** but deliberately no age (`IdentityFields.svelte:12`). The
     **editor** mounts `IdentityFields` at `CharacterDetails.svelte:85` and `AgeFields`
-    immediately after at `:87` — so in edit mode age already sits beside identity. The
+    immediately after at `CharacterDetails.svelte:87` — so in edit mode age already sits beside identity. The
     life-stage panel has a *separate* input (`LifeStagePanel.svelte:117-127`,
-    `life-stage-age-input`, verified at `:126`), rendered only under life-stage
+    `life-stage-age-input`, verified at `LifeStagePanel.svelte:126`), rendered only under life-stage
     funding. The aging step has `AgeFields` (`age-input`), added because *"under flat
     (pool) funding there is no age field anywhere in the wizard"*
     (`AgeFields.svelte:14-19`). All three write the one `entity.age` — duplicated
@@ -2270,9 +2270,9 @@ the per-slice gate is the real pacing mechanism.
     valid. **The editor is unaffected** — it already has this layout.
   - **#25** (DECIDED core) — today the relationship runs one way only: the engine
     computes calendar year as `birth_year + age` (`crates/arm-rules/src/aging.rs:148`,
-    `:158-165`), and there is **no** current-year or saga-start field anywhere in the
+    `aging.rs:158-165`), and there is **no** current-year or saga-start field anywhere in the
     entity or ruleset. DECIDED: an **app-level current-year setting, default 1220**
-    (source: Core Rules `:597`, verified; also `:364`, `:440`), with age ↔ birth year as
+    (source: Core Rules `ArMDE:597`, verified; also `ArMDE:364`, `ArMDE:440`), with age ↔ birth year as
     two views of one fact on the Concept step — edit either, the other follows.
     **Key simplification, and why this slice carries no schema risk:** `entity.age` and
     `entity.birth_year` are *both* already stored, so the setting is a pure **editing
@@ -2304,7 +2304,7 @@ the per-slice gate is the real pacing mechanism.
       action and is the aging-for-loaded-characters backlog item, **not** part of this
       slice.
 - **Files to touch** `ui/src/lib/components/IdentityFields.svelte:12`;
-  `ui/src/lib/components/AgeFields.svelte:14-19`, `:33-34`;
+  `ui/src/lib/components/AgeFields.svelte:14-19`, `AgeFields.svelte:33-34`;
   `ui/src/lib/components/LifeStagePanel.svelte:117-133`;
   the new `ExperienceStep.svelte` (from S2);
   `ui/src/lib/components/AgingStep.svelte`;
@@ -2367,8 +2367,8 @@ the per-slice gate is the real pacing mechanism.
   the value is saga-scoped, not character-scoped, and putting it on the entity is the
   wrong answer (see §6).
 - **Provenance** The 1220 default is a rules fact: cite
-  `Ars Magica - Definitive Edition (Core Rules).md:597` (verified: *"That domination
-  persists until the present day, 1220"*), with `:364` and `:440` as corroboration, at
+  `ArMDE:597` (verified: *"That domination
+  persists until the present day, 1220"*), with `ArMDE:364` and `ArMDE:440` as corroboration, at
   the implementation site, and add a `RULES.md` entry recording that the default year is
   a rules value and the setting itself is an editing aid with no mechanical effect.
 - **Acceptance criteria**
@@ -2430,7 +2430,7 @@ a build at 17.
   exactly:
   - **Dispatch on field absence, never on the recorded `schema_version`** — a
     hand-edited save may carry any version alongside either shape. This is the rule the
-    existing aging and talisman folds follow (`:3025-3028`).
+    existing aging and talisman folds follow (`types.rs:3025-3028`).
   - `ability_funding` absent → infer `LifeStages` if `life_stages` is present, else
     `Pool`. That is today's rule (`state.svelte.ts:420`), applied **once** at load
     instead of on every read.
@@ -2470,7 +2470,7 @@ a build at 17.
   DECIDED fix is grid and not a tweak to `columns`.
 - **`display: contents` wrappers survive the switch.** Children became column items;
   they become grid items the same way. `app.css:1056-1059` keeps working, but the
-  `break-inside: avoid` companions at `:1042-1045` / `:1061-1065` become meaningless
+  `break-inside: avoid` companions at `app.css:1042-1045` / `app.css:1061-1065` become meaningless
   under grid and must be re-expressed (`gap`, not `margin-bottom`, is usually the
   grid-native form).
 - **Flex gaps do not collapse margins.** `gap` and an adjacent UA margin **add**. This
@@ -2525,7 +2525,7 @@ a build at 17.
   `[CreationPhase; 12]`). S2's batched remove-one/add-one keeps it at 12; doing #1 and
   #11 in separate slices would move it twice for no benefit.
 - **`ui/e2e/wizard-walk.js` derives phases from `rules/core/character_types.json`** and
-  throws with the known-filler list if a phase has no filler (`:139`, `:241-245`). A
+  throws with the known-filler list if a phase has no filler (`wizard-walk.js:139`, `wizard-walk.js:241-245`). A
   phase change without a filler fails e2e loudly — which is good, but it means S2 is not
   done until the filler exists.
 - **The finding-code contract table at `validation/mod.rs:118-180` is documentation by
@@ -2551,7 +2551,7 @@ Recorded so a future session does not chase them:
    DE term for "Later Life" *"must come from `rules/source/de/translation-tables/`"*. It
    is **not in the tables** (searched). Its verified provenance is the German rulebook
    at the line mirroring the English source: `Ars Magica Definitive Edition
-   Basisregeln.md:2214` and the heading at `:2390` give **"Späteres Leben"**, which
+   Basisregeln.md:2214` and the heading at `Basisregeln.md:2390` give **"Späteres Leben"**, which
    `locales/de/main.ftl:239` already uses. "Gauntlet" **is** in the tables
    (`grundbegriffe.md:57` → *Lehrlingsprüfung*), as is "Apprentice"
    (`grundbegriffe.md:15` → *Lehrling*). So the rule stands — never invent — but the
@@ -2563,14 +2563,14 @@ Recorded so a future session does not chase them:
    (ages N-M)"; the span's start is `childhood.years` (`rules/core/life_stages.json:19`).
 3. **#30's anchor `validation/mod.rs:126-176` is the finding-code *contract table*, a
    doc comment — not the emitting code.** The code constants are at `mod.rs:325`,
-   `:361`, `:376`, `:494`; the emitters live in `validation/` submodules
+   `mod.rs:361`, `mod.rs:376`, `mod.rs:494`; the emitters live in `validation/` submodules
    (`life_stage.rs:647-648` for `restricted_xp_unspent`, and the scores/spells
    validators). Adding a code therefore touches three places: the constant, the table
    row, and the emitter — plus both locales.
 4. **#12's "7 of 7 for a list of 3" is confirmed from data.**
    `rules/core/life_stages.json:3-13` declares **3** `minimum_abilities` and **4**
    `recommended_abilities`; `MagusMinimumAbilities.svelte:66` passes
-   `total: String(rows.length)` (all 7) while `:68-74` renders only the 3 required rows
+   `total: String(rows.length)` (all 7) while `MagusMinimumAbilities.svelte:68-74` renders only the 3 required rows
    under the *Minimum Abilities* heading.
 5. **#13's option (c) has a data-kind complication the doc does not mention.** The
    requirement's parameter would be a *text*-domain value ("Latin"), and putting a

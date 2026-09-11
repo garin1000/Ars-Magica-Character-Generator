@@ -7,10 +7,10 @@
   //
   // "Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
   // Latin 1. Characters with lower scores would not be admitted to the Order."
-  // Source: Ars Magica - Definitive Edition (Core Rules).md:2437
+  // Source: ArMDE:2437
   //
   // The recommended package below it is advice, priced at "Total Cost: 90 experience
-  // points" (`:2451-2461`), so falling short of it is a warning and not a refusal.
+  // points" (`ArMDE:2451-2461`), so falling short of it is a warning and not a refusal.
   //
   // The rows are the ENGINE's — the same reading its `magus_minimum_ability` /
   // `magus_recommended_ability` findings come from, so the list and the findings can
@@ -52,7 +52,7 @@
    * The Ability label goes through `requirementAbilityLabel`, the same path the
    * `issue-magus_minimum_ability` message takes, so the checklist and the finding
    * word the demand identically. That is also where the rules' own exemplar is
-   * named — `:2437` says "Latin 1" while the enforced check is "any Dead
+   * named — `ArMDE:2437` says "Latin 1" while the enforced check is "any Dead
    * Language 1", so the row states the demand as the rulebook does and trails the
    * widening as `requirementExemplarNote`, clear of the score.
    */

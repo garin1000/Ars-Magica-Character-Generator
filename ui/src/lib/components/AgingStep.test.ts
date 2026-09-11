@@ -67,7 +67,7 @@ beforeEach(() => {
 describe('AgingStep (slice 6b6c)', () => {
   it('carries the Longevity Ritual on the aging step, which no other step can reach', () => {
     // The ritual's bonus is a term of the AGING TOTAL
-    // (Core Rules.md:16567-16569), but its editor home is the Possessions tab,
+    // (ArMDE:16567-16569), but its editor home is the Possessions tab,
     // which is magus-gated (App.svelte) and which no CreationPhase maps to. So
     // without this mount a guided character cannot enter the bonus at all.
     const body = html();
@@ -77,7 +77,7 @@ describe('AgingStep (slice 6b6c)', () => {
 
   it('takes the bonus of a ritual a grog did not make himself', () => {
     // "You can perform Longevity Rituals for others, even for non-magi."
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:10672 — so the
+    // Source: ArMDE:10672 — so the
     // panel must work for a non-magus. Only the Creo Corpus SUGGESTION is
     // magus-gated (derived.rs), and a grog simply gets no hint.
     store.entity.longevity_ritual = { source: 'external', bonus: 7, focus: '' };

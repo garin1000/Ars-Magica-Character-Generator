@@ -1884,7 +1884,7 @@ ul {
    the empty tracks and stretch the remaining rows to the full width, putting the
    modifier column an inch from its own label. Empty tracks held open keep every row
    the same measure. It degrades to one column on a narrow window with no breakpoint.
-   Placement is row-major, so the book's own best-conditions-first order (`:16583`)
+   Placement is row-major, so the book's own best-conditions-first order (`ArMDE:16583`)
    reads across each row and then down — the same order the DOM and the keyboard
    take. Column-major (`grid-auto-flow: column`) would read better as a ranking and
    is exactly the reordering that leaves the tab order scrambled, so it is not used.

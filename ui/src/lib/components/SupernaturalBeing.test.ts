@@ -195,7 +195,7 @@ describe('SupernaturalBeing power list', () => {
     expect(has(body, 'power-remove-1')).toBe(true);
   });
 
-  // The budget bar charges for Penetration as well as level (Core Rules.md:4019,
+  // The budget bar charges for Penetration as well as level (ArMDE:4019,
   // and the engine's `powers_used`), so the row must offer a control for it —
   // otherwise the player is billed for a value nothing on screen can set.
   it('reads a power row Penetration back from the entity, defaulting to 0', () => {

@@ -43,7 +43,7 @@ function lifeStageRules(): LifeStageRules {
     },
     later_life: { xp_per_year: 15 },
     // The block the Gauntlet-age placeholder reads its baseline off — "25 years old
-    // and just out of apprenticeship" (`:1601`), which is what leaving the field
+    // and just out of apprenticeship" (`ArMDE:1601`), which is what leaving the field
     // blank now means.
     apprenticeship: {
       default_gauntlet_age: 25,

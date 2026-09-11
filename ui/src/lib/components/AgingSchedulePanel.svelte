@@ -16,7 +16,7 @@
 
   // AGING TOTAL: stress die (no botch) + age/10 (round up) - Living Conditions
   // modifier - Longevity Ritual modifier.
-  // Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569
+  // Source: ArMDE:16567-16569
   //
   // Both modifiers are SUBTRACTED, so a stored +7 ritual bonus lowers the total by
   // 7 — the formula shows each term as it acts on the total, which is what the
@@ -26,7 +26,7 @@
   // FOUR terms, not the book's three. The Virtue/Flaw aging-roll modifiers are a
   // separate quantity, ADDED with their stored sign — "You are resistant to aging,
   // and get -1 to all aging rolls" (Faerie Blood).
-  // Source: Ars Magica - Definitive Edition (Core Rules).md:3801
+  // Source: ArMDE:3801
   // — and `fixed_total` has always counted them. Naming only the book's three left
   // a read-out that contradicted itself for any character holding such a Virtue or
   // Flaw ("+4 (age) 0 (living conditions) 0 (Longevity Ritual) = stress die +3"),

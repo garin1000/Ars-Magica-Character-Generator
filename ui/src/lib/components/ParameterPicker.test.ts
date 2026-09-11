@@ -87,7 +87,7 @@ const ITEMS: Record<string, PointItem> = {
   'virtue.second_sight': pointItem('virtue.second_sight', [], ['supernatural']),
   // False Power's shape: the target must be a Virtue the character HOLDS
   // (`require_possessed`) and must not already be Infernal (`forbid_tainted`) —
-  // Core Rules.md:6096. The engine refuses either, so the menu must not offer
+  // ArMDE:6096. The engine refuses either, so the menu must not offer
   // them.
   'flaw.possessed_probe': pointItem('flaw.possessed_probe', [
     { key: 'virtue', type: 'ref', domain: 'item', require_possessed: true, forbid_tainted: true },
@@ -104,7 +104,7 @@ const ITEMS: Record<string, PointItem> = {
   'virtue.puissant_ability': pointItem('virtue.puissant_ability', [
     { key: 'ability', type: 'ref', domain: 'ability' },
   ]),
-  // Two axes, exactly as the shipped entry has them (Core Rules.md:3909). The
+  // Two axes, exactly as the shipped entry has them (ArMDE:3909). The
   // `enumerated` spell category declares its own closed list, so its option set
   // comes from the DATA and not from any catalogue the store holds — three
   // values, so a taken one can be seen greyed while others stay offered. The
@@ -123,8 +123,8 @@ const ITEMS: Record<string, PointItem> = {
       at_most_one_of: [['realm.divine', 'realm.infernal']],
     },
   ]),
-  // Row 19 "taken as": Sufi (Ars Magica - Definitive Edition (Core
-  // Rules).md:5083) "either as a Minor Social Status Virtue or a Minor
+  // Row 19 "taken as": Sufi (ArMDE:5083) "either as a Minor Social Status
+  // Virtue or a Minor
   // Supernatural Virtue" — the `category` domain's own values are a subset of
   // the item's `categories`, labelled through the SAME `category-<id>` Fluent
   // family the V/F badge uses, never through rules i18n.
@@ -344,7 +344,7 @@ describe('ParameterPicker domain branches (slice 7, #4)', () => {
   it('offers only Virtues the character holds when the parameter requires possession', () => {
     // False Power taints "one of the character's Supernatural Virtues", taken
     // "once for each appropriate Supernatural Virtue that the character
-    // possesses" (Core Rules.md:6096). Both non-offers matter: Demonic Blood is
+    // possesses" (ArMDE:6096). Both non-offers matter: Demonic Blood is
     // HELD but already Infernal, and Granted Gift is un-held here.
     store.entity.selections = [{ ref: 'virtue.second_sight' }, { ref: 'virtue.demonic_blood' }];
     const select = selectFor(
@@ -464,7 +464,7 @@ describe('ParameterPicker enumerated domain', () => {
 });
 
 // B7 (row 12): Folk Magic's magic "is aligned to" a supernatural realm
-// (Core Rules.md:3909), and the four Realms are a closed engine taxonomy with
+// (ArMDE:3909), and the four Realms are a closed engine taxonomy with
 // Fluent labels of their own — so the picker offers them from `REALMS`, labelled
 // through `realm-<id>`, and never a text box in which only an internal slug
 // would validate.
@@ -578,7 +578,7 @@ describe('ParameterPicker category domain (row 19 "taken as")', () => {
 // abilities already on the sheet, while abilities are bought on a later step — so
 // Puissant Ability could not be completed where it is taken and the wizard deadlocked.
 // Puissant Ability is "choose one Ability" with no requirement that a score exists
-// (Ars Magica - Definitive Edition (Core Rules).md:4814-4816), exactly like the `art`
+// (ArMDE:4814-4816), exactly like the `art`
 // domain, which never required the Art to be on the sheet.
 describe('ParameterPicker ability domain (manual-testing-findings-2026-09-03 #5)', () => {
   const TESTID = 'param-virtue.puissant_ability-ability-0';

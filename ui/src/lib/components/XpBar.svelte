@@ -109,8 +109,8 @@
   // terms are the character's own and neither is a literal — childhood's length is
   // ruleset data (`rules/core/life_stages.json`) and `later_life_years` is the
   // engine's own figure, already on `LifeStageBudget`.
-  // Source: Ars Magica - Definitive Edition (Core Rules).md:2214, worked through over
-  // ages 5 to 10 by the Darius example at `:2402`.
+  // Source: ArMDE:2214, worked through over
+  // ages 5 to 10 by the Darius example at `ArMDE:2402`.
   const childhoodYears = $derived(store.ruleset?.ruleset.life_stages?.childhood?.years ?? 0);
   const laterLifeTo = $derived(childhoodYears + (lifeStage?.later_life_years ?? 0));
 
@@ -183,8 +183,8 @@
            childhood, later life, apprenticeship, the years after it. The rules state
            them as exactly that ordered sequence — "5. Early Childhood … 6. Later
            Life … 7. … Apprenticeship … 8. … Years after apprenticeship"
-           (Ars Magica - Definitive Edition (Core Rules).md:2213-2216) — and again as
-           a chronology of periods at `:2364`. The previous order put later life LAST,
+           (ArMDE:2213-2216) — and again as
+           a chronology of periods at `ArMDE:2364`. The previous order put later life LAST,
            where its label read as life past the Gauntlet.
 
            ONE chip per block: each merges the block's derivation with the spent/total
@@ -193,7 +193,7 @@
            the component needs no notion of a magus. -->
       {#if childhoodNative || childhoodSpread}
         <!-- Childhood's 75 for the native language and 45 for the spread are ONE
-             block under one heading (`:2378`), not two rows that read as two blocks.
+             block under one heading (`ArMDE:2378`), not two rows that read as two blocks.
              The spread-only wording covers the state before a native language is
              named, when the engine has formed no native-language pool to report. -->
         <span class="xp-life-stage" data-testid="{prefix}life-stage-early-childhood">

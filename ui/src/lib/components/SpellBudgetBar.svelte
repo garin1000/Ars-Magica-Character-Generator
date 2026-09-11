@@ -20,7 +20,7 @@
   // way), so the divergence is visible at the mount site.
   //
   // Why the wizard may withhold it: the 120 is a fixed rules grant — "Take 120
-  // levels of spells" (Ars Magica - Definitive Edition (Core Rules).md:2215) — and
+  // levels of spells" (ArMDE:2215) — and
   // every legitimate in-rules variation of the budget already arrives somewhere else
   // on this bar: Skilled/Weak Parens as the `bonus` entry, and the levels bought past
   // the Gauntlet as the `lifeStage` entry. The editor keeps the field because direct

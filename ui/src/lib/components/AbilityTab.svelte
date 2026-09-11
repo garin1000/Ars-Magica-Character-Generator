@@ -245,7 +245,7 @@
   }
 </script>
 
-<!-- What the Order demands of a magus (Core Rules.md:2437), read before the lists it
+<!-- What the Order demands of a magus (ArMDE:2437), read before the lists it
      is about — an auto-height SIBLING of `.region-row`, never a wrapper: the row must
      stay the only `flex: 1` child of `.vf-tab`, or the Available/Selected lists
      collapse.

@@ -41,7 +41,7 @@
      the running totals it explains (apparent age, Decrepitude, points) — and finally
      the Longevity Ritual, whose bonus is subtracted from
      every aging total this character will ever roll
-     (Ars Magica - Definitive Edition (Core Rules).md:16567-16569). Composed once so
+     (ArMDE:16567-16569). Composed once so
      the editor's Aging tab and the guided aging step mount the same thing and can
      never drift.
 
@@ -52,7 +52,7 @@
      removes that constraint. The panel needs no gate of its own: it reads
      `entity.longevity_ritual` directly, and only the Creo Corpus *suggestion* is
      magus-only (derived.rs), which is right, because "You can perform Longevity
-     Rituals for others, even for non-magi" (Core Rules.md:10672).
+     Rituals for others, even for non-magi" (ArMDE:10672).
 
      THREE COLUMNS, AS WRAPPERS (manual-testing-findings-2026-09-03 #33). This
      wrapper is `display: contents` inside `.character-details` (app.css), so the

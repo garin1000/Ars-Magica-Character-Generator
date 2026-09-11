@@ -183,7 +183,7 @@ describe('FamiliarPanel Personality Traits', () => {
 describe('FamiliarPanel cords', () => {
   it('bounds every cord input by the RULE (0 to +5), not by the serde width', () => {
     // "The strength of each of these cords is rated from 0 to +5 … a score of +5
-    // (the maximum)" — Core Rules.md:10836. A max of 255 (the u8 width) let a 6
+    // (the maximum)" — ArMDE:10836. A max of 255 (the u8 width) let a 6
     // through, which the engine's three cord consumers then read inconsistently.
     store.addFamiliar();
     const body = html();
@@ -213,7 +213,7 @@ describe('FamiliarPanel invested powers', () => {
     expect(element(body, 'familiar-power-remove-0').open).toMatch(/<button/i);
   });
 
-  it('renders NO power-levels budget bar — there is no limit (Core:10866)', () => {
+  it('renders NO power-levels budget bar — there is no limit (ArMDE:10866)', () => {
     store.addFamiliar();
     store.addFamiliarPower();
     store.setFamiliarPowerLevel(0, 400);

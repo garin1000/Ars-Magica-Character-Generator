@@ -91,7 +91,7 @@ function setEffective(
 ): void {
   // The general pool is exactly the engine's `base_general` (`effective.rs`): for a
   // life-stage character the block that may fund anything — APPRENTICESHIP for a
-  // magus, whose 240 points buy Arts as well as Abilities (Core Rules.md:2435), and
+  // magus, whose 240 points buy Arts as well as Abilities (ArMDE:2435), and
   // later life for anyone who serves none — and the typed `xp_pool` for a
   // directly-entered one. A non-zero apprenticeship block is what makes the character
   // a magus, so it is the discriminator here too. The bar reads the pool off
@@ -144,7 +144,7 @@ function budget(years: number, rate: number): LifeStageBudget {
 /**
  * A life-stage budget for a guided MAGUS: fifteen years of apprenticeship earning the
  * 240 points that "can be spent on Arts or Abilities"
- * (Ars Magica - Definitive Edition (Core Rules).md:2435), which makes apprenticeship
+ * (ArMDE:2435), which makes apprenticeship
  * the general pool — and a later life that stops at the Gauntlet (five years for a
  * magus of 25), which is a restricted, Abilities-only pool instead.
  */
@@ -491,7 +491,7 @@ describe('XpBar under a life-stage plan (slice 6b3b)', () => {
     const { text } = element(html(), 'life-stage-early-childhood');
     // Both blocks arrive as restricted pools with a life_stage origin, and #14 merges
     // them into ONE chip: the 75 for the native language and the 45 spread are one
-    // block of the rules (Core Rules.md:2378), so they share one heading rather than
+    // block of the rules (ArMDE:2378), so they share one heading rather than
     // reading as two blocks — which is what put "Early childhood" on the spread row
     // while the block's real name was the heading it lacked.
     expect(text).toContain('Early childhood');
@@ -576,7 +576,7 @@ describe('XpBar under a guided magus plan (slice 6b4)', () => {
     installPlan();
     setEffective(0, laterLifePool(75), magusBudget());
     const body = html('art-');
-    // Apprenticeship experience buys Arts as well (`:2435`), so the Arts bar shows the
+    // Apprenticeship experience buys Arts as well (`ArMDE:2435`), so the Arts bar shows the
     // same 240 — the two instances differ only in their testid prefix.
     expect(element(body, 'art-xp-pool-total').text).toBe('240');
     expect(element(body, 'art-life-stage-apprenticeship').text).toContain('240');
@@ -644,7 +644,7 @@ describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
   it('gives the Arts instance the identical line', () => {
     installPastGauntlet();
     const body = html('art-');
-    // Those points buy Arts as readily as Abilities (Core Rules.md:2471), so the Arts
+    // Those points buy Arts as readily as Abilities (ArMDE:2471), so the Arts
     // bar carries the same row — the two instances differ only in their testid prefix.
     expect(element(body, 'art-life-stage-post-gauntlet').text).toContain('720');
   });
@@ -655,14 +655,14 @@ describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
 // pool it forms (`Later life (Abilities only): 0 / 75`) — in an order that put later
 // life AFTER apprenticeship, so the label read as life past the Gauntlet. The blocks
 // are a chronology in the rules' own summary
-// (Ars Magica - Definitive Edition (Core Rules).md:2213-2216, :2364), so the bar
+// (ArMDE:2213-2216, :2364), so the bar
 // reads as one: one chip per block, in the order the character lived them.
 describe('XpBar life-stage chronology (#14)', () => {
   /**
    * Every block a magus can have on screen at once: childhood's two, later life
    * (restricted for a magus), apprenticeship, and ten years past the Gauntlet.
    * Gauntlet age 25 and a childhood of five years put later life at ages 5-10 —
-   * the very span the Darius example works through (`:2402`).
+   * the very span the Darius example works through (`ArMDE:2402`).
    */
   function installEveryBlock(): void {
     resetEntity(0);
@@ -713,7 +713,7 @@ describe('XpBar life-stage chronology (#14)', () => {
     setEffective(65, [...childhoodPools(20, 15), ...laterLifePool(75, 30)], magusBudget());
     const rendered = chips(html());
     const childhood = rendered.find((c) => c.testid === 'life-stage-early-childhood')!;
-    // Both childhood sub-pools under the one Early childhood heading (`:2378`).
+    // Both childhood sub-pools under the one Early childhood heading (`ArMDE:2378`).
     expect(childhood.text).toContain('20');
     expect(childhood.text).toContain('75');
     expect(childhood.text).toContain('15');
@@ -730,7 +730,7 @@ describe('XpBar life-stage chronology (#14)', () => {
     const later = chips(html()).find((c) => c.testid === 'life-stage-later-life')!;
     // Childhood runs to 5 (`life_stages.childhood.years`) and apprenticeship starts
     // at the Gauntlet age less its fifteen years, so later life is ages 5 to 10 —
-    // exactly the Darius worked example (`:2402`).
+    // exactly the Darius worked example (`ArMDE:2402`).
     expect(later.text).toContain('ages 5-10');
     // ASCII hyphen-minus as the range separator, never U+2212.
     expect(later.text).not.toContain('−');
@@ -835,7 +835,7 @@ describe('XpBar flat mode is untouched by the guided branch (slice 6b3b)', () =>
 });
 
 // A flat magus with Skilled Parens ("You gain an additional 60 experience points …
-// during apprenticeship", Core Rules.md:4966) may spend 300 against a typed 240,
+// during apprenticeship", ArMDE:4966) may spend 300 against a typed 240,
 // and the engine grants exactly that. The bar used to charge the spend against the
 // typed total alone, so the character read a negative Available with no error
 // anywhere — a silently wrong read-out of a perfectly legal character.

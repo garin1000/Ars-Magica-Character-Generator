@@ -17,7 +17,7 @@
   // "The following Ability packages can be taken to speed up character generation.
   // Each represents a particular sort of childhood. Note that you can spend the 45
   // experience points for yourself, as well."
-  // Source: Ars Magica - Definitive Edition (Core Rules).md:2380-2388
+  // Source: ArMDE:2380-2388
 
   // A ruleset shipping no packages has no choice to offer, so the whole picker is
   // absent rather than an empty dropdown.

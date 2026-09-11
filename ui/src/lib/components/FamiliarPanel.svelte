@@ -181,7 +181,7 @@
       {store.t('personality-add')}
     </button>
 
-    <!-- Cord scores run 0 to +5, "+5 (the maximum)" (Core:10836) — the bound here is
+    <!-- Cord scores run 0 to +5, "+5 (the maximum)" (ArMDE:10836) — the bound here is
          the RULE, not the u8 the field is stored in; the store clamps to the same 5. -->
     <div class="cord-row">
       {#each [['gold', 'familiar-cord-gold'], ['silver', 'familiar-cord-silver'], ['bronze', 'familiar-cord-bronze']] as [cord, key] (cord)}
@@ -201,7 +201,7 @@
 
     <!-- Powers invested in the bond. Deliberately NO budget read-out: "there is no
          limit to the number of powers which may be invested in a familiar"
-         (Core:10866), so a bar here would invent a limit the rules deny. The absence
+         (ArMDE:10866), so a bar here would invent a limit the rules deny. The absence
          of a bar is the whole statement — manual-testing-findings #21 removed the
          sentence that also said it in words. -->
     <h4 class="detail-sublabel">{store.t('familiar-powers-label')}</h4>

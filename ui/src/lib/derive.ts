@@ -319,8 +319,7 @@ const REALM_ID_PREFIX = 'realm.';
  * The `realm-<slug>` Fluent label for a Realm parameter value, or `null` when
  * the value names no Realm.
  *
- * Folk Magic's second axis (`Ars Magica - Definitive Edition (Core
- * Rules).md:3909`) stores `realm.<slug>`. The four Realms are a closed engine
+ * Folk Magic's second axis (`ArMDE:3909`) stores `realm.<slug>`. The four Realms are a closed engine
  * taxonomy with no rules-i18n entry of their own, so their labels come from the
  * same `realm-<id>` family the Might picker and the Markdown export
  * (`Doc::taxonomy_label`) already read. Membership is tested against `REALMS`
@@ -401,7 +400,7 @@ export function selectionDisplayName(
  * keys. A target is the whole `(item_ref, params)` tuple — that is literally the
  * engine's duplicate key (`validate_duplicate_selections`) — so a row that
  * disagrees on any other key aims at a different target and must not count
- * here. Folk Magic is why this exists: `:3919` lets a second copy "align it to
+ * here. Folk Magic is why this exists: `ArMDE:3919` lets a second copy "align it to
  * the same Realm as before or pick a different one", so two copies may share a
  * spell category as long as their Realms differ, and counting the category axis
  * alone would grey out a legal choice. Omitted (or empty) for a
@@ -595,7 +594,7 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
  * against EVERY category the item carries (`require_categories` needs a non-empty
  * intersection, `forbid_categories` an empty one), so a descriptor's secondary
  * category both admits a pick and rules one out. The rules name no fixed menu for a
- * Warping-owed slot (the pick is storyguide judgement, Core:16553-16561), so the
+ * Warping-owed slot (the pick is storyguide judgement, ArMDE:16553-16561), so the
  * constraint is the only filter.
  *
  * `house` is the character's own Hermetic House (`store.entity.house`), or `null`
@@ -709,7 +708,7 @@ function warpingSlotKeys(constraint: GrantConstraint): { labelKey: string; count
  * A Virtue/Flaw whose descriptor names two categories may record which of them
  * it was taken as, in a parameter of the `category` domain (Sufi's `taken_as`:
  * "either as a Minor Social Status Virtue or a Minor Supernatural Virtue",
- * `Ars Magica - Definitive Edition (Core Rules).md:5083`). Where such a value is
+ * `ArMDE:5083`). Where such a value is
  * recorded, ONLY that category is in force; otherwise the whole descriptor is,
  * exactly as before `taken_as` existed. The domain is read off the ruleset's own
  * parameter definition rather than matching the key name, so a second taken-as
@@ -748,12 +747,13 @@ export function selectionCategories(
  * An item appears under EVERY category it carries, because that is what the
  * rulebook itself does: its Virtue/Flaw indexes list each dual-category item
  * twice, once per category, with no "primary" among them. Sufi is at
- * `Ars Magica - Definitive Edition (Core Rules).md:3179` under
- * "### Supernatural, Minor" (:3135) and again at :3230 under
- * "### Social Status, Minor" (:3187); likewise Suppressed Gift (:5301 Hermetic,
- * Major / :5369 Story, Major), Raised from the Dead (:5365 Story, Major / :5399
- * Supernatural, Major) and Visions (:5517 Story, Minor / :5561 Supernatural,
- * Minor). Filing such an item under one heading only hid it from a player
+ * `ArMDE:3179` under
+ * "### Supernatural, Minor" (ArMDE:3135) and again at ArMDE:3230 under
+ * "### Social Status, Minor" (ArMDE:3187); likewise Suppressed Gift (ArMDE:5301
+ * Hermetic, Major / ArMDE:5369 Story, Major), Raised from the Dead (ArMDE:5365
+ * Story, Major / ArMDE:5399 Supernatural, Major) and Visions (ArMDE:5517 Story,
+ * Minor / ArMDE:5561 Supernatural, Minor). Filing such an item under one
+ * heading only hid it from a player
  * browsing the other category — the very category that may be the one making it
  * legal for their character. The engine's two category checks are mirrors of each
  * other, so a single carried category really can be what makes an item legal:
@@ -986,7 +986,7 @@ export function grantedSelectionsForSide(
  * charge (`xp_allocation`): a granted `floor` (auto-mastery at 1) is free, so only
  * the table cost *above* the floor is charged; and when advancement is `doubled`
  * that remainder is halved (rounded up). Spent from the Mastered-Spells pool plus
- * the general pool. Source: Core Rules.md:3887-3889, :4471-4474.
+ * the general pool. Source: ArMDE:3887-3889, :4471-4474.
  *
  * KNOWN DRIFT RISK (GD4, tmp/review/review-round-2-gerda-derived.md): this
  * duplicates the mastery-spend leg of `crates/arm-rules/src/effective/xp.rs`'s
@@ -1075,8 +1075,8 @@ export const RITUAL_MINIMUM_LEVEL_FALLBACK = 20;
 
 /**
  * The minimum level a spell can be learned at: a Ritual must be learned at the
- * ruleset's `ritual_min_level` (Ars Magica - Definitive Edition (Core
- * Rules).md:12293, "Ritual spells are always at least level 20"), an ordinary
+ * ruleset's `ritual_min_level` (ArMDE:12293, "Ritual spells are always at
+ * least level 20"), an ordinary
  * spell at 1.
  *
  * VA2 (tmp/review/review-round-1-viktor-app.md): the Ritual floor used to be a
@@ -1188,7 +1188,7 @@ export function exemplarLabel(
  * An Ability requirement's label — the example the rules themselves name, where they
  * name one.
  *
- * The Core Rules demand "Latin 1" of every magus (Core Rules `:2437`), but
+ * The Core Rules demand "Latin 1" of every magus (ArMDE:2437), but
  * `ability.dead_language` takes a **free-text** instance — a troupe decides which
  * languages exist and which are dead — so the engine can only enforce "any Dead
  * Language ≥ N". That widening is permanent (see `crates/arm-rules/RULES.md`), so the
@@ -1291,7 +1291,7 @@ export interface ChildhoodSlot {
  * key per slot would make the catalogue's shape code, and printing the slug raw
  * would render an id as a label. Both are forbidden.
  *
- * Source: Ars Magica - Definitive Edition (Core Rules).md:2384-2388.
+ * Source: ArMDE:2384-2388.
  */
 export function childhoodSlots(
   localized: LocalizedRuleset,
@@ -1326,7 +1326,7 @@ export function childhoodSlots(
  * and never the Ability id), a slot already answered reads its answer ("Rhine Lore
  * 1"), and an unanswered one falls back to the localized parameter hint.
  *
- * Source: Ars Magica - Definitive Edition (Core Rules).md:2384-2388.
+ * Source: ArMDE:2384-2388.
  */
 export function childhoodEntryPreview(
   localized: LocalizedRuleset,
@@ -1364,7 +1364,7 @@ export type ChildhoodSlotFault = 'empty' | 'duplicate' | 'native';
  * Reported symmetrically for a duplicate: both answers need looking at, and either
  * one is a legitimate thing to change.
  *
- * Source: Ars Magica - Definitive Edition (Core Rules).md:2378, :2384-2388.
+ * Source: ArMDE:2378, :2384-2388.
  */
 export function childhoodSlotFault(
   localized: LocalizedRuleset,
@@ -1627,7 +1627,7 @@ export interface GeneralXpAllocation {
  * policy for the identical reason — the two bars report the two halves of one
  * Virtue. Skilled Parens grants "an additional 60 experience points and 30 spell
  * levels during apprenticeship"
- * (Ars Magica - Definitive Edition (Core Rules).md:4966), so whatever the spell
+ * (ArMDE:4966), so whatever the spell
  * bar does with the 30 the XP bar must do with the 60.
  *
  * A **positive** modifier is spent first and the base covers the rest, mirroring

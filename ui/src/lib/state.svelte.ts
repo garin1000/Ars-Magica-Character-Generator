@@ -1623,7 +1623,7 @@ class AppStore {
   /**
    * Levels spent one-for-one on the power's Penetration. Charged against the
    * SAME power-levels budget as the level itself ("You may also spend levels
-   * one-for-one to give the power Penetration", Core Rules.md:4019), which is why
+   * one-for-one to give the power Penetration", ArMDE:4019), which is why
    * the engine's `power_levels_used` counts both — so this must be editable, or
    * the bar would charge for something no control can enter. Clamped to u16 like
    * the level.
@@ -2053,7 +2053,7 @@ class AppStore {
    * Take or drop one Living Conditions row, by its id into the aging catalogue.
    *
    * A SET, not a single pick: "Modifiers marked with an asterisk are cumulative
-   * with each other" (Core Rules.md:16594), so several rows can hold at once. The
+   * with each other" (ArMDE:16594), so several rows can hold at once. The
    * engine decides which combinations are legal
    * (`living_conditions_conflict`); this only records the choice.
    *

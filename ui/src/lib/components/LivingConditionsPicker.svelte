@@ -7,15 +7,15 @@
   //
   // "AGING TOTAL: Stress die (no botch) + age/10 (round up) / - Living Conditions
   // modifier / - Longevity Ritual modifier"
-  // Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569
+  // Source: ArMDE:16567-16569
   //
   // The modifier is SUBTRACTED, so "a high Living Conditions modifier … indicate[s]
-  // longer life" (`:16571`) — a good condition lowers the total. That is why every
+  // longer life" (`ArMDE:16571`) — a good condition lowers the total. That is why every
   // row is shown with its own sign as the book prints it, and the sign is never
   // flipped here.
   //
   // A multi-select and not a radio group, because "Modifiers marked with an
-  // asterisk are cumulative with each other" (`:16594`). That footnote is the only
+  // asterisk are cumulative with each other" (`ArMDE:16594`). That footnote is the only
   // thing the book says about combining rows; the unstarred rows being mutually
   // exclusive is inferred from it, so it is stated as guidance here and enforced
   // (as `living_conditions_conflict`) by the engine, never by disabling a box.
@@ -25,7 +25,7 @@
   const rows = $derived.by(() => {
     const localized = store.ruleset;
     const conditions = localized?.ruleset.aging?.living_conditions ?? [];
-    // The book's own order (`:16583-16592`): best conditions first, which puts the
+    // The book's own order (`ArMDE:16583-16592`): best conditions first, which puts the
     // cumulative rows together at the bottom. Ties break on the localized name so
     // the order is stable and reads as the active language sorts.
     return [...conditions].sort(

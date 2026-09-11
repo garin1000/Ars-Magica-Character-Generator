@@ -394,7 +394,7 @@
                   />
                 {/if}
                 <!-- Spell Mastery is an Ability every magus may buy from the general
-                   apprenticeship pool (Core:9518), so the spinner shows whenever the
+                   apprenticeship pool (ArMDE:9518), so the spinner shows whenever the
                    advancement table can price it — not only with Mastered Spells /
                    Flawless Magic. This picker is already magus-and-Spells-tab-only. -->
                 {#if masteryMax > 0}
@@ -446,7 +446,7 @@
                   ×
                 </button>
                 <!-- Spell Mastery special abilities: one may be chosen per effective
-                   mastery level (Core:9524-9526). The add-picker hides once the
+                   mastery level (ArMDE:9524-9526). The add-picker hides once the
                    count reaches the effective mastery; a non-repeatable ability
                    already chosen is disabled in the list, a repeatable one
                    (Precise/Quick/Quiet Casting) stays selectable again.

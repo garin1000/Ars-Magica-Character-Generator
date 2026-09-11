@@ -5,7 +5,7 @@
   import type { ReputationType } from '../types';
 
   const reputations = $derived(store.entity.reputations ?? []);
-  // Reputation input is offered only for the slots a V/F grants (Core:2514) —
+  // Reputation input is offered only for the slots a V/F grants (ArMDE:2514) —
   // and the grant IS the row. There is no add control: an authorized Reputation
   // is already known, so it renders as a row waiting for its description rather
   // than a button that could be pressed twice into a duplicate.
