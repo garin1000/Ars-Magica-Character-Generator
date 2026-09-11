@@ -22,9 +22,8 @@ fn might_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<(Realm, u8)> {
 /// being (no base Might and no [`Effect::MightGrant`]). The Realm comes from the
 /// entity's base Might if entered, else from its Might Virtue grants; the score is
 /// the entered base (may be 0) plus every same-Realm grant. Demonic Blood grants
-/// Infernal Might 5, Demonic Might +2 → effective 7. Source: Ars Magica 5e -
-/// Realms of Power - Magic.md:1470-1472; Ars Magica 5e - Realms of Power -
-/// The Infernal.md:4120, :4136.
+/// Infernal Might 5, Demonic Might +2 → effective 7. Source: RoP:M:1470-1472;
+/// RoP:I:4120, :4136.
 pub fn effective_might(entity: &Entity, ruleset: &Ruleset) -> Option<MightScore> {
     let grants = might_grants(entity, ruleset);
     let realm = entity
@@ -43,8 +42,7 @@ pub fn effective_might(entity: &Entity, ruleset: &Ruleset) -> Option<MightScore>
 
 /// The character's derived True Faith Score: base 0 plus every
 /// [`Effect::TrueFaithGrant`] (True Faith Virtue → 1), summed and clamped to
-/// `u8`. Derived, never stored. Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:5169-5171.
+/// `u8`. Derived, never stored. Source: ArMDE:5169-5171.
 pub fn true_faith(entity: &Entity, ruleset: &Ruleset) -> u8 {
     let mut score = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {

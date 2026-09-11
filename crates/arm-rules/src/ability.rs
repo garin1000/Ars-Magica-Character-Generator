@@ -23,7 +23,7 @@ use crate::types::{Id, SourceRef, is_false};
 
 /// The five Ability categories.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:7177-7268 (the Ability
+/// Source: ArMDE:7177-7268 (the Ability
 /// list, grouped into General, Academic, Arcane, Martial, and Supernatural).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -87,11 +87,11 @@ pub struct Ability {
     /// (Area) Lore, Chirurgy), Academic, Arcane, and all Supernatural abilities.
     /// The UI renders a trailing `*` after the name when this is set.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4157 (the Jack of
+    /// Source: ArMDE:4157 (the Jack of
     /// All Trades Virtue spells out the rule: "Characters without this Virtue
     /// cannot even attempt rolls on an asterisked Ability without at least one
     /// experience point in it."). Each asterisked ability's `####` heading in the
-    /// Abilities chapter (`:7273-7786`) carries the `*` that sets this flag.
+    /// Abilities chapter (`ArMDE:7273-7786`) carries the `*` that sets this flag.
     #[serde(default, skip_serializing_if = "is_false")]
     pub requires_training: bool,
     /// Whether this Ability may be used as a weapon's combat Ability. True for
@@ -102,7 +102,7 @@ pub struct Ability {
     /// ruleset that slugs unarmed combat differently just sets the flag rather
     /// than mis-rejecting.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:7337-7340 (Brawl:
+    /// Source: ArMDE:7337-7340 (Brawl:
     /// "Fighting hand-to-hand without weapons, or with the sorts of improvised
     /// weapons you just pick up … also the Ability used to dodge attacks if you
     /// have no Martial Abilities.").
@@ -118,7 +118,7 @@ pub struct Ability {
     /// social Abilities**". The three named families carry the flag; which social
     /// Abilities a saga counts is left to the data author rather than guessed here.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:6160 (Foreign
+    /// Source: ArMDE:6160 (Foreign
     /// Upbringing).
     #[serde(default, skip_serializing_if = "is_false")]
     pub locality_dependent: bool,
@@ -130,7 +130,7 @@ pub struct Ability {
 /// One row of the Ability advancement table: `total_xp` is the experience needed
 /// to reach `score` from zero.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2406-2427
+/// Source: ArMDE:2406-2427
 /// ("ABILITY To Buy" column).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AbilityXpRow {
@@ -206,7 +206,7 @@ impl AdvancementTable {
     /// inverse of [`xp_for_score`]. Score 0 is always free, so an `xp` below the
     /// first row yields 0; an `xp` at or above the top row yields the top score
     /// (the curve is clamped, never extrapolated). Decrepitude and Warping rise
-    /// "like an Ability" up this same table (Ars Magica - Definitive Edition (Core Rules).md:16464-16475, :16617), so this is
+    /// "like an Ability" up this same table (ArMDE:16464-16475, :16617), so this is
     /// how a bank of accrued points becomes a score.
     ///
     /// Rows are score-sorted ascending at construction, so the last row not
@@ -277,7 +277,7 @@ impl AdvancementTable {
 /// or younger caps every Ability at `max_score` at character creation. The final,
 /// open-ended band omits `max_age` and covers every older character.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2366-2374.
+/// Source: ArMDE:2366-2374.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgeAbilityCap {
     /// Inclusive upper age bound of this band; `None` for the open-ended band.
@@ -340,7 +340,7 @@ impl AgeAbilityCaps {
     }
 
     /// The maximum Ability score a character of `age` may buy at creation, per the
-    /// age band table (Ars Magica - Definitive Edition (Core Rules).md:2366-2374), or `None` if the ruleset ships no age caps
+    /// age band table (ArMDE:2366-2374), or `None` if the ruleset ships no age caps
     /// (the cap is then unknowable and not enforced). The bands are age-ascending
     /// with the open-ended band last, so the first band whose `max_age` covers
     /// `age` — or the open-ended band — gives the cap. Some Virtues raise this
@@ -449,7 +449,7 @@ mod tests {
         assert_eq!(t.score_for_xp(5), 1); // exactly score 1
         assert_eq!(t.score_for_xp(14), 1); // between 5 and 15
         assert_eq!(t.score_for_xp(15), 2); // exactly score 2 (warping worked value)
-        assert_eq!(t.score_for_xp(17), 2); // 17 aging points → Decrepitude 2 (Ars Magica - Definitive Edition (Core Rules).md:16617)
+        assert_eq!(t.score_for_xp(17), 2); // 17 aging points → Decrepitude 2 (ArMDE:16617)
         assert_eq!(t.score_for_xp(30), 3);
         assert_eq!(t.score_for_xp(275), 10);
         assert_eq!(t.score_for_xp(10_000), 10); // clamps at the table's top row
@@ -579,7 +579,7 @@ mod tests {
         );
     }
 
-    /// The shipped age → max-Ability-score bands (Ars Magica - Definitive Edition (Core Rules).md:2366-2374), authored out of
+    /// The shipped age → max-Ability-score bands (ArMDE:2366-2374), authored out of
     /// order so the sort-on-load is exercised.
     fn age_caps() -> AgeAbilityCaps {
         serde_json::from_str(

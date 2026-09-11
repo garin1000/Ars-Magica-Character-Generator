@@ -17,7 +17,7 @@
 //! block. Per-type bonus points raise the balance ceilings (see
 //! [`crate::validation`]).
 //!
-//! Source: Ars Magica - Definitive Edition (Core Rules).md:2635-2639 (general
+//! Source: ArMDE:2635-2639 (general
 //! rules), :2643-2765 (the four types), :2842-2851 (V/F guidelines).
 
 use serde::{Deserialize, Serialize};
@@ -37,7 +37,7 @@ fn is_zero_u8(n: &u8) -> bool {
 /// must satisfy (same magnitude/category). The UI seeds `default` and offers the
 /// constraint-eligible Flaws as substitutes.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2660, :2689, :2754
+/// Source: ArMDE:2660, :2689, :2754
 /// ("or a suitable substitute agreed with the troupe").
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RequiredFlaw {
@@ -68,13 +68,12 @@ pub struct MythicCompanionType {
     pub required_flaws: Vec<RequiredFlaw>,
     /// Extra Flaw points this type may take beyond the base ceiling (Devil Child
     /// and Spirit Votary get +7). Each still funds virtue points at the type's
-    /// rate. Source: Ars Magica - Definitive Edition (Core Rules).md:2664;
-    /// Ars Magica 5e - Realms of Power - Magic.md:5486.
+    /// rate. Source: ArMDE:2664;
+    /// RoP:M:5486.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub bonus_flaw_points: u8,
     /// Extra virtue points at no flaw cost (Devil Child gets +3, to balance the
-    /// compulsory Major Flaw). Source: Ars Magica - Definitive Edition
-    /// (Core Rules).md:2664.
+    /// compulsory Major Flaw). Source: ArMDE:2664.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub bonus_free_virtue_points: u8,
     /// Provenance into the Markdown rules source.

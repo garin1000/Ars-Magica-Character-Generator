@@ -31,10 +31,10 @@ pub struct CastingWithinFocus {
 /// The non-standard-casting variants of a cell's **Formulaic** Casting Total:
 /// casting with no voice ("silent") and/or no gestures ("still"). The Words and
 /// Gestures penalties apply to Formulaic and Spontaneous casting, never to Ritual
-/// (Ars Magica - Definitive Edition (Core Rules).md:9236); these variants adjust the Formulaic total. Quiet Magic reduces the
+/// (ArMDE:9236); these variants adjust the Formulaic total. Quiet Magic reduces the
 /// no-voice penalty, Subtle Magic the no-gesture penalty, and Deft Form waives
 /// both for spells in its Form; each residual penalty clamps at 0. Source:
-/// Ars Magica - Definitive Edition (Core Rules).md:9236-9245, :4822-4826, :5073-5076, :3645-3648.
+/// ArMDE:9236-9245, :4822-4826, :5073-5076, :3645-3648.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NonStandardCasting {
     /// Residual no-voice penalty (≤ 0) after Quiet Magic / Deft Form.
@@ -58,8 +58,7 @@ pub struct NonStandardCasting {
 /// CastingTotalMod (per scope). Formulaic = the score; Ritual = the score +
 /// Artes Liberales + Philosophiae; fatiguing Spontaneous = ÷2; non-fatiguing
 /// Spontaneous = ÷5. Within a Magical Focus the lower Art is added again; a
-/// Deficient Art halves the totals. Source: Ars Magica - Definitive Edition
-/// (Core Rules).md:9089 (Casting Score), :9103-9145
+/// Deficient Art halves the totals. Source: ArMDE:9089 (Casting Score), :9103-9145
 /// (cast types), :4524-4527 (Method Caster), :4399-4422 (focus), :5909-5915
 /// (Deficient halving).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -121,8 +120,7 @@ fn formulaic_casting_score(
     score
 }
 
-/// Casting Totals for every `(Technique, Form)` pair. Source: Ars Magica -
-/// Definitive Edition (Core Rules).md:9089-9145.
+/// Casting Totals for every `(Technique, Form)` pair. Source: ArMDE:9089-9145.
 pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
     let mods = in_play_mods(entity, ruleset);
     let stamina = characteristic(entity, ruleset, Characteristic::Sta);
@@ -172,8 +170,7 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 CastingScores {
                     formulaic,
                     ritual,
-                    // Weak Spontaneous Magic (Ars Magica - Definitive Edition
-                    // (Core Rules).md:7084-7086): "You may not exert yourself
+                    // Weak Spontaneous Magic (ArMDE:7084-7086): "You may not exert yourself
                     // when casting spontaneous magic, so you always divide
                     // your Casting Score by five." This does not add a second
                     // halving on top of the normal ÷2 fatiguing rate (that
@@ -235,8 +232,7 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
 /// Applies the Deficient-Art halving to a casting score. Weak Spontaneous
 /// Magic is handled separately (it fixes the spontaneous *divisor* to 5
 /// rather than halving an already-computed score — see the `spontaneous_fatiguing`
-/// field comment in [`casting_totals`]'s `variant` closure). Source: Ars
-/// Magica - Definitive Edition (Core Rules).md:5909-5915.
+/// field comment in [`casting_totals`]'s `variant` closure). Source: ArMDE:5909-5915.
 fn post(score: i32, deficient: bool) -> i32 {
     if deficient { halve(score) } else { score }
 }
@@ -253,9 +249,9 @@ struct CastingScores {
 /// A Penetration line for one known spell.
 ///
 /// Penetration Total = Casting Total − Spell Level + Penetration Ability score
-/// (Ars Magica - Definitive Edition (Core Rules).md:9159-9161). Weak Magic
+/// (ArMDE:9159-9161). Weak Magic
 /// halves the Penetration Total *after* subtracting the level
-/// (Ars Magica - Definitive Edition (Core Rules).md:7064-7067).
+/// (ArMDE:7064-7067).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PenetrationLine {
     /// The known spell's id.
@@ -280,8 +276,7 @@ pub struct PenetrationLine {
     pub weak_magic: bool,
 }
 
-/// Per-known-spell Penetration Totals. Source: Ars Magica - Definitive Edition
-/// (Core Rules).md:9159-9161, :7064-7067.
+/// Per-known-spell Penetration Totals. Source: ArMDE:9159-9161, :7064-7067.
 pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
     let mods = in_play_mods(entity, ruleset);
     let pen_ability = ability(entity, ruleset, ID_PENETRATION);
@@ -330,11 +325,10 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
 
 /// A per-Form Magic Resistance line.
 ///
-/// A magus's Magic Resistance = Form + 5 × Parma Magica (Ars Magica -
-/// Definitive Edition (Core Rules).md:9390-9398). A supernatural being uses
+/// A magus's Magic Resistance = Form + 5 × Parma Magica (ArMDE:9390-9398). A
+/// supernatural being uses
 /// its **Might Score** as a blanket resistance instead of Parma — the two do
-/// not stack; the higher is the base (Ars Magica 5e - Realms of Power -
-/// Magic.md:1472; Ars Magica - Definitive Edition (Core Rules).md:2627), and
+/// not stack; the higher is the base (RoP:M:1472; ArMDE:2627), and
 /// the Form bonus is compatible with either. Limited Magic Resistance drops
 /// the Form bonus; Flawed Parma / Weak Magic Resistance halve it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -347,16 +341,15 @@ pub struct MagicResistance {
     pub total: i32,
 }
 
-/// Per-Form Magic Resistance. Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:9390-9398, :6142-6145, :6346-6349;
-/// Ars Magica 5e - Realms of Power - Magic.md:1472 (Might grants MR = Might
+/// Per-Form Magic Resistance. Source: ArMDE:9390-9398, :6142-6145, :6346-6349;
+/// RoP:M:1472 (Might grants MR = Might
 /// Score, not stacking with Parma).
 pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistance> {
     let mods = in_play_mods(entity, ruleset);
     let parma = ability(entity, ruleset, ID_PARMA_MAGICA);
     let parma_mr = 5 * parma;
     // A Might-being's blanket resistance = its effective Might Score. Might and
-    // Parma do not stack; the higher is the base (Ars Magica 5e - Realms of Power - Magic.md:1472, Ars Magica - Definitive Edition (Core Rules).md:2627).
+    // Parma do not stack; the higher is the base (RoP:M:1472, ArMDE:2627).
     let might = crate::effective::effective_might(entity, ruleset)
         .map(|m| i32::from(m.score))
         .unwrap_or(0);

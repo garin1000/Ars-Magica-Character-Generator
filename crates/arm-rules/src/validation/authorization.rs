@@ -15,23 +15,23 @@ use crate::ability::AbilityCategory;
 /// > the first three groups, although other Virtues (and some Flaws) also grant
 /// > access to some of these Abilities.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2315, restated for the
-/// later-life block at `:2392`.
+/// Source: ArMDE:2315, restated for the
+/// later-life block at `ArMDE:2392`.
 ///
 /// **Supernatural is not checked here.** It has its own, stricter rule — access is
-/// granted per Ability rather than per category (`:2315`: "In most cases, access to
+/// granted per Ability rather than per category (`ArMDE:2315`: "In most cases, access to
 /// each Supernatural Ability is granted by a separate Virtue") — which
 /// [`validate_supernatural_abilities`] already enforces. Which categories this
 /// function gates is therefore rules *data*
 /// (`abilities.json` → `categories_requiring_virtue`), not a hardcoded list.
 ///
-/// **Magi are exempt**, per `:7151` ("Beginning characters may only purchase
+/// **Magi are exempt**, per `ArMDE:7151` ("Beginning characters may only purchase
 /// Academic Abilities if they are specifically permitted to through the purchase of
-/// a Virtue, **or if they are magi**") and `:2435`, where apprenticeship experience
+/// a Virtue, **or if they are magi**") and `ArMDE:2435`, where apprenticeship experience
 /// may be spent on "Arcane, Academic, and Martial Abilities". The exemption is read
 /// off the profile's `is_magus` flag, never a type id.
 ///
-/// The exemption is whole-character on purpose, and the other half of `:2435` —
+/// The exemption is whole-character on purpose, and the other half of `ArMDE:2435` —
 /// "magi can only spend experience points on Arcane, Academic and Martial Abilities
 /// **before** apprenticeship if they have a Virtue which allows them to do so" — is
 /// enforced elsewhere and is **not** unenforced: for a guided magus it is a property
@@ -96,7 +96,7 @@ pub(crate) fn validate_ability_authorization(
 /// > Hebrew, or Arabic score of at least 3, depending on the region of Europe you
 /// > are from. For most characters, Latin 3 is required.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:7151.
+/// Source: ArMDE:7151.
 ///
 /// A **warning**, not an error, for two reasons the passage itself gives: "normally"
 /// and "depending on the region", so a saga may legitimately differ; and which
@@ -130,7 +130,7 @@ pub(crate) fn validate_academic_language(
             ("ability", requirement.ability.to_string()),
             ("min", requirement.min_score.to_string()),
         ]);
-        // "For most characters, Latin 3 is required" (`:7151`): the check stays any
+        // "For most characters, Latin 3 is required" (`ArMDE:7151`): the check stays any
         // instance of the dead language, but the finding names the rules' exemplar.
         if let Some(exemplar) = &requirement.exemplar {
             args.insert("exemplar".to_string(), exemplar.clone());
@@ -242,7 +242,7 @@ mod tests {
     }
 
     /// "a character must have a Virtue to buy Academic, Arcane, Martial … Abilities"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2315).
+    /// (ArMDE:2315).
     #[test]
     fn a_martial_ability_without_a_virtue_is_an_error() {
         let entity = character("companion", vec![], vec![("ability.single_weapon", 3)]);
@@ -297,8 +297,8 @@ mod tests {
         assert_eq!(gate_issues(&validate(&broader, &rs())).len(), 1);
     }
 
-    /// "…or if they are magi" (`:7151`), and apprenticeship experience may go on
-    /// "Arcane, Academic, and Martial Abilities" (`:2435`). Read off the profile
+    /// "…or if they are magi" (`ArMDE:7151`), and apprenticeship experience may go on
+    /// "Arcane, Academic, and Martial Abilities" (`ArMDE:2435`). Read off the profile
     /// flag, never a type id.
     #[test]
     fn a_magus_needs_no_virtue_for_the_restricted_categories() {

@@ -57,7 +57,7 @@ fn characteristic_limit_shift(
 /// clamped at the absolute effective ceiling (+5). Great Characteristic grants no
 /// points — it only opens this headroom; the score must still be bought.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3987-3989.
+/// Source: ArMDE:3987-3989.
 pub fn characteristic_cap(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -76,7 +76,7 @@ pub fn characteristic_cap(
 /// clamped at the absolute effective floor (−5). Poor Characteristic grants no
 /// points — it only opens this headroom; the score must still be sold down.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:6598-6600.
+/// Source: ArMDE:6598-6600.
 pub fn characteristic_floor(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -128,7 +128,7 @@ pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> i32 
 /// The character's derived Size: base 0 plus every [`Effect::SizeDelta`]
 /// (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2), summed across
 /// selections. Size is not a bought Characteristic — it has no cost and no buy
-/// cap. Source: Ars Magica - Definitive Edition (Core Rules).md:3975-3978,
+/// cap. Source: ArMDE:3975-3978,
 /// :4229-4231, :5996-5998, :6767-6769.
 pub fn size(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0;
@@ -216,7 +216,7 @@ pub fn effective_characteristics(
 
 /// Aging-drop counts per Characteristic (from [`aging_drops`]), only the non-zero
 /// entries (canonical order), for the effective-score tooltip breakdown. Empty for
-/// a character whose Virtues exempt him from Characteristic aging (`:5189`).
+/// a character whose Virtues exempt him from Characteristic aging (`ArMDE:5189`).
 pub fn characteristic_aging_drops(
     entity: &Entity,
     ruleset: &Ruleset,

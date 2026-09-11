@@ -31,7 +31,7 @@ pub struct AbilityBonus {
 /// and not "Berlin Lore". A plain ability matches by id alone. Two virtues
 /// boosting the same instance stack.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4814-4816 ("You may
+/// Source: ArMDE:4814-4816 ("You may
 /// only take this Virtue once for a given Ability"; each (Area) Lore is a
 /// distinct Ability).
 pub fn ability_bonus(

@@ -108,7 +108,7 @@ pub struct Ruleset {
     /// `advancement` field name is a stable public contract.
     #[serde(default)]
     pub(crate) advancement: AdvancementTable,
-    /// The age → maximum-Ability-score band table (Ars Magica - Definitive Edition (Core Rules).md:2366-2374). Caps *Ability*
+    /// The age → maximum-Ability-score band table (ArMDE:2366-2374). Caps *Ability*
     /// scores by age, loaded from `rules/core/abilities.json` beside the Ability
     /// advancement table. Empty for a ruleset that ships no age caps. Serialized
     /// whole to the frontend; the `age_ability_caps` field name is a stable public
@@ -116,14 +116,14 @@ pub struct Ruleset {
     #[serde(default)]
     pub(crate) age_ability_caps: AgeAbilityCaps,
     /// Ability categories a character may only buy with a permitting Virtue
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2315), loaded from `rules/core/abilities.json` beside the age caps.
+    /// (ArMDE:2315), loaded from `rules/core/abilities.json` beside the age caps.
     /// Empty for a ruleset that gates none, which stands the rule down rather than
     /// letting the engine invent the list. Serialized whole to the frontend; the
     /// `categories_requiring_virtue` field name is a stable public contract.
     #[serde(default)]
     pub(crate) categories_requiring_virtue: BTreeSet<AbilityCategory>,
     /// The scholarly-language expectation Academic Abilities normally carry
-    /// (Ars Magica - Definitive Edition (Core Rules).md:7151), loaded beside the categories above. `None` for a ruleset that
+    /// (ArMDE:7151), loaded beside the categories above. `None` for a ruleset that
     /// states none. Serialized whole to the frontend; the `scholarly_language` field
     /// name is a stable public contract.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -584,16 +584,16 @@ struct AbilitiesFile {
     advancement: AdvancementTable,
     #[serde(default)]
     abilities: Vec<Ability>,
-    /// The age → maximum-Ability-score band table (Ars Magica - Definitive Edition (Core Rules).md:2366-2374). Caps *Ability*
+    /// The age → maximum-Ability-score band table (ArMDE:2366-2374). Caps *Ability*
     /// scores by age, so it lives beside the Ability advancement table.
     #[serde(default)]
     age_ability_caps: AgeAbilityCaps,
     /// Ability categories a character may only buy with a permitting Virtue
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2315). Data, not a hardcoded list, so a ruleset that gates a different
+    /// (ArMDE:2315). Data, not a hardcoded list, so a ruleset that gates a different
     /// set says so in its own file; empty means the rule is not enforced.
     #[serde(default)]
     categories_requiring_virtue: BTreeSet<AbilityCategory>,
-    /// The scholarly-language expectation for Academic Abilities (Ars Magica - Definitive Edition (Core Rules).md:7151), or
+    /// The scholarly-language expectation for Academic Abilities (ArMDE:7151), or
     /// absent for a ruleset that states none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     scholarly_language: Option<ScholarlyLanguageRequirement>,
@@ -606,14 +606,13 @@ struct AbilitiesFile {
 ///
 /// Data rather than four hardcoded ids: which language qualifies is regional, so the
 /// ruleset names the *ability* (the parameterized dead language) and the minimum
-/// score, and any instance of it satisfies the expectation. Source: Ars Magica -
-/// Definitive Edition (Core Rules).md:7151.
+/// score, and any instance of it satisfies the expectation. Source: ArMDE:7151.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ScholarlyLanguageRequirement {
     /// The ability a scholarly language is an instance of.
     pub ability: Id,
     /// One example the rules themselves name — "For most characters, Latin 3 is
-    /// required" (`:7151`) — as a language-neutral slug, so a UI can say which
+    /// required" (`ArMDE:7151`) — as a language-neutral slug, so a UI can say which
     /// language the passage means beside the wider check the engine enforces.
     ///
     /// A **label key, not a `ref`**: see [`crate::AbilityRequirement::exemplar`].
@@ -689,7 +688,7 @@ const ENGINE_REQUIRED_ARTS: [&str; 2] = [ID_CORPUS, ID_CREO];
 /// V/F category slug the engine dereferences by hardcoded string:
 /// `validation/scores.rs` keys the Major-Personality-Flaw rule (each Major
 /// Personality Flaw permits one personality trait with `|value|` up to ±6;
-/// Ars Magica - Definitive Edition (Core Rules).md:2500-2503, :2820) off this exact category. Engine invariant like
+/// ArMDE:2500-2503, :2820) off this exact category. Engine invariant like
 /// [`ENGINE_REQUIRED_ABILITIES`] — a ruleset that renamed or dropped it would make
 /// the engine silently count zero Major Personality Flaws and wrongly reject every
 /// ±6 trait, so [`Ruleset::validate_integrity`] enforces its presence for any
@@ -1281,8 +1280,7 @@ mod tests {
         assert!(format!("{err:?}").contains("spell"), "{err:?}");
     }
 
-    // --- Ritual creation-legality (5d). Source: Ars Magica - Definitive
-    //     Edition (Core Rules).md:12279-12295, :12055,
+    // --- Ritual creation-legality (5d). Source: ArMDE:12279-12295, :12055,
     //     :12077, :12039/:12115. ---
 
     #[test]
@@ -1340,7 +1338,7 @@ mod tests {
     }
 
     /// Vision target is Boundary-level in difficulty but, unlike Boundary, does
-    /// NOT require Ritual (Ars Magica - Definitive Edition (Core Rules).md:12099).
+    /// NOT require Ritual (ArMDE:12099).
     #[test]
     fn vision_target_does_not_require_ritual() {
         let rs = ruleset_with_spells(
@@ -3051,7 +3049,7 @@ mod tests {
     /// The Aging Roll table answers *every* total, so its rows must tile the
     /// number line from the first one upwards: a gap would leave a total with no
     /// result at all, an overlap would give it two, and without an open-ended top
-    /// row ("22+", Ars Magica - Definitive Edition (Core Rules).md:16611) every high total would fall off the end.
+    /// row ("22+", ArMDE:16611) every high total would fall off the end.
     ///
     /// The check is contiguity, deliberately **not** "must cover 10..=21" — the
     /// shipped table's own numbers are data, and a ruleset that bands its rows
@@ -3150,7 +3148,7 @@ mod tests {
         );
     }
 
-    /// The Longevity Ritual clamp of `:16575` says what it is *for*: a young
+    /// The Longevity Ritual clamp of `ArMDE:16575` says what it is *for*: a young
     /// ritual-bearer "is at no risk of actually aging before any other
     /// characters". That holds if and only if the clamped ceiling sits strictly
     /// below the first row that costs Aging Points — so the 9-against-10 the
@@ -3194,7 +3192,7 @@ mod tests {
     /// badly. Plus the duplicate-id sweep the Living Conditions table joins.
     #[test]
     fn an_apparent_age_threshold_above_the_first_points_row_fails_the_load() {
-        // `:16577` gives exactly one exception to "apparent age increases":
+        // `ArMDE:16577` gives exactly one exception to "apparent age increases":
         // particularly low rolls. So no row that costs Aging Points may sit below
         // the threshold, or a total could age a character without his looking a day
         // older.
@@ -3261,7 +3259,7 @@ mod tests {
             "should name the row that names no Characteristic: {err}"
         );
 
-        // "1 Aging Point in Str and Sta" (`:16607`) gives each named Characteristic
+        // "1 Aging Point in Str and Sta" (`ArMDE:16607`) gives each named Characteristic
         // a point, so naming one twice is a transcription slip that would silently
         // double it.
         let err = aging_outcomes_ruleset(
@@ -3371,8 +3369,8 @@ mod tests {
     }"#;
 
     /// A well-formed Crisis Table in miniature: a bedridden row open below
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16626), then two illness rows climbing together, the last of
-    /// them open above and offering no Stamina roll at all (`:16632`).
+    /// (ArMDE:16626), then two illness rows climbing together, the last of
+    /// them open above and offering no Stamina roll at all (`ArMDE:16632`).
     const CRISIS_ROWS: &str = r#"
       { "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
       { "id": "crisis.minor", "min": 9, "max": 14,
@@ -3394,8 +3392,8 @@ mod tests {
 
     /// The Crisis Table answers *every* crisis total, so its rows must tile the
     /// number line between two open ends: the row open below ("8 or less",
-    /// Ars Magica - Definitive Edition (Core Rules).md:16626) comes first and only it may omit its minimum, the row
-    /// open above ("19+", `:16632`) comes last and only it may omit its maximum,
+    /// ArMDE:16626) comes first and only it may omit its minimum, the row
+    /// open above ("19+", `ArMDE:16632`) comes last and only it may omit its maximum,
     /// and between them no total may land on two rows or on none.
     ///
     /// The check is contiguity, deliberately **not** "must cover 15..=19": the
@@ -3513,7 +3511,7 @@ mod tests {
     }
 
     /// "The level of spell required depends on the severity of the crisis, as noted
-    /// on the table." (Ars Magica - Definitive Edition (Core Rules).md:16638) — the illness rows are one ladder, so
+    /// on the table." (ArMDE:16638) — the illness rows are one ladder, so
     /// severity, required Ritual level and Ease Factor must all climb together
     /// down the table, and the bedridden rows (which have no severity at all) must
     /// sit in front of them.
@@ -3588,7 +3586,7 @@ mod tests {
             "should name the two rows whose Ease Factors go backwards: {msg}"
         );
 
-        // Only the most severe illness may forgo the Stamina roll (`:16632`); a
+        // Only the most severe illness may forgo the Stamina roll (`ArMDE:16632`); a
         // milder row with no Ease Factor would be unsurvivable without magic while
         // a worse one was not.
         let err = crisis_rows_ruleset(
@@ -3625,7 +3623,7 @@ mod tests {
         );
     }
 
-    /// The attending doctor's "Int + Medicine roll" (Ars Magica - Definitive Edition (Core Rules).md:16634) names an
+    /// The attending doctor's "Int + Medicine roll" (ArMDE:16634) names an
     /// Ability by id, so a typo there is a referential-integrity failure like every
     /// other ref in the rules data — the survival read-out would otherwise quietly
     /// find no Medicine score to add.
@@ -3659,7 +3657,7 @@ mod tests {
     }
 
     /// "Characters with a Decrepitude score of 4 are extremely frail … Characters
-    /// with a Decrepitude score of 5 are bedridden and will die" (`:16617`) — two
+    /// with a Decrepitude score of 5 are bedridden and will die" (`ArMDE:16617`) — two
     /// thresholds on one ascending track, so the frail one must be reached first.
     /// Transposed, a character would be dead before he ever turned frail.
     #[test]
@@ -3844,7 +3842,7 @@ mod tests {
     }
 
     /// The apprenticeship block names Abilities ("Parma Magica 1, Magic Theory 1,
-    /// Latin 1", Ars Magica - Definitive Edition (Core Rules).md:2437), so a typo there would silently drop a
+    /// Latin 1", ArMDE:2437), so a typo there would silently drop a
     /// requirement no magus is then held to — a load-time referential failure like
     /// every other ref in the rules data.
     #[test]
@@ -3907,13 +3905,13 @@ mod tests {
     }
 
     /// The recommended Abilities carry their own total — "Total Cost: 90 experience
-    /// points" (Ars Magica - Definitive Edition (Core Rules).md:2461) — so the list and the total must agree off the
+    /// points" (ArMDE:2461) — so the list and the total must agree off the
     /// advancement table. This is the **trust gate on transcribed rulebook data**,
     /// the same one `validate_childhood_packages` applies to childhood's 45 and 75: a
     /// mistyped score fails the load instead of shipping a recommendation that costs
     /// something the rulebook never says.
     ///
-    /// The *minimum* set is deliberately not priced — `:2437` states no total, so
+    /// The *minimum* set is deliberately not priced — `ArMDE:2437` states no total, so
     /// such a check could only compare the engine to itself.
     #[test]
     fn recommended_apprenticeship_abilities_must_price_to_their_total() {
@@ -3961,7 +3959,7 @@ mod tests {
 
     /// A ruleset that declares Hermetic magi and ships life-stage rules must declare
     /// the apprenticeship block, because a magus's later life runs only *until*
-    /// apprenticeship (Ars Magica - Definitive Edition (Core Rules).md:2214, :2364). Without the block the engine would
+    /// apprenticeship (ArMDE:2214, :2364). Without the block the engine would
     /// cost a magus exactly as it costs a companion — every year to its age, funding
     /// Arts out of a child's experience — so this is an engine invariant enforced
     /// where the limit actually lives: in the data, at load, not on each character.
@@ -4076,7 +4074,7 @@ mod tests {
     }
 
     /// A season of lab work costs a magus "10 points from the yearly 30 experience
-    /// points" (Ars Magica - Definitive Edition (Core Rules).md:2482), so a cost of nothing is a broken file: every
+    /// points" (ArMDE:2482), so a cost of nothing is a broken file: every
     /// season would be free and the whole passage would stop applying.
     #[test]
     fn a_post_apprenticeship_lab_season_must_cost_something() {
@@ -4102,7 +4100,7 @@ mod tests {
     }
 
     /// The charged seasons must exhaust the year exactly. This is not a tidiness
-    /// check, it **is** `:2482`: the deduction runs "to a minimum of 0 if three or
+    /// check, it **is** `ArMDE:2482`: the deduction runs "to a minimum of 0 if three or
     /// four seasons are spent on lab work", so three seasons at 10 have to cancel
     /// the yearly 30 — no more, no less. The trust gate on three hand-transcribed
     /// numbers, the same idiom as re-pricing the apprenticeship's `recommended_xp`.
@@ -4138,7 +4136,7 @@ mod tests {
     /// A ruleset that declares Hermetic magi and ships life-stage rules must declare
     /// the post-apprenticeship block, exactly as it must declare the apprenticeship
     /// one. Its stored Gauntlet age already ends the magus's later life
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2364); without this block the years after it would grant
+    /// (ArMDE:2364); without this block the years after it would grant
     /// nothing back, so the profile would simply lose them.
     ///
     /// Gated like [`Ruleset::validate_apprenticeship_refs`]: only an `is_magus`
@@ -4256,10 +4254,10 @@ mod tests {
     }
 
     /// Abilities for the Sample Childhood fixtures: the closed spread list of
-    /// Ars Magica - Definitive Edition (Core Rules).md:2378 in miniature (one parameterized `(Area) Lore`, one
+    /// ArMDE:2378 in miniature (one parameterized `(Area) Lore`, one
     /// parameterized `(Living Language)`, three plain ones), plus a known ability
     /// the spread may NOT buy, and the canonical "ABILITY To Buy" prices for
-    /// scores 1-5 (Ars Magica - Definitive Edition (Core Rules).md:2406-2427).
+    /// scores 1-5 (ArMDE:2406-2427).
     const CHILDHOOD_ABILITIES: &str = r#"{
       "advancement": [
         { "score": 1, "total_xp": 5 },
@@ -4279,7 +4277,7 @@ mod tests {
     }"#;
 
     /// The two childhood blocks a package is a shortcut for: 75 in the native
-    /// language, 45 across the spread list (Ars Magica - Definitive Edition (Core Rules).md:2378).
+    /// language, 45 across the spread list (ArMDE:2378).
     const CHILDHOOD_LIFE_STAGES: &str = r#"{
       "childhood": {
         "years": 5,
@@ -4506,7 +4504,7 @@ mod tests {
         );
     }
 
-    /// The spread is a closed list (Ars Magica - Definitive Edition (Core Rules).md:2378), so a package naming an
+    /// The spread is a closed list (ArMDE:2378), so a package naming an
     /// Ability outside it would smuggle in experience the block may not spend.
     #[test]
     fn a_spread_entry_must_be_on_the_childhood_spread_list() {
@@ -5366,7 +5364,7 @@ mod tests {
     /// Row 19 "taken as": a `category`-domain parameter's `values` must be a
     /// SUBSET of the declaring item's own `categories`, since the whole point
     /// of the domain is "one of the categories THIS item already carries"
-    /// (Sufi's `taken_as`, `:5083`). A value the item's own descriptor never
+    /// (Sufi's `taken_as`, `ArMDE:5083`). A value the item's own descriptor never
     /// lists is an authoring slip, not a value the picker could ever offer.
     #[test]
     fn category_domain_value_outside_the_items_own_categories_fails_integrity() {
@@ -5389,7 +5387,7 @@ mod tests {
     }
 
     /// Row 19 "taken as": every item declaring a `category`-domain parameter
-    /// must cap `max_total` at 1 — `:5083` offers a choice between two
+    /// must cap `max_total` at 1 — `ArMDE:5083` offers a choice between two
     /// READINGS of one item, not two items, and `taken_as` sitting inside the
     /// `(item_ref, params)` duplicate key means a missing cap would let both
     /// readings be held at once.

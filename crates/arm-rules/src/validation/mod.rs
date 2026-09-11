@@ -321,16 +321,16 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_TOO_MANY_MINOR_FLAWS: &'static str = "too_many_minor_flaws";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: more than half a
-    /// character's Virtue points are Tainted (Ars Magica - Definitive Edition (Core Rules).md:2998-3002).
+    /// character's Virtue points are Tainted (ArMDE:2998-3002).
     pub const CODE_TOO_MANY_TAINTED_VIRTUES: &'static str = "too_many_tainted_virtues";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: more than half a
-    /// character's Flaw points are Tainted (Ars Magica - Definitive Edition (Core Rules).md:2998-3002).
+    /// character's Flaw points are Tainted (ArMDE:2998-3002).
     pub const CODE_TOO_MANY_TAINTED_FLAWS: &'static str = "too_many_tainted_flaws";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: this item's copies
     /// account for more than the share of its own kind's point total that its
     /// descriptor allows — Demonic Might / Demonic Powers, "no more than half of
     /// the character's total Virtues"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:3665, :3669).
+    /// (ArMDE:3665, :3669).
     pub const CODE_TOO_LARGE_SHARE: &'static str = "too_large_share";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_PREREQ_NOT_MET: &'static str = "prereq_not_met";
@@ -357,7 +357,7 @@ impl ValidationIssue {
     /// [`ParameterDef::at_most_one_of`](crate::types::ParameterDef::at_most_one_of)
     /// group allows only one of — Folk Magic's "a character cannot have access
     /// to both the Divine and Infernal Realms"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:3919). The excluded
+    /// (ArMDE:3919). The excluded
     /// values live in the rules data, never in Rust.
     ///
     /// The message names the item, the parameter and how many group members are
@@ -420,7 +420,7 @@ impl ValidationIssue {
     /// [`ParameterDef::require_possessed`](crate::types::ParameterDef::require_possessed)
     /// names a point item the entity does not hold. False Power is taken "once
     /// for each appropriate Supernatural Virtue that the character possesses"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:6096), so a target
+    /// (ArMDE:6096), so a target
     /// nobody holds is a Flaw attached to nothing.
     ///
     /// Distinct from
@@ -431,7 +431,7 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: two selections name
     /// the same possessed target under a
     /// [`ParameterDef::require_possessed`](crate::types::ParameterDef::require_possessed)
-    /// parameter — "**once** for each appropriate Supernatural Virtue" (`:6096`).
+    /// parameter — "**once** for each appropriate Supernatural Virtue" (`ArMDE:6096`).
     ///
     /// Not expressible as [`crate::types::PointItem::max_per_target`], whose
     /// duplicate key is `(item_ref, params)`: `flaw.false_power` and
@@ -442,7 +442,7 @@ impl ValidationIssue {
     /// [`ParameterDef::require_power`](crate::types::ParameterDef::require_power)
     /// names a supernatural power the being does not hold. Restricted Power, Slow
     /// Power and Variable Power each modify "one of the character's supernatural
-    /// powers" (Ars Magica - Definitive Edition (Core Rules).md:6689, :6761,
+    /// powers" (ArMDE:6689, :6761,
     /// :5205), so a name matching no `Entity::powers` entry restricts nothing.
     ///
     /// The free-text sibling of [`Self::CODE_PARAM_TARGET_NOT_POSSESSED`]: same
@@ -469,7 +469,7 @@ impl ValidationIssue {
     /// Deliberately **factual**: `restricted_xp_unspent` may say the points are
     /// wasted because childhood's blocks are spent-or-lost, but the Core Rules make
     /// no such statement about the general pool or the apprenticeship's 240 points
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2215). So this reports
+    /// (ArMDE:2215). So this reports
     /// "N of M unspent" and asserts no rule beyond the count.
     pub const CODE_GENERAL_XP_UNSPENT: &'static str = "general_xp_unspent";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an Ability whose category
@@ -495,13 +495,13 @@ impl ValidationIssue {
         "life_stage_age_before_childhood";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus is younger than
     /// childhood plus apprenticeship, so it cannot yet stand at its Gauntlet
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2435). The magus-specific counterpart of
+    /// (ArMDE:2435). The magus-specific counterpart of
     /// [`ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD`]; one wrong age
     /// produces one of the two, never both.
     pub const CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET: &'static str = "life_stage_age_before_gauntlet";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the stored Gauntlet age is
     /// later than the character's own age, putting the Gauntlet in its future
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2216). [`crate::life_stage::LifeStageRules::budget`] clamps the
+    /// (ArMDE:2216). [`crate::life_stage::LifeStageRules::budget`] clamps the
     /// value to the age so no figure underflows; this names the fault the clamp
     /// would otherwise absorb in silence.
     pub const CODE_LIFE_STAGE_GAUNTLET_AGE_AFTER_AGE: &'static str =
@@ -509,7 +509,7 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: more lab seasons are
     /// charged against the post-Gauntlet years than those years can hold. Only three
     /// seasons a year cost anything — the deduction runs "to a minimum of 0 if three
-    /// or four seasons are spent on lab work" (Ars Magica - Definitive Edition (Core Rules).md:2482) — so the ceiling
+    /// or four seasons are spent on lab work" (ArMDE:2482) — so the ceiling
     /// is `max_charged_lab_seasons_per_year × post_gauntlet_years`.
     /// [`crate::life_stage::LifeStageRules::budget`] caps the total there, making the
     /// surplus free rather than an error of its own.
@@ -527,13 +527,13 @@ impl ValidationIssue {
     /// because the two faults differ: over the ceiling, the player has miscounted how
     /// many seasons a year may be charged for; with no years, the per-year rule is
     /// beside the point and the missing span is the whole story. The same rule
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2482) produces both.
+    /// (ArMDE:2482) produces both.
     pub const CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS: &'static str =
         "life_stage_lab_seasons_without_years";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: more of a magus's yearly
     /// post-Gauntlet points are taken as levels of spells than those years granted.
     /// "Each point can be an experience point in an Art or Ability or one level of
-    /// spell" (Ars Magica - Definitive Edition (Core Rules).md:2471) splits points that exist;
+    /// spell" (ArMDE:2471) splits points that exist;
     /// [`crate::life_stage::LifeStageRules::budget`] holds the stored split to them.
     /// Filed under `abilities`, the phase whose input surface owns the value, not
     /// `spells`, which merely spends the budget it feeds.
@@ -541,7 +541,7 @@ impl ValidationIssue {
         "life_stage_spell_level_split_exceeds_points";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a life-stage plan with no
     /// age, so the later-life block — the one that counts years — cannot be earned.
-    /// Childhood is granted regardless (Ars Magica - Definitive Edition (Core Rules).md:2378), which is why this is a
+    /// Childhood is granted regardless (ArMDE:2378), which is why this is a
     /// finding of its own rather than the absence of a budget.
     pub const CODE_LIFE_STAGE_AGE_UNSET: &'static str = "life_stage_age_unset";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: no native language chosen,
@@ -556,11 +556,11 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus falls short of an
     /// Ability the Order demands — "Magi must have the following minimum Abilities:
     /// Parma Magica 1, Magic Theory 1, Latin 1. Characters with lower scores would not
-    /// be admitted to the Order." (Ars Magica - Definitive Edition (Core Rules).md:2437.) One finding per unmet
+    /// be admitted to the Order." (ArMDE:2437.) One finding per unmet
     /// requirement, and unconditional on how the experience was funded.
     pub const CODE_MAGUS_MINIMUM_ABILITY: &'static str = "magus_minimum_ability";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a magus falls short of one
-    /// of the `#### Hermetic Magi Recommended Minimum Abilities` (Ars Magica - Definitive Edition (Core Rules).md:2451-2461)
+    /// of the `#### Hermetic Magi Recommended Minimum Abilities` (ArMDE:2451-2461)
     /// — advice about a weak magus, not an illegal one.
     pub const CODE_MAGUS_RECOMMENDED_ABILITY: &'static str = "magus_recommended_ability";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the Sample Childhood
@@ -574,7 +574,7 @@ impl ValidationIssue {
     pub const CODE_CHILDHOOD_SLOT_UNFILLED: &'static str = "childhood_slot_unfilled";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Sample Childhood
     /// package's language slot was answered with the character's own native
-    /// language, which the childhood spread may not buy (Ars Magica - Definitive Edition (Core Rules).md:2378). A
+    /// language, which the childhood spread may not buy (ArMDE:2378). A
     /// **command-input** code, never a [`validate`] finding.
     pub const CODE_CHILDHOOD_SLOT_IS_NATIVE_LANGUAGE: &'static str =
         "childhood_slot_is_native_language";
@@ -620,7 +620,7 @@ impl ValidationIssue {
     /// chosen level yet, so it is excluded from the spell-levels budget.
     pub const CODE_SPELL_LEVEL_UNRESOLVED: &'static str = "spell_level_unresolved";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the sum of the chosen
-    /// spells' levels exceeds the magus's spell-levels budget (Ars Magica - Definitive Edition (Core Rules).md:2215-2216).
+    /// spells' levels exceeds the magus's spell-levels budget (ArMDE:2215-2216).
     pub const CODE_OVER_SPELL_LEVELS: &'static str = "over_spell_levels";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the magus's spell-levels
     /// budget still holds levels — the underspend counterpart of
@@ -633,104 +633,104 @@ impl ValidationIssue {
     ///
     /// Deliberately **factual**, for the same reason as
     /// [`ValidationIssue::CODE_GENERAL_XP_UNSPENT`]: the Core Rules grant "120
-    /// levels of spells" (Ars Magica - Definitive Edition (Core Rules).md:2215)
+    /// levels of spells" (ArMDE:2215)
     /// and say nothing anywhere about unused levels being lost, so the message
     /// counts and claims nothing.
     pub const CODE_SPELL_LEVELS_UNSPENT: &'static str = "spell_levels_unspent";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a spell's level exceeds
-    /// Technique + Form + Intelligence + Magic Theory + 3 (Ars Magica - Definitive Edition (Core Rules).md:2465).
+    /// Technique + Form + Intelligence + Magic Theory + 3 (ArMDE:2465).
     pub const CODE_SPELL_LEVEL_EXCEEDS_CAP: &'static str = "spell_level_exceeds_cap";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a spell's resolved learned
     /// level violates the ritual level bounds — a ritual learned below level 20, or a
     /// non-ritual learned above level 50
-    /// (Ars Magica - Definitive Edition (Core Rules).md:12279-12295, :12285 —
+    /// (ArMDE:12279-12295, :12285 —
     /// "Formulaic and Spontaneous spells may not have a level greater than 50";
-    /// not `:12283`, the unrelated Year-duration restriction).
+    /// not `ArMDE:12283`, the unrelated Year-duration restriction).
     pub const CODE_SPELL_RITUAL_LEGALITY: &'static str = "spell_ritual_legality";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen Spell Mastery
     /// special ability id does not resolve against the mastery-ability catalogue.
     pub const CODE_UNKNOWN_MASTERY_ABILITY: &'static str = "unknown_mastery_ability";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the number of Spell Mastery
     /// special abilities chosen for a spell exceeds its effective mastery score —
-    /// one may be chosen per mastery level (Ars Magica - Definitive Edition (Core Rules).md:9524-9526).
+    /// one may be chosen per mastery level (ArMDE:9524-9526).
     pub const CODE_TOO_MANY_MASTERY_ABILITIES: &'static str = "too_many_mastery_abilities";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a non-repeatable Spell
     /// Mastery special ability is chosen more than once for the same spell. Only
-    /// Precise, Quick, and Quiet Casting may repeat (Ars Magica - Definitive Edition (Core Rules).md:9572, :9576, :9580).
+    /// Precise, Quick, and Quiet Casting may repeat (ArMDE:9572, :9576, :9580).
     pub const CODE_DUPLICATE_MASTERY_ABILITY: &'static str = "duplicate_mastery_ability";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a bought Ability exceeds
-    /// the character's age-based maximum (Ars Magica - Definitive Edition (Core Rules).md:2366-2376; Affinity raises it +2).
+    /// the character's age-based maximum (ArMDE:2366-2376; Affinity raises it +2).
     pub const CODE_ABILITY_ABOVE_AGE_CAP: &'static str = "ability_above_age_cap";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Supernatural Ability is
-    /// held with no granting Virtue and no free Gift slot (Ars Magica - Definitive Edition (Core Rules).md:2874).
+    /// held with no granting Virtue and no free Gift slot (ArMDE:2874).
     pub const CODE_SUPERNATURAL_ABILITY_REQUIRES_VIRTUE: &'static str =
         "supernatural_ability_requires_virtue";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Personality Trait is
     /// outside ±3 (or beyond the ±6 allowance a Major Personality Flaw grants).
     pub const CODE_PERSONALITY_TRAIT_OUT_OF_RANGE: &'static str = "personality_trait_out_of_range";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a starting Reputation is
-    /// not backed by a granting Virtue/Flaw (Ars Magica - Definitive Edition (Core Rules).md:2514).
+    /// not backed by a granting Virtue/Flaw (ArMDE:2514).
     pub const CODE_REPUTATION_NOT_GRANTED: &'static str = "reputation_not_granted";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the total level of the
     /// character's enchanted devices exceeds the item-level budget the character's
-    /// Virtues grant (Magic Items +25, Redcap 50; Ars Magica - Definitive Edition (Core Rules).md:4347-4349, :4842-4846).
+    /// Virtues grant (Magic Items +25, Redcap 50; ArMDE:4347-4349, :4842-4846).
     pub const CODE_OVER_ITEM_LEVEL: &'static str = "over_item_level";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the total level of the
     /// being's supernatural powers exceeds the power-levels budget its Might
-    /// Virtues grant (Demonic Blood 30, Demonic Powers +20; Ars Magica 5e - Realms of Power - The Infernal.md:4122,
+    /// Virtues grant (Demonic Blood 30, Demonic Powers +20; RoP:I:4122,
     /// :4142). A power with no granting Virtue (budget 0) is flagged, mirroring
     /// enchanted devices.
     pub const CODE_OVER_POWER_LEVELS: &'static str = "over_power_levels";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the entity's base Might
     /// Realm disagrees with the Realm its Might Virtues grant (a supernatural being
-    /// belongs to exactly one Realm; Ars Magica - Definitive Edition (Core Rules).md:2623-2625).
+    /// belongs to exactly one Realm; ArMDE:2623-2625).
     pub const CODE_MIGHT_REALM_MISMATCH: &'static str = "might_realm_mismatch";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a Characteristic's
     /// completed aging/Decrepitude reductions would push its effective score below
     /// the rules effective minimum (−5). Advisory — the engine still clamps the
-    /// derived score at the floor (Ars Magica - Definitive Edition (Core Rules).md:16579).
+    /// derived score at the floor (ArMDE:16579).
     pub const CODE_EXCESSIVE_AGING_REDUCTION: &'static str = "excessive_aging_reduction";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a character over 35 has
     /// no aging rolls recorded, and "a character over the age of 35 must make aging
-    /// rolls ... before the game begins" (Ars Magica - Definitive Edition (Core Rules).md:2232). Advisory: the rolls happen at
+    /// rolls ... before the game begins" (ArMDE:2232). Advisory: the rolls happen at
     /// the table, so the engine can only say they are owed.
     pub const CODE_AGING_ROLLS_PENDING: &'static str = "aging_rolls_pending";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen Living Condition
-    /// resolves against no row of the Living Conditions table (Ars Magica - Definitive Edition (Core Rules).md:16581-16594).
+    /// resolves against no row of the Living Conditions table (ArMDE:16581-16594).
     /// The modifier computation skips such an id, so without this the aging total
     /// would be silently wrong.
     pub const CODE_UNKNOWN_LIVING_CONDITION: &'static str = "unknown_living_condition";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: two or more chosen Living
     /// Conditions are mutually exclusive. Only the asterisked rows "are cumulative
-    /// with each other" (Ars Magica - Definitive Edition (Core Rules).md:16594); the rest describe one situation each.
+    /// with each other" (ArMDE:16594); the rest describe one situation each.
     pub const CODE_LIVING_CONDITIONS_CONFLICT: &'static str = "living_conditions_conflict";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the apparent age exceeds
     /// the actual age, which aging cannot produce — it advances the apparent age by
-    /// at most one year per year (Ars Magica - Definitive Edition (Core Rules).md:16577). Advisory, because `:5189` puts it as
+    /// at most one year per year (ArMDE:16577). Advisory, because `ArMDE:5189` puts it as
     /// a *should* with an explicit escape for a character who is not basically
     /// human.
     pub const CODE_APPARENT_AGE_ABOVE_AGE: &'static str = "apparent_age_above_age";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an aging roll was
     /// submitted against a ruleset shipping no aging table, so there is nothing to
-    /// resolve it on (Ars Magica - Definitive Edition (Core Rules).md:16597-16611). A **command-input** finding: see
+    /// resolve it on (ArMDE:16597-16611). A **command-input** finding: see
     /// [`aging_error_issue`](crate::validation::aging_error_issue).
     pub const CODE_AGING_RULES_MISSING: &'static str = "aging_rules_missing";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the aging log already
     /// records this age, and applying it twice would charge the character twice for
-    /// one roll (Ars Magica - Definitive Edition (Core Rules).md:16565 — one roll a year).
+    /// one roll (ArMDE:16565 — one roll a year).
     pub const CODE_AGING_YEAR_ALREADY_RECORDED: &'static str = "aging_year_already_recorded";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the points the player
     /// distributed do not sum to the points the row awarded. The count is the
-    /// table's, not the player's (Ars Magica - Definitive Edition (Core Rules).md:16602, :16611).
+    /// table's, not the player's (ArMDE:16602, :16611).
     pub const CODE_AGING_DISTRIBUTION_MISMATCH: &'static str = "aging_distribution_mismatch";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the row names its own
-    /// Characteristics (Ars Magica - Definitive Edition (Core Rules).md:16603-16610), or awards nothing, so there was nothing
+    /// Characteristics (ArMDE:16603-16610), or awards nothing, so there was nothing
     /// for the player to place — yet points were placed.
     pub const CODE_AGING_DISTRIBUTION_NOT_OPEN: &'static str = "aging_distribution_not_open";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the row asks for enough
-    /// Aging Points to reach the next Decrepitude level (Ars Magica - Definitive Edition (Core Rules).md:16602) and the
+    /// Aging Points to reach the next Decrepitude level (ArMDE:16602) and the
     /// advancement curve cannot price that level — Decrepitude "increases as an
-    /// Ability" (Ars Magica - Definitive Edition (Core Rules).md:16617) and the table tops out. Reported rather than silently
+    /// Ability" (ArMDE:16617) and the table tops out. Reported rather than silently
     /// costed at zero.
     pub const CODE_AGING_AWARD_UNPRICEABLE: &'static str = "aging_award_unpriceable";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: no aging log entry records
@@ -739,32 +739,32 @@ impl ValidationIssue {
     pub const CODE_AGING_YEAR_NOT_RECORDED: &'static str = "aging_year_not_recorded";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an equipment slot names an
     /// id that does not resolve to any catalogue weapon, shield, or armor
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16944-17011).
+    /// (ArMDE:16944-17011).
     pub const CODE_UNKNOWN_EQUIPMENT: &'static str = "unknown_equipment";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: an equipped weapon or
     /// shield's minimum-Strength requirement exceeds the character's Strength
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16997). Advisory — the character may still carry/wield it, at the
+    /// (ArMDE:16997). Advisory — the character may still carry/wield it, at the
     /// storyguide's discretion, so this never blocks.
     pub const CODE_EQUIPMENT_MIN_STRENGTH: &'static str = "equipment_min_strength";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a shield is equipped
     /// alongside only two-handed weapon(s), so its Attack/Defense modifiers are
     /// dropped (a two-handed weapon cannot be used with a shield). Advisory — the
     /// shield still counts toward Load, and the character may carry it, so this
-    /// never blocks (Ars Magica - Definitive Edition (Core Rules).md:7494, :17063, :16975).
+    /// never blocks (ArMDE:7494, :17063, :16975).
     pub const CODE_SHIELD_WITH_TWO_HANDED_WEAPON: &'static str = "shield_with_two_handed_weapon";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a non-magus owes more
-    /// Minor Flaws from Warping than it has chosen fills for (Ars Magica - Definitive Edition (Core Rules).md:16553-16557).
+    /// Minor Flaws from Warping than it has chosen fills for (ArMDE:16553-16557).
     pub const CODE_WARPING_OWED_MINOR_FLAWS: &'static str = "warping_owed_minor_flaws";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a non-magus owes a
-    /// supernatural Minor Virtue from Warping it has not chosen yet (Ars Magica - Definitive Edition (Core Rules).md:16559).
+    /// supernatural Minor Virtue from Warping it has not chosen yet (ArMDE:16559).
     pub const CODE_WARPING_OWED_SUPERNATURAL_VIRTUES: &'static str =
         "warping_owed_supernatural_virtues";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a non-magus owes more
-    /// Major Flaws from Warping than it has chosen fills for (Ars Magica - Definitive Edition (Core Rules).md:16561).
+    /// Major Flaws from Warping than it has chosen fills for (ArMDE:16561).
     pub const CODE_WARPING_OWED_MAJOR_FLAWS: &'static str = "warping_owed_major_flaws";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen warping-owed
     /// fill does not match the owed slot's kind/magnitude/category (or its id does
-    /// not resolve) — e.g. a Major Flaw where a Minor is owed (Ars Magica - Definitive Edition (Core Rules).md:16553-16561).
+    /// not resolve) — e.g. a Major Flaw where a Minor is owed (ArMDE:16553-16561).
     pub const CODE_WARPING_FILL_CONSTRAINT: &'static str = "warping_fill_constraint";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen warping-owed
     /// fill carries an [`crate::types::Effect::WarpingGrant`] and is ineligible —
@@ -1467,7 +1467,7 @@ mod tests {
     ]"#;
 
     /// A magus profile capping Major Hermetic Virtues at 1 (hard), mirroring the
-    /// shipped `≤1 Major Hermetic Virtue` rule (Ars Magica - Definitive Edition (Core Rules).md:2855-2861).
+    /// shipped `≤1 Major Hermetic Virtue` rule (ArMDE:2855-2861).
     const CAP_MAGUS_TYPE: &str = r#"[{
         "id": "magus",
         "budget": { "virtue_points": 30, "flaw_points": 30,
@@ -1511,7 +1511,7 @@ mod tests {
         );
     }
 
-    // --- Tainted V/F half-budget point cap (Ars Magica - Definitive Edition (Core Rules).md:2998-3002) ---------
+    // --- Tainted V/F half-budget point cap (ArMDE:2998-3002) ---------
 
     /// Items carrying the Tainted flag: two Major tainted virtues (3 pts each),
     /// an untainted Major virtue, and two Major tainted flaws. The cap is
@@ -1607,7 +1607,7 @@ mod tests {
         );
     }
 
-    // --- Share-of-kind ratio cap (Ars Magica - Definitive Edition (Core Rules).md:3665, :3669) ---
+    // --- Share-of-kind ratio cap (ArMDE:3665, :3669) ---
 
     /// Items for the share-of-kind cap: one Virtue and one Flaw carrying a
     /// 1/2 `max_share_of_kind` (both repeatable, as the Demonic entries are),
@@ -1782,7 +1782,7 @@ mod tests {
     ] }"#;
 
     /// A magus profile carrying both Hermetic category fields — `gift_categories`
-    /// for Gift detection and `hermetic_flaw_categories` for the `:2860`
+    /// for Gift detection and `hermetic_flaw_categories` for the `ArMDE:2860`
     /// guideline — and permitting the test categories. The two are separate
     /// fields on purpose (see `EntityTypeProfile::hermetic_flaw_categories`);
     /// the shipped magus profile sets both to `["hermetic"]` likewise.
@@ -2157,7 +2157,7 @@ mod tests {
     /// "taken as"): a pick's OWN `params` — set by the player exactly like any
     /// other parameter on an open grant pick — narrow which category is "in
     /// force" here, not the item's whole category list. Modelled on Sufi
-    /// ("Minor, Social Status, Supernatural", `:5083`) but with made-up
+    /// ("Minor, Social Status, Supernatural", `ArMDE:5083`) but with made-up
     /// category names so the test does not ride on the shipped catalogue.
     #[test]
     fn open_pick_satisfies_is_taken_as_aware() {
@@ -2427,7 +2427,7 @@ mod tests {
     }
 
     /// A profile whose Demonic Blood Virtue grants Infernal Might 5 + 30 power
-    /// levels (Ars Magica 5e - Realms of Power - The Infernal.md:4120-4122).
+    /// levels (RoP:I:4120-4122).
     const MIGHT_ITEMS: &str = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
         { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
@@ -2594,7 +2594,7 @@ mod tests {
 
     /// **Invariant (M5.5c).** The familiar's Characteristics are its own creature
     /// statblock, not bought from the magus's Characteristic points
-    /// (Ars Magica - Definitive Edition (Core Rules).md:17793 — a creature's Characteristics are simply "a list of the
+    /// (ArMDE:17793 — a creature's Characteristics are simply "a list of the
     /// characteristics and values"). Because they are nested in `Entity.familiar`
     /// and never in `Entity.characteristics`, `validate_characteristics` cannot
     /// see them: a familiar whose Characteristics would cost far more than the
@@ -2702,7 +2702,7 @@ mod tests {
     /// The smallest loadable aging block: the threshold the pending-rolls finding
     /// reads (`start_age: 35`), the Living Conditions rows the unknown-id and
     /// conflict checks resolve against — three non-cumulative alternatives and two
-    /// asterisked rows that stack (`:16594`) — and a single open-ended outcome row,
+    /// asterisked rows that stack (`ArMDE:16594`) — and a single open-ended outcome row,
     /// which is all `Ruleset::validate_aging_rules`' tiling gate needs. The shipped
     /// table is asserted in `tests/data_integrity.rs`, not restated here.
     const AGING_RULES: &str = r#"{
@@ -2829,7 +2829,7 @@ mod tests {
     }
 
     /// "A character over the age of 35 must make aging rolls ... before the game
-    /// begins" (Ars Magica - Definitive Edition (Core Rules).md:2232) is a rule about *any* character, not only one
+    /// begins" (ArMDE:2232) is a rule about *any* character, not only one
     /// built through its life stages — so the finding cannot hang off the
     /// life-stage plan, which a directly-entered character does not carry. This
     /// fixture has no plan at all, and the warning still fires.
@@ -2858,8 +2858,8 @@ mod tests {
     }
 
     /// "Characters begin aging in the Winter **after** they turn 35"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16565), and the rule reads "over the age of 35"
-    /// (`:2232`) — so 35 owes nothing and 36 owes the first roll. The exact
+    /// (ArMDE:16565), and the rule reads "over the age of 35"
+    /// (`ArMDE:2232`) — so 35 owes nothing and 36 owes the first roll. The exact
     /// boundary, pinned on both sides.
     #[test]
     fn the_first_aging_roll_is_owed_at_thirty_six_not_thirty_five() {
@@ -2969,7 +2969,7 @@ mod tests {
     }
 
     /// "Modifiers marked with an asterisk are cumulative with each other"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16594) — which is only worth saying because the *rest* are
+    /// (ArMDE:16594) — which is only worth saying because the *rest* are
     /// alternatives. A character cannot be both "Wealthy, or healthy location" and
     /// "Average peasant", and the covenant rows are graded versions of one
     /// situation, so at most one non-cumulative row may be chosen.
@@ -2997,7 +2997,7 @@ mod tests {
                 "living_condition.work_in_a_mine",
             ]))
             .is_empty(),
-            "the cumulative rows stack with each other (:16594)"
+            "the cumulative rows stack with each other (ArMDE:16594)"
         );
 
         // A cumulative row plus one baseline is the table's own normal case.
@@ -3035,13 +3035,13 @@ mod tests {
     }
 
     /// "Otherwise, the character's apparent age increases by one year"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16577) — at most one year per year lived, so absent a
+    /// (ArMDE:16577) — at most one year per year lived, so absent a
     /// supernatural reason the apparent age cannot outrun the actual one, and a
     /// higher figure is a transposed entry.
     ///
     /// A WARNING, not an error: the closest explicit text is Unaging's aside — "You
     /// may choose your apparent age freely, although if you are basically human it
-    /// **should be** less than or equal to your actual age" (`:5189`) — a *should*,
+    /// **should be** less than or equal to your actual age" (`ArMDE:5189`) — a *should*,
     /// carrying its own escape for a character who is not basically human.
     #[test]
     fn an_apparent_age_above_the_actual_age_is_reported() {
@@ -3103,7 +3103,7 @@ mod tests {
             "with no aging rules the engine has no threshold to enforce"
         );
 
-        // The shipped threshold: "over the age of 35" is strict (`:2232`, `:16565`).
+        // The shipped threshold: "over the age of 35" is strict (`ArMDE:2232`, `ArMDE:16565`).
         let rs = aging_ruleset();
         assert!(!owed(&rs, 35), "a character of 35 has not yet begun aging");
         assert!(owed(&rs, 36), "the first roll is owed the year after 35");
@@ -3877,8 +3877,7 @@ mod tests {
     fn mythic_flaw_points_fund_double_virtues() {
         // Mythic Companions: each Flaw point funds two Virtue points. Two virtue
         // points on one flaw point is balanced here, but unbalanced at the
-        // default 1:1 rate. Source: Ars Magica - Definitive Edition (Core
-        // Rules).md:2638.
+        // default 1:1 rate. Source: ArMDE:2638.
         let types = r#"[{
           "id": "mythic",
           "budget": { "virtue_points": 20, "flaw_points": 10, "virtue_points_per_flaw_point": 2 },
@@ -5084,7 +5083,7 @@ mod tests {
 
     /// The fix for a dangling Puissant target is to BUY the ability, which happens
     /// on the Abilities step — Puissant Ability is "choose one Ability"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:4814-4816), with no
+    /// (ArMDE:4814-4816), with no
     /// requirement that a score already exists. Filing the finding on
     /// `virtues_flaws` therefore deadlocked the guided wizard: the V/F step blocked
     /// on work that step cannot do. It stays an error, on the step that owns the fix.
@@ -6639,8 +6638,7 @@ mod tests {
 
     /// Items for the grant-aware `max_total` tests: a Puissant Ability item
     /// shaped after the real one — "once for a given Ability, but more than once
-    /// for different Abilities" (Ars Magica - Definitive Edition (Core
-    /// Rules).md:4816), which is what `max_per_target: 1` (the default) already
+    /// for different Abilities" (ArMDE:4816), which is what `max_per_target: 1` (the default) already
     /// encodes — but with a test-only `max_total: 1` layered on top, so a
     /// House-granted copy plus a bought copy of a DIFFERENT target trips
     /// `too_many_selections`, while a bought copy of the SAME target the House
@@ -6870,7 +6868,7 @@ mod tests {
     fn enumerated_domain_param_resolves_only_against_its_declared_values() {
         // An `enumerated` domain IS its list: the book prints Folk Magic's four
         // spell categories as a closed set ("must be one of the following four
-        // options", Ars Magica - Definitive Edition (Core Rules).md:3909, listed
+        // options", ArMDE:3909, listed
         // :3911-3917), so a declared id resolves and anything else raises
         // `unknown_param_value` exactly as an unknown Art id would.
         let items = r#"[
@@ -6919,7 +6917,7 @@ mod tests {
     /// The `realm` domain resolves against the four-member [`Realm`] taxonomy —
     /// no catalogue, no declared list — exactly as `characteristic` resolves
     /// through `Characteristic::from_id`. Folk Magic's magic "is aligned to" a
-    /// supernatural realm (Ars Magica - Definitive Edition (Core Rules).md:3909),
+    /// supernatural realm (ArMDE:3909),
     /// and the Realms are the closed set the engine already models, so a value
     /// outside it must raise `unknown_param_value` just as `dragons` does in an
     /// enumerated slot.
@@ -6972,11 +6970,11 @@ mod tests {
     /// "Each time you choose this Virtue, you can align it to the same Realm as
     /// before or pick a different one, although a character cannot have access
     /// to both the Divine and Infernal Realms."
-    /// (Ars Magica - Definitive Edition (Core Rules).md:3919)
+    /// (ArMDE:3919)
     ///
     /// The excluded pair is **data** — `at_most_one_of` on the parameter — so
     /// the engine names no realm id anywhere. A pair the group does not list
-    /// (Magic beside Faerie) is exactly what `:3919` permits and must stay
+    /// (Magic beside Faerie) is exactly what `ArMDE:3919` permits and must stay
     /// clean.
     #[test]
     fn two_copies_may_not_name_two_values_the_data_keeps_apart() {
@@ -7273,7 +7271,7 @@ mod tests {
 
     /// "This Flaw cannot apply to Supernatural Virtues that are affiliated to
     /// the Infernal realm in the first place"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:6096). Infernal
+    /// (ArMDE:6096). Infernal
     /// affiliation is the descriptor's *Tainted* tag (`PointItem::tainted`), so
     /// `forbid_tainted` takes those items out of the parameter's domain — and,
     /// on `require_categories`' precedent, reports them as
@@ -7350,7 +7348,7 @@ mod tests {
 
     /// False Power is taken "once for each appropriate Supernatural Virtue that
     /// the character **possesses**"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:6096), so a target the
+    /// (ArMDE:6096), so a target the
     /// character does not hold is a Flaw attached to nothing.
     #[test]
     fn a_require_possessed_target_the_character_lacks_is_flagged() {
@@ -7433,7 +7431,7 @@ mod tests {
         );
     }
 
-    /// "**Once** for each appropriate Supernatural Virtue" (`:6096`): one held
+    /// "**Once** for each appropriate Supernatural Virtue" (`ArMDE:6096`): one held
     /// Virtue may be claimed by one selection only. The two probes are different
     /// ids — the Major/Minor False Power shape — so `max_per_target`, whose key
     /// is `(item_ref, params)`, cannot see the collision at all.
@@ -8137,7 +8135,7 @@ mod tests {
 
     /// The levels of spells a magus took out of its post-Gauntlet points raise the
     /// same budget `over_spell_levels` is measured against: "Divide 30 points per year
-    /// between … levels of spells" (Ars Magica - Definitive Edition (Core Rules).md:2216). Gauntleted at 25 and now 60,
+    /// between … levels of spells" (ArMDE:2216). Gauntleted at 25 and now 60,
     /// this maga banked 370 of its 1050 points as spell levels, so its budget is the
     /// profile's 50 plus 370 — and the finding turns on exactly one level.
     #[test]
@@ -8241,7 +8239,7 @@ mod tests {
 
     /// A parameterized spell taken with a chosen Form validates, and the same base
     /// spell with a *different* Form is a distinct instance (not a duplicate).
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:15791-15794
+    /// Source: ArMDE:15791-15794
     /// (one version per Hermetic Form).
     #[test]
     fn parametrized_spell_distinct_per_form() {
@@ -8363,7 +8361,7 @@ mod tests {
 
     /// A mastered spell carrying one special ability per effective mastery level,
     /// all catalogue-known and non-repeating, raises no mastery-ability issue.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:9524-9526.
+    /// Source: ArMDE:9524-9526.
     #[test]
     fn mastery_abilities_within_score_are_clean() {
         let rs = spell_rs();
@@ -8387,7 +8385,7 @@ mod tests {
     }
 
     /// More special abilities than the spell's effective mastery score is an error
-    /// — one may be chosen per mastery level (Ars Magica - Definitive Edition (Core Rules).md:9524-9526).
+    /// — one may be chosen per mastery level (ArMDE:9524-9526).
     #[test]
     fn too_many_mastery_abilities_is_flagged() {
         let rs = spell_rs();
@@ -8408,7 +8406,7 @@ mod tests {
     }
 
     /// A non-repeatable ability chosen twice for the same spell is an error, even
-    /// when the count fits the mastery score (Ars Magica - Definitive Edition (Core Rules).md:9528-9592).
+    /// when the count fits the mastery score (ArMDE:9528-9592).
     #[test]
     fn duplicate_non_repeatable_mastery_ability_is_flagged() {
         let rs = spell_rs();
@@ -8428,7 +8426,7 @@ mod tests {
     }
 
     /// A repeatable ability (Quiet Casting) chosen twice for the same spell is
-    /// legal (Ars Magica - Definitive Edition (Core Rules).md:9580).
+    /// legal (ArMDE:9580).
     #[test]
     fn repeatable_mastery_ability_twice_is_clean() {
         let rs = spell_rs();
@@ -8464,7 +8462,7 @@ mod tests {
     }
 
     /// A General ritual spell learned below level 20 is a ritual-legality error
-    /// (Ars Magica - Definitive Edition (Core Rules).md:12279-12295).
+    /// (ArMDE:12279-12295).
     #[test]
     fn ritual_spell_learned_below_20_is_flagged() {
         let rs = spell_rs();
@@ -8474,8 +8472,8 @@ mod tests {
     }
 
     /// A General non-ritual spell learned above level 50 is a ritual-legality error
-    /// (Ars Magica - Definitive Edition (Core Rules).md:12285 — "may not have a
-    /// level greater than 50"; not `:12283`, the unrelated Year-duration
+    /// (ArMDE:12285 — "may not have a
+    /// level greater than 50"; not `ArMDE:12283`, the unrelated Year-duration
     /// restriction).
     #[test]
     fn non_ritual_spell_learned_above_50_is_flagged() {
@@ -8507,7 +8505,7 @@ mod tests {
     /// than the well-clear-of-it 15/55 the existing tests use. These three
     /// close that out.
     ///
-    /// Ars Magica - Definitive Edition (Core Rules).md:12293 ("Ritual spells
+    /// ArMDE:12293 ("Ritual spells
     /// are always at least level 20 ...").
     #[test]
     fn ritual_spell_learned_at_19_is_flagged() {
@@ -8519,7 +8517,7 @@ mod tests {
 
     /// A General non-ritual spell learned at exactly level 50 is legal — the
     /// fourth boundary case E3 found untested.
-    /// Ars Magica - Definitive Edition (Core Rules).md:12285 ("Formulaic and
+    /// ArMDE:12285 ("Formulaic and
     /// Spontaneous spells may not have a level greater than 50").
     #[test]
     fn non_ritual_spell_learned_at_50_is_clean() {
@@ -8568,7 +8566,7 @@ mod tests {
         { "id": "flaw.major_personality", "kind": "flaw", "classification": "narrative", "magnitude": "major",
           "categories": ["personality"], "entity_kinds": ["character"] }
     ]"#;
-    // Carries the age → max-Ability-score bands (Ars Magica - Definitive Edition (Core Rules).md:2366-2374), so the age-cap
+    // Carries the age → max-Ability-score bands (ArMDE:2366-2374), so the age-cap
     // checks below are exercised against ruleset data.
     const P7_ABILITIES: &str = r#"{ "advancement": [
         { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },

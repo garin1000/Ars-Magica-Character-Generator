@@ -26,7 +26,7 @@ use crate::types::SpellSelection;
 /// derived grant is never stored on `entity.selections`; the grant option refs
 /// are integrity-checked at load (see `validate_house_refs`).
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861 (the free
+/// Source: ArMDE:2855-2861 (the free
 /// House Virtue and the recommendation to take a Hermetic Flaw).
 pub(crate) fn validate_house(
     entity: &Entity,
@@ -43,7 +43,7 @@ pub(crate) fn validate_house(
     }
 
     // A magus should take at least one Hermetic Flaw
-    // (Ars Magica - Definitive Edition (Core Rules).md:2860, a bullet under
+    // (ArMDE:2860, a bullet under
     // `#### Magi` at :2853: "You should take at least one Hermetic Flaw").
     //
     // "Hermetic" is the type's declared `hermetic_flaw_categories` (data), so no
@@ -57,7 +57,7 @@ pub(crate) fn validate_house(
     // files an entry under beyond its membership categories. The two Beings
     // Flaws are exactly that case: `general` for membership (so an unGifted
     // companion holding one is not read as Gifted), and indexed under
-    // `### Hermetic, Minor` all the same (:5445, :5455).
+    // `### Hermetic, Minor` all the same (ArMDE:5445, :5455).
     //
     // Membership, not the taken-as-narrowed `categories_for`: an index heading
     // is provenance, and the descriptor's whole list is provenance too, so the
@@ -230,17 +230,17 @@ fn grant_pick_outcomes<'a>(
 /// > Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
 /// > Latin 1. Characters with lower scores would not be admitted to the Order.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2437, with the
-/// `#### Hermetic Magi Recommended Minimum Abilities` of `:2451-2461` as the second,
+/// Source: ArMDE:2437, with the
+/// `#### Hermetic Magi Recommended Minimum Abilities` of `ArMDE:2451-2461` as the second,
 /// advisory half.
 ///
 /// - `magus_minimum_ability` (error) — one per unmet minimum. "Would not be admitted
 ///   to the Order" is a hard bar, and the passage is **unconditional on the funding
 ///   mode**, which is why this lives here rather than in `validation/life_stage.rs`:
 ///   that validator returns early without a life-stage plan, while a magus built from
-///   a flat experience pool is held to `:2437` just the same.
-/// - `magus_recommended_ability` (warning) — one per unmet recommendation. `:2451`
-///   calls them *recommended*, and the consequences `:2437` spells out ("unable to
+///   a flat experience pool is held to `ArMDE:2437` just the same.
+/// - `magus_recommended_ability` (warning) — one per unmet recommendation. `ArMDE:2451`
+///   calls them *recommended*, and the consequences `ArMDE:2437` spells out ("unable to
 ///   read the books of the Order", "cannot set up his own laboratory") describe a weak
 ///   magus, not an illegal one.
 ///
@@ -305,7 +305,7 @@ pub(crate) fn validate_magus_minimum_abilities(
 ///   (ref + params) so parameterized/duplicated requirements — Nephilim's two
 ///   distinct Great Characteristics, Puissant Guile — are matched precisely.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2635-2639, 2842-2851.
+/// Source: ArMDE:2635-2639, 2842-2851.
 pub(crate) fn validate_mythic_type(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -410,11 +410,11 @@ pub(crate) fn validate_mythic_type(
 
 /// Validates a magus's spell list: every referenced spell must resolve; the same
 /// spell at the same level may not appear twice (different General levels are
-/// different spells, Ars Magica - Definitive Edition (Core Rules).md:12353); a General spell with no chosen level is excluded
+/// different spells, ArMDE:12353); a General spell with no chosen level is excluded
 /// from the budget and warned; the sum of chosen levels must not exceed the
-/// effective spell-levels budget (Ars Magica - Definitive Edition (Core Rules).md:2215-2216, 2435, and the levels bought out of
-/// the years past the Gauntlet, `:2471`); and no spell's level may
-/// exceed Technique + Form + Intelligence + Magic Theory + 3 (Ars Magica - Definitive Edition (Core Rules).md:2465).
+/// effective spell-levels budget (ArMDE:2215-2216, 2435, and the levels bought out of
+/// the years past the Gauntlet, `ArMDE:2471`); and no spell's level may
+/// exceed Technique + Form + Intelligence + Magic Theory + 3 (ArMDE:2465).
 ///
 /// The budget and per-spell cap apply only to magi (`profile.is_magus`); a stray
 /// spell on a non-magus is ref- and dedup-checked only (spells are magus-only).
@@ -437,8 +437,8 @@ pub(crate) fn validate_spells(
 ) {
     let is_magus = type_profile.is_some_and(|p| p.is_magus);
     // Identity is (spell, resolved level, parameter): a parameterized meta-magic
-    // Vim spell may be taken once per distinct target (Form) (Ars Magica - Definitive Edition (Core Rules).md:12353,
-    // Ars Magica - Definitive Edition (Core Rules).md:15791-15794).
+    // Vim spell may be taken once per distinct target (Form) (ArMDE:12353,
+    // ArMDE:15791-15794).
     let mut seen: BTreeMap<(&Id, Option<u32>, Option<&String>), u32> = BTreeMap::new();
 
     for sel in &entity.spells {
@@ -508,7 +508,7 @@ fn validate_spell_level_unresolved(
 /// Job 3/7: a parameterized spell (meta-magic Vim spell whose target (Form) is
 /// a selection) requires a chosen value that resolves to the declared domain.
 /// Display + identity only — it does NOT change the spell's own
-/// Technique/Form (Ars Magica - Definitive Edition (Core Rules).md:15791-15794).
+/// Technique/Form (ArMDE:15791-15794).
 /// Mirrors the virtue/flaw parameter checks in `validation::selections`.
 fn validate_spell_parameter(
     sel: &SpellSelection,
@@ -562,7 +562,7 @@ fn validate_spell_parameter(
 /// used to restate it too (audit finding VA2), and one number in two places
 /// is one number that can drift.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:12279-12295,
+/// Source: ArMDE:12279-12295,
 /// :12285 ("Formulaic and Spontaneous spells may not have a level greater
 /// than 50" — the exact non-Ritual ceiling this checks). An earlier
 /// version of this comment cited :12283 (the Year-duration restriction,
@@ -599,7 +599,7 @@ fn validate_spell_ritual_legality(
 }
 
 /// Job 6/7: no spell's level may exceed Technique + Form + Intelligence +
-/// Magic Theory + 3 (Ars Magica - Definitive Edition (Core Rules).md:2465).
+/// Magic Theory + 3 (ArMDE:2465).
 /// Magi only — the caller gates on `is_magus`.
 fn validate_spell_level_cap(
     entity: &Entity,
@@ -630,7 +630,7 @@ fn validate_spell_level_cap(
 /// Job 4/7: the same spell at the same resolved level (and, for a
 /// parameterized meta-magic Vim spell, the same parameter) may not appear
 /// twice — different General levels are different spells
-/// (Ars Magica - Definitive Edition (Core Rules).md:12353). Runs once, after
+/// (ArMDE:12353). Runs once, after
 /// the per-spell loop has built `seen`.
 fn validate_duplicate_spells(
     seen: BTreeMap<(&Id, Option<u32>, Option<&String>), u32>,
@@ -649,8 +649,8 @@ fn validate_duplicate_spells(
 }
 
 /// Job 7/7: the sum of chosen spell levels must not exceed the effective
-/// spell-levels budget (Ars Magica - Definitive Edition (Core Rules).md:2215-2216,
-/// 2435, and the levels bought out of the years past the Gauntlet, `:2471`).
+/// spell-levels budget (ArMDE:2215-2216,
+/// 2435, and the levels bought out of the years past the Gauntlet, `ArMDE:2471`).
 /// Magi only — the caller gates on `is_magus`.
 fn validate_spell_levels_budget(
     entity: &Entity,
@@ -679,7 +679,7 @@ fn validate_spell_levels_budget(
         // the budget is.
         //
         // Factual, exactly as `general_xp_unspent`. "Take 120 levels of spells"
-        // (Ars Magica - Definitive Edition (Core Rules).md:2215) grants the
+        // (ArMDE:2215) grants the
         // levels; the source nowhere says unused levels are lost, so the
         // message reports the count and asserts nothing further.
         issues.push(ValidationIssue::warning(
@@ -701,11 +701,11 @@ fn validate_spell_levels_budget(
 ///   (referential integrity — an unknown id fails loudly, CLAUDE.md).
 /// - The count of chosen abilities may not exceed the spell's *effective* mastery
 ///   score: for every level in the Mastery Ability the maga may choose one
-///   special ability (Ars Magica - Definitive Edition (Core Rules).md:9524-9526).
+///   special ability (ArMDE:9524-9526).
 /// - A non-repeatable ability may be chosen only once for the same spell; only
-///   Precise, Quick, and Quiet Casting may repeat (Ars Magica - Definitive Edition (Core Rules).md:9572, :9576, :9580).
+///   Precise, Quick, and Quiet Casting may repeat (ArMDE:9572, :9576, :9580).
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:9524-9592.
+/// Source: ArMDE:9524-9592.
 fn validate_spell_mastery_abilities(
     sel: &SpellSelection,
     entity: &Entity,
@@ -716,7 +716,7 @@ fn validate_spell_mastery_abilities(
         return;
     }
 
-    // One special ability per effective mastery level (Ars Magica - Definitive Edition (Core Rules).md:9524-9526).
+    // One special ability per effective mastery level (ArMDE:9524-9526).
     let effective = crate::effective::effective_spell_mastery(sel, entity, ruleset);
     if sel.mastery_abilities.len() > usize::from(effective) {
         issues.push(ValidationIssue::error(
@@ -851,7 +851,7 @@ pub(crate) fn validate_xp_pool(
         // otherwise be told it has spent too much AND has points left over.
         //
         // The wording this feeds is deliberately just a count. The pool's own size
-        // is a rule (Ars Magica - Definitive Edition (Core Rules).md:2213-2216 —
+        // is a rule (ArMDE:2213-2216 —
         // 75 + 45 in childhood, 15 a year in later life, 240 for apprenticeship, 30
         // a year after the Gauntlet), but NOTHING in the source says unspent general
         // experience is lost. `restricted_xp_unspent` may say "wasted" because
@@ -948,8 +948,8 @@ mod tests {
         { "id": "ability.swim", "category": "general" }
       ]
     }"#;
-    /// The shipped Hermetic requirements: the three minimums of Ars Magica - Definitive Edition (Core Rules).md:2437 and
-    /// the four recommendations of `:2451-2461`, priced to 90 (5 + 50 + 30 + 5).
+    /// The shipped Hermetic requirements: the three minimums of ArMDE:2437 and
+    /// the four recommendations of `ArMDE:2451-2461`, priced to 90 (5 + 50 + 30 + 5).
     const LIFE_STAGES: &str = r#"{
       "apprenticeship": {
         "years": 15,
@@ -1012,7 +1012,7 @@ mod tests {
     }
 
     /// A directly-entered character of `type_id` with the given bought scores. No
-    /// life-stage plan: `:2437` is unconditional on how the experience was funded.
+    /// life-stage plan: `ArMDE:2437` is unconditional on how the experience was funded.
     fn character(type_id: &str, scores: Vec<(&str, Option<&str>, u8)>) -> Entity {
         let mut entity = Entity::new(
             EntityKind::Character,
@@ -1044,7 +1044,7 @@ mod tests {
     /// > Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory
     /// > 1, Latin 1. Characters with lower scores would not be admitted to the Order.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2437. An **error**, and
+    /// Source: ArMDE:2437. An **error**, and
     /// unconditional: it says nothing about how the experience was earned, so a magus
     /// built from a flat pool is held to it exactly as a guided one is. One finding per
     /// unmet requirement, each naming the Ability it is about.
@@ -1090,7 +1090,7 @@ mod tests {
         }
 
         // A magus meeting the minimums raises neither code for them; the Darius
-        // package (`:2441`, `:2449`) meets all seven rows.
+        // package (`ArMDE:2441`, `ArMDE:2449`) meets all seven rows.
         let darius = character(
             "magus",
             vec![

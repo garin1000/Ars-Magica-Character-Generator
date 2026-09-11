@@ -169,8 +169,7 @@ impl<'a> Doc<'a> {
         let domain = item.parameters.iter().find(|p| p.key == key)?.domain;
         match domain {
             ParameterDomain::Category => Some(self.label(&format!("category-{value}"))),
-            // Folk Magic's realm axis (Ars Magica - Definitive Edition
-            // (Core Rules).md:3909, :3919). The stored value is `realm.<slug>`
+            // Folk Magic's realm axis (ArMDE:3909, :3919). The stored value is `realm.<slug>`
             // and the Fluent family is keyed on the bare slug — the same
             // `realm-<id>` keys `Doc::realm_score` reads for a Might score, so
             // nothing new has to be declared. A value that is not a Realm at

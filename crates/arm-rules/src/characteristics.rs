@@ -14,7 +14,7 @@ use std::fmt;
 
 /// The eight inborn Characteristics.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:1023-1025 ("There are
+/// Source: ArMDE:1023-1025 ("There are
 /// eight Characteristics in Ars Magica").
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -106,7 +106,7 @@ pub struct CharacteristicCost {
 /// Poor (Characteristic) shift it (the "+5" / "−5"). The cost table itself spans
 /// the effective range so those scores can be priced.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2340-2354 (table),
+/// Source: ArMDE:2340-2354 (table),
 /// :4105 (the "+3 unless Great Characteristic" base cap), :3987-3989 (Great's
 /// "+5"), :6598-6600 (Poor's "−5").
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -116,13 +116,11 @@ pub struct CharacteristicRules {
     /// The cost table, one row per legal score, sorted ascending by `score`.
     pub costs: Vec<CharacteristicCost>,
     /// The highest base score buyable with no limit-shifting virtue (the "+3"
-    /// cap). `None` falls back to the table maximum. Source: Ars Magica -
-    /// Definitive Edition (Core Rules).md:4105.
+    /// cap). `None` falls back to the table maximum. Source: ArMDE:4105.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_max: Option<i8>,
     /// The lowest base score buyable with no limit-shifting flaw (the "−3"
-    /// floor). `None` falls back to the table minimum. Source: Ars Magica -
-    /// Definitive Edition (Core Rules).md:2340-2354 (the "−3" row of the
+    /// floor). `None` falls back to the table minimum. Source: ArMDE:2340-2354 (the "−3" row of the
     /// point-buy table — corrected from a copy-paste of Poor (Characteristic)'s
     /// citation below, which is the −5 *effective* floor, not this −3 *base*
     /// floor).
@@ -130,12 +128,12 @@ pub struct CharacteristicRules {
     pub base_min: Option<i8>,
     /// The highest base score reachable once Great (Characteristic) raises the
     /// cap (the "+5" ceiling). `None` falls back to the table maximum. Source:
-    /// Ars Magica - Definitive Edition (Core Rules).md:3987-3989.
+    /// ArMDE:3987-3989.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub effective_max: Option<i8>,
     /// The lowest base score reachable once Poor (Characteristic) lowers the
     /// floor (the "−5" floor). `None` falls back to the table minimum. Source:
-    /// Ars Magica - Definitive Edition (Core Rules).md:6598-6600.
+    /// ArMDE:6598-6600.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub effective_min: Option<i8>,
 }

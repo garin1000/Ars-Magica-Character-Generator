@@ -26,8 +26,8 @@ use super::*;
 /// `ceil(55·2/3) = ceil(36.67) = 37`, which the rules say counts as 56 ≥ 55.
 /// Integer-only so the engine stays exact.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3372-3378, worked
-/// example `:2443`.
+/// Source: ArMDE:3372-3378, worked
+/// example `ArMDE:2443`.
 pub(crate) fn charged_cost(table_xp: u32, affinity: Option<(u8, u8)>) -> u32 {
     match affinity {
         Some((num, den)) if num != 0 => table_xp
@@ -58,7 +58,7 @@ pub(crate) fn best_affinity(multipliers: impl Iterator<Item = (u8, u8)>) -> Opti
 /// The Affinity multiplier applying to one ability instance, if any
 /// ([`Effect::AffinityAbilityCost`] targeting it). Matches the instance exactly,
 /// like [`ability_bonus`]. `pub(crate)` so the age-cap validator can read whether
-/// an Ability carries an Affinity (which raises its age cap by +2, Ars Magica - Definitive Edition (Core Rules).md:3374).
+/// an Ability carries an Affinity (which raises its age cap by +2, ArMDE:3374).
 pub(crate) fn ability_affinity(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -175,8 +175,8 @@ pub enum XpPoolOrigin {
 /// **Apprenticeship is absent, and later life is present.** Whichever block funds
 /// anything the character may learn is the *general* pool and needs no slug: for a
 /// magus that is apprenticeship, whose experience "can be spent on Arts or
-/// Abilities" (Ars Magica - Definitive Edition (Core Rules).md:2435). Later life buys "any **Abilities**" (`:2214`,
-/// `:2392`) and, for a magus, ends where apprenticeship begins — so it is a
+/// Abilities" (ArMDE:2435). Later life buys "any **Abilities**" (`ArMDE:2214`,
+/// `ArMDE:2392`) and, for a magus, ends where apprenticeship begins — so it is a
 /// restricted pool of its own, listed here. For a grog or companion later life is
 /// still the general pool; the enum names the blocks that *can* be restricted, and
 /// which pools a character actually gets is decided in [`xp_allocation`].
@@ -184,13 +184,13 @@ pub enum XpPoolOrigin {
 #[serde(rename_all = "snake_case")]
 pub enum LifeStageBlock {
     /// Childhood's native-language experience: spendable only on the native
-    /// language instance (Ars Magica - Definitive Edition (Core Rules).md:2378).
+    /// language instance (ArMDE:2378).
     ChildhoodNativeLanguage,
     /// Childhood's restricted spread: spendable only on the childhood Ability list,
-    /// and never on the native language (`:2378`).
+    /// and never on the native language (`ArMDE:2378`).
     ChildhoodSpread,
     /// Later life: for a magus, the years before apprenticeship, spendable on
-    /// Abilities alone and never on an Art (`:2214`, `:2392`).
+    /// Abilities alone and never on an Art (`ArMDE:2214`, `ArMDE:2392`).
     LaterLife,
 }
 
@@ -391,7 +391,7 @@ pub(crate) fn ability_authorizations(
                 // Ability/Art/Characteristic bonuses and Affinities (including
                 // the group form) target or discount something already legally
                 // owned rather than granting the right to own it (Puissant
-                // Ability: Ars Magica - Definitive Edition (Core Rules).md:4814-4816);
+                // Ability: ArMDE:4814-4816);
                 // the XP/budget/derived-stat grants (spell levels, general XP,
                 // later-life rate, confidence, mastery, item levels, True
                 // Faith/Warping/Might/Power/Reputation, size, characteristic
@@ -551,7 +551,7 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
         // free: the player "will not need to spend experience points for the
         // first point". So only the score above the granted floor is charged —
         // the floor's own table cost is subtracted before Affinity is applied.
-        // Source: Ars Magica - Definitive Edition (Core Rules).md:2639.
+        // Source: ArMDE:2639.
         let floor = granted_ability_floor(entity, ruleset, &a.ability, a.parameter.as_deref());
         let floor_table = u8::try_from(floor)
             .ok()
@@ -586,13 +586,13 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
             kind: SpendKind::Art,
         });
     }
-    // Spell Mastery is an Ability (Ars Magica - Definitive Edition (Core Rules).md:9516, :7143) bought from the
-    // Ability advancement table (:15952, :15956-15979). Flawless Magic auto-masters
+    // Spell Mastery is an Ability (ArMDE:9516, :7143) bought from the
+    // Ability advancement table (ArMDE:15952, :15956-15979). Flawless Magic auto-masters
     // every spell at a free floor (charge only above it, like a granted Supernatural
     // floor) AND doubles all mastery Advancement Totals (an Affinity that halves the
     // charge). The mastery pool (Mastered Spells) — not the ability-restricted pools
     // — plus the general pool fund it.
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:3887-3889, :4471-4474.
+    // Source: ArMDE:3887-3889, :4471-4474.
     let mastery_floor = spell_mastery_floor(entity, ruleset);
     let mastery_floor_table = if mastery_floor > 0 {
         ruleset.advancement.xp_for_score(mastery_floor).unwrap_or(0)
@@ -659,8 +659,7 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
 
 /// Childhood's native-language pool — pool kind 2 of 5 [`build_flow_pools`]
 /// assembles. `None` when no native language is set (no pool is created for a
-/// language nobody picked). Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:2378.
+/// language nobody picked). Source: ArMDE:2378.
 fn childhood_native_language_pool(
     entity: &Entity,
     rules: &crate::life_stage::LifeStageRules,
@@ -683,8 +682,7 @@ fn childhood_native_language_pool(
 
 /// Childhood's restricted-spread pool — pool kind 3 of 5 [`build_flow_pools`]
 /// assembles. Always present alongside a life-stage budget (unlike the native
-/// pool, which needs a language actually set). Source: Ars Magica - Definitive
-/// Edition (Core Rules).md:2378.
+/// pool, which needs a language actually set). Source: ArMDE:2378.
 fn childhood_spread_pool(
     entity: &Entity,
     rules: &crate::life_stage::LifeStageRules,
@@ -709,10 +707,10 @@ fn childhood_spread_pool(
 
 /// A magus's later-life pool — pool kind 4 of 5 [`build_flow_pools`] assembles:
 /// the years between childhood and being taken as an apprentice, which buy "any
-/// Abilities" (`:2214`) and never an Art, and not an Arcane, Academic or Martial
+/// Abilities" (`ArMDE:2214`) and never an Art, and not an Arcane, Academic or Martial
 /// Ability either — "magi can only spend experience points on Arcane, Academic
 /// and Martial Abilities before apprenticeship if they have a Virtue which
-/// allows them to do so" (`:2435`). A Virtue that does allow it (Covenant
+/// allows them to do so" (`ArMDE:2435`). A Virtue that does allow it (Covenant
 /// Upbringing, Educated, Warrior) widens the pool through the same
 /// authorizations the ownership check reads, so the two cannot disagree.
 ///
@@ -722,9 +720,9 @@ fn childhood_spread_pool(
 /// unauthorized one is already an error and funding it here changes nothing.
 ///
 /// `None` when `budget.later_life_xp == 0` — a grog or companion never calls
-/// this at all (later life is their general pool, `:2392`, and the categories
+/// this at all (later life is their general pool, `ArMDE:2392`, and the categories
 /// are gated by an error on the character instead; a magus's category gate is
-/// waived whole-character, `:7151`, so this pool is the only place the "before
+/// waived whole-character, `ArMDE:7151`, so this pool is the only place the "before
 /// apprenticeship" half can live).
 fn magus_later_life_pool(
     entity: &Entity,
@@ -907,27 +905,27 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
 ///
 /// The general pool funds anything, so it is the block whose experience the rules
 /// let buy Arts as well as Abilities. For a **magus** that is apprenticeship —
-/// "These experience points can be spent on Arts or Abilities" (`:2435`) — with
+/// "These experience points can be spent on Arts or Abilities" (`ArMDE:2435`) — with
 /// later life a restricted, Abilities-only pool ([`magus_later_life_pool`]). For a
 /// grog or companion there is no apprenticeship and later life is itself
-/// unrestricted (`:2392`), so it is the general pool. A directly-entered character
+/// unrestricted (`ArMDE:2392`), so it is the general pool. A directly-entered character
 /// uses the typed `xp_pool`. Decided here, once: Skilled/Weak Parens (and any
 /// GeneralXp effect) then adjust it — "an additional 60 experience points … during
-/// apprenticeship" (`:4966`) — and a net-negative grant clamps at 0 rather than
+/// apprenticeship" (`ArMDE:4966`) — and a net-negative grant clamps at 0 rather than
 /// underflowing.
 ///
 /// A magus's years past its Gauntlet join that same general pool rather than
 /// forming a block of their own: "Divide 30 points per year between experience
 /// points in Arts, experience points in Abilities, and levels of spells"
-/// (`:2216`), "Each point can be an experience point in an Art or Ability or one
-/// level of spell" (`:2471`) — Arts included, which is precisely what makes a pool
-/// general. The Academic/Arcane/Martial gate does not narrow them either: `:2435`
+/// (`ArMDE:2216`), "Each point can be an experience point in an Art or Ability or one
+/// level of spell" (`ArMDE:2471`) — Arts included, which is precisely what makes a pool
+/// general. The Academic/Arcane/Martial gate does not narrow them either: `ArMDE:2435`
 /// restricts only what a magus may buy "**before** apprenticeship", and "Magi
 /// without a specific Virtue may only buy Academic Abilities during or after
-/// apprenticeship" (`:7151`) says the years after it are on the permitted side.
+/// apprenticeship" (`ArMDE:7151`) says the years after it are on the permitted side.
 /// So there is no restricted pool and no life-stage block to add — the block that
 /// funds anything is the general pool and needs no slug.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2435, :2471, :7151.
+/// Source: ArMDE:2216, :2435, :2471, :7151.
 ///
 /// Recomputed here rather than threaded out of `build_flow_pools`: both are
 /// cheap, pure, side-effect-free lookups (a profile map lookup; a life-stage
@@ -989,8 +987,8 @@ impl FlowGraphLayout {
 /// Panics if the graph would need more than [`MAX_XP_SOLVE_NODES`] nodes.
 /// `r` and `s` both grow 1:1 with save-controlled `Vec`s (`entity.selections`
 /// for `r`; `entity.ability_scores`/`art_scores`/`spells` for `s` — see
-/// `types.rs:2482` (selections), `:2492` (ability_scores), `:2521`
-/// (art_scores), `:2526` (spells)), and the matrix below is `n * n` `u32`s.
+/// `types.rs:3329` (selections), `types.rs:3339` (ability_scores), `types.rs:3408`
+/// (art_scores), `types.rs:3413` (spells)), and the matrix below is `n * n` `u32`s.
 /// With no bound, a crafted save with tens of thousands of entries forces a
 /// multi-gigabyte single allocation on a plain File → Open, aborting the whole
 /// process (`handle_alloc_error`) with no dialog and no diagnostic — an

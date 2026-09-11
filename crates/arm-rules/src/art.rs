@@ -11,7 +11,7 @@
 //! The two Art classes (Technique, Form) are a fixed taxonomy and so an enum;
 //! individual Arts and the advancement table are data.
 //!
-//! Source: Ars Magica - Definitive Edition (Core Rules).md:8833-8982 (the Arts
+//! Source: ArMDE:8833-8982 (the Arts
 //! chapter), :2406-2427 (the "ART To Buy" advancement column).
 //!
 //! [`Entity`]: crate::types::Entity
@@ -24,7 +24,7 @@ use crate::types::{Id, SourceRef};
 
 /// The two classes of Hermetic Art.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:8845-8897 (Techniques),
+/// Source: ArMDE:8845-8897 (Techniques),
 /// :8899-8982 (Forms).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

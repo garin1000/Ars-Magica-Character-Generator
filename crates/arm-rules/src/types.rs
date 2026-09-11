@@ -93,7 +93,7 @@ impl fmt::Display for EntityKind {
 /// Point cost/grant magnitude. Free = 0, Minor = 1, Major = 3.
 /// Ordered `Free < Minor < Major` to reflect increasing point weight.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2774 ("Major Virtues
+/// Source: ArMDE:2774 ("Major Virtues
 /// cost three points ... Minor Virtues and Flaws cost and grant ... one point");
 /// :2209; Free virtues at :2886-2896.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -136,7 +136,7 @@ impl fmt::Display for Magnitude {
 /// Whether a rules item is positive (costs points) or negative (grants points).
 /// Virtue/Boon are positive; Flaw/Hook are negative. Boon/Hook are covenant-specific.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2774 ("Virtues cost
+/// Source: ArMDE:2774 ("Virtues cost
 /// points, while Flaws grant points").
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -457,7 +457,7 @@ pub enum ParameterDomain {
     /// Value is one of the *declaring item's own* [`PointItem::categories`] —
     /// records which single category reading of a multi-category Virtue/Flaw
     /// the player chose. Sufi is "*Minor, Social Status, Supernatural*"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:5078) and `:5083`
+    /// (ArMDE:5078) and `ArMDE:5083`
     /// makes the choice explicit: "either as a Minor Social Status Virtue or a
     /// Minor Supernatural Virtue". Structurally identical to [`Self::Enumerated`]
     /// at resolution time (`param.values.contains(value)`), but load-time
@@ -466,7 +466,7 @@ pub enum ParameterDomain {
     /// labels options through the existing `category-<id>` Fluent family
     /// instead of the rules-i18n `displayName` lookup `Enumerated` uses — a
     /// bare category slug has no rules-i18n entry of its own. Every item
-    /// declaring this domain must also cap `max_total` at 1: `:5083` offers a
+    /// declaring this domain must also cap `max_total` at 1: `ArMDE:5083` offers a
     /// choice between two readings of ONE item, not two items. See
     /// [`PointItem::categories_for`] — the single place every "is this item of
     /// category X" test resolves a `taken_as` selection against, so the five
@@ -485,8 +485,8 @@ pub enum ParameterDomain {
     ///
     /// Folk Magic is the first user: "The choice of (Realm) Lore also determines
     /// which supernatural realm his magic is aligned to for the purposes of aura
-    /// modifiers" (Ars Magica - Definitive Edition (Core Rules).md:3909), and
-    /// `:3919` lets each copy "align it to the same Realm as before or pick a
+    /// modifiers" (ArMDE:3909), and
+    /// `ArMDE:3919` lets each copy "align it to the same Realm as before or pick a
     /// different one". What is stored is the **Realm**, not the (Realm) Lore
     /// Ability: the Core Rules print no closed "(Realm) Lore" list, whereas the
     /// four Realms are closed, already modelled, and already have Fluent labels.
@@ -567,7 +567,7 @@ pub struct ParameterDef {
     /// Groups of values of which **at most one** may be named across all copies
     /// of the declaring item. Empty for almost every parameter.
     ///
-    /// Folk Magic's realm axis is the first and only user: `:3919` grants the
+    /// Folk Magic's realm axis is the first and only user: `ArMDE:3919` grants the
     /// repeat *and* limits it — "you can align it to the same Realm as before or
     /// pick a different one, although a character cannot have access to both the
     /// Divine and Infernal Realms". The excluded pair is therefore **data**, not
@@ -582,8 +582,8 @@ pub struct ParameterDef {
     /// which raises [`crate::validation::ValidationIssue::CODE_EXCLUSIVE_PARAM_VALUES`].
     ///
     /// **Not** the shape for a *within-one-copy* cross-parameter restriction:
-    /// `:3915` ("Infernal Lore cannot be used to produce this type of effect",
-    /// Healing) and `:3917` (Divine Lore, Evil Eye) constrain one copy's realm
+    /// `ArMDE:3915` ("Infernal Lore cannot be used to produce this type of effect",
+    /// Healing) and `ArMDE:3917` (Divine Lore, Evil Eye) constrain one copy's realm
     /// against that same copy's spell category, which excludes nothing *across*
     /// copies. See `crates/arm-rules/RULES.md`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -630,7 +630,7 @@ pub struct ParameterDef {
     ///
     /// False Power is the case the rules state: the Flaw is taken "once for each
     /// appropriate Supernatural Virtue that the character **possesses**"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:6096), so a target the
+    /// (ArMDE:6096), so a target the
     /// character does not hold is a Flaw attached to nothing.
     ///
     /// **Which notion of possession.** The grants-inclusive one:
@@ -671,10 +671,10 @@ pub struct ParameterDef {
     ///
     /// "This Flaw cannot apply to Supernatural Virtues that are affiliated to
     /// the Infernal realm in the first place"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:6096). Infernal
+    /// (ArMDE:6096). Infernal
     /// affiliation is exactly what [`PointItem::tainted`] records — the
     /// descriptor's *Tainted* type tag, "associated with the Infernal realm"
-    /// (`:2998-3002`) — so no new field and no id list is needed.
+    /// (`ArMDE:2998-3002`) — so no new field and no id list is needed.
     ///
     /// Enforced by `validation::selections::param_value_resolves` and reported
     /// as the existing
@@ -694,14 +694,14 @@ pub struct ParameterDef {
     ///
     /// The three per-power items are the case the rules state: Restricted Power,
     /// Slow Power and Variable Power each modify "one of the character's
-    /// supernatural powers" (Ars Magica - Definitive Edition (Core Rules).md:6689,
+    /// supernatural powers" (ArMDE:6689,
     /// :6761, :5205), so a name no power carries restricts nothing. This is the
     /// free-text sibling of [`Self::require_possessed`]: the same idea — the
     /// target must be on the sheet — for the one domain that names no registry.
     ///
     /// **Why not a domain of its own.** A power is not a catalogue entry; it is an
     /// anonymous instance the player types (a Greater Power's levels may be spent
-    /// on several powers, `:4021`), so there is nothing for a domain to resolve
+    /// on several powers, `ArMDE:4021`), so there is nothing for a domain to resolve
     /// against. The value stays free text and only the *entity* can judge it.
     ///
     /// Matching is exact on the trimmed strings the engine already stores:
@@ -805,7 +805,7 @@ pub enum Effect {
     /// not a float, so [`Effect`] keeps deriving `Eq`. The age-cap exemption the
     /// same Virtue grants is read off the presence of this effect (Phase 6).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3372-3374.
+    /// Source: ArMDE:3372-3374.
     AffinityAbilityCost {
         /// Parameter key whose value names the target ability.
         param: String,
@@ -817,7 +817,7 @@ pub enum Effect {
     /// Affinity with (Art): the Art analogue of [`Effect::AffinityAbilityCost`],
     /// targeting the Art named by the selection's `params[param]`.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3376-3378.
+    /// Source: ArMDE:3376-3378.
     AffinityArtCost {
         /// Parameter key whose value names the target Art.
         param: String,
@@ -832,7 +832,7 @@ pub enum Effect {
     /// "counts as" `num/den` of itself, exactly like [`Self::AffinityAbilityCost`]
     /// but auto-applied to the whole group.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4315-4317 (Linguist).
+    /// Source: ArMDE:4315-4317 (Linguist).
     GroupAffinityCost {
         /// The Ability ids the Affinity covers (Linguist: living + dead language).
         abilities: std::collections::BTreeSet<Id>,
@@ -848,8 +848,8 @@ pub enum Effect {
     /// Stacks across selections. Educated (specific ids), Warrior / Privileged
     /// Upbringing (categories).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3711-3713
-    /// (Educated), `:5227-5229` (Warrior), `:4806-4808` (Privileged Upbringing).
+    /// Source: ArMDE:3711-3713
+    /// (Educated), `ArMDE:5227-5229` (Warrior), `ArMDE:4806-4808` (Privileged Upbringing).
     RestrictedAbilityXp {
         /// Points granted to this restricted pool.
         amount: u32,
@@ -863,12 +863,12 @@ pub enum Effect {
     },
     /// Adjusts the Characteristic-buy budget by `amount` (on top of
     /// [`crate::characteristics::CharacteristicRules::start_points`]). Signed:
-    /// Improved Characteristics grants +3 (`:4103-4105`), Weak Characteristics
-    /// removes 3 (`:7056-7058`); both stack, so the grants from every matching
+    /// Improved Characteristics grants +3 (`ArMDE:4103-4105`), Weak Characteristics
+    /// removes 3 (`ArMDE:7056-7058`); both stack, so the grants from every matching
     /// selection are summed.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4103-4105 (Improved),
-    /// `:7056-7058` (Weak).
+    /// Source: ArMDE:4103-4105 (Improved),
+    /// `ArMDE:7056-7058` (Weak).
     CharacteristicPoints {
         /// Points added to (or, when negative, removed from) the characteristic
         /// budget per selection.
@@ -892,8 +892,8 @@ pub enum Effect {
     /// Parens grants +30, Weak Parens −30. The grants from every matching
     /// selection are summed and the total is clamped at 0.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4964-4966 (Skilled
-    /// Parens), `:7072-7074` (Weak Parens).
+    /// Source: ArMDE:4964-4966 (Skilled
+    /// Parens), `ArMDE:7072-7074` (Weak Parens).
     SpellLevels {
         /// Spell levels added to the budget per selection (may be negative).
         amount: i16,
@@ -903,8 +903,8 @@ pub enum Effect {
     /// Skilled Parens grants +60, Weak Parens −60. Summed across selections and
     /// clamped at 0.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4964-4966 (Skilled
-    /// Parens), `:7072-7074` (Weak Parens).
+    /// Source: ArMDE:4964-4966 (Skilled
+    /// Parens), `ArMDE:7072-7074` (Weak Parens).
     GeneralXp {
         /// Experience points added to the general pool per selection (may be
         /// negative).
@@ -917,7 +917,7 @@ pub enum Effect {
     /// Flaw get 10 experience points per year"). Both are Major and, per the same
     /// line, available to companions only; the profiles enforce that.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2394.
+    /// Source: ArMDE:2394.
     LaterLifeXpRate {
         /// Experience points earned per year of later life.
         amount: u32,
@@ -930,8 +930,7 @@ pub enum Effect {
     /// > Abilities, are half (round up) that which his age normally allows.
     ///
     /// Applies to the *cap*, not the cost: such an Ability is bought at the usual
-    /// price, just not as high. Source: Ars Magica - Definitive Edition (Core
-    /// Rules).md:6160 (Foreign Upbringing).
+    /// price, just not as high. Source: ArMDE:6160 (Foreign Upbringing).
     LocalityAbilityCapFraction {
         /// Numerator of the surviving fraction (1 for "half").
         num: u8,
@@ -948,7 +947,7 @@ pub enum Effect {
     /// [`Effect::RestrictedAbilityXp`] pool already implies permission for what it
     /// funds (Warrior, Arcane Lore), since the grant would otherwise be unspendable.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2315.
+    /// Source: ArMDE:2315.
     AbilityAuthorization {
         /// Specific Abilities permitted.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -962,7 +961,7 @@ pub enum Effect {
     /// `{ score: 1, points: 2 }` (raising the 1/3 default to 2/5). Confidence is
     /// never stored on the entity — it is `profile default + Σ this effect`.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4900-4902 (Self-Confident).
+    /// Source: ArMDE:4900-4902 (Self-Confident).
     ConfidenceBonus {
         /// Confidence Score added per selection.
         score: i8,
@@ -973,7 +972,7 @@ pub enum Effect {
     /// restricted pool, distinct from the general/ability XP pools — mastery is
     /// spent per known spell). Mastered Spells grants 50, stackable.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4471-4474.
+    /// Source: ArMDE:4471-4474.
     SpellMasteryXp {
         /// Mastery experience points granted per selection.
         amount: u16,
@@ -982,15 +981,14 @@ pub enum Effect {
     /// Flawless Magic auto-masters every spell learned (Mastery 1); the effective
     /// mastery of a spell is `max(bought, this floor)`.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3887-3889.
+    /// Source: ArMDE:3887-3889.
     GrantsSpellMastery {
         /// The mastery-score floor granted to every known spell.
         score: u8,
         /// Advancement-Total multiplier for Spell Mastery Abilities, as an Affinity
         /// "counts as num/den of itself": Flawless Magic doubles all mastery
         /// Advancement Totals (`{2, 1}`), halving the XP charged. Absent in JSON →
-        /// `{1, 1}` (no reduction — a plain floor grant). Source: Ars Magica -
-        /// Definitive Edition (Core Rules).md:3889.
+        /// `{1, 1}` (no reduction — a plain floor grant). Source: ArMDE:3889.
         #[serde(default = "one_u8", skip_serializing_if = "is_one_u8")]
         advancement_num: u8,
         #[serde(default = "one_u8", skip_serializing_if = "is_one_u8")]
@@ -1003,7 +1001,7 @@ pub enum Effect {
     /// to a point item. Only bought selections are scanned for this effect (one
     /// level of nesting; a granted item's own `grants_selection` is not applied).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5113-5116 (Templar
+    /// Source: ArMDE:5113-5116 (Templar
     /// Commander).
     GrantsSelection {
         /// The Virtue/Flaw ids granted for free.
@@ -1012,8 +1010,8 @@ pub enum Effect {
     /// Grants `amount` starting levels of enchanted devices (base 0, summed).
     /// Magic Items grants +25 (stackable), Redcap 50.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4347-4349 (Magic
-    /// Items), `:4842-4846` (Redcap).
+    /// Source: ArMDE:4347-4349 (Magic
+    /// Items), `ArMDE:4842-4846` (Redcap).
     ItemLevelBudget {
         /// Levels of enchanted devices added.
         amount: u16,
@@ -1026,14 +1024,14 @@ pub enum Effect {
     /// entered by hand under Magic Items. Consumed only by [`crate::derived`]; a
     /// no-op for effective scores, validation, and referential checks.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4476-4479 (Virtue),
+    /// Source: ArMDE:4476-4479 (Virtue),
     /// :10410 (lesser-enchantment Lab-Total-≥-2×level rule).
     MasterpieceItem,
     /// Grants a derived True Faith Score (base 0, summed across grants). True
     /// Faith is a special score with its own rules, not a Supernatural Ability.
     /// The True Faith Virtue confers Score 1.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5169-5171.
+    /// Source: ArMDE:5169-5171.
     TrueFaithGrant {
         /// True Faith Score added.
         score: u8,
@@ -1041,7 +1039,7 @@ pub enum Effect {
     /// Grants a derived Warping Score and Warping Points (base 0 each, summed
     /// across grants). Warped by Magic confers Warping Score 1 + 5 Warping Points.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:7019-7021.
+    /// Source: ArMDE:7019-7021.
     WarpingGrant {
         /// Warping Score added.
         score: u8,
@@ -1053,9 +1051,9 @@ pub enum Effect {
     /// grants (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2). Summed across
     /// selections.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3975-3978 (Giant
-    /// Blood +2), `:4229-4231` (Large +1), `:6767-6769` (Small Frame −1),
-    /// `:5996-5998` (Dwarf −2).
+    /// Source: ArMDE:3975-3978 (Giant
+    /// Blood +2), `ArMDE:4229-4231` (Large +1), `ArMDE:6767-6769` (Small Frame −1),
+    /// `ArMDE:5996-5998` (Dwarf −2).
     SizeDelta {
         /// Size adjustment per selection (may be negative).
         amount: i8,
@@ -1068,8 +1066,8 @@ pub enum Effect {
     /// fixed by the virtue, so the id is stored directly (not read from a param).
     /// Summed across selections.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3975-3978 (Giant
-    /// Blood, +1 Str/Sta to +6), `:5996-5998` (Dwarf, −1 Str/Sta to −6).
+    /// Source: ArMDE:3975-3978 (Giant
+    /// Blood, +1 Str/Sta to +6), `ArMDE:5996-5998` (Dwarf, −1 Str/Sta to −6).
     CharacteristicScoreDelta {
         /// The Characteristic id (`characteristic.str`, …) this bonus targets.
         characteristic: Id,
@@ -1079,16 +1077,16 @@ pub enum Effect {
     /// Authorizes the character to start with one Reputation of the given `kind`
     /// at the given `score` (content is player-supplied). A starting Reputation is
     /// legal only if backed by such a grant
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2514). A `kind` of `None`
+    /// (ArMDE:2514). A `kind` of `None`
     /// is a
     /// **player-chosen-type** grant (Famous,
-    /// Ars Magica - Definitive Edition (Core Rules).md:3861-3863: "Choose … one type"):
+    /// ArMDE:3861-3863: "Choose … one type"):
     /// it authorizes one Reputation of *any* type. Concrete-kind grants authorize
     /// only that type; an item with two audiences (e.g. Senior Clergy, both local
     /// and Church) carries two `GrantsReputation` effects.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:6310-6312 (Infamous),
-    /// `:5703-5705` (Black Sheep), `:3861-3863` (Famous, player-chosen kind).
+    /// Source: ArMDE:6310-6312 (Infamous),
+    /// `ArMDE:5703-5705` (Black Sheep), `ArMDE:3861-3863` (Famous, player-chosen kind).
     GrantsReputation {
         /// Which audience the granted Reputation reaches; `None` = player-chosen
         /// (any type).
@@ -1106,8 +1104,8 @@ pub enum Effect {
     /// Might = age ÷ 20 is entered by hand). Consumed by
     /// [`crate::effective::effective_might`]; a no-op for buy budgets / XP.
     ///
-    /// Source: Ars Magica 5e - Realms of Power - The Infernal.md:4120 (Demonic
-    /// Blood, Infernal Might 5), `:4136` (Demonic Might, +2); The Divine
+    /// Source: RoP:I:4120 (Demonic
+    /// Blood, Infernal Might 5), `RoP:I:4136` (Demonic Might, +2); The Divine
     /// (Revised).md:1975 (Strong Angelic Heritage, Divine Might age ÷ 20).
     MightGrant {
         /// The Realm the granted Might is aligned to.
@@ -1121,8 +1119,8 @@ pub enum Effect {
     /// Demonic Powers +20, Strong Angelic Heritage 30. Consumed by
     /// [`crate::effective::power_levels_budget`].
     ///
-    /// Source: Ars Magica 5e - Realms of Power - The Infernal.md:4122 (Demonic
-    /// Blood, 30 levels), `:4142` (Demonic Powers, +20); The Divine
+    /// Source: RoP:I:4122 (Demonic
+    /// Blood, 30 levels), `RoP:I:4142` (Demonic Powers, +20); The Divine
     /// (Revised).md:1977 (Strong Angelic Heritage, 30 levels).
     PowerLevels {
         /// Levels of supernatural powers added to the budget.
@@ -1149,8 +1147,8 @@ pub enum Effect {
     /// `derived.rs` (5i) via a per-total "focus applies" toggle, since descriptor
     /// applicability cannot be auto-derived.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4399-4422 (Major),
-    /// `:4536-4542` (Minor, one-focus limit at `:4542`).
+    /// Source: ArMDE:4399-4422 (Major),
+    /// `ArMDE:4536-4542` (Minor, one-focus limit at `ArMDE:4542`).
     MagicalFocus {
         /// Parameter key whose free-text value names the focus descriptor.
         param: String,
@@ -1162,7 +1160,7 @@ pub enum Effect {
     /// carriers are circumstantial (Cyclic Magic, Special Circumstances); 5i
     /// surfaces those as toggleable addends. Computed by `derived.rs` (5i).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4524-4527 (Method
+    /// Source: ArMDE:4524-4527 (Method
     /// Caster).
     CastingTotalMod {
         /// Points added to (or, when negative, removed from) the Casting Total.
@@ -1173,7 +1171,7 @@ pub enum Effect {
     /// A flat modifier to a magus's Lab Total (Inventive Genius +3). Computed by
     /// `derived.rs` (5i).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4151-4154.
+    /// Source: ArMDE:4151-4154.
     LabTotalMod {
         /// Points added to (or, when negative, removed from) the Lab Total.
         amount: i8,
@@ -1186,8 +1184,8 @@ pub enum Effect {
     /// resolution; the halving *scope* is derived at compute time from the
     /// targeted Art's `ArtType`. Computed by `derived.rs` (5i).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5913-5915
-    /// (Technique), `:5909-5912` (Form).
+    /// Source: ArMDE:5913-5915
+    /// (Technique), `ArMDE:5909-5912` (Form).
     DeficientArt {
         /// Parameter key whose value names the deficient Technique or Form.
         param: String,
@@ -1196,8 +1194,8 @@ pub enum Effect {
     /// totals for enchanting; Weak Magic halves penetration; Flawed Parma halves
     /// Magic Resistance). Computed by `derived.rs` (5i).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:7060-7063 (Weak
-    /// Enchanter), `:7064-7067` (Weak Magic), `:6142-6145` (Flawed Parma).
+    /// Source: ArMDE:7060-7063 (Weak
+    /// Enchanter), `ArMDE:7064-7067` (Weak Magic), `ArMDE:6142-6145` (Flawed Parma).
     MagicTotalHalving {
         /// Which in-play total is halved.
         total: HalvableTotal,
@@ -1205,8 +1203,8 @@ pub enum Effect {
     /// A flat modifier to Soak (Tough +3, Frail −1). Consumed by `derived.rs`
     /// `soak()` (5i).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5145-5147 (Tough),
-    /// `:6190-6193` (Frail).
+    /// Source: ArMDE:5145-5147 (Tough),
+    /// `ArMDE:6190-6193` (Frail).
     SoakMod {
         /// Points added to (or, when negative, removed from) Soak.
         amount: i8,
@@ -1215,7 +1213,7 @@ pub enum Effect {
     /// may carry several (one per affected `target`). Consumed by `derived.rs`
     /// `combat_totals()` (5i).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3500-3503 (Berserk).
+    /// Source: ArMDE:3500-3503 (Berserk).
     CombatMod {
         /// Points added to (or, when negative, removed from) the combat total.
         amount: i8,
@@ -1227,7 +1225,7 @@ pub enum Effect {
     /// simulate recovery rolls); the wound and fatigue tracks are consumed by
     /// `derived.rs` wound/fatigue read-outs (5i).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3751-3754 (Enduring
+    /// Source: ArMDE:3751-3754 (Enduring
     /// Constitution).
     HealthMod {
         /// Which health track the modifier affects.
@@ -1242,8 +1240,8 @@ pub enum Effect {
     /// [`Effect::MagicTotalHalving`]. Consumed by `derived.rs` `magic_resistance()`
     /// (5i).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:6346-6349 (Limited),
-    /// `:6819-6826` (Susceptibility), `:3579-3596` (Commanding Aura).
+    /// Source: ArMDE:6346-6349 (Limited),
+    /// `ArMDE:6819-6826` (Susceptibility), `ArMDE:3579-3596` (Commanding Aura).
     MagicResistanceMod {
         /// Which Magic Resistance modifier this is.
         kind: MagicResistanceEffect,
@@ -1261,8 +1259,8 @@ pub enum Effect {
     /// modifier read-out, which is the only home for the ones no computation
     /// reaches — see each variant for what it is worth today.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5187-5190 (Unaging),
-    /// `:16567-16569` (the AGING TOTAL the modifiers feed).
+    /// Source: ArMDE:5187-5190 (Unaging),
+    /// `ArMDE:16567-16569` (the AGING TOTAL the modifiers feed).
     AgingMod {
         /// Which aging / longevity subsystem the modifier touches.
         kind: AgingEffect,
@@ -1275,7 +1273,7 @@ pub enum Effect {
     /// `amount` the modifier (Apt Student +5 when taught). 5i surfaces these
     /// labelled.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3422-3425 (Apt
+    /// Source: ArMDE:3422-3425 (Apt
     /// Student).
     AdvancementMod {
         /// The advancement source the modifier applies to.
@@ -1291,9 +1289,9 @@ pub enum Effect {
     /// (Diedne, Faerie-Raised, Life-Linked) and circumstantial casting penalties —
     /// is **surfaced-only**, listed labelled rather than simulated.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3645-3648 (Deft
+    /// Source: ArMDE:3645-3648 (Deft
     /// Form), :4822-4826 (Quiet Magic), :5073-5076 (Subtle Magic), :9243-9245
-    /// (Words/Gestures penalties), `:3675-3682` (Diedne Magic), `:5917-5920`
+    /// (Words/Gestures penalties), `ArMDE:3675-3682` (Diedne Magic), `ArMDE:5917-5920`
     /// (Deleterious Circumstances).
     SpecialCastingMod {
         /// Which casting-style quirk this is.
@@ -1312,7 +1310,7 @@ pub enum Effect {
     /// rolls, not the bought/effective Ability score, so it never perturbs
     /// creation. 5i surfaces it labelled.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3362-3367.
+    /// Source: ArMDE:3362-3367.
     AbilityRollMod {
         /// Parameter key whose free-text value names the subject/field.
         param: String,
@@ -1328,7 +1326,7 @@ pub enum Effect {
     /// the bought score, unlike a flat [`Effect::ArtBonus`]); a no-op everywhere
     /// else.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3731-3737.
+    /// Source: ArMDE:3731-3737.
     ElementalMagic {
         /// The elemental Form ids the redistribution pools over.
         forms: std::collections::BTreeSet<Id>,
@@ -1488,7 +1486,7 @@ impl fmt::Display for MagicResistanceEffect {
 ///
 /// The two immunities are **orthogonal**, because the sources state them
 /// separately: not dropping Characteristics and not looking older are different
-/// facts, and Bound to (Role) has the first without the second (`:5743`).
+/// facts, and Bound to (Role) has the first without the second (`ArMDE:5743`).
 /// Collapsing them into one tag is what made the shipped Bee King entry wrong.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -1503,24 +1501,24 @@ pub enum AgingEffect {
     /// **Aging Points do not decrease the character's Characteristics** — they
     /// still accrue, and still count toward Decrepitude: "your aging points do
     /// not decrease your Characteristics, only building up to give you
-    /// Decrepitude points" (`:5189`). Carried by Unaging and by Bound to (Role),
-    /// which "also includes the effects of the Unaging Virtue" (`:5743`). It says
+    /// Decrepitude points" (`ArMDE:5189`). Carried by Unaging and by Bound to (Role),
+    /// which "also includes the effects of the Unaging Virtue" (`ArMDE:5743`). It says
     /// nothing about the apparent age — see [`Self::NoApparentAging`].
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5189, :5743.
+    /// Source: ArMDE:5189, :5743.
     NoAging,
     /// **The apparent age never advances**, whatever the roll: "Bee Kings do not
-    /// appear to age after reaching maturity" (`:3488`), and Unaging's "You may
-    /// choose your apparent age freely" (`:5189`). Consumed by
+    /// appear to age after reaching maturity" (`ArMDE:3488`), and Unaging's "You may
+    /// choose your apparent age freely" (`ArMDE:5189`). Consumed by
     /// `aging::resolve_outcome`, so a carrier's
     /// `AgingOutcome::apparent_age_increases` is false at every total.
     ///
     /// Bound to (Role) deliberately does **not** carry it: "but the character's
-    /// apparent age advances in line with their physical age" (`:5743`) — the
+    /// apparent age advances in line with their physical age" (`ArMDE:5743`) — the
     /// sentence that proves the two immunities are separable at all. A Bee King
     /// carries this one alone, and so still loses Characteristics.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3488, :5189,
+    /// Source: ArMDE:3488, :5189,
     /// :5743.
     NoApparentAging,
     /// A modifier to accrued Decrepitude. Surfaced only — no shipped item moves
@@ -1532,19 +1530,19 @@ pub enum AgingEffect {
     LivingConditions,
     /// A modifier to the roll to **survive an aging crisis** — a different roll
     /// from the aging roll, and deliberately sealed off from it: "Virtues that
-    /// affect aging rolls do not affect crisis survival rolls" (`:16636`). So a
+    /// affect aging rolls do not affect crisis survival rolls" (`ArMDE:16636`). So a
     /// modifier tagged here never reaches [`Self::AgingRoll`]'s total, and an
     /// `aging_roll` modifier never reaches the survival roll.
     ///
     /// The general prohibition does not silence a *specific* grant: Mild Aging's
-    /// "he receives a +3 bonus to rolls to survive an aging crisis" (`:4530`) is
+    /// "he receives a +3 bonus to rolls to survive an aging crisis" (`ArMDE:4530`) is
     /// exactly such a grant, and is the first shipped item to carry this kind.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4530, :16636.
+    /// Source: ArMDE:4530, :16636.
     CrisisSurvival,
     /// **A Heavy Wound whenever a crisis lands**: "whenever she undergoes an Aging
     /// Crisis (page 392) the leper sustains a Heavy Wound in addition to any other
-    /// result" (`:6340`). A marker — the `amount` is ignored and ships as 0,
+    /// result" (`ArMDE:6340`). A marker — the `amount` is ignored and ships as 0,
     /// because this is a consequence of the crisis, not a number added to any roll.
     ///
     /// Kept separate from [`Self::CrisisSurvival`] rather than folded into one
@@ -1552,7 +1550,7 @@ pub enum AgingEffect {
     /// would make the stored `amount` mean a roll modifier for one carrier and
     /// nothing at all for the next.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:6340.
+    /// Source: ArMDE:6340.
     CrisisHeavyWound,
 }
 
@@ -1677,7 +1675,7 @@ impl fmt::Display for SpecialCasting {
 /// The audience a Reputation reaches — a fixed rules taxonomy (so an enum, like
 /// [`crate::art::ArtType`]), rendered via Fluent, never as a raw slug.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:1091-1101.
+/// Source: ArMDE:1091-1101.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ReputationType {
@@ -1690,7 +1688,7 @@ pub enum ReputationType {
     /// Known within scholarly / university circles (the "Academic Reputation" the
     /// scholastic Social-Status Virtues confer — Baccalaureus, Magister in
     /// Artibus, Doctor in (Faculty), …). Core names it as a Reputation type
-    /// alongside the three "main" types at `:1097` ("The most basic type is …").
+    /// alongside the three "main" types at `ArMDE:1097` ("The most basic type is …").
     Academic,
 }
 
@@ -1740,7 +1738,7 @@ pub enum CreationPhase {
     /// the life stages that earn it — and, in that case, the plan those stages are
     /// priced from (the age, a magus's Gauntlet age and post-Gauntlet seasons, the
     /// native language, and the sample childhood)
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2364, :2213-2216).
+    /// (ArMDE:2364, :2213-2216).
     /// Declared before [`Abilities`](Self::Abilities), because it is what funds it.
     Experience,
     /// Abilities, bought with the experience the previous phase supplies.
@@ -1758,7 +1756,7 @@ pub enum CreationPhase {
     /// The aging a character owes before play: the age itself, the Living
     /// Conditions and Longevity Ritual that modify each aging total, and the
     /// per-year rolls the rules require of anyone past the threshold
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2232, :16563-16617).
+    /// (ArMDE:2232, :16563-16617).
     Aging,
     /// The terminal phase: everything a finished character carries that no
     /// creation phase owns — equipment, magic items, Might and powers, Warping —
@@ -1769,7 +1767,7 @@ pub enum CreationPhase {
 
 impl CreationPhase {
     /// Every phase, in the order the rules' creation summary walks them
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2205-2222), with the synthetic [`Review`](Self::Review)
+    /// (ArMDE:2205-2222), with the synthetic [`Review`](Self::Review)
     /// last. The single source of the phase set: the Fluent `phase-<slug>` keys,
     /// the UI's step table and the issue-contract table are all checked against
     /// it rather than against a second hardcoded list.
@@ -1901,11 +1899,11 @@ pub struct PointItem {
     ///
     /// Most descriptors name a single category, but some name two: Suppressed
     /// Gift is "*Major, Hermetic, Story*"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:6803-6804), and a
+    /// (ArMDE:6803-6804), and a
     /// character may legitimately reach it through either. **All of them are
     /// equally real** — the book's own indexes list such an item under both
     /// headings (Suppressed Gift at
-    /// Ars Magica - Definitive Edition (Core Rules).md:5301 under
+    /// ArMDE:5301 under
     /// "### Hermetic, Major" and again at :5369 under "### Story, Major"), and
     /// there is no "primary" among them. *Membership* tests — permitted/forbidden
     /// categories, category caps, grant constraints, Gift categories — consider
@@ -1929,15 +1927,15 @@ pub struct PointItem {
     /// also uses to decide a character has The Gift
     /// ([`EntityTypeProfile::gift_categories`]), so the two Beings Flaws the
     /// book indexes under *both* Hermetic and General
-    /// (Ars Magica - Definitive Edition (Core Rules).md:5445 and :5455, against
-    /// `### Hermetic, Minor` at `:5417`) may not carry `hermetic` as a
+    /// (ArMDE:5445 and :5455, against
+    /// `### Hermetic, Minor` at `ArMDE:5417`) may not carry `hermetic` as a
     /// membership category — an unGifted companion holding one would count as
     /// Gifted and be handed the Gift's free Supernatural-Ability slot. Recording
     /// the index heading here keeps the book's placement without granting
     /// membership anywhere.
     ///
     /// **Exactly one consumer**: `validation::magus::validate_house`'s
-    /// `:2860` "at least one Hermetic Flaw" guideline, which is a question about
+    /// `ArMDE:2860` "at least one Hermetic Flaw" guideline, which is a question about
     /// what the book lists, not about what the character *is*. Every membership
     /// surface — permitted/forbidden categories, category caps, grant
     /// constraints, Gift detection, [`Self::categories_for`] — and every
@@ -1959,7 +1957,7 @@ pub struct PointItem {
     /// (no more than half a character's Virtue points — and likewise Flaw points —
     /// may be Tainted).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2998-3002.
+    /// Source: ArMDE:2998-3002.
     #[serde(default, skip_serializing_if = "is_false")]
     pub tainted: bool,
     /// Entity kinds this item may be selected for. Empty means any kind.
@@ -2012,7 +2010,7 @@ pub struct PointItem {
     /// Flaw points. Drives the share-of-kind cap in
     /// `validation::caps::validate_share_of_kind_cap`.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3665 and :3669
+    /// Source: ArMDE:3665 and :3669
     /// (Demonic Might / Demonic Powers, "no more than half of the character's
     /// total Virtues").
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2227,7 +2225,7 @@ impl PointItem {
     ///
     /// If `params` records a value for one of this item's [`ParameterDomain::Category`]
     /// parameters (Sufi's `taken_as`), only THAT chosen category is in force —
-    /// `:5083` is an explicit "either/or" choice between two readings of one
+    /// `ArMDE:5083` is an explicit "either/or" choice between two readings of one
     /// item, not membership in both at once. Otherwise every category the
     /// descriptor lists is in force, exactly as before `taken_as` existed.
     ///
@@ -2300,7 +2298,7 @@ pub struct PointBudget {
     /// buys one Virtue point). Mythic Companions get 2 (each Flaw point is worth
     /// two Virtue points). Data-driven so the engine never hardcodes a type.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2638 ("you may
+    /// Source: ArMDE:2638 ("you may
     /// take up to ten points of Flaws, and each point of Flaws is worth two
     /// points of Virtues. This produces a maximum of 21 points of Virtues and 10
     /// points of Flaws").
@@ -2317,7 +2315,7 @@ pub struct PointBudget {
     pub max_major_flaws: Option<u8>,
     /// Optional cap on the number of Minor flaws (hard rule).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2774 ("A central
+    /// Source: ArMDE:2774 ("A central
     /// character may have up to ten points of Flaws, but no more than five Minor
     /// Flaws"); grogs :1009 ("no more than three Minor Flaws").
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2327,7 +2325,7 @@ pub struct PointBudget {
     /// category slug. `major_only` restricts the count to Major-magnitude flaws;
     /// `hard` makes the cap a blocking error (otherwise a non-blocking warning).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2820 ("A
+    /// Source: ArMDE:2820 ("A
     /// character may not have more than one Major Personality Flaw"; "A
     /// character should normally not have more than two Personality Flaws in
     /// total"); :2818 ("A character should not have more than one Story Flaw").
@@ -2337,7 +2335,7 @@ pub struct PointBudget {
     /// `flaw_category_caps` but counts `Virtue`-kind items. The magus type uses
     /// this for the `≤1 Major Hermetic Virtue` rule.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861 ("You
+    /// Source: ArMDE:2855-2861 ("You
     /// may take a maximum of one Major Hermetic Virtue during character
     /// creation").
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -2382,7 +2380,7 @@ pub(crate) fn is_false(b: &bool) -> bool {
 /// disagree about which entries apply.
 ///
 /// The rule this exists for is
-/// Ars Magica - Definitive Edition (Core Rules).md:2840 — "You may not take
+/// ArMDE:2840 — "You may not take
 /// Hermetic Virtues and Flaws, unless you have The Gift (this would be highly
 /// unusual)" — which the companion profile could previously encode only as its
 /// unconditional half.
@@ -2474,13 +2472,13 @@ pub struct EntityTypeProfile {
     #[serde(default, skip_serializing_if = "is_false")]
     pub has_mythic_type: bool,
     /// The magus's starting spell-levels budget (the sum of the levels of spells
-    /// he may know at creation). 120 for the magus profile (Ars Magica - Definitive Edition (Core Rules).md:2215-2216,
+    /// he may know at creation). 120 for the magus profile (ArMDE:2215-2216,
     /// 2435); 0 (omitted) for every non-magus type, which cannot take spells.
     /// Modified per-character by [`Effect::SpellLevels`] (Skilled/Weak Parens).
     #[serde(default, skip_serializing_if = "is_zero")]
     pub spell_levels: u32,
     /// The character type's starting Confidence Score
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2524 — the earlier
+    /// (ArMDE:2524 — the earlier
     /// citation of this line pointed at the "### Confidence" heading two lines
     /// above the actual "start with a Confidence Score of 1 and 3 Confidence
     /// Points" sentence; corrected against the source). Companions,
@@ -2490,7 +2488,7 @@ pub struct EntityTypeProfile {
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub confidence_score: u8,
     /// The character type's starting Confidence Points
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2524): 3 for
+    /// (ArMDE:2524): 3 for
     /// companions/magi/mythic, 0 for grogs.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub confidence_points: u8,
@@ -2510,8 +2508,8 @@ pub struct EntityTypeProfile {
     ///
     /// > You should take at least one Hermetic Flaw
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2860 (a bullet
-    /// under `#### Magi`, `:2853`).
+    /// Source: ArMDE:2860 (a bullet
+    /// under `#### Magi`, `ArMDE:2853`).
     ///
     /// Deliberately **not** [`Self::gift_categories`], though both name
     /// `hermetic` today. They answer different questions — "is this character
@@ -2645,7 +2643,7 @@ pub struct ArtScore {
 /// resolved value: the catalogue supplies a fixed spell's level, so `level` is
 /// `Some` only for a **General** spell — the per-character learned level. Two
 /// General versions of one spell at different levels are distinct spells
-/// (Ars Magica - Definitive Edition (Core Rules).md:12349-12353), so identity is (spell, level, parameter). Kept
+/// (ArMDE:12349-12353), so identity is (spell, level, parameter). Kept
 /// sorted via [`Entity::normalize`].
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SpellSelection {
@@ -2658,23 +2656,21 @@ pub struct SpellSelection {
     /// The bought Spell Mastery Ability score for this spell, spent from the
     /// mastery-XP pool (Mastered Spells). `None`/0 = unmastered. The effective
     /// mastery is `max(this, granted floor)` — Flawless Magic floors every spell
-    /// at 1. Source: Ars Magica - Definitive Edition (Core Rules).md:4471-4474,
+    /// at 1. Source: ArMDE:4471-4474,
     /// :3887-3889.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mastery: Option<u8>,
     /// The chosen value for a parameterized spell (the target `(Form)` of a
     /// meta-magic Vim spell like Wizard's Boost — an Art id such as `art.ignem`).
     /// Part of the spell's identity: the same base spell may be taken once per
-    /// distinct parameter (Ars Magica - Definitive Edition (Core
-    /// Rules).md:15791-15794). Display + identity only —
+    /// distinct parameter (ArMDE:15791-15794). Display + identity only —
     /// it does NOT change the spell's own Technique/Form. `None` for ordinary,
     /// unparameterized spells.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameter: Option<String>,
     /// The chosen Spell Mastery special abilities for this spell, each a
     /// `spell_mastery_ability.*` id from the catalogue. One may be chosen per
-    /// effective mastery level (Ars Magica - Definitive Edition (Core
-    /// Rules).md:9524-9526); a repeatable ability
+    /// effective mastery level (ArMDE:9524-9526); a repeatable ability
     /// (Precise/Quick/Quiet Casting) may appear more than once, so this is a
     /// `Vec` that may hold duplicates, not a set. Additive and serde-defaulted, so
     /// it is backward/forward compatible with saves written before it existed
@@ -2689,8 +2685,7 @@ pub struct SpellSelection {
 /// shield, or armor id, plus whether it is currently equipped (wielded / worn).
 /// Only the choice is stored — combat totals, Soak, and Encumbrance are derived
 /// downstream (5i) from the referenced catalogue row. Kept sorted via
-/// [`Entity::normalize`]. Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:16944-17011 (the equipment tables),
+/// [`Entity::normalize`]. Source: ArMDE:16944-17011 (the equipment tables),
 /// :17103-17123 (Encumbrance, computed in the derived-totals slice).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct EquipmentSlot {
@@ -2706,16 +2701,14 @@ pub struct EquipmentSlot {
     /// for a weapon slot whose Ability carries a specialty. Additive and
     /// serde-defaulted — old saves omit the key and deserialize to `false`, a new
     /// save with `false` omits it on write (SCHEMA_VERSION unchanged), exactly like
-    /// the sibling `equipped` field. Source: Ars Magica - Definitive Edition
-    /// (Core Rules).md:7122, :7139.
+    /// the sibling `equipped` field. Source: ArMDE:7122, :7139.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub specialization_applies: bool,
 }
 
 /// A named Personality Trait with a value in −3..+3 (or ±6 for the trait
 /// representing a Major Personality Flaw). Free-text name, kept sorted by name in
-/// [`Entity::normalize`]. Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:2500-2503.
+/// [`Entity::normalize`]. Source: ArMDE:2500-2503.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct PersonalityTrait {
     /// Free-text trait name (e.g. "Brave", "Loyal").
@@ -2726,7 +2719,7 @@ pub struct PersonalityTrait {
 
 /// A starting Reputation: score + free-text content + audience type. Only legal
 /// when backed by a granting Virtue/Flaw ([`Effect::GrantsReputation`]).
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:1091-1101, 2512-2514.
+/// Source: ArMDE:1091-1101, 2512-2514.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Reputation {
     /// Which audience the Reputation reaches.
@@ -2741,7 +2734,7 @@ pub struct Reputation {
 /// total effect level); the `level` is charged against the item-level budget the
 /// character's Magic Items / Redcap Virtues grant (see
 /// [`crate::effective::item_level_budget`]). Kept sorted via [`Entity::normalize`].
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4347-4349 (Magic
+/// Source: ArMDE:4347-4349 (Magic
 /// Items), :4842-4846 (Redcap).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct EnchantedDevice {
@@ -2754,8 +2747,7 @@ pub struct EnchantedDevice {
 /// The four supernatural Realms of Mythic Europe. A being's Might is aligned to
 /// exactly one Realm, which determines its Magic Resistance and what powers it may
 /// hold. A fixed rules taxonomy, rendered via Fluent, never as a raw slug.
-/// Source: Ars Magica 5e - Realms of Power - Magic.md:1470-1472; Ars Magica -
-/// Definitive Edition (Core Rules).md:2623-2631.
+/// Source: RoP:M:1470-1472; ArMDE:2623-2631.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Realm {
@@ -2804,10 +2796,8 @@ impl fmt::Display for Realm {
 }
 
 /// A supernatural being's **Might Score** and the Realm it is aligned to. A Might
-/// Score grants blanket Magic Resistance equal to the score (Ars Magica 5e -
-/// Realms of Power - Magic.md:1472). Only the choice is stored; the effective
-/// score and its Magic Resistance are derived. Source: Ars Magica 5e - Realms
-/// of Power - Magic.md:1470-1472.
+/// Score grants blanket Magic Resistance equal to the score (RoP:M:1472). Only the choice is stored; the effective
+/// score and its Magic Resistance are derived. Source: RoP:M:1470-1472.
 ///
 /// The struct is shared by two holders, and Virtue grants apply to only one of them:
 /// - [`Entity::might`] — the *character's* own Might. A being may enter a base score
@@ -2832,9 +2822,7 @@ pub struct MightScore {
 /// being's Might Virtues grant (see [`crate::effective::power_levels_budget`]),
 /// exactly as an [`EnchantedDevice`] is charged against the item-level budget. The
 /// engine is not a power *designer* — powers are entered by hand, like spells.
-/// Kept sorted via [`Entity::normalize`]. Source: Ars Magica 5e - Realms of
-/// Power - The Infernal.md:4122; Ars Magica 5e - Realms of Power - The Divine
-/// (Revised).md:1977.
+/// Kept sorted via [`Entity::normalize`]. Source: RoP:I:4122; RoP:D:1977.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SupernaturalPower {
     /// Free-text power name.
@@ -2846,7 +2834,7 @@ pub struct SupernaturalPower {
     /// "You may also spend levels one-for-one to give the power Penetration;
     /// otherwise, it has a Penetration of zero" — so these levels come out of the
     /// SAME pool as [`Self::level`] and are charged against the same budget by
-    /// [`crate::effective::powers_used`]. The book's own worked example (`:4021`)
+    /// [`crate::effective::powers_used`]. The book's own worked example (`ArMDE:4021`)
     /// spends two copies of Greater Power, 100 levels, as "a power with a level of
     /// 60 and a Penetration of 0, and a second power with a level and Penetration
     /// of 20 each": 60 + 0 + 20 + 20 = 100.
@@ -2855,7 +2843,7 @@ pub struct SupernaturalPower {
     /// written before the field reads 0, and a power that bought no Penetration
     /// serializes exactly as it did before.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4019, :4021.
+    /// Source: ArMDE:4019, :4021.
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub penetration: u16,
 }
@@ -2865,9 +2853,9 @@ pub struct SupernaturalPower {
 /// "A familiar is a beast that a magus befriends and then magically bonds with,
 /// instilling the beast with magical powers in the process" — it "always has its
 /// own will, and is not under the control of the magus"
-/// (Ars Magica - Definitive Edition (Core Rules).md:10766-10892). It is
+/// (ArMDE:10766-10892). It is
 /// therefore a *creature*, and the fields below
-/// follow the rulebook's own **Creature Format** order (`:17787-17827`) so a save
+/// follow the rulebook's own **Creature Format** order (`ArMDE:17787-17827`) so a save
 /// reads like a statblock: Might, Characteristics, Size, Personality Traits, …,
 /// Powers.
 ///
@@ -2880,7 +2868,7 @@ pub struct SupernaturalPower {
 ///
 /// Everything the familiar holds is its **own**, never the magus's: its
 /// Characteristics are not bought from the magus's Characteristic points
-/// (`:17793`), and its Might is not the magus's Might, so neither the point-buy nor
+/// (`ArMDE:17793`), and its Might is not the magus's Might, so neither the point-buy nor
 /// the Might realm-agreement check can ever see them (both invariants are locked by
 /// regression tests in `validation/mod.rs`). Nothing is derived here; the read-outs
 /// live in [`crate::derived::familiar_readout`].
@@ -2889,8 +2877,8 @@ pub struct SupernaturalPower {
 /// a pre-M5.5c familiar (name + cords) loads unchanged and writes identical bytes —
 /// hence no `SCHEMA_VERSION` bump.
 ///
-/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10766-10892` (Familiars),
-/// `:10840-10844` (the three cords), `:17787-17827` (Creature Format).
+/// Source: `ArMDE:10766-10892` (Familiars),
+/// `ArMDE:10840-10844` (the three cords), `ArMDE:17787-17827` (Creature Format).
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Familiar {
     /// Free-text familiar name.
@@ -2898,36 +2886,36 @@ pub struct Familiar {
     /// The kind of beast, free text ("raven", "tortoiseshell cat"). Deliberately
     /// **not** `species`: the rules reserve *Species* for the Imaginem term
     /// (the sensory image a thing sheds), so the field is named for the animal.
-    /// Source: `:10774` ("finding an animal with inherent magic").
+    /// Source: `ArMDE:10774` ("finding an animal with inherent magic").
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub animal: String,
     /// The familiar's own Magic Might Score + Realm; `None` when not entered.
     /// "the beast is likely to have a Magic Might score, which may be assigned
-    /// based on the scores of comparable magical creatures" (`:10774`). This is the
+    /// based on the scores of comparable magical creatures" (`ArMDE:10774`). This is the
     /// familiar's Might, never the magus's — no Virtue grant stacks on it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub might: Option<MightScore>,
-    /// The familiar's eight Characteristics (`:17793`), signed and NOT bought from
+    /// The familiar's eight Characteristics (`ArMDE:17793`), signed and NOT bought from
     /// the magus's Characteristic points. A score of 0 is pruned by
     /// [`Familiar::normalize`] and the map is omitted when empty, so an explicit 0 and
     /// an absent entry serialize identically.
     ///
     /// A bound familiar that lacked human intelligence "gains it, with a score of
-    /// –3" (`:10854`), which is an ordinary Intelligence entry — so the fixed
+    /// –3" (`ArMDE:10854`), which is an ordinary Intelligence entry — so the fixed
     /// eight-value [`Characteristic`] enum needs no `Cunning` variant. The
     /// *unbound* creature's Cunning (Cun) score the Creature Format mentions
-    /// (`:17793`) is a display-only affordance and is deliberately deferred; see
+    /// (`ArMDE:17793`) is a display-only affordance and is deliberately deferred; see
     /// RULES.md so it is not re-litigated.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub characteristics: BTreeMap<Characteristic, i8>,
     /// The familiar's Size — signed, and commonly **negative** (a raven is -4).
     /// It lowers the bonding level: "If the familiar has negative Size, this
-    /// reduces the level for the enchantment" (`:10824`). Source: `:17795`
-    /// (creature Size), `:17829-17856` (the Size examples table).
+    /// reduces the level for the enchantment" (`ArMDE:10824`). Source: `ArMDE:17795`
+    /// (creature Size), `ArMDE:17829-17856` (the Size examples table).
     #[serde(default, skip_serializing_if = "is_zero_i8")]
     pub size: i8,
-    /// The familiar's Personality Traits (`:17807`). The bond adds Loyal (partner)
-    /// +3 (`:10852`), which is surfaced as a note and entered by hand, never
+    /// The familiar's Personality Traits (`ArMDE:17807`). The bond adds Loyal (partner)
+    /// +3 (`ArMDE:10852`), which is surfaced as a note and entered by hand, never
     /// auto-applied. Kept sorted via [`Familiar::normalize`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub personality_traits: Vec<PersonalityTrait>,
@@ -2945,9 +2933,9 @@ pub struct Familiar {
     pub cord_bronze: u8,
     /// The powers invested in the familiar bond. Charged against **no** budget:
     /// "there is no limit to the number of powers which may be invested in a
-    /// familiar" (`:10866`) — unlike a being's own [`Entity::powers`], which the
+    /// familiar" (`ArMDE:10866`) — unlike a being's own [`Entity::powers`], which the
     /// power-levels budget bounds. Kept sorted via [`Familiar::normalize`].
-    /// Source: `:10862-10884` (Empowering the Bond).
+    /// Source: `ArMDE:10862-10884` (Empowering the Bond).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub powers: Vec<SupernaturalPower>,
 }
@@ -2960,7 +2948,7 @@ pub struct Familiar {
 /// for values that reach a consumer before a normalize pass (a freshly loaded save).
 /// Neither restates the number.
 ///
-/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10836`.
+/// Source: `ArMDE:10836`.
 pub const MAX_CORD_SCORE: u8 = 5;
 
 impl Familiar {
@@ -2971,7 +2959,7 @@ impl Familiar {
     ///
     /// A 0 is pruned rather than kept because a familiar's Characteristics are
     /// display-only — nothing derives from them and none is bought from a point pool
-    /// (`:17793`) — so an explicit 0 and an absent entry are the same statement, and
+    /// (`ArMDE:17793`) — so an explicit 0 and an absent entry are the same statement, and
     /// two such familiars must serialize to identical bytes.
     ///
     /// A cord above the maximum is clamped for exactly that reason. The cord fields
@@ -3003,7 +2991,7 @@ impl Familiar {
 /// **Stored, deliberately not computed.** The bonus is *not* folded into any
 /// Casting Total: it applies "only … when the magus is touching the talisman, and
 /// only the highest bonus applies", to Casting Scores for Ritual/Formulaic/
-/// Spontaneous magic and never to Magic Resistance or lab activities (`:10625`).
+/// Spontaneous magic and never to Magic Resistance or lab activities (`ArMDE:10625`).
 /// Which spells an attunement covers is free text ([`Self::description`]), so the
 /// engine cannot tell whether a given cell of the casting grid is one it enhances,
 /// and "touching the talisman" is a moment of play the model does not represent.
@@ -3011,7 +2999,7 @@ impl Familiar {
 /// same call as [`crate::derived::soak`]'s Form bonus, which is surfaced as an
 /// entered 0. Recorded as a deferral in RULES.md so it is not read as done.
 ///
-/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10623`, `:10625`.
+/// Source: `ArMDE:10623`, `ArMDE:10625`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TalismanAttunement {
     /// Free-text description of the attunement (what it enhances).
@@ -3031,7 +3019,7 @@ pub struct TalismanAttunement {
 /// nothing. Keeping them apart is the same separation that puts
 /// [`SupernaturalPower`] beside [`EnchantedDevice`].
 ///
-/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10621` ("When a magus
+/// Source: `ArMDE:10621` ("When a magus
 /// instills effects into a talisman …").
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TalismanEffect {
@@ -3055,7 +3043,7 @@ pub struct TalismanEffect {
 /// Every field is optional, so an untouched talisman writes no keys at all. Both
 /// nested lists are kept sorted via [`Entity::normalize`].
 ///
-/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10603-10625`.
+/// Source: `ArMDE:10603-10625`.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Talisman {
     /// Free-text shape/material identity of the item ("an ash staff shod with
@@ -3086,7 +3074,7 @@ impl Talisman {
 pub enum LongevitySource {
     /// The magus made their own ritual. The bonus is still *entered*, not derived:
     /// it was fixed by the Creo Corpus Lab Total of the season the ritual was made
-    /// (Ars Magica - Definitive Edition (Core Rules).md:10662), and the engine only *suggests* a value from today's
+    /// (ArMDE:10662), and the engine only *suggests* a value from today's
     /// Lab Total.
     SelfMade,
     /// An external ritual (e.g. bought or cast by another magus); no suggestion is
@@ -3107,12 +3095,11 @@ impl fmt::Display for LongevitySource {
 /// computation.
 ///
 /// The aging bonus is "+1 bonus for every five points or fraction of Creo Corpus
-/// Lab Total" (Ars Magica - Definitive Edition (Core Rules).md:10662) — but that Lab Total is the one the *creating*
+/// Lab Total" (ArMDE:10662) — but that Lab Total is the one the *creating*
 /// magus had in the season the ritual was made. Raising Creo/Corpus or moving to a
 /// stronger aura afterwards does not improve an existing ritual; the magus must
 /// reinvent it, which is a fresh season's work ("If you reinvent the ritual to take
-/// advantage of increased Art scores…", Ars Magica - Definitive Edition (Core
-/// Rules).md:10670, and a failed ritual's
+/// advantage of increased Art scores…", ArMDE:10670, and a failed ritual's
 /// focus is repeated unchanged, :10668). So `bonus` is **player-entered for both
 /// sources** and stored: `None` means "not entered yet", never a claimed 0. The
 /// engine offers a suggestion from today's Lab Total
@@ -3120,7 +3107,7 @@ impl fmt::Display for LongevitySource {
 ///
 /// `focus` is the ritual's culminating focus, "which is appropriate to the magus in
 /// question" and must be repeated verbatim if the ritual ever fails
-/// (Ars Magica - Definitive Edition (Core Rules).md:10656, :10668) — free text,
+/// (ArMDE:10656, :10668) — free text,
 /// since the rules give it no mechanics.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LongevityRitual {
@@ -3130,7 +3117,7 @@ pub struct LongevityRitual {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bonus: Option<i8>,
     /// The ritual's culminating focus, free text; empty while not entered.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:10656.
+    /// Source: ArMDE:10656.
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub focus: String,
 }
@@ -3138,7 +3125,7 @@ pub struct LongevityRitual {
 /// A Twilight Scar: a minor magical trait (beneficial or annoying) a magus
 /// acquires from experiencing Twilight. Free-text — the rules give no mechanical
 /// number, only a description — and kept sorted via [`Entity::normalize`].
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:9731, :9743.
+/// Source: ArMDE:9731, :9743.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TwilightScar {
     /// Free-text description of the scar.
@@ -3169,7 +3156,7 @@ pub struct TwilightScar {
 /// chronologically via [`Entity::normalize`]. **A log mixing dated and undated
 /// entries sorts the undated ones first**, because `None < Some(_)`.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16563-16577 (Aging).
+/// Source: ArMDE:16563-16577 (Aging).
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct AgingLogEntry {
     /// The **calendar** year the roll happened. `None` for a character with no
@@ -3188,53 +3175,53 @@ pub struct AgingLogEntry {
     /// structured fields below speak.
     pub effect: String,
     /// The stress die the player typed. The app never rolls.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567.
+    /// Source: ArMDE:16567.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub die: Option<i32>,
     /// The AGING TOTAL that die produced, conditions and Longevity Ritual
-    /// included. Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569.
+    /// included. Source: ArMDE:16567-16569.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub total: Option<i32>,
     /// The Living Conditions in force that year, as ids into the
     /// `rules/core/aging.json` table. Recorded per year because the character's
     /// standing [`Entity::living_conditions`] may legitimately change later.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16581-16594.
+    /// Source: ArMDE:16581-16594.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub living_conditions: BTreeSet<Id>,
     /// The aging points that year awarded, per Characteristic — the player's own
-    /// distribution where the table left the choice open (Ars Magica - Definitive Edition (Core Rules).md:16615).
+    /// distribution where the table left the choice open (ArMDE:16615).
     /// Subtracting exactly these is what reverts the year.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16579.
+    /// Source: ArMDE:16579.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub points: BTreeMap<Characteristic, u8>,
     /// Whether the roll advanced the character's apparent age by one year.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16577.
+    /// Source: ArMDE:16577.
     #[serde(default, skip_serializing_if = "is_false")]
     pub apparent_age_increased: bool,
-    /// Whether the row called for a Crisis (`:16602`, `:16611`). It says the year
+    /// Whether the row called for a Crisis (`ArMDE:16602`, `ArMDE:16611`). It says the year
     /// *demanded* one, which is not the same as the Crisis having been rolled: the
     /// four fields below are what records that, and a `true` here with an absent
     /// [`Self::crisis_row`] is a Crisis owed and not yet resolved.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16602, :16611.
+    /// Source: ArMDE:16602, :16611.
     #[serde(default, skip_serializing_if = "is_false")]
     pub crisis: bool,
     /// The Simple Die the player typed for the Crisis, when one was rolled. The
     /// app never rolls this one either.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16621.
+    /// Source: ArMDE:16621.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub crisis_die: Option<i32>,
     /// The CRISIS TOTAL that die produced — "Simple die + age/10 (round up) +
     /// Decrepitude Score", the Decrepitude being the one this very year raised
-    /// (`:16619`). Recorded for the same reason [`Self::total`] is: it is the
+    /// (`ArMDE:16619`). Recorded for the same reason [`Self::total`] is: it is the
     /// historical record of a roll, and the score it was made against goes on
     /// climbing afterwards.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16619, :16621.
+    /// Source: ArMDE:16619, :16621.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub crisis_total: Option<i32>,
     /// The row of the Crisis Table that total landed on, as an id into
     /// `rules/core/aging.json` — `crisis.minor_illness` and friends. An id, never
     /// a name: the row's text lives in `rules/i18n/<lang>/aging.json`.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16624-16632.
+    /// Source: ArMDE:16624-16632.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub crisis_row: Option<Id>,
     /// How bad that row was, recorded beside its id rather than left to be looked
@@ -3242,9 +3229,9 @@ pub struct AgingLogEntry {
     /// Table at all — so a save can outlive the table that produced it, and the
     /// severity is then the only thing left that says what the character went
     /// through. `None` beside a present [`Self::crisis_row`] is a Bedridden row
-    /// (`:16626`, `:16627`), which has no severity because it is time rather than
+    /// (`ArMDE:16626`, `ArMDE:16627`), which has no severity because it is time rather than
     /// an illness.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16628-16632.
+    /// Source: ArMDE:16628-16632.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub crisis_severity: Option<CrisisSeverity>,
 }
@@ -3460,7 +3447,7 @@ pub struct Entity {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub mythic_choices: BTreeMap<String, Selection>,
     /// The player's chosen fills for the Virtues/Flaws a non-magus character owes
-    /// from its Warping Score ("Effects of Warping", Ars Magica - Definitive Edition (Core Rules).md:16547-16561),
+    /// from its Warping Score ("Effects of Warping", ArMDE:16547-16561),
     /// keyed by each owed slot's stable `choice_key` (see
     /// [`crate::effective::warping_owed_grants`]). Off-budget grants: like
     /// `house_choices`/`mythic_choices` the fills are resolved to derived
@@ -3472,19 +3459,19 @@ pub struct Entity {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub warping_choices: BTreeMap<String, Selection>,
     /// The character's age in years. Drives the age → max-Ability-score cap
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2366-2376). `None` when unset (no cap enforced yet).
+    /// (ArMDE:2366-2376). `None` when unset (no cap enforced yet).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub age: Option<u32>,
-    /// The character's apparent age in years (Ars Magica - Definitive Edition (Core Rules).md:1155). The resolved
+    /// The character's apparent age in years (ArMDE:1155). The resolved
     /// outcome of aging rolls: "the character's apparent age increases by one
     /// year" whenever the AGING TOTAL clears the table's threshold
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16577), which [`crate::aging`] resolves and a resolved year
+    /// (ArMDE:16577), which [`crate::aging`] resolves and a resolved year
     /// writes here. It stays directly editable — a hand-entered age is never
     /// overwritten — and `None` when unset. Mirrors [`Entity::age`]'s
     /// representation.
     ///
     /// Never an input to the aging roll: the modifier "depends on the character's
-    /// **actual, not apparent**, age" (`:16577`).
+    /// **actual, not apparent**, age" (`ArMDE:16577`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub apparent_age: Option<u32>,
     /// Named Personality Traits (value ±3, or ±6 for a Major Personality Flaw's
@@ -3525,15 +3512,15 @@ pub struct Entity {
     pub longevity_ritual: Option<LongevityRitual>,
     /// The circumstances the character lives under, as ids into the Living
     /// Conditions table of `rules/core/aging.json`
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16581-16594). The other modifier the AGING TOTAL subtracts,
-    /// alongside the Longevity Ritual above (`:16567-16569`).
+    /// (ArMDE:16581-16594). The other modifier the AGING TOTAL subtracts,
+    /// alongside the Longevity Ritual above (`ArMDE:16567-16569`).
     ///
     /// A **set**, because the asterisked rows are not alternatives: "Modifiers
-    /// marked with an asterisk are cumulative with each other" (`:16594`), so a
+    /// marked with an asterisk are cumulative with each other" (`ArMDE:16594`), so a
     /// leper who works in a mine holds two rows and their modifiers add.
     ///
     /// **Empty means the table's baseline, not an unfinished entry.** The table
-    /// prints "Average peasant 0" (`:16587`), so a character who names no
+    /// prints "Average peasant 0" (`ArMDE:16587`), so a character who names no
     /// condition has a modifier of exactly 0 — the same number the baseline row
     /// carries. Nothing prompts him to choose one.
     ///
@@ -3558,37 +3545,34 @@ pub struct Entity {
     /// the effective Characteristic used by derived / play stats but never the
     /// bought score creation-legality checks read, so entering an aged character
     /// cannot retroactively make its point-buy illegal.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16579.
+    /// Source: ArMDE:16579.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub aging_points: BTreeMap<Characteristic, u8>,
     /// Accrued Warping Points. Summed with any grant-derived Warping Points (Warped
     /// by Magic, …) and inverted through the advancement curve to the Warping Score
-    /// by [`crate::effective::warping_score`]. Source: Ars Magica - Definitive
-    /// Edition (Core Rules).md:16464-16475.
+    /// by [`crate::effective::warping_score`]. Source: ArMDE:16464-16475.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub warping_points: u32,
     /// Free-text description of how the character's Warping manifests (the
     /// source-reflecting Minor/Major Flaw from "Effects of Warping",
-    /// Ars Magica - Definitive Edition (Core Rules).md:16547-16561). A pure
+    /// ArMDE:16547-16561). A pure
     /// annotation carrying NO mechanic: it is
     /// deliberately NOT a Flaw `selection`, because a post-creation warping Flaw
     /// must not count against the creation Virtue/Flaw budget. Empty when unset.
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub warping_effect: String,
     /// Twilight Scars the magus has acquired (free-text). Kept sorted via
-    /// [`Entity::normalize`]. Source: Ars Magica - Definitive Edition (Core
-    /// Rules).md:9731, :9743.
+    /// [`Entity::normalize`]. Source: ArMDE:9731, :9743.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub twilight_scars: Vec<TwilightScar>,
     /// Free-text narrative of the character's overall aging / decrepitude
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16563-16577). A pure
+    /// (ArMDE:16563-16577). A pure
     /// annotation carrying NO mechanic —
     /// Decrepitude is derived from `aging_points`; this only records flavor.
     /// Empty when unset.
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub decrepitude_effect: String,
-    /// Per-year aging-roll log (Ars Magica - Definitive Edition (Core
-    /// Rules).md:16563-16577). The app never rolls
+    /// Per-year aging-roll log (ArMDE:16563-16577). The app never rolls
     /// the die, but it resolves the one the player types — [`crate::aging`]
     /// computes the AGING TOTAL and its outcome — and records the result here as
     /// a structured [`AgingLogEntry`], which is what lets a year be reverted
@@ -3644,22 +3628,18 @@ pub struct Entity {
     /// The weapons, shields, and armor the character carries (each a reference to
     /// a catalogue id). Kept sorted via [`Entity::normalize`]. Defaults to empty.
     /// The derived-totals slice (5i) consumes these to compute combat lines, Soak,
-    /// and Encumbrance. Source: Ars Magica - Definitive Edition (Core
-    /// Rules).md:16944-17011.
+    /// and Encumbrance. Source: ArMDE:16944-17011.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub equipment: Vec<EquipmentSlot>,
     /// The supernatural being's base Might Score + Realm (grog/companion/mythic
     /// companion with a Might Virtue). `None` for ordinary characters. The
     /// effective Might is this base plus same-Realm [`Effect::MightGrant`]s (see
-    /// [`crate::effective::effective_might`]). Source: Ars Magica 5e - Realms
-    /// of Power - Magic.md:1470-1472.
+    /// [`crate::effective::effective_might`]). Source: RoP:M:1470-1472.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub might: Option<MightScore>,
     /// The being's supernatural powers; each `level` is charged against the
     /// power-levels budget its Might Virtues grant. Kept sorted via
-    /// [`Entity::normalize`]. Defaults to empty. Source: Ars Magica 5e - Realms
-    /// of Power - The Infernal.md:4122; Ars Magica 5e - Realms of Power - The
-    /// Divine (Revised).md:1977.
+    /// [`Entity::normalize`]. Defaults to empty. Source: RoP:I:4122; RoP:D:1977.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub powers: Vec<SupernaturalPower>,
 }
@@ -3778,7 +3758,7 @@ pub const SCHEMA_VERSION: u32 = 17;
 /// Infernal-realm powers, "– (5 x aura)", at the highest aura rating the rules
 /// give ("can be rated in power on a scale from 1 to 10").
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:17390 (rating scale),
+/// Source: ArMDE:17390 (rating scale),
 /// :17404-17409 (Realm Interaction Table, the ×5 Divine-on-Infernal entry).
 ///
 /// Enforced in two places. [`Entity::normalize`] clamps the stored value
@@ -3906,7 +3886,7 @@ pub struct LoadedEntity {
 /// Characteristic drops starting from a `bought` score, under the derived rule
 /// (each drop needs one more point than the absolute value of the current
 /// aged-down score). Used to reconstruct a legacy `aging_reductions` count as
-/// `aging_points`. Source: Ars Magica - Definitive Edition (Core Rules).md:16579.
+/// `aging_points`. Source: ArMDE:16579.
 fn minimal_aging_points_for_drops(bought: i32, drops: u32) -> u32 {
     let mut total = 0u32;
     for i in 0..drops {
@@ -4014,9 +3994,9 @@ const BEING_PARAM_KEY: &str = "being";
 /// `rules/i18n/en/virtues_flaws.json` and `rules/i18n/de/virtues_flaws.json`, both
 /// at the `being.*` entries. The rulebook supplies the wording a player copying
 /// from the page would have typed:
-/// Ars Magica - Definitive Edition (Core Rules).md:4135, :6526, :6893, and the
+/// ArMDE:4135, :6526, :6893, and the
 /// German mirror at the same line numbers. The English lists and the German lists
-/// at `:6526` / `:6893` fold onto the i18n labels exactly; the German `:4135` list
+/// at `ArMDE:6526` / `ArMDE:6893` fold onto the i18n labels exactly; the German `ArMDE:4135` list
 /// is in the dative, which contributes the three extra keys below. No synonym
 /// beyond what those print is invented — an unrecognised value is left exactly as
 /// typed.
@@ -4039,13 +4019,13 @@ const LEGACY_BEING_LABELS: &[(&str, &str)] = &[
     ("Magische Kreaturen", "being.magical_creatures"),
     ("Sterbliche Menschen", "being.mundane_humans"),
     // The German **dative** forms, printed by the Inoffensive entry at
-    // `:4135` — "…von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen
+    // `ArMDE:4135` — "…von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen
     // oder magischen Kreaturen." A player filling the old free-text box while
     // reading that page copied the inflected form off it, so these are recovered
     // too. Transcribed, not declined: "Feen" and "Dämonen" are identical in the
     // dative and are already above, and the fourth class has no dative form here
     // to take — `sterbliche Menschen` appears only in the two entries that print
-    // the nominative (`:6526`, `:6893`), so no "sterblichen Menschen" key is
+    // the nominative (`ArMDE:6526`, `ArMDE:6893`), so no "sterblichen Menschen" key is
     // invented.
     ("Tieren", "being.animals"),
     ("göttlichen Wesen", "being.divine"),
@@ -4161,7 +4141,7 @@ fn trim_all_selection_params(entity: &mut Entity) {
 ///
 /// Saves at schema ≤ 9 carried a manual `aging_reductions` map of completed
 /// Characteristic drops. The current model derives those drops from
-/// `aging_points` (Ars Magica - Definitive Edition (Core Rules).md:16579), so any legacy reductions are folded into
+/// `aging_points` (ArMDE:16579), so any legacy reductions are folded into
 /// `aging_points` as the minimal point total that reproduces the same number of
 /// drops. Because every aging point counts toward Decrepitude — including those
 /// "lost" to a drop — this fold also corrects the old model's Decrepitude
@@ -4668,7 +4648,7 @@ mod tests {
         // before the field existed carries no key and must read as 0, and a power
         // that spent no levels on Penetration must round-trip without growing one
         // (canonical serialization, zero-noise diffs). A power that DID buy
-        // Penetration keeps it (Ars Magica - Definitive Edition (Core Rules).md:4019).
+        // Penetration keeps it (ArMDE:4019).
         let older: SupernaturalPower =
             serde_json::from_str(r#"{"name":"Curse of Sleep","level":25}"#).unwrap();
         assert_eq!(older.penetration, 0);
@@ -4877,7 +4857,7 @@ mod tests {
     fn point_item_keeps_every_descriptor_category_in_source_order() {
         // Suppressed Gift's descriptor reads "Major, Hermetic, Story" — two
         // equally real categories, kept in the descriptor's own order.
-        // Source: Ars Magica - Definitive Edition (Core Rules).md:6803-6804.
+        // Source: ArMDE:6803-6804.
         let json = r#"{
           "id": "flaw.suppressed_gift",
           "kind": "flaw",
@@ -6007,7 +5987,7 @@ mod tests {
     }
 
     /// `Familiar::normalize()` prunes Characteristics entered as 0. A familiar's
-    /// Characteristics are display-only (`:17793`) and nothing is bought with them, so
+    /// Characteristics are display-only (`ArMDE:17793`) and nothing is bought with them, so
     /// an explicit 0 and an absent entry say the same thing — and canonical
     /// serialization asks that two semantically identical familiars write identical
     /// bytes. Pruning to empty also lets `skip_serializing_if` drop the key entirely.
@@ -6048,7 +6028,7 @@ mod tests {
     }
 
     /// `Familiar::normalize()` clamps a cord score above the rules maximum
-    /// (0…+5, Ars Magica - Definitive Edition (Core Rules).md:10836) for the same reason it prunes a zero
+    /// (0…+5, ArMDE:10836) for the same reason it prunes a zero
     /// Characteristic: every consumer already routes through
     /// `derived::cord_score`, so `cord_bronze: 255` and `cord_bronze: 5` are the
     /// same statement to the engine — yet unclamped they serialize differently and
@@ -6902,7 +6882,7 @@ mod tests {
     /// version: an entity that records none omits the key entirely, and a save
     /// written before the field existed loads to the empty set — which is not an
     /// incomplete entry but the table's own baseline, "Average peasant 0"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16587).
+    /// (ArMDE:16587).
     #[test]
     fn a_save_without_living_conditions_round_trips_unchanged() {
         let mut entity = Entity::new(
@@ -6931,7 +6911,7 @@ mod tests {
         let legacy: Entity = serde_json::from_str(older).unwrap();
         assert!(legacy.living_conditions.is_empty());
 
-        // Two cumulative rows (`:16594`) are a set, and the `BTreeSet` orders them
+        // Two cumulative rows (`ArMDE:16594`) are a set, and the `BTreeSet` orders them
         // canonically without `normalize` having to.
         entity.living_conditions = BTreeSet::from([
             Id::new("living_condition.work_in_a_mine"),
@@ -6990,7 +6970,7 @@ mod tests {
     }
 
     /// A resolved **Crisis** records what the Crisis Table was asked and what it
-    /// answered — the Simple Die the player typed (`:16621`), the CRISIS TOTAL it
+    /// answered — the Simple Die the player typed (`ArMDE:16621`), the CRISIS TOTAL it
     /// made, the row it landed on and that row's severity — and all four
     /// round-trip. Absent on every year that saw no Crisis, so a save that had
     /// none carries none of the keys.
@@ -7004,7 +6984,7 @@ mod tests {
     /// `Entity::living_conditions` made and `AgingLogEntry::year` did not — 14 → 15
     /// was earned by `year` *becoming* optional, which an older reader rejects.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16621, :16624-16632.
+    /// Source: ArMDE:16621, :16624-16632.
     #[test]
     fn a_resolved_crisis_round_trips_and_needs_no_schema_bump() {
         // 17 is schema 17's own bump (the per-document saga year); the Crisis
@@ -7226,7 +7206,7 @@ mod tests {
         );
     }
 
-    /// German `:4135` — the Inoffensive entry — prints its list of classes in the
+    /// German `ArMDE:4135` — the Inoffensive entry — prints its list of classes in the
     /// **dative** ("Tieren, göttlichen Wesen, … magischen Kreaturen"), so a player
     /// copying the class straight off the page typed an inflected form. Those three
     /// forms are printed by the source, not invented, and all three name a class
@@ -7868,7 +7848,7 @@ mod tests {
     /// [`crate::characteristics::Characteristic`] is: `realm.<slug>` in, the
     /// enum member out. That round trip is what lets a parameter value name a
     /// Realm without any registry — Folk Magic's realm axis
-    /// (Ars Magica - Definitive Edition (Core Rules).md:3909, :3919).
+    /// (ArMDE:3909, :3919).
     #[test]
     fn a_realm_id_round_trips_through_from_id() {
         for realm in Realm::ALL {

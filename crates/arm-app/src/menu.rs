@@ -307,7 +307,7 @@ fn window_section(labels: &MenuLabels) -> MenuSection {
 ///   `PostQuitMessage(0)` (`muda-0.19.3/src/platform_impl/windows/mod.rs:1223`),
 ///   which ends the message loop instead of raising a close request, so it
 ///   would walk straight past the guard. Window → Close Window posts `WM_CLOSE`
-///   (`:1220`) and is guarded, so that is the offered way out.
+///   (`muda-0.19.3/src/platform_impl/windows/mod.rs:1220`) and is guarded, so that is the offered way out.
 /// * **Linux/BSD** — File only. muda's GTK backend renders just Separator,
 ///   Copy, Cut, Paste, SelectAll and About and silently drops every other
 ///   predefined item (`muda-0.19.3/src/platform_impl/gtk/mod.rs:36-43`), and

@@ -12,8 +12,8 @@
 //!   instead [`characteristic_cap`] / [`characteristic_floor`] report the
 //!   per-characteristic range the limit shifts open.
 //!
-//! Source: `Ars Magica - Definitive Edition (Core Rules).md:4814-4816` (Puissant
-//! Ability, +2), `:3987-3989` (Great Characteristic, raise to +5), `:6598-6600`
+//! Source: `ArMDE:4814-4816` (Puissant
+//! Ability, +2), `ArMDE:3987-3989` (Great Characteristic, raise to +5), `ArMDE:6598-6600`
 //! (Poor Characteristic, lower to −5).
 
 use crate::ability::AbilityCategory;
@@ -866,8 +866,7 @@ mod tests {
 
     /// charged_cost is the inverse of "counts as num/den, rounded up". The book's
     /// worked example: Perdo 10 needs 55 on the Art table; with Affinity 3/2 you
-    /// pay 37 (which counts as ceil(37·3/2)=56 ≥ 55). Source: Ars Magica -
-    /// Definitive Edition (Core Rules).md:2443.
+    /// pay 37 (which counts as ceil(37·3/2)=56 ≥ 55). Source: ArMDE:2443.
     #[test]
     fn affinity_charged_cost_matches_perdo_example() {
         assert_eq!(charged_cost(55, Some((3, 2))), 37); // Affinity with Art
@@ -1363,7 +1362,7 @@ mod tests {
     #[test]
     fn linguist_group_affinity_applies_to_every_language_instance() {
         // Linguist gives a 5/4 Affinity to any Language, matched by id for every
-        // instance (Ars Magica - Definitive Edition (Core Rules).md:4315-4317), unlike a param-chosen single-target Affinity.
+        // instance (ArMDE:4315-4317), unlike a param-chosen single-target Affinity.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.linguist")]);
         let lang = Id::new("ability.living_language");
@@ -1384,8 +1383,8 @@ mod tests {
 
     #[test]
     fn spell_mastery_pool_and_floor() {
-        // Mastered Spells grants 50 mastery XP (stackable, Ars Magica - Definitive Edition (Core Rules).md:4471-4474);
-        // Flawless Magic floors every spell's mastery at 1 (Ars Magica - Definitive Edition (Core Rules).md:3887-3889).
+        // Mastered Spells grants 50 mastery XP (stackable, ArMDE:4471-4474);
+        // Flawless Magic floors every spell's mastery at 1 (ArMDE:3887-3889).
         let rs = xp_ruleset();
         let masters = xp_entity(vec![
             sel("virtue.mastered_spells"),
@@ -1429,7 +1428,7 @@ mod tests {
     #[test]
     fn bought_mastery_is_charged_from_the_general_pool() {
         // Spell Mastery is an Ability bought from the Ability advancement table
-        // (Ars Magica - Definitive Edition (Core Rules).md:9518, :15952). With no mastery Virtue it draws the general pool.
+        // (ArMDE:9518, :15952). With no mastery Virtue it draws the general pool.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![]);
         e.xp_pool = 20;
@@ -1448,7 +1447,7 @@ mod tests {
 
     #[test]
     fn mastered_spells_pool_funds_mastery_but_not_abilities() {
-        // Mastered Spells' +50 pool (Ars Magica - Definitive Edition (Core Rules).md:4471-4474) is spendable only on Spell
+        // Mastered Spells' +50 pool (ArMDE:4471-4474) is spendable only on Spell
         // Mastery, never on ordinary Abilities/Arts, and the general pool is 0.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.mastered_spells")]);
@@ -1480,7 +1479,7 @@ mod tests {
     #[test]
     fn flawless_magic_floors_first_mastery_free_and_halves_the_rest() {
         // Flawless Magic auto-masters every spell at 1 (free floor) AND doubles all
-        // Spell-Mastery Advancement Totals, halving the XP charged. Ars Magica - Definitive Edition (Core Rules).md:3887-3889.
+        // Spell-Mastery Advancement Totals, halving the XP charged. ArMDE:3887-3889.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.flawless_magic")]);
         e.xp_pool = 100;
@@ -1494,7 +1493,7 @@ mod tests {
     #[test]
     fn grants_selection_folds_free_items_into_grants() {
         // A Virtue that grants another Virtue for free (Templar Commander →
-        // Brother-Knight + Temporal Influence; Ars Magica - Definitive Edition (Core Rules).md:5113-5116) folds the granted
+        // Brother-Knight + Temporal Influence; ArMDE:5113-5116) folds the granted
         // items into entity_grants (budget-exempt), and their effects apply.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.granter")]);
@@ -1515,7 +1514,7 @@ mod tests {
     #[test]
     fn item_level_budget_sums_grants() {
         // Magic Items grants +25 starting levels of enchanted devices, stackable
-        // (Ars Magica - Definitive Edition (Core Rules).md:4347-4349); Redcap 50 (Ars Magica - Definitive Edition (Core Rules).md:4842-4846).
+        // (ArMDE:4347-4349); Redcap 50 (ArMDE:4842-4846).
         let rs = xp_ruleset();
         assert_eq!(item_level_budget(&xp_entity(vec![]), &rs), 0);
         assert_eq!(
@@ -1534,8 +1533,7 @@ mod tests {
 
     #[test]
     fn self_confident_adds_one_score_and_two_points_on_top_of_the_base() {
-        // Self-Confident: Confidence Score +1, Confidence Points +2 (Ars Magica -
-        // Definitive Edition (Core Rules).md:4900-4902), additive on top of the
+        // Self-Confident: Confidence Score +1, Confidence Points +2 (ArMDE:4900-4902), additive on top of the
         // type profile's base.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.self_confident")]);
@@ -1558,8 +1556,8 @@ mod tests {
     #[test]
     fn reputation_grants_reads_one_entry_per_grants_reputation_effect() {
         // Famous grants a player-chosen-type Reputation 3 (kind omitted =
-        // wildcard, Ars Magica - Definitive Edition (Core Rules).md:3861-3863);
-        // Infamous fixes the kind to Local (:6310-6312). Each grant names the
+        // wildcard, ArMDE:3861-3863);
+        // Infamous fixes the kind to Local (ArMDE:6310-6312). Each grant names the
         // Virtue/Flaw it came from, so the UI can say WHY the slot exists.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.famous"), sel("flaw.infamous")]);
@@ -1584,8 +1582,7 @@ mod tests {
 
     #[test]
     fn supernatural_free_slots_grants_one_gifted_non_magus_slot() {
-        // A Gifted non-magus gets one free Supernatural-Ability slot (Ars Magica -
-        // Definitive Edition (Core Rules).md:2874); a magus profile gets none.
+        // A Gifted non-magus gets one free Supernatural-Ability slot (ArMDE:2874); a magus profile gets none.
         let rs = xp_ruleset();
         let profile = rs.profile(&Id::new("companion")).unwrap();
         let gifted = xp_entity(vec![sel("virtue.the_gift")]);
@@ -1599,8 +1596,8 @@ mod tests {
 
     #[test]
     fn demonic_blood_grants_infernal_might_5_and_30_power_levels() {
-        // Demonic Blood confers Infernal Might (Corpus) 5 (Ars Magica 5e - Realms of Power - The Infernal.md:4120) and
-        // up to 30 levels of Infernal Powers (Ars Magica 5e - Realms of Power - The Infernal.md:4122). Effective Might =
+        // Demonic Blood confers Infernal Might (Corpus) 5 (RoP:I:4120) and
+        // up to 30 levels of Infernal Powers (RoP:I:4122). Effective Might =
         // entity base (0 here) + Σ MightGrant of the same realm.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.demonic_blood")]);
@@ -1612,8 +1609,8 @@ mod tests {
 
     #[test]
     fn demonic_might_adds_two_and_powers_add_twenty() {
-        // Demonic Might: Infernal Might +2 (Ars Magica 5e - Realms of Power - The Infernal.md:4136). Demonic Powers:
-        // +20 power levels (Ars Magica 5e - Realms of Power - The Infernal.md:4142). Both stack on Demonic Blood.
+        // Demonic Might: Infernal Might +2 (RoP:I:4136). Demonic Powers:
+        // +20 power levels (RoP:I:4142). Both stack on Demonic Blood.
         let rs = xp_ruleset();
         let e = xp_entity(vec![
             sel("virtue.demonic_blood"),
@@ -1649,9 +1646,9 @@ mod tests {
     #[test]
     fn powers_used_spends_penetration_from_the_same_pool_as_level() {
         // "You may also spend levels one-for-one to give the power Penetration"
-        // (Ars Magica - Definitive Edition (Core Rules).md:4019), so Penetration
+        // (ArMDE:4019), so Penetration
         // is charged against the SAME budget as the level. The book's own worked
-        // example (`:4021`): two copies of Greater Power give 100 levels, spent as
+        // example (`ArMDE:4021`): two copies of Greater Power give 100 levels, spent as
         // "a power with a level of 60 and a Penetration of 0, and a second power
         // with a level and Penetration of 20 each" — 60 + 0 + 20 + 20 = 100, so a
         // `powers_used` that ignored Penetration would report 80 and let the
@@ -1674,7 +1671,7 @@ mod tests {
 
     #[test]
     fn true_faith_grant_sums_score() {
-        // True Faith grants a derived True Faith Score of 1 (Ars Magica - Definitive Edition (Core Rules).md:5169-5171),
+        // True Faith grants a derived True Faith Score of 1 (ArMDE:5169-5171),
         // base 0, summed across grants.
         let rs = xp_ruleset();
         assert_eq!(true_faith(&xp_entity(vec![]), &rs), 0);
@@ -1688,7 +1685,7 @@ mod tests {
     fn warping_grant_sums_score_and_points() {
         // Warped by Magic grants 5 Warping Points; the score is DERIVED by
         // inverting the advancement curve (5 points → Warping Score 1), not read
-        // from the grant's declared score. Ars Magica - Definitive Edition (Core Rules).md:7019-7021, :16464-16475.
+        // from the grant's declared score. ArMDE:7019-7021, :16464-16475.
         let rs = xp_ruleset();
         assert_eq!(
             warping(&xp_entity(vec![]), &rs),
@@ -1708,7 +1705,7 @@ mod tests {
 
     /// `warping_score`/`warping_points_total` UNIFY stored + grant-derived points
     /// through one path, then invert the advancement curve. Stored 10 + Warped by
-    /// Magic's 5 = 15 points → Warping Score 2 (Ars Magica - Definitive Edition (Core Rules).md:16464-16475: cumulative
+    /// Magic's 5 = 15 points → Warping Score 2 (ArMDE:16464-16475: cumulative
     /// 5/15/30/50/75).
     #[test]
     fn warping_sums_stored_and_granted_points_then_inverts() {
@@ -1732,14 +1729,12 @@ mod tests {
         assert_eq!(warping_score(&only_stored, &rs), 2);
     }
 
-    // --- Issue E: warping-owed V/F (Ars Magica - Definitive Edition (Core
-    // Rules).md:16547-16561) --------------------------------------------------
+    // --- Issue E: warping-owed V/F (ArMDE:16547-16561) -----------------------
 
     /// The owed-V/F threshold curve, tested on the pure `from_score` at the rule's
     /// boundary scores so the assertion is independent of the advancement table:
     /// 0 → none; 1 → 1 Minor Flaw; 3 → 2 Minor Flaws; 5 → +supernatural Minor
-    /// Virtue; 6 → +1 Major Flaw; 7 → 2 Major Flaws. Source: Ars Magica -
-    /// Definitive Edition (Core Rules).md:16553-16561.
+    /// Virtue; 6 → +1 Major Flaw; 7 → 2 Major Flaws. Source: ArMDE:16553-16561.
     #[test]
     fn warping_owed_thresholds_follow_the_score_curve() {
         let owed = |score| WarpingOwed::from_score(score);
@@ -1842,7 +1837,7 @@ mod tests {
 
     /// A non-magus with a Warping Score of 2 (15 stored points → curve score 2)
     /// owes one Minor Flaw; a magus at the SAME high score owes nothing — Warping
-    /// gives magi Wizard's Twilight instead (Ars Magica - Definitive Edition (Core Rules).md:16551).
+    /// gives magi Wizard's Twilight instead (ArMDE:16551).
     #[test]
     fn magus_is_exempt_from_owed_warping_vf() {
         let rs = magus_owed_ruleset();
@@ -1913,7 +1908,7 @@ mod tests {
 
     /// Decrepitude XP is the sum of aging points across every Characteristic,
     /// inverted through the (Ability) advancement curve: 17 points → Decrepitude 2
-    /// (15 ≤ 17 < 30). Ars Magica - Definitive Edition (Core Rules).md:16617.
+    /// (15 ≤ 17 < 30). ArMDE:16617.
     #[test]
     fn decrepitude_score_sums_aging_points_and_inverts() {
         let rs = xp_ruleset();
@@ -1956,7 +1951,7 @@ mod tests {
 
     #[test]
     fn aging_drops_match_the_worked_examples() {
-        // Ars Magica - Definitive Edition (Core Rules).md:16613: a Communication of +2 drops to +1 in the year it
+        // ArMDE:16613: a Communication of +2 drops to +1 in the year it
         // gains its THIRD aging point; a Stamina of −3 drops to −4 on its FOURTH.
         let rs = xp_ruleset();
         let mut com = xp_entity(vec![]);
@@ -1989,7 +1984,7 @@ mod tests {
     #[test]
     fn aging_drop_applies_to_bought_score_then_free_delta_stacks_on_top() {
         // Decision: the aging drop lowers the *bought* score (its threshold uses
-        // the bought score per Ars Magica - Definitive Edition (Core Rules).md:16579/:16613); the free
+        // the bought score per ArMDE:16579/:16613); the free
         // CharacteristicScoreDelta bonus (Giant Blood +1 Str) is then added on
         // top, so an aged Giant-Blood Strength can still reach +6.
         let rs = xp_ruleset();
@@ -2010,7 +2005,7 @@ mod tests {
 
     #[test]
     fn effective_summary_maps_report_aged_value_and_drops() {
-        // Ars Magica - Definitive Edition (Core Rules).md:16613 worked example: Communication +2 with 3 aging points
+        // ArMDE:16613 worked example: Communication +2 with 3 aging points
         // drops once → effective +1. The summary maps must surface both the aged
         // effective value and the drop count, and omit unchanged Characteristics.
         let rs = xp_ruleset();
@@ -2045,7 +2040,7 @@ mod tests {
     #[test]
     fn size_delta_sums_from_virtues_and_flaws() {
         // Size is a derived stat (base 0) modified by SizeDelta effects
-        // (Giant Blood +2, Dwarf -2). Ars Magica - Definitive Edition (Core Rules).md:3975-3978, :5996-5998.
+        // (Giant Blood +2, Dwarf -2). ArMDE:3975-3978, :5996-5998.
         let rs = xp_ruleset();
         assert_eq!(size(&xp_entity(vec![]), &rs), 0);
         assert_eq!(size(&xp_entity(vec![sel("virtue.giant_blood")]), &rs), 2);
@@ -2055,7 +2050,7 @@ mod tests {
     #[test]
     fn giant_blood_grants_free_characteristic_bonus_reaching_six() {
         // Giant Blood adds a free +1 to Str and Sta that may raise the effective
-        // score as high as +6 (Ars Magica - Definitive Edition (Core Rules).md:3975-3978). The bought score is untouched.
+        // score as high as +6 (ArMDE:3975-3978). The bought score is untouched.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.giant_blood")]);
         e.characteristics = BTreeMap::from([(Characteristic::Str, 5)]);
@@ -2069,7 +2064,7 @@ mod tests {
 
     #[test]
     fn characteristic_bonuses_lists_each_nonzero_free_delta_in_canonical_order() {
-        // Giant Blood grants a free +1 to Str and +1 to Sta (Ars Magica - Definitive Edition (Core Rules).md:3975-3978). The
+        // Giant Blood grants a free +1 to Str and +1 to Sta (ArMDE:3975-3978). The
         // accessor surfaces exactly those two nonzero bonuses in canonical
         // Characteristic order, omitting the untouched ones.
         let rs = xp_ruleset();
@@ -2093,7 +2088,7 @@ mod tests {
 
     #[test]
     fn weak_characteristics_grants_negative_points_and_nets_with_improved() {
-        // Weak Characteristics removes 3 budget points (Ars Magica - Definitive Edition (Core Rules).md:7056-7058); the grant
+        // Weak Characteristics removes 3 budget points (ArMDE:7056-7058); the grant
         // is signed and nets against Improved Characteristics (+3).
         let rs = xp_ruleset();
         let weak = xp_entity(vec![sel("flaw.weak_characteristics")]);
@@ -2366,7 +2361,7 @@ mod tests {
 
     /// Three elemental Forms bought at score 6 (21 table-XP each) and one at score 4
     /// (10 table-XP): the boosted effective scores match the ceil-rounded
-    /// redistribution hand-computed from the worked example (Ars Magica - Definitive Edition (Core Rules).md:3731-3737).
+    /// redistribution hand-computed from the worked example (ArMDE:3731-3737).
     ///
     /// bonus_xp(F) = Σ_{G≠F} ceil(xp(G)/2):
     ///   Aquam/Auram/Ignem (own 21): 11 + 11 + 5 = 27 → 48 XP → score 9.
@@ -2500,7 +2495,7 @@ mod tests {
     }
 
     /// The per-Technique/Form spell-level caps surfaced to the UI equal
-    /// Te + Fo + Int + Magic Theory + 3 (Ars Magica - Definitive Edition (Core Rules).md:2465), one entry per Te×Fo combo.
+    /// Te + Fo + Int + Magic Theory + 3 (ArMDE:2465), one entry per Te×Fo combo.
     #[test]
     fn spell_level_caps_expose_te_fo_int_mt_plus_three() {
         let rs = ruleset();
@@ -2570,7 +2565,7 @@ mod tests {
     /// reason the spell-levels one is: the pool the solve funds from is `typed +
     /// bonus`, and a bar that shows only the total cannot say why the two differ.
     /// Skilled Parens: "You gain an additional 60 experience points … during
-    /// apprenticeship" (Ars Magica - Definitive Edition (Core Rules).md:4966).
+    /// apprenticeship" (ArMDE:4966).
     #[test]
     fn the_general_xp_bonus_is_reported_beside_the_pool_it_raises() {
         let rs = ruleset();
@@ -2642,7 +2637,7 @@ mod tests {
             { "id": "ability.swim", "category": "general" }
           ]
         }"#;
-        // Art table: the shipped Core Rules figures up to 20 (`:2408-2427`), so a
+        // Art table: the shipped Core Rules figures up to 20 (`ArMDE:2408-2427`), so a
         // post-Gauntlet magus can buy an Art far beyond what apprenticeship's 240
         // could ever fund.
         let arts = r#"{
@@ -2733,8 +2728,8 @@ mod tests {
 
     /// A guided magus's **general** pool is its apprenticeship experience, not its
     /// later life: "These experience points can be spent on Arts or Abilities"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2435), and the general pool is the only one that may fund an
-    /// Art. Later life buys "any Abilities" (`:2214`) and becomes a restricted pool
+    /// (ArMDE:2435), and the general pool is the only one that may fund an
+    /// Art. Later life buys "any Abilities" (`ArMDE:2214`) and becomes a restricted pool
     /// of its own.
     #[test]
     fn the_general_pool_of_a_guided_magus_is_its_apprenticeship() {
@@ -2742,7 +2737,7 @@ mod tests {
         assert_eq!(xp_allocation(&planned_magus(), &rs).general_pool, 240);
 
         // Skilled Parens grants "an additional 60 experience points … during
-        // apprenticeship" (`:4966`), which lands on exactly this pool. So the block's
+        // apprenticeship" (`ArMDE:4966`), which lands on exactly this pool. So the block's
         // base (240) and the pool the solve funds from (300) are different numbers —
         // which is why the base is not stored as a pool anywhere.
         let mut magus = planned_magus();
@@ -2934,9 +2929,9 @@ mod tests {
     /// A magus's pre-apprenticeship experience may not buy an Arcane, Academic or
     /// Martial Ability: "Note that magi can only spend experience points on Arcane,
     /// Academic and Martial Abilities **before** apprenticeship if they have a Virtue
-    /// which allows them to do so." (Ars Magica - Definitive Edition (Core Rules).md:2435.) The Darius example reasons
+    /// which allows them to do so." (ArMDE:2435.) The Darius example reasons
     /// the same way about a pre-apprenticeship purchase — "It's a **general** Ability,
-    /// so he can" (`:2402`).
+    /// so he can" (`ArMDE:2402`).
     ///
     /// So later life is a pool of its own for a magus, and a gated Ability falls to
     /// apprenticeship's general pool instead.
@@ -2975,8 +2970,8 @@ mod tests {
     }
 
     /// …unless a Virtue says otherwise: "if they have a Virtue which allows them to do
-    /// so" (Ars Magica - Definitive Edition (Core Rules).md:2435). Covenant Upbringing authorizes the dead language
-    /// ("You may take Latin at character creation", `:5867`), so those points may come
+    /// so" (ArMDE:2435). Covenant Upbringing authorizes the dead language
+    /// ("You may take Latin at character creation", `ArMDE:5867`), so those points may come
     /// from before apprenticeship after all.
     ///
     /// A **regression lock**: the pool is built from the same authorizations the
@@ -3018,7 +3013,7 @@ mod tests {
     }
 
     /// A magus gauntleted at 25 and now 60: thirty-five years of "30 points per
-    /// year" (Ars Magica - Definitive Edition (Core Rules).md:2471) behind it, none of them spent in the lab.
+    /// year" (ArMDE:2471) behind it, none of them spent in the lab.
     fn experienced_magus() -> Entity {
         let mut magus = planned_magus();
         magus.age = Some(60);
@@ -3034,7 +3029,7 @@ mod tests {
 
     /// The years after the Gauntlet fund the **general** pool: "Divide 30 points per
     /// year between experience points in Arts, experience points in Abilities, and
-    /// levels of spells" (Ars Magica - Definitive Edition (Core Rules).md:2216) — Arts included, which no restricted
+    /// levels of spells" (ArMDE:2216) — Arts included, which no restricted
     /// pool may ever fund.
     ///
     /// Proved through the allocation rather than by reading the budget: two Arts at
@@ -3071,7 +3066,7 @@ mod tests {
     }
 
     /// The post-Gauntlet experience does not widen later life: that block stays the
-    /// restricted, Abilities-only pool of `:2435`'s "before apprenticeship" clause,
+    /// restricted, Abilities-only pool of `ArMDE:2435`'s "before apprenticeship" clause,
     /// so it funds neither an Art nor a gated Academic Ability however many years
     /// the magus has lived since.
     #[test]
@@ -3099,7 +3094,7 @@ mod tests {
     }
 
     /// A companion's allocation is untouched by post-Gauntlet fields on its plan:
-    /// "**Hermetic Magi Only (Optional):** Years after apprenticeship" (`:2216`), and
+    /// "**Hermetic Magi Only (Optional):** Years after apprenticeship" (`ArMDE:2216`), and
     /// a companion serves no apprenticeship, so the numbers may not move a point.
     #[test]
     fn a_companion_allocation_ignores_post_gauntlet_fields() {
@@ -3132,9 +3127,9 @@ mod tests {
     }
 
     /// The levels of spells a magus took out of its post-Gauntlet points are **added
-    /// to** the profile's 120, not a second budget beside it: the 120 of `:2435` are
+    /// to** the profile's 120, not a second budget beside it: the 120 of `ArMDE:2435` are
     /// the type profile's `spell_levels`, while these are the player's chosen slice of
-    /// the fungible "30 points per year" (`:2471`).
+    /// the fungible "30 points per year" (`ArMDE:2471`).
     #[test]
     fn post_gauntlet_spell_levels_add_to_the_profile_budget() {
         let rs = life_stage_ruleset();
@@ -3201,7 +3196,7 @@ mod tests {
     }
 
     /// A non-magus earns none: "**Hermetic Magi Only (Optional):** Years after
-    /// apprenticeship" (`:2216`), so a companion's plan contributes 0 however its
+    /// apprenticeship" (`ArMDE:2216`), so a companion's plan contributes 0 however its
     /// post-Gauntlet fields are set — and so does a character with no plan at all.
     #[test]
     fn a_non_magus_gets_no_post_gauntlet_spell_levels() {
@@ -3220,8 +3215,8 @@ mod tests {
     }
 
     /// Later life is a life-stage block like the childhood ones, because for a magus
-    /// it is a **restricted** pool: it buys "any Abilities" (Ars Magica - Definitive Edition (Core Rules).md:2214,
-    /// `:2392`) and never an Art, which only apprenticeship's experience may. So it
+    /// it is a **restricted** pool: it buys "any Abilities" (ArMDE:2214,
+    /// `ArMDE:2392`) and never an Art, which only apprenticeship's experience may. So it
     /// needs a slug of its own, and a Fluent label — a block the UI cannot name would
     /// print its own slug.
     #[test]

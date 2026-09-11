@@ -26,7 +26,7 @@ use crate::types::AbilityScore;
 /// Characteristics set: an untouched step is not yet under-spent, so a fresh
 /// character is not nagged. Out-of-range scores are always flagged.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2340-2354 (the cost
+/// Source: ArMDE:2340-2354 (the cost
 /// table and the seven starting points), :4105 (the +3 base cap), :3987-3989
 /// (Great's +5), :6598-6600 (Poor's −5). The numbers themselves are data in
 /// `rules/core/characteristics.json` (see RULES.md).
@@ -173,7 +173,7 @@ fn validate_characteristic_point_spend(
 /// characteristic the selection targets), so it lives here rather than in the
 /// static [`Prereq`] tree.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3987-3989 (Great,
+/// Source: ArMDE:3987-3989 (Great,
 /// "already … at least +3"), :6598-6600 (Poor, "already −3 or lower").
 pub(crate) fn validate_characteristic_limit_preconditions(
     entity: &Entity,
@@ -343,13 +343,12 @@ fn validate_ability_score_in_range(
     }
 }
 
-/// Age → max-Ability-score cap (Ars Magica - Definitive Edition (Core
-/// Rules).md:2366-2374). An Ability carrying an Affinity may exceed it by +2
-/// (Ars Magica - Definitive Edition (Core Rules).md:3374), not without limit.
+/// Age → max-Ability-score cap (ArMDE:2366-2374). An Ability carrying an Affinity may exceed it by +2
+/// (ArMDE:3374), not without limit.
 /// The cap is read from the ruleset's age band table; a ruleset that ships
 /// none cannot enforce it, so the check is skipped. The per-ability cap, so a
-/// Flaw that halves locality-dependent Abilities (Foreign Upbringing, Ars
-/// Magica - Definitive Edition (Core Rules).md:6160) is enforced on those rows
+/// Flaw that halves locality-dependent Abilities (Foreign Upbringing,
+/// ArMDE:6160) is enforced on those rows
 /// alone.
 fn validate_ability_age_cap(
     entity: &Entity,
@@ -468,8 +467,7 @@ pub(crate) fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
 /// a granting Virtue (an `ability_score_grant` floor) or fit within the Gift's
 /// free slot (one for a Gifted non-magus, none for a magus). Uncovered instances
 /// beyond the free allowance emit `supernatural_ability_requires_virtue`
-/// (deterministic by sorted id). Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:2874.
+/// (deterministic by sorted id). Source: ArMDE:2874.
 pub(crate) fn validate_supernatural_abilities(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -517,8 +515,7 @@ pub(crate) fn validate_supernatural_abilities(
 
 /// Validates Personality Traits: `|value|` never exceeds 6, and at most one trait
 /// per selected Major Personality Flaw may exceed ±3 (a Major Personality Flaw is
-/// represented by a single ±6 trait; others stay ±3). Source: Ars Magica -
-/// Definitive Edition (Core Rules).md:2500-2503.
+/// represented by a single ±6 trait; others stay ±3). Source: ArMDE:2500-2503.
 pub(crate) fn validate_personality_traits(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -527,7 +524,7 @@ pub(crate) fn validate_personality_traits(
     // The personality category slug is referenced directly here, deliberately.
     // Unlike caps.rs — whose per-category caps are driven by profile data that
     // *happens* to name categories, so no slug is baked in — this is a universal
-    // core rule keyed specifically to the Personality Flaw category (Ars Magica - Definitive Edition (Core Rules).md:2500-2503,
+    // core rule keyed specifically to the Personality Flaw category (ArMDE:2500-2503,
     // :2820): each Major Personality Flaw permits exactly one ±6 trait. Categories
     // are free-form data slugs with no registry or per-item metadata that marks
     // "this is the personality category", and the rule is not per-profile, so there
@@ -587,8 +584,7 @@ fn personality_out_of_range(trait_: &crate::types::PersonalityTrait, max: i8) ->
 /// (`Effect::GrantsReputation`). A player-chosen-kind grant (`kind == None`, e.g.
 /// Famous) is a wildcard authorizing one Reputation of *any* type; a Reputation
 /// consumes a matching concrete-kind slot first, falling back to a wildcard slot.
-/// Excess reputations emit `reputation_not_granted`. Source: Ars Magica -
-/// Definitive Edition (Core Rules).md:2514.
+/// Excess reputations emit `reputation_not_granted`. Source: ArMDE:2514.
 pub(crate) fn validate_reputations(
     entity: &Entity,
     ruleset: &Ruleset,

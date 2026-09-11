@@ -3,7 +3,7 @@
 //!
 //! For every level in a spell's Mastery Ability, the maga may choose one special
 //! ability, applying only to that mastered spell
-//! (Ars Magica - Definitive Edition (Core Rules).md:9524-9526). The
+//! (ArMDE:9524-9526). The
 //! per-spell chosen abilities live on the [`SpellSelection`](crate::types::SpellSelection);
 //! the catalogue here is language-neutral mechanics, with names/descriptions in
 //! `rules/i18n`, keyed by `id`.
@@ -12,7 +12,7 @@
 //! Quiet Casting — may be taken multiple times for the same spell, flagged by
 //! [`SpellMasteryAbility::repeatable`].
 //!
-//! Source: Ars Magica - Definitive Edition (Core Rules).md:9524-9592.
+//! Source: ArMDE:9524-9592.
 
 use serde::{Deserialize, Serialize};
 
@@ -21,14 +21,14 @@ use crate::types::{Id, SourceRef};
 /// A single choosable Spell Mastery special ability in the catalogue. Its display
 /// name and description live in `rules/i18n`, keyed by `id`.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:9528-9592.
+/// Source: ArMDE:9528-9592.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SpellMasteryAbility {
     /// Slug-style id, e.g. `spell_mastery_ability.penetration`.
     pub id: Id,
     /// Whether this ability may be taken multiple times for the same spell.
     /// `true` only for Precise, Quick, and Quiet Casting
-    /// (Ars Magica - Definitive Edition (Core Rules).md:9572, :9576, :9580);
+    /// (ArMDE:9572, :9576, :9580);
     /// `false` (the default) for the rest,
     /// which are once-per-spell.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]

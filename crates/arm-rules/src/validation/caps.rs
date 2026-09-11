@@ -15,7 +15,7 @@ use super::*;
 /// hardcoded in the engine.
 ///
 /// Source: grogs may take no Major Virtues or Flaws (the `max_major_*` count
-/// caps) at Ars Magica - Definitive Edition (Core Rules).md:2824-2830; ≤5 Minor
+/// caps) at ArMDE:2824-2830; ≤5 Minor
 /// Flaws (central) at :2774, grogs ≤3 at :1009; ≤1 Major Personality Flaw at
 /// :2820; ≤2 Personality Flaws (soft) at :2820/:2976; ≤1 Story Flaw (soft) at
 /// :2818, grogs none at :1009. See RULES.md.
@@ -100,18 +100,17 @@ pub(crate) fn validate_caps(
     // only, so House-granted items (which never enter the bought list) are
     // exempt — Bjornaer's Major Hermetic Heartbeast cannot trip a virtue cap.
     //
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861.
+    // Source: ArMDE:2855-2861.
     let mut push_category_cap_issues = |caps: &[CategoryCap], kind: ItemKind, noun: &str| {
         for cap in caps {
             // An item counts against the cap when it *carries* the capped
             // category, primary or secondary: Suppressed Gift is "*Major,
-            // Hermetic, Story*" (Ars Magica - Definitive Edition (Core
-            // Rules).md:6803-6804), so it is a Story Flaw for the Story cap just
+            // Hermetic, Story*" (ArMDE:6803-6804), so it is a Story Flaw for the Story cap just
             // as much as it is a Hermetic one.
             //
             // Taken-as aware, via `PointItem::categories_for`: a Sufi taken as
             // Social Status must not count against a Supernatural cap, and vice
-            // versa — `:5083` is a choice between the two readings, not both at
+            // versa — `ArMDE:5083` is a choice between the two readings, not both at
             // once.
             let n = count(&|i, s| {
                 i.kind == kind
@@ -164,7 +163,7 @@ pub(crate) fn validate_caps(
 /// actually taken, not the type's budget. Free items contribute 0 points and so
 /// never affect the ratio.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2998-3002.
+/// Source: ArMDE:2998-3002.
 pub(crate) fn validate_tainted_cap(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -227,10 +226,10 @@ pub(crate) fn validate_tainted_cap(
 /// **warning** severity. It differs in one: it takes the **folded** selection
 /// list (bought ++ granted) rather than `entity.selections`, because a granted
 /// copy is still a copy — Devil Child hands out a free Demonic Might or Demonic
-/// Powers (Ars Magica - Definitive Edition (Core Rules).md:3673). See RULES.md
+/// Powers (ArMDE:3673). See RULES.md
 /// for why that divergence from the Tainted precedent is deliberate.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3665 (Demonic Might)
+/// Source: ArMDE:3665 (Demonic Might)
 /// and :3669 (Demonic Powers) — "no more than half of the character's total
 /// Virtues", read as points, which is an interpretation (see RULES.md) and the
 /// second reason this is a warning rather than an error.

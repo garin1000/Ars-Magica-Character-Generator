@@ -28,8 +28,7 @@ pub struct ReputationGrant {
 }
 
 /// The Reputation grants a character holds (one per [`Effect::GrantsReputation`]),
-/// authorizing starting Reputations. Source: Ars Magica - Definitive Edition
-/// (Core Rules).md:2512-2514.
+/// authorizing starting Reputations. Source: ArMDE:2512-2514.
 pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
     let mut grants = Vec::new();
     for_each_effect!(entity, ruleset, |selection, effect| {
@@ -59,7 +58,7 @@ pub struct SupernaturalFreeSlots {
 /// slot; a magus gets none (his free ability is Hermetic magic itself). `used`
 /// counts the Supernatural abilities the entity holds that no granting Virtue
 /// covers (a granting Virtue seeds an `ability_score_grant` floor).
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2874.
+/// Source: ArMDE:2874.
 pub fn supernatural_free_slots(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -91,7 +90,7 @@ pub fn supernatural_free_slots(
 }
 
 /// The base age → maximum-Ability-score cap for `age`, read from the ruleset's
-/// age band table (Ars Magica - Definitive Edition (Core Rules).md:2366-2374). Data, not hardcoded: the bands live
+/// age band table (ArMDE:2366-2374). Data, not hardcoded: the bands live
 /// in `rules/core/abilities.json` (`age_ability_caps`) and are surfaced via
 /// `EffectiveScores` so the UI never re-hardcodes the table. `None` when the
 /// ruleset ships no age caps. An Ability with an Affinity may exceed this by +2
@@ -113,7 +112,7 @@ pub fn age_ability_cap(entity: &Entity, ruleset: &Ruleset) -> Option<u8> {
 /// > Language, Area Lore, or Organization Lore, as well as some social Abilities,
 /// > are half (round up) that which his age normally allows.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:6160 (Foreign
+/// Source: ArMDE:6160 (Foreign
 /// Upbringing). Which Abilities count as locality-dependent is catalogue data
 /// (`locality_dependent`), because the passage's "as well as some social Abilities"
 /// is deliberately open — the engine enforces the flag it is given rather than

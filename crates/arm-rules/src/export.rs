@@ -2382,8 +2382,8 @@ mod tests {
     }
 
     /// With a shield equipped, a one-handed weapon prints twice: the with-shield row
-    /// first, named `<weapon> <joiner> <shield>`, then the bare row (Ars Magica - Definitive Edition (Core Rules).md:16656;
-    /// ordering Ars Magica - Definitive Edition (Core Rules).md:1467-1472). The joiner is a localized label, never hardcoded.
+    /// first, named `<weapon> <joiner> <shield>`, then the bare row (ArMDE:16656;
+    /// ordering ArMDE:1467-1472). The joiner is a localized label, never hardcoded.
     #[test]
     fn combat_with_a_shield_emits_with_shield_then_bare_rows() {
         let mut e = fully_populated_magus();
@@ -2743,10 +2743,9 @@ mod tests {
     }
 
     /// The being's own powers print their Penetration, because the levels spent
-    /// on it come out of the same budget as the level itself (Ars Magica -
-    /// Definitive Edition (Core Rules).md:4019). Without the column the exported
+    /// on it come out of the same budget as the level itself (ArMDE:4019). Without the column the exported
     /// sheet cannot be reconciled with the budget the app charged: the book's own
-    /// two-Greater-Power example (`:4021`) would read as 80 levels of powers
+    /// two-Greater-Power example (`ArMDE:4021`) would read as 80 levels of powers
     /// against a budget of 100.
     #[test]
     fn a_powers_table_prints_the_penetration_bought_from_the_same_budget() {
@@ -2884,7 +2883,7 @@ mod tests {
     }
 
     /// The Living Conditions are a stored choice and a standing term of every aging
-    /// total (Ars Magica - Definitive Edition (Core Rules).md:16567-16569, :16581-16594), so the sheet has to carry
+    /// total (ArMDE:16567-16569, :16581-16594), so the sheet has to carry
     /// them — a sheet that dropped them would read as data loss. They are catalogue
     /// ids, so they print through the rules i18n and never as the slug. Each logged
     /// year prints the stress die and the total it produced alongside its free text,
@@ -2938,7 +2937,7 @@ mod tests {
     ///
     /// The row prints through the rules i18n keyed by its id, the severity through
     /// `crisis-severity-<slug>`, and both dice and both totals stand beside each
-    /// other so a reader can check the arithmetic of `:16621` off the sheet.
+    /// other so a reader can check the arithmetic of `ArMDE:16621` off the sheet.
     #[test]
     fn a_logged_crisis_prints_its_row_its_severity_and_the_die_that_found_it() {
         let mut e = fully_populated_magus();

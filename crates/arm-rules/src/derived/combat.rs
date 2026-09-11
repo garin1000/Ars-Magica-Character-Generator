@@ -13,7 +13,7 @@ use super::*;
 
 /// The Encumbrance read-out: total Load, Burden, and the Encumbrance penalty.
 ///
-/// Burden comes from the Load table (Ars Magica - Definitive Edition (Core Rules).md:17103-17123); Encumbrance =
+/// Burden comes from the Load table (ArMDE:17103-17123); Encumbrance =
 /// max(0, Burden − max(0, Strength)).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EncumbranceTotal {
@@ -26,7 +26,7 @@ pub struct EncumbranceTotal {
 }
 
 /// The Load-table thresholds: index = Burden, value = Load at which that Burden
-/// begins (Ars Magica - Definitive Edition (Core Rules).md:17103-17123).
+/// begins (ArMDE:17103-17123).
 const LOAD_TABLE: [u32; 11] = [0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55];
 
 /// Burden for a total Load: the highest table index whose threshold is ≤ load.
@@ -41,7 +41,7 @@ fn burden_for_load(load: u32) -> i32 {
 }
 
 /// The character's Encumbrance. All carried equipment (equipped or not) counts
-/// toward Load. Source: Ars Magica - Definitive Edition (Core Rules).md:17103-17123.
+/// toward Load. Source: ArMDE:17103-17123.
 pub fn encumbrance(entity: &Entity, ruleset: &Ruleset) -> EncumbranceTotal {
     let load: u32 = entity
         .equipment
@@ -75,11 +75,11 @@ fn equipment_load(ruleset: &Ruleset, id: &Id) -> u32 {
 
 /// One way of wielding an equipped weapon. A one-handed weapon carried alongside a
 /// shield yields **two** lines — one with every equipped shield's modifiers combined
-/// in (Ars Magica - Definitive Edition (Core Rules).md:16656) and one bare — because both are legal choices in play. A
-/// two-handed weapon receives no shield modifiers (Ars Magica - Definitive Edition (Core Rules).md:7494) and so yields a single
+/// in (ArMDE:16656) and one bare — because both are legal choices in play. A
+/// two-handed weapon receives no shield modifiers (ArMDE:7494) and so yields a single
 /// line. Attack / Damage are `None` for a weapon that lacks them (Dodge). Initiative
-/// is always reduced by Encumbrance (Ars Magica - Definitive Edition (Core Rules).md:16658); Attack and Defense are reduced only
-/// when the Encumbrance is **not** largely due to weapons and armor (Ars Magica - Definitive Edition (Core Rules).md:17105) —
+/// is always reduced by Encumbrance (ArMDE:16658); Attack and Defense are reduced only
+/// when the Encumbrance is **not** largely due to weapons and armor (ArMDE:17105) —
 /// see [`combat_encumbrance_applies`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CombatLine {
@@ -109,15 +109,14 @@ pub struct CombatLine {
 
 /// Combat lines: **one or two** per equipped weapon. With a shield equipped, a
 /// one-handed weapon yields a with-shield line (every equipped shield's Init/Atk/Def
-/// modifiers added — Source: Ars Magica - Definitive Edition (Core Rules).md:16656)
+/// modifiers added — Source: ArMDE:16656)
 /// followed by a bare line, because the fighter may drop the shield at will and a
 /// Single Weapon specialty "covers using that weapon with any shield or none"
-/// (Source: Ars Magica - Definitive Edition (Core Rules).md:7746). With-shield first
+/// (Source: ArMDE:7746). With-shield first
 /// mirrors the book's own statblocks, which list the weapon-and-shield lines ahead of
-/// the rest (Source: Ars Magica - Definitive Edition (Core Rules).md:1467-1472). The
+/// the rest (Source: ArMDE:1467-1472). The
 /// two lines differ ONLY by the shield modifiers — specialization and Encumbrance are
-/// shield-independent. Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:16658-16670, :16656, :7746, :17105.
+/// shield-independent. Source: ArMDE:16658-16670, :16656, :7746, :17105.
 pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     let mods = in_play_mods(entity, ruleset);
     let quickness = characteristic(entity, ruleset, Characteristic::Qik);
@@ -126,7 +125,7 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     let enc = encumbrance(entity, ruleset).total;
 
     // Every equipped shield's modifiers sum into one combined pseudo-shield.
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:16656
+    // Source: ArMDE:16656
     let shield_ids: Vec<Id> = entity
         .equipment
         .iter()
@@ -147,7 +146,7 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     let cm = |stat: CombatStat| mods.combat_mods.get(&stat).copied().unwrap_or(0);
 
     // Attack/Defense take the Encumbrance penalty only when the load is NOT
-    // largely weapons and armor; Initiative always takes it (Ars Magica - Definitive Edition (Core Rules).md:17105, :16658).
+    // largely weapons and armor; Initiative always takes it (ArMDE:17105, :16658).
     let atk_def_enc = if combat_encumbrance_applies(entity, ruleset) {
         enc
     } else {
@@ -161,10 +160,10 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
         };
         // Ability specialization (+1) applies to Attack and Defense only, when the
         // slot is flagged and the weapon's Ability carries a specialty aligned to
-        // this weapon (Ars Magica - Definitive Edition (Core Rules).md:7122, :7139). It acts as if the score were one higher.
+        // this weapon (ArMDE:7122, :7139). It acts as if the score were one higher.
         // A specialty "covers using that weapon with any shield or none", so it is
         // shield-independent and identical on both lines.
-        // Source: Ars Magica - Definitive Edition (Core Rules).md:7746
+        // Source: ArMDE:7746
         let spec_bonus = i32::from(specialization_bonus(entity, ruleset, slot, weapon));
         let combat_ability =
             effective_ability_score(entity, ruleset, &weapon.ability, None) + spec_bonus;
@@ -193,14 +192,14 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
         let bare = || wielding(Vec::new(), 0, 0, 0);
         // A two-handed weapon cannot be paired with a shield, so it takes none of
         // the combined shield modifiers and offers no choice to print.
-        // Source: Ars Magica - Definitive Edition (Core Rules).md:7494
+        // Source: ArMDE:7494
         if weapon.two_handed || shield_ids.is_empty() {
             out.push(bare());
             continue;
         }
         // Both ways of wielding a one-handed weapon, with the shield first — the order
         // the book's own statblocks use.
-        // Source: Ars Magica - Definitive Edition (Core Rules).md:1467-1472
+        // Source: ArMDE:1467-1472
         out.push(wielding(
             shield_ids.clone(),
             shield_init,
@@ -217,8 +216,7 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
 /// specialty on the weapon's combat Ability (so the toggle is not a dead switch).
 /// The specialty is a per-weapon alignment the player asserts — the engine never
 /// matches specialty text to weapon names — so a flagged slot with a real specialty
-/// grants the bonus. Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:7122 (Single Weapon longsword example),
+/// grants the bonus. Source: ArMDE:7122 (Single Weapon longsword example),
 /// :7139 ("Add +1 when using an Ability's specialization").
 fn specialization_bonus(
     entity: &Entity,
@@ -237,8 +235,8 @@ fn specialization_bonus(
 
 /// Total Load from combat gear — every carried weapon, shield, and armor, whether
 /// equipped or not (a spare weapon is still a weapon). Classified by catalogue
-/// item type via the same dispatch [`equipment_load`] uses. Source: Ars Magica -
-/// Definitive Edition (Core Rules).md:17105 ("weapons and armor"), :17107
+/// item type via the same dispatch [`equipment_load`] uses. Source: ArMDE:17105
+/// ("weapons and armor"), :17107
 /// (Load counts all carried gear).
 fn combat_gear_load(entity: &Entity, ruleset: &Ruleset) -> u32 {
     entity
@@ -255,7 +253,7 @@ fn combat_gear_load(entity: &Entity, ruleset: &Ruleset) -> u32 {
 
 /// Whether combat gear makes up "largely" (the majority) of the total carried
 /// Load, i.e. combat-gear Load ≥ half of total Load. `>= half` is our reading of
-/// the rules' "largely due to weapons and armor" (Ars Magica - Definitive Edition (Core Rules).md:17105); documented in
+/// the rules' "largely due to weapons and armor" (ArMDE:17105); documented in
 /// RULES.md. Zero total Load is trivially a majority (nothing to penalize).
 pub(super) fn combat_gear_is_majority(combat_load: u32, total_load: u32) -> bool {
     // combat_load * 2 >= total_load, i.e. combat_load >= total_load / 2, without
@@ -266,8 +264,8 @@ pub(super) fn combat_gear_is_majority(combat_load: u32, total_load: u32) -> bool
 /// Whether the Encumbrance penalty applies to Attack and Defense. The penalty is
 /// waived ("Attack and Defense are not [penalized]") when the Encumbrance is
 /// largely due to weapons and armor; otherwise it applies. Initiative is always
-/// penalized regardless (Ars Magica - Definitive Edition (Core Rules).md:16658), so this governs only Attack/Defense.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:17105.
+/// penalized regardless (ArMDE:16658), so this governs only Attack/Defense.
+/// Source: ArMDE:17105.
 ///
 /// Crate-internal: an implementation detail of [`combat_totals`], not part of the
 /// curated public API (unlike the surfaced totals `combat_totals` / `soak` /
@@ -283,7 +281,7 @@ pub(crate) fn combat_encumbrance_applies(entity: &Entity, ruleset: &Ruleset) -> 
 /// The Soak read-out.
 ///
 /// Soak = Stamina + Armor Protection + SoakMod (Tough +3) + Bronze cord
-/// (Ars Magica - Definitive Edition (Core Rules).md:16667, :10840-10844). The
+/// (ArMDE:16666, :10840-10844). The
 /// magus Form bonus is situational and shown as an entered addend of 0.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SoakTotal {
@@ -293,12 +291,10 @@ pub struct SoakTotal {
     pub total: i32,
 }
 
-/// The character's Soak. Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:16667, :5145-5147 (Tough), :10840-10844
+/// The character's Soak. Source: ArMDE:16666, :5145-5147 (Tough), :10840-10844
 /// (Bronze cord). The cord addend goes through [`bronze_cord_bonus`] and thus
-/// [`cord_score`], so it can never exceed the +5 maximum (Ars Magica -
-/// Definitive Edition (Core Rules).md:10836) or disagree with the other cord
-/// read-outs.
+/// [`cord_score`], so it can never exceed the +5 maximum (ArMDE:10836) or
+/// disagree with the other cord read-outs.
 pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
     let mods = in_play_mods(entity, ruleset);
     let stamina = characteristic(entity, ruleset, Characteristic::Sta);
@@ -325,8 +321,7 @@ pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
 
 /// The five penalty-bearing Fatigue levels. A fixed rules taxonomy, rendered via
 /// Fluent, never as a raw slug. Unconscious is a game state with no action penalty
-/// and is intentionally not a variant here. Source: Ars Magica - Definitive
-/// Edition (Core Rules).md:17127-17129.
+/// and is intentionally not a variant here. Source: ArMDE:17127-17129.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FatigueTier {
@@ -368,7 +363,7 @@ pub struct FatigueLevel {
 /// The five penalty-bearing Fatigue levels and their penalties, adjusted by
 /// HealthMod fatigue deltas (a positive delta reduces the penalty magnitude).
 /// Unconscious is omitted (it is a state, not an action penalty). Source:
-/// Ars Magica - Definitive Edition (Core Rules).md:17127-17129.
+/// ArMDE:17127-17129.
 pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
     let mods = in_play_mods(entity, ruleset);
     let delta = mods
@@ -377,7 +372,7 @@ pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
         .copied()
         .unwrap_or(0);
     // (id, base penalty). Fresh/Winded are penalty-free; Unconscious is its own
-    // penalty (no numeric). Ars Magica - Definitive Edition (Core Rules).md:17127-17129 gives Weary −1, Tired −3, Dazed −5.
+    // penalty (no numeric). ArMDE:17127-17129 gives Weary −1, Tired −3, Dazed −5.
     [
         (FatigueTier::Fresh, 0),
         (FatigueTier::Winded, 0),
@@ -395,8 +390,7 @@ pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
 }
 
 /// The five wound bands, in ascending severity. A fixed rules taxonomy, rendered
-/// via Fluent, never as a raw slug. Source: Ars Magica - Definitive Edition
-/// (Core Rules).md:17167-17191.
+/// via Fluent, never as a raw slug. Source: ArMDE:17167-17191.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WoundBand {
@@ -443,7 +437,7 @@ pub struct WoundRange {
 /// The Size-indexed wound ranges, with wound penalties adjusted by any HealthMod
 /// wound delta. The band unit is `u = max(1, Size + 5)`; Light 1..u, Medium
 /// u+1..2u, Heavy 2u+1..3u, Incapacitating 3u+1..4u, Dead 4u+1.. — so each +1 Size
-/// widens every band (Ars Magica - Definitive Edition (Core Rules).md:17167-17191). Uses the character's derived Size.
+/// widens every band (ArMDE:17167-17191). Uses the character's derived Size.
 pub fn wound_ranges(entity: &Entity, ruleset: &Ruleset) -> Vec<WoundRange> {
     let mods = in_play_mods(entity, ruleset);
     let delta = mods

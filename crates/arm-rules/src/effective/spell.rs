@@ -144,7 +144,7 @@ fn sum_signed_effect(
 /// profile's `spell_levels` (120 for a magus; 0 for a type with no profile).
 /// Factored so the effective payload and the validator select the base
 /// identically and can never diverge (Issue 11).
-// Source: Ars Magica - Definitive Edition (Core Rules).md:2215-2216, :2435
+// Source: ArMDE:2215-2216, :2435
 pub fn spell_levels_base(entity: &Entity, profile: Option<&EntityTypeProfile>) -> u32 {
     entity
         .spell_levels_override
@@ -153,12 +153,12 @@ pub fn spell_levels_base(entity: &Entity, profile: Option<&EntityTypeProfile>) -
 
 /// The levels of spells a magus took out of its years past the Gauntlet — the
 /// player's chosen slice of "30 points per year", where "Each point can be an
-/// experience point in an Art or Ability or **one level of spell**" (`:2471`).
+/// experience point in an Art or Ability or **one level of spell**" (`ArMDE:2471`).
 ///
 /// 0 for a character with no life-stage plan, and for a ruleset shipping no
 /// `post_apprenticeship` block — the rate is data, so with no block there is
 /// nothing to grant.
-// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2471.
+// Source: ArMDE:2216, :2471.
 pub fn life_stage_spell_levels(entity: &Entity, ruleset: &Ruleset) -> u32 {
     ruleset
         .life_stages()
@@ -171,9 +171,9 @@ pub fn life_stage_spell_levels(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// years bought ([`life_stage_spell_levels`]), clamped at 0.
 ///
 /// The post-Gauntlet term is **additive, not a second budget.** Apprenticeship's
-/// "120 levels of spells" (`:2435`) are the type profile's `spell_levels` and are
+/// "120 levels of spells" (`ArMDE:2435`) are the type profile's `spell_levels` and are
 /// what `base` selects; these are the player's chosen slice of the fungible "30
-/// points per year" (`:2471`), which is also why `post_gauntlet_xp` and
+/// points per year" (`ArMDE:2471`), which is also why `post_gauntlet_xp` and
 /// `post_gauntlet_spell_levels` always sum to `post_gauntlet_points`.
 ///
 /// Folded in **here**, in the one selector both `validate_spells` and the
@@ -184,7 +184,7 @@ pub fn life_stage_spell_levels(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// the post-Gauntlet levels stay on top of it. Deliberate: the override is the flat
 /// flow's escape hatch, and it is not made exclusive with a life-stage plan the way
 /// [`Entity::xp_pool`] is.
-// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2435, :2471.
+// Source: ArMDE:2216, :2435, :2471.
 pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32 {
     clamp_to_u32(
         i64::from(base)
@@ -194,12 +194,12 @@ pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32
 }
 
 /// The maximum level a magus may learn of a spell of the given Technique/Form:
-/// the sum of Technique, Form, Intelligence, Magic Theory and 3 (Ars Magica - Definitive Edition (Core Rules).md:2465),
+/// the sum of Technique, Form, Intelligence, Magic Theory and 3 (ArMDE:2465),
 /// using effective Art/Ability scores. Returns an `i64` (small or negative for a
 /// beginning magus). Requisite-Art reduction is a lab-total nuance out of scope.
 /// Single source of truth: both the validation cap and the UI-surfaced cap read
 /// this, so the two can never diverge.
-// Source: Ars Magica - Definitive Edition (Core Rules).md:2465
+// Source: ArMDE:2465
 pub fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, technique: &Id, form: &Id) -> i64 {
     let tech = i64::from(effective_art_score(entity, ruleset, technique));
     let form = i64::from(effective_art_score(entity, ruleset, form));
@@ -268,8 +268,7 @@ pub fn resolved_spell_level(sel: &SpellSelection, ruleset: &Ruleset) -> Option<u
 
 /// The character's Spell-Mastery XP pool: the sum of every
 /// [`Effect::SpellMasteryXp`] (Mastered Spells +50, stackable). A restricted pool
-/// spent only on per-spell Spell Mastery Abilities. Source: Ars Magica -
-/// Definitive Edition (Core Rules).md:4471-4474.
+/// spent only on per-spell Spell Mastery Abilities. Source: ArMDE:4471-4474.
 pub fn spell_mastery_xp(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -287,7 +286,7 @@ pub fn spell_mastery_xp(entity: &Entity, ruleset: &Ruleset) -> u32 {
 
 /// The mastery-score floor every known spell receives from
 /// [`Effect::GrantsSpellMastery`] (Flawless Magic → 1). The highest floor wins.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3887-3889.
+/// Source: ArMDE:3887-3889.
 pub fn spell_mastery_floor(entity: &Entity, ruleset: &Ruleset) -> u8 {
     let mut floor = 0u8;
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -307,7 +306,7 @@ pub fn spell_mastery_floor(entity: &Entity, ruleset: &Ruleset) -> u8 {
 /// an Affinity "counts as num/den of itself" ([`Effect::GrantsSpellMastery`]'s
 /// doubling: Flawless Magic → `(2, 1)`, halving the XP charged). `None` when no
 /// grant reduces the cost. The most generous multiplier wins, like any Affinity.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3889.
+/// Source: ArMDE:3889.
 pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) -> Option<(u8, u8)> {
     let selections = selections_for_effects(entity, ruleset);
     let found = selections.iter().flat_map(|selection| {

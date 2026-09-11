@@ -10,8 +10,7 @@ use super::*;
 ///
 /// Lab Total = Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod;
 /// within a Magical Focus the lower applicable Art is added again; a Deficient Art
-/// halves the whole cell. Source: Ars Magica - Definitive Edition (Core
-/// Rules).md:10276-10278 (Lab Total shape), :4151-4154
+/// halves the whole cell. Source: ArMDE:10276-10278 (Lab Total shape), :4151-4154
 /// (Inventive Genius, the flat `LabTotalMod`), :4399-4422 (focus doubling),
 /// :5909-5915 (Deficient halving).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -30,8 +29,7 @@ pub struct LabTotal {
     pub within_focus: Option<i32>,
     /// Whether a Deficient Art halved this cell.
     pub deficient: bool,
-    /// `total`, halved again for Weak Enchanter (Ars Magica - Definitive
-    /// Edition (Core Rules).md:7060-7063: "Halve your Lab Total whenever you
+    /// `total`, halved again for Weak Enchanter (ArMDE:7060-7063: "Halve your Lab Total whenever you
     /// create or investigate an enchanted item. If you have a Deficiency that
     /// counts as part of the Lab Total, apply the Deficiency first and then
     /// halve the remaining total"). Equal to `total` for anyone without the
@@ -43,7 +41,7 @@ pub struct LabTotal {
 }
 
 /// Lab Totals for every `(Technique, Form)` pair — the 5×10 grid. Source:
-/// Ars Magica - Definitive Edition (Core Rules).md:10276-10278.
+/// ArMDE:10276-10278.
 pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
     let mods = in_play_mods(entity, ruleset);
     let intelligence = characteristic(entity, ruleset, Characteristic::Int);
@@ -96,8 +94,8 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
 /// stored value.
 ///
 /// "+1 bonus for every five points or fraction of Creo Corpus Lab Total"
-/// (Ars Magica - Definitive Edition (Core Rules).md:10662). Shown beside the entered-bonus input so a player who is creating
-/// the ritual now (or reinventing it after an aging crisis, Ars Magica - Definitive Edition (Core Rules).md:10668, :10670) can
+/// (ArMDE:10662). Shown beside the entered-bonus input so a player who is creating
+/// the ritual now (or reinventing it after an aging crisis, ArMDE:10668, :10670) can
 /// read off the number the rules give them. It moves whenever Creo, Corpus,
 /// Intelligence, Magic Theory or the aura move — which is exactly why the *stored*
 /// bonus must not be derived from it.
@@ -115,11 +113,11 @@ pub struct LongevityHint {
 ///
 /// `bonus` is what the player entered, for **both** sources — the ritual is a past
 /// event whose bonus was fixed by the Lab Total of the season it was made
-/// (Ars Magica - Definitive Edition (Core Rules).md:10662, :10670), so nothing here is derived. `entered` distinguishes an
+/// (ArMDE:10662, :10670), so nothing here is derived. `entered` distinguishes an
 /// unfilled field from a deliberate 0. `hint` carries the live suggestion for a
 /// self-made ritual only. The Bronze cord adds "to rolls to resist aging"
-/// (Ars Magica - Definitive Edition (Core Rules).md:10844) and is noted separately, since it is not part of the ritual; it goes
-/// through [`bronze_cord_bonus`], so it can never exceed the +5 maximum (Ars Magica - Definitive Edition (Core Rules).md:10836)
+/// (ArMDE:10844) and is noted separately, since it is not part of the ritual; it goes
+/// through [`bronze_cord_bonus`], so it can never exceed the +5 maximum (ArMDE:10836)
 /// or disagree with the Soak and cord-cost read-outs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LongevityBonus {
@@ -131,9 +129,9 @@ pub struct LongevityBonus {
     pub entered: bool,
     /// The Bronze-cord bonus, noted here and **not** summed into `bonus`.
     ///
-    /// The cord applies "to rolls to resist aging" (Ars Magica - Definitive Edition (Core Rules).md:10844), and the roll that
+    /// The cord applies "to rolls to resist aging" (ArMDE:10844), and the roll that
     /// referent names is the **crisis survival** roll — an aging roll itself is not
-    /// passed or failed, and Ars Magica - Definitive Edition (Core Rules).md:16636 keeps the two roll families apart. So this
+    /// passed or failed, and ArMDE:16636 keeps the two roll families apart. So this
     /// line is informational on the ritual panel; the cord reaches a total through
     /// [`bronze_cord_bonus`] on the crisis-survival read-out, not here.
     pub bronze_cord: i32,
@@ -143,13 +141,13 @@ pub struct LongevityBonus {
 }
 
 /// The Longevity Ritual read-out, or `None` when the magus has no ritual. Source:
-/// Ars Magica - Definitive Edition (Core Rules).md:10662 (formula), :10668 + :10670 (the bonus is fixed at creation and only a
+/// ArMDE:10662 (formula), :10668 + :10670 (the bonus is fixed at creation and only a
 /// reinvention takes advantage of raised Arts), :10844 (Bronze cord).
 pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBonus> {
     let ritual = entity.longevity_ritual.as_ref()?;
     let bronze = bronze_cord_bonus(entity);
     // A hint only makes sense for a ritual this magus makes: an external one came
-    // from another magus's Lab Total, which this sheet does not know (Ars Magica - Definitive Edition (Core Rules).md:10672).
+    // from another magus's Lab Total, which this sheet does not know (ArMDE:10672).
     let hint = match ritual.source {
         LongevitySource::SelfMade => {
             let (lab_total, halved) = creo_corpus_lab_total(entity, ruleset);
@@ -173,14 +171,14 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
 /// The Creo Corpus Lab Total and whether it was halved.
 ///
 /// "Your basic Lab Total is: Technique + Form + Intelligence + Magic Theory + Aura
-/// Modifier" (Ars Magica - Definitive Edition (Core Rules).md:10276-10278) plus any flat Lab-Total modifier. The Aura Modifier
+/// Modifier" (ArMDE:10276-10278) plus any flat Lab-Total modifier. The Aura Modifier
 /// is a plain addend with no floor and no gate: a zero aura is simply "the absence
-/// of aura, so powers used there function without hindrance" (Ars Magica - Definitive Edition (Core Rules).md:17658).
+/// of aura, so powers used there function without hindrance" (ArMDE:17658).
 ///
 /// Two halvings can apply. A Deficient Creo or Corpus halves "almost all totals
-/// (including … Lab Totals) to which a particular Form is added" (Ars Magica - Definitive Edition (Core Rules).md:5909-5915),
+/// (including … Lab Totals) to which a particular Form is added" (ArMDE:5909-5915),
 /// and Difficult Longevity Ritual makes anyone "creating a Longevity Ritual for you
-/// … halve their Lab Total" (Ars Magica - Definitive Edition (Core Rules).md:5962-5964). **That the two compound is an
+/// … halve their Lab Total" (ArMDE:5962-5964). **That the two compound is an
 /// inference**: each Flaw halves the Lab Total and neither carves out the other, but
 /// no passage states the interaction. The order is immaterial — [`halve`] truncates
 /// toward zero — so it is fixed here as base → Deficient → Difficult.
@@ -214,7 +212,7 @@ fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> (i32, bool) {
 }
 
 /// The bonus a Creo Corpus Lab Total buys: "+1 bonus for every five points or
-/// fraction" (Ars Magica - Definitive Edition (Core Rules).md:10662), i.e. `ceil(lab_total / 5)`. A non-positive Lab Total buys
+/// fraction" (ArMDE:10662), i.e. `ceil(lab_total / 5)`. A non-positive Lab Total buys
 /// nothing — there is no fraction of five points below one point.
 fn suggested_longevity_bonus(lab_total: i32) -> i32 {
     if lab_total <= 0 {
@@ -230,15 +228,13 @@ fn suggested_longevity_bonus(lab_total: i32) -> i32 {
 ///
 /// The Masterpiece Virtue lets the magus keep one *lesser enchanted item* he
 /// designed "based on his Lab Totals at character generation, following the
-/// regular rules for construction of such a device" (Ars Magica - Definitive
-/// Edition (Core Rules).md:4476-4479). The
+/// regular rules for construction of such a device" (ArMDE:4476-4479). The
 /// regular lesser-enchantment rule caps a single-season instillation at
 /// `Lab Total ≥ 2 × effect level`, i.e. the effect level may not exceed
-/// `Lab Total ÷ 2` (Ars Magica - Definitive Edition (Core Rules).md:10410). Vis costs are ignored (the parens provided
+/// `Lab Total ÷ 2` (ArMDE:10410). Vis costs are ignored (the parens provided
 /// them), so the only bound the engine can honestly compute is that Lab-Total
 /// cap. Designing this item *is* creating an enchanted item, so a Weak
-/// Enchanter's halved `enchanting` figure (Ars Magica - Definitive Edition
-/// (Core Rules).md:7060-7063) is "the regular rules for construction of such a
+/// Enchanter's halved `enchanting` figure (ArMDE:7060-7063) is "the regular rules for construction of such a
 /// device" for that magus — this cap is built from `enchanting`, not the plain
 /// `total`, and the two are equal for anyone without the Flaw. The best base
 /// `(Technique, Form)` cell is used — the magus is free to pick the
@@ -259,13 +255,12 @@ pub struct MasterpieceCap {
     /// doubling) — Weak Enchanter-halved when that Flaw applies, equal to the
     /// plain Lab Total otherwise.
     pub lab_total: i32,
-    /// The maximum lesser-enchantment effect level: `lab_total ÷ 2` (Ars Magica -
-    /// Definitive Edition (Core Rules).md:10410).
+    /// The maximum lesser-enchantment effect level: `lab_total ÷ 2` (ArMDE:10410).
     pub cap: i32,
 }
 
 /// The Masterpiece lesser-item cap, or `None` when the magus lacks the Virtue.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4476-4479 (Virtue),
+/// Source: ArMDE:4476-4479 (Virtue),
 /// :10410 (lesser-enchantment cap), :7060-7063 (Weak Enchanter halving applies
 /// here too, since designing the item is creating an enchanted item).
 pub fn masterpiece_item_cap(entity: &Entity, ruleset: &Ruleset) -> Option<MasterpieceCap> {

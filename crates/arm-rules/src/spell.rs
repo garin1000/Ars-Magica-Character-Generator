@@ -5,16 +5,16 @@
 //! its Level, and any Art requisites. Level is either a fixed multiple of five or
 //! **General** — a General spell is learned at a per-character chosen level, and
 //! two General versions at different levels are different spells
-//! (Ars Magica - Definitive Edition (Core Rules).md:12349-12353). The character's
+//! (ArMDE:12349-12353). The character's
 //! chosen spells and (for General
 //! spells) their learned levels live on the [`Entity`](crate::types::Entity) as
 //! [`SpellSelection`](crate::types::SpellSelection)s; the catalogue here is
 //! language-neutral mechanics, with names/descriptions in `rules/i18n`.
 //!
 //! Spells consume the magus's *spell-levels budget* (120 out of apprenticeship,
-//! Ars Magica - Definitive Edition (Core Rules).md:2215-2216, 2435, plus whatever
+//! ArMDE:2215-2216, 2435, plus whatever
 //! the magus took as levels out of its
-//! years past the Gauntlet, `:2471`), a currency distinct from the shared
+//! years past the Gauntlet, `ArMDE:2471`), a currency distinct from the shared
 //! Ability/Art XP pool. Enforcement lives in [`crate::validation`].
 
 use std::fmt;
@@ -27,7 +27,7 @@ use crate::types::{Id, ParameterDef, SourceRef};
 /// most-difficult, matching the RDT chart. Its label lives in Fluent
 /// (`spell-range-<scalar>`), never rendered as the raw slug.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:12001-12027.
+/// Source: ArMDE:12001-12027.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SpellRange {
@@ -59,9 +59,9 @@ impl fmt::Display for SpellRange {
 }
 
 /// A spell's Duration — how long the effect lasts. Year Duration forces a Ritual
-/// (Ars Magica - Definitive Edition (Core Rules).md:12055).
+/// (ArMDE:12055).
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:12001-12055.
+/// Source: ArMDE:12001-12055.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SpellDuration {
@@ -98,11 +98,11 @@ impl fmt::Display for SpellDuration {
 /// A spell's Target — what the effect can affect: objects (Individual, Part,
 /// Group), containers (Circle, Room, Structure, Boundary), and magical senses
 /// (Taste, Touch, Smell, Hearing, Vision). Boundary forces a Ritual
-/// (Ars Magica - Definitive Edition (Core Rules).md:12077); Vision, though
+/// (ArMDE:12077); Vision, though
 /// equally difficult, does not
-/// (Ars Magica - Definitive Edition (Core Rules).md:12099).
+/// (ArMDE:12099).
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:12001-12099.
+/// Source: ArMDE:12001-12099.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SpellTarget {
@@ -157,7 +157,7 @@ impl fmt::Display for SpellTarget {
 /// `derived_magnitude_points` in `ruleset.rs` for the sibling pattern this
 /// follows) so the UI never re-hardcodes the floor.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:12293 ("Ritual
+/// Source: ArMDE:12293 ("Ritual
 /// spells are always at least level 20, even if the level calculation would
 /// make them lower.").
 pub const RITUAL_MIN_LEVEL: u8 = 20;
@@ -182,7 +182,7 @@ pub struct Spell {
     pub requisites: Vec<Id>,
     /// Whether this spell is a Ritual: longer to cast, requires vis, floored at
     /// [`RITUAL_MIN_LEVEL`]
-    /// (Ars Magica - Definitive Edition (Core Rules).md:12293).
+    /// (ArMDE:12293).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub ritual: bool,
     /// The spell's Range. `None` in the seed data until the full catalogue (5d)
@@ -196,7 +196,7 @@ pub struct Spell {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub target: Option<SpellTarget>,
     /// True when a Momentary Creo spell creates a lasting thing — which, per
-    /// Ars Magica - Definitive Edition (Core Rules).md:12039/:12115, forces the
+    /// ArMDE:12039/:12115, forces the
     /// spell to be a Ritual.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub creates_lasting: bool,
@@ -206,7 +206,7 @@ pub struct Spell {
     /// chosen value is **display + identity only** and does NOT change the spell's
     /// own Technique/Form — those stay the catalogue Vim Arts. Empty for ordinary
     /// spells, so existing catalogue entries are unaffected.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:15791-15794
+    /// Source: ArMDE:15791-15794
     /// ("There are ten versions of this spell, one for each Hermetic Form").
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<ParameterDef>,
@@ -304,7 +304,7 @@ mod tests {
     }
 
     /// A spell carrying full Range/Duration/Target + ritual flag round-trips.
-    /// Source (RDT chart): Ars Magica - Definitive Edition (Core Rules).md:12001-12009.
+    /// Source (RDT chart): ArMDE:12001-12009.
     #[test]
     fn spell_with_rdt_and_ritual_roundtrips() {
         let json = r#"{

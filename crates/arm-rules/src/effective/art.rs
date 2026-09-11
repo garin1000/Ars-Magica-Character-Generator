@@ -20,7 +20,7 @@ pub struct ArtBonus {
 /// not parameterized, so the target is matched by id alone. Two virtues boosting
 /// the same Art stack.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4818-4820 (Puissant
+/// Source: ArMDE:4818-4820 (Puissant
 /// Art, +3; may be taken twice, for two different Arts).
 pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
     let mut bonus = 0;
@@ -74,7 +74,7 @@ fn elemental_magic_forms(entity: &Entity, ruleset: &Ruleset) -> Option<BTreeSet<
 /// assigned XP), so leftover XP between score thresholds is not represented — see
 /// RULES.md.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3731-3737 (21 XP → 11
+/// Source: ArMDE:3731-3737 (21 XP → 11
 /// bonus each: `ceil(21/2)`, so rounding is **up**).
 fn elemental_form_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
     let Some(forms) = elemental_magic_forms(entity, ruleset) else {
@@ -94,7 +94,7 @@ fn elemental_form_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
         let other_xp = table
             .xp_for_score(bought_art_score(entity, other))
             .unwrap_or(0);
-        // Half, rounded up (Ars Magica - Definitive Edition (Core Rules).md:3731 worked example: 21 → 11).
+        // Half, rounded up (ArMDE:3731 worked example: 21 → 11).
         bonus_xp += other_xp.div_ceil(2);
     }
     let boosted = table.score_for_xp(own_xp + bonus_xp);

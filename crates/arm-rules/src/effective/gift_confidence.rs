@@ -51,8 +51,7 @@ pub struct Confidence {
 
 /// The character's effective Confidence: the type profile's base plus every
 /// [`Effect::ConfidenceBonus`], clamped at 0. Confidence is derived, never
-/// stored. Source: Ars Magica - Definitive Edition (Core Rules).md:2520-2526,
-/// 4900-4902.
+/// stored. Source: ArMDE:2520-2526, :4900-4902.
 pub fn confidence(
     base_score: u8,
     base_points: u8,
@@ -80,7 +79,7 @@ pub fn confidence(
 
 /// The character's derived enchanted-device level budget: base 0 plus every
 /// [`Effect::ItemLevelBudget`] (Magic Items +25, Redcap 50), summed. Source:
-/// Ars Magica - Definitive Edition (Core Rules).md:4347-4349, :4842-4846.
+/// ArMDE:4347-4349, :4842-4846.
 pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {
@@ -92,8 +91,8 @@ pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
 }
 
 /// The total enchanted-device level the entity's `devices` consume — the "used"
-/// side of the item-level budget bar. Summed across every device. Source: Ars
-/// Magica - Definitive Edition (Core Rules).md:4347-4349.
+/// side of the item-level budget bar. Summed across every device. Source:
+/// ArMDE:4347-4349.
 pub fn item_level_used(entity: &Entity) -> u32 {
     entity.devices.iter().map(|d| u32::from(d.level)).sum()
 }
@@ -101,9 +100,7 @@ pub fn item_level_used(entity: &Entity) -> u32 {
 /// The character's derived power-levels budget: base 0 plus every
 /// [`Effect::PowerLevels`] grant (Demonic Blood 30, Demonic Powers +20, Strong
 /// Angelic Heritage 30), summed. The being's `powers` are charged against it,
-/// mirroring [`item_level_budget`]. Source: Ars Magica 5e - Realms of Power -
-/// The Infernal.md:4122, :4142; Ars Magica 5e - Realms of Power - The Divine
-/// (Revised).md:1977.
+/// mirroring [`item_level_budget`]. Source: RoP:I:4122, :4142; RoP:D:1977.
 pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {
@@ -119,14 +116,13 @@ pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
 ///
 /// Level **and** Penetration, because they are spent from one pool: "You may also
 /// spend levels one-for-one to give the power Penetration; otherwise, it has a
-/// Penetration of zero" (Ars Magica - Definitive Edition (Core Rules).md:4019).
-/// The book's worked example (`:4021`) spends the 100 levels of two Greater Powers
+/// Penetration of zero" (ArMDE:4019).
+/// The book's worked example (`ArMDE:4021`) spends the 100 levels of two Greater Powers
 /// as "a power with a level of 60 and a Penetration of 0, and a second power with
 /// a level and Penetration of 20 each" — 60 + 0 + 20 + 20 = 100. Counting the
 /// levels alone would report 80 and let the player buy 20 levels already spent.
 ///
-/// Source: Ars Magica 5e - Realms of Power - The Infernal.md:4122; Ars Magica -
-/// Definitive Edition (Core Rules).md:4019, :4021.
+/// Source: RoP:I:4122; ArMDE:4019, :4021.
 pub fn powers_used(entity: &Entity) -> u32 {
     entity
         .powers

@@ -39,7 +39,7 @@ fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
 /// never be double-counted or diverge. Owed warping fills carrying
 /// [`Effect::WarpingGrant`] are filtered out of the folded grants (see
 /// [`warping_granted_selections`]), so they never contribute here either.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16464-16475.
+/// Source: ArMDE:16464-16475.
 pub fn warping_points_total(entity: &Entity, ruleset: &Ruleset) -> u32 {
     entity
         .warping_points
@@ -54,7 +54,7 @@ pub fn warping_points_total(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// ([`entity_grants_base`]) ONLY. The owed warping fills are deliberately excluded
 /// so a fill can never raise the score that decides how many fills are owed — the
 /// recursion guard against the self-amplifying `warped_by_magic` feedback loop.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16553-16561.
+/// Source: ArMDE:16553-16561.
 fn warping_points_for_owed(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut base = entity.selections.clone();
     base.extend(entity_grants_base(entity, ruleset));
@@ -65,7 +65,7 @@ fn warping_points_for_owed(entity: &Entity, ruleset: &Ruleset) -> u32 {
 
 /// The Warping Score used to decide the owed warping V/F: [`warping_points_for_owed`]
 /// inverted through the advancement curve (owed fills excluded — the recursion
-/// guard). Source: Ars Magica - Definitive Edition (Core Rules).md:16553-16561.
+/// guard). Source: ArMDE:16553-16561.
 fn warping_score_for_owed(entity: &Entity, ruleset: &Ruleset) -> u8 {
     ruleset
         .advancement
@@ -74,7 +74,7 @@ fn warping_score_for_owed(entity: &Entity, ruleset: &Ruleset) -> u8 {
 
 /// The character's derived Warping Score: [`warping_points_total`] inverted through
 /// the (Ability) advancement curve (Warping rises "like an Ability": cumulative
-/// 5/15/30/50/75, so 15 points → Warping Score 2). Source: Ars Magica - Definitive Edition (Core Rules).md:16464-16475.
+/// 5/15/30/50/75, so 15 points → Warping Score 2). Source: ArMDE:16464-16475.
 pub fn warping_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
     ruleset
         .advancement
@@ -94,8 +94,7 @@ pub struct Warping {
 
 /// The character's derived Warping — the unified readout: the score from
 /// [`warping_score`], the points from [`warping_points_total`]. Derived, never
-/// stored on the entity as a resolved value. Source: Ars Magica - Definitive
-/// Edition (Core Rules).md:7019-7021, :16464-16475.
+/// stored on the entity as a resolved value. Source: ArMDE:7019-7021, :16464-16475.
 pub fn warping(entity: &Entity, ruleset: &Ruleset) -> Warping {
     Warping {
         score: warping_score(entity, ruleset),
@@ -104,7 +103,7 @@ pub fn warping(entity: &Entity, ruleset: &Ruleset) -> Warping {
 }
 
 /// The category slug a warping-owed supernatural Minor Virtue must belong to
-/// (Ars Magica - Definitive Edition (Core Rules).md:16559, "a supernatural Minor Virtue"). The category taxonomy is
+/// (ArMDE:16559, "a supernatural Minor Virtue"). The category taxonomy is
 /// data; this names the slug the rule's "supernatural" wording maps to.
 const WARPING_SUPERNATURAL_CATEGORY: &str = "supernatural";
 
@@ -116,7 +115,7 @@ pub(crate) const WARPING_SUPERNATURAL_VIRTUE_KEY: &str = "warping.supernatural_v
 pub(crate) const WARPING_MAJOR_FLAW_KEY: &str = "warping.major_flaw.";
 
 /// The Virtues and Flaws a character owes from its Warping Score, per "Effects of
-/// Warping" (Ars Magica - Definitive Edition (Core Rules).md:16547-16561). These are auto-granted, off-budget V/F
+/// Warping" (ArMDE:16547-16561). These are auto-granted, off-budget V/F
 /// (never counted against the creation Virtue/Flaw budget), filled by the player
 /// choosing specific items (stored in [`Entity::warping_choices`]). Derived, never
 /// stored as a resolved value.
@@ -126,20 +125,20 @@ pub(crate) const WARPING_MAJOR_FLAW_KEY: &str = "warping.major_flaw.";
 /// NOT model — a magus always owes zero.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct WarpingOwed {
-    /// Owed Minor Flaws: 1 at Warping Score 1 (:16553), 2 at Score 3 (:16557).
+    /// Owed Minor Flaws: 1 at Warping Score 1 (ArMDE:16553), 2 at Score 3 (ArMDE:16557).
     pub minor_flaws: u8,
-    /// Owed supernatural Minor Virtues: 1 at Warping Score 5 (:16559), else 0.
+    /// Owed supernatural Minor Virtues: 1 at Warping Score 5 (ArMDE:16559), else 0.
     pub minor_supernatural_virtues: u8,
-    /// Owed Major Flaws: 1 at Warping Score 6 and every point thereafter (:16561).
+    /// Owed Major Flaws: 1 at Warping Score 6 and every point thereafter (ArMDE:16561).
     pub major_flaws: u8,
 }
 
 impl WarpingOwed {
     /// The owed V/F for a non-magus at Warping Score `score` — the pure threshold
-    /// curve of "Effects of Warping". Source: Ars Magica - Definitive Edition (Core Rules).md:16553-16561.
+    /// curve of "Effects of Warping". Source: ArMDE:16553-16561.
     pub fn from_score(score: u8) -> Self {
         WarpingOwed {
-            // A Minor Flaw at Warping Score 1 (:16553); a second at Score 3 (:16557).
+            // A Minor Flaw at Warping Score 1 (ArMDE:16553); a second at Score 3 (ArMDE:16557).
             minor_flaws: if score >= 3 {
                 2
             } else if score >= 1 {
@@ -147,9 +146,9 @@ impl WarpingOwed {
             } else {
                 0
             },
-            // A supernatural Minor Virtue at Warping Score 5 (:16559).
+            // A supernatural Minor Virtue at Warping Score 5 (ArMDE:16559).
             minor_supernatural_virtues: u8::from(score >= 5),
-            // A Major Flaw at Warping Score 6, and every point thereafter (:16561).
+            // A Major Flaw at Warping Score 6, and every point thereafter (ArMDE:16561).
             major_flaws: score.saturating_sub(5),
         }
     }
@@ -158,7 +157,7 @@ impl WarpingOwed {
 /// The Virtues/Flaws `entity` owes from Warping. Non-magi owe per the score
 /// (derived via the recursion-guarded [`warping_score_for_owed`], so owed fills
 /// never inflate the count); Hermetic magi (`profile.is_magus`) are exempt and
-/// owe zero — Warping gives them Wizard's Twilight instead (Ars Magica - Definitive Edition (Core Rules).md:16551).
+/// owe zero — Warping gives them Wizard's Twilight instead (ArMDE:16551).
 pub fn warping_owed(entity: &Entity, ruleset: &Ruleset) -> WarpingOwed {
     if ruleset
         .profile(&entity.type_id)
@@ -186,7 +185,7 @@ pub(crate) fn item_carries_warping_grant(item_ref: &Id, ruleset: &Ruleset) -> bo
 /// satisfy (a Minor Flaw, a supernatural Minor Virtue, or a Major Flaw). The list
 /// length tracks the recursion-guarded Warping Score via [`warping_owed`]. The
 /// frontend renders one picker per grant; validation resolves each pick against
-/// its constraint. Source: Ars Magica - Definitive Edition (Core Rules).md:16553-16561.
+/// its constraint. Source: ArMDE:16553-16561.
 pub fn warping_owed_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<Grant> {
     let owed = warping_owed(entity, ruleset);
     let mut grants = Vec::new();
@@ -248,7 +247,7 @@ fn warping_open_grant(
 /// against the folded bought-plus-granted list. A pick carrying
 /// [`Effect::WarpingGrant`] is dropped (ineligible — the recursion guard), so a
 /// warping fill can never feed Warping Points back into the owed count.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16553-16561.
+/// Source: ArMDE:16553-16561.
 pub fn warping_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
     resolve_grants(
         &warping_owed_grants(entity, ruleset),
@@ -261,14 +260,14 @@ pub fn warping_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Sel
 
 /// The character's total accrued aging points across every Characteristic — the
 /// character's Decrepitude XP (every aging point is 1 XP toward Decrepitude).
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16617.
+/// Source: ArMDE:16617.
 pub fn decrepitude_points_total(entity: &Entity) -> u32 {
     entity.aging_points.values().map(|p| u32::from(*p)).sum()
 }
 
 /// The character's derived Decrepitude Score: [`decrepitude_points_total`] inverted
 /// through the (Ability) advancement curve (Decrepitude rises "like an Ability",
-/// 5×new score, so 17 aging points → Decrepitude 2). Source: Ars Magica - Definitive Edition (Core Rules).md:16617.
+/// 5×new score, so 17 aging points → Decrepitude 2). Source: ArMDE:16617.
 pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
     ruleset
         .advancement
@@ -283,7 +282,7 @@ pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
 /// the score by one, so the threshold shrinks toward 0 and then grows again.
 /// Worked examples: a Communication of +2 drops on its 3rd aging point; a
 /// Stamina of −3 on its 4th.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16579, :16613.
+/// Source: ArMDE:16579, :16613.
 ///
 /// Crate-internal primitive: the frontend consumes the surfaced
 /// [`characteristic_aging_drops`] map (which wraps this per-Characteristic), so
@@ -293,14 +292,14 @@ pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
 ///
 /// Returns 0 for a character carrying an [`AgingEffect::NoAging`] item: "In game
 /// terms, your aging points do not decrease your Characteristics, only building up
-/// to give you Decrepitude points" (`:5189`; Bound to (Role) "also includes the
-/// effects of the Unaging Virtue" at `:5743`). The second half of that sentence is
+/// to give you Decrepitude points" (`ArMDE:5189`; Bound to (Role) "also includes the
+/// effects of the Unaging Virtue" at `ArMDE:5743`). The second half of that sentence is
 /// why [`decrepitude_points_total`] and [`decrepitude_score`] are deliberately
 /// **not** gated the same way — the points still accrue and still build
 /// Decrepitude, at everybody else's rate. The *appearance* is a separate exemption
 /// ([`AgingEffect::NoApparentAging`]), applied in `aging.rs`.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:5189, :5743.
+/// Source: ArMDE:5189, :5743.
 pub(crate) fn aging_drops(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -336,11 +335,11 @@ pub(crate) fn aging_drops(
 /// whether he carries an [`AgingEffect::NoAging`] item.
 ///
 /// It gates the Characteristic drop **only**. Unaging carries this tag alongside
-/// `no_apparent_aging`, Bound to (Role) carries it alone (`:5743` advances the
+/// `no_apparent_aging`, Bound to (Role) carries it alone (`ArMDE:5743` advances the
 /// apparent age "in line with their physical age"), and a Bee King carries neither
-/// — "do not appear to age" (`:3488`) is about the appearance and nothing else.
+/// — "do not appear to age" (`ArMDE:3488`) is about the appearance and nothing else.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:5189, :5743, :3488.
+/// Source: ArMDE:5189, :5743, :3488.
 fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
     selections_for_effects(entity, ruleset)
         .iter()
@@ -367,7 +366,7 @@ fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// reads (the point-buy budget check in `validation.rs` reads the un-aged bought
 /// score from `entity.characteristics`), so entering an already-aged character
 /// cannot retroactively make its point-buy illegal.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16579.
+/// Source: ArMDE:16579.
 pub fn effective_characteristic_after_aging(
     entity: &Entity,
     ruleset: &Ruleset,

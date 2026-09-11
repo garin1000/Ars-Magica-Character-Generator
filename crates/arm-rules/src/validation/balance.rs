@@ -15,7 +15,7 @@ use super::*;
 ///    points for buying Virtues and Flaws, and thus must take Flaws if they
 ///    want Virtues."
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2774 ("must take
+/// Source: ArMDE:2774 ("must take
 /// Flaws if they want Virtues"), :2297 (companions), :2303 (magi) — "up to ten
 /// points of Flaws, and the same number of points of Virtues". The per-type
 /// point totals themselves are data in `rules/core/character_types.json` (see
@@ -84,9 +84,9 @@ pub(crate) fn validate_balance(
 /// The extra Flaw points each still fund virtue points at the type's rate, so
 /// they raise the virtue ceiling by `bonus_flaw · rate` (not just the flaw
 /// ceiling); `bonus_free_virtue_points` is unfunded headroom that also lifts the
-/// funded floor. Source: Ars Magica - Definitive Edition (Core Rules).md:2664
+/// funded floor. Source: ArMDE:2664
 /// (Devil Child +3 free V / +7 F);
-/// Ars Magica 5e - Realms of Power - Magic.md:5486 (Spirit Votary +7 F).
+/// RoP:M:5486 (Spirit Votary +7 F).
 pub(crate) struct EffectiveBudget {
     pub(crate) virtue_ceiling: i32,
     pub(crate) flaw_ceiling: i32,

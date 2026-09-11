@@ -279,7 +279,7 @@ pub fn aging_preview(
 /// Empty for a row that names its own Characteristics.
 ///
 /// `crisisDie` is the Simple Die thrown at the Crisis Table for a year the aging
-/// row sent there (`:16621`); `null` records the Crisis as owed and unrolled,
+/// row sent there (`ArMDE:16621`); `null` records the Crisis as owed and unrolled,
 /// which is a legitimate state rather than a refusal.
 #[tauri::command]
 pub fn aging_apply(

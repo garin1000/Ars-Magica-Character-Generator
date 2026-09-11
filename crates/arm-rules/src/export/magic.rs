@@ -290,7 +290,7 @@ impl<'a> Doc<'a> {
     /// They are a **stored choice** ([`Entity::living_conditions`]) and a standing
     /// term of every future aging total — "AGING TOTAL: Stress die (no botch) +
     /// age/10 (round up) - Living Conditions modifier"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16567-16569, table at
+    /// (ArMDE:16567-16569, table at
     /// :16581-16594) — so a sheet that dropped them would read as data loss. The
     /// resolved modifier is deliberately *not* printed: it is derived from these ids
     /// and the character's Virtues and Flaws, and the sheet records choices.
@@ -318,7 +318,7 @@ impl<'a> Doc<'a> {
     /// A resolved year may leave the free text empty and let the structured fields
     /// speak, and a hand-written entry carries no die at all, so each part is
     /// included only when it is there.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569, :16621.
+    /// Source: ArMDE:16567-16569, :16621.
     fn aging_log_entry(&self, entry: &AgingLogEntry) -> String {
         let mut parts: Vec<String> = Vec::new();
         let effect = escape_cell(&entry.effect);
@@ -348,7 +348,7 @@ impl<'a> Doc<'a> {
     /// reaches the sheet as a slug; the severity is a Rust taxonomy and goes through
     /// `crisis-severity-<slug>`, which [`LABEL_KEYS`] declares.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16619-16632.
+    /// Source: ArMDE:16619-16632.
     fn aging_log_crisis(&self, entry: &AgingLogEntry) -> Vec<String> {
         if !entry.crisis {
             return Vec::new();
@@ -409,13 +409,13 @@ impl<'a> Doc<'a> {
     /// The being's OWN supernatural powers: name, level, and the Penetration
     /// bought with levels out of the same budget ("You may also spend levels
     /// one-for-one to give the power Penetration",
-    /// Ars Magica - Definitive Edition (Core Rules).md:4019). Three columns rather
+    /// ArMDE:4019). Three columns rather
     /// than the shared two, so the table reconciles with the power-levels budget
-    /// the app charged — otherwise the book's own worked example (`:4021`) would
+    /// the app charged — otherwise the book's own worked example (`ArMDE:4021`) would
     /// print 80 levels of powers against a budget of 100.
     ///
     /// The familiar's invested powers keep [`Self::leveled_rows`]: they are
-    /// charged against no budget at all (`:10866`) and no surface sets their
+    /// charged against no budget at all (`ArMDE:10866`) and no surface sets their
     /// Penetration, so a third column there would be a row of zeros implying a
     /// field that does not exist.
     fn power_rows(&self, powers: &[SupernaturalPower]) -> LeveledTable {

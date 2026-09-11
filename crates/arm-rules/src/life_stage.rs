@@ -3,7 +3,7 @@
 //! A character's Abilities are bought with experience earned in blocks, not from
 //! one undifferentiated bank: "For grogs and companions they are acquired in two
 //! blocks: early childhood, and later life."
-//! (Source: Ars Magica - Definitive Edition (Core Rules).md:2364.) This module
+//! (Source: ArMDE:2364.) This module
 //! turns an age into those blocks; the blocks then become funding pools for the
 //! existing allocation solve in [`crate::effective::xp_allocation`], which is why
 //! nothing here charges or spends anything itself.
@@ -25,7 +25,7 @@ use crate::types::{AbilityFunding, Effect, Entity, Id, is_zero};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LifeStageRules {
     /// The magus's apprenticeship, when the ruleset ships one. Optional because
-    /// `:2364` calls apprenticeship and life as a magus "two **more** periods" — a
+    /// `ArMDE:2364` calls apprenticeship and life as a magus "two **more** periods" — a
     /// ruleset with no Hermetic magi needs neither.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub apprenticeship: Option<ApprenticeshipRules>,
@@ -34,7 +34,7 @@ pub struct LifeStageRules {
     /// Every year after childhood, up to the character's age.
     pub later_life: LaterLifeRules,
     /// The years a magus lives after its Gauntlet, when the ruleset ships them.
-    /// Optional for the same reason as [`Self::apprenticeship`]: `:2364` calls
+    /// Optional for the same reason as [`Self::apprenticeship`]: `ArMDE:2364` calls
     /// apprenticeship and life as a magus "two **more** periods", so a ruleset
     /// with no Hermetic magi ships neither.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -51,16 +51,16 @@ pub struct LifeStageRules {
 /// The **120 spell levels are deliberately not here**: they are the magus type
 /// profile's `spell_levels` (`rules/core/character_types.json`), which
 /// [`crate::effective::spell_levels_base`] is the single selector of. The two
-/// numbers of `:2435` live in two files on purpose; see `RULES.md`.
+/// numbers of `ArMDE:2435` live in two files on purpose; see `RULES.md`.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2433-2437.
+/// Source: ArMDE:2433-2437.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ApprenticeshipRules {
     /// The age a plan naming no Gauntlet age is read at — the rules' own baseline
     /// magus, "25 years old and just out of apprenticeship"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:1601), which the Darius
-    /// example builds too: apprenticed at 10 (`:2402`) plus the fifteen years of
-    /// `:2435`, with his years as a magus then counted "from 26 to 33" (`:2486`).
+    /// (ArMDE:1601), which the Darius
+    /// example builds too: apprenticed at 10 (`ArMDE:2402`) plus the fifteen years of
+    /// `ArMDE:2435`, with his years as a magus then counted "from 26 to 33" (`ArMDE:2486`).
     ///
     /// Here rather than in Rust because it is a rule's number like `years` and `xp`:
     /// a ruleset whose magi are gauntleted at another age says so in its own file.
@@ -74,19 +74,19 @@ pub struct ApprenticeshipRules {
     pub default_gauntlet_age: Option<u32>,
     /// Abilities the Order demands of every magus: "Magi must have the following
     /// minimum Abilities: Parma Magica 1, Magic Theory 1, Latin 1. Characters with
-    /// lower scores would not be admitted to the Order." (`:2437`.)
+    /// lower scores would not be admitted to the Order." (`ArMDE:2437`.)
     pub minimum_abilities: Vec<AbilityRequirement>,
     /// The Abilities of `#### Hermetic Magi Recommended Minimum Abilities`
-    /// (`:2451-2461`) — advice, not admission, so a shortfall is a warning.
+    /// (`ArMDE:2451-2461`) — advice, not admission, so a shortfall is a warning.
     pub recommended_abilities: Vec<AbilityRequirement>,
     /// What [`Self::recommended_abilities`] costs off the advancement table:
-    /// "Total Cost: 90 experience points" (`:2461`). Carried as data so the load
+    /// "Total Cost: 90 experience points" (`ArMDE:2461`). Carried as data so the load
     /// can re-price the list against it — the trust gate on transcribed numbers.
     pub recommended_xp: u32,
     /// Experience the years of apprenticeship grant ("240 experience points",
-    /// `:2435`), spendable on Arts or Abilities alike.
+    /// `ArMDE:2435`), spendable on Arts or Abilities alike.
     pub xp: u32,
-    /// Years apprenticeship covers ("The fifteen years of apprenticeship", `:2435`).
+    /// Years apprenticeship covers ("The fifteen years of apprenticeship", `ArMDE:2435`).
     pub years: u32,
 }
 
@@ -96,25 +96,25 @@ pub struct ApprenticeshipRules {
 /// > For every year, the magus gets 30 points. Each point can be an experience
 /// > point in an Art or Ability or one level of spell.
 ///
-/// Every field is counted in **points**, not experience: `:2471` makes a point
+/// Every field is counted in **points**, not experience: `ArMDE:2471` makes a point
 /// fungible between an experience point and a level of spell, and the player
 /// decides which each one becomes. Calling them "xp" would name only half of what
 /// they buy — which is why this struct says `points_per_year` where
-/// [`ApprenticeshipRules`] says `xp` (`:2435` grants experience and spell levels
+/// [`ApprenticeshipRules`] says `xp` (`ArMDE:2435` grants experience and spell levels
 /// as two separate, non-interchangeable numbers).
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2467-2482.
+/// Source: ArMDE:2467-2482.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PostApprenticeshipRules {
     /// What one season of lab work costs the year that holds it: "the character
-    /// loses 10 points from the yearly 30 experience points" (`:2482`).
+    /// loses 10 points from the yearly 30 experience points" (`ArMDE:2482`).
     pub lab_season_cost: u32,
     /// How many lab seasons in one year actually cost anything — the deduction
     /// stops "at a minimum of 0 if three or four seasons are spent on lab work"
-    /// (`:2482`), so a fourth season is free because there is nothing left to take.
+    /// (`ArMDE:2482`), so a fourth season is free because there is nothing left to take.
     pub max_charged_lab_seasons_per_year: u32,
     /// The points one year out of apprenticeship grants: "For every year, the
-    /// magus gets 30 points" (`:2471`).
+    /// magus gets 30 points" (`ArMDE:2471`).
     pub points_per_year: u32,
 }
 
@@ -146,8 +146,8 @@ pub struct AbilityRequirement {
     /// `exemplar.<slug>`, keeping `rules/core/` free of translatable strings. It is
     /// one named example, never an enumeration.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2437 (Latin 1),
-    /// `:2455` (the recommended Latin 4).
+    /// Source: ArMDE:2437 (Latin 1),
+    /// `ArMDE:2455` (the recommended Latin 4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exemplar: Option<String>,
     /// The score it must reach.
@@ -160,7 +160,7 @@ pub struct AbilityRequirement {
 /// Early childhood: a fixed block of years granting a native language and a
 /// restricted spread of the Abilities a child picks up in play.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2378.
+/// Source: ArMDE:2378.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ChildhoodRules {
     /// Years childhood covers ("the first five years of life").
@@ -187,7 +187,7 @@ pub struct ChildhoodRules {
 /// age. The base rate here is modified per character by
 /// [`crate::types::Effect::LaterLifeXpRate`] (Wealthy, Poor).
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2392.
+/// Source: ArMDE:2392.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LaterLifeRules {
     /// Experience per year of later life ("15 experience points per year").
@@ -203,9 +203,9 @@ pub struct LaterLifeRules {
 #[serde(rename_all = "snake_case")]
 pub enum AbilityRequirementKind {
     /// A minimum without which the character "would not be admitted to the Order"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2437) — an error.
+    /// (ArMDE:2437) — an error.
     Required,
-    /// One of the `#### Hermetic Magi Recommended Minimum Abilities` (`:2451-2461`) —
+    /// One of the `#### Hermetic Magi Recommended Minimum Abilities` (`ArMDE:2451-2461`) —
     /// advice, so a warning.
     Recommended,
 }
@@ -214,7 +214,7 @@ pub enum AbilityRequirementKind {
 /// character bought, and whether that satisfies it.
 ///
 /// Derived, never stored. Produced by [`magus_minimum_abilities`], which is the
-/// single reading of `:2437`/`:2451-2461` — both the validator and the effective
+/// single reading of `ArMDE:2437`/`ArMDE:2451-2461` — both the validator and the effective
 /// scores consume this, so the finding and the display cannot disagree.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MagusMinimumAbility {
@@ -241,7 +241,7 @@ pub struct MagusMinimumAbility {
 }
 
 /// The Hermetic minimum-Ability checklist for this character: the minimums of
-/// `:2437` first, then the recommendations of `:2451-2461`, each in the order the
+/// `ArMDE:2437` first, then the recommendations of `ArMDE:2451-2461`, each in the order the
 /// rules data declares them.
 ///
 /// > Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
@@ -251,9 +251,9 @@ pub struct MagusMinimumAbility {
 /// `validate_magus_minimum_abilities` and `EffectiveScores`, so the error and the
 /// checklist a UI shows can never drift apart.
 ///
-/// Empty for anyone who is not a magus — `:2437` is about admission to the Order —
+/// Empty for anyone who is not a magus — `ArMDE:2437` is about admission to the Order —
 /// and for a ruleset shipping no apprenticeship block, which states no minimums.
-/// Independent of the funding mode: `:2437` is unconditional, so a magus built from a
+/// Independent of the funding mode: `ArMDE:2437` is unconditional, so a magus built from a
 /// flat experience pool is held to it exactly as a guided one is.
 ///
 /// `score` is the highest **bought** score across the matching instances: a Virtue's
@@ -261,7 +261,7 @@ pub struct MagusMinimumAbility {
 /// [`crate::effective::effective_ability_score`] would report 2 for a magus with no
 /// Parma row at all.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2437, :2451-2461.
+/// Source: ArMDE:2437, :2451-2461.
 pub fn magus_minimum_abilities(entity: &Entity, ruleset: &Ruleset) -> Vec<MagusMinimumAbility> {
     let Some(apprenticeship) = ruleset
         .life_stages()
@@ -333,7 +333,7 @@ pub struct LifeStagePlan {
     /// The language the character grew up speaking — the one the childhood's
     /// native-language experience may be spent on, and the one a second Living
     /// Language may not be ("Living Language (other than the character's native
-    /// language)", Ars Magica - Definitive Edition (Core Rules).md:2378). A `living_language` instance value, so it is
+    /// language)", ArMDE:2378). A `living_language` instance value, so it is
     /// the player's own text, not an id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub native_language: Option<String>,
@@ -345,7 +345,7 @@ pub struct LifeStagePlan {
     ///
     /// It is deliberately **not** cross-checked against those rows: "Note that you
     /// can spend the 45 experience points for yourself, as well"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2382) leaves a package open
+    /// (ArMDE:2382) leaves a package open
     /// to adjustment after it has been taken, so a character whose scores no longer
     /// match the package is legal, not an error.
     ///
@@ -363,7 +363,7 @@ pub struct LifeStagePlan {
     /// **`None` means the ruleset's baseline** —
     /// [`ApprenticeshipRules::default_gauntlet_age`], 25 in the shipped data ("25
     /// years old and just out of apprenticeship",
-    /// Ars Magica - Definitive Edition (Core Rules).md:1601), clamped to
+    /// ArMDE:1601), clamped to
     /// [`Entity::age`] so a younger magus still stands at its Gauntlet. It read as
     /// the age itself until that baseline existed, which made a blank field mean
     /// "zero years as a magus" — the least likely magus there is. The field stays
@@ -375,13 +375,13 @@ pub struct LifeStagePlan {
     /// it was taken as an apprentice — rather than its years as a magus, which is the
     /// opposite of what a player raising the age means.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2467-2471.
+    /// Source: ArMDE:2216, :2467-2471.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub gauntlet_age: Option<u32>,
     /// Lab seasons **charged** against the yearly 30 points, totalled across every
     /// post-Gauntlet year: "the character loses 10 points from the yearly 30
     /// experience points, to a minimum of 0 if three or four seasons are spent on lab
-    /// work" (Ars Magica - Definitive Edition (Core Rules).md:2482).
+    /// work" (ArMDE:2482).
     ///
     /// One total rather than a season list per year, because the arithmetic cannot
     /// tell the difference: the deduction stops at the third season of any year, so
@@ -389,14 +389,14 @@ pub struct LifeStagePlan {
     /// that range is realizable by some distribution, and all of them cost the same.
     ///
     /// It counts **charged** seasons, not seasons actually worked — the fourth season
-    /// of a year is free (`:2482` has already reached 0 by the third), so 16 seasons
+    /// of a year is free (`ArMDE:2482` has already reached 0 by the third), so 16 seasons
     /// worked costs nothing across four years but 30 points across five, and a single
     /// total of *worked* seasons could not tell those two apart.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub post_gauntlet_lab_seasons: u32,
     /// How many of the post-Gauntlet points the player took as **levels of spells**
     /// rather than experience: "Each point can be an experience point in an Art or
-    /// Ability or one level of spell" (Ars Magica - Definitive Edition (Core Rules).md:2471). The rest are experience.
+    /// Ability or one level of spell" (ArMDE:2471). The rest are experience.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub post_gauntlet_spell_levels: u32,
 }
@@ -426,7 +426,7 @@ pub struct LifeStageBudget {
     pub apprenticeship_years: u32,
     /// Experience from apprenticeship (240 for a magus, 0 for anyone else) — the
     /// **general** pool, since it alone may buy Arts as well as Abilities
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2435).
+    /// (ArMDE:2435).
     ///
     /// The pool the solve actually funds from is this plus any
     /// [`Effect::GeneralXp`] (Skilled/Weak Parens), surfaced as
@@ -441,23 +441,23 @@ pub struct LifeStageBudget {
     /// is unset, like every other age-dependent figure here.
     pub gauntlet_age: u32,
     /// Years lived after the Gauntlet (age − [`Self::gauntlet_age`]), 0 for a
-    /// character standing at it (Ars Magica - Definitive Edition (Core Rules).md:2216).
+    /// character standing at it (ArMDE:2216).
     pub post_gauntlet_years: u32,
     /// What those years grant, lab work deducted: `post_gauntlet_years × 30 −
-    /// charged lab seasons × 10` (Ars Magica - Definitive Edition (Core Rules).md:2471, :2482).
+    /// charged lab seasons × 10` (ArMDE:2471, :2482).
     ///
     /// **Points, not experience:** each one is "an experience point in an Art or
-    /// Ability or one level of spell" (`:2471`), so this is the sum of the two fields
+    /// Ability or one level of spell" (`ArMDE:2471`), so this is the sum of the two fields
     /// below and never itself funds a pool.
     pub post_gauntlet_points: u32,
     /// How many of [`Self::post_gauntlet_points`] the player took as levels of spells
-    /// (`:2471`) — not experience, so `total()` excludes them.
+    /// (`ArMDE:2471`) — not experience, so `total()` excludes them.
     pub post_gauntlet_spell_levels: u32,
     /// The rest of [`Self::post_gauntlet_points`], which is experience.
     pub post_gauntlet_xp: u32,
     // Deliberately NOT a field: what a post-Gauntlet year is worth. Unlike
-    // `later_life_rate`, which Wealthy and Poor change per character (`:2394`), the 30
-    // of `:2471` never varies — so there is nothing per-character to report, and a UI
+    // `later_life_rate`, which Wealthy and Poor change per character (`ArMDE:2394`), the 30
+    // of `ArMDE:2471` never varies — so there is nothing per-character to report, and a UI
     // that shows the rate reads it off the ruleset's `post_apprenticeship` block,
     // which is the one place it lives.
 }
@@ -466,7 +466,7 @@ impl LifeStageBudget {
     /// Every **experience point** the character has earned, across every block.
     ///
     /// [`Self::post_gauntlet_spell_levels`] is excluded on purpose: a level of spell
-    /// is not experience — `:2471` has the player split the yearly points between the
+    /// is not experience — `ArMDE:2471` has the player split the yearly points between the
     /// two — and counting it here would spend it twice, once as experience and once
     /// against the spell-levels budget.
     pub fn total(&self) -> u32 {
@@ -497,7 +497,7 @@ impl LifeStageRules {
     ///
     /// An **unset age** still yields a budget: childhood is granted "in the first
     /// five years of life" with no further condition
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2378), so only later life
+    /// (ArMDE:2378), so only later life
     /// scales with an age and an ageless plan simply lives 0 later-life years.
     /// Withholding the whole budget instead would leave childhood's two restricted
     /// pools at nothing and report every childhood row as unfunded — the validator
@@ -505,7 +505,7 @@ impl LifeStageRules {
     ///
     /// **The age is spent around the Gauntlet, not up to it.** The years before the
     /// Gauntlet are childhood, later life and apprenticeship; the years after it earn
-    /// "30 points per year" (`:2216`, `:2471`). So every figure here is derived from
+    /// "30 points per year" (`ArMDE:2216`, `ArMDE:2471`). So every figure here is derived from
     /// the *Gauntlet* age — [`LifeStagePlan::gauntlet_age`], or the ruleset's
     /// [`ApprenticeshipRules::default_gauntlet_age`] when the plan names none — and
     /// raising a magus's age lengthens its life as a magus, never the
@@ -519,7 +519,7 @@ impl LifeStageRules {
         let apprenticeship = self.apprenticeship_of(entity, ruleset);
         let apprenticeship_years = apprenticeship.map_or(0, |block| block.years);
         // "**Hermetic Magi Only (Optional):** Years after apprenticeship"
-        // (Ars Magica - Definitive Edition (Core Rules).md:2216), so the stored
+        // (ArMDE:2216), so the stored
         // Gauntlet age is read for a character that serves an apprenticeship and
         // ignored on every other plan — gating on the *points* being zero instead
         // would let a hand-edited companion plan carrying one cut its later life
@@ -528,7 +528,7 @@ impl LifeStageRules {
         // A plan that names no Gauntlet age falls back to the ruleset's own baseline
         // ([`ApprenticeshipRules::default_gauntlet_age`], 25 in the shipped data:
         // "25 years old and just out of apprenticeship",
-        // Ars Magica - Definitive Edition (Core Rules).md:1601) rather than to the
+        // ArMDE:1601) rather than to the
         // character's age, which would have read a blank field as "zero years as a
         // magus" — the least likely magus there is. Only a character that serves an
         // apprenticeship reaches the fallback at all, so a companion still runs its
@@ -549,7 +549,7 @@ impl LifeStageRules {
         let post_gauntlet_years = entity.age.unwrap_or(0).saturating_sub(gauntlet_age);
         let post_gauntlet_points = self.post_gauntlet_points(plan, post_gauntlet_years);
         // "Each point can be an experience point in an Art or Ability or one level of
-        // spell" (`:2471`): the player's split, held to the points that exist so a
+        // spell" (`ArMDE:2471`): the player's split, held to the points that exist so a
         // stored figure the years cannot pay for takes nothing away from the rest
         // (the validator reports it).
         let post_gauntlet_spell_levels = plan.post_gauntlet_spell_levels.min(post_gauntlet_points);
@@ -572,10 +572,10 @@ impl LifeStageRules {
     }
 
     /// What `post_gauntlet_years` out of apprenticeship are worth to this plan:
-    /// "For every year, the magus gets 30 points" (`:2471`), less what its lab work
+    /// "For every year, the magus gets 30 points" (`ArMDE:2471`), less what its lab work
     /// took — "For each season that your magus spends working on a lab project, the
     /// character loses 10 points from the yearly 30 experience points, to a minimum
-    /// of 0 if three or four seasons are spent on lab work" (`:2482`).
+    /// of 0 if three or four seasons are spent on lab work" (`ArMDE:2482`).
     ///
     /// The stored season total is capped at `max_charged × years` first, which is that
     /// per-year minimum of 0 read across the whole span: no year can lose more than
@@ -586,7 +586,7 @@ impl LifeStageRules {
     /// 0 throughout for a ruleset shipping no `post_apprenticeship` block: the rate
     /// is data, so with no block there is no number to grant.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2471, :2482.
+    /// Source: ArMDE:2471, :2482.
     fn post_gauntlet_points(&self, plan: &LifeStagePlan, post_gauntlet_years: u32) -> u32 {
         let Some(rules) = self.post_apprenticeship.as_ref() else {
             return 0;
@@ -609,8 +609,8 @@ impl LifeStageRules {
     ///
     /// **A magus's later life ends where its apprenticeship begins.** "**Later
     /// Life.** 15 experience points per year (until apprenticeship for magi)"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2214), the same four periods
-    /// `:2364` sets out. Counting every year to a magus's age would over-grant, and
+    /// (ArMDE:2214), the same four periods
+    /// `ArMDE:2364` sets out. Counting every year to a magus's age would over-grant, and
     /// since Abilities and Arts buy from one shared pool the surplus would fund Arts
     /// as well.
     ///
@@ -619,9 +619,9 @@ impl LifeStageRules {
     /// its age only while it stands at its Gauntlet — and the age itself for anyone
     /// else, who never leaves later life. That is why a magus of 60 gauntleted at 25
     /// has the same five later-life years as one of 25, exactly the Darius example's
-    /// "75 experience points to spend from those five years" (`:2402`) for a boy
+    /// "75 experience points to spend from those five years" (`ArMDE:2402`) for a boy
     /// apprenticed at 10. The years after the Gauntlet are a block of their own
-    /// (`:2216`, `:2471`), counted in [`Self::budget`].
+    /// (`ArMDE:2216`, `ArMDE:2471`), counted in [`Self::budget`].
     pub fn later_life_years(&self, stop_age: u32, apprenticeship_years: u32) -> u32 {
         stop_age.saturating_sub(self.childhood.years.saturating_add(apprenticeship_years))
     }
@@ -647,10 +647,10 @@ impl LifeStageRules {
     }
 
     /// The youngest a magus can be gauntleted: childhood plus the fifteen years of
-    /// apprenticeship (Ars Magica - Definitive Edition (Core Rules).md:2435), so twenty against the shipped data.
+    /// apprenticeship (ArMDE:2435), so twenty against the shipped data.
     ///
     /// A floor on the **Gauntlet age**, which is a floor on the character's age too:
-    /// the years after the Gauntlet (`:2216`) run forward from it, so a magus is at
+    /// the years after the Gauntlet (`ArMDE:2216`) run forward from it, so a magus is at
     /// least this old whether it stands at its Gauntlet or is a century past it.
     ///
     /// Falls back to childhood alone for a ruleset shipping no apprenticeship block —
@@ -673,7 +673,7 @@ impl LifeStageRules {
     /// wins: nothing in the text ranks them, so the engine takes the conservative
     /// reading rather than depending on declaration order.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2392, :2394.
+    /// Source: ArMDE:2392, :2394.
     pub fn later_life_rate(&self, entity: &Entity, ruleset: &Ruleset) -> u32 {
         // The base rate is not one of the candidates: a named rate replaces it
         // outright, so `min` is taken over the named rates only (or the base stands
@@ -760,13 +760,13 @@ mod tests {
     }
 
     /// "For magi, there are two more periods to consider: apprenticeship, and life
-    /// as a magus after that." (Ars Magica - Definitive Edition (Core Rules).md:2364.) Apprenticeship is the third
+    /// as a magus after that." (ArMDE:2364.) Apprenticeship is the third
     /// block a ruleset may ship: "The fifteen years of apprenticeship give the
-    /// character 240 experience points" (`:2435`), with the minimum Abilities the
-    /// Order demands (`:2437`) and the recommended package priced at 90 experience
-    /// points (`:2451-2461`).
+    /// character 240 experience points" (`ArMDE:2435`), with the minimum Abilities the
+    /// Order demands (`ArMDE:2437`) and the recommended package priced at 90 experience
+    /// points (`ArMDE:2451-2461`).
     ///
-    /// Optional, because `:2364` calls these "two **more** periods": a non-Hermetic
+    /// Optional, because `ArMDE:2364` calls these "two **more** periods": a non-Hermetic
     /// ruleset ships none, and the block is simply absent.
     #[test]
     fn apprenticeship_rules_carry_the_years_the_xp_and_the_ability_lists() {
@@ -821,7 +821,7 @@ mod tests {
 
     /// The age a plan naming no Gauntlet age is read at: "These templates are of a
     /// stereotypical member of each House, 25 years old and just out of
-    /// apprenticeship" (Ars Magica - Definitive Edition (Core Rules).md:1601). The
+    /// apprenticeship" (ArMDE:1601). The
     /// number belongs to the ruleset like every other figure on this block, not to a
     /// constant in the engine.
     ///
@@ -847,9 +847,9 @@ mod tests {
     }
 
     /// The fourth period: "For every year, the magus gets 30 points"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2471), less the "10 points from the yearly 30 experience
+    /// (ArMDE:2471), less the "10 points from the yearly 30 experience
     /// points" a season of lab work costs, "to a minimum of 0 if three or four
-    /// seasons are spent on lab work" (`:2482`).
+    /// seasons are spent on lab work" (`ArMDE:2482`).
     ///
     /// Additive like every optional field before it: a ruleset shipping no such
     /// block parses, and serializes without the key.
@@ -950,7 +950,7 @@ mod tests {
     }
 
     /// Later life starts where childhood ends, so the years that earn the yearly
-    /// experience are `age - childhood.years` (Ars Magica - Definitive Edition (Core Rules).md:2378, :2392).
+    /// experience are `age - childhood.years` (ArMDE:2378, :2392).
     #[test]
     fn later_life_years_start_after_childhood() {
         let rules = rules();
@@ -1020,7 +1020,7 @@ mod tests {
 
     /// Wealthy and Poor replace the yearly rate rather than adding to it: "get 20
     /// experience points per year" / "get 10 experience points per year".
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2394.
+    /// Source: ArMDE:2394.
     #[test]
     fn wealthy_and_poor_replace_the_yearly_rate() {
         let rs = rate_ruleset();
@@ -1051,12 +1051,12 @@ mod tests {
 
     /// A magus's later life ends where its apprenticeship begins: "**Later Life.** 15
     /// experience points per year (until apprenticeship for magi)"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2214). Apprenticeship is fifteen years (`:2435`) and the stop
+    /// (ArMDE:2214). Apprenticeship is fifteen years (`ArMDE:2435`) and the stop
     /// age is the **Gauntlet** age, so a magus gauntleted at 25 was taken as an
     /// apprentice at 10 and lived five later-life years however old it is now —
     /// exactly the arithmetic of the Darius
     /// example, whose master "picks 10 as a nice, round number" and who then "has 75
-    /// experience points to spend from those five years" (`:2402`).
+    /// experience points to spend from those five years" (`ArMDE:2402`).
     #[test]
     fn a_magus_later_life_stops_at_the_gauntlet() {
         let rules = rules();
@@ -1112,7 +1112,7 @@ mod tests {
 
     /// A magus earns a fourth block on top of the three: "The fifteen years of
     /// apprenticeship give the character 240 experience points"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2435). So a magus of 25 has 75 + 45 + 75 + 240 = 435 points,
+    /// (ArMDE:2435). So a magus of 25 has 75 + 45 + 75 + 240 = 435 points,
     /// where a companion of the same age has 420.
     #[test]
     fn the_budget_of_a_guided_magus_adds_its_apprenticeship() {
@@ -1137,7 +1137,7 @@ mod tests {
         assert_eq!(budget.total(), 420);
     }
 
-    /// Apprenticeship is a fixed block of fifteen years (`:2435`), exactly as
+    /// Apprenticeship is a fixed block of fifteen years (`ArMDE:2435`), exactly as
     /// childhood is a fixed five, so it does not wait for an age either: only later
     /// life is counted in years up to one. A guided magus whose age is not yet typed
     /// therefore holds its 240 points and lives no later-life year — the missing age
@@ -1199,10 +1199,10 @@ mod tests {
     /// A plan naming no Gauntlet age reads the ruleset's baseline, not the
     /// character's own age: "These templates are of a stereotypical member of each
     /// House, 25 years old and just out of apprenticeship"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:1601). So a magus of 60 that
+    /// (ArMDE:1601). So a magus of 60 that
     /// never filled the field in is thirty-five years out of apprenticeship, which is
     /// what the rules' own worked example does — Darius counts his years as a magus
-    /// "from 26 to 33" (`:2486`), not from the age he happens to be.
+    /// "from 26 to 33" (`ArMDE:2486`), not from the age he happens to be.
     ///
     /// Reading the age itself, as this did before, made the blank field mean "zero
     /// years as a magus" — the least likely magus there is, and the one that made an
@@ -1252,7 +1252,7 @@ mod tests {
     }
 
     /// "For every year, the magus gets 30 points."
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2471.) The years counted are
+    /// (ArMDE:2471.) The years counted are
     /// the ones after the Gauntlet — and the years *before* it are untouched by the
     /// character's age, which is the whole reason the Gauntlet age is the stored
     /// number: a magus of 60 gauntleted at 25 still lived the same five later-life
@@ -1274,7 +1274,7 @@ mod tests {
     }
 
     /// "For each season that your magus spends working on a lab project, the
-    /// character loses 10 points from the yearly 30 experience points" (`:2482`), so
+    /// character loses 10 points from the yearly 30 experience points" (`ArMDE:2482`), so
     /// ten charged seasons cost 100 of the 1050.
     #[test]
     fn each_charged_lab_season_costs_ten_points() {
@@ -1286,7 +1286,7 @@ mod tests {
     }
 
     /// The deduction runs "to a minimum of 0 if three or four seasons are spent on
-    /// lab work" (`:2482`), so the fourth season of a year is free — the year has
+    /// lab work" (`ArMDE:2482`), so the fourth season of a year is free — the year has
     /// nothing left to lose. A magus one year out of apprenticeship that spent every
     /// season in the lab is at 0 points, never below.
     #[test]
@@ -1314,7 +1314,7 @@ mod tests {
     }
 
     /// "Each point can be an experience point in an Art or Ability or one level of
-    /// spell" (`:2471`), so the split is the player's: 300 of the 950 taken as spell
+    /// spell" (`ArMDE:2471`), so the split is the player's: 300 of the 950 taken as spell
     /// levels leave 650 experience points. `total()` counts the 650 alone — a level
     /// of spell is not experience, and folding it in would spend it twice.
     #[test]
@@ -1358,7 +1358,7 @@ mod tests {
     }
 
     /// The Gauntlet age is read for a character that serves an apprenticeship and
-    /// nobody else — `:2216` is "**Hermetic Magi Only (Optional):** Years after
+    /// nobody else — `ArMDE:2216` is "**Hermetic Magi Only (Optional):** Years after
     /// apprenticeship". Gating on the field instead would let a hand-edited companion
     /// plan carrying one silently lose every later-life year between the two ages: 35
     /// years, 525 experience points.
@@ -1488,7 +1488,7 @@ mod tests {
         entity
     }
 
-    /// The one reading of `:2437` and `:2451-2461`, as a checklist: every requirement
+    /// The one reading of `ArMDE:2437` and `ArMDE:2451-2461`, as a checklist: every requirement
     /// in order, the score the character actually bought, and whether it is met.
     ///
     /// Both the validator and the effective-scores payload consume this, so they
@@ -1526,7 +1526,7 @@ mod tests {
         );
 
         // The Darius package: Latin 4, Magic Theory 4, Artes Liberales 3, Parma 1
-        // (`:2441`, `:2449`) meets every row.
+        // (`ArMDE:2441`, `ArMDE:2449`) meets every row.
         let darius = magus(vec![
             ("ability.dead_language", Some("Latin"), 4),
             ("ability.magic_theory", None, 4),
@@ -1556,7 +1556,7 @@ mod tests {
             vec![(1, 4, true), (4, 4, true)]
         );
 
-        // Nothing is demanded of a companion — `:2437` is about admission to the
+        // Nothing is demanded of a companion — `ArMDE:2437` is about admission to the
         // Order — and nothing at all when the ruleset ships no apprenticeship block.
         assert!(magus_minimum_abilities(&companion(vec![]), &rs).is_empty());
         assert!(magus_minimum_abilities(&magus(vec![]), &rate_ruleset()).is_empty());
@@ -1591,7 +1591,7 @@ mod tests {
 
     /// The score tested is the **bought** one. "Magi must have the following minimum
     /// Abilities … Characters with lower scores would not be admitted to the Order"
-    /// (`:2437`) cannot mean the effective score: `effective_ability_score` returns 2
+    /// (`ArMDE:2437`) cannot mean the effective score: `effective_ability_score` returns 2
     /// for a magus with a Puissant Parma Magica and no Parma row at all, and a
     /// Virtue's +2 to *use* is not training the Order can examine.
     #[test]
@@ -1777,7 +1777,7 @@ mod tests {
     }
 
     /// Childhood is granted "in the first five years of life" unconditionally
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2378) — only later life counts years up to an age. So a plan
+    /// (ArMDE:2378) — only later life counts years up to an age. So a plan
     /// whose age is not yet typed still earns both childhood blocks, and merely
     /// lives no later-life year. Returning nothing instead would leave the
     /// childhood pools at 0 and report every childhood row as unfunded, blaming

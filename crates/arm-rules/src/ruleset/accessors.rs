@@ -87,7 +87,7 @@ impl Ruleset {
         &self.advancement
     }
 
-    /// The age → maximum-Ability-score band table (Ars Magica - Definitive Edition (Core Rules).md:2366-2374). Empty when the
+    /// The age → maximum-Ability-score band table (ArMDE:2366-2374). Empty when the
     /// ruleset ships no age caps.
     pub fn age_ability_caps(&self) -> &AgeAbilityCaps {
         &self.age_ability_caps
@@ -269,12 +269,12 @@ impl Ruleset {
     }
 
     /// Ability categories that may only be bought with a permitting Virtue
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2315). Empty for a ruleset that gates none.
+    /// (ArMDE:2315). Empty for a ruleset that gates none.
     pub fn categories_requiring_virtue(&self) -> &BTreeSet<AbilityCategory> {
         &self.categories_requiring_virtue
     }
 
-    /// The scholarly-language expectation for Academic Abilities (Ars Magica - Definitive Edition (Core Rules).md:7151), if the
+    /// The scholarly-language expectation for Academic Abilities (ArMDE:7151), if the
     /// ruleset states one.
     pub fn scholarly_language_requirement(&self) -> Option<&ScholarlyLanguageRequirement> {
         self.scholarly_language.as_ref()

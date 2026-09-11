@@ -142,7 +142,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   below under-count their points; `core_rules_tainted_virtues_carry_the_tainted_flag`
   in `crates/arm-rules/tests/data_integrity.rs` now pins a sample of tagged
   entries plus that control.
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:168).
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:167).
   The book frames the limit as a "should", so it is a **non-blocking warning**,
   measured against the points **actually taken** (not the type budget): a side
   warns when `2·tainted_points > total_points` for that side (Virtue / Flaw).
@@ -192,7 +192,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   Tainted precedent.** `validate_share_of_kind_cap` takes the **folded**
   selection list (bought ++ granted), because **Devil Child grants a free
   Demonic Might or Demonic Powers** (`:3673`) and a granted copy is still a copy
-  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :168) reads raw
+  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :167) reads raw
   `entity.selections` and so counts only bought ones — arguably right for Tainted,
   which the book frames as a character-generation guideline. Two identically
   worded "half" rules therefore disagree about grants **on purpose**; do not
@@ -1011,7 +1011,7 @@ reason: a category condition would license itself.
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2868-2877` (The Gift),
   `:2858` (magi must take The Gift + Hermetic Magus status), `:2293` and
   `:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:900).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:899).
   The Gift policy is independent of the `is_magus` flag (an unGifted Redcap is a
   companion; a Gifted hedge wizard is not a magus).
 
@@ -1237,7 +1237,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:420).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:419).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -2549,7 +2549,7 @@ approximation of "Latin").
   Vec<EnchantedDevice { name, level: u16 }>` records the player's chosen starting
   devices; the total `level` is charged against `item_level_budget()`.
   `effective/gift_confidence.rs::item_level_used` sums the device levels (surfaced as
-  `EffectiveScores.item_level_used`), and `validation/might.rs::validate_devices` (:95) emits
+  `EffectiveScores.item_level_used`), and `validation/might.rs::validate_devices` (:93) emits
   `over_item_level` (Fluent `issue-over_item_level`) when `used > budget`. A device
   therefore requires a granting Virtue, exactly as a starting Reputation does.
 

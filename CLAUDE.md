@@ -330,13 +330,56 @@ relevant surface MUST preserve them and keep their tests green.
   source is added. A rule from a book with no English source in
   `rules/source/en/` yet (e.g. the Rhine Tribunal book) cannot be implemented,
   because English is the source of truth for IDs.
-- **Cite the source at the implementation site, by book.** When implementing a
-  mechanic in Rust, add a comment citing the **source file basename** + inclusive
-  line range — the basename identifies which book, e.g.
-  `// Source: Ars Magica - Definitive Edition (Core Rules).md:2774`. Never cite
-  bare line numbers; they are meaningless without the book. Verify every line
-  range against the actual file before committing it — do not trust recalled
-  numbers.
+- **Cite the source at the implementation site, by acronym.** When implementing a
+  mechanic in Rust, add a comment citing the book's **acronym** + inclusive line
+  range — the acronym identifies which book, e.g. `// Source: ArMDE:2774`, or a
+  range `ArMDE:16563-16617`. A citation naming a second book in the same
+  sentence gets its own acronym (`RoP:M:5486`, `HoH:TL:1234`); a colon-bearing
+  acronym is fine, since the line number is always the trailing run of digits
+  after the *last* colon, which is what makes the form unambiguously parseable.
+  A continuation within one citation repeats only the line number, not the
+  acronym: `ArMDE:16565, :2232, :16575`. Never cite a bare line number with no
+  acronym at all (`` `:2774` ``, `(:2774)`) — it is meaningless without the
+  book — and never spell the book out by its full basename
+  (`Ars Magica - Definitive Edition (Core Rules).md:2774`); the acronym is the
+  only spelling. Verify every line range against the actual file before
+  committing it — do not trust recalled numbers; the guard below only checks
+  that a range lands on non-blank lines, not that it says what the comment
+  claims.
+
+  The nine acronyms, canonically defined in
+  `rules/source/de/translation-tables/grundbegriffe.md:212-229` (whose `:212`
+  row offers both `ArM5` and `ArMDE` for the core book — this repo uses `ArMDE`
+  only, so `ArM5` is a rejected spelling):
+
+  | Acronym | File under `rules/source/en/` |
+  |---|---|
+  | `ArMDE` | `Ars Magica - Definitive Edition (Core Rules).md` |
+  | `HoH:TL` | `Ars Magica 5e - Houses of Hermes - True Lineages.md` |
+  | `HoH:MC` | `Ars Magica 5e - Houses of Hermes - Mystery Cults.md` |
+  | `HoH:S` | `Ars Magica 5e - Houses of Hermes - Societates.md` |
+  | `HM:RE` | `Ars Magica 5e - Magic - Hedge Magic (Revised).md` |
+  | `RoP:M` | `Ars Magica 5e - Realms of Power - Magic.md` |
+  | `RoP:F` | `Ars Magica 5e - Realms of Power - Faerie.md` |
+  | `RoP:D` | `Ars Magica 5e - Realms of Power - The Divine (Revised).md` |
+  | `RoP:I` | `Ars Magica 5e - Realms of Power - The Infernal.md` |
+
+  This is the second spelling the repo has used for this citation — an earlier
+  pass (`docs/audit-2026-08.md`) normalized ~470 shorthand citations
+  (`Core Rules.md`, `Core:NNNN`, `RoP:Magic`) that matched no real file, and
+  caught four wrong line ranges hiding behind that shorthand along the way,
+  each found only by opening the source file. Shorthand is safe here *only*
+  because it is now mechanically resolvable:
+  `crates/arm-rules/tests/rulebook_citations.rs` guards it — one test resolves
+  every acronym to a real file (and rejects `ArM5`), one checks every cited
+  range actually lands on non-blank lines in that file, one forbids the bare
+  form, and one forbids the full-basename form — so a citation can no longer
+  drift to a spelling nothing checks. Do not re-normalize back to full
+  basenames; that would undo the guard's whole point. The guard is scoped
+  incrementally by slice (D1a: `crates/arm-rules/src` and `crates/arm-app/src`;
+  later slices widen it to `crates/*/tests`, `crates/arm-rules/RULES.md`,
+  `ui/src`, and `docs/`) — see the roots function's doc comment for the current
+  boundary.
 - **Maintain the traceability map.** `crates/arm-rules/RULES.md` maps each rule
   → verbatim excerpt → source file:line → implementing function/file (and the
   JSON data value where the rule's number lives), organized by book. Update it

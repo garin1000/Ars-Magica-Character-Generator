@@ -32,8 +32,8 @@ use crate::types::CreationPhase;
 ///
 /// A rules value, not a preference: *"That domination persists until the present
 /// day, 1220."*
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:597
-/// (corroborated at `:364` — *"much like the Europe of 1220"* — and `:440`).
+/// Source: ArMDE:597
+/// (corroborated at `ArMDE:364` — *"much like the Europe of 1220"* — and `ArMDE:440`).
 pub const DEFAULT_SAGA_YEAR: i32 = 1220;
 
 /// An age derived from a saga year and a birth year, with whatever the pair

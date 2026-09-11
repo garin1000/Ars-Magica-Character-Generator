@@ -91,17 +91,17 @@ pub(crate) fn validate_permitted_categories(
         // the profile need only allow one of them. Suppressed Gift is "*Major,
         // Hermetic, Story*", so a companion — who may take Story but not
         // Hermetic — may take it.
-        // Source: Ars Magica - Definitive Edition (Core Rules).md:6803-6804.
+        // Source: ArMDE:6803-6804.
         //
         // Taken-as aware: if the selection recorded which category it was
-        // taken as (Sufi's `taken_as`, `:5083`), only that ONE category is
+        // taken as (Sufi's `taken_as`, `ArMDE:5083`), only that ONE category is
         // "in force" here — a player who took Sufi as Social Status has
         // declared they are NOT taking the Supernatural reading, so the
         // Supernatural category must not rescue them from a profile that
         // forbids it. See `PointItem::categories_for`.
         //
         // Judged against the categories the PROFILE puts in force for this
-        // entity, so `:2840`'s "unless you have The Gift" opens `hermetic` to a
+        // entity, so `ArMDE:2840`'s "unless you have The Gift" opens `hermetic` to a
         // Gifted companion and to nobody else.
         let in_force = item.categories_for(&selection.params);
         if !in_force.iter().any(|c| permitted.contains(c.as_str())) {
@@ -161,7 +161,7 @@ pub(crate) fn validate_forbidden_categories(
         // is open to a grog who forbids only the Supernatural one.
         // For a single-category item "every" is identical to "any", so this
         // loosens nothing else in the catalogue.
-        // Source: Ars Magica - Definitive Edition (Core Rules).md:6803-6804
+        // Source: ArMDE:6803-6804
         // (Suppressed Gift's descriptor), :6809 (a companion's Flaw), :5079 and
         // :5083 (Sufi "either as a Minor Social Status Virtue or a Minor
         // Supernatural Virtue").
@@ -174,7 +174,7 @@ pub(crate) fn validate_forbidden_categories(
         // whether Supernatural also is.
         //
         // Conditional-rule aware in the same way the permitted gate is, and
-        // authored as its complement: `:2840` forbids a companion `hermetic`
+        // authored as its complement: `ArMDE:2840` forbids a companion `hermetic`
         // only while he lacks The Gift, so the forbid drops out for exactly the
         // character the permit appears for. An empty in-force set therefore
         // forbids nothing, which is what `all` over a non-empty category list
@@ -231,7 +231,7 @@ pub(crate) fn validate_entity_kind_applicability(
 /// a House-granted copy of a target counts the same as a bought one. This
 /// closes a wrong-rules-output bug: a Flambeau magus granted a free Puissant
 /// Ignem who also BUYS Puissant Ignem is taking the same Virtue for the same
-/// target twice — illegal (Ars Magica - Definitive Edition (Core Rules).md:4820,
+/// target twice — illegal (ArMDE:4820,
 /// "twice, for two different Arts") — but validated clean, and stacked +6 to
 /// Ignem, before grants were folded in here.
 pub(crate) fn validate_duplicate_selections(
@@ -316,7 +316,7 @@ pub(crate) fn validate_total_selection_cap(
 /// the copies of one item: at most one member of a group may be named, however
 /// many copies are held.
 ///
-/// Folk Magic is the case the rules state: `:3919` grants the repeat and limits
+/// Folk Magic is the case the rules state: `ArMDE:3919` grants the repeat and limits
 /// it in the same breath — "you can align it to the same Realm as before or
 /// pick a different one, although a character cannot have access to both the
 /// Divine and Infernal Realms". Which values exclude each other is **data**, so
@@ -418,7 +418,7 @@ pub(crate) fn validate_forbidden_traits(
 /// Whether a parameter `value` resolves against its domain's registry: `Item`
 /// → point items, `Ability` → the ability catalogue, `Art` → the art catalogue,
 /// `Technique`/`Form` → the art catalogue *and* the required art class (so
-/// Deficient Technique cannot target a Form; Ars Magica - Definitive Edition (Core Rules).md:5909-5915),
+/// Deficient Technique cannot target a Form; ArMDE:5909-5915),
 /// `Characteristic` → [`Characteristic::from_id`], `Enumerated` → the definition's
 /// own declared `values`, `Text` → any value with non-whitespace content (no
 /// registry, but the domain's own documentation says "non-empty", and an empty
@@ -442,7 +442,7 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // `forbid_tainted` narrows it the same way and for the same reason:
         // "this Flaw cannot apply to Supernatural Virtues that are affiliated to
         // the Infernal realm in the first place"
-        // (Ars Magica - Definitive Edition (Core Rules).md:6096), and the
+        // (ArMDE:6096), and the
         // descriptor's *Tainted* tag is precisely that affiliation. Entity-free,
         // so it belongs here rather than in `validate_possessed_param_targets`.
         ParameterDomain::Item => ruleset.point_items.get(value).is_some_and(|item| {
@@ -467,7 +467,7 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         ParameterDomain::Category => param.values.contains(value),
         // No catalogue and no declared list: the four-member `Realm` enum IS the
         // registry, the same way `Characteristic` is for `characteristic`
-        // (Ars Magica - Definitive Edition (Core Rules).md:3909).
+        // (ArMDE:3909).
         ParameterDomain::Realm => Realm::from_id(value).is_some(),
         ParameterDomain::Text => !value.as_str().trim().is_empty(),
     }
@@ -625,7 +625,7 @@ pub(crate) fn validate_selection_parameters(
 ///
 /// Filed on [`CreationPhase::Abilities`], the step that owns the fix, even though
 /// the offending value is the Virtue's parameter. Puissant Ability is "choose one
-/// Ability" (Ars Magica - Definitive Edition (Core Rules).md:4814-4816) with no
+/// Ability" (ArMDE:4814-4816) with no
 /// requirement that a score already exists, and abilities are bought on a later
 /// step — so filing this on `virtues_flaws` deadlocked the guided wizard, blocking
 /// a step that could not offer the fix.
@@ -687,7 +687,7 @@ pub(crate) fn validate_ability_bonus_targets(
 ///
 /// False Power is the case the rules state: the Flaw is taken "once for each
 /// appropriate Supernatural Virtue that the character possesses"
-/// (Ars Magica - Definitive Edition (Core Rules).md:6096). Two failures follow
+/// (ArMDE:6096). Two failures follow
 /// from that one sentence, so both live here:
 ///
 /// - **possesses** → [`ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED`] when
@@ -714,7 +714,7 @@ pub(crate) fn validate_ability_bonus_targets(
 ///
 /// `selections` is the caller's folded bought-plus-granted list, for the same
 /// reason [`validate_duplicate_selections`] takes it: a warping-owed Major Flaw
-/// slot (`:16561`) or an open House grant is filled with a player-chosen
+/// slot (`ArMDE:16561`) or an open House grant is filled with a player-chosen
 /// [`Selection`], parameters and all, and such a copy claims its target exactly
 /// as a bought one does.
 pub(crate) fn validate_possessed_param_targets(
@@ -789,10 +789,9 @@ pub(crate) fn validate_possessed_param_targets(
 /// being actually holds.
 ///
 /// Restricted Power, Slow Power and Variable Power each modify "one of the
-/// character's supernatural powers" (Ars Magica - Definitive Edition (Core
-/// Rules).md:6689, :6761, :5205). The target is free text because a power is an
+/// character's supernatural powers" (ArMDE:6689, :6761, :5205). The target is free text because a power is an
 /// anonymous *instance* of a Power Virtue rather than a catalogue entry — a
-/// Greater Power's levels may be spent on "several powers" (`:4021`) — so only
+/// Greater Power's levels may be spent on "several powers" (`ArMDE:4021`) — so only
 /// [`Entity::powers`] can say whether the named one exists. A name no power
 /// carries is a Flaw attached to nothing, exactly as a dangling Puissant is.
 ///
@@ -852,7 +851,7 @@ pub(crate) fn validate_power_targets(
     }
 }
 
-/// Enforces the "one Magical Focus per magus" limit (Ars Magica - Definitive Edition (Core Rules).md:4542) by
+/// Enforces the "one Magical Focus per magus" limit (ArMDE:4542) by
 /// counting [`Effect::MagicalFocus`] across everything that feeds the effective
 /// layer (bought selections plus House / Mythic-type grants, e.g. Mythic Blood's
 /// bundled Minor Focus). More than one Focus is illegal. This counts the *effect*
@@ -893,7 +892,7 @@ pub(crate) fn validate_magical_focus(
 /// Enforces the type's Gift policy (required / allowed / forbidden). The policy
 /// per type is data; this is the mechanism the book's Gift rules map onto.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2868-2877 (The Gift:
+/// Source: ArMDE:2868-2877 (The Gift:
 /// "all magi must have this Virtue"; "Grogs can never have The Gift"); magi must
 /// take The Gift at :2858; only magi may take the Hermetic Magus Social Status
 /// at :2293 and :4067-4069.
