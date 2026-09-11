@@ -6921,43 +6921,68 @@ are described under *False Power names the Virtue it taints (B9)*, and False
 Power is now the first shipped entry to declare an `item`-domain parameter, so
 the "nothing shipped uses it" note above is history rather than current fact.
 
-### The saga year (Slice 12, #25) — `validation/saga.rs`
+### The saga year (Slice 12, #25; moved onto the document by C8) — `validation/saga.rs`
 
 **One rules value, wrapped in an editing aid.** The saga year — the calendar year
-the troupe's saga stands in — is **not** a rule and **not** character state. It is a
-saga fact shared by every character in one saga, so it lives in an app-settings file
-owned by `arm-app` (`crates/arm-app/src/settings.rs`, commands `read_settings` /
-`write_settings` — since C4 it shares that file with the UI language, the palette
-and the validation mode, and the writer is read-modify-write so choosing one never
-destroys another), never on the entity and never in the ruleset. `arm-rules` gains
-no filesystem dependency from it: the engine holds only the arithmetic and the one
-advisory, and receives the year as a plain argument.
+the troupe's saga stands in — is **not** a rule, so it is not in the ruleset. It *is*
+character-document state, as of C8: `Entity::saga_year` (schema 17). It used to live
+in the app-settings file owned by `arm-app` instead, and that was a defect of the
+top-severity class this project names — **wrong rules output**. A storyguide running
+a 1220 Rhine saga and a 1197 Iberia saga had a single machine-global number, right
+for one of them; opening a character from the other reported the wrong derived age
+and could raise a spurious `saga_year_before_birth_year`. A saga year is a property
+of the saga, so it travels in the save.
 
-The **default** year, however, IS a rules value, and is the only cited thing here:
+The accepted cost, recorded with the decision: advancing a saga by a year means
+touching each character. The named-sagas model (a list of sagas, each with a year,
+referenced by id) was considered and deliberately not built.
+
+What `settings.json` keeps is only the year a **new** document is stamped with —
+key `default_saga_year` (`crates/arm-app/src/settings.rs`, commands `read_settings` /
+`write_settings`; it shares that file with the UI language, the palette and the
+validation mode, and the writer is read-modify-write so choosing one never destroys
+another). The key was `saga_year` before C8 and is read through a serde `alias`, so
+an existing settings file keeps the year its owner chose.
+
+`arm-rules` still gains **no** filesystem dependency: the engine holds only the
+arithmetic and the one advisory, receives the year as a plain argument, and takes the
+*migration* default as a parameter too (`load_entity_migrating(json,
+default_saga_year)`) rather than reading one — `crates/arm-app/src/ruleset_io.rs`'s
+`load_entity_from_path` is what passes the user's configured value in.
+
+The **default** year IS a rules value, and is the only cited thing here:
 
 > `:597` "That domination persists until the present day, 1220."
 
 Corroborated at `:364` ("much like the Europe of 1220, the middle ages") and `:440`
 ("Much like medieval Europe in 1220"). Encoded as
 `arm_rules::DEFAULT_SAGA_YEAR = 1220` in `validation/saga.rs`, applied by
-`settings::read_settings` whenever there is no stored value — so the number appears
-once, in the engine, and neither the app nor the frontend restates it. It is the
-only one of the four settings whose default is resolved in Rust at all: the other
-three are UI-layer choices whose defaults live in the frontend store, and
-`read_settings` reports them honestly as unset rather than inventing a value.
+`settings::read_settings` whenever there is no stored value, by `Entity::new`, and by
+`Entity::saga_year`'s `serde(default)` for a hand-edited schema-17 file that drops
+the key — the fallback of last resort, behind both the document's own year and the
+user's configured default. It is the only one of the four settings whose default is
+resolved in Rust at all: the other three are UI-layer choices whose defaults live in
+the frontend store, and `read_settings` reports them honestly as unset rather than
+inventing a value. `ui/src/lib/state.svelte.ts` mirrors the constant by hand (its
+module-scope placeholder entity needs a year before any IPC can answer), pinned by
+`the_frontend_mirrors_the_engine_default_saga_year`.
 
 **What it derives, and what it deliberately does not.** `age` and `birth_year` are
-both already stored on the entity, so the saga year adds no state and forces **no
-`SCHEMA_VERSION` bump**. It is the reference the two are linked against while the
-user types: `age_in_saga_year(saga_year, birth_year)` and
+both already stored on the entity, so the saga year adds no *derived* state. It is
+the reference the two are linked against while the user types:
+`age_in_saga_year(saga_year, birth_year)` and
 `birth_year_in_saga_year(saga_year, age)`, exposed as the `derive_age` /
 `derive_birth_year` commands so the frontend computes none of it itself. Editing
 either half rewrites the other and dirties the document; **editing the saga year
-rewrites nothing and does not dirty the document.** That is a deliberate refusal, not
-an omission: advancing a character by N years requires an aging roll, Living
-Conditions and any Longevity Ritual applied *per year* (see *Aging*, above), so a
-silent recompute would fabricate ages that skipped their rolls. Saga progression is a
-separate, explicit feature.
+rewrites neither of them.** That is a deliberate refusal, not an omission: advancing a
+character by N years requires an aging roll, Living Conditions and any Longevity
+Ritual applied *per year* (see *Aging*, above), so a silent recompute would fabricate
+ages that skipped their rolls. Saga progression is a separate, explicit feature.
+
+It *does* dirty the document, as of C8 — the year is stored state now, part of what an
+unsaved file would lose, so the unsaved-changes guard has to see it move. Before C8 it
+dirtied nothing, because it was a preference. The settings dialog's
+`default_saga_year` control still dirties nothing, for exactly that reason.
 
 The derivation shares the calendar-year approximation the aging engine already makes
 (`aging.rs`, calendar year = `birth_year + age`): birthdays within the year are
@@ -6968,9 +6993,11 @@ the birth year would underflow. It clamps the derived age to 0 and emits
 `saga_year_before_birth_year` — a **warning**, phase `concept`, args `saga_year` and
 `birth_year`, localized as `issue-saga_year_before_birth_year` in both locales. Like
 the three `childhood_slot_*` rows it is listed in the `ValidationIssue` contract table
-but is **not** emitted by `validate`: the saga year never reaches the engine as entity
-data, so only the derivation can raise it. It carries no rulebook citation — no
-passage forbids an impossible date; the clamp exists because the type does.
+but is **not** emitted by `validate`: only the derivation raises it, and that stayed
+true through C8 — the year now reaches the engine as entity data, but `validate` was
+not given a new rule to enforce with it, so the advisory still comes only from
+`age_in_saga_year`. It carries no rulebook citation — no passage forbids an impossible
+date; the clamp exists because the type does.
 
 ### Creation-phase completeness (M6/6b8a) — `completeness.rs`
 

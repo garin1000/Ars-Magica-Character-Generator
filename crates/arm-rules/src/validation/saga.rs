@@ -1,12 +1,20 @@
 //! The saga year, and the age ↔ birth-year link derived from it
 //! (guided-creation-review-2026-08 #25).
 //!
-//! The saga year itself is deliberately **not** here, and not anywhere in this
-//! crate: it is a saga fact — shared by every character in one saga, and advancing
-//! as the saga is played — so it belongs neither on the entity (per-character
-//! copies would immediately disagree) nor in the ruleset (it is not a rule). It
-//! lives in an app-settings file owned by `arm-app`, and reaches this module as a
-//! plain argument.
+//! The saga year itself is deliberately **not** here: it is not a rule, so it is not
+//! in the ruleset. Where it *is* changed in C8 — it lives on the entity
+//! ([`crate::Entity::saga_year`], schema 17), because a storyguide runs more than one
+//! saga and the app-settings file it used to live in holds exactly one number. That
+//! number was right for one saga and silently wrong for every other, which meant
+//! wrong ages and a spurious "not born yet" advisory on any character from the
+//! others. What `settings.json` keeps is only the year a *new* document starts at.
+//!
+//! The cost of that choice, accepted with it: advancing a saga by a year means
+//! touching each character. The named-sagas alternative (a list of sagas, each with a
+//! year, referenced by id) was considered and rejected as a whole new domain concept.
+//!
+//! Either way the year reaches this module as a plain argument, and this crate still
+//! reads no file.
 //!
 //! What *is* here is the arithmetic and the one advisory an impossible pair
 //! produces, so the clamp policy has a single home and no caller — Rust or
@@ -18,7 +26,9 @@ use super::{ValidationIssue, args};
 use crate::types::CreationPhase;
 
 /// The calendar year the published setting stands in, and therefore the saga year
-/// a fresh installation assumes.
+/// a fresh installation assumes — the fallback of last resort, behind both the
+/// document's own [`crate::Entity::saga_year`] and the user's configured default for
+/// new documents.
 ///
 /// A rules value, not a preference: *"That domination persists until the present
 /// day, 1220."*

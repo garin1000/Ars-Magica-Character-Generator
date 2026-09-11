@@ -50,6 +50,7 @@ function resetEntity(): void {
     ability_scores: [],
     xp_pool: 0,
     ability_funding: 'pool',
+    saga_year: 1220,
     art_scores: [],
     personality_traits: [],
     reputations: [],
@@ -63,7 +64,9 @@ function html(): string {
 
 beforeEach(() => {
   store.lang = 'en';
-  store.sagaYear = 1220;
+  // C8 moved the saga year onto the document (`entity.saga_year`), so there is no
+  // longer a machine-global setting to prime here: SagaYearField renders
+  // unconditionally from the entity, which resetEntity() already supplies.
   installRuleset();
   resetEntity();
 });

@@ -97,6 +97,7 @@ beforeEach(() => {
     ability_scores: [],
     xp_pool: 0,
     ability_funding: 'pool',
+    saga_year: 1220,
     art_scores: [],
     personality_traits: [],
     reputations: [],

@@ -1,5 +1,5 @@
 {
-  "schema_version": 16,
+  "schema_version": 17,
   "ruleset": {
     "id": "arm5-core",
     "version": "2024.1"
@@ -34,5 +34,6 @@
     }
   ],
   "xp_pool": 120,
-  "ability_funding": "pool"
+  "ability_funding": "pool",
+  "saga_year": 1220
 }

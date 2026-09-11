@@ -1,9 +1,13 @@
 //! The app-settings file: the small, non-mechanical preferences the app itself
-//! owns — the saga year (guided-creation-review-2026-08 #25 / D3.1, Slice 12) and,
-//! since C4, the UI language, the palette and the validation mode.
+//! owns — the **default saga year for new documents**
+//! (guided-creation-review-2026-08 #25 / D3.1, Slice 12; narrowed from THE saga year
+//! to a default by C8) and, since C4, the UI language, the palette and the
+//! validation mode.
 //!
 //! None of the four is character state and none is a rule, so they live neither on
-//! the entity nor in the ruleset but in a small settings file this crate owns.
+//! the entity nor in the ruleset but in a small settings file this crate owns. The
+//! saga year proper is the counter-example and left in C8: one machine-global number
+//! was wrong for every saga but one, so it is `Entity::saga_year` now.
 //! `arm-rules` gains nothing from any of it: the engine holds the saga-year
 //! arithmetic and the `ValidationMode` taxonomy, never the IO — and it holds no
 //! notion of a theme at all.
@@ -15,9 +19,9 @@ use arm_app::settings::{self, SettingsPatch};
 use arm_rules::ValidationMode;
 
 /// A patch naming exactly one field, which is how every caller writes.
-fn saga_year(year: i32) -> SettingsPatch {
+fn default_saga_year(year: i32) -> SettingsPatch {
     SettingsPatch {
-        saga_year: Some(year),
+        default_saga_year: Some(year),
         ..SettingsPatch::default()
     }
 }
@@ -38,7 +42,7 @@ fn a_written_setting_reads_back() {
         &path,
         &SettingsPatch {
             lang: Some("de".to_owned()),
-            saga_year: Some(1230),
+            default_saga_year: Some(1230),
             theme: Some("light".to_owned()),
             validation_mode: Some(ValidationMode::Advisory),
         },
@@ -47,7 +51,7 @@ fn a_written_setting_reads_back() {
 
     let read = settings::read_settings(Some(&path));
     assert_eq!(read.lang.as_deref(), Some("de"));
-    assert_eq!(read.saga_year, 1230);
+    assert_eq!(read.default_saga_year, 1230);
     assert_eq!(read.theme.as_deref(), Some("light"));
     assert_eq!(read.validation_mode, Some(ValidationMode::Advisory));
 }
@@ -67,16 +71,19 @@ fn writing_one_setting_preserves_every_other_setting() {
         &path,
         &SettingsPatch {
             lang: Some("de".to_owned()),
-            saga_year: Some(1220),
+            default_saga_year: Some(1220),
             theme: Some("light".to_owned()),
             validation_mode: Some(ValidationMode::Silent),
         },
     )
     .unwrap();
-    settings::write_settings(&path, &saga_year(1230)).unwrap();
+    settings::write_settings(&path, &default_saga_year(1230)).unwrap();
 
     let read = settings::read_settings(Some(&path));
-    assert_eq!(read.saga_year, 1230, "the field being written did not land");
+    assert_eq!(
+        read.default_saga_year, 1230,
+        "the field being written did not land"
+    );
     assert_eq!(
         read.lang.as_deref(),
         Some("de"),
@@ -94,6 +101,35 @@ fn writing_one_setting_preserves_every_other_setting() {
     );
 }
 
+/// C8 renamed the key: the saga year now lives in each save, and what stays here is
+/// only the default a NEW document starts at. A settings file already on disk was
+/// written under the old name — and a settings file is user data too, so the rename
+/// must not silently reset the year the user chose.
+#[test]
+fn a_settings_file_written_before_the_rename_keeps_its_year() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join(settings::SETTINGS_FILE_NAME);
+    // Exactly what C4 wrote.
+    fs::write(
+        &path,
+        "{\n  \"lang\": \"de\",\n  \"saga_year\": 1197,\n  \"theme\": \"dark\"\n}\n",
+    )
+    .unwrap();
+
+    let read = settings::read_settings(Some(&path));
+    assert_eq!(read.default_saga_year, 1197, "the chosen year was reset");
+    assert_eq!(read.lang.as_deref(), Some("de"));
+    assert_eq!(read.theme.as_deref(), Some("dark"));
+
+    // The next write re-homes it under the new name, with the same value, and does
+    // not leave a second stale copy behind to disagree with it.
+    settings::write_settings(&path, &theme("light")).unwrap();
+    let text = fs::read_to_string(&path).unwrap();
+    assert!(text.contains("\"default_saga_year\": 1197"), "got {text}");
+    assert!(!text.contains("\"saga_year\""), "got {text}");
+    assert_eq!(settings::read_settings(Some(&path)).default_saga_year, 1197);
+}
+
 #[test]
 fn writing_creates_the_settings_directory_on_first_run() {
     // First launch: the per-user config directory may not exist yet, and the write
@@ -101,8 +137,8 @@ fn writing_creates_the_settings_directory_on_first_run() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("config").join(settings::SETTINGS_FILE_NAME);
 
-    settings::write_settings(&path, &saga_year(1201)).unwrap();
-    assert_eq!(settings::read_settings(Some(&path)).saga_year, 1201);
+    settings::write_settings(&path, &default_saga_year(1201)).unwrap();
+    assert_eq!(settings::read_settings(Some(&path)).default_saga_year, 1201);
 }
 
 #[test]
@@ -114,7 +150,7 @@ fn a_missing_settings_file_reads_as_the_defaults() {
     // Silently, never as an error: this runs at launch, and a first launch has no
     // settings file at all.
     let read = settings::read_settings(Some(&path));
-    assert_eq!(read.saga_year, arm_rules::DEFAULT_SAGA_YEAR);
+    assert_eq!(read.default_saga_year, arm_rules::DEFAULT_SAGA_YEAR);
     // The other three have no default HERE. The saga year's lives in the engine
     // (a rules value); the language's and the validation mode's are the frontend
     // store's existing initial state, and the theme's is `auto` — also the
@@ -133,14 +169,14 @@ fn an_unreadable_settings_file_reads_as_the_defaults() {
     fs::write(&path, "{ this is not json").unwrap();
 
     assert_eq!(
-        settings::read_settings(Some(&path)).saga_year,
+        settings::read_settings(Some(&path)).default_saga_year,
         arm_rules::DEFAULT_SAGA_YEAR
     );
 
     // A well-formed file that simply does not carry the keys reads the same way.
     fs::write(&path, "{}").unwrap();
     let read = settings::read_settings(Some(&path));
-    assert_eq!(read.saga_year, arm_rules::DEFAULT_SAGA_YEAR);
+    assert_eq!(read.default_saga_year, arm_rules::DEFAULT_SAGA_YEAR);
     assert_eq!(read.theme, None);
 }
 
@@ -155,7 +191,7 @@ fn one_unusable_value_does_not_cost_the_user_the_others() {
     let path = tmp.path().join(settings::SETTINGS_FILE_NAME);
     fs::write(
         &path,
-        "{\"lang\": \"de\", \"saga_year\": \"twelve thirty\", \
+        "{\"lang\": \"de\", \"default_saga_year\": \"twelve thirty\", \
          \"theme\": \"light\", \"validation_mode\": \"whimsical\"}",
     )
     .unwrap();
@@ -164,7 +200,7 @@ fn one_unusable_value_does_not_cost_the_user_the_others() {
     assert_eq!(read.lang.as_deref(), Some("de"));
     assert_eq!(read.theme.as_deref(), Some("light"));
     // The two unusable ones fall back to their own default and nothing else does.
-    assert_eq!(read.saga_year, arm_rules::DEFAULT_SAGA_YEAR);
+    assert_eq!(read.default_saga_year, arm_rules::DEFAULT_SAGA_YEAR);
     assert_eq!(read.validation_mode, None);
 }
 
@@ -172,7 +208,7 @@ fn one_unusable_value_does_not_cost_the_user_the_others() {
 fn no_resolvable_settings_path_reads_as_the_defaults() {
     // No config directory and no executable directory: the launch still succeeds.
     let read = settings::read_settings(None);
-    assert_eq!(read.saga_year, arm_rules::DEFAULT_SAGA_YEAR);
+    assert_eq!(read.default_saga_year, arm_rules::DEFAULT_SAGA_YEAR);
     assert_eq!(read.lang, None);
     assert_eq!(read.theme, None);
     assert_eq!(read.validation_mode, None);
@@ -206,10 +242,14 @@ fn storing_writes_to_the_file_that_already_exists() {
     fs::write(&existing, "{}").unwrap();
 
     let written =
-        settings::store_settings(&[fresh.clone(), existing.clone()], &saga_year(1230)).unwrap();
+        settings::store_settings(&[fresh.clone(), existing.clone()], &default_saga_year(1230))
+            .unwrap();
     assert_eq!(written, existing);
     assert!(!fresh.exists(), "a second settings file was started");
-    assert_eq!(settings::read_settings(Some(&existing)).saga_year, 1230);
+    assert_eq!(
+        settings::read_settings(Some(&existing)).default_saga_year,
+        1230
+    );
 }
 
 #[test]
@@ -223,16 +263,20 @@ fn storing_falls_through_to_the_next_candidate_when_one_cannot_be_written() {
     let blocked = blocked_parent.join(settings::SETTINGS_FILE_NAME);
     let usable = tmp.path().join("config").join(settings::SETTINGS_FILE_NAME);
 
-    let written = settings::store_settings(&[blocked, usable.clone()], &saga_year(1230)).unwrap();
+    let written =
+        settings::store_settings(&[blocked, usable.clone()], &default_saga_year(1230)).unwrap();
     assert_eq!(written, usable);
-    assert_eq!(settings::read_settings(Some(&usable)).saga_year, 1230);
+    assert_eq!(
+        settings::read_settings(Some(&usable)).default_saga_year,
+        1230
+    );
 }
 
 #[test]
 fn storing_with_no_candidate_at_all_is_an_error() {
     // Distinct from reading: a failed *read* falls back silently because the launch
     // must proceed, while a failed *write* is a user action that reported nothing.
-    assert!(settings::store_settings(&[], &saga_year(1230)).is_err());
+    assert!(settings::store_settings(&[], &default_saga_year(1230)).is_err());
 }
 
 #[test]
@@ -243,7 +287,7 @@ fn the_settings_file_is_canonical_json_a_human_can_edit() {
         &path,
         &SettingsPatch {
             lang: Some("de".to_owned()),
-            saga_year: Some(1230),
+            default_saga_year: Some(1230),
             theme: Some("light".to_owned()),
             validation_mode: Some(ValidationMode::Enforced),
         },
@@ -251,7 +295,7 @@ fn the_settings_file_is_canonical_json_a_human_can_edit() {
     .unwrap();
 
     let text = fs::read_to_string(&path).unwrap();
-    assert!(text.contains("\"saga_year\""), "got {text}");
+    assert!(text.contains("\"default_saga_year\""), "got {text}");
     assert!(text.contains("1230"), "got {text}");
     assert!(text.ends_with('\n'), "no trailing newline: {text:?}");
 
@@ -259,8 +303,8 @@ fn the_settings_file_is_canonical_json_a_human_can_edit() {
     // whichever setting the user changes, the file's shape is the same and the diff
     // is only ever the line that moved.
     let keys: Vec<usize> = [
+        "\"default_saga_year\"",
         "\"lang\"",
-        "\"saga_year\"",
         "\"theme\"",
         "\"validation_mode\"",
     ]

@@ -65,6 +65,7 @@ function resetEntity(pool: number): void {
     ability_scores: [],
     xp_pool: pool,
     ability_funding: 'pool',
+    saga_year: 1220,
     art_scores: [],
     personality_traits: [],
     reputations: [],

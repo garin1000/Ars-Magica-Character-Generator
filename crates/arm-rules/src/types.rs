@@ -3613,6 +3613,25 @@ pub struct Entity {
     /// The character's birth year (flavor; no mechanical effect). `None` when unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub birth_year: Option<i32>,
+    /// The calendar year the saga this entity was built for stands in (schema 17).
+    ///
+    /// **Document state, not a preference.** It was a machine-global app setting until
+    /// C8, which made it wrong for every saga but one on the machine of a storyguide
+    /// running two: opening a 1220 Rhine magus while the setting said 1197 reported
+    /// the wrong age and could raise a spurious `saga_year_before_birth_year`.
+    ///
+    /// Drives [`crate::age_in_saga_year`] and [`crate::birth_year_in_saga_year`], and
+    /// nothing else — it is the reference `age` and `birth_year` are two views
+    /// against, and changing it rewrites neither (D3.3).
+    ///
+    /// **Always serialized, even at its default.** The second such field, after
+    /// [`Entity::ability_funding`], and for the same reason: [`load_entity_migrating`]
+    /// dispatches on this key's *absence* to fill a pre-17 save from the default its
+    /// caller supplies, so a `skip_serializing_if` here would turn every save that
+    /// happened to sit at 1220 back into a migration candidate. `serde(default)` is
+    /// only for a hand-edited schema-17 file that drops the key.
+    #[serde(default = "default_saga_year")]
+    pub saga_year: i32,
     /// The magus's Wizard's sigil (free-text; no mechanical effect).
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub sigil: String,
@@ -3643,6 +3662,11 @@ pub struct Entity {
     /// Divine (Revised).md:1977.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub powers: Vec<SupernaturalPower>,
+}
+
+/// The engine's own fallback for [`Entity::saga_year`].
+fn default_saga_year() -> i32 {
+    crate::validation::DEFAULT_SAGA_YEAR
 }
 
 /// Current save-format schema version.
@@ -3721,7 +3745,34 @@ pub struct Entity {
 /// reader reports as `life_stage_xp_pool_conflict` — a finding this bump retires.
 /// `wizard_furthest_phase` alone would have been purely additive
 /// (`skip_serializing_if`, so byte-identical when unset) and earned nothing.
-pub const SCHEMA_VERSION: u32 = 16;
+///
+/// Bumped 16 → 17 for [`Entity::saga_year`] (C8). The saga year used to live in the
+/// app's machine-global `settings.json`, which meant a storyguide running a 1220
+/// Rhine saga and a 1197 Iberia saga had **one** number that was wrong for one of
+/// them — every derived age, and the `saga_year_before_birth_year` advisory with it.
+/// It is a property of the saga, so it belongs to the document that was built for
+/// one; `settings.json` keeps only a default for *new* documents.
+///
+/// The bump is earned in both directions. Backwards: a pre-17 save has no
+/// `saga_year` key, so [`load_entity_migrating`] fills it from the default its
+/// caller hands in and stamps the version — the same dispatch-on-absence rule
+/// `ability_funding` uses, and for the same reason (`serde(default)` would make
+/// "absent" and "really 1220" indistinguishable). Forwards: a schema-16 reader
+/// ignores the new key and goes on resolving ages against whatever its own settings
+/// file happens to say, which is precisely the defect this retires — and a version
+/// number is how that reader learns not to try.
+///
+/// [`Entity::saga_year`] is therefore the **second** field written even when it
+/// holds its default ([`Entity::ability_funding`] is the first), because the
+/// absence of the key is load-bearing.
+///
+/// The migration takes the default as an *argument* rather than reading one. This
+/// crate has no filesystem and no knowledge of `settings.json` (the engine-purity
+/// invariant), and the value an old save should inherit is the user's configured
+/// default, not a constant. [`crate::DEFAULT_SAGA_YEAR`] stays the engine's own
+/// fallback of last resort: what [`Entity::new`] starts at, and what
+/// `serde(default)` fills into a hand-edited schema-17 save that omits the key.
+pub const SCHEMA_VERSION: u32 = 17;
 
 /// The lowest rules-legal [`Entity::aura`] modifier: a Divine aura acting on
 /// Infernal-realm powers, "– (5 x aura)", at the highest aura rating the rules
@@ -3794,6 +3845,7 @@ impl Entity {
             concept: String::new(),
             gender: String::new(),
             birth_year: None,
+            saga_year: crate::validation::DEFAULT_SAGA_YEAR,
             sigil: String::new(),
             covenant_name: String::new(),
             parens: String::new(),
@@ -4167,7 +4219,10 @@ fn trim_all_selection_params(entity: &mut Entity) {
 /// malformed current field does. A fold that quietly yielded nothing would still get
 /// the version stamped, so the load would look successful and the next save would
 /// drop the legacy key — losing the data permanently.
-pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Error> {
+pub fn load_entity_migrating(
+    json: &str,
+    default_saga_year: i32,
+) -> Result<LoadedEntity, serde_json::Error> {
     let mut value: serde_json::Value = serde_json::from_str(json)?;
     let legacy = value
         .as_object_mut()
@@ -4182,7 +4237,28 @@ pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Err
     let funding_absent = !value
         .as_object()
         .is_some_and(|obj| obj.contains_key("ability_funding"));
+    // Same dispatch-on-absence rule, for the same reason: `serde(default)` fills the
+    // engine's own 1220 in, which is indistinguishable afterwards from a save that
+    // really says 1220. Read before deserializing.
+    let saga_year_absent = !value
+        .as_object()
+        .is_some_and(|obj| obj.contains_key("saga_year"));
     let mut entity: Entity = serde_json::from_value(value)?;
+
+    // A save from a build that does not exist yet is REFUSED, not migrated. Every
+    // fold below was written against a shape this build knows; running them over a
+    // newer one would stamp the current version onto a document whose unknown keys
+    // serde has already dropped, and the next save would make that loss permanent.
+    // Refusing leaves the file exactly as the user left it. This is the one place
+    // the recorded version is read as a decision rather than as data — a hand-edited
+    // *legacy* version still decides nothing, because the folds dispatch on the
+    // legacy keys themselves.
+    if entity.schema_version > SCHEMA_VERSION {
+        return Err(serde::de::Error::custom(format!(
+            "save schema_version {} is newer than this build's {SCHEMA_VERSION}",
+            entity.schema_version
+        )));
+    }
 
     // Both folds below are value-driven and idempotent, and deliberately stamp no
     // version — see the `being` and whitespace paragraphs above. The trim runs
@@ -4204,6 +4280,14 @@ pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Err
         } else {
             AbilityFunding::Pool
         };
+        entity.schema_version = SCHEMA_VERSION;
+    }
+
+    if saga_year_absent {
+        // Pre-17: the saga year lived in `settings.json`, machine-globally. The value
+        // the document inherits is therefore the one the user has configured — handed
+        // in, because this crate may not read a settings file (engine purity).
+        entity.saga_year = default_saga_year;
         entity.schema_version = SCHEMA_VERSION;
     }
 
@@ -4323,6 +4407,7 @@ impl fmt::Display for ValidationMode {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::validation::DEFAULT_SAGA_YEAR;
     use pretty_assertions::assert_eq;
 
     fn house(id: &str) -> Prereq {
@@ -5247,6 +5332,7 @@ mod tests {
             concept: String::new(),
             gender: String::new(),
             birth_year: None,
+            saga_year: crate::validation::DEFAULT_SAGA_YEAR,
             sigil: String::new(),
             covenant_name: String::new(),
             parens: String::new(),
@@ -5259,7 +5345,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 16"#));
+        assert!(json.contains(r#""schema_version": 17"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -5506,6 +5592,7 @@ mod tests {
             concept: String::new(),
             gender: String::new(),
             birth_year: None,
+            saga_year: crate::validation::DEFAULT_SAGA_YEAR,
             sigil: String::new(),
             covenant_name: String::new(),
             parens: String::new(),
@@ -5754,7 +5841,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 16"#));
+        assert!(json.contains(r#""schema_version": 17"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -6117,7 +6204,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 16"#));
+        assert!(json.contains(r#""schema_version": 17"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -6150,7 +6237,7 @@ mod tests {
           "characteristics": { "com": 2 },
           "aging_reductions": { "com": 1 }
         }"#;
-        let loaded = load_entity_migrating(old).unwrap();
+        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
         assert_eq!(
             loaded.migrated_aging_characteristics,
             vec![Characteristic::Com]
@@ -6189,7 +6276,7 @@ mod tests {
         );
         entity.aging_points.insert(Characteristic::Sta, 4);
         let json = serde_json::to_string(&entity).unwrap();
-        let loaded = load_entity_migrating(&json).unwrap();
+        let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR).unwrap();
         assert!(loaded.migrated_aging_characteristics.is_empty());
         assert_eq!(
             loaded
@@ -6199,6 +6286,110 @@ mod tests {
                 .copied(),
             Some(4)
         );
+    }
+
+    /// C8: the saga year is entity data from schema 17 on, and a save written
+    /// before it inherits the default its CALLER supplies — the user's configured
+    /// default for new documents, which this crate cannot read for itself.
+    #[test]
+    fn a_pre_17_save_takes_the_default_saga_year_it_is_handed() {
+        let old = r#"{
+          "schema_version": 16,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "age": 30,
+          "birth_year": 1167
+        }"#;
+        // An Iberia saga, deliberately NOT the engine's 1220: what an old save
+        // inherits is the year the user configured, not a constant.
+        let loaded = load_entity_migrating(old, 1197).unwrap();
+        assert_eq!(loaded.entity.saga_year, 1197);
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+    }
+
+    /// C8 / round-trip fidelity, which CLAUDE.md rates top severity. A schema-16
+    /// save migrates, re-saves and reloads **without the migrated year moving** —
+    /// and the second load is handed a *different* default, so a `saga_year` that
+    /// failed to reach the file would be caught rather than re-invented.
+    ///
+    /// Green on arrival: the migration and the always-write serialization that make
+    /// it hold were both written for the test above. It is kept because it states
+    /// the property that would break silently — a `skip_serializing_if` added later
+    /// to `saga_year` would leave every other test passing and this one failing.
+    #[test]
+    fn a_migrated_saga_year_survives_a_save_and_reload_unchanged() {
+        let old = r#"{
+          "schema_version": 16,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "name": "Fiona",
+          "age": 30,
+          "birth_year": 1167
+        }"#;
+        let migrated = load_entity_migrating(old, 1197).unwrap().entity;
+        assert_eq!(migrated.saga_year, 1197);
+
+        let saved = serde_json::to_string_pretty(&migrated).unwrap();
+        assert!(saved.contains(r#""saga_year": 1197"#), "{saved}");
+
+        // A different default: 1197 may now only come from the file.
+        let reloaded = load_entity_migrating(&saved, 1000).unwrap().entity;
+        assert_eq!(reloaded.saga_year, 1197);
+        assert_eq!(reloaded, migrated, "nothing was lost or invented");
+
+        // And the second write is byte-identical to the first.
+        assert_eq!(serde_json::to_string_pretty(&reloaded).unwrap(), saved);
+    }
+
+    /// C8 / Trap 3. The save file is this project's declared hostile-input surface,
+    /// and `schema_version` is the attacker-controlled field in it. A save claiming
+    /// a schema this build has never seen is **refused**, cleanly, rather than run
+    /// through migrations written for an older shape: half-migrating it would stamp
+    /// the current version onto a document whose unknown keys serde had already
+    /// dropped, and the next save would make that permanent.
+    ///
+    /// No panic, no hang, no allocation: `u32::MAX` takes the same path as 18.
+    #[test]
+    fn a_save_from_a_future_schema_is_refused_rather_than_half_migrated() {
+        for claimed in [SCHEMA_VERSION + 1, 999, u32::MAX] {
+            let future = format!(
+                r#"{{
+                  "schema_version": {claimed},
+                  "ruleset": {{ "id": "arm5-core", "version": "2024.1" }},
+                  "entity_kind": "character",
+                  "type_id": "companion",
+                  "ability_funding": "pool",
+                  "saga_year": 1197
+                }}"#
+            );
+            let error = load_entity_migrating(&future, DEFAULT_SAGA_YEAR)
+                .expect_err("a save from the future must not be opened");
+            let message = error.to_string();
+            assert!(
+                message.contains(&claimed.to_string()),
+                "the refusal must name the version it read: {message}"
+            );
+        }
+
+        // The boundary itself is fine: this build's own version opens.
+        let current = format!(
+            r#"{{
+              "schema_version": {},
+              "ruleset": {{ "id": "arm5-core", "version": "2024.1" }},
+              "entity_kind": "character",
+              "type_id": "companion",
+              "ability_funding": "pool",
+              "saga_year": 1197
+            }}"#,
+            SCHEMA_VERSION
+        );
+        let loaded = load_entity_migrating(&current, DEFAULT_SAGA_YEAR)
+            .expect("this build's own version opens");
+        assert_eq!(loaded.entity.saga_year, 1197);
     }
 
     /// A legacy save carrying the flat `talisman_attunements` list migrates into
@@ -6218,7 +6409,7 @@ mod tests {
             { "description": "Controlling things at a distance", "bonus": 4 }
           ]
         }"#;
-        let loaded = load_entity_migrating(old).unwrap();
+        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
         let talisman = loaded
             .entity
             .talisman
@@ -6250,7 +6441,7 @@ mod tests {
           "type_id": "magus",
           "talisman_attunements": []
         }"#;
-        let loaded = load_entity_migrating(old).unwrap();
+        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
         assert!(loaded.entity.talisman.is_none(), "no phantom talisman");
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
@@ -6280,7 +6471,7 @@ mod tests {
           },
           "talisman_attunements": [{ "description": "Stale", "bonus": 3000 }]
         }"#;
-        let loaded = load_entity_migrating(both).unwrap();
+        let loaded = load_entity_migrating(both, DEFAULT_SAGA_YEAR).unwrap();
         let talisman = loaded.entity.talisman.as_ref().expect("talisman kept");
         assert_eq!(talisman.description, "An ash staff");
         assert_eq!(talisman.attunements.len(), 1, "legacy row not merged in");
@@ -6311,7 +6502,7 @@ mod tests {
           "talisman": {},
           "talisman_attunements": [{ "description": "Warding", "bonus": 5 }]
         }"#;
-        let loaded = load_entity_migrating(both).unwrap();
+        let loaded = load_entity_migrating(both, DEFAULT_SAGA_YEAR).unwrap();
         let talisman = loaded
             .entity
             .talisman
@@ -6351,7 +6542,7 @@ mod tests {
           "talisman": { "description": "An ash staff" },
           "talisman_attunements": [{ "description": "Warding", "bonus": 5 }]
         }"#;
-        let loaded = load_entity_migrating(both).unwrap();
+        let loaded = load_entity_migrating(both, DEFAULT_SAGA_YEAR).unwrap();
         let talisman = loaded
             .entity
             .talisman
@@ -6388,7 +6579,7 @@ mod tests {
           "talisman": {},
           "talisman_attunements": []
         }"#;
-        let loaded = load_entity_migrating(both).unwrap();
+        let loaded = load_entity_migrating(both, DEFAULT_SAGA_YEAR).unwrap();
         assert_eq!(
             loaded.entity.talisman,
             Some(Talisman::default()),
@@ -6421,14 +6612,15 @@ mod tests {
             { "description": "Projecting bolts and missiles", "bonus": 3000 }
           ]
         }"#;
-        let err = load_entity_migrating(broken)
+        let err = load_entity_migrating(broken, DEFAULT_SAGA_YEAR)
             .expect_err("a malformed legacy attunement list must not load as an empty talisman")
             .to_string();
         assert!(err.contains("3000") && err.contains("i8"), "{err}");
         // Positive control: the same document with the bonus in range loads, so the
         // failure above is the legacy row and nothing else.
         let fixed = broken.replace("3000", "3");
-        let loaded = load_entity_migrating(&fixed).expect("the in-range twin loads");
+        let loaded =
+            load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the in-range twin loads");
         assert_eq!(
             loaded
                 .entity
@@ -6447,12 +6639,12 @@ mod tests {
           "type_id": "magus",
           "talisman_attunements": [{ "description": "Warding", "bonus": "5" }]
         }"#;
-        let err = load_entity_migrating(stringly)
+        let err = load_entity_migrating(stringly, DEFAULT_SAGA_YEAR)
             .expect_err("a stringly-typed bonus must not load")
             .to_string();
         assert!(err.contains("i8"), "{err}");
         let fixed = stringly.replace("\"5\"", "5");
-        load_entity_migrating(&fixed).expect("the numeric twin loads");
+        load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the numeric twin loads");
 
         let nulled = r#"{
           "schema_version": 13,
@@ -6461,12 +6653,12 @@ mod tests {
           "type_id": "magus",
           "talisman_attunements": null
         }"#;
-        let err = load_entity_migrating(nulled)
+        let err = load_entity_migrating(nulled, DEFAULT_SAGA_YEAR)
             .expect_err("a null legacy list must not load")
             .to_string();
         assert!(err.contains("null") && err.contains("sequence"), "{err}");
         let fixed = nulled.replace("null", "[]");
-        load_entity_migrating(&fixed).expect("the empty-list twin loads");
+        load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the empty-list twin loads");
     }
 
     /// The same guarantee for the older `aging_reductions` fold: a legacy map that
@@ -6486,12 +6678,13 @@ mod tests {
           "characteristics": { "com": 2 },
           "aging_reductions": { "com": 300 }
         }"#;
-        let err = load_entity_migrating(out_of_range)
+        let err = load_entity_migrating(out_of_range, DEFAULT_SAGA_YEAR)
             .expect_err("an out-of-u8 drop count must not load")
             .to_string();
         assert!(err.contains("300") && err.contains("u8"), "{err}");
         let fixed = out_of_range.replace("300", "1");
-        let loaded = load_entity_migrating(&fixed).expect("the in-range twin loads");
+        let loaded =
+            load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the in-range twin loads");
         assert_eq!(
             loaded.migrated_aging_characteristics,
             vec![Characteristic::Com]
@@ -6504,7 +6697,7 @@ mod tests {
           "type_id": "companion",
           "aging_reductions": { "cun": 1 }
         }"#;
-        let err = load_entity_migrating(unknown_key)
+        let err = load_entity_migrating(unknown_key, DEFAULT_SAGA_YEAR)
             .expect_err("an unknown Characteristic key must not load")
             .to_string();
         assert!(err.contains("cun"), "{err}");
@@ -6512,7 +6705,8 @@ mod tests {
         // Creature Format's Cunning score is deliberately not a variant (see
         // `Familiar::characteristics`).
         let fixed = unknown_key.replace("cun", "int");
-        let loaded = load_entity_migrating(&fixed).expect("the known-key twin loads");
+        let loaded =
+            load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the known-key twin loads");
         assert_eq!(
             loaded.migrated_aging_characteristics,
             vec![Characteristic::Int]
@@ -6813,10 +7007,10 @@ mod tests {
     /// Source: Ars Magica - Definitive Edition (Core Rules).md:16621, :16624-16632.
     #[test]
     fn a_resolved_crisis_round_trips_and_needs_no_schema_bump() {
-        // 16 is schema 16's own bump (the funding discriminator plus the wizard
-        // progress slug); the Crisis widening contributed nothing to it.
+        // 17 is schema 17's own bump (the per-document saga year); the Crisis
+        // widening contributed nothing to it, and nor did 16's funding discriminator.
         assert_eq!(
-            SCHEMA_VERSION, 16,
+            SCHEMA_VERSION, 17,
             "a purely additive widening earns no bump"
         );
 
@@ -6895,7 +7089,7 @@ mod tests {
     /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 16);
+        assert_eq!(SCHEMA_VERSION, 17);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -6904,7 +7098,7 @@ mod tests {
           "apparent_age": 45,
           "aging_log": [{ "year": 1220, "effect": "Lost a point of Stamina" }]
         }"#;
-        let loaded = load_entity_migrating(schema_14).unwrap();
+        let loaded = load_entity_migrating(schema_14, DEFAULT_SAGA_YEAR).unwrap();
         assert!(
             loaded.migrated_aging_characteristics.is_empty(),
             "the bump migrates nothing"
@@ -6921,14 +7115,13 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// The 15 → 16 bump, pinned. Two fields arrive together (see
-    /// [`SCHEMA_VERSION`]'s doc): the explicit funding discriminator
-    /// [`Entity::ability_funding`] and the wizard-progress slug
-    /// [`Entity::wizard_furthest_phase`]. Batching them means one migration and one
-    /// window instead of two.
+    /// The 16 → 17 bump, pinned. One field: [`Entity::saga_year`] (C8) — the saga
+    /// year moved out of the machine-global settings file and onto the document,
+    /// because a storyguide runs more than one saga and a single stored number was
+    /// wrong for all but one of them.
     #[test]
-    fn schema_version_is_16() {
-        assert_eq!(SCHEMA_VERSION, 16);
+    fn schema_version_is_17() {
+        assert_eq!(SCHEMA_VERSION, 17);
     }
 
     /// A save written before the funding discriminator existed carries a
@@ -6945,7 +7138,7 @@ mod tests {
           "age": 25,
           "life_stages": { "native_language": "German" }
         }"#;
-        let loaded = load_entity_migrating(old).unwrap();
+        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
         assert_eq!(loaded.entity.ability_funding, AbilityFunding::LifeStages);
         assert!(loaded.entity.life_stages.is_some(), "the plan is kept");
         // A fold happened, so the version is stamped.
@@ -6963,7 +7156,7 @@ mod tests {
           "type_id": "companion",
           "xp_pool": 240
         }"#;
-        let loaded = load_entity_migrating(old).unwrap();
+        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
         assert_eq!(loaded.entity.ability_funding, AbilityFunding::Pool);
         assert_eq!(loaded.entity.xp_pool, 240, "the typed pool is kept");
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
@@ -7019,7 +7212,7 @@ mod tests {
     /// case- and whitespace-insensitively.
     #[test]
     fn a_v0_2_x_save_migrates_its_typed_being_values_in_both_languages() {
-        let loaded = load_entity_migrating(V0_2_X_SAVE).unwrap();
+        let loaded = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR).unwrap();
         let entity = &loaded.entity;
 
         assert_eq!(
@@ -7059,7 +7252,7 @@ mod tests {
                   ]
                 }}"#
             );
-            let loaded = load_entity_migrating(&json).unwrap();
+            let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR).unwrap();
             assert_eq!(
                 being_param(&loaded.entity, "virtue.inoffensive_to_beings"),
                 expected,
@@ -7101,7 +7294,7 @@ mod tests {
     /// as written — which is also what makes the fold idempotent.
     #[test]
     fn an_already_migrated_being_value_is_left_alone() {
-        let loaded = load_entity_migrating(V0_2_X_SAVE).unwrap();
+        let loaded = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR).unwrap();
         assert_eq!(
             being_param(&loaded.entity, "virtue.inoffensive_to_beings"),
             "being.faeries"
@@ -7115,7 +7308,7 @@ mod tests {
     /// so the fold is keyed on the three items that actually changed.
     #[test]
     fn a_being_param_that_is_still_free_text_is_never_folded() {
-        let loaded = load_entity_migrating(V0_2_X_SAVE).unwrap();
+        let loaded = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR).unwrap();
         assert_eq!(
             being_param(&loaded.entity, "virtue.alluring_to_beings"),
             "Faeries",
@@ -7144,7 +7337,7 @@ mod tests {
                   ]
                 }}"#
             );
-            let loaded = load_entity_migrating(&json).unwrap();
+            let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR).unwrap();
             assert_eq!(being_param(&loaded.entity, item_ref), "dragons");
         }
     }
@@ -7155,7 +7348,7 @@ mod tests {
     /// `missing_param` is the correct outcome and the player supplies it once.
     #[test]
     fn a_choice_the_old_save_never_stored_is_not_invented() {
-        let loaded = load_entity_migrating(V0_2_X_SAVE).unwrap();
+        let loaded = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR).unwrap();
         for item_ref in ["flaw.slow_power", "virtue.folk_magic"] {
             let selection = loaded
                 .entity
@@ -7177,9 +7370,13 @@ mod tests {
     /// nothing.
     #[test]
     fn migrating_a_v0_2_x_save_twice_changes_nothing() {
-        let once = load_entity_migrating(V0_2_X_SAVE).unwrap().entity;
+        let once = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR)
+            .unwrap()
+            .entity;
         let json = serde_json::to_string(&once).unwrap();
-        let twice = load_entity_migrating(&json).unwrap().entity;
+        let twice = load_entity_migrating(&json, DEFAULT_SAGA_YEAR)
+            .unwrap()
+            .entity;
         assert_eq!(once, twice);
     }
 
@@ -7190,11 +7387,15 @@ mod tests {
     /// save rather than repeating.)
     #[test]
     fn a_migrated_save_is_byte_stable_across_a_save_load_save_cycle() {
-        let mut first = load_entity_migrating(V0_2_X_SAVE).unwrap().entity;
+        let mut first = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR)
+            .unwrap()
+            .entity;
         first.normalize();
         let first_bytes = serde_json::to_string_pretty(&first).unwrap();
 
-        let mut second = load_entity_migrating(&first_bytes).unwrap().entity;
+        let mut second = load_entity_migrating(&first_bytes, DEFAULT_SAGA_YEAR)
+            .unwrap()
+            .entity;
         second.normalize();
         let second_bytes = serde_json::to_string_pretty(&second).unwrap();
 
@@ -7252,7 +7453,9 @@ mod tests {
     /// selection can live is trimmed before the entity reaches anyone.
     #[test]
     fn load_trims_the_whitespace_around_every_param_value() {
-        let entity = load_entity_migrating(PADDED_PARAMS_SAVE).unwrap().entity;
+        let entity = load_entity_migrating(PADDED_PARAMS_SAVE, DEFAULT_SAGA_YEAR)
+            .unwrap()
+            .entity;
 
         assert_eq!(
             param_of(&entity, "flaw.lesser_power", "power"),
@@ -7306,11 +7509,15 @@ mod tests {
     /// settles at the first save instead of churning the file on every open.
     #[test]
     fn trimming_params_at_load_is_idempotent_and_byte_stable() {
-        let mut first = load_entity_migrating(PADDED_PARAMS_SAVE).unwrap().entity;
+        let mut first = load_entity_migrating(PADDED_PARAMS_SAVE, DEFAULT_SAGA_YEAR)
+            .unwrap()
+            .entity;
         first.normalize();
         let first_bytes = serde_json::to_string_pretty(&first).unwrap();
 
-        let mut second = load_entity_migrating(&first_bytes).unwrap().entity;
+        let mut second = load_entity_migrating(&first_bytes, DEFAULT_SAGA_YEAR)
+            .unwrap()
+            .entity;
         second.normalize();
         let second_bytes = serde_json::to_string_pretty(&second).unwrap();
 
@@ -7338,7 +7545,9 @@ mod tests {
         // And a pool-funded character keeping a plan round-trips as pool-funded.
         entity.life_stages = Some(crate::life_stage::LifeStagePlan::default());
         let json = serde_json::to_string(&entity).unwrap();
-        let back = load_entity_migrating(&json).unwrap().entity;
+        let back = load_entity_migrating(&json, DEFAULT_SAGA_YEAR)
+            .unwrap()
+            .entity;
         assert_eq!(back.ability_funding, AbilityFunding::Pool);
         assert!(
             back.life_stages.is_some(),
@@ -7389,7 +7598,7 @@ mod tests {
                   "wizard_furthest_phase": "{slug}"
                 }}"#
             );
-            let loaded = load_entity_migrating(&save)
+            let loaded = load_entity_migrating(&save, DEFAULT_SAGA_YEAR)
                 .unwrap_or_else(|e| panic!("a save carrying '{slug}' must still load: {e}"));
             assert_eq!(
                 loaded.entity.wizard_furthest_phase,
@@ -7420,7 +7629,7 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""warping_choices""#), "{json}");
-        assert!(json.contains(r#""schema_version": 16"#), "{json}");
+        assert!(json.contains(r#""schema_version": 17"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);

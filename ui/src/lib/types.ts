@@ -1695,6 +1695,14 @@ export interface Entity {
   concept?: string;
   gender?: string;
   birth_year?: number | null;
+  // The calendar year the saga this document was built for stands in (C8, schema
+  // 17). Required, and always written even at its default: `load_entity_migrating`
+  // dispatches on the key's ABSENCE to fill a pre-17 save from the configured
+  // default, so an omitted key is a migration trigger rather than a tidy elision.
+  // It was a machine-global app setting until C8, which made it wrong for every
+  // saga but one on a storyguide's machine; `settings.json` now keeps only the
+  // default a NEW document starts at.
+  saga_year: number;
   sigil?: string;
   covenant_name?: string;
   parens?: string;

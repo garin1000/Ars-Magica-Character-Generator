@@ -287,7 +287,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     // The shipped sample now carries characteristics, ability scores, and a bank,
     // and is kept at the current schema version so a save/load round trip on it is
     // an identity (see `save_then_load_round_trips_with_byte_stable_canonical_json`).
-    assert_eq!(entity.schema_version, 16);
+    assert_eq!(entity.schema_version, 17);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -643,7 +643,7 @@ fn save_then_load_round_trips_with_byte_stable_canonical_json() {
     save_entity_to_path(&entity, &path).unwrap();
     let first = fs::read_to_string(&path).unwrap();
 
-    let reloaded = load_entity_from_path(&path).unwrap();
+    let reloaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
     assert_eq!(reloaded, entity, "round trip must preserve the entity");
 
     // Re-saving the reloaded entity yields byte-identical output.
@@ -678,9 +678,9 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     )
     .unwrap();
 
-    let migrated = load_entity_from_path(&path).unwrap();
+    let migrated = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
     assert_eq!(
-        migrated.schema_version, 16,
+        migrated.schema_version, 17,
         "the field move bumps the schema"
     );
     let talisman = migrated
@@ -698,7 +698,41 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     let written = fs::read_to_string(&path).unwrap();
     assert!(!written.contains("talisman_attunements"), "got: {written}");
     assert!(written.contains("\"talisman\""), "got: {written}");
-    assert!(written.contains("\"schema_version\": 16"), "got: {written}");
+    assert!(written.contains("\"schema_version\": 17"), "got: {written}");
+}
+
+/// C8: the app's load door is what carries the user's configured default into the
+/// engine's migration. `arm-rules` cannot read `settings.json` (engine purity), so
+/// the year a pre-17 save inherits is decided here, by the caller that CAN.
+#[test]
+fn a_pre_17_save_inherits_the_configured_default_through_the_real_load_path() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("iberia-companion.json");
+    fs::write(
+        &path,
+        format!(
+            r#"{{
+              "schema_version": 16,
+              "ruleset": {{ "id": "{RULESET_ID}", "version": "{RULESET_VERSION}" }},
+              "entity_kind": "character",
+              "type_id": "companion",
+              "ability_funding": "pool",
+              "age": 30,
+              "birth_year": 1167
+            }}"#
+        ),
+    )
+    .unwrap();
+
+    let migrated = load_entity_from_path(&path, 1197).unwrap();
+    assert_eq!(migrated.saga_year, 1197);
+    assert_eq!(migrated.schema_version, arm_rules::SCHEMA_VERSION);
+
+    // Round trip: saved and reopened under a DIFFERENT default, the year the
+    // document now owns is the one that answers.
+    save_entity_to_path(&migrated, &path).unwrap();
+    let reopened = load_entity_from_path(&path, 1000).unwrap();
+    assert_eq!(reopened.saga_year, 1197);
 }
 
 #[test]
@@ -711,7 +745,7 @@ fn save_stamps_current_schema_version() {
     save_entity_to_path(&entity, &path).unwrap();
     let written = fs::read_to_string(&path).unwrap();
     assert!(
-        written.contains("\"schema_version\": 16"),
+        written.contains("\"schema_version\": 17"),
         "save must stamp the current schema version, got: {written}"
     );
 }
@@ -721,7 +755,7 @@ fn sample_save_loads_with_defaulted_aging_warping_annotations() {
     // A shipped example save carries none of the new annotation fields; loading it
     // must fill them with their empty/None defaults (additive backward compat).
     let path = repo_root().join("examples/companion_sample.json");
-    let entity = load_entity_from_path(&path).unwrap();
+    let entity = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
     assert_eq!(entity.apparent_age, None);
     assert!(entity.warping_effect.is_empty());
     assert!(entity.decrepitude_effect.is_empty());
@@ -774,8 +808,8 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("magus.json");
     save_entity_to_path(&entity, &path).unwrap();
-    let reloaded = load_entity_from_path(&path).unwrap();
-    assert_eq!(reloaded.schema_version, 16);
+    let reloaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
+    assert_eq!(reloaded.schema_version, 17);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 
@@ -1212,7 +1246,11 @@ fn effective_scores_surface_virtue_flaw_balance() {
 
 #[test]
 fn load_entity_from_missing_path_is_io_error() {
-    let err = load_entity_from_path(&repo_root().join("does/not/exist.json")).unwrap_err();
+    let err = load_entity_from_path(
+        &repo_root().join("does/not/exist.json"),
+        arm_rules::DEFAULT_SAGA_YEAR,
+    )
+    .unwrap_err();
     assert!(matches!(err, AppError::Io { .. }), "got {err:?}");
 }
 
@@ -2160,6 +2198,26 @@ fn the_frontend_mirrors_the_engine_schema_version() {
     );
 }
 
+/// The same pin for `DEFAULT_SAGA_YEAR` (C8). The frontend needs a year the instant
+/// its module loads — `AppStore.entity`'s initial placeholder carries a required
+/// `saga_year`, and no IPC call can have answered yet — so the engine's constant is
+/// mirrored by hand exactly as `SCHEMA_VERSION` is. A stale mirror is silent in the
+/// same way: every year the user sees comes from `read_settings` or from the opened
+/// document, so the wrong value here would surface only in the seconds before the
+/// first settings read, and then only as a year nobody typed.
+#[test]
+fn the_frontend_mirrors_the_engine_default_saga_year() {
+    let state = fs::read_to_string(repo_root().join("ui/src/lib/state.svelte.ts")).unwrap();
+    let declaration = format!(
+        "export const DEFAULT_SAGA_YEAR = {};",
+        arm_rules::DEFAULT_SAGA_YEAR
+    );
+    assert!(
+        state.contains(&declaration),
+        "ui/src/lib/state.svelte.ts must declare `{declaration}`"
+    );
+}
+
 /// Provenance is deliberately not mirrored to the frontend — `PointItem` and
 /// `House` drop their `source` too — so a `SourceRef` is never a drift risk and its
 /// key (and the `file`/`lines` inside it) is skipped by [`mirrored_keys`].
@@ -2899,7 +2957,7 @@ fn every_example_save_parses_and_validates() {
     entries.sort();
 
     for path in entries {
-        let entity = load_entity_from_path(&path)
+        let entity = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
             .unwrap_or_else(|e| panic!("{} failed to load: {e}", path.display()));
         let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
         assert!(
@@ -2914,4 +2972,39 @@ fn every_example_save_parses_and_validates() {
         checked > 0,
         "examples/ must contain at least one *.json fixture"
     );
+}
+
+/// C8 / Trap 2. `examples/` is deliberately **not** uniform, and this test is why.
+///
+/// `companion_sample.json` had to be regenerated at schema 17: it is the fixture
+/// `save_then_load_round_trips_with_byte_stable_canonical_json` compares a save
+/// against, so a stale version there makes the round trip a non-identity. The other
+/// three are left at schema 16 on purpose — regenerating all four would leave the
+/// migration with no real checked-in input at all, only hand-written string literals
+/// in the test modules, and the thing most worth proving about a migration is that it
+/// works on a file somebody actually wrote.
+#[test]
+fn the_examples_keep_a_genuine_pre_migration_fixture() {
+    let pre_migration = repo_root().join("examples/grog_sample.json");
+    let raw = fs::read_to_string(&pre_migration).unwrap();
+    assert!(
+        raw.contains("\"schema_version\": 16"),
+        "grog_sample.json is the checked-in pre-17 fixture; do not regenerate it"
+    );
+    assert!(
+        !raw.contains("saga_year"),
+        "a pre-17 save records no saga year — that is the point of the fixture"
+    );
+
+    // Opened with an Iberia default, it becomes an Iberia character: the year comes
+    // from the caller, never from a constant.
+    let migrated = load_entity_from_path(&pre_migration, 1197).unwrap();
+    assert_eq!(migrated.saga_year, 1197);
+    assert_eq!(migrated.schema_version, arm_rules::SCHEMA_VERSION);
+
+    // And the current fixture is genuinely current, so the round-trip test above is
+    // comparing like with like.
+    let current = fs::read_to_string(repo_root().join("examples/companion_sample.json")).unwrap();
+    assert!(current.contains("\"schema_version\": 17"), "got {current}");
+    assert!(current.contains("\"saga_year\": 1220"), "got {current}");
 }

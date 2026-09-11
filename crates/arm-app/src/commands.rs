@@ -345,9 +345,10 @@ fn settings_candidates(app: &AppHandle) -> Vec<std::path::PathBuf> {
     settings::settings_candidates(config_dir.as_deref(), exe_dir.as_deref())
 }
 
-/// Everything the app persists between runs: the saga year
-/// (guided-creation-review-2026-08 #25), and since C4 the UI language, the palette
-/// and the validation mode.
+/// Everything the app persists between runs: the **default** saga year for new
+/// documents (guided-creation-review-2026-08 #25; narrowed to a default by C8, when
+/// the saga year itself moved onto the entity), and since C4 the UI language, the
+/// palette and the validation mode.
 ///
 /// **One command for all four, and the frontend reads it before it loads the
 /// ruleset.** Rules display text is per-language, so the language has to be known
@@ -356,9 +357,9 @@ fn settings_candidates(app: &AppHandle) -> Vec<std::path::PathBuf> {
 /// setting.
 ///
 /// Infallible on purpose: it is read at launch, and a first launch has no settings
-/// file. Everything that could go wrong reads as "not chosen" — with the saga year
-/// resolving to [`arm_rules::DEFAULT_SAGA_YEAR`], the one setting whose default is a
-/// rules value.
+/// file. Everything that could go wrong reads as "not chosen" — with the default saga
+/// year resolving to [`arm_rules::DEFAULT_SAGA_YEAR`], the one setting whose own
+/// default is a rules value.
 #[tauri::command]
 pub fn read_settings(app: AppHandle) -> settings::Settings {
     let candidates = settings_candidates(&app);
@@ -765,7 +766,11 @@ pub async fn load_entity(app: AppHandle) -> Result<Option<LoadedEntity>, AppErro
         }
     };
 
-    let entity = ruleset_io::load_entity_from_path(&path)?;
+    // A pre-schema-17 save carries no saga year of its own, and the honest value for
+    // it is the one the user has configured for new documents — read here, because
+    // `arm-rules` has no filesystem and cannot.
+    let default_saga_year = read_settings(app).default_saga_year;
+    let entity = ruleset_io::load_entity_from_path(&path, default_saga_year)?;
     Ok(Some(LoadedEntity {
         path: path.to_string_lossy().into_owned(),
         entity,

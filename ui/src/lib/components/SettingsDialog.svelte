@@ -3,10 +3,18 @@
   import LanguageSelector from './LanguageSelector.svelte';
   import ThemeSelector from './ThemeSelector.svelte';
   import ModeToggle from './ModeToggle.svelte';
+  import DefaultSagaYearField from './DefaultSagaYearField.svelte';
 
-  // The app's preferences: language, palette and validation strictness, all three
-  // persisted across restarts. Reachable from the native menu's Settings item and
-  // from the header button on every screen.
+  // The app's preferences: language, palette, validation strictness, and — since C8 —
+  // the saga year NEW documents start at, all persisted across restarts. Reachable
+  // from the native menu's Settings item and from the header button on every screen.
+  //
+  // The fourth field is narrower than the setting it replaces, and that is the point.
+  // Until C8 this file held THE saga year, machine-globally, which was wrong the
+  // moment a storyguide ran two sagas: one number, correct for one of them, silently
+  // wrong for every character of the other. A saga year is a property of the saga, so
+  // it travels in the save; what belongs beside language and appearance is only the
+  // default a fresh character is stamped with.
   //
   // **Its own component, not a refactor of the two existing modals.** ConfirmPrompt
   // carries a standing note explaining why DiscardPrompt must not be folded into a
@@ -106,6 +114,10 @@
         <LanguageSelector />
         <ThemeSelector />
         <ModeToggle />
+        <!-- Last, and deliberately the only field here that is about characters
+             rather than about the app: it seeds new documents, and the saga year
+             itself lives on each document (see DefaultSagaYearField's header). -->
+        <DefaultSagaYearField />
       </div>
       <div class="modal-actions">
         <button type="button" onclick={() => store.closeSettings()} data-testid="settings-close">

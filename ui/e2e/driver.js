@@ -115,17 +115,20 @@ export async function waitForPort(port, options = {}) {
 /**
  * A per-worker `XDG_CONFIG_HOME`, created on demand.
  *
- * The app persists its settings — the saga year, and since C4 the UI language,
- * the palette and the validation mode — under `app_config_dir()`, which on Linux
- * hangs off `XDG_CONFIG_HOME`: one path shared by every instance. Two concurrent
- * workers would race on that file, so each gets its own tree. All four keys live
- * in the same `settings.json`, so this one redirection covers every one of them
- * and every future setting without further work.
+ * The app persists its settings — the default saga year for new documents, and
+ * since C4 the UI language, the palette and the validation mode — under
+ * `app_config_dir()`, which on Linux hangs off `XDG_CONFIG_HOME`: one path shared
+ * by every instance. Two concurrent workers would race on that file, so each gets
+ * its own tree. All four keys live in the same `settings.json`, so this one
+ * redirection covers every one of them and every future setting without further
+ * work.
  *
  * A welcome side effect: the suite stops writing the developer's real settings
- * file. `saga-year.e2e.js` used to do exactly that and restore it afterwards;
- * now it starts from a guaranteed-clean directory instead of from whatever the
- * machine happened to hold, which is both safer and more deterministic.
+ * file. The saga-year spec used to do exactly that and restore it afterwards; now
+ * it starts from a guaranteed-clean directory instead of from whatever the machine
+ * happened to hold, which is both safer and more deterministic. (Since C8 that spec
+ * writes no setting at all — the saga year is in the save — and it is
+ * `app-shell.e2e.js`'s settings block that exercises `default_saga_year` here.)
  *
  * @param {string} repoRoot
  * @param {Record<string, string | undefined>} env

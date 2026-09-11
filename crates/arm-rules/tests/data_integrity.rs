@@ -7929,7 +7929,7 @@ fn missing_param_targets(entity: &Entity, rs: &Ruleset) -> Vec<(String, String)>
 #[test]
 fn a_v0_2_x_saves_typed_being_values_resolve_after_migration() {
     let rs = load_ruleset();
-    let entity = arm_rules::load_entity_migrating(V0_2_X_MAGUS_SAVE)
+    let entity = arm_rules::load_entity_migrating(V0_2_X_MAGUS_SAVE, arm_rules::DEFAULT_SAGA_YEAR)
         .expect("a v0.2.x save still loads")
         .entity;
 
@@ -7953,7 +7953,7 @@ fn a_v0_2_x_saves_typed_being_values_resolve_after_migration() {
 #[test]
 fn the_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each() {
     let rs = load_ruleset();
-    let entity = arm_rules::load_entity_migrating(V0_2_X_MAGUS_SAVE)
+    let entity = arm_rules::load_entity_migrating(V0_2_X_MAGUS_SAVE, arm_rules::DEFAULT_SAGA_YEAR)
         .expect("a v0.2.x save still loads")
         .entity;
 
@@ -7993,7 +7993,7 @@ fn a_genuine_too_many_selections_survives_the_being_migration() {
         { "ref": "flaw.unbearable_to_beings", "params": { "being": "Demons" } }
       ]
     }"#;
-    let entity = arm_rules::load_entity_migrating(save)
+    let entity = arm_rules::load_entity_migrating(save, arm_rules::DEFAULT_SAGA_YEAR)
         .expect("a v0.2.x save still loads")
         .entity;
 

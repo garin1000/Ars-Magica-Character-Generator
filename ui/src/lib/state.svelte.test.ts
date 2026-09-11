@@ -62,8 +62,8 @@ vi.mock('./ipc', () => ({
   // C4: the four persisted settings are read in ONE call and written with a patch
   // naming only what changed, so choosing one can never destroy another.
   readSettings: vi.fn().mockResolvedValue({
+    default_saga_year: 1220,
     lang: null,
-    saga_year: 1220,
     theme: null,
     validation_mode: null,
   }),
@@ -74,7 +74,7 @@ vi.mock('./ipc', () => ({
 
 // Import the singleton after the mock is registered.
 import * as ipc from './ipc';
-import { store, defaultPickerFilters, SCHEMA_VERSION } from './state.svelte';
+import { store, defaultPickerFilters, DEFAULT_SAGA_YEAR, SCHEMA_VERSION } from './state.svelte';
 
 // The screen the app boots on, captured at import time — before any test or
 // `beforeEach` has touched the shared singleton, which is the only moment the
@@ -161,6 +161,11 @@ function resetEntity(): void {
     // migration folds the key onto every pre-16 save, so an entity that reaches the
     // store without it is a shape the app never produces.
     ability_funding: 'pool',
+    // C8: document state, and required from schema 17 on. Present here for the same
+    // reason `ability_funding` is — an entity reaching the store without it is a
+    // shape the app never produces, and its presence is what makes the age ↔ birth
+    // year derivation live, exactly as it is in a running app.
+    saga_year: 1220,
     art_scores: [],
     personality_traits: [],
     reputations: [],
@@ -168,13 +173,19 @@ function resetEntity(): void {
 }
 
 /**
- * A persisted-settings payload as `read_settings` returns it: the saga year always
- * resolved (its default is a rules value the engine applies), the other three
+ * A persisted-settings payload as `read_settings` returns it: the default saga year
+ * always resolved (its default is a rules value the engine applies), the other three
  * honestly `null` when never chosen, so their defaults stay in the one place each
  * already lives.
  */
 function persisted(overrides: Partial<PersistedSettings> = {}): PersistedSettings {
-  return { lang: null, saga_year: 1220, theme: null, validation_mode: null, ...overrides };
+  return {
+    default_saga_year: 1220,
+    lang: null,
+    theme: null,
+    validation_mode: null,
+    ...overrides,
+  };
 }
 
 beforeEach(() => {
@@ -378,6 +389,7 @@ describe('the guided wizard', () => {
       ability_scores: [],
       xp_pool: 0,
       ability_funding: 'pool',
+      saga_year: 1220,
       art_scores: [],
       personality_traits: [],
       reputations: [],
@@ -747,6 +759,7 @@ describe('the guided wizard', () => {
           ability_scores: [],
           xp_pool: 0,
           ability_funding: 'pool',
+          saga_year: 1220,
           art_scores: [],
           personality_traits: [],
           reputations: [],
@@ -877,6 +890,7 @@ describe('open() and the startup view', () => {
       type_id: 'companion',
       name: 'Marcus of Bonisagus',
       ability_funding: 'pool',
+      saga_year: 1220,
       selections: [],
       characteristics: {} as Entity['characteristics'],
       characteristic_descriptions: {},
@@ -1344,7 +1358,7 @@ describe('setAge', () => {
 
 describe('the saga year and the age ↔ birth-year link', () => {
   beforeEach(async () => {
-    vi.mocked(ipc.readSettings).mockResolvedValue(persisted({ saga_year: 1220 }));
+    vi.mocked(ipc.readSettings).mockResolvedValue(persisted({ default_saga_year: 1220 }));
     vi.mocked(ipc.writeSettings).mockResolvedValue(undefined);
     vi.mocked(ipc.deriveAge).mockClear();
     vi.mocked(ipc.deriveBirthYear).mockClear();
@@ -1352,21 +1366,18 @@ describe('the saga year and the age ↔ birth-year link', () => {
   });
 
   afterEach(() => {
-    // Put the shared singleton back to "the saga year was never read", which is the
-    // state every other block in this file was written against — with a year loaded,
-    // every `setAge`/`setBirthYear` anywhere else would fire a derivation round trip.
-    store.sagaYear = null;
     store.sagaIssues = [];
     vi.mocked(ipc.deriveAge).mockReset().mockResolvedValue({ age: 0, issues: [] });
     vi.mocked(ipc.deriveBirthYear).mockReset().mockResolvedValue(0);
   });
 
-  it('loads the persisted saga year rather than assuming one', async () => {
+  it('loads the persisted default rather than assuming one', async () => {
     // The default lives in the engine (a rules value) and is applied by the settings
-    // reader in `arm-app`; the frontend only ever reports what it was told.
-    vi.mocked(ipc.readSettings).mockResolvedValue(persisted({ saga_year: 1230 }));
+    // reader in `arm-app`; the frontend only ever reports what it was told. Since C8
+    // it seeds new documents rather than governing every open one.
+    vi.mocked(ipc.readSettings).mockResolvedValue(persisted({ default_saga_year: 1230 }));
     await store.loadSettings();
-    expect(store.sagaYear).toBe(1230);
+    expect(store.defaultSagaYear).toBe(1230);
   });
 
   it('derives the age from a typed birth year, against the saga year', async () => {
@@ -1440,34 +1451,13 @@ describe('the saga year and the age ↔ birth-year link', () => {
     expect(store.dirty).toBe(true);
   });
 
-  // D3.3, and the assertion most likely to be got wrong: the saga year is a
-  // reference for derivation, never a rewrite of stored values. A silent recompute
-  // would fabricate ages that skipped their aging rolls.
-  it('changes no stored value and does not dirty the document when only the saga year moves', async () => {
-    // A just-loaded document IS the saved one, which is the only way to reach a
-    // clean baseline that already carries both halves of the pair.
-    vi.mocked(ipc.loadEntity).mockResolvedValue({
-      path: '/tmp/marcus.armc',
-      entity: { ...store.entity, age: 30, birth_year: 1190 },
-    });
-    const opening = store.open();
-    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
-    await opening;
-    expect(store.dirty).toBe(false);
-
-    store.setSagaYear(1230);
-    await vi.runAllTimersAsync();
-
-    expect(store.sagaYear).toBe(1230);
-    expect(store.entity.age).toBe(30);
-    expect(store.entity.birth_year).toBe(1190);
-    expect(store.dirty).toBe(false);
-    expect(store.closeGuardPayload().dirty).toBe(false);
-    // It is saga state, so it is persisted — just not into the document. The patch
-    // names the saga year and NOTHING else, so writing it cannot disturb the theme
-    // or the language sitting in the same file.
-    expect(vi.mocked(ipc.writeSettings)).toHaveBeenCalledWith({ saga_year: 1230 });
-  });
+  // C8 DELETED a test here: "changes no stored value and does not dirty the document
+  // when only the saga year moves". Half of it was a contract this slice reverses —
+  // the saga year IS a stored value now, so moving it MUST dirty the document — and
+  // the surviving half (D3.3: it rewrites neither the age nor the birth year) is
+  // asserted, against the new contract, by "dirties the document when the saga year
+  // moves, and rewrites nothing" in the C8 block below. Keeping a renamed copy here
+  // would have been a second assertion of the same thing.
 
   it('uses the new saga year for the next edit, and only then', async () => {
     store.setSagaYear(1230);
@@ -1477,6 +1467,104 @@ describe('the saga year and the age ↔ birth-year link', () => {
     store.setBirthYear(1190);
     await vi.runAllTimersAsync();
     expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1230, 1190);
+  });
+});
+
+// --- C8: the saga year belongs to the saga, not the installation -------------
+
+describe('the saga year is document state, and settings keep only a default', () => {
+  /** Open a saved document with `overrides` applied, so the baseline is clean. */
+  async function openSaved(overrides: Partial<Entity>): Promise<void> {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/saga.armc',
+      entity: { ...store.entity, ...overrides },
+    });
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+  }
+
+  beforeEach(async () => {
+    installRuleset([]);
+    vi.mocked(ipc.readSettings).mockResolvedValue(persisted({ default_saga_year: 1197 }));
+    vi.mocked(ipc.writeSettings).mockClear();
+    await store.loadSettings();
+  });
+
+  afterEach(async () => {
+    vi.mocked(ipc.readSettings).mockResolvedValue(persisted());
+    await store.loadSettings();
+    vi.mocked(ipc.deriveAge).mockReset().mockResolvedValue({ age: 0, issues: [] });
+    vi.mocked(ipc.deriveBirthYear).mockReset().mockResolvedValue(0);
+  });
+
+  it('reads the stored default under its own key', () => {
+    expect(store.defaultSagaYear).toBe(1197);
+  });
+
+  it('stamps the configured default onto a new character', async () => {
+    // The whole point of the slice: a storyguide who runs an Iberia saga gets an
+    // Iberia character, and the number travels WITH the document from then on.
+    await store.createCharacter('companion');
+    expect(store.entity.saga_year).toBe(1197);
+  });
+
+  it('derives the age against the DOCUMENT year, not the setting', async () => {
+    await store.createCharacter('companion');
+    store.setSagaYear(1220);
+    vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 30, issues: [] });
+    store.setBirthYear(1190);
+    await vi.runAllTimersAsync();
+
+    // 1220 — the document's — even though the installation's default is 1197.
+    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1220, 1190);
+  });
+
+  it('dirties the document when the saga year moves, and rewrites nothing', async () => {
+    // A just-loaded document IS the saved one — the only way to a clean baseline
+    // that already carries both halves of the pair.
+    await openSaved({ age: 30, birth_year: 1167, saga_year: 1197 });
+    expect(store.dirty).toBe(false);
+
+    store.setSagaYear(1220);
+    await vi.runAllTimersAsync();
+
+    expect(store.entity.saga_year).toBe(1220);
+    // It IS a stored value now, so the guard must see it — the year is part of what
+    // an unsaved document would lose.
+    expect(store.dirty).toBe(true);
+    expect(store.closeGuardPayload().dirty).toBe(true);
+    // D3.3 still holds: the year is the reference the pair is measured against, never
+    // a rewrite of it. A silent recompute would fabricate ages that skipped their
+    // aging rolls.
+    expect(store.entity.age).toBe(30);
+    expect(store.entity.birth_year).toBe(1167);
+    // And it is not a preference, so nothing is written to the settings file.
+    expect(vi.mocked(ipc.writeSettings)).not.toHaveBeenCalled();
+  });
+
+  it('persists the default without touching the open document', async () => {
+    await openSaved({ saga_year: 1197 });
+
+    store.setDefaultSagaYear(1230);
+    await vi.runAllTimersAsync();
+
+    expect(store.defaultSagaYear).toBe(1230);
+    // A patch naming ONLY the new key: the Rust side is read-modify-write, so this
+    // cannot disturb the theme or the language sharing the file.
+    expect(vi.mocked(ipc.writeSettings)).toHaveBeenCalledWith({ default_saga_year: 1230 });
+    // The open document was built for another saga and keeps its own year.
+    expect(store.entity.saga_year).toBe(1197);
+    expect(store.dirty).toBe(false);
+  });
+
+  it('keeps the year an opened save carries', async () => {
+    await openSaved({ saga_year: 1220 });
+
+    // The installation's default is 1197; the document's own year wins and the
+    // document is not dirtied by having been opened.
+    expect(store.entity.saga_year).toBe(1220);
+    expect(store.dirty).toBe(false);
   });
 });
 
@@ -2072,6 +2160,14 @@ describe('revalidate error latching', () => {
   // raised: a failed save leaves the document unsaved, so its banner must stay up
   // until the user resolves it, even though every later validate succeeds.
   it('does not let a succeeding validate clear a save failure', async () => {
+    // Dirty this document explicitly. The assertion at the end — a failed save leaves
+    // the document unsaved — is only meaningful against edits this test made; it used
+    // to ride on whatever the blocks above happened to leave behind in the shared
+    // singleton, which made it hostage to their ordering (C8 changed that ordering and
+    // the test went green-for-nothing until this line was added).
+    store.entity.name = 'Unsaved by a failed save';
+    expect(store.dirty).toBe(true);
+
     vi.mocked(ipc.saveEntity).mockRejectedValueOnce({ kind: 'io' });
     await store.saveAs();
     expect(store.error).toEqual({ kind: 'io' });
@@ -2417,6 +2513,7 @@ describe('ability funding mode', () => {
       characteristic_descriptions: {},
       ability_scores: [],
       xp_pool: 0,
+      saga_year: 1220,
       art_scores: [],
       personality_traits: [],
       reputations: [],
@@ -3591,6 +3688,7 @@ describe('unsaved-changes tracking', () => {
       ability_scores: [],
       xp_pool: 0,
       ability_funding: 'pool',
+      saga_year: 1220,
       art_scores: [],
       personality_traits: [],
       reputations: [],
@@ -3730,6 +3828,7 @@ describe('document file model', () => {
       ability_scores: [],
       xp_pool: 0,
       ability_funding: 'pool',
+      saga_year: 1220,
       art_scores: [],
       personality_traits: [],
       reputations: [],
@@ -4560,11 +4659,12 @@ describe('persisted settings', () => {
 
   afterEach(() => {
     // Put the shared singleton back to the state every other block was written
-    // against: English, dark-by-OS, enforced, and no saga year ever read.
+    // against: English, dark-by-OS, enforced, and the published setting's year as
+    // the default new documents start at.
     store.lang = 'en';
     store.theme = 'auto';
     store.mode = 'enforced';
-    store.sagaYear = null;
+    store.defaultSagaYear = DEFAULT_SAGA_YEAR;
     store.closeSettings();
     vi.mocked(ipc.loadRuleset).mockReset();
   });
@@ -4652,8 +4752,8 @@ describe('persisted settings', () => {
   describe('reading what was stored', () => {
     it('applies every persisted setting', async () => {
       vi.mocked(ipc.readSettings).mockResolvedValue({
+        default_saga_year: 1230,
         lang: 'de',
-        saga_year: 1230,
         theme: 'light',
         validation_mode: 'advisory',
       });
@@ -4661,7 +4761,7 @@ describe('persisted settings', () => {
       await store.loadSettings();
 
       expect(store.lang).toBe('de');
-      expect(store.sagaYear).toBe(1230);
+      expect(store.defaultSagaYear).toBe(1230);
       expect(store.theme).toBe('light');
       expect(store.mode).toBe('advisory');
     });
@@ -4682,8 +4782,8 @@ describe('persisted settings', () => {
       // `purple` has no palette and a language of `fr` has no bundle; taking either
       // at face value would paint an unstyled app or an untranslated one.
       vi.mocked(ipc.readSettings).mockResolvedValue({
+        default_saga_year: 1220,
         lang: 'fr',
-        saga_year: 1220,
         theme: 'purple',
         validation_mode: null,
       });

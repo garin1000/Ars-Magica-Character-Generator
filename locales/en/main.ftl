@@ -25,12 +25,18 @@ theme-auto = Match the desktop
 theme-light = Light
 theme-dark = Dark
 
-# The settings dialog (C4): language, appearance and validation strictness, all
-# three persisted across restarts. Reachable from the native menu's Settings item
-# and from the header button on every screen.
+# The settings dialog (C4): language, appearance, validation strictness and — since
+# C8 — the saga year new documents start at, all persisted across restarts.
+# Reachable from the native menu's Settings item and from the header button on
+# every screen.
 settings-title = Settings
 settings-open = Settings
 settings-close = Close
+# The saga year a NEWLY created character or covenant is stamped with. Deliberately
+# not "Saga year": the saga year itself belongs to each document (`saga-year-label`),
+# and this seeds the next one. The label says what it seeds so the dialog needs no
+# explanatory sentence under it.
+settings-default-saga-year-label = Saga year for new documents
 
 type-label = Character type
 type-grog = Grog
@@ -497,9 +503,10 @@ identity-concept = Concept
 identity-concept-placeholder = Describe the character concept
 identity-gender = Gender
 identity-birth-year = Birth year
-# The saga year (guided-creation-review-2026-08 #25): an app-wide setting, not part
-# of any character, against which the age and the birth year are two views of one
-# fact.
+# The saga year (guided-creation-review-2026-08 #25). Part of the CHARACTER since
+# C8 — the year the saga this one was built for stands in, and the year against
+# which its age and birth year are two views of one fact. It was a machine-global
+# app setting until then, which made it wrong for every saga but one.
 saga-year-label = Saga year
 identity-sigil = Wizard's sigil
 identity-covenant = Covenant

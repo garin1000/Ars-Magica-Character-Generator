@@ -2829,9 +2829,12 @@ mod tests {
             BTreeMap::from([("subject".into(), Id::new(" \tTheology  "))]),
         )];
         // Through the real load door, because that is where the trim lives.
-        let loaded = crate::load_entity_migrating(&serde_json::to_string(&e).unwrap())
-            .unwrap()
-            .entity;
+        let loaded = crate::load_entity_migrating(
+            &serde_json::to_string(&e).unwrap(),
+            crate::DEFAULT_SAGA_YEAR,
+        )
+        .unwrap()
+        .entity;
         let s = surfaced_modifiers(&loaded, &rs);
         assert!(
             s.iter().any(|m| m.family == ModifierFamily::AbilityRoll

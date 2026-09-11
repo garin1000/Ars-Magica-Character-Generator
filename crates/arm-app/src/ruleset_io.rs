@@ -1292,9 +1292,16 @@ pub fn export_markdown_to_path(
 /// A pre-schema-10 save's manual `aging_reductions` are folded into `aging_points`
 /// (aging drops are now derived); the migration is logged so a stale save is
 /// visibly upgraded on load. See [`arm_rules::load_entity_migrating`].
-pub fn load_entity_from_path(path: &Path) -> Result<Entity, AppError> {
+///
+/// `default_saga_year` is what a **pre-schema-17** save inherits: before C8 the saga
+/// year lived in `settings.json`, machine-globally, so the honest value for a
+/// document that never recorded one is the year the user has configured for new
+/// documents. The engine cannot read that file — it has no filesystem at all — so
+/// this crate, which owns the settings, hands it in. The caller passes
+/// [`crate::settings::Settings::default_saga_year`].
+pub fn load_entity_from_path(path: &Path, default_saga_year: i32) -> Result<Entity, AppError> {
     let json = fs::read_to_string(path)?;
-    let loaded = arm_rules::load_entity_migrating(&json)?;
+    let loaded = arm_rules::load_entity_migrating(&json, default_saga_year)?;
     if !loaded.migrated_aging_characteristics.is_empty() {
         let characteristics: Vec<String> = loaded
             .migrated_aging_characteristics

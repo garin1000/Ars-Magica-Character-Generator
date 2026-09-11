@@ -118,12 +118,13 @@ yourself.
   default picks whichever one your operating system is set to, switching live if
   you change that setting while it is open — no restart, and nothing to configure.
   Settings can pin it to light or dark instead, and remembers which.
-- **Age and birth year are two views of one fact.** Set the year your saga is
-  played in — 1220 by default, the year the published setting stands in — and the
-  guided wizard links the two: type an age and the birth year follows, type a birth
-  year and the age follows. The saga year is remembered between launches and is
-  saga-wide rather than part of any character, so changing it never silently rewrites
-  a character you already built.
+- **Age and birth year are two views of one fact.** Set the year the saga is played
+  in — 1220 by default, the year the published setting stands in — and both the
+  wizard and the editor link the two: type an age and the birth year follows, type a
+  birth year and the age follows. Changing the year never silently rewrites a
+  character you already built. Each character records the year of *its own* saga, so
+  running a 1220 Rhine saga and a 1197 Iberia saga side by side gives each of them
+  the right ages; Settings holds only the year new characters start at.
 - **Export a readable character sheet.** File -> Export writes the whole character
   to a Markdown file of your choosing — identity, Characteristics, Virtues and Flaws
   (including the ones a House or type granted), Abilities, Arts, spells,

@@ -14,14 +14,22 @@
 // nothing about resolution. What is asserted is exactly the thing the layout puts
 // at risk — that the rules were found, and that both halves of them arrived.
 //
-// SLICE 12 ADDS A SECOND RESOLVED PATH. The saga-year settings file
+// SLICE 12 ADDS A SECOND RESOLVED PATH. The settings file
 // (`crates/arm-app/src/settings.rs`) is read at launch and written on demand, so it
 // is a path resolution of its own — and this layout is precisely where the project
 // has been bitten before. It does NOT use `BaseDirectory::Resource`: the per-user
 // config directory is computed from the environment rather than from where the bundle
 // was installed, so it resolves the same here as in `target/release`. That is a claim
 // worth checking rather than asserting in a comment, so the second test below reads
-// the setting back in this layout.
+// a setting back in this layout.
+//
+// C8 CHANGED WHICH SETTING THAT IS. The saga year itself is document state now — it
+// travels in the save, because a storyguide runs more than one saga and one
+// machine-global number was wrong for all but one of them. The key still in the file
+// is `default_saga_year`, the year a NEW document starts at, and the control for it
+// lives in the settings dialog rather than on the wizard's Concept step. The claim
+// this test makes is unchanged: a value chosen here reaches a writable file and is
+// read back at the next launch. Only the surface it is typed into moved.
 //
 //   cd ui && npm run test:e2e:portable
 //
@@ -64,9 +72,11 @@ describe('portable layout', () => {
     expect(await $('[data-testid="error"]').isExisting()).toBe(false);
   });
 
-  it('resolves its settings file here too, so the saga year survives (Slice 12)', async () => {
-    // The wizard's Concept step is the only surface the setting is on. Reaching it
-    // through the start screen keeps this independent of the test above.
+  it('resolves its settings file here too, so a chosen setting survives (Slice 12, C8)', async () => {
+    // The settings dialog is the surface the persisted saga-year default is on since
+    // C8, and its header button is on every screen including the start screen —
+    // ordinary shipped code, which this run needs, since it builds WITHOUT
+    // `e2e-testing` and the native menu is not drivable from here.
     //
     // A RELOAD, not a document action — and C7 is why.
     //
@@ -86,57 +96,57 @@ describe('portable layout', () => {
     // New at the price of the single claim this suite exists to make — that the
     // artifact `build-linux.sh` ships boots and finds its rules — by testing a
     // binary that is not that artifact. Instead the spec stops needing a
-    // document action at all: a reload returns the app to the startup screen,
-    // and this test already reloads further down for the settings round trip,
-    // so it is the mechanism the test was built on rather than a new one.
+    // document action at all: a reload returns the app to the startup screen, and
+    // that is also how the settings round trip re-runs the launch-time read.
     //
     // Safe for the same reason the chord was: the test above only created a
     // character and read a label, so the document is CLEAN and nothing is
-    // discarded. Nothing here may dirty it.
-    await browser.execute(() => window.location.reload());
-    await $('[data-testid="start-screen"]').waitForExist({ timeout: BOOT_TIMEOUT });
-    const start = await $('[data-testid="start-wizard-grog"]');
-    await start.waitForExist({ timeout: BOOT_TIMEOUT });
-    await start.click();
+    // discarded. Nothing here may dirty it — and since C8 nothing here CAN,
+    // because the value this test types is a preference rather than document state.
+    /** Reload to the start screen and open the settings dialog's default-year field. */
+    async function reopenDefaultSagaYear() {
+      await browser.execute(() => window.location.reload());
+      await $('[data-testid="start-screen"]').waitForExist({ timeout: BOOT_TIMEOUT });
+      const button = await $('[data-testid="settings-button"]');
+      await button.waitForExist({ timeout: BOOT_TIMEOUT });
+      await button.click();
+      await $('[data-testid="settings-dialog"]').waitForExist({ timeout: STEP_TIMEOUT });
+      const field = await $('[data-testid="default-saga-year-input"]');
+      await field.waitForExist({ timeout: STEP_TIMEOUT });
+      return field;
+    }
 
-    const sagaYear = await $('[data-testid="saga-year-input"]');
-    await sagaYear.waitForExist({ timeout: BOOT_TIMEOUT });
+    const defaultYear = await reopenDefaultSagaYear();
 
-    // The field renders only once `saga_year` has answered, so its presence already
+    // The field shows whatever `read_settings` answered, so a plausible year already
     // means the settings path resolved and the read did not fail the launch. The value
-    // is whatever this machine has stored — the DEFAULT if there is no file at all —
-    // so what is asserted is that it is a year, never a specific one.
-    const initial = await sagaYear.getValue();
+    // is whatever this machine has stored — the engine's own default if there is no
+    // file at all — so what is asserted is that it is a year, never a specific one.
+    const initial = await defaultYear.getValue();
     expect(Number(initial)).toBeGreaterThan(0);
 
-    // And the write half: `set_saga_year` has to find a writable candidate from here
+    // And the write half: `write_settings` has to find a writable candidate from here
     // as well. Reading it back after a reload re-runs the launch-time read against
     // whatever the write produced.
-    await sagaYear.setValue('1231');
-    await browser.waitUntil(async () => (await sagaYear.getValue()) === '1231', {
+    await defaultYear.setValue('1231');
+    await browser.waitUntil(async () => (await defaultYear.getValue()) === '1231', {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'the typed saga year did not stay in the field',
+      timeoutMsg: 'the typed default saga year did not stay in the field',
     });
     expect(await $('[data-testid="error"]').isExisting()).toBe(false);
 
-    await browser.execute(() => window.location.reload());
-    await $('[data-testid="start-screen"]').waitForExist({ timeout: BOOT_TIMEOUT });
-    const again = await $('[data-testid="start-wizard-grog"]');
-    await again.waitForExist({ timeout: BOOT_TIMEOUT });
-    await again.click();
-    const reloaded = await $('[data-testid="saga-year-input"]');
-    await reloaded.waitForExist({ timeout: BOOT_TIMEOUT });
+    const reloaded = await reopenDefaultSagaYear();
     await browser.waitUntil(async () => (await reloaded.getValue()) === '1231', {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: `the saga year did not survive a relaunch in the portable layout; read ${await reloaded.getValue()}`,
+      timeoutMsg: `the default saga year did not survive a relaunch in the portable layout; read ${await reloaded.getValue()}`,
     });
 
-    // Put this machine's setting back where it was found, exactly as `saga-year.e2e.js`
-    // does: it is real persisted state, not a fixture.
+    // Put this machine's setting back where it was found: it is real persisted state,
+    // not a fixture.
     await reloaded.setValue(initial);
     await browser.waitUntil(async () => (await reloaded.getValue()) === initial, {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'restoring the saga year found on this machine',
+      timeoutMsg: 'restoring the default saga year found on this machine',
     });
   });
 });

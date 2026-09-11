@@ -32,7 +32,6 @@ import {
   currentWizardPhase,
   runDocumentAction,
   setWizardAge,
-  standOnWizardStep,
   startCharacter,
   startWizard,
   STEP_TIMEOUT,
@@ -674,7 +673,7 @@ describe('the guided aging step', () => {
     // Derived from the age against the saga year, and NOT a schema change: both
     // fields have always been stored (Slice 12, #25 — no `SCHEMA_VERSION` bump).
     expect(saved.birth_year).toBe(1180);
-    expect(saved.schema_version).toBe(16);
+    expect(saved.schema_version).toBe(17);
     // The widened log entry is the whole record of the year: what was rolled, what
     // it totalled, the conditions in force, the points it awarded — and now the
     // calendar year. The engine has always written `year` as `birth_year + age`
@@ -1032,47 +1031,42 @@ describe('the aging crisis', () => {
 });
 
 // End-to-end: the SAGA YEAR and the age ↔ birth-year link it derives
-// (guided-creation-review-2026-08 #25, Slice 12).
+// (guided-creation-review-2026-08 #25, Slice 12; moved onto the document by C8).
 //
-// WHY THIS SPEC IS MANDATORY RATHER THAN NICE TO HAVE. Everything this slice adds on
-// the Rust side is invisible to every other layer of the suite: two new commands
-// (`saga_year` / `set_saga_year`) reading and writing a settings file resolved at
-// LAUNCH, and two more (`derive_age` / `derive_birth_year`) that the store calls on
-// every keystroke in the age or birth-year field. Unit tests cover the file and the
-// arithmetic; only a real-binary run covers the IPC bridge, the startup read, and the
-// fact that the frontend's derivation actually reaches the entity that gets saved.
+// WHY THIS SPEC IS MANDATORY RATHER THAN NICE TO HAVE. `derive_age` /
+// `derive_birth_year` are called by the store on every keystroke in the age or
+// birth-year field, and since C8 the year they are measured against travels in the
+// save. Unit tests cover the arithmetic and the migration; only a real-binary run
+// covers the IPC bridge and the fact that the frontend's derivation actually reaches
+// the entity that gets written to disk.
 //
-// THE THREE CLAIMS:
+// THE FOUR CLAIMS:
 //
 //  1. Age and birth year are two views of one fact — edit either, the other follows,
-//     against the saga year.
+//     against this document's saga year.
 //  2. A saga year BEFORE the birth year clamps the derived age to 0 and says why,
 //     rather than underflowing the entity's unsigned `age`
 //     (`saga_year_before_birth_year`, a warning on the `concept` phase).
-//  3. Editing the saga year alone changes NEITHER stored value and does NOT dirty the
-//     document. This is the one most likely to be got wrong and the one with teeth:
-//     a silent recompute would fabricate ages that skipped their aging rolls, and it
-//     would also make a setting trip the mandatory unsaved-changes guard.
+//  3. Editing the saga year rewrites NEITHER stored value. A silent recompute would
+//     fabricate ages that skipped their aging rolls (D3.3).
+//  4. But it DOES dirty the document and it IS written to the file — that is the
+//     whole of C8. Before it, the year lived in a machine-global settings file, so a
+//     storyguide running a 1220 Rhine saga and a 1197 Iberia saga had one number that
+//     was wrong for one of them, and every age derived from it was wrong with it.
 //
-// The default is a rules value the engine owns —
+// A new character starts at the configured default, which a worker that has chosen
+// none gets from the engine's own rules value —
 // "That domination persists until the present day, 1220."
 // (Ars Magica - Definitive Edition (Core Rules).md:597) — so 1220 is asserted as the
-// year a fresh installation reports, never typed in as a magic number first.
+// year a fresh installation stamps, never typed in as a magic number first. The
+// settings half of the split (`default_saga_year`, and that it seeds the NEXT
+// document without touching the open one) is covered in `app-shell.e2e.js`'s
+// settings-dialog block, beside the other three persisted settings.
 //
-// SETTINGS ISOLATION. The saga year is real persisted app state, so this spec writes
-// a settings file exactly as the shipped app would — but each worker gets its own
-// XDG_CONFIG_HOME (`driver.js`'s `workerConfigHome`, wired in by both wdio configs'
-// `beforeSession`), so it is never the developer's own settings file. Every run of
-// this spec therefore starts from a guaranteed-clean directory rather than from
-// whatever the machine happened to hold, which is both safer and strictly more
-// deterministic than the developer-file side effect this replaced. The `after` hook
-// still resets the saga year to 1220: the per-worker directory persists across runs
-// (it is created once, not wiped per run), so without this a later run in the same
-// worker slot would inherit whatever value the previous run left behind.
-//
-// Internally order-dependent — `it`#4 reads what `it`#2/#3 set, `it`#5 reads what
-// `it`#4 saved — so this describe stays intact and runs after the two above, which
-// touch no persisted setting.
+// This describe no longer writes a settings file at all — the year it types goes into
+// the document — so the `after` hook that used to restore 1220 is gone with it.
+// Internally order-dependent: `it`#4 reads what `it`#2/#3 set, and `it`#5 reopens
+// what `it`#4 saved.
 describe('the saga year', () => {
   const AGE_INPUT = '[data-testid="age-input"]';
   const BIRTH_YEAR_INPUT = '[data-testid="identity-birth-year"]';
@@ -1083,7 +1077,7 @@ describe('the saga year', () => {
   const DOCKED_ISSUES = '[data-testid="issue-list"]';
   const CLAMP_CODE = 'saga_year_before_birth_year';
 
-  /** The published setting's year, and so the default a fresh installation reports. */
+  /** The published setting's year, and so the year a fresh installation stamps. */
   const DEFAULT_SAGA_YEAR = '1220';
 
   /** Type `value` into `selector`, replacing whatever was there. */
@@ -1112,22 +1106,14 @@ describe('the saga year', () => {
     await $(AGE_INPUT).waitForExist({ timeout: BOOT_TIMEOUT });
   });
 
-  // Leave this worker's settings directory as later runs expect to find it — see
-  // the SETTINGS ISOLATION note above.
-  after(async () => {
-    await standOnWizardStep('concept');
-    await type(SAGA_YEAR_INPUT, DEFAULT_SAGA_YEAR);
-    await expectValue(SAGA_YEAR_INPUT, DEFAULT_SAGA_YEAR, 'restoring the default saga year');
-  });
-
-  it('offers the age beside the identity, with the setting they are measured against', async () => {
+  it('offers the age beside the identity, with the year they are measured against', async () => {
     // #24: ONE canonical home for the age, mirroring the editor's Details tab. The
     // count spans the step, because a duplicate is exactly what this replaced.
     expect(await $$(AGE_INPUT)).toHaveLength(1);
     expect(await $$(BIRTH_YEAR_INPUT)).toHaveLength(1);
 
-    // The default is the engine's, not this field's: a fresh installation has no
-    // settings file, and the year it reports is the published setting's own.
+    // The year a fresh character is stamped with is the engine's, not this field's:
+    // a worker that has chosen no default gets the published setting's own year.
     await expectValue(SAGA_YEAR_INPUT, DEFAULT_SAGA_YEAR, 'the default saga year');
 
     // manual-testing-findings #21: the sentence explaining what the setting does and
@@ -1175,8 +1161,8 @@ describe('the saga year', () => {
     await expectValue(AGE_INPUT, 30, 'the age follows the corrected birth year');
   });
 
-  it('changes no stored value and does not dirty the document when the saga year moves', async () => {
-    // A clean baseline first: the claim is that this edit moves nothing, which can
+  it('dirties the document when the saga year moves, and recomputes neither half', async () => {
+    // A clean baseline first: the claim is about what THIS edit moves, which can
     // only be read off a document that had nothing outstanding.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
     await runDocumentAction('save');
@@ -1189,19 +1175,28 @@ describe('the saga year', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'the document should be clean immediately after a save',
     });
+    // The save wrote the year too — it is stored state, not a preference (C8).
+    expect(JSON.parse(fs.readFileSync(e2eFile, 'utf-8')).saga_year).toBe(1220);
 
     await type(SAGA_YEAR_INPUT, 1230);
     await expectValue(SAGA_YEAR_INPUT, 1230, 'the typed saga year');
 
     // D3.3. Neither stored value moved — the saga year governs only what the NEXT
-    // edit derives — so the document is still the one that was saved.
+    // edit derives.
     await expectValue(AGE_INPUT, 30, 'the stored age must not be recomputed');
     await expectValue(BIRTH_YEAR_INPUT, 1190, 'the stored birth year must not be recomputed');
-    expect(clean(await status.getText()).startsWith('*')).toBe(false);
-    // And the file on disk still holds the pair the save wrote.
+
+    // C8's inversion, and the assertion with teeth: the year is part of what an
+    // unsaved file would lose, so the unsaved-changes guard has to see it move.
+    await browser.waitUntil(async () => clean(await status.getText()).startsWith('*'), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'moving the saga year must dirty the document',
+    });
+    // The file on disk is still the one that was saved, unchanged.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
     expect(saved.age).toBe(30);
     expect(saved.birth_year).toBe(1190);
+    expect(saved.saga_year).toBe(1220);
 
     // What it DOES govern: the next edit is measured against 1230.
     await type(AGE_INPUT, 40);
@@ -1210,21 +1205,42 @@ describe('the saga year', () => {
     await expectValue(AGE_INPUT, 30, 'a birth year of 1200 in a 1230 saga is age 30');
   });
 
-  it('remembers the saga year across a reload of the app', async () => {
-    // The startup read, which is the whole reason this slice needs an e2e run: the
-    // year came back over IPC from a settings file `arm-app` wrote at the previous
-    // test's keystroke. Reloading the webview re-runs the store's `init()` against the
-    // real backend, so a year that never reached the file cannot survive it.
+  it('carries the saga year through a save and an open, not through a relaunch', async () => {
+    // The whole of C8 against the shipped binary. Before it, this test reloaded the
+    // webview and expected the year back from a settings file; that is exactly the
+    // behaviour that made one number wrong for every saga but one. Now the year
+    // belongs to the document, so it must survive a WRITE and a READ of that
+    // document — and a brand-new character must NOT inherit it.
     await type(SAGA_YEAR_INPUT, 1231);
     await expectValue(SAGA_YEAR_INPUT, 1231, 'the saga year to persist');
 
-    await browser.execute(() => window.location.reload());
-    // Back on the startup screen — a reload drops the in-memory document, so the
-    // character has to be rebuilt to see the field again.
-    await $('[data-testid="start-screen"]').waitForExist({ timeout: BOOT_TIMEOUT });
+    if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
+    await runDocumentAction('save');
+    await browser.waitUntil(
+      () =>
+        fs.existsSync(e2eFile) && JSON.parse(fs.readFileSync(e2eFile, 'utf-8')).saga_year === 1231,
+      { timeout: STEP_TIMEOUT, timeoutMsg: 'the saga year did not reach the saved file' },
+    );
+
+    // A fresh character starts at the configured default, NOT at 1231 — the year is
+    // the document's, not the installation's.
     await startWizard('grog');
     await $(SAGA_YEAR_INPUT).waitForExist({ timeout: BOOT_TIMEOUT });
-    await expectValue(SAGA_YEAR_INPUT, 1231, 'the saga year after a relaunch');
+    await expectValue(SAGA_YEAR_INPUT, DEFAULT_SAGA_YEAR, 'a new character starts at the default');
+
+    // And opening the saved file brings 1231 back, through the real load path. An
+    // open lands in the editor, so the year is read off the Details tab — C8's other
+    // new surface, and the one direct entry uses.
+    await runDocumentAction('open');
+    // Entering the wizard records its progress, so the fresh grog may be dirty;
+    // discard it the way `magus-possessions.e2e.js`'s legacy-open test does.
+    const discard = await $('[data-testid="discard-confirm"]');
+    if (await discard.isExisting()) await discard.click();
+    const detailsTab = await $('[data-testid="tab-details"]');
+    await detailsTab.waitForExist({ timeout: BOOT_TIMEOUT });
+    await detailsTab.click();
+    await $(SAGA_YEAR_INPUT).waitForExist({ timeout: BOOT_TIMEOUT });
+    await expectValue(SAGA_YEAR_INPUT, 1231, 'the saga year the opened document carries');
   });
 });
 

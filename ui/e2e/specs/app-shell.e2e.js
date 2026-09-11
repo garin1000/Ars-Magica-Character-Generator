@@ -35,6 +35,7 @@ import {
   activateMenuItem,
   clean,
   closeSettings,
+  openSettings,
   returnToStartScreen,
   runDocumentAction,
   setLanguage,
@@ -612,16 +613,74 @@ describe('the settings dialog', () => {
   });
 
   it('writing one setting leaves every other one standing', async () => {
-    // The regression this slice fixed. Before it, `write_saga_year` rebuilt the
-    // whole document from the one field it was given, so the SECOND key written
-    // silently deleted the first — no error, no banner, no undo.
+    // The regression C4 fixed. Before it, `write_saga_year` rebuilt the whole
+    // document from the one field it was given, so the SECOND key written silently
+    // deleted the first — no error, no banner, no undo.
     await setLanguage('de');
 
     const stored = storedSettings();
     expect(stored.lang).toBe('de');
     expect(stored.theme).toBe('light');
-    // And the saga year, written by an entirely different surface, is untouched.
-    expect(stored.saga_year === undefined || typeof stored.saga_year === 'number').toBe(true);
+    // And the default saga year, written by an entirely different surface, is
+    // untouched. (C8 renamed the key from `saga_year`; the old name must never
+    // reappear, because a file carrying both would have two answers.)
+    expect(stored.saga_year).toBe(undefined);
+    expect(
+      stored.default_saga_year === undefined || typeof stored.default_saga_year === 'number',
+    ).toBe(true);
+  });
+
+  // C8. The saga year itself is document state now — a storyguide runs more than one
+  // saga, and the machine-global number was wrong for all but one of them. What is
+  // left in this dialog is the year a NEW document starts at, and the claim with
+  // teeth is that it seeds the next character WITHOUT reaching into the open one.
+  it('persists a default saga year that seeds the next character and not the open one', async () => {
+    const SAGA_YEAR_INPUT = '[data-testid="saga-year-input"]';
+    const DEFAULT_INPUT = '[data-testid="default-saga-year-input"]';
+    const DETAILS_TAB = '[data-testid="tab-details"]';
+
+    /** The open character's own saga year, read off the editor's Details tab. */
+    async function openDetails() {
+      const tab = await $(DETAILS_TAB);
+      await tab.waitForExist({ timeout: 10000 });
+      await tab.click();
+      await $(SAGA_YEAR_INPUT).waitForExist({ timeout: 10000 });
+    }
+
+    await startCharacter('grog');
+    await openDetails();
+
+    // The fresh character carries the current default, which a worker with no
+    // stored value gets from the engine's own constant.
+    expect(await $(SAGA_YEAR_INPUT).getValue()).toBe('1220');
+
+    await openSettings();
+    await $(DEFAULT_INPUT).setValue('1197');
+    await browser.waitUntil(() => storedSettings().default_saga_year === 1197, {
+      timeout: 5000,
+      timeoutMsg: 'the chosen default saga year should reach the settings file',
+    });
+    await closeSettings();
+
+    // The open document was built for 1220 and keeps its own year.
+    expect(await $(SAGA_YEAR_INPUT).getValue()).toBe('1220');
+
+    // The NEXT one is stamped with the new default.
+    await startCharacter('grog');
+    await openDetails();
+    await browser.waitUntil(async () => (await $(SAGA_YEAR_INPUT).getValue()) === '1197', {
+      timeout: 5000,
+      timeoutMsg: 'a newly created character should start at the configured default',
+    });
+
+    // Restore, since the worker's settings directory persists across runs.
+    await openSettings();
+    await $(DEFAULT_INPUT).setValue('1220');
+    await browser.waitUntil(() => storedSettings().default_saga_year === 1220, {
+      timeout: 5000,
+      timeoutMsg: 'the default saga year should be restored for the next run',
+    });
+    await closeSettings();
   });
 });
 

@@ -26,13 +26,19 @@ theme-auto = Wie die Arbeitsumgebung
 theme-light = Hell
 theme-dark = Dunkel
 
-# Der Einstellungsdialog (C4): Sprache, Erscheinungsbild und Prüfstrenge, alle
-# drei über Neustarts hinweg gespeichert. Erreichbar über den Eintrag
-# „Einstellungen“ im nativen Menü und über die Schaltfläche in der Kopfzeile,
-# auf jedem Bildschirm.
+# Der Einstellungsdialog (C4): Sprache, Erscheinungsbild, Prüfstrenge und — seit
+# C8 — das Jahr der Saga, mit dem neue Dokumente beginnen, alle über Neustarts
+# hinweg gespeichert. Erreichbar über den Eintrag „Einstellungen“ im nativen Menü
+# und über die Schaltfläche in der Kopfzeile, auf jedem Bildschirm.
 settings-title = Einstellungen
 settings-open = Einstellungen
 settings-close = Schließen
+# Das Jahr der Saga, mit dem ein NEU angelegter Charakter oder Konvent gestempelt
+# wird. Bewusst nicht „Jahr der Saga“: das Jahr selbst gehört zu jedem Dokument
+# (`saga-year-label`), dies legt nur das nächste fest. „Saga“ bleibt unübersetzt
+# (rules/source/de/translation-tables/grundbegriffe.md:104), „Dokument“ folgt der
+# in `app-document-unsaved` bereits verwendeten Wortwahl.
+settings-default-saga-year-label = Jahr der Saga für neue Dokumente
 
 type-label = Charaktertyp
 type-grog = Grog
@@ -502,8 +508,10 @@ identity-concept = Konzept
 identity-concept-placeholder = Beschreibe das Charakterkonzept
 identity-gender = Geschlecht
 identity-birth-year = Geburtsjahr
-# Das Jahr der Saga (guided-creation-review-2026-08 #25): eine appweite Einstellung,
-# nicht Teil eines Charakters. "Saga" bleibt unübersetzt
+# Das Jahr der Saga (guided-creation-review-2026-08 #25). Seit C8 Teil des
+# CHARAKTERS — das Jahr, in dem die Saga steht, für die dieser Charakter gebaut
+# wurde. Bis dahin eine appweite Einstellung, die damit für jede Saga außer einer
+# falsch war. „Saga“ bleibt unübersetzt
 # (rules/source/de/translation-tables/grundbegriffe.md:104).
 saga-year-label = Jahr der Saga
 identity-sigil = Zauberer-Sigil

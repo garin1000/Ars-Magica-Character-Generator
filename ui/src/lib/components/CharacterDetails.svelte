@@ -11,6 +11,7 @@
   import ParameterPicker from './ParameterPicker.svelte';
   import AgeFields from './AgeFields.svelte';
   import IdentityFields from './IdentityFields.svelte';
+  import SagaYearField from './SagaYearField.svelte';
   import { type GrantConstraint, type PointItem, type Selection } from '../types';
 
   // Confidence is derived (type default + V/F); grogs have none (0/0) → hidden.
@@ -99,6 +100,12 @@
     <IdentityFields />
 
     <AgeFields />
+
+    <!-- C8: the year THIS character's saga stands in — document state now, not an
+         app setting, so the direct-entry editor needs it as much as the wizard's
+         concept step does. Immediately after `AgeFields` because that is the pair
+         it is the reference for, matching `ConceptStep`'s order exactly. -->
+    <SagaYearField />
 
     {#if showConfidence}
       <div class="detail-field">

@@ -38,13 +38,17 @@ export function derivedTotals(entity: Entity): Promise<DerivedTotals> {
  * them. Read from an app-settings file `arm-app` owns, NOT from the character and
  * not from the ruleset: none of the four is character state and none is a rule.
  *
- * Only `saga_year` arrives resolved, because its default is a rules value the engine
- * owns (`arm_rules::DEFAULT_SAGA_YEAR`). The other three are `null` when never
+ * Only `default_saga_year` arrives resolved, because its default is a rules value the
+ * engine owns (`arm_rules::DEFAULT_SAGA_YEAR`). The other three are `null` when never
  * chosen, so their defaults stay in the single place each already lives — the store.
+ *
+ * `default_saga_year` was `saga_year` until C8, when the saga year itself became
+ * document state. The Rust side reads the old key through a serde `alias`, so a
+ * settings file written by an earlier build keeps the year its owner chose.
  */
 export interface PersistedSettings {
+  default_saga_year: number;
   lang: string | null;
-  saga_year: number;
   theme: string | null;
   validation_mode: ValidationMode | null;
 }
@@ -52,11 +56,11 @@ export interface PersistedSettings {
 /**
  * A partial update: exactly the settings being changed. The Rust side is
  * read-modify-write, so a patch naming one key cannot destroy another — which is
- * what makes choosing a saga year safe now that the file holds four things.
+ * what makes choosing one setting safe now that the file holds four things.
  */
 export interface SettingsPatch {
+  default_saga_year?: number;
   lang?: string;
-  saga_year?: number;
   theme?: string;
   validation_mode?: ValidationMode;
 }

@@ -226,6 +226,12 @@ const ALLOWED_ENTITY_KEYS: &[&str] = &[
     "description",
     "concept",
     "gender",
+    // C8, schema 17. A stored CHOICE, not a derived value: which saga this document
+    // was built for is something only the player knows, and the ages derived from it
+    // (`age_in_saga_year`) are computed on demand and never persisted. It moved here
+    // from the app-settings file, where one machine-global number was wrong for every
+    // saga but one.
+    "saga_year",
     "birth_year",
     "sigil",
     "covenant_name",
@@ -284,14 +290,18 @@ fn fully_populated_entity_actually_sets_every_allowlisted_field() {
     let full_obj = full_value.as_object().unwrap();
     let full_keys: BTreeSet<&str> = full_obj.keys().map(String::as_str).collect();
 
-    // ability_funding is written even at its default (see Entity doc comment
-    // on that field), so it is legitimately present on a bare entity too.
+    // `ability_funding` and (since C8) `saga_year` are written even at their default
+    // values — see each field's doc comment on `Entity`. Both are read back by
+    // `load_entity_migrating`'s dispatch-on-absence, so omitting either at its default
+    // would turn an ordinary save into a migration candidate. They are legitimately
+    // present on a bare entity too.
     let always_present: BTreeSet<&str> = [
         "schema_version",
         "ruleset",
         "entity_kind",
         "type_id",
         "ability_funding",
+        "saga_year",
     ]
     .into_iter()
     .collect();

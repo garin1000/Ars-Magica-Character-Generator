@@ -66,6 +66,7 @@ function resetEntity(typeId: string): void {
     ability_scores: [],
     xp_pool: 0,
     ability_funding: 'pool',
+    saga_year: 1220,
     art_scores: [],
     personality_traits: [],
     reputations: [],
@@ -127,6 +128,18 @@ describe('CharacterDetails after the tab split', () => {
     expect(has(body, 'age-input')).toBe(true);
     expect(has(body, 'warping-points-input')).toBe(true);
     expect(has(body, 'twilight-scars-list')).toBe(true);
+  });
+
+  // C8. Until now the saga year was an app setting the editor deliberately did NOT
+  // carry (#24 left this tab alone, and the wizard's concept step was its only
+  // surface). It is document state now, so the direct-entry editor — the mode that
+  // exists to record characters as written — must be able to see and change the year
+  // the character was built for. Here, beside the age and the birth year it governs.
+  it('carries the document saga year beside the age it is measured against', () => {
+    const body = html();
+    expect(has(body, 'saga-year-input')).toBe(true);
+    // And never the settings-dialog control: that one seeds new documents only.
+    expect(has(body, 'default-saga-year-input')).toBe(false);
   });
 });
 

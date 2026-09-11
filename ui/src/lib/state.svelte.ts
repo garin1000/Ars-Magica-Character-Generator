@@ -72,7 +72,21 @@ const VALIDATE_DEBOUNCE_MS = 150;
  * Mirrors `arm_rules::SCHEMA_VERSION` by hand; the Rust constant is the source
  * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
-export const SCHEMA_VERSION = 16;
+export const SCHEMA_VERSION = 17;
+
+/**
+ * The saga year a document starts at when nothing else says otherwise — the
+ * published setting's own year.
+ *
+ * Mirrors `arm_rules::DEFAULT_SAGA_YEAR` by hand, exactly as {@link SCHEMA_VERSION}
+ * mirrors the schema constant, and pinned to it by the Rust-side
+ * `the_frontend_mirrors_the_engine_default_saga_year`. A mirror is needed because
+ * {@link AppStore.entity}'s initial placeholder is built at module scope, before any
+ * IPC call can have answered — and a required `saga_year` has to hold a real year
+ * from that first instant. Every year the user can actually see comes from
+ * `read_settings` or from the opened document; this is the value of last resort.
+ */
+export const DEFAULT_SAGA_YEAR = 1220;
 
 /** Live filter/search state of the Virtue/Flaw picker (one per side). */
 export interface VfFilterState {
@@ -152,7 +166,12 @@ export function defaultPickerFilters(): PickerFilters {
  * fixed at creation time (see {@link AppStore.createCharacter}); no id is
  * defaulted here, so the caller decides and the profile catalogue stays data.
  */
-function newEntity(rulesetId: string, version: string, typeId: string): Entity {
+function newEntity(
+  rulesetId: string,
+  version: string,
+  typeId: string,
+  sagaYear: number = DEFAULT_SAGA_YEAR,
+): Entity {
   return {
     schema_version: SCHEMA_VERSION,
     ruleset: { id: rulesetId, version },
@@ -168,6 +187,11 @@ function newEntity(rulesetId: string, version: string, typeId: string): Entity {
     // payload — so an absent key would read as `Pool` in Rust and quietly strip
     // every life-stage pool off a life-stage-funded character.
     ability_funding: 'pool',
+    // Written explicitly for the same reason `ability_funding` is: the engine's
+    // migration dispatches on this key's absence, and an IPC payload is
+    // deserialized with plain serde, so an omitted key would read as the engine's
+    // own 1220 and silently overwrite the saga the user configured.
+    saga_year: sagaYear,
     art_scores: [],
     spells: [],
     house: null,
@@ -2182,16 +2206,20 @@ class AppStore {
   // (guided-creation-review-2026-08 #25 / D3.3).
 
   /**
-   * The calendar year the saga stands in. App-level saga state, persisted by
-   * `arm-app` in a settings file — not on the entity (one saga-wide fact would
-   * become per-character copies that disagree) and not in the ruleset (it is a saga
-   * fact, not a rule).
+   * The saga year a **new** document starts at — a preference, and the only part of
+   * the saga year that is still machine-global.
    *
-   * `null` until {@link loadSagaYear} has answered. The default is the engine's
-   * (`arm_rules::DEFAULT_SAGA_YEAR`, a rules value), applied by the settings reader,
-   * so no year is written down here.
+   * C8 split the one number in two. The saga year proper is document state
+   * ({@link Entity.saga_year}): a storyguide runs a 1220 Rhine saga and a 1197
+   * Iberia saga, and a single stored year was wrong for all but one of them — every
+   * derived age with it. What remains here is the seed a fresh character is stamped
+   * with, which is a genuine preference in the way language and appearance are.
+   *
+   * Seeded from {@link DEFAULT_SAGA_YEAR} and replaced by {@link loadSettings}; the
+   * settings reader resolves it against the engine's own constant, so the year a
+   * user sees is never one this file invented.
    */
-  sagaYear = $state<number | null>(null);
+  defaultSagaYear = $state<number>(DEFAULT_SAGA_YEAR);
 
   /**
    * Advisories from the age ↔ birth-year derivation — today only "the saga year is
@@ -2229,7 +2257,7 @@ class AppStore {
   async loadSettings(): Promise<void> {
     try {
       const stored = await ipc.readSettings();
-      this.sagaYear = stored.saga_year;
+      this.defaultSagaYear = stored.default_saga_year;
       if (isLang(stored.lang)) this.lang = stored.lang;
       if (isTheme(stored.theme)) this.theme = stored.theme;
       if (stored.validation_mode !== null) this.mode = stored.validation_mode;
@@ -2239,15 +2267,31 @@ class AppStore {
   }
 
   /**
-   * Choose the saga year. Persists it as saga state and changes **no** stored
-   * value, so the document is not dirtied — it only governs what gets derived the
-   * next time the age or the birth year is typed.
+   * Set the year **this document's** saga stands in.
+   *
+   * It is stored state from C8 on, so it dirties the document — the year is part of
+   * what an unsaved file would lose, and the unsaved-changes guard has to see it.
+   * It still rewrites neither the age nor the birth year (D3.3): advancing a saga by
+   * N years means an aging roll, Living Conditions and any Longevity Ritual applied
+   * *per year*, so a silent recompute would fabricate ages that skipped their rolls.
+   * It governs only what the next age or birth-year edit derives.
    */
   setSagaYear(year: number): void {
     if (!Number.isFinite(year)) return;
+    this.entity.saga_year = clampInt(year, I32_MIN, I32_MAX);
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Choose the saga year **new documents** start at. A preference, so it is
+   * persisted to the settings file and touches neither the open document nor the
+   * dirty flag — a character already built for another saga keeps its own year.
+   */
+  setDefaultSagaYear(year: number): void {
+    if (!Number.isFinite(year)) return;
     const clamped = clampInt(year, I32_MIN, I32_MAX);
-    this.sagaYear = clamped;
-    this.#persist({ saga_year: clamped });
+    this.defaultSagaYear = clamped;
+    this.#persist({ default_saga_year: clamped });
   }
 
   /**
@@ -2256,7 +2300,7 @@ class AppStore {
    * frontend states no policy of its own.
    */
   #deriveAgeFromBirthYear(): void {
-    const sagaYear = this.sagaYear;
+    const sagaYear = this.entity.saga_year;
     const birthYear = this.entity.birth_year;
     if (sagaYear == null || birthYear == null) {
       // An emptied field derives nothing — the same treatment `setBirthYear` gives
@@ -2283,7 +2327,7 @@ class AppStore {
 
   /** The other direction: the birth year follows the age just typed. */
   #deriveBirthYearFromAge(): void {
-    const sagaYear = this.sagaYear;
+    const sagaYear = this.entity.saga_year;
     const age = this.entity.age;
     if (sagaYear == null || age == null) {
       this.sagaIssues = [];
@@ -2412,7 +2456,7 @@ class AppStore {
     if (this.#fileOps.busy || this.discardConfirmPending) return;
     if (this.dirty && !(await this.#fileOps.confirmDiscard())) return;
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
-    this.entity = newEntity(id, version, '');
+    this.entity = newEntity(id, version, '', this.defaultSagaYear);
     this.view = 'start';
     this.#resetWizardNav();
     this.currentPath = null;
@@ -2460,7 +2504,7 @@ class AppStore {
    */
   #instantiateCharacter(typeId: string): void {
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
-    this.entity = newEntity(id, version, typeId);
+    this.entity = newEntity(id, version, typeId, this.defaultSagaYear);
     this.entity.selections = [...this.#mandatoryTraitRefs(typeId)].map((ref) => ({ ref }));
     this.currentPath = null;
     this.filters = defaultPickerFilters();
@@ -2701,7 +2745,7 @@ class AppStore {
       this.ruleset = localized;
       const { id, version } = localized.ruleset;
       if (resetEntity) {
-        this.entity = newEntity(id, version, '');
+        this.entity = newEntity(id, version, '', this.defaultSagaYear);
         // A fresh entity is a clean baseline. A language reload (else branch)
         // keeps the edited entity, so it must NOT reset the baseline — doing so
         // would drop `dirty` to false while unsaved edits still exist.

@@ -405,7 +405,7 @@ describe('spells', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(16);
+    expect(saved.schema_version).toBe(17);
     expect(saved.spells.some((s) => s.spell === 'spell.pilum_of_fire')).toBe(true);
     expect(
       saved.spells.some((s) => s.spell === 'spell.aegis_of_the_hearth' && s.level === 200),
@@ -559,7 +559,7 @@ describe('familiar', () => {
     // Every statblock field reaches disk, at the engine's current schema — the
     // statblock fields are additive, so 5.5c bumped nothing of its own.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(16);
+    expect(saved.schema_version).toBe(17);
     expect(saved.familiar.name).toBe('Corvus');
     expect(saved.familiar.animal).toBe('raven');
     expect(saved.familiar.size).toBe(-4);
@@ -731,7 +731,7 @@ describe('talisman', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(16);
+    expect(saved.schema_version).toBe(17);
     expect(saved.talisman_attunements).toBeUndefined();
     expect(saved.talisman.description).toBe('An ash staff shod with silver');
     expect(saved.talisman.attunements).toEqual([

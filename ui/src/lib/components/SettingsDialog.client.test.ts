@@ -25,8 +25,8 @@ vi.mock('../ipc', () => ({
   agingApply: vi.fn(),
   agingRevert: vi.fn(),
   readSettings: vi.fn().mockResolvedValue({
+    default_saga_year: 1220,
     lang: null,
-    saga_year: 1220,
     theme: null,
     validation_mode: null,
   }),
@@ -85,7 +85,10 @@ function dialog(): HTMLElement {
 
 /** Every control the trap must cycle through, in DOM order. */
 function focusables(): HTMLElement[] {
-  return [...dialog().querySelectorAll<HTMLElement>('select, button')];
+  // Mirrors the component's own `focusable()` selector, C8's number input included:
+  // a trap that skipped a new control would be an accessibility defect the two
+  // wrap tests below could not see.
+  return [...dialog().querySelectorAll<HTMLElement>('select, button, input')];
 }
 
 function press(key: string, shiftKey = false): void {
@@ -196,6 +199,24 @@ describe('the settings dialog controls', () => {
 
     expect(store.lang).toBe('de');
     expect(vi.mocked(ipc.writeSettings)).toHaveBeenCalledWith({ lang: 'de' });
+  });
+
+  // C8: the dialog gains the one half of the old saga-year setting that really is a
+  // preference — the year a NEW document starts at. The year itself is on the
+  // document and is edited there.
+  it('applies and persists a chosen default saga year', () => {
+    openFromInvoker();
+
+    const input = dialog().querySelector<HTMLInputElement>(
+      '[data-testid="default-saga-year-input"]',
+    );
+    expect(input).toBeTruthy();
+    input!.value = '1197';
+    input!.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+
+    expect(store.defaultSagaYear).toBe(1197);
+    expect(vi.mocked(ipc.writeSettings)).toHaveBeenCalledWith({ default_saga_year: 1197 });
   });
 
   it('closes from its own Close button', () => {
