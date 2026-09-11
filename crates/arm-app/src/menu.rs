@@ -169,6 +169,11 @@ pub enum MenuEntry {
         id: String,
         label: String,
         enabled: bool,
+        /// The keyboard chord the OS binds to this item and draws beside its
+        /// label, in muda's cross-platform notation (`CmdOrCtrl+N`). Not
+        /// user-facing text: the OS renders the chord itself, from the key and
+        /// modifiers this string names, in its own language.
+        accelerator: Option<String>,
     },
     Predefined {
         role: PredefinedRole,
@@ -184,11 +189,47 @@ pub struct MenuSection {
     pub items: Vec<MenuEntry>,
 }
 
+/// The keyboard chord `id` answers to, in muda's notation.
+///
+/// **The single declaration of every shortcut this app has** (C7). The chord
+/// lives on the menu item and nowhere else: the OS binds it, the OS dispatches
+/// it, and the OS draws it beside the label — which is also what makes the
+/// shortcuts discoverable at all. The webview deliberately carries no competing
+/// keydown handler for any of these, because two owners for one chord means one
+/// press runs the action twice.
+///
+/// `CmdOrCtrl` rather than a branch on [`Platform`]: muda parses it to `SUPER`
+/// on macOS and to `CONTROL` on every other desktop
+/// (muda-0.19.3/src/accelerator.rs:539-541), so the platform difference is
+/// spelled once, by the library that owns it.
+///
+/// Export takes Shift, which C3c chose and the move to the menu makes more
+/// necessary rather than less: on GTK a bare Ctrl+E is the readline
+/// end-of-line binding text entries answer to, and an accelerator is matched on
+/// the window's accel group *before* the key reaches the focused entry — so
+/// claiming it here would not shadow the binding, it would remove it.
+///
+/// A chord answered by no id is not an error here but a shortcut that does not
+/// exist; `every_document_action_carries_the_chord_the_os_draws_beside_it`
+/// (`tests/menu.rs`) is what keeps the list complete.
+fn accelerator_for(id: &str) -> Option<&'static str> {
+    match id {
+        ACTION_NEW => Some("CmdOrCtrl+N"),
+        ACTION_OPEN => Some("CmdOrCtrl+O"),
+        ACTION_SAVE => Some("CmdOrCtrl+S"),
+        ACTION_SAVE_AS => Some("CmdOrCtrl+Shift+S"),
+        ACTION_EXPORT => Some("CmdOrCtrl+Shift+E"),
+        ACTION_SETTINGS => Some("CmdOrCtrl+,"),
+        _ => None,
+    }
+}
+
 fn action(id: &str, label: &str, enabled: bool) -> MenuEntry {
     MenuEntry::Action {
         id: id.to_string(),
         label: label.to_string(),
         enabled,
+        accelerator: accelerator_for(id).map(str::to_string),
     }
 }
 
@@ -320,13 +361,18 @@ pub fn build_menu<R: Runtime, M: Manager<R>>(
                 MenuEntry::Separator => {
                     submenu.append(&PredefinedMenuItem::separator(manager)?)?;
                 }
-                MenuEntry::Action { id, label, enabled } => {
+                MenuEntry::Action {
+                    id,
+                    label,
+                    enabled,
+                    accelerator,
+                } => {
                     submenu.append(&MenuItem::with_id(
                         manager,
                         id,
                         label,
                         *enabled,
-                        None::<&str>,
+                        accelerator.as_deref(),
                     )?)?;
                 }
                 MenuEntry::Predefined { role, label } => {
@@ -342,6 +388,17 @@ pub fn build_menu<R: Runtime, M: Manager<R>>(
 /// Build the menu this platform should show and make it the app's, replacing
 /// whatever was installed before. Called again on every language switch and on
 /// every change of the document-action gate.
+///
+/// **Known noise on GTK, benign and not ours.** Each replacement makes muda
+/// create a fresh accel group, and detaching the outgoing menu's items logs one
+/// `gtk_widget_remove_accelerator: no accelerator (78,4) installed in accel
+/// group …` warning per accelerated item on stderr. It is a muda/GTK bookkeeping
+/// complaint about the *old* menu, not a failure: the replacement menu's
+/// accelerators are live afterwards, checked on a running build by asking GTK
+/// itself — `gtk_accel_groups_activate(window, GDK_KEY_n, CONTROL_MASK)`
+/// answered true after the menu had already been rebuilt. A desktop user never
+/// sees stderr; nothing here can suppress it without giving up the rebuild that
+/// keeps the menu translated and correctly greyed out.
 pub fn install_menu<R: Runtime>(
     app: &tauri::AppHandle<R>,
     labels: &MenuLabels,

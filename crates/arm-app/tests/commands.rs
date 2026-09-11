@@ -2829,22 +2829,31 @@ fn the_os_menu_handler_and_the_activation_seam_share_one_dispatch_path() {
     );
 }
 
-/// The two command names are string literals in a WebdriverIO spec and function
-/// names in `commands.rs`, with nothing but this test holding them together —
-/// the same gap `the_frontend_invokes_the_registered_discard_confirmation_command`
-/// closes for `confirm_discard`. A rename would leave the spec invoking a
-/// command that does not exist, and its rejection would surface as a timeout on
-/// an assertion about something else entirely.
+/// The two command names are string literals on the WebdriverIO side and
+/// function names in `commands.rs`, with nothing but this test holding them
+/// together — the same gap
+/// `the_frontend_invokes_the_registered_discard_confirmation_command` closes
+/// for `confirm_discard`. A rename would leave the suite invoking a command
+/// that does not exist, and its rejection would surface as a timeout on an
+/// assertion about something else entirely.
+///
+/// Both the shared harness and the spec are read, because C7 moved the
+/// activation call: `activateMenuItem` is `helpers.js`'s now, since
+/// `runDocumentAction` drives the whole suite through it, while `installed_menu`
+/// is still read only by the menu describe. Which of the two files holds which
+/// literal is not the contract — that a registered command name exists on the
+/// WebdriverIO side at all is.
 #[test]
 fn the_menu_spec_invokes_the_registered_menu_seam_commands() {
-    let spec = fs::read_to_string(repo_root().join("ui/e2e/specs/app-shell.e2e.js")).unwrap();
+    let spec = fs::read_to_string(repo_root().join("ui/e2e/specs/app-shell.e2e.js")).unwrap()
+        + &fs::read_to_string(repo_root().join("ui/e2e/helpers.js")).unwrap();
     let main_rs = fs::read_to_string(repo_root().join("crates/arm-app/src/main.rs")).unwrap();
 
     for command in ["activate_menu_item", "installed_menu"] {
         assert!(
             spec.contains(&format!("'{command}'")),
-            "app-shell.e2e.js must invoke the `{command}` command by that exact \
-             name"
+            "app-shell.e2e.js or helpers.js must invoke the `{command}` command \
+             by that exact name"
         );
         assert!(
             main_rs.contains(&format!("commands::{command}")),

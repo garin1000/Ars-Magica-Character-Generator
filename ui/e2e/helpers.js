@@ -84,67 +84,89 @@ export async function textOf(selector) {
   return clean(await $(selector).getText());
 }
 
-// The chord each document action answers to, mirroring `shortcutAction()` in
-// `ui/src/App.svelte`. `Control` and `Shift` are WebDriver key names WebdriverIO
-// maps to their spec codepoints; passing the whole chord as one array presses
-// the keys in order and releases them in reverse, which is what makes it a
-// chord rather than three separate taps.
-//
-// WHY THE KEYBOARD, AND NOT A TEST-ONLY BACK DOOR (C3c). Until this slice the
-// suite drove these five actions by clicking toolbar buttons. C3c removes the
-// toolbar in favour of the native menu C3a added — and a native menu is
-// unreachable by WebDriver, permanently: it is not in the DOM. That left two
-// options. One was a `#[cfg(feature = "e2e-testing")]` command in Rust that
-// invokes `runDocumentAction` directly, in the manner of `ARM_E2E_FILE` and
-// `confirm_discard`. The other is this. This wins on three counts:
-//
-//   * It exercises a REAL user path. The seam would have tested a door that
-//     only exists in the test build, leaving the shortcut handler — now the
-//     app's only in-window route to these actions — covered by unit tests
-//     alone, never against the shipped binary.
-//   * It works in the PORTABLE suite, which builds WITHOUT `e2e-testing`
-//     (`wdio.portable.conf.js`) and therefore could not have called a gated
-//     command at all. `portable-rules.e2e.js` needs New, and gets it here.
-//   * It adds nothing to the shipped binary. A seam, however inert, is still a
-//     second code path to keep honest in both halves.
-//
-// The corresponding risk is drift: if `shortcutAction` retires a chord, this
-// table goes stale. That failure is loud rather than silent — every spec below
-// drives its document actions through here, so a broken chord fails the suite
-// on its first `beforeEach` — which is the same coverage argument the header of
-// this file makes for the rest of these helpers.
-const DOCUMENT_CHORDS = {
-  new: ['Control', 'n'],
-  open: ['Control', 'o'],
-  save: ['Control', 's'],
-  saveAs: ['Control', 'Shift', 's'],
-  export: ['Control', 'Shift', 'e'],
+// The native menu item each document action lives on — `arm_app::menu`'s
+// `ACTION_IDS`, which `ui/src/lib/menu.ts` maps back to the store action.
+const MENU_ITEM_IDS = {
+  new: 'menu.new',
+  open: 'menu.open',
+  save: 'menu.save',
+  saveAs: 'menu.save-as',
+  export: 'menu.export',
+  settings: 'menu.settings',
 };
 
+// NO CHORD TABLE LIVES HERE ANY MORE, and WebDriver is why (C7).
+//
+// This file used to press Ctrl+N/O/S, Ctrl+Shift+S and Ctrl+Shift+E, because
+// C3c made those chords a webview keydown handler after the toolbar went. C7
+// moved every one of them onto its menu item as an accelerator, declared there
+// and nowhere else (`accelerator_for`, `crates/arm-app/src/menu.rs`), which is
+// what lets the OS draw the chord beside the label and what removes the
+// double-fire hazard of two owners.
+//
+// The accelerator is dispatched ABOVE the webview — GTK matches the toplevel's
+// accel group in `gtk_window_key_press_event`, before the focused widget sees
+// the key — and WebDriver cannot get there. `browser.keys` goes to
+// WebKitWebDriver, which feeds a synthesized key into WebKit's own input
+// pipeline rather than delivering it as an event on the window, so it reaches
+// the page and stops. Measured in C7 rather than assumed: with the chords
+// declared and the webview handler gone, every chord press was inert (F10 did
+// not open the menubar either), while asking GTK directly —
+// `gtk_accel_groups_activate` on the live window, for Ctrl+N — answered true.
+// The accelerators work; they are simply not reachable from a spec.
+//
+// So a document action is driven by {@link runDocumentAction} below, which
+// presses the menu item the accelerator is attached to.
+
 /**
- * Invoke a document action — the app offers these on the native menu and on the
- * keyboard, and only the keyboard is reachable from here.
+ * Press a native menu item, exactly as the OS handler would (C6).
  *
- * @param {'new'|'open'|'save'|'saveAs'|'export'} action
+ * Fires `menu::forward_menu_action` — the single line `main.rs`'s
+ * `on_menu_event` runs — so the id travels the real route to the frontend's
+ * `runMenuAction`. Only exists in a build carrying the `e2e-testing` feature;
+ * in the portable run the command is registered but inert.
+ *
+ * @param {string} id one of `arm_app::menu::ACTION_IDS`
+ */
+export async function activateMenuItem(id) {
+  await browser.execute((itemId) => {
+    window.__TAURI_INTERNALS__.invoke('activate_menu_item', { id: itemId });
+  }, id);
+}
+
+/**
+ * Invoke a document action by choosing its item off the native menu.
+ *
+ * WHY THE MENU AND NOT THE CHORD (C7). It is the same route: the chord is this
+ * item's accelerator, so the OS turns a press into this very activation. It is
+ * also the only one of the two a spec can take — see the block above. Addressing
+ * the item rather than the keyboard is the better shape anyway: a spec that
+ * means "save" says save, instead of silently becoming a test of key delivery.
+ *
+ * NOT available in the portable run, which builds without `e2e-testing`; the
+ * command is registered there but inert. `portable-rules.e2e.js` therefore uses
+ * no document action at all.
+ *
+ * @param {'new'|'open'|'save'|'saveAs'|'export'|'settings'} action
  */
 export async function runDocumentAction(action) {
-  const chord = DOCUMENT_CHORDS[action];
-  if (chord === undefined) {
+  const id = MENU_ITEM_IDS[action];
+  if (id === undefined) {
     throw new Error(
-      `no keyboard chord for the document action '${action}'; it offers ${Object.keys(
-        DOCUMENT_CHORDS,
+      `no menu item for the document action '${action}'; it offers ${Object.keys(
+        MENU_ITEM_IDS,
       ).join(', ')}`,
     );
   }
-  await browser.keys(chord);
+  await activateMenuItem(id);
 }
 
 /**
  * Open the settings dialog (C4) and leave it open.
  *
- * The header button rather than the native menu's Settings item, for the reason
- * `runDocumentAction` gives above: a native menu is not in the webview, so
- * WebDriver cannot click it. Both routes call the same
+ * The header button rather than the native menu's Settings item: a native menu
+ * is not in the webview, so WebDriver cannot click it, and the seam would take
+ * this helper out of the portable run. Both routes call the same
  * `store.runDocumentAction('settings')`.
  */
 export async function openSettings() {
@@ -481,10 +503,11 @@ export async function satisfyMagusMinimums(language = 'Latin') {
  * startup screen is already showing.
  */
 export async function returnToStartScreen() {
-  // A settings dialog a previous spec left open would make the shell `inert`, so
-  // the Ctrl+N below would reach a live window listener but land on a screen the
-  // user cannot see past. Every helper here closes the dialog behind itself, so
-  // this is belt-and-braces against a spec that opened it by hand.
+  // A settings dialog a previous spec left open would make the shell `inert`,
+  // so the New below would land on a screen the user cannot see past — `inert`
+  // reaches neither a menu item nor the accel group above it. Every helper here
+  // closes the dialog behind itself, so this is belt-and-braces against a spec
+  // that opened it by hand.
   await closeSettings();
 
   // Decide only once the app has painted one of its three screens: on the very

@@ -7,7 +7,13 @@
 // `update_close_guard` already uses for the discard dialog — no user-facing
 // string is authored in Rust.
 
-/** A document action the menu and the keyboard shortcuts share. */
+/**
+ * A document action the native menu offers.
+ *
+ * Also what its keyboard chord runs, and that is the same thing rather than a
+ * second one: since C7 every shortcut is the menu item's own accelerator, so a
+ * press arrives here as an ordinary activation of that item.
+ */
 export type DocumentAction = 'new' | 'open' | 'save' | 'saveAs' | 'export' | 'settings';
 
 /**
@@ -20,9 +26,9 @@ export const MENU_ACTION_EVENT = 'menu://action';
 /**
  * Menu item id (`arm_app::menu::ACTION_IDS`) -> the store action it runs.
  * Nothing here reimplements a file operation: each action names the very store
- * method `runDocumentAction` dispatches to, which is also what the keyboard
- * shortcuts reach. Since C3c removed the toolbar, those two are the only ways
- * in.
+ * method `runDocumentAction` dispatches to. Since C3c removed the toolbar and
+ * C7 made every shortcut the menu item's accelerator, this table is the ONE
+ * route these actions have — a chord and a click both arrive through it.
  */
 export const MENU_ACTIONS: Record<string, DocumentAction> = {
   'menu.new': 'new',

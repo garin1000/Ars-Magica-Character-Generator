@@ -30,8 +30,6 @@
 
 import { $, browser, expect } from '@wdio/globals';
 
-import { runDocumentAction } from '../helpers.js';
-
 const BOOT_TIMEOUT = 30000;
 const STEP_TIMEOUT = 10000;
 
@@ -70,18 +68,33 @@ describe('portable layout', () => {
     // The wizard's Concept step is the only surface the setting is on. Reaching it
     // through the start screen keeps this independent of the test above.
     //
-    // C3c: New is a keyboard chord now that the toolbar is gone, and THAT IS WHY
-    // it is a chord rather than an `e2e-testing` command. This spec drives a
-    // binary built WITHOUT that feature (`wdio.portable.conf.js`), so a gated
-    // affordance would have been unreachable from here — the shortcut is
-    // ordinary shipped code and works in either build.
+    // A RELOAD, not a document action — and C7 is why.
     //
-    // Safe without answering a discard prompt for the same reason it was safe to
-    // click the button: the test above only created a character and read a label,
-    // so the document is CLEAN, and `newDocument()` consults the confirmation
-    // only when `dirty` (state.svelte.ts). Nothing here may dirty it, or this
-    // would block on a native GTK dialog no WebDriver can dismiss.
-    await runDocumentAction('new');
+    // This used to press Ctrl+N. C3c made that chord a webview keydown handler,
+    // which worked here because it was ordinary shipped code: this run builds
+    // WITHOUT `e2e-testing` (`wdio.portable.conf.js`), so C6's
+    // `activate_menu_item` seam is registered but inert, and a gated affordance
+    // was never an option. C7 then moved the chord's owner to the menu item's
+    // accelerator, which GTK dispatches from the toplevel's accel group above
+    // the webview — where WebDriver's synthesized keys do not reach, because
+    // WebKitWebDriver feeds them into WebKit's own input pipeline rather than
+    // delivering them as events on the window. So the chord stopped being
+    // drivable from a spec, in both suites.
+    //
+    // Of the three ways out, this is the one that costs nothing. Building this
+    // run with `--features e2e-testing` to gain the seam would have bought a
+    // New at the price of the single claim this suite exists to make — that the
+    // artifact `build-linux.sh` ships boots and finds its rules — by testing a
+    // binary that is not that artifact. Instead the spec stops needing a
+    // document action at all: a reload returns the app to the startup screen,
+    // and this test already reloads further down for the settings round trip,
+    // so it is the mechanism the test was built on rather than a new one.
+    //
+    // Safe for the same reason the chord was: the test above only created a
+    // character and read a label, so the document is CLEAN and nothing is
+    // discarded. Nothing here may dirty it.
+    await browser.execute(() => window.location.reload());
+    await $('[data-testid="start-screen"]').waitForExist({ timeout: BOOT_TIMEOUT });
     const start = await $('[data-testid="start-wizard-grog"]');
     await start.waitForExist({ timeout: BOOT_TIMEOUT });
     await start.click();

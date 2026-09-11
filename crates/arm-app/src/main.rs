@@ -38,9 +38,11 @@ fn main() {
         // A native menu item was chosen. The item's id is forwarded to the
         // frontend rather than acted on here: the document, the unsaved-changes
         // state and the availability gate all live there, and the whole point of
-        // the menu is to reach the SAME store actions the keyboard shortcuts call
-        // (`ui/src/App.svelte`'s `runMenuAction`). Predefined items are handled
-        // by the OS and never reach this handler.
+        // the menu is to reach the store actions `ui/src/App.svelte`'s
+        // `runMenuAction` routes to. Predefined items are handled by the OS and
+        // never reach this handler — and since C7 a keyboard chord does not
+        // either: it is the item's own accelerator, so the OS turns the press
+        // into an ordinary activation of that item and it arrives here.
         //
         // The forwarding itself lives in `menu::forward_menu_action` rather than
         // inline here, because C6's `activate_menu_item` seam has to fire the
@@ -88,7 +90,8 @@ fn main() {
 /// all — `window.close()` is already a no-op there, since wry implements no
 /// `webViewDidClose:` WKUIDelegate method, and WebKit only invokes delegate
 /// methods an app actually implements.) No UI path in this app calls
-/// `window.close()` today (checked `App.svelte`'s `handleShortcut`), so this
+/// `window.close()` today (checked `App.svelte`, which since C7 has no
+/// keyboard handler at all), so this
 /// is pre-emptive hardening of a latent hole, not a live regression fix.
 ///
 /// The fix: shadow the JS-visible `window.close` before any page script can

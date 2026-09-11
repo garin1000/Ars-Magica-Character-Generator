@@ -276,6 +276,28 @@ relevant surface MUST preserve them and keep their tests green.
   clean and reads correctly in assistive tech. `formatSigned(n)` in
   `ui/src/lib/derive.ts` is the single source of truth for signed values;
   `.ftl` strings that prepend a sign to a value use the hyphen too.
+- **A menu action's keyboard shortcut is the menu item's accelerator, and is
+  declared nowhere else.** One chord, one owner. Every shortcut for an action
+  the native menu offers is attached to that item
+  (`accelerator_for`, `crates/arm-app/src/menu.rs`), in muda's cross-platform
+  `CmdOrCtrl` notation rather than a hand-written branch per platform, and the
+  webview must **not** carry a competing `keydown` handler for the same chord —
+  two owners mean one press runs the action twice, which on a dirty document is
+  two discard prompts for one Ctrl+N. Three things follow and are part of the
+  rule. The OS *draws* the chord beside the label, which is the only reason the
+  shortcuts are discoverable at all, so a shortcut that is not on the menu is
+  a shortcut nobody can find — give it a menu item instead of a handler. The OS
+  *dispatches* it above the webview (GTK matches the window's accel group before
+  the focused widget sees the key), so `inert` and DOM state do not gate it; the
+  gate travels to the OS as the item's enabled state (`MenuFlags`), and the
+  platform refuses to activate a disabled item's accelerator. And the chord is
+  therefore **not reachable from an e2e spec** — WebDriver delivers keys into
+  the webview, not to the window — so a new chord is proved by the accelerator
+  test in `crates/arm-app/tests/menu.rs` (which parses it with muda's own
+  parser, because `MenuItem::with_id` silently drops one it cannot parse) plus
+  an activation of the item itself, never by `browser.keys`. Widget-local keys
+  — arrow navigation in a tablist, Escape in a dialog — are not shortcuts in
+  this sense and stay in the component that owns them.
 - **English** for all code, identifiers, comments, commit messages, and all
   assistant communication (chat responses, PR descriptions, status updates) —
   regardless of the language the user writes in.

@@ -93,9 +93,10 @@ pub fn update_close_guard(dirty: bool, labels: CloseGuardLabels, state: State<'_
 ///
 /// The frontend supplies every label — resolved from Fluent, exactly as
 /// [`update_close_guard`] does for the discard dialog — and the enabled state
-/// of each document action, which it reads from the one predicate its toolbar
-/// buttons and keyboard shortcuts also read. Rust contributes the menu's shape
-/// and its platform placement and nothing else (see [`crate::menu`]).
+/// of each document action, which it reads from the one predicate
+/// `store.runDocumentAction` also reads. Rust contributes the menu's shape, its
+/// platform placement and — since C7 — each item's keyboard accelerator, and
+/// nothing else (see [`crate::menu`]).
 ///
 /// Called again on every UI-language switch and whenever that predicate
 /// changes, because a menu carries the text and the enabled state it was built

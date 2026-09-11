@@ -108,6 +108,23 @@ fn action_ids(model: &[MenuSection]) -> Vec<String> {
     ids
 }
 
+/// Every action id `platform`'s menu offers paired with the chord it declares,
+/// in menu order.
+fn action_accelerators(model: &[MenuSection]) -> Vec<(String, Option<String>)> {
+    let mut chords = Vec::new();
+    for section in model {
+        for item in &section.items {
+            if let MenuEntry::Action {
+                id, accelerator, ..
+            } = item
+            {
+                chords.push((id.clone(), accelerator.clone()));
+            }
+        }
+    }
+    chords
+}
+
 /// Every predefined role `platform`'s menu asks the OS for.
 fn predefined_roles(model: &[MenuSection]) -> Vec<PredefinedRole> {
     let mut roles = Vec::new();
@@ -169,6 +186,147 @@ fn the_file_menu_offers_every_document_action_on_every_platform() {
                 ACTION_EXPORT
             ],
             "{platform:?} File menu"
+        );
+    }
+}
+
+// C7. A keyboard shortcut for a menu action is declared HERE and nowhere else:
+// the item carries the chord, the OS owns the dispatch, and the webview holds no
+// competing handler (`ui/src/App.svelte` lost `shortcutAction`/`handleShortcut`
+// in the same slice). Two things ride on this list being right, and neither is
+// visible to any other gate:
+//
+//   * The OS draws the chord beside the label, which is the whole answer to
+//     "the shortcuts are undiscoverable".
+//   * tauri parses the string and SILENTLY DROPS it on failure —
+//     `MenuItem::with_id` does `accelerator.and_then(|s| s.as_ref().parse().ok())`
+//     (tauri-2.11.3/src/menu/normal.rs:69) — so a typo is not an error, it is a
+//     shortcut that quietly stops existing. The chords are exercised for real by
+//     `ui/e2e/specs/app-shell.e2e.js`'s accelerator describe; this pins what they
+//     are meant to be.
+#[test]
+fn every_document_action_carries_the_chord_the_os_draws_beside_it() {
+    let expected = [
+        (ACTION_NEW, "CmdOrCtrl+N"),
+        (ACTION_OPEN, "CmdOrCtrl+O"),
+        (ACTION_SAVE, "CmdOrCtrl+S"),
+        (ACTION_SAVE_AS, "CmdOrCtrl+Shift+S"),
+        (ACTION_EXPORT, "CmdOrCtrl+Shift+E"),
+        (ACTION_SETTINGS, "CmdOrCtrl+,"),
+    ];
+
+    for platform in Platform::ALL {
+        let declared = action_accelerators(&model_for(*platform, &all_enabled()));
+        for (id, chord) in expected {
+            let found = declared
+                .iter()
+                .find(|(item, _)| item == id)
+                .unwrap_or_else(|| panic!("{platform:?} has no {id}"));
+            assert_eq!(
+                found.1.as_deref(),
+                Some(chord),
+                "{platform:?}: {id} must answer to {chord}"
+            );
+        }
+    }
+}
+
+// THE SILENT-FAILURE GUARD, and the reason muda is a dev-dependency at all.
+//
+// `MenuItem::with_id` parses the accelerator string and throws the result away
+// on failure — `accelerator.and_then(|s| s.as_ref().parse().ok())`
+// (tauri-2.11.3/src/menu/normal.rs:69). A typo is therefore not a build error
+// and not a runtime error: it is a menu item that quietly has no shortcut, in a
+// slice whose entire point is that the item is the only place a shortcut is
+// declared. Nothing else in the repo would notice — the e2e suite cannot press
+// an accelerator at all (WebKitWebDriver delivers keys into the page, not to
+// the toplevel's accel group), so there is no later gate to fall back on.
+//
+// Run against muda's own parser rather than a regex of this test's invention,
+// because the thing that must succeed is the parse tauri performs. The
+// dev-dependency is pinned to the same minor tauri resolves; keep the two on
+// the same minor for the same reason `Cargo.toml`'s tauri note gives.
+#[test]
+fn every_chord_parses_as_an_accelerator_instead_of_being_silently_dropped() {
+    for platform in Platform::ALL {
+        for (id, chord) in action_accelerators(&model_for(*platform, &all_enabled())) {
+            let Some(chord) = chord else { continue };
+            assert!(
+                chord.parse::<muda::accelerator::Accelerator>().is_ok(),
+                "{platform:?}: {id} declares {chord:?}, which muda cannot parse — \
+                 tauri would drop it without a word and the item would have no shortcut"
+            );
+        }
+    }
+}
+
+// Export keeps the Shift C3c gave it, and the reason is unchanged by the move to
+// the menu: on GTK a bare Ctrl+E is the readline end-of-line binding that text
+// entries answer to, and the character-name field is exactly where someone would
+// press it meaning "end of line". A menu accelerator is if anything MORE
+// dangerous than the old webview handler was — GTK matches it on the window's
+// accel group before the key ever reaches the focused entry, so a bare Ctrl+E
+// here would not merely shadow the binding, it would make it unreachable.
+#[test]
+fn export_claims_shift_so_the_bare_chord_stays_the_platforms() {
+    for platform in Platform::ALL {
+        let declared = action_accelerators(&model_for(*platform, &all_enabled()));
+        assert!(
+            !declared
+                .iter()
+                .any(|(_, chord)| chord.as_deref() == Some("CmdOrCtrl+E")),
+            "{platform:?} claims a bare Ctrl+E, which GTK entries need for end-of-line"
+        );
+    }
+}
+
+// One chord, one owner — within the menu as well as between the menu and the
+// webview. Two items sharing an accelerator is a coin toss over which one GTK
+// activates, and it would read as an intermittently wrong action rather than as
+// a mistake in this table.
+#[test]
+fn no_two_menu_items_answer_to_the_same_chord() {
+    for platform in Platform::ALL {
+        let declared = action_accelerators(&model_for(*platform, &all_enabled()));
+        let mut seen = BTreeSet::new();
+        for (id, chord) in &declared {
+            let Some(chord) = chord else { continue };
+            assert!(
+                seen.insert(chord.clone()),
+                "{platform:?}: {id} repeats the chord {chord}"
+            );
+        }
+    }
+}
+
+// muda spells the platform difference for us: `CmdOrCtrl` parses to `SUPER` on
+// macOS and to `CONTROL` everywhere else
+// (muda-0.19.3/src/accelerator.rs:539-541). Branching on `Platform` here instead
+// would produce a second, hand-maintained answer to a question the library
+// already answers — and one that a Linux developer machine could never catch
+// being wrong, since `Platform::MacOs`'s model is only ever built in a test.
+#[test]
+fn the_chords_name_the_cross_platform_modifier_rather_than_branching_by_hand() {
+    let mut per_platform = Vec::new();
+    for platform in Platform::ALL {
+        let declared = action_accelerators(&model_for(*platform, &all_enabled()));
+        for (id, chord) in &declared {
+            let chord = chord
+                .as_deref()
+                .unwrap_or_else(|| panic!("{id} has no chord"));
+            assert!(
+                chord.starts_with("CmdOrCtrl+"),
+                "{platform:?}: {id} declares {chord}, which hardcodes one platform's modifier"
+            );
+        }
+        let mut sorted = declared;
+        sorted.sort();
+        per_platform.push(sorted);
+    }
+    for window in per_platform.windows(2) {
+        assert_eq!(
+            window[0], window[1],
+            "the same action must answer to the same chord on every desktop"
         );
     }
 }

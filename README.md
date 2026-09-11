@@ -102,8 +102,10 @@ yourself.
   Save, Save As and Export, on your desktop's own menu bar — fully translated,
   and greyed out exactly when the action cannot run. On macOS with the usual
   application, Edit and Window menus, and Settings where each desktop expects
-  it. The same actions answer to the usual shortcuts: Ctrl/Cmd+N/O/S, Shift+S
-  for Save As and Shift+E for Export. The window title shows the file name and
+  it. Each item shows its keyboard shortcut beside it, drawn by the OS —
+  Ctrl/Cmd+N/O/S, Shift+S for Save As, Shift+E for Export and Ctrl/Cmd+, for
+  Settings — so the shortcuts are where you would look for them rather than
+  something to be told about. The window title shows the file name and
   marks unsaved edits, and so does a compact readout in the app's own header, so
   the current document is visible without looking at the title bar; Save writes
   straight to the current file while Save As always prompts.

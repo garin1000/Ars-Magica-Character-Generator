@@ -3,7 +3,7 @@
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { store } from './lib/state.svelte';
   import { onMenuAction, setAppMenu, updateCloseGuard } from './lib/ipc';
-  import { MENU_ACTIONS, menuLabels, type DocumentAction } from './lib/menu';
+  import { MENU_ACTIONS, menuLabels } from './lib/menu';
   import type { AppError } from './lib/types';
   import SettingsDialog from './lib/components/SettingsDialog.svelte';
   import StartScreen from './lib/components/StartScreen.svelte';
@@ -252,48 +252,30 @@
       .catch(() => {});
   });
 
-  // Standard document-app keyboard shortcuts. Ctrl (or Cmd on macOS) + S/N/O,
-  // with Shift+S for Save As. Cmd+Q keeps routing through the OS/close guard, so
-  // it is deliberately not handled here.
+  // NO KEYBOARD SHORTCUT HANDLER LIVES HERE (C7), and that is the design.
   //
-  // Which action a chord means; `null` for a chord this app does not claim.
-  // Ctrl+N and Ctrl+O stay live on both screens — from the editor New discards
-  // (through the unsaved-changes guard) and returns to the type choice, and on
-  // the startup screen it lands where it already is — while Save/Save As are
-  // gated on there being a document at all. That gate is NOT restated here: it
-  // is `store.documentActionEnabled`, the same predicate the menu's enabled
-  // state and the store's own dispatcher read. This handler used to carry its
-  // own copy of the busy check, because `inert` on the shell does not reach a
-  // window-level listener; with a third caller (the native menu) obeying
-  // neither mechanism, the question moved into the store and the copies went.
-  function shortcutAction(event: KeyboardEvent): DocumentAction | null {
-    if (!(event.ctrlKey || event.metaKey)) return null;
-    switch (event.key.toLowerCase()) {
-      case 's':
-        return event.shiftKey ? 'saveAs' : 'save';
-      case 'n':
-        return 'new';
-      case 'o':
-        return 'open';
-      case 'e':
-        // C3c: Export is the one document action with no other keyboard route
-        // once the toolbar is gone — a native menu item is not in the webview's
-        // tab order, so without this chord Export is mouse-or-menu only.
-        // Shift is REQUIRED rather than optional: on GTK a bare Ctrl+E is the
-        // readline end-of-line binding that text entries answer to, and the
-        // character-name field is precisely where someone would press it.
-        return event.shiftKey ? 'export' : null;
-      default:
-        return null;
-    }
-  }
-
-  function handleShortcut(event: KeyboardEvent): void {
-    const action = shortcutAction(event);
-    if (action === null || !store.documentActionEnabled(action)) return;
-    event.preventDefault();
-    void store.runDocumentAction(action);
-  }
+  // Every document chord — Ctrl/Cmd+N/O/S, Shift+S for Save As, Shift+E for
+  // Export, Ctrl/Cmd+, for Settings — is declared as the native menu item's
+  // accelerator and nowhere else (`accelerator_for`,
+  // `crates/arm-app/src/menu.rs`). The OS binds it, the OS dispatches it, and
+  // the OS draws it beside the label, which is what makes the shortcuts
+  // discoverable in the first place. The id then arrives on `menu://action`
+  // and runs the very `store.runDocumentAction` this file's deleted
+  // `handleShortcut` used to call, so nothing about the route past dispatch
+  // changed.
+  //
+  // A handler here would be a SECOND owner of the same chord. On GTK the accel
+  // group is matched on the toplevel window before the key reaches the focused
+  // widget, so both would fire and one Ctrl+N on a dirty document would raise
+  // two discard prompts — the hazard that made C3a and C3c ship the menu with
+  // no accelerators at all. `the document chords belong to the native menu,
+  // not the webview` (`App.client.test.ts`) is what keeps this file from
+  // growing one back.
+  //
+  // The availability gate is unchanged and still single: `MenuFlags` carries
+  // `store.documentActionEnabled` to the OS, and GTK refuses to activate an
+  // insensitive item's accelerator, so a withheld action is withheld from the
+  // keyboard too.
 
   // Mirror the unsaved-changes flag (and the localized dialog strings) to the
   // backend close/quit guard. Re-runs whenever dirty flips or the language
@@ -344,7 +326,7 @@
   });
 </script>
 
-<svelte:window onkeydown={handleShortcut} onfocusin={trackFocus} />
+<svelte:window onfocusin={trackFocus} />
 
 <!-- Everything interactive lives in the shell so a single `inert` can switch the
      whole app off while a native file dialog is open. The dialogs are parented to

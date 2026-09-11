@@ -36,6 +36,23 @@ tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 
 [dev-dependencies]
+# Tests only — never linked into the binary. `tests/menu.rs` parses the menu's
+# accelerator strings with the very parser tauri uses, because
+# `MenuItem::with_id` drops one it cannot parse without saying so
+# (tauri-2.11.3/src/menu/normal.rs:69) and a typo would otherwise ship as a
+# shortcut that silently does not exist. tauri 2.11.3 resolves muda 0.19.x, and
+# cargo unifies the two on that; keep this on the same minor when tauri moves,
+# or the test would be validating a different parser than the one that runs.
+#
+# `default-features = false` IS LOAD-BEARING, and was learned the hard way:
+# muda's defaults are `libxdo` + `gtk`, cargo unifies features across the
+# graph, and tauri gates `muda/libxdo` behind its own `linux-libxdo` feature
+# which this crate deliberately does not enable (C3a). Taking muda with its
+# defaults therefore switched `libxdo` on for the real build too — it failed to
+# link (`unable to find library -lxdo`) and, had the library been present,
+# would have quietly changed how the shipped menu's predefined items behave.
+# Take exactly what tauri takes: nothing but what it already enables.
+muda = { version = "0.19", default-features = false }
 pretty_assertions = "1"
 tempfile = "3"
 

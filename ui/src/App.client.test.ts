@@ -1075,11 +1075,25 @@ describe('the native application menu', () => {
   });
 });
 
-// The window-level Ctrl/Cmd shortcuts had their own hand-written copy of the
-// busy check, because `inert` on the shell does not reach a window listener.
-// They now read the store's single predicate instead — and nothing covered
-// them before, so a refactor could have silently retired them.
-describe('the document keyboard shortcuts', () => {
+// C7: ONE OWNER PER CHORD, and the owner is the native menu item.
+//
+// Until this slice the webview held its own `keydown` handler for Ctrl+N/O/S,
+// Ctrl+Shift+S and Ctrl+Shift+E, because C3a and C3c shipped the menu with no
+// accelerators at all — deliberately, to avoid exactly the collision this
+// describe now guards. The accelerators are declared on the menu items
+// (`accelerator_for`, `crates/arm-app/src/menu.rs`) and GTK/macOS/Windows
+// dispatch them, so the handler had to go: a surviving copy would see the same
+// press the accel group sees, and one Ctrl+N on a dirty document would raise
+// two discard prompts.
+//
+// These tests replace six that asserted the opposite (`saves with Ctrl+S`,
+// `opens with Ctrl+O`, `exports with Ctrl+Shift+E`, their two startup-screen
+// negatives and `leaves a bare Ctrl+E to the platform`). They were not deleted
+// as redundant — the claim they pinned was retired, and its replacement is
+// this. What the chords DO is now proved against the shipped binary, by the
+// accelerator describe in `ui/e2e/specs/app-shell.e2e.js`, which is the only
+// layer where a real accel group exists to press.
+describe('the document chords belong to the native menu, not the webview', () => {
   function press(key: string, options: KeyboardEventInit = {}): void {
     window.dispatchEvent(
       new KeyboardEvent('keydown', {
@@ -1093,69 +1107,39 @@ describe('the document keyboard shortcuts', () => {
     flushSync();
   }
 
-  it('saves with Ctrl+S while a character is being edited', async () => {
+  /** Every chord the menu claims, spelled as the webview would see it. */
+  const MENU_CHORDS: [string, KeyboardEventInit][] = [
+    ['n', {}],
+    ['o', {}],
+    ['s', {}],
+    ['s', { shiftKey: true }],
+    ['e', { shiftKey: true }],
+    [',', {}],
+  ];
+
+  // Asserted on the store's DISPATCHER rather than on the IPC each action ends
+  // at. `runDocumentAction` is the one thing a webview handler could possibly
+  // call — it is what the deleted `handleShortcut` called, and what the menu
+  // bridge still calls — so watching it catches a surviving handler whatever
+  // the action does afterwards. Watching IPC instead would have passed
+  // vacuously for Export, whose route awaits `exportLabelKeys` first and so
+  // reaches no spy within the tick.
+  it.each(MENU_CHORDS)('dispatches nothing of its own on Ctrl+%s', async (key, options) => {
     await mountApp();
     store.view = 'editor';
     store.currentPath = '/tmp/example.armc.json';
     flushSync();
-    vi.mocked(ipc.saveEntity).mockResolvedValue('/tmp/example.armc.json');
+    const dispatch = vi.spyOn(store, 'runDocumentAction').mockResolvedValue();
 
-    press('s');
+    press(key, options);
+    await Promise.resolve();
 
-    await vi.waitFor(() => expect(ipc.saveEntity).toHaveBeenCalled());
+    expect(dispatch).not.toHaveBeenCalled();
+    dispatch.mockRestore();
   });
 
-  it('does not save from the startup screen, which has no document', async () => {
-    await mountApp();
-    store.view = 'start';
-    flushSync();
-
-    press('s');
-
-    expect(ipc.saveEntity).not.toHaveBeenCalled();
-  });
-
-  it('opens with Ctrl+O from either screen', async () => {
-    await mountApp();
-    store.view = 'start';
-    flushSync();
-    vi.mocked(ipc.loadEntity).mockResolvedValue(null);
-
-    press('o');
-
-    await vi.waitFor(() => expect(ipc.loadEntity).toHaveBeenCalled());
-  });
-
-  // C3c: Export lost its button with the toolbar, and a native menu item is not
-  // in the webview's tab order — so without a chord of its own, Export became
-  // the one document action a keyboard user inside the window could not reach.
-  // Shift+E rather than a bare Ctrl+E: on GTK, Ctrl+E is the readline
-  // end-of-line binding text entries answer to, and the character name field is
-  // exactly where a user would press it meaning "end of line".
-  it('exports with Ctrl+Shift+E while a character is being edited', async () => {
-    await mountApp();
-    store.view = 'editor';
-    flushSync();
-    vi.mocked(ipc.exportMarkdown).mockResolvedValue('/tmp/marcus.md');
-    vi.mocked(ipc.exportLabelKeys).mockResolvedValue([]);
-
-    press('e', { shiftKey: true });
-
-    await vi.waitFor(() => expect(ipc.exportMarkdown).toHaveBeenCalled());
-  });
-
-  it('does not export from the startup screen, which has no document', async () => {
-    await mountApp();
-    store.view = 'start';
-    flushSync();
-
-    press('e', { shiftKey: true });
-
-    expect(ipc.exportMarkdown).not.toHaveBeenCalled();
-  });
-
-  // A bare Ctrl+E must stay unclaimed, or the GTK end-of-line binding above is
-  // exactly what this handler eats.
+  // The other half of "nowhere else": a bare Ctrl+E is not the menu's either,
+  // so nothing may eat the GTK end-of-line binding a text entry answers to.
   it('leaves a bare Ctrl+E to the platform', async () => {
     await mountApp();
     store.view = 'editor';

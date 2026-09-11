@@ -52,6 +52,7 @@ name = "arm-app"
 version = "0.3.0"
 dependencies = [
  "arm-rules",
+ "muda",
  "pretty_assertions",
  "serde",
  "serde_json",

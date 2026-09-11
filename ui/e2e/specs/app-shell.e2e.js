@@ -32,6 +32,7 @@ import { fileURLToPath } from 'node:url';
 
 import { workerConfigHome } from '../driver.js';
 import {
+  activateMenuItem,
   clean,
   closeSettings,
   returnToStartScreen,
@@ -367,13 +368,6 @@ describe('German localization', () => {
 describe('the native menu', () => {
   const MENU_SAVE = 'menu.save';
 
-  /** Press a native menu item, exactly as the OS handler would. */
-  async function activateMenuItem(id) {
-    await browser.execute((itemId) => {
-      window.__TAURI_INTERNALS__.invoke('activate_menu_item', { id: itemId });
-    }, id);
-  }
-
   /**
    * The menu Tauri has actually installed, read off `AppHandle::menu()`.
    *
@@ -495,6 +489,38 @@ describe('the native menu', () => {
     // empty title is all a separator can be recognised by.
     expect(file.items.some((item) => item.kind === 'other' && item.title === '')).toBe(true);
   });
+
+  // C7, TRAP 2 — WHERE "EXACTLY ONCE" IS PROVED, AND WHY NOT HERE.
+  //
+  // The chord and the menu item are the same owner since C7: the chord is the
+  // item's accelerator, so the OS turns a press into the activation this
+  // describe already exercises. What must never happen is one press producing
+  // the action TWICE, which is what a surviving webview keydown handler beside
+  // the accelerator would do — and on a dirty document that is two discard
+  // prompts for one Ctrl+N, the hazard that made C3a and C3c ship no
+  // accelerators at all.
+  //
+  // Neither half of that can be counted from a spec, and both were tried:
+  //
+  //   * The press cannot be made. WebKitWebDriver feeds a synthesized key into
+  //     WebKit's own input pipeline rather than delivering it as an event on the
+  //     window, so it never reaches the accel group GTK matches in
+  //     `gtk_window_key_press_event` — measured, not assumed: every chord was
+  //     inert under `browser.keys` while `gtk_accel_groups_activate` on the live
+  //     window answered true for Ctrl+N.
+  //   * The dispatches cannot be counted. Wrapping
+  //     `window.__TAURI_INTERNALS__.invoke` to tally commands looks like the
+  //     obvious tally, and does not work: Tauri locks the property down, so
+  //     neither assignment nor `Object.defineProperty` replaces it — a version
+  //     of this test carrying that patch reported zero saves for a save that had
+  //     demonstrably happened. Do not reach for it again.
+  //
+  // So exactly-once is proved structurally instead, in two halves that together
+  // leave no second owner: the page dispatches nothing for any of these chords
+  // (`the document chords belong to the native menu, not the webview`,
+  // `App.client.test.ts`), and Rust announces a chosen item through one function
+  // and only one (`the_os_menu_handler_and_the_activation_seam_share_one_dispatch_path`,
+  // `crates/arm-app/tests/commands.rs`).
 
   // THE HEADLINE. `set_app_menu` is re-invoked on every language switch, and the
   // client unit test proves the frontend makes that call — but only this can

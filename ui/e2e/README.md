@@ -43,9 +43,41 @@ behind the `e2e-testing` Cargo feature and inert in the shipped binary
   `is_enabled()` on a `PredefinedMenuItem` and no accessor for its role, so
   separators and OS-implemented items are reported by text and position only.
 
-Neither seam exists in the portable run, which builds without the feature; the
-portable spec drives the app through the keyboard, as every spec did before C6
-and still does for the document actions themselves (`helpers.js`).
+Neither seam exists in the portable run, which builds without the feature.
+
+### Keyboard accelerators cannot be pressed from a spec (C7)
+
+Since C7 every document shortcut is declared as its menu item's **accelerator**
+and nowhere else; `App.svelte` carries no keydown handler for any of them. The
+accelerator is dispatched above the webview — GTK matches the toplevel window's
+accel group in `gtk_window_key_press_event`, before the focused widget sees the
+key — and **WebDriver cannot reach that**: `browser.keys` goes to
+WebKitWebDriver, which feeds a synthesized key into WebKit's own input pipeline
+rather than delivering it as an event on the window.
+
+That was measured, not assumed. With the accelerators in place and the webview
+handler gone, every chord press was inert (`F10` did not open the menubar
+either), while asking GTK directly on the live window —
+`gtk_accel_groups_activate(window, GDK_KEY_n, CONTROL_MASK)` — answered `true`,
+and the items' `GtkAccelLabel`s reported accelerator widths of 37-76px once a
+size request was forced, i.e. the chord really is drawn beside the label. The
+shortcuts work; they are simply not drivable from a spec.
+
+Two consequences:
+
+- `helpers.js`'s `runDocumentAction` presses the **menu item** (through
+  `activate_menu_item`), which is the same route the accelerator takes once the
+  OS has turned the press into an activation.
+- The portable spec, which has no seam, uses **no document action at all** — it
+  reaches the startup screen with `window.location.reload()`. Building that run
+  with `--features e2e-testing` was the alternative and was rejected: the
+  portable suite exists to prove the artifact `build-linux.sh` ships works, and
+  a binary built with a test feature is not that artifact.
+
+What therefore stays unproven end-to-end is that a _physical_ key press
+activates the item. The chord strings themselves are pinned and parse-checked
+in `crates/arm-app/tests/menu.rs`, against muda's own parser, because
+`MenuItem::with_id` drops an accelerator it cannot parse without a word.
 
 ## The portable-layout smoke check
 
