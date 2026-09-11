@@ -1105,8 +1105,8 @@ pub enum Effect {
     /// [`crate::effective::effective_might`]; a no-op for buy budgets / XP.
     ///
     /// Source: RoP:I:4120 (Demonic
-    /// Blood, Infernal Might 5), `RoP:I:4136` (Demonic Might, +2); The Divine
-    /// (Revised).md:1975 (Strong Angelic Heritage, Divine Might age ÷ 20).
+    /// Blood, Infernal Might 5), `RoP:I:4136` (Demonic Might, +2); RoP:D:1975
+    /// (Strong Angelic Heritage, Divine Might age ÷ 20).
     MightGrant {
         /// The Realm the granted Might is aligned to.
         realm: Realm,
@@ -1120,8 +1120,8 @@ pub enum Effect {
     /// [`crate::effective::power_levels_budget`].
     ///
     /// Source: RoP:I:4122 (Demonic
-    /// Blood, 30 levels), `RoP:I:4142` (Demonic Powers, +20); The Divine
-    /// (Revised).md:1977 (Strong Angelic Heritage, 30 levels).
+    /// Blood, 30 levels), `RoP:I:4142` (Demonic Powers, +20); RoP:D:1977
+    /// (Strong Angelic Heritage, 30 levels).
     PowerLevels {
         /// Levels of supernatural powers added to the budget.
         amount: u16,

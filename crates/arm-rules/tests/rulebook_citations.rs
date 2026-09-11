@@ -22,6 +22,29 @@
 //! This is a different subject from `rules_md_citations.rs`, which guards
 //! *implementation-site* citations (`RULES.md` pointing at Rust code, and
 //! Rust comments pointing back at `RULES.md`) — not rulebook citations.
+//!
+//! **Deliberate exclusion: string literals.** [`comment_blocks`] only collects
+//! `///`/`//!`/`//` lines, so a full basename inside a Rust **string
+//! literal** is invisible to every detector in this file — e.g.
+//! `crates/arm-rules/src/ruleset/integrity.rs` spells `Ars Magica -
+//! Definitive Edition (Core Rules).md:NNNN` seven times inside
+//! `errors.push(format!(...))` diagnostics built by `RulesetIntegrity`'s
+//! validators (`IntegrityError`, surfaced through `RulesetError` when a
+//! ruleset — including a hand-edited `rules/core/*.json`, which
+//! `CLAUDE.md`'s trust model treats as the file the user opens) fails a
+//! structural check (non-tiling aging rows, misordered Aging/Decrepitude
+//! thresholds, …). This is a **kept-on-purpose** exception, not an oversight:
+//! these are `IntegrityError` diagnostics for whoever is editing the rules
+//! JSON, in the same spirit as `CLAUDE.md`'s "fail loudly with clear error
+//! listing offending IDs" — the reader needs to open a specific rulebook, and
+//! spelling it out in full removes any need to know the nine-item acronym
+//! table to act on the message. It is not the routed-through-Fluent UI copy
+//! `CLAUDE.md` bans from being hardcoded (no Ability/Virtue/label text, no
+//! normal-session string); it is data-integrity diagnostic text reached only
+//! when the rules data itself is broken, i.e. self-inflicted by whoever
+//! edited it. `dotmd_citation_detector_ignores_a_dot_md_path_inside_a_string_literal_but_flags_one_in_a_comment`
+//! is the test proving this exclusion is intentional and mechanical (it falls
+//! out of `comment_blocks`'s existing "comments only" scope), not accidental.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -270,6 +293,44 @@ fn find_full_basenames(text: &str) -> Vec<&'static str> {
         .map(|&(_, file)| file)
         .filter(|file| text.contains(file))
         .collect()
+}
+
+/// Finds every `.md:NNNN` (or `.md:NNNN-MMMM`) shape in `text`, regardless of
+/// what precedes the `.md` — a shape-only backstop for [`find_full_basenames`],
+/// which only recognises the nine basenames verbatim and so cannot see a
+/// *mangled* or *partial* one (e.g. `The Divine (Revised).md:1975`, missing
+/// the `Ars Magica 5e - Realms of Power - ` prefix of the real file). After
+/// the D1a sweep no comment should ever spell a rulebook as a `.md` path in
+/// any form — every real citation uses `ACRONYM:NNNN` — so this test treats
+/// the bare shape itself as the defect, without needing to know which book
+/// was intended. Returns a short snippet of surrounding context (up to 70
+/// bytes before, 15 after) for the failure message, snapped to the nearest
+/// UTF-8 char boundary.
+fn find_dotmd_citations(text: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    let mut search_from = 0usize;
+    while let Some(rel) = text[search_from..].find(".md:") {
+        let dot_at = search_from + rel;
+        let colon_at = dot_at + 3;
+        let after_colon = colon_at + 1;
+        if text[after_colon..]
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_ascii_digit())
+        {
+            let mut start = dot_at.saturating_sub(70);
+            while !text.is_char_boundary(start) {
+                start += 1;
+            }
+            let mut end = (after_colon + 15).min(text.len());
+            while !text.is_char_boundary(end) {
+                end -= 1;
+            }
+            found.push(text[start..end].to_string());
+        }
+        search_from = after_colon;
+    }
+    found
 }
 
 /// Finds every bare rulebook citation in `text`: a backtick or an opening
@@ -595,6 +656,103 @@ fn full_basename_detector_finds_a_basename_split_across_a_wrapped_comment() {
         find_full_basenames(joined),
         vec!["Ars Magica - Definitive Edition (Core Rules).md"]
     );
+}
+
+#[test]
+fn dotmd_citation_detector_flags_any_dot_md_colon_digits_shape_including_mangled_basenames() {
+    // The real near-misses this backstop exists for: a partial basename
+    // (`types.rs:1109`) and a differently-mangled one missing the
+    // `Ars Magica - ` / parenthetical parts (`xp.rs:1313`), plus a correctly
+    // spelled full basename for good measure (already caught by
+    // `find_full_basenames`, but this detector must see it too since it is a
+    // superset). None of `RULES.md` (no trailing digits — a different guard's
+    // subject), a bare mention of `CLAUDE.md` with no citation, or a
+    // timestamp-shaped `10:30` should be flagged.
+    let fixture = "\
+Mangled partial basename: The Divine (Revised).md:1975 should be flagged.\n\
+Differently mangled: Definitive Edition Core Rules.md:4814-4816 should be flagged.\n\
+Correctly spelled full basename: Ars Magica - Definitive Edition (Core Rules).md:2774 \
+should also be flagged.\n\
+Not a citation at all: see CLAUDE.md for details.\n\
+Not this guard's subject: RULES.md is a different file, cited without a line number here.\n\
+Not a citation: the clock read 10:30 that morning.\n\
+";
+    let found = find_dotmd_citations(fixture);
+    assert_eq!(
+        found.len(),
+        3,
+        "expected exactly the three `.md:NNNN` shapes, found {found:?}"
+    );
+}
+
+#[test]
+fn no_source_comment_cites_a_rulebook_by_any_dot_md_path() {
+    // Shape-only backstop for `no_source_comment_spells_a_rulebook_by_full_basename`:
+    // that test only recognises the nine basenames verbatim, so a mangled or
+    // partial one slips through it. This test flags the bare shape
+    // `.md:NNNN` wherever it appears in a comment, regardless of what
+    // precedes the `.md` — after the D1a sweep no comment should spell a
+    // rulebook as a `.md` path in any spelling at all.
+    let mut offenders: BTreeSet<String> = BTreeSet::new();
+    let mut scanned = 0usize;
+    for path in all_rust_files() {
+        scanned += 1;
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in comment_blocks(&content) {
+            for snippet in find_dotmd_citations(&text) {
+                offenders.insert(format!(
+                    "{}:{line}: cites a rulebook as a `.md` path ({snippet}) instead of its \
+                     acronym",
+                    relative(&path)
+                ));
+            }
+        }
+    }
+    assert!(
+        scanned > 10,
+        "expected to scan many source files, saw {scanned}"
+    );
+    assert!(
+        offenders.is_empty(),
+        "{} citation(s) spell a rulebook as a `.md` path instead of the acronym:\n{}",
+        offenders.len(),
+        offenders.iter().cloned().collect::<Vec<_>>().join("\n")
+    );
+}
+
+#[test]
+fn dotmd_citation_detector_ignores_a_dot_md_path_inside_a_string_literal_but_flags_one_in_a_comment()
+ {
+    // Mirrors the real shape in `ruleset/integrity.rs`: a full basename
+    // inside a `format!()` string literal (a deliberate exclusion, documented
+    // in this file's module doc comment) alongside one in a `///` comment
+    // (which must still be flagged). `comment_blocks` only collects
+    // `///`/`//!`/`//` lines, so the string-literal line is never even
+    // handed to the detector — this test proves that end-to-end through the
+    // same `comment_blocks` -> `find_dotmd_citations` pipeline the live-tree
+    // guard uses, not just by asserting on `find_dotmd_citations` in
+    // isolation.
+    let source = "\
+fn validate(errors: &mut Vec<String>) {\n\
+    errors.push(format!(\n\
+        \"a clamp does not clear the first aging-point row \
+(Ars Magica - Definitive Edition (Core Rules).md:16575), which holds only while below it\"\n\
+    ));\n\
+}\n\
+\n\
+/// Undocumented and untested: The Divine (Revised).md:1975 (mangled basename).\n\
+fn documented() {}\n";
+    let mut offenders = Vec::new();
+    for (_, text) in comment_blocks(source) {
+        offenders.extend(find_dotmd_citations(&text));
+    }
+    assert_eq!(
+        offenders.len(),
+        1,
+        "expected the string-literal basename to be ignored and only the comment's mangled \
+         basename to be flagged, found {offenders:?}"
+    );
+    assert!(offenders[0].contains("Revised).md:1975"));
 }
 
 #[test]

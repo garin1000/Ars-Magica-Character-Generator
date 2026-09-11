@@ -1310,9 +1310,8 @@ mod tests {
     /// `AbilityAuthorization`, and `AbilityScoreGrant` contribute a permission;
     /// every other effect is a no-op. `AbilityBonus` (Puissant Ability) stands in
     /// for the rest — it names a target ability via `params[param]` but, per the
-    /// rules text (Definitive Edition Core Rules.md:4814-4816), grants no
-    /// permission to own that ability, only a bonus once it is already legally
-    /// held.
+    /// rules text (ArMDE:4814-4816), grants no permission to own that ability,
+    /// only a bonus once it is already legally held.
     #[test]
     fn ability_authorizations_reads_only_the_three_permission_granting_effects() {
         let items = r#"[
