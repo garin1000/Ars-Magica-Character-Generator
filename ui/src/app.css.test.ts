@@ -869,6 +869,59 @@ describe('app.css', () => {
     expect(appCss).not.toMatch(/\.pick-row:disabled/);
   });
 
+  // ── The header is chrome, and chrome is charged to the content (C5) ─────────
+  //
+  // The header cost 113px of a window whose `minHeight` is 900 (tauri.conf.json),
+  // and it did so unconditionally: `.brand` declared `flex: 1 1 100%`, so the
+  // controls were pushed onto a SECOND row at every width — a wrap that no
+  // available width could ever satisfy. Above and below that sat 1rem of padding
+  // each, around a 2.25rem logo.
+  //
+  // The rendered height is measured in the real engine (`e2e/specs/app-shell.e2e.js`,
+  // "header real estate"), because a stylesheet can only pin the numbers that were
+  // chosen, never the box they produce. These are the fast guards on those numbers.
+
+  /** The shared `select, input, button` base rule — what sizes the header's row. */
+  const controlBaseBody = (): string => {
+    const block = /^select,\ninput,\nbutton\s*\{([^}]*)\}/m.exec(cssWithoutComments);
+    expect(block, 'app.css should declare a shared control base rule').not.toBeNull();
+    return block![1];
+  };
+
+  it('keeps the whole header on a single row', () => {
+    // Asserted as an ABSENCE, because the bug was a rule and not a missing one:
+    // `.brand` existed only to hold `flex: 1 1 100%`, and nothing in the header
+    // may claim a full flex line again — a 100% basis in a wrap container is a
+    // row break that no width can undo.
+    expect(cssWithoutComments).not.toMatch(/^\.brand\s*\{/m);
+    expect(ruleBody('app-header')).not.toMatch(/flex-basis:\s*100%/);
+    expect(ruleBody('controls')).not.toMatch(/flex(-basis)?:[^;]*100%/);
+  });
+
+  it('budgets the header a chrome strip of padding, not a content band', () => {
+    const [vertical] = paddingPx(ruleBody('app-header'));
+    // 1rem above AND below was a quarter of the old height on its own. Half a
+    // root step is the band a separator rule needs to read as a strip.
+    expect(vertical).toBeLessThanOrEqual(0.5 * ROOT_FONT_PX);
+    // A floor too: at zero the row's controls would touch the window edge and the
+    // bottom rule.
+    expect(vertical).toBeGreaterThan(0);
+  });
+
+  it('sizes the logo so it can never be the thing setting the header height', () => {
+    const logoPx = lengthPx(/height:\s*([^;]+);/.exec(ruleBody('app-logo'))![1]);
+
+    // Derived from the control that DOES set the row height — the Settings button
+    // — rather than compared against a number someone picked: its line box plus
+    // the shared vertical padding and its 1px border pair. A logo taller than that
+    // makes the licence mark, not the app's controls, the header's height budget.
+    const [controlVertical] = paddingPx(controlBaseBody());
+    const controlRowPx = ROOT_FONT_PX * 1.2 + 2 * controlVertical + 2;
+
+    expect(logoPx).toBeGreaterThan(0);
+    expect(logoPx).toBeLessThanOrEqual(controlRowPx);
+  });
+
   it('centres the characteristics panel itself, in either mount', () => {
     const block = /^\.char-panel\s*\{([^}]*)\}/m.exec(appCss);
     expect(block).not.toBeNull();

@@ -187,6 +187,83 @@ describe('App screens', () => {
     expect(openTag(html(), 'settings-button')).not.toBeNull();
   });
 
+  // --- the header's real estate (C5) -----------------------------------------
+  //
+  // The header used to spend a whole row on a logo and a visible `<h1>` repeating
+  // the app's name, and `.brand`'s `flex: 1 1 100%` pushed the controls onto a
+  // second row at EVERY width. The title is the OS window title already (set from
+  // this same component) and, on macOS, the application menu's; rendering it a
+  // third time inside the window is duplicated chrome on a 900px-minimum window.
+
+  /** The `<header class="app-header">` element's inner markup. */
+  function headerMarkup(body: string): string {
+    const header = /<header[^>]*class="app-header"[^>]*>([\s\S]*?)<\/header>/i.exec(body);
+    expect(header, 'the app should render a .app-header').not.toBeNull();
+    return header![1];
+  }
+
+  // DROPPING THE HEADING OUTRIGHT WAS NOT AN OPTION. `<h1>` was the document's
+  // only top-level heading and, since `app-logo-alt` names the *licence* logo
+  // rather than the app, the only thing naming the application in-window to a
+  // screen reader. It is kept and made `.sr-only` — announced, zero height — which
+  // is the one utility in this stylesheet that makes that trade (see app.css).
+  it('names the app in a top-level heading that costs the header no height', () => {
+    const headings = [...html().matchAll(/<h1([^>]*)>([\s\S]*?)<\/h1>/gi)];
+
+    // Exactly one: a second `<h1>` would break the document outline just as
+    // surely as none at all.
+    expect(headings).toHaveLength(1);
+    expect(headings[0][1]).toMatch(/class="[^"]*\bsr-only\b[^"]*"/);
+    // The name itself, through Fluent — never the raw key.
+    const title = headings[0][2].replace(/<[^>]*>/g, '').trim();
+    expect(title).toBe(store.t('app-title'));
+    expect(title).not.toBe('app-title');
+  });
+
+  // The logo is an attribution mark for the Ars Magica Open License, and its alt
+  // says so. That is the right name for what the image IS — which is exactly why
+  // it could not be promoted to carry the app's name when the visible `<h1>` went
+  // away, and why the heading above had to stay.
+  it('keeps the licence logo named for what it is, not for the app', () => {
+    const logo = /<img[^>]*class="app-logo"[^>]*>/i.exec(html());
+    expect(logo).not.toBeNull();
+    const alt = /alt="([^"]*)"/.exec(logo![0]);
+    expect(alt, 'the logo should carry an alt').not.toBeNull();
+    expect(alt![1].trim()).not.toBe('');
+    expect(alt![1]).toBe(store.t('app-logo-alt'));
+  });
+
+  it('puts the logo last in the header, out of the way of what the user reads', () => {
+    const header = headerMarkup(html());
+    // Reading order as well as visual order: the licence mark is the least
+    // important thing on the row, so it comes after the document status and after
+    // every control rather than leading the header the way it used to.
+    expect(header.indexOf('class="app-logo"')).toBeGreaterThan(
+      header.indexOf('data-testid="settings-button"'),
+    );
+    expect(header.indexOf('class="app-logo"')).toBeGreaterThan(
+      header.indexOf('data-testid="doc-status"'),
+    );
+  });
+
+  // GREEN ON ARRIVAL, and deliberately so: this pins SURVIVAL through the shrink
+  // rather than new behaviour. `.doc-status` is the only on-screen surface for
+  // unsaved state since C3c retired the toolbar, and it sat inside the `.brand`
+  // wrapper this slice deletes.
+  it('keeps the document status and its ASCII dirty marker in the header', () => {
+    store.currentPath = '/saves/bonisagus.armc.json';
+    const header = headerMarkup(html());
+    expect(header).toContain('data-testid="doc-status"');
+    expect(textOf(html(), 'doc-status')).toContain('bonisagus.armc.json');
+
+    // The marker is the dirty variant of that same key, and it must be a plain
+    // ASCII asterisk — never a typographic glyph (CLAUDE.md).
+    for (const key of ['app-document-name-dirty', 'app-document-unsaved-dirty']) {
+      const label = store.t(key, { name: 'bonisagus.armc.json' });
+      expect(label.codePointAt(0), key).toBe(0x2a);
+    }
+  });
+
   it('renders no settings dialog until it is asked for', () => {
     expect(openTag(html(), 'settings-dialog')).toBeNull();
   });

@@ -104,8 +104,9 @@ yourself.
   application, Edit and Window menus, and Settings where each desktop expects
   it. The same actions answer to the usual shortcuts: Ctrl/Cmd+N/O/S, Shift+S
   for Save As and Shift+E for Export. The window title shows the file name and
-  marks unsaved edits; Save writes straight to the current file while Save As
-  always prompts.
+  marks unsaved edits, and so does a compact readout in the app's own header, so
+  the current document is visible without looking at the title bar; Save writes
+  straight to the current file while Save As always prompts.
 - **Never lose work by accident.** Closing or quitting the app with unsaved
   changes — including via macOS Cmd+Q — prompts for confirmation before
   discarding, as does starting a new document or opening another file. It is one

@@ -310,46 +310,60 @@ h6 {
   cursor: progress;
 }
 
+/* ONE ROW OF CHROME (C5), and no more. This header used to measure 96.8px in the
+   shipped binary — 11% of the window's 900px minimum height, spent on every
+   screen. Two things paid for that and both are gone:
+
+     * a `.brand` wrapper declaring `flex: 1 1 100%`, which forced `.controls`
+       onto a SECOND row at every width. A 100% flex basis in a wrap container is
+       an unconditional line break: no amount of available width can satisfy it,
+       so the header was two rows tall on a 3440px monitor exactly as on a 900px
+       one. The wrapper is deleted rather than re-tuned — with the title and the
+       logo no longer grouped there was nothing left for it to group.
+     * 1rem of padding above AND below, around a 2.25rem logo.
+
+   `flex-wrap` stays: the row must be allowed to break rather than clip, because
+   `getText()` returns nothing for an element hidden by `overflow: hidden` and the
+   dirty marker is the one thing here that must always be readable. It is simply
+   no longer forced to. The rendered height is measured against the real engine in
+   `e2e/specs/app-shell.e2e.js` ("header real estate"); app.css.test.ts guards the
+   numbers chosen below. */
 .app-header {
-  padding: 1rem 1.5rem;
+  padding: 0.35rem 1rem;
   border-bottom: 1px solid var(--region-border);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
   gap: 0.75rem;
-  flex: 1 1 100%;
 }
 
+/* The Ars Magica Open License attribution mark. Sized so that the CONTROLS set
+   the row's height and the mark never does — see app.css.test.ts, which derives
+   the ceiling from the shared `select, input, button` rule rather than restating
+   a number. */
 .app-logo {
-  height: 2.25rem;
+  height: 1.5rem;
   width: auto;
 }
 
-.app-header h1 {
-  font-size: 1.25rem;
-}
-
-/* Active save's file name (with an ASCII dirty marker) shown at the right of the
-   brand row, so the current document and its unsaved state are visible on-screen
-   and not only in the OS window title. */
+/* Active save's file name (with an ASCII dirty marker), so the current document
+   and its unsaved state are visible on-screen and not only in the OS window
+   title. It leads the row now that the logo and the title have left it. */
 .doc-status {
-  margin-left: auto;
   color: var(--muted);
   font-size: var(--font-small);
   font-variant-numeric: tabular-nums;
 }
 
+/* The auto margin lives here rather than on `.doc-status`, which used to carry
+   it: the status is absent on the startup screen, and the controls have to end
+   up on the right on that screen too. */
 .controls {
   display: flex;
   gap: 1rem;
   align-items: flex-end;
   flex-wrap: wrap;
+  margin-left: auto;
 }
 
 .field {

@@ -367,26 +367,40 @@
   aria-busy={store.busy}
   data-testid="app-shell"
 >
+  <!-- ONE ROW (C5). The header used to be two: a `.brand` wrapper declaring
+       `flex: 1 1 100%` pushed the controls onto a line of their own at every
+       width, and it carried 1rem of padding around a 2.25rem logo and an `<h1>`
+       repeating the app's name. That cost 97px of a window whose minimum height
+       is 900, on every screen, to say nothing the title bar was not already
+       saying. -->
   <header class="app-header">
-    <div class="brand">
-      <img class="app-logo" src={logoUrl} alt={store.t('app-logo-alt')} />
-      <h1>{store.t('app-title')}</h1>
-      <!-- Active save's file name + ASCII dirty marker, on-screen (not only in the
+    <!-- THE APP'S NAME, ANNOUNCED BUT NOT DRAWN. The visible `<h1>` is gone — the
+         effect above puts the very same `app-title` in the OS window title, and
+         C3a's menu puts it in the macOS application menu, so a third rendering
+         inside the window was duplicated chrome.
+         It is `.sr-only` rather than deleted, because deleting it would take the
+         document's ONLY top-level heading with it, and with it the app's only
+         accessible name in-window: the logo beside it is the Ars Magica Open
+         License mark and its alt says exactly that, which is the right name for
+         what the image is and the wrong one for what the application is. -->
+    <h1 class="sr-only">{store.t('app-title')}</h1>
+    <!-- Active save's file name + ASCII dirty marker, on-screen (not only in the
          OS window title). Reuses the derived currentFileName/dirty state; a null
          file name means the document has never been saved. Hidden on the startup
-         screen, where it would report an unsaved document that does not exist. -->
-      {#if store.view !== 'start'}
-        <span class="doc-status" data-testid="doc-status">
-          {#if store.currentFileName === null}
-            {store.t(store.dirty ? 'app-document-unsaved-dirty' : 'app-document-unsaved')}
-          {:else}
-            {store.t(store.dirty ? 'app-document-name-dirty' : 'app-document-name', {
-              name: store.currentFileName,
-            })}
-          {/if}
-        </span>
-      {/if}
-    </div>
+         screen, where it would report an unsaved document that does not exist.
+         First on the row, where the eye starts — it is the only on-screen surface
+         for unsaved state since C3c retired the toolbar. -->
+    {#if store.view !== 'start'}
+      <span class="doc-status" data-testid="doc-status">
+        {#if store.currentFileName === null}
+          {store.t(store.dirty ? 'app-document-unsaved-dirty' : 'app-document-unsaved')}
+        {:else}
+          {store.t(store.dirty ? 'app-document-name-dirty' : 'app-document-name', {
+            name: store.currentFileName,
+          })}
+        {/if}
+      </span>
+    {/if}
     <!-- The app's own preferences — language, appearance, validation strictness —
          live behind ONE button now (C4), on every screen, because none of the
          three is about a character. The language dropdown and the Validation
@@ -432,6 +446,12 @@
         </div>
       {/if}
     </div>
+    <!-- The Ars Magica Open License attribution mark, in the upper right and last
+         in reading order: it names neither the app nor anything the user acts on,
+         so it comes after the status and after every control rather than leading
+         the header the way it used to. Small enough that the controls, not the
+         mark, set the row's height (app.css). -->
+    <img class="app-logo" src={logoUrl} alt={store.t('app-logo-alt')} />
   </header>
 
   {#if store.view === 'start'}

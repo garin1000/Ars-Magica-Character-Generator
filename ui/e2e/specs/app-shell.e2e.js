@@ -225,6 +225,72 @@ describe('header document status', () => {
   });
 });
 
+// C5. The header is chrome, and every pixel of it is charged to the character
+// surfaces below on a window whose `minHeight` is 900 (tauri.conf.json). It used
+// to take a whole second row: `.brand` declared `flex: 1 1 100%`, so the controls
+// wrapped at EVERY width — an unconditional break no available width could undo —
+// and above and below that sat 1rem of padding around a 2.25rem logo and an `<h1>`
+// repeating the OS window title.
+//
+// Measured in the real engine, because that is the only place a height exists.
+// `render` from `svelte/server` attaches no stylesheet and happy-dom performs no
+// layout, so app.css.test.ts can pin the numbers that were CHOSEN but never the
+// box they produce.
+describe('header real estate', () => {
+  it('spends one row on the header, with the logo in its upper right', async () => {
+    await startCharacter('companion');
+    await $('[data-testid="doc-status"]').waitForExist({ timeout: 30000 });
+
+    const box = await browser.execute(() => {
+      const rect = (el) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, height: r.height };
+      };
+      const header = document.querySelector('.app-header');
+      return {
+        header: rect(header),
+        logo: rect(header.querySelector('.app-logo')),
+        status: rect(header.querySelector('[data-testid="doc-status"]')),
+        settings: rect(header.querySelector('[data-testid="settings-button"]')),
+      };
+    });
+
+    // THE BUDGET. One row of controls, its padding and the bottom rule. The header
+    // measured 113px before this slice, which is where the number to beat comes
+    // from; 48 is comfortably above what a single control row needs and still less
+    // than half of what was there.
+    // Measured at 38.8px here against 96.8px before the slice — the budget below
+    // is the guard, not the achievement.
+    expect(box.header.height).toBeLessThanOrEqual(48);
+
+    // ONE ROW, not merely a shorter stack: the three things on it all overlap each
+    // other's vertical band. A wrapped header could satisfy the height budget alone
+    // by shedding padding, and would still be the layout this slice is about.
+    for (const child of [box.logo, box.status, box.settings]) {
+      // `null` would mean the element left the header altogether — the logo, the
+      // status and the Settings button all have to still BE here.
+      expect(child).not.toBe(null);
+      expect(child.top).toBeGreaterThanOrEqual(box.header.top - 1);
+      expect(child.bottom).toBeLessThanOrEqual(box.header.bottom + 1);
+    }
+    expect(box.logo.top).toBeLessThan(box.settings.bottom);
+    expect(box.settings.top).toBeLessThan(box.logo.bottom);
+    expect(box.status.top).toBeLessThan(box.settings.bottom);
+
+    // …and the logo is the rightmost thing on that row — the upper right corner.
+    expect(box.logo.left).toBeGreaterThanOrEqual(box.settings.right);
+    expect(box.logo.right).toBeLessThanOrEqual(box.header.right);
+    // The document status keeps the left, where the eye starts.
+    expect(box.status.left).toBeLessThan(box.settings.left);
+
+    // The dirty marker's only on-screen home survives the shrink AND stays
+    // readable: `getText()` returns '' for an element clipped by `overflow:
+    // hidden`, so this fails loudly if the tightened row started clipping.
+    expect(clean(await $('[data-testid="doc-status"]').getText())).not.toBe('');
+  });
+});
+
 describe('German localization', () => {
   const SPELLS_TAB = '[data-testid="tab-spells"]';
 
