@@ -1596,7 +1596,7 @@ fn german_i18n_covers_all_items() {
 /// strings across 16 entries off **mid-word** — user-facing rules text truncated
 /// to nonsense, and nothing in the suite noticed. This is that missing witness.
 ///
-/// The accepted terminators are deliberately a *set*, not just `.`ArMDE: two entries
+/// The accepted terminators are deliberately a *set*, not just `.`: two entries
 /// legitimately end in `!` (`flaw.gullible`, "There is one born every minute -
 /// and it is this character!"), and a first sentence can equally close on a
 /// parenthesis or a quotation mark. A cut-off string ends on a letter, so a
@@ -4216,7 +4216,7 @@ fn a_two_category_flaw_counts_against_its_secondary_category_cap() {
 ///
 /// The book backs the outcome. `ArMDE:2840` bars a companion from Hermetic Virtues and
 /// Flaws "unless you have The Gift" — and a Suppressed-Gift character *does* have
-/// The Gift (`ArMDE:6805`ArMDE: it "does not function", but the social penalties remain),
+/// The Gift (`ArMDE:6805`: it "does not function", but the social penalties remain),
 /// which is why `has_the_gift` flags them through the same `hermetic` category.
 /// `ArMDE:6809` then describes the Flaw as a companion's: "If he replaces a companion,
 /// he will become much more powerful when the Story Flaw is resolved."
@@ -4460,7 +4460,7 @@ fn a_grog_may_take_sufi_through_its_social_status_category() {
 // ":2840" — "You may not take Hermetic Virtues and Flaws, unless you have The
 // Gift (this would be highly unusual)" — is a CONDITIONAL category rule, and
 // the companion profile encoded only its unconditional half. Both halves of
-// the profile now carry a `when`ArMDE: `hermetic` is permitted while
+// the profile now carry a `when`: `hermetic` is permitted while
 // `Has(virtue.the_gift)` holds and forbidden while it does not. Permitting is
 // ANY and forbidding is EVERY, so relaxing only the forbid would have left
 // every single-category Hermetic item refused with `category_not_permitted` —
@@ -5443,7 +5443,7 @@ fn the_beings_items_carry_general_plus_an_explicit_eligibility_gate() {
         assert_eq!(
             item.categories,
             vec!["general".to_string()],
-            "{id} is indexed under General, and must not carry `hermetic`ArMDE: that \
+            "{id} is indexed under General, and must not carry `hermetic`: that \
              slug is the profiles' `gift_categories` and would make an unGifted \
              bearer count as Gifted"
         );
@@ -5538,7 +5538,7 @@ fn a_companion_may_take_the_two_beings_flaws() {
     );
 }
 
-/// The other half of dropping `hermetic`ArMDE: without the prerequisites, a grog
+/// The other half of dropping `hermetic`: without the prerequisites, a grog
 /// could take Unbearable to (Beings) with neither The Gift nor Magical Air —
 /// trading one wrong output for another. `ArMDE:6895` bars it, and a grog can have
 /// neither (`ArMDE:2830`).
@@ -5570,7 +5570,7 @@ fn a_grog_may_not_take_unbearable_to_beings_without_the_gift_or_magical_air() {
 /// The find that belongs in the same slice: `virtue.inoffensive_to_beings` ships
 /// the permissive `general` category and shipped **no** eligibility gate at all,
 /// so an unGifted character with no Magical Air took it clean.
-/// `ArMDE:4139`ArMDE: "UnGifted characters may take this Virtue only if they have the Flaw
+/// `ArMDE:4139`: "UnGifted characters may take this Virtue only if they have the Flaw
 /// Magical Air."
 #[test]
 fn an_ungifted_character_needs_magical_air_for_inoffensive_to_beings() {
@@ -5647,7 +5647,7 @@ fn a_companion_holding_offensive_to_beings_is_not_gifted() {
     );
 }
 
-// --- `index_categories`ArMDE: the book's index, kept apart from membership (row 18) -
+// --- `index_categories`: the book's index, kept apart from membership (row 18) -
 //
 // `7ea4f5b` moved the two Beings Flaws from `categories: ["hermetic"]` to
 // `["general"]` because `hermetic` is what `effective::has_the_gift` reads, and
@@ -5667,7 +5667,7 @@ fn a_companion_holding_offensive_to_beings_is_not_gifted() {
 // and the Markdown export all stay blind to it, which the leak guards below pin.
 
 /// Every shipped item carrying `index_categories`, with the index heading and
-/// the line the book lists it at. Frozen, in the manner of `TAKEN_AS_ITEMS`ArMDE: the
+/// the line the book lists it at. Frozen, in the manner of `TAKEN_AS_ITEMS`: the
 /// set is small, hand-verified against the `### <Category>, <Magnitude>` blocks
 /// under `## List of Virtues` (`ArMDE:3004`) and `## List of Flaws` (`ArMDE:5283`), and a
 /// silent addition must fail rather than pass.
@@ -6410,7 +6410,7 @@ fn a_grog_may_not_take_a_mythic_companion_virtue() {
 }
 
 /// The Gift-category test is a membership query as well, so it still recognises
-/// a Flaw through the `hermetic` category it now shares with `story`ArMDE: a grog
+/// a Flaw through the `hermetic` category it now shares with `story`: a grog
 /// forbids The Gift, and Suppressed Gift is Hermetic.
 #[test]
 fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
@@ -6449,7 +6449,7 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 
 /// Every core-rules item whose descriptor allows repetition **without naming a
 /// ceiling**, paired with the line that says so. The convention for "the
-/// rulebook states no limit" is `u8::MAX`ArMDE: the V/F point budget
+/// rulebook states no limit" is `u8::MAX`: the V/F point budget
 /// (ArMDE:2638) caps the real count
 /// far below it, so the number is unreachable rather than arbitrary.
 ///
@@ -6555,7 +6555,7 @@ const SHARE_CAPPED_ITEMS: &[(&str, u32, u8, u8)] = &[
 /// naming the SAME power collides, and `max_total` stays absent (`u8::MAX`)
 /// because the book states no ceiling on the number of powers.
 ///
-/// The target must be free text rather than `domain: "item"`ArMDE: a "power" is an
+/// The target must be free text rather than `domain: "item"`: a "power" is an
 /// *instance* of one of the Focus/Greater/Lesser/Personal/Ritual Power Virtues
 /// (`ArMDE:6689`), and those Virtues are themselves unparameterized and repeatable,
 /// so naming the Virtue would wrongly cap a magus at one copy across all three

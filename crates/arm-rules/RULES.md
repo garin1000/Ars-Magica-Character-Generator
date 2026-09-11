@@ -199,7 +199,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   "fix" one to match the other without deciding the question again.
 - One transient state warns by design and is pinned by
   `a_devil_child_without_demonic_blood_yet_warns_on_the_ratio` in
-  `crates/arm-app/tests/commands.rs`ArMDE: a Devil Child whose free-Minor choice is
+  `crates/arm-app/tests/commands.rs`: a Devil Child whose free-Minor choice is
   Demonic Might but who has not yet bought Demonic Blood holds 1 granted point
   of a 1-point Virtue total (Devil Child itself is Free and lifts no
   denominator), so `2·1 > 1` fires. A finished build is clean — both Demonic
@@ -240,7 +240,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
 
   Already correct and deliberately untouched: `virtue.deft_form` (`ArMDE:3645-3648`),
   `flaw.deficient_form` (`ArMDE:5909-5912`), `flaw.deficient_technique` (`ArMDE:5913-5915`).
-  Correct by design as `art`ArMDE: `virtue.affinity_art` and `virtue.puissant_art`, where
+  Correct by design as `art`: `virtue.affinity_art` and `virtue.puissant_art`, where
   **either** Art class is legal. Pinned by `tests/data_integrity.rs`
   (`form_restricted_virtues_flaws_declare_the_form_domain`,
   `virtue_deft_form_declares_the_form_domain`,
@@ -462,7 +462,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   every byte-identity site (the duplicate key at `validation/selections.rs`'s
   `validate_duplicate_selections`) that a new field would sit outside of, and
   needs no `Ord`/`normalize`/canonical-output change. `virtue.sufi` additionally
-  carries `max_total: 1`ArMDE: `ArMDE:5083` offers a choice between two READINGS of one
+  carries `max_total: 1`: `ArMDE:5083` offers a choice between two READINGS of one
   item, not two items, and load-time integrity
   (`ruleset::integrity::validate_taken_as_max_total`) now rejects any
   `taken_as`-declaring item that omits this cap.
@@ -646,7 +646,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   same resolution and which
   `ui/e2e/specs/magus-editor.e2e.js:317` asserts.
 - **Permitting is ANY, and forbidding is EVERY — the two are mirrors**
-  (`validation/selections.rs`ArMDE: `validate_permitted_categories`,
+  (`validation/selections.rs`: `validate_permitted_categories`,
   `validate_forbidden_categories`). An item is permitted when **any** of its
   categories is on the profile's permitted list, and ruled out only when **every**
   one of them is on its forbidden list. Both readings follow from the same fact:
@@ -853,8 +853,8 @@ selection clears it.
 
 The `hermetic` category gates on **The Gift, not magus-hood**. `ArMDE:2882` goes
 further and lets a troupe read Hermetic Flaws as Supernatural Flaws for a
-sufficiently supernatural character. `ArMDE:2840`ArMDE: a companion "may not take Hermetic
-Virtues and Flaws, **unless you have The Gift**". `ArMDE:2829`ArMDE: grogs may not, and
+sufficiently supernatural character. `ArMDE:2840`: a companion "may not take Hermetic
+Virtues and Flaws, **unless you have The Gift**". `ArMDE:2829`: grogs may not, and
 `ArMDE:2830` bars them from The Gift entirely.
 
 Two Flaws the book also indexes under General shipped `["hermetic"]` alone, and
@@ -929,7 +929,7 @@ membership category on either Flaw:
 
 `validate_house` counts a selected Flaw when the profile's
 `hermetic_flaw_categories` meets the item's `categories` **or** its
-`index_categories`. Everything else stays blind to `index_categories`ArMDE: Gift
+`index_categories`. Everything else stays blind to `index_categories`: Gift
 detection, the free-slot grant, permitted/forbidden categories, the category
 caps, grant constraints, `PointItem::categories_for`, `items_by_category`, the UI
 pickers and the Markdown export's Type cell. That is a leak guard, not a
@@ -964,7 +964,7 @@ repeated heading and rejects a heading the item already carries in `categories`
 — the field records only the divergence, and a slug in both lists would let a
 reader satisfy itself from either and blur the line. Unlike `categories`, whose
 order is the descriptor's own emphasis, `index_categories` is canonically sorted
-by `PointItem::normalize`ArMDE: an index has no authored order.
+by `PointItem::normalize`: an index has no authored order.
 
 `SCHEMA_VERSION` is untouched (16). Both fields are **ruleset** shape, not save
 shape, so there is no migration.
@@ -1032,20 +1032,20 @@ source:
 | grog | `virtue_points: 3`, `flaw_points: 3` | `ArMDE:2295`, `ArMDE:2824-2830`, `ArMDE:1009` |
 | grog | `max_major_virtues: 0`, `max_major_flaws: 0` | `ArMDE:2824-2830` ("may not take Major Virtues or Flaws"), `ArMDE:1009` |
 | grog | `max_minor_flaws: 3` | `ArMDE:1009` ("no more than three Minor Flaws") |
-| grog | `flaw_category_caps`ArMDE: personality major_only/hard `max: 0`; personality `max: 1`; story `max: 0` | grogs take one Minor Personality Flaw, no Major Flaws, no Story Flaws `ArMDE:1009`, `ArMDE:2824-2830` |
+| grog | `flaw_category_caps`: personality major_only/hard `max: 0`; personality `max: 1`; story `max: 0` | grogs take one Minor Personality Flaw, no Major Flaws, no Story Flaws `ArMDE:1009`, `ArMDE:2824-2830` |
 | grog | `forbidden_categories` includes `hermetic`; `gift_policy: forbidden` | `ArMDE:2829` ("You may not take Hermetic Virtues and Flaws"), `ArMDE:2830` ("You may not take The Gift"), `ArMDE:2876` ("Grogs can never have The Gift"), `ArMDE:1009` ("grogs can never have The Gift") |
 | grog | `permitted_categories` includes `supernatural`, and `forbidden_categories` does **not** | **Removed as unsourced** — the entry it replaces forbade `supernatural`, and no passage supports that. `ArMDE:2822-2830` is the grog guidelines in full (up to 3 points of Flaws and an equal number of Virtues; must take one Social Status; should not take Story Flaws; not more than one Personality Flaw; may not take Major Virtues or Flaws; may not take Hermetic Virtues and Flaws; may not take The Gift) and Supernatural appears nowhere in it; `ArMDE:1009` likewise; the `### Supernatural` prose (`ArMDE:2958-2962`) explains realm association and Warping immunity and sets no character-type restriction. **Both halves had to go**: permitting is ANY, so removing only the forbid would have left every single-category Supernatural item refused with `category_not_permitted` — a change that looks like a fix and does nothing. `hermetic` stays forbidden (`ArMDE:2829`, row above). What still bounds a grog here is sourced: `ArMDE:2828`'s Major cap (`max_major_virtues`/`max_major_flaws: 0`), which catches every Major Supernatural item and so does most of the real work; `ArMDE:2830`'s Gift policy, untouched because Gift detection reads `gift_categories: ["hermetic"]`, so a Supernatural Virtue never confers The Gift; `ArMDE:2824`'s 3-point budget; and `ArMDE:2826`'s Story cap, which still refuses the two *Story, Supernatural* Flaws |
 | companion | `virtue_points: 10`, `flaw_points: 10` | `ArMDE:2297`, `ArMDE:2834-2840` |
 | companion | `hermetic` is **permitted when** `Has(virtue.the_gift)` and **forbidden when** `Nor([Has(virtue.the_gift)])` | `ArMDE:2840` ("You may not take Hermetic Virtues and Flaws, unless you have The Gift (this would be highly unusual)"). The conditional is now modelled — see *A category rule may carry a condition* below. **Both halves carry the condition**, because permitting is ANY and forbidding is EVERY: relaxing only the forbid would have left every single-category Hermetic item refused with `category_not_permitted`, the same trap the grog `supernatural` row records. The two conditions are exact complements, so behaviour for an unGifted companion is unchanged (both issues still fire) and only the Gifted case moves |
 | companion | `max_major_virtues: null`, `max_major_flaws: null` (no count cap) | no Major-count cap for companions in the book |
 | companion | `max_minor_flaws: 5` | `ArMDE:2774`, `ArMDE:2835` |
-| companion | `flaw_category_caps`ArMDE: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `ArMDE:2820`, `ArMDE:2838` (Major Personality hard); `ArMDE:2820`/`ArMDE:2976` (Personality total); `ArMDE:2818`/`ArMDE:2837` (Story) |
+| companion | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `ArMDE:2820`, `ArMDE:2838` (Major Personality hard); `ArMDE:2820`/`ArMDE:2976` (Personality total); `ArMDE:2818`/`ArMDE:2837` (Story) |
 | magus | `virtue_points: 10`, `flaw_points: 10` | `ArMDE:2303` ("Like companions, magi may take up to ten points of Flaws, and the same number of points of Virtues"), `ArMDE:2855` ("up to 10 points of Flaws, and an equal number of points of Virtues") |
 | magus | `max_minor_flaws: 5` | `ArMDE:2856` ("may not have more than 5 Minor Flaws") |
 | magus | `is_magus: true`, `gift_policy: required`, `required_traits: [virtue.hermetic_magus]` | `ArMDE:2858` ("must take The Gift and the Hermetic Magus Social Status Virtue"), `ArMDE:2293` (only magi may take the Hermetic Magus Status) |
-| magus | `flaw_category_caps`ArMDE: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `ArMDE:2862` ("should not take more than two Personality Flaws, and may not take more than one Major Personality Flaw"); `ArMDE:2861` ("should not take more than one Story Flaw") |
-| magus | `virtue_category_caps`ArMDE: hermetic major_only/hard `max: 1` | `ArMDE:2857` ("may not have more than one Major Hermetic Virtue") — see the Houses section |
-| magus | `hermetic_flaw_categories: [hermetic]`, and **no other profile carries the key** | `ArMDE:2860` ("You should take at least one Hermetic Flaw"), a bullet under `#### Magi` (`ArMDE:2853`). Its own field rather than a second read of `gift_categories`ArMDE: the guideline asks what the BOOK lists as Hermetic, Gift detection asks what the CHARACTER is, and the two Beings Flaws answer those differently — see *Resolved (row 18)* |
+| magus | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `ArMDE:2862` ("should not take more than two Personality Flaws, and may not take more than one Major Personality Flaw"); `ArMDE:2861` ("should not take more than one Story Flaw") |
+| magus | `virtue_category_caps`: hermetic major_only/hard `max: 1` | `ArMDE:2857` ("may not have more than one Major Hermetic Virtue") — see the Houses section |
+| magus | `hermetic_flaw_categories: [hermetic]`, and **no other profile carries the key** | `ArMDE:2860` ("You should take at least one Hermetic Flaw"), a bullet under `#### Magi` (`ArMDE:2853`). Its own field rather than a second read of `gift_categories`: the guideline asks what the BOOK lists as Hermetic, Gift detection asks what the CHARACTER is, and the two Beings Flaws answer those differently — see *Resolved (row 18)* |
 | mythic_companion | `virtue_points: 20`, `flaw_points: 10`, `virtue_points_per_flaw_point: 2` | `ArMDE:2638` ("up to ten points of Flaws, and each point of Flaws is worth two points of Virtues. This produces a maximum of 21 points of Virtues and 10 points of Flaws") |
 | mythic_companion | `forbidden_categories: [hermetic]`, `gift_policy: forbidden` | `ArMDE:2637` (Mythic Companion status Virtues "are incompatible … with The Gift"); generated as Companions `ArMDE:2635` |
 | mythic_companion | `permitted_categories` includes `mythic_companion`, and no other profile's does | `ArMDE:2637` ("All Mythic Companions take a Free Virtue which specifies their status … are not available to grogs"); each status Virtue makes its bearer a Mythic Companion (`ArMDE:3673`, `ArMDE:3823`, `ArMDE:4596`, `ArMDE:5008`) — see the V/F category note |
@@ -1158,7 +1158,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   are the book's Ability types (`ArMDE:7177-7268`), taken from each entry's trailing
   `(Type)` label.
 - Data: 78 abilities covering all five categories, including the full
-  early-childhood restricted list (`ArMDE:2378`ArMDE: Area Lore, Athletics, Awareness,
+  early-childhood restricted list (`ArMDE:2378`: Area Lore, Athletics, Awareness,
   Brawl, Charm, Folk Ken, Guile, Living Language, Stealth, Survival, Swim).
   Native language is not a separate id: it is one *instance* of
   `ability.living_language`, told apart by the row's `parameter` (the language
@@ -1478,7 +1478,7 @@ Two shapes need it, and neither was expressible with `max_per_target` alone:
    domains make the target part of the duplicate key, which is the only property
    `max_total` is compensating for.)
 
-**Same sentinel convention as `max_per_target`ArMDE: absent = `u8::MAX` (255) = "no
+**Same sentinel convention as `max_per_target`: absent = `u8::MAX` (255) = "no
 stated ceiling"** (see the box above). A stated ceiling is encoded literally.
 
 Items whose descriptor caps the TOTAL number of copies, each with the line
@@ -1578,9 +1578,9 @@ magnitude change here, the per-Virtue target there.
   forbid_tainted: true }]`, and the Minor entry's `max_per_target` dropped from
   `255` to the default `1`. Label `param-label-virtue` in
   `locales/en|de/main.ftl`.
-- Engine: `ParameterDef::require_possessed` / `ArMDE::forbid_tainted` (`types.rs`);
+- Engine: `ParameterDef::require_possessed` / `::forbid_tainted` (`types.rs`);
   `validation/selections.rs::validate_possessed_param_targets` (possession and
-  the one-claim-per-Virtue rule) and `ArMDE::param_value_resolves` (the Tainted
+  the one-claim-per-Virtue rule) and `::param_value_resolves` (the Tainted
   narrowing); load gate in `ruleset/integrity.rs::validate_parameter_defs`.
 - Frontend: `ParameterDef.require_possessed` / `.forbid_tainted`
   (`ui/src/lib/types.ts`), `itemOptionsFor` + `heldItemRefs`
@@ -1938,7 +1938,7 @@ magic is aligned to for the purposes of aura modifiers" — and the four Realms
 `realm-<id>` Fluent family the Might score reads. So the parameter records the
 Realm, and `realm.<slug>` resolves through `Realm::from_id` exactly as
 `characteristic.<slug>` resolves through `Characteristic::from_id`. No catalogue
-and no declared `values`ArMDE: the enum *is* the registry, which is why a `values`
+and no declared `values`: the enum *is* the registry, which is why a `values`
 list on a realm parameter is rejected at load by the same branch that rejects
 one on `text`.
 
@@ -1999,7 +1999,7 @@ parentheses**: an unfilled slot renders the hint "(Realm)", so a
 per-power items needed `name_unfilled` to escape — and a freshly added row is
 exactly the unfilled case. And no noun follows the Realm label, because German
 takes it uninflected from the glossary
-(`rules/source/de/translation-tables/sphären-mächte.md:18-21`ArMDE: Magie, Fee, Das
+(`rules/source/de/translation-tables/sphären-mächte.md:18-21`: Magie, Fee, Das
 Göttliche, Das Infernale); "… Göttliche Sphäre" would need the inflected
 adjective the label does not carry. Since the sheet appends an unmentioned
 parameter in parentheses, the exported string changed shape with the template,
@@ -2126,9 +2126,9 @@ every selection, so two Improved Characteristics yield
 `characteristic_points_granted == 6` and two Demonic Powers yield
 `power_levels_budget == 40`. Covered by
 `tests/data_integrity.rs::repeated_selections_stack_their_effects`,
-`ArMDE::repeated_selections_are_not_reported_as_duplicates`,
-`ArMDE::shipped_repeatable_items_carry_their_rulebook_ceiling` and
-`ArMDE::shipped_once_only_items_stay_non_repeatable`.
+`::repeated_selections_are_not_reported_as_duplicates`,
+`::shipped_repeatable_items_carry_their_rulebook_ceiling` and
+`::shipped_once_only_items_stay_non_repeatable`.
 
 #### Power Virtues fund the power-levels budget (B10)
 > "The character has a supernatural power that he can activate at will. If you
@@ -2220,7 +2220,7 @@ reports.
 **Markdown export.** The being's own powers table gained a Penetration column
 (`export/magic.rs::power_rows`, key `power-penetration-label`), so the sheet
 reconciles with the budget bar the app showed. The familiar's invested-powers
-table keeps the two-column `leveled_rows`ArMDE: those powers are charged against no
+table keeps the two-column `leveled_rows`: those powers are charged against no
 budget at all (`ArMDE:10866`) and no surface sets their Penetration, so a third column
 there would be a row of zeros implying a field that does not exist.
 
@@ -2433,7 +2433,7 @@ approximation of "Latin").
   assigned XP; leftover XP sitting between two score thresholds is not represented.
   A by-hand assignment that left such leftover XP will not reproduce exactly.
   Verification therefore uses scores at **clean XP thresholds** only (tests in
-  `effective.rs` and `data_integrity.rs`ArMDE: three Forms at score 6 = 21 XP, one at
+  `effective.rs` and `data_integrity.rs`: three Forms at score 6 = 21 XP, one at
   score 4 = 10 XP → boosted 9/9/9 and 8 on the triangular Art curve).
 
 #### Mastered Spells / Flawless Magic — Spell Mastery (`spell_mastery_xp`, `grants_spell_mastery`)
@@ -2480,7 +2480,7 @@ approximation of "Latin").
 > "For every level in the Mastery Ability, the maga may also choose one special
 > ability, which applies only to that mastered spell. Thus, a maga with a Mastery
 > Score of two for a spell has two special abilities for that spell." (`ArMDE:9524-9526`)
-> The catalogue of fourteen options is at `ArMDE:9528-9592`ArMDE: Adaptive, Ceremonial, Fast,
+> The catalogue of fourteen options is at `ArMDE:9528-9592`: Adaptive, Ceremonial, Fast,
 > Imperturbable, Magic Resistance, Multiple, Obfuscated, Penetration, Precise,
 > Quick, Quiet, Rebuttal, Still Casting, and Unravelling. Most are once-per-spell;
 > Precise (`ArMDE:9570-9572`), Quick (`ArMDE:9574-9576`), and Quiet Casting (`ArMDE:9578-9580`)
@@ -2624,7 +2624,7 @@ talisman, which is why it is an `Option`, not a `Vec`.
   per-total "touching my talisman" toggle; both are out of M5.5b's scope.
 - **Instilled effects** — `Talisman.effects: Vec<TalismanEffect { name, level: u16 }>`.
   "When a magus instills effects into a talisman, he gets a +5 bonus to his Lab
-  Total" (`ArMDE:10621`). Deliberately **not** a reused `EnchantedDevice`ArMDE: the two carry
+  Total" (`ArMDE:10621`). Deliberately **not** a reused `EnchantedDevice`: the two carry
   different budget contracts (see the non-goal under M5.5b in the derived-totals
   section) and different provenance — the same reason `SupernaturalPower` exists
   beside `EnchantedDevice`.
@@ -2721,7 +2721,7 @@ Source for the whole chapter: `ArMDE:10766-10892`.
 
 - **`animal: String`** (free text) — the kind of beast. "The first step in getting a
   familiar is finding an animal with inherent magic" (`ArMDE:10774`). Deliberately **not**
-  named `species`ArMDE: the rules reserve *Species* for the Imaginem term (the sensory
+  named `species`: the rules reserve *Species* for the Imaginem term (the sensory
   image a thing sheds), and the German glossary makes the same reservation
   (`translation-tables/grundbegriffe.md:112`), so "Spezies" is the wrong label too.
 - **`might: Option<MightScore>`** — the familiar's own Magic Might + Realm. "the
@@ -2821,7 +2821,7 @@ Masterpiece block. Every read-out comes from `store.derived.familiar` and is **n
 recomputed in JS, the `itemBudget`/`itemUsed` precedent.
 
 New Fluent keys in both locales. German terms come from
-`rules/source/de/translation-tables/`ArMDE: `tiere-kreaturen.md` (Animal → **Tier**, Size →
+`rules/source/de/translation-tables/`: `tiere-kreaturen.md` (Animal → **Tier**, Size →
 **Größe**, Power → **Kraft**), `grundbegriffe.md` (Familiar → **Vertrauter**, Might
 Score → **Machtwert**, Intelligence → **Intelligenz**), `sphären-mächte.md`
 (Magic Might → **Magische Macht**), `labor-fortschritt.md` (Familiar Bond →
@@ -2852,7 +2852,7 @@ with `load_entity_migrating` upgrading older saves (see the Aging points note
 below). A v8 (pre-5e) and a v9 (5e) save both still load. Aging *rolls* stay in M6;
 M5 only makes the raw state + effects enterable and computes the scores from points.
 
-- **Aging points** — `Entity.aging_points: BTreeMap<Characteristic, u8>`ArMDE: the
+- **Aging points** — `Entity.aging_points: BTreeMap<Characteristic, u8>`: the
   *lifetime* accrued aging points *per Characteristic* (the sheet prints these).
   The Characteristic **drops** they force are DERIVED, never stored (see the
   "Aging lowers derived" note below). Source:
@@ -2867,7 +2867,7 @@ M5 only makes the raw state + effects enterable and computes the scores from poi
     Decrepitude — including those "lost" to a drop — the fold also corrects the old
     model's Decrepitude under-count. A legacy map that cannot deserialize fails the
     load loudly rather than folding in nothing (see the M5.5b migration note).
-- **Warping points** — `Entity.warping_points: u32`ArMDE: accrued Warping Points.
+- **Warping points** — `Entity.warping_points: u32`: accrued Warping Points.
 - **Twilight scars** — `Entity.twilight_scars: Vec<TwilightScar { description }>`
   (free-text; `TwilightScar` derives `Ord`, so `Entity::normalize()` sorts them for
   zero-noise diffs). Source: `ArMDE:9731`, `ArMDE:9743`.
@@ -2911,7 +2911,7 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
 - Source: `ArMDE:16551-16561`.
 - Implementation: `effective/warping.rs::warping_owed(entity, ruleset) -> WarpingOwed`
   (`{ minor_flaws, minor_supernatural_virtues, major_flaws }`), driven by the pure
-  threshold `WarpingOwed::from_score`ArMDE: Minor Flaw at Score 1, a second at 3
+  threshold `WarpingOwed::from_score`: Minor Flaw at Score 1, a second at 3
   (`minor_flaws` cap 2); a supernatural Minor Virtue at 5; `major_flaws =
   score.saturating_sub(5)` (Score 6 → 1, 7 → 2, …). Magi (`profile.is_magus`) owe
   **zero** — Warping gives them Wizard's Twilight instead (16551), which this
@@ -3000,7 +3000,7 @@ consumes them). Both invert the **Ability** advancement table via the new
   `ArMDE:16464-16475`; grant at `ArMDE:7019-7021`.
 
 **Aging lowers derived, not creation.** The drops are DERIVED from the accrued
-points by `effective/warping.rs::aging_drops(entity, char)`ArMDE: once the points **exceed** the
+points by `effective/warping.rs::aging_drops(entity, char)`: once the points **exceed** the
 absolute value of the (already aged-down) score the Characteristic drops by one and
 the points reset, so the simulation consumes `|score| + 1` points per drop over the
 lifetime total. Worked examples encoded as tests (`ArMDE:16613`): a Communication of +2
@@ -3410,7 +3410,7 @@ without a parameter: the `ParamType` model is ref-domain-only and there is no
 ## Spells (magus-only, M4/4c)
 
 A starting magus knows a list of spells, each drawn from the catalogue in
-`rules/core/spells.json` (`spell.rs`ArMDE: `Spell { technique, form, level,
+`rules/core/spells.json` (`spell.rs`: `Spell { technique, form, level,
 requisites, parameters }`, with `level: None` marking a **General** spell learned
 at a per-character level). The chosen spells live on `Entity::spells`
 (`SpellSelection { spell, level, mastery, parameter }`); `validate_spells`
@@ -3721,7 +3721,7 @@ differently just sets the flag).
 
 7 missile-table weapons (32 weapons total).
 
-**`n/a` cells** are `Option::None`ArMDE: Dodge has no Attack/Damage; the body attacks
+**`n/a` cells** are `Option::None`: Dodge has no Attack/Damage; the body attacks
 (Dodge/Fist/Kick) have no minimum-Strength — distinct from a real `0` (Fist's `+0`
 Attack). `min_strength` for a weapon and a shield are met separately (`ArMDE:16997`).
 
@@ -3777,7 +3777,7 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Magic Resistance | `ArMDE:9390-9398` | per Form: Form + 5 × Parma Magica (Form-base rule `ArMDE:9390`, Parma "five times" `ArMDE:9398`); Limited MR drops the Form bonus, Flawed Parma halves |
 | Longevity (stored) | `ArMDE:10662`, `ArMDE:10668`, `ArMDE:10670` | the aging bonus is the **player-entered** `LongevityRitual.bonus`, passed through for **both** sources; `entered: false` marks an unfilled field so a placeholder 0 is never read as a claim. Bronze cord noted for aging-resistance (`ArMDE:10840-10844`), via `cord_score` so it respects the +5 maximum (`ArMDE:10836`) and matches the Soak and cord-cost figures |
 | Longevity hint | `ArMDE:10662`, `ArMDE:10276-10278`, `ArMDE:17658`, `ArMDE:5909-5915`, `ArMDE:5962-5964` | self-made only: `LongevityHint { lab_total, suggested_bonus, halved }` — Creo Corpus Lab Total (Int + Magic Theory + Creo + Corpus + Aura + flat LabTotalMod), halved by a Deficient Creo/Corpus and again by Difficult Longevity Ritual, then `suggested_bonus = ceil(lab_total / 5)` floored at 0. **Read-only guidance** — never written into the entity. `derived/lab.rs::suggested_longevity_bonus` / `creo_corpus_lab_total` |
-| Masterpiece | `ArMDE:4476-4479`, `ArMDE:10410`, `ArMDE:7060-7063` | magus with the Masterpiece Virtue (`Effect::MasterpieceItem` marker) surfaces a **read-only** lesser-enchanted-item cap = **best base `(Te,Fo)` Lab Total ÷ 2** (the lesser-enchantment rule caps single-season instillation at Lab Total ≥ 2×effect level, `ArMDE:10410`; vis costs ignored per the Virtue). The best cell is picked by (and the cap built from) `LabTotal.enchanting`, not the plain `total`ArMDE: designing the item is "creating" an enchanted item, so a **Weak Enchanter** magus's halved figure (`ArMDE:7060-7063`) is "the regular rules for construction of such a device" (`ArMDE:4476-4479`) for him too — `enchanting` equals `total` for everyone else, so the formula is unchanged for a magus without the Flaw (round 3, G1: the un-halved `total` used to leak through here, doubling the cap). No focus doubling. The engine does **not** create the device or spend an item-level budget — the player still enters the actual lesser enchanted item by hand under Magic Items; this is guidance only. `masterpiece_item_cap` / `DerivedTotals.masterpiece` |
+| Masterpiece | `ArMDE:4476-4479`, `ArMDE:10410`, `ArMDE:7060-7063` | magus with the Masterpiece Virtue (`Effect::MasterpieceItem` marker) surfaces a **read-only** lesser-enchanted-item cap = **best base `(Te,Fo)` Lab Total ÷ 2** (the lesser-enchantment rule caps single-season instillation at Lab Total ≥ 2×effect level, `ArMDE:10410`; vis costs ignored per the Virtue). The best cell is picked by (and the cap built from) `LabTotal.enchanting`, not the plain `total`: designing the item is "creating" an enchanted item, so a **Weak Enchanter** magus's halved figure (`ArMDE:7060-7063`) is "the regular rules for construction of such a device" (`ArMDE:4476-4479`) for him too — `enchanting` equals `total` for everyone else, so the formula is unchanged for a magus without the Flaw (round 3, G1: the un-halved `total` used to leak through here, doubling the cap). No focus doubling. The engine does **not** create the device or spend an item-level budget — the player still enters the actual lesser enchanted item by hand under Magic Items; this is guidance only. `masterpiece_item_cap` / `DerivedTotals.masterpiece` |
 | Talisman capacity | `ArMDE:10619`, `ArMDE:4347-4349`, `ArMDE:4842-4850` | magus **with a talisman** surfaces a **read-only** enchantment capacity in pawns of Vim vis: "The maximum number of pawns of Vim vis that may be used to prepare a talisman is equal to the sum of the magus's highest Technique and highest Form" (`ArMDE:10619`). Taken from the per-Art maxima of **effective** scores (`effective_art_score`, so Puissant Art folds in), **not** the best `lab_totals` pair — a Deficient Art halves *totals*, never the score, and a discriminating test pins that. Ties go to the alphabetically first Art (`Ruleset::art_ids_of` is sorted); a magus with no bought Arts still reads out, at 0 pawns. **Non-goal**: instilled `TalismanEffect` levels are charged against **no** budget — `item_level_budget` comes only from the Redcap-only Virtues (Magic Items "You must be a Redcap to take this Virtue", `ArMDE:4347-4349`; Redcap's fifty starting levels `ArMDE:4842-4850`, which also states "You may not take The Gift", `ArMDE:4850`), so it can never fund a magus's talisman, and the talisman's real limit is this vis capacity, which the model cannot enforce (it holds no vis stock). `derived/familiar.rs::talisman_capacity` / `DerivedTotals.talisman_capacity` |
 | Familiar bonding level | `ArMDE:10824`, `ArMDE:10828` | magus **with a familiar** surfaces a **read-only** bonding level = **Magic Might + 25 + 5 × Size**: "The level for the enchantment is equal to 25 plus the familiar's Magic Might plus 5 times its Size. If the familiar has negative Size, this reduces the level for the enchantment" (`ArMDE:10824`), restated as "**FAMILIAR BONDING LEVEL: Familiar's Magic Might + 25 + (5 x Size)**" (`ArMDE:10828`). Size is signed and commonly negative, so the level routinely drops *below* 25 — the book's own worked example (Size -2, Might 10 → level 25) is a named test. A familiar with **no entered Might** contributes 0 rather than suppressing the read-out; the panel says "no Magic Might entered" instead. `derived/familiar.rs::familiar_binding_level` |
 | Familiar bonding Lab Total | `ArMDE:10818`, `ArMDE:10822`, `ArMDE:10826`, `ArMDE:10824` | the **ordinary Lab Total shape** — "any appropriate Technique + any appropriate Form + Int + Magic Theory + Aura Modifier" (`ArMDE:10818`), restated as "**FAMILIAR BONDING LAB TOTAL**" (`ArMDE:10826`) — so `lab_totals()` is **reused** and the best `(Te,Fo)` cell taken with `max_by_key`, the same max-over-grid reuse as Masterpiece. Which Arts are *appropriate* to a given beast is prose the engine cannot evaluate, and "Any magus should be able to find an animal that he can bind with his best Technique and Form" (`ArMDE:10822`), so the best cell is the honest figure. **Unlike Masterpiece, a focus applies here**: "Puissant Arts and foci may apply to this" (`ArMDE:10818`) — so `lab_total_within_focus` is surfaced as a **separate conditional** figure the UI labels as such (whether *this* familiar falls inside the focus's narrow field is a troupe judgment); Puissant Arts need no separate figure, `effective_art_score` folds them in. `lab_total_reaches_level` reports "A magus can only bind a familiar if his Lab Total equals or exceeds this level" (`ArMDE:10824`). `derived/familiar.rs::familiar_readout` / `FamiliarBinding` |
@@ -4139,7 +4139,7 @@ Because a magus may hold only one Magical Focus of **either** magnitude,
 `incompatible_with` in `rules/core/virtues_flaws.json` (ArMDE:4405) — the same
 dual-magnitude convention every `*_major`/`*_minor` V/F pair follows. That
 convention is now enforced at load by `ruleset/integrity.rs`
-`validate_magnitude_variant_exclusivity`ArMDE: it detects variant pairs by shared stem
+`validate_magnitude_variant_exclusivity`: it detects variant pairs by shared stem
 under both the `<stem>_major`/`<stem>_minor` **suffix** and the
 `major_<stem>`/`minor_<stem>` **prefix** conventions (Magical Focus is the sole
 prefix pair), and — only when **both** members exist, so a lone `*_major` or the
@@ -4485,7 +4485,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
 > choose the ones that best fit your conception of the character.
 
 - Source: `ArMDE:2378`.
-- Data: `rules/core/life_stages.json` → `childhood`ArMDE: `years` 5,
+- Data: `rules/core/life_stages.json` → `childhood`: `years` 5,
   `native_language_xp` 75, `spread_xp` 45, and `spread_abilities` (the eleven ids
   the passage names). `native_language_ability` names the ability the 75 buys
   (`ability.living_language`) as data rather than a hardcoded slug.
@@ -4547,7 +4547,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   sorted by `(ability, slot)`; an absent slot sorts first, which is what puts
   Traveling's native `Living Language 5` ahead of its slotted `Living Language 1`.
   Names in `rules/i18n/en/childhoods.json` and `rules/i18n/de/childhoods.json` —
-  `name` only, no `description`ArMDE: the entry list is mechanics, and a UI composes the
+  `name` only, no `description`: the entry list is mechanics, and a UI composes the
   human-readable spread from this file plus the Ability i18n, so no rules text is
   duplicated. The German names are read verbatim off the German mirror
   `Ars Magica Definitive Edition Basisregeln.md:2384-2388` — Athletische Kindheit,
@@ -4679,7 +4679,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `restricted_xp_unspent` warning. `ChildhoodRejection::DuplicateSlotValue` names
   both slots so the UI can point at the colliding field.
 - **Rejections are collected, not short-circuited.** `apply_package` reports every
-  bad field in one pass (`ChildhoodRejection`ArMDE: unknown package, native language
+  bad field in one pass (`ChildhoodRejection`: unknown package, native language
   unset, slot unfilled, slot is the native language, duplicate slot value), so a
   player fixing a package fills in all of it at once. The rejections are plain
   data — no issue codes, no Fluent keys, no user-facing prose; mapping them onto
@@ -4689,7 +4689,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `validation::childhood_rejection_issues` (`validation/life_stage.rs`) turns the
   rejections into `childhood_slot_unfilled`, `childhood_slot_is_native_language`
   and `childhood_slot_duplicate_value` (all error / `experience`). They are emitted
-  only there, never by `validate()`ArMDE: applying a package is all-or-nothing, so a
+  only there, never by `validate()`: applying a package is all-or-nothing, so a
   stored character cannot *hold* an unanswered or colliding slot — the rejection
   describes the form the player just submitted and is gone once it is corrected.
   Each carries the Ability plus the `key` its field label comes from — the
@@ -4761,7 +4761,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   after that"), and the Darius example at `ArMDE:2439-2449` — whose master "picks 10 as a
   nice, round number" for the start of apprenticeship (`ArMDE:2402`) and who spends "his
   last 5 exp on Parma Magica 1" "just before Gauntlet" (`ArMDE:2449`).
-- Data: `rules/core/life_stages.json` → `apprenticeship`ArMDE: `years` 15, `xp` 240,
+- Data: `rules/core/life_stages.json` → `apprenticeship`: `years` 15, `xp` 240,
   `default_gauntlet_age` 25 (below), plus the two Ability lists (below). Canonically
   sorted, so `apprenticeship` leads the file.
 - Implementation: `life_stage.rs` — `ApprenticeshipRules`,
@@ -4846,7 +4846,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `plan.gauntlet_age` — the stored `Option`, still `None` here — so the baseline
   cannot trip it. `life_stage_age_before_gauntlet` compares
   `LifeStageBudget::gauntlet_age` against `minimum_gauntlet_age()` (20), and the clamp
-  keeps that value at `min(25, age)`ArMDE: for `age < 25` it is the age, exactly what the
+  keeps that value at `min(25, age)`: for `age < 25` it is the age, exactly what the
   validator saw before, and for `age >= 25` it is 25, which clears the floor. The
   lab-season and spell-level ceilings both *rise* with the post-Gauntlet years the
   baseline grants, so they refuse strictly less than before.
@@ -4874,12 +4874,12 @@ Abilities are bought with experience earned in blocks, not from one bank:
   step), `ArMDE:2471` (the rate) and `ArMDE:2482` (lab work), under the heading
   `#### Magus Only — After Apprenticeship` at `ArMDE:2467` — the fourth of the periods
   `ArMDE:2364` names: "apprenticeship, and life as a magus after that".
-- Data: `rules/core/life_stages.json` → `post_apprenticeship`ArMDE: `points_per_year` 30
+- Data: `rules/core/life_stages.json` → `post_apprenticeship`: `points_per_year` 30
   (`ArMDE:2471`), `lab_season_cost` 10 and `max_charged_lab_seasons_per_year` 3 (`ArMDE:2482`).
   Canonically sorted, so the block closes the file after `later_life`.
 - Implementation: `life_stage.rs` — `PostApprenticeshipRules`, carried by
   `LifeStageRules::post_apprenticeship` as an additive `Option` with
-  `skip_serializing_if`, exactly like `apprenticeship`ArMDE: `ArMDE:2364` calls these "two
+  `skip_serializing_if`, exactly like `apprenticeship`: `ArMDE:2364` calls these "two
   **more** periods", so a ruleset with no Hermetic magi ships neither block and writes
   neither key. The player's three choices live on `LifeStagePlan` (`gauntlet_age`,
   `post_gauntlet_lab_seasons`, `post_gauntlet_spell_levels`), the derived figures on
@@ -4887,13 +4887,13 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `post_gauntlet_spell_levels`, `post_gauntlet_xp`).
 - **Points, not experience points.** `ArMDE:2471` makes each point fungible — "an experience
   point in an Art or Ability or one level of spell" — and the player decides which each
-  one becomes. Hence `points_per_year` where apprenticeship says `xp`ArMDE: `ArMDE:2435` grants
+  one becomes. Hence `points_per_year` where apprenticeship says `xp`: `ArMDE:2435` grants
   its 240 experience and 120 spell levels as two separate, non-interchangeable numbers,
   which is why those two live in two files (above) while this one number does not split.
 - **Transcription trust gate:** `lab_season_cost × max_charged_lab_seasons_per_year`
   must equal `points_per_year`, and `lab_season_cost` may not be 0 —
   `Ruleset::validate_post_apprenticeship_rules`. The identity is not tidiness, it **is**
-  `ArMDE:2482`ArMDE: the deduction runs "to a minimum of 0 if three or four seasons are spent", so
+  `ArMDE:2482`: the deduction runs "to a minimum of 0 if three or four seasons are spent", so
   three seasons at 10 have to cancel the yearly 30 exactly. A year that overshot would
   have lab work take points it never granted; one that fell short would still pay a
   magus who spent the whole year in the lab. Same idiom as re-pricing the
@@ -5295,7 +5295,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
 
 - Source: `ArMDE:2451-2461` (heading
   `ArMDE:2451`, the four Abilities `ArMDE:2453-2459`, the total `ArMDE:2461`), with the consequence
-  half of `ArMDE:2437`ArMDE: "A character without a Latin score of least 4 and an Artes
+  half of `ArMDE:2437`: "A character without a Latin score of least 4 and an Artes
   Liberales score of at least 1 is unable to read the books of the Order… A Magic
   Theory score of below 3 is weak, and, in particular, means that the magus cannot set
   up his own laboratory."
@@ -5774,7 +5774,7 @@ stands over the character at all.
   sentences that happen to coincide. "Until he reaches the age of 35" stops the clamp
   *at* 35 while rolls are owed only from 36, so at exactly 35 a ritual-holder rolls
   **unclamped** and a character without one does not roll at all. `validate_aging_rules`
-  deliberately does **not** gate `start_age == until_age`ArMDE: asserting equality would
+  deliberately does **not** gate `start_age == until_age`: asserting equality would
   invent a relationship the rules never state.
 - **The load-time trust gate**: `longevity_clamp.max_total < outcomes[0].min`.
   `ArMDE:16575` states the clamp's *purpose* — "no risk of actually aging" — and that is
@@ -5794,7 +5794,7 @@ stands over the character at all.
   order is *not* the book's; the `source` line is what pairs a row with its
   rulebook line:
 
-  | id | modifier | `ArMDE:line` | cumulative |
+  | id | modifier | `:line` | cumulative |
   |---|---|---|---|
   | `living_condition.wealthy_or_healthy_location` | +2 | `ArMDE:16583` | |
   | `living_condition.typical_summer_or_autumn_covenant_magus` | +2 | `ArMDE:16584` | |
@@ -5861,7 +5861,7 @@ stands over the character at all.
   `source` line and a serde-tagged `effect` so an unknown kind is a **load**
   failure rather than a silently ignored row:
 
-  | totals | effect | `ArMDE:line` |
+  | totals | effect | `:line` |
   |---|---|---|
   | 10-12 | `any_characteristic`, 1 point | `ArMDE:16601` |
   | 13 | `next_decrepitude_level_and_crisis` | `ArMDE:16602` |
@@ -6002,7 +6002,7 @@ because the year, die and distribution they describe are typed on the aging step
 nowhere else. Several are errors, so the attribution is what lets that step block
 Next on its own broken input. A refusal therefore crosses the IPC
 edge as an ordinary `Ok` outcome (`status: "rejected"`) carrying issues, never as an
-`AppError`ArMDE: it describes the form the player just submitted, and the frontend
+`AppError`: it describes the form the player just submitted, and the frontend
 renders it through the `issue-<code>` path it already has, so no English prose
 crosses the boundary. They are **command-input** findings — the engine writes
 nothing when it refuses, so no saved character can hold one for `validate` to find —
@@ -6385,7 +6385,7 @@ ends and every band between them.
 
 `crisis_preview` (`aging.rs`) composes `crisis_total`, `resolve_crisis_row` and
 `crisis_survival` into the one value a caller needs from `(entity, ruleset, age,
-die)`ArMDE: the CRISIS TOTAL with its three terms, the **id** of the row it lands on, that
+die)`: the CRISIS TOTAL with its three terms, the **id** of the row it lands on, that
 row's `CrisisOutcome`, and the survival read-out where one applies. Each of the three
 stays the single home of its own rule; what the composition adds is the *pairing* —
 the row is looked up against the total this call computed and the survival read-out
@@ -6436,7 +6436,7 @@ crisis rule is implemented twice.
   records the Crisis as **owed and unrolled** (`crisis: true`, no `crisis_row`). The
   aging roll happened whether or not the second die has been thrown, and refusing to
   record it would lose the one thing that did. This is deliberately **not** an
-  `AgingError`ArMDE: every existing variant describes a write the engine will not make, and
+  `AgingError`: every existing variant describes a write the engine will not make, and
   here it makes one.
 - **A Crisis die on a year the table sent to no Crisis resolves nothing**, and is not an
   error either — whether a Crisis happened is `ArMDE:16602`/`ArMDE:16611`'s call, never the
@@ -6505,7 +6505,7 @@ cases — rolled, unrolled, no Crisis, no ritual.
 > — ArMDE:16621, :16624-16632
 
 `AgingLogEntry` (`types.rs`) widens by four fields, all
-`serde(default, skip_serializing_if)`ArMDE: `crisis_die` (the player's Simple Die),
+`serde(default, skip_serializing_if)`: `crisis_die` (the player's Simple Die),
 `crisis_total` (the CRISIS TOTAL it made), `crisis_row` (the **id** of the row it
 landed on) and `crisis_severity`. Together with the pre-existing `crisis` flag they
 distinguish three states a year can be in, which one boolean could not: no Crisis
@@ -6826,7 +6826,7 @@ reader confidently to the wrong passage.
   named English file exists and the range brackets real, non-blank content.
 - **Inward, into Rust.** `tests/rules_md_citations.rs` —
   `every_implementation_site_citation_in_rules_md_points_at_the_named_item`
-  parses this file's `` `symbol` (ArMDE:NNN) `` implementation-site citations and
+  parses this file's `` `symbol` (:NNN) `` implementation-site citations and
   asserts each cited line actually defines the symbol it names. The B11 sweep
   found **15 of them stale**, every one a function that had simply moved; the
   failure message now names the line the symbol is really on, so the fix is
@@ -6870,7 +6870,7 @@ no domain has a legal value with an edge of whitespace.
 `house_choices` / `mythic_choices` / `warping_choices`, exactly like the `being`
 fold — and at every frontend write path (`AppStore.setParamAt`,
 `setAbilityBonusTarget`, `setArtBonusTarget`, and `ParameterPicker`'s
-`onTypeText`, which already did). **Not** in `Entity::normalize`ArMDE: normalize runs
+`onTypeText`, which already did). **Not** in `Entity::normalize`: normalize runs
 on every save and sorts selections by `(ref, params)`, so trimming there would
 reorder the rows of a file the player had only opened, against the
 zero-noise-diff convention. On load the reordering settles once.
@@ -7065,7 +7065,7 @@ the birth year would underflow. It clamps the derived age to 0 and emits
 `saga_year_before_birth_year` — a **warning**, phase `concept`, args `saga_year` and
 `birth_year`, localized as `issue-saga_year_before_birth_year` in both locales. Like
 the three `childhood_slot_*` rows it is listed in the `ValidationIssue` contract table
-but is **not** emitted by `validate`ArMDE: only the derivation raises it, and that stayed
+but is **not** emitted by `validate`: only the derivation raises it, and that stayed
 true through C8 — the year now reaches the engine as entity data, but `validate` was
 not given a new rule to enforce with it, so the advisory still comes only from
 `age_in_saga_year`. It carries no rulebook citation — no passage forbids an impossible

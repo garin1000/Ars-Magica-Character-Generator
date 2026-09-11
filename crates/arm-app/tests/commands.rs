@@ -1109,7 +1109,7 @@ fn aging_preview_reads_the_crisis_off_the_year_it_would_apply() {
 /// sufficient Aging Points (in any Characteristics) to reach the next level in
 /// Decrepitude, and Crisis" (`ArMDE:16602`) — five points from nothing. The Crisis is
 /// then read off the character those five points already made (`ArMDE:16619`), so a
-/// Simple Die of 10 totals `10 + 4 + 1 = 15`ArMDE: the minor illness of `ArMDE:16628`,
+/// Simple Die of 10 totals `10 + 4 + 1 = 15`: the minor illness of `ArMDE:16628`,
 /// survivable on a Stamina stress roll against an Ease Factor of 3 or a CrCo20.
 ///
 /// Until the die crossed this edge every Crisis the shipped app recorded was owed
