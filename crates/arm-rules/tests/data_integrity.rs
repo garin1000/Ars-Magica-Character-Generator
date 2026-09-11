@@ -152,10 +152,10 @@ fn shipped_data_passes_integrity_check() {
 /// "Poor"), so this test is as much a guard against losing it again as a check on
 /// its numbers.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2394 ("Characters with
+/// Source: ArMDE:2394 ("Characters with
 /// the Wealthy Virtue get 20 experience points per year, while characters with the
 /// Poor Flaw get 10 … Note that only companions can take this Virtue or Flaw"),
-/// `:5235-5238` (Wealthy), `:6594-6596` (Poor: "this Flaw is not available to
+/// `ArMDE:5235-5238` (Wealthy), `ArMDE:6594-6596` (Poor: "this Flaw is not available to
 /// magi").
 #[test]
 fn wealthy_and_poor_ship_with_their_rates_and_eligibility() {
@@ -193,7 +193,7 @@ fn wealthy_and_poor_ship_with_their_rates_and_eligibility() {
         for id in ["virtue.wealthy", "flaw.poor"] {
             assert!(
                 profile.forbidden_traits.contains(&Id::new(id)),
-                "{type_id} must forbid {id} (Ars Magica - Definitive Edition (Core Rules).md:2394)"
+                "{type_id} must forbid {id} (ArMDE:2394)"
             );
         }
     }
@@ -213,7 +213,7 @@ fn wealthy_and_poor_ship_with_their_rates_and_eligibility() {
 /// > Language, Area Lore, or Organization Lore, as well as some social Abilities, are
 /// > half (round up) that which his age normally allows.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:6160. The trailing "some
+/// Source: ArMDE:6160. The trailing "some
 /// social Abilities" is deliberately unflagged — see RULES.md.
 #[test]
 fn foreign_upbringing_halves_the_locality_dependent_abilities() {
@@ -242,7 +242,7 @@ fn foreign_upbringing_halves_the_locality_dependent_abilities() {
             rs.ability(&Id::new(id))
                 .expect("ability ships")
                 .locality_dependent,
-            "{id} is locality-dependent (Ars Magica - Definitive Edition (Core Rules).md:6160)"
+            "{id} is locality-dependent (ArMDE:6160)"
         );
     }
     // A plainly non-local Ability is not flagged, so the fraction has a real edge.
@@ -297,7 +297,7 @@ fn shipped_abilities_and_characteristics_load() {
 
     // The `*` marker is the per-ability `requires_training` flag (cannot be used
     // untrained), NOT the supernatural category: it spans General/Academic/Arcane
-    // too. Source: Ars Magica - Definitive Edition (Core Rules).md:4157
+    // too. Source: ArMDE:4157
     // (Jack of All Trades) — heading asterisks set it.
     for (id, expected) in [
         ("ability.artes_liberales", true), // Academic, asterisked
@@ -395,9 +395,9 @@ fn top_level_keys_in_file_order(json_text: &str) -> Vec<&str> {
 /// it is a shortcut for: 45 experience points across the spread and 75 in the
 /// native language.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2378 (the two blocks),
-/// `:2384-2388` (the five packages), priced off the "ABILITY To Buy" column at
-/// `:2406-2427`.
+/// Source: ArMDE:2378 (the two blocks),
+/// `ArMDE:2384-2388` (the five packages), priced off the "ABILITY To Buy" column at
+/// `ArMDE:2406-2427`.
 ///
 /// The two figures are deliberately **literals**. `Ruleset::validate_childhood_packages`
 /// already prices every package at load, but against `rules/core/life_stages.json`
@@ -433,8 +433,8 @@ fn every_shipped_childhood_package_prices_to_45_and_75() {
 /// > … Magi must have the following minimum Abilities: Parma Magica 1, Magic
 /// > Theory 1, Latin 1.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2435 (the years and the
-/// experience), `:2437` (the three minimums), `:2451-2461` (the four recommended
+/// Source: ArMDE:2435 (the years and the
+/// experience), `ArMDE:2437` (the three minimums), `ArMDE:2451-2461` (the four recommended
 /// Abilities and their "Total Cost: 90 experience points").
 ///
 /// Every figure is a **literal off the rulebook line**, for the same reason the
@@ -449,10 +449,16 @@ fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
         .and_then(|rules| rules.apprenticeship.as_ref())
         .expect("the shipped life stages declare an apprenticeship");
 
-    assert_eq!(apprenticeship.years, 15, "\"The fifteen years\" (:2435)");
-    assert_eq!(apprenticeship.xp, 240, "\"240 experience points\" (:2435)");
+    assert_eq!(
+        apprenticeship.years, 15,
+        "\"The fifteen years\" (ArMDE:2435)"
+    );
+    assert_eq!(
+        apprenticeship.xp, 240,
+        "\"240 experience points\" (ArMDE:2435)"
+    );
 
-    // "Parma Magica 1, Magic Theory 1, Latin 1" (:2437). Latin is one instance of
+    // "Parma Magica 1, Magic Theory 1, Latin 1" (ArMDE:2437). Latin is one instance of
     // the parameterized dead-language Ability, matched by id (see RULES.md), so no
     // requirement names a parameter.
     let stated: Vec<(&str, u8, Option<&str>)> = apprenticeship
@@ -469,7 +475,7 @@ fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
         ]
     );
 
-    // "Artes Liberales 1 / Latin 4 / Magic Theory 3 / Parma Magica 1" (:2453-2459).
+    // "Artes Liberales 1 / Latin 4 / Magic Theory 3 / Parma Magica 1" (ArMDE:2453-2459).
     let recommended: Vec<(&str, u8, Option<&str>)> = apprenticeship
         .recommended_abilities
         .iter()
@@ -486,17 +492,17 @@ fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
     );
     assert_eq!(
         apprenticeship.recommended_xp, 90,
-        "\"Total Cost: 90 experience points\" (:2461)"
+        "\"Total Cost: 90 experience points\" (ArMDE:2461)"
     );
 
     // The baseline a plan naming no Gauntlet age is read at: "These templates are of
     // a stereotypical member of each House, 25 years old and just out of
-    // apprenticeship" (:1601). A literal for the same reason the rest are — the only
+    // apprenticeship" (ArMDE:1601). A literal for the same reason the rest are — the only
     // outside witness that the shipped number is the rulebook's.
     assert_eq!(
         apprenticeship.default_gauntlet_age,
         Some(25),
-        "\"25 years old and just out of apprenticeship\" (:1601)"
+        "\"25 years old and just out of apprenticeship\" (ArMDE:1601)"
     );
 }
 
@@ -510,11 +516,11 @@ fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
 /// *some* content in the file it names).
 ///
 /// Note that `Curse-Throwing` appears twice in the core rules: the Virtue at
-/// `:3625` (*Major, Supernatural*, "confers the Supernatural Ability
-/// Curse-Throwing 1") and the Supernatural **Ability** at `:7396`, which is what
+/// `ArMDE:3625` (*Major, Supernatural*, "confers the Supernatural Ability
+/// Curse-Throwing 1") and the Supernatural **Ability** at `ArMDE:7396`, which is what
 /// `ability.curse_throwing` already cites. `virtue.curse_throwing` is the former.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3504, 3625, 3649, 3663,
+/// Source: ArMDE:3504, 3625, 3649, 3663,
 /// 3667, 3671, 3821, 4594, 5006, 5010, 5022.
 #[test]
 fn core_rules_virtues_cite_the_core_rules_file() {
@@ -563,9 +569,9 @@ fn core_rules_virtues_cite_the_core_rules_file() {
 /// Sampled structurally, never as a total (the catalogue may grow): a few
 /// descriptor lines that do carry the tag, plus `flaw.tainted_with_evil` as the
 /// control — its *name* contains "Tainted" but its descriptor is
-/// `*Minor, General*` (:6844), so it must NOT be flagged.
+/// `*Minor, General*` (ArMDE:6844), so it must NOT be flagged.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2998-3000 (the cap),
+/// Source: ArMDE:2998-3000 (the cap),
 /// and the descriptor lines :3650 (Demonic Blood, "*Major, Supernatural,
 /// Tainted*"), :6856 (Tragic Life, "*Major, Story, Tainted*"), :3411, :3427,
 /// :6840, :6844.
@@ -600,9 +606,9 @@ fn core_rules_tainted_virtues_carry_the_tainted_flag() {
 /// > You have been initiated into the Outer Mystery of the Heartbeast (see page
 /// > 233), and thus are a member of House Bjornaer.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4059-4061 (Heartbeast
-/// → Bjornaer), `:3761` (The Enigma → Criamon), `:3827` (Faerie Magic →
-/// Merinita), `:5217` (Verditius Magic → Verditius). No other free-Virtue
+/// Source: ArMDE:4059-4061 (Heartbeast
+/// → Bjornaer), `ArMDE:3761` (The Enigma → Criamon), `ArMDE:3827` (Faerie Magic →
+/// Merinita), `ArMDE:5217` (Verditius Magic → Verditius). No other free-Virtue
 /// descriptor in the core rules makes that claim, so `virtue.hermetic_prestige`
 /// (Guernicus) is the control: its House grants it, but the Virtue itself says
 /// nothing about membership and must stay House-free.
@@ -655,7 +661,7 @@ fn heartbeast_issue_codes(rs: &Ruleset, e: &Entity) -> Vec<String> {
 /// grant satisfies the prerequisite in any case. Pinned because the House-prereq
 /// data would be actively harmful if it fired on the grant that House makes.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4061 ("all Bjornaer
+/// Source: ArMDE:4061 ("all Bjornaer
 /// magi gain this Virtue for free at character creation").
 #[test]
 fn a_bjornaer_magus_keeps_the_house_granted_heartbeast() {
@@ -764,8 +770,8 @@ fn a_jerbiton_magus_may_still_take_an_ordinary_free_minor_virtue() {
 /// once: two instances of one parameterized Ability and a spread language beside
 /// the native one.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2384 (Athletic),
-/// `:2388` (Traveling).
+/// Source: ArMDE:2384 (Athletic),
+/// `ArMDE:2388` (Traveling).
 #[test]
 fn known_childhood_packages_ship_with_their_entries_and_provenance() {
     let rs = load_full_ruleset();
@@ -786,7 +792,7 @@ fn known_childhood_packages_ship_with_their_entries_and_provenance() {
             ("ability.living_language", None, 5, true),
             ("ability.swim", None, 2, false),
         ],
-        "Athletics 2, Brawl 2, Native Language 5, Swim 2 (Ars Magica - Definitive Edition (Core Rules).md:2384)"
+        "Athletics 2, Brawl 2, Native Language 5, Swim 2 (ArMDE:2384)"
     );
     let source = athletic
         .source
@@ -813,7 +819,7 @@ fn known_childhood_packages_ship_with_their_entries_and_provenance() {
             ("language", "ability.living_language"),
         ],
         "Area A Lore, Area B Lore and the spread Living Language are asked for \
-         (Ars Magica - Definitive Edition (Core Rules).md:2388)"
+         (ArMDE:2388)"
     );
     // The native language is never a slot: it is chosen once per character.
     let native = traveling.native_entry().expect("a native-language entry");
@@ -953,7 +959,7 @@ fn german_i18n_covers_all_spells() {
 /// declare a single `form`-domain parameter, keep their catalogue Vim
 /// Technique/Form (the parameter is display + identity only), and the whole
 /// shipped catalogue still passes load-time referential integrity.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:15776-15779,
+/// Source: ArMDE:15776-15779,
 /// :15791-15794, :15801-15804, :15843-15846.
 #[test]
 fn parametrized_vim_spells_declare_a_form_parameter() {
@@ -1228,7 +1234,7 @@ fn validate_equipment_unknown_ref_and_min_strength() {
 /// whose min-Strength exceeds the wielder's Strength raises the same advisory
 /// `equipment_min_strength` warning as a weapon (shield arm), while armor — which
 /// carries no min-Strength requirement — never warns however weak the wearer (armor
-/// arm's `None`). Ars Magica - Definitive Edition (Core Rules).md:16997.
+/// arm's `None`). ArMDE:16997.
 #[test]
 fn validate_equipment_shield_warns_and_armor_never_warns() {
     let rs = load_ruleset_with_equipment();
@@ -1289,7 +1295,7 @@ fn validate_equipment_shield_warns_and_armor_never_warns() {
 /// advisory `shield_with_two_handed_weapon` warning (the shield's modifiers are
 /// dropped, which looks like a bug otherwise). A one-handed weapon in the mix
 /// clears the advisory, since the shield is usable with it. Non-blocking.
-/// Ars Magica - Definitive Edition (Core Rules).md:7494, :17063, :16975.
+/// ArMDE:7494, :17063, :16975.
 #[test]
 fn shield_with_only_two_handed_weapons_warns() {
     let rs = load_ruleset_with_equipment();
@@ -1388,7 +1394,7 @@ fn normalize_sorts_equipment() {
 
 /// The shipped Skilled Parens raises *both* the spell-levels budget (+30) and the
 /// general apprenticeship XP pool (+60), proving its two-effect package is wired
-/// end-to-end against real data (Ars Magica - Definitive Edition (Core Rules).md:4964-4966).
+/// end-to-end against real data (ArMDE:4964-4966).
 #[test]
 fn shipped_skilled_parens_raises_both_budgets() {
     let rs = load_ruleset_with_spells();
@@ -1406,7 +1412,7 @@ fn shipped_skilled_parens_raises_both_budgets() {
     );
 }
 
-/// The shipped Elemental Magic (Ars Magica - Definitive Edition (Core Rules).md:3731-3737) redistributes Art-XP over the four
+/// The shipped Elemental Magic (ArMDE:3731-3737) redistributes Art-XP over the four
 /// elemental Forms against the real Arts catalogue: each Form gains half (rounded
 /// up) of every other Form's table-XP. With Ignem/Auram/Terram at score 6 (21 XP)
 /// and Aquam at score 4 (10 XP), the boosted effective scores are 9/9/9 and 8,
@@ -1437,7 +1443,7 @@ fn shipped_elemental_magic_redistributes_art_xp() {
     assert_eq!(effective_art_score(&e, &rs, &Id::new("art.corpus")), 6);
 }
 
-/// The shipped Weak Parens lowers both budgets (Ars Magica - Definitive Edition (Core Rules).md:7072-7074).
+/// The shipped Weak Parens lowers both budgets (ArMDE:7072-7074).
 #[test]
 fn shipped_weak_parens_lowers_both_budgets() {
     let rs = load_ruleset_with_spells();
@@ -1585,12 +1591,12 @@ fn german_i18n_covers_all_items() {
 ///
 /// The convention these files follow is "the first sentence of the rulebook
 /// entry's body text, verbatim" (compare `virtue.inoffensive_to_beings` against
-/// Ars Magica - Definitive Edition (Core Rules).md:4135). An earlier generation
+/// ArMDE:4135). An earlier generation
 /// pass capped every summary at roughly 240 characters, which silently cut 20
 /// strings across 16 entries off **mid-word** — user-facing rules text truncated
 /// to nonsense, and nothing in the suite noticed. This is that missing witness.
 ///
-/// The accepted terminators are deliberately a *set*, not just `.`: two entries
+/// The accepted terminators are deliberately a *set*, not just `.`ArMDE: two entries
 /// legitimately end in `!` (`flaw.gullible`, "There is one born every minute -
 /// and it is this character!"), and a first sentence can equally close on a
 /// parenthesis or a quotation mark. A cut-off string ends on a letter, so a
@@ -1686,8 +1692,8 @@ fn no_virtue_flaw_summary_ends_mid_sentence() {
 /// genuine closing paragraph after its table), which an end-of-string check
 /// would miss, and two descriptions legitimately end without a full stop
 /// because their source lines do — `spell.notes_of_a_delightful_sound`
-/// (Ars Magica - Definitive Edition (Core Rules).md:14676) and
-/// `spell.scent_of_peaceful_slumber` (:15171). Those are faithful extractions
+/// (ArMDE:14676) and
+/// `spell.scent_of_peaceful_slumber` (ArMDE:15171). Those are faithful extractions
 /// of typographic slips in the rulebook and must not be "corrected" here.
 #[test]
 fn no_spell_description_carries_markdown_table() {
@@ -1897,7 +1903,7 @@ fn issue_codes(entity: &Entity, rs: &Ruleset) -> Vec<String> {
         .collect()
 }
 
-/// A magus may hold at most one Magical Focus (Ars Magica - Definitive Edition (Core Rules).md:4542): two Minor
+/// A magus may hold at most one Magical Focus (ArMDE:4542): two Minor
 /// Foci (distinct descriptors, so not a duplicate selection) trip the
 /// `multiple_magical_foci` rule, which counts the `MagicalFocus` effect rather
 /// than relying on pairwise incompatibility (which cannot catch two Minors).
@@ -2075,13 +2081,13 @@ fn companion_with_reputation(item: &str, kind: ReputationType, score: u8) -> Ent
 #[test]
 fn shipped_reputation_granters_authorize_their_kind() {
     let rs = load_ruleset();
-    // Hermetic Prestige → a Hermetic Reputation at 4 (Ars Magica - Definitive Edition (Core Rules).md:4071-4073).
+    // Hermetic Prestige → a Hermetic Reputation at 4 (ArMDE:4071-4073).
     let hp = companion_with_reputation("virtue.hermetic_prestige", ReputationType::Hermetic, 4);
     assert!(
         !reputation_ungranted(&hp, &rs),
         "Hermetic Prestige grants Hermetic"
     );
-    // Baccalaureus → an Academic Reputation (Ars Magica - Definitive Edition (Core Rules).md:3472).
+    // Baccalaureus → an Academic Reputation (ArMDE:3472).
     let bac = companion_with_reputation("virtue.baccalaureus", ReputationType::Academic, 1);
     assert!(
         !reputation_ungranted(&bac, &rs),
@@ -2098,7 +2104,7 @@ fn shipped_reputation_granters_authorize_their_kind() {
 #[test]
 fn shipped_famous_authorizes_any_reputation_kind() {
     let rs = load_ruleset();
-    // Famous (Ars Magica - Definitive Edition (Core Rules).md:3861-3863): player chooses the type — any single type is legal.
+    // Famous (ArMDE:3861-3863): player chooses the type — any single type is legal.
     for kind in ReputationType::ALL {
         let e = companion_with_reputation("virtue.famous", kind, 4);
         assert!(
@@ -2136,7 +2142,7 @@ fn shipped_supernatural_virtues_grant_starting_score() {
             "{item} grants {ability} at 1",
         );
     }
-    // Strong Faerie Blood grants the Second Sight *Virtue* for free (Ars Magica - Definitive Edition (Core Rules).md:5038),
+    // Strong Faerie Blood grants the Second Sight *Virtue* for free (ArMDE:5038),
     // which in turn floors Second Sight at 1.
     let sfb = entity(
         "companion",
@@ -2153,7 +2159,7 @@ fn shipped_supernatural_virtues_grant_starting_score() {
 fn shipped_xp_granters_add_restricted_pool() {
     use arm_rules::restricted_xp_pools;
     let rs = load_ruleset();
-    // Arcane Lore → +50 XP restricted to Arcane abilities (Ars Magica - Definitive Edition (Core Rules).md:3432).
+    // Arcane Lore → +50 XP restricted to Arcane abilities (ArMDE:3432).
     let e = entity(
         "companion",
         vec![Selection::new(Id::new("virtue.arcane_lore"))],
@@ -2165,7 +2171,7 @@ fn shipped_xp_granters_add_restricted_pool() {
             .any(|p| p.amount == 50 && p.categories.contains(&AbilityCategory::Arcane)),
         "Arcane Lore grants a 50-xp Arcane-restricted pool",
     );
-    // Feral Upbringing → 120 XP on a fixed ability list (Ars Magica - Definitive Edition (Core Rules).md:6112).
+    // Feral Upbringing → 120 XP on a fixed ability list (ArMDE:6112).
     let fu = entity(
         "companion",
         vec![Selection::new(Id::new("flaw.feral_upbringing"))],
@@ -2182,7 +2188,7 @@ fn shipped_xp_granters_add_restricted_pool() {
 fn shipped_confidence_true_faith_and_size_granters() {
     use arm_rules::{Confidence, confidence, size, true_faith};
     let rs = load_ruleset();
-    // Ferocity → +1 Confidence Score / +3 Points (Ars Magica - Definitive Edition (Core Rules).md:3875) over the base.
+    // Ferocity → +1 Confidence Score / +3 Points (ArMDE:3875) over the base.
     let fer = entity(
         "companion",
         vec![Selection::new(Id::new("virtue.ferocity"))],
@@ -2195,7 +2201,7 @@ fn shipped_confidence_true_faith_and_size_granters() {
         },
         "Ferocity adds 1/3"
     );
-    // Low Self-Esteem → removes the standard 1/3 Confidence (Ars Magica - Definitive Edition (Core Rules).md:6364).
+    // Low Self-Esteem → removes the standard 1/3 Confidence (ArMDE:6364).
     let lse = entity(
         "companion",
         vec![Selection::new(Id::new("flaw.low_self_esteem"))],
@@ -2208,7 +2214,7 @@ fn shipped_confidence_true_faith_and_size_granters() {
         },
         "Low Self-Esteem zeroes Confidence"
     );
-    // Relic → True Faith 1 (Ars Magica - Definitive Edition (Core Rules).md:4854); Powerful Relic → 3 (Ars Magica - Definitive Edition (Core Rules).md:4783).
+    // Relic → True Faith 1 (ArMDE:4854); Powerful Relic → 3 (ArMDE:4783).
     let relic = entity("companion", vec![Selection::new(Id::new("virtue.relic"))]);
     assert_eq!(true_faith(&relic, &rs), 1);
     let prelic = entity(
@@ -2342,8 +2348,8 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
             specialization_applies: false,
         },
     ];
-    // A full familiar statblock: a raven (Size -4, Ars Magica - Definitive Edition (Core Rules).md:17829-17856) with Magic
-    // Might 10, human intelligence at Int -3 (Ars Magica - Definitive Edition (Core Rules).md:10854), the bond's Loyal
+    // A full familiar statblock: a raven (Size -4, ArMDE:17829-17856) with Magic
+    // Might 10, human intelligence at Int -3 (ArMDE:10854), the bond's Loyal
     // (partner) +3 entered by hand, and one power invested in the bond.
     e.familiar = Some(Familiar {
         name: "Corvus".to_string(),
@@ -2483,7 +2489,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     assert!(!hint.halved);
 
     // Talisman capacity on the real ruleset = highest Technique (Creo 10) + highest
-    // Form (Corpus 12) = 22 pawns of Vim vis (Ars Magica - Definitive Edition (Core Rules).md:10619). Ignem 8 loses to Corpus.
+    // Form (Corpus 12) = 22 pawns of Vim vis (ArMDE:10619). Ignem 8 loses to Corpus.
     let capacity = d
         .talisman_capacity
         .expect("capacity present for a magus with a talisman");
@@ -2494,8 +2500,8 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     assert_eq!(capacity.pawns, 22);
 
     // Non-goal guard: the level-15 instilled effect is charged against NOTHING. The
-    // item-level budget belongs to the Redcap-only Virtues (Ars Magica - Definitive Edition (Core Rules).md:4347-4349,
-    // :4842-4850), and a Redcap "may not take The Gift" (:4850), so it can never
+    // item-level budget belongs to the Redcap-only Virtues (ArMDE:4347-4349,
+    // :4842-4850), and a Redcap "may not take The Gift" (ArMDE:4850), so it can never
     // fund a magus's talisman. This magus has no such Virtue, so both figures are 0
     // even though he owns a talisman holding 15 levels of effect.
     assert_eq!(
@@ -2513,10 +2519,10 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     );
 
     // Familiar bonding read-out on the real ruleset. Binding level = Magic Might 10
-    // + 25 + 5 × Size(-4) = 15 (Ars Magica - Definitive Edition (Core Rules).md:10824, :10828) — the negative Size takes 20
-    // points off. Cords 1/1/2 cost 5 + 5 + 15 = 25 off the curve (:10836), which
+    // + 25 + 5 × Size(-4) = 15 (ArMDE:10824, :10828) — the negative Size takes 20
+    // points off. Cords 1/1/2 cost 5 + 5 + 15 = 25 off the curve (ArMDE:10836), which
     // fits inside the best bonding Lab Total. Invested powers total 20 levels and
-    // are charged against nothing (:10866).
+    // are charged against nothing (ArMDE:10866).
     let fam = d
         .familiar
         .expect("read-out present for a magus with a familiar");
@@ -2561,8 +2567,8 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
 /// A magus with a Creo Corpus Lab Total of 35, built on the **real shipped
 /// ruleset**, gets the book's own worked example back: "Longevity Ritual: Lab Total
 /// 35, +7 aging bonus".
-/// Source: `Ars Magica - Definitive Edition (Core Rules).md:2573` (the sheet line),
-/// `:2488` (the same magus's lab season), `:10662` (the formula).
+/// Source: `ArMDE:2573` (the sheet line),
+/// `ArMDE:2488` (the same magus's lab season), `ArMDE:10662` (the formula).
 #[test]
 fn longevity_hint_reproduces_the_books_lab_total_35_example() {
     let rs = load_full_ruleset();
@@ -2608,7 +2614,7 @@ fn longevity_hint_reproduces_the_books_lab_total_35_example() {
     assert_eq!(hint.suggested_bonus, 7);
 
     // A zero aura does not suppress the suggestion — the Aura Modifier is a plain
-    // addend, and no aura simply means no hindrance (Ars Magica - Definitive Edition (Core Rules).md:10276-10278, :17658).
+    // addend, and no aura simply means no hindrance (ArMDE:10276-10278, :17658).
     // The removed `aura != 0` gate, guarded on the real ruleset.
     e.aura = 0;
     let hint = arm_rules::derived_totals(&e, &rs)
@@ -2620,7 +2626,7 @@ fn longevity_hint_reproduces_the_books_lab_total_35_example() {
     assert_eq!(hint.suggested_bonus, 6, "ceil(30/5), not 0");
 
     // Difficult Longevity Ritual halves it on the shipped catalogue too
-    // (Ars Magica - Definitive Edition (Core Rules).md:5962-5964): 30 → 15 → ceil(15/5) = 3.
+    // (ArMDE:5962-5964): 30 → 15 → ceil(15/5) = 3.
     e.selections
         .push(Selection::new(Id::new("flaw.difficult_longevity_ritual")));
     let hint = arm_rules::derived_totals(&e, &rs)
@@ -2649,15 +2655,15 @@ fn shipped_aging_rules() -> AgingRules {
 }
 
 /// The whole of `## Aging`'s two tables, transcribed row by row: the scalars of
-/// `:16565`-`:16577`, the ten Living Conditions of `:16583-16592` (five of them
-/// asterisked, i.e. cumulative — `:16594`) and the eleven Aging Roll outcomes of
-/// `:16601-16611`.
+/// `ArMDE:16565`-`ArMDE:16577`, the ten Living Conditions of `ArMDE:16583-16592` (five of them
+/// asterisked, i.e. cumulative — `ArMDE:16594`) and the eleven Aging Roll outcomes of
+/// `ArMDE:16601-16611`.
 ///
 /// The row values are deliberately **literals** here: nothing else in the engine
 /// can witness a mis-transcribed modifier or a swapped Characteristic, since the
 /// JSON is the only place those numbers live.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16563-16615.
+/// Source: ArMDE:16563-16615.
 #[test]
 fn shipped_aging_table_carries_the_16583_to_16611_rows() {
     let rules = shipped_aging_rules();
@@ -2665,21 +2671,21 @@ fn shipped_aging_table_carries_the_16583_to_16611_rows() {
     // Stated outright rather than left to `load_full_ruleset`'s unwrap: the
     // shipped tables clear every load-time gate of `validate_aging_rules` —
     // contiguous rows up to an open-ended top one, a clamp below the first
-    // aging-point row (:16575), and no duplicate Living Condition id.
+    // aging-point row (ArMDE:16575), and no duplicate Living Condition id.
     load_full_ruleset()
         .validate_integrity()
         .expect("the shipped aging tables pass every load-time gate");
 
-    // "Characters begin aging in the Winter after they turn 35" (:16565), the
-    // "age/10 (round up)" term (:16567) and the apparent-aging threshold, which
+    // "Characters begin aging in the Winter after they turn 35" (ArMDE:16565), the
+    // "age/10 (round up)" term (ArMDE:16567) and the apparent-aging threshold, which
     // is a question asked of every total rather than a row: "2 or less — No
     // apparent aging" / "3 or more — Apparent age increases by one year"
-    // (:16599-16600, :16577).
+    // (ArMDE:16599-16600, :16577).
     assert_eq!(rules.start_age, 35);
     assert_eq!(rules.age_divisor, 10);
     assert_eq!(rules.apparent_age_increase_min, 3);
     // "treats all rolls of 10 or more as rolls of 9 until he reaches the age of
-    // 35" (:16575).
+    // 35" (ArMDE:16575).
     let clamp = rules
         .longevity_clamp
         .clone()
@@ -2722,7 +2728,7 @@ fn shipped_aging_table_carries_the_16583_to_16611_rows() {
     );
 
     // "\\* Modifiers marked with an asterisk are cumulative with each other."
-    // (:16594) — FIVE rows carry it, the three occupational -1s and both -2s.
+    // (ArMDE:16594) — FIVE rows carry it, the three occupational -1s and both -2s.
     let cumulative: Vec<&str> = rules
         .living_conditions
         .iter()
@@ -2787,7 +2793,7 @@ fn shipped_aging_table_carries_the_16583_to_16611_rows() {
         ]
     );
 
-    // The Aging Roll table (:16601-16611): eleven effect rows, ascending, the
+    // The Aging Roll table (ArMDE:16601-16611): eleven effect rows, ascending, the
     // last one open-ended ("22+").
     let any = |points| AgingRowEffect::AnyCharacteristic { points };
     let named = |characteristics: Vec<Characteristic>| AgingRowEffect::NamedCharacteristics {
@@ -2819,7 +2825,7 @@ fn shipped_aging_table_carries_the_16583_to_16611_rows() {
             (14, Some(14), &named(vec![Characteristic::Qik]), 16603),
             (15, Some(15), &named(vec![Characteristic::Sta]), 16604),
             (16, Some(16), &named(vec![Characteristic::Per]), 16605),
-            // "1 Aging Point in Prs" (:16606) — the table's abbreviation for
+            // "1 Aging Point in Prs" (ArMDE:16606) — the table's abbreviation for
             // Presence, which the engine spells `pre`.
             (17, Some(17), &named(vec![Characteristic::Pre]), 16606),
             (
@@ -2851,7 +2857,7 @@ fn shipped_aging_table_carries_the_16583_to_16611_rows() {
     );
 
     // The table's structural signature: over the eight rows that name
-    // Characteristics (:16603-16610), the four "physical/social pairs" halves
+    // Characteristics (ArMDE:16603-16610), the four "physical/social pairs" halves
     // Qik, Sta, Per and Prs each appear twice — once alone, once paired — and
     // Str, Dex, Com and Int exactly once each. A row transcribed with the wrong
     // Characteristic breaks this even if every band still looks plausible.
@@ -2889,16 +2895,16 @@ fn shipped_aging_table_carries_the_16583_to_16611_rows() {
 /// the assertion says nothing about which field is which.
 type CrisisTableRow<'a> = (&'a str, Option<i32>, Option<i32>, &'a CrisisOutcome, u32);
 
-/// The Crisis Table transcribed row by row (`:16626-16632`), together with the
-/// Simple Die it is rolled on (`:474`), the attending doctor (`:16634`) and the
-/// two Decrepitude thresholds of `:16617`.
+/// The Crisis Table transcribed row by row (`ArMDE:16626-16632`), together with the
+/// Simple Die it is rolled on (`ArMDE:474`), the attending doctor (`ArMDE:16634`) and the
+/// two Decrepitude thresholds of `ArMDE:16617`.
 ///
 /// The values are deliberately **literals**, for the same reason the Aging Roll
 /// transcription above uses them: the shipped JSON is the only place an Ease
 /// Factor or a Ritual level lives, so nothing else in the engine can witness a
 /// mis-transcribed one.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:474, :16617-16634.
+/// Source: ArMDE:474, :16617-16634.
 #[test]
 fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
     let rules = shipped_aging_rules();
@@ -2908,20 +2914,20 @@ fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
     // shipped Crisis Table clears every load-time gate of `validate_crisis_rules`
     // — rows tiling contiguously between an open-below and an open-above end, an
     // illness ladder whose severity, Ritual level and Ease Factor all climb
-    // together (:16638), an attendant Ability that resolves, and a frail
-    // Decrepitude score below the fatal one (:16617).
+    // together (ArMDE:16638), an attendant Ability that resolves, and a frail
+    // Decrepitude score below the fatal one (ArMDE:16617).
     load_full_ruleset()
         .validate_integrity()
         .expect("the shipped crisis table passes every load-time gate");
 
     // "Characters with a Decrepitude score of 4 are extremely frail, and must
     // roll on the Crisis Table … Characters with a Decrepitude score of 5 are
-    // bedridden and will die within a few months at most." (:16617)
+    // bedridden and will die within a few months at most." (ArMDE:16617)
     assert_eq!(rules.frail_decrepitude_score, Some(4));
     assert_eq!(rules.fatal_decrepitude_score, Some(5));
 
     // "Roll a ten-sided die. Each number counts for its value, except that a zero
-    // counts as ten." (:474) — the CRISIS TOTAL's Simple die (:16621).
+    // counts as ten." (ArMDE:474) — the CRISIS TOTAL's Simple die (ArMDE:16621).
     let die = crisis.die.clone().expect("the Simple Die of :474 ships");
     assert_eq!((die.min, die.max), (1, 10));
     let die_source = die.source.expect("the die carries provenance");
@@ -2934,7 +2940,7 @@ fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
     // "An Int + Medicine roll against an Ease Factor of 6 allows the character to
     // add the attendant's Medicine score to the roll to survive the crisis. …
     // if the doctor botches the character must subtract 3 from the survival
-    // roll." (:16634) — the penalty is stored signed, as the roll takes it.
+    // roll." (ArMDE:16634) — the penalty is stored signed, as the roll takes it.
     let attendant = crisis
         .attendant
         .clone()
@@ -2984,7 +2990,7 @@ fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
     assert_eq!(
         rows,
         vec![
-            // "8 or less — Bedridden for a week" (:16626): open below, so no
+            // "8 or less — Bedridden for a week" (ArMDE:16626): open below, so no
             // `min` at all rather than a very small one.
             ("crisis.bedridden_week", None, Some(8), &bedridden, 16626),
             (
@@ -3023,7 +3029,7 @@ fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
                 16631
             ),
             // "19+ — **Terminal illness**. CrCo40 required to survive."
-            // (:16632): open above, and no Stamina roll at all — hence no Ease
+            // (ArMDE:16632): open above, and no Stamina roll at all — hence no Ease
             // Factor rather than an unbeatable one.
             (
                 "crisis.terminal_illness",
@@ -3044,11 +3050,11 @@ fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
     let last = crisis.rows.last().expect("the crisis table has rows");
     assert!(
         first.min.is_none(),
-        "the first row is open below: \"8 or less\" (:16626)"
+        "the first row is open below: \"8 or less\" (ArMDE:16626)"
     );
     assert!(
         last.max.is_none(),
-        "the last row is open above: \"19+\" (:16632)"
+        "the last row is open above: \"19+\" (ArMDE:16632)"
     );
     for pair in crisis.rows.windows(2) {
         let ceiling = pair[0].max.expect("only the last row is open above");
@@ -3062,7 +3068,7 @@ fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
     }
 
     // "The level of spell required depends on the severity of the crisis, as
-    // noted on the table." (:16638) — so severity is a ladder that climbs with
+    // noted on the table." (ArMDE:16638) — so severity is a ladder that climbs with
     // the band, and the Ritual level climbs with it.
     let illnesses: Vec<(CrisisSeverity, u32)> = crisis
         .rows
@@ -3099,7 +3105,7 @@ fn shipped_aging_total(items: &[&str]) -> AgingTotal {
 }
 
 /// Faerie Blood: "You are resistant to aging, and get -1 to all aging rolls."
-/// (Ars Magica - Definitive Edition (Core Rules).md:3801) — the shipped `aging_roll -1` is ADDED with its stored sign, so
+/// (ArMDE:3801) — the shipped `aging_roll -1` is ADDED with its stored sign, so
 /// the total drops by one.
 #[test]
 fn faerie_blood_lowers_the_aging_total_by_one() {
@@ -3116,7 +3122,7 @@ fn faerie_blood_lowers_the_aging_total_by_one() {
 
 /// Strong Faerie Blood: "You start making aging rolls at the age of fifty, rather
 /// than the normal 35, and get -3 to Aging Rolls, cumulative with any other
-/// bonuses." (Ars Magica - Definitive Edition (Core Rules).md:5036)
+/// bonuses." (ArMDE:5036)
 ///
 /// Only the -3 half is implemented. The start-at-fifty half needs a per-trait
 /// override of [`arm_rules::AgingRules::start_age`] — machinery no other shipped
@@ -3154,15 +3160,15 @@ fn aging_kinds(id: &str) -> Vec<(AgingEffect, i8)> {
 /// > "The character's aging rolls benefit from a +1 bonus to the Living
 /// > Conditions Modifier, in addition to whatever his social standing normally
 /// > offers him. Furthermore, he receives a +3 bonus to rolls to survive an aging
-/// > crisis." (Ars Magica - Definitive Edition (Core Rules).md:4530)
+/// > crisis." (ArMDE:4530)
 ///
 /// The +1 is a Living Conditions term of the AGING TOTAL; the +3 belongs to the
-/// crisis *survival* roll, which `:16636` otherwise walls off from aging-roll
+/// crisis *survival* roll, which `ArMDE:16636` otherwise walls off from aging-roll
 /// modifiers entirely. Only the first half shipped until 6b7, so the Virtue read
 /// as half a rule. Both halves now ship, and this test is the witness that a
 /// later sweep does not drop one again.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4530, :16636.
+/// Source: ArMDE:4530, :16636.
 #[test]
 fn mild_aging_carries_both_halves_of_4530() {
     assert_eq!(
@@ -3191,7 +3197,7 @@ fn shipped_crisis_outcome(id: &str) -> CrisisOutcome {
 }
 
 /// The crisis-survival read-out for a companion carrying the named shipped
-/// items, against the shipped Minor illness row (`:16628`).
+/// items, against the shipped Minor illness row (`ArMDE:16628`).
 fn shipped_crisis_survival(items: &[&str]) -> CrisisSurvival {
     let rs = load_full_ruleset();
     let e = entity(
@@ -3206,18 +3212,18 @@ fn shipped_crisis_survival(items: &[&str]) -> CrisisSurvival {
 }
 
 /// **"Virtues that affect aging rolls do not affect crisis survival rolls."**
-/// (Ars Magica - Definitive Edition (Core Rules).md:16636) — the single load-bearing sentence of the survival read-out,
+/// (ArMDE:16636) — the single load-bearing sentence of the survival read-out,
 /// locked against the shipped catalogue rather than a fixture.
 ///
 /// Three shipped items carry the two kinds the aging roll takes, and all three
 /// are witnessed moving the AGING TOTAL and then contributing **nothing** to the
 /// survival roll:
 ///
-/// - Faerie Blood, `aging_roll -1` (`:3801`)
-/// - Strong Faerie Blood, `aging_roll -3` (`:5036`)
-/// - Poor Living Conditions, `living_conditions -1` (`:6620`)
+/// - Faerie Blood, `aging_roll -1` (`ArMDE:3801`)
+/// - Strong Faerie Blood, `aging_roll -3` (`ArMDE:5036`)
+/// - Poor Living Conditions, `living_conditions -1` (`ArMDE:6620`)
 ///
-/// Mild Aging is the proof case, because `:4530` grants both sides in one
+/// Mild Aging is the proof case, because `ArMDE:4530` grants both sides in one
 /// sentence: "The character's aging rolls benefit from a +1 bonus to the Living
 /// Conditions Modifier … Furthermore, he receives a +3 bonus to rolls to survive
 /// an aging crisis." The +1 stays out of the crisis; the +3 goes in, alone.
@@ -3226,7 +3232,7 @@ fn shipped_crisis_survival(items: &[&str]) -> CrisisSurvival {
 /// on the first character and -1 on the second, so this test is not satisfiable
 /// by accident.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3801, :4530, :5036,
+/// Source: ArMDE:3801, :4530, :5036,
 /// :6620, :16636.
 #[test]
 fn virtues_that_modify_aging_rolls_do_not_affect_crisis_survival_rolls() {
@@ -3269,13 +3275,13 @@ fn virtues_that_modify_aging_rolls_do_not_affect_crisis_survival_rolls() {
     assert_eq!(shipped_aging_total(&with_mild).living_conditions.total, 0);
 }
 
-/// "19+ — **Terminal illness**. CrCo40 required to survive." (Ars Magica - Definitive Edition (Core Rules).md:16632) — the
+/// "19+ — **Terminal illness**. CrCo40 required to survive." (ArMDE:16632) — the
 /// one row that offers no Stamina roll at all. The read-out reports the Ritual
-/// that resolves it (`:16638`) and **no** Ease Factor, rather than an unbeatable
+/// that resolves it (`ArMDE:16638`) and **no** Ease Factor, rather than an unbeatable
 /// one; and the Minor row beside it shows the ordinary shape, Ease Factor 3 and
-/// CrCo20 (`:16628`).
+/// CrCo20 (`ArMDE:16628`).
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16628, :16632, :16638.
+/// Source: ArMDE:16628, :16632, :16638.
 #[test]
 fn the_terminal_row_reports_a_ritual_level_and_no_ease_factor() {
     let rs = load_full_ruleset();
@@ -3303,14 +3309,14 @@ fn the_terminal_row_reports_a_ritual_level_and_no_ease_factor() {
 /// "An Int + Medicine roll against an Ease Factor of 6 allows the character to
 /// add the attendant's Medicine score to the roll to survive the crisis. Only
 /// one doctor may usefully attend a patient, and if the doctor botches the
-/// character must subtract 3 from the survival roll." (Ars Magica - Definitive Edition (Core Rules).md:16634)
+/// character must subtract 3 from the survival roll." (ArMDE:16634)
 ///
 /// The doctor is reported as an **allowance** — what the rules permit — and not
 /// as a modifier, because the app has no attendant to score: the Medicine score
 /// belongs to another character entirely. Every value comes off the ruleset, and
 /// the botch penalty keeps the file's one sign convention (stored signed, added).
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16634.
+/// Source: ArMDE:16634.
 #[test]
 fn the_attending_doctor_is_reported_as_an_allowance() {
     let survival = shipped_crisis_survival(&[]);
@@ -3330,15 +3336,15 @@ fn the_attending_doctor_is_reported_as_an_allowance() {
 
 /// One Crisis walked end to end against the **shipped** table, through the
 /// crate's public surface: a die and a year in, and the CRISIS TOTAL
-/// (Ars Magica - Definitive Edition (Core Rules).md:16621), the row it lands on (`:16624-16632`), what that row costs and
-/// what surviving it would take (`:16628-16638`) out.
+/// (ArMDE:16621), the row it lands on (`ArMDE:16624-16632`), what that row costs and
+/// what surviving it would take (`ArMDE:16628-16638`) out.
 ///
 /// The fixture tests in `aging.rs` prove the composition; this proves it against
-/// the real `rules/core/aging.json`, where the attendant of `:16634` actually
+/// the real `rules/core/aging.json`, where the attendant of `ArMDE:16634` actually
 /// ships — so the doctor reaches a caller through the composed read-out and not
 /// only through a hand-built outcome.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16621-16638.
+/// Source: ArMDE:16621-16638.
 #[test]
 fn the_shipped_crisis_table_answers_a_total_end_to_end() {
     let rs = load_full_ruleset();
@@ -3346,7 +3352,7 @@ fn the_shipped_crisis_table_answers_a_total_end_to_end() {
     e.age = Some(40);
     e.aging_points.insert(Characteristic::Sta, 15);
 
-    // `9 + ⌈36/10⌉ + 2 = 15` — Minor illness, Ease Factor 3, CrCo20 (:16628).
+    // `9 + ⌈36/10⌉ + 2 = 15` — Minor illness, Ease Factor 3, CrCo20 (ArMDE:16628).
     let preview = arm_rules::crisis_preview(&e, &rs, 36, 9).expect("the shipped table");
     assert_eq!(preview.total.age_modifier, 4);
     assert_eq!(preview.total.decrepitude_score, 2);
@@ -3374,7 +3380,7 @@ fn the_shipped_crisis_table_answers_a_total_end_to_end() {
         "the doctor of :16634 reaches the composed read-out too"
     );
 
-    // "8 or less — Bedridden for a week" (:16626) is time, not a roll.
+    // "8 or less — Bedridden for a week" (ArMDE:16626) is time, not a roll.
     let unaged = entity("companion", vec![]);
     let bedridden = arm_rules::crisis_preview(&unaged, &rs, 36, 4).expect("the shipped table");
     assert_eq!(bedridden.total.total, 8);
@@ -3411,19 +3417,19 @@ fn the_shipped_crisis_table_answers_a_total_end_to_end() {
 /// One Crisis **written into a character** against the shipped tables, and taken
 /// back off again.
 ///
-/// A 40-year-old companion rolls a 9: `9 + ⌈40/10⌉ = 13`, the row of `:16602` that
+/// A 40-year-old companion rolls a 9: `9 + ⌈40/10⌉ = 13`, the row of `ArMDE:16602` that
 /// reaches the next level in Decrepitude and sends him to the Crisis Table. Five
 /// Aging Points is what the shipped advancement curve prices Decrepitude 1 at, and
-/// `:16619`'s "increase the character's Decrepitude first" is visible in the CRISIS
+/// `ArMDE:16619`'s "increase the character's Decrepitude first" is visible in the CRISIS
 /// TOTAL: `10 + 4 + 1 = 15`, the **1** being the score this very year raised. That
 /// lands on the shipped minor illness — Ease Factor 3, CrCo20, and the doctor of
-/// `:16634`, which only the real `rules/core/aging.json` ships.
+/// `ArMDE:16634`, which only the real `rules/core/aging.json` ships.
 ///
 /// The fixture tests in `aging.rs` prove the leg; this proves it against the
 /// catalogue the app actually loads, and that the year still comes back off byte
 /// for byte.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16602, :16619, :16621,
+/// Source: ArMDE:16602, :16619, :16621,
 /// :16628, :16634.
 #[test]
 fn a_shipped_crisis_year_is_written_into_the_character_and_reverts_exactly() {
@@ -3486,13 +3492,13 @@ fn a_shipped_crisis_year_is_written_into_the_character_and_reverts_exactly() {
 ///
 /// > "A leper has a permanent -2 modifier to her Living Condition …, and whenever
 /// > she undergoes an Aging Crisis (page 392) the leper sustains a Heavy Wound in
-/// > addition to any other result." (Ars Magica - Definitive Edition (Core Rules).md:6340)
+/// > addition to any other result." (ArMDE:6340)
 ///
 /// The Heavy Wound is a *consequence*, not a number, so it ships as a marker with
 /// amount 0 — the `crisis_heavy_wound` kind exists precisely so the shipped 0 is
 /// not mistaken for an unfilled modifier.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:6340.
+/// Source: ArMDE:6340.
 #[test]
 fn leprosy_carries_its_crisis_wound_beside_its_living_conditions_penalty() {
     assert_eq!(
@@ -3505,19 +3511,19 @@ fn leprosy_carries_its_crisis_wound_beside_its_living_conditions_penalty() {
 }
 
 /// > "Virtues that affect aging rolls do not affect crisis survival rolls."
-/// > (Ars Magica - Definitive Edition (Core Rules).md:16636)
+/// > (ArMDE:16636)
 ///
 /// This is that sentence's **converse**, which Mild Aging is the first shipped
 /// item to make expressible: a modifier granted specifically to the crisis
 /// survival roll is not an aging-roll modifier either, so nothing of the +3 may
 /// reach the AGING TOTAL. Mild Aging moves the Living Conditions term by +1 and
 /// nothing else — the trait modifier stays 0, and the total drops by exactly one,
-/// because the total *subtracts* the Living Conditions Modifier (`:16571`).
+/// because the total *subtracts* the Living Conditions Modifier (`ArMDE:16571`).
 ///
 /// (Step 7 pins the other direction, that `aging_roll` modifiers stay out of the
 /// survival roll.)
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4530, :16636.
+/// Source: ArMDE:4530, :16636.
 #[test]
 fn a_crisis_survival_modifier_never_reaches_the_aging_total() {
     let baseline = shipped_aging_total(&[]);
@@ -3563,9 +3569,9 @@ fn a_crisis_survival_modifier_never_reaches_the_aging_total() {
 /// be "fixed" into a number.
 ///
 /// Age Quickly doubles the *rate*: "your effective age … increases two years for
-/// every year that passes, and you make two aging rolls each year" (Ars Magica - Definitive Edition (Core Rules).md:5661).
+/// every year that passes, and you make two aging rolls each year" (ArMDE:5661).
 /// Baneful Circumstances adds a *conditional extra roll*: "he must make an
-/// additional Aging roll even if he is normally immune to aging" (Ars Magica - Definitive Edition (Core Rules).md:5689).
+/// additional Aging roll even if he is normally immune to aging" (ArMDE:5689).
 /// Both are schedule rules — how many rolls, at what effective age — and neither
 /// shifts the total of any one roll. The engine does not implement either
 /// schedule yet, so each Flaw contributes nothing to the arithmetic while staying
@@ -3603,7 +3609,7 @@ fn age_quickly_contributes_nothing_to_the_total_and_stays_surfaced() {
 
 /// The shipped table's own reading of `total`, for a companion who has already
 /// accrued `accrued` Aging Points (parked in Str — Decrepitude counts the
-/// character's whole bank, whichever Characteristics hold it, Ars Magica - Definitive Edition (Core Rules).md:16617).
+/// character's whole bank, whichever Characteristics hold it, ArMDE:16617).
 fn shipped_aging_outcome(total: i32, accrued: u8) -> AgingOutcome {
     let rs = load_full_ruleset();
     let mut e = entity("companion", vec![]);
@@ -3615,15 +3621,15 @@ fn shipped_aging_outcome(total: i32, accrued: u8) -> AgingOutcome {
 }
 
 /// The shipped table resolved row by row, against the shipped advancement curve:
-/// the apparent-aging threshold of `:16599-16600`, the "any Characteristic" band
-/// of `:16601`, the named rows of `:16603-16610`, and both Decrepitude-and-Crisis
-/// rows (`:16602`, `:16611`).
+/// the apparent-aging threshold of `ArMDE:16599-16600`, the "any Characteristic" band
+/// of `ArMDE:16601`, the named rows of `ArMDE:16603-16610`, and both Decrepitude-and-Crisis
+/// rows (`ArMDE:16602`, `ArMDE:16611`).
 ///
 /// The unit fixture in `aging.rs` transcribes these rows by hand; only this test
 /// witnesses the ones the app actually ships — and only here does the derived
 /// Decrepitude count meet the real advancement curve.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16599-16617.
+/// Source: ArMDE:16599-16617.
 #[test]
 fn the_shipped_aging_table_resolves_each_row_of_16599_to_16611() {
     // "2 or less — No apparent aging" / "3 or more — Apparent age increases by
@@ -3639,8 +3645,8 @@ fn the_shipped_aging_table_resolves_each_row_of_16599_to_16611() {
         "the appearance ages below the first row that costs anything"
     );
 
-    // "10–12 — 1 Aging Point in any Characteristic" (:16601), the player placing
-    // it (:16615).
+    // "10–12 — 1 Aging Point in any Characteristic" (ArMDE:16601), the player placing
+    // it (ArMDE:16615).
     let eleven = shipped_aging_outcome(11, 0);
     assert_eq!(
         eleven.awards,
@@ -3652,8 +3658,8 @@ fn the_shipped_aging_table_resolves_each_row_of_16599_to_16611() {
     assert!(eleven.apparent_age_increases);
     assert!(!eleven.crisis);
 
-    // The named rows, including the one the book spells "Prs" (:16606) and a
-    // two-Characteristic row where EACH name takes a point of its own (:16608).
+    // The named rows, including the one the book spells "Prs" (ArMDE:16606) and a
+    // two-Characteristic row where EACH name takes a point of its own (ArMDE:16608).
     let named = |total: i32| -> Vec<AgingPointAward> { shipped_aging_outcome(total, 0).awards };
     let one_point = |characteristic| AgingPointAward {
         target: AgingPointTarget::Named(characteristic),
@@ -3671,7 +3677,7 @@ fn the_shipped_aging_table_resolves_each_row_of_16599_to_16611() {
     assert!(!shipped_aging_outcome(21, 0).crisis, "only 13 and 22+ do");
 
     // "Gain sufficient Aging Points … to reach the next level in Decrepitude, and
-    // Crisis" (:16602, :16611). The count comes off the shipped curve, so the
+    // Crisis" (ArMDE:16602, :16611). The count comes off the shipped curve, so the
     // expectation is computed from it rather than written out.
     let rs = load_full_ruleset();
     let to_first_level = rs
@@ -3725,8 +3731,8 @@ fn english_and_german_i18n_cover_all_living_conditions() {
 /// Every Crisis Table row has a display name in both shipped languages.
 ///
 /// The German names are pinned as literals for the two rows that are a false
-/// friend in the other direction: German *Schwere* is **Major** (:16630) and
-/// *Ernste* is **Serious** (:16629), which is the opposite of what the English
+/// friend in the other direction: German *Schwere* is **Major** (ArMDE:16630) and
+/// *Ernste* is **Serious** (ArMDE:16629), which is the opposite of what the English
 /// cognate suggests. `alterung-twilight.md:82-92` agrees with the rulebook body.
 #[test]
 fn english_and_german_i18n_cover_all_crisis_rows() {
@@ -3796,13 +3802,13 @@ fn crisis_row_i18n_order_matches_core_band_order() {
 ///
 /// - Unaging — "your aging points do not decrease your Characteristics, only
 ///   building up to give you Decrepitude points … You may choose your apparent
-///   age freely" (Ars Magica - Definitive Edition (Core Rules).md:5189): both facts.
+///   age freely" (ArMDE:5189): both facts.
 /// - Bound to (Role) — "This Flaw also includes the effects of the Unaging
 ///   Virtue, **but** the character's apparent age advances in line with their
-///   physical age" (Ars Magica - Definitive Edition (Core Rules).md:5743): the Characteristic immunity only. That *but* is
+///   physical age" (ArMDE:5743): the Characteristic immunity only. That *but* is
 ///   what proves the two are separable at all.
 /// - Bee King — "Bee Kings do not appear to age after reaching maturity"
-///   (Ars Magica - Definitive Edition (Core Rules).md:3488): the appearance only, and nothing about Characteristics.
+///   (ArMDE:3488): the appearance only, and nothing about Characteristics.
 ///
 /// All three shipped `no_aging` alone before the tags came apart, which made the
 /// Bee King's entry simply wrong. This test is the outside witness that keeps the
@@ -3830,24 +3836,24 @@ fn the_three_aging_immunities_ship_their_two_facts_separately() {
     assert_eq!(
         tagged("virtue.unaging"),
         vec![AgingEffect::NoAging, AgingEffect::NoApparentAging],
-        "Unaging states both facts (Ars Magica - Definitive Edition (Core Rules).md:5189)"
+        "Unaging states both facts (ArMDE:5189)"
     );
     assert_eq!(
         tagged("flaw.bound_to_role_role"),
         vec![AgingEffect::NoAging],
-        "Bound to (Role) keeps ageing in appearance (Ars Magica - Definitive Edition (Core Rules).md:5743)"
+        "Bound to (Role) keeps ageing in appearance (ArMDE:5743)"
     );
     assert_eq!(
         tagged("virtue.bee_king"),
         vec![AgingEffect::NoApparentAging],
-        "a Bee King only stops looking older (Ars Magica - Definitive Edition (Core Rules).md:3488)"
+        "a Bee King only stops looking older (ArMDE:3488)"
     );
 }
 
 /// Issue F (selection-level): a magus selecting BOTH magnitude variants of the
 /// same Virtue — here the prefix pair Major / Minor Magical Focus — must raise
 /// the incompatibility issue. Behavioral assertion (no catalogue counts).
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4405.
+/// Source: ArMDE:4405.
 #[test]
 fn both_magical_focus_variants_are_incompatible() {
     let rs = load_ruleset();
@@ -3893,7 +3899,7 @@ fn only_parameter(rs: &Ruleset, id: &str) -> ParameterDef {
 /// Deft (Form) — the reported case of #4. Its data was already right; the bug was
 /// entirely in the picker, so this pins the data so a "fix" cannot move it.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3645-3648.
+/// Source: ArMDE:3645-3648.
 #[test]
 fn virtue_deft_form_declares_the_form_domain() {
     let rs = load_ruleset();
@@ -3925,16 +3931,16 @@ fn the_deficient_art_flaws_declare_their_own_art_class() {
 ///
 /// - `flaw.form_monstrosity` — "a monstrous feature, or mutation, which corresponds
 ///   to a magical Form", with an examples table headed `Form` listing only Forms
-///   (Ars Magica - Definitive Edition (Core Rules).md:6162-6185).
+///   (ArMDE:6162-6185).
 /// - `flaw.hunger_for_form_magic` — "1 pawn of vis each season, corresponding to the
-///   Form that it has been mostly exposed to" (`:6276-6279`).
+///   Form that it has been mostly exposed to" (`ArMDE:6276-6279`).
 /// - `virtue.extractor_of_form_vis` — "only if the features of the aura exemplify the
 ///   Form … This Virtue may be taken multiple times (once for each Form)"
-///   (`:3779-3782`).
+///   (`ArMDE:3779-3782`).
 /// - `virtue.imbued_with_the_spirit_of_form` — "any being with a Magic Might
-///   associated with the Form of this Virtue" (`:4085-4094`).
+///   associated with the Form of this Virtue" (`ArMDE:4085-4094`).
 /// - `virtue.master_of_form_creatures` — "beings whose Magic Might is aligned with a
-///   particular Form … once for each Form" (`:4463-4466`).
+///   particular Form … once for each Form" (`ArMDE:4463-4466`).
 #[test]
 fn form_restricted_virtues_flaws_declare_the_form_domain() {
     let rs = load_ruleset();
@@ -3978,13 +3984,13 @@ fn exemplar_id(slug: &str) -> Id {
     Id::new(format!("exemplar.{slug}"))
 }
 
-/// #32: `:2437` names **Latin** three times, but `ability.dead_language` takes a
+/// #32: `ArMDE:2437` names **Latin** three times, but `ability.dead_language` takes a
 /// free-text instance, so the engine can only enforce "any Dead Language ≥ N". The
 /// widening is permanent (see RULES.md); the honesty fix is to carry the rules' own
 /// exemplar as a language-neutral slug and label it per locale.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2437 (Latin 1), `:2455`
-/// (the recommended Latin 4), `:7151` ("For most characters, Latin 3 is required").
+/// Source: ArMDE:2437 (Latin 1), `ArMDE:2455`
+/// (the recommended Latin 4), `ArMDE:7151` ("For most characters, Latin 3 is required").
 #[test]
 fn the_magus_minimum_dead_language_requirement_names_its_exemplar() {
     let rs = load_full_ruleset();
@@ -4113,7 +4119,7 @@ fn an_exemplar_slug_is_not_treated_as_a_referential_integrity_ref() {
 /// The shipped catalogue carries each two-category descriptor's categories in
 /// the source's order, primary first.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:5077-5078
+/// Source: ArMDE:5077-5078
 /// (*Minor, Social Status, Supernatural*), :6646-6647 (*Major, Story,
 /// Supernatural*), :6803-6804 (*Major, Hermetic, Story*), :6985-6986
 /// (*Minor, Story, Supernatural*).
@@ -4208,11 +4214,11 @@ fn a_two_category_flaw_counts_against_its_secondary_category_cap() {
 /// Hermetic, Story*") reaches them through its secondary Story category: neither
 /// the permitted nor the forbidden check rules it out.
 ///
-/// The book backs the outcome. `:2840` bars a companion from Hermetic Virtues and
+/// The book backs the outcome. `ArMDE:2840` bars a companion from Hermetic Virtues and
 /// Flaws "unless you have The Gift" — and a Suppressed-Gift character *does* have
-/// The Gift (`:6805`: it "does not function", but the social penalties remain),
+/// The Gift (`ArMDE:6805`ArMDE: it "does not function", but the social penalties remain),
 /// which is why `has_the_gift` flags them through the same `hermetic` category.
-/// `:6809` then describes the Flaw as a companion's: "If he replaces a companion,
+/// `ArMDE:6809` then describes the Flaw as a companion's: "If he replaces a companion,
 /// he will become much more powerful when the Story Flaw is resolved."
 ///
 /// The fixture deliberately stays **unGifted**, because that is the only state
@@ -4220,7 +4226,7 @@ fn a_two_category_flaw_counts_against_its_secondary_category_cap() {
 /// `hermetic` rules are conditional on `Has(virtue.the_gift)`, so a *Gifted*
 /// companion clears both checks through `hermetic` itself and `story` would be
 /// carrying nothing. The price is that the entity is incomplete for a different,
-/// correct reason — `:6805` gives the Flaw The Gift, so it now carries
+/// correct reason — `ArMDE:6805` gives the Flaw The Gift, so it now carries
 /// `prerequisites: Has(virtue.the_gift)` — which the last assertion pins rather
 /// than leaves as a surprise.
 #[test]
@@ -4270,7 +4276,7 @@ fn a_secondary_category_clears_both_the_permitted_and_the_forbidden_check() {
             .iter()
             .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&suppressed)),
         "the category gates are clear; what stops this unGifted companion is \
-         `:6805`'s own requirement, which is the honest reason"
+         `ArMDE:6805`'s own requirement, which is the honest reason"
     );
 }
 
@@ -4290,15 +4296,15 @@ fn a_secondary_category_clears_both_the_permitted_and_the_forbidden_check() {
 /// stopped demonstrating anything once the grog profile's unsourced
 /// `supernatural` restriction was removed (open-to-dos row 20): `supernatural`
 /// is on a grog's permitted list now, so Visions clears both category checks and
-/// is refused by the sourced Story-Flaw cap instead (`:2826`). Suppressed Gift
+/// is refused by the sourced Story-Flaw cap instead (`ArMDE:2826`). Suppressed Gift
 /// replaces it as the one shipped pairing that still exercises the conjunction
 /// for a grog.
 ///
 /// **B5 qualified that claim rather than ending it, and the qualification is
 /// asserted below so it cannot lapse silently.** `flaw.suppressed_gift` now
-/// carries `prerequisites: Has(virtue.the_gift)` (`:6805`, "The character has
+/// carries `prerequisites: Has(virtue.the_gift)` (`ArMDE:6805`, "The character has
 /// The Gift but cannot access its power"), and a grog may never hold The Gift
-/// (`:2830`), so the pairing gained a *fourth* refusal on top of
+/// (`ArMDE:2830`), so the pairing gained a *fourth* refusal on top of
 /// `category_not_permitted`, `gift_forbidden` and the Major cap. That does not
 /// weaken what this test demonstrates — the two category validators are
 /// independent of prerequisite evaluation and run regardless — but the pairing
@@ -4321,7 +4327,7 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
     assert!(!grog.names_permitted_category("story"));
 
     // Suppressed Gift is "*Major, Hermetic, Story*"
-    // (Ars Magica - Definitive Edition (Core Rules).md:6804, entry :6803-6810). A grog forbids
+    // (ArMDE:6804, entry :6803-6810). A grog forbids
     // only the first of those, so the item survives the forbidden check — and is
     // still blocked, by the honest reason: neither category is on the grog's
     // permitted list.
@@ -4358,8 +4364,8 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
             .issues
             .iter()
             .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&suppressed)),
-        "and since B5 the pairing is prereq-illegal as well: `:6805` gives the \
-         Flaw The Gift, `:2830` denies a grog one"
+        "and since B5 the pairing is prereq-illegal as well: `ArMDE:6805` gives the \
+         Flaw The Gift, `ArMDE:2830` denies a grog one"
     );
 
     // No replacement fixture exists, so pin the fact rather than discovering it
@@ -4409,12 +4415,12 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
 /// Supernatural*", and either category now opens it to a grog:
 ///
 /// > "It is also possible to be an entirely mundane Sufi, in which case you
-/// > should take this Virtue as a Social Status Virtue" — `:5079`
+/// > should take this Virtue as a Social Status Virtue" — `ArMDE:5079`
 ///
 /// > "either as a Minor Social Status Virtue **or** a Minor Supernatural Virtue"
-/// > — `:5083`
+/// > — `ArMDE:5083`
 ///
-/// (Ars Magica - Definitive Edition (Core Rules).md:5079, :5083.)
+/// (ArMDE:5079, :5083.)
 ///
 /// This test no longer exercises the ANY/EVERY conjunction, and says so rather
 /// than pretending to: it did when a grog forbade `supernatural` and only
@@ -4424,7 +4430,7 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
 /// `forbidding_fires_only_when_every_category_is_forbidden` (Suppressed Gift)
 /// and its companion case in
 /// `a_secondary_category_clears_both_the_permitted_and_the_forbidden_check`.
-/// What remains here is still worth pinning: `:5079` names a mundane Sufi
+/// What remains here is still worth pinning: `ArMDE:5079` names a mundane Sufi
 /// explicitly, and a grog may be one.
 #[test]
 fn a_grog_may_take_sufi_through_its_social_status_category() {
@@ -4454,7 +4460,7 @@ fn a_grog_may_take_sufi_through_its_social_status_category() {
 // ":2840" — "You may not take Hermetic Virtues and Flaws, unless you have The
 // Gift (this would be highly unusual)" — is a CONDITIONAL category rule, and
 // the companion profile encoded only its unconditional half. Both halves of
-// the profile now carry a `when`: `hermetic` is permitted while
+// the profile now carry a `when`ArMDE: `hermetic` is permitted while
 // `Has(virtue.the_gift)` holds and forbidden while it does not. Permitting is
 // ANY and forbidding is EVERY, so relaxing only the forbid would have left
 // every single-category Hermetic item refused with `category_not_permitted` —
@@ -4462,7 +4468,7 @@ fn a_grog_may_take_sufi_through_its_social_status_category() {
 // profile rows).
 
 /// The cell ":2840" grants and the profile refused: a Gifted companion may take
-/// a Hermetic Flaw. `flaw.blatant_gift` is "*Major, Hermetic*" (`:5711-5712`)
+/// a Hermetic Flaw. `flaw.blatant_gift` is "*Major, Hermetic*" (`ArMDE:5711-5712`)
 /// and already carries `prerequisites: Has(virtue.the_gift)`, so it is the
 /// shipped consumer of the conditional rule.
 #[test]
@@ -4596,14 +4602,14 @@ fn a_companion_does_not_gift_himself_with_a_hermetic_virtue() {
 /// Gift but not its twin.
 ///
 /// The two are a matched pair — mutually `incompatible_with`, both descriptors
-/// reading "*Major, Hermetic*" (`:3956` and `:5712`) with **no** prerequisite
+/// reading "*Major, Hermetic*" (`ArMDE:3956` and `ArMDE:5712`) with **no** prerequisite
 /// line in either, and both mentioning magi only in passing (Blatant Gift's own
 /// text says "even if they do not know you are a **magus**" and nonetheless
 /// ships `Has(virtue.the_gift)`). The magus requirement was inferred from the
-/// comparative at `:3957`, "Unlike other magi, whose Magical nature disturbs
+/// comparative at `ArMDE:3957`, "Unlike other magi, whose Magical nature disturbs
 /// normal people and animals" — which compares, it does not restrict. And the
 /// penalty Gentle Gift cancels attaches to The Gift, not to Order membership:
-/// `:6805` describes a character who "continues to suffer the negative social
+/// `ArMDE:6805` describes a character who "continues to suffer the negative social
 /// penalties of The Gift".
 #[test]
 fn gentle_gift_requires_the_gift_and_not_the_order() {
@@ -4614,7 +4620,7 @@ fn gentle_gift_requires_the_gift_and_not_the_order() {
             .expect("virtue.gentle_gift must ship")
             .prerequisites,
         Some(Prereq::Has(Id::new("virtue.the_gift"))),
-        "`:3956`/`:3957` state a Gift requirement, never an Order one"
+        "`ArMDE:3956`/`ArMDE:3957` state a Gift requirement, never an Order one"
     );
 
     let gifted = validate(
@@ -4656,7 +4662,7 @@ fn gentle_gift_requires_the_gift_and_not_the_order() {
 /// because that is how this catalogue already states a flat "may not have The
 /// Gift": `virtue.devil_child`, `virtue.faerie_doctor`, `virtue.nephilim` and
 /// `virtue.spirit_votary` all do it that way, and `virtue.the_gift` lists each
-/// of them back. The one `Nor` in the data (`flaw.offensive_to_beings`, `:6530`)
+/// of them back. The one `Nor` in the data (`flaw.offensive_to_beings`, `ArMDE:6530`)
 /// is there because that rule is *conditional* — "unless you have the Gentle
 /// Gift" — which an incompatibility cannot express. Failed Apprentice's is not.
 #[test]
@@ -4669,7 +4675,7 @@ fn failed_apprentice_is_incompatible_with_the_gift() {
             .expect("virtue.failed_apprentice must ship")
             .incompatible_with
             .contains(&gift),
-        "`:3845` bars the pairing outright"
+        "`ArMDE:3845` bars the pairing outright"
     );
 
     let result = validate(
@@ -4722,8 +4728,8 @@ fn the_apprentice_virtue_requires_the_gift() {
 /// ":6805" — "The character has The Gift but cannot access its power, having
 /// temporarily lost his magical ability through mishap or some other
 /// misfortune." A Flaw that states outright that its bearer has The Gift must
-/// require it, and with `:2840` now conditional the pair is what makes a
-/// Suppressed-Gift **companion** — the character `:6809` describes — a legal
+/// require it, and with `ArMDE:2840` now conditional the pair is what makes a
+/// Suppressed-Gift **companion** — the character `ArMDE:6809` describes — a legal
 /// build rather than one the profile refuses.
 #[test]
 fn a_gifted_companion_may_take_suppressed_gift() {
@@ -4751,14 +4757,14 @@ fn a_gifted_companion_may_take_suppressed_gift() {
             .issues
             .iter()
             .any(|i| i.context.as_ref() == Some(&suppressed)),
-        "`:6809` puts this Flaw on a companion: {:?}",
+        "`ArMDE:6809` puts this Flaw on a companion: {:?}",
         result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
 }
 
 // --- Row 19: "taken as" (B2) -------------------------------------------------
 //
-// `:5083` makes Sufi's dual category an explicit player CHOICE, not membership
+// `ArMDE:5083` makes Sufi's dual category an explicit player CHOICE, not membership
 // in both at once: "This Virtue may be taken by both male and female
 // characters, either as a Minor Social Status Virtue or a Minor Supernatural
 // Virtue." Recorded as a `params` entry under `ParameterDomain::Category`
@@ -4798,7 +4804,7 @@ fn shipped_taken_as_items_declare_only_their_own_categories() {
             param.domain,
             ParameterDomain::Category,
             "{id}'s '{key}' records which of its OWN categories was chosen \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line}), not a \
+             (ArMDE:{line}), not a \
              closed list of its own"
         );
         assert!(
@@ -4809,8 +4815,7 @@ fn shipped_taken_as_items_declare_only_their_own_categories() {
             assert!(
                 item.categories.iter().any(|c| c == value.as_str()),
                 "{id}'s '{key}' value '{value}' must be one of its own \
-                 categories {:?} (Ars Magica - Definitive Edition (Core \
-                 Rules).md:{line})",
+                 categories {:?} (ArMDE:{line})",
                 item.categories
             );
         }
@@ -4828,7 +4833,7 @@ fn shipped_taken_as_items_cap_at_one_copy() {
         assert_eq!(
             item.max_total, 1,
             "{id} offers a choice between readings of ONE item, not several \
-             items (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             items (ArMDE:{line})"
         );
     }
 }
@@ -4886,8 +4891,8 @@ fn ruleset_with_supernatural_cap() -> Ruleset {
 /// The first-failing test for row 19 (B2): a grog Sufi taken as Social Status
 /// must not count as a Supernatural Virtue for any membership rule — the
 /// defect `RULES.md`'s "Unmodelled, and recorded rather than resolved" note
-/// used to record. Both categories are open to a grog either way (`:5079`,
-/// `:5083`), so the permitted/forbidden half is exercised against the real
+/// used to record. Both categories are open to a grog either way (`ArMDE:5079`,
+/// `ArMDE:5083`), so the permitted/forbidden half is exercised against the real
 /// shipped catalogue to pin "still legal"; the cap half needs the synthetic
 /// ruleset above since no shipped profile caps `supernatural`.
 #[test]
@@ -4903,7 +4908,7 @@ fn a_grog_sufi_taken_as_social_status_is_not_a_supernatural_virtue() {
         assert!(
             !codes.contains(&code.to_string()),
             "Social Status is open to a grog either way \
-             (Ars Magica - Definitive Edition (Core Rules).md:5083): {codes:?}"
+             (ArMDE:5083): {codes:?}"
         );
     }
 
@@ -4993,7 +4998,7 @@ fn two_sufis_with_different_taken_as_trip_the_total_cap_not_a_silent_drop() {
     assert!(
         codes.contains(&"too_many_selections".to_string()),
         "two readings of the SAME Virtue must still be capped at one \
-         (Ars Magica - Definitive Edition (Core Rules).md:5083): {codes:?}"
+         (ArMDE:5083): {codes:?}"
     );
 }
 
@@ -5252,10 +5257,10 @@ fn gift_detection_is_taken_as_aware() {
 
 // --- Curse of Slander is General *or* Supernatural (row 13, B4) -------------
 //
-// `:5882` reads "*Minor, General or Supernatural*", and the book indexes the
-// Flaw under both of those headings: `:5538` under `### Supernatural, Minor`
-// (`:5534`) and `:5575` under `### General, Minor` (`:5564`). That "or" is the
-// same explicit either/or `:5083` spells out in prose for Sufi, so it is
+// `ArMDE:5882` reads "*Minor, General or Supernatural*", and the book indexes the
+// Flaw under both of those headings: `ArMDE:5538` under `### Supernatural, Minor`
+// (`ArMDE:5534`) and `ArMDE:5575` under `### General, Minor` (`ArMDE:5564`). That "or" is the
+// same explicit either/or `ArMDE:5083` spells out in prose for Sufi, so it is
 // modelled the same way — both categories shipped, plus a `taken_as` parameter
 // naming the reading in force, and `max_total: 1` because the book offers a
 // choice between two readings of ONE Flaw.
@@ -5322,8 +5327,8 @@ fn curse_of_slander_offers_both_categories_its_descriptor_names() {
     assert_eq!(
         offered,
         vec!["general", "supernatural"],
-        "\"*Minor, General or Supernatural*\" (Ars Magica - Definitive Edition \
-         (Core Rules).md:5882) offers exactly these two readings"
+        "\"*Minor, General or Supernatural*\" (ArMDE:5882) offers exactly these \
+         two readings"
     );
 }
 
@@ -5347,7 +5352,7 @@ fn curse_of_slander_taken_as_general_is_not_a_supernatural_flaw() {
     assert!(
         !as_general.contains(&CODE.to_string()),
         "taken as General, Curse of Slander is not a Supernatural Flaw \
-         (Ars Magica - Definitive Edition (Core Rules).md:5882): {as_general:?}"
+         (ArMDE:5882): {as_general:?}"
     );
 
     let as_supernatural = issue_codes(
@@ -5368,15 +5373,15 @@ fn curse_of_slander_taken_as_general_is_not_a_supernatural_flaw() {
 //
 // "Hermetic" gates on The Gift, not on magus-hood: "Only characters with The
 // Gift can take these Virtues and Flaws, and some are only applicable to
-// Hermetic magi who have already completed their training." (`:2880`) A
+// Hermetic magi who have already completed their training." (`ArMDE:2880`) A
 // companion "may not take Hermetic Virtues and Flaws, unless you have The Gift"
-// (`:2840`); a grog may not at all (`:2829`) and is barred from The Gift itself
-// (`:2830`).
+// (`ArMDE:2840`); a grog may not at all (`ArMDE:2829`) and is barred from The Gift itself
+// (`ArMDE:2830`).
 //
-// Offensive to (Beings) is "*Minor, Hermetic and General*" (`:6525`) and
-// Unbearable to (Beings) "*Minor, Hermetic or General*" (`:6892`) — dual-indexed
-// in the book's own lists (Offensive at `:5445` Hermetic and `:5608` General;
-// Unbearable at `:5455` and `:5629`). Both shipped `["hermetic"]` alone, and
+// Offensive to (Beings) is "*Minor, Hermetic and General*" (`ArMDE:6525`) and
+// Unbearable to (Beings) "*Minor, Hermetic or General*" (`ArMDE:6892`) — dual-indexed
+// in the book's own lists (Offensive at `ArMDE:5445` Hermetic and `ArMDE:5608` General;
+// Unbearable at `ArMDE:5455` and `ArMDE:5629`). Both shipped `["hermetic"]` alone, and
 // `hermetic` is forbidden for grog, companion and mythic companion, so only a
 // magus could take them.
 //
@@ -5391,16 +5396,16 @@ fn curse_of_slander_taken_as_general_is_not_a_supernatural_flaw() {
 /// eligibility the rulebook states in prose:
 ///
 /// > "Only characters with The Gift or Magical Air may take this Flaw, and it
-/// > cannot be combined with the Blatant Gift." — Unbearable, `:6895`
+/// > cannot be combined with the Blatant Gift." — Unbearable, `ArMDE:6895`
 ///
 /// > "Characters with The Gift may take this Flaw only if they have the Gentle
 /// > Gift … Characters with Magical Air may not take it at all." — Offensive,
-/// > `:6530`
+/// > `ArMDE:6530`
 ///
 /// > "UnGifted characters may take this Virtue only if they have the Flaw
-/// > Magical Air." — Inoffensive, `:4139`
+/// > Magical Air." — Inoffensive, `ArMDE:4139`
 ///
-/// (Ars Magica - Definitive Edition (Core Rules).md:6895, :6530, :4139.)
+/// (ArMDE:6895, :6530, :4139.)
 #[test]
 fn the_beings_items_carry_general_plus_an_explicit_eligibility_gate() {
     let rs = load_ruleset();
@@ -5438,7 +5443,7 @@ fn the_beings_items_carry_general_plus_an_explicit_eligibility_gate() {
         assert_eq!(
             item.categories,
             vec!["general".to_string()],
-            "{id} is indexed under General, and must not carry `hermetic`: that \
+            "{id} is indexed under General, and must not carry `hermetic`ArMDE: that \
              slug is the profiles' `gift_categories` and would make an unGifted \
              bearer count as Gifted"
         );
@@ -5460,9 +5465,9 @@ fn the_beings_items_carry_general_plus_an_explicit_eligibility_gate() {
 }
 
 /// A companion is neither a magus nor Gifted, and the book lets him take both:
-/// Offensive because he is unGifted (`:6530` restricts only the *Gifted* case,
+/// Offensive because he is unGifted (`ArMDE:6530` restricts only the *Gifted* case,
 /// which proves the unGifted case is the default), Unbearable because he has
-/// Magical Air (`:6895`).
+/// Magical Air (`ArMDE:6895`).
 #[test]
 fn a_companion_may_take_the_two_beings_flaws() {
     let rs = load_ruleset();
@@ -5478,7 +5483,7 @@ fn a_companion_may_take_the_two_beings_flaws() {
             ),
         ],
     );
-    // Offensive is incompatible with Magical Air (`:6530`), so the two are tested
+    // Offensive is incompatible with Magical Air (`ArMDE:6530`), so the two are tested
     // on separate characters.
     let offensive_alone = entity(
         "companion",
@@ -5533,10 +5538,10 @@ fn a_companion_may_take_the_two_beings_flaws() {
     );
 }
 
-/// The other half of dropping `hermetic`: without the prerequisites, a grog
+/// The other half of dropping `hermetic`ArMDE: without the prerequisites, a grog
 /// could take Unbearable to (Beings) with neither The Gift nor Magical Air —
-/// trading one wrong output for another. `:6895` bars it, and a grog can have
-/// neither (`:2830`).
+/// trading one wrong output for another. `ArMDE:6895` bars it, and a grog can have
+/// neither (`ArMDE:2830`).
 #[test]
 fn a_grog_may_not_take_unbearable_to_beings_without_the_gift_or_magical_air() {
     let rs = load_ruleset();
@@ -5556,7 +5561,7 @@ fn a_grog_may_not_take_unbearable_to_beings_without_the_gift_or_magical_air() {
             .issues
             .iter()
             .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&unbearable)),
-        "the Gift-or-Magical-Air gate (:6895) must fire on its own now that the \
+        "the Gift-or-Magical-Air gate (ArMDE:6895) must fire on its own now that the \
          `hermetic` category no longer blocks the Flaw: {:?}",
         result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
@@ -5565,7 +5570,7 @@ fn a_grog_may_not_take_unbearable_to_beings_without_the_gift_or_magical_air() {
 /// The find that belongs in the same slice: `virtue.inoffensive_to_beings` ships
 /// the permissive `general` category and shipped **no** eligibility gate at all,
 /// so an unGifted character with no Magical Air took it clean.
-/// `:4139`: "UnGifted characters may take this Virtue only if they have the Flaw
+/// `ArMDE:4139`ArMDE: "UnGifted characters may take this Virtue only if they have the Flaw
 /// Magical Air."
 #[test]
 fn an_ungifted_character_needs_magical_air_for_inoffensive_to_beings() {
@@ -5585,7 +5590,7 @@ fn an_ungifted_character_needs_magical_air_for_inoffensive_to_beings() {
             .issues
             .iter()
             .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&inoffensive)),
-        "an unGifted companion with no Magical Air may not take it (:4139): {:?}",
+        "an unGifted companion with no Magical Air may not take it (ArMDE:4139): {:?}",
         ungifted.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
 
@@ -5615,7 +5620,7 @@ fn an_ungifted_character_needs_magical_air_for_inoffensive_to_beings() {
 /// the profile's `gift_categories` — `["hermetic"]` everywhere — so tagging these
 /// Flaws Hermetic would make an unGifted companion count as Gifted and silently
 /// hand him the Gift's free Supernatural-Ability slot
-/// (Ars Magica - Definitive Edition (Core Rules).md:2874).
+/// (ArMDE:2874).
 #[test]
 fn a_companion_holding_offensive_to_beings_is_not_gifted() {
     let rs = load_ruleset();
@@ -5642,16 +5647,16 @@ fn a_companion_holding_offensive_to_beings_is_not_gifted() {
     );
 }
 
-// --- `index_categories`: the book's index, kept apart from membership (row 18) -
+// --- `index_categories`ArMDE: the book's index, kept apart from membership (row 18) -
 //
 // `7ea4f5b` moved the two Beings Flaws from `categories: ["hermetic"]` to
 // `["general"]` because `hermetic` is what `effective::has_the_gift` reads, and
 // an unGifted companion holding one was thereby counted as Gifted. That was
 // right, but it also silently changed the answer to a second, unrelated
 // question: `validate_house`'s "a magus should take at least one Hermetic Flaw"
-// guideline (`:2860`) read the very same `gift_categories`, so a magus whose one
+// guideline (`ArMDE:2860`) read the very same `gift_categories`, so a magus whose one
 // Hermetic Flaw was Unbearable to (Beings) was told he had none — though the
-// book's own Flaw index lists it under `### Hermetic, Minor` (`:5455`).
+// book's own Flaw index lists it under `### Hermetic, Minor` (`ArMDE:5455`).
 //
 // The two questions now have two fields. `PointItem::index_categories` records
 // the headings the book's index files an entry under BEYOND its membership
@@ -5662,20 +5667,20 @@ fn a_companion_holding_offensive_to_beings_is_not_gifted() {
 // and the Markdown export all stay blind to it, which the leak guards below pin.
 
 /// Every shipped item carrying `index_categories`, with the index heading and
-/// the line the book lists it at. Frozen, in the manner of `TAKEN_AS_ITEMS`: the
+/// the line the book lists it at. Frozen, in the manner of `TAKEN_AS_ITEMS`ArMDE: the
 /// set is small, hand-verified against the `### <Category>, <Magnitude>` blocks
-/// under `## List of Virtues` (`:3004`) and `## List of Flaws` (`:5283`), and a
+/// under `## List of Virtues` (`ArMDE:3004`) and `## List of Flaws` (`ArMDE:5283`), and a
 /// silent addition must fail rather than pass.
 /// In id order, which is both the shipped file's canonical order and the order
 /// `Ruleset::items()` walks its `BTreeMap`.
 const INDEX_CATEGORY_ITEMS: [(&str, &str, u32); 4] = [
-    // *Minor, Hermetic and General* (:6525) — `### Hermetic, Minor` is :5417.
+    // *Minor, Hermetic and General* (ArMDE:6525) — `### Hermetic, Minor` is :5417.
     ("flaw.offensive_to_beings", "hermetic", 5445),
-    // *Minor, Story and Hermetic* (:6635) — `### Hermetic, Minor` is :5417.
+    // *Minor, Story and Hermetic* (ArMDE:6635) — `### Hermetic, Minor` is :5417.
     ("flaw.primogeniture_lineage", "hermetic", 5447),
-    // *Minor, Hermetic or General* (:6892) — `### Hermetic, Minor` is :5417.
+    // *Minor, Hermetic or General* (ArMDE:6892) — `### Hermetic, Minor` is :5417.
     ("flaw.unbearable_to_beings", "hermetic", 5455),
-    // *Minor, General and Hermetic* (:4134) — `### Hermetic, Minor` is :3087.
+    // *Minor, General and Hermetic* (ArMDE:4134) — `### Hermetic, Minor` is :3087.
     ("virtue.inoffensive_to_beings", "hermetic", 3110),
 ];
 
@@ -5693,7 +5698,7 @@ fn the_shipped_catalogue_records_the_books_own_index_headings() {
         assert!(
             item.index_categories.iter().any(|c| c == heading),
             "{id} is listed under `### {heading}` at \
-             Ars Magica - Definitive Edition (Core Rules).md:{line}"
+             ArMDE:{line}"
         );
         assert!(
             !item.has_category(heading),
@@ -5718,7 +5723,7 @@ fn the_shipped_catalogue_records_the_books_own_index_headings() {
 /// The leak guard row 18 asks for by name. `index_categories` is provenance, so
 /// Gift detection must not see it: a companion holding Offensive to (Beings) —
 /// which now records `hermetic` as an index heading — is still unGifted and
-/// still gets no free Supernatural-Ability slot (`:2874`).
+/// still gets no free Supernatural-Ability slot (`ArMDE:2874`).
 #[test]
 fn gift_detection_ignores_index_categories() {
     let rs = load_ruleset();
@@ -5770,7 +5775,7 @@ fn index_categories_are_invisible_to_every_membership_surface() {
 
     // A grog forbids `hermetic`; the Flaw is `general`, so the only thing that
     // could refuse it on category grounds is a leak of the index heading. (The
-    // Gift-or-Magical-Air prerequisite still fires — that is `:6895`, not a
+    // Gift-or-Magical-Air prerequisite still fires — that is `ArMDE:6895`, not a
     // category rule.)
     let codes = issue_codes(
         &entity(
@@ -5791,7 +5796,7 @@ fn index_categories_are_invisible_to_every_membership_surface() {
 }
 
 /// **The positive form, restored on purpose.** The book indexes both Beings
-/// Flaws under Hermetic, so the `:2860` guideline — "You should take at least
+/// Flaws under Hermetic, so the `ArMDE:2860` guideline — "You should take at least
 /// one Hermetic Flaw" — counts them again. It reads
 /// `EntityTypeProfile::hermetic_flaw_categories` against the item's
 /// `categories` PLUS its `index_categories`, which is why this can be true
@@ -5806,7 +5811,7 @@ fn the_hermetic_flaw_guideline_counts_the_two_beings_flaws() {
         ]
     };
 
-    // Unbearable to (Beings): any magus may take it (`:6895`).
+    // Unbearable to (Beings): any magus may take it (`ArMDE:6895`).
     let mut selections = magus_base();
     selections.push(Selection::with_params(
         Id::new("flaw.unbearable_to_beings"),
@@ -5816,10 +5821,10 @@ fn the_hermetic_flaw_guideline_counts_the_two_beings_flaws() {
     assert!(
         !codes.contains(&"missing_hermetic_flaw".to_string()),
         "the book lists Unbearable to (Beings) under `### Hermetic, Minor` \
-         (:5455), so it satisfies :2860: {codes:?}"
+         (ArMDE:5455), so it satisfies :2860: {codes:?}"
     );
 
-    // Offensive to (Beings): a Gifted character needs the Gentle Gift (`:6530`).
+    // Offensive to (Beings): a Gifted character needs the Gentle Gift (`ArMDE:6530`).
     let mut selections = magus_base();
     selections.push(Selection::new(Id::new("virtue.gentle_gift")));
     selections.push(Selection::with_params(
@@ -5829,7 +5834,7 @@ fn the_hermetic_flaw_guideline_counts_the_two_beings_flaws() {
     let codes = issue_codes(&entity("magus", selections), &rs);
     assert!(
         !codes.contains(&"missing_hermetic_flaw".to_string()),
-        "and Offensive to (Beings) is indexed there too (:5445): {codes:?}"
+        "and Offensive to (Beings) is indexed there too (ArMDE:5445): {codes:?}"
     );
 
     // The guideline still bites when there is genuinely no Hermetic Flaw.
@@ -5840,7 +5845,7 @@ fn the_hermetic_flaw_guideline_counts_the_two_beings_flaws() {
     );
 }
 
-/// The magus profile is the one that states the guideline, because `:2860` is a
+/// The magus profile is the one that states the guideline, because `ArMDE:2860` is a
 /// magus bullet. No other shipped profile may claim it: `validate_house`
 /// returns early for a non-magus, and a stray field would be a silent lie.
 #[test]
@@ -5856,7 +5861,7 @@ fn only_the_magus_profile_names_hermetic_flaw_categories() {
         assert_eq!(
             actual,
             expected.to_vec(),
-            "profile '{}' (Ars Magica - Definitive Edition (Core Rules).md:2860 \
+            "profile '{}' (ArMDE:2860 \
              is a magus bullet)",
             profile.id
         );
@@ -5920,7 +5925,7 @@ fn a_repeated_index_category_fails_the_load() {
 
 /// Carry-over (a) from B4, checked rather than assumed: a **non-Gifted**
 /// character who qualifies for Unbearable to (Beings) through Magical Air
-/// (`:6895`) must not be detected as Gifted. Both `flaw.magical_air` and
+/// (`ArMDE:6895`) must not be detected as Gifted. Both `flaw.magical_air` and
 /// `flaw.unbearable_to_beings` are `categories: ["general"]`, so nothing in the
 /// pair reaches `gift_categories` — and the new index heading must not change
 /// that.
@@ -5944,7 +5949,7 @@ fn magical_air_plus_unbearable_to_beings_is_not_gifted() {
     assert_eq!(
         arm_rules::supernatural_free_slots(&e, &rs, profile).total,
         0,
-        "Magical Air is not The Gift (:6895 names them as alternatives), so \
+        "Magical Air is not The Gift (ArMDE:6895 names them as alternatives), so \
          neither Flaw may confer the Gift's free Supernatural-Ability slot"
     );
     let codes = issue_codes(&e, &rs);
@@ -5976,7 +5981,7 @@ fn items_by_category_finds_an_item_through_its_secondary_category() {
 // > "This Flaw can only be taken by magi of House Verditius, as a maga who has
 // > left the House is no longer a candidate for Primus. In her case, it would be
 // > no more than an interesting feature of her background."
-// > — Ars Magica - Definitive Edition (Core Rules).md:6636
+// > — ArMDE:6636
 //
 // The Flaw ships `categories: ["story"]`, which the companion, mythic-companion
 // and magus profiles all permit, so the restriction was enforced by nothing:
@@ -6021,7 +6026,7 @@ fn primogeniture_lineage_requires_a_magus_of_house_verditius() {
             Prereq::IsMagus,
             Prereq::House(Id::new("house.verditius")),
         ])),
-        "`:6636` restricts the Flaw to magi of House Verditius, and the House \
+        "`ArMDE:6636` restricts the Flaw to magi of House Verditius, and the House \
          leaf alone leaves a non-magus merely warned"
     );
 }
@@ -6076,7 +6081,7 @@ fn a_companion_may_not_take_primogeniture_lineage() {
     let codes = primogeniture_codes(&rs, &e);
     assert!(
         codes.contains(&"prereq_not_met".to_string()),
-        "`:6636` says magi, and `story` is on a companion's permitted list, so \
+        "`ArMDE:6636` says magi, and `story` is on a companion's permitted list, so \
          the prerequisite is the only thing that can refuse this: {codes:?}"
     );
 }
@@ -6154,15 +6159,15 @@ fn a_magus_with_no_house_yet_only_warns_on_primogeniture_lineage() {
 // > - You may not take Major Virtues or Flaws
 // > - You may not take Hermetic Virtues and Flaws
 // > - You may not take The Gift
-// > — Ars Magica - Definitive Edition (Core Rules).md:2824-2830
+// > — ArMDE:2824-2830
 //
-// and the `### Supernatural` prose (`:2958-2962`) explains realm association and
+// and the `### Supernatural` prose (`ArMDE:2958-2962`) explains realm association and
 // Warping immunity, setting no character-type restriction at all.
 //
 // Removing only the forbid would have changed nothing, because permitting is an
 // ANY test: a single-category Supernatural Virtue would still have been refused
 // with `category_not_permitted`. Both halves went. `hermetic` stays forbidden —
-// `:2829` sources it explicitly.
+// `ArMDE:2829` sources it explicitly.
 
 /// Category-gate issue codes raised against one item.
 fn category_gate_codes(rs: &Ruleset, e: &Entity, item: &Id) -> Vec<String> {
@@ -6190,14 +6195,14 @@ fn the_grog_profile_restricts_only_the_categories_the_book_names() {
             .map(CategoryRule::category)
             .collect::<Vec<_>>(),
         vec!["hermetic"],
-        "`:2829` is the only category restriction the grog guidelines state"
+        "`ArMDE:2829` is the only category restriction the grog guidelines state"
     );
     assert!(
         grog.permitted_categories
             .iter()
             .all(|rule| rule.when().is_none()),
-        "a grog's restrictions are unconditional: `:2822-2830` states no \
-         'unless' the way `:2840` does for a companion"
+        "a grog's restrictions are unconditional: `ArMDE:2822-2830` states no \
+         'unless' the way `ArMDE:2840` does for a companion"
     );
     assert!(
         grog.names_permitted_category("supernatural"),
@@ -6207,7 +6212,7 @@ fn the_grog_profile_restricts_only_the_categories_the_book_names() {
 }
 
 /// Second Sight is "*Minor, Supernatural*"
-/// (Ars Magica - Definitive Edition (Core Rules).md:4889, entry :4888-4890) and
+/// (ArMDE:4889, entry :4888-4890) and
 /// carries that one category, so nothing else can rescue it: it is open to a
 /// grog only because the profile no longer bars Supernatural.
 #[test]
@@ -6236,9 +6241,9 @@ fn a_grog_may_take_a_minor_supernatural_virtue() {
     );
 }
 
-/// The restriction that does the real work, and this one *is* sourced: `:2828`
+/// The restriction that does the real work, and this one *is* sourced: `ArMDE:2828`
 /// "You may not take Major Virtues or Flaws". Bee King is "*Major,
-/// Supernatural*" (`:3485`, entry `:3484-3499`), so the category gate lets it
+/// Supernatural*" (`ArMDE:3485`, entry `ArMDE:3484-3499`), so the category gate lets it
 /// through and the magnitude cap refuses it — the honest issue code.
 #[test]
 fn a_grog_still_may_not_take_a_major_supernatural_virtue() {
@@ -6262,11 +6267,11 @@ fn a_grog_still_may_not_take_a_major_supernatural_virtue() {
         .collect();
     assert!(
         codes.contains(&"too_many_major_virtues".to_string()),
-        "`:2828` still bars every Major Virtue, Supernatural included: {codes:?}"
+        "`ArMDE:2828` still bars every Major Virtue, Supernatural included: {codes:?}"
     );
 }
 
-/// `:2830` "You may not take The Gift" is untouched: Gift-hood is detected
+/// `ArMDE:2830` "You may not take The Gift" is untouched: Gift-hood is detected
 /// through the profile's `gift_categories` (`["hermetic"]`), so a Supernatural
 /// Virtue never confers it. The free Supernatural-Ability slot is the observable
 /// consequence of being Gifted, and a grog gets none.
@@ -6290,12 +6295,12 @@ fn a_grog_with_a_supernatural_virtue_is_not_thereby_gifted() {
     assert_eq!(
         arm_rules::supernatural_free_slots(&e, &rs, profile).total,
         0,
-        "the free slot belongs to the Gifted, and `:2830` bars a grog from The \
+        "the free slot belongs to the Gifted, and `ArMDE:2830` bars a grog from The \
          Gift"
     );
 }
 
-/// `:2824`'s 3-point budget is untouched too: four Minor Supernatural Virtues
+/// `ArMDE:2824`'s 3-point budget is untouched too: four Minor Supernatural Virtues
 /// now clear the category gate and are refused on points instead.
 #[test]
 fn the_three_point_grog_budget_still_bounds_supernatural_virtues() {
@@ -6313,7 +6318,7 @@ fn the_three_point_grog_budget_still_bounds_supernatural_virtues() {
     let codes: Vec<String> = validate(&e, &rs).errors().map(|i| i.code.clone()).collect();
     assert!(
         codes.contains(&"over_budget_virtues".to_string()),
-        "four Minor Virtues exceed `:2824`'s 3 points: {codes:?}"
+        "four Minor Virtues exceed `ArMDE:2824`'s 3 points: {codes:?}"
     );
 }
 
@@ -6321,10 +6326,10 @@ fn the_three_point_grog_budget_still_bounds_supernatural_virtues() {
 //
 // `## List of Virtues` groups its entries under `### <Category>, <Magnitude>`
 // headings, and one of those headings is `### Mythic Companion, Free`
-// (Ars Magica - Definitive Edition (Core Rules).md:3329-3334), listing Devil
+// (ArMDE:3329-3334), listing Devil
 // Child, Faerie Doctor, Nephilim and Spirit Votary — none of which appears under
-// `### Social Status, Free` (:3336-3354). Their descriptors read
-// "*Free, Mythic Companion*" (:3672, :3822, :4595, :5007), which is the
+// `### Social Status, Free` (ArMDE:3336-3354). Their descriptors read
+// "*Free, Mythic Companion*" (ArMDE:3672, :3822, :4595, :5007), which is the
 // magnitude-then-category shape every other descriptor uses. `Tainted` never
 // occupies that slot — it is always a third token after a real category — which
 // is why it is a flag and this is not.
@@ -6357,8 +6362,8 @@ fn the_mythic_companion_virtues_carry_the_mythic_companion_category() {
 
 /// "All Mythic Companions take a Free Virtue which specifies their status. These
 /// Virtues are incompatible with each other, and with The Gift, and are not
-/// available to grogs." (`:2637`) — and each descriptor says the Virtue *makes*
-/// the character a Mythic Companion (`:3673`, `:3823`, `:4596`, `:5008`). So the
+/// available to grogs." (`ArMDE:2637`) — and each descriptor says the Virtue *makes*
+/// the character a Mythic Companion (`ArMDE:3673`, `ArMDE:3823`, `ArMDE:4596`, `ArMDE:5008`). So the
 /// category is permitted to the mythic-companion profile and to no other.
 #[test]
 fn only_the_mythic_companion_profile_permits_the_mythic_companion_category() {
@@ -6384,7 +6389,7 @@ fn only_the_mythic_companion_profile_permits_the_mythic_companion_category() {
 }
 
 /// The consequence on a real character: a grog may not take a Mythic Companion
-/// Virtue (`:2637`), which the `social_status` mapping used to allow outright.
+/// Virtue (`ArMDE:2637`), which the `social_status` mapping used to allow outright.
 #[test]
 fn a_grog_may_not_take_a_mythic_companion_virtue() {
     let rs = load_ruleset();
@@ -6405,7 +6410,7 @@ fn a_grog_may_not_take_a_mythic_companion_virtue() {
 }
 
 /// The Gift-category test is a membership query as well, so it still recognises
-/// a Flaw through the `hermetic` category it now shares with `story`: a grog
+/// a Flaw through the `hermetic` category it now shares with `story`ArMDE: a grog
 /// forbids The Gift, and Suppressed Gift is Hermetic.
 #[test]
 fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
@@ -6435,7 +6440,7 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 //
 // "A Virtue or Flaw may be taken more than once only if the description
 // explicitly allows it. Most Virtues and Flaws may only be taken once."
-// Ars Magica - Definitive Edition (Core Rules).md:2814.
+// ArMDE:2814.
 //
 // The engine keys duplicate selections on `(item_ref, params)` and permits
 // `max_per_target` copies of each key. An item whose descriptor allows repeats
@@ -6444,13 +6449,13 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 
 /// Every core-rules item whose descriptor allows repetition **without naming a
 /// ceiling**, paired with the line that says so. The convention for "the
-/// rulebook states no limit" is `u8::MAX`: the V/F point budget
-/// (Ars Magica - Definitive Edition (Core Rules).md:2638) caps the real count
+/// rulebook states no limit" is `u8::MAX`ArMDE: the V/F point budget
+/// (ArMDE:2638) caps the real count
 /// far below it, so the number is unreachable rather than arbitrary.
 ///
 /// `flaw.false_power_minor` used to sit here, because its ceiling — one copy
 /// "for each appropriate Supernatural Virtue that the character possesses"
-/// (`:6096`) — was a per-Virtue target the data model could not express. It now
+/// (`ArMDE:6096`) — was a per-Virtue target the data model could not express. It now
 /// can: the entry carries a `require_possessed` item parameter naming the
 /// Virtue, so the ceiling is `max_per_target: 1` per named Virtue plus an
 /// unbounded `max_total` across different ones. Pinned by
@@ -6521,7 +6526,7 @@ const TOTAL_CAP_ITEMS: &[(&str, u32, u8)] = &[
     ("flaw.fish_out_of_water_terrain", 6132, 1),
     // False Power's FIRST instance is the Major one and there is only ever one
     // of it — "in each subsequent instance as a Minor Flaw rather than a Major
-    // one" (`:6096`). Every subsequent copy is the separate
+    // one" (`ArMDE:6096`). Every subsequent copy is the separate
     // `flaw.false_power_minor` entry, so the Major is capped at one copy total.
     ("flaw.false_power", 6096, 1),
     ("virtue.affinity_art", 3378, 2),
@@ -6544,15 +6549,15 @@ const SHARE_CAPPED_ITEMS: &[(&str, u32, u8, u8)] = &[
 /// These sit between `UNLIMITED_REPEAT_ITEMS` and `ONCE_ONLY_ITEMS` and belong
 /// to neither. The rulebook allows the repeat, but only across *different*
 /// powers — "not more than once for a single power" (`flaw.slow_power`,
-/// `:6761`). That shape is expressed entirely in data: a free-text `power`
+/// `ArMDE:6761`). That shape is expressed entirely in data: a free-text `power`
 /// parameter makes each copy's target part of the `(item_ref, params)`
 /// duplicate key, `max_per_target` stays at its default of 1 so a second copy
 /// naming the SAME power collides, and `max_total` stays absent (`u8::MAX`)
 /// because the book states no ceiling on the number of powers.
 ///
-/// The target must be free text rather than `domain: "item"`: a "power" is an
+/// The target must be free text rather than `domain: "item"`ArMDE: a "power" is an
 /// *instance* of one of the Focus/Greater/Lesser/Personal/Ritual Power Virtues
-/// (`:6689`), and those Virtues are themselves unparameterized and repeatable,
+/// (`ArMDE:6689`), and those Virtues are themselves unparameterized and repeatable,
 /// so naming the Virtue would wrongly cap a magus at one copy across all three
 /// of his Greater Powers.
 const PER_POWER_ITEMS: &[(&str, u32)] = &[
@@ -6570,21 +6575,21 @@ const PER_POWER_ITEMS: &[(&str, u32)] = &[
 ///
 /// **Focus Power is deliberately absent.** Its 25 are a *different currency*: "This
 /// Virtue grants a pool of 25 points… It costs 2 points to raise the maximum level
-/// of effect by 1, and 1 point to raise the Penetration by 1" (`:3899`). Adding 25
+/// of effect by 1, and 1 point to raise the Penetration by 1" (`ArMDE:3899`). Adding 25
 /// points to a budget denominated in levels would be wrong arithmetic — a Focus
 /// Power's 25 points buy at most 12 levels, not 25. The control test below pins
 /// that it stays out.
 const POWER_LEVEL_ITEMS: &[(&str, u32, u16)] = &[
     // "equivalent to a Formulaic Hermetic spell with a level of 50 or lower"
-    // (:4019).
+    // (ArMDE:4019).
     ("virtue.greater_power", 4019, 50),
     // "equivalent to Formulaic Hermetic spells with total levels of 25 or lower"
-    // (:4281).
+    // (ArMDE:4281).
     ("virtue.lesser_power", 4281, 25),
     // "equivalent to a Formulaic Hermetic spell with a level of 25 or lower"
-    // (:4716).
+    // (ArMDE:4716).
     ("virtue.personal_power", 4716, 25),
-    // "equivalent to a Ritual Hermetic spell with a level of 25 or lower" (:4872).
+    // "equivalent to a Ritual Hermetic spell with a level of 25 or lower" (ArMDE:4872).
     ("virtue.ritual_power", 4872, 25),
 ];
 
@@ -6599,7 +6604,7 @@ const POWER_LEVEL_ITEMS: &[(&str, u32, u16)] = &[
 ///
 /// **No count is written down anywhere**, and Folk Magic no longer has a
 /// ceiling this list could imply. It may be picked "more than once, to acquire
-/// expertise in a different category of spells" (`:3919`) and carries neither
+/// expertise in a different category of spells" (`ArMDE:3919`) and carries neither
 /// `max_total` nor `max_per_target` — but the same sentence gives it a **second**
 /// axis ("you can align it to the same Realm as before or pick a different
 /// one"), so a further copy is legal as soon as it differs in *either* axis and
@@ -6611,11 +6616,11 @@ const POWER_LEVEL_ITEMS: &[(&str, u32, u16)] = &[
 /// `max_per_target: 4`.
 ///
 /// `flaw.fish_out_of_water_terrain` is deliberately **absent**: its terrain list
-/// ends "…, etc." (`:6130`), so open-endedness is what the book means there. The
+/// ends "…, etc." (`ArMDE:6130`), so open-endedness is what the book means there. The
 /// control test below pins that it stays free text.
 const ENUMERATED_PARAM_ITEMS: &[(&str, &str, u32, &[&str])] = &[
     // "He can only create spells in one narrow area, which must be one of the
-    // following four options" (:3909), printed :3911-3917.
+    // following four options" (ArMDE:3909), printed :3911-3917.
     (
         "virtue.folk_magic",
         "category",
@@ -6628,7 +6633,7 @@ const ENUMERATED_PARAM_ITEMS: &[(&str, &str, u32, &[&str])] = &[
         ],
     ),
     // "associated with one of five classes of beings: animals, divine beings,
-    // faeries, demons, or magical creatures" (:4135).
+    // faeries, demons, or magical creatures" (ArMDE:4135).
     (
         "virtue.inoffensive_to_beings",
         "being",
@@ -6642,7 +6647,7 @@ const ENUMERATED_PARAM_ITEMS: &[(&str, &str, u32, &[&str])] = &[
         ],
     ),
     // "one of six classes of beings: animals, mundane humans, divine beings,
-    // faeries, demons, or magical creatures" (:6526) — the five above plus
+    // faeries, demons, or magical creatures" (ArMDE:6526) — the five above plus
     // mundane humans.
     (
         "flaw.offensive_to_beings",
@@ -6658,7 +6663,7 @@ const ENUMERATED_PARAM_ITEMS: &[(&str, &str, u32, &[&str])] = &[
         ],
     ),
     // "one of three classes of beings: mundane humans, demons, or divine
-    // beings" (:6893) — a strict subset of the other two.
+    // beings" (ArMDE:6893) — a strict subset of the other two.
     (
         "flaw.unbearable_to_beings",
         "being",
@@ -6689,21 +6694,21 @@ fn shipped_enumerated_params_declare_exactly_their_book_values() {
             param.domain,
             ParameterDomain::Enumerated,
             "{id}'s '{key}' is one of a closed list the book prints \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line}), not free text"
+             (ArMDE:{line}), not free text"
         );
         let declared: Vec<String> = param.values.iter().map(|v| v.to_string()).collect();
         assert_eq!(
             declared,
             values.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
             "{id}'s '{key}' must offer exactly the classes named at \
-             Ars Magica - Definitive Edition (Core Rules).md:{line}"
+             ArMDE:{line}"
         );
     }
 }
 
 #[test]
 fn fish_out_of_water_keeps_a_free_text_terrain() {
-    // The control for the sweep above: this list ends "…, etc." (:6130), so the
+    // The control for the sweep above: this list ends "…, etc." (ArMDE:6130), so the
     // book means it to be open. Tightening it to `enumerated` would be a wrong
     // rules output, not a UI improvement.
     let rs = load_ruleset();
@@ -6717,7 +6722,7 @@ fn fish_out_of_water_keeps_a_free_text_terrain() {
         param.domain,
         ParameterDomain::Text,
         "the terrain list ends '…, etc.' \
-         (Ars Magica - Definitive Edition (Core Rules).md:6130), so it stays open"
+         (ArMDE:6130), so it stays open"
     );
 }
 
@@ -6794,7 +6799,7 @@ fn a_value_outside_an_enumerated_list_does_not_resolve() {
         assert!(
             codes.contains(&"unknown_param_value".to_string()),
             "{id}'s '{key}' takes only the classes the book names \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+             (ArMDE:{line}): {codes:?}"
         );
     }
 }
@@ -6809,7 +6814,7 @@ fn every_declared_enumerated_value_resolves() {
             assert!(
                 !codes.contains(&"unknown_param_value".to_string()),
                 "{id}'s declared value '{value}' must resolve \
-                 (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+                 (ArMDE:{line}): {codes:?}"
             );
         }
     }
@@ -6818,7 +6823,7 @@ fn every_declared_enumerated_value_resolves() {
 #[test]
 fn folk_magic_repeats_across_categories_but_never_within_one() {
     // "You may pick this Virtue more than once, to acquire expertise in a
-    // different category of spells." (:3919)
+    // different category of spells." (ArMDE:3919)
     let rs = load_ruleset();
     let (id, key, _, values) = ENUMERATED_PARAM_ITEMS[0];
     assert_eq!(id, "virtue.folk_magic");
@@ -6843,11 +6848,11 @@ fn folk_magic_repeats_across_categories_but_never_within_one() {
 /// the one exclusion the rulebook states over it.
 ///
 /// > "The choice of (Realm) Lore also determines which supernatural realm his
-/// > magic is aligned to for the purposes of aura modifiers." (`:3909`)
+/// > magic is aligned to for the purposes of aura modifiers." (`ArMDE:3909`)
 ///
 /// > "Each time you choose this Virtue, you can align it to the same Realm as
 /// > before or pick a different one, although a character cannot have access to
-/// > both the Divine and Infernal Realms." (`:3919`)
+/// > both the Divine and Infernal Realms." (`ArMDE:3919`)
 ///
 /// What is stored is the **Realm**, not the (Realm) Lore Ability: the Core
 /// Rules print no closed "(Realm) Lore" list, while the four Realms are a
@@ -6873,7 +6878,7 @@ fn folk_magic_records_the_realm_its_magic_is_aligned_to() {
         param.domain,
         ParameterDomain::Realm,
         "the realm is one of the four the engine models, not free text \
-         (Ars Magica - Definitive Edition (Core Rules).md:3909)"
+         (ArMDE:3909)"
     );
     assert!(
         param.values.is_empty(),
@@ -6888,12 +6893,12 @@ fn folk_magic_records_the_realm_its_magic_is_aligned_to() {
             Id::new("realm.infernal")
         ])],
         "\"a character cannot have access to both the Divine and Infernal \
-         Realms\" (Ars Magica - Definitive Edition (Core Rules).md:3919)"
+         Realms\" (ArMDE:3919)"
     );
 }
 
 /// Builds a companion holding one copy of Folk Magic per `(category, realm)`
-/// pair — the two axes `:3909` gives it.
+/// pair — the two axes `ArMDE:3909` gives it.
 fn folk_magic_copies(pairs: &[(&Id, &Id)]) -> Entity {
     let selections = pairs
         .iter()
@@ -6917,7 +6922,7 @@ fn folk_magic_copies(pairs: &[(&Id, &Id)]) -> Entity {
 /// > different category of spells. Each time you choose this Virtue, you can
 /// > align it to the same Realm as before or pick a different one, although a
 /// > character cannot have access to both the Divine and Infernal Realms."
-/// > (`:3919`)
+/// > (`ArMDE:3919`)
 ///
 /// So a further copy is legal as soon as it differs in **either** axis; it is a
 /// repeat only when it differs in neither; and the one pairing the book rules
@@ -7001,7 +7006,7 @@ fn folk_magic_repeats_along_either_axis_and_never_across_the_excluded_realms() {
     assert!(
         both.contains(&"exclusive_param_values".to_string()),
         "a character cannot have access to both the Divine and Infernal Realms \
-         (Ars Magica - Definitive Edition (Core Rules).md:3919): {both:?}"
+         (ArMDE:3919): {both:?}"
     );
 }
 
@@ -7016,14 +7021,14 @@ fn shipped_power_virtues_fund_the_power_levels_budget() {
             power_levels_budget(&one, &rs),
             u32::from(*levels),
             "{id} grants {levels} levels of supernatural power \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             (ArMDE:{line})"
         );
     }
 }
 
 /// Focus Power's 25 are POINTS, not levels — "It costs 2 points to raise the
 /// maximum level of effect by 1, and 1 point to raise the Penetration by 1"
-/// (Ars Magica - Definitive Edition (Core Rules).md:3899). Feeding them into the
+/// (ArMDE:3899). Feeding them into the
 /// level-denominated budget would silently double what the Virtue actually buys,
 /// so the entry must grant nothing there.
 #[test]
@@ -7039,7 +7044,7 @@ fn focus_power_funds_no_power_levels_because_its_pool_is_points() {
         power_levels_budget(&focused, &rs),
         0,
         "Focus Power's pool is 25 POINTS at 2 points per level of effect \
-         (Ars Magica - Definitive Edition (Core Rules).md:3899), a different \
+         (ArMDE:3899), a different \
          currency from the level budget the other Power Virtues fund"
     );
 }
@@ -7056,13 +7061,13 @@ fn shipped_per_power_items_carry_a_power_target() {
         assert_eq!(
             item.max_per_target, 1,
             "{id} may not be taken twice for the SAME power \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             (ArMDE:{line})"
         );
         assert_eq!(
             item.max_total,
             u8::MAX,
             "{id} states no ceiling on the number of DIFFERENT powers it may \
-             name (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             name (ArMDE:{line})"
         );
 
         let [param] = item.parameters.as_slice() else {
@@ -7086,7 +7091,7 @@ fn shipped_per_power_items_carry_a_power_target() {
             param.require_power,
             "{id} restricts a power the character HAS, so the typed name must \
              match one of `entity.powers` \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             (ArMDE:{line})"
         );
     }
 }
@@ -7122,7 +7127,7 @@ fn a_per_power_item_naming_no_held_power_dangles() {
             codes.contains(&"power_dangling_target".to_string()),
             "{id} restricts one of the character's own powers, so a name no \
              power carries restricts nothing \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+             (ArMDE:{line}): {codes:?}"
         );
     }
 }
@@ -7143,7 +7148,7 @@ fn a_per_power_item_naming_a_held_power_is_clean() {
         assert!(
             !codes.contains(&"power_dangling_target".to_string()),
             "{id} may name any power the character holds \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+             (ArMDE:{line}): {codes:?}"
         );
     }
 }
@@ -7172,7 +7177,7 @@ fn per_power_items_repeated_on_one_power_are_duplicates() {
         assert!(
             codes.contains(&"duplicate_selection".to_string()),
             "{id} may not be taken twice for the same power \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+             (ArMDE:{line}): {codes:?}"
         );
     }
 }
@@ -7189,12 +7194,12 @@ fn per_power_items_repeated_across_powers_are_clean() {
         assert!(
             !codes.contains(&"duplicate_selection".to_string()),
             "{id} may be taken once for each power the character possesses \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+             (ArMDE:{line}): {codes:?}"
         );
         assert!(
             !codes.contains(&"too_many_selections".to_string()),
             "{id} states no ceiling on the number of different powers \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line}): {codes:?}"
+             (ArMDE:{line}): {codes:?}"
         );
     }
 }
@@ -7215,7 +7220,7 @@ fn shipped_share_capped_items_carry_their_rulebook_ratio() {
             }),
             "{id} may account for no more than {numerator}/{denominator} of its \
              kind's point total \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             (ArMDE:{line})"
         );
     }
 }
@@ -7232,7 +7237,7 @@ fn shipped_repeatable_items_carry_their_rulebook_ceiling() {
             item.max_per_target,
             u8::MAX,
             "{id} may be taken more than once with no stated ceiling \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             (ArMDE:{line})"
         );
         assert!(
             item.parameters.is_empty(),
@@ -7248,7 +7253,7 @@ fn shipped_repeatable_items_carry_their_rulebook_ceiling() {
         assert_eq!(
             item.max_per_target, 2,
             "{id} may be taken exactly twice \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             (ArMDE:{line})"
         );
     }
 }
@@ -7264,7 +7269,7 @@ fn shipped_once_only_items_stay_non_repeatable() {
         assert_eq!(
             item.max_per_target, 1,
             "{id} may not be taken more than once \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             (ArMDE:{line})"
         );
     }
 }
@@ -7280,12 +7285,12 @@ fn shipped_total_cap_items_carry_their_rulebook_ceiling() {
         assert_eq!(
             item.max_total, *expected_max_total,
             "{id} is capped at {expected_max_total} total across all targets \
-             (Ars Magica - Definitive Edition (Core Rules).md:{line})"
+             (ArMDE:{line})"
         );
     }
 
     // "You may take this Virtue twice, for two different Arts"
-    // (Ars Magica - Definitive Edition (Core Rules).md:3378, :4820): one copy
+    // (ArMDE:3378, :4820): one copy
     // per Art, two Arts total. If `max_per_target` were ever raised here, the
     // same Art could be doubled up — this guards that it stays 1.
     for id in ["virtue.affinity_art", "virtue.puissant_art"] {
@@ -7302,7 +7307,7 @@ fn shipped_total_cap_items_carry_their_rulebook_ceiling() {
 /// False Power "may be taken multiple times, once for each appropriate
 /// Supernatural Virtue that the character possesses, but in each subsequent
 /// instance as a Minor Flaw rather than a Major one"
-/// (Ars Magica - Definitive Edition (Core Rules).md:6096; entry :6080-6096).
+/// (ArMDE:6096; entry :6080-6096).
 ///
 /// `magnitude` belongs to the catalogue entry, never to a selection, so the
 /// per-copy magnitude change is expressed as a PAIR of entries — the shipped
@@ -7323,12 +7328,12 @@ fn false_power_ships_as_a_coexisting_major_plus_minor_pair() {
     assert_eq!(
         major.magnitude,
         Magnitude::Major,
-        "the first instance of False Power is a Major Flaw (:6081)"
+        "the first instance of False Power is a Major Flaw (ArMDE:6081)"
     );
     assert_eq!(
         minor.magnitude,
         Magnitude::Minor,
-        "each subsequent instance is a Minor Flaw rather than a Major one (:6096)"
+        "each subsequent instance is a Minor Flaw rather than a Major one (ArMDE:6096)"
     );
     assert_eq!(minor.kind, ItemKind::Flaw);
     assert_eq!(
@@ -7339,11 +7344,11 @@ fn false_power_ships_as_a_coexisting_major_plus_minor_pair() {
     assert_eq!(minor.entity_kinds, major.entity_kinds);
     assert_eq!(
         minor.source, major.source,
-        "both entries are read off the same rulebook entry (:6080-6096)"
+        "both entries are read off the same rulebook entry (ArMDE:6080-6096)"
     );
     assert!(
         major.tainted && minor.tainted,
-        "False Power is a *Tainted* Flaw in both magnitudes (:6081), so both \
+        "False Power is a *Tainted* Flaw in both magnitudes (ArMDE:6081), so both \
          copies must feed the half-of-Flaw-points Tainted cap"
     );
     assert_eq!(
@@ -7374,7 +7379,7 @@ fn a_second_major_false_power_is_capped() {
     assert!(
         codes.contains(&"too_many_selections".to_string()),
         "only the FIRST instance of False Power is the Major one \
-         (Ars Magica - Definitive Edition (Core Rules).md:6096): {codes:?}"
+         (ArMDE:6096): {codes:?}"
     );
 }
 
@@ -7390,7 +7395,7 @@ fn a_minor_false_power_without_the_major_is_a_missing_prerequisite() {
     assert!(
         codes.contains(&"prereq_not_met".to_string()),
         "a Minor False Power is a SUBSEQUENT instance and cannot be the first \
-         (Ars Magica - Definitive Edition (Core Rules).md:6096): {codes:?}"
+         (ArMDE:6096): {codes:?}"
     );
 }
 
@@ -7399,7 +7404,7 @@ fn a_minor_false_power_without_the_major_is_a_missing_prerequisite() {
 ///
 /// Each copy names a Virtue of its own, and the character holds all three —
 /// "once for each appropriate Supernatural Virtue that the character possesses"
-/// (`:6096`) is what makes three copies legal in the first place, so a fixture
+/// (`ArMDE:6096`) is what makes three copies legal in the first place, so a fixture
 /// of three unnamed copies would no longer be the legal build this asserts.
 #[test]
 fn false_power_taken_three_times_costs_three_plus_one_plus_one() {
@@ -7420,7 +7425,7 @@ fn false_power_taken_three_times_costs_three_plus_one_plus_one() {
         compute_balance(&thrice, &rs).flaw_points,
         3 + 1 + 1,
         "the first instance is Major (3) and each subsequent one Minor (1) \
-         (Ars Magica - Definitive Edition (Core Rules).md:6096)"
+         (ArMDE:6096)"
     );
 
     let codes = issue_codes(&thrice, &rs);
@@ -7435,14 +7440,14 @@ fn false_power_taken_three_times_costs_three_plus_one_plus_one() {
         assert!(
             !codes.contains(&blocker.to_string()),
             "one Major plus two Minor False Powers is a legal build \
-             (Ars Magica - Definitive Edition (Core Rules).md:6096): {codes:?}"
+             (ArMDE:6096): {codes:?}"
         );
     }
 }
 
 /// The Minor entry rests entirely on its `has` prerequisite, and a False Power
 /// can arrive as an off-budget grant rather than a bought row — a warping-owed
-/// Major Flaw slot (Ars Magica - Definitive Edition (Core Rules).md:16561) is
+/// Major Flaw slot (ArMDE:16561) is
 /// filled by choosing a real item. `validate_prerequisites` is handed the folded
 /// grant list, so such a copy satisfies the Minor's prerequisite; asserted here
 /// rather than assumed, because the whole entry pair rests on it.
@@ -7454,7 +7459,7 @@ fn a_granted_major_false_power_satisfies_the_minor_prerequisite() {
         vec![Selection::new(Id::new("flaw.false_power_minor"))],
     );
     // Warping Score 6 (105 Warping Points on the 5-per-score advancement curve)
-    // owes one Major Flaw (:16561).
+    // owes one Major Flaw (ArMDE:16561).
     e.warping_points = 105;
     e.warping_choices = BTreeMap::from([(
         "warping.major_flaw.0".to_string(),
@@ -7490,13 +7495,13 @@ fn false_power(item: &str, target: &str) -> Selection {
 }
 
 /// "One of the character's Supernatural Virtues is associated with the Infernal
-/// realm" (Ars Magica - Definitive Edition (Core Rules).md:6082), taken "once
+/// realm" (ArMDE:6082), taken "once
 /// for each appropriate Supernatural Virtue that the character possesses"
-/// (`:6096`) — so every copy must NAME its Virtue, and that Virtue must be one
+/// (`ArMDE:6096`) — so every copy must NAME its Virtue, and that Virtue must be one
 /// the character actually holds and is not already Infernal.
 ///
 /// The three required categories are read off the book's own three examples at
-/// `:6082` — "Faerie Blood, Diedne Magic, or even The Gift" — which in this
+/// `ArMDE:6082` — "Faerie Blood, Diedne Magic, or even The Gift" — which in this
 /// catalogue carry `supernatural`, `hermetic` and `special` respectively. A
 /// bare `supernatural` would have excluded two Virtues the source names
 /// outright.
@@ -7519,7 +7524,7 @@ fn false_power_names_the_supernatural_virtue_it_taints() {
         assert_eq!(
             param.domain,
             ParameterDomain::Item,
-            "the target is a catalogue Virtue, not free text (:6096)"
+            "the target is a catalogue Virtue, not free text (ArMDE:6096)"
         );
         assert_eq!(
             param.require_categories,
@@ -7533,16 +7538,16 @@ fn false_power_names_the_supernatural_virtue_it_taints() {
         );
         assert!(
             param.require_possessed,
-            "{id} taints a Virtue the character POSSESSES (:6096)"
+            "{id} taints a Virtue the character POSSESSES (ArMDE:6096)"
         );
         assert!(
             param.forbid_tainted,
             "{id} cannot apply to a Virtue already affiliated to the Infernal \
-             realm (:6096)"
+             realm (ArMDE:6096)"
         );
         assert_eq!(
             item.max_per_target, 1,
-            "{id} is taken once for EACH Virtue (:6096), so no two copies may \
+            "{id} is taken once for EACH Virtue (ArMDE:6096), so no two copies may \
              name the same one"
         );
     }
@@ -7557,7 +7562,7 @@ fn false_power_names_the_supernatural_virtue_it_taints() {
             .max_total,
         u8::MAX,
         "the book states no limit on the number of different Virtues tainted \
-         (Ars Magica - Definitive Edition (Core Rules).md:6096)"
+         (ArMDE:6096)"
     );
 }
 
@@ -7602,7 +7607,7 @@ fn false_power_cannot_taint_a_virtue_the_character_lacks() {
     assert!(
         issue_codes(&lacking, &rs).contains(&"param_target_not_possessed".to_string()),
         "the Flaw taints a Virtue the character possesses \
-         (Ars Magica - Definitive Edition (Core Rules).md:6096): {:?}",
+         (ArMDE:6096): {:?}",
         issue_codes(&lacking, &rs)
     );
 
@@ -7615,13 +7620,13 @@ fn false_power_cannot_taint_a_virtue_the_character_lacks() {
     );
     assert!(
         !issue_codes(&holding, &rs).contains(&"param_target_not_possessed".to_string()),
-        "(False) Second Sight is the book's own example (:6086): {:?}",
+        "(False) Second Sight is the book's own example (ArMDE:6086): {:?}",
         issue_codes(&holding, &rs)
     );
 }
 
 /// "Also note that this Flaw cannot apply to Supernatural Virtues that are
-/// affiliated to the Infernal realm in the first place" (`:6096`). Infernal
+/// affiliated to the Infernal realm in the first place" (`ArMDE:6096`). Infernal
 /// affiliation is the descriptor's *Tainted* tag, so Demonic Blood — held or
 /// not — is outside the parameter's domain.
 #[test]
@@ -7636,7 +7641,7 @@ fn false_power_cannot_taint_an_already_infernal_virtue() {
     );
     assert!(
         issue_codes(&e, &rs).contains(&"unknown_param_value".to_string()),
-        "a Tainted Virtue is already Infernal and cannot be made falser (:6096): {:?}",
+        "a Tainted Virtue is already Infernal and cannot be made falser (ArMDE:6096): {:?}",
         issue_codes(&e, &rs)
     );
 }
@@ -7644,7 +7649,7 @@ fn false_power_cannot_taint_an_already_infernal_virtue() {
 /// The gap `max_per_target` is structurally blind to: its duplicate key is
 /// `(item_ref, params)`, and the Major and Minor entries are different ids, so
 /// nothing stopped both from naming one Virtue. "Once for each appropriate
-/// Supernatural Virtue" (`:6096`) says they may not.
+/// Supernatural Virtue" (`ArMDE:6096`) says they may not.
 #[test]
 fn a_major_and_a_minor_false_power_cannot_taint_the_same_virtue() {
     let rs = load_ruleset();
@@ -7688,7 +7693,7 @@ fn a_major_and_a_minor_false_power_cannot_taint_the_same_virtue() {
 
 /// Possession is by **id**, the `Prereq::Has` notion — a `taken_as` reading is
 /// not consulted. Sufi is "either as a Minor Social Status Virtue or a Minor
-/// Supernatural Virtue" (`:5083`), and a Sufi taken as Social Status is still a
+/// Supernatural Virtue" (`ArMDE:5083`), and a Sufi taken as Social Status is still a
 /// Virtue the character holds, so False Power may name it.
 ///
 /// Deliberate, and the same answer the *domain* half already gives: a parameter
@@ -7745,7 +7750,7 @@ fn repeated_selections_are_not_reported_as_duplicates() {
     assert!(
         !codes.contains(&"duplicate_selection".to_string()),
         "Improved Characteristics may be taken multiple times \
-         (Ars Magica - Definitive Edition (Core Rules).md:4105): {codes:?}"
+         (ArMDE:4105): {codes:?}"
     );
 }
 
@@ -7755,7 +7760,7 @@ fn repeated_selections_stack_their_effects() {
     let rs = load_ruleset();
 
     // "You have an additional three points to spend on buying Characteristics
-    // ... You may take this Virtue multiple times." (:4105)
+    // ... You may take this Virtue multiple times." (ArMDE:4105)
     let two_improved = entity(
         "companion",
         vec![
@@ -7770,7 +7775,7 @@ fn repeated_selections_stack_their_effects() {
     );
 
     // "He gains an extra 20 levels of Infernal Powers ... You may also take
-    // this Virtue more than once" (:3669).
+    // this Virtue more than once" (ArMDE:3669).
     let two_demonic = entity(
         "mythic_companion",
         vec![
@@ -7794,8 +7799,8 @@ fn repeated_selections_stack_their_effects() {
 // `entity.selections`, so the duplicate/total-cap checks — which used to read
 // `entity.selections` alone — could not see them. A Flambeau magus granted
 // Puissant Ignem who also BOUGHT Puissant Ignem therefore validated clean and
-// stacked +6 onto Ignem, against Ars Magica - Definitive Edition (Core
-// Rules).md:4820 ("You may take this Virtue twice, for two different Arts").
+// stacked +6 onto Ignem, against ArMDE:4820 ("You may take this Virtue
+// twice, for two different Arts").
 // The three tests below pin the fix against the SHIPPED ruleset
 // (`load_full_ruleset()`), not a synthetic one, since the bug lived in the real
 // `rules/core/houses.json` grant data and a future data edit (e.g. raising
@@ -7838,7 +7843,7 @@ fn flambeau_granted_and_bought_same_art_is_a_duplicate() {
 
 /// The guard against over-correcting: a Flambeau magus granted Puissant Ignem
 /// who buys Puissant Perdo instead holds two DIFFERENT Arts — exactly what
-/// "twice, for two different Arts" (:4820) allows. Neither the per-target
+/// "twice, for two different Arts" (ArMDE:4820) allows. Neither the per-target
 /// duplicate check nor the total cap (`max_total` 2, and this is only 2
 /// copies) may fire.
 #[test]
@@ -7946,7 +7951,7 @@ fn a_v0_2_x_saves_typed_being_values_resolve_after_migration() {
 /// actionable `missing_param` naming the item and the key the player must
 /// supply — inventing a placeholder would invent a character's rules choices.
 ///
-/// Folk Magic's `realm` (B7, `:3909`) joined the list on exactly the standing
+/// Folk Magic's `realm` (B7, `ArMDE:3909`) joined the list on exactly the standing
 /// policy its `category` set: a `ParameterDef` is **ruleset** shape, not save
 /// shape, so `SCHEMA_VERSION` neither moves nor could, and no save distinguishes
 /// the two eras. The player is asked, not guessed at.

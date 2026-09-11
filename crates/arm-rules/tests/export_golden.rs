@@ -311,7 +311,7 @@ fn golden_magus() -> Entity {
     // One hand-written year and two the engine resolved, so the fixture covers the
     // free-text entry, the widened one carrying its die and total, and both states a
     // Crisis can be in: demanded and unrolled (1229), and resolved against the
-    // Crisis Table (1230, Ars Magica - Definitive Edition (Core Rules).md:16621-16632).
+    // Crisis Table (1230, ArMDE:16621-16632).
     e.aging_log = vec![
         AgingLogEntry {
             year: Some(1220),
@@ -362,7 +362,7 @@ fn a_fully_populated_magus_matches_the_golden_document() {
 /// separator the rest of the document uses. Rendering only the primary would hide
 /// that Visions is a Supernatural Flaw as well as a Story one.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:6985-6986
+/// Source: ArMDE:6985-6986
 /// (*Minor, Story, Supernatural*).
 #[test]
 fn the_type_cell_lists_every_category_the_descriptor_names() {

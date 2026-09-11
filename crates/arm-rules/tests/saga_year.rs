@@ -12,7 +12,7 @@ use arm_rules::{CreationPhase, IssueSeverity, ValidationIssue};
 #[test]
 fn the_default_saga_year_is_the_year_the_published_setting_stands_in() {
     // A rules value, not a preference: "That domination persists until the present
-    // day, 1220." — Ars Magica - Definitive Edition (Core Rules).md:597
+    // day, 1220." — ArMDE:597
     assert_eq!(arm_rules::DEFAULT_SAGA_YEAR, 1220);
 }
 

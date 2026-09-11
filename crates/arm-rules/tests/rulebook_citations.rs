@@ -14,37 +14,145 @@
 //! `rules/source/de/translation-tables/grundbegriffe.md:212-229` rather than
 //! either the bare form or the full basename, and make that acronym
 //! mechanically resolvable so a wrong range can never hide behind it again.
-//! This file is that guard. It is deliberately scoped to `crates/arm-rules/src`
-//! and `crates/arm-app/src` for D1a; later slices (D1b, D1c) widen
-//! [`citation_roots`] to `crates/*/tests`, `crates/arm-rules/RULES.md`,
-//! `ui/src`, and `docs/`.
+//! This file is that guard.
+//!
+//! **D1a** scoped it to `crates/arm-rules/src` and `crates/arm-app/src`.
+//! **D1b** (this slice) widens [`citation_roots`] to `crates/arm-rules/tests`
+//! and `crates/arm-app/tests`, and adds [`markdown_citation_files`] +
+//! [`markdown_blocks`] so `crates/arm-rules/RULES.md` — prose, not Rust
+//! comments — is covered too. A later slice (D1c) still owes `ui/src` and
+//! `docs/`.
 //!
 //! This is a different subject from `rules_md_citations.rs`, which guards
 //! *implementation-site* citations (`RULES.md` pointing at Rust code, and
 //! Rust comments pointing back at `RULES.md`) — not rulebook citations.
 //!
-//! **Deliberate exclusion: string literals.** [`comment_blocks`] only collects
-//! `///`/`//!`/`//` lines, so a full basename inside a Rust **string
-//! literal** is invisible to every detector in this file — e.g.
-//! `crates/arm-rules/src/ruleset/integrity.rs` spells `Ars Magica -
-//! Definitive Edition (Core Rules).md:NNNN` seven times inside
+//! **Deliberate exclusion: string literals in `.rs` source.**
+//! [`comment_blocks`] only collects `///`/`//!`/`//` lines, so a citation
+//! inside a Rust **string literal** is invisible to every `.rs` detector in
+//! this file — e.g. `crates/arm-rules/src/ruleset/integrity.rs` spells `Ars
+//! Magica - Definitive Edition (Core Rules).md:NNNN` seven times inside
 //! `errors.push(format!(...))` diagnostics built by `RulesetIntegrity`'s
 //! validators (`IntegrityError`, surfaced through `RulesetError` when a
 //! ruleset — including a hand-edited `rules/core/*.json`, which
 //! `CLAUDE.md`'s trust model treats as the file the user opens) fails a
-//! structural check (non-tiling aging rows, misordered Aging/Decrepitude
-//! thresholds, …). This is a **kept-on-purpose** exception, not an oversight:
-//! these are `IntegrityError` diagnostics for whoever is editing the rules
-//! JSON, in the same spirit as `CLAUDE.md`'s "fail loudly with clear error
-//! listing offending IDs" — the reader needs to open a specific rulebook, and
-//! spelling it out in full removes any need to know the nine-item acronym
-//! table to act on the message. It is not the routed-through-Fluent UI copy
-//! `CLAUDE.md` bans from being hardcoded (no Ability/Virtue/label text, no
-//! normal-session string); it is data-integrity diagnostic text reached only
-//! when the rules data itself is broken, i.e. self-inflicted by whoever
-//! edited it. `dotmd_citation_detector_ignores_a_dot_md_path_inside_a_string_literal_but_flags_one_in_a_comment`
-//! is the test proving this exclusion is intentional and mechanical (it falls
-//! out of `comment_blocks`'s existing "comments only" scope), not accidental.
+//! structural check. This is **kept on purpose**: these are diagnostics for
+//! whoever is editing the rules JSON, in the same spirit as `CLAUDE.md`'s
+//! "fail loudly with clear error listing offending IDs" — the reader needs to
+//! open a specific rulebook, and spelling it out in full removes any need to
+//! know the nine-item acronym table to act on the message.
+//! `dotmd_citation_detector_ignores_a_dot_md_path_inside_a_string_literal_but_flags_one_in_a_comment`
+//! proves this exclusion is intentional and mechanical (it falls out of
+//! `comment_blocks`'s existing "comments only" scope), not accidental.
+//!
+//! D1b's sweep of `crates/*/tests` found the same shape recurring in
+//! `assert!`/`assert_eq!` failure-message string literals (e.g.
+//! `data_integrity.rs`: `"{id} is locality-dependent (Ars Magica -
+//! Definitive Edition (Core Rules).md:6160)"`). Those are **not** given the
+//! `ruleset/integrity.rs` exemption above — a test failure message has no
+//! rules-editor reading it without the acronym table, and every sample
+//! checked was a trailing message argument (never the value under
+//! comparison), so converting it to the acronym is safe and was done by hand
+//! alongside the comment sweep, even though this guard (matching
+//! `comment_blocks`'s scope) does not and will not enforce it there.
+//!
+//! **Markdown scanning mode.** RULES.md's whole structure is prose — rule,
+//! verbatim rulebook excerpt, source citation, implementing function — so
+//! there is no comment leader to key off the way `comment_blocks` does for
+//! Rust. [`markdown_blocks`] instead joins contiguous non-blank lines (a
+//! Markdown paragraph/list-item/table run, the closest analogue to a
+//! comment's contiguous run) and drops fenced code block bodies entirely.
+//! Two hazards drove that shape, both real in the live document:
+//!
+//!  - **Fenced code blocks quote JSON/pseudocode**, never a rulebook
+//!    citation in this document (verified: none of RULES.md's three fences
+//!    contain one) — but a future example could coincidentally contain a
+//!    `key: 123`-shaped shape, so the scanner drops fence bodies rather than
+//!    trusting that to stay true. [`markdown_blocks_skips_fenced_code_bodies`]
+//!    proves a citation-shaped token inside a fence is invisible, and one
+//!    just outside it is not.
+//!  - **Verbatim rulebook excerpts** (block-quoted book prose) legitimately
+//!    contain arbitrary digits and colons (ratios, times, page-internal
+//!    numbering) that must not be invented into citations. No new
+//!    discrimination logic was needed for this: [`find_bare_citations`]
+//!    already requires a backtick or open-paren *immediately* before the
+//!    colon (proved by
+//!    `bare_citation_detector_flags_real_bare_citations_and_ignores_near_misses`,
+//!    which includes exactly this kind of near-miss), a shape ordinary quoted
+//!    prose does not produce by accident.
+//!
+//! **Book declarations without a citation are not citations.** RULES.md
+//! names a book twice without citing a line: the `## <basename>.md` section
+//! heading, and the "Other available books" list of not-yet-implemented
+//! sourcebooks. Rather than special-case "heading" or "list item" lines (a
+//! classification that would need to be kept in sync with the document's
+//! structure), [`find_full_basename_citations`] requires the basename to be
+//! immediately followed by `:NNNN` before counting it — the same test
+//! [`find_dotmd_citations`] already applies. A bare mention with no line
+//! number therefore is never a citation, in a heading or anywhere else, with
+//! no separate exemption list to maintain.
+//! [`full_basename_citation_detector_ignores_a_bare_book_mention_but_flags_a_real_citation`]
+//! proves both halves.
+//!
+//! `RULES.md:NNNN` self-references belong to `rules_md_citations.rs`, not
+//! this file — [`find_bare_citations`]'s doc comment already explains why a
+//! letter (not a backtick/paren) before the colon keeps the two apart.
+//!
+//! **Paren-bare citations in RULES.md are implementation sites, not
+//! rulebook citations.** `rules_md_citations.rs` already owns a *different*
+//! bare-citation convention in this same document: `` `validate_caps`
+//! (:22) `` pins a Rust function at line 22 of a nearby-cited `.rs` file, and
+//! that guard's own `citation_offsets` comment notes "a hyphen would make it
+//! a range, which implementation sites never use". Reusing
+//! [`find_bare_citations`] naively against RULES.md therefore misreads every
+//! one of those (~24 in the live document) as an *unlabelled rulebook*
+//! citation and "fixes" it into nonsense (`` `validate_caps` (ArMDE:22) ``,
+//! silently corrupting the very citation `rules_md_citations.rs` checks —
+//! caught only by running that file's own test suite after the sweep, which
+//! is exactly why both guards are exercised together in CI). A **range**
+//! paren-bare citation (`` (:4399-4422) ``) is unambiguous — implementation
+//! sites never use one — and is handled by the ordinary path. A **single-number**
+//! paren-bare citation is ambiguous by shape alone, so
+//! [`has_preceding_rs_backtick_token`] applies the same signal
+//! `rules_md_citations.rs`'s own `resolve_target` uses: a backtick-wrapped
+//! `.rs` token earlier in the same block means "implementation site, not
+//! ours". [`find_bare_rulebook_citations_in_markdown`] is the wrapper that
+//! applies this only to the Markdown scan; Rust-source scanning is
+//! unaffected and still uses [`find_bare_citations`] directly, since no
+//! `.rs` comment in this codebase uses the implementation-site convention.
+//!
+//! **This guard excludes its own test files, and `rules_md_citations.rs`.**
+//! Widening [`citation_roots`] to `crates/arm-rules/tests` makes the guard
+//! scan its own source for the first time, and its doc comments necessarily
+//! discuss citation *shapes* with realistic-looking illustrative examples —
+//! `` `:22` `` and `The Divine (Revised).md:1975` in `rules_md_citations.rs`
+//! and this file's own module doc comment, deliberately mangled fixtures
+//! that exist to document and test the detectors above, not to record real
+//! project provenance. Left unexcluded, the guard would flag its own
+//! examples as violations of itself. [`SELF_EXCLUDED_FILES`] is the same
+//! kind of deliberate carve-out as the string-literal exclusion above, not
+//! an oversight.
+//!
+//! **German-provenance citations are a different, valid convention, not a
+//! mangled English one.** Widening [`find_dotmd_citations`] to RULES.md
+//! surfaced a real false-positive class: RULES.md and `commands.rs`
+//! legitimately cite German sourcebooks and translation tables
+//! (`Ars Magica Definitive Edition Basisregeln.md:9524`,
+//! `translation-tables/grundbegriffe.md:112`) per `CLAUDE.md`'s own "Rules
+//! provenance" / "German translation tables" sections — a `file.md:line`
+//! shape that has nothing to do with the nine-book English acronym system
+//! this guard enforces. [`german_source_basenames`] walks the real
+//! `rules/source/de/` tree so this exclusion self-maintains as translation
+//! tables are added, rather than a hardcoded list drifting out of sync.
+//! [`GERMAN_SHORTHAND_BASENAMES`] additionally covers the one shorthand this
+//! repo's prose actually uses (`Basisregeln.md` for the German core book) —
+//! deliberately *not* generalised to "last word of every German title",
+//! because `Societates.md` would then collide with a genuine shorthand
+//! attempt at the *English* Houses of Hermes: Societates book, which must
+//! still be caught. Genuinely mangled English shorthands survive this
+//! exclusion untouched — `commands.rs` also has six `Core Rules.md:NNNN`
+//! citations (missing the `Ars Magica - Definitive Edition (` prefix), and
+//! those are still flagged and were fixed in the sweep.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -57,6 +165,51 @@ fn repo_root() -> PathBuf {
 
 fn rules_source_en() -> PathBuf {
     repo_root().join("rules/source/en")
+}
+
+fn rules_source_de() -> PathBuf {
+    repo_root().join("rules/source/de")
+}
+
+/// Every `.md` basename under `rules/source/de/` (recursively, so
+/// `translation-tables/` is included), gathered from the real directory tree
+/// rather than hardcoded, so a new German sourcebook or translation table is
+/// picked up automatically. See this file's module doc comment,
+/// "German-provenance citations are a different, valid convention".
+fn german_source_basenames() -> BTreeSet<String> {
+    let mut names = BTreeSet::new();
+    collect_md_basenames(&rules_source_de(), &mut names);
+    names
+}
+
+fn collect_md_basenames(dir: &Path, out: &mut BTreeSet<String>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_md_basenames(&path, out);
+        } else if path.extension().is_some_and(|ext| ext == "md")
+            && let Some(name) = path.file_name().and_then(|n| n.to_str())
+        {
+            out.insert(name.to_string());
+        }
+    }
+}
+
+/// The one shorthand this repo's own prose actually uses for a German
+/// source file instead of its full basename: `Basisregeln.md` for the German
+/// core rulebook. Not generalised to "last word of every German basename" —
+/// see the module doc comment for why (`Societates.md` collision risk).
+const GERMAN_SHORTHAND_BASENAMES: &[&str] = &["Basisregeln.md"];
+
+/// The full set of `.md` basenames that are a legitimate non-rulebook
+/// citation and must not be flagged by [`find_dotmd_citations`].
+fn non_rulebook_md_exclusions() -> BTreeSet<String> {
+    let mut names = german_source_basenames();
+    names.extend(GERMAN_SHORTHAND_BASENAMES.iter().map(|s| s.to_string()));
+    names
 }
 
 /// The nine acronyms `CLAUDE.md` → "Rules provenance" defines, each mapped to
@@ -92,12 +245,33 @@ const BOOK_ACRONYMS: &[(&str, &str)] = &[
 /// `grundbegriffe.md:212` itself documents as an alternate.
 const REJECTED_SPELLINGS: &[&str] = &["ArM5"];
 
-/// The roots this guard scans in slice D1a.
-fn citation_roots() -> Vec<PathBuf> {
+/// The two roots D1a scanned.
+fn src_roots() -> Vec<PathBuf> {
     vec![
         repo_root().join("crates/arm-rules/src"),
         repo_root().join("crates/arm-app/src"),
     ]
+}
+
+/// The two roots D1b adds.
+fn test_roots() -> Vec<PathBuf> {
+    vec![
+        repo_root().join("crates/arm-rules/tests"),
+        repo_root().join("crates/arm-app/tests"),
+    ]
+}
+
+/// Every root this guard scans for Rust-comment citations.
+fn citation_roots() -> Vec<PathBuf> {
+    let mut roots = src_roots();
+    roots.extend(test_roots());
+    roots
+}
+
+/// The Markdown files this guard scans in prose-scanning mode. Just
+/// `RULES.md` for D1b; `docs/` is D1c's.
+fn markdown_citation_files() -> Vec<PathBuf> {
+    vec![repo_root().join("crates/arm-rules/RULES.md")]
 }
 
 /// Every `.rs` file under `dir`, recursively.
@@ -115,13 +289,30 @@ fn rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
+/// This guard's own test files, excluded from every scan below — see the
+/// module doc comment, "This guard excludes its own test files".
+const SELF_EXCLUDED_FILES: &[&str] = &["rulebook_citations.rs", "rules_md_citations.rs"];
+
 fn all_rust_files() -> Vec<PathBuf> {
     let mut files = Vec::new();
     for root in citation_roots() {
         rust_files(&root, &mut files);
     }
+    files.retain(|f| {
+        f.file_name()
+            .and_then(|n| n.to_str())
+            .is_some_and(|name| !SELF_EXCLUDED_FILES.contains(&name))
+    });
     files.sort();
     files
+}
+
+/// The subset of [`all_rust_files`] that live under one of [`test_roots`].
+fn test_root_rust_files() -> Vec<PathBuf> {
+    all_rust_files()
+        .into_iter()
+        .filter(|f| test_roots().iter().any(|root| f.starts_with(root)))
+        .collect()
 }
 
 /// One contiguous run of `///`, `//!`, or `//` comment lines, with the
@@ -166,6 +357,46 @@ fn comment_blocks(content: &str) -> Vec<(usize, String)> {
     if let Some(block) = current.take() {
         blocks.push(block);
     }
+    blocks
+}
+
+/// Markdown's analogue of [`comment_blocks`]: joins each contiguous run of
+/// non-blank lines (a paragraph, list, table, or block-quote run — Markdown's
+/// blank line is the paragraph boundary the way a non-comment line is Rust's
+/// comment-run boundary) into one logical string, and drops fenced code
+/// block bodies entirely so an embedded JSON/pseudocode example can never
+/// manufacture a citation. See this file's module doc comment ("Markdown
+/// scanning mode") for why fences are dropped rather than scanned, and why
+/// no separate heading/list-item exemption is needed here.
+fn markdown_blocks(content: &str) -> Vec<(usize, String)> {
+    let mut blocks = Vec::new();
+    let mut current: Option<(usize, String)> = None;
+    let mut in_fence = false;
+    let flush = |current: &mut Option<(usize, String)>, blocks: &mut Vec<(usize, String)>| {
+        if let Some(block) = current.take() {
+            blocks.push(block);
+        }
+    };
+    for (idx, raw_line) in content.lines().enumerate() {
+        let trimmed = raw_line.trim();
+        if trimmed.starts_with("```") {
+            in_fence = !in_fence;
+            flush(&mut current, &mut blocks);
+            continue;
+        }
+        if in_fence || trimmed.is_empty() {
+            flush(&mut current, &mut blocks);
+            continue;
+        }
+        match &mut current {
+            Some((_, joined)) => {
+                joined.push(' ');
+                joined.push_str(trimmed);
+            }
+            None => current = Some((idx + 1, trimmed.to_string())),
+        }
+    }
+    flush(&mut current, &mut blocks);
     blocks
 }
 
@@ -286,12 +517,33 @@ fn find_rejected_spellings(text: &str) -> Vec<&'static str> {
 }
 
 /// Finds every full basename spelled out in `text` — the spelling this slice
-/// retires in favor of the acronym.
+/// retires in favor of the acronym. Used for `.rs` comments, where
+/// `comment_blocks` only ever hands this function a citation context, so any
+/// basename mention found is one.
 fn find_full_basenames(text: &str) -> Vec<&'static str> {
     BOOK_ACRONYMS
         .iter()
         .map(|&(_, file)| file)
         .filter(|file| text.contains(file))
+        .collect()
+}
+
+/// Markdown analogue of [`find_full_basenames`]: only counts a basename
+/// occurrence immediately followed by `:NNNN` — i.e. actually used as a
+/// citation, not merely a book-name mention (a `## <basename>.md` heading, or
+/// the "Other available books" list). See this file's module doc comment for
+/// why this extra requirement is what tells the two apart, in place of a
+/// heading/list-item exemption list.
+fn find_full_basename_citations(text: &str) -> Vec<&'static str> {
+    BOOK_ACRONYMS
+        .iter()
+        .map(|&(_, file)| file)
+        .filter(|file| {
+            let needle = format!("{file}:");
+            text.find(needle.as_str())
+                .and_then(|idx| text[idx + needle.len()..].chars().next())
+                .is_some_and(|c| c.is_ascii_digit())
+        })
         .collect()
 }
 
@@ -303,20 +555,24 @@ fn find_full_basenames(text: &str) -> Vec<&'static str> {
 /// the D1a sweep no comment should ever spell a rulebook as a `.md` path in
 /// any form — every real citation uses `ACRONYM:NNNN` — so this test treats
 /// the bare shape itself as the defect, without needing to know which book
-/// was intended. Returns a short snippet of surrounding context (up to 70
-/// bytes before, 15 after) for the failure message, snapped to the nearest
-/// UTF-8 char boundary.
-fn find_dotmd_citations(text: &str) -> Vec<String> {
+/// was intended. `exclude` is checked as a suffix ending exactly at the `.md`
+/// — any basename in it (a legitimate German-provenance citation; see the
+/// module doc comment) is skipped rather than flagged. Returns a short
+/// snippet of surrounding context (up to 70 bytes before, 15 after) for the
+/// failure message, snapped to the nearest UTF-8 char boundary.
+fn find_dotmd_citations(text: &str, exclude: &BTreeSet<String>) -> Vec<String> {
     let mut found = Vec::new();
     let mut search_from = 0usize;
     while let Some(rel) = text[search_from..].find(".md:") {
         let dot_at = search_from + rel;
         let colon_at = dot_at + 3;
         let after_colon = colon_at + 1;
-        if text[after_colon..]
-            .chars()
-            .next()
-            .is_some_and(|c| c.is_ascii_digit())
+        let is_excluded = exclude.iter().any(|name| text[..colon_at].ends_with(name));
+        if !is_excluded
+            && text[after_colon..]
+                .chars()
+                .next()
+                .is_some_and(|c| c.is_ascii_digit())
         {
             let mut start = dot_at.saturating_sub(70);
             while !text.is_char_boundary(start) {
@@ -346,6 +602,10 @@ fn find_dotmd_citations(text: &str) -> Vec<String> {
 /// subject) has a letter before the colon, not a backtick/paren, so it is
 /// never matched either. Only the two shapes this codebase's own bare-citation
 /// convention actually used — `` `:NNNN` `` and `(:NNNN...)` — are flagged.
+/// This same discrimination rule is what keeps a quoted rulebook excerpt's
+/// own digits (times, ratios, in-book numbering) from being misread as a
+/// citation when this function is reused for Markdown prose — see this
+/// file's module doc comment, "Markdown scanning mode".
 fn find_bare_citations(text: &str) -> Vec<String> {
     let bytes = text.as_bytes();
     let mut found = Vec::new();
@@ -377,6 +637,52 @@ fn find_bare_citations(text: &str) -> Vec<String> {
     found
 }
 
+/// True when `text[..before]` contains a backtick-wrapped token with `.rs`
+/// in it — the same signal `rules_md_citations.rs`'s own `resolve_target`
+/// uses to resolve an implementation-site citation's file. See this file's
+/// module doc comment, "Paren-bare citations in RULES.md are implementation
+/// sites, not rulebook citations".
+fn has_preceding_rs_backtick_token(text: &str, before: usize) -> bool {
+    let bound = before.min(text.len());
+    let mut search_from = 0usize;
+    while let Some(rel) = text[search_from..bound].find('`') {
+        let open = search_from + rel;
+        let Some(close_rel) = text[open + 1..].find('`') else {
+            break;
+        };
+        let close = open + 1 + close_rel;
+        if close > bound {
+            break;
+        }
+        if text[open + 1..close].contains(".rs") {
+            return true;
+        }
+        search_from = close + 1;
+    }
+    false
+}
+
+/// Markdown-specific wrapper around [`find_bare_citations`]: drops a
+/// paren-bare match preceded (within the same block) by a backtick-wrapped
+/// `.rs` token, since that shape is RULES.md's own implementation-site
+/// citation convention, not an unlabelled rulebook citation. A backtick-bare
+/// match is never dropped this way — RULES.md's implementation sites are
+/// exclusively paren- or comma-continuation-shaped, never backtick-wrapped.
+fn find_bare_rulebook_citations_in_markdown(text: &str) -> Vec<String> {
+    find_bare_citations(text)
+        .into_iter()
+        .filter(|snippet| {
+            if !snippet.starts_with('(') {
+                return true;
+            }
+            match text.find(snippet.as_str()) {
+                Some(pos) => !has_preceding_rs_backtick_token(text, pos),
+                None => true,
+            }
+        })
+        .collect()
+}
+
 fn book_line_count(book_file: &str) -> usize {
     let content = fs::read_to_string(rules_source_en().join(book_file))
         .unwrap_or_else(|e| panic!("{book_file} is readable under rules/source/en: {e}"));
@@ -391,8 +697,9 @@ fn book_is_blank_in_range(book_file: &str, start: i64, end: i64) -> bool {
     bracketed.iter().all(|line| line.trim().is_empty())
 }
 
-/// Every citation found across [`citation_roots`], paired with the file and
-/// block-start line it came from (for error messages).
+/// Every citation found across [`all_rust_files`] (via [`comment_blocks`])
+/// plus [`markdown_citation_files`] (via [`markdown_blocks`]), paired with the
+/// file and block-start line it came from (for error messages).
 fn collect_all_citations() -> (
     usize, /* files scanned */
     Vec<(PathBuf, usize, Citation)>,
@@ -407,7 +714,17 @@ fn collect_all_citations() -> (
             }
         }
     }
-    (files.len(), all)
+    let mut files_scanned = files.len();
+    for path in markdown_citation_files() {
+        files_scanned += 1;
+        let content = fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path:?}: {e}"));
+        for (line, text) in markdown_blocks(&content) {
+            for citation in find_citations(&text) {
+                all.push((path.clone(), line, citation));
+            }
+        }
+    }
+    (files_scanned, all)
 }
 
 fn relative(path: &Path) -> String {
@@ -535,6 +852,20 @@ fn no_source_comment_cites_a_rulebook_by_bare_line_number() {
             }
         }
     }
+    for path in markdown_citation_files() {
+        scanned += 1;
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in markdown_blocks(&content) {
+            for snippet in find_bare_rulebook_citations_in_markdown(&text) {
+                offenders.insert(format!(
+                    "{}:{line}: bare rulebook citation {snippet} has no acronym — name the book \
+                     (e.g. ArMDE:{snippet})",
+                    relative(&path),
+                    snippet = snippet
+                ));
+            }
+        }
+    }
     assert!(
         scanned > 10,
         "expected to scan many source files, saw {scanned}"
@@ -564,6 +895,19 @@ fn no_source_comment_spells_a_rulebook_by_full_basename() {
             }
         }
     }
+    for path in markdown_citation_files() {
+        scanned += 1;
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in markdown_blocks(&content) {
+            for basename in find_full_basename_citations(&text) {
+                offenders.insert(format!(
+                    "{}:{line}: spells the rulebook out by full basename ({basename}) instead of \
+                     its acronym",
+                    relative(&path)
+                ));
+            }
+        }
+    }
     assert!(
         scanned > 10,
         "expected to scan many source files, saw {scanned}"
@@ -576,12 +920,286 @@ fn no_source_comment_spells_a_rulebook_by_full_basename() {
     );
 }
 
+#[test]
+fn no_source_comment_cites_a_rulebook_by_any_dot_md_path() {
+    // Shape-only backstop for `no_source_comment_spells_a_rulebook_by_full_basename`:
+    // that test only recognises the nine basenames verbatim, so a mangled or
+    // partial one slips through it. This test flags the bare shape
+    // `.md:NNNN` wherever it appears in a comment, regardless of what
+    // precedes the `.md` — after the D1a sweep no comment should spell a
+    // rulebook as a `.md` path in any spelling at all.
+    let exclude = non_rulebook_md_exclusions();
+    let mut offenders: BTreeSet<String> = BTreeSet::new();
+    let mut scanned = 0usize;
+    for path in all_rust_files() {
+        scanned += 1;
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in comment_blocks(&content) {
+            for snippet in find_dotmd_citations(&text, &exclude) {
+                offenders.insert(format!(
+                    "{}:{line}: cites a rulebook as a `.md` path ({snippet}) instead of its \
+                     acronym",
+                    relative(&path)
+                ));
+            }
+        }
+    }
+    for path in markdown_citation_files() {
+        scanned += 1;
+        let content = fs::read_to_string(&path).unwrap();
+        for (line, text) in markdown_blocks(&content) {
+            for snippet in find_dotmd_citations(&text, &exclude) {
+                offenders.insert(format!(
+                    "{}:{line}: cites a rulebook as a `.md` path ({snippet}) instead of its \
+                     acronym",
+                    relative(&path)
+                ));
+            }
+        }
+    }
+    assert!(
+        scanned > 10,
+        "expected to scan many source files, saw {scanned}"
+    );
+    assert!(
+        offenders.is_empty(),
+        "{} citation(s) spell a rulebook as a `.md` path instead of the acronym:\n{}",
+        offenders.len(),
+        offenders.iter().cloned().collect::<Vec<_>>().join("\n")
+    );
+}
+
+#[test]
+fn dotmd_citation_detector_ignores_a_dot_md_path_inside_a_string_literal_but_flags_one_in_a_comment()
+ {
+    // Mirrors the real shape in `ruleset/integrity.rs`: a full basename
+    // inside a `format!()` string literal (a deliberate exclusion, documented
+    // in this file's module doc comment) alongside one in a `///` comment
+    // (which must still be flagged). `comment_blocks` only collects
+    // `///`/`//!`/`//` lines, so the string-literal line is never even
+    // handed to the detector — this test proves that end-to-end through the
+    // same `comment_blocks` -> `find_dotmd_citations` pipeline the live-tree
+    // guard uses, not just by asserting on `find_dotmd_citations` in
+    // isolation.
+    let source = "\
+fn validate(errors: &mut Vec<String>) {\n\
+    errors.push(format!(\n\
+        \"a clamp does not clear the first aging-point row \
+(Ars Magica - Definitive Edition (Core Rules).md:16575), which holds only while below it\"\n\
+    ));\n\
+}\n\
+\n\
+/// Undocumented and untested: The Divine (Revised).md:1975 (mangled basename).\n\
+fn documented() {}\n";
+    let mut offenders = Vec::new();
+    for (_, text) in comment_blocks(source) {
+        offenders.extend(find_dotmd_citations(&text, &BTreeSet::new()));
+    }
+    assert_eq!(
+        offenders.len(),
+        1,
+        "expected the string-literal basename to be ignored and only the comment's mangled \
+         basename to be flagged, found {offenders:?}"
+    );
+    assert!(offenders[0].contains("Revised).md:1975"));
+}
+
+#[test]
+fn comment_blocks_joins_contiguous_doc_comment_lines_and_breaks_on_code() {
+    let source = "\
+/// First line of a doc comment,\n\
+/// second line continues it.\n\
+fn not_a_comment() {}\n\
+// Then a separate line comment.\n";
+    let blocks = comment_blocks(source);
+    assert_eq!(
+        blocks,
+        vec![
+            (
+                1,
+                "First line of a doc comment, second line continues it.".to_string()
+            ),
+            (4, "Then a separate line comment.".to_string()),
+        ]
+    );
+}
+
 // ---------------------------------------------------------------------------
-// Fixture-based unit tests for the detectors above. These do not touch the
-// live tree — they prove the discrimination rules against hand-written near-
-// misses, per the D1a task brief's requirement that the bare-citation regex
-// "not false-positive on things that are not citations".
+// D1b: widened-root and Markdown-scanning-mode fixture tests.
 // ---------------------------------------------------------------------------
+
+#[test]
+fn citation_roots_include_the_new_test_directories_and_scan_a_nonzero_floor() {
+    // The floor that keeps a widened root from passing vacuously: a root
+    // that resolves to an empty/nonexistent directory would otherwise let
+    // `rust_files` silently contribute zero files and zero citations.
+    let test_files = test_root_rust_files();
+    assert!(
+        test_files.len() > 5,
+        "expected `crates/arm-rules/tests` + `crates/arm-app/tests` to contribute several .rs \
+         files, found {}",
+        test_files.len()
+    );
+
+    let mut test_citations = 0usize;
+    for path in &test_files {
+        let content = fs::read_to_string(path).unwrap();
+        for (_, text) in comment_blocks(&content) {
+            test_citations += find_citations(&text).len();
+        }
+    }
+    assert!(
+        test_citations > 100,
+        "expected many acronym'd rulebook citations across the widened test roots, found {}",
+        test_citations
+    );
+}
+
+#[test]
+fn all_rust_files_excludes_this_guards_own_test_files() {
+    let names: BTreeSet<String> = all_rust_files()
+        .iter()
+        .filter_map(|f| f.file_name().and_then(|n| n.to_str()).map(String::from))
+        .collect();
+    for excluded in SELF_EXCLUDED_FILES {
+        assert!(
+            !names.contains(*excluded),
+            "{excluded} must be excluded from the scan (it is this guard's own test file), \
+             found it among {names:?}"
+        );
+    }
+}
+
+#[test]
+fn markdown_citation_files_scan_a_nonzero_floor() {
+    let files = markdown_citation_files();
+    assert!(
+        !files.is_empty(),
+        "expected at least one Markdown file to be registered for scanning"
+    );
+
+    let mut markdown_citations = 0usize;
+    for path in &files {
+        assert!(path.is_file(), "{path:?} does not exist");
+        let content = fs::read_to_string(path).unwrap();
+        for (_, text) in markdown_blocks(&content) {
+            markdown_citations += find_citations(&text).len();
+        }
+    }
+    // RULES.md alone carries well over a thousand citations post-sweep; 500
+    // is a generous floor that still catches a scanner silently matching
+    // nothing (e.g. a fenced-block off-by-one that blanks the whole file).
+    assert!(
+        markdown_citations > 500,
+        "expected RULES.md to carry many acronym'd rulebook citations, found {}",
+        markdown_citations
+    );
+}
+
+#[test]
+fn markdown_blocks_skips_fenced_code_bodies() {
+    let source = "\
+Prose before the fence names ArMDE:100.\n\
+\n\
+```json\n\
+\"not_a_citation\": \"`:200`\"\n\
+```\n\
+\n\
+Prose after the fence names ArMDE:300.\n";
+    let mut citations = Vec::new();
+    for (_, text) in markdown_blocks(source) {
+        citations.extend(find_citations(&text));
+    }
+    let starts: Vec<i64> = citations.iter().map(|c| c.start).collect();
+    assert_eq!(
+        starts,
+        vec![100, 300],
+        "expected the fenced block's citation-shaped content to be invisible, found {starts:?}"
+    );
+}
+
+#[test]
+fn markdown_blocks_joins_a_paragraph_and_breaks_on_a_blank_line() {
+    let source = "\
+Source: `Ars Magica - Definitive Edition (Core\n\
+Rules).md:2774` continues a wrapped basename.\n\
+\n\
+A new paragraph after the blank line.\n";
+    let blocks = markdown_blocks(source);
+    assert_eq!(
+        blocks,
+        vec![
+            (
+                1,
+                "Source: `Ars Magica - Definitive Edition (Core Rules).md:2774` continues a \
+                 wrapped basename."
+                    .to_string()
+            ),
+            (4, "A new paragraph after the blank line.".to_string()),
+        ]
+    );
+}
+
+#[test]
+fn full_basename_citation_detector_ignores_a_bare_book_mention_but_flags_a_real_citation() {
+    let heading = "## Ars Magica - Definitive Edition (Core Rules).md — ArMDE";
+    assert_eq!(
+        find_full_basename_citations(heading),
+        Vec::<&str>::new(),
+        "a heading names the book but cites no line, so it must not be flagged"
+    );
+
+    let list_item = "- Ars Magica 5e - Realms of Power - Faerie.md";
+    assert_eq!(
+        find_full_basename_citations(list_item),
+        Vec::<&str>::new(),
+        "a book-availability list entry cites no line, so it must not be flagged"
+    );
+
+    let real_citation = "Source: Ars Magica - Definitive Edition (Core Rules).md:2774.";
+    assert_eq!(
+        find_full_basename_citations(real_citation),
+        vec!["Ars Magica - Definitive Edition (Core Rules).md"],
+        "a basename immediately followed by `:NNNN` is a real citation and must be flagged"
+    );
+}
+
+#[test]
+fn markdown_bare_citation_wrapper_excludes_an_implementation_site_citation_but_keeps_a_range_and_a_backtick_one()
+ {
+    // Each case is its own block (as `markdown_blocks` would hand it to this
+    // function one paragraph at a time), so a `.rs` token in one bullet
+    // cannot "bleed" into a later, unrelated one.
+    let implementation_site =
+        "- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:22)";
+    assert_eq!(
+        find_bare_rulebook_citations_in_markdown(implementation_site),
+        Vec::<String>::new(),
+        "a paren-bare citation right after a `.rs` token is an implementation site, not ours"
+    );
+
+    let a_range = "- **Magical Focus (major/minor)** — `virtue.major_magical_focus` (:4399-4422)";
+    assert_eq!(
+        find_bare_rulebook_citations_in_markdown(a_range),
+        vec!["(:4399-4422)".to_string()],
+        "a range is never an implementation site (they never use ranges), so it must survive"
+    );
+
+    let a_backtick_one = "- Savantism `:6703` *halves* starting XP";
+    assert_eq!(
+        find_bare_rulebook_citations_in_markdown(a_backtick_one),
+        vec!["`:6703`".to_string()],
+        "a backtick-bare citation is never RULES.md's implementation-site shape"
+    );
+
+    let unlabelled_with_no_rs_nearby =
+        "- A truly unlabelled paren-bare rulebook citation with no source file nearby (:9999)";
+    assert_eq!(
+        find_bare_rulebook_citations_in_markdown(unlabelled_with_no_rs_nearby),
+        vec!["(:9999)".to_string()],
+        "a paren-bare citation with no preceding `.rs` token must still be flagged"
+    );
+}
 
 #[test]
 fn bare_citation_detector_flags_real_bare_citations_and_ignores_near_misses() {
@@ -677,7 +1295,7 @@ Not a citation at all: see CLAUDE.md for details.\n\
 Not this guard's subject: RULES.md is a different file, cited without a line number here.\n\
 Not a citation: the clock read 10:30 that morning.\n\
 ";
-    let found = find_dotmd_citations(fixture);
+    let found = find_dotmd_citations(fixture, &BTreeSet::new());
     assert_eq!(
         found.len(),
         3,
@@ -686,91 +1304,47 @@ Not a citation: the clock read 10:30 that morning.\n\
 }
 
 #[test]
-fn no_source_comment_cites_a_rulebook_by_any_dot_md_path() {
-    // Shape-only backstop for `no_source_comment_spells_a_rulebook_by_full_basename`:
-    // that test only recognises the nine basenames verbatim, so a mangled or
-    // partial one slips through it. This test flags the bare shape
-    // `.md:NNNN` wherever it appears in a comment, regardless of what
-    // precedes the `.md` — after the D1a sweep no comment should spell a
-    // rulebook as a `.md` path in any spelling at all.
-    let mut offenders: BTreeSet<String> = BTreeSet::new();
-    let mut scanned = 0usize;
-    for path in all_rust_files() {
-        scanned += 1;
-        let content = fs::read_to_string(&path).unwrap();
-        for (line, text) in comment_blocks(&content) {
-            for snippet in find_dotmd_citations(&text) {
-                offenders.insert(format!(
-                    "{}:{line}: cites a rulebook as a `.md` path ({snippet}) instead of its \
-                     acronym",
-                    relative(&path)
-                ));
-            }
-        }
-    }
-    assert!(
-        scanned > 10,
-        "expected to scan many source files, saw {scanned}"
-    );
-    assert!(
-        offenders.is_empty(),
-        "{} citation(s) spell a rulebook as a `.md` path instead of the acronym:\n{}",
-        offenders.len(),
-        offenders.iter().cloned().collect::<Vec<_>>().join("\n")
-    );
-}
-
-#[test]
-fn dotmd_citation_detector_ignores_a_dot_md_path_inside_a_string_literal_but_flags_one_in_a_comment()
+fn dotmd_citation_detector_excludes_a_known_non_rulebook_md_file_but_still_flags_a_real_mangled_one()
  {
-    // Mirrors the real shape in `ruleset/integrity.rs`: a full basename
-    // inside a `format!()` string literal (a deliberate exclusion, documented
-    // in this file's module doc comment) alongside one in a `///` comment
-    // (which must still be flagged). `comment_blocks` only collects
-    // `///`/`//!`/`//` lines, so the string-literal line is never even
-    // handed to the detector — this test proves that end-to-end through the
-    // same `comment_blocks` -> `find_dotmd_citations` pipeline the live-tree
-    // guard uses, not just by asserting on `find_dotmd_citations` in
-    // isolation.
-    let source = "\
-fn validate(errors: &mut Vec<String>) {\n\
-    errors.push(format!(\n\
-        \"a clamp does not clear the first aging-point row \
-(Ars Magica - Definitive Edition (Core Rules).md:16575), which holds only while below it\"\n\
-    ));\n\
-}\n\
-\n\
-/// Undocumented and untested: The Divine (Revised).md:1975 (mangled basename).\n\
-fn documented() {}\n";
-    let mut offenders = Vec::new();
-    for (_, text) in comment_blocks(source) {
-        offenders.extend(find_dotmd_citations(&text));
-    }
+    // RULES.md and `commands.rs` legitimately cite German sourcebooks and
+    // translation tables this way — see the module doc comment,
+    // "German-provenance citations are a different, valid convention".
+    let exclude: BTreeSet<String> = [
+        "Ars Magica Definitive Edition Basisregeln.md",
+        "Basisregeln.md",
+        "grundbegriffe.md",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect();
+    let fixture = "\
+German shorthand is not a rulebook citation: Basisregeln.md:3329.\n\
+Full German name is not a rulebook citation either: Ars Magica Definitive Edition \
+Basisregeln.md:9524.\n\
+A translation table is not a rulebook citation: grundbegriffe.md:112.\n\
+A real mangled English citation must still be flagged: Core Rules.md:2437.\n\
+";
+    let found = find_dotmd_citations(fixture, &exclude);
     assert_eq!(
-        offenders.len(),
+        found.len(),
         1,
-        "expected the string-literal basename to be ignored and only the comment's mangled \
-         basename to be flagged, found {offenders:?}"
+        "expected only the mangled English citation to survive the exclusion, found {found:?}"
     );
-    assert!(offenders[0].contains("Revised).md:1975"));
+    assert!(found[0].contains("Core Rules.md:2437"));
 }
 
 #[test]
-fn comment_blocks_joins_contiguous_doc_comment_lines_and_breaks_on_code() {
-    let source = "\
-/// First line of a doc comment,\n\
-/// second line continues it.\n\
-fn not_a_comment() {}\n\
-// Then a separate line comment.\n";
-    let blocks = comment_blocks(source);
-    assert_eq!(
-        blocks,
-        vec![
-            (
-                1,
-                "First line of a doc comment, second line continues it.".to_string()
-            ),
-            (4, "Then a separate line comment.".to_string()),
-        ]
+fn german_source_basenames_finds_the_german_core_rulebook_on_disk() {
+    // A floor against the walker silently finding nothing (e.g. a wrong
+    // `rules_source_de` path), mirroring the same floor pattern used
+    // throughout this file for the English side.
+    let names = german_source_basenames();
+    assert!(
+        names.contains("Ars Magica Definitive Edition Basisregeln.md"),
+        "expected the German core rulebook among {names:?}"
+    );
+    assert!(
+        names.contains("grundbegriffe.md"),
+        "expected a translation table among {names:?}"
     );
 }

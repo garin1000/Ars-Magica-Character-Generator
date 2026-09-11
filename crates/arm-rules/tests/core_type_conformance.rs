@@ -141,7 +141,7 @@ fn every_shipped_profile_buys_abilities_after_virtues_flaws() {
 /// pointed at an Ability not yet bought must be held on the **Abilities** step, not
 /// on the Virtues & Flaws step where the Virtue is taken. Puissant Ability is
 /// "choose one Ability" with no requirement that a score exists
-/// (Ars Magica - Definitive Edition (Core Rules).md:4814-4816), and Abilities are
+/// (ArMDE:4814-4816), and Abilities are
 /// bought later — filing it on `virtues_flaws` deadlocked the guided wizard, because
 /// that step gates on its own findings and could offer no fix.
 #[test]
@@ -191,7 +191,7 @@ fn puissant_ability_on_an_unbought_ability_holds_the_abilities_step_not_virtues_
 /// 'Loyal' is a particularly important Trait, as it reflects the grog's attachment to
 /// the covenant, while 'Brave' is just as important for warrior grogs. A third Trait
 /// should be something distinctive about that grog."
-/// (Ars Magica - Definitive Edition (Core Rules).md:1073-1075; the character-sheet
+/// (ArMDE:1073-1075; the character-sheet
 /// listing at :1165 names Personality Traits unconditionally.)
 ///
 /// So the type whose traits the rules treat as mechanically load-bearing was the one
