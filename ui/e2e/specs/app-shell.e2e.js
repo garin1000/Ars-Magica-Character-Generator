@@ -33,6 +33,7 @@ import { fileURLToPath } from 'node:url';
 import { workerConfigHome } from '../driver.js';
 import {
   clean,
+  closeSettings,
   returnToStartScreen,
   runDocumentAction,
   setLanguage,
@@ -50,6 +51,7 @@ const CHARACTER_TYPE = '[data-testid="character-type"]';
 const TAB_BAR = '[role="tablist"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const NAME_INPUT = '[data-testid="identity-name"]';
+const SETTINGS_DIALOG = '[data-testid="settings-dialog"]';
 
 describe('app entry', () => {
   it('boots on the startup screen, not in the editor', async () => {
@@ -339,6 +341,188 @@ describe('German localization', () => {
     const pop = await $('[data-testid="tooltip-text"]');
     await pop.waitForExist({ timeout: 5000 });
     expect((await pop.getText()).trim().length).toBeGreaterThan(0);
+  });
+});
+
+// C6. The native menu, driven and read through the two `e2e-testing` seams in
+// `crates/arm-app/src/commands.rs`.
+//
+// WHY SEAMS AT ALL, when C3c argued so firmly for the keyboard. C3c's argument
+// was about the five DOCUMENT ACTIONS, which the keyboard genuinely offers and
+// which the portable suite (built without `e2e-testing`) can only reach that
+// way. It was never an argument that the menu itself needs no coverage, and two
+// claims sit outside the keyboard's reach entirely:
+//
+//   * that ACTIVATING a menu item does anything at all. The keyboard chord
+//     proves `shortcutAction` -> `runDocumentAction`; it says nothing about the
+//     Rust `on_menu_event` -> `menu://action` -> `runMenuAction` path, which is
+//     the only route a mouse user has since the toolbar went.
+//   * that the model the frontend pushes ever reached the OS. `menu_model` is
+//     unit tested as a pure value, and a pure value cannot show that a runtime
+//     language switch REBUILT the installed menu — the exact failure C3a called
+//     out, where the bar sits in English behind a German UI all session.
+//
+// Both seams are inert in the shipped build (`menu_test_seams_enabled`), proved
+// in `crates/arm-app/tests/commands.rs` under the plain `cargo test` gate.
+describe('the native menu', () => {
+  const MENU_SAVE = 'menu.save';
+
+  /** Press a native menu item, exactly as the OS handler would. */
+  async function activateMenuItem(id) {
+    await browser.execute((itemId) => {
+      window.__TAURI_INTERNALS__.invoke('activate_menu_item', { id: itemId });
+    }, id);
+  }
+
+  /**
+   * The menu Tauri has actually installed, read off `AppHandle::menu()`.
+   *
+   * `browser.execute` does not await a promise, so the answer is parked on a
+   * global and polled for — steadier here than the deprecated `executeAsync`
+   * under WebKitWebDriver's script timeout.
+   *
+   * The answer is WRAPPED rather than parked bare, because WebDriver
+   * serializes `undefined` to `null`: a bare `window.x = undefined` sentinel
+   * is indistinguishable over the wire from the command having answered
+   * `None`, so the poll would fall through on its first tick and read a menu
+   * that had not arrived. An object is `null` until it exists, and nothing
+   * else ever is.
+   */
+  async function installedMenu() {
+    await browser.execute(() => {
+      window.__armInstalledMenu = null;
+      window.__TAURI_INTERNALS__.invoke('installed_menu').then(
+        (menu) => {
+          window.__armInstalledMenu = { ok: true, menu };
+        },
+        (error) => {
+          window.__armInstalledMenu = { ok: false, error: String(error) };
+        },
+      );
+    });
+    await browser.waitUntil(
+      async () => (await browser.execute(() => window.__armInstalledMenu)) !== null,
+      { timeout: 10000, timeoutMsg: 'the installed_menu seam never answered' },
+    );
+
+    const answer = await browser.execute(() => window.__armInstalledMenu);
+    // A rejection here means the command is not registered or the seam is not
+    // compiled in; say which rather than failing on a null menu three lines on.
+    if (!answer.ok) throw new Error(`installed_menu rejected: ${answer.error}`);
+    // `null` now means the command answered but NO menu is installed, which is
+    // itself the failure this whole describe exists to catch.
+    expect(answer.menu).not.toBe(null);
+    return answer.menu;
+  }
+
+  /**
+   * The File submenu. On GTK it is the only section there is — muda renders no
+   * other predefined item, so `menu_model` builds no Edit or Window menu here
+   * (`crates/arm-app/src/menu.rs`).
+   */
+  function fileSection(menu) {
+    expect(menu.length).toBeGreaterThan(0);
+    return menu[0];
+  }
+
+  function itemById(section, id) {
+    const item = section.items.find((entry) => entry.kind === 'action' && entry.id === id);
+    if (item === undefined) throw new Error(`the installed File menu has no ${id}`);
+    return item;
+  }
+
+  after(async () => {
+    await setLanguage('en');
+  });
+
+  it('runs the action an activated item names, gate and store included', async () => {
+    await startCharacter('grog');
+    await $(NAME_INPUT).setValue('Menu-driven Marius');
+    if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
+
+    // Not a keyboard chord and not a button: the id goes to Rust, which
+    // forwards it on `menu://action` through the very function
+    // `on_menu_event` calls.
+    await activateMenuItem(MENU_SAVE);
+
+    await browser.waitUntil(() => fs.existsSync(e2eFile), {
+      timeout: 10000,
+      timeoutMsg: 'activating the Save menu item did not save the document',
+    });
+    expect(JSON.parse(fs.readFileSync(e2eFile, 'utf-8')).name).toBe('Menu-driven Marius');
+  });
+
+  it('leaves a disabled item disabled, rather than working around the gate', async () => {
+    // The startup screen has no document, so Save is withheld — the one place
+    // `documentActionEnabled` says no to something the menu still shows.
+    await returnToStartScreen();
+    if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
+
+    // Read off the real object, not assumed: the item really is greyed out.
+    expect(itemById(fileSection(await installedMenu()), MENU_SAVE).enabled).toBe(false);
+
+    await activateMenuItem(MENU_SAVE);
+
+    // A refusal produces nothing to wait for, so establish ORDER instead of
+    // sleeping: menu ids arrive on one event channel in the order they were
+    // emitted, so once Settings — which IS enabled here — has opened, the Save
+    // fired before it has already been delivered and turned away. That also
+    // makes this the positive half: an enabled item activates on this very
+    // screen, so the withholding is the gate's doing and not a dead seam.
+    await activateMenuItem('menu.settings');
+    await $(SETTINGS_DIALOG).waitForExist({ timeout: 10000 });
+    await closeSettings();
+
+    expect(fs.existsSync(e2eFile)).toBe(false);
+  });
+
+  it('carries the same actions, in menu order, that the model declares', async () => {
+    await startCharacter('grog');
+    const file = fileSection(await installedMenu());
+
+    // The order C3a's `the_file_menu_offers_every_document_action_on_every_platform`
+    // asserts of the MODEL, asserted here of the object the OS was handed.
+    expect(file.items.filter((item) => item.kind === 'action').map((item) => item.id)).toEqual([
+      'menu.new',
+      'menu.open',
+      MENU_SAVE,
+      'menu.save-as',
+      'menu.export',
+      'menu.settings',
+    ]);
+    // …and the separators between them survived the crossing. A predefined item
+    // reports no enabled state and no role (see `InstalledMenuItem`), so an
+    // empty title is all a separator can be recognised by.
+    expect(file.items.some((item) => item.kind === 'other' && item.title === '')).toBe(true);
+  });
+
+  // THE HEADLINE. `set_app_menu` is re-invoked on every language switch, and the
+  // client unit test proves the frontend makes that call — but only this can
+  // show the call LANDED. A menu that Tauri never replaced would keep every
+  // English label and pass every other gate in the repo.
+  it('is rebuilt in German when the language changes, in the OS and not just in the model', async () => {
+    await startCharacter('grog');
+
+    const english = fileSection(await installedMenu());
+    expect(english.title).toBe('File');
+    expect(itemById(english, MENU_SAVE).title).toBe('Save');
+
+    await setLanguage('de');
+
+    // The rebuild is a round trip (the ruleset reloads first), so wait for it
+    // rather than reading once and hoping.
+    await browser.waitUntil(async () => fileSection(await installedMenu()).title === 'Datei', {
+      timeout: 10000,
+      timeoutMsg: 'the installed menu kept its English File title after switching to German',
+    });
+
+    const german = fileSection(await installedMenu());
+    expect(itemById(german, 'menu.new').title).toBe('Neu');
+    expect(itemById(german, 'menu.open').title).toBe('Öffnen…');
+    expect(itemById(german, MENU_SAVE).title).toBe('Speichern');
+    expect(itemById(german, 'menu.save-as').title).toBe('Speichern unter…');
+    expect(itemById(german, 'menu.export').title).toBe('Als Markdown exportieren…');
+    expect(itemById(german, 'menu.settings').title).toBe('Einstellungen…');
   });
 });
 

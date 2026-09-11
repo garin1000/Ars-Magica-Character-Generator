@@ -11,8 +11,9 @@ use std::collections::BTreeSet;
 
 use arm_app::menu::{
     ACTION_EXPORT, ACTION_IDS, ACTION_NEW, ACTION_OPEN, ACTION_SAVE, ACTION_SAVE_AS,
-    ACTION_SETTINGS, MENU_ACTION_EVENT, MenuEntry, MenuFlags, MenuLabels, MenuSection, Platform,
-    PredefinedRole, SECTION_APP, SECTION_EDIT, SECTION_FILE, SECTION_WINDOW, menu_model,
+    ACTION_SETTINGS, InstalledMenuItem, InstalledMenuSection, MENU_ACTION_EVENT, MenuEntry,
+    MenuFlags, MenuLabels, MenuSection, Platform, PredefinedRole, SECTION_APP, SECTION_EDIT,
+    SECTION_FILE, SECTION_WINDOW, is_menu_action_id, menu_model,
 };
 
 /// A [`MenuLabels`] whose every field carries a unique, recognisable sentinel,
@@ -421,4 +422,70 @@ fn the_menu_glue_authors_no_text_of_its_own() {
             offset + 1
         );
     }
+}
+
+// C6, seam 1. `activate_menu_item` forwards an id onto the app's event bus —
+// the very line the OS handler runs — so the set of ids it will forward has to
+// be the set the menu can actually emit. Without this guard the seam is a
+// general-purpose "emit anything on `menu://action`" hole rather than a way to
+// press one of six items, and a typo'd id in a spec would look like a silently
+// ignored click instead of a mistake.
+#[test]
+fn the_activation_seam_accepts_exactly_the_ids_the_menu_can_emit() {
+    for id in ACTION_IDS {
+        assert!(
+            is_menu_action_id(id),
+            "{id} is on the menu but the activation seam would not forward it"
+        );
+    }
+
+    // A section id is a real menu id and still not an action: choosing a
+    // submenu opens it, it never reaches `on_menu_event`.
+    for section in [SECTION_APP, SECTION_FILE, SECTION_EDIT, SECTION_WINDOW] {
+        assert!(
+            !is_menu_action_id(section),
+            "{section} is a submenu title, not an action the frontend can run"
+        );
+    }
+    assert!(!is_menu_action_id("menu.nonsense"));
+    assert!(!is_menu_action_id(""));
+}
+
+// C6, seam 2. The read-back is consumed by a WebdriverIO spec through JSON, so
+// its wire shape is a contract with a file the compiler never sees. Pinned here
+// in the same spirit as `the_frontend_and_rust_agree_on_the_menu_contract`.
+//
+// `Other` is not an evasion, it is the API's limit stated honestly: tauri 2.11.3
+// exposes only `id()` and `text()` on a `PredefinedMenuItem` — no `is_enabled()`
+// and no way to ask which predefined role it plays — so a separator and an
+// OS-implemented item can be reported by their text and their position, and by
+// nothing else. Their muda-generated numeric ids are not carried either: they
+// are a per-process counter, so they would differ on every run and make the
+// value uncomparable.
+#[test]
+fn the_installed_menu_reads_back_in_the_shape_the_spec_parses() {
+    let section = InstalledMenuSection {
+        title: "Datei".to_string(),
+        items: vec![
+            InstalledMenuItem::Action {
+                id: ACTION_SAVE.to_string(),
+                title: "Speichern".to_string(),
+                enabled: false,
+            },
+            InstalledMenuItem::Other {
+                title: String::new(),
+            },
+        ],
+    };
+
+    assert_eq!(
+        serde_json::to_value(&section).expect("the read-back serializes"),
+        serde_json::json!({
+            "title": "Datei",
+            "items": [
+                { "kind": "action", "id": "menu.save", "title": "Speichern", "enabled": false },
+                { "kind": "other", "title": "" },
+            ],
+        })
+    );
 }

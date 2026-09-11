@@ -513,6 +513,79 @@ pub fn native_discard_confirmation_enabled() -> bool {
     false
 }
 
+/// E2E-only IPC seam: press a native menu item.
+///
+/// A native menu is drawn by the OS *outside* the webview, so WebDriver can
+/// neither see it, click it, nor read it — C3a established that and it is
+/// permanent. Without this the only thing proving a menu click does anything is
+/// a client unit test calling `App.svelte`'s handler directly; nothing connects
+/// "the OS activated `menu.save`" to "the document was saved" against the
+/// shipped binary.
+///
+/// **It is the real dispatch path, not a parallel one.** The body is the single
+/// line `main.rs`'s `on_menu_event` runs — [`crate::menu::forward_menu_action`]
+/// — so the id travels the same event to the same frontend listener
+/// (`runMenuAction` in `ui/App.svelte`), which routes it to
+/// `store.runDocumentAction`. The availability gate is therefore untouched:
+/// `store.documentActionEnabled` is still the one answer to "may this run right
+/// now?" (C3a consolidated it there precisely so no second copy could exist),
+/// and a disabled item activated through here is refused by it exactly as a
+/// disabled item clicked by a user would never be delivered at all. The
+/// e2e spec asserts that.
+///
+/// Ids are restricted to [`crate::menu::is_menu_action_id`] so this stays a way
+/// to press one of six items rather than a way to publish an arbitrary string
+/// on the app's event bus.
+///
+/// Inert unless the crate is built with the `e2e-testing` Cargo feature — see
+/// [`menu_test_seams_enabled`], which mirrors `main.rs`'s `request_exit`.
+#[tauri::command]
+pub fn activate_menu_item(id: String, app: AppHandle) {
+    if !menu_test_seams_enabled() || !crate::menu::is_menu_action_id(&id) {
+        return;
+    }
+    crate::menu::forward_menu_action(&app, &id);
+}
+
+/// E2E-only IPC seam: read back the menu Tauri has actually installed.
+///
+/// The companion to [`activate_menu_item`], and the only way to observe that
+/// [`set_app_menu`] reached the OS at all. `crate::menu::menu_model` is unit
+/// tested as a pure value, which can never show that a live language switch
+/// *rebuilt* the installed menu — the failure C3a warned about, where a menu
+/// built once at startup sits in English behind a German UI for the rest of the
+/// session.
+///
+/// Reads [`tauri::AppHandle::menu`], i.e. the live object, never the model that
+/// was handed to it; see [`crate::menu::read_installed_menu`] for what the API
+/// can and cannot report. `None` means either that this build has no seam or
+/// that no menu is installed — the spec's assertions distinguish the two,
+/// because an absent menu fails them.
+#[tauri::command]
+pub fn installed_menu(app: AppHandle) -> Option<Vec<crate::menu::InstalledMenuSection>> {
+    if !menu_test_seams_enabled() {
+        return None;
+    }
+    crate::menu::read_installed_menu(&app.menu()?).ok()
+}
+
+/// Whether this build carries the two menu test seams above.
+///
+/// Same polarity and same reasoning as [`e2e_file_override`]'s: the seams are
+/// *affordances* (drive the app, inspect its chrome), so the shipped build must
+/// not have them, and only `ui/e2e/wdio.conf.js`'s
+/// `--features e2e-testing` build does. Both halves are proved in
+/// `tests/commands.rs`.
+#[cfg(feature = "e2e-testing")]
+pub fn menu_test_seams_enabled() -> bool {
+    true
+}
+
+#[cfg(not(feature = "e2e-testing"))]
+pub fn menu_test_seams_enabled() -> bool {
+    false
+}
+
 /// Ties a file dialog to the app's main window, so it opens centred on the app and
 /// can never be lost behind it. Parenting IS the mechanism here — the dialog plugin
 /// exposes no modal or always-on-top flag. Falls back to an unparented dialog when

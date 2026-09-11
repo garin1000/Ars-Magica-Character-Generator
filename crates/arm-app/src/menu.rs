@@ -16,10 +16,19 @@
 //! an item is a compile error until the frontend supplies its text. The
 //! frontend also rebuilds the menu when the UI language changes, so a runtime
 //! language switch retitles it.
+//!
+//! Two more pieces sit at the bottom, both there because the OS draws this menu
+//! *outside* the webview and WebDriver can therefore neither click it nor read
+//! it (C6). [`forward_menu_action`] is the single dispatch path a chosen item
+//! travels — `main.rs`'s `on_menu_event` and the e2e activation seam both call
+//! it, so a spec drives the real route rather than a copy of it. And
+//! [`read_installed_menu`] reports what Tauri *installed*, read off the live
+//! object, which is the only thing that can tell a menu rebuilt in German from
+//! one that was never rebuilt at all.
 
 use serde::{Deserialize, Serialize};
-use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::{Manager, Runtime};
+use tauri::menu::{Menu, MenuItem, MenuItemKind, PredefinedMenuItem, Submenu};
+use tauri::{Emitter, Manager, Runtime};
 
 pub const SECTION_APP: &str = "menu.app";
 pub const SECTION_FILE: &str = "menu.file";
@@ -342,6 +351,116 @@ pub fn install_menu<R: Runtime>(
     let menu = build_menu(app, &model)?;
     app.set_menu(menu)?;
     Ok(())
+}
+
+/// Whether `id` is one of the action ids this menu can emit
+/// ([`ACTION_IDS`]) — i.e. something [`forward_menu_action`] may legitimately
+/// announce.
+///
+/// Submenu ids and anything else answer `false`. The OS only ever hands
+/// `on_menu_event` an id it put on the menu itself, so this changes nothing for
+/// the real path; it exists for the e2e activation seam
+/// (`commands::activate_menu_item`), which would otherwise be a way to publish
+/// an arbitrary string on the app's event bus rather than a way to press one of
+/// six items.
+pub fn is_menu_action_id(id: &str) -> bool {
+    ACTION_IDS.contains(&id)
+}
+
+/// Announce a chosen menu item to the frontend.
+///
+/// **The single dispatch path.** `main.rs`'s `on_menu_event` calls this and so
+/// does the e2e activation seam, so there is exactly one answer to "what
+/// happens when a menu item is picked" — the id is forwarded, and the frontend
+/// decides what it means and whether it may run right now
+/// (`store.runDocumentAction`, via `ui/src/App.svelte`'s `runMenuAction`). A
+/// seam with its own copy of this would prove nothing about the real one.
+pub fn forward_menu_action<R: Runtime>(app: &tauri::AppHandle<R>, id: &str) {
+    let _ = app.emit(MENU_ACTION_EVENT, id.to_string());
+}
+
+/// One top-level submenu of the menu Tauri has actually installed, as read back
+/// from the live object rather than from the model that was handed to it — see
+/// [`read_installed_menu`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct InstalledMenuSection {
+    pub title: String,
+    pub items: Vec<InstalledMenuItem>,
+}
+
+/// One entry of an installed submenu, reported as far as the API allows.
+///
+/// [`InstalledMenuItem::Other`] covers separators and OS-implemented
+/// (predefined) items together, because tauri 2.11.3 exposes only `id()` and
+/// `text()` on a `PredefinedMenuItem`: there is no `is_enabled()` and no
+/// accessor for which predefined role it plays, so position and text are
+/// genuinely all that can be observed. Their ids are omitted for the same
+/// reason they would be useless — muda assigns predefined items a
+/// per-process counter, so they differ on every run.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum InstalledMenuItem {
+    Action {
+        id: String,
+        title: String,
+        enabled: bool,
+    },
+    Other {
+        title: String,
+    },
+}
+
+/// Read back what the OS was actually given: the installed menu's submenu
+/// titles, and each entry's id, text and enabled state.
+///
+/// This walks the real [`tauri::menu::Menu`] — every value here comes out of
+/// `Submenu::text`, `MenuItem::text` and `MenuItem::is_enabled`, none of it out
+/// of the [`MenuSection`] model that was passed to [`build_menu`]. Reporting
+/// the model instead would be an identity test: it could not tell a menu that
+/// was rebuilt in German from one that was never rebuilt at all.
+pub fn read_installed_menu<R: Runtime>(menu: &Menu<R>) -> tauri::Result<Vec<InstalledMenuSection>> {
+    let mut sections = Vec::new();
+    for entry in menu.items()? {
+        let Some(submenu) = entry.as_submenu() else {
+            continue;
+        };
+        let mut items = Vec::new();
+        for item in submenu.items()? {
+            items.push(read_installed_item(&item)?);
+        }
+        sections.push(InstalledMenuSection {
+            title: submenu.text()?,
+            items,
+        });
+    }
+    Ok(sections)
+}
+
+fn read_installed_item<R: Runtime>(item: &MenuItemKind<R>) -> tauri::Result<InstalledMenuItem> {
+    match item {
+        MenuItemKind::MenuItem(action) => Ok(InstalledMenuItem::Action {
+            id: action.id().0.clone(),
+            title: action.text()?,
+            enabled: action.is_enabled()?,
+        }),
+        // A separator reads back as an `Other` with empty text, which is what
+        // muda reports for one (`PredefinedMenuItemType::text`).
+        MenuItemKind::Predefined(other) => Ok(InstalledMenuItem::Other {
+            title: other.text()?,
+        }),
+        // This app builds none of the three below, but the match is exhaustive
+        // rather than defaulted so a menu that grew one is reported instead of
+        // silently read back as something it is not.
+        MenuItemKind::Submenu(other) => Ok(InstalledMenuItem::Other {
+            title: other.text()?,
+        }),
+        MenuItemKind::Check(other) => Ok(InstalledMenuItem::Other {
+            title: other.text()?,
+        }),
+        MenuItemKind::Icon(other) => Ok(InstalledMenuItem::Other {
+            title: other.text()?,
+        }),
+    }
 }
 
 fn predefined_item<R: Runtime, M: Manager<R>>(

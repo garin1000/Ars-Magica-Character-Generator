@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use arm_app::commands::{self, AppState};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 fn main() {
@@ -26,6 +26,8 @@ fn main() {
             commands::update_close_guard,
             commands::confirm_discard,
             commands::set_app_menu,
+            commands::activate_menu_item,
+            commands::installed_menu,
             commands::read_settings,
             commands::write_settings,
             commands::derive_age,
@@ -36,11 +38,16 @@ fn main() {
         // A native menu item was chosen. The item's id is forwarded to the
         // frontend rather than acted on here: the document, the unsaved-changes
         // state and the availability gate all live there, and the whole point of
-        // the menu is to reach the SAME store actions the toolbar buttons call
+        // the menu is to reach the SAME store actions the keyboard shortcuts call
         // (`ui/src/App.svelte`'s `runMenuAction`). Predefined items are handled
         // by the OS and never reach this handler.
+        //
+        // The forwarding itself lives in `menu::forward_menu_action` rather than
+        // inline here, because C6's `activate_menu_item` seam has to fire the
+        // very same handler — WebDriver cannot reach a native menu, so a seam
+        // with its own copy of this line would prove only that the copy works.
         .on_menu_event(|app, event| {
-            let _ = app.emit(arm_app::menu::MENU_ACTION_EVENT, event.id().0.clone());
+            arm_app::menu::forward_menu_action(app, &event.id().0);
         })
         // Window-close gestures (title-bar X, Alt+F4, Cmd+W).
         .on_window_event(|window, event| {

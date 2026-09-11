@@ -28,6 +28,25 @@ honors the `ARM_E2E_FILE` environment seam (set by the config) to save/load a
 fixed temp path instead of opening a dialog. See
 `crates/arm-app/src/commands.rs`.
 
+The same is true of the **native menu**, which the OS draws outside the webview:
+WebDriver can neither click it nor read it. Two commands stand in, both gated
+behind the `e2e-testing` Cargo feature and inert in the shipped binary
+(`menu_test_seams_enabled`, `crates/arm-app/src/commands.rs`):
+
+- `activate_menu_item(id)` — presses one of the six items, by firing the very
+  `menu::forward_menu_action` the OS handler fires. The availability gate is
+  untouched: `store.documentActionEnabled` still decides, so a disabled item
+  does nothing.
+- `installed_menu()` — reads back what Tauri actually installed
+  (`AppHandle::menu()`), not the model that was pushed to it, so a menu that was
+  never rebuilt is distinguishable from one that was. Tauri exposes no
+  `is_enabled()` on a `PredefinedMenuItem` and no accessor for its role, so
+  separators and OS-implemented items are reported by text and position only.
+
+Neither seam exists in the portable run, which builds without the feature; the
+portable spec drives the app through the keyboard, as every spec did before C6
+and still does for the document actions themselves (`helpers.js`).
+
 ## The portable-layout smoke check
 
 `npm run test:e2e` runs the binary from `target/release`, where Tauri takes it for
@@ -182,7 +201,10 @@ language/window state, a terminal describe), why it is ordered the way it is.
 - `app-shell.e2e.js` — app-wide chrome: boot entry (M6a — the startup screen,
   creating a character, New's discard guard, Open loading a saved file's own
   type), the header's document-status readout, German localization of the
-  chrome, and the `window.close()` bridge for a clean document (terminal).
+  chrome, the native menu (C6 — activating an item really runs the action, a
+  disabled one does not, and a language switch rebuilds the _installed_ menu in
+  German), the settings dialog, and the `window.close()` bridge for a clean
+  document (terminal).
 - `companion-editor.e2e.js` — the companion-shaped editor surface: Characteristic
   caps and Ability bonuses, illegal-selection reporting and its per-`ValidationMode`
   variants, mechanical Virtue/Flaw effects, mutual exclusion, warping-owed fills,

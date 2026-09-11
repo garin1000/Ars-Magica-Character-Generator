@@ -2773,6 +2773,87 @@ fn e2e_export_file_override_is_honored_when_the_feature_is_enabled() {
     assert_eq!(result, Some(PathBuf::from("/nonexistent/honored-path.md")));
 }
 
+/// C6, both seams. `activate_menu_item` and `installed_menu` exist so a
+/// WebDriver spec can press a native menu item and read the menu the OS was
+/// actually given — neither of which is in the DOM, permanently (C3a). They
+/// must be inert in the shipped build for the same reason `request_exit` is
+/// (`main.rs`): a seam that drives the app's document actions has no business
+/// existing in the binary users install, however benign the local threat model.
+/// This test runs under the plain `cargo test -p arm-app` gate, which is
+/// exactly that build.
+#[cfg(not(feature = "e2e-testing"))]
+#[test]
+fn the_menu_test_seams_are_compiled_out_of_the_default_build() {
+    assert!(
+        !arm_app::commands::menu_test_seams_enabled(),
+        "activate_menu_item / installed_menu must be inert unless built with \
+         the `e2e-testing` feature, or the shipped binary exposes an IPC path \
+         that can run New/Open/Save/Save As/Export/Settings"
+    );
+}
+
+/// Mirror of the above, proving the gate opens rather than staying permanently
+/// shut — compiled WITH the feature `ui/e2e/wdio.conf.js` passes to
+/// `cargo tauri build --no-bundle`, or the menu specs have no seam to drive.
+#[cfg(feature = "e2e-testing")]
+#[test]
+fn the_menu_test_seams_act_when_the_feature_is_enabled() {
+    assert!(arm_app::commands::menu_test_seams_enabled());
+}
+
+/// The seam is worth nothing unless it fires the SAME handler the OS fires.
+/// `arm_app::menu::forward_menu_action` is that one handler: `main.rs`'s
+/// `on_menu_event` calls it and so does `activate_menu_item`. A second `emit`
+/// anywhere would be a parallel path, and a spec driving it would prove only
+/// that the parallel path works.
+#[test]
+fn the_os_menu_handler_and_the_activation_seam_share_one_dispatch_path() {
+    let main_rs = fs::read_to_string(repo_root().join("crates/arm-app/src/main.rs")).unwrap();
+    let commands_rs =
+        fs::read_to_string(repo_root().join("crates/arm-app/src/commands.rs")).unwrap();
+
+    assert!(
+        main_rs.contains("menu::forward_menu_action"),
+        "main.rs's on_menu_event must dispatch through \
+         `arm_app::menu::forward_menu_action`"
+    );
+    assert!(
+        commands_rs.contains("forward_menu_action"),
+        "`activate_menu_item` must dispatch through the same \
+         `forward_menu_action`, not emit the event a second way"
+    );
+    assert!(
+        !main_rs.contains("MENU_ACTION_EVENT"),
+        "main.rs must no longer emit the menu event itself; that line moved \
+         into `forward_menu_action` so the seam and the OS cannot drift"
+    );
+}
+
+/// The two command names are string literals in a WebdriverIO spec and function
+/// names in `commands.rs`, with nothing but this test holding them together —
+/// the same gap `the_frontend_invokes_the_registered_discard_confirmation_command`
+/// closes for `confirm_discard`. A rename would leave the spec invoking a
+/// command that does not exist, and its rejection would surface as a timeout on
+/// an assertion about something else entirely.
+#[test]
+fn the_menu_spec_invokes_the_registered_menu_seam_commands() {
+    let spec = fs::read_to_string(repo_root().join("ui/e2e/specs/app-shell.e2e.js")).unwrap();
+    let main_rs = fs::read_to_string(repo_root().join("crates/arm-app/src/main.rs")).unwrap();
+
+    for command in ["activate_menu_item", "installed_menu"] {
+        assert!(
+            spec.contains(&format!("'{command}'")),
+            "app-shell.e2e.js must invoke the `{command}` command by that exact \
+             name"
+        );
+        assert!(
+            main_rs.contains(&format!("commands::{command}")),
+            "`{command}` must be registered in main.rs's invoke_handler, or the \
+             spec's call can never reach it"
+        );
+    }
+}
+
 #[test]
 fn every_validation_code_has_a_fluent_key_in_each_locale() {
     let mut codes = validation_codes();
