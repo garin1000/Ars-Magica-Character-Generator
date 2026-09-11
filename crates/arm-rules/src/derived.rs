@@ -293,6 +293,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::GrantsReputation { .. }
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
+                | Effect::FocusPoints { .. }
                 | Effect::ElementalMagic { .. } => {}
             }
         }
@@ -393,7 +394,10 @@ pub use casting::{
 };
 
 mod combat;
+mod focus_power;
 mod lab;
+
+pub use focus_power::{FocusPowerLine, focus_power_lines};
 
 pub use combat::{
     CombatLine, EncumbranceTotal, FatigueLevel, FatigueTier, SoakTotal, WoundBand, WoundRange,
@@ -568,6 +572,12 @@ pub struct DerivedTotals {
     /// The familiar bonding read-out (magi with a familiar only; `None` otherwise).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub familiar: Option<FamiliarReadout>,
+    /// One line per entered Focus Power — magnitude, Initiative and Fatigue cost
+    /// (`ArMDE:3899`, `ArMDE:3901`). Empty for a character with none, and open to every
+    /// character type, since Focus Power is a Supernatural Virtue rather than a
+    /// Hermetic one.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub focus_powers: Vec<FocusPowerLine>,
     /// One or two combat lines per equipped weapon — with-shield then bare when a
     /// shield is equipped and the weapon is one-handed, otherwise a single line.
     pub combat: Vec<CombatLine>,
@@ -645,6 +655,7 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
         } else {
             None
         },
+        focus_powers: focus_power_lines(entity, ruleset),
         combat: combat_totals(entity, ruleset),
         soak: soak(entity, ruleset),
         encumbrance: encumbrance(entity, ruleset),
@@ -670,8 +681,8 @@ mod tests {
     use super::combat::{combat_encumbrance_applies, combat_gear_is_majority};
     use crate::ruleset::RulesetSources;
     use crate::types::{
-        AbilityScore, ArtScore, EntityKind, EquipmentSlot, Familiar, LongevityRitual, MightScore,
-        Realm, RulesetRef, Selection, SpellSelection, SupernaturalPower, Talisman,
+        AbilityScore, ArtScore, EntityKind, EquipmentSlot, Familiar, FocusPower, LongevityRitual,
+        MightScore, Realm, RulesetRef, Selection, SpellSelection, SupernaturalPower, Talisman,
     };
     use pretty_assertions::assert_eq;
     use std::collections::BTreeMap;
@@ -1579,6 +1590,74 @@ mod tests {
         };
         assert_eq!(familiar_binding_level(&f), 30);
         assert_eq!(familiar_binding_level(&Familiar::default()), 25);
+    }
+
+    /// A Focus Power's Initiative is "the character's Quickness – the maximum
+    /// magnitude of the effect" (ArMDE:3899), and a magnitude "is equal to the
+    /// level divided by five, rounded up" (`ArMDE:9097`) — the only sourced
+    /// level→magnitude rule the book gives. Activation costs "one Fatigue level …
+    /// for an effect of level 25 or lower, two Fatigue levels … if the effect has a
+    /// level of 26 to 50, and three for 51 to 75" (`ArMDE:3901`); the book stops at
+    /// 75, so above it the cost is unstated rather than extrapolated.
+    #[test]
+    fn focus_power_lines_derive_magnitude_initiative_and_fatigue() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Qik, 2);
+        e.focus_powers = vec![
+            FocusPower {
+                name: "Wolves".into(),
+                max_level: 10,
+                penetration: 5,
+            },
+            FocusPower {
+                name: "Storms".into(),
+                max_level: 51,
+                penetration: 0,
+            },
+            FocusPower {
+                name: "Past the table".into(),
+                max_level: 80,
+                penetration: 0,
+            },
+        ];
+
+        let lines = focus_power_lines(&e, &rs);
+        assert_eq!(lines.len(), 3);
+
+        assert_eq!(lines[0].name, "Wolves");
+        assert_eq!(lines[0].magnitude, 2); // 10 ÷ 5
+        assert_eq!(lines[0].initiative, 0); // Qik 2 − 2
+        assert_eq!(lines[0].fatigue_levels, Some(1)); // level ≤ 25
+
+        assert_eq!(lines[1].magnitude, 11); // 51 ÷ 5, rounded UP
+        assert_eq!(lines[1].initiative, -9); // Qik 2 − 11
+        assert_eq!(lines[1].fatigue_levels, Some(3)); // 51–75
+
+        assert_eq!(lines[2].fatigue_levels, None); // above 75 the book is silent
+
+        // No focus powers, no lines.
+        assert!(focus_power_lines(&magus(), &rs).is_empty());
+    }
+
+    /// The read-out has to reach the panel, so the whole-character totals carry the
+    /// focus-power lines; a character with none carries an empty list.
+    #[test]
+    fn derived_totals_carry_the_focus_power_lines() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Qik, 1);
+        e.focus_powers = vec![FocusPower {
+            name: "Wolves".into(),
+            max_level: 10,
+            penetration: 5,
+        }];
+
+        let out = derived_totals(&e, &rs);
+        assert_eq!(out.focus_powers.len(), 1);
+        assert_eq!(out.focus_powers[0].initiative, -1); // Qik 1 − magnitude 2
+
+        assert!(derived_totals(&magus(), &rs).focus_powers.is_empty());
     }
 
     /// Bond-invested power levels are summed for information only: "there is no

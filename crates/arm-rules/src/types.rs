@@ -1126,6 +1126,27 @@ pub enum Effect {
         /// Levels of supernatural powers added to the budget.
         amount: u16,
     },
+    /// Grants `amount` **Focus Power points** (base 0, summed) — a second,
+    /// separate power currency from [`Effect::PowerLevels`].
+    ///
+    /// "This Virtue grants a pool of 25 points. The maximum level of effect and
+    /// Penetration both start at zero. It costs 2 points to raise the maximum
+    /// level of effect by 1, and 1 point to raise the Penetration by 1"
+    /// (ArMDE:3899), and "This Virtue may be taken more than once, and the points
+    /// gained may be combined" (`ArMDE:3903`) — hence base 0 and summed, exactly
+    /// like [`Effect::PowerLevels`].
+    ///
+    /// It is deliberately **not** `PowerLevels`: at 2 points per level these 25
+    /// buy at most 12 levels, so feeding them into the level-denominated budget
+    /// would let a Focus Power pay for 25 levels the Virtue cannot buy. Consumed
+    /// by [`crate::effective::focus_points_budget`]; the spending side is
+    /// [`crate::effective::focus_points_used`].
+    ///
+    /// Source: ArMDE:3899, :3903.
+    FocusPoints {
+        /// Focus Power points added to the pool.
+        amount: u16,
+    },
 
     // --- M5 slice 5b: in-play effect variants ---
     //
@@ -2848,6 +2869,37 @@ pub struct SupernaturalPower {
     pub penetration: u16,
 }
 
+/// A Focus Power the character may exercise at will, bought out of the Focus
+/// Power Virtue's point pool.
+///
+/// Deliberately **not** a [`SupernaturalPower`], because the two store different
+/// quantities in different currencies. A `SupernaturalPower`'s `level` is the
+/// level of a power that was *made*, spent one-for-one out of the level budget
+/// ([`crate::effective::powers_used`]). A Focus Power stores a **ceiling**: "the
+/// maximum level of effect", raised at **2 points each**, with "the character may
+/// create any effect within the scope of the power, up to the level of the
+/// effect" (`ArMDE:3899`). Keeping them apart makes it structurally impossible
+/// for a focus power to be charged against the level budget — the confusion B10
+/// avoided by leaving Focus Power out of [`Effect::PowerLevels`] entirely.
+///
+/// The Virtue's scope is a free-text descriptor, "like a magical focus … related
+/// to a specialty that is smaller than a single Hermetic Form" (`ArMDE:3897`), so
+/// [`Self::name`] carries it exactly as [`SupernaturalPower::name`] does.
+///
+/// Kept sorted via [`Entity::normalize`]. Source: `ArMDE:3895-3903`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct FocusPower {
+    /// Free-text name / scope of the focus power.
+    pub name: String,
+    /// The maximum level of effect the character may create, at **2 points** per
+    /// level out of the Focus Power pool. Source: `ArMDE:3899`.
+    pub max_level: u16,
+    /// The power's Penetration, at **1 point** per point out of the same pool;
+    /// both "start at zero". Source: `ArMDE:3899`.
+    #[serde(default, skip_serializing_if = "is_zero_u16")]
+    pub penetration: u16,
+}
+
 /// A magus's familiar: the magical beast itself plus the three bond cords.
 ///
 /// "A familiar is a beast that a magus befriends and then magically bonds with,
@@ -3642,6 +3694,15 @@ pub struct Entity {
     /// [`Entity::normalize`]. Defaults to empty. Source: RoP:I:4122; RoP:D:1977.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub powers: Vec<SupernaturalPower>,
+    /// The character's Focus Powers, bought out of the Focus Power point pool
+    /// ([`crate::effective::focus_points_budget`]) rather than the level budget
+    /// [`Self::powers`] draws on — a separate currency at 2 points per level of
+    /// effect and 1 per point of Penetration. Kept sorted via
+    /// [`Entity::normalize`]. Defaults to empty, so a save written before this
+    /// field loads unchanged and writes identical bytes, and [`SCHEMA_VERSION`]
+    /// does not move. Source: `ArMDE:3899`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub focus_powers: Vec<FocusPower>,
 }
 
 /// The engine's own fallback for [`Entity::saga_year`].
@@ -3832,6 +3893,7 @@ impl Entity {
             equipment: Vec::new(),
             might: None,
             powers: Vec::new(),
+            focus_powers: Vec::new(),
         }
     }
 
@@ -3867,6 +3929,7 @@ impl Entity {
         self.aging_log.sort();
         self.equipment.sort();
         self.powers.sort();
+        self.focus_powers.sort();
     }
 }
 
@@ -4672,6 +4735,55 @@ mod tests {
         );
     }
 
+    /// `focus_powers` is additive, so a save written before it carries no key,
+    /// reads as an empty list, and writes identical bytes — SCHEMA_VERSION stays
+    /// put. `normalize` sorts the list like every other, for zero-noise diffs.
+    #[test]
+    fn focus_powers_round_trip_are_sorted_and_absent_when_empty() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef {
+                id: Id::new("test"),
+                version: "1".into(),
+            },
+        );
+        // Empty: the key must not appear at all.
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(!json.contains("focus_powers"), "{json}");
+
+        entity.focus_powers = vec![
+            FocusPower {
+                name: "Wolves".into(),
+                max_level: 10,
+                penetration: 5,
+            },
+            FocusPower {
+                name: "Beasts of the wood".into(),
+                max_level: 5,
+                penetration: 0,
+            },
+        ];
+        entity.normalize();
+        assert_eq!(
+            entity
+                .focus_powers
+                .iter()
+                .map(|p| p.name.as_str())
+                .collect::<Vec<_>>(),
+            vec!["Beasts of the wood", "Wolves"]
+        );
+
+        let json = serde_json::to_string(&entity).unwrap();
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+        // An unspent Penetration is omitted, exactly as on a SupernaturalPower.
+        assert!(
+            json.contains("{\"name\":\"Beasts of the wood\",\"max_level\":5}"),
+            "{json}"
+        );
+    }
+
     #[test]
     fn might_effects_round_trip() {
         // The two Might/power-budget Effect variants survive a `type`-tagged
@@ -5319,6 +5431,7 @@ mod tests {
             equipment: Vec::new(),
             might: None,
             powers: Vec::new(),
+            focus_powers: Vec::new(),
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
@@ -5579,6 +5692,7 @@ mod tests {
             equipment: Vec::new(),
             might: None,
             powers: Vec::new(),
+            focus_powers: Vec::new(),
         };
 
         // Serialization is canonical only after normalize(); derive-based

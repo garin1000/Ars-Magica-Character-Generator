@@ -57,13 +57,13 @@ pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRule
 // exercised individually by this crate's own tests.
 pub use derived::{
     Addend, CastingTotal, CastingWithinFocus, CombatLine, DerivedTotals, EncumbranceTotal,
-    FamiliarBinding, FamiliarReadout, FatigueLevel, FatigueTier, LabTotal, LongevityBonus,
-    LongevityHint, MagicResistance, MasterpieceCap, ModifierFamily, NonStandardCasting,
-    PenetrationLine, SoakTotal, SurfacedModifier, TalismanCapacity, WoundBand, WoundRange,
-    casting_totals, combat_totals, cord_points_spent, derived_totals, encumbrance,
+    FamiliarBinding, FamiliarReadout, FatigueLevel, FatigueTier, FocusPowerLine, LabTotal,
+    LongevityBonus, LongevityHint, MagicResistance, MasterpieceCap, ModifierFamily,
+    NonStandardCasting, PenetrationLine, SoakTotal, SurfacedModifier, TalismanCapacity, WoundBand,
+    WoundRange, casting_totals, combat_totals, cord_points_spent, derived_totals, encumbrance,
     familiar_binding_level, familiar_invested_power_levels, familiar_readout, fatigue_levels,
-    lab_totals, longevity_bonus, magic_resistance, masterpiece_item_cap, penetration, soak,
-    surfaced_modifiers, talisman_capacity, wound_ranges,
+    focus_power_lines, lab_totals, longevity_bonus, magic_resistance, masterpiece_item_cap,
+    penetration, soak, surfaced_modifiers, talisman_capacity, wound_ranges,
 };
 // Curated public compute-function facade (see the `derived` re-export above):
 // bare names such as `size`, `warping`, `confidence`, and `true_faith` are the
@@ -79,10 +79,11 @@ pub use effective::{
     decrepitude_points_total, decrepitude_score, effective_ability_score, effective_art_score,
     effective_characteristic_after_aging, effective_characteristic_score,
     effective_characteristics, effective_might, effective_spell_mastery, entity_grants,
-    item_level_budget, item_level_used, life_stage_spell_levels, power_levels_budget, powers_used,
-    reputation_grants, resolved_spell_level, restricted_xp_pools, size, spell_level_cap,
-    spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
-    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
+    focus_points_budget, focus_points_used, item_level_budget, item_level_used,
+    life_stage_spell_levels, power_levels_budget, powers_used, reputation_grants,
+    resolved_spell_level, restricted_xp_pools, size, spell_level_cap, spell_level_caps,
+    spell_levels_base, spell_levels_bonus, spell_levels_budget, spell_levels_used,
+    spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
     supernatural_free_slots, true_faith, warping, warping_owed, warping_owed_grants,
     warping_points_total, warping_score,
 };
@@ -97,11 +98,11 @@ pub use spell_mastery::SpellMasteryAbility;
 pub use types::{
     AbilityFunding, AbilityScore, AdvancementSource, AgingEffect, AgingLogEntry, ArtScore,
     CastingScope, CategoryCap, CategoryRule, Classification, CombatStat, CreationPhase, Effect,
-    EnchantedDevice, Entity, EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, GiftPolicy,
-    HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind, LineRange, LoadedEntity, LongevityRitual,
-    LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType, ParameterDef,
-    ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm, Reputation,
-    ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpecialCasting,
+    EnchantedDevice, Entity, EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, FocusPower,
+    GiftPolicy, HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind, LineRange, LoadedEntity,
+    LongevityRitual, LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType,
+    ParameterDef, ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm,
+    Reputation, ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpecialCasting,
     SpellSelection, SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar,
     ValidationMode, load_entity_migrating,
 };

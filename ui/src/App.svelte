@@ -71,6 +71,14 @@
   const hasMight = $derived(
     !isMagus && (hasMythicType || (store.effective?.might ?? null) !== null),
   );
+  // Focus Power is a *Supernatural* Virtue (ArMDE:3895-3896) that grants no Might
+  // and is open to every character type, magi included — so the tab must also
+  // open on the Focus Power pool, or a companion or magus who bought the Virtue
+  // would have nowhere to enter the power it gives him. Existing focus powers
+  // count too, so a loaded save always has somewhere to edit them.
+  const hasFocusPower = $derived(
+    (store.effective?.focus_points_budget ?? 0) > 0 || (store.entity.focus_powers ?? []).length > 0,
+  );
   // The Experience tab is gated on the RULESET shipping life-stage rules, not on
   // the character type: `LifeStagePanel` gates on exactly this, so every type can
   // choose where its experience comes from, and reading the same flag in both
@@ -102,7 +110,7 @@
         ]
       : []),
     ...(hasMythicType ? [{ id: 'mythic_type' as Tab, key: 'tab-mythic-type' }] : []),
-    ...(hasMight ? [{ id: 'supernatural' as Tab, key: 'tab-supernatural' }] : []),
+    ...(hasMight || hasFocusPower ? [{ id: 'supernatural' as Tab, key: 'tab-supernatural' }] : []),
     // Equipment applies to every type (grogs especially carry weapons and armor).
     { id: 'equipment', key: 'tab-equipment' },
     // The derived play-stat read-out applies to every type (read-only totals).

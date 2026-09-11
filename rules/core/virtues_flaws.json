@@ -4212,9 +4212,10 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "max_per_target": 255,
+    "effects": [{ "type": "focus_points", "amount": 25 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3895, 3906] }
   },
   {

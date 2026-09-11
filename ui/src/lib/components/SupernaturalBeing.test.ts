@@ -225,4 +225,71 @@ describe('SupernaturalBeing power list', () => {
     expect(text).toContain('20');
     expect(text).toContain('50');
   });
+
+  // Focus Power's 25 points are a SECOND currency (ArMDE:3899) — 2 per level of
+  // effect, 1 per Penetration — so the panel draws its own list and its own bar,
+  // and neither reads the other's numbers.
+  it('renders a focus-power row per entry with its own max-level and Penetration inputs', () => {
+    store.entity.focus_powers = [
+      { name: 'Wolves of the wood', max_level: 10, penetration: 5 },
+      { name: 'Storms', max_level: 5 },
+    ];
+    const body = html();
+    expect(element(body, 'focus-power-name-0').open).toMatch(/value="Wolves of the wood"/);
+    expect(element(body, 'focus-power-max-level-0').open).toMatch(/value="10"/);
+    expect(element(body, 'focus-power-penetration-0').open).toMatch(/value="5"/);
+    // An unspent Penetration reads back as 0, never blank.
+    expect(element(body, 'focus-power-penetration-1').open).toMatch(/value="0"/);
+    expect(has(body, 'focus-power-remove-0')).toBe(true);
+    expect(has(body, 'focus-power-remove-1')).toBe(true);
+    expect(has(body, 'focus-power-add')).toBe(true);
+  });
+
+  it('reads the focus-points budget/used readout from the engine, never recomputed locally', () => {
+    store.entity.focus_powers = [{ name: 'Wolves', max_level: 10, penetration: 5 }];
+    store.effective = {
+      focus_points_used: 25,
+      focus_points_budget: 50,
+    } as unknown as EffectiveScores;
+    const text = clean(element(html(), 'focus-points-used').text);
+    expect(text).toContain('25');
+    expect(text).toContain('50');
+  });
+
+  // A magus reaches this tab only through Focus Power, and "Magi never have
+  // Might" — so the Might block and the level-budget power list, which are a
+  // Might-being's, must not be offered to him. The Focus Power section is.
+  it('hides the Might and level-budget blocks for a magus, keeping the focus section', () => {
+    store.entity.type_id = 'magus';
+    store.ruleset!.ruleset.type_profiles.magus = {
+      is_magus: true,
+    } as unknown as LocalizedRuleset['ruleset']['type_profiles'][string];
+    const body = html();
+    expect(has(body, 'might-add')).toBe(false);
+    expect(has(body, 'power-add')).toBe(false);
+    expect(has(body, 'focus-power-add')).toBe(true);
+  });
+
+  // Magnitude, Initiative and the Fatigue cost are all engine-derived
+  // (ArMDE:3899, ArMDE:3901, ArMDE:9097) and only displayed here.
+  it('shows the engine-derived magnitude, Initiative and Fatigue cost per focus power', () => {
+    store.entity.focus_powers = [{ name: 'Wolves', max_level: 10, penetration: 5 }];
+    store.derived = {
+      focus_powers: [
+        {
+          name: 'Wolves',
+          max_level: 10,
+          penetration: 5,
+          magnitude: 2,
+          initiative: -1,
+          fatigue_levels: 1,
+        },
+      ],
+    } as unknown as DerivedTotals;
+    const text = clean(element(html(), 'focus-power-derived-0').text);
+    expect(text).toContain('2');
+    // ASCII hyphen, never U+2212.
+    expect(text).toContain('-1');
+    expect(text).not.toContain('−');
+  });
 });

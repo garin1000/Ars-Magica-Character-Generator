@@ -1882,6 +1882,30 @@ describe('magic possessions', () => {
     expect(store.entity.powers?.[0].penetration).toBe(65535);
   });
 
+  // Focus Power's pool is a SECOND currency (ArMDE:3899): 2 points per level of
+  // effect, 1 per point of Penetration, out of 25 per copy of the Virtue. Its
+  // level is a ceiling ("the maximum level of effect"), so it lives in its own
+  // list rather than among the level-budget powers.
+  it('adds, edits and removes focus powers, clamping both numbers to u16', () => {
+    store.addFocusPower();
+    store.setFocusPowerName(0, 'Wolves');
+    store.setFocusPowerMaxLevel(0, 10);
+    store.setFocusPowerPenetration(0, 5);
+    expect(store.entity.focus_powers).toEqual([{ name: 'Wolves', max_level: 10, penetration: 5 }]);
+
+    store.setFocusPowerMaxLevel(0, -5);
+    expect(store.entity.focus_powers?.[0].max_level).toBe(0);
+    store.setFocusPowerPenetration(0, 70000);
+    expect(store.entity.focus_powers?.[0].penetration).toBe(65535);
+
+    // The ordinary power list is a different list and is untouched.
+    expect(store.entity.powers ?? []).toEqual([]);
+
+    store.addFocusPower();
+    store.removeFocusPowerAt(1);
+    expect(store.entity.focus_powers).toHaveLength(1);
+  });
+
   it('adds a longevity ritual with nothing entered yet', () => {
     store.addLongevityRitual('self_made');
     expect(store.entity.longevity_ritual).toEqual({ source: 'self_made', bonus: null, focus: '' });

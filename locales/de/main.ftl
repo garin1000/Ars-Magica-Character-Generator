@@ -704,6 +704,23 @@ power-level-label = Stufe
 power-penetration-label = Penetration
 power-add = Kraft hinzufügen
 powers-empty = Noch keine übernatürlichen Kräfte.
+# Fokussierte Macht (Basisregeln.md:3895-3903): eine ZWEITE Kraft-Währung. Die
+# 25 Punkte kaufen eine maximale Effektstufe zu je 2 Punkten und Penetration zu
+# je 1 Punkt — die Stufenspalte ist also eine Obergrenze, keine ausgegebene
+# Stufe. Begriffe aus dem deutschen Regeltext: „Fokussierte Macht“
+# (magische-qualitaeten.md), „maximale Effektstufe“, „Initiativewert“
+# (kampf.md), „Erschöpfungsstufe“ (grundbegriffe.md).
+focus-powers-label = Fokussierte Mächte
+focus-points-used = Fokuspunkte: { $used } / { $budget }
+focus-power-name-placeholder = Wirkungsbereich der Macht
+focus-power-max-level-label = Max. Effektstufe
+focus-power-initiative-label = Initiativewert
+focus-power-fatigue-label = Erschöpfungsstufen
+# Über Stufe 75 nennen die Regeln keine Erschöpfungskosten (Basisregeln.md:3901).
+focus-power-fatigue-unstated = n/v
+focus-power-derived = Magnitude { $magnitude }, Initiativewert { $initiative }, Erschöpfung { $fatigue }
+focus-power-add = Fokussierte Macht hinzufügen
+focus-powers-empty = Noch keine Fokussierten Mächte.
 realm-magic = Magie
 realm-faerie = Fee
 realm-divine = Das Göttliche
@@ -1111,6 +1128,7 @@ issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ 
 issue-reputation_not_granted = Eine Reputation ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der sie verleiht.
 issue-over_item_level = Artefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-over_power_levels = Übernatürliche Kräfte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
+issue-over_focus_points = Fokussierte Mächte verbrauchen { $used } Punkte, über dem Pool von { $budget } (um { $over }).
 # Der genannte Kraftname ist Freitext, den der Spieler im Reiter „Übernatürlich“
 # eingetragen hat; die Meldung gibt ihn deshalb wörtlich wieder.
 issue-power_dangling_target = { $item } nennt die Kraft { $power }, die dieser Charakter nicht besitzt; trage sie unter „Übernatürliche Kräfte“ ein oder berichtige den Namen.

@@ -427,6 +427,7 @@ pub(crate) fn ability_authorizations(
                 | Effect::GrantsReputation { .. }
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
+                | Effect::FocusPoints { .. }
                 | Effect::MagicalFocus { .. }
                 | Effect::CastingTotalMod { .. }
                 | Effect::LabTotalMod { .. }

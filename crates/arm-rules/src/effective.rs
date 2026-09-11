@@ -217,6 +217,7 @@ macro_rules! irrelevant_effect_variants {
         | Effect::GrantsReputation { .. }
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
+        | Effect::FocusPoints { .. }
         // M5/5b in-play effects: consumed by derived.rs (5i); they never affect a
         // creation-legality score bonus, characteristic-limit shift, or Affinity
         // cost reduction, so they are no-ops in every fold that shares this tail.
@@ -256,7 +257,7 @@ fn clamp_to_u32(n: i64) -> u32 {
 mod tests {
     use super::*;
     use crate::types::{
-        AbilityScore, ArtScore, EntityKind, ReputationType, RulesetRef, Selection,
+        AbilityScore, ArtScore, EntityKind, FocusPower, ReputationType, RulesetRef, Selection,
         SupernaturalPower,
     };
     use pretty_assertions::assert_eq;
@@ -1019,6 +1020,12 @@ mod tests {
             "effects": [{ "type": "power_levels", "amount": 20 }]
           },
           {
+            "id": "virtue.focus_power",
+            "kind": "virtue", "classification": "creation_effect", "magnitude": "major", "categories": ["supernatural"],
+            "entity_kinds": ["character"], "max_per_target": 255,
+            "effects": [{ "type": "focus_points", "amount": 25 }]
+          },
+          {
             "id": "virtue.self_confident",
             "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["personality"],
             "entity_kinds": ["character"],
@@ -1619,6 +1626,63 @@ mod tests {
         ]);
         assert_eq!(effective_might(&e, &rs).unwrap().score, 7);
         assert_eq!(power_levels_budget(&e, &rs), 50);
+    }
+
+    /// Focus Power's 25 are a currency of their own — "This Virtue grants a pool
+    /// of 25 points" — and copies combine: "This Virtue may be taken more than
+    /// once, and the points gained may be combined" (ArMDE:3899, :3903).
+    #[test]
+    fn focus_power_grants_a_twenty_five_point_pool_that_copies_combine() {
+        let rs = xp_ruleset();
+        let one = xp_entity(vec![sel("virtue.focus_power")]);
+        assert_eq!(focus_points_budget(&one, &rs), 25);
+
+        let twice = xp_entity(vec![sel("virtue.focus_power"), sel("virtue.focus_power")]);
+        assert_eq!(focus_points_budget(&twice, &rs), 50);
+
+        // A being without the Virtue has no such pool.
+        assert_eq!(focus_points_budget(&xp_entity(vec![]), &rs), 0);
+    }
+
+    /// A Focus Power spends its OWN pool at its own rate: "It costs 2 points to
+    /// raise the maximum level of effect by 1, and 1 point to raise the Penetration
+    /// by 1. Thus, 25 points can allow a maximum level of 10 with a Penetration of
+    /// 5, or a maximum level of 5 with a Penetration of 15" (ArMDE:3899). Both of
+    /// the book's own splits are checked, and neither pool subsidises the other.
+    #[test]
+    fn a_focus_power_spends_two_points_per_level_and_one_per_penetration() {
+        let mut e = xp_entity(vec![sel("virtue.focus_power")]);
+
+        e.focus_powers = vec![focus_power("Ward against wolves", 10, 5)];
+        assert_eq!(focus_points_used(&e), 25);
+        // The level-denominated budget is untouched by a focus power.
+        assert_eq!(powers_used(&e), 0);
+
+        // The book's second split of the same 25.
+        e.focus_powers = vec![focus_power("Ward against wolves", 5, 15)];
+        assert_eq!(focus_points_used(&e), 25);
+
+        // Several focus powers draw on the one combined pool.
+        e.focus_powers = vec![focus_power("A", 5, 15), focus_power("B", 10, 5)];
+        assert_eq!(focus_points_used(&e), 50);
+
+        // An ordinary power stays on the level budget and spends no focus points,
+        // exactly as before this Virtue was modelled.
+        e.powers = vec![SupernaturalPower {
+            name: "Curse".into(),
+            level: 20,
+            penetration: 5,
+        }];
+        assert_eq!(powers_used(&e), 25);
+        assert_eq!(focus_points_used(&e), 50);
+    }
+
+    fn focus_power(name: &str, max_level: u16, penetration: u16) -> FocusPower {
+        FocusPower {
+            name: name.into(),
+            max_level,
+            penetration,
+        }
     }
 
     #[test]

@@ -1640,6 +1640,49 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  // --- Focus Powers: the Focus Power Virtue's own 25-point pool ---
+  //
+  // A separate list from `powers` because the numbers are a separate currency:
+  // "This Virtue grants a pool of 25 points… It costs 2 points to raise the
+  // maximum level of effect by 1, and 1 point to raise the Penetration by 1"
+  // (ArMDE:3899). `max_level` is a CEILING on what the character may create, not a
+  // level that was spent, so it is never charged against `power_levels_used`.
+
+  addFocusPower(): void {
+    this.entity.focus_powers = [...(this.entity.focus_powers ?? []), { name: '', max_level: 0 }];
+    this.#scheduleValidate();
+  }
+
+  removeFocusPowerAt(index: number): void {
+    this.entity.focus_powers = (this.entity.focus_powers ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  setFocusPowerName(index: number, name: string): void {
+    this.entity.focus_powers = (this.entity.focus_powers ?? []).map((p, i) =>
+      i === index ? { ...p, name } : p,
+    );
+    this.#scheduleValidate();
+  }
+
+  /** The maximum level of effect, at 2 points each. Clamped to u16 like a power level. */
+  setFocusPowerMaxLevel(index: number, maxLevel: number): void {
+    const clamped = clampInt(maxLevel, 0, U16_MAX);
+    this.entity.focus_powers = (this.entity.focus_powers ?? []).map((p, i) =>
+      i === index ? { ...p, max_level: clamped } : p,
+    );
+    this.#scheduleValidate();
+  }
+
+  /** The power's Penetration, at 1 point each out of the same pool. */
+  setFocusPowerPenetration(index: number, penetration: number): void {
+    const clamped = clampInt(penetration, 0, U16_MAX);
+    this.entity.focus_powers = (this.entity.focus_powers ?? []).map((p, i) =>
+      i === index ? { ...p, penetration: clamped } : p,
+    );
+    this.#scheduleValidate();
+  }
+
   // --- Familiar: the creature statblock + the three bond cords ---
   //
   // Every edit below is guarded by `if (!this.entity.familiar) return;`: the panel

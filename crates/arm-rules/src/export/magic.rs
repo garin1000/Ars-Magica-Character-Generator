@@ -57,7 +57,8 @@ impl<'a> Doc<'a> {
     pub(super) fn write_supernatural(&self, out: &mut String) {
         let might = effective_might(self.entity, self.rules());
         let powers = self.power_rows(&self.entity.powers);
-        if might.is_none() && powers.is_empty() {
+        let focus = self.focus_power_rows();
+        if might.is_none() && powers.is_empty() && focus.is_empty() {
             return;
         }
         self.section(out, 2, "tab-supernatural");
@@ -65,11 +66,14 @@ impl<'a> Doc<'a> {
             self.labelled(out, "supernatural-might-label", &self.realm_score(&might));
             out.push('\n');
         }
-        if powers.is_empty() {
-            return;
+        if !powers.is_empty() {
+            self.section(out, 3, "supernatural-powers-label");
+            table(out, &powers.headers, &powers.rows);
         }
-        self.section(out, 3, "supernatural-powers-label");
-        table(out, &powers.headers, &powers.rows);
+        if !focus.is_empty() {
+            self.section(out, 3, "focus-powers-label");
+            table(out, &focus.headers, &focus.rows);
+        }
     }
 
     /// The magus's magical possessions: the assumed aura, enchanted devices, the
@@ -432,6 +436,46 @@ impl<'a> Doc<'a> {
                         escape_cell(&power.name),
                         power.level.to_string(),
                         power.penetration.to_string(),
+                    ]
+                })
+                .collect(),
+        }
+    }
+
+    /// The character's Focus Powers: the maximum level of effect, the Penetration
+    /// bought from the same point pool, and the two figures the rulebook derives
+    /// from that level — Initiative (`ArMDE:3899`) and the Fatigue cost of
+    /// activating it (`ArMDE:3901`).
+    ///
+    /// Its OWN table rather than three more columns on [`Self::power_rows`],
+    /// because the level column holds a different quantity: an ordinary power's
+    /// `level` is a level that was spent, a Focus Power's is a ceiling on what may
+    /// be created, bought at 2 points each from a pool the other table's budget
+    /// knows nothing about.
+    fn focus_power_rows(&self) -> LeveledTable {
+        LeveledTable {
+            headers: vec![
+                self.label("identity-name"),
+                self.label("focus-power-max-level-label"),
+                self.label("power-penetration-label"),
+                self.label("focus-power-initiative-label"),
+                self.label("focus-power-fatigue-label"),
+            ],
+            rows: focus_power_lines(self.entity, self.rules())
+                .iter()
+                .map(|line| {
+                    vec![
+                        escape_cell(&line.name),
+                        line.max_level.to_string(),
+                        line.penetration.to_string(),
+                        line.initiative.to_string(),
+                        // Above level 75 the book states no cost (`ArMDE:3901`), so
+                        // the cell says "unstated" through a label rather than
+                        // printing a band nothing sourced.
+                        match line.fatigue_levels {
+                            Some(levels) => levels.to_string(),
+                            None => self.label("focus-power-fatigue-unstated"),
+                        },
                     ]
                 })
                 .collect(),

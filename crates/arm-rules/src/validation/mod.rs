@@ -215,6 +215,7 @@ impl fmt::Display for IssueSeverity {
 /// | `too_many_mastery_abilities` | error | spells | `spell`, `chosen`, `mastery` |
 /// | `duplicate_mastery_ability` | error | spells | `spell`, `ability`, `count` |
 /// | `over_power_levels` | error | review | `used`, `budget`, `over` |
+/// | `over_focus_points` | error | review | `used`, `budget`, `over` |
 /// | `might_realm_mismatch` | warning | review | `base`, `granted` |
 /// | `excessive_aging_reduction` | warning | aging | `characteristic`, `reduction`, `min` |
 /// | `aging_rolls_pending` | warning | aging | `age` |
@@ -681,6 +682,13 @@ impl ValidationIssue {
     /// :4142). A power with no granting Virtue (budget 0) is flagged, mirroring
     /// enchanted devices.
     pub const CODE_OVER_POWER_LEVELS: &'static str = "over_power_levels";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the character's Focus
+    /// Powers spend more than the Focus Power point pool grants — 2 points per
+    /// level of effect and 1 per point of Penetration, out of 25 per copy of the
+    /// Virtue (`ArMDE:3899`, `ArMDE:3903`). A separate currency from
+    /// [`ValidationIssue::CODE_OVER_POWER_LEVELS`]: neither pool subsidises the
+    /// other.
+    pub const CODE_OVER_FOCUS_POINTS: &'static str = "over_focus_points";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the entity's base Might
     /// Realm disagrees with the Realm its Might Virtues grant (a supernatural being
     /// belongs to exactly one Realm; ArMDE:2623-2625).
@@ -959,6 +967,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_reputations(entity, ruleset, &mut issues);
         validate_devices(entity, ruleset, &mut issues);
         validate_powers(entity, ruleset, &mut issues);
+        validate_focus_powers(entity, ruleset, &mut issues);
         validate_power_targets(entity, &effective_selections, ruleset, &mut issues);
         validate_might(entity, ruleset, &effective_selections, &mut issues);
         validate_equipment(entity, ruleset, &mut issues);
@@ -1071,6 +1080,7 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::GrantsReputation { .. }
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
+        | Effect::FocusPoints { .. }
         // M5/5b in-play effects: consumed by derived.rs (5i). They carry
         // no ability/characteristic creation target to check here.
         | Effect::MagicalFocus { .. }
@@ -2437,7 +2447,10 @@ mod tests {
           "effects": [
             { "type": "might_grant", "realm": "infernal", "score": 5 },
             { "type": "power_levels", "amount": 30 }
-          ] }
+          ] },
+        { "id": "virtue.focus_power", "kind": "virtue", "classification": "creation_effect", "magnitude": "major",
+          "categories": ["supernatural"], "entity_kinds": ["character"], "max_per_target": 255,
+          "effects": [{ "type": "focus_points", "amount": 25 }] }
     ]"#;
 
     fn power(name: &str, level: u16) -> SupernaturalPower {
@@ -2468,6 +2481,48 @@ mod tests {
         entity.powers = vec![power("Curse", 25), power("Shape", 10)]; // 35 > 30
         let result = validate(&entity, &rs);
         assert!(codes(&result).contains(&ValidationIssue::CODE_OVER_POWER_LEVELS.to_string()));
+    }
+
+    /// Focus Power's pool is its own currency and its own check: "This Virtue
+    /// grants a pool of 25 points… It costs 2 points to raise the maximum level of
+    /// effect by 1, and 1 point to raise the Penetration by 1" (`ArMDE:3899`). A
+    /// maximum level of 10 with Penetration 5 spends exactly the 25 the Virtue
+    /// grants; one more level costs 2 more points and overspends.
+    #[test]
+    fn focus_powers_are_checked_against_their_own_pool() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.focus_power")]);
+
+        entity.focus_powers = vec![FocusPower {
+            name: "Wolves".into(),
+            max_level: 10,
+            penetration: 5,
+        }];
+        assert!(
+            !codes(&validate(&entity, &rs))
+                .contains(&ValidationIssue::CODE_OVER_FOCUS_POINTS.to_string()),
+            "2 × 10 + 5 = 25 is exactly the pool"
+        );
+
+        entity.focus_powers[0].max_level = 11; // 2 × 11 + 5 = 27 > 25
+        let result = validate(&entity, &rs);
+        assert!(codes(&result).contains(&ValidationIssue::CODE_OVER_FOCUS_POINTS.to_string()));
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_OVER_FOCUS_POINTS)
+            .expect("over_focus_points present");
+        assert_eq!(issue.args.get("used").map(String::as_str), Some("27"));
+        assert_eq!(issue.args.get("budget").map(String::as_str), Some("25"));
+        assert_eq!(issue.args.get("over").map(String::as_str), Some("2"));
+
+        // And it never leaks into the level-denominated budget: the same character
+        // holding no ordinary power reports no `over_power_levels`.
+        assert!(
+            !codes(&result).contains(&ValidationIssue::CODE_OVER_POWER_LEVELS.to_string()),
+            "issues: {:?}",
+            result.issues
+        );
     }
 
     #[test]

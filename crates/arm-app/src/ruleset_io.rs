@@ -21,12 +21,12 @@ use arm_rules::{
     characteristic_bonuses, characteristic_caps, characteristic_floors,
     characteristic_points_granted, checked_xp_allocation, compute_balance, confidence,
     decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
-    entity_grants, item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
-    magus_minimum_abilities, power_levels_budget, powers_used, reputation_grants, resolve_outcome,
-    resolve_year, revert_year, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
-    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
-    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
-    warping_owed_grants,
+    entity_grants, focus_points_budget, focus_points_used, item_level_budget, item_level_used,
+    life_stage_spell_levels, longevity_bonus, magus_minimum_abilities, power_levels_budget,
+    powers_used, reputation_grants, resolve_outcome, resolve_year, revert_year, size,
+    spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
+    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, validate, warping, warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -239,6 +239,13 @@ pub struct EffectiveScores {
     /// The total power level the being's `powers` consume — the "used" side of the
     /// power-levels bar (engine-authoritative; the UI never recomputes it).
     pub power_levels_used: u32,
+    /// The Focus Power point pool the character's copies of the Virtue grant (25
+    /// each, `ArMDE:3899`, `ArMDE:3903`); 0 when none. A *second* power currency,
+    /// carried separately so neither bar can subsidise the other.
+    pub focus_points_budget: u32,
+    /// The points the character's `focus_powers` spend — 2 per level of effect
+    /// plus 1 per point of Penetration (`ArMDE:3899`).
+    pub focus_points_used: u32,
 }
 
 /// Everything about a character's aging that does **not** depend on a die.
@@ -634,6 +641,8 @@ struct MightPowerFields {
     might: Option<MightScore>,
     power_levels_budget: u32,
     power_levels_used: u32,
+    focus_points_budget: u32,
+    focus_points_used: u32,
 }
 
 fn might_power_fields(entity: &Entity, ruleset: &Ruleset) -> MightPowerFields {
@@ -641,6 +650,8 @@ fn might_power_fields(entity: &Entity, ruleset: &Ruleset) -> MightPowerFields {
         might: effective_might(entity, ruleset),
         power_levels_budget: power_levels_budget(entity, ruleset),
         power_levels_used: powers_used(entity),
+        focus_points_budget: focus_points_budget(entity, ruleset),
+        focus_points_used: focus_points_used(entity),
     }
 }
 
@@ -729,6 +740,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         might: might_power.might,
         power_levels_budget: might_power.power_levels_budget,
         power_levels_used: might_power.power_levels_used,
+        focus_points_budget: might_power.focus_points_budget,
+        focus_points_used: might_power.focus_points_used,
     }
 }
 

@@ -1882,6 +1882,7 @@ impl Ruleset {
                 | Effect::GrantsReputation { .. }
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
+                | Effect::FocusPoints { .. }
                 // M5/5b in-play effects with no parameter or ref to resolve:
                 // consumed intrinsically by derived.rs (5i).
                 | Effect::CastingTotalMod { .. }

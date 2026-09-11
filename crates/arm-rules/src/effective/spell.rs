@@ -44,6 +44,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::GrantsReputation { .. }
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
+        | Effect::FocusPoints { .. }
         | Effect::MagicalFocus { .. }
         | Effect::CastingTotalMod { .. }
         | Effect::LabTotalMod { .. }
@@ -101,6 +102,7 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::GrantsReputation { .. }
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
+        | Effect::FocusPoints { .. }
         | Effect::MagicalFocus { .. }
         | Effect::CastingTotalMod { .. }
         | Effect::LabTotalMod { .. }
@@ -353,6 +355,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::GrantsReputation { .. }
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
+                | Effect::FocusPoints { .. }
                 | Effect::MagicalFocus { .. }
                 | Effect::CastingTotalMod { .. }
                 | Effect::LabTotalMod { .. }

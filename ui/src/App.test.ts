@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity, LocalizedRuleset } from './lib/types';
+import type { EffectiveScores, Entity, LocalizedRuleset } from './lib/types';
 
 // While a native file dialog is open the app must be inert behind a blocking
 // overlay: rfd dialogs are not input-modal on Linux, so without this the user can
@@ -485,6 +485,31 @@ describe('editor tabs for the phases split out in Slice 3', () => {
     // tab whose panel is empty is the failure mode this slice must not create —
     // so tab and content read the very same flag.
     expect(openTag(html(), 'tab-experience')).toBeNull();
+  });
+
+  // Focus Power is a *Supernatural* Virtue (ArMDE:3895-3896), open to every
+  // character type including a magus — and it grants no Might. Gating the
+  // Supernatural tab on Might alone would leave a companion or a magus holding
+  // Focus Power with nowhere to enter one, so the tab opens on the pool too.
+  it('opens the Supernatural tab for a Focus Power pool, with no Might at all', () => {
+    store.entity.type_id = 'companion';
+    store.effective = { focus_points_budget: 25, might: null } as unknown as EffectiveScores;
+    expect(openTag(html(), 'tab-supernatural')).not.toBeNull();
+  });
+
+  it('opens it for a magus with a Focus Power pool, though magi never have Might', () => {
+    store.ruleset!.ruleset.type_profiles.magus = {
+      is_magus: true,
+    } as unknown as LocalizedRuleset['ruleset']['type_profiles'][string];
+    store.entity.type_id = 'magus';
+    store.effective = { focus_points_budget: 25, might: null } as unknown as EffectiveScores;
+    expect(openTag(html(), 'tab-supernatural')).not.toBeNull();
+  });
+
+  it('leaves the Supernatural tab closed for a character with neither', () => {
+    store.entity.type_id = 'companion';
+    store.effective = { focus_points_budget: 0, might: null } as unknown as EffectiveScores;
+    expect(openTag(html(), 'tab-supernatural')).toBeNull();
   });
 
   it('exposes separate Personality & Reputations and Aging tabs', () => {

@@ -653,6 +653,10 @@ export interface EffectiveScores {
   power_levels_budget: number;
   // Total power level the being's powers consume — the "used" side of the bar.
   power_levels_used: number;
+  // Derived Focus Power point pool (25 per copy of the Virtue); 0 when none.
+  focus_points_budget: number;
+  // Points the focus powers consume: 2 per level of effect + 1 per Penetration.
+  focus_points_used: number;
 }
 
 // --- Derived play-stat totals (M5/5i), mirrored from `arm_rules::derived`.
@@ -837,6 +841,19 @@ export interface FamiliarReadout {
   binding: FamiliarBinding;
 }
 
+// One Focus Power's derived figures. Display-only: the magnitude of the maximum
+// level of effect (ArMDE:9097), the Initiative it gives (Quickness − that
+// magnitude, ArMDE:3899), and the Fatigue levels activating it costs — null above
+// level 75, where the rulebook states no cost (ArMDE:3901).
+export interface FocusPowerLine {
+  name: string;
+  max_level: number;
+  penetration: number;
+  magnitude: number;
+  initiative: number;
+  fatigue_levels?: number | null;
+}
+
 // A surfaced-only modifier (listed, not simulated).
 export interface SurfacedModifier {
   family: string;
@@ -855,6 +872,7 @@ export interface DerivedTotals {
   masterpiece?: MasterpieceCap | null;
   talisman_capacity?: TalismanCapacity | null;
   familiar?: FamiliarReadout | null;
+  focus_powers?: FocusPowerLine[];
   combat: CombatLine[];
   soak: SoakTotal;
   encumbrance: EncumbranceTotal;
@@ -1102,6 +1120,17 @@ export interface MightScore {
 export interface SupernaturalPower {
   name: string;
   level: number;
+  penetration?: number;
+}
+
+// A Focus Power, bought from the Focus Power Virtue's own 25-point pool: 2 points
+// per point of `max_level`, 1 per point of `penetration` (ArMDE:3899). Deliberately
+// NOT a SupernaturalPower — `max_level` is the *maximum level of effect* the
+// character may create, a ceiling, where a SupernaturalPower's `level` is a level
+// that was spent out of the level budget. `penetration` is absent when unspent.
+export interface FocusPower {
+  name: string;
+  max_level: number;
   penetration?: number;
 }
 
@@ -1715,6 +1744,9 @@ export interface Entity {
   // The being's supernatural powers; each level is charged against the
   // power-levels budget its Might Virtues grant. Omitted when empty.
   powers?: SupernaturalPower[];
+  // The character's Focus Powers, charged against the separate Focus Power point
+  // pool (ArMDE:3899). Omitted when empty.
+  focus_powers?: FocusPower[];
 }
 
 export interface ValidationIssue {

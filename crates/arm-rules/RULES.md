@@ -2164,14 +2164,17 @@ and stacks rather than double-counts: a Might Score is not itself a grant —
 `power_levels_budget` starts at 0 and sums `Effect::PowerLevels` alone — so a
 demon-blooded companion who also buys Lesser Power legitimately has 30 + 25.
 
-**Focus Power is deliberately excluded.** "This Virtue grants a pool of 25
-points… It costs 2 points to raise the maximum level of effect by 1, and 1 point
-to raise the Penetration by 1" (`ArMDE:3899`). Those 25 are a different currency: they
-buy at most 12 levels, or 25 Penetration, or a mix. Adding them to a
-level-denominated budget would let a Focus Power pay for 25 levels the Virtue
-cannot buy — wrong rules output, so `virtue.focus_power` carries no
-`power_levels` effect and a control test pins that it never gains one. Modelling
-its own point pool (with its 2:1 level rate) is a separate, unbuilt mechanic.
+**Focus Power is deliberately excluded from *this* budget** — and E1 built the
+one it does belong to (see *Focus Power's own point pool* below). "This Virtue
+grants a pool of 25 points… It costs 2 points to raise the maximum level of
+effect by 1, and 1 point to raise the Penetration by 1" (`ArMDE:3899`). Those 25
+are a different currency: they buy at most 12 levels, or 25 Penetration, or a
+mix. Adding them to a level-denominated budget would let a Focus Power pay for 25
+levels the Virtue cannot buy — wrong rules output, so `virtue.focus_power`
+carries no `power_levels` effect and a control test
+(`focus_power_funds_no_power_levels_because_its_pool_is_points`) still pins that
+it never gains one. What it gains instead is `Effect::FocusPoints`, a second
+currency with its own budget, its own spend rate and its own over-spend code.
 
 **Penetration is charged against the same budget** — `SupernaturalPower` gains
 `penetration: u16`. `ArMDE:4021` makes the arithmetic explicit: two copies of Greater
@@ -2223,6 +2226,80 @@ reconciles with the budget bar the app showed. The familiar's invested-powers
 table keeps the two-column `leveled_rows`: those powers are charged against no
 budget at all (`ArMDE:10866`) and no surface sets their Penetration, so a third column
 there would be a row of zeros implying a field that does not exist.
+
+#### Focus Power's own point pool (E1)
+> "This Virtue grants a pool of 25 points. The maximum level of effect and
+> Penetration both start at zero. It costs 2 points to raise the maximum level of
+> effect by 1, and 1 point to raise the Penetration by 1. Thus, 25 points can
+> allow a maximum level of 10 with a Penetration of 5, or a maximum level of 5
+> with a Penetration of 15, or combinations in between. The power has an
+> Initiative score equal to the character's Quickness – the maximum magnitude of
+> the effect. The character may create any effect within the scope of the power,
+> up to the level of the effect."
+
+- Source: `ArMDE:3895-3897` (Focus Power, *Major, Supernatural*), `ArMDE:3899`
+  (the 25-point pool, the 2:1 / 1:1 rates, the two worked splits, Initiative),
+  `ArMDE:3901` (the Fatigue bands), `ArMDE:3903` ("This Virtue may be taken more
+  than once, and the points gained may be combined"). The magnitude the
+  Initiative formula names is the book's own general rule: "Spells also have a
+  magnitude, which is equal to the level divided by five, rounded up"
+  (`ArMDE:9097`).
+- Data: `rules/core/virtues_flaws.json` — `virtue.focus_power` gains
+  `effects: [{ "type": "focus_points", "amount": 25 }]` and, with it, the
+  `creation_effect` classification every effect-bearing entry must carry. **The
+  25 lives only here**, never in Rust.
+- Implementation: `types.rs::Effect::FocusPoints` (the grant),
+  `effective/gift_confidence.rs::focus_points_budget` (base 0, summed — copies
+  combine), `effective/gift_confidence.rs::focus_points_used`
+  (`2 × max_level + penetration`), `validation/might.rs::validate_focus_powers`
+  (`over_focus_points`, Fluent `issue-over_focus_points`),
+  `derived/focus_power.rs::focus_power_lines` (magnitude, Initiative, Fatigue),
+  `export/magic.rs::focus_power_rows` (its own table).
+- Tests: `focus_power_grants_a_twenty_five_point_pool_that_copies_combine` and
+  `a_focus_power_spends_two_points_per_level_and_one_per_penetration`
+  (`effective.rs`), `focus_powers_are_checked_against_their_own_pool`
+  (`validation/mod.rs`), `focus_power_lines_derive_magnitude_initiative_and_fatigue`
+  (`derived.rs`), `focus_powers_print_their_own_table_with_initiative_and_fatigue`
+  (`export.rs`),
+  `shipped_focus_power_funds_a_twenty_five_point_pool_that_copies_combine`
+  (`tests/data_integrity.rs`).
+
+**Why a separate `Entity.focus_powers` list rather than a flag on
+`SupernaturalPower`.** The two hold different quantities. A `SupernaturalPower`'s
+`level` is the level of a power that was *made*, spent one-for-one out of the
+level budget; a Focus Power's is a **ceiling** — "the maximum level of effect",
+raised at 2 points a time, with "the character may create any effect within the
+scope of the power, up to the level of the effect" (`ArMDE:3899`). The field is
+therefore named `max_level`, and keeping the lists apart makes it *structurally*
+impossible for a focus power to reach `powers_used` — the stronger form of the
+same guarantee B10 got by leaving Focus Power out of `Effect::PowerLevels`.
+A character with no Focus Power is provably unaffected: `powers_used` and
+`power_levels_budget` are untouched, and `focus_points_used` of an empty list is
+0 against a budget of 0.
+
+**Initiative and the Fatigue bands are display-only** (`derived/focus_power.rs`,
+surfaced as `DerivedTotals.focus_powers` and in the export table). Initiative is
+`Quickness − magnitude`, against the same aging-adjusted Quickness every other
+play stat uses. The Fatigue cost is 1 / 2 / 3 levels for ≤25 / 26–50 / 51–75
+(`ArMDE:3901`); **above 75 the rulebook says nothing**, so the read-out reports
+"unstated" through `focus-power-fatigue-unstated` rather than continuing the
+pattern into a fourth band nothing sourced.
+
+**Recorded, not implemented: the cross-book guidance of `ArMDE:3905`.** "This
+Virtue may be associated with any supernatural realm… you may want to base the
+power on a different system of supernatural powers… remember that the levels of
+effects may work on different scales for different systems, and you may want to
+change the cost of a level of effect." That is explicit troupe/other-book
+guidance — a *variable* points-per-level rate keyed to a power system this app
+does not model — so the engine implements the core rate (2 points per level) and
+nothing else. The realm association itself is likewise unmodelled: a focus power
+carries no Realm field.
+
+**Schema.** `Entity.focus_powers` is additive
+(`#[serde(default, skip_serializing_if = "Vec::is_empty")]`), as is
+`FocusPower::penetration` (`is_zero_u16`), so `SCHEMA_VERSION` stays **17** and
+there is no migration: an older save reads an empty list and writes identical
+bytes. `Entity::normalize` sorts the list, like every other.
 
 #### Affinity with (Ability) — creation XP counts for half again
 > "All Advancement Totals for one Ability are increased by half, rounded up, as
@@ -2549,7 +2626,7 @@ approximation of "Latin").
   Vec<EnchantedDevice { name, level: u16 }>` records the player's chosen starting
   devices; the total `level` is charged against `item_level_budget()`.
   `effective/gift_confidence.rs::item_level_used` sums the device levels (surfaced as
-  `EffectiveScores.item_level_used`), and `validation/might.rs::validate_devices` (:93) emits
+  `EffectiveScores.item_level_used`), and `validation/might.rs::validate_devices` (:123) emits
   `over_item_level` (Fluent `issue-over_item_level`) when `used > budget`. A device
   therefore requires a granting Virtue, exactly as a starting Reputation does.
 

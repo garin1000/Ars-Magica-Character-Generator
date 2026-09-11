@@ -1831,6 +1831,39 @@ fn devil_child_resolves_infernal_might_and_power_budget_end_to_end() {
     assert_eq!(scores.power_levels_budget, 30); // Demonic Blood's 30 levels
 }
 
+/// The Focus Power pool crosses IPC as its own pair of numbers, because the
+/// panel draws its own bar for it: 25 points per copy of the Virtue
+/// (`ArMDE:3899`), spent 2 per level of effect and 1 per point of Penetration.
+/// A character without the Virtue reports 0/0 and is otherwise untouched.
+#[test]
+fn effective_scores_carry_the_focus_power_pool() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+
+    let plain = effective_scores_loaded(&entity, &ruleset);
+    assert_eq!(plain.focus_points_budget, 0);
+    assert_eq!(plain.focus_points_used, 0);
+
+    entity
+        .selections
+        .push(Selection::new(Id::new("virtue.focus_power")));
+    entity.focus_powers = vec![arm_rules::FocusPower {
+        name: "Wolves".into(),
+        max_level: 10,
+        penetration: 5,
+    }];
+
+    let scores = effective_scores_loaded(&entity, &ruleset);
+    assert_eq!(scores.focus_points_budget, 25);
+    assert_eq!(scores.focus_points_used, 25); // 2 × 10 + 5
+    // The level-denominated budget is untouched by any of it.
+    assert_eq!(scores.power_levels_used, 0);
+}
+
 /// A Devil Child, mid-build against the shipped rules.
 fn devil_child(bought_demonic_might: usize, demonic_blood: bool) -> Entity {
     let mut entity = Entity::new(

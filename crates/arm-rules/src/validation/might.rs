@@ -85,6 +85,36 @@ pub(crate) fn validate_powers(
     }
 }
 
+/// Validates a character's Focus Powers against the Focus Power point pool — a
+/// *second* power currency, checked separately from [`validate_powers`]'s levels
+/// so neither pool ever subsidises the other.
+///
+/// "This Virtue grants a pool of 25 points… It costs 2 points to raise the maximum
+/// level of effect by 1, and 1 point to raise the Penetration by 1"
+/// (`ArMDE:3899`); copies of the Virtue combine their points (`ArMDE:3903`). A
+/// focus power on a character with no Focus Power Virtue (pool 0) is flagged,
+/// mirroring [`validate_powers`] and [`validate_devices`].
+pub(crate) fn validate_focus_powers(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let used = crate::effective::focus_points_used(entity);
+    let budget = crate::effective::focus_points_budget(entity, ruleset);
+    if used > budget {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_OVER_FOCUS_POINTS,
+            CreationPhase::Review,
+            args([
+                ("used", used.to_string()),
+                ("budget", budget.to_string()),
+                ("over", (used - budget).to_string()),
+            ]),
+            None,
+        ));
+    }
+}
+
 /// Validates a character's starting enchanted devices: the total device level may
 /// not exceed the item-level budget the character's Virtues grant (Magic Items
 /// +25, Redcap 50). A device requires budget, so a device on a character with no

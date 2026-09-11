@@ -692,6 +692,21 @@ power-level-label = Level
 power-penetration-label = Penetration
 power-add = Add power
 powers-empty = No supernatural powers yet.
+# Focus Power (ArMDE:3895-3903): a SECOND power currency. Its 25 points buy a
+# maximum level of effect at 2 points each and Penetration at 1 each, so its
+# level column is a ceiling, not a level that was spent — hence its own list,
+# its own bar and its own word for the level.
+focus-powers-label = Focus Powers
+focus-points-used = Focus points: { $used } / { $budget }
+focus-power-name-placeholder = Focus power scope
+focus-power-max-level-label = Max. level of effect
+focus-power-initiative-label = Initiative
+focus-power-fatigue-label = Fatigue levels
+# Above level 75 the rulebook states no Fatigue cost (ArMDE:3901).
+focus-power-fatigue-unstated = n/a
+focus-power-derived = Magnitude { $magnitude }, Initiative { $initiative }, Fatigue { $fatigue }
+focus-power-add = Add focus power
+focus-powers-empty = No focus powers yet.
 realm-magic = Magic
 realm-faerie = Faerie
 realm-divine = Divine
@@ -1077,6 +1092,7 @@ issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) 
 issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Virtue or Flaw that grants one.
 issue-over_item_level = Enchanted devices total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-over_power_levels = Supernatural powers total { $used } levels, over the budget of { $budget } (by { $over }).
+issue-over_focus_points = Focus Powers spend { $used } points, over the pool of { $budget } (by { $over }).
 # The named power is free text the player typed on the Supernatural tab, so the
 # message quotes it back rather than trying to label it.
 issue-power_dangling_target = { $item } names the power { $power }, which this character does not have; add it under Supernatural Powers or correct the name.

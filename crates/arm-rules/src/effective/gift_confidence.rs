@@ -111,6 +111,37 @@ pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     total
 }
 
+/// The character's Focus Power point pool: base 0 plus every
+/// [`Effect::FocusPoints`] grant, summed. Source: ArMDE:3899, :3903.
+pub fn focus_points_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    let mut total = 0u32;
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::FocusPoints { amount } = effect {
+            total += u32::from(*amount);
+        }
+    });
+    total
+}
+
+/// The Focus Power points the character's `focus_powers` consume — the "used"
+/// side of the focus-points pool.
+///
+/// "It costs 2 points to raise the maximum level of effect by 1, and 1 point to
+/// raise the Penetration by 1. Thus, 25 points can allow a maximum level of 10
+/// with a Penetration of 5, or a maximum level of 5 with a Penetration of 15, or
+/// combinations in between" (`ArMDE:3899`) — hence `2 × max_level + penetration`,
+/// which both of the book's worked splits satisfy exactly.
+///
+/// Charged against [`focus_points_budget`] alone: a focus power never touches the
+/// level budget [`powers_used`] spends, and vice versa. Source: `ArMDE:3899`.
+pub fn focus_points_used(entity: &Entity) -> u32 {
+    entity
+        .focus_powers
+        .iter()
+        .map(|p| 2 * u32::from(p.max_level) + u32::from(p.penetration))
+        .sum()
+}
+
 /// The total power level the being's `powers` consume — the "used" side of the
 /// power-levels budget bar.
 ///

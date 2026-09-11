@@ -61,7 +61,9 @@ use std::fmt;
 
 use crate::art::ArtType;
 use crate::characteristics::Characteristic;
-use crate::derived::{CombatLine, combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
+use crate::derived::{
+    CombatLine, combat_totals, encumbrance, fatigue_levels, focus_power_lines, soak, wound_ranges,
+};
 use crate::effective::{
     RestrictedXpPool, XpPoolOrigin, ability_score_floors, checked_xp_allocation, confidence,
     decrepitude_score, effective_ability_score, effective_art_score,
@@ -193,6 +195,11 @@ pub const LABEL_KEYS: &[&str] = &[
     "familiar-might-label",
     "familiar-powers-label",
     "familiar-size-label",
+    "focus-power-fatigue-label",
+    "focus-power-fatigue-unstated",
+    "focus-power-initiative-label",
+    "focus-power-max-level-label",
+    "focus-powers-label",
     "house-label",
     "identity-birth-year",
     "identity-concept",
@@ -562,12 +569,13 @@ mod tests {
     use super::*;
     use crate::ability::AbilityCategory;
     use crate::aging::CrisisSeverity;
+    use crate::characteristics::Characteristic;
     use crate::ruleset::RulesetSources;
     use crate::types::{
-        AbilityScore, AgingLogEntry, ArtScore, EquipmentSlot, Familiar, I18nEntry, LongevityRitual,
-        LongevitySource, Magnitude, MightScore, PersonalityTrait, Realm, Reputation,
-        ReputationType, RulesetRef, Selection, SpellSelection, Talisman, TalismanAttunement,
-        TwilightScar,
+        AbilityScore, AgingLogEntry, ArtScore, EquipmentSlot, Familiar, FocusPower, I18nEntry,
+        LongevityRitual, LongevitySource, Magnitude, MightScore, PersonalityTrait, Realm,
+        Reputation, ReputationType, RulesetRef, Selection, SpellSelection, Talisman,
+        TalismanAttunement, TwilightScar,
     };
     use pretty_assertions::assert_eq;
 
@@ -2776,6 +2784,68 @@ mod tests {
         assert!(doc.contains("| Name | Level | Penetration |"), "{doc}");
         assert!(doc.contains("| Stormcall | 60 | 0 |"), "{doc}");
         assert!(doc.contains("| Wolf Shape | 20 | 20 |"), "{doc}");
+    }
+
+    /// A Focus Power gets its own table, because the number in its level column is
+    /// a different quantity from an ordinary power's: a *ceiling* on what may be
+    /// created ("the maximum level of effect", `ArMDE:3899`), bought at 2 points a
+    /// level out of a separate pool. The derived figures the book gives for it ride
+    /// along — Initiative (`ArMDE:3899`) and the Fatigue cost (`ArMDE:3901`) — and
+    /// every header is a localized label, never a slug.
+    #[test]
+    fn focus_powers_print_their_own_table_with_initiative_and_fatigue() {
+        let mut e = magus();
+        e.characteristics.insert(Characteristic::Qik, 2);
+        e.focus_powers = vec![FocusPower {
+            name: "Wolves of the wood".to_string(),
+            max_level: 10,
+            penetration: 5,
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-supernatural", "Supernatural"),
+                ("focus-powers-label", "Focus Powers"),
+                ("focus-power-max-level-label", "Max. level"),
+                ("power-penetration-label", "Penetration"),
+                ("focus-power-initiative-label", "Initiative"),
+                ("focus-power-fatigue-label", "Fatigue"),
+                ("identity-name", "Name"),
+            ]),
+        );
+        assert!(doc.contains("### Focus Powers\n"), "{doc}");
+        assert!(
+            doc.contains("| Name | Max. level | Penetration | Initiative | Fatigue |"),
+            "{doc}"
+        );
+        // Qik 2 − magnitude 2 = 0; level 10 costs one Fatigue level.
+        assert!(
+            doc.contains("| Wolves of the wood | 10 | 5 | 0 | 1 |"),
+            "{doc}"
+        );
+    }
+
+    /// Above level 75 the rulebook states no Fatigue cost (`ArMDE:3901`), so the
+    /// cell says so through a localized label rather than inventing a fourth band.
+    #[test]
+    fn a_focus_power_past_the_fatigue_table_prints_the_unstated_label() {
+        let mut e = magus();
+        e.focus_powers = vec![FocusPower {
+            name: "Beyond".to_string(),
+            max_level: 80,
+            penetration: 0,
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-supernatural", "Supernatural"),
+                ("focus-powers-label", "Focus Powers"),
+                ("focus-power-fatigue-unstated", "n/a"),
+            ]),
+        );
+        assert!(doc.contains("| Beyond | 80 | 0 | -16 | n/a |"), "{doc}");
     }
 
     #[test]

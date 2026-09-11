@@ -7049,6 +7049,31 @@ fn focus_power_funds_no_power_levels_because_its_pool_is_points() {
     );
 }
 
+/// The other half of the exclusion above: Focus Power funds the pool it really
+/// does grant. "This Virtue grants a pool of 25 points" (`ArMDE:3899`), and "This
+/// Virtue may be taken more than once, and the points gained may be combined"
+/// (`ArMDE:3903`) — so two copies give 50, in a currency of their own.
+#[test]
+fn shipped_focus_power_funds_a_twenty_five_point_pool_that_copies_combine() {
+    use arm_rules::focus_points_budget;
+    let rs = load_ruleset();
+
+    let one = entity(
+        "mythic_companion",
+        vec![Selection::new(Id::new("virtue.focus_power"))],
+    );
+    assert_eq!(focus_points_budget(&one, &rs), 25);
+
+    let twice = entity(
+        "mythic_companion",
+        vec![
+            Selection::new(Id::new("virtue.focus_power")),
+            Selection::new(Id::new("virtue.focus_power")),
+        ],
+    );
+    assert_eq!(focus_points_budget(&twice, &rs), 50);
+}
+
 #[test]
 fn shipped_per_power_items_carry_a_power_target() {
     let rs = load_ruleset();
