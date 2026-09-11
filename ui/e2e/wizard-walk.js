@@ -169,30 +169,32 @@ const FILLERS = {
   },
 
   // Where the character's experience comes from (Slice 2 split this off the
-  // `abilities` step). The walk keeps the DEFAULT flat funding: the pool total is
+  // `abilities` step). The walk exercises the FLAT-POOL path: the pool total is
   // typed on the `abilities` step's XP bar below, and a life-stage plan would retire
-  // that input and re-price every later step, so the mode is what this step decides
-  // and the funding fieldset with `pool` standing selected is what proves it
-  // rendered and holds a choice.
+  // that input and re-price every later step, so the mode is what this step decides.
   //
-  // Read-only for the same reason the deleted `type` filler was: the step's default
-  // IS the walk's answer. Unlike that one, though, this phase reports itself ENGAGED
-  // only once something is stored for it — `completeness.rs`:
-  // `life_stages.is_some() || xp_pool > 0` — and under flat funding the one control
-  // that can store either, the XP bar's pool input, is mounted on the NEXT step. So
-  // the walk cannot clear this step's untouched mark while standing on it, and
-  // `expectPhaseComplete` below says so out loud rather than the walk skipping it:
-  // a step that asks for a number it does not offer a field for is the defect, not
-  // the assertion.
-  // Where the character's experience comes from. The walk keeps the default flat
-  // funding, so the answer is the pool total — typed here, on the step that asks the
-  // question, not on the step that spends it. That split is the point of the phase:
-  // `abilities` now only buys against a total this step already set.
+  // The wizard now defaults new characters to life-stage funding instead (owner
+  // request, M6/D2), so this filler switches to the pool explicitly rather than
+  // finding it already selected.
+  //
+  // This phase reports itself ENGAGED only once something is stored for it —
+  // `completeness.rs`'s `Experience` arm, content on the plan or a nonzero
+  // `xp_pool` — and under flat funding the one control that can store either, the
+  // XP bar's pool input, is mounted on the NEXT step. So the walk cannot clear
+  // this step's untouched mark while standing on it, and `expectPhaseComplete`
+  // below says so out loud rather than the walk skipping it: a step that asks for
+  // a number it does not offer a field for is the defect, not the assertion.
   experience: async (plan) => {
     await $('[data-testid="life-stage-panel"]').waitForExist({ timeout: STEP_TIMEOUT });
     const funding = await $('[data-testid="ability-funding-pool"]');
     await funding.waitForExist({ timeout: STEP_TIMEOUT });
-    expect(await funding.isSelected()).toBe(true);
+    if (!(await funding.isSelected())) {
+      await funding.click();
+      await browser.waitUntil(async () => funding.isSelected(), {
+        timeout: STEP_TIMEOUT,
+        timeoutMsg: 'switching to flat-pool funding did not select the radio',
+      });
+    }
     const pool = await $('[data-testid="xp-pool"]');
     await pool.waitForExist({ timeout: STEP_TIMEOUT });
     await pool.setValue(plan.xpPool);

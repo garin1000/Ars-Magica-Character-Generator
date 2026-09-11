@@ -142,20 +142,27 @@ async function describedByIds(selector) {
 }
 
 describe('life-stage funding and Sample Childhoods', () => {
-  it('offers a typed experience pool by default, with no life-stage plan', async () => {
+  it('defaults to life-stage funding, with the typed pool one click away (M6/D2)', async () => {
     await startWizard('companion');
     await advanceWizardTo('experience');
     await $(PANEL).waitForExist({ timeout: BOOT_TIMEOUT });
 
-    // Flat funding is the default and must stay byte-identical: the chooser stands on
-    // the typed pool, so the plan's own fields are not on the step at all.
-    expect(await $(FUNDING_POOL).isSelected()).toBe(true);
-    expect(await $(AGE_READOUT).isExisting()).toBe(false);
-    // Every character type may be built either way, so the guided option is live.
-    expect(await $(FUNDING_LIFE_STAGES).isEnabled()).toBe(true);
+    // The guided wizard now defaults to life-stage funding (owner request): a
+    // guided character is built through its life history from the start, so the
+    // chooser stands on it already and the plan's own fields — the age read-out
+    // among them — are on the step without a click.
+    expect(await $(FUNDING_LIFE_STAGES).isSelected()).toBe(true);
+    expect(await $(AGE_READOUT).isExisting()).toBe(true);
+    // The typed pool stays fully available, one click away.
+    expect(await $(FUNDING_POOL).isEnabled()).toBe(true);
 
-    // And the pool that default is named for is on the next step, editable, with no
-    // life-stage row and no restricted block anywhere near it.
+    await $(FUNDING_POOL).click();
+    expect(await $(AGE_READOUT).isExisting()).toBe(false);
+
+    // And the pool that switch named is on the next step, editable, with no
+    // life-stage row and no restricted block anywhere near it. (Leaving this test
+    // on `pool` funding is deliberate: the next test resumes this same wizard run
+    // and switches back to `life_stages` itself, exactly as it always did.)
     await advanceWizardTo('abilities');
     expect(await $(XP_POOL_INPUT).getTagName()).toBe('input');
     expect(await $(XP_POOL_TOTAL).isExisting()).toBe(false);

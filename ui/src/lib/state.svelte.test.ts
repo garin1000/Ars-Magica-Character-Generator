@@ -455,6 +455,28 @@ describe('the guided wizard', () => {
         'review',
       ]);
     });
+
+    /**
+     * Owner request: guided creation should hand the player a character funded by
+     * its life history, not a pool sitting at 0 — the wizard is where a rules-faithful
+     * construction belongs, so it defaults to `life_stages` (unlike direct entry,
+     * which stays on the typed pool: {@link createCharacter} is the "I already know
+     * the numbers" mode).
+     *
+     * An EMPTY plan is allocated together with the mode — exactly like a manual
+     * {@link store.setAbilityFunding} switch — because every engine read of the
+     * plan (`LifeStageRules::budget`, `validate_life_stage_plan`) is gated on its
+     * mere presence: without one, an age typed on `concept` before the player
+     * even opens `experience` would raise no life-stage finding at all. The empty
+     * plan does not itself finish the Experience step, though — see
+     * `completeness.rs`'s `phase_is_engaged`, which now reads the plan's content
+     * rather than its presence.
+     */
+    it('defaults new characters to life-stage funding, with an empty plan', async () => {
+      await store.startWizard('magus');
+      expect(store.entity.ability_funding).toBe('life_stages');
+      expect(store.entity.life_stages).toEqual({});
+    });
   });
 
   describe('navigation', () => {
@@ -2676,8 +2698,12 @@ describe('ability funding mode', () => {
     expect('ability_funding' in store.entity).toBe(true);
     expect(store.entity.ability_funding).toBe('pool');
 
+    // The guided wizard defaults to the OTHER mode (owner request, M6/D2): a
+    // guided character is built through its life history from the start, while
+    // direct entry stays on the flat pool it always used.
     await store.startWizard('companion');
-    expect(store.entity.ability_funding).toBe('pool');
+    expect('ability_funding' in store.entity).toBe(true);
+    expect(store.entity.ability_funding).toBe('life_stages');
   });
 
   it('still carries life_stages after a save/load round trip through the store', async () => {
@@ -2745,7 +2771,9 @@ describe('setNativeLanguage', () => {
   it('is a no-op when no plan exists, so no surface can conjure one', async () => {
     // The guard is the plan's PRESENCE, not the funding mode: since schema 16 a
     // switch to pool funding preserves the plan, so this case has to be built by
-    // removing the plan rather than by switching mode.
+    // removing the plan rather than by switching mode. (M6/D2: the wizard's own
+    // default now allocates a plan too, alongside `setAbilityFunding` — see
+    // `#instantiateCharacter` — so this remains the only way to reach "no plan".)
     await store.setAbilityFunding('pool');
     delete store.entity.life_stages;
     vi.mocked(ipc.validateEntity).mockClear();

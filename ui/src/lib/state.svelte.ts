@@ -1113,11 +1113,13 @@ class AppStore {
    *
    * A blank value deletes the key rather than storing an empty string: the engine
    * reads blank as unset, and a sparse save is the canonical one. A no-op when no
-   * plan exists, so no surface can conjure one into being; {@link setAbilityFunding}
-   * is the only thing that creates a plan. Note the guard is the plan's *presence*,
-   * not the funding mode — since schema 16 a pool-funded character may legitimately
-   * carry one, and writing into an inert plan is how its contents survive a mode
-   * switch rather than a bug.
+   * plan exists, so no surface can conjure one into being: {@link setAbilityFunding}
+   * (a manual switch) and {@link startWizard}'s default (M6/D2, via
+   * `#instantiateCharacter`) are the only two places that allocate a plan — always
+   * together with the mode, never on its own — so this setter never has to. Note
+   * the guard is the plan's *presence*, not the funding mode — since schema 16 a
+   * pool-funded character may legitimately carry one, and writing into an inert
+   * plan is how its contents survive a mode switch rather than a bug.
    */
   setNativeLanguage(value: string): void {
     const plan = this.entity.life_stages;
@@ -1173,6 +1175,8 @@ class AppStore {
    * blank, zero or not a number. The three post-Gauntlet fields share this shape:
    * absent is the meaningful default for every one of them, so a sparse save is the
    * canonical one.
+   *
+   * A no-op when no plan exists, exactly like {@link setNativeLanguage}.
    */
   #setPlanCount(
     field: 'gauntlet_age' | 'post_gauntlet_lab_seasons' | 'post_gauntlet_spell_levels',
@@ -2501,10 +2505,32 @@ class AppStore {
    * seeds the profile's mandatory free traits, clears the current file, the
    * picker filters and the last results, and re-seeds the saved baseline so a
    * freshly created character is not dirty.
+   *
+   * `abilityFunding` defaults to `'pool'` — {@link newEntity}'s own default,
+   * which {@link createCharacter} takes as-is. {@link startWizard} passes
+   * `'life_stages'` instead (owner request, M6/D2): direct entry is the "I
+   * already know the numbers" mode, where a hand-typed total is the point, while
+   * the guided wizard is where the rules-faithful, life-history construction
+   * belongs.
+   *
+   * Life-stage funding always carries an allocated (possibly empty) plan, so this
+   * allocates one here too, exactly as {@link setAbilityFunding} does for a manual
+   * switch — every engine read of the plan (`LifeStageRules::budget`,
+   * `validate_life_stage_plan`) is gated on the plan's mere *presence*, so an age
+   * typed on `concept` before the player ever opens `experience` would otherwise
+   * raise no `life_stage_age_before_gauntlet`/`life_stage_age_unset` finding at
+   * all. An *empty* plan is not itself a choice, though: `completeness.rs`'s
+   * `Experience` criterion reads the plan's *content*, not its mere presence, so
+   * this does not mark the step engaged before the player has done anything (see
+   * `phase_is_engaged`).
    */
-  #instantiateCharacter(typeId: string): void {
+  #instantiateCharacter(typeId: string, abilityFunding: AbilityFunding = 'pool'): void {
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
     this.entity = newEntity(id, version, typeId, this.defaultSagaYear);
+    this.entity.ability_funding = abilityFunding;
+    if (abilityFunding === 'life_stages') {
+      this.entity.life_stages = {};
+    }
     this.entity.selections = [...this.#mandatoryTraitRefs(typeId)].map((ref) => ({ ref }));
     this.currentPath = null;
     this.filters = defaultPickerFilters();
@@ -2527,9 +2553,12 @@ class AppStore {
    * end — followed by the wizard view and a rail reset. Validates immediately
    * rather than through the debounce, so the first step is gated before the user
    * can act on it.
+   *
+   * Defaults to life-stage funding, unlike {@link createCharacter} — see
+   * {@link #instantiateCharacter}.
    */
   async startWizard(typeId: string): Promise<void> {
-    this.#instantiateCharacter(typeId);
+    this.#instantiateCharacter(typeId, 'life_stages');
     this.view = 'wizard';
     this.#resetWizardNav();
     await this.revalidate();

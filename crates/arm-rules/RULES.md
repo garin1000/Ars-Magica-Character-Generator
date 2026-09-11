@@ -5496,6 +5496,78 @@ standing at its Gauntlet (`life_stage_age_before_gauntlet`, `ArMDE:2435`) — an
 native language, and a chosen one with no bought score (a warning — the points are
 merely unspent). Only the two age bars are sourced.
 
+#### The guided wizard defaults to life-stage funding, direct entry stays on the pool (M6/D2)
+
+Not a rule change — `LifeStageRules::budget` and every validator above are untouched
+— but the product decision that finally *wires up* the age-derived budget this whole
+section computes, which sat behind `AbilityFunding::Pool` (every character's default)
+until a new wizard character explicitly switched to it. The owner's report: guided
+creation should hand the player a character funded by its life history, not a pool
+sitting at 0.
+
+**Scoped to the wizard, not `Entity::new`.** `ui/src/lib/state.svelte.ts`'s
+`#instantiateCharacter(typeId, abilityFunding)` takes the mode as a parameter,
+defaulting to `'pool'` — {@link createCharacter} (direct entry) takes that default
+as-is, `startWizard` passes `'life_stages'`. The engine's own `Entity::new` and its
+`#[default]` on `AbilityFunding` are unchanged: direct entry is the "I already know
+the numbers" mode, where a hand-typed total is the point, and nothing about a
+directly-entered character's defaults moves.
+
+**Allocates an EMPTY plan together with the mode, exactly like a manual switch.**
+`#instantiateCharacter` sets `life_stages = {}` whenever it defaults to
+`'life_stages'` — the same pairing `setAbilityFunding` already does for a manual
+switch (`ui/src/lib/state.svelte.ts`). This is not cosmetic: every engine read of
+the plan (`LifeStageRules::budget`, `validate_life_stage_plan`) is gated on the
+plan's mere *presence*, by design predating this slice — so a magus's age, typed on
+`concept` (see below) before the player ever opens `experience`, would raise no
+`life_stage_age_before_gauntlet`/`life_stage_age_unset` finding at all without a
+plan already sitting there to read. An earlier version of this slice tried leaving
+the plan uncreated and having the individual setters (`setNativeLanguage`,
+`#setPlanCount`) conjure it lazily on first write instead; the flat-out gap that
+design left — a magus whose player types an age but never happens to touch a
+plan-specific field first sails past every Gauntlet-age check with zero feedback —
+surfaced immediately in the `e2e/specs/magus-apprenticeship.e2e.js` run, which is
+exactly the failure this paragraph is now the record of.
+
+**A merely-allocated plan is still not a choice, though.** `completeness.rs`'s
+`Experience` criterion changed from `life_stages.is_some()` to
+`life_stages.as_ref().is_some_and(|plan| *plan != LifeStagePlan::default())` — it
+now reads the plan's *content*, not its bare presence — precisely mirroring how the
+`VirtuesFlaws` arm above it already filters a profile's own forced selections
+(`is_mandatory_trait`) out of "engaged": a default the player did not choose is not
+engagement, whichever field carries it. Without this refinement, EVERY fresh wizard
+character would read the Experience step as finished the instant it is created,
+before the player has named it, aged it or touched anything at all — reopening
+exactly the "0 is always a deliberate entry" trap the flat-pool side of this same
+disjunction was built to avoid. `completeness.rs`'s
+`a_life_stage_funded_character_with_an_empty_plan_is_still_incomplete` pins the
+three-way shape: no plan is incomplete, an allocated-but-empty plan is *still*
+incomplete, and a plan carrying one real field (a Gauntlet age, say) finishes the
+step. The pre-existing `a_stored_life_stage_plan_finishes_the_experience_step` was
+updated in the same change to store a plan with a native language rather than a bare
+`LifeStagePlan::default()`, since a default plan no longer finishes anything.
+
+**The step-order question this raises, and why it was already answered.** A
+life-stage budget derived from a null age is empty, so this default is only sound if
+the age is captured before the `experience` phase in every character type's
+`creation_phases` (`rules/core/character_types.json`). It already is: Slice 12
+(#24, guided-creation-review-2026-08) moved the age field onto the FIRST phase every
+profile declares — `concept` — via `AgeFields` mounted in `ConceptStep.svelte`,
+specifically because the age used to live on the `aging` step, three phases past
+where life-stage funding needed it. This slice rides that fix rather than repeating
+it, and the eager plan allocation above is what makes riding it sufficient: the age
+typed on `concept` has a plan waiting for it by the time `budget()`/
+`validate_life_stage_plan` next run, on the very same character, whichever step is
+current.
+
+**What did NOT change: `LifeStageBudget::total()` stays unwired.** The owner also
+asked, and rejected, prefilling `Entity::xp_pool` from the age — see this section's
+own doc comment on `total()` above: the blocks fund different, non-fungible things
+(childhood's 75 buys only the native language, its 45 only the closed spread list, a
+magus's later life is Abilities-only), so summing them into one scalar pool would
+misrepresent what the character may spend it on. Defaulting the *mode*, not summing
+the *budget*, is what this slice does instead.
+
 #### `Entity::wizard_furthest_phase` — UI/document state, no rule
 
 The furthest guided-wizard phase the player reached, added alongside

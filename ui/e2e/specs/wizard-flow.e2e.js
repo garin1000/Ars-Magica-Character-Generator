@@ -34,6 +34,7 @@ import {
   startCharacter,
   startWizard,
   STEP_TIMEOUT,
+  useFlatPoolFunding,
   wizardRailPhases,
 } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
@@ -236,6 +237,11 @@ describe('guided creation wizard', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: `a rail jump forward from '${twoBack}' did not land on Virtues & Flaws`,
     });
+
+    // Life-stage funding is not what this test is about (M6/D2 made it the wizard's
+    // new default), so it opts back into the typed pool `satisfyMagusMinimums`
+    // below expects to fill.
+    await useFlatPoolFunding();
 
     // The Abilities step owes the Order its minimums — Parma Magica 1, Magic Theory 1
     // and Latin 1 (Core Rules.md:2437) — which are blocking errors for every magus, so
@@ -488,6 +494,8 @@ describe('guided guidance and unspent-budget findings (slice 11)', () => {
 
   it('collapses the Hermetic minimums to one line that expands on demand (#12)', async () => {
     await standOnWizardStep('virtues_flaws');
+    // Not a life-stage-funding test (M6/D2 made it the wizard's new default).
+    await useFlatPoolFunding();
     await advanceWizardTo('abilities');
     await $(MINIMUMS).waitForExist({ timeout: STEP_TIMEOUT });
 

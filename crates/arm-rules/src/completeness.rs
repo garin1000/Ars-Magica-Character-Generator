@@ -21,6 +21,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::life_stage::LifeStagePlan;
 use crate::ruleset::Ruleset;
 use crate::types::{CreationPhase, Entity, EntityTypeProfile, GiftPolicy, Id};
 
@@ -97,11 +98,33 @@ fn phase_is_engaged(phase: CreationPhase, entity: &Entity, profile: &EntityTypeP
         // The question here is "has the player recorded anything", not "which mode is
         // active": `ability_funding` has a default every untouched character carries,
         // so it can never distinguish a visited step from a fresh one. The two stored
-        // *substances* can — a plan (the age its years are priced from, the native
-        // language, the childhood package) or a nonzero typed pool, which defaults to
-        // 0 and so is always a deliberate entry. A plan kept beside pool funding
-        // still counts: the player typed it, whichever side currently funds them.
-        CreationPhase::Experience => entity.life_stages.is_some() || entity.xp_pool > 0,
+        // *substances* can — a plan with actual content (the age its years are priced
+        // from, the native language, the childhood package) or a nonzero typed pool,
+        // which defaults to 0 and so is always a deliberate entry.
+        //
+        // **A plan's mere PRESENCE is not enough (M6/D2).** The guided wizard now
+        // defaults every new character to life-stage funding and allocates an EMPTY
+        // plan together with it (`ui/src/lib/state.svelte.ts`'s
+        // `#instantiateCharacter`) — the engine's own reads of the plan
+        // (`LifeStageRules::budget`, `validate_life_stage_plan`) are gated on
+        // presence too, so an age typed on `concept` before the player ever opens
+        // this step needs a plan to already exist for its finding to fire. Reading
+        // `is_some()` here would therefore report every fresh wizard character's
+        // Experience step as finished before it is opened — exactly the "0 is always
+        // deliberate" trap the pool side already avoids, just on the other side of
+        // the disjunction. So this checks the plan holds something beyond
+        // `LifeStagePlan::default()`, precisely mirroring how `VirtuesFlaws` above
+        // already filters out `is_mandatory_trait` selections a profile seeds
+        // unasked: a default the player did not choose does not count as engagement.
+        // A plan kept beside pool funding still counts once it holds content — the
+        // player typed it, whichever side currently funds them.
+        CreationPhase::Experience => {
+            entity
+                .life_stages
+                .as_ref()
+                .is_some_and(|plan| *plan != LifeStagePlan::default())
+                || entity.xp_pool > 0
+        }
         CreationPhase::Abilities => !entity.ability_scores.is_empty(),
         CreationPhase::Arts => !entity.art_scores.is_empty(),
         CreationPhase::Spells => !entity.spells.is_empty(),
@@ -151,10 +174,9 @@ fn is_mandatory_trait(item_ref: &Id, profile: &EntityTypeProfile) -> bool {
 mod tests {
     use super::*;
     use crate::characteristics::Characteristic;
-    use crate::life_stage::LifeStagePlan;
     use crate::types::{
-        AbilityScore, ArtScore, EntityKind, PersonalityTrait, Reputation, ReputationType,
-        RulesetRef, Selection, SpellSelection,
+        AbilityFunding, AbilityScore, ArtScore, EntityKind, PersonalityTrait, Reputation,
+        ReputationType, RulesetRef, Selection, SpellSelection,
     };
     use crate::validation::validate;
     use crate::{Ruleset, RulesetSources};
@@ -238,7 +260,10 @@ mod tests {
     fn a_stored_life_stage_plan_finishes_the_experience_step() {
         let mut entity = character("grog");
         assert!(incomplete(&entity).contains(&CreationPhase::Experience));
-        entity.life_stages = Some(LifeStagePlan::default());
+        entity.life_stages = Some(LifeStagePlan {
+            native_language: Some("German".to_string()),
+            ..LifeStagePlan::default()
+        });
         assert!(!incomplete(&entity).contains(&CreationPhase::Experience));
     }
 
@@ -253,6 +278,38 @@ mod tests {
         let mut entity = character("grog");
         assert!(incomplete(&entity).contains(&CreationPhase::Experience));
         entity.xp_pool = 45;
+        assert!(!incomplete(&entity).contains(&CreationPhase::Experience));
+    }
+
+    /// The guided wizard now defaults a freshly instantiated character to
+    /// [`AbilityFunding::LifeStages`] AND allocates an EMPTY plan together with it
+    /// (M6/D2) — see `ui/src/lib/state.svelte.ts`'s `#instantiateCharacter`, which
+    /// mirrors what a manual [`AbilityFunding`] switch already did. The plan has to
+    /// exist so the engine's own life-stage reads (`LifeStageRules::budget`,
+    /// `validate_life_stage_plan`) work from the moment the mode is set, but an
+    /// *empty* plan is not itself a choice — so this pins the resulting shape: the
+    /// funding mode, and even a bare allocated plan, are not a choice; only
+    /// *content* on the plan is.
+    #[test]
+    fn a_life_stage_funded_character_with_an_empty_plan_is_still_incomplete() {
+        let mut entity = character("grog");
+        entity.ability_funding = AbilityFunding::LifeStages;
+        assert!(
+            incomplete(&entity).contains(&CreationPhase::Experience),
+            "the funding mode alone is not a choice; a plan has to exist"
+        );
+
+        entity.life_stages = Some(LifeStagePlan::default());
+        assert!(
+            incomplete(&entity).contains(&CreationPhase::Experience),
+            "an EMPTY allocated plan is not a choice either — every fresh wizard \
+             character would otherwise read as finished before it is opened"
+        );
+
+        entity.life_stages = Some(LifeStagePlan {
+            gauntlet_age: Some(25),
+            ..LifeStagePlan::default()
+        });
         assert!(!incomplete(&entity).contains(&CreationPhase::Experience));
     }
 

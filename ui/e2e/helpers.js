@@ -351,6 +351,35 @@ export async function advanceWizardTo(phase) {
 }
 
 /**
+ * Switch a fresh wizard character from its new life-stage default (M6/D2) back to
+ * the flat, typed pool, and leave the wizard standing on `experience`.
+ *
+ * The guided wizard now defaults every new character to life-stage funding with an
+ * allocated (empty) plan, so `Next` on `experience` blocks on
+ * `life_stage_age_unset` / `life_stage_native_language_unset` until an age and a
+ * native language are supplied. A spec that is not about life-stage funding at all
+ * — general wizard flow, aging — has no reason to supply either, so it calls this
+ * once, right after {@link startWizard}, to opt back into the simple pool exactly
+ * as a player who does not want the guided plan would click the other radio.
+ *
+ * Advances to `experience` itself (a fresh character always starts before it), so
+ * the caller does not need its own {@link advanceWizardTo} call first. A no-op
+ * once the pool is already selected, and when the ruleset ships no life-stage
+ * rules at all — the panel, and the choice, do not exist.
+ */
+export async function useFlatPoolFunding() {
+  await advanceWizardTo('experience');
+  const funding = await $('[data-testid="ability-funding-pool"]');
+  if (!(await funding.isExisting())) return;
+  if (await funding.isSelected()) return;
+  await funding.click();
+  await browser.waitUntil(async () => funding.isSelected(), {
+    timeout: STEP_TIMEOUT,
+    timeoutMsg: 'switching to flat-pool funding did not select the radio',
+  });
+}
+
+/**
  * Stand on the wizard's `phase`, whichever side of the current step it is on.
  *
  * A rail click rather than Next, because it is the only navigation that goes both

@@ -36,6 +36,7 @@ import {
   startWizard,
   STEP_TIMEOUT,
   textOf,
+  useFlatPoolFunding,
 } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
@@ -263,6 +264,10 @@ describe('the guided aging step', () => {
 
   it('reaches an aging step that owes a young character nothing', async () => {
     await startWizard('grog');
+    // Aging, not life-stage funding, is what this file is about — see
+    // `useFlatPoolFunding`'s doc comment for why the guided default otherwise
+    // blocks `Next` on `experience` before this test ever reaches `aging`.
+    await useFlatPoolFunding();
     await advanceWizardTo('aging');
     expect(await currentWizardPhase()).toBe('aging');
     await $(SCHEDULE).waitForExist({ timeout: BOOT_TIMEOUT });
@@ -844,6 +849,7 @@ describe('the aging crisis', () => {
 
   it('sends a grog of 40 to the Crisis Table and asks for the second die', async () => {
     await startWizard('grog');
+    await useFlatPoolFunding();
     await advanceWizardTo('aging');
     expect(await currentWizardPhase()).toBe('aging');
     await $(SCHEDULE).waitForExist({ timeout: BOOT_TIMEOUT });
