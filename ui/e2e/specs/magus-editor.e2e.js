@@ -6,7 +6,7 @@
 // A2 merged seven previously separate spec files into this one. Each describe
 // keeps its own local selectors and helpers scoped to its block, exactly as
 // when it was a standalone file, since several of them reused the same
-// constant names (`VF_TAB`, `ARTS_TAB`, `LANG_SELECT`, `VIRTUE_BUDGET`,
+// constant names (`VF_TAB`, `ARTS_TAB`, `VIRTUE_BUDGET`,
 // `FLAW_BUDGET`) with the same values but no reason to share a single
 // module-level binding.
 //
@@ -17,7 +17,7 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
-import { clean, isRowBlocked, startCharacter, STEP_TIMEOUT } from '../helpers.js';
+import { clean, isRowBlocked, setLanguage, startCharacter, STEP_TIMEOUT } from '../helpers.js';
 
 // End-to-end: Hermetic Arts (magus-only). The Arts tab appears only for a magus,
 // an Art is bought against the shared XP pool, and Puissant Art adds +3 to the
@@ -25,7 +25,6 @@ import { clean, isRowBlocked, startCharacter, STEP_TIMEOUT } from '../helpers.js
 describe('hermetic arts', () => {
   const ARTS_TAB = '[data-testid="tab-arts"]';
   const VF_TAB = '[data-testid="tab-virtues_flaws"]';
-  const LANG_SELECT = '[data-testid="language-select"]';
 
   it('shows the Arts tab only for a magus', async () => {
     // A companion has no Arts tab...
@@ -147,15 +146,17 @@ describe('hermetic arts', () => {
     await available.waitForExist({ timeout: 5000 });
     expect(clean(await available.getText())).toContain('Available');
 
-    // German: switching the language re-localizes the same XP row.
-    await $(LANG_SELECT).selectByAttribute('value', 'de');
+    // German: switching the language re-localizes the same XP row. The control
+    // lives in the settings dialog since C4, so the switch goes through the helper
+    // that opens it, chooses and closes it again.
+    await setLanguage('de');
     await browser.waitUntil(async () => clean(await available.getText()).includes('Verfügbar'), {
       timeout: 5000,
       timeoutMsg: 'the XP row Available label should localize to German',
     });
 
     // Restore English so later specs run against the default locale.
-    await $(LANG_SELECT).selectByAttribute('value', 'en');
+    await setLanguage('en');
   });
 });
 
@@ -670,8 +671,6 @@ describe('selected frame', () => {
 // with-shield and a bare line — a second, now-ordinary source of duplicate
 // `line.weapon` values, and the reason that `{#each}` must stay unkeyed forever.
 describe('totals tab', () => {
-  const LANG_SELECT = '[data-testid="language-select"]';
-
   const EQUIPMENT_TAB = '[data-testid="tab-equipment"]';
   const TOTALS_TAB = '[data-testid="tab-totals"]';
 
@@ -693,13 +692,10 @@ describe('totals tab', () => {
     // Freshly created, so the row counts below are only what this spec carries.
     await startCharacter('magus');
 
-    // The language is app-wide state and does survive a new character, so pin it:
-    // the English weapon names below are asserted exactly.
-    await $(LANG_SELECT).selectByAttribute('value', 'en');
-    await browser.waitUntil(async () => (await $(LANG_SELECT).getValue()) === 'en', {
-      timeout: 5000,
-      timeoutMsg: 'language should switch to en',
-    });
+    // The language is app-wide state, survives a new character and since C4 also
+    // survives a restart, so pin it: the English weapon names below are asserted
+    // exactly.
+    await setLanguage('en');
 
     // Carry the same Long Sword twice. Nothing dedups this, and it is what a real
     // character does: several instances of one catalogue weapon.

@@ -344,22 +344,32 @@ fn settings_candidates(app: &AppHandle) -> Vec<std::path::PathBuf> {
     settings::settings_candidates(config_dir.as_deref(), exe_dir.as_deref())
 }
 
-/// The saga year the app is set to — the year the age ↔ birth-year link is measured
-/// against (guided-creation-review-2026-08 #25).
+/// Everything the app persists between runs: the saga year
+/// (guided-creation-review-2026-08 #25), and since C4 the UI language, the palette
+/// and the validation mode.
+///
+/// **One command for all four, and the frontend reads it before it loads the
+/// ruleset.** Rules display text is per-language, so the language has to be known
+/// *before* the load, not beside it; a single settings read is what makes serializing
+/// the two affordable, since it is one small local file rather than a round trip per
+/// setting.
 ///
 /// Infallible on purpose: it is read at launch, and a first launch has no settings
-/// file. Everything that could go wrong reads as [`arm_rules::DEFAULT_SAGA_YEAR`].
+/// file. Everything that could go wrong reads as "not chosen" — with the saga year
+/// resolving to [`arm_rules::DEFAULT_SAGA_YEAR`], the one setting whose default is a
+/// rules value.
 #[tauri::command]
-pub fn saga_year(app: AppHandle) -> i32 {
+pub fn read_settings(app: AppHandle) -> settings::Settings {
     let candidates = settings_candidates(&app);
-    settings::read_saga_year(settings::pick_settings_file(&candidates).as_deref())
+    settings::read_settings(settings::pick_settings_file(&candidates).as_deref())
 }
 
-/// Persists the saga year. Saga state, so it survives a relaunch — but it is not
-/// document state, so it neither touches the entity nor dirties it.
+/// Persists the settings the patch names, leaving every other key alone. App state,
+/// so it survives a relaunch — but it is not document state, so it neither touches
+/// the entity nor dirties it.
 #[tauri::command]
-pub fn set_saga_year(year: i32, app: AppHandle) -> Result<(), AppError> {
-    settings::store_saga_year(&settings_candidates(&app), year).map(|_| ())
+pub fn write_settings(patch: settings::SettingsPatch, app: AppHandle) -> Result<(), AppError> {
+    settings::store_settings(&settings_candidates(&app), &patch).map(|_| ())
 }
 
 /// How old a character born in `birthYear` is in `sagaYear`, plus any advisory the

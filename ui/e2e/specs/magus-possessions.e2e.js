@@ -16,7 +16,7 @@ import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { clean, isRowBlocked, runDocumentAction, startCharacter } from '../helpers.js';
+import { clean, isRowBlocked, runDocumentAction, setLanguage, startCharacter } from '../helpers.js';
 import { e2eExportFile, e2eFile } from '../wdio.conf.js';
 
 // End-to-end: Spells (magus-only). The Spells tab appears only for a magus;
@@ -1098,7 +1098,6 @@ describe('longevity ritual', () => {
 // ARM_E2E_EXPORT_FILE seam (see crates/arm-app/src/commands.rs), a fixed `.md`
 // path separate from the JSON save file the other specs round-trip.
 describe('markdown export', () => {
-  const LANG_SELECT = '[data-testid="language-select"]';
   const STATUS = '[data-testid="doc-status"]';
   const NAME = 'Marcus of Bonisagus';
 
@@ -1112,13 +1111,10 @@ describe('markdown export', () => {
   const EN_LAST_SECTION = '## Magic Items';
   const DE_LAST_SECTION = '## Magische Gegenstände';
 
-  async function setLang(value) {
-    await $(LANG_SELECT).selectByAttribute('value', value);
-    await browser.waitUntil(async () => (await $(LANG_SELECT).getValue()) === value, {
-      timeout: 5000,
-      timeoutMsg: `language should switch to ${value}`,
-    });
-  }
+  // The language control moved into the settings dialog in C4, so the spec-local
+  // wrapper is now the shared helper — which opens the dialog, chooses, waits for
+  // the value to land, and closes it again.
+  const setLang = setLanguage;
 
   async function clickTab(id) {
     const tab = await $(`[data-testid="tab-${id}"]`);

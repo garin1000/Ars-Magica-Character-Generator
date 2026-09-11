@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import LanguageSelector from './LanguageSelector.svelte';
 
   // The character types on offer are ruleset data, never a hardcoded set: they are
   // exactly the profiles the loaded ruleset declares. `type_profiles` is a BTreeMap
@@ -29,6 +30,19 @@
 </script>
 
 <main class="start-screen" data-testid="start-screen" aria-labelledby="start-heading">
+  <!-- The language, on the screen the app first opens on — a SECOND copy of the
+       control the settings dialog holds, and deliberately so.
+       C4 moved the language into that dialog, whose title, field labels and
+       opening button are all rendered in the language the app is currently running
+       in. On a first launch that is English, so a reader who cannot read "Settings"
+       would be unable to reach the one control that fixes it — and because C4 also
+       persists the choice, the first launch is when it matters most. A `<select>`
+       showing "English / Deutsch" (each language's own endonym) requires reading no
+       English at all, so it stays here where it cannot be missed.
+       Its own `data-testid`: two instances of one control must be separately
+       nameable, and the dialog's copy keeps the original id. -->
+  <LanguageSelector testid="start-language-select" />
+
   <h2 id="start-heading">{store.t('start-title')}</h2>
 
   {#if errorText}

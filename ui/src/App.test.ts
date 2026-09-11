@@ -160,21 +160,35 @@ describe('App screens', () => {
     expect(openTag(body, 'no-issues')).toBeNull();
   });
 
-  it('keeps only the language control in the header on the startup screen', () => {
+  // UPDATED BY C4, from "keeps only the language control in the header". C4 moved
+  // the language and the validation mode into the settings dialog, so what the
+  // header keeps is the way IN to them — a button, on every screen, since the
+  // preferences belong to the app rather than to a document.
+  it('offers settings from the header on the startup screen', () => {
     store.view = 'start';
     const body = html();
 
-    expect(openTag(body, 'language-select')).not.toBeNull();
-    // Validation mode is meaningless with no document, and the status would read
-    // "unsaved" for a document that does not exist.
+    expect(openTag(body, 'settings-button')).not.toBeNull();
+    // The two controls that used to sit here live in the dialog now, and the dialog
+    // is closed, so neither is on screen.
+    expect(openTag(body, 'language-select')).toBeNull();
+    expect(openTag(body, 'mode-select')).toBeNull();
+    // The status would read "unsaved" for a document that does not exist.
     //
     // Saving is unavailable here too, and used to be asserted as an absent
     // `save-button`. Since C3c that availability is a DISABLED MENU ITEM, which
     // no rendered string can show — the claim lives in `state.svelte.test.ts`'s
     // "withholds the document-writing actions on the startup screen", against
     // `documentActionEnabled` itself.
-    expect(openTag(body, 'mode-select')).toBeNull();
     expect(openTag(body, 'doc-status')).toBeNull();
+  });
+
+  it('offers settings from the header in the editor too', () => {
+    expect(openTag(html(), 'settings-button')).not.toBeNull();
+  });
+
+  it('renders no settings dialog until it is asked for', () => {
+    expect(openTag(html(), 'settings-dialog')).toBeNull();
   });
 
   it('renders the editor, and no startup screen, once a character exists', () => {
@@ -353,7 +367,9 @@ describe('App and the guided wizard', () => {
     const body = html();
     expect(openTag(body, 'character-type')).not.toBeNull();
     expect(openTag(body, 'identity-name')).not.toBeNull();
-    expect(openTag(body, 'mode-select')).not.toBeNull();
+    // `mode-select` stood here until C4 moved it into the settings dialog. What the
+    // header keeps on every screen — the wizard included — is the way in to it.
+    expect(openTag(body, 'settings-button')).not.toBeNull();
     expect(openTag(body, 'doc-status')).not.toBeNull();
   });
 

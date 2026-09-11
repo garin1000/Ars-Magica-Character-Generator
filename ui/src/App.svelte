@@ -5,8 +5,7 @@
   import { onMenuAction, setAppMenu, updateCloseGuard } from './lib/ipc';
   import { MENU_ACTIONS, menuLabels, type DocumentAction } from './lib/menu';
   import type { AppError } from './lib/types';
-  import LanguageSelector from './lib/components/LanguageSelector.svelte';
-  import ModeToggle from './lib/components/ModeToggle.svelte';
+  import SettingsDialog from './lib/components/SettingsDialog.svelte';
   import StartScreen from './lib/components/StartScreen.svelte';
   import CharacterBanner from './lib/components/CharacterBanner.svelte';
   import WizardShell from './lib/components/WizardShell.svelte';
@@ -323,9 +322,14 @@
   // Keyed on `discardConfirmPending`, not on the in-app modal: since C3b the
   // confirmation is normally the NATIVE dialog, which has no in-app flag at all,
   // and focus must come back the same way once that one closes.
+  //
+  // `settingsOpen` joins the guard for the same reason: that dialog restores focus
+  // itself, and letting its controls be recorded here would leave this effect
+  // pointing at a control that no longer exists the next time a discard is
+  // confirmed.
   let lastFocusOutsideDialog: HTMLElement | null = null;
   function trackFocus(event: FocusEvent): void {
-    if (store.discardConfirmPending) return;
+    if (store.discardConfirmPending || store.settingsOpen) return;
     if (event.target instanceof HTMLElement) lastFocusOutsideDialog = event.target;
   }
   $effect(() => {
@@ -352,10 +356,14 @@
      because it is no more input-modal than the file dialogs above, and for the
      in-app fallback because otherwise a keyboard user tabbing forward would walk
      through the whole live, visually-obscured app before ever reaching the
-     prompt's own Cancel/Discard buttons. -->
+     prompt's own Cancel/Discard buttons. The settings dialog gets the same
+     containment for that last reason — it has a real focus trap of its own, and
+     `inert` is the belt to its braces: the trap closes the ring, while `inert`
+     also takes the shell out of the accessibility tree so nothing behind the
+     dialog is announced. -->
 <div
   class="app-shell"
-  inert={store.busy || store.discardConfirmPending}
+  inert={store.busy || store.discardConfirmPending || store.settingsOpen}
   aria-busy={store.busy}
   data-testid="app-shell"
 >
@@ -379,20 +387,32 @@
         </span>
       {/if}
     </div>
-    <!-- The language applies to the whole app, so it is offered on both screens.
-         Everything else here acts on a character, so it appears only once one
-         exists.
+    <!-- The app's own preferences — language, appearance, validation strictness —
+         live behind ONE button now (C4), on every screen, because none of the
+         three is about a character. The language dropdown and the Validation
+         dropdown used to sit here loose; they are the settings dialog's fields
+         now, unchanged, so neither gained a second definition.
 
          New/Open/Save/Save As/Export are NOT here. C3c retired the toolbar that
          held them: they are the native menu's (C3a) and the keyboard's, and a
          third rendering of the same five actions was a third copy of the gate
          `store.documentActionEnabled` exists to be the only answer to. What
-         stayed is what was never a document action — the entry into the guided
-         flow, and the error banner. -->
+         stayed is what was never a document action — the way into the settings,
+         the entry into the guided flow, and the error banner.
+
+         `documentActionEnabled('settings')` is what disables it, not `store.busy`
+         directly: the menu item, the button and the dispatcher all have to answer
+         the same question, and the store is where that answer lives. -->
     <div class="controls">
-      <LanguageSelector />
+      <button
+        type="button"
+        onclick={() => store.runDocumentAction('settings')}
+        disabled={!store.documentActionEnabled('settings')}
+        data-testid="settings-button"
+      >
+        {store.t('settings-open')}
+      </button>
       {#if store.view !== 'start'}
-        <ModeToggle />
         <div class="header-actions">
           <!-- Take the character on screen into the guided flow (#31). Offered
                only from the editor — the wizard is where it leads — and only for
@@ -586,3 +606,9 @@
      Outside the shell: it is the one modal the user must still be able to answer
      (it never overlaps a native dialog — `busy` is false while it is open). -->
 <DiscardPrompt />
+
+<!-- The app's preferences (C4). Outside the shell for the same reason the prompt
+     is: the shell goes `inert` while it is open, and a dialog inside an inert
+     subtree could not be answered. It owns its own focus trap and its own focus
+     restoration, so it needs nothing from the block above. -->
+<SettingsDialog />

@@ -80,6 +80,11 @@ yourself.
 - **Two languages out of the box** — English and German, for both the UI and the
   rules text. English is the canonical source of truth; German terminology is
   matched against hand-curated EN↔DE glossary tables.
+- **Settings that stay put.** Language, appearance (follow the desktop, light or
+  dark) and validation strictness live in one dialog, reachable from the menu's
+  Settings item and from a button on every screen, and every choice survives a
+  restart. The language is also offered on the start screen itself, so a first
+  launch never hides it behind an English label.
 - **Rules-as-data.** Mechanics live in JSON keyed by stable slug IDs
   (`virtue.puissant_ability`, `art.creo`, `house.bjornaer`). Translatable text is
   kept strictly separate from mechanics and from UI strings.
@@ -106,9 +111,10 @@ yourself.
   discarding, as does starting a new document or opening another file. It is one
   and the same confirmation, and it is your desktop's own dialog rather than a
   panel drawn inside the window.
-- **Light and dark, following your desktop.** The app ships both palettes and
-  picks whichever one your operating system is set to, switching live if you
-  change that setting while it is open — no restart, and nothing to configure.
+- **Light and dark, following your desktop.** The app ships both palettes and by
+  default picks whichever one your operating system is set to, switching live if
+  you change that setting while it is open — no restart, and nothing to configure.
+  Settings can pin it to light or dark instead, and remembers which.
 - **Age and birth year are two views of one fact.** Set the year your saga is
   played in — 1220 by default, the year the published setting stands in — and the
   guided wizard links the two: type an age and the birth year follows, type a birth

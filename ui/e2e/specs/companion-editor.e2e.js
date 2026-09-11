@@ -26,7 +26,13 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { clean, isRowBlocked, runDocumentAction, startCharacter } from '../helpers.js';
+import {
+  clean,
+  isRowBlocked,
+  runDocumentAction,
+  setValidationMode,
+  startCharacter,
+} from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 // End-to-end: Great Characteristic raises a Characteristic's buy cap (it grants
@@ -207,7 +213,6 @@ describe('validation modes', () => {
   // `flaw.blatant_gift` (hermetic category) is forbidden for the `companion`
   // profile, so it yields a deterministic error in Enforced mode.
   const FORBIDDEN = '[data-testid="add-flaw.blatant_gift"]';
-  const MODE_SELECT = '[data-testid="mode-select"]';
 
   async function severities() {
     // Index-based loop: in webdriverio v9 the awaited `$$` result's `.map` does
@@ -234,8 +239,13 @@ describe('validation modes', () => {
   // mode (greying/blocking behaviour, `data-code` findings actually rendering), so
   // without this restore they silently ran in Silent mode instead and their
   // findings-panel assertions failed. Caught by a real e2e run, not by inspection.
+  //
+  // C4 made the mode PERSIST as well, so the restore matters beyond this session —
+  // and moved the control into the settings dialog, which is what `setValidationMode`
+  // opens. Each worker has its own `XDG_CONFIG_HOME` (`driver.js`), so the file being
+  // written is the worker's and never the developer's.
   after(async () => {
-    await $(MODE_SELECT).selectByAttribute('value', 'enforced');
+    await setValidationMode('enforced');
   });
 
   it('reports the same illegal entity differently per mode', async () => {
@@ -243,8 +253,9 @@ describe('validation modes', () => {
     // per-mode severity counts are unambiguous.
     await startCharacter('companion');
 
-    // V/F add buttons live in the Virtues & Flaws tab; the mode select and the
-    // shared validation bar are visible throughout the editor.
+    // V/F add buttons live in the Virtues & Flaws tab; the shared validation bar is
+    // visible throughout the editor, and the mode itself is chosen in the settings
+    // dialog (C4).
     const vfTab = await $('[data-testid="tab-virtues_flaws"]');
     await vfTab.waitForExist({ timeout: 30000 });
     await vfTab.click();
@@ -252,17 +263,15 @@ describe('validation modes', () => {
     await addForbidden.waitForExist({ timeout: 10000 });
     await addForbidden.click();
 
-    const modeSelect = await $(MODE_SELECT);
-
     // Enforced (default): at least one error-severity issue, no warnings.
-    await modeSelect.selectByAttribute('value', 'enforced');
+    await setValidationMode('enforced');
     await $('[data-testid="issue-list"]').waitForExist({ timeout: 5000 });
     let sev = await severities();
     expect(sev).toContain('error');
     expect(sev).not.toContain('warning');
 
     // Advisory: every issue is downgraded to a warning; no errors remain.
-    await modeSelect.selectByAttribute('value', 'advisory');
+    await setValidationMode('advisory');
     await browserWaitFor(async () => {
       const s = await severities();
       return s.length > 0 && !s.includes('error');
@@ -272,7 +281,7 @@ describe('validation modes', () => {
     expect(sev).not.toContain('error');
 
     // Silent: the panel reports no issues at all.
-    await modeSelect.selectByAttribute('value', 'silent');
+    await setValidationMode('silent');
     await $('[data-testid="no-issues"]').waitForExist({ timeout: 5000 });
     expect(await $$('[data-testid="issue-list"] li').then((l) => l.length)).toBe(0);
   });
@@ -411,7 +420,6 @@ describe('phase-3 virtue/flaw effects', () => {
 // exclusion: a hand-authored clique (Gentle vs Blatant Gift) and a Major/Minor
 // magnitude pair of the same Flaw (Ambitious).
 describe('mutually exclusive Virtues/Flaws', () => {
-  const MODE_SELECT = '[data-testid="mode-select"]';
   const INCOMPATIBLE_ISSUE = '[data-testid="issue-list"] li[data-code="incompatible"]';
 
   async function addButton(ref) {
@@ -448,14 +456,13 @@ describe('mutually exclusive Virtues/Flaws', () => {
     await waitForEnabled('virtue.gentle_gift', false);
 
     // Advisory: the pick is allowed again and the clash is reported instead.
-    const modeSelect = await $(MODE_SELECT);
-    await modeSelect.selectByAttribute('value', 'advisory');
+    await setValidationMode('advisory');
     await waitForEnabled('virtue.gentle_gift', true);
     await (await addButton('virtue.gentle_gift')).click();
     await $(INCOMPATIBLE_ISSUE).waitForExist({ timeout: 5000 });
 
     // Back to Enforced: the same state now reports at error severity.
-    await modeSelect.selectByAttribute('value', 'enforced');
+    await setValidationMode('enforced');
     await browser.waitUntil(
       async () => (await $(INCOMPATIBLE_ISSUE).getAttribute('data-severity')) === 'error',
       { timeout: 5000, timeoutMsg: 'expected an error-severity incompatibility issue' },

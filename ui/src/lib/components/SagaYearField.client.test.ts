@@ -26,8 +26,13 @@ vi.mock('../ipc', () => ({
   agingPreview: vi.fn(),
   agingApply: vi.fn(),
   agingRevert: vi.fn(),
-  sagaYear: vi.fn().mockResolvedValue(1220),
-  setSagaYear: vi.fn().mockResolvedValue(undefined),
+  readSettings: vi.fn().mockResolvedValue({
+    lang: null,
+    saga_year: 1220,
+    theme: null,
+    validation_mode: null,
+  }),
+  writeSettings: vi.fn().mockResolvedValue(undefined),
   deriveAge: vi.fn().mockResolvedValue({ age: null, issues: [] }),
   deriveBirthYear: vi.fn().mockResolvedValue(null),
 }));
@@ -79,8 +84,8 @@ beforeEach(async () => {
   store.view = 'editor';
   installRuleset();
   resetEntity();
-  vi.mocked(ipc.setSagaYear).mockClear();
-  await store.loadSagaYear();
+  vi.mocked(ipc.writeSettings).mockClear();
+  await store.loadSettings();
 });
 
 afterEach(() => {
@@ -113,7 +118,9 @@ describe('SagaYearField (slice 12, #25)', () => {
   it('persists the typed saga year as saga state', () => {
     typeSagaYear('1230');
     expect(store.sagaYear).toBe(1230);
-    expect(vi.mocked(ipc.setSagaYear)).toHaveBeenCalledWith(1230);
+    // A patch naming the saga year and nothing else: the Rust side is
+    // read-modify-write, so this cannot disturb the theme or the language.
+    expect(vi.mocked(ipc.writeSettings)).toHaveBeenCalledWith({ saga_year: 1230 });
   });
 
   it('leaves the stored pair alone and does not dirty the document', () => {

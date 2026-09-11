@@ -115,10 +115,12 @@ export async function waitForPort(port, options = {}) {
 /**
  * A per-worker `XDG_CONFIG_HOME`, created on demand.
  *
- * The app persists its settings (the saga year today) under
- * `app_config_dir()`, which on Linux hangs off `XDG_CONFIG_HOME` — one path
- * shared by every instance. Two concurrent workers would race on that file, so
- * each gets its own tree.
+ * The app persists its settings — the saga year, and since C4 the UI language,
+ * the palette and the validation mode — under `app_config_dir()`, which on Linux
+ * hangs off `XDG_CONFIG_HOME`: one path shared by every instance. Two concurrent
+ * workers would race on that file, so each gets its own tree. All four keys live
+ * in the same `settings.json`, so this one redirection covers every one of them
+ * and every future setting without further work.
  *
  * A welcome side effect: the suite stops writing the developer's real settings
  * file. `saga-year.e2e.js` used to do exactly that and restore it afterwards;

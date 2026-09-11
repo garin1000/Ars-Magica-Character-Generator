@@ -17,6 +17,23 @@ mode-enforced = Erzwungen
 mode-advisory = Hinweise
 mode-silent = Aus
 
+# Mit welcher Farbpalette die Anwendung zeichnet. `auto` folgt der
+# Arbeitsumgebung und ist die Voreinstellung. Beschriftungen der Auswahl, nie die
+# rohen Kennungen `auto`/`light`/`dark` — ein Slug auf dem Bildschirm ist
+# derselbe Verstoß wie eine fest eingebaute englische Zeichenkette.
+theme-label = Erscheinungsbild
+theme-auto = Wie die Arbeitsumgebung
+theme-light = Hell
+theme-dark = Dunkel
+
+# Der Einstellungsdialog (C4): Sprache, Erscheinungsbild und Prüfstrenge, alle
+# drei über Neustarts hinweg gespeichert. Erreichbar über den Eintrag
+# „Einstellungen“ im nativen Menü und über die Schaltfläche in der Kopfzeile,
+# auf jedem Bildschirm.
+settings-title = Einstellungen
+settings-open = Einstellungen
+settings-close = Schließen
+
 type-label = Charaktertyp
 type-grog = Grog
 type-companion = Gefährte
@@ -37,12 +54,13 @@ action-open-into-wizard = In geführter Erstellung öffnen
 start-open-wizard-hint = Ein Charakter, der mitten in der geführten Erstellung gespeichert wurde, wird bei dem Schritt fortgesetzt, auf dem er verlassen wurde. Ein im Editor angelegter Charakter wird mit allen erreichbaren Schritten geöffnet.
 start-create-title = Neuen Charakter anlegen
 start-create-hint = Der Charaktertyp wird hier einmalig gewählt — er lässt sich später nicht mehr ändern.
-# S28 (full-audit UX): benennt die Prüfmodus-Achse (Erzwungen/Beratend/Still),
-# die direkt-geprüfte von direkt-ungeprüfter Erstellung unterscheidet — auf
-# diesem Bildschirm sonst unsichtbar. Die Prüfung-Steuerung in der Werkzeugleiste
-# erscheint erst, sobald ein Charakter existiert (App.svelte), daher kann dieser
-# Hinweis nur darauf vorausweisen.
-start-create-mode-hint = Wie streng die Regeln geprüft werden (Prüfung, in der Werkzeugleiste), lässt sich jederzeit ändern, sobald der Charakter geöffnet ist.
+# S28 (full-audit UX): benennt die Prüfmodus-Achse (Erzwungen/Hinweise/Aus), die
+# direkt-geprüfte von direkt-ungeprüfter Erstellung unterscheidet — auf diesem
+# Bildschirm sonst unsichtbar. C4 hat die Prüfung-Steuerung in den
+# Einstellungsdialog verlegt, der auch von diesem Bildschirm aus erreichbar ist;
+# der Hinweis benennt daher ihren Ort, statt auf eine Werkzeugleiste
+# vorauszuweisen, die es seit C3c nicht mehr gibt.
+start-create-mode-hint = Wie streng die Regeln geprüft werden (Prüfung), lässt sich jederzeit unter „Einstellungen“ ändern.
 start-wizard-title = Geführte Erstellung
 start-wizard-hint = Schritt für Schritt durch die Erstellungsphasen dieses Typs, in ihrer Reihenfolge. Der Charaktertyp wird auch hier einmalig gewählt — er kann später nicht geändert werden.
 

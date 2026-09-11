@@ -255,6 +255,20 @@ describe('StartScreen', () => {
   // only mounts once a character exists (App.svelte: "appear only once one
   // exists"), so the hint on THIS screen can only point ahead to it, not offer
   // it directly.
+  // C4 moved the language control off the header and into the settings dialog —
+  // and then put a SECOND copy back here, on purpose. The dialog's own title, its
+  // field labels and the header button that opens it are all in the language the
+  // app is currently running in, which on a first launch is English. A German
+  // reader who cannot read "Settings" would have no way to reach the one control
+  // that would fix that, and the persistence this slice adds means the first run is
+  // the only chance to get it right. A `<select>` offering "English / Deutsch"
+  // needs no English read at all.
+  it('offers the language on the screen the app first opens on', () => {
+    const body = html();
+    expect(body).toContain('data-testid="start-language-select"');
+    expect(body).toContain(store.t('language-name-de'));
+  });
+
   it('names where validation strictness is chosen, real prose not an echoed key', () => {
     const body = html();
     expect(body).toContain(store.t('start-create-mode-hint'));

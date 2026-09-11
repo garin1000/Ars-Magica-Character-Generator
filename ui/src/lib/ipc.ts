@@ -34,21 +34,48 @@ export function derivedTotals(entity: Entity): Promise<DerivedTotals> {
 }
 
 /**
- * The saga year the app is set to — the year the age ↔ birth-year link is measured
- * against (guided-creation-review-2026-08 #25).
+ * The settings that survive a restart, as `arm_app::settings::Settings` reports
+ * them. Read from an app-settings file `arm-app` owns, NOT from the character and
+ * not from the ruleset: none of the four is character state and none is a rule.
  *
- * Read from an app-settings file `arm-app` owns, NOT from the character and not from
- * the ruleset: it is a saga fact, shared by every character in one saga. Infallible
- * on the Rust side, so a first launch with no settings file simply reports the
- * engine's default (a rules value; see `arm_rules::DEFAULT_SAGA_YEAR`).
+ * Only `saga_year` arrives resolved, because its default is a rules value the engine
+ * owns (`arm_rules::DEFAULT_SAGA_YEAR`). The other three are `null` when never
+ * chosen, so their defaults stay in the single place each already lives — the store.
  */
-export function sagaYear(): Promise<number> {
-  return invoke('saga_year');
+export interface PersistedSettings {
+  lang: string | null;
+  saga_year: number;
+  theme: string | null;
+  validation_mode: ValidationMode | null;
 }
 
-/** Persist the saga year. Saga state, so it survives a relaunch. */
-export function setSagaYear(year: number): Promise<void> {
-  return invoke('set_saga_year', { year });
+/**
+ * A partial update: exactly the settings being changed. The Rust side is
+ * read-modify-write, so a patch naming one key cannot destroy another — which is
+ * what makes choosing a saga year safe now that the file holds four things.
+ */
+export interface SettingsPatch {
+  lang?: string;
+  saga_year?: number;
+  theme?: string;
+  validation_mode?: ValidationMode;
+}
+
+/**
+ * Every persisted setting, in ONE call. Deliberately not four: the language decides
+ * which ruleset text is loaded, so it has to be known before the load rather than
+ * beside it, and a single small read is what makes serializing the two affordable.
+ *
+ * Infallible on the Rust side, so a first launch with no settings file simply
+ * reports "nothing chosen" with the engine's default saga year.
+ */
+export function readSettings(): Promise<PersistedSettings> {
+  return invoke('read_settings');
+}
+
+/** Persist the settings the patch names, leaving every other key alone. */
+export function writeSettings(patch: SettingsPatch): Promise<void> {
+  return invoke('write_settings', { patch });
 }
 
 /**

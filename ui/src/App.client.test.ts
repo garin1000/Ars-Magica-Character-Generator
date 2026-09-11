@@ -979,8 +979,9 @@ describe('the native application menu', () => {
     flushSync();
 
     expect(lastMenu().flags.save).toBe(true);
-    // Settings is present but inert until C4 gives it a screen.
-    expect(lastMenu().flags.settings).toBe(false);
+    // C4 gave Settings a screen, so it is live everywhere — including the startup
+    // screen, since the preferences are not about a document.
+    expect(lastMenu().flags.settings).toBe(true);
   });
 
   it('runs the very store action the chosen item names', async () => {
@@ -999,10 +1000,44 @@ describe('the native application menu', () => {
     store.view = 'start';
     flushSync();
 
+    // `menu.settings` stood beside `menu.save` here as the other withheld item.
+    // C4 gave it a screen, so it is no longer withheld and the claim moved to
+    // "opens the settings dialog from the menu" below.
     chooseMenuItem('menu.save');
-    chooseMenuItem('menu.settings');
 
     expect(ipc.saveEntity).not.toHaveBeenCalled();
+  });
+
+  // The settings dialog (C4), reachable from the native menu's Settings item —
+  // which C3a shipped present-but-disabled precisely so it would promise nothing
+  // until this screen existed.
+  it('opens the settings dialog from the menu, on the startup screen too', async () => {
+    await mountApp();
+    store.view = 'start';
+    flushSync();
+    expect(document.querySelector('[data-testid="settings-dialog"]')).toBeNull();
+
+    chooseMenuItem('menu.settings');
+    flushSync();
+
+    expect(document.querySelector('[data-testid="settings-dialog"]')).not.toBeNull();
+    store.closeSettings();
+    flushSync();
+  });
+
+  it('makes the shell inert while the settings dialog is open', async () => {
+    await mountApp();
+    store.openSettings();
+    flushSync();
+
+    // The same containment the discard confirmation gets: without it a keyboard
+    // user tabbing forward would walk the whole live, visually-obscured app before
+    // ever reaching the dialog, and assistive tech would announce it all.
+    expect(document.querySelector('[data-testid="app-shell"]')?.hasAttribute('inert')).toBe(true);
+
+    store.closeSettings();
+    flushSync();
+    expect(document.querySelector('[data-testid="app-shell"]')?.hasAttribute('inert')).toBe(false);
   });
 
   it('ignores an id it does not know, rather than throwing', async () => {

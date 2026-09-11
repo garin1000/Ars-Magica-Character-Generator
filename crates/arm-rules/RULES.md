@@ -6926,9 +6926,11 @@ the "nothing shipped uses it" note above is history rather than current fact.
 **One rules value, wrapped in an editing aid.** The saga year — the calendar year
 the troupe's saga stands in — is **not** a rule and **not** character state. It is a
 saga fact shared by every character in one saga, so it lives in an app-settings file
-owned by `arm-app` (`crates/arm-app/src/settings.rs`, commands `saga_year` /
-`set_saga_year`), never on the entity and never in the ruleset. `arm-rules` gains no
-filesystem dependency from it: the engine holds only the arithmetic and the one
+owned by `arm-app` (`crates/arm-app/src/settings.rs`, commands `read_settings` /
+`write_settings` — since C4 it shares that file with the UI language, the palette
+and the validation mode, and the writer is read-modify-write so choosing one never
+destroys another), never on the entity and never in the ruleset. `arm-rules` gains
+no filesystem dependency from it: the engine holds only the arithmetic and the one
 advisory, and receives the year as a plain argument.
 
 The **default** year, however, IS a rules value, and is the only cited thing here:
@@ -6937,9 +6939,12 @@ The **default** year, however, IS a rules value, and is the only cited thing her
 
 Corroborated at `:364` ("much like the Europe of 1220, the middle ages") and `:440`
 ("Much like medieval Europe in 1220"). Encoded as
-`arm_rules::DEFAULT_SAGA_YEAR = 1220` in `validation/saga.rs`, read by
-`settings::read_saga_year` whenever there is no stored value — so the number appears
-once, in the engine, and neither the app nor the frontend restates it.
+`arm_rules::DEFAULT_SAGA_YEAR = 1220` in `validation/saga.rs`, applied by
+`settings::read_settings` whenever there is no stored value — so the number appears
+once, in the engine, and neither the app nor the frontend restates it. It is the
+only one of the four settings whose default is resolved in Rust at all: the other
+three are UI-layer choices whose defaults live in the frontend store, and
+`read_settings` reports them honestly as unset rather than inventing a value.
 
 **What it derives, and what it deliberately does not.** `age` and `birth_year` are
 both already stored on the entity, so the saga year adds no state and forces **no

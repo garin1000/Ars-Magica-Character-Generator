@@ -27,7 +27,7 @@ import {
 } from './childhood-workflow.svelte';
 import { mandatoryTraitRefs, sameSelection, totalCopies } from './derive';
 import { FileOperations } from './file-operations.svelte';
-import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
+import { AVAILABLE_LANGS, buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
 import type { AgingNote, CloseGuardLabels } from './ipc';
 import type { DocumentAction, MenuFlags } from './menu';
@@ -185,11 +185,30 @@ function newEntity(rulesetId: string, version: string, typeId: string): Entity {
 export type { AbilityFunding };
 
 /**
- * Which palette the app paints with. `auto` follows the OS, and it is the
- * default, so a fresh install is already correct with no settings surface at all
- * — the user-facing control and the persistence of an explicit choice are C4's.
+ * Which palette the app paints with, in the order the settings control offers
+ * them. `auto` follows the OS and is the default, so a fresh install is already
+ * correct with nothing configured.
+ *
+ * **This array is the theme taxonomy's only home, and `auto` its only default.**
+ * `arm-rules` does not and must not know what a palette is — it is a pure rules
+ * engine, and a colour scheme is not an Ars Magica rule — and `arm-app` carries
+ * the stored value as an opaque string precisely so it cannot become a second,
+ * drifting copy of this list.
  */
-export type Theme = 'auto' | 'light' | 'dark';
+export const THEMES = ['auto', 'light', 'dark'] as const;
+
+/** @see THEMES */
+export type Theme = (typeof THEMES)[number];
+
+/** Whether `value` is a palette this build can actually paint. */
+function isTheme(value: unknown): value is Theme {
+  return THEMES.some((theme) => theme === value);
+}
+
+/** Whether `value` is a language this build ships a bundle for. */
+function isLang(value: unknown): value is Lang {
+  return AVAILABLE_LANGS.some((lang) => lang === value);
+}
 
 /**
  * Deliberately the LIGHT query and not the dark one. The app's own default is
@@ -488,6 +507,10 @@ class AppStore {
   // later succeeding validate can tell its own banner apart from a file-operation
   // failure that landed in the same shared field. Not reactive: it never renders.
   #validateError: AppError | null = null;
+  // The same idea for the ruleset load: the exact error object its last failure
+  // published, so a succeeding load retires its own banner and no one else's.
+  // Not reactive — it never renders. @see #reloadRuleset
+  #rulesetError: AppError | null = null;
 
   /** Translate a UI-chrome key. Bound so it can be passed to components. */
   t = (key: string, args?: TranslateArgs): string => translate(this.#bundle, key, args);
@@ -532,8 +555,12 @@ class AppStore {
    * enabled state nor a window key handler is anything a rendered string or
    * WebDriver can observe.
    *
-   * `settings` is deliberately never enabled: it has no screen to open until
-   * C4, and a menu item that opens nothing is worse than a greyed-out one.
+   * `settings` is the one member that is not a *document* action at all: the
+   * preferences belong to the app, not to the character, so unlike Save/Save
+   * As/Export they are offered on the startup screen too. It rides here anyway
+   * because the menu and the dispatcher must answer for it exactly once, and
+   * `busy` gates it like everything else — nothing may open over a native file
+   * dialog.
    */
   documentActionEnabled(action: DocumentAction): boolean {
     // A native file dialog is open: the shell is inert and the store actions
@@ -551,7 +578,7 @@ class AppStore {
         // character that does not exist.
         return this.view !== 'start';
       case 'settings':
-        return false;
+        return true;
     }
   }
 
@@ -578,6 +605,7 @@ class AppStore {
         await this.exportMarkdown();
         return;
       case 'settings':
+        this.openSettings();
         return;
     }
   }
@@ -595,22 +623,58 @@ class AppStore {
   }
 
   /**
-   * Load the ruleset for the current language and validate the initial entity, and
-   * read the persisted saga year.
+   * Read the persisted settings, then load the ruleset for the language they name
+   * and validate the initial entity.
    *
-   * Deliberately here and not in an `$effect`: the saga year is read once at launch,
-   * and `onMount` already owns this call. The two run concurrently because neither
-   * needs the other — the saga year is an app setting, not part of the ruleset.
+   * **Sequential, and that is the whole point.** Until C4 these two ran in
+   * `Promise.all`, which was correct precisely because neither needed the other: the
+   * saga year is an app setting and the ruleset knows nothing of it. A persisted
+   * LANGUAGE destroys that premise — rules display text is per-language, so the
+   * language has to be known *before* the load. The two alternatives were both worse
+   * than one extra await: loading in English and reloading afterwards would show a
+   * German user a screen of English on first paint and then throw a whole ruleset
+   * away, and leaving the order to chance would make which of the two happened a
+   * race. The cost is one small local file read ahead of a much larger one, and
+   * `read_settings` fetches all four settings in a single call precisely so it stays
+   * one round trip rather than four.
+   *
+   * Deliberately here and not in an `$effect`: the settings are read once at launch,
+   * and `onMount` already owns this call.
    */
   async init(): Promise<void> {
-    await Promise.all([this.#reloadRuleset(true), this.loadSagaYear()]);
+    await this.loadSettings();
+    await this.#reloadRuleset(true);
   }
 
   async setLang(lang: Lang): Promise<void> {
     if (lang === this.lang) return;
     this.lang = lang;
+    this.#persist({ lang });
     // Rules display text is per-language, so reload the ruleset too.
     await this.#reloadRuleset(false);
+  }
+
+  /**
+   * Choose the palette (see {@link Theme}). Persisted, and it touches no document:
+   * a colour scheme is an app preference, not character state.
+   */
+  async setTheme(theme: Theme): Promise<void> {
+    this.theme = theme;
+    this.#persist({ theme });
+  }
+
+  /**
+   * Write the settings the patch names, and nothing else. The Rust side is
+   * read-modify-write, so naming one key here cannot destroy another.
+   *
+   * A rejection is SURFACED, never swallowed: a preference that silently failed to
+   * persist looks saved until the next launch contradicts it, which is worse than a
+   * banner. Mirrors what {@link setSagaYear} already did.
+   */
+  #persist(patch: ipc.SettingsPatch): void {
+    void ipc.writeSettings(patch).catch((e: unknown) => {
+      this.error = e as AppError;
+    });
   }
 
   /**
@@ -653,7 +717,25 @@ class AppStore {
 
   async setMode(mode: ValidationMode): Promise<void> {
     this.mode = mode;
+    this.#persist({ validation_mode: mode });
     await this.revalidate();
+  }
+
+  /**
+   * Whether the settings modal is on screen. App preferences, not a document
+   * action's confirmation, so it is plain state rather than a pending promise —
+   * closing it answers nothing and cancels nothing.
+   */
+  settingsOpen = $state(false);
+
+  /** Show the settings modal. @see documentActionEnabled */
+  openSettings(): void {
+    this.settingsOpen = true;
+  }
+
+  /** Dismiss the settings modal. Every choice inside it took effect as it was made. */
+  closeSettings(): void {
+    this.settingsOpen = false;
   }
 
   /** The item ids the given type profile mandates (required traits + required Gift). */
@@ -2126,13 +2208,33 @@ class AppStore {
   // not land on top of a later one. Same shape as `#seq` for validation.
   #sagaSeq = 0;
 
-  /** Read the persisted saga year. Called from {@link init}; never fails loudly. */
-  async loadSagaYear(): Promise<void> {
+  /**
+   * Read every persisted setting and apply it. Called from {@link init} before the
+   * ruleset load, because the language decides what that load returns.
+   *
+   * **Each stored value is checked before it is believed.** The settings file is
+   * hand-editable, which makes it the trust boundary (CLAUDE.md): a `theme` of
+   * `purple` names no palette and a `lang` of `fr` names no bundle, so taking either
+   * at face value would paint an unstyled app or an untranslated one. An
+   * unrecognised value falls back to this store's own default, which is where the
+   * theme's and the language's defaults live.
+   *
+   * The saga year needs no such check — it arrives already resolved, because its
+   * default is `arm_rules::DEFAULT_SAGA_YEAR`, a rules value the engine owns.
+   *
+   * Never fails loudly: the Rust command is infallible, so a rejection means the
+   * bridge itself is gone, and the app starts on its defaults rather than refusing
+   * to start over a preference.
+   */
+  async loadSettings(): Promise<void> {
     try {
-      this.sagaYear = await ipc.sagaYear();
+      const stored = await ipc.readSettings();
+      this.sagaYear = stored.saga_year;
+      if (isLang(stored.lang)) this.lang = stored.lang;
+      if (isTheme(stored.theme)) this.theme = stored.theme;
+      if (stored.validation_mode !== null) this.mode = stored.validation_mode;
     } catch {
-      // The Rust command is infallible, so this means the bridge itself is gone.
-      // The link stays inert rather than the app refusing to start over a setting.
+      // See above: defaults stand, and the launch proceeds.
     }
   }
 
@@ -2145,10 +2247,7 @@ class AppStore {
     if (!Number.isFinite(year)) return;
     const clamped = clampInt(year, I32_MIN, I32_MAX);
     this.sagaYear = clamped;
-    void ipc.setSagaYear(clamped).catch((e: unknown) => {
-      // A user action that silently failed to persist is worse than a banner.
-      this.error = e as AppError;
-    });
+    this.#persist({ saga_year: clamped });
   }
 
   /**
@@ -2586,7 +2685,17 @@ class AppStore {
 
   async #reloadRuleset(resetEntity: boolean): Promise<void> {
     this.loading = true;
-    this.error = null;
+    // Retire the error THIS path last raised, and nothing else. `error` is one
+    // shared banner — the menu build, the file operations and validation all write
+    // to it — so an unconditional clear here erases a failure that has nothing to do
+    // with the ruleset. It used to be harmless by accident: `init()` started the
+    // load synchronously, so the clear ran before anything else could raise
+    // anything. C4 put the settings read in front of it, which moved the clear a
+    // microtask later — straight over `App.svelte`'s menu-build effect, whose
+    // `AppError::Menu` would then vanish with no diagnostic. Same rule as
+    // {@link revalidate}: a succeeding pass may retire only its own error.
+    if (this.error === this.#rulesetError) this.error = null;
+    this.#rulesetError = null;
     try {
       const localized = await ipc.loadRuleset(this.lang);
       this.ruleset = localized;
@@ -2602,7 +2711,8 @@ class AppStore {
       }
       await this.revalidate();
     } catch (e) {
-      this.error = e as AppError;
+      this.#rulesetError = e as AppError;
+      this.error = this.#rulesetError;
     } finally {
       this.loading = false;
     }

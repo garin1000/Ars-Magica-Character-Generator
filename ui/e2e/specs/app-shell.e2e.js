@@ -28,8 +28,17 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { clean, returnToStartScreen, runDocumentAction, startCharacter } from '../helpers.js';
+import { workerConfigHome } from '../driver.js';
+import {
+  clean,
+  returnToStartScreen,
+  runDocumentAction,
+  setLanguage,
+  setTheme,
+  startCharacter,
+} from '../helpers.js';
 // The app's save/load dialog seam (ARM_E2E_FILE) points at this fixed path, so
 // Save and Open never raise a native dialog.
 import { e2eFile } from '../wdio.conf.js';
@@ -71,8 +80,14 @@ describe('app entry', () => {
     expect(await $('[data-testid="doc-status"]').isExisting()).toBe(false);
     expect(await $('[data-testid="mode-select"]').isExisting()).toBe(false);
 
-    // The language applies to the whole app, so it IS offered here.
-    await expect($('[data-testid="language-select"]')).toExist();
+    // The app's own preferences ARE offered here — they are not about a document.
+    await expect($('[data-testid="settings-button"]')).toExist();
+
+    // And the language is offered a second time, on this screen itself (C4). The
+    // settings button says "Settings" in whatever language the app is running in,
+    // which on a first launch is English; a reader who cannot read that word would
+    // otherwise have no way to the one control that fixes it.
+    await expect($('[data-testid="start-language-select"]')).toExist();
   });
 
   it('creates a magus with its free traits and a read-only type label', async () => {
@@ -211,7 +226,6 @@ describe('header document status', () => {
 });
 
 describe('German localization', () => {
-  const LANG_SELECT = '[data-testid="language-select"]';
   const SPELLS_TAB = '[data-testid="tab-spells"]';
 
   // This spec switches the whole app to German and does not restore it on its
@@ -219,21 +233,22 @@ describe('German localization', () => {
   // `magus-editor.e2e.js`'s ex-`arts.e2e.js` block). A dedicated `after` hook
   // restores `en` here instead, so every describe below this one in the shared
   // session still starts in English.
+  //
+  // C4 moved the language control into the settings dialog, so the switch goes
+  // through `setLanguage` — which opens the dialog, chooses, waits and closes it
+  // again. The language now also PERSISTS, which makes restoring `en` here matter
+  // beyond this session: the worker's own `XDG_CONFIG_HOME` keeps the written file
+  // out of the developer's config either way, but a worker left in German would
+  // still start its next run there.
   after(async () => {
-    await $(LANG_SELECT).selectByAttribute('value', 'en');
+    await setLanguage('en');
   });
 
   it('renders German chrome and a non-empty German spell tooltip', async () => {
     // A magus of this spec's own — the Spells tab is magus-only.
     await startCharacter('magus');
-    await $(LANG_SELECT).waitForExist({ timeout: 30000 });
 
-    // Switch to German and confirm the language actually changed.
-    await $(LANG_SELECT).selectByAttribute('value', 'de');
-    await browser.waitUntil(async () => (await $(LANG_SELECT).getValue()) === 'de', {
-      timeout: 5000,
-      timeoutMsg: 'language should switch to German',
-    });
+    await setLanguage('de');
 
     // The Spells tab's "Available" region title must render in German
     // ("Verfügbar"), proving UI chrome re-localizes.
@@ -265,6 +280,75 @@ describe('German localization', () => {
 // changes half — the companion case to `window-close-bridge-dirty` in
 // `companion-editor.e2e.js` (read that describe's header for the full context on
 // why this exists and what it does and does not prove).
+// End-to-end: the settings dialog (C4), against the real binary and the real file.
+//
+// Two things only this layer can prove. The first is that a chosen setting reaches
+// DISK at all — the store, the IPC wrapper and the Rust writer are each unit-tested,
+// but nothing below this exercises the three of them joined to a real
+// `app_config_dir()`. The second is the data-loss bug this slice fixed: writing one
+// setting must leave every other key in the file standing. That was a
+// read-modify-write correction in `crates/arm-app/src/settings.rs`, and here it is
+// checked on the file the shipped app actually wrote.
+//
+// SETTINGS ISOLATION — the same contract `grog-wizard-aging.e2e.js`'s saga-year
+// block relies on, now carrying three more keys. Each worker runs the app under its
+// own `XDG_CONFIG_HOME` (`driver.js`'s `workerConfigHome`, wired in by both wdio
+// configs' `beforeSession`), so this spec can never poison a concurrent worker or
+// the developer's own settings file. It recomputes that path from the same function
+// rather than hardcoding one, and restores every value it changed, because the
+// directory persists across runs.
+describe('the settings dialog', () => {
+  // `app_config_dir()` on Linux is `$XDG_CONFIG_HOME/<identifier>`, and the
+  // identifier is `crates/arm-app/tauri.conf.json`'s.
+  const settingsFile = path.join(
+    workerConfigHome(
+      path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..'),
+      process.env,
+    ),
+    'io.github.garin1000.armchargen',
+    'settings.json',
+  );
+
+  /** The settings file's parsed contents, or `{}` before anything was written. */
+  function storedSettings() {
+    if (!fs.existsSync(settingsFile)) return {};
+    return JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+  }
+
+  after(async () => {
+    await setLanguage('en');
+    await setTheme('auto');
+  });
+
+  it('persists a chosen theme, and repaints with it', async () => {
+    await startCharacter('grog');
+
+    await setTheme('light');
+
+    // The palette is named on <html>, which is the whole switch between the two
+    // `:root` blocks in app.css — so this proves the choice reached the DOM, not
+    // merely the store.
+    await browser.waitUntil(async () => (await $('html').getAttribute('data-theme')) === 'light', {
+      timeout: 5000,
+      timeoutMsg: 'the light palette should be applied to <html>',
+    });
+    expect(storedSettings().theme).toBe('light');
+  });
+
+  it('writing one setting leaves every other one standing', async () => {
+    // The regression this slice fixed. Before it, `write_saga_year` rebuilt the
+    // whole document from the one field it was given, so the SECOND key written
+    // silently deleted the first — no error, no banner, no undo.
+    await setLanguage('de');
+
+    const stored = storedSettings();
+    expect(stored.lang).toBe('de');
+    expect(stored.theme).toBe('light');
+    // And the saga year, written by an entirely different surface, is untouched.
+    expect(stored.saga_year === undefined || typeof stored.saga_year === 'number').toBe(true);
+  });
+});
+
 //
 // `guard_blocks_quit` (`crates/arm-app/src/main.rs`) returns `false` — allow —
 // when the entity is not dirty, so the shadowed `window.close()` must reach the

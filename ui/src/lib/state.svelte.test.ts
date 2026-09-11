@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AgingApplication, AgingProjection } from './ipc';
+import type { AgingApplication, AgingProjection, PersistedSettings } from './ipc';
 import type {
   Ability,
   AgingLogEntry,
@@ -59,8 +59,15 @@ vi.mock('./ipc', () => ({
   agingPreview: vi.fn(),
   agingApply: vi.fn(),
   agingRevert: vi.fn(),
-  sagaYear: vi.fn().mockResolvedValue(1220),
-  setSagaYear: vi.fn().mockResolvedValue(undefined),
+  // C4: the four persisted settings are read in ONE call and written with a patch
+  // naming only what changed, so choosing one can never destroy another.
+  readSettings: vi.fn().mockResolvedValue({
+    lang: null,
+    saga_year: 1220,
+    theme: null,
+    validation_mode: null,
+  }),
+  writeSettings: vi.fn().mockResolvedValue(undefined),
   deriveAge: vi.fn().mockResolvedValue({ age: 0, issues: [] }),
   deriveBirthYear: vi.fn().mockResolvedValue(0),
 }));
@@ -158,6 +165,16 @@ function resetEntity(): void {
     personality_traits: [],
     reputations: [],
   };
+}
+
+/**
+ * A persisted-settings payload as `read_settings` returns it: the saga year always
+ * resolved (its default is a rules value the engine applies), the other three
+ * honestly `null` when never chosen, so their defaults stay in the one place each
+ * already lives.
+ */
+function persisted(overrides: Partial<PersistedSettings> = {}): PersistedSettings {
+  return { lang: null, saga_year: 1220, theme: null, validation_mode: null, ...overrides };
 }
 
 beforeEach(() => {
@@ -1327,11 +1344,11 @@ describe('setAge', () => {
 
 describe('the saga year and the age ↔ birth-year link', () => {
   beforeEach(async () => {
-    vi.mocked(ipc.sagaYear).mockResolvedValue(1220);
-    vi.mocked(ipc.setSagaYear).mockResolvedValue(undefined);
+    vi.mocked(ipc.readSettings).mockResolvedValue(persisted({ saga_year: 1220 }));
+    vi.mocked(ipc.writeSettings).mockResolvedValue(undefined);
     vi.mocked(ipc.deriveAge).mockClear();
     vi.mocked(ipc.deriveBirthYear).mockClear();
-    await store.loadSagaYear();
+    await store.loadSettings();
   });
 
   afterEach(() => {
@@ -1347,8 +1364,8 @@ describe('the saga year and the age ↔ birth-year link', () => {
   it('loads the persisted saga year rather than assuming one', async () => {
     // The default lives in the engine (a rules value) and is applied by the settings
     // reader in `arm-app`; the frontend only ever reports what it was told.
-    vi.mocked(ipc.sagaYear).mockResolvedValue(1230);
-    await store.loadSagaYear();
+    vi.mocked(ipc.readSettings).mockResolvedValue(persisted({ saga_year: 1230 }));
+    await store.loadSettings();
     expect(store.sagaYear).toBe(1230);
   });
 
@@ -1446,8 +1463,10 @@ describe('the saga year and the age ↔ birth-year link', () => {
     expect(store.entity.birth_year).toBe(1190);
     expect(store.dirty).toBe(false);
     expect(store.closeGuardPayload().dirty).toBe(false);
-    // It is saga state, so it is persisted — just not into the document.
-    expect(vi.mocked(ipc.setSagaYear)).toHaveBeenCalledWith(1230);
+    // It is saga state, so it is persisted — just not into the document. The patch
+    // names the saga year and NOTHING else, so writing it cannot disturb the theme
+    // or the language sitting in the same file.
+    expect(vi.mocked(ipc.writeSettings)).toHaveBeenCalledWith({ saga_year: 1230 });
   });
 
   it('uses the new saga year for the next edit, and only then', async () => {
@@ -4512,6 +4531,238 @@ describe('the active theme', () => {
   });
 });
 
+// --- C4: the four settings that survive a restart --------------------------
+describe('persisted settings', () => {
+  /** A ruleset payload `loadRuleset` can resolve with, tagged by language. */
+  function localized(lang: string): LocalizedRuleset {
+    return {
+      ruleset: {
+        id: `test-${lang}`,
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        abilities: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+      },
+      i18n: {},
+    };
+  }
+
+  beforeEach(() => {
+    vi.mocked(ipc.readSettings).mockReset().mockResolvedValue(persisted());
+    vi.mocked(ipc.writeSettings).mockReset().mockResolvedValue(undefined);
+    vi.mocked(ipc.loadRuleset)
+      .mockReset()
+      .mockImplementation((lang: string) => Promise.resolve(localized(lang)));
+  });
+
+  afterEach(() => {
+    // Put the shared singleton back to the state every other block was written
+    // against: English, dark-by-OS, enforced, and no saga year ever read.
+    store.lang = 'en';
+    store.theme = 'auto';
+    store.mode = 'enforced';
+    store.sagaYear = null;
+    store.closeSettings();
+    vi.mocked(ipc.loadRuleset).mockReset();
+  });
+
+  // THE ORDERING TRAP. `init()` used to run the ruleset load and the saga-year read
+  // concurrently, which was correct precisely because neither needed the other. A
+  // persisted LANGUAGE destroys that premise: rules display text is per-language, so
+  // the language has to be known BEFORE the load. Loading first and reloading after
+  // would have shown a German user a screen of English on first paint, and a second
+  // whole-ruleset round trip to replace it.
+  describe('the launch order', () => {
+    it('loads the ruleset in the persisted language, with no flash of English', async () => {
+      vi.mocked(ipc.readSettings).mockResolvedValue(persisted({ lang: 'de' }));
+
+      await store.init();
+
+      expect(vi.mocked(ipc.loadRuleset).mock.calls).toEqual([['de']]);
+      expect(store.lang).toBe('de');
+      // One load, not two: the English ruleset is never fetched, so there is no
+      // first paint to flash and nothing to throw away.
+      expect(store.ruleset?.ruleset.id).toBe('test-de');
+    });
+
+    it('reads the settings before it asks for the ruleset at all', async () => {
+      const order: string[] = [];
+      vi.mocked(ipc.readSettings).mockImplementation(async () => {
+        order.push('settings');
+        return persisted({ lang: 'de' });
+      });
+      vi.mocked(ipc.loadRuleset).mockImplementation(async (lang: string) => {
+        order.push(`ruleset:${lang}`);
+        return localized(lang);
+      });
+
+      await store.init();
+
+      expect(order).toEqual(['settings', 'ruleset:de']);
+    });
+
+    // Serializing the launch exposed something the concurrent version hid. A
+    // ruleset load clears `error` on its way in, to retire whatever a previous
+    // failed load had said — but `error` is ONE shared banner that the menu build,
+    // the file operations and validation all write to. While `init()` started the
+    // load synchronously, that clear happened before anything else could raise
+    // anything; with the settings read in front of it, the clear lands a microtask
+    // later and wipes whatever was raised in between. The native menu build is
+    // exactly that: `App.svelte` pushes the menu from an `$effect` that runs right
+    // after mount, and a window system that refuses reports `AppError::Menu` — which
+    // would then vanish with no diagnostic at all.
+    //
+    // The rule is the one `revalidate` already follows: a succeeding pass may retire
+    // ONLY its own error.
+    it('retires its own error on a successful load, and nobody else’s', async () => {
+      const fromTheMenu = { kind: 'menu', message: 'the window system refused' };
+      store.error = fromTheMenu as typeof store.error;
+
+      await store.init();
+
+      expect(store.error).toEqual(fromTheMenu);
+      store.error = null;
+    });
+
+    it('does retire the error its own previous failure raised', async () => {
+      vi.mocked(ipc.loadRuleset).mockRejectedValueOnce({ kind: 'ruleset' });
+      await store.init();
+      expect(store.error).toEqual({ kind: 'ruleset' });
+
+      await store.init();
+
+      expect(store.error).toBeNull();
+    });
+
+    it('still starts when the settings cannot be read at all', async () => {
+      // A broken bridge must not stop the app launching: the settings fall back to
+      // their own defaults and the ruleset still loads.
+      vi.mocked(ipc.readSettings).mockRejectedValue({ kind: 'io' });
+
+      await store.init();
+
+      expect(store.lang).toBe('en');
+      expect(vi.mocked(ipc.loadRuleset).mock.calls).toEqual([['en']]);
+    });
+  });
+
+  describe('reading what was stored', () => {
+    it('applies every persisted setting', async () => {
+      vi.mocked(ipc.readSettings).mockResolvedValue({
+        lang: 'de',
+        saga_year: 1230,
+        theme: 'light',
+        validation_mode: 'advisory',
+      });
+
+      await store.loadSettings();
+
+      expect(store.lang).toBe('de');
+      expect(store.sagaYear).toBe(1230);
+      expect(store.theme).toBe('light');
+      expect(store.mode).toBe('advisory');
+    });
+
+    it('keeps its own default for a setting that was never chosen', async () => {
+      await store.loadSettings();
+
+      // `auto` is the theme default and it lives HERE — not in `arm-rules`, which is
+      // a rules engine and has no business knowing what a palette is, and not in
+      // `arm-app`, which would only be a second answer to drift from this one.
+      expect(store.theme).toBe('auto');
+      expect(store.lang).toBe('en');
+      expect(store.mode).toBe('enforced');
+    });
+
+    it('ignores a stored value this build cannot use', async () => {
+      // The settings file is hand-editable, so it is the trust boundary. A theme of
+      // `purple` has no palette and a language of `fr` has no bundle; taking either
+      // at face value would paint an unstyled app or an untranslated one.
+      vi.mocked(ipc.readSettings).mockResolvedValue({
+        lang: 'fr',
+        saga_year: 1220,
+        theme: 'purple',
+        validation_mode: null,
+      });
+
+      await store.loadSettings();
+
+      expect(store.theme).toBe('auto');
+      expect(store.lang).toBe('en');
+    });
+  });
+
+  describe('writing what was chosen', () => {
+    it('persists the theme, naming only the theme', async () => {
+      await store.setTheme('light');
+
+      expect(store.theme).toBe('light');
+      expect(vi.mocked(ipc.writeSettings)).toHaveBeenCalledWith({ theme: 'light' });
+    });
+
+    it('persists the language, naming only the language', async () => {
+      await store.setLang('de');
+
+      expect(store.lang).toBe('de');
+      expect(vi.mocked(ipc.writeSettings)).toHaveBeenCalledWith({ lang: 'de' });
+    });
+
+    it('persists the validation mode, naming only the validation mode', async () => {
+      await store.setMode('silent');
+
+      expect(store.mode).toBe('silent');
+      expect(vi.mocked(ipc.writeSettings)).toHaveBeenCalledWith({ validation_mode: 'silent' });
+    });
+
+    it('dirties no document — none of the four is character state', async () => {
+      const before = store.dirty;
+      await store.setTheme('dark');
+      await store.setMode('advisory');
+      expect(store.dirty).toBe(before);
+    });
+
+    it('surfaces a failed write rather than letting the choice silently not stick', async () => {
+      vi.mocked(ipc.writeSettings).mockRejectedValue({ kind: 'io' });
+
+      await store.setTheme('light');
+      await vi.runAllTimersAsync();
+
+      expect(store.error).toEqual({ kind: 'io' });
+      store.error = null;
+    });
+  });
+
+  // The settings surface itself. C3a left `settings` permanently disabled with an
+  // explicit no-op arm, because a menu item that opens nothing is worse than a
+  // greyed-out one; it has a screen now, so the placeholder is over.
+  describe('the settings screen', () => {
+    it('is reachable from every view, now that it has a screen to open', () => {
+      for (const view of ['start', 'editor', 'wizard'] as const) {
+        store.view = view;
+        expect(store.documentActionEnabled('settings'), view).toBe(true);
+      }
+    });
+
+    it('opens from the menu action and closes again', async () => {
+      expect(store.settingsOpen).toBe(false);
+
+      await store.runDocumentAction('settings');
+      expect(store.settingsOpen).toBe(true);
+
+      store.closeSettings();
+      expect(store.settingsOpen).toBe(false);
+    });
+
+    it('starts closed, so a launch lands on the app and not on its preferences', () => {
+      store.closeSettings();
+      expect(store.settingsOpen).toBe(false);
+    });
+  });
+});
+
 // C3a: the native menu can reach neither of the two mechanisms that gated the
 // document actions before it. The toolbar buttons carried `disabled`, and
 // `App.svelte`'s window-level keydown handler repeated the same check by hand
@@ -4583,13 +4834,16 @@ describe('the document-action gate', () => {
     }
   });
 
-  // Settings has no surface yet (that is C4). It is present so the menu has its
-  // conventional shape, and disabled so it makes no promise it cannot keep —
-  // rather than being wired to a placeholder that would have to say something.
-  it('keeps Settings inert until it has a screen to open', () => {
-    for (const view of ['start', 'editor'] as const) {
+  // UPDATED BY C4, from "keeps Settings inert until it has a screen to open". That
+  // claim was deliberately about a placeholder: C3a shipped the item disabled
+  // everywhere because a menu entry that opens nothing is worse than a greyed-out
+  // one. C4 gave it a screen, so the placeholder is over and the claim inverts —
+  // and unlike Save/Save As/Export the preferences are not about a document, so
+  // they are offered on the startup screen too.
+  it('offers Settings on every screen, document or not', () => {
+    for (const view of ['start', 'editor', 'wizard'] as const) {
       store.view = view;
-      expect(store.documentActionEnabled('settings'), view).toBe(false);
+      expect(store.documentActionEnabled('settings'), view).toBe(true);
     }
   });
 
@@ -4631,8 +4885,10 @@ describe('the document-action gate', () => {
     store.view = 'start';
     const save = vi.spyOn(store, 'save').mockResolvedValue(undefined);
 
+    // `settings` used to stand beside `save` here, as the other withheld action.
+    // C4 gave it a screen, so the gate no longer withholds it and it has moved to
+    // the "reachable from every view" claim in the persisted-settings block.
     await store.runDocumentAction('save');
-    await store.runDocumentAction('settings');
 
     expect(save).not.toHaveBeenCalled();
     save.mockRestore();

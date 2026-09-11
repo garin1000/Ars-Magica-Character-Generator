@@ -28,6 +28,8 @@ import {
   returnToStartScreen,
   runDocumentAction,
   satisfyMagusMinimums,
+  setLanguage,
+  setValidationMode,
   standOnWizardStep,
   startCharacter,
   startWizard,
@@ -49,7 +51,6 @@ describe('guided creation wizard', () => {
   const NEXT = '[data-testid="wizard-next"]';
   const FINISH = '[data-testid="wizard-finish"]';
   const NAME_INPUT = '[data-testid="identity-name"]';
-  const MODE_SELECT = '[data-testid="mode-select"]';
   // The balance bar's Flaw half on the Virtues & Flaws step: the surviving home of the
   // Flaw budget after manual-testing-findings #3 removed the banner's restatement of
   // it. It is the surface that SPENDS the budget, which is why it is the one that keeps
@@ -82,7 +83,9 @@ describe('guided creation wizard', () => {
     const label = clean(await $(CHARACTER_TYPE).getText());
     expect(label).toContain('Magus');
     expect(label).not.toContain('type-magus');
-    await expect($(MODE_SELECT)).toExist();
+    // The validation mode moved into the settings dialog in C4; what the wizard
+    // header keeps is the way in to it.
+    await expect($('[data-testid="settings-button"]')).toExist();
 
     // Slice 2 (#1) deleted the read-only `type` step; manual-testing-findings #3 then
     // deleted the explanatory lines its content had been relocated into. The banner
@@ -205,12 +208,12 @@ describe('guided creation wizard', () => {
 
     // Advisory downgrades every error to a warning, so the gate lifts with the
     // illegal state standing — the validation mode is the intended escape hatch.
-    await $(MODE_SELECT).selectByAttribute('value', 'advisory');
+    await setValidationMode('advisory');
     await browser.waitUntil(async () => await $(NEXT).isEnabled(), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'Advisory mode did not lift the step gate',
     });
-    await $(MODE_SELECT).selectByAttribute('value', 'enforced');
+    await setValidationMode('enforced');
     await browser.waitUntil(async () => !(await $(NEXT).isEnabled()), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'returning to Enforced did not restore the step gate',
@@ -919,9 +922,6 @@ describe('tab area at a short window height', () => {
   // Under two source rows: this rejects the collapse, not a particular row height.
   const MIN_USABLE_LIST = 60;
 
-  // The whole-app language control in the header.
-  const LANG_SELECT = '[data-testid="language-select"]';
-
   /** Geometry of the tab area and the source picker's scrolling list. */
   function tabAreaMetrics() {
     return browser.execute(() => {
@@ -1079,11 +1079,7 @@ describe('tab area at a short window height', () => {
     expect(english.smallestTabBox[0]).toBeGreaterThanOrEqual(24);
     expect(english.smallestTabBox[1]).toBeGreaterThanOrEqual(24);
 
-    await $(LANG_SELECT).selectByAttribute('value', 'de');
-    await browser.waitUntil(async () => (await $(LANG_SELECT).getValue()) === 'de', {
-      timeout: 5000,
-      timeoutMsg: 'the language should switch to German',
-    });
+    await setLanguage('de');
     // Wait for a label the two locales spell differently, so the assertions below
     // cannot race the re-render and measure English boxes.
     await browser.waitUntil(async () => (await tabLabel('tab-abilities')) === 'Fertigkeiten', {
@@ -1103,11 +1099,7 @@ describe('tab area at a short window height', () => {
     expect(german.smallestTabBox[1]).toBeGreaterThanOrEqual(24);
 
     // Hand the next spec in this file the language it expects.
-    await $(LANG_SELECT).selectByAttribute('value', 'en');
-    await browser.waitUntil(async () => (await $(LANG_SELECT).getValue()) === 'en', {
-      timeout: 5000,
-      timeoutMsg: 'the language should switch back to English',
-    });
+    await setLanguage('en');
   });
 
   it('restores the full-height layout when the window grows back', async () => {

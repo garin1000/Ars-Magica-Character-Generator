@@ -45,6 +45,14 @@ const TAB_BAR = '[role="tablist"]';
 const WIZARD_RAIL = '[data-testid="wizard-rail"]';
 const WIZARD_NEXT = '[data-testid="wizard-next"]';
 
+// The settings dialog (C4) and the two controls that moved into it from the
+// header. The ids are unchanged — the controls were relocated, not rewritten —
+// so every spec that already named them keeps working once the dialog is open.
+const SETTINGS_DIALOG = '[data-testid="settings-dialog"]';
+const LANGUAGE_SELECT = '[data-testid="language-select"]';
+const MODE_SELECT = '[data-testid="mode-select"]';
+const THEME_SELECT = '[data-testid="theme-select"]';
+
 // The first wait of a run also covers app start-up and the ruleset load over IPC
 // (the create buttons are the loaded profiles, so they do not exist before it);
 // every later wait is an ordinary DOM update. Same figures the specs use.
@@ -129,6 +137,92 @@ export async function runDocumentAction(action) {
     );
   }
   await browser.keys(chord);
+}
+
+/**
+ * Open the settings dialog (C4) and leave it open.
+ *
+ * The header button rather than the native menu's Settings item, for the reason
+ * `runDocumentAction` gives above: a native menu is not in the webview, so
+ * WebDriver cannot click it. Both routes call the same
+ * `store.runDocumentAction('settings')`.
+ */
+export async function openSettings() {
+  const dialog = await $(SETTINGS_DIALOG);
+  if (await dialog.isExisting()) return;
+
+  const button = await $('[data-testid="settings-button"]');
+  await button.waitForExist({ timeout: BOOT_TIMEOUT });
+  await button.waitForClickable({ timeout: STEP_TIMEOUT });
+  await button.click();
+  await dialog.waitForExist({ timeout: STEP_TIMEOUT });
+}
+
+/** Dismiss the settings dialog if it is open. */
+export async function closeSettings() {
+  const dialog = await $(SETTINGS_DIALOG);
+  if (!(await dialog.isExisting())) return;
+
+  await $('[data-testid="settings-close"]').click();
+  await dialog.waitForExist({ timeout: STEP_TIMEOUT, reverse: true });
+}
+
+/**
+ * Choose the UI language, through the settings dialog that holds it since C4,
+ * and wait for the choice to land before returning.
+ *
+ * Every spec that switches language goes through here rather than naming the
+ * select itself: the control moved once already, and one helper is one place to
+ * follow it.
+ *
+ * @param {'en'|'de'} value
+ */
+export async function setLanguage(value) {
+  await openSettings();
+  await $(LANGUAGE_SELECT).selectByAttribute('value', value);
+  await browser.waitUntil(async () => (await $(LANGUAGE_SELECT).getValue()) === value, {
+    timeout: STEP_TIMEOUT,
+    timeoutMsg: `language should switch to ${value}`,
+  });
+  await closeSettings();
+}
+
+/**
+ * Choose the palette, through the settings dialog (C4).
+ *
+ * @param {'auto'|'light'|'dark'} value
+ */
+export async function setTheme(value) {
+  await openSettings();
+  await $(THEME_SELECT).selectByAttribute('value', value);
+  await browser.waitUntil(async () => (await $(THEME_SELECT).getValue()) === value, {
+    timeout: STEP_TIMEOUT,
+    timeoutMsg: `theme should switch to ${value}`,
+  });
+  await closeSettings();
+}
+
+/**
+ * Choose the validation mode, through the settings dialog that holds it since C4.
+ *
+ * @param {'enforced'|'advisory'|'silent'} value
+ */
+export async function setValidationMode(value) {
+  await openSettings();
+  await $(MODE_SELECT).selectByAttribute('value', value);
+  await browser.waitUntil(async () => (await $(MODE_SELECT).getValue()) === value, {
+    timeout: STEP_TIMEOUT,
+    timeoutMsg: `validation mode should switch to ${value}`,
+  });
+  await closeSettings();
+}
+
+/** The validation mode currently chosen, read from the dialog. */
+export async function validationMode() {
+  await openSettings();
+  const value = await $(MODE_SELECT).getValue();
+  await closeSettings();
+  return value;
 }
 
 /**
@@ -387,6 +481,12 @@ export async function satisfyMagusMinimums(language = 'Latin') {
  * startup screen is already showing.
  */
 export async function returnToStartScreen() {
+  // A settings dialog a previous spec left open would make the shell `inert`, so
+  // the Ctrl+N below would reach a live window listener but land on a screen the
+  // user cannot see past. Every helper here closes the dialog behind itself, so
+  // this is belt-and-braces against a spec that opened it by hand.
+  await closeSettings();
+
   // Decide only once the app has painted one of its three screens: on the very
   // first call it may still be starting up, and New only leaves a screen that
   // has been reached.

@@ -17,6 +17,21 @@ mode-enforced = Enforced
 mode-advisory = Advisory
 mode-silent = Silent
 
+# Which palette the app paints with. `auto` follows the desktop and is the
+# default. Option labels, never the raw `auto`/`light`/`dark` ids — a slug on
+# screen is the same violation as a hardcoded English string.
+theme-label = Appearance
+theme-auto = Match the desktop
+theme-light = Light
+theme-dark = Dark
+
+# The settings dialog (C4): language, appearance and validation strictness, all
+# three persisted across restarts. Reachable from the native menu's Settings item
+# and from the header button on every screen.
+settings-title = Settings
+settings-open = Settings
+settings-close = Close
+
 type-label = Character type
 type-grog = Grog
 type-companion = Companion
@@ -38,9 +53,10 @@ start-create-title = Create a new character
 start-create-hint = The character type is chosen here, once — it cannot be changed later.
 # S28 (full-audit UX): names the validation-mode axis (Enforced/Advisory/Silent)
 # that distinguishes direct-validated from direct-unchecked creation — invisible
-# on this screen otherwise. The toolbar's Validation control only mounts once a
-# character exists (App.svelte), so this can only point ahead to it.
-start-create-mode-hint = How strictly the rules are checked (Validation, in the toolbar) can be changed at any time once the character is open.
+# on this screen otherwise. C4 moved the Validation control into the settings
+# dialog, which is reachable from this screen too, so the hint names where it is
+# rather than pointing ahead to a toolbar that no longer exists (C3c).
+start-create-mode-hint = How strictly the rules are checked (Validation) can be changed at any time, under Settings.
 start-wizard-title = Guided creation
 start-wizard-hint = Step by step through this type's creation phases, in order. The character type is chosen here too, once — it cannot be changed later.
 
