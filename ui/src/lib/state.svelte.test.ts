@@ -4179,6 +4179,19 @@ describe('exportMarkdown', () => {
     finishSave('/tmp/marcus.armc');
     await saving;
   });
+
+  // MOVED HERE BY C3c from `SaveLoadBar.test.ts`, which asserted it of the
+  // Export toolbar button that no longer exists. It was always a claim about the
+  // store action rather than the button: exporting must not write the save file,
+  // or "export a copy" would quietly become "save".
+  it('exports without writing the document through the save path', async () => {
+    vi.mocked(ipc.saveEntity).mockReset();
+
+    await store.exportMarkdown();
+
+    expect(ipc.exportMarkdown).toHaveBeenCalledTimes(1);
+    expect(ipc.saveEntity).not.toHaveBeenCalled();
+  });
 });
 
 // --- the aging roll draft (M6/6b6c) -----------------------------------------
@@ -4500,7 +4513,7 @@ describe('the active theme', () => {
 });
 
 // C3a: the native menu can reach neither of the two mechanisms that gated the
-// document actions before it. The toolbar buttons carry `disabled`, and
+// document actions before it. The toolbar buttons carried `disabled`, and
 // `App.svelte`'s window-level keydown handler repeated the same check by hand
 // (`inert` does not reach a window listener) — a menu item obeys neither. So
 // "may this action run right now?" moved into the store as ONE predicate, and
@@ -4536,9 +4549,30 @@ describe('the document-action gate', () => {
     }
   });
 
+  // MOVED HERE BY C3c, from `App.test.ts`'s "keeps the banner and the document
+  // controls", which asserted a `save-button` was rendered on the wizard screen.
+  // With the toolbar gone that claim has no element to make itself about: the
+  // menu expresses availability as an ENABLED ITEM, which WebDriver and a
+  // server-rendered string can both see nothing of. The predicate is the honest
+  // subject, and it is the one all three callers read.
+  //
+  // The claim itself is load-bearing rather than incidental: the unsaved-changes
+  // guard (CLAUDE.md) offers the user a chance to SAVE rather than lose the
+  // work, and the wizard is a screen they can be holding unsaved work on. A
+  // wizard that could not save would make that offer a lie.
+  it('offers the document-writing actions in the guided wizard too', () => {
+    store.view = 'wizard';
+
+    for (const action of ['new', 'open', 'save', 'saveAs', 'export'] as const) {
+      expect(store.documentActionEnabled(action), action).toBe(true);
+    }
+  });
+
   // Save/Save As/Export write the document being edited, and the startup screen
-  // has none — only the placeholder entity. The toolbar simply is not rendered
-  // there; the menu is always there, so it has to say no itself.
+  // has none — only the placeholder entity. The menu bar is on screen there like
+  // everywhere else and the shortcuts are live, so both have to say no
+  // themselves; there is no longer a toolbar whose simple absence said it for
+  // them.
   it('withholds the document-writing actions on the startup screen', () => {
     store.view = 'start';
 
@@ -4570,7 +4604,7 @@ describe('the document-action gate', () => {
     await release();
   });
 
-  it('runs the very store method the toolbar button calls', async () => {
+  it('runs the very store method that owns each file operation', async () => {
     const calls: string[] = [];
     const spies = [
       vi.spyOn(store, 'newDocument').mockImplementation(async () => void calls.push('new')),

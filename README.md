@@ -94,12 +94,13 @@ yourself.
 - **Source-backed rules.** Every implemented mechanic is traced to a line range
   in the authoritative rulebook Markdown — no rules from memory.
 - **Works like a standard document app.** A tracked current file with New, Open,
-  Save and Save As — plus the usual Ctrl/Cmd+N/O/S (Shift+S for Save As)
-  shortcuts. The window title shows the file name and marks unsaved edits; Save
-  writes straight to the current file while Save As always prompts. A native
-  menu bar offers the same actions, fully translated and greyed out exactly when
-  the buttons are — on macOS with the usual application, Edit and Window menus,
-  and Settings where each desktop expects it.
+  Save, Save As and Export, on your desktop's own menu bar — fully translated,
+  and greyed out exactly when the action cannot run. On macOS with the usual
+  application, Edit and Window menus, and Settings where each desktop expects
+  it. The same actions answer to the usual shortcuts: Ctrl/Cmd+N/O/S, Shift+S
+  for Save As and Shift+E for Export. The window title shows the file name and
+  marks unsaved edits; Save writes straight to the current file while Save As
+  always prompts.
 - **Never lose work by accident.** Closing or quitting the app with unsaved
   changes — including via macOS Cmd+Q — prompts for confirmation before
   discarding, as does starting a new document or opening another file. It is one
@@ -114,8 +115,8 @@ yourself.
   year and the age follows. The saga year is remembered between launches and is
   saga-wide rather than part of any character, so changing it never silently rewrites
   a character you already built.
-- **Export a readable character sheet.** One click writes the whole character to a
-  Markdown file of your choosing — identity, Characteristics, Virtues and Flaws
+- **Export a readable character sheet.** File -> Export writes the whole character
+  to a Markdown file of your choosing — identity, Characteristics, Virtues and Flaws
   (including the ones a House or type granted), Abilities, Arts, spells,
   equipment, the computed combat/Soak/Fatigue/Wound values, the magic possessions,
   and the aging record — in the language the app is running in. Exporting is not a
@@ -277,7 +278,7 @@ focus.
 
   An **existing** character can be walked through it too, not only a brand-new one:
   from the startup screen a file can be opened straight into the flow, and the
-  editor's toolbar offers the same for the character already on screen. A file saved
+  editor's header offers the same for the character already on screen. A file saved
   part-way through resumes on the step it was left on, still refusing to jump past
   it; a character built in the editor opens with every step reachable and nothing
   gating, since it never passed those gates in the first place. Only a Next onto a

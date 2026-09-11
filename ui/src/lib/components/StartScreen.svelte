@@ -9,13 +9,14 @@
   const typeIds = $derived(store.ruleset ? Object.keys(store.ruleset.ruleset.type_profiles) : []);
 
   // Nothing may be started while the ruleset is still loading (no profiles yet) or
-  // while a native file dialog is open — the same guard the document toolbar puts
-  // on its buttons.
+  // while a native file dialog is open — the same guard `documentActionEnabled`
+  // puts on every document action.
   const blocked = $derived(store.loading || store.busy);
 
-  // The one error surface of this screen. SaveLoadBar's banner is not rendered
-  // here, so without this a failed ruleset load would leave the user with no
-  // create buttons and no reason for their absence. Same `error-<kind>` keys.
+  // The one error surface of this screen. The header's `ErrorBanner` is not
+  // rendered here, so without this a failed ruleset load would leave the user
+  // with no create buttons and no reason for their absence. Same `error-<kind>`
+  // keys.
   const errorText = $derived(store.error ? store.t(`error-${store.error.kind}`) : null);
 
   // Initial focus: the first control of the screen, so keyboard and screen-reader

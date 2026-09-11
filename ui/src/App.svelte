@@ -29,7 +29,7 @@
   import MythicCompanionTypeSelector from './lib/components/MythicCompanionTypeSelector.svelte';
   import BalanceBar from './lib/components/BalanceBar.svelte';
   import ValidationPanel from './lib/components/ValidationPanel.svelte';
-  import SaveLoadBar from './lib/components/SaveLoadBar.svelte';
+  import ErrorBanner from './lib/components/ErrorBanner.svelte';
   import DiscardPrompt from './lib/components/DiscardPrompt.svelte';
   import logoUrl from './lib/assets/logo.png';
 
@@ -276,6 +276,14 @@
         return 'new';
       case 'o':
         return 'open';
+      case 'e':
+        // C3c: Export is the one document action with no other keyboard route
+        // once the toolbar is gone — a native menu item is not in the webview's
+        // tab order, so without this chord Export is mouse-or-menu only.
+        // Shift is REQUIRED rather than optional: on GTK a bare Ctrl+E is the
+        // readline end-of-line binding that text entries answer to, and the
+        // character-name field is precisely where someone would press it.
+        return event.shiftKey ? 'export' : null;
       default:
         return null;
     }
@@ -372,13 +380,36 @@
       {/if}
     </div>
     <!-- The language applies to the whole app, so it is offered on both screens.
-         The validation mode and the document toolbar act on a character, so they
-         appear only once one exists. -->
+         Everything else here acts on a character, so it appears only once one
+         exists.
+
+         New/Open/Save/Save As/Export are NOT here. C3c retired the toolbar that
+         held them: they are the native menu's (C3a) and the keyboard's, and a
+         third rendering of the same five actions was a third copy of the gate
+         `store.documentActionEnabled` exists to be the only answer to. What
+         stayed is what was never a document action — the entry into the guided
+         flow, and the error banner. -->
     <div class="controls">
       <LanguageSelector />
       {#if store.view !== 'start'}
         <ModeToggle />
-        <SaveLoadBar />
+        <div class="header-actions">
+          <!-- Take the character on screen into the guided flow (#31). Offered
+               only from the editor — the wizard is where it leads — and only for
+               a type the loaded ruleset declares a profile for, since the
+               profile's phases ARE the rail. -->
+          {#if store.view === 'editor' && store.canEnterWizard}
+            <button
+              type="button"
+              onclick={() => store.enterWizard()}
+              disabled={store.busy}
+              data-testid="wizard-continue-button"
+            >
+              {store.t('action-continue-in-wizard')}
+            </button>
+          {/if}
+          <ErrorBanner />
+        </div>
       {/if}
     </div>
   </header>

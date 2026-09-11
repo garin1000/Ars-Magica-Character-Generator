@@ -6,7 +6,7 @@ import type { Entity, EntityTypeProfile, LocalizedRuleset } from '../types';
 // The start screen reads the shared store singleton (ruleset, loading/busy flags,
 // error banner) and the Fluent bundle; both of its actions delegate to store
 // actions that go over the Tauri IPC bridge, so mock the bridge away. Harness
-// mirrors SaveLoadBar.test.ts.
+// mirrors XpBar.test.ts.
 vi.mock('../ipc', () => ({
   loadRuleset: vi.fn(),
   validateEntity: vi.fn().mockResolvedValue({ issues: [] }),
@@ -230,9 +230,9 @@ describe('StartScreen', () => {
     expect(element(html(), 'start-open').open).not.toMatch(/disabled/);
   });
 
-  // Without this the only error surface is SaveLoadBar's, which the start screen
-  // does not render: a failed ruleset load would leave the user with no create
-  // buttons and no explanation.
+  // Without this the only error surface is the header's `ErrorBanner`, which the
+  // start screen does not render: a failed ruleset load would leave the user with
+  // no create buttons and no explanation.
   it('surfaces a failed ruleset load through the shared error keys', () => {
     store.ruleset = null;
     store.error = { kind: 'ruleset', ruleset_kind: 'parse', errors: ['bad json'] };

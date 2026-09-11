@@ -140,9 +140,10 @@ fn all_enabled() -> MenuFlags {
     }
 }
 
-// The whole point of the slice: the document actions the toolbar offers are
-// reachable from the menu bar, on every desktop, in the order a File menu is
-// read in.
+// The whole point of the slice: every document action is reachable from the
+// menu bar, on every desktop, in the order a File menu is read in. Since C3c
+// removed the in-app toolbar this is no longer a second route to them — it is
+// the primary one, the keyboard shortcuts being the other.
 #[test]
 fn the_file_menu_offers_every_document_action_on_every_platform() {
     for platform in Platform::ALL {

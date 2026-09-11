@@ -26,7 +26,7 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { clean, isRowBlocked, startCharacter } from '../helpers.js';
+import { clean, isRowBlocked, runDocumentAction, startCharacter } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 // End-to-end: Great Characteristic raises a Characteristic's buy cap (it grants
@@ -620,7 +620,7 @@ describe('character editor', () => {
 
     // Save through the ARM_E2E_FILE seam, then confirm the JSON on disk.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',
@@ -639,7 +639,7 @@ describe('character editor', () => {
     // confirm that; the reload then repopulates the entity, proving Open works.
     await $('[data-testid="tab-virtues_flaws"]').click();
     await removeKeenVision.click();
-    await $('[data-testid="open-button"]').click();
+    await runDocumentAction('open');
     await $('[data-testid="discard-confirm"]').waitForExist({ timeout: 10000 });
     await $('[data-testid="discard-confirm"]').click();
     await $('[data-testid^="remove-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
@@ -806,7 +806,7 @@ describe('character details', () => {
 
   it('round-trips the new fields through a save', async () => {
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',

@@ -44,6 +44,7 @@ import {
   advanceWizardTo,
   BOOT_TIMEOUT,
   clean,
+  runDocumentAction,
   setWizardAge,
   standOnWizardStep,
   startWizard,
@@ -448,7 +449,7 @@ describe('life-stage funding and Sample Childhoods', () => {
     await $(TAKEN).waitForExist({ timeout: STEP_TIMEOUT });
 
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'save did not write the file',
@@ -463,7 +464,7 @@ describe('life-stage funding and Sample Childhoods', () => {
     });
     expect(saved.xp_pool ?? 0).toBe(0);
 
-    await $('[data-testid="open-button"]').click();
+    await runDocumentAction('open');
     const discard = await $('[data-testid="discard-confirm"]');
     if (await discard.isExisting()) await discard.click();
 

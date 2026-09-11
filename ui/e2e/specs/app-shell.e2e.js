@@ -7,7 +7,7 @@
 // session:
 //
 //  1. `app entry`'s first `it` asserts the app's BOOT state (start screen, no
-//     tablist, no doc-status, no mode-select, no save-button). It must run before
+//     tablist, no doc-status, no mode-select). It must run before
 //     any other `it` in this file creates a character, so it is placed as the
 //     FIRST `it` of the FIRST describe below — not because of file-name sort
 //     order (that used to matter when every spec got its own process; it no
@@ -29,7 +29,7 @@ import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { clean, returnToStartScreen, startCharacter } from '../helpers.js';
+import { clean, returnToStartScreen, runDocumentAction, startCharacter } from '../helpers.js';
 // The app's save/load dialog seam (ARM_E2E_FILE) points at this fixed path, so
 // Save and Open never raise a native dialog.
 import { e2eFile } from '../wdio.conf.js';
@@ -61,11 +61,15 @@ describe('app entry', () => {
     expect((await $$('[data-testid^="start-create-"]')).length).toBeGreaterThan(0);
 
     // No character exists yet, so nothing that acts on one is offered: no editor
-    // tabs, no document status, no validation-mode toggle, no save/export bar.
+    // tabs, no document status, no validation-mode toggle.
+    //
+    // Saving is unavailable here too, but since C3c that is no longer an absent
+    // BUTTON — it is a disabled item on the native menu, which WebDriver cannot
+    // see. The claim moved to `store.documentActionEnabled('save')` in
+    // `state.svelte.test.ts`, where it is a predicate rather than a rendering.
     expect(await $(TAB_BAR).isExisting()).toBe(false);
     expect(await $('[data-testid="doc-status"]').isExisting()).toBe(false);
     expect(await $('[data-testid="mode-select"]').isExisting()).toBe(false);
-    expect(await $('[data-testid="save-button"]').isExisting()).toBe(false);
 
     // The language applies to the whole app, so it IS offered here.
     await expect($('[data-testid="language-select"]')).toExist();
@@ -103,7 +107,7 @@ describe('app entry', () => {
 
     // An edit makes the document dirty, so New must ask before discarding it.
     await $(NAME_INPUT).setValue('Abandoned draft');
-    await $('[data-testid="new-button"]').click();
+    await runDocumentAction('new');
     await $('[data-testid="discard-prompt"]').waitForExist({ timeout: 10000 });
 
     // Cancelling keeps the character being edited.
@@ -116,7 +120,7 @@ describe('app entry', () => {
     expect(await $(START_SCREEN).isExisting()).toBe(false);
 
     // Confirming discards it and lands back on the type choice.
-    await $('[data-testid="new-button"]').click();
+    await runDocumentAction('new');
     await $('[data-testid="discard-confirm"]').waitForExist({ timeout: 10000 });
     await $('[data-testid="discard-confirm"]').click();
     await $(START_SCREEN).waitForExist({ timeout: 10000 });
@@ -129,7 +133,7 @@ describe('app entry', () => {
     await startCharacter('grog');
     await $(NAME_INPUT).setValue('Rolf the Turb');
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',
@@ -185,7 +189,7 @@ describe('header document status', () => {
 
     // Saving shows the file name on-screen and clears the dirty marker.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',

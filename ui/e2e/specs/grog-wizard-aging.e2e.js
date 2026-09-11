@@ -30,6 +30,7 @@ import {
   BOOT_TIMEOUT,
   clean,
   currentWizardPhase,
+  runDocumentAction,
   setWizardAge,
   standOnWizardStep,
   startCharacter,
@@ -559,7 +560,7 @@ describe('the guided aging step', () => {
     // Saved first, so the document is clean going in: what follows must not dirty
     // it, because the die is UI-only state the entity never holds.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(async () => !clean(await $(DOC_STATUS).getText()).startsWith('*'), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'saving should clear the dirty marker before the die is typed',
@@ -660,7 +661,7 @@ describe('the guided aging step', () => {
     expect((await agingPoints()).qik).toBe('1');
 
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'save did not write the file',
@@ -703,7 +704,7 @@ describe('the guided aging step', () => {
     expect(rest).not.toContain('"distribution"');
 
     // Reload: everything is read back off the stored choices, with no reconciliation.
-    await $('[data-testid="open-button"]').click();
+    await runDocumentAction('open');
     const discard = await $('[data-testid="discard-confirm"]');
     if (await discard.isExisting()) await discard.click();
 
@@ -976,7 +977,7 @@ describe('the aging crisis', () => {
 
   it('saves the resolved Crisis and takes the whole year back off', async () => {
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'save did not write the file',
@@ -1178,7 +1179,7 @@ describe('the saga year', () => {
     // A clean baseline first: the claim is that this edit moves nothing, which can
     // only be read off a document that had nothing outstanding.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'save did not write the file',

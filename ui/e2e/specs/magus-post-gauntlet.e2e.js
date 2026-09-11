@@ -42,6 +42,7 @@ import {
   advanceWizardTo,
   BOOT_TIMEOUT,
   clean,
+  runDocumentAction,
   satisfyMagusMinimums,
   setWizardAge,
   startWizard,
@@ -385,7 +386,7 @@ describe('a magus past its Gauntlet', () => {
     expect(await textOf(XP_POOL_TOTAL)).toBe('890');
 
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'save did not write the file',
@@ -408,7 +409,7 @@ describe('a magus past its Gauntlet', () => {
 
     // The reload comes AFTER Finish deliberately: loading a file lands in the editor,
     // so there would be no wizard left to advance.
-    await $('[data-testid="open-button"]').click();
+    await runDocumentAction('open');
     const discard = await $('[data-testid="discard-confirm"]');
     if (await discard.isExisting()) await discard.click();
 

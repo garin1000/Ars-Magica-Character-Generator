@@ -9,7 +9,7 @@ import type { Entity, LocalizedRuleset } from './lib/types';
 // overlay: rfd dialogs are not input-modal on Linux, so without this the user can
 // keep editing the character behind the dialog. Everything the app root reaches
 // goes over the Tauri IPC bridge, so mock it away; harness mirrors
-// lib/components/SaveLoadBar.test.ts.
+// lib/components/XpBar.test.ts.
 vi.mock('./lib/ipc', () => ({
   loadRuleset: vi.fn(),
   validateEntity: vi.fn().mockResolvedValue({ issues: [] }),
@@ -165,10 +165,15 @@ describe('App screens', () => {
     const body = html();
 
     expect(openTag(body, 'language-select')).not.toBeNull();
-    // Validation mode and the document toolbar are meaningless with no document,
-    // and the status would read "unsaved" for a document that does not exist.
+    // Validation mode is meaningless with no document, and the status would read
+    // "unsaved" for a document that does not exist.
+    //
+    // Saving is unavailable here too, and used to be asserted as an absent
+    // `save-button`. Since C3c that availability is a DISABLED MENU ITEM, which
+    // no rendered string can show — the claim lives in `state.svelte.test.ts`'s
+    // "withholds the document-writing actions on the startup screen", against
+    // `documentActionEnabled` itself.
     expect(openTag(body, 'mode-select')).toBeNull();
-    expect(openTag(body, 'save-button')).toBeNull();
     expect(openTag(body, 'doc-status')).toBeNull();
   });
 
@@ -220,6 +225,98 @@ describe('App screens', () => {
   });
 });
 
+// --- what the toolbar left behind (C3c) --------------------------------------
+//
+// C3c retires the in-app document toolbar: New/Open/Save/Save As/Export are the
+// native menu's (C3a) and the keyboard's, and duplicating them as buttons is the
+// second copy of a gate this project spent C3a collapsing into one.
+//
+// Two things inside `SaveLoadBar` were NOT document actions and had to survive
+// it: the app's error banner and the "continue in the guided flow" entry. The
+// first three tests here were written against the toolbar and passed unchanged
+// once it was gone, which is the point of them — they pin the behaviour across
+// the move rather than the markup it used to live in.
+describe('the header after the document toolbar', () => {
+  it('shows the error banner in the editor header', () => {
+    store.error = { kind: 'io' } as never;
+    const body = html();
+
+    const banner = openTag(body, 'error');
+    expect(banner).not.toBeNull();
+    expect(banner).toMatch(/role="alert"/);
+    expect(textOf(body, 'error')).toBe(store.t('error-io'));
+    expect(textOf(body, 'error')).not.toBe('error-io');
+  });
+
+  // `AppError::Export` carries the specific missing Fluent/catalogue keys, and
+  // the banner names them — a passive "some text is missing" leaves the user
+  // nothing to act on or report.
+  it('names the missing keys an export failure reports', () => {
+    store.error = { kind: 'export', missing: ['spell-name', 'type-grog'] } as never;
+
+    expect(textOf(html(), 'error')).toBe(
+      store.t('error-export', { missing: 'spell-name, type-grog' }),
+    );
+  });
+
+  it('renders no banner while nothing has failed', () => {
+    store.error = null;
+    expect(openTag(html(), 'error')).toBeNull();
+  });
+
+  // The five document actions are the menu's and the keyboard's now. Asserting
+  // their ABSENCE is what stops the toolbar growing back one button at a time.
+  it('offers no in-app buttons for the document actions', () => {
+    const body = html();
+    for (const testid of [
+      'new-button',
+      'open-button',
+      'save-button',
+      'save-as-button',
+      'export-button',
+    ]) {
+      expect(openTag(body, testid), testid).toBeNull();
+    }
+  });
+});
+
+// Slice 5 (#31): the character on screen can be walked through the guided flow,
+// not only a brand-new one. Moved here from `SaveLoadBar.test.ts` with the
+// toolbar's removal (C3c) — the action was never a document action, so it stayed
+// in the header while the five that were went to the menu. Offered
+// CONDITIONALLY: a save from another ruleset may name a type this build has no
+// profile for, and a wizard with no rail is not a screen to enter.
+describe('the guided-creation entry in the header', () => {
+  it('offers continuing the loaded character in the guided flow', () => {
+    installRuleset('companion');
+    const body = html();
+
+    expect(openTag(body, 'wizard-continue-button')).toMatch(/<button/i);
+    expect(textOf(body, 'wizard-continue-button')).toBe(store.t('action-continue-in-wizard'));
+    expect(textOf(body, 'wizard-continue-button')).not.toBe('action-continue-in-wizard');
+  });
+
+  it('localizes the label to German', () => {
+    installRuleset('companion');
+    store.lang = 'de';
+    expect(textOf(html(), 'wizard-continue-button')).toBe(store.t('action-continue-in-wizard'));
+    store.lang = 'en';
+  });
+
+  it('is not offered for a type_id the loaded ruleset has no profile for', () => {
+    installRuleset();
+    expect(store.ruleset!.ruleset.type_profiles[store.entity.type_id]).toBeUndefined();
+    expect(openTag(html(), 'wizard-continue-button')).toBeNull();
+  });
+
+  it('is not offered while the wizard is already on screen', () => {
+    installRuleset('companion');
+    store.view = 'wizard';
+    expect(openTag(html(), 'wizard-continue-button')).toBeNull();
+    store.view = 'editor';
+  });
+});
+
 // --- the wizard as the third screen (M6b1b) ----------------------------------
 
 describe('App and the guided wizard', () => {
@@ -243,13 +340,19 @@ describe('App and the guided wizard', () => {
   });
 
   // The wizard edits a real character, so the banner belongs above it — and the
-  // document toolbar has to be reachable, because the close guard promises the
+  // document actions have to be reachable, because the close guard promises the
   // user can save rather than lose the work.
+  //
+  // That last clause used to be asserted here as a rendered `save-button`. C3c
+  // moved saving to the native menu, whose enabled state is not markup, so the
+  // claim moved with it: `state.svelte.test.ts`'s "offers the document-writing
+  // actions in the guided wizard too" pins `documentActionEnabled` for
+  // `view === 'wizard'`. What is still a rendering — and so still belongs here —
+  // is the rest of the header.
   it('keeps the banner and the document controls', () => {
     const body = html();
     expect(openTag(body, 'character-type')).not.toBeNull();
     expect(openTag(body, 'identity-name')).not.toBeNull();
-    expect(openTag(body, 'save-button')).not.toBeNull();
     expect(openTag(body, 'mode-select')).not.toBeNull();
     expect(openTag(body, 'doc-status')).not.toBeNull();
   });

@@ -26,6 +26,7 @@ import {
   currentWizardPhase,
   resizeWindowTo,
   returnToStartScreen,
+  runDocumentAction,
   satisfyMagusMinimums,
   standOnWizardStep,
   startCharacter,
@@ -70,10 +71,17 @@ describe('guided creation wizard', () => {
     // It edits a real character, so the banner is above it and the document
     // controls are reachable — the unsaved-changes guard promises the work can be
     // saved rather than lost.
+    //
+    // "Saving is reachable here" used to be asserted as a rendered save-button.
+    // C3c retired the toolbar, and the native menu states availability as an
+    // ENABLED ITEM, which WebDriver cannot read — so that claim now lives in
+    // `state.svelte.test.ts` ("offers the document-writing actions in the guided
+    // wizard too"), against `documentActionEnabled` itself. What is proved HERE,
+    // against the real binary, is the stronger thing: a save from the wizard
+    // actually writes the file — see `saveAndRead()` in the describe below.
     const label = clean(await $(CHARACTER_TYPE).getText());
     expect(label).toContain('Magus');
     expect(label).not.toContain('type-magus');
-    await expect($('[data-testid="save-button"]')).toExist();
     await expect($(MODE_SELECT)).toExist();
 
     // Slice 2 (#1) deleted the read-only `type` step; manual-testing-findings #3 then
@@ -270,7 +278,6 @@ describe('guided creation wizard', () => {
 describe('opening a saved character into the guided wizard', () => {
   const WIZARD_RAIL = '[data-testid="wizard-rail"]';
   const START_OPEN_WIZARD = '[data-testid="start-open-wizard"]';
-  const SAVE_BUTTON = '[data-testid="save-button"]';
   const STATUS = '[data-testid="doc-status"]';
   const FINISH = '[data-testid="wizard-finish"]';
   const NAME_INPUT = '[data-testid="identity-name"]';
@@ -284,7 +291,7 @@ describe('opening a saved character into the guided wizard', () => {
   /** Save through the ARM_E2E_FILE seam and hand back the JSON that landed on disk. */
   async function saveAndRead() {
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $(SAVE_BUTTON).click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'save did not write the file',

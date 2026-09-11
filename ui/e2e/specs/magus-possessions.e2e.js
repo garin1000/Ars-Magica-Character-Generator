@@ -16,7 +16,7 @@ import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { clean, isRowBlocked, startCharacter } from '../helpers.js';
+import { clean, isRowBlocked, runDocumentAction, startCharacter } from '../helpers.js';
 import { e2eExportFile, e2eFile } from '../wdio.conf.js';
 
 // End-to-end: Spells (magus-only). The Spells tab appears only for a magus;
@@ -399,7 +399,7 @@ describe('spells', () => {
 
   it('round-trips the spell list through a save', async () => {
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',
@@ -550,7 +550,7 @@ describe('familiar', () => {
 
   it('round-trips the whole statblock through save and Open', async () => {
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',
@@ -572,7 +572,7 @@ describe('familiar', () => {
     expect(saved.familiar.powers).toEqual([{ name: 'Mental communication', level: 20 }]);
 
     // And back in through the shipped binary's own Open path.
-    await $('[data-testid="open-button"]').click();
+    await runDocumentAction('open');
     const discard = await $('[data-testid="discard-confirm"]');
     if (await discard.isExisting()) await discard.click();
 
@@ -725,7 +725,7 @@ describe('talisman', () => {
 
     // The schema-14 shape reaches disk: a nested talisman, no legacy key.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',
@@ -755,7 +755,7 @@ describe('talisman', () => {
       }),
     );
 
-    await $('[data-testid="open-button"]').click();
+    await runDocumentAction('open');
     // The document is dirty from the previous test, so confirm discarding first.
     const discard = await $('[data-testid="discard-confirm"]');
     if (await discard.isExisting()) await discard.click();
@@ -1067,7 +1067,7 @@ describe('longevity ritual', () => {
 
     // The stored bonus and focus reach the save file.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',
@@ -1132,7 +1132,7 @@ describe('markdown export', () => {
    */
   async function exportSheet(marker) {
     if (fs.existsSync(exportFile)) fs.unlinkSync(exportFile);
-    await $('[data-testid="export-button"]').click();
+    await runDocumentAction('export');
     await browser.waitUntil(
       () => fs.existsSync(exportFile) && fs.readFileSync(exportFile, 'utf-8').includes(marker),
       { timeout: 15000, timeoutMsg: `export did not write a document containing "${marker}"` },
@@ -1321,7 +1321,7 @@ describe('markdown export', () => {
 
     // Exporting again over the existing file replaces it rather than appending —
     // one H1 and one Soak section, not two.
-    await $('[data-testid="export-button"]').click();
+    await runDocumentAction('export');
     await browser.waitUntil(() => fs.readFileSync(exportFile, 'utf-8').includes(EN_LAST_SECTION), {
       timeout: 15000,
       timeoutMsg: 'the second export did not replace the German document',
@@ -1334,7 +1334,7 @@ describe('markdown export', () => {
   it('does not mark the document saved, and leaves the current file alone', async () => {
     // Save first, so the document has a known current file and a clean baseline.
     if (fs.existsSync(saveFile)) fs.unlinkSync(saveFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(saveFile), {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',
@@ -1367,7 +1367,7 @@ describe('markdown export', () => {
 
     // And Save still writes the JSON to the file the export never touched.
     fs.unlinkSync(saveFile);
-    await $('[data-testid="save-button"]').click();
+    await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(saveFile), {
       timeout: 10000,
       timeoutMsg: 'save after an export did not write the JSON file',

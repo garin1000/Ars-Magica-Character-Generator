@@ -7,7 +7,7 @@
 // `update_close_guard` already uses for the discard dialog — no user-facing
 // string is authored in Rust.
 
-/** A document action the menu, the toolbar and the keyboard shortcuts share. */
+/** A document action the menu and the keyboard shortcuts share. */
 export type DocumentAction = 'new' | 'open' | 'save' | 'saveAs' | 'export' | 'settings';
 
 /**
@@ -19,8 +19,10 @@ export const MENU_ACTION_EVENT = 'menu://action';
 
 /**
  * Menu item id (`arm_app::menu::ACTION_IDS`) -> the store action it runs.
- * Nothing here reimplements a toolbar button: each action is the very method
- * `SaveLoadBar` calls.
+ * Nothing here reimplements a file operation: each action names the very store
+ * method `runDocumentAction` dispatches to, which is also what the keyboard
+ * shortcuts reach. Since C3c removed the toolbar, those two are the only ways
+ * in.
  */
 export const MENU_ACTIONS: Record<string, DocumentAction> = {
   'menu.new': 'new',

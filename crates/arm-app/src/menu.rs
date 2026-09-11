@@ -34,7 +34,7 @@ pub const ACTION_EXPORT: &str = "menu.export";
 pub const ACTION_SETTINGS: &str = "menu.settings";
 
 /// Every action id the menu can emit. The frontend maps each to the very store
-/// action its toolbar button calls; see `ui/src/lib/menu.ts`.
+/// action that owns the file operation; see `ui/src/lib/menu.ts`.
 pub const ACTION_IDS: &[&str] = &[
     ACTION_NEW,
     ACTION_OPEN,
@@ -116,9 +116,10 @@ pub struct MenuLabels {
 
 /// Whether each document action may run right now.
 ///
-/// A native menu reaches neither the toolbar buttons' `disabled` attribute nor
-/// the window-level keydown gate, so the store's single availability predicate
-/// is mirrored here as data and rendered as the items' enabled state.
+/// A native menu is neither a button carrying `disabled` nor a window key
+/// event, so it reaches neither mechanism the frontend gates with. The store's
+/// single availability predicate is therefore mirrored here as data and
+/// rendered as the items' enabled state.
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuFlags {

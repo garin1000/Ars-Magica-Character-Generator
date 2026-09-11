@@ -34,6 +34,7 @@ import { $, $$, browser, expect } from '@wdio/globals';
 
 import {
   currentWizardPhase,
+  runDocumentAction,
   satisfyMagusMinimums,
   startWizard,
   wizardRailPhases,
@@ -402,14 +403,14 @@ export async function finishIntoEditor() {
  */
 export async function saveAndReopen() {
   if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
-  await $('[data-testid="save-button"]').click();
+  await runDocumentAction('save');
   await browser.waitUntil(() => fs.existsSync(e2eFile), {
     timeout: STEP_TIMEOUT,
     timeoutMsg: 'save did not write the file',
   });
   const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
 
-  await $('[data-testid="open-button"]').click();
+  await runDocumentAction('open');
   const discard = await $('[data-testid="discard-confirm"]');
   if (await discard.isExisting()) await discard.click();
   await $(TAB_BAR).waitForExist({ timeout: STEP_TIMEOUT });

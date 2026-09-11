@@ -802,12 +802,11 @@ mythic-required-flaw-label = Required Flaw
 balance-virtues = Virtues: { $used } / { $budget }
 balance-flaws = Flaws: { $used } / { $budget }
 
-# Document toolbar actions.
-action-new = New
+# Header actions. New/Save/Save As/Export lost their keys with the toolbar C3c
+# removed: those five are the native menu's now, and it has its own `menu-*` keys
+# below. `action-open` stays because the STARTUP SCREEN offers Open in its own
+# right, on a screen that has no menu-shaped equivalent to lean on.
 action-open = Open
-action-save = Save
-action-save-as = Save As
-action-export = Export
 # Takes the character already on screen into the guided flow, resuming from the
 # furthest step its file recorded. Offered only where that flow can be walked.
 action-continue-in-wizard = Continue in guided creation

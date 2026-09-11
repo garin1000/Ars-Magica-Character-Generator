@@ -526,6 +526,12 @@ class AppStore {
    * menu's enabled state ({@link menuFlags}) and {@link runDocumentAction} all
    * read it.
    *
+   * C3c then removed the toolbar, so the two remaining callers are the menu and
+   * the keyboard. That makes this the ONLY place the question is answered — and
+   * the only place it can be asserted, since neither a native menu item's
+   * enabled state nor a window key handler is anything a rendered string or
+   * WebDriver can observe.
+   *
    * `settings` is deliberately never enabled: it has no screen to open until
    * C4, and a menu item that opens nothing is worse than a greyed-out one.
    */
@@ -551,8 +557,7 @@ class AppStore {
 
   /**
    * Run `action` if {@link documentActionEnabled} allows it, through the very
-   * method the matching toolbar button calls. Nothing here reimplements a file
-   * operation.
+   * method that owns the file operation. Nothing here reimplements one.
    */
   async runDocumentAction(action: DocumentAction): Promise<void> {
     if (!this.documentActionEnabled(action)) return;

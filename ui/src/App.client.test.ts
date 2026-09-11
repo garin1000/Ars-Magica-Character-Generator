@@ -151,6 +151,11 @@ beforeEach(() => {
   vi.mocked(ipc.updateCloseGuard).mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.saveEntity).mockReset().mockResolvedValue(null);
   vi.mocked(ipc.loadEntity).mockReset().mockResolvedValue(null);
+  // Reset alongside save/load (C3c): the export shortcut tests assert on call
+  // COUNTS, and a spy carrying the previous test's call makes "did not export"
+  // unprovable.
+  vi.mocked(ipc.exportMarkdown).mockReset().mockResolvedValue(null);
+  vi.mocked(ipc.exportLabelKeys).mockReset().mockResolvedValue([]);
   // `null` = "this build has no native discard dialog", which is what the
   // `e2e-testing` binary answers and what sends the frontend to the in-app
   // fallback modal — the one the focus tests below are about. A test wanting the
@@ -283,15 +288,33 @@ async function awaitConfirmationSettled(): Promise<void> {
 }
 
 describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
-  it('returns focus to the New button once a cancelled prompt closes', async () => {
+  /**
+   * Whatever had focus when the confirmation was raised.
+   *
+   * These tests used to focus the toolbar's own New/Open buttons, because a
+   * click on one was how a discard was reached. C3c removed that toolbar, so
+   * New and Open now arrive from the native menu or from Ctrl+N/Ctrl+O — and
+   * in BOTH cases focus is wherever the user left it, never on a control that
+   * belongs to the action. Which makes the character-name field the honest
+   * trigger to test with: someone typing a name, pressing Ctrl+N, then thinking
+   * better of it should be returned to the field they were typing in. The
+   * mechanism under test is unchanged; only the element standing in for "the
+   * thing that had focus" is.
+   */
+  function focusedTrigger(): HTMLElement {
+    const field = document.querySelector('[data-testid="identity-name"]') as HTMLElement;
+    expect(field).toBeTruthy();
+    field.focus();
+    expect(document.activeElement).toBe(field);
+    return field;
+  }
+
+  it('returns focus where it was once a cancelled prompt closes', async () => {
     await mountApp();
     store.view = 'editor';
     flushSync();
 
-    const newButton = document.querySelector('[data-testid="new-button"]') as HTMLElement;
-    expect(newButton).toBeTruthy();
-    newButton.focus();
-    expect(document.activeElement).toBe(newButton);
+    const trigger = focusedTrigger();
 
     store.entity.name = 'a dirtying edit';
     flushSync();
@@ -302,10 +325,10 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
     store.resolveDiscardPrompt(false);
     await awaitConfirmationSettled();
 
-    expect(document.activeElement).toBe(newButton);
+    expect(document.activeElement).toBe(trigger);
   });
 
-  it('returns focus to the Open button once a confirmed load lands back in the editor', async () => {
+  it('returns focus where it was once a confirmed load lands back in the editor', async () => {
     await mountApp();
     store.view = 'editor';
     flushSync();
@@ -314,10 +337,7 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
       entity: loadableEntity(),
     });
 
-    const openButton = document.querySelector('[data-testid="open-button"]') as HTMLElement;
-    expect(openButton).toBeTruthy();
-    openButton.focus();
-    expect(document.activeElement).toBe(openButton);
+    const trigger = focusedTrigger();
 
     store.entity.name = 'a dirtying edit';
     flushSync();
@@ -328,9 +348,9 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
     store.resolveDiscardPrompt(true);
     await awaitConfirmationSettled();
 
-    // open() sets view = 'editor', which it already was, so the Open button is
-    // never unmounted — this is the "trigger survives" half of the fix.
-    expect(document.activeElement).toBe(openButton);
+    // open() sets view = 'editor', which it already was, so the field is never
+    // unmounted — this is the "trigger survives" half of the fix.
+    expect(document.activeElement).toBe(trigger);
   });
 
   it('does not force focus onto a trigger that is no longer in the document', async () => {
@@ -338,10 +358,8 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
     store.view = 'editor';
     flushSync();
 
-    const newButton = document.querySelector('[data-testid="new-button"]') as HTMLElement;
-    expect(newButton).toBeTruthy();
-    newButton.focus();
-    const focusSpy = vi.spyOn(newButton, 'focus');
+    const trigger = focusedTrigger();
+    const focusSpy = vi.spyOn(trigger, 'focus');
 
     store.entity.name = 'a dirtying edit';
     flushSync();
@@ -351,8 +369,10 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
 
     // Simulate the trigger having left the document by the time the prompt
     // resolves — App.svelte's own comment describes exactly this case: "the
-    // old element is disconnected and .focus() is skipped".
-    newButton.remove();
+    // old element is disconnected and .focus() is skipped". This is the common
+    // case for New, which navigates to the startup screen and unmounts the
+    // whole editor the trigger belonged to.
+    trigger.remove();
 
     store.resolveDiscardPrompt(false);
     await awaitConfirmationSettled();
@@ -974,7 +994,7 @@ describe('the native application menu', () => {
     await vi.waitFor(() => expect(ipc.loadEntity).toHaveBeenCalled());
   });
 
-  it('obeys the same gate the toolbar and the shortcuts obey', async () => {
+  it('obeys the same gate the keyboard shortcuts obey', async () => {
     await mountApp();
     store.view = 'start';
     flushSync();
@@ -1069,5 +1089,45 @@ describe('the document keyboard shortcuts', () => {
     press('o');
 
     await vi.waitFor(() => expect(ipc.loadEntity).toHaveBeenCalled());
+  });
+
+  // C3c: Export lost its button with the toolbar, and a native menu item is not
+  // in the webview's tab order — so without a chord of its own, Export became
+  // the one document action a keyboard user inside the window could not reach.
+  // Shift+E rather than a bare Ctrl+E: on GTK, Ctrl+E is the readline
+  // end-of-line binding text entries answer to, and the character name field is
+  // exactly where a user would press it meaning "end of line".
+  it('exports with Ctrl+Shift+E while a character is being edited', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+    vi.mocked(ipc.exportMarkdown).mockResolvedValue('/tmp/marcus.md');
+    vi.mocked(ipc.exportLabelKeys).mockResolvedValue([]);
+
+    press('e', { shiftKey: true });
+
+    await vi.waitFor(() => expect(ipc.exportMarkdown).toHaveBeenCalled());
+  });
+
+  it('does not export from the startup screen, which has no document', async () => {
+    await mountApp();
+    store.view = 'start';
+    flushSync();
+
+    press('e', { shiftKey: true });
+
+    expect(ipc.exportMarkdown).not.toHaveBeenCalled();
+  });
+
+  // A bare Ctrl+E must stay unclaimed, or the GTK end-of-line binding above is
+  // exactly what this handler eats.
+  it('leaves a bare Ctrl+E to the platform', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    press('e');
+
+    expect(ipc.exportMarkdown).not.toHaveBeenCalled();
   });
 });

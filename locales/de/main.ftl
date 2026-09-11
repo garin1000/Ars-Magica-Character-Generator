@@ -817,12 +817,12 @@ mythic-required-flaw-label = Erforderlicher Fehler
 balance-virtues = Tugenden: { $used } / { $budget }
 balance-flaws = Fehler: { $used } / { $budget }
 
-# Aktionen der Dokument-Werkzeugleiste.
-action-new = Neu
+# Aktionen der Kopfzeile. „Neu“, „Speichern“, „Speichern unter“ und „Exportieren“
+# haben ihre Schlüssel mit der von C3c entfernten Werkzeugleiste verloren: diese
+# fünf gehören jetzt zum nativen Menü, das weiter unten eigene `menu-*`-Schlüssel
+# besitzt. `action-open` bleibt, weil der STARTBILDSCHIRM „Öffnen“ eigenständig
+# anbietet — auf einem Bildschirm, der kein menüartiges Gegenstück hat.
 action-open = Öffnen
-action-save = Speichern
-action-save-as = Speichern unter
-action-export = Exportieren
 # Übernimmt den bereits angezeigten Charakter in die geführte Erstellung und setzt
 # beim weitesten Schritt fort, den seine Datei festgehalten hat. Wird nur dort
 # angeboten, wo diese Erstellung durchlaufen werden kann.

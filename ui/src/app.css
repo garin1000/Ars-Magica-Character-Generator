@@ -2418,14 +2418,20 @@ ul {
   overflow-y: auto;
 }
 
-.saveload {
+/* What is left of the header's document strip after C3c retired the toolbar:
+   the guided-creation entry and the error banner. It stays a flex row of its own
+   rather than letting the two become direct children of `.controls`, because
+   `.controls` aligns to `flex-end` — which would bottom-align a small-type error
+   line against a full-height button instead of centring them on each other, the
+   way the strip they came from did. */
+.header-actions {
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
 
 /* A failed-operation banner: the start screen's ruleset load failure, the
-   save/load bar's error line. NOT named `.error` (guided-creation-review-2026-08
+   header's error line. NOT named `.error` (guided-creation-review-2026-08
    #6): a bare one-word class carrying typography collides with every element that
    names its severity in a class — it was silently restyling the validation panel's
    Error rows, which set the same word. The name says what the element IS, so no
