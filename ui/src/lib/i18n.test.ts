@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildBundle, translate } from './i18n';
+import type { ParameterDomain } from './types';
 
 // The real locale sources, loaded the same way i18n.ts loads them, so these
 // tests exercise the shipped German .ftl rather than a synthetic bundle.
@@ -249,6 +250,61 @@ describe('German UI bundle', () => {
       expect(message).toContain('2');
       expect(message.toLowerCase()).not.toMatch(/divine|infernal|göttlich|infernal/);
     }
+  });
+
+  // E2 (open-todos row 24): `unknown_param_value` is the finding a player meets
+  // when a save's typed realm word no longer resolves, and it names the DOMAIN
+  // the value failed in. The engine emits that as the `ParameterDomain` enum's
+  // serialized name, so without a label per variant the German message read
+  // "unbekannten realm-Wert" — an English slug inside a German sentence, the
+  // very thing CLAUDE.md forbids. `Record<ParameterDomain, ...>` is what keeps
+  // this honest: a new engine variant mirrored into the frontend union is a
+  // type error here until it is labelled, so no variant can slip through
+  // unlabelled the way `realm` did.
+  const PARAM_DOMAINS: Record<ParameterDomain, true> = {
+    ability: true,
+    art: true,
+    technique: true,
+    form: true,
+    characteristic: true,
+    item: true,
+    enumerated: true,
+    category: true,
+    realm: true,
+    text: true,
+  };
+
+  it('labels every parameter domain in both locales', () => {
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      for (const domain of Object.keys(PARAM_DOMAINS)) {
+        expect(keys, `${lang} is missing param-domain-${domain}`).toContain(
+          `param-domain-${domain}`,
+        );
+      }
+    }
+    // The German term is the glossary's (translation-tables/sphären-mächte.md:16,
+    // grundbegriffe.md:97 — Realm → Sphäre), the same word `param-label-realm`
+    // and the `realm-<id>` family already use.
+    expect(translate(buildBundle('de'), 'param-domain-realm')).toBe('Sphäre');
+  });
+
+  // The other half of row 24: whatever the player typed must reach the sentence
+  // intact — that IS the mechanism by which the choice is not lost — while the
+  // domain beside it arrives as a word, never as its slug.
+  it.each(['en', 'de'])('shows the typed value back, and no domain slug (%s)', (lang) => {
+    const bundle = buildBundle(lang as 'en' | 'de');
+    const clean = (s: string) => s.replace(/[⁦-⁩]/g, '');
+    const message = clean(
+      translate(bundle, 'issue-unknown_param_value', {
+        item: 'Bound to (Realm)',
+        key: translate(bundle, 'param-label-realm'),
+        value: 'Feenreich',
+        domain: translate(bundle, 'param-domain-realm'),
+      }),
+    );
+    expect(message).toContain('Feenreich');
+    expect(message).not.toContain('realm');
   });
 
   it('has full message-key parity between English and German', () => {

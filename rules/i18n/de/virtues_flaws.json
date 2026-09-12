@@ -114,7 +114,8 @@
     "summary": "Wenn du stirbst, enden alle deine Zauber abrupt, und alle magischen Artefakte, die du erschaffen hast, hören auf zu funktionieren."
   },
   "flaw.bound_to_realm": {
-    "name": "Gebunden an {realm}",
+    "name": "Gebunden an eine Sphäre, {realm}",
+    "name_unfilled": "Gebunden an (Sphäre)",
     "summary": "Der Charakter ist nicht mehr in der Lage, in der weltlichen Welt zu überleben, und erkrankt, wenn er sich über längere Zeit außerhalb einer bestimmten Art übernatürlicher Aura aufhält."
   },
   "flaw.bound_to_role_role": {
@@ -790,7 +791,7 @@
     "summary": "Damit deine Magie funktioniert, musst du beim Wirken jedes Zaubers eine bestimmte Handlung ausführen."
   },
   "flaw.necessary_realm_aura_for_ability": {
-    "name": "Notwendige {realm}-Aura für {ability}",
+    "name": "Notwendige Aura für {ability}, {realm}",
     "summary": "Aufgrund einer Verbindung mit einer bestimmten übernatürlichen Sphäre wirkt sich das Fehlen einer entsprechenden übernatürlichen Aura deutlich auf die Fähigkeit des Charakters aus, sich auf bestimmte Aufgaben zu konzentrieren."
   },
   "flaw.night_terrors": {
@@ -970,7 +971,8 @@
     "summary": "Dieser Charakter wurde am Rand der Gesellschaft großgezogen."
   },
   "flaw.realm_stigmatic": {
-    "name": "{realm}-Stigmatisierter",
+    "name": "Stigmatisierter, {realm}",
+    "name_unfilled": "(Sphäre)-Stigmatisierter",
     "summary": "Der Charakter manifestiert gelegentlich in Gegenwart übernatürlicher Kräfte körperliche Phänomene."
   },
   "flaw.rebellious_major": {
@@ -2472,7 +2474,8 @@
     "summary": "Du lässt dich nicht leicht zu Handlungen, Überzeugungen oder Gefühlen zwingen."
   },
   "virtue.student_of_realm": {
-    "name": "Student der {realm}",
+    "name": "Student einer Sphäre, {realm}",
+    "name_unfilled": "Student der (Sphäre)",
     "summary": "Du wurdest in den mystischen Aspekten einer der vier Machtsphären (Göttlich, Feen, Infernal oder Magie) unterwiesen und erhältst einen Bonus von +2 auf alle Verwendungen der entsprechenden Kundefertigkeiten."
   },
   "virtue.study_bonus": {

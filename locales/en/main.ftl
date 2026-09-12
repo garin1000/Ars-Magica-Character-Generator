@@ -952,6 +952,25 @@ param-label-category = Category
 # Definitive Edition (Core Rules).md:5083).
 param-label-taken_as = Taken as
 
+# Localized names for the engine's `ParameterDomain` variants — the kind of value a
+# parameter slot accepts. Read only by `unknown_param_value`, which names the domain a
+# stored value failed to resolve in; the engine emits the enum's serialized name, and
+# a slug must never reach the screen. One key per variant, so a new engine variant is
+# a missing string here rather than a leaked `realm`.
+param-domain-ability = Ability
+param-domain-art = Art
+param-domain-technique = Technique
+param-domain-form = Form
+param-domain-characteristic = Characteristic
+# The `item` domain resolves against the point-item registry, which is the Virtue and
+# Flaw catalogue — so this names what the player would recognize, not the internal term.
+param-domain-item = Virtue or Flaw
+# The parameter carries its own closed list of legal values.
+param-domain-enumerated = listed value
+param-domain-category = Category
+param-domain-realm = Realm
+param-domain-text = Text
+
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }
 
@@ -1004,7 +1023,11 @@ issue-missing_required_trait = A required trait is missing: { $item }.
 issue-forbidden_trait = A forbidden trait is present: { $item }.
 issue-missing_param = { $item } is missing the parameter { $key }.
 issue-unexpected_param = { $item } has an unexpected parameter { $key }.
-issue-unknown_param_value = { $item } parameter { $key } has unknown { $domain } value { $value }.
+# The stored value is quoted back verbatim: after E2 this is what an older save's
+# free-text realm word surfaces as, and showing it is the whole mechanism by which
+# the player's choice is not lost — they read what they had typed and pick the
+# matching value. `$domain` is now a word (`param-domain-<id>`), never the enum slug.
+issue-unknown_param_value = { $item } parameter { $key }: unknown value { $value } (expected: { $domain }).
 # Core Rules.md:3919 — "a character cannot have access to both the Divine and
 # Infernal Realms". Which values exclude each other is rules data
 # (`ParameterDef.at_most_one_of`), never a hardcoded pair, so this message names

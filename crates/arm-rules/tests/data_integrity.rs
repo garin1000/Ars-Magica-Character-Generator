@@ -7,7 +7,7 @@ use arm_rules::aging::{
 use arm_rules::effective_art_score;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
-use arm_rules::validation::{compute_balance, validate};
+use arm_rules::validation::{ValidationIssue, compute_balance, validate};
 use arm_rules::{AgingRowEffect, AgingRules};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -7007,6 +7007,136 @@ fn folk_magic_repeats_along_either_axis_and_never_across_the_excluded_realms() {
         both.contains(&"exclusive_param_values".to_string()),
         "a character cannot have access to both the Divine and Infernal Realms \
          (ArMDE:3919): {both:?}"
+    );
+}
+
+/// E2 (open-todos row 24): **every** shipped parameter that asks for a
+/// supernatural Realm names one of the four the engine models — none is free
+/// text any more.
+///
+/// Four items shipped their realm as `domain: "text"` after B7 gave the project
+/// `ParameterDomain::Realm`, and each one's own rulebook entry states the closed
+/// list in so many words:
+///
+/// > "Choose the realm (Divine, Faerie, Infernal, or Magic) to which the
+/// > character is bound when you take the Flaw." — Bound to (Realm),
+/// > `ArMDE:5733`
+///
+/// > "Due to some connection with a given supernatural realm …" — Necessary
+/// > (Realm) Aura for (Ability), `ArMDE:6482`
+///
+/// > "Pick one of the four Realms of Power" — (Realm) Stigmatic, `ArMDE:6656`
+///
+/// > "You have been trained in the mystical aspects of one of the four realms of
+/// > power (Divine, Faerie, Infernal, or Magic)" — Student of (Realm),
+/// > `ArMDE:5054`
+///
+/// Written as a **sweep over the catalogue**, not a list of four ids: catalogue
+/// size is data, so a supplement adding a fifth realm-axis item is held to the
+/// same rule with no edit here. The four ids appear only as a non-vacuity
+/// precondition, so the sweep cannot pass by finding nothing to check.
+#[test]
+fn no_shipped_realm_parameter_is_free_text() {
+    let rs = load_ruleset();
+
+    let realm_params: Vec<(&Id, &ParameterDef)> = rs
+        .items()
+        .flat_map(|item| {
+            item.parameters
+                .iter()
+                .filter(|p| p.key == "realm")
+                .map(move |p| (&item.id, p))
+        })
+        .collect();
+
+    // Non-vacuity: the items row 24 names must still be in the sweep's reach.
+    for id in [
+        "flaw.bound_to_realm",
+        "flaw.necessary_realm_aura_for_ability",
+        "flaw.realm_stigmatic",
+        "virtue.folk_magic",
+        "virtue.student_of_realm",
+    ] {
+        assert!(
+            realm_params.iter().any(|(item, _)| item.as_str() == id),
+            "{id} must declare a 'realm' parameter for this sweep to mean anything"
+        );
+    }
+
+    let free_text: Vec<String> = realm_params
+        .iter()
+        .filter(|(_, p)| p.domain != ParameterDomain::Realm)
+        .map(|(id, p)| format!("{id} ({})", p.domain))
+        .collect();
+    assert!(
+        free_text.is_empty(),
+        "a Realm is one of the four the engine models, never a typed word: {free_text:?}"
+    );
+}
+
+/// E2 (open-todos row 24), the half that is about **not losing what a player
+/// already typed**. A save written while the realm was free text holds a word
+/// like "Faerie" in that slot; `Realm::from_id` resolves none of it.
+///
+/// No migration rewrites the save — "saves store choices, not resolved values",
+/// and guessing which Realm a word meant would be inventing someone's rules
+/// choice. The engine *reports* instead, through the established
+/// `unknown_param_value`: the same code an unresolvable `item` or `ability` ref
+/// already raises, and the only one whose args carry the offending **value**, so
+/// the player is shown what they had typed and can pick the right Realm from the
+/// picker the domain change gives them.
+#[test]
+fn a_free_text_realm_from_an_older_save_is_reported_in_the_players_own_words() {
+    let rs = load_ruleset();
+    let typed = Id::new("Faerie");
+    let saved = entity(
+        "companion",
+        vec![Selection::with_params(
+            Id::new("flaw.bound_to_realm"),
+            BTreeMap::from([("realm".to_string(), typed.clone())]),
+        )],
+    );
+
+    // The file is the player's. Loading it back leaves the typed word exactly
+    // as written — no fold, no blank, no guessed Realm.
+    let json = serde_json::to_string(&saved).expect("an entity serializes");
+    let loaded = load_entity_migrating(&json, 1220).expect("an older save still loads");
+    assert_eq!(
+        loaded.entity.selections[0].params.get("realm"),
+        Some(&typed),
+        "the engine reports an unresolvable choice; it never rewrites the save"
+    );
+
+    let issue = validate(&loaded.entity, &rs)
+        .issues
+        .into_iter()
+        .find(|i| i.code == ValidationIssue::CODE_UNKNOWN_PARAM_VALUE)
+        .expect("a typed realm name resolves to no Realm, so it must be reported");
+    assert_eq!(
+        (
+            issue.args.get("item").map(String::as_str),
+            issue.args.get("key").map(String::as_str),
+            issue.args.get("domain").map(String::as_str),
+        ),
+        (Some("flaw.bound_to_realm"), Some("realm"), Some("realm"))
+    );
+    assert_eq!(
+        issue.args.get("value").map(String::as_str),
+        Some(typed.as_str()),
+        "the finding must carry the player's own words, or the choice is lost"
+    );
+
+    // And the remedy is one pick: a real Realm resolves and the finding is gone.
+    let fixed = entity(
+        "companion",
+        vec![Selection::with_params(
+            Id::new("flaw.bound_to_realm"),
+            BTreeMap::from([("realm".to_string(), Realm::Faerie.id())]),
+        )],
+    );
+    assert!(
+        !issue_codes(&fixed, &rs).contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+        "picking one of the four Realms clears it"
     );
 }
 

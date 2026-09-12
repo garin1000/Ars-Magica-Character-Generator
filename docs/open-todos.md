@@ -14,7 +14,8 @@ these should be tagged over silently.
 | 19 | **The *and* / *or* / comma join in a dual-category descriptor is unmodelled, and *and* has no settled reading.** Half (a) of this row is closed: a Virtue **taken as** one of its categories now exists (`ParameterDomain::Category`, `PointItem::categories_for`) — see "Done since" below. What survives is the join itself. `taken_as` models ***or***, and only *or*: an *or* descriptor states a choice between two readings of one item, and the book says so outright for Sufi (`ArMDE:5083`). An *and* descriptor makes no such statement, and the rulebook never settles what it means — "either route" (the permissive reading the engine takes today, resolving the whole `categories` list, every membership site asking *any* and never *all*) or "both, hence both categories' restrictions apply at once" (the restrictive reading, which no mechanism expresses). Stretching `taken_as` over an *and* would be worse than leaving it open: it hands the player a choice the book does not offer, and under the restrictive reading it silently *drops* half of a restriction meant to bind. The three affected descriptors are `virtue.inoffensive_to_beings` (*General and Hermetic*, `ArMDE:4134`), `flaw.offensive_to_beings` (*Hermetic and General*, `ArMDE:6525`) and `flaw.primogeniture_lineage` (*Story and Hermetic*, `ArMDE:6635`); the reasoning is carried in `crates/arm-rules/RULES.md`. Resolving this needs a rules **decision**, not more code. | decision — a reading of *and* | 2026-09-09 |
 | 22 | **A code comment can cite a Rust source file by a line number that rots silently, and nothing guards it.** `crates/arm-rules/src/effective/xp.rs:990-991` cites `types.rs:3329` (selections), `types.rs:3339` (ability_scores), `types.rs:3408` (art_scores), `types.rs:3413` (spells) — a *source-code* cross-reference, not a rulebook citation. D1a (`1003453`) found and fixed one live instance of this rotting: three of those numbers had drifted into stale values and were being misclassified by an early draft of the rulebook-citation guard as bare rulebook citations (`:NNNN` with no book), when they were really pointing at `types.rs` fields whose line had moved. This is dangerous for exactly the reason `rules_md_citations.rs::no_source_comment_cites_rules_md_by_line_number` already exists for the sibling case (a Rust comment pinning `RULES.md` by line number) — a line number is not stable under refactoring the way a rulebook page is, and nobody notices the drift until they open the target and it no longer matches. The obvious fix is the same one that guard already enforces for `RULES.md`: cite the **symbol** (`types.rs`'s `Entity::selections` field, etc.), never the line, and CI can then verify the symbol still exists instead of trusting an arbitrary integer. Not built now — a new guard for arbitrary Rust-to-Rust line citations is a different subject from the rulebook-citation sweep D1a/D1b/D1c are doing, and would balloon this slice. | decision — build a guard, or accept the drift risk | 2026-09-11 |
 | ~~23~~ | **DONE 2026-09-11 — see "Done since" below.** ~~Focus Power's 25-point pool is modelled by nothing.~~ The decision the row asked for was taken: a **second budget kind**, with its own effect variant, its own read-out and its own over-spend code. | — | 2026-09-11 |
-| 24 | **Four shipped items type their `realm` parameter as free text, now that a real Realm domain exists.** `flaw.bound_to_realm` (`rules/core/virtues_flaws.json:239`), `flaw.necessary_realm_aura_for_ability` (`rules/core/virtues_flaws.json:1881`), `flaw.realm_stigmatic` (`rules/core/virtues_flaws.json:2332`) and `virtue.student_of_realm` (`rules/core/virtues_flaws.json:6041`) each declare `{ "key": "realm", "type": "ref", "domain": "text" }`. B7 (`d8abbb4`) gave the project `ParameterDomain::Realm` — a closed four-value taxonomy resolved through `Realm::from_id`, already labelled by the `realm-<id>` Fluent family in both locales — and `virtue.folk_magic` (`rules/core/virtues_flaws.json:4227`) uses it today. Tightening the four is the obvious follow-up: it turns four free-text boxes into the picker the taxonomy already has labels for, and stops a typo becoming a value nothing can resolve. What is owed is the decision plus the migration question that comes with it — existing saves hold free text in those slots, and `Realm::from_id` will resolve none of it, so those choices have to be mapped, or allowed to fall to `missing_param` under the standing policy of row 17, or left as text. | decision — including what happens to existing saves | 2026-09-11 |
+| ~~24~~ | **DONE 2026-09-12 — see "Done since" below.** ~~Four shipped items type their `realm` parameter as free text, now that a real Realm domain exists.~~ All four are `domain: "realm"`, and the migration question the row asked was answered the data-loss-averse way: **nothing is rewritten**, the unresolvable text is reported back to the player verbatim. | — | 2026-09-12 |
+| 29 | **A parameter cap that binds one key, not the whole tuple, is unmodelled.** Necessary (Realm) Aura for (Ability) says "A character may take this Flaw once for any particular Ability" (`ArMDE:6482`), which caps repeats on the **`ability` key alone**. `PointItem::max_per_target` cannot express that: its duplicate key is `(item_ref, params)` — *all* parameters at once — so with E2's realm axis in place, two copies naming the same Ability in different Realms collide in no key and validate clean, which the sentence forbids. E2 found this while tightening the realm domain and deliberately **recorded rather than invented** it, per the standing "implement only what the source supports" rule; nothing regressed, because the second axis existed before E2 too (it was merely free text, so the same two copies differed in a typed word instead of a Realm). Expressing it needs a new `ParameterDef` field — a per-key uniqueness marker — plus a validator beside `validate_duplicate_selections`, and that is engine work with a data shape to settle first: whether the marker names one key ("unique on `ability`") or a subset, and whether an existing save holding two such copies is reported once or twice. The same entry's sibling restriction, "You may not take Student of (Realm) and Puissant Ability for the same Lore" (`ArMDE:5054`), is a cross-**item** constraint over a parameter value and is unmodelled for a different reason: no mechanism relates two different items' parameter values at all. Both are recorded in `crates/arm-rules/RULES.md`. | decision — the data shape for a per-key cap | 2026-09-12 |
 | 25 | **`AppError::Ruleset` carries raw English integrity messages across IPC that nothing renders.** `crates/arm-app/src/error.rs:20-23` defines `Ruleset { ruleset_kind: String, errors: Vec<String> }`, and `From<RulesetError>` (`crates/arm-app/src/error.rs:69-81`) fills `errors` with the engine's own `IntegrityError` strings — hardcoded English built with `format!` in `crates/arm-rules/src/ruleset/integrity.rs`, over a hundred `errors.push(format!(...))` sites. The frontend declares the field (`ui/src/lib/types.ts:1765`) and then **reads it nowhere**: `ErrorBanner.svelte` maps `error-<kind>` and special-cases only `export`, and `StartScreen.svelte` maps `error-<kind>` alone, so a ruleset that fails to load shows the generic, fully localized `error-ruleset` sentence in both locales and the payload is dropped on the floor. Two things follow and both belong here. It is **not** the localization defect it looks like on a first read — but the only reason it is not is that the messages are invisible, so the moment anyone surfaces them (which is the obvious way to make a failed rules edit actionable) it becomes one, and that is the decision owed: surface them and localize them, or stop carrying a payload no consumer wants. And it is why the rulebook-citation guard's **string-literal exclusion** — the seven full-basename `.md:NNNN` spellings inside `integrity.rs`'s diagnostics — rests on a premise that is now *verified* rather than assumed: no user ever sees them. Pre-existing and consistent with `Export { missing }` (`crates/arm-app/src/error.rs:28-33`), which *is* rendered; introduced by no slice in this pack. | decision — surface and localize, or drop the payload | 2026-09-11 |
 | 26 | **The macOS and Windows menus are unit-tested as data and have never been run.** C3a and C6 prove the menu *model* for all three platforms and, via `installed_menu`, that Tauri really installed it — on Linux. The macOS **Cmd+Q** path through `RunEvent::ExitRequested`, which the mandatory unsaved-changes guard depends on, has never executed on real hardware, and neither has the Windows menu bar. C7's own commit says it plainly: "macOS and Windows are unverified here, as every Phase C slice has said", with muda's `CmdOrCtrl` the only thing standing between the asserted model and a wrong modifier. Worth preserving rather than merely noting: C3a found that `PredefinedMenuItem::quit` on **Windows** would have bypassed the guard outright — muda implements it as `PostQuitMessage(0)`, which ends the message loop instead of raising a close request — so the Windows menu deliberately ships **no** Quit item and offers Window → Close Window (`WM_CLOSE`, guarded) as the way out. That reasoning is recorded in the doc comment on `menu_model` (`crates/arm-app/src/menu.rs`). What is owed is a run on real hardware of each, which a Linux box cannot supply. | a macOS machine and a Windows machine | 2026-09-11 |
 | 27 | **The `e2e-testing` build emits a noticeably larger JS bundle than the plain build, from identical frontend sources.** Observed during Phase C: roughly **537 kB** against the plain build's **480 kB**. The plain figure was re-measured in this slice's gate build and is **486.67 kB** (`dist/assets/index-*.js`, 146.36 kB gzipped), so the plain half of the comparison is real; the 537 kB half has not been re-measured. The feature is Rust-side and `#[cfg]`-gated (`crates/arm-app/Cargo.toml` declares `e2e-testing = []`; `ui/e2e/wdio.conf.js` is its only caller, passing `--features e2e-testing` to the same `cargo tauri build --no-bundle`), so it runs the very same `beforeBuildCommand` over the very same `ui/src` and should not reach the frontend bundle at all. Nobody has looked. Most likely a build-configuration difference — a different Vite mode, sourcemap or minification setting on the path wdio takes — rather than real code, but "most likely" is not an answer. What is owed is the measurement and the explanation; if it turns out real code is being included, that is a shipped-binary concern rather than a curiosity. | an explanation | 2026-09-11 |
@@ -23,11 +24,64 @@ these should be tagged over silently.
 
 ## Done since this list was started
 
+- Every shipped `realm` parameter names one of the four Realms, and an older
+  save's typed word is **handed back, not thrown away** (old row 24, E2,
+  2026-09-12). `flaw.bound_to_realm` (`ArMDE:5733`),
+  `flaw.necessary_realm_aura_for_ability` (`ArMDE:6482`, whose second
+  `ability` parameter is untouched), `flaw.realm_stigmatic` (`ArMDE:6656`) and
+  `virtue.student_of_realm` (`ArMDE:5054`) each moved from
+  `"domain": "text"` to `"domain": "realm"` — a **data-only** change, since
+  B7 (`d8abbb4`) had already built every piece it needs, which is exactly what
+  "catalogue size is data, never code" is for. Each of the four states the
+  closed list in its own entry ("Choose the realm (Divine, Faerie, Infernal, or
+  Magic)", "Pick one of the four Realms of Power"), so none of this is inferred.
+  The row's real question was what happens to saves holding free text there, and
+  the answer is the third option it listed, sharpened: **no migration, and not
+  `missing_param` either.** A blank slot is a choice not yet made and keeps
+  reporting `missing_param`; a slot holding *"Faerie"* is a choice that no longer
+  resolves, and it reports the established **`unknown_param_value`** — the same
+  code an unresolvable `item` or `ability` ref has always raised, chosen because
+  it is the only parameter finding whose args carry the offending **`value`**.
+  That argument is the whole point: the player reads the words they typed, beside
+  the picker the domain change gives them, and one pick clears it. The file is
+  never touched — saves store choices, not resolved values, and guessing which
+  Realm a word meant would be inventing someone's rules choice. `SCHEMA_VERSION`
+  does not move and could not: `ParameterDomain` is ruleset shape, not save
+  shape. Three things were deliberately **not** done. No `at_most_one_of` on any
+  of the four: `ArMDE:3919`'s Divine/Infernal exclusion is stated inside Folk
+  Magic's own entry as part of *its* repeat rule, and none of these four repeats
+  it, so borrowing it would forbid a build the book permits. Student of (Realm)'s
+  "multiple times, for a different realm each time" (`ArMDE:5054`) needed no
+  change — the defaults already express it exactly. And Necessary (Realm) Aura's
+  "once for any particular Ability" (`ArMDE:6482`) caps one key rather than the
+  whole parameter tuple, which `max_per_target` cannot express; it is recorded as
+  new row 29 instead of approximated. One fix travelled with the slice, because
+  it is the message this change makes players read: `unknown_param_value`
+  interpolated the `ParameterDomain` as its raw enum slug, so German said "hat
+  unbekannten realm-Wert". The `param-domain-<id>` Fluent family (one key per
+  variant, both locales, German from the glossary — `Realm` → `Sphäre`,
+  `sphären-mächte.md:16`) now labels it, routed through
+  `resolveIssueArgValue`'s `ENUM_ARG_FLUENT_PREFIX` exactly as `category` is, and
+  both messages were reworded to put the domain in a trailing parenthesis rather
+  than at the head of a compound, since a word arriving from data cannot be
+  compounded or inflected reliably. `Record<ParameterDomain, true>` in
+  `i18n.test.ts` makes a future unlabelled variant a type error. The **German
+  item names** needed rewriting for the same underlying reason and are the most
+  visible part of the slice: a typed word inflected however the player typed it,
+  but a picked Realm arrives as a fixed label, and two of the four German labels
+  are noun phrases with their own article ("Das Göttliche", "Das Infernale"), so
+  every template rendered ungrammatically — "Gebunden an Das Göttliche",
+  "Student der Das Göttliche", "Das Göttliche-Stigmatisierter", "Notwendige Das
+  Göttliche-Aura für …". All four now take the label in apposition after a comma,
+  uninflected, exactly as Folk Magic's does, with `name_unfilled` restoring the
+  German rulebook's own heading on an unfilled row. English needed no change —
+  its realm labels are bare adjectives. The full table is in
+  `crates/arm-rules/RULES.md`.
 - Focus Power has the point pool the rulebook gives it, as a **second power
-  currency** (old row 23, E1, 2026-09-11, the single commit *"Focus Power's 25
-  points are a currency the engine can count"* — named by subject rather than
-  hash because the row is closed **in** that commit, so no hash of it can exist
-  inside it). The row offered two answers and the
+  currency** (old row 23, E1, 2026-09-11, `9d1d75f`, the single commit *"Focus
+  Power's 25 points are a currency the engine can count"* — the hash was added
+  by the next slice, since the row is closed **in** that commit and no hash of a
+  commit can exist inside it). The row offered two answers and the
   first was taken: a budget kind of its own, not "player arithmetic plus an
   Initiative". `virtue.focus_power` now carries
   `effects: [{ "type": "focus_points", "amount": 25 }]` (`ArMDE:3899`) and, with

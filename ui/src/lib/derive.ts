@@ -1430,6 +1430,14 @@ export function restrictedPoolLabel(
  * rather than a Rust enum, but it behaves identically here: a bare slug with no
  * i18n entry of its own, labelled by the very `category-<id>` key the picker
  * heading and the row badge already use.
+ *
+ * `domain` is the `ParameterDomain` an `unknown_param_value` finding says the
+ * value failed to resolve in — the enum's own serialized name (`realm`,
+ * `technique`, `item`), emitted by `validate_selection_parameters`. It has no
+ * rules-i18n entry, so without a prefix it printed straight into the sentence;
+ * in German that read "unbekannten realm-Wert", an English slug inside a German
+ * message. E2 gave it the `param-domain-<id>` family, one key per variant, the
+ * same shape `category` uses.
  */
 const ENUM_ARG_FLUENT_PREFIX: Record<string, string> = {
   characteristic: 'characteristic-',
@@ -1437,6 +1445,7 @@ const ENUM_ARG_FLUENT_PREFIX: Record<string, string> = {
   base: 'realm-',
   granted: 'realm-',
   category: 'category-',
+  domain: 'param-domain-',
 };
 
 /**

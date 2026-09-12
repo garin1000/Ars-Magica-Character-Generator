@@ -236,7 +236,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "realm", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5731, 5734] }
   },
   {
@@ -1878,7 +1878,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "realm", "type": "ref", "domain": "text" }, { "key": "ability", "type": "ref", "domain": "ability" }],
+    "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }, { "key": "ability", "type": "ref", "domain": "ability" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6480, 6487] }
   },
   {
@@ -2329,7 +2329,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "realm", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6654, 6658] }
   },
   {
@@ -6039,7 +6039,7 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "realm", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }],
     "effects": [
       {
         "type": "ability_authorization",

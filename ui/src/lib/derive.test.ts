@@ -955,6 +955,51 @@ describe('selectionDisplayName', () => {
     expect(name).not.toContain('realm.');
   });
 
+  // E2 (open-todos row 24): four more items now store a Realm instead of a word
+  // the player typed, and a picked Realm arrives as the fixed `realm-<id>`
+  // label. In German those are NOUN PHRASES carrying their own article — "Das
+  // Göttliche", "Das Infernale" (`translation-tables/sphären-mächte.md:18-21`) —
+  // so a template that put the token in a genitive ("Student der {realm}"), in a
+  // dative after a preposition ("Gebunden an {realm}") or at the head of a
+  // compound ("{realm}-Aura", "{realm}-Stigmatisierter") rendered ungrammatical
+  // German the moment the free text became a taxonomy value. Each German name
+  // therefore takes the label in APPOSITION, uninflected, exactly as Folk
+  // Magic's does. Divine is the case to test: it is the label with the article.
+  it.each([
+    ['flaw.bound_to_realm', { realm: 'realm.divine' }, 'Gebunden an eine Sphäre, Das Göttliche'],
+    [
+      'flaw.necessary_realm_aura_for_ability',
+      { realm: 'realm.divine', ability: 'ability.awareness' },
+      'Notwendige Aura für ability.awareness, Das Göttliche',
+    ],
+    ['flaw.realm_stigmatic', { realm: 'realm.divine' }, 'Stigmatisierter, Das Göttliche'],
+    ['virtue.student_of_realm', { realm: 'realm.divine' }, 'Student einer Sphäre, Das Göttliche'],
+  ])('takes the German Realm label in apposition, never inflected (%s)', (id, params, expected) => {
+    const localized = makeRuleset([item({ id: id as string })], { i18n: shippedItems('de') });
+    const name = selectionDisplayName(
+      localized,
+      id as string,
+      params as Record<string, string>,
+      translator('de'),
+    );
+    // The ability id has no i18n entry in this fixture, so it renders as itself —
+    // what matters here is where the REALM label lands.
+    expect(name).toBe(expected);
+    expect(name).not.toContain('realm.');
+  });
+
+  // …and the same four unfilled: `name_unfilled` puts the German rulebook's own
+  // heading back, so a freshly added row reads as the book prints it instead of
+  // repeating the word "Sphäre" either side of the comma.
+  it.each([
+    ['flaw.bound_to_realm', 'Gebunden an (Sphäre)'],
+    ['flaw.realm_stigmatic', '(Sphäre)-Stigmatisierter'],
+    ['virtue.student_of_realm', 'Student der (Sphäre)'],
+  ])('names an unfilled German row as the rulebook heads it (%s)', (id, expected) => {
+    const localized = makeRuleset([item({ id })], { i18n: shippedItems('de') });
+    expect(selectionDisplayName(localized, id, {}, translator('de'))).toBe(expected);
+  });
+
   // The Realm token must not sit inside literal parentheses: the unfilled hint
   // is itself "(Realm)", so a "… ({realm})" template would render the nested
   // "((Realm))" the three per-power items needed `name_unfilled` to escape. A
@@ -2092,6 +2137,8 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
       'xp-pool-childhood_spread': 'Early childhood',
       'xp-pool-childhood_native_language': 'Native language',
       'category-supernatural': 'Supernatural',
+      'param-domain-realm': 'Realm',
+      'param-domain-text': 'Text',
     };
     if (key === 'param-hint') return `(${args?.label})`;
     return table[key] ?? key;
@@ -2134,6 +2181,18 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
   it('resolves a param key arg through its param-label', () => {
     const rs = makeRuleset([]);
     expect(resolveIssueArgValue(rs, 'key', 'language', t)).toBe('Language');
+  });
+
+  // E2 (open-todos row 24): `unknown_param_value` names the DOMAIN the value
+  // failed to resolve in, and the engine emits it as the `ParameterDomain`
+  // enum's own serialized name. That slug reaching the screen is exactly what
+  // CLAUDE.md forbids — and it is the message a player meets head-on after this
+  // slice, when a save's typed realm word no longer resolves.
+  it('resolves a parameter domain arg through its param-domain Fluent key', () => {
+    const rs = makeRuleset([]);
+    expect(resolveIssueArgValue(rs, 'domain', 'realm', t)).toBe('Realm');
+    expect(resolveIssueArgValue(rs, 'domain', 'text', t)).toBe('Text');
+    expect(resolveIssueArgValue(rs, 'domain', 'realm', t)).not.toBe('realm');
   });
 
   // `restricted_xp_unspent` names the pool it is about, and the pool's origin is

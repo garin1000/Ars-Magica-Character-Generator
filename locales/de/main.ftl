@@ -987,6 +987,30 @@ param-label-category = Kategorie
 # wörtlich "gewählt werden, entweder als ... oder als ...".
 param-label-taken_as = Gewählt als
 
+# Lokalisierte Namen der `ParameterDomain`-Varianten der Engine — die Art von Wert,
+# die ein Parameter-Platzhalter annimmt. Gelesen nur von `unknown_param_value`, das
+# die Domäne nennt, in der ein gespeicherter Wert nicht aufgelöst werden konnte; die
+# Engine liefert den serialisierten Enum-Namen, und ein Slug darf nie auf den
+# Bildschirm gelangen. Ein Schlüssel je Variante, damit eine neue Variante hier als
+# fehlender Text auffällt statt als durchgereichtes „realm“.
+# Begriffe aus rules/source/de/translation-tables/: grundbegriffe.md:26
+# („Fertigkeit“), grundbegriffe.md:97 und sphären-mächte.md:16 („Realm“ →
+# „Sphäre“) — dieselben Wörter, die `param-label-*` und die
+# `realm-<id>`-Familie schon verwenden.
+param-domain-ability = Fertigkeit
+param-domain-art = Kunst
+param-domain-technique = Technik
+param-domain-form = Form
+param-domain-characteristic = Eigenschaft
+# Die Domäne `item` löst gegen den Katalog der Tugenden und Fehler auf — benannt also
+# so, wie die Spielerin es wiedererkennt, nicht mit dem internen Begriff.
+param-domain-item = Tugend oder Fehler
+# Der Parameter bringt seine eigene geschlossene Liste zulässiger Werte mit.
+param-domain-enumerated = Listenwert
+param-domain-category = Kategorie
+param-domain-realm = Sphäre
+param-domain-text = Text
+
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }
 
@@ -1040,7 +1064,13 @@ issue-missing_required_trait = Eine erforderliche Eigenschaft fehlt: { $item }.
 issue-forbidden_trait = Eine verbotene Eigenschaft ist vorhanden: { $item }.
 issue-missing_param = { $item } fehlt der Parameter { $key }.
 issue-unexpected_param = { $item } hat einen unerwarteten Parameter { $key }.
-issue-unknown_param_value = { $item }: Parameter { $key } hat unbekannten { $domain }-Wert { $value }.
+# Der gespeicherte Wert wird wörtlich zurückgezeigt: nach E2 taucht so das frei
+# getippte Sphären-Wort einer älteren Datei auf, und genau dadurch geht die Wahl der
+# Spielerin nicht verloren — sie liest, was sie getippt hatte, und wählt den passenden
+# Wert. `$domain` ist jetzt ein Wort (`param-domain-<id>`), nie mehr der Enum-Slug.
+# Nachgestellt in Klammern statt als Kompositum („{ $domain }-Wert“), weil das Wort
+# aus den Daten kommt und sich nicht zuverlässig zusammensetzen oder beugen lässt.
+issue-unknown_param_value = { $item }, Parameter { $key }: unbekannter Wert { $value } (erwartet: { $domain }).
 # Basisregeln — Core Rules.md:3919: "a character cannot have access to both the
 # Divine and Infernal Realms". Welche Werte einander ausschließen, steht in den
 # Regeldaten (`ParameterDef.at_most_one_of`) und nie fest im Text — daher nennt

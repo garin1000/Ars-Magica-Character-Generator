@@ -2012,6 +2012,141 @@ existing save holding Folk Magic reports `missing_param` for the newly declared
 `realm`, exactly as it already does for `category` — the standing policy, since
 a placeholder would invent someone's rules choice.
 
+#### The other four realm parameters (open-to-dos row 24)
+
+B7 above gave the project `ParameterDomain::Realm` and wired Folk Magic to it.
+Four shipped items still typed their realm as free text; each one's own entry
+names the closed four-value list in so many words, so all four are now `realm`
+too.
+
+> "Choose the realm (Divine, Faerie, Infernal, or Magic) to which the character
+> is bound when you take the Flaw." — Bound to (Realm), `ArMDE:5733`.
+
+> "Due to some connection with a given supernatural realm, the absence of a
+> given supernatural aura has a pronounced effect upon the character's ability
+> to focus on certain tasks. … A character may take this Flaw once for any
+> particular Ability." — Necessary (Realm) Aura for (Ability), `ArMDE:6482`.
+
+> "Pick one of the four Realms of Power; whenever he enters an aura of strength
+> 4 or more aligned to that realm …" — (Realm) Stigmatic, `ArMDE:6656`.
+
+> "You have been trained in the mystical aspects of one of the four realms of
+> power (Divine, Faerie, Infernal, or Magic) … You may take this Virtue multiple
+> times, for a different realm each time." — Student of (Realm), `ArMDE:5054`.
+
+- Source: `ArMDE:5733`, `ArMDE:6482`, `ArMDE:6656`, `ArMDE:5054`.
+- Data: `rules/core/virtues_flaws.json` — `flaw.bound_to_realm`,
+  `flaw.necessary_realm_aura_for_ability` (whose second, `ability`-domain
+  parameter is untouched), `flaw.realm_stigmatic` and `virtue.student_of_realm`
+  each carry `{ "key": "realm", "type": "ref", "domain": "realm" }`. No
+  `values` list (the `Realm` enum IS the registry) and no `at_most_one_of` —
+  see below.
+- Engine: unchanged. `param_value_resolves`
+  (`validation/selections.rs`) already resolves the domain through
+  `Realm::from_id`, the picker already has a `realm` branch, and
+  `export/resolve.rs::Doc::taxonomy_label` already labels it — so this is a
+  data-only change, which is the point of keeping catalogue shape in JSON.
+- Tests: `no_shipped_realm_parameter_is_free_text`,
+  `a_free_text_realm_from_an_older_save_is_reported_in_the_players_own_words`
+  (`crates/arm-rules/tests/data_integrity.rs`);
+  `resolves a parameter domain arg through its param-domain Fluent key`
+  `takes the German Realm label in apposition, never inflected`,
+  `names an unfilled German row as the rulebook heads it`
+  (`ui/src/lib/derive.test.ts`); `labels every parameter domain in both
+  locales`, `shows the typed value back, and no domain slug`
+  (`ui/src/lib/i18n.test.ts`).
+
+**What an older save does — reported, never rewritten.** A save written while
+these were free text holds a typed word ("Faerie", "the Divine") in the slot,
+and `Realm::from_id` resolves none of it. **No migration touches it.** Saves
+store choices, not resolved values; mapping a word onto a Realm would be
+guessing someone's rules choice, and blanking it would destroy the only record
+of what they meant. The engine reports instead, through the **existing**
+`unknown_param_value` — the same code an unresolvable `item` or `ability` ref
+has always raised, and the only parameter finding whose args carry the offending
+**`value`**. That argument is the whole mechanism: the player is shown the words
+they typed, beside the picker the domain change gives them, and one pick clears
+it. A *blank* realm still reports `missing_param` as before
+(`param_value_is_blank` runs first), which is the right split — nothing typed is
+a choice not yet made, something typed is a choice that no longer resolves.
+`SCHEMA_VERSION` does not move and could not: `ParameterDomain` is *ruleset*
+shape, not save shape, so no save distinguishes the two eras. This is B7's
+"Save impact — accepted, not migrated" paragraph applied to four more items.
+
+**The finding's `domain` argument is now a word.** `unknown_param_value`
+interpolates the `ParameterDomain` the value failed in, and the engine emits the
+enum's serialized name. Nothing labelled it, so German read "hat unbekannten
+realm-Wert" — an English slug inside a German sentence, and the violation
+CLAUDE.md names explicitly. E2 added the `param-domain-<id>` Fluent family (one
+key per variant, both locales) and routes the argument through it in
+`resolveIssueArgValue`'s `ENUM_ARG_FLUENT_PREFIX` (`ui/src/lib/derive.ts`),
+exactly as `category` is routed. Both messages were reworded to place the domain
+in a trailing parenthesis rather than as the head of a compound
+(`{ $domain }-Wert`), because the word arrives from data and cannot be compounded
+or inflected reliably. `Record<ParameterDomain, true>` in the i18n test makes a
+future unlabelled variant a type error.
+
+**The German names had to be rewritten, and that is the change with the most
+user-visible bite.** A typed word inflects however the player typed it; a picked
+Realm arrives as the fixed `realm-<id>` label, and two of the German four are
+noun phrases carrying their own article — *Das Göttliche*, *Das Infernale*
+(`rules/source/de/translation-tables/sphären-mächte.md:18-21`). Every German
+template put the token somewhere that demands agreement, so the moment the
+domain changed they rendered ungrammatical German: *"Gebunden an Das
+Göttliche"*, *"Student der Das Göttliche"*, *"Das Göttliche-Stigmatisierter"*,
+*"Notwendige Das Göttliche-Aura für …"*. The fix is Folk Magic's own pattern
+from B7 — the label stands in **apposition after a comma**, uninflected, and no
+noun follows it:
+
+| id | `rules/i18n/de/virtues_flaws.json` `name` | `name_unfilled` |
+|---|---|---|
+| `flaw.bound_to_realm` | `Gebunden an eine Sphäre, {realm}` | `Gebunden an (Sphäre)` |
+| `flaw.necessary_realm_aura_for_ability` | `Notwendige Aura für {ability}, {realm}` | — (two params; see below) |
+| `flaw.realm_stigmatic` | `Stigmatisierter, {realm}` | `(Sphäre)-Stigmatisierter` |
+| `virtue.student_of_realm` | `Student einer Sphäre, {realm}` | `Student der (Sphäre)` |
+
+`name_unfilled` carries the German rulebook's own heading (`Basisregeln.md:5731`,
+`Basisregeln.md:6654`, `Basisregeln.md:5052` — the German file mirrors the
+English line-for-line, so these are the same entries as the citations above) so a
+freshly added row reads as the book prints it instead of
+repeating "Sphäre" either side of the comma. It is **not** given to Necessary
+(Realm) Aura: it fires only when *no* placeholder is filled, so on a row with an
+Ability chosen and no Realm it would not fire anyway, and the plain template
+already renders cleanly there. **Parentheses were considered and rejected** for
+the same reason B7 rejected them — the unfilled hint is itself "(Sphäre)", so a
+`"… ({realm})"` template renders the nested "((Sphäre))", and on a two-parameter
+item `name_unfilled` cannot rescue the half-filled case.
+
+The **English** names needed no change: the English realm labels are bare
+adjectives (Magic, Faerie, Divine, Infernal), so "Bound to Divine", "Divine
+Stigmatic", "Necessary Divine Aura for Awareness" and "Student of Divine" all
+read as the book heads them. This is the asymmetry B7 recorded and it is why the
+two locales' templates now differ in shape.
+
+**No `at_most_one_of` on any of the four, and that is a finding, not an
+omission.** Folk Magic carries one because `ArMDE:3919` states it *inside Folk
+Magic's own entry* — "although a character cannot have access to both the Divine
+and Infernal Realms" — as part of that Virtue's repeat rule. It is not a general
+statement about characters, and none of these four repeats the restriction.
+Inventing it for Student of (Realm) would forbid a build the book permits.
+
+**Two multiplicity restrictions these entries state, and what became of them.**
+
+- *Student of (Realm)* — "You may take this Virtue multiple times, for a
+  different realm each time" (`ArMDE:5054`) is already expressed exactly by the
+  defaults: `max_per_target` 1 over the duplicate key `(item_ref, params)`,
+  whose only parameter is the realm, plus no `max_total`. Nothing to add. It is
+  already listed under "Repeats with a different target each time" above.
+- *Necessary (Realm) Aura for (Ability)* — "A character may take this Flaw once
+  for any particular Ability" (`ArMDE:6482`) caps repeats on **one parameter
+  key**, not on the whole tuple. `max_per_target` keys on all parameters at
+  once, so two copies naming the same Ability in different Realms collide in no
+  key and pass today. Expressing it needs a per-key cap the `ParameterDef` model
+  does not have — engine work, not data — so it is **recorded, not invented**
+  (`docs/open-todos.md`). The same entry's "You may not take Student of (Realm)
+  and Puissant Ability for the same Lore" (`ArMDE:5054`) is a cross-*item*
+  constraint over a parameter value and is likewise unmodelled.
+
 #### Selection multiplicity — one copy per named power
 > "This Flaw may be taken once for each power the character possesses."
 
@@ -4344,10 +4479,12 @@ Infernal Might + power-levels budget (tested in `arm-app`'s
   ["ability.dominion_lore", "ability.faerie_lore", "ability.infernal_lore",
   "ability.magic_lore"] }]`.
 - **Documented approximation, same shape as `flaw.covenant_upbringing`'s Latin
-  proxy (`ArMDE:3543-3547` above).** The Virtue's only parameter (`realm`, domain
-  `text`) is free text — same shape as the purely-narrative `flaw.bound_to_realm`
-  / `flaw.realm_stigmatic` beside it — so it cannot be bound to one specific
-  Lore ability the way `Effect::AbilityBonus`'s `param` mechanism requires
+  proxy (`ArMDE:3543-3547` above).** The Virtue's only parameter is `realm` —
+  free text when this was written, tightened to `domain: "realm"` by E2 (see
+  "The other four realm parameters" above), along with `flaw.bound_to_realm`
+  and `flaw.realm_stigmatic` beside it. Either way the value names a **Realm**,
+  not a Lore Ability, so it cannot be bound to one specific Lore ability the way
+  `Effect::AbilityBonus`'s `param` mechanism requires
   (`selection.params.get(param) == Some(ability)` in `effective/ability.rs`,
   which needs the parameter's *value* to literally equal the target ability
   id). `Effect::AbilityAuthorization`, unlike `AbilityBonus`, is **not**
@@ -4364,7 +4501,9 @@ Infernal Might + power-levels budget (tested in `arm-app`'s
   realm→Lore-ability resolution in the engine. Both are `crates/arm-rules/src`
   changes, outside this task's file set (`derive.ts`, `SpellTab.svelte`,
   `rules/core`, `rules/i18n`, `.github/workflows`, this file) — flagged here as
-  a follow-up, not silently dropped.
+  a follow-up, not silently dropped. E2 makes the second of the two tractable:
+  the stored value is now one of four known `Realm`s rather than any word a
+  player might type, so a realm→Lore mapping has something closed to map *from*.
 - **No test added for this fix.** `crates/arm-rules/tests/**` is outside this
   task's file set (the parallel session owns `crates/arm-app/tests/**`; no
   `arm-rules` test path was granted). `cargo test -p arm-rules` passed
