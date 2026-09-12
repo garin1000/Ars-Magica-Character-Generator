@@ -364,6 +364,44 @@ describe('app.css', () => {
     }
   });
 
+  // E4's technical-detail disclosure is new running text on the window
+  // background — the start screen's error block and the header's both sit
+  // directly on `--bg`, neither declaring a surface of its own. It dims nothing
+  // (no `opacity`, so it is outside `DIMMED_TEXT` above), but the two tokens it
+  // DOES choose still have to clear AA in both palettes, and `--muted` is the
+  // quieter of the pair: it measures 8.44:1 on `--panel` dark and only 5.49:1
+  // light, so a claim derived from the dark palette alone would prove nothing.
+  // Computed here rather than asserted in the stylesheet's comment, exactly as
+  // the two rules above are.
+  it('keeps the technical-detail disclosure above AA in BOTH palettes', () => {
+    const declaredColour = (rule: RegExp, what: string): string => {
+      const block = rule.exec(cssWithoutComments);
+      expect(block, `app.css should declare ${what}`).not.toBeNull();
+      const declared = /[^-]color:\s*var\((--[a-z0-9-]+)\);/.exec(block![1]);
+      expect(declared, `${what} should take its colour from a palette token`).not.toBeNull();
+      return declared![1];
+    };
+
+    const payload = declaredColour(/^\.error-details\s*\{([^}]*)\}/m, 'the disclosure payload');
+    const summary = declaredColour(
+      /^\.error-details summary\s*\{([^}]*)\}/m,
+      'the disclosure summary',
+    );
+
+    for (const selector of [DARK, LIGHT]) {
+      const surface = tokenValue(selector, '--bg');
+      for (const [what, token] of [
+        ['payload', payload],
+        ['summary', summary],
+      ]) {
+        expect(
+          contrastRatio(tokenValue(selector, token), surface),
+          `${selector}: disclosure ${what} (${token}) on --bg`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
   // Every OTHER place the stylesheet dims live text with an opacity, as
   // `[what, rule, the token it dims, the surface it sits on]`. Both entries have
   // the blocked row's problem: they dim a token that already sits close to the
@@ -783,6 +821,30 @@ describe('app.css', () => {
   it('never carries typography on a bare one-word severity class', () => {
     expect(appCss).not.toMatch(/^\.error\s*\{/m);
     expect(appCss).not.toMatch(/^\.warning\s*\{/m);
+  });
+
+  // E4: the ruleset diagnostics disclosure (`ErrorDetails.svelte`). One of its two
+  // mounts is the HEADER, which `.app-header` keeps to a single row of chrome — an
+  // integrity failure can carry a hundred messages, and an unbounded list expanding
+  // there would push the whole app down the window. The open panel is therefore a
+  // scrollport of its own, so opening it costs a bounded amount of height wherever
+  // it is mounted.
+  it('bounds the technical-detail panel so opening it cannot swallow the window', () => {
+    const block = /^\.error-details ul\s*\{([^}]*)\}/m.exec(cssWithoutComments);
+    expect(block, 'app.css should declare a .error-details ul rule').not.toBeNull();
+    expect(block![1]).toMatch(/max-height:\s*[\d.]+rem;/);
+    expect(block![1]).toMatch(/overflow-y:\s*auto;/);
+    // And a measure: an integrity message is a full sentence naming ids and a
+    // rulebook file, which spans the whole window without one.
+    expect(block![1]).toMatch(/max-width:\s*[\d.]+rem;/);
+  });
+
+  // The summary is a POINTER TARGET, and a native `<summary>` does not get a
+  // pointer cursor on its own.
+  it('marks the disclosure summary as the control it is', () => {
+    const block = /^\.error-details summary\s*\{([^}]*)\}/m.exec(cssWithoutComments);
+    expect(block, 'app.css should declare a .error-details summary rule').not.toBeNull();
+    expect(block![1]).toMatch(/cursor:\s*pointer;/);
   });
 
   // guided-creation-review-2026-08 #8: the row separator was a `border-bottom` with

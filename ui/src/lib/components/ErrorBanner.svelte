@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import ErrorDetails from './ErrorDetails.svelte';
 
   // The app's one failed-operation surface for the editor and the wizard: save,
   // load, export, validate and the native-menu build all report here. (The
@@ -26,5 +27,16 @@
 </script>
 
 {#if errorText}
-  <span class="error-banner" role="alert" data-testid="error">{errorText}</span>
+  <!-- A ruleset failure reaches this surface as well as the start screen's, which
+       is why the disclosure is mounted here too: `setLang` reloads the ruleset for
+       the new language, so a rules-editor who has just broken an
+       `rules/i18n/<lang>/*.json` file and switches the UI language is told about it
+       HERE, in the editor, with their character still on screen.
+       The alert wraps the SENTENCE only and the disclosure is its sibling — see
+       `ErrorDetails.svelte` for why nesting it inside an assertive, atomic live
+       region would be an accessibility defect. -->
+  <div class="error-banner-block">
+    <span class="error-banner" role="alert" data-testid="error">{errorText}</span>
+    <ErrorDetails />
+  </div>
 {/if}

@@ -64,6 +64,13 @@ empty. Download 0.2.1 or newer; to rescue an older one, launch it with
 `/usr/lib/x86_64-linux-gnu/libwayland-client.so.0` on Debian/Ubuntu). The `.deb`,
 `.rpm` and portable builds were never affected.
 
+**"The ruleset could not be loaded"?** The rules live as JSON beside the binary
+and are checked for referential integrity at load. When that check fails, expand
+**Technical details** under the message for the engine's own report — the
+offending ids and the rulebook to open, one line per problem. The same report
+goes to `stderr`, so launching from a terminal shows it without any clicking.
+It is English in every language: it quotes the ids as spelled in the rules files.
+
 **The binaries are unsigned.** Windows SmartScreen will warn on first launch —
 choose *More info → Run anyway*. The Linux packages are unsigned too.
 

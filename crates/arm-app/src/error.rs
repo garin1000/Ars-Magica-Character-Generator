@@ -38,6 +38,67 @@ pub enum AppError {
     Menu { message: String },
 }
 
+impl AppError {
+    /// Writes a ruleset failure's individual diagnostics to `out`, one per line
+    /// under a header naming which check failed — and writes **nothing at all**
+    /// for any other variant, so the one `?` chain that calls it
+    /// (`commands.rs::load_ruleset`, which also raises [`AppError::Io`] when no
+    /// rules directory exists) does not emit an empty header.
+    ///
+    /// Deliberately not [`std::fmt::Display`]: that joins the messages with
+    /// `"; "` into a single line, which is unreadable once an integrity failure
+    /// produces one message per violation. A reader looking for the offending id
+    /// needs them stacked.
+    ///
+    /// **The text is English and stays English.** These are diagnostics for
+    /// whoever is editing `rules/` — the same audience, and the same reasoning,
+    /// as the `.md:NNNN` book references the engine spells out inside them (see
+    /// `integrity.rs::validate_integrity`). They are not UI strings and have no
+    /// Fluent keys; localizing them would mean translating a hundred-odd
+    /// `format!` sites whose whole value is matching, verbatim, what a rules
+    /// editor greps for in the JSON.
+    pub fn write_ruleset_diagnostics(&self, out: &mut impl std::io::Write) -> std::io::Result<()> {
+        let AppError::Ruleset {
+            ruleset_kind,
+            errors,
+        } = self
+        else {
+            return Ok(());
+        };
+        let noun = if errors.len() == 1 {
+            "problem"
+        } else {
+            "problems"
+        };
+        writeln!(
+            out,
+            "arm-char-gen: ruleset load failed ({ruleset_kind}): {} {noun}",
+            errors.len()
+        )?;
+        for message in errors {
+            writeln!(out, "  - {message}")?;
+        }
+        Ok(())
+    }
+
+    /// Prints this failure's ruleset diagnostics to stderr and hands it straight
+    /// back, so a load can report itself in one link of its `?` chain:
+    /// `load_ruleset_from_dir(..).map_err(AppError::reported)?`.
+    ///
+    /// Reporting never *consumes* the error: the frontend still receives the
+    /// identical [`AppError`] and renders both its localized sentence and its
+    /// technical-detail disclosure from it. The stderr copy is the second,
+    /// terminal-only surface — a developer or power user who launched the binary
+    /// from a shell sees the whole list without touching the UI.
+    ///
+    /// A failed write to stderr is ignored on purpose: a diagnostic that cannot
+    /// be printed must not replace the failure it was describing.
+    pub fn reported(self) -> Self {
+        let _ = self.write_ruleset_diagnostics(&mut std::io::stderr().lock());
+        self
+    }
+}
+
 impl std::fmt::Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

@@ -1220,6 +1220,10 @@ error-not_loaded = Es ist noch kein Regelwerk geladen.
 error-serialize = Die Charakterdatei konnte nicht verarbeitet werden.
 error-export = Das Charakterblatt konnte nicht exportiert werden: In der aktuellen Sprache fehlt Text für { $missing }. Versuchen Sie es mit Englisch als Sprache erneut, oder melden Sie dies als Fehler.
 error-menu = Die Menüleiste der Anwendung konnte nicht erstellt werden.
+# Beschriftung der eingeklappten Detailanzeige mit den Integritätsmeldungen eines
+# fehlgeschlagenen Regelwerks (E4). Die BESCHRIFTUNG ist übersetzt, die Meldungen
+# dahinter bewusst nicht — siehe `ErrorDetails.svelte`.
+error-technical-details = Technische Details
 
 # Abgeleitete Spielwerte (M5/5i). Schreibgeschützte, von der Engine berechnete
 # Werte; das Panel zeigt diese Zahlen nur an und berechnet keine Mechanik selbst.

@@ -16,7 +16,7 @@ these should be tagged over silently.
 | ~~23~~ | **DONE 2026-09-11 — see "Done since" below.** ~~Focus Power's 25-point pool is modelled by nothing.~~ The decision the row asked for was taken: a **second budget kind**, with its own effect variant, its own read-out and its own over-spend code. | — | 2026-09-11 |
 | ~~24~~ | **DONE 2026-09-12 — see "Done since" below.** ~~Four shipped items type their `realm` parameter as free text, now that a real Realm domain exists.~~ All four are `domain: "realm"`, and the migration question the row asked was answered the data-loss-averse way: **nothing is rewritten**, the unresolvable text is reported back to the player verbatim. | — | 2026-09-12 |
 | 29 | **A parameter cap that binds one key, not the whole tuple, is unmodelled.** Necessary (Realm) Aura for (Ability) says "A character may take this Flaw once for any particular Ability" (`ArMDE:6482`), which caps repeats on the **`ability` key alone**. `PointItem::max_per_target` cannot express that: its duplicate key is `(item_ref, params)` — *all* parameters at once — so with E2's realm axis in place, two copies naming the same Ability in different Realms collide in no key and validate clean, which the sentence forbids. E2 found this while tightening the realm domain and deliberately **recorded rather than invented** it, per the standing "implement only what the source supports" rule; nothing regressed, because the second axis existed before E2 too (it was merely free text, so the same two copies differed in a typed word instead of a Realm). Expressing it needs a new `ParameterDef` field — a per-key uniqueness marker — plus a validator beside `validate_duplicate_selections`, and that is engine work with a data shape to settle first: whether the marker names one key ("unique on `ability`") or a subset, and whether an existing save holding two such copies is reported once or twice. The same entry's sibling restriction, "You may not take Student of (Realm) and Puissant Ability for the same Lore" (`ArMDE:5054`), is a cross-**item** constraint over a parameter value and is unmodelled for a different reason: no mechanism relates two different items' parameter values at all. Both are recorded in `crates/arm-rules/RULES.md`. | decision — the data shape for a per-key cap | 2026-09-12 |
-| 25 | **`AppError::Ruleset` carries raw English integrity messages across IPC that nothing renders.** `crates/arm-app/src/error.rs:20-23` defines `Ruleset { ruleset_kind: String, errors: Vec<String> }`, and `From<RulesetError>` (`crates/arm-app/src/error.rs:69-81`) fills `errors` with the engine's own `IntegrityError` strings — hardcoded English built with `format!` in `crates/arm-rules/src/ruleset/integrity.rs`, over a hundred `errors.push(format!(...))` sites. The frontend declares the field (`ui/src/lib/types.ts:1765`) and then **reads it nowhere**: `ErrorBanner.svelte` maps `error-<kind>` and special-cases only `export`, and `StartScreen.svelte` maps `error-<kind>` alone, so a ruleset that fails to load shows the generic, fully localized `error-ruleset` sentence in both locales and the payload is dropped on the floor. Two things follow and both belong here. It is **not** the localization defect it looks like on a first read — but the only reason it is not is that the messages are invisible, so the moment anyone surfaces them (which is the obvious way to make a failed rules edit actionable) it becomes one, and that is the decision owed: surface them and localize them, or stop carrying a payload no consumer wants. And it is why the rulebook-citation guard's **string-literal exclusion** — the seven full-basename `.md:NNNN` spellings inside `integrity.rs`'s diagnostics — rests on a premise that is now *verified* rather than assumed: no user ever sees them. Pre-existing and consistent with `Export { missing }` (`crates/arm-app/src/error.rs:28-33`), which *is* rendered; introduced by no slice in this pack. | decision — surface and localize, or drop the payload | 2026-09-11 |
+| ~~25~~ | **DONE 2026-09-12 — see "Done since" below.** ~~`AppError::Ruleset` carries raw English integrity messages across IPC that nothing renders.~~ The decision the row asked for was taken, and it was neither of the two the row offered: the payload is **kept and made reachable, and deliberately stays English** — printed to stderr on a failed load, and offered behind a collapsed "technical details" disclosure (the label localized, the payload not) on both error surfaces. | — | 2026-09-11 |
 | 26 | **The macOS and Windows menus are unit-tested as data and have never been run.** C3a and C6 prove the menu *model* for all three platforms and, via `installed_menu`, that Tauri really installed it — on Linux. The macOS **Cmd+Q** path through `RunEvent::ExitRequested`, which the mandatory unsaved-changes guard depends on, has never executed on real hardware, and neither has the Windows menu bar. C7's own commit says it plainly: "macOS and Windows are unverified here, as every Phase C slice has said", with muda's `CmdOrCtrl` the only thing standing between the asserted model and a wrong modifier. Worth preserving rather than merely noting: C3a found that `PredefinedMenuItem::quit` on **Windows** would have bypassed the guard outright — muda implements it as `PostQuitMessage(0)`, which ends the message loop instead of raising a close request — so the Windows menu deliberately ships **no** Quit item and offers Window → Close Window (`WM_CLOSE`, guarded) as the way out. That reasoning is recorded in the doc comment on `menu_model` (`crates/arm-app/src/menu.rs`). What is owed is a run on real hardware of each, which a Linux box cannot supply. | a macOS machine and a Windows machine | 2026-09-11 |
 | 27 | **The `e2e-testing` build emits a noticeably larger JS bundle than the plain build, from identical frontend sources.** Observed during Phase C: roughly **537 kB** against the plain build's **480 kB**. The plain figure was re-measured in this slice's gate build and is **486.67 kB** (`dist/assets/index-*.js`, 146.36 kB gzipped), so the plain half of the comparison is real; the 537 kB half has not been re-measured. The feature is Rust-side and `#[cfg]`-gated (`crates/arm-app/Cargo.toml` declares `e2e-testing = []`; `ui/e2e/wdio.conf.js` is its only caller, passing `--features e2e-testing` to the same `cargo tauri build --no-bundle`), so it runs the very same `beforeBuildCommand` over the very same `ui/src` and should not reach the frontend bundle at all. Nobody has looked. Most likely a build-configuration difference — a different Vite mode, sourcemap or minification setting on the path wdio takes — rather than real code, but "most likely" is not an answer. What is owed is the measurement and the explanation; if it turns out real code is being included, that is a shipped-binary concern rather than a curiosity. | an explanation | 2026-09-11 |
 | 28 | **The logo has not been checked by eye on the light background.** C2 (`b04b473`) shipped light/dark/auto with the **same** asset in both themes — `ui/src/lib/assets/logo.png`, 242×96, one file, referenced once from `App.svelte`. The dark theme was verified in the running app; the light one was not. A logo authored against a dark chrome can lose its edges or halo on a light one, and no test can see it. Needs a human eye in the running app, in both themes, at the header's actual size. | a visual check | 2026-09-11 |
@@ -24,6 +24,49 @@ these should be tagged over silently.
 
 ## Done since this list was started
 
+- **The ruleset-integrity diagnostics are reachable, and deliberately English**
+  (old row 25, E4, 2026-09-12). The row offered two ways out — surface the
+  payload *and localize it*, or stop carrying a payload nobody consumes — and the
+  answer taken is a third: keep the localized sentence as the user-facing text
+  and make the detail reachable **as a developer diagnostic**, the way a stack
+  trace is. Two surfaces, because the payload had two different readers and
+  neither had one before:
+  - **stderr on a failed load.** `error.rs::write_ruleset_diagnostics` writes a
+    header naming which check failed (`parse` or `integrity`) and then one line
+    per violation; `error.rs::reported` prints it and hands the identical
+    `AppError` straight back, so `commands.rs::load_ruleset` reports in one link
+    of its `?` chain and the frontend still receives everything. Anyone running
+    the binary from a terminal gets the whole list for free. Deliberately not
+    `Display`, which joins with `"; "` into a single unreadable line.
+  - **a collapsed disclosure in the UI.** `ui/src/lib/components/ErrorDetails.svelte`
+    — a native `<details>`/`<summary>`, so it is collapsible, focusable and
+    screen-reader-announced with no component, no state and no keyboard handling
+    of ours. Mounted on **both** error surfaces, because both can receive an
+    `AppError::Ruleset`: `StartScreen.svelte`'s `start-error` takes the startup
+    failure, and `ErrorBanner.svelte`'s `error` takes the one a **language
+    switch** raises — `setLang` reloads the ruleset, so a rules-editor who has
+    just broken `rules/i18n/<lang>/*.json` is told about it in the editor, with
+    their character still on screen. The disclosure is a **sibling** of the
+    `role="alert"` element, never a child: `role="alert"` is assertive and
+    atomic, so nesting it would interrupt the user to read an entire
+    hundred-message list aloud and re-read it on every expand and collapse. The
+    alert keeps the sentence; the list is opened on demand, and is a bounded
+    scrollport (`.error-details ul`) so opening it in the single-row header
+    cannot swallow the window.
+  The label `error-technical-details` is a normal localized UI string in both
+  locales ("Technical details" / "Technische Details"); the **payload is not**,
+  and the comment at the render site says why so it is not "fixed" into a
+  mistranslation later: these messages name ids exactly as they are spelled in
+  `rules/core/*.json` and cite the rulebook file and line to open, so their whole
+  value is being greppable, verbatim, against the data the reader is editing.
+  This also **replaces the premise** under the rulebook-citation guard's
+  string-literal exclusion (the seven full-basename `.md:NNNN` spellings inside
+  `integrity.rs`'s diagnostics). That carve-out used to rest on "no user ever
+  sees them"; it now rests on "they are deliberately shown, to someone who has
+  the rulebook open" — which is a *stronger* reason to spell the basename out in
+  full than invisibility ever was. Recorded in the guard's own module comment
+  (`crates/arm-rules/tests/rulebook_citations.rs`) and in the citation-sweep
+  entry below.
 - A source-to-source cross-reference names the **symbol**, and a guard keeps it
   honest (old row 22, E3, 2026-09-12). The form is `` `<file>::<symbol>` `` —
   `` `types.rs::Entity::selections` ``,
@@ -213,8 +256,12 @@ these should be tagged over silently.
   same pass. **Four deliberate, tested exclusions**, each documented in the
   guard's own module comment: the seven full-basename spellings inside
   `crates/arm-rules/src/ruleset/integrity.rs`'s `errors.push(format!(...))`
-  diagnostics (string literals, not comments — see row 25 above, which now
-  verifies the premise they rest on); the German source basenames, discovered
+  diagnostics (string literals, not comments — the premise under them was "no
+  user ever sees them", which row 25 first verified and E4 then **replaced**:
+  they are now deliberately shown as developer diagnostics, on stderr and behind
+  a collapsed technical-details disclosure, which is a stronger reason to spell
+  the basename out in full than invisibility ever was); the German source
+  basenames, discovered
   from the directory rather than listed, since German provenance is a different
   and valid convention; `RULES.md`'s own paren-bare implementation-site citations
   (`` `validate_caps` (:22) ``, owned by `rules_md_citations.rs`), recognised by

@@ -544,6 +544,84 @@ fn integrity_failure_preserves_individual_messages() {
     );
 }
 
+/// E4: the integrity messages are diagnostics for whoever is editing
+/// `rules/`, so a terminal-launched binary must print them in full. Before this
+/// they were computed, packed into [`AppError::Ruleset`], shipped over IPC and
+/// read by nobody.
+#[test]
+fn ruleset_diagnostics_name_the_kind_and_list_every_message() {
+    let err = AppError::Ruleset {
+        ruleset_kind: "integrity".to_string(),
+        errors: vec![
+            "unknown prerequisite 'virtue.x' referenced by 'virtue.a'".to_string(),
+            "unknown prerequisite 'virtue.y' referenced by 'virtue.b'".to_string(),
+        ],
+    };
+
+    let mut sink: Vec<u8> = Vec::new();
+    err.write_ruleset_diagnostics(&mut sink).unwrap();
+    let report = String::from_utf8(sink).unwrap();
+
+    // One header naming which check failed, then one line per violation — never a
+    // single `; `-joined blob, which is what `Display` produces and what a reader
+    // scanning for an id cannot use.
+    let lines: Vec<&str> = report.lines().collect();
+    assert_eq!(
+        lines.len(),
+        3,
+        "a header plus one line per message: {report}"
+    );
+    assert!(
+        lines[0].contains("integrity"),
+        "header names the failing check: {report}"
+    );
+    assert!(
+        lines[1].contains("unknown prerequisite 'virtue.x' referenced by 'virtue.a'"),
+        "first violation printed verbatim: {report}"
+    );
+    assert!(
+        lines[2].contains("unknown prerequisite 'virtue.y' referenced by 'virtue.b'"),
+        "second violation printed verbatim: {report}"
+    );
+}
+
+/// The emitter is called from the one `?` chain that loads the ruleset, which
+/// also carries [`AppError::Io`] (no rules directory at all) — so every other
+/// variant has to be silent rather than printing an empty header.
+#[test]
+fn a_non_ruleset_failure_writes_no_diagnostics() {
+    let err = AppError::Io {
+        message: "no such file".to_string(),
+    };
+
+    let mut sink: Vec<u8> = Vec::new();
+    err.write_ruleset_diagnostics(&mut sink).unwrap();
+
+    assert!(sink.is_empty(), "only a ruleset failure has diagnostics");
+}
+
+/// Printing must not consume the failure: the frontend still needs the very same
+/// [`AppError`] to render its localized sentence and its detail disclosure.
+#[test]
+fn reporting_a_failure_hands_the_same_error_back() {
+    let err = AppError::Ruleset {
+        ruleset_kind: "parse".to_string(),
+        errors: vec!["virtues_flaws.json: expected value at line 1".to_string()],
+    };
+
+    let returned = err.reported();
+
+    let AppError::Ruleset {
+        ruleset_kind,
+        errors,
+    } = returned
+    else {
+        panic!("expected the ruleset error back unchanged");
+    };
+    assert_eq!(ruleset_kind, "parse");
+    assert_eq!(errors, vec!["virtues_flaws.json: expected value at line 1"]);
+}
+
 #[test]
 fn sample_companion_is_valid_in_enforced_mode() {
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;

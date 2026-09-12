@@ -248,6 +248,47 @@ describe('StartScreen', () => {
     expect(html()).not.toContain('data-testid="start-error"');
   });
 
+  // E4 (open-todos row 25): the sentence says the ruleset failed; only the
+  // engine's own diagnostics say WHICH id in WHICH file, and this screen is
+  // where a startup failure lands — the header's `ErrorBanner` is not rendered
+  // here, so without a disclosure of its own the payload would be unreachable at
+  // exactly the moment it is most useful. Deliberately untranslated: they are
+  // rules-editor diagnostics, shown as such.
+  it('offers the technical detail of a failed ruleset load', () => {
+    store.ruleset = null;
+    store.error = {
+      kind: 'ruleset',
+      ruleset_kind: 'integrity',
+      errors: ["unknown prerequisite 'virtue.x' referenced by 'virtue.a'"],
+    };
+
+    const body = html();
+    expect(body).toContain('data-testid="error-details"');
+    expect(body).toContain("unknown prerequisite 'virtue.x' referenced by 'virtue.a'");
+  });
+
+  // The alert region holds the sentence and nothing else: `role="alert"` is
+  // assertive and atomic, so a nested list would be read out in full, on every
+  // expand and collapse. See `ErrorDetails.svelte`.
+  it('keeps the diagnostics out of the alert live region', () => {
+    store.ruleset = null;
+    store.error = {
+      kind: 'ruleset',
+      ruleset_kind: 'integrity',
+      errors: ["unknown prerequisite 'virtue.x' referenced by 'virtue.a'"],
+    };
+
+    const { open, text } = element(html(), 'start-error');
+    expect(open).toMatch(/role="alert"/);
+    expect(text).toBe(store.t('error-ruleset'));
+    expect(text).not.toContain('unknown prerequisite');
+  });
+
+  it('offers no technical detail for a failure that carries none', () => {
+    store.error = { kind: 'io', message: 'no such file' };
+    expect(html()).not.toContain('data-testid="error-details"');
+  });
+
   // S28 (full-audit UX): this screen only surfaces guided-vs-direct. The
   // validation-mode axis (Enforced/Advisory/Silent) — what actually
   // distinguishes direct-validated from direct-unchecked — was invisible here,

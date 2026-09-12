@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import ErrorDetails from './ErrorDetails.svelte';
   import LanguageSelector from './LanguageSelector.svelte';
 
   // The character types on offer are ruleset data, never a hardcoded set: they are
@@ -45,8 +46,15 @@
 
   <h2 id="start-heading">{store.t('start-title')}</h2>
 
+  <!-- The alert carries the sentence; the disclosure beside it carries the
+       engine's own diagnostics, which is the only thing that says WHICH id in
+       WHICH file broke. A startup failure lands here and nowhere else — the
+       header's `ErrorBanner` is not rendered on this screen — so without this the
+       payload would be unreachable at exactly the moment it matters most.
+       Not nested inside the alert: see `ErrorDetails.svelte`. -->
   {#if errorText}
     <p class="error-banner" role="alert" data-testid="start-error">{errorText}</p>
+    <ErrorDetails />
   {/if}
 
   <section class="start-choice" aria-labelledby="start-open-heading">

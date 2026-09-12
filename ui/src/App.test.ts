@@ -356,6 +356,53 @@ describe('the header after the document toolbar', () => {
     expect(openTag(html(), 'error')).toBeNull();
   });
 
+  // E4: this surface receives a ruleset failure too, and the start screen is not
+  // the only one that can. `setLang` reloads the ruleset for the new language, so
+  // a rules-editor who has just broken `rules/i18n/de/*.json` and switches the UI
+  // to German lands HERE, in the editor, with the character they were building
+  // still on screen. Before this the banner said only "The ruleset could not be
+  // loaded" and the engine's own diagnostics went nowhere.
+  it('offers the technical detail of a ruleset failure beside the sentence', () => {
+    store.error = {
+      kind: 'ruleset',
+      ruleset_kind: 'integrity',
+      errors: ["unknown prerequisite 'virtue.x' referenced by 'virtue.a'"],
+    } as never;
+    const body = html();
+
+    expect(textOf(body, 'error')).toBe(store.t('error-ruleset'));
+    expect(openTag(body, 'error-details')).not.toBeNull();
+    expect(body).toContain("unknown prerequisite 'virtue.x' referenced by 'virtue.a'");
+  });
+
+  // `role="alert"` is `aria-live="assertive"` + `aria-atomic="true"`: whatever is
+  // inside it is read in full, interrupting the user, and re-read whenever it
+  // changes. An integrity failure carries one message per violation, so the
+  // payload must stay OUTSIDE the region — the sentence is the alert, the
+  // disclosure is a sibling the user opens deliberately.
+  it('keeps the diagnostics out of the alert live region', () => {
+    store.error = {
+      kind: 'ruleset',
+      ruleset_kind: 'integrity',
+      errors: ["unknown prerequisite 'virtue.x' referenced by 'virtue.a'"],
+    } as never;
+    const body = html();
+
+    expect(openTag(body, 'error')).toMatch(/role="alert"/);
+    expect(textOf(body, 'error')).not.toContain('unknown prerequisite');
+
+    const details = openTag(body, 'error-details');
+    expect(details).not.toBeNull();
+    expect(details).not.toMatch(/role="alert"/);
+  });
+
+  // No disclosure where there is no payload: every other failure kind says
+  // everything it knows in its own localized sentence.
+  it('offers no technical detail for a failure that carries none', () => {
+    store.error = { kind: 'io' } as never;
+    expect(openTag(html(), 'error-details')).toBeNull();
+  });
+
   // The five document actions are the menu's and the keyboard's now. Asserting
   // their ABSENCE is what stops the toolbar growing back one button at a time.
   it('offers no in-app buttons for the document actions', () => {

@@ -1172,6 +1172,10 @@ error-not_loaded = No ruleset is loaded yet.
 error-serialize = The character file could not be processed.
 error-export = The character sheet could not be exported: the current language is missing text for { $missing }. Try switching to English and exporting again, or report this as a bug.
 error-menu = The application menu could not be built.
+# Label of the collapsed disclosure holding a failed ruleset's own integrity
+# diagnostics (E4). The LABEL is localized; the diagnostics behind it are
+# deliberately not — see `ErrorDetails.svelte`.
+error-technical-details = Technical details
 
 # Derived play-stat read-out (M5/5i). Read-only totals computed by the engine;
 # the panel renders these numbers and computes no mechanics itself.

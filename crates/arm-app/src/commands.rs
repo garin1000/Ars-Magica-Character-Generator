@@ -165,7 +165,14 @@ pub fn load_ruleset(
         ),
     })?;
 
-    let localized = ruleset_io::load_ruleset_from_dir(&rules_dir, &lang)?;
+    // Report before propagating (E4). The frontend gets the same error either
+    // way and renders its localized sentence plus a technical-detail disclosure;
+    // this is the second surface, for a binary launched from a terminal, where
+    // the whole diagnostic list is free and needs no UI at all. See
+    // `error.rs::AppError::write_ruleset_diagnostics` for why its text is
+    // English on purpose.
+    let localized =
+        ruleset_io::load_ruleset_from_dir(&rules_dir, &lang).map_err(AppError::reported)?;
 
     *state.ruleset.write().expect("ruleset lock poisoned") = Some(localized.clone());
 

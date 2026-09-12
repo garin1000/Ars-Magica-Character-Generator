@@ -2455,6 +2455,49 @@ ul {
   font-size: var(--font-small);
 }
 
+/* The banner and its technical-detail disclosure as one block (E4). A column,
+   because both of its mounts want the detail UNDER the sentence rather than
+   beside it: `.header-actions` is a flex ROW, so without this the disclosure
+   would become a second item on the chrome strip and open into a column as wide
+   as its own label. `align-items: flex-start` keeps the collapsed summary at its
+   own width instead of stretching it across the block. */
+.error-banner-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+/* The disclosure holding a failed ruleset's own integrity diagnostics. Quieter
+   than the sentence above it — that is the message, this is the evidence — and
+   the summary takes the app's ordinary ink rather than `--error`, so the one red
+   line in the block stays the one that says what went wrong. Both colours are
+   palette tokens and read at full strength in either theme; nothing here dims
+   anything. */
+.error-details {
+  font-size: var(--font-small);
+  color: var(--muted);
+}
+
+.error-details summary {
+  color: var(--ink);
+  cursor: pointer;
+}
+
+/* A SCROLLPORT, not a list that grows. One of the two mounts is the header, which
+   `.app-header` holds to a single row of chrome, and an integrity failure carries
+   one message per violation — an unbounded list would push the entire app down
+   the window the moment someone opened it. The max-width is a reading measure:
+   each message is a full sentence naming ids and the rulebook file to open, and
+   it would otherwise run the full width of the window. */
+.error-details ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  max-height: 12rem;
+  max-width: 40rem;
+  overflow-y: auto;
+}
+
 /* Hover/focus tooltip carrying an item's description + example specialties
    (see actions.ts `tooltip`). Appended to <body> and positioned in viewport
    coordinates, so it is never clipped by a scrolling panel. High contrast and a

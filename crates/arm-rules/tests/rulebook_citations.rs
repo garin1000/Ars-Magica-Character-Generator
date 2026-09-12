@@ -47,6 +47,20 @@
 //! "fail loudly with clear error listing offending IDs" — the reader needs to
 //! open a specific rulebook, and spelling it out in full removes any need to
 //! know the nine-item acronym table to act on the message.
+//!
+//! **E4 makes that premise an honest one.** When this exclusion was written the
+//! messages went nowhere: `AppError::Ruleset` carried them across IPC and the
+//! frontend read the field in no component, so "the reader" was hypothetical and
+//! the carve-out rested on nobody ever seeing the text. They are now *shown*,
+//! and shown **as developer diagnostics** — printed to stderr by
+//! `error.rs::write_ruleset_diagnostics` on a failed load, and offered behind a
+//! collapsed "technical details" disclosure (`ErrorDetails.svelte`) on both of
+//! the app's error surfaces. The payload stays English by decision, for the same
+//! reason the basename is spelled out in full: its value is matching, verbatim,
+//! the files and ids the rules editor is looking at. So the exclusion is no
+//! longer "invisible text nobody has to read" but "text deliberately addressed
+//! to someone who has the rulebook open", which is a stronger reason to keep the
+//! full basename, not a weaker one.
 //! `dotmd_citation_detector_ignores_a_dot_md_path_inside_a_string_literal_but_flags_one_in_a_comment`
 //! proves this exclusion is intentional and mechanical (it falls out of
 //! `comment_blocks`'s existing "comments only" scope), not accidental.
