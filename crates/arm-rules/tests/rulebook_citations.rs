@@ -160,14 +160,14 @@
 //! citations (missing the `Ars Magica - Definitive Edition (` prefix), and
 //! those are still flagged and were fixed in the sweep.
 
+mod citation_support;
+
+use citation_support::{
+    comment_blocks, relative, repo_root, rust_files, source_files_in, web_comment_blocks,
+};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-
-/// `crates/arm-rules` (this crate's manifest dir) -> repo root.
-fn repo_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
-}
 
 fn rules_source_en() -> PathBuf {
     repo_root().join("rules/source/en")
@@ -333,102 +333,12 @@ fn ui_src_root() -> PathBuf {
     repo_root().join("ui/src")
 }
 
-fn web_source_files_in(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.filter_map(Result::ok) {
-        let path = entry.path();
-        if path.is_dir() {
-            web_source_files_in(&path, out);
-        } else if path
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .is_some_and(|ext| matches!(ext, "ts" | "svelte" | "css"))
-        {
-            out.push(path);
-        }
-    }
-}
-
 /// Every `.ts`, `.svelte`, or `.css` file under [`ui_src_root`], recursively.
 fn web_source_files() -> Vec<PathBuf> {
     let mut files = Vec::new();
-    web_source_files_in(&ui_src_root(), &mut files);
+    source_files_in(&ui_src_root(), &["ts", "svelte", "css"], &mut files);
     files.sort();
     files
-}
-
-/// Extracts every `open`..`close` delimited span from `content` — used for
-/// `/* */` block comments (including JSDoc `/** */`) and Svelte/HTML
-/// `<!-- -->` comments — pairing each with its 1-based starting line and a
-/// [`comment_blocks`]-style joined string (each inner line trimmed, blank
-/// lines dropped, joined with a single space; a whole span is naturally one
-/// block, unlike a `//` run, since the delimiters already bound it). Also
-/// returns a same-length copy of `content` with every matched span
-/// (delimiters included) blanked to spaces — newlines preserved — so line
-/// numbers stay valid for a follow-up scan over the remainder, and a `//`
-/// sequence that happens to sit inside an already-extracted span can never be
-/// independently re-matched. See [`web_comment_blocks`].
-fn extract_delimited_blocks(
-    content: &str,
-    open: &str,
-    close: &str,
-) -> (Vec<(usize, String)>, String) {
-    let mut blocks = Vec::new();
-    let mut masked = String::with_capacity(content.len());
-    let mut rest = content;
-    let mut line = 1usize;
-    loop {
-        let Some(open_rel) = rest.find(open) else {
-            masked.push_str(rest);
-            break;
-        };
-        let before = &rest[..open_rel];
-        masked.push_str(before);
-        line += before.matches('\n').count();
-        let start_line = line;
-        let after_open = &rest[open_rel + open.len()..];
-        let Some(close_rel) = after_open.find(close) else {
-            // Unterminated span: leave the remainder untouched (defensive; a
-            // well-formed source file never hits this).
-            masked.push_str(&rest[open_rel..]);
-            break;
-        };
-        let inner = &after_open[..close_rel];
-        let joined = inner
-            .lines()
-            .map(str::trim)
-            .filter(|l| !l.is_empty())
-            .collect::<Vec<_>>()
-            .join(" ");
-        if !joined.is_empty() {
-            blocks.push((start_line, joined));
-        }
-        let span_end = open_rel + open.len() + close_rel + close.len();
-        let span = &rest[open_rel..span_end];
-        for ch in span.chars() {
-            masked.push(if ch == '\n' { '\n' } else { ' ' });
-        }
-        line += span.matches('\n').count();
-        rest = &rest[span_end..];
-    }
-    (blocks, masked)
-}
-
-/// [`comment_blocks`]'s analogue for `ui/src`. Block and HTML comments are
-/// extracted first via [`extract_delimited_blocks`]; the masked remainder —
-/// same length, newlines intact — is then handed to [`comment_blocks`] to
-/// pick up every `//` line-comment run, which matches its Rust `//` handling
-/// exactly (a plain `//` line falls through `comment_blocks`'s `///`/`//!`
-/// checks to its `//` branch either way).
-fn web_comment_blocks(content: &str) -> Vec<(usize, String)> {
-    let (mut blocks, masked1) = extract_delimited_blocks(content, "/*", "*/");
-    let (html_blocks, masked2) = extract_delimited_blocks(&masked1, "<!--", "-->");
-    blocks.extend(html_blocks);
-    blocks.extend(comment_blocks(&masked2));
-    blocks.sort_by_key(|(line, _)| *line);
-    blocks
 }
 
 /// True when `cell` (already trimmed) is *exactly* a bare citation number —
@@ -456,21 +366,6 @@ fn find_bare_table_cell_citations(text: &str) -> Vec<String> {
         .filter(|cell| is_bare_table_cell_citation(cell))
         .map(str::to_string)
         .collect()
-}
-
-/// Every `.rs` file under `dir`, recursively.
-fn rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.filter_map(Result::ok) {
-        let path = entry.path();
-        if path.is_dir() {
-            rust_files(&path, out);
-        } else if path.extension().is_some_and(|ext| ext == "rs") {
-            out.push(path);
-        }
-    }
 }
 
 /// This guard's own test files, excluded from every scan below — see the
@@ -509,51 +404,6 @@ fn src_root_rust_files() -> Vec<PathBuf> {
         .into_iter()
         .filter(|f| src_roots().iter().any(|root| f.starts_with(root)))
         .collect()
-}
-
-/// One contiguous run of `///`, `//!`, or `//` comment lines, with the
-/// comment leader and a single leading space stripped, joined by a single
-/// space. Citations live only in comments in this codebase, and joining a
-/// run into one logical string is what lets a citation's continuation list
-/// (`, :NNN`) be found even when hand-wrapped prose splits it — or splits a
-/// full basename — across two physical comment lines (observed in the wild,
-/// e.g. `mythic_companion.rs:76-77`: "...Core Rules).md" wraps onto the
-/// following `///` line). Returns each block paired with the 1-based source
-/// line it started on, for error messages; precision beyond "which block"
-/// is not needed since a human re-finds the exact spot by searching.
-fn comment_blocks(content: &str) -> Vec<(usize, String)> {
-    let mut blocks = Vec::new();
-    let mut current: Option<(usize, String)> = None;
-    for (idx, raw_line) in content.lines().enumerate() {
-        let trimmed = raw_line.trim_start();
-        let text = trimmed
-            .strip_prefix("///")
-            .or_else(|| trimmed.strip_prefix("//!"))
-            .or_else(|| trimmed.strip_prefix("//"));
-        match text {
-            Some(text) => {
-                let text = text.strip_prefix(' ').unwrap_or(text);
-                match &mut current {
-                    Some((_, joined)) => {
-                        if !joined.is_empty() {
-                            joined.push(' ');
-                        }
-                        joined.push_str(text);
-                    }
-                    None => current = Some((idx + 1, text.to_string())),
-                }
-            }
-            None => {
-                if let Some(block) = current.take() {
-                    blocks.push(block);
-                }
-            }
-        }
-    }
-    if let Some(block) = current.take() {
-        blocks.push(block);
-    }
-    blocks
 }
 
 /// Markdown's analogue of [`comment_blocks`]: joins each contiguous run of
@@ -942,13 +792,6 @@ fn collect_all_citations() -> (
         }
     }
     (files_scanned, all)
-}
-
-fn relative(path: &Path) -> String {
-    path.strip_prefix(repo_root())
-        .unwrap_or(path)
-        .display()
-        .to_string()
 }
 
 #[test]
@@ -1536,7 +1379,7 @@ A normal acronym citation is not bare: Source: ArMDE:2774.\n\
 
 #[test]
 fn citation_finder_resolves_continuations_across_a_wrapped_block_to_the_inherited_acronym() {
-    // Mirrors the real wrap in `derived.rs:319-322`: a comma-continuation
+    // Mirrors the real wrap in `derived.rs::residual_voice_penalty`: a comma-continuation
     // list where only the first number carries the acronym.
     let text = "Source: Ars Magica - Definitive Edition (Core Rules) becomes ArMDE:9245, \
                 :4822-4826, :3645-3648 after the sweep.";
@@ -1568,7 +1411,7 @@ fn citation_finder_resolves_continuations_across_a_wrapped_block_to_the_inherite
 
 #[test]
 fn a_continuation_wrapped_in_its_own_backticks_is_not_chained_and_reads_as_bare() {
-    // D1c found this exact shape live at `ipc.ts:280`:
+    // D1c found this exact shape live in `ipc.ts::CrisisPreview`'s doc comment:
     // `` (`ArMDE:16626`, `:16627`) `` — unlike every other continuation in the
     // codebase (e.g. the fixture above, or the real
     // `(ArMDE:16602, :16611)` in `aging-workflow.svelte.ts`), the second
@@ -1657,9 +1500,11 @@ fn full_basename_detector_finds_a_basename_split_across_a_wrapped_comment() {
 
 #[test]
 fn dotmd_citation_detector_flags_any_dot_md_colon_digits_shape_including_mangled_basenames() {
-    // The real near-misses this backstop exists for: a partial basename
-    // (`types.rs:1109`) and a differently-mangled one missing the
-    // `Ars Magica - ` / parenthetical parts (`xp.rs:1313`), plus a correctly
+    // The real near-misses this backstop exists for: a partial basename (in
+    // `types.rs::MightGrant`'s doc comment) and a differently-mangled one
+    // missing the `Ars Magica - ` / parenthetical parts (in
+    // `xp.rs::ability_authorizations_reads_only_the_three_permission_granting_effects`'s),
+    // plus a correctly
     // spelled full basename for good measure (already caught by
     // `find_full_basenames`, but this detector must see it too since it is a
     // superset). None of `RULES.md` (no trailing digits — a different guard's

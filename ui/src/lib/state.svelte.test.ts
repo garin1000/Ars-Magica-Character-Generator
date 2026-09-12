@@ -4521,7 +4521,7 @@ describe('the aging log’s remove button', () => {
   }
 
   /** A hand-written row: free text and no age, so there is nothing mechanical to
-   *  undo and `revert_year` cannot reach it (aging.rs:1537-1541). */
+   *  undo and `aging.rs::revert_year` cannot reach it. */
   const handWritten: AgingLogEntry = { year: 1219, effect: 'A hard winter' };
 
   /** The engine's refusal for an age nothing records (`AgingError::YearNotRecorded`). */

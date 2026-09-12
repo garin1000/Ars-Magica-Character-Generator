@@ -16,8 +16,8 @@ import type { DerivedTotals, Entity, LocalizedRuleset } from './lib/types';
 // project exists (see CLAUDE.md, "Frontend test environments"); mounting the app
 // client-side is what makes the effect actually run.
 // S4 (full-audit UX): the native OS window title never reflected the open file
-// name or unsaved state — only `document.title` did (the existing `$effect`
-// just above this file's App.svelte:163), which a Tauri window does NOT mirror
+// name or unsaved state — only `document.title` did (the existing `$effect` in
+// `App.svelte` that assigns it), which a Tauri window does NOT mirror
 // into its own chrome automatically. `getCurrentWindow` is hoisted so the
 // SAME mock function backs every `getCurrentWindow()` call, letting tests
 // assert on it directly.
@@ -239,8 +239,10 @@ describe('the unsaved-changes guard is mirrored to the backend', () => {
 });
 
 // S1 (round 2), S4 (round 3, tmp/review/review-round-3-sabine.md): the discard
-// prompt's focus-restoration `$effect` (App.svelte:196-210) shipped with zero
-// coverage anywhere in the suite. `App.test.ts` renders through `svelte/server`
+// prompt's focus-restoration `$effect` (the one restoring
+// `App.svelte::lastFocusOutsideDialog`, which `App.svelte::trackFocus` records)
+// shipped with zero coverage anywhere in the suite. `App.test.ts` renders
+// through `svelte/server`
 // and never runs an `$effect`, so this file is the only place that can. A loaded
 // entity here only needs to satisfy the shapes `open()`/`revalidate()` touch, not
 // a real ruleset's full schema.

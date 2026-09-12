@@ -2150,7 +2150,7 @@ class AppStore {
    * button uses, so the two controls cannot disagree about what an undo is.
    *
    * **The key is `age`, and nothing narrower.** `age` is precisely what
-   * `revert_year` addresses entries by (aging.rs:1535-1541) and what its `retain`
+   * `aging.rs::revert_year` addresses entries by and what its `retain`
    * removes, so "carries an age" is the engine's own definition of a row within
    * its reach — a stricter test (a recorded die, say) would plain-filter a row the
    * engine would have reverted, which is the corruption again. A hand-written row

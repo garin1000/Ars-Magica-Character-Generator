@@ -534,8 +534,9 @@ describe('ParameterPicker realm domain (row 12)', () => {
 // Row 19 "taken as": the `category` domain's menu is the item's own declared
 // `values` (a subset of `categories`, enforced at load), but options are
 // labelled through the `category-<id>` Fluent family rather than rules i18n —
-// the sharp edge the comment at ParameterPicker.svelte:412-415 exists to
-// prevent, since a bare category slug has no rules-i18n entry of its own.
+// the sharp edge the comment on the `category` domain branch in
+// `ParameterPicker.svelte` exists to prevent, since a bare category slug has no
+// rules-i18n entry of its own.
 describe('ParameterPicker category domain (row 19 "taken as")', () => {
   const TESTID = 'param-virtue.sufi-taken_as-0';
 

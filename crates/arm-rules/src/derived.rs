@@ -1021,7 +1021,7 @@ mod tests {
     }
 
     /// `Entity::aura` is only clamped to `AURA_MODIFIER_MIN`..=`AURA_MODIFIER_MAX`
-    /// by `Entity::normalize` (`types.rs:2862`); a value that reaches
+    /// by `types.rs::Entity::normalize`; a value that reaches
     /// `creo_corpus_lab_total` before that pass runs (e.g. a freshly deserialized
     /// save under `ValidationMode::Silent`, which still computes derived totals —
     /// "one evaluation path") must not overflow the bare `i32` sum. Saturates

@@ -988,8 +988,9 @@ impl FlowGraphLayout {
 /// Panics if the graph would need more than [`MAX_XP_SOLVE_NODES`] nodes.
 /// `r` and `s` both grow 1:1 with save-controlled `Vec`s (`entity.selections`
 /// for `r`; `entity.ability_scores`/`art_scores`/`spells` for `s` — see
-/// `types.rs:3329` (selections), `types.rs:3339` (ability_scores), `types.rs:3408`
-/// (art_scores), `types.rs:3413` (spells)), and the matrix below is `n * n` `u32`s.
+/// `types.rs::Entity::selections`, `types.rs::Entity::ability_scores`,
+/// `types.rs::Entity::art_scores` and `types.rs::Entity::spells`), and the
+/// matrix below is `n * n` `u32`s.
 /// With no bound, a crafted save with tens of thousands of entries forces a
 /// multi-gigabyte single allocation on a plain File → Open, aborting the whole
 /// process (`handle_alloc_error`) with no dialog and no diagnostic — an

@@ -311,9 +311,10 @@ describe('WizardShell', () => {
     expect(label).not.toBe(text(html(), 'wizard-blocked-hint-characteristics'));
   });
 
-  // The noise check this gate exists for. Measured against the shipped catalogue
-  // (`core_type_conformance.rs::a_fresh_wizard_magus_…`): an untouched magus already
-  // warns on 4 of its 11 steps — Virtues & Flaws, House, Abilities and Spells — so an
+  // The noise check this gate exists for. Measured against the shipped catalogue — see
+  // `core_type_conformance.rs::a_fresh_wizard_magus_already_carries_warnings_on_several_unreached_phases`
+  // — an untouched magus already warns on 4 of its 11 steps — Virtues & Flaws,
+  // House, Abilities and Spells — so an
   // ungated marker would light more than a third of the rail on step one, on steps
   // the player has never opened. Only steps already reached are marked, which is
   // exactly the set the rail lets you click.

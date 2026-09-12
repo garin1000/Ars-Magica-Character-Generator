@@ -37,13 +37,13 @@
   // is standing on. The rail is what carries it forward instead.
   //
   // GATED TO STEPS ALREADY REACHED, and that gate is the whole design. Measured
-  // against the shipped catalogue (`core_type_conformance.rs::a_fresh_wizard_magus_
-  // already_carries_warnings_on_several_unreached_phases`): a magus the wizard has
-  // only just created already warns on 4 of its 11 steps — Virtues & Flaws, House,
-  // Abilities, Spells — so an ungated marker would light over a third of the rail
-  // on step one, every one of them a step never opened. `index <= wizardFurthest`
-  // is exactly the set of steps the rail lets you click, so the marker never points
-  // anywhere the user cannot go.
+  // against the shipped catalogue — see
+  // `core_type_conformance.rs::a_fresh_wizard_magus_already_carries_warnings_on_several_unreached_phases`
+  // — a magus the wizard has only just created already warns on 4 of its 11 steps
+  // — Virtues & Flaws, House, Abilities, Spells — so an ungated marker would light
+  // over a third of the rail on step one, every one of them a step never opened.
+  // `index <= wizardFurthest` is exactly the set of steps the rail lets you click,
+  // so the marker never points anywhere the user cannot go.
   //
   // Suppressed on a blocked step: a step holding both should say the stronger
   // thing once, not two markers at once.

@@ -993,8 +993,9 @@ export function grantedSelectionsForSide(
  * `build_spends` as a second, independent implementation — the same class of
  * problem `characteristicPointsUsed` above documents, pending an engine-surfaced
  * mastery-pool `used` figure on `EffectiveScores` (the value is already computed
- * inside `xp_allocation` but deliberately not surfaced, per the "the mastery
- * pool is flow-only" comment at `effective/xp.rs:568-570`). The `doubled`
+ * inside `xp_allocation` but deliberately not surfaced, per the "Flow-only:
+ * never surfaced in `restricted`" comment on
+ * `effective/xp.rs::spell_mastery_flow_pool`). The `doubled`
  * boolean below is ALSO NOT a general Affinity reduction: the engine's
  * `charged_cost(payable, affinity)` handles any `(num, den)` ratio, but this
  * collapses it to `Math.ceil(payable / 2)`, correct only for a 2/1 ratio.
@@ -1002,7 +1003,8 @@ export function grantedSelectionsForSide(
  * grants Spell Mastery (`rules/core/virtues_flaws.json`'s Flawless Magic entry,
  * `advancement_num: 2, advancement_den: 1`), so no live call site can hit a
  * different ratio today — but the engine's `Effect::GrantsSpellMastery` already
- * supports an arbitrary ratio (`effective/spell.rs:311-326`), so a future
+ * supports an arbitrary ratio
+ * (`effective/spell.rs::spell_mastery_advancement_affinity`), so a future
  * Virtue/Flaw with a different one would silently diverge here while the
  * engine-computed (validated/exported) total updated correctly. The test below
  * is pinned to the exact same worked example as

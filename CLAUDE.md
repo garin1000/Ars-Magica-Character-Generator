@@ -386,6 +386,33 @@ relevant surface MUST preserve them and keep their tests green.
   in the same change as any mechanic. JSON files carry no comments, so RULES.md
   is the provenance home for rule values encoded as data (e.g. character-type
   budgets in `rules/core/character_types.json`).
+- **A cross-reference to another *source file* names the symbol, never the
+  line.** This is the opposite rule to the one above, and for the opposite
+  reason: a rulebook line is stable because the book is never edited, while a
+  source line moves under every edit above it and nothing tells the reader it
+  moved. The form is `` `<file>::<symbol>` `` — the file (a full path, or any
+  suffix of one that resolves: `types.rs`, `effective/xp.rs`) and the declared
+  name, joined by `::` — as in `` `types.rs::Entity::selections` ``,
+  `` `effective/xp.rs::spell_mastery_flow_pool` ``,
+  `` `menu.rs::accelerator_for` ``. It cannot be confused with a rulebook
+  citation (`ArMDE:3899`): this one requires a source extension before its `::`
+  and carries no digits. Naming a file with **no** line and no symbol is also
+  fine — imprecise, but it cannot rot. `crates/arm-rules/tests/source_citations.rs`
+  enforces both halves: no comment in `crates/*/src`, `crates/*/tests` or
+  `ui/src` may pin a source file by line, and every `::` symbol it does name
+  must still be declared in the named file. Two things are deliberately outside
+  that guard and must stay so. **`docs/`** — its several hundred line citations
+  sit in dated historical records (implementation plans, reviews, findings
+  sheets), where the line number is part of the snapshot and rewriting it to
+  today's symbol would falsify the record, exactly as D1c decided for
+  `docs/audit-2026-08.md`. **`crates/arm-rules/RULES.md`** — it has its own
+  line-citation convention (`` `validate_caps` (:22) ``) that
+  `rules_md_citations.rs` already *verifies*, so a blanket ban there would
+  contradict a working guard rather than add to one. A reference into a
+  **vendored dependency** at a pinned version
+  (`muda-0.19.3/src/accelerator.rs:539-541`) keeps its line number: those bytes
+  are frozen, the version is in the path, and the guard checks that version
+  against `Cargo.lock`.
 
 ## Build & test commands
 
