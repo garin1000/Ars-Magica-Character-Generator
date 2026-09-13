@@ -410,8 +410,22 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   `index_categories: ["hermetic"]`, which exactly one consumer reads (the
   `ArMDE:2860` Hermetic-Flaw guideline). See *Resolved (row 18)* below.
 
-  **Still unmodelled, and recorded rather than resolved (row 19, half b): the
-  *and*-joined descriptors.** `taken_as` models ***or***, and only *or*. An *or*
+  **Decided 2026-09-13 (Norbert): an *and*-joined descriptor means *either
+  route*.** That is the permissive reading, and it is what the engine already
+  does — so this decision ratifies the existing behaviour rather than changing
+  it, and no code or data moved. The three affected items keep their whole
+  `categories` list, every membership site keeps asking *any* rather than *all*,
+  and none of them gains a `taken_as`. The reasoning the decision rests on is
+  below, kept because the alternative was genuinely arguable and a later reader
+  should see why it was not taken. Two supporting facts: the book indexes the
+  Beings items under Hermetic without their being Hermetic in play, which is what
+  `index_categories` exists to record (`ArMDE:2860`'s guideline reads it, nothing
+  else does); and `flaw.primogeniture_lineage`'s real restriction was never a
+  category at all — it is `All([IsMagus, House(house.verditius)])`, sourced to
+  `ArMDE:6636`. So no restriction is lost under the permissive reading.
+
+  **The reasoning, recorded (was row 19, half b): the *and*-joined
+  descriptors.** `taken_as` models ***or***, and only *or*. An *or*
   descriptor states a choice between two readings of one item — the book says so
   outright for Sufi (`ArMDE:5083`, "either as a Minor Social Status Virtue or a Minor
   Supernatural Virtue") — so the parameter records which reading the player
@@ -424,12 +438,11 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   *all*). Stretching `taken_as` over them would be worse than leaving them open:
   it would hand the player a choice the book does not offer, and under the
   restrictive reading it would silently *drop* half of a restriction meant to
-  bind. So the three *and*-joined descriptors stay as they are:
-  `virtue.inoffensive_to_beings` (*General and Hermetic*, `ArMDE:4134`),
-  `flaw.offensive_to_beings` (*Hermetic and General*, `ArMDE:6525`) and
-  `flaw.primogeniture_lineage` (*Story and Hermetic*, `ArMDE:6635`). Resolving them
-  needs a rules *decision* first, not more code, and `docs/open-todos.md` row 19
-  half (b) is where that decision is owed.
+  bind. So the three *and*-joined descriptors stay as they are, now by decision
+  rather than by deferral: `virtue.inoffensive_to_beings` (*General and
+  Hermetic*, `ArMDE:4134`), `flaw.offensive_to_beings` (*Hermetic and General*,
+  `ArMDE:6525`) and `flaw.primogeniture_lineage` (*Story and Hermetic*,
+  `ArMDE:6635`).
 
   **`flaw.unbearable_to_beings` is *or*-joined and still stays out, for a
   separate reason.** Its descriptor is *Minor, Hermetic or General* (`ArMDE:6892`), so

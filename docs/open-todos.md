@@ -14,7 +14,7 @@ these should be tagged over silently.
 
 | # | Item | Waiting on | Raised |
 |---|---|---|---|
-| 19 | **The *and* / *or* / comma join in a dual-category descriptor is unmodelled, and *and* has no settled reading.** Half (a) of this row is closed: a Virtue **taken as** one of its categories now exists (`ParameterDomain::Category`, `PointItem::categories_for`) — see "Done since" below. What survives is the join itself. `taken_as` models ***or***, and only *or*: an *or* descriptor states a choice between two readings of one item, and the book says so outright for Sufi (`ArMDE:5083`). An *and* descriptor makes no such statement, and the rulebook never settles what it means — "either route" (the permissive reading the engine takes today, resolving the whole `categories` list, every membership site asking *any* and never *all*) or "both, hence both categories' restrictions apply at once" (the restrictive reading, which no mechanism expresses). Stretching `taken_as` over an *and* would be worse than leaving it open: it hands the player a choice the book does not offer, and under the restrictive reading it silently *drops* half of a restriction meant to bind. The three affected descriptors are `virtue.inoffensive_to_beings` (*General and Hermetic*, `ArMDE:4134`), `flaw.offensive_to_beings` (*Hermetic and General*, `ArMDE:6525`) and `flaw.primogeniture_lineage` (*Story and Hermetic*, `ArMDE:6635`); the reasoning is carried in `crates/arm-rules/RULES.md`. Resolving this needs a rules **decision**, not more code. | decision — a reading of *and* | 2026-09-09 |
+| ~~19~~ | **DONE 2026-09-13 — decided by Norbert: an *and*-joined descriptor means *either route*. See "Done since" below.** ~~The *and* / *or* / comma join in a dual-category descriptor is unmodelled, and *and* has no settled reading.~~ Half (a) of this row is closed: a Virtue **taken as** one of its categories now exists (`ParameterDomain::Category`, `PointItem::categories_for`) — see "Done since" below. What survives is the join itself. `taken_as` models ***or***, and only *or*: an *or* descriptor states a choice between two readings of one item, and the book says so outright for Sufi (`ArMDE:5083`). An *and* descriptor makes no such statement, and the rulebook never settles what it means — "either route" (the permissive reading the engine takes today, resolving the whole `categories` list, every membership site asking *any* and never *all*) or "both, hence both categories' restrictions apply at once" (the restrictive reading, which no mechanism expresses). Stretching `taken_as` over an *and* would be worse than leaving it open: it hands the player a choice the book does not offer, and under the restrictive reading it silently *drops* half of a restriction meant to bind. The three affected descriptors are `virtue.inoffensive_to_beings` (*General and Hermetic*, `ArMDE:4134`), `flaw.offensive_to_beings` (*Hermetic and General*, `ArMDE:6525`) and `flaw.primogeniture_lineage` (*Story and Hermetic*, `ArMDE:6635`); the reasoning is carried in `crates/arm-rules/RULES.md`. Resolving this needs a rules **decision**, not more code. | decision — a reading of *and* | 2026-09-09 |
 | ~~22~~ | **DONE 2026-09-12 — see "Done since" below.** ~~A code comment can cite a Rust source file by a line number that rots silently, and nothing guards it.~~ The decision the row asked for was taken the way it proposed: **a guard**, `crates/arm-rules/tests/source_citations.rs`, plus the conversion of every in-scope site. `docs/` is deliberately outside it. | — | 2026-09-11 |
 | ~~23~~ | **DONE 2026-09-11 — see "Done since" below.** ~~Focus Power's 25-point pool is modelled by nothing.~~ The decision the row asked for was taken: a **second budget kind**, with its own effect variant, its own read-out and its own over-spend code. | — | 2026-09-11 |
 | ~~24~~ | **DONE 2026-09-12 — see "Done since" below.** ~~Four shipped items type their `realm` parameter as free text, now that a real Realm domain exists.~~ All four are `domain: "realm"`, and the migration question the row asked was answered the data-loss-averse way: **nothing is rewritten**, the unresolvable text is reported back to the player verbatim. | — | 2026-09-12 |
@@ -89,6 +89,23 @@ engine only reports.
   The typed text is handed back verbatim in the finding rather than discarded.
 
 ## Done since this list was started
+
+- **An *and*-joined category descriptor means *either route*** (old row 19 half
+  (b), decided by Norbert 2026-09-13). The permissive reading, which is what the
+  engine already did, so the decision **ratifies existing behaviour and changed no
+  code or data** — the three items keep their whole `categories` list, every
+  membership site keeps asking *any* rather than *all*, and none gains a
+  `taken_as`. The restrictive reading ("both, hence both categories' restrictions
+  bind at once") was genuinely arguable and the argument is kept in
+  `crates/arm-rules/RULES.md` rather than deleted, because a later reader deserves
+  to see why it was not taken. Nothing is lost under the permissive reading: the
+  book indexes `virtue.inoffensive_to_beings` (*General and Hermetic*,
+  `ArMDE:4134`) and `flaw.offensive_to_beings` (*Hermetic and General*,
+  `ArMDE:6525`) under Hermetic without their being Hermetic in play, which is
+  exactly what B6's `index_categories` records for the `ArMDE:2860` guideline; and
+  `flaw.primogeniture_lineage`'s (*Story and Hermetic*, `ArMDE:6635`) real
+  restriction was never a category but `All([IsMagus, House(house.verditius)])`,
+  sourced to `ArMDE:6636`. Half (a), "taken as", shipped in B2/B3.
 
 - **The `e2e-testing` build's JS bundle is byte-identical to the plain build's**
   (old row 27, 2026-09-13). Both were built from the same clean tree, minutes
