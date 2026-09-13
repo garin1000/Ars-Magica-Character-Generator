@@ -2,15 +2,18 @@
 
 Items waiting on a decision, a visual check, or a follow-up pass. Kept here so
 they survive a session ending. Findings that are merely *implemented* live in
-their own findings document; this list is what is still owed.
+their own findings document; **the table below is what is still owed**.
+
+Two earlier rows recorded a settled policy or a reference list rather than work,
+and while they sat in the table they overstated what was outstanding. They now
+live under "Recorded conventions" below, which is the right shelf for something
+nobody has to act on.
 
 **Surface this list when a release or a git tag is being prepared** — none of
 these should be tagged over silently.
 
 | # | Item | Waiting on | Raised |
 |---|---|---|---|
-| 16 | **Mismatched German quote glyphs are the German corpus's house style, and `rules/source/de/` stays as published.** Measured 2026-09-09 with `rg -a --count-matches` over `rules/source/de/`, after this pass's own edits: **1425** occurrences of `„…"` — opening with `„` (U+201E), closing with an ASCII `"` — against **6** correctly paired `„…“` and **0** genuine inverse pairs. Split: **1345** across all **7** German rulebook files (Basisregeln 309, Mysterienkulte 240, Heckenzauber 230, Societates 190, Wahre Linien 128, Rhein-Tribunal 125, Sphären der Macht — Magie 123) and **80** across 10 files under `translation-tables/` (grundbegriffe 30, tugenden-fehler 12, that directory's own README 12, sphären-mächte 9, orden-tribunale 5, konvent 5, reputationen 4, zauber-nach-form/tiere-kreaturen/magie-regeln 1 each). All **6** correct pairs sit in *Sphären der Macht — Magie*, on five lines: :4495, :4547, :4623, :4681 and :4885, which carries two. That doubled line is also why a naive `“…„` scan reports one "inverse" hit — it matches the gap *between* the two correct pairs, so the genuine inverse count is zero. Raw glyph totals corroborate: 1451 `„`, 6 `“`, 0 `”`, 1544 ASCII `"`. At 1425-to-6 this is the corpus's convention, not a slip, so the earlier reading of `Basisregeln.md:6232` as a one-off defect was wrong. **Decision: the source is not touched** — `rules/source/de/` reproduces the books as printed, and a 1425-site sweep would rewrite the CC-BY-SA rules text over a typographic preference. The policy instead: if an extraction ever carries quoted text past the first sentence, it normalizes the pairing **on the way out**, in the extractor, so `rules/i18n/de/` is clean without the source moving. Nothing shipped reaches such a quote today — every extracted summary stops at the first sentence. The row stays open as the recorded policy, not as work owed. | recorded policy — no source change | 2026-09-07 |
-| 17 | **What an older save still reports on open, and why each one is correct.** `e443aaf` recovers what is mechanically recoverable from a character file written before this round of ruleset changes (`8801b03`, `bb305fd`, `2380322`, `b86889c`), and "such a save opens clean" is true of the **format** changes only. Three findings survive on purpose. Nothing is corrupted in any of them — saves store choices, not resolved values, and the engine only reports. (a) **`too_many_selections`** is a genuine rules violation, not a format problem: two bought Puissant Arts plus a House grant really do exceed the ceiling the descriptor states, the engine was simply blind to it before `8801b03`/`bb305fd`, so it survives migration by design and the character has to lose a copy. (b) **`missing_param`** on Folk Magic's `category` and on the three per-power Flaws' `power` (`flaw.slow_power`, `flaw.restricted_power`, `virtue.variable_power`): neither key was ever *stored*, so there is nothing to migrate from, and filling a placeholder would be inventing someone's rules choices — one pick each clears it permanently. (c) **`prereq_not_met`** where `7ea4f5b`'s new eligibility gates bite — a character holding The Gift plus Offensive to (Beings) without the Gentle Gift, which `ArMDE:6530` has always forbidden and nothing checked. That is not a hypothetical: it is the exact shape of `e443aaf`'s own migration fixture (`V0_2_X_MAGUS_SAVE` in `crates/arm-rules/tests/data_integrity.rs`), which is how it came to light. Recorded here so the three are explainable rather than mistaken for regressions; there is no fix owed for any of them. Since then the list of parameters an older save cannot answer has grown, on exactly the same standing policy: Folk Magic's `realm` (B7), Curse of Slander's `taken_as` (B4), Sufi's `taken_as` (B2) and both False Power entries' `virtue` (B9) all report `missing_param` until the player picks. | nothing owed — recorded so an older save's findings are explainable | 2026-09-09 |
 | 19 | **The *and* / *or* / comma join in a dual-category descriptor is unmodelled, and *and* has no settled reading.** Half (a) of this row is closed: a Virtue **taken as** one of its categories now exists (`ParameterDomain::Category`, `PointItem::categories_for`) — see "Done since" below. What survives is the join itself. `taken_as` models ***or***, and only *or*: an *or* descriptor states a choice between two readings of one item, and the book says so outright for Sufi (`ArMDE:5083`). An *and* descriptor makes no such statement, and the rulebook never settles what it means — "either route" (the permissive reading the engine takes today, resolving the whole `categories` list, every membership site asking *any* and never *all*) or "both, hence both categories' restrictions apply at once" (the restrictive reading, which no mechanism expresses). Stretching `taken_as` over an *and* would be worse than leaving it open: it hands the player a choice the book does not offer, and under the restrictive reading it silently *drops* half of a restriction meant to bind. The three affected descriptors are `virtue.inoffensive_to_beings` (*General and Hermetic*, `ArMDE:4134`), `flaw.offensive_to_beings` (*Hermetic and General*, `ArMDE:6525`) and `flaw.primogeniture_lineage` (*Story and Hermetic*, `ArMDE:6635`); the reasoning is carried in `crates/arm-rules/RULES.md`. Resolving this needs a rules **decision**, not more code. | decision — a reading of *and* | 2026-09-09 |
 | ~~22~~ | **DONE 2026-09-12 — see "Done since" below.** ~~A code comment can cite a Rust source file by a line number that rots silently, and nothing guards it.~~ The decision the row asked for was taken the way it proposed: **a guard**, `crates/arm-rules/tests/source_citations.rs`, plus the conversion of every in-scope site. `docs/` is deliberately outside it. | — | 2026-09-11 |
 | ~~23~~ | **DONE 2026-09-11 — see "Done since" below.** ~~Focus Power's 25-point pool is modelled by nothing.~~ The decision the row asked for was taken: a **second budget kind**, with its own effect variant, its own read-out and its own over-spend code. | — | 2026-09-11 |
@@ -18,11 +21,100 @@ these should be tagged over silently.
 | 29 | **A parameter cap that binds one key, not the whole tuple, is unmodelled.** Necessary (Realm) Aura for (Ability) says "A character may take this Flaw once for any particular Ability" (`ArMDE:6482`), which caps repeats on the **`ability` key alone**. `PointItem::max_per_target` cannot express that: its duplicate key is `(item_ref, params)` — *all* parameters at once — so with E2's realm axis in place, two copies naming the same Ability in different Realms collide in no key and validate clean, which the sentence forbids. E2 found this while tightening the realm domain and deliberately **recorded rather than invented** it, per the standing "implement only what the source supports" rule; nothing regressed, because the second axis existed before E2 too (it was merely free text, so the same two copies differed in a typed word instead of a Realm). Expressing it needs a new `ParameterDef` field — a per-key uniqueness marker — plus a validator beside `validate_duplicate_selections`, and that is engine work with a data shape to settle first: whether the marker names one key ("unique on `ability`") or a subset, and whether an existing save holding two such copies is reported once or twice. The same entry's sibling restriction, "You may not take Student of (Realm) and Puissant Ability for the same Lore" (`ArMDE:5054`), is a cross-**item** constraint over a parameter value and is unmodelled for a different reason: no mechanism relates two different items' parameter values at all. Both are recorded in `crates/arm-rules/RULES.md`. | decision — the data shape for a per-key cap | 2026-09-12 |
 | ~~25~~ | **DONE 2026-09-12 — see "Done since" below.** ~~`AppError::Ruleset` carries raw English integrity messages across IPC that nothing renders.~~ The decision the row asked for was taken, and it was neither of the two the row offered: the payload is **kept and made reachable, and deliberately stays English** — printed to stderr on a failed load, and offered behind a collapsed "technical details" disclosure (the label localized, the payload not) on both error surfaces. | — | 2026-09-11 |
 | 26 | **The macOS and Windows menus are unit-tested as data and have never been run.** C3a and C6 prove the menu *model* for all three platforms and, via `installed_menu`, that Tauri really installed it — on Linux. The macOS **Cmd+Q** path through `RunEvent::ExitRequested`, which the mandatory unsaved-changes guard depends on, has never executed on real hardware, and neither has the Windows menu bar. C7's own commit says it plainly: "macOS and Windows are unverified here, as every Phase C slice has said", with muda's `CmdOrCtrl` the only thing standing between the asserted model and a wrong modifier. Worth preserving rather than merely noting: C3a found that `PredefinedMenuItem::quit` on **Windows** would have bypassed the guard outright — muda implements it as `PostQuitMessage(0)`, which ends the message loop instead of raising a close request — so the Windows menu deliberately ships **no** Quit item and offers Window → Close Window (`WM_CLOSE`, guarded) as the way out. That reasoning is recorded in the doc comment on `menu_model` (`crates/arm-app/src/menu.rs`). What is owed is a run on real hardware of each, which a Linux box cannot supply. | a macOS machine and a Windows machine | 2026-09-11 |
-| 27 | **The `e2e-testing` build emits a noticeably larger JS bundle than the plain build, from identical frontend sources.** Observed during Phase C: roughly **537 kB** against the plain build's **480 kB**. The plain figure was re-measured in this slice's gate build and is **486.67 kB** (`dist/assets/index-*.js`, 146.36 kB gzipped), so the plain half of the comparison is real; the 537 kB half has not been re-measured. The feature is Rust-side and `#[cfg]`-gated (`crates/arm-app/Cargo.toml` declares `e2e-testing = []`; `ui/e2e/wdio.conf.js` is its only caller, passing `--features e2e-testing` to the same `cargo tauri build --no-bundle`), so it runs the very same `beforeBuildCommand` over the very same `ui/src` and should not reach the frontend bundle at all. Nobody has looked. Most likely a build-configuration difference — a different Vite mode, sourcemap or minification setting on the path wdio takes — rather than real code, but "most likely" is not an answer. What is owed is the measurement and the explanation; if it turns out real code is being included, that is a shipped-binary concern rather than a curiosity. | an explanation | 2026-09-11 |
-| 28 | **The logo has not been checked by eye on the light background.** C2 (`b04b473`) shipped light/dark/auto with the **same** asset in both themes — `ui/src/lib/assets/logo.png`, 242×96, one file, referenced once from `App.svelte`. The dark theme was verified in the running app; the light one was not. A logo authored against a dark chrome can lose its edges or halo on a light one, and no test can see it. Needs a human eye in the running app, in both themes, at the header's actual size. | a visual check | 2026-09-11 |
+| ~~27~~ | **DONE 2026-09-13 — see "Done since" below. There is no difference; the row was a measurement artifact.** ~~The `e2e-testing` build emits a noticeably larger JS bundle than the plain build, from identical frontend sources.~~ Observed during Phase C: roughly **537 kB** against the plain build's **480 kB**. The plain figure was re-measured in this slice's gate build and is **486.67 kB** (`dist/assets/index-*.js`, 146.36 kB gzipped), so the plain half of the comparison is real; the 537 kB half has not been re-measured. The feature is Rust-side and `#[cfg]`-gated (`crates/arm-app/Cargo.toml` declares `e2e-testing = []`; `ui/e2e/wdio.conf.js` is its only caller, passing `--features e2e-testing` to the same `cargo tauri build --no-bundle`), so it runs the very same `beforeBuildCommand` over the very same `ui/src` and should not reach the frontend bundle at all. Nobody has looked. Most likely a build-configuration difference — a different Vite mode, sourcemap or minification setting on the path wdio takes — rather than real code, but "most likely" is not an answer. What is owed is the measurement and the explanation; if it turns out real code is being included, that is a shipped-binary concern rather than a curiosity. | an explanation | 2026-09-11 |
+| ~~28~~ | **DONE 2026-09-13 — checked by Norbert in the running app; the logo works on the light background. No change owed.** ~~The logo has not been checked by eye on the light background.~~ C2 (`b04b473`) shipped light/dark/auto with the **same** asset in both themes — `ui/src/lib/assets/logo.png`, 242×96, one file, referenced once from `App.svelte`. The dark theme was verified in the running app; the light one was not. A logo authored against a dark chrome can lose its edges or halo on a light one, and no test can see it. Needs a human eye in the running app, in both themes, at the header's actual size. | a visual check | 2026-09-11 |
 | ~~21~~ | **DONE 2026-09-10 — see "Done since" below.** ~~The e2e suite pays its startup cost 43 times.~~ Every spec file gets its own WebDriver session, so the app is launched and torn down once per file: 43 launches, strictly serial (`maxInstances: 1`, `ui/e2e/wdio.shared.conf.js:23`). Measured on the 2026-09-09 run from `tmp/e2e-logs/`, the blocking `POST /session` alone costs ~30s of a ~40s per-spec cycle (`app-quit-bridge-clean.e2e-0-3.log`: session posted at 21:13:12.020, first test command at 21:13:42.296, whole test body done by 21:13:44.067 — **30.3s of setup for 1.8s of testing**). Whole-suite: 41m43s. Consolidating the 43 spec files into ~10 larger ones removes ~33 startups at ~40s each, roughly **20 minutes**, with no infrastructure change and no loss of coverage — the specs already run serially against a fresh app each, so merging them only changes how many times that app is started. Worth doing independently of whether the 30s itself (see the finding on it) is ever fixed, since the two savings compound. Note `wdio.shared.conf.js:24` currently claims "Specs run serially against one shared app instance", which is wrong — every spec log carries its own session id and ends in `deleteSession()` — and should be corrected in the same pass. | decision on how to group the specs | 2026-09-09 |
 
+## Recorded conventions — nothing owed
+
+Neither of these is work. They were rows 16 and 17 and sat in the table above
+until 2026-09-13, where they read as outstanding items when in fact one is a
+settled policy and the other is a reference list. Moved here so the table means
+what it says.
+
+### German quote glyphs are the corpus's house style, and `rules/source/de/` stays as published
+
+Measured 2026-09-09 with `rg -a --count-matches` over `rules/source/de/`:
+**1425** occurrences of `„…"` — opening with `„` (U+201E), closing with an ASCII
+`"` — against **6** correctly paired `„…“` and **0** genuine inverse pairs. Split:
+**1345** across all **7** German rulebook files (Basisregeln 309, Mysterienkulte
+240, Heckenzauber 230, Societates 190, Wahre Linien 128, Rhein-Tribunal 125,
+Sphären der Macht — Magie 123) and **80** across 10 files under
+`translation-tables/` (grundbegriffe 30, tugenden-fehler 12, that directory's own
+README 12, sphären-mächte 9, orden-tribunale 5, konvent 5, reputationen 4,
+zauber-nach-form/tiere-kreaturen/magie-regeln 1 each). All **6** correct pairs sit
+in *Sphären der Macht — Magie*, on five lines: :4495, :4547, :4623, :4681 and
+:4885, which carries two. That doubled line is also why a naive `“…„` scan reports
+one "inverse" hit — it matches the gap *between* the two correct pairs, so the
+genuine inverse count is zero. Raw glyph totals corroborate: 1451 `„`, 6 `“`,
+0 `”`, 1544 ASCII `"`. At 1425-to-6 this is the corpus's convention, not a slip,
+so the earlier reading of `Basisregeln.md:6232` as a one-off defect was wrong.
+
+**The source is not touched** — `rules/source/de/` reproduces the books as
+printed, and a 1425-site sweep would rewrite the CC-BY-SA rules text over a
+typographic preference. The policy instead: if an extraction ever carries quoted
+text past the first sentence, it normalizes the pairing **on the way out**, in the
+extractor, so `rules/i18n/de/` is clean without the source moving. Nothing shipped
+reaches such a quote today — every extracted summary stops at the first sentence.
+
+### What an older save still reports on open, and why each one is correct
+
+**Read this before opening an old save to check it** — every finding below is
+correct behaviour, and without the list a correct result reads as a regression.
+
+`e443aaf` recovers what is mechanically recoverable from a character file written
+before that round of ruleset changes (`8801b03`, `bb305fd`, `2380322`, `b86889c`),
+and "such a save opens clean" is true of the **format** changes only. Nothing is
+corrupted in any of these — saves store choices, not resolved values, and the
+engine only reports.
+
+- **`too_many_selections`** is a genuine rules violation, not a format problem:
+  two bought Puissant Arts plus a House grant really do exceed the ceiling the
+  descriptor states. The engine was blind to it before `8801b03`/`bb305fd`, so it
+  survives migration by design and the character has to lose a copy.
+- **`missing_param`**, on a growing list of keys that were never *stored*, so
+  there is nothing to migrate from and filling a placeholder would invent someone's
+  rules choices. One pick each clears it permanently. Folk Magic's `category` and
+  the three per-power Flaws' `power` (`flaw.slow_power`, `flaw.restricted_power`,
+  `virtue.variable_power`) were the original set; since then Folk Magic's `realm`
+  (B7), Curse of Slander's `taken_as` (B4), Sufi's `taken_as` (B2) and both False
+  Power entries' `virtue` (B9) joined it on the same standing policy.
+- **`prereq_not_met`** where `7ea4f5b`'s eligibility gates bite — a character
+  holding The Gift plus Offensive to (Beings) without the Gentle Gift, which
+  `ArMDE:6530` has always forbidden and nothing checked. Not hypothetical: it is
+  the exact shape of `e443aaf`'s own migration fixture (`V0_2_X_MAGUS_SAVE` in
+  `crates/arm-rules/tests/data_integrity.rs`), which is how it came to light.
+- **`unknown_param_value`** on a `realm` a player typed by hand, since E2
+  (`c4f6e45`) tightened four items from free text onto `ParameterDomain::Realm`.
+  The typed text is handed back verbatim in the finding rather than discarded.
+
 ## Done since this list was started
+
+- **The `e2e-testing` build's JS bundle is byte-identical to the plain build's**
+  (old row 27, 2026-09-13). Both were built from the same clean tree, minutes
+  apart: `cargo tauri build --no-bundle` and the same command with
+  `--features e2e-testing`. Both emit `dist/assets/index-DDxsCLep.js` at
+  **496.63 kB** (149.41 kB gzipped) — the same content hash, beside the same
+  `index-CwulwS-V.css` at 26.56 kB and the same `logo-CdL7Q5__.png`. There is no
+  difference to explain. The row compared **537 kB** against **480 kB**, two
+  figures taken on different days and read as if they were a controlled pair; the
+  bundle simply moved between measurements. The mechanism agrees with the result:
+  `e2e-testing = []` is declared in `crates/arm-app/Cargo.toml` and consumed only
+  through Rust `#[cfg]`, every mention of it under `ui/src` is a comment, and both
+  builds run the identical `beforeBuildCommand` over the identical sources — there
+  was never a path by which the flag could reach the frontend bundle. Logs kept at
+  `tmp/row27-plain.log` and `tmp/row27-e2e.log`. **Worth keeping as a method note:**
+  the row asked for an explanation of a difference nobody had confirmed existed.
+  Re-measuring both halves of a comparison *before* explaining it cost two builds
+  and saved a hunt through Vite configuration for a cause that was not there.
+
+- **The logo reads correctly on the light background** (old row 28, 2026-09-13).
+  Checked by Norbert in the running app. The asset is a 242×96 indexed-colour PNG
+  carrying a `tRNS` chunk, so its background is genuinely transparent and the same
+  file serves both themes as C2 intended; its ink is dark red and dark blue, which
+  keeps its contrast against the light palette's warm off-white, and the pale halo
+  that separates it from the dark chrome simply stops being visible rather than
+  becoming a fringe. No second asset and no per-theme switch is owed.
 
 - **The ruleset-integrity diagnostics are reachable, and deliberately English**
   (old row 25, E4, 2026-09-12). The row offered two ways out — surface the
