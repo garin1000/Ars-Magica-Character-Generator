@@ -6739,7 +6739,8 @@ mod tests {
         { "id": "ability.magic_theory", "category": "arcane" },
         { "id": "ability.parma_magica", "category": "arcane" },
         { "id": "ability.penetration", "category": "arcane" },
-        { "id": "ability.philosophiae", "category": "academic" }
+        { "id": "ability.philosophiae", "category": "academic" },
+        { "id": "ability.craft", "category": "general", "parameter": "craft" }
     ] }"#;
 
     /// A Flambeau-shaped House: grants a fixed Puissant (ability.ignem), mirroring
@@ -6893,6 +6894,72 @@ mod tests {
         )
     }
 
+    /// Copies of the capped Flaw naming ONE parameterized Ability —
+    /// `ability.craft`, whose own `craft` key carries the instance — so a pair
+    /// differs in the instance, in the Realm, or in both.
+    ///
+    /// Three keys per copy, because a parameter targeting a parameterized
+    /// Ability *requires* the instance key: `validate_selection_parameters`
+    /// puts the target ability's own `parameter` into the expected set, so a
+    /// copy naming `ability.craft` without a `craft` value is `missing_param`.
+    fn per_value_craft_entity(copies: &[(&str, &str)]) -> Entity {
+        make_entity(
+            "magus",
+            copies
+                .iter()
+                .map(|(instance, realm)| {
+                    Selection::with_params(
+                        Id::new("flaw.necessary_aura"),
+                        BTreeMap::from([
+                            ("ability".into(), Id::new("ability.craft")),
+                            ("craft".into(), Id::new(*instance)),
+                            ("realm".into(), Id::new(*realm)),
+                        ]),
+                    )
+                })
+                .collect(),
+        )
+    }
+
+    /// Craft (Carpentry) and Craft (Blacksmith) are two different **Abilities**,
+    /// not one Ability named twice: the target of an `ability`-domain parameter
+    /// is `(ability, instance)`, the same pair `validate_ability_bonus_targets`
+    /// reads and `validate_selection_parameters` demands. `ArMDE:6484`
+    /// explicitly contemplates this Flaw "applied to Craft or Profession
+    /// Abilities", and `ArMDE:6482` caps it "once for any particular Ability" —
+    /// which these two are not one of.
+    #[test]
+    fn two_instances_of_one_parameterized_ability_are_two_targets() {
+        let rs = per_value_rs(PER_VALUE_ITEMS);
+        let entity = per_value_craft_entity(&[
+            ("Carpentry", "realm.divine"),
+            ("Blacksmith", "realm.divine"),
+        ]);
+
+        let found = codes(&validate(&entity, &rs));
+        assert!(
+            !found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "Craft (Carpentry) and Craft (Blacksmith) are two Abilities (ArMDE:6484): {found:?}"
+        );
+    }
+
+    /// The converse, so the composite target cannot be read as "the cap never
+    /// bites a parameterized Ability": two copies naming the SAME Craft in two
+    /// Realms are the very shape `ArMDE:6482` allows one of, and their tuples
+    /// differ, so `max_per_target` stays silent and only this axis can say it.
+    #[test]
+    fn two_copies_naming_one_instance_of_a_parameterized_ability_trip_the_cap() {
+        let rs = per_value_rs(PER_VALUE_ITEMS);
+        let entity =
+            per_value_craft_entity(&[("Carpentry", "realm.divine"), ("Carpentry", "realm.faerie")]);
+
+        let found = codes(&validate(&entity, &rs));
+        assert!(
+            found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "one Flaw per particular Craft (ArMDE:6482), whatever the Realm: {found:?}"
+        );
+    }
+
     /// Two copies naming the same Ability in different Realms are two copies
     /// "for any particular Ability", which `ArMDE:6482` allows only one of —
     /// and which the whole-tuple `max_per_target` key cannot see, because the
@@ -6999,6 +7066,72 @@ mod tests {
         assert!(
             !found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
             "and must not be reported a second time under the per-value cap: {found:?}"
+        );
+    }
+
+    /// The same repeat, counted rather than merely looked for: one mistake draws
+    /// exactly ONE finding, never a second one under the narrower axis. The
+    /// property the "distinct tuples" dedup exists to protect, and the one the
+    /// `max_per_target`-aware counting below must not spend.
+    #[test]
+    fn an_identical_repeat_draws_exactly_one_finding() {
+        let rs = per_value_rs(PER_VALUE_ITEMS);
+        let entity = per_value_entity(&[
+            ("ability.artes_liberales", "realm.divine"),
+            ("ability.artes_liberales", "realm.divine"),
+        ]);
+
+        let found = codes(&validate(&entity, &rs));
+        let count = |code: &str| found.iter().filter(|c| c.as_str() == code).count();
+        assert_eq!(
+            count(ValidationIssue::CODE_DUPLICATE_SELECTION),
+            1,
+            "one duplicate target, one finding: {found:?}"
+        );
+        assert_eq!(
+            count(ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE),
+            0,
+            "and none at all under the per-value cap: {found:?}"
+        );
+    }
+
+    /// The same two identical copies under an item whose `max_per_target` is 2,
+    /// which **legalises** the repeat — so `validate_duplicate_selections`
+    /// reports nothing, and the per-value cap is the only axis left that can
+    /// see two copies naming one Ability.
+    ///
+    /// The dedup into distinct tuples was right to exist and wrong to be
+    /// unconditional: it rests on "an identical repeat is already
+    /// `max_per_target`'s finding", which holds only while that ceiling is 1.
+    /// Above 1 there is no neighbouring finding to defer to, and collapsing the
+    /// copies silently under-enforces a cap the data does state. Catalogue shape
+    /// is data, so a data-only edit is all it would take.
+    #[test]
+    fn legal_identical_repeats_still_count_toward_the_per_value_cap() {
+        const ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
+          { "id": "flaw.necessary_aura", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
+            "categories": ["general"], "entity_kinds": ["character"], "max_per_target": 2,
+            "parameters": [
+              { "key": "ability", "type": "ref", "domain": "ability", "max_per_value": 1 },
+              { "key": "realm", "type": "ref", "domain": "realm" }
+            ] }
+        ]"#;
+        let rs = per_value_rs(ITEMS);
+        let entity = per_value_entity(&[
+            ("ability.artes_liberales", "realm.divine"),
+            ("ability.artes_liberales", "realm.divine"),
+        ]);
+
+        let found = codes(&validate(&entity, &rs));
+        assert!(
+            !found.contains(&ValidationIssue::CODE_DUPLICATE_SELECTION.to_string()),
+            "max_per_target 2 permits the identical repeat, so nothing to defer to: {found:?}"
+        );
+        assert!(
+            found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "two copies name one Ability and the cap says one: {found:?}"
         );
     }
 

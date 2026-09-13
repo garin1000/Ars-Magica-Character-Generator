@@ -1025,7 +1025,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:978).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1037).
   The Gift policy is independent of the `is_magus` flag (an unGifted Redcap is a
   companion; a Gifted hedge wizard is not a magus).
 
@@ -1523,13 +1523,19 @@ that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
   `"max_per_value": 1`. Its `realm` parameter carries none.
 - Tests: `two_copies_may_not_share_a_capped_parameter_value`,
   `copies_naming_different_values_of_a_capped_parameter_are_clean`,
+  `two_instances_of_one_parameterized_ability_are_two_targets`,
+  `two_copies_naming_one_instance_of_a_parameterized_ability_trip_the_cap`,
   `a_parameter_with_no_stated_cap_never_trips_the_per_value_cap`,
   `an_identical_repeat_stays_the_duplicate_selections_finding`,
+  `an_identical_repeat_draws_exactly_one_finding`,
+  `legal_identical_repeats_still_count_toward_the_per_value_cap`,
   `granted_copies_count_toward_the_per_value_cap`,
   `the_per_value_finding_names_the_key_and_the_value`,
   `the_absent_per_value_cap_is_a_sentinel_and_not_the_number_255`
   (`validation/mod.rs`),
-  `a_per_value_cap_of_zero_is_rejected` (`ruleset.rs`),
+  `a_per_value_cap_of_zero_is_rejected`,
+  `across_copies_constraints_on_a_spell_parameter_are_rejected`,
+  `across_copies_constraints_on_a_point_item_parameter_are_accepted` (`ruleset.rs`),
   `necessary_aura_is_taken_once_for_any_particular_ability`
   (`tests/data_integrity.rs`), and `names the per-parameter-value cap in both
   locales, naming the value` (`ui/src/lib/i18n.test.ts`).
@@ -1541,7 +1547,24 @@ binds **one named parameter key** rather than an item-wide grouping:
 |---|---|---|
 | one identical target | `PointItem::max_per_target` | `(item_ref, params)` — the whole tuple |
 | copies in total | `PointItem::max_total` | `item_ref` alone |
-| per named value | `ParameterDef::max_per_value` | `(item_ref, one key's value)` |
+| per named value | `ParameterDef::max_per_value` | `(item_ref, one key's target)` |
+
+**The cap is per Ability *target*, not per Ability id.** An `ability`-domain
+parameter aimed at a *parameterized* Ability names its target with two keys —
+the ability id under the parameter's own key, plus the instance under the
+Ability's (`{ ability: "ability.craft", craft: "Carpentry" }`), the pair
+`validate_selection_parameters` makes mandatory. Craft (Carpentry) and Craft
+(Blacksmith) are two different **Abilities**, and `ArMDE:6484` explicitly
+contemplates this Flaw "applied to Craft or Profession Abilities", so counting
+both as `ability.craft` rejected a character the rules permit — an error, which
+blocks the guided wizard in Enforced mode. The catalogue's seven parameterized
+Abilities (`rules/core/abilities.json`: Area Lore, Craft, Dead Language, Living
+Language, Mystery Cult Lore, Organization Lore, Profession) were all affected.
+The composition lives once, in
+`validation/selections.rs::ability_instance`, shared with
+`validate_ability_bonus_targets` — the same `(ability, instance)` pair
+`Entity::ability_scores` rows are keyed by and the frontend's
+`usedAbilityTargets` composes.
 
 **Why the two older axes cannot state it.** The Flaw declares two parameters,
 `realm` and `ability`, and `ArMDE:6482` caps repeats on the Ability alone —
@@ -1567,10 +1590,18 @@ would repeat a key name `ParameterDef` already owns, and a typo in it would sit
 in `rules/` looking enforced; here the cap *is* on the key, so naming a
 parameter the item does not declare is unrepresentable rather than merely
 rejected. It also sits beside `at_most_one_of`, the other per-key constraint
-judged across an item's copies. Load-time integrity rejects only the one
-authoring slip the shape still permits — `max_per_value: 0`, which forbids every
-value the parameter could name and leaves the item unfillable, the mirror of the
-`at_most_one_of` group that excludes nothing.
+judged across an item's copies. Load-time integrity rejects the two authoring
+slips the shape still permits. `max_per_value: 0` forbids every value the
+parameter could name and leaves the item unfillable — the mirror of the
+`at_most_one_of` group that excludes nothing. And either constraint declared on
+a **spell** parameter is rejected outright: both are read only by validators
+that resolve a `ruleset.point_items` entry, while a spell's one parameter value
+is checked alone by `validation/magus.rs::validate_spell_parameter`, so a cap
+there would sit in `rules/` looking enforced and enforce nothing. That gate keys
+on the declaring record rather than on the parameter's domain — see
+`ruleset/integrity.rs::CopiesJudgedTogether` — which is what distinguishes it
+from the `require_categories` / `require_possessed` / `require_power` gates
+beside it.
 
 **Same sentinel convention as `max_total`: absent = `u8::MAX` (255) = "no stated
 ceiling"**, and the validator tests for the sentinel rather than comparing
@@ -1581,13 +1612,28 @@ hostile-input surface, so the sentinel is checked explicitly — which also boun
 the counting to parameters that actually declare a cap.
 
 **`max_per_target` stays, at its default of 1.** The two are not redundant,
-because `validate_per_value_cap` counts **distinct parameter tuples**, not raw
-copies: two copies with an identical `(realm, ability)` tuple are
-`max_per_target`'s finding and only its finding, and copies that differ in
-Realm are this axis's finding and only this one. One mistake draws one finding —
-the same division of labour `validate_possessed_param_targets` keeps with the
-same neighbour. Removing the default `max_per_target` would legalise an exact
-duplicate row; raising it would too.
+because `validate_per_value_cap` counts only the copies its neighbour did not
+already report: each distinct tuple contributes at most `max_per_target` copies
+to the per-value count. At the default ceiling of 1, two copies with an
+identical `(realm, ability)` tuple are `max_per_target`'s finding and only its
+finding, while copies that differ in Realm are this axis's and only this one.
+One mistake draws one finding — the same division of labour
+`validate_possessed_param_targets` keeps with the same neighbour. Removing the
+default `max_per_target` would legalise an exact duplicate row; raising it would
+too.
+
+**Why "at most `max_per_target`" and not "one copy per tuple".** An
+unconditional collapse to one copy per distinct tuple looks equivalent and is,
+but only while the ceiling is 1. Above it there is no neighbouring finding to
+defer to: at `max_per_target: 2`, `validate_duplicate_selections` passes two
+identical copies, and a collapse would fold them into a single tuple so the
+per-value cap saw one copy and reported nothing — a stated cap silently
+unenforced. Catalogue shape is **data, never code**, so reaching that state is a
+data-only edit to `rules/core/virtues_flaws.json`; many shipped items already
+carry `max_per_target: 255` and three carry 2. Capping each tuple's contribution
+at the ceiling keeps both halves: the excess above it is the duplicate check's
+finding and is not counted twice, and everything at or below it is a legal
+repeat nobody else reports and so must count here.
 
 **This message names its value, unlike `exclusive_param_values`.** The
 exclusion message deliberately names no value (see *Realm parameter domain*
@@ -7130,11 +7176,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:455),
-  `validate_forbidden_traits` (:476))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:513),
+  `validate_forbidden_traits` (:534))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:204),
-  `validate_parameters` (:586), `validate_duplicate_selections` (:237))
+  `validate_parameters` (:644), `validate_duplicate_selections` (:237))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

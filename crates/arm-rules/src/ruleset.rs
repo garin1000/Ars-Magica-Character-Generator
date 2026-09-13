@@ -2198,6 +2198,60 @@ mod tests {
         );
     }
 
+    /// A spell's copies are never weighed against each other: a
+    /// [`crate::spell::SpellSelection`] carries one parameter value, and
+    /// `validation/magus.rs::validate_spell_parameter` resolves it against its
+    /// domain and stops there. The two across-copies constraints
+    /// (`at_most_one_of`, `max_per_value`) are read only by
+    /// `validation/selections.rs::validate_exclusive_param_values` and
+    /// `::validate_per_value_cap`, both of which resolve a
+    /// `ruleset.point_items` entry and so never see a spell at all. Declaring
+    /// either on a spell parameter therefore puts a constraint in `rules/`
+    /// that looks like a rule and enforces nothing — exactly what the
+    /// `require_categories` / `require_possessed` / `require_power` gates
+    /// beside it exist to prevent.
+    #[test]
+    fn across_copies_constraints_on_a_spell_parameter_are_rejected() {
+        for constraint in [
+            r#""max_per_value": 1"#,
+            r#""at_most_one_of": [["art.ignem", "art.vim"]]"#,
+        ] {
+            let err = ruleset_with_spells(&format!(
+                r#"{{ "spells": [
+                  {{ "id": "spell.wizards_boost_form", "technique": "art.rego", "form": "art.vim", "level": 20,
+                     "parameters": [{{ "key": "form", "type": "ref", "domain": "form", {constraint} }}] }}
+                ] }}"#
+            ))
+            .unwrap_err();
+            let msg = err.to_string();
+            assert!(
+                msg.contains("spell.wizards_boost_form") && msg.contains("form"),
+                "{constraint}: {msg}"
+            );
+        }
+    }
+
+    /// The same two constraints on a POINT ITEM's parameter stay legal — they
+    /// are the axes `virtue.folk_magic` and
+    /// `flaw.necessary_realm_aura_for_ability` actually ship, so the gate above
+    /// must key on the record kind and not on the field.
+    #[test]
+    fn across_copies_constraints_on_a_point_item_parameter_are_accepted() {
+        for constraint in [
+            r#""max_per_value": 1"#,
+            r#""at_most_one_of": [["realm.divine", "realm.infernal"]]"#,
+        ] {
+            let result = ruleset_with_param(&format!(
+                r#"{{ "key": "realm", "type": "ref", "domain": "realm", {constraint} }}"#
+            ));
+            assert!(
+                result.is_ok(),
+                "{constraint}: {:?}",
+                result.err().map(|e| e.to_string())
+            );
+        }
+    }
+
     /// `require_categories` narrows the `item` domain and nothing else: no other
     /// domain resolves against the point-item catalogue, so a list there is read
     /// by no one. Left in, it would sit in the data looking like an enforced

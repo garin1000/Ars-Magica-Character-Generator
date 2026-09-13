@@ -119,6 +119,7 @@ impl Ruleset {
                 &item.parameters,
                 &format!("{id}"),
                 Some(&item.categories),
+                CopiesJudgedTogether::Yes,
                 errors,
             );
             Self::validate_taken_as_max_total(id, item, errors);
@@ -1543,7 +1544,13 @@ impl Ruleset {
                 ));
             }
         }
-        validate_parameter_defs(&spell.parameters, &format!("spell '{id}'"), None, errors);
+        validate_parameter_defs(
+            &spell.parameters,
+            &format!("spell '{id}'"),
+            None,
+            CopiesJudgedTogether::No,
+            errors,
+        );
         self.validate_at_most_one_of(&spell.parameters, &format!("spell '{id}'"), errors);
         self.validate_require_categories(&spell.parameters, &format!("spell '{id}'"), errors);
         validate_source_range(&spell.source, &format!("spell '{id}'"), errors);
@@ -1965,14 +1972,41 @@ impl Ruleset {
 /// (e.g. `"spell 'spell.foo'"`), while the point-item site passes the bare id
 /// with no label — so every site's message text is byte-identical to before
 /// this extraction; only the duplicated check is shared.
+/// Whether anything weighs the declaring record's copies against each other —
+/// the precondition for a parameter's **across-copies** constraints
+/// ([`ParameterDef::at_most_one_of`], [`ParameterDef::max_per_value`]) to mean
+/// anything at all.
+///
+/// Not a property of the parameter but of what carries it, which is why it is
+/// the caller's answer rather than something [`validate_parameter_defs`] could
+/// read off a [`ParameterDef`].
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CopiesJudgedTogether {
+    /// A **point item**: `validation/selections.rs::validate_exclusive_param_values`
+    /// and `::validate_per_value_cap` both group an entity's selections by
+    /// `item_ref` and judge the group, so both constraints have a reader.
+    Yes,
+    /// A **spell**: a `SpellSelection` carries one parameter value, and
+    /// `validation/magus.rs::validate_spell_parameter` resolves that one value
+    /// against its domain and stops. Both across-copies validators resolve a
+    /// `ruleset.point_items` entry, so neither ever sees a spell — a constraint
+    /// declared here would sit in `rules/` looking enforced and enforce nothing.
+    No,
+}
+
 /// Checks the shape of every declared parameter's value list, for whatever
 /// carries parameters — a point item or a spell (both hold [`ParameterDef`]s and
 /// both are resolved by the same `validation::selections::param_value_resolves`,
 /// so a spell may declare `enumerated` under exactly the same terms). `subject`
 /// is the caller's own message prefix, as with [`validate_source_range`].
 ///
-/// Five halves, all authoring slips that would otherwise be invisible:
+/// Six halves, all authoring slips that would otherwise be invisible:
 ///
+/// - An across-copies constraint ([`ParameterDef::at_most_one_of`],
+///   [`ParameterDef::max_per_value`]) on a record whose copies nothing weighs
+///   against each other — see [`CopiesJudgedTogether`]. Unlike the five below
+///   this one keys on the declaring RECORD, not on the parameter's domain,
+///   because that is where its reader is missing.
 /// - A [`ParameterDef::require_power`] flag on any domain but `text`: it matches
 ///   a value against the being's own `Entity::powers`, whose names are free text,
 ///   so on a domain that resolves against a registry it would narrow nothing. The
@@ -2010,10 +2044,29 @@ fn validate_parameter_defs(
     params: &[ParameterDef],
     subject: &str,
     categories: Option<&[String]>,
+    copies: CopiesJudgedTogether,
     errors: &mut Vec<String>,
 ) {
     for param in params {
         let key = &param.key;
+        // The across-copies constraints are the two that judge an item's copies
+        // as a group rather than one value on its own. Both readers start from
+        // `ruleset.point_items`, so on a record that is not a point item they
+        // are data with nobody to read them.
+        if copies == CopiesJudgedTogether::No {
+            for (field, declared) in [
+                ("at_most_one_of", !param.at_most_one_of.is_empty()),
+                ("max_per_value", param.max_per_value != u8::MAX),
+            ] {
+                if declared {
+                    errors.push(format!(
+                        "{subject}: parameter '{key}' declares '{field}', but nothing \
+                         weighs this record's copies against each other, so the \
+                         restriction would be read by no one"
+                    ));
+                }
+            }
+        }
         if !param.require_categories.is_empty() && param.domain != ParameterDomain::Item {
             errors.push(format!(
                 "{subject}: parameter '{key}' has domain '{}' but declares \

@@ -325,12 +325,28 @@ pub(crate) fn validate_total_selection_cap(
 /// say "per Ability" at all. Which key is capped, and at what, is data: no item
 /// id and no parameter key appears here.
 ///
-/// **Distinct tuples, not raw copies.** Two copies with an *identical* tuple
-/// are already `max_per_target`'s finding, and counting them here too would
-/// draw two findings for one mistake — the same division of labour
-/// [`validate_possessed_param_targets`] keeps with the same neighbour. So the
-/// count is of distinct parameter tuples naming the value, and the two axes
-/// partition the problem rather than overlap on it.
+/// **The value is the whole target, not the bare id.** For an `ability`-domain
+/// parameter aimed at a *parameterized* Ability the target is
+/// `(ability, instance)` — two keys, the target's own instance key included, the
+/// pair [`validate_selection_parameters`] makes mandatory and
+/// [`validate_ability_bonus_targets`] already reads. Craft (Carpentry) and Craft
+/// (Blacksmith) are two different Abilities, and `ArMDE:6484` explicitly
+/// contemplates this Flaw "applied to Craft or Profession Abilities", so
+/// counting them both as `ability.craft` would reject a character the rules
+/// permit. See [`ability_instance`].
+///
+/// **Copies the duplicate check did not already report.** Two copies with an
+/// *identical* tuple are `max_per_target`'s finding whenever that ceiling
+/// rejects them, and counting them here too would draw two findings for one
+/// mistake — the same division of labour [`validate_possessed_param_targets`]
+/// keeps with the same neighbour. So each distinct tuple contributes at most
+/// `max_per_target` copies: below that ceiling the copies are legal repeats
+/// nobody else reports and they must count, at or above it the excess is
+/// already the neighbour's finding and must not. An unconditional collapse to
+/// one copy per tuple only *looks* equivalent, and only while the ceiling is 1:
+/// at `max_per_target: 2` there is no neighbouring finding to defer to, so N
+/// identical copies of a capped value would draw none at all. Catalogue shape
+/// is data, so raising a ceiling is a data-only edit.
 ///
 /// Grant-aware for the reason its neighbours are: `selections` is the folded
 /// bought-plus-granted list ([`crate::effective::selections_for_effects`]), and
@@ -340,20 +356,23 @@ pub(crate) fn validate_per_value_cap(
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    // Grouped by item so each item is judged over all of its own copies, and
-    // the tuples are de-duplicated per value — see "distinct tuples" above.
-    let mut tuples_by_item: BTreeMap<&Id, BTreeSet<&BTreeMap<String, Id>>> = BTreeMap::new();
+    // Grouped by item so each item is judged over all of its own copies, and by
+    // tuple within it so the per-tuple count can be capped — see "copies the
+    // duplicate check did not already report" above.
+    let mut copies_by_item: BTreeMap<&Id, BTreeMap<&BTreeMap<String, Id>, usize>> = BTreeMap::new();
     for selection in selections {
-        tuples_by_item
+        *copies_by_item
             .entry(&selection.item_ref)
             .or_default()
-            .insert(&selection.params);
+            .entry(&selection.params)
+            .or_insert(0) += 1;
     }
 
-    for (item_ref, tuples) in tuples_by_item {
+    for (item_ref, copies_by_tuple) in copies_by_item {
         let Some(item) = ruleset.point_items.get(item_ref) else {
             continue; // unknown_ref already reported
         };
+        let per_target = usize::from(item.max_per_target);
         for param in &item.parameters {
             // The default is a SENTINEL for "no ceiling the rules state", not
             // the number 255: a crafted save holding 256 copies of one value
@@ -364,13 +383,20 @@ pub(crate) fn validate_per_value_cap(
                 continue;
             }
             let max = usize::from(param.max_per_value);
-            let mut counts: BTreeMap<&Id, usize> = BTreeMap::new();
-            for params in &tuples {
-                if let Some(value) = params.get(&param.key) {
-                    *counts.entry(value).or_insert(0) += 1;
-                }
+            let mut counts: BTreeMap<(&Id, Option<&str>), usize> = BTreeMap::new();
+            for (params, copies) in &copies_by_tuple {
+                let Some(value) = params.get(&param.key) else {
+                    continue; // missing_param already reported
+                };
+                // Only an `ability` domain names an Ability; on any other, a
+                // value that happened to spell one would pick up an instance
+                // key that is not part of its target at all.
+                let instance = matches!(param.domain, ParameterDomain::Ability)
+                    .then(|| ability_instance(ruleset, params, value))
+                    .flatten();
+                *counts.entry((value, instance)).or_insert(0) += (*copies).min(per_target);
             }
-            for (value, count) in counts {
+            for ((value, _instance), count) in counts {
                 if count <= max {
                     continue;
                 }
@@ -380,6 +406,11 @@ pub(crate) fn validate_per_value_cap(
                     args([
                         ("item", item_ref.to_string()),
                         ("key", param.key.clone()),
+                        // The Ability, not the instance: the message has room
+                        // for one name and the instance is free text the player
+                        // can read off the offending copies, which are on screen
+                        // beside the finding. `count` is already the count for
+                        // the instance, so the two agree.
                         ("value", value.to_string()),
                         ("count", count.to_string()),
                         ("max", max.to_string()),
@@ -389,6 +420,33 @@ pub(crate) fn validate_per_value_cap(
             }
         }
     }
+}
+
+/// The instance discriminator that completes an `ability`-domain parameter's
+/// target, read from the selection's own parameter map: `(Area) Lore` needs an
+/// `area`, `Craft` a `craft`, and a plain Ability needs none.
+///
+/// The engine's one spelling of "which Ability instance does this parameter
+/// name", shared by [`validate_ability_bonus_targets`] and
+/// [`validate_per_value_cap`] so the two cannot drift apart — the same
+/// `(ability, instance)` pair `Entity::ability_scores` rows are keyed by and
+/// the frontend's `usedAbilityTargets` composes.
+///
+/// `None` for an unparameterized Ability, for a `target` no catalogue knows
+/// (already `unknown_param_value`), and for one whose instance key is simply
+/// absent — which is [`validate_selection_parameters`]'s `missing_param`, not
+/// this function's finding.
+///
+/// `target` is assumed to name an Ability; whether the parameter's domain says
+/// so is the caller's test, since an effect target is one by construction while
+/// a [`ParameterDef`]'s is not.
+fn ability_instance<'a>(
+    ruleset: &Ruleset,
+    params: &'a BTreeMap<String, Id>,
+    target: &Id,
+) -> Option<&'a str> {
+    let instance_key = ruleset.abilities.get(target)?.parameter.as_deref()?;
+    params.get(instance_key).map(Id::as_str)
 }
 
 /// Enforces every parameter's [`ParameterDef::at_most_one_of`] groups across
@@ -732,12 +790,13 @@ pub(crate) fn validate_ability_bonus_targets(
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
             };
-            // The instance discriminator, if the target ability is parameterized.
-            let instance = ruleset
-                .abilities
-                .get(target)
-                .and_then(|a| a.parameter.as_deref())
-                .and_then(|key| selection.params.get(key).map(Id::as_str));
+            // The instance discriminator, if the target ability is
+            // parameterized. An effect's target is an Ability by construction
+            // (`EffectTarget::AbilityParam`), so no domain test is needed here;
+            // sharing the helper is what keeps this validator and
+            // `validate_per_value_cap` composing one `(ability, instance)`
+            // target rather than two spellings of it.
+            let instance = ability_instance(ruleset, &selection.params, target);
             let has_instance = entity
                 .ability_scores
                 .iter()
