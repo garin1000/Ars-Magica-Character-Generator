@@ -1133,7 +1133,11 @@ issue-childhood_slot_is_native_language = { $key } für { $ability } muss sich v
 issue-childhood_slot_duplicate_value = { $key } { $value } für { $ability } ist bereits von einem anderen Eintrag des Fertigkeitspakets belegt; wähle einen anderen Wert.
 issue-ability_parameter_required = { $ability } braucht einen Wert (z. B. das konkrete Gebiet oder die Sprache).
 issue-ability_score_out_of_range = Fertigkeit { $ability } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
-issue-ability_bonus_dangling_target = Füge { $ability } { $parameter } zu den Fertigkeiten des Charakters hinzu; { $item } zielt darauf.
+# `$ability` ist der VOLLSTÄNDIGE Fertigkeitsname samt Instanz („Handwerk:
+# Zimmerei“, „Brandenburg-Kunde“): das Argument `parameter` der Engine wird von
+# `resolveIssueArgs` in ihn eingesetzt, bevor diese Nachricht ihn sieht, denn wo
+# die Instanz im Namen steht, bestimmt die Vorlage der Fertigkeit je Sprache.
+issue-ability_bonus_dangling_target = Füge { $ability } zu den Fertigkeiten des Charakters hinzu; { $item } zielt darauf.
 issue-unknown_art = Unbekannte Kunst: { $art }.
 issue-duplicate_art = { $art } ist { $count }-mal aufgeführt.
 issue-art_score_out_of_range = Kunst { $art } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).

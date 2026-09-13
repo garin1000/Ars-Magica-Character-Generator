@@ -2241,6 +2241,152 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
   });
 });
 
+// --- E6 (open-todos row 30): a finding that names a parameterized Ability ----
+
+describe('an issue message naming a parameterized Ability (E6)', () => {
+  /**
+   * The SHIPPED Ability catalogue and rules i18n, as the backend hands them to the
+   * frontend — not a fixture, because the whole point of this block is that the
+   * parameter's position inside an Ability name is per-ability AND per-language
+   * (`{area} Lore` vs `{area}-Kunde`, `Craft: {craft}` vs `Handwerk: {craft}`), and
+   * only the real data carries that.
+   */
+  function shippedRuleset(lang: Lang): LocalizedRuleset {
+    const read = (path: string) =>
+      JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf-8'));
+    const core = read('../../../rules/core/abilities.json') as { abilities: Ability[] };
+    const localized = makeRuleset([], {
+      i18n: {
+        ...(read(`../../../rules/i18n/${lang}/abilities.json`) as LocalizedRuleset['i18n']),
+        ...(read(`../../../rules/i18n/${lang}/virtues_flaws.json`) as LocalizedRuleset['i18n']),
+      },
+    });
+    localized.ruleset.abilities = Object.fromEntries(core.abilities.map((a) => [a.id, a]));
+    return localized;
+  }
+
+  /** The finding as a player reads it: engine args → resolved labels → the real bundle. */
+  function render(lang: Lang, code: string, args: Record<string, string>): string {
+    const bundle = buildBundle(lang);
+    const t: Translate = (key, a) => formatMessage(bundle, key, a);
+    const resolved = resolveIssueArgs(shippedRuleset(lang), args, t);
+    // Fluent wraps each interpolated value in bidi isolates; strip them so the
+    // assertion reads as the sentence on screen does.
+    return formatMessage(bundle, `issue-${code}`, resolved).replace(/[⁦-⁩]/g, '');
+  }
+
+  /** `ability_bonus_dangling_target` as `validate_ability_bonus_targets` emits it. */
+  function danglingArgs(ability: string, parameter: string): Record<string, string> {
+    return { item: 'virtue.puissant_ability', ability, parameter };
+  }
+
+  it('names an unparameterized Ability once, with no gap where an instance would go', () => {
+    expect(
+      render('en', 'ability_bonus_dangling_target', danglingArgs('ability.awareness', '')),
+    ).toBe("Add Awareness to the character's Abilities; Puissant (Ability) targets it.");
+    expect(
+      render('de', 'ability_bonus_dangling_target', danglingArgs('ability.awareness', '')),
+    ).toBe(
+      'Füge Aufmerksamkeit zu den Fertigkeiten des Charakters hinzu; Begabung in (Fertigkeit) zielt darauf.',
+    );
+  });
+
+  // The instance belongs INSIDE the template, and where it goes is the template's
+  // business: English puts it after a colon, German after its own colon; Area Lore
+  // puts it in front, and glues it on with a hyphen in German. No juxtaposition of
+  // two args could ever have produced all four.
+  it('fills the instance into the template, in each language’s own word order', () => {
+    expect(
+      render('en', 'ability_bonus_dangling_target', danglingArgs('ability.craft', 'Carpentry')),
+    ).toBe("Add Craft: Carpentry to the character's Abilities; Puissant (Ability) targets it.");
+    expect(
+      render('de', 'ability_bonus_dangling_target', danglingArgs('ability.craft', 'Zimmerei')),
+    ).toBe(
+      'Füge Handwerk: Zimmerei zu den Fertigkeiten des Charakters hinzu; Begabung in (Fertigkeit) zielt darauf.',
+    );
+    expect(
+      render(
+        'en',
+        'ability_bonus_dangling_target',
+        danglingArgs('ability.area_lore', 'Brandenburg'),
+      ),
+    ).toBe("Add Brandenburg Lore to the character's Abilities; Puissant (Ability) targets it.");
+    expect(
+      render(
+        'de',
+        'ability_bonus_dangling_target',
+        danglingArgs('ability.area_lore', 'Brandenburg'),
+      ),
+    ).toBe(
+      'Füge Brandenburg-Kunde zu den Fertigkeiten des Charakters hinzu; Begabung in (Fertigkeit) zielt darauf.',
+    );
+  });
+
+  // A parameterized target whose instance is not filled in yet: the hint stands in
+  // for the missing word, inside the template, exactly as it does in the picker.
+  it('falls back to the localized param hint when the instance is empty', () => {
+    expect(render('en', 'ability_bonus_dangling_target', danglingArgs('ability.craft', ''))).toBe(
+      "Add Craft: (Craft) to the character's Abilities; Puissant (Ability) targets it.",
+    );
+    expect(render('de', 'ability_bonus_dangling_target', danglingArgs('ability.craft', ''))).toBe(
+      'Füge Handwerk: (Handwerk) zu den Fertigkeiten des Charakters hinzu; Begabung in (Fertigkeit) zielt darauf.',
+    );
+  });
+
+  // Defect 2: `validate_per_value_cap` counts per `(ability, instance)`, so the name
+  // it shows must be that same target — "2 times for Craft: (Craft)" beside three
+  // Craft rows says the count and the name disagree about what is being counted.
+  it('names the whole counted target in the per-value cap finding', () => {
+    const args = (parameter: string) => ({
+      item: 'flaw.necessary_realm_aura_for_ability',
+      key: 'ability',
+      value: 'ability.craft',
+      parameter,
+      count: '2',
+      max: '1',
+    });
+    expect(render('en', 'too_many_for_param_value', args('Carpentry'))).toBe(
+      'Necessary (Realm) Aura for (Ability) is selected 2 times for Craft: Carpentry, but may be taken at most 1 time(s) per Ability.',
+    );
+    expect(render('de', 'too_many_for_param_value', args('Zimmerei'))).toBe(
+      'Notwendige Aura für (Fertigkeit), (Sphäre) ist 2-mal für Handwerk: Zimmerei ausgewählt, darf aber höchstens 1-mal pro Fertigkeit gewählt werden.',
+    );
+  });
+
+  // The structural half of the same fix, so the empty instance is gone BY
+  // CONSTRUCTION rather than by a message happening not to mention it: an instance
+  // arg is a qualifier, never a label, and so never reaches Fluent under its own
+  // name — exactly the treatment `exemplar` already gets.
+  it('never hands the instance to Fluent as an arg of its own', () => {
+    const t: Translate = (key, a) => (key === 'param-hint' ? `(${a?.label})` : key);
+    const localized = shippedRuleset('en');
+    for (const parameter of ['Carpentry', '']) {
+      const resolved = resolveIssueArgs(
+        localized,
+        { item: 'virtue.puissant_ability', ability: 'ability.craft', parameter },
+        t,
+      );
+      expect(Object.keys(resolved).sort()).toEqual(['ability', 'item', 'qualifier']);
+    }
+  });
+
+  // The fold is gated on the ruleset knowing the value as an Ability, not on the
+  // issue code — so `param_target_not_possessed`, whose `value` names a Virtue
+  // (both shipped `require_possessed` parameters are `domain: "item"`), is
+  // untouched by it.
+  it('leaves a value arg that names something other than an Ability alone', () => {
+    const t: Translate = (key, a) => (key === 'param-hint' ? `(${a?.label})` : key);
+    const localized = shippedRuleset('en');
+    expect(
+      resolveIssueArgs(
+        localized,
+        { item: 'flaw.false_power', key: 'virtue', value: 'virtue.second_sight' },
+        t,
+      ).value,
+    ).toBe('Second Sight');
+  });
+});
+
 // --- C4: grouping + sorting selected V/F and abilities ----------------------
 
 describe('groupSelectionsByCategory', () => {

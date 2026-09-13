@@ -396,7 +396,7 @@ pub(crate) fn validate_per_value_cap(
                     .flatten();
                 *counts.entry((value, instance)).or_insert(0) += (*copies).min(per_target);
             }
-            for ((value, _instance), count) in counts {
+            for ((value, instance), count) in counts {
                 if count <= max {
                     continue;
                 }
@@ -406,12 +406,19 @@ pub(crate) fn validate_per_value_cap(
                     args([
                         ("item", item_ref.to_string()),
                         ("key", param.key.clone()),
-                        // The Ability, not the instance: the message has room
-                        // for one name and the instance is free text the player
-                        // can read off the offending copies, which are on screen
-                        // beside the finding. `count` is already the count for
-                        // the instance, so the two agree.
+                        // The whole target the count was taken over, in two
+                        // args: the Ability id, plus its instance where it has
+                        // one. Naming the Ability alone left the count and the
+                        // name disagreeing — "selected 2 times for Craft" with
+                        // three Craft rows on screen, two of them Carpentry.
+                        // Emitted unconditionally (empty for a plain Ability),
+                        // exactly as `validate_ability_bonus_targets` emits it;
+                        // the frontend's `ABILITY_INSTANCE_ARG` folds the pair
+                        // into one name, because where the instance sits inside
+                        // an Ability's name is its template's business and
+                        // differs per language.
                         ("value", value.to_string()),
+                        ("parameter", instance.unwrap_or("").to_string()),
                         ("count", count.to_string()),
                         ("max", max.to_string()),
                     ]),

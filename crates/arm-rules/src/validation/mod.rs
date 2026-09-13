@@ -117,6 +117,15 @@ impl fmt::Display for IssueSeverity {
 /// into the `ability` label plus a `qualifier` note, and never reaches the message as
 /// a variable of its own.
 ///
+/// `parameter` is the same shape for a different reason. It carries the **instance**
+/// of a parameterized Ability named by the arg beside it (`ability` here,
+/// `value` in `too_many_for_param_value`), and is emitted unconditionally — empty for
+/// an Ability that takes none. It is not a name of its own and no message may
+/// interpolate it: where an instance sits inside an Ability's name is that Ability's
+/// localized template and differs per language (`{area} Lore` vs `{area}-Kunde`,
+/// `Craft: {craft}` vs `Handwerk: {craft}`), so the UI's `resolveIssueArgs` folds the
+/// pair into ONE name through `abilityDisplayName` before Fluent sees it.
+///
 /// | `code` | severity | phase | `args` keys |
 /// |--------|----------|-------|-------------|
 /// | `saga_year_before_birth_year` | warning | concept | `saga_year`, `birth_year` |
@@ -149,7 +158,7 @@ impl fmt::Display for IssueSeverity {
 /// | `unexpected_param` | error | virtues_flaws, house_specialisation, mythic_type, review | `item`, `key` |
 /// | `unknown_param_value` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key`, `value`, `domain` |
 /// | `exclusive_param_values` | error | virtues_flaws | `item`, `key`, `count` |
-/// | `too_many_for_param_value` | error | virtues_flaws | `item`, `key`, `value`, `count`, `max` |
+/// | `too_many_for_param_value` | error | virtues_flaws | `item`, `key`, `value`, `parameter`, `count`, `max` |
 /// | `param_target_not_possessed` | error | virtues_flaws | `item`, `key`, `value` |
 /// | `param_target_already_claimed` | error | virtues_flaws | `item`, `key`, `value`, `other` |
 /// | `power_dangling_target` | error | review | `item`, `key`, `power` |
@@ -7198,6 +7207,64 @@ mod tests {
         );
         assert_eq!(issue.args.get("count").map(String::as_str), Some("2"));
         assert_eq!(issue.args.get("max").map(String::as_str), Some("1"));
+    }
+
+    /// E6: the finding must name the target it COUNTED. The cap counts per
+    /// `(ability, instance)` — Craft (Carpentry) and Craft (Blacksmith) are two
+    /// targets — so a finding carrying `ability.craft` alone leaves the count and
+    /// the name disagreeing about what is being counted, in front of a player
+    /// looking at three Craft rows. The instance travels as its own arg, spelled
+    /// `parameter` exactly as `validate_ability_bonus_targets` spells it and as
+    /// `AbilityScore::parameter` names the field; the frontend folds the two into
+    /// one name, because where the instance sits inside an Ability's name is the
+    /// Ability's template and differs per language.
+    #[test]
+    fn the_per_value_finding_names_the_instance_it_counted() {
+        let rs = per_value_rs(PER_VALUE_ITEMS);
+        let entity = per_value_craft_entity(&[
+            ("Carpentry", "realm.divine"),
+            ("Carpentry", "realm.faerie"),
+            ("Blacksmith", "realm.divine"),
+        ]);
+
+        let result = validate(&entity, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE)
+            .expect("the per-value cap must have fired");
+        assert_eq!(
+            issue.args.get("value").map(String::as_str),
+            Some("ability.craft")
+        );
+        assert_eq!(
+            issue.args.get("parameter").map(String::as_str),
+            Some("Carpentry"),
+            "the offending target is Craft (Carpentry), not Craft: {:?}",
+            issue.args
+        );
+        assert_eq!(issue.args.get("count").map(String::as_str), Some("2"));
+    }
+
+    /// The counterpart: a cap tripped on an UNPARAMETERIZED Ability has no
+    /// instance, and the arg is empty rather than absent — the same unconditional
+    /// shape `validate_ability_bonus_targets` emits, so the frontend's fold never
+    /// has to ask whether the key is there.
+    #[test]
+    fn the_per_value_finding_carries_an_empty_instance_for_a_plain_ability() {
+        let rs = per_value_rs(PER_VALUE_ITEMS);
+        let entity = per_value_entity(&[
+            ("ability.artes_liberales", "realm.divine"),
+            ("ability.artes_liberales", "realm.faerie"),
+        ]);
+
+        let result = validate(&entity, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE)
+            .expect("the per-value cap must have fired");
+        assert_eq!(issue.args.get("parameter").map(String::as_str), Some(""));
     }
 
     // --- Parameter validation ---

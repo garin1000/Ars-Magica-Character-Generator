@@ -1451,6 +1451,36 @@ const ENUM_ARG_FLUENT_PREFIX: Record<string, string> = {
 };
 
 /**
+ * Validation-issue arg pairs that name ONE thing between them: the arg holding an
+ * Ability id, mapped to the arg holding that Ability's **instance** (the area, the
+ * craft, the language). Declared once, here beside {@link ENUM_ARG_FLUENT_PREFIX},
+ * rather than as a list of issue codes the resolver would have to recognize — the
+ * engine's arg names are the contract, and a new finding that emits the same pair is
+ * composed correctly with no code change.
+ *
+ * **Why the two halves cannot simply be juxtaposed in the message.** Where the
+ * instance sits inside an Ability's name is the *Ability's* business and the
+ * *language's*, not the sentence's: `{area} Lore` puts it first and `{area}-Kunde`
+ * glues it on with a hyphen, while `Craft: {craft}` and `Handwerk: {craft}` put it
+ * last after a colon. A message interpolating `{ $ability } { $parameter }` can
+ * produce at most one of those four, and produced a stray space for every
+ * unparameterized Ability besides. So the pair is folded into one name BEFORE
+ * Fluent sees it, by {@link abilityDisplayName} — the one name composer, which
+ * already fills the template's token with the instance or with a localized hint.
+ *
+ * Repeated values are the same idiom `base`/`granted` → `realm-` already uses: the
+ * engine spells this value `parameter` wherever it appears (it is the
+ * `AbilityScore::parameter` field), so both pairs name the same partner.
+ */
+const ABILITY_INSTANCE_ARG: Record<string, string> = {
+  ability: 'parameter',
+  value: 'parameter',
+};
+
+/** Arg keys that only ever QUALIFY another arg, and so are never resolved alone. */
+const QUALIFIER_ARG_KEYS = new Set(['exemplar', ...Object.values(ABILITY_INSTANCE_ARG)]);
+
+/**
  * Localize one validation-issue arg value for display. The engine deliberately
  * emits raw ids/enums in `issue.args`; the id→label mapping lives in the UI, not
  * the engine. Resolution is data-driven, never slug-shaped:
@@ -1506,8 +1536,17 @@ export function resolveIssueArgs(
 ): Record<string, string> {
   const resolved: Record<string, string> = {};
   for (const [key, value] of Object.entries(args)) {
-    if (key === 'exemplar') continue;
+    if (QUALIFIER_ARG_KEYS.has(key)) continue;
     resolved[key] = resolveIssueArgValue(localized, key, value, t);
+  }
+  // An Ability id and its instance are one name (see `ABILITY_INSTANCE_ARG`), so
+  // they are composed here rather than left for a message to juxtapose. Gated on the
+  // ruleset actually knowing the value as an Ability, which is what keeps a `value`
+  // arg naming a Virtue (`param_target_not_possessed`) out of this path.
+  for (const [nameKey, instanceKey] of Object.entries(ABILITY_INSTANCE_ARG)) {
+    const abilityId = args[nameKey];
+    if (abilityId === undefined || !localized.ruleset.abilities?.[abilityId]) continue;
+    resolved[nameKey] = abilityDisplayName(localized, abilityId, args[instanceKey], paramHint(t));
   }
   if (args.ability) {
     // Emitted for every `ability` arg, empty where the rules name no exemplar: a

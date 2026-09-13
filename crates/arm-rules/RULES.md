@@ -1025,7 +1025,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1037).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1044).
   The Gift policy is independent of the `is_magus` flag (an unGifted Redcap is a
   companion; a Gifted hedge wizard is not a magus).
 
@@ -1531,6 +1531,8 @@ that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
   `legal_identical_repeats_still_count_toward_the_per_value_cap`,
   `granted_copies_count_toward_the_per_value_cap`,
   `the_per_value_finding_names_the_key_and_the_value`,
+  `the_per_value_finding_names_the_instance_it_counted`,
+  `the_per_value_finding_carries_an_empty_instance_for_a_plain_ability`,
   `the_absent_per_value_cap_is_a_sentinel_and_not_the_number_255`
   (`validation/mod.rs`),
   `a_per_value_cap_of_zero_is_rejected`,
@@ -1565,6 +1567,19 @@ The composition lives once, in
 `validate_ability_bonus_targets` — the same `(ability, instance)` pair
 `Entity::ability_scores` rows are keyed by and the frontend's
 `usedAbilityTargets` composes.
+
+**The finding names the target it counted.** Because the count is taken per
+`(ability, instance)`, naming the Ability alone left the two halves of the
+sentence disagreeing: with Craft (Carpentry) twice and Craft (Blacksmith) once,
+"selected 2 times for Craft" sat beside three Craft rows. So the issue carries
+the instance as its own `parameter` arg — spelled as
+`validate_ability_bonus_targets` spells it, and emitted unconditionally (empty
+for an Ability that takes none). It is a **qualifier, not a label**: no Fluent
+message interpolates it, because where an instance sits inside an Ability's name
+is that Ability's localized template and differs per language (`{area} Lore` vs
+`{area}-Kunde`, `Craft: {craft}` vs `Handwerk: {craft}`). The frontend folds the
+pair into one name through `derive.ts::abilityDisplayName`, declared once in
+`ABILITY_INSTANCE_ARG` beside `ENUM_ARG_FLUENT_PREFIX`.
 
 **Why the two older axes cannot state it.** The Flaw declares two parameters,
 `realm` and `ability`, and `ArMDE:6482` caps repeats on the Ability alone —
@@ -7176,11 +7191,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:513),
-  `validate_forbidden_traits` (:534))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:520),
+  `validate_forbidden_traits` (:541))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:204),
-  `validate_parameters` (:644), `validate_duplicate_selections` (:237))
+  `validate_parameters` (:651), `validate_duplicate_selections` (:237))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,
