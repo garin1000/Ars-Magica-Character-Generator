@@ -466,3 +466,27 @@ describe('AbilityTab age cap note', () => {
     expect(html()).not.toContain('data-testid="age-cap-note"');
   });
 });
+
+// Sabine 3 (full-audit round 1): the Available side of this picker is built from
+// buttons and is keyboard-reachable; the Selected side is bare `<span>`s, so the
+// `use:tooltip` carrying an Ability's rules text and its specialties list opened on
+// hover only. Same action, same content, reachable from one side of the same screen.
+//
+// `ssr`, not `client`: `tabindex` is static markup, and that focus on such a host
+// actually opens the popup is proved once for the shared action in
+// `ArtGrid.client.test.ts`.
+describe('AbilityTab selected-row rules text is keyboard-reachable (Sabine 3)', () => {
+  /** The Selected column's markup — the side whose rows are not buttons. */
+  function selectedRegion(body: string): string {
+    const start = body.indexOf('region-selected');
+    if (start < 0) throw new Error('no Selected region');
+    return body.slice(start);
+  }
+
+  it('puts a chosen Ability name in the tab order', () => {
+    store.entity.ability_scores = [{ ability: 'ability.athletics', score: 2 }];
+    const name = /<span class="item-name"[^>]*>/.exec(selectedRegion(html()));
+    expect(name, 'no selected-row name span').not.toBeNull();
+    expect(name![0]).toContain('tabindex="0"');
+  });
+});

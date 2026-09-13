@@ -80,9 +80,13 @@ pub(crate) fn validate_ability_authorization(
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_ABILITY_CATEGORY_REQUIRES_VIRTUE,
             CreationPhase::Abilities,
+            // `ability_category`, not `category`: the latter names the Virtue/Flaw
+            // grouping category in `category_not_permitted`/`forbidden_category`
+            // (`selections.rs`), a disjoint taxonomy with its own label family. One
+            // arg name for both taxonomies left this side unlabelled in the UI.
             args([
                 ("ability", entry.ability.to_string()),
-                ("category", ability.category.to_string()),
+                ("ability_category", ability.category.to_string()),
             ]),
             Some(entry.ability.clone()),
         ));
@@ -243,15 +247,22 @@ mod tests {
 
     /// "a character must have a Virtue to buy Academic, Arcane, Martial … Abilities"
     /// (ArMDE:2315).
+    ///
+    /// The category arrives under `ability_category`, NOT `category`: the latter is
+    /// the Virtue/Flaw grouping category `category_not_permitted` and
+    /// `forbidden_category` emit (`selections.rs`), a disjoint taxonomy the UI
+    /// labels through a different Fluent family. One arg name serving both meant
+    /// the Ability side resolved against the V/F labels and printed its own slug.
     #[test]
     fn a_martial_ability_without_a_virtue_is_an_error() {
         let entity = character("companion", vec![], vec![("ability.single_weapon", 3)]);
         let result = validate(&entity, &rs());
         let issue = gate_issues(&result).first().copied().expect("gated");
         assert_eq!(
-            issue.args.get("category").map(String::as_str),
+            issue.args.get("ability_category").map(String::as_str),
             Some("martial")
         );
+        assert_eq!(issue.args.get("category"), None);
         assert_eq!(issue.phase, CreationPhase::Abilities);
     }
 

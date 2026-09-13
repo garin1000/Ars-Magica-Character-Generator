@@ -131,6 +131,7 @@ impl fmt::Display for IssueSeverity {
 /// | `saga_year_before_birth_year` | warning | concept | `saga_year`, `birth_year` |
 /// | `unknown_type` | error | review | `type_id` |
 /// | `unknown_ref` | error | virtues_flaws | `item` |
+/// | `ruleset_mismatch` | warning | review | `saved_ruleset`, `saved_version`, `loaded_ruleset`, `loaded_version` |
 /// | `wrong_entity_kind` | error | virtues_flaws | `item`, `entity_kind` |
 /// | `duplicate_selection` | error | virtues_flaws | `item`, `count`, `max` |
 /// | `too_many_selections` | error | virtues_flaws | `item`, `count`, `max` |
@@ -177,7 +178,7 @@ impl fmt::Display for IssueSeverity {
 /// | `xp_solve_bound_exceeded` | error | abilities | `nodes`, `limit`, `spends`, `pools` |
 /// | `general_xp_unspent` | warning | abilities | `pool`, `used`, `unspent` |
 /// | `restricted_xp_unspent` | warning | experience | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
-/// | `ability_category_requires_virtue` | error | abilities | `ability`, `category` |
+/// | `ability_category_requires_virtue` | error | abilities | `ability`, `ability_category` |
 /// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min`, `exemplar`&nbsp;(opt) |
 /// | `life_stage_age_unset` | error | experience | (none) |
 /// | `life_stage_age_before_childhood` | error | experience | `age`, `min` |
@@ -310,6 +311,11 @@ impl ValidationIssue {
     pub const CODE_SAGA_YEAR_BEFORE_BIRTH_YEAR: &'static str = "saga_year_before_birth_year";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_UNKNOWN_REF: &'static str = "unknown_ref";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the entity was saved
+    /// against a ruleset id/version other than the one now loaded, so its ids may
+    /// resolve while the numbers behind them differ. Warning, not error: opening
+    /// such a save stays possible, the user is merely told.
+    pub const CODE_RULESET_MISMATCH: &'static str = "ruleset_mismatch";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_WRONG_ENTITY_KIND: &'static str = "wrong_entity_kind";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -959,6 +965,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         crate::effective::fold_granted_selections(entity, &granted);
     let prereq_ctx = PrereqCtx::build(entity, ruleset, type_profile, &selected_ids, &granted);
 
+    validate_ruleset_identity(entity, ruleset, &mut issues);
     validate_known_type(entity, type_profile, &mut issues);
     validate_known_refs(entity, ruleset, &mut issues);
     validate_entity_kind_applicability(entity, ruleset, &mut issues);
@@ -1015,6 +1022,43 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         issues,
         completeness: completeness(entity, ruleset),
     }
+}
+
+/// Emits `ruleset_mismatch` when the entity was authored against a different
+/// ruleset than the one it is now validated against.
+///
+/// A save records the ruleset id + version it was written under
+/// (`types.rs::Entity::ruleset`) exactly so a document can say which numbers
+/// produced it — but until the full audit (V6) nothing ever compared the two, so
+/// the field was written and never read. The gap is reachable without any
+/// tampering: a `rules/` directory beside the binary is a supported layout, so a
+/// character built against house-ruled data and reopened under the shipped
+/// catalogue is re-priced in silence — every id still resolves, and only the
+/// values behind them moved, which no other check looks at.
+///
+/// A warning, never an error: the save is still openable and its owner may well
+/// want it open. The whole point is that they are told.
+pub(crate) fn validate_ruleset_identity(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if entity.ruleset.id == ruleset.id && entity.ruleset.version == ruleset.version {
+        return;
+    }
+    // No creation phase owns this: it is the document's provenance, not a choice
+    // any step of the wizard offers.
+    issues.push(ValidationIssue::warning(
+        ValidationIssue::CODE_RULESET_MISMATCH,
+        CreationPhase::Review,
+        args([
+            ("saved_ruleset", entity.ruleset.id.to_string()),
+            ("saved_version", entity.ruleset.version.clone()),
+            ("loaded_ruleset", ruleset.id.to_string()),
+            ("loaded_version", ruleset.version.clone()),
+        ]),
+        None,
+    ));
 }
 
 /// Emits `unknown_type` when the entity's `type_id` has no matching profile.
@@ -2410,6 +2454,92 @@ mod tests {
 
         let result = validate(&entity, &rs);
         assert!(result.is_valid(), "issues: {:?}", result.issues);
+    }
+
+    /// A save's stored `RulesetRef` is provenance, and provenance nobody reads
+    /// catches nothing: a character authored against a house-ruled `rules/`
+    /// directory reopens under the shipped one with every id still resolving and
+    /// every number silently different (full-audit V6).
+    #[test]
+    fn a_save_from_another_ruleset_warns_about_the_mismatch() {
+        let rs = test_ruleset();
+        let mut entity = make_entity(
+            "companion",
+            vec![sel("virtue.keen_vision"), sel("flaw.poor_student")],
+        );
+        entity.ruleset = RulesetRef::new(Id::new("house-rules"), "2024.1");
+
+        let result = validate(&entity, &rs);
+
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_RULESET_MISMATCH)
+            .unwrap_or_else(|| panic!("expected a mismatch warning, got {:?}", result.issues));
+        assert_eq!(issue.severity, IssueSeverity::Warning);
+        assert_eq!(issue.args["saved_ruleset"], "house-rules");
+        assert_eq!(issue.args["saved_version"], "2024.1");
+        assert_eq!(issue.args["loaded_ruleset"], "arm5-core");
+        assert_eq!(issue.args["loaded_version"], "2024.1");
+    }
+
+    /// Warning, never error: opening a save written against another ruleset must
+    /// stay possible — the point is that the user is told, not that the document
+    /// is blocked.
+    #[test]
+    fn a_ruleset_mismatch_does_not_block_the_character() {
+        let rs = test_ruleset();
+        let mut entity = make_entity(
+            "companion",
+            vec![sel("virtue.keen_vision"), sel("flaw.poor_student")],
+        );
+        entity.ruleset = RulesetRef::new(Id::new("house-rules"), "1");
+
+        let result = validate(&entity, &rs);
+        assert!(result.is_valid(), "issues: {:?}", result.issues);
+    }
+
+    /// The version alone moving is the likelier drift — the same ruleset id
+    /// re-cut with different numbers — so it must warn on its own.
+    #[test]
+    fn a_version_difference_alone_warns() {
+        let rs = test_ruleset();
+        let mut entity = make_entity(
+            "companion",
+            vec![sel("virtue.keen_vision"), sel("flaw.poor_student")],
+        );
+        entity.ruleset = RulesetRef::new(Id::new("arm5-core"), "2023.4");
+
+        let result = validate(&entity, &rs);
+
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_RULESET_MISMATCH)
+            .unwrap_or_else(|| panic!("expected a mismatch warning, got {:?}", result.issues));
+        assert_eq!(issue.args["saved_version"], "2023.4");
+        assert_eq!(issue.args["loaded_version"], "2024.1");
+    }
+
+    /// The ordinary case — a save opened under the ruleset it was written
+    /// against — must stay silent, or the warning is noise on every document.
+    #[test]
+    fn a_matching_ruleset_ref_raises_no_mismatch_warning() {
+        let rs = test_ruleset();
+        let entity = make_entity(
+            "companion",
+            vec![sel("virtue.keen_vision"), sel("flaw.poor_student")],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !result
+                .issues
+                .iter()
+                .any(|i| i.code == ValidationIssue::CODE_RULESET_MISMATCH),
+            "issues: {:?}",
+            result.issues
+        );
     }
 
     /// A magus profile permitting the categories the device tests use, with the

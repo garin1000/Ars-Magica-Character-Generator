@@ -18,6 +18,11 @@
     <dt>{store.t('derived-section-decrepitude')}</dt>
     <dd data-testid="derived-decrepitude">{d.decrepitude_score}</dd>
     <dt>{store.t('derived-section-warping')}</dt>
-    <dd data-testid="derived-warping">{d.warping_score} ({d.warping_points})</dd>
+    <dd data-testid="derived-warping">
+      {store.t('warping-readout', {
+        score: String(d.warping_score),
+        points: String(d.warping_points),
+      })}
+    </dd>
   </dl>
 </div>

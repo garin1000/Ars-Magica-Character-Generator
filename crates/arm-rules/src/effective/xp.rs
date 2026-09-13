@@ -13,6 +13,8 @@
 //! the guard used to live solely in that `assert!` and in one caller's
 //! discipline, and three other call sites grew directly against the
 //! unguarded function — see [`checked_xp_allocation`]'s docs for the fix).
+//! Its *value* additionally caps the `O(n^3)` solve's worst accepted runtime
+//! (audit finding Klaus F4) — see the constant's own docs.
 
 use super::*;
 
@@ -497,13 +499,33 @@ fn pool_covers(eligibility: &PoolEligibility, spend: &Spend) -> bool {
 /// large a crafted save's `ability_scores`/`art_scores`/`spells`/`selections`
 /// arrays are.
 ///
+/// The value bounds **CPU** as well as memory (audit finding Klaus F4), which is
+/// what sets it this low: the solve is `O(n^3)`, so the cost of the worst save
+/// that is still *accepted* scales with the cube of this number. Measured on a
+/// spends-heavy entity (the expensive shape — see `rs_with_dead_pools`), release
+/// build: 60 ms at 512 spends, 196 ms at 768, 454 ms at 1024, and ~3.6 s
+/// extrapolated at the old 2048, against ~21 s / ~170 s for the same two points
+/// in a debug build. Since `validate_xp_pool`, `effective_scores` and
+/// `export/sections.rs` each re-run the solve, a debounced `refresh()` pays it
+/// about three times over — so 2048 meant a multi-second freeze per keystroke on
+/// a save that was accepted rather than rejected, and 1024 keeps that worst case
+/// comfortably sub-second.
+///
+/// The lower edge is the binding constraint, and it is a *character* size, not a
+/// catalogue size: roughly 211 Ability scores (71 distinct plus twenty instances
+/// of each parameterized one), 15 Art scores, 560 mastered spells and 64
+/// restricted pools come to 853 nodes for a maximal-but-legal character, so this
+/// is the smallest power of two that cannot reject one.
+/// `the_solve_bound_admits_a_maximal_legal_character` pins that arithmetic and
+/// fails if the value is ever lowered into it.
+///
 /// `pub(crate)` (not otherwise used outside this module) so
 /// [`crate::validation::magus::validate_xp_pool`] can compare against the same
 /// constant `xp_allocation` enforces, rather than restating the number: the
 /// validation layer rejects a hostile save with a structured issue *before*
 /// ever calling `xp_allocation`, and this `assert!` remains the unbypassable
 /// backstop for any caller that skips validation.
-pub(crate) const MAX_XP_SOLVE_NODES: usize = 2048;
+pub(crate) const MAX_XP_SOLVE_NODES: usize = 1024;
 
 /// The counts behind the flow-solve node total [`xp_allocation`] would need for
 /// this entity, without building its `n x n` matrix — `build_spends` and
@@ -1002,17 +1024,21 @@ impl FlowGraphLayout {
 /// at most a few hundred spells, so this gives roughly an order of magnitude of
 /// headroom above that while keeping the matrix under ~64 MB.
 ///
-/// The bound protects memory, not CPU time: a legal entity whose *spends*
-/// (not `flow_pools`) make up most of `n` near the 2048 ceiling measurably
-/// takes on the order of a minute in a debug build (`max_flow`'s BFS is
-/// `O(n)` per dequeued node regardless of real edge count, and this graph's
-/// shape needs roughly one augmenting BFS per spend, i.e. `O(n)` BFS calls —
-/// `O(n^3)` overall — found empirically while writing this fix's own
-/// regression test, not previously measured). No test in this suite
-/// exercises that shape at the full bound for exactly this reason (see the
-/// `tests` module below); flagged in the round-2 K1 fix report as a
-/// follow-up rather than fixed here, since a spend-heavy save at this scale
-/// is a legal-but-slow character, not a memory-safety regression.
+/// The bound protects CPU time as well as memory (audit finding Klaus F4).
+/// `max_flow`'s BFS is `O(n)` per dequeued node regardless of real edge
+/// count, and this graph's shape needs roughly one augmenting BFS per spend,
+/// i.e. `O(n)` BFS calls — `O(n^3)` overall. So an entity whose *spends*
+/// (not `flow_pools`) make up most of `n` is the expensive shape, and the
+/// cost of the worst such save that is still accepted scales with the cube
+/// of [`MAX_XP_SOLVE_NODES`]. Lowering that constant from 2048 to 1024 cut it
+/// by 8x — from a multi-second freeze per debounced `refresh()` to
+/// comfortably sub-second — which is why the constant is set from the
+/// largest *character* that must not be rejected rather than from the
+/// largest matrix that fits in memory. The `O(n^3)` algorithm itself is
+/// unchanged and is tracked in `docs/open-todos.md`; no test in this suite
+/// exercises the expensive shape at the full bound, since that would make
+/// the suite pay the very cost the bound exists to cap (see the `tests`
+/// module below).
 ///
 /// This function is private to the module, reachable only through
 /// [`xp_allocation`], which is itself `pub(crate)`, not `pub` (audit finding
@@ -1227,9 +1253,8 @@ mod tests {
     /// calls the solve needs tracks `spends` (the sink-side bottleneck), not
     /// `flow_pools` — so a fixture with thousands of pools and a handful of
     /// spends reaches the same `n` as a spends-heavy one in a fraction of the
-    /// runtime (see the comment on the `assert!` above, which measured a
-    /// spends-heavy construction at this scale taking on the order of a
-    /// minute in a debug build).
+    /// runtime (the `MAX_XP_SOLVE_NODES` docs carry the measured figures for
+    /// the spends-heavy shape, which is the one the bound is set from).
     fn rs_with_dead_pools(pool_count: usize) -> Ruleset {
         // The engine requires at least one V/F category-tagged "personality"
         // (`ENGINE_REQUIRED_CATEGORY_PERSONALITY`) once a catalogue is shipped
@@ -1295,6 +1320,61 @@ mod tests {
         assert_eq!(err.limit, MAX_XP_SOLVE_NODES);
         assert_eq!(err.spends, MAX_XP_SOLVE_NODES - 2);
         assert_eq!(err.flow_pools, 0);
+    }
+
+    /// Klaus F4 (round-1 MINOR), upper edge: the bound must refuse a spend
+    /// count no legal character reaches, so an oversized save hits the
+    /// friendly rejection *before* the solve rather than being accepted into
+    /// it. The solve is `O(n^3)` and the UI re-pays it on every debounced
+    /// `refresh()`, so "accepted, then runs for seconds" is the defect — an
+    /// `Err` here is what keeps the worst accepted case sub-second.
+    ///
+    /// 1200 spends is above every term of the maximal-character arithmetic
+    /// [`the_solve_bound_admits_a_maximal_legal_character`] pins, so no real
+    /// character is refused by this.
+    #[test]
+    fn the_solve_bound_refuses_a_spend_count_no_legal_character_reaches() {
+        let rs = rs();
+        let oversized = companion_with_scores(1200);
+
+        let err = checked_xp_allocation(&oversized, &rs).unwrap_err();
+
+        assert_eq!(err.spends, 1200);
+        assert_eq!(err.limit, MAX_XP_SOLVE_NODES);
+    }
+
+    /// Klaus F4, lower edge — the guard that stops the bound above from being
+    /// lowered into a legal character. [`MAX_XP_SOLVE_NODES`] bounds one
+    /// entity's own collections, never the ruleset's catalogue (CLAUDE.md,
+    /// "Catalogue size is data, never code"), so every term below is a
+    /// *character* collection size, each already an order of magnitude past
+    /// any real one. The shipped catalogue is a sanity input, not the
+    /// derivation: a bigger catalogue does not make a character bigger.
+    #[test]
+    fn the_solve_bound_admits_a_maximal_legal_character() {
+        // 71 distinct non-parameterized Abilities, plus 20 instances of each
+        // of the 7 parameterized ones (Area Lore, Craft, Language, …) — a
+        // character with twenty Crafts is already beyond implausible.
+        let ability_scores = 71 + 7 * 20;
+        // One score per Art: 5 Techniques + 10 Forms.
+        let art_scores = 15;
+        // Only a spell with mastery >= 1 becomes a spend. An archmage who
+        // mastered every spell in print (the shipped catalogue is ~360) and
+        // invented two hundred more.
+        let mastered_spells = 560;
+        // One pool per restricted-XP grant held, plus four life-stage pools.
+        // A real character has fewer than ten.
+        let flow_pools = 64;
+
+        let maximal = companion_with_scores(ability_scores + art_scores + mastered_spells);
+        let nodes = xp_solve_scale(&maximal, &rs()).nodes() + flow_pools;
+
+        assert!(
+            nodes <= MAX_XP_SOLVE_NODES,
+            "a maximal legal character needs {nodes} nodes but the bound is \
+             {MAX_XP_SOLVE_NODES} — lowering it this far rejects a character \
+             the app must be able to open",
+        );
     }
 
     /// `restricted_xp_pools` is one of K1's four unguarded call sites — it must

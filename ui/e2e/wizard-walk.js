@@ -1,6 +1,7 @@
-// Shared driver for the four per-type wizard walks — `grog-wizard.e2e.js`,
-// `companion-wizard.e2e.js`, `mythic-companion-wizard.e2e.js` and
-// `magus-wizard.e2e.js` (milestone 6b8d).
+// Shared driver for the four per-type wizard walks — the `guided wizard: grog`,
+// `guided wizard: companion`, `guided wizard: mythic companion` and
+// `guided wizard: magus` describes of `wizard-walks.e2e.js` (milestone 6b8d; A2
+// merged the four one-walk-per-file specs into that one file).
 //
 // WHY THIS EXISTS. The four walks are the same walk: start the wizard, stand on
 // every phase the character's type declares, put a real choice into it, and come
@@ -282,7 +283,7 @@ const FILLERS = {
   // completeness rule for this phase is `entity.age.is_some()` — so the walk proving
   // the step reads as complete here, without touching it, proves the age really
   // travelled from the step that now owns it. Aging ROLLS are not owed at these ages
-  // and have their own spec (`aging.e2e.js`).
+  // and have their own spec (`grog-wizard-aging.e2e.js`'s `the guided aging step`).
   aging: async () => {
     await $('[data-testid="aging-panel"]').waitForExist({ timeout: STEP_TIMEOUT });
     // The copy this step used to carry is gone, not merely unused.

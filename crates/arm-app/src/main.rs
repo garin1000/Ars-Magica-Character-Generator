@@ -125,11 +125,14 @@ fn main() {
 /// library-crate hook (`main.rs` is a binary, and `guard_blocks_quit` below has
 /// the same gap), and exercising it for real needs a live window, which needs
 /// Tauri's mock runtime (the `test` feature, not enabled in this crate — adding
-/// it is a larger step than this fix). That half is closed by an e2e spec
-/// instead: `ui/e2e/specs/window-close-bridge-dirty.e2e.js` and
-/// `window-close-bridge-clean.e2e.js` drive the real release binary through
-/// `browser.execute(() => window.close())`, the same call the shadow below
-/// intercepts, against both a dirty and a clean document.
+/// it is a larger step than this fix). That half is closed by e2e specs
+/// instead: the `window.close() bridge — unsaved changes` describe in
+/// `ui/e2e/specs/companion-editor.e2e.js` and `window.close() bridge — no
+/// unsaved changes` in `ui/e2e/specs/app-shell.e2e.js` drive the real release
+/// binary through `browser.execute(() => window.close())`, the same call the
+/// shadow below intercepts, against a dirty and a clean document respectively.
+/// (Both are pinned as the tail describe of their file: the call ends the
+/// session, so nothing after them could run.)
 ///
 /// The one part of this glue that IS plain data — that the injected script
 /// invokes the command that is actually registered — is unit-tested in this
@@ -223,49 +226,54 @@ fn request_exit_enabled() -> bool {
 /// Returns `false` (allow) when there are no unsaved changes or the user has
 /// already confirmed — mirroring the frontend dirty flag pushed via
 /// `update_close_guard`.
+///
+/// **The decision itself is not here** (Erika F4). `commands.rs::guard_decision`
+/// and `commands.rs::apply_dialog_answer` own every branch of it, because this
+/// file is a binary with no unit seam of any kind: what is left below is the one
+/// step that genuinely needs Tauri — putting the dialog on screen and handing
+/// its answer back. See those two functions for the table, and
+/// `tests/commands.rs` for the six rows that now walk it.
 fn guard_blocks_quit<F>(app: &AppHandle, on_discard: F) -> bool
 where
     F: FnOnce(&AppHandle) + Send + 'static,
 {
     let state = app.state::<AppState>();
     let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
-    if !guard.dirty || guard.confirmed {
-        return false;
-    }
-    if !guard.showing {
-        guard.showing = true;
-        let labels = guard.labels.clone();
-        drop(guard);
-        let app = app.clone();
-        let mut dialog = app
-            .dialog()
-            .message(labels.message)
-            .title(labels.title)
-            .kind(MessageDialogKind::Warning)
-            .buttons(MessageDialogButtons::OkCancelCustom(
-                labels.discard,
-                labels.cancel,
-            ));
-        // Tie the confirmation to the window it is about, so it cannot be lost
-        // behind it. Parenting IS the modality mechanism the dialog plugin offers.
-        if let Some(window) = app.get_webview_window("main") {
-            dialog = dialog.parent(&window);
-        }
-        dialog.show(move |discard| {
-            {
-                let state = app.state::<AppState>();
-                let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
-                guard.showing = false;
-                if !discard {
-                    return;
-                }
-                // Let the re-issued close/quit pass straight through.
-                guard.confirmed = true;
+    match commands::guard_decision(&mut guard) {
+        commands::Decision::Allow => false,
+        commands::Decision::Block => true,
+        commands::Decision::BlockAndShow => {
+            let labels = guard.labels.clone();
+            drop(guard);
+            let app = app.clone();
+            let mut dialog = app
+                .dialog()
+                .message(labels.message)
+                .title(labels.title)
+                .kind(MessageDialogKind::Warning)
+                .buttons(MessageDialogButtons::OkCancelCustom(
+                    labels.discard,
+                    labels.cancel,
+                ));
+            // Tie the confirmation to the window it is about, so it cannot be lost
+            // behind it. Parenting IS the modality mechanism the dialog plugin offers.
+            if let Some(window) = app.get_webview_window("main") {
+                dialog = dialog.parent(&window);
             }
-            on_discard(&app);
-        });
+            dialog.show(move |discard| {
+                {
+                    let state = app.state::<AppState>();
+                    let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
+                    commands::apply_dialog_answer(&mut guard, discard);
+                    if !discard {
+                        return;
+                    }
+                }
+                on_discard(&app);
+            });
+            true
+        }
     }
-    true
 }
 
 #[cfg(test)]
@@ -312,7 +320,9 @@ mod tests {
     // staying permanently shut — compiled WITH the `e2e-testing` feature
     // (exactly what `ui/e2e/wdio.conf.js` passes to `cargo tauri build
     // --no-bundle --features e2e-testing`), `request_exit` must act, or the
-    // new `app-quit-bridge-*.e2e.js` specs have no seam to drive.
+    // `RunEvent::ExitRequested bridge` describes — `— unsaved changes` in
+    // `ui/e2e/specs/grog-wizard-aging.e2e.js`, `— no unsaved changes` in
+    // `ui/e2e/specs/wizard-walks.e2e.js` — have no seam to drive.
     #[cfg(feature = "e2e-testing")]
     #[test]
     fn request_exit_acts_when_the_feature_is_enabled() {

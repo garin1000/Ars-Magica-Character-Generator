@@ -44,6 +44,27 @@ mechanics carry entries; the rest are stubbed at the end.
 - Source: `ArMDE:2774`.
 - Implementation: `crates/arm-rules/src/types.rs` — `ItemKind::is_positive()`.
 
+#### Rounding default — round **down** when the rule names no direction
+> "The rules for Ars Magica sometimes involve division. In most cases, a rule
+> specifies whether you should round up or down, but if it does not, round down."
+
+- Source: `ArMDE:547`.
+- Implementation: `crates/arm-rules/src/derived.rs` — `halve`, which is
+  `i32::div_euclid(2)` (exactly floor division for a positive divisor), shared by
+  every undirected halving in the engine: the Deficient Technique/Form halving of
+  Casting and Lab Totals, fatiguing Spontaneous ÷2, Weak Magic's Penetration
+  halving, Flawed Parma / Weak Magic Resistance, the Weak Enchanter and Difficult
+  Longevity Ritual lab halvings, and the Masterpiece lesser-item cap. The
+  non-fatiguing Spontaneous ÷5 follows the same default in
+  `crates/arm-rules/src/derived/casting.rs` — `casting_totals`.
+- **Why this is not plain `/`.** Rust's `/` truncates toward zero, which agrees
+  with flooring only for non-negative operands. A negative total — a Dominion
+  aura, a newly gauntleted magus, a halved Penetration — would be reported one
+  point *in the character's favour*. Where a rule *does* name a direction the
+  engine says so at that site instead: `suggested_longevity_bonus` rounds **up**
+  ("every five points or fraction", `ArMDE:10662`) and the aging age modifier
+  rounds the decade up (see **Aging**).
+
 (The aging-roll threshold used to sit here as `AGING_ROLLS_START_AGE`. Slice 6b6
 introduced `rules/core/aging.json`, so it is now a data value — see
 **Aging (M6/6b6)** below.)
@@ -4172,7 +4193,7 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Two-handed weapon | `ArMDE:7494`, `ArMDE:17008-17013` | a two-handed weapon (`Weapon.two_handed`) cannot be paired with a shield, so it receives **no** shield Init/Atk/Def mods (the shield still counts toward Load, `ArMDE:17107`) and therefore emits exactly **one** line — there is no second way to wield it. The 9 Great-Weapon melee weapons ("Fighting with a weapon which requires two hands to use", `ArMDE:7494`) + both bows are flagged in `rules/core/equipment.json`. The bows come from the missile table's asterisked rows and its footnote (`ArMDE:17008-17013`, i.e. `| Sling* …` through `ArMDE:17013` "\* Requires two free hands to load and fire."), **not** from the Bows Ability entry at `ArMDE:7333-7334` or the `Bow, Long:` flavor note at `ArMDE:17099`, neither of which says anything about two hands. The **Sling** shares that asterisk but stays unflagged: it is a thrown weapon and keeps the status-quo shield handling. (`ArMDE:17017` is the missile table's "Atk:" column legend — not a citation for this rule.) `derived/combat.rs::combat_totals` |
 | Shield + two-handed advisory | `ArMDE:7494`, `ArMDE:17063`, `ArMDE:16975` | advisory `shield_with_two_handed_weapon` warning when an equipped shield accompanies **only** two-handed weapon(s) — its dropped modifiers otherwise look like a bug (buckler prose `ArMDE:17063`; shield table "Single" Ability column `ArMDE:16975`). Non-blocking. `validation/equipment.rs` |
 | Specialization +1 | `ArMDE:7122`, `ArMDE:7139`, `ArMDE:7746` | when `EquipmentSlot.specialization_applies` is set AND the weapon's combat Ability carries a non-empty specialty, the Ability acts "as if your score were one level higher" (`ArMDE:7122`, Single Weapon longsword example) for **Attack and Defense only** (Damage/Init do not use the Ability); "Add +1 when using an Ability's specialization" (`ArMDE:7139`). The bonus is **shield-independent** and so applies identically to the with-shield and the bare line: a Single Weapon specialty is "any one weapon or shield, which covers using that weapon with any shield or none, and that shield with any weapon" (`ArMDE:7746`). `derived/combat.rs::specialization_bonus` |
-| Enc-exempt (conditional) | `ArMDE:17105`, `ArMDE:17107` | Attack/Defense are Encumbrance-penalized **only** when the Encumbrance is *not* largely weapons + armor; Init is **always** penalized (`ArMDE:16658`). "Largely due to weapons and armor" is read as **combat-gear Load ≥ half of total Load** (majority) — an explicit interpretation assumption, since the rules give no numeric threshold. Combat gear = every carried weapon/shield/armor (equipped or not, `ArMDE:17107` counts all Load). `derived/combat.rs::combat_encumbrance_applies` |
+| Enc-exempt (unconditional) | `ArMDE:17105`, `ArMDE:17107` | Attack/Defense are Encumbrance-penalized **only** when the Encumbrance is *not* largely weapons + armor; Init is **always** penalized (`ArMDE:16658`). Here the waiver is **unconditional**: all modelled Load is combat gear by construction, so Attack/Defense never take the penalty and only Init does. Load is "listed in the Armor and Weapons tables" (`ArMDE:17107`), and the engine mirrors that — `equipment.rs::EquipmentCatalogue` holds exactly `weapons`, `shields` and `armor`, `load` is declared on exactly those three structs, and `equipment_load` yields 0 for anything else. No `Entity` can therefore carry non-combat Load. Earlier revisions encoded a majority test ("largely" read as combat-gear Load ≥ half of total Load); both of its sums ranged over the same items, so it was identically true and has been removed rather than left as a decision in shape only. The interpretation question returns the day a non-combat load-bearing item is modelled — which requires a new catalogue collection, not a data edit. `derived/combat.rs::combat_totals` |
 | Soak | `ArMDE:16666` | Stamina + Armor Protection + SoakMod (Tough +3) + Bronze cord; Form bonus situational (entered 0). The Bronze-cord addend goes through `cord_score` (the +5 maximum, `ArMDE:10836`) so it cannot disagree with the cord-cost or Longevity read-outs |
 | Encumbrance | `ArMDE:17103-17123` | Burden from Load table `[0,1,3,6,10,15,21,28,36,45,55]→[0..10]`; Enc = `max(0, Burden − max(0,Str))` |
 | Fatigue | `ArMDE:17127-17129` | Winded/Weary −1, Tired −3, Dazed −5, adjusted by HealthMod fatigue delta |
@@ -4282,7 +4303,9 @@ number.
 **That the two halvings compound is an inference, not a quoted rule.** Each Flaw
 says to halve the Lab Total and neither carves out the other, but no passage states
 the interaction. Order is pinned base → Deficient → Difficult and is numerically
-immaterial, since `halve()` truncates toward zero. `halved` is a single flag: the UI
+immaterial, since the two are the same operation and `halve()` floors
+(`ArMDE:547`), so halving twice is `floor(base / 4)` whichever Flaw is named
+first. `halved` is a single flag: the UI
 marks the hint as halved without claiming which Flaw did it.
 
 `suggested_bonus = ceil(lab_total / 5)`, floored at 0 — "every five points or
@@ -4545,7 +4568,7 @@ hand-authored cliques: Gentle vs Blatant Gift, Dwarf/Small Frame/Giant
 Blood/Large, the four Mythic Companion status Virtues + The Gift). The
 descriptor-blind two-Minor-Foci case is *not* blocked in the picker — it is not
 an `incompatible_with` pair — and remains reported by `validate_magical_focus`.
-E2E: `ui/e2e/specs/vf-incompatible.e2e.js`.
+E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`.
 
 | Variant | Family / representative V/F | Source | 5i |
 |---|---|---|---|
@@ -7254,7 +7277,7 @@ distinguish. `virtue.puissant_ability`-style id domains are trimmed too, because
 no domain has a legal value with an edge of whitespace.
 
 **Where it happens:** at **load**, in `load_entity_migrating`
-(`types.rs::trim_all_selection_params`) — covering the bought list plus
+(`migration.rs::trim_all_selection_params`) — covering the bought list plus
 `house_choices` / `mythic_choices` / `warping_choices`, exactly like the `being`
 fold — and at every frontend write path (`AppStore.setParamAt`,
 `setAbilityBonusTarget`, `setArtBonusTarget`, and `ParameterPicker`'s

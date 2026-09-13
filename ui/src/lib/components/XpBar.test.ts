@@ -372,8 +372,9 @@ describe('XpBar negative-available regression (Issue G(a))', () => {
 
   // A pure CSS-class rename must not break a spec that only cares about the
   // overspend STATE, not its presentation — so the state is also exposed
-  // through a semantic `data-overspent` attribute (arts.e2e.js reads this
-  // instead of the `over-value`/`over` classes, finding E7).
+  // through a semantic `data-overspent` attribute (`magus-editor.e2e.js`'s
+  // `hermetic arts` reads this instead of the `over-value`/`over` classes,
+  // finding E7).
   it('marks Available with a semantic data-overspent attribute when overspent', () => {
     resetEntity(20);
     setEffective(30, []); // available = -10

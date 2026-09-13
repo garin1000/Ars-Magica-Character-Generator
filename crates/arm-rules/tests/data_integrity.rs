@@ -360,6 +360,117 @@ fn german_i18n_covers_all_abilities() {
     }
 }
 
+// --- Round-1 audit, Sabine 12: the three uncovered catalogues ---------------
+//
+// Six catalogues already have an `*_i18n_covers_all_*` pair (abilities above,
+// plus childhoods, spells, mastery abilities, equipment and items below), and
+// `aging.json` is covered too, by name rather than by shape
+// (`english_and_german_i18n_cover_all_living_conditions` /
+// `..._crisis_rows`). `arts`, `houses` and `mythic_companion_types` had none.
+//
+// All three ship complete today — which is exactly why the gap was invisible.
+// An id with no i18n entry does not fail to load: `display_name` returns `None`
+// and the UI renders the raw slug, so deleting `art.ignem` from both locales
+// left the whole suite green while the Arts grid printed `art.ignem`. Both
+// locales are checked, because a key missing from BOTH is perfectly symmetrical
+// and locale parity alone cannot see it.
+
+#[test]
+fn english_i18n_covers_all_arts() {
+    let rs = load_full_ruleset();
+    let loc = LocalizedRuleset::new(rs.clone(), include_str!("../../../rules/i18n/en/arts.json"))
+        .unwrap();
+    for art in rs.arts() {
+        assert!(
+            loc.display_name(&art.id).is_some(),
+            "English i18n missing art '{}'",
+            art.id
+        );
+    }
+}
+
+#[test]
+fn german_i18n_covers_all_arts() {
+    let rs = load_full_ruleset();
+    let loc = LocalizedRuleset::new(rs.clone(), include_str!("../../../rules/i18n/de/arts.json"))
+        .unwrap();
+    for art in rs.arts() {
+        assert!(
+            loc.display_name(&art.id).is_some(),
+            "German i18n missing art '{}'",
+            art.id
+        );
+    }
+}
+
+#[test]
+fn english_i18n_covers_all_houses() {
+    let rs = load_full_ruleset();
+    let loc = LocalizedRuleset::new(
+        rs.clone(),
+        include_str!("../../../rules/i18n/en/houses.json"),
+    )
+    .unwrap();
+    for house in rs.houses() {
+        assert!(
+            loc.display_name(&house.id).is_some(),
+            "English i18n missing house '{}'",
+            house.id
+        );
+    }
+}
+
+#[test]
+fn german_i18n_covers_all_houses() {
+    let rs = load_full_ruleset();
+    let loc = LocalizedRuleset::new(
+        rs.clone(),
+        include_str!("../../../rules/i18n/de/houses.json"),
+    )
+    .unwrap();
+    for house in rs.houses() {
+        assert!(
+            loc.display_name(&house.id).is_some(),
+            "German i18n missing house '{}'",
+            house.id
+        );
+    }
+}
+
+#[test]
+fn english_i18n_covers_all_mythic_companion_types() {
+    let rs = load_full_ruleset();
+    let loc = LocalizedRuleset::new(
+        rs.clone(),
+        include_str!("../../../rules/i18n/en/mythic_companion_types.json"),
+    )
+    .unwrap();
+    for mythic_type in rs.mythic_types() {
+        assert!(
+            loc.display_name(&mythic_type.id).is_some(),
+            "English i18n missing mythic companion type '{}'",
+            mythic_type.id
+        );
+    }
+}
+
+#[test]
+fn german_i18n_covers_all_mythic_companion_types() {
+    let rs = load_full_ruleset();
+    let loc = LocalizedRuleset::new(
+        rs.clone(),
+        include_str!("../../../rules/i18n/de/mythic_companion_types.json"),
+    )
+    .unwrap();
+    for mythic_type in rs.mythic_types() {
+        assert!(
+            loc.display_name(&mythic_type.id).is_some(),
+            "German i18n missing mythic companion type '{}'",
+            mythic_type.id
+        );
+    }
+}
+
 /// The shipped Sample Childhood catalogue, read as text so the tests below can
 /// check the *file's* own canonical order as well as what the engine parses out
 /// of it.
@@ -7181,7 +7292,7 @@ fn a_free_text_realm_from_an_older_save_is_reported_in_the_players_own_words() {
     // The file is the player's. Loading it back leaves the typed word exactly
     // as written — no fold, no blank, no guessed Realm.
     let json = serde_json::to_string(&saved).expect("an entity serializes");
-    let loaded = load_entity_migrating(&json, 1220).expect("an older save still loads");
+    let loaded = arm_rules::load_entity_migrating(&json, 1220).expect("an older save still loads");
     assert_eq!(
         loaded.entity.selections[0].params.get("realm"),
         Some(&typed),

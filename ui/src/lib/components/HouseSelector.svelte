@@ -8,7 +8,6 @@
     sameSelection,
   } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
-  import { tooltip, type TooltipContent } from '../actions';
   import type { GrantConstraint, House, PointItem, Selection } from '../types';
 
   // Houses are data from the ruleset. Display names/descriptions come from the
@@ -29,10 +28,6 @@
 
   function houseName(id: string): string {
     return store.ruleset?.i18n[id]?.name ?? id;
-  }
-
-  function houseTip(id: string): TooltipContent {
-    return { text: store.ruleset?.i18n[id]?.description ?? undefined };
   }
 
   // Localized name of a granted/option item, filling any `{param}` token: an
@@ -122,7 +117,12 @@
                scrolling, so the padding stays a gap the content cannot scroll into. -->
           <div class="selected-scroll">
             {#if selected}
-              <p class="house-description" use:tooltip={houseTip(selected.id)}>
+              <!-- No `use:tooltip` here, deliberately (Sabine 3): it carried the very
+                   string this paragraph already renders, so it was a hover popup
+                   repeating on-screen text — redundancy, not a second source of
+                   information. The other five tooltip hosts gained a tab stop for the
+                   opposite reason: their text exists nowhere else. -->
+              <p class="house-description">
                 {store.ruleset.i18n[selected.id]?.description ?? ''}
               </p>
 

@@ -916,6 +916,7 @@ fn origin_args(origin: &XpPoolOrigin) -> (&'static str, String) {
 
 #[cfg(test)]
 mod tests {
+    use crate::effective::MAX_XP_SOLVE_NODES;
     use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
     use crate::validation::{IssueSeverity, ValidationIssue, ValidationResult, validate};
     use crate::{CreationPhase, Ruleset, RulesetSources};
@@ -1141,7 +1142,10 @@ mod tests {
         assert_eq!(issue.severity, IssueSeverity::Error);
         assert_eq!(issue.phase, CreationPhase::Abilities);
         assert_eq!(issue.args.get("nodes").cloned(), Some("3003".to_string()));
-        assert_eq!(issue.args.get("limit").cloned(), Some("2048".to_string()));
+        assert_eq!(
+            issue.args.get("limit").cloned(),
+            Some(MAX_XP_SOLVE_NODES.to_string())
+        );
         assert_eq!(issue.args.get("spends").cloned(), Some("3000".to_string()));
         assert_eq!(issue.args.get("pools").cloned(), Some("0".to_string()));
 
@@ -1170,9 +1174,9 @@ mod tests {
     /// `flow_pools` rather than `spends` so the exact-boundary tests below stay
     /// fast. The flow solve's cost is dominated by the number of augmenting
     /// BFS calls, which tracks `spends` (the sink-side bottleneck) and not
-    /// `flow_pools`; a spends-heavy fixture at `n` near 2048 measurably takes
-    /// on the order of a minute in a debug build (see
-    /// `effective/xp.rs`'s `assert!` comment), which a boundary test must
+    /// `flow_pools`; a spends-heavy fixture at `n` near the bound measurably
+    /// takes on the order of a minute in a debug build (see
+    /// `effective/xp.rs::MAX_XP_SOLVE_NODES`), which a boundary test must
     /// avoid.
     fn rs_with_dead_pools(pool_count: usize) -> Ruleset {
         let mut items = String::from(ITEMS.trim_end().trim_end_matches(']'));
@@ -1231,8 +1235,12 @@ mod tests {
     #[test]
     fn one_node_past_the_solve_bound_is_rejected() {
         let rs = rs();
+        // Node count is `spends + pools + 3`, so `MAX_XP_SOLVE_NODES - 2`
+        // spends with no pools lands on exactly one node past the bound.
+        // Derived from the constant rather than restated: when the bound moved
+        // 2048 -> 1024 these literals were the only thing that went stale.
         let scores: Vec<(&str, Option<&str>, u8)> =
-            vec![("ability.artes_liberales", None, 1); 2046];
+            vec![("ability.artes_liberales", None, 1); MAX_XP_SOLVE_NODES - 2];
         let entity = character("companion", scores);
 
         let result = validate(&entity, &rs);
@@ -1241,11 +1249,11 @@ mod tests {
         assert_eq!(errors.len(), 1, "{:?}", result.issues);
         assert_eq!(
             errors[0].args.get("nodes").cloned(),
-            Some("2049".to_string())
+            Some((MAX_XP_SOLVE_NODES + 1).to_string())
         );
         assert_eq!(
             errors[0].args.get("limit").cloned(),
-            Some("2048".to_string())
+            Some(MAX_XP_SOLVE_NODES.to_string())
         );
     }
 }

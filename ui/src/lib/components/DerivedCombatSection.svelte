@@ -13,6 +13,12 @@
   function name(id: string): string {
     return store.ruleset?.i18n[id]?.name ?? id;
   }
+
+  // What a cell with no value reads (Attack/Damage/Range are optional per line).
+  // A Fluent key, not the literal em dash it used to be: a screen reader
+  // announces a bare dash as nothing, so N/A was indistinguishable from a cell
+  // that had failed to render.
+  const notApplicable = $derived(store.t('derived-not-applicable'));
 </script>
 
 <!-- Combat lines -->
@@ -21,14 +27,19 @@
   {#if d.combat.length > 0}
     <div class="table-scroll">
       <table class="derived-table combat" data-testid="derived-combat">
+        <!-- `scope` on both axes (Sabine 9, round-1 audit): this table has a
+             header ROW and a header COLUMN, and with two header axes the
+             cell→header association is not inferable, so a screen reader reads
+             the body as bare numbers. The empty corner cell is scoped too — it
+             heads the weapon-name column. -->
         <thead>
           <tr>
-            <th></th>
-            <th>{store.t('derived-combat-init')}</th>
-            <th>{store.t('derived-combat-attack')}</th>
-            <th>{store.t('derived-combat-defense')}</th>
-            <th>{store.t('derived-combat-damage')}</th>
-            <th>{store.t('derived-range')}</th>
+            <th scope="col"></th>
+            <th scope="col">{store.t('derived-combat-init')}</th>
+            <th scope="col">{store.t('derived-combat-attack')}</th>
+            <th scope="col">{store.t('derived-combat-defense')}</th>
+            <th scope="col">{store.t('derived-combat-damage')}</th>
+            <th scope="col">{store.t('derived-range')}</th>
           </tr>
         </thead>
         <tbody>
@@ -40,7 +51,7 @@
                `each_key_duplicate` and killed this whole tab. -->
           {#each d.combat as line}
             <tr>
-              <th>
+              <th scope="row">
                 {combatRowLabel(
                   name(line.weapon),
                   (line.shields ?? []).map(name),
@@ -48,10 +59,10 @@
                 )}
               </th>
               <td>{line.initiative}</td>
-              <td>{line.attack ?? '—'}</td>
+              <td>{line.attack ?? notApplicable}</td>
               <td>{line.defense}</td>
-              <td>{line.damage ?? '—'}</td>
-              <td>{line.range ?? '—'}</td>
+              <td>{line.damage ?? notApplicable}</td>
+              <td>{line.range ?? notApplicable}</td>
             </tr>
           {/each}
         </tbody>

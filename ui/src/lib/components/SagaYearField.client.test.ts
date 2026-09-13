@@ -96,6 +96,7 @@ beforeEach(async () => {
   vi.mocked(ipc.loadEntity).mockResolvedValue({
     path: '/tmp/rhine.armc',
     entity: { ...store.entity },
+    migrated_aging_characteristics: [],
   });
   const opening = store.open();
   if (store.discardPromptOpen) store.resolveDiscardPrompt(true);

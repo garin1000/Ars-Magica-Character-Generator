@@ -130,6 +130,57 @@ fn a_settings_file_written_before_the_rename_keeps_its_year() {
     assert_eq!(settings::read_settings(Some(&path)).default_saga_year, 1197);
 }
 
+/// Cluster C (CRITICAL — Klaus F6): the settings write must replace the file
+/// rather than truncate it in place, and here the truncation is worse than it
+/// looks. `store_settings` tries the candidates in order and returns `Ok` on the
+/// first that takes the write — so a candidate emptied by `File::create` and
+/// then failed mid-write is left CORRUPT while the good document goes to the
+/// next candidate. `pick_settings_file` reads the FIRST existing candidate on
+/// the next launch, which is the corrupt one, and `read_patch` swallows
+/// malformed JSON as "the user has not chosen". Every setting silently reverts
+/// to its default and the good copy is never read again.
+///
+/// Same witness as the save path: a second hard link names the bytes already on
+/// disk, and only an in-place truncation overwrites them.
+#[test]
+fn writing_a_setting_replaces_the_file_instead_of_truncating_it() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join(settings::SETTINGS_FILE_NAME);
+
+    settings::write_settings(&path, &default_saga_year(1197)).unwrap();
+    let previous = fs::read_to_string(&path).unwrap();
+
+    let witness = tmp.path().join("previous-bytes");
+    fs::hard_link(&path, &witness).unwrap();
+
+    settings::write_settings(&path, &theme("light")).unwrap();
+
+    assert_eq!(
+        fs::read_to_string(&witness).unwrap(),
+        previous,
+        "the settings already on disk must not be overwritten in place: a write \
+         that fails after emptying the file leaves a corrupt document that reads \
+         back as 'nothing chosen'"
+    );
+    let read = settings::read_settings(Some(&path));
+    assert_eq!(read.default_saga_year, 1197);
+    assert_eq!(read.theme.as_deref(), Some("light"));
+
+    let mut entries: Vec<String> = fs::read_dir(tmp.path())
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    entries.sort();
+    assert_eq!(
+        entries,
+        vec![
+            "previous-bytes".to_string(),
+            settings::SETTINGS_FILE_NAME.to_string()
+        ],
+        "a settings write must leave no scratch file behind"
+    );
+}
+
 #[test]
 fn writing_creates_the_settings_directory_on_first_run() {
     // First launch: the per-user config directory may not exist yet, and the write

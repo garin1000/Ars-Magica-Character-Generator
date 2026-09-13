@@ -9,7 +9,7 @@
 //! domain module (including this one) sees them for free via `use
 //! super::*;`, with no visibility widening in any direction.
 
-use super::lab::lab_totals;
+use super::lab::best_lab_total_by;
 use super::*;
 
 // --- Talisman (enchantment capacity) ---------------------------------------
@@ -190,23 +190,30 @@ pub struct FamiliarReadout {
 }
 
 /// The magus's familiar read-out, or `None` when he has no familiar.
+///
+/// `totals` is the caller's already-built Lab-Total grid (see
+/// `derived.rs::derived_totals`) for the reason given on
+/// `lab.rs::masterpiece_item_cap`. It is also why this takes no
+/// [`Ruleset`](crate::ruleset::Ruleset): the grid was the only thing that needed
+/// one.
+///
 /// Source: `ArMDE:10818`, `ArMDE:10822`,
 /// `ArMDE:10824`, `ArMDE:10826`, `ArMDE:10828`, `ArMDE:10836`, `ArMDE:10866`.
-pub fn familiar_readout(entity: &Entity, ruleset: &Ruleset) -> Option<FamiliarReadout> {
+pub fn familiar_readout(totals: &[LabTotal], entity: &Entity) -> Option<FamiliarReadout> {
     let familiar = entity.familiar.as_ref()?;
     let binding_level = familiar_binding_level(familiar);
     let cord_points = cord_points_spent(familiar);
     // Best base Lab Total across the grid; the magus picks the Te/Fo that maxes it.
-    let best = lab_totals(entity, ruleset)
-        .into_iter()
-        .max_by_key(|lt| lt.total)?;
+    // First-maximum tie-break, so this names the same pair as the talisman and
+    // Masterpiece read-outs — see `lab.rs::best_lab_total_by`.
+    let best = best_lab_total_by(totals, |lt| lt.total)?;
     Some(FamiliarReadout {
         binding_level,
         cord_points_spent: cord_points,
         invested_power_levels: familiar_invested_power_levels(familiar),
         binding: FamiliarBinding {
-            technique: best.technique,
-            form: best.form,
+            technique: best.technique.clone(),
+            form: best.form.clone(),
             lab_total: best.total,
             lab_total_within_focus: best.within_focus,
             lab_total_reaches_level: best.total >= binding_level,

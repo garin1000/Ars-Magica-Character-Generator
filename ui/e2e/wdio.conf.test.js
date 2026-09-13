@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
+import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -168,4 +169,89 @@ describe.each([
       expect(options.env.ARM_E2E_EXPORT_FILE).toBeUndefined();
     });
   }
+});
+
+// A2 (spec consolidation) merged 40 single-purpose spec files into 7, and the
+// comments across the codebase that pointed a reader at "the e2e counterpart"
+// kept naming the files that had gone. A dangling pointer is worse than no
+// pointer: it reads as a promise that the behaviour is covered somewhere, and
+// the reader who goes looking finds nothing and cannot tell whether the spec was
+// renamed or the coverage was dropped. Round-1 audit finding 1d listed eight such
+// names; this guard's first run found thirteen, across twenty-five sites — and one
+// of them was hiding a behaviour (`.icon-btn`'s pointer-target size) that really
+// had lost its e2e measurement in the merge with nobody noticing. That gap between
+// what a hand audit saw and what the sweep sees is the reason this is a test.
+//
+// This is the same shape as `crates/arm-rules/tests/source_citations.rs`, which
+// checks that a `file::symbol` cross-reference still resolves. Here the claim is
+// narrower and purely mechanical: every `*.e2e.js` basename named in live code
+// must be a spec file that exists.
+//
+// `docs/` IS DELIBERATELY NOT SCANNED, and that is project policy rather than an
+// oversight (CLAUDE.md, "A cross-reference to another source file"): `docs/`
+// holds dated historical records — implementation plans, reviews, findings
+// sheets — where the name a file had at the time is part of the snapshot, and
+// rewriting it to today's name would falsify the record.
+describe('e2e spec citations', () => {
+  // Non-spec harness modules (`helpers.js`, `wizard-walk.js`) live at the `e2e/`
+  // root and are not spec files, so only these two directories count.
+  const SPEC_DIRS = ['ui/e2e/specs', 'ui/e2e/portable'];
+  // Live code only. `docs/` is excluded by being absent here — see above.
+  const SCAN_ROOTS = ['ui/src', 'ui/e2e', 'crates'];
+  const SCAN_EXTENSIONS = ['.js', '.ts', '.svelte', '.css', '.rs', '.md'];
+  const SKIP_DIRS = new Set(['node_modules', 'target', 'dist', '.git']);
+
+  // Starts on a word character, so a glob (`specs/**/*.e2e.js` in a wdio config,
+  // `window-close-bridge-*.e2e.js` in a prose comment) matches nothing: a `*` is
+  // not a claim that a file by that name exists.
+  const CITATION = /[A-Za-z0-9_][A-Za-z0-9_.-]*\.e2e\.js/g;
+  // `ex-<name>` is the codebase's explicit marker for a file the consolidation
+  // removed — `wizard-flow.e2e.js` (ex-`tab-area.e2e.js`). It says out loud that
+  // the name is historical, which is the opposite of a dangling pointer, so it
+  // is allowed to name a file that no longer exists.
+  const HISTORICAL_MARKER = /ex-`?$/;
+
+  function filesUnder(dir) {
+    const found = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        if (!SKIP_DIRS.has(entry.name)) found.push(...filesUnder(path.join(dir, entry.name)));
+      } else if (SCAN_EXTENSIONS.includes(path.extname(entry.name))) {
+        found.push(path.join(dir, entry.name));
+      }
+    }
+    return found;
+  }
+
+  const realSpecs = new Set(
+    SPEC_DIRS.flatMap((dir) =>
+      fs.readdirSync(path.resolve(repoRoot, dir)).filter((name) => name.endsWith('.e2e.js')),
+    ),
+  );
+
+  // The scan itself is asserted, not assumed: a roots list that silently stopped
+  // matching anything would make every assertion below vacuously green.
+  it('finds the spec files and the sources that cite them', () => {
+    expect(realSpecs.size).toBeGreaterThan(0);
+    const scanned = SCAN_ROOTS.flatMap((root) => filesUnder(path.resolve(repoRoot, root)));
+    expect(scanned.length).toBeGreaterThan(0);
+  });
+
+  it('names only spec files that exist', () => {
+    const dangling = [];
+    for (const root of SCAN_ROOTS) {
+      for (const file of filesUnder(path.resolve(repoRoot, root))) {
+        const source = fs.readFileSync(file, 'utf8');
+        for (const match of source.matchAll(CITATION)) {
+          if (realSpecs.has(match[0])) continue;
+          if (HISTORICAL_MARKER.test(source.slice(0, match.index))) continue;
+          const line = source.slice(0, match.index).split('\n').length;
+          dangling.push(`${path.relative(repoRoot, file)}:${line} cites ${match[0]}`);
+        }
+      }
+    }
+    // Collected rather than asserted one at a time, so a failure names every
+    // offender instead of stopping at the first.
+    expect(dangling).toEqual([]);
+  });
 });

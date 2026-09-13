@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Core access for the main window. Custom commands are always invokable; the dialog plugin is driven from Rust, so only its default set is granted.",
+  "description": "Core access for the main window. Custom commands are always invokable; every dialog is opened from Rust via app.dialog(), which bypasses this ACL entirely, so the webview is granted no dialog permission at all.",
   "windows": ["main"],
-  "permissions": ["core:default", "dialog:default"]
+  "permissions": ["core:default"]
 }

@@ -9,6 +9,7 @@
 
 #![deny(clippy::all)]
 
+pub mod atomic_write;
 pub mod commands;
 pub mod error;
 pub mod menu;

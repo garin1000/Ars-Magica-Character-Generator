@@ -510,7 +510,8 @@ describe('app.css', () => {
   // The two content-derived column floors are the other place a rem value carries an
   // absolute measurement: 24rem was chosen as "360px holds a Living Conditions row,
   // the aging formula's longest German token and a labelled field", and
-  // `aging.e2e.js` asserts no `.character-details` track comes out under 360px. A
+  // `grog-wizard-aging.e2e.js`'s `the guided aging step` asserts no
+  // `.character-details` track comes out under 360px. A
   // rebase that left the number alone would have quietly moved the floor to 306px
   // and reintroduced the checklist overflow fixed in the same week.
   it('keeps the content-derived column floors at the 360px they were measured for', () => {
@@ -704,7 +705,9 @@ describe('app.css', () => {
   // Sticky BEHAVIOUR cannot be asserted here: `render` from `svelte/server` attaches
   // no stylesheet, and happy-dom does no layout, so no computed position or scroll
   // offset exists to read. The stylesheet contract is the honest unit-level guard;
-  // the behaviour is verified by the e2e scroll assertion in `abilities.e2e.js`.
+  // the behaviour is verified by the e2e scroll assertion in
+  // `magus-apprenticeship.e2e.js` ("keeps the XP bar on screen while the abilities
+  // step scrolls"), which shrinks the window until the step really overflows.
   it('pins every budget bar to the top of its scrollport with an opaque background', () => {
     // ONE rule for all three bars (`.xp-summary` is XpBar and SpellBudgetBar,
     // `.balance` is BalanceBar), so a fourth bar cannot be added half-fixed and the
@@ -1107,7 +1110,8 @@ describe('app.css', () => {
   // puts the German set at 0.53em per character. The larger of the two is used,
   // so the model errs towards a wider string than reality.
   //
-  // The e2e counterpart (`e2e/specs/tab-area.e2e.js`) measures the real thing in
+  // The e2e counterpart (`e2e/specs/wizard-flow.e2e.js`'s `tab area at a short
+  // window height`) measures the real thing in
   // a real engine; this test is the fast guard that catches a longer German label
   // or a loosened rule long before the binary is built.
   const ROOT_FONT_PX = 12.75; // `:root { font-size: 12.75px }` — see the type scale above
@@ -1262,5 +1266,28 @@ describe('app.css', () => {
       0,
     );
     expect(characters).toBeGreaterThan(english);
+  });
+
+  // ── The derived read-out tables need the figures the rest of the app has ────
+  //
+  // Sabine 10 (full-audit round 1): `.derived-table th, .derived-table td` already
+  // right-aligns every cell, which is only worth doing if the digits are the same
+  // width — proportional figures put the units column of "7" and "11" in different
+  // places even flush right, and the Lab/Casting grid is the densest numeric
+  // surface the app has. Eleven other rules in this stylesheet already declare
+  // `tabular-nums` for exactly this; the tables were the omission.
+  //
+  // The rule is a GROUPED selector, so `selectorBody`'s single-selector pattern
+  // does not reach it — matched here by its own two-line head instead.
+  it('sets tabular figures on the right-aligned derived-table cells', () => {
+    const block = /^\.derived-table th,\s*\n\.derived-table td\s*\{([^}]*)\}/m.exec(
+      cssWithoutComments,
+    );
+    expect(block, 'app.css should declare a grouped .derived-table th/td rule').not.toBeNull();
+    const body = block![1];
+    // The alignment is the reason the figures have to be tabular, so both halves
+    // are pinned together: dropping either one alone re-opens the defect.
+    expect(body).toMatch(/text-align:\s*right;/);
+    expect(body).toMatch(/font-variant-numeric:\s*tabular-nums;/);
   });
 });

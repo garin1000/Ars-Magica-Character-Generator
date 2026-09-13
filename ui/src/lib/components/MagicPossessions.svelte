@@ -14,10 +14,11 @@
   // once `store.ruleset` is loaded), not a restatement of the rule itself.
   const auraMin = $derived(store.ruleset?.ruleset.aura_modifier_min ?? I32_MIN);
   const auraMax = $derived(store.ruleset?.ruleset.aura_modifier_max ?? I32_MAX);
-  // A value outside the engine's bound is not rejected here — `Entity.normalize()`
-  // silently clamps it on save (ArMDE:17390,
-  // :17404-17409) — so this warns the player instead of letting the number change
-  // out from under them with no explanation.
+  // A TYPED value can no longer be out of range: `state.svelte.ts::AppStore.setAura`
+  // clamps to this same engine-surfaced bound. What survives is a value this app
+  // did not type — a hand-edited or older save, which `Entity::normalize`
+  // (ArMDE:17390, :17404-17409) rewrites only at the NEXT save — so the warning
+  // stays for exactly that case. See `DerivedAuraField.svelte` for the same note.
   const auraOutOfRange = $derived(aura < auraMin || aura > auraMax);
   const devices = $derived(store.entity.devices ?? []);
   // Item-level budget used/remaining is engine-authoritative, never recomputed here.

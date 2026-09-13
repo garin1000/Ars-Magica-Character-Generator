@@ -323,7 +323,12 @@
                 <span class="invalid-glyph" aria-hidden="true">!</span>
                 <span class="sr-only">{store.t('ability-invalid-selection')}</span>
               {/if}
-              <span class="item-name" use:tooltip={selectedTip(entry.ability)}
+              <!-- Deliberately focusable: `use:tooltip` opens on `focusin`, and this
+                   span is the only host for the chosen Ability's rules text and its
+                   specialties list. The Available side is buttons and was always
+                   reachable; this side was not (Sabine 3). -->
+              <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+              <span class="item-name" tabindex="0" use:tooltip={selectedTip(entry.ability)}
                 >{selectedName(entry.ability, entry.parameter)}</span
               >
               <Spinner

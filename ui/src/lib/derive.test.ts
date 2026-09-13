@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   abilityDisplayName,
   abilityLabel,
+  agingMigrationNotice,
   firstBlockedPhaseIndex,
   incompletePhases,
   issuesForPhase,
@@ -940,9 +941,10 @@ describe('selectionDisplayName', () => {
   });
 
   // German is where a missing or wrong Realm shows loudest: an English slug
-  // hides in an English row and cannot hide in a German one. "Das Göttliche" is
-  // the glossary's own rendering (`rules/source/de/translation-tables/
-  // sphären-mächte.md:20`), and the apposition takes it uninflected.
+  // hides in an English row and cannot hide in a German one. The label is the
+  // rulebook's own article-free term (`Basisregeln.md:2960` — "Magie, Fee,
+  // Infernal und Göttlich"; it read "Das Göttliche" until Sabine 6 of the
+  // round-1 audit), and the apposition takes it uninflected.
   it('names the Realm a Folk Magic copy is aligned to (German)', () => {
     const localized = makeRuleset([folkMagic], { i18n: shippedItems('de') });
     const name = selectionDisplayName(
@@ -951,29 +953,34 @@ describe('selectionDisplayName', () => {
       { category: 'folk_magic.healing', realm: 'realm.divine' },
       translator('de'),
     );
-    expect(name).toBe('Volksmagie Heilung, Das Göttliche');
+    expect(name).toBe('Volksmagie Heilung, Göttlich');
     expect(name).not.toContain('realm.');
   });
 
   // E2 (open-todos row 24): four more items now store a Realm instead of a word
   // the player typed, and a picked Realm arrives as the fixed `realm-<id>`
-  // label. In German those are NOUN PHRASES carrying their own article — "Das
-  // Göttliche", "Das Infernale" (`translation-tables/sphären-mächte.md:18-21`) —
-  // so a template that put the token in a genitive ("Student der {realm}"), in a
-  // dative after a preposition ("Gebunden an {realm}") or at the head of a
-  // compound ("{realm}-Aura", "{realm}-Stigmatisierter") rendered ungrammatical
-  // German the moment the free text became a taxonomy value. Each German name
-  // therefore takes the label in APPOSITION, uninflected, exactly as Folk
-  // Magic's does. Divine is the case to test: it is the label with the article.
+  // label. A template that put that token in a genitive ("Student der
+  // {realm}"), in a dative after a preposition ("Gebunden an {realm}") or at
+  // the head of a compound ("{realm}-Aura", "{realm}-Stigmatisierter") rendered
+  // ungrammatical German the moment the free text became a taxonomy value —
+  // the label has one fixed form and cannot inflect to suit four frames. Each
+  // German name therefore takes it in APPOSITION, uninflected, exactly as Folk
+  // Magic's does.
+  //
+  // The apposition long predates Sabine 6 of the round-1 audit and is untouched
+  // by it; what changed is the label itself, from the article-bearing "Das
+  // Göttliche" to the rulebook's own article-free "Göttlich"
+  // (`Basisregeln.md:2960`). Divine is still the case to test — it is the one
+  // that carried the article.
   it.each([
-    ['flaw.bound_to_realm', { realm: 'realm.divine' }, 'Gebunden an eine Sphäre, Das Göttliche'],
+    ['flaw.bound_to_realm', { realm: 'realm.divine' }, 'Gebunden an eine Sphäre, Göttlich'],
     [
       'flaw.necessary_realm_aura_for_ability',
       { realm: 'realm.divine', ability: 'ability.awareness' },
-      'Notwendige Aura für ability.awareness, Das Göttliche',
+      'Notwendige Aura für ability.awareness, Göttlich',
     ],
-    ['flaw.realm_stigmatic', { realm: 'realm.divine' }, 'Stigmatisierter, Das Göttliche'],
-    ['virtue.student_of_realm', { realm: 'realm.divine' }, 'Student einer Sphäre, Das Göttliche'],
+    ['flaw.realm_stigmatic', { realm: 'realm.divine' }, 'Stigmatisierter, Göttlich'],
+    ['virtue.student_of_realm', { realm: 'realm.divine' }, 'Student einer Sphäre, Göttlich'],
   ])('takes the German Realm label in apposition, never inflected (%s)', (id, params, expected) => {
     const localized = makeRuleset([item({ id: id as string })], { i18n: shippedItems('de') });
     const name = selectionDisplayName(
@@ -1112,7 +1119,8 @@ describe('exemplarLabel / requirementAbilityLabel', () => {
   });
 
   it('gives an ability requirement with no exemplar an empty qualifier', () => {
-    // Empty, never absent: Fluent throws on a variable the args map does not carry.
+    // Empty, never absent: a variable the args map does not carry prints as a
+    // literal `{$qualifier}` in the sentence.
     expect(resolveIssueArgs(rs, { ability: 'ability.parma_magica', min: '1' }, t)).toEqual({
       ability: 'Parma Magica',
       min: '1',
@@ -2235,7 +2243,8 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
       characteristic: 'Intelligence',
       score: '5',
       // Every `ability` arg carries a qualifier, empty when the requirement names no
-      // exemplar — Fluent throws on a variable the args map does not carry.
+      // exemplar — a variable the args map does not carry prints as a literal
+      // `{$qualifier}` in the sentence.
       qualifier: '',
     });
   });
@@ -2384,6 +2393,134 @@ describe('an issue message naming a parameterized Ability (E6)', () => {
         t,
       ).value,
     ).toBe('Second Sight');
+  });
+});
+
+// --- Round-1 audit, Sabine 1: the gated-Ability-category finding ------------
+
+/**
+ * `ability_category_requires_virtue` names the **Ability** category the score
+ * falls in — a taxonomy disjoint from the Virtue/Flaw grouping category that
+ * `category_not_permitted` and `forbidden_category` emit, and labelled by its own
+ * `ability-category-<id>` Fluent family. While both travelled under one arg name
+ * (`category`) they shared one prefix, and the Ability side — whose values are
+ * `academic`/`arcane`/`martial`, none of which has a `category-*` key — printed
+ * its own slug into a blocking error, in both locales, on every emission.
+ *
+ * The list is read out of the shipped data rather than spelled out here, because
+ * which categories are gated is rules data (`categories_requiring_virtue`): a
+ * fourth one added by a data-only edit must arrive already labelled.
+ */
+describe('the gated-Ability-category finding (Sabine 1)', () => {
+  const gatedCategories: string[] = JSON.parse(
+    readFileSync(
+      fileURLToPath(new URL('../../../rules/core/abilities.json', import.meta.url)),
+      'utf-8',
+    ),
+  ).categories_requiring_virtue;
+
+  /** The shipped Ability catalogue and its rules i18n, as the backend hands it over. */
+  function shippedAbilities(lang: Lang): LocalizedRuleset {
+    const read = (path: string) =>
+      JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf-8'));
+    const core = read('../../../rules/core/abilities.json') as { abilities: Ability[] };
+    const localized = makeRuleset([], {
+      i18n: read(`../../../rules/i18n/${lang}/abilities.json`) as LocalizedRuleset['i18n'],
+    });
+    localized.ruleset.abilities = Object.fromEntries(core.abilities.map((a) => [a.id, a]));
+    return localized;
+  }
+
+  /** The finding as a player reads it: engine args → resolved labels → the real bundle. */
+  function render(lang: Lang, args: Record<string, string>): string {
+    const bundle = buildBundle(lang);
+    const t: Translate = (key, a) => formatMessage(bundle, key, a);
+    const resolved = resolveIssueArgs(shippedAbilities(lang), args, t);
+    return formatMessage(bundle, 'issue-ability_category_requires_virtue', resolved).replace(
+      /[⁦-⁩]/g,
+      '',
+    );
+  }
+
+  it('reads a non-empty gated-category list out of the shipped data', () => {
+    expect(gatedCategories.length).toBeGreaterThan(0);
+  });
+
+  // The resolver half on its own: an arg key with no prefix registered falls
+  // through to `return value`, which IS the slug.
+  it.each(['en', 'de'] as const)('resolves the arg to a label, not the raw value (%s)', (lang) => {
+    const bundle = buildBundle(lang);
+    const t: Translate = (key, a) => formatMessage(bundle, key, a);
+    const localized = shippedAbilities(lang);
+    for (const category of gatedCategories) {
+      expect(resolveIssueArgValue(localized, 'ability_category', category, t)).toBe(
+        formatMessage(bundle, `ability-category-${category}`),
+      );
+      expect(resolveIssueArgValue(localized, 'ability_category', category, t)).not.toBe(category);
+    }
+  });
+
+  it.each(['en', 'de'] as const)(
+    'labels every gated category through its own Fluent family, never as a slug (%s)',
+    (lang) => {
+      const bundle = buildBundle(lang);
+      for (const category of gatedCategories) {
+        const label = formatMessage(bundle, `ability-category-${category}`);
+        // The label itself must exist — `translate` echoes the key back otherwise.
+        expect(label, `${lang} is missing ability-category-${category}`).not.toBe(
+          `ability-category-${category}`,
+        );
+        const message = render(lang, {
+          ability: 'ability.single_weapon',
+          ability_category: category,
+        });
+        expect(message).toContain(label);
+        expect(message).not.toContain(category);
+        expect(message).not.toContain(`category-${category}`);
+      }
+    },
+  );
+});
+
+// --- Round-1 audit, slice-2 handoff: the schema-migration notice ------------
+
+/**
+ * `load_entity` reports which Characteristics' Aging Points a schema migration
+ * rewrote. The rewrite is a **minimal reconstruction** — the original totals are
+ * unrecoverable — and the next Save makes it the document's own truth, so the
+ * user has to be told. These pin that the notice is real localized prose naming
+ * the affected Characteristics, never a slug and never silence.
+ */
+describe('agingMigrationNotice (slice-2 handoff)', () => {
+  const bundles = { en: buildBundle('en'), de: buildBundle('de') } as const;
+  const translator =
+    (lang: Lang): Translate =>
+    (key, a) =>
+      formatMessage(bundles[lang], key, a);
+
+  it('says nothing for a save that needed no migration', () => {
+    expect(agingMigrationNotice([], translator('en'))).toBeNull();
+  });
+
+  it.each(['en', 'de'] as const)('names every rewritten Characteristic (%s)', (lang) => {
+    const t = translator(lang);
+    const notice = agingMigrationNotice(['com', 'sta'], t)?.replace(/[⁦-⁩]/g, '');
+    expect(notice).not.toBeNull();
+    for (const id of ['com', 'sta'] as const) {
+      // The localized name, not the enum's serialized id.
+      expect(notice).toContain(t(`characteristic-${id}`));
+      expect(notice).not.toContain(`characteristic-${id}`);
+    }
+  });
+
+  // The loss is the whole reason for the notice: a wording that only said
+  // "upgraded" would leave the user with no idea that the figures behind their
+  // Aging Points are a reconstruction they cannot get back.
+  it.each(['en', 'de'] as const)('says the reconstruction is approximate (%s)', (lang) => {
+    const notice = agingMigrationNotice(['com'], translator(lang)) ?? '';
+    expect(notice.toLowerCase()).toMatch(
+      lang === 'en' ? /smallest|minimal|approximat/ : /kleinstm|minimal|näherung/,
+    );
   });
 });
 
@@ -3043,6 +3180,53 @@ describe('grantItemLabel', () => {
   it('falls back to the ref when there is no i18n entry', () => {
     expect(grantItemLabel(makeRuleset([]), 'virtue.unknown', translate)).toBe('virtue.unknown');
   });
+
+  // Sabine 13 (round-1 audit): the resolver was `localized.i18n[value]?.name ??
+  // value`, which handles a rules id and nothing else. Characteristic- and
+  // Realm-domain parameter values are labelled through FLUENT
+  // (`characteristic-<id>`, `realm-<id>`) and have zero entries in any
+  // `rules/i18n/*.json`, so both fell through to the raw slug — breaking this
+  // function's own doc-comment promise of "never `Puissant art.ignem`". The
+  // sibling `selectionParamLabel` already resolved all four domains; the two now
+  // share one resolver rather than keeping two answers to one question.
+  const domainStub = (key: string, args?: Record<string, string>) => {
+    if (key === 'param-hint') return `(${args?.label ?? ''})`;
+    if (key === 'characteristic-sta') return 'Stamina';
+    if (key === 'realm-divine') return 'Divine';
+    return key;
+  };
+
+  it('resolves a Characteristic-domain param value through its Fluent label', () => {
+    const ruleset = makeRuleset([], {
+      i18n: { 'virtue.great_characteristic': { name: 'Great {characteristic}' } },
+    });
+    expect(
+      grantItemLabel(ruleset, 'virtue.great_characteristic', domainStub, {
+        characteristic: 'characteristic.sta',
+      }),
+    ).toBe('Great Stamina');
+  });
+
+  it('resolves a Realm-domain param value through its Fluent label', () => {
+    const ruleset = makeRuleset([], {
+      i18n: { 'virtue.necessary_aura': { name: 'Necessary {realm} Aura' } },
+    });
+    expect(
+      grantItemLabel(ruleset, 'virtue.necessary_aura', domainStub, { realm: 'realm.divine' }),
+    ).toBe('Necessary Divine Aura');
+  });
+
+  // A value that merely starts with "realm." but names no Realm is free text and
+  // stays as it is — `realmLabel` tests membership, not the prefix alone, so no
+  // Fluent key is invented for it.
+  it('leaves free text that only looks like a domain id alone', () => {
+    const ruleset = makeRuleset([], {
+      i18n: { 'virtue.necessary_aura': { name: 'Necessary {realm} Aura' } },
+    });
+    expect(
+      grantItemLabel(ruleset, 'virtue.necessary_aura', domainStub, { realm: 'realm.nowhere' }),
+    ).toBe('Necessary realm.nowhere Aura');
+  });
 });
 
 describe('eligibleForConstraint', () => {
@@ -3124,8 +3308,9 @@ describe('eligibleForConstraint', () => {
   // item already at its `max_total` ceiling — the engine's
   // `too_many_selections` validator would reject it the instant it were picked.
   // Only a genuinely AT-cap ref is dropped; an item with zero copies (or under
-  // its cap) stays offered, exactly as houses.e2e.js's Ex Miscellanea case needs
-  // (a character holding zero Puissant Art copies must still see it).
+  // its cap) stays offered, exactly as `magus-editor.e2e.js`'s `hermetic houses`
+  // Ex Miscellanea case needs (a character holding zero Puissant Art copies must
+  // still see it).
   it('drops an item whose ref is in atCapRefs, and keeps everything else', () => {
     const ids = eligibleForConstraint(ruleset, { kind: 'virtue', magnitude: 'minor' }, null, {
       atCapRefs: new Set(['virtue.minor_general']),
@@ -3185,6 +3370,75 @@ describe('eligibleForConstraint', () => {
         null,
       ).map((it) => it.id),
     ).toEqual(['virtue.plain_status']);
+  });
+
+  // An item that declares a `category`-domain parameter is an explicit either/or
+  // between two readings of ONE item (Sufi "either as a Minor Social Status
+  // Virtue or a Minor Supernatural Virtue", ArMDE:5077-5084), and the engine
+  // judges the pick on the reading in force — `open_pick_satisfies` resolves the
+  // pick's categories through `types.rs::PointItem::categories_for`. A menu is
+  // built BEFORE any reading is chosen, so it must admit an item when ANY
+  // reading it can still be taken under satisfies the constraint; otherwise the
+  // picker hides a choice the engine would accept and leaves the player no route
+  // to it, since the reading is chosen in the `ParameterPicker` that only
+  // appears once the pick exists.
+  describe('taken-as readings', () => {
+    const takenAsRuleset = makeRuleset([
+      item({
+        id: 'virtue.sufi',
+        kind: 'virtue',
+        magnitude: 'minor',
+        categories: ['social_status', 'supernatural'],
+        parameters: [
+          {
+            key: 'taken_as',
+            type: 'ref',
+            domain: 'category',
+            values: ['social_status', 'supernatural'],
+          },
+        ],
+        max_total: 1,
+      }),
+      item({
+        id: 'virtue.plain_super',
+        kind: 'virtue',
+        magnitude: 'minor',
+        categories: ['supernatural'],
+      }),
+    ]);
+
+    it('offers an item whose other reading escapes the forbid-list', () => {
+      const ids = eligibleForConstraint(
+        takenAsRuleset,
+        { kind: 'virtue', magnitude: 'minor', forbid_categories: ['supernatural'] },
+        null,
+      ).map((it) => it.id);
+      // Taken as Social Status, Sufi is a legal pick for a menu closed to
+      // Supernatural; `virtue.plain_super` has no second reading to escape into.
+      expect(ids).toEqual(['virtue.sufi']);
+    });
+
+    it('drops it when every reading is forbidden', () => {
+      const ids = eligibleForConstraint(
+        takenAsRuleset,
+        {
+          kind: 'virtue',
+          magnitude: 'minor',
+          forbid_categories: ['social_status', 'supernatural'],
+        },
+        null,
+      ).map((it) => it.id);
+      expect(ids).toEqual([]);
+    });
+
+    it('drops it when no reading meets the require-list', () => {
+      const ids = eligibleForConstraint(
+        takenAsRuleset,
+        { kind: 'virtue', magnitude: 'minor', require_categories: ['hermetic'] },
+        null,
+      ).map((it) => it.id);
+      expect(ids).toEqual([]);
+    });
   });
 
   // Mirrors the engine's `open_pick_satisfies` House check: an open grant menu

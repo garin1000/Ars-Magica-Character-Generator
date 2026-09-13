@@ -59,8 +59,8 @@ function installRuleset(): void {
       art_type_order: ['technique', 'form'],
     },
     i18n: {
-      [CREO]: { name: 'Creo', abbreviation: 'Cr' },
-      [IGNEM]: { name: 'Ignem', abbreviation: 'Ig' },
+      [CREO]: { name: 'Creo', abbreviation: 'Cr', description: 'I create.' },
+      [IGNEM]: { name: 'Ignem', abbreviation: 'Ig', description: 'Fire and heat.' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -154,6 +154,50 @@ afterEach(() => {
   store.effective = null;
   store.view = 'start';
   vi.useRealTimers();
+});
+
+// Sabine 3 (full-audit round 1): `use:tooltip` opens on `focusin` as well as
+// `mouseenter`, so it is keyboard-ready BY CONSTRUCTION — but only if the element it
+// is attached to can take focus, and this one was a bare `<span>`. For an Art that
+// tooltip is the ONLY place the app renders Creo's or Ignem's rules text, so a
+// keyboard or screen-reader user had no route to it at all. The asymmetry is the
+// tell: the *available* side of every picker is built from buttons and is reachable;
+// the *chosen* side is spans and was not.
+//
+// A `client` test, and it has to be: actions do not run under the SSR renderer, so
+// only a mounted instance can show that focus actually opens the popup. Asserting
+// the `tabindex` attribute alone would pin the mechanism without proving the
+// outcome.
+describe('ArtGrid rules text is reachable by keyboard (Sabine 3)', () => {
+  /** The chosen Art's name cell — the element the tooltip hangs on. */
+  function nameCell(): HTMLElement {
+    const cell = target.querySelector<HTMLElement>('.art-list .item-name');
+    expect(cell).toBeTruthy();
+    return cell!;
+  }
+
+  afterEach(() => {
+    document.querySelectorAll('.tooltip-pop').forEach((pop) => pop.remove());
+  });
+
+  it('puts the Art name in the page tab order', () => {
+    // `tabIndex` is the DOM's OWN answer to "can Tab land here", which is what this
+    // finding is about — and it is the assertion to make rather than one about
+    // `document.activeElement`, because happy-dom lets `.focus()` succeed on an
+    // element no real browser would ever move focus to. A bare `<span>` reports -1.
+    expect(nameCell().tabIndex).toBeGreaterThanOrEqual(0);
+  });
+
+  it('opens the Art rules text once the keyboard reaches the name', () => {
+    expect(nameCell().tabIndex).toBeGreaterThanOrEqual(0);
+
+    nameCell().focus();
+    flushSync();
+
+    const describedBy = nameCell().getAttribute('aria-describedby');
+    expect(describedBy).toBeTruthy();
+    expect(document.getElementById(describedBy!)?.textContent).toContain('I create.');
+  });
 });
 
 describe('ArtGrid effective-score badge staleness (#16)', () => {

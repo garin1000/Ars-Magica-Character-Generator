@@ -103,7 +103,11 @@ beforeEach(() => {
     reputations: [],
   };
   // Each carries the args its `issue-<code>` message interpolates (the contract
-  // table in `validation/mod.rs`); Fluent throws on a missing variable.
+  // table in `validation/mod.rs`). `i18n.ts::translate` now hands Fluent an errors
+  // array, so a missing variable no longer throws — it renders as a literal
+  // `{$name}` in the sentence instead. Supplying the full arg set is still what
+  // these fixtures are for: an assertion on the rendered text would otherwise pass
+  // against a sentence with a placeholder still in it.
   store.result = {
     issues: [
       issue('unbalanced_virtues', 'virtues_flaws', 'error', {

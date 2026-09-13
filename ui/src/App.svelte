@@ -136,6 +136,50 @@
     await tick();
     document.getElementById(`tab-${tabs[wrapped].id}`)?.focus();
   }
+  /**
+   * Put the element's full text in `title`, but ONLY while the element is
+   * actually clipping it.
+   *
+   * Sabine 14: the strip is one line and ellipsizes a label too long for the room
+   * it has (app.css), so a clipped tab needs its full label somewhere readable —
+   * but an unconditional `title` is a real cost paid at every width. A `<button>`
+   * with no `aria-label` takes its accessible NAME from its content, which makes
+   * `title` its accessible DESCRIPTION, so assistive tech reads the same string
+   * twice on every tab stop. Measuring means the description exists only in the
+   * state that ever justified it: German's thirteen-tab magus set at the 900px
+   * the window is resizable down to (tauri.conf.json).
+   *
+   * `ResizeObserver` and not a one-shot read, for the same reason
+   * `actions.ts::reserveTagSpace` uses one: the strip re-lays-out on every window
+   * resize, and a measurement taken once at mount would be a stale answer the
+   * moment the user drags the window edge. `update` re-measures when the label
+   * itself changes, which is what a UI-language switch does.
+   *
+   * Local to this component rather than added to `actions.ts`: the tab strip is
+   * its only consumer (YAGNI), and it belongs with the strip it measures.
+   */
+  function titleWhenClipped(node: HTMLElement, label: string) {
+    let current = label;
+    const apply = () => {
+      // `scrollWidth` is the content's full width, `clientWidth` the box it got;
+      // they differ exactly when `text-overflow: ellipsis` has something to cut.
+      if (node.scrollWidth > node.clientWidth) node.setAttribute('title', current);
+      else node.removeAttribute('title');
+    };
+    const observer = new ResizeObserver(apply);
+    observer.observe(node);
+    apply();
+    return {
+      update(next: string) {
+        current = next;
+        apply();
+      },
+      destroy() {
+        observer.disconnect();
+      },
+    };
+  }
+
   function onTabsKeydown(event: KeyboardEvent): void {
     const current = tabs.findIndex((t) => t.id === tab);
     if (current === -1) return;
@@ -350,7 +394,14 @@
      containment for that last reason — it has a real focus trap of its own, and
      `inert` is the belt to its braces: the trap closes the ring, while `inert`
      also takes the shell out of the accessibility tree so nothing behind the
-     dialog is announced. -->
+     dialog is announced.
+     `ConfirmPrompt` is deliberately NOT in this predicate, and cannot be: unlike
+     the two modals above it renders *inside* the shell (`FamiliarPanel.svelte`,
+     `TalismanPanel.svelte` mount it beside the control it guards), so switching the
+     shell off would switch the prompt off with it and leave a confirmation nobody
+     could answer — exactly the trade the comment above `<SettingsDialog />` states.
+     It closes its own ring instead, at the window rather than at the dialog, which
+     buys the same containment without needing the shell inert (Sabine 2). -->
 <div
   class="app-shell"
   inert={store.busy || store.discardConfirmPending || store.settingsOpen}
@@ -457,11 +508,14 @@
     <CharacterBanner />
 
     <!-- The strip is one line and ellipsizes a label too long for the room it has
-         (app.css), so each tab carries its full label in `title` as well — the same
+         (app.css), so a tab carries its full label in `title` as well — the same
          Fluent string as the visible text, never a second wording. `title` STAYS
          even though the strip's type and padding were re-budgeted so the labels fit
          in full at the default window: the window is resizable down to 900px
-         (tauri.conf.json), where German's thirteen-tab magus set truncates again. -->
+         (tauri.conf.json), where German's thirteen-tab magus set truncates again.
+         But it is attached ONLY WHILE THE LABEL IS ACTUALLY CLIPPED (Sabine 14) —
+         see `titleWhenClipped` above for why an unconditional one is an a11y cost
+         at every other width. -->
 
     <div class="tabbar" role="tablist" tabindex="-1" onkeydown={onTabsKeydown}>
       {#each tabs as t (t.id)}
@@ -476,7 +530,7 @@
           tabindex={tab === t.id ? 0 : -1}
           onclick={() => (tab = t.id)}
           data-testid="tab-{t.id}"
-          title={store.t(t.key)}
+          use:titleWhenClipped={store.t(t.key)}
         >
           {store.t(t.key)}
         </button>

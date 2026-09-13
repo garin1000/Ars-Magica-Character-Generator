@@ -29,9 +29,29 @@ export function buildBundle(lang: Lang): FluentBundle {
 
 export type TranslateArgs = Record<string, string | number>;
 
-/** Resolves a message key against a bundle, falling back to the key itself. */
+/**
+ * Resolves a message key against a bundle, falling back to the key itself.
+ *
+ * **The `errors` array is load-bearing, not decoration.** `formatPattern` has two
+ * modes: called with two arguments it THROWS a `ReferenceError` on any
+ * resolution error (a missing variable, an unknown term), and called with an
+ * errors array it collects them and returns its best-effort partial instead.
+ * Every `store.t()` call site in the app is unguarded and many sit inside a
+ * `$derived`, so the throwing form meant one message interpolating a variable
+ * its caller had omitted would take down the entire render — a blank window
+ * because a *label* could not be built. Collecting is strictly better: the
+ * sentence still reads, missing its one slot, and the user keeps their
+ * character on screen. (Round-1 audit; no reachable trigger was found in the
+ * shipped data, so this is defence in depth.)
+ *
+ * The errors are deliberately not reported anywhere: the only ones reachable
+ * would be authoring mistakes in the repo's own `.ftl`, which the i18n tests
+ * catch at build time, and a desktop binary launched from a menu has no console
+ * for a runtime warning to reach.
+ */
 export function translate(bundle: FluentBundle, key: string, args?: TranslateArgs): string {
   const message = bundle.getMessage(key);
   if (!message?.value) return key;
-  return bundle.formatPattern(message.value, args);
+  const errors: Error[] = [];
+  return bundle.formatPattern(message.value, args, errors);
 }

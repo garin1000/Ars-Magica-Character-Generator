@@ -180,7 +180,7 @@ describe('MythicCompanionTypeSelector grant/required-flaw selects (S19/S20/S21)'
 // G12 (full-audit test-adequacy): MythicCompanionTypeSelector had no test file
 // beyond the S19/S20/S21 a11y fix above. Its type-picker empty state, fixed
 // grant, and the required-Flaw default-vs-substitute logic were exercised only
-// via the slow e2e layer (`mythic-companion.e2e.js`).
+// via the slow e2e layer (`magus-editor.e2e.js`'s `mythic companion types`).
 describe('MythicCompanionTypeSelector type selection and grants', () => {
   it('shows no grants/required-Flaws section when no type is selected', () => {
     store.entity.mythic_type = undefined;

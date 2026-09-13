@@ -1435,12 +1435,15 @@ pub fn resolve_year(
     }
 
     // Both read the character as it stands *before* the year: the next
-    // Decrepitude level is priced off the points already accrued.
-    let (Some(total), Some(outcome)) = (
-        aging_total(entity, ruleset, request.age, request.die),
-        aging_total(entity, ruleset, request.age, request.die)
-            .and_then(|total| resolve_outcome(entity, ruleset, total.total)),
-    ) else {
+    // Decrepitude level is priced off the points already accrued. Computed once
+    // and reused — the outcome must be resolved against the very total that gets
+    // recorded, and two calls could drift apart the day one of them gains an
+    // argument the other does not. (`aging_total` also walks every selection twice
+    // and rebuilds the in-play modifiers, so the second call was pure cost.)
+    let Some(total) = aging_total(entity, ruleset, request.age, request.die) else {
+        return Err(AgingError::NoAgingRules);
+    };
+    let Some(outcome) = resolve_outcome(entity, ruleset, total.total) else {
         return Err(AgingError::NoAgingRules);
     };
 

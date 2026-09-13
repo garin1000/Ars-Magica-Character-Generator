@@ -64,7 +64,10 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
             let base = sum(&addends);
             let total = if deficient { halve(base) } else { base };
             let within_focus = mods.has_focus.then(|| {
-                let focused = base + te.min(fo);
+                // `base` is already saturated by `sum`, so a plain `+` here would
+                // abort under `overflow-checks = true`; fold through the same
+                // helper instead. See `derived.rs::saturating_i32_sum`.
+                let focused = saturating_i32_sum([base, te.min(fo)]);
                 if deficient { halve(focused) } else { focused }
             });
             // Weak Enchanter: Deficiency (already folded into `total`) first,
@@ -180,8 +183,10 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
 /// and Difficult Longevity Ritual makes anyone "creating a Longevity Ritual for you
 /// … halve their Lab Total" (ArMDE:5962-5964). **That the two compound is an
 /// inference**: each Flaw halves the Lab Total and neither carves out the other, but
-/// no passage states the interaction. The order is immaterial — [`halve`] truncates
-/// toward zero — so it is fixed here as base → Deficient → Difficult.
+/// no passage states the interaction. The order is immaterial — the two are the
+/// same operation, and [`halve`] floors (ArMDE:547), so halving twice is
+/// `floor(base / 4)` whichever Flaw is named first — so it is fixed here as
+/// base → Deficient → Difficult.
 ///
 /// **Sibling formula:** [`lab_totals`] builds the same addend list for every
 /// `(Technique, Form)` cell. This is deliberately not that grid's Creo/Corpus cell:
@@ -259,23 +264,53 @@ pub struct MasterpieceCap {
     pub cap: i32,
 }
 
+/// The best cell of a Lab-Total grid by `key`, breaking a tie on the **first**
+/// maximum.
+///
+/// Three panels of one character sheet answer "your best Technique and Form" — the
+/// talisman capacity, the Masterpiece cap and the familiar binding — so they must
+/// agree, and on a magus who has bought no Arts every cell of the grid ties.
+/// [`Ruleset::art_ids_of`] is sorted and [`lab_totals`] walks it in order, so
+/// keeping the first strict maximum sends the tie to the alphabetically first
+/// pair, matching `familiar.rs::highest_art`, which documents the reason: the
+/// read-out must never flicker between equal Arts. [`Iterator::max_by_key`]
+/// returns the *last* maximum and so cannot be used here.
+pub(super) fn best_lab_total_by(
+    totals: &[LabTotal],
+    key: impl Fn(&LabTotal) -> i32,
+) -> Option<&LabTotal> {
+    totals.iter().reduce(|best, current| {
+        if key(current) > key(best) {
+            current
+        } else {
+            best
+        }
+    })
+}
+
 /// The Masterpiece lesser-item cap, or `None` when the magus lacks the Virtue.
 /// Source: ArMDE:4476-4479 (Virtue),
 /// :10410 (lesser-enchantment cap), :7060-7063 (Weak Enchanter halving applies
 /// here too, since designing the item is creating an enchanted item).
-pub fn masterpiece_item_cap(entity: &Entity, ruleset: &Ruleset) -> Option<MasterpieceCap> {
+/// `totals` is the caller's already-built Lab-Total grid (see
+/// `derived.rs::derived_totals`). Taking it rather than rebuilding it matters:
+/// every cell calls `effective_art_score` twice, which clones the whole selection
+/// vector for any character with a grant, and this read-out, the familiar binding
+/// and `DerivedTotals::lab_totals` all want the same grid on every recompute.
+pub fn masterpiece_item_cap(
+    totals: &[LabTotal],
+    entity: &Entity,
+    ruleset: &Ruleset,
+) -> Option<MasterpieceCap> {
     if !in_play_mods(entity, ruleset).has_masterpiece {
         return None;
     }
     // Best enchanting Lab Total across the grid; the magus picks the Te/Fo that
     // maxes the figure that actually applies to building the item.
-    lab_totals(entity, ruleset)
-        .into_iter()
-        .max_by_key(|lt| lt.enchanting)
-        .map(|lt| MasterpieceCap {
-            technique: lt.technique,
-            form: lt.form,
-            lab_total: lt.enchanting,
-            cap: halve(lt.enchanting),
-        })
+    best_lab_total_by(totals, |lt| lt.enchanting).map(|lt| MasterpieceCap {
+        technique: lt.technique.clone(),
+        form: lt.form.clone(),
+        lab_total: lt.enchanting,
+        cap: halve(lt.enchanting),
+    })
 }

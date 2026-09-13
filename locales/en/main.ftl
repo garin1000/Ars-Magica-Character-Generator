@@ -515,6 +515,15 @@ identity-parens = Parens
 # are computed by the engine from these points, never recomputed here.
 aging-label = Aging
 aging-points-heading = Aging points per Characteristic
+# Shown once, after opening a save an older schema version wrote. The upgrade is
+# LOSSY: the loader rebuilds the smallest Aging-Point total that still produces
+# each recorded Characteristic score, so the original totals are gone, and the
+# next Save writes the reconstruction back as the document's own figures. The
+# user is told because it cannot be undone and the next keystroke makes it
+# permanent. Separator as restricted-xp-list-separator, via Fluent rather than a
+# hardcoded ", ".
+aging-migration-notice = This character was saved in an older format. The Aging points for { $characteristics } were rebuilt as the smallest total that still produces the recorded scores, so the original figures could not be recovered. Saving will keep the rebuilt values.
+aging-migration-list-separator = ,
 warping-points-label = Warping points
 twilight-scars-label = Twilight Scars
 twilight-scar-placeholder = Describe the scar
@@ -1053,6 +1062,10 @@ issue-gift_required = This type requires The Gift.
 issue-gift_forbidden = This type cannot have The Gift.
 issue-unknown_ref = Unknown item reference: { $item }.
 issue-unknown_type = Unknown entity type: { $type_id }.
+# A warning, not an error: the save opens either way. It names both identities
+# because the whole point is that the ids inside it still resolve — only the
+# numbers behind them moved — so nothing else in the list can show the drift.
+issue-ruleset_mismatch = Saved under ruleset { $saved_ruleset } { $saved_version }, but { $loaded_ruleset } { $loaded_version } is loaded. The values behind the same names may differ.
 issue-characteristic_out_of_range = Characteristic { $characteristic } score { $score } is outside the allowed range ({ $min } to { $max }).
 issue-characteristic_overspent = Characteristics cost { $cost } points, over the { $points } available.
 issue-characteristic_points_unspent = Only { $cost } of { $points } Characteristic points spent.
@@ -1071,7 +1084,7 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } of { $amount } restricte
 # pool or of the 120 levels of spells. So these two state what is left and stop.
 issue-general_xp_unspent = { $unspent } of { $pool } experience points are still unspent.
 issue-spell_levels_unspent = { $unspent } of { $budget } levels of spells are still unspent.
-issue-ability_category_requires_virtue = { $ability } is { $category }, which needs a Virtue granting access at character creation.
+issue-ability_category_requires_virtue = { $ability } is { $ability_category }, which needs a Virtue granting access at character creation.
 issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $ability }{ $qualifier } at { $min } or better.
 issue-life_stage_age_unset = Enter the character's age: later life earns experience per year, so with no age only childhood's blocks can be counted.
 issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, which lasts { $min } years — there are no later-life years to earn experience in.
@@ -1240,6 +1253,12 @@ derived-combat-init = Init
 derived-combat-attack = Attack
 derived-combat-defense = Defense
 derived-combat-damage = Damage
+# A derived cell the line has no value for — a weapon with no Attack, no Damage
+# or no Range. It was a literal em dash in the markup until the round-1 audit
+# (Sabine 7): a user-facing string with no key, and unreadable besides, since a
+# screen reader announces a bare dash as nothing at all — so a blind user could
+# not tell "not applicable" from "failed to render".
+derived-not-applicable = n/a
 # Joins a weapon to the shield carried with it on a combat line ("Long Sword &
 # Round Shield"). It stands in for a word — the rulebook's own statblocks write
 # both "&" and "and" — so it is translatable, not hardcoded. The surrounding

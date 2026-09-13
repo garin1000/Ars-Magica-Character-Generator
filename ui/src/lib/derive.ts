@@ -10,6 +10,7 @@ import type {
   Addend,
   Art,
   ArtType,
+  Characteristic,
   ChildhoodEntry,
   ChildhoodPackage,
   CreationPhase,
@@ -491,6 +492,16 @@ export function localizedSortKey(localized: LocalizedRuleset, id: string): strin
  * ("(Ability)"), a chosen ref resolves to its own localized name ("Puissant
  * Ignem", never "Puissant art.ignem"). Shared by every grant picker (House,
  * Mythic type, Warping-owed) so no picker renders a raw slug or a raw brace.
+ *
+ * The filled value goes through {@link selectionParamLabel} — the same resolver
+ * a *chosen* row's name uses — rather than a second one of its own. It had one
+ * (`localized.i18n[value]?.name ?? value`), which covered rules ids and nothing
+ * else: the Characteristic and Realm domains are labelled through Fluent
+ * (`characteristic-<id>`, `realm-<id>`) and have no rules-i18n entry at all, so
+ * a grant given a parameter in either domain rendered "Great characteristic.sta"
+ * — the very thing the paragraph above promises it never does (Sabine 13,
+ * round-1 audit). One resolver, so a domain added to one surface cannot go
+ * missing on the other.
  */
 export function grantItemLabel(
   localized: LocalizedRuleset,
@@ -498,12 +509,8 @@ export function grantItemLabel(
   t: Translate,
   params: Record<string, string> = {},
 ): string {
-  return displayName(
-    localized,
-    ref,
-    params,
-    paramHint(t),
-    (_key, value) => localized.i18n[value]?.name ?? value,
+  return displayName(localized, ref, params, paramHint(t), (_key, value) =>
+    selectionParamLabel(localized, params, value, t),
   );
 }
 
@@ -586,16 +593,61 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
 }
 
 /**
+ * Every category list an open pick of `item` could still have in force, in no
+ * significant order: the whole descriptor (what the engine's
+ * `types.rs::PointItem::categories_for` resolves to while no reading is
+ * recorded), plus each single reading a `category`-domain parameter still
+ * allows. Load-time integrity requires such a parameter's `values` to be a
+ * non-empty subset of the item's own categories
+ * (`integrity.rs::validate_parameter_defs`), so every entry here is one the
+ * player can actually reach through the `ParameterPicker`.
+ *
+ * An item with no `category`-domain parameter has exactly one reading — its own
+ * category list — so this collapses to the pre-`taken_as` behaviour for all but
+ * the handful of dual-reading descriptors.
+ */
+function admissibleCategoryReadings(item: PointItem): string[][] {
+  const readings: string[][] = [item.categories];
+  for (const param of item.parameters ?? []) {
+    if (param.domain !== 'category') continue;
+    for (const value of param.values ?? []) {
+      if (item.categories.includes(value)) readings.push([value]);
+    }
+  }
+  return readings;
+}
+
+/**
  * Point items an open grant admits: matching kind, matching magnitude (when the
  * constraint fixes one), inside any required-category allow-list and outside the
  * forbid-list, and not demanding a House other than `house` — mirroring the
  * engine's `open_pick_satisfies`, so a picker offers exactly the legal choices
- * and nothing more. Both category lists are matched
- * against EVERY category the item carries (`require_categories` needs a non-empty
- * intersection, `forbid_categories` an empty one), so a descriptor's secondary
+ * and nothing more. Both category lists are matched against a whole category
+ * reading at once (`require_categories` needs a non-empty intersection with it,
+ * `forbid_categories` an empty one), so within a reading a descriptor's secondary
  * category both admits a pick and rules one out. The rules name no fixed menu for a
  * Warping-owed slot (the pick is storyguide judgement, ArMDE:16553-16561), so the
  * constraint is the only filter.
+ *
+ * **Where the mirror is deliberately wider than the engine's.** `open_pick_satisfies`
+ * judges a pick that already exists, so it resolves ONE category list — the pick's
+ * own `params` narrowed through `types.rs::PointItem::categories_for`. A menu is
+ * built before any pick exists and therefore before any reading is chosen, so it
+ * asks the weaker question: does ANY reading this item can still be taken under
+ * satisfy the constraint? Sufi is "either ... a Minor Social Status Virtue or a
+ * Minor Supernatural Virtue" (ArMDE:5077-5084), so a slot closed to Supernatural
+ * must still offer it — taken as Social Status the engine accepts it, and testing
+ * the unnarrowed list alone would hide a legal choice with no route back to it.
+ * The reading itself is then chosen in the `ParameterPicker` each open-grant row
+ * renders beneath its pick, which is also why the menu does not split into one row
+ * per reading: that would ask the same question twice, in two widgets.
+ *
+ * The converse stays with the engine on purpose. Because the unnarrowed list is
+ * among the admissible readings, a menu with a `require_categories` list can offer
+ * an item the player then narrows OUT of that list; the engine's own callers of
+ * `open_pick_satisfies` (`magus.rs::grant_pick_outcomes`,
+ * `warping.rs::validate_warping_fill_picks`) report that, exactly as they report
+ * any other pick made illegal after the fact.
  *
  * `house` is the character's own Hermetic House (`store.entity.house`), or `null`
  * when there is none. It is a required argument rather than an option so that
@@ -626,9 +678,12 @@ export function eligibleForConstraint(
       (it) =>
         it.kind === constraint.kind &&
         (!constraint.magnitude || it.magnitude === constraint.magnitude) &&
-        (!constraint.require_categories?.length ||
-          constraint.require_categories.some((c) => it.categories.includes(c))) &&
-        !(constraint.forbid_categories ?? []).some((c) => it.categories.includes(c)) &&
+        admissibleCategoryReadings(it).some(
+          (categories) =>
+            (!constraint.require_categories?.length ||
+              constraint.require_categories.some((c) => categories.includes(c))) &&
+            !(constraint.forbid_categories ?? []).some((c) => categories.includes(c)),
+        ) &&
         !(
           opts.excludeWarpingSources && (it.effects ?? []).some((e) => e.type === 'warping_grant')
         ) &&
@@ -1234,7 +1289,9 @@ export function requirementAbilityLabel(
  * language a troupe invents.
  *
  * Empty rather than absent, because every message interpolating it does so
- * unconditionally and Fluent throws on a variable the args map does not carry.
+ * unconditionally, and a variable the args map does not carry renders as a
+ * literal `{$qualifier}` inside the sentence (`i18n.ts::translate` collects the
+ * resolution error rather than letting Fluent throw on it).
  */
 export function requirementExemplarNote(
   localized: LocalizedRuleset,
@@ -1433,6 +1490,18 @@ export function restrictedPoolLabel(
  * i18n entry of its own, labelled by the very `category-<id>` key the picker
  * heading and the row badge already use.
  *
+ * `ability_category` is a DIFFERENT taxonomy that happens to share the English
+ * word: the `AbilityCategory` an `ability_category_requires_virtue` finding names
+ * (`validation/authorization.rs`), whose values are the gated ones out of
+ * `categories_requiring_virtue`. It has its own label family,
+ * `ability-category-<id>`, the one the Ability picker's own filter already uses.
+ * The two rode under a single `category` arg until the round-1 audit, which meant
+ * one prefix for two disjoint value sets — and since no `category-martial` key
+ * exists, the Ability side printed its slug into a blocking error in both
+ * locales. Aliasing the three values into the `category-*` family would also have
+ * resolved, but it would leave two drifting copies of the same labels; the engine
+ * arg carries the distinction instead.
+ *
  * `domain` is the `ParameterDomain` an `unknown_param_value` finding says the
  * value failed to resolve in — the enum's own serialized name (`realm`,
  * `technique`, `item`), emitted by `validate_selection_parameters`. It has no
@@ -1447,6 +1516,7 @@ const ENUM_ARG_FLUENT_PREFIX: Record<string, string> = {
   base: 'realm-',
   granted: 'realm-',
   category: 'category-',
+  ability_category: 'ability-category-',
   domain: 'param-domain-',
 };
 
@@ -1522,9 +1592,10 @@ export function resolveIssueArgValue(
  * requirement reads "Latin 1" as the rulebook states it. Two consequences worth
  * keeping in mind:
  *  - a message must NOT interpolate `$exemplar` — the arg is optional in the engine's
- *    output (only where the rules data states one), and Fluent reports a missing
- *    variable. `$qualifier` is safe to interpolate because it is emitted for every
- *    `ability` arg, empty when there is no exemplar;
+ *    output (only where the rules data states one), and an absent variable prints
+ *    as a literal `{$exemplar}` in the sentence. `$qualifier` is safe to
+ *    interpolate because it is emitted for every `ability` arg, empty when there
+ *    is no exemplar;
  *  - the message and the magus-minimums checklist go through the one
  *    `requirementAbilityLabel` / `requirementExemplarNote` pair, which is what makes
  *    them read identically.
@@ -1550,13 +1621,44 @@ export function resolveIssueArgs(
   }
   if (args.ability) {
     // Emitted for every `ability` arg, empty where the rules name no exemplar: a
-    // message interpolates it unconditionally, and Fluent throws on a missing one.
+    // message interpolates it unconditionally, and a missing one would print as
+    // a literal `{$qualifier}`.
     resolved.qualifier = requirementExemplarNote(localized, args.ability, args.exemplar, t);
   }
   if (args.exemplar && args.ability) {
     resolved.ability = requirementAbilityLabel(localized, args.ability, null, args.exemplar, t);
   }
   return resolved;
+}
+
+/**
+ * The notice shown after opening a save the loader had to migrate: which
+ * Characteristics' Aging Points were rewritten, in the user's own language, or
+ * `null` when the save needed no migration.
+ *
+ * Why the user is told at all. The migration is **lossy** — the engine
+ * reconstructs the smallest Aging-Point total that still produces each recorded
+ * score, so whatever the original total was is gone — and the very next Save
+ * writes the reconstruction back as the document's own truth. A conversion that
+ * cannot be undone and that the next keystroke makes permanent is not something
+ * to leave unannounced.
+ *
+ * The Characteristics arrive from Rust as the enum's serialized ids
+ * (`commands.rs`'s `OpenedDocument::migrated_aging_characteristics`), never as a
+ * sentence: which words this notice is made of is the frontend's business, and
+ * they go through the same `characteristic-<id>` family the pickers and the
+ * validation findings already use, so one Characteristic reads one way
+ * everywhere.
+ */
+export function agingMigrationNotice(
+  characteristics: readonly Characteristic[],
+  t: Translate,
+): string | null {
+  if (characteristics.length === 0) return null;
+  const separator = `${t('aging-migration-list-separator')} `;
+  return t('aging-migration-notice', {
+    characteristics: characteristics.map((id) => t(`characteristic-${id}`)).join(separator),
+  });
 }
 
 /** How a magus's spent spell levels split between the base budget, its V/F modifier and its years as a magus. */

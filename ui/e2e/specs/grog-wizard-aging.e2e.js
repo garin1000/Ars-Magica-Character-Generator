@@ -1254,7 +1254,8 @@ describe('the saga year', () => {
 // `wizard-walks.e2e.js`'s `RunEvent::ExitRequested bridge — no unsaved changes`
 // — RunEvent::ExitRequested (macOS Cmd+Q / app-level quit) coverage.
 //
-// window-close-bridge-*.e2e.js (in `app-shell.e2e.js` and `companion-editor.e2e.js`)
+// `app-shell.e2e.js`'s `window.close() bridge — no unsaved changes` and
+// `companion-editor.e2e.js`'s `window.close() bridge — unsaved changes`
 // cover WindowEvent::CloseRequested, but that is a structurally different Tauri
 // event from RunEvent::ExitRequested — the one Cmd+Q actually raises (see
 // `crates/arm-app/src/main.rs`'s `request_exit` doc comment for the full story:

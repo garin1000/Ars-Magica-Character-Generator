@@ -40,3 +40,24 @@
     <ErrorDetails />
   </div>
 {/if}
+
+{#if store.migrationNotice}
+  <!-- The load-time schema migration's report, and NOT an error: it is the
+       ordinary outcome of opening an older save, so it renders on its own and
+       never waits on `errorText`.
+       `role="status"` (polite) rather than the sentence above's assertive
+       `role="alert"` — the user has just opened a file and is reading it, so
+       this waits its turn. It is a SIBLING of the alert, not a child, for the
+       same reason `ErrorDetails` is: that span is assertive and atomic, so
+       folding a second unrelated sentence into it would have the whole thing
+       re-announced, and would tie this notice's lifetime to an error's.
+       Why it exists at all: the migration is LOSSY. The engine reconstructs the
+       smallest Aging Point total that still reproduces the recorded scores, so
+       the original total is unrecoverable — and the next Save writes the
+       reconstruction back as the document's own figures. -->
+  <div class="error-banner-block">
+    <span class="migration-notice" role="status" data-testid="migration-notice"
+      >{store.migrationNotice}</span
+    >
+  </div>
+{/if}

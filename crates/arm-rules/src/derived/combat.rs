@@ -79,8 +79,9 @@ fn equipment_load(ruleset: &Ruleset, id: &Id) -> u32 {
 /// two-handed weapon receives no shield modifiers (ArMDE:7494) and so yields a single
 /// line. Attack / Damage are `None` for a weapon that lacks them (Dodge). Initiative
 /// is always reduced by Encumbrance (ArMDE:16658); Attack and Defense are reduced only
-/// when the Encumbrance is **not** largely due to weapons and armor (ArMDE:17105) —
-/// see [`combat_encumbrance_applies`].
+/// when the Encumbrance is **not** largely due to weapons and armor (ArMDE:17105),
+/// which no modelled character can be — see the invariant noted at the
+/// `atk_def_enc` binding in [`combat_totals`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CombatLine {
     /// The weapon id.
@@ -145,13 +146,24 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
 
     let cm = |stat: CombatStat| mods.combat_mods.get(&stat).copied().unwrap_or(0);
 
-    // Attack/Defense take the Encumbrance penalty only when the load is NOT
-    // largely weapons and armor; Initiative always takes it (ArMDE:17105, :16658).
-    let atk_def_enc = if combat_encumbrance_applies(entity, ruleset) {
-        enc
-    } else {
-        0
-    };
+    // Attack/Defense take the Encumbrance penalty only when the Encumbrance is NOT
+    // "largely due to weapons and armor"; Initiative always takes it
+    // (ArMDE:17105, :16658).
+    //
+    // That waiver is unconditional here, because **all** modelled Load is combat
+    // gear by construction: `EquipmentCatalogue` holds exactly `weapons`, `shields`
+    // and `armor` (`equipment.rs`), `load` is declared on exactly those three
+    // structs, and `equipment_load` returns 0 for anything it cannot resolve. The
+    // rules agree — Load is "listed in the Armor and Weapons tables" (ArMDE:17107),
+    // so non-combat carried gear has no Load to contribute in the first place.
+    //
+    // This was previously written as a live majority test over combat Load vs total
+    // Load. Both sums ranged over the same items, so the predicate was identically
+    // `2n >= n` and this term was always 0 — a decision in shape only, with a test
+    // that could only ever exercise the one reachable answer. Revisit if a
+    // non-combat load-bearing item is ever modelled: that means a new catalogue
+    // collection and a new `equipment_load` arm, which lands on this comment.
+    let atk_def_enc = 0;
 
     let mut out = Vec::new();
     for slot in entity.equipment.iter().filter(|s| s.equipped) {
@@ -231,49 +243,6 @@ fn specialization_bonus(
         a.ability == weapon.ability && a.specialty.as_deref().is_some_and(|s| !s.trim().is_empty())
     });
     u8::from(has_specialty)
-}
-
-/// Total Load from combat gear — every carried weapon, shield, and armor, whether
-/// equipped or not (a spare weapon is still a weapon). Classified by catalogue
-/// item type via the same dispatch [`equipment_load`] uses. Source: ArMDE:17105
-/// ("weapons and armor"), :17107
-/// (Load counts all carried gear).
-fn combat_gear_load(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    entity
-        .equipment
-        .iter()
-        .filter(|slot| {
-            ruleset.weapon(&slot.item).is_some()
-                || ruleset.shield(&slot.item).is_some()
-                || ruleset.armor_item(&slot.item).is_some()
-        })
-        .map(|slot| equipment_load(ruleset, &slot.item))
-        .sum()
-}
-
-/// Whether combat gear makes up "largely" (the majority) of the total carried
-/// Load, i.e. combat-gear Load ≥ half of total Load. `>= half` is our reading of
-/// the rules' "largely due to weapons and armor" (ArMDE:17105); documented in
-/// RULES.md. Zero total Load is trivially a majority (nothing to penalize).
-pub(super) fn combat_gear_is_majority(combat_load: u32, total_load: u32) -> bool {
-    // combat_load * 2 >= total_load, i.e. combat_load >= total_load / 2, without
-    // integer-division rounding.
-    combat_load.saturating_mul(2) >= total_load
-}
-
-/// Whether the Encumbrance penalty applies to Attack and Defense. The penalty is
-/// waived ("Attack and Defense are not [penalized]") when the Encumbrance is
-/// largely due to weapons and armor; otherwise it applies. Initiative is always
-/// penalized regardless (ArMDE:16658), so this governs only Attack/Defense.
-/// Source: ArMDE:17105.
-///
-/// Crate-internal: an implementation detail of [`combat_totals`], not part of the
-/// curated public API (unlike the surfaced totals `combat_totals` / `soak` /
-/// `encumbrance` the frontend consumes).
-pub(crate) fn combat_encumbrance_applies(entity: &Entity, ruleset: &Ruleset) -> bool {
-    let total_load = encumbrance(entity, ruleset).load;
-    let combat_load = combat_gear_load(entity, ruleset);
-    !combat_gear_is_majority(combat_load, total_load)
 }
 
 // --- Soak ------------------------------------------------------------------

@@ -3,12 +3,14 @@
 // validation result, and the active language/mode — and drives the live
 // validation loop with debouncing plus a sequence guard against stale results.
 
+import { AbilityWorkflow } from './ability-workflow.svelte';
 import {
   AgingWorkflow,
   defaultAgingDraft,
   type AgingDraft,
   type AgingPreview,
 } from './aging-workflow.svelte';
+import { ArtWorkflow } from './art-workflow.svelte';
 import {
   CORD_MAX,
   I32_MAX,
@@ -25,10 +27,15 @@ import {
   defaultChildhoodDraft,
   type ChildhoodDraft,
 } from './childhood-workflow.svelte';
-import { mandatoryTraitRefs, sameSelection, totalCopies } from './derive';
+import { agingMigrationNotice, mandatoryTraitRefs } from './derive';
+import { EquipmentWorkflow } from './equipment-workflow.svelte';
 import { FileOperations } from './file-operations.svelte';
+import { HouseWorkflow } from './house-workflow.svelte';
 import { AVAILABLE_LANGS, buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
+import { MythicWorkflow } from './mythic-workflow.svelte';
+import { SelectionWorkflow } from './selection-workflow.svelte';
+import { SpellWorkflow } from './spell-workflow.svelte';
 import type { AgingNote, CloseGuardLabels } from './ipc';
 import type { DocumentAction, MenuFlags } from './menu';
 import type {
@@ -364,6 +371,59 @@ class AppStore {
     return this.#agingWorkflow.year;
   }
 
+  // --- Entity-mutator workflows -------------------------------------------
+  //
+  // The per-domain document editors, finishing the extraction the four
+  // workflows above began (Viktor #7). Each owns one region of the entity and
+  // holds no state of its own: they write in place through `host.entity()`,
+  // which returns `AppStore`'s own `$state` object, so the store remains the
+  // sole owner of the document and `dirty` still compares the very object these
+  // mutators edit. The store's methods below are one-line delegations, exactly
+  // as the aging ones are.
+
+  #abilityWorkflow = new AbilityWorkflow({
+    entity: () => this.entity,
+    ruleset: () => this.ruleset,
+    scheduleValidate: () => this.#scheduleValidate(),
+  });
+
+  #artWorkflow = new ArtWorkflow({
+    entity: () => this.entity,
+    scheduleValidate: () => this.#scheduleValidate(),
+  });
+
+  #equipmentWorkflow = new EquipmentWorkflow({
+    entity: () => this.entity,
+    scheduleValidate: () => this.#scheduleValidate(),
+  });
+
+  #houseWorkflow = new HouseWorkflow({
+    entity: () => this.entity,
+    ruleset: () => this.ruleset,
+    revalidate: () => this.revalidate(),
+    scheduleValidate: () => this.#scheduleValidate(),
+  });
+
+  #mythicWorkflow = new MythicWorkflow({
+    entity: () => this.entity,
+    ruleset: () => this.ruleset,
+    revalidate: () => this.revalidate(),
+    scheduleValidate: () => this.#scheduleValidate(),
+  });
+
+  #selectionWorkflow = new SelectionWorkflow({
+    entity: () => this.entity,
+    ruleset: () => this.ruleset,
+    effective: () => this.effective,
+    scheduleValidate: () => this.#scheduleValidate(),
+  });
+
+  #spellWorkflow = new SpellWorkflow({
+    entity: () => this.entity,
+    ruleset: () => this.ruleset,
+    scheduleValidate: () => this.#scheduleValidate(),
+  });
+
   /**
    * Which screen the app is on: the startup choice screen, the guided wizard, or
    * the character editor. The app boots on `start`; {@link createCharacter} and a
@@ -470,6 +530,31 @@ class AppStore {
   /** Whether a file operation (Save/Save As/Open) is running; disables the toolbar. */
   get busy(): boolean {
     return this.#fileOps.busy;
+  }
+
+  /**
+   * Characteristics whose Aging Points the load-time schema migration rebuilt,
+   * for the document currently open. Empty when the save needed no migration.
+   *
+   * Kept as the raw ids rather than the finished sentence so
+   * {@link migrationNotice} re-composes in the new language when the user
+   * switches locale — a notice frozen in the language it was opened in would be
+   * a second place the UI language fails to reach.
+   */
+  migratedAgingCharacteristics = $state<Characteristic[]>([]);
+
+  /**
+   * The localized "your Aging Points were rebuilt" notice for the open document,
+   * or `null` when there is nothing to say.
+   *
+   * This matters because the migration is **lossy**: the engine reconstructs the
+   * minimal Aging Point total that still reproduces the recorded scores, so the
+   * original total is unrecoverable — and the next Save writes the
+   * reconstruction back as the document's own figures. Telling the user nothing
+   * would make that permanent silently.
+   */
+  get migrationNotice(): string | null {
+    return agingMigrationNotice(this.migratedAgingCharacteristics, this.t);
   }
 
   /**
@@ -776,214 +861,85 @@ class AppStore {
    * House drops them all.
    */
   async setHouse(house: string | null): Promise<void> {
-    if ((this.entity.house ?? null) === house) return;
-    this.entity.house = house;
-    this.entity.house_choices = this.#prunedHouseChoices(house);
-    await this.revalidate();
+    await this.#houseWorkflow.setHouse(house);
   }
 
   /**
    * Set the specialisation pick for one of the current House's grants, keyed by
-   * the grant's `choice_key` (a menu option for a `choice` grant, or a chosen
-   * Virtue/Flaw for an `open` one). Debounced like the other picker edits.
+   * the grant's `choice_key`.
+   *
+   * @see HouseWorkflow.setChoice
    */
   setHouseChoice(choiceKey: string, selection: Selection): void {
-    this.entity.house_choices = { ...(this.entity.house_choices ?? {}), [choiceKey]: selection };
-    this.#scheduleValidate();
-  }
-
-  /** The `choice_key`s the given House's `choice`/`open` grants define. */
-  #houseChoiceKeys(house: string | null): Set<string> {
-    const keys = new Set<string>();
-    if (!house) return keys;
-    for (const grant of this.ruleset?.ruleset.houses?.[house]?.grants ?? []) {
-      if (grant.kind === 'choice' || grant.kind === 'open') keys.add(grant.choice_key);
-    }
-    return keys;
-  }
-
-  /** Existing picks kept only where the target House still defines their key. */
-  #prunedHouseChoices(house: string | null): Record<string, Selection> {
-    const valid = this.#houseChoiceKeys(house);
-    const kept: Record<string, Selection> = {};
-    for (const [key, pick] of Object.entries(this.entity.house_choices ?? {})) {
-      if (valid.has(key)) kept[key] = pick;
-    }
-    return kept;
+    this.#houseWorkflow.setChoice(choiceKey, selection);
   }
 
   /**
    * Select the Mythic Companion type (or clear it with `null`). A discrete
    * action, so it validates immediately. Switching auto-manages the type's
-   * required package: it removes the previous type's seeded required Virtues/
-   * Flaws that the new type doesn't require, then seeds the new type's package
-   * (its required Virtues + each required Flaw's rules default) as ordinary
-   * budgeted selections — so a direct-entry mythic companion starts legal, with
-   * the required Flaws swappable via {@link setMythicRequiredFlaw}. The free
-   * status/Minor Virtue are point-free grants derived engine-side (never in
-   * `selections`); a `choice` free-Minor (Devil Child's Might/Powers) defaults to
-   * its first option. Mirrors {@link setHouse}.
+   * required package. Mirrors {@link setHouse}.
+   *
+   * @see MythicWorkflow.setType
    */
   async setMythicType(mythicType: string | null): Promise<void> {
-    if ((this.entity.mythic_type ?? null) === mythicType) return;
-    const previousPackage = this.#mythicPackage(this.entity.mythic_type ?? null);
-    const nextPackage = this.#mythicPackage(mythicType);
-    // Drop the previous type's seeded package rows the new type doesn't require.
-    const kept = (this.entity.selections ?? []).filter(
-      (s) =>
-        !(
-          previousPackage.some((p) => sameSelection(p, s)) &&
-          !nextPackage.some((p) => sameSelection(p, s))
-        ),
-    );
-    this.entity.mythic_type = mythicType;
-    this.entity.mythic_choices = this.#defaultedMythicChoices(mythicType);
-    // Seed the new type's required package (budgeted) where not already present.
-    for (const pkg of nextPackage) {
-      if (!kept.some((s) => sameSelection(s, pkg))) kept.push(pkg);
-    }
-    this.entity.selections = kept;
-    await this.revalidate();
+    await this.#mythicWorkflow.setType(mythicType);
   }
 
   /**
-   * Set a Mythic Companion type grant pick keyed by the grant's `choice_key`
-   * (e.g. Devil Child's Demonic Might-or-Powers free Minor). Debounced like the
-   * other picker edits. Mirrors {@link setHouseChoice}.
+   * Set a Mythic Companion type grant pick keyed by the grant's `choice_key`.
+   * Mirrors {@link setHouseChoice}.
+   *
+   * @see MythicWorkflow.setChoice
    */
   setMythicChoice(choiceKey: string, selection: Selection): void {
-    this.entity.mythic_choices = {
-      ...(this.entity.mythic_choices ?? {}),
-      [choiceKey]: selection,
-    };
-    this.#scheduleValidate();
+    this.#mythicWorkflow.setChoice(choiceKey, selection);
   }
 
   /**
-   * Swap a required Flaw for a "suitable substitute agreed with the troupe":
-   * removes the currently-selected required Flaw (`previousRef`) and adds the
-   * chosen substitute (`nextRef`) as a budgeted selection. A discrete dropdown
-   * action, so it validates immediately.
+   * Swap a required Flaw for a "suitable substitute agreed with the troupe".
+   *
+   * @see MythicWorkflow.setRequiredFlaw
    */
   async setMythicRequiredFlaw(previousRef: string, nextRef: string): Promise<void> {
-    if (previousRef === nextRef) return;
-    const selections = [...(this.entity.selections ?? [])];
-    const idx = selections.findIndex((s) => s.ref === previousRef);
-    if (idx >= 0) selections.splice(idx, 1);
-    if (!selections.some((s) => s.ref === nextRef)) selections.push({ ref: nextRef });
-    this.entity.selections = selections;
-    await this.revalidate();
-  }
-
-  /** The budgeted required package (required Virtues + each Flaw's default). */
-  #mythicPackage(mythicType: string | null): Selection[] {
-    if (!mythicType) return [];
-    const t = this.ruleset?.ruleset.mythic_companion_types?.[mythicType];
-    if (!t) return [];
-    return [...(t.required_virtues ?? []), ...(t.required_flaws ?? []).map((f) => f.default)];
-  }
-
-  /**
-   * Mythic-type grant picks kept where the target type still defines their key,
-   * with each `choice` grant defaulted to its first option so the free Minor
-   * Virtue is granted without an extra step.
-   */
-  #defaultedMythicChoices(mythicType: string | null): Record<string, Selection> {
-    const grants = mythicType
-      ? (this.ruleset?.ruleset.mythic_companion_types?.[mythicType]?.grants ?? [])
-      : [];
-    const validKeys = new Set(
-      grants.filter((g) => g.kind === 'choice' || g.kind === 'open').map((g) => g.choice_key),
-    );
-    const kept: Record<string, Selection> = {};
-    for (const [key, pick] of Object.entries(this.entity.mythic_choices ?? {})) {
-      if (validKeys.has(key)) kept[key] = pick;
-    }
-    for (const g of grants) {
-      if (g.kind === 'choice' && !kept[g.choice_key]) kept[g.choice_key] = g.options[0];
-    }
-    return kept;
+    await this.#mythicWorkflow.setRequiredFlaw(previousRef, nextRef);
   }
 
   /**
    * Add a virtue/flaw selection. A repeatable item — one carrying parameters
    * (e.g. Great Characteristic) or with `max_per_target > 1` — can be added
    * several times, each instance choosing its own target; a plain item is added
-   * once. Mirrors {@link addAbility}.
+   * once.
    *
-   * Also refuses once the item's bought+granted total already sits at its
-   * `max_total` ceiling (Puissant Art, capped at two total across every Art
-   * target) — the model-level guard behind the engine's
-   * `too_many_selections` validator, so the store itself cannot be pushed past
-   * it even though `VirtueFlawTab`'s disabled predicate is its only production
-   * caller today.
+   * @see SelectionWorkflow.add
    */
   addSelection(ref: string): void {
-    const item = this.ruleset?.ruleset.point_items[ref];
-    const repeatable = !!item?.parameters?.length || (item?.max_per_target ?? 1) > 1;
-    const present = (this.entity.selections ?? []).some((s) => s.ref === ref);
-    if (!repeatable && present) return;
-    if (item?.max_total !== undefined) {
-      const count = totalCopies(
-        this.entity.selections ?? [],
-        this.effective?.granted_selections ?? [],
-        ref,
-      );
-      if (count >= item.max_total) return;
-    }
-    this.entity.selections = [...(this.entity.selections ?? []), { ref }];
-    this.#scheduleValidate();
+    this.#selectionWorkflow.add(ref);
   }
 
-  /** Selection edits are by row index, since a repeatable item has several rows. */
+  /** Selection edits are by row index, since a repeatable item has several rows.
+   *  @see SelectionWorkflow.removeAt */
   removeSelectionAt(index: number): void {
-    this.entity.selections = (this.entity.selections ?? []).filter((_, i) => i !== index);
-    this.#scheduleValidate();
+    this.#selectionWorkflow.removeAt(index);
   }
 
   /**
-   * Set one parameter of one selection row.
+   * Set one parameter of one selection row. The value is trimmed, never
+   * case-folded — parameter values decide a selection's identity.
    *
-   * The value is **trimmed**, never case-folded. Parameter values decide a
-   * selection's identity — the engine's duplicate key is the whole params map, and
-   * `sameSelection` compares values byte-for-byte — so 'Wolf Shape ' would be a
-   * second, distinct power, and the per-power cap would count them separately. The
-   * engine trims the same way when a save is loaded
-   * (`load_entity_migrating`), so the store and the file agree; capitalisation stays
-   * the player's, since the rules ask for no folding. A value that trims to nothing
-   * is kept as the empty string, which the engine reports as `missing_param`.
+   * @see SelectionWorkflow.setParamAt
    */
   setParamAt(index: number, key: string, value: string): void {
-    const trimmed = value.trim();
-    this.entity.selections = (this.entity.selections ?? []).map((s, i) =>
-      i === index ? { ...s, params: { ...(s.params ?? {}), [key]: trimmed } } : s,
-    );
-    this.#scheduleValidate();
+    this.#selectionWorkflow.setParamAt(index, key, value);
   }
 
   /**
    * Point an ability-bonus selection (Puissant Ability) at a specific ability
-   * *instance*. The ability id goes under the `ability` param; for a
-   * parameterized ability the instance value (the area/language) goes under the
-   * ability's own param key (so the bonus attaches to that one row). Switching to
-   * a plain ability drops any stale instance key.
+   * *instance*.
    *
-   * The instance value is free text the player typed, so it is trimmed for the same
-   * identity reason as {@link setParamAt}: ' Rhine ' and 'Rhine' are one Area Lore,
-   * and `usedAbilityTargets` composes the instance into the target key it caps on.
-   * A value that is nothing but whitespace names no instance, so it is dropped
-   * rather than stored blank — leaving the engine's `missing_param` to name the key,
-   * exactly as an unfilled instance box already does.
+   * @see SelectionWorkflow.setAbilityBonusTarget
    */
   setAbilityBonusTarget(index: number, abilityId: string, parameter?: string | null): void {
-    const instanceKey = this.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
-    const params: Record<string, string> = { ability: abilityId.trim() };
-    const instance = parameter?.trim();
-    if (instanceKey && instance) params[instanceKey] = instance;
-    this.entity.selections = (this.entity.selections ?? []).map((s, i) =>
-      i === index ? { ...s, params } : s,
-    );
-    this.#scheduleValidate();
+    this.#selectionWorkflow.setAbilityBonusTarget(index, abilityId, parameter);
   }
 
   /** Set or clear a Characteristic score (score 0 removes the explicit entry). */
@@ -1013,45 +969,33 @@ class AppStore {
 
   /**
    * Select an ability (like a virtue/flaw): it enters at score 0, which costs no
-   * XP — the first point is bought by raising it. A parameterized ability (e.g.
-   * (Area) Lore) can be added several times (each instance gets its own value); a
-   * plain ability is added once.
+   * XP — the first point is bought by raising it.
+   *
+   * @see AbilityWorkflow.add
    */
   addAbility(ability: string): void {
-    const parameterized = !!this.ruleset?.ruleset.abilities?.[ability]?.parameter;
-    const present = (this.entity.ability_scores ?? []).some((a) => a.ability === ability);
-    if (!parameterized && present) return;
-    this.entity.ability_scores = [...(this.entity.ability_scores ?? []), { ability, score: 0 }];
-    this.#scheduleValidate();
+    this.#abilityWorkflow.add(ability);
   }
 
-  /** Ability edits are by row index, since a parameterized ability has several rows. */
+  /** Ability edits are by row index, since a parameterized ability has several rows.
+   *  @see AbilityWorkflow.removeAt */
   removeAbilityAt(index: number): void {
-    this.entity.ability_scores = (this.entity.ability_scores ?? []).filter((_, i) => i !== index);
-    this.#scheduleValidate();
+    this.#abilityWorkflow.removeAt(index);
   }
 
+  /** @see AbilityWorkflow.adjustAt */
   adjustAbilityAt(index: number, delta: number, max: number): void {
-    this.entity.ability_scores = (this.entity.ability_scores ?? []).map((a, i) =>
-      i === index ? { ...a, score: Math.max(0, Math.min(max, a.score + delta)) } : a,
-    );
-    this.#scheduleValidate();
+    this.#abilityWorkflow.adjustAt(index, delta, max);
   }
 
+  /** @see AbilityWorkflow.setSpecialtyAt */
   setAbilitySpecialtyAt(index: number, specialty: string): void {
-    const spec = specialty.trim() ? specialty.trim() : undefined;
-    this.entity.ability_scores = (this.entity.ability_scores ?? []).map((a, i) =>
-      i === index ? { ...a, specialty: spec } : a,
-    );
-    this.#scheduleValidate();
+    this.#abilityWorkflow.setSpecialtyAt(index, specialty);
   }
 
+  /** @see AbilityWorkflow.setParameterAt */
   setAbilityParameterAt(index: number, value: string): void {
-    const param = value.trim() ? value.trim() : undefined;
-    this.entity.ability_scores = (this.entity.ability_scores ?? []).map((a, i) =>
-      i === index ? { ...a, parameter: param } : a,
-    );
-    this.#scheduleValidate();
+    this.#abilityWorkflow.setParameterAt(index, value);
   }
 
   setXpPool(xp: number): void {
@@ -1283,42 +1227,21 @@ class AppStore {
   }
 
   /**
-   * Adjust an Art's bought score by `delta`, clamped to [0, max]. All 15 Arts are
-   * always present for a magus, so an Art is addressed by id (not a row index)
-   * and upserted: the score is stored only while non-zero (score 0 is the default
-   * and is dropped to keep saves sparse and canonical).
+   * Adjust an Art's bought score by `delta`, clamped to [0, max].
+   *
+   * @see ArtWorkflow.adjust
    */
   adjustArt(art: string, delta: number, max: number): void {
-    const scores = this.entity.art_scores ?? [];
-    const current = scores.find((a) => a.art === art)?.score ?? 0;
-    const next = Math.max(0, Math.min(max, current + delta));
-    if (next === 0) {
-      this.entity.art_scores = scores.filter((a) => a.art !== art);
-    } else if (scores.some((a) => a.art === art)) {
-      this.entity.art_scores = scores.map((a) => (a.art === art ? { ...a, score: next } : a));
-    } else {
-      this.entity.art_scores = [...scores, { art, score: next }];
-    }
-    this.#scheduleValidate();
+    this.#artWorkflow.adjust(art, delta, max);
   }
 
   /**
    * Point an Art-domain parameter of a selection at a specific Art (by id).
-   * `key` is the *declaring* parameter's key — usually `art` (Puissant Art), but
-   * an Art-domain parameter may be keyed otherwise (Master of (Form) Creatures
-   * declares `form` over the Art catalogue), and the value must land under the
-   * key the item declared or the engine reports it missing.
    *
-   * Trimmed like every other parameter write path. An Art id comes from a
-   * `<select>` and so is already canonical — this is defence in depth, kept only so
-   * that no write path is the odd one out.
+   * @see ArtWorkflow.setBonusTarget
    */
   setArtBonusTarget(index: number, key: string, artId: string): void {
-    const trimmed = artId.trim();
-    this.entity.selections = (this.entity.selections ?? []).map((s, i) =>
-      i === index ? { ...s, params: { ...(s.params ?? {}), [key]: trimmed } } : s,
-    );
-    this.#scheduleValidate();
+    this.#artWorkflow.setBonusTarget(index, key, artId);
   }
 
   /**
@@ -1334,116 +1257,68 @@ class AppStore {
    * flagged by the engine's dedupe. A plain spell is added once per (level).
    */
   addSpell(spellId: string, level?: number | null, parameter?: string | null): void {
-    const lvl = typeof level === 'number' ? level : undefined;
-    const param = parameter ?? undefined;
-    const parameterized = (this.ruleset?.ruleset.spells?.[spellId]?.parameters?.length ?? 0) > 0;
-    if (!parameterized) {
-      const present = (this.entity.spells ?? []).some(
-        (s) =>
-          s.spell === spellId &&
-          (s.level ?? undefined) === lvl &&
-          (s.parameter ?? undefined) === param,
-      );
-      if (present) return;
-    }
-    this.entity.spells = [
-      ...(this.entity.spells ?? []),
-      {
-        spell: spellId,
-        ...(lvl === undefined ? {} : { level: lvl }),
-        ...(param === undefined ? {} : { parameter: param }),
-      },
-    ];
-    this.#scheduleValidate();
+    this.#spellWorkflow.add(spellId, level, parameter);
   }
 
   /**
    * Set (or clear) the target Form of a parametrized spell at `index` — part of
-   * the spell's identity, so distinct Forms are distinct instances. The chosen
-   * value is an Art id (e.g. `art.ignem`). Mirrors {@link setAbilityParameterAt}.
+   * the spell's identity, so distinct Forms are distinct instances.
+   *
+   * @see SpellWorkflow.setParameterAt
    */
   setSpellParameterAt(index: number, parameter: string | null): void {
-    const param = parameter && parameter.trim() ? parameter.trim() : undefined;
-    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
-      i === index ? { ...s, parameter: param } : s,
-    );
-    this.#scheduleValidate();
+    this.#spellWorkflow.setParameterAt(index, parameter);
   }
 
   /**
    * Adjust the bought Spell Mastery score of the spell at `index` by `delta`,
-   * clamped to [0, max]. Spent from the restricted Spell-Mastery XP pool; the
-   * granted floor (Flawless Magic) is applied on top when computing the effective
-   * mastery, so it is not stored here. Mirrors {@link adjustAbilityAt}.
+   * clamped to [0, max].
+   *
+   * @see SpellWorkflow.adjustMasteryAt
    */
   adjustSpellMasteryAt(index: number, delta: number, max: number): void {
-    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
-      i === index ? { ...s, mastery: Math.max(0, Math.min(max, (s.mastery ?? 0) + delta)) } : s,
-    );
-    this.#scheduleValidate();
+    this.#spellWorkflow.adjustMasteryAt(index, delta, max);
   }
 
   /**
    * Add a Spell Mastery special ability (a `spell_mastery_ability.*` id) to the
-   * spell at `index`. A repeatable ability (Precise/Quick/Quiet Casting) may be
-   * added more than once; the count cap vs. effective mastery is enforced by the
-   * engine, not here. Mirrors {@link adjustSpellMasteryAt}.
+   * spell at `index`.
+   *
+   * @see SpellWorkflow.addMasteryAbilityAt
    */
   addMasteryAbilityAt(index: number, abilityId: string): void {
-    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
-      i === index ? { ...s, mastery_abilities: [...(s.mastery_abilities ?? []), abilityId] } : s,
-    );
-    this.#scheduleValidate();
+    this.#spellWorkflow.addMasteryAbilityAt(index, abilityId);
   }
 
   /**
    * Remove the mastery special ability at position `abilityIndex` within the
-   * spell at `index`. Index-addressed so a repeatable ability chosen several
-   * times removes exactly one instance. Mirrors {@link addMasteryAbilityAt}.
+   * spell at `index`.
+   *
+   * @see SpellWorkflow.removeMasteryAbilityAt
    */
   removeMasteryAbilityAt(index: number, abilityIndex: number): void {
-    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
-      i === index
-        ? {
-            ...s,
-            mastery_abilities: (s.mastery_abilities ?? []).filter((_, j) => j !== abilityIndex),
-          }
-        : s,
-    );
-    this.#scheduleValidate();
+    this.#spellWorkflow.removeMasteryAbilityAt(index, abilityIndex);
   }
 
-  /**
-   * Set the level of the (General) spell at `index`. The budget/used totals are
-   * engine-authoritative, so no recompute happens here. Mirrors
-   * {@link adjustSpellMasteryAt}.
-   */
+  /** Set the level of the (General) spell at `index`.
+   *  @see SpellWorkflow.setLevelAt */
   setSpellLevelAt(index: number, level: number): void {
-    // `SpellSelection.level` is the entity's narrowest number (u8), and a General
-    // spell has no level 0, so the floor is 1 — matching the input's `min`.
-    const clamped = clampInt(level, 1, U8_MAX);
-    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
-      i === index ? { ...s, level: clamped } : s,
-    );
-    this.#scheduleValidate();
+    this.#spellWorkflow.setLevelAt(index, level);
   }
 
-  /** Spell edits are by row index, since a General spell can appear at several levels. */
+  /** Spell edits are by row index, since a General spell can appear at several levels.
+   *  @see SpellWorkflow.removeAt */
   removeSpellAt(index: number): void {
-    this.entity.spells = (this.entity.spells ?? []).filter((_, i) => i !== index);
-    this.#scheduleValidate();
+    this.#spellWorkflow.removeAt(index);
   }
 
   /**
-   * Set (or clear) the per-character spell-levels budget override. A non-positive
-   * or non-finite value clears it (`null`), so the engine falls back to the type
-   * profile's base. The budget/used totals stay engine-authoritative — no
-   * recompute happens here. Mirrors {@link setAge}.
+   * Set (or clear) the per-character spell-levels budget override.
+   *
+   * @see SpellWorkflow.setLevelsOverride
    */
   setSpellLevelsOverride(levels: number | null): void {
-    this.entity.spell_levels_override =
-      levels != null && Number.isFinite(levels) && levels > 0 ? clampInt(levels, 1, U32_MAX) : null;
-    this.#scheduleValidate();
+    this.#spellWorkflow.setLevelsOverride(levels);
   }
 
   /**
@@ -1546,9 +1421,28 @@ class AppStore {
 
   // --- Magic Items tab: aura, devices, familiar, talisman, longevity ---
 
-  /** Set the realm aura modifier (signed; Divine can be a penalty). */
+  /**
+   * Set the realm aura modifier (signed; Divine can be a penalty).
+   *
+   * Clamped to the RULES range the engine surfaces
+   * (`Ruleset.aura_modifier_min`/`max`), not to the serde width — the same bound
+   * both aura inputs already render as their `min`/`max`
+   * (`MagicPossessions.svelte`, `DerivedAuraField.svelte`), so the number cannot
+   * disagree with the field it was typed into. i32 is not a constraint here: no
+   * aura a player can plausibly type falls outside it, so clamping only to the
+   * width meant an out-of-range value reached the engine intact and every derived
+   * read-out was computed from it, until the next save+reload silently replaced
+   * it with `Entity::normalize`'s own clamp — two different answers for one
+   * document.
+   *
+   * The i32 fallback stays for a ruleset payload predating those fields: it
+   * constrains nothing, but it keeps the value REPRESENTABLE, without which serde
+   * rejects the whole payload at the Tauri boundary.
+   */
   setAura(aura: number | null): void {
-    this.entity.aura = aura == null ? 0 : clampInt(aura, I32_MIN, I32_MAX);
+    const min = this.ruleset?.ruleset.aura_modifier_min ?? I32_MIN;
+    const max = this.ruleset?.ruleset.aura_modifier_max ?? I32_MAX;
+    this.entity.aura = aura == null ? 0 : clampInt(aura, min, max);
     this.#scheduleValidate();
   }
 
@@ -2198,31 +2092,26 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  /** Add a carried equipment slot referencing a catalogue weapon/shield/armor id. */
+  /** Add a carried equipment slot referencing a catalogue weapon/shield/armor id.
+   *  @see EquipmentWorkflow.add */
   addEquipment(item: string): void {
-    if (!item) return;
-    this.entity.equipment = [...(this.entity.equipment ?? []), { item, equipped: true }];
-    this.#scheduleValidate();
+    this.#equipmentWorkflow.add(item);
   }
 
+  /** @see EquipmentWorkflow.removeAt */
   removeEquipmentAt(index: number): void {
-    this.entity.equipment = (this.entity.equipment ?? []).filter((_, i) => i !== index);
-    this.#scheduleValidate();
+    this.#equipmentWorkflow.removeAt(index);
   }
 
+  /** @see EquipmentWorkflow.setEquipped */
   setEquipmentEquipped(index: number, equipped: boolean): void {
-    this.entity.equipment = (this.entity.equipment ?? []).map((slot, i) =>
-      i === index ? { ...slot, equipped } : slot,
-    );
-    this.#scheduleValidate();
+    this.#equipmentWorkflow.setEquipped(index, equipped);
   }
 
-  /** Toggle whether the weapon's Ability specialization applies (+1 Atk/Def). */
+  /** Toggle whether the weapon's Ability specialization applies (+1 Atk/Def).
+   *  @see EquipmentWorkflow.setSpecialization */
   setEquipmentSpecialization(index: number, specialization_applies: boolean): void {
-    this.entity.equipment = (this.entity.equipment ?? []).map((slot, i) =>
-      i === index ? { ...slot, specialization_applies } : slot,
-    );
-    this.#scheduleValidate();
+    this.#equipmentWorkflow.setSpecialization(index, specialization_applies);
   }
 
   /** Set a free-text identity/flavor field (no mechanical effect). */
@@ -2460,6 +2349,10 @@ class AppStore {
       if (loaded) {
         this.entity = loaded.entity;
         this.currentPath = loaded.path;
+        // What the load-time schema migration had to rebuild, if anything. Set
+        // before the snapshot for no reason but order-of-reading; it is view
+        // state about the load, never part of the document.
+        this.migratedAgingCharacteristics = loaded.migrated_aging_characteristics ?? [];
         this.#savedSnapshot = this.#snapshot();
         // A loaded character's recorded childhood package is history, not a draft:
         // its slot answers already live in its Ability rows. Starting the draft
@@ -2507,6 +2400,10 @@ class AppStore {
     this.view = 'start';
     this.#resetWizardNav();
     this.currentPath = null;
+    // The migration notice describes the document being discarded, so it goes
+    // with it — leaving it up over a new character would report a rewrite that
+    // never happened to it.
+    this.migratedAgingCharacteristics = [];
     this.filters = defaultPickerFilters();
     this.childhoodDraft = defaultChildhoodDraft();
     this.clearAgingDraft();
@@ -2576,6 +2473,8 @@ class AppStore {
     }
     this.entity.selections = [...this.#mandatoryTraitRefs(typeId)].map((ref) => ({ ref }));
     this.currentPath = null;
+    // Goes with the outgoing document, exactly as in `newDocument()`.
+    this.migratedAgingCharacteristics = [];
     this.filters = defaultPickerFilters();
     this.childhoodDraft = defaultChildhoodDraft();
     this.clearAgingDraft();

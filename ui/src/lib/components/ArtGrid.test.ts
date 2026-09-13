@@ -96,7 +96,8 @@ beforeEach(() => {
 // G12 (full-audit test-adequacy): ArtGrid had no test file at all — its
 // three-column layout (the Technique/Form split this component alone computes
 // from `art_type_order`), the score spinners, and the effective-score badge
-// were exercised only via the slow e2e layer (`arts.e2e.js`).
+// were exercised only via the slow e2e layer (`magus-editor.e2e.js`'s
+// `hermetic arts`).
 // S17 (full-audit a11y): every column opened at `<h3 class="category">`
 // directly under the app's single `<h1>`, skipping `<h2>` entirely — a heading
 // hierarchy gap (h1 -> h3, no h2 between). The owning Arts tab now gets its own

@@ -69,7 +69,12 @@
               {@const score = scoreOf(art.id)}
               {@const bonus = bonusOf(art.id)}
               <li>
-                <span class="item-name" use:tooltip={tip(art.id)}>
+                <!-- Deliberately focusable: `use:tooltip` opens on `focusin`, so this
+                     is the only thing standing between a keyboard user and the Art's
+                     rules text — which this popup is the app's ONLY rendering of
+                     (Sabine 3). Matches DerivedLabCastingSection's own `<dt>`. -->
+                <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+                <span class="item-name" tabindex="0" use:tooltip={tip(art.id)}>
                   {name(art.id)}{#if abbr(art.id)}<span class="art-abbr">({abbr(art.id)})</span
                     >{/if}
                 </span>

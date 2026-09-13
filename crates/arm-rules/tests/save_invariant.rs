@@ -12,6 +12,13 @@
 //! and be computed at evaluation time instead, e.g. in
 //! `arm_rules::effective` or `arm_rules::derived`)?
 //!
+//! The same fixture then carries a second, independent guarantee:
+//! `a_fully_populated_entity_round_trips_unchanged` feeds it through
+//! serialize -> deserialize and asserts equality. The key-set test above only
+//! ever *serializes*, so it is blind to anything that goes wrong on the way
+//! back in; the round-trip test is what turns this fixture from a shape
+//! assertion into a save/load fidelity one.
+//!
 //! This is a fixed-struct-shape assertion, not a rules-catalogue count:
 //! `Entity`'s field list is a Rust struct definition, not sized by
 //! `rules/core/*.json`, so enumerating its keys here does not violate
@@ -20,7 +27,7 @@
 //! matter how many Virtues, Abilities, or Spells the loaded ruleset carries.
 
 use arm_rules::types::*;
-use arm_rules::{Characteristic, LifeStagePlan};
+use arm_rules::{Characteristic, CrisisSeverity, LifeStagePlan};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Every field `Entity` declares, populated with a non-default value so
@@ -155,10 +162,24 @@ fn fully_populated_entity() -> Entity {
     e.aging_points = BTreeMap::from([(Characteristic::Sta, 2)]);
     e.decrepitude_effect = "a persistent cough".to_string();
     e.living_conditions = BTreeSet::from([Id::new("living_condition.average_peasant")]);
+    // Spelled out field by field rather than `..AgingLogEntry::default()`: a
+    // resolved-and-survived Crisis year is the deepest nested shape a save
+    // carries (schema 15), and leaving eleven of its thirteen fields at their
+    // default would mean no test ever round-trips them.
     e.aging_log = vec![AgingLogEntry {
         year: Some(1220),
+        age: Some(35),
         effect: "an apparent aging crisis, weathered".to_string(),
-        ..AgingLogEntry::default()
+        die: Some(9),
+        total: Some(12),
+        living_conditions: BTreeSet::from([Id::new("living_condition.average_peasant")]),
+        points: BTreeMap::from([(Characteristic::Sta, 2)]),
+        apparent_age_increased: true,
+        crisis: true,
+        crisis_die: Some(4),
+        crisis_total: Some(11),
+        crisis_row: Some(Id::new("crisis.minor_illness")),
+        crisis_severity: Some(CrisisSeverity::Minor),
     }];
 
     e.equipment = vec![EquipmentSlot {
@@ -174,6 +195,11 @@ fn fully_populated_entity() -> Entity {
         name: "Second Sight".to_string(),
         level: 5,
         penetration: 2,
+    }];
+    e.focus_powers = vec![FocusPower {
+        name: "flame".to_string(),
+        max_level: 15,
+        penetration: 4,
     }];
 
     e.normalize();
@@ -239,6 +265,12 @@ const ALLOWED_ENTITY_KEYS: &[&str] = &[
     "equipment",
     "might",
     "powers",
+    // A stored CHOICE, not a derived value: a Focus Power's scope is free text the
+    // player writes and its `max_level`/`penetration` are what they chose to buy out
+    // of the Focus Power pool. What IS derived is whether that spend fits the budget
+    // (`effective::focus_points_budget`), and that is computed at evaluation time.
+    // Deliberately separate from `powers`, which is a different currency.
+    "focus_powers",
 ];
 
 #[test]
@@ -264,6 +296,39 @@ fn entity_serialized_keys_match_the_declared_allowlist() {
          Missing keys (in the allowlist but absent from JSON — did you remove \
          or rename a field, or does the fixture above need updating to set \
          it?): {missing:?}"
+    );
+}
+
+/// Save/load fidelity for a **fully-populated** entity: every field
+/// [`fully_populated_entity`] sets must survive serialize -> deserialize
+/// unchanged.
+///
+/// Distinct from the key-set assertion above, and not implied by it. That one
+/// only ever *serializes*, so it can see a key appear or vanish but never what
+/// comes back: a field can serialize under the right key and still be dropped,
+/// truncated, or defaulted on the way in — by a `skip_deserializing`, a
+/// `default` that disagrees with the field's real default, or a
+/// `deserialize_with` that loses data — and the key set is identical either
+/// way. The property-based `entity_roundtrips_and_serializes_canonically`
+/// (`roundtrip_proptest.rs`) does exercise the round trip, but over generated
+/// entities; this one is the fixture that is *deliberately* non-default in
+/// every field at once, so it pins the whole struct in a single assertion.
+///
+/// The failure this guards is silent save corruption — a character losing a
+/// field on the next open->save cycle — which `CLAUDE.md` rates at the top of
+/// the severity scale.
+#[test]
+fn a_fully_populated_entity_round_trips_unchanged() {
+    let entity = fully_populated_entity();
+
+    let json = serde_json::to_string(&entity).expect("Entity always serializes");
+    let back: Entity = serde_json::from_str(&json)
+        .unwrap_or_else(|e| panic!("a saved Entity must load: {e}\n{json}"));
+
+    assert_eq!(
+        entity, back,
+        "a fully-populated Entity did not survive a save/load round trip — some \
+         field is dropped or altered on the way back in.\nJSON was: {json}"
     );
 }
 

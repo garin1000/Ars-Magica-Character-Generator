@@ -37,6 +37,7 @@ pub use life_stage::{
     LaterLifeRules, LifeStageBudget, LifeStagePlan, LifeStageRules, MagusMinimumAbility,
     PostApprenticeshipRules, magus_minimum_abilities,
 };
+pub mod migration;
 pub mod mythic_companion;
 pub mod ruleset;
 pub mod spell;
@@ -91,6 +92,10 @@ pub use equipment::{Armor, Shield, Weapon, WeaponKind};
 pub use export::{LABEL_KEYS, character_markdown};
 pub use grant::{Grant, GrantConstraint, open_pick_satisfies, resolve_grants};
 pub use house::{House, LineageType};
+// The save-migration subsystem lives in its own module (`migration.rs`), but its
+// three public names stay at the crate root, where `arm-app` has always imported
+// them from.
+pub use migration::{LoadedEntity, SCHEMA_VERSION, load_entity_migrating};
 pub use mythic_companion::{MythicCompanionType, RequiredFlaw};
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use spell::{Spell, SpellDuration, SpellRange, SpellTarget};
@@ -99,12 +104,11 @@ pub use types::{
     AbilityFunding, AbilityScore, AdvancementSource, AgingEffect, AgingLogEntry, ArtScore,
     CastingScope, CategoryCap, CategoryRule, Classification, CombatStat, CreationPhase, Effect,
     EnchantedDevice, Entity, EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, FocusPower,
-    GiftPolicy, HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind, LineRange, LoadedEntity,
-    LongevityRitual, LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType,
-    ParameterDef, ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm,
-    Reputation, ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpecialCasting,
-    SpellSelection, SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar,
-    ValidationMode, load_entity_migrating,
+    GiftPolicy, HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind, LineRange, LongevityRitual,
+    LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType, ParameterDef,
+    ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm, Reputation,
+    ReputationType, RulesetRef, Selection, SourceRef, SpecialCasting, SpellSelection,
+    SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar, ValidationMode,
 };
 pub use validation::{
     AgeInSagaYear, Balance, DEFAULT_SAGA_YEAR, IssueSeverity, PointCeilings, ValidationIssue,

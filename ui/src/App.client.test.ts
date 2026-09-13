@@ -1,7 +1,7 @@
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { DerivedTotals, Entity, LocalizedRuleset } from './lib/types';
+import type { DerivedTotals, EffectiveScores, Entity, LocalizedRuleset } from './lib/types';
 
 // The unsaved-changes guard is a MANDATORY product behavior (CLAUDE.md): closing
 // or quitting with unsaved edits must prompt before discarding, on every
@@ -339,6 +339,7 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/example.armc.json',
       entity: loadableEntity(),
+      migrated_aging_characteristics: [],
     });
 
     const trigger = focusedTrigger();
@@ -816,6 +817,7 @@ describe('the unsaved-changes guard mirrors wizard progress (S5/#31)', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/example.armc.json',
       entity: loadableEntity(),
+      migrated_aging_characteristics: [],
     });
     await store.open();
     flushSync();
@@ -855,6 +857,7 @@ describe('the unsaved-changes guard mirrors wizard progress (S5/#31)', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/v0.2.0-character.armc.json',
       entity: migrated,
+      migrated_aging_characteristics: [],
     });
 
     await store.open();
@@ -890,6 +893,7 @@ describe('the unsaved-changes guard mirrors wizard progress (S5/#31)', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/padded-character.armc.json',
       entity: loaded,
+      migrated_aging_characteristics: [],
     });
 
     await store.open();
@@ -909,6 +913,7 @@ describe('the unsaved-changes guard mirrors wizard progress (S5/#31)', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/example.armc.json',
       entity: { ...loadableEntity(), wizard_furthest_phase: 'characteristics' },
+      migrated_aging_characteristics: [],
     });
     await store.openIntoWizard();
     flushSync();
@@ -1152,5 +1157,162 @@ describe('the document chords belong to the native menu, not the webview', () =>
     press('e');
 
     expect(ipc.exportMarkdown).not.toHaveBeenCalled();
+  });
+});
+
+// Sabine 14 (full-audit round 1): every tab carried `title={store.t(t.key)}` —
+// character-for-character the same Fluent string as its visible text. With no
+// `aria-label`, the button's content IS its accessible name, so `title` becomes
+// its accessible DESCRIPTION, and AT announces the label twice on every tab stop
+// ("Abilities, Abilities") at every window width.
+//
+// The `title` is not deleted, because the need behind it is real: the strip is
+// one line and ellipsizes (app.css), and German's thirteen-tab magus set clips
+// at the 900px the window is resizable down to — a clipped label with no `title`
+// is unreadable. So it is made CONDITIONAL on the label actually being clipped,
+// which is the only state that ever justified it.
+//
+// A `client` test necessarily: the action measures `scrollWidth`/`clientWidth`
+// on a live node, and SSR emits no node to measure. happy-dom performs no
+// layout, so both widths are 0 there — the clipping is stubbed on the prototype
+// rather than pretended into existence.
+describe('a tab carries its full label in `title` only while the strip clips it (Sabine 14)', () => {
+  /**
+   * Make every element report overflow (or not), and hand back the undo.
+   * Stubbed on the prototype because the action measures during its own setup,
+   * before a test could reach the instance.
+   */
+  function stubClipping(clipped: boolean): () => void {
+    const widths: Record<string, number> = { scrollWidth: clipped ? 200 : 100, clientWidth: 100 };
+    const saved = new Map<string, PropertyDescriptor | undefined>();
+    for (const [name, value] of Object.entries(widths)) {
+      saved.set(name, Object.getOwnPropertyDescriptor(HTMLElement.prototype, name));
+      Object.defineProperty(HTMLElement.prototype, name, { configurable: true, get: () => value });
+    }
+    return () => {
+      for (const [name, descriptor] of saved) {
+        if (descriptor) Object.defineProperty(HTMLElement.prototype, name, descriptor);
+        else delete (HTMLElement.prototype as unknown as Record<string, unknown>)[name];
+      }
+    };
+  }
+
+  function tabButtons(): HTMLElement[] {
+    return [...document.querySelectorAll<HTMLElement>('[role="tab"]')];
+  }
+
+  it('sets no title while every label fits', async () => {
+    const restore = stubClipping(false);
+    try {
+      await mountApp();
+      store.view = 'editor';
+      flushSync();
+
+      const tabs = tabButtons();
+      expect(tabs.length).toBeGreaterThan(0);
+      // The defect: a description that merely repeats the name, on every tab
+      // stop, at a width where nothing is truncated at all.
+      for (const tab of tabs) {
+        expect(tab.hasAttribute('title'), `${tab.id} should carry no title`).toBe(false);
+      }
+    } finally {
+      restore();
+    }
+  });
+
+  it('restores the full label in `title` once the label is clipped', async () => {
+    const restore = stubClipping(true);
+    try {
+      await mountApp();
+      store.view = 'editor';
+      flushSync();
+
+      const tabs = tabButtons();
+      expect(tabs.length).toBeGreaterThan(0);
+      for (const tab of tabs) {
+        // The same Fluent string as the visible text, never a second wording.
+        expect(tab.getAttribute('title')).toBe(tab.textContent?.trim());
+      }
+    } finally {
+      restore();
+    }
+  });
+});
+
+// Erika F8 (full-audit round 1): the LAST `$effect` in App.svelte with no
+// coverage. Seven of its eight have named tests in this file (the close-guard
+// mirror, `<html lang>`, the palette, the live OS switch, the window title, the
+// menu rebuild, focus restoration); the tab-fallback one had none.
+//
+// `App.test.ts` asserts only that a tab is ABSENT from a freshly rendered strip,
+// which says nothing about the TRANSITION — and the transition is where the
+// damage is. Removing the Focus Power Virtue while sitting on the Supernatural
+// tab leaves `tab` naming a tab that no longer exists: the content area renders
+// nothing, and `onTabsKeydown` computes `current === -1` and returns early, so
+// Arrow/Home/End navigation is dead and no tab carries `aria-selected="true"`.
+// A stuck editor, one click away, with every gate green.
+//
+// A `client` test necessarily: SSR never executes an `$effect` body, so the
+// assertions below would compare a strip that had never been corrected and pass
+// vacuously. (Verified by neutering the effect — see the fix report's RED.)
+describe('the active tab falls back when its own tab disappears (F8)', () => {
+  /** Mount, enter the editor, and open the Supernatural tab on a Focus Power pool. */
+  async function onSupernaturalTab(): Promise<HTMLElement> {
+    await mountApp();
+    store.view = 'editor';
+    store.effective = { focus_points_budget: 25, might: null } as unknown as EffectiveScores;
+    flushSync();
+
+    const supernatural = document.getElementById('tab-supernatural');
+    expect(supernatural, 'a Focus Power pool should open the Supernatural tab').not.toBeNull();
+    supernatural!.click();
+    flushSync();
+    expect(supernatural!.getAttribute('aria-selected')).toBe('true');
+    return supernatural!;
+  }
+
+  /** Withdraw the Focus Power pool — the tab's only reason to exist here. */
+  function removeTheGrant(): void {
+    store.effective = { focus_points_budget: 0, might: null } as unknown as EffectiveScores;
+    flushSync();
+  }
+
+  it('selects Details when the tab it was on is removed from the strip', async () => {
+    await onSupernaturalTab();
+
+    removeTheGrant();
+
+    expect(document.getElementById('tab-supernatural')).toBeNull();
+    expect(document.getElementById('tab-details')?.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('leaves exactly one tab selected, so the strip is never orphaned', async () => {
+    // The precise failure: with `tab` naming a tab that is gone, EVERY remaining
+    // tab renders `aria-selected="false"` and the panel area renders nothing.
+    await onSupernaturalTab();
+
+    removeTheGrant();
+
+    const selected = document.querySelectorAll('[role="tab"][aria-selected="true"]');
+    expect(selected.length).toBe(1);
+    expect(document.querySelector('[role="tabpanel"]')?.id).toBe('tabpanel-details');
+  });
+
+  it('keeps arrow navigation alive afterwards', async () => {
+    // The consequence that makes this more than cosmetic: `onTabsKeydown` looks
+    // the active tab up with `findIndex` and returns early on -1, so an orphaned
+    // `tab` value silently kills Arrow/Home/End for the whole strip.
+    await onSupernaturalTab();
+    removeTheGrant();
+
+    const tablist = document.querySelector('[role="tablist"]') as HTMLElement;
+    tablist.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }),
+    );
+    flushSync();
+
+    expect(document.getElementById('tab-characteristics')?.getAttribute('aria-selected')).toBe(
+      'true',
+    );
   });
 });

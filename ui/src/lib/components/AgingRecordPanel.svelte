@@ -332,8 +332,10 @@
      178.375px), and the input adds 0.5rem of padding either side and a 1px border,
      14.75px in all — 272.5px, against 22rem = 280.5px. So the floor means "the label
      the field is showing you fits inside it", in either shipped language, and not a
-     number that happened to pass. `aging.e2e.js` re-measures the real placeholder
-     against the real input every run rather than trusting this arithmetic.
+     number that happened to pass. `grog-wizard-aging.e2e.js`'s `the guided aging
+     step` re-measures the real placeholder against the real input every run
+     ("keeps the columns independent when the aging log grows, and clips nothing")
+     rather than trusting this arithmetic.
 
      `min()` against the line, so the floor can never become an overflow. The row's
      `flex-wrap` gives the input its own line as soon as `year + ×` leave it less

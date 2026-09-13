@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { buildBundle, translate } from './i18n';
@@ -60,7 +62,9 @@ describe('German UI bundle', () => {
     );
     // Whole sentences per status, so neither row leans on colour alone. `qualifier`
     // is the trailing "any Dead Language" note, empty for a requirement that names
-    // no exemplar — and never absent, because Fluent throws on a missing variable.
+    // no exemplar — and never absent, because an unresolved variable renders as a
+    // literal `{$qualifier}` in the sentence. (It used to THROW; `translate` now
+    // collects the error and returns the partial instead — see i18n.ts.)
     const row = { ability: 'Parma Magica', min: '1', score: '0', qualifier: '' };
     expect(translate(de, 'magus-minimum-met', row)).toContain('erfüllt');
     expect(translate(de, 'magus-minimum-unmet', row)).toContain('nicht erfüllt');
@@ -330,6 +334,122 @@ describe('German UI bundle', () => {
     expect(message).not.toContain('realm');
   });
 
+  // Round-1 audit, Sabine 6: the four German Realm labels were a mixed
+  // register — two bare terms (Magie, Fee) and two carrying a definite article
+  // (Das Göttliche, Das Infernale). They are `<option>` labels and they are
+  // interpolated into slots (`might-effective = Effektive Macht: { $realm }
+  // { $score }`, and the `..., {realm}` apposition every German V/F name
+  // template uses), where the article produced "Effektive Macht: Das Göttliche
+  // 15". The rulebook's own four-term enumeration is article-free
+  // (`Basisregeln.md:2960`: "mit einer der vier Sphären verbunden: Magie, Fee,
+  // Infernal und Göttlich"), and CLAUDE.md's standalone-label rule wants the
+  // uninflected form. The glossary (`translation-tables/sphären-mächte.md:20`)
+  // offers "Das Göttliche / Göttliche Sphäre"; neither is a standalone label,
+  // so the rulebook's enumeration is what this follows.
+  it('names the four Realms in the rulebook’s own article-free register', () => {
+    const de = buildBundle('de');
+    expect(translate(de, 'realm-magic')).toBe('Magie');
+    expect(translate(de, 'realm-faerie')).toBe('Fee');
+    expect(translate(de, 'realm-divine')).toBe('Göttlich');
+    expect(translate(de, 'realm-infernal')).toBe('Infernal');
+    // The whole point: no label carries an article the slot cannot absorb.
+    for (const realm of ['magic', 'faerie', 'divine', 'infernal']) {
+      expect(translate(de, `realm-${realm}`)).not.toMatch(/^(Der|Die|Das) /);
+    }
+  });
+
+  // Round-1 audit, Sabine 5: an Ability is a **Fertigkeit**. The glossary maps
+  // it that way and the German rulebook says *Übernatürliche Fertigkeiten*
+  // throughout (`Basisregeln.md:1065, :1067, :2315, :2872`), which is why the
+  // rest of the bundle already reads Mindestfertigkeiten /
+  // Fertigkeitskategorie. Two strings about the Gift's one free Ability said
+  // *Fähigkeit* instead — the very word `magus-minimums-summary` is already
+  // asserted not to contain, so the repo treats it as an error everywhere but
+  // here.
+  //
+  // Deliberately NOT covered by this test, because both are correct German
+  // rather than the game term: `characteristic-desc-int` / `-per` use
+  // *Fähigkeit* in its ordinary sense ("the ability to analyse"), and
+  // `spell-mastery-abilities-label` is the rulebook's own heading verbatim
+  // (`Basisregeln.md:9524` — "Besondere Fähigkeiten gemeisterter Zauber").
+  it('calls an Ability a Fertigkeit wherever it names the game term', () => {
+    const de = buildBundle('de');
+    for (const key of ['ability-requires-virtue', 'issue-supernatural_ability_requires_virtue']) {
+      const message = translate(de, key, { ability: 'Zweites Gesicht' });
+      expect(message, `${key} still says Fähigkeit`).not.toContain('Fähigkeit');
+      expect(message, `${key} does not say Fertigkeit`).toContain('Fertigkeit');
+    }
+  });
+
+  // Round-1 audit, Sabine 4: the German Fatigue ladder is the rulebook's own
+  // six-term enumeration, given verbatim at
+  // `Ars Magica Definitive Edition Basisregeln.md:17127` ("Ausgeruht, Außer
+  // Atem, Erschöpft, Müde, Betäubt und Bewusstlos") and in the glossary
+  // (`translation-tables/grundbegriffe.md:173` — Fresh → Ausgeruht). Four of the
+  // five keys already matched and only `fresh` said `Frisch`, a word that
+  // appears nowhere in the German rulebook as a Fatigue tier — which is what
+  // makes it an oversight rather than a choice. All five are pinned, so the next
+  // one to drift is caught too.
+  it('names every Fatigue level as the German rulebook does', () => {
+    const de = buildBundle('de');
+    expect(translate(de, 'derived-fatigue-fresh')).toBe('Ausgeruht');
+    expect(translate(de, 'derived-fatigue-winded')).toBe('Außer Atem');
+    expect(translate(de, 'derived-fatigue-weary')).toBe('Erschöpft');
+    expect(translate(de, 'derived-fatigue-tired')).toBe('Müde');
+    expect(translate(de, 'derived-fatigue-dazed')).toBe('Betäubt');
+  });
+
+  // Round-1 audit, Sabine 11: `validate_category_caps` composes its issue code
+  // from a category slug read out of `rules/core/character_types.json`
+  // (`caps.rs` — `too_many_{category}_{noun}`, or `too_many_major_…` for a
+  // Major-only cap). The four codes the shipped data produces all have keys, but
+  // nothing pinned that — and CLAUDE.md explicitly blesses adding a cap as a
+  // DATA-ONLY change, which is precisely the edit that would print a raw code
+  // into the validation panel. Parity alone cannot catch it: a code missing from
+  // both locales is perfectly symmetrical.
+  //
+  // The list is walked, never spelled out, so a fifth cap is covered the day it
+  // is added rather than the day someone remembers this test.
+  it('names every category cap the shipped character types declare, in both locales', () => {
+    interface CategoryCap {
+      category: string;
+      max: number;
+      major_only?: boolean;
+    }
+    interface TypeProfile {
+      id: string;
+      budget: { flaw_category_caps?: CategoryCap[]; virtue_category_caps?: CategoryCap[] };
+    }
+    const profiles: TypeProfile[] = JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL('../../../rules/core/character_types.json', import.meta.url)),
+        'utf-8',
+      ),
+    );
+
+    /** The code exactly as `caps.rs` composes it. */
+    const codeFor = (cap: CategoryCap, noun: string) =>
+      cap.major_only
+        ? `too_many_major_${cap.category}_${noun}`
+        : `too_many_${cap.category}_${noun}`;
+
+    const codes = new Set<string>();
+    for (const profile of profiles) {
+      for (const cap of profile.budget.flaw_category_caps ?? []) codes.add(codeFor(cap, 'flaws'));
+      for (const cap of profile.budget.virtue_category_caps ?? [])
+        codes.add(codeFor(cap, 'virtues'));
+    }
+    // A guard over an empty set would pass vacuously.
+    expect(codes.size).toBeGreaterThan(0);
+
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      for (const code of codes) {
+        expect(keys, `${lang} is missing issue-${code}`).toContain(`issue-${code}`);
+      }
+    }
+  });
+
   it('has full message-key parity between English and German', () => {
     // A missing German key silently falls back to English (or the key) at
     // runtime, so drift is invisible without this check — the same class of gap
@@ -339,6 +459,25 @@ describe('German UI bundle', () => {
     const missingInDe = [...en].filter((key) => !de.has(key)).sort();
     const missingInEn = [...de].filter((key) => !en.has(key)).sort();
     expect({ missingInDe, missingInEn }).toEqual({ missingInDe: [], missingInEn: [] });
+  });
+
+  // Round-1 audit (orchestrator, from Sabine's @Gerda tag): `formatPattern` was
+  // called in its TWO-argument form, which makes `@fluent/bundle` **throw** on a
+  // resolution error rather than return a partial string. Every `store.t()` call
+  // site is unguarded and many sit inside `$derived`, so one message
+  // interpolating a variable its caller omitted would take down the whole
+  // render — the app going blank because a *label* could not be built. No
+  // reachable trigger exists in the shipped data; this is defence in depth, and
+  // a renderable sentence with one empty slot beats a blank window either way.
+  it('renders what it can instead of throwing when an argument is missing', () => {
+    const en = buildBundle('en');
+    // `magus-minimum-met` interpolates ability/min/score/qualifier; omit two.
+    const args = { ability: 'Parma Magica', min: '1' };
+    expect(() => translate(en, 'magus-minimum-met', args)).not.toThrow();
+    const message = translate(en, 'magus-minimum-met', args).replace(/[⁦-⁩]/g, '');
+    // The arguments that DID resolve still reach the sentence.
+    expect(message).toContain('Parma Magica');
+    expect(message).toContain('1');
   });
 
   // E6 (round-1 audit): the "never render a raw slug as a user-facing label"

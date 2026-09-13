@@ -486,7 +486,9 @@ describe('ParameterPicker realm domain (row 12)', () => {
     store.lang = 'de';
     const select = selectFor(pickerBody('virtue.folk_magic'), TESTID);
     expect(ariaLabel(select!)).toBe('Sphäre');
-    expect(optionTexts(select!)).toContain('Das Göttliche');
+    // Article-free, as the rulebook enumerates the four Sphären
+    // (`Basisregeln.md:2960`) — round-1 audit, Sabine 6.
+    expect(optionTexts(select!)).toContain('Göttlich');
   });
 
   // ":3919 — you can align it to the same Realm as before or pick a different

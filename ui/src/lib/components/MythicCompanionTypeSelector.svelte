@@ -8,7 +8,6 @@
     sameSelection,
   } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
-  import { tooltip, type TooltipContent } from '../actions';
   import type {
     GrantConstraint,
     MythicCompanionType,
@@ -36,10 +35,6 @@
 
   function typeName(id: string): string {
     return store.ruleset?.i18n[id]?.name ?? id;
-  }
-
-  function typeTip(id: string): TooltipContent {
-    return { text: store.ruleset?.i18n[id]?.description ?? undefined };
   }
 
   // Localized name of a granted/option/required item, filling any `{param}` token
@@ -158,7 +153,10 @@
     </label>
 
     {#if selected}
-      <p class="mythic-type-description" use:tooltip={typeTip(selected.id)}>
+      <!-- No `use:tooltip` here, deliberately (Sabine 3): it carried the very string
+           this paragraph already renders, so it was a hover popup repeating on-screen
+           text. See HouseSelector.svelte for the same removal. -->
+      <p class="mythic-type-description">
         {store.ruleset.i18n[selected.id]?.description ?? ''}
       </p>
 

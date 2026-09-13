@@ -25,6 +25,98 @@ these should be tagged over silently.
 | ~~28~~ | **DONE 2026-09-13 — checked by Norbert in the running app; the logo works on the light background. No change owed.** ~~The logo has not been checked by eye on the light background.~~ C2 (`b04b473`) shipped light/dark/auto with the **same** asset in both themes — `ui/src/lib/assets/logo.png`, 242×96, one file, referenced once from `App.svelte`. The dark theme was verified in the running app; the light one was not. A logo authored against a dark chrome can lose its edges or halo on a light one, and no test can see it. Needs a human eye in the running app, in both themes, at the header's actual size. | a visual check | 2026-09-11 |
 | ~~30~~ | **DONE 2026-09-13 — see "Done since" below. The wording decision the row asked for turned out not to be available: *no* juxtaposition can be right, so the message stopped juxtaposing.** ~~`ability_bonus_dangling_target` renders a double space for an unparameterized Ability.~~ The row read the defect as cosmetic and offered two fixes, a separator in the arg or a re-worded message. Both assume the two halves can sit side by side in *some* order, and they cannot: **where an instance sits inside an Ability's name is that Ability's localized template, and it differs per ability and per language** — `{area} Lore` puts it first, `{area}-Kunde` puts it first and glues it on with a hyphen, `Craft: {craft}` and `Handwerk: {craft}` put it last after a colon. A sentence interpolating `{ $ability } { $parameter }` can produce at most one of those four. The double space was only the most visible symptom; the parameterized case was worse and was **not** cosmetic — the frontend resolves `$ability` through `displayName` *with the param hint*, so Craft (Carpentry) rendered as `Add Craft: (Craft) Carpentry …`: hint and instance both, template ignored. | — | 2026-09-13 |
 | ~~21~~ | **DONE 2026-09-10 — see "Done since" below.** ~~The e2e suite pays its startup cost 43 times.~~ Every spec file gets its own WebDriver session, so the app is launched and torn down once per file: 43 launches, strictly serial (`maxInstances: 1`, `ui/e2e/wdio.shared.conf.js:23`). Measured on the 2026-09-09 run from `tmp/e2e-logs/`, the blocking `POST /session` alone costs ~30s of a ~40s per-spec cycle (`app-quit-bridge-clean.e2e-0-3.log`: session posted at 21:13:12.020, first test command at 21:13:42.296, whole test body done by 21:13:44.067 — **30.3s of setup for 1.8s of testing**). Whole-suite: 41m43s. Consolidating the 43 spec files into ~10 larger ones removes ~33 startups at ~40s each, roughly **20 minutes**, with no infrastructure change and no loss of coverage — the specs already run serially against a fresh app each, so merging them only changes how many times that app is started. Worth doing independently of whether the 30s itself (see the finding on it) is ever fixed, since the two savings compound. Note `wdio.shared.conf.js:24` currently claims "Specs run serially against one shared app instance", which is wrong — every spec log carries its own session id and ends in `deleteSession()` — and should be corrected in the same pass. | decision on how to group the specs | 2026-09-09 |
+| 31 | **The XP max-flow solve is `O(n^3)`, and only its input size is capped.** `effective/xp.rs::two_phase_max_flow` runs Edmonds-Karp over a dense `n x n` matrix, re-scanning every node per augmenting path (`effective/xp.rs::max_flow`), and the graph's shape needs about one augmenting pass per spend — so cost grows with the cube of `n`, where `n` counts the character's own Ability scores, Art scores and mastered spells. Klaus F4 (2026-09-13) fixed the *symptom* by lowering `effective/xp.rs::MAX_XP_SOLVE_NODES` from 2048 to 1024, which cuts the worst **accepted** save's solve by 8x — measured release-build: ~3.6s before, 454ms after (debug: ~170s before, ~21s after). That is enough that no legal character freezes the app, because the bound is now set from the largest character that must not be rejected (853 nodes) rather than from the largest matrix that fits in memory. The algorithm is untouched, so the residual is real but small: a save near the new bound still costs ~450ms per solve, and a debounced `refresh()` pays it about three times over (`validate_xp_pool`, `effective_scores`, and the Markdown export path each re-run it) — so roughly 1.4s of lag per keystroke at the very top of the legal range. Fixing it properly means a sparse adjacency representation instead of the dense matrix, or memoizing one solve per entity revision across the three callers. Neither is urgent: a realistic character sits near 110 spends, where the solve costs ~1.5ms. Do not raise the bound back without re-reading the constant's doc comment — its value is now load-bearing for CPU, not just memory, and `the_solve_bound_admits_a_maximal_legal_character` pins the lower edge. | a follow-up pass, if the lag is ever observed in practice | 2026-09-13 |
+
+## Found during the full audit, 2026-09-13 — `.icon-btn` lost its e2e coverage
+
+Not one of the 39 audit findings; turned up while repairing dangling e2e spec
+citations (finding 1d), and recorded because it is a **coverage regression
+nobody noticed**, not a comment defect.
+
+`ui/src/app.css:1296` claimed `.icon-btn` — every `×` remove button and every
+`+`/`-` stepper in the app — was measured in a real browser engine by an e2e
+spec. No spec measures it: `grep -rn "icon-btn" ui/e2e/` is empty. The pointer
+has been dangling since the 43→10 spec consolidation, so the check was dropped
+silently rather than deliberately.
+
+Why it matters more than a typical stale comment: this is a **WCAG 2.5.8
+pointer-target floor with roughly 0.2px of margin**. The only surviving guard
+parses the CSS text, which can prove the declared size and nothing else — it
+cannot see the button being squeezed by its container, which is precisely the
+failure a real layout would catch and the reason the e2e check existed.
+
+The 1d pass wrote an honest "no e2e spec measures this" comment rather than
+inventing a replacement pointer, so the gap is now visible in the source instead
+of disguised. Restoring it is small: a one-`it` addition to `wizard-flow.e2e.js`'s
+tab-area describe, which already has the harness set up.
+
+## Product changes requested by Norbert, 2026-09-13
+
+Raised in-session during the full-codebase audit. These are **product decisions
+already taken**, not audit findings and not open questions — they are recorded
+here because they arrived mid-audit and are owed as their own pass rather than
+folded into a review fix. Numbered separately from the table above, which is for
+items still waiting on a decision; nothing below is waiting on one.
+
+| # | Item | Kind |
+|---|---|---|
+| P1 | **Menu → Window → Fullscreen does nothing.** The item exists in the native menu and is inert. Note this lands next to row 26: the menu model is unit-tested *as data*, so an item that is correctly declared and does nothing when activated is exactly the class those tests cannot catch — `crates/arm-app/tests/menu.rs` proves the accelerator parses and the item installs, never that the handler fires. Whatever fixes this should also close that gap for the item it fixes. | defect |
+| P2 | **Remove the Settings button from the web UI.** No longer needed — settings are reachable from the native menu. Check `App.svelte`'s `inert` predicate and `store.settingsOpen` on the way out; the settings dialog itself stays, only the in-page button goes. | removal |
+| P3 | **Put the character name in the window title**, as is conventional for desktop applications, with a leading **asterisk** marking unsaved state. Touches the existing window-title `$effect` in `App.svelte` (covered by `App.client.test.ts`) and reads `AppStore.dirty` — the same flag the mandatory unsaved-changes guard uses, so the dirty source is already there and must not be duplicated. | change |
+| P4 | **Remove the "Unsaved document" text.** Superseded by P3's asterisk — the two would say the same thing twice. Do P3 and P4 together, or the app briefly has neither indicator. | removal |
+| P5 | **Move the logo into the character-type / character-name section**, right-bound, sized to the combined height of the character-type and character-name lines. Row 28 stays closed: Norbert confirmed the logo reads correctly on the light background **at any size**, so moving and resizing it owes no new visual check. | layout |
+| P6 | **Move "continue in guided creation" to below the logo**, on the same line as the character one-liner description (e.g. "Knight of the Teutonic Order…"). | layout |
+| P7 | **Table and panel backgrounds should be a lighter beige, not white.** A palette change in `ui/src/app.css`. Note `app.css.test.ts` machine-checks contrast ratios in both palettes — any new background must clear 4.5:1 against the text on it, and the test is the place to prove it rather than the eye. | visual |
+| P8 | **Update the rules Markdown sources — there have been substantial changes.** Re-sync `rules/source/en/*.md` and `rules/source/de/*.md` from upstream. **Read the paragraph below before starting: this is the single most disruptive change in this file.** | data |
+
+**Not yet scoped or estimated.** P3+P4 and P5+P6 each pair naturally; P1 is a
+defect and is independent of the rest.
+
+### P8 is a line-number earthquake, not a file copy
+
+Every rule in this codebase is cited by **acronym + line range into these exact
+files** — the nine acronyms in `CLAUDE.md`, each followed by a line number, as
+in the rounding default at `ArMDE:547` — and that convention is only safe
+because a published rulebook never moves under you. Re-syncing the sources
+breaks that assumption for every citation at once. What is affected:
+
+(Note for anyone editing this entry: do **not** write illustrative citations
+with invented line numbers here. `docs/` is inside the
+`rulebook_citations.rs` sweep, which parses anything of that shape as a real
+citation and fails when the range lands on blank lines — this paragraph did
+exactly that when first written, and turned the suite red.)
+
+- **Hundreds of citations** across `crates/*/src`, `crates/*/tests`,
+  `crates/arm-rules/RULES.md`, `ui/src` and `docs/`. Any line inserted near the
+  top of a source file shifts every citation below it in that file.
+- **`crates/arm-rules/tests/rulebook_citations.rs`** will keep passing while
+  being wrong. It checks a cited range lands on **non-blank lines** — not that
+  those lines say what the comment claims. So a wholesale shift produces a green
+  suite and hundreds of citations silently pointing at the wrong rule. This is
+  precisely the failure `docs/audit-2026-08.md` records: four wrong ranges hid
+  behind unverifiable shorthand and were each found only by opening the file.
+- **The German line-parity invariant** (`CLAUDE.md`): German sources mirror the
+  English **line-by-line throughout**, deliberately un-re-sorted, so a German
+  line number identifies the same item as the English one. A re-sync that
+  updates one language and not the other, or that changes line counts
+  differently between them, destroys that property — and nothing tests it.
+- **`rules/core/*.json` and `rules/i18n/<lang>/*.json`** carry `source`
+  (`SourceRef { file, lines: [start, end] }`) per item, pointing at the English
+  file. Those ranges shift with everything else.
+- **New content is not free.** If the re-sync adds rules, they may only be
+  *implemented* from the source text — never from recollection — and English
+  remains the source of truth for IDs.
+
+**Therefore P8 is not "copy the files in".** The work is: sync, then
+mechanically re-derive every citation against the new text, then re-verify by
+opening files rather than by trusting a green suite. Worth considering as part
+of the same pass: strengthening `rulebook_citations.rs` so it checks the cited
+range against an *expected excerpt* rather than merely non-blankness — which
+would make the next re-sync a caught failure instead of a silent one.
+
+There is a gitignored helper, `rules/source/sync-sources.sh`, that refreshes the
+German sources from `arm-de-translation`; check whether it is still current
+before relying on it.
 
 ## Recorded conventions — nothing owed
 

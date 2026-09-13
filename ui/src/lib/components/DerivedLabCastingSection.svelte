@@ -97,19 +97,31 @@
 
   {#if castCell}
     <div class="table-scroll">
+      <!-- Both axes are scoped (Sabine 9): the table has a header ROW naming the
+           four cast types and a header COLUMN naming the line, and with neither
+           `scope` present the cell→header association is not inferable, so a
+           screen reader reads bare numbers. The empty corner cell is scoped too —
+           it heads the row-label column.
+           This is only safe because the non-standard figures moved OUT of the
+           table below: they lay on neither axis, so scoping them would have had
+           the reader assert a "Formulaic — No voice" relationship the rules do
+           not have. -->
       <table class="derived-table casting" data-testid="derived-casting-total">
         <thead>
           <tr>
-            <th></th>
-            <th>{store.t('derived-cast-formulaic')}</th>
-            <th>{store.t('derived-cast-ritual')}</th>
-            <th>{store.t('derived-cast-spont-fatiguing')}</th>
-            <th>{store.t('derived-cast-spont-non-fatiguing')}</th>
+            <th scope="col"></th>
+            <th scope="col">{store.t('derived-cast-formulaic')}</th>
+            <th scope="col">{store.t('derived-cast-ritual')}</th>
+            <th scope="col">{store.t('derived-cast-spont-fatiguing')}</th>
+            <th scope="col">{store.t('derived-cast-spont-non-fatiguing')}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th tabindex="0" use:tooltip={{ text: addendBreakdown(castCell.addends, store.t) }}
+            <th
+              scope="row"
+              tabindex="0"
+              use:tooltip={{ text: addendBreakdown(castCell.addends, store.t) }}
               >{store.t('derived-section-casting')}{castCell.deficient
                 ? ' ' + store.t('derived-deficient')
                 : ''}</th
@@ -121,27 +133,44 @@
           </tr>
           {#if castCell.within_focus}
             <tr class="derived-focus">
-              <th>{store.t('derived-within-focus')}</th>
+              <th scope="row">{store.t('derived-within-focus')}</th>
               <td>{castCell.within_focus.formulaic}</td>
               <td>{castCell.within_focus.ritual}</td>
               <td>{castCell.within_focus.spontaneous_fatiguing}</td>
               <td>{castCell.within_focus.spontaneous_non_fatiguing}</td>
             </tr>
           {/if}
-          <tr class="non-standard">
-            <th
-              >{store.t('derived-cast-non-standard')}{castCell.non_standard.deft_form
-                ? ' ' + store.t('derived-deft-form')
-                : ''}</th
-            >
-            <td>{store.t('derived-cast-silent')}: {castCell.non_standard.silent}</td>
-            <td>{store.t('derived-cast-still')}: {castCell.non_standard.still}</td>
-            <td colspan="2"
-              >{store.t('derived-cast-silent-still')}: {castCell.non_standard.silent_and_still}</td
-            >
-          </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- The non-standard (Silent/Still) figures, OUT of the table above and in a
+         list of their own (Sabine 9). They are all variants of one number — the
+         Formulaic total — so they never lay on that table's axes: filed as a row,
+         "No voice: 20" sat under the *Formulaic* column header, "No gestures: 23"
+         under *Ritual*, and the combined figure under a `colspan="2"` spanning the
+         two spontaneous columns. Here each number has a `<dt>` that says what it
+         is, which is the association a screen reader can actually use, and the
+         colon is the list's own semantics rather than punctuation baked into the
+         markup. -->
+    <div class="detail-section">
+      <!-- `.detail-label` is the global heading class (app.css); `.detail-sublabel`
+           is scoped to FamiliarPanel and would render unstyled here. `<h4>` under
+           this section's `<h3>` keeps the hierarchy gapless — the same pairing
+           AgingCrisisPanel uses. -->
+      <h4 class="detail-label">
+        {store.t('derived-cast-non-standard')}{castCell.non_standard.deft_form
+          ? ' ' + store.t('derived-deft-form')
+          : ''}
+      </h4>
+      <dl class="derived-grid" data-testid="derived-cast-non-standard">
+        <dt>{store.t('derived-cast-silent')}</dt>
+        <dd>{castCell.non_standard.silent}</dd>
+        <dt>{store.t('derived-cast-still')}</dt>
+        <dd>{castCell.non_standard.still}</dd>
+        <dt>{store.t('derived-cast-silent-still')}</dt>
+        <dd>{castCell.non_standard.silent_and_still}</dd>
+      </dl>
     </div>
   {/if}
 </div>

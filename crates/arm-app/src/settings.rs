@@ -56,6 +56,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Deserializer, Serialize};
 
+use crate::atomic_write::write_file_atomically;
 use crate::error::AppError;
 
 /// The settings file's name, inside whichever directory resolution picks.
@@ -220,8 +221,7 @@ pub fn write_settings(path: &Path, patch: &SettingsPatch) -> Result<(), AppError
     // read and hand-edited, and the newline keeps it diff- and editor-friendly.
     let mut json = serde_json::to_string_pretty(&settings)?;
     json.push('\n');
-    fs::write(path, json)?;
-    Ok(())
+    write_file_atomically(path, &json)
 }
 
 /// Applies `patch` to the best available candidate and returns the path used.
@@ -231,6 +231,14 @@ pub fn write_settings(path: &Path, patch: &SettingsPatch) -> Result<(), AppError
 /// candidates are tried in order and the first successful write wins — an installed
 /// build's executable directory is not writable by the user, and falling through is
 /// how that stays a non-event.
+///
+/// Falling through is only safe because [`write_settings`] replaces the file rather
+/// than truncating it (Klaus F6). A failed candidate left half-written would be the
+/// worse outcome of the two: this function would go on to write the good document to
+/// the NEXT candidate and report success, while [`pick_settings_file`] reads the
+/// FIRST existing candidate on the next launch — the corrupt one — and `read_patch`
+/// reads malformed JSON as "the user has not chosen". Every setting would silently
+/// revert to its default with the good copy still on disk, unread.
 ///
 /// Unlike [`read_settings`], a total failure IS an error: this is a user action, and
 /// silently dropping it would leave the setting looking saved when it was not.

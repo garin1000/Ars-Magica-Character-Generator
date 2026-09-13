@@ -257,9 +257,15 @@
 {#snippet nameWrap(ref: string, params: Record<string, string> | undefined)}
   {@const item = store.ruleset?.ruleset.point_items[ref]}
   {@const categories = item ? selectionCategories(item, params) : []}
+  <!-- Deliberately focusable: `use:tooltip` opens on `focusin`, and both of this
+       snippet's call sites are plain Selected-side rows (a chosen selection, a House
+       grant) rather than the Available side's buttons — so without a tab stop the
+       chosen item's rules text was mouse-only (Sabine 3). -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <span
     class="name-wrap"
     class:tall-badges={categories.length > 1}
+    tabindex="0"
     use:reserveTagSpace
     use:tooltip={tip(ref)}
   >

@@ -608,3 +608,20 @@ describe('VirtueFlawTab enforces max_total on the Available list', () => {
     expect(addRow(html())).toContain('aria-disabled="false"');
   });
 });
+
+// Sabine 3 (full-audit round 1): `nameWrap` is the Selected side's row name, and it
+// is where `use:tooltip` hangs the Virtue/Flaw's rules text. Both its call sites are
+// plain rows (a chosen selection and a House grant) — never inside a button, the way
+// the Available side's rows are — so the tooltip was mouse-only, on the one column
+// where the item's text matters most: what the character actually took.
+//
+// `ssr`, not `client`: `tabindex` is static markup, and that focus opens the popup
+// on such a host is proved once for the shared action in `ArtGrid.client.test.ts`.
+describe('VirtueFlawTab selected-row rules text is keyboard-reachable (Sabine 3)', () => {
+  it('puts a chosen item name in the tab order', () => {
+    resetEntity([{ ref: 'virtue.heartbeast' }]);
+    const wrap = /<span class="[^"]*name-wrap[^"]*"[^>]*>/.exec(virtueColumn(html()));
+    expect(wrap, 'no selected-row name-wrap span').not.toBeNull();
+    expect(wrap![0]).toContain('tabindex="0"');
+  });
+});

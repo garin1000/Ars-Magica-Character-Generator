@@ -103,27 +103,49 @@ fn sum(addends: &[Addend]) -> i32 {
 /// Widens every term to `i64`, sums, then narrows back to `i32` by **saturating**
 /// at `i32::MIN`/`i32::MAX` rather than wrapping.
 ///
-/// Every casting/lab/penetration total folds in [`Entity::aura`], which is only
-/// clamped to `AURA_MODIFIER_MIN..=AURA_MODIFIER_MAX` by `Entity::normalize`
-/// (`types.rs`) — a value that reaches one of these totals *before* that pass
-/// runs (a freshly deserialized save under `ValidationMode::Silent`, which still
-/// computes derived totals per this engine's "one evaluation path") could
-/// otherwise overflow a bare `i32` sum: silently wrapping to a nonsensical total
-/// in a release build (`overflow-checks = false` is Cargo's release default),
-/// or panicking in a debug build. `i64` cannot overflow summing any realistic
-/// number of `i32` terms, so this is exact for every legal input and merely
-/// clamps the display value for an illegal one — mirroring the
-/// `saturating_add`/`i64`-widening pattern already used by
+/// Every casting/lab/penetration total folds in [`Entity::aura`], the only
+/// unbounded signed field on an [`Entity`]. It is clamped to
+/// `AURA_MODIFIER_MIN..=AURA_MODIFIER_MAX` in two places — `Entity::normalize`
+/// (`types.rs::Entity::normalize`) on every save, and
+/// `migration.rs::load_entity_migrating` on every load — but `arm-rules` is a library
+/// whose `derived_totals` is `pub`, so a caller can still hand these totals an
+/// entity that went through neither.
+///
+/// **In this build an unguarded overflow aborts the process, it does not wrap.**
+/// The workspace sets `overflow-checks = true` under `[profile.release]` in the
+/// root `Cargo.toml`, deliberately, and
+/// `tests/overflow_checks_profile.rs::overflow_checks_are_enabled_in_this_profile`
+/// locks that in. So a bare `i32` sum here would panic in release exactly as it
+/// does in debug — taking every unsaved edit with it — rather than silently
+/// wrapping to a nonsensical total, which is what it would do under Cargo's
+/// stock release default of `overflow-checks = false`.
+///
+/// `i64` cannot overflow summing any realistic number of `i32` terms, so this is
+/// exact for every legal input and merely clamps the display value for an illegal
+/// one — mirroring the `saturating_add`/`i64`-widening pattern already used by
 /// `effective/warping.rs::warping_points_total` and
 /// `effective/xp.rs::charged_cost`.
+///
+/// Note that a *saturated* value is not a safe value to add to: folding anything
+/// further onto one must go back through this helper, in both directions. The
+/// sign of an addend decides which end it overflows, never whether it can.
 fn saturating_i32_sum(terms: impl IntoIterator<Item = i32>) -> i32 {
     let total: i64 = terms.into_iter().map(i64::from).sum();
     i32::try_from(total).unwrap_or(if total > 0 { i32::MAX } else { i32::MIN })
 }
 
-/// Integer halving toward zero (Deficient Art / halving flaws halve *totals*).
+/// Integer halving, **rounded down** (Deficient Art / halving flaws halve
+/// *totals*).
+///
+/// No halving rule in the book names a rounding direction, so the rulebook
+/// default governs: "In most cases, a rule specifies whether you should round up
+/// or down, but if it does not, round down." Source: ArMDE:547. `div_euclid` is
+/// exactly floor division for a positive divisor — unlike `/`, which truncates
+/// toward zero and so reports a negative total one point in the character's
+/// favour. Negative totals are ordinary play (a Dominion aura, a newly
+/// gauntleted magus, Deficient Technique), not an edge case.
 fn halve(x: i32) -> i32 {
-    x / 2
+    x.div_euclid(2)
 }
 
 // --- In-play effect fold (the single exhaustive-match consumer) ------------
@@ -613,13 +635,33 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
     // A supernatural being (Might Score) has Magic Resistance too, even though it
     // is not a magus. Source: RoP:M:1472.
     let has_might = crate::effective::effective_might(entity, ruleset).is_some();
+    // The 5x10 Lab-Total grid, built ONCE. The Masterpiece cap and the familiar
+    // binding are both "the best cell of this grid", and each used to rebuild it:
+    // three builds per recompute, each cell calling `effective_art_score` twice,
+    // each of those cloning the whole selection vector for any character carrying a
+    // grant. The store recomputes on every debounced keystroke, so this was the
+    // hottest path in the engine. Anything else wanting the grid should take it as
+    // a parameter rather than add a fourth build.
+    let lab = if is_magus {
+        lab_totals(entity, ruleset)
+    } else {
+        Vec::new()
+    };
+    // Bound before the struct literal so both can borrow `lab`, which is then
+    // moved into the `lab_totals` field.
+    let masterpiece = if is_magus {
+        masterpiece_item_cap(&lab, entity, ruleset)
+    } else {
+        None
+    };
+    let familiar = if is_magus {
+        familiar_readout(&lab, entity)
+    } else {
+        None
+    };
     DerivedTotals {
         is_magus,
-        lab_totals: if is_magus {
-            lab_totals(entity, ruleset)
-        } else {
-            Vec::new()
-        },
+        lab_totals: lab,
         casting_totals: if is_magus {
             casting_totals(entity, ruleset)
         } else {
@@ -640,21 +682,13 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
         } else {
             None
         },
-        masterpiece: if is_magus {
-            masterpiece_item_cap(entity, ruleset)
-        } else {
-            None
-        },
+        masterpiece,
         talisman_capacity: if is_magus {
             talisman_capacity(entity, ruleset)
         } else {
             None
         },
-        familiar: if is_magus {
-            familiar_readout(entity, ruleset)
-        } else {
-            None
-        },
+        familiar,
         focus_powers: focus_power_lines(entity, ruleset),
         combat: combat_totals(entity, ruleset),
         soak: soak(entity, ruleset),
@@ -672,13 +706,6 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Module-split (Wave 6) accessors: these two helpers moved to
-    // `derived::combat` as domain-private code motion, but the existing
-    // white-box tests below call them by bare name — `use super::*;` above
-    // only re-imports `derived`'s own namespace, not a sibling submodule's,
-    // so each needs an explicit import path (the one test-file change the
-    // split's contract allows).
-    use super::combat::{combat_encumbrance_applies, combat_gear_is_majority};
     use crate::ruleset::RulesetSources;
     use crate::types::{
         AbilityScore, ArtScore, EntityKind, EquipmentSlot, Familiar, FocusPower, LongevityRitual,
@@ -1146,7 +1173,7 @@ mod tests {
         ];
         e.aura = 5;
         e.selections = vec![Selection::new(Id::new("virtue.masterpiece"))];
-        let cap = masterpiece_item_cap(&e, &rs).expect("has masterpiece");
+        let cap = masterpiece_item_cap(&lab_totals(&e, &rs), &e, &rs).expect("has masterpiece");
         assert_eq!(cap.lab_total, 35);
         assert_eq!(cap.cap, 17);
         assert_eq!(cap.technique.as_str(), "art.creo");
@@ -1163,7 +1190,7 @@ mod tests {
             art: Id::new("art.creo"),
             score: 10,
         }];
-        assert!(masterpiece_item_cap(&e, &rs).is_none());
+        assert!(masterpiece_item_cap(&lab_totals(&e, &rs), &e, &rs).is_none());
         assert!(derived_totals(&e, &rs).masterpiece.is_none());
     }
 
@@ -1201,7 +1228,7 @@ mod tests {
             Selection::new(Id::new("virtue.masterpiece")),
             Selection::new(Id::new("flaw.weak_enchanter")),
         ];
-        let cap = masterpiece_item_cap(&e, &rs).expect("has masterpiece");
+        let cap = masterpiece_item_cap(&lab_totals(&e, &rs), &e, &rs).expect("has masterpiece");
         assert_eq!(cap.lab_total, 17);
         assert_eq!(cap.cap, 8);
         assert_eq!(cap.technique.as_str(), "art.creo");
@@ -1329,6 +1356,53 @@ mod tests {
         assert_eq!(cap.pawns, 0);
         assert_eq!(cap.technique.as_str(), "art.creo");
         assert_eq!(cap.form.as_str(), "art.corpus");
+    }
+
+    /// Gerda #9. Three panels of one character sheet answer "your best Technique
+    /// and Form": the talisman capacity, the Masterpiece cap and the familiar
+    /// binding. `talisman_capacity` breaks a tie by taking the **first** strict
+    /// maximum and documents why — "so the read-out never flickers between equal
+    /// Arts" (`familiar.rs::highest_art`). The other two reached for `max_by_key`,
+    /// which returns the **last** maximum, so on a magus who has bought no Arts —
+    /// every cell of the grid identical — one panel said Creo/Corpus while the
+    /// other two said Perdo/Vim, and the answer moved as soon as any single Art
+    /// was bought.
+    ///
+    /// The pair itself is arbitrary on an all-zero grid; what is not arbitrary is
+    /// that the three agree, which is why this asserts them against each other as
+    /// well as against the alphabetically-first pair.
+    #[test]
+    fn the_three_best_art_readouts_break_a_tie_the_same_way() {
+        let rs = ruleset();
+        let mut e = magus();
+        // No Art scores at all: every Lab Total cell is identical, so every cell
+        // is a maximum and only the tie-break decides the answer.
+        e.talisman = Some(Talisman::default());
+        e.familiar = Some(statblock_familiar());
+        e.selections = vec![Selection::new(Id::new("virtue.masterpiece"))];
+
+        let talisman = talisman_capacity(&e, &rs).expect("a talisman has a capacity");
+        let grid = lab_totals(&e, &rs);
+        let masterpiece = masterpiece_item_cap(&grid, &e, &rs).expect("Masterpiece is present");
+        let familiar = familiar_readout(&grid, &e).expect("a familiar has a read-out");
+
+        assert_eq!(
+            (masterpiece.technique.as_str(), masterpiece.form.as_str()),
+            (talisman.technique.as_str(), talisman.form.as_str()),
+            "the Masterpiece cap must name the same pair as the talisman capacity"
+        );
+        assert_eq!(
+            (
+                familiar.binding.technique.as_str(),
+                familiar.binding.form.as_str()
+            ),
+            (talisman.technique.as_str(), talisman.form.as_str()),
+            "the familiar binding must name the same pair as the talisman capacity"
+        );
+        // And that shared answer is the alphabetically first pair, as the
+        // documented first-strict-maximum fold gives.
+        assert_eq!(talisman.technique.as_str(), "art.creo");
+        assert_eq!(talisman.form.as_str(), "art.corpus");
     }
 
     /// A ruleset with the given type profile and Art catalogue, for the empty and
@@ -1708,7 +1782,7 @@ mod tests {
         )];
         e.familiar = Some(statblock_familiar());
 
-        let out = familiar_readout(&e, &rs).expect("a familiar has a read-out");
+        let out = familiar_readout(&lab_totals(&e, &rs), &e).expect("a familiar has a read-out");
         assert_eq!(out.binding_level, 15);
         assert_eq!(out.cord_points_spent, 50);
         assert_eq!(out.invested_power_levels, 15);
@@ -1735,7 +1809,7 @@ mod tests {
         let rs = ruleset();
         let mut e = magus();
         e.familiar = Some(statblock_familiar());
-        let out = familiar_readout(&e, &rs).expect("a familiar has a read-out");
+        let out = familiar_readout(&lab_totals(&e, &rs), &e).expect("a familiar has a read-out");
         assert_eq!(out.binding.lab_total, 0);
         assert_eq!(out.binding.lab_total_within_focus, None);
         assert!(!out.binding.lab_total_reaches_level, "0 < 15");
@@ -1748,7 +1822,7 @@ mod tests {
     fn familiar_readout_absent_without_a_familiar_or_for_a_non_magus() {
         let rs = ruleset();
         let e = magus();
-        assert!(familiar_readout(&e, &rs).is_none());
+        assert!(familiar_readout(&lab_totals(&e, &rs), &e).is_none());
         assert!(derived_totals(&e, &rs).familiar.is_none());
 
         let mut g = grog();
@@ -1771,7 +1845,7 @@ mod tests {
         let mut e = magus();
         e.familiar = Some(statblock_familiar());
         assert!(lab_totals(&e, &rs).is_empty(), "no Arts, so no grid cell");
-        assert!(familiar_readout(&e, &rs).is_none());
+        assert!(familiar_readout(&lab_totals(&e, &rs), &e).is_none());
         assert!(derived_totals(&e, &rs).familiar.is_none());
     }
 
@@ -1881,6 +1955,195 @@ mod tests {
             .find(|l| l.technique.as_str() == "art.creo" && l.form.as_str() == "art.ignem")
             .expect("lab cell present");
         assert_eq!(lab_cell.total, i32::MAX, "saturates rather than wraps");
+    }
+
+    /// Cluster A. The three sibling `aura = i32::MAX` tests (this module's
+    /// longevity-hint, casting/lab and penetration ones) each assert **one**
+    /// total against a fixture whose trailing addends are all zero — no Magical
+    /// Focus, no Artes Liberales, no Philosophiae — so the plain `+` chains that
+    /// sit *downstream* of the saturated `common`/`base` were never handed a
+    /// non-zero term to overflow with. This one drives the **aggregator**
+    /// instead, so every total that exists today and every total added later is
+    /// covered by one test, and the character carries all three of the addends
+    /// the per-total fixtures omit.
+    ///
+    /// It asserts saturation rather than a number because the interesting
+    /// failure is not a wrong value: this workspace sets `overflow-checks = true`
+    /// under `[profile.release]` (locked by `tests/overflow_checks_profile.rs`),
+    /// so an unguarded `+` here aborts the shipped binary and takes every unsaved
+    /// edit with it.
+    #[test]
+    fn derived_totals_with_an_unclamped_aura_saturates_rather_than_aborting() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        // The addends the per-total fixtures leave at zero: the ritual pair…
+        e.ability_scores = vec![
+            AbilityScore {
+                ability: Id::new("ability.artes_liberales"),
+                parameter: None,
+                specialty: None,
+                score: 3,
+            },
+            AbilityScore {
+                ability: Id::new("ability.philosophiae"),
+                parameter: None,
+                specialty: None,
+                score: 2,
+            },
+        ];
+        // …and a Magical Focus, which is what makes `focus_add` and the Lab
+        // Total's `within_focus` non-zero.
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.magical_focus"),
+            BTreeMap::from([("focus".into(), Id::new("fire"))]),
+        )];
+        e.aura = i32::MAX; // deliberately unclamped — normalize() was not called
+
+        let totals = derived_totals(&e, &rs);
+
+        let cell = find_casting(&totals.casting_totals, "art.creo", "art.ignem");
+        assert_eq!(cell.formulaic, i32::MAX, "saturates rather than aborting");
+        assert_eq!(
+            cell.ritual,
+            i32::MAX,
+            "the ritual addends must not overflow"
+        );
+        let wf = cell.within_focus.as_ref().expect("focus present");
+        assert_eq!(wf.formulaic, i32::MAX);
+        assert_eq!(wf.ritual, i32::MAX);
+
+        let lab_cell = totals
+            .lab_totals
+            .iter()
+            .find(|l| l.technique.as_str() == "art.creo" && l.form.as_str() == "art.ignem")
+            .expect("lab cell present");
+        assert_eq!(lab_cell.total, i32::MAX);
+        assert_eq!(
+            lab_cell.within_focus.expect("focus present"),
+            i32::MAX,
+            "the within-focus Lab Total must not overflow either"
+        );
+    }
+
+    /// Cluster A, the other end of the range. The aura field accepts the whole
+    /// `i32` range in both directions, and the non-standard-casting lines add a
+    /// **negative** residual to an already-saturated total
+    /// (`silent = formulaic + voice_penalty`, the voice penalty a flat -10 for
+    /// any magus without Deft Form). So a saturated `i32::MIN` aborts there for the
+    /// mirror-image reason a saturated `i32::MAX` aborts on the ritual line: the
+    /// addends' sign is what decides which end overflows, never a guard.
+    #[test]
+    fn derived_totals_with_a_minimally_unclamped_aura_saturates_rather_than_aborting() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        e.aura = i32::MIN; // deliberately unclamped — normalize() was not called
+
+        let totals = derived_totals(&e, &rs);
+
+        // The bought-Art cell has enough headroom that nothing saturates:
+        // Cr10 + Ig5 + Sta2 + aura = `i32::MIN + 17`, and the -10 voice / -5
+        // gesture residuals still fit. Pinned so the test cannot be read as
+        // "everything clamps".
+        let bought = find_casting(&totals.casting_totals, "art.creo", "art.ignem");
+        assert_eq!(bought.formulaic, i32::MIN + 17);
+        assert_eq!(bought.non_standard.silent, i32::MIN + 7);
+        assert_eq!(bought.non_standard.silent_and_still, i32::MIN + 2);
+
+        // The cell that actually underflows is one with **no** Arts bought:
+        // Sta2 + aura = `i32::MIN + 2`, and the two residuals take it past the
+        // floor. This is the cell the abort came from, and there is one for
+        // every unbought Technique/Form pair on a real character sheet.
+        let unbought = find_casting(&totals.casting_totals, "art.muto", "art.corpus");
+        assert_eq!(unbought.formulaic, i32::MIN + 2);
+        assert_eq!(
+            unbought.non_standard.silent,
+            i32::MIN,
+            "the -10 voice penalty must saturate, not underflow"
+        );
+        assert_eq!(unbought.non_standard.still, i32::MIN);
+        assert_eq!(unbought.non_standard.silent_and_still, i32::MIN);
+    }
+
+    /// Cluster A, the whole route. The save file is this project's declared
+    /// hostile-input surface, and the two tests above reach the derived layer by
+    /// assigning `e.aura` directly — which is the *frontend's* door, not the
+    /// file's. Nothing exercised `load_entity_migrating` → `derived_totals` as one
+    /// flow, which is literally File → Open, so the clamp that now sits on the load
+    /// path had no test standing behind it at the point where it matters.
+    ///
+    /// This asserts the stronger post-clamp property: a crafted aura does not merely
+    /// fail to abort, it produces a *correct* sheet, because the value is brought
+    /// into the rules range before any total is computed. A saturated `i32::MAX`
+    /// read-out would be a wrong character sheet, which this project rates as a
+    /// product-integrity failure rather than a display quirk.
+    #[test]
+    fn a_crafted_aura_in_a_save_is_clamped_before_any_total_is_derived() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.artes_liberales"),
+            parameter: None,
+            specialty: None,
+            score: 3,
+        }];
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.magical_focus"),
+            BTreeMap::from([("focus".into(), Id::new("fire"))]),
+        )];
+        e.aura = i32::MAX;
+
+        // Through the real load door, because that is where the clamp lives.
+        let loaded = crate::load_entity_migrating(
+            &serde_json::to_string(&e).unwrap(),
+            crate::DEFAULT_SAGA_YEAR,
+        )
+        .unwrap()
+        .entity;
+        assert_eq!(
+            loaded.aura,
+            crate::types::AURA_MODIFIER_MAX,
+            "the load path clamps before the engine ever sees the value"
+        );
+
+        let totals = derived_totals(&loaded, &rs);
+        let cell = find_casting(&totals.casting_totals, "art.creo", "art.ignem");
+        // Cr10 + Ig5 + Sta2 - Enc0 + Aura10 = 27 — a real number, not i32::MAX.
+        assert_eq!(cell.formulaic, 27);
+        // …+ Artes Liberales 3 + Philosophiae 0 on the ritual line.
+        assert_eq!(cell.ritual, 30);
     }
 
     /// A Deficient Technique halves every casting total using it (ArMDE:5913-5915).
@@ -2459,24 +2722,18 @@ mod tests {
         assert_eq!(no_spec.defense, 6);
     }
 
-    /// Issue A: the pure "largely due to weapons and armor" majority test —
-    /// combat-gear Load ≥ half of total Load exempts Attack/Defense (ArMDE:17105).
-    /// Documents the ">= half" interpretation of "largely" (RULES.md).
-    #[test]
-    fn combat_gear_majority_boundary() {
-        // (i) majority combat gear (7 of 10) → exempt.
-        assert!(combat_gear_is_majority(7, 10));
-        // (ii) majority non-combat load (3 of 10) → NOT exempt (penalized).
-        assert!(!combat_gear_is_majority(3, 10));
-        // (iii) exact 50/50 → exempt (the ">= half" choice).
-        assert!(combat_gear_is_majority(5, 10));
-        // No load at all → trivially exempt (nothing to penalize).
-        assert!(combat_gear_is_majority(0, 0));
-    }
-
     /// Issue A: with all Load coming from combat gear (weapons + armor), the
     /// Encumbrance penalty is exempt from Attack/Defense but still hits Initiative
     /// (ArMDE:17105, :16658).
+    ///
+    /// This replaces a companion test that called the private `combat_gear_is_majority`
+    /// helper with hand-written `(7, 10)` / `(3, 10)` pairs. Those argument pairs
+    /// were unreachable: every catalogued item that carries Load is a weapon, shield
+    /// or armor, so combat Load and total Load are the same sum and the helper could
+    /// only ever be asked `(n, n)`. It read as coverage while pinning a branch the
+    /// engine cannot take. The assertions below go through the public
+    /// `Entity` + `Ruleset` surface instead, where they pin the numbers the sheet
+    /// actually shows.
     #[test]
     fn combat_gear_exempts_attack_defense_but_not_initiative() {
         let rs = ruleset();
@@ -2503,13 +2760,15 @@ mod tests {
                 specialization_applies: false,
             },
         ];
-        assert!(!combat_encumbrance_applies(&e, &rs));
+        // The Encumbrance is real — this is not a fixture that dodges the rule by
+        // carrying nothing.
+        assert_eq!(encumbrance(&e, &rs).total, 1);
         let l = &combat_totals(&e, &rs)[0];
-        // Init = Qik 1 + WpnInit 2 − Enc 1 = 2 (Initiative IS penalized).
+        // Init = Qik 1 + WpnInit 2 - Enc 1 = 2 (Initiative IS penalized).
         assert_eq!(l.initiative, 2);
-        // Attack = Dex 2 + Ability 4 + WpnAtk 4 = 10 (NO −Enc: exempt).
+        // Attack = Dex 2 + Ability 4 + WpnAtk 4 = 10 (NO -Enc: exempt).
         assert_eq!(l.attack, Some(10));
-        // Defense = Qik 1 + Ability 4 + WpnDef 1 = 6 (NO −Enc: exempt).
+        // Defense = Qik 1 + Ability 4 + WpnDef 1 = 6 (NO -Enc: exempt).
         assert_eq!(l.defense, 6);
     }
 
@@ -3036,6 +3295,53 @@ mod tests {
         assert_eq!(pen[0].casting_total, 8);
         // Penetration = 8 − level 20 + Penetration 4 = −8.
         assert_eq!(pen[0].total, -8);
+    }
+
+    /// Every halving in the engine divides without the rule naming a direction, so
+    /// the rulebook default applies: "if it does not, round down" (ArMDE:547).
+    /// Floor and truncate-toward-zero agree on non-negative operands — which is why
+    /// every worked example passes either way — and diverge on negative ones, which
+    /// are ordinary play (a Dominion aura, a low-Art magus, Deficient Technique).
+    #[test]
+    fn halving_rounds_down_not_toward_zero() {
+        // Negative, odd: floor(-7/2) = -4, not -3.
+        assert_eq!(halve(-7), -4);
+        assert_eq!(halve(-5), -3);
+        assert_eq!(halve(-1), -1);
+        // Negative, even: exact either way.
+        assert_eq!(halve(-4), -2);
+        // Non-negative: unchanged.
+        assert_eq!(halve(0), 0);
+        assert_eq!(halve(17), 8);
+    }
+
+    /// The same rounding default, end-to-end through `casting_totals` on a cell
+    /// driven negative by a Dominion aura (ArMDE:547). A newly gauntleted magus
+    /// with no Arts, Stamina −1 and no equipment: the whole grid is negative.
+    #[test]
+    fn a_negative_casting_cell_rounds_its_divisions_down() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, -1);
+
+        // Casting Score = Cr0 + Ig0 + Sta−1 + Enc0 + Aura−3 = −4.
+        e.aura = -3;
+        let totals = casting_totals(&e, &rs);
+        let cell = find_casting(&totals, "art.creo", "art.ignem");
+        assert_eq!(cell.formulaic, -4);
+        // ÷5 floors: −4/5 = −1, not 0.
+        assert_eq!(cell.spontaneous_non_fatiguing, -1);
+        // ÷2 is exact here.
+        assert_eq!(cell.spontaneous_fatiguing, -2);
+
+        // Casting Score = −5: now the ÷2 is the one that rounds.
+        e.aura = -4;
+        let totals = casting_totals(&e, &rs);
+        let cell = find_casting(&totals, "art.creo", "art.ignem");
+        assert_eq!(cell.formulaic, -5);
+        // ÷2 floors: −5/2 = −3, not −2.
+        assert_eq!(cell.spontaneous_fatiguing, -3);
+        assert_eq!(cell.spontaneous_non_fatiguing, -1);
     }
 
     /// A surfaced-only health-roll track (Long-Winded → fatigue_roll +3) is listed

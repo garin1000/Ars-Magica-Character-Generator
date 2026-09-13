@@ -3,14 +3,14 @@
 //! data — no Tauri runtime or webview required.
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use arm_app::error::AppError;
 use arm_app::ruleset_io::{
-    AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication, RULESET_ID,
-    RULESET_VERSION, apply_childhood_package_loaded, effective_scores_loaded, ensure_extension,
+    AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication,
+    apply_childhood_package_loaded, effective_scores_loaded, ensure_extension,
     export_markdown_to_path, load_entity_from_path, load_ruleset_from_dir, missing_core_files,
-    pick_rules_dir, save_entity_to_path, validate_loaded,
+    path_text, pick_rules_dir, save_entity_to_path, validate_loaded,
 };
 use arm_rules::{
     ArtScore, CreationPhase, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode,
@@ -25,6 +25,15 @@ fn repo_root() -> PathBuf {
 fn rules_dir() -> PathBuf {
     repo_root().join("rules")
 }
+
+/// The identity the **shipped** `rules/core/ruleset.json` declares, as a fixture
+/// value for the saves these tests build. It lives here, in the tests, rather
+/// than in the binary: the app must not author a ruleset's identity (full-audit
+/// V6), so the only thing left that may name it is an expectation — and
+/// [`load_ruleset_declares_the_identity_the_rules_data_carries`] pins the pair
+/// against the file, so shipping different data fails loudly instead of drifting.
+const RULESET_ID: &str = "arm5-core";
+const RULESET_VERSION: &str = "2024.1";
 
 fn sample_entity() -> Entity {
     let json = fs::read_to_string(repo_root().join("examples/companion_sample.json")).unwrap();
@@ -406,6 +415,7 @@ fn missing_core_files_names_every_absent_file() {
     assert!(!missing.contains(&"core/character_types.json"));
     assert!(!missing.contains(&"core/virtues_flaws.json"));
     // Every other required core file is genuinely absent from this fixture.
+    assert!(missing.contains(&"core/ruleset.json"));
     assert!(missing.contains(&"core/abilities.json"));
     assert!(missing.contains(&"core/arts.json"));
     assert!(missing.contains(&"core/houses.json"));
@@ -417,7 +427,7 @@ fn missing_core_files_names_every_absent_file() {
     assert!(missing.contains(&"core/life_stages.json"));
     assert!(missing.contains(&"core/childhoods.json"));
     assert!(missing.contains(&"core/aging.json"));
-    assert_eq!(missing.len(), 11);
+    assert_eq!(missing.len(), 12);
 }
 
 #[test]
@@ -428,7 +438,157 @@ fn missing_core_files_is_empty_for_the_real_shipped_rules_directory() {
 #[test]
 fn missing_core_files_is_the_full_list_for_a_directory_that_does_not_exist() {
     let missing = missing_core_files(&PathBuf::from("/does/not/exist/at/all"));
-    assert_eq!(missing.len(), 13);
+    assert_eq!(missing.len(), 14);
+}
+
+/// A temp copy of the shipped `rules/` (core + English i18n) whose
+/// `core/ruleset.json` carries `identity` verbatim. A copy of the real data
+/// rather than a synthetic minimal ruleset: what is under test is the shipped
+/// loader reading the shipped files, with only the identity file swapped —
+/// exactly the portable "house-ruled `rules/` beside the binary" layout.
+fn staged_rules_with_identity(identity: &str) -> tempfile::TempDir {
+    let staged = tempfile::tempdir().unwrap();
+    for sub in ["core", "i18n/en"] {
+        let target = staged.path().join(sub);
+        fs::create_dir_all(&target).unwrap();
+        for entry in fs::read_dir(rules_dir().join(sub)).unwrap() {
+            let source = entry.unwrap().path();
+            if source.is_file() {
+                fs::copy(&source, target.join(source.file_name().unwrap())).unwrap();
+            }
+        }
+    }
+    fs::write(staged.path().join("core/ruleset.json"), identity).unwrap();
+    staged
+}
+
+/// V6: a ruleset's identity is a property of the rules data, never of the
+/// executable. It used to be a pair of `const`s in the binary, so a house-ruled
+/// `rules/` directory produced saves stamped with the shipped ruleset's id and
+/// version — indistinguishable from characters built against the real one.
+#[test]
+fn ruleset_identity_is_read_from_the_rules_data() {
+    let staged = staged_rules_with_identity(r#"{ "id": "house-rules", "version": "9.9" }"#);
+
+    let localized = load_ruleset_from_dir(staged.path(), "en").unwrap();
+
+    assert_eq!(localized.ruleset.id.as_str(), "house-rules");
+    assert_eq!(localized.ruleset.version, "9.9");
+}
+
+/// The shipped data's identity, and the fixture constants above, are one pair:
+/// what `rules/core/ruleset.json` declares is what a loaded ruleset reports, and
+/// every save these tests stamp with [`RULESET_ID`] is therefore stamped with the
+/// shipped ruleset's own id. Editing the file without editing the constants fails
+/// here rather than drifting.
+#[test]
+fn load_ruleset_declares_the_identity_the_rules_data_carries() {
+    let declared: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(rules_dir().join("core/ruleset.json")).unwrap())
+            .unwrap();
+
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+
+    assert_eq!(declared["id"], RULESET_ID);
+    assert_eq!(declared["version"], RULESET_VERSION);
+    assert_eq!(localized.ruleset.id.as_str(), declared["id"]);
+    assert_eq!(localized.ruleset.version, declared["version"]);
+}
+
+/// The identity file is rules data like any other, so a malformed one fails the
+/// load loudly rather than falling back to a default identity nothing declared.
+#[test]
+fn a_malformed_ruleset_identity_file_fails_the_load() {
+    let staged = staged_rules_with_identity("not valid json");
+
+    let err = load_ruleset_from_dir(staged.path(), "en").unwrap_err();
+
+    let AppError::Ruleset {
+        ruleset_kind,
+        errors,
+    } = &err
+    else {
+        panic!("expected ruleset error, got {err:?}");
+    };
+    assert_eq!(ruleset_kind, "parse", "malformed JSON is a parse failure");
+    assert_eq!(errors.len(), 1, "parse failure carries one message");
+    assert!(
+        errors[0].contains("core/ruleset.json"),
+        "the message must name the offending file, got {errors:?}"
+    );
+}
+
+/// An empty id or version is malformed too: it would stamp every save with a
+/// blank provenance that can never be compared against anything.
+#[test]
+fn a_blank_ruleset_identity_fails_the_load() {
+    for identity in [
+        r#"{ "id": "", "version": "2024.1" }"#,
+        r#"{ "id": "arm5-core", "version": "" }"#,
+    ] {
+        let staged = staged_rules_with_identity(identity);
+
+        let err = load_ruleset_from_dir(staged.path(), "en").unwrap_err();
+
+        let AppError::Ruleset {
+            ruleset_kind,
+            errors,
+        } = &err
+        else {
+            panic!("expected ruleset error for {identity}, got {err:?}");
+        };
+        assert_eq!(ruleset_kind, "parse");
+        assert!(
+            errors[0].contains("core/ruleset.json"),
+            "the message must name the offending file, got {errors:?}"
+        );
+    }
+}
+
+/// The two halves of V6 meeting through the real production path: a character
+/// authored against a house-ruled rules directory, reopened under the shipped
+/// one, is told rather than silently re-priced.
+#[test]
+fn a_save_from_another_rules_directory_warns_when_reopened() {
+    let staged = staged_rules_with_identity(r#"{ "id": "house-rules", "version": "9.9" }"#);
+    let house_ruled = load_ruleset_from_dir(staged.path(), "en").unwrap().ruleset;
+    let mut entity = sample_entity();
+    entity.ruleset =
+        arm_rules::RulesetRef::new(house_ruled.id.clone(), house_ruled.version.clone());
+    let shipped = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+
+    let result = validate_loaded(&entity, &shipped, ValidationMode::Enforced);
+
+    let issue = result
+        .issues
+        .iter()
+        .find(|i| i.code == "ruleset_mismatch")
+        .unwrap_or_else(|| panic!("expected a mismatch warning, got {:?}", result.issues));
+    assert_eq!(issue.args["saved_ruleset"], "house-rules");
+    assert_eq!(issue.args["saved_version"], "9.9");
+    assert_eq!(issue.args["loaded_ruleset"], RULESET_ID);
+    assert_eq!(issue.args["loaded_version"], RULESET_VERSION);
+    assert!(
+        result.is_valid(),
+        "a mismatch must not block the document: {:?}",
+        result.issues
+    );
+}
+
+/// And the ordinary case stays silent: a shipped example, validated against the
+/// shipped ruleset, must not carry the warning — otherwise it is noise on every
+/// document rather than a signal on the rare one.
+#[test]
+fn a_shipped_example_raises_no_ruleset_mismatch() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+
+    let result = validate_loaded(&sample_entity(), &ruleset, ValidationMode::Enforced);
+
+    assert!(
+        !result.issues.iter().any(|i| i.code == "ruleset_mismatch"),
+        "issues: {:?}",
+        result.issues
+    );
 }
 
 #[test]
@@ -436,6 +596,11 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     let tmp = tempfile::tempdir().unwrap();
     fs::create_dir_all(tmp.path().join("core")).unwrap();
     fs::create_dir_all(tmp.path().join("i18n/en")).unwrap();
+    fs::write(
+        tmp.path().join("core/ruleset.json"),
+        r#"{ "id": "test", "version": "1" }"#,
+    )
+    .unwrap();
     fs::write(tmp.path().join("core/virtues_flaws.json"), "not valid json").unwrap();
     fs::write(tmp.path().join("core/character_types.json"), "[]").unwrap();
     fs::write(tmp.path().join("core/abilities.json"), "{}").unwrap();
@@ -490,6 +655,11 @@ fn integrity_failure_preserves_individual_messages() {
     let tmp = tempfile::tempdir().unwrap();
     fs::create_dir_all(tmp.path().join("core")).unwrap();
     fs::create_dir_all(tmp.path().join("i18n/en")).unwrap();
+    fs::write(
+        tmp.path().join("core/ruleset.json"),
+        r#"{ "id": "test", "version": "1" }"#,
+    )
+    .unwrap();
     fs::write(
         tmp.path().join("core/virtues_flaws.json"),
         // Carries a personality-category item so the only integrity failures are
@@ -721,7 +891,9 @@ fn save_then_load_round_trips_with_byte_stable_canonical_json() {
     save_entity_to_path(&entity, &path).unwrap();
     let first = fs::read_to_string(&path).unwrap();
 
-    let reloaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
+    let reloaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
+        .unwrap()
+        .entity;
     assert_eq!(reloaded, entity, "round trip must preserve the entity");
 
     // Re-saving the reloaded entity yields byte-identical output.
@@ -734,7 +906,8 @@ fn save_then_load_round_trips_with_byte_stable_canonical_json() {
 /// through the **real** load path the app uses, not just the engine helper: the
 /// attunements arrive under `Entity.talisman`, the version is bumped to current, and
 /// re-saving writes only the new shape. This is the engine-boundary half of the
-/// migration proof (the UI-boundary half is `ui/e2e/specs/talisman.e2e.js`).
+/// migration proof; the UI-boundary half is the `talisman` describe in
+/// `ui/e2e/specs/magus-possessions.e2e.js`.
 #[test]
 fn legacy_talisman_save_migrates_through_the_real_load_path() {
     let tmp = tempfile::tempdir().unwrap();
@@ -756,7 +929,9 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     )
     .unwrap();
 
-    let migrated = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
+    let migrated = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
+        .unwrap()
+        .entity;
     assert_eq!(
         migrated.schema_version, 17,
         "the field move bumps the schema"
@@ -802,14 +977,14 @@ fn a_pre_17_save_inherits_the_configured_default_through_the_real_load_path() {
     )
     .unwrap();
 
-    let migrated = load_entity_from_path(&path, 1197).unwrap();
+    let migrated = load_entity_from_path(&path, 1197).unwrap().entity;
     assert_eq!(migrated.saga_year, 1197);
     assert_eq!(migrated.schema_version, arm_rules::SCHEMA_VERSION);
 
     // Round trip: saved and reopened under a DIFFERENT default, the year the
     // document now owns is the one that answers.
     save_entity_to_path(&migrated, &path).unwrap();
-    let reopened = load_entity_from_path(&path, 1000).unwrap();
+    let reopened = load_entity_from_path(&path, 1000).unwrap().entity;
     assert_eq!(reopened.saga_year, 1197);
 }
 
@@ -828,12 +1003,288 @@ fn save_stamps_current_schema_version() {
     );
 }
 
+/// Cluster C (CRITICAL — Gerda #2 + Klaus F6): a save must never truncate the
+/// previous file in place. `fs::write` is `File::create` (O_TRUNC) +
+/// `write_all`, so the character already on disk is emptied *before* the new
+/// bytes land and any failure in between — a full disk, a lost network mount, a
+/// process kill — leaves nothing at all. Plain Save writes straight to the
+/// current path with no dialog, dozens of times a session, and there is no other
+/// copy anywhere.
+///
+/// A second hard link is the witness: it names the very bytes the first save
+/// wrote, and they stay reachable under it for as long as nothing overwrites
+/// them. A save that REPLACES the file (scratch file in the same directory,
+/// flushed, then renamed over the target) leaves them untouched; a save that
+/// truncates in place overwrites them, which is precisely the act that destroys
+/// the user's only copy when the write then fails halfway.
+#[test]
+fn a_re_save_replaces_the_previous_file_instead_of_truncating_it() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("character.armc");
+    let entity = sample_entity();
+
+    save_entity_to_path(&entity, &path).unwrap();
+    let previous = fs::read_to_string(&path).unwrap();
+
+    let witness = tmp.path().join("previous-bytes");
+    fs::hard_link(&path, &witness).unwrap();
+
+    let mut edited = entity.clone();
+    edited.name = "Gerhard von Ratzeburg".to_owned();
+    save_entity_to_path(&edited, &path).unwrap();
+
+    assert_eq!(
+        fs::read_to_string(&witness).unwrap(),
+        previous,
+        "the previous save's bytes must still be intact: a save that overwrites \
+         them in place is one crash away from leaving the user with an empty file"
+    );
+    let written = fs::read_to_string(&path).unwrap();
+    assert!(
+        written.contains("Gerhard von Ratzeburg"),
+        "the new save must be complete at the target path, got: {written}"
+    );
+}
+
+/// The other half of Cluster C: replacing a file through a scratch copy must not
+/// leave that scratch copy behind. A `.armc.tmp-…` sitting next to every save the
+/// user makes would be its own defect — and it is what an atomic write does if it
+/// forgets to clean up.
+#[test]
+fn a_successful_save_leaves_no_scratch_file_beside_the_target() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("character.armc");
+
+    save_entity_to_path(&sample_entity(), &path).unwrap();
+    save_entity_to_path(&sample_entity(), &path).unwrap();
+
+    let mut entries: Vec<String> = fs::read_dir(tmp.path())
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    entries.sort();
+    assert_eq!(
+        entries,
+        vec!["character.armc".to_string()],
+        "a save must leave exactly the file it was asked to write"
+    );
+}
+
+/// Cluster C's third site: the Markdown export writes the same way, so it gets
+/// the same guarantee. Milder — an export is reproducible from the save — but a
+/// second way to write a file is a second thing to keep correct, so both go
+/// through one helper.
+#[test]
+fn a_re_export_replaces_the_previous_file_instead_of_truncating_it() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("companion.md");
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+    let labels = locale_labels("en");
+
+    export_markdown_to_path(&sample_entity(), Some(&localized), &labels, &path).unwrap();
+    let previous = fs::read_to_string(&path).unwrap();
+
+    let witness = tmp.path().join("previous-bytes");
+    fs::hard_link(&path, &witness).unwrap();
+
+    let mut edited = sample_entity();
+    edited.name = "Gerhard von Ratzeburg".to_owned();
+    export_markdown_to_path(&edited, Some(&localized), &labels, &path).unwrap();
+
+    assert_eq!(
+        fs::read_to_string(&witness).unwrap(),
+        previous,
+        "the previous export's bytes must still be intact"
+    );
+    assert!(
+        fs::read_to_string(&path).unwrap().contains("Gerhard"),
+        "the new export must be complete at the target path"
+    );
+    let mut entries: Vec<String> = fs::read_dir(tmp.path())
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    entries.sort();
+    assert_eq!(
+        entries,
+        vec!["companion.md".to_string(), "previous-bytes".to_string()],
+        "an export must leave no scratch file behind"
+    );
+}
+
+/// Klaus F5 (MINOR): `lang` is joined straight into a path
+/// (`rules_dir/i18n/<lang>/<file>`), and it arrives as a bare `String` — from
+/// the `load_ruleset` command with no allowlist, and from `settings.json`, whose
+/// deliberately lenient deserializer accepts any string at all. `"../../.."`
+/// resolves outside the rules directory.
+///
+/// The impact is near-inert by this app's threat model (`CLAUDE.md`): the access
+/// is read-only, the final component is one of ten fixed filenames, and there is
+/// no remote attacker. It is fixed because it is the codebase's only unvalidated
+/// string-to-path join, and the next one might not be inert.
+///
+/// The guard sits in `read_i18n_sources`, not in the command shim, so the
+/// settings path and the IPC path share one check.
+#[test]
+fn a_language_that_is_not_a_language_tag_is_refused() {
+    for rejected in ["../etc", "en/../..", "", ".", "en/de"] {
+        let err = load_ruleset_from_dir(&rules_dir(), rejected).unwrap_err();
+        let AppError::Io { message } = err else {
+            panic!("expected an Io refusal for {rejected:?}, got {err:?}");
+        };
+        assert!(
+            message.contains(rejected),
+            "the refusal must name the value it rejected ({rejected:?}), got: \
+             {message}"
+        );
+    }
+}
+
+/// The other half: the languages the app actually ships still load. A guard that
+/// refused a real language would take the whole ruleset down with it.
+#[test]
+fn the_shipped_languages_pass_the_language_tag_guard() {
+    for accepted in ["en", "de"] {
+        assert!(
+            load_ruleset_from_dir(&rules_dir(), accepted).is_ok(),
+            "{accepted} must still load"
+        );
+    }
+}
+
+/// Viktor #4 (MINOR): a schema migration must reach the user, not a terminal
+/// nobody is looking at. The load used to format its report into an English
+/// `eprintln!` and return a bare `Entity`, dropping it — and a GUI binary
+/// launched from a desktop launcher has no attached terminal at all. The
+/// migration is lossy (`minimal_aging_points_for_drops` reconstructs a
+/// *minimal* total, not the one the character really accumulated) and the next
+/// save makes it permanent, so going unmentioned is the problem.
+///
+/// The engine already holds up its end: `migration.rs::LoadedEntity` carries the
+/// migrated Characteristics and states that "the caller surfaces a localized
+/// notice; the engine holds no user-facing string". This is the caller doing
+/// so — the app's load door hands the report on rather than swallowing it.
+#[test]
+fn the_load_reports_which_characteristics_a_migration_rewrote() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("legacy-companion.json");
+    fs::write(
+        &path,
+        format!(
+            r#"{{
+              "schema_version": 9,
+              "ruleset": {{ "id": "{RULESET_ID}", "version": "{RULESET_VERSION}" }},
+              "entity_kind": "character",
+              "type_id": "companion",
+              "characteristics": {{ "com": 2 }},
+              "aging_reductions": {{ "com": 1 }}
+            }}"#
+        ),
+    )
+    .unwrap();
+
+    let loaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
+    assert_eq!(
+        loaded.migrated_aging_characteristics,
+        vec![arm_rules::Characteristic::Com],
+        "the rewritten Characteristics must reach the caller that can tell the \
+         user about them"
+    );
+    assert_eq!(loaded.entity.schema_version, arm_rules::SCHEMA_VERSION);
+}
+
+/// A save that needed no migration reports none, so the frontend has nothing to
+/// announce — the ordinary case, and the one a notice must not fire on.
+#[test]
+fn an_up_to_date_save_reports_no_migration() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("current.armc");
+    save_entity_to_path(&sample_entity(), &path).unwrap();
+
+    let loaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
+    assert!(loaded.migrated_aging_characteristics.is_empty());
+}
+
+/// The wire contract the frontend reads. `path` and `entity` keep their names —
+/// the shape the UI already consumes is unchanged — and the migration report
+/// rides alongside them, always present so the frontend has one field to check
+/// rather than an optional to distinguish from a stale build.
+///
+/// The struct is `OpenedDocument`, not `LoadedEntity` (Viktor #8): it is what
+/// `load_entity` returns, i.e. an opened document, while the engine's
+/// `LoadedEntity` is a migration outcome — and both names were in scope in this
+/// crate meaning different things.
+#[test]
+fn the_opened_document_dto_carries_the_migration_report_to_the_frontend() {
+    use arm_app::commands::OpenedDocument;
+
+    let document = OpenedDocument {
+        path: "/home/u/gerhard.armc".to_owned(),
+        entity: sample_entity(),
+        migrated_aging_characteristics: vec![arm_rules::Characteristic::Com],
+    };
+    let json: serde_json::Value = serde_json::to_value(&document).unwrap();
+
+    assert_eq!(json["path"], "/home/u/gerhard.armc");
+    assert!(json["entity"].is_object(), "got: {json}");
+    assert_eq!(
+        json["migrated_aging_characteristics"],
+        serde_json::json!(["com"]),
+        "the frontend needs the Characteristics themselves, never an English \
+         sentence: it resolves its own Fluent notice from them"
+    );
+}
+
+/// Gerda #5 (MAJOR): the path the frontend adopts as `currentPath` must be the
+/// real path or an error, never a lookalike. A filename on Linux is an arbitrary
+/// byte string, and `to_string_lossy` substitutes U+FFFD for every byte that is
+/// not UTF-8 — so a save into such a directory used to hand the frontend a path
+/// that does not exist, which every later plain Save would then write to. The
+/// user edits for an hour, presses Ctrl+S, and the file they believe they
+/// updated still holds the old version; the dirty flag is cleared, so the
+/// close guard does not warn them either.
+///
+/// Refusing is the honest answer: the user is told, rather than silently
+/// misdirected.
+#[test]
+fn a_utf8_path_is_reported_verbatim() {
+    assert_eq!(
+        path_text(Path::new("/home/u/gerhard.armc")).unwrap(),
+        "/home/u/gerhard.armc"
+    );
+}
+
+/// The other half. Only reachable on a platform whose paths are bytes rather
+/// than (well-formed or not) UTF-16, which is why it is `cfg(unix)` — the check
+/// itself is unconditional.
+#[cfg(unix)]
+#[test]
+fn a_path_that_is_not_utf8_is_refused_rather_than_mangled() {
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+
+    // 0x80 is a continuation byte with nothing to continue: a valid file name,
+    // not valid UTF-8.
+    let path = PathBuf::from(OsString::from_vec(b"gerhard-\x80.armc".to_vec()));
+
+    let err = path_text(&path).unwrap_err();
+    let AppError::Io { message } = err else {
+        panic!("a path that cannot be reported must be an Io failure, got {err:?}");
+    };
+    assert!(
+        message.contains("gerhard-"),
+        "the failure must name the path it is about, got: {message}"
+    );
+}
+
 #[test]
 fn sample_save_loads_with_defaulted_aging_warping_annotations() {
     // A shipped example save carries none of the new annotation fields; loading it
     // must fill them with their empty/None defaults (additive backward compat).
     let path = repo_root().join("examples/companion_sample.json");
-    let entity = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
+    let entity = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
+        .unwrap()
+        .entity;
     assert_eq!(entity.apparent_age, None);
     assert!(entity.warping_effect.is_empty());
     assert!(entity.decrepitude_effect.is_empty());
@@ -886,7 +1337,9 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("magus.json");
     save_entity_to_path(&entity, &path).unwrap();
-    let reloaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
+    let reloaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
+        .unwrap()
+        .entity;
     assert_eq!(reloaded.schema_version, 17);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
@@ -2785,6 +3238,131 @@ fn a_fresh_dirty_state_report_clears_the_confirmed_discard_latch() {
     );
 }
 
+/// Erika F4 (MAJOR): the close/quit guard is the mandatory product behaviour
+/// `CLAUDE.md` singles out, and until this test its decision logic had no
+/// coverage at any level. `guard_blocks_quit` (`main.rs`) lives in a binary, the
+/// crate does not enable Tauri's `test` feature, and WebDriver cannot answer a
+/// native GTK dialog — so of its branches the e2e suite reached exactly two
+/// (clean-allow and dirty-show-dialog) and nothing at all reached the
+/// `confirmed` pass-through, the `showing` no-second-dialog branch, or either
+/// dialog answer. Inverting one `!` in the callback made Cancel *discard* the
+/// user's work with every gate still green.
+///
+/// The decision is pure over [`CloseGuardState`] — Tauri appears only in the
+/// dialog presentation — so it is [`guard_decision`] now, and this table walks
+/// every row of it.
+#[test]
+fn the_close_guard_allows_a_quit_with_nothing_unsaved() {
+    use arm_app::commands::{CloseGuardState, Decision, guard_decision};
+
+    let mut guard = CloseGuardState::default();
+    assert_eq!(guard_decision(&mut guard), Decision::Allow);
+    assert!(
+        !guard.showing,
+        "a clean document must not arm the dialog latch"
+    );
+}
+
+/// The `confirmed` pass-through: the user has already answered "discard", and
+/// the close/quit that answer re-issues must go through without a second
+/// dialog. Dirty is still true — the edits were never saved, that is the whole
+/// point — so nothing but this latch distinguishes it from the row below.
+#[test]
+fn the_close_guard_lets_an_already_confirmed_discard_through() {
+    use arm_app::commands::{CloseGuardState, Decision, guard_decision};
+
+    let mut guard = CloseGuardState {
+        dirty: true,
+        confirmed: true,
+        ..CloseGuardState::default()
+    };
+    assert_eq!(guard_decision(&mut guard), Decision::Allow);
+}
+
+/// The live case: unsaved edits, nothing confirmed, no dialog open yet. The quit
+/// is blocked AND the caller is told to put the confirmation up — and the latch
+/// is armed as part of the decision, so the row below can distinguish itself.
+#[test]
+fn the_close_guard_blocks_a_dirty_quit_and_asks_for_the_dialog() {
+    use arm_app::commands::{CloseGuardState, Decision, guard_decision};
+
+    let mut guard = CloseGuardState {
+        dirty: true,
+        ..CloseGuardState::default()
+    };
+    assert_eq!(guard_decision(&mut guard), Decision::BlockAndShow);
+    assert!(
+        guard.showing,
+        "the decision must record that a dialog is now up, or a second \
+         close/quit would stack another one on top of it"
+    );
+}
+
+/// Alt+F4 while the confirmation is already on screen. Still blocked, but the
+/// caller must NOT show a second dialog: two stacked confirmations for one
+/// document means the user answers twice to discard once, and the second answer
+/// arrives against a window that is already gone.
+#[test]
+fn the_close_guard_does_not_stack_a_second_dialog() {
+    use arm_app::commands::{CloseGuardState, Decision, guard_decision};
+
+    let mut guard = CloseGuardState {
+        dirty: true,
+        showing: true,
+        ..CloseGuardState::default()
+    };
+    assert_eq!(guard_decision(&mut guard), Decision::Block);
+    assert!(guard.showing, "the open dialog is still open");
+}
+
+/// The user pressed Discard. The dialog is down, and the latch is set so the
+/// close/quit the callback re-issues passes straight through the decision above.
+#[test]
+fn confirming_the_discard_latches_the_re_issued_quit_through() {
+    use arm_app::commands::{CloseGuardState, apply_dialog_answer};
+
+    let mut guard = CloseGuardState {
+        dirty: true,
+        showing: true,
+        ..CloseGuardState::default()
+    };
+    apply_dialog_answer(&mut guard, true);
+
+    assert!(!guard.showing, "the dialog is no longer on screen");
+    assert!(
+        guard.confirmed,
+        "without the latch the re-issued close/quit would raise a second dialog"
+    );
+}
+
+/// The user pressed Cancel — the one row where getting the sign wrong destroys
+/// the document. The dialog comes down and NOTHING else changes: the work is
+/// still unsaved, still unconfirmed, and the next quit must ask again.
+#[test]
+fn cancelling_the_discard_keeps_the_unsaved_work() {
+    use arm_app::commands::{CloseGuardState, Decision, apply_dialog_answer, guard_decision};
+
+    let mut guard = CloseGuardState {
+        dirty: true,
+        showing: true,
+        ..CloseGuardState::default()
+    };
+    apply_dialog_answer(&mut guard, false);
+
+    assert!(!guard.showing, "the dialog is no longer on screen");
+    assert!(
+        !guard.confirmed,
+        "Cancel must never latch a discard — that inversion turns the button \
+         that protects the user's work into the one that destroys it"
+    );
+    assert!(guard.dirty, "the edits are still unsaved");
+    assert_eq!(
+        guard_decision(&mut guard),
+        Decision::BlockAndShow,
+        "the next quit must ask again"
+    );
+}
+
 /// C3b: the New/Open discard confirmation is the SAME native dialog the
 /// close/quit guard shows, and `native_discard_confirmation_enabled()` is the
 /// single switch deciding whether this build owns one.
@@ -2832,29 +3410,41 @@ fn the_discard_confirmation_stands_down_under_the_e2e_feature() {
 /// action would suppress every later confirmation in the session, silently
 /// discarding the user's work on the second New.
 ///
-/// Structurally that cannot happen: `confirm_discard` takes no
-/// `State<'_, AppState>` at all, so it cannot read or write the latch. This test
-/// pins the observable half — a guard already latched by a confirmed quit
-/// changes nothing about whether the next New/Open gets its dialog. The
-/// behavioural half (that a second New really does ask again) is the frontend's
-/// `state.svelte.test.ts`, which confirms twice in one session.
+/// What actually enforces that is the signature: `confirm_discard` takes no
+/// `State<'_, AppState>`, so it cannot reach the latch at all. So the signature
+/// is what this test reads.
+///
+/// **Erika F6.** This used to assert `latched.confirmed` one line after setting
+/// it, plus a verbatim copy of the build-property assertion in
+/// `the_discard_confirmation_is_native_in_the_default_build` — a tautology and a
+/// duplicate, neither of which mentioned the relationship the name claims, and
+/// both of which stayed green under the very change they were named for. The
+/// behavioural half (that a second New really does ask again) remains the
+/// frontend's `state.svelte.test.ts`, which confirms twice in one session.
 #[test]
 fn a_latched_close_guard_cannot_suppress_a_discard_confirmation() {
-    use arm_app::commands::CloseGuardState;
+    let source = fs::read_to_string(repo_root().join("crates/arm-app/src/commands.rs")).unwrap();
+    let after = source
+        .split_once("pub async fn confirm_discard(")
+        .expect("confirm_discard must still be declared in commands.rs")
+        .1;
+    let signature = after
+        .split_once(')')
+        .expect("confirm_discard's parameter list must close")
+        .0;
 
-    let latched = CloseGuardState {
-        dirty: true,
-        confirmed: true,
-        ..CloseGuardState::default()
-    };
-
-    assert!(latched.confirmed, "sanity: the latch really is set");
-    assert_eq!(
-        arm_app::commands::native_discard_confirmation_enabled(),
-        cfg!(not(feature = "e2e-testing")),
-        "whether a discard is confirmed natively is a property of the BUILD, \
-         never of the close-guard latch; if this ever starts reading the guard, \
-         a confirmed quit would silence the next New"
+    // The extraction really found the parameter list, so a pass below cannot be
+    // vacuous.
+    assert!(
+        signature.contains("labels"),
+        "expected confirm_discard's parameters, got: {signature}"
+    );
+    assert!(
+        !signature.contains("State"),
+        "confirm_discard must not take managed state: reading \
+         `CloseGuardState::confirmed` there would let one confirmed quit silence \
+         every later New/Open in the session, discarding the user's work without \
+         asking. Got: {signature}"
     );
 }
 
@@ -3079,7 +3669,8 @@ fn every_example_save_parses_and_validates() {
 
     for path in entries {
         let entity = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
-            .unwrap_or_else(|e| panic!("{} failed to load: {e}", path.display()));
+            .unwrap_or_else(|e| panic!("{} failed to load: {e}", path.display()))
+            .entity;
         let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
         assert!(
             result.is_valid(),
@@ -3119,7 +3710,7 @@ fn the_examples_keep_a_genuine_pre_migration_fixture() {
 
     // Opened with an Iberia default, it becomes an Iberia character: the year comes
     // from the caller, never from a constant.
-    let migrated = load_entity_from_path(&pre_migration, 1197).unwrap();
+    let migrated = load_entity_from_path(&pre_migration, 1197).unwrap().entity;
     assert_eq!(migrated.saga_year, 1197);
     assert_eq!(migrated.schema_version, arm_rules::SCHEMA_VERSION);
 

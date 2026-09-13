@@ -402,6 +402,7 @@ describe('the guided wizard', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/marcus.armc',
       entity: savedMagus(overrides),
+      migrated_aging_characteristics: [],
     });
     const opening = store.openIntoWizard();
     if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
@@ -786,6 +787,7 @@ describe('the guided wizard', () => {
           personality_traits: [],
           reputations: [],
         },
+        migrated_aging_characteristics: [],
       });
       const opening = store.open();
       if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
@@ -941,6 +943,7 @@ describe('open() and the startup view', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/marcus.armc',
       entity: loadedEntity(),
+      migrated_aging_characteristics: [],
     });
 
     await openAndConfirm();
@@ -969,6 +972,7 @@ describe('open() and the startup view', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/rolf.armc',
       entity: sparse as Entity,
+      migrated_aging_characteristics: [],
     });
 
     await openAndConfirm();
@@ -976,6 +980,100 @@ describe('open() and the startup view', () => {
     expect(store.view).toBe('editor');
     store.addSelection('virtue.plain');
     expect(store.entity.selections).toEqual([{ ref: 'virtue.plain' }]);
+  });
+
+  // Slice 3 handoff: `derive.ts::agingMigrationNotice`, both locales' strings and
+  // the `OpenedDocument` wire field all landed, but NOTHING carried the value
+  // from `ipc.loadEntity()` to a surface — `#fileOps` is private, so no component
+  // could reach a value only `open()` receives, and the notice was composed by
+  // nobody.
+  //
+  // Why it is worth a surface at all: the migration is LOSSY. The engine
+  // reconstructs the smallest Aging Point total that still reproduces the
+  // recorded Characteristic scores, so whatever the original total was is gone —
+  // and the next Save writes the reconstruction back as the document's own
+  // figures. Silence makes that permanent without the user ever being asked.
+  describe('the schema-migration notice', () => {
+    it('composes the notice for a document the migration rewrote', async () => {
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: loadedEntity(),
+        migrated_aging_characteristics: ['com', 'sta'],
+      });
+
+      await openAndConfirm();
+
+      const notice = store.migrationNotice;
+      expect(notice).not.toBeNull();
+      // Both Characteristics named by their localized label, never the enum id.
+      for (const id of ['com', 'sta'] as const) {
+        expect(notice).toContain(store.t(`characteristic-${id}`));
+        expect(notice).not.toContain(`characteristic-${id}`);
+      }
+    });
+
+    it('stays silent for a document that needed no migration', async () => {
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: loadedEntity(),
+        migrated_aging_characteristics: [],
+      });
+
+      await openAndConfirm();
+
+      expect(store.migrationNotice).toBeNull();
+    });
+
+    it('re-composes in the new language when the UI language switches', async () => {
+      // Stored as ids, not as a finished sentence: a notice frozen in the
+      // language the document was opened in is a second place the language
+      // switch fails to reach.
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: loadedEntity(),
+        migrated_aging_characteristics: ['com'],
+      });
+
+      await openAndConfirm();
+      const english = store.migrationNotice;
+      store.lang = 'de';
+      const german = store.migrationNotice;
+
+      expect(english).not.toBeNull();
+      expect(german).not.toBeNull();
+      expect(german).not.toBe(english);
+      expect(german).toContain(store.t('characteristic-com'));
+      store.lang = 'en';
+    });
+
+    it('clears the notice when the migrated document is closed', async () => {
+      // The notice belongs to the document, not to the session: leaving it up
+      // over a brand-new character would describe a rewrite that never happened.
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: loadedEntity(),
+        migrated_aging_characteristics: ['com'],
+      });
+      await openAndConfirm();
+      expect(store.migrationNotice).not.toBeNull();
+
+      await store.newDocument();
+
+      expect(store.migrationNotice).toBeNull();
+    });
+
+    it('clears it when a fresh character replaces the migrated one', async () => {
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: loadedEntity(),
+        migrated_aging_characteristics: ['com'],
+      });
+      await openAndConfirm();
+
+      await store.createCharacter('companion');
+
+      expect(store.migrationNotice).toBeNull();
+    });
   });
 });
 
@@ -1500,6 +1598,7 @@ describe('the saga year is document state, and settings keep only a default', ()
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/saga.armc',
       entity: { ...store.entity, ...overrides },
+      migrated_aging_characteristics: [],
     });
     const opening = store.open();
     if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
@@ -2028,7 +2127,52 @@ describe('integer clamps at the Tauri boundary', () => {
     expect(store.entity.aging_points?.str).toBe(255);
   });
 
-  it('clamps the i32-backed aura at both ends', () => {
+  // Slice 1 handoff. This block's own premise — a value the serde width cannot
+  // represent — is not the aura's real problem: clamping to i32 is clamping to
+  // nothing, because no aura a player can plausibly type falls outside it. So a
+  // typed 999 was stored as 999 and every derived read-out was computed from it,
+  // producing a Casting Total ~989 too high until the next save+reload silently
+  // replaced it with the engine's clamp. Two different answers for one document
+  // is the product-integrity failure CLAUDE.md rates highest, and it outranks the
+  // typing-ergonomics nicety the previous behaviour preserved.
+  //
+  // The bound is the RULE's, read from the engine payload, exactly as the two
+  // aura INPUTS already read it (`MagicPossessions`, `DerivedAuraField`) — the
+  // same reason a familiar cord clamps at +5 rather than at u8 above.
+  it('clamps the aura to the engine-surfaced rules range, not to i32', () => {
+    store.ruleset!.ruleset.aura_modifier_min = -50;
+    store.ruleset!.ruleset.aura_modifier_max = 10;
+
+    store.setAura(999);
+    expect(store.entity.aura).toBe(10);
+    store.setAura(-999);
+    expect(store.entity.aura).toBe(-50);
+    // A legal value is untouched, at both ends of the range and inside it.
+    for (const legal of [-50, -7, 0, 3, 10]) {
+      store.setAura(legal);
+      expect(store.entity.aura).toBe(legal);
+    }
+  });
+
+  it('reads the aura bound from the payload rather than a hardcoded pair', () => {
+    store.ruleset!.ruleset.aura_modifier_min = -7;
+    store.ruleset!.ruleset.aura_modifier_max = 4;
+
+    store.setAura(999);
+    expect(store.entity.aura).toBe(4);
+    store.setAura(-999);
+    expect(store.entity.aura).toBe(-7);
+  });
+
+  // The old assertion, kept for the path where it is still the right one: a
+  // ruleset payload predating `aura_modifier_min/max` constrains nothing, so the
+  // store falls back to the serde width — the same defensive "no constraint"
+  // sentinel both aura inputs use. The clamp must still keep the value
+  // REPRESENTABLE there, or serde rejects the whole payload.
+  it('falls back to the i32 range for a ruleset payload carrying no aura bound', () => {
+    delete store.ruleset!.ruleset.aura_modifier_min;
+    delete store.ruleset!.ruleset.aura_modifier_max;
+
     store.setAura(3e9);
     expect(store.entity.aura).toBe(2147483647);
     store.setAura(-3e9);
@@ -2690,6 +2834,7 @@ describe('ability funding mode', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/marcus.armc',
       entity: entityWithPlan(),
+      migrated_aging_characteristics: [],
     });
     const opening = store.open();
     if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
@@ -2743,7 +2888,11 @@ describe('ability funding mode', () => {
 
     // Reload exactly the bytes that were handed to Rust — the mode must survive,
     // or every life-stage pool evaporates on the next validate.
-    vi.mocked(ipc.loadEntity).mockResolvedValue({ path: '/tmp/marcus.armc', entity: written });
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/marcus.armc',
+      entity: written,
+      migrated_aging_characteristics: [],
+    });
     const opening = store.open();
     if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
     await opening;
@@ -3100,6 +3249,7 @@ describe('the childhood package draft', () => {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path: '/tmp/marcus.armc',
       entity: { ...store.entity, life_stages: { childhood_package: 'childhood.traveling' } },
+      migrated_aging_characteristics: [],
     });
 
     const opening = store.open();
@@ -3749,7 +3899,11 @@ describe('unsaved-changes tracking', () => {
 
   /** Drive a real open so the store captures a clean saved-baseline. */
   async function loadClean(path = '/tmp/marcus.armc'): Promise<void> {
-    vi.mocked(ipc.loadEntity).mockResolvedValue({ path, entity: cleanEntity() });
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path,
+      entity: cleanEntity(),
+      migrated_aging_characteristics: [],
+    });
     const opening = store.open();
     // The shared singleton may be dirty from a prior test; open() then shows the
     // discard prompt. Confirm it so this setup helper always reaches the load.
@@ -3777,7 +3931,11 @@ describe('unsaved-changes tracking', () => {
   it('is a true snapshot compare: editing a field back to its saved baseline clears dirty again', async () => {
     const original = cleanEntity();
     original.name = 'Original Name';
-    vi.mocked(ipc.loadEntity).mockResolvedValue({ path: '/tmp/marcus.armc', entity: original });
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/marcus.armc',
+      entity: original,
+      migrated_aging_characteristics: [],
+    });
     const opening = store.open();
     if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
     await opening;
@@ -3889,7 +4047,11 @@ describe('document file model', () => {
 
   /** Open a file with a known path so the store tracks it as the current file. */
   async function openFile(path = '/tmp/marcus.armc'): Promise<void> {
-    vi.mocked(ipc.loadEntity).mockResolvedValue({ path, entity: cleanEntity() });
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path,
+      entity: cleanEntity(),
+      migrated_aging_characteristics: [],
+    });
     const opening = store.open();
     // The shared singleton may be dirty from a prior test; confirm the discard
     // prompt so this setup helper always reaches the load.
@@ -4027,7 +4189,11 @@ describe('document file model', () => {
 
     // Ignore the setup helper's load; only the cancelled open below matters.
     vi.mocked(ipc.loadEntity).mockClear();
-    vi.mocked(ipc.loadEntity).mockResolvedValue({ path: '/tmp/other.armc', entity: cleanEntity() });
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/other.armc',
+      entity: cleanEntity(),
+      migrated_aging_characteristics: [],
+    });
     vi.mocked(ipc.confirmDiscard).mockResolvedValueOnce(false);
     await store.open();
     // Cancelled: the current file is unchanged and loadEntity was never called.

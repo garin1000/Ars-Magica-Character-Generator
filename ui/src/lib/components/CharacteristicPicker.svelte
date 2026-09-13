@@ -118,8 +118,12 @@
     </p>
     <div class="char-grid">
       {#each CHARACTERISTICS as characteristic (characteristic)}
+        <!-- Deliberately focusable: `use:tooltip` opens on `focusin`, and this span is
+             the only host for the Characteristic's rules text (Sabine 3). -->
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
         <span
           class="spinner-label"
+          tabindex="0"
           use:tooltip={{ text: store.t(`characteristic-desc-${characteristic}`) }}
           >{store.t(`characteristic-${characteristic}`)}</span
         >
@@ -140,9 +144,14 @@
           {#snippet children()}
             <span class="spinner-value" data-testid="char-value-{characteristic}">
               {formatSigned(scoreOf(characteristic))}
+              <!-- Deliberately focusable: the bought→effective breakdown (which aging
+                   drop, which Virtue) lives only in this tooltip, and `use:tooltip`
+                   opens it on `focusin` (Sabine 3). -->
+              <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
               {#if effectiveOf(characteristic) !== settledScoreOf(characteristic)}<span
                   class="eff-badge char-effective"
                   data-testid="char-effective-{characteristic}"
+                  tabindex="0"
                   use:tooltip={effectiveTooltip(characteristic)}
                   >→ {formatSigned(effectiveOf(characteristic))}</span
                 >{/if}

@@ -297,7 +297,8 @@ describe('magus apprenticeship through the life stages', () => {
       // to be long enough.
       // 600 is the window's own `minHeight` (tauri.conf.json), i.e. the shortest
       // the app can legally be — so this is the real worst case, not an arbitrary
-      // number, and `tab-area.e2e.js` already exercises the same height.
+      // number, and `wizard-flow.e2e.js`'s `tab area at a short window height`
+      // already exercises the same height.
       await resizeWindowTo(1400, 600);
 
       const before = await stickyBarMetrics();

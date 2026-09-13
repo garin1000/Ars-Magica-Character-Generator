@@ -65,10 +65,11 @@
     ].filter((element) => !element.hasAttribute('disabled') && element.tabIndex !== -1);
   }
 
-  // A REAL focus trap, which neither existing modal has. DiscardPrompt is contained
-  // only by accident — `App.svelte` marks the shell `inert` while it is pending, and
-  // that is what keeps Tab inside it — and ConfirmPrompt is not contained at all. An
-  // untrapped dialog sends the next Tab into the browser's own chrome, where a
+  // A REAL focus trap. DiscardPrompt is contained only by accident — `App.svelte`
+  // marks the shell `inert` while it is pending, and that is what keeps Tab inside
+  // it — while ConfirmPrompt, which had no containment at all, now carries a copy of
+  // this ring (Sabine 2; it renders inside the shell, so `inert` is not open to it).
+  // An untrapped dialog sends the next Tab into the browser's own chrome, where a
   // keyboard user has no way back and a screen-reader user is simply lost.
   //
   // Only the two ENDS of the ring are handled. Calling `preventDefault` on every Tab

@@ -59,8 +59,9 @@ const THEME_SELECT = '[data-testid="theme-select"]';
 //
 // Exported (V36) so specs import these instead of redefining the same two
 // numbers locally. A spec with a genuinely different value (e.g.
-// `wizard-resume.e2e.js`'s longer `STEP_TIMEOUT`) keeps its own local const
-// instead of importing this one — see that spec for why.
+// `wizard-flow.e2e.js`'s `opening a saved character into the guided wizard`
+// describe, whose `STEP_TIMEOUT` is longer) keeps its own local const instead of
+// importing this one — see that describe for why.
 export const BOOT_TIMEOUT = 30000;
 export const STEP_TIMEOUT = 10000;
 

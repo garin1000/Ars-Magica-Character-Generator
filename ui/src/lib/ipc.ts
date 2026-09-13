@@ -373,13 +373,33 @@ export function agingRevert(entity: Entity, age: number): Promise<AgingReversion
   return invoke('aging_revert', { entity, age });
 }
 
-/** An opened document: the entity plus the file it was read from. */
-export interface LoadedEntity {
+/**
+ * An opened document: the entity, the file it was read from, and what a schema
+ * migration had to rewrite on the way in. Mirrors `commands.rs::OpenedDocument`
+ * field for field (named for it, so the two ends of the wire are searchable as
+ * one thing).
+ */
+export interface OpenedDocument {
   path: string;
   entity: Entity;
+  /**
+   * Characteristics whose Aging Points a schema migration rebuilt — empty for a
+   * save that needed none. The rebuild is **lossy** (the engine reconstructs the
+   * minimal total that still reproduces the recorded scores) and the next Save
+   * writes it back as the document's own figures, so a non-empty array is
+   * something to tell the user about: `derive.ts::agingMigrationNotice` composes
+   * the localized sentence from it.
+   *
+   * Required, because Rust always serializes it — empty array included. It was
+   * briefly optional so the `loadEntity` test doubles need not spell out a field
+   * they were not exercising, but an optional field here misdescribed the wire:
+   * `undefined` is a shape the backend cannot produce, and typing it as possible
+   * invites a consumer to branch on a case that never occurs.
+   */
+  migrated_aging_characteristics: Characteristic[];
 }
 
-export function loadEntity(): Promise<LoadedEntity | null> {
+export function loadEntity(): Promise<OpenedDocument | null> {
   return invoke('load_entity');
 }
 

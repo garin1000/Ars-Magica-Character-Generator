@@ -521,6 +521,15 @@ identity-parens = Parens
 # Gebrechlichkeit und Verzerrung berechnet die Engine aus diesen Punkten.
 aging-label = Alterung
 aging-points-heading = Alterungspunkte pro Eigenschaft
+# Einmalig nach dem Öffnen eines Spielstands einer älteren Schema-Version. Die
+# Umwandlung ist VERLUSTBEHAFTET: Der Loader rekonstruiert die kleinstmögliche
+# Summe an Alterungspunkten, die die gespeicherten Eigenschaftswerte noch
+# ergibt — die ursprünglichen Summen sind damit verloren, und das nächste
+# Speichern schreibt die Rekonstruktion als die Werte des Dokuments fest.
+# Trennzeichen wie restricted-xp-list-separator, über Fluent statt eines
+# fest verdrahteten ", ".
+aging-migration-notice = Dieser Charakter wurde in einem älteren Format gespeichert. Die Alterungspunkte für { $characteristics } wurden als kleinstmögliche Summe rekonstruiert, die die gespeicherten Werte noch ergibt; die ursprünglichen Werte ließen sich nicht wiederherstellen. Beim Speichern werden die rekonstruierten Werte übernommen.
+aging-migration-list-separator = ,
 warping-points-label = Verzerrungspunkte
 twilight-scars-label = Zwielichtnarben
 twilight-scar-placeholder = Beschreibe die Narbe
@@ -721,10 +730,16 @@ focus-power-fatigue-unstated = n/v
 focus-power-derived = Magnitude { $magnitude }, Initiativewert { $initiative }, Erschöpfung { $fatigue }
 focus-power-add = Fokussierte Macht hinzufügen
 focus-powers-empty = Noch keine Fokussierten Mächte.
+# Die vier Sphären, artikelfrei wie in der Aufzählung des Regelwerks
+# (Basisregeln.md:2960: "Magie, Fee, Infernal und Göttlich"). Diese Labels stehen
+# allein in <option>-Listen UND werden in Slots eingesetzt (might-effective, und
+# die "…, {realm}"-Apposition jeder deutschen Tugend-/Fehler-Vorlage), wo ein
+# Artikel "Effektive Macht: Das Göttliche 15" ergab. Für eigenständige Labels
+# gilt die unflektierte Form.
 realm-magic = Magie
 realm-faerie = Fee
-realm-divine = Das Göttliche
-realm-infernal = Das Infernale
+realm-divine = Göttlich
+realm-infernal = Infernal
 familiar-label = Vertrauter
 familiar-name-placeholder = Name des Vertrauten
 familiar-cord-gold = Goldene Kordel
@@ -806,8 +821,10 @@ longevity-hint = Ein jetzt erschaffenes Ritual: Alterungsbonus { $bonus } (Creo 
 longevity-hint-halved = halbiert
 longevity-focus-label = Fokus
 longevity-focus-placeholder = Worin das Ritual gipfelt
-# Grund, warum eine übernatürliche Fähigkeit im Auswähler ausgegraut ist.
-ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe)
+# Grund, warum eine Übernatürliche Fertigkeit im Auswähler ausgegraut ist.
+# "Fertigkeit", nie "Fähigkeit": Ability ist im Glossar und im Regelwerk
+# durchgehend die Fertigkeit (Basisregeln.md:1065, :1067, :2315, :2872).
+ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fertigkeit der Gabe)
 # Nur für Screenreader: Text auf einer gewählten Fähigkeitszeile, auf die ein
 # Prüfhinweis mit Schweregrad „Fehler" zeigt (S7, full-audit a11y) — ergänzt ein
 # sichtbares Symbol, damit die Ungültigkeit nie allein über die Farbe vermittelt
@@ -1095,6 +1112,11 @@ issue-gift_required = Dieser Typ erfordert die Gabe.
 issue-gift_forbidden = Dieser Typ darf die Gabe nicht haben.
 issue-unknown_ref = Unbekannte Element-Referenz: { $item }.
 issue-unknown_type = Unbekannte Wesensart: { $type_id }.
+# Eine Warnung, kein Fehler: der Charakter lässt sich weiterhin öffnen. Die
+# Meldung nennt beide Kennungen, denn genau darum geht es — die IDs im Charakter
+# lassen sich weiterhin auflösen, nur die Werte dahinter haben sich verschoben,
+# sodass keine andere Meldung die Abweichung zeigen kann.
+issue-ruleset_mismatch = Gespeichert unter Regelwerk { $saved_ruleset } { $saved_version }, geladen ist aber { $loaded_ruleset } { $loaded_version }. Die Werte hinter gleichen Namen können abweichen.
 issue-characteristic_out_of_range = Eigenschaft { $characteristic } mit Wert { $score } liegt außerhalb des erlaubten Bereichs ({ $min } bis { $max }).
 issue-characteristic_overspent = Eigenschaften kosten { $cost } Punkte, mehr als die verfügbaren { $points }.
 issue-characteristic_points_unspent = Nur { $cost } von { $points } Eigenschaftspunkten ausgegeben.
@@ -1114,7 +1136,7 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } von { $amount } eingesch
 # behaupten nichts darüber hinaus.
 issue-general_xp_unspent = { $unspent } von { $pool } Erfahrungspunkten sind noch nicht ausgegeben.
 issue-spell_levels_unspent = { $unspent } von { $budget } Stufen Zauber sind noch nicht ausgegeben.
-issue-ability_category_requires_virtue = { $ability } ist { $category } und benötigt eine Tugend, die den Zugang bei der Charaktererschaffung gewährt.
+issue-ability_category_requires_virtue = { $ability } ist { $ability_category } und benötigt eine Tugend, die den Zugang bei der Charaktererschaffung gewährt.
 issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $ability }{ $qualifier } auf { $min } oder höher.
 issue-life_stage_age_unset = Trage das Alter des Charakters ein: das spätere Leben erbringt Erfahrungspunkte pro Jahr, ohne Alter zählen daher nur die Blöcke der Kindheit.
 issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindheit, die { $min } Jahre dauert — es gibt keine späteren Lebensjahre, in denen Erfahrung erworben wird.
@@ -1165,7 +1187,7 @@ issue-unknown_mastery_ability = Unbekannte Meisterschaftsfähigkeit { $ability }
 issue-too_many_mastery_abilities = { $spell } hat { $chosen } Meisterschaftsfähigkeiten, mehr als der Meisterschaftswert von { $mastery } (eine je Stufe).
 issue-duplicate_mastery_ability = Meisterschaftsfähigkeit { $ability } wurde { $count }-mal für { $spell } gewählt, darf aber nur einmal genommen werden.
 issue-ability_above_age_cap = { $ability } mit Wert { $score } überschreitet das Maximum von { $cap } für Alter { $age }.
-issue-supernatural_ability_requires_virtue = { $ability } ist eine übernatürliche Fähigkeit und erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe).
+issue-supernatural_ability_requires_virtue = { $ability } ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend (oder die eine freie Fertigkeit der Gabe).
 issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
 issue-reputation_not_granted = Eine Reputation ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der sie verleiht.
 issue-over_item_level = Artefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
@@ -1288,6 +1310,12 @@ derived-combat-init = Initiative
 derived-combat-attack = Angriff
 derived-combat-defense = Verteidigung
 derived-combat-damage = Schaden
+# Eine abgeleitete Zelle, für die die Zeile keinen Wert hat — eine Waffe ohne
+# Angriff, ohne Schaden oder ohne Reichweite. Bis zum Round-1-Audit (Sabine 7)
+# stand dort ein fest verdrahteter Geviertstrich: eine sichtbare Zeichenkette
+# ohne Schlüssel, die ein Screenreader zudem gar nicht ansagt. `n/a` → `n/v`
+# nach uebersetzungsregeln.md:40-42.
+derived-not-applicable = n/v
 # Verbindet eine Waffe mit dem dazu getragenen Schild in einer Kampfzeile
 # ("Langschwert & Tartsche"); die deutschen Regeln schreiben ebenfalls "&".
 # Die umgebenden Leerzeichen setzt der Code, da ein Fluent-Wert nicht mit einem
@@ -1336,7 +1364,7 @@ derived-addend-armor = Rüstung
 derived-addend-soak_mod = Absorptionsmodifikator
 derived-addend-bronze_cord = Bronzene Kordel
 derived-addend-form_bonus = Formbonus
-derived-fatigue-fresh = Frisch
+derived-fatigue-fresh = Ausgeruht
 derived-fatigue-winded = Außer Atem
 derived-fatigue-weary = Erschöpft
 derived-fatigue-tired = Müde

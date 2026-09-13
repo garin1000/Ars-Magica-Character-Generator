@@ -81,6 +81,62 @@ impl CloseGuardState {
     }
 }
 
+/// What a pending close or quit must do about the unsaved-changes guard.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Decision {
+    /// Nothing to confirm — let the close/quit proceed.
+    Allow,
+    /// Refuse the close/quit; a confirmation is already on screen.
+    Block,
+    /// Refuse the close/quit and put the confirmation up.
+    BlockAndShow,
+}
+
+/// The whole of the close/quit guard's decision, as a pure function of the
+/// mirrored state — `main.rs`'s `guard_blocks_quit` adds nothing to it but the
+/// dialog.
+///
+/// **It lives here rather than there because there is nowhere to test it there**
+/// (Erika F4). `main.rs` is a binary, this crate does not enable Tauri's `test`
+/// feature, and a native GTK dialog is not something WebDriver can answer — so
+/// the e2e suite reached two of these rows and the other four were unreachable
+/// at every level. They are the rows that matter most: the `confirmed`
+/// pass-through and the `showing` no-second-dialog branch are the difference
+/// between one confirmation and two, and the dialog answers are the difference
+/// between Cancel keeping the user's work and Cancel destroying it. The
+/// unsaved-changes guard is a mandatory product behaviour (`CLAUDE.md`), and a
+/// mandatory behaviour with an untestable decision is one edit from silently
+/// inverting.
+///
+/// Arming the `showing` latch is part of the decision, not of the presentation:
+/// it is what makes [`Decision::Block`] reachable, and a caller that forgot to
+/// set it would stack a second dialog on the next Alt+F4.
+pub fn guard_decision(guard: &mut CloseGuardState) -> Decision {
+    if !guard.dirty || guard.confirmed {
+        return Decision::Allow;
+    }
+    if guard.showing {
+        return Decision::Block;
+    }
+    guard.showing = true;
+    Decision::BlockAndShow
+}
+
+/// Records the user's answer to the discard confirmation: the dialog is down
+/// either way, and only a confirmed discard latches the re-issued close/quit
+/// through [`guard_decision`].
+///
+/// Cancel deliberately changes nothing else — the edits are still unsaved and
+/// still unconfirmed, so the next quit asks again. That asymmetry is the guard's
+/// entire safety property; inverting it would make the button that protects the
+/// document the one that discards it.
+pub fn apply_dialog_answer(guard: &mut CloseGuardState, discard: bool) {
+    guard.showing = false;
+    if discard {
+        guard.confirmed = true;
+    }
+}
+
 /// Mirrors the frontend's dirty flag and dialog strings into managed state for
 /// the close/quit guard (see `main.rs`).
 #[tauri::command]
@@ -610,11 +666,33 @@ fn parented_to_main_window(
 }
 
 /// An opened document: the deserialized entity plus the file it came from, so
-/// the frontend can track it as the "current file" for subsequent direct saves.
+/// the frontend can track it as the "current file" for subsequent direct saves —
+/// and whatever the load's schema migration rewrote on the way in.
+///
+/// **Named for what it is** (Viktor #8). It used to be `LoadedEntity`, which is
+/// also the name of `arm_rules`'s migration outcome — two types in scope in this
+/// one crate, meaning different things. This one is what [`load_entity`]
+/// returns: a document the user opened. The serde field names `path` and
+/// `entity` are unchanged, so the shape the frontend consumes is exactly what it
+/// was.
 #[derive(serde::Serialize)]
-pub struct LoadedEntity {
+pub struct OpenedDocument {
     pub path: String,
     pub entity: Entity,
+    /// Characteristics whose legacy `aging_reductions` the load folded into
+    /// `aging_points` — empty for a save that needed no migration.
+    ///
+    /// Carried to the frontend rather than printed (Viktor #4): a GUI binary
+    /// started from a desktop launcher has no terminal, so the `eprintln!` this
+    /// used to be reached nobody. The migration is lossy — the engine
+    /// reconstructs the MINIMAL aging-point total that reproduces the recorded
+    /// drops — and the next save makes it permanent, which is exactly the kind
+    /// of silent rewrite the user is entitled to hear about.
+    ///
+    /// The Characteristics travel as themselves, never as a sentence: the
+    /// frontend resolves the localized notice from them, as it does for every
+    /// other engine output.
+    pub migrated_aging_characteristics: Vec<Characteristic>,
 }
 
 /// Writes the entity as canonical JSON. When `path` is `Some`, writes straight to
@@ -655,8 +733,12 @@ pub async fn save_entity(
         },
     };
 
+    // Before the write, not after: a path the frontend cannot be told about is a
+    // path it must not adopt as the current file, and writing first would leave a
+    // document on disk the app then disowns (Gerda #5).
+    let reported = ruleset_io::path_text(&target)?;
     ruleset_io::save_entity_to_path(&entity, &target)?;
-    Ok(Some(target.to_string_lossy().into_owned()))
+    Ok(Some(reported))
 }
 
 /// E2E seam for the Markdown export, deliberately separate from [`E2E_FILE_ENV`]:
@@ -753,7 +835,7 @@ pub fn export_label_keys() -> Vec<String> {
 /// Prompts for a file and deserializes the entity from it, returning it paired
 /// with its path. Returns `None` if the dialog was cancelled.
 #[tauri::command]
-pub async fn load_entity(app: AppHandle) -> Result<Option<LoadedEntity>, AppError> {
+pub async fn load_entity(app: AppHandle) -> Result<Option<OpenedDocument>, AppError> {
     let path = match e2e_file_override() {
         Some(path) => path,
         None => {
@@ -773,13 +855,19 @@ pub async fn load_entity(app: AppHandle) -> Result<Option<LoadedEntity>, AppErro
         }
     };
 
+    // Before the read, for the same reason the save checks before the write: the
+    // frontend keeps this path as the current file, so a path it cannot be told
+    // about verbatim must be refused rather than mangled (Gerda #5).
+    let reported = ruleset_io::path_text(&path)?;
+
     // A pre-schema-17 save carries no saga year of its own, and the honest value for
     // it is the one the user has configured for new documents — read here, because
     // `arm-rules` has no filesystem and cannot.
     let default_saga_year = read_settings(app).default_saga_year;
-    let entity = ruleset_io::load_entity_from_path(&path, default_saga_year)?;
-    Ok(Some(LoadedEntity {
-        path: path.to_string_lossy().into_owned(),
-        entity,
+    let loaded = ruleset_io::load_entity_from_path(&path, default_saga_year)?;
+    Ok(Some(OpenedDocument {
+        path: reported,
+        entity: loaded.entity,
+        migrated_aging_characteristics: loaded.migrated_aging_characteristics,
     }))
 }

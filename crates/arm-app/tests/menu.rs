@@ -201,9 +201,11 @@ fn the_file_menu_offers_every_document_action_on_every_platform() {
 //   * tauri parses the string and SILENTLY DROPS it on failure —
 //     `MenuItem::with_id` does `accelerator.and_then(|s| s.as_ref().parse().ok())`
 //     (tauri-2.11.3/src/menu/normal.rs:69) — so a typo is not an error, it is a
-//     shortcut that quietly stops existing. The chords are exercised for real by
-//     `ui/e2e/specs/app-shell.e2e.js`'s accelerator describe; this pins what they
-//     are meant to be.
+//     shortcut that quietly stops existing. The items themselves are activated
+//     for real by the `the native menu` describe in
+//     `ui/e2e/specs/app-shell.e2e.js` (a chord itself is not reachable from a
+//     spec — WebDriver delivers keys into the webview, not to the window); this
+//     pins what the chords are meant to be.
 #[test]
 fn every_document_action_carries_the_chord_the_os_draws_beside_it() {
     let expected = [

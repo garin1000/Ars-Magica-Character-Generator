@@ -167,3 +167,34 @@ describe('CharacteristicPicker point-buy budget and spinners', () => {
     expect(html()).toContain('data-testid="characteristic-size"');
   });
 });
+
+// Sabine 3 (full-audit round 1): `use:tooltip` opens on `focusin` as well as
+// `mouseenter`, so the rules text it holds is keyboard-ready by construction — but
+// only if its host can take focus, and both hosts here were bare `<span>`s. The
+// characteristic description and the bought→effective breakdown were mouse-only.
+//
+// `ssr`, not `client`: `tabindex` is static markup, and the outcome it produces —
+// focus opening the popup — is proved once for the whole action in
+// `ArtGrid.client.test.ts`. Re-mounting a component per site to re-test the shared
+// action would test the action five times and the markup not at all.
+describe('CharacteristicPicker tooltip hosts are keyboard-reachable (Sabine 3)', () => {
+  /** The start tag of the first element whose attributes contain `marker`. */
+  function tagContaining(body: string, marker: string): string {
+    const tag = new RegExp(`<[a-z]+[^>]*${marker}[^>]*>`).exec(body);
+    if (!tag) throw new Error(`no element whose start tag contains ${marker}`);
+    return tag[0];
+  }
+
+  it('puts the characteristic name in the tab order', () => {
+    expect(tagContaining(html(), 'class="spinner-label"')).toContain('tabindex="0"');
+  });
+
+  it('puts the effective-score badge in the tab order', () => {
+    store.entity.characteristics = { str: 1 } as Entity['characteristics'];
+    store.effective = {
+      characteristic_effective: { str: 0 },
+    } as unknown as EffectiveScores;
+
+    expect(tagContaining(html(), 'data-testid="char-effective-str"')).toContain('tabindex="0"');
+  });
+});

@@ -88,6 +88,27 @@ pub struct CastingTotal {
     pub deficient: bool,
 }
 
+/// The addends of a Casting Total that belong to the **character** rather than to
+/// a `(Technique, Form)` cell or a spell, so they are computed once per read-out
+/// and carried down. Deriving them per cell made `penetration` re-walk the whole
+/// equipment list once or twice for every known spell to arrive at the same two
+/// numbers.
+#[derive(Clone, Copy)]
+struct CastingBase {
+    stamina: i32,
+    /// The Encumbrance **total**, subtracted (so it is stored positive).
+    encumbrance: i32,
+}
+
+impl CastingBase {
+    fn of(entity: &Entity, ruleset: &Ruleset) -> Self {
+        Self {
+            stamina: characteristic(entity, ruleset, Characteristic::Sta),
+            encumbrance: encumbrance(entity, ruleset).total,
+        }
+    }
+}
+
 /// The formulaic casting score of one `(Technique, Form)` cell, without the die,
 /// including the focus double when `focus` is set and the Deficient-Art halving.
 /// Shared by the grid and by per-spell penetration.
@@ -97,17 +118,16 @@ fn formulaic_casting_score(
     mods: &InPlayMods,
     technique: &Id,
     form: &Id,
+    base: CastingBase,
     focus: bool,
 ) -> i32 {
     let te = effective_art_score(entity, ruleset, technique);
     let fo = effective_art_score(entity, ruleset, form);
-    let stamina = characteristic(entity, ruleset, Characteristic::Sta);
-    let enc = encumbrance(entity, ruleset).total;
     let mut score = saturating_i32_sum([
         te,
         fo,
-        stamina,
-        -enc,
+        base.stamina,
+        -base.encumbrance,
         entity.aura,
         mods.casting_mod_for(CastType::Formulaic),
     ]);
@@ -123,8 +143,10 @@ fn formulaic_casting_score(
 /// Casting Totals for every `(Technique, Form)` pair. Source: ArMDE:9089-9145.
 pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
     let mods = in_play_mods(entity, ruleset);
-    let stamina = characteristic(entity, ruleset, Characteristic::Sta);
-    let enc = encumbrance(entity, ruleset).total;
+    let CastingBase {
+        stamina,
+        encumbrance: enc,
+    } = CastingBase::of(entity, ruleset);
     let aura = entity.aura;
     let artes_liberales = ability(entity, ruleset, ID_ARTES_LIBERALES);
     let philosophiae = ability(entity, ruleset, ID_PHILOSOPHIAE);
@@ -151,22 +173,38 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
 
             let variant = |focused: bool| -> CastingScores {
                 let focus_add = if focused { focus_art } else { 0 };
+                // `common` is already saturated by `sum`, so every fold onto it
+                // goes through the same helper: a plain `+` aborts the process
+                // under `overflow-checks = true`. See
+                // `derived.rs::saturating_i32_sum`.
                 let formulaic = post(
-                    common + focus_add + mods.casting_mod_for(CastType::Formulaic),
+                    saturating_i32_sum([
+                        common,
+                        focus_add,
+                        mods.casting_mod_for(CastType::Formulaic),
+                    ]),
                     deficient,
                 );
                 let ritual = post(
-                    common
-                        + focus_add
-                        + sum(&ritual_addends)
-                        + mods.casting_mod_for(CastType::Ritual),
+                    saturating_i32_sum([
+                        common,
+                        focus_add,
+                        sum(&ritual_addends),
+                        mods.casting_mod_for(CastType::Ritual),
+                    ]),
                     deficient,
                 );
                 let spont_base = post(
-                    common + focus_add + mods.casting_mod_for(CastType::Spontaneous),
+                    saturating_i32_sum([
+                        common,
+                        focus_add,
+                        mods.casting_mod_for(CastType::Spontaneous),
+                    ]),
                     deficient,
                 );
-                let spontaneous_non_fatiguing = spont_base / 5;
+                // Rounded down, like every other division the rules leave
+                // undirected. Source: ArMDE:547; see `derived.rs::halve`.
+                let spontaneous_non_fatiguing = spont_base.div_euclid(5);
                 CastingScores {
                     formulaic,
                     ritual,
@@ -192,12 +230,20 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
             let base = variant(false);
             let voice_penalty = mods.residual_voice_penalty(&form);
             let gesture_penalty = mods.residual_gesture_penalty(&form);
+            // These three addends are always `<= 0`, so they cannot push a
+            // saturated `i32::MAX` higher — but they *can* push a saturated
+            // `i32::MIN` lower, which is the same abort at the other end of the
+            // range. The sign is not a guard in either direction; the helper is.
             let non_standard = NonStandardCasting {
                 voice_penalty,
                 gesture_penalty,
-                silent: base.formulaic + voice_penalty,
-                still: base.formulaic + gesture_penalty,
-                silent_and_still: base.formulaic + voice_penalty + gesture_penalty,
+                silent: saturating_i32_sum([base.formulaic, voice_penalty]),
+                still: saturating_i32_sum([base.formulaic, gesture_penalty]),
+                silent_and_still: saturating_i32_sum([
+                    base.formulaic,
+                    voice_penalty,
+                    gesture_penalty,
+                ]),
                 deft_form: mods.deft_forms.contains(&form),
             };
             let within_focus = mods.has_focus.then(|| {
@@ -281,6 +327,9 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
     let mods = in_play_mods(entity, ruleset);
     let pen_ability = ability(entity, ruleset, ID_PENETRATION);
     let weak_magic = mods.halvings.contains(&HalvableTotal::Penetration);
+    // Character-level, not spell-level: hoisted so a magus with a long spell list
+    // does not re-walk his equipment for every line.
+    let base = CastingBase::of(entity, ruleset);
     let mut out = Vec::new();
     for sel in &entity.spells {
         let Some(spell) = ruleset.spell(&sel.spell) else {
@@ -294,8 +343,15 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
             let raw = saturating_i32_sum([casting, -level_i, pen_ability]);
             if weak_magic { halve(raw) } else { raw }
         };
-        let base_casting =
-            formulaic_casting_score(entity, ruleset, &mods, &spell.technique, &spell.form, false);
+        let base_casting = formulaic_casting_score(
+            entity,
+            ruleset,
+            &mods,
+            &spell.technique,
+            &spell.form,
+            base,
+            false,
+        );
         let within_focus = mods.has_focus.then(|| {
             let focus_casting = formulaic_casting_score(
                 entity,
@@ -303,6 +359,7 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
                 &mods,
                 &spell.technique,
                 &spell.form,
+                base,
                 true,
             );
             pen(focus_casting)

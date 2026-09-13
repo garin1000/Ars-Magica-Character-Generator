@@ -28,8 +28,9 @@ use arm_rules::{
     spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
     supernatural_free_slots, true_faith, validate, warping, warping_owed_grants,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
+use crate::atomic_write::write_file_atomically;
 use crate::error::AppError;
 
 /// The score effects a character's virtues/flaws produce, for the frontend.
@@ -1088,28 +1089,63 @@ pub fn ensure_extension(path: PathBuf, ext: &str) -> PathBuf {
     }
 }
 
-/// Stable ID + version of the shipped ruleset. These are slug-style identifiers,
-/// not user-facing text, so they live in code rather than Fluent.
-pub const RULESET_ID: &str = "arm5-core";
-pub const RULESET_VERSION: &str = "2024.1";
-
-/// Given ordered candidate rules directories, returns the first one that
-/// actually holds the rules data, or `None` when none do.
+/// The rules file each ruleset declares its own identity in. Slug-style
+/// identifiers, not user-facing text, so no Fluent key is involved.
 ///
-/// Tauri's `BaseDirectory::Resource` does not resolve to the executable's own
-/// directory for a portable Linux build: `resource_dir` there falls back to a
-/// system path (`/usr/lib/<name>`) that a portable extract never populates. So
-/// the command offers both the resource path and the directory next to the
-/// executable as candidates and lets this pick whichever is real. A candidate is
-/// considered valid when it contains `core/character_types.json`, a required
-/// rules file.
+/// It is a file rather than a pair of `const`s in this binary (which is what it
+/// was until full-audit V6) because a ruleset's identity is a property of the
+/// **data**, not of the executable that read it. A `rules/` directory beside the
+/// binary is a supported layout, so house-ruled data is loadable — and while the
+/// id was compiled in, every character built against it was stamped with the
+/// shipped ruleset's id and version, leaving the provenance a save records
+/// (`types.rs::RulesetRef`) unable to tell the two apart.
+const RULESET_IDENTITY_FILE: &str = "core/ruleset.json";
+
+/// A ruleset's own declaration of which ruleset it is, as read from
+/// [`RULESET_IDENTITY_FILE`]. Unknown fields are tolerated (a future ruleset may
+/// declare more about itself); the two that must be there are checked below.
+#[derive(Deserialize)]
+struct RulesetIdentity {
+    /// Stable ruleset id, e.g. `arm5-core`.
+    id: String,
+    /// Ruleset version string, e.g. `2024.1`.
+    version: String,
+}
+
+/// Parses [`RULESET_IDENTITY_FILE`]'s contents, failing loudly — as a ruleset
+/// **parse** failure naming the file, exactly like any other malformed rules
+/// file — rather than falling back to an identity nothing declared. A blank id
+/// or version counts as malformed: it would stamp every save with a provenance
+/// that can never be compared against anything.
+fn parse_ruleset_identity(json: &str) -> Result<RulesetIdentity, AppError> {
+    let identity: RulesetIdentity =
+        serde_json::from_str(json).map_err(|e| ruleset_identity_error(&e.to_string()))?;
+    if identity.id.trim().is_empty() || identity.version.trim().is_empty() {
+        return Err(ruleset_identity_error(
+            "\"id\" and \"version\" must both be non-empty",
+        ));
+    }
+    Ok(identity)
+}
+
+/// A parse-kind [`AppError::Ruleset`] naming [`RULESET_IDENTITY_FILE`], matching
+/// the engine's own `"{source}: {message}"` diagnostic shape so the frontend and
+/// the stderr listing treat it like every other rules-file failure.
+fn ruleset_identity_error(message: &str) -> AppError {
+    AppError::Ruleset {
+        ruleset_kind: "parse".to_string(),
+        errors: vec![format!("{RULESET_IDENTITY_FILE}: {message}")],
+    }
+}
+
 /// Every core rules file a valid `rules/` directory must carry — exactly the
 /// set [`load_ruleset_from_dir`] unconditionally reads via `fs::read_to_string`
 /// regardless of language. An empty *file* is a legitimate "this ruleset ships
 /// none of this subsystem" signal there (characteristics/life_stages/
 /// childhoods/aging may all be `""`), but the file itself must still exist —
 /// that is exactly the presence this list checks.
-const REQUIRED_CORE_FILES: [&str; 13] = [
+const REQUIRED_CORE_FILES: [&str; 14] = [
+    RULESET_IDENTITY_FILE,
     "core/virtues_flaws.json",
     "core/character_types.json",
     "core/abilities.json",
@@ -1138,7 +1174,16 @@ pub fn missing_core_files(dir: &Path) -> Vec<&'static str> {
         .collect()
 }
 
-/// Picks the first candidate directory that carries every
+/// Given ordered candidate rules directories, returns the first one that
+/// actually holds the rules data, or `None` when none do.
+///
+/// Tauri's `BaseDirectory::Resource` does not resolve to the executable's own
+/// directory for a portable Linux build: `resource_dir` there falls back to a
+/// system path (`/usr/lib/<name>`) that a portable extract never populates. So
+/// the command offers both the resource path and the directory next to the
+/// executable as candidates and lets this pick whichever is real.
+///
+/// A candidate qualifies when it carries every
 /// [`REQUIRED_CORE_FILES`] entry (V9). A candidate missing even one — a
 /// stale or partially-staged directory — is skipped rather than accepted on
 /// the strength of a single file and left to fail later, deep inside
@@ -1164,6 +1209,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         .map(|file| fs::read_to_string(rules_dir.join(file)).map_err(AppError::from))
         .collect::<Result<_, _>>()?;
     let [
+        identity_json,
         point_items_json,
         type_profiles_json,
         abilities_json,
@@ -1177,13 +1223,17 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         life_stages_json,
         childhoods_json,
         aging_json,
-    ]: [String; 13] = core
+    ]: [String; 14] = core
         .try_into()
-        .expect("REQUIRED_CORE_FILES has exactly 13 entries");
+        .expect("REQUIRED_CORE_FILES has exactly 14 entries");
+
+    // The identity the DATA declares, never one this binary holds: see
+    // [`RULESET_IDENTITY_FILE`].
+    let identity = parse_ruleset_identity(&identity_json)?;
 
     let ruleset = Ruleset::from_sources(RulesetSources {
-        id: RULESET_ID,
-        version: RULESET_VERSION,
+        id: &identity.id,
+        version: &identity.version,
         point_items: &point_items_json,
         type_profiles: &type_profiles_json,
         abilities: Some(&abilities_json),
@@ -1243,6 +1293,7 @@ fn read_i18n_sources(rules_dir: &Path, lang: &str) -> Result<Vec<String>, AppErr
         "childhoods.json",
         "aging.json",
     ];
+    let lang = validated_language_tag(lang)?;
     FILES
         .iter()
         .map(|file| {
@@ -1250,6 +1301,73 @@ fn read_i18n_sources(rules_dir: &Path, lang: &str) -> Result<Vec<String>, AppErr
                 .map_err(AppError::from)
         })
         .collect()
+}
+
+/// `lang` back again, once it is a single path component and nothing else.
+///
+/// **This is the codebase's only string-to-path join fed by an unvalidated
+/// string** (Klaus F5), and it has two sources: the `load_ruleset` command,
+/// which takes a bare `String` over IPC, and `settings.json`, whose deliberately
+/// lenient deserializer (`settings.rs::lenient`) accepts any string a
+/// hand-edited file offers. `"../../.."` would resolve outside the rules
+/// directory.
+///
+/// What it can actually reach is narrow — the read is read-only and the final
+/// component is one of the ten fixed filenames above — so by this app's threat
+/// model (`CLAUDE.md`: single local user, no remote attacker) the exposure is
+/// near-inert. The guard is here because an unchecked join is worth closing
+/// while it IS inert, and because [`read_i18n_sources`] is the one place both
+/// sources meet: putting it in the command shim would leave the settings path
+/// unchecked.
+///
+/// The shape, not a list of languages: a language directory is named by a
+/// BCP-47-style tag (`en`, `de`, `pt-BR`), so ASCII alphanumerics plus `-` and
+/// `_` is the whole alphabet. That rejects `/`, `\` and `.` — and with `.` gone
+/// there is no `..` to climb with — while keeping which languages exist a
+/// property of the rules data, never of this code.
+fn validated_language_tag(lang: &str) -> Result<&str, AppError> {
+    let is_tag = !lang.is_empty()
+        && lang
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+    if is_tag {
+        return Ok(lang);
+    }
+    Err(AppError::Io {
+        message: format!("not a language tag: {lang}"),
+    })
+}
+
+/// The path as the text the frontend will carry, or a failure naming it.
+///
+/// **Refusing is the point** (Gerda #5). A file name on Linux is an arbitrary
+/// byte string, so a path chosen in the native dialog need not be UTF-8 — and
+/// `to_string_lossy`, which this used to be, substitutes U+FFFD for every byte
+/// that is not. The frontend adopts the result as `currentPath`, and every later
+/// plain Save writes straight to it with no dialog: the user would edit for an
+/// hour, press Ctrl+S, and have the app write to a path containing a literal
+/// replacement character while the file they believe they updated still held the
+/// old version. The dirty flag is cleared on that "successful" save, so the
+/// close guard would not warn them either.
+///
+/// The honest fix is the cheap one: refuse at the boundary and say which path,
+/// so the user is told rather than silently misdirected. The message is
+/// technical detail (`AppError::Io`'s `message`), not a user-facing sentence —
+/// the frontend renders the localized text for the variant, as it does for every
+/// other IO failure.
+pub fn path_text(path: &Path) -> Result<String, AppError> {
+    match path.to_str() {
+        Some(text) => Ok(text.to_owned()),
+        // Lossy HERE is correct and nowhere else: this string is a diagnostic
+        // for a human, never a path anything writes to.
+        None => Err(AppError::Io {
+            message: format!(
+                "the chosen path is not valid UTF-8 and cannot be tracked as the \
+                 current file: {}",
+                path.to_string_lossy()
+            ),
+        }),
+    }
 }
 
 /// Validates an entity against a loaded ruleset and applies the caller's mode
@@ -1266,6 +1384,12 @@ pub fn validate_loaded(
 /// normalized first (sorting selections and parameters) so the output is
 /// byte-stable for zero-noise git diffs — the engine no longer sorts implicitly
 /// on serialize.
+///
+/// The write replaces the file rather than truncating it
+/// (`atomic_write.rs::write_file_atomically`): this is the path a plain Save
+/// takes straight to the current file, with no dialog and no other copy of the
+/// character anywhere, so a write that empties it first is one interruption away
+/// from losing the document outright.
 pub fn save_entity_to_path(entity: &Entity, path: &Path) -> Result<(), AppError> {
     let mut canonical = entity.clone();
     // Stamp the current schema version so app-written saves never drift from the
@@ -1273,8 +1397,7 @@ pub fn save_entity_to_path(entity: &Entity, path: &Path) -> Result<(), AppError>
     canonical.schema_version = arm_rules::SCHEMA_VERSION;
     canonical.normalize();
     let json = serde_json::to_string_pretty(&canonical)?;
-    fs::write(path, json)?;
-    Ok(())
+    write_file_atomically(path, &json)
 }
 
 /// Renders `entity` as Markdown and writes it to `path`.
@@ -1296,15 +1419,24 @@ pub fn export_markdown_to_path(
 ) -> Result<(), AppError> {
     let ruleset = ruleset.ok_or(AppError::NotLoaded)?;
     let markdown = arm_rules::character_markdown(entity, ruleset, labels)?;
-    fs::write(path, markdown)?;
-    Ok(())
+    write_file_atomically(path, &markdown)
 }
 
-/// Reads and deserializes an entity from `path`, applying save migrations.
+/// Reads and deserializes an entity from `path`, applying save migrations, and
+/// hands back the engine's outcome **including what the migration rewrote**.
 ///
 /// A pre-schema-10 save's manual `aging_reductions` are folded into `aging_points`
-/// (aging drops are now derived); the migration is logged so a stale save is
-/// visibly upgraded on load. See [`arm_rules::load_entity_migrating`].
+/// (aging drops are now derived). See [`arm_rules::load_entity_migrating`].
+///
+/// **The report is returned, not swallowed** (Viktor #4). It used to go only to
+/// an `eprintln!`, which a GUI binary started from a desktop launcher sends
+/// nowhere: the user was never told that their character had been rewritten,
+/// even though the fold is lossy (the engine reconstructs the MINIMAL
+/// aging-point total that reproduces the recorded drops) and the next save makes
+/// it permanent. The engine's own contract says the caller surfaces a localized
+/// notice — `migration.rs::LoadedEntity` — and this is the caller. The stderr line
+/// stays as a SECOND surface for whoever did launch from a terminal, exactly as
+/// `error.rs::AppError::reported` writes to stderr *and* returns the failure.
 ///
 /// `default_saga_year` is what a **pre-schema-17** save inherits: before C8 the saga
 /// year lived in `settings.json`, machine-globally, so the honest value for a
@@ -1312,7 +1444,10 @@ pub fn export_markdown_to_path(
 /// documents. The engine cannot read that file — it has no filesystem at all — so
 /// this crate, which owns the settings, hands it in. The caller passes
 /// [`crate::settings::Settings::default_saga_year`].
-pub fn load_entity_from_path(path: &Path, default_saga_year: i32) -> Result<Entity, AppError> {
+pub fn load_entity_from_path(
+    path: &Path,
+    default_saga_year: i32,
+) -> Result<arm_rules::LoadedEntity, AppError> {
     let json = fs::read_to_string(path)?;
     let loaded = arm_rules::load_entity_migrating(&json, default_saga_year)?;
     if !loaded.migrated_aging_characteristics.is_empty() {
@@ -1327,7 +1462,7 @@ pub fn load_entity_from_path(path: &Path, default_saga_year: i32) -> Result<Enti
             characteristics.join(", ")
         );
     }
-    Ok(loaded.entity)
+    Ok(loaded)
 }
 
 #[cfg(test)]
