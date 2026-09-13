@@ -1076,6 +1076,14 @@ issue-unknown_param_value = { $item }, Parameter { $key }: unbekannter Wert { $v
 # Regeldaten (`ParameterDef.at_most_one_of`) und nie fest im Text — daher nennt
 # diese Meldung Element und Feld und zählt die Kopien, statt die Werte zu nennen.
 issue-exclusive_param_values = { $item } nennt { $count } Werte für { $key }, von denen die Regeln nur einen zulassen.
+# Basisregeln — Core Rules.md:6482: "A character may take this Flaw once for any
+# particular Ability". Die dritte und engste Mehrfach-Achse, neben
+# `duplicate_selection` (ein identisches Ziel) und `too_many_selections` (Kopien
+# insgesamt): eine Obergrenze je Wert EINES Parameters. Diese Meldung nennt den
+# Wert — es gibt genau einen, und „zweimal für irgendetwas" hilft niemandem.
+# „pro { $key }" statt „für dieselbe { $key }", weil das Wort aus den Daten kommt
+# und ein Artikel dessen Genus erraten müsste (die Fertigkeit, das Merkmal).
+issue-too_many_for_param_value = { $item } ist { $count }-mal für { $value } ausgewählt, darf aber höchstens { $max }-mal pro { $key } gewählt werden.
 # Basisregeln.md:6096 — die Falsche Macht wird "einmal für jede geeignete
 # Übernatürliche Tugend, die der Charakter besitzt" genommen. Die erste Meldung
 # betrifft ein Ziel, das der Charakter nicht hat, die zweite eine Tugend, die

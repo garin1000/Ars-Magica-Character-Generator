@@ -312,6 +312,85 @@ pub(crate) fn validate_total_selection_cap(
     }
 }
 
+/// Enforces every parameter's [`ParameterDef::max_per_value`]: how many of an
+/// item's copies may name one and the same value for ONE parameter key.
+///
+/// Necessary (Realm) Aura for (Ability) is the case the rules state: "A
+/// character may take this Flaw once for any particular Ability"
+/// (ArMDE:6482). The Flaw declares two parameters and that sentence binds only
+/// one of them, which is precisely what its two neighbours cannot say —
+/// [`validate_duplicate_selections`] groups by the *whole* `(item_ref, params)`
+/// tuple, so one Ability under two Realms collides in no key, and
+/// [`validate_total_selection_cap`] groups by `item_ref` alone, so it cannot
+/// say "per Ability" at all. Which key is capped, and at what, is data: no item
+/// id and no parameter key appears here.
+///
+/// **Distinct tuples, not raw copies.** Two copies with an *identical* tuple
+/// are already `max_per_target`'s finding, and counting them here too would
+/// draw two findings for one mistake — the same division of labour
+/// [`validate_possessed_param_targets`] keeps with the same neighbour. So the
+/// count is of distinct parameter tuples naming the value, and the two axes
+/// partition the problem rather than overlap on it.
+///
+/// Grant-aware for the reason its neighbours are: `selections` is the folded
+/// bought-plus-granted list ([`crate::effective::selections_for_effects`]), and
+/// a granted copy names its Ability exactly as a bought one does.
+pub(crate) fn validate_per_value_cap(
+    selections: &[Selection],
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    // Grouped by item so each item is judged over all of its own copies, and
+    // the tuples are de-duplicated per value — see "distinct tuples" above.
+    let mut tuples_by_item: BTreeMap<&Id, BTreeSet<&BTreeMap<String, Id>>> = BTreeMap::new();
+    for selection in selections {
+        tuples_by_item
+            .entry(&selection.item_ref)
+            .or_default()
+            .insert(&selection.params);
+    }
+
+    for (item_ref, tuples) in tuples_by_item {
+        let Some(item) = ruleset.point_items.get(item_ref) else {
+            continue; // unknown_ref already reported
+        };
+        for param in &item.parameters {
+            // The default is a SENTINEL for "no ceiling the rules state", not
+            // the number 255: a crafted save holding 256 copies of one value
+            // must not invent a rule no rulebook contains. Skipping it also
+            // bounds the counting below to the parameters that actually
+            // declare a cap.
+            if param.max_per_value == u8::MAX {
+                continue;
+            }
+            let max = usize::from(param.max_per_value);
+            let mut counts: BTreeMap<&Id, usize> = BTreeMap::new();
+            for params in &tuples {
+                if let Some(value) = params.get(&param.key) {
+                    *counts.entry(value).or_insert(0) += 1;
+                }
+            }
+            for (value, count) in counts {
+                if count <= max {
+                    continue;
+                }
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE,
+                    CreationPhase::VirtuesFlaws,
+                    args([
+                        ("item", item_ref.to_string()),
+                        ("key", param.key.clone()),
+                        ("value", value.to_string()),
+                        ("count", count.to_string()),
+                        ("max", max.to_string()),
+                    ]),
+                    Some(item_ref.clone()),
+                ));
+            }
+        }
+    }
+}
+
 /// Enforces every parameter's [`ParameterDef::at_most_one_of`] groups across
 /// the copies of one item: at most one member of a group may be named, however
 /// many copies are held.

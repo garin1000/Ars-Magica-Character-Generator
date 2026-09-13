@@ -149,6 +149,7 @@ impl fmt::Display for IssueSeverity {
 /// | `unexpected_param` | error | virtues_flaws, house_specialisation, mythic_type, review | `item`, `key` |
 /// | `unknown_param_value` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key`, `value`, `domain` |
 /// | `exclusive_param_values` | error | virtues_flaws | `item`, `key`, `count` |
+/// | `too_many_for_param_value` | error | virtues_flaws | `item`, `key`, `value`, `count`, `max` |
 /// | `param_target_not_possessed` | error | virtues_flaws | `item`, `key`, `value` |
 /// | `param_target_already_claimed` | error | virtues_flaws | `item`, `key`, `value`, `other` |
 /// | `power_dangling_target` | error | review | `item`, `key`, `power` |
@@ -369,6 +370,26 @@ impl ValidationIssue {
     /// player sees which Virtue and which slot; the copies themselves are on
     /// screen beside the finding.
     pub const CODE_EXCLUSIVE_PARAM_VALUES: &'static str = "exclusive_param_values";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: more copies of one
+    /// item name the same value for one parameter than that parameter's
+    /// [`ParameterDef::max_per_value`](crate::types::ParameterDef::max_per_value)
+    /// allows — Necessary (Realm) Aura for (Ability)'s "A character may take
+    /// this Flaw once for any particular Ability"
+    /// (ArMDE:6482). Which key is
+    /// capped, and at what, is rules data.
+    ///
+    /// The third and narrowest of the three multiplicity axes, beside
+    /// `duplicate_selection` (one identical `(id, params)` target) and
+    /// `too_many_selections` (copies in total). It counts **distinct tuples**,
+    /// so an identical repeat stays its neighbour's finding and one mistake
+    /// never draws two.
+    ///
+    /// Unlike [`Self::CODE_EXCLUSIVE_PARAM_VALUES`], the message DOES name the
+    /// offending value: there is exactly one of it, and the player cannot act
+    /// on "twice for something". It is one arg in one domain — the parameter's
+    /// own — so the per-domain-argument problem that keeps the exclusion
+    /// message value-free does not arise.
+    pub const CODE_TOO_MANY_FOR_PARAM_VALUE: &'static str = "too_many_for_param_value";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_GIFT_REQUIRED: &'static str = "gift_required";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -934,6 +955,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_entity_kind_applicability(entity, ruleset, &mut issues);
     validate_duplicate_selections(&effective_selections, ruleset, &mut issues);
     validate_total_selection_cap(&effective_selections, ruleset, &mut issues);
+    validate_per_value_cap(&effective_selections, ruleset, &mut issues);
     validate_exclusive_param_values(&effective_selections, ruleset, &mut issues);
     validate_balance(entity, ruleset, type_profile, &mut issues);
     validate_caps(entity, ruleset, type_profile, &mut issues);
@@ -6791,6 +6813,258 @@ mod tests {
             "buying the same target the House already grants must be a duplicate: {:?}",
             result.issues
         );
+    }
+
+    // --- Per-parameter-value cap (E5) ---
+
+    /// Items for the `max_per_value` family, shaped after the one shipped item
+    /// whose source caps repeats on ONE parameter key rather than on the whole
+    /// tuple: Necessary (Realm) Aura for (Ability), "A character may take this
+    /// Flaw once for any particular Ability" (ArMDE:6482). Two parameters, and
+    /// the cap sits on the `ability` one alone, so the Realm axis stays free.
+    ///
+    /// The Puissant-shaped grant item beside it is what lets a House-granted
+    /// copy be weighed against a bought one, exactly as the `max_total` family
+    /// above does.
+    const PER_VALUE_ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
+      { "id": "flaw.necessary_aura", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
+        "categories": ["general"], "entity_kinds": ["character"],
+        "parameters": [
+          { "key": "ability", "type": "ref", "domain": "ability", "max_per_value": 1 },
+          { "key": "realm", "type": "ref", "domain": "realm" }
+        ] }
+    ]"#;
+
+    /// The same two-parameter Flaw with no cap declared on either key — the
+    /// shape of every parameter that shipped before this field existed.
+    const PER_VALUE_UNCAPPED_ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
+      { "id": "flaw.necessary_aura", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
+        "categories": ["general"], "entity_kinds": ["character"],
+        "parameters": [
+          { "key": "ability", "type": "ref", "domain": "ability" },
+          { "key": "realm", "type": "ref", "domain": "realm" }
+        ] }
+    ]"#;
+
+    /// The per-value fixtures declare no Puissant Ability, so they cannot use
+    /// the grant-bearing builder above — its Flambeau-shaped House grants one.
+    /// Only `granted_copies_count_toward_the_per_value_cap` needs a House, and
+    /// it brings a catalogue that satisfies the grant.
+    fn per_value_rs(items: &str) -> Ruleset {
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: GRANT_MAGUS_TYPE,
+            abilities: Some(TOTAL_CAP_GRANT_ABILITIES),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+            life_stages: None,
+            childhoods: None,
+            aging: None,
+        })
+        .unwrap()
+    }
+
+    fn per_value_entity(copies: &[(&str, &str)]) -> Entity {
+        make_entity(
+            "magus",
+            copies
+                .iter()
+                .map(|(ability, realm)| {
+                    Selection::with_params(
+                        Id::new("flaw.necessary_aura"),
+                        BTreeMap::from([
+                            ("ability".into(), Id::new(*ability)),
+                            ("realm".into(), Id::new(*realm)),
+                        ]),
+                    )
+                })
+                .collect(),
+        )
+    }
+
+    /// Two copies naming the same Ability in different Realms are two copies
+    /// "for any particular Ability", which `ArMDE:6482` allows only one of —
+    /// and which the whole-tuple `max_per_target` key cannot see, because the
+    /// tuples differ in their Realm.
+    #[test]
+    fn two_copies_may_not_share_a_capped_parameter_value() {
+        let rs = per_value_rs(PER_VALUE_ITEMS);
+        let entity = per_value_entity(&[
+            ("ability.artes_liberales", "realm.divine"),
+            ("ability.artes_liberales", "realm.faerie"),
+        ]);
+
+        let found = codes(&validate(&entity, &rs));
+        assert!(
+            found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "one Flaw per particular Ability (ArMDE:6482), whatever the Realm: {found:?}"
+        );
+    }
+
+    #[test]
+    fn copies_naming_different_values_of_a_capped_parameter_are_clean() {
+        let rs = per_value_rs(PER_VALUE_ITEMS);
+        let entity = per_value_entity(&[
+            ("ability.artes_liberales", "realm.divine"),
+            ("ability.philosophiae", "realm.divine"),
+        ]);
+
+        let found = codes(&validate(&entity, &rs));
+        assert!(
+            !found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "two different Abilities are two different targets the source permits: {found:?}"
+        );
+    }
+
+    #[test]
+    fn a_parameter_with_no_stated_cap_never_trips_the_per_value_cap() {
+        let rs = per_value_rs(PER_VALUE_UNCAPPED_ITEMS);
+        let entity = per_value_entity(&[
+            ("ability.artes_liberales", "realm.divine"),
+            ("ability.artes_liberales", "realm.faerie"),
+        ]);
+
+        let found = codes(&validate(&entity, &rs));
+        assert!(
+            !found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "no cap in the data means no cap in the engine: {found:?}"
+        );
+    }
+
+    /// The absent-cap default is the `u8::MAX` **sentinel** for "no ceiling the
+    /// rules state", not the number 255 — so it must not become one at 256
+    /// copies. A crafted save is the only way to reach that count, and a save
+    /// is a declared hostile-input surface: a finding invented there would
+    /// name a rule no rulebook contains.
+    #[test]
+    fn the_absent_per_value_cap_is_a_sentinel_and_not_the_number_255() {
+        let rs = per_value_rs(PER_VALUE_UNCAPPED_ITEMS);
+        let realms: Vec<Id> = Realm::ALL.iter().map(|realm| realm.id()).collect();
+        // 256 copies naming ONE ability, all with distinct tuples, which is what
+        // the counter sees; the realm values only keep the tuples apart.
+        let selections = (0..=u16::from(u8::MAX))
+            .map(|n| {
+                Selection::with_params(
+                    Id::new("flaw.necessary_aura"),
+                    BTreeMap::from([
+                        ("ability".into(), Id::new("ability.artes_liberales")),
+                        (
+                            "realm".into(),
+                            // Only four Realms exist, so vary the whole tuple by
+                            // a per-copy suffix; an unresolvable realm is its own
+                            // finding and is not the one under test here.
+                            Id::new(format!("{}-{n}", realms[0])),
+                        ),
+                    ]),
+                )
+            })
+            .collect();
+        let entity = make_entity("magus", selections);
+
+        let found = codes(&validate(&entity, &rs));
+        assert!(
+            !found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "an absent cap must stay absent however many copies a save holds: {found:?}"
+        );
+    }
+
+    /// Two copies with an IDENTICAL tuple are `max_per_target`'s finding, and
+    /// only its finding: the per-value cap counts distinct tuples, so one
+    /// mistake never draws two findings — the same division of labour
+    /// `validate_possessed_param_targets` keeps with the same neighbour.
+    #[test]
+    fn an_identical_repeat_stays_the_duplicate_selections_finding() {
+        let rs = per_value_rs(PER_VALUE_ITEMS);
+        let entity = per_value_entity(&[
+            ("ability.artes_liberales", "realm.divine"),
+            ("ability.artes_liberales", "realm.divine"),
+        ]);
+
+        let found = codes(&validate(&entity, &rs));
+        assert!(
+            found.contains(&ValidationIssue::CODE_DUPLICATE_SELECTION.to_string()),
+            "an identical repeat is still a duplicate target: {found:?}"
+        );
+        assert!(
+            !found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "and must not be reported a second time under the per-value cap: {found:?}"
+        );
+    }
+
+    /// The per-value cap is grant-aware for the reason its two neighbours are:
+    /// a granted copy is still a copy. The House here grants Puissant
+    /// (ability.ignem); the capped Flaw is bought twice for `ability.ignem`
+    /// under two Realms, so the finding must name the Flaw's own copies.
+    #[test]
+    fn granted_copies_count_toward_the_per_value_cap() {
+        const ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
+          { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+            "categories": ["hermetic"], "entity_kinds": ["character"],
+            "parameters": [
+              { "key": "ability", "type": "ref", "domain": "ability", "max_per_value": 1 },
+              { "key": "realm", "type": "ref", "domain": "realm" }
+            ] }
+        ]"#;
+        let rs = rs_total_cap_with_grants(ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity(
+            "magus",
+            vec![Selection::with_params(
+                Id::new("virtue.puissant_ability"),
+                BTreeMap::from([
+                    ("ability".into(), Id::new("ability.ignem")),
+                    ("realm".into(), Id::new("realm.faerie")),
+                ]),
+            )],
+        );
+        entity.house = Some(Id::new("house.flambeau"));
+
+        let found = codes(&validate(&entity, &rs));
+        assert!(
+            found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "a House-granted copy names its Ability as surely as a bought one: {found:?}"
+        );
+    }
+
+    /// The message must name the key and the value that collided, so the player
+    /// reads "twice for Awareness" rather than "twice for something".
+    #[test]
+    fn the_per_value_finding_names_the_key_and_the_value() {
+        let rs = per_value_rs(PER_VALUE_ITEMS);
+        let entity = per_value_entity(&[
+            ("ability.artes_liberales", "realm.divine"),
+            ("ability.artes_liberales", "realm.faerie"),
+        ]);
+
+        let result = validate(&entity, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE)
+            .expect("the per-value cap must have fired");
+        assert_eq!(
+            issue.args.get("item").map(String::as_str),
+            Some("flaw.necessary_aura")
+        );
+        assert_eq!(issue.args.get("key").map(String::as_str), Some("ability"));
+        assert_eq!(
+            issue.args.get("value").map(String::as_str),
+            Some("ability.artes_liberales")
+        );
+        assert_eq!(issue.args.get("count").map(String::as_str), Some("2"));
+        assert_eq!(issue.args.get("max").map(String::as_str), Some("1"));
     }
 
     // --- Parameter validation ---

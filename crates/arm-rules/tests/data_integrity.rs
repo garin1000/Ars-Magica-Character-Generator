@@ -7010,6 +7010,87 @@ fn folk_magic_repeats_along_either_axis_and_never_across_the_excluded_realms() {
     );
 }
 
+/// E5 (open-todos row 29): Necessary (Realm) Aura for (Ability) is capped on
+/// its **Ability** key alone, not on the whole `(Realm, Ability)` tuple.
+///
+/// > "A character may take this Flaw once for any particular Ability."
+/// > (`ArMDE:6482`)
+///
+/// The Realm axis is deliberately untouched by that sentence — nothing in
+/// `ArMDE:6480-6487` says a character may hold the Flaw only once overall — so
+/// the cap is expressed on the parameter that the sentence names and on no
+/// other. The two Abilities and the two Realms are read out of the catalogue
+/// and the `Realm` taxonomy, so no ability id is written down here.
+#[test]
+fn necessary_aura_is_taken_once_for_any_particular_ability() {
+    let rs = load_ruleset();
+    let id = Id::new("flaw.necessary_realm_aura_for_ability");
+    let item = rs.item(&id).expect("the Flaw must ship");
+    let realms: Vec<Id> = Realm::ALL.iter().map(|realm| realm.id()).collect();
+    let abilities: Vec<Id> = rs.abilities().map(|a| a.id.clone()).take(2).collect();
+    // Preconditions, not catalogue totals: the cases below need two of each.
+    assert!(realms.len() >= 2 && abilities.len() == 2);
+
+    let ability_param = item
+        .parameters
+        .iter()
+        .find(|p| p.key == "ability")
+        .expect("the Flaw must declare an 'ability' parameter");
+    assert_eq!(
+        ability_param.max_per_value, 1,
+        "'once for any particular Ability' (ArMDE:6482) is a cap of one on the \
+         Ability key"
+    );
+    let realm_param = item
+        .parameters
+        .iter()
+        .find(|p| p.key == "realm")
+        .expect("the Flaw must declare a 'realm' parameter");
+    assert_eq!(
+        realm_param.max_per_value,
+        u8::MAX,
+        "no sentence in ArMDE:6480-6487 caps the Realm axis, so it stays free"
+    );
+
+    let copies = |pairs: &[(&Id, &Id)]| {
+        entity(
+            "companion",
+            pairs
+                .iter()
+                .map(|(ability, realm)| {
+                    Selection::with_params(
+                        id.clone(),
+                        BTreeMap::from([
+                            ("ability".to_string(), (*ability).clone()),
+                            ("realm".to_string(), (*realm).clone()),
+                        ]),
+                    )
+                })
+                .collect(),
+        )
+    };
+
+    let same_ability = issue_codes(
+        &copies(&[(&abilities[0], &realms[0]), (&abilities[0], &realms[1])]),
+        &rs,
+    );
+    assert!(
+        same_ability.contains(&"too_many_for_param_value".to_string()),
+        "a second copy for the same Ability is what :6482 forbids, whatever the \
+         Realm: {same_ability:?}"
+    );
+
+    let different_abilities = issue_codes(
+        &copies(&[(&abilities[0], &realms[0]), (&abilities[1], &realms[0])]),
+        &rs,
+    );
+    assert!(
+        !different_abilities.contains(&"too_many_for_param_value".to_string()),
+        "two different Abilities are two particular Abilities, which :6482 \
+         permits: {different_abilities:?}"
+    );
+}
+
 /// E2 (open-todos row 24): **every** shipped parameter that asks for a
 /// supernatural Realm names one of the four the engine models — none is free
 /// text any more.

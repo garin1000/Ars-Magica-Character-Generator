@@ -588,6 +588,44 @@ pub struct ParameterDef {
     /// copies. See `crates/arm-rules/RULES.md`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub at_most_one_of: Vec<BTreeSet<Id>>,
+    /// The largest number of the declaring item's copies that may name **one
+    /// and the same value** for this parameter. Default `u8::MAX` (255) = "no
+    /// ceiling the rules state" — the same sentinel convention
+    /// [`PointItem::max_total`] uses, and the shape of every parameter that
+    /// shipped before this field existed.
+    ///
+    /// Necessary (Realm) Aura for (Ability) is the case the rules state: "A
+    /// character may take this Flaw once for any particular Ability"
+    /// (ArMDE:6482). The Flaw declares two parameters, and that sentence caps
+    /// repeats on the `ability` one **alone** — the Realm axis stays free — so
+    /// neither of the two [`PointItem`]-level caps can express it:
+    /// [`PointItem::max_per_target`]'s duplicate key is `(item_ref, params)`,
+    /// the *whole* tuple, so two copies naming one Ability under two Realms
+    /// collide in no key; [`PointItem::max_total`] groups by `item_ref` alone
+    /// and so cannot say "per Ability" at all. This is the third and narrowest
+    /// axis: `(item_ref, one named key's value)`.
+    ///
+    /// **Why it lives on the parameter and not on the item.** A cap spelled as
+    /// an item-level key→max map would repeat a key name this struct already
+    /// owns, which is a typo waiting to look enforced; here the cap *is* on the
+    /// key, so naming a parameter the item does not declare is unrepresentable
+    /// rather than merely rejected. It also sits beside [`Self::at_most_one_of`],
+    /// the other per-key constraint judged across an item's copies.
+    ///
+    /// Enforced by `validation::selections::validate_per_value_cap`, which
+    /// raises
+    /// [`crate::validation::ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE`]
+    /// and counts **distinct parameter tuples**, so an identical repeat stays
+    /// `max_per_target`'s finding and one mistake draws one finding. It tests
+    /// for the `u8::MAX` sentinel rather than comparing against it, so a
+    /// crafted save holding 256 copies of one value cannot trip a ceiling the
+    /// rules never state. Load-time integrity rejects a cap of `0`, which no
+    /// selection could ever satisfy.
+    #[serde(
+        default = "default_max_per_value",
+        skip_serializing_if = "is_default_max_per_value"
+    )]
+    pub max_per_value: u8,
     /// Narrows an [`ParameterDomain::Item`] parameter to a category: if non-empty,
     /// the point item the value names must carry at least one of these categories.
     /// Empty (the default, and the shape of every parameter shipped today) means
@@ -732,6 +770,7 @@ impl ParameterDef {
             domain,
             values: Vec::new(),
             at_most_one_of: Vec::new(),
+            max_per_value: default_max_per_value(),
             require_categories: Default::default(),
             require_possessed: false,
             forbid_tainted: false,
@@ -747,6 +786,7 @@ impl ParameterDef {
             domain: ParameterDomain::Enumerated,
             values: values.into_iter().collect(),
             at_most_one_of: Vec::new(),
+            max_per_value: default_max_per_value(),
             require_categories: Default::default(),
             require_possessed: false,
             forbid_tainted: false,
@@ -2050,6 +2090,17 @@ fn one_u8() -> u8 {
 
 fn is_one_u8(value: &u8) -> bool {
     *value == 1
+}
+
+/// The default per-parameter-value ceiling: no stated limit. See
+/// [`ParameterDef::max_per_value`]'s doc comment for the `u8::MAX` sentinel,
+/// which it shares with [`PointItem::max_total`].
+fn default_max_per_value() -> u8 {
+    u8::MAX
+}
+
+fn is_default_max_per_value(value: &u8) -> bool {
+    *value == default_max_per_value()
 }
 
 /// The default selection multiplicity: an item may be taken once per target.

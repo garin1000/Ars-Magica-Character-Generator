@@ -2050,6 +2050,16 @@ fn validate_parameter_defs(
                 param.domain
             ));
         }
+        // A `max_per_value` of 0 forbids every value the parameter could ever
+        // name, so the declaring item is unfillable — the mirror of the
+        // `at_most_one_of` group that excludes nothing. `ArMDE:6482` caps the
+        // one real user at one, never at none.
+        if param.max_per_value == 0 {
+            errors.push(format!(
+                "{subject}: parameter '{key}' declares 'max_per_value' 0; no \
+                 copy could then name any value, leaving the item unfillable"
+            ));
+        }
         let declares_values = matches!(
             param.domain,
             ParameterDomain::Enumerated | ParameterDomain::Category

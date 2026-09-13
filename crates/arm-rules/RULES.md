@@ -1025,7 +1025,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:899).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:978).
   The Gift policy is independent of the `is_magus` flag (an unGifted Redcap is a
   companion; a Gifted hedge wizard is not a magus).
 
@@ -1507,6 +1507,103 @@ that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
 | `virtue.affinity_art` | `ArMDE:3378` | "You may take this Virtue twice, for two different Arts" |
 | `virtue.puissant_art` | `ArMDE:4820` | "You may take this Virtue twice, for two different Arts" |
 | `flaw.false_power` | `ArMDE:6096` | "in each subsequent instance as a Minor Flaw rather than a Major one" — only the FIRST instance is this (Major) entry; see the section below |
+
+#### Selection multiplicity — `max_per_value` (one key, not the whole tuple)
+> "A character may take this Flaw once for any particular Ability." — Necessary
+> (Realm) Aura for (Ability), `ArMDE:6482`.
+
+- Source: `ArMDE:6482` (the descriptor runs `ArMDE:6480-6487`).
+- Engine: `ParameterDef::max_per_value` (`types.rs`), enforced by
+  `validation/selections.rs::validate_per_value_cap` (issue code
+  `too_many_for_param_value`, `ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE`);
+  load-time shape in `ruleset/integrity.rs::validate_parameter_defs`; messages
+  `issue-too_many_for_param_value` (`locales/en|de/main.ftl`).
+- Data: `rules/core/virtues_flaws.json` —
+  `flaw.necessary_realm_aura_for_ability`'s **`ability`** parameter,
+  `"max_per_value": 1`. Its `realm` parameter carries none.
+- Tests: `two_copies_may_not_share_a_capped_parameter_value`,
+  `copies_naming_different_values_of_a_capped_parameter_are_clean`,
+  `a_parameter_with_no_stated_cap_never_trips_the_per_value_cap`,
+  `an_identical_repeat_stays_the_duplicate_selections_finding`,
+  `granted_copies_count_toward_the_per_value_cap`,
+  `the_per_value_finding_names_the_key_and_the_value`,
+  `the_absent_per_value_cap_is_a_sentinel_and_not_the_number_255`
+  (`validation/mod.rs`),
+  `a_per_value_cap_of_zero_is_rejected` (`ruleset.rs`),
+  `necessary_aura_is_taken_once_for_any_particular_ability`
+  (`tests/data_integrity.rs`), and `names the per-parameter-value cap in both
+  locales, naming the value` (`ui/src/lib/i18n.test.ts`).
+
+The third and narrowest of the three multiplicity axes, and the only one that
+binds **one named parameter key** rather than an item-wide grouping:
+
+| Axis | Field | Groups by |
+|---|---|---|
+| one identical target | `PointItem::max_per_target` | `(item_ref, params)` — the whole tuple |
+| copies in total | `PointItem::max_total` | `item_ref` alone |
+| per named value | `ParameterDef::max_per_value` | `(item_ref, one key's value)` |
+
+**Why the two older axes cannot state it.** The Flaw declares two parameters,
+`realm` and `ability`, and `ArMDE:6482` caps repeats on the Ability alone —
+nothing in `ArMDE:6480-6487` limits how many Realms a character may hold the
+Flaw across. So `(ability: awareness, realm: divine)` and `(ability: awareness,
+realm: faerie)` are different tuples, collide in no `max_per_target` key, and
+before this axis both validated clean: the character held the Flaw twice for one
+Ability and had spent Flaw points the rules do not allow. `max_total` cannot help
+either — grouping by `item_ref` alone, it can say "twice overall" but never "twice
+per Ability".
+
+**Why the gap survived so long.** The cap mechanism predates multi-parameter
+items. For every single-parameter item it was designed against, "one copy per
+target" and "one copy per named value" are the same sentence, because the tuple
+*is* the value. Only a second parameter separates them, and the catalogue ships
+exactly two multi-parameter items — this Flaw and `virtue.folk_magic`, whose own
+`ArMDE:3919` explicitly *permits* the divergence ("you can align it to the same
+Realm as before or pick a different one"). So this is the one entry where the
+divergence is a defect rather than a rule.
+
+**The cap lives on the parameter, not on the item.** An item-level key→max map
+would repeat a key name `ParameterDef` already owns, and a typo in it would sit
+in `rules/` looking enforced; here the cap *is* on the key, so naming a
+parameter the item does not declare is unrepresentable rather than merely
+rejected. It also sits beside `at_most_one_of`, the other per-key constraint
+judged across an item's copies. Load-time integrity rejects only the one
+authoring slip the shape still permits — `max_per_value: 0`, which forbids every
+value the parameter could name and leaves the item unfillable, the mirror of the
+`at_most_one_of` group that excludes nothing.
+
+**Same sentinel convention as `max_total`: absent = `u8::MAX` (255) = "no stated
+ceiling"**, and the validator tests for the sentinel rather than comparing
+against it. That distinction is load-bearing, not pedantry: a crafted save
+holding 256 copies naming one value would otherwise trip a cap the rules never
+state, inventing a finding out of an implementation detail. A save is a declared
+hostile-input surface, so the sentinel is checked explicitly — which also bounds
+the counting to parameters that actually declare a cap.
+
+**`max_per_target` stays, at its default of 1.** The two are not redundant,
+because `validate_per_value_cap` counts **distinct parameter tuples**, not raw
+copies: two copies with an identical `(realm, ability)` tuple are
+`max_per_target`'s finding and only its finding, and copies that differ in
+Realm are this axis's finding and only this one. One mistake draws one finding —
+the same division of labour `validate_possessed_param_targets` keeps with the
+same neighbour. Removing the default `max_per_target` would legalise an exact
+duplicate row; raising it would too.
+
+**This message names its value, unlike `exclusive_param_values`.** The
+exclusion message deliberately names no value (see *Realm parameter domain*
+below): a group's members can span domains, and a per-domain argument family
+would make Fluent throw wherever a domain does not supply one. Here there is
+exactly one offending value, in exactly one domain — the parameter's own — and
+"taken twice for something" is not a finding a player can act on, so `value`
+is an argument and the message reads "twice for Awareness". The label comes from
+the frontend's existing `resolveIssueArgValue`, which already turns a rules id
+into its localized name, so no new label machinery was needed.
+
+**Still unmodelled, and recorded rather than approximated:** the same entry's
+sibling restriction "You may not take Student of (Realm) and Puissant Ability
+for the same Lore" (`ArMDE:5054`) is a cross-**item** constraint over a parameter
+value. `max_per_value` binds one item's own copies and cannot express it; no
+mechanism relates two *different* items' parameter values at all.
 
 #### Selection multiplicity — False Power's subsequent copies are Minor
 > "This Flaw may be taken multiple times, once for each appropriate
@@ -7033,11 +7130,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:376),
-  `validate_forbidden_traits` (:397))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:455),
+  `validate_forbidden_traits` (:476))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:204),
-  `validate_parameters` (:507), `validate_duplicate_selections` (:237))
+  `validate_parameters` (:586), `validate_duplicate_selections` (:237))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

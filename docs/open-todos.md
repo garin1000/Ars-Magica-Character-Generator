@@ -18,7 +18,7 @@ these should be tagged over silently.
 | ~~22~~ | **DONE 2026-09-12 — see "Done since" below.** ~~A code comment can cite a Rust source file by a line number that rots silently, and nothing guards it.~~ The decision the row asked for was taken the way it proposed: **a guard**, `crates/arm-rules/tests/source_citations.rs`, plus the conversion of every in-scope site. `docs/` is deliberately outside it. | — | 2026-09-11 |
 | ~~23~~ | **DONE 2026-09-11 — see "Done since" below.** ~~Focus Power's 25-point pool is modelled by nothing.~~ The decision the row asked for was taken: a **second budget kind**, with its own effect variant, its own read-out and its own over-spend code. | — | 2026-09-11 |
 | ~~24~~ | **DONE 2026-09-12 — see "Done since" below.** ~~Four shipped items type their `realm` parameter as free text, now that a real Realm domain exists.~~ All four are `domain: "realm"`, and the migration question the row asked was answered the data-loss-averse way: **nothing is rewritten**, the unresolvable text is reported back to the player verbatim. | — | 2026-09-12 |
-| 29 | **A parameter cap that binds one key, not the whole tuple, is unmodelled.** Necessary (Realm) Aura for (Ability) says "A character may take this Flaw once for any particular Ability" (`ArMDE:6482`), which caps repeats on the **`ability` key alone**. `PointItem::max_per_target` cannot express that: its duplicate key is `(item_ref, params)` — *all* parameters at once — so with E2's realm axis in place, two copies naming the same Ability in different Realms collide in no key and validate clean, which the sentence forbids. E2 found this while tightening the realm domain and deliberately **recorded rather than invented** it, per the standing "implement only what the source supports" rule; nothing regressed, because the second axis existed before E2 too (it was merely free text, so the same two copies differed in a typed word instead of a Realm). Expressing it needs a new `ParameterDef` field — a per-key uniqueness marker — plus a validator beside `validate_duplicate_selections`, and that is engine work with a data shape to settle first: whether the marker names one key ("unique on `ability`") or a subset, and whether an existing save holding two such copies is reported once or twice. The same entry's sibling restriction, "You may not take Student of (Realm) and Puissant Ability for the same Lore" (`ArMDE:5054`), is a cross-**item** constraint over a parameter value and is unmodelled for a different reason: no mechanism relates two different items' parameter values at all. Both are recorded in `crates/arm-rules/RULES.md`. | decision — the data shape for a per-key cap | 2026-09-12 |
+| ~~29~~ | **DONE 2026-09-13 — see "Done since" below.** ~~A parameter cap that binds one key, not the whole tuple, is unmodelled.~~ The data shape the row asked for was settled the way the row itself proposed: a new **`ParameterDef`** field, `max_per_value`. Necessary (Realm) Aura for (Ability) says "A character may take this Flaw once for any particular Ability" (`ArMDE:6482`), which caps repeats on the **`ability` key alone**. `PointItem::max_per_target` cannot express that: its duplicate key is `(item_ref, params)` — *all* parameters at once — so with E2's realm axis in place, two copies naming the same Ability in different Realms collide in no key and validate clean, which the sentence forbids. E2 found this while tightening the realm domain and deliberately **recorded rather than invented** it, per the standing "implement only what the source supports" rule; nothing regressed, because the second axis existed before E2 too (it was merely free text, so the same two copies differed in a typed word instead of a Realm). ~~Expressing it needs a new `ParameterDef` field — a per-key uniqueness marker — plus a validator beside `validate_duplicate_selections`.~~ Both open sub-questions were answered: the marker names **one key** — it is a field *on* that key, so a cap naming a parameter the item does not declare is unrepresentable rather than merely rejected — and an existing save holding two such copies is reported **once**, because `validate_per_value_cap` counts distinct parameter tuples and so leaves an identical repeat to `max_per_target`. The same entry's sibling restriction, "You may not take Student of (Realm) and Puissant Ability for the same Lore" (`ArMDE:5054`), is a cross-**item** constraint over a parameter value and **remains unmodelled** for a different reason: no mechanism relates two different items' parameter values at all. Both are recorded in `crates/arm-rules/RULES.md`. | — | 2026-09-12 |
 | ~~25~~ | **DONE 2026-09-12 — see "Done since" below.** ~~`AppError::Ruleset` carries raw English integrity messages across IPC that nothing renders.~~ The decision the row asked for was taken, and it was neither of the two the row offered: the payload is **kept and made reachable, and deliberately stays English** — printed to stderr on a failed load, and offered behind a collapsed "technical details" disclosure (the label localized, the payload not) on both error surfaces. | — | 2026-09-11 |
 | 26 | **The macOS and Windows menus are unit-tested as data and have never been run.** C3a and C6 prove the menu *model* for all three platforms and, via `installed_menu`, that Tauri really installed it — on Linux. The macOS **Cmd+Q** path through `RunEvent::ExitRequested`, which the mandatory unsaved-changes guard depends on, has never executed on real hardware, and neither has the Windows menu bar. C7's own commit says it plainly: "macOS and Windows are unverified here, as every Phase C slice has said", with muda's `CmdOrCtrl` the only thing standing between the asserted model and a wrong modifier. Worth preserving rather than merely noting: C3a found that `PredefinedMenuItem::quit` on **Windows** would have bypassed the guard outright — muda implements it as `PostQuitMessage(0)`, which ends the message loop instead of raising a close request — so the Windows menu deliberately ships **no** Quit item and offers Window → Close Window (`WM_CLOSE`, guarded) as the way out. That reasoning is recorded in the doc comment on `menu_model` (`crates/arm-app/src/menu.rs`). What is owed is a run on real hardware of each, which a Linux box cannot supply. | a macOS machine and a Windows machine | 2026-09-11 |
 | ~~27~~ | **DONE 2026-09-13 — see "Done since" below. There is no difference; the row was a measurement artifact.** ~~The `e2e-testing` build emits a noticeably larger JS bundle than the plain build, from identical frontend sources.~~ Observed during Phase C: roughly **537 kB** against the plain build's **480 kB**. The plain figure was re-measured in this slice's gate build and is **486.67 kB** (`dist/assets/index-*.js`, 146.36 kB gzipped), so the plain half of the comparison is real; the 537 kB half has not been re-measured. The feature is Rust-side and `#[cfg]`-gated (`crates/arm-app/Cargo.toml` declares `e2e-testing = []`; `ui/e2e/wdio.conf.js` is its only caller, passing `--features e2e-testing` to the same `cargo tauri build --no-bundle`), so it runs the very same `beforeBuildCommand` over the very same `ui/src` and should not reach the frontend bundle at all. Nobody has looked. Most likely a build-configuration difference — a different Vite mode, sourcemap or minification setting on the path wdio takes — rather than real code, but "most likely" is not an answer. What is owed is the measurement and the explanation; if it turns out real code is being included, that is a shipped-binary concern rather than a curiosity. | an explanation | 2026-09-11 |
@@ -89,6 +89,42 @@ engine only reports.
   The typed text is handed back verbatim in the finding rather than discarded.
 
 ## Done since this list was started
+
+- **A parameter cap may now bind one key rather than the whole tuple** (old row
+  29, 2026-09-13). `ParameterDef::max_per_value` is the third and narrowest
+  multiplicity axis, beside `PointItem::max_per_target` (one identical
+  `(item_ref, params)` target) and `PointItem::max_total` (copies in total); it
+  groups by `(item_ref, one named key's value)` and is enforced by
+  `validation/selections.rs::validate_per_value_cap`, issue code
+  `too_many_for_param_value`, in both locales. The one shipped user is
+  `flaw.necessary_realm_aura_for_ability`'s `ability` parameter,
+  `"max_per_value": 1`, from "A character may take this Flaw once for any
+  particular Ability" (`ArMDE:6482`); its `realm` parameter carries no cap,
+  because no sentence in `ArMDE:6480-6487` limits the Realm axis.
+
+  **Why the gap existed, which is the part worth keeping:** the cap mechanism
+  **predates multi-parameter items**. For every single-parameter item it was
+  designed against, "one copy per target" and "one copy per named value" are the
+  same sentence, because the tuple *is* the value — so the two readings could not
+  diverge and nobody had to choose between them. A second parameter is what
+  separates them, and the catalogue ships exactly **two** multi-parameter items:
+  this Flaw, and `virtue.folk_magic`, whose own `ArMDE:3919` *explicitly permits*
+  the divergence ("you can align it to the same Realm as before or pick a
+  different one"). So one entry in the whole catalogue turns the divergence into
+  a defect, and it went unnoticed for as long as the second parameter was the
+  newer of the two things. The general lesson is not about this Flaw: a
+  constraint mechanism keyed on "the whole of X" quietly stops meaning what it
+  said the day X grows a second component.
+
+  `max_per_target` deliberately **stays** at its default of 1 on the item. The
+  two are not redundant, because the new validator counts *distinct parameter
+  tuples* rather than raw copies: an identical `(realm, ability)` repeat is
+  `max_per_target`'s finding and only its finding, a Realm-differing repeat is
+  the new axis's and only the new axis's, and one mistake therefore draws one
+  finding.
+  `SCHEMA_VERSION` did not move — this is *ruleset* shape, not save shape, and
+  the field is `#[serde(default, skip_serializing_if = …)]` so every existing
+  `rules/` file still loads and round-trips byte-identical.
 
 - **An *and*-joined category descriptor means *either route*** (old row 19 half
   (b), decided by Norbert 2026-09-13). The permissive reading, which is what the

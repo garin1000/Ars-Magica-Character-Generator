@@ -2178,6 +2178,26 @@ mod tests {
         }
     }
 
+    /// A per-value cap of zero says no copy may ever name any value for this
+    /// parameter, which makes the declaring item unfillable — the mirror of the
+    /// `at_most_one_of` group that excludes nothing, and rejected for the same
+    /// reason: it sits in the data looking like a rule and is one no character
+    /// could satisfy. `ArMDE:6482` caps the real one at one, never at none.
+    #[test]
+    fn a_per_value_cap_of_zero_is_rejected() {
+        let err = ruleset_with_param(
+            r#"{ "key": "realm", "type": "ref", "domain": "realm", "max_per_value": 0 }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.folk_magic")
+                && msg.contains("realm")
+                && msg.contains("max_per_value"),
+            "{msg}"
+        );
+    }
+
     /// `require_categories` narrows the `item` domain and nothing else: no other
     /// domain resolves against the point-item catalogue, so a list there is read
     /// by no one. Left in, it would sit in the data looking like an enforced

@@ -252,6 +252,29 @@ describe('German UI bundle', () => {
     }
   });
 
+  // E5 (ArMDE:6482, open-todos row 29): a new validation code,
+  // `too_many_for_param_value`. Unlike `exclusive_param_values` above it DOES
+  // name the offending value — there is exactly one of it, and "twice for
+  // something" is not a finding a player can act on — so both locales must
+  // interpolate `$value` alongside the key, the count and the cap.
+  it('names the per-parameter-value cap in both locales, naming the value', () => {
+    for (const lang of ['en', 'de']) {
+      expect(messageKeys(sourceForLang(lang))).toContain('issue-too_many_for_param_value');
+    }
+    for (const lang of ['en', 'de'] as const) {
+      const message = translate(buildBundle(lang), 'issue-too_many_for_param_value', {
+        item: 'Necessary Aura',
+        key: lang === 'de' ? 'Fertigkeit' : 'Ability',
+        value: 'Awareness',
+        count: '2',
+        max: '1',
+      }).replace(/[⁦-⁩]/g, '');
+      expect(message).toContain('Awareness');
+      expect(message).toContain('2');
+      expect(message).toContain(lang === 'de' ? 'Fertigkeit' : 'Ability');
+    }
+  });
+
   // E2 (open-todos row 24): `unknown_param_value` is the finding a player meets
   // when a save's typed realm word no longer resolves, and it names the DOMAIN
   // the value failed in. The engine emits that as the `ParameterDomain` enum's

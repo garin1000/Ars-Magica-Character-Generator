@@ -70,6 +70,13 @@ export interface ParameterDef {
   // (`exclusive_param_values`); which values exclude each other is data, so no
   // id is named in the frontend either.
   at_most_one_of?: string[][];
+  // How many of the item's copies may name one and the same value for THIS key.
+  // Necessary (Realm) Aura for (Ability) is taken "once for any particular
+  // Ability" (ArMDE:6482), a cap the whole-tuple `max_per_target` cannot state.
+  // Omitted when the rules state no such ceiling. Enforced by the engine
+  // (`too_many_for_param_value`); like `at_most_one_of`, the picker does not
+  // pre-empt it — the finding names the key and the value.
+  max_per_value?: number;
   // Narrows the `item` domain to a category: the point item the value names must
   // carry at least one of these, so the picker offers only those. Membership
   // (`PointItem.categories`) and nothing else — a value names an ITEM, not a

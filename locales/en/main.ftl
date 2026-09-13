@@ -1035,6 +1035,14 @@ issue-unknown_param_value = { $item } parameter { $key }: unknown value { $value
 # value's label depends on its domain, and a per-domain argument would make
 # Fluent throw wherever that domain does not supply it.
 issue-exclusive_param_values = { $item } names { $count } values for { $key } that the rules allow only one of.
+# Core Rules.md:6482 — "A character may take this Flaw once for any particular
+# Ability". The third and narrowest multiplicity axis, beside
+# `duplicate_selection` (one identical target) and `too_many_selections` (copies
+# in total): a cap on ONE parameter key's value. This one DOES name the value —
+# there is exactly one of it, and "twice for something" is not a finding anyone
+# can act on. "per { $key }" rather than "for the same { $key }" so the sentence
+# needs no article before a word that comes from the data.
+issue-too_many_for_param_value = { $item } is selected { $count } times for { $value }, but may be taken at most { $max } time(s) per { $key }.
 # Core Rules.md:6096 — False Power is taken "once for each appropriate
 # Supernatural Virtue that the character possesses". The first message is the
 # unheld target, the second a Virtue two copies both claim.
