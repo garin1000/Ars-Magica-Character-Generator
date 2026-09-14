@@ -101,6 +101,35 @@ fn elemental_form_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
     i32::from(boosted) - i32::from(own_score)
 }
 
+/// Every Art the entity holds a Deficiency in — the Art named by each
+/// [`Effect::DeficientArt`] selection's parameter.
+///
+/// A Deficiency halves every total the Art is added to (`ArMDE:5911` Deficient
+/// Form, `ArMDE:5915` Deficient Technique), which reaches **two** layers: the
+/// in-play Lab/Casting totals (`derived.rs::in_play_mods`, which seeds
+/// `InPlayMods::deficient_arts` from here) and the creation-time per-spell level
+/// cap (`effective/spell.rs::spell_level_cap`), since `ArMDE:2465` declares that
+/// cap to be a Lab Total. This is the one fold both read, so the two can never
+/// disagree about which Arts are deficient.
+///
+/// The `deficient_art` arm is **guarded** on the parameter resolving, which is
+/// what makes reusing [`irrelevant_effect_variants`] sound here: the unfilled-
+/// parameter case names no Art and falls through with every other variant,
+/// exactly as the `if let Some` it replaces did.
+pub(crate) fn deficient_arts(entity: &Entity, ruleset: &Ruleset) -> BTreeSet<Id> {
+    let mut arts = BTreeSet::new();
+    for_each_effect!(entity, ruleset, |selection, effect| {
+        match effect {
+            Effect::DeficientArt { param } if selection.params.contains_key(param) => {
+                arts.extend(selection.params.get(param).cloned());
+            }
+            // Not a resolved Deficiency; names no Art.
+            irrelevant_effect_variants!() => {}
+        }
+    });
+    arts
+}
+
 /// The effective score of `art`: the highest bought score the entity holds for
 /// it, plus any flat bonus (Puissant Art) and any Elemental Magic XP-space boost.
 /// An Art the entity has not bought counts as 0.

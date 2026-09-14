@@ -36,7 +36,11 @@
 //!   behaviour would silently detach it — the save reports success, the dirty
 //!   flag clears, and the synced copy is never written again. So the final
 //!   component is resolved first ([`resolved_target`]) and the whole operation,
-//!   scratch file included, happens beside the *real* file.
+//!   scratch file included, happens beside the *real* file. **A link that points
+//!   at a file which does not exist yet is followed just the same** — preparing
+//!   the link before the first save is the ordinary way to set this up, and
+//!   giving up on resolving it is how the save came to destroy the link it could
+//!   not follow (Gerda #2, round 3).
 //! - **A write-protected target is refused, loudly.** `rename(2)` needs write
 //!   permission on the containing directory and none at all on the destination,
 //!   so a `chmod 444` character the user marked "finished" would be replaced
@@ -84,7 +88,7 @@ static SCRATCH_COUNTER: AtomicU64 = AtomicU64::new(0);
 /// the underlying failure may be about the scratch file and says nothing about
 /// which save it was for.
 pub fn write_file_atomically(path: &Path, contents: &str) -> Result<(), AppError> {
-    let target = resolved_target(path);
+    let target = resolved_target(path)?;
     refuse_write_protected(path, &target)?;
     let scratch = scratch_path(&target)?;
     match write_then_rename(&scratch, &target, contents) {
@@ -98,23 +102,62 @@ pub fn write_file_atomically(path: &Path, contents: &str) -> Result<(), AppError
     }
 }
 
-/// The file the write must actually land on: `path` itself, or — when `path` is
-/// a symlink — the file it points at.
+/// How many links deep the walk below follows before calling the path a cycle.
+/// Chains this long are already pathological; the bound exists so a link loop
+/// ends the walk rather than spinning it.
+const MAX_SYMLINK_HOPS: u8 = 16;
+
+/// The file the write must actually land on: `path` itself, or — when its final
+/// component is a symlink — the path at the end of that chain of links,
+/// **whether or not anything exists there**.
 ///
-/// A link that points nowhere resolves to nothing, and a save is not the moment
-/// to refuse to write a document merely because the path is a dangling link, so
-/// that case falls back to `path` and the write creates a regular file there —
-/// which is what the truncating write did too (`O_CREAT` through a dangling link
-/// creates the destination; with no destination to create, the link's own path
-/// is the only thing left).
-fn resolved_target(path: &Path) -> PathBuf {
-    let Ok(metadata) = fs::symlink_metadata(path) else {
-        return path.to_path_buf();
-    };
-    if !metadata.file_type().is_symlink() {
-        return path.to_path_buf();
+/// Only the final component is resolved, because that is the only one
+/// [`std::fs::rename`] treats differently from `open(2)`: a symlinked *directory*
+/// along the way is followed identically by both, and the scratch file travels
+/// the same path as the target, so the rename still happens within one
+/// filesystem. Resolving the final link, by contrast, is what keeps a save
+/// pointed into a synced folder from being replaced by a regular file.
+///
+/// A **dangling** link is resolved just the same, and that is the case
+/// [`fs::canonicalize`] cannot serve: it requires every component to exist, so
+/// the link a player prepares before their first save — the ordinary way to route
+/// a document into a synced folder — errored, and falling back to the link's own
+/// path let `rename` unlink it and install a regular file in its place (Gerda #2,
+/// round 3). `File::create` carries no `O_NOFOLLOW`, so the truncating write this
+/// module replaced resolved that link and created the file at its *target*,
+/// leaving the link intact; following the chain here is what preserves that.
+///
+/// A link *cycle* resolves to nothing at all, and the write is refused — the
+/// `ELOOP` the truncating write got from `open(2)`. Guessing a path here would
+/// mean dropping a regular file over a link and reporting success, which is the
+/// same silent detachment by another route.
+fn resolved_target(path: &Path) -> Result<PathBuf, AppError> {
+    let mut current = path.to_path_buf();
+    for _ in 0..MAX_SYMLINK_HOPS {
+        // Anything that cannot be stat'ed is not a link this can follow: a
+        // missing file is the ordinary first save, and a stat that fails for
+        // any other reason fails again, with its own error, at the write.
+        let Ok(metadata) = fs::symlink_metadata(&current) else {
+            return Ok(current);
+        };
+        if !metadata.file_type().is_symlink() {
+            return Ok(current);
+        }
+        let link = fs::read_link(&current).map_err(|error| io_error_at(path, &error))?;
+        current = match current.parent() {
+            // A relative link resolves against the directory holding the link,
+            // never the process's working directory.
+            Some(directory) if link.is_relative() => directory.join(link),
+            _ => link,
+        };
     }
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+    // `ErrorKind::FilesystemLoop` is the name for this, and is still unstable —
+    // the wording is `open(2)`'s own, which is what the caller would have seen
+    // before this module existed.
+    Err(io_error_at(
+        path,
+        &std::io::Error::other("too many levels of symbolic links"),
+    ))
 }
 
 /// Refuses to replace a target the user has write-protected, restoring the

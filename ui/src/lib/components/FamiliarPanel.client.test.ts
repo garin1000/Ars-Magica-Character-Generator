@@ -20,12 +20,17 @@ vi.mock('../ipc', () => ({
   derivedTotals: vi.fn().mockResolvedValue({}),
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
+  // The document-swap test drives the real `AppStore.open()`, which asks to
+  // discard; without this the store falls back to the in-app prompt, which
+  // nothing in this suite answers, and the promise never settles.
+  confirmDiscard: vi.fn().mockResolvedValue(true),
   updateCloseGuard: vi.fn(),
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
 }));
 
+import * as ipc from '../ipc';
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import FamiliarPanel from './FamiliarPanel.svelte';
 
@@ -44,9 +49,10 @@ function installRuleset(): void {
   } as unknown as LocalizedRuleset;
 }
 
-function resetEntityWithFamiliar(): void {
+/** A magus whose familiar is named `familiarName`, so two of them differ. */
+function magusWithFamiliar(name: string, familiarName: string): Entity {
   const familiar: Familiar = {
-    name: 'Corax',
+    name: familiarName,
     animal: 'raven',
     might: null,
     characteristics: {},
@@ -57,11 +63,12 @@ function resetEntityWithFamiliar(): void {
     cord_bronze: 0,
     powers: [],
   };
-  store.entity = {
+  return {
     schema_version: SCHEMA_VERSION,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'magus',
+    name,
     selections: [],
     characteristics: {} as Entity['characteristics'],
     characteristic_descriptions: {},
@@ -75,6 +82,10 @@ function resetEntityWithFamiliar(): void {
     spells: [],
     familiar,
   };
+}
+
+function resetEntityWithFamiliar(): void {
+  store.entity = magusWithFamiliar('Marcus', 'Corax');
   store.derived = null;
 }
 
@@ -158,6 +169,34 @@ describe('FamiliarPanel remove confirmation (S18)', () => {
     const confirm = target.querySelector('[data-testid="familiar-remove-confirm-confirm"]');
     expect(document.activeElement).toBe(cancel);
     expect(document.activeElement).not.toBe(confirm);
+  });
+
+  // Sabine #2 (full-audit round 3). This panel sits inside the `possessions`
+  // tab, inside `App.svelte`'s editor branch — none of which a document swap
+  // recreates, because `AppStore.open()` leaves `view === 'editor'` and never
+  // moves the active tab. `documentActionEnabled` gates Open on `busy` alone and
+  // knows nothing about an unanswered in-app confirmation, and the native menu
+  // dispatches Ctrl+O above the webview, so the swap is reachable with the prompt
+  // up. An unanswered "delete this familiar, no undo" must not survive it.
+  it('abandons an unanswered remove confirmation when a different document is opened', async () => {
+    mountPanel();
+    (target.querySelector('[data-testid="familiar-remove"]') as HTMLButtonElement).click();
+    flushSync();
+    expect(target.querySelector('[data-testid="familiar-remove-confirm-prompt"]')).toBeTruthy();
+
+    // The newly opened magus HAS a familiar, so `{#if familiar}` stays true and
+    // nothing but the reset can take the prompt down — this is the scenario
+    // where confirming would delete a familiar the player never selected.
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/somewhere/quendalon.armc',
+      entity: magusWithFamiliar('Quendalon', 'Vespera'),
+      migrated_aging_characteristics: [],
+    });
+    await store.open();
+    flushSync();
+
+    expect(store.entity.familiar?.name).toBe('Vespera');
+    expect(target.querySelector('[data-testid="familiar-remove-confirm-prompt"]')).toBeFalsy();
   });
 
   it('resolves Escape to cancel, never to remove', () => {

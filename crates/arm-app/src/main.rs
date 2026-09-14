@@ -227,18 +227,21 @@ fn request_exit_enabled() -> bool {
 /// already confirmed — mirroring the frontend dirty flag pushed via
 /// `update_close_guard`.
 ///
-/// **No decision of any kind is left here** (Erika F4, completed in E1).
-/// `commands.rs` owns all four: `guard_decision` and `apply_dialog_answer` for
-/// the state, `Decision::blocks` and `resolve_discard_dialog` for the two
-/// actions — whether to prevent the close/quit, and whether the answer re-issues
-/// it. They live there because this file is a binary with no unit seam of any
-/// kind, and every one of those branches is one edit away from discarding the
-/// user's work: E1 confirmed that inverting either action decision left `cargo
+/// **No decision of any kind is left here** (Erika F4, completed in E1, and
+/// again in round 3's E1). `commands.rs` owns all five: `guard_decision` and
+/// `apply_dialog_answer` for the state, `Decision::blocks`,
+/// `Decision::shows_dialog` and `resolve_discard_dialog` for the three actions —
+/// whether to prevent the close/quit, whether to put the confirmation on screen,
+/// and whether the answer re-issues it. They live there because this file is a
+/// binary with no unit seam of any kind, and every one of those branches is one
+/// edit away from discarding the user's work — or from refusing every quit path
+/// with no explanation: E1 confirmed that inverting any of them left `cargo
 /// test`, clippy, fmt, vitest and the full e2e suite green.
 ///
-/// What is left below is the one step that genuinely needs Tauri — putting the
-/// dialog on screen and handing its answer back. See those four functions for
-/// the table, and `tests/commands.rs` for the rows that walk it.
+/// What is left below is the one step that genuinely needs Tauri — building the
+/// dialog, parenting it to the window, and handing its answer back. See those
+/// five functions for the table, and `tests/commands.rs` for the rows that walk
+/// it.
 fn guard_blocks_quit<F>(app: &AppHandle, on_discard: F) -> bool
 where
     F: FnOnce(&AppHandle) + Send + 'static,
@@ -246,7 +249,7 @@ where
     let state = app.state::<AppState>();
     let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
     let decision = commands::guard_decision(&mut guard);
-    if decision == commands::Decision::BlockAndShow {
+    if decision.shows_dialog() {
         let labels = guard.labels.clone();
         drop(guard);
         let app = app.clone();

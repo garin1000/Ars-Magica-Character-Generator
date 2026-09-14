@@ -589,6 +589,34 @@ class AppStore {
   }
 
   /**
+   * How many documents this session has opened, counting the one it started
+   * with — a monotonic token whose only meaningful property is that it CHANGES
+   * whenever the open document is replaced.
+   *
+   * It exists because a component inside the editor is not recreated when that
+   * happens (Sabine #1/#2, full-audit round 3). {@link open} leaves
+   * `view === 'editor'` and never touches the active tab, so `App.svelte`'s
+   * editor branch is unchanged and every instance inside it — and every piece of
+   * per-document UI state it keeps locally — survives into the next character.
+   * The two that were caught doing so are the aura clamp hint
+   * (`MagicPossessions.svelte`, `DerivedAuraField.svelte`) and the familiar's and
+   * talisman's unanswered remove confirmations (`FamiliarPanel.svelte`,
+   * `TalismanPanel.svelte`); the second is an undo-free delete that would land on
+   * a character the player never selected.
+   *
+   * ONE token rather than a flag per feature, deliberately: a store flag for each
+   * would need clearing in all three replace routes every time one is added, and
+   * that is the list this counter makes it impossible to forget. Components key
+   * off it in an `$effect` and reset their own state — so the store never learns
+   * what any of them are for.
+   */
+  get documentEpoch(): number {
+    return this.#documentEpoch;
+  }
+
+  #documentEpoch = $state(0);
+
+  /**
    * Whether a New/Open discard confirmation is on screen and unanswered —
    * the native dialog or, where there is none, the in-app fallback.
    * @see FileOperations.discardConfirmPending
@@ -2384,6 +2412,10 @@ class AppStore {
         // before the snapshot for no reason but order-of-reading; it is view
         // state about the load, never part of the document.
         this.migratedAgingCharacteristics = loaded.migrated_aging_characteristics ?? [];
+        // A different document from here on, so the components that keep
+        // per-document UI state locally retire theirs (@see documentEpoch).
+        // Bumped only on a SUCCESSFUL load: a cancelled dialog replaced nothing.
+        this.#documentEpoch += 1;
         this.#savedSnapshot = this.#snapshot();
         // A loaded character's recorded childhood package is history, not a draft:
         // its slot answers already live in its Ability rows. Starting the draft
@@ -2435,6 +2467,8 @@ class AppStore {
     // with it — leaving it up over a new character would report a rewrite that
     // never happened to it.
     this.migratedAgingCharacteristics = [];
+    // Likewise every component's own per-document state (@see documentEpoch).
+    this.#documentEpoch += 1;
     this.filters = defaultPickerFilters();
     this.childhoodDraft = defaultChildhoodDraft();
     this.clearAgingDraft();
@@ -2506,6 +2540,8 @@ class AppStore {
     this.currentPath = null;
     // Goes with the outgoing document, exactly as in `newDocument()`.
     this.migratedAgingCharacteristics = [];
+    // As does every component's own per-document state (@see documentEpoch).
+    this.#documentEpoch += 1;
     this.filters = defaultPickerFilters();
     this.childhoodDraft = defaultChildhoodDraft();
     this.clearAgingDraft();

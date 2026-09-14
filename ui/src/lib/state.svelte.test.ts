@@ -1075,6 +1075,69 @@ describe('open() and the startup view', () => {
       expect(store.migrationNotice).toBeNull();
     });
   });
+
+  // Sabine #1/#2 (full-audit round 3). A component mounted inside the editor is
+  // NOT recreated when the document is replaced: `open()` leaves
+  // `view === 'editor'` and never touches the active tab, so `App.svelte`'s
+  // editor branch is unchanged and every instance inside it survives. Any
+  // per-document UI state such an instance keeps locally — an aura clamp hint,
+  // an unanswered destructive confirmation — therefore has no lifecycle of its
+  // own and silently retargets at the next character.
+  //
+  // This counter is the single signal those components key off, so the store
+  // gains ONE token rather than each feature gaining its own flag here. The
+  // guarantee under test is that it advances on every route that replaces the
+  // document, and only on those.
+  describe('documentEpoch', () => {
+    it('advances when a saved document replaces the open one', async () => {
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: loadedEntity(),
+        migrated_aging_characteristics: [],
+      });
+      const before = store.documentEpoch;
+
+      await openAndConfirm();
+
+      expect(store.documentEpoch).not.toBe(before);
+    });
+
+    it('does not advance when the open dialog is cancelled', async () => {
+      vi.mocked(ipc.loadEntity).mockResolvedValue(null);
+      const before = store.documentEpoch;
+
+      await openAndConfirm();
+
+      expect(store.documentEpoch).toBe(before);
+    });
+
+    it('advances when the document is discarded for the startup screen', async () => {
+      const before = store.documentEpoch;
+
+      const discarding = store.newDocument();
+      if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+      await discarding;
+
+      expect(store.documentEpoch).not.toBe(before);
+    });
+
+    it('advances when a fresh character replaces the open one', async () => {
+      const before = store.documentEpoch;
+
+      await store.createCharacter('companion');
+
+      expect(store.documentEpoch).not.toBe(before);
+    });
+
+    it('stays put while the same document is merely edited', () => {
+      const before = store.documentEpoch;
+
+      store.setAura(4);
+      store.addDevice();
+
+      expect(store.documentEpoch).toBe(before);
+    });
+  });
 });
 
 // Every selection mutator has to survive an entity whose empty `selections` the

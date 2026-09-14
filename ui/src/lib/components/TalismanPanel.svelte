@@ -26,6 +26,15 @@
   // instilled effects in one click, with no undo. Gate it behind a
   // confirmation instead of calling store.removeTalisman() directly.
   let confirmRemoveOpen = $state(false);
+
+  // Withdraw an unanswered confirmation when the document is replaced — this
+  // panel is not recreated by a swap, so the question would otherwise be
+  // answered against a talisman the player never selected. Identical in shape
+  // and reason to `FamiliarPanel.svelte`; see its note (Sabine #2, round 3).
+  $effect(() => {
+    void store.documentEpoch;
+    confirmRemoveOpen = false;
+  });
 </script>
 
 <div class="detail-section">

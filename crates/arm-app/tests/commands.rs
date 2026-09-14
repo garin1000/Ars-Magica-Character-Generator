@@ -2708,6 +2708,219 @@ fn every_aging_effect_has_a_fluent_key_in_each_locale() {
     }
 }
 
+/// Sabine → Erika E2 (round 3): `AgingEffect` above is only one of the **five**
+/// engine taxonomies that reach `derived-detail-<slug>`. The Surfaced Modifiers
+/// panel composes that key from whatever string the engine put in
+/// `SurfacedModifier::detail` (`DerivedSurfacedModifiersSection.svelte`), and
+/// `translate` returns the key itself when the message is missing — so a slug no
+/// locale names is rendered verbatim on screen, which is the one thing a label may
+/// never do. The other four were guarded by nothing.
+///
+/// `AdvancementSource` is the sharp one: `derived.rs::in_play_mods` stringifies it
+/// with no `match` at all, so a new variant needs **no code change anywhere** to
+/// reach the panel — every gate stays green while a player reads
+/// `derived-detail-correspondence` as a bullet, in English and in German.
+///
+/// The variant lists live in the helpers below rather than as a `pub const ALL` on
+/// each enum — which is where `AgingEffect`, `CreationPhase` and `CrisisSeverity`
+/// keep theirs, and is the tidier home — because this round's slice may not edit
+/// `crates/arm-rules`. The exhaustive `match` inside each helper is what keeps
+/// them honest from this side of the seam: a new variant fails this file's
+/// compile, which is the prompt to list it. The key itself is always built from
+/// `Display`, never from a literal, so the test cannot agree with itself while
+/// disagreeing with the panel.
+#[test]
+fn every_surfaced_modifier_detail_has_a_fluent_key_in_each_locale() {
+    let mut keys: Vec<String> = Vec::new();
+    for source in every_advancement_source() {
+        keys.push(format!("derived-detail-{source}"));
+    }
+    for kind in every_special_casting() {
+        keys.push(format!("derived-detail-{kind}"));
+    }
+    for kind in surfaced_magic_resistance_effects() {
+        keys.push(format!("derived-detail-{kind}"));
+    }
+    for track in surfaced_health_tracks() {
+        keys.push(format!("derived-detail-{track}"));
+    }
+
+    for lang in ["en", "de"] {
+        let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
+        for key in &keys {
+            assert!(
+                ftl.contains(&format!("{key} =")),
+                "locale '{lang}' is missing key '{key}'"
+            );
+        }
+    }
+}
+
+/// The other half of the same panel: each row is prefixed with its family's label
+/// (`derived-surfaced-<slug>`), from the one enum that tags every surfaced row.
+/// `ModifierFamily::AbilityRoll`'s *detail* is deliberately exempt from the test
+/// above — it is a free-text Ability subject, returned unmapped by `detailLabel` —
+/// but its family label is composed exactly like the other five and needs its key.
+#[test]
+fn every_surfaced_modifier_family_has_a_fluent_key_in_each_locale() {
+    for lang in ["en", "de"] {
+        let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
+        for family in every_modifier_family() {
+            let key = format!("derived-surfaced-{family}");
+            assert!(
+                ftl.contains(&format!("{key} =")),
+                "locale '{lang}' is missing key '{key}'"
+            );
+        }
+    }
+}
+
+/// Every `AdvancementSource`. All of them reach the panel: `Effect::AdvancementMod`
+/// is surfaced unconditionally, with no classification step at all.
+fn every_advancement_source() -> Vec<arm_rules::AdvancementSource> {
+    use arm_rules::AdvancementSource as Source;
+
+    let all = vec![
+        Source::Taught,
+        Source::Book,
+        Source::Vis,
+        Source::Practice,
+        Source::Adventure,
+        Source::Insight,
+        Source::Teaching,
+        Source::SpellMastery,
+        Source::All,
+    ];
+    for source in &all {
+        // Exhaustive tripwire: a new variant is a compile error here, which is the
+        // prompt to add it to the list above.
+        match source {
+            Source::Taught
+            | Source::Book
+            | Source::Vis
+            | Source::Practice
+            | Source::Adventure
+            | Source::Insight
+            | Source::Teaching
+            | Source::SpellMastery
+            | Source::All => {}
+        }
+    }
+    all
+}
+
+/// Every `SpecialCasting`. The first three are folded into casting cells rather
+/// than surfaced (`derived.rs::in_play_mods`), but they carry labels of their own
+/// and are listed here too: the classification of a quirk is a rules decision that
+/// can change, and a key that already exists costs nothing to keep.
+fn every_special_casting() -> Vec<arm_rules::SpecialCasting> {
+    use arm_rules::SpecialCasting as Casting;
+
+    let all = vec![
+        Casting::QuietWords,
+        Casting::SubtleGestures,
+        Casting::DeftForm,
+        Casting::Diedne,
+        Casting::FaerieRaised,
+        Casting::LifeLinkedSpontaneous,
+        Casting::SpellImprovisation,
+        Casting::Mercurian,
+        Casting::LifeBoost,
+        Casting::Circumstantial,
+    ];
+    for kind in &all {
+        // Exhaustive tripwire — see `every_advancement_source`.
+        match kind {
+            Casting::QuietWords
+            | Casting::SubtleGestures
+            | Casting::DeftForm
+            | Casting::Diedne
+            | Casting::FaerieRaised
+            | Casting::LifeLinkedSpontaneous
+            | Casting::SpellImprovisation
+            | Casting::Mercurian
+            | Casting::LifeBoost
+            | Casting::Circumstantial => {}
+        }
+    }
+    all
+}
+
+/// The `MagicResistanceEffect`s that reach the panel as a detail slug. `NoFormBonus`
+/// is the one that does not: it folds into the flat per-Form Magic Resistance
+/// number instead of being listed, so it carries no label and must not demand one.
+/// The split mirrors `derived.rs::in_play_mods`, and the `match` forces a new
+/// variant to be classified rather than silently landing on either side.
+fn surfaced_magic_resistance_effects() -> Vec<arm_rules::MagicResistanceEffect> {
+    use arm_rules::MagicResistanceEffect as Mr;
+
+    let mut surfaced = Vec::new();
+    for kind in [
+        Mr::NoFormBonus,
+        Mr::AuraBonus,
+        Mr::SusceptibleDivine,
+        Mr::SusceptibleFaerie,
+        Mr::SusceptibleInfernal,
+    ] {
+        match kind {
+            Mr::NoFormBonus => {}
+            Mr::AuraBonus
+            | Mr::SusceptibleDivine
+            | Mr::SusceptibleFaerie
+            | Mr::SusceptibleInfernal => surfaced.push(kind),
+        }
+    }
+    surfaced
+}
+
+/// The health tracks that reach the panel as a detail slug. The two penalty tracks
+/// are folded into the fatigue/wound read-outs instead of being listed, so they
+/// carry no label; the split mirrors `derived.rs::surfaced_modifiers`.
+fn surfaced_health_tracks() -> Vec<arm_rules::HealthTrack> {
+    use arm_rules::HealthTrack as Track;
+
+    let mut surfaced = Vec::new();
+    for track in [
+        Track::FatiguePenalty,
+        Track::WoundPenalty,
+        Track::FatigueRoll,
+        Track::CastingFatigue,
+        Track::Recovery,
+    ] {
+        match track {
+            Track::FatiguePenalty | Track::WoundPenalty => {}
+            Track::FatigueRoll | Track::CastingFatigue | Track::Recovery => surfaced.push(track),
+        }
+    }
+    surfaced
+}
+
+/// Every `ModifierFamily` — every one of them prefixes a row in the panel.
+fn every_modifier_family() -> Vec<arm_rules::ModifierFamily> {
+    use arm_rules::ModifierFamily as Family;
+
+    let all = vec![
+        Family::Aging,
+        Family::Advancement,
+        Family::SpecialCasting,
+        Family::AbilityRoll,
+        Family::HealthRoll,
+        Family::MagicResistance,
+    ];
+    for family in &all {
+        // Exhaustive tripwire — see `every_advancement_source`.
+        match family {
+            Family::Aging
+            | Family::Advancement
+            | Family::SpecialCasting
+            | Family::AbilityRoll
+            | Family::HealthRoll
+            | Family::MagicResistance => {}
+        }
+    }
+    all
+}
+
 /// The crisis panel names an illness's severity through `crisis-severity-<slug>`,
 /// and the log entry that records one does the same. `CrisisSeverity` is a Rust
 /// taxonomy, so a rank no locale names would reach the screen as its own raw slug —
@@ -3409,6 +3622,60 @@ fn the_block_and_show_decision_refuses_the_close() {
     assert!(
         Decision::BlockAndShow.blocks(),
         "the close/quit that raises the confirmation must itself be prevented"
+    );
+}
+
+/// Erika E1 (round 3, MINOR): the *fifth* decision — which decisions warrant
+/// putting the confirmation on screen — was still spelled as a comparison inside
+/// `main.rs::guard_blocks_quit`, under a doc comment asserting that no decision was
+/// left there at all. It is the decision that gives [`Decision::Block`] its
+/// meaning, and the `guard_decision` half of that contract is pinned
+/// (`the_close_guard_does_not_stack_a_second_dialog`) while the caller-side half
+/// was not: nothing at any level reached it, because `main.rs` has no unit seam,
+/// and each dirty e2e spec issues exactly one close/quit — so "blocked" and
+/// "blocked without a second dialog" are indistinguishable to WebDriver, which
+/// cannot see a native GTK dialog in the first place.
+///
+/// `Allow` is the trivially safe row.
+#[test]
+fn the_allow_decision_raises_no_dialog() {
+    use arm_app::commands::Decision;
+
+    assert!(
+        !Decision::Allow.shows_dialog(),
+        "nothing is unsaved, so there is nothing to confirm"
+    );
+}
+
+/// **The row that matters.** A second Alt+F4 (or Cmd+Q) while the confirmation is
+/// already on screen must be refused *silently*: stacking a second native
+/// confirmation on the same document makes the user answer twice to discard once,
+/// and the second answer arrives against a window that is already gone. That is
+/// the entire reason `Block` exists as a variant distinct from `BlockAndShow`.
+#[test]
+fn the_block_decision_does_not_raise_a_second_dialog() {
+    use arm_app::commands::Decision;
+
+    assert!(
+        !Decision::Block.shows_dialog(),
+        "the confirmation is already up; raising another one stacks two dialogs \
+         on one document"
+    );
+}
+
+/// The live case, and the other way the branch can go wrong: mapping this to "do
+/// not show" leaves a dirty quit prevented with **no dialog at all**, so the app
+/// silently refuses to close on every quit path — including macOS Cmd+Q — and the
+/// user's only remaining exit is a force-kill, which discards exactly the unsaved
+/// work the guard exists to protect.
+#[test]
+fn the_block_and_show_decision_raises_the_confirmation() {
+    use arm_app::commands::Decision;
+
+    assert!(
+        Decision::BlockAndShow.shows_dialog(),
+        "a dirty close/quit must put the confirmation on screen, or the app just \
+         refuses to close with no explanation"
     );
 }
 

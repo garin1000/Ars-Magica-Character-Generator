@@ -1120,13 +1120,24 @@ export function spellMasteryXpSpent(
  * What an advancement total actually costs under an Affinity: a score "counts as
  * `num`/`den` of itself", so it is charged `ceil(table * den / num)`. The exact
  * mirror of the engine's `effective/xp.rs::charged_cost`, including its guard on
- * a zero numerator — nonsense data must not divide by zero, and charging the
+ * a degenerate ratio — nonsense data must not price a spend, and charging the
  * full cost is the conservative reading.
+ *
+ * BOTH terms are guarded, because the engine guards both (Klaus, round 3). A
+ * zero numerator would divide by zero; a zero numerator is not the only nonsense
+ * ratio, though, and a zero DENOMINATOR is the worse one — it divides cleanly and
+ * prices the whole spend at nothing, so the bar would have read 0 XP where the
+ * engine read the full table. Round 3 also closed the gap upstream: a zero term
+ * in either position is now rejected at ruleset load, across every ratio-bearing
+ * effect, so no loadable ruleset reaches this branch. It stays anyway — this
+ * function's contract is "the exact mirror", and a mirror that guards half of
+ * what its counterpart guards is precisely the drift that contract exists to
+ * prevent.
  */
 function chargedCost(tableXp: number, affinity: [number, number] | null): number {
   if (!affinity) return tableXp;
   const [num, den] = affinity;
-  if (num === 0) return tableXp;
+  if (num === 0 || den === 0) return tableXp;
   return Math.ceil((tableXp * den) / num);
 }
 

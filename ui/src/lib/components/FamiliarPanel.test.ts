@@ -133,6 +133,17 @@ describe('FamiliarPanel Magic Might', () => {
     store.addFamiliar();
     store.setFamiliarMightRealm('magic');
     const body = html();
+
+    // Erika E3 (round 3): this used to assert ONLY the absence — and the string
+    // it forbids is rendered by a different component (`SupernaturalBeing.svelte`
+    // carries `might-score-label`), so an EMPTY label, the wrong key or a raw
+    // slug all satisfied it. That matters beyond tidiness: the control is a
+    // wrapping `<label class="field inline">` and the input has no `aria-label`,
+    // so this span IS the field's accessible name.
+    expect(body).toContain(store.t('familiar-might-score-label'));
+    // And it is the resolved text, never the identifier: `i18n.ts::translate`
+    // falls back to rendering the key itself, which would put a slug on screen.
+    expect(body).not.toContain('familiar-might-score-label');
     // The familiar's Might takes no Virtue grants on top, so "Base" would be a lie.
     expect(body).not.toContain('Base Might Score');
   });

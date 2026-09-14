@@ -36,6 +36,7 @@ vi.mock('../ipc', () => ({
   deriveBirthYear: vi.fn().mockResolvedValue(null),
 }));
 
+import * as ipc from '../ipc';
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import DerivedAuraField from './DerivedAuraField.svelte';
 
@@ -59,12 +60,14 @@ function installRuleset(): void {
   } as unknown as LocalizedRuleset;
 }
 
-function resetEntity(): void {
-  store.entity = {
+/** A minimal magus carrying `aura`, and a `name` so two of them differ. */
+function magus(aura: number, name: string): Entity {
+  return {
     schema_version: SCHEMA_VERSION,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'magus',
+    name,
     selections: [],
     characteristics: {} as Entity['characteristics'],
     characteristic_descriptions: {},
@@ -75,8 +78,12 @@ function resetEntity(): void {
     art_scores: [],
     personality_traits: [],
     reputations: [],
-    aura: 0,
+    aura,
   };
+}
+
+function resetEntity(): void {
+  store.entity = magus(0, 'Marcus');
 }
 
 let target: HTMLElement;
@@ -126,6 +133,20 @@ describe('DerivedAuraField: the clamp is never silent', () => {
     expect(auraInput().getAttribute('aria-describedby')).toBeNull();
   });
 
+  it('does not claim a range violation for an in-range entry that was merely truncated', () => {
+    // `clampInt` does TWO things — it clamps to [min,max] AND it truncates — so
+    // "the store rewrote what you typed" cannot be the predicate: 2.5 is inside
+    // -50..10, and the message this hint renders says the value was outside the
+    // rules range. `<input type="number">` hands a fractional entry over intact
+    // (a step mismatch does not blank `value`), so this is reachable by typing
+    // `2` `.` `5` (Gerda #3, full-audit round 3).
+    typeAura('2.5');
+
+    expect(store.entity.aura).toBe(2);
+    expect(hint()).toBeNull();
+    expect(auraInput().getAttribute('aria-describedby')).toBeNull();
+  });
+
   it('tells the player when their typed value was rewritten to the bound', () => {
     // The failure this fixes: a magus in an aura of 12 types 12, setAura clamps
     // to 10, the controlled binding rewrites the field under the caret, and
@@ -158,6 +179,28 @@ describe('DerivedAuraField: the clamp is never silent', () => {
     typeAura('7');
 
     expect(store.entity.aura).toBe(7);
+    expect(hint()).toBeNull();
+    expect(auraInput().getAttribute('aria-describedby')).toBeNull();
+  });
+
+  it('retires the hint when a DIFFERENT document is opened behind it', async () => {
+    // Sabine #1 (full-audit round 3). `AppStore.open()` leaves
+    // `view === 'editor'` and never touches the active tab, so this component is
+    // NOT recreated by a document swap — without a document token the hint, and
+    // the input's `aria-describedby`, stay on screen asserting that the newly
+    // opened character's in-range aura was adjusted. It never was.
+    typeAura('12');
+    expect(hint()).not.toBeNull();
+
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/somewhere/quendalon.armc',
+      entity: magus(3, 'Quendalon'),
+      migrated_aging_characteristics: [],
+    });
+    await store.open();
+    flushSync();
+
+    expect(store.entity.aura).toBe(3);
     expect(hint()).toBeNull();
     expect(auraInput().getAttribute('aria-describedby')).toBeNull();
   });

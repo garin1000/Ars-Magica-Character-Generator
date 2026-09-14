@@ -16,12 +16,17 @@ vi.mock('../ipc', () => ({
   derivedTotals: vi.fn().mockResolvedValue({}),
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
+  // The document-swap test below drives the real `AppStore.open()`, which asks
+  // to discard the edits the test just made; without this the store falls back
+  // to the in-app prompt and the promise never settles.
+  confirmDiscard: vi.fn().mockResolvedValue(true),
   updateCloseGuard: vi.fn(),
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
 }));
 
+import * as ipc from '../ipc';
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import MagicPossessions from './MagicPossessions.svelte';
 
@@ -45,12 +50,14 @@ function installRuleset(): void {
   } as unknown as LocalizedRuleset;
 }
 
-function resetEntity(): void {
-  store.entity = {
+/** A minimal magus carrying `aura`, and a `name` so two of them differ. */
+function magus(aura: number, name: string): Entity {
+  return {
     schema_version: SCHEMA_VERSION,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'magus',
+    name,
     selections: [],
     characteristics: {} as Entity['characteristics'],
     characteristic_descriptions: {},
@@ -63,8 +70,12 @@ function resetEntity(): void {
     reputations: [],
     spells: [],
     devices: [],
-    aura: 0,
+    aura,
   };
+}
+
+function resetEntity(): void {
+  store.entity = magus(0, 'Marcus');
   store.derived = null;
 }
 
@@ -107,6 +118,19 @@ describe('MagicPossessions: the aura clamp is never silent', () => {
     expect(hint()).toBeNull();
   });
 
+  it('does not claim a range violation for an in-range entry that was merely truncated', () => {
+    // The Magic Items tab's half of Gerda #3 (round 3): `clampInt` clamps AND
+    // truncates, so a fractional but in-range entry must not raise the
+    // out-of-range hint. The two entry points give the same feedback for the
+    // same keystroke, so they are tested with the same keystroke.
+    typeAura('2.5');
+
+    expect(store.entity.aura).toBe(2);
+    expect(hint()).toBeNull();
+    const input = target.querySelector<HTMLInputElement>('[data-testid="aura-input"]');
+    expect(input!.getAttribute('aria-describedby')).toBeNull();
+  });
+
   it('tells the player when their typed value was rewritten to the bound', () => {
     typeAura('12');
 
@@ -127,5 +151,27 @@ describe('MagicPossessions: the aura clamp is never silent', () => {
 
     expect(store.entity.aura).toBe(-4);
     expect(hint()).toBeNull();
+  });
+
+  it('retires the hint when a DIFFERENT document is opened behind it', async () => {
+    // Sabine #1 (full-audit round 3). The Magic Items tab stays selected across
+    // a document swap and this panel is never recreated, so the hint — and the
+    // input's `aria-describedby` — would otherwise assert that the newly opened
+    // character's in-range aura had been adjusted.
+    typeAura('12');
+    expect(hint()).not.toBeNull();
+
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/somewhere/quendalon.armc',
+      entity: magus(3, 'Quendalon'),
+      migrated_aging_characteristics: [],
+    });
+    await store.open();
+    flushSync();
+
+    expect(store.entity.aura).toBe(3);
+    expect(hint()).toBeNull();
+    const input = target.querySelector<HTMLInputElement>('[data-testid="aura-input"]');
+    expect(input!.getAttribute('aria-describedby')).toBeNull();
   });
 });

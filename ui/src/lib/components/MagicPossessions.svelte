@@ -18,8 +18,16 @@
   // no longer be out of range on any route into the store, so testing it asked a
   // question with only one answer while the field silently overruled the player.
   // See `DerivedAuraField.svelte` for the full note; the two entry points must
-  // give the same feedback for the same keystroke.
+  // give the same feedback for the same keystroke. What it tests is the RANGE,
+  // not "the store rewrote it": `clamp.ts::clampInt` also truncates, and a
+  // fractional in-range entry is not a range violation (Gerda #3, round 3).
   let clampedEntry = $state(false);
+  // Retire the hint with the document it described — this panel is not recreated
+  // by a document swap. See `DerivedAuraField.svelte` for the full note.
+  $effect(() => {
+    void store.documentEpoch;
+    clampedEntry = false;
+  });
   const devices = $derived(store.entity.devices ?? []);
   // Item-level budget used/remaining is engine-authoritative, never recomputed here.
   const itemBudget = $derived(store.effective?.item_level_budget ?? 0);
@@ -30,8 +38,9 @@
     const requested = raw === '' ? null : Number(raw);
     store.setAura(requested);
     // A cleared field is not the player being overruled — it is no entry at all,
-    // which the store reads as 0.
-    clampedEntry = requested !== null && requested !== store.entity.aura;
+    // which the store reads as 0. Neither is `2.5`, which is in range and merely
+    // truncated.
+    clampedEntry = requested !== null && (requested < auraMin || requested > auraMax);
   }
 </script>
 

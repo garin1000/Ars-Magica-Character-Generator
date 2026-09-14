@@ -21,6 +21,18 @@
   // no undo. Gate it behind a confirmation instead of calling
   // store.removeFamiliar() directly from the button.
   let confirmRemoveOpen = $state(false);
+
+  // A confirmation must not change its subject between the question and the
+  // answer (Sabine #2, round 3). This panel is never recreated by a document
+  // swap — `state.svelte.ts::AppStore.open` leaves `view === 'editor'` and the
+  // active tab alone — and Open is reachable with the prompt up, so an
+  // unanswered "no undo" delete would otherwise retarget at the character that
+  // was just loaded. Withdrawing the question is the safe resolution: Cancel is
+  // what an abandoned prompt means, and the player can ask again.
+  $effect(() => {
+    void store.documentEpoch;
+    confirmRemoveOpen = false;
+  });
 </script>
 
 <div class="detail-section">

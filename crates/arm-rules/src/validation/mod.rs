@@ -8636,7 +8636,11 @@ mod tests {
         { "id": "virtue.skilled_parens", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "categories": ["hermetic"], "entity_kinds": ["character"],
           "effects": [ { "type": "spell_levels", "amount": 30 },
-                       { "type": "general_xp", "amount": 60 } ] }
+                       { "type": "general_xp", "amount": 60 } ] },
+        { "id": "flaw.deficient_technique", "kind": "flaw", "classification": "in_play_effect",
+          "magnitude": "major", "categories": ["hermetic"], "entity_kinds": ["character"],
+          "parameters": [{ "key": "technique", "type": "ref", "domain": "technique" }],
+          "effects": [{ "type": "deficient_art", "param": "technique" }] }
     ]"#;
     const SPELL_ARTS: &str = r#"{ "arts": [
         { "id": "art.creo", "art_type": "technique" },
@@ -8883,6 +8887,88 @@ mod tests {
         // Zero Arts/Int/MT → cap = 3; Pilum (20) exceeds it.
         e.spells = vec![spell("spell.pilum_of_fire", None)];
         assert!(all_codes(&validate(&e, &rs)).contains(&"spell_level_exceeds_cap".to_string()));
+    }
+
+    /// A Deficient Technique halves the per-spell cap (ArMDE:2465 makes the cap a
+    /// Lab Total; ArMDE:5915 halves every Lab Total including that Technique), so a
+    /// spell sitting *strictly between* the halved and the unhalved cap is legal
+    /// without the Flaw and illegal with it. A level below both caps, or above
+    /// both, would pass under either implementation and prove nothing.
+    #[test]
+    fn deficient_technique_halves_the_per_spell_cap() {
+        let rs = spell_rs();
+        // Cr12 + Ig12 + Int3 + Magic Theory 5 + 3 = 35; halved → 17. Pilum of Fire
+        // is level 20 — above 17, below 35.
+        let mut legal = make_entity("magus", vec![]);
+        legal.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 12,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 12,
+            },
+        ];
+        legal.characteristics.insert(Characteristic::Int, 3);
+        legal.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.magic_theory"),
+            parameter: None,
+            score: 5,
+            specialty: None,
+        }];
+        legal.spells = vec![spell("spell.pilum_of_fire", None)];
+        assert!(
+            !all_codes(&validate(&legal, &rs)).contains(&"spell_level_exceeds_cap".to_string()),
+            "level 20 is under the unhalved cap of 35"
+        );
+
+        let mut deficient = legal.clone();
+        deficient.selections = vec![Selection::with_params(
+            Id::new("flaw.deficient_technique"),
+            BTreeMap::from([("technique".to_string(), Id::new("art.creo"))]),
+        )];
+        assert!(
+            all_codes(&validate(&deficient, &rs)).contains(&"spell_level_exceeds_cap".to_string()),
+            "level 20 is over the halved cap of 17"
+        );
+    }
+
+    /// The halving is keyed on the spell's own Technique/Form, not on "the magus
+    /// has the Flaw": a Deficient Creo leaves a Rego Vim spell's cap untouched.
+    #[test]
+    fn a_deficiency_in_another_art_leaves_the_cap_unhalved() {
+        let rs = spell_rs();
+        let mut e = make_entity(
+            "magus",
+            vec![Selection::with_params(
+                Id::new("flaw.deficient_technique"),
+                BTreeMap::from([("technique".to_string(), Id::new("art.creo"))]),
+            )],
+        );
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.rego"),
+                score: 12,
+            },
+            ArtScore {
+                art: Id::new("art.vim"),
+                score: 12,
+            },
+        ];
+        e.characteristics.insert(Characteristic::Int, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.magic_theory"),
+            parameter: None,
+            score: 5,
+            specialty: None,
+        }];
+        // Rego Vim cap is the unhalved 35; the General spell is taken at 20.
+        e.spells = vec![spell("spell.general_ward", Some(20))];
+        assert!(
+            !all_codes(&validate(&e, &rs)).contains(&"spell_level_exceeds_cap".to_string()),
+            "the deficiency is on Creo, not Rego or Vim"
+        );
     }
 
     /// A General spell with no chosen level warns and is excluded from the budget.

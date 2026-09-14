@@ -343,6 +343,26 @@ mod tests {
               { "type": "general_xp", "amount": -60 }
             ]
           },
+          {
+            "id": "flaw.deficient_technique",
+            "kind": "flaw",
+            "classification": "in_play_effect",
+            "magnitude": "major",
+            "categories": ["general"],
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "art", "type": "ref", "domain": "technique" }],
+            "effects": [{ "type": "deficient_art", "param": "art" }]
+          },
+          {
+            "id": "flaw.deficient_form",
+            "kind": "flaw",
+            "classification": "in_play_effect",
+            "magnitude": "minor",
+            "categories": ["general"],
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+            "effects": [{ "type": "deficient_art", "param": "form" }]
+          },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
             "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
@@ -872,6 +892,13 @@ mod tests {
     fn affinity_charged_cost_matches_perdo_example() {
         assert_eq!(charged_cost(55, Some((3, 2))), 37); // Affinity with Art
         assert_eq!(charged_cost(55, None), 55); // no affinity: full price
+        // A degenerate ratio is rejected at load, so this is defence in depth: a
+        // ruleset that somehow reached the engine unvalidated must fail SAFE (full
+        // price) rather than free. `den == 0` would otherwise make the product 0
+        // and `div_ceil` return 0 — every score under that Affinity costing
+        // nothing — and `num == 0` already falls through to the full cost.
+        assert_eq!(charged_cost(30, Some((1, 0))), 30);
+        assert_eq!(charged_cost(30, Some((0, 1))), 30);
         // Ability table is 5× the Art table; the same ratio applies to its costs.
         assert_eq!(charged_cost(275, Some((3, 2))), 184); // ceil(275·2/3)
         assert_eq!(charged_cost(0, Some((3, 2))), 0);
@@ -2582,6 +2609,103 @@ mod tests {
         assert_eq!(caps[0].form, Id::new("art.ignem"));
         // 2 (Creo) + 3 (Ignem) + 1 (Int) + 0 (no Magic Theory) + 3 = 9.
         assert_eq!(caps[0].cap, 9);
+    }
+
+    /// A Creo 2 / Ignem 3 / Int +1 magus: the raw cap is 9.
+    fn cap_fixture(selections: Vec<Selection>) -> Entity {
+        let mut e = entity(selections);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 2,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 3,
+            },
+        ];
+        e.characteristics.insert(Characteristic::Int, 1);
+        e
+    }
+
+    fn deficient(item: &str, param: &str, art: &str) -> Selection {
+        Selection::with_params(
+            Id::new(item),
+            BTreeMap::from([(param.to_string(), Id::new(art))]),
+        )
+    }
+
+    /// Deficient Technique halves the per-spell level cap. `ArMDE:2465` makes the
+    /// cap a Lab Total — "any Virtues and Flaws your character has apply to this
+    /// total if they would apply to a Lab Total in play" — and `ArMDE:5915` halves
+    /// "All totals, including Lab and Casting totals, including a particular
+    /// Technique".
+    #[test]
+    fn deficient_technique_halves_the_spell_level_cap() {
+        let rs = ruleset();
+        let e = cap_fixture(vec![deficient(
+            "flaw.deficient_technique",
+            "art",
+            "art.creo",
+        )]);
+        // 2 + 3 + 1 + 0 + 3 = 9, halved → 4.
+        assert_eq!(
+            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem")),
+            4
+        );
+    }
+
+    /// Deficient Form halves it too: `ArMDE:5911` — "Almost all totals (including
+    /// Casting Totals and Lab Totals, but excluding Magic Resistance) to which a
+    /// particular Form is added are halved."
+    #[test]
+    fn deficient_form_halves_the_spell_level_cap() {
+        let rs = ruleset();
+        let e = cap_fixture(vec![deficient("flaw.deficient_form", "form", "art.ignem")]);
+        assert_eq!(
+            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem")),
+            4
+        );
+    }
+
+    /// Both Flaws on the same Technique/Form pair halve **once**, not twice — the
+    /// deficiency is a property of the pair, exactly as `derived/lab.rs::lab_totals`
+    /// reads it through one `InPlayMods::deficient` boolean. Pinned so the per-spell
+    /// cap can never drift from the nine other Lab Totals on this question.
+    #[test]
+    fn two_deficient_arts_on_one_pair_halve_the_cap_once() {
+        let rs = ruleset();
+        let e = cap_fixture(vec![
+            deficient("flaw.deficient_technique", "art", "art.creo"),
+            deficient("flaw.deficient_form", "form", "art.ignem"),
+        ]);
+        assert_eq!(
+            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem")),
+            4
+        );
+    }
+
+    /// The halving **floors** (ArMDE:547 — "if it does not, round down"), so an odd
+    /// negative cap halves down rather than toward zero. A beginning magus's cap is
+    /// legitimately negative, which is why `/ 2` would be wrong here: it would
+    /// report −1 as 0 and hand the character a free level-0 spell.
+    #[test]
+    fn a_negative_spell_level_cap_halves_downwards() {
+        let rs = ruleset();
+        let mut e = entity(vec![deficient(
+            "flaw.deficient_technique",
+            "art",
+            "art.creo",
+        )]);
+        let creo = Id::new("art.creo");
+        let ignem = Id::new("art.ignem");
+        // 0 + 0 + (-5) + 0 + 3 = -2, halved → -1: the halving applies below zero.
+        e.characteristics.insert(Characteristic::Int, -5);
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem), -1);
+        // 0 + 0 + (-4) + 0 + 3 = -1; floor(-1/2) = -1, where a truncating `/ 2`
+        // would report 0 and hand the character a free level-0 spell.
+        e.characteristics.insert(Characteristic::Int, -4);
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem), -1);
     }
 
     /// Issue 11: with no per-character override the base budget is the type

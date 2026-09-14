@@ -163,6 +163,37 @@ export async function runDocumentAction(action) {
 }
 
 /**
+ * Wait until the app shell is interactive again after a document action.
+ *
+ * WHY THIS EXISTS (Erika E4, full-audit round 3). A document action leaves the
+ * whole shell `inert` while it runs (`App.svelte`, keyed on `store.busy`), and a
+ * click delivered into an `inert` subtree is swallowed in silence — no error, no
+ * event, no handler. So "the file appeared on disk" is NOT the signal to click
+ * on: Rust writes the file before the frontend's `save()` promise resolves, which
+ * means the filesystem goes quiet strictly BEFORE the UI does. A spec that waits
+ * only on the file and then clicks races the tail of its own save, and loses on a
+ * loaded machine — round 2's gate run recorded exactly that, absorbed by
+ * `specFileRetries`.
+ *
+ * `waitForClickable` is not the check either: it resolves through
+ * `elementsFromPoint`, which returns the whole stack at a point, so the busy
+ * scrim lying over the button does not make the button unclickable by that
+ * definition. The scrim's own presence is the honest signal, and it renders if
+ * and only if `store.busy` does.
+ *
+ * USE IT ONLY ONCE THE ACTION IS KNOWN TO BE IN FLIGHT — after a wait that
+ * cannot pass until the app is busy, such as "the save file exists". Called the
+ * instant an action is dispatched it proves nothing, because the scrim it waits
+ * to see gone may not have been drawn yet.
+ */
+export async function waitForIdle() {
+  await $('[data-testid="busy-overlay"]').waitForExist({
+    reverse: true,
+    timeout: STEP_TIMEOUT,
+  });
+}
+
+/**
  * Open the settings dialog (C4) and leave it open.
  *
  * The header button rather than the native menu's Settings item: a native menu

@@ -85,21 +85,158 @@ fn a_save_through_a_symlink_still_replaces_rather_than_truncates() {
     assert_eq!(fs::read_to_string(&real).unwrap(), "new");
 }
 
-/// A dangling link has no file to write through, so there is nothing to follow
-/// and the write lands on the link's own path. The point of the test is that it
-/// does not *fail*: `fs::canonicalize` errors on a link that points nowhere, and
-/// a save that surfaced that error would be refusing to write a document it is
-/// perfectly able to write.
+/// Gerda #2 (round 3): a link that points at a file which does not exist *yet* is
+/// the ordinary way to prepare a save path — the player links
+/// `~/chars/gerhard.armc` at a synced folder before the first save. The write must
+/// create the file **at the link's target**, exactly as `fs::write` did
+/// (`File::create` carries no `O_NOFOLLOW`, so `open(2)` resolves the final link
+/// and creates the destination, leaving the link intact and now valid).
+///
+/// Round 2 resolved the link with `fs::canonicalize`, which errors on a link that
+/// points nowhere, and fell back to the link's own path — so `fs::rename` unlinked
+/// the link and installed a regular file where it had been. That is the same
+/// silent detachment the follow-the-link fix exists to prevent, in the one case
+/// the fix did not cover: the synced folder never receives the character, and
+/// every later save keeps going to the wrong place with the app reporting success.
+///
+/// The old assertion (`read_to_string(&link) == "new"`) could not see any of this:
+/// it holds both when the link is replaced by a regular file and when the target
+/// is correctly created, because in the second case the link then resolves.
 #[cfg(unix)]
 #[test]
-fn a_dangling_symlink_does_not_stop_the_save() {
+fn a_dangling_symlink_is_written_through_rather_than_replaced() {
     let tmp = tempfile::tempdir().unwrap();
     let link = tmp.path().join("magus.armc");
-    std::os::unix::fs::symlink(tmp.path().join("gone.armc"), &link).unwrap();
+    let target = tmp.path().join("gone.armc");
+    std::os::unix::fs::symlink(&target, &link).unwrap();
 
     write_file_atomically(&link, "new").unwrap();
 
-    assert_eq!(fs::read_to_string(&link).unwrap(), "new");
+    assert!(
+        fs::symlink_metadata(&link)
+            .unwrap()
+            .file_type()
+            .is_symlink(),
+        "a dangling link must survive the save that fills it in — replacing it \
+         with a regular file detaches the user's save from wherever they pointed \
+         it, silently and permanently"
+    );
+    assert_eq!(
+        fs::read_to_string(&target).unwrap(),
+        "new",
+        "the bytes must land where the link points, which is what the truncating \
+         write did through O_CREAT"
+    );
+    assert!(no_scratch_files_beside(tmp.path()));
+}
+
+/// The same case one hop further out, and the reason a single `read_link` is not
+/// enough: `magus.armc -> sync.armc -> gone.armc`, where only the last name is
+/// missing. Stopping at the first hop would write over `sync.armc` — destroying an
+/// intermediate link instead of the final one, which is the identical defect moved
+/// along by one.
+///
+/// The links are **relative**, which is how a link inside a save folder is usually
+/// written, so this also pins that a relative target is resolved against the
+/// link's own directory rather than the process's working directory.
+#[cfg(unix)]
+#[test]
+fn a_dangling_chain_of_symlinks_is_written_through_at_its_far_end() {
+    let tmp = tempfile::tempdir().unwrap();
+    let first = tmp.path().join("magus.armc");
+    let second = tmp.path().join("sync.armc");
+    let end = tmp.path().join("gone.armc");
+    std::os::unix::fs::symlink("sync.armc", &first).unwrap();
+    std::os::unix::fs::symlink("gone.armc", &second).unwrap();
+
+    write_file_atomically(&first, "new").unwrap();
+
+    assert!(
+        fs::symlink_metadata(&first)
+            .unwrap()
+            .file_type()
+            .is_symlink(),
+        "the link the user named must survive"
+    );
+    assert!(
+        fs::symlink_metadata(&second)
+            .unwrap()
+            .file_type()
+            .is_symlink(),
+        "an intermediate link must survive too — writing over it is the same \
+         detachment one hop in"
+    );
+    assert_eq!(
+        fs::read_to_string(&end).unwrap(),
+        "new",
+        "the bytes must land at the end of the chain"
+    );
+}
+
+/// A link that points at itself (or round a cycle) resolves to nothing at all, and
+/// there is no honest file to write. `fs::write` failed here with `ELOOP`, and so
+/// must this: the one thing the save must NOT do is give up on resolving and drop
+/// a regular file over the link, because that is indistinguishable from a
+/// successful save to the user while their real destination is gone.
+#[cfg(unix)]
+#[test]
+fn a_symlink_loop_fails_the_save_instead_of_replacing_the_link() {
+    let tmp = tempfile::tempdir().unwrap();
+    let first = tmp.path().join("magus.armc");
+    let second = tmp.path().join("other.armc");
+    std::os::unix::fs::symlink("other.armc", &first).unwrap();
+    std::os::unix::fs::symlink("magus.armc", &second).unwrap();
+
+    let result = write_file_atomically(&first, "new");
+
+    assert!(
+        result.is_err(),
+        "a save that cannot resolve where the document goes must say so, not \
+         guess"
+    );
+    assert!(
+        fs::symlink_metadata(&first)
+            .unwrap()
+            .file_type()
+            .is_symlink(),
+        "the link must still be a link after the refused save"
+    );
+    assert!(
+        no_scratch_files_beside(tmp.path()),
+        "a refused write must not leave a scratch copy behind"
+    );
+}
+
+/// The remaining shape a resolved final component can take: a link pointing at a
+/// *directory*. `rename(2)` refuses to put a file over a directory, so the save
+/// fails loudly and both the link and the directory are left alone — the same
+/// refusal `File::create` gave (`EISDIR`). Characterization: this already held, and
+/// it is asserted here so the enumeration of symlink cases the resolver answers is
+/// checked rather than claimed.
+#[cfg(unix)]
+#[test]
+fn a_symlink_to_a_directory_fails_the_save_and_keeps_both() {
+    let tmp = tempfile::tempdir().unwrap();
+    let directory = tmp.path().join("saves");
+    fs::create_dir(&directory).unwrap();
+    let link = tmp.path().join("magus.armc");
+    std::os::unix::fs::symlink(&directory, &link).unwrap();
+
+    let result = write_file_atomically(&link, "new");
+
+    assert!(
+        result.is_err(),
+        "a directory is not a document to overwrite"
+    );
+    assert!(
+        fs::symlink_metadata(&link)
+            .unwrap()
+            .file_type()
+            .is_symlink(),
+        "the link must survive the refused save"
+    );
+    assert!(directory.is_dir(), "the directory must survive it too");
+    assert!(no_scratch_files_beside(tmp.path()));
 }
 
 /// Klaus K1(a): a behaviour *reversal*, not merely lost metadata. `chmod 444` on

@@ -2667,6 +2667,23 @@ identical rule applies to Abilities but against the 5×-larger Ability table.)
 - Implementation: `effective/xp.rs::charged_cost` + `art_affinity`, via
   `xp_allocation`.
 
+**The ratio itself is validated at load.** `counts_as_num`/`counts_as_den` (and
+`grants_spell_mastery`'s `advancement_num`/`advancement_den`, the same ratio under
+other names) are ruleset-authored numbers that reach the `ceil(T·den/num)`
+arithmetic unfiltered, so a hand-authored `0` denominator would price every score
+under the Affinity at **0 XP** — silently, in the player's favour, with the
+character still validating clean in Enforced mode.
+`ruleset/integrity.rs::validate_item_affinity_ratios` therefore rejects a zero on
+either side of all four ratio-bearing effects, naming the offending item, as
+`validate_item_share` does for `max_share_of_kind`. A numerator *above* the
+denominator stays legal here — unlike a share, that is the ordinary case (3/2,
+5/4, 2/1), because the ratio reduces a cost rather than capping a count.
+`charged_cost` additionally treats a degenerate ratio as full price, so an
+unvalidated ruleset fails safe rather than free. Tests:
+`an_affinity_with_a_zero_denominator_fails_the_load_naming_the_item` and its
+numerator / Art / group / mastery siblings, plus `ordinary_affinity_ratios_load`
+(`ruleset.rs`); `affinity_charged_cost_matches_perdo_example` (`effective.rs`).
+
 #### Educated / Warrior / Privileged Upbringing — restricted XP pools
 > Educated: "you get an additional 50 experience points, which must be spent on
 > Latin and Artes Liberales." Warrior: "gain an additional 50 experience points
@@ -3901,7 +3918,9 @@ are now rendered in separate slots.
 
 > `ArMDE:2465` "The highest level spell you can learn is equal to Technique + Form +
 > Intelligence + Magic Theory +3 … If the spell has requisites … they apply to
-> this total as well."
+> this total as well. This is the appropriate Lab Total, assuming an aura modifier
+> of +3, and thus any Virtues and Flaws your character has apply to this total if
+> they would apply to a Lab Total in play."
 
 `spell_level_cap(entity, ruleset, technique, form)` (`effective/spell.rs`) computes it
 from the effective Art scores, the Intelligence characteristic, and effective
@@ -3912,6 +3931,32 @@ spell picker greys a spell above the cap from the one engine-authoritative value
 rather than recomputing it in JS. **Approximation:** requisite-Art reduction is a
 lab-total nuance out of M4 scope — requisites are stored on the spell for display
 but not folded into the cap.
+
+**A Deficient Art halves the cap, because the cap *is* a Lab Total.** The closing
+sentence of `ArMDE:2465` above is what makes the per-spell cap subject to every Virtue
+and Flaw that touches a Lab Total in play, and a Deficiency is one of those:
+
+> `ArMDE:5911` (Deficient Form, *Minor, Hermetic*) "Almost all totals (including
+> Casting Totals and Lab Totals, but excluding Magic Resistance) to which a
+> particular Form is added are halved."
+
+> `ArMDE:5915` (Deficient Technique, *Major, Hermetic*) "All totals, including Lab
+> and Casting totals, including a particular Technique are halved."
+
+So `spell_level_cap` halves the summed total whenever the spell's Technique or Form
+is deficient — **once** for the pair, however many of its two Arts are deficient,
+which is the same reading `lab_totals` (`derived/lab.rs`) applies through
+`InPlayMods::deficient`. Both read one fold, `deficient_arts` (`effective/art.rs`),
+so the creation-time cap and the in-play Lab Totals can never disagree about which
+Arts are deficient. The halving **floors** (`ArMDE:547` — "if it does not, round
+down"), via `div_euclid(2)` as `halve` (`derived.rs`) does: this cap is legitimately
+negative for a beginning magus, and a truncating `/ 2` would round −1 up to 0.
+Tests: `deficient_technique_halves_the_spell_level_cap`,
+`deficient_form_halves_the_spell_level_cap`,
+`two_deficient_arts_on_one_pair_halve_the_cap_once`,
+`a_negative_spell_level_cap_halves_downwards` (`effective.rs`);
+`deficient_technique_halves_the_per_spell_cap`,
+`a_deficiency_in_another_art_leaves_the_cap_unhalved` (`validation/mod.rs`).
 
 **General spells.**
 
@@ -7301,7 +7346,7 @@ migration wants. No new issue code and no new Fluent key.
 
 Tests: `a_blank_text_param_reads_as_a_missing_choice` (`validation/mod.rs`),
 `load_trims_the_whitespace_around_every_param_value` and
-`trimming_params_at_load_is_idempotent_and_byte_stable` (`types.rs`),
+`trimming_params_at_load_is_idempotent_and_byte_stable` (`migration.rs`),
 `a_padded_ability_roll_mod_subject_surfaces_trimmed` (`derived.rs` — the
 `text`-domain parameter of `Effect::AbilityRollMod` reaches the sheet verbatim),
 plus `setParamAt` / `setAbilityBonusTarget` trim cases in

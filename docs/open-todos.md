@@ -28,6 +28,56 @@ these should be tagged over silently.
 | 31 | **The XP max-flow solve is `O(n^3)`, and only its input size is capped.** `effective/xp.rs::two_phase_max_flow` runs Edmonds-Karp over a dense `n x n` matrix, re-scanning every node per augmenting path (`effective/xp.rs::max_flow`), and the graph's shape needs about one augmenting pass per spend — so cost grows with the cube of `n`, where `n` counts the character's own Ability scores, Art scores and mastered spells. Klaus F4 (2026-09-13) fixed the *symptom* by lowering `effective/xp.rs::MAX_XP_SOLVE_NODES` from 2048 to 1024, which cuts the worst **accepted** save's solve by 8x — measured release-build: ~3.6s before, 454ms after (debug: ~170s before, ~21s after). That is enough that no legal character freezes the app, because the bound is now set from the largest character that must not be rejected (853 nodes) rather than from the largest matrix that fits in memory. The algorithm is untouched, so the residual is real but small: a save near the new bound still costs ~450ms per solve, and a debounced `refresh()` pays it about three times over (`validate_xp_pool`, `effective_scores`, and the Markdown export path each re-run it) — so roughly 1.4s of lag per keystroke at the very top of the legal range. Fixing it properly means a sparse adjacency representation instead of the dense matrix, or memoizing one solve per entity revision across the three callers. Neither is urgent: a realistic character sits near 110 spends, where the solve costs ~1.5ms. Do not raise the bound back without re-reading the constant's doc comment — its value is now load-bearing for CPU, not just memory, and `the_solve_bound_admits_a_maximal_legal_character` pins the lower edge. | a follow-up pass, if the lag is ever observed in practice | 2026-09-13 |
 | 32 | **Great (Characteristic) charges Characteristic points for a point the rulebook gives away — and the price it charges is invented** (GitHub issue #4, reported against v0.3.0). The reporter is right, and the rulebook is unambiguous. `ArMDE:3989` says the Virtue **performs the raise itself**: "You may **raise** any Characteristic that already has a score of at least +3 **by one point**, to no more than +5." That is the same grammar as Giant Blood's "You also gain +1 to both Strength and Stamina" (`ArMDE:3977`), which this codebase *already* models correctly as a free `characteristic_score_delta`. `ArMDE:4105` is consistent rather than contrary: +3 is the cap on the **bought** score, and the Virtue is what carries you past it — by granting the point, not by unlocking a purchase. And the printed point-buy table (`ArMDE:2346-2354`) has exactly seven rows, +3 through −3; **there is no printed cost for +4 or +5**, which is the tell — a cap-shift reading needs a price the book never prints. `rules/core/characteristics.json` invents four rows to supply it (`+4→10`, `+5→15`, `−4→Gain 10`, `−5→Gain 15`), and `crates/arm-rules/RULES.md` says so outright: they "**continue the table's own triangular progression** … the rulebook does not print them", beside the claim that "Great Characteristic grants **no free point**". That is a breach of the standing "rules backed by source, never memory" rule, hiding in plain sight behind an honest comment. **Poor (Characteristic) has the mirror defect and it is the worse half**: `ArMDE:6600` likewise *lowers* the score, but the invented −4 row refunds 10 points where the table's own progression would give 6, so the Flaw pays the player **twice** — once in Flaw points, once in Characteristic points. Fix shape, a full TDD slice across engine, data, UI and docs: drop the four invented rows so the bought score is ±3 again; re-point `virtue.great_characteristic` / `flaw.poor_characteristic` from `characteristic_limit` to a **parameter-targeted** free score delta (the existing `Effect::CharacteristicScoreDelta` names a literal Characteristic, so the param-relative form is the one new piece); move the ±1 out of `effective/characteristic.rs::characteristic_cap` and into `effective/characteristic.rs::characteristic_score_bonus`, after which "to no more than +5" falls out of `max_per_target: 2` for free and needs no clamp of its own; keep `validation/scores.rs::validate_characteristic_limit_preconditions` as it is, since the "already at least +3" gate is unchanged and still reads the bought score; return the `CharacteristicPicker.svelte` spinner to ±3 and render +4/+5 as a bonus the way Giant Blood's already renders. Two things to settle on the way through rather than assume: `effective_max` / `effective_min` (±5) stop bounding the bought score and may end up used only by the aging floor clamp in `validation/aging.rs` and `effective/warping.rs` — decide deliberately whether they keep that job or are re-scoped; and Giant Blood stacked on two Greats reaches +6, which `ArMDE:3977` explicitly allows ("This bonus may raise your scores in those Characteristics as high as +6"), so no ceiling may be imposed that forbids it. Rated high rather than cosmetic: this is wrong rules output, which `CLAUDE.md` calls a product-integrity failure. | an implementation pass | 2026-09-14 |
 
+## Found during the full audit, 2026-09-14 — the `EffectiveScores` DTO extraction is deferred
+
+**This is the audit's one consciously accepted architectural deferral, and this
+entry is its only record in the repository.** It was declined twice,
+independently, in round 2; both fixers wrote the reasoning into
+`tmp/review/`, which is gitignored scratch that nothing preserves, and commit
+`e108a09`'s message then asserted it was recorded here when it was not. Viktor
+filed that gap in round 3 and it is closed by this entry — the decision itself
+stands and is **not** being re-litigated.
+
+(Note for anyone editing this entry, the same one the P8 section carries: do
+**not** write a source location as a file plus a line number here. `docs/` is
+inside the `rulebook_citations.rs` sweep, which parses anything shaped like an
+acronym followed by a colon and digits as a real rulebook citation. Name the
+**symbol** instead — the form `` `file.rs::Symbol` `` — which is also the
+convention `CLAUDE.md` requires for a cross-reference to a source file, and
+which cannot rot when the lines below it move.)
+
+**What is owed.** `crates/arm-app/src/ruleset_io.rs` carries the whole IPC
+read-out DTO layer — `ruleset_io.rs::EffectiveScores`, the private per-domain
+field structs it is assembled from (`ruleset_io.rs::XpFields`,
+`ruleset_io.rs::SpellFields`, `ruleset_io.rs::WarpingFields`,
+`ruleset_io.rs::CharacteristicFields`, `ruleset_io.rs::ConfidenceFields`,
+`ruleset_io.rs::GrantBudgetFields`, `ruleset_io.rs::DecrepitudeFaithItemFields`,
+`ruleset_io.rs::SpellMasteryFields`, `ruleset_io.rs::MightPowerFields` and their
+siblings), their assemblers, and `ruleset_io.rs::effective_scores_loaded` —
+inside a module that is also the ruleset loader, the path helpers and the aging
+commands. Roughly 730 lines of one concern under a name that promises another.
+The destination is a module of its own, `crates/arm-app/src/effective_dto.rs`.
+
+**Why it is deferred rather than done.** Moving it is not the hard part; the
+**pointers into it** are. Its cross-references span crates and documents — four
+in `crates/arm-rules/RULES.md`, one in `ui/src/lib/derive.ts`, and two in
+`docs/` — so an extraction performed inside any single slice's file list
+strands the rest, manufacturing exactly the stale-pointer defect round 2 spent a
+slice repairing. That is the whole argument, and it is the reason the move needs
+one coordinated slice rather than a spare afternoon.
+
+**The file list that slice must own**, so it is actionable rather than a wish:
+
+- `crates/arm-app/src/ruleset_io.rs` (the source), `crates/arm-app/src/lib.rs`
+  (the module declaration) and `crates/arm-app/src/commands.rs` (the callers).
+- `crates/arm-app/tests/commands.rs`.
+- `crates/arm-rules/RULES.md`, `ui/src/lib/derive.ts`, and the two `docs/`
+  references — the pointer set, which is what makes this a coordinated slice.
+
+The single DTO test inside `ruleset_io.rs`'s own `#[cfg(test)]` module moves
+with the block; leaving it behind would put a test for one module in another,
+which is the same drift in miniature.
+
 ## Found during the full audit, 2026-09-14 — the e2e harness leaks its driver processes
 
 Observed directly, twice, and confirmed as the cause of a false failure — so this

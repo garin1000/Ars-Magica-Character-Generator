@@ -46,7 +46,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::art::ArtType;
 use crate::characteristics::Characteristic;
 use crate::effective::{
-    decrepitude_score, effective_ability_score, effective_art_score,
+    decrepitude_score, deficient_arts, effective_ability_score, effective_art_score,
     effective_characteristic_after_aging, resolved_spell_level, selections_for_effects,
     warping_points_total, warping_score,
 };
@@ -193,7 +193,15 @@ struct InPlayMods {
 /// no-ops (consumed by `effective.rs`), so adding an [`Effect`] variant is a
 /// compile error until it is classified here.
 fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
-    let mut m = InPlayMods::default();
+    // Deficiencies are folded by `effective/art.rs::deficient_arts` rather than in
+    // the match below, because the creation-time per-spell level cap needs the same
+    // set: `ArMDE:2465` makes that cap a Lab Total, so a Deficiency halves it too.
+    // One fold, so the in-play totals and the cap can never disagree about which
+    // Arts are deficient.
+    let mut m = InPlayMods {
+        deficient_arts: deficient_arts(entity, ruleset),
+        ..InPlayMods::default()
+    };
     for selection in selections_for_effects(entity, ruleset).iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
@@ -206,11 +214,8 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     m.casting_mods.push((i32::from(*amount), *scope));
                 }
                 Effect::LabTotalMod { amount } => m.lab_mod += i32::from(*amount),
-                Effect::DeficientArt { param } => {
-                    if let Some(art) = selection.params.get(param) {
-                        m.deficient_arts.insert(art.clone());
-                    }
-                }
+                // Already folded, above — listed so the match stays exhaustive.
+                Effect::DeficientArt { .. } => {}
                 Effect::MagicTotalHalving { total } => {
                     m.halvings.insert(*total);
                 }

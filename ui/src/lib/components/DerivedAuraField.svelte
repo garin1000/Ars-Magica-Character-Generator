@@ -26,15 +26,35 @@
   // stored value therefore asked a question with only one answer, leaving the
   // field free to overrule the player in complete silence. It reports the event
   // that does happen instead: the entry the store rewrote.
+  //
+  // Round 3 (Gerda #3) narrowed WHICH rewrite. `clamp.ts::clampInt` does two of
+  // them — it clamps to [min,max] and it truncates — so "the stored value is not
+  // what you typed" answered yes to a fractional in-range entry too, and claimed
+  // a range violation that had not happened. The test is now the range itself,
+  // which is exactly what the message states. It stays an event report rather
+  // than a stored-state test, so it does not reintroduce the unreachable branch
+  // round 2 removed.
   let clampedEntry = $state(false);
+
+  // The hint describes ONE keystroke on ONE document, so it must not outlive
+  // either (Sabine #1, round 3). Component-local `$state` does not retire on its
+  // own here: `state.svelte.ts::AppStore.open` leaves `view === 'editor'` and the
+  // active tab untouched, so this instance is never recreated and the hint — plus
+  // the input's `aria-describedby` — would carry onto a character nothing
+  // adjusted. Keying off the store's document token is what gives it a lifetime.
+  $effect(() => {
+    void store.documentEpoch;
+    clampedEntry = false;
+  });
 
   function onAura(e: Event) {
     const raw = (e.currentTarget as HTMLInputElement).value;
     const requested = raw === '' ? null : Number(raw);
     store.setAura(requested);
     // A cleared field is not the player being overruled — it is no entry at all,
-    // which the store reads as 0.
-    clampedEntry = requested !== null && requested !== store.entity.aura;
+    // which the store reads as 0. Neither is `2.5`, which is in range and merely
+    // truncated.
+    clampedEntry = requested !== null && (requested < auraMin || requested > auraMax);
   }
 </script>
 

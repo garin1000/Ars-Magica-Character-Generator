@@ -2878,6 +2878,142 @@ mod tests {
         Ruleset::from_json("t", "1", &items, "[]")
     }
 
+    /// Loads a catalogue whose single Virtue carries `effect_json`, alongside the
+    /// personality filler the catalogue invariant needs. Mirrors [`load_with_share`];
+    /// the Ability and Art catalogues plus the two declared parameters are there so
+    /// every Affinity-bearing effect shape can be expressed.
+    fn load_with_effect(effect_json: &str) -> Result<Ruleset, RulesetError> {
+        let items = format!(
+            r#"[
+              {{ "id": "virtue.tester", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["general"],
+                 "parameters": [
+                   {{ "key": "ability", "type": "ref", "domain": "ability" }},
+                   {{ "key": "art", "type": "ref", "domain": "art" }}
+                 ],
+                 "effects": [{effect_json}] }},
+              {{ "id": "flaw.personality_filler", "kind": "flaw", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["personality"] }}
+            ]"#
+        );
+        let abilities =
+            r#"{ "abilities": [{ "id": "ability.awareness", "category": "general" }] }"#;
+        let arts = r#"{ "arts": [{ "id": "art.creo", "art_type": "technique" }] }"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: &items,
+            type_profiles: "[]",
+            abilities: Some(abilities),
+            arts: Some(arts),
+            ..RulesetSources::default()
+        })
+    }
+
+    /// An Affinity is a ratio of the cost, so a zero denominator prices the
+    /// advancement at nothing: `charged_cost` (`effective/xp.rs`) multiplies the
+    /// table cost by the denominator, and `ceil(table·0/num)` is 0. Reject it at
+    /// load, naming the item, exactly as a zero share denominator is rejected.
+    #[test]
+    fn an_affinity_with_a_zero_denominator_fails_the_load_naming_the_item() {
+        let err = load_with_effect(
+            r#"{ "type": "affinity_ability_cost", "param": "ability",
+                 "counts_as_num": 3, "counts_as_den": 0 }"#,
+        )
+        .expect_err("a zero denominator makes the advancement free");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("affinity_ability_cost"),
+            "expected an item-naming affinity error, got: {msg}"
+        );
+    }
+
+    /// A zero numerator is silently treated as "no Affinity" by `charged_cost`.
+    /// Safe, but not what the author wrote — so it fails the load too.
+    #[test]
+    fn an_affinity_with_a_zero_numerator_fails_the_load_naming_the_item() {
+        let err = load_with_effect(
+            r#"{ "type": "affinity_ability_cost", "param": "ability",
+                 "counts_as_num": 0, "counts_as_den": 2 }"#,
+        )
+        .expect_err("a zero numerator is not a ratio");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("affinity_ability_cost"),
+            "expected an item-naming affinity error, got: {msg}"
+        );
+    }
+
+    /// The Art analogue carries the identical pair and is checked identically.
+    #[test]
+    fn an_art_affinity_with_a_zero_denominator_fails_the_load_naming_the_item() {
+        let err = load_with_effect(
+            r#"{ "type": "affinity_art_cost", "param": "art",
+                 "counts_as_num": 3, "counts_as_den": 0 }"#,
+        )
+        .expect_err("a zero denominator makes the Art advancement free");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("affinity_art_cost"),
+            "expected an item-naming affinity error, got: {msg}"
+        );
+    }
+
+    /// The group form (Linguist) reaches the same `charged_cost` line unfiltered.
+    #[test]
+    fn a_group_affinity_with_a_zero_denominator_fails_the_load_naming_the_item() {
+        let err = load_with_effect(
+            r#"{ "type": "group_affinity_cost", "abilities": ["ability.awareness"],
+                 "counts_as_num": 5, "counts_as_den": 0 }"#,
+        )
+        .expect_err("a zero denominator makes every ability in the group free");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("group_affinity_cost"),
+            "expected an item-naming affinity error, got: {msg}"
+        );
+    }
+
+    /// Flawless Magic's mastery Affinity carries the same ratio under different
+    /// field names. Its own `advancement_num > advancement_den` guard
+    /// (`effective/spell.rs`) admits `(1, 0)`, since `1 > 0`, so nothing downstream
+    /// catches this one either.
+    #[test]
+    fn a_mastery_grant_with_a_zero_advancement_denominator_fails_the_load() {
+        let err = load_with_effect(
+            r#"{ "type": "grants_spell_mastery", "score": 1,
+                 "advancement_num": 2, "advancement_den": 0 }"#,
+        )
+        .expect_err("a zero denominator makes every spell mastery free");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("grants_spell_mastery"),
+            "expected an item-naming affinity error, got: {msg}"
+        );
+    }
+
+    /// The shipped ratios still load: Affinity 3/2, Linguist 5/4, Flawless Magic
+    /// 2/1. A ratio above 1 is the whole point (it reduces the cost), so — unlike
+    /// `max_share_of_kind` — a numerator above the denominator is legal here.
+    #[test]
+    fn ordinary_affinity_ratios_load() {
+        for effect in [
+            r#"{ "type": "affinity_ability_cost", "param": "ability",
+                 "counts_as_num": 3, "counts_as_den": 2 }"#,
+            r#"{ "type": "affinity_art_cost", "param": "art",
+                 "counts_as_num": 3, "counts_as_den": 2 }"#,
+            r#"{ "type": "group_affinity_cost", "abilities": ["ability.awareness"],
+                 "counts_as_num": 5, "counts_as_den": 4 }"#,
+            r#"{ "type": "grants_spell_mastery", "score": 1,
+                 "advancement_num": 2, "advancement_den": 1 }"#,
+        ] {
+            assert!(
+                load_with_effect(effect).is_ok(),
+                "a shipped Affinity ratio must load: {effect}"
+            );
+        }
+    }
+
     #[test]
     fn a_share_with_a_zero_denominator_fails_the_load_naming_the_item() {
         let err = load_with_share(r#"{ "numerator": 1, "denominator": 0 }"#)

@@ -15,12 +15,17 @@ vi.mock('../ipc', () => ({
   derivedTotals: vi.fn().mockResolvedValue({}),
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
+  // The document-swap test drives the real `AppStore.open()`, which asks to
+  // discard; without this the store falls back to the in-app prompt, which
+  // nothing in this suite answers, and the promise never settles.
+  confirmDiscard: vi.fn().mockResolvedValue(true),
   updateCloseGuard: vi.fn(),
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
 }));
 
+import * as ipc from '../ipc';
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import TalismanPanel from './TalismanPanel.svelte';
 
@@ -39,17 +44,19 @@ function installRuleset(): void {
   } as unknown as LocalizedRuleset;
 }
 
-function resetEntityWithTalisman(): void {
+/** A magus whose talisman is `description`, so two of them differ. */
+function magusWithTalisman(name: string, description: string): Entity {
   const talisman: Talisman = {
-    description: 'an ash staff',
+    description,
     attunements: [],
     effects: [],
   };
-  store.entity = {
+  return {
     schema_version: SCHEMA_VERSION,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'magus',
+    name,
     selections: [],
     characteristics: {} as Entity['characteristics'],
     characteristic_descriptions: {},
@@ -63,6 +70,10 @@ function resetEntityWithTalisman(): void {
     spells: [],
     talisman,
   };
+}
+
+function resetEntityWithTalisman(): void {
+  store.entity = magusWithTalisman('Marcus', 'an ash staff');
   store.derived = null;
 }
 
@@ -146,6 +157,29 @@ describe('TalismanPanel remove confirmation (S30)', () => {
     const confirm = target.querySelector('[data-testid="talisman-remove-confirm-confirm"]');
     expect(document.activeElement).toBe(cancel);
     expect(document.activeElement).not.toBe(confirm);
+  });
+
+  // Sabine #2 (full-audit round 3), the talisman half — identical in shape and
+  // reason to FamiliarPanel's; see that file's note for the mount lifecycle that
+  // lets a document swap slide underneath an unanswered prompt.
+  it('abandons an unanswered remove confirmation when a different document is opened', async () => {
+    mountPanel();
+    (target.querySelector('[data-testid="talisman-remove-item"]') as HTMLButtonElement).click();
+    flushSync();
+    expect(target.querySelector('[data-testid="talisman-remove-confirm-prompt"]')).toBeTruthy();
+
+    // The newly opened magus HAS a talisman, so `{#if talisman}` stays true and
+    // nothing but the reset can take the prompt down.
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/somewhere/quendalon.armc',
+      entity: magusWithTalisman('Quendalon', 'a silver ring'),
+      migrated_aging_characteristics: [],
+    });
+    await store.open();
+    flushSync();
+
+    expect(store.entity.talisman?.description).toBe('a silver ring');
+    expect(target.querySelector('[data-testid="talisman-remove-confirm-prompt"]')).toBeFalsy();
   });
 
   it('resolves Escape to cancel, never to remove', () => {

@@ -97,6 +97,7 @@ impl Ruleset {
             self.validate_item_categories(id, item, errors);
             Self::validate_index_categories(id, item, errors);
             Self::validate_item_share(id, item, errors);
+            Self::validate_item_affinity_ratios(id, item, errors);
 
             if let Some(ref prereq) = item.prerequisites {
                 self.validate_prereq_refs(prereq, id.as_str(), 1, errors);
@@ -315,6 +316,68 @@ impl Ruleset {
                  {}; a share cannot be larger than the whole",
                 share.numerator, share.denominator
             ));
+        }
+    }
+
+    /// Checks that every Affinity-style ratio an item's effects carry is usable.
+    ///
+    /// An Affinity says experience "counts as `num/den` of itself", so the XP
+    /// charged is `ceil(table · den / num)` (`effective/xp.rs::charged_cost`).
+    /// A **zero denominator** makes that product 0 and the charge 0 — every score
+    /// under the Affinity free — and it is caught nowhere downstream:
+    /// `charged_cost` guards only the numerator, and `grants_spell_mastery`'s own
+    /// `advancement_num > advancement_den` test admits `(1, 0)` because `1 > 0`.
+    /// A **zero numerator** is treated as "no Affinity", which is safe but is not
+    /// what the author wrote. Both are authoring slips, so they fail the load
+    /// naming the offending item, exactly as [`Self::validate_item_share`] does.
+    ///
+    /// Unlike a share, a numerator *above* the denominator is perfectly legal
+    /// here — it is the whole point of an Affinity (3/2, 5/4, 2/1), since the
+    /// ratio reduces the cost rather than capping a count.
+    ///
+    /// The trailing `_` is deliberate rather than the exhaustive `Effect` tail the
+    /// folds in `effective.rs` spell out: this is a `ruleset` module, and the
+    /// exhaustive-match machinery (`irrelevant_effect_variants`) lives a layer
+    /// above it in `effective.rs`. The use-site guard in `charged_cost` is the
+    /// backstop that keeps a future ratio-bearing variant failing *safe* (full
+    /// price) rather than free until it is listed here.
+    fn validate_item_affinity_ratios(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
+        for effect in &item.effects {
+            let (kind, num, den) = match effect {
+                Effect::AffinityAbilityCost {
+                    counts_as_num,
+                    counts_as_den,
+                    ..
+                } => ("affinity_ability_cost", *counts_as_num, *counts_as_den),
+                Effect::AffinityArtCost {
+                    counts_as_num,
+                    counts_as_den,
+                    ..
+                } => ("affinity_art_cost", *counts_as_num, *counts_as_den),
+                Effect::GroupAffinityCost {
+                    counts_as_num,
+                    counts_as_den,
+                    ..
+                } => ("group_affinity_cost", *counts_as_num, *counts_as_den),
+                Effect::GrantsSpellMastery {
+                    advancement_num,
+                    advancement_den,
+                    ..
+                } => ("grants_spell_mastery", *advancement_num, *advancement_den),
+                _ => continue,
+            };
+            if den == 0 {
+                errors.push(format!(
+                    "{id}: '{kind}' has a denominator of 0; an Affinity is a ratio \
+                     of the cost, so a zero denominator makes the advancement free"
+                ));
+            }
+            if num == 0 {
+                errors.push(format!(
+                    "{id}: '{kind}' has a numerator of 0; an Affinity is a ratio of \
+                     the cost, and a zero numerator is silently no Affinity at all"
+                ));
+            }
         }
     }
 

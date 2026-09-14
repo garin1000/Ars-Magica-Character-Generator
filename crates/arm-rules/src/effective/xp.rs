@@ -28,11 +28,17 @@ use super::*;
 /// `ceil(55·2/3) = ceil(36.67) = 37`, which the rules say counts as 56 ≥ 55.
 /// Integer-only so the engine stays exact.
 ///
+/// A degenerate ratio charges the **full** cost. Both halves are rejected at load
+/// (`ruleset/integrity.rs::validate_item_affinity_ratios`), so this arm is
+/// defence in depth for a ruleset that somehow reached the engine unvalidated:
+/// `den == 0` would otherwise zero the product and make every score under the
+/// Affinity free, which is the one direction that must never fail open.
+///
 /// Source: ArMDE:3372-3378, worked
 /// example `ArMDE:2443`.
 pub(crate) fn charged_cost(table_xp: u32, affinity: Option<(u8, u8)>) -> u32 {
     match affinity {
-        Some((num, den)) if num != 0 => table_xp
+        Some((num, den)) if num != 0 && den != 0 => table_xp
             .saturating_mul(u32::from(den))
             .div_ceil(u32::from(num)),
         _ => table_xp,

@@ -16,7 +16,14 @@ import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { clean, isRowBlocked, runDocumentAction, setLanguage, startCharacter } from '../helpers.js';
+import {
+  clean,
+  isRowBlocked,
+  runDocumentAction,
+  setLanguage,
+  startCharacter,
+  waitForIdle,
+} from '../helpers.js';
 import { e2eExportFile, e2eFile } from '../wdio.conf.js';
 
 // End-to-end: Spells (magus-only). The Spells tab appears only for a magus;
@@ -1080,6 +1087,11 @@ describe('longevity ritual', () => {
     // Removal is only ever CLICKED here — the panel's unit tests render to a string
     // (SSR), so its handler never runs there. The empty state (the Add button) must
     // come back and take the whole editor with it.
+    //
+    // The file existing above does NOT mean the save is finished: Rust writes it
+    // before the frontend's promise resolves, and the shell stays `inert` until
+    // that resolves, so this click used to be swallowed (Erika E4, round 3).
+    await waitForIdle();
     await $('[data-testid="longevity-remove"]').click();
     await $('[data-testid="longevity-add"]').waitForExist({ timeout: 10000 });
     expect(await $(BONUS).isExisting()).toBe(false);

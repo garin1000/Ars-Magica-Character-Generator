@@ -1479,6 +1479,23 @@ describe('spellMasteryXpSpent', () => {
     expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [1, 1])).toBe(30);
   });
 
+  it('fails safe on a degenerate ratio, on BOTH terms, exactly as the engine does', () => {
+    // Klaus (round 3). `effective/xp.rs::charged_cost` takes the Affinity only
+    // when `num != 0 && den != 0` and charges the full table otherwise —
+    // nonsense data must not price a spend, and the full cost is the
+    // conservative reading. This mirror guarded the numerator alone, so a zero
+    // DENOMINATOR fell through to the arithmetic and made the spend FREE: the
+    // bar would have shown 0 XP where the engine showed 30.
+    //
+    // Round 3's engine half now rejects a zero term in either position at
+    // ruleset load, so no shipped ruleset can reach this — the divergence is
+    // closed at the data gate and this is the contract-matching layer behind it.
+    // A mirror that guards half of what it mirrors is the drift itself.
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [2, 0])).toBe(30);
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [0, 2])).toBe(30);
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [0, 0])).toBe(30);
+  });
+
   it('mirrors effective.rs::flawless_magic_floors_first_mastery_free_and_halves_the_rest', () => {
     // The Rust test's own worked example, verbatim: Flawless Magic (floor 1,
     // doubled advancement) on two spells mastered at 1 and 3. Mastery 1 ==

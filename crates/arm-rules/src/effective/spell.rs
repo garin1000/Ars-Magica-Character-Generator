@@ -197,12 +197,24 @@ pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32
 
 /// The maximum level a magus may learn of a spell of the given Technique/Form:
 /// the sum of Technique, Form, Intelligence, Magic Theory and 3 (ArMDE:2465),
-/// using effective Art/Ability scores. Returns an `i64` (small or negative for a
-/// beginning magus). Requisite-Art reduction is a lab-total nuance out of scope.
-/// Single source of truth: both the validation cap and the UI-surfaced cap read
-/// this, so the two can never diverge.
-// Source: ArMDE:2465
+/// using effective Art/Ability scores, **halved** if either Art is deficient.
+/// Returns an `i64` (small or negative for a beginning magus). Requisite-Art
+/// reduction is a lab-total nuance out of scope. Single source of truth: both the
+/// validation cap and the UI-surfaced cap read this, so the two can never diverge.
+///
+/// The halving is not a separate rule but the same sentence: `ArMDE:2465` ends
+/// "This is the appropriate Lab Total, assuming an aura modifier of +3, and thus
+/// any Virtues and Flaws your character has apply to this total if they would
+/// apply to a Lab Total in play", and a Deficiency halves every Lab Total its Art
+/// is added to (`ArMDE:5911, :5915`). So this cap halves on exactly the
+/// condition `derived/lab.rs::lab_totals` halves on — once for the pair, however
+/// many of its two Arts are deficient — and it reads the same
+/// `effective/art.rs::deficient_arts` fold to decide.
+// Source: ArMDE:2465, :5911, :5915, :547
 pub fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, technique: &Id, form: &Id) -> i64 {
+    // Read before the Art *scores* shadow `technique`/`form` with their totals.
+    let deficiencies = deficient_arts(entity, ruleset);
+    let deficient = deficiencies.contains(technique) || deficiencies.contains(form);
     let tech = i64::from(effective_art_score(entity, ruleset, technique));
     let form = i64::from(effective_art_score(entity, ruleset, form));
     let int = i64::from(
@@ -218,7 +230,17 @@ pub fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, technique: &Id, form:
         &Id::new(crate::ruleset::ID_MAGIC_THEORY),
         None,
     ));
-    tech + form + int + magic_theory + 3
+    let base = tech + form + int + magic_theory + 3;
+    if deficient {
+        // Floor, not truncate. No halving rule names a rounding direction, so the
+        // rulebook default governs — "if it does not, round down" (ArMDE:547) —
+        // and this is the one Lab Total that is routinely negative, where `/ 2`
+        // would round -1 up to 0 and hand out a free level-0 spell. Same
+        // `div_euclid` the in-play totals halve through (`derived.rs::halve`).
+        base.div_euclid(2)
+    } else {
+        base
+    }
 }
 
 /// A per-Technique/Form spell-level cap, surfaced to the frontend so the spell

@@ -108,6 +108,25 @@ impl Decision {
             Decision::Block | Decision::BlockAndShow => true,
         }
     }
+
+    /// Whether this decision calls for putting the confirmation on screen.
+    ///
+    /// The second of the two halves of the no-second-dialog contract, and it
+    /// lives here for the same reason [`Self::blocks`] does (Erika E1, round 3).
+    /// [`Decision::Block`] exists precisely so a close/quit arriving while the
+    /// confirmation is already up is refused **without stacking another one**;
+    /// `guard_decision` owns the half that decides it, and this owns the half
+    /// that acts on it. Spelled as a comparison in `main.rs::guard_blocks_quit`
+    /// it was reachable from nothing: that file has no unit seam, and each dirty
+    /// e2e spec issues exactly one close/quit, so "blocked" and "blocked with no
+    /// second dialog" looked identical from outside — as does "blocked with no
+    /// dialog at all", which silently refuses every quit path including Cmd+Q.
+    pub fn shows_dialog(self) -> bool {
+        match self {
+            Decision::Allow | Decision::Block => false,
+            Decision::BlockAndShow => true,
+        }
+    }
 }
 
 /// The whole of the close/quit guard's decision, as a pure function of the
