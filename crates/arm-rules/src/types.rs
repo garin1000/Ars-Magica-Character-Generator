@@ -174,11 +174,18 @@ impl fmt::Display for ItemKind {
 
 /// Coarse classification of a Virtue/Flaw by *what kind of mechanical impact* it
 /// has, assigned to every catalogue entry (M5 slice 5a). It partitions the whole
-/// V/F catalogue into three disjoint classes and is the definitive input to the
+/// V/F catalogue into four disjoint classes and is the definitive input to the
 /// effect-wiring slices: `creation_effect` items feed the creation-number wiring
 /// (slice 5a-wire), `in_play_effect` items feed the derived-totals `Effect`
-/// variant set (slice 5b / `derived.rs`), and `narrative` items are deliberately
-/// left with no mechanical effect.
+/// variant set (slice 5b / `derived.rs`), and `narrative` and `uncomputed_rule`
+/// items are deliberately left with no mechanical effect.
+///
+/// The `narrative` / `uncomputed_rule` split answers a question the original
+/// three-way scheme could not: *why* does this entry carry no effect? Two
+/// answers were previously indistinguishable in the data — "the rulebook states
+/// no rule" and "the rulebook states a rule this engine cannot compute" — so no
+/// guard could tell a silently-dropped rule from genuine flavour. Separating
+/// them is what makes the dropped-clause guard possible at all.
 ///
 /// Required on [`PointItem`] (no serde default): a catalogue entry that omits it
 /// fails to load, so "every V/F is classified" is enforced at load time, not only
@@ -188,9 +195,39 @@ impl fmt::Display for ItemKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Classification {
-    /// No mechanical creation number and no in-play/derived-total effect: pure
-    /// personality, story, or social-status flavor. Never given an invented effect.
+    /// No mechanical creation number, no in-play/derived-total effect, **and no
+    /// mechanical clause in the cited passage at all**: pure personality, story,
+    /// or social-status flavor. Never given an invented effect.
+    ///
+    /// The last condition is the load-bearing one and is easy to misread. An
+    /// entry whose rulebook text states a hard rule — a signed modifier, a botch-
+    /// dice change, a cap — is **not** narrative even when the engine computes
+    /// nothing for it; that is [`Classification::UncomputedRule`].
     Narrative,
+    /// The cited passage states a real mechanical rule, but one that is
+    /// **genuinely uncomputable at character-generation time**, so the engine
+    /// deliberately models nothing and the displayed rules text is the rule's
+    /// only carrier.
+    ///
+    /// "Uncomputable" here means the rule is not a property of the character
+    /// sheet at all. The recurring shapes are:
+    ///
+    /// - **botch dice** — a table-time modification of how a stress roll is
+    ///   rolled, not a number on the sheet (`flaw.clumsy`'s extra botch die);
+    /// - **scene- or activity-contingent modifiers** — contingent on terrain,
+    ///   time of day, who is watching, or what the character is doing, where the
+    ///   engine's `Effect` vocabulary models only fixed, always-on modifiers to
+    ///   totals it computes (`flaw.nocturnal`'s -1 between dawn and midday);
+    /// - **GM judgement and open-ended magnitudes** — "-3 or greater", "as the
+    ///   storyguide sees fit".
+    ///
+    /// Carrying an `Effect` is what distinguishes this from
+    /// [`Classification::InPlayEffect`]: an entry the engine *does* compute
+    /// something for is `in_play_effect` even if its passage also contains an
+    /// uncomputable clause. `uncomputed_rule` entries carry no effects, exactly
+    /// like `narrative` ones — the difference is entirely about whether the
+    /// **rulebook** said something, not about whether the **engine** did.
+    UncomputedRule,
     /// Changes a character-creation number or state (starting scores, XP grants,
     /// Confidence, Size/characteristic deltas, reputation grants, spell-levels,
     /// item-level budget, free starting Supernatural Ability score, …). Includes
@@ -206,6 +243,7 @@ impl fmt::Display for Classification {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Classification::Narrative => f.write_str("narrative"),
+            Classification::UncomputedRule => f.write_str("uncomputed_rule"),
             Classification::CreationEffect => f.write_str("creation_effect"),
             Classification::InPlayEffect => f.write_str("in_play_effect"),
         }
@@ -4112,6 +4150,18 @@ mod tests {
         );
     }
 
+    /// The fourth `Classification`. `Narrative` used to mean two different
+    /// things at once — "the rulebook states no rule" and "the rulebook states
+    /// a rule the engine cannot compute" — so no guard could tell a dropped
+    /// rule from genuine flavour. This asserts the catalogue can carry the
+    /// separating value, spelled `uncomputed_rule` in the JSON.
+    #[test]
+    fn uncomputed_rule_is_a_classification_the_catalogue_can_carry() {
+        let parsed: Classification = serde_json::from_str("\"uncomputed_rule\"")
+            .expect("`uncomputed_rule` deserializes as a Classification");
+        assert_eq!(parsed.to_string(), "uncomputed_rule");
+    }
+
     /// Guards against drift between a scalar enum's hand-written `Display` and
     /// its `#[serde(rename_all = "snake_case")]` scalar form. Both feed the
     /// Fluent key mapping, so they must agree for every variant. Asserts
@@ -4137,6 +4187,7 @@ mod tests {
         check(ItemKind::Boon);
         check(ItemKind::Hook);
         check(Classification::Narrative);
+        check(Classification::UncomputedRule);
         check(Classification::CreationEffect);
         check(Classification::InPlayEffect);
         check(GiftPolicy::Required);

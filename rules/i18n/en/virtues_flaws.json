@@ -31,7 +31,8 @@
   },
   "flaw.afflicted_tongue": {
     "name": "Afflicted Tongue",
-    "summary": "You have a speech impediment, such as a lisp, stutter, or missing teeth."
+    "summary": "You have a speech impediment, such as a lisp, stutter, or missing teeth.",
+    "description": "You have a speech impediment, such as a lisp, stutter, or missing teeth. You suffer a -2 penalty to all rolls involving the voice, and all Casting Scores if you cast the spell using words. If you are a magus, you must also roll an extra botch die when casting a spell using words."
   },
   "flaw.age_quickly": {
     "name": "Age Quickly",
@@ -143,11 +144,13 @@
   },
   "flaw.careless_sorcerer": {
     "name": "Careless Sorcerer",
-    "summary": "You are slapdash in your use of magical power, and must roll two more botch dice than normal when casting spells."
+    "summary": "You are slapdash in your use of magical power, and must roll two more botch dice than normal when casting spells.",
+    "description": "You are slapdash in your use of magical power, and must roll two more botch dice than normal when casting spells. Note that if you would normally roll no botch dice, you still roll none."
   },
   "flaw.careless_with_ability": {
     "name": "Careless with {ability}",
-    "summary": "The character is particularly reckless when it comes to a particular Ability, chosen when this Virtue is taken."
+    "summary": "The character is particularly reckless when it comes to a particular Ability, chosen when this Virtue is taken.",
+    "description": "The character is particularly reckless when it comes to a particular Ability, chosen when this Virtue is taken. This Ability should be one that is important to the character, or the troupe may veto the choice of this Flaw. When she fails, she does so dramatically. Whenever she rolls a zero when using the Ability, that zero is treated as a botch. She may need to roll extra botch dice depending on the circumstances, but she always suffer the effects of at least a single botch. This Flaw may be taken more than once; each time, it applies to a different Ability."
   },
   "flaw.castratus": {
     "name": "Castratus",
@@ -171,7 +174,8 @@
   },
   "flaw.clumsy": {
     "name": "Clumsy",
-    "summary": "You are not very graceful and tend to drop things — you are at –3 in all related rolls."
+    "summary": "You are not very graceful and tend to drop things — you are at -3 in all related rolls.",
+    "description": "You are not very graceful and tend to drop things — you are at -3 in all related rolls. Furthermore, roll an extra botch die when taking actions related to Dexterity. Roleplay your clumsiness."
   },
   "flaw.clumsy_magic": {
     "name": "Clumsy Magic",
@@ -251,7 +255,8 @@
   },
   "flaw.cursed_guile": {
     "name": "Cursed Guile",
-    "summary": "This is the Flaw for \"the boy who cried wolf,\" and probably results from Infernal influence."
+    "summary": "This is the Flaw for \"the boy who cried wolf,\" and probably results from Infernal influence.",
+    "description": "This is the Flaw for \"the boy who cried wolf,\" and probably results from Infernal influence. The character has three extra botch dice when using Guile. More importantly, the character is rarely believed, even when he is being honest. He must make a Communication + Guile roll against an Ease Factor of 9 in order to be believed when he tells the truth at important moments. For example, if the character is returning from a scouting mission, and you fail his Guile roll when he reports back, the maga may assume that he has been deficient in his duties; perhaps she thinks that he never went scouting at all, but instead went to the nearest town to entertain himself. This character may prefer the company of animals to that of people, as they do not respond to subterfuge."
   },
   "flaw.cyclic_magic_negative": {
     "name": "Cyclic Magic (negative)",
@@ -263,7 +268,8 @@
   },
   "flaw.deaf": {
     "name": "Deaf",
-    "summary": "You cannot hear at all."
+    "summary": "You cannot hear at all.",
+    "description": "You cannot hear at all. You may be able to speak, but you cannot understand spoken language, which makes communication difficult. Magi with this Flaw must roll an extra two botch dice when casting spells with a spoken component, as they cannot hear what they are saying."
   },
   "flaw.deficient_form": {
     "name": "Deficient Form",
@@ -395,7 +401,8 @@
   },
   "flaw.evil_eye": {
     "name": "Evil Eye",
-    "summary": "You character bears the Evil Eye, the uncontrolled potential to bring harm to others around her."
+    "summary": "You character bears the Evil Eye, the uncontrolled potential to bring harm to others around her.",
+    "description": "You character bears the Evil Eye, the uncontrolled potential to bring harm to others around her. Characters making stress rolls in her presence are subject to an additional botch die. Characters may protect themselves through the use of an amulet or a ritual, decided upon by the troupe, which does not need to be magical or supernatural in nature. A Magic Resistance of 0 or more, including the effect of the Aegis of the Hearth, is also sufficient to guard against this effect."
   },
   "flaw.exciting_experimentation": {
     "name": "Exciting Experimentation",
@@ -471,7 +478,8 @@
   },
   "flaw.fish_out_of_water_terrain": {
     "name": "Fish Out of Water {terrain}",
-    "summary": "This character has an affinity with one type of terrain, whether this is at sea, in the woods, the rolling hills, or in the urban landscape of towns and cities, and feels uncomfortable and awkward when away from where he wants to be."
+    "summary": "This character has an affinity with one type of terrain, whether this is at sea, in the woods, the rolling hills, or in the urban landscape of towns and cities, and feels uncomfortable and awkward when away from where he wants to be.",
+    "description": "This character has an affinity with one type of terrain, whether this is at sea, in the woods, the rolling hills, or in the urban landscape of towns and cities, and feels uncomfortable and awkward when away from where he wants to be. The character suffers a -1 penalty to all stress rolls taken outside of their favored terrain and also rolls one more botch dice than normal in those situations.\n\nAppropriate areas may be Cities & Towns, Villages, Rivers, The Sea, Mountains, Woodland, Desert, etc.\n\nThis Flaw may only be taken once, because taking it more than once makes it less serious, rather than more."
   },
   "flaw.flashbacks": {
     "name": "Flashbacks",
@@ -591,7 +599,8 @@
   },
   "flaw.hobbled": {
     "name": "Hobbled",
-    "summary": "Both of the character's legs are severely damaged."
+    "summary": "Both of the character's legs are severely damaged.",
+    "description": "Both of the character's legs are severely damaged. She may not walk unless assisted by crutches or other devices, with which she can only move a mere half mile per hour. Any roll that requires moving quickly is penalized by -9. Her Dodge and other combat rolls are penalized by -6, and you roll double the normal botch dice in combat situations."
   },
   "flaw.horrifying_appearance_snake_legs": {
     "name": "Horrifying Appearance – Snake Legs",
@@ -651,7 +660,8 @@
   },
   "flaw.jinxed": {
     "name": "Jinxed",
-    "summary": "The character is a magnet for any bad luck."
+    "summary": "The character is a magnet for any bad luck.",
+    "description": "The character is a magnet for any bad luck. He is not personally the cause of the bad luck, and so need not roll any extra botch dice or suffer any penalty to die rolls. However, whenever chance determines who will be affected by misfortune, the odds are biased against him to be the one affected. For example, if it has been determined that a rope used for climbing will break, it is more likely to do so when the jinxed character makes the climb. If determining when the bandits will attack the camp at night, it is more likely to happen right at the moment when the character is relieving himself. If the storyguide is rolling dice to determine the target of a random event, a jinxed character should be affected half of the time, and his comrades between them the other half. His bad luck does not tend to spill over onto others; in fact, other characters may prefer to keep him around to deflect any bad luck from themselves."
   },
   "flaw.judged_unfairly": {
     "name": "Judged Unfairly",
@@ -659,7 +669,8 @@
   },
   "flaw.lame": {
     "name": "Lame",
-    "summary": "One of your legs is weakened, whether since birth or through some accident."
+    "summary": "One of your legs is weakened, whether since birth or through some accident.",
+    "description": "One of your legs is weakened, whether since birth or through some accident. You move slowly and clumsily. Your base speed is a mere one mile per hour, and anyone can outrun you. You suffer a -6 penalty on rolls involving moving quickly or with agility, -3 on Dodge, and -1 on other combat scores."
   },
   "flaw.lecherous_major": {
     "name": "Lecherous (Major)",
@@ -683,7 +694,7 @@
   },
   "flaw.lingering_injury": {
     "name": "Lingering Injury",
-    "summary": "The character suffers from an old injury that won't heal properly, resulting in a –1 penalty to all rolls involving physical activity."
+    "summary": "The character suffers from an old injury that won't heal properly, resulting in a -1 penalty to all rolls involving physical activity."
   },
   "flaw.loose_magic": {
     "name": "Loose Magic",
@@ -751,15 +762,17 @@
   },
   "flaw.missing_ear": {
     "name": "Missing Ear",
-    "summary": "You cannot accurately locate the direction of sounds, and suffer a penalty of –3 to hearing rolls."
+    "summary": "You cannot accurately locate the direction of sounds, and suffer a penalty of -3 to hearing rolls."
   },
   "flaw.missing_eye": {
     "name": "Missing Eye",
-    "summary": "You cannot judge close distances easily and get –3 on Attack rolls for missiles and targeting rolls for spells."
+    "summary": "You cannot judge close distances easily and get -3 on Attack rolls for missiles and targeting rolls for spells.",
+    "description": "You cannot judge close distances easily and get -3 on Attack rolls for missiles and targeting rolls for spells. In melee combat you suffer -1 on Attack rolls because your field of vision is limited. You also have a blind side from which people can approach unseen. This Flaw can be combined with Poor Eyesight, but the penalties are cumulative."
   },
   "flaw.missing_hand": {
     "name": "Missing Hand",
-    "summary": "Perhaps it was an accident or a punishment in your past that cost you one of your hands."
+    "summary": "Perhaps it was an accident or a punishment in your past that cost you one of your hands.",
+    "description": "Perhaps it was an accident or a punishment in your past that cost you one of your hands. Climbing, combat, and other activities normally requiring both hands are at a penalty of -3 or greater."
   },
   "flaw.mistaken_identity": {
     "name": "Mistaken Identity",
@@ -887,7 +900,8 @@
   },
   "flaw.palsied_hands": {
     "name": "Palsied Hands",
-    "summary": "Your hands shake uncontrollably, which makes casting spells or holding objects difficult."
+    "summary": "Your hands shake uncontrollably, which makes casting spells or holding objects difficult.",
+    "description": "Your hands shake uncontrollably, which makes casting spells or holding objects difficult. All rolls involving holding or wielding an object are made at -2, including weapon skills. Magi and others who rely on hand gestures to work magic must roll an extra botch die when casting a spell."
   },
   "flaw.pessimistic": {
     "name": "Pessimistic",
@@ -1189,7 +1203,8 @@
   },
   "flaw.twilight_prone": {
     "name": "Twilight Prone",
-    "summary": "You either enjoy or cannot help running excessive amounts of magic through you when you cast spells."
+    "summary": "You either enjoy or cannot help running excessive amounts of magic through you when you cast spells.",
+    "description": "You either enjoy or cannot help running excessive amounts of magic through you when you cast spells. You must roll to resist Twilight on a single magical botch, rather than on a double botch like most magi."
   },
   "flaw.tzadik_nistar": {
     "name": "Tzadik Nistar",
@@ -1209,7 +1224,8 @@
   },
   "flaw.uncontrollable_strength": {
     "name": "Uncontrollable Strength",
-    "summary": "This character doesn't know his own strength, and at times he has trouble controlling it."
+    "summary": "This character doesn't know his own strength, and at times he has trouble controlling it.",
+    "description": "This character doesn't know his own strength, and at times he has trouble controlling it. This Flaw may not be taken if the character's Strength is below 0. Whenever he handles delicate or fragile objects, whenever care must be taken to knock somebody out gently, and so on, he risks overdoing it, severely. The character must make a stress roll against an Ease Factor of 6 to avoid using too much power and causing damage of some kind. In addition to this, any Strength Stress Roll uses one extra botch die."
   },
   "flaw.unhappily_married": {
     "name": "Unhappily Married",
@@ -1237,7 +1253,8 @@
   },
   "flaw.unpredictable_magic": {
     "name": "Unpredictable Magic",
-    "summary": "You always roll a stress die when using magic, even if completely relaxed."
+    "summary": "You always roll a stress die when using magic, even if completely relaxed.",
+    "description": "You always roll a stress die when using magic, even if completely relaxed. If you choose to cast a Spontaneous spell without expending fatigue, you must still roll to check for a botch, although the roll does not add to your Casting Total. Even if you have Mastered a spell, you must always roll at least one botch die."
   },
   "flaw.unruly_air": {
     "name": "Unruly Air",
@@ -1309,7 +1326,8 @@
   },
   "flaw.waster_of_vis": {
     "name": "Waster of Vis",
-    "summary": "When you use raw vis you waste one guarter (rounded up) of the pawns you apply."
+    "summary": "When you use raw vis you waste one guarter (rounded up) of the pawns you apply.",
+    "description": "When you use raw vis you waste one guarter (rounded up) of the pawns you apply. The lost raw vis does not apply to the magical effect being enacted but does count toward the total number of botch dice you must roll if you roll a zero. You must use a third again as many pawns as usual when casting a ritual spell, and if you want to improve an Art score by studying raw vis, you must use a third again as many pawns as usual. This Flaw applies to all occasions on which you use vis, including certamen, laboratory work, and boosting penetration. Wasted pawns count toward the maximum number you can use at one time. For example, if you would normally use 12 pawns, you must use 16, and 4, one quarter of those you use, are wasted. If you would normally need 10 pawns, you must use 14, because 4 pawns are wasted."
   },
   "flaw.weak_characteristics": {
     "name": "Weak Characteristics",
@@ -1357,7 +1375,8 @@
   },
   "flaw.weird_magic": {
     "name": "Weird Magic",
-    "summary": "Your control over magic is somewhat loose, perhaps due to Twilight effects or idiosyncratic training."
+    "summary": "Your control over magic is somewhat loose, perhaps due to Twilight effects or idiosyncratic training.",
+    "description": "Your control over magic is somewhat loose, perhaps due to Twilight effects or idiosyncratic training. Roll one extra botch die when you roll a zero on stressed spell casting rolls, apart from your other botch dice. Botches from this die should be strange or bizarre rather than dangerous, and if the Weird Magic botch occurs along with a regular botch, the results could be truly spectacular."
   },
   "flaw.witch_marks": {
     "name": "Witch Marks",
@@ -1405,7 +1424,8 @@
   },
   "virtue.all_according_to_plan": {
     "name": "All According to Plan",
-    "summary": "Once per session, a player whose character has this Virtue can reroll a botch die."
+    "summary": "Once per session, a player whose character has this Virtue can reroll a botch die.",
+    "description": "Once per session, a player whose character has this Virtue can reroll a botch die. The character has prepared, in advance, for this exact failure and has a contingency plan, which the player must describe."
   },
   "virtue.alluring_to_beings": {
     "name": "Alluring to {being}",
@@ -1513,11 +1533,13 @@
   },
   "virtue.cautious_sorcerer": {
     "name": "Cautious Sorcerer",
-    "summary": "You are very careful with magic, and are less likely to fail spectacularly if you do fail."
+    "summary": "You are very careful with magic, and are less likely to fail spectacularly if you do fail.",
+    "description": "You are very careful with magic, and are less likely to fail spectacularly if you do fail. You roll three fewer botch dice when casting spells (whether ritual, formulaic, or spontaneous), and when working in the laboratory. This Virtue may not reduce the number of botch dice rolled below one. However, its effects are applied before any other effects which reduce botch dice, such as Spell Mastery (see page 225), and they may reduce the number of botch dice to zero."
   },
   "virtue.cautious_with_ability": {
     "name": "Cautious with {ability}",
-    "summary": "You are very careful with a specific Ability, and are less likely to fail spectacularly if you do fail when using it."
+    "summary": "You are very careful with a specific Ability, and are less likely to fail spectacularly if you do fail when using it.",
+    "description": "You are very careful with a specific Ability, and are less likely to fail spectacularly if you do fail when using it. You roll two fewer botch dice than normal whenever you are required to roll botch dice for that Ability. This may mean that you roll no botch dice. This Virtue may apply to any Ability, even one you cannot learn at character creation."
   },
   "virtue.clan_ilfetu": {
     "name": "Clan Ilfetu",
@@ -1933,7 +1955,8 @@
   },
   "virtue.jack_of_all_trades": {
     "name": "Jack-of-All-Trades",
-    "summary": "The character is capable of turning his hand to almost anything."
+    "summary": "The character is capable of turning his hand to almost anything.",
+    "description": "The character is capable of turning his hand to almost anything. He suffers no additional botch dice for attempting an Ability roll for an Ability that he has no score in (see page 157). If it is an asterisked Ability, then he can attempt a roll as if he had a score of zero with three extra botch dice, if and only if he is normally able to take Abilities of that type. Characters without this Virtue cannot even attempt rolls on an asterisked Ability without at least one experience point in it. For example, he must have a Virtue permitting him to take Arcane Abilities to attempt an unskilled Magic Lore roll. Some Abilities are excepted from this Virtue, including those that are not rolled (such as Parma Magica or Penetration), and all Supernatural Abilities (which require a specific Virtue for each Ability, rather than the type). The troupe may make other exceptions on a case-by-case basis, but this Virtue is supposed to allow the character to attempt things that would normally require training."
   },
   "virtue.journeyman": {
     "name": "Journeyman",
@@ -2033,7 +2056,8 @@
   },
   "virtue.light_touch": {
     "name": "Light Touch",
-    "summary": "You have especially good handeye coordination and great proficiency for using your hands in precise, fast ways."
+    "summary": "You have especially good handeye coordination and great proficiency for using your hands in precise, fast ways.",
+    "description": "You have especially good handeye coordination and great proficiency for using your hands in precise, fast ways. You gain +1 to all rolls involving subtle manipulation of objects (like picking pockets) and roll one less botch die than you normally would in such activities (minimum of one). This bonus does not apply to archery, but does apply to playing musical instruments."
   },
   "virtue.lightning_reflexes": {
     "name": "Lightning Reflexes",
@@ -2309,7 +2333,7 @@
   },
   "virtue.quiet_magic": {
     "name": "Quiet Magic",
-    "summary": "You can cast spells using only a soft voice at no penalty, and at only a –5 penalty if you do not speak at all."
+    "summary": "You can cast spells using only a soft voice at no penalty, and at only a -5 penalty if you do not speak at all."
   },
   "virtue.rabbi": {
     "name": "Rabbi",
@@ -2425,7 +2449,7 @@
   },
   "virtue.skilled_smuggler": {
     "name": "Skilled Smuggler",
-    "summary": "The character can hide one item on his person, and attempts to find it suffer a –9 penalty on Awareness rolls."
+    "summary": "The character can hide one item on his person, and attempts to find it suffer a -9 penalty on Awareness rolls."
   },
   "virtue.skinchanger": {
     "name": "Skinchanger",
@@ -2622,7 +2646,8 @@
   },
   "virtue.ways_of_the_land": {
     "name": "Ways Of The {land}",
-    "summary": "You have a deep understanding of a type of terrain, feeling more natural and at home there than anywhere else."
+    "summary": "You have a deep understanding of a type of terrain, feeling more natural and at home there than anywhere else.",
+    "description": "You have a deep understanding of a type of terrain, feeling more natural and at home there than anywhere else. Examples include Ways of the Forest, Ways of the Mountain, Ways of the Steppe or Ways of the Town. You get a +3 bonus to all rolls, including combat and Casting Scores, that directly involve that area and its inhabitants; mundane, magical, or faerie. In addition, you roll one fewer botch die than normal (which may mean you roll no botch dice) in rolls that pertain to your area of understanding. You are not normally molested by animals of the terrain, and though particularly vicious creatures may still attack you, at least they'll accord you proper respect. (For Ways of the Town, this still applies to town animals, of which there are plenty in the medieval world, rather than people. The +3 bonus does apply to people.) You may choose this Virtue multiple times, for different types of terrain."
   },
   "virtue.wealthy": {
     "name": "Wealthy",

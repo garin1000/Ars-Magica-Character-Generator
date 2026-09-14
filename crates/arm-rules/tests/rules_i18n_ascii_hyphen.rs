@@ -13,6 +13,21 @@
 //! discovered rather than hardcoded, so it scales with however many
 //! languages/domains exist — and fails on the first U+2212 it finds, naming
 //! the file and a snippet of the offending string.
+//!
+//! U+2212 is not the only way to spell a non-ASCII negative sign, and it was
+//! not even the common one: the rulebook Markdown sources write their
+//! negative numbers with the **EN DASH U+2013**, so text transcribed verbatim
+//! out of a source range imports en dashes wholesale. Checking only U+2212
+//! therefore left a hole exactly the width of the character the sources
+//! actually contain.
+//!
+//! The en-dash rule is deliberately **narrower** than the U+2212 one: it
+//! fires only on an en dash *immediately followed by an ASCII digit*, which
+//! is unambiguously a negative number. A blanket en-dash ban would be wrong —
+//! the rulebook uses the en dash legitimately as sentence punctuation in the
+//! very same strings (`flaw.clumsy`: "you tend to drop things – you are at -3
+//! …") and inside entry names ("Horrifying Appearance – Snake Legs"). The
+//! narrow form is exact and cannot over-trigger.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -20,6 +35,7 @@ use std::path::{Path, PathBuf};
 use serde_json::Value;
 
 const MATH_MINUS: char = '\u{2212}';
+const EN_DASH: char = '\u{2013}';
 
 fn rules_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../rules")
@@ -55,32 +71,32 @@ fn i18n_json_files() -> Vec<PathBuf> {
     files
 }
 
-/// Recursively collects every string in `value` that contains the
-/// mathematical minus U+2212, formatted as `"<snippet>"` for the failure
-/// message.
-fn find_math_minus_strings(value: &Value, out: &mut Vec<String>) {
+/// Recursively collects every string in `value` for which `is_offending`
+/// returns true, cloned verbatim for the failure message.
+fn find_strings(value: &Value, is_offending: &dyn Fn(&str) -> bool, out: &mut Vec<String>) {
     match value {
         Value::String(s) => {
-            if s.contains(MATH_MINUS) {
+            if is_offending(s) {
                 out.push(s.clone());
             }
         }
         Value::Object(map) => {
             for v in map.values() {
-                find_math_minus_strings(v, out);
+                find_strings(v, is_offending, out);
             }
         }
         Value::Array(items) => {
             for v in items {
-                find_math_minus_strings(v, out);
+                find_strings(v, is_offending, out);
             }
         }
         _ => {}
     }
 }
 
-#[test]
-fn no_rules_i18n_text_uses_the_mathematical_minus() {
+/// Every offending string across every `rules/i18n/<lang>/*.json` file,
+/// prefixed with the file it came from.
+fn offenders(is_offending: &dyn Fn(&str) -> bool) -> Vec<String> {
     let mut offenders: Vec<String> = Vec::new();
 
     for path in i18n_json_files() {
@@ -89,17 +105,51 @@ fn no_rules_i18n_text_uses_the_mathematical_minus() {
         let value: Value = serde_json::from_str(&text)
             .unwrap_or_else(|e| panic!("{} is valid JSON: {e}", path.display()));
         let mut found = Vec::new();
-        find_math_minus_strings(&value, &mut found);
+        find_strings(&value, is_offending, &mut found);
         for s in found {
             offenders.push(format!("{}: {s:?}", path.display()));
         }
     }
+
+    offenders
+}
+
+/// True when `s` contains an en dash immediately followed by an ASCII digit —
+/// i.e. a negative number spelled with U+2013. An en dash used as punctuation
+/// (followed by a space, or by a letter) is legitimate and not matched.
+fn has_en_dash_negative(s: &str) -> bool {
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == EN_DASH && chars.peek().is_some_and(char::is_ascii_digit) {
+            return true;
+        }
+    }
+    false
+}
+
+#[test]
+fn no_rules_i18n_text_uses_the_mathematical_minus() {
+    let offenders = offenders(&|s: &str| s.contains(MATH_MINUS));
 
     assert!(
         offenders.is_empty(),
         "found U+2212 (mathematical minus) in rules i18n text — use the ASCII \
          hyphen-minus U+002D instead (CLAUDE.md: \"Negative signs are ASCII \
          hyphens\"):\n{}",
+        offenders.join("\n")
+    );
+}
+
+#[test]
+fn no_rules_i18n_text_uses_an_en_dash_as_a_negative_sign() {
+    let offenders = offenders(&has_en_dash_negative);
+
+    assert!(
+        offenders.is_empty(),
+        "found U+2013 (en dash) immediately before a digit in rules i18n text — \
+         that is a negative sign and must be the ASCII hyphen-minus U+002D \
+         (CLAUDE.md: \"Negative signs are ASCII hyphens\"). An en dash used as \
+         punctuation is fine and is not flagged:\n{}",
         offenders.join("\n")
     );
 }

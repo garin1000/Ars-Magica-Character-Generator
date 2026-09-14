@@ -1617,17 +1617,19 @@ fn fully_specified_companion_validates() {
 /// Acceptance criterion for M5 slice 5a: every shipped Virtue/Flaw carries a
 /// `classification`. The field is required (no serde default), so an unclassified
 /// entry would already fail `load_ruleset()`; this test additionally asserts the
-/// catalogue is non-trivial and that all three classes are actually used, so the
+/// catalogue is non-trivial and that all four classes are actually used, so the
 /// classification pass can never silently collapse to a single bucket.
 #[test]
 fn every_vf_is_classified() {
     let rs = load_ruleset();
     let mut narrative = 0usize;
+    let mut uncomputed = 0usize;
     let mut creation = 0usize;
     let mut in_play = 0usize;
     for item in rs.items() {
         match item.classification {
             Classification::Narrative => narrative += 1,
+            Classification::UncomputedRule => uncomputed += 1,
             Classification::CreationEffect => creation += 1,
             Classification::InPlayEffect => in_play += 1,
         }
@@ -1635,21 +1637,32 @@ fn every_vf_is_classified() {
     // Catalogue size is data, not code: assert only that the catalogue is large
     // and every class is represented, never exact per-class totals.
     assert!(
-        narrative + creation + in_play > 600,
+        narrative + uncomputed + creation + in_play > 600,
         "expected the full V/F catalogue to load"
     );
     assert!(narrative > 0, "some V/F must be narrative");
+    assert!(uncomputed > 0, "some V/F must be uncomputed_rule");
     assert!(creation > 0, "some V/F must be creation_effect");
     assert!(in_play > 0, "some V/F must be in_play_effect");
-    // An entry carrying `effects` is mechanical, never narrative: it either
-    // changes a creation number (creation_effect) or modifies an in-play/derived
-    // total (in_play_effect, M5/5b). Narrative items are never given an effect.
+    // An entry carrying `effects` is mechanical, so it is neither narrative nor
+    // uncomputed_rule: it either changes a creation number (creation_effect) or
+    // modifies an in-play/derived total (in_play_effect, M5/5b). Both
+    // effect-free classes are never given an invented effect — the difference
+    // between them is whether the *rulebook* stated a rule, not the engine.
     for item in rs.items() {
         if !item.effects.is_empty() {
             assert_ne!(
                 item.classification,
                 Classification::Narrative,
                 "{} carries effects so must not be narrative",
+                item.id
+            );
+            assert_ne!(
+                item.classification,
+                Classification::UncomputedRule,
+                "{} carries effects, so the engine does compute something for it \
+                 — that makes it in_play_effect or creation_effect, never \
+                 uncomputed_rule",
                 item.id
             );
         }

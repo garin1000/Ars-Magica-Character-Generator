@@ -300,7 +300,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5769, 5772] }
   },
@@ -309,7 +309,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5773, 5776] }
@@ -364,7 +364,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5797, 5800] }
   },
@@ -565,7 +565,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5889, 5892] }
   },
@@ -596,7 +596,7 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5901, 5904] }
   },
@@ -915,7 +915,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6036, 6039] }
   },
@@ -1101,7 +1101,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "terrain", "type": "ref", "domain": "text" }],
     "max_total": 1,
@@ -1535,7 +1535,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6322, 6325] }
   },
@@ -2840,7 +2840,7 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6879, 6882] }
   },
@@ -2890,7 +2890,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6907, 6910] }
   },
@@ -2954,7 +2954,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6935, 6938] }
   },
@@ -3124,7 +3124,7 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7052, 7055] }
   },
@@ -3245,7 +3245,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7098, 7101] }
   },
@@ -3341,7 +3341,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3384, 3387] }
   },
@@ -3612,7 +3612,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3555, 3558] }
   },
@@ -3621,7 +3621,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3559, 3562] }
@@ -4679,7 +4679,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4155, 4158] }
   },
@@ -4913,7 +4913,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4307, 4310] }
   },

@@ -228,7 +228,13 @@ export type Prereq =
 
 // How a V/F impacts a character mechanically (M5 slice 5a). Mirrors the engine's
 // `Classification`. Required on every PointItem.
-export type Classification = 'narrative' | 'creation_effect' | 'in_play_effect';
+//
+// `narrative` and `uncomputed_rule` both mean "the engine computes nothing"; they
+// differ in whether the *rulebook* stated a rule. `uncomputed_rule` marks an entry
+// whose passage carries a real mechanical clause the engine cannot compute at
+// character-generation time (botch dice, scene-contingent modifiers, GM
+// judgement), so the displayed rules text is that rule's only carrier.
+export type Classification = 'narrative' | 'uncomputed_rule' | 'creation_effect' | 'in_play_effect';
 
 export interface PointItem {
   id: string;

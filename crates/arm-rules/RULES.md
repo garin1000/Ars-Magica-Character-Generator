@@ -4514,13 +4514,21 @@ field (engine enum `Classification`, serde `snake_case`; no serde default — an
 unclassified entry fails to load, and `tests/data_integrity.rs::every_vf_is_classified`
 guards the acceptance criterion). This slice adds **no mechanical effects**; it is a
 data-tagging + provenance pass whose output finalizes the slice-4/5b `Effect`
-variant set and the slice-5a-wire creation-number wiring. The three disjoint
+variant set and the slice-5a-wire creation-number wiring. The four disjoint
 classes:
 
-- **`narrative`** — no mechanical creation number and no in-play/derived-total
-  effect. Personality, Story, and most Social-Status V/F are narrative by design;
-  they are **never** given an invented effect. No source citation is required for a
-  narrative item.
+- **`narrative`** — no mechanical creation number, no in-play/derived-total
+  effect, **and no mechanical clause in the cited passage at all**. Personality,
+  Story, and most Social-Status V/F are narrative by design; they are **never**
+  given an invented effect. No source citation is required for a narrative item.
+- **`uncomputed_rule`** — the cited passage states a real mechanical rule, but one
+  that is genuinely uncomputable at character-generation time, so the engine models
+  nothing and the **displayed rules text is the rule's only carrier**. Like
+  `narrative` it carries no `effects`; unlike `narrative` the rulebook did say
+  something. The recurring shapes are **botch dice** (a table-time change to how a
+  stress roll is rolled, not a sheet property), **scene- or activity-contingent
+  modifiers** (terrain, time of day, what the character is doing), and **GM
+  judgement / open-ended magnitudes** ("-3 or greater").
 - **`creation_effect`** — changes a character-creation number/state (starting
   scores, XP grants, Confidence, Size/characteristic deltas, reputation grants,
   spell-levels, item-level budget, True Faith / Might scores, a free starting
@@ -4528,13 +4536,55 @@ classes:
   `effects`.
 - **`in_play_effect`** — no creation-number change, but modifies an in-play/derived
   total the engine computes in slice 5i (casting / lab / penetration / magic
-  resistance / combat / soak / study / aging-longevity).
+  resistance / combat / soak / study / aging-longevity). An entry the engine *does*
+  compute something for stays `in_play_effect` even when its passage additionally
+  carries an uncomputable clause — `flaw.hobbled` (ArMDE:6260-6263) encodes its
+  combat penalties and also doubles botch dice, and the encoded half is what decides
+  the class.
 
 Counts over the shipped catalogue (structural, not asserted as exact totals in
 tests): **narrative 445**, **creation_effect 115**
 (36 wired via `effects` before 5a; 68 more wired in 5a-wire; **11 deferred** —
 see the 5a-wire section for the itemized deferrals),
 **in_play_effect 93** (all wired in 5b). Total 653.
+
+### Why the fourth class exists
+
+`narrative` originally carried two incompatible meanings at once. Its own
+definition said "no derived-total effect" (a statement about **the engine**) and
+"pure personality, story, or social-status flavor" (a statement about **the
+rulebook**), and those came apart on any entry the engine cannot compute but the
+book still gives a rule for. `flaw.clumsy` (ArMDE:5797-5800) is the clearest case:
+its passage says "you are at -3 in all related rolls" and "roll an extra botch
+die", which is emphatically not flavour, yet it was `narrative` because no `Effect`
+variant fits a botch-dice change.
+
+The consequence was that a **dropped rule and genuine flavour were
+indistinguishable in the data**, so no guard could detect the former. Worse, the
+V/F `summary` convention stops at the first sentence, so whether such a clause
+reached the user at all depended on where the author happened to put the full stop
+— `virtue.all_according_to_plan` and `flaw.careless_sorcerer` kept their botch
+clause purely because it landed in sentence one, while 16 sibling entries lost
+theirs. `uncomputed_rule` makes the distinction explicit and per-entry, which is
+what makes the clause reachable by a guard.
+
+The botch family reclassified `narrative` → `uncomputed_rule` (18 entries; the five
+botch-carrying entries that already had `effects` stayed `in_play_effect`):
+`virtue.all_according_to_plan` (ArMDE:3384-3387), `virtue.cautious_sorcerer`
+(ArMDE:3555-3558), `virtue.cautious_with_ability` (ArMDE:3559-3562),
+`virtue.jack_of_all_trades` (ArMDE:4155-4158), `virtue.light_touch`
+(ArMDE:4307-4310), `flaw.careless_sorcerer` (ArMDE:5769-5772),
+`flaw.careless_with_ability` (ArMDE:5773-5776), `flaw.clumsy` (ArMDE:5797-5800),
+`flaw.cursed_guile` (ArMDE:5889-5892), `flaw.deaf` (ArMDE:5901-5904),
+`flaw.evil_eye` (ArMDE:6036-6039), `flaw.fish_out_of_water_terrain`
+(ArMDE:6126-6133), `flaw.jinxed` (ArMDE:6322-6325), `flaw.twilight_prone`
+(ArMDE:6879-6882), `flaw.uncontrollable_strength` (ArMDE:6907-6910),
+`flaw.unpredictable_magic` (ArMDE:6935-6938), `flaw.waster_of_vis`
+(ArMDE:7052-7055), `flaw.weird_magic` (ArMDE:7098-7101).
+
+`flaw.jinxed` is worth noting as the one that states the *absence* of a botch
+change ("need not roll any extra botch dice"). That is still a rule — a
+clarification a player needs — so it classifies the same way.
 
 ### Roadmap corrections applied here
 

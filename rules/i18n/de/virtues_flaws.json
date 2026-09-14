@@ -31,7 +31,8 @@
   },
   "flaw.afflicted_tongue": {
     "name": "Sprachfehler",
-    "summary": "Du hast einen Sprachfehler, etwa ein Lispeln, Stottern oder fehlende Zähne."
+    "summary": "Du hast einen Sprachfehler, etwa ein Lispeln, Stottern oder fehlende Zähne.",
+    "description": "Du hast einen Sprachfehler, etwa ein Lispeln, Stottern oder fehlende Zähne. Du erleidest eine -2-Strafe auf alle Würfe, die die Stimme einbeziehen, sowie auf alle Zauberwerte, wenn du einen Zauber mit Worten wirkst. Bist du ein Magus, musst du beim Wirken eines Zaubers mit Worten außerdem einen zusätzlichen Patzerwürfel würfeln."
   },
   "flaw.age_quickly": {
     "name": "Schnelles Altern",
@@ -144,11 +145,13 @@
   },
   "flaw.careless_sorcerer": {
     "name": "Nachlässiger Zauberer",
-    "summary": "Du gehst nachlässig mit magischer Kraft um und musst beim Wirken von Zaubern zwei Patzerwürfel mehr als normal würfeln."
+    "summary": "Du gehst nachlässig mit magischer Kraft um und musst beim Wirken von Zaubern zwei Patzerwürfel mehr als normal würfeln.",
+    "description": "Du gehst nachlässig mit magischer Kraft um und musst beim Wirken von Zaubern zwei Patzerwürfel mehr als normal würfeln. Beachte: Wenn du normalerweise keine Patzerwürfel würfeln würdest, würfelst du weiterhin keine."
   },
   "flaw.careless_with_ability": {
     "name": "Nachlässig mit {ability}",
-    "summary": "Der Charakter ist in Bezug auf eine bestimmte Fertigkeit, die bei der Aufnahme dieser Tugend gewählt wird, besonders leichtsinnig."
+    "summary": "Der Charakter ist in Bezug auf eine bestimmte Fertigkeit, die bei der Aufnahme dieser Tugend gewählt wird, besonders leichtsinnig.",
+    "description": "Der Charakter ist in Bezug auf eine bestimmte Fertigkeit, die bei der Aufnahme dieser Tugend gewählt wird, besonders leichtsinnig. Diese Fertigkeit sollte eine sein, die für den Charakter wichtig ist, andernfalls kann die Spieltruppe die Wahl dieses Fehlers ablehnen. Wenn er scheitert, tut er es auf dramatische Weise. Immer wenn er bei der Verwendung der Fertigkeit eine Null würfelt, wird diese Null als Patzer behandelt. Er muss je nach Umständen möglicherweise zusätzliche Patzerwürfel würfeln, erleidet aber stets mindestens die Auswirkungen eines einzelnen Patzers. Dieser Fehler kann mehr als einmal genommen werden; jedes Mal gilt er für eine andere Fertigkeit."
   },
   "flaw.castratus": {
     "name": "Kastrat",
@@ -172,7 +175,8 @@
   },
   "flaw.clumsy": {
     "name": "Ungeschickt",
-    "summary": "Du bist nicht sehr anmutig und neigst dazu, Dinge fallen zu lassen – du hast eine –3-Strafe auf alle damit zusammenhängenden Würfe."
+    "summary": "Du bist nicht sehr anmutig und neigst dazu, Dinge fallen zu lassen – du hast eine -3-Strafe auf alle damit zusammenhängenden Würfe.",
+    "description": "Du bist nicht sehr anmutig und neigst dazu, Dinge fallen zu lassen – du hast eine -3-Strafe auf alle damit zusammenhängenden Würfe. Außerdem würfelst du bei Handlungen, die mit Geschicklichkeit zusammenhängen, einen zusätzlichen Patzerwürfel. Spiele deine Ungeschicklichkeit aus."
   },
   "flaw.clumsy_magic": {
     "name": "Plumpe Magie",
@@ -252,7 +256,8 @@
   },
   "flaw.cursed_guile": {
     "name": "Verfluchte Täuschung",
-    "summary": "Dies ist der Fehler für „den Jungen, der Wolf rief\", und resultiert wahrscheinlich aus infernalischem Einfluss."
+    "summary": "Dies ist der Fehler für „den Jungen, der Wolf rief\", und resultiert wahrscheinlich aus infernalischem Einfluss.",
+    "description": "Dies ist der Fehler für „den Jungen, der Wolf rief\", und resultiert wahrscheinlich aus infernalischem Einfluss. Der Charakter hat drei zusätzliche Patzerwürfel bei der Verwendung von Täuschung. Was noch wichtiger ist: Dem Charakter wird selten geglaubt, selbst wenn er ehrlich ist. Er muss einen Kommunikation + Täuschung-Wurf gegen Schwierigkeitsgrad 9 ablegen, um geglaubt zu werden, wenn er in wichtigen Momenten die Wahrheit sagt. Kehrt der Charakter beispielsweise von einem Erkundungsauftrag zurück und misslingt sein Täuschungswurf, wenn er Bericht erstattet, könnte die Maga annehmen, dass er seine Pflichten vernachlässigt hat; vielleicht glaubt sie, er sei gar nicht auf Erkundung gegangen, sondern in die nächste Stadt gegangen, um sich zu vergnügen. Dieser Charakter bevorzugt möglicherweise die Gesellschaft von Tieren gegenüber der von Menschen, da diese nicht auf List reagieren."
   },
   "flaw.cyclic_magic_negative": {
     "name": "Zyklische Magie (negativ)",
@@ -264,7 +269,8 @@
   },
   "flaw.deaf": {
     "name": "Taub",
-    "summary": "Du kannst überhaupt nichts hören."
+    "summary": "Du kannst überhaupt nichts hören.",
+    "description": "Du kannst überhaupt nichts hören. Du bist möglicherweise in der Lage zu sprechen, kannst aber gesprochene Sprache nicht verstehen, was die Kommunikation erheblich erschwert. Magi mit diesem Fehler müssen beim Wirken von Zaubern mit einer gesprochenen Komponente zwei zusätzliche Patzerwürfel werfen, da sie nicht hören können, was sie sagen."
   },
   "flaw.deficient_form": {
     "name": "Defizitäre Form",
@@ -396,7 +402,8 @@
   },
   "flaw.evil_eye": {
     "name": "Böser Blick",
-    "summary": "Dein Charakter trägt den Bösen Blick, das unkontrollierte Potenzial, anderen in seiner Umgebung Schaden zuzufügen."
+    "summary": "Dein Charakter trägt den Bösen Blick, das unkontrollierte Potenzial, anderen in seiner Umgebung Schaden zuzufügen.",
+    "description": "Dein Charakter trägt den Bösen Blick, das unkontrollierte Potenzial, anderen in seiner Umgebung Schaden zuzufügen. Charaktere, die in ihrer Anwesenheit Stresswürfe durchführen, unterliegen einem zusätzlichen Patzerwürfel. Charaktere können sich durch den Einsatz eines Amuletts oder eines Rituals schützen – über das die Spieltruppe entscheidet –, das nicht magischer oder übernatürlicher Natur sein muss. Eine Magieresistenz von 0 oder mehr, einschließlich der Wirkung der Aegis des Herdes, ist ebenfalls ausreichend, um sich gegen diesen Effekt zu schützen."
   },
   "flaw.exciting_experimentation": {
     "name": "Aufregendes Experimentieren",
@@ -472,7 +479,8 @@
   },
   "flaw.fish_out_of_water_terrain": {
     "name": "Fremd im {terrain}",
-    "summary": "Dieser Charakter hat eine Affinität zu einer Art von Gelände, sei es auf dem Meer, im Wald, in den Hügeln oder in der städtischen Landschaft von Städten und Gemeinden, und fühlt sich unwohl und unbeholfen, wenn er sich fernab von seinem bevorzugten Umfeld befindet."
+    "summary": "Dieser Charakter hat eine Affinität zu einer Art von Gelände, sei es auf dem Meer, im Wald, in den Hügeln oder in der städtischen Landschaft von Städten und Gemeinden, und fühlt sich unwohl und unbeholfen, wenn er sich fernab von seinem bevorzugten Umfeld befindet.",
+    "description": "Dieser Charakter hat eine Affinität zu einer Art von Gelände, sei es auf dem Meer, im Wald, in den Hügeln oder in der städtischen Landschaft von Städten und Gemeinden, und fühlt sich unwohl und unbeholfen, wenn er sich fernab von seinem bevorzugten Umfeld befindet. Der Charakter erleidet -1 auf alle Stresswürfe außerhalb seines bevorzugten Geländes und würfelt in diesen Situationen auch einen Patzerwürfel mehr als normal.\n\nGeeignete Gebiete können Städte und Gemeinden, Dörfer, Flüsse, das Meer, Gebirge, Wälder, Wüsten usw. sein.\n\nDieser Fehler darf nur einmal genommen werden, da sein mehrmaliges Nehmen ihn weniger schwerwiegend macht statt schwerwiegender."
   },
   "flaw.flashbacks": {
     "name": "Rückblenden",
@@ -592,7 +600,8 @@
   },
   "flaw.hobbled": {
     "name": "Humpelnd",
-    "summary": "Beide Beine des Charakters sind stark beschädigt."
+    "summary": "Beide Beine des Charakters sind stark beschädigt.",
+    "description": "Beide Beine des Charakters sind stark beschädigt. Sie kann nicht gehen, ohne von Krücken oder anderen Hilfsmitteln unterstützt zu werden, mit denen sie sich nur mit einer halben Meile pro Stunde fortbewegen kann. Alle Würfe, die schnelle Bewegung erfordern, werden mit -9 bestraft. Ausweichen und andere Kampfwürfe werden mit -6 bestraft, und du würfelst in Kampfsituationen doppelt so viele Patzerwürfel wie normalerweise."
   },
   "flaw.horrifying_appearance_snake_legs": {
     "name": "Schreckliches Äußeres – Schlangenbeine",
@@ -652,7 +661,8 @@
   },
   "flaw.jinxed": {
     "name": "Verhext",
-    "summary": "Der Charakter ist ein Magnet für jedes Unglück."
+    "summary": "Der Charakter ist ein Magnet für jedes Unglück.",
+    "description": "Der Charakter ist ein Magnet für jedes Unglück. Er ist nicht persönlich die Ursache des Unglücks, und so muss er weder zusätzliche Patzerwürfel würfeln noch Abzüge auf seine Würfe hinnehmen. Wann immer aber der Zufall bestimmt, wen ein Missgeschick trifft, sind die Chancen zu seinen Ungunsten verzerrt. Wenn beispielsweise festgestellt wurde, dass ein Kletterseil reißen wird, ist es wahrscheinlicher, dass es reißt, wenn der verhexte Charakter klettert. Wenn bestimmt wird, wann Räuber das Lager nachts überfallen werden, geschieht es wahrscheinlich genau dann, wenn der Charakter auf der Toilette ist. Wenn der Spielleiter würfelt, um das Ziel eines zufälligen Ereignisses zu bestimmen, sollte ein verhexter Charakter in der Hälfte der Fälle betroffen sein, und seine Kameraden zusammen in der anderen Hälfte. Sein Pech greift nicht auf andere über; tatsächlich ziehen es andere Charaktere möglicherweise vor, ihn in der Nähe zu halten, damit das Unglück von ihnen selbst ferngehalten wird."
   },
   "flaw.judged_unfairly": {
     "name": "Ungerecht beurteilt",
@@ -660,7 +670,8 @@
   },
   "flaw.lame": {
     "name": "Lahm",
-    "summary": "Eines deiner Beine ist geschwächt, sei es von Geburt an oder durch einen Unfall."
+    "summary": "Eines deiner Beine ist geschwächt, sei es von Geburt an oder durch einen Unfall.",
+    "description": "Eines deiner Beine ist geschwächt, sei es von Geburt an oder durch einen Unfall. Du bewegst dich langsam und unbeholfen. Deine Grundgeschwindigkeit beträgt lediglich eine Meile pro Stunde, und jeder kann dich überholen. Du erleidest einen -6-Malus auf Würfe, die schnelle oder wendige Bewegung erfordern, -3 auf Ausweichen und -1 auf andere Kampfwerte."
   },
   "flaw.lecherous_major": {
     "name": "Wollüstig (Groß)",
@@ -684,7 +695,7 @@
   },
   "flaw.lingering_injury": {
     "name": "Anhaltende Verletzung",
-    "summary": "Der Charakter leidet unter einer alten Verletzung, die nicht richtig heilt, was zu einem –1-Malus auf alle Würfe für körperliche Aktivitäten führt."
+    "summary": "Der Charakter leidet unter einer alten Verletzung, die nicht richtig heilt, was zu einem -1-Malus auf alle Würfe für körperliche Aktivitäten führt."
   },
   "flaw.loose_magic": {
     "name": "Lose Magie",
@@ -752,15 +763,17 @@
   },
   "flaw.missing_ear": {
     "name": "Fehlendes Ohr",
-    "summary": "Du kannst die Richtung von Geräuschen nicht genau orten und erleidest –3 auf Hörwürfe."
+    "summary": "Du kannst die Richtung von Geräuschen nicht genau orten und erleidest -3 auf Hörwürfe."
   },
   "flaw.missing_eye": {
     "name": "Fehlendes Auge",
-    "summary": "Du kannst kurze Abstände nicht leicht einschätzen und erhältst –3 auf Angriffswürfe mit Fernkampfwaffen und Zielwürfe für Zauber."
+    "summary": "Du kannst kurze Abstände nicht leicht einschätzen und erhältst -3 auf Angriffswürfe mit Fernkampfwaffen und Zielwürfe für Zauber.",
+    "description": "Du kannst kurze Abstände nicht leicht einschätzen und erhältst -3 auf Angriffswürfe mit Fernkampfwaffen und Zielwürfe für Zauber. Im Nahkampf erleidest du -1 auf Angriffswürfe, weil dein Sichtfeld eingeschränkt ist. Du hast außerdem eine blinde Seite, von der aus sich Menschen unbemerkt nähern können. Dieser Fehler kann mit Schlechtes Sehvermögen kombiniert werden, aber die Malus-Werte kumulieren sich."
   },
   "flaw.missing_hand": {
     "name": "Fehlende Hand",
-    "summary": "Vielleicht war es ein Unfall oder eine Strafe in deiner Vergangenheit, die dich eine deiner Hände gekostet hat."
+    "summary": "Vielleicht war es ein Unfall oder eine Strafe in deiner Vergangenheit, die dich eine deiner Hände gekostet hat.",
+    "description": "Vielleicht war es ein Unfall oder eine Strafe in deiner Vergangenheit, die dich eine deiner Hände gekostet hat. Klettern, Kampf und andere Aktivitäten, die normalerweise beide Hände erfordern, werden mit einem Malus von -3 oder mehr belegt."
   },
   "flaw.mistaken_identity": {
     "name": "Verwechslung",
@@ -888,7 +901,8 @@
   },
   "flaw.palsied_hands": {
     "name": "Zitternde Hände",
-    "summary": "Deine Hände zittern unkontrollierbar, was das Wirken von Zaubern oder das Halten von Gegenständen erschwert."
+    "summary": "Deine Hände zittern unkontrollierbar, was das Wirken von Zaubern oder das Halten von Gegenständen erschwert.",
+    "description": "Deine Hände zittern unkontrollierbar, was das Wirken von Zaubern oder das Halten von Gegenständen erschwert. Alle Würfe, die das Halten oder Führen eines Gegenstands beinhalten, werden mit -2 gemacht, einschließlich Waffenfertigkeiten. Magi und andere, die auf Handgesten angewiesen sind, um Magie zu wirken, müssen beim Wirken eines Zaubers einen zusätzlichen Patzerwürfel rollen."
   },
   "flaw.pessimistic": {
     "name": "Pessimistisch",
@@ -1191,7 +1205,8 @@
   },
   "flaw.twilight_prone": {
     "name": "Zwielicht-anfällig",
-    "summary": "Du genießt es entweder, übermäßige Mengen an Magie durch dich hindurchfließen zu lassen, wenn du Zauber wirkst, oder du kannst es nicht verhindern."
+    "summary": "Du genießt es entweder, übermäßige Mengen an Magie durch dich hindurchfließen zu lassen, wenn du Zauber wirkst, oder du kannst es nicht verhindern.",
+    "description": "Du genießt es entweder, übermäßige Mengen an Magie durch dich hindurchfließen zu lassen, wenn du Zauber wirkst, oder du kannst es nicht verhindern. Du musst bei einem einfachen magischen Patzer einen Wurf ablegen, um dem Zwielicht zu widerstehen, anstatt wie die meisten Magi erst beim doppelten Patzer."
   },
   "flaw.tzadik_nistar": {
     "name": "Tzadik Nistar",
@@ -1211,7 +1226,8 @@
   },
   "flaw.uncontrollable_strength": {
     "name": "Unkontrollierbare Stärke",
-    "summary": "Dieser Charakter kennt seine eigene Kraft nicht und hat manchmal Schwierigkeiten, sie zu kontrollieren."
+    "summary": "Dieser Charakter kennt seine eigene Kraft nicht und hat manchmal Schwierigkeiten, sie zu kontrollieren.",
+    "description": "Dieser Charakter kennt seine eigene Kraft nicht und hat manchmal Schwierigkeiten, sie zu kontrollieren. Dieser Fehler darf nicht genommen werden, wenn der Stärkewert des Charakters unter 0 liegt. Wann immer er zerbrechliche oder empfindliche Gegenstände handhabt, wann immer Vorsicht geboten ist, um jemanden sanft zu betäuben, und so weiter, riskiert er, es zu übertreiben und auf irgendeine Weise Schaden anzurichten. Der Charakter muss einen Stresswurf gegen einen Schwierigkeitsgrad von 6 ablegen, um zu vermeiden, zu viel Kraft einzusetzen und irgendeinen Schaden anzurichten. Darüber hinaus verwendet jeder Stärke-Stresswurf einen zusätzlichen Patzerwürfel."
   },
   "flaw.unhappily_married": {
     "name": "Unglücklich verheiratet",
@@ -1239,7 +1255,8 @@
   },
   "flaw.unpredictable_magic": {
     "name": "Unberechenbare Magie",
-    "summary": "Du würfelst beim Einsetzen von Magie immer einen Stresswürfel, auch wenn du völlig entspannt bist."
+    "summary": "Du würfelst beim Einsetzen von Magie immer einen Stresswürfel, auch wenn du völlig entspannt bist.",
+    "description": "Du würfelst beim Einsetzen von Magie immer einen Stresswürfel, auch wenn du völlig entspannt bist. Wenn du einen Spontanzauber wirken möchtest, ohne Erschöpfung einzusetzen, musst du dennoch würfeln, um auf einen Patzer zu prüfen, obwohl der Wurf nicht zu deiner Zaubersumme beiträgt. Selbst wenn du einen Zauber gemeistert hast, musst du immer mindestens einen Patzerwürfel würfeln."
   },
   "flaw.unruly_air": {
     "name": "Ungebändigte Ausstrahlung",
@@ -1311,7 +1328,8 @@
   },
   "flaw.waster_of_vis": {
     "name": "Vis-Verschwender",
-    "summary": "Wenn du rohes Vis einsetzt, verschwendest du ein Viertel (aufgerundet) der angewendeten Bauern."
+    "summary": "Wenn du rohes Vis einsetzt, verschwendest du ein Viertel (aufgerundet) der angewendeten Bauern.",
+    "description": "Wenn du rohes Vis einsetzt, verschwendest du ein Viertel (aufgerundet) der angewendeten Bauern. Das verlorene rohe Vis zählt nicht für den magischen Effekt, der bewirkt wird, zählt aber zur Gesamtzahl der Patzerwürfel, die du würfeln musst, wenn du eine Null würfelst. Du musst ein Drittel mehr Bauern als üblich einsetzen, wenn du einen Ritualzauber wirkst, und wenn du einen Kunstwert durch das Studieren von rohem Vis verbessern möchtest, musst du ein Drittel mehr Bauern als üblich verwenden. Dieser Fehler gilt für alle Gelegenheiten, bei denen du Vis einsetzt, einschließlich Certamen, Laborarbeit und dem Erhöhen der Penetration. Verschwendete Bauern zählen zur maximalen Anzahl, die du auf einmal einsetzen kannst. Wenn du zum Beispiel normalerweise 12 Bauern einsetzen würdest, musst du 16 einsetzen, und 4, ein Viertel der eingesetzten, werden verschwendet. Wenn du normalerweise 10 Bauern benötigen würdest, musst du 14 einsetzen, weil 4 Bauern verschwendet werden."
   },
   "flaw.weak_characteristics": {
     "name": "Schwache Eigenschaften",
@@ -1359,7 +1377,8 @@
   },
   "flaw.weird_magic": {
     "name": "Sonderbare Magie",
-    "summary": "Deine Kontrolle über Magie ist etwas locker, vielleicht aufgrund von Zwielichteffekten oder einer eigenwilligen Ausbildung."
+    "summary": "Deine Kontrolle über Magie ist etwas locker, vielleicht aufgrund von Zwielichteffekten oder einer eigenwilligen Ausbildung.",
+    "description": "Deine Kontrolle über Magie ist etwas locker, vielleicht aufgrund von Zwielichteffekten oder einer eigenwilligen Ausbildung. Du würfelst beim Würfeln einer Null auf Stresszauberwürfe, abgesehen von deinen anderen Patzerwürfeln, einen zusätzlichen Patzerwürfel. Patzer aus diesem Würfel sollten seltsam oder bizarr statt gefährlich sein, und wenn der Patzer der Sonderbaren Magie zusammen mit einem normalen Patzer auftritt, könnten die Ergebnisse wirklich spektakulär sein."
   },
   "flaw.witch_marks": {
     "name": "Hexenmale",
@@ -1407,7 +1426,8 @@
   },
   "virtue.all_according_to_plan": {
     "name": "Alles nach Plan",
-    "summary": "Einmal pro Spielsitzung kann ein Spieler, dessen Charakter diese Tugend hat, einen Patzerwürfel neu würfeln."
+    "summary": "Einmal pro Spielsitzung kann ein Spieler, dessen Charakter diese Tugend hat, einen Patzerwürfel neu würfeln.",
+    "description": "Einmal pro Spielsitzung kann ein Spieler, dessen Charakter diese Tugend hat, einen Patzerwürfel neu würfeln. Der Charakter hat sich im Voraus auf genau diesen Misserfolg vorbereitet und hat einen Notfallplan, den der Spieler beschreiben muss."
   },
   "virtue.alluring_to_beings": {
     "name": "Anziehend auf {being}",
@@ -1515,11 +1535,13 @@
   },
   "virtue.cautious_sorcerer": {
     "name": "Vorsichtiger Zauberer",
-    "summary": "Du gehst sehr sorgfältig mit Magie um und scheitest weniger leicht auf spektakuläre Weise, wenn du doch scheiterst."
+    "summary": "Du gehst sehr sorgfältig mit Magie um und scheitest weniger leicht auf spektakuläre Weise, wenn du doch scheiterst.",
+    "description": "Du gehst sehr sorgfältig mit Magie um und scheitest weniger leicht auf spektakuläre Weise, wenn du doch scheiterst. Du würfelst beim Wirken von Zaubern (ob Ritual-, Formulaisch- oder Spontanzauber) und beim Arbeiten im Laboratorium drei Patzerwürfel weniger. Diese Tugend kann die Anzahl der gewürfelten Patzerwürfel nicht unter einen senken. Ihre Wirkung wird jedoch vor allen anderen Effekten angewendet, die Patzerwürfel reduzieren, wie z. B. Zaubermeisterschaft (siehe Seite 225), und diese können die Anzahl der Patzerwürfel auf null reduzieren."
   },
   "virtue.cautious_with_ability": {
     "name": "Vorsichtig mit {ability}",
-    "summary": "Du gehst mit einer bestimmten Fertigkeit sehr sorgfältig um und scheitest bei ihrer Anwendung weniger leicht auf spektakuläre Weise."
+    "summary": "Du gehst mit einer bestimmten Fertigkeit sehr sorgfältig um und scheitest bei ihrer Anwendung weniger leicht auf spektakuläre Weise.",
+    "description": "Du gehst mit einer bestimmten Fertigkeit sehr sorgfältig um und scheitest bei ihrer Anwendung weniger leicht auf spektakuläre Weise. Du würfelst zwei Patzerwürfel weniger als normal, wann immer du für diese Fertigkeit Patzerwürfel würfeln musst. Dies kann bedeuten, dass du keine Patzerwürfel würfelst. Diese Tugend kann für jede Fertigkeit gelten, selbst für eine, die du bei der Charaktererschaffung nicht erlernen kannst."
   },
   "virtue.clan_ilfetu": {
     "name": "Clan Ilfetu",
@@ -1935,7 +1957,8 @@
   },
   "virtue.jack_of_all_trades": {
     "name": "Alleskönner",
-    "summary": "Der Charakter kann sich fast allem zuwenden."
+    "summary": "Der Charakter kann sich fast allem zuwenden.",
+    "description": "Der Charakter kann sich fast allem zuwenden. Er erleidet keine zusätzlichen Patzerwürfel, wenn er einen Fertigkeitswurf für eine Fertigkeit versucht, in der er keinen Wert hat (siehe Seite 157). Handelt es sich um eine mit Sternchen markierte Fertigkeit, kann er einen Wurf so versuchen, als hätte er einen Wert von null, mit drei zusätzlichen Patzerwürfeln, sofern und nur sofern er normalerweise Fertigkeiten dieses Typs nehmen kann. Charaktere ohne diese Tugend können überhaupt keinen Wurf auf eine mit Sternchen markierte Fertigkeit versuchen, ohne zumindest einen Erfahrungspunkt darin zu haben. So muss er beispielsweise über eine Tugend verfügen, die Arkane Fertigkeiten erlaubt, um einen ungeübten Magiekunde-Wurf zu versuchen. Einige Fertigkeiten sind von dieser Tugend ausgenommen, darunter solche, die nicht gewürfelt werden (wie Parma Magica oder Penetration) sowie alle Übernatürlichen Fertigkeiten (für die jeweils eine eigene Tugend erforderlich ist, nicht nur der Typ). Die Spieltruppe kann von Fall zu Fall weitere Ausnahmen festlegen, doch diese Tugend soll dem Charakter ermöglichen, Dinge zu versuchen, die normalerweise eine Ausbildung erfordern würden."
   },
   "virtue.journeyman": {
     "name": "Geselle",
@@ -2035,7 +2058,8 @@
   },
   "virtue.light_touch": {
     "name": "Leichte Berührung",
-    "summary": "Du hast eine besonders gute Hand-Auge-Koordination und eine große Geschicklichkeit im präzisen, schnellen Umgang mit deinen Händen."
+    "summary": "Du hast eine besonders gute Hand-Auge-Koordination und eine große Geschicklichkeit im präzisen, schnellen Umgang mit deinen Händen.",
+    "description": "Du hast eine besonders gute Hand-Auge-Koordination und eine große Geschicklichkeit im präzisen, schnellen Umgang mit deinen Händen. Du erhältst +1 auf alle Würfe, die subtile Manipulation von Gegenständen beinhalten (wie das Stehlen aus Taschen), und würfelst einen Patzerwürfel weniger als üblich bei solchen Tätigkeiten (mindestens jedoch einen). Dieser Bonus gilt nicht für Bogenschießen, aber für das Spielen von Musikinstrumenten."
   },
   "virtue.lightning_reflexes": {
     "name": "Blitzreflexe",
@@ -2311,7 +2335,7 @@
   },
   "virtue.quiet_magic": {
     "name": "Stille Magie",
-    "summary": "Du kannst Zauber ohne Abzug mit nur leiser Stimme wirken und erhältst nur einen Abzug von –5, wenn Du überhaupt nicht sprichst."
+    "summary": "Du kannst Zauber ohne Abzug mit nur leiser Stimme wirken und erhältst nur einen Abzug von -5, wenn Du überhaupt nicht sprichst."
   },
   "virtue.rabbi": {
     "name": "Rabbi",
@@ -2331,7 +2355,7 @@
   },
   "virtue.redcap": {
     "name": "Rotkappe",
-    "summary": "Obwohl Du nicht die Gabe besitzt und keine hermetische Magie wirken kannst, bist Du ein vollwertiges Mitglied des Ordens des Hermes und des Hauses Mercere (siehe [Seite 15](#haus-mercere))."
+    "summary": "Obwohl Du nicht die Gabe besitzt und keine hermetische Magie wirken kannst, bist Du ein vollwertiges Mitglied des Ordens des Hermes und des Hauses Mercere (siehe Seite 15)."
   },
   "virtue.relic": {
     "name": "Relikt",
@@ -2427,7 +2451,7 @@
   },
   "virtue.skilled_smuggler": {
     "name": "Erfahrener Schmugler",
-    "summary": "Der Charakter kann einen Gegenstand an seiner Person verbergen, und Versuche, ihn zu finden, erleiden einen Abzug von –9 auf Wahrnehmungswürfe."
+    "summary": "Der Charakter kann einen Gegenstand an seiner Person verbergen, und Versuche, ihn zu finden, erleiden einen Abzug von -9 auf Wahrnehmungswürfe."
   },
   "virtue.skinchanger": {
     "name": "Tierwandler",
@@ -2451,7 +2475,7 @@
   },
   "virtue.spell_improvisation": {
     "name": "Zauberimprovisation",
-    "summary": "Der Magus kann die Magnitude eines formulaischen Zaubers, den er kennt, als Bonus auf seine Zaubersumme addieren, wenn er spontan einen ähnlichen Zauber wirkt (siehe Ähnliche Zauber, [Seite 260](#ähnliche-zauber))."
+    "summary": "Der Magus kann die Magnitude eines formulaischen Zaubers, den er kennt, als Bonus auf seine Zaubersumme addieren, wenn er spontan einen ähnlichen Zauber wirkt (siehe Ähnliche Zauber, Seite 260)."
   },
   "virtue.spirit_votary": {
     "name": "Geistverehrer",
@@ -2625,7 +2649,8 @@
   },
   "virtue.ways_of_the_land": {
     "name": "Wege des {land}",
-    "summary": "Du hast ein tiefes Verständnis für eine bestimmte Art von Terrain und fühlst dich dort natürlicher und heimischer als sonst irgendwo."
+    "summary": "Du hast ein tiefes Verständnis für eine bestimmte Art von Terrain und fühlst dich dort natürlicher und heimischer als sonst irgendwo.",
+    "description": "Du hast ein tiefes Verständnis für eine bestimmte Art von Terrain und fühlst dich dort natürlicher und heimischer als sonst irgendwo. Beispiele umfassen Wege des Waldes, Wege des Gebirges, Wege der Steppe oder Wege der Stadt. Du erhältst einen Bonus von +3 auf alle Würfe, einschließlich Kampf und Zauberwerte, die direkt dieses Gebiet und seine Bewohner betreffen; ob weltlich, magisch oder feenhaft. Außerdem würfelst du bei Würfen, die deinen Verständnisbereich betreffen, einen Patzerwürfel weniger als üblich (was bedeuten kann, dass du gar keinen Patzerwürfel würfelst). Von Tieren des betreffenden Terrains wirst du normalerweise nicht belästigt, und obwohl besonders bösartige Kreaturen dich möglicherweise noch angreifen, werden sie dir zumindest gebührenden Respekt entgegenbringen. (Bei Wegen der Stadt gilt dies weiterhin für Stadttiere, von denen es in der mittelalterlichen Welt viele gibt, nicht für Menschen. Der +3-Bonus gilt jedoch für Menschen.) Du kannst diese Tugend mehrfach wählen, für verschiedene Arten von Terrain."
   },
   "virtue.wealthy": {
     "name": "Wohlhabend",
