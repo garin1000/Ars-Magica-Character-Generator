@@ -2780,7 +2780,7 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "lab_total_mod", "amount": -3 }],
+    "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5821, 5838] }
   },
   {

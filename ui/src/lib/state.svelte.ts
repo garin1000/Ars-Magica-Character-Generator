@@ -2389,9 +2389,9 @@ class AppStore {
    * operation is in flight.
    *
    * Stays on `AppStore` rather than moving into {@link FileOperations}: unlike
-   * Save/Export it resets several axes at once (entity, wizard rail, childhood
-   * and aging drafts, view) that belong to other modules or to `AppStore`
-   * itself, so it borrows only the busy flag and the discard prompt from
+   * Save/Export it resets several axes at once (entity, wizard rail, picker
+   * filters, childhood and aging drafts, view) that belong to other modules or to
+   * `AppStore` itself, so it borrows only the busy flag and the discard prompt from
    * `#fileOps` rather than folding those resets into that module.
    *
    * Returns whether a document was actually loaded, so {@link openIntoWizard} can
@@ -2417,6 +2417,14 @@ class AppStore {
         // Bumped only on a SUCCESSFUL load: a cancelled dialog replaced nothing.
         this.#documentEpoch += 1;
         this.#savedSnapshot = this.#snapshot();
+        // And the picker filters, which are per-document exactly as they are in
+        // `newDocument()` and `#instantiateCharacter()` — Open was the one
+        // replacement route that let them through (Sabine 3, full-audit round 4).
+        // `derivedArtPicker` is the case that decides it: it is not a filter but a
+        // SELECTION, naming the Technique/Form pair the Derived tab computes Lab
+        // and Casting Totals for, so carrying it over shows the new character's
+        // totals for a pair chosen for the previous one.
+        this.filters = defaultPickerFilters();
         // A loaded character's recorded childhood package is history, not a draft:
         // its slot answers already live in its Ability rows. Starting the draft
         // empty is what keeps that coherent — nothing pre-fills a package whose

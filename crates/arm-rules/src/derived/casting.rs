@@ -41,9 +41,12 @@ pub struct NonStandardCasting {
     pub voice_penalty: i32,
     /// Residual no-gesture penalty (≤ 0) after Subtle Magic / Deft Form.
     pub gesture_penalty: i32,
-    /// Formulaic total cast with no voice: `formulaic + voice_penalty`.
+    /// Formulaic total cast with no voice. The penalty is a **Casting-Score**
+    /// term (ArMDE:9236), so it is summed with the others *before* any
+    /// Deficient-Art halving: `halve(score + voice_penalty)`, which for a
+    /// non-deficient magus is just `formulaic + voice_penalty`.
     pub silent: i32,
-    /// Formulaic total cast with no gestures: `formulaic + gesture_penalty`.
+    /// Formulaic total cast with no gestures — same ordering as [`Self::silent`].
     pub still: i32,
     /// Formulaic total cast with neither voice nor gestures.
     pub silent_and_still: i32,
@@ -71,6 +74,23 @@ pub struct CastingTotal {
     pub addends: Vec<Addend>,
     /// The ritual-only extra addends (artes_liberales, philosophiae).
     pub ritual_addends: Vec<Addend>,
+    /// The flat `CastingTotalMod` reaching each cast type, one labelled addend
+    /// per scope (`casting_mod_formulaic`, `casting_mod_ritual`,
+    /// `casting_mod_spontaneous`).
+    ///
+    /// Separate from [`Self::addends`] rather than folded into it because the
+    /// modifier is **per scope** while `addends` is the one breakdown shared by
+    /// all four cast types: Method Caster's +3 reaches Formulaic and Ritual but
+    /// not Spontaneous, so a single shared `casting_mod` addend would be wrong
+    /// for one column whichever value it carried. Same split as
+    /// [`Self::ritual_addends`], for the same reason.
+    ///
+    /// Each cast type's figure is therefore `sum(addends)` + its own entry here
+    /// (+ `ritual_addends` for Ritual), *before* the Magical-Focus double and
+    /// the Deficient-Art halving, which are transforms of that sum rather than
+    /// addends. Pinned by
+    /// `derived.rs::every_shipped_breakdown_accounts_for_the_total_it_explains`.
+    pub casting_mod_addends: Vec<Addend>,
     /// Formulaic Casting Total.
     pub formulaic: i32,
     /// Ritual Casting Total (+ Artes Liberales + Philosophiae).
@@ -168,21 +188,41 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 Addend::new("artes_liberales", artes_liberales),
                 Addend::new("philosophiae", philosophiae),
             ];
+            // Read once and used both for the breakdown and for the arithmetic,
+            // so the two cannot drift: a breakdown that computes its own copy of
+            // a term is a breakdown that can disagree with the total it explains.
+            let formulaic_mod = mods.casting_mod_for(CastType::Formulaic);
+            let ritual_mod = mods.casting_mod_for(CastType::Ritual);
+            let spontaneous_mod = mods.casting_mod_for(CastType::Spontaneous);
+            // One entry per scope, always present — including at 0, exactly as
+            // the sibling `lab.rs::lab_totals` always carries its `lab_mod`
+            // addend. A breakdown that silently omits a zero term cannot be
+            // told apart from one that omits a term it should have had.
+            let casting_mod_addends = vec![
+                Addend::new("casting_mod_formulaic", formulaic_mod),
+                Addend::new("casting_mod_ritual", ritual_mod),
+                Addend::new("casting_mod_spontaneous", spontaneous_mod),
+            ];
             let common = sum(&addends);
             let focus_art = te.min(fo);
 
-            let variant = |focused: bool| -> CastingScores {
+            // `extra` is a further **Casting-Score** term, summed with the rest
+            // *before* `post` applies the Deficient-Art halving — which is where
+            // every Casting-Score term belongs. The Words/Gestures penalties are
+            // its only caller: ArMDE:9236 classifies them as "a penalty to the
+            // casting score", and ArMDE:5911 halves the total that score feeds,
+            // so `halve(score + penalty)` is the order on either reading.
+            // Passing them to `variant` rather than adding them to its result is
+            // what keeps that true — see
+            // `derived.rs::non_standard_penalties_are_inside_the_deficient_halving`.
+            let variant = |focused: bool, extra: i32| -> CastingScores {
                 let focus_add = if focused { focus_art } else { 0 };
                 // `common` is already saturated by `sum`, so every fold onto it
                 // goes through the same helper: a plain `+` aborts the process
                 // under `overflow-checks = true`. See
                 // `derived.rs::saturating_i32_sum`.
                 let formulaic = post(
-                    saturating_i32_sum([
-                        common,
-                        focus_add,
-                        mods.casting_mod_for(CastType::Formulaic),
-                    ]),
+                    saturating_i32_sum([common, focus_add, formulaic_mod, extra]),
                     deficient,
                 );
                 let ritual = post(
@@ -190,16 +230,13 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                         common,
                         focus_add,
                         sum(&ritual_addends),
-                        mods.casting_mod_for(CastType::Ritual),
+                        ritual_mod,
+                        extra,
                     ]),
                     deficient,
                 );
                 let spont_base = post(
-                    saturating_i32_sum([
-                        common,
-                        focus_add,
-                        mods.casting_mod_for(CastType::Spontaneous),
-                    ]),
+                    saturating_i32_sum([common, focus_add, spontaneous_mod, extra]),
                     deficient,
                 );
                 // Rounded down, like every other division the rules leave
@@ -227,27 +264,29 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 }
             };
 
-            let base = variant(false);
+            let base = variant(false, 0);
             let voice_penalty = mods.residual_voice_penalty(&form);
             let gesture_penalty = mods.residual_gesture_penalty(&form);
-            // These three addends are always `<= 0`, so they cannot push a
+            // These three penalties are always `<= 0`, so they cannot push a
             // saturated `i32::MAX` higher — but they *can* push a saturated
             // `i32::MIN` lower, which is the same abort at the other end of the
-            // range. The sign is not a guard in either direction; the helper is.
+            // range. The sign is not a guard in either direction; the helper is,
+            // and `variant` folds them in through the same `saturating_i32_sum`
+            // the other Casting-Score terms go through.
             let non_standard = NonStandardCasting {
                 voice_penalty,
                 gesture_penalty,
-                silent: saturating_i32_sum([base.formulaic, voice_penalty]),
-                still: saturating_i32_sum([base.formulaic, gesture_penalty]),
-                silent_and_still: saturating_i32_sum([
-                    base.formulaic,
-                    voice_penalty,
-                    gesture_penalty,
-                ]),
+                silent: variant(false, voice_penalty).formulaic,
+                still: variant(false, gesture_penalty).formulaic,
+                silent_and_still: variant(
+                    false,
+                    saturating_i32_sum([voice_penalty, gesture_penalty]),
+                )
+                .formulaic,
                 deft_form: mods.deft_forms.contains(&form),
             };
             let within_focus = mods.has_focus.then(|| {
-                let f = variant(true);
+                let f = variant(true, 0);
                 CastingWithinFocus {
                     focus_art,
                     formulaic: f.formulaic,
@@ -262,6 +301,7 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 form: form.clone(),
                 addends,
                 ritual_addends,
+                casting_mod_addends,
                 formulaic: base.formulaic,
                 ritual: base.ritual,
                 spontaneous_fatiguing: base.spontaneous_fatiguing,

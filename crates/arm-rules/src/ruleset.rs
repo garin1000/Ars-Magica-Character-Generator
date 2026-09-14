@@ -2992,11 +2992,45 @@ mod tests {
         );
     }
 
+    /// The fifth ratio in ruleset data. Unlike an Affinity, its use site
+    /// (`effective/reputation_and_caps.rs`) guards with `den > 0` and **skips
+    /// the whole narrowing** when the guard trips, so a zero denominator fails
+    /// *permissive*: the Flaw silently does nothing while its points are still
+    /// credited to the budget. `charged_cost` is not the backstop here, because
+    /// this variant never reaches it.
+    #[test]
+    fn a_locality_cap_fraction_with_a_zero_denominator_fails_the_load_naming_the_item() {
+        let err =
+            load_with_effect(r#"{ "type": "locality_ability_cap_fraction", "num": 1, "den": 0 }"#)
+                .expect_err("a zero denominator makes the cap narrowing silently inert");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("locality_ability_cap_fraction"),
+            "expected an item-naming ratio error, got: {msg}"
+        );
+    }
+
+    /// The other direction, and the more damaging one: `ceil(base·0/den)` is 0,
+    /// so every locality-dependent Ability is capped at 0 and a legal character
+    /// is rejected with nothing on screen naming the ruleset item responsible.
+    #[test]
+    fn a_locality_cap_fraction_with_a_zero_numerator_fails_the_load_naming_the_item() {
+        let err =
+            load_with_effect(r#"{ "type": "locality_ability_cap_fraction", "num": 0, "den": 2 }"#)
+                .expect_err("a zero numerator caps every locality-dependent Ability at 0");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("locality_ability_cap_fraction"),
+            "expected an item-naming ratio error, got: {msg}"
+        );
+    }
+
     /// The shipped ratios still load: Affinity 3/2, Linguist 5/4, Flawless Magic
-    /// 2/1. A ratio above 1 is the whole point (it reduces the cost), so — unlike
+    /// 2/1, Foreign Upbringing's cap narrowing 1/2. A ratio above 1 is the whole
+    /// point of an Affinity (it reduces the cost), so — unlike
     /// `max_share_of_kind` — a numerator above the denominator is legal here.
     #[test]
-    fn ordinary_affinity_ratios_load() {
+    fn ordinary_ruleset_ratios_load() {
         for effect in [
             r#"{ "type": "affinity_ability_cost", "param": "ability",
                  "counts_as_num": 3, "counts_as_den": 2 }"#,
@@ -3006,10 +3040,11 @@ mod tests {
                  "counts_as_num": 5, "counts_as_den": 4 }"#,
             r#"{ "type": "grants_spell_mastery", "score": 1,
                  "advancement_num": 2, "advancement_den": 1 }"#,
+            r#"{ "type": "locality_ability_cap_fraction", "num": 1, "den": 2 }"#,
         ] {
             assert!(
                 load_with_effect(effect).is_ok(),
-                "a shipped Affinity ratio must load: {effect}"
+                "a shipped ruleset ratio must load: {effect}"
             );
         }
     }

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { EffectiveScores, Entity } from '../types';
+import type { Entity } from '../types';
 
-// The fields read the shared store singleton (the entity's age, the engine's age
-// cap) and the Fluent bundle. The store schedules a debounced revalidate over the
+// The fields read the shared store singleton (the entity's age) and the Fluent
+// bundle. The store schedules a debounced revalidate over the
 // Tauri IPC bridge; mock the bridge so nothing reaches a backend. Harness mirrors
 // LifeStagePanel.test.ts.
 vi.mock('../ipc', () => ({
@@ -47,14 +47,6 @@ function resetEntity(): void {
   store.effective = null;
 }
 
-/** The engine's age→max-Ability-score cap, the fields' read-only echo. */
-function setAgeCap(cap: number | null): void {
-  store.effective = {
-    ...(store.effective ?? {}),
-    age_ability_cap: cap,
-  } as unknown as EffectiveScores;
-}
-
 /** Render the fields to an HTML string (node env, no DOM). */
 function html(props: { readonly?: boolean } = {}): string {
   return render(AgeFields, { props }).body;
@@ -83,7 +75,6 @@ beforeEach(() => {
 describe('AgeFields (slice 6b6b)', () => {
   it('offers the age', () => {
     store.entity.age = 40;
-    setAgeCap(5);
     const body = html();
     // The age is what the aging schedule and the life-stage pricing both hang on,
     // and since Slice 12 this is the one editable field for it in either flow — the
@@ -92,12 +83,13 @@ describe('AgeFields (slice 6b6b)', () => {
     expect(age.open).toMatch(/type="number"/);
     expect(age.open).toMatch(/value="40"/);
     expect(body).toContain('Age');
-    // Nothing renders a slug: the label comes from Fluent.
-    expect(body).not.toMatch(/>\s*age_ability_cap\s*</);
+    // Nothing renders a slug: the label comes from Fluent. Pinned on the label
+    // these fields actually own — the `age_ability_cap` slug this used to name is
+    // gone with the DTO field (V1, full-audit round 4), which nothing read.
+    expect(body).not.toMatch(/>\s*age-label\s*</);
   });
 
   it('leaves the field empty for a character with no age', () => {
-    setAgeCap(null);
     const body = html();
     expect(element(body, 'age-input').open).toMatch(/value=""/);
   });
@@ -135,8 +127,10 @@ describe('AgeFields read-only mode (slice 12, #24)', () => {
   });
 
   it('renders the age cap note in neither mode', () => {
-    // Slice 12 gives the cap note one home, beside the Ability lists it constrains.
-    setAgeCap(5);
+    // Slice 12 gave the cap note one home beside the Ability lists it constrains,
+    // and manual-testing-findings #21 removed it from there too — so no surface
+    // echoes the cap. V1 (full-audit round 4) then removed the DTO field this used
+    // to set, since nothing read it.
     expect(has(html(), 'age-cap-note')).toBe(false);
     expect(has(html({ readonly: true }), 'age-cap-note')).toBe(false);
   });

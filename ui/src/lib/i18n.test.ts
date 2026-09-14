@@ -30,6 +30,21 @@ function messageKeys(src: string): Set<string> {
   return keys;
 }
 
+// A message's full value: the text after its `=`, plus any indented continuation
+// lines that belong to it. Read from the raw `.ftl` rather than through the
+// bundle so an assertion about WORDING needs no placeable arguments.
+function messageValue(src: string, key: string): string {
+  const lines = src.split('\n');
+  const head = lines.findIndex((line) => new RegExp(`^${key}\\s*=`).test(line));
+  if (head === -1) throw new Error(`missing message: ${key}`);
+  const value = [lines[head].replace(/^[^=]*=/, '')];
+  for (const line of lines.slice(head + 1)) {
+    if (!/^\s+\S/.test(line)) break;
+    value.push(line);
+  }
+  return value.join('\n');
+}
+
 // E9 (full-audit round 2). Every `$name` a message's VALUE references, per key —
 // including indented continuation and attribute lines, which carry placeables
 // too, and including selector references (`{ $count ->` ), which are variable
@@ -92,6 +107,44 @@ describe('German UI bundle', () => {
     const row = { ability: 'Parma Magica', min: '1', score: '0', qualifier: '' };
     expect(translate(de, 'magus-minimum-met', row)).toContain('erfüllt');
     expect(translate(de, 'magus-minimum-unmet', row)).toContain('nicht erfüllt');
+  });
+
+  // Sabine 4 (full-audit round 4). A control and the validation messages that
+  // refer to the same object must share a word, or the user cannot map the error
+  // onto anything on screen. English always did — "Special abilities" against
+  // "Mastery ability" / "Mastery special abilities" — while German set
+  // "Besondere Fähigkeiten" against "Meisterschaftsfähigkeit" and shared no word
+  // at all. The repo's own glossary settles which side moves:
+  // `rules/source/de/translation-tables/grundbegriffe.md:671` gives the full form
+  // "Besondere Fähigkeiten gemeisterter Zauber" and names
+  // "Meisterschaftsfähigkeit(en)" the sanctioned short form for running text —
+  // which is exactly what a one-line control label is. So the label adopts the
+  // errors' word, not the reverse.
+  //
+  // Pinned as a shared STEM rather than as five fixed strings: what must hold is
+  // the PAIRING. Either side may be rewritten later, but not apart from the other.
+  it('names Spell Mastery abilities with one term in the control and in its errors', () => {
+    // A word stem, not a whole word: German compounds and inflects it
+    // (…fähigkeit/…fähigkeiten) and English pluralizes it.
+    const stems: Record<string, string> = { en: 'abilit', de: 'Meisterschaftsfähigkeit' };
+    for (const [lang, stem] of Object.entries(stems)) {
+      const src = sourceForLang(lang);
+      for (const key of [
+        // The control: the chip row's label, and the add-`<select>`'s own
+        // `aria-label` — which is what a screen-reader user hears.
+        'spell-mastery-abilities-label',
+        'spell-mastery-ability-add',
+        // Every issue the engine can raise about that control's contents.
+        'issue-unknown_mastery_ability',
+        'issue-too_many_mastery_abilities',
+        'issue-duplicate_mastery_ability',
+      ]) {
+        expect(
+          messageValue(src, key),
+          `${lang}/${key} does not name the object the way its siblings do`,
+        ).toContain(stem);
+      }
+    }
   });
 
   // Slice 2 (#1, #11): the read-only `type` step is gone and the `experience` step

@@ -2,7 +2,7 @@
   import { store } from '../state.svelte';
   import { addendBreakdown } from '../derive';
   import { tooltip } from '../actions';
-  import type { DerivedTotals } from '../types';
+  import type { Addend, CastingTotal, DerivedTotals } from '../types';
 
   // Split out of `DerivedTotalsPanel.svelte` (V26, full-audit round). Magus-only
   // (the parent mounts this only inside its own `{#if d.is_magus}` block).
@@ -34,6 +34,20 @@
   // Localized display name for a catalogue id (an Art here), id as fallback.
   function name(id: string): string {
     return store.ruleset?.i18n[id]?.name ?? id;
+  }
+
+  // Every term the engine surfaces for a casting cell, in one list. The row
+  // `<th>` heads four cells holding four different totals, so its tooltip was
+  // never going to equal any one of them; it reads as "here is every term that
+  // feeds this row" instead (Sabine's presentation call on Gerda round-4
+  // finding 3). That only works if the list is complete — `ritual_addends` and
+  // the per-scope `casting_mod_addends` were computed, serialized and typed
+  // with no renderer, so a Method Caster's +3 and a Ritual's Artes Liberales
+  // were simply missing from the breakdown. The Lab tooltip above needs no
+  // equivalent: `lab.rs::lab_totals` folds its `lab_mod` into the single
+  // `addends` list, which is why the two disagreed.
+  function castingBreakdown(cell: CastingTotal): Addend[] {
+    return [...cell.addends, ...cell.ritual_addends, ...cell.casting_mod_addends];
   }
 </script>
 
@@ -121,7 +135,7 @@
             <th
               scope="row"
               tabindex="0"
-              use:tooltip={{ text: addendBreakdown(castCell.addends, store.t) }}
+              use:tooltip={{ text: addendBreakdown(castingBreakdown(castCell), store.t) }}
               >{store.t('derived-section-casting')}{castCell.deficient
                 ? ' ' + store.t('derived-deficient')
                 : ''}</th

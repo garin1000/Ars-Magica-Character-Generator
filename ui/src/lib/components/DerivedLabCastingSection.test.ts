@@ -86,6 +86,7 @@ function castingTotal(overrides: Partial<CastingTotal> = {}): CastingTotal {
     form: 'art.ignem',
     addends: [],
     ritual_addends: [],
+    casting_mod_addends: [],
     formulaic: 25,
     ritual: 28,
     spontaneous_fatiguing: 12,

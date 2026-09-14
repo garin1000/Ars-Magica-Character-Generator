@@ -342,12 +342,20 @@
             {#snippet row(item: { selection: SpellSelection; index: number })}
               {@const chosen = item.selection}
               {@const i = item.index}
-              <li
-                class:invalid-selection={invalidIds.has(chosen.spell)}
-                use:tooltip={tip(chosen.spell)}
-              >
-                <span class="item-name" data-testid="spell-name-{chosen.spell}-{i}"
-                  >{rowLabel(chosen)}</span
+              <li class:invalid-selection={invalidIds.has(chosen.spell)}>
+                <!-- Deliberately focusable, and NOT on the `<li>` (Sabine 3): a list
+                     item is not interactive, and `use:tooltip` points
+                     `aria-describedby` at its own node, which is not inherited. The
+                     row's remove button made the popup open on focus by bubbling
+                     while describing nothing in the tab order. Same host the
+                     Available side uses — `SourcePicker` puts it on a real
+                     `<button>` — and the same shape as `AbilityTab`'s chosen rows. -->
+                <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+                <span
+                  class="item-name"
+                  tabindex="0"
+                  use:tooltip={tip(chosen.spell)}
+                  data-testid="spell-name-{chosen.spell}-{i}">{rowLabel(chosen)}</span
                 >
                 {#if isParametrized(chosen.spell)}
                   <!-- The target Form of a meta-magic Vim spell — display + identity

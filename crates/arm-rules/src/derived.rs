@@ -2184,6 +2184,13 @@ mod tests {
 
     /// With no relevant Virtue, casting with no voice takes −10 and with no
     /// gestures −5 off the Formulaic total (ArMDE:9243-9245); combined −15.
+    ///
+    /// The three figures are written out **absolutely** rather than as
+    /// `formulaic - N`. A relative assertion here is invariant under any
+    /// transform applied to the base — including the Deficient-Art halving —
+    /// so it would agree with `halve(score) + p` and `halve(score + p)` alike;
+    /// that is how the round-4 ordering defect stayed green. Cr 10 + Ig 5 +
+    /// Sta 2 = 17, with no halving on this Deficiency-free fixture.
     #[test]
     fn non_standard_casting_penalties_without_virtue() {
         let rs = ruleset();
@@ -2201,14 +2208,185 @@ mod tests {
         ];
         let totals = casting_totals(&e, &rs);
         let cell = find_casting(&totals, "art.creo", "art.ignem");
-        let f = cell.formulaic;
+        assert_eq!(cell.formulaic, 17);
         let nc = &cell.non_standard;
         assert_eq!(nc.voice_penalty, -10);
         assert_eq!(nc.gesture_penalty, -5);
-        assert_eq!(nc.silent, f - 10);
-        assert_eq!(nc.still, f - 5);
-        assert_eq!(nc.silent_and_still, f - 15);
+        assert_eq!(nc.silent, 7);
+        assert_eq!(nc.still, 12);
+        assert_eq!(nc.silent_and_still, 2);
         assert!(!nc.deft_form);
+    }
+
+    /// A breakdown promises to *explain* the number it sits beside, and
+    /// completeness is the whole of that promise — so the property worth
+    /// stating is about the addend **list**, not any addend in it. Every other
+    /// `addends` assertion in this file pulls one entry out by label and checks
+    /// its value, which passes identically whether the list is complete or
+    /// missing a term.
+    ///
+    /// This is a **cross-site** assertion: it walks every shipped cell of both
+    /// `Addend`-bearing grids rather than one worked example, so a term added
+    /// outside a list at either site reds here even though the site's own
+    /// per-addend tests stay green. It is aimed at the two grids where the
+    /// property is non-trivial; `SoakTotal` and the penetration total compute
+    /// `total = sum(&addends)` by construction, so asserting it there would be
+    /// a tautology.
+    ///
+    /// **Two deliberate exclusions**, both transforms *of* the sum rather than
+    /// addends: the Deficient-Art halving and the within-focus double. The
+    /// fixture therefore carries neither, and does carry a flat
+    /// `casting_total_mod` **and** a flat `lab_total_mod`, which are exactly
+    /// the terms that can go missing from a list.
+    #[test]
+    fn every_shipped_breakdown_accounts_for_the_total_it_explains() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        set_char(&mut e, Characteristic::Int, 3);
+        e.aura = 2;
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 7,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        e.selections = vec![
+            // +3 to Formulaic and Ritual only — so a single shared casting_mod
+            // addend could not be right for every column.
+            Selection::new(Id::new("virtue.method_caster")),
+            // +3 to every Lab Total.
+            Selection::new(Id::new("virtue.inventive_genius")),
+        ];
+
+        let addend = |addends: &[Addend], label: &str| -> i32 {
+            addends
+                .iter()
+                .find(|a| a.label == label)
+                .unwrap_or_else(|| panic!("breakdown carries a {label} addend"))
+                .value
+        };
+
+        let lab = lab_totals(&e, &rs);
+        assert!(!lab.is_empty(), "the fixture ships a lab grid");
+        for cell in &lab {
+            assert!(
+                !cell.deficient,
+                "fixture is Deficiency-free by construction"
+            );
+            assert_eq!(
+                sum(&cell.addends),
+                cell.total,
+                "lab breakdown for {}/{} does not sum to the total it explains",
+                cell.technique,
+                cell.form
+            );
+        }
+
+        let casting = casting_totals(&e, &rs);
+        assert!(!casting.is_empty(), "the fixture ships a casting grid");
+        for cell in &casting {
+            assert!(
+                !cell.deficient,
+                "fixture is Deficiency-free by construction"
+            );
+            let common = sum(&cell.addends);
+            assert_eq!(
+                common + addend(&cell.casting_mod_addends, "casting_mod_formulaic"),
+                cell.formulaic,
+                "formulaic breakdown for {}/{} does not sum to the total it explains",
+                cell.technique,
+                cell.form
+            );
+            assert_eq!(
+                common
+                    + sum(&cell.ritual_addends)
+                    + addend(&cell.casting_mod_addends, "casting_mod_ritual"),
+                cell.ritual,
+                "ritual breakdown for {}/{} does not sum to the total it explains",
+                cell.technique,
+                cell.form
+            );
+            // The spontaneous cells are the same sum divided, so the breakdown
+            // explains the base they are derived from.
+            let spont_base = common + addend(&cell.casting_mod_addends, "casting_mod_spontaneous");
+            assert_eq!(
+                spont_base.div_euclid(2),
+                cell.spontaneous_fatiguing,
+                "fatiguing spontaneous for {}/{} does not follow its breakdown",
+                cell.technique,
+                cell.form
+            );
+            assert_eq!(
+                spont_base.div_euclid(5),
+                cell.spontaneous_non_fatiguing,
+                "non-fatiguing spontaneous for {}/{} does not follow its breakdown",
+                cell.technique,
+                cell.form
+            );
+        }
+    }
+
+    /// The Words/Gestures modifier is a penalty **to the Casting Score**
+    /// (ArMDE:9236: "Increased subtlety gives a penalty to the casting score";
+    /// ArMDE:9247 repeats it), and a Deficient Art halves the *total* that
+    /// score feeds (ArMDE:5911: "Almost all totals (including Casting Totals
+    /// and Lab Totals …) to which a particular Form is added are halved";
+    /// ArMDE:9103 makes the Casting Total = Casting Score + die). So the
+    /// penalty is **inside** the halving: `halve(score + penalty)`, never
+    /// `halve(score) + penalty`.
+    ///
+    /// Every number here is written out **absolutely** rather than relative to
+    /// `cell.formulaic`, and that is the entire point of the test. The four
+    /// neighbouring `non_standard` tests all assert `formulaic - N`, which is
+    /// mathematically invariant under the very transform this pins — both
+    /// orderings produce a `silent` that sits exactly `voice_penalty` below
+    /// their own `formulaic`, so a relative assertion agrees with the bug and
+    /// with the fix. The fixture is equally deliberate: the two features have
+    /// to **meet**, and `score + penalty` has to be odd-parity-different from
+    /// `score`, or the two floors coincide and the test proves nothing.
+    ///
+    /// Cr 10 + Ig 1 + Sta 0 − Enc 0 + aura 0 = a raw Casting Score of 11,
+    /// Deficient Ignem:
+    ///
+    /// | cell | correct `halve(11 + p)` | wrong `halve(11) + p` |
+    /// |---|---|---|
+    /// | `still` (−5) | `halve(6)` = **3** | `5 - 5` = 0 |
+    /// | `silent` (−10) | `halve(1)` = **0** | `5 - 10` = −5 |
+    /// | `silent_and_still` (−15) | `halve(-4)` = **−2** | `5 - 15` = −10 |
+    #[test]
+    fn non_standard_penalties_are_inside_the_deficient_halving() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 0);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 1,
+            },
+        ];
+        e.selections = vec![Selection::with_params(
+            Id::new("flaw.deficient_form"),
+            BTreeMap::from([("form".into(), Id::new("art.ignem"))]),
+        )];
+        let totals = casting_totals(&e, &rs);
+        let cell = find_casting(&totals, "art.creo", "art.ignem");
+        assert!(cell.deficient);
+        // The raw Casting Score is 11; halved on its own it is 5.
+        assert_eq!(cell.formulaic, 5);
+        assert_eq!(cell.non_standard.voice_penalty, -10);
+        assert_eq!(cell.non_standard.gesture_penalty, -5);
+        assert_eq!(cell.non_standard.still, 3);
+        assert_eq!(cell.non_standard.silent, 0);
+        assert_eq!(cell.non_standard.silent_and_still, -2);
     }
 
     /// Quiet Magic cuts the no-voice penalty to −5; a second casting eliminates it

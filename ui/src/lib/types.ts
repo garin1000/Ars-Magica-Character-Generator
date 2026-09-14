@@ -618,9 +618,6 @@ export interface EffectiveScores {
   // and how many are used, so the ability picker greys unavailable ones.
   supernatural_free_total: number;
   supernatural_free_used: number;
-  // The character's age → max-Ability-score cap (base, pre-Affinity). Null when
-  // age is unset.
-  age_ability_cap?: number | null;
   // Reputation grants the character's V/F confer (kind + score), so the UI only
   // offers a Reputation add-control when one exists.
   reputation_grants: ReputationGrant[];
@@ -719,6 +716,14 @@ export interface CastingTotal {
   form: string;
   addends: Addend[];
   ritual_addends: Addend[];
+  // The flat `CastingTotalMod` reaching each cast type, one labelled addend per
+  // scope (`casting_mod_formulaic` / `_ritual` / `_spontaneous`), always present
+  // including at 0. Separate from `addends` because the modifier is per scope
+  // while `addends` is the one breakdown shared by all four cast types — Method
+  // Caster's +3 reaches Formulaic and Ritual but not Spontaneous. Mirrored from
+  // the Rust `CastingTotal.casting_mod_addends` field
+  // (`crates/arm-rules/src/derived/casting.rs`).
+  casting_mod_addends: Addend[];
   formulaic: number;
   ritual: number;
   spontaneous_fatiguing: number;

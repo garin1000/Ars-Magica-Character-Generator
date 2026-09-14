@@ -457,8 +457,12 @@ spell-mastery-label = Meisterschaft
 # Begründung wie bei ability-increment/-decrement oben.
 spell-mastery-increment = Zauber-Meisterschaft für { $name } erhöhen
 spell-mastery-decrement = Zauber-Meisterschaft für { $name } verringern
-spell-mastery-abilities-label = Besondere Fähigkeiten
-spell-mastery-ability-add = Besondere Fähigkeit hinzufügen
+# Die Kurzform aus der Glossartabelle (grundbegriffe.md:671): die Vollform
+# „Besondere Fähigkeiten gemeisterter Zauber" ist für eine Zeilenbeschriftung zu
+# lang, und „Besondere Fähigkeiten" allein teilte kein Wort mehr mit den drei
+# Meldungen zu genau diesem Feld (issue-unknown_mastery_ability u. a.).
+spell-mastery-abilities-label = Meisterschaftsfähigkeiten
+spell-mastery-ability-add = Meisterschaftsfähigkeit hinzufügen
 # Generischer Entfernen-Regler für die Listenzeilen (Fertigkeiten, Tugenden &
 # Fehler, Alterungsprotokoll, Persönlichkeitsmerkmale, Dämmerungsnarben,
 # Vertrauten-Eigenschaften/-Kräfte, Magische Gegenstände, Talisman-Bindungen/
@@ -1030,6 +1034,10 @@ param-domain-text = Text
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }
+# Dieselbe Anzeige dort, wo der Basiswert direkt daneben steht — das Paar soll als
+# Veränderung lesbar sein, nicht als zwei unverbundene Zahlen. Der Pfeil steht für
+# ein Wort („wird zu") und ist damit übersetzbar wie das `&` in derived-combat-and.
+effective-score-from = → { $score }
 
 empty-selections-side = Noch keine.
 no-issues = Keine Probleme.
@@ -1358,6 +1366,11 @@ derived-addend-stamina = Ausdauer
 derived-addend-encumbrance = Belastung
 derived-addend-artes_liberales = Artes Liberales
 derived-addend-philosophiae = Philosophiae
+# Zaubersumme = Casting Total (grundbegriffe.md:24). Parenthetical qualifiers, as
+# derived-cast-spont-* already uses, so the adjectives stay uninflected.
+derived-addend-casting_mod_formulaic = Zaubermodifikator (formulaisch)
+derived-addend-casting_mod_ritual = Zaubermodifikator (Ritual)
+derived-addend-casting_mod_spontaneous = Zaubermodifikator (spontan)
 derived-addend-parma = Parma Magica
 derived-addend-might = Macht
 derived-addend-armor = Rüstung

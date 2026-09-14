@@ -50,12 +50,19 @@
 <span class="mastery-abilities" data-testid="spell-mastery-abilities-{chosen.spell}-{index}">
   <span class="spinner-label">{store.t('spell-mastery-abilities-label')}</span>
   {#each chosenAbilities as abilityId, ai (`${abilityId}:${ai}`)}
-    <span
-      class="ability-chip"
-      use:tooltip={masteryAbilityTip(abilityId)}
-      data-testid="spell-mastery-ability-{chosen.spell}-{index}-{ai}"
-    >
-      <span class="chip-name">{masteryAbilityName(abilityId)}</span>
+    <span class="ability-chip" data-testid="spell-mastery-ability-{chosen.spell}-{index}-{ai}">
+      <!-- Deliberately focusable, and the action deliberately sits HERE rather than
+           on the chip wrapper (Sabine 3): `use:tooltip` writes `aria-describedby`
+           onto its own node, and that attribute is not inherited. On the wrapper the
+           popup still opened — `focusin` bubbles up from the `×` button — but the
+           only focusable descendant is that button, whose accessible name is
+           `remove-item`, so the description was announced to nobody. This chip is
+           the ONLY rendering of a mastery ability's rules text in the app; the
+           add-`<select>` shows names alone. -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <span class="chip-name" tabindex="0" use:tooltip={masteryAbilityTip(abilityId)}
+        >{masteryAbilityName(abilityId)}</span
+      >
       <button
         type="button"
         class="icon-btn"

@@ -302,12 +302,10 @@ describe('WizardStep', () => {
   // every step. It used to render on the abilities step; the count across the whole
   // table is what proves no surface kept a copy.
   it('renders the age cap note on no step at all', () => {
-    store.effective = { age_ability_cap: 5 } as unknown as EffectiveScores;
+    // V1 (full-audit round 4) removed the `age_ability_cap` DTO field this used to
+    // set: no surface ever read it. The count across the whole table is still what
+    // proves no step kept a copy of the read-out.
     store.entity.age = 30;
-    try {
-      expect(countAcrossSteps('age-cap-note')).toBe(0);
-    } finally {
-      store.effective = null;
-    }
+    expect(countAcrossSteps('age-cap-note')).toBe(0);
   });
 });

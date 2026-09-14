@@ -140,14 +140,6 @@ function installPlan(plan: LifeStagePlan = {}): void {
   store.entity.life_stages = plan;
 }
 
-/** The engine's age→max-Ability-score cap, the panel's read-only echo. */
-function setAgeCap(cap: number | null): void {
-  store.effective = {
-    ...(store.effective ?? {}),
-    age_ability_cap: cap,
-  } as unknown as EffectiveScores;
-}
-
 /**
  * The engine's life-stage budget, which the post-Gauntlet read-out reports. Shaped
  * as `LifeStageBudget::budget` derives it: `years × 30` less `seasons × 10`, split
@@ -324,7 +316,6 @@ describe('LifeStagePanel offers both modes to a magus (slice 6b4)', () => {
 
 describe('LifeStagePanel guided fields (slice 6b3b)', () => {
   it('renders neither the age nor the native-language field in pool mode', () => {
-    setAgeCap(5);
     const body = html();
     expect(has(body, 'age-readout')).toBe(false);
     expect(has(body, 'life-stage-age-input')).toBe(false);
@@ -359,11 +350,13 @@ describe('LifeStagePanel guided fields (slice 6b3b)', () => {
 
   it('echoes no age cap at all — it has one home, beside the Ability lists', () => {
     // Slice 12 (#24): `age-cap-note` used to render on two surfaces at once, neither
-    // of which shows an Ability score. It renders only on the Abilities surface now
-    // (`AbilityTab`), which is the list the cap actually constrains.
+    // of which shows an Ability score. manual-testing-findings #21 then took it off
+    // the Abilities surface too, so no surface echoes the cap any more — the engine
+    // enforces it and reports `ability_above_age_cap` when a score breaks it.
+    // V1 (full-audit round 4) removed the DTO field this used to set: nothing read
+    // it, so there is no longer a cap to hand the panel in the first place.
     installPlan();
     store.entity.age = 25;
-    setAgeCap(5);
     const body = html();
     expect(has(body, 'life-stage-age-cap')).toBe(false);
     expect(has(body, 'age-cap-note')).toBe(false);

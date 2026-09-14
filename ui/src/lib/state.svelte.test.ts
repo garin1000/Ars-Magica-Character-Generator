@@ -982,6 +982,45 @@ describe('open() and the startup view', () => {
     expect(store.entity.selections).toEqual([{ ref: 'virtue.plain' }]);
   });
 
+  // Sabine 3 (full-audit round 4). The picker filters are per-DOCUMENT, and the
+  // other two document-replacement routes already say so: `newDocument()` and
+  // `#instantiateCharacter()` both reset them, the latter under its own test
+  // ("resets the picker filters"). `open()` was the one route that did not, which
+  // made it the odd one out rather than a decision — nothing in `docs/` recorded
+  // an intent for filters to outlive a document.
+  //
+  // The sharpest case is `derivedArtPicker`, which is not a filter at all but a
+  // SELECTION: it chooses which Technique/Form pair the Derived tab computes Lab
+  // and Casting Totals for. Carried across an open, the new magus's totals are
+  // shown for a pair picked for the previous character — correctly computed by
+  // the engine, but answering a question about somebody else.
+  it('resets the picker filters, like every other document replacement', async () => {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/marcus.armc',
+      entity: loadedEntity(),
+      migrated_aging_characteristics: [],
+    });
+    store.filters.abilities.search = 'latin';
+    store.filters.vf.virtue.magnitude = 'major';
+    store.filters.derivedArtPicker.technique = 'art.creo';
+
+    await openAndConfirm();
+
+    expect(store.filters).toEqual(defaultPickerFilters());
+  });
+
+  it('leaves the filters alone when the open dialog is cancelled', async () => {
+    // Nothing was replaced, so nothing is reset — the same rule `documentEpoch`
+    // follows one describe below.
+    vi.mocked(ipc.loadEntity).mockResolvedValue(null);
+    store.filters.abilities.search = 'latin';
+
+    await openAndConfirm();
+
+    expect(store.filters.abilities.search).toBe('latin');
+    store.filters = defaultPickerFilters();
+  });
+
   // Slice 3 handoff: `derive.ts::agingMigrationNotice`, both locales' strings and
   // the `OpenedDocument` wire field all landed, but NOTHING carried the value
   // from `ipc.loadEntity()` to a surface — `#fileOps` is private, so no component

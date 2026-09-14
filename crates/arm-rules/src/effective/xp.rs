@@ -29,7 +29,7 @@ use super::*;
 /// Integer-only so the engine stays exact.
 ///
 /// A degenerate ratio charges the **full** cost. Both halves are rejected at load
-/// (`ruleset/integrity.rs::validate_item_affinity_ratios`), so this arm is
+/// (`ruleset/integrity.rs::validate_item_ratios`), so this arm is
 /// defence in depth for a ruleset that somehow reached the engine unvalidated:
 /// `den == 0` would otherwise zero the product and make every score under the
 /// Affinity free, which is the one direction that must never fail open.

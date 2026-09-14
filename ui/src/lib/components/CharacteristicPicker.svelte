@@ -153,7 +153,9 @@
                   data-testid="char-effective-{characteristic}"
                   tabindex="0"
                   use:tooltip={effectiveTooltip(characteristic)}
-                  >→ {formatSigned(effectiveOf(characteristic))}</span
+                  >{store.t('effective-score-from', {
+                    score: formatSigned(effectiveOf(characteristic)),
+                  })}</span
                 >{/if}
             </span>
           {/snippet}

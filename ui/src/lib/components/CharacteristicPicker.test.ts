@@ -157,7 +157,18 @@ describe('CharacteristicPicker point-buy budget and spinners', () => {
     } as unknown as EffectiveScores;
     const withDrop = html();
     expect(withDrop).toContain('data-testid="char-effective-str"');
-    expect(clean(withDrop)).toMatch(/char-effective-str[^]*?→ 0/);
+    // Sabine 5 (full-audit round 4): asserted through the KEY, not against a
+    // literal `→ 0`. The arrow is user-facing text — it carries the base→effective
+    // relationship the three sibling badges leave to colour alone — so it belongs
+    // in Fluent like the `&` in `derived-combat-and` and the `n/a` in
+    // `derived-not-applicable`. A literal here passed whether the glyph came
+    // through the bundle or was written into the markup, which is how it stayed
+    // hardcoded.
+    const badge = store.t('effective-score-from', { score: '0' });
+    expect(badge).not.toBe('effective-score-from');
+    // `clean` on both sides: Fluent wraps a placeable in FSI/PDI isolation marks,
+    // and the rendered markup carries them just as the bundle's own output does.
+    expect(clean(withDrop)).toContain(clean(badge));
   });
 
   it('shows the Size readout only when it is off 0', () => {

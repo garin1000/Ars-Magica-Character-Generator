@@ -453,16 +453,16 @@ describe('AbilityTab unbought bonus rows (#17)', () => {
 // `ability_above_age_cap` when a score breaks it; the panel simply stops restating
 // the number beside the lists.
 describe('AbilityTab age cap note', () => {
-  /** The engine's age → max-Ability-score cap, as it arrives on the store. */
-  function setAgeCap(cap: number | null): void {
-    store.effective = { age_ability_cap: cap } as unknown as EffectiveScores;
-  }
-
-  it('renders no cap note, with a cap reported or without one', () => {
+  // V1 (full-audit round 4): this used to set an `age_ability_cap` fixture to
+  // prove the note stayed away even with a cap reported. That DTO field is gone —
+  // it was the only one of 52 with no consumer, and it surfaced the raw age-band
+  // figure rather than the per-ability cap validation enforces — so there is no
+  // longer a cap to report. The guarantee is unchanged and still the real one:
+  // the testid exists on no surface.
+  it('renders no cap note, at any age', () => {
     store.entity.age = 25;
-    setAgeCap(5);
     expect(html()).not.toContain('data-testid="age-cap-note"');
-    setAgeCap(null);
+    store.entity.age = undefined;
     expect(html()).not.toContain('data-testid="age-cap-note"');
   });
 });

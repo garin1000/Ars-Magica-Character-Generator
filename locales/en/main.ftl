@@ -982,6 +982,11 @@ param-domain-text = Text
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }
+# The same badge where the base score is shown right beside it, so the pair reads
+# as a change rather than as two unrelated numbers. The arrow is user-facing text
+# standing in for a word ("becomes"), exactly like the `&` in derived-combat-and,
+# so it is translatable: a locale may replace it with a word or another mark.
+effective-score-from = → { $score }
 
 empty-selections-side = None yet.
 no-issues = No issues.
@@ -1301,6 +1306,11 @@ derived-addend-stamina = Stamina
 derived-addend-encumbrance = Encumbrance
 derived-addend-artes_liberales = Artes Liberales
 derived-addend-philosophiae = Philosophiae
+# The flat CastingTotalMod is per scope, so it needs one label per cast type
+# rather than the single `lab_mod`-style term the Lab Total gets.
+derived-addend-casting_mod_formulaic = Casting modifier (formulaic)
+derived-addend-casting_mod_ritual = Casting modifier (ritual)
+derived-addend-casting_mod_spontaneous = Casting modifier (spontaneous)
 derived-addend-parma = Parma Magica
 derived-addend-might = Might
 derived-addend-armor = Armor

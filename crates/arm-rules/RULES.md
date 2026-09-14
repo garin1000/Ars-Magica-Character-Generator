@@ -2673,11 +2673,20 @@ other names) are ruleset-authored numbers that reach the `ceil(T·den/num)`
 arithmetic unfiltered, so a hand-authored `0` denominator would price every score
 under the Affinity at **0 XP** — silently, in the player's favour, with the
 character still validating clean in Enforced mode.
-`ruleset/integrity.rs::validate_item_affinity_ratios` therefore rejects a zero on
-either side of all four ratio-bearing effects, naming the offending item, as
+`ruleset/integrity.rs::validate_item_ratios` therefore rejects a zero on
+either side of all **five** ratio-bearing effects, naming the offending item, as
 `validate_item_share` does for `max_share_of_kind`. A numerator *above* the
 denominator stays legal here — unlike a share, that is the ordinary case (3/2,
 5/4, 2/1), because the ratio reduces a cost rather than capping a count.
+
+The fifth is `LocalityAbilityCapFraction` (Foreign Upbringing's 1/2 cap
+narrowing, `ArMDE:6160`), added in round 4 — it is **not** an Affinity, which is
+why the validator is no longer named for one. A zero breaks it the opposite way:
+its use site (`effective/reputation_and_caps.rs::ability_age_cap`) guards with
+`den > 0` and skips the whole narrowing, so a zero denominator leaves the Flaw
+silently inert while its points still count, and a zero numerator caps every
+locality-dependent Ability at 0 and rejects a character the rules allow. Each
+family therefore carries its own message body rather than an Affinity-shaped one.
 `charged_cost` additionally treats a degenerate ratio as full price, so an
 unvalidated ruleset fails safe rather than free. Tests:
 `an_affinity_with_a_zero_denominator_fails_the_load_naming_the_item` and its
@@ -4218,7 +4227,7 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Casting Score | `ArMDE:9089` | Technique + Form + Stamina − Encumbrance + Aura |
 | Cast types | `ArMDE:9103-9145` | Formulaic = score; Ritual = score + Artes Liberales + Philosophiae; Spont fatiguing = ÷2; non-fatiguing = ÷5 |
 | Method Caster | `ArMDE:4524-4527` | +3 flat, Formulaic/Ritual scope only |
-| Non-standard casting | `ArMDE:9236-9245` | Words/Gestures penalties (Formulaic/Spont, not Ritual): no voice −10, no gestures −5. Per cell, `NonStandardCasting` exposes `silent` (Formulaic − residual voice penalty), `still` (− residual gesture penalty), `silent_and_still`; residuals clamp at 0 |
+| Non-standard casting | `ArMDE:9236-9245` | Words/Gestures penalties (Formulaic/Spont, not Ritual): no voice −10, no gestures −5. The penalty is **to the Casting Score** (`ArMDE:9236` "Increased subtlety gives a penalty to the casting score", repeated at `ArMDE:9247`), so it is summed with the other Casting-Score terms **before** the Deficient-Art halving: `silent` = `halve(score + residual voice penalty)`, not `halve(score) + penalty`. Round 4 (Gerda 1) corrected the ordering, which this row previously documented the wrong way round. Per cell, `NonStandardCasting` exposes `silent`, `still` and `silent_and_still`; residuals clamp at 0 |
 | Quiet Magic | `ArMDE:4822-4826` | reduces the no-voice penalty +5 per casting (soft voice → 0, no voice → −5; a second casting eliminates it) |
 | Subtle Magic | `ArMDE:5073-5076` | reduces the no-gesture penalty +5 (no gestures → 0) |
 | Deft Form | `ArMDE:3645-3648` | casting in the named Form suffers **no** non-standard voice/gesture penalty (both residuals 0 for that Form's cells) |
@@ -4400,9 +4409,9 @@ Gift/Supernatural gate — the remaining Core character-generation surfaces.
 `AgeAbilityCaps` in `ability.rs`; each band is `{ max_age?, max_score }`, the
 open-ended 46+ band omitting `max_age`). `AgeAbilityCaps::max_ability_score` reads
 it; `effective::age_max_ability_score(ruleset, age)` and
-`age_ability_cap(entity, ruleset)` surface it via `EffectiveScores.age_ability_cap`
-so the UI never re-hardcodes it. A ruleset that ships no bands cannot enforce the
-cap (returns `None`).
+`age_ability_cap(entity, ruleset)` expose it to the engine's own consumers, which
+apply the cap during validation so the UI never re-hardcodes it. A ruleset that
+ships no bands cannot enforce the cap (returns `None`).
 
 > `ArMDE:2366-2374` "Your character's age determines the maximum score … | under 30 |
 > 5 | | 30-35 | 6 | | 36-40 | 7 | | 41-45 | 8 | | 46+ | 9 |"
@@ -4546,8 +4555,34 @@ see the 5a-wire section for the itemized deferrals),
 - **Flat casting-total bonus/penalty** — `virtue.method_caster` (ArMDE:4524-4527), `flaw.poor_formulaic_magic` (ArMDE:6610-6613), `flaw.afflicted_tongue` (ArMDE:5655-5658), `virtue.life_boost` (ArMDE:4295-4298), `virtue.leper_magus` (ArMDE:4249-4252), `virtue.cyclic_magic_positive` (ArMDE:3635-3638), `flaw.cyclic_magic_negative` (ArMDE:5893-5896), `virtue.special_circumstances` (ArMDE:4998-5001), `virtue.ways_of_the_land` (ArMDE:5231-5234), `flaw.corrupted_spells` (ArMDE:5859-5864), `flaw.susceptibility_to_divine_power` (ArMDE:6815-6818)
 - **Spontaneous-magic casting modifier** — `flaw.weak_spontaneous_magic` (ArMDE:7084-7089), `virtue.diedne_magic` (ArMDE:3675-3682), `virtue.faerie_raised_magic` (ArMDE:3829-3842), `virtue.spell_improvisation` (ArMDE:5002-5005), `virtue.life_linked_spontaneous_magic` (ArMDE:4299-4306)
 - **Art-halving (Technique / Form)** — `flaw.deficient_technique` (ArMDE:5913-5915), `flaw.deficient_form` (ArMDE:5909-5912)
-- **Circumstantial casting/lab halving** — `flaw.deleterious_circumstances` (ArMDE:5917-5920), `flaw.environmental_magic_condition` (ArMDE:6020-6023), `flaw.short_ranged_magic` (ArMDE:6737-6740)
-- **Flat lab-total bonus/penalty** — `virtue.adept_laboratory_student` (ArMDE:3368-3371), `virtue.aristotelian_training` (ArMDE:3440-3443), `virtue.inventive_genius` (ArMDE:4151-4154), `flaw.creative_block` (ArMDE:5873-5876), `flaw.weak_scholar` (ArMDE:7080-7083), `flaw.disjointed_magic` (ArMDE:5972-5975), `flaw.the_constant_expression` (ArMDE:5821-5838), `virtue.potent_magic_major` (ArMDE:4740-4781), `virtue.potent_magic_minor` (ArMDE:4740-4781)
+- **Circumstantial casting/lab penalty (surfaced)** — `flaw.deleterious_circumstances` (ArMDE:5917-5920), `flaw.environmental_magic_condition` (ArMDE:6020-6023), `flaw.short_ranged_magic` (ArMDE:6737-6740), `flaw.disjointed_magic` (ArMDE:5972-5975), `flaw.the_constant_expression` (ArMDE:5821-5838)
+- **Flat lab-total bonus/penalty** — `virtue.adept_laboratory_student` (ArMDE:3368-3371), `virtue.aristotelian_training` (ArMDE:3440-3443), `virtue.inventive_genius` (ArMDE:4151-4154), `flaw.creative_block` (ArMDE:5873-5876), `flaw.weak_scholar` (ArMDE:7080-7083), `virtue.potent_magic_major` (ArMDE:4740-4781), `virtue.potent_magic_minor` (ArMDE:4740-4781)
+
+  **Two items were listed here and belong to neither family.** `flaw.disjointed_magic`
+  carries `special_casting_mod { circumstantial }`, never a `lab_total_mod`, and
+  `ArMDE:5974` states no Lab-Total number at all — it is filed under
+  `SpecialCastingMod` below, which is its only correct home.
+  `flaw.the_constant_expression` carried `lab_total_mod −3` until the round-4 audit,
+  but the passage its `source` range points at gives no Lab-Total number either:
+
+  > `ArMDE:5831` — "The constant expression of magic also makes laboratory work
+  > inherently risky. Any laboratory the maga works in is treated as having a free
+  > Flaw providing a **Safety penalty of –3** (see page 288)."
+
+  > `ArMDE:11576` — "The Safety score **subtracts its value from the number of botch
+  > dice** on all lab activities."
+
+  Safety is one of the eight laboratory Characteristics (`ArMDE:11502`), not a term of
+  the Lab Total, so the Flaw makes lab work botch-prone and imposes no Lab-Total
+  penalty whatsoever. The engine models no laboratory and has no botch-dice concept,
+  so the rule is **recorded, not simulated**: the item carries
+  `special_casting_mod { circumstantial }` (surfaced) and its own rules text carries
+  the −3 Safety plus the Warping-Score botch dice on Ritual/Ceremonial casting
+  (`ArMDE:5829`). Inventing a `safety_mod` variant with no consumer would be
+  implementing a subsystem the app does not have, which is the opposite of what
+  `CLAUDE.md` → "Rules backed by source, never memory" asks for. The machine-checkable
+  guard that catches this class is
+  `rules_source_provenance.rs::every_guarded_effect_cites_a_passage_that_names_its_own_mechanic`.
 - **Lab-total halving** — `flaw.weak_enchanter` (ArMDE:7060-7063), `flaw.difficult_longevity_ritual` (ArMDE:5962-5965)
 - **Ritual effective-level bonus** — `virtue.mercurian_magic` (ArMDE:4514-4523)
 - **Penetration-total modifier** — `flaw.weak_magic` (ArMDE:7064-7067)
@@ -4621,17 +4656,17 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 | Variant | Family / representative V/F | Source | 5i |
 |---|---|---|---|
 | `MagicalFocus { param(Text), major }` | Magical Focus — major/minor/mythic_blood | ArMDE:4399-4422, 4536-4542, 4573-4589 | computed |
-| `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | ArMDE:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed (conditional ones toggled) |
-| `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), aristotelian_training (+1), creative_block (−3), weak_scholar (−6), the_constant_expression (−3), cyclic_magic, potent_magic | ArMDE:3368-3371, 4151-4154, 3440-3443, 5873-5876, 7080-7083, 5821-5838, 4740-4781 | computed |
+| `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | ArMDE:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed; conditional ones folded **unconditionally** (no toggle exists), surfaced per scope as the `casting_mod_formulaic`/`_ritual`/`_spontaneous` addends |
+| `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), aristotelian_training (+1), creative_block (−3), weak_scholar (−6), cyclic_magic, potent_magic | ArMDE:3368-3371, 4151-4154, 3440-3443, 5873-5876, 7080-7083, 4740-4781 | computed |
 | `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | ArMDE:5913-5915, 5909-5912 | computed |
 | `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration / MR — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic, flawed_parma_magica, weak_magic_resistance | ArMDE:7084-7089, 7060-7063, 5962-5964, 7064-7067, 6142-6145, 7068-7071 | **computed** (round-2 audit finding GD3 closed the last gap): `spontaneous_casting`, `penetration`, `magic_resistance`, `lab_longevity` (since M5.5a), and now `lab_enchanting` too — folded into the new `LabTotal.enchanting` field in `derived/lab.rs::lab_totals` (Deficiency first, then this halving, per `ArMDE:7060-7063`'s own stated order). Round 3 (G1) wired `enchanting` into `masterpiece_item_cap` too — the one remaining consumer of a Lab Total that used to read `total` instead — and into the frontend `LabTotal` type / `DerivedTotalsPanel` (G2) |
 | `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | ArMDE:5145-5147, 6190-6193, 3500-3503 | computed |
-| `CombatMod { amount, target }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | ArMDE:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed (conditional ones labelled) |
+| `CombatMod { amount, target }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | ArMDE:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed; conditional ones folded **unconditionally** and **not labelled** — `CombatLine` carries no `addends` at all |
 | `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | ArMDE:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |
 | `MagicResistanceMod { kind }` | Non-halving MR — limited_magic_resistance (no_form_bonus), susceptibility faerie/infernal/divine, commanding_aura & special_circumstances (aura_bonus) | ArMDE:6346-6349, 6819-6826, 6815-6818, 3579-3596 | **no_form_bonus computed** (folded into the flat per-Form MR number in `magic_resistance`); the four realm-conditional/situational kinds (aura_bonus, susceptible_divine/faerie/infernal) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — they cannot be folded into the flat per-Form figure, so listing them keeps them from being silently dropped |
 | `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | ArMDE:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |
 | `AdvancementMod { source, amount }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher, independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible, loose_magic | ArMDE:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement) |
-| `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, and circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic) | ArMDE:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
+| `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, and circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic, the_constant_expression) | ArMDE:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975, 5821-5838 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
 | `AbilityRollMod { param(Text), amount }` | Ability-roll bonus in a subject — academic_concentration_subject (+3) | ArMDE:3362-3367 | surfaced |
 
 **Modeling notes / accepted approximations** (each surfaced in 5i's labelled
@@ -4650,9 +4685,27 @@ does not exist" representation. Rank-dependent `commanding_aura` (MR
 the rank-specific numbers are surfaced. `mythic_blood`'s bundled formulaic/ritual
 fatigue benefits beyond its Minor Focus are surfaced in the item text.
 `incomprehensible`/`loose_magic` halve advancement (amount 0 marker; surfaced).
-Conditional `CastingTotalMod`/`CombatMod`/`LabTotalMod` addends (cyclic magic,
-potent magic, special circumstances, missing_eye's ranged −3, etc.) are shown as
-toggleable/labelled addends in 5i rather than always-on numbers.
+Conditional `CastingTotalMod`/`CombatMod`/`LabTotalMod` amounts (cyclic magic,
+potent magic, special circumstances, missing_eye's ranged −3, etc.) are folded
+**unconditionally** into the printed totals. This row previously claimed they
+were "shown as toggleable/labelled addends in 5i rather than always-on numbers";
+round 4 (Gerda 5) established that no toggle exists anywhere in `crates/` or
+`ui/`, and the always-on fold is the decision that actually shipped. What is
+true:
+
+- `LabTotalMod` — folded, and **labelled** as the `lab_mod` addend
+  (`derived/lab.rs::lab_totals`).
+- `CastingTotalMod` — folded, and labelled since round 4 as the three per-scope
+  `casting_mod_*` addends (`derived/casting.rs::CastingTotal`); before that it
+  was folded into the printed figure with nothing on screen accounting for it.
+- `CombatMod` — folded, and **not** surfaced at all: `CombatLine` has no
+  `addends` field, so a conditional combat modifier is invisible in the
+  breakdown.
+
+The condition itself is carried only by the item's own rules text; the engine
+applies every one of these amounts always. A per-condition toggle is **not
+implemented** and is not claimed here — if it is wanted it is queued work, and
+this document records implemented properties only.
 
 
 ### `creation_effect` V/F wiring (M5/5a-wire) — implemented

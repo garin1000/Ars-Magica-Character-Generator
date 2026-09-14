@@ -16,12 +16,12 @@ use arm_rules::{
     EntityTypeProfile, Grant, Id, LifeStageBudget, LocalizedRuleset, MagusMinimumAbility,
     MightScore, PointCeilings, ReputationType, RestrictedXpPool, Ruleset, RulesetSources,
     Selection, SpellLevelCap, SupernaturalFreeSlots, ValidationIssue, ValidationMode,
-    ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap, aging_schedule,
-    aging_total, apply_childhood_package, art_bonuses, characteristic_aging_drops,
-    characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, checked_xp_allocation, compute_balance, confidence,
-    decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
-    entity_grants, focus_points_budget, focus_points_used, item_level_budget, item_level_used,
+    ValidationResult, ability_bonuses, ability_score_floors, aging_schedule, aging_total,
+    apply_childhood_package, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
+    characteristic_caps, characteristic_floors, characteristic_points_granted,
+    checked_xp_allocation, compute_balance, confidence, decrepitude_score,
+    effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
+    focus_points_budget, focus_points_used, item_level_budget, item_level_used,
     life_stage_spell_levels, longevity_bonus, magus_minimum_abilities, power_levels_budget,
     powers_used, reputation_grants, resolve_outcome, resolve_year, revert_year, size,
     spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
@@ -195,9 +195,6 @@ pub struct EffectiveScores {
     /// not already granted by a Virtue.
     pub supernatural_free_total: u8,
     pub supernatural_free_used: u8,
-    /// The character's age → max-Ability-score cap (base, before Affinity's +2),
-    /// surfaced so the UI shows one source of truth. `None` when age is unset.
-    pub age_ability_cap: Option<u8>,
     /// The Reputation grants the character's V/F confer, so the UI only offers a
     /// Reputation add-control (pre-filled kind/score) when one exists.
     pub reputation_grants: Vec<ReputationGrant>,
@@ -547,15 +544,22 @@ fn characteristic_fields(entity: &Entity, ruleset: &Ruleset) -> CharacteristicFi
     }
 }
 
-/// The Confidence / Gift-slot / age-cap slice of [`EffectiveScores`]. Grouped
-/// because Confidence and the Gift's free Supernatural-Ability slots share the
-/// same "type default, or zero with no profile" shape.
+/// The Confidence / Gift-slot slice of [`EffectiveScores`]. Grouped because
+/// Confidence and the Gift's free Supernatural-Ability slots share the same
+/// "type default, or zero with no profile" shape.
+///
+/// It also carried the raw age→Ability cap until V1 (full-audit round 4) removed
+/// it: no frontend surface ever read it, and the cap the engine actually enforces
+/// is the per-ability `effective/reputation_and_caps.rs::ability_age_cap`, which
+/// halves for locality-dependent Abilities under Foreign Upbringing. Should the
+/// Ability spinner ever grey scores past the cap, it must surface THAT one as a
+/// keyed map, the way `spell_level_caps` already does for spells — not a single
+/// figure that disagrees with the validator for exactly those Abilities.
 struct ConfidenceFields {
     confidence_score: u8,
     confidence_points: u8,
     supernatural_free_total: u8,
     supernatural_free_used: u8,
-    age_ability_cap: Option<u8>,
 }
 
 fn confidence_fields(
@@ -578,7 +582,6 @@ fn confidence_fields(
         confidence_points: derived_confidence.points,
         supernatural_free_total: supernatural_free.total,
         supernatural_free_used: supernatural_free.used,
-        age_ability_cap: age_ability_cap(entity, ruleset),
     }
 }
 
@@ -728,7 +731,6 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         confidence_points: confidence.confidence_points,
         supernatural_free_total: confidence.supernatural_free_total,
         supernatural_free_used: confidence.supernatural_free_used,
-        age_ability_cap: confidence.age_ability_cap,
 
         reputation_grants: reputation_grants_for_ui(entity, ruleset),
 

@@ -21,6 +21,23 @@
 use super::*;
 use crate::validation::param_value_resolves;
 
+/// What a zero denominator does to an Affinity-style cost ratio — see
+/// [`Ruleset::validate_item_ratios`].
+const AFFINITY_ZERO_DEN: &str = "an Affinity is a ratio of the cost, so a zero denominator makes \
+                                 the advancement free";
+/// What a zero numerator does to an Affinity-style cost ratio.
+const AFFINITY_ZERO_NUM: &str = "an Affinity is a ratio of the cost, and a zero numerator is \
+                                 silently no Affinity at all";
+/// What a zero denominator does to the locality cap narrowing — the opposite of
+/// an Affinity's: the rule goes silently inert rather than free.
+const LOCALITY_ZERO_DEN: &str = "the cap narrowing is a fraction of the age cap, and its use site \
+                                 skips the whole narrowing when the denominator is 0, so the item \
+                                 silently does nothing while still costing points";
+/// What a zero numerator does to the locality cap narrowing.
+const LOCALITY_ZERO_NUM: &str = "the cap narrowing is a fraction of the age cap, and a zero \
+                                 numerator caps every locality-dependent Ability at 0, rejecting \
+                                 characters the rules allow";
+
 impl Ruleset {
     /// Checks referential integrity: prerequisite refs, incompatibility symmetry,
     /// type profile trait refs, parameter domain refs, and source line ranges.
@@ -97,7 +114,7 @@ impl Ruleset {
             self.validate_item_categories(id, item, errors);
             Self::validate_index_categories(id, item, errors);
             Self::validate_item_share(id, item, errors);
-            Self::validate_item_affinity_ratios(id, item, errors);
+            Self::validate_item_ratios(id, item, errors);
 
             if let Some(ref prereq) = item.prerequisites {
                 self.validate_prereq_refs(prereq, id.as_str(), 1, errors);
@@ -319,64 +336,114 @@ impl Ruleset {
         }
     }
 
-    /// Checks that every Affinity-style ratio an item's effects carry is usable.
+    /// Checks that every `num/den` ratio an item's effects carry is usable.
     ///
-    /// An Affinity says experience "counts as `num/den` of itself", so the XP
+    /// Two families reach this, and **a zero breaks them in opposite
+    /// directions**, which is why each carries its own message rather than a
+    /// shared one:
+    ///
+    /// *Affinities* say experience "counts as `num/den` of itself", so the XP
     /// charged is `ceil(table · den / num)` (`effective/xp.rs::charged_cost`).
     /// A **zero denominator** makes that product 0 and the charge 0 — every score
     /// under the Affinity free — and it is caught nowhere downstream:
     /// `charged_cost` guards only the numerator, and `grants_spell_mastery`'s own
     /// `advancement_num > advancement_den` test admits `(1, 0)` because `1 > 0`.
     /// A **zero numerator** is treated as "no Affinity", which is safe but is not
-    /// what the author wrote. Both are authoring slips, so they fail the load
-    /// naming the offending item, exactly as [`Self::validate_item_share`] does.
+    /// what the author wrote.
     ///
-    /// Unlike a share, a numerator *above* the denominator is perfectly legal
-    /// here — it is the whole point of an Affinity (3/2, 5/4, 2/1), since the
-    /// ratio reduces the cost rather than capping a count.
+    /// [`Effect::LocalityAbilityCapFraction`] narrows an age cap to `num/den` of
+    /// itself, and fails the other way. Its use site
+    /// (`effective/reputation_and_caps.rs::ability_age_cap`) guards with
+    /// `den > 0` and, when the guard trips, skips the **whole narrowing** — so a
+    /// zero denominator is silently *permissive*: the Flaw does nothing while its
+    /// points are still credited to the budget. A zero numerator is worse in the
+    /// other direction: `ceil(base · 0 / den)` is 0, so every locality-dependent
+    /// Ability is capped at 0 and a legal character is rejected with nothing
+    /// naming the item responsible.
+    ///
+    /// All of these are authoring slips, so they fail the load naming the
+    /// offending item, exactly as [`Self::validate_item_share`] does.
+    ///
+    /// Unlike a share, a numerator *above* the denominator is legal for an
+    /// Affinity (3/2, 5/4, 2/1): the ratio reduces the cost rather than capping a
+    /// count.
     ///
     /// The trailing `_` is deliberate rather than the exhaustive `Effect` tail the
     /// folds in `effective.rs` spell out: this is a `ruleset` module, and the
     /// exhaustive-match machinery (`irrelevant_effect_variants`) lives a layer
-    /// above it in `effective.rs`. The use-site guard in `charged_cost` is the
-    /// backstop that keeps a future ratio-bearing variant failing *safe* (full
-    /// price) rather than free until it is listed here.
-    fn validate_item_affinity_ratios(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
+    /// above it in `effective.rs`. What that `_` therefore costs is stated rather
+    /// than hand-waved: **nothing outside this list is checked at load**, and
+    /// there is no single downstream backstop that makes the omission safe.
+    /// `charged_cost`'s guard covers the three Affinity variants and
+    /// `grants_spell_mastery` only — it is on the XP path, which
+    /// `LocalityAbilityCapFraction` never reaches, and it was the claim that this
+    /// guard covered "a future ratio-bearing variant" that kept the fifth ratio
+    /// invisible for three audit rounds. A new ratio-bearing variant must be added
+    /// here, with its own two consequences worked out, and its use-site guard kept
+    /// as defence in depth rather than treated as the check.
+    fn validate_item_ratios(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
         for effect in &item.effects {
-            let (kind, num, den) = match effect {
+            // `(kind, num, den, what a zero denominator does, what a zero
+            // numerator does)` — the consequences travel with the family.
+            let (kind, num, den, zero_den, zero_num) = match effect {
                 Effect::AffinityAbilityCost {
                     counts_as_num,
                     counts_as_den,
                     ..
-                } => ("affinity_ability_cost", *counts_as_num, *counts_as_den),
+                } => (
+                    "affinity_ability_cost",
+                    *counts_as_num,
+                    *counts_as_den,
+                    AFFINITY_ZERO_DEN,
+                    AFFINITY_ZERO_NUM,
+                ),
                 Effect::AffinityArtCost {
                     counts_as_num,
                     counts_as_den,
                     ..
-                } => ("affinity_art_cost", *counts_as_num, *counts_as_den),
+                } => (
+                    "affinity_art_cost",
+                    *counts_as_num,
+                    *counts_as_den,
+                    AFFINITY_ZERO_DEN,
+                    AFFINITY_ZERO_NUM,
+                ),
                 Effect::GroupAffinityCost {
                     counts_as_num,
                     counts_as_den,
                     ..
-                } => ("group_affinity_cost", *counts_as_num, *counts_as_den),
+                } => (
+                    "group_affinity_cost",
+                    *counts_as_num,
+                    *counts_as_den,
+                    AFFINITY_ZERO_DEN,
+                    AFFINITY_ZERO_NUM,
+                ),
                 Effect::GrantsSpellMastery {
                     advancement_num,
                     advancement_den,
                     ..
-                } => ("grants_spell_mastery", *advancement_num, *advancement_den),
+                } => (
+                    "grants_spell_mastery",
+                    *advancement_num,
+                    *advancement_den,
+                    AFFINITY_ZERO_DEN,
+                    AFFINITY_ZERO_NUM,
+                ),
+                Effect::LocalityAbilityCapFraction { num, den } => (
+                    "locality_ability_cap_fraction",
+                    *num,
+                    *den,
+                    LOCALITY_ZERO_DEN,
+                    LOCALITY_ZERO_NUM,
+                ),
                 _ => continue,
             };
             if den == 0 {
-                errors.push(format!(
-                    "{id}: '{kind}' has a denominator of 0; an Affinity is a ratio \
-                     of the cost, so a zero denominator makes the advancement free"
-                ));
+                errors.push(format!("{id}: '{kind}' has a denominator of 0; {zero_den}"));
             }
             if num == 0 {
-                errors.push(format!(
-                    "{id}: '{kind}' has a numerator of 0; an Affinity is a ratio of \
-                     the cost, and a zero numerator is silently no Affinity at all"
-                ));
+                errors.push(format!("{id}: '{kind}' has a numerator of 0; {zero_num}"));
             }
         }
     }
