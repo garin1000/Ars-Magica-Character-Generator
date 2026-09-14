@@ -170,8 +170,14 @@ struct InPlayMods {
     halvings: BTreeSet<HalvableTotal>,
     /// Flat Soak modifier (Tough +3, Frail −1, summed).
     soak_mod: i32,
-    /// Flat combat-total modifiers per stat (summed).
+    /// Flat combat-total modifiers per stat (summed), applying to every weapon.
     combat_mods: BTreeMap<CombatStat, i32>,
+    /// Per-weapon *deltas* on top of `combat_mods`, for items that scope a figure
+    /// to one weapon (Lame's -3 on Dodge). Each entry is the scoped amount minus
+    /// the same item's unscoped amount for that stat, so adding it to the summed
+    /// `combat_mods` yields the scoped figure while leaving every *other* item's
+    /// unscoped contribution intact. Keyed weapon → stat.
+    weapon_combat_mods: BTreeMap<Id, BTreeMap<CombatStat, i32>>,
     /// Health-track penalty deltas per track (positive reduces the penalty).
     health_mods: BTreeMap<HealthTrack, i32>,
     /// Non-halving Magic-Resistance modifiers (Limited MR, Susceptibility, …).
@@ -206,6 +212,24 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
+        // This item's own unscoped CombatMod figure per stat — the baseline a
+        // weapon-scoped figure on the same item replaces. Summed rather than
+        // overwritten so a malformed item with two unscoped figures on one stat
+        // still yields the amount that was actually folded above.
+        let unscoped_combat =
+            item.effects
+                .iter()
+                .fold(BTreeMap::<CombatStat, i32>::new(), |mut acc, effect| {
+                    if let Effect::CombatMod {
+                        amount,
+                        target,
+                        weapon: None,
+                    } = effect
+                    {
+                        *acc.entry(*target).or_default() += i32::from(*amount);
+                    }
+                    acc
+                });
         for effect in &item.effects {
             match effect {
                 Effect::MagicalFocus { .. } => m.has_focus = true,
@@ -220,8 +244,28 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     m.halvings.insert(*total);
                 }
                 Effect::SoakMod { amount } => m.soak_mod += i32::from(*amount),
-                Effect::CombatMod { amount, target } => {
+                // A weapon-scoped figure replaces this item's unscoped one on that
+                // weapon alone, so it is stored as the delta between them: adding
+                // it to the summed unscoped total yields the scoped figure while
+                // every *other* item's unscoped contribution survives untouched.
+                Effect::CombatMod {
+                    amount,
+                    target,
+                    weapon: None,
+                } => {
                     *m.combat_mods.entry(*target).or_default() += i32::from(*amount);
+                }
+                Effect::CombatMod {
+                    amount,
+                    target,
+                    weapon: Some(weapon),
+                } => {
+                    let replaced = unscoped_combat.get(target).copied().unwrap_or(0);
+                    *m.weapon_combat_mods
+                        .entry(weapon.clone())
+                        .or_default()
+                        .entry(*target)
+                        .or_default() += i32::from(*amount) - replaced;
                 }
                 Effect::HealthMod { track, amount } => {
                     *m.health_mods.entry(*track).or_default() += i32::from(*amount);
@@ -787,6 +831,11 @@ mod tests {
           { "id": "flaw.lame", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "combat_mod", "amount": -3, "target": "initiative" }] },
+          { "id": "flaw.lame_split", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "combat_mod", "amount": -1, "target": "defense" },
+                        { "type": "combat_mod", "amount": -3, "target": "defense",
+                          "weapon": "weapon.dodge" }] },
           { "id": "flaw.limited_magic_resistance", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "major", "categories": ["hermetic"], "entity_kinds": ["character"],
             "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus" }] },
@@ -840,7 +889,7 @@ mod tests {
           { "id": "ability.artes_liberales", "category": "academic" },
           { "id": "ability.philosophiae", "category": "academic" },
           { "id": "ability.single_weapon", "category": "martial" },
-          { "id": "ability.brawl", "category": "general" }
+          { "id": "ability.brawl", "category": "general", "combat_ability": true }
         ] }"#;
         let arts = r#"{
           "advancement": [
@@ -872,7 +921,9 @@ mod tests {
               "ability": "ability.single_weapon" },
             { "id": "weapon.great_sword", "kind": "melee", "init_mod": 2, "attack_mod": 5,
               "defense_mod": 2, "damage_mod": 9, "min_strength": 0, "load": 2,
-              "two_handed": true, "ability": "ability.single_weapon" }
+              "two_handed": true, "ability": "ability.single_weapon" },
+            { "id": "weapon.dodge", "kind": "melee", "init_mod": 0, "defense_mod": 0,
+              "load": 0, "ability": "ability.brawl" }
           ],
           "shields": [
             { "id": "shield.round", "init_mod": 0, "attack_mod": 0, "defense_mod": 2,
@@ -3242,6 +3293,47 @@ mod tests {
         e.selections = vec![Selection::new(Id::new("flaw.lame"))];
         // With Lame (−3 Initiative): 3 − 3 = 0.
         assert_eq!(combat_totals(&e, &rs)[0].initiative, 0);
+    }
+
+    /// A weapon-scoped CombatMod replaces the same item's unscoped figure on that
+    /// weapon's line alone. Lame reads "-3 on Dodge, and -1 on other combat
+    /// scores" (ArMDE:6332): the Dodge line takes -3, not -1 and not -4, while
+    /// every other weapon's line takes -1.
+    #[test]
+    fn weapon_scoped_combat_mod_replaces_general_on_that_weapon_only() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Qik, 1);
+        set_char(&mut e, Characteristic::Str, 3);
+        e.equipment = vec![
+            EquipmentSlot {
+                item: Id::new("weapon.long_sword"),
+                equipped: true,
+                specialization_applies: false,
+            },
+            EquipmentSlot {
+                item: Id::new("weapon.dodge"),
+                equipped: true,
+                specialization_applies: false,
+            },
+        ];
+        let line = |lines: &[CombatLine], id: &str| {
+            lines
+                .iter()
+                .find(|l| l.weapon.as_str() == id)
+                .expect("line present")
+                .defense
+        };
+        // Baselines: sword = Qik 1 + WpnDef 1 = 2; dodge = Qik 1 + WpnDef 0 = 1.
+        let base = combat_totals(&e, &rs);
+        assert_eq!(line(&base, "weapon.long_sword"), 2);
+        assert_eq!(line(&base, "weapon.dodge"), 1);
+
+        e.selections = vec![Selection::new(Id::new("flaw.lame_split"))];
+        let lamed = combat_totals(&e, &rs);
+        // The unscoped -1 reaches the sword; the Dodge-scoped -3 replaces it on Dodge.
+        assert_eq!(line(&lamed, "weapon.long_sword"), 1);
+        assert_eq!(line(&lamed, "weapon.dodge"), -2);
     }
 
     /// Limited Magic Resistance (a MagicResistanceMod NoFormBonus) drops the Form

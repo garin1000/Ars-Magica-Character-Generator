@@ -144,7 +144,18 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
             )
         });
 
-    let cm = |stat: CombatStat| mods.combat_mods.get(&stat).copied().unwrap_or(0);
+    // The combat-total modifier for one stat on one weapon's lines: every unscoped
+    // modifier, plus any delta an item scoped to this weapon (Lame's -3 on Dodge,
+    // ArMDE:6332). A weapon nobody scoped a figure to sees the unscoped sum alone.
+    let cm = |stat: CombatStat, weapon: &Id| {
+        mods.combat_mods.get(&stat).copied().unwrap_or(0)
+            + mods
+                .weapon_combat_mods
+                .get(weapon)
+                .and_then(|per_stat| per_stat.get(&stat))
+                .copied()
+                .unwrap_or(0)
+    };
 
     // Attack/Defense take the Encumbrance penalty only when the Encumbrance is NOT
     // "largely due to weapons and armor"; Initiative always takes it
@@ -188,17 +199,17 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
                 shields,
                 ability: weapon.ability.clone(),
                 initiative: quickness + i32::from(weapon.init_mod) + sh_init - enc
-                    + cm(CombatStat::Initiative),
+                    + cm(CombatStat::Initiative, &slot.item),
                 attack: weapon.attack_mod.map(|m| {
                     dexterity + combat_ability + i32::from(m) + sh_attack - atk_def_enc
-                        + cm(CombatStat::Attack)
+                        + cm(CombatStat::Attack, &slot.item)
                 }),
                 defense: quickness + combat_ability + i32::from(weapon.defense_mod) + sh_defense
                     - atk_def_enc
-                    + cm(CombatStat::Defense),
+                    + cm(CombatStat::Defense, &slot.item),
                 damage: weapon
                     .damage_mod
-                    .map(|m| strength + i32::from(m) + cm(CombatStat::Damage)),
+                    .map(|m| strength + i32::from(m) + cm(CombatStat::Damage, &slot.item)),
                 range: weapon.range,
             };
         let bare = || wielding(Vec::new(), 0, 0, 0);

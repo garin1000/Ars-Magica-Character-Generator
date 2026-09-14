@@ -2000,6 +2000,23 @@ impl Ruleset {
                     ));
                     continue;
                 }
+                // A weapon-scoped combat modifier (Lame's -3 on Dodge) names a
+                // weapon, and that is a referential claim like any other: an
+                // unresolvable one would silently scope the figure to a line that
+                // can never match. Checked only when the ruleset carries an
+                // equipment catalogue — production always does (`core/equipment.json`
+                // is a required core file), while lean test fixtures may omit it.
+                Effect::CombatMod { weapon, .. } => {
+                    if let Some(weapon) = weapon
+                        && !self.weapons.is_empty()
+                        && !self.weapons.contains_key(weapon)
+                    {
+                        errors.push(format!(
+                            "{id}: effect 'combat_mod' references unknown weapon '{weapon}'"
+                        ));
+                    }
+                    continue;
+                }
                 // No parameter or ref to resolve: the grant is intrinsic. The
                 // param-less / non-`deft_form` SpecialCasting quirks fall here.
                 Effect::SpellMasteryXp { .. }
@@ -2026,7 +2043,6 @@ impl Ruleset {
                 | Effect::LabTotalMod { .. }
                 | Effect::MagicTotalHalving { .. }
                 | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
                 | Effect::HealthMod { .. }
                 | Effect::MagicResistanceMod { .. }
                 | Effect::AgingMod { .. }

@@ -1557,7 +1557,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "combat_mod", "amount": -1, "target": "attack" },
-      { "type": "combat_mod", "amount": -1, "target": "defense" }
+      { "type": "combat_mod", "amount": -1, "target": "defense" },
+      { "type": "combat_mod", "amount": -3, "target": "defense", "weapon": "weapon.dodge" }
     ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6330, 6333] }
   },
@@ -1804,7 +1805,10 @@
     "categories": ["general"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "combat_mod", "amount": -3, "target": "attack" }],
+    "effects": [
+      { "type": "combat_mod", "amount": -3, "target": "attack" },
+      { "type": "combat_mod", "amount": -3, "target": "defense" }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6438, 6441] }
   },
   {

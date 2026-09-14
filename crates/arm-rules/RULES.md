@@ -4650,6 +4650,74 @@ see the 5a-wire section for the itemized deferrals),
 - **Wound/fatigue penalty delta** — `virtue.enduring_constitution` (ArMDE:3751-3754), `flaw.low_tolerance` (ArMDE:6366-6369), `flaw.painful_magic` (ArMDE:6574-6577), `flaw.vulnerable_casting` (ArMDE:6993-7004), `virtue.withstand_casting` (ArMDE:5261-5282), `flaw.obese` (ArMDE:6516-6519), `flaw.short_of_breath` (ArMDE:6733-6736), `virtue.long_winded` (ArMDE:4327-4330)
 - **Wound-recovery modifier** — `flaw.fragile_constitution` (ArMDE:6186-6189), `virtue.rapid_convalescence` (ArMDE:4834-4837)
 - **Combat total modifier (atk/def/init/dam)** — `virtue.berserk` (ArMDE:3500-3503), `flaw.hobbled` (ArMDE:6260-6263), `flaw.lame` (ArMDE:6330-6333), `flaw.missing_hand` (ArMDE:6438-6441), `flaw.missing_eye` (ArMDE:6434-6437), `flaw.poor_eyesight` (ArMDE:6606-6609), `flaw.palsied_hands` (ArMDE:6578-6581), `flaw.slow_reflexes` (ArMDE:6763-6766), `virtue.lightning_reflexes` (ArMDE:4311-4314), `virtue.fast_caster` (ArMDE:3865-3868)
+
+  **What "combat rolls" / "combat scores" was read to mean.** Several of these
+  Flaws penalize "combat rolls" or "combat scores" without naming the totals.
+  ArMDE:16656 names five — "Initiative, Attack, Defense, Damage, and Soak" — so
+  the phrase needed a decision, taken 2026-09-14 and recorded here (it closes
+  row 37 of `docs/open-todos.md`).
+
+  **The reading: the totals that take a Combat Ability — Attack and Defense.**
+  The book's own formulas draw the line. ArMDE:16660 gives ATTACK TOTAL =
+  Dexterity + **Combat Ability** + Weapon Attack Modifier + Stress Die and
+  ArMDE:16662 gives DEFENSE TOTAL = Quickness + **Combat Ability** + Weapon
+  Defense Modifier + Stress Die. ArMDE:16658's INITIATIVE TOTAL = Quickness +
+  Weapon Initiative Modifier - Encumbrance + Stress Die carries no Combat
+  Ability at all, and neither does ArMDE:16664's DAMAGE TOTAL (Strength +
+  Weapon Damage Modifier + Attack Advantage) or ArMDE:16666's SOAK TOTAL
+  (Stamina + Armor Protection). So a penalty on "combat" as a *skill at
+  fighting* lands on exactly Attack and Defense; Initiative, Damage and Soak
+  measure speed, brawn and armor, and are untouched. This is the same argument
+  the `flaw.palsied_hands` paraphrase exemption in
+  `rules_source_provenance.rs::PARAPHRASE_EXEMPTIONS` already makes from that
+  Flaw's "including weapon skills" wording — the reading here simply applies it
+  to the Flaws that say "combat" without saying "skill".
+
+  Per item:
+
+  - `flaw.hobbled` (ArMDE:6262) — "Her Dodge and other combat rolls are
+    penalized by -6": -6 Attack, -6 Defense. Dodge *is* a Defense (ArMDE:16959
+    gives it a Dfn column and no Atk), so naming it adds no total the -6 does
+    not already reach, and the figure is uniform so no per-weapon scope is
+    needed. The same entry's "you roll double the normal botch dice in combat
+    situations" is **not modelled**: no `Effect` variant carries botch dice, and
+    the app computes sheet totals rather than resolving rolls. Recorded as the
+    narrowed row 37 in `docs/open-todos.md`.
+  - `flaw.lame` (ArMDE:6332) — "-6 penalty on rolls involving moving quickly or
+    with agility, **-3 on Dodge, and -1 on other combat scores**". The -6 is a
+    roll made in play, not a sheet total, so it is not modelled. The other two
+    figures are both encoded, because Dodge is a row of the weapon table using
+    Brawl (ArMDE:16959) and so has a Defense Total of its own that genuinely
+    differs from a weapon's: -1 Attack and -1 Defense unscoped, plus a -3
+    Defense scoped to `weapon.dodge`. The scoped figure **replaces** the
+    unscoped one on that weapon — which is what "**other** combat scores" says —
+    rather than adding to it, so the Dodge line reads -3 and not -4. Encoded via
+    `Effect::CombatMod`'s `weapon` field (`types.rs::Effect::CombatMod`), folded
+    by `derived.rs::in_play_mods` as a delta over the unscoped sum so a second
+    Flaw's unscoped penalty still applies on the Dodge line, and consumed by
+    `derived/combat.rs::combat_totals`. Pinned by
+    `derived.rs::weapon_scoped_combat_mod_replaces_general_on_that_weapon_only`.
+    Deliberately **not** encoded as a flat -3 Defense: that would assert the
+    Dodge penalty against weapon-parry defence, a different computed total the
+    source says nothing about.
+  - `flaw.missing_hand` (ArMDE:6440) — "Climbing, **combat**, and other
+    activities normally requiring both hands are at a penalty of -3 or greater":
+    -3 Attack, -3 Defense. It says "combat", so the reading above reaches both
+    Combat-Ability totals. ArMDE:16656 describes the standard configuration as
+    "using a weapon and a shield", which needs both hands, so combat as the book
+    normally describes it does require them. "-3 **or greater**" is open-ended;
+    the engine takes the **floor**, -3, because that is the only figure the
+    source fixes and anything beyond it is a storyguide ruling. Corrected
+    2026-09-14 from Attack-only, which also removed a sibling asymmetry in which
+    a severed hand penalized fewer totals than the milder `flaw.palsied_hands`.
+  - `flaw.palsied_hands` (ArMDE:6580) — "All rolls involving holding or wielding
+    an object are made at -2, including weapon skills": -2 Attack, -2 Defense.
+    The same entry's "must roll an extra botch die when casting a spell" is
+    **not modelled**, for the same reason as Hobbled's botch clause.
+
+  All four are pinned by
+  `data_integrity.rs::the_combat_roll_flaws_penalize_the_combat_ability_totals`,
+  which also asserts that none of them touches Initiative.
 - **Study source-quality / advancement modifier** — `virtue.apt_student` (ArMDE:3422-3425), `virtue.book_learner` (ArMDE:3519-3522), `virtue.free_study` (ArMDE:3937-3940), `virtue.good_teacher` (ArMDE:3971-3974), `virtue.independent_study` (ArMDE:4115-4118), `virtue.study_bonus` (ArMDE:5056-5072), `flaw.unimaginative_learner` (ArMDE:6915-6918), `flaw.poor_student` (ArMDE:6626-6628), `flaw.incomprehensible` (ArMDE:6294-6297), `virtue.secondary_insight` (ArMDE:4892-4895), `flaw.loose_magic` (ArMDE:6354-6357)
 - **Aging / longevity modifier** — `flaw.age_quickly` (ArMDE:5659-5662), `flaw.baneful_circumstances` (ArMDE:5687-5690), `flaw.monstrous_blood` (ArMDE:6454-6467), `virtue.bee_king` (ArMDE:3484-3499), `virtue.faerie_blood` (ArMDE:3797-3820), `virtue.magical_blood` (ArMDE:4359-4372), `virtue.unaging` (ArMDE:5187-5190), `flaw.bound_to_role_role` (ArMDE:5735-5748), `flaw.leprosy` (ArMDE:6338-6341), `flaw.poor_living_conditions` (ArMDE:6618-6621), `virtue.mild_aging` (ArMDE:4528-4531), `virtue.magian_lineage_major` (ArMDE:4339-4346), `virtue.magian_lineage_minor` (ArMDE:4339-4346)
 - **Non-standard-casting penalty removal (Deft/Quiet/Subtle)** — **computed** into per-cell `NonStandardCasting` variants (`derived.rs`), not surfaced-only. Base Words/Gestures penalties `ArMDE:9236-9245` (no voice −10, no gestures −5). `virtue.quiet_magic` (ArMDE:4822-4826, +5 voice per casting, second casting eliminates), `virtue.subtle_magic` (ArMDE:5073-5076, +5 gesture), `virtue.deft_form` (ArMDE:3645-3648, Form-parameterized, waives both for that Form). Residuals clamp at 0.
@@ -4720,7 +4788,7 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 | `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | ArMDE:5913-5915, 5909-5912 | computed |
 | `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration / MR — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic, flawed_parma_magica (weak_magic_resistance was removed from this family in the round-5 audit — `ArMDE:7070` halves nothing; see **Magic-resistance modifier** above) | ArMDE:7084-7089, 7060-7063, 5962-5964, 7064-7067, 6142-6145 | **computed** (round-2 audit finding GD3 closed the last gap): `spontaneous_casting`, `penetration`, `magic_resistance`, `lab_longevity` (since M5.5a), and now `lab_enchanting` too — folded into the new `LabTotal.enchanting` field in `derived/lab.rs::lab_totals` (Deficiency first, then this halving, per `ArMDE:7060-7063`'s own stated order). Round 3 (G1) wired `enchanting` into `masterpiece_item_cap` too — the one remaining consumer of a Lab Total that used to read `total` instead — and into the frontend `LabTotal` type / `DerivedTotalsPanel` (G2) |
 | `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | ArMDE:5145-5147, 6190-6193, 3500-3503 | computed |
-| `CombatMod { amount, target }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | ArMDE:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed; conditional ones folded **unconditionally** and **not labelled** — `CombatLine` carries no `addends` at all |
+| `CombatMod { amount, target, weapon }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | ArMDE:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed; conditional ones folded **unconditionally** and **not labelled** — `CombatLine` carries no `addends` at all. `weapon` restricts a figure to one weapon's lines and **replaces** the same item's unscoped figure there (only `flaw.lame`'s -3 on `weapon.dodge`, ArMDE:6332); an unresolvable weapon fails referential integrity |
 | `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | ArMDE:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |
 | `MagicResistanceMod { kind }` | Non-halving MR — limited_magic_resistance (no_form_bonus), susceptibility faerie/infernal, commanding_aura & special_circumstances (aura_bonus), weak_magic_resistance (conditional_penetration_waiver) | ArMDE:6346-6349, 6819-6826, 3579-3596, 7068-7071 | **no_form_bonus computed** (folded into the flat per-Form MR number in `magic_resistance`); the four conditional/situational kinds (aura_bonus, susceptible_faerie/infernal, conditional_penetration_waiver) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — each carries a scope the flat per-Form figure has no axis for (a realm, an aura, a scene condition plus the incoming spell's level), so listing them keeps them from being silently dropped *and* from being applied where the book does not apply them. `susceptible_divine` was retired in the round-5 audit: `ArMDE:6817` never mentions Magic Resistance, and the Flaw now carries `special_casting_mod { doubled_aura_penalty }` |
 | `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | ArMDE:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |

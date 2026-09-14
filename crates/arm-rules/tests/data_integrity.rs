@@ -8505,3 +8505,93 @@ fn the_realm_scoped_susceptibilities_are_surfaced_and_halve_no_flat_total() {
         );
     }
 }
+
+/// Every `CombatMod` figure the four "combat rolls"/"combat scores" Flaws carry.
+fn combat_mods_of(rs: &Ruleset, id: &str) -> Vec<(i32, CombatStat, Option<String>)> {
+    rs.item(&Id::new(id))
+        .unwrap_or_else(|| panic!("{id} is a shipped item"))
+        .effects
+        .iter()
+        .filter_map(|e| match e {
+            Effect::CombatMod {
+                amount,
+                target,
+                weapon,
+            } => Some((
+                i32::from(*amount),
+                *target,
+                weapon.as_ref().map(|w| w.as_str().to_string()),
+            )),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Row 37's decision, encoded: "combat rolls"/"combat scores" means the totals
+/// that take a **Combat Ability** — Attack and Defense. ArMDE:16660 gives ATTACK
+/// TOTAL = Dexterity + Combat Ability + Weapon Attack Modifier + Stress Die and
+/// ArMDE:16662 gives DEFENSE TOTAL = Quickness + Combat Ability + Weapon Defense
+/// Modifier + Stress Die, while ArMDE:16658's INITIATIVE TOTAL = Quickness +
+/// Weapon Initiative Modifier - Encumbrance + Stress Die carries none, so
+/// Initiative is not a "combat roll" in this sense; ArMDE:16664 and :16666 leave
+/// Damage and Soak likewise Ability-free.
+///
+/// - `flaw.hobbled` — "Her Dodge and other combat rolls are penalized by -6"
+///   (ArMDE:6262). One figure, so Dodge needs no separate scope.
+/// - `flaw.lame` — "-3 on Dodge, and -1 on other combat scores" (ArMDE:6332).
+///   Two figures, and Dodge is a weapon-table row (ArMDE:16959), so the -3 is
+///   scoped to `weapon.dodge` and the -1 is left to every other weapon.
+/// - `flaw.missing_hand` — "Climbing, combat, and other activities normally
+///   requiring both hands are at a penalty of -3 or greater" (ArMDE:6440). It
+///   says "combat", so it reaches both Combat-Ability totals.
+/// - `flaw.palsied_hands` — "All rolls involving holding or wielding an object
+///   are made at -2, including weapon skills" (ArMDE:6580).
+#[test]
+fn the_combat_roll_flaws_penalize_the_combat_ability_totals() {
+    let rs = load_ruleset();
+
+    assert_eq!(
+        combat_mods_of(&rs, "flaw.hobbled"),
+        vec![
+            (-6, CombatStat::Attack, None),
+            (-6, CombatStat::Defense, None)
+        ]
+    );
+    assert_eq!(
+        combat_mods_of(&rs, "flaw.lame"),
+        vec![
+            (-1, CombatStat::Attack, None),
+            (-1, CombatStat::Defense, None),
+            (-3, CombatStat::Defense, Some("weapon.dodge".to_string())),
+        ]
+    );
+    assert_eq!(
+        combat_mods_of(&rs, "flaw.missing_hand"),
+        vec![
+            (-3, CombatStat::Attack, None),
+            (-3, CombatStat::Defense, None)
+        ]
+    );
+    assert_eq!(
+        combat_mods_of(&rs, "flaw.palsied_hands"),
+        vec![
+            (-2, CombatStat::Attack, None),
+            (-2, CombatStat::Defense, None)
+        ]
+    );
+
+    // Initiative takes no Combat Ability, so none of the four may touch it.
+    for id in [
+        "flaw.hobbled",
+        "flaw.lame",
+        "flaw.missing_hand",
+        "flaw.palsied_hands",
+    ] {
+        assert!(
+            combat_mods_of(&rs, id)
+                .iter()
+                .all(|(_, target, _)| *target != CombatStat::Initiative),
+            "{id} must not modify Initiative"
+        );
+    }
+}

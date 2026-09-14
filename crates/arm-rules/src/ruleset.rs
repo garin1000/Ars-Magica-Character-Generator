@@ -1025,6 +1025,63 @@ mod tests {
         );
     }
 
+    /// A weapon-scoped `combat_mod` is a referential claim like any other, so an
+    /// unresolvable weapon must fail the load-time trust gate rather than silently
+    /// scoping the figure to a weapon that will never match a combat line.
+    #[test]
+    fn combat_mod_rejects_unknown_weapon_scope() {
+        let abilities = r#"{
+          "advancement": [],
+          "abilities": [
+            { "id": "ability.unarmed", "category": "general", "combat_ability": true }
+          ]
+        }"#;
+        let equipment = r#"{ "weapons": [
+          { "id": "weapon.fist", "kind": "melee", "init_mod": 0, "defense_mod": 0,
+            "load": 0, "ability": "ability.unarmed" }
+        ] }"#;
+        // VALID_ITEMS' five entries (the engine-required categories must all be
+        // present) plus one flaw scoping a combat_mod to a weapon that does not exist.
+        let items = r#"[
+          { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative",
+            "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
+          { "id": "virtue.hermetic_magus", "kind": "virtue", "classification": "narrative",
+            "magnitude": "free", "categories": ["social_status"], "entity_kinds": ["character"],
+            "prerequisites": { "kind": "has", "value": "virtue.the_gift" } },
+          { "id": "flaw.blatant_gift", "kind": "flaw", "classification": "narrative",
+            "magnitude": "major", "categories": ["hermetic"], "entity_kinds": ["character"] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.limp", "kind": "flaw", "magnitude": "minor",
+            "categories": ["general"], "classification": "in_play_effect",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "combat_mod", "amount": -3, "target": "defense",
+                          "weapon": "weapon.nonexistent" }] }
+        ]"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: items,
+            type_profiles: VALID_TYPES,
+            abilities: Some(abilities),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: Some(equipment),
+            characteristics: None,
+            life_stages: None,
+            childhoods: None,
+            aging: None,
+        })
+        .unwrap_err();
+        assert!(
+            err.to_string().contains("weapon.nonexistent"),
+            "expected the unknown weapon scope to be rejected, got: {err}"
+        );
+    }
+
     #[test]
     fn weapon_rejects_unflagged_non_martial_ability() {
         // A non-Martial Ability without the `combat_ability` flag is not a valid

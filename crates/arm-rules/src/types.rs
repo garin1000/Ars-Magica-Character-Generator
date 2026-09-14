@@ -1284,6 +1284,21 @@ pub enum Effect {
         amount: i8,
         /// Which combat total the modifier affects.
         target: CombatStat,
+        /// Restricts the modifier to the combat lines of one weapon, and
+        /// **replaces** the same item's unscoped figure for that weapon and
+        /// `target`. `None` — the default, and the shape every entry but Lame
+        /// uses — applies to every weapon.
+        ///
+        /// The scope is a weapon `Id` rather than an enum because the weapon
+        /// catalogue is data, not a fixed taxonomy. It exists because the book
+        /// gives some penalties *two* figures split by how you defend: Lame is
+        /// "-3 on Dodge, and -1 on other combat scores" (ArMDE:6332), and Dodge
+        /// is a row of the weapon table using Brawl (ArMDE:16959), so the two
+        /// figures land on two genuinely different Defense Totals. Replacement
+        /// rather than addition is what "**other** combat scores" means: the
+        /// -1 never applied to Dodge in the first place.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        weapon: Option<Id>,
     },
     /// A modifier to the penalty on a health track (Enduring Constitution reduces
     /// wound and fatigue penalties). `Recovery` is surfaced-only (the app does not
@@ -4377,6 +4392,7 @@ mod tests {
             Effect::CombatMod {
                 amount: -2,
                 target: CombatStat::Defense,
+                weapon: None,
             },
             Effect::HealthMod {
                 track: HealthTrack::WoundPenalty,

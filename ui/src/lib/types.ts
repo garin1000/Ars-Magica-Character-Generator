@@ -141,7 +141,11 @@ export type Effect =
   | { type: 'deficient_art'; param: string }
   | { type: 'magic_total_halving'; total: HalvableTotal }
   | { type: 'soak_mod'; amount: number }
-  | { type: 'combat_mod'; amount: number; target: CombatStat }
+  // `weapon` scopes the modifier to one weapon's combat line, for a rule that
+  // singles a weapon out — Lame's -3 applies to Dodge (`ArMDE:6332`), which is a
+  // Brawling Weapons row rather than an Ability (`ArMDE:16959`), so the scope is
+  // per-weapon. Absent means the modifier applies to every line.
+  | { type: 'combat_mod'; amount: number; target: CombatStat; weapon?: string }
   | { type: 'health_mod'; track: HealthTrack; amount: number }
   | { type: 'magic_resistance_mod'; kind: MagicResistanceEffect }
   | { type: 'aging_mod'; kind: AgingEffect; amount: number }
