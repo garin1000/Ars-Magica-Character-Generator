@@ -271,30 +271,143 @@ fn every_cited_source_file_exists_under_rules_source_en() {
 /// must cite a passage containing at least one of its phrases (matched
 /// case-insensitively).
 ///
-/// Deliberately **two** families rather than all of `types.rs::Effect`. These
-/// are the two where the rulebook's own vocabulary is consistent enough for
-/// the check to be crisp, and a guard that is loud on two families beats one
+/// Deliberately a **subset** of `types.rs::Effect`, not all of it. These are
+/// the families where the rulebook's own vocabulary is consistent enough for
+/// the check to be crisp, and a guard that is loud on a few families beats one
 /// that is noisy on thirty-five and grows an exemption list nobody reads. Add
-/// a family here when its vocabulary is shown to be as consistent — not
-/// speculatively.
+/// a family here when its vocabulary is shown to be as consistent — by reading
+/// the cited passages, not speculatively.
+///
+/// Each phrase list is the vocabulary the book actually uses for that mechanic,
+/// established by opening the citations:
+///
+/// - `magic_total_halving` — "halve"/"half" ("must halve their Lab Total",
+///   ArMDE:5964; "only half the normal Magic Resistance", ArMDE:6144; "Halve
+///   your Lab Total", ArMDE:7062; "You halve the normal Penetration Total",
+///   ArMDE:7066). Deliberately *not* widened to "divide": that would silently
+///   absorb Weak Spontaneous Magic's ÷5, whose exemption is worth having
+///   written down, and would stop discriminating a halving from any other
+///   division.
+/// - `magic_resistance_mod` — "Magic Resistance" and "Parma Magica" are the
+///   book's proper nouns for the mechanic and are never used loosely.
+/// - `aging_mod` — the aging system's own named terms: the "aging
+///   roll"/"aging table"/"Aging Crisis"/"aging points" family (which also
+///   catches "Unaging" as a substring), the "Living Conditions" Modifier, the
+///   "Decrepitude" track, and the "Longevity" Ritual. Bare "age" is
+///   deliberately excluded — it is a substring of "damage", "village", and
+///   "average", so it would match unrelated prose and make the family vacuous.
 const GUARDED_EFFECT_PHRASES: &[(&str, &[&str])] = &[
     ("lab_total_mod", &["lab total"]),
     ("casting_total_mod", &["casting total", "casting score"]),
+    ("magic_total_halving", &["halve", "half"]),
+    (
+        "magic_resistance_mod",
+        &["magic resistance", "parma magica"],
+    ),
+    (
+        "aging_mod",
+        &["aging", "living conditions", "decrepitude", "longevity"],
+    ),
 ];
 
 /// Encodings whose cited passage states the mechanic in different words, with
 /// the reason the paraphrase is sound. Every row is a sentence somebody had
 /// to mean: writing one down is the point of the exemption, not its cost.
-const PARAPHRASE_EXEMPTIONS: &[(&str, &str, &str)] = &[(
-    "flaw.poor_formulaic_magic",
-    "casting_total_mod",
-    "ArMDE:6612 says \"Subtract 5 from every roll that you make to cast Formulaic \
-     spells. This does not apply to Ritual spells.\"; ArMDE:9103 defines FORMULAIC \
-     CASTING TOTAL = Casting Score + Die Roll, so the roll the passage penalizes IS \
-     the Formulaic Casting Total, and the excluded Rituals are exactly what the \
-     effect's \"formulaic\" scope excludes. A wording difference, not a mechanic \
-     difference.",
-)];
+const PARAPHRASE_EXEMPTIONS: &[(&str, &str, &str)] = &[
+    (
+        "flaw.poor_formulaic_magic",
+        "casting_total_mod",
+        "ArMDE:6612 says \"Subtract 5 from every roll that you make to cast Formulaic \
+         spells. This does not apply to Ritual spells.\"; ArMDE:9103 defines FORMULAIC \
+         CASTING TOTAL = Casting Score + Die Roll, so the roll the passage penalizes IS \
+         the Formulaic Casting Total, and the excluded Rituals are exactly what the \
+         effect's \"formulaic\" scope excludes. A wording difference, not a mechanic \
+         difference.",
+    ),
+    (
+        "flaw.weak_spontaneous_magic",
+        "magic_total_halving",
+        "ArMDE:7086 says \"you always divide your Casting Score by five\" — a division of \
+         a whole in-play total, which is what this family encodes, stated with the \
+         divisor spelled out instead of the word \"halve\". The family name says \
+         *halving* but the variant it carries is the discriminator: \
+         `HalvableTotal::SpontaneousCasting` is read by `derived/casting.rs::casting_totals` \
+         as \"the fatiguing (exert-yourself) option does not exist\", so the fatiguing slot \
+         reports the div_euclid(5) figure rather than halve(base). The encoded behaviour is \
+         the passage's own /5, not a /2 — verified at the consumption site. A wording \
+         difference, not a mechanic difference.",
+    ),
+    (
+        "virtue.bee_king",
+        "aging_mod",
+        "ArMDE:3488 states the mechanic in plain English instead of the system's noun: \
+         \"Bee Kings do not appear to age after reaching maturity\". That sentence IS \
+         `AgingEffect::NoApparentAging` (\"the apparent age never advances\"), and it is \
+         the passage `types.rs::AgingEffect::NoApparentAging` already cites. The entry \
+         carries that kind alone and correctly does *not* carry `NoAging` — the Bee King \
+         still loses Characteristics, which is the distinction M6/6b6 split the two \
+         immunities apart to preserve. The family's other 16 encodings all use the book's \
+         \"aging\"/\"Living Conditions\"/\"Decrepitude\"/\"Longevity\" vocabulary; this one \
+         narrative sentence is the sole plain-English statement of an aging immunity.",
+    ),
+];
+
+/// Encodings the guard flags that are **genuinely wrong** and are not yet fixed,
+/// because the correct mechanic has no `types.rs::Effect` representation and
+/// inventing one is exactly what `CLAUDE.md` → "Rules provenance" forbids
+/// ("Implementing a rule from training-data recollection is prohibited"). Each
+/// row is a recorded wrong-output defect with an open row in `docs/open-todos.md`
+/// — parked in the open, never silently absolved as a paraphrase.
+///
+/// This list is deliberately separate from [`PARAPHRASE_EXEMPTIONS`]: conflating
+/// "the book says it differently" with "the book says something else entirely" is
+/// how a guard quietly becomes decorative. A row here is an admission of a bug,
+/// not a justification.
+///
+/// It also cannot rot: [`known_misencodings_still_fail_the_guard`] asserts every
+/// row still fails the phrase check, so the day one is genuinely fixed the test
+/// tells you to delete its row instead of leaving a stale excuse behind.
+const KNOWN_MISENCODINGS: &[(&str, &str, &str)] = &[
+    (
+        "flaw.weak_magic_resistance",
+        "magic_total_halving",
+        "WRONG OUTPUT, parked. ArMDE:7070 gives no halving at all: \"Any form of Magic \
+     Resistance you generate is much weaker under relatively common circumstances \
+     ... If the conditions are met, do not subtract the level of the effect from the \
+     casting total before calculating Penetration.\" That is a Penetration-side \
+     mechanic (the attacker gets the spell level back under a stated condition), not \
+     a halved Magic Resistance. ArMDE:9912 confirms it by glossing the Clan Ilfetu \
+     secret-name mystery as \"need not subtract the spell level from the Penetration \
+     total ... much like the Weak Magic Resistance Flaw\". The engine nonetheless \
+     halves this character's MR on *every* Form unconditionally \
+     (`derived/casting.rs::magic_resistance`). Not fixed here: the correct mechanic \
+     needs a new conditional-Penetration effect variant (or a new \
+     `MagicResistanceEffect` surfaced kind), which is a code + Fluent + locales \
+     change well outside a test-hardening slice. See `docs/open-todos.md`.",
+    ),
+    (
+        "flaw.susceptibility_to_divine_power",
+        "magic_resistance_mod",
+        "WRONG OUTPUT (labelling), parked. ArMDE:6817 never mentions Magic Resistance: \
+         \"You are especially sensitive to the Dominion and suffer twice the normal \
+         penalties (such as spellcasting modifiers and botch dice) to your magic when in \
+         a Divine aura.\" The mechanic is doubled *aura* penalties to casting and botch \
+         dice. Its two siblings are what make this visible and are correctly encoded — \
+         ArMDE:6821 (Faerie) \"your Magic Resistance score, including Parma Magica, \
+         against faerie effects is halved\" and ArMDE:6825 (Infernal) \"You get only half \
+         your normal Magic Resistance score\" — so all three were given a \
+         `magic_resistance_mod` on the strength of the shared Flaw name while only two of \
+         the three passages support it. This is the sibling-inconsistency shape this guard \
+         was built for. Impact is bounded: the realm-conditional kinds are surfaced-only \
+         with amount 0 (`derived.rs`), so no total is wrong — it is filed under the Magic \
+         Resistance family in the modifier read-out when it belongs under casting. Not \
+         fixed here: no effect variant expresses \"double the aura's casting and botch \
+         penalties\", and re-encoding it as the nearest available \
+         `special_casting_mod{circumstantial}` is precisely the guess this guard exists to \
+         catch; it would also orphan `MagicResistanceEffect::SusceptibleDivine` and its \
+         Fluent key, a code + locales change outside this slice. See `docs/open-todos.md`.",
+    ),
+];
 
 /// The minimum number of items each guarded family must actually match. A
 /// floor, never a total — `CLAUDE.md` → "Catalogue size is data, never code"
@@ -365,6 +478,7 @@ fn every_guarded_effect_cites_a_passage_that_names_its_own_mechanic() {
 
             if PARAPHRASE_EXEMPTIONS
                 .iter()
+                .chain(KNOWN_MISENCODINGS)
                 .any(|(id, exempt_kind, _)| *id == found.entry_label && exempt_kind == kind)
             {
                 continue;
@@ -410,4 +524,48 @@ fn every_guarded_effect_cites_a_passage_that_names_its_own_mechanic() {
         errors.len(),
         errors.join("\n")
     );
+}
+
+/// [`KNOWN_MISENCODINGS`] is a list of parked bugs, so every row must still *be*
+/// a bug. If one starts passing the phrase check — because the encoding was
+/// corrected, the citation repointed, or the family's phrase list widened — the
+/// row has become a stale excuse that silences a guard over nothing. Fail then,
+/// so the fix ends with the row deleted rather than outliving the defect.
+#[test]
+fn known_misencodings_still_fail_the_guard() {
+    let source_dir = rules_dir().join("source/en");
+    let all_refs = all_source_refs();
+    let mut cache: BTreeMap<String, Vec<String>> = BTreeMap::new();
+
+    for (id, kind, _) in KNOWN_MISENCODINGS {
+        let phrases = GUARDED_EFFECT_PHRASES
+            .iter()
+            .find(|(guarded, _)| guarded == kind)
+            .map(|(_, phrases)| *phrases)
+            .unwrap_or_else(|| {
+                panic!(
+                    "KNOWN_MISENCODINGS row \"{id}\" names {kind}, which no longer appears in \
+                        GUARDED_EFFECT_PHRASES — the guard it silences is gone, so delete the row"
+                )
+            });
+
+        let found = all_refs
+            .iter()
+            .find(|found| found.entry_label == *id && found.effect_kinds.iter().any(|k| k == kind))
+            .unwrap_or_else(|| {
+                panic!(
+                    "KNOWN_MISENCODINGS row \"{id}\" claims a {kind} effect that no longer \
+                        exists in rules/core/*.json — the defect was fixed, so delete the row"
+                )
+            });
+
+        let passage = bracketed_passage(&source_dir, &mut cache, found)
+            .unwrap_or_else(|| panic!("\"{id}\" cites an out-of-bounds range"));
+        assert!(
+            !phrases.iter().any(|phrase| passage.contains(phrase)),
+            "KNOWN_MISENCODINGS row \"{id}\" ({kind}) now PASSES the phrase check — the cited \
+             passage does name the mechanic. The parked defect is resolved (or the citation \
+             moved), so delete the row and let the guard cover it normally."
+        );
+    }
 }
