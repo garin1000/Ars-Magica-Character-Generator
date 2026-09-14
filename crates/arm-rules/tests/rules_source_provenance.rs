@@ -296,6 +296,42 @@ fn every_cited_source_file_exists_under_rules_source_en() {
 ///   "Decrepitude" track, and the "Longevity" Ritual. Bare "age" is
 ///   deliberately excluded — it is a substring of "damage", "village", and
 ///   "average", so it would match unrelated prose and make the family vacuous.
+/// - `grants_reputation` — "Reputation" is a rulebook proper noun and this is
+///   the catalogue's largest family. Every entry states it with that one word
+///   ("a bad Reputation at 4", ArMDE:5677; "an Academic Reputation of 1",
+///   ArMDE:3472; "a Local Reputation of 1", ArMDE:3478), so one phrase suffices
+///   and anything broader would only add slack.
+/// - `combat_mod` — the `CombatStat` names plus the book's own collective noun.
+///   ArMDE:16656 fixes the taxonomy ("Characters have five combat scores:
+///   Initiative, Attack, Defense, Damage, and Soak"), and the encodings split
+///   between naming a total ("Attack rolls", ArMDE:6436; "+9 to your Initiative
+///   Total", ArMDE:4313) and naming the group ("Dodge and other combat rolls",
+///   ArMDE:6262; "-1 on other combat scores", ArMDE:6332). So "combat" is
+///   load-bearing rather than slack: without it three correctly-encoded items
+///   would be false positives. "defend" is listed beside "defense" because
+///   ArMDE:6608 uses the verb ("rolls to attack and defend").
+///
+///   Two deliberate exclusions. **"damage"**, though a `CombatStat`, is left
+///   out: no entry encodes that target today, and the word is ordinary English
+///   throughout these books ("legs are severely damaged", ArMDE:6262), so it
+///   would let a passage pass for a reason unrelated to the mechanic. The day a
+///   `damage` encoding lands it will flag, and whoever adds it should read the
+///   passage and widen this list deliberately — which is the review moment the
+///   guard exists to force. **"soak"** is excluded because Soak is *not* in this
+///   family: ArMDE:16656 groups it with the combat scores, but the engine models
+///   it as its own `Effect::SoakMod`, and `virtue.berserk` shows the correct
+///   shape by carrying `combat_mod` attack/defense *and* a separate `soak_mod`
+///   off the same passage. Admitting "soak" here would let a Soak-only passage
+///   validate a `combat_mod` encoding — precisely the mis-encoding to catch.
+/// - `health_mod` — the health system's mechanical nouns, one per `HealthTrack`
+///   axis: "fatigue" (the FatiguePenalty / FatigueRoll / CastingFatigue tracks),
+///   "wound" (WoundPenalty), and "recover" (Recovery, stated as "rolls to
+///   recover from wounds", ArMDE:6188 and ArMDE:4836). All three are sharp
+///   mechanical terms here rather than loose prose. This family flagged nothing
+///   on its first run — every entry states its own mechanic — so its liveness
+///   was proved by mutation instead: repointing `flaw.obese`'s citation at an
+///   unrelated passage (the Gabai social-status Flaw, ArMDE:6198-6201) makes the
+///   guard fail. The mutation was reverted immediately.
 const GUARDED_EFFECT_PHRASES: &[(&str, &[&str])] = &[
     ("lab_total_mod", &["lab total"]),
     ("casting_total_mod", &["casting total", "casting score"]),
@@ -308,6 +344,12 @@ const GUARDED_EFFECT_PHRASES: &[(&str, &[&str])] = &[
         "aging_mod",
         &["aging", "living conditions", "decrepitude", "longevity"],
     ),
+    ("grants_reputation", &["reputation"]),
+    (
+        "combat_mod",
+        &["attack", "defense", "defend", "initiative", "combat"],
+    ),
+    ("health_mod", &["fatigue", "wound", "recover"]),
 ];
 
 /// Encodings whose cited passage states the mechanic in different words, with
@@ -336,6 +378,30 @@ const PARAPHRASE_EXEMPTIONS: &[(&str, &str, &str)] = &[
          reports the div_euclid(5) figure rather than halve(base). The encoded behaviour is \
          the passage's own /5, not a /2 — verified at the consumption site. A wording \
          difference, not a mechanic difference.",
+    ),
+    (
+        "flaw.palsied_hands",
+        "combat_mod",
+        "ArMDE:6580 states the mechanic in terms of the totals' shared *input* instead of their \
+         names: \"All rolls involving holding or wielding an object are made at -2, including \
+         weapon skills.\" The book's own formulas are what resolve that to this family: \
+         ArMDE:16660 gives ATTACK TOTAL = Dexterity + Combat Ability + Weapon Attack Modifier + \
+         Stress Die and ArMDE:16662 gives DEFENSE TOTAL = Quickness + Combat Ability + Weapon \
+         Defense Modifier + Stress Die. The weapon skill (Combat Ability) is a term of both and \
+         of no other combat total, so a flat -2 on it is -2 Attack and -2 Defense and nothing \
+         else — which is exactly the pair encoded, and is why Initiative (which takes no Combat \
+         Ability) is correctly absent. A wording difference, not a mechanic difference.",
+    ),
+    (
+        "virtue.magister_in_medicina",
+        "grants_reputation",
+        "ArMDE:4397 states the mechanic by *delegation* rather than by wording: \"This Virtue \
+         offers the same benefits as Doctor in (Faculty).\" The referent, ArMDE:3687, says \"He \
+         also begins the game with an Academic Reputation of 3\" — and the two entries' effects \
+         are identical (academic/3 plus 300 restricted academic XP), so the delegation is \
+         honoured in full rather than approximated. The citation is deliberately NOT repointed \
+         at ArMDE:3683-3698: `source` records where the item is *defined*, and this Virtue is \
+         defined at :4395. A wording difference, not a mechanic difference.",
     ),
     (
         "virtue.bee_king",
