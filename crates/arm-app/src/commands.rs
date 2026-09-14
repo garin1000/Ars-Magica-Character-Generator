@@ -92,6 +92,24 @@ pub enum Decision {
     BlockAndShow,
 }
 
+impl Decision {
+    /// Whether the pending close/quit must be prevented — i.e. whether the
+    /// caller has to call `prevent_close`/`prevent_exit`.
+    ///
+    /// This mapping lives here, not in `main.rs`'s `guard_blocks_quit`, for the
+    /// same reason [`guard_decision`] does (Erika E1): as a `match` in the
+    /// binary, `Block => true` was covered by nothing at any level — each dirty
+    /// e2e spec issues exactly one close/quit, so the second one this variant
+    /// exists for was never exercised, and flipping it to `false` closed the
+    /// window out from under the open confirmation with every gate green.
+    pub fn blocks(self) -> bool {
+        match self {
+            Decision::Allow => false,
+            Decision::Block | Decision::BlockAndShow => true,
+        }
+    }
+}
+
 /// The whole of the close/quit guard's decision, as a pure function of the
 /// mirrored state — `main.rs`'s `guard_blocks_quit` adds nothing to it but the
 /// dialog.
@@ -134,6 +152,37 @@ pub fn apply_dialog_answer(guard: &mut CloseGuardState, discard: bool) {
     guard.showing = false;
     if discard {
         guard.confirmed = true;
+    }
+}
+
+/// Records the user's answer to the discard confirmation and re-issues the
+/// close/quit — by calling `on_discard` — if and only if they chose to discard.
+///
+/// This is the guard's second *action* decision, and it lives here for the same
+/// reason [`Decision::blocks`] does (Erika E1). `main.rs` used to spell it as a
+/// bare `if !discard { return; }` around `w.destroy()`/`app.exit(0)`, i.e. around
+/// the act of throwing the document away, in a binary with no unit seam — so the
+/// one inversion that makes **Cancel** destroy the user's work was asserted
+/// nowhere, at any level. Taking the action as a closure rather than returning a
+/// "re-issue?" flag is deliberate: a flag leaves the branch in the caller, which
+/// is exactly where nothing can reach it.
+///
+/// **The lock is released before `on_discard` runs**, and that is load-bearing
+/// rather than tidy: `on_discard` is `app.exit(0)`, which fires
+/// `RunEvent::ExitRequested` synchronously, which re-enters `guard_blocks_quit`
+/// and locks this same mutex. See
+/// `the_discard_action_runs_with_the_close_guard_lock_released`.
+pub fn resolve_discard_dialog(
+    guard: &Mutex<CloseGuardState>,
+    discard: bool,
+    on_discard: impl FnOnce(),
+) {
+    {
+        let mut state = guard.lock().expect("close guard lock poisoned");
+        apply_dialog_answer(&mut state, discard);
+    }
+    if discard {
+        on_discard();
     }
 }
 

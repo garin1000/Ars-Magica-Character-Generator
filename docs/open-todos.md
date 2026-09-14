@@ -27,6 +27,45 @@ these should be tagged over silently.
 | ~~21~~ | **DONE 2026-09-10 — see "Done since" below.** ~~The e2e suite pays its startup cost 43 times.~~ Every spec file gets its own WebDriver session, so the app is launched and torn down once per file: 43 launches, strictly serial (`maxInstances: 1`, `ui/e2e/wdio.shared.conf.js:23`). Measured on the 2026-09-09 run from `tmp/e2e-logs/`, the blocking `POST /session` alone costs ~30s of a ~40s per-spec cycle (`app-quit-bridge-clean.e2e-0-3.log`: session posted at 21:13:12.020, first test command at 21:13:42.296, whole test body done by 21:13:44.067 — **30.3s of setup for 1.8s of testing**). Whole-suite: 41m43s. Consolidating the 43 spec files into ~10 larger ones removes ~33 startups at ~40s each, roughly **20 minutes**, with no infrastructure change and no loss of coverage — the specs already run serially against a fresh app each, so merging them only changes how many times that app is started. Worth doing independently of whether the 30s itself (see the finding on it) is ever fixed, since the two savings compound. Note `wdio.shared.conf.js:24` currently claims "Specs run serially against one shared app instance", which is wrong — every spec log carries its own session id and ends in `deleteSession()` — and should be corrected in the same pass. | decision on how to group the specs | 2026-09-09 |
 | 31 | **The XP max-flow solve is `O(n^3)`, and only its input size is capped.** `effective/xp.rs::two_phase_max_flow` runs Edmonds-Karp over a dense `n x n` matrix, re-scanning every node per augmenting path (`effective/xp.rs::max_flow`), and the graph's shape needs about one augmenting pass per spend — so cost grows with the cube of `n`, where `n` counts the character's own Ability scores, Art scores and mastered spells. Klaus F4 (2026-09-13) fixed the *symptom* by lowering `effective/xp.rs::MAX_XP_SOLVE_NODES` from 2048 to 1024, which cuts the worst **accepted** save's solve by 8x — measured release-build: ~3.6s before, 454ms after (debug: ~170s before, ~21s after). That is enough that no legal character freezes the app, because the bound is now set from the largest character that must not be rejected (853 nodes) rather than from the largest matrix that fits in memory. The algorithm is untouched, so the residual is real but small: a save near the new bound still costs ~450ms per solve, and a debounced `refresh()` pays it about three times over (`validate_xp_pool`, `effective_scores`, and the Markdown export path each re-run it) — so roughly 1.4s of lag per keystroke at the very top of the legal range. Fixing it properly means a sparse adjacency representation instead of the dense matrix, or memoizing one solve per entity revision across the three callers. Neither is urgent: a realistic character sits near 110 spends, where the solve costs ~1.5ms. Do not raise the bound back without re-reading the constant's doc comment — its value is now load-bearing for CPU, not just memory, and `the_solve_bound_admits_a_maximal_legal_character` pins the lower edge. | a follow-up pass, if the lag is ever observed in practice | 2026-09-13 |
 
+## Found during the full audit, 2026-09-14 — the e2e harness leaks its driver processes
+
+Observed directly, twice, and confirmed as the cause of a false failure — so this
+is a measurement, not a suspicion.
+
+`npm run test:e2e` and `npm run test:e2e:portable` both leave
+`tauri-driver --port 4444 --native-port 4445` and
+`/usr/bin/WebKitWebDriver --port=4445` **running after the suite exits 0**. They
+are not cleaned up on a normal, fully-passing run.
+
+Why it matters, and why it cost a real debugging detour: a later run does not
+start its own driver on an occupied port — it connects to the **stale** one, and
+`POST /session` then hangs for its full 120 s timeout and fails. The symptom is
+maximally misleading:
+
+- It reports as `Failed to create a session: WebDriverError: timeout`, which
+  reads like infrastructure flakiness.
+- It is **deterministic**, not flaky, so "run it again" reproduces it exactly and
+  appears to confirm a genuine regression.
+- It strikes whichever spec happens to be scheduled first (here
+  `app-shell.e2e.js`), so it looks like that spec is broken.
+- The other nine specs pass, which makes it look like a defect localized to one
+  area rather than an environment problem.
+
+During the round-2 gate this produced a 9-passed/1-failed result that survived a
+full re-run and a single-spec isolation run, and was investigated as a suspected
+startup deadlock in the round-2 close-guard rework before `ps` showed two
+day-old driver processes still holding the ports. Killing them made the same
+commit pass 10/10 with no code change.
+
+Worth fixing rather than remembering: an `onComplete` hook in
+`ui/e2e/wdio.shared.conf.js` that reaps the driver it spawned, or a preflight
+check that refuses to start when 4444 is already held by a process this run did
+not create. The preflight is the more valuable half — it converts a silent
+120 s hang into an immediate, accurate error message.
+
+Until then: if e2e fails at session creation, check `ps aux | grep tauri-driver`
+**before** reading anything into the failure.
+
 ## Found during the full audit, 2026-09-13 — `.icon-btn` lost its e2e coverage
 
 Not one of the 39 audit findings; turned up while repairing dangling e2e spec

@@ -227,10 +227,16 @@ pub struct EffectiveScores {
     pub spell_mastery_xp: u32,
     /// Mastery-score floor every known spell gets (Flawless Magic → 1); 0 = none.
     pub spell_mastery_floor: u8,
-    /// Whether a Virtue doubles all Spell-Mastery Advancement Totals (Flawless
-    /// Magic), halving the XP each mastery point costs — so the UI's mastery
-    /// accounting charges the same reduced cost the engine does.
-    pub spell_mastery_advancement_doubled: bool,
+    /// The Affinity applying to every Spell-Mastery Advancement Total, as the
+    /// authored `[num, den]` pair ("counts as num/den of itself"; Flawless Magic
+    /// → `[2, 1]`, halving the XP each mastery point costs); `None` when no
+    /// grant reduces the cost. The *ratio* crosses, not a "doubled" flag,
+    /// because it is rules data: the engine prices any pair through
+    /// `effective/xp.rs::charged_cost`, so the UI must be able to charge the
+    /// same reduced cost for any pair the catalogue authors — a new Virtue with
+    /// a different Affinity has to stay the data-only change the "catalogue size
+    /// is data, never code" invariant promises.
+    pub spell_mastery_advancement_affinity: Option<[u8; 2]>,
     /// The supernatural being's effective Might Score + Realm (base + same-Realm
     /// Virtue grants), or `None` for an ordinary character. Engine-authoritative.
     pub might: Option<MightScore>,
@@ -626,14 +632,15 @@ fn decrepitude_faith_item_fields(entity: &Entity, ruleset: &Ruleset) -> Decrepit
 struct SpellMasteryFields {
     xp: u32,
     floor: u8,
-    advancement_doubled: bool,
+    advancement_affinity: Option<[u8; 2]>,
 }
 
 fn spell_mastery_fields(entity: &Entity, ruleset: &Ruleset) -> SpellMasteryFields {
     SpellMasteryFields {
         xp: spell_mastery_xp(entity, ruleset),
         floor: spell_mastery_floor(entity, ruleset),
-        advancement_doubled: spell_mastery_advancement_affinity(entity, ruleset).is_some(),
+        advancement_affinity: spell_mastery_advancement_affinity(entity, ruleset)
+            .map(|(num, den)| [num, den]),
     }
 }
 
@@ -736,7 +743,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
 
         spell_mastery_xp: mastery.xp,
         spell_mastery_floor: mastery.floor,
-        spell_mastery_advancement_doubled: mastery.advancement_doubled,
+        spell_mastery_advancement_affinity: mastery.advancement_affinity,
 
         might: might_power.might,
         power_levels_budget: might_power.power_levels_budget,
@@ -1203,7 +1210,8 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     // Array-driven, matching read_i18n_sources below: REQUIRED_CORE_FILES *is*
     // the ordered list of files this function reads (see its doc comment), so
     // reading it back destructures in exactly that fixed order rather than
-    // repeating the 13 filenames a second time.
+    // repeating the filenames a second time. Deliberately no count here — the
+    // array is the count, and the one below is checked by the compiler.
     let core: Vec<String> = REQUIRED_CORE_FILES
         .iter()
         .map(|file| fs::read_to_string(rules_dir.join(file)).map_err(AppError::from))
@@ -1468,6 +1476,55 @@ pub fn load_entity_from_path(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use arm_rules::Effect;
+
+    /// The repository root — `crates/arm-app` is two levels below it.
+    fn repo_root() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+    }
+
+    /// The Spell Mastery Advancement Affinity is authored rules data: an
+    /// arbitrary "counts as `num`/`den` of itself" ratio on
+    /// [`Effect::GrantsSpellMastery`], which the engine prices through the
+    /// general `effective/xp.rs::charged_cost`. The IPC boundary must carry that
+    /// ratio rather than a "is there one at all" boolean — collapsing it leaves
+    /// the frontend re-expanding the number as a literal, so a Virtue authoring
+    /// any other ratio would be a data-only change that silently produces a
+    /// wrong total on screen (full-audit round 2, V2).
+    ///
+    /// The expectation is read back out of the shipped catalogue rather than
+    /// written as a literal, so this asserts "whatever ratio the data authors
+    /// arrives intact" and never pins the catalogue to one value.
+    #[test]
+    fn the_mastery_affinity_reaches_the_frontend_as_the_authored_ratio() {
+        let localized = load_ruleset_from_dir(&repo_root().join("rules"), "en").unwrap();
+        let json = fs::read_to_string(repo_root().join("examples/magus_sample.json")).unwrap();
+        let mut entity: Entity = serde_json::from_str(&json).unwrap();
+        let granting = Id::new("virtue.flawless_magic");
+        entity.selections.push(Selection::new(granting.clone()));
+
+        let authored = localized
+            .ruleset
+            .item(&granting)
+            .expect("the shipped catalogue must still carry the mastery-granting Virtue")
+            .effects
+            .iter()
+            .find_map(|effect| match effect {
+                Effect::GrantsSpellMastery {
+                    advancement_num,
+                    advancement_den,
+                    ..
+                } => Some([*advancement_num, *advancement_den]),
+                _ => None,
+            })
+            .expect("virtue.flawless_magic must still grant Spell Mastery");
+
+        assert_eq!(
+            spell_mastery_fields(&entity, &localized.ruleset).advancement_affinity,
+            Some(authored),
+            "the DTO must carry the authored (num, den), not a boolean"
+        );
+    }
 
     #[test]
     fn extension_and_default_name_per_kind() {
@@ -1610,8 +1667,15 @@ mod tests {
             RulesetRef::new(Id::new("test"), "1"),
         );
         e.xp_pool = 1_000_000;
-        // One node past MAX_XP_SOLVE_NODES: rejected before the solve runs, so
-        // this stays fast regardless of count.
+        // Comfortably past MAX_XP_SOLVE_NODES: rejected before the solve runs,
+        // so this stays fast regardless of count. Deliberately not a boundary
+        // fixture — the bound is `pub(crate)` in `arm-rules`, so this crate
+        // cannot name it, and pinning the exact edge against a literal here
+        // would be a second copy of the number that nothing keeps in step. The
+        // boundary itself is covered where the constant lives, in
+        // `effective/xp.rs::xp_solve_scale`'s own tests; what this test owns is
+        // the app-layer consequence — far over the bound must surface as zeroed
+        // totals rather than a panic.
         e.ability_scores = (0..2049)
             .map(|_| AbilityScore {
                 ability: Id::new("ability.artes_liberales"),

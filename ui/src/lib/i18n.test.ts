@@ -30,6 +30,30 @@ function messageKeys(src: string): Set<string> {
   return keys;
 }
 
+// E9 (full-audit round 2). Every `$name` a message's VALUE references, per key —
+// including indented continuation and attribute lines, which carry placeables
+// too, and including selector references (`{ $count ->` ), which are variable
+// references like any other. Sets, not sequences: German word order is free to
+// differ, and must stay free to.
+function messageVariables(src: string): Map<string, Set<string>> {
+  const vars = new Map<string, Set<string>>();
+  let current: Set<string> | null = null;
+  for (const line of src.split('\n')) {
+    const declaration = /^([A-Za-z][\w-]*)\s*=(.*)$/.exec(line);
+    if (declaration) {
+      current = new Set();
+      vars.set(declaration[1], current);
+    } else if (!/^\s+\S/.test(line)) {
+      // A blank line, a comment, or a term — whatever message was open ends here.
+      current = null;
+      continue;
+    }
+    if (!current) continue;
+    for (const [, name] of line.matchAll(/\$([A-Za-z][\w-]*)/g)) current.add(name);
+  }
+  return vars;
+}
+
 describe('German UI bundle', () => {
   it('builds the real German Fluent bundle and resolves known keys to German', () => {
     const de = buildBundle('de');
@@ -459,6 +483,38 @@ describe('German UI bundle', () => {
     const missingInDe = [...en].filter((key) => !de.has(key)).sort();
     const missingInEn = [...de].filter((key) => !en.has(key)).sort();
     expect({ missingInDe, missingInEn }).toEqual({ missingInDe: [], missingInEn: [] });
+  });
+
+  // E9 (full-audit round 2): key parity alone is not locale parity. Since
+  // `translate` (i18n.ts) calls `formatPattern` in its three-argument form, an
+  // unresolved variable no longer throws — @fluent/bundle's resolver returns
+  // `FluentNone("$name")`, which renders as the literal `{$name}` INSIDE the
+  // sentence, and `translate` discards the collected errors by design. Its doc
+  // comment justifies discarding them on the grounds that the i18n tests catch
+  // authoring mistakes at build time; this is the test that makes that true for
+  // this class. Without it, a German value referencing a variable no caller
+  // passes ships a raw identifier into the German UI — the "never render a raw
+  // identifier as a user-facing label" invariant, breached in the one locale
+  // nothing else checks — with vitest, eslint, prettier, svelte-check and
+  // `cargo tauri build` all green.
+  it('references the same variables per key in English and German', () => {
+    const en = messageVariables(sourceForLang('en'));
+    const de = messageVariables(sourceForLang('de'));
+    // A guard over an empty map would pass vacuously.
+    expect([...en.values()].filter((set) => set.size > 0).length).toBeGreaterThan(0);
+
+    const mismatches: Record<string, { en: string[]; de: string[] }> = {};
+    for (const [key, enVars] of en) {
+      const deVars = de.get(key);
+      // Key parity is the test above's job; judge only keys both locales carry.
+      if (!deVars) continue;
+      const enSorted = [...enVars].sort();
+      const deSorted = [...deVars].sort();
+      if (enSorted.join('|') !== deSorted.join('|')) {
+        mismatches[key] = { en: enSorted, de: deSorted };
+      }
+    }
+    expect(mismatches).toEqual({});
   });
 
   // Round-1 audit (orchestrator, from Sabine's @Gerda tag): `formatPattern` was

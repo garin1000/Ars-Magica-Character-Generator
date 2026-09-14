@@ -3363,6 +3363,163 @@ fn cancelling_the_discard_keeps_the_unsaved_work() {
     );
 }
 
+/// Erika E1 (round 2, MAJOR): F4 moved the guard's *state* decisions here but
+/// left both of its *action* decisions inside `main.rs::guard_blocks_quit`,
+/// where nothing at any level could reach them — inverting either still
+/// discarded the user's work with every gate green. [`Decision::blocks`] is the
+/// first of the two: the `Decision` → "call `prevent_close`/`prevent_exit`"
+/// mapping, which `guard_blocks_quit` used to spell as a `match` of its own.
+///
+/// `Allow` and `BlockAndShow` were at least reachable end-to-end (a clean quit
+/// and a dirty quit in the e2e specs). **`Block` was covered by nothing**: each
+/// dirty spec issues `request_exit` exactly once, so a second close/quit while
+/// the confirmation is on screen — the entire reason `Block` exists — was never
+/// exercised anywhere.
+#[test]
+fn the_allow_decision_lets_the_close_proceed() {
+    use arm_app::commands::Decision;
+
+    assert!(
+        !Decision::Allow.blocks(),
+        "nothing is unsaved, so the close/quit must not be prevented"
+    );
+}
+
+/// The row no test and no e2e spec reached before: Alt+F4 (or Cmd+Q) a second
+/// time while the confirmation is already up. Mapping this to "do not block"
+/// closes the window out from under the open dialog with the edits unsaved.
+#[test]
+fn the_block_decision_refuses_a_second_close_while_the_dialog_is_up() {
+    use arm_app::commands::Decision;
+
+    assert!(
+        Decision::Block.blocks(),
+        "a close/quit arriving while the confirmation is on screen must be \
+         prevented; allowing it destroys the window out from under the dialog \
+         with the work unsaved"
+    );
+}
+
+/// The live case: the confirmation is going up now, so the close/quit that
+/// triggered it must be prevented and re-issued only if the user says discard.
+#[test]
+fn the_block_and_show_decision_refuses_the_close() {
+    use arm_app::commands::Decision;
+
+    assert!(
+        Decision::BlockAndShow.blocks(),
+        "the close/quit that raises the confirmation must itself be prevented"
+    );
+}
+
+/// Erika E1, second half: the *other* action decision the F4 extraction left in
+/// the binary — whether the answer the user gave re-issues the close/quit.
+///
+/// [`apply_dialog_answer`] returned `()`, so it recorded the latch but decided
+/// nothing; `main.rs` then gated the re-issue on a bare `if !discard { return; }`
+/// that no test could reach. The action behind that gate is `w.destroy()` or
+/// `app.exit(0)` — the act of throwing the document away — so inverting the `!`
+/// made **Cancel** destroy the unsaved work, with `cargo test`, clippy, fmt,
+/// vitest and the whole e2e suite still green (WebDriver cannot answer a native
+/// GTK dialog, see `the_discard_confirmation_is_native_in_the_default_build`).
+///
+/// [`resolve_discard_dialog`] now owns the gate, so `guard_blocks_quit` holds no
+/// branch about it at all and this test is the thing that pins it.
+#[test]
+fn confirming_the_discard_runs_the_discard_action() {
+    use arm_app::commands::{CloseGuardState, resolve_discard_dialog};
+    use std::sync::Mutex;
+
+    let guard = Mutex::new(CloseGuardState {
+        dirty: true,
+        showing: true,
+        ..CloseGuardState::default()
+    });
+    let mut discarded = false;
+
+    resolve_discard_dialog(&guard, true, || discarded = true);
+
+    assert!(
+        discarded,
+        "the user pressed Discard, so the close/quit must be re-issued — \
+         without this the app simply refuses to close and the answer is ignored"
+    );
+    let state = guard.lock().expect("close guard lock poisoned");
+    assert!(!state.showing, "the dialog is no longer on screen");
+    assert!(
+        state.confirmed,
+        "without the latch the re-issued close/quit would raise a second dialog"
+    );
+}
+
+/// The row where getting the sign wrong destroys the document: Cancel must leave
+/// the work alone AND must not run the discard action. The state assertions
+/// below duplicate `cancelling_the_discard_keeps_the_unsaved_work` deliberately —
+/// all four of them stayed true under the inversion Erika found, so the load-
+/// bearing assertion is the first one.
+#[test]
+fn cancelling_the_discard_must_not_run_the_discard_action() {
+    use arm_app::commands::{CloseGuardState, Decision, guard_decision, resolve_discard_dialog};
+    use std::sync::Mutex;
+
+    let guard = Mutex::new(CloseGuardState {
+        dirty: true,
+        showing: true,
+        ..CloseGuardState::default()
+    });
+    let mut discarded = false;
+
+    resolve_discard_dialog(&guard, false, || discarded = true);
+
+    assert!(
+        !discarded,
+        "Cancel must never re-issue the close/quit — that inversion turns the \
+         button that protects the user's work into the one that destroys it"
+    );
+    let mut state = guard.lock().expect("close guard lock poisoned");
+    assert!(!state.showing, "the dialog is no longer on screen");
+    assert!(!state.confirmed, "Cancel must never latch a discard");
+    assert!(state.dirty, "the edits are still unsaved");
+    assert_eq!(
+        guard_decision(&mut state),
+        Decision::BlockAndShow,
+        "the next quit must ask again"
+    );
+}
+
+/// The discard action must run with the close-guard lock **released**. This is
+/// not hygiene: the action is `app.exit(0)`, which fires `RunEvent::ExitRequested`
+/// synchronously, which re-enters `guard_blocks_quit`, which locks this very
+/// mutex. Running it under the lock deadlocks the app on the one gesture that is
+/// supposed to close it — so the release is part of the contract this seam owns,
+/// not an implementation detail of the caller.
+///
+/// `try_lock` rather than `lock`, because a regression here must fail the test
+/// rather than hang the suite.
+#[test]
+fn the_discard_action_runs_with_the_close_guard_lock_released() {
+    use arm_app::commands::{CloseGuardState, resolve_discard_dialog};
+    use std::sync::Mutex;
+
+    let guard = Mutex::new(CloseGuardState {
+        dirty: true,
+        showing: true,
+        ..CloseGuardState::default()
+    });
+    let mut lock_was_free = false;
+
+    resolve_discard_dialog(&guard, true, || {
+        lock_was_free = guard.try_lock().is_ok();
+    });
+
+    assert!(
+        lock_was_free,
+        "the discard action re-enters the close guard (app.exit(0) fires \
+         ExitRequested synchronously), so holding the lock across it deadlocks \
+         the quit it is meant to perform"
+    );
+}
+
 /// C3b: the New/Open discard confirmation is the SAME native dialog the
 /// close/quit guard shows, and `native_discard_confirmation_enabled()` is the
 /// single switch deciding whether this build owns one.

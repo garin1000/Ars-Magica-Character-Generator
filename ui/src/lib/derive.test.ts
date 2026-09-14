@@ -1461,10 +1461,22 @@ describe('spellMasteryXpSpent', () => {
   });
 
   it('halves the charge above the floor when advancement is doubled', () => {
-    // Flawless Magic doubles advancement totals: (30 - 5) charged as ceil(25/2) = 13.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1, true)).toBe(13);
-    // Doubling with no floor: ceil(30/2) = 15.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, true)).toBe(15);
+    // Flawless Magic doubles advancement totals ([2, 1]): (30 - 5) charged as
+    // ceil(25 * 1 / 2) = 13.
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1, [2, 1])).toBe(13);
+    // Doubling with no floor: ceil(30 / 2) = 15.
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [2, 1])).toBe(15);
+  });
+
+  it('charges any authored Affinity ratio, not just 2/1', () => {
+    // V2 (full-audit round 2): the Affinity is authored rules data, priced by
+    // the engine's general `effective/xp.rs::charged_cost` as
+    // ceil(payable * den / num). A 3/2 grant ("counts as 3/2 of itself") charges
+    // ceil(30 * 2 / 3) = 20 for a mastery-3 spell with no floor — a hardcoded
+    // halving would say 15, which is the engine disagreeing with the bar.
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [3, 2])).toBe(20);
+    // And the identity ratio charges the full table cost.
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [1, 1])).toBe(30);
   });
 
   it('mirrors effective.rs::flawless_magic_floors_first_mastery_free_and_halves_the_rest', () => {
@@ -1473,22 +1485,26 @@ describe('spellMasteryXpSpent', () => {
     // the floor is free; mastery 3 costs table(3) - table(1) = 25, doubled ->
     // ceil(25/2) = 13. The Rust test asserts `alloc.total_demand == 13` for
     // this exact input; this is the TS side of the same claim.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1, true)).toBe(13);
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1, [2, 1])).toBe(13);
   });
 });
 
-describe('spellMasteryXpSpent — 2:1-only, guarded against silent drift (V2)', () => {
-  // spellMasteryXpSpent's `doubled` flag collapses ANY GrantsSpellMastery
-  // advancement ratio into `Math.ceil(payable / 2)`, which is only correct for
-  // exactly a 2/1 ratio (see the function's docstring). No live call site can
-  // hit a different ratio TODAY — this test reads the SHIPPED
-  // `rules/core/virtues_flaws.json` (not a fixture) so that claim stays true by
-  // construction rather than by memory: it fails the moment any
-  // `grants_spell_mastery` effect ships a genuine (num > den) reduction ratio
-  // other than 2/1, forcing whoever adds one to fix this function (or finally
-  // do the engine-surfaced-total fix the docstring recommends) instead of
-  // shipping a silent divergence from the engine's own arithmetic.
-  it('carries no GrantsSpellMastery reduction ratio other than 2/1', () => {
+describe('spellMasteryXpSpent — prices whatever ratio the shipped data authors (V2)', () => {
+  // This describe block REPLACES the round-1 "2:1-only" tripwire, which pinned
+  // the shipped catalogue to a 2/1 ratio because `spellMasteryXpSpent` could
+  // only price that one. That tripwire was the wrong shape once the ratio
+  // crosses the IPC boundary intact: it turned "add a Virtue with a 3/2 mastery
+  // Affinity" — a data-only change under the "catalogue size is data, never
+  // code" invariant — into a red test that could only be greened by editing
+  // TypeScript. The real data is still read, but to exercise the function
+  // against it rather than to constrain it.
+  const advancement = [
+    { score: 1, total_xp: 5 },
+    { score: 2, total_xp: 15 },
+    { score: 3, total_xp: 30 },
+  ];
+
+  it('charges every shipped GrantsSpellMastery ratio the way the engine does', () => {
     const catalogue = JSON.parse(
       readFileSync(
         fileURLToPath(new URL('../../../rules/core/virtues_flaws.json', import.meta.url)),
@@ -1507,7 +1523,14 @@ describe('spellMasteryXpSpent — 2:1-only, guarded against silent drift (V2)', 
     // Magic must still be there.
     expect(reducingGrants.length).toBeGreaterThan(0);
     for (const grant of reducingGrants) {
-      expect([grant.advancement_num, grant.advancement_den]).toEqual([2, 1]);
+      const num = grant.advancement_num ?? 1;
+      const den = grant.advancement_den ?? 1;
+      // The engine's own `effective/xp.rs::charged_cost`, spelled out here so
+      // the comparison is against the rule rather than against this function's
+      // own arithmetic: table(3) = 30, no floor.
+      expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [num, den])).toBe(
+        Math.ceil((30 * den) / num),
+      );
     }
   });
 });

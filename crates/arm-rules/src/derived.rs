@@ -1125,7 +1125,7 @@ mod tests {
             .expect("has ritual")
             .hint
             .expect("has a hint");
-        assert_eq!(hint.lab_total, 8, "trunc(trunc(35/2)/2)");
+        assert_eq!(hint.lab_total, 8, "floor(floor(35/2)/2)");
         assert_eq!(hint.suggested_bonus, 2);
         assert!(hint.halved);
     }
@@ -2391,11 +2391,11 @@ mod tests {
         }];
         let pen = penetration(&e, &rs);
         assert_eq!(pen.len(), 1);
-        // Casting Total = Cr10 + Ig5 + Sta2 = 17; − level 20 + Penetration 4 = 1.
+        // Casting Total = Cr10 + Ig5 + Sta2 = 17; - level 20 + Penetration 4 = 1.
         assert_eq!(pen[0].casting_total, 17);
         assert_eq!(pen[0].total, 1);
 
-        // With Weak Magic: (17 − 20 + 4)/2 = 0 (halve toward zero).
+        // With Weak Magic: floor((17 - 20 + 4)/2) = 0 (ArMDE:547, rounds down).
         e.selections = vec![Selection::new(Id::new("flaw.weak_magic"))];
         let pen = penetration(&e, &rs);
         assert!(pen[0].weak_magic);

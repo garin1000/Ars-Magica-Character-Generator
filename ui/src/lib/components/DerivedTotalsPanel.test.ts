@@ -198,41 +198,26 @@ describe('DerivedTotalsPanel aura bound (round 3, Task 3)', () => {
     expect(body).not.toContain('data-testid="derived-aura-out-of-range"');
   });
 
-  it('shows an out-of-range hint when the stored aura is beyond the engine bound', () => {
-    // A hand-edited or stale save can carry an out-of-range aura before the next
-    // save re-normalizes it (Entity::normalize is not called on load).
+  // Full-audit round 2 (Gerda #1 / Sabine #2) re-aimed the hint from the STORED
+  // value's range to the CLAMP, because no route into the store can leave an
+  // out-of-range aura there any more — `setAura` clamps what is typed and
+  // `migration.rs::load_entity_migrating` clamps what is loaded. The two tests
+  // below pin what SSR can still see; the clamp itself is an `oninput`
+  // listener firing on a live element, so `role="status"`, the
+  // `aria-describedby` association and the hint's text are proved in
+  // `DerivedAuraField.client.test.ts` and cannot be observed here at all.
+  it('shows no hint for a value the player did not type, however extreme', () => {
     store.entity.aura = 999;
     store.derived = derivedFixture({ is_magus: true });
     const body = html();
-    expect(body).toContain('data-testid="derived-aura-out-of-range"');
+    expect(body).not.toContain('data-testid="derived-aura-out-of-range"');
   });
 
-  // Round 4, S2: the hint used to be visually adjacent to the aura input with no
-  // programmatic association, so a screen-reader user tabbing to the input never
-  // learned their value was out of range.
-  it('associates the out-of-range hint with the aura input via aria-describedby', () => {
-    store.entity.aura = 999;
-    store.derived = derivedFixture({ is_magus: true });
-    const input = auraInputTag();
-    expect(input).toContain('aria-describedby="derived-aura-out-of-range"');
-  });
-
-  it('does not describe the input when the aura is in range', () => {
+  it('does not describe the input before any entry has been rewritten', () => {
     store.entity.aura = 3;
     store.derived = derivedFixture({ is_magus: true });
     const input = auraInputTag();
     expect(input).not.toContain('aria-describedby');
-  });
-
-  it('announces the hint as a polite live region, not an interrupting one', () => {
-    // role="status" is implicitly aria-live="polite" — the hint fires while the
-    // player is still typing, so an assertive region would talk over them.
-    store.entity.aura = 999;
-    store.derived = derivedFixture({ is_magus: true });
-    const body = html();
-    const match = /<[^>]*data-testid="derived-aura-out-of-range"[^>]*>/i.exec(body);
-    if (!match) throw new Error('no element with data-testid="derived-aura-out-of-range"');
-    expect(match[0]).toContain('role="status"');
   });
 });
 

@@ -539,21 +539,30 @@ export interface EligibilityOptions {
 
 /**
  * How deeply a prerequisite expression may nest. Mirrors the engine's
- * `PREREQ_MAX_DEPTH` (`crates/arm-rules/src/types.rs`), which rejects a deeper
- * tree at load — so this is defence in depth for a ruleset that somehow reached
- * the frontend unvalidated, not a limit the UI enforces on its own.
+ * `types.rs::PREREQ_MAX_DEPTH`, which rejects a deeper tree at load — so this is
+ * defence in depth for a ruleset that somehow reached the frontend unvalidated,
+ * not a limit the UI enforces on its own.
+ *
+ * Exported only so `prereq-parity.test.ts` can hold it against the engine's
+ * literal: two copies of one number are a drift risk the moment nothing
+ * compares them.
  */
-const PREREQ_MAX_DEPTH = 32;
+export const PREREQ_MAX_DEPTH = 32;
 
 /**
  * Whether `prereq` is DEFINITELY unsatisfiable for a character in `house`,
  * judging `house` leaves alone and treating every other leaf as undecided.
  *
- * The exact mirror of the engine's `Prereq::conflicts_with_house`
- * (`crates/arm-rules/src/types.rs`) — a deliberate matched pair, since the menu
- * this filters and the validation that would otherwise catch the pick must agree
- * on what is offerable. Returns `undefined` for "undecided", which is why an
- * unknown House and a non-`house` prerequisite both leave an item on the menu.
+ * The exact mirror of the engine's `types.rs::Prereq::conflicts_with_house` — a
+ * deliberate matched pair, since the menu this filters and the validation that
+ * would otherwise catch the pick must agree on what is offerable. Returns
+ * `undefined` for "undecided", which is why an unknown House and a non-`house`
+ * prerequisite both leave an item on the menu.
+ *
+ * The pairing is enforced, not merely asserted: every kind is named explicitly
+ * below so the `never` guard after the switch turns a new union member into a
+ * type error, and `prereq-parity.test.ts` diffs the union itself against the
+ * engine's enum so a new engine variant cannot stay out of the union.
  */
 function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): boolean | undefined {
   if (depth > PREREQ_MAX_DEPTH) return undefined;
@@ -585,11 +594,24 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
       return fold(prereq.value, true, false, true);
     case 'house':
       return house === null ? undefined : house === prereq.value;
-    default:
-      // `has`, `ability_min`, `art_min`, `is_magus`: outside this question's
-      // remit, so they can neither exclude an item nor rescue one.
+    // Outside this question's remit, so they can neither exclude an item nor
+    // rescue one. Listed one by one rather than swept up by a `default:` so the
+    // `never` assignment below is reachable: a `default:` would absorb a kind
+    // this function was never written for, and the only thing standing between
+    // an open grant and a House-restricted Virtue is this filter.
+    case 'has':
+    case 'ability_min':
+    case 'art_min':
+    case 'is_magus':
       return undefined;
   }
+  // Exhaustiveness guard: `prereq` narrows to `never` here only while every
+  // kind above is handled. Adding one to the union makes THIS line the type
+  // error, mirroring the compile error the engine's exhaustive `match` raises
+  // at its own three sites; `prereq-parity.test.ts` is what forces a new engine
+  // variant into the union in the first place.
+  const unhandled: never = prereq;
+  return unhandled;
 }
 
 /**
@@ -1039,9 +1061,11 @@ export function grantedSelectionsForSide(
  * like an Ability, so it is priced from the same advancement table; unmastered
  * spells (0/null) cost nothing. Two Flawless-Magic reductions mirror the engine's
  * charge (`xp_allocation`): a granted `floor` (auto-mastery at 1) is free, so only
- * the table cost *above* the floor is charged; and when advancement is `doubled`
- * that remainder is halved (rounded up). Spent from the Mastered-Spells pool plus
- * the general pool. Source: ArMDE:3887-3889, :4471-4474.
+ * the table cost *above* the floor is charged; and an `affinity` — the authored
+ * `[num, den]` "counts as num/den of itself" pair — charges that remainder as
+ * `ceil(payable * den / num)`, exactly as `effective/xp.rs::charged_cost` does.
+ * Spent from the Mastered-Spells pool plus the general pool.
+ * Source: ArMDE:3887-3889, :4471-4474.
  *
  * KNOWN DRIFT RISK (GD4, tmp/review/review-round-2-gerda-derived.md): this
  * duplicates the mastery-spend leg of `crates/arm-rules/src/effective/xp.rs`'s
@@ -1050,19 +1074,8 @@ export function grantedSelectionsForSide(
  * mastery-pool `used` figure on `EffectiveScores` (the value is already computed
  * inside `xp_allocation` but deliberately not surfaced, per the "Flow-only:
  * never surfaced in `restricted`" comment on
- * `effective/xp.rs::spell_mastery_flow_pool`). The `doubled`
- * boolean below is ALSO NOT a general Affinity reduction: the engine's
- * `charged_cost(payable, affinity)` handles any `(num, den)` ratio, but this
- * collapses it to `Math.ceil(payable / 2)`, correct only for a 2/1 ratio.
- * Verified against the shipped ruleset (2026-08 round 2): exactly one item
- * grants Spell Mastery (`rules/core/virtues_flaws.json`'s Flawless Magic entry,
- * `advancement_num: 2, advancement_den: 1`), so no live call site can hit a
- * different ratio today — but the engine's `Effect::GrantsSpellMastery` already
- * supports an arbitrary ratio
- * (`effective/spell.rs::spell_mastery_advancement_affinity`), so a future
- * Virtue/Flaw with a different one would silently diverge here while the
- * engine-computed (validated/exported) total updated correctly. The test below
- * is pinned to the exact same worked example as
+ * `effective/xp.rs::spell_mastery_flow_pool`). The test below is pinned to the
+ * exact same worked example as
  * `effective.rs::flawless_magic_floors_first_mastery_free_and_halves_the_rest`,
  * so a change to either side's arithmetic without the other fails a test on
  * both. The correct long-term fix is the same shape as
@@ -1070,26 +1083,22 @@ export function grantedSelectionsForSide(
  * `EffectiveScores` and have `SpellBudgetBar.svelte` read it from
  * `store.effective` instead of calling this function.
  *
- * V2 (full-audit round) re-confirmed this is dormant, not live: option (a)
- * (surface the engine-computed total) needs `crates/arm-rules/src/effective/xp.rs`
- * and `crates/arm-app/src/ruleset_io.rs` (`EffectiveScores`) changes outside this
- * fix's file set, so it is NOT done here — flagged as the recommended follow-up,
- * unchanged from the paragraph above. Option (b) — explicitly scoping this
- * function to 2:1-only — is what this fix adds: the name keeps its established
- * call-site spelling (`SpellBudgetBar.svelte`'s only caller is also outside this
- * fix's file set, so renaming here would leave that import broken), but the
- * 2:1-only constraint is now enforced by a **data-integrity tripwire**, not just
- * this docstring: `derive.test.ts`'s "spellMasteryXpSpent — 2:1-only, guarded
- * against silent drift (V2)" describe block reads the SHIPPED
- * `rules/core/virtues_flaws.json` and fails the moment any `grants_spell_mastery`
- * effect ships a genuine reduction ratio other than 2/1 — so a future Virtue/Flaw
- * introducing one cannot land silently.
+ * What is NO LONGER a drift risk (V2, full-audit round 2): the Affinity itself.
+ * This used to take a `doubled` boolean and re-expand it as
+ * `Math.ceil(payable / 2)` — a rules value that was data in the engine and a
+ * literal here, so a Virtue authoring any ratio but 2/1 would have been priced
+ * wrongly on screen while the engine's own total stayed right. The ratio now
+ * crosses the IPC boundary intact as
+ * `EffectiveScores.spell_mastery_advancement_affinity`
+ * (`ruleset_io.rs::spell_mastery_fields`), and the arithmetic below is the
+ * engine's general one, so adding such a Virtue is once again the data-only
+ * change the "catalogue size is data, never code" invariant promises.
  */
 export function spellMasteryXpSpent(
   advancement: { score: number; total_xp: number }[] | undefined,
   spells: { mastery?: number | null }[] | undefined,
   floor = 0,
-  doubled = false,
+  affinity: [number, number] | null = null,
 ): number {
   if (!advancement) return 0;
   const tableFor = (score: number): number | undefined =>
@@ -1102,9 +1111,23 @@ export function spellMasteryXpSpent(
     const table = tableFor(bought);
     if (table === undefined) continue;
     const payable = Math.max(0, table - floorTable);
-    total += doubled ? Math.ceil(payable / 2) : payable;
+    total += chargedCost(payable, affinity);
   }
   return total;
+}
+
+/**
+ * What an advancement total actually costs under an Affinity: a score "counts as
+ * `num`/`den` of itself", so it is charged `ceil(table * den / num)`. The exact
+ * mirror of the engine's `effective/xp.rs::charged_cost`, including its guard on
+ * a zero numerator — nonsense data must not divide by zero, and charging the
+ * full cost is the conservative reading.
+ */
+function chargedCost(tableXp: number, affinity: [number, number] | null): number {
+  if (!affinity) return tableXp;
+  const [num, den] = affinity;
+  if (num === 0) return tableXp;
+  return Math.ceil((tableXp * den) / num);
 }
 
 /**

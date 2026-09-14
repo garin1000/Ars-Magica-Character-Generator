@@ -649,10 +649,12 @@ export interface EffectiveScores {
   spell_mastery_xp: number;
   // Mastery-score floor every known spell gets (Flawless Magic 1); 0 = none.
   spell_mastery_floor: number;
-  // Whether a Virtue doubles Spell-Mastery Advancement Totals (Flawless Magic),
-  // halving each mastery point's XP cost, so the mastery accounting matches the
-  // engine's charge.
-  spell_mastery_advancement_doubled: boolean;
+  // The Affinity on every Spell-Mastery Advancement Total, as the authored
+  // [num, den] pair ("counts as num/den of itself"; Flawless Magic [2, 1], which
+  // halves each mastery point's XP cost); null when no grant reduces the cost.
+  // The ratio crosses rather than a "doubled" flag so the mastery accounting
+  // matches the engine's charge for ANY pair the catalogue authors.
+  spell_mastery_advancement_affinity: [number, number] | null;
   // The being's effective Might Score + Realm (base + same-Realm grants), or null
   // for an ordinary character. Engine-authoritative; never recomputed in JS.
   might: MightScore | null;

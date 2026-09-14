@@ -686,7 +686,7 @@ reputation-type-academic = Akademisch
 # und das Langlebigkeitsritual. Das genutzte/verbleibende Artefaktbudget stammt aus
 # der Engine, wird hier nie neu berechnet.
 aura-label = Angenommene Labor-/Konventaura
-aura-out-of-range = Außerhalb des Regelbereichs ({ $min } bis { $max }); wird beim Speichern auf den nächstgültigen Wert begrenzt.
+aura-out-of-range = Außerhalb des Regelbereichs ({ $min } bis { $max }); der Wert wurde auf den nächstgültigen begrenzt.
 possessions-devices-label = Artefakte
 device-name-placeholder = Name des Artefakts
 device-level-label = Stufe
@@ -1280,7 +1280,7 @@ derived-section-decrepitude = Gebrechlichkeit
 derived-section-warping = Verzerrung
 derived-size = Größe
 derived-aura-label = Angenommene Labor-/Konventaura
-derived-aura-out-of-range = Außerhalb des Regelbereichs ({ $min } bis { $max }); wird beim Speichern auf den nächstgültigen Wert begrenzt.
+derived-aura-out-of-range = Außerhalb des Regelbereichs ({ $min } bis { $max }); der Wert wurde auf den nächstgültigen begrenzt.
 derived-lab-enchanting = Für Verzauberung
 derived-lab-enchanting-hint = Von der obigen Laborsumme wegen Schwacher Verzauberer halbiert — für das Erschaffen oder Untersuchen verzauberter Gegenstände verwenden.
 derived-within-focus = Im Fokus

@@ -1978,10 +1978,10 @@ carrying `being: "Demons"` raised `unknown_param_value`, and one carrying
 accepted when the domains landed and is no longer, because 0.3 ships to players
 already running v0.2.0 — "open your character, get four errors" is not a release.
 
-- **The `being` labels are migrated.** `fold_legacy_being_params`
-  (`crates/arm-rules/src/types.rs`, called from `load_entity_migrating`) maps the
-  fifteen labels a v0.2.x player could have typed — six classes × the two shipped
-  languages, taken from `rules/i18n/en|de/virtues_flaws.json`, plus the three
+- **The `being` labels are migrated.** `migration.rs::fold_legacy_being_params`
+  (called from `migration.rs::load_entity_migrating`) maps the fifteen labels a
+  v0.2.x player could have typed — six classes × the two shipped languages,
+  taken from `rules/i18n/en|de/virtues_flaws.json`, plus the three
   German dative forms `ArMDE:4135` prints (see below); all cross-checked against
   `ArMDE:4135` / `ArMDE:6526` / `ArMDE:6893` and their German mirrors — onto the
   `being.*` ids, case- and whitespace-insensitively. The earlier objection that
@@ -2015,7 +2015,7 @@ already running v0.2.0 — "open your character, get four errors" is not a relea
   `a_choice_the_old_save_never_stored_is_not_invented`,
   `migrating_a_v0_2_x_save_twice_changes_nothing`,
   `a_migrated_save_is_byte_stable_across_a_save_load_save_cycle`
-  (`crates/arm-rules/src/types.rs`);
+  (`crates/arm-rules/src/migration.rs`);
   `a_v0_2_x_saves_typed_being_values_resolve_after_migration`,
   `the_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each`,
   `a_genuine_too_many_selections_survives_the_being_migration`
@@ -2039,10 +2039,10 @@ entries where that class is legal, both print the nominative). The English lists
 add no key.
 
 `every_frozen_being_label_is_distinct_and_is_never_an_id`
-(`crates/arm-rules/src/types.rs`) asserts the two properties the whole fold rests
-on over whatever the table holds: no two keys collapse onto one another under the
-case/whitespace folding, and no key equals a `being.*` id. So growing the table
-cannot silently introduce an ambiguity or break idempotency.
+(`crates/arm-rules/src/migration.rs`) asserts the two properties the whole fold
+rests on over whatever the table holds: no two keys collapse onto one another
+under the case/whitespace folding, and no key equals a `being.*` id. So growing
+the table cannot silently introduce an ambiguity or break idempotency.
 
 **One German wording deliberately left out.** `ArMDE:4141` renders the mundane-humans
 class as *"gewöhnliche Menschen"* rather than the *"sterbliche Menschen"* of
@@ -2874,8 +2874,10 @@ approximation of "Latin").
   `allocation.max_flow`, the total all pools can fund, so `spent − pool == shortfall`
   stays accurate). `Effect::GrantsSpellMastery { score, .. }` → `spell_mastery_floor`
   (max grant); `effective_spell_mastery(sel)` = `max(bought, floor)`. The UI mirrors
-  the same floor + doubling charge in `derive.ts::spellMasteryXpSpent`, driven by
-  `EffectiveScores.spell_mastery_{xp,floor}` and `spell_mastery_advancement_doubled`;
+  the same floor + Affinity charge in `derive.ts::spellMasteryXpSpent`, driven by
+  `EffectiveScores.spell_mastery_{xp,floor}` and `spell_mastery_advancement_affinity`
+  — the authored `[num, den]` pair, not a "doubled" flag, so the UI charges the same
+  reduced cost for any ratio the catalogue authors (full-audit round 2, V2);
   the SpellPicker mastery spinner shows for every magus (buyable from the general
   pool). "You may take this Virtue multiple times" (`ArMDE:4474`) states no ceiling, so
   `virtue.mastered_spells` carries `max_per_target: 255` — see *Selection
@@ -3264,10 +3266,11 @@ M5 only makes the raw state + effects enterable and computes the scores from poi
   `ArMDE:16579`.
   - The former manual `aging_reductions` map was **removed** (schema 9 → 10):
     modelling aging fully from `aging_points` per the rule made a separate
-    stored-drops field redundant and a divergence risk. `load_entity_migrating`
-    (`types.rs`) migrates old saves by folding any legacy `aging_reductions[c] = R`
-    into `aging_points[c]` as the *minimal* point total that reproduces `R` drops
-    under the derived rule (`minimal_aging_points_for_drops`), reporting which
+    stored-drops field redundant and a divergence risk.
+    `migration.rs::load_entity_migrating` migrates old saves by folding any
+    legacy `aging_reductions[c] = R` into `aging_points[c]` as the *minimal*
+    point total that reproduces `R` drops under the derived rule
+    (`migration.rs::minimal_aging_points_for_drops`), reporting which
     Characteristics were migrated. Because every aging point counts toward
     Decrepitude — including those "lost" to a drop — the fold also corrects the old
     model's Decrepitude under-count. A legacy map that cannot deserialize fails the
@@ -6510,7 +6513,7 @@ code exists**. What is *not* compatible is the **forward** direction: a schema-1
 save may omit `year` entirely, which a schema-14 reader rejects — and a version
 number is exactly how an older build learns not to try. That is why this one earns a
 bump where `Entity.living_conditions` (purely additive) did not. The history line
-lives on the `SCHEMA_VERSION` constant in `types.rs`; the frontend mirror in
+lives on the `migration.rs::SCHEMA_VERSION` constant; the frontend mirror in
 `ui/src/lib/state.svelte.ts` is pinned equal to it by test.
 
 Knock-on: `export.rs` now prints an **undated** log entry as a plain bullet rather

@@ -675,7 +675,7 @@ reputation-type-academic = Academic
 # talisman and the Longevity Ritual. The item-level budget used/remaining comes
 # from the engine, never recomputed here.
 aura-label = Assumed lab/covenant aura
-aura-out-of-range = Outside the rules range ({ $min } to { $max }); will be clamped to the nearest legal value when saved.
+aura-out-of-range = Outside the rules range ({ $min } to { $max }); the value was adjusted to the nearest legal one.
 possessions-devices-label = Enchanted Devices
 device-name-placeholder = Device name
 device-level-label = Level
@@ -1223,7 +1223,7 @@ derived-section-decrepitude = Decrepitude
 derived-section-warping = Warping
 derived-size = Size
 derived-aura-label = Assumed lab/covenant aura
-derived-aura-out-of-range = Outside the rules range ({ $min } to { $max }); will be clamped to the nearest legal value when saved.
+derived-aura-out-of-range = Outside the rules range ({ $min } to { $max }); the value was adjusted to the nearest legal one.
 derived-lab-enchanting = For enchanting
 derived-lab-enchanting-hint = Halved from the Lab Total above for Weak Enchanter — use this figure when creating or investigating an enchanted item.
 derived-within-focus = Within focus

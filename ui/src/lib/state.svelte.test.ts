@@ -3964,6 +3964,47 @@ describe('unsaved-changes tracking', () => {
     expect(store.dirty).toBe(false);
   });
 
+  // S3 (full-audit round 2): the schema-migration notice closes with "Saving
+  // will keep the rebuilt values" — a future-tense instruction that stayed on
+  // screen, untouched and undismissible, for the rest of the session after the
+  // save it describes had already happened.
+  it('retires the schema-migration notice once the save it asks for has happened', async () => {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/migrated.armc',
+      entity: cleanEntity(),
+      migrated_aging_characteristics: ['str'],
+    });
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+
+    expect(store.migrationNotice).not.toBeNull();
+
+    vi.mocked(ipc.saveEntity).mockResolvedValue('/tmp/migrated.armc');
+    await store.save();
+
+    expect(store.migrationNotice).toBeNull();
+  });
+
+  it('keeps the migration notice when the save was cancelled', async () => {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/migrated.armc',
+      entity: cleanEntity(),
+      migrated_aging_characteristics: ['str'],
+    });
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+    // No current file, so save() routes to Save As, which can be cancelled.
+    store.currentPath = null;
+
+    vi.mocked(ipc.saveEntity).mockResolvedValue(null);
+    await store.save();
+
+    // Nothing was written, so the advice has not been consumed.
+    expect(store.migrationNotice).not.toBeNull();
+  });
+
   it('stays dirty after a cancelled save (null return)', async () => {
     await loadClean();
     // Clear the current file so save() routes to Save As (which prompts and can
@@ -5224,5 +5265,91 @@ describe('the document-action gate', () => {
         settings: store.documentActionEnabled('settings'),
       });
     }
+  });
+});
+
+// --- Choosing a language is not a document edit (S1, full-audit round 2) -----
+//
+// `setLang` reloads the ruleset because rules display text is per-language. That
+// reload used to re-stamp `entity.ruleset` with the freshly loaded identity,
+// which is a no-op in the ordinary case and destructive in exactly the one case
+// the engine's `ruleset_mismatch` warning exists to report: a save written under
+// a different ruleset. `ssr` project — plain store state, no component, no
+// `$effect`.
+describe('setLang leaves the document provenance alone', () => {
+  const savedProvenance = { id: 'house-rules', version: '3' };
+  let langBefore: typeof store.lang;
+
+  /** A localized ruleset payload announcing `id`/`version` as its identity. */
+  function loadedRuleset(id: string, version: string): LocalizedRuleset {
+    return {
+      ruleset: {
+        id,
+        version,
+        point_items: {},
+        type_profiles: {},
+        abilities: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+      },
+      i18n: {},
+    } as LocalizedRuleset;
+  }
+
+  beforeEach(() => {
+    langBefore = store.lang;
+    vi.mocked(ipc.loadEntity).mockReset();
+    vi.mocked(ipc.loadRuleset).mockReset();
+    store.view = 'start';
+  });
+
+  afterEach(() => {
+    store.lang = langBefore;
+  });
+
+  it('keeps the saved ruleset identity, and the document clean, across a language switch', async () => {
+    // A save written against a house-ruled `rules/` directory beside the binary
+    // — a supported layout — opened under the shipped catalogue. The mismatch is
+    // the point: it is what the Validation panel warns about.
+    const saved: Entity = {
+      schema_version: 11,
+      ruleset: { ...savedProvenance },
+      entity_kind: 'character',
+      type_id: 'companion',
+      selections: [],
+      characteristics: {} as Entity['characteristics'],
+      characteristic_descriptions: {},
+      ability_scores: [],
+      xp_pool: 0,
+      ability_funding: 'pool',
+      saga_year: 1220,
+      art_scores: [],
+      personality_traits: [],
+      reputations: [],
+    };
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/magus.armc',
+      entity: saved,
+      migrated_aging_characteristics: [],
+    });
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+
+    expect(store.entity.ruleset).toEqual(savedProvenance);
+    expect(store.dirty).toBe(false);
+
+    vi.mocked(ipc.loadRuleset).mockResolvedValue(loadedRuleset('arm5-core', '2024.1'));
+    await store.setLang(store.lang === 'de' ? 'en' : 'de');
+
+    // The language changed; what the character was built against did not. A
+    // re-stamp here would erase the `ruleset_mismatch` warning with no user
+    // action addressing it, write a false provenance on the next save, and
+    // dirty a document nobody edited.
+    expect(store.entity.ruleset).toEqual(savedProvenance);
+    expect(store.dirty).toBe(false);
+    // The reload itself still happened — the rules text really is per-language.
+    expect(store.ruleset?.ruleset.id).toBe('arm5-core');
   });
 });

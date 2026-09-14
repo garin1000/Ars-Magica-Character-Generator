@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "@fluent/bundle": "^0.18.0",
-    "@tauri-apps/api": "^2.0.0",
-    "@tauri-apps/plugin-dialog": "^2.0.0"
+    "@tauri-apps/api": "^2.0.0"
   }
 }

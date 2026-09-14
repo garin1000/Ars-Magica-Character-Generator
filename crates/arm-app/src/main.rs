@@ -227,53 +227,49 @@ fn request_exit_enabled() -> bool {
 /// already confirmed — mirroring the frontend dirty flag pushed via
 /// `update_close_guard`.
 ///
-/// **The decision itself is not here** (Erika F4). `commands.rs::guard_decision`
-/// and `commands.rs::apply_dialog_answer` own every branch of it, because this
-/// file is a binary with no unit seam of any kind: what is left below is the one
-/// step that genuinely needs Tauri — putting the dialog on screen and handing
-/// its answer back. See those two functions for the table, and
-/// `tests/commands.rs` for the six rows that now walk it.
+/// **No decision of any kind is left here** (Erika F4, completed in E1).
+/// `commands.rs` owns all four: `guard_decision` and `apply_dialog_answer` for
+/// the state, `Decision::blocks` and `resolve_discard_dialog` for the two
+/// actions — whether to prevent the close/quit, and whether the answer re-issues
+/// it. They live there because this file is a binary with no unit seam of any
+/// kind, and every one of those branches is one edit away from discarding the
+/// user's work: E1 confirmed that inverting either action decision left `cargo
+/// test`, clippy, fmt, vitest and the full e2e suite green.
+///
+/// What is left below is the one step that genuinely needs Tauri — putting the
+/// dialog on screen and handing its answer back. See those four functions for
+/// the table, and `tests/commands.rs` for the rows that walk it.
 fn guard_blocks_quit<F>(app: &AppHandle, on_discard: F) -> bool
 where
     F: FnOnce(&AppHandle) + Send + 'static,
 {
     let state = app.state::<AppState>();
     let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
-    match commands::guard_decision(&mut guard) {
-        commands::Decision::Allow => false,
-        commands::Decision::Block => true,
-        commands::Decision::BlockAndShow => {
-            let labels = guard.labels.clone();
-            drop(guard);
-            let app = app.clone();
-            let mut dialog = app
-                .dialog()
-                .message(labels.message)
-                .title(labels.title)
-                .kind(MessageDialogKind::Warning)
-                .buttons(MessageDialogButtons::OkCancelCustom(
-                    labels.discard,
-                    labels.cancel,
-                ));
-            // Tie the confirmation to the window it is about, so it cannot be lost
-            // behind it. Parenting IS the modality mechanism the dialog plugin offers.
-            if let Some(window) = app.get_webview_window("main") {
-                dialog = dialog.parent(&window);
-            }
-            dialog.show(move |discard| {
-                {
-                    let state = app.state::<AppState>();
-                    let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
-                    commands::apply_dialog_answer(&mut guard, discard);
-                    if !discard {
-                        return;
-                    }
-                }
-                on_discard(&app);
-            });
-            true
+    let decision = commands::guard_decision(&mut guard);
+    if decision == commands::Decision::BlockAndShow {
+        let labels = guard.labels.clone();
+        drop(guard);
+        let app = app.clone();
+        let mut dialog = app
+            .dialog()
+            .message(labels.message)
+            .title(labels.title)
+            .kind(MessageDialogKind::Warning)
+            .buttons(MessageDialogButtons::OkCancelCustom(
+                labels.discard,
+                labels.cancel,
+            ));
+        // Tie the confirmation to the window it is about, so it cannot be lost
+        // behind it. Parenting IS the modality mechanism the dialog plugin offers.
+        if let Some(window) = app.get_webview_window("main") {
+            dialog = dialog.parent(&window);
         }
+        dialog.show(move |discard| {
+            let state = app.state::<AppState>();
+            commands::resolve_discard_dialog(&state.close_guard, discard, || on_discard(&app));
+        });
     }
+    decision.blocks()
 }
 
 #[cfg(test)]

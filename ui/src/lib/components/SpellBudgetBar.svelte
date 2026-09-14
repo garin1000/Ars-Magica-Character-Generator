@@ -63,17 +63,18 @@
   const available = $derived(alloc.available);
 
   // Spell-Mastery: XP pool (Mastered Spells) + auto-mastery floor (Flawless Magic)
-  // + whether Flawless Magic doubles advancement (halving each mastery point's XP).
+  // + the advancement Affinity the engine computed, as its authored [num, den]
+  // ratio (Flawless Magic [2, 1], halving each mastery point's XP).
   const masteryXp = $derived(store.effective?.spell_mastery_xp ?? 0);
   const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
-  const masteryDoubled = $derived(store.effective?.spell_mastery_advancement_doubled ?? false);
+  const masteryAffinity = $derived(store.effective?.spell_mastery_advancement_affinity ?? null);
   // The Mastery Ability rises like an Ability, so it is priced from the Ability
   // advancement table (data, not a hardcoded mechanic — same path as abilities).
   const advancement = $derived(store.ruleset?.ruleset.advancement ?? []);
-  // Charged like the engine: only mastery above the free floor, halved when
-  // Flawless Magic doubles advancement totals.
+  // Charged like the engine: only mastery above the free floor, reduced by
+  // whatever Affinity ratio the grant authors.
   const masteryUsed = $derived(
-    spellMasteryXpSpent(advancement, store.entity.spells ?? [], masteryFloor, masteryDoubled),
+    spellMasteryXpSpent(advancement, store.entity.spells ?? [], masteryFloor, masteryAffinity),
   );
   // Referenced so the mastery read-out only claims a pool the table can price.
   const masteryMax = $derived(maxAbilityScore(advancement));

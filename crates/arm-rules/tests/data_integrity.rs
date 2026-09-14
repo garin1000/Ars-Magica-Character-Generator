@@ -5050,7 +5050,7 @@ fn a_grog_sufi_taken_as_social_status_is_not_a_supernatural_virtue() {
 /// Old-save regression: a `virtue.sufi` selection with no `taken_as` at all
 /// (every save written before this slice) must still validate as a legal item
 /// — `taken_as` is a newly-declared param on an already-shipped item, so the
-/// accepted precedent (the `SCHEMA_VERSION` doc comment in `types.rs`, and
+/// accepted precedent (the `migration.rs::SCHEMA_VERSION` doc comment, and
 /// RULES.md, "Realm parameter domain, and mutually exclusive values" →
 /// "Save impact — accepted, not migrated") is a non-blocking `missing_param`,
 /// never a hard failure or a silently invented

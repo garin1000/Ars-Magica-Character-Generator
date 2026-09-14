@@ -373,13 +373,33 @@ class AppStore {
 
   // --- Entity-mutator workflows -------------------------------------------
   //
-  // The per-domain document editors, finishing the extraction the four
+  // The per-domain document editors, continuing the extraction the four
   // workflows above began (Viktor #7). Each owns one region of the entity and
   // holds no state of its own: they write in place through `host.entity()`,
   // which returns `AppStore`'s own `$state` object, so the store remains the
   // sole owner of the document and `dirty` still compares the very object these
   // mutators edit. The store's methods below are one-line delegations, exactly
   // as the aging ones are.
+  //
+  // **The extraction is NOT finished, and which domains have a module is not yet
+  // a principle** (full-audit round 2, V6 — this comment previously claimed
+  // otherwise). Roughly 860 further lines of entity mutators still live inline
+  // below: Familiar, Talisman, magic items/devices/powers/focus powers, warping
+  // and twilight scars, the aging log and living conditions, reputations,
+  // personality traits, the longevity ritual, the life-stage plan and
+  // characteristics. Several are larger than modules that were extracted —
+  // `EquipmentWorkflow` is 58 lines and four one-line mutators; Familiar is
+  // three times that and stayed. The boundary is therefore historical: it is
+  // the list one review round happened to name, not a rule anyone can apply to
+  // the next domain.
+  //
+  // The intended end state, for whoever continues: one module per domain until
+  // `AppStore` holds only cross-domain state — `lang`, `theme`, `view`,
+  // `entity`, `result`, `effective`, `derived`, `currentPath` — plus the
+  // `dirty`/close-guard surface, which is a mandatory product behaviour and the
+  // reason the co-location costs anything at all: every Familiar or Talisman
+  // edit currently lands in the same file, and the same diff, as the
+  // unsaved-changes guard.
 
   #abilityWorkflow = new AbilityWorkflow({
     entity: () => this.entity,
@@ -506,6 +526,12 @@ class AppStore {
     snapshot: () => this.#snapshot(),
     markSaved: (snapshot) => {
       this.#savedSnapshot = snapshot;
+      // The moment the schema-migration notice's advice is consumed — its
+      // closing clause reads "Saving will keep the rebuilt values", which is a
+      // false statement about the future from here on (S3, full-audit round 2).
+      // A cancelled save never reaches this callback, so the notice survives a
+      // dialog the player backed out of.
+      this.migratedAgingCharacteristics = [];
     },
     setError: (error) => {
       this.error = error;
@@ -540,6 +566,11 @@ class AppStore {
    * {@link migrationNotice} re-composes in the new language when the user
    * switches locale — a notice frozen in the language it was opened in would be
    * a second place the UI language fails to reach.
+   *
+   * Cleared when the document changes (`open`, `newDocument`,
+   * `#instantiateCharacter`) and, since S3, on a **successful save** — see the
+   * `markSaved` callback above: that is the moment the notice's own closing
+   * instruction becomes a statement about the past.
    */
   migratedAgingCharacteristics = $state<Characteristic[]>([]);
 
@@ -2714,16 +2745,25 @@ class AppStore {
     try {
       const localized = await ipc.loadRuleset(this.lang);
       this.ruleset = localized;
-      const { id, version } = localized.ruleset;
       if (resetEntity) {
+        const { id, version } = localized.ruleset;
         this.entity = newEntity(id, version, '', this.defaultSagaYear);
-        // A fresh entity is a clean baseline. A language reload (else branch)
-        // keeps the edited entity, so it must NOT reset the baseline — doing so
-        // would drop `dirty` to false while unsaved edits still exist.
+        // A fresh entity is a clean baseline. A language reload keeps the
+        // edited entity, so it must NOT reset the baseline — doing so would
+        // drop `dirty` to false while unsaved edits still exist.
         this.#savedSnapshot = this.#snapshot();
-      } else {
-        this.entity.ruleset = { id, version };
       }
+      // A language reload deliberately touches NOTHING on the entity — S1
+      // (full-audit round 2). It used to re-stamp `entity.ruleset` with the
+      // freshly loaded identity, which rewrites the same two values in the
+      // ordinary case and changes something in exactly one: when the document's
+      // recorded ruleset differs from the loaded one, which is precisely what
+      // `validation/mod.rs::validate_ruleset_identity` exists to report. That
+      // erased the warning with no user action addressing it, made the save's
+      // provenance field a false claim, and dirtied a document nobody edited.
+      // Adopting a different ruleset is a decision, not a side effect of
+      // choosing a display language; a loaded entity carries its own identity
+      // and a fresh one is stamped above.
       await this.revalidate();
     } catch (e) {
       this.#rulesetError = e as AppError;

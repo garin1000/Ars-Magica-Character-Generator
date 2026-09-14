@@ -109,8 +109,20 @@ describe('DerivedCombatSection — the not-applicable cell (Sabine 7)', () => {
     expect(store.t('derived-not-applicable')).toBe('n/v');
   });
 
+  // E10 (full-audit round 2): this used to make exactly one assertion, and it was
+  // negative — "the placeholder is absent". That is satisfied just as well by
+  // "nothing is present": emptying the three `<td>`s, or narrowing the table's
+  // own `{#if d.combat.length > 0}` so it never renders, left it green. It is the
+  // only test in this file whose NAME promises present values are rendered, so it
+  // now asserts them positively.
   it('still shows a present value rather than the placeholder', () => {
     const body = html([{ ...unarmed(), attack: 7, damage: 9, range: 0 }]);
+    const cells = [...body.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((m) => m[1].trim());
+
+    // Initiative, Attack, Defense, Damage, Range — in the template's own order.
+    expect(cells).toEqual(['2', '7', '5', '9', '0']);
+    // `range: 0` is the deliberate case: a falsy-but-present value. `??` keeps it,
+    // `||` would swap it for the placeholder.
     expect(body).not.toContain(store.t('derived-not-applicable'));
   });
 });

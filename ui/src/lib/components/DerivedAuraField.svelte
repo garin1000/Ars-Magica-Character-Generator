@@ -18,18 +18,23 @@
   // fallback is not expected to be exercised in practice).
   const auraMin = $derived(store.ruleset?.ruleset.aura_modifier_min ?? I32_MIN);
   const auraMax = $derived(store.ruleset?.ruleset.aura_modifier_max ?? I32_MAX);
-  // A TYPED value can no longer be out of range: `state.svelte.ts::AppStore.setAura`
-  // clamps to this same engine-surfaced bound, so the field and the derived
-  // read-outs cannot disagree. What survives is a value this app did not type —
-  // a hand-edited or older save, which `Entity::normalize` (ArMDE:17390,
-  // :17404-17409) rewrites only at the NEXT save. So the warning stays, for
-  // exactly that case: the number on screen is not yet the number that will be
-  // stored, and the player should know before saving rather than after.
-  const auraOutOfRange = $derived(aura < auraMin || aura > auraMax);
+  // What the hint reports is the CLAMP, not the stored value's range — Gerda #1 /
+  // Sabine #2, full-audit round 2. A stored aura can no longer be out of range at
+  // all: `state.svelte.ts::AppStore.setAura` clamps what is typed, and
+  // `migration.rs::load_entity_migrating` clamps what is loaded (ArMDE:17390,
+  // :17404-17409), which between them is every route into the store. Testing the
+  // stored value therefore asked a question with only one answer, leaving the
+  // field free to overrule the player in complete silence. It reports the event
+  // that does happen instead: the entry the store rewrote.
+  let clampedEntry = $state(false);
 
   function onAura(e: Event) {
     const raw = (e.currentTarget as HTMLInputElement).value;
-    store.setAura(raw === '' ? null : Number(raw));
+    const requested = raw === '' ? null : Number(raw);
+    store.setAura(requested);
+    // A cleared field is not the player being overruled — it is no entry at all,
+    // which the store reads as 0.
+    clampedEntry = requested !== null && requested !== store.entity.aura;
   }
 </script>
 
@@ -44,15 +49,15 @@
       min={auraMin}
       max={auraMax}
       value={aura}
-      aria-describedby={auraOutOfRange ? 'derived-aura-out-of-range' : undefined}
+      aria-describedby={clampedEntry ? 'derived-aura-out-of-range' : undefined}
       oninput={onAura}
       data-testid="derived-aura-input"
     />
   </label>
-  {#if auraOutOfRange}
-    <!-- role="status" (polite): announced once the value goes out of range
-         without interrupting the keystroke the player is mid-typing, the
-         same politeness BalanceBar/XpBar use for their own live totals. -->
+  {#if clampedEntry}
+    <!-- role="status" (polite): announced once the entry is rewritten, without
+         interrupting the keystroke the player is mid-typing, the same
+         politeness BalanceBar/XpBar use for their own live totals. -->
     <p
       class="hint"
       id="derived-aura-out-of-range"
