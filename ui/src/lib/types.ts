@@ -170,9 +170,9 @@ export type HealthTrack =
 export type MagicResistanceEffect =
   | 'no_form_bonus'
   | 'aura_bonus'
-  | 'susceptible_divine'
   | 'susceptible_faerie'
-  | 'susceptible_infernal';
+  | 'susceptible_infernal'
+  | 'conditional_penetration_waiver';
 export type AgingEffect =
   | 'aging_roll'
   | 'longevity_bonus'
@@ -202,7 +202,8 @@ export type SpecialCasting =
   | 'spell_improvisation'
   | 'mercurian'
   | 'life_boost'
-  | 'circumstantial';
+  | 'circumstantial'
+  | 'doubled_aura_penalty';
 
 // The audience a Reputation reaches (a fixed rules taxonomy, rendered via Fluent
 // `reputation-type-<id>`, never as a raw slug).

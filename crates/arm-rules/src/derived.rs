@@ -228,17 +228,19 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 }
                 // Only NoFormBonus folds into the flat per-Form MR number
                 // (magic_resistance()). The realm-conditional / situational variants
-                // (aura bonus, realm susceptibilities) cannot be folded into that flat
-                // figure, so they are surfaced labelled rather than silently dropped.
-                // Source: ArMDE:6815-6826
-                // (Susceptibility flaws), :3579-3596 (Commanding Aura) & :4998-5001
-                // (Special Circumstances) for aura_bonus.
+                // (aura bonus, realm susceptibilities, the conditional Penetration
+                // waiver) cannot be folded into that flat figure, so they are surfaced
+                // labelled rather than silently dropped.
+                // Source: ArMDE:6819-6826
+                // (the two realm susceptibilities that do halve MR), :3579-3596
+                // (Commanding Aura) & :4998-5001 (Special Circumstances) for
+                // aura_bonus, :7068-7070 (Weak Magic Resistance).
                 Effect::MagicResistanceMod { kind } => match kind {
                     MagicResistanceEffect::NoFormBonus => m.mr_mods.push(*kind),
                     MagicResistanceEffect::AuraBonus
-                    | MagicResistanceEffect::SusceptibleDivine
                     | MagicResistanceEffect::SusceptibleFaerie
-                    | MagicResistanceEffect::SusceptibleInfernal => {
+                    | MagicResistanceEffect::SusceptibleInfernal
+                    | MagicResistanceEffect::ConditionalPenetrationWaiver => {
                         m.surfaced.push(SurfacedModifier {
                             family: ModifierFamily::MagicResistance,
                             detail: kind.to_string(),
@@ -277,7 +279,8 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     | SpecialCasting::SpellImprovisation
                     | SpecialCasting::Mercurian
                     | SpecialCasting::LifeBoost
-                    | SpecialCasting::Circumstantial => m.surfaced.push(SurfacedModifier {
+                    | SpecialCasting::Circumstantial
+                    | SpecialCasting::DoubledAuraPenalty => m.surfaced.push(SurfacedModifier {
                         family: ModifierFamily::SpecialCasting,
                         detail: kind.to_string(),
                         amount: 0,
@@ -787,9 +790,9 @@ mod tests {
           { "id": "flaw.limited_magic_resistance", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "major", "categories": ["hermetic"], "entity_kinds": ["character"],
             "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus" }] },
-          { "id": "flaw.susceptibility_to_divine_power", "kind": "flaw", "classification": "in_play_effect",
+          { "id": "flaw.susceptibility_to_faerie_power", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-            "effects": [{ "type": "magic_resistance_mod", "kind": "susceptible_divine" }] },
+            "effects": [{ "type": "magic_resistance_mod", "kind": "susceptible_faerie" }] },
           { "id": "virtue.unaging", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }] },
@@ -3299,20 +3302,21 @@ mod tests {
             && m.amount == 0));
     }
 
-    /// A non-flat Magic-Resistance modifier (Susceptibility to Divine power) is
+    /// A non-flat Magic-Resistance modifier (Susceptibility to Faerie power) is
     /// surfaced labelled with amount 0, not silently dropped. Only NoFormBonus is
     /// folded into the flat per-Form MR number; the realm-conditional variants are
-    /// listed. Source: ArMDE:6815-6826.
+    /// listed, because "against faerie effects" is a scope the flat figure cannot
+    /// carry. Source: ArMDE:6819-6826.
     #[test]
     fn susceptibility_magic_resistance_is_surfaced() {
         let rs = ruleset();
         let mut e = magus();
         e.selections = vec![Selection::new(Id::new(
-            "flaw.susceptibility_to_divine_power",
+            "flaw.susceptibility_to_faerie_power",
         ))];
         let s = surfaced_modifiers(&e, &rs);
         assert!(s.iter().any(|m| m.family == ModifierFamily::MagicResistance
-            && m.detail == "susceptible_divine"
+            && m.detail == "susceptible_faerie"
             && m.amount == 0));
     }
 

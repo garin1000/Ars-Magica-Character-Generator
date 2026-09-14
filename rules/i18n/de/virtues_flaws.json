@@ -1139,11 +1139,11 @@
   },
   "flaw.susceptibility_to_faerie_power": {
     "name": "Anfälligkeit für Feenmacht",
-    "summary": "Du bist besonders anfällig gegenüber Feen und ihrer Magie."
+    "summary": "Du bist besonders anfällig gegenüber Feen und ihrer Magie. Wann immer du eine Feenaura betrittst, musst du einen Ausdauerwurf gleich oder größer als ihre Aurastärke ablegen, um nicht desorientiert zu werden. Darüber hinaus wird dein Magieresistenzwert, einschließlich der Parma Magica, gegen Feeneffekte halbiert. Wenn jemand anderes seine Parma Magica einsetzt, um dich zu schützen, wird seine Resistenz nicht beeinflusst und du profitierst normal davon."
   },
   "flaw.susceptibility_to_infernal_power": {
     "name": "Anfälligkeit für Höllische Macht",
-    "summary": "Du bist besonders anfällig gegenüber den dunklen Mächten."
+    "summary": "Du bist besonders anfällig gegenüber den dunklen Mächten. Wann immer du ein Gebiet mit höllischem Einfluss betrittst, musst du einen Ausdauerwurf gleich oder größer als die Aurastärke ablegen oder krank werden (-1 auf alle Würfe). Du erhältst nur die Hälfte deines normalen Magieresistenzwerts gegen Höllische Effekte, obwohl die Parma Magica eines anderen, die dich schützt, normal zählt."
   },
   "flaw.susceptibility_to_sunlight": {
     "name": "Anfälligkeit für Sonnenlicht",
@@ -1327,7 +1327,7 @@
   },
   "flaw.weak_magic_resistance": {
     "name": "Schwache Magieresistenz",
-    "summary": "Jede Form von Magieresistenz, die du erzeugst, ist unter relativ häufigen Umständen, die ein Gegner leicht nutzen kann, viel schwächer — etwa wenn du nass bist oder dem Zaubernden den Rücken zukehrst."
+    "summary": "Jede Form von Magieresistenz, die du erzeugst, ist unter relativ häufigen Umständen, die ein Gegner leicht nutzen kann, viel schwächer — etwa wenn du nass bist oder dem Zaubernden den Rücken zukehrst. Wenn die Bedingungen erfüllt sind, ziehe nicht die Stufe des Effekts von der Zaubersumme ab, bevor du die Penetration berechnest."
   },
   "flaw.weak_parens": {
     "name": "Schwacher Parens",

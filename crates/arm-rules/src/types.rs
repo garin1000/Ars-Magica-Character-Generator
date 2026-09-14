@@ -1300,13 +1300,16 @@ pub enum Effect {
         amount: i8,
     },
     /// A non-halving Magic Resistance modifier (Limited Magic Resistance drops the
-    /// Form bonus; Susceptibility adds a penalty against one realm; Commanding
-    /// Aura adds a bonus while in a matching aura). Halving MR effects use
-    /// [`Effect::MagicTotalHalving`]. Consumed by `derived.rs` `magic_resistance()`
-    /// (5i).
+    /// Form bonus; Susceptibility to Faerie/Infernal Power halves resistance
+    /// against one realm's effects; Commanding Aura adds a bonus while in a
+    /// matching aura; Weak Magic Resistance waives an attacker's spell-level
+    /// subtraction under a stated condition). Halving MR effects that apply to the
+    /// flat per-Form total use [`Effect::MagicTotalHalving`]. Consumed by
+    /// `derived.rs` `magic_resistance()` (5i).
     ///
     /// Source: ArMDE:6346-6349 (Limited),
-    /// `ArMDE:6819-6826` (Susceptibility), `ArMDE:3579-3596` (Commanding Aura).
+    /// `ArMDE:6819-6826` (Susceptibility), `ArMDE:3579-3596` (Commanding Aura),
+    /// `ArMDE:7068-7070` (Weak Magic Resistance).
     MagicResistanceMod {
         /// Which Magic Resistance modifier this is.
         kind: MagicResistanceEffect,
@@ -1357,7 +1360,8 @@ pub enum Effect {
     /// Source: ArMDE:3645-3648 (Deft
     /// Form), :4822-4826 (Quiet Magic), :5073-5076 (Subtle Magic), :9243-9245
     /// (Words/Gestures penalties), `ArMDE:3675-3682` (Diedne Magic), `ArMDE:5917-5920`
-    /// (Deleterious Circumstances).
+    /// (Deleterious Circumstances), `ArMDE:6815-6817` (Susceptibility to Divine
+    /// Power's doubled aura penalties).
     SpecialCastingMod {
         /// Which casting-style quirk this is.
         kind: SpecialCasting,
@@ -1526,12 +1530,24 @@ pub enum MagicResistanceEffect {
     NoFormBonus,
     /// A bonus to Magic Resistance while in a matching aura (Commanding Aura).
     AuraBonus,
-    /// A penalty to Magic Resistance against Divine power (Susceptibility).
-    SusceptibleDivine,
     /// A penalty to Magic Resistance against Faerie power (Susceptibility).
     SusceptibleFaerie,
     /// A penalty to Magic Resistance against Infernal power (Susceptibility).
     SusceptibleInfernal,
+    /// Under a described, character-specific condition, an attacker does not
+    /// subtract the spell level from the casting total before calculating
+    /// Penetration against this character (Weak Magic Resistance).
+    ///
+    /// Surfaced-only, and necessarily so: the Flaw halves nothing and leaves the
+    /// carrier's own Magic Resistance score untouched. Its two inputs — whether
+    /// the condition is met, and the level of the *incoming* spell — are scene
+    /// facts, so no number on this sheet can carry it.
+    ///
+    /// Source: ArMDE:7068-7070 (the Flaw), :7066 (normal Penetration subtracts
+    /// the spell level), :9912 (the book's own gloss: "need not subtract the
+    /// spell level from the Penetration total ... much like the Weak Magic
+    /// Resistance Flaw").
+    ConditionalPenetrationWaiver,
 }
 
 impl fmt::Display for MagicResistanceEffect {
@@ -1539,9 +1555,9 @@ impl fmt::Display for MagicResistanceEffect {
         f.write_str(match self {
             MagicResistanceEffect::NoFormBonus => "no_form_bonus",
             MagicResistanceEffect::AuraBonus => "aura_bonus",
-            MagicResistanceEffect::SusceptibleDivine => "susceptible_divine",
             MagicResistanceEffect::SusceptibleFaerie => "susceptible_faerie",
             MagicResistanceEffect::SusceptibleInfernal => "susceptible_infernal",
+            MagicResistanceEffect::ConditionalPenetrationWaiver => "conditional_penetration_waiver",
         })
     }
 }
@@ -1718,6 +1734,16 @@ pub enum SpecialCasting {
     /// (Deleterious Circumstances, Environmental Magic, Short-Ranged Magic,
     /// Corrupted Spells).
     Circumstantial,
+    /// The aura's own penalties to this character's magic — the Aura Modifier on
+    /// the Casting Score and the botch dice it adds — are **doubled** in one
+    /// realm's aura (Susceptibility to Divine Power).
+    ///
+    /// Surfaced-only: the engine models neither an aura of a foreign realm nor
+    /// botch dice, and the doubling has no value of its own — it scales whatever
+    /// the scene's aura rating happens to be.
+    ///
+    /// Source: ArMDE:6815-6817.
+    DoubledAuraPenalty,
 }
 
 impl fmt::Display for SpecialCasting {
@@ -1733,6 +1759,7 @@ impl fmt::Display for SpecialCasting {
             SpecialCasting::Mercurian => "mercurian",
             SpecialCasting::LifeBoost => "life_boost",
             SpecialCasting::Circumstantial => "circumstantial",
+            SpecialCasting::DoubledAuraPenalty => "doubled_aura_penalty",
         })
     }
 }
@@ -4133,9 +4160,9 @@ mod tests {
         check(HealthTrack::Recovery);
         check(MagicResistanceEffect::NoFormBonus);
         check(MagicResistanceEffect::AuraBonus);
-        check(MagicResistanceEffect::SusceptibleDivine);
         check(MagicResistanceEffect::SusceptibleFaerie);
         check(MagicResistanceEffect::SusceptibleInfernal);
+        check(MagicResistanceEffect::ConditionalPenetrationWaiver);
         check(AgingEffect::AgingRoll);
         check(AgingEffect::LongevityBonus);
         check(AgingEffect::NoAging);
@@ -4161,6 +4188,7 @@ mod tests {
         check(SpecialCasting::Mercurian);
         check(SpecialCasting::LifeBoost);
         check(SpecialCasting::Circumstantial);
+        check(SpecialCasting::DoubledAuraPenalty);
         check(LongevitySource::SelfMade);
         check(LongevitySource::External);
         check(crate::validation::IssueSeverity::Error);

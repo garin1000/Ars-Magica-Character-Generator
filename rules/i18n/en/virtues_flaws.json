@@ -1137,11 +1137,11 @@
   },
   "flaw.susceptibility_to_faerie_power": {
     "name": "Susceptibility to Faerie Power",
-    "summary": "You are especially susceptible to the fay and their magic."
+    "summary": "You are especially susceptible to the fay and their magic. Whenever you enter a Faerie aura, you must make a Stamina roll equal to or greater than its aura rating to avoid becoming disoriented. In addition, your Magic Resistance score, including Parma Magica, against faerie effects is halved. If someone else uses their Parma Magica to protect you, their resistance is not affected and you benefit normally."
   },
   "flaw.susceptibility_to_infernal_power": {
     "name": "Susceptibility to Infernal Power",
-    "summary": "You are especially vulnerable to the dark powers."
+    "summary": "You are especially vulnerable to the dark powers. Whenever you enter an area of Infernal influence, you must make a Stamina roll equal to or greater than the aura rating or become ill (-1 on all rolls). You get only half your normal Magic Resistance score against infernal effects, though if someone else's Parma Magica is protecting you, it counts normally."
   },
   "flaw.susceptibility_to_sunlight": {
     "name": "Susceptibility to Sunlight",
@@ -1325,7 +1325,7 @@
   },
   "flaw.weak_magic_resistance": {
     "name": "Weak Magic Resistance",
-    "summary": "Any form of Magic Resistance you generate is much weaker under relatively common circumstances which are fairly easy for an opponent to utilize, such as when you are wet or facing away from the caster of the spell."
+    "summary": "Any form of Magic Resistance you generate is much weaker under relatively common circumstances which are fairly easy for an opponent to utilize, such as when you are wet or facing away from the caster of the spell. If the conditions are met, do not subtract the level of the effect from the casting total before calculating Penetration."
   },
   "flaw.weak_parens": {
     "name": "Weak Parens",

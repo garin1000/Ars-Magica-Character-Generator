@@ -1420,13 +1420,19 @@ derived-detail-spell_improvisation = Zauberimprovisation
 derived-detail-mercurian = Merkurische Magie
 derived-detail-life_boost = Lebensschub
 derived-detail-circumstantial = Umständeabhängig
+# Anfälligkeit für Göttliche Macht: die Abzüge der Aura auf deine Magie — der
+# Auramodifikator und die Patzerwürfel — zählen in dieser Aura doppelt.
+derived-detail-doubled_aura_penalty = Verdoppelte Aura-Abzüge
 derived-detail-fatigue_roll = Erschöpfungswurf
 derived-detail-casting_fatigue = Zauber-Erschöpfung
 derived-detail-recovery = Genesung
-derived-detail-susceptible_divine = Anfällig für das Göttliche
 derived-detail-susceptible_faerie = Anfällig für das Feenreich
 derived-detail-susceptible_infernal = Anfällig für das Infernale
 derived-detail-aura_bonus = Aurabonus
+# Schwache Magieresistenz: unter der im Fehler genannten Bedingung behält ein
+# Angreifer die Zauberstufe, die von der Penetration sonst abgezogen wird. Auf
+# dem Bogen ändert sich nichts, der Wert wird daher nur genannt, nicht berechnet.
+derived-detail-conditional_penetration_waiver = Zauberstufe wird unter bestimmten Umständen nicht abgezogen
 
 # Markdown-Export (Bogen exportieren). Dokumenttext, den nur der Export benötigt:
 # selbst zusammengesetzte Tabellenköpfe, die beiden Konvents-Punktegruppen und die

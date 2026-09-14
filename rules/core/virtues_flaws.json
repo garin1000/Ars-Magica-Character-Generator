@@ -2704,7 +2704,7 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "magic_resistance_mod", "kind": "susceptible_divine" }],
+    "effects": [{ "type": "special_casting_mod", "kind": "doubled_aura_penalty" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6815, 6818] }
   },
   {
@@ -3162,7 +3162,7 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "magic_total_halving", "total": "magic_resistance" }],
+    "effects": [{ "type": "magic_resistance_mod", "kind": "conditional_penetration_waiver" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7068, 7071] }
   },
   {

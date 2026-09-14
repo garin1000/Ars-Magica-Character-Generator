@@ -1360,13 +1360,19 @@ derived-detail-spell_improvisation = Spell improvisation
 derived-detail-mercurian = Mercurian magic
 derived-detail-life_boost = Life Boost
 derived-detail-circumstantial = Circumstantial
+# Susceptibility to Divine Power: the aura's own penalties to your magic — the
+# Aura Modifier and the botch dice — count double in that realm's aura.
+derived-detail-doubled_aura_penalty = Doubled aura penalties
 derived-detail-fatigue_roll = Fatigue roll
 derived-detail-casting_fatigue = Casting fatigue
 derived-detail-recovery = Recovery
-derived-detail-susceptible_divine = Susceptible to the Divine
 derived-detail-susceptible_faerie = Susceptible to Faerie
 derived-detail-susceptible_infernal = Susceptible to the Infernal
 derived-detail-aura_bonus = Aura bonus
+# Weak Magic Resistance: under the Flaw's stated condition an attacker keeps the
+# spell level that Penetration normally subtracts. Nothing on the sheet changes,
+# so the rule is listed rather than computed.
+derived-detail-conditional_penetration_waiver = Spell level not subtracted under stated conditions
 
 # Markdown export (Export sheet). Document chrome the exporter needs but no other
 # surface names: table headers it composes itself, the two covenant point-item

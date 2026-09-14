@@ -2827,6 +2827,7 @@ fn every_special_casting() -> Vec<arm_rules::SpecialCasting> {
         Casting::Mercurian,
         Casting::LifeBoost,
         Casting::Circumstantial,
+        Casting::DoubledAuraPenalty,
     ];
     for kind in &all {
         // Exhaustive tripwire — see `every_advancement_source`.
@@ -2840,7 +2841,8 @@ fn every_special_casting() -> Vec<arm_rules::SpecialCasting> {
             | Casting::SpellImprovisation
             | Casting::Mercurian
             | Casting::LifeBoost
-            | Casting::Circumstantial => {}
+            | Casting::Circumstantial
+            | Casting::DoubledAuraPenalty => {}
         }
     }
     all
@@ -2858,16 +2860,16 @@ fn surfaced_magic_resistance_effects() -> Vec<arm_rules::MagicResistanceEffect> 
     for kind in [
         Mr::NoFormBonus,
         Mr::AuraBonus,
-        Mr::SusceptibleDivine,
         Mr::SusceptibleFaerie,
         Mr::SusceptibleInfernal,
+        Mr::ConditionalPenetrationWaiver,
     ] {
         match kind {
             Mr::NoFormBonus => {}
             Mr::AuraBonus
-            | Mr::SusceptibleDivine
             | Mr::SusceptibleFaerie
-            | Mr::SusceptibleInfernal => surfaced.push(kind),
+            | Mr::SusceptibleInfernal
+            | Mr::ConditionalPenetrationWaiver => surfaced.push(kind),
         }
     }
     surfaced

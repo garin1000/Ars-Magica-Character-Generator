@@ -367,47 +367,16 @@ const PARAPHRASE_EXEMPTIONS: &[(&str, &str, &str)] = &[
 /// It also cannot rot: [`known_misencodings_still_fail_the_guard`] asserts every
 /// row still fails the phrase check, so the day one is genuinely fixed the test
 /// tells you to delete its row instead of leaving a stale excuse behind.
-const KNOWN_MISENCODINGS: &[(&str, &str, &str)] = &[
-    (
-        "flaw.weak_magic_resistance",
-        "magic_total_halving",
-        "WRONG OUTPUT, parked. ArMDE:7070 gives no halving at all: \"Any form of Magic \
-     Resistance you generate is much weaker under relatively common circumstances \
-     ... If the conditions are met, do not subtract the level of the effect from the \
-     casting total before calculating Penetration.\" That is a Penetration-side \
-     mechanic (the attacker gets the spell level back under a stated condition), not \
-     a halved Magic Resistance. ArMDE:9912 confirms it by glossing the Clan Ilfetu \
-     secret-name mystery as \"need not subtract the spell level from the Penetration \
-     total ... much like the Weak Magic Resistance Flaw\". The engine nonetheless \
-     halves this character's MR on *every* Form unconditionally \
-     (`derived/casting.rs::magic_resistance`). Not fixed here: the correct mechanic \
-     needs a new conditional-Penetration effect variant (or a new \
-     `MagicResistanceEffect` surfaced kind), which is a code + Fluent + locales \
-     change well outside a test-hardening slice. See `docs/open-todos.md`.",
-    ),
-    (
-        "flaw.susceptibility_to_divine_power",
-        "magic_resistance_mod",
-        "WRONG OUTPUT (labelling), parked. ArMDE:6817 never mentions Magic Resistance: \
-         \"You are especially sensitive to the Dominion and suffer twice the normal \
-         penalties (such as spellcasting modifiers and botch dice) to your magic when in \
-         a Divine aura.\" The mechanic is doubled *aura* penalties to casting and botch \
-         dice. Its two siblings are what make this visible and are correctly encoded — \
-         ArMDE:6821 (Faerie) \"your Magic Resistance score, including Parma Magica, \
-         against faerie effects is halved\" and ArMDE:6825 (Infernal) \"You get only half \
-         your normal Magic Resistance score\" — so all three were given a \
-         `magic_resistance_mod` on the strength of the shared Flaw name while only two of \
-         the three passages support it. This is the sibling-inconsistency shape this guard \
-         was built for. Impact is bounded: the realm-conditional kinds are surfaced-only \
-         with amount 0 (`derived.rs`), so no total is wrong — it is filed under the Magic \
-         Resistance family in the modifier read-out when it belongs under casting. Not \
-         fixed here: no effect variant expresses \"double the aura's casting and botch \
-         penalties\", and re-encoding it as the nearest available \
-         `special_casting_mod{circumstantial}` is precisely the guess this guard exists to \
-         catch; it would also orphan `MagicResistanceEffect::SusceptibleDivine` and its \
-         Fluent key, a code + locales change outside this slice. See `docs/open-todos.md`.",
-    ),
-];
+///
+/// **Empty is the goal state, and it is the current one.** The two rows this list
+/// was created for — `flaw.weak_magic_resistance` (halving a Magic Resistance
+/// `ArMDE:7070` never halves) and `flaw.susceptibility_to_divine_power` (filed
+/// under Magic Resistance though `ArMDE:6817` never mentions it) — were fixed
+/// rather than kept: both are now encoded against the mechanic their own passage
+/// states, and `known_misencodings_still_fail_the_guard` is what forced their
+/// removal from here. Keep the list (and its test) for the next parked defect; do
+/// not delete the mechanism because it currently has nothing to hold.
+const KNOWN_MISENCODINGS: &[(&str, &str, &str)] = &[];
 
 /// The minimum number of items each guarded family must actually match. A
 /// floor, never a total — `CLAUDE.md` → "Catalogue size is data, never code"

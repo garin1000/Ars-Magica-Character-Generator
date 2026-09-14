@@ -8360,3 +8360,148 @@ fn a_genuine_too_many_selections_survives_the_being_migration() {
         "and the being value in the same save is still folded: {codes:?}"
     );
 }
+
+// --- Magic Resistance: the mechanic each passage states, not the one the Flaw's
+// --- name suggests ---------------------------------------------------------
+//
+// Two encodings were parked as `KNOWN_MISENCODINGS` rows by the rules-semantics
+// guard (`rules_source_provenance.rs`) and are corrected here. Both tests run
+// against the SHIPPED `rules/core/virtues_flaws.json` through `load_full_ruleset`,
+// because the wrong encoding lived in that data and a synthetic fixture could not
+// have caught it.
+
+/// A magus with Parma Magica 3 and Ignem 8 — enough for a per-Form Magic
+/// Resistance number to exist — carrying `selections`.
+fn magus_with_parma(selections: Vec<Selection>) -> Entity {
+    let mut e = entity("magus", selections);
+    e.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.parma_magica"),
+        parameter: None,
+        specialty: None,
+        score: 3,
+    }];
+    e.art_scores = vec![ArtScore {
+        art: Id::new("art.ignem"),
+        score: 8,
+    }];
+    e
+}
+
+/// Weak Magic Resistance halves nothing. `ArMDE:7070`: "Any form of Magic
+/// Resistance you generate is much weaker under relatively common circumstances
+/// which are fairly easy for an opponent to utilize ... If the conditions are met,
+/// do not subtract the level of the effect from the casting total before
+/// calculating Penetration." Normal Penetration is the Casting Total less the
+/// spell level (`ArMDE:7066`), so the Flaw makes an *attacker* skip that
+/// subtraction: the size of the effect is the level of the **incoming** spell and
+/// the trigger is a scene call. Neither is knowable from this sheet, and the
+/// carrier's own Magic Resistance score does not change at all — so no number on
+/// the sheet may differ because of this Flaw. `ArMDE:9912` settles the reading,
+/// glossing the Clan Ilfetu secret name as "need not subtract the spell level from
+/// the Penetration total ... much like the Weak Magic Resistance Flaw".
+#[test]
+fn weak_magic_resistance_changes_no_number_on_the_sheet() {
+    let rs = load_full_ruleset();
+    let clean = arm_rules::derived_totals(&magus_with_parma(Vec::new()), &rs);
+    let weak = arm_rules::derived_totals(
+        &magus_with_parma(vec![Selection::new(Id::new("flaw.weak_magic_resistance"))]),
+        &rs,
+    );
+    assert_eq!(
+        weak.magic_resistance, clean.magic_resistance,
+        "ArMDE:7070 gives no halving: the carrier's own Magic Resistance is unchanged"
+    );
+}
+
+/// …and because it is not computed, it must be **listed**. The condition and the
+/// incoming spell level are scene facts, so the honest encoding is a surfaced-only
+/// Magic Resistance note (amount 0) — the shape `aura_bonus` and the two realm
+/// susceptibilities already use for a Magic Resistance rule that cannot be folded
+/// into the flat per-Form figure.
+#[test]
+fn weak_magic_resistance_is_surfaced_as_a_conditional_magic_resistance_note() {
+    let rs = load_full_ruleset();
+    let d = arm_rules::derived_totals(
+        &magus_with_parma(vec![Selection::new(Id::new("flaw.weak_magic_resistance"))]),
+        &rs,
+    );
+    assert!(
+        d.surfaced_modifiers
+            .iter()
+            .any(|m| m.family == arm_rules::ModifierFamily::MagicResistance
+                && m.detail == "conditional_penetration_waiver"
+                && m.amount == 0),
+        "the rule must be listed rather than silently dropped: {:?}",
+        d.surfaced_modifiers
+    );
+}
+
+/// Susceptibility to Divine Power is not a Magic Resistance rule. `ArMDE:6817`:
+/// "You are especially sensitive to the Dominion and suffer twice the normal
+/// penalties (such as spellcasting modifiers and botch dice) to your magic when in
+/// a Divine aura." The Aura Modifier is a term of the Casting Score, so this is a
+/// casting-side quirk; Magic Resistance is never mentioned. Its two siblings *are*
+/// Magic Resistance rules, and their agreement is what carried the wrong encoding
+/// across all three.
+#[test]
+fn susceptibility_to_divine_power_is_a_casting_quirk_not_a_magic_resistance_mod() {
+    let rs = load_full_ruleset();
+    let d = arm_rules::derived_totals(
+        &magus_with_parma(vec![Selection::new(Id::new(
+            "flaw.susceptibility_to_divine_power",
+        ))]),
+        &rs,
+    );
+    assert!(
+        d.surfaced_modifiers
+            .iter()
+            .any(|m| m.family == arm_rules::ModifierFamily::SpecialCasting
+                && m.detail == "doubled_aura_penalty"
+                && m.amount == 0),
+        "ArMDE:6817 doubles the aura's casting penalties and botch dice: {:?}",
+        d.surfaced_modifiers
+    );
+    assert!(
+        !d.surfaced_modifiers
+            .iter()
+            .any(|m| m.family == arm_rules::ModifierFamily::MagicResistance),
+        "ArMDE:6817 never mentions Magic Resistance: {:?}",
+        d.surfaced_modifiers
+    );
+}
+
+/// The sibling check, pinned so the fix above cannot drag the two correct
+/// encodings with it. `ArMDE:6821` (Faerie) and `ArMDE:6825` (Infernal) both do
+/// halve Magic Resistance, but each halves it only "against faerie effects" /
+/// "against infernal effects" — a realm scope no sheet number can carry. They stay
+/// `magic_resistance_mod`s, surfaced at amount 0 rather than folded into the flat
+/// per-Form total, which is what keeps the realm scope honest: a global halving
+/// would be wrong output on every Form against every attacker.
+#[test]
+fn the_realm_scoped_susceptibilities_are_surfaced_and_halve_no_flat_total() {
+    let rs = load_full_ruleset();
+    let clean = arm_rules::derived_totals(&magus_with_parma(Vec::new()), &rs);
+    for (id, detail) in [
+        ("flaw.susceptibility_to_faerie_power", "susceptible_faerie"),
+        (
+            "flaw.susceptibility_to_infernal_power",
+            "susceptible_infernal",
+        ),
+    ] {
+        let d =
+            arm_rules::derived_totals(&magus_with_parma(vec![Selection::new(Id::new(id))]), &rs);
+        assert_eq!(
+            d.magic_resistance, clean.magic_resistance,
+            "{id} is realm-scoped, so it may not halve the flat per-Form total"
+        );
+        assert!(
+            d.surfaced_modifiers
+                .iter()
+                .any(|m| m.family == arm_rules::ModifierFamily::MagicResistance
+                    && m.detail == detail
+                    && m.amount == 0),
+            "{id} must still be listed: {:?}",
+            d.surfaced_modifiers
+        );
+    }
+}
