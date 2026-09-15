@@ -412,7 +412,7 @@ pub(crate) fn ability_authorizations(
                 // modifiers, Elemental Magic) modify a derived total computed
                 // over Abilities/Arts already owned, never ownership itself.
                 Effect::AbilityBonus { .. }
-                | Effect::CharacteristicLimit { .. }
+                | Effect::CharacteristicScoreDeltaParam { .. }
                 | Effect::ArtBonus { .. }
                 | Effect::AffinityAbilityCost { .. }
                 | Effect::AffinityArtCost { .. }

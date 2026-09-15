@@ -1885,7 +1885,8 @@ impl Ruleset {
 
     /// Validates that every [`Effect`] names a declared parameter whose domain
     /// matches the effect kind (`ability_bonus` → an `ability`-domain param,
-    /// `characteristic_limit` → a `characteristic`-domain param). Effects resolve
+    /// `characteristic_score_delta_param` → a `characteristic`-domain param).
+    /// Effects resolve
     /// the target through that parameter, so a missing key or domain mismatch
     /// would silently never apply — fail loudly at load instead. Effects that carry
     /// a directly-stored ref instead of a parameter are validated inline via the
@@ -1906,10 +1907,10 @@ impl Ruleset {
                 Effect::AbilityBonus { param, .. } => {
                     (param, ParameterDomain::Ability, "ability_bonus")
                 }
-                Effect::CharacteristicLimit { param, .. } => (
+                Effect::CharacteristicScoreDeltaParam { param, .. } => (
                     param,
                     ParameterDomain::Characteristic,
-                    "characteristic_limit",
+                    "characteristic_score_delta_param",
                 ),
                 Effect::ArtBonus { param, .. } => (param, ParameterDomain::Art, "art_bonus"),
                 Effect::AffinityAbilityCost { param, .. } => {

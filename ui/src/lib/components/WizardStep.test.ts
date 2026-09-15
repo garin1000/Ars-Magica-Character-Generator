@@ -46,8 +46,6 @@ beforeEach(() => {
         start_points: 7,
         base_max: 3,
         base_min: -3,
-        effective_max: 5,
-        effective_min: -5,
         costs: [],
       },
       // The ruleset ships life-stage rules, so the Abilities step offers the funding

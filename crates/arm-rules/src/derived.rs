@@ -342,7 +342,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // Creation-effect variants (consumed by effective.rs) and the
                 // Elemental Magic XP-space marker: no in-play modifier here.
                 Effect::AbilityBonus { .. }
-                | Effect::CharacteristicLimit { .. }
+                | Effect::CharacteristicScoreDeltaParam { .. }
                 | Effect::ArtBonus { .. }
                 | Effect::AffinityAbilityCost { .. }
                 | Effect::AffinityArtCost { .. }

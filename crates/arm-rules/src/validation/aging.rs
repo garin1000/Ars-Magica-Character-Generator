@@ -62,9 +62,9 @@ pub(crate) fn validate_aging(
             .map_or(0i32, i32::from)
     };
 
-    let effective_min = ruleset
+    let aging_floor = ruleset
         .characteristic_rules()
-        .and_then(|r| r.effective_min_score())
+        .and_then(|r| r.aging_floor_score())
         .map(i32::from);
 
     for (characteristic, points) in &entity.aging_points {
@@ -78,7 +78,7 @@ pub(crate) fn validate_aging(
         let aged = bought(characteristic) - i32::try_from(drops).unwrap_or(i32::MAX);
 
         // The aged-down score would fall below the rules floor (clamped anyway).
-        if let Some(min) = effective_min
+        if let Some(min) = aging_floor
             && aged < min
         {
             issues.push(ValidationIssue::warning(

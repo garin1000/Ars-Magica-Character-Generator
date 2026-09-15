@@ -7,7 +7,7 @@
 use super::*;
 
 /// A non-zero free effective-score bonus targeting one Characteristic (Giant
-/// Blood +1 Str/Sta, Dwarf −1). Serializes for the frontend as
+/// Blood +1 Str/Sta, Dwarf -1). Serializes for the frontend as
 /// `{ "characteristic": "str", "bonus": N }`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CharacteristicBonus {
@@ -17,98 +17,59 @@ pub struct CharacteristicBonus {
     pub bonus: i32,
 }
 
-/// Net limit shift for `characteristic` from `CharacteristicLimit` effects whose
-/// sign matches `raising`: the sum of positive amounts when `raising` is true
-/// (Great Characteristic) or of negative amounts when false (Poor). Two Greats
-/// for the same characteristic sum to +2; two Poors to −2.
-fn characteristic_limit_shift(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-    raising: bool,
-) -> i32 {
-    let mut shift = 0;
-    for_each_effect!(entity, ruleset, |selection, effect| {
-        // Exhaustive match so adding an Effect variant is a compile error
-        // here, not a silently-ignored shift.
-        match effect {
-            Effect::CharacteristicLimit { param, amount }
-                if (*amount > 0) == raising && *amount != 0 =>
-            {
-                let target = selection
-                    .params
-                    .get(param)
-                    .and_then(Characteristic::from_id);
-                if target == Some(characteristic) {
-                    shift += i32::from(*amount);
-                }
-            }
-            // Wrong sign, or not a limit shift; contributes nothing here.
-            // CharacteristicPoints grants budget, not a range shift, and is
-            // read by characteristic_points_granted.
-            irrelevant_effect_variants!() => {}
-        }
-    });
-    shift
+/// The highest score `characteristic` may be **bought** to: the ruleset's base
+/// cap, which is the top row of the printed point-buy table (+3).
+///
+/// Nothing widens it. Great (Characteristic) does not unlock a purchase — it
+/// *performs the raise itself* ("You may raise any Characteristic … by one
+/// point"), which the engine models as a free
+/// [`Effect::CharacteristicScoreDeltaParam`] read by
+/// [`characteristic_score_bonus`]. The printed table stops at ±3 and prices no
+/// +4, so there is no cost a cap-shift reading could charge.
+///
+/// Source: ArMDE:2346-2354 (the table),
+/// :4105 (the +3 cap on the bought score), :3987-3989 (Great grants the point).
+pub fn characteristic_cap(ruleset: &Ruleset, _characteristic: Characteristic) -> i32 {
+    ruleset
+        .characteristic_rules()
+        .and_then(|rules| rules.base_max_score())
+        .map_or(0, i32::from)
 }
 
-/// The highest base score `characteristic` may be bought to: the ruleset's base
-/// cap (+3) raised by each Great (Characteristic) targeting it (+1 apiece),
-/// clamped at the absolute effective ceiling (+5). Great Characteristic grants no
-/// points — it only opens this headroom; the score must still be bought.
+/// The lowest score `characteristic` may be **bought** to: the ruleset's base
+/// floor (-3), the bottom row of the printed table. The sign-mirror of
+/// [`characteristic_cap`] — Poor (Characteristic) lowers the score itself rather
+/// than opening headroom to sell into.
 ///
-/// Source: ArMDE:3987-3989.
-pub fn characteristic_cap(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-) -> i32 {
-    let Some(rules) = ruleset.characteristic_rules() else {
-        return 0;
-    };
-    let base_max = i32::from(rules.base_max_score().unwrap_or(0));
-    let ceiling = i32::from(rules.effective_max_score().unwrap_or(0));
-    (base_max + characteristic_limit_shift(entity, ruleset, characteristic, true)).min(ceiling)
-}
-
-/// The lowest base score `characteristic` may be bought to: the ruleset's base
-/// floor (−3) lowered by each Poor (Characteristic) targeting it (−1 apiece),
-/// clamped at the absolute effective floor (−5). Poor Characteristic grants no
-/// points — it only opens this headroom; the score must still be sold down.
-///
-/// Source: ArMDE:6598-6600.
-pub fn characteristic_floor(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-) -> i32 {
-    let Some(rules) = ruleset.characteristic_rules() else {
-        return 0;
-    };
-    let base_min = i32::from(rules.base_min_score().unwrap_or(0));
-    let floor = i32::from(rules.effective_min_score().unwrap_or(0));
-    (base_min + characteristic_limit_shift(entity, ruleset, characteristic, false)).max(floor)
+/// Source: ArMDE:2346-2354 (the table),
+/// :6598-6600 (Poor lowers the score).
+pub fn characteristic_floor(ruleset: &Ruleset, _characteristic: Characteristic) -> i32 {
+    ruleset
+        .characteristic_rules()
+        .and_then(|rules| rules.base_min_score())
+        .map_or(0, i32::from)
 }
 
 /// The per-characteristic buy cap for all eight characteristics, keyed by
-/// characteristic — the spinner ceiling the UI enforces (Great Characteristic
-/// raises individual entries). Every characteristic has a cap, so none is
-/// omitted.
-pub fn characteristic_caps(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Characteristic, i32> {
+/// characteristic — the spinner ceiling the UI enforces. Every characteristic
+/// has a cap, so none is omitted. The map stays per-characteristic because that
+/// is the frontend's contract (`ruleset_io.rs::EffectiveScores`) and the shape a
+/// future book's per-Characteristic buy limit would need; today every entry is
+/// the same base cap.
+pub fn characteristic_caps(ruleset: &Ruleset) -> BTreeMap<Characteristic, i32> {
     Characteristic::ALL
         .into_iter()
-        .map(|c| (c, characteristic_cap(entity, ruleset, c)))
+        .map(|c| (c, characteristic_cap(ruleset, c)))
         .collect()
 }
 
 /// The per-characteristic buy floor for all eight characteristics, keyed by
-/// characteristic — the spinner floor the UI enforces (Poor Characteristic
-/// lowers individual entries). Every characteristic has a floor, so none is
-/// omitted.
-pub fn characteristic_floors(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Characteristic, i32> {
+/// characteristic — the spinner floor the UI enforces. Every characteristic has
+/// a floor, so none is omitted.
+pub fn characteristic_floors(ruleset: &Ruleset) -> BTreeMap<Characteristic, i32> {
     Characteristic::ALL
         .into_iter()
-        .map(|c| (c, characteristic_floor(entity, ruleset, c)))
+        .map(|c| (c, characteristic_floor(ruleset, c)))
         .collect()
 }
 
@@ -126,7 +87,7 @@ pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> i32 
 }
 
 /// The character's derived Size: base 0 plus every [`Effect::SizeDelta`]
-/// (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2), summed across
+/// (Large +1, Giant Blood +2, Small Frame -1, Dwarf -2), summed across
 /// selections. Size is not a bought Characteristic — it has no cost and no buy
 /// cap. Source: ArMDE:3975-3978,
 /// :4229-4231, :5996-5998, :6767-6769.
@@ -140,31 +101,58 @@ pub fn size(entity: &Entity, ruleset: &Ruleset) -> i32 {
     total
 }
 
-/// The free effective-score bonus a virtue/flaw grants to `characteristic`
-/// ([`Effect::CharacteristicScoreDelta`], e.g. Giant Blood +1 Str/Sta), summed
-/// across selections. Costs no buy points and stacks on top of the bought score.
+/// The free effective-score bonus a virtue/flaw grants to `characteristic`,
+/// summed across selections. Costs no buy points and stacks on top of the bought
+/// score. Two shapes contribute, and both are free:
+///
+/// - [`Effect::CharacteristicScoreDelta`] names a *fixed* Characteristic — Giant
+///   Blood +1 Str/Sta (`ArMDE:3977`), Dwarf -1 (`ArMDE:5996-5998`).
+/// - [`Effect::CharacteristicScoreDeltaParam`] names the one the selection
+///   targets — Great (Characteristic) +1 (`ArMDE:3989`), Poor -1
+///   (`ArMDE:6600`).
+///
+/// **No ceiling is applied here, deliberately.** `ArMDE:3977` says Giant Blood's
+/// bonus "may raise your scores in those Characteristics as high as +6", so a
+/// clamp at +5 would be wrong; Great's own "to no more than +5" falls out of its
+/// `max_per_target: 2` over a bought score capped at +3.
 pub fn characteristic_score_bonus(
     entity: &Entity,
     ruleset: &Ruleset,
     characteristic: Characteristic,
 ) -> i32 {
     let mut bonus = 0;
-    for_each_effect!(entity, ruleset, |_selection, effect| {
-        if let Effect::CharacteristicScoreDelta {
-            characteristic: target,
-            amount,
-        } = effect
-            && Characteristic::from_id(target) == Some(characteristic)
-        {
-            bonus += i32::from(*amount);
+    for_each_effect!(entity, ruleset, |selection, effect| {
+        // Exhaustive match so adding an Effect variant is a compile error here,
+        // not a silently-ignored bonus. Both interesting arms are guarded, which
+        // is what keeps the shared tail sound.
+        match effect {
+            Effect::CharacteristicScoreDelta {
+                characteristic: target,
+                amount,
+            } if Characteristic::from_id(target) == Some(characteristic) => {
+                bonus += i32::from(*amount);
+            }
+            Effect::CharacteristicScoreDeltaParam { param, amount }
+                if selection
+                    .params
+                    .get(param)
+                    .and_then(Characteristic::from_id)
+                    == Some(characteristic) =>
+            {
+                bonus += i32::from(*amount);
+            }
+            // Targets another Characteristic, or is not a score delta at all.
+            // CharacteristicPoints grants budget, not a score, and is read by
+            // characteristic_points_granted.
+            irrelevant_effect_variants!() => {}
         }
     });
     bonus
 }
 
-/// The effective score of `characteristic`: the bought score plus any free
-/// [`Effect::CharacteristicScoreDelta`] bonus. The bonus may push the effective
-/// score beyond the normal ±5 ceiling (Giant Blood's +1 reaches +6).
+/// The effective score of `characteristic`: the bought score (±3) plus any free
+/// delta from [`characteristic_score_bonus`]. Great (Characteristic) taken twice
+/// reaches +5; Giant Blood stacked on top reaches the +6 `ArMDE:3977` allows.
 pub fn effective_characteristic_score(
     entity: &Entity,
     ruleset: &Ruleset,

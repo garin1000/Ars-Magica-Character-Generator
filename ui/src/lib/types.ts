@@ -98,13 +98,14 @@ export interface ParameterDef {
 }
 
 // Mechanical effect a virtue/flaw applies. `ability_bonus` adds to an ability's
-// effective score (Puissant Ability +2); `characteristic_limit` shifts a
-// characteristic's buy limit (Great Characteristic +1 raises the cap, Poor
-// Characteristic −1 lowers the floor). The target is named by the selection's
-// `param` value.
+// effective score (Puissant Ability +2); `characteristic_score_delta_param`
+// grants a free point to a characteristic (Great Characteristic +1, Poor
+// Characteristic -1) without touching the bought score, which stays inside the
+// printed +-3 point-buy table. The target is named by the selection's `param`
+// value.
 export type Effect =
   | { type: 'ability_bonus'; param: string; amount: number }
-  | { type: 'characteristic_limit'; param: string; amount: number }
+  | { type: 'characteristic_score_delta_param'; param: string; amount: number }
   | { type: 'art_bonus'; param: string; amount: number }
   | { type: 'affinity_ability_cost'; param: string; counts_as_num: number; counts_as_den: number }
   | { type: 'affinity_art_cost'; param: string; counts_as_num: number; counts_as_den: number }

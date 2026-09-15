@@ -43,8 +43,6 @@ function installFlow(phases: CreationPhase[] = PHASES): void {
         start_points: 7,
         base_max: 3,
         base_min: -3,
-        effective_max: 5,
-        effective_min: -5,
         costs: [],
       },
       magnitude_points: { free: 0, minor: 1, major: 3 },

@@ -6,8 +6,12 @@
   import Spinner from './Spinner.svelte';
 
   const rules = $derived(store.ruleset?.ruleset.characteristic_rules ?? null);
-  // The cost table spans the absolute ±5 range; the *buyable* range per
-  // characteristic is the base cap/floor, widened by Great/Poor Characteristic.
+  // The cost table is the printed point-buy table and stops at ±3 (`ArMDE:2346-2354`),
+  // which is also the buyable range: Great/Poor (Characteristic) do NOT widen it.
+  // `ArMDE:3989` has the Virtue perform the raise itself — "You may raise any
+  // Characteristic that already has a score of at least +3 by one point" — so +4
+  // and +5 arrive as a granted bonus on the effective score, exactly like Giant
+  // Blood's free +1, and are never bought. The book prints no cost for them.
   const tableMax = $derived(rules ? Math.max(...rules.costs.map((c) => c.score)) : 3);
   const tableMin = $derived(rules ? Math.min(...rules.costs.map((c) => c.score)) : -3);
   // Engine-authoritative: the point-buy cost comes from the effective-scores
@@ -24,9 +28,10 @@
     return store.entity.characteristics?.[characteristic] ?? 0;
   }
 
-  // Per-characteristic buy limits from the engine (entity-dependent: Great raises
-  // the cap, Poor lowers the floor). Until they arrive, fall back to the
-  // ruleset's base cap/floor, then to the table bounds.
+  // Per-characteristic buy limits from the engine. These are the ruleset's own
+  // cap/floor and no Virtue moves them — Great/Poor grant a point on the
+  // effective score instead. Until they arrive, fall back to the ruleset's base
+  // cap/floor, then to the table bounds.
   function capOf(characteristic: Characteristic): number {
     return store.effective?.characteristic_caps?.[characteristic] ?? rules?.base_max ?? tableMax;
   }

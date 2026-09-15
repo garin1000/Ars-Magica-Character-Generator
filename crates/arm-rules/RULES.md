@@ -1123,23 +1123,32 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Source: `ArMDE:2340-2354` (printed
   table), `ArMDE:4105` (the +3 base cap "unless you take … Great Characteristic").
 - Data: `rules/core/characteristics.json` (`start_points: 7`, `costs`,
-  `base_max: 3`, `base_min: -3`, `effective_max: 5`, `effective_min: -5`). The
-  rulebook's "Gain N" rows are encoded as **negative** cost (`Gain 1` → `-1`,
-  etc.) — an extraction sign convention. The printed table stops at ±3=±6; the
-  ±4/±5 rows (+4→10, +5→15, −4→Gain 10, −5→Gain 15) **continue the table's own
-  triangular progression** (marginal cost of level n is n) so the scores Great /
-  Poor (Characteristic) unlock can be priced — the rulebook does not print them.
-  The **base** limits (±3) are the no-virtue buy range; the **effective** limits
-  (±5) are the absolute ceiling/floor those virtues/flaws open. The legal table
-  range is now −5..+5. (The age → max-Ability-score bands live in
+  `base_max: 3`, `base_min: -3`, `aging_floor: -5`). The rulebook's "Gain N" rows
+  are encoded as **negative** cost (`Gain 1` → `-1`, etc.) — an extraction sign
+  convention. The table is **exactly the seven printed rows**, ±3, and that is
+  also the buy range: `base_max`/`base_min` equal the table bounds.
+
+  *Corrected 2026-09-15 (open-todos row 32 / GitHub issue #4).* The file
+  previously carried four **invented** rows (+4→10, +5→15, −4→Gain 10, −5→Gain
+  15) justified as "continuing the table's own triangular progression". The
+  rulebook prints no cost for ±4 or ±5, and that absence is the tell: those rows
+  existed only to pay for a cap-shift reading of Great/Poor (Characteristic) that
+  the passages do not support (see below). They are gone, and with them
+  `effective_max`/`effective_min` — the buy range has one tier again. What
+  remains is `aging_floor`, which is **not** a buy limit and **not** a printed
+  rule: `ArMDE:16579` names no floor for aging drops at all, so the engine picks
+  −5 to keep a derived score bounded and to have a threshold for the
+  `excessive_aging_reduction` warning. It is named for that one job so it cannot
+  again be mistaken for a rules value. (The age → max-Ability-score bands live in
   `rules/core/abilities.json`, not here — see "Age → max Ability score" below.)
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
-  `base_max_score`, `base_min_score`, `effective_max_score`,
-  `effective_min_score`); enforced in `validation/scores.rs` —
-  `validate_characteristics` (:33) (off-table out-of-range error, above-cap /
-  below-floor errors against the per-characteristic buy range, overspent error,
-  points-unspent warning). See the Great/Poor (Characteristic) layer below.
+  `base_max_score`, `base_min_score`, `aging_floor_score`); enforced in
+  `validation/scores.rs` — `validate_characteristics` (:32) (off-table
+  out-of-range error, above-cap / below-floor errors against the buy range,
+  overspent error, points-unspent warning). The out-of-range error is what a save
+  written against the old invented rows now trips — see *Save compatibility*
+  below. See the Great/Poor (Characteristic) layer below.
 
 ### Abilities
 
@@ -1224,7 +1233,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:262).
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:259).
 
 ### Arts
 
@@ -1272,7 +1281,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:419).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:416).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -1365,47 +1374,88 @@ bleed onto the character's other areas.
   until the first point is bought (Issue 13). Iterating the catalogue surfaces the
   bonus at bought-0 and naturally dedupes any duplicate bought rows.
 
-#### Great (Characteristic) — raise the buy cap to +4/+5
+#### Great (Characteristic) — a free +1, to a maximum of +5
 > "You may raise any Characteristic that already has a score of at least +3 by
 > one point, to no more than +5 … You may take this Virtue twice for the same
 > Characteristic, and for more than one Characteristic."
 
-Great Characteristic grants **no free point**: it raises the buy *cap* (+3 → +4
-→ +5; line 4105 confirms +3 is the cap "unless you take … Great Characteristic"),
-and the score is still bought against the cost table.
+Great Characteristic **grants the point**. The passage's verb is *raise*, and its
+object is the Characteristic — the same grammar as Giant Blood's "You also gain
++1 to both Strength and Stamina" (`ArMDE:3977`), which this engine already models
+as a free `characteristic_score_delta`. `ArMDE:4105` agrees rather than
+conflicts: +3 is the cap on the **bought** score, and the Virtue is what carries
+the character past it — by granting the point, not by unlocking a purchase. The
+decisive evidence is negative: the point-buy table (`ArMDE:2346-2354`) has seven
+rows, +3 through −3, and **prices no +4 or +5**. A cap-shift reading needs a cost
+the book never prints.
+
+*Corrected 2026-09-15 (open-todos row 32 / GitHub issue #4). This entry
+previously asserted "Great Characteristic grants no free point" and modelled the
+Virtue as a buy-cap shift, which required the four invented cost rows recorded
+above. Both are gone.*
 
 - Source: `ArMDE:3987-3989` (and
   `ArMDE:4105`).
 - Data: `rules/core/virtues_flaws.json` `virtue.great_characteristic` —
-  `characteristic`-domain param; `effects: [{ characteristic_limit, param:
-  "characteristic", amount: 1 }]`; `max_per_target: 2`. The base cap (+3) and the
-  +5 ceiling are `base_max` / `effective_max` in `rules/core/characteristics.json`.
-- Implementation: `effective/characteristic.rs::characteristic_cap` =
-  `min(base_max + Σ positive amounts, effective_max)`;
-  `validation/scores.rs::validate_characteristics` (:33) flags a bought score above the cap
-  (`characteristic_above_cap`); `validate_characteristic_limit_preconditions`
-  flags a target base below the base cap (`characteristic_max_base_too_low`) —
-  the "≥ +3" precondition is parameter-relative, derived from `base_max` by the
-  amount's sign, so it lives on the effect, not in the static `Prereq`.
+  `characteristic`-domain param; `effects: [{ characteristic_score_delta_param,
+  param: "characteristic", amount: 1 }]`; `max_per_target: 2`. The buy cap (+3)
+  is `base_max` in `rules/core/characteristics.json`.
+- Implementation: `effective/characteristic.rs::characteristic_score_bonus` sums
+  the delta (its param resolved through the selection) alongside the fixed-target
+  `characteristic_score_delta`; `effective/characteristic.rs::effective_characteristic_score`
+  adds it to the bought score.
+  `validation/scores.rs::validate_characteristic_delta_preconditions` flags a
+  target whose **bought** score is below the base cap
+  (`characteristic_max_base_too_low`) — the "≥ +3" precondition is
+  parameter-relative, derived from `base_max` by the amount's sign, so it lives
+  on the effect, not in the static `Prereq`. That gate is unchanged by the
+  correction: it always read the bought score.
+- **"to no more than +5" needs no clamp of its own.** It falls out arithmetically:
+  the bought score tops out at `base_max` (+3) and `max_per_target: 2` allows at
+  most two grants, so +5 is the maximum reachable. Deliberately **no ceiling is
+  imposed** on the effective score, because `ArMDE:3977` explicitly allows Giant
+  Blood to push those same Characteristics to +6 ("This bonus may raise your
+  scores in those Characteristics as high as +6"); a +5 clamp would break it.
+  Pinned by `tests/data_integrity.rs::giant_blood_over_two_greats_reaches_plus_six`.
 
-#### Poor (Characteristic) — lower the buy floor to −4/−5
+#### Poor (Characteristic) — a free −1, to a minimum of −5
 > "lower one which is already −3 or lower by one point … You may take this Flaw
 > twice for a single Characteristic, lowering it to −5, and multiple times for
 > different Characteristics."
 
-The exact sign-mirror of Great: a `flaw`, `amount: -1`, lowering the buy *floor*
-(−3 → −4 → −5) without granting/removing points beyond the score's own cost.
+The exact sign-mirror of Great: a `flaw`, `amount: -1`, which *lowers the score
+itself* for free.
+
+*This was the worse half of the row-32 defect.* Modelled as a buy-floor shift, it
+needed the invented −4 row, which refunded **10** points where the table's own
+progression gives 6 — so the Flaw paid the player twice, once in Flaw points and
+once in Characteristic points.
 
 - Source: `ArMDE:6598-6600`.
 - Data: `rules/core/virtues_flaws.json` `flaw.poor_characteristic` —
-  `characteristic`-domain param; `effects: [{ characteristic_limit, param:
-  "characteristic", amount: -1 }]`; `max_per_target: 2`. The base floor (−3) and
-  the −5 floor are `base_min` / `effective_min` in `characteristics.json`.
-- Implementation: `effective/characteristic.rs::characteristic_floor` =
-  `max(base_min + Σ negative amounts, effective_min)`;
-  `validate_characteristics` flags a bought score below the floor
-  (`characteristic_below_floor`); `validate_characteristic_limit_preconditions`
-  flags a target base above the base floor (`characteristic_min_base_too_high`).
+  `characteristic`-domain param; `effects: [{ characteristic_score_delta_param,
+  param: "characteristic", amount: -1 }]`; `max_per_target: 2`. The buy floor
+  (−3) is `base_min` in `characteristics.json`.
+- Implementation: as Great above, sign-mirrored —
+  `characteristic_score_bonus` sums the negative delta, and
+  `validate_characteristic_delta_preconditions` flags a target whose bought score
+  is above the base floor (`characteristic_min_base_too_high`).
+
+#### Save compatibility after the row-32 correction
+A save stores **choices, not resolved values**, so a character built under the
+old table still carries whatever bought score the player entered — `Str: 4`, say,
+alongside a `virtue.great_characteristic`. Under the corrected rules that bought
+value is off-table, and `validate_characteristics` reports
+`characteristic_out_of_range` naming the Characteristic and the legal range.
+
+*Deliberately no migration fold.* The obvious one — rewrite bought 4 → 3 and let
+the Virtue supply the point — is lossless only for the single-Great case. With
+**two** Greats the free delta is not optional, so an old bought +4 would become
+an effective +5: a different character. With **no** Great (a hand-edited or
+already-invalid save) there is nothing to fold at all. A fold that is correct in
+one shape and invents rules choices in the others is worse than a loud, precise
+error the player resolves in one click, so the file is left byte-for-byte as
+written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 
 #### Selection multiplicity — `max_per_target`
 > "A Virtue or Flaw may be taken more than once only if the description
@@ -2768,7 +2818,7 @@ approximation of "Latin").
   the `max_per_target` — see *Selection multiplicity* above. Copies stack: two
   grant 6 points.
 - Implementation: `effective/characteristic.rs::characteristic_points_granted` sums the grants;
-  `validation/scores.rs::validate_characteristics` (:33) budget = `start_points + granted`. The
+  `validation/scores.rs::validate_characteristics` (:32) budget = `start_points + granted`. The
   per-characteristic +3 *cap* is unchanged (only Great Characteristic widens it).
 
 #### Weak Characteristics — −3 Characteristic-buy points (`characteristic_points`, signed)

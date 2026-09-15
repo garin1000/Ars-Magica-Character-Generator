@@ -135,17 +135,34 @@ describe('CharacteristicPicker point-buy budget and spinners', () => {
     expect(tagContaining(body, 'data-testid="char-dec-sta"')).not.toContain('disabled');
   });
 
-  it('widens the buyable range past the table when the engine reports a raised cap/lowered floor', () => {
-    // Great Characteristic / Poor Characteristic widen the per-characteristic
-    // buy range past the ruleset's base ±3 — the engine, not this component,
-    // owns that math (VA1-style separation), so a wider cap must lift the
-    // increment button's disabled state past the table max.
+  it('takes the buyable range from the engine rather than re-deriving it', () => {
+    // The engine, not this component, owns the per-characteristic buy range
+    // (VA1-style separation), so whatever cap it reports must drive the
+    // increment button's disabled state — even one wider than the cost table.
     store.entity.characteristics = { str: 3 } as Entity['characteristics'];
     store.effective = {
       characteristic_caps: { str: 5 },
     } as unknown as EffectiveScores;
     const body = html();
     expect(tagContaining(body, 'data-testid="char-inc-str"')).not.toContain('disabled');
+  });
+
+  it('keeps the spinner at +3 under Great Characteristic and shows the point as a badge', () => {
+    // Great (Characteristic) grants the point rather than unlocking a purchase
+    // (ArMDE:3989), so the engine reports an unchanged +3 cap and a +4 effective
+    // score. The spinner must therefore stay capped at the bought +3, with the
+    // fourth point surfacing in the effective badge — exactly how Giant Blood's
+    // free +1 already renders.
+    store.entity.characteristics = { str: 3 } as Entity['characteristics'];
+    store.effective = {
+      characteristic_caps: { str: 3 },
+      characteristic_effective: { str: 4 },
+      characteristic_bonuses: [{ characteristic: 'str', bonus: 1 }],
+    } as unknown as EffectiveScores;
+    const body = html();
+    expect(tagContaining(body, 'data-testid="char-inc-str"')).toContain('disabled');
+    expect(body).toContain('data-testid="char-effective-str"');
+    expect(clean(body)).toContain(clean(store.t('effective-score-from', { score: '+4' })));
   });
 
   it('shows the effective-score badge only when it differs from the bought score', () => {

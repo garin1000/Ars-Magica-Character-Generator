@@ -34,6 +34,7 @@
   "flaw.offensive_to_beings": { "anchor": "abstoßend-für-wesen", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.overconfident_major": { "anchor": "überheblich", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.overconfident_minor": { "anchor": "überheblich", "file": "Ars Magica Definitive Edition Basisregeln.md" },
+  "flaw.poor_characteristic": { "anchor": "schlechte-eigenschaft", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.poor_concentration": { "anchor": "schlechte-konzentration", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.primitive_equipment": { "anchor": "primitive-ausrüstung", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.raised_in_the_gutter": { "anchor": "in-der-gosse-aufgewachsen", "file": "Ars Magica Definitive Edition Basisregeln.md" },
@@ -49,5 +50,6 @@
   "flaw.unlucky": { "anchor": "unglücklich", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.vengeful_powers": { "anchor": "rachsüchtige-mächte", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.warped_senses": { "anchor": "verzerrte-sinne", "file": "Ars Magica Definitive Edition Basisregeln.md" },
-  "flaw.weak_personality": { "anchor": "schwache-persönlichkeit", "file": "Ars Magica Definitive Edition Basisregeln.md" }
+  "flaw.weak_personality": { "anchor": "schwache-persönlichkeit", "file": "Ars Magica Definitive Edition Basisregeln.md" },
+  "virtue.great_characteristic": { "anchor": "hervorragende-eigenschaft", "file": "Ars Magica Definitive Edition Basisregeln.md" }
 }

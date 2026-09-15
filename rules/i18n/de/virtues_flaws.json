@@ -958,7 +958,7 @@
   },
   "flaw.poor_characteristic": {
     "name": "Schlechte {characteristic}",
-    "summary": "Senke eine Eigenschaft, die bereits bei -3 liegt, bis mindestens -5; die Punkte erhältst du weiterhin."
+    "summary": "Senkt eine Eigenschaft, die bereits bei -3 liegt, um einen Punkt, auf mindestens -5; Punkte gibt es dafür nicht."
   },
   "flaw.poor_concentration": {
     "name": "Schlechte Konzentration",
@@ -1885,7 +1885,7 @@
   },
   "virtue.great_characteristic": {
     "name": "Hervorragende {characteristic}",
-    "summary": "Erhöhe eine Eigenschaft, die bereits bei +3 liegt, bis höchstens +5; die Punkte zahlst du weiterhin."
+    "summary": "Hebt eine Eigenschaft, die bereits bei +3 liegt, kostenlos um einen Punkt an, auf höchstens +5."
   },
   "virtue.greater_benediction": {
     "name": "Große Segnung",

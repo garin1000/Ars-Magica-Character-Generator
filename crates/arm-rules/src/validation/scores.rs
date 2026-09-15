@@ -14,22 +14,21 @@ use crate::types::AbilityScore;
 /// unspent" warning, mirroring the V/F balance rule). No-op when the ruleset
 /// ships no characteristic rules.
 ///
-/// The buy range is the base ±3 by default, widened upward by Great
-/// (Characteristic) and downward by Poor (Characteristic) (see
-/// [`characteristic_cap`](crate::effective::characteristic_cap) /
-/// [`characteristic_floor`](crate::effective::characteristic_floor)). The cost
-/// table itself spans the absolute ±5 range so the higher/lower scores can be
-/// priced; without the virtue/flaw they are legal table values but above the cap
-/// / below the floor.
+/// The buy range is the base ±3, and nothing widens it: Great and Poor
+/// (Characteristic) grant a free score delta on top of the bought score rather
+/// than opening headroom to buy into (see
+/// [`characteristic_score_bonus`](crate::effective::characteristic_score_bonus)),
+/// which is why the cost table needs no price for ±4 or ±5 — the rulebook prints
+/// none.
 ///
 /// The point-spend check is skipped entirely when the character has no
 /// Characteristics set: an untouched step is not yet under-spent, so a fresh
 /// character is not nagged. Out-of-range scores are always flagged.
 ///
 /// Source: ArMDE:2340-2354 (the cost
-/// table and the seven starting points), :4105 (the +3 base cap), :3987-3989
-/// (Great's +5), :6598-6600 (Poor's −5). The numbers themselves are data in
-/// `rules/core/characteristics.json` (see RULES.md).
+/// table and the seven starting points), :4105 (the +3 base cap).
+/// The numbers themselves are data in `rules/core/characteristics.json` (see
+/// RULES.md).
 pub(crate) fn validate_characteristics(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -46,24 +45,18 @@ pub(crate) fn validate_characteristics(
         if !validate_characteristic_is_legal_score(rules, characteristic, score, min, max, issues) {
             continue;
         }
-        // A legal table value still has to sit within the range that this
-        // character's Great/Poor (Characteristic) choices open for the target.
-        validate_characteristic_within_cap_and_floor(
-            entity,
-            ruleset,
-            characteristic,
-            score,
-            issues,
-        );
+        // A priced score still has to sit within the buy range.
+        validate_characteristic_within_cap_and_floor(ruleset, characteristic, score, issues);
     }
 
     validate_characteristic_point_spend(entity, rules, ruleset, issues);
 }
 
-/// A bought score must be a legal table value at all — the pure ±5-range check,
-/// independent of any Great/Poor (Characteristic) shift. Pushes
-/// `characteristic_out_of_range` and returns `false` when it fails, so the
-/// caller skips the cap/floor check below (which assumes a legal value).
+/// A bought score must be a legal table value at all — the pure "is it priced"
+/// check. Pushes `characteristic_out_of_range` and returns `false` when it
+/// fails, so the caller skips the cap/floor check below (which assumes a legal
+/// value). This is what a save carrying a bought +4 from the old, invented
+/// ±4/±5 rows now trips.
 fn validate_characteristic_is_legal_score(
     rules: &CharacteristicRules,
     characteristic: Characteristic,
@@ -89,18 +82,19 @@ fn validate_characteristic_is_legal_score(
     true
 }
 
-/// A legal score still has to sit within the per-characteristic buy range Great
-/// (Characteristic)/Poor (Characteristic) opens: `characteristic_above_cap` /
-/// `characteristic_below_floor`.
+/// A score that the cost table prices still has to sit within the buy range:
+/// `characteristic_above_cap` / `characteristic_below_floor`. The two checks are
+/// not redundant, because a ruleset may price scores outside its own buy
+/// range — the shipped one does not (its table *is* ±3), so this is the guard
+/// that keeps a wider third-party table honest.
 fn validate_characteristic_within_cap_and_floor(
-    entity: &Entity,
     ruleset: &Ruleset,
     characteristic: Characteristic,
     score: i8,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    let cap = crate::effective::characteristic_cap(entity, ruleset, characteristic);
-    let floor = crate::effective::characteristic_floor(entity, ruleset, characteristic);
+    let cap = crate::effective::characteristic_cap(ruleset, characteristic);
+    let floor = crate::effective::characteristic_floor(ruleset, characteristic);
     if i32::from(score) > cap {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_CHARACTERISTIC_ABOVE_CAP,
@@ -163,19 +157,22 @@ fn validate_characteristic_point_spend(
     }
 }
 
-/// Enforces the parameter-relative precondition on `characteristic_limit`
-/// effects: a limit-shift may only be taken on a characteristic whose *base*
-/// (bought) score is already at the limit being extended. Great (Characteristic,
-/// positive amount) needs base ≥ the base cap (+3); Poor (Characteristic,
-/// negative amount) needs base ≤ the base floor (−3). The threshold is derived
-/// from the ruleset's base cap/floor by the sign of the amount, so no per-effect
-/// number is stored. This is parameter-relative (it constrains whichever
-/// characteristic the selection targets), so it lives here rather than in the
-/// static [`Prereq`] tree.
+/// Enforces the parameter-relative precondition on
+/// `characteristic_score_delta_param` effects: the free point may only be
+/// granted to a characteristic whose *bought* score is already at the limit the
+/// grant carries it past. Great (Characteristic, positive amount) needs bought ≥
+/// the base cap (+3); Poor (Characteristic, negative amount) needs bought ≤ the
+/// base floor (−3). The threshold is derived from the ruleset's base cap/floor
+/// by the sign of the amount, so no per-effect number is stored. This is
+/// parameter-relative (it constrains whichever characteristic the selection
+/// targets), so it lives here rather than in the static [`Prereq`] tree.
+///
+/// Unchanged by the move from a buy-cap shift to a free score delta: the gate
+/// always read the **bought** score, and the bought score still tops out at ±3.
 ///
 /// Source: ArMDE:3987-3989 (Great,
 /// "already … at least +3"), :6598-6600 (Poor, "already −3 or lower").
-pub(crate) fn validate_characteristic_limit_preconditions(
+pub(crate) fn validate_characteristic_delta_preconditions(
     entity: &Entity,
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
@@ -193,7 +190,7 @@ pub(crate) fn validate_characteristic_limit_preconditions(
             // The exhaustive Effect match lives once, in effect_target (V71):
             // adding a variant is a compile error there, not here.
             let (amount, target, base) = match effect_target(effect) {
-                EffectTarget::CharacteristicLimit { param, amount } => {
+                EffectTarget::CharacteristicParamDelta { param, amount } => {
                     let Some(target) = selection
                         .params
                         .get(param)

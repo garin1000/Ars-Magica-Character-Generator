@@ -19,7 +19,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // Exhaustive so adding an Effect variant is a compile error here, not a
         // silently-ignored contribution to the spell-levels budget.
         Effect::AbilityBonus { .. }
-        | Effect::CharacteristicLimit { .. }
+        | Effect::CharacteristicScoreDeltaParam { .. }
         | Effect::ArtBonus { .. }
         | Effect::AffinityAbilityCost { .. }
         | Effect::AffinityArtCost { .. }
@@ -74,7 +74,7 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // Exhaustive so adding an Effect variant is a compile error here, not a
         // silently-ignored contribution to the general XP pool.
         Effect::AbilityBonus { .. }
-        | Effect::CharacteristicLimit { .. }
+        | Effect::CharacteristicScoreDeltaParam { .. }
         | Effect::ArtBonus { .. }
         | Effect::AffinityAbilityCost { .. }
         | Effect::AffinityArtCost { .. }
@@ -353,7 +353,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 Effect::GrantsSpellMastery { .. }
                 | Effect::AffinityAbilityCost { .. }
                 | Effect::AbilityBonus { .. }
-                | Effect::CharacteristicLimit { .. }
+                | Effect::CharacteristicScoreDeltaParam { .. }
                 | Effect::ArtBonus { .. }
                 | Effect::AffinityArtCost { .. }
                 | Effect::RestrictedAbilityXp { .. }

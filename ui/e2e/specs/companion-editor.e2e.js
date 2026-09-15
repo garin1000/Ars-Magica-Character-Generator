@@ -1,5 +1,5 @@
-// End-to-end: the companion-shaped editor surface — Characteristic caps and
-// Ability bonuses, illegal-selection reporting and its per-mode variants,
+// End-to-end: the companion-shaped editor surface — granted Characteristic points
+// and Ability bonuses, illegal-selection reporting and its per-mode variants,
 // mechanical Virtue/Flaw effects, mutual exclusion, warping-owed fills, the
 // core tabbed edit/save/reload flow, per-character fields, and the
 // window.close() bridge for a DIRTY document.
@@ -35,14 +35,45 @@ import {
 } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
-// End-to-end: Great Characteristic raises a Characteristic's buy cap (it grants
-// no free point — the score must be bought past +3), and Puissant Ability (+2)
-// shows as an "effective" badge on its target ability.
-describe('characteristic cap + ability bonus', () => {
-  it('Great Characteristic opens the cap, Puissant shows a badge', async () => {
+// End-to-end: Great (Characteristic) performs the raise ITSELF — it does not open
+// the buy cap — and Puissant Ability (+2) shows as an "effective" badge on its
+// target ability.
+//
+// The rule is `ArMDE:3989`: "You may raise any Characteristic that already has a
+// score of at least +3 by one point, to no more than +5." The verb is active on
+// the Virtue's part, exactly like Giant Blood's free +1 (`ArMDE:3977`), and the
+// printed point-buy table (`ArMDE:2346-2354`) stops at +-3 and prints no cost for
+// +4 or +5 — so there is no price at which a player could buy that point. The
+// bought score therefore stays capped at +3 and the +4 arrives as a granted bonus,
+// rendered through the same effective-score badge Giant Blood already uses.
+//
+// This spec used to assert the opposite ("the cap is now +4, so increment is
+// enabled again and clicking it buys Strength up to +4"), pinning the open-todos
+// row 32 defect in place. It now asserts the corrected rule, including the half
+// the old reading got wrong: taking the Virtue must not raise the
+// Characteristic-point spend, because the point is given rather than sold.
+describe('characteristic grant + ability bonus', () => {
+  const POINTS = '[data-testid="characteristic-points"]';
+
+  // The BOUGHT score on its own. `char-value-str` also hosts the granted-bonus
+  // badge, so once that badge exists the span's `getText()` reads "+3 -> +4";
+  // join the span's own text-node children instead and leave the badge out of it.
+  const boughtStrength = () =>
+    browser.execute(() => {
+      const value = document.querySelector('[data-testid="char-value-str"]');
+      if (!value) return null;
+      return [...value.childNodes]
+        .filter((node) => node.nodeType === 3)
+        .map((node) => node.textContent)
+        .join('')
+        .trim();
+    });
+
+  it('Great Characteristic grants the point, Puissant shows a badge', async () => {
     await startCharacter('companion');
 
-    // Open the Characteristics tab; raise Strength to its base cap of +3.
+    // Open the Characteristics tab; buy Strength up to +3, the last row the
+    // printed table prices.
     await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
     await $('[data-testid="tab-characteristics"]').click();
     const strInc = await $('[data-testid="char-inc-str"]');
@@ -51,8 +82,16 @@ describe('characteristic cap + ability bonus', () => {
     await strInc.click();
     await strInc.click();
     expect(await $('[data-testid="char-value-str"]').getText()).toBe('+3');
-    // At the base cap the increment button is disabled — no headroom yet.
+    // At the buy cap the increment button is disabled, and nothing has been
+    // granted yet, so there is no effective badge at all.
     expect(await strInc.isEnabled()).toBe(false);
+    expect(await $('[data-testid="char-effective-str"]').isExisting()).toBe(false);
+    // +3 costs 6 of the companion's 7 Characteristic points. Recorded BEFORE the
+    // Virtue so the reading after it is a comparison, not a bare number.
+    await browser.waitUntil(async () => clean(await $(POINTS).getText()).includes('6 / 7'), {
+      timeout: 10000,
+      timeoutMsg: 'buying Strength to +3 should spend 6 of the 7 Characteristic points',
+    });
 
     // Add Great Characteristic and target Strength via the characteristic picker.
     await $('[data-testid="tab-virtues_flaws"]').click();
@@ -65,15 +104,41 @@ describe('characteristic cap + ability bonus', () => {
     await charParam.waitForExist({ timeout: 5000 });
     await charParam.selectByAttribute('value', 'characteristic.str');
 
-    // Back on Characteristics: the cap is now +4, so increment is enabled again
-    // and clicking it buys Strength up to +4 (no free point was granted).
+    // Back on Characteristics: the Virtue raised Strength itself, so +4 arrives as
+    // the granted-bonus badge. Waiting for the badge is also what proves the engine
+    // has answered for the entity the Virtue is now on, so everything asserted
+    // below it reads a settled state rather than racing the debounce.
     await $('[data-testid="tab-characteristics"]').click();
+    const badge = await $('[data-testid="char-effective-str"]');
+    await badge.waitForExist({ timeout: 10000 });
+    expect(clean(await badge.getText())).toContain('+4');
+
+    // The BOUGHT score did not move, and the spinner still stops at +3 — adding
+    // the Virtue changes the effective score, never the buy cap. This is the
+    // assertion the old spec had backwards: it clicked increment here and expected
+    // a bought +4.
+    expect(await boughtStrength()).toBe('+3');
     const strInc2 = await $('[data-testid="char-inc-str"]');
-    await strInc2.waitForClickable({ timeout: 10000 });
-    await strInc2.click();
-    expect(await $('[data-testid="char-value-str"]').getText()).toBe('+4');
-    // +4 is the cap with one Great; the button disables again.
     expect(await strInc2.isEnabled()).toBe(false);
+
+    // And the point was GIVEN, not sold: the Characteristic spend is unchanged at
+    // 6 of 7. The printed table has no +4 row to charge from, which is the whole
+    // evidence for the grant reading.
+    expect(clean(await $(POINTS).getText())).toContain('6 / 7');
+
+    // The app says as much in its own words: the badge's breakdown attributes the
+    // gap to the Virtue, over a bought score it still reports as +3.
+    await browser.execute((el) => {
+      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    }, badge);
+    const summary = await $('[data-testid="tooltip-text"]');
+    await summary.waitForExist({ timeout: 5000 });
+    expect(clean(await summary.getText())).toContain('Bought +3, effective +4');
+    expect(clean(await $('.tooltip-pop .tooltip-list').getText())).toContain('Virtue +1');
+    // Dismiss the popup so it does not linger over the tabs clicked below.
+    await browser.execute((el) => {
+      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    }, badge);
 
     // Buy Awareness up to 2, then add Puissant Ability targeting it.
     await $('[data-testid="tab-abilities"]').click();

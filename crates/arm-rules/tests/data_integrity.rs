@@ -4,11 +4,11 @@ use arm_rules::aging::{
     AgingOutcome, AgingPointAward, AgingPointTarget, AgingTotal, CrisisAllowance, CrisisModifier,
     CrisisModifierSource, CrisisOutcome, CrisisSeverity, CrisisSurvival,
 };
-use arm_rules::effective_art_score;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{ValidationIssue, compute_balance, validate};
 use arm_rules::{AgingRowEffect, AgingRules};
+use arm_rules::{effective_art_score, effective_characteristic_score};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The shipped House registry. Every helper below loads it, because the four
@@ -318,18 +318,178 @@ fn shipped_abilities_and_characteristics_load() {
         .characteristic_rules()
         .expect("characteristic rules present");
     assert_eq!(chars.start_points, 7);
-    // The cost table spans the absolute ±5 range (Great/Poor headroom)...
-    assert_eq!(chars.min_score(), Some(-5));
-    assert_eq!(chars.max_score(), Some(5));
-    // ...while the no-virtue base limits are ±3.
+    // The cost table is exactly the printed ±3 range, which is also the buy
+    // range — Great/Poor (Characteristic) grant a free delta on top rather than
+    // widening it (see characteristic_cost_table_prices_only_the_printed_rows).
+    assert_eq!(chars.min_score(), Some(-3));
+    assert_eq!(chars.max_score(), Some(3));
     assert_eq!(chars.base_max_score(), Some(3));
     assert_eq!(chars.base_min_score(), Some(-3));
-    assert_eq!(chars.effective_max_score(), Some(5));
-    assert_eq!(chars.effective_min_score(), Some(-5));
+    // The aging floor is a derived-side clamp, below the buy range.
+    assert_eq!(chars.aging_floor_score(), Some(-5));
 
     // Advancement table is triangular: score 5 costs 75 xp total.
     assert_eq!(rs.advancement().xp_for_score(5), Some(75));
     assert_eq!(rs.advancement().xp_to_raise(5), Some(25));
+}
+
+/// A Characteristic selection targeting `characteristic`, for the Great/Poor
+/// tests below.
+fn targeting(item: &str, characteristic: Characteristic) -> Selection {
+    Selection::with_params(
+        Id::new(item),
+        BTreeMap::from([("characteristic".to_string(), characteristic.id())]),
+    )
+}
+
+/// **The point-buy table is exactly the seven rows the rulebook prints.**
+///
+/// `ArMDE:2346-2354` prints +3→6 through -3→Gain 6 and stops. There is no
+/// printed price for +4 or +5, and inventing one to "continue the triangular
+/// progression" breaks `CLAUDE.md` → "Rules backed by source, never memory". The
+/// absence is also the tell that the cap-shift reading of Great (Characteristic)
+/// was wrong: a cap the player buys past needs a price the book never gives.
+#[test]
+fn characteristic_cost_table_prices_only_the_printed_rows() {
+    let rs = load_ruleset();
+    let chars = rs
+        .characteristic_rules()
+        .expect("characteristic rules present");
+    for (score, cost) in [(3, 6), (2, 3), (1, 1), (0, 0), (-1, -1), (-2, -3), (-3, -6)] {
+        assert_eq!(chars.cost_for(score), Some(cost), "printed row {score}");
+    }
+    for score in [4, 5, -4, -5] {
+        assert_eq!(
+            chars.cost_for(score),
+            None,
+            "score {score} has no printed cost in ArMDE:2346-2354 and must not be priced"
+        );
+    }
+    assert_eq!(chars.max_score(), Some(3));
+    assert_eq!(chars.min_score(), Some(-3));
+}
+
+/// **Great (Characteristic) grants the point; it does not unlock a purchase.**
+///
+/// `ArMDE:3989`: "You may **raise** any Characteristic that already has a score
+/// of at least +3 **by one point**, to no more than +5." That is the grammar of
+/// Giant Blood's "You also gain +1 to both Strength and Stamina"
+/// (`ArMDE:3977`), already modelled as a free score delta. `ArMDE:4105` is
+/// consistent: +3 is the cap on the **bought** score, and the Virtue carries the
+/// character past it by granting the point.
+#[test]
+fn great_characteristic_grants_a_free_point() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![targeting(
+            "virtue.great_characteristic",
+            Characteristic::Str,
+        )],
+    );
+    e.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+    assert_eq!(
+        effective_characteristic_score(&e, &rs, Characteristic::Str),
+        4,
+        "one Great on a bought +3 must read +4"
+    );
+    // It targets only the Characteristic the selection names.
+    assert_eq!(
+        effective_characteristic_score(&e, &rs, Characteristic::Qik),
+        0
+    );
+}
+
+/// Taken twice for one Characteristic (`max_per_target: 2`), Great reaches the
+/// "+5" the passage names — with no clamp of its own: +3 bought plus two granted
+/// points *is* +5.
+#[test]
+fn great_characteristic_twice_reaches_plus_five() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![
+            targeting("virtue.great_characteristic", Characteristic::Str),
+            targeting("virtue.great_characteristic", Characteristic::Str),
+        ],
+    );
+    e.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+    assert_eq!(
+        effective_characteristic_score(&e, &rs, Characteristic::Str),
+        5
+    );
+}
+
+/// **Poor (Characteristic) lowers the score itself — the worse half of the
+/// defect.** `ArMDE:6600`: "lower one which is already -3 or lower by one
+/// point … You may take this Flaw twice for a single Characteristic, lowering it
+/// to -5". Priced as a buy-floor shift, the invented -4 row refunded 10 points
+/// where the table's own progression gives 6, so the Flaw paid the player twice:
+/// once in Flaw points, once in Characteristic points.
+#[test]
+fn poor_characteristic_lowers_the_score_for_free() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![targeting("flaw.poor_characteristic", Characteristic::Str)],
+    );
+    e.characteristics = BTreeMap::from([(Characteristic::Str, -3)]);
+    assert_eq!(
+        effective_characteristic_score(&e, &rs, Characteristic::Str),
+        -4
+    );
+}
+
+/// **Giant Blood stacked on two Greats reaches +6, and nothing may forbid it.**
+///
+/// `ArMDE:3977` says so outright: "This bonus may raise your scores in those
+/// Characteristics as high as +6." This is the case a naive "+5 ceiling" clamp
+/// breaks, so it is pinned: bought +3, two Greats (+2) and Giant Blood (+1).
+#[test]
+fn giant_blood_over_two_greats_reaches_plus_six() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![
+            targeting("virtue.great_characteristic", Characteristic::Str),
+            targeting("virtue.great_characteristic", Characteristic::Str),
+            Selection::new(Id::new("virtue.giant_blood")),
+        ],
+    );
+    e.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+    assert_eq!(
+        effective_characteristic_score(&e, &rs, Characteristic::Str),
+        6
+    );
+    // Stamina gets Giant Blood's point alone.
+    assert_eq!(
+        effective_characteristic_score(&e, &rs, Characteristic::Sta),
+        1
+    );
+}
+
+/// A bought +4 — legal only under the invented table — is now reported as an
+/// off-table score rather than silently priced at an invented 10 points.
+#[test]
+fn a_bought_score_above_plus_three_is_out_of_range() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![targeting(
+            "virtue.great_characteristic",
+            Characteristic::Str,
+        )],
+    );
+    e.characteristics = BTreeMap::from([(Characteristic::Str, 4)]);
+    let result = validate(&e, &rs);
+    assert!(
+        result
+            .issues
+            .iter()
+            .any(|i| i.code == ValidationIssue::CODE_CHARACTERISTIC_OUT_OF_RANGE),
+        "a bought +4 must be reported off-table; got {:#?}",
+        result.issues
+    );
 }
 
 #[test]
@@ -2000,20 +2160,26 @@ fn shipped_score_effects_apply() {
         4,
         "Awareness 2 + Puissant +2"
     );
-    // Great raises Strength's buy cap (no free point); Poor lowers Quickness's
-    // buy floor. Untargeted characteristics keep the base ±3 limits.
+    // Great grants Strength a free point and Poor takes one off Quickness; the
+    // buy range stays the printed ±3 for every characteristic, targeted or not.
     assert_eq!(
-        characteristic_cap(&e, &rs, Characteristic::Str),
+        effective_characteristic_score(&e, &rs, Characteristic::Str),
         4,
-        "Great raises the Strength cap to +4"
+        "Great grants Strength its fourth point"
     );
     assert_eq!(
-        characteristic_floor(&e, &rs, Characteristic::Qik),
+        effective_characteristic_score(&e, &rs, Characteristic::Qik),
         -4,
-        "Poor lowers the Quickness floor to -4"
+        "Poor drops Quickness to -4"
     );
-    assert_eq!(characteristic_cap(&e, &rs, Characteristic::Int), 3);
-    assert_eq!(characteristic_floor(&e, &rs, Characteristic::Int), -3);
+    for characteristic in [
+        Characteristic::Str,
+        Characteristic::Qik,
+        Characteristic::Int,
+    ] {
+        assert_eq!(characteristic_cap(&rs, characteristic), 3);
+        assert_eq!(characteristic_floor(&rs, characteristic), -3);
+    }
 }
 
 // --- M5 slice 5b: in-play effect variants ---
@@ -2136,7 +2302,7 @@ fn deficient_technique_cannot_target_a_form() {
 /// dictates, computed elsewhere.
 #[test]
 fn in_play_effects_do_not_perturb_creation_totals() {
-    use arm_rules::{characteristic_cap, checked_xp_allocation, effective_ability_score};
+    use arm_rules::{checked_xp_allocation, effective_ability_score};
     let rs = load_ruleset_with_spells();
 
     let mut base = entity("magus", vec![]);
@@ -2172,9 +2338,9 @@ fn in_play_effects_do_not_perturb_creation_totals() {
         "in-play effects must not change XP demand"
     );
     assert_eq!(
-        characteristic_cap(&base, &rs, Characteristic::Int),
-        characteristic_cap(&with_effects, &rs, Characteristic::Int),
-        "in-play effects must not change characteristic caps"
+        effective_characteristic_score(&base, &rs, Characteristic::Int),
+        effective_characteristic_score(&with_effects, &rs, Characteristic::Int),
+        "in-play effects must not change effective characteristic scores"
     );
     assert_eq!(
         effective_ability_score(&base, &rs, &Id::new("ability.awareness"), None),

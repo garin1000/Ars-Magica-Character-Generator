@@ -2182,9 +2182,15 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
-    "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": -1 }],
+    "effects": [
+      { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": -1 }
+    ],
     "max_per_target": 2,
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6598, 6600] }
+    "source": {
+      "anchor": "poor-characteristic",
+      "file": "Ars Magica - Definitive Edition (Core Rules).md",
+      "lines": [6598, 6600]
+    }
   },
   {
     "id": "flaw.poor_concentration",
@@ -4381,9 +4387,15 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
-    "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }],
+    "effects": [
+      { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": 1 }
+    ],
     "max_per_target": 2,
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3987, 3989] }
+    "source": {
+      "anchor": "great-characteristic",
+      "file": "Ars Magica - Definitive Edition (Core Rules).md",
+      "lines": [3987, 3989]
+    }
   },
   {
     "id": "virtue.greater_benediction",

@@ -380,7 +380,7 @@ pub fn effective_characteristic_after_aging(
     let drops = i32::try_from(aging_drops(entity, ruleset, characteristic)).unwrap_or(i32::MAX);
     let floor = ruleset
         .characteristic_rules()
-        .and_then(|r| r.effective_min_score())
+        .and_then(|r| r.aging_floor_score())
         .map_or(i32::MIN, i32::from);
     let aged = bought.saturating_sub(drops).max(floor);
     aged + characteristic_score_bonus(entity, ruleset, characteristic)

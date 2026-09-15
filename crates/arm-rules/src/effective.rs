@@ -6,15 +6,18 @@
 //!
 //! - *Ability bonuses* (Puissant Ability +2) add to a bought ability score; the
 //!   effective ability score is bought + bonus, always computed, never stored.
-//! - *Characteristic limit shifts* (Great/Poor Characteristic) move a base
-//!   score's buy cap or floor. They grant no points — the score is still bought
-//!   against the cost table — so there is no characteristic "effective score";
-//!   instead [`characteristic_cap`] / [`characteristic_floor`] report the
-//!   per-characteristic range the limit shifts open.
+//! - *Characteristic score deltas* (Giant Blood +1 Str/Sta by a fixed target;
+//!   Great/Poor Characteristic ±1 by a selection parameter) add a **free** point
+//!   on top of a bought characteristic score, which stays inside the printed ±3
+//!   point-buy table. [`characteristic_score_bonus`] sums them and
+//!   [`effective_characteristic_score`] adds them to the bought score;
+//!   [`characteristic_cap`] / [`characteristic_floor`] report the buy range,
+//!   which nothing widens.
 //!
 //! Source: `ArMDE:4814-4816` (Puissant
-//! Ability, +2), `ArMDE:3987-3989` (Great Characteristic, raise to +5), `ArMDE:6598-6600`
-//! (Poor Characteristic, lower to −5).
+//! Ability, +2), `ArMDE:3987-3989` (Great Characteristic, a free point to +5),
+//! `ArMDE:6598-6600` (Poor Characteristic, a free −1 to −5), `ArMDE:3975-3978`
+//! (Giant Blood, +1 Str/Sta as high as +6).
 
 use crate::ability::AbilityCategory;
 use crate::characteristics::Characteristic;
@@ -169,14 +172,14 @@ fn vf_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
     out
 }
 
-/// The [`Effect`] variants that never contribute to a score-space bonus, a
-/// characteristic-limit shift, or an Affinity cost reduction — the fixed
-/// "everything else is a no-op" tail every fold in this section needs, because
-/// the match must stay exhaustive (a new `Effect` variant is a compile error
-/// here, not a silently-ignored bonus/shift/reduction). Defined once so
-/// [`ability_bonus`], [`art_bonus`], `characteristic_limit_shift`,
-/// [`ability_affinity`] and `art_affinity` — five folds that each need this same
-/// ~40-variant list — do not hand-maintain five near-identical copies of it.
+/// The [`Effect`] variants that never contribute to a score-space bonus or an
+/// Affinity cost reduction — the fixed "everything else is a no-op" tail every
+/// fold in this section needs, because the match must stay exhaustive (a new
+/// `Effect` variant is a compile error here, not a silently-ignored
+/// bonus/reduction). Defined once so [`ability_bonus`], [`art_bonus`],
+/// [`characteristic_score_bonus`], [`ability_affinity`] and `art_affinity` —
+/// five folds that each need this same ~40-variant list — do not hand-maintain
+/// five near-identical copies of it.
 ///
 /// Only sound for a fold whose "interesting" arm(s) are **guarded** (`if ...`):
 /// a guard can fail, so the variant must also appear here to catch that case,
@@ -191,7 +194,7 @@ fn vf_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
 macro_rules! irrelevant_effect_variants {
     () => {
         Effect::AbilityBonus { .. }
-        | Effect::CharacteristicLimit { .. }
+        | Effect::CharacteristicScoreDeltaParam { .. }
         | Effect::ArtBonus { .. }
         | Effect::AffinityAbilityCost { .. }
         | Effect::AffinityArtCost { .. }
@@ -295,7 +298,9 @@ mod tests {
             "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
-            "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }],
+            "effects": [
+              { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": 1 }
+            ],
             "max_per_target": 2
           },
           {
@@ -306,7 +311,9 @@ mod tests {
             "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
-            "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": -1 }],
+            "effects": [
+              { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": -1 }
+            ],
             "max_per_target": 2
           },
           {
@@ -400,14 +407,12 @@ mod tests {
         let characteristics = r#"{
           "start_points": 7,
           "base_max": 3, "base_min": -3,
-          "effective_max": 5, "effective_min": -5,
+          "aging_floor": -5,
           "costs": [
-            { "score": 5, "cost": 15 }, { "score": 4, "cost": 10 },
             { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 },
             { "score": 1, "cost": 1 }, { "score": 0, "cost": 0 },
             { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 },
-            { "score": -3, "cost": -6 }, { "score": -4, "cost": -10 },
-            { "score": -5, "cost": -15 }
+            { "score": -3, "cost": -6 }
           ]
         }"#;
         Ruleset::from_sources(RulesetSources {
@@ -606,105 +611,118 @@ mod tests {
     }
 
     #[test]
-    fn default_cap_and_floor_are_the_base_limits() {
-        // With no Great/Poor, every characteristic's range is the base ±3.
+    fn the_buy_range_is_the_base_limits() {
+        // The printed table IS the buy range; nothing widens it.
         let rs = ruleset();
-        let e = entity(vec![]);
-        assert_eq!(characteristic_cap(&e, &rs, Characteristic::Str), 3);
-        assert_eq!(characteristic_floor(&e, &rs, Characteristic::Str), -3);
+        assert_eq!(characteristic_cap(&rs, Characteristic::Str), 3);
+        assert_eq!(characteristic_floor(&rs, Characteristic::Str), -3);
     }
 
     #[test]
-    fn great_characteristic_raises_the_cap_without_touching_the_score() {
+    fn great_characteristic_grants_the_point_and_leaves_the_buy_range_alone() {
         let rs = ruleset();
         let mut e = entity(vec![great(Characteristic::Str)]);
         e.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
-        // The cap opens to +4; the bought score is unchanged (no free point).
-        assert_eq!(characteristic_cap(&e, &rs, Characteristic::Str), 4);
+        // The Virtue performs the raise itself (ArMDE:3989)...
+        assert_eq!(characteristic_score_bonus(&e, &rs, Characteristic::Str), 1);
+        assert_eq!(
+            effective_characteristic_score(&e, &rs, Characteristic::Str),
+            4
+        );
+        // ...the bought score is untouched, and so is the range it may occupy.
         assert_eq!(e.characteristics[&Characteristic::Str], 3);
-        // The floor is untouched.
-        assert_eq!(characteristic_floor(&e, &rs, Characteristic::Str), -3);
+        assert_eq!(characteristic_cap(&rs, Characteristic::Str), 3);
+        assert_eq!(characteristic_floor(&rs, Characteristic::Str), -3);
     }
 
     #[test]
-    fn great_characteristic_twice_raises_the_cap_to_five() {
+    fn great_characteristic_twice_reaches_plus_five_with_no_clamp_of_its_own() {
+        // "to no more than +5" needs no clamp: a bought score capped at +3 plus
+        // `max_per_target: 2` grants IS +5.
         let rs = ruleset();
-        let e = entity(vec![great(Characteristic::Str), great(Characteristic::Str)]);
-        assert_eq!(characteristic_cap(&e, &rs, Characteristic::Str), 5);
+        let mut e = entity(vec![great(Characteristic::Str), great(Characteristic::Str)]);
+        e.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+        assert_eq!(
+            effective_characteristic_score(&e, &rs, Characteristic::Str),
+            5
+        );
     }
 
     #[test]
-    fn cap_is_clamped_at_the_effective_ceiling() {
-        // Three Greats (a state the data forbids, but the engine must stay sound)
-        // cannot push the cap past the +5 effective ceiling.
-        let rs = ruleset();
-        let e = entity(vec![
-            great(Characteristic::Str),
-            great(Characteristic::Str),
-            great(Characteristic::Str),
-        ]);
-        assert_eq!(characteristic_cap(&e, &rs, Characteristic::Str), 5);
-    }
-
-    #[test]
-    fn poor_characteristic_lowers_the_floor_without_touching_the_score() {
+    fn poor_characteristic_lowers_the_score_and_leaves_the_buy_range_alone() {
         let rs = ruleset();
         let mut e = entity(vec![poor(Characteristic::Str)]);
         e.characteristics = BTreeMap::from([(Characteristic::Str, -3)]);
-        assert_eq!(characteristic_floor(&e, &rs, Characteristic::Str), -4);
+        assert_eq!(
+            effective_characteristic_score(&e, &rs, Characteristic::Str),
+            -4
+        );
         assert_eq!(e.characteristics[&Characteristic::Str], -3);
-        // The cap is untouched.
-        assert_eq!(characteristic_cap(&e, &rs, Characteristic::Str), 3);
+        assert_eq!(characteristic_floor(&rs, Characteristic::Str), -3);
+        assert_eq!(characteristic_cap(&rs, Characteristic::Str), 3);
     }
 
     #[test]
-    fn poor_characteristic_twice_lowers_the_floor_to_minus_five() {
+    fn poor_characteristic_twice_reaches_minus_five() {
         let rs = ruleset();
-        let e = entity(vec![poor(Characteristic::Str), poor(Characteristic::Str)]);
-        assert_eq!(characteristic_floor(&e, &rs, Characteristic::Str), -5);
+        let mut e = entity(vec![poor(Characteristic::Str), poor(Characteristic::Str)]);
+        e.characteristics = BTreeMap::from([(Characteristic::Str, -3)]);
+        assert_eq!(
+            effective_characteristic_score(&e, &rs, Characteristic::Str),
+            -5
+        );
     }
 
     #[test]
-    fn floor_is_clamped_at_the_effective_floor() {
+    fn a_param_delta_targets_only_the_characteristic_its_selection_names() {
         let rs = ruleset();
-        let e = entity(vec![
-            poor(Characteristic::Str),
-            poor(Characteristic::Str),
-            poor(Characteristic::Str),
-        ]);
-        assert_eq!(characteristic_floor(&e, &rs, Characteristic::Str), -5);
+        let mut e = entity(vec![great(Characteristic::Str), poor(Characteristic::Qik)]);
+        e.characteristics = BTreeMap::from([(Characteristic::Str, 3), (Characteristic::Qik, -3)]);
+        assert_eq!(
+            effective_characteristic_score(&e, &rs, Characteristic::Str),
+            4
+        );
+        assert_eq!(
+            effective_characteristic_score(&e, &rs, Characteristic::Qik),
+            -4
+        );
+        // Untargeted characteristics get nothing.
+        assert_eq!(characteristic_score_bonus(&e, &rs, Characteristic::Int), 0);
     }
 
     #[test]
-    fn limit_shift_targets_only_the_named_characteristic() {
+    fn a_param_delta_with_an_unresolvable_target_contributes_nothing() {
+        // A selection whose `characteristic` param names no Characteristic (the
+        // param itself is reported by validate_parameters) must not silently
+        // land on some other Characteristic.
         let rs = ruleset();
-        let e = entity(vec![great(Characteristic::Str), poor(Characteristic::Qik)]);
-        // Str's cap rose; its floor and the other characteristic are unaffected.
-        assert_eq!(characteristic_cap(&e, &rs, Characteristic::Str), 4);
-        assert_eq!(characteristic_cap(&e, &rs, Characteristic::Qik), 3);
-        assert_eq!(characteristic_floor(&e, &rs, Characteristic::Qik), -4);
-        assert_eq!(characteristic_floor(&e, &rs, Characteristic::Str), -3);
+        let e = entity(vec![Selection::with_params(
+            Id::new("virtue.great_characteristic"),
+            BTreeMap::from([("characteristic".into(), Id::new("characteristic.nope"))]),
+        )]);
+        for c in Characteristic::ALL {
+            assert_eq!(characteristic_score_bonus(&e, &rs, c), 0);
+        }
     }
 
     #[test]
     fn cap_and_floor_maps_cover_all_eight_characteristics() {
         let rs = ruleset();
-        let e = entity(vec![great(Characteristic::Str), poor(Characteristic::Qik)]);
-        let caps = characteristic_caps(&e, &rs);
-        let floors = characteristic_floors(&e, &rs);
+        let caps = characteristic_caps(&rs);
+        let floors = characteristic_floors(&rs);
         assert_eq!(caps.len(), Characteristic::ALL.len());
         assert_eq!(floors.len(), Characteristic::ALL.len());
-        assert_eq!(caps[&Characteristic::Str], 4);
-        assert_eq!(caps[&Characteristic::Int], 3);
-        assert_eq!(floors[&Characteristic::Qik], -4);
-        assert_eq!(floors[&Characteristic::Int], -3);
+        for c in Characteristic::ALL {
+            assert_eq!(caps[&c], 3);
+            assert_eq!(floors[&c], -3);
+        }
     }
 
     #[test]
     fn cap_and_floor_default_to_zero_without_characteristic_rules() {
-        // A ruleset that supplies no characteristic table has no base/effective
-        // limits to report, so both guards fall back to zero rather than reading
-        // an absent table.
+        // A ruleset that supplies no characteristic table has no buy limits to
+        // report, so both guards fall back to zero rather than reading an absent
+        // table.
         let rs = Ruleset::from_sources(RulesetSources {
             id: "arm5-core",
             version: "2024.1",
@@ -713,9 +731,8 @@ mod tests {
             ..RulesetSources::default()
         })
         .unwrap();
-        let e = entity(vec![]);
-        assert_eq!(characteristic_cap(&e, &rs, Characteristic::Str), 0);
-        assert_eq!(characteristic_floor(&e, &rs, Characteristic::Str), 0);
+        assert_eq!(characteristic_cap(&rs, Characteristic::Str), 0);
+        assert_eq!(characteristic_floor(&rs, Characteristic::Str), 0);
     }
 
     fn puissant_art(art: &str) -> Selection {
@@ -1112,7 +1129,7 @@ mod tests {
         }"#;
         let characteristics = r#"{
           "start_points": 7, "base_max": 3, "base_min": -3,
-          "effective_max": 5, "effective_min": -5,
+          "aging_floor": -5,
           "costs": [
             { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 },
             { "score": 1, "cost": 1 }, { "score": 0, "cost": 0 },
@@ -1910,7 +1927,7 @@ mod tests {
         let arts = r#"{ "advancement": [{ "score": 1, "total_xp": 1 }], "arts": [] }"#;
         let characteristics = r#"{
           "start_points": 7, "base_max": 3, "base_min": -3,
-          "effective_max": 5, "effective_min": -5,
+          "aging_floor": -5,
           "costs": [{ "score": 0, "cost": 0 }]
         }"#;
         Ruleset::from_sources(RulesetSources {
@@ -2422,7 +2439,7 @@ mod tests {
         let characteristics = r#"{
           "start_points": 7,
           "base_max": 3, "base_min": -3,
-          "effective_max": 5, "effective_min": -5,
+          "aging_floor": -5,
           "costs": [
             { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 },
             { "score": 1, "cost": 1 }, { "score": 0, "cost": 0 },

@@ -2003,9 +2003,11 @@ mod tests {
           "categories": ["general"],
           "entity_kinds": ["character"],
           "parameters": [{ "key": "characteristic", "type": "ref", "domain": "ability" }],
-          "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }]
+          "effects": [
+            { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": 1 }
+          ]
         }]"#;
-        // characteristic_limit needs a characteristic-domain param, not ability.
+        // The effect needs a characteristic-domain param, not an ability one.
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("expected 'characteristic'"), "{msg}");
@@ -2512,7 +2514,9 @@ mod tests {
             "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
-            "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }] },
+            "effects": [
+              { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": 1 }
+            ] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
             "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;

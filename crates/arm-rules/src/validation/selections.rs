@@ -792,7 +792,7 @@ pub(crate) fn validate_ability_bonus_targets(
             // `EffectTarget::AbilityParam` arm.
             let param = match effect_target(effect) {
                 EffectTarget::AbilityParam(param) => param,
-                EffectTarget::CharacteristicLimit { .. } | EffectTarget::Other => continue,
+                EffectTarget::CharacteristicParamDelta { .. } | EffectTarget::Other => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
