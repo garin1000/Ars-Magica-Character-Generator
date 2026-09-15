@@ -141,6 +141,13 @@ pub struct CharacteristicRules {
     /// rather than left as a second "effective" limit, because the buy range has
     /// exactly one tier (`base_min`..=`base_max`) now that Great/Poor grant a
     /// free delta instead of widening it.
+    ///
+    /// The shipped value is -10, chosen to sit *well clear* of the buy range
+    /// rather than just below it. A bound that close (the earlier -5) does not
+    /// merely clamp an absurd score, it states a rule the book does not: that a
+    /// character decrepit with age can be no weaker than a newly-made grog may
+    /// start. Nothing in the aging rules says that, so the convention is placed
+    /// where it can only ever catch runaway arithmetic.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub aging_floor: Option<i8>,
 }

@@ -2,7 +2,7 @@
   "start_points": 7,
   "base_max": 3,
   "base_min": -3,
-  "aging_floor": -5,
+  "aging_floor": -10,
   "costs": [
     { "score": 3, "cost": 6 },
     { "score": 2, "cost": 3 },

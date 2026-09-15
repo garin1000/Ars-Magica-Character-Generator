@@ -8,7 +8,9 @@ use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{ValidationIssue, compute_balance, validate};
 use arm_rules::{AgingRowEffect, AgingRules};
-use arm_rules::{effective_art_score, effective_characteristic_score};
+use arm_rules::{
+    effective_art_score, effective_characteristic_after_aging, effective_characteristic_score,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The shipped House registry. Every helper below loads it, because the four
@@ -325,12 +327,46 @@ fn shipped_abilities_and_characteristics_load() {
     assert_eq!(chars.max_score(), Some(3));
     assert_eq!(chars.base_max_score(), Some(3));
     assert_eq!(chars.base_min_score(), Some(-3));
-    // The aging floor is a derived-side clamp, below the buy range.
-    assert_eq!(chars.aging_floor_score(), Some(-5));
+    // The aging floor is a derived-side clamp, well below the buy range. The
+    // rulebook names no floor for aging drops (`ArMDE:16579`), so this is an
+    // engine convention chosen to bound the derived score without asserting a
+    // rule: -10 is low enough that a decrepit character can legitimately end up
+    // weaker than any startable character, which -5 (the old value) forbade.
+    assert_eq!(chars.aging_floor_score(), Some(-10));
 
     // Advancement table is triangular: score 5 costs 75 xp total.
     assert_eq!(rs.advancement().xp_for_score(5), Some(75));
     assert_eq!(rs.advancement().xp_to_raise(5), Some(25));
+}
+
+/// The aging floor sits far enough below the buy range that a decrepit character
+/// can end up weaker than any character could be *built*. That is the point of
+/// the value: `ArMDE:16579` names no floor, and nothing in the aging rules says a
+/// seventy-year-old's Stamina stops falling where a newly-made grog's may start.
+/// The engine still needs *a* bound — an unbounded derived score is worse, and
+/// `excessive_aging_reduction` needs a threshold to fire against — so -10 is a
+/// declared engine convention, not a rule, and this test pins both halves: the
+/// drops pass the buy floor, and they stop at the declared one.
+#[test]
+fn aging_drops_fall_past_the_buy_floor_but_stop_at_the_declared_one() {
+    let rs = load_ruleset();
+    let mut e = entity("grog", vec![]);
+    e.characteristics.insert(Characteristic::Sta, -3);
+
+    // Enough points for several drops below an already-minimal bought score.
+    e.aging_points.insert(Characteristic::Sta, 30);
+    let aged = effective_characteristic_after_aging(&e, &rs, Characteristic::Sta);
+    assert!(
+        aged < -5,
+        "an old character must be able to fall below the buy floor; got {aged}"
+    );
+
+    // …and no further than the declared convention, however many points accrue.
+    e.aging_points.insert(Characteristic::Sta, u8::MAX);
+    assert_eq!(
+        effective_characteristic_after_aging(&e, &rs, Characteristic::Sta),
+        -10
+    );
 }
 
 /// A Characteristic selection targeting `characteristic`, for the Great/Poor

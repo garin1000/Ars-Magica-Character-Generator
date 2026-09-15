@@ -1123,7 +1123,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Source: `ArMDE:2340-2354` (printed
   table), `ArMDE:4105` (the +3 base cap "unless you take … Great Characteristic").
 - Data: `rules/core/characteristics.json` (`start_points: 7`, `costs`,
-  `base_max: 3`, `base_min: -3`, `aging_floor: -5`). The rulebook's "Gain N" rows
+  `base_max: 3`, `base_min: -3`, `aging_floor: -10`). The rulebook's "Gain N" rows
   are encoded as **negative** cost (`Gain 1` → `-1`, etc.) — an extraction sign
   convention. The table is **exactly the seven printed rows**, ±3, and that is
   also the buy range: `base_max`/`base_min` equal the table bounds.
@@ -1137,10 +1137,20 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `effective_max`/`effective_min` — the buy range has one tier again. What
   remains is `aging_floor`, which is **not** a buy limit and **not** a printed
   rule: `ArMDE:16579` names no floor for aging drops at all, so the engine picks
-  −5 to keep a derived score bounded and to have a threshold for the
+  one to keep a derived score bounded and to have a threshold for the
   `excessive_aging_reduction` warning. It is named for that one job so it cannot
   again be mistaken for a rules value. (The age → max-Ability-score bands live in
   `rules/core/abilities.json`, not here — see "Age → max Ability score" below.)
+
+  *Lowered to −10 on 2026-09-15 (open-todos row 44, Norbert's decision).* The
+  convention was −5, one point below the buy range, and that proximity made it
+  say something the book does not: that a character decrepit with age can be no
+  weaker than a freshly-built grog may start. An invented bound is tolerable only
+  where it cannot be mistaken for a rule, so it moved far enough out
+  (`-10`) to catch nothing but runaway arithmetic. The value is data, so the move
+  was a one-line ruleset edit; `crates/arm-rules/tests/data_integrity.rs` —
+  `aging_drops_fall_past_the_buy_floor_but_stop_at_the_declared_one` pins both
+  halves (the drops *do* pass −5, and they stop at −10).
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
   `base_max_score`, `base_min_score`, `aging_floor_score`); enforced in

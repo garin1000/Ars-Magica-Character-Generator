@@ -357,9 +357,11 @@ fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
 }
 
 /// The effective value of `characteristic` after aging: the bought score lowered
-/// by the DERIVED aging drops ([`aging_drops`]) and floored at the rules effective
-/// minimum (−5), with any free [`Effect::CharacteristicScoreDelta`] bonus (Giant
-/// Blood +1 Str/Sta, Dwarf −1) then added on top — so an aged Giant-Blood score
+/// by the DERIVED aging drops ([`aging_drops`]) and floored at the ruleset's
+/// [`aging_floor`](crate::characteristics::CharacteristicRules::aging_floor) (-10,
+/// an engine convention — `ArMDE:16579` names no floor), with any free
+/// [`Effect::CharacteristicScoreDelta`] bonus (Giant
+/// Blood +1 Str/Sta, Dwarf -1) then added on top — so an aged Giant-Blood score
 /// can still reach ±6. The aging drop lowers the *bought* score (its threshold is
 /// the bought score); the free delta is a separate additive layer. This is what
 /// DERIVED / play stats consume; it is deliberately **not** what creation-legality
