@@ -166,7 +166,8 @@ struct InPlayMods {
     lab_mod: i32,
     /// The deficient Technique/Form Art ids (Deficient Art halves totals adding one).
     deficient_arts: BTreeSet<Id>,
-    /// Whole-total halvings in effect (Weak Magic → Penetration, Flawed Parma → MR).
+    /// Whole-total halvings in effect (Weak Magic → Penetration, Weak Enchanter →
+    /// lab enchanting).
     halvings: BTreeSet<HalvableTotal>,
     /// Flat Soak modifier (Tough +3, Frail −1, summed).
     soak_mod: i32,
@@ -180,8 +181,12 @@ struct InPlayMods {
     weapon_combat_mods: BTreeMap<Id, BTreeMap<CombatStat, i32>>,
     /// Health-track penalty deltas per track (positive reduces the penalty).
     health_mods: BTreeMap<HealthTrack, i32>,
-    /// Non-halving Magic-Resistance modifiers (Limited MR, Susceptibility, …).
-    mr_mods: Vec<MagicResistanceEffect>,
+    /// Forms whose own contribution to Magic Resistance is dropped (Limited
+    /// Magic Resistance, one copy per Form).
+    no_form_bonus_forms: BTreeSet<Id>,
+    /// Forms against which the Parma contribution to Magic Resistance is halved
+    /// (Flawed Parma Magica, one copy per Form).
+    halved_parma_forms: BTreeSet<Id>,
     /// Total no-voice-penalty reduction from Quiet Magic (+5 per casting; a second
     /// casting eliminates the penalty once clamped).
     voice_reduction: i32,
@@ -270,17 +275,38 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 Effect::HealthMod { track, amount } => {
                     *m.health_mods.entry(*track).or_default() += i32::from(*amount);
                 }
-                // Only NoFormBonus folds into the flat per-Form MR number
-                // (magic_resistance()). The realm-conditional / situational variants
-                // (aura bonus, realm susceptibilities, the conditional Penetration
-                // waiver) cannot be folded into that flat figure, so they are surfaced
+                // Two kinds fold into the flat per-Form MR number
+                // (magic_resistance()), and both are scoped to the ONE Form the
+                // selection names — the rulebook buys each of them "for different
+                // Forms", one copy each, so an unscoped fold would apply a Minor
+                // Flaw to all ten Forms at once. The Form travels exactly as Deft
+                // Form's does: through the effect's `param` key into the
+                // selection's own params. A copy that names no Form applies to
+                // none — `missing_param` asks for the choice rather than this
+                // guessing one.
+                // Source: ArMDE:6346-6349 (Limited Magic Resistance, "one of your
+                // Form scores"), :6142-6145 (Flawed Parma, "against a certain
+                // Form").
+                //
+                // The realm-conditional / situational variants (aura bonus, realm
+                // susceptibilities, the conditional Penetration waiver) cannot be
+                // folded into that flat figure at all, so they are surfaced
                 // labelled rather than silently dropped.
                 // Source: ArMDE:6819-6826
                 // (the two realm susceptibilities that do halve MR), :3579-3596
                 // (Commanding Aura) & :4998-5001 (Special Circumstances) for
                 // aura_bonus, :7068-7070 (Weak Magic Resistance).
-                Effect::MagicResistanceMod { kind } => match kind {
-                    MagicResistanceEffect::NoFormBonus => m.mr_mods.push(*kind),
+                Effect::MagicResistanceMod { kind, param } => match kind {
+                    MagicResistanceEffect::NoFormBonus => {
+                        if let Some(form) = param.as_ref().and_then(|p| selection.params.get(p)) {
+                            m.no_form_bonus_forms.insert(form.clone());
+                        }
+                    }
+                    MagicResistanceEffect::HalvedParma => {
+                        if let Some(form) = param.as_ref().and_then(|p| selection.params.get(p)) {
+                            m.halved_parma_forms.insert(form.clone());
+                        }
+                    }
                     MagicResistanceEffect::AuraBonus
                     | MagicResistanceEffect::SusceptibleFaerie
                     | MagicResistanceEffect::SusceptibleInfernal
@@ -802,7 +828,8 @@ mod tests {
             "effects": [{ "type": "magic_total_halving", "total": "penetration" }] },
           { "id": "flaw.flawed_parma", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
-            "effects": [{ "type": "magic_total_halving", "total": "magic_resistance" }] },
+            "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+            "effects": [{ "type": "magic_resistance_mod", "kind": "halved_parma", "param": "form" }] },
           { "id": "virtue.enduring_constitution", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [
@@ -838,7 +865,8 @@ mod tests {
                           "weapon": "weapon.dodge" }] },
           { "id": "flaw.limited_magic_resistance", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "major", "categories": ["hermetic"], "entity_kinds": ["character"],
-            "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus" }] },
+            "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+            "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus", "param": "form" }] },
           { "id": "flaw.susceptibility_to_faerie_power", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "magic_resistance_mod", "kind": "susceptible_faerie" }] },
@@ -2533,9 +2561,13 @@ mod tests {
         assert_eq!(corpus.total, 15);
     }
 
-    /// Flawed Parma halves Magic Resistance (ArMDE:6142-6145).
+    /// Flawed Parma Magica halves the **Parma contribution alone**, and only
+    /// against the Form its own selection names: the Flaw's subject is "Your
+    /// Parma Magica" (ArMDE:6144), and :9396 puts the Form half of the
+    /// resistance on the Form scores rather than on the Parma, so a defective
+    /// Parma cannot reduce it. Source: ArMDE:6142-6145, :9390, :9396, :9398.
     #[test]
-    fn flawed_parma_halves_magic_resistance() {
+    fn flawed_parma_halves_only_the_parma_contribution_against_its_own_form() {
         let rs = ruleset();
         let mut e = magus();
         e.ability_scores = vec![AbilityScore {
@@ -2544,15 +2576,76 @@ mod tests {
             specialty: None,
             score: 3,
         }];
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.ignem"),
-            score: 4,
-        }];
-        e.selections = vec![Selection::new(Id::new("flaw.flawed_parma"))];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 10,
+            },
+        ];
+        e.selections = vec![Selection::with_params(
+            Id::new("flaw.flawed_parma"),
+            BTreeMap::from([("form".to_string(), Id::new("art.ignem"))]),
+        )];
         let mr = magic_resistance(&e, &rs);
         let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
-        // (4 + 15) / 2 = 9.
-        assert_eq!(ignem.total, 9);
+        // Ignem 10 + halve(5 × Parma 3) = 10 + 7 = 17.
+        assert_eq!(ignem.total, 17);
+        let addend = |m: &MagicResistance, label: &str| {
+            m.addends
+                .iter()
+                .find(|a| a.label == label)
+                .unwrap_or_else(|| panic!("a {label} addend"))
+                .value
+        };
+        assert_eq!(addend(ignem, "form"), 10, "the Form score is not halved");
+        assert_eq!(addend(ignem, "parma"), 7, "only the Parma is halved");
+        // Every other Form is untouched: Corpus 10 + 15 = 25.
+        let corpus = mr.iter().find(|m| m.form.as_str() == "art.corpus").unwrap();
+        assert_eq!(corpus.total, 25);
+        assert_eq!(addend(corpus, "parma"), 15);
+    }
+
+    /// The halving is on the *Parma* contribution, so it never halves a
+    /// Might-being's blanket Might base. Might and Parma do not stack and the
+    /// higher of the two is the base (RoP:M:1472; ArMDE:2627) — a defective
+    /// Parma lowers only the Parma side of that comparison.
+    /// Source: ArMDE:6142-6145.
+    #[test]
+    fn flawed_parma_never_halves_a_might_base() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.might = Some(MightScore {
+            realm: Realm::Magic,
+            score: 30,
+        });
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.parma_magica"),
+            parameter: None,
+            specialty: None,
+            score: 3,
+        }];
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.ignem"),
+            score: 10,
+        }];
+        e.selections = vec![Selection::with_params(
+            Id::new("flaw.flawed_parma"),
+            BTreeMap::from([("form".to_string(), Id::new("art.ignem"))]),
+        )];
+        let mr = magic_resistance(&e, &rs);
+        let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
+        // Ignem 10 + max(halve(15), 30) = 10 + 30 = 40, on an unhalved Might base.
+        assert_eq!(ignem.total, 40);
+        assert!(
+            ignem
+                .addends
+                .iter()
+                .any(|a| a.label == "might" && a.value == 30)
+        );
     }
 
     /// A supernatural being's Magic Resistance equals its Might Score, blanket
@@ -3337,9 +3430,12 @@ mod tests {
     }
 
     /// Limited Magic Resistance (a MagicResistanceMod NoFormBonus) drops the Form
-    /// contribution, leaving resistance from Parma alone (ArMDE:6346-6349).
+    /// contribution of the **one** Form its selection names — "You gain no bonus
+    /// from *one of* your Form scores" (ArMDE:6348) — leaving resistance from
+    /// Parma alone against that Form and every other Form untouched.
+    /// Source: ArMDE:6346-6349.
     #[test]
-    fn limited_magic_resistance_drops_form_bonus() {
+    fn limited_magic_resistance_drops_the_form_bonus_of_its_own_form_only() {
         let rs = ruleset();
         let mut e = magus();
         e.ability_scores = vec![AbilityScore {
@@ -3348,17 +3444,29 @@ mod tests {
             specialty: None,
             score: 3,
         }];
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.ignem"),
-            score: 4,
-        }];
-        e.selections = vec![Selection::new(Id::new("flaw.limited_magic_resistance"))];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 4,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 4,
+            },
+        ];
+        e.selections = vec![Selection::with_params(
+            Id::new("flaw.limited_magic_resistance"),
+            BTreeMap::from([("form".to_string(), Id::new("art.ignem"))]),
+        )];
         let mr = magic_resistance(&e, &rs);
         let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
         // Form bonus dropped: 0 + 5 × Parma 3 = 15 (not 19).
         assert_eq!(ignem.total, 15);
         let form_addend = ignem.addends.iter().find(|a| a.label == "form").unwrap();
         assert_eq!(form_addend.value, 0);
+        // The Form nobody named keeps its bonus: Corpus 4 + 15 = 19.
+        let corpus = mr.iter().find(|m| m.form.as_str() == "art.corpus").unwrap();
+        assert_eq!(corpus.total, 19);
     }
 
     /// An AgingMod (Unaging → no_aging) is surfaced with amount 0, not simulated.

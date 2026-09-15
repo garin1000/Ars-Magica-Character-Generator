@@ -4227,6 +4227,118 @@ fn virtue_deft_form_declares_the_form_domain() {
     assert_eq!(def.domain, ParameterDomain::Form);
 }
 
+/// The two **Form-scoped Magic Resistance Flaws**. Each weakens resistance
+/// against one named Form, and each says in its own descriptor that it repeats
+/// across different Forms:
+///
+/// > "Your Parma Magica is defective and provides only half the normal Magic
+/// > Resistance **against a certain Form**. You may purchase this Flaw more than
+/// > once for different Forms." (`ArMDE:6144`)
+///
+/// > "You gain no bonus from **one of** your Form scores to Magic Resistance …
+/// > You may take this Flaw multiple times, for multiple Forms." (`ArMDE:6348`)
+///
+/// Both sentences are one data shape: a `form` parameter puts each copy's Form
+/// into the `(item_ref, params)` duplicate key, after which the **default**
+/// `max_per_target` of 1 says exactly "once per Form", and an absent `max_total`
+/// says "any number of different Forms". Neither entry may carry the
+/// `max_per_target: 255` it shipped with before the Form existed — that number
+/// permitted a second, identical copy naming the same Form, which no line of
+/// either descriptor allows.
+#[test]
+fn the_form_scoped_magic_resistance_flaws_name_their_form() {
+    let rs = load_ruleset();
+
+    for (id, line) in [
+        ("flaw.flawed_parma_magica", 6144),
+        ("flaw.limited_magic_resistance", 6348),
+    ] {
+        let def = only_parameter(&rs, id);
+        assert_eq!(def.key, "form", "{id} names its Form under `form`");
+        assert_eq!(
+            def.domain,
+            ParameterDomain::Form,
+            "{id}'s target is a Form, not either Art class (ArMDE:{line})"
+        );
+
+        let item = rs.item(&Id::new(id)).expect("present");
+        assert_eq!(
+            item.max_per_target, 1,
+            "{id} is taken once for EACH Form (ArMDE:{line}), so two copies naming \
+             the same Form must collide"
+        );
+        assert_eq!(
+            item.max_total,
+            u8::MAX,
+            "{id} states no ceiling on how many DIFFERENT Forms it may name \
+             (ArMDE:{line})"
+        );
+        assert_eq!(
+            def.max_per_value,
+            u8::MAX,
+            "{id} needs no per-value cap: with one parameter, `max_per_target`'s \
+             own key IS the Form, so a per-value cap would be a second spelling of \
+             the same ceiling"
+        );
+    }
+}
+
+/// The repeat rule both descriptors state, exercised rather than asserted about:
+/// two copies naming two different Forms are legal, a second copy naming the
+/// same Form is not. Source: ArMDE:6144, :6348.
+#[test]
+fn a_form_scoped_mr_flaw_repeats_across_forms_but_never_within_one() {
+    let rs = load_ruleset_with_spells();
+
+    for id in ["flaw.flawed_parma_magica", "flaw.limited_magic_resistance"] {
+        let pick = |form: &str| {
+            Selection::with_params(
+                Id::new(id),
+                BTreeMap::from([("form".to_string(), Id::new(form))]),
+            )
+        };
+
+        let different = issue_codes(
+            &entity("magus", vec![pick("art.ignem"), pick("art.corpus")]),
+            &rs,
+        );
+        assert!(
+            !different.contains(&"duplicate_selection".to_string()),
+            "{id} twice for two different Forms is what the descriptor permits: \
+             {different:?}"
+        );
+
+        let same = issue_codes(
+            &entity("magus", vec![pick("art.ignem"), pick("art.ignem")]),
+            &rs,
+        );
+        assert!(
+            same.contains(&"duplicate_selection".to_string()),
+            "{id} twice for the SAME Form is a repeat the descriptor does not \
+             grant: {same:?}"
+        );
+    }
+}
+
+/// A save written before the Form parameter existed holds the selection with no
+/// `form` key at all, and the engine **reports** that rather than migrating it:
+/// there is no correct Form to invent, and saves store choices, not resolved
+/// values. The finding is `missing_param`, one pick clears it permanently, and
+/// it is listed in `docs/open-todos.md` → "What an older save still reports on
+/// open". Source: ArMDE:6144, :6348.
+#[test]
+fn an_mr_flaw_selection_written_before_the_form_parameter_reports_missing_param() {
+    let rs = load_ruleset_with_spells();
+
+    for id in ["flaw.flawed_parma_magica", "flaw.limited_magic_resistance"] {
+        let codes = issue_codes(&entity("magus", vec![Selection::new(Id::new(id))]), &rs);
+        assert!(
+            codes.contains(&"missing_param".to_string()),
+            "{id} with no Form stored must ask for one, not guess: {codes:?}"
+        );
+    }
+}
+
 /// Deficient Form / Deficient Technique were already correct too — one per Art
 /// class, and each is the reason the two narrow domains exist at all.
 #[test]
@@ -6779,6 +6891,15 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 /// Virtue, so the ceiling is `max_per_target: 1` per named Virtue plus an
 /// unbounded `max_total` across different ones. Pinned by
 /// `false_power_names_the_supernatural_virtue_it_taints` instead.
+///
+/// `flaw.flawed_parma_magica` and `flaw.limited_magic_resistance` left for the
+/// same reason and by the same route. Each repeats "for different Forms"
+/// (`ArMDE:6144`, `ArMDE:6348`) — never twice for one Form — and each now carries
+/// the `form` parameter that makes the Form part of the duplicate key, so the
+/// **default** `max_per_target` of 1 states the real ceiling and the 255 they
+/// shipped with was over-permissive. Pinned by
+/// `the_form_scoped_magic_resistance_flaws_name_their_form` and
+/// `a_form_scoped_mr_flaw_repeats_across_forms_but_never_within_one` instead.
 const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.demonic_might", 3665),
     ("virtue.demonic_powers", 3669),
@@ -6798,8 +6919,6 @@ const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.strong_angelic_heritage", 5030),
     ("virtue.withstand_casting", 5265),
     ("flaw.deteriorating_power", 5948),
-    ("flaw.flawed_parma_magica", 6144),
-    ("flaw.limited_magic_resistance", 6348),
     ("flaw.vulnerable_casting", 6997),
     ("flaw.vulnerable_magic", 7009),
 ];

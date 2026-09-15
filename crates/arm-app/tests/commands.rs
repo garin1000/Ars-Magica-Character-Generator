@@ -2848,24 +2848,27 @@ fn every_special_casting() -> Vec<arm_rules::SpecialCasting> {
     all
 }
 
-/// The `MagicResistanceEffect`s that reach the panel as a detail slug. `NoFormBonus`
-/// is the one that does not: it folds into the flat per-Form Magic Resistance
-/// number instead of being listed, so it carries no label and must not demand one.
-/// The split mirrors `derived.rs::in_play_mods`, and the `match` forces a new
-/// variant to be classified rather than silently landing on either side.
+/// The `MagicResistanceEffect`s that reach the panel as a detail slug.
+/// `NoFormBonus` and `HalvedParma` are the two that do not: each folds into the
+/// flat per-Form Magic Resistance number — for the one Form its own selection
+/// names — instead of being listed, so neither carries a label and neither must
+/// demand one. The split mirrors `derived.rs::in_play_mods`, and the `match`
+/// forces a new variant to be classified rather than silently landing on either
+/// side.
 fn surfaced_magic_resistance_effects() -> Vec<arm_rules::MagicResistanceEffect> {
     use arm_rules::MagicResistanceEffect as Mr;
 
     let mut surfaced = Vec::new();
     for kind in [
         Mr::NoFormBonus,
+        Mr::HalvedParma,
         Mr::AuraBonus,
         Mr::SusceptibleFaerie,
         Mr::SusceptibleInfernal,
         Mr::ConditionalPenetrationWaiver,
     ] {
         match kind {
-            Mr::NoFormBonus => {}
+            Mr::NoFormBonus | Mr::HalvedParma => {}
             Mr::AuraBonus
             | Mr::SusceptibleFaerie
             | Mr::SusceptibleInfernal

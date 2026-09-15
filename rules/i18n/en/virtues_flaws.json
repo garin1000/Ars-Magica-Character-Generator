@@ -502,7 +502,8 @@
   },
   "flaw.flawed_parma_magica": {
     "name": "Flawed Parma Magica",
-    "summary": "Your Parma Magica is defective and provides only half the normal Magic Resistance against a certain Form."
+    "summary": "Your Parma Magica is defective and provides only half the normal Magic Resistance against a certain Form.",
+    "description": "Your Parma Magica is defective and provides only half the normal Magic Resistance against a certain Form. You may purchase this Flaw more than once for different Forms."
   },
   "flaw.flawed_powers": {
     "name": "Flawed Powers",
@@ -713,7 +714,8 @@
   },
   "flaw.limited_magic_resistance": {
     "name": "Limited Magic Resistance",
-    "summary": "You are less able to resist magic than other magi."
+    "summary": "You gain no bonus from one of your Form scores to Magic Resistance.",
+    "description": "You are less able to resist magic than other magi. You gain no bonus from one of your Form scores to Magic Resistance, though if you are caught without your Parma Magica, you retain a Magic Resistance of 0. You may take this Flaw multiple times, for multiple Forms."
   },
   "flaw.lingering_injury": {
     "name": "Lingering Injury",

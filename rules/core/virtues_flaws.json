@@ -1123,9 +1123,9 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "magic_total_halving", "total": "magic_resistance" }],
-    "max_per_target": 255,
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6142, 6145] }
+    "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+    "effects": [{ "type": "magic_resistance_mod", "kind": "halved_parma", "param": "form" }],
+    "source": { "anchor": "flawed-parma-magica", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6142, 6145] }
   },
   {
     "id": "flaw.flawed_powers",
@@ -1611,9 +1611,9 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus" }],
-    "max_per_target": 255,
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6346, 6349] }
+    "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+    "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus", "param": "form" }],
+    "source": { "anchor": "limited-magic-resistance", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6346, 6349] }
   },
   {
     "id": "flaw.lingering_injury",

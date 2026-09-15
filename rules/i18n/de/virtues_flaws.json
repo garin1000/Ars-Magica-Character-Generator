@@ -503,7 +503,8 @@
   },
   "flaw.flawed_parma_magica": {
     "name": "Fehlerhafte Parma Magica",
-    "summary": "Deine Parma Magica ist fehlerhaft und bietet gegen eine bestimmte Form nur halb so viel Magieresistenz wie normal."
+    "summary": "Deine Parma Magica ist fehlerhaft und bietet gegen eine bestimmte Form nur halb so viel Magieresistenz wie normal.",
+    "description": "Deine Parma Magica ist fehlerhaft und bietet gegen eine bestimmte Form nur halb so viel Magieresistenz wie normal. Du kannst diesen Fehler für verschiedene Formen mehrfach erwerben."
   },
   "flaw.flawed_powers": {
     "name": "Fehlerhafte Kräfte",
@@ -714,7 +715,8 @@
   },
   "flaw.limited_magic_resistance": {
     "name": "Begrenzte Magieresistenz",
-    "summary": "Du bist weniger in der Lage, Magie zu widerstehen als andere Magi."
+    "summary": "Du erhältst keinen Bonus von einem deiner Form-Werte auf die Magieresistenz.",
+    "description": "Du bist weniger in der Lage, Magie zu widerstehen als andere Magi. Du erhältst keinen Bonus von einem deiner Form-Werte auf die Magieresistenz, obwohl du, wenn du ohne deine Parma Magica erwischt wirst, eine Magieresistenz von 0 behältst. Du kannst diesen Fehler mehrfach für mehrere Formen wählen."
   },
   "flaw.lingering_injury": {
     "name": "Anhaltende Verletzung",

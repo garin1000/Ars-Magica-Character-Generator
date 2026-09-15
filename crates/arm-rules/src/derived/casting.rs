@@ -426,8 +426,9 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
 /// supernatural being uses
 /// its **Might Score** as a blanket resistance instead of Parma — the two do
 /// not stack; the higher is the base (RoP:M:1472; ArMDE:2627), and
-/// the Form bonus is compatible with either. Limited Magic Resistance drops
-/// the Form bonus; Flawed Parma / Weak Magic Resistance halve it.
+/// the Form bonus is compatible with either. Limited Magic Resistance drops one
+/// named Form's bonus; Flawed Parma Magica halves the Parma contribution
+/// against one named Form. Both are per-Form, never blanket.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MagicResistance {
     /// The Form Art id.
@@ -450,22 +451,36 @@ pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistan
     let might = crate::effective::effective_might(entity, ruleset)
         .map(|m| i32::from(m.score))
         .unwrap_or(0);
-    let no_form = mods.mr_mods.contains(&MagicResistanceEffect::NoFormBonus);
-    let halved = mods.halvings.contains(&HalvableTotal::MagicResistance);
     let mut out = Vec::new();
     for form in ruleset.art_ids_of(ArtType::Form) {
         let fo = effective_art_score(entity, ruleset, &form);
-        let form_bonus = if no_form { 0 } else { fo };
-        let base_addend = if might > parma_mr {
+        // Limited Magic Resistance drops the bonus of the ONE Form its copy names,
+        // and leaves every other Form's alone. Source: ArMDE:6346-6349.
+        let form_bonus = if mods.no_form_bonus_forms.contains(&form) {
+            0
+        } else {
+            fo
+        };
+        // Flawed Parma Magica halves the PARMA contribution against the Form its
+        // copy names, and nothing else: the Flaw's subject is the Parma, while
+        // :9396 puts the rest of the resistance on the Form scores, so it cannot
+        // touch `form_bonus`. Source: ArMDE:6142-6145, :9396.
+        let parma_for_form = if mods.halved_parma_forms.contains(&form) {
+            halve(parma_mr)
+        } else {
+            parma_mr
+        };
+        // Might and Parma do not stack; the higher is the base (RoP:M:1472,
+        // ArMDE:2627). The comparison uses this Form's own Parma figure, so a
+        // defective Parma lowers only the Parma side of it — a Might base is a
+        // being's own resistance, not a Parma contribution, and is never halved.
+        let base_addend = if might > parma_for_form {
             Addend::new("might", might)
         } else {
-            Addend::new("parma", parma_mr)
+            Addend::new("parma", parma_for_form)
         };
         let addends = vec![Addend::new("form", form_bonus), base_addend];
-        let mut total = sum(&addends);
-        if halved {
-            total = halve(total);
-        }
+        let total = sum(&addends);
         out.push(MagicResistance {
             form,
             addends,

@@ -53,7 +53,8 @@ mechanics carry entries; the rest are stubbed at the end.
   `i32::div_euclid(2)` (exactly floor division for a positive divisor), shared by
   every undirected halving in the engine: the Deficient Technique/Form halving of
   Casting and Lab Totals, fatiguing Spontaneous ÷2, Weak Magic's Penetration
-  halving, Flawed Parma, the Weak Enchanter and Difficult
+  halving, Flawed Parma's halving of the Parma contribution to Magic Resistance,
+  the Weak Enchanter and Difficult
   Longevity Ritual lab halvings, and the Masterpiece lesser-item cap. The
   non-fatiguing Spontaneous ÷5 follows the same default in
   `crates/arm-rules/src/derived/casting.rs` — `casting_totals`.
@@ -1489,7 +1490,9 @@ both:
    `virtue.extractor_of_form_vis` (`ArMDE:3781`),
    `virtue.master_of_form_creatures` (`ArMDE:4465`), `virtue.student_of_realm`
    (`ArMDE:5054`), `virtue.ways_of_the_land` (`ArMDE:5233`),
-   `flaw.careless_with_ability` (`ArMDE:5775`).
+   `flaw.careless_with_ability` (`ArMDE:5775`),
+   `flaw.flawed_parma_magica` (`ArMDE:6144`),
+   `flaw.limited_magic_resistance` (`ArMDE:6348`).
 2. **Repeats with no target at all** — the item carries no parameter, so every
    copy shares the one empty duplicate key and only `max_per_target` can permit
    the repeat. This is the case GitHub issue 3 reported against Improved
@@ -1525,10 +1528,24 @@ carry `max_per_target: 255` in `rules/core/virtues_flaws.json`:
 | `virtue.strong_angelic_heritage` | `ArMDE:5030` | "multiple times. Each additional time … increases by thirty the number of levels of holy powers" |
 | `virtue.withstand_casting` | `ArMDE:5265` | "more than once, and withstand 1 Fatigue level for each level of the Virtue" |
 | `flaw.deteriorating_power` | `ArMDE:5948` | "more than once, if the character has more than one Power" |
-| `flaw.flawed_parma_magica` | `ArMDE:6144` | "may purchase this Flaw more than once for different Forms" |
-| `flaw.limited_magic_resistance` | `ArMDE:6348` | "multiple times, for multiple Forms" |
 | `flaw.vulnerable_casting` | `ArMDE:6997` | "may have, or acquire, this Flaw more than once, losing 1 extra Fatigue level for each level" |
 | `flaw.vulnerable_magic` | `ArMDE:7009` | "multiple times, so long as a different condition is specified for each" |
+
+`flaw.flawed_parma_magica` (`ArMDE:6144`, "may purchase this Flaw more than once
+**for different Forms**") and `flaw.limited_magic_resistance` (`ArMDE:6348`,
+"multiple times, **for multiple Forms**") used to sit in that table and no longer
+do. Each names a **Form**, so each is shape 1 above rather than shape 2: the
+`form` parameter puts the Form into the duplicate key, the **default**
+`max_per_target` of 1 states the real ceiling ("once per Form"), and the absent
+`max_total` states the other half ("any number of different Forms"). The 255 they
+shipped with predated the parameter and was over-permissive — it also allowed a
+second, identical copy naming the *same* Form, which neither descriptor grants.
+Pinned by `data_integrity.rs` —
+`the_form_scoped_magic_resistance_flaws_name_their_form` and
+`a_form_scoped_mr_flaw_repeats_across_forms_but_never_within_one`. A
+`max_per_value` cap is deliberately **not** added: with a single parameter,
+`max_per_target`'s own key already *is* the Form, so the two would be one ceiling
+spelled twice.
 
 Items with a stated ceiling of two: `virtue.great_characteristic` (`ArMDE:3989`),
 `virtue.quiet_magic` ("You may take this Virtue twice, and eliminate the penalty
@@ -4312,7 +4329,7 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Lab Total | `ArMDE:10276-10278`, `ArMDE:4151-4154` | Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod (+ focus / halving as casting). "**YOUR BASIC LAB TOTAL IS: Technique + Form + Intelligence + Magic Theory + Aura Modifier**" (`ArMDE:10276`); `ArMDE:4151-4154` is Inventive Genius, the flat `LabTotalMod`. (Corrects the earlier `ArMDE:4143-4154`, which is the Inspirational / Intuition / Inventive Genius Virtue block, not the formula.) |
 | Penetration | `ArMDE:9159-9161` | per known spell: Casting Total − Level + Penetration score |
 | Weak Magic | `ArMDE:7064-7067` | halves Penetration **after** subtracting level (not the casting total) |
-| Magic Resistance | `ArMDE:9390-9398` | per Form: Form + 5 × Parma Magica (Form-base rule `ArMDE:9390`, Parma "five times" `ArMDE:9398`); Limited MR drops the Form bonus, Flawed Parma halves |
+| Magic Resistance | `ArMDE:9390-9398` | per Form: Form + 5 × Parma Magica (Form-base rule `ArMDE:9390`, Parma "five times" `ArMDE:9398`). Both Flaws that modify it are scoped to **one named Form**, carried as a `form` parameter on the selection: **Limited Magic Resistance** (`ArMDE:6346-6349`) drops that Form's own bonus ("no bonus from **one of** your Form scores"), and **Flawed Parma Magica** (`ArMDE:6142-6145`) halves the **Parma addend alone** against that Form — `MR = form_bonus + halve(5 × Parma)`. Only the Parma addend, because the Flaw's subject is "Your Parma Magica" while `ArMDE:9396` puts the rest of the resistance on "a maga's Form scores", which a defective Parma does not produce and cannot reduce. Worked example: Ignem 10, Parma 3, Flawed Parma (Ignem) → Ignem MR = 10 + halve(15) = **17**, every other Form unchanged at its score + 15. A Might base is never halved by it: Might and Parma do not stack and the higher is the base (RoP:M:1472, `ArMDE:2627`), and the comparison is made against that Form's own (possibly halved) Parma figure, so the halving only ever moves the Parma side of it. `derived/casting.rs::magic_resistance` |
 | Longevity (stored) | `ArMDE:10662`, `ArMDE:10668`, `ArMDE:10670` | the aging bonus is the **player-entered** `LongevityRitual.bonus`, passed through for **both** sources; `entered: false` marks an unfilled field so a placeholder 0 is never read as a claim. Bronze cord noted for aging-resistance (`ArMDE:10840-10844`), via `cord_score` so it respects the +5 maximum (`ArMDE:10836`) and matches the Soak and cord-cost figures |
 | Longevity hint | `ArMDE:10662`, `ArMDE:10276-10278`, `ArMDE:17658`, `ArMDE:5909-5915`, `ArMDE:5962-5964` | self-made only: `LongevityHint { lab_total, suggested_bonus, halved }` — Creo Corpus Lab Total (Int + Magic Theory + Creo + Corpus + Aura + flat LabTotalMod), halved by a Deficient Creo/Corpus and again by Difficult Longevity Ritual, then `suggested_bonus = ceil(lab_total / 5)` floored at 0. **Read-only guidance** — never written into the entity. `derived/lab.rs::suggested_longevity_bonus` / `creo_corpus_lab_total` |
 | Masterpiece | `ArMDE:4476-4479`, `ArMDE:10410`, `ArMDE:7060-7063` | magus with the Masterpiece Virtue (`Effect::MasterpieceItem` marker) surfaces a **read-only** lesser-enchanted-item cap = **best base `(Te,Fo)` Lab Total ÷ 2** (the lesser-enchantment rule caps single-season instillation at Lab Total ≥ 2×effect level, `ArMDE:10410`; vis costs ignored per the Virtue). The best cell is picked by (and the cap built from) `LabTotal.enchanting`, not the plain `total`: designing the item is "creating" an enchanted item, so a **Weak Enchanter** magus's halved figure (`ArMDE:7060-7063`) is "the regular rules for construction of such a device" (`ArMDE:4476-4479`) for him too — `enchanting` equals `total` for everyone else, so the formula is unchanged for a magus without the Flaw (round 3, G1: the un-halved `total` used to leak through here, doubling the cap). No focus doubling. The engine does **not** create the device or spend an item-level budget — the player still enters the actual lesser enchanted item by hand under Magic Items; this is guidance only. `masterpiece_item_cap` / `DerivedTotals.masterpiece` |
@@ -4349,7 +4366,9 @@ number changes — those reducers **and tests** are what guarantee the 5b in-pla
 effects are actually consumed. Worked-example tests: Longevity hint Lab Total 35 →
 +7 (`ArMDE:2573`, `ArMDE:2488`); casting total with Encumbrance + Focus (base vs within-focus, Method
 Caster +3); Deficient Technique halving; per-Form Magic Resistance = Form + 5×Parma;
-Flawed Parma halving; per-spell penetration + Weak Magic; weapon+shield combat line;
+Flawed Parma halving the Parma addend against its own Form only (Ignem 10 + Parma
+3 → 17, other Forms untouched, a Might base never halved); Limited Magic
+Resistance dropping its own Form's bonus only; per-spell penetration + Weak Magic; weapon+shield combat line;
 Soak with Tough + Bronze cord; Encumbrance from Load; wound ranges Size 0 / +1;
 Enduring Constitution penalty reduction; Decrepitude 17→2 & Warping 15→2 via the
 reused functions; purity.
@@ -4365,8 +4384,9 @@ variants, circumstantial halvings, doubled aura penalties) stays surfaced-only.
 **Surfaced-only families** (study / conditional-casting /
 wound-recovery / conditional MR: `AdvancementMod`, the non-computed
 `SpecialCastingMod` kinds, `AbilityRollMod`, the `HealthTrack::{FatigueRoll,
-CastingFatigue, Recovery}` tracks, and the non-`no_form_bonus` `MagicResistanceMod`
-kinds — `ModifierFamily::MagicResistance` — aura_bonus, the two realm
+CastingFatigue, Recovery}` tracks, and the `MagicResistanceMod`
+kinds that are neither `no_form_bonus` nor `halved_parma`
+— `ModifierFamily::MagicResistance` — aura_bonus, the two realm
 susceptibilities and Weak Magic Resistance's conditional Penetration waiver) are
 **listed** as labelled `SurfacedModifier`s, not folded into a
 simulated number, because the app does not simulate those subsystems.
@@ -4859,6 +4879,41 @@ swept and is deliberately outside the scope.
   play at the moment an aura is entered and produce no sheet value.
   Pinned by
   `data_integrity.rs::the_realm_scoped_susceptibilities_are_surfaced_and_halve_no_flat_total`.
+
+  **The two Form-scoped Flaws are scoped too, and that is why they are
+  *computed per Form* rather than blanket.** Both used to apply to all ten Forms
+  at once, and repeat purchases were indistinguishable from the first, because
+  neither entry declared the Form the rulebook scopes it to (row 35 of
+  `docs/open-todos.md`). `ArMDE:6144` gives Flawed Parma Magica "only half the
+  normal Magic Resistance **against a certain Form** … more than once for
+  different Forms", and `ArMDE:6348` gives Limited Magic Resistance "no bonus
+  from **one of** your Form scores … multiple times, for multiple Forms". Both
+  now carry a `form` parameter (`ParameterDomain::Form`) and both encode as a
+  `magic_resistance_mod` with `param: "form"` — `no_form_bonus` and
+  `halved_parma` — folded per Form by `derived.rs::in_play_mods` into
+  `no_form_bonus_forms` / `halved_parma_forms`, exactly as Deft Form's
+  `deft_forms` set already works.
+
+  **Flawed Parma halves the Parma addend, not the total.** `ArMDE:6144`'s
+  subject is "**Your Parma Magica**", and `ArMDE:9396` states the other half of
+  the resistance arises "from a maga's **Form scores**" — a defective Parma does
+  not produce that number and cannot reduce it. So against the named Form
+  `MR = form_bonus + halve(5 × Parma)`, and `HalvableTotal::MagicResistance`
+  (which meant "halve this **whole** total") was **deleted**: its only data user
+  was this Flaw, its only consumer `derived/casting.rs::magic_resistance`, and
+  `flaw.weak_magic_resistance` had already left it in the round-5 audit. A Might
+  base is never halved — the comparison that picks Might over Parma
+  (RoP:M:1472, `ArMDE:2627`) is made against that Form's own Parma figure, so
+  the halving only ever moves the Parma side of it. Pinned by
+  `derived.rs::flawed_parma_halves_only_the_parma_contribution_against_its_own_form`,
+  `flawed_parma_never_halves_a_might_base` and
+  `limited_magic_resistance_drops_the_form_bonus_of_its_own_form_only`.
+
+  **Limited Magic Resistance's "caught without your Parma" clause is not
+  modelled**, deliberately: whether the Parma is up is a scene fact, not a sheet
+  number, and the fallback it states (Magic Resistance 0) is what the character
+  already reads at Form 0 with no Parma. It rides in the Flaw's own rules text in
+  both locales instead.
 - **Flat Soak bonus/penalty** — `virtue.tough` (ArMDE:5145-5147), `flaw.frail` (ArMDE:6190-6193)
 - **Wound/fatigue penalty delta** — `virtue.enduring_constitution` (ArMDE:3751-3754), `flaw.low_tolerance` (ArMDE:6366-6369), `flaw.painful_magic` (ArMDE:6574-6577), `flaw.vulnerable_casting` (ArMDE:6993-7004), `virtue.withstand_casting` (ArMDE:5261-5282), `flaw.obese` (ArMDE:6516-6519), `flaw.short_of_breath` (ArMDE:6733-6736), `virtue.long_winded` (ArMDE:4327-4330)
 - **Wound-recovery modifier** — `flaw.fragile_constitution` (ArMDE:6186-6189), `virtue.rapid_convalescence` (ArMDE:4834-4837)
@@ -4999,11 +5054,11 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 | `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | ArMDE:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed; conditional ones folded **unconditionally** (no toggle exists), surfaced per scope as the `casting_mod_formulaic`/`_ritual`/`_spontaneous` addends |
 | `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), aristotelian_training (+1), creative_block (−3), weak_scholar (−6), cyclic_magic, potent_magic | ArMDE:3368-3371, 4151-4154, 3440-3443, 5873-5876, 7080-7083, 4740-4781 | computed |
 | `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | ArMDE:5913-5915, 5909-5912 | computed |
-| `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration / MR — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic, flawed_parma_magica (weak_magic_resistance was removed from this family in the round-5 audit — `ArMDE:7070` halves nothing; see **Magic-resistance modifier** above) | ArMDE:7084-7089, 7060-7063, 5962-5964, 7064-7067, 6142-6145 | **computed** (round-2 audit finding GD3 closed the last gap): `spontaneous_casting`, `penetration`, `magic_resistance`, `lab_longevity` (since M5.5a), and now `lab_enchanting` too — folded into the new `LabTotal.enchanting` field in `derived/lab.rs::lab_totals` (Deficiency first, then this halving, per `ArMDE:7060-7063`'s own stated order). Round 3 (G1) wired `enchanting` into `masterpiece_item_cap` too — the one remaining consumer of a Lab Total that used to read `total` instead — and into the frontend `LabTotal` type / `DerivedTotalsPanel` (G2) |
+| `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic. Two items have left this family: weak_magic_resistance in the round-5 audit (`ArMDE:7070` halves nothing), and flawed_parma_magica with row 35 (it halves one *addend* against one *Form*, which is not a whole total — see **Magic-resistance modifier** above). `HalvableTotal::MagicResistance` was deleted with the second of them | ArMDE:7084-7089, 7060-7063, 5962-5964, 7064-7067 | **computed** (round-2 audit finding GD3 closed the last gap): `spontaneous_casting`, `penetration`, `lab_longevity` (since M5.5a), and now `lab_enchanting` too — folded into the new `LabTotal.enchanting` field in `derived/lab.rs::lab_totals` (Deficiency first, then this halving, per `ArMDE:7060-7063`'s own stated order). Round 3 (G1) wired `enchanting` into `masterpiece_item_cap` too — the one remaining consumer of a Lab Total that used to read `total` instead — and into the frontend `LabTotal` type / `DerivedTotalsPanel` (G2) |
 | `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | ArMDE:5145-5147, 6190-6193, 3500-3503 | computed |
 | `CombatMod { amount, target, weapon }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | ArMDE:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed; conditional ones folded **unconditionally** and **not labelled** — `CombatLine` carries no `addends` at all. `weapon` restricts a figure to one weapon's lines and **replaces** the same item's unscoped figure there (only `flaw.lame`'s -3 on `weapon.dodge`, ArMDE:6332); an unresolvable weapon fails referential integrity |
 | `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | ArMDE:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |
-| `MagicResistanceMod { kind }` | Non-halving MR — limited_magic_resistance (no_form_bonus), susceptibility faerie/infernal, commanding_aura & special_circumstances (aura_bonus), weak_magic_resistance (conditional_penetration_waiver) | ArMDE:6346-6349, 6819-6826, 3579-3596, 7068-7071 | **no_form_bonus computed** (folded into the flat per-Form MR number in `magic_resistance`); the four conditional/situational kinds (aura_bonus, susceptible_faerie/infernal, conditional_penetration_waiver) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — each carries a scope the flat per-Form figure has no axis for (a realm, an aura, a scene condition plus the incoming spell's level), so listing them keeps them from being silently dropped *and* from being applied where the book does not apply them. `susceptible_divine` was retired in the round-5 audit: `ArMDE:6817` never mentions Magic Resistance, and the Flaw now carries `special_casting_mod { doubled_aura_penalty }` |
+| `MagicResistanceMod { kind, param }` | MR modifiers — limited_magic_resistance (no_form_bonus), flawed_parma_magica (halved_parma), susceptibility faerie/infernal, commanding_aura & special_circumstances (aura_bonus), weak_magic_resistance (conditional_penetration_waiver). `param` names the selection key carrying the **Form** the modifier is scoped to; it is set on the first two kinds and absent on the rest, which name no Form | ArMDE:6346-6349, 6142-6145, 6819-6826, 3579-3596, 7068-7071 | **no_form_bonus and halved_parma computed** (folded into the flat per-Form MR number in `magic_resistance`, each against the one Form its own copy names — a copy naming no Form applies to none, and `missing_param` asks for the choice rather than the engine guessing it); the four conditional/situational kinds (aura_bonus, susceptible_faerie/infernal, conditional_penetration_waiver) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — each carries a scope the flat per-Form figure has no axis for (a realm, an aura, a scene condition plus the incoming spell's level), so listing them keeps them from being silently dropped *and* from being applied where the book does not apply them. `susceptible_divine` was retired in the round-5 audit: `ArMDE:6817` never mentions Magic Resistance, and the Flaw now carries `special_casting_mod { doubled_aura_penalty }` |
 | `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | ArMDE:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |
 | `AdvancementMod { source, amount }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher, independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible, loose_magic | ArMDE:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement) |
 | `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic, the_constant_expression), and doubled_aura_penalty (susceptibility_to_divine_power) | ArMDE:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975, 5821-5838, 6815-6818 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |

@@ -1299,11 +1299,17 @@ pub enum Effect {
         param: String,
     },
     /// Halves a whole in-play total of the given kind (Weak Enchanter halves lab
-    /// totals for enchanting; Weak Magic halves penetration; Flawed Parma halves
-    /// Magic Resistance). Computed by `derived.rs` (5i).
+    /// totals for enchanting; Weak Magic halves penetration). Computed by
+    /// `derived.rs` (5i).
+    ///
+    /// Magic Resistance is deliberately **not** a member of
+    /// [`HalvableTotal`]: the one Flaw that halved it, Flawed Parma Magica,
+    /// halves one *addend* of it (the Parma contribution) against one *Form*,
+    /// which is neither a whole total nor blanket — it is
+    /// [`MagicResistanceEffect::HalvedParma`] instead.
     ///
     /// Source: ArMDE:7060-7063 (Weak
-    /// Enchanter), `ArMDE:7064-7067` (Weak Magic), `ArMDE:6142-6145` (Flawed Parma).
+    /// Enchanter), `ArMDE:7064-7067` (Weak Magic).
     MagicTotalHalving {
         /// Which in-play total is halved.
         total: HalvableTotal,
@@ -1357,20 +1363,32 @@ pub enum Effect {
         /// magnitude in 5i's read-out; the sign convention is pinned there).
         amount: i8,
     },
-    /// A non-halving Magic Resistance modifier (Limited Magic Resistance drops the
-    /// Form bonus; Susceptibility to Faerie/Infernal Power halves resistance
-    /// against one realm's effects; Commanding Aura adds a bonus while in a
-    /// matching aura; Weak Magic Resistance waives an attacker's spell-level
-    /// subtraction under a stated condition). Halving MR effects that apply to the
-    /// flat per-Form total use [`Effect::MagicTotalHalving`]. Consumed by
-    /// `derived.rs` `magic_resistance()` (5i).
+    /// A Magic Resistance modifier (Limited Magic Resistance drops one Form's
+    /// bonus; Flawed Parma Magica halves the Parma contribution against one Form;
+    /// Susceptibility to Faerie/Infernal Power halves resistance against one
+    /// realm's effects; Commanding Aura adds a bonus while in a matching aura;
+    /// Weak Magic Resistance waives an attacker's spell-level subtraction under a
+    /// stated condition). Consumed by `derived.rs` `magic_resistance()` (5i).
+    ///
+    /// `param` names the selection parameter carrying the **Form** the modifier
+    /// is scoped to, for the two kinds the rulebook scopes that way
+    /// ([`MagicResistanceEffect::NoFormBonus`] and
+    /// [`MagicResistanceEffect::HalvedParma`]). It is `None` for the realm- and
+    /// scene-conditional kinds, which name no Form at all. A `param` naming a key
+    /// the selection has not filled leaves the modifier **unapplied** — the
+    /// missing choice is `validation::selections`'s `missing_param`, and guessing
+    /// a Form here would invent a rules choice the save never stored.
     ///
     /// Source: ArMDE:6346-6349 (Limited),
-    /// `ArMDE:6819-6826` (Susceptibility), `ArMDE:3579-3596` (Commanding Aura),
-    /// `ArMDE:7068-7070` (Weak Magic Resistance).
+    /// `ArMDE:6142-6145` (Flawed Parma), `ArMDE:6819-6826` (Susceptibility),
+    /// `ArMDE:3579-3596` (Commanding Aura), `ArMDE:7068-7070` (Weak Magic
+    /// Resistance).
     MagicResistanceMod {
         /// Which Magic Resistance modifier this is.
         kind: MagicResistanceEffect,
+        /// Parameter key whose value names the Form this modifier is scoped to.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        param: Option<String>,
     },
     /// An aging / longevity modifier. `kind` selects which aging subsystem it
     /// touches, `amount` the signed modifier — 0 when the `kind` is itself the
@@ -1502,8 +1520,6 @@ pub enum HalvableTotal {
     LabLongevity,
     /// Penetration totals (Weak Magic).
     Penetration,
-    /// Magic Resistance (Flawed Parma Magica, Weak Magic Resistance).
-    MagicResistance,
 }
 
 impl fmt::Display for HalvableTotal {
@@ -1513,7 +1529,6 @@ impl fmt::Display for HalvableTotal {
             HalvableTotal::LabEnchanting => "lab_enchanting",
             HalvableTotal::LabLongevity => "lab_longevity",
             HalvableTotal::Penetration => "penetration",
-            HalvableTotal::MagicResistance => "magic_resistance",
         })
     }
 }
@@ -1583,9 +1598,22 @@ impl fmt::Display for HealthTrack {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MagicResistanceEffect {
-    /// The relevant Form's contribution to Magic Resistance is dropped (Limited
-    /// Magic Resistance: resistance from Parma alone).
+    /// The named Form's contribution to Magic Resistance is dropped (Limited
+    /// Magic Resistance: against that Form, resistance from Parma alone).
+    ///
+    /// Source: ArMDE:6346-6349.
     NoFormBonus,
+    /// The **Parma contribution** to Magic Resistance is halved against the
+    /// named Form, and nothing else is (Flawed Parma Magica).
+    ///
+    /// Only the Parma half, because the Flaw's subject is "Your Parma Magica"
+    /// (`ArMDE:6144`) while `ArMDE:9396` puts the rest of the resistance on "a
+    /// maga's Form scores" — a defective Parma cannot reduce a number it does
+    /// not produce. And only against one Form, because the Flaw is bought "for
+    /// different Forms", one copy each.
+    ///
+    /// Source: ArMDE:6142-6145, :9390, :9396, :9398.
+    HalvedParma,
     /// A bonus to Magic Resistance while in a matching aura (Commanding Aura).
     AuraBonus,
     /// A penalty to Magic Resistance against Faerie power (Susceptibility).
@@ -1612,6 +1640,7 @@ impl fmt::Display for MagicResistanceEffect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             MagicResistanceEffect::NoFormBonus => "no_form_bonus",
+            MagicResistanceEffect::HalvedParma => "halved_parma",
             MagicResistanceEffect::AuraBonus => "aura_bonus",
             MagicResistanceEffect::SusceptibleFaerie => "susceptible_faerie",
             MagicResistanceEffect::SusceptibleInfernal => "susceptible_infernal",
@@ -4250,7 +4279,6 @@ mod tests {
         check(HalvableTotal::LabEnchanting);
         check(HalvableTotal::LabLongevity);
         check(HalvableTotal::Penetration);
-        check(HalvableTotal::MagicResistance);
         check(CombatStat::Initiative);
         check(CombatStat::Attack);
         check(CombatStat::Defense);
@@ -4487,6 +4515,15 @@ mod tests {
             },
             Effect::MagicResistanceMod {
                 kind: MagicResistanceEffect::NoFormBonus,
+                param: Some("form".into()),
+            },
+            Effect::MagicResistanceMod {
+                kind: MagicResistanceEffect::HalvedParma,
+                param: Some("form".into()),
+            },
+            Effect::MagicResistanceMod {
+                kind: MagicResistanceEffect::SusceptibleFaerie,
+                param: None,
             },
             Effect::AgingMod {
                 kind: AgingEffect::AgingRoll,

@@ -658,9 +658,9 @@ fn the_heading_slug_matches_the_sources_own_generated_links() {
 /// established by opening the citations:
 ///
 /// - `magic_total_halving` — "halve"/"half" ("must halve their Lab Total",
-///   ArMDE:5964; "only half the normal Magic Resistance", ArMDE:6144; "Halve
-///   your Lab Total", ArMDE:7062; "You halve the normal Penetration Total",
-///   ArMDE:7066). Deliberately *not* widened to "divide": that would silently
+///   ArMDE:5964; "Halve your Lab Total", ArMDE:7062; "You halve the normal
+///   Penetration Total", ArMDE:7066). Deliberately *not* widened to "divide":
+///   that would silently
 ///   absorb Weak Spontaneous Magic's ÷5, whose exemption is worth having
 ///   written down, and would stop discriminating a halving from any other
 ///   division.
@@ -824,7 +824,15 @@ const KNOWN_MISENCODINGS: &[(&str, &str, &str)] = &[];
 /// floor, never a total — `CLAUDE.md` → "Catalogue size is data, never code"
 /// forbids asserting exact catalogue counts, but without *some* floor this
 /// test passes vacuously the day a family is renamed and matches nothing.
-const MIN_ITEMS_PER_GUARDED_FAMILY: usize = 5;
+///
+/// Lowered from 5 to 4 when `flaw.flawed_parma_magica` left `magic_total_halving`
+/// for `magic_resistance_mod`: it halves one *addend* of Magic Resistance (the
+/// Parma contribution) against one *Form*, which is not the "halve a whole
+/// in-play total" this family means. That leaves the family with the four
+/// genuine whole-total halvings the catalogue states (spontaneous casting, lab
+/// enchanting, lab longevity, penetration), so the floor follows the data down
+/// rather than the data being padded up to the floor.
+const MIN_ITEMS_PER_GUARDED_FAMILY: usize = 4;
 
 /// Reads the lines a citation brackets, lowercased and joined, caching each
 /// source file so the guard reads a multi-megabyte rulebook once rather than

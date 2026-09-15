@@ -148,7 +148,10 @@ export type Effect =
   // per-weapon. Absent means the modifier applies to every line.
   | { type: 'combat_mod'; amount: number; target: CombatStat; weapon?: string }
   | { type: 'health_mod'; track: HealthTrack; amount: number }
-  | { type: 'magic_resistance_mod'; kind: MagicResistanceEffect }
+  // `param` names the selection parameter carrying the Form the modifier is
+  // scoped to, for the two kinds the rulebook scopes that way. Absent for the
+  // realm- and scene-conditional kinds, which name no Form.
+  | { type: 'magic_resistance_mod'; kind: MagicResistanceEffect; param?: string }
   | { type: 'aging_mod'; kind: AgingEffect; amount: number }
   | { type: 'advancement_mod'; source: AdvancementSource; amount: number }
   | { type: 'special_casting_mod'; kind: SpecialCasting }
@@ -159,12 +162,15 @@ export type Effect =
 
 // M5/5b scalar enums mirroring the engine (rendered via Fluent in slice 5i).
 export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' | 'spontaneous';
+// Magic Resistance is deliberately absent: the one Flaw that halved it, Flawed
+// Parma Magica, halves one *addend* of it (the Parma contribution) against one
+// *Form*, which is neither a whole total nor blanket. It is the
+// `halved_parma` MagicResistanceEffect instead.
 export type HalvableTotal =
   | 'spontaneous_casting'
   | 'lab_enchanting'
   | 'lab_longevity'
-  | 'penetration'
-  | 'magic_resistance';
+  | 'penetration';
 export type CombatStat = 'initiative' | 'attack' | 'defense' | 'damage';
 export type HealthTrack =
   | 'fatigue_penalty'
@@ -173,7 +179,11 @@ export type HealthTrack =
   | 'casting_fatigue'
   | 'recovery';
 export type MagicResistanceEffect =
+  // `no_form_bonus` and `halved_parma` are scoped to the ONE Form the selection
+  // names, carried in `param`; both fold into the flat per-Form Magic Resistance
+  // number rather than being listed, so neither carries a `derived-detail-*` key.
   | 'no_form_bonus'
+  | 'halved_parma'
   | 'aura_bonus'
   | 'susceptible_faerie'
   | 'susceptible_infernal'
