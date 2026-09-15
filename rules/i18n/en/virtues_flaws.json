@@ -48,7 +48,8 @@
   },
   "flaw.anchored_to_the_land": {
     "name": "Anchored to the {land}",
-    "summary": "The character suffers from feelings of loneliness and depression when she cannot see or hear a particular type of environment."
+    "summary": "The character suffers from feelings of loneliness and depression when she cannot see or hear a particular type of environment.",
+    "description": "The character suffers from feelings of loneliness and depression when she cannot see or hear a particular type of environment. In game terms, the character has a -3 penalty to all rolls when traveling through any other sort of environment (it is assumed that once the character has time to recover from the journey, she will find some reminder of her natural environment to help her rest). For example, a character who is Anchored to the Sea would suffer the penalty when traveling overland, but once settled can easily comfort herself — with the sound of the sea heard in a seashell, perhaps."
   },
   "flaw.animal_companion": {
     "name": "Animal Companion",
@@ -60,7 +61,8 @@
   },
   "flaw.arthritis": {
     "name": "Arthritis",
-    "summary": "Your joints are stiff and often painful, making almost any prolonged movement difficult."
+    "summary": "Your joints are stiff and often painful, making almost any prolonged movement difficult.",
+    "description": "Your joints are stiff and often painful, making almost any prolonged movement difficult. You are at -3 to rolls involving repetitive movement, sustained over time. Occasionally, the pain is so great that you are seriously disabled. On any movement or combat botch, one of your joints may \"lock up,\" making the limb effectively useless (-6 to all rolls involving it) until you have a chance to rest it for a day or two."
   },
   "flaw.avaricious_major": {
     "name": "Avaricious (Major)",
@@ -96,11 +98,13 @@
   },
   "flaw.blatant_gift": {
     "name": "Blatant Gift",
-    "summary": "Your Gift is extremely disturbing to others."
+    "summary": "Your Gift is extremely disturbing to others.",
+    "description": "People immediately realize that there is something strange about you, even if they do not know you are a magus. Animals are extremely disturbed, frightened, and possibly enraged by your presence. You suffer a -6 penalty on all interaction rolls with normal people and animals, and should see page 203 for further discussion of this Flaw's effects."
   },
   "flaw.blatant_magical_air": {
     "name": "Blatant Magical Air",
-    "summary": "Only characters with a Magical Air or The Gift may take this Flaw."
+    "summary": "Only characters with a Magical Air or The Gift may take this Flaw.",
+    "description": "Only characters with a Magical Air or The Gift may take this Flaw. The character is especially disturbing to others, so much that they can barely tolerate its presence. The character suffers a -6 penalty to social actions, and is immediately hated and feared by members of the mundane population. This effect is the same as the Blatant Gift, and a character may not have both Flaws."
   },
   "flaw.blind": {
     "name": "Blind",
@@ -128,11 +132,13 @@
   },
   "flaw.broken_vessel": {
     "name": "Broken Vessel",
-    "summary": "The character is constantly aware that her supernatural powers may only be temporary."
+    "summary": "The character is constantly aware that her supernatural powers may only be temporary.",
+    "description": "The character is constantly aware that her supernatural powers may only be temporary. Failures using those abilities represent the ebbing away of the power that sustains them. When a zero is rolled on any Stress Roll (not Simple Roll) for any of her Supernatural Abilities, Powers, or in casting spells, she loses 5 experience points from that Ability or an Art involved in the Power or Spell. If the roll then botches, the character automatically loses enough experience points to reduce her score in the affected Art or Ability by one full level (or 5 experience points, whichever is greater). Characters may only take this Flaw if they have at least one Supernatural Ability or Art normally improved through experience points."
   },
   "flaw.brutal_artist": {
     "name": "Brutal Artist",
-    "summary": "This Flaw is only available to magi of House Jerbiton."
+    "summary": "This Flaw is only available to magi of House Jerbiton.",
+    "description": "This Flaw is only available to magi of House Jerbiton. The magus creates and enjoys art that is ugly, according to his Housemates. He suffers a -3 penalty on social rolls with Jerbiton magi, and cannot develop a positive Reputation in the House, because his mind is so obviously disturbed. This restricts his involvement in the leagues (see Houses of Hermes: Societates, page 53). Over time, the character might convince his sodales that his work is not ugly, but this requires stories, much as removing any other Flaw."
   },
   "flaw.busybody": {
     "name": "Busybody",
@@ -154,7 +160,8 @@
   },
   "flaw.castratus": {
     "name": "Castratus",
-    "summary": "You were castrated before puberty, leaving you beardless and somewhat effeminate compared to most men."
+    "summary": "You were castrated before puberty, leaving you beardless and somewhat effeminate compared to most men.",
+    "description": "You were castrated before puberty, leaving you beardless and somewhat effeminate compared to most men. Social rolls involving characters from Latin culture suffer a -3 penalty. Under Byzantine law you may not marry, although you may adopt children. In Byzantine culture, this may have been an astute career move on your guardians' part, as eunuchs can attain positions of power. Elsewhere, it was probably the result of an accident or an assault. This Flaw is only available to characters who were born with testicles."
   },
   "flaw.ceremonial_spontaneous_magic": {
     "name": "Ceremonial Spontaneous Magic",
@@ -179,7 +186,8 @@
   },
   "flaw.clumsy_magic": {
     "name": "Clumsy Magic",
-    "summary": "You have trouble targeting your spells accurately."
+    "summary": "You have trouble targeting your spells accurately.",
+    "description": "You have trouble targeting your spells accurately. Any aiming roll is subject to disastrous failure: an aiming roll of 0 is automatically a botch. (Aiming rolls do not count as mystical rolls for the purposes of gaining Warping Points.) You receive a -3 penalty to any rolls involving Finesse."
   },
   "flaw.companion_animal": {
     "name": "Companion Animal",
@@ -219,7 +227,8 @@
   },
   "flaw.corrupted_abilities": {
     "name": "Corrupted Abilities",
-    "summary": "One or more of the character's Abilities was taught to her by a demon, or came through some other corrupted source of study."
+    "summary": "One or more of the character's Abilities was taught to her by a demon, or came through some other corrupted source of study.",
+    "description": "One or more of the character's Abilities was taught to her by a demon, or came through some other corrupted source of study. Use of a corrupted Ability for a selfish or sinful action receives a +3 bonus to the roll. Succeeding in a roll because of this bonus (that is, when without it the roll would have failed) means that the character immediately acquires 5 experience points in that Ability. However, uses of the Ability that are neutral or selfless receive a -3 penalty, and if you fail the roll because of this penalty, the character loses 5 experience points in the Ability.\n\nAny use of a corrupted Ability is an unholy act, which can be sensed by Divine Powers. You may only take this Flaw once, though you can choose to have it affect multiple Abilities if you wish."
   },
   "flaw.corrupted_arts": {
     "name": "Corrupted Arts",
@@ -235,7 +244,8 @@
   },
   "flaw.craving_for_travel": {
     "name": "Craving for Travel",
-    "summary": "The character suffers from feelings of loneliness, boredom, and depression if he does not expose himself to new experiences."
+    "summary": "The character suffers from feelings of loneliness, boredom, and depression if he does not expose himself to new experiences.",
+    "description": "The character suffers from feelings of loneliness, boredom, and depression if he does not expose himself to new experiences. He can stave off the boredom for a while, but if he remains in one place for more than a season, he suffers a -1 penalty to all rolls and totals until he experiences a change in scene. This penalty rises to -3 after a year of boredom. This character is probably the first to volunteer for a mission beyond the covenant gates, and may even spend part of each year in a different location such as the nearby wood. This Flaw might seem to make the character unsuitable for life at a covenant, so you should decide what it is at the covenant that means he keeps coming back. Perhaps it is the love of his life, the camaraderie, or perhaps just the feeling that he fits in here."
   },
   "flaw.creative_block": {
     "name": "Creative Block",
@@ -313,7 +323,8 @@
   },
   "flaw.devoted_parent": {
     "name": "Devoted Parent/Child",
-    "summary": "The character is extremely attached to a parent or child."
+    "summary": "The character is extremely attached to a parent or child.",
+    "description": "The character is extremely attached to a parent or child. Where he goes, she goes also. Separation of more than a day causes anxiety, and gives a -1 penalty to all rolls due to stress."
   },
   "flaw.dhimmi": {
     "name": "Dhimmi",
@@ -337,7 +348,8 @@
   },
   "flaw.disfigured": {
     "name": "Disfigured",
-    "summary": "A visible disfigurement makes you ugly and easy to recognize."
+    "summary": "A visible disfigurement makes you ugly and easy to recognize.",
+    "description": "A visible disfigurement makes you ugly and easy to recognize. Presence rolls that involve good looks and gaining respect from most people are at -3. You probably have a cruel nickname that refers to your unfortunate appearance. You might have a large, visible burn scar, or an enlarged and deformed eye (an 'evil eye'), or even be albino."
   },
   "flaw.disjointed_magic": {
     "name": "Disjointed Magic",
@@ -393,7 +405,8 @@
   },
   "flaw.environmental_sensitivity": {
     "name": "Environmental Sensitivity",
-    "summary": "The character is unusually sensitive to an uncommon environmental feature, such as bad air, salt water, or extreme temperatures."
+    "summary": "The character is unusually sensitive to an uncommon environmental feature, such as bad air, salt water, or extreme temperatures.",
+    "description": "The character is unusually sensitive to an uncommon environmental feature, such as bad air, salt water, or extreme temperatures. Whenever the character is exposed to these conditions, he has a -3 penalty to his Stamina for any debilitation checks (page 406)."
   },
   "flaw.evil_destiny": {
     "name": "Evil Destiny",
@@ -474,7 +487,8 @@
   },
   "flaw.fickle_nature": {
     "name": "Fickle Nature",
-    "summary": "The character swings between two types of personality behaviors that are directly opposite."
+    "summary": "The character swings between two types of personality behaviors that are directly opposite.",
+    "description": "The character swings between two types of personality behaviors that are directly opposite. There is no middle ground, so the character is always either displaying traits of one behavior or the other. Select a Personality Trait at +4, and its opposite at +4. Typical Personality Traits are: Happy and Sad, Energetic and Lazy, Confident and Diffident, or Proud and Humble."
   },
   "flaw.fish_out_of_water_terrain": {
     "name": "Fish Out of Water {terrain}",
@@ -483,7 +497,8 @@
   },
   "flaw.flashbacks": {
     "name": "Flashbacks",
-    "summary": "When engaged in combat, or a similar violent and tense situation, the stress might trigger a flashback to the horrors of past battles, which left this character mentally scarred."
+    "summary": "When engaged in combat, or a similar violent and tense situation, the stress might trigger a flashback to the horrors of past battles, which left this character mentally scarred.",
+    "description": "When engaged in combat, or a similar violent and tense situation, the stress might trigger a flashback to the horrors of past battles, which left this character mentally scarred. The hallucinations seem so real that it is hard to avoid reacting to them. When an event appropriate for the Flashbacks occurs, roll a stress die against an Ease Factor of 9. On a failure, the character panics and reverts to his past nightmares. At the storyguide's discretion, modifiers from -1 to -5 could apply, for things like full-scale battle, fires, or stampeding animals. In addition, add or subtract any relevant Personality Traits, depending on whether they might lessen or worsen the effects of this Flaw.\n\nBear in mind that positive traits like loyal, reliable, lawabiding, or calm should be helpful in avoiding this affliction. Similarly, negative traits like selfish, angry, or corrupt subtract from the roll, making him more likely to succumb. Often, his actions hurt, embarrass, or offend comrades, employers, or other important people, and might have social repercussions. On a botch, he'll get into real trouble — it could result in someone being seriously hurt or killed, in valuables being broken or in him failing in his duty at a critical time.\n\nFor magi, this Flaw should not involve flashbacks to Twilight episodes, spell botches or laboratory disasters. Since most of these situations won't get worse by applying a penalty to the rest of the scene, it won't be enough of a Flaw. But magi can be affected by combat, house fires, or cave-ins just as much as other character types."
   },
   "flaw.flawed_parma_magica": {
     "name": "Flawed Parma Magica",
@@ -519,7 +534,8 @@
   },
   "flaw.fury": {
     "name": "Fury",
-    "summary": "A violent temper sometimes overwhelms you, sending you into a destructive, uncontrollable rage."
+    "summary": "A violent temper sometimes overwhelms you, sending you into a destructive, uncontrollable rage.",
+    "description": "A violent temper sometimes overwhelms you, sending you into a destructive, uncontrollable rage. You are likely to be provoked by some sort of specific event, such as being insulted, being hurt, or hearing the Order of Hermes disparaged. Roll 9+ on a stress die to avoid flying into a rage when such an event occurs, with another roll every round to try to calm yourself should you fail the first. On a botch, you try to kill everyone around you. While enraged you get +3 to Damage, but -1 on all other scores and rolls."
   },
   "flaw.gabai": {
     "name": "Gabai",
@@ -559,7 +575,8 @@
   },
   "flaw.gullible": {
     "name": "Gullible",
-    "summary": "There is one born every minute - and it is this character!"
+    "summary": "There is one born every minute - and it is this character!",
+    "description": "There is one born every minute - and it is this character! He is an easy victim of ruses, stories and teasing lies. People lying to him get a bonus to their Guile rolls of +1 to +3. Depending on how bright or sharp-witted he is, he might not fall for obvious lies, denials of things that are evident or common knowledge. However, he most likely falls for lies that are even remotely plausible, and if he has no idea whether or not something is true, he is almost certain to believe it. This could, for instance, be whether or not there are mischievous faeries under the bridge. If you really want the character to not fall for something, make an Intelligence + Folk Ken Stress roll against an Ease Factor equal to the Communication + Guile roll of the person telling the tall tale. Recommended modifiers to the Ease Factor are +0 for obvious lies (ones that someone without the Flaw would certainly not believe), +6 for outlandish tales and +9 for things which could be true, or lies told by someone in authority, or who has expert knowledge of the subject at hand."
   },
   "flaw.hallucinations": {
     "name": "Hallucinations",
@@ -612,11 +629,13 @@
   },
   "flaw.hunchback": {
     "name": "Hunchback",
-    "summary": "You have a deformed body that gives you a grotesque appearance and hinders your movements."
+    "summary": "You have a deformed body that gives you a grotesque appearance and hinders your movements.",
+    "description": "You have a deformed body that gives you a grotesque appearance and hinders your movements. You are at -3 to all rolls involving agility and balance. Communication rolls that involve good looks are at -3."
   },
   "flaw.hunger_for_form_magic": {
     "name": "Hunger for {form} Magic",
-    "summary": "The character has been repeatedly exposed to magic and has thus become dependent upon magic to survive."
+    "summary": "The character has been repeatedly exposed to magic and has thus become dependent upon magic to survive.",
+    "description": "The character has been repeatedly exposed to magic and has thus become dependent upon magic to survive. The character must consume 1 pawn of vis each season, corresponding to the Form that it has been mostly exposed to. If the character is unable to consume a pawn of vis in a season, it loses a Long-Term Fatigue Level that cannot be regained until a pawn of the appropriate vis is consumed. For example, a character that has Hunger for Ignem Magic and has not consumed a pawn of Ignem vis for a whole year will have lost 4 Long-Term Fatigue Levels, and so be Dazed with a -5 penalty to activities. If the character then consumes 1 pawn of Ignem vis, it will regain a Fatigue Level and become Tired after an hour has elapsed."
   },
   "flaw.imagined_folk_tradition_vulnerability": {
     "name": "Imagined Folk Tradition Vulnerability",
@@ -636,15 +655,18 @@
   },
   "flaw.inconstant_magic": {
     "name": "Inconstant Magic",
-    "summary": "The character's magic is easily distracted, and it stutters and starts."
+    "summary": "The character's magic is easily distracted, and it stutters and starts.",
+    "description": "The character's magic is easily distracted, and it stutters and starts. Spells that require his guidance (e.g. concentration, or aimed spells) after being cast are not immediately responsive, as if the character must focus the spell's attention, and spells that are triggered by a condition (such as Waiting Spells or enchanted devices) take about two minutes to activate, as if the magic had wandered off when the caster was not watching it carefully. Any magic items he creates with constant effects are interrupted at sunrise and sunset; the magic is not seamless. The character suffers a -3 penalty to all Finesse rolls."
   },
   "flaw.independent_craftsman": {
     "name": "Independent Craftsman",
-    "summary": "This character has his own way of working and doesn't like other people getting in his way."
+    "summary": "This character has his own way of working and doesn't like other people getting in his way.",
+    "description": "This character has his own way of working and doesn't like other people getting in his way. This character always treats his Leadership and Craft or Profession Abilities as three levels lower when working with others on a given task. For Craftsmen, this means that whether he is working as an assistant or working with assistants his Craft Ability has a penalty of -3. This affects the number of assistants he can employ in the workshop and the benefit that he provides when working as an assistant. If you are not using the rules in City and Guild (page 73), treat this is a Personality Flaw."
   },
   "flaw.indiscreet": {
     "name": "Indiscreet",
-    "summary": "You are unable to keep a secret."
+    "summary": "You are unable to keep a secret.",
+    "description": "You are unable to keep a secret. You must tell all to the first interested party you meet in an effort to be helpful or to demonstrate that you are in-the-know, unless you succeed on an Intelligence-based stress roll against an Ease Factor of 9. If you botch, you may have to be physically restrained by your companions from answering any questions put to you for the remainder of the encounter."
   },
   "flaw.infamous": {
     "name": "Infamous",
@@ -656,7 +678,8 @@
   },
   "flaw.inscribed_shadow": {
     "name": "Inscribed Shadow",
-    "summary": "The character's stigmata are reflected by glowing symbols in the character's shadow."
+    "summary": "The character's stigmata are reflected by glowing symbols in the character's shadow.",
+    "description": "The character's stigmata are reflected by glowing symbols in the character's shadow. This causes alarm among nonmagicians and makes the character's stigmata extremely easy for other Criamon magi to read (+3 on all rolls). The shadow's glowing symbols do not vanish when there is insufficient light to form a shadow — they burn brighter. Characters who use magic to hide their stigmata are not acting aptly. Only characters with stigmata may have this Flaw, which normally means that they must be magi of House Criamon."
   },
   "flaw.jinxed": {
     "name": "Jinxed",
@@ -694,7 +717,8 @@
   },
   "flaw.lingering_injury": {
     "name": "Lingering Injury",
-    "summary": "The character suffers from an old injury that won't heal properly, resulting in a -1 penalty to all rolls involving physical activity."
+    "summary": "The character suffers from an old injury that won't heal properly, resulting in a -1 penalty to all rolls involving physical activity.",
+    "description": "The character suffers from an old injury that won't heal properly, resulting in a -1 penalty to all rolls involving physical activity. If he botches a physical action, he aggravates the injury and the penalty becomes -3 (recovery from aggravation is as for a Light Wound). This condition worsens with age, so multiply whatever the penalty is by 1 + (Decrepitude Score)."
   },
   "flaw.loose_magic": {
     "name": "Loose Magic",
@@ -714,11 +738,13 @@
   },
   "flaw.lycanthrope": {
     "name": "Lycanthrope",
-    "summary": "You have been cursed to change form into a dangerous predator (such as a wolf, lynx, or bear) on nights of the full moon (or similar, monthly, astrological events)."
+    "summary": "You have been cursed to change form into a dangerous predator (such as a wolf, lynx, or bear) on nights of the full moon (or similar, monthly, astrological events).",
+    "description": "You have been cursed to change form into a dangerous predator (such as a wolf, lynx, or bear) on nights of the full moon (or similar, monthly, astrological events). No items or clothing transform between shapes, and it takes one full round for the full transformation to take effect. You are not immune to normal weapons, and the curse does not infect bite victims. The animal may be detected as a cursed human with an InAn or InCo spell.\n\nYou have the intelligence of an animal while changed, react to all stimuli as an animal, and do not retain any memory of actions taken in animal form, save occasionally in dreams. You may not even realize that you are under this curse. You can still recognize both friends and enemies when changed.\n\nLycanthropes may transform into a non-magical animal between Size -1 (wolf) and Size +2 (bear). You have the normal physical characteristics of a shapeshifter (see page 107), except that +3 is added to your Soak score (in animal form only). Furthermore, you are fully healed of all wounds incurred in animal form upon resuming human form (which happens at dawn)."
   },
   "flaw.magic_addiction": {
     "name": "Magic Addiction",
-    "summary": "You crave the rush of casting and holding power over magic."
+    "summary": "You crave the rush of casting and holding power over magic.",
+    "description": "You crave the rush of casting and holding power over magic. Whenever you cast a spell, you have a difficult time stopping yourself from casting again and again until you drop from exhaustion. Whenever you use a stress die in spellcasting, you must, whether or not the spell succeeds, make an Intelligence + Concentration stress roll, against an Ease Factor of half the level of the spell (or, if you botched, the level you were attempting). If you fail, as your next action you must either cast a Formulaic spell of at least the same level as the previous spell, or cast any spontaneous spell, expending Fatigue and not reserving levels for Penetration. You must roll again to control your addiction, based on the level of the spell you just cast, but you get a +3 bonus to the roll for every spell you cast after the first. If you botch, you continue casting spells until you fall unconscious."
   },
   "flaw.magical_air": {
     "name": "Magical Air",
@@ -734,7 +760,8 @@
   },
   "flaw.manifest_sin": {
     "name": "Manifest Sin",
-    "summary": "A sin or crime this character has committed in the past stains his spirit and is manifest to those who can perceive things hidden to mortal senses."
+    "summary": "A sin or crime this character has committed in the past stains his spirit and is manifest to those who can perceive things hidden to mortal senses.",
+    "description": "A sin or crime this character has committed in the past stains his spirit and is manifest to those who can perceive things hidden to mortal senses. Characters with Second Sight, Sense Holiness & Unholiness, or similar Supernatural Powers or Abilities perceive the sin through one or more senses.\n\nThe manifestation of the sin or crime should be chosen by you and the storyguide together, and should always be appropriate to the sin or crime in question. For instance, the perpetrator of a violent crime may appear to have blood on his hands, or be accompanied by the sobbing of his victim, while lustful sins may be seen to play across the sinner's leering face.\n\nIn addition, the character suffer a -1 penalty to all social interaction rolls or totals as the intangible aura of their past sins affects those with whom they interact.\n\nWhile his spirit is tainted and the manifestation will always be with him, he may spend a Faith Point, including Faith Points gained from taking Holy Communion and from relics, to banish the manifestation for Sun duration. While banished, the sin cannot be perceived and the social penalty is also suspended.\n\nThis Flaw originates from either the Divine or the Infernal Realm, as a mark of punishment, penitence, or temptation."
   },
   "flaw.manufactured_ignorance": {
     "name": "Manufactured Ignorance",
@@ -796,7 +823,8 @@
   },
   "flaw.mute": {
     "name": "Mute",
-    "summary": "You cannot speak; perhaps your tongue was cut out."
+    "summary": "You cannot speak; perhaps your tongue was cut out.",
+    "description": "You cannot speak; perhaps your tongue was cut out. You probably use rudimentary hand gestures and grunts to communicate your needs. You can still understand languages perfectly well, and may learn to read and write if you have an appropriate Virtue. Note that magi with this Flaw get a -10 penalty to all spellcasting, although this may be offset by taking the Quiet Magic Virtue (page 105). A magus with this Flaw can be assumed to be able to make sounds, which are sufficient to allow normal use of the Voice Range."
   },
   "flaw.necessary_condition": {
     "name": "Necessary Condition",
@@ -804,11 +832,13 @@
   },
   "flaw.necessary_realm_aura_for_ability": {
     "name": "Necessary {realm} Aura for {ability}",
-    "summary": "Due to some connection with a given supernatural realm, the absence of a given supernatural aura has a pronounced effect upon the character's ability to focus on certain tasks."
+    "summary": "Due to some connection with a given supernatural realm, the absence of a given supernatural aura has a pronounced effect upon the character's ability to focus on certain tasks.",
+    "description": "Due to some connection with a given supernatural realm, the absence of a given supernatural aura has a pronounced effect upon the character's ability to focus on certain tasks. The character has a -3 penalty to any totals he generates with a particular Ability when not in the right aura. A character may take this Flaw once for any particular Ability. The chosen Ability should be one which the character is likely to use frequently, such as in service to the covenant or to support his day-to-day activities.\n\nWhen applied to Craft or Profession Abilities, this Flaw also reduces the character's capability to support himself by reducing the number of Labor Points (as described in City & Guild) he accumulates each season when not working within the appropriate aura.\n\nTroupes should think carefully about how a character would be limited by taking Magic (which covers most covenants) or Dominion (which covers most other human settlements) aura. If the character would not be limited, the Flaw should not be allowed."
   },
   "flaw.night_terrors": {
     "name": "Night Terrors",
-    "summary": "This character is plagued far too often by horrible nightmares and fits of screaming in his sleep."
+    "summary": "This character is plagued far too often by horrible nightmares and fits of screaming in his sleep.",
+    "description": "This character is plagued far too often by horrible nightmares and fits of screaming in his sleep. The character must make a Stress Roll against an Ease Factor of 9 in order to avoid suffering terrors. The storyguide may call for modifiers of -1 to -3 if he has faced eerie or terrifying events recently, like meeting a demon or battling the undead.\n\nSuffering from terrors means that the character wakes up often and in a panic during the night. Situations might occur where he overreacts or reacts in unfortunate ways, if forced awake during such nights. The morning leaves him with a Long Term Fatigue Level lost. These Long Term Fatigue Levels are cumulative, so several bad nights leave him in bad shape. Subtract the character's Fatigue penalty from the Ease Factor to avoid night terrors, to represent how a truly exhausted victim will at some point sleep through the nightmares due to sheer exhaustion. If a night of terrors renders the character Unconscious, he slips into deep, dreamless sleep. He sleeps for an entire day and night, and wakes up at Winded, ending the string of Night Terrors. A character with this Flaw may not also take the Sleep Disorder Flaw\n\nThis Flaw normally makes seasonal Laboratory work impossible, and so is not suitable for magi."
   },
   "flaw.no_hands": {
     "name": "No Hands",
@@ -820,7 +850,8 @@
   },
   "flaw.nocturnal": {
     "name": "Nocturnal",
-    "summary": "Your natural body rhythms try to keep you sleeping until noon."
+    "summary": "Your natural body rhythms try to keep you sleeping until noon.",
+    "description": "Your natural body rhythms try to keep you sleeping until noon. You are at -1 on all rolls made between dawn and midday. Conversely, you have little difficulty staying up at night. Though you enjoy no special benefits in the dark, your companions may decide to saddle you with night guard duty on a regular basis to use your attributes to best effect."
   },
   "flaw.noncombatant": {
     "name": "Noncombatant",
@@ -844,7 +875,8 @@
   },
   "flaw.offensive_to_beings": {
     "name": "Offensive to {being}",
-    "summary": "This Flaw is associated with one of six classes of beings: animals, mundane humans, divine beings, faeries, demons, or magical creatures."
+    "summary": "This Flaw is associated with one of six classes of beings: animals, mundane humans, divine beings, faeries, demons, or magical creatures.",
+    "description": "This Flaw is associated with one of six classes of beings: animals, mundane humans, divine beings, faeries, demons, or magical creatures. These last four include characters associated with the Divine, Faerie, Infernal, or Magic realm, respectively, through Supernatural Virtues or Flaws, as well as beings with Might.\n\nBeings of the chosen category react badly to the character, as if he had The Gift, which makes them very uncomfortable around him and gives him a -3 to all social interaction rolls with them.\n\nYou may not take this Flaw more than once, characters who are Offensive to more than one kind of being should take Magical Air instead. Characters with The Gift may take this Flaw only if they have the Gentle Gift, which makes this type of being react to them negatively while others are unaffected. Characters with Magical Air may not take it at all.\n\nIf you are offensive to animals, animals with a Might score react in different ways. In general, those that react negatively to The Gift react negatively to you, while those that react positively do not, unless you actually have The Gift."
   },
   "flaw.optimistic_major": {
     "name": "Optimistic (Major)",
@@ -929,7 +961,8 @@
   },
   "flaw.poor_concentration": {
     "name": "Poor Concentration",
-    "summary": "While the character may have a mind that is quick to make decisions, he has a short attention span."
+    "summary": "While the character may have a mind that is quick to make decisions, he has a short attention span.",
+    "description": "While the character may have a mind that is quick to make decisions, he has a short attention span. The character has a -3 penalty to Concentration rolls."
   },
   "flaw.poor_eyesight": {
     "name": "Poor Eyesight",
@@ -957,7 +990,8 @@
   },
   "flaw.primitive_equipment": {
     "name": "Primitive Equipment",
-    "summary": "The character is capable of using only the simplest tools and equipment."
+    "summary": "The character is capable of using only the simplest tools and equipment.",
+    "description": "The character is capable of using only the simplest tools and equipment. Perhaps her training was incomplete, or she has been affected by some sort of curse, or maybe she originates from a less technologically capable society and refuses to adapt. She is restricted to Inexpensive weapons and armor only, regardless of what is made available to her. If forced by order or necessity to use other equipment, her Burden is one point higher when she uses anything other than Inexpensive weapons, and one point higher when she uses anything other than Inexpensive armor. She suffers a -1 penalty to Attack and Defense if using inappropriate weapons, and a -1 penalty to Initiative and Protection if using inappropriate armor. If the character works as a laborer or craftsman, she uses simple tools and primitive procedures. Unless working with simple tasks, the base Craft Value (see City & Guild, page 67) is raised by 1-3 at the storyguide's discretion, based on complexity. Further, her workshop may not be improved with regards to Innovation (City & Guild, page 65). Other Profession Abilities dependent on tools and equipment suffer a similar penalty for complex tasks. You should only take this Flaw if the character belongs to a profession that relies heavily on equipment, such as a smith, mason, or soldier."
   },
   "flaw.primogeniture_lineage": {
     "name": "Primogeniture Lineage",
@@ -981,7 +1015,8 @@
   },
   "flaw.raised_in_the_gutter": {
     "name": "Raised in the Gutter",
-    "summary": "This character was raised on the margins of society."
+    "summary": "This character was raised on the margins of society.",
+    "description": "This character was raised on the margins of society. She is able to use her social abilities normally with those of the lower and middle classes, but doesn't know how to act among her \"betters.\" When using Charm or Guile, it is obvious that she's from the bad part of town, and this makes convincing people to do what she wants harder (-3 on rolls). She can use Etiquette normally if she's holding her social place (which means staying silent and doing exactly what she's told) but suffers a -3 penalty if she tries to go beyond this."
   },
   "flaw.realm_stigmatic": {
     "name": "{realm} Stigmatic",
@@ -1017,7 +1052,8 @@
   },
   "flaw.repellent": {
     "name": "Repellent",
-    "summary": "The character has developed one of the physical characteristics of his demonic creator, which causes fear and revulsion among normal humans."
+    "summary": "The character has developed one of the physical characteristics of his demonic creator, which causes fear and revulsion among normal humans.",
+    "description": "The character has developed one of the physical characteristics of his demonic creator, which causes fear and revulsion among normal humans. The character makes all rolls requiring trust with a -6 penalty. The character also gains a minor advantage from the repellent feature. As examples, a character with horns, claws, or fangs could learn to use them in melee, a scaled character might have a Soak bonus of +3, and a character with demonic eves might see in the dark."
   },
   "flaw.restricted_learning": {
     "name": "Restricted Learning",
@@ -1038,7 +1074,8 @@
   },
   "flaw.rolling_stone": {
     "name": "Rolling Stone",
-    "summary": "The rolling stone gathers no moss, and neither does this character."
+    "summary": "The rolling stone gathers no moss, and neither does this character.",
+    "description": "The rolling stone gathers no moss, and neither does this character. She has moved from village to village so often that she finds it difficult to create attachments in the community. All social rolls have a -1 penalty within the community."
   },
   "flaw.savantism": {
     "name": "Savantism",
@@ -1082,7 +1119,8 @@
   },
   "flaw.sleep_disorder": {
     "name": "Sleep Disorder",
-    "summary": "More often than not, this character is unable to sleep soundly during the night."
+    "summary": "More often than not, this character is unable to sleep soundly during the night.",
+    "description": "More often than not, this character is unable to sleep soundly during the night. The resulting deprivation means that he is likely to nod off in periods of quiet and boredom. When the character is alone, comfortable, bored, or otherwise at risk of falling asleep, he needs to make a suitable Personality roll to avoid nodding off. Loyal, Reliable, and Lazy (for a penalty in the last case) are all appropriate. The character's current Fatigue penalty applies to the roll.\n\nRegardless of whether he manages to stay awake, the following night you must make a stress roll (no botch) against an Ease Factor of 6 to see if the character sleeps well. Every night he has slept poorly, he loses a Long Term Fatigue Level. Continue this until he sleeps soundly for a whole night. Once he has lost 3 Long Term Fatigue Levels, he automatically sleeps through the night, due to sheer exhaustion. This Flaw is not compatible with the Night Terrors Flaw."
   },
   "flaw.slothful": {
     "name": "Slothful",
@@ -1107,7 +1145,8 @@
   },
   "flaw.social_handicap": {
     "name": "Social Handicap",
-    "summary": "You have some trait that keeps you from interacting easily with other people."
+    "summary": "You have some trait that keeps you from interacting easily with other people.",
+    "description": "You have some trait that keeps you from interacting easily with other people. This impairs your dealings with most of society, causing penalties of -3 on appropriate rolls. Examples include morose temperament, unworldliness, an unpleasant odor, or tactlessness."
   },
   "flaw.soft_hearted": {
     "name": "Soft-Hearted",
@@ -1143,7 +1182,8 @@
   },
   "flaw.surgical_empiricus": {
     "name": "Surgical Empiricus",
-    "summary": "You are a chirurgeon by trade, but have never received a wide grounding in the subject; rather your training has focused on only a single aspect of Chirurgy."
+    "summary": "You are a chirurgeon by trade, but have never received a wide grounding in the subject; rather your training has focused on only a single aspect of Chirurgy.",
+    "description": "You are a chirurgeon by trade, but have never received a wide grounding in the subject; rather your training has focused on only a single aspect of Chirurgy. Pick a type of surgery as your specialization in that Ability (couching cataracts, removal of stones, bone-setting, etc.). When performing this type of surgery, you get the usual +1 bonus to your roll, but when trying to employ any other application of Chirurgy, you must halve your score in Chirurgy due to your inexperience. It is likely that you travel to get enough clientele for your practice, but can usually earn a good living."
   },
   "flaw.susceptibility_to_divine_power": {
     "name": "Susceptibility to Divine Power",
@@ -1159,7 +1199,8 @@
   },
   "flaw.susceptibility_to_sunlight": {
     "name": "Susceptibility to Sunlight",
-    "summary": "Direct, bright sunlight causes you noticeable pain and exhausts you."
+    "summary": "Direct, bright sunlight causes you noticeable pain and exhausts you.",
+    "description": "Direct, bright sunlight causes you noticeable pain and exhausts you. Attuned to darkness, your eyes are very sensitive, and you suffer from a -2 penalty to all rolls involving sight in bright environments such as a cloudless day. Due to your malediction, you lose one Fatigue level per Diameter if outdoors at noon on a hot summer day, and lose levels more slowly in less-intense light and warmth from the sun."
   },
   "flaw.susceptibility_to_warping": {
     "name": "Susceptibility to Warping",
@@ -1216,11 +1257,13 @@
   },
   "flaw.unbearable_to_beings": {
     "name": "Unbearable to {being}",
-    "summary": "This Flaw is associated with one of three classes of beings: mundane humans, demons, or divine beings."
+    "summary": "This Flaw is associated with one of three classes of beings: mundane humans, demons, or divine beings.",
+    "description": "This Flaw is associated with one of three classes of beings: mundane humans, demons, or divine beings. These last two include characters associated with the Divine or the Infernal realms, respectively, through Supernatural Virtues or Flaws, as well as beings with Divine or Infernal Might.\n\nThese beings are extremely disturbed, frightened, and possibly enraged by the character's presence. She suffers an additional -3 penalty on all social interactions with them, which adds to the -3 penalty normally associated with The Gift. Only characters with The Gift or Magical Air may take this Flaw, and it cannot be combined with the Blatant Gift.\n\nYou may not take this Flaw more than once; characters who are Unbearable to more than one kind of being should take the Blatant Gift instead."
   },
   "flaw.uncertain_faith": {
     "name": "Uncertain Faith",
-    "summary": "Whether through a flaw in the character's understanding of doctrine, a moral turmoil, the disheartening absolution of repeated sins, or exposure to conflicting philosophies, he finds it hard to fully express devotion to his faith."
+    "summary": "Whether through a flaw in the character's understanding of doctrine, a moral turmoil, the disheartening absolution of repeated sins, or exposure to conflicting philosophies, he finds it hard to fully express devotion to his faith.",
+    "description": "Whether through a flaw in the character's understanding of doctrine, a moral turmoil, the disheartening absolution of repeated sins, or exposure to conflicting philosophies, he finds it hard to fully express devotion to his faith. Some element of doubt stands between him and the Divine, and all rolls for holy influence, tempering an aura, invoking God's aid, or invoking a saint or baraka (see Realms of Power: The Divine Revised Edition, pages 38-41, 87, and 103) suffer a -3 penalty.\n\nThe character also has an \"Uncertain Faith\" Personality Trait at +1 that describes this conflict or doubt, which always provides demons with an opportunity to sow further doubt through their Obsession power (Realms of Power: The Infernal, page 31).\n\nSupernatural Abilities originating from the Divine, including Methods and Powers, are not penalized. This Flaw is not compatible with the True Faith Virtue."
   },
   "flaw.uncontrollable_strength": {
     "name": "Uncontrollable Strength",
@@ -1237,7 +1280,8 @@
   },
   "flaw.uninspirational": {
     "name": "Uninspirational",
-    "summary": "This character is bland, boring, and simple, with almost no chance of ever getting noticed or enticing anyone."
+    "summary": "This character is bland, boring, and simple, with almost no chance of ever getting noticed or enticing anyone.",
+    "description": "This character is bland, boring, and simple, with almost no chance of ever getting noticed or enticing anyone. His Presence and Communication may not be greater than 0. Any use of Abilities like Leadership, Charm, Intrigue, Etiquette or similar — as well as Personality Rolls — to stir or impress people suffers a -3 penalty."
   },
   "flaw.university_dean": {
     "name": "University Dean",
@@ -1245,7 +1289,8 @@
   },
   "flaw.unlucky": {
     "name": "Unlucky",
-    "summary": "The character is exceptionally unlucky, and is frequently dealt a bad hand by the forces of chance."
+    "summary": "The character is exceptionally unlucky, and is frequently dealt a bad hand by the forces of chance.",
+    "description": "The character is exceptionally unlucky, and is frequently dealt a bad hand by the forces of chance. He gets a -1 to -3 penalty (at storyguide's discretion) on rolls in situations based on luck rather than skill or talent, depending on how much luck is involved. It would be wise for him not to take part in games of chance."
   },
   "flaw.unnatural_magic": {
     "name": "Unnatural Magic",
@@ -1278,7 +1323,8 @@
   },
   "flaw.vengeful_powers": {
     "name": "Vengeful Powers",
-    "summary": "The character has one or more non-Infernal Powers in which the Infernal realm has taken a personal interest."
+    "summary": "The character has one or more non-Infernal Powers in which the Infernal realm has taken a personal interest.",
+    "description": "The character has one or more non-Infernal Powers in which the Infernal realm has taken a personal interest. Whenever she uses one of these Powers in a way that is not sinful, it has an unpleasant side effect. This is always harmful, and often recognizably Infernal, and the severity varies depending upon the Power's application, so that extremely good works cause even more terrible evil. The effect is not obviously linked to the use of the Power, and in fact it may seem completely unrelated. It always manifests at about the same time as the use of the Power, however, though the character may not be aware of this. Some potential side effects might include: illness and disease among local people or animals; open sores and other painful wounds; distrust and a bad reputation among strangers; Infernal auras in the surrounding area; negative or sinful Personality Traits; additional botch dice on a particular type of roll; demons suddenly causing havoc in the region.\n\nThe forces that wreak vengeance cannot cross Magic Resistance or effects like Aegis of the Hearth that keep demons away, yet they can still sense when these Powers are put to good use, and they retaliate however they can.\n\nThe character may not know about these circumstances, but once she realizes the relationship between her Power and these side effects, they usually seem much worse, as paranoia and guilt may cause her to worry about the potential harm her Powers may cause. Hell hopes that this makes using the Power for good seem too great a sacrifice.\n\nVengeful Powers may be taken as a Hermetic Flaw, as applicable to Hermetic magic. In that case, the effect triggers whenever the character performs magic that is without sin. It is more commonly associated with Supernatural Abilities, however."
   },
   "flaw.viaticarus": {
     "name": "Viaticarus",
@@ -1322,7 +1368,8 @@
   },
   "flaw.warped_senses": {
     "name": "Warped Senses",
-    "summary": "The character has become overly sensitive to environmental conditions, which affects his behavior in certain uncommon circumstances."
+    "summary": "The character has become overly sensitive to environmental conditions, which affects his behavior in certain uncommon circumstances.",
+    "description": "The character has become overly sensitive to environmental conditions, which affects his behavior in certain uncommon circumstances. Some examples include:\n\nSensitive (Sense): One of your senses is so sensitive that it is overwhelmed under circumstances that others find normal. If it is sight, normal daylight dazzles you. If it is hearing, sounds above normal speaking volume hurt your ears. If it is taste, only bland food is tolerable. If it is smell, strong odors, good or bad, are nauseating. You suffer a -2 penalty on all activities under relevant circumstances. (It is inadvisable to combine Sensitive Sight with Keen Vision, and Sensitive Hearing with Sharp Ears, and these are incompatible with Blind and Deaf, respectively.)\n\nWeak (Sense): One of your senses is so weak that it is useless under circumstances that others find normal. If it is sight, you can only see well in good illumination (e.g. broad daylight). If it is hearing, you can only hear sounds above normal speaking volume. If taste, only highly flavored food is palatable. If smell, you can only detect strong odors. You suffer a -2 penalty on all activities under relevant circumstances. (Weak Sight is incompatible with Sensitive Sight, Keen Vision, and Blind and you cannot take Weak Hearing with Sensitive Hearing, Sharp Ears, or Deaf.)\n\nSensitive to Cold: You function normally at temperatures considerably above the norm for your part of the world. You lose 1 Fatigue level for every hour you spend in an environment two steps or more below your accustomed conditions on the Environmental Temperatures chart. Your responses to heat are reduced in intensity by 2 (page 407).\n\nSensitive to Heat: You function normally at temperatures considerably below the norm for your part of the world. You lose 1 Fatigue level for every hour you spend in an environment two steps or more above your habituated conditions on the Environmental Temperatures chart. Your response to ice is reduced in intensity to 0 (page 407).\n\nThis is a common Flaw for characters who become Warped by a strong magic environment."
   },
   "flaw.waster_of_vis": {
     "name": "Waster of Vis",
@@ -1351,7 +1398,8 @@
   },
   "flaw.weak_personality": {
     "name": "Weak Personality",
-    "summary": "This character doesn't feel strongly for or against anything and lacks the unique traits most people have to make them really stand out."
+    "summary": "This character doesn't feel strongly for or against anything and lacks the unique traits most people have to make them really stand out.",
+    "description": "This character doesn't feel strongly for or against anything and lacks the unique traits most people have to make them really stand out. Consequently, all Personality Traits must be between +1 and -1. When making personality rolls, treat any roll above 6 as merely 6. The character may have no other Personality Flaws or Virtues or Flaws that grant Personality Traits. Depending on the personality of the observer, he may seem a complete pushover with no opinion of his own, insensitive because he rarely shows strong emotion, or simply lacking in initiative to those seeking leadership and guidance. These elements result in a -1 or worse (at the storyguide's discretion) modifier in most social situations for obviously being a cold fish. Finally, he will never be known for his great loyalty or pious nature, and will have a hard time winning respect or getting promoted. His lack of enthusiasm for the Church in particular might be viewed as a lack of faith. On the plus side, he might occasionally be seen in a positive light since he never disagrees strongly."
   },
   "flaw.weak_scholar": {
     "name": "Weak Scholar",

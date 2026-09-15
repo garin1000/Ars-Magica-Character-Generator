@@ -53,6 +53,9 @@ struct FoundSourceRef {
     /// (most catalogue entries have one; falls back to a positional label).
     entry_label: String,
     source_file: String,
+    /// The `anchor` recorded beside the line range, when the entry has been
+    /// swept. See `types.rs::SourceRef::anchor`.
+    anchor: Option<String>,
     start: i64,
     end: i64,
     /// The `type` of every entry in the sibling `effects` array on the same
@@ -101,6 +104,10 @@ fn collect_source_refs(core_file: &str, value: &Value, out: &mut Vec<FoundSource
                     core_file: core_file.to_string(),
                     entry_label,
                     source_file: file.to_string(),
+                    anchor: source
+                        .get("anchor")
+                        .and_then(Value::as_str)
+                        .map(str::to_string),
                     start,
                     end,
                     effect_kinds,
@@ -128,6 +135,7 @@ fn validate_source_ref(source_dir: &Path, found: &FoundSourceRef, errors: &mut V
         core_file,
         entry_label,
         source_file,
+        anchor: _,
         start,
         end,
         effect_kinds: _,
@@ -262,6 +270,374 @@ fn every_cited_source_file_exists_under_rules_source_en() {
         missing.is_empty(),
         "rules/core/*.json cites source file(s) not present under rules/source/en/: {missing:?}"
     );
+}
+
+// --- The heading-anchor guard ----------------------------------------------
+
+/// The per-language sidecar that carries a non-English item's heading anchor,
+/// found under `rules/i18n/<lang>/`. English anchors key `rules/core/`'s
+/// `source` block instead, because `rules/core/` *is* the canonical-ID language
+/// (`CLAUDE.md` → "Rules provenance").
+///
+/// Shape: `id -> { "anchor": <slug>, "file": <basename under rules/source/<lang>/> }`.
+/// Deliberately a **sidecar** rather than a field on the localized entries in
+/// `virtues_flaws.json`:
+///
+/// - those entries deserialize into `ruleset.rs::I18nEntry`, whose serialized
+///   shape is a stable IPC contract the frontend binds to, and an extraction
+///   coordinate has no business crossing that boundary into every tooltip;
+/// - it is provenance, not rules text, and `CLAUDE.md` → "Strict separation of
+///   data kinds" keeps those apart;
+/// - `ruleset_io.rs::read_i18n_sources` reads a fixed ten-file list, so the
+///   sidecar is not loaded at runtime at all — which is correct: it exists for
+///   the re-sync tooling and for this guard.
+///
+/// It records **no line range**, on purpose. German line numbers are already
+/// derivable from the English ones by the line-parity invariant
+/// (`CLAUDE.md` → "Rules provenance"), and
+/// [`german_anchors_sit_on_the_same_line_as_their_english_counterparts`] is what
+/// now checks that. Copying the numbers here would create a second coordinate to
+/// rot.
+const ANCHOR_SIDECAR: &str = "source_anchors.json";
+
+/// The language `rules/core/` citations resolve against.
+const CANONICAL_LANGUAGE: &str = "en";
+
+/// Slugifies a Markdown heading the way the generator that produced these files
+/// does — the algorithm is not guessed: the sources carry their own generated
+/// cross-links (`[Anchored to the (Land)](#anchored-to-the-land)`,
+/// `[Seite 15](#haus-mercere)`, `(#hitze--und-ätzungstabelle)`), and this
+/// reproduces every one of them.
+///
+/// Lowercase; drop everything that is not alphanumeric, `-`, `_` or a space;
+/// spaces become `-`. Unicode-aware, so `Ähnliche Zauber` becomes
+/// `ähnliche-zauber` rather than losing its umlaut.
+fn slugify_heading(text: &str) -> String {
+    text.to_lowercase()
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_' || *c == ' ')
+        .map(|c| if c == ' ' { '-' } else { c })
+        .collect()
+}
+
+/// Every Markdown heading in `text`, as `anchor -> 1-based line number`,
+/// including the generator's `-1`/`-2` disambiguation for repeated headings
+/// (which is what `#die-gabe-2` and `#abilities-1` in these files are).
+fn heading_anchors(text: &str) -> BTreeMap<String, usize> {
+    let mut seen: BTreeMap<String, usize> = BTreeMap::new();
+    let mut anchors = BTreeMap::new();
+
+    for (index, line) in text.lines().enumerate() {
+        let trimmed = line.trim_start();
+        // A blockquoted heading (`> #### Environmental Temperatures`) is a
+        // sidebar, and the generator anchors it like any other heading.
+        let trimmed = trimmed.strip_prefix("> ").unwrap_or(trimmed).trim_start();
+        if !trimmed.starts_with('#') {
+            continue;
+        }
+        let title = trimmed.trim_start_matches('#').trim();
+        if title.is_empty() {
+            continue;
+        }
+        let base = slugify_heading(title);
+        let count = seen.entry(base.clone()).or_insert(0);
+        let anchor = if *count == 0 {
+            base.clone()
+        } else {
+            format!("{base}-{count}")
+        };
+        *count += 1;
+        anchors.entry(anchor).or_insert(index + 1);
+    }
+
+    anchors
+}
+
+/// `rules/source/<lang>/<file>` -> its heading anchors, read once per file.
+fn anchors_for(
+    cache: &mut BTreeMap<(String, String), BTreeMap<String, usize>>,
+    lang: &str,
+    file: &str,
+) -> BTreeMap<String, usize> {
+    cache
+        .entry((lang.to_string(), file.to_string()))
+        .or_insert_with(|| {
+            let path = rules_dir().join("source").join(lang).join(file);
+            match fs::read_to_string(&path) {
+                Ok(text) => heading_anchors(&text),
+                Err(_) => BTreeMap::new(),
+            }
+        })
+        .clone()
+}
+
+/// Every `rules/i18n/<lang>/source_anchors.json`, as
+/// `lang -> id -> (file, anchor)`. The canonical language is skipped: its
+/// anchors live in `rules/core/`.
+fn localized_anchors() -> BTreeMap<String, BTreeMap<String, (String, String)>> {
+    let i18n_dir = rules_dir().join("i18n");
+    let mut by_language = BTreeMap::new();
+
+    for entry in fs::read_dir(&i18n_dir).unwrap_or_else(|e| panic!("rules/i18n is readable: {e}")) {
+        let lang_path = entry.expect("a readable rules/i18n child").path();
+        if !lang_path.is_dir() {
+            continue;
+        }
+        let lang = lang_path
+            .file_name()
+            .expect("a language directory has a name")
+            .to_string_lossy()
+            .to_string();
+        if lang == CANONICAL_LANGUAGE {
+            continue;
+        }
+
+        let path = lang_path.join(ANCHOR_SIDECAR);
+        if !path.is_file() {
+            continue;
+        }
+        let text = fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("{} is readable: {e}", path.display()));
+        let parsed: BTreeMap<String, Value> = serde_json::from_str(&text)
+            .unwrap_or_else(|e| panic!("{} is valid JSON: {e}", path.display()));
+
+        let rows = parsed
+            .into_iter()
+            .map(|(id, value)| {
+                let file = value["file"]
+                    .as_str()
+                    .unwrap_or_else(|| panic!("{}: \"{id}\" has a string file", path.display()))
+                    .to_string();
+                let anchor = value["anchor"]
+                    .as_str()
+                    .unwrap_or_else(|| panic!("{}: \"{id}\" has a string anchor", path.display()))
+                    .to_string();
+                (id, (file, anchor))
+            })
+            .collect();
+        by_language.insert(lang, rows);
+    }
+
+    by_language
+}
+
+/// The floor that stops the anchor guards passing vacuously. A count, not a
+/// total — `CLAUDE.md` → "Catalogue size is data, never code" forbids asserting
+/// exact catalogue sizes, and the sweep that records anchors is incremental, so
+/// this only ever needs raising.
+const MIN_RECORDED_ANCHORS: usize = 40;
+
+/// **Every recorded heading anchor resolves to a real heading, and that heading
+/// is inside the line range recorded beside it.**
+///
+/// This is the anchor-shaped sibling of `rulebook_citations.rs`, and the second
+/// half is what makes it worth more than a spell-check. `CLAUDE.md`'s citation
+/// guards can only prove a range lands on non-blank lines; the upstream re-sync
+/// `docs/rules-source-resync.md` describes will shift every range at once and
+/// leave that check green while hundreds of citations point at the wrong rule.
+/// Binding the anchor to the range means the two coordinates have to agree:
+/// after a re-sync, a shifted range no longer contains its own heading and this
+/// fails immediately, and the fix is mechanical — relocate the anchor, take its
+/// new line number.
+#[test]
+fn every_recorded_source_anchor_resolves_to_its_own_heading() {
+    let all_refs = all_source_refs();
+    let mut cache = BTreeMap::new();
+    let mut recorded = 0usize;
+    let mut errors = Vec::new();
+
+    for found in &all_refs {
+        let Some(anchor) = &found.anchor else {
+            continue;
+        };
+        recorded += 1;
+        let anchors = anchors_for(&mut cache, CANONICAL_LANGUAGE, &found.source_file);
+        match anchors.get(anchor) {
+            None => errors.push(format!(
+                "{}: \"{}\" records anchor \"#{anchor}\", but {} has no heading with that \
+                 anchor — the heading was renamed, or the anchor was mistyped",
+                found.core_file, found.entry_label, found.source_file
+            )),
+            Some(&line) => {
+                let line = line as i64;
+                if line < found.start || line > found.end {
+                    errors.push(format!(
+                        "{}: \"{}\" records anchor \"#{anchor}\", whose heading is at \
+                         {}:{line} — outside the cited range {}-{}. The two halves of this \
+                         citation disagree, so one of them is stale.",
+                        found.core_file,
+                        found.entry_label,
+                        found.source_file,
+                        found.start,
+                        found.end
+                    ));
+                }
+            }
+        }
+    }
+
+    assert!(
+        recorded >= MIN_RECORDED_ANCHORS,
+        "only {recorded} source citation(s) in rules/core/*.json record a heading anchor, below \
+         the floor of {MIN_RECORDED_ANCHORS} — so this guard is checking almost nothing. Either \
+         the sweep recording them regressed, or the floor is stale."
+    );
+
+    assert!(
+        errors.is_empty(),
+        "{} recorded heading anchor(s) in rules/core/*.json do not resolve:\n{}",
+        errors.len(),
+        errors.join("\n")
+    );
+}
+
+/// Every anchor in a `rules/i18n/<lang>/source_anchors.json` resolves to a real
+/// heading in that language's own source file.
+#[test]
+fn every_localized_source_anchor_resolves_to_a_heading() {
+    let by_language = localized_anchors();
+    let mut cache = BTreeMap::new();
+    let mut recorded = 0usize;
+    let mut errors = Vec::new();
+
+    for (lang, rows) in &by_language {
+        for (id, (file, anchor)) in rows {
+            recorded += 1;
+            let path = rules_dir().join("source").join(lang).join(file);
+            if !path.is_file() {
+                errors.push(format!(
+                    "{lang}/{ANCHOR_SIDECAR}: \"{id}\" names source file {file}, which does not \
+                     exist under rules/source/{lang}/"
+                ));
+                continue;
+            }
+            if !anchors_for(&mut cache, lang, file).contains_key(anchor) {
+                errors.push(format!(
+                    "{lang}/{ANCHOR_SIDECAR}: \"{id}\" records anchor \"#{anchor}\", but {file} \
+                     has no heading with that anchor"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        recorded >= MIN_RECORDED_ANCHORS,
+        "only {recorded} localized heading anchor(s) recorded across rules/i18n/*/{ANCHOR_SIDECAR}, \
+         below the floor of {MIN_RECORDED_ANCHORS} — this guard is checking almost nothing"
+    );
+
+    assert!(
+        errors.is_empty(),
+        "{} localized heading anchor(s) do not resolve:\n{}",
+        errors.len(),
+        errors.join("\n")
+    );
+}
+
+/// **The German line-parity invariant, tested for the first time.**
+///
+/// `CLAUDE.md` → "Rules provenance" declares that the German sources mirror the
+/// English line-by-line throughout, so a German line number identifies the same
+/// item as the English one — which is why `rules/core/` can carry a single line
+/// range and both locales' extractions can use it. `docs/rules-source-resync.md`
+/// records that nothing tested this, and that the invariant breaks silently if
+/// the two languages ever shift differently.
+///
+/// Anchors make it testable: for every item recording an anchor in both
+/// languages, the two headings must sit on the *same* line. That is the
+/// invariant stated exactly, item by item, over whatever subset has been swept.
+#[test]
+fn german_anchors_sit_on_the_same_line_as_their_english_counterparts() {
+    let english: BTreeMap<String, (String, Option<String>)> = all_source_refs()
+        .into_iter()
+        .map(|found| (found.entry_label, (found.source_file, found.anchor)))
+        .collect();
+    let by_language = localized_anchors();
+    let mut cache = BTreeMap::new();
+    let mut compared = 0usize;
+    let mut errors = Vec::new();
+
+    for (lang, rows) in &by_language {
+        for (id, (file, anchor)) in rows {
+            let Some((english_file, Some(english_anchor))) = english.get(id) else {
+                continue;
+            };
+            let english_line = anchors_for(&mut cache, CANONICAL_LANGUAGE, english_file)
+                .get(english_anchor)
+                .copied();
+            let localized_line = anchors_for(&mut cache, lang, file).get(anchor).copied();
+            let (Some(english_line), Some(localized_line)) = (english_line, localized_line) else {
+                // Unresolvable anchors are the other two tests' finding.
+                continue;
+            };
+            compared += 1;
+            if english_line != localized_line {
+                errors.push(format!(
+                    "\"{id}\": #{english_anchor} is at {english_file}:{english_line} but \
+                     #{anchor} is at {lang}/{file}:{localized_line} — the line-parity invariant \
+                     CLAUDE.md declares for the German sources does not hold here, so a line \
+                     number no longer identifies the same item in both languages"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        compared >= MIN_RECORDED_ANCHORS,
+        "only {compared} item(s) have an anchor in both languages, below the floor of \
+         {MIN_RECORDED_ANCHORS} — this guard is checking almost nothing"
+    );
+
+    assert!(
+        errors.is_empty(),
+        "{} item(s) break the German line-parity invariant:\n{}",
+        errors.len(),
+        errors.join("\n")
+    );
+}
+
+/// The anchor guards above are only as good as the slug algorithm they resolve
+/// with, and a resolver that is wrong in the same way the data is wrong would
+/// pass while checking nothing. These cases are taken from the sources' **own
+/// generated cross-links**, so they are the generator's output rather than my
+/// reading of it.
+#[test]
+fn the_heading_slug_matches_the_sources_own_generated_links() {
+    // `[Anchored to the (Land)](#anchored-to-the-land)`, ArMDE:5568 — brackets
+    // and parentheses are dropped, not transliterated.
+    assert_eq!(
+        slugify_heading("Anchored to the (Land)"),
+        "anchored-to-the-land"
+    );
+    assert_eq!(
+        slugify_heading("Fish Out of Water (Terrain)"),
+        "fish-out-of-water-terrain"
+    );
+    // German links keep their umlauts: `(#ähnliche-zauber)`,
+    // `(#hitze--und-ätzungstabelle)` — note the doubled hyphen, which survives
+    // because a hyphen already in the heading is kept and the space becomes a
+    // second one.
+    assert_eq!(slugify_heading("Ähnliche Zauber"), "ähnliche-zauber");
+    assert_eq!(
+        slugify_heading("Hitze- und Ätzungstabelle"),
+        "hitze--und-ätzungstabelle"
+    );
+    assert_eq!(slugify_heading("Haus Mercere"), "haus-mercere");
+
+    // Repeated headings take the generator's `-N` suffix, zero-based on the
+    // *second* occurrence: `(#die-gabe-2)` is the third "Die Gabe".
+    let anchors = heading_anchors("# Die Gabe\n\n## Die Gabe\n\n#### Die Gabe\n");
+    assert_eq!(anchors.get("die-gabe"), Some(&1));
+    assert_eq!(anchors.get("die-gabe-1"), Some(&3));
+    assert_eq!(anchors.get("die-gabe-2"), Some(&5));
+
+    // A sidebar heading inside a blockquote is still a heading.
+    let sidebar = heading_anchors("> #### Environmental Temperatures\n");
+    assert_eq!(sidebar.get("environmental-temperatures"), Some(&1));
+
+    // Not headings: a hash inside prose, and a bare hash rule.
+    let prose = heading_anchors("the # sign\n#\n");
+    assert!(prose.is_empty(), "{prose:?}");
 }
 
 // --- The mechanic-vs-passage guard -----------------------------------------

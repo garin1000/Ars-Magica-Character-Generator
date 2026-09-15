@@ -4542,11 +4542,14 @@ classes:
   combat penalties and also doubles botch dice, and the encoded half is what decides
   the class.
 
-Counts over the shipped catalogue (structural, not asserted as exact totals in
-tests): **narrative 445**, **creation_effect 115**
+Counts over the shipped catalogue as of the 2026-09-15 Flaws sweep — a snapshot
+for orientation, **deliberately not asserted in any test** (`CLAUDE.md` →
+"Catalogue size is data, never code"): **narrative 370**,
+**uncomputed_rule 67**, **creation_effect 125**
 (36 wired via `effects` before 5a; 68 more wired in 5a-wire; **11 deferred** —
 see the 5a-wire section for the itemized deferrals),
-**in_play_effect 93** (all wired in 5b). Total 653.
+**in_play_effect 93** (all wired in 5b). Total 655. `narrative` will keep falling
+as later blocks are swept; the two classes trade one-for-one.
 
 ### Why the fourth class exists
 
@@ -4585,6 +4588,90 @@ botch-carrying entries that already had `effects` stayed `in_play_effect`):
 `flaw.jinxed` is worth noting as the one that states the *absence* of a botch
 change ("need not roll any extra botch dice"). That is still a rule — a
 clarification a player needs — so it classifies the same way.
+
+### The Flaws-block sweep (2026-09-15) — 49 further reclassifications
+
+The botch family above was one shape of dropped rule. The **signed-modifier**
+shape is far larger, and the core rulebook's whole Flaws block (ArMDE:5639-7113)
+was read entry by entry to clear it. 49 Flaws moved `narrative` →
+`uncomputed_rule`; each now carries the full cited passage as `description` in
+both shipped locales, so the rule the engine does not compute at least reaches
+the player:
+
+`flaw.anchored_to_the_land` (ArMDE:5667-5670), `flaw.arthritis`
+(ArMDE:5679-5682), `flaw.blatant_gift` (ArMDE:5711-5714),
+`flaw.blatant_magical_air` (ArMDE:5715-5718), `flaw.broken_vessel`
+(ArMDE:5753-5756), `flaw.brutal_artist` (ArMDE:5757-5760), `flaw.castratus`
+(ArMDE:5777-5780), `flaw.clumsy_magic` (ArMDE:5801-5804),
+`flaw.corrupted_abilities` (ArMDE:5847-5852), `flaw.craving_for_travel`
+(ArMDE:5869-5872), `flaw.devoted_parent` (ArMDE:5950-5953), `flaw.disfigured`
+(ArMDE:5980-5983), `flaw.environmental_sensitivity` (ArMDE:6024-6027),
+`flaw.fickle_nature` (ArMDE:6122-6125), `flaw.flashbacks` (ArMDE:6134-6141),
+`flaw.fury` (ArMDE:6194-6197), `flaw.gullible` (ArMDE:6222-6225),
+`flaw.hunchback` (ArMDE:6272-6275), `flaw.hunger_for_form_magic`
+(ArMDE:6276-6279), `flaw.inconstant_magic` (ArMDE:6298-6301),
+`flaw.independent_craftsman` (ArMDE:6302-6305), `flaw.indiscreet`
+(ArMDE:6306-6309), `flaw.inscribed_shadow` (ArMDE:6318-6321),
+`flaw.lingering_injury` (ArMDE:6350-6353), `flaw.lycanthrope`
+(ArMDE:6370-6377), `flaw.magic_addiction` (ArMDE:6378-6381),
+`flaw.manifest_sin` (ArMDE:6396-6407), `flaw.missing_ear` (ArMDE:6430-6433),
+`flaw.mute` (ArMDE:6472-6475), `flaw.necessary_realm_aura_for_ability`
+(ArMDE:6480-6487), `flaw.night_terrors` (ArMDE:6488-6495), `flaw.nocturnal`
+(ArMDE:6504-6507), `flaw.offensive_to_beings` (ArMDE:6524-6533),
+`flaw.poor_concentration` (ArMDE:6602-6605), `flaw.primitive_equipment`
+(ArMDE:6630-6633), `flaw.raised_in_the_gutter` (ArMDE:6650-6653),
+`flaw.repellent` (ArMDE:6679-6682), `flaw.rolling_stone` (ArMDE:6699-6702),
+`flaw.sleep_disorder` (ArMDE:6745-6750), `flaw.social_handicap`
+(ArMDE:6771-6774), `flaw.surgical_empiricus` (ArMDE:6811-6814),
+`flaw.susceptibility_to_sunlight` (ArMDE:6827-6830), `flaw.unbearable_to_beings`
+(ArMDE:6891-6898), `flaw.uncertain_faith` (ArMDE:6899-6906),
+`flaw.uninspirational` (ArMDE:6919-6922), `flaw.unlucky` (ArMDE:6927-6930),
+`flaw.vengeful_powers` (ArMDE:6959-6976), `flaw.warped_senses`
+(ArMDE:7027-7051), `flaw.weak_personality` (ArMDE:7076-7079).
+
+`flaw.missing_ear` is the one that gained no `description`: its passage is a
+single sentence that its `summary` already carries in full, so a `description`
+would be a byte-identical duplicate. Same reading as
+`flaw.susceptibility_to_divine_power` in the previous pass.
+
+**Four of these are not simple modifiers, and flattening them would misstate the
+rule.** Worth naming because the class is called "uncomputed *rule*", not
+"uncomputed penalty":
+
+- `flaw.weak_personality` (ArMDE:7078) is a **cap plus a roll ceiling**: "all
+  Personality Traits must be between +1 and -1", and "treat any roll above 6 as
+  merely 6". Only the trailing "-1 or worse … modifier" is a penalty at all.
+- `flaw.uninspirational` (ArMDE:6921) is likewise a **cap on two
+  Characteristics** — "His Presence and Communication may not be greater than 0"
+  — beside its -3.
+- `flaw.fickle_nature` (ArMDE:6124) is a **creation-time grant**, not a penalty:
+  "Select a Personality Trait at +4, and its opposite at +4."
+- `flaw.lingering_injury` (ArMDE:6352) is a **formula**: the penalty is
+  multiplied by `1 + Decrepitude Score`, so it is not a fixed number at all.
+
+All four are `uncomputed_rule` rather than `creation_effect`/`in_play_effect`
+because the engine has no representation for any of them: Personality Traits are
+free-form user entries on `types.rs::Entity::personality_traits` with no
+granting effect and no cap validation, and no `Effect` variant multiplies by
+Decrepitude. Inventing one is what `CLAUDE.md` → "Rules provenance" forbids.
+These are the four best candidates if a later slice wants to *compute*
+something here — see `docs/open-todos.md`.
+
+**Two entries in the block trip the guard's screen and are correctly
+`narrative`:** `flaw.overconfident_major` and `flaw.overconfident_minor`
+(ArMDE:6562-6565). Their passage contains the word "botch", but as a bare verb
+inside a roleplaying instruction ("If you actually botch, you come up with some
+rationalization"); it states nothing about botch dice and no number. They are
+recorded with their reading in
+`tests/uncomputed_clauses.rs::NO_RULE_DESPITE_TOKEN`, and
+`exempted_entries_still_trip_the_screen` stops that row outliving its reason.
+
+With the block clean, the third assertion of the uncomputed-clause guard —
+*"a `narrative` entry whose cited passage carries a mechanical token has dropped
+a rule"* — **landed green**, scoped to this block via
+`tests/uncomputed_clauses.rs::SWEPT_BLOCKS`, mirroring the incremental-roots
+pattern `rulebook_citations.rs` uses. The Virtues block (ArMDE:3360-5282) is not
+swept and is deliberately outside the scope.
 
 ### Roadmap corrections applied here
 

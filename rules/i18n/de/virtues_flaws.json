@@ -48,7 +48,8 @@
   },
   "flaw.anchored_to_the_land": {
     "name": "Verwurzelt im {land}",
-    "summary": "Der Charakter leidet unter Einsamkeit und Niedergeschlagenheit, wenn er eine bestimmte Art von Umgebung weder sehen noch hören kann."
+    "summary": "Der Charakter leidet unter Einsamkeit und Niedergeschlagenheit, wenn er eine bestimmte Art von Umgebung weder sehen noch hören kann.",
+    "description": "Der Charakter leidet unter Einsamkeit und Niedergeschlagenheit, wenn er eine bestimmte Art von Umgebung weder sehen noch hören kann. In Spieltermini hat der Charakter eine -3-Strafe auf alle Würfe, wenn er durch eine andere Art von Umgebung reist (es wird angenommen, dass der Charakter, sobald er Zeit hat, sich von der Reise zu erholen, eine Erinnerung an seine natürliche Umgebung findet, die ihm Erholung verschafft). Ein Charakter, der zum Beispiel am Meer verwurzelt ist, würde die Strafe erleiden, wenn er über Land reist, kann sich aber nach dem Eintreffen leicht trösten – vielleicht durch das Meeresrauschen in einer Muschel."
   },
   "flaw.animal_companion": {
     "name": "Tierbegleiter",
@@ -60,7 +61,8 @@
   },
   "flaw.arthritis": {
     "name": "Arthritis",
-    "summary": "Deine Gelenke sind steif und oft schmerzhaft, was fast jede anhaltende Bewegung beschwerlich macht."
+    "summary": "Deine Gelenke sind steif und oft schmerzhaft, was fast jede anhaltende Bewegung beschwerlich macht.",
+    "description": "Deine Gelenke sind steif und oft schmerzhaft, was fast jede anhaltende Bewegung beschwerlich macht. Du hast eine -3-Strafe auf Würfe, die wiederholende, über längere Zeit ausgedehnte Bewegungen beinhalten. Gelegentlich ist der Schmerz so stark, dass du ernsthaft beeinträchtigt bist. Bei jedem Bewegungs- oder Kampfpatzer kann eines deiner Gelenke „einrasten\", wodurch die betroffene Gliedmaße bis zu einer Ruhepause von ein bis zwei Tagen praktisch unbrauchbar wird (-6 auf alle Würfe, die sie einbeziehen)."
   },
   "flaw.avaricious_major": {
     "name": "Habgierig (Groß)",
@@ -96,11 +98,13 @@
   },
   "flaw.blatant_gift": {
     "name": "Auffällige Gabe",
-    "summary": "Deine Gabe ist extrem verstörend für andere."
+    "summary": "Deine Gabe ist extrem verstörend für andere.",
+    "description": "Menschen merken sofort, dass etwas Seltsames an dir ist, auch wenn sie nicht wissen, dass du ein Magus bist. Tiere werden von deiner Gegenwart außerordentlich beunruhigt, verängstigt und möglicherweise aufgebracht. Du erleidest eine -6-Strafe auf alle Interaktionswürfe mit normalen Menschen und Tieren; weitere Ausführungen zu den Auswirkungen dieses Fehlers findest du auf Seite 203."
   },
   "flaw.blatant_magical_air": {
     "name": "Auffällige Magische Ausstrahlung",
-    "summary": "Nur Charaktere mit einer Magischen Aura oder der Gabe dürfen diesen Fehler nehmen."
+    "summary": "Nur Charaktere mit einer Magischen Aura oder der Gabe dürfen diesen Fehler nehmen.",
+    "description": "Nur Charaktere mit einer Magischen Aura oder der Gabe dürfen diesen Fehler nehmen. Der Charakter ist anderen gegenüber so beunruhigend, dass sie seine Gegenwart kaum ertragen können. Der Charakter erleidet eine -6-Strafe auf soziale Handlungen und wird von der weltlichen Bevölkerung sofort gehasst und gefürchtet. Dieser Effekt entspricht der Auffälligen Gabe; ein Charakter kann nicht beide Fehler besitzen."
   },
   "flaw.blind": {
     "name": "Blind",
@@ -129,11 +133,13 @@
   },
   "flaw.broken_vessel": {
     "name": "Zerbrochenes Gefäß",
-    "summary": "Der Charakter ist sich stets bewusst, dass seine übernatürlichen Kräfte möglicherweise nur vorübergehend sind."
+    "summary": "Der Charakter ist sich stets bewusst, dass seine übernatürlichen Kräfte möglicherweise nur vorübergehend sind.",
+    "description": "Der Charakter ist sich stets bewusst, dass seine übernatürlichen Kräfte möglicherweise nur vorübergehend sind. Fehlschläge beim Einsetzen dieser Fähigkeiten stellen das Schwinden der Kraft dar, die sie trägt. Wird bei einem Stresswurf (nicht Einfachwurf) für eine seiner Übernatürlichen Fertigkeiten, Mächte oder beim Wirken von Zaubern eine Null gewürfelt, verliert er 5 Erfahrungspunkte aus dieser Fertigkeit oder einer bei der Macht oder dem Zauber beteiligten Kunst. Folgt auf den Wurf ein Patzer, verliert der Charakter automatisch so viele Erfahrungspunkte, dass sein Wert in der betroffenen Kunst oder Fertigkeit um eine volle Stufe sinkt (oder 5 Erfahrungspunkte, je nachdem, was mehr ist). Charaktere dürfen diesen Fehler nur nehmen, wenn sie mindestens eine Übernatürliche Fertigkeit oder Kunst besitzen, die normalerweise durch Erfahrungspunkte gesteigert wird."
   },
   "flaw.brutal_artist": {
     "name": "Brutaler Künstler",
-    "summary": "Dieser Fehler steht nur Magi des Hauses Jerbiton zur Verfügung."
+    "summary": "Dieser Fehler steht nur Magi des Hauses Jerbiton zur Verfügung.",
+    "description": "Dieser Fehler steht nur Magi des Hauses Jerbiton zur Verfügung. Der Magus erschafft und genießt Kunst, die seinen Hausgenossen zufolge hässlich ist. Er erleidet eine -3-Strafe auf soziale Würfe mit Jerbiton-Magi und kann innerhalb des Hauses keine positive Reputation entwickeln, da sein Geist offensichtlich gestört ist. Das schränkt seine Beteiligung an den Ligen ein (siehe Häuser des Hermes: Gemeinschaften, Seite 53). Im Laufe der Zeit könnte der Charakter seine Sodales davon überzeugen, dass sein Werk nicht hässlich ist, doch das erfordert Geschichten, ähnlich wie das Ablegen eines anderen Fehlers."
   },
   "flaw.busybody": {
     "name": "Klatschbase",
@@ -155,7 +161,8 @@
   },
   "flaw.castratus": {
     "name": "Kastrat",
-    "summary": "Du wurdest vor der Pubertät kastriert, was dich bartlos und im Vergleich zu den meisten Männern etwas feminin wirken lässt."
+    "summary": "Du wurdest vor der Pubertät kastriert, was dich bartlos und im Vergleich zu den meisten Männern etwas feminin wirken lässt.",
+    "description": "Du wurdest vor der Pubertät kastriert, was dich bartlos und im Vergleich zu den meisten Männern etwas feminin wirken lässt. Soziale Würfe mit Charakteren aus der lateinischen Kultur erleiden eine -3-Strafe. Nach byzantinischem Recht darfst du nicht heiraten, kannst aber Kinder adoptieren. In der byzantinischen Kultur war dies möglicherweise ein kluger Karriereschachzug deiner Vormünder, da Eunuchen Machtpositionen erlangen können. Anderswo war es wahrscheinlich die Folge eines Unfalls oder Übergriffs. Dieser Fehler steht nur Charakteren zur Verfügung, die mit Hoden geboren wurden."
   },
   "flaw.ceremonial_spontaneous_magic": {
     "name": "Zeremonielle Spontane Magie",
@@ -180,7 +187,8 @@
   },
   "flaw.clumsy_magic": {
     "name": "Plumpe Magie",
-    "summary": "Du hast Schwierigkeiten, deine Zauber genau zu zielen."
+    "summary": "Du hast Schwierigkeiten, deine Zauber genau zu zielen.",
+    "description": "Du hast Schwierigkeiten, deine Zauber genau zu zielen. Jeder Zielwurf ist anfällig für katastrophales Scheitern: Ein Zielwurf von 0 ist automatisch ein Patzer. (Zielwürfe gelten nicht als mystische Würfe für die Zwecke des Erlangens von Verzerrungspunkten.) Du erhältst eine -3-Strafe auf alle Würfe, die Finesse einbeziehen."
   },
   "flaw.companion_animal": {
     "name": "Begleittier",
@@ -220,7 +228,8 @@
   },
   "flaw.corrupted_abilities": {
     "name": "Verderbte Fertigkeiten",
-    "summary": "Eine oder mehrere der Fertigkeiten des Charakters wurden ihr von einem Dämon beigebracht oder stammen aus einer anderen verderbten Quelle."
+    "summary": "Eine oder mehrere der Fertigkeiten des Charakters wurden ihr von einem Dämon beigebracht oder stammen aus einer anderen verderbten Quelle.",
+    "description": "Eine oder mehrere der Fertigkeiten des Charakters wurden ihr von einem Dämon beigebracht oder stammen aus einer anderen verderbten Quelle. Die Verwendung einer verderbten Fertigkeit für eine selbstsüchtige oder sündige Handlung erhält einen +3-Bonus auf den Wurf. Gelingt der Wurf durch diesen Bonus (d. h. er wäre ohne ihn misslungen), gewinnt der Charakter sofort 5 Erfahrungspunkte in dieser Fertigkeit. Jedoch erhalten Verwendungen der Fertigkeit, die neutral oder selbstlos sind, eine -3-Strafe, und misslingt der Wurf durch diese Strafe, verliert der Charakter 5 Erfahrungspunkte in der Fertigkeit.\n\nJede Verwendung einer verderbten Fertigkeit ist ein unheiliger Akt, der von Göttlichen Mächten wahrgenommen werden kann. Du darfst diesen Fehler nur einmal nehmen, kannst jedoch wählen, dass er mehrere Fertigkeiten betrifft."
   },
   "flaw.corrupted_arts": {
     "name": "Verderbte Künste",
@@ -236,7 +245,8 @@
   },
   "flaw.craving_for_travel": {
     "name": "Reiselust",
-    "summary": "Der Charakter leidet unter Einsamkeit, Langeweile und Niedergeschlagenheit, wenn er sich nicht neuen Erfahrungen aussetzt."
+    "summary": "Der Charakter leidet unter Einsamkeit, Langeweile und Niedergeschlagenheit, wenn er sich nicht neuen Erfahrungen aussetzt.",
+    "description": "Der Charakter leidet unter Einsamkeit, Langeweile und Niedergeschlagenheit, wenn er sich nicht neuen Erfahrungen aussetzt. Er kann die Langeweile eine Weile abwehren, aber wenn er länger als ein Quartal an einem Ort bleibt, erleidet er eine -1-Strafe auf alle Würfe und Summen, bis er einen Szenenwechsel erlebt. Diese Strafe steigt nach einem Jahr der Langeweile auf -3. Dieser Charakter ist wahrscheinlich der Erste, der sich für eine Mission jenseits der Konventtore freiwillig meldet, und verbringt möglicherweise sogar einen Teil jeden Jahres an einem anderen Ort, etwa dem nahegelegenen Wald. Dieser Fehler mag den Charakter auf den ersten Blick ungeeignet für das Leben in einem Konvent erscheinen lassen, daher solltest du entscheiden, was ihn am Konvent dazu bringt, immer wieder zurückzukehren. Vielleicht ist es die Liebe seines Lebens, die Kameradschaft, oder vielleicht einfach das Gefühl, hier hineinzupassen."
   },
   "flaw.creative_block": {
     "name": "Schaffensblockade",
@@ -314,7 +324,8 @@
   },
   "flaw.devoted_parent": {
     "name": "Hingebungsvolles Elternteil/Kind",
-    "summary": "Der Charakter ist einem Elternteil oder Kind außerordentlich zugetan."
+    "summary": "Der Charakter ist einem Elternteil oder Kind außerordentlich zugetan.",
+    "description": "Der Charakter ist einem Elternteil oder Kind außerordentlich zugetan. Wohin er auch geht, folgt die andere Person. Eine Trennung von mehr als einem Tag verursacht Angst und gibt -1 auf alle Würfe infolge des Stresses."
   },
   "flaw.dhimmi": {
     "name": "Dhimmi",
@@ -338,7 +349,8 @@
   },
   "flaw.disfigured": {
     "name": "Entstellt",
-    "summary": "Eine sichtbare Entstellung macht dich hässlich und leicht erkennbar."
+    "summary": "Eine sichtbare Entstellung macht dich hässlich und leicht erkennbar.",
+    "description": "Eine sichtbare Entstellung macht dich hässlich und leicht erkennbar. Präsenz-Würfe, bei denen es um gutes Aussehen und das Gewinnen des Respekts der meisten Menschen geht, erfolgen mit -3. Du hast wahrscheinlich einen grausamen Spitznamen, der auf dein unglückliches Äußeres anspielt. Du könntest eine große, sichtbare Brandnarbe haben, oder ein vergrößertes und entstelltes Auge (einen „bösen Blick\"), oder sogar Albinismus aufweisen."
   },
   "flaw.disjointed_magic": {
     "name": "Zusammenhanglose Magie",
@@ -394,7 +406,8 @@
   },
   "flaw.environmental_sensitivity": {
     "name": "Umweltempfindlichkeit",
-    "summary": "Der Charakter reagiert ungewöhnlich empfindlich auf ein seltenes Umweltmerkmal, wie schlechte Luft, Salzwasser oder extreme Temperaturen."
+    "summary": "Der Charakter reagiert ungewöhnlich empfindlich auf ein seltenes Umweltmerkmal, wie schlechte Luft, Salzwasser oder extreme Temperaturen.",
+    "description": "Der Charakter reagiert ungewöhnlich empfindlich auf ein seltenes Umweltmerkmal, wie schlechte Luft, Salzwasser oder extreme Temperaturen. Immer wenn der Charakter diesen Bedingungen ausgesetzt ist, hat er -3 auf seine Ausdauer für alle Erschöpfungsproben (Seite 406)."
   },
   "flaw.evil_destiny": {
     "name": "Böses Schicksal",
@@ -475,7 +488,8 @@
   },
   "flaw.fickle_nature": {
     "name": "Launenhaftes Wesen",
-    "summary": "Der Charakter schwankt zwischen zwei diametral entgegengesetzten Verhaltensweisen."
+    "summary": "Der Charakter schwankt zwischen zwei diametral entgegengesetzten Verhaltensweisen.",
+    "description": "Der Charakter schwankt zwischen zwei diametral entgegengesetzten Verhaltensweisen. Es gibt keinen Mittelweg, der Charakter zeigt daher immer entweder die Züge der einen oder der anderen Verhaltensweise. Wähle eine Persönlichkeitseigenschaft mit +4 und ihr Gegenteil mit +4. Typische Persönlichkeitseigenschaften sind: Fröhlich und Traurig, Energisch und Faul, Selbstbewusst und Schüchtern oder Stolz und Demütig."
   },
   "flaw.fish_out_of_water_terrain": {
     "name": "Fremd im {terrain}",
@@ -484,7 +498,8 @@
   },
   "flaw.flashbacks": {
     "name": "Rückblenden",
-    "summary": "Wenn der Charakter in einen Kampf oder eine ähnlich gewalttätige und angespannte Situation verwickelt wird, könnte der Stress eine Rückblende auf die Schrecken vergangener Schlachten auslösen, durch die dieser Charakter seelische Narben davongetragen hat."
+    "summary": "Wenn der Charakter in einen Kampf oder eine ähnlich gewalttätige und angespannte Situation verwickelt wird, könnte der Stress eine Rückblende auf die Schrecken vergangener Schlachten auslösen, durch die dieser Charakter seelische Narben davongetragen hat.",
+    "description": "Wenn der Charakter in einen Kampf oder eine ähnlich gewalttätige und angespannte Situation verwickelt wird, könnte der Stress eine Rückblende auf die Schrecken vergangener Schlachten auslösen, durch die dieser Charakter seelische Narben davongetragen hat. Die Halluzinationen erscheinen so real, dass es schwer fällt, nicht auf sie zu reagieren. Wenn ein für Rückblenden geeignetes Ereignis eintritt, würfle einen Stresswürfel gegen einen Schwierigkeitsgrad von 9. Bei einem Misserfolg gerät der Charakter in Panik und verfällt in seine vergangenen Albträume. Nach dem Ermessen des Spielleiters könnten Abzüge von -1 bis -5 gelten, für Dinge wie eine Feldschlacht, Feuer oder stampedende Tiere. Addiere außerdem relevante Persönlichkeitseigenschaften oder subtrahiere sie, je nachdem ob sie die Auswirkungen dieses Fehlers mildern oder verschlimmern könnten.\n\nBeachte, dass positive Eigenschaften wie loyal, zuverlässig, gesetzestreue oder ruhig dabei helfen sollten, diese Afflktion zu vermeiden. Ebenso subtrahieren negative Eigenschaften wie egoistisch, wütend oder verdorben vom Wurf und machen es wahrscheinlicher, dass er nachgibt. Oft verletzen, beschämen oder beleidigen seine Handlungen Kameraden, Arbeitgeber oder andere wichtige Personen und können soziale Folgen haben. Bei einem Patzer gerät er in wirkliche Schwierigkeiten – es könnte dazu führen, dass jemand schwer verletzt oder getötet wird, dass Wertvolles zerstört wird oder dass er in einem kritischen Moment seine Pflicht versäumt.\n\nFür Magi sollte dieser Fehler keine Rückblenden auf Zwielicht-Episoden, Zauberpatzer oder Laborkatastrophen beinhalten. Da die meisten dieser Situationen durch einen Abzug auf den Rest der Szene nicht schlimmer werden, reicht das nicht als Fehler aus. Magi können jedoch durch Kämpfe, Hausbrände oder Höhleneinstürze genauso betroffen sein wie andere Charaktertypen."
   },
   "flaw.flawed_parma_magica": {
     "name": "Fehlerhafte Parma Magica",
@@ -520,7 +535,8 @@
   },
   "flaw.fury": {
     "name": "Raserei",
-    "summary": "Ein jähzorniges Temperament überwältigt dich bisweilen und versetzt dich in eine zerstörerische, unkontrollierbare Wut."
+    "summary": "Ein jähzorniges Temperament überwältigt dich bisweilen und versetzt dich in eine zerstörerische, unkontrollierbare Wut.",
+    "description": "Ein jähzorniges Temperament überwältigt dich bisweilen und versetzt dich in eine zerstörerische, unkontrollierbare Wut. Wahrscheinlich wirst du durch eine bestimmte Art von Ereignis provoziert, etwa durch Beleidigung, Verletzung oder wenn du hörst, wie der Orden des Hermes verächtlich gemacht wird. Würfle mit einem Stresswürfel 9+, um ein Ausrasten zu vermeiden, wenn ein solches Ereignis eintritt; bei einem Misserfolg hast du eine weitere Möglichkeit, dich zu beruhigen, indem du in jeder Runde erneut würfelst. Bei einem Patzer versuchst du, alle um dich herum zu töten. Im Zustand der Raserei erhältst du +3 auf Schaden, aber -1 auf alle anderen Werte und Würfe."
   },
   "flaw.gabai": {
     "name": "Gabai",
@@ -560,7 +576,8 @@
   },
   "flaw.gullible": {
     "name": "Leichtgläubig",
-    "summary": "Von denen wird ständig einer geboren – und das ist dieser Charakter!"
+    "summary": "Von denen wird ständig einer geboren – und das ist dieser Charakter!",
+    "description": "Von denen wird ständig einer geboren – und das ist dieser Charakter! Er ist ein leichtes Opfer für Täuschungen, Geschichten und scherzhaft erzählte Lügen. Menschen, die ihn anlügen, erhalten einen Bonus von +1 bis +3 auf ihre Täuschungswürfe. Je nach seiner Klugheit und Scharfsinnigkeit könnte er nicht auf offensichtliche Lügen hereinfallen, auf Dinge, die evident oder allgemein bekannt sind. Wahrscheinlich fällt er aber auf Lügen herein, die auch nur entfernt plausibel sind, und wenn er keine Ahnung hat, ob etwas wahr ist oder nicht, glaubt er es so gut wie mit Sicherheit. Das könnte zum Beispiel die Frage sein, ob unter der Brücke unruhige Feen hausen. Wenn du wirklich möchtest, dass der Charakter etwas nicht glaubt, mache einen stressbasierten Intelligenz + Menschenkenntnis-Wurf gegen einen Schwierigkeitsgrad, der dem Kommunikation + Täuschung-Wurf der lügenden Person entspricht. Empfohlene Modifikatoren für den Schwierigkeitsgrad sind +0 für offensichtliche Lügen (solche, denen jemand ohne diesen Fehler sicher nicht glauben würde), +6 für abstruse Geschichten und +9 für Dinge, die wahr sein könnten, oder Lügen, die von einer Autoritätsperson oder jemandem mit Sachverstand auf dem betreffenden Gebiet erzählt werden."
   },
   "flaw.hallucinations": {
     "name": "Halluzinationen",
@@ -613,11 +630,13 @@
   },
   "flaw.hunchback": {
     "name": "Bucklig",
-    "summary": "Du hast einen missgebildeten Körper, der dir ein groteskes Äußeres verleiht und deine Bewegungen behindert."
+    "summary": "Du hast einen missgebildeten Körper, der dir ein groteskes Äußeres verleiht und deine Bewegungen behindert.",
+    "description": "Du hast einen missgebildeten Körper, der dir ein groteskes Äußeres verleiht und deine Bewegungen behindert. Du erhältst -3 auf alle Würfe, die Wendigkeit und Gleichgewicht erfordern. Kommunikationswürfe, die auf ein gutes Aussehen angewiesen sind, erhalten -3."
   },
   "flaw.hunger_for_form_magic": {
     "name": "Hunger nach {form}-Magie",
-    "summary": "Der Charakter wurde wiederholt Magie ausgesetzt und ist dadurch auf Magie zum Überleben angewiesen."
+    "summary": "Der Charakter wurde wiederholt Magie ausgesetzt und ist dadurch auf Magie zum Überleben angewiesen.",
+    "description": "Der Charakter wurde wiederholt Magie ausgesetzt und ist dadurch auf Magie zum Überleben angewiesen. Der Charakter muss jede Jahreszeit 1 Bauer Vis verbrauchen, der der Form entspricht, der er hauptsächlich ausgesetzt wurde. Ist der Charakter nicht in der Lage, in einer Jahreszeit einen Bauern Vis zu verbrauchen, verliert er eine Langzeit-Erschöpfungsstufe, die erst wieder erlangt werden kann, wenn ein Bauer des entsprechenden Vis verbraucht wurde. Ein Charakter, der Hunger nach Ignem-Magie hat und ein ganzes Jahr lang keinen Bauern Ignem-Vis verbraucht hat, hat zum Beispiel 4 Langzeit-Erschöpfungsstufen verloren und ist daher Betäubt mit einem -5-Malus auf Aktivitäten. Verbraucht der Charakter dann 1 Bauern Ignem-Vis, erlangt er nach einer Stunde eine Erschöpfungsstufe zurück und ist Müde."
   },
   "flaw.imagined_folk_tradition_vulnerability": {
     "name": "Eingebildete Volksüberlieferungsanfälligkeit",
@@ -637,15 +656,18 @@
   },
   "flaw.inconstant_magic": {
     "name": "Unbeständige Magie",
-    "summary": "Die Magie des Charakters ist leicht ablenkbar und stottert und stockt."
+    "summary": "Die Magie des Charakters ist leicht ablenkbar und stottert und stockt.",
+    "description": "Die Magie des Charakters ist leicht ablenkbar und stottert und stockt. Zauber, die seiner Führung bedürfen (z.B. Konzentrations- oder Zielzauber), reagieren nach dem Wirken nicht sofort, als müsste der Charakter die Aufmerksamkeit des Zaubers erst bündeln, und Zauber, die durch eine Bedingung ausgelöst werden (wie Wartezauber oder verzauberte Gegenstände), benötigen etwa zwei Minuten zur Aktivierung, als wäre die Magie abgewandert, während der Wirker sie nicht sorgfältig beobachtete. Alle Magieartefakte, die er mit Dauereffekten erschafft, werden bei Sonnenauf- und -untergang unterbrochen; die Magie ist nicht nahtlos. Der Charakter erleidet -3 auf alle Finesse-Würfe."
   },
   "flaw.independent_craftsman": {
     "name": "Unabhängiger Handwerker",
-    "summary": "Dieser Charakter hat seine eigene Art zu arbeiten und mag es nicht, wenn andere ihm in die Quere kommen."
+    "summary": "Dieser Charakter hat seine eigene Art zu arbeiten und mag es nicht, wenn andere ihm in die Quere kommen.",
+    "description": "Dieser Charakter hat seine eigene Art zu arbeiten und mag es nicht, wenn andere ihm in die Quere kommen. Er behandelt seine Führungs- und Handwerks- oder Berufsfertigkeiten stets als drei Stufen niedriger, wenn er mit anderen an einer Aufgabe zusammenarbeitet. Für Handwerker bedeutet dies, dass seine Handwerksfertigkeit unabhängig davon, ob er als Assistent oder mit Assistenten arbeitet, einen Malus von -3 erhält. Dies betrifft die Anzahl der Assistenten, die er in der Werkstatt beschäftigen kann, und den Nutzen, den er als Assistent bietet. Wenn du nicht die Regeln in Stadt und Gilde (Seite 73) verwendest, behandle dies als Persönlichkeits-Fehler."
   },
   "flaw.indiscreet": {
     "name": "Indiskret",
-    "summary": "Du kannst kein Geheimnis bewahren."
+    "summary": "Du kannst kein Geheimnis bewahren.",
+    "description": "Du kannst kein Geheimnis bewahren. Du musst dem ersten interessierten Gesprächspartner, dem du begegnest, alles mitteilen, um hilfsbereit zu sein oder zu zeigen, dass du Bescheid weißt, es sei denn, du schaffst es, einen intelligenzbasierten Stresswurf gegen einen Schwierigkeitsgrad von 9 zu bestehen. Bei einem Patzer musst du möglicherweise von deinen Gefährten körperlich daran gehindert werden, auf alle an dich gerichteten Fragen für den Rest der Begegnung zu antworten."
   },
   "flaw.infamous": {
     "name": "Berüchtigt",
@@ -657,7 +679,8 @@
   },
   "flaw.inscribed_shadow": {
     "name": "Eingeschriebener Schatten",
-    "summary": "Die Stigmata des Charakters spiegeln sich als leuchtende Symbole in seinem Schatten wider."
+    "summary": "Die Stigmata des Charakters spiegeln sich als leuchtende Symbole in seinem Schatten wider.",
+    "description": "Die Stigmata des Charakters spiegeln sich als leuchtende Symbole in seinem Schatten wider. Dies löst bei Nichtmagiern Alarm aus und macht die Stigmata des Charakters für andere Criamon-Magi extrem leicht lesbar (+3 auf alle Würfe). Die leuchtenden Symbole des Schattens verschwinden nicht, wenn es nicht genug Licht gibt, um einen Schatten zu bilden – sie leuchten heller. Charaktere, die Magie einsetzen, um ihre Stigmata zu verbergen, handeln nicht angemessen. Nur Charaktere mit Stigmata dürfen diesen Fehler haben, was normalerweise bedeutet, dass sie Magi des Hauses Criamon sein müssen."
   },
   "flaw.jinxed": {
     "name": "Verhext",
@@ -695,7 +718,8 @@
   },
   "flaw.lingering_injury": {
     "name": "Anhaltende Verletzung",
-    "summary": "Der Charakter leidet unter einer alten Verletzung, die nicht richtig heilt, was zu einem -1-Malus auf alle Würfe für körperliche Aktivitäten führt."
+    "summary": "Der Charakter leidet unter einer alten Verletzung, die nicht richtig heilt, was zu einem -1-Malus auf alle Würfe für körperliche Aktivitäten führt.",
+    "description": "Der Charakter leidet unter einer alten Verletzung, die nicht richtig heilt, was zu einem -1-Malus auf alle Würfe für körperliche Aktivitäten führt. Wenn er bei einer körperlichen Handlung einen Patzer erleidet, verschlimmert er die Verletzung, und der Malus wird -3 (Erholung von der Verschlimmerung wie bei einer Leichten Wunde). Dieser Zustand verschlimmert sich mit dem Alter, also multipliziere den jeweiligen Malus mit 1 + (Gebrechlichkeitswert)."
   },
   "flaw.loose_magic": {
     "name": "Lose Magie",
@@ -715,11 +739,13 @@
   },
   "flaw.lycanthrope": {
     "name": "Lykanthrop",
-    "summary": "Du wurdest verflucht, dich bei Vollmond (oder ähnlichen, monatlichen astronomischen Ereignissen) in ein gefährliches Raubtier (z.B."
+    "summary": "Du wurdest verflucht, dich bei Vollmond (oder ähnlichen, monatlichen astronomischen Ereignissen) in ein gefährliches Raubtier (z.B.",
+    "description": "Du wurdest verflucht, dich bei Vollmond (oder ähnlichen, monatlichen astronomischen Ereignissen) in ein gefährliches Raubtier (z.B. Wolf, Luchs oder Bär) zu verwandeln. Keine Gegenstände oder Kleidung verwandeln sich mit, und es dauert eine volle Runde, bis die vollständige Verwandlung abgeschlossen ist. Du bist nicht gegen normale Waffen immun, und der Fluch überträgt sich nicht auf Opfer von Bisswunden. Das Tier kann mit einem InAn- oder InCo-Zauber als verfluchter Mensch erkannt werden.\n\nIm verwandelten Zustand hast du die Intelligenz eines Tieres, reagierst auf alle Reize wie ein Tier und behältst keine Erinnerung an Handlungen in Tiergestalt, außer gelegentlich in Träumen. Du weißt möglicherweise nicht einmal, dass du unter diesem Fluch stehst. Du kannst sowohl Freunde als auch Feinde noch erkennen, wenn du verwandelt bist.\n\nLykanthropen können sich in ein nicht-magisches Tier zwischen Größe -1 (Wolf) und Größe +2 (Bär) verwandeln. Du hast die normalen körperlichen Eigenschaften eines Gestaltwandlers (siehe Seite 107), außer dass +3 zu deinem Absorptionswert addiert wird (nur in Tiergestalt). Darüber hinaus wirst du beim Wiederannehmen der Menschengestalt (was bei der Morgendämmerung geschieht) vollständig von allen in Tiergestalt erlittenen Wunden geheilt."
   },
   "flaw.magic_addiction": {
     "name": "Magiesucht",
-    "summary": "Du sehnst dich nach dem Rausch des Zauberns und dem Machterlebnis über die Magie."
+    "summary": "Du sehnst dich nach dem Rausch des Zauberns und dem Machterlebnis über die Magie.",
+    "description": "Du sehnst dich nach dem Rausch des Zauberns und dem Machterlebnis über die Magie. Wann immer du einen Zauber wirkst, fällt es dir schwer, dich davon abzuhalten, immer und immer wieder zu zaubern, bis du vor Erschöpfung zusammenbrichst. Wann immer du einen Stresswürfel beim Zaubern verwendest, musst du unabhängig davon, ob der Zauber gelingt, einen Intelligenz + Konzentration-Stresswurf gegen einen Schwierigkeitsgrad von der halben Zauberstufe machen (oder, bei einem Patzer, der Stufe, die du versucht hattest). Bei einem Misserfolg musst du als nächste Handlung entweder einen Formulaischen Zauber von mindestens der gleichen Stufe wie der vorherige Zauber wirken, oder einen beliebigen spontanen Zauber wirken, dabei Erschöpfung aufwenden und keine Stufen für Penetration zurückhalten. Du musst erneut würfeln, um deine Sucht zu kontrollieren, basierend auf der Stufe des gerade gewirkten Zaubers, erhältst aber für jeden nach dem ersten gewirkten Zauber einen +3-Bonus auf den Wurf. Bei einem Patzer setzt du das Zaubern fort, bis du bewusstlos bist."
   },
   "flaw.magical_air": {
     "name": "Magische Ausstrahlung",
@@ -735,7 +761,8 @@
   },
   "flaw.manifest_sin": {
     "name": "Offenbarte Sünde",
-    "summary": "Eine Sünde oder ein Verbrechen, das dieser Charakter in der Vergangenheit begangen hat, befleckt seinen Geist und ist für diejenigen sichtbar, die Dinge wahrnehmen können, die sterblichen Sinnen verborgen sind."
+    "summary": "Eine Sünde oder ein Verbrechen, das dieser Charakter in der Vergangenheit begangen hat, befleckt seinen Geist und ist für diejenigen sichtbar, die Dinge wahrnehmen können, die sterblichen Sinnen verborgen sind.",
+    "description": "Eine Sünde oder ein Verbrechen, das dieser Charakter in der Vergangenheit begangen hat, befleckt seinen Geist und ist für diejenigen sichtbar, die Dinge wahrnehmen können, die sterblichen Sinnen verborgen sind. Charaktere mit Zweitem Gesicht, Gespür für Heiliges und Unheiliges oder ähnlichen übernatürlichen Kräften oder Fertigkeiten nehmen die Sünde durch einen oder mehrere Sinne wahr.\n\nDie Manifestation der Sünde oder des Verbrechens sollte von dir und dem Spielleiter gemeinsam gewählt werden und muss stets der Sünde oder dem Verbrechen angemessen sein. Zum Beispiel erscheint dem Täter eines Gewaltverbrechens möglicherweise, Blut an den Händen zu haben, oder er wird vom Schluchzen seines Opfers begleitet, während wollüstige Sünden auf dem lüsternen Gesicht des Sünders abzulesen sein mögen.\n\nDarüber hinaus erleidet der Charakter -1 auf alle Würfe und Gesamtwerte für soziale Interaktion, da die greifbare Aura seiner vergangenen Sünden jene beeinflusst, mit denen er interagiert.\n\nObwohl sein Geist befleckt ist und die Manifestation stets bei ihm bleiben wird, kann er einen Glaubenspunkt ausgeben – einschließlich Glaubenspunkten, die durch die Heilige Kommunion und durch Reliquien erlangt wurden –, um die Manifestation für die Dauer Sonne zu verbannen. Während sie verbannt ist, kann die Sünde nicht wahrgenommen werden, und auch der soziale Malus wird ausgesetzt.\n\nDieser Fehler stammt entweder aus der Göttlichen oder der Höllensphäre, als Zeichen der Strafe, der Buße oder der Versuchung."
   },
   "flaw.manufactured_ignorance": {
     "name": "Fabrizierte Unwissenheit",
@@ -797,7 +824,8 @@
   },
   "flaw.mute": {
     "name": "Stumm",
-    "summary": "Du kannst nicht sprechen; möglicherweise wurde dir die Zunge herausgeschnitten."
+    "summary": "Du kannst nicht sprechen; möglicherweise wurde dir die Zunge herausgeschnitten.",
+    "description": "Du kannst nicht sprechen; möglicherweise wurde dir die Zunge herausgeschnitten. Du verwendest wahrscheinlich einfache Handgesten und Grunzlaute, um deine Bedürfnisse zu kommunizieren. Du kannst Sprachen noch immer vollkommen verstehen und lernst Lesen und Schreiben, sofern du eine entsprechende Tugend besitzt. Beachte, dass Magi mit diesem Fehler -10 auf alle Zauberwürfe erhalten, obwohl dies durch die Tugend Stille Magie (Seite 105) ausgeglichen werden kann. Bei einem Magus mit diesem Fehler kann davon ausgegangen werden, dass er Laute erzeugen kann, die ausreichen, um die Reichweite Stimme normal zu nutzen."
   },
   "flaw.necessary_condition": {
     "name": "Notwendige Bedingung",
@@ -805,11 +833,13 @@
   },
   "flaw.necessary_realm_aura_for_ability": {
     "name": "Notwendige Aura für {ability}, {realm}",
-    "summary": "Aufgrund einer Verbindung mit einer bestimmten übernatürlichen Sphäre wirkt sich das Fehlen einer entsprechenden übernatürlichen Aura deutlich auf die Fähigkeit des Charakters aus, sich auf bestimmte Aufgaben zu konzentrieren."
+    "summary": "Aufgrund einer Verbindung mit einer bestimmten übernatürlichen Sphäre wirkt sich das Fehlen einer entsprechenden übernatürlichen Aura deutlich auf die Fähigkeit des Charakters aus, sich auf bestimmte Aufgaben zu konzentrieren.",
+    "description": "Aufgrund einer Verbindung mit einer bestimmten übernatürlichen Sphäre wirkt sich das Fehlen einer entsprechenden übernatürlichen Aura deutlich auf die Fähigkeit des Charakters aus, sich auf bestimmte Aufgaben zu konzentrieren. Der Charakter hat -3 auf alle Summen, die er mit einer bestimmten Fertigkeit erzeugt, wenn er sich nicht in der richtigen Aura befindet. Ein Charakter darf diesen Fehler einmal für jede bestimmte Fertigkeit nehmen. Die gewählte Fertigkeit sollte eine sein, die der Charakter voraussichtlich häufig nutzt, etwa im Dienst am Konvent oder zur Unterstützung seiner alltäglichen Tätigkeiten.\n\nWenn dieser Fehler auf Handwerk- oder Berufsfertigkeiten angewendet wird, verringert er außerdem die Fähigkeit des Charakters, sich selbst zu versorgen, indem er die Anzahl der Arbeitspunkte (wie in Stadt & Gilde beschrieben), die er pro Quartal ansammelt, reduziert, wenn er nicht innerhalb der entsprechenden Aura arbeitet.\n\nDie Spieltruppe sollte sorgfältig bedenken, wie ein Charakter durch die Wahl von Magie (die die meisten Konvente abdeckt) oder Dominium (das die meisten anderen menschlichen Siedlungen abdeckt) eingeschränkt würde. Würde der Charakter nicht eingeschränkt werden, sollte der Fehler nicht zugelassen werden."
   },
   "flaw.night_terrors": {
     "name": "Nachtschrecken",
-    "summary": "Dieser Charakter wird viel zu oft von schrecklichen Albträumen und Schreianfällen im Schlaf heimgesucht."
+    "summary": "Dieser Charakter wird viel zu oft von schrecklichen Albträumen und Schreianfällen im Schlaf heimgesucht.",
+    "description": "Dieser Charakter wird viel zu oft von schrecklichen Albträumen und Schreianfällen im Schlaf heimgesucht. Der Charakter muss einen Stresswurf gegen Schwierigkeitsgrad 9 ablegen, um Nachtschrecken zu vermeiden. Der Spielleiter kann Abzüge von -1 bis -3 anordnen, wenn der Charakter kürzlich beängstigende oder schaurige Ereignisse erlebt hat, wie etwa eine Begegnung mit einem Dämon oder einen Kampf gegen Untote.\n\nAn Nachtschrecken zu leiden bedeutet, dass der Charakter in der Nacht oft und in Panik aufwacht. Es kann zu Situationen kommen, in denen er überreagiert oder in unglücklicher Weise reagiert, wenn er in solchen Nächten geweckt wird. Der Morgen hinterlässt ihn mit einer verlorenen Langzeit-Erschöpfungsstufe. Diese Langzeit-Erschöpfungsstufen kumulieren sich, sodass mehrere schlechte Nächte ihn in schlechter Verfassung hinterlassen. Ziehe den Erschöpfungsmalus des Charakters vom Schwierigkeitsgrad ab, um Nachtschrecken zu vermeiden, da ein wirklich erschöpftes Opfer die Albträume irgendwann allein durch schiere Erschöpfung verschläft. Wenn eine Nacht mit Nachtschrecken den Charakter bewusstlos werden lässt, verfällt er in tiefen, traumlosen Schlaf. Er schläft einen ganzen Tag und eine Nacht und wacht Außer Atem auf, womit die Serie der Nachtschrecken endet. Ein Charakter mit diesem Fehler darf nicht zusätzlich den Fehler Schlafstörung nehmen.\n\nDieser Fehler macht saisonale Laborarbeit normalerweise unmöglich und ist daher für Magi nicht geeignet."
   },
   "flaw.no_hands": {
     "name": "Keine Hände",
@@ -821,7 +851,8 @@
   },
   "flaw.nocturnal": {
     "name": "Nachtmensch",
-    "summary": "Dein natürlicher Körperrhythmus versucht, dich bis zum Mittag schlafen zu lassen."
+    "summary": "Dein natürlicher Körperrhythmus versucht, dich bis zum Mittag schlafen zu lassen.",
+    "description": "Dein natürlicher Körperrhythmus versucht, dich bis zum Mittag schlafen zu lassen. Du hast -1 auf alle Würfe zwischen Morgengrauen und Mittag. Umgekehrt hast du kaum Schwierigkeiten, nachts wach zu bleiben. Obwohl du im Dunkeln keine besonderen Vorteile genießt, könnten deine Gefährten beschließen, dir regelmäßig den Nachtwachtdienst zu übertragen, um deine Veranlagung optimal zu nutzen."
   },
   "flaw.noncombatant": {
     "name": "Nichtkämpfer",
@@ -845,7 +876,8 @@
   },
   "flaw.offensive_to_beings": {
     "name": "Abstoßend für {being}",
-    "summary": "Dieser Fehler ist mit einer von sechs Klassen von Wesen verbunden: Tiere, sterbliche Menschen, göttliche Wesen, Feen, Dämonen oder magische Kreaturen."
+    "summary": "Dieser Fehler ist mit einer von sechs Klassen von Wesen verbunden: Tiere, sterbliche Menschen, göttliche Wesen, Feen, Dämonen oder magische Kreaturen.",
+    "description": "Dieser Fehler ist mit einer von sechs Klassen von Wesen verbunden: Tiere, sterbliche Menschen, göttliche Wesen, Feen, Dämonen oder magische Kreaturen. Die letzten vier umfassen Charaktere, die durch Übernatürliche Tugenden oder Fehler oder als Wesen mit einem Machtwert mit der Göttlichen, Feensphäre, Höllensphäre oder Magiesphäre verbunden sind.\n\nWesen der gewählten Kategorie reagieren negativ auf den Charakter, als hätte er die Gabe, was sie sehr unwohl um ihn herum macht und ihm -3 auf alle Würfe sozialer Interaktion mit ihnen gibt.\n\nDu darfst diesen Fehler nicht mehr als einmal nehmen; Charaktere, die gegenüber mehr als einer Art von Wesen abstoßend sind, sollten stattdessen Magisches Auftreten nehmen. Charaktere mit der Gabe dürfen diesen Fehler nur nehmen, wenn sie die Sanfte Gabe besitzen, wodurch diese Art von Wesen negativ auf sie reagiert, während andere unbeeinträchtigt bleiben. Charaktere mit Magischem Auftreten dürfen ihn überhaupt nicht nehmen.\n\nWenn du gegenüber Tieren abstoßend bist, reagieren Tiere mit einem Machtwert auf unterschiedliche Weise. Im Allgemeinen reagieren jene, die negativ auf die Gabe reagieren, auch negativ auf dich, während jene, die positiv reagieren, dies nicht tun – es sei denn, du besitzt tatsächlich die Gabe."
   },
   "flaw.optimistic_major": {
     "name": "Optimistisch (Groß)",
@@ -930,7 +962,8 @@
   },
   "flaw.poor_concentration": {
     "name": "Schlechte Konzentration",
-    "summary": "Obwohl der Charakter vielleicht einen Geist hat, der schnell Entscheidungen trifft, hat er eine kurze Aufmerksamkeitsspanne."
+    "summary": "Obwohl der Charakter vielleicht einen Geist hat, der schnell Entscheidungen trifft, hat er eine kurze Aufmerksamkeitsspanne.",
+    "description": "Obwohl der Charakter vielleicht einen Geist hat, der schnell Entscheidungen trifft, hat er eine kurze Aufmerksamkeitsspanne. Der Charakter hat -3 auf Konzentrationswürfe."
   },
   "flaw.poor_eyesight": {
     "name": "Schlechtes Sehvermögen",
@@ -958,7 +991,8 @@
   },
   "flaw.primitive_equipment": {
     "name": "Primitive Ausrüstung",
-    "summary": "Der Charakter ist nur in der Lage, die einfachsten Werkzeuge und Ausrüstungen zu verwenden."
+    "summary": "Der Charakter ist nur in der Lage, die einfachsten Werkzeuge und Ausrüstungen zu verwenden.",
+    "description": "Der Charakter ist nur in der Lage, die einfachsten Werkzeuge und Ausrüstungen zu verwenden. Vielleicht war seine Ausbildung unvollständig, oder er wurde von einer Art Fluch betroffen, oder er stammt aus einer technologisch weniger fortschrittlichen Gesellschaft und weigert sich, sich anzupassen. Er ist auf Günstige Waffen und Rüstungen beschränkt, unabhängig davon, was ihm zur Verfügung gestellt wird. Wenn er durch Befehl oder Notwendigkeit gezwungen ist, andere Ausrüstung zu verwenden, ist seine Beladung einen Punkt höher, wenn er andere als Günstige Waffen benutzt, und einen Punkt höher, wenn er andere als Günstige Rüstungen benutzt. Er erleidet -1 auf Angriff und Verteidigung bei ungeeigneten Waffen und -1 auf Initiative und Schutz bei ungeeigneter Rüstung. Wenn der Charakter als Arbeiter oder Handwerker tätig ist, verwendet er einfache Werkzeuge und primitive Verfahren. Sofern es sich nicht um einfache Aufgaben handelt, wird der Basis-Handwerkswert (siehe Stadt & Gilde, Seite 67) nach Ermessen des Spielleiters je nach Komplexität um 1-3 erhöht. Außerdem kann ihre Werkstatt nicht in Bezug auf Innovation (Stadt & Gilde, Seite 65) verbessert werden. Andere Berufsfertigkeiten, die von Werkzeugen und Ausrüstungen abhängen, erleiden bei komplexen Aufgaben einen ähnlichen Malus. Du solltest diesen Fehler nur nehmen, wenn der Charakter einem Beruf angehört, der stark von Ausrüstung abhängt, wie Schmied, Maurer oder Soldat."
   },
   "flaw.primogeniture_lineage": {
     "name": "Erstgeburts-Abstammung",
@@ -982,7 +1016,8 @@
   },
   "flaw.raised_in_the_gutter": {
     "name": "In der Gosse aufgewachsen",
-    "summary": "Dieser Charakter wurde am Rand der Gesellschaft großgezogen."
+    "summary": "Dieser Charakter wurde am Rand der Gesellschaft großgezogen.",
+    "description": "Dieser Charakter wurde am Rand der Gesellschaft großgezogen. Er kann seine sozialen Fertigkeiten mit Angehörigen der Unter- und Mittelschicht normal einsetzen, weiß aber nicht, wie er sich unter „Bessergestellten\" verhalten soll. Bei Verwendung von Charme oder Täuschung ist offensichtlich, dass sie aus einem schlechten Viertel stammt, was es schwieriger macht, Leute zu überzeugen, das zu tun, was sie möchte (-3 auf Würfe). Sie kann Etikette normal einsetzen, wenn sie ihren sozialen Platz hält (was bedeutet, still zu bleiben und genau das zu tun, was ihr gesagt wird), aber erleidet -3, wenn sie darüber hinausgehen möchte."
   },
   "flaw.realm_stigmatic": {
     "name": "Stigmatisierter, {realm}",
@@ -1019,7 +1054,8 @@
   },
   "flaw.repellent": {
     "name": "Abstoßend",
-    "summary": "Der Charakter hat eines der körperlichen Merkmale seines dämonischen Schöpfers entwickelt, das bei normalen Menschen Furcht und Abscheu hervorruft."
+    "summary": "Der Charakter hat eines der körperlichen Merkmale seines dämonischen Schöpfers entwickelt, das bei normalen Menschen Furcht und Abscheu hervorruft.",
+    "description": "Der Charakter hat eines der körperlichen Merkmale seines dämonischen Schöpfers entwickelt, das bei normalen Menschen Furcht und Abscheu hervorruft. Der Charakter macht alle Würfe, die Vertrauen erfordern, mit -6. Der Charakter erhält auch einen geringfügigen Vorteil durch das abstoßende Merkmal. Als Beispiele könnte ein Charakter mit Hörnern, Klauen oder Reißzähnen lernen, diese im Nahkampf einzusetzen; ein beschuppter Charakter könnte einen Schutzbonus von +3 haben; und ein Charakter mit dämonischen Augen könnte im Dunkeln sehen."
   },
   "flaw.restricted_learning": {
     "name": "Eingeschränktes Lernen",
@@ -1040,7 +1076,8 @@
   },
   "flaw.rolling_stone": {
     "name": "Rastloser Wanderer",
-    "summary": "Der rollende Stein setzt kein Moos an, und dieser Charakter auch nicht."
+    "summary": "Der rollende Stein setzt kein Moos an, und dieser Charakter auch nicht.",
+    "description": "Der rollende Stein setzt kein Moos an, und dieser Charakter auch nicht. Sie ist so oft von Dorf zu Dorf gezogen, dass es ihr schwerfällt, Bindungen in der Gemeinschaft einzugehen. Alle sozialen Würfe haben innerhalb der Gemeinschaft -1."
   },
   "flaw.savantism": {
     "name": "Savantismus",
@@ -1084,7 +1121,8 @@
   },
   "flaw.sleep_disorder": {
     "name": "Schlafstörung",
-    "summary": "Mehr als nicht, ist dieser Charakter nachts unfähig, ruhig zu schlafen."
+    "summary": "Mehr als nicht, ist dieser Charakter nachts unfähig, ruhig zu schlafen.",
+    "description": "Mehr als nicht, ist dieser Charakter nachts unfähig, ruhig zu schlafen. Die daraus resultierende Schlafentbehrung bedeutet, dass er in ruhigen und langweiligen Phasen wahrscheinlich einnickt. Wenn der Charakter allein, bequem, gelangweilt oder anderweitig gefährdet ist einzuschlafen, muss er einen geeigneten Persönlichkeitswurf ablegen, um das Einnicken zu vermeiden. Loyal, Zuverlässig und Faul (mit Malus im letzten Fall) sind alle geeignet. Der aktuelle Erschöpfungsmalus des Charakters gilt für den Wurf.\n\nUnabhängig davon, ob er es schafft, wach zu bleiben, musst du die folgende Nacht einen Stresswurf (kein Patzer) gegen Schwierigkeitsgrad 6 ablegen, um zu sehen, ob der Charakter gut schläft. Jede Nacht, in der er schlecht geschlafen hat, verliert er eine Langzeit-Erschöpfungsstufe. Dies geht weiter, bis er eine ganze Nacht gut schläft. Sobald er 3 Langzeit-Erschöpfungsstufen verloren hat, schläft er automatisch die Nacht durch, aus purer Erschöpfung. Dieser Fehler ist nicht vereinbar mit dem Fehler Nachtschrecken."
   },
   "flaw.slothful": {
     "name": "Träge",
@@ -1109,7 +1147,8 @@
   },
   "flaw.social_handicap": {
     "name": "Sozialer Makel",
-    "summary": "Du besitzt eine Eigenart, die es dir erschwert, mit anderen Menschen umzugehen."
+    "summary": "Du besitzt eine Eigenart, die es dir erschwert, mit anderen Menschen umzugehen.",
+    "description": "Du besitzt eine Eigenart, die es dir erschwert, mit anderen Menschen umzugehen. Dies beeinträchtigt deinen Umgang mit den meisten Menschen und verursacht Abzüge von -3 auf entsprechende Würfe. Beispiele hierfür sind ein mürrisches Temperament, Weltfremdheit, ein unangenehmer Körpergeruch oder Taktlosigkeit."
   },
   "flaw.soft_hearted": {
     "name": "Weiches Herz",
@@ -1145,7 +1184,8 @@
   },
   "flaw.surgical_empiricus": {
     "name": "Chirurgischer Empiriker",
-    "summary": "Du bist von Beruf Chirurg, hast aber nie eine breite Grundausbildung in diesem Fach erhalten; vielmehr hat sich deine Ausbildung nur auf einen einzigen Aspekt der Chirurgie konzentriert."
+    "summary": "Du bist von Beruf Chirurg, hast aber nie eine breite Grundausbildung in diesem Fach erhalten; vielmehr hat sich deine Ausbildung nur auf einen einzigen Aspekt der Chirurgie konzentriert.",
+    "description": "Du bist von Beruf Chirurg, hast aber nie eine breite Grundausbildung in diesem Fach erhalten; vielmehr hat sich deine Ausbildung nur auf einen einzigen Aspekt der Chirurgie konzentriert. Wähle eine Art von Chirurgie als deine Spezialisierung in dieser Fertigkeit (Starkataraktierung, Entfernung von Steinen, Knochenrichten usw.). Bei dieser Art von Chirurgie erhältst du den üblichen +1-Bonus auf deinen Wurf, aber wenn du eine andere Anwendung der Chirurgie versuchst, musst du deinen Chirurgie-Wert aufgrund deiner Unerfahrenheit halbieren. Wahrscheinlich reist du, um genug Klientel für deine Praxis zu finden, kannst aber in der Regel gut davon leben."
   },
   "flaw.susceptibility_to_divine_power": {
     "name": "Anfälligkeit für Göttliche Macht",
@@ -1161,7 +1201,8 @@
   },
   "flaw.susceptibility_to_sunlight": {
     "name": "Anfälligkeit für Sonnenlicht",
-    "summary": "Direktes, helles Sonnenlicht verursacht dir spürbaren Schmerz und erschöpft dich."
+    "summary": "Direktes, helles Sonnenlicht verursacht dir spürbaren Schmerz und erschöpft dich.",
+    "description": "Direktes, helles Sonnenlicht verursacht dir spürbaren Schmerz und erschöpft dich. Auf die Dunkelheit eingestimmt, sind deine Augen sehr empfindlich, und du erleidest einen -2-Abzug auf alle Würfe, die Sehvermögen in hellen Umgebungen erfordern, wie an einem wolkenlosen Tag. Aufgrund deines Fluches verlierst du eine Erschöpfungsstufe pro Durchmesser, wenn du mittags an einem heißen Sommertag im Freien bist, und verlierst bei weniger intensivem Licht und Sonnenwärme langsamer Stufen."
   },
   "flaw.susceptibility_to_warping": {
     "name": "Anfälligkeit für Verzerrung",
@@ -1218,11 +1259,13 @@
   },
   "flaw.unbearable_to_beings": {
     "name": "Unerträglich für {being}",
-    "summary": "Dieser Fehler ist mit einer von drei Klassen von Wesen verbunden: sterbliche Menschen, Dämonen oder göttliche Wesen."
+    "summary": "Dieser Fehler ist mit einer von drei Klassen von Wesen verbunden: sterbliche Menschen, Dämonen oder göttliche Wesen.",
+    "description": "Dieser Fehler ist mit einer von drei Klassen von Wesen verbunden: sterbliche Menschen, Dämonen oder göttliche Wesen. Die letzten beiden umfassen Charaktere, die mit der Göttlichen oder der Höllischen Sphäre verbunden sind, durch übernatürliche Tugenden oder Fehler, sowie Wesen mit Göttlicher oder Höllischer Macht.\n\nDiese Wesen sind durch die Anwesenheit des Charakters äußerst verstört, verängstigt und möglicherweise aufgebracht. Sie erleidet einen zusätzlichen -3-Abzug auf alle sozialen Interaktionen mit ihnen, der sich zum -3-Abzug addiert, der normalerweise mit der Gabe verbunden ist. Nur Charaktere mit der Gabe oder Magischer Ausstrahlung können diesen Fehler nehmen, und er kann nicht mit der Auffälligen Gabe kombiniert werden.\n\nDu darfst diesen Fehler nicht mehr als einmal nehmen; Charaktere, die für mehr als eine Art von Wesen unerträglich sind, sollten stattdessen die Auffällige Gabe nehmen."
   },
   "flaw.uncertain_faith": {
     "name": "Unsicherer Glaube",
-    "summary": "Ob durch einen Mangel im Verständnis der Lehre des Charakters, eine moralische Zerrissenheit, die entmutigende Absolution wiederholter Sünden oder die Exposition gegenüber widersprüchlichen Philosophien — er hat Schwierigkeiten, seine Hingabe an seinen Glauben vollständig auszudrücken."
+    "summary": "Ob durch einen Mangel im Verständnis der Lehre des Charakters, eine moralische Zerrissenheit, die entmutigende Absolution wiederholter Sünden oder die Exposition gegenüber widersprüchlichen Philosophien — er hat Schwierigkeiten, seine Hingabe an seinen Glauben vollständig auszudrücken.",
+    "description": "Ob durch einen Mangel im Verständnis der Lehre des Charakters, eine moralische Zerrissenheit, die entmutigende Absolution wiederholter Sünden oder die Exposition gegenüber widersprüchlichen Philosophien — er hat Schwierigkeiten, seine Hingabe an seinen Glauben vollständig auszudrücken. Ein Element des Zweifels steht zwischen ihm und dem Göttlichen, und alle Würfe für heiligen Einfluss, das Mildern einer Aura, das Anrufen von Gottes Hilfe oder das Anrufen eines Heiligen oder einer Baraka (siehe Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Seiten 38-41, 87 und 103) erleiden einen -3-Abzug.\n\nDer Charakter hat auch einen Persönlichkeitszug „Unsicherer Glaube\" bei +1, der diesen Konflikt oder Zweifel beschreibt, der Dämonen immer eine Gelegenheit gibt, durch ihre Besessenheitsmacht (Sphären der Macht: Das Infernale, Seite 31) weiteren Zweifel zu säen.\n\nÜbernatürliche Fertigkeiten göttlichen Ursprungs, einschließlich Methoden und Mächte, werden nicht bestraft. Dieser Fehler ist nicht kompatibel mit der Tugend Wahrer Glaube."
   },
   "flaw.uncontrollable_strength": {
     "name": "Unkontrollierbare Stärke",
@@ -1239,7 +1282,8 @@
   },
   "flaw.uninspirational": {
     "name": "Uninspirierend",
-    "summary": "Dieser Charakter ist farblos, langweilig und schlicht, mit fast keiner Chance, jemals aufzufallen oder jemanden zu begeistern."
+    "summary": "Dieser Charakter ist farblos, langweilig und schlicht, mit fast keiner Chance, jemals aufzufallen oder jemanden zu begeistern.",
+    "description": "Dieser Charakter ist farblos, langweilig und schlicht, mit fast keiner Chance, jemals aufzufallen oder jemanden zu begeistern. Sein Präsenz- und Kommunikationswert darf nicht größer als 0 sein. Jeder Einsatz von Fertigkeiten wie Führung, Charme, Intrige, Etikette oder ähnlichem — sowie Persönlichkeitswürfe — um Menschen zu bewegen oder zu beeindrucken, erleidet einen -3-Abzug."
   },
   "flaw.university_dean": {
     "name": "Universitätsdekan",
@@ -1247,7 +1291,8 @@
   },
   "flaw.unlucky": {
     "name": "Unglücklich",
-    "summary": "Der Charakter ist außergewöhnlich unglücklich und bekommt von den Mächten des Zufalls häufig eine schlechte Hand zugeteilt."
+    "summary": "Der Charakter ist außergewöhnlich unglücklich und bekommt von den Mächten des Zufalls häufig eine schlechte Hand zugeteilt.",
+    "description": "Der Charakter ist außergewöhnlich unglücklich und bekommt von den Mächten des Zufalls häufig eine schlechte Hand zugeteilt. Er erhält einen -1 bis -3-Abzug (nach Ermessen des Spielleiters) auf Würfe in Situationen, die eher auf Glück als auf Fähigkeit oder Talent beruhen, je nachdem, wie viel Glück im Spiel ist. Es wäre ratsam für ihn, nicht an Glücksspielen teilzunehmen."
   },
   "flaw.unnatural_magic": {
     "name": "Unnatürliche Magie",
@@ -1280,7 +1325,8 @@
   },
   "flaw.vengeful_powers": {
     "name": "Rachsüchtige Mächte",
-    "summary": "Der Charakter hat eine oder mehrere nicht-höllische Mächte, an denen die Höllische Sphäre ein persönliches Interesse genommen hat."
+    "summary": "Der Charakter hat eine oder mehrere nicht-höllische Mächte, an denen die Höllische Sphäre ein persönliches Interesse genommen hat.",
+    "description": "Der Charakter hat eine oder mehrere nicht-höllische Mächte, an denen die Höllische Sphäre ein persönliches Interesse genommen hat. Wann immer sie eine dieser Mächte auf eine nicht-sündhafte Weise einsetzt, hat dies einen unangenehmen Nebeneffekt. Dies ist immer schädlich und oft erkennbar höllisch, und die Schwere variiert je nach der Anwendung der Macht, so dass außergewöhnlich gute Werke noch schrecklicheres Übel verursachen. Der Effekt ist nicht offensichtlich mit dem Einsatz der Macht verbunden und scheint tatsächlich völlig unverbunden zu sein. Er manifestiert sich jedoch immer ungefähr zur gleichen Zeit wie der Einsatz der Macht, auch wenn der Charakter sich dessen möglicherweise nicht bewusst ist. Einige mögliche Nebeneffekte könnten sein: Krankheit und Seuche unter den Einheimischen oder Tieren; offene Wunden und andere schmerzhafte Verletzungen; Misstrauen und ein schlechter Ruf unter Fremden; höllische Auren in der Umgebung; negative oder sündhafte Persönlichkeitszüge; zusätzliche Patzerwürfel auf eine bestimmte Art von Wurf; Dämonen, die plötzlich Chaos in der Region anrichten.\n\nDie Kräfte, die Vergeltung üben, können Magieresistenz oder Effekte wie die Aegis des Herdes, die Dämonen fernhalten, nicht überwinden, können aber dennoch spüren, wenn diese Mächte zum Guten eingesetzt werden, und vergekten sich so gut sie können.\n\nDer Charakter weiß möglicherweise nichts von diesen Umständen, aber sobald sie die Verbindung zwischen ihrer Macht und diesen Nebeneffekten erkennt, erscheinen sie normalerweise viel schlimmer, da Paranoia und Schuldgefühle dazu führen können, dass sie sich um den potenziellen Schaden sorgt, den ihre Mächte verursachen könnten. Die Hölle hofft, dass dies den Einsatz der Macht für das Gute zu einem zu großen Opfer erscheinen lässt.\n\nRachsüchtige Mächte können als Hermetischer Fehler genommen werden, soweit sie auf Hermetische Magie anwendbar sind. In diesem Fall wird der Effekt ausgelöst, wann immer der Charakter Magie ohne Sünde wirkt. Er ist jedoch häufiger mit übernatürlichen Fertigkeiten verbunden."
   },
   "flaw.viaticarus": {
     "name": "Viaticarus",
@@ -1324,7 +1370,8 @@
   },
   "flaw.warped_senses": {
     "name": "Verzerrte Sinne",
-    "summary": "Der Charakter ist gegenüber Umgebungsbedingungen zu empfindlich geworden, was sein Verhalten in bestimmten ungewöhnlichen Umständen beeinflusst."
+    "summary": "Der Charakter ist gegenüber Umgebungsbedingungen zu empfindlich geworden, was sein Verhalten in bestimmten ungewöhnlichen Umständen beeinflusst.",
+    "description": "Der Charakter ist gegenüber Umgebungsbedingungen zu empfindlich geworden, was sein Verhalten in bestimmten ungewöhnlichen Umständen beeinflusst. Einige Beispiele:\n\nEmpfindlich (Sinn): Einer deiner Sinne ist so empfindlich, dass er unter Umständen überwältigt wird, die andere als normal empfinden. Ist es das Sehen, blendet dich normales Tageslicht. Ist es das Hören, schmerzen dich Geräusche über normaler Sprechlautstärke. Ist es der Geschmack, sind nur fade Speisen erträglich. Ist es der Geruch, sind starke Gerüche, gute oder schlechte, ekelerregend. Du erleidest einen -2-Abzug auf alle Aktivitäten unter den entsprechenden Umständen. (Es ist ratsam, Empfindliche Sicht nicht mit Scharfe Sicht zu kombinieren und Empfindliches Hören nicht mit Scharfe Ohren; diese sind inkompatibel mit Blind bzw. Taub.)\n\nSchwach (Sinn): Einer deiner Sinne ist so schwach, dass er unter Umständen nutzlos ist, die andere als normal empfinden. Ist es das Sehen, kannst du nur bei guter Beleuchtung (z. B. hellem Tageslicht) gut sehen. Ist es das Hören, kannst du nur Geräusche über normaler Sprechlautstärke hören. Ist es der Geschmack, sind nur stark gewürzte Speisen genießbar. Ist es der Geruch, kannst du nur starke Gerüche wahrnehmen. Du erleidest einen -2-Abzug auf alle Aktivitäten unter den entsprechenden Umständen. (Schwaches Sehen ist inkompatibel mit Empfindlichem Sehen, Scharfer Sicht und Blind, und du kannst Schwaches Hören nicht mit Empfindlichem Hören, Scharfen Ohren oder Taub nehmen.)\n\nKälteempfindlich: Du funktionierst normal bei Temperaturen, die deutlich über der Norm für deinen Teil der Welt liegen. Du verlierst eine Erschöpfungsstufe für jede Stunde, die du in einer Umgebung verbringst, die auf der Tabelle der Umgebungstemperaturen zwei Stufen oder mehr unter deinen gewohnten Bedingungen liegt. Deine Reaktionen auf Hitze werden um 2 in der Intensität verringert (Seite 407).\n\nWärmeempfindlich: Du funktionierst normal bei Temperaturen, die deutlich unter der Norm für deinen Teil der Welt liegen. Du verlierst eine Erschöpfungsstufe für jede Stunde, die du in einer Umgebung verbringst, die auf der Tabelle der Umgebungstemperaturen zwei Stufen oder mehr über deinen gewohnten Bedingungen liegt. Deine Reaktion auf Eis wird auf 0 in der Intensität reduziert (Seite 407).\n\nDies ist ein häufiger Fehler für Charaktere, die durch eine starke Magie-Umgebung verzerrt werden."
   },
   "flaw.waster_of_vis": {
     "name": "Vis-Verschwender",
@@ -1353,7 +1400,8 @@
   },
   "flaw.weak_personality": {
     "name": "Schwache Persönlichkeit",
-    "summary": "Dieser Charakter empfindet weder stark für noch gegen irgendetwas und mangelt an den einzigartigen Eigenschaften, die die meisten Menschen wirklich hervorstechen lassen."
+    "summary": "Dieser Charakter empfindet weder stark für noch gegen irgendetwas und mangelt an den einzigartigen Eigenschaften, die die meisten Menschen wirklich hervorstechen lassen.",
+    "description": "Dieser Charakter empfindet weder stark für noch gegen irgendetwas und mangelt an den einzigartigen Eigenschaften, die die meisten Menschen wirklich hervorstechen lassen. Infolgedessen müssen alle Persönlichkeitszüge zwischen +1 und -1 liegen. Bei Persönlichkeitswürfen wird jedes Ergebnis über 6 lediglich als 6 behandelt. Der Charakter darf keine anderen Persönlichkeits-Fehler oder -Tugenden oder Fehler haben, die Persönlichkeitszüge verleihen. Je nach Persönlichkeit des Beobachters mag er wie ein völliger Mitläufer ohne eigene Meinung wirken, unsensibel, weil er selten starke Emotionen zeigt, oder einfach initiativlos für diejenigen, die Führung und Orientierung suchen. Diese Elemente führen in den meisten sozialen Situationen zu einem -1 oder schlechteren (nach Ermessen des Spielleiters) Modifikator, da er offensichtlich ein kalter Fisch ist. Schließlich wird er nie für seine große Loyalität oder seine fromme Natur bekannt sein und wird es schwer haben, Respekt zu gewinnen oder befördert zu werden. Sein mangelnder Enthusiasmus für die Kirche könnte insbesondere als Mangel an Glauben angesehen werden. Auf der positiven Seite mag er gelegentlich in einem positiven Licht erscheinen, da er niemals stark widerspricht."
   },
   "flaw.weak_scholar": {
     "name": "Schwacher Gelehrter",

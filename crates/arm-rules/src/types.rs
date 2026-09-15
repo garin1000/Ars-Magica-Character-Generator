@@ -1994,8 +1994,33 @@ impl From<LineRange> for [u32; 2] {
 /// line range, so it self-heals when the source Markdown is reformatted. There
 /// is deliberately no rulebook page number — the Markdown source has lines, not
 /// pages, and the source files are where edits actually happen.
+///
+/// Field order is alphabetical (`anchor`, `file`, `lines`) so the serialized
+/// form satisfies `CLAUDE.md` → "Canonical serialization" without a custom
+/// `Serialize`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SourceRef {
+    /// The Markdown heading anchor the item is defined under, as the source
+    /// file's own generated cross-links spell it (`abandoned-apprentice` for
+    /// `#### Abandoned Apprentice`) — **the durable half of this reference**.
+    ///
+    /// [`Self::lines`] is a derived coordinate: an upstream edit anywhere above
+    /// the item shifts it, and the guards can only prove a range lands on
+    /// non-blank lines, never that it lands on the rule the citation claims. A
+    /// wholesale re-sync therefore yields a green suite and hundreds of
+    /// citations silently pointing at the wrong passage (`docs/rules-source-resync.md`).
+    /// An anchor survives an edit anywhere else in the book, and when it does
+    /// break — because the heading was renamed, which is a semantic change worth
+    /// noticing — it fails **loudly** rather than resolving to the wrong text.
+    /// That asymmetry is the whole argument for carrying both.
+    ///
+    /// Optional, because the sweep that records them is incremental: an entry
+    /// that has not been read yet carries none and serializes exactly as it did
+    /// before this field existed. Always the **English** anchor —
+    /// `rules/core/` is the canonical-ID language (`CLAUDE.md` → "Rules
+    /// provenance"); per-language anchors live in `rules/i18n/<lang>/source_anchors.json`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub anchor: Option<String>,
     /// Basename of the Markdown source file.
     pub file: String,
     /// Inclusive line range the item was extracted from.
@@ -2003,9 +2028,15 @@ pub struct SourceRef {
 }
 
 impl SourceRef {
-    /// Creates a source reference.
+    /// Creates a source reference with no heading anchor recorded.
+    ///
+    /// There is deliberately no `with_anchor` constructor to pair with it:
+    /// every anchor in the shipped data comes from JSON via serde, so a builder
+    /// would be a public API with no caller (`CLAUDE.md` → YAGNI). Construct the
+    /// struct literally if one is ever needed in Rust.
     pub fn new(file: impl Into<String>, lines: LineRange) -> Self {
         Self {
+            anchor: None,
             file: file.into(),
             lines,
         }
@@ -4572,6 +4603,7 @@ mod tests {
         assert_eq!(
             item.source,
             Some(SourceRef {
+                anchor: None,
                 file: "Ars Magica - Definitive Edition (Core Rules).md".to_string(),
                 lines: LineRange::new(120, 135)
             })
@@ -4649,6 +4681,38 @@ mod tests {
         let source = SourceRef::new("file.md", LineRange::new(10, 20));
         let json = serde_json::to_string(&source).unwrap();
         assert!(json.contains("[10,20]"), "lines as array: {json}");
+    }
+
+    /// A line number is a *derived* coordinate: it moves under every upstream
+    /// edit above it, and `rules_source_provenance.rs` can only prove a range
+    /// lands on non-blank lines, never that it lands on the right rule. The
+    /// heading anchor is the durable half of the same reference — it survives an
+    /// edit anywhere else in the book and fails loudly when it breaks. So a
+    /// `SourceRef` must be able to *carry* one, round-trip, without losing it to
+    /// serde.
+    ///
+    /// Written as a round-trip through JSON rather than a field access so it
+    /// compiles against a `SourceRef` that has no anchor field yet and fails on
+    /// its assertion instead of on a missing symbol.
+    #[test]
+    fn source_ref_preserves_the_heading_anchor() {
+        let json = r#"{"anchor":"clumsy","file":"file.md","lines":[10,20]}"#;
+        let source: SourceRef = serde_json::from_str(json).unwrap();
+        let round_tripped = serde_json::to_string(&source).unwrap();
+        assert!(
+            round_tripped.contains(r#""anchor":"clumsy""#),
+            "a SourceRef must keep the heading anchor it was given: {round_tripped}"
+        );
+    }
+
+    /// The anchor is optional, so the several hundred entries that have not been
+    /// swept yet must serialize byte-identically to before it existed — a
+    /// zero-noise diff is the whole reason this can roll out incrementally.
+    #[test]
+    fn source_ref_without_an_anchor_serializes_without_the_key() {
+        let source = SourceRef::new("file.md", LineRange::new(10, 20));
+        let json = serde_json::to_string(&source).unwrap();
+        assert!(!json.contains("anchor"), "no empty anchor key: {json}");
     }
 
     #[test]
