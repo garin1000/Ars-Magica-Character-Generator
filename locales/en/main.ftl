@@ -1150,7 +1150,6 @@ issue-over_focus_points = Focus Powers spend { $used } points, over the pool of 
 # message quotes it back rather than trying to label it.
 issue-power_dangling_target = { $item } names the power { $power }, which this character does not have; add it under Supernatural Powers or correct the name.
 issue-might_realm_mismatch = The entered Might Realm ({ $base }) disagrees with the Realm its Virtues grant ({ $granted }).
-issue-excessive_aging_reduction = The aging drops to { $characteristic } ({ $reduction }) would fall below the minimum score ({ $min }); it is clamped there.
 # A character over 35 owes aging rolls before play begins (Core Rules.md:2232),
 # and aging starts the Winter after 35 (`:16565`) — so this fires from 36 up. The
 # rolls happen at the table, so the app can only say they are outstanding; a

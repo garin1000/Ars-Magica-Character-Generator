@@ -1123,7 +1123,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Source: `ArMDE:2340-2354` (printed
   table), `ArMDE:4105` (the +3 base cap "unless you take … Great Characteristic").
 - Data: `rules/core/characteristics.json` (`start_points: 7`, `costs`,
-  `base_max: 3`, `base_min: -3`, `aging_floor: -10`). The rulebook's "Gain N" rows
+  `base_max: 3`, `base_min: -3`). The rulebook's "Gain N" rows
   are encoded as **negative** cost (`Gain 1` → `-1`, etc.) — an extraction sign
   convention. The table is **exactly the seven printed rows**, ±3, and that is
   also the buy range: `base_max`/`base_min` equal the table bounds.
@@ -1134,26 +1134,23 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   rulebook prints no cost for ±4 or ±5, and that absence is the tell: those rows
   existed only to pay for a cap-shift reading of Great/Poor (Characteristic) that
   the passages do not support (see below). They are gone, and with them
-  `effective_max`/`effective_min` — the buy range has one tier again. What
-  remains is `aging_floor`, which is **not** a buy limit and **not** a printed
-  rule: `ArMDE:16579` names no floor for aging drops at all, so the engine picks
-  one to keep a derived score bounded and to have a threshold for the
-  `excessive_aging_reduction` warning. It is named for that one job so it cannot
-  again be mistaken for a rules value. (The age → max-Ability-score bands live in
-  `rules/core/abilities.json`, not here — see "Age → max Ability score" below.)
+  `effective_max`/`effective_min` — the buy range has one tier again. (The age →
+  max-Ability-score bands live in `rules/core/abilities.json`, not here — see
+  "Age → max Ability score" below.)
 
-  *Lowered to −10 on 2026-09-15 (open-todos row 44, Norbert's decision).* The
-  convention was −5, one point below the buy range, and that proximity made it
-  say something the book does not: that a character decrepit with age can be no
-  weaker than a freshly-built grog may start. An invented bound is tolerable only
-  where it cannot be mistaken for a rule, so it moved far enough out
-  (`-10`) to catch nothing but runaway arithmetic. The value is data, so the move
-  was a one-line ruleset edit; `crates/arm-rules/tests/data_integrity.rs` —
-  `aging_drops_fall_past_the_buy_floor_but_stop_at_the_declared_one` pins both
-  halves (the drops *do* pass −5, and they stop at −10).
+  *`aging_floor` removed 2026-09-15 (open-todos row 44, Norbert's decision).* The
+  same correction one size down. A third limit survived the row-32 pass because it
+  had a job — clamping an aged-down score, and giving the
+  `excessive_aging_reduction` warning a threshold — but `ArMDE:16579` names no
+  floor for aging drops at all, so the limit stated a rule the book does not: that
+  a character decrepit with age can be no weaker than a freshly-built grog may
+  start. Moving it further out (briefly −10) only made the invention harder to
+  see. It is deleted, with the warning that depended on it; the derived score needs
+  no clamp because `aging_points` is a `u8` and each drop costs more than the last,
+  so the arithmetic terminates on its own. See **Aging (M6/6b6)** below.
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
-  `base_max_score`, `base_min_score`, `aging_floor_score`); enforced in
+  `base_max_score`, `base_min_score`); enforced in
   `validation/scores.rs` — `validate_characteristics` (:32) (off-table
   out-of-range error, above-cap / below-floor errors against the buy range,
   overspent error, points-unspent warning). The out-of-range error is what a save
@@ -3499,8 +3496,8 @@ absolute value of the (already aged-down) score the Characteristic drops by one 
 the points reset, so the simulation consumes `|score| + 1` points per drop over the
 lifetime total. Worked examples encoded as tests (`ArMDE:16613`): a Communication of +2
 drops on its **3rd** aging point; a Stamina of −3 on its **4th**.
-`effective_characteristic_after_aging(entity, ruleset, char) = (bought − drops)`
-floored at the rules effective minimum (−5), **plus** any free
+`effective_characteristic_after_aging(entity, ruleset, char) = (bought − drops)`,
+**unfloored**, **plus** any free
 `CharacteristicScoreDelta` bonus (Giant Blood +1 Str/Sta, Dwarf −1) added on top —
 so an aged Giant-Blood score can still reach ±6. *Decision:* the drop lowers the
 *bought* score (its threshold is the bought score, per the rule text); the free
@@ -3509,14 +3506,33 @@ creation-legality validators keep reading the **un-aged bought score** from
 `entity.characteristics`, so entering an aged-down character can never
 retroactively make its point-buy illegal. Source: `ArMDE:16579`, `ArMDE:16613`.
 
-**Validation (advisory, single path).** `validation/aging.rs::validate_aging` (:52) emits one
-**warning** (never blocking), per Characteristic whose accrued points force a drop:
-`excessive_aging_reduction` — when the derived drops would push the score below the
-−5 floor (it is clamped regardless; args `characteristic`, `reduction`, `min`).
-Fluent key `issue-excessive_aging_reduction` (en/de). (An earlier
+**No floor, and therefore no warning about one.** `ArMDE:16579` gives the drop
+condition and names **no minimum** for an aged Characteristic, so the engine states
+none either: the drops run to the arithmetic, and a decrepit character may end up
+far weaker than any character could be *built*. The result is bounded by the data
+rather than by a clamp — `Entity::aging_points` is a `u8` per Characteristic and
+each successive drop costs one point more than the last, so the drops terminate on
+their own (255 points on a −3 Stamina buy 19 of them and no more). Pinned by
+`tests/data_integrity.rs` —
+`aging_drops_run_to_the_arithmetic_with_no_invented_floor`.
+
+*Removed 2026-09-15 (open-todos row 44, Norbert's decision).* A
+`characteristics.json` key `aging_floor` clamped the aged score (at −5, briefly at
+−10), and `validation/aging.rs` emitted an `excessive_aging_reduction` warning when
+the drops passed it. Both are gone, along with the Fluent key
+`issue-excessive_aging_reduction` in both locales and
+`CharacteristicRules::aging_floor_score`. The clamp was an engine invention no
+passage supports, and the warning was worse: it existed *only* because the clamp
+did, so it warned the player about a perfectly legal character. "The warning needs
+a threshold to fire against" was offered as a reason to keep the floor, which is
+the argument eating its own tail — a warning can only exist where a rule does.
+
+**Validation (advisory, single path).** `validation/aging.rs::validate_aging` (:54)
+emits no per-Characteristic finding at all. (An earlier
 `aging_points_force_drop` note announcing each auto-applied drop was removed as
 validation noise — the drop is automatic and already reflected in the effective
-score, so it is not an entry problem worth flagging.)
+score, so it is not an entry problem worth flagging.) The entity-wide findings
+below are what remains.
 
 `validate_aging` also emits the entity-wide **warning**
 `aging_rolls_pending` (arg `age`, phase `aging`) when the character has

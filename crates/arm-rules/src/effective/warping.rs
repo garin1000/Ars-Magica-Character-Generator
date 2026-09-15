@@ -357,9 +357,7 @@ fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
 }
 
 /// The effective value of `characteristic` after aging: the bought score lowered
-/// by the DERIVED aging drops ([`aging_drops`]) and floored at the ruleset's
-/// [`aging_floor`](crate::characteristics::CharacteristicRules::aging_floor) (-10,
-/// an engine convention — `ArMDE:16579` names no floor), with any free
+/// by the DERIVED aging drops ([`aging_drops`]), with any free
 /// [`Effect::CharacteristicScoreDelta`] bonus (Giant
 /// Blood +1 Str/Sta, Dwarf -1) then added on top — so an aged Giant-Blood score
 /// can still reach ±6. The aging drop lowers the *bought* score (its threshold is
@@ -368,6 +366,18 @@ fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// reads (the point-buy budget check in `validation.rs` reads the un-aged bought
 /// score from `entity.characteristics`), so entering an already-aged character
 /// cannot retroactively make its point-buy illegal.
+///
+/// # There is no floor, deliberately
+///
+/// `ArMDE:16579` gives the drop condition and names no minimum, so neither does
+/// this function. It carried an engine-invented one (-5, then -10) until
+/// 2026-09-15; a clamp at either value says something the book does not — that a
+/// character decrepit with age can be no weaker than a freshly-built grog. The
+/// clamp existed to keep the derived score bounded, but the score is bounded by
+/// the data already: [`Entity::aging_points`] is a `u8` per Characteristic and
+/// each drop costs one point more than the last, so the drops terminate on their
+/// own. Nothing invented is needed to make the arithmetic safe.
+///
 /// Source: ArMDE:16579.
 pub fn effective_characteristic_after_aging(
     entity: &Entity,
@@ -380,10 +390,5 @@ pub fn effective_characteristic_after_aging(
         .copied()
         .map_or(0, i32::from);
     let drops = i32::try_from(aging_drops(entity, ruleset, characteristic)).unwrap_or(i32::MAX);
-    let floor = ruleset
-        .characteristic_rules()
-        .and_then(|r| r.aging_floor_score())
-        .map_or(i32::MIN, i32::from);
-    let aged = bought.saturating_sub(drops).max(floor);
-    aged + characteristic_score_bonus(entity, ruleset, characteristic)
+    bought.saturating_sub(drops) + characteristic_score_bonus(entity, ruleset, characteristic)
 }

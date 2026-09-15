@@ -407,7 +407,6 @@ mod tests {
         let characteristics = r#"{
           "start_points": 7,
           "base_max": 3, "base_min": -3,
-          "aging_floor": -5,
           "costs": [
             { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 },
             { "score": 1, "cost": 1 }, { "score": 0, "cost": 0 },
@@ -1129,7 +1128,6 @@ mod tests {
         }"#;
         let characteristics = r#"{
           "start_points": 7, "base_max": 3, "base_min": -3,
-          "aging_floor": -5,
           "costs": [
             { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 },
             { "score": 1, "cost": 1 }, { "score": 0, "cost": 0 },
@@ -1927,7 +1925,6 @@ mod tests {
         let arts = r#"{ "advancement": [{ "score": 1, "total_xp": 1 }], "arts": [] }"#;
         let characteristics = r#"{
           "start_points": 7, "base_max": 3, "base_min": -3,
-          "aging_floor": -5,
           "costs": [{ "score": 0, "cost": 0 }]
         }"#;
         Ruleset::from_sources(RulesetSources {
@@ -2029,8 +2026,8 @@ mod tests {
     }
 
     /// Aging reductions LOWER the effective Characteristic that derived/play stats
-    /// use, floored at the rules minimum, but the bought score creation-legality
-    /// reads is untouched.
+    /// use, but the bought score creation-legality reads is untouched — and they
+    /// are not floored anywhere, `ArMDE:16579` naming no minimum.
     #[test]
     fn aging_points_derive_the_drop_but_not_creation() {
         let rs = xp_ruleset();
@@ -2049,11 +2046,13 @@ mod tests {
             e.characteristics.get(&Characteristic::Str).copied(),
             Some(3)
         );
-        // The floor clamps at the rules effective minimum (−5), never below.
+        // Nothing clamps the result: 200 points from +3 fund 22 drops (costs 4, 3,
+        // 2, 1, then 2, 3, 4 … as the threshold shrinks to 0 and grows again),
+        // leaving 1 point against a 19-point threshold.
         e.aging_points.insert(Characteristic::Str, 200);
         assert_eq!(
             effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
-            -5
+            -19
         );
     }
 
@@ -2439,7 +2438,6 @@ mod tests {
         let characteristics = r#"{
           "start_points": 7,
           "base_max": 3, "base_min": -3,
-          "aging_floor": -5,
           "costs": [
             { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 },
             { "score": 1, "cost": 1 }, { "score": 0, "cost": 0 },

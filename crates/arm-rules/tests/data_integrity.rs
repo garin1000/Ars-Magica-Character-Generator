@@ -327,45 +327,38 @@ fn shipped_abilities_and_characteristics_load() {
     assert_eq!(chars.max_score(), Some(3));
     assert_eq!(chars.base_max_score(), Some(3));
     assert_eq!(chars.base_min_score(), Some(-3));
-    // The aging floor is a derived-side clamp, well below the buy range. The
-    // rulebook names no floor for aging drops (`ArMDE:16579`), so this is an
-    // engine convention chosen to bound the derived score without asserting a
-    // rule: -10 is low enough that a decrepit character can legitimately end up
-    // weaker than any startable character, which -5 (the old value) forbade.
-    assert_eq!(chars.aging_floor_score(), Some(-10));
+    // The buy range is the whole of what this file limits. There is deliberately
+    // no aging floor: `ArMDE:16579` names none, so the engine states none.
 
     // Advancement table is triangular: score 5 costs 75 xp total.
     assert_eq!(rs.advancement().xp_for_score(5), Some(75));
     assert_eq!(rs.advancement().xp_to_raise(5), Some(25));
 }
 
-/// The aging floor sits far enough below the buy range that a decrepit character
-/// can end up weaker than any character could be *built*. That is the point of
-/// the value: `ArMDE:16579` names no floor, and nothing in the aging rules says a
-/// seventy-year-old's Stamina stops falling where a newly-made grog's may start.
-/// The engine still needs *a* bound — an unbounded derived score is worse, and
-/// `excessive_aging_reduction` needs a threshold to fire against — so -10 is a
-/// declared engine convention, not a rule, and this test pins both halves: the
-/// drops pass the buy floor, and they stop at the declared one.
+/// Aging drops run all the way down: the aged score is the arithmetic the rule
+/// describes and nothing else. `ArMDE:16579` gives only the drop condition ("Once
+/// a character has a number of Aging Points greater than the absolute value of the
+/// Characteristic, the Characteristic drops by one point and all Aging Points are
+/// lost") and names no minimum, so the engine imposes none — a decrepit character
+/// may end up far weaker than any character could be *built*, which is the whole
+/// point of a Characteristic that falls with age.
+///
+/// The result is bounded by the data rather than by a clamp: `Entity::aging_points`
+/// is a `u8` per Characteristic, and each successive drop costs one point more than
+/// the last, so 255 points on a -3 Stamina buys 19 drops and no more. That is why
+/// removing the clamp costs nothing in robustness.
 #[test]
-fn aging_drops_fall_past_the_buy_floor_but_stop_at_the_declared_one() {
+fn aging_drops_run_to_the_arithmetic_with_no_invented_floor() {
     let rs = load_ruleset();
     let mut e = entity("grog", vec![]);
     e.characteristics.insert(Characteristic::Sta, -3);
 
-    // Enough points for several drops below an already-minimal bought score.
-    e.aging_points.insert(Characteristic::Sta, 30);
-    let aged = effective_characteristic_after_aging(&e, &rs, Characteristic::Sta);
-    assert!(
-        aged < -5,
-        "an old character must be able to fall below the buy floor; got {aged}"
-    );
-
-    // …and no further than the declared convention, however many points accrue.
+    // The costs run 4, 5, 6, … from a -3 score; 255 points fund 19 of them and
+    // leave 8 unspent against a 22-point threshold.
     e.aging_points.insert(Characteristic::Sta, u8::MAX);
     assert_eq!(
         effective_characteristic_after_aging(&e, &rs, Characteristic::Sta),
-        -10
+        -22
     );
 }
 

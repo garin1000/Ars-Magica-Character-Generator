@@ -228,7 +228,6 @@ impl fmt::Display for IssueSeverity {
 /// | `over_power_levels` | error | review | `used`, `budget`, `over` |
 /// | `over_focus_points` | error | review | `used`, `budget`, `over` |
 /// | `might_realm_mismatch` | warning | review | `base`, `granted` |
-/// | `excessive_aging_reduction` | warning | aging | `characteristic`, `reduction`, `min` |
 /// | `aging_rolls_pending` | warning | aging | `age` |
 /// | `unknown_living_condition` | error | aging | `condition` |
 /// | `living_conditions_conflict` | error | aging | `condition`, `other` |
@@ -729,11 +728,6 @@ impl ValidationIssue {
     /// Realm disagrees with the Realm its Might Virtues grant (a supernatural being
     /// belongs to exactly one Realm; ArMDE:2623-2625).
     pub const CODE_MIGHT_REALM_MISMATCH: &'static str = "might_realm_mismatch";
-    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a Characteristic's
-    /// completed aging/Decrepitude reductions would push its effective score below
-    /// the rules effective minimum (−5). Advisory — the engine still clamps the
-    /// derived score at the floor (ArMDE:16579).
-    pub const CODE_EXCESSIVE_AGING_REDUCTION: &'static str = "excessive_aging_reduction";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a character over 35 has
     /// no aging rolls recorded, and "a character over the age of 35 must make aging
     /// rolls ... before the game begins" (ArMDE:2232). Advisory: the rolls happen at
@@ -2964,7 +2958,6 @@ mod tests {
         ]"#;
         let characteristics = r#"{
           "start_points": 7, "base_max": 3, "base_min": -3,
-          "aging_floor": -5,
           "costs": [
             { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 }, { "score": 1, "cost": 1 },
             { "score": 0, "cost": 0 }, { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 },
@@ -2991,59 +2984,38 @@ mod tests {
         .unwrap()
     }
 
-    /// A plausible aged character whose accrued points have not yet forced a drop
-    /// (points within score magnitude) raises no aging advisory.
+    /// **How far the drops go changes nothing about validation.** Accrued points
+    /// that force a drop raise no advisory — the drop is automatic and already
+    /// reflected in the effective score — and a character driven far below the buy
+    /// range raises exactly the same nothing, because `ArMDE:16579` states no
+    /// minimum for an aged Characteristic and so there is no threshold to cross.
+    ///
+    /// This replaces an `excessive_aging_reduction` warning removed on 2026-09-15.
+    /// It fired when the drops passed an engine-invented floor, which made it a
+    /// warning about a perfectly legal character; deleting the floor deleted its
+    /// only possible trigger. Comparing the two code sets rather than asserting a
+    /// single absence is what makes the test outlive the deleted constant: it fails
+    /// if *any* future finding starts keying off the depth of an aging drop.
     #[test]
-    fn plausible_aging_state_has_no_warnings() {
+    fn the_depth_of_an_aging_drop_changes_no_validation_finding() {
         let rs = aging_ruleset();
-        let mut entity = make_entity("companion", vec![]);
-        entity.characteristics.insert(Characteristic::Str, 3);
-        entity.aging_points.insert(Characteristic::Str, 1); // 1 ≤ |3|, no drop
-        let result = validate(&entity, &rs);
-        let codes = all_codes(&result);
-        assert!(!codes.contains(&ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION.to_string()));
-    }
 
-    /// Derived drops that would drive the effective Characteristic below the rules
-    /// floor warn (non-blocking); the score is clamped regardless.
-    #[test]
-    fn excessive_aging_reduction_warns() {
-        let rs = aging_ruleset();
-        let mut entity = make_entity("companion", vec![]);
-        entity.characteristics.insert(Characteristic::Str, 0);
-        // From a 0 score, 21 points force 6 drops (1+2+3+4+5+6) → −6 < −5.
-        entity.aging_points.insert(Characteristic::Str, 21);
-        let result = validate(&entity, &rs);
-        assert!(
-            all_codes(&result)
-                .contains(&ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION.to_string())
-        );
-        // Advisory only — never an error.
-        assert!(
-            result.errors().next().is_none(),
-            "issues: {:?}",
-            result.issues
-        );
-    }
+        let mut shallow = make_entity("companion", vec![]);
+        shallow.characteristics.insert(Characteristic::Sta, 1);
+        shallow.aging_points.insert(Characteristic::Sta, 3); // 3 > |1| → one drop
+        let shallow_codes = all_codes(&validate(&shallow, &rs));
 
-    /// Accrued points that force a drop (but stay above the floor) raise NO aging
-    /// advisory — the auto-applied drop is not surfaced as validation noise — and
-    /// never block. The excessive-reduction warning only fires below the floor.
-    #[test]
-    fn aging_points_forcing_a_drop_raise_no_note() {
-        let rs = aging_ruleset();
-        let mut entity = make_entity("companion", vec![]);
-        entity.characteristics.insert(Characteristic::Sta, 1);
-        entity.aging_points.insert(Characteristic::Sta, 3); // 3 > |1| → drops, but above −5
-        let result = validate(&entity, &rs);
+        let mut deep = make_entity("companion", vec![]);
+        deep.characteristics.insert(Characteristic::Sta, 1);
+        // 100 points from +1 fund drops well past the -3 buy floor.
+        deep.aging_points.insert(Characteristic::Sta, 100);
+        let deep_result = validate(&deep, &rs);
+
+        assert_eq!(all_codes(&deep_result), shallow_codes);
         assert!(
-            !all_codes(&result)
-                .contains(&ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION.to_string())
-        );
-        assert!(
-            result.errors().next().is_none(),
-            "issues: {:?}",
-            result.issues
+            deep_result.errors().next().is_none(),
+            "aging deeply is legal, never an error; issues: {:?}",
+            deep_result.issues
         );
     }
 
@@ -3524,12 +3496,11 @@ mod tests {
         // aging.rs — the aging step owns the age, the Living Conditions and the
         // accrued points, so its findings are fixable there and nowhere else.
         let mut aged = make_entity("companion", vec![]);
-        aged.characteristics.insert(Characteristic::Str, 0);
-        aged.aging_points.insert(Characteristic::Str, 21);
+        aged.age = Some(60);
         assert_eq!(
             phase_of(
                 &validate(&aged, &aging_rs),
-                ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION
+                ValidationIssue::CODE_AGING_ROLLS_PENDING
             ),
             CreationPhase::Aging
         );
@@ -5023,7 +4994,7 @@ mod tests {
         ] }"#;
         let characteristics = r#"{
           "start_points": 7,
-          "base_max": 3, "base_min": -3, "aging_floor": -5,
+          "base_max": 3, "base_min": -3,
           "costs": [
             { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 }, { "score": 1, "cost": 1 },
             { "score": 0, "cost": 0 },

@@ -1205,7 +1205,6 @@ issue-over_focus_points = Fokussierte Mächte verbrauchen { $used } Punkte, übe
 # eingetragen hat; die Meldung gibt ihn deshalb wörtlich wieder.
 issue-power_dangling_target = { $item } nennt die Kraft { $power }, die dieser Charakter nicht besitzt; trage sie unter „Übernatürliche Kräfte“ ein oder berichtige den Namen.
 issue-might_realm_mismatch = Die eingegebene Macht-Sphäre ({ $base }) stimmt nicht mit der von den Tugenden verliehenen Sphäre ({ $granted }) überein.
-issue-excessive_aging_reduction = Die Alterungsminderungen für { $characteristic } ({ $reduction }) würden unter den Mindestwert ({ $min }) fallen; er wird dort begrenzt.
 # Ein Charakter über 35 muss vor Spielbeginn Alterungswürfe ablegen
 # (Basisregeln.md:2232); die Alterung beginnt im Winter nach dem 35. Geburtstag
 # (`:16565`), daher greift dies ab 36. Die Würfe fallen am Spieltisch, die App

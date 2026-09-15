@@ -108,8 +108,10 @@ pub struct CharacteristicCost {
 /// `ArMDE:6600` perform the raise/drop themselves and the table prints no price
 /// for ±4 or ±5.
 ///
-/// [`aging_floor`](Self::aging_floor) is a separate, *derived*-side bound and not
-/// a buy limit at all.
+/// That buy limit is the **only** bound this type carries. A `derived`-side
+/// `aging_floor` lived here until 2026-09-15, clamping an aged-down score; it is
+/// gone because `ArMDE:16579` names no such floor, and a limit the rules do not
+/// state has no business in the rules data (open-todos row 44).
 ///
 /// Source: ArMDE:2340-2354 (table),
 /// :4105 (the "+3 unless Great Characteristic" base cap).
@@ -130,26 +132,6 @@ pub struct CharacteristicRules {
     /// table).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_min: Option<i8>,
-    /// The floor an **aged-down** score is clamped to, and the threshold the
-    /// `excessive_aging_reduction` warning fires below. `None` falls back to the
-    /// table minimum.
-    ///
-    /// This is deliberately **not** a buy limit and **not** a printed rule:
-    /// `ArMDE:16579` states how aging points drop a Characteristic but names no
-    /// floor at all, so the engine picks one to keep a derived score bounded and
-    /// to have something to warn against. It is named for the one job it does
-    /// rather than left as a second "effective" limit, because the buy range has
-    /// exactly one tier (`base_min`..=`base_max`) now that Great/Poor grant a
-    /// free delta instead of widening it.
-    ///
-    /// The shipped value is -10, chosen to sit *well clear* of the buy range
-    /// rather than just below it. A bound that close (the earlier -5) does not
-    /// merely clamp an absurd score, it states a rule the book does not: that a
-    /// character decrepit with age can be no weaker than a newly-made grog may
-    /// start. Nothing in the aging rules says that, so the convention is placed
-    /// where it can only ever catch runaway arithmetic.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub aging_floor: Option<i8>,
 }
 
 impl<'de> Deserialize<'de> for CharacteristicRules {
@@ -162,15 +144,12 @@ impl<'de> Deserialize<'de> for CharacteristicRules {
             base_max: Option<i8>,
             #[serde(default)]
             base_min: Option<i8>,
-            #[serde(default)]
-            aging_floor: Option<i8>,
         }
         let Raw {
             start_points,
             mut costs,
             base_max,
             base_min,
-            aging_floor,
         } = Raw::deserialize(deserializer)?;
         costs.sort_by_key(|row| row.score);
         Ok(Self {
@@ -178,7 +157,6 @@ impl<'de> Deserialize<'de> for CharacteristicRules {
             costs,
             base_max,
             base_min,
-            aging_floor,
         })
     }
 }
@@ -225,13 +203,6 @@ impl CharacteristicRules {
     /// `None` only when the table itself is empty.
     pub fn base_min_score(&self) -> Option<i8> {
         self.base_min.or_else(|| self.min_score())
-    }
-
-    /// The floor an aged-down score is clamped to: the
-    /// [`aging_floor`](Self::aging_floor) when present, else the table minimum.
-    /// `None` only when the table itself is empty.
-    pub fn aging_floor_score(&self) -> Option<i8> {
-        self.aging_floor.or_else(|| self.min_score())
     }
 
     /// `true` if `score` has a row in the cost table.
@@ -310,14 +281,13 @@ mod tests {
         assert!(!r.is_legal_score(4));
     }
 
-    /// The shipped table: the seven printed rows, base limits ±3, and the
-    /// aging-side floor at −5.
+    /// The shipped table: the seven printed rows and base limits ±3. There is no
+    /// third limit — the buy range is all this file bounds.
     fn shipped_rules() -> CharacteristicRules {
         serde_json::from_str(
             r#"{
               "start_points": 7,
               "base_max": 3, "base_min": -3,
-              "aging_floor": -5,
               "costs": [
                 { "score": 3, "cost": 6 },
                 { "score": 2, "cost": 3 },
@@ -352,8 +322,6 @@ mod tests {
         assert_eq!(r.base_min_score(), Some(-3));
         assert_eq!(r.max_score(), Some(3));
         assert_eq!(r.min_score(), Some(-3));
-        // The aging floor sits below the buy range and is not one of its limits.
-        assert_eq!(r.aging_floor_score(), Some(-5));
     }
 
     #[test]
@@ -362,21 +330,6 @@ mod tests {
         let r = rules();
         assert_eq!(r.base_max_score(), Some(3));
         assert_eq!(r.base_min_score(), Some(-3));
-        assert_eq!(r.aging_floor_score(), Some(-3));
-    }
-
-    #[test]
-    fn aging_floor_overrides_table_min_when_present() {
-        // Without an explicit aging_floor, the table minimum is the floor.
-        assert_eq!(rules().aging_floor_score(), Some(-3));
-        // With one, it lowers the floor below the buy range.
-        let r: CharacteristicRules = serde_json::from_str(
-            r#"{ "start_points": 7, "aging_floor": -5,
-                 "costs": [{ "score": 3, "cost": 6 }, { "score": 0, "cost": 0 }] }"#,
-        )
-        .unwrap();
-        assert_eq!(r.aging_floor_score(), Some(-5));
-        assert_eq!(r.min_score(), Some(0));
     }
 
     #[test]

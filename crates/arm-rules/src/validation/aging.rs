@@ -24,9 +24,6 @@ use crate::aging::AgingError;
 /// drops are DERIVED from [`Entity::aging_points`] (ArMDE:16579); this
 /// only surfaces informational notes, never blocking errors:
 ///
-/// - `excessive_aging_reduction`: the derived drops would push a Characteristic's
-///   effective score below the rules effective minimum (−5). The derived score is
-///   clamped regardless; this only flags an implausible entry.
 /// - `aging_rolls_pending`: the character is over 35 and no aging roll
 ///   is recorded, so the rolls the rules owe before play have not been made.
 /// - `unknown_living_condition` and `living_conditions_conflict`: the character's
@@ -35,7 +32,12 @@ use crate::aging::AgingError;
 ///
 /// (An earlier `aging_points_force_drop` note announcing each auto-applied drop
 /// was removed as validation noise — the drop is automatic and already reflected
-/// in the effective score, so it is not an entry problem worth flagging.)
+/// in the effective score, so it is not an entry problem worth flagging. An
+/// `excessive_aging_reduction` warning was removed on 2026-09-15 for a stronger
+/// reason: it fired when the drops passed an engine-invented floor that
+/// `ArMDE:16579` does not state, so it warned about a legal character. A warning
+/// can only exist where a rule does; this one existed because a clamp did, and
+/// the clamp went with it.)
 ///
 /// Three neighbouring findings were considered and **rejected as noise**, recorded
 /// here so they are not re-litigated: a note for a Longevity Ritual carrying no
@@ -54,46 +56,6 @@ pub(crate) fn validate_aging(
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    let bought = |c: &Characteristic| {
-        entity
-            .characteristics
-            .get(c)
-            .copied()
-            .map_or(0i32, i32::from)
-    };
-
-    let aging_floor = ruleset
-        .characteristic_rules()
-        .and_then(|r| r.aging_floor_score())
-        .map(i32::from);
-
-    for (characteristic, points) in &entity.aging_points {
-        if *points == 0 {
-            continue;
-        }
-        let drops = crate::effective::aging_drops(entity, ruleset, *characteristic);
-        if drops == 0 {
-            continue;
-        }
-        let aged = bought(characteristic) - i32::try_from(drops).unwrap_or(i32::MAX);
-
-        // The aged-down score would fall below the rules floor (clamped anyway).
-        if let Some(min) = aging_floor
-            && aged < min
-        {
-            issues.push(ValidationIssue::warning(
-                ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION,
-                CreationPhase::Aging,
-                args([
-                    ("characteristic", characteristic.to_string()),
-                    ("reduction", drops.to_string()),
-                    ("min", min.to_string()),
-                ]),
-                None,
-            ));
-        }
-    }
-
     report_living_conditions(entity, ruleset, issues);
     report_apparent_age(entity, issues);
     report_pending_aging_rolls(entity, ruleset, issues);
