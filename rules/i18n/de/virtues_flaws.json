@@ -1481,7 +1481,8 @@
   },
   "virtue.alluring_to_beings": {
     "name": "Anziehend auf {being}",
-    "summary": "Diese Tugend ist mit einer von drei Klassen von Wesen verbunden: gewöhnlichen Tieren, Feen oder magischen Wesen."
+    "summary": "Diese Tugend ist mit einer von drei Klassen von Wesen verbunden: gewöhnlichen Tieren, Feen oder magischen Wesen.",
+    "description": "Diese Tugend ist mit einer von drei Klassen von Wesen verbunden: gewöhnlichen Tieren, Feen oder magischen Wesen. Die letzten beiden umfassen Charaktere, die durch übernatürliche Tugenden oder Fehler mit der Feensphäre bzw. der Magiesphäre verbunden sind, sowie Wesen mit Feenmacht oder Magischer Macht.\n\nDiese Wesen fühlen sich seltsam zum Charakter hingezogen und vertrauen oder gehorchen ihm gewöhnlich ohne Nachdenken. Er erhält +3 auf Kommunikations- und Präsenzwürfe, um sie zu beeinflussen. Charaktere, die auf Wesen dieser Art abstoßend wirken, können diese Tugend nicht nehmen, einschließlich jener, die die Gabe oder eine Magische Ausstrahlung besitzen, obwohl Charaktere, die auf sie harmlos wirken, oder die Sanfte Gabe besitzen, dies dürfen.\n\nZu beachten ist, dass Anziehend auf Magische Wesen zwar hermetische Magi betreffen kann, die Parma Magica diesen Effekt jedoch abwehrt, da sie auch gegen die sozialen Nachteile der Gabe schützt. Machtwert und andere Formen allgemeiner Magieresistenz hindern diesen Effekt nicht."
   },
   "virtue.almogaten": {
     "name": "Almogaten",
@@ -1513,7 +1514,8 @@
   },
   "virtue.aptitude_for_sin": {
     "name": "Begabung für {sin}",
-    "summary": "Diese Sammel-Tugend steht für jene kleineren Wirkungen, die Dämonen ihren Opfern verleihen, damit sie effektiver sündigen können – und daher häufiger."
+    "summary": "Diese Sammel-Tugend steht für jene kleineren Wirkungen, die Dämonen ihren Opfern verleihen, damit sie effektiver sündigen können – und daher häufiger.",
+    "description": "Diese Sammel-Tugend steht für jene kleineren Wirkungen, die Dämonen ihren Opfern verleihen, damit sie effektiver sündigen können – und daher häufiger. Jede Begabung für eine bestimmte Sünde addiert +3 auf alle Würfe in einem sehr begrenzten Umfeld, das mit der Besessenheit eines Dämons verknüpft ist. Als Beispiele können Charaktere Begabungen für Taschendiebstahl, für geschickten Ehebruch oder für das Vergiften von Menschen haben."
   },
   "virtue.arcane_lore": {
     "name": "Arkanes Wissen",
@@ -1529,7 +1531,8 @@
   },
   "virtue.atlantean_magic": {
     "name": "Atlantische Magie",
-    "summary": "Der Magus – oder ein Vorfahre in seiner Linie – hat die Magie verbannter Atlantier studiert und dabei mehrere nützliche Erweiterungen der hermetischen Magie entwickelt."
+    "summary": "Der Magus – oder ein Vorfahre in seiner Linie – hat die Magie verbannter Atlantier studiert und dabei mehrere nützliche Erweiterungen der hermetischen Magie entwickelt.",
+    "description": "Der Magus – oder ein Vorfahre in seiner Linie – hat die Magie verbannter Atlantier studiert und dabei mehrere nützliche Erweiterungen der hermetischen Magie entwickelt.\n\nDer Magus hat Zugang zu einer besonderen Reichweite: Wasserweg, einer besonderen Dauer: Sturm, und einem besonderen Ziel: Gewässer, die er bei Spontaner Magie sowie in Formulaischen oder Ritualzaubern nutzen darf.\n\nWasserweg (Reichweite): Der Magus kann jeden bzw. alles auf demselben Wasserweg anvisieren, auf dem er sich selbst befindet. Ein Fluss, ein Kanal, ein See oder ein Meer ist zum Beispiel ein Wasserweg. Zuflüsse eines Flusses gehören zum selben Wasserweg wie der Hauptfluss, sind jedoch nicht derselbe Wasserweg wie andere Zuflüsse des Hauptflusses. In manchen Fällen muss die Spieltruppe genau festlegen, wo ein Wasserweg beginnt und ein anderer endet.\n\nDer Magus muss beim Wirken des Zaubers den Wasserweg berühren, und das Ziel muss entweder ebenfalls den Wasserweg berühren oder auf ihm schwimmen (zum Beispiel in einem Boot). Eine Person am Ufer eines Flusses kann durch diesen Zauber nicht anvisiert werden. Der Magus muss das Ziel nicht sehen können, muss es aber auf irgendeine Weise wahrnehmen, sofern der Zauber kein Intellego-Effekt ist, der feststellen soll, ob sich etwas auf dem Wasserweg befindet.\n\nZur Bestimmung der Spruchstufe entspricht Wasserweg derselben Reichweitenstufe wie Sicht.\n\nSturm (Dauer): Ein Zauber mit dieser Dauer muss während eines Sturms gewirkt werden und hält bis zum Ende des Sturms an. Normalerweise dauert ein Sturm Minuten oder Stunden, doch manche großen Stürme können Tage andauern. Die Form des Zaubers muss entweder Aquam oder Auram sein, doch der Zauber wird nicht notwendigerweise auf den Sturm selbst gewirkt. Die Dauer eines vollkommen natürlichen Sturms lässt sich grob abschätzen, indem man einen Stresswürfel würfelt und das Ergebnis durch 2 teilt – das ergibt die Anzahl der Stunden, die der Sturm andauern wird. Ein Patzer hat keine Konsequenz, außer dass der Sturm in einigen Minuten abklingt. Der Spielleiter sollte verdeckt bestimmen, wie lange der Sturm dauern wird – obwohl ein InAu-Zauber oder ein Natursinns-Fertigkeitswurf diese Information leicht enthüllen könnte.\n\nZur Bestimmung der Spruchstufe entspricht Sturm derselben Dauerstufe wie Konzentration.\n\nGewässer (Ziel): Ein Zauber mit diesem Ziel zielt auf ein ganzes Gewässer ab, ob es sich um einen See, einen Fluss oder ein Meer handelt. Verwende dieselben Richtlinien wie bei Wasserweg, um zu bestimmen, wo ein Gewässer beginnt und endet.\n\nZur Bestimmung der Spruchstufe entspricht Gewässer derselben Zielstufe wie Bauwerk (denke daran, die Spruchmagnitude zu erhöhen, um ein sehr großes Gewässer wie ein Meer oder den Ozean zu beeinflussen)."
   },
   "virtue.baccalaureus": {
     "name": "Baccalaureus",
@@ -1557,7 +1560,8 @@
   },
   "virtue.boosted_magic": {
     "name": "Verstärkte Magie",
-    "summary": "Indem du beim Wirken von Formulaischen Zaubern einen Bauern Vis ausgibst, kannst du Reichweite, Dauer, Ziel oder Größe des Effekts um eine Magnitude „verstärken\"."
+    "summary": "Indem du beim Wirken von Formulaischen Zaubern einen Bauern Vis ausgibst, kannst du Reichweite, Dauer, Ziel oder Größe des Effekts um eine Magnitude „verstärken“.",
+    "description": "Indem du beim Wirken von Formulaischen Zaubern einen Bauern Vis ausgibst, kannst du Reichweite, Dauer, Ziel oder Größe des Effekts um eine Magnitude „verstärken“. Du kannst dies für denselben Zauber mehrmals tun.\n\nZum Beispiel würde das Verstärken der Reichweite von Berührung auf Sicht und des Ziels von Individuum auf Gruppe vier Bauern Vis kosten. Du kannst keinen der Parameter des Zaubers verringern und nicht die Grenzen Formulaischer Magie überschreiten. Zaubererfolg, Erschöpfungsverlust und Penetration werden alle auf Grundlage der ursprünglichen Spruchstufe berechnet, aber du addierst für jeden verwendeten Bauern Vis einen zusätzlichen Patzerwürfel. Dies hat keine Wirkung auf Spontane oder Ritualzauber, obwohl du Vis weiterhin normal zur Steigerung deiner Penetration verwenden kannst."
   },
   "virtue.brother_chaplain": {
     "name": "Bruder Kaplan",
@@ -1599,7 +1603,8 @@
   },
   "virtue.clear_thinker": {
     "name": "Klarer Denker",
-    "summary": "Du denkst logisch und rational."
+    "summary": "Du denkst logisch und rational.",
+    "description": "Du denkst logisch und rational. Du erhältst einen +3-Bonus auf alle Würfe, um Lügen, Verwirrung, Betäubung und Hinterlist zu widerstehen – ob magisch oder weltlich."
   },
   "virtue.clerk": {
     "name": "Kleriker",
@@ -1619,7 +1624,8 @@
   },
   "virtue.convoluted_mind": {
     "name": "Verschlungener Geist",
-    "summary": "Der Charakter ist so häufig den Machenschaften von Dämonen ausgesetzt, dass er ein Gespür dafür entwickelt hat, wie ihre Gedanken funktionieren."
+    "summary": "Der Charakter ist so häufig den Machenschaften von Dämonen ausgesetzt, dass er ein Gespür dafür entwickelt hat, wie ihre Gedanken funktionieren.",
+    "description": "Der Charakter ist so häufig den Machenschaften von Dämonen ausgesetzt, dass er ein Gespür dafür entwickelt hat, wie ihre Gedanken funktionieren. Der Charakter erhält einen +3-Bonus auf alle Infernalkunde-Würfe, um zu bestimmen, was ein Dämon tun wird, und hat ein Gespür – ähnlich der Tugend Gesunder Menschenverstand –, das ihn davon abhält, im Umgang mit Dämonen dumme Dinge zu tun."
   },
   "virtue.corpse_magic": {
     "name": "Leichenmagie",
@@ -1695,7 +1701,8 @@
   },
   "virtue.dust_devil": {
     "name": "Staubwirbel",
-    "summary": "Diese Variante der Tierwandler-Tugend erlaubt es dem Charakter, die Gestalt eines Tamzawit – also eines Staubteufels, eines kleinen Wirbelwinds, der Staub mit sich trägt – anzunehmen."
+    "summary": "Diese Variante der Tierwandler-Tugend erlaubt es dem Charakter, die Gestalt eines Tamzawit – also eines Staubteufels, eines kleinen Wirbelwinds, der Staub mit sich trägt – anzunehmen.",
+    "description": "Diese Variante der Tierwandler-Tugend erlaubt es dem Charakter, die Gestalt eines Tamzawit – also eines Staubteufels, eines kleinen Wirbelwinds, der Staub mit sich trägt – anzunehmen. Sie wird zu einem Staubwirbel der Größe +1, kann die Form jederzeit annehmen und ihre Bewegung selbst lenken. Anstelle eines Umhangs oder einer Tierhaut ist das Fokusobjekt dieser Tugend ein Glasamulett, das aus Sand einer Magiesphäre-Aura geformt wurde."
   },
   "virtue.educated": {
     "name": "Gebildet",
@@ -1727,7 +1734,8 @@
   },
   "virtue.enticer_of_multitudes": {
     "name": "Verführer der Massen",
-    "summary": "Der Charakter besitzt eine Version der Inspirierend-Tugend, die jedoch ausschließlich dazu eingesetzt werden kann, Menschen zu bösen Taten zu verleiten."
+    "summary": "Der Charakter besitzt eine Version der Inspirierend-Tugend, die jedoch ausschließlich dazu eingesetzt werden kann, Menschen zu bösen Taten zu verleiten.",
+    "description": "Der Charakter besitzt eine Version der Inspirierend-Tugend, die jedoch ausschließlich dazu eingesetzt werden kann, Menschen zu bösen Taten zu verleiten. Der Charakter wirkt dabei demagogisch statt heldenhaft und kann eine Gruppe, die er in Raserei versetzt hat, nicht mehr kontrollieren. Der Aufwiegler zwingt Einzelpersonen einer Gruppe dazu, Persönlichkeitseigenschafts-Würfe auf die jeweilige Sünde vorzunehmen, zu der er sie zu verleiten sucht, mit einem Bonus von +5 oder mehr."
   },
   "virtue.entrancement": {
     "name": "Betörung",
@@ -1747,11 +1755,13 @@
   },
   "virtue.eye_of_hephaestus": {
     "name": "Auge des Hephaistos",
-    "summary": "Der Charakter kann die Qualität eines gefertigten Gegenstands intuitiv einschätzen."
+    "summary": "Der Charakter kann die Qualität eines gefertigten Gegenstands intuitiv einschätzen.",
+    "description": "Der Charakter kann die Qualität eines gefertigten Gegenstands intuitiv einschätzen. Ist der Gegenstand in irgendeiner Weise fehlerhaft, wird er sich dessen durch bloßes Berühren sofort bewusst. Er hat auch eine Chance festzustellen, ob ein Gegenstand magisch ist. Für übernatürliche Gegenstände, die von einem Handwerker hergestellt wurden, wird ein Wahrnehmung + Wahrnehmungs-Fertigkeit + Stresswürfelwurf gegen einen Schwierigkeitsgrad von 9 vorgenommen. Bei Erfolg kennt der Charakter die Stärke des Gegenstands. Für hermetisch verzauberte Gegenstände oder solche, die von anderen Zauberern hergestellt wurden, wird ein Wahrnehmung + Wahrnehmungs-Fertigkeit + Stresswürfelwurf gegen einen Schwierigkeitsgrad von 12 vorgenommen. Bei Erfolg weiß der Charakter, dass der Gegenstand verzaubert ist, hat aber keine Ahnung, wie oder welche Kräfte er haben könnte. Das Patzen bei einem dieser Würfe führt zu falschen Informationen. Diese Tugend liefert keine Informationen über die Aktionen oder Befehle, die nötig sind, um die Kräfte eines Gegenstands auszulösen.\n\nHephaistos war ein heidnischer Gott der Handwerker, hauptsächlich der Metallurgen. Für christliche Charaktere ist es passender, diese Tugend als Auge des Heiligen Dunstan zu bezeichnen."
   },
   "virtue.fabric_ripper": {
     "name": "Stoffreißer",
-    "summary": "Der Charakter besitzt die übernatürliche Fähigkeit, jedes gefertigte Ding zu zerreißen, das aus Pflanzen- oder Tierfasern besteht."
+    "summary": "Der Charakter besitzt die übernatürliche Fähigkeit, jedes gefertigte Ding zu zerreißen, das aus Pflanzen- oder Tierfasern besteht.",
+    "description": "Der Charakter besitzt die übernatürliche Fähigkeit, jedes gefertigte Ding zu zerreißen, das aus Pflanzen- oder Tierfasern besteht. Dies erlaubt ihr, Segel zu zerstören, den Riemen zu lösen, der einzelne Rüstungsteile hält, das Zaumzeug eines Pferdes zu sprengen, einen Sack zu platzen zu lassen und eine Hose mit dem Geist zu zerfetzen. Sie gibt eine Erschöpfungsstufe aus, um die Fähigkeit zu aktivieren, und kann pro ausgegebener Erschöpfungsstufe nur ein Objekt zum Ziel machen. Es handelt sich um einen PeAn(He)-25-Effekt mit +0 Penetration, der weder Worte noch Gesten erfordert."
   },
   "virtue.factor": {
     "name": "Faktor",
@@ -1783,11 +1793,13 @@
   },
   "virtue.falls_like_a_cat": {
     "name": "Fällt wie eine Katze",
-    "summary": "Der Charakter wird durch Stürze aus bis zur dreifachen eigenen Körperhöhe nicht verletzt, oder bis zur sechsfachen Höhe, wenn er seinen Fall abfedern kann, indem er sich an Fenstersimsen festhält, durch Markisen bricht oder auf dem Weg nach unten an Ästen hängenbleibt."
+    "summary": "Der Charakter wird durch Stürze aus bis zur dreifachen eigenen Körperhöhe nicht verletzt, oder bis zur sechsfachen Höhe, wenn er seinen Fall abfedern kann, indem er sich an Fenstersimsen festhält, durch Markisen bricht oder auf dem Weg nach unten an Ästen hängenbleibt.",
+    "description": "Der Charakter wird durch Stürze aus bis zur dreifachen eigenen Körperhöhe nicht verletzt, oder bis zur sechsfachen Höhe, wenn er seinen Fall abfedern kann, indem er sich an Fenstersimsen festhält, durch Markisen bricht oder auf dem Weg nach unten an Ästen hängenbleibt. Aus größeren Höhen erleidet der Charakter Aufprallschaden von +1 für jeden zusätzlichen Fuß, wenn er auf einem harten Untergrund landet, oder für jeden zusätzlichen vier Fuß, wenn er auf einem weichen Untergrund landet."
   },
   "virtue.familiarity_with_the_fae": {
     "name": "Vertrautheit mit den Feen",
-    "summary": "Du besitzt ein natürliches Verständnis für die Eigenheiten der Feen, vielleicht weil du Zeit unter ihnen verbracht hast."
+    "summary": "Du besitzt ein natürliches Verständnis für die Eigenheiten der Feen, vielleicht weil du Zeit unter ihnen verbracht hast.",
+    "description": "Du besitzt ein natürliches Verständnis für die Eigenheiten der Feen, vielleicht weil du Zeit unter ihnen verbracht hast. Du erhältst +2 auf alle Würfe, die soziale Interaktion mit Feen beinhalten. Du erhältst außerdem die Effekte der Gesunder-Menschenverstand-Tugend, jedoch nur wenn die Situation Feen betrifft. Du darfst Feenkunde bei der Charaktererschaffung erwerben, selbst wenn du normalerweise keine Arkanen Fertigkeiten nehmen kannst."
   },
   "virtue.famous": {
     "name": "Berühmt",
@@ -1839,11 +1851,13 @@
   },
   "virtue.forgettable_face": {
     "name": "Unscheinbares Gesicht",
-    "summary": "Dieser Charakter wird niemals der sein, der auffällt oder aus einer Menge herausgesucht wird."
+    "summary": "Dieser Charakter wird niemals der sein, der auffällt oder aus einer Menge herausgesucht wird.",
+    "description": "Dieser Charakter wird niemals der sein, der auffällt oder aus einer Menge herausgesucht wird. Momente nachdem man mit ihm gesprochen hat, können die wenigsten Menschen eine angemessene Beschreibung von ihm geben. Ihm werden oft Dinge nachgesehen, weil die Leute nicht sicher sind, ob es tatsächlich er war. Wenn andere Charaktere einen Wurf vornehmen müssen, um ihn zu identifizieren, geschieht dies mit -3. Auf der negativen Seite ist diese Eigenschaft unvereinbar mit großer Schönheit, Charisma oder befehlsgewaltiger Präsenz. Tugenden wie Venussegen oder Inspirierend sind ausgeschlossen, obwohl Venusfluch möglich wäre."
   },
   "virtue.free_expression": {
     "name": "Freie Ausdrucksfähigkeit",
-    "summary": "Du besitzt die Vorstellungskraft und Kreativität, die benötigt werden, um eine neue Ballade zu komponieren oder ein originelles Bild zu malen, und hast das Potenzial, ein großer Künstler zu werden."
+    "summary": "Du besitzt die Vorstellungskraft und Kreativität, die benötigt werden, um eine neue Ballade zu komponieren oder ein originelles Bild zu malen, und hast das Potenzial, ein großer Künstler zu werden.",
+    "description": "Du besitzt die Vorstellungskraft und Kreativität, die benötigt werden, um eine neue Ballade zu komponieren oder ein originelles Bild zu malen, und hast das Potenzial, ein großer Künstler zu werden. Du erhältst +3 Bonus auf alle Würfe, um ein neues Kunstwerk zu schaffen."
   },
   "virtue.free_study": {
     "name": "Freies Studium",
@@ -1851,7 +1865,8 @@
   },
   "virtue.frightful_presence": {
     "name": "Furchteinflößende Erscheinung",
-    "summary": "Du bist in der Lage, durch dein Auftreten großes Entsetzen zu wecken."
+    "summary": "Du bist in der Lage, durch dein Auftreten großes Entsetzen zu wecken.",
+    "description": "Du bist in der Lage, durch dein Auftreten großes Entsetzen zu wecken. Dies kann auf zwei Arten funktionieren: Entweder bist du in der Lage, dein Gesicht zu einer Schreckensvision zu verzerren (häufig, wenn die Präsenz unter null liegt), oder du strahlst eine Aura der Ehrfurcht und Pracht aus, die andere in die Knie zwingt (häufig, wenn die Präsenz über null liegt).\n\nJeder, der deine Furchteinflößende Erscheinung miterlebt, muss sofort einen Tapfer-Persönlichkeitseigenschaftswurf gegen einen Schwierigkeitsgrad von 3 ablegen. Addiere deine Präsenz zum Schwierigkeitsgrad, ohne etwaige Minuszeichen zu berücksichtigen (zum Beispiel macht eine Präsenz von +3 oder -3 den Schwierigkeitsgrad zu 6). Bei einem Misserfolg versuchen sie entweder, deine unmittelbare Nähe zu fliehen, oder werden von deiner Pracht eingeschüchtert.\n\nBleiben die Betroffenen in deiner Nähe (weil sie beeindruckt sind oder weil sie gefangen sind), können sie den Tapfer-Wurf alle zwei Minuten erneut versuchen. Sobald eine Person von der Furchteinflößenden Erscheinung betroffen war und sich von deren Effekten erholt hat, kann sie nicht erneut davon betroffen werden; allerdings wirst du eine entsprechende Reputation (wie Furchteinflößend oder Ehrfurchtgebietend) mit einem Wert von 2 bei jenen erwerben, die du betroffen hast, was deine Beziehungen zu ihnen färben wird.\n\nDieser Effekt hat eine Penetrationssumme von 0."
   },
   "virtue.gender_shift": {
     "name": "Geschlechtswechsel",

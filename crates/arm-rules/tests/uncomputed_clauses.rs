@@ -55,9 +55,20 @@ use std::path::{Path, PathBuf};
 use serde_json::Value;
 
 /// Rulebook terms for the botch-dice mechanic, lowercased. `botch` covers
-/// "botch die"/"botch dice"/"magical botch"; `patzer` covers "Patzerwürfel" and
-/// "Patzer". Both are rulebook proper terms, never loose prose.
-const BOTCH_TERMS: &[&str] = &["botch", "patzer"];
+/// "botch die"/"botch dice"/"magical botch"; `patzer` covers "Patzerwürfel",
+/// "Patzer" and "gepatzert". All are rulebook proper terms, never loose prose.
+///
+/// The German entries are deliberately *four* where English needs one. English
+/// inflects by suffix, so the stem `botch` already reads "botches", "botching"
+/// and "botched"; German does not, and a noun-only list missed every passage
+/// phrased with the verb — "Das Patzen bei einem dieser Würfe", "Einige
+/// Stresswürfe können nicht patzen". That gap was found by a shipped German
+/// description being rewritten to satisfy the detector, which is backwards: this
+/// vocabulary is a property of **the rulebooks' language**, so when the books and
+/// the list disagree it is the list that is wrong. A bare `patz` stem would cover
+/// all of them in one entry and is the reason this is not one — it also matches
+/// "patzig" (impertinent), which states nothing.
+const BOTCH_TERMS: &[&str] = &["botch", "patzer", "patzen", "patzt", "gepatzt"];
 
 fn rules_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../rules")
@@ -212,13 +223,24 @@ fn every_uncomputed_rule_entry_states_its_rule_in_every_locale() {
 /// and a regression inside an already-swept block fails immediately.
 ///
 /// `(file, first line, last line)`, inclusive, against `rules/source/en/`.
-const SWEPT_BLOCKS: &[(&str, i64, i64)] = &[(
-    // The Flaws block: `## Flaws` to the end of `#### Wrathful`,
-    // ArMDE:5639-7113. Swept 2026-09-15.
-    "Ars Magica - Definitive Edition (Core Rules).md",
-    5639,
-    7113,
-)];
+const SWEPT_BLOCKS: &[(&str, i64, i64)] = &[
+    (
+        // The Flaws block: `## Flaws` to the end of `#### Wrathful`,
+        // ArMDE:5639-7113. Swept 2026-09-15.
+        "Ars Magica - Definitive Edition (Core Rules).md",
+        5639,
+        7113,
+    ),
+    (
+        // The head of the Virtues block: `## Virtues` to the end of
+        // `#### Frightful Presence`, ArMDE:3360-3950. Swept 2026-09-18. The
+        // rest of the block (ArMDE:3951-5282) is still unswept — a survey over
+        // the whole block flags 45 entries, of which these are the first 16.
+        "Ars Magica - Definitive Edition (Core Rules).md",
+        3360,
+        3950,
+    ),
+];
 
 /// Entries whose cited passage trips the mechanical-token screen but, on
 /// reading it, states **no rule** — so `narrative` is correct and the screen is
@@ -428,6 +450,30 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
         "resist Twilight on a single magical botch"
     ));
     assert!(states_a_mechanical_rule("einen zusätzlichen Patzerwürfel"));
+
+    // The German VERB forms of the same mechanic. English is covered by a stem —
+    // "botch" already reads "botches", "botching", "botched" — while the German
+    // side listed only the noun, so a passage saying the character *botches*
+    // rather than *suffers a botch* read as pure flavour. The books write both:
+    // "Das Patzen bei einem dieser Würfe führt zu falschen Informationen" (Eye
+    // of Hephaestus) and "Einige Stresswürfe können nicht patzen" (the stress-die
+    // rules). The asymmetry is the detector's defect, not the text's — the
+    // vocabulary is a property of the rulebooks' language, so the term list is
+    // what has to match the books rather than the other way round.
+    assert!(states_a_mechanical_rule(
+        "Das Patzen bei einem dieser Würfe führt zu falschen Informationen."
+    ));
+    assert!(states_a_mechanical_rule(
+        "Einige Stresswürfe können nicht patzen"
+    ));
+    assert!(states_a_mechanical_rule("Wenn er patzt, fällt er"));
+    assert!(states_a_mechanical_rule(
+        "wenn einer davon eine Null zeigt, hat man gepatzt"
+    ));
+
+    // The adjective shares the stem and states nothing — which is why the terms
+    // below are the inflected verb forms rather than a bare "patz" stem.
+    assert!(!states_a_mechanical_rule("eine patzige Antwort"));
 
     // An unsigned number is not a modifier — this is the exclusion that keeps
     // the signed-number token sharp.

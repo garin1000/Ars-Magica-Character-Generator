@@ -1479,7 +1479,8 @@
   },
   "virtue.alluring_to_beings": {
     "name": "Alluring to {being}",
-    "summary": "This Virtue is associated with one of three classes of beings: mundane animals, faeries, or magical beings."
+    "summary": "This Virtue is associated with one of three classes of beings: mundane animals, faeries, or magical beings.",
+    "description": "This Virtue is associated with one of three classes of beings: mundane animals, faeries, or magical beings. These last two include characters associated with Faerie or the Magic realms, respectively, through Supernatural Virtues or Flaws, as well as beings with Faerie or Magic Might.\n\nThese beings are strangely drawn to the character, and generally trust or obey her without thinking. She gets +3 on Communication and Presence rolls to affect them. Characters who are Offensive to beings of this sort cannot take this Virtue, including those who have The Gift or Magical Air, though characters who are Inoffensive to them or have the Gentle Gift may.\n\nNote that while Alluring to Magical Beings can affect Hermetic magi, the Parma Magica protects against this effect as part of resisting the social penalties of The Gift. Might and other forms of general Magic Resistance do not hinder this effect."
   },
   "virtue.almogaten": {
     "name": "Almogaten",
@@ -1511,7 +1512,8 @@
   },
   "virtue.aptitude_for_sin": {
     "name": "Aptitude for {sin}",
-    "summary": "This catch-all Virtue is for those minor effects which demons grant to their victims to allow them to sin more effectively, and so more often."
+    "summary": "This catch-all Virtue is for those minor effects which demons grant to their victims to allow them to sin more effectively, and so more often.",
+    "description": "This catch-all Virtue is for those minor effects which demons grant to their victims to allow them to sin more effectively, and so more often. Each Aptitude for a particular sin adds +3 to all rolls in a very limited circumstance linked to a demon's Obsession. As examples, characters may have aptitudes for picking pockets, for committing adultery skillfully, or for poisoning people."
   },
   "virtue.arcane_lore": {
     "name": "Arcane Lore",
@@ -1527,7 +1529,8 @@
   },
   "virtue.atlantean_magic": {
     "name": "Atlantean Magic",
-    "summary": "The magus, or an ancestor in his lineage, has studied the magic of exiled Atlanteans and has developed several useful extensions to Hermetic magic."
+    "summary": "The magus, or an ancestor in his lineage, has studied the magic of exiled Atlanteans and has developed several useful extensions to Hermetic magic.",
+    "description": "The magus, or an ancestor in his lineage, has studied the magic of exiled Atlanteans and has developed several useful extensions to Hermetic magic.\n\nThe magus has access to a special Range: Water-way, a special Duration: Storm, and a special Target: Body-of-water, that he may utilize with Spontaneous magic and in Formulaic or Ritual spells.\n\nWater-way (Range): The magus can target anyone, or anything, on (or in) the same water-way as him. For example, a river, canal, lake, or sea is a water-way. Tributary streams of a river are the same waterway as the main river, but are not the same water-way as other tributaries to the main river. In some cases the troupe will need to decide precisely where one water-way begins, and another ends.\n\nThe magus must touch the water-way, when casting the spell, and the target must be either also touching the water-way or floating on it (in a boat, for example). A person on the bank of a river cannot be targeted by this spell. The magus need not be able to see the target, but he must be able to sense it in some way, unless the spell is an Intellego effect intended to determine whether something is in the water-way.\n\nFor determining the spell level, water-way is the same Range level as Sight.\n\nStorm (Duration): A spell with this duration must be cast during a storm and lasts until the end of the storm. Normally, a storm lasts a number of minutes or hours, but some large storms may last for days. The form of the spell must be either Aquam or Auram, but the spell is not necessarily cast on the storm itself. The length of an entirely natural storm can be quickly estimated by rolling a stress die and dividing the result by 2 — this gives the number of hours that the storm will last. A botch has no consequence, excepting that the storm will dissipate in a number of minutes. The storyguide should secretly determine how long the storm will last — although an InAu spell, or Wilderness Sense Ability Roll could easily reveal this information.\n\nFor determining the spell level, Storm is the same Duration level as Concentration.\n\nBody-of-water (Target): A spell with this target targets an entire body-of-water, whether this is a lake, a river, or a sea. Use the same guidelines as water-way to determine where a body-of-water begins and ends.\n\nFor determining the spell level, Body-of-water is the same level of Target as Structure (remember to increase the spell magnitude to affect a very large body-of-water, like a sea or the ocean)."
   },
   "virtue.baccalaureus": {
     "name": "Baccalaureus",
@@ -1555,7 +1558,8 @@
   },
   "virtue.boosted_magic": {
     "name": "Boosted Magic",
-    "summary": "By spending a pawn of vis when casting Formulaic spells you may \"boost\" the Range, Duration, Target, or size of the effect by one magnitude."
+    "summary": "By spending a pawn of vis when casting Formulaic spells you may \"boost\" the Range, Duration, Target, or size of the effect by one magnitude.",
+    "description": "By spending a pawn of vis when casting Formulaic spells you may \"boost\" the Range, Duration, Target, or size of the effect by one magnitude. You can do this multiple times for the same spell.\n\nFor example, boosting Range from Touch to Sight and Target from Individual to Group would cost you four pawns of vis. You may not reduce any of the parameters of the spell, nor may you exceed the limits of Formulaic magic. Casting success, Fatigue loss, and Penetration are all calculated based on the original level of the spell, but you do add one additional botch die for each pawn of vis used. This has no effect on Spontaneous or Ritual spells, though you can still use vis to boost your Penetration as normal."
   },
   "virtue.brother_chaplain": {
     "name": "Brother Chaplain",
@@ -1597,7 +1601,8 @@
   },
   "virtue.clear_thinker": {
     "name": "Clear Thinker",
-    "summary": "You think logically and rationally."
+    "summary": "You think logically and rationally.",
+    "description": "You think logically and rationally. You get a +3 bonus on all rolls to resist lies, confusion, befuddlement, and subterfuge — whether magical or mundane."
   },
   "virtue.clerk": {
     "name": "Clerk",
@@ -1617,7 +1622,8 @@
   },
   "virtue.convoluted_mind": {
     "name": "Convoluted Mind",
-    "summary": "The character has been exposed to the machinations of demons so often that he has developed a sense of how their minds work."
+    "summary": "The character has been exposed to the machinations of demons so often that he has developed a sense of how their minds work.",
+    "description": "The character has been exposed to the machinations of demons so often that he has developed a sense of how their minds work. The character gains a +3 bonus on all Infernal Lore rolls to determine what a demon will do, and has a feeling, similar to the Common Sense Virtue, that prevents him from doing stupid things when dealing with demons."
   },
   "virtue.corpse_magic": {
     "name": "Corpse Magic",
@@ -1693,7 +1699,8 @@
   },
   "virtue.dust_devil": {
     "name": "Dust Devil",
-    "summary": "This variant of the Skinchanger Virtue allows the character to adopt the shape of a tamzawit, or dust devil, a small whirlwind carrying dust."
+    "summary": "This variant of the Skinchanger Virtue allows the character to adopt the shape of a tamzawit, or dust devil, a small whirlwind carrying dust.",
+    "description": "This variant of the Skinchanger Virtue allows the character to adopt the shape of a tamzawit, or dust devil, a small whirlwind carrying dust. She becomes a dust devil of Size +1, can assume the form at any time, and can direct her movement. Rather than a cloak or animal skin, the focus object of this Virtue is a glass amulet formed from sand taken from a Magic aura."
   },
   "virtue.educated": {
     "name": "Educated",
@@ -1725,7 +1732,8 @@
   },
   "virtue.enticer_of_multitudes": {
     "name": "Enticer of Multitudes",
-    "summary": "The character has a version of the Inspirational Virtue that can only be used to manipulate people toward evil acts."
+    "summary": "The character has a version of the Inspirational Virtue that can only be used to manipulate people toward evil acts.",
+    "description": "The character has a version of the Inspirational Virtue that can only be used to manipulate people toward evil acts. The character appears demagogic rather than heroic, and cannot control a group once he has whipped it into a frenzy. The enticer forces individuals in a group to make Personality Trait rolls for the particular sin they are attempting to evoke, with a bonus of +5 or more."
   },
   "virtue.entrancement": {
     "name": "Entrancement",
@@ -1745,11 +1753,13 @@
   },
   "virtue.eye_of_hephaestus": {
     "name": "Eye of Hephaestus",
-    "summary": "The character can innately tell the quality of a manufactured item."
+    "summary": "The character can innately tell the quality of a manufactured item.",
+    "description": "The character can innately tell the quality of a manufactured item. If the item is somehow flawed he is instantly aware of that by merely touching it. He also has a chance to tell if an item is magical. For supernatural items made by a craftsman, make a Perception + Awareness + stress die roll against an Ease Factor of 9. If successful, the character knows the power of the item. For Hermetic enchanted items, or those made by other sorcerers, make a Perception + Awareness + stress die roll against an Ease Factor of 12. If successful, the character knows the item is enchanted, but has no idea how, or what its powers might be. Botching either roll results in false information. This Virtue does not offer any information about the actions or commands necessary to trigger an item's powers.\n\nHephaestus was a pagan god of craftsmen, primarily metallurgists. Calling this Virtue the Eye of St. Dunstan is more appropriate for Christian characters."
   },
   "virtue.fabric_ripper": {
     "name": "Fabric Ripper",
-    "summary": "The character has the supernatural ability to tear any manufactured thing made from plant or animal fibers."
+    "summary": "The character has the supernatural ability to tear any manufactured thing made from plant or animal fibers.",
+    "description": "The character has the supernatural ability to tear any manufactured thing made from plant or animal fibers. This allows her to destroy sails, break the strap holding on individual pieces of armor, snap the tack of a horse, burst a sack, and tatter a pair of pants with her mind. She spends a Fatigue level to activate the ability, and may only target one object per Fatigue level spent. This is a PeAn(He) 25 effect with +0 Penetration, and does not require any words or gestures."
   },
   "virtue.factor": {
     "name": "Factor",
@@ -1781,11 +1791,13 @@
   },
   "virtue.falls_like_a_cat": {
     "name": "Falls Like a Cat",
-    "summary": "The character is not injured by falls of up to three times his height, or six times his height if he can soften his fall by catching on windowsills, breaking through awnings, or hitting branches on the way down."
+    "summary": "The character is not injured by falls of up to three times his height, or six times his height if he can soften his fall by catching on windowsills, breaking through awnings, or hitting branches on the way down.",
+    "description": "The character is not injured by falls of up to three times his height, or six times his height if he can soften his fall by catching on windowsills, breaking through awnings, or hitting branches on the way down. At greater heights the character suffers Impact damage of +1 for every additional foot, if landing on a hard surface, or for every additional four feet, if landing on a soft surface."
   },
   "virtue.familiarity_with_the_fae": {
     "name": "Familiarity with the Fae",
-    "summary": "You have a natural understanding of faerie ways, perhaps due to spending time among them."
+    "summary": "You have a natural understanding of faerie ways, perhaps due to spending time among them.",
+    "description": "You have a natural understanding of faerie ways, perhaps due to spending time among them. You get a +2 to all rolls involving social interaction with faeries. You also gain the effects of the Common Sense Virtue, but only when the situation pertains to faeries. You may purchase Faerie Lore at character generation, even if normally unable to take Arcane Abilities."
   },
   "virtue.famous": {
     "name": "Famous",
@@ -1837,11 +1849,13 @@
   },
   "virtue.forgettable_face": {
     "name": "Forgettable Face",
-    "summary": "Never will this character be the one noticed or picked out of a crowd."
+    "summary": "Never will this character be the one noticed or picked out of a crowd.",
+    "description": "Never will this character be the one noticed or picked out of a crowd. Moments after speaking with him, very few people can give an adequate description of him. He often gets away with things because people are not sure it was actually him. If other characters must make a roll to identify him, it is at -3. On the downside, this trait is incompatible with great beauty, charisma, or commanding presence. Virtues like Venus' Blessing or Inspirational are prohibited, although Curse of Venus could work."
   },
   "virtue.free_expression": {
     "name": "Free Expression",
-    "summary": "You have the imagination and creativity needed to compose a new ballad or to paint an original picture, and have the potential to be a great artist."
+    "summary": "You have the imagination and creativity needed to compose a new ballad or to paint an original picture, and have the potential to be a great artist.",
+    "description": "You have the imagination and creativity needed to compose a new ballad or to paint an original picture, and have the potential to be a great artist. You get a +3 bonus on all rolls to create a new work of art."
   },
   "virtue.free_study": {
     "name": "Free Study",
@@ -1849,7 +1863,8 @@
   },
   "virtue.frightful_presence": {
     "name": "Frightful Presence",
-    "summary": "You are capable of instilling great dread through your appearance."
+    "summary": "You are capable of instilling great dread through your appearance.",
+    "description": "You are capable of instilling great dread through your appearance. This can work in one of two ways: you are either able to contort your face into a vision of terror (common if Presence is less than zero); or else radiate an aura of awe and splendor that makes others weak at the knees (common if Presence is greater than zero).\n\nEveryone witnessing you displaying your Frightful Presence must make an immediate Brave Personality roll against an Ease Factor of 3. Add your Presence to the Ease Factor, ignoring any negative sign (for example, a Presence of +3 or -3 makes the Ease Factor 6). A failure means that they either attempt to flee your immediate vicinity, or else are cowed before your glory.\n\nIf the targets remain within your presence (because they are awed or because they are trapped), they can reattempt the Brave roll every two minutes. Once a person has been affected by the Frightful Presence and recovered from its effects, he cannot be affected again; although you will acquire an appropriate Reputation (such as Fearsome or Awesome) at a score of 2 among those you have affected, which will color your dealings with them.\n\nThis effect has a Penetration Total of 0."
   },
   "virtue.gender_shift": {
     "name": "Gender Shift",

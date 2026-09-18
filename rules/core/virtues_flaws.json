@@ -3356,10 +3356,10 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3388, 3395] }
+    "source": { "anchor": "alluring-to-beings", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3388, 3395] }
   },
   {
     "id": "virtue.almogaten",
@@ -3436,11 +3436,11 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
     "parameters": [{ "key": "sin", "type": "ref", "domain": "text" }],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3426, 3429] }
+    "source": { "anchor": "aptitude-for-sin", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3426, 3429] }
   },
   {
     "id": "virtue.arcane_lore",
@@ -3476,9 +3476,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3444, 3469] }
+    "source": { "anchor": "atlantean-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3444, 3469] }
   },
   {
     "id": "virtue.baccalaureus",
@@ -3551,9 +3551,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3523, 3528] }
+    "source": { "anchor": "boosted-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3523, 3528] }
   },
   {
     "id": "virtue.brother_chaplain",
@@ -3647,9 +3647,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3567, 3570] }
+    "source": { "anchor": "clear-thinker", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3567, 3570] }
   },
   {
     "id": "virtue.clerk",
@@ -3694,10 +3694,10 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3601, 3604] }
+    "source": { "anchor": "convoluted-mind", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3601, 3604] }
   },
   {
     "id": "virtue.corpse_magic",
@@ -3897,9 +3897,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3707, 3710] }
+    "source": { "anchor": "dust-devil", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3707, 3710] }
   },
   {
     "id": "virtue.educated",
@@ -3989,10 +3989,10 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3763, 3766] }
+    "source": { "anchor": "enticer-of-multitudes", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3763, 3766] }
   },
   {
     "id": "virtue.entrancement",
@@ -4037,18 +4037,18 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3783, 3788] }
+    "source": { "anchor": "eye-of-hephaestus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3783, 3788] }
   },
   {
     "id": "virtue.fabric_ripper",
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3789, 3792] }
+    "source": { "anchor": "fabric-ripper", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3789, 3792] }
   },
   {
     "id": "virtue.factor",
@@ -4126,18 +4126,18 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3853, 3856] }
+    "source": { "anchor": "falls-like-a-cat", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3853, 3856] }
   },
   {
     "id": "virtue.familiarity_with_the_fae",
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3857, 3860] }
+    "source": { "anchor": "familiarity-with-the-fae", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3857, 3860] }
   },
   {
     "id": "virtue.famous",
@@ -4192,9 +4192,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3883, 3886] }
+    "source": { "anchor": "finding-hidden-loot", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3883, 3886] }
   },
   {
     "id": "virtue.flawless_magic",
@@ -4263,18 +4263,18 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3929, 3932] }
+    "source": { "anchor": "forgettable-face", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3929, 3932] }
   },
   {
     "id": "virtue.free_expression",
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3933, 3936] }
+    "source": { "anchor": "free-expression", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3933, 3936] }
   },
   {
     "id": "virtue.free_study",
@@ -4291,9 +4291,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3941, 3950] }
+    "source": { "anchor": "frightful-presence", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3941, 3950] }
   },
   {
     "id": "virtue.gender_shift",
