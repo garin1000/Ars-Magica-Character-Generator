@@ -4638,10 +4638,10 @@ classes:
   combat penalties and also doubles botch dice, and the encoded half is what decides
   the class.
 
-Counts over the shipped catalogue as of the 2026-09-15 Flaws sweep — a snapshot
-for orientation, **deliberately not asserted in any test** (`CLAUDE.md` →
-"Catalogue size is data, never code"): **narrative 370**,
-**uncomputed_rule 67**, **creation_effect 125**
+Counts over the shipped catalogue as of the 2026-09-19 phrase-screen re-sweep —
+a snapshot for orientation, **deliberately not asserted in any test**
+(`CLAUDE.md` → "Catalogue size is data, never code"): **narrative 335**,
+**uncomputed_rule 102**, **creation_effect 125**
 (36 wired via `effects` before 5a; 68 more wired in 5a-wire; **11 deferred** —
 see the 5a-wire section for the itemized deferrals),
 **in_play_effect 93** (all wired in 5b). Total 655. `narrative` will keep falling
@@ -4768,6 +4768,83 @@ a rule"* — **landed green**, scoped to this block via
 `tests/uncomputed_clauses.rs::SWEPT_BLOCKS`, mirroring the incremental-roots
 pattern `rulebook_citations.rs` uses. The Virtues block (ArMDE:3360-5282) is not
 swept and is deliberately outside the scope.
+
+### The phrase-screen re-sweep (2026-09-19) — 19 further reclassifications
+
+Both sweeps above were run with a two-token detector: a **signed number** and a
+**botch term**. The books state plenty of mechanics in neither. A cap ("up to 12
+human-sized animals"), a target number ("against an Ease Factor of 15"), a
+formula ("equal to a tenth of his Creo Vim Lab Total"), a rounding direction, an
+absolute ("cannot die as a result of wounds or old age"), a step counted in
+magnitudes — each is as mechanical as a `+3`, and every one of them read as pure
+flavour. So "the Flaws block is clean" was true only of the shapes the screen
+could see: **thirteen** of the nineteen entries below sit inside that block.
+
+`tests/uncomputed_clauses.rs::MECHANICAL_PHRASES` adds the third screen, and both
+blocks were re-read under it. The reclassified entries, each now carrying the
+full cited passage as `description` in both shipped locales:
+
+`flaw.bound_to_realm` (ArMDE:5731-5734), `flaw.curse_of_slander`
+(ArMDE:5881-5884), `flaw.the_falling_evil` (ArMDE:6076-6079),
+`flaw.flawed_powers` (ArMDE:6146-6149), `flaw.raised_from_the_dead`
+(ArMDE:6646-6649), `flaw.realm_stigmatic` (ArMDE:6654-6658),
+`flaw.servant_of_the_land` (ArMDE:6717-6720), `flaw.stigmatic_catalyst`
+(ArMDE:6783-6786), `flaw.university_dean` (ArMDE:6923-6926), `flaw.viaticarus`
+(ArMDE:6977-6984), `flaw.vulnerable_to_folk_tradition` (ArMDE:7011-7014),
+`virtue.capo` (ArMDE:3545-3548), `virtue.command_animals` (ArMDE:3575-3578),
+`virtue.death_prophecy` (ArMDE:3639-3644), `virtue.enduring_magic`
+(ArMDE:3755-3758), `virtue.exotic_casting` (ArMDE:3775-3778),
+`virtue.extractor_of_form_vis` (ArMDE:3779-3782),
+`virtue.flexible_formulaic_magic` (ArMDE:3891-3894), `virtue.folk_magic`
+(ArMDE:3907-3920).
+
+**Shapes worth naming, because none of them is a modifier:**
+
+- `virtue.command_animals` (ArMDE:3577) is a **hard cap on a count** — "the
+  character may command up to 12 human-sized animals" — with an explicitly
+  open-ended clause beneath it for smaller animals.
+- `virtue.death_prophecy` (ArMDE:3641) is an **absolute**: "You heal normally,
+  but cannot die as a result of wounds or old age." It overrides two systems the
+  engine does model (wounds, aging) and carries no number at all.
+- `virtue.extractor_of_form_vis` (ArMDE:3781) is a **formula with a rounding
+  direction** — "a number of pawns of Vis equal to a tenth of his Creo Vim (Form)
+  Lab Total (round up)".
+- `virtue.enduring_magic` (ArMDE:3757) is a **die-typed multiplier**: "The
+  storyguide secretly rolls a simple die; multiply the spell's normal duration by
+  the number rolled."
+- `virtue.flexible_formulaic_magic` (ArMDE:3893) is a **parameter-swap rule**
+  priced in magnitudes: raise or lower the casting level by one magnitude to
+  shift one of Range/Duration/Target category/Target size by one step.
+- `flaw.university_dean` (ArMDE:6925) and `flaw.flawed_powers` (ArMDE:6148) are
+  **selection prerequisites the engine does not express** — a minimum age of 40
+  and a Flaw exclusion in the first, "at least one Major Supernatural Virtue" and
+  a Hermetic-Flaw exclusion in the second.
+- `flaw.servant_of_the_land` (ArMDE:6719) states a **budget exemption**: the
+  granted Prohibition "does not count toward the character's total number of
+  Virtues and Flaws".
+- `virtue.folk_magic` (ArMDE:3919) is a whole **sub-system** — a Casting Total of
+  `(Stamina + (Realm) Lore + Aura modifier + stress die) / 2`, a Fatigue cost per
+  cast, and a 15-minute preparation minimum.
+
+All nineteen stay `uncomputed_rule` rather than gaining an effect: no `Effect`
+variant expresses a cap on commanded animals, an exemption from the V/F budget, a
+minimum age, or a duration multiplier, and inventing one is what `CLAUDE.md` →
+"Rules provenance" forbids.
+
+**Four entries trip the widened screen and are correctly `narrative`**, recorded
+with their readings in `tests/uncomputed_clauses.rs::NO_RULE_DESPITE_TOKEN`:
+`flaw.horrifying_appearance_snake_legs` (ArMDE:6264-6267, "two or more
+snake-like tails" counts tails), `flaw.primogeniture_lineage` (ArMDE:6634-6637 —
+its one real rule, House Verditius only, is already *computed* by the entry's
+`prerequisites`; see the Prereq section above), and `flaw.true_love_major` /
+`flaw.true_love_minor` (ArMDE:6871-6878, whose "equal to or better than the
+player character" is the book choosing which magnitude applies — a choice the
+catalogue already encodes as two entries).
+
+The screen also needs a **left word boundary**, without which "or more" reads
+itself out of "f|or more| details" and flags every entry pointing at a
+supplement; `virtue.factor` (ArMDE:3793-3796) and `virtue.fidai`
+(ArMDE:3877-3882) arrived that way and are not reclassified.
 
 ### Roadmap corrections applied here
 

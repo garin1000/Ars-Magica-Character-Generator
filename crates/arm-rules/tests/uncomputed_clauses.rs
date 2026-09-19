@@ -15,8 +15,10 @@
 //!
 //! One assertion, in every shipped locale: an `uncomputed_rule` entry's
 //! displayed rules text (`description` if present, else `summary`) must contain
-//! at least one **mechanical token** — a signed number, or a botch-dice term.
-//! Reclassifying an entry into `uncomputed_rule` therefore costs more than
+//! at least one **mechanical token** — a signed number, a botch-dice term, or
+//! one of the rulebooks' phrase-shaped idioms ([`MECHANICAL_PHRASES`]: a cap, a
+//! target number, a formula, a rounding direction, an absolute, a magnitude
+//! step). Reclassifying an entry into `uncomputed_rule` therefore costs more than
 //! leaving it alone: you must then write the rule into *both* locales. That is
 //! the property that stops the class becoming decorative.
 //!
@@ -47,6 +49,17 @@
 //! draws for `GUARDED_EFFECT_PHRASES`. A phrase list structurally cannot absolve
 //! a specific entry of a specific bug, which is why it is an acceptable input
 //! here and a per-item exemption array would not be.
+//!
+//! That principle has now cut both ways twice, and both times the *list* was
+//! what was wrong. `BOTCH_TERMS` gained its German verb forms after a shipped
+//! description had been reworded to satisfy a noun-only list. Then the whole
+//! token set gained [`MECHANICAL_PHRASES`], because a signed number and a botch
+//! die cannot see a rule the books state in words — and while they could not,
+//! nineteen entries whose passages state caps, target numbers, formulas and
+//! absolutes sat classified `narrative`, thirteen of them inside a block already
+//! declared swept and clean. Both blocks below were therefore **re-swept** under
+//! the widened screen; the earlier dates record when a block was first read, not
+//! when it last passed.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -83,9 +96,15 @@ const SIGN_CHARS: &[char] = &['-', '+', '\u{2013}', '\u{2212}'];
 
 /// True when `s` contains a signed number — `+3`, `-9`, or their en-dash /
 /// minus-sign spellings as the rulebooks write them. In these books the signed
-/// form is a modifier essentially without exception; unsigned numbers ("1 pawn
-/// of vis", "an Ease Factor of 9") are where the noise lives, so requiring the
-/// sign is what keeps the token sharp.
+/// form is a modifier essentially without exception; a bare number ("1 pawn of
+/// vis each season") is where the noise lives, so requiring the sign is what
+/// keeps *this* token sharp.
+///
+/// It used to keep "an Ease Factor of 9" out as well, and that exclusion was
+/// asserted here — wrongly. A target number is a rule, not noise; what it is not
+/// is a *signed modifier*. [`has_mechanical_phrase`] is where it belongs, and
+/// splitting the two is what lets this one stay narrow without the vocabulary as
+/// a whole staying blind.
 fn has_signed_number(s: &str) -> bool {
     let mut chars = s.chars().peekable();
     while let Some(c) = chars.next() {
@@ -102,9 +121,128 @@ fn has_botch_term(s: &str) -> bool {
     BOTCH_TERMS.iter().any(|term| lower.contains(term))
 }
 
+/// The rulebooks' **phrase-shaped** mechanical idioms, lowercased: the rules
+/// they state in words rather than in a signed number or a die name.
+///
+/// The books are full of these — a cap ("up to 12 human-sized animals"), a
+/// target number ("against an Ease Factor of 15"), a formula ("equal to a tenth
+/// of his Creo Vim Lab Total"), a rounding direction, an absolute ("cannot die
+/// as a result of wounds or old age"), a step counted in magnitudes. Each is as
+/// mechanical as a `+3`, and while this screen did not exist every one of them
+/// read as pure flavour. That is not a hypothetical either: the Flaws block was
+/// declared swept and clean on 2026-09-15 with thirteen of them sitting inside
+/// it, because the two tokens that existed could not see a rule stated in words.
+///
+/// # This screen is deliberately noisier than the other two, and that is the
+/// # safe direction
+///
+/// "equal to" and "at least" occur in ordinary prose, so this list over-reports
+/// by design. Over-reporting costs a human one reading, written down as a
+/// [`NO_RULE_DESPITE_TOKEN`] row that says what the passage actually says.
+/// Under-reporting costs a rule, silently, with the entry still looking
+/// complete — which is the exact failure this module exists to prevent. Given
+/// the choice, be noisy. The negative assertions in
+/// [`the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses`]
+/// are what keep "noisy" from becoming "meaningless": the noise is bounded by
+/// tests rather than by hope.
+///
+/// # One list, both locales
+///
+/// German phrases sit beside their English equivalents rather than in a list of
+/// their own. Two lists drift, and the narrower one then bends the rulebook text
+/// to fit it — which has already happened once here, when a shipped German
+/// description was rewritten from "Das Patzen" to "Ein Patzer" to satisfy a
+/// noun-only `BOTCH_TERMS`. The vocabulary is a property of **the rulebooks'
+/// language**, so when the books and the list disagree, the list is what
+/// changes.
+///
+/// Two consequences of German being in the same list:
+///
+/// - **`multiplizier` is a stem where its English twins are not.** German
+///   inflects the ending ("multipliziere"/"multipliziert"), so one stem serves;
+///   English splits the stem itself ("multiply"/"multiplied"), so both forms are
+///   listed. The tempting single stem `multipl` covers neither pair honestly —
+///   it also swallows "may be taken multiple times", a repeatability rule the
+///   engine *does* compute (`max_per_target`), so it would flag most of the
+///   catalogue and teach nothing.
+/// - **German negation is discontinuous**, so a contiguous substring cannot
+///   express "cannot <verb>" in general: the books' own "kannst aber nicht an
+///   Wunden oder Alter sterben" is invisible to `nicht sterben`. The list
+///   carries the contiguous spelling the books also write plainly, and the gap
+///   is a known limit of a substring screen — never a reason to reword shipped
+///   text.
+///
+/// The rounding forms are spelled out rather than stemmed because the obvious
+/// stem, `round`, is also a unit of combat time; `rounded up`/`round up` and
+/// their two downward twins are all in the English book, as are `aufgerundet`
+/// and `abgerundet` in the German one.
+const MECHANICAL_PHRASES: &[&str] = &[
+    // Caps, floors and thresholds.
+    "up to",
+    "bis zu",
+    "at least",
+    "mindestens",
+    "or greater",
+    "oder höher",
+    "or more",
+    "oder mehr",
+    "may not be greater than",
+    "darf nicht größer sein als",
+    "no more than",
+    "nicht mehr als",
+    // Target numbers.
+    "ease factor",
+    "schwierigkeitsgrad",
+    // Formulas.
+    "equal to",
+    "entspricht",
+    "multiply",
+    "multiplied",
+    "multiplizier",
+    // Rounding, which changes the answer.
+    "round up",
+    "rounded up",
+    "round down",
+    "rounded down",
+    "aufgerundet",
+    "abgerundet",
+    // Dice named by kind.
+    "simple die",
+    "einfachen würfel",
+    "stress die",
+    "stresswürfel",
+    // Absolutes.
+    "cannot die",
+    "nicht sterben",
+    // A step counted in magnitudes.
+    "one magnitude",
+    "eine magnitude",
+];
+
+/// True when `s` uses one of [`MECHANICAL_PHRASES`], matched **at a word
+/// boundary on the left**.
+///
+/// The boundary is load-bearing, not tidiness. A bare `contains` reads "or more"
+/// out of "f|or more| details" and so flags every entry whose only sin is
+/// pointing at a supplement — `virtue.factor` and `virtue.fidai` both arrived in
+/// the sweep that way. A phrase crossing a word boundary is a defect in the
+/// screen, and the fix belongs here rather than in a row arguing down prose that
+/// never contained the idiom.
+///
+/// There is deliberately **no** boundary on the right, so a phrase still matches
+/// through a suffix — which is how the `multipli` stem earns its keep.
+fn has_mechanical_phrase(s: &str) -> bool {
+    let lower = s.to_lowercase();
+    MECHANICAL_PHRASES.iter().any(|phrase| {
+        lower
+            .match_indices(phrase)
+            .any(|(at, _)| !lower[..at].ends_with(char::is_alphanumeric))
+    })
+}
+
 /// The guard's detector: does this rules text actually state a mechanical rule?
 fn states_a_mechanical_rule(text: &str) -> bool {
-    has_signed_number(text) || has_botch_term(text)
+    has_signed_number(text) || has_botch_term(text) || has_mechanical_phrase(text)
 }
 
 /// The V/F catalogue, parsed once.
@@ -203,9 +341,10 @@ fn every_uncomputed_rule_entry_states_its_rule_in_every_locale() {
         offenders.is_empty(),
         "an `uncomputed_rule` Virtue/Flaw states a rule the engine does not \
          compute, so its displayed rules text is that rule's ONLY carrier — but \
-         these carry no mechanical token (no signed number, no botch-dice term). \
-         Either the clause was dropped when the text was written, or the entry is \
-         not really `uncomputed_rule`:\n{}",
+         these carry no mechanical token (no signed number, no botch-dice term, \
+         and none of the rulebooks' phrase-shaped idioms). Either the clause was \
+         dropped when the text was written, or the entry is not really \
+         `uncomputed_rule`:\n{}",
         offenders.join("\n")
     );
 }
@@ -226,16 +365,19 @@ fn every_uncomputed_rule_entry_states_its_rule_in_every_locale() {
 const SWEPT_BLOCKS: &[(&str, i64, i64)] = &[
     (
         // The Flaws block: `## Flaws` to the end of `#### Wrathful`,
-        // ArMDE:5639-7113. Swept 2026-09-15.
+        // ArMDE:5639-7113. Swept 2026-09-15; re-swept 2026-09-19 under the
+        // widened screen, which found 13 more — the first sweep could only see
+        // a signed number or a botch die, so every rule the book states in
+        // words read as flavour.
         "Ars Magica - Definitive Edition (Core Rules).md",
         5639,
         7113,
     ),
     (
         // The head of the Virtues block: `## Virtues` to the end of
-        // `#### Frightful Presence`, ArMDE:3360-3950. Swept 2026-09-18. The
-        // rest of the block (ArMDE:3951-5282) is still unswept — a survey over
-        // the whole block flags 45 entries, of which these are the first 16.
+        // `#### Frightful Presence`, ArMDE:3360-3950. Swept 2026-09-18,
+        // re-swept 2026-09-19 with the same widening (8 more). The rest of the
+        // block (ArMDE:3951-5282) is still unswept.
         "Ars Magica - Definitive Edition (Core Rules).md",
         3360,
         3950,
@@ -278,6 +420,44 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
         "flaw.overconfident_minor",
         "The Minor half of the same entry, citing the same passage (ArMDE:6562-6565). Same \
          reading as flaw.overconfident_major.",
+    ),
+    (
+        "flaw.horrifying_appearance_snake_legs",
+        "ArMDE:6264-6267 counts tails, not dice: \"your hips give rise to two or more \
+         snake-like tails\". The \"or more\" is the only token, and what it quantifies is the \
+         character's anatomy — the passage's one near-mechanical sentence, \"Your movement is \
+         not hindered under most circumstances\", explicitly declines to impose a penalty. \
+         Nothing rolls, nothing is capped, nothing is modified. Pure body-horror description, \
+         which is `narrative`.",
+    ),
+    (
+        "flaw.primogeniture_lineage",
+        "ArMDE:6634-6637 trips twice and states a rule neither time. \"She is at least three \
+         places removed from the Primus\" places her in a fictional succession the engine has \
+         no model of — there is no Primus, no line, and no number that changes. \"It would be \
+         no more than an interesting feature of her background\" is a turn of phrase. The one \
+         genuinely mechanical clause, \"This Flaw can only be taken by magi of House \
+         Verditius\", is already *computed*: the entry carries \
+         `prerequisites: all(is_magus, house.verditius)`, so the rule is enforced rather than \
+         merely described, and describing it again would not be `uncomputed_rule`.",
+    ),
+    (
+        "flaw.true_love_major",
+        "ArMDE:6871-6878 trips on \"equal to\" inside \"If the True Love is competent, equal to \
+         or better than the player character, then this is only a Minor Flaw\" — a comparison \
+         of two people's competence, not a formula. The clause it sits in is the book choosing \
+         *which magnitude* of the Flaw applies, and that choice is already data: the catalogue \
+         splits this passage into a Major and a Minor entry whose `magnitude` fields carry \
+         exactly that rule, and marks them `incompatible_with` each other. Nothing is dropped, \
+         because there is no third thing for the text to say. The rest of the passage — the \
+         bond cannot be sundered, no magic can make you hate your love, the True Love must be \
+         a non-player character — is Story-Flaw premise stated in fiction the engine has no \
+         concept of.",
+    ),
+    (
+        "flaw.true_love_minor",
+        "The Minor half of the same entry, citing the same passage (ArMDE:6871-6878). Same \
+         reading as flaw.true_love_major.",
     ),
 ];
 
@@ -377,8 +557,10 @@ fn no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause() {
     assert!(
         offenders.is_empty(),
         "{} `narrative` Virtue/Flaw(s) inside a swept block cite a passage that states a \
-         mechanical rule (a signed modifier or a botch-dice clause). `narrative` means the \
-         RULEBOOK says nothing mechanical, not merely that the engine computes nothing — so \
+         mechanical rule (a signed modifier, a botch-dice clause, or a phrase-shaped idiom — \
+         a cap, a target number, a formula, a rounding direction, an absolute). `narrative` \
+         means the RULEBOOK says nothing mechanical, not merely that the engine computes \
+         nothing — so \
          each of these has either dropped a rule the player never sees, or is misclassified \
          and belongs in `uncomputed_rule` (fill `description` in every locale) or \
          `in_play_effect`:\n{}",
@@ -476,14 +658,160 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
     assert!(!states_a_mechanical_rule("eine patzige Antwort"));
 
     // An unsigned number is not a modifier — this is the exclusion that keeps
-    // the signed-number token sharp.
+    // the signed-number token sharp. Its former companion, "an Ease Factor of
+    // 9", was asserted here as a non-rule and is now a rule the phrase screen
+    // reads: a target number is mechanical, it just is not a *signed modifier*.
     assert!(!states_a_mechanical_rule("1 pawn of vis each season"));
-    assert!(!states_a_mechanical_rule("an Ease Factor of 9"));
 
     // A hyphen that is not a sign, and prose with no mechanics at all.
     assert!(!states_a_mechanical_rule("good hand-eye coordination"));
     assert!(!states_a_mechanical_rule("Roleplay your clumsiness."));
     assert!(!states_a_mechanical_rule(
         "You are a full member of the Order of Hermes."
+    ));
+
+    // --- The phrase screen -------------------------------------------------
+    //
+    // Caps and floors. Source: ArMDE:3577 (Command Animals), :6925 (University
+    // Dean), :5733 (Bound to (Realm)), :6981 (Viaticarus).
+    assert!(states_a_mechanical_rule(
+        "the character may command up to 12 human-sized animals"
+    ));
+    assert!(states_a_mechanical_rule(
+        "kann der Charakter bis zu 12 menschengroße Tiere befehligen"
+    ));
+    assert!(states_a_mechanical_rule("be at least 40 years old"));
+    assert!(states_a_mechanical_rule("mindestens 40 Jahre alt sein"));
+    assert!(states_a_mechanical_rule(
+        "must live in a supernatural aura of 5 or greater"
+    ));
+    assert!(states_a_mechanical_rule(
+        "muss in einer übernatürlichen Aura von 5 oder höher leben"
+    ));
+    assert!(states_a_mechanical_rule("a (Realm) Lore of 1 or more"));
+    assert!(states_a_mechanical_rule(
+        "einer (Sphären-)Kunde von 1 oder mehr"
+    ));
+    assert!(states_a_mechanical_rule(
+        "his Presence and Communication may not be greater than 0"
+    ));
+    assert!(states_a_mechanical_rule(
+        "it would be no more than an interesting feature"
+    ));
+
+    // Target numbers. Source: ArMDE:3777 (Exotic Casting), :6785 (Stigmatic
+    // Catalyst).
+    assert!(states_a_mechanical_rule(
+        "is made against an Ease Factor of 15"
+    ));
+    assert!(states_a_mechanical_rule(
+        "würfeln gegen einen Schwierigkeitsgrad von 6"
+    ));
+
+    // Formulas. Source: ArMDE:3781 (Extractor of (Form) Vis), :3919 (Folk
+    // Magic), :3757 (Enduring Magic).
+    assert!(states_a_mechanical_rule(
+        "a number of pawns of Vis equal to a tenth of his Creo Vim Lab Total"
+    ));
+    assert!(states_a_mechanical_rule(
+        "Die Zaubersumme entspricht (Ausdauer + (Sphären-)Kunde) / 2"
+    ));
+    assert!(states_a_mechanical_rule(
+        "multiply the spell's normal duration by the number rolled"
+    ));
+    assert!(states_a_mechanical_rule(
+        "multipliziere die normale Dauer des Zaubers mit dem gewürfelten Wert"
+    ));
+
+    // Rounding, which changes the answer and so is as mechanical as a modifier.
+    // Source: ArMDE:3781; the four English spellings and two German ones are all
+    // in the books.
+    assert!(states_a_mechanical_rule("Lab Total (round up)"));
+    assert!(states_a_mechanical_rule("half the total, rounded down"));
+    assert!(states_a_mechanical_rule(
+        "seiner Laborsumme entspricht (aufgerundet)"
+    ));
+    assert!(states_a_mechanical_rule("die Hälfte des Werts, abgerundet"));
+
+    // Dice named by kind. Source: ArMDE:3757 (Enduring Magic), :6078 (The
+    // Falling Evil).
+    assert!(states_a_mechanical_rule(
+        "the storyguide secretly rolls a simple die"
+    ));
+    assert!(states_a_mechanical_rule(
+        "Der Spielleiter würfelt heimlich einen einfachen Würfel"
+    ));
+    assert!(states_a_mechanical_rule(
+        "the storyguide should secretly roll a stress die"
+    ));
+    assert!(states_a_mechanical_rule(
+        "sollte der Spielleiter im Geheimen einen Stresswürfel werfen"
+    ));
+
+    // Absolutes — a rule stated as a prohibition carries no number at all.
+    // Source: ArMDE:3641 (Death Prophecy). The German clause is the *earlier*
+    // sentence of the same passage on purpose: German negation is discontinuous
+    // ("kannst aber nicht an Wunden oder Alter sterben"), so a contiguous
+    // substring cannot express "cannot <verb>" in general, and the spelling the
+    // list can carry is the one the books also write plainly. That is a real
+    // limit of a substring screen, not a reason to reword the shipped text —
+    // see the note on `MECHANICAL_PHRASES`.
+    assert!(states_a_mechanical_rule(
+        "You heal normally, but cannot die as a result of wounds or old age."
+    ));
+    assert!(states_a_mechanical_rule(
+        "bis diese Bedingung erfüllt ist, wirst du nicht sterben"
+    ));
+
+    // A step counted in magnitudes. Source: ArMDE:3893 (Flexible Formulaic
+    // Magic).
+    assert!(states_a_mechanical_rule(
+        "raise or lower the casting level of the spell by one magnitude"
+    ));
+    assert!(states_a_mechanical_rule(
+        "Du kannst die Zauberstufe um eine Magnitude anheben oder senken"
+    ));
+
+    // --- What the phrase screen must NOT read as a rule --------------------
+    //
+    // The screen is deliberately noisier than the other two, so its noise is
+    // bounded here rather than left to hope. A phrase is matched as the *whole*
+    // idiom: the bare noun or preposition inside it states nothing.
+    assert!(!states_a_mechanical_rule(
+        "The magnitude of his ambition is hard to overstate."
+    ));
+    assert!(!states_a_mechanical_rule(
+        "Er ist mehr Gelehrter als Krieger."
+    ));
+    assert!(!states_a_mechanical_rule(
+        "His workshop is up the road from the covenant."
+    ));
+    assert!(!states_a_mechanical_rule("Sie würfelt gern mit den Grogs."));
+    assert!(!states_a_mechanical_rule(
+        "She rounds on anyone who questions her."
+    ));
+
+    // A phrase must begin at a word boundary. Without that, "or more" reads
+    // itself out of "f|or more| details" and flags every entry that points at a
+    // supplement — which is how virtue.factor at ArMDE:3795 and virtue.fidai at
+    // ArMDE:3881 first appeared in the sweep. A substring crossing a word boundary
+    // is a defect in the screen, not an idiom to argue down in a
+    // `NO_RULE_DESPITE_TOKEN` row.
+    assert!(!states_a_mechanical_rule(
+        "see City and Guild for more details"
+    ));
+    assert!(!states_a_mechanical_rule(
+        "from page 162, for more detail on the Nizaris"
+    ));
+    assert!(!states_a_mechanical_rule(
+        "His talents are unequal to the task."
+    ));
+
+    // Plain flavour, in both locales, tripping nothing.
+    assert!(!states_a_mechanical_rule(
+        "The character is a member of the lesser nobility."
+    ));
+    assert!(!states_a_mechanical_rule(
+        "Der Charakter ist ein Mitglied des niederen Adels."
     ));
 }

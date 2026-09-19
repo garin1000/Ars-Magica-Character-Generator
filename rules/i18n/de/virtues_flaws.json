@@ -121,7 +121,8 @@
   "flaw.bound_to_realm": {
     "name": "Gebunden an eine Sphäre, {realm}",
     "name_unfilled": "Gebunden an (Sphäre)",
-    "summary": "Der Charakter ist nicht mehr in der Lage, in der weltlichen Welt zu überleben, und erkrankt, wenn er sich über längere Zeit außerhalb einer bestimmten Art übernatürlicher Aura aufhält."
+    "summary": "Der Charakter ist nicht mehr in der Lage, in der weltlichen Welt zu überleben, und erkrankt, wenn er sich über längere Zeit außerhalb einer bestimmten Art übernatürlicher Aura aufhält.",
+    "description": "Der Charakter ist nicht mehr in der Lage, in der weltlichen Welt zu überleben, und erkrankt, wenn er sich über längere Zeit außerhalb einer bestimmten Art übernatürlicher Aura aufhält. Der Charakter muss in einer übernatürlichen Aura von 5 oder höher leben, um gesund zu bleiben; verbringt er den Großteil eines Quartals außerhalb einer solchen Aura, würfle einen Ausdauer-Wurf gegen Schwierigkeitsgrad (9 - Größe). Misslingt der Wurf, erleidet der Charakter eine Schwere Wunde – es sei denn, er hat im vorangegangenen Quartal ebenfalls einen solchen Wurf misslungen, in welchem Fall er stattdessen eine Lähmende Wunde erleidet. Wähle bei der Aufnahme dieses Fehlers die Sphäre (Göttlich, Fee, Höllisch oder Magie), an die der Charakter gebunden ist."
   },
   "flaw.bound_to_role_role": {
     "name": "Gebunden an {role}",
@@ -258,7 +259,8 @@
   },
   "flaw.curse_of_slander": {
     "name": "Verleumdungsfluch",
-    "summary": "Überall, wo er sich aufhält, beginnen innerhalb kurzer Zeit unangenehme Gerüchte und ungünstige Geschichten über diesen Charakter zu kursieren."
+    "summary": "Überall, wo er sich aufhält, beginnen innerhalb kurzer Zeit unangenehme Gerüchte und ungünstige Geschichten über diesen Charakter zu kursieren.",
+    "description": "Überall, wo er sich aufhält, beginnen innerhalb kurzer Zeit unangenehme Gerüchte und ungünstige Geschichten über diesen Charakter zu kursieren. Das kann auf Pech zurückzuführen sein, oder es könnte etwas Übernatürliches sein, wie ein Fluch. Die Verleumdung richtet sich gegen einen bestimmten Abschnitt der weltlichen Gesellschaft – den Adel, die Kirche, Zünfte, Bauern – und beeinträchtigt sein Arbeitsleben ernsthaft. Nachdem er ein Quartal in einem Gebiet verbracht hat, erhält er eine schlechte Reputation auf Stufe 1, meist eine lokale Reputation. Er gewinnt in jedem weiteren Quartal einen Punkt zur Steigerung der Reputation, oder mehr, wenn er in verstörende oder seltsame Ereignisse verwickelt ist. Wirklich bemerkenswerte Taten können die Steigerung für ein Quartal aufhalten, aber sie werden mit dem nächsten Quartal vergessen. In einem Konvent sind die Menschen an seltsame Dinge und abweichendes Verhalten gewöhnt. Die Reputation wird gewonnen und steigt in Jahresintervallen statt in Quartalsintervallen, was dem unglücklichen Opfer mehr Zeit gibt, bevor es völlig gemieden wird. Verlässt der Charakter ein Gebiet, hört die Reputation auf zu steigen und kann sogar sinken, nach Ermessen der Spieltruppe."
   },
   "flaw.curse_of_venus": {
     "name": "Fluch der Venus",
@@ -508,7 +510,8 @@
   },
   "flaw.flawed_powers": {
     "name": "Fehlerhafte Kräfte",
-    "summary": "Der Charakter muss mindestens eine Große Übernatürliche Tugend besitzen, um diesen Fehler zu nehmen."
+    "summary": "Der Charakter muss mindestens eine Große Übernatürliche Tugend besitzen, um diesen Fehler zu nehmen.",
+    "description": "Der Charakter muss mindestens eine Große Übernatürliche Tugend besitzen, um diesen Fehler zu nehmen. Die übernatürlichen Mächte des Charakters sind in irgendeiner Weise eingeschränkt oder begrenzt. Er leidet unter den Auswirkungen eines Großen Hermetischen Fehlers (üblicherweise Einschränkung oder Notwendige Bedingung), doch wird dieser auf seine Übernatürlichen Tugenden angewendet statt auf seine Hermetische Magie (falls vorhanden). Jeder Fehler, der nur für Hermetische Magie geeignet ist (zum Beispiel Defizitäre Technik oder Unstrukturierter Zauberer), kann nicht mit diesem Fehler kombiniert werden. Beachte, dass die Einschränkung der übernatürlichen Macht kein separater Großer Fehler ist: Dieser Kleine Fehler stellt die Tatsache dar, dass eine Große Übernatürliche Tugend für die Aktivitäten eines Charakters weniger zentral ist als Hermetische Magie für einen Magus."
   },
   "flaw.fluctuating_fortune": {
     "name": "Schwankendes Glück",
@@ -1014,7 +1017,8 @@
   },
   "flaw.raised_from_the_dead": {
     "name": "Vom Tode auferstanden",
-    "summary": "Du bist gestorben und durch ein heiliges Wunder ins Leben zurückgebracht worden."
+    "summary": "Du bist gestorben und durch ein heiliges Wunder ins Leben zurückgebracht worden.",
+    "description": "Du bist gestorben und durch ein heiliges Wunder ins Leben zurückgebracht worden. Du beginnst mit mindestens drei Verzerrungspunkten, zuzüglich eines Verzerrungspunkts für jedes Jahr, das seit deiner Auferstehung vergangen ist, und du erhältst automatisch jeden weiteren Jahr, den du weiterlebst, einen weiteren Verzerrungspunkt. Du hast außerdem eine Reputation der Stufe 4 in dem Gebiet, in dem das Wunder stattfand. Du erinnerst dich nicht daran, was während des Todes mit dir geschah, obwohl du tugendhafte Impulse haben kannst, die du nicht erklären kannst."
   },
   "flaw.raised_in_the_gutter": {
     "name": "In der Gosse aufgewachsen",
@@ -1024,7 +1028,8 @@
   "flaw.realm_stigmatic": {
     "name": "Stigmatisierter, {realm}",
     "name_unfilled": "(Sphäre)-Stigmatisierter",
-    "summary": "Der Charakter manifestiert gelegentlich in Gegenwart übernatürlicher Kräfte körperliche Phänomene."
+    "summary": "Der Charakter manifestiert gelegentlich in Gegenwart übernatürlicher Kräfte körperliche Phänomene.",
+    "description": "Der Charakter manifestiert gelegentlich in Gegenwart übernatürlicher Kräfte körperliche Phänomene. Wähle eine der vier Sphären der Macht; immer wenn er eine Aura der Stärke 4 oder mehr betritt, die dieser Sphäre zugeordnet ist, oder von einer Macht größer als vierter Magnitude (20. Stufe) aus dieser Sphäre betroffen wird, leidet er unter den Stigmata. Jeder Einzelne leidet anders unter den Stigmata, aber die häufigsten Varianten sind dunkle Flecken auf der Haut, Blut aus Körperöffnungen, spontanes Aufbrechen von Wunden, leichtes Verzerren der Gliedmaßen oder das Auftreten geringfügiger tierischer Merkmale. Wann immer sie sich manifestieren, verliert der Charakter eine Langzeit-Erschöpfungsstufe, die er nicht erholen kann, solange er unter dem Einfluss dieser Sphäre steht. Wenn er die Erschöpfungsstufe erholt, verblassen die Stigmata. Wenn er jemals einen Verzerrungspunkt durch Exposition gegenüber seiner empfindlichen Sphäre erhält, brechen seine Stigmata so heftig aus, dass er zusätzlich zur Erschöpfung eine Leichte Wunde erleidet, und die Stigmata verbleiben, bis er sich von dieser Wunde erholt hat."
   },
   "flaw.rebellious_major": {
     "name": "Aufsässig (Groß)",
@@ -1095,7 +1100,8 @@
   },
   "flaw.servant_of_the_land": {
     "name": "Diener des {land}",
-    "summary": "Eine mächtige magische Kreatur hat den Charakter vor dem Tod bewahrt oder eine ähnliche Wohltat gewährt, und als Gegenleistung wurde dem Charakter eine Aufgabe übertragen."
+    "summary": "Eine mächtige magische Kreatur hat den Charakter vor dem Tod bewahrt oder eine ähnliche Wohltat gewährt, und als Gegenleistung wurde dem Charakter eine Aufgabe übertragen.",
+    "description": "Eine mächtige magische Kreatur hat den Charakter vor dem Tod bewahrt oder eine ähnliche Wohltat gewährt, und als Gegenleistung wurde dem Charakter eine Aufgabe übertragen. Mögliche Aufgaben umfassen: eine Botschaft zu predigen, einen Leuchtturm zu betreiben oder das Jagen in einem bestimmten Gebiet zu verhindern. Normalerweise ist die Aufgabe entweder schwierig oder zeitaufwendig, und solange sie unvollendet bleibt, hat der Charakter den Kleinen Persönlichkeits-Fehler: Prohibition, der jedoch nicht auf die Gesamtzahl der Tugenden und Fehler des Charakters angerechnet wird. Die Prohibition bedeutet, dass wenn der Charakter nicht mindestens ein vollständiges Quartal pro Jahr damit verbringt, an seiner zugewiesenen Aufgabe zu arbeiten, ein Fluch ihn trifft. Mögliche Flüche umfassen: einen magischen Zwang, in das Land zurückzukehren, wo der Charakter sich seinem Meister erklären muss, sich in ein Tier zu verwandeln oder einen Übernatürlichen Fehler zu erwerben."
   },
   "flaw.sheltered_upbringing": {
     "name": "Behütete Kindheit",
@@ -1162,7 +1168,8 @@
   },
   "flaw.stigmatic_catalyst": {
     "name": "Stigma-Katalysator",
-    "summary": "Die Anwesenheit des Charakters verursacht manchmal, dass symbolische Male auf den Körpern von Menschen in der Nähe erscheinen, die keine Magieresistenz besitzen."
+    "summary": "Die Anwesenheit des Charakters verursacht manchmal, dass symbolische Male auf den Körpern von Menschen in der Nähe erscheinen, die keine Magieresistenz besitzen.",
+    "description": "Die Anwesenheit des Charakters verursacht manchmal, dass symbolische Male auf den Körpern von Menschen in der Nähe erscheinen, die keine Magieresistenz besitzen. Der Charakter kann diesen Vorgang nicht kontrollieren, kann jedoch Intelligenz + Enigmatische Weisheit würfeln gegen einen Schwierigkeitsgrad von 6, um den so Betroffenen mitzuteilen, welche Form geistiger Reinigung sie durchlaufen müssen, damit das Stigma verschwindet. Charaktere, die stigmatisiert werden, reagieren möglicherweise feindselig, wenn sie die Quelle der Stigmata erkennen. Dieser Fehler findet sich normalerweise bei Magi des Hauses Criamon, und Magi dieses Hauses würden sich für jeden anderen Charakter interessieren, der ihn aufweist."
   },
   "flaw.stockade_parma_magica": {
     "name": "Palisaden-Parma Magica",
@@ -1228,7 +1235,8 @@
   },
   "flaw.the_falling_evil": {
     "name": "Fallsucht",
-    "summary": "Der Charakter leidet gelegentlich unter Krämpfen und Ohnmachtsanfällen."
+    "summary": "Der Charakter leidet gelegentlich unter Krämpfen und Ohnmachtsanfällen.",
+    "description": "Der Charakter leidet gelegentlich unter Krämpfen und Ohnmachtsanfällen. Krämpfe treten zufällig und selten auf; für ein beliebiges Ereignis sollte der Spielleiter im Geheimen einen Stresswürfel werfen, und wenn das Ergebnis 9 oder höher ist, wird während dieses Ereignisses an einer vom Spielleiter gewählten Stelle ein Krampf auftreten. Dieser Anfall verursacht unkontrollierte Bewegungen und Halluzinationen, die den Charakter vorübergehend Handlungsunfähig machen. Er bricht zu Boden und zuckt, und du kannst jeden Runde einen Ausdauer-Wurf gegen einen Schwierigkeitsgrad von 9 durchführen; bei Erfolg endet der Krampf, obwohl der Charakter nach einem Anfall auf die Erschöpfungsstufe Betäubt reduziert wird. Die Fallende Krankheit wird üblicherweise durch Dämonenbesitz verursacht (Kunst & Gelehrsamkeit, Seite 48), aber jene Form der Erkrankung ist in der Regel vorübergehender Natur. Der Charakter scheint keine Krankheit zu haben und kann sich nicht auf natürlichem Wege von dieser Afflktion erholen. Möglicherweise hat sie eine andere Ursache. Im antiken Griechenland und Rom wurde sie als „göttliche Krankheit“ bezeichnet, da man glaubte, die Götter sprächen durch jene, die solche Anfälle hatten."
   },
   "flaw.tormenting_master": {
     "name": "Quälender Meister",
@@ -1289,7 +1297,8 @@
   },
   "flaw.university_dean": {
     "name": "Universitätsdekan",
-    "summary": "Der Charakter ist der Leiter einer Universität und hat bereits seinen Doktor in (Fachbereich) erworben."
+    "summary": "Der Charakter ist der Leiter einer Universität und hat bereits seinen Doktor in (Fachbereich) erworben.",
+    "description": "Der Charakter ist der Leiter einer Universität und hat bereits seinen Doktor in (Fachbereich) erworben. Der Charakter wurde zur Leitung der Universität gewählt und überwacht die äußeren Angelegenheiten mit der Stadt sowie die inneren Angelegenheiten zwischen Studenten und Meistern. Obwohl das Amt angesehen ist, stellt es ernsthafte Anforderungen an die Zeit des Charakters. Der Charakter muss während des Schuljahres mit vielen Unterbrechungen seines Unterrichts rechnen. Der Charakter muss die Tugend Doktor in (Fachbereich) besitzen, mindestens 40 Jahre alt sein und darf nicht den Fehler Arm oder einen anderen Fehler haben, der eine schlechte Reputation verleiht."
   },
   "flaw.unlucky": {
     "name": "Unglücklich",
@@ -1332,7 +1341,8 @@
   },
   "flaw.viaticarus": {
     "name": "Viaticarus",
-    "summary": "Zu einem Zeitpunkt in der Vergangenheit des Charakters war er dem Tode nahe, und infolgedessen spendete ihm ein Priester das Sakrament der Letzten Ölung."
+    "summary": "Zu einem Zeitpunkt in der Vergangenheit des Charakters war er dem Tode nahe, und infolgedessen spendete ihm ein Priester das Sakrament der Letzten Ölung.",
+    "description": "Zu einem Zeitpunkt in der Vergangenheit des Charakters war er dem Tode nahe, und infolgedessen spendete ihm ein Priester das Sakrament der Letzten Ölung. Der Zweck dieses Sakraments war es, ihn von allen lässlichen Sünden zu entbinden und ihn auf die Reise ins Jenseits (das Viatikum) vorzubereiten; aber wider alle Erwartungen überlebte er. Dies versetzt ihn in ein geistiges Niemandsland — nicht unter den Toten, aber auch nicht vollständig unter den Lebenden. Deshalb ist er immun gegen die Versuchungen von Dämonen und kann daher von ihrer Besessenheitsmacht nicht beeinflusst werden; er erscheint ihnen einfach nicht als eine Seele, die der Verderbnis bedarf. Allerdings hat seine Haut eine ungewöhnliche Blässe, und seine Augen sind eingefallen. Menschen mögen an ihm einen Leichengeruch wahrnehmen. Diese Effekte sind zunächst subtil, aber mit zunehmendem Alter ähnelt er immer mehr einer Leiche, was zu einem Abzug auf alle sozialen Interaktionswürfe in Höhe seines Gebrechlichkeitswerts führt.\n\nEr hat Schwierigkeiten, Schwellen zu überqueren, wo unruhige Geister nicht willkommen sind; wenn eine Person mit einer (Sphären-)Kunde von 1 oder mehr eine traditionelle Schutzbannreihe eingerichtet hat, wie eine Salzkörner-Linie oder einen Eisennagel auf dem Türsturz, kann er das geschützte Gebäude oder den geschützten Bereich nicht betreten. Obwohl er keinen Machtwert hat, wird er außerdem von jedem magischen Schutz zurückgewiesen, der eine Kreatur mit einem Machtwert fernhalten kann, der auf Corpus oder Mentem ausgerichtet ist (einschließlich der Aegis des Herdes), ungeachtet ihres Niveaus oder ihrer Penetration. Beide Arten des Ausschlusses können jedoch aufgehoben werden, wenn er von der Person, die den Schutz eingerichtet hat, oder von jemandem, der darin wohnt, eingeladen wird, die Schwelle zu überqueren. Er kann weiterhin Personen mit Magieresistenz berühren, da er keine aktive Macht um sich hat.\n\nWenn der Status des Charakters in der Gemeinschaft, in der er lebt, bekannt ist, sollte er den Fehler Sozialer Status: Ausgestoßener nehmen."
   },
   "flaw.visions": {
     "name": "Visionen",
@@ -1356,7 +1366,8 @@
   },
   "flaw.vulnerable_to_folk_tradition": {
     "name": "Anfällig für Volksüberlieferungen",
-    "summary": "Die Magie des Magus ist anfällig gegenüber verschiedenen Volksheilmitteln zur Abwehr feindlicher Zauber."
+    "summary": "Die Magie des Magus ist anfällig gegenüber verschiedenen Volksheilmitteln zur Abwehr feindlicher Zauber.",
+    "description": "Die Magie des Magus ist anfällig gegenüber verschiedenen Volksheilmitteln zur Abwehr feindlicher Zauber. Jedes Ziel, das weiß, dass der Magus gerade seine Magie eingesetzt hat, kann ein Volksritual versuchen, wie das Zeichen gegen das Böse machen oder Spucken, und so weiter. Dies verleiht dem Ziel oder den Zielen eine Magieresistenz von (5 × der Magiekunde des Ziels) oder 0, wenn das Ziel diese Fertigkeit nicht besitzt, nur gegen die Magie des Magus. Außerdem kann jemand mit Magiekunde möglicherweise eine Methode zum Brechen einer anhaltenden Verzauberung entwickeln, wie das Bestreuen mit Salz oder das Liegen auf einem Eisenbett; dies erfordert normalerweise einen Intelligenz + Magiekunde-Wurf gegen einen Schwierigkeitsgrad von (9 + die Magnitude des Zaubers) oder höher."
   },
   "flaw.wanderlust": {
     "name": "Wanderlust",
@@ -1581,7 +1592,8 @@
   },
   "virtue.capo": {
     "name": "Capo",
-    "summary": "Der Charakter leitet ein Handelsunternehmen, das Niederlassungen in mindestens zwei Städten hat."
+    "summary": "Der Charakter leitet ein Handelsunternehmen, das Niederlassungen in mindestens zwei Städten hat.",
+    "description": "Der Charakter leitet ein Handelsunternehmen, das Niederlassungen in mindestens zwei Städten hat. Stadt & Gilde, Kapitel 7, enthält weitere Details dazu. Ein Capo, der auch Partner im Unternehmen ist, nimmt nicht die Tugend Partner, sondern wählt entsprechend seinen Verhältnissen Arm oder Reich."
   },
   "virtue.cathedral_school_master": {
     "name": "Domschulmeister",
@@ -1612,7 +1624,8 @@
   },
   "virtue.command_animals": {
     "name": "Tiere befehligen",
-    "summary": "Der Charakter hat die Fähigkeit, gewöhnliche Vertreter einer Tierart mental zu befehligen, die in der Regel mit dem Dämon assoziiert wird, der ihn gezeichnet hat."
+    "summary": "Der Charakter hat die Fähigkeit, gewöhnliche Vertreter einer Tierart mental zu befehligen, die in der Regel mit dem Dämon assoziiert wird, der ihn gezeichnet hat.",
+    "description": "Der Charakter hat die Fähigkeit, gewöhnliche Vertreter einer Tierart mental zu befehligen, die in der Regel mit dem Dämon assoziiert wird, der ihn gezeichnet hat. Zu jeder Zeit kann der Charakter bis zu 12 menschengroße Tiere befehligen und sie anweisen, selbstmörderische Handlungen durchzuführen. Kleinere Tiere können in weit größeren Mengen befehligt werden, sodass manche Charaktere Insektenschwärme oder Hunderte von Ratten befehligen können."
   },
   "virtue.commanding_aura": {
     "name": "Befehlende Aura",
@@ -1661,7 +1674,8 @@
   },
   "virtue.death_prophecy": {
     "name": "Todesprophezeiung",
-    "summary": "Du bist in Bezug auf dein Schicksal gesegnet oder verflucht."
+    "summary": "Du bist in Bezug auf dein Schicksal gesegnet oder verflucht.",
+    "description": "Du bist in Bezug auf dein Schicksal gesegnet oder verflucht. Jemand (ein Zauberer, eine Fee oder eine andere übernatürliche Kreatur) hat eine Bedingung an deinen Tod geknüpft, und bis diese Bedingung erfüllt ist, wirst du nicht sterben, obwohl du schwer verletzt werden kannst. Du heilst normal, kannst aber nicht an Wunden oder Alter sterben. Zu deinem Unglück kann das Schicksal oder schlechte Planung die Bedingungen auf unerwartete Weise herbeiführen. Wenn zum Beispiel deine Todesprophezeiung besagt, dass du nur Wildschweine fürchten sollst, solltest du vorsichtig sein mit Männern, die Wildschweine in ihrem Wappen tragen, oder mit Gasthäusern, die nach Wildschweinen benannt sind – zusätzlich zu dem rein weltlichen Tier. Diese Symbolik ist möglicherweise nicht offensichtlich: Ein Mann, der in seinem Dorf als Schwein bekannt ist, könnte auch als Wildschwein zählen.\n\nDer Spielleiter muss die Prophezeiung im Hinterkopf behalten und faire Warnungen zu Gegenständen im Zusammenhang mit der Prophezeiung geben. Dies ist eine Große Tugend, weil der Charakter weiß, dass er mit wahnsinnigen Risiken davonkommen kann; die Prophezeiung heimlich auf ihn loszulassen ist eine unfaire Art, den Wert der Tugend zu negieren. Spieler dürfen diese Tugend nur mit Zustimmung des Spielleiters oder der Spieltruppe nehmen."
   },
   "virtue.deft_form": {
     "name": "Gewandte Form",
@@ -1730,7 +1744,8 @@
   },
   "virtue.enduring_magic": {
     "name": "Anhaltende Magie",
-    "summary": "Die Effekte deiner Zauber dauern in der Regel länger als gewöhnlich an (obwohl Konzentrations-, Momentan- und Ringzauber genau das bleiben)."
+    "summary": "Die Effekte deiner Zauber dauern in der Regel länger als gewöhnlich an (obwohl Konzentrations-, Momentan- und Ringzauber genau das bleiben).",
+    "description": "Die Effekte deiner Zauber dauern in der Regel länger als gewöhnlich an (obwohl Konzentrations-, Momentan- und Ringzauber genau das bleiben). Der Spielleiter würfelt heimlich einen einfachen Würfel; multipliziere die normale Dauer des Zaubers mit dem gewürfelten Wert. Das ist in der Regel, aber nicht immer, von Vorteil. Diese Tugend beeinflusst nicht die Dauer von Ritualzaubern."
   },
   "virtue.enticer_of_multitudes": {
     "name": "Verführer der Massen",
@@ -1747,11 +1762,13 @@
   },
   "virtue.exotic_casting": {
     "name": "Exotisches Zaubern",
-    "summary": "Der Magus verwendet nicht-hermetische Methoden, um hermetische Zauber zu wirken."
+    "summary": "Der Magus verwendet nicht-hermetische Methoden, um hermetische Zauber zu wirken.",
+    "description": "Der Magus verwendet nicht-hermetische Methoden, um hermetische Zauber zu wirken. Er muss zwar nach wie vor offensichtliche rituelle Handlungen vollziehen, doch sind diese nicht dieselben Worte und Gesten, die im Orden als Teil der Magietheorie gelehrt werden, und andere Magi, die mit der Tradition des Magus nicht vertraut sind, haben große Mühe, zu erkennen, welchen Zauber er wirkt. Jeder Versuch, die Form seines magischen Effekts zu bestimmen (Seite 217), wird gegen einen Schwierigkeitsgrad von 15 vorgenommen, ohne dass die Magnitude des Effekts wie üblich davon abgezogen wird. Besitzt der Charakter übernatürliche Fertigkeiten, wendet er für das Wirken seiner hermetischen Magie dieselben Methoden an, die er auch für seine nicht-hermetische Magie verwendet. Der Magus kann nicht wählen, stattdessen die üblichen hermetischen Methoden zu verwenden, kann aber in der üblichen Weise auf Worte und Gesten verzichten oder diese reduzieren (Seite 216)."
   },
   "virtue.extractor_of_form_vis": {
     "name": "Vis-Gewinner der {form}",
-    "summary": "Der Magus kann (Form)-Vis aus einer Magiesphären-Aura gewinnen, jedoch nur, wenn die Merkmale der Aura die Form verkörpern."
+    "summary": "Der Magus kann (Form)-Vis aus einer Magiesphären-Aura gewinnen, jedoch nur, wenn die Merkmale der Aura die Form verkörpern.",
+    "description": "Der Magus kann (Form)-Vis aus einer Magiesphären-Aura gewinnen, jedoch nur, wenn die Merkmale der Aura die Form verkörpern. Eine Aura am Ufer eines Sees verkörpert beispielsweise Aquam, eine Aura an einer Begräbnisstätte verkörpert Corpus usw. Die Vis-Gewinnung auf diese Weise ist eine Laboratoriumstätigkeit; der Magus gewinnt eine Anzahl Bauern Vis, die einem Zehntel seiner Creo-Vim-(Form)-Laborsumme entspricht (aufgerundet). Offensichtlich benötigt er dafür auch ein Laboratorium in der Aura, und natürlich kann der Magus auch wählen, stattdessen Vim-Vis zu gewinnen (siehe Seite 250). Diese Tugend kann mehrfach gewählt werden (einmal für jede Form)."
   },
   "virtue.eye_of_hephaestus": {
     "name": "Auge des Hephaistos",
@@ -1831,7 +1848,8 @@
   },
   "virtue.flexible_formulaic_magic": {
     "name": "Flexible Formulaische Magie",
-    "summary": "Du kannst die Effekte formulaischer Zauber in geringem Maße variieren und dabei dennoch die Vorteile des Wirkens bekannter Magie nutzen."
+    "summary": "Du kannst die Effekte formulaischer Zauber in geringem Maße variieren und dabei dennoch die Vorteile des Wirkens bekannter Magie nutzen.",
+    "description": "Du kannst die Effekte formulaischer Zauber in geringem Maße variieren und dabei dennoch die Vorteile des Wirkens bekannter Magie nutzen. Du kannst die Zauberstufe um eine Magnitude anheben oder senken, um eine (und nur eine) der Kategorien Reichweite, Dauer, Zielgröße und Zielkategorie um einen Schritt anzuheben oder zu senken, solange dabei keine der normalen Einschränkungen für formulaische Magie verletzt wird. Du kannst alternativ auch einen (und nur einen) dieser Parameter in einen anderen Parameter der gleichen Stufe ändern, ohne die Zauberstufe zu verändern, solange dabei keine der normalen Einschränkungen für formulaische Magie verletzt wird. Zaubererfolg, Erschöpfungsverlust und Penetration werden alle auf Grundlage der endgültig veränderten Zauberstufe berechnet. Du kannst Ritualmagie nicht auf diese Weise manipulieren."
   },
   "virtue.focus_power": {
     "name": "Fokussierte Macht",
@@ -1839,7 +1857,8 @@
   },
   "virtue.folk_magic": {
     "name": "Volksmagie {category}, {realm}",
-    "summary": "Der Charakter ist in der Lage, durch sein Wissen von Bruchstücken okkulten Wissens sehr geringe Magie zu wirken."
+    "summary": "Der Charakter ist in der Lage, durch sein Wissen von Bruchstücken okkulten Wissens sehr geringe Magie zu wirken.",
+    "description": "Der Charakter ist in der Lage, durch sein Wissen von Bruchstücken okkulten Wissens sehr geringe Magie zu wirken. Wähle eine (Sphären-)Kunde als Schlüsselfertigkeit für diese Magie; er darf diese Fertigkeit bereits bei der Charaktererschaffung erlernen, auch wenn er normalerweise keine Arkanen Fertigkeiten erwerben kann. Die Wahl der (Sphären-)Kunde bestimmt auch, welcher übernatürlichen Sphäre seine Magie für die Zwecke der Auramodifikatoren zugeordnet ist. Er kann nur Zauber in einem engen Bereich erschaffen, der eine der folgenden vier Optionen sein muss:\n\nAbwehr: Erschafft einen Ward gegen Tiere oder übernatürliche Kreaturen. Verwendet die Leitlinien für Rego Animal oder Rego Vim.\n\nDivination: Erschafft magische Sinne, die Gesundheit, Reichtum und Gemütszustand wahrnehmen. Verwendet die Leitlinien für Intellego Corpus, Intellego Mentem und Intellego Terram.\n\nHeilung: Gewährt einen Genesungsbonus für Wunden oder Krankheiten und unterstützt die Geburt von Kindern und Vieh. Verwendet die Leitlinien für Creo Corpus oder Creo Animal. Infernalkunde kann nicht verwendet werden, um diese Art von Effekten zu erzeugen.\n\nBöser Blick: Verursacht geringfügige Bosheiten wie Schmerzen, Ernteschäden, Haarausfall, Niesen und dergleichen. Verwendet die Leitlinien für Perdo Corpus, Perdo Animal oder Perdo Herbam. Dominiumkunde kann nicht verwendet werden, um diese Art von Effekten zu erzeugen.\n\nUm einen Zauber zu wirken, muss der Charakter eine Erschöpfungsstufe aufwenden, ob der Zauber gelingt oder misslingt. Er muss außerdem mindestens 15 Minuten damit verbringen, den Zauber vorzubereiten, während er ununterbrochene Konzentration und Zugang zu seinen „magischen“ Materialien benötigt (die zwar erforderlich, aber ohne Nutzen für den Zauberwurf sind). Der Zauber wird genau wie ein hermetischer Zauber entworfen. Die Zaubersumme entspricht (Ausdauer + (Sphären-)Kunde + Auramodifikator + Stresswürfel) / 2. Die Penetration wird auf die übliche Weise berechnet: Zauberwert - Zauberstufe + Penetrationsmodifikatoren. Du kannst diese Tugend mehrfach wählen, um Fachkenntnis in einer anderen Zauberkategorie zu erwerben. Jedes Mal, wenn du diese Tugend wählst, kannst du sie derselben Sphäre wie zuvor zuordnen oder eine andere wählen, obwohl ein Charakter keinen Zugang zu sowohl der Göttlichen als auch der Höllensphäre haben kann."
   },
   "virtue.font_of_knowledge": {
     "name": "Quell des Wissens",

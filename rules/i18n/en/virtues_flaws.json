@@ -120,7 +120,8 @@
   },
   "flaw.bound_to_realm": {
     "name": "Bound to {realm}",
-    "summary": "The character is no longer able to survive in the mundane world, and sickens if it is outside a particular sort of supernatural aura for an extended period of time."
+    "summary": "The character is no longer able to survive in the mundane world, and sickens if it is outside a particular sort of supernatural aura for an extended period of time.",
+    "description": "The character is no longer able to survive in the mundane world, and sickens if it is outside a particular sort of supernatural aura for an extended period of time. The character must live in a supernatural aura of 5 or greater to remain healthy; if it spends most of a season outside such an aura, make a Stamina Roll against an Ease Factor of (9 - Size). If you fail the roll, the character sustains a Heavy wound, unless the previous season it also failed such a roll, in which case it sustains an Incapacitating wound instead. Choose the realm (Divine, Faerie, Infernal, or Magic) to which the character is bound when you take the Flaw."
   },
   "flaw.bound_to_role_role": {
     "name": "Bound to {role} Role",
@@ -257,7 +258,8 @@
   },
   "flaw.curse_of_slander": {
     "name": "Curse of Slander",
-    "summary": "Wherever he stays, unpleasant rumors and ill-favored stories about this character begin to spread within a short time."
+    "summary": "Wherever he stays, unpleasant rumors and ill-favored stories about this character begin to spread within a short time.",
+    "description": "Wherever he stays, unpleasant rumors and ill-favored stories about this character begin to spread within a short time. This can be due to bad luck, or it could be something supernatural, like a curse. The slander is centered on one specific section of mundane society — the nobility, the church, guilds, peasants — and it seriously hampers his working life. After staying one season in an area, he gains a bad Reputation at level 1, usually a Local Reputation. He gains one point toward raising the Reputation in each further season, or more if he is involved in disturbing or strange events. Truly remarkable deeds can halt the increase for one season, but they will be forgotten come next season. At a covenant, people are used to strange things and deviant behavior. The Reputation is gained and increases in intervals of years rather than seasons, giving the poor victim more time before he becomes completely shunned. If the character leaves an area, the Reputation stops increasing, and may even fall, at the troupe's discretion."
   },
   "flaw.curse_of_venus": {
     "name": "Curse of Venus",
@@ -507,7 +509,8 @@
   },
   "flaw.flawed_powers": {
     "name": "Flawed Powers",
-    "summary": "The character must have at least one Major Supernatural Virtue to take this Flaw."
+    "summary": "The character must have at least one Major Supernatural Virtue to take this Flaw.",
+    "description": "The character must have at least one Major Supernatural Virtue to take this Flaw. The character's supernatural powers are limited or restricted in some fashion. She suffers the effects of a Major Hermetic Flaw (commonly Restriction or Necessary Condition), but it is applied to her Supernatural Virtues rather than to her Hermetic magic (if any). Any Flaw that is only appropriate to Hermetic Magic (for example, Deficient Technique or Unstructured Caster) cannot be taken with this Flaw. Note that the restriction on the supernatural power is not a separate Major Flaw: this Minor Flaw represents the fact that a Major Supernatural Virtue is less central to a character's activities than Hermetic magic is to a magus."
   },
   "flaw.fluctuating_fortune": {
     "name": "Fluctuating Fortune",
@@ -1013,7 +1016,8 @@
   },
   "flaw.raised_from_the_dead": {
     "name": "Raised from the Dead",
-    "summary": "You died, and were brought back to life through a holy miracle."
+    "summary": "You died, and were brought back to life through a holy miracle.",
+    "description": "You died, and were brought back to life through a holy miracle. You begin with at least three Warping points, plus one Warping point for every year that has passed since you were resurrected, and you automatically receive another Warping point every year you continue living. You also have a level 4 reputation in the area where the miracle occurred. You do not remember what happened to you while you were dead, although you may have virtuous impulses that you cannot explain."
   },
   "flaw.raised_in_the_gutter": {
     "name": "Raised in the Gutter",
@@ -1022,7 +1026,8 @@
   },
   "flaw.realm_stigmatic": {
     "name": "{realm} Stigmatic",
-    "summary": "The character occasionally manifests physical phenomena in the presence of supernatural powers."
+    "summary": "The character occasionally manifests physical phenomena in the presence of supernatural powers.",
+    "description": "The character occasionally manifests physical phenomena in the presence of supernatural powers. Pick one of the four Realms of Power; whenever he enters an aura of strength 4 or more aligned to that realm, or is affected by a power greater than fourth magnitude (20th level) from that realm, he suffers from the stigmata. Every individual suffers from stigmata differently, but the most common variants are dark marks appearing on the skin, blood issuing from orifices, spontaneous eruption of wounds, minor twisting of the limbs, or the acquisition of minor animal features. Whenever they manifest, the character loses a Long-Term Fatigue level that he cannot recover while he remains under the influence of that Realm. When he recovers the Fatigue level, the stigmata fade. If he ever takes a Warping point from exposure to his sensitive Realm, his stigmata erupt so violently that he takes a Light Wound as well as Fatigue, and the stigmata remain until he recovers from this wound."
   },
   "flaw.rebellious_major": {
     "name": "Rebellious (Major)",
@@ -1093,7 +1098,8 @@
   },
   "flaw.servant_of_the_land": {
     "name": "Servant of the {land}",
-    "summary": "Some powerful magical creature has saved the character from death or granted a similar boon, and in return the character has been set a task."
+    "summary": "Some powerful magical creature has saved the character from death or granted a similar boon, and in return the character has been set a task.",
+    "description": "Some powerful magical creature has saved the character from death or granted a similar boon, and in return the character has been set a task. Possible tasks include: preaching a message, operating a lighthouse, or preventing hunting in a certain area. Usually the task is either difficult or time-consuming, and while it remains incomplete the character has the Minor Personality Flaw: Prohibition, but this does not count toward the character's total number of Virtues and Flaws. The Prohibition means that if the character does not spend at least one complete season every year working toward his assigned task, a curse afflicts him. Possible curses include: a magical compulsion to return to the land where the character must explain himself to his master, turning into an animal, or acquiring a Supernatural Flaw."
   },
   "flaw.sheltered_upbringing": {
     "name": "Sheltered Upbringing",
@@ -1160,7 +1166,8 @@
   },
   "flaw.stigmatic_catalyst": {
     "name": "Stigmatic Catalyst",
-    "summary": "The character's presence sometimes causes symbolic marks to appear on the bodies of people without Magic Resistance nearby."
+    "summary": "The character's presence sometimes causes symbolic marks to appear on the bodies of people without Magic Resistance nearby.",
+    "description": "The character's presence sometimes causes symbolic marks to appear on the bodies of people without Magic Resistance nearby. The character cannot control this process, but may make Intelligence + Enigmatic Wisdom rolls against an Ease Factor of 6 to tell those so afflicted what form of spiritual purification they must undergo for the stigma to disappear. Characters who are stigmatized may have a hostile reaction if they realize the source of the stigmata. This Flaw is normally found among magi of House Criamon, and magi of that House would be interested in any other character who manifested it."
   },
   "flaw.stockade_parma_magica": {
     "name": "Stockade Parma Magica",
@@ -1226,7 +1233,8 @@
   },
   "flaw.the_falling_evil": {
     "name": "The Falling Evil",
-    "summary": "The character occasionally suffers convulsions and blackouts."
+    "summary": "The character occasionally suffers convulsions and blackouts.",
+    "description": "The character occasionally suffers convulsions and blackouts. Convulsions occur randomly and infrequently; for any given event, the storyguide should secretly roll a stress die, and if the result is 9 or more then a convulsion will occur at some point during that event, as chosen by the storyguide. This spasm causes random movements and hallucinations, leaving the character temporarily Incapacitated. She collapses to the ground and twitches, and you can make a Stamina roll against an Ease Factor of 9 every round; success means that the convulsion ends, although the character is reduced to the Dazed Fatigue level following a fit. The Falling Evil is usually caused by possession by demons (Art & Academe, page 48), but that form of the illness is usually temporary in nature. The character does not seem to have a disease, and cannot naturally recover from this affliction. It may be that it stems from a different source. In Ancient Greece and Rome, it was called the \"divine illness,\" as it was believed that the gods spoke to those who had such fits."
   },
   "flaw.tormenting_master": {
     "name": "Tormenting Master",
@@ -1287,7 +1295,8 @@
   },
   "flaw.university_dean": {
     "name": "University Dean",
-    "summary": "The character is the head of a university, having already acquired his doctor in (faculty) license."
+    "summary": "The character is the head of a university, having already acquired his doctor in (faculty) license.",
+    "description": "The character is the head of a university, having already acquired his doctor in (faculty) license. The character has been chosen to lead the university, overseeing external affairs with the town and internal affairs between students and masters. Though prestigious, the position imposes serious demands on the character's time. The character can expect many interruptions in his teaching during the school year. The character must have the Virtue Doctor in (Faculty), be at least 40 years old, and can not have the Poor Flaw or any other Flaw that grants a Bad Reputation."
   },
   "flaw.unlucky": {
     "name": "Unlucky",
@@ -1330,7 +1339,8 @@
   },
   "flaw.viaticarus": {
     "name": "Viaticarus",
-    "summary": "At some point in the character's past, he was at death's door, and as a result a priest performed the sacrament of Extreme Unction."
+    "summary": "At some point in the character's past, he was at death's door, and as a result a priest performed the sacrament of Extreme Unction.",
+    "description": "At some point in the character's past, he was at death's door, and as a result a priest performed the sacrament of Extreme Unction. The purpose of this sacrament was to remit him of all venial sins, and prepare him for the journey beyond (the viaticum); but against all expectations, he survived. This leaves him in a spiritual no-man's land, not one of the dead, but neither wholly of the living. Because of this, he is immune to the temptations of demons, and therefore cannot be affected by their Obsession power; he simply does not register to them as a soul in need of corruption. However, his skin has an unusual pallor, and his eyes are sunken. People may smell a charnel odor about him. These effects are subtle at first, but as he ages, he gradually comes to resemble a corpse more and more, resulting in a penalty to all social interaction rolls equal to his Decrepitude score.\n\nHe has difficulty crossing thresholds where unquiet spirits are not welcome; if a person with a (Realm) Lore of 1 or more has set up a traditional ward, such as a line of salt or an iron nail laid on the lintel, then he cannot enter the protected building or area. Further, although he does not have a Might score, he is repulsed by any magical warding that can keep out a creature with a Might score aligned to Corpus or Mentem (including the Aegis of the Hearth), regardless of its level or Penetration. However, both types of exclusion can be negated if he is invited to cross by the person who established the ward, or someone who lives within. He can still touch individuals with Magic Resistance, since he has no active power around him.\n\nIf the character's status is known in the community in which he lives, he should take the Outcast Social Status Flaw."
   },
   "flaw.visions": {
     "name": "Visions",
@@ -1354,7 +1364,8 @@
   },
   "flaw.vulnerable_to_folk_tradition": {
     "name": "Vulnerable to Folk Tradition",
-    "summary": "The magus's magic is susceptible to various folk-remedies for averting hostile spells."
+    "summary": "The magus's magic is susceptible to various folk-remedies for averting hostile spells.",
+    "description": "The magus's magic is susceptible to various folk-remedies for averting hostile spells. Any target who is aware that the magus has just used his magic may attempt a folk ritual such as making a sign against evil, or spitting, and so forth. This grants the target or targets a Magic Resistance equal to (5 x the target's Magic Lore), or 0 if the target does not have this Ability, against the magus's magic only. Furthermore, someone with Magic Lore may be able to devise a manner to break a lasting enchantment, such as sprinkling with salt or lying on an iron bed; this typically requires an Intelligence + Magic Lore roll against an Ease Factor of (9 + the spell's magnitude) or greater."
   },
   "flaw.wanderlust": {
     "name": "Wanderlust",
@@ -1579,7 +1590,8 @@
   },
   "virtue.capo": {
     "name": "Capo",
-    "summary": "The character manages a trading company that has branches in at least two cities."
+    "summary": "The character manages a trading company that has branches in at least two cities.",
+    "description": "The character manages a trading company that has branches in at least two cities. City and Guild, Chapter 7 gives more details of what this involves. A capo who is also a partner in the business does not select the Partner Virtue, instead selecting Poor or Wealthy, as appropriate to his circumstances."
   },
   "virtue.cathedral_school_master": {
     "name": "Cathedral School Master",
@@ -1610,7 +1622,8 @@
   },
   "virtue.command_animals": {
     "name": "Command Animals",
-    "summary": "The character has the ability to mentally command mundane examples of a species of animal usually associated with the demon who tainted him or her."
+    "summary": "The character has the ability to mentally command mundane examples of a species of animal usually associated with the demon who tainted him or her.",
+    "description": "The character has the ability to mentally command mundane examples of a species of animal usually associated with the demon who tainted him or her. At any time, the character may command up to 12 human-sized animals, and may instruct them to do suicidal things. Smaller animals can be commanded in far greater numbers, so some characters can command swarms of insects, or hundreds of rats."
   },
   "virtue.commanding_aura": {
     "name": "Commanding Aura",
@@ -1659,7 +1672,8 @@
   },
   "virtue.death_prophecy": {
     "name": "Death Prophecy",
-    "summary": "You have been blessed or cursed as to your fate."
+    "summary": "You have been blessed or cursed as to your fate.",
+    "description": "You have been blessed or cursed as to your fate. Someone (a magician, a faerie, or other supernatural creature) has put a condition on your death, and until the condition is met, you will not die, though you can be seriously injured. You heal normally, but cannot die as a result of wounds or old age. Unfortunately for you, fate or bad planning can bring about the conditions in unexpected ways. If, for instance, your death condition is to fear only boars, you should be wary of men bearing boars on their coats of arms or of inns named after boars, in addition to the purely mundane creature. This symbolism may not be obvious: a man known as a pig in his village might also count as a boar.\n\nThe storyguide must keep the prophecy in mind and give fair warning of items related to the prophecy. This is a Major Virtue because the character knows he can get away with insane risks; sneaking his prophecy up on him is an unfair way of negating the value of the Virtue. Players may only take this Virtue with the agreement of the storyguide or troupe."
   },
   "virtue.deft_form": {
     "name": "Deft Form",
@@ -1728,7 +1742,8 @@
   },
   "virtue.enduring_magic": {
     "name": "Enduring Magic",
-    "summary": "The effects of your spells tend to last longer than usual (though Concentration, Momentary, and Ring spells remain just that)."
+    "summary": "The effects of your spells tend to last longer than usual (though Concentration, Momentary, and Ring spells remain just that).",
+    "description": "The effects of your spells tend to last longer than usual (though Concentration, Momentary, and Ring spells remain just that). The storyguide secretly rolls a simple die; multiply the spell's normal duration by the number rolled. This is usually, but not always, a good thing. This Virtue does not affect the duration of Ritual spells."
   },
   "virtue.enticer_of_multitudes": {
     "name": "Enticer of Multitudes",
@@ -1745,11 +1760,13 @@
   },
   "virtue.exotic_casting": {
     "name": "Exotic Casting",
-    "summary": "The magus uses non-Hermetic methods to cast Hermetic spells."
+    "summary": "The magus uses non-Hermetic methods to cast Hermetic spells.",
+    "description": "The magus uses non-Hermetic methods to cast Hermetic spells. While he still needs to employ obvious ritual actions, these are not the same words and gestures taught as part of Magic Theory within the Order, and other magi who are unfamiliar with the magus's tradition find it very hard to recognize which spell he is casting. Any attempt to determine the Form of his magical effect (page 217) is made against an Ease Factor of 15, without the magnitude of the effect being subtracted from this Ease Factor as normal. If the character has any Supernatural Abilities, then he uses the same methods to cast his Hermetic magic as he does to use his non-Hermetic magic. The magus cannot choose to use the standard Hermetic methods instead of those of his native tradition, but can choose to reduce or forgo words and gestures in the usual fashion (page 216)."
   },
   "virtue.extractor_of_form_vis": {
     "name": "Extractor of {form} Vis",
-    "summary": "The magus can extract (Form) vis from a Magic aura, but only if the features of the aura exemplify the Form."
+    "summary": "The magus can extract (Form) vis from a Magic aura, but only if the features of the aura exemplify the Form.",
+    "description": "The magus can extract (Form) vis from a Magic aura, but only if the features of the aura exemplify the Form. For example, an aura on the shores of a lake might exemplify Aquam, an aura at a burial-site exemplifies Corpus, etc. Extracting vis in this way is a Laboratory activity; the magus extracts a number of pawns of Vis equal to a tenth of his Creo Vim (Form) Lab Total (round up). Obviously, he needs to have a Laboratory in the aura too, and, of course, the magus can choose to extract Vim vis instead (see page 250). This Virtue may be taken multiple times (once for each Form)."
   },
   "virtue.eye_of_hephaestus": {
     "name": "Eye of Hephaestus",
@@ -1829,7 +1846,8 @@
   },
   "virtue.flexible_formulaic_magic": {
     "name": "Flexible Formulaic Magic",
-    "summary": "You can vary the effects of Formulaic spells to a slight degree, while still getting the benefits of casting known magic."
+    "summary": "You can vary the effects of Formulaic spells to a slight degree, while still getting the benefits of casting known magic.",
+    "description": "You can vary the effects of Formulaic spells to a slight degree, while still getting the benefits of casting known magic. You may raise or lower the casting level of the spell by one magnitude to raise or lower one (only) of Range, Duration, Target category, and Target size by one step, as long as this does not violate any of the normal limits on Formulaic magic. You may instead change one (only) of those parameters to another parameter at the same level, without modifying the casting level, as long as this does not violate any of the normal limits on Formulaic magic. Casting success, Fatigue loss, and Penetration are all calculated based on the final modified level of the spell. You cannot manipulate Ritual magic in this way."
   },
   "virtue.focus_power": {
     "name": "Focus Power",
@@ -1837,7 +1855,8 @@
   },
   "virtue.folk_magic": {
     "name": "Folk Magic {category}, {realm}",
-    "summary": "The character is capable of performing very minor acts of magic through his knowledge of scraps of occult lore."
+    "summary": "The character is capable of performing very minor acts of magic through his knowledge of scraps of occult lore.",
+    "description": "The character is capable of performing very minor acts of magic through his knowledge of scraps of occult lore. Choose one (Realm) Lore that is the key Ability for this magic, he may learn this Ability at Character Creation even if he is normally unable to take Arcane Abilities. The choice of (Realm) Lore also determines which supernatural realm his magic is aligned to for the purposes of aura modifiers. He can only create spells in one narrow area, which must be one of the following four options:\n\nAbjuration: Creates a ward against animals or supernatural creatures. Uses the Rego Animal or Rego Vim guidelines.\n\nDivination: Acquire magical senses that detect health, wealth, and mental state. Uses Intellego Corpus, Intellego Mentem, and Intellego Terram guidelines.\n\nHealing: Grants a Recovery bonus for either wounds or diseases, and aids the birthing of children and livestock. Uses the Creo Corpus or Creo Animal guidelines. Infernal Lore cannot be used to produce this type of effect.\n\nEvil Eye: Causes minor acts of mischief like pain, blight of crops, hair loss, sneezing, and so forth. Uses the Perdo Corpus, Perdo Animal, or Perdo Herbam guidelines. Divine Lore cannot be used to produce this type of effect.\n\nTo cast a spell the character must expend a Fatigue level, whether the spell succeeds or fails. He must also spend at least 15 minutes preparing the spell, during which time he needs unbroken concentration and access to his \"magical\" materials (while necessary, these materials offer no benefit to the casting). The spell is designed exactly like a Hermetic spell. The Casting Total is equal to (Stamina + (Realm) Lore + Aura modifier + stress die) / 2. Penetration is calculated in the normal fashion: Casting Total - Spell Level + Penetration modifiers. You may pick this Virtue more than once, to acquire expertise in a different category of spells. Each time you choose this Virtue, you can align it to the same Realm as before or pick a different one, although a character cannot have access to both the Divine and Infernal Realms."
   },
   "virtue.font_of_knowledge": {
     "name": "Font of Knowledge",

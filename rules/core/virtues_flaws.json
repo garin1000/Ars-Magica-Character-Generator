@@ -234,10 +234,10 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5731, 5734] }
+    "source": { "anchor": "bound-to-realm", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5731, 5734] }
   },
   {
     "id": "flaw.bound_to_role_role",
@@ -538,7 +538,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general", "supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [
       {
@@ -549,7 +549,7 @@
       }
     ],
     "max_total": 1,
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5881, 5884] }
+    "source": { "anchor": "curse-of-slander", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5881, 5884] }
   },
   {
     "id": "flaw.curse_of_venus",
@@ -1132,9 +1132,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6146, 6149] }
+    "source": { "anchor": "flawed-powers", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6146, 6149] }
   },
   {
     "id": "flaw.fluctuating_fortune",
@@ -1406,7 +1406,7 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6264, 6267] }
+    "source": { "anchor": "horrifying-appearance--snake-legs", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6264, 6267] }
   },
   {
     "id": "flaw.humble",
@@ -2283,7 +2283,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "all", "value": [{ "kind": "is_magus" }, { "kind": "house", "value": "house.verditius" }] },
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6634, 6637] }
+    "source": { "anchor": "primogeniture-lineage", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6634, 6637] }
   },
   {
     "id": "flaw.prohibition",
@@ -2319,9 +2319,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story", "supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6646, 6649] }
+    "source": { "anchor": "raised-from-the-dead", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6646, 6649] }
   },
   {
     "id": "flaw.raised_in_the_gutter",
@@ -2337,10 +2337,10 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6654, 6658] }
+    "source": { "anchor": "realm-stigmatic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6654, 6658] }
   },
   {
     "id": "flaw.rebellious_major",
@@ -2497,10 +2497,10 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6717, 6720] }
+    "source": { "anchor": "servant-of-the-land", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6717, 6720] }
   },
   {
     "id": "flaw.sheltered_upbringing",
@@ -2648,9 +2648,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6783, 6786] }
+    "source": { "anchor": "stigmatic-catalyst", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6783, 6786] }
   },
   {
     "id": "flaw.stockade_parma_magica",
@@ -2798,9 +2798,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6076, 6079] }
+    "source": { "anchor": "the-falling-evil", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6076, 6079] }
   },
   {
     "id": "flaw.tormenting_master",
@@ -2829,7 +2829,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.true_love_minor"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6871, 6878] }
+    "source": { "anchor": "true-love", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6871, 6878] }
   },
   {
     "id": "flaw.true_love_minor",
@@ -2839,7 +2839,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.true_love_major"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6871, 6878] }
+    "source": { "anchor": "true-love", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6871, 6878] }
   },
   {
     "id": "flaw.twilight_prone",
@@ -2933,9 +2933,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6923, 6926] }
+    "source": { "anchor": "university-dean", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6923, 6926] }
   },
   {
     "id": "flaw.unlucky",
@@ -3025,9 +3025,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6977, 6984] }
+    "source": { "anchor": "viaticarus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6977, 6984] }
   },
   {
     "id": "flaw.visions",
@@ -3084,9 +3084,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7011, 7014] }
+    "source": { "anchor": "vulnerable-to-folk-tradition", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7011, 7014] }
   },
   {
     "id": "flaw.wanderlust",
@@ -3596,9 +3596,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3545, 3548] }
+    "source": { "anchor": "capo", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3545, 3548] }
   },
   {
     "id": "virtue.cathedral_school_master",
@@ -3665,10 +3665,10 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3575, 3578] }
+    "source": { "anchor": "command-animals", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3575, 3578] }
   },
   {
     "id": "virtue.commanding_aura",
@@ -3784,9 +3784,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3639, 3644] }
+    "source": { "anchor": "death-prophecy", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3639, 3644] }
   },
   {
     "id": "virtue.deft_form",
@@ -3980,9 +3980,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3755, 3758] }
+    "source": { "anchor": "enduring-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3755, 3758] }
   },
   {
     "id": "virtue.enticer_of_multitudes",
@@ -4018,19 +4018,19 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3775, 3778] }
+    "source": { "anchor": "exotic-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3775, 3778] }
   },
   {
     "id": "virtue.extractor_of_form_vis",
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3779, 3782] }
+    "source": { "anchor": "extractor-of-form-vis", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3779, 3782] }
   },
   {
     "id": "virtue.eye_of_hephaestus",
@@ -4213,9 +4213,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3891, 3894] }
+    "source": { "anchor": "flexible-formulaic-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3891, 3894] }
   },
   {
     "id": "virtue.focus_power",
@@ -4233,10 +4233,10 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "category", "type": "ref", "domain": "enumerated", "values": ["folk_magic.abjuration", "folk_magic.divination", "folk_magic.evil_eye", "folk_magic.healing"] }, { "key": "realm", "type": "ref", "domain": "realm", "at_most_one_of": [["realm.divine", "realm.infernal"]] }],
-    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3907, 3920] }
+    "source": { "anchor": "folk-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3907, 3920] }
   },
   {
     "id": "virtue.font_of_knowledge",
