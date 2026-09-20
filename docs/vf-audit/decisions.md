@@ -63,6 +63,40 @@ is corrected here.
 
 ---
 
+## D6 — a translation-table error is fixed in BOTH projects, immediately
+
+**Ruling (Norbert, standing for this session).** Any error found in
+`rules/source/de/translation-tables/` is corrected **here and in the source
+project `arm-de-translation`** in the same step. Not recorded as a todo in one
+and fixed in the other — fixed in both.
+
+**Why it is not a Phase 2 item like everything else this audit finds.** A wrong
+table is a *generator* of future wrong data: CLAUDE.md makes the tables the
+canonical EN→DE mapping, so the next agent producing German text reproduces the
+error, and the error outlives the audit. Fixing the data alone leaves the
+faucet running.
+
+**Scope of a table's authority, which is what these errors keep violating.**
+The tables are authoritative for **terminology** — which German word renders
+which English term. They are **not** authoritative for **facts about the
+rules**: which Virtue grants which Reputation, at which level, in which
+magnitude class. Four of the six errors found so far were factual claims a
+terminology table had no business making.
+
+**Precedence when sources disagree** (also in
+`rules/source/de/translation-tables/README.md`):
+rulebook > thematic table > `tugenden-fehler.md`.
+
+**And the finding underneath the findings: the copy drifts.** The tables are
+*copied* into `arm-char-gen`, not referenced. The `Covenfolk` error was not an
+error in the source project at all — `arm-de-translation` already carried
+`Konventsbewohner` with a written rationale, and the copy here was simply
+stale. So a table row disagreeing with the rulebook has two possible causes,
+and they need different fixes: a real error (fix both) or a stale copy (re-sync
+this one). **Check the source project before concluding the table is wrong.**
+
+---
+
 ## D5 — the description obligation follows the rule, not the classification
 
 **Question.** Today only `uncomputed_rule` must carry a `description`, enforced

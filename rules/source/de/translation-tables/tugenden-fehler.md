@@ -140,9 +140,7 @@
 | Protection | Schutz | |
 | Second Sight | Zweites Gesicht | |
 | Sense Holiness/Unholiness | Heiligkeit/Unheiligkeit spüren | |
-| Sense Passions | Gespür für Leidenschaft | |
 | Skinchanger | Tierwandler | |
-| Summon Animals | Tiere rufen | |
 | Unbound Tongue | Ungebundene Zunge | Kann in nicht-menschlicher Gestalt menschliche Sprachen sprechen und zaubern |
 | Variable Power | Variable Kraft | SdM:M; Kraft wird stärker basierend auf Alter, Machtwert, Verwicklung oder Fertigkeit |
 | Voice of the (Land) | Stimme des/der (Land) | SdM:M; kann mit Kreaturen eines bestimmten Lebensraums sprechen |
@@ -241,7 +239,7 @@
 | Bard | Barde | Sozialer Status, Frei; irischer Berufsstand nach Bardenschule |
 | Beadle | Pedell | Sozialer Status, Klein; Assistent eines Universitätsdekans |
 | Clerk | Kleriker | |
-| Covenfolk | Konventsbewohner | |
+| Covenfolk | Konventsbewohner | Nicht-Magi eines Konvents (Grogs, Diener, Handwerker); „Konventsmitglied" wäre missverständlich, weil es die Magi meint |
 | Craftsman | Handwerker | |
 | Custos | Custos (Lat.) | |
 | Educated | Gebildet | |
@@ -251,10 +249,10 @@
 | Landed Noble | Landadliger | |
 | Magister in Artibus | Magister in Artibus (Lat.) | Akademischer Titel |
 | Magical Champion | Magischer Streiter | SdM:M; Klein; Vertreter einer kleinen Gruppe durch magische Natur |
-| Magical Covenfolk | Magische Konventsbewohner | SdM:M; Frei; magisches Wesen als gleichwertiger Konventsbewohner |
+| Magical Covenfolk | Magischer Konventsbewohner | SdM:M; Frei; magisches Wesen als gleichwertiger Konventsbewohner |
 | Magical Master | Magischer Meister | SdM:M; Groß; als höhere Macht von einer großen Gruppe anerkannt |
 | Redcap | Rotkappe | Haus-Mercere-Bote |
-| Spirit Votary | Geistverehrer | SdM:M; Klein; Charakter pflegt rituelle Beziehung zu einem Geist |
+| Spirit Votary | Geistverehrer | **Frei, Mythischer Gefährte** (ArMDE:5007) — nicht Sozialer Status, nicht Klein; Charakter pflegt rituelle Beziehung zu einem Geist |
 | Veteran | Veteran | |
 
 ---
