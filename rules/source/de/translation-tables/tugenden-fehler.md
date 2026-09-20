@@ -264,7 +264,7 @@
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Blatant Gift | Auffällige Gabe | |
-| Environmental Magic Condition | Magische Umgebungsbedingung | SdM:M; Groß, Hermetisch; alle Zauber- und Laborsummen halbiert unter bestimmten Umständen |
+| Environmental Magic Condition | Magische Umweltbedingung | Groß, Hermetisch (ArMDE:6020); alle Zauber- und Laborsummen halbiert unter bestimmten Umständen |
 | Deficient Form | Defizitäre Form | |
 | Deficient Technique | Defizitäre Technik | |
 | Difficult Spontaneous Magic | Schwierige Spontane Magie | |
@@ -291,7 +291,7 @@
 | Cyclic Magic (negative) | Zyklische Magie (negativ) | |
 | Deficient Art | Defizitäre Kunst | |
 | Difficult Longevity Ritual | Schwieriges Langlebigkeitsritual | |
-| Disorientating Magic | Desorientierungsmagie | |
+| Disorientating Magic | Desorientierende Magie | ArMDE:5984 |
 | Erratic Magic | Unbeständige Magie | |
 | Flawed Powers | Fehlerhafte Kräfte | Übernatürliche Kräfte funktionieren unzuverlässig |
 | Flawed Parma | Fehlerhafte Parma | |
@@ -337,9 +337,8 @@
 |---|---|---|
 | Baneful Circumstances | Schädliche Umstände | SdM:M; unter bestimmten Umständen keine Erholung/Heilung/Macht-Regeneration |
 | Bound to (Realm) | Gebunden an (Sphäre) | |
-| Deteriorating Power | Schwindende Kraft | SdM:M; eine Kraft wird schwächer über Zeit |
-| Environmental Magic Condition | Magische Umgebungsbedingung | Klein; s. auch Groß/Hermetisch-Version |
-| Environmental Sensitivity | Umgebungsempfindlichkeit | |
+| Deteriorating Power | Schwindende Macht | ArMDE:5944; eine Kraft wird schwächer über Zeit |
+| Environmental Sensitivity | Umweltempfindlichkeit | ArMDE:6024 |
 | Exiled Atlantean | Verbannter Atlantier | SdM:M; kann nicht in heimische Regio zurückkehren |
 | Form Monstrosity | (Form-)Monstrosität | Platzhalter (Form) ersetzen |
 | Imagined Folk Tradition Vulnerability | Eingebildete Volksmagie-Verwundbarkeit | |
@@ -365,7 +364,7 @@
 | Continence | Enthaltsamkeit | |
 | Craving for Travel | Reiselust | |
 | Driven | Getrieben | |
-| Enfeebled | Entkräftet | |
+| Enfeebled | Geschwächt | ArMDE:6008 |
 | Envious | Neidisch | |
 | Fear | Angst | |
 | Greedy | Gierig | |
