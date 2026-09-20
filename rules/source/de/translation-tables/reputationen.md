@@ -78,7 +78,7 @@ Ein zufälliger Zeuge hat von einem Charakter gehört, wenn Stresswurf + Reputat
 | Famous | Berühmt | Frei wählbar | 4 (+) | Frei wählbar |
 | Hermetic Prestige | Hermetisches Ansehen | Hermetisch | 4 (+) | Angesehener Magus |
 | Protection | Schutz | Frei wählbar | 3 (+/–) | Abhängig vom Schirmherrn |
-| Mythic Blood | Mythisches Blut | Blutsverwandte | 3 (+) | Unter Angehörigen der Blutlinie |
+| Magical Blood (Magic Human) | Magisches Blut (Magischer Mensch) | Blutsverwandte | 3 (+) | Unter Angehörigen der Blutlinie |
 | Physician of Salerno | Arzt von Salerno | Lokal / Akademisch | 2 (+) | Arzt von Salerno |
 | Frightful Presence | Furchteinflößende Erscheinung | Lokal | 2 (+) | Furchteinflößend oder Ehrfurcht­gebietend |
 | Social Contacts | Soziale Kontakte | Lokal | – | Verdoppelt Lokale Reputationen; kann Reputationen verleihen |

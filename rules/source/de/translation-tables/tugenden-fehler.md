@@ -241,7 +241,7 @@
 | Bard | Barde | Sozialer Status, Frei; irischer Berufsstand nach Bardenschule |
 | Beadle | Pedell | Sozialer Status, Klein; Assistent eines Universitätsdekans |
 | Clerk | Kleriker | |
-| Covenfolk | Konventsmitglied | |
+| Covenfolk | Konventsbewohner | |
 | Craftsman | Handwerker | |
 | Custos | Custos (Lat.) | |
 | Educated | Gebildet | |
@@ -251,7 +251,7 @@
 | Landed Noble | Landadliger | |
 | Magister in Artibus | Magister in Artibus (Lat.) | Akademischer Titel |
 | Magical Champion | Magischer Streiter | SdM:M; Klein; Vertreter einer kleinen Gruppe durch magische Natur |
-| Magical Covenfolk | Magisches Konventsmitglied | SdM:M; Frei; magisches Wesen als gleichwertiges Konventsmitglied |
+| Magical Covenfolk | Magische Konventsbewohner | SdM:M; Frei; magisches Wesen als gleichwertiger Konventsbewohner |
 | Magical Master | Magischer Meister | SdM:M; Groß; als höhere Macht von einer großen Gruppe anerkannt |
 | Redcap | Rotkappe | Haus-Mercere-Bote |
 | Spirit Votary | Geistverehrer | SdM:M; Klein; Charakter pflegt rituelle Beziehung zu einem Geist |

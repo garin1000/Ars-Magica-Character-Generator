@@ -13,6 +13,36 @@ Thematisch gegliederte Übersetzungstabellen für die deutsche Ausgabe von Ars M
 
 ---
 
+## ⚠️ Diese Tabellen sind KI-erzeugt und können Fehler enthalten
+
+Die Tabellen wurden mit Claude aus den Quelldateien erzeugt. Sie sind für die
+**Terminologie** maßgeblich — der deutsche Begriff für einen englischen Term ist
+der Wert in der Spalte `Deutsch (DE)`. Sie sind **nicht** maßgeblich für
+**Sachaussagen** über die Regeln: welcher Tugend eine Reputation zusteht, welche
+Stufe sie hat, welche Tugend was gewährt. Dafür gilt ausschließlich das
+Regelbuch.
+
+**Rangfolge bei Widerspruch:**
+1. Das Regelwerk (`rules/source/en/`, bei deutschen Begriffen
+   `rules/source/de/`) — gewinnt immer bei Sachaussagen.
+2. Die thematische Tabelle des jeweiligen Sachgebiets (z. B. `konvent.md` für
+   Konventsbegriffe).
+3. `tugenden-fehler.md` — die breiteste Tabelle, und damit die mit der
+   höchsten Fehlerwahrscheinlichkeit.
+
+Gefundene und korrigierte Fehler (V/F-Audit 2026-09-20):
+
+| Datei | Fehler | Korrektur | Beleg |
+|---|---|---|---|
+| `reputationen.md` | Die Reputation Stufe 3 „Unter Angehörigen der Blutlinie" war **Mythic Blood** zugeordnet | gehört zu **Magical Blood (Magic Human)** | ArMDE:4588 „this Virtue does not grant any Reputation"; ArMDE:4367 „a positive Reputation at level 3 among others of his bloodline" |
+| `tugenden-fehler.md` | `Covenfolk → Konventsmitglied` | `Konventsbewohner` | Überschrift im dt. Regelbuch, Zeile 3609; `konvent.md:38`; ausgelieferte i18n |
+| `tugenden-fehler.md` | `Magical Covenfolk → Magisches Konventsmitglied` | `Magische Konventsbewohner` | dieselbe Begriffsfestlegung |
+
+Diese Korrekturen gehören auch in das Quellprojekt `arm-de-translation`, aus
+dem die Tabellen stammen — siehe dort `docs/`.
+
+---
+
 ## Übersicht der Tabellendateien
 
 16 thematische Glossartabellen, dazu `uebersetzungsregeln.md` als Regeldokument (kein Glossar). Der Index ist vollständig: jede hier gelistete Datei liegt im Verzeichnis, und jede Datei im Verzeichnis ist hier gelistet.
