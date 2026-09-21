@@ -110,10 +110,11 @@ known and are a lead, not a conclusion: `flaw.corrupted_arts`,
 
 ## Progress
 
-| Batch | Checked | Failures | Open questions | Status |
-|---|---|---|---|---|
-| Phase 0 (`engine-semantics.md`) | — | 11 systemic, in 7 areas (Part C) | 4 | **done** |
-| B01–B19 | 0 / 655 | — | — | pending |
+| Batch | Checked | Failures | Findings | Open questions | Status |
+|---|---|---|---|---|---|
+| Phase 0 (`engine-semantics.md`) | — | 11 systemic, in 7 areas (Part C) | — | 4 | **done** |
+| B01–B13 | 455 / 655 | — | F-001 … F-444 | Q-01 … Q-110 | **done** |
+| B14–B19 | 200 remaining, ArMDE:6236-7119 | — | — | — | pending |
 
 Phase 0 notes, which every batch agent must know before starting:
 

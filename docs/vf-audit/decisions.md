@@ -83,9 +83,39 @@ rules**: which Virtue grants which Reputation, at which level, in which
 magnitude class. Four of the six errors found so far were factual claims a
 terminology table had no business making.
 
-**Precedence when sources disagree** (also in
-`rules/source/de/translation-tables/README.md`):
-rulebook > thematic table > `tugenden-fehler.md`.
+**Precedence when sources disagree — CORRECTED 2026-09-21, the first wording
+was unscoped and contradicted the paragraph above it.** B13's F-444 caught it:
+this file said flatly *"rulebook > thematic table > `tugenden-fehler.md`"*, which
+read as a blanket rule and so cancelled the scope-of-authority paragraph
+directly above, where the tables are authoritative for terminology. B13 applied
+both readings inside one batch (F-433 against F-438) because the record
+permitted both. The correct statement, matching
+`rules/source/de/translation-tables/README.md:25-31` (*"gewinnt immer bei
+**Sachaussagen**"*) and `RULES.md:788` (*"glossary wins on any term mismatch"*),
+is **two rules, keyed on what kind of claim is in dispute**:
+
+1. **A factual claim about the rules** — which Virtue grants which Reputation,
+   at which level, in which magnitude class, from which book. **The rulebook
+   wins, always.** A terminology table making a factual claim is the error shape
+   this audit has now found seven times.
+2. **A terminology claim** — which German word renders which English term.
+   **The glossary wins**, in the order thematic table > `tugenden-fehler.md`
+   (the broadest table, so the likeliest to be wrong). The DE rulebook heading is
+   strong evidence of terminology but is not decisive, because the heading is one
+   translator's rendering at one line and the glossary is the catalogue-wide
+   reconciliation of all of them.
+
+**The case that forced the split, and the reason rule 2 has to exist.**
+`flaw.fettered_magic` (ArMDE:6114) and `virtue.tethered_magic` (ArMDE:5141) are
+two different catalogue entries, and the **German rulebook gives both the same
+heading** — `#### Gefesselte Magie`, at DE 6114 and DE 5141. The shipped data
+follows the headings and so ships both under one name, leaving them
+indistinguishable in the German UI. `tugenden-fehler.md` resolves it
+(`:73` Tethered Magic → *Gefesselte Magie*; `:701` Fettered Magic → *Gekettete
+Magie*). Under the old unscoped wording the rulebook won and the collision
+stood, which is plainly the wrong answer: a name collision is a defect in the
+rendering, not a rule the book states. **A rulebook heading that collides with
+another entry's is evidence the heading is wrong, not evidence the glossary is.**
 
 **And the finding underneath the findings: the copy drifts.** The tables are
 *copied* into `arm-char-gen`, not referenced. The `Covenfolk` error was not an
