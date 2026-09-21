@@ -127,6 +127,155 @@ this one). **Check the source project before concluding the table is wrong.**
 
 ---
 
+## D14 — an ability reference in an effect must be able to name its parameter
+
+**Question.** Raised by Norbert on reading D13's citation of `RULES.md:6362`,
+which blesses a known over-permission as a "documented approximation". It should
+not be blessed; it should be fixed.
+
+**The root cause.** `Effect::AbilityAuthorization` (and every other effect that
+names an Ability) carries `abilities: Vec<Id>` — **an id and nothing else.** An
+Ability id is not always the whole reference: `ability.dead_language` carries
+`parameter: "language"`, so "Latin" is an id *plus a parameter value*. The effect
+vocabulary cannot express that, and two entries are wrong as a result, in two
+different ways.
+
+**Shape 1 — a parameterized Ability, over-authorized.** ArMDE:5867 gives
+`flaw.covenant_upbringing` "You may take **Latin** at character creation". The
+data authorizes `ability.dead_language`, which is `academic` (gated) with
+`parameter: "language"` — so it permits **every** dead language, Ancient Greek
+and Hebrew included. `RULES.md:6362` records this as deliberate.
+
+**Shape 2 — the entry's own parameter ignored, which is worse.**
+`virtue.student_of_realm` carries a `realm` parameter, so the player picks **one**
+realm — and its authorization lists **all four** realm Lores (`dominion`,
+`faerie`, `infernal`, `magic`) unconditionally. A magus who takes Student of the
+Magic Realm is authorized for **Infernal Lore**. Nothing links the authorization
+to the choice the entry already records. This is not an id-level proxy
+limitation; it is a missing binding.
+
+**Ruling (Norbert, 2026-09-21): make ability references in effects
+parameter-aware, and do it before F-409's remedy adds ~30 more authorizations.**
+
+**What this obliges.**
+
+1. **An ability reference in an effect gains an optional parameter constraint**,
+   in two forms: a **literal** value (`ability.dead_language` + `language =
+   latin`) and a **binding** to the selecting entry's own parameter
+   (`ability.realm_lore`-style + `realm = {realm}`, so Student of (Magic)
+   authorizes Magic Lore alone).
+2. **No such mechanism exists today.** The `{land}` / `{realm}` placeholders in
+   the catalogue are **i18n-layer name templates only**; no effect references a
+   parameter. So the binding is genuinely new, and its syntax should be designed
+   **once**, together with D9's multi-valued parameter type, rather than twice.
+3. **`RULES.md:6362` is rewritten, not amended.** It currently documents the
+   approximation as acceptable and cites `ability_score_grant` as precedent for
+   the same looseness. Both halves stop being true.
+
+**Scope, stated because it is smaller than it sounds.** Exactly **one** gated
+parameterized Ability exists in the catalogue — `ability.dead_language`. So
+shape 1 has one possible carrier today. Shape 2 has one. **The reason to do it
+now is timing, not volume**: F-409's remedy writes ~30 new authorizations, and
+writing them against a shape known to over-permit and retrofitting later is the
+expensive order.
+
+### Hard sequencing constraint: D14 lands before or with D13
+
+**D13's earmark names Abilities, so it inherits this defect on a brand-new
+effect.** ArMDE:5791 lists Church Upbringing's five as "Artes Liberales,
+**Latin**, Music, **Organization Lore: Church**, or Theology" — and two of the
+five are parameterized:
+
+| Ability | Category | Parameter | The book means |
+|---|---|---|---|
+| `ability.dead_language` | academic | `language` | **Latin** |
+| `ability.organization_lore` | general | `organization` | **Church** |
+
+Written against the current id-only shape, the earmark would let the 25 points go
+to **any** dead language and **any** organization's Lore. So D13 must not be
+implemented until an ability reference can name its parameter — otherwise the
+ruling that exists to model a passage *exactly* ships an approximation on day
+one.
+
+---
+
+## D13 — an earmark of the normal budget is a third XP mode, and it gets modelled
+
+**Question (Q-92).** `flaw.church_upbringing`, ArMDE:5791:
+
+> "The player **must spend 25 experience points from the normal budget** on
+> Artes Liberales, Latin, Music, Organization Lore: Church, or Theology.
+> **Unless the character has a Virtue that permits it, no other experience points
+> may be spent on Academic Abilities.**"
+
+Two clauses, neither expressible. `RestrictedAbilityXp` **grants** new points,
+which would turn a Flaw into a benefit; `AbilityAuthorization` is unbounded,
+which would permit the unlimited Academic spending clause 2 forbids. The entry
+ships `narrative` with no effects, so **a player who does what the Flaw mandates
+gets a hard `ability_category_requires_virtue`** — a legal character the app
+refuses to build.
+
+**Ruling (Norbert, 2026-09-21): add a `from_normal_budget` earmark to
+`RestrictedAbilityXp`.** Model both clauses exactly rather than approximating.
+
+**Sizing, stated because it argues the other way and was overruled.** "from the
+normal budget" appears **exactly once in the rulebook** — this entry. So this is
+an engine change for one entry in 655, and the cheaper option (an
+`ability_authorization` over the five named Abilities, with the rule as text) had
+a documented precedent at `RULES.md:6362`, where Covenant Upbringing accepted the
+same kind of over-permissive approximation. Norbert chose the exact model.
+
+### Why it fits better than it looks
+
+**Authorization comes free, and this is the part that makes the design tidy.**
+`types.rs:1034-1035` already records that "`Effect::RestrictedAbilityXp` pool
+already implies permission for what it funds … since the grant would otherwise be
+unspendable." So an earmark naming the five Abilities **authorizes exactly those
+five** — and every *other* Academic Ability stays gated by
+`categories_requiring_virtue`. **That is clause 2, precisely, with no second
+effect and no new authorization.**
+
+### What this obliges
+
+1. **`from_normal_budget: bool`** on `RestrictedAbilityXp`, `#[serde(default,
+   skip_serializing_if)]` so the twelve existing carriers' JSON is unchanged.
+2. **The flow graph gains one edge shape.** Today `effective/xp.rs::build_flow_pools`
+   treats every restricted pool as a *source*. An earmark is not additional
+   supply — it is a constraint on supply the character already has, so it draws
+   from the general pool: `general → earmark → eligible spends`, rather than
+   `source → pool → eligible spends`. The total budget must not rise.
+3. **`restricted_xp_unspent` applies unchanged.** The earmark *must* be spent;
+   the existing warning (`validation/life_stage.rs:745`) already says so, and
+   here it is saying something the rulebook actually requires rather than
+   nagging.
+4. **`flaw.church_upbringing` becomes `creation_effect`** carrying the earmark,
+   with the full passage in `description` in both locales per D5 — the "unless
+   the character has a Virtue that permits it" escape is not modelled and must
+   reach the player as text.
+5. **Test-first.** The red that matters: a character with this Flaw who spends
+   none of the 25 must fail, and the total budget must be unchanged by taking the
+   Flaw.
+
+### The larger thing this names
+
+There are now **three distinct XP modes** in the rules, and the engine has had
+only one of them:
+
+| Mode | Example | Status |
+|---|---|---|
+| **Additive grant** — new points on top of the budget | Educated, Warrior, Privileged | modelled |
+| **Earmark** — N of the *existing* budget, constrained | Church Upbringing (ArMDE:5791) | **this ruling** |
+| **Replacement** — substitutes a life-stage block | Feral Upbringing (ArMDE:6112) | **F-428, unmodelled** |
+
+F-428's defect is that `flaw.feral_upbringing`'s 120 XP *replaces* the 120-point
+childhood block and the engine stacks them, yielding 240. That is the **third**
+mode, not this one, and it needs its own shape — but the two should be designed
+together, because a `from_normal_budget` flag and a `replaces_life_stage` flag
+are the same kind of answer to the same kind of question, and building one in
+ignorance of the other invites a third incompatible spelling.
+
+---
+
 ## D12 — Hermetic V/F are intrinsic or trained, and trained requires a magus
 
 **Question** (Q-90, "one ruling with 122 consequences").
