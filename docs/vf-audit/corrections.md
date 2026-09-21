@@ -779,6 +779,26 @@ list; it was scattered across seven documents before this file.**
 **Files.** `crates/arm-rules/tests/uncomputed_clauses.rs` only. **This is a test
 change, and it is the only one that must land before data changes.**
 
+**The baseline, corrected 2026-09-21.** Batches B10, B11 and B13 describe the
+screen as "the **20-phrase** list", and the orchestrator repeated that figure in
+every brief from B12 on. **It is wrong.** `uncomputed_clauses.rs:179-219` holds
+**33** entries, counted item by item — and they are **bilingual pairs**, so the
+list covers roughly **17 concepts in two languages**, not twenty independent
+idioms. The figure came from `ecb5150`'s commit message and was never checked
+against the array. The batch files keep the old number because they are dated
+records, but any slice working this group must start from **33 / ~17 concepts**.
+
+**And the German half is where the real problem is** — B17 measured it. A
+contiguous, left-word-boundary substring match **structurally cannot express
+German discontinuous negation**: four of the five German prohibitions in B17's
+span put one or more words between the two halves of the negation (`kann … nicht
+anwenden`, `darf … nicht nehmen`). Family 1 below is therefore **not
+implementable as written in German**, and adding its DE forms as literal
+substrings would leave the guard red on exactly the entries the reclassification
+is meant to fix. **This must be decided before any data lands** — see § 2.1 —
+because the alternative pressure is to reword shipped rulebook text to satisfy a
+detector, which is what `ecb5150` was written to stop.
+
 #### The list — 14 idiom families, ~60 word-forms
 
 Recorded as families, because every batch that found a miss found it to be a

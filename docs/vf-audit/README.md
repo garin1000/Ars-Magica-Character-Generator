@@ -113,11 +113,12 @@ known and are a lead, not a conclusion: `flaw.corrupted_arts`,
 | Batch | Checked | Failures | Findings | Open questions | Status |
 |---|---|---|---|---|---|
 | Phase 0 (`engine-semantics.md`) | — | 11 systemic, in 7 areas (Part C) | — | 4 | **done** |
-| B01–B17 | 595 / 655 | — | F-001 … F-522 | Q-01 … Q-135 | **done** |
-| B18–B19 | 60 remaining, ArMDE:6803-7119 | — | — | — | pending |
+| B01–B18 | 630 / 655 | — | F-001 … F-538 | Q-01 … Q-139 | **done** |
+| B19 | 25 remaining, ArMDE:6989-7119 | — | — | — | pending |
 
-`corrections.md` indexes **B01–B16 only**. B17's findings (F-502…F-522) are in
-`batch-17.md` and are not yet in the index — B18 and B19 must check both.
+`corrections.md` indexes **B01–B16 only**. B17's findings (F-502…F-522) and
+B18's (F-523…F-538) are in `batch-17.md` and `batch-18.md` and are not yet in
+the index — B19 must check all three.
 
 Phase 0 notes, which every batch agent must know before starting:
 
