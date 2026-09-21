@@ -341,7 +341,7 @@
 | Perpetuity | Beständigkeit | Mysterientugend |
 | Independent Study | Eigenständiges Studium | Kleine Allgemeine Tugend |
 | Alluring to (Beings) | Anziehend für (Wesen) | Kleine Allgemeine Tugend |
-| Vulnerable Magic | Verwundbare Magie | Großer Hermetischer Fehler |
+| Vulnerable Magic | Anfällige Magie | Großer Hermetischer Fehler (ArMDE:7005) |
 | Binding the Gift | Bindung der Gabe | Kleines Hausmysterium; Feenvertrauter |
 | Wayfarers | Weltengänger | Merinita-Gesellschaft; Arkadien-Experten |
 | Keepers of the Thousand Tales | Hüter der Tausend Geschichten | Merinita-Gesellschaft |
@@ -407,7 +407,7 @@
 | Council of Four | Rat der Vier | Regierungsgremium des Hauses |
 | Warding (Ability) | Schutzkreismagie | Beschleunigte Fertigkeit der Columbae |
 | Ring/Circle Magic | Ring/Kreis-Magie | Kleine Hermetische Tugend (Columbae) |
-| Vulnerable to Folk Tradition | Anfällig für Volkszauber | Kleiner Hermetischer Fehler |
+| Vulnerable to Folk Tradition | Anfällig für Volksüberlieferungen | Kleiner Hermetischer Fehler (ArMDE:7011) |
 | Control Fertility | Fruchtbarkeit beherrschen | Übernatürliche Fertigkeit |
 | Hermetic Haruspexes | Hermetische Haruspexe | Ex-Misc.-Tradition; Sg. Haruspex |
 | Karaites / Karaite Magic | Karäer / Karäische Magie | Ex-Misc.-Tradition |

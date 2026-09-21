@@ -113,12 +113,18 @@ known and are a lead, not a conclusion: `flaw.corrupted_arts`,
 | Batch | Checked | Failures | Findings | Open questions | Status |
 |---|---|---|---|---|---|
 | Phase 0 (`engine-semantics.md`) | — | 11 systemic, in 7 areas (Part C) | — | 4 | **done** |
-| B01–B18 | 630 / 655 | — | F-001 … F-538 | Q-01 … Q-139 | **done** |
-| B19 | 25 remaining, ArMDE:6989-7119 | — | — | — | pending |
+| B01–B19 | **655 / 655** | — | F-001 … F-545 | Q-01 … Q-142 | **done** |
 
-`corrections.md` indexes **B01–B16 only**. B17's findings (F-502…F-522) and
-B18's (F-523…F-538) are in `batch-17.md` and `batch-18.md` and are not yet in
-the index — B19 must check all three.
+**The checking pass is complete.** Every one of the 655 Virtues and Flaws has
+been read against its rulebook passage in both languages and checked on all
+twelve points. Closure was verified three ways in B19: `jq 'length'` = 655,
+630 + 25 = 655, and `jq '[.[]|.source.lines[1]]|max'` = 7119 carried by exactly
+the two `flaw.wrathful_*` entries, so nothing in the catalogue cites past the
+Flaws block.
+
+`corrections.md` indexes **B01–B16 only** (F-001…F-501). B17's F-502…F-522,
+B18's F-523…F-538 and B19's F-539…F-545 are in their batch files and are **not
+yet in the index** — Phase 2 must fold them in before working from it.
 
 Phase 0 notes, which every batch agent must know before starting:
 

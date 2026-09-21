@@ -728,6 +728,36 @@ detector knows. B11 measured six of its seven reclassifications blocked this way
 B12 measured eight of eleven. **Extend the phrase list first, then reclassify.**
 The consolidated word-form list is § 3.1.
 
+### 2.1a Fix `flaw.wrathful_*`'s `source.lines` BEFORE widening `SWEPT_BLOCKS` — B19
+
+Added 2026-09-21. `SWEPT_BLOCKS`' Flaws entry is `(ArMDE, 5639, 7113)` and its
+comment claims it runs "to the end of `#### Wrathful`". It does not, and
+`is_swept` (`uncomputed_clauses.rs:476-480`) requires the entry's range to lie
+**wholly** inside the block:
+
+```rust
+start >= *lo && end <= *hi
+```
+
+`flaw.wrathful_major` and `flaw.wrathful_minor` both carry
+`source.lines: [7106, 7119]`, and `7119 > 7113`, so **both are silently excluded
+from the narrative screen today** — a guard hole, not untidiness. They are the
+only two entries in all 655 that cite past 7113 (`jq '[.[]|.source.lines[1]]|max'`
+= 7119, carried by exactly those two).
+
+**The obvious fix is the wrong order.** Widening the block to 7119 first would
+pull both entries in — and the screen would then read lines 7106-7119 as
+Wrathful's text. But the Flaw ends at ArMDE:7108; `---` follows at 7110, a pull
+quote at 7112, and **`# Chapter 5: Abilities` at 7114**, whose :7118 reads
+"meeting or exceeding an **Ease Factor**". `"ease factor"` is literal #7 in
+`MECHANICAL_PHRASES` (`:194`). So the screen would flag two `narrative` entries
+as dropping a mechanical clause **that belongs to a different chapter** — a false
+offender, and exactly the kind of guard-driven confusion the audit exists to end.
+
+**Order: fix F-540's range to `[7106, 7109]` first, then widen the block.** Doing
+so brings the entire 655-entry catalogue inside the swept block for the first
+time.
+
 ### 2.2 D2 is pending — one finding is blocked on it, and two validators must not be touched
 
 `decisions.md` D2 ("granted Virtues and the bought-only validators") is **not
@@ -781,11 +811,14 @@ change, and it is the only one that must land before data changes.**
 
 **The baseline, corrected 2026-09-21.** Batches B10, B11 and B13 describe the
 screen as "the **20-phrase** list", and the orchestrator repeated that figure in
-every brief from B12 on. **It is wrong.** `uncomputed_clauses.rs:179-219` holds
-**33** entries, counted item by item — and they are **bilingual pairs**, so the
-list covers roughly **17 concepts in two languages**, not twenty independent
-idioms. The figure came from `ecb5150`'s commit message and was never checked
-against the array. The batch files keep the old number because they are dated
+every brief from B12 on. **It is wrong.** `uncomputed_clauses.rs:179-220` holds
+**33 string literals in 15 bilingual groups** — so the list covers **15
+concepts in two languages**, not twenty independent idioms. (An earlier version
+of this note said "~17 concepts"; B19 counted the groups and it is 15.) The
+figure came from `ecb5150`'s commit message and was never checked against the
+array. **The list contains no prohibition idiom in either language** — which is
+why `flaw.vulnerable_magic` sits inside a swept block, ships `narrative`, passes
+the screen, and drops a real rule. The batch files keep the old number because they are dated
 records, but any slice working this group must start from **33 / ~17 concepts**.
 
 **And the German half is where the real problem is** — B17 measured it. A
