@@ -328,7 +328,6 @@
 | Bound to Magic | An Magie gebunden | SdM:M; muss in Magieaura ≥ 5 leben; sonst Schwere Wunden |
 | Greater Malediction | Große Verfluchung | |
 | Hunger for (Form) Magic | Hunger nach (Form-)Magie | SdM:M; muss 1 Vis der Form pro Quartal konsumieren |
-| Monstrous Blood | Monströses Blut | |
 | Suppressed Gift | Unterdrückte Gabe | |
 
 ### Übernatürliche Fehler, Klein / Supernatural, Minor
@@ -343,7 +342,7 @@
 | Form Monstrosity | (Form-)Monstrosität | Platzhalter (Form) ersetzen |
 | Imagined Folk Tradition Vulnerability | Eingebildete Volksmagie-Verwundbarkeit | |
 | Lesser Malediction | Kleine Verfluchung | |
-| Monstrous Blood | Monströses Blut | SdM:M; Klein; −1 Alterungswurf aber nachteilige körperliche Eigenschaft |
+| Monstrous Blood | Monströses Blut | Klein, Übernatürlich (ArMDE:6454); -1 Alterungswurf aber nachteilige körperliche Eigenschaft |
 | Restricted Power | Eingeschränkte Kraft | SdM:M; Kraft nur unter bestimmten Umständen oder mit Zeremonie aktivierbar |
 | Slow Power | Langsame Kraft | SdM:M; Kraft benötigt zusätzliche Runde Vorbereitung |
 | Susceptibility to Divine Power | Anfälligkeit für Göttliche Kraft | |
