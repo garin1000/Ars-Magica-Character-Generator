@@ -2386,8 +2386,8 @@
     "summary": "Die Magie der Maga ist in einem engen Bereich besonders ausgeprägt, ähnlich wie bei einem Magischen Fokus."
   },
   "virtue.powerful_relic": {
-    "name": "Mächtiges Relikt",
-    "summary": "Du besitzt ein ungewöhnlich mächtiges Relikt mit einem Wahrer-Glaube-Wert von 3."
+    "name": "Mächtige Reliquie",
+    "summary": "Du besitzt eine ungewöhnlich mächtige Reliquie mit einem Wahrer-Glaube-Wert von 3."
   },
   "virtue.premonitions": {
     "name": "Vorahnungen",
@@ -2442,8 +2442,8 @@
     "summary": "Obwohl Du nicht die Gabe besitzt und keine hermetische Magie wirken kannst, bist Du ein vollwertiges Mitglied des Ordens des Hermes und des Hauses Mercere (siehe Seite 15)."
   },
   "virtue.relic": {
-    "name": "Relikt",
-    "summary": "Du besitzt ein heiliges Relikt, etwa den Fingerknöchelknochen eines Heiligen, mit einem Wahrer-Glaube-Wert von 1."
+    "name": "Reliquie",
+    "summary": "Du besitzt eine heilige Reliquie, etwa den Fingerknöchelknochen eines Heiligen, mit einem Wahrer-Glaube-Wert von 1."
   },
   "virtue.religious": {
     "name": "Ordensangehöriger",

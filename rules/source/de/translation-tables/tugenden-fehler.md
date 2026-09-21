@@ -166,6 +166,7 @@
 | Essential Virtue | Essenzielle Tugend | SdM:M; Groß (+6) oder Klein (+3); verleiht Essenzielle Eigenschaft |
 | Giant Blood | Riesenblut | SdM:M-Hinweis: repräsentiert Halbriesen, nicht volle Riesen |
 | Magical Warder | Magischer Wächter | SdM:M; magisches Wesen als Beschützer; auch für Geisterhaften Wächter mit Machtwert |
+| Powerful Relic | Mächtige Reliquie | Reliquie mit Wahrer-Glaube-Wert 3 und einer Kraft; setzt frommes Verhalten voraus. **Nicht** „Mächtiges Relikt" (`grundbegriffe.md`) |
 | True Friend | Wahrer Freund | |
 
 ### Allgemeine Tugenden, Klein / General, Minor
@@ -199,6 +200,7 @@
 | Inspirational | Inspirierend | |
 | Intuition | Intuition | Natürliche Feinfühligkeit; bei Glücksentscheidungen Chance auf richtige Wahl |
 | Natural Leader | Natürlicher Anführer | Dominante Persönlichkeit; +3 auf soziale Situationen bei Führung |
+| Keen Sense of Smell | Feiner Geruchssinn | +3 auf Geruchswürfe, auch beim Spurenverfolgen mit Jagen. Gleichlautend mit der Tier-Quality (`tiere-kreaturen.md`) |
 | Keen Vision | Scharfe Sicht | |
 | Large | Großgewachsen | SdM:M-Hinweis: bei magischen Charakteren ohne Stärke-/Schnelligkeit-Modifikation |
 | Lightning Reflexes | Blitzreflexe | |
@@ -208,13 +210,15 @@
 | Protection | Schutz | |
 | Puissant Ability | Begabung in (Fertigkeit) | |
 | Rapid Convalescence | Schnelle Genesung | |
+| Relic | Reliquie | Heilige Reliquie mit Wahrer-Glaube-Wert 1, ohne weitere Kräfte. **Nicht** „Relikt" – das bleibt dem Überrest/Fundstück vorbehalten (`grundbegriffe.md`) |
 | Self-Confident | Selbstbewusst | |
+| Sharp Ears | Scharfe Ohren | +3 auf Hörwürfe. Gleichlautend mit der Tier-Quality (`tiere-kreaturen.md`). Nicht „Spitze Ohren" – der Spielwert ist die Hörleistung, nicht die Ohrenform |
 | Social Contacts | Soziale Kontakte | |
 | Strong-Willed | Willensstark | |
 | Student of (Realm) | Student der (Sphäre) | |
-| Tough | Zäh | |
+| Tough | Zäh | +3 Absorption. Nicht mit der Tier-Quality *Hardy* → „Widerstandsfähig" verwechseln (`tiere-kreaturen.md`); beide hießen bis 2026-09-10 „Zäh" |
 | Troupe Upbringing | Zirkuserziehung | Aufgewachsen in einer Wandertruppe |
-| Unaging | Nicht-Alternd | |
+| Unaging | Nicht alternd | Schreibung wie die Überschrift in den Basisregeln, ohne Bindestrich |
 | Venus's Blessing | Venussegen | |
 | Warrior | Krieger | |
 | Magical Mount | Magisches Reittier | SdM:M; magisches Wesen als Reittier/Wachtier mit Machtwert ≤ 25 |
@@ -313,6 +317,7 @@
 | Twilight Prone | Zwielicht-anfällig | |
 | Unruly Magic | Ungebändigte Magie | |
 | Waster of Vis | Vis-Verschwender | |
+| Warped Magic | Verzerrte Magie | Nebeneffekt der eigenen Magie, wächst mit der Zauberstufe; nicht mit *Warped by Magic* verwechseln |
 | Weak Enchanter | Schwacher Verzauberer | |
 | Weak Magic | Schwache Magie | |
 | Weak Scholar | Schwacher Gelehrter | |
@@ -349,6 +354,7 @@
 | Susceptibility to Faerie Power | Anfälligkeit für Feenkraft | |
 | Susceptibility to Infernal Power | Anfälligkeit für Infernale Kraft | |
 | Susceptibility to Sunlight | Anfälligkeit für Sonnenlicht | |
+| Warped by Magic | Durch Magie Verzerrt | 5 Verzerrungspunkte und Verzerrungswert 1 aus früheren Begegnungen; nicht mit *Warped Magic* verwechseln |
 
 ### Persönlichkeits-Fehler / Personality Flaws (Auswahl)
 
@@ -360,6 +366,7 @@
 | Compassionate | Mitfühlend | |
 | Compulsion | Zwang | |
 | Compulsive Lying | Zwanghaftes Lügen | |
+| Dutybound | Pflichtgebunden | Klein, Persönlichkeit; einschränkender Verhaltenskodex, befolgt aus Schuldgefühl oder Angst, nicht aus Überzeugung. ~~Pflichtbewusst~~ (klingt nach Tugend statt nach Fehler), ~~Pflichttreu~~, ~~Pflichtverbunden~~ – alle drei kamen im Korpus vor und sind 2026-09-07 vereinheitlicht. Nicht verwechseln mit der Persönlichkeitseigenschaft *Dutiful* → „Pflichtbewusst" |
 | Continence | Enthaltsamkeit | |
 | Craving for Travel | Reiselust | |
 | Driven | Getrieben | |
@@ -369,6 +376,7 @@
 | Greedy | Gierig | |
 | Grudge | Groll | Starker Groll gegen jemanden im eigenen sozialen Umfeld |
 | Hatred | Hass | |
+| Higher Purpose | Höheres Ziel | Groß oder Klein, Persönlichkeit; altruistisches Ziel, dem alles andere untergeordnet wird. ~~Höherer Zweck~~ – kam im Korpus vor und ist 2026-09-10 auf den Namen der Basisregeln-Definition vereinheitlicht |
 | Humble | Demütig | |
 | Infamous | Berüchtigt | |
 | Lecherous | Wollüstig | |
@@ -446,10 +454,27 @@
 | Poor Memory | Schlechtes Gedächtnis | |
 | Poor Hearing | Schlechtes Hörvermögen | |
 | Poor Student | Schlechter Schüler | |
+| Sensitive (Sense) | Empfindlicher (Sinn) | Klein; ein Sinn wird unter normalen Umständen überwältigt, −2 auf Aktivitäten. **Platzhalter-Fehler**, wird über die Spezialisierung benannt – siehe unten |
 | Simple-Minded | Einfältig | |
 | Slow Learner | Langsamer Lerner | |
 | Small Frame | Zierlicher Körperbau | SdM:M-Hinweis: bei magischen Charakteren ohne Stärke-/Schnelligkeit-Modifikation |
+| Weak (Sense) | Schwacher (Sinn) | Klein; ein Sinn ist unter normalen Umständen nutzlos, −2 auf Aktivitäten. **Platzhalter-Fehler**, wird über die Spezialisierung benannt – siehe unten |
 | Weak Personality | Schwache Persönlichkeit | |
+
+#### Spezialisierungen von *Empfindlicher (Sinn)* / *Schwacher (Sinn)*
+
+Beide Fehler tragen einen Sinnes-Platzhalter; im Spiel werden sie unter dem Namen der Spezialisierung geführt. Die Reihe ist 2026-09-10 vereinheitlicht – der Korpus führte zuvor „Lichtempfindlichkeit", „Empfindliches Sehvermögen", „Empfindliches Hören", „Schwaches Sehen" und „Schwaches Hören" nebeneinander.
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Sensitive Sight | Empfindliche Sicht | ~~Lichtempfindlichkeit~~, ~~Empfindliches Sehvermögen~~ |
+| Sensitive Hearing | Empfindliches Gehör | ~~Empfindliches Hören~~. **Nicht** „Scharfes Gehör" – das klingt nach Vorteil, gemeint ist ein Nachteil; die Tugend heißt *Sharp Ears* → „Scharfe Ohren" |
+| Sensitive Smell | Empfindlicher Geruchssinn | **Nicht** „Scharfer Geruchssinn" – das ist die Tugend *Keen Sense of Smell* → „Feiner Geruchssinn" |
+| Sensitive Taste | Empfindlicher Geschmack | analog gebildet; im Korpus bisher nur im Definitionstext erwähnt |
+| Weak Sight | Schwache Sicht | ~~Schwaches Sehen~~, ~~Schwaches Sehvermögen~~ |
+| Weak Hearing | Schwaches Gehör | ~~Schwaches Hören~~ |
+| Weak Smell | Schwacher Geruchssinn | analog gebildet |
+| Weak Taste | Schwacher Geschmack | analog gebildet |
 
 ---
 
@@ -592,126 +617,126 @@
 
 ---
 
-### Ergänzungen aus Houses of Hermes: True Lineages (HoH:TL)
+### Ergänzungen aus Häuser des Hermes: Wahre Linien (HdH:WL)
 
 #### Hermetische Tugenden, Klein / Hermetic, Minor
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Colens Arcanorum | Colens Arcanorum | HoH:TL; Charakter ist Mitglied der Colentes Arcanorum (Haus Bonisagus) |
+| Colens Arcanorum | Colens Arcanorum | HdH:WL; Charakter ist Mitglied der Colentes Arcanorum (Haus Bonisagus) |
 
 #### Statustugenden, Klein / Social Status, Minor
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Tenens Occultorum | Tenens Occultorum | HoH:TL; Charakter ist Mitglied der Tenentes Occultorum (Haus Bonisagus) |
+| Tenens Occultorum | Tenens Occultorum | HdH:WL; Charakter ist Mitglied der Tenentes Occultorum (Haus Bonisagus) |
 
 #### Allgemeine Tugenden, Klein / General, Minor
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Linguist | Linguist | HoH:TL; Erleichtertes Sprachenlernen |
+| Linguist | Linguist | HdH:WL; Erleichtertes Sprachenlernen |
 
-#### Große Tugenden / Major Virtues (HoH:TL)
-
-| Englisch (EN) | Deutsch (DE) | Anmerkung |
-|---|---|---|
-| Blood of Heroes | Heldenblut | HoH:TL; Mythischer Gefährte; doppelt so viele Tugenden wie Fehler; Heroische T&F |
-| Tamed Magic | Gezähmte Magie | HoH:TL; Gezügelte + Gefesselte Magie ohne Nachteile |
-
-#### Heroische Tugenden, Groß / Heroic, Major (HoH:TL)
+#### Große Tugenden / Major Virtues (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Charmed Life | Unter gutem Stern | HoH:TL; Patzer zählen nicht in chaotischen Situationen |
-| Invisible to Magic | Unsichtbar für Magie | HoH:TL; Durch Konzentration unsichtbar für Intellego |
-| Mythic Mimicry | Mythische Nachahmung | HoH:TL; Perfekte Stimm-/Handschriftnachahmung |
-| Vis Sensitivity | Vis-Gespür | HoH:TL; Vis durch Berührung erkennen |
+| Blood of Heroes | Heldenblut | HdH:WL; Mythischer Gefährte; doppelt so viele Tugenden wie Fehler; Heroische T&F |
+| Tamed Magic | Gezähmte Magie | HdH:WL; Gezügelte + Gefesselte Magie ohne Nachteile |
 
-#### Heroische Tugenden, Klein / Heroic, Minor (HoH:TL)
+#### Heroische Tugenden, Groß / Heroic, Major (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Gift of the Tongues | Gabe der Zungen | HoH:TL; Jede Sprache bei direkter Kommunikation verstehen |
-| Great Bearer | Großer Lastenträger | HoH:TL; Doppelte Traglast und Reiseausdauer |
-| Heroes' Birthright | Geburtsrecht der Helden | HoH:TL; Magische Kraft bis Stufe 15, mehrfach nehmbar |
-| Messenger's Memory | Botengedächtnis | HoH:TL; Kurze Botschaften wortwörtlich merken |
-| Mythic (Characteristic) | Mythische (Eigenschaft) | HoH:TL; +3 Bonus bei Spezialisierung, +1 Patzerwürfel |
-| Sure Traveler | Sicherer Reisender | HoH:TL; Verirrt sich nie, unbeeindruckt von Wetter |
+| Charmed Life | Unter gutem Stern | HdH:WL; Patzer zählen nicht in chaotischen Situationen |
+| Invisible to Magic | Unsichtbar für Magie | HdH:WL; Durch Konzentration unsichtbar für Intellego |
+| Mythic Mimicry | Mythische Nachahmung | HdH:WL; Perfekte Stimm-/Handschriftnachahmung |
+| Vis Sensitivity | Vis-Gespür | HdH:WL; Vis durch Berührung erkennen |
 
-#### Statustugenden, Klein / Social Status, Minor (HoH:TL)
+#### Heroische Tugenden, Klein / Heroic, Minor (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Lone Redcap | Einzelgänger-Rotkappe | HoH:TL; Rotkappe ohne Hausanbindung |
+| Gift of the Tongues | Gabe der Zungen | HdH:WL; Jede Sprache bei direkter Kommunikation verstehen |
+| Great Bearer | Großer Lastenträger | HdH:WL; Doppelte Traglast und Reiseausdauer |
+| Heroes' Birthright | Geburtsrecht der Helden | HdH:WL; Magische Kraft bis Stufe 15, mehrfach nehmbar |
+| Messenger's Memory | Botengedächtnis | HdH:WL; Kurze Botschaften wortwörtlich merken |
+| Mythic (Characteristic) | Mythische (Eigenschaft) | HdH:WL; +3 Bonus bei Spezialisierung, +1 Patzerwürfel |
+| Sure Traveler | Sicherer Reisender | HdH:WL; Verirrt sich nie, unbeeindruckt von Wetter |
 
-#### Heroische Fehler / Heroic Flaws (HoH:TL)
-
-| Englisch (EN) | Deutsch (DE) | Anmerkung |
-|---|---|---|
-| Heroic Personality | Heroische Persönlichkeit | HoH:TL; Klein; Pflicht bei Heldenblut; SL kann Handlungen diktieren |
-| Tragic (Characteristic) | Tragische (Eigenschaft) | HoH:TL; Klein; −3 bei Spezialisierung, +1 Patzerwürfel |
-
-#### Feenblut-Varianten / Faerie Blood Variants (HoH:TL)
+#### Statustugenden, Klein / Social Status, Minor (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Bloodcap | Blutkappe | HoH:TL; Feenblut-Variante für Haus Mercere; +1 Ausdauer |
-| Samovily Blood | Samovilenblut | HoH:TL; Klein, Übernatürlich; Feenblut-Variante bulgarischer Herkunft |
+| Lone Redcap | Einzelgänger-Rotkappe | HdH:WL; Rotkappe ohne Hausanbindung |
 
-#### Große Übernatürliche Tugenden / Supernatural, Major (HoH:TL)
-
-| Englisch (EN) | Deutsch (DE) | Anmerkung |
-|---|---|---|
-| Dhampir | Dhampir | HoH:TL; Halbvampirisches Kind; transsilvanisches Feenwesen |
-
-#### Kleine Übernatürliche Tugenden / Supernatural, Minor (HoH:TL)
+#### Heroische Fehler / Heroic Flaws (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Folk Dancer | Volkstänzer | HoH:TL; Rudimentäre heidnische Tanzmagie-Tradition |
+| Heroic Personality | Heroische Persönlichkeit | HdH:WL; Klein; Pflicht bei Heldenblut; SL kann Handlungen diktieren |
+| Tragic (Characteristic) | Tragische (Eigenschaft) | HdH:WL; Klein; −3 bei Spezialisierung, +1 Patzerwürfel |
 
-#### Kleine Hermetische Tugenden / Hermetic, Minor (HoH:TL, Kap. 4)
-
-| Englisch (EN) | Deutsch (DE) | Anmerkung |
-|---|---|---|
-| Harenarius | Harenarius | HoH:TL; Lat. „Mensch des Sandes"; zwei Certamen-Schulen instinktiv meistern |
-| Leadworker | Bleigießer | HoH:TL; Nekromantische Fluchtafel-Tradition (Katadesmoi/Kolossoi) des Aita-Kults |
-| Nyktophylax | Nyktophylax | HoH:TL; Griech. „Nachtwache"; Sonne-Zauber enden mittags/mitternachts |
-
-#### Geschichte-Tugenden / Story Virtues (HoH:TL)
+#### Feenblut-Varianten / Faerie Blood Variants (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Hermetic Patron | Hermetischer Patron | HoH:TL; Mächtiger Magus als Gönner |
-| Legacy | Vermächtnis | HoH:TL; Nachkomme eines legendären Magus/Rotkappen |
+| Bloodcap | Blutkappe | HdH:WL; Feenblut-Variante für Haus Mercere; +1 Ausdauer |
+| Samovily Blood | Samovilenblut | HdH:WL; Klein, Übernatürlich; Feenblut-Variante bulgarischer Herkunft |
 
-#### Geschichte-Fehler / Story Flaws (HoH:TL)
+#### Große Übernatürliche Tugenden / Supernatural, Major (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Illegitimate Lineage | Illegitime Abstammung | HoH:TL; Mercere-Magus ohne Blutslinie zum Gründer |
+| Dhampir | Dhampir | HdH:WL; Halbvampirisches Kind; transsilvanisches Feenwesen |
+
+#### Kleine Übernatürliche Tugenden / Supernatural, Minor (HdH:WL)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Folk Dancer | Volkstänzer | HdH:WL; Rudimentäre heidnische Tanzmagie-Tradition |
+
+#### Kleine Hermetische Tugenden / Hermetic, Minor (HdH:WL, Kap. 4)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Harenarius | Harenarius | HdH:WL; Lat. „Mensch des Sandes"; zwei Certamen-Schulen instinktiv meistern |
+| Leadworker | Bleigießer | HdH:WL; Nekromantische Fluchtafel-Tradition (Katadesmoi/Kolossoi) des Aita-Kults |
+| Nyktophylax | Nyktophylax | HdH:WL; Griech. „Nachtwache"; Sonne-Zauber enden mittags/mitternachts |
+
+#### Geschichte-Tugenden / Story Virtues (HdH:WL)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Hermetic Patron | Hermetischer Patron | HdH:WL; Mächtiger Magus als Gönner |
+| Legacy | Vermächtnis | HdH:WL; Nachkomme eines legendären Magus/Rotkappen |
+
+#### Geschichte-Fehler / Story Flaws (HdH:WL)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Illegitimate Lineage | Illegitime Abstammung | HdH:WL; Mercere-Magus ohne Blutslinie zum Gründer |
 
 #### Hermetische Fehler, Klein / Hermetic, Minor
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Painful Magic | Schmerzhafte Magie | HoH:TL; Zaubern verursacht körperliche Schmerzen |
-| Fettered Magic | Gekettete Magie | HoH:TL; Alle Zauber/aktivierte Gegenstände sind Arkane Verbindungen zum Zauberer |
-| Stockade Parma Magica | Palisaden-Parma Magica | HoH:TL; Parma kann nicht unterdrückt werden; freundliche Zauber müssen durchdringen |
+| Painful Magic | Schmerzhafte Magie | HdH:WL; Zaubern verursacht körperliche Schmerzen |
+| Fettered Magic | Gekettete Magie | HdH:WL; Alle Zauber/aktivierte Gegenstände sind Arkane Verbindungen zum Zauberer |
+| Stockade Parma Magica | Palisaden-Parma Magica | HdH:WL; Parma kann nicht unterdrückt werden; freundliche Zauber müssen durchdringen |
 
 #### Allgemeine Fehler, Klein / General, Minor
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Feral Upbringing | Wilde Erziehung | In der Wildnis aufgewachsen; nur Wildnisfertigkeiten als Ausgangsfertigkeiten |
-| Palsied Hands | Zittrige Hände | HoH:TL; Hände zittern, erschwert feinmotorische Tätigkeiten. **Im Grundregelwerk heißt der Fehler „Zitternde Hände" (ArMDE:6578)** — beide Formen sind richtig, je nach Buch. |
+| Palsied Hands | Zittrige Hände | HdH:WL; Hände zittern, erschwert feinmotorische Tätigkeiten. **Im Grundregelwerk heißt der Fehler „Zitternde Hände" (ArMDE:6578)** — beide Formen sind richtig, je nach Buch. |
 
 #### Geschichte-Fehler, Klein / Story, Minor
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Fostered Apprentice | Fremdlehrling | HoH:TL; Lehrling wurde in Fremdlehre gegeben (Haus Bonisagus) |
+| Fostered Apprentice | Fremdlehrling | HdH:WL; Lehrling wurde in Fremdlehre gegeben (Haus Bonisagus) |
 
 ---
 
@@ -871,7 +896,35 @@
 | Faerie Trainer | Feenausbilder | SdM:F; Frei, Übernatürlich; trainiert Täuschungen |
 | Pretense multiplier | Täuschungsmultiplikator | SdM:F; Mechanik zur Berechnung der Täuschungspunkte |
 | Pretence Cost | Täuschungskosten | SdM:F; Kosten für Feenentwicklung durch Wandel |
+| Faerie Sympathy | Feensympathie | SdM:F; Kleine Tugend |
+| Faerie Antipathy | Feenantipathie | SdM:F; Kleiner Fehler |
+| Gift of the Gab | Silberzunge | SdM:F; Beispiel Kleine Segnung; überzeugender Redner |
+| Pricking Thumbs | Juckende Daumen | SdM:F; Beispiel Kleine Segnung; spürt Feindseligkeit (Shakespeare-Referenz) |
+| Universally Liked | Allseits beliebt | SdM:F; Beispiel Große Segnung |
 
 ---
 
-*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024; GitHub: OriginalMadman/Ars-Magica-Open-License); Hedge Magic Revised Edition (Atlas Games, 2011); Houses of Hermes: True Lineages (Atlas Games, 2005); Realms of Power: The Divine (Atlas Games, 2011); Realms of Power: Faerie (Atlas Games, 2011)*
+### Ergänzungen aus Die Mysterien (Überarbeitete Ausgabe) (DM:ÜA)
+
+#### Geschichte-Fehler, Klein / Story, Minor (DM:ÜA)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Cabal Legacy | Kabalen-Vermächtnis | DM:ÜA S. 20; Klein, Hermetisch, Geschichte. Der Magus wurde noch als Lehrling in einen esoterischen Mysterienkult eingeweiht; andere misstrauen ihm deshalb. ~~Tugend~~ – die Einordnung als Tugend im Kaeso-Statblock von HdH:S ist ein Fehler des Ursprungsbuchs, den die Definitive Edition behebt |
+
+---
+
+### Ergänzungen aus Sphären der Macht: Das Infernale (SdM:I)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Berserk | Berserker | Klein, Allgemein; Basisregeln S. 40. Form aus den Basisregeln, nicht „Raserei" – das Verb bleibt „in Raserei verfallen" |
+| Devil Child | Teufelskind | Spezial (Basisregeln: *Frei, Mythischer Gefährte*); gewährt Dämonische Macht **oder** Dämonische Kräfte frei |
+| Gender Nonconforming | Geschlechtsnonkonform | Groß oder Klein, Persönlichkeit. Substantivform im Fließtext: „Geschlechtsnonkonformität". „nonkonform" ist die im Duden geführte Form, nicht „nichtkonform" |
+| Gender Shift | Geschlechtswandel | Klein, Übernatürlich, Befleckt. SdM:I führt den Zusatz „Befleckt", die Definitive Edition hat ihn gestrichen – SdM:I bleibt beim Buchstand |
+| Tainted with Evil | Mit dem Bösen befleckt | Klein, Allgemein. Form der Basisregeln (Überschrift, Inhaltsverzeichnis, Register). ~~Befleckt mit Bösem~~, ~~Mit Bösem befleckt~~ |
+| Tragic Life | Tragisches Leben | Groß, Geschichte, Befleckt. **Achtung:** Die Teufelskind-Liste der Basisregeln führt den Fehler als *(Groß, Übernatürlich)*, die Definition derselben Datei als *(Groß, Geschichte, Befleckt)*; die SdM:I-Errata stellt auf *(Groß, Geschichte)* um. In jedem Buch gilt der jeweilige Buchstand |
+
+---
+
+*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024; GitHub: OriginalMadman/Ars-Magica-Open-License); Hedge Magic Revised Edition (Atlas Games, 2011); Houses of Hermes: True Lineages (Atlas Games, 2005); Realms of Power: The Divine (Atlas Games, 2011); Realms of Power: Faerie (Atlas Games, 2011); Realms of Power: The Infernal (Atlas Games, 2006); The Mysteries Revised Edition (Atlas Games, 2006)*

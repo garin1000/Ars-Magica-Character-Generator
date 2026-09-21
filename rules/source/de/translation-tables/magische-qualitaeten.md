@@ -16,7 +16,9 @@
 | Magic Quality | Magische Qualität | Übernatürlicher Vorteil für Charaktere mit Machtwert |
 | Magic Inferiority | Magischer Mangel | Übernatürlicher Nachteil für Charaktere mit Machtwert |
 | Quality points | Qualitätspunkte | Anzahl = Machtwert des Charakters |
-| Mastery points | Meisterschaftspunkte | Verbesserungspunkte für magische Kräfte |
+| Mastery points | Meisterschaftspunkte | Verbesserungspunkte für magische Kräfte (SdM:M) |
+| Intricacy point(s) | Geflechtpunkt(e) | SdM:F; das feenhafte Gegenstück zu den Meisterschaftspunkten – **nicht** gleichsetzen. Mechanisch dieselbe Wirkung und dieselbe Bezugstugend (*Improved Powers*), begrifflich aber etwas anderes: Feen lernen nichts durch Übung, ihr Glamour ist an der Stelle nur dichter gewoben. Kap. 1 definiert den Glamour als „the **intricate** mystical rules a faerie must follow"; ein Geflechtpunkt ist ein Stück dieses Regelgeflechts, das komplexer ist als der Durchschnitt |
+| Intricacy score | Geflechtwert | SdM:F; Wert einer Kraft nach mehrfacher Wahl von *Verbesserte Kräfte* |
 | Spell levels | Zauberstufen | Stufenbudget einer Kraft |
 
 ---

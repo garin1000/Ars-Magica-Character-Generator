@@ -183,7 +183,7 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | The Magic Realm | Die Magische Sphäre | Die übernatürliche Welt der Magie jenseits der mundänen Welt |
-| Vestige | Relikt | Überrest eines vergangenen Zustands in der Magischen Sphäre |
+| Vestige | Vestigium (n.), Pl. Vestigia | Vollkommene, alle fünf Sinne umfassende Trugerscheinung in der Magischen Sphäre, einer Form zugeordnet und mit einem Ding der mundanen Welt verbunden; für Reisende als Wegmarke nutzbar, durchschreitbar wie Schlamm oder Wasser. Lateinisch beibehalten wie *Insulae* und *Tempora* im selben Abschnitt. **Nicht** „Relikt" (Überrest, `grundbegriffe.md`) und **nicht** „Reliquie" (heiliger Gegenstand, `tugenden-fehler.md`). Komposita mit Bindestrich: Maus-/Baum-/Drachen-Vestigium, Ziel-/Ausgangs-Vestigium, Vestigium-Stufe, Vestigium-Reisesumme |
 | Boundary | Grenze | Übergangszone zwischen Bereichen der Magischen Sphäre |
 | Twilight Void | Zwielichtleere | Teil der Magischen Sphäre; keine Gewöhnung; mächtige Wesen leben dort |
 | Magic Realm Magic | Magie der Magischen Sphäre | Besondere Regeln für Magie innerhalb der Magischen Sphäre |
@@ -264,7 +264,7 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Hierarchy score | Hierarchiewert | Höchster infernaler Reputationswert eines Dämons |
+| Hierarchy score | Hierarchiewert | Höchster infernaler Reputationswert eines Dämons; Infernalisten haben ebenfalls einen. Als **Statblock-Feld** nur bei Infernalisten und dämonenblütigen Charakteren (EN `Hierarchy Score:`); Dämonen-Statblöcke führen das Feld als `Hierarchie:` (EN `Hierarchy:`) – siehe `formatting-rules/charakter-kreaturen-beschreibung.md` §4.6 |
 | Infernal Reputation | Infernale Reputation | Reputationen von Dämonen innerhalb der Hierarchie |
 | Corrupt Beast | Verdorbene Bestie | Kreaturentyp; infernal korrumpiertes Tier |
 
@@ -378,6 +378,32 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 | Miraculous Abilities | Wundersame Fertigkeiten | Oberbegriff für Heilige Kräfte als Übernatürliche Fertigkeiten |
 | Holy Societates | Heilige Societates | Traditionen, die Heilige Magie als Bevorzugte Fertigkeit lehren |
 
+### Theologische Tugenden / Theological Virtues
+
+Die drei Kräfte, die ein Charakter mit steigendem Wahrer-Glauben-Wert erhält (SdM:G, Kap. 1).
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Devotion (theological virtue) | Hingabe | Wahrer Glaube 2. **Nicht** mit *Devotion (Duration)* → „Andacht" verwechseln |
+| Hope | Hoffnung | Wahrer Glaube 3 |
+| Charity | Nächstenliebe | Wahrer Glaube 5 |
+
+Das Original benennt die erste Tugend ausdrücklich um: „the theological virtue ‚Devotion' is normally ‚Faith', but the name has been changed to avoid confusion". Der Grund trägt im Deutschen genauso – der Dreiklang heißt Glaube–Hoffnung–Liebe, und „Glaube" kollidiert hier sowohl mit *True Faith* → „Wahrer Glaube" als auch mit dem Heiligen Ziel *Faith (Target)* → „Glaube". Deshalb **Hingabe**, das Wort, mit dem das Buch *devotion* als Gemeinwort ohnehin schon übersetzt („Hingabe an den Teufel", „Heilige Hingabe").
+
+### Steine der Tugend / Stones of Virtue (SdM:M)
+
+Die Liste der Form- und Materialboni für Tugendobjekte übersetzt **nur das, was das Original übersetzt**: lateinische und gälische Lapidariennamen bleiben stehen, volkssprachliche werden eingedeutscht.
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Clach Crubain | Clach Crubain | gälisch, bleibt |
+| Bufonites | Bufonites | lat., Krötenstein. Bleibt lateinisch wie im Original; der Fließtext führt „Krötenstein" als Glosse. **Nicht** „Bufonit" – die `-it`-Endung ist der modernen Mineralogie vorbehalten, der Krötenstein ist keine Mineralart, sondern (wie die Glossopetrae) ein versteinerter Zahn. **Nicht** „Borax" – kollidiert mit dem Natriumborat |
+| Ovum Anguinum | Ovum Anguinum | lat., bleibt |
+| Cornu Ammonis | Cornu Ammonis | lat., bleibt |
+| Glossopetrae | Glossopetrae | lat., bleibt |
+| Thunderbolt | Donnerkeil | im Original volkssprachlich, daher eingedeutscht |
+| Fairy Loaves | Feenbrote | im Original volkssprachlich, daher eingedeutscht |
+
 ### Heilige Reichweiten, Dauern und Ziele / Holy R/D/T
 
 | Englisch (EN) | Deutsch (DE) | Äquivalent | Anmerkung |
@@ -386,7 +412,7 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 | Communion (Range) | Kommunion | Arkane Verbindung | Heilige Reichweite |
 | Recitation (Duration) | Rezitation | Konzentration | Heilige Dauer |
 | Office (Duration) | Offizium | Durchmesser | Heilige Dauer |
-| Devotion (Duration) | Andacht | Sonne | Heilige Dauer |
+| Devotion (Duration) | Andacht | Sonne | Heilige Dauer; **nicht** die theologische Tugend *Devotion* → „Hingabe" |
 | Sabbath (Duration) | Sabbat | Sonne | Heilige Dauer |
 | 40 (Duration) | 40 | Mond | Heilige Dauer |
 | Fast (Duration) | Fasten | Mond | Heilige Dauer |
@@ -449,6 +475,18 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 | Stock Characters | Stehende Figuren | Klischeehafte Rollen, die Feenwesen bei der Nachahmung von Menschen annehmen |
 | Mother Road | Mutterstraße | Hauptweg durch die Feensphäre |
 | Ars Fabulosa | Ars Fabulosa | Lat. Eigenname: Kunst der Feenverhandlung |
+| Faerie Legacy | Feenvermächtnis | Tugend (Kap. 5); Feenerbe eines Sterblichen |
+| Faerie Heritage (Flaw) | Feenerbe | Fehler |
+| Faerie Background | Feenhintergrund | Hintergrund des Feenerbes |
+| tinting / tinted aura | Färbung / gefärbte Aura | Sympathie-Mechanik: Aura wird durch Feeneinfluss gefärbt |
+| folk charm | Schutzzauber | Volkstümliches Schutzmittel gegen Feen (Objekte, Gesten, Symbole) |
+| Hermetic charm | Hermetische Feenverzauberung | Hermetische Variante des Schutzzaubers |
+| Nympholept | Nympholept | Von einer Nymphe besessener/verzauberter Mensch |
+| Milk Brother | Milchbruder | Mensch, der als Kind von einer Fee gesäugt wurde |
+| Faerie Metamorphosis | Feenmetamorphose | Fehler |
+| Homunculus Wizard | Homunculus-Zauberer | Charaktertyp |
+| Bonding (Faerie Power) | Bindung | Feenhandel: Bindung an ein Feenwesen (als Kraft) |
+| Dream (Faerie Power) | Traum | Feenkraft |
 
 ### Feenkonzepte / Faerie Concepts
 
@@ -509,11 +547,42 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 | sleeping vis | Schlafendes Vis | Vis mit Glamour aber ohne Vitalität; kann zu einer Fee erweckt werden |
 | abstract vis | Abstraktes Vis | Glamour, der als Vis erscheint, aber keines enthält; nur im Herrschaftsbereich des Erzeugers wirksam |
 
+### Feenparameter / Faerie R/D/T
+
+| Englisch (EN) | Deutsch (DE) | Typ | Anmerkung |
+|---|---|---|---|
+| Crossroads (Range) | Kreuzung | Feenreichweite | |
+| Presence (Range) | Präsenz | Feenreichweite | |
+| Prop (Range) | Requisit | Feenreichweite | |
+| Symbol | Symbol | Feenreichweite/-dauer/-ziel | |
+| Held (Duration) | Gehalten | Feendauer | |
+| Focus (Duration) | Fokus | Feendauer | |
+| While (Duration) | Während | Feendauer | |
+| Hour+1 (Duration) | Stunde+1 | Feendauer | |
+| Midday/Midnight (Duration) | Mittag/Mitternacht | Feendauer | |
+| Not (Duration) | Nicht | Feendauer | |
+| Season (Duration) | Jahreszeit | Feendauer | |
+| Hidden (Duration) | Verborgen | Feendauer | |
+| If (Duration) | Wenn | Feendauer | |
+| Medium (Target) | Medium | Feenziel | |
+| Passion (Target) | Leidenschaft | Feenziel | |
+
 ### Feenmethoden / Faerie Methods
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Evocation | Evokation | Feenmethode |
+| Enchantment | Verzauberung | Feenmethode |
+| Empathy | Empathie | Feenmethode |
+
+### Feenriten / Faerie Rites (Kap. 6)
+
+Die Riten aus Kapitel 6 sind nicht vollständig tabelliert; hier stehen nur Namen, die
+außerhalb der ursprünglichen Übersetzung neu gebildet wurden.
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| The Reflecting Pool | Der Spiegelnde Teich | Evokation/Traum 30, Ritual; die Überschrift fehlte im englischen Original und kam erst mit dem Errata-Stand 2026-09 hinzu |
 
 ### Feenkräfte / Faerie Powers
 
@@ -579,7 +648,10 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
+| Summoning | Beschwörung | Feenhandel: Feenwesen herbeirufen |
+| Bonding Ceremony | Bindungszeremonie | Feenhandel: Bindung an ein Feenwesen |
 | Captivating | Vereinnahmung | Feenhandel: Körpertausch mit einem Feenwesen |
+| Dismissing | Entlassung | Feenhandel: Feenwesen entlassen |
 
 ### Heidnische Traditionen / Pagan Traditions
 

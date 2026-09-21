@@ -97,6 +97,8 @@
 | Realm | – | – | – | – | Sphäre / Herrschaftssphäre | Übernatürlicher Einflussbereich |
 | Redcap | – | – | – | – | Rotkappe | Bote des Hauses Mercere |
 | Regio | – | Regio | – | Regiones | Regio | Verschachtelte Auraebene |
+| Relic (heiliger Gegenstand) | – | – | – | – | Reliquie (f.) | **Nur** für heilige Gegenstände: Gebeine, Kreuzpartikel, Gewänder. Die Tugenden heißen *Reliquie* und *Mächtige Reliquie* (siehe [tugenden-fehler.md](tugenden-fehler.md)). Im Deutschen strikt zu trennen von *Relikt* (Überrest, Fundstück) – siehe nächste Zeile |
+| Relic (mystischer Gegenstand) | – | – | – | – | Relikt (n.) | Einsichtsquelle bei der Integration fremder Traditionen (ArMDE, Kap. „Einsichten"): „mystische Vorrichtungen **oder** heilige Gegenstände" sowie fortbestehende mystische Wirkungen – also **nicht** ausschließlich heilig, daher „Relikt" |
 | Renounced | – | – | – | – | ordensverstoßen | Aus dem Orden ausgeschlossen |
 | Renouncement / Being Marched | – | – | – | – | Ordensbann | Ausschluss aus dem Orden |
 | Reputation | – | – | – | – | Reputation | Pl.: Reputationen; **nicht** „Ruf" |
@@ -128,7 +130,7 @@
 | Vituperation | – | – | – | – | Vituperation (f.) | Infernales Äquivalent zum Zwielicht; lateinischer Begriff beibehalten (RoP:I) |
 | unGifted | – | – | – | – | unBegabt | Adjektiv für Mensch ohne die Gabe |
 | unGifted | – | – | – | – | UnBegabter | Mensch ohne die Gabe |
-| Vis | – | Vis | – | Vires | Vis | Magische Kraft / Substanz (im Spiel indeklinabel) |
+| Vis | – | Vis | – | Vires | Vis | **das Vis** (Neutrum); Magische Kraft / Substanz; im Spiel indeklinabel. Adjektive im Neutrum: „rohes/magisches/inhärentes Vis". Lat. *vis* ist zwar feminin (Akk. *vim*), im Deutschen jedoch sächlich – **nicht** „die Vis". In Komposita richtet sich das Genus nach dem Grundwort (die Vis-Quelle/-Menge/-Art). |
 | Warping | – | – | – | – | Verzerrung | Magische Entfremdung/Verzerrung |
 | Warping Points | – | – | – | – | Verzerrungspunkte | |
 | Wizard's War | – | – | – | – | Krieg der Zauberer | Legaler, regulierter Konflikt zweier Magi |
@@ -181,13 +183,11 @@
 
 ## Maßeinheiten / Units of Measurement
 
-*Ergänzungen aus ArM_DE_Zusatztermini.md.*
+➡️ **Ausgelagert nach [masseinheiten.md](masseinheiten.md).**
 
-| Englisch (EN) | Deutsch (DE) | Anmerkung |
-|---|---|---|
-| league (Entfernungsmaß) | Wegstunde (ca. 5 km) | **Regel:** Wenn eine km-Angabe beigefügt ist (ca. 5 km / ca. 35 km), ist die Übersetzung mit „Wegstunde" zwingend (1 Meile ≠ 5 km → eindeutig league); ohne km-Angabe: Kontext-Entscheidung; ~~INKONSISTENZ behoben~~ in allen Leitlinientabellen und Zauberbeschreibungen |
-| league (Seven-League Stride) | Sieben-Meilen-Schritt | **Bewusste Abweichung:** nur im Eigennamen des Zaubers; Referenz auf dt. Volksmärchen „Siebenmeilenstiefel"; die Zauberbeschreibung verwendet korrekt „sieben Wegstunden (ca. 35 km)" |
-| pace (Entfernungsmaß) | Schritt (1 Schritt = 1,5 m) | Systemweite Umrechnungskonvention; **ABWEICHUNG vom EN-Original** (1 pace ≈ 0,91 m); intern vollständig konsistent; ~~FEHLER korrigiert~~ (Herbam-Einleitung Kap. 9 verwendete noch EN „Pace") |
+Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina, Massen), die Sonderfälle und die Regel, dass **geografische Angaben den realen Wert** nehmen statt der Umrechnung.
+
+**Kurzfassung:** Keine imperialen Einheiten im deutschen Text; *pace* → **Schritt** bleibt als RPG-Einheit erhalten und wird NICHT umgerechnet. Anker: 1 Yard = 1 m · 1 Fuß = 30 cm · 1 Zoll = 2,5 cm · 1 Meile = 1,5 km · 1 Pfund (Gewicht) = 0,5 kg. Mythischer Pfund als **Währung** bleibt „Pfund".
 
 ---
 
@@ -227,6 +227,12 @@
 | Mythic Locations | Mythische Orte | Supplementband; Abk. EN **ML**, DE **MO** |
 | Transforming Mythic Europe | Gestalten des Mythischen Europas | Supplementband; Abk. EN **TME**, DE **GdME** |
 | Hedge Magic Revised Edition | Heckenzauber (Überarbeitete Ausgabe) | Supplementband; Abk. EN **HM:RE**, DE **HZ:ÜA** |
+
+### Buchbestandteile / Book Structure
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Timeline | Zeitleiste | **nicht** „Zeittafel" – HdH:WL und WdW führten je eine Variante. Auch als Anhangtitel: „Anhang: Zeitleiste" (HdH:WL), „Anhang B: Zeitleiste" (WdW) |
 
 ### The Mysteries Revised Edition (TMRE) / Die Mysterien (Überarbeitete Ausgabe) (DM:ÜA)
 
@@ -324,7 +330,7 @@
 | Vulcanalia | Vulcanalia | Römisches Fest am 23. August; Eigenname |
 | Hobbled | Verkrüppelt | Kleiner Allgemeiner Fehler; beide Beine schwer geschädigt |
 | Confraternity Member | Bruderschaftsmitglied | Kleiner Geschichte-Fehler |
-| Primogeniture Lineage | Primogenitur-Abstammungslinie | Kleiner Hermetischer Fehler. **Im Grundregelwerk heißt der Fehler „Erstgeburts-Abstammung" (ArMDE:6634)**, und diese Form wird ausgeliefert. |
+| Primogeniture Lineage | Primogenitur-Abstammungslinie | Kleiner Hermetischer Fehler. **Im Grundregelwerk heißt der Fehler „Erstgeburts-Abstammung" (ArMDE:6634)**, und diese Form wird im Generator ausgeliefert. |
 | Covet Device | Gegenstandsgier | Persönlichkeitszug; zwanghafte Bindung an abgestimmten Gegenstand |
 | Craft Automata | Automatenkunst | Große Hermetische Tugend / Fertigkeit |
 
@@ -336,7 +342,7 @@
 | Symbolic Magic | Symbolische Magie | Mysterientugend |
 | Charm Magic | Sympathiemagie | Kleines Volksmysterium; sympathetische Zeichen in Zaubern |
 | Guardian of Nature | Hüterin der Natur | Mysterientugend |
-| Nature Lore | Naturkunde | Fertigkeit/Mysterientugend |
+| Nature Lore | Naturkunde | Kleines Äußeres Mysterium; gewährt gleichnamige Fertigkeit (Arkan, siehe [fertigkeiten.md](fertigkeiten.md)) |
 | Animae Magic | Animae-Magie | Großes Arkadisches Mysterium |
 | Perpetuity | Beständigkeit | Mysterientugend |
 | Independent Study | Eigenständiges Studium | Kleine Allgemeine Tugend |
@@ -363,7 +369,6 @@
 | castellan | Kastellan | Hüter des Horns der Streiter |
 | Levant Tribunal | Levante-Tribunal | Tribunal im Heiligen Land |
 | Order of Suleiman | Orden Suleimans | Muslimischer Magierorden |
-| Cabal Legacy | Kabalen-Vermächtnis | Tugend; Verweis auf DM:ÜA S. 20 |
 | Method Caster | Methodischer Zauberer | Tugend; feste Zauberroutine |
 | Adjuration | Adjuration | Göttliche Kraft: Beschwören, Beherrschen, Bannen übernatürlicher Wesen; Eigenname beibehalten (SdM:G) |
 | flamen (pl. flamines) | Flamen (Pl. Flamines) | Lat.; merkurischer Priester |
@@ -437,6 +442,7 @@
 | Bargain Total | Verhandlungssumme | Sahir-Mechanik (Verhandlung mit Dschinnen) |
 | Bargain Modifier | Verhandlungsmodifikator | Sahir-Mechanik |
 | Discern Might | Machtwert erkennen | Sahir-Mechanik |
+| principal (agency) | Auftraggeber | Agenturen-Mechanik; Dienstherr der Agenten. Das Original benutzt „principal" auch für die Verfahrensvertreter der Debattenregeln (siehe dort) – im Deutschen bewusst getrennt, **nicht vereinheitlichen** |
 | factor (agency) | Faktor | Agenturen-Mittelsmann |
 | agency points | Agenturpunkte | Agenturen-Mechanik |
 | Resistance Strength | Widerstandsstärke | Agenturen-Mechanik |
@@ -473,6 +479,9 @@
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Story Seed | Abenteueridee | Abschnittskopf in Spielleiterteilen; nicht „Geschichtssamen" oder „Abenteuerkeim" |
+| Trade Dress | Reihengestaltung | Credits-Zeile; die Gestaltung der Buchreihe (Umschlag, Satzspiegel, Logo), nicht die Gestaltung des Einzelbands. Ersetzt die bisherigen Varianten „Gestaltungsvorgaben", „Gestaltungsvorlage", „Aufmachung" und das unübersetzte „Trade Dress". Einheitliche Zeilenform: **Ars Magica Fifth Edition – Reihengestaltung:** (Gedankenstrich, kein Bindestrich); Versalien nur, wenn die Credits-Sektion des Buchs durchgehend in Versalien gesetzt ist |
+| Required Virtues | Erforderliche Tugenden | Feldbezeichnung in Vorlagen für Mythische Gefährten und Charaktertypen. Form der freigegebenen Basisregeln (7 Vorkommen). ~~Pflichttugenden~~, ~~Pflicht-Tugenden~~ |
+| Required Flaws | Erforderliche Fehler | Gegenstück zu *Erforderliche Tugenden*. ~~Pflichtfehler~~ |
 
 ### Guardians of the Forests: The Rhine Tribunal (GotF) / Wächter des Waldes: Das Rhein-Tribunal (WdW)
 
@@ -592,7 +601,7 @@
 | Magic Defenses | Magische Abwehr | Passive Magieresistenz von Heckenzauberern |
 | Magical Defense Bonus | Magischer Abwehrbonus | Zahlenwert der Magischen Abwehr |
 | Accelerated Expiry | Beschleunigte Verfalldauer | Magische Abwehr: verkürzt Zauberdauer |
-| Akacritous Fortune | Glückhafte Fügung | Magische Abwehr: verändert Würfelergebnisse |
+| Alacritous Fortune | Flinke Fügung | Magische Abwehr: Abwehrbonus auf die Verteidigungssumme gegen gezielte Zauber (HM:RE-Errata; das Lemma stand vormals als „Akacritous" im Original) |
 | Confounding Magics | Verwirrende Magie | Magische Abwehr: erschwert feindliche Zauber |
 | Immovable Object | Unbewegliches Hindernis | Magische Abwehr: widersetzt sich magischer Bewegung |
 | Magical Fortitude | Magische Widerstandskraft | Magische Abwehr: widersteht körperlicher Magie |
@@ -609,6 +618,8 @@
 | Breakthrough Points | Durchbruchpunkte | Fortschrittspunkte bei der Integration |
 | Insight | Einsicht | Erkenntnis aus nicht-hermetischer Magie |
 | Insight Lab Texts | Einsichts-Labortexte | Labortexte, die Einsichten dokumentieren |
+| Integration Effects | Integrationseffekte | Abschnittsüberschrift je Integrationsprojekt. ~~Integrationsergebnisse~~ |
+| Consequences of Integration | Konsequenzen der Integration | Abschnittsüberschrift je Integrationsprojekt. ~~Folgen der Integration~~ |
 | Original Research | Originäre Forschung | Forschungsmethode aus The Mysteries Revised |
 | Ancient Magic | Alte Magie | Forschungsmethode aus dem gleichnamigen Supplement |
 
@@ -643,7 +654,7 @@
 
 ---
 
-### Ergänzungen aus Houses of Hermes: True Lineages (HoH:TL)
+### Ergänzungen aus Häuser des Hermes: Wahre Linien (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
@@ -696,7 +707,7 @@
 | Casting tokens | Zaubertokens | Gegenstände, die Passage durch den Aegis des Herdes gewähren |
 | Death of familiar | Tod des Vertrauten | Schwerste Strafform unterhalb des Zugs der Magier |
 | Doctrine, The | Die Doktrin | Tremere-Methode der Kriegsführung und Lebensphilosophie |
-| Defense principle | Verteidigungsvertreter | Partei, die die Verteidigung vor dem Tribunal vertritt |
+| defense principal (legal) | Verteidigungsvertreter | Partei, die die Verteidigung vor dem Tribunal vertritt. Die Definitive Edition korrigiert die frühere Schreibung ~~principle~~ |
 | Directed proxy | Gebundene Stimmrechtsvertretung | Stellvertretung mit konkreten Abstimmungsanweisungen |
 | Endorsing testimony | Beglaubigung von Aussagen | Magische Überprüfung der Wahrhaftigkeit durch Quaesitor |
 | Extromission | Extromission | Aussenden magischer Species aus den Augen (Wahrnehmungsmethode) |
@@ -711,9 +722,9 @@
 | Pawnbrokers | Bauernhändler | Rotkappen-Gesellschaft; Vis-Handel in Bauern-Form |
 | Join or Die | Beitritt oder Tod | Tribunalsentscheidung: friedlichen Zauberern muss Mitgliedschaft angeboten werden |
 | Private hearing | Nichtöffentliche Anhörung | Vorverhandlung vor dem Vorsitzenden Quaesitor |
-| Principle (legal) | Verfahrensvertreter | Sammelbezeichnung für Anklage-/Verteidigungsvertreter |
+| principals (legal) | Verfahrensvertreter | Sammelbezeichnung für Anklage-/Verteidigungsvertreter. Die Definitive Edition korrigiert die frühere Schreibung ~~principle~~ |
 | Proposal ruling | Vorschlags-Entscheidung | Tribunalsentscheidung über einen Vorschlag (ohne Strafverfahren) |
-| Prosecution principle | Anklagevertreter | Partei, die die Anklage vor dem Tribunal vertritt |
+| prosecution principal (legal) | Anklagevertreter | Partei, die die Anklage vor dem Tribunal vertritt. Die Definitive Edition korrigiert die frühere Schreibung ~~principle~~ |
 | Proxy voting / Proxy | Stimmrechtsvertretung / Stellvertreter | System der Stimmabgabe durch einen Vertreter |
 | Public hearing | Öffentliche Anhörung | Hauptverhandlung vor dem versammelten Tribunal |
 | Publishing (a case) | Veröffentlichung (eines Falls) | Förmliche Bekanntgabe der Anklage |

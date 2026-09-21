@@ -69,11 +69,11 @@
 | Fins | Flossen | Keine Abzüge für Unterwasseraktionen |
 | Good Jumper | Guter Springer | +3 auf alle Sprungwürfe |
 | Grapple | Greifen | Kann Gegner bis Größe (eigene Größe +1) greifen |
-| Hardy | Zäh | Überleben 5 (heimisches Gelände); +1 Erschöpfungsstufe |
+| Hardy | Widerstandsfähig | Überleben 5 (heimisches Gelände); +1 Erschöpfungsstufe. ~~Zäh~~ – das ist die Tugend *Tough* (+3 Absorption, `tugenden-fehler.md`); beide Werte trugen bis 2026-09-10 denselben deutschen Namen |
 | Herd Animal | Herdentier | Tapfer in der Herde; erhält vorübergehend Furor-Tugend bei Gruppenpanik oder -flucht |
 | Imposing Appearance | Imponierendes Äußeres | Präsenz auf 0 (wenn negativ) oder +1; mehrfach wählbar |
 | Keen Eyesight | Scharfe Augen | +1 Wahrnehmung; +3 auf Sehwürfe |
-| Keen Sense of Smell | Scharfer Geruchssinn | +1 Wahrnehmung; +3 auf Riech­würfe; +2 auf Jagen-Würfe |
+| Keen Sense of Smell | Feiner Geruchssinn | +1 Wahrnehmung; +3 auf Riech­würfe; +2 auf Jagen-Würfe. ~~Scharfer Geruchssinn~~ – gleichlautend mit der Tugend *Keen Sense of Smell* (Basisregeln). Nicht mit *Sensitive Smell* („Empfindlicher Geruchssinn", ein Fehler) verwechseln |
 | Large Claws | Große Klauen | Klauen nutzen verbesserte Waffenwerte |
 | Large Horns / Antlers | Großes Geweih / Große Hörner | Hörner/Geweih nutzen verbesserte Waffenwerte |
 | Large Teeth | Große Zähne | Zähne nutzen verbesserte Waffenwerte |
@@ -84,7 +84,7 @@
 | Pack / Herd Leader | Rudel-/Herdenführer | +1 Kommunikation; Führung 5 (eigene Art) |
 | Pursuit Predator | Verfolgungsjäger | Jagt aktiv Beute; Jagen 4 (Beute); +1 Erschöpfungsstufe |
 | Roll Attack | Rollangriff | Nach erfolgreichem Biss: Rollbewegung in nächster Runde; +6 Schaden oder Ertränken |
-| Sharp Ears | Spitze Ohren | +1 Wahrnehmung; +3 auf Hörwürfe |
+| Sharp Ears | Scharfe Ohren | +1 Wahrnehmung; +3 auf Hörwürfe. ~~Spitze Ohren~~ – beschreibt die Ohrenform, der Spielwert ist aber die Hörleistung; gleichlautend mit der Tugend *Sharp Ears* (Basisregeln „Du hörst besser als die meisten") |
 | Shell | Panzer | +4 Schutz; −3 auf schnelle/wendige Bewegungswürfe |
 | Skilled Climber | Geschickter Kletterer | +3 auf alle Kletterwürfe |
 | Slippery | Glitschig | +6 auf Verteidigung gegen Greifangriffe; mehrfach wählbar (+3 je weiterer Wahl) |
@@ -149,18 +149,18 @@
 
 ---
 
-### Ergänzungen aus Houses of Hermes: True Lineages (HoH:TL)
+### Ergänzungen aus Häuser des Hermes: Wahre Linien (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Cataphract | Kataphraktos | HoH:TL; Geist eines berittenen oström. Schwergepanzerten |
-| Common White Wolves | Gemeine Weiße Wölfe | HoH:TL; Magisches Tier, von Tremeres Vertrautem abstammend |
-| Ethereal Fisherman Spiders | Ätherische Fischerspinnen | HoH:TL; Magisches Tier, soziale Spinnen, fangen Geister |
-| Fire Hawk / Fire Kite | Feuerfalke | HoH:TL; Magisches Tier, Greifvogel mit Feuerkräften |
-| Legionary (ghost) | Legionär | HoH:TL; Geist eines gefallenen römischen Legionärs |
-| Moro | Moro | HoH:TL; Feenkreatur, Vampirsäugling; balkanische Folklore |
-| Shadow Owl | Schatteneule | HoH:TL; Magisches Tier, Greifvogel mit Geisterkräften |
-| Wili | Wili | HoH:TL; Feenkreatur, Geist einer verstorbenen Braut; slawische Folklore |
+| Cataphract | Kataphraktos | HdH:WL; Geist eines berittenen oström. Schwergepanzerten |
+| Common White Wolves | Gemeine Weiße Wölfe | HdH:WL; Magisches Tier, von Tremeres Vertrautem abstammend |
+| Ethereal Fisherman Spiders | Ätherische Fischerspinnen | HdH:WL; Magisches Tier, soziale Spinnen, fangen Geister |
+| Fire Hawk / Fire Kite | Feuerfalke | HdH:WL; Magisches Tier, Greifvogel mit Feuerkräften |
+| Legionary (ghost) | Legionär | HdH:WL; Geist eines gefallenen römischen Legionärs |
+| Moro | Moro | HdH:WL; Feenkreatur, Vampirsäugling; balkanische Folklore |
+| Shadow Owl | Schatteneule | HdH:WL; Magisches Tier, Greifvogel mit Geisterkräften |
+| Wili | Wili | HdH:WL; Feenkreatur, Geist einer verstorbenen Braut; slawische Folklore |
 
 ---
 

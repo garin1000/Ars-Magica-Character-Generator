@@ -37,7 +37,7 @@
 | Edifice | Prachtbau | Gelände | Beeindruckendes Gebäude mit besonderem Nutzen |
 | Hidden Resources | Verborgene Ressourcen | Gelände | Zugang zu versteckten Materialien oder Vis |
 | Important Building | Bedeutendes Gebäude | Gelände | Spezifisches nützliches Gebäude (Schmiede, Mühle o. ä.) |
-| Prestige | Ansehen | Außenbeziehungen | Guter Ruf; Konventsmitglieder werden besser behandelt |
+| Prestige | Ansehen | Außenbeziehungen | Guter Ruf; Konventsbewohner werden besser behandelt |
 | Regio | Regio | Gelände | Kleines Regio im oder beim Konvent |
 | Seclusion | Abgeschiedenheit | Gelände | Konvent liegt abseits von Mundanen; weniger Einmischung |
 | Shell Keep | Schalenturm | Gelände | Befestigte Ringmauer mit offenem Innenhof |
@@ -71,7 +71,7 @@
 | Regio | Regio | Gelände | Das Regio birgt Gefahren oder Komplikationen |
 | Rival | Rivale | Außenbeziehungen | Ein schwächerer oder entfernterer Rivale |
 | Road | Straße | Gelände | Eine belebte Straße verläuft durch oder nahe dem Konvent |
-| Superiors | Vorgesetzte | Bewohner | Jemand hat Autorität über Konventsmitglieder |
+| Superiors | Vorgesetzte | Bewohner | Jemand hat Autorität über die Konventsbewohner |
 | Urban | Städtisch | Gelände | Konvent liegt in oder nahe einer Stadt; wenig Privatsphäre |
 
 ### Große Haken / Major Hooks (3 Punkte)

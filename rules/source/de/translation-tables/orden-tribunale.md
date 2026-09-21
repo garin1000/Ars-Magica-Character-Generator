@@ -36,6 +36,7 @@
 | Hibernian Tribunal | Hibernisches Tribunal | Irland |
 | Iberian Tribunal | Iberisches Tribunal | Spanien/Portugal |
 | Loch Leglean Tribunal | Loch-Leglean-Tribunal | Schottland |
+| Lotharingian Tribunal | Lotharingisches Tribunal | WdW; Gründungsname 865 des späteren Languedoc-Tribunals; auch Name des im Buch geplanten neuen Tribunals der Niederlande |
 | Normandy Tribunal | Normannisches Tribunal | Nordfrankreich |
 | Novgorod Tribunal | Novgorod-Tribunal | Slawische Länder |
 | Provençal / Languedoc Tribunal | Languedoc-Tribunal | Südfrankreich |
@@ -44,6 +45,20 @@
 | Stonehenge Tribunal | Stonehenge-Tribunal | England und Wales |
 | Theban Tribunal | Tribunal von Theben | Griechenland |
 | Transylvanian Tribunal | Transsilvanisches Tribunal | Transsilvanien |
+| Tribunal of the West Franks | Tribunal der Westfranken | WdW; Gründungsname 865 des späteren Normannischen Tribunals |
+
+---
+
+## Konventsnamen / Covenant Names
+
+**Grundsatz:** Konventsnamen bleiben unübersetzt – lateinische (Rudiaria, Treverorum, Arae Flaviae, Oculus Septentrionalis, Pripet Maior), pseudogermanische Kunstnamen (Durenmar, Fengheld, Dankmar, Crintera, Irencillia, Fenistal) und bereits deutsche (Schwarzburg, Rheinstein, Waldherz) gleichermaßen.
+
+**Ausnahme:** Namen, die im englischen Original erkennbar die *englische Fassung eines deutschen bzw. regionalen Ortsnamens* sind. Das Buch erklärt diese Praxis selbst im Kasten „Eine Anmerkung zu deutschen Namen" (WdW, Kap. 1: „Black Forest" statt Schwarzwald, „Brunswick" statt Braunschweig). In der deutschen Ausgabe werden sie zurückübersetzt.
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Oakdell | Eichengrund | WdW; Konvent im Westerwald, 934 von Haus Diedne gegründet, 1016 zerstört. *oak* = Eiche, *dell* = enge bewaldete Talsenke → „-grund" (vgl. Wiesengrund, Höllengrund). ~~Waldwiese~~ (trifft weder Eiche noch Senke) |
+| Grand Silesia | Groß-Schlesien | WdW; östlichster Konvent des Ordens, 993 gegründet. *Silesia* = Schlesien; „Grand" ist keine lateinische Bildung (die hieße *Silesia Maior*) |
 
 ---
 
@@ -81,7 +96,7 @@
 | Sodalis (Vok.: Sodale) | (= m.) | Sodales | (= m.) | Fellow (greeting) | Salve Sodale / Salvete Sodales | Grußformel (Vokativ) |
 | Sanctum (n.) | – | Sancta | – | Sanctuary | Sanctum | Neutrum; Privatgemächer |
 | – | Turba | – | Turbae | Turb | Turba | f.; Grog-Einheit |
-| – | Vis | – | Vires | Raw Magic / Vis | Vis | lat. f., irreg.; im Deutschen n. (das Vis); im Spiel indeklinabel. Ausnahme: der etablierte Zaubername „Die Natur der Vis erkennen" (fem. Genitiv) bleibt kanonisch unverändert |
+| – | Vis | – | Vires | Raw Magic / Vis | Vis | lat. f., irreg.; **im Deutschen aber Neutrum: „das Vis"** (indeklinabel). Siehe [grundbegriffe.md](grundbegriffe.md). |
 | Percamenarius | – | Percamenarii | – | Parchment Maker | Pergamentmacher | m., 2. Dekl.; im Text lat. unübersetzt |
 | Vim (Akk. von Vis) | – | – | – | Vim (Form name) | Vim | Akkusativ, als Form-Name verwendet |
 | – | Aegis | – | Aegides | Aegis | Aegis | f., aus dem Griechischen |
@@ -102,7 +117,7 @@
 | venditor (pl. venditores) | Venditor (Venditores) | Kapitel 2 | Lat. Fachbegriff für Handelsvertreter von Haus Verditius; im DE-Text unübersetzt belassen – korrekt |
 | voting sigil | Abstimmungs-Sigil | Kapitel 2 | Kompositum zur Unterscheidung vom Zauberer-Sigil (Persönlichkeitsausdruck); Tabelle kennt nur „Sigil" |
 
-### Ergänzungen aus Houses of Hermes: True Lineages (HoH:TL)
+### Ergänzungen aus Häuser des Hermes: Wahre Linien (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Erstes Auftreten | Anmerkung |
 |---|---|---|---|

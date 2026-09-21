@@ -820,6 +820,63 @@ presumption of correctness.
 
 ---
 
+## D18 — the tables are NEWER than the rulebook copy, so a disagreement is not a table error
+
+**This amends D7, whose central assumption turns out to be false.** Recorded
+2026-09-21 on Norbert's ruling.
+
+**D7 assumed the DE rulebook heading is the most current authority.** It is not.
+`rules/source/de/Ars Magica Definitive Edition Basisregeln.md` is an **older
+edition**. The translation tables in `arm-de-translation` have been maintained
+against a **newer** German rulebook, so **a table row that disagrees with the
+heading may be a correction the shipped book has not caught up with** — not an
+error.
+
+**The two cases that established this**, both ruled by Norbert:
+
+| Entry | Shipped / old heading | Current German edition | Ruling |
+|---|---|---|---|
+| `virtue.relic`, `virtue.powerful_relic` | *Relikt*, *Mächtiges Relikt* (DE :4782, :4852) | **Reliquie**, **Mächtige Reliquie** | table wins; data changed |
+| `spell.curse_of_circe` | *Fluch der Kirke* | **Fluch der Circe** | table wins; data changed |
+
+In both, the table was arguing *against* the heading and the table was right. The
+Relic row even carried its reasoning ("**Nicht** ‚Relikt'"), which under D7 read
+as a terminology table overreaching. It was a newer edition's correction.
+
+### What this obliges
+
+1. **A table–heading disagreement is now a three-way question, not two-way.**
+   Before calling a row wrong, ask: is it a table error, a stale copy, **or a
+   correction from a newer rulebook edition the repo has not received?** Only the
+   first is fixed in the table.
+2. **The remaining disagreements are NOT to be auto-fixed.** A sweep found **21**
+   table-versus-shipped-data disagreements after the 2026-09-21 re-sync, and the
+   obvious action — bring 20 table rows back into line with the heading — would
+   have **reverted genuine corrections**. Each must be checked individually
+   against the current edition, which only Norbert can consult. The list is in
+   `tmp/table-sync-check.md`.
+3. **D7's rule 2 stands, narrowed.** The rulebook heading still wins for a name
+   *at equal currency*. It does not win against a later edition.
+
+### DO NOT re-sync the rulebook sources — the line numbers will break
+
+**Norbert's standing instruction, 2026-09-21.** A newer German (and English)
+rulebook exists, and pulling it in would shift **every line number**. The entire
+audit is built on them: 655 `source.lines` ranges, every `ArMDE:NNNN` citation in
+code, `RULES.md` and all nineteen batch files, `SWEPT_BLOCKS`, and
+`rulebook_citations.rs`'s range guard — which checks only that a range lands on
+non-blank lines, so it would go **green on citations that now point at the wrong
+text**.
+
+**This makes the `source.anchor` backfill urgent rather than tidy.** B19 measured
+coverage at **94 of 655 (14.4 %)**. The anchor is derived from the `####`
+heading, so it survives a re-pagination; a line range does not, and fails
+silently. **Backfilling anchors to 100 % is the prerequisite for ever accepting a
+newer rulebook**, and should be treated as such in Phase 2 rather than as the
+low-priority cleanup Q-96 filed it as.
+
+---
+
 ## D7 — which German name wins when the DE rulebook heading and the glossary disagree
 
 **Question.** B16 escalated two entries (Q-129) rather than judging them, because

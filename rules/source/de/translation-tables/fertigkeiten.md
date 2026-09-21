@@ -51,6 +51,7 @@
 | Finesse | Arkan | Finesse | |
 | Folk Ken | Allgemein | Menschenkenntnis | |
 | Font of Knowledge\* | Übernatürlich | Quell des Wissens | |
+| Forest Lore\* | Arkan | Waldkunde | WdW; Machtpfade des Waldes; benannter Wald als Kompositum („Schwarzwaldkunde") oder in Klammern („Waldkunde (Westerwald)"); verwandt mit Nature Lore/Naturkunde, erfordert aber keine Einweihung |
 | Great Weapon | Kampf | Große Waffe | |
 | Guile | Allgemein | Täuschung | |
 | Heartbeast\* | Arkan | Herztier | Bjornaer-Fertigkeit |
@@ -69,6 +70,7 @@
 | Magic Theory\* | Arkan | Magietheorie | |
 | Medicine\* | Akademisch | Medizin | |
 | Music | Allgemein | Musik | |
+| Nature Lore\* | Arkan | Naturkunde | HdH:MK; (Typ-)Kunde des Naturmysteriums (Waldkunde, Tierkunde, Bergkunde …); per Errata arkan, vormals übernatürlich |
 | Parma Magica\* | Arkan | Parma Magica | |
 | Penetration | Arkan | Penetration | |
 | Persona\* | Übernatürlich | Persona | |
@@ -104,11 +106,11 @@
 | Magical Meditation\* | Übernatürlich | Magische Meditation | Nur mit Machtwert; beschleunigte Machtpunkt-Erholung in Magieaura; verhindert Gewöhnung |
 
 
-### Ergänzungen aus Houses of Hermes: True Lineages (HoH:TL)
+### Ergänzungen aus Häuser des Hermes: Wahre Linien (HdH:WL)
 
 | Englisch (EN) | Typ | Deutsch (DE) | Anmerkung |
 |---|---|---|---|
-| Legion Lore | Arkane | Legionskunde | HoH:TL; Wissen über römische Legionsstrukturen (Geisterarmeen) |
+| Legion Lore | Arkane | Legionskunde | HdH:WL; Wissen über römische Legionsstrukturen (Geisterarmeen) |
 
 ### Ergänzungen aus Sphären der Macht: Das Göttliche (SdM:G)
 
@@ -135,6 +137,7 @@
 | Gematria\* | Übernatürlich | Gematria | SdM:G; Kap. 6; hebräische Zahlenmystik |
 | Kabbalah\* | Übernatürlich | Kabbalah | SdM:G; Kap. 6; jüdische Mystik |
 | Merkavah\* | Übernatürlich | Merkavah | SdM:G; Kap. 6; Mysterien des Thronwagens |
+| East Norse | Allgemein | Ostnordisch | WdW; Lebende Sprache (Dänisch); Errata der Definitive Edition ersetzt durchgehend „West Norse" |
 
 ---
 

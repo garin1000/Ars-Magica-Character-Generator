@@ -132,13 +132,41 @@ IDs (or wait until the English source is added).
 
 ### German translation tables
 
-`rules/source/de/translation-tables/` holds 16 thematic, hand-curated **EN↔DE
+`rules/source/de/translation-tables/` holds 22 thematic, hand-curated **EN↔DE
 glossary tables** (Markdown tables: `Englisch (EN) | Deutsch (DE) | Anmerkung`),
 distilled from three master tables (main glossary of 22 sections, 30 additional
 terms, 362 spell names). These are the **canonical EN→DE terminology mapping**:
 when generating `rules/i18n/de/` text, the German label for any term whose
-English form appears in a table MUST match the table's `Deutsch (DE)` value.
-`README.md` indexes the tables and records resolved naming conflicts;
+English form appears in a table MUST match the table's `Deutsch (DE)` value —
+**subject to the precedence rules below, which are not optional.**
+
+**This directory is a COPY, and `../arm-de-translation` is the
+source of truth.** It is synced from there, not maintained here, and it *drifts*
+between syncs — the V/F audit found rows that disagreed with the rulebook and
+turned out to be stale rather than wrong. So a correction goes into the source
+project first, and a row that looks wrong is checked against it **before** being
+called an error. Re-sync by copying `translation-tables/*.md` across; the local
+`README.md` then needs its audit warning re-applied, since the source project's
+copy is worded for that project.
+
+**The tables are AI-generated and demonstrably fallible.** The V/F audit
+(2026-09-19 to -21, all 655 entries) found **ten** proven errors, and seven of
+them were the same shape: *a terminology table making a factual claim about the
+rules*. Hence the precedence rules, which live in full in
+`docs/vf-audit/decisions.md` **D6** and **D7**:
+
+1. A **factual claim about the rules** (which Virtue grants which Reputation, at
+   which level, in which magnitude) — the **rulebook** wins, always.
+2. An **entry's name** — the **heading of the rulebook the entry cites** wins.
+   The glossary wins only where that heading is *defective*: it collides with
+   another entry's heading, or the book never renders the term.
+3. **Other terminology** — thematic table before `tugenden-fehler.md`, which is
+   the broadest and so the likeliest to be wrong.
+4. A row tagged with **another book's acronym** (`HdH:WL`, `SdM:G`) is not in
+   the dispute at all; it describes that book's terminology.
+
+`README.md` indexes the tables, carries the audit warning and the corrected-error
+log, and records resolved naming conflicts;
 `uebersetzungsregeln.md` gives the prose/formatting rules (natural German
 syntax, `n/a`→`n/v`, Latin terms kept untranslated, etc.). Key conventions:
 Latin terms tagged `(Lat.)` stay untranslated; the type-label `Tainted` →

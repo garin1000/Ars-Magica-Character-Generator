@@ -35,7 +35,7 @@
 | Imaginem (Im) | Imaginem (f., Akk. Sg.) | Imaginem (Im) | Erscheinungen / Sinne |
 | Mentem (Me) | Mentem (f., Akk. Sg.) | Mentem (Me) | Geist / Verstand |
 | Terram (Te) | Terram (f., Akk. Sg.) | Terram (Te) | Erde und Gestein |
-| Vim (Vi) | Vim (lat. f., Akk. Sg. von Vis; dt. Substantiv „Vis" = n.) | Vim (Vi) | Magische Urkraft |
+| Vim (Vi) | Vim (f., Akk. Sg. von Vis) | Vim (Vi) | Magische Urkraft |
 
 *Die Formen werden im Spiel im Akkusativ Singular verwendet und als solche nicht weiter dekliniert.*
 
@@ -106,6 +106,40 @@
 | Body-of-water | Gewässer | +3 | SdM:M; Atlantische Magie; ein ganzes Gewässer (See, Fluss, Meer); wie Bauwerk |
 | Boundary | Grenze | +4 | Alles innerhalb einer definierten Grenze |
 
+### Sinnes-Ziele / Sense Targets
+
+Ziele für magische Sinneszauber (Intellego). Ein Zauber verleiht jeweils einen Sinn.
+
+| Englisch (EN) | Deutsch (DE) | Magnitude-Bonus | Anmerkung |
+|---|---|---|---|
+| Taste | Geschmack | +0 | Stufe wie Individuum |
+| Touch | Tastsinn | +1 | Stufe wie Teil. **Nicht** „Berührung" – das ist die Reichweite *Touch* |
+| Smell | Geruch | +2 | Stufe wie Gruppe |
+| Hearing | Gehör | +3 | Stufe wie Bauwerk |
+| Vision | Sehsinn | +4 | Stufe wie Grenze, aber ohne Ritualzwang; als einziges Ziel dieser Stufe auch für Formular- und Spontanzauber zulässig. **Nicht** „Sicht" – das ist die Reichweite *Sight*; ~~Sichtfeld~~, ~~Vision~~ (Letzteres kollidiert mit dem Fehler *Visions* = „Visionen") |
+
+Das Original vermeidet die Verwechslung von Reichweite und Ziel, indem es den Sehsinn als Ziel *Vision* statt *Sight* führt; die deutsche Fassung leistet dasselbe über die Endung „-sinn". Bei *Touch* unterscheidet das Original nicht – die deutsche Fassung ist dort genauer.
+
+**Achtung, Bonuswert entscheidet:** In Berechnungsklammern steht `+3 Sehsinn` nie – ein `+3` gehört immer zur **Reichweite** („+3 Sicht"), ein `+4` immer zum **Ziel** („+4 Sehsinn").
+
+**Bewusste Abweichung vom Original:** An zwei Stellen schreibt das Original `T: Sight` bzw. `+4 Sight` – beim Caladrius-Zauber *Wahrnehmung der Leiden des sterblichen Fleisches* (Basisregeln Z. 18795 f.) und im selben Zauber in SdM:M (Z. 3169 ff.). Ein Ziel „Sight" existiert nicht, und die Rechnung belegt *Vision*: Die Reichweite ist Per (+0), die +4 Magnituden sind der Ziel-Bonus. Die deutsche Fassung schreibt dort „Sehsinn"; das englische Original bleibt unverändert.
+
+---
+
+## Geisteszustände / Mental States (HdH:S)
+
+Zielzustände für Rego-Mentem-Zauber (Basisstufe 4, ArM5 S. 151). Ein Geisteszustand bestimmt sich über das Verhältnis des Ziels zu seiner Umgebung; die Basisregeln nennen nur „wach", „schlafend" und „verwirrt", HdH:S ergänzt die folgenden.
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Animalist | Animalistisch | Umgebung wird durch Sinnesapparat und Zeitgefühl eines Tieres wahrgenommen; ggf. Animal-Requisit |
+| Anaesthetic | Anästhetisch | Der eigene Körper wird nicht wahrgenommen, die Umgebung schon – Gegenstück zu *Selbstgewahr* |
+| Daydreaming | Tagträumerisch | Einem **Gedanken** zugewandt, Umgebung ausgeschlossen |
+| Dreaming | Träumend | Der Traumwelt zugewandt statt der Wachwelt (DM:ÜA) |
+| Self-aware | Selbstgewahr | Den eigenen **Reaktionen und Empfindungen** zugewandt statt der Umgebung; auch unwillkürlich (Schmerz). **Nicht** „Selbstbewusst" – so heißt die Tugend *Self-Confident*; ~~Introspektiv~~ (überschneidet sich mit *Tagträumerisch* und unterstellt willentliche Innenschau) |
+| Somnambulistic | Schlafwandlerisch | Wahrnehmung der Wirklichkeit durch Träume gefiltert |
+| Unconscious | Bewusstlos | Oberbegriff; weder seiner selbst noch der Umgebung gewahr (schlafend, komatös, ohnmächtig) |
+
 ---
 
 ## Magnitudenberechnung / Magnitudes
@@ -115,6 +149,7 @@
 | Magnitude | Magnitude | Einheit für Zauberstärke (5 Stufen = 1 Magnitude) |
 | Level | Stufe | Zauber-/Spruchstufe |
 | Guideline | Leitlinie | Grundlage für Zaubereffekte |
+| Spell Guidelines | Zauberleitlinien | Auch als Abschnittsüberschrift. ~~Spruchleitlinien~~ – „Spruch" ist im Korpus kein Terminus; 2026-09-10 vereinheitlicht |
 | Base Effect | Basiseffekt | |
 | Requisite | Requisit | Zusätzlich benötigte Technik oder Form |
 

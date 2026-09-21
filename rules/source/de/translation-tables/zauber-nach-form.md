@@ -8,6 +8,7 @@
 
 | Englisch (EN) | Deutsch (DE) | Kunst und Stufe | Anmerkung |
 |---|---|---|---|
+| Summoning the Creeping Death | Beschwörung des Kriechenden Todes | Cr(Re)An25 | HdH:S |
 | Image Of The Beast | Bild des Tieres | InAn5 | |
 | Viper's Gaze | Blick der Viper | ReAn15 | |
 | Opening The Tome Of The Animal's Mind | Das Buch des tierischen Geistes öffnen | InAn25 | |
@@ -26,6 +27,7 @@
 | Circle Of Beast Warding | Kreis der Bestienabwehr | ReAn5 | |
 | Soothe Pains Of The Beast | Linderung der Schmerzen des Tieres | CrAn20 | |
 | Agony Of The Beast | Qual des Tieres | PeAn15 | |
+| Fury of the Charging Bull | Raserei des Stürmenden Stiers | ReAn20 | HdH:S |
 | Steed Of Vengeance | Ross der Rache | MuAn35 | |
 | Shiver Of The Lycanthrope | Schauer des Lykanthropen | InAn10 | |
 | Panic Of The Elephant's Mouse | Schrecken der Elefantenmaus | ReAn15 | |
@@ -38,8 +40,6 @@
 | Growth Of The Creeping Things | Wachstum des Kleingetiers | MuAn15 | |
 | Doublet Of Impenetrable Silk | Wams aus undurchdringlicher Seide | MuAn15 | |
 | Weaver's Trap Of Webs | Weberfalle aus Spinnfäden | CrAn35 | |
-| Summoning the Creeping Death | Beschwörung des Kriechenden Todes | Cr(Re)An25 | HdH:S |
-| Fury of the Charging Bull | Raserei des Stürmenden Stiers | ReAn20 | HdH:S |
 
 ---
 
@@ -57,7 +57,9 @@
 | Break The Oncoming Wave | Die anrollende Welle brechen | ReAq10 | |
 | Calling The Odious Drought | Die verhasste Dürre herbeirufen | PeAq50 | |
 | Ice Of Drowning | Eis des Ertrinkens | ReAq35 | |
+| Dagger of Ice | Eisdolch | Cr(Re)Aq10 | HdH:S |
 | Subtle Taste Of Poison And Purity | Feiner Geschmack von Gift und Reinheit | InAq5 | |
+| Shackles of the Frozen Ice | Fesseln des Gefrorenen Eises | ReAq10 | HdH:S |
 | Curse Of The Desert | Fluch der Wüste | PeAq25 | |
 | Mighty Torrent Of Water | Gewaltiger Wasserstrahl | CrAq20 | |
 | Breath Of Winter | Hauch des Winters | ReAq15 | |
@@ -65,6 +67,7 @@
 | Creeping Oil | Kriechendes Öl | CrAq15 | |
 | Lungs Of The Fish | Lungen des Fisches | MuAq20 | |
 | Cloak Of The Duck's Feathers | Mantel der Entenfedern | ReAq5 | |
+| Alchemist's Revenge | Rache des Alchemisten | CrAq25 | HdH:S |
 | Call Of The Rushing Waters | Ruf des rauschenden Wassers | InAq15 | |
 | Ward Against Faeries Of The Waters | Schutzwall gegen die Feen der Gewässer | ReAq | |
 | Deluge Of Rushing And Dashing | Sintflut des reißenden Stroms | CrAq40 | |
@@ -78,9 +81,6 @@
 | Enchantment Of The Scrying Pool | Verzauberung des Seherbeckens | InAq30 | |
 | Waves Of Drowning And Smashing | Wellen des Ertrinkens und Zerschmetterns | ReAq30 | |
 | Neptune's Wrath | Zorn des Neptun | ReAq40 | |
-| Dagger of Ice | Eisdolch | Cr(Re)Aq10 | HdH:S |
-| Alchemist's Revenge | Rache des Alchemisten | CrAq25 | HdH:S |
-| Shackles of the Frozen Ice | Fesseln des Gefrorenen Eises | ReAq10 | HdH:S |
 
 ---
 
@@ -96,12 +96,14 @@
 | Sailor's Foretaste Of The Morrow | Des Seemanns Vorgeschmack auf den morgigen Tag | InAu15 | |
 | Incantation Of Lightning, The | Die Beschwörung des Blitzes | CrAu35 | |
 | Eyes Of The Bat | Fledermausaugen | InAu25 | |
+| Curse of the Evil Humors | Fluch der Bösen Säfte | MuAu25 | HdH:S |
 | Whispering Winds | Flüsternde Winde | InAu15 | |
 | Chamber Of Spring Breezes | Gemach der Frühlingsbrisen | CrAu5 | |
 | Air's Ghostly Form | Gespenstische Luftgestalt | CrAu5 | |
 | Stench Of The Twenty Corpses | Gestank der zwanzig Leichen | CrAu10 | |
 | Infernal Smoke Of Death | Höllischer Todesrauch | MuAu40 | |
 | Jupiter's Resounding Blow | Jupiters dröhnender Schlag | CrAu10 | |
+| Catapult of the Mighty Winds | Katapult der Mächtigen Winde | Cr(Re)Au30 | HdH:S |
 | True Sight Of The Air | Klare Sicht durch die Luft | InAu15 | |
 | Talons Of The Winds | Klauen der Winde | MuAu20 | |
 | Circling Winds Of Protection | Kreisende Winde des Schutzes | CrAu20 | |
@@ -120,8 +122,6 @@
 | Room Of Stale Air | Zimmer der abgestandenen Luft | PeAu15 | |
 | Wrath Of Whirling Winds And Water | Zorn der wirbelnden Winde und des Wassers | CrAu65 | |
 | Rain Of Oil | Ölregen | MuAu50 | |
-| Catapult of the Mighty Winds | Katapult der Mächtigen Winde | Cr(Re)Au30 | HdH:S |
-| Curse of the Evil Humors | Fluch der Bösen Säfte | MuAu25 | HdH:S |
 
 ---
 
@@ -155,7 +155,7 @@
 | Walking Corpse, The | Die wandelnde Leiche | ReCo35 | |
 | Wound That Weeps, The | Die weinende Wunde | PeCo15 | |
 | Revealed Flaws Of Mortal Flesh | Enthüllte Mängel des sterblichen Fleisches | InCo10 | |
-| Curse Of Circe | Fluch der Kirke | MuCo30 | |
+| Curse Of Circe | Fluch der Circe | MuCo30 | |
 | Curse Of The Unportended Plague | Fluch der unangekündigten Seuche | PeCo55 | |
 | Curse Of The Unruly Tongue | Fluch der unbändigen Zunge | ReCo5 | |
 | Curse Of The Leprous Flesh | Fluch des aussätzigen Fleisches | PeCo25 | |
@@ -176,14 +176,15 @@
 | Mists Of Change | Nebel des Wandels | MuCo60 | |
 | Gentle Touch Of The Purified Body | Sanfte Berührung des geläuterten Körpers | CrCo20 | |
 | Seven-League Stride | Sieben-Meilen-Schritt | ReCo30 | Eigenname behält 'Meilen'; Zauberbeschreibung verwendet korrekt 'sieben Wegstunden (ca. 35 km)' |
+| Wizard's Leap | Sprung des Zauberers | ReCo15 | HdH:S |
 | Dust To Dust | Staub zu Staub | PeCo15 | |
 | Twist Of The Tongue | Verdrehung der Zunge | PeCo30 | |
 | Transform To Water | Verwandlung in Wasser | MuCo40 | |
 | Despair Of The Quivering Manacles | Verzweiflung der zitternden Fesseln | ReCo15 | |
+| When Fortuna Blinks | Wenn Fortuna blinzelt | PeCo10 | SdM:M; „Fortuna" bleibt als Eigenname stehen |
 | Restoration Of The Defiled Body | Wiederherstellung des entweihten Körpers | CrCo25 | |
 | Bind Wound | Wunde verbinden | CrCo10 | |
 | Preternatural Growth And Shrinking | Übernatürliches Wachsen und Schrumpfen | MuCo15 | |
-| Wizard's Leap | Sprung des Zauberers | ReCo15 | HdH:S |
 
 ---
 
@@ -191,6 +192,7 @@
 
 | Englisch (EN) | Deutsch (DE) | Kunst und Stufe | Anmerkung |
 |---|---|---|---|
+| Aegis of Unbreakable Wood | Aegis des Unzerbrechlichen Holzes | MuHe15 | HdH:S |
 | Freeing The Striding Tree | Befreiung des schreitenden Baumes | ReHe30 | |
 | Bridge Of Wood | Brücke aus Holz | CrHe20 | |
 | Plant's Withering Bane | Das Welken der Pflanze | PeHe20 | |
@@ -201,6 +203,7 @@
 | Stir The Slumbering Tree | Den schlummernden Baum erwecken | MuHe25 | |
 | Conjure The Sturdy Vine | Der stämmige Weinstock | CrHe5 | |
 | Treacherous Spear, The | Der verräterische Speer | ReHe25 | |
+| Tree Falling in the Forest | Des Waldes fallender Riese | Pe(Re)He35 | HdH:S |
 | Wizard's Autumn | Des Zauberers Herbst | PeHe15 | |
 | Great Rot, The | Die große Fäulnis | PeHe25 | |
 | Repel The Wooden Shafts | Die Holzschäfte abwehren | ReHe10 | |
@@ -226,8 +229,6 @@
 | Thaumaturgical Transformation Of Plants To Iron | Thaumaturgische Verwandlung von Pflanzen in Eisen | MuHe20 | |
 | Transformation Of The Thorny Staff | Verwandlung des dornigen Stabs | MuHe10 | |
 | Wall Of Living Wood | Wand aus lebendem Holz | CrHe25 | |
-| Aegis of Unbreakable Wood | Aegis des Unzerbrechlichen Holzes | MuHe15 | HdH:S |
-| Tree Falling in the Forest | Des Waldes fallender Riese | Pe(Re)He35 | HdH:S |
 
 ---
 
@@ -243,6 +244,7 @@
 | Arc Of Fiery Ribbons | Bogen aus feurigen Bändern | CrIg25 | |
 | Well Without Light | Brunnen ohne Licht | PeIg25 | |
 | Trapping The Fire | Das Feuer einfangen | MuIg25 | |
+| The Obedient Fire | Das Gehorsame Feuer | ReIg20 | HdH:S |
 | Many-Hued Conflagration, The | Das vielfarbige Flammenmeer | MuIg5 | |
 | Gloom Of Evening | Düsternis des Abends | PeIg10 | |
 | Winter's Icy Touch | Eisige Berührung des Winters | PeIg10 | |
@@ -260,19 +262,18 @@
 | Circle Of Encompassing Flames | Kreis der umschließenden Flammen | CrIg35 | |
 | Ball Of Abysmal Flame | Kugel der abgründigen Flamme | CrIg35 | |
 | Lamp Without Flame | Lampe ohne Flamme | CrIg10 | |
+| Last Flight of the Phoenix | Letzter Flug des Phönix | CrIg50 | HdH:S |
 | Light Shaft Of The Night | Lichtschaft der Nacht | ReIg20 | |
+| Quench the Raging Conflagration | Lösche den Wütenden Brand | PeIg20 | HdH:S |
 | Moonbeam | Mondstrahl | CrIg3 | |
 | Pilum Of Fire | Pilum aus Feuer | CrIg20 | |
+| Test of the Flames | Prüfung der Flammen | CrIg15 | HdH:S |
 | Shadows Of The Fires Past | Schatten vergangener Feuer | InIg15 | |
 | Ward Against Heat And Flames | Schutz vor Hitze und Flammen | ReIg25 | |
 | Vision Of Heat's Light | Sicht durch Wärmestrahlung | InIg20 | |
 | Leap Of The Fire | Sprung des Feuers | ReIg10 | |
 | Words Of The Flickering Flame | Worte der flackernden Flamme | InIg35 | |
 | Tremulous Vault Of The Torch's Flame | Zitternder Schwung der Fackelflamme | ReIg5 | |
-| Test of the Flames | Prüfung der Flammen | CrIg15 | HdH:S |
-| Last Flight of the Phoenix | Letzter Flug des Phönix | CrIg50 | HdH:S |
-| Quench the Raging Conflagration | Lösche den Wütenden Brand | PeIg20 | HdH:S |
-| The Obedient Fire | Das Gehorsame Feuer | ReIg20 | HdH:S |
 
 ---
 
@@ -284,7 +285,6 @@
 | Eyes Of The Eagle | Augen des Adlers | InIm25 | |
 | Aura Of Ennobled Presence | Aura der adligen Erscheinung | MuIm10 | |
 | Summoning The Distant Image | Beschwörung des fernen Bildes | InIm25 | |
-| Image Phantom | Truggestalt | MuIm20 | |
 | Ear For Distant Voices, The | Das Ohr für entfernte Stimmen | InIm20 | |
 | Image From The Wizard Torn | Das vom Zauberer losgelöste Bild | ReIm35 | |
 | Shadow Of Human Life, The | Der Schatten menschlichen Lebens | CrIm40 | |
@@ -307,6 +307,7 @@
 | Prying Eyes | Spähende Augen | InIm5 | |
 | Silence Of The Smothered Sound | Stille des erstickten Schalls | PeIm20 | |
 | Removal Of The Conspicuous Sigil | Tilgung des auffälligen Sigils | PeIm20 | |
+| Image Phantom | Truggestalt | MuIm20 | |
 | Notes Of A Delightful Sound | Töne eines wohlklingenden Klangs | MuIm10 | |
 | Invisibility Of The Standing Wizard | Unsichtbarkeit des stehenden Zauberers | PeIm15 | |
 | Disguise Of The Transformed Image | Verkleidung des verwandelten Bildes | MuIm15 | |
@@ -342,6 +343,7 @@
 | Thoughts Within Babble | Gedanken im Kauderwelsch | InMe25 | |
 | Mind Of The Beast | Geist des Tieres | MuMe30 | |
 | Weight Of A Thousand Hells | Gewicht von tausend Höllen | CrMe25 | |
+| Heart of the Lion | Herz des Löwen | CrMe15 | HdH:S |
 | Panic Of The Trembling Heart | Panik des zitternden Herzens | CrMe15 | |
 | Pains Of The Perpetual Worry | Qualen der ewigen Sorge | CrMe20 | |
 | Ring Of Warding Against Spirits | Ring der Abwehr gegen Geister | ReMe | |
@@ -360,7 +362,6 @@
 | Perception Of The Conflicting Motives | Wahrnehmung der widerstreitenden Motive | InMe15 | |
 | Words Of The Unbroken Silence | Worte der ungebrochenen Stille | CrMe10 | |
 | Coerce The Spirits Of The Night | Zwang der Geister der Nacht | ReMe20 | |
-| Heart of the Lion | Herz des Löwen | CrMe15 | HdH:S |
 
 ---
 
@@ -371,6 +372,7 @@
 | Probe For Pure Silver | Auf der Suche nach reinem Silber | InTe4 | |
 | Eyes Of The Eons | Augen der Äonen | InTe10 | |
 | Eyes Of The Treacherous Terrain | Augen des tückischen Geländes | InTe15 | |
+| Ominous Levitation of the Weighty Stone | Bedrohliches Schweben des Gewichtigen Steins | ReTe15 | HdH:S |
 | Touch Of Midas | Berührung des Midas | CrTe20 | |
 | End Of The Mighty Castle | Das Ende der mächtigen Burg | PeTe25 | |
 | Object Of Increased Size | Das Objekt wächst | MuTe20 | |
@@ -386,6 +388,7 @@
 | Cascade Of Rocks | Der Steinschlag | PeTe40 | |
 | Unseen Arm | Der unsichtbare Arm | ReTe5 | |
 | Unseen Porter, The | Der unsichtbare Träger | ReTe10 | |
+| Undoing the Stonemason's Handiwork | Des Maurers Werk zunichte | PeTe15 | HdH:S |
 | Earth Split Asunder, The | Die Erde bricht auseinander | ReTe30 | |
 | Forgiving Earth, The | Die nachgebende Erde | ReTe10 | |
 | Sense The Feet That Tread The Earth | Die Schritte auf der Erde spüren | InTe30 | |
@@ -399,9 +402,13 @@
 | Supple Iron And Rigid Rope | Geschmeidiges Eisen und steifes Seil | MuTe10 | |
 | Pit Of The Gaping Earth | Grube der klaffenden Erde | PeTe15 | |
 | Hands Of The Grasping Earth | Hände der ergreifenden Erde | ReTe15 | |
+| Hardness of Adamantine | Härte des Adamant | MuTe25 | HdH:S |
 | Wall Of Protecting Stone | Mauer aus schützendem Stein | CrTe25 | |
+| Hauberk of Sublime Lightness | Panzerhemd Erhabener Leichtigkeit | PeTe30 | HdH:S |
 | Rusted Decay Of Ten-Score Years | Rostiger Verfall von zweihundert Jahren | PeTe10 | |
 | Ward Against Faeries Of The Mountain | Schutzwall gegen die Feen des Gebirges | ReTe | |
+| Sword from the Unseen Scabbard | Schwert aus der Unsichtbaren Scheide | CrTe15 | HdH:S |
+| Silvery Scales of the Knight | Silberne Schuppen des Ritters | CrTe(An)30 | HdH:S |
 | Tracks Of The Faerie Glow | Spuren des Feenglühens | InTe25 | |
 | Stone To Falling Dust | Stein zu fallendem Staub | PeTe20 | |
 | Wielding The Invisible Sling | Trage die unsichtbare Schleuder | ReTe10 | |
@@ -409,12 +416,6 @@
 | Earth That Breaks No More | Unzerbrechliche Erde | MuTe20 | |
 | Obliteration Of The Metallic Barrier | Vernichtung der metallenen Schranke | PeTe20 | |
 | Seal The Earth | Versiegele die Erde | CrTe15 | |
-| Sword from the Unseen Scabbard | Schwert aus der Unsichtbaren Scheide | CrTe15 | HdH:S |
-| Silvery Scales of the Knight | Silberne Schuppen des Ritters | CrTe(An)30 | HdH:S |
-| Hardness of Adamantine | Härte des Adamant | MuTe25 | HdH:S |
-| Undoing the Stonemason's Handiwork | Des Maurers Werk zunichte | PeTe15 | HdH:S |
-| Hauberk of Sublime Lightness | Panzerhemd Erhabener Leichtigkeit | PeTe30 | HdH:S |
-| Ominous Levitation of the Weighty Stone | Bedrohliches Schweben des Gewichtigen Steins | ReTe15 | HdH:S |
 
 ---
 
@@ -455,80 +456,80 @@
 | Wind Of Mundane Silence | Wind der weltlichen Stille | PeVi | PeVi; ~~verworfene Variante: Wind der gewöhnlichen Stille~~ |
 
 
-### Ergänzungen aus Houses of Hermes: True Lineages (HoH:TL)
+### Ergänzungen aus Häuser des Hermes: Wahre Linien (HdH:WL)
 
 | Englisch (EN) | Deutsch (DE) | Form | Anmerkung |
 |---|---|---|---|
-| Aura of Inconsequence | Aura der Bedeutungslosigkeit | ReMe25 | HoH:TL; Beiläufige Aufmerksamkeit ablenken |
-| Bitter Taste of Betrayal | Bitterer Geschmack des Verrats | InVi15 | HoH:TL; Aktive Magie durch bitteren Geschmack erkennen |
-| By His Works | An seinen Werken | CrMe5 | HoH:TL; Eigene Erinnerung auffrischen |
-| Call for Justice | Ruf nach Gerechtigkeit | ReVi | HoH:TL; Großes Ritual: Nemesis anrufen |
-| Circle of Clarity | Kreis der Klarheit | PeVi Gen | HoH:TL; Vim-Effekte im Kreis auflösen |
-| Curse of Mars | Fluch des Mars | ReMe | HoH:TL; Großes Ritual: Nation mit Zwist verfluchen |
-| Curse of Thoth | Fluch des Thoth | PeVi | HoH:TL; Großes Ritual: Gruppe mit Unglück verfluchen |
-| Cutting the Cords | Die Bande durchtrennen | PeVi Gen Rit. | HoH:TL; Vertrautenbindung dauerhaft trennen |
-| Dream of the Artifice | Traum des Kunstwerks | InTe50 | HoH:TL; Erinnerungen künstlicher Steinobjekte ergründen |
-| Dream of the Forged | Traum des Geschmiedeten | InTe55 Rit. | HoH:TL; Erinnerungen von Metallgegenständen ergründen |
-| Ear of Truth | Ohr der Wahrheit | InMe30 | HoH:TL; Wahrheit/Lüge beim Hören erkennen |
-| Impression of the Faded Sigil | Eindruck des verblassten Sigils | InVi30 | HoH:TL; Technik/Form/Sigil einer Spur identifizieren |
-| Odor of Lingering Magic | Geruch der verbleibenden Magie | InVi30 | HoH:TL; Aktive Magie/Spuren riechen |
-| Pierce the Magic Veil | Den Magieschleier durchdringen | InVi20 | HoH:TL; Analogon zu „Piercing the Faerie Veil" für Magie-Regiones |
-| Reveal the Lingering Spirit | Den verweilenden Geist enthüllen | InMe30 | HoH:TL; Unsichtbare Geister wahrnehmen |
-| Sight of the Molting Magus | Sicht des sich häutenden Magus | InCo25 | HoH:TL; Corpus-Material in Sichtlinie erkennen |
-| Sight of the Sigil | Sicht des Sigils | InVi50 | HoH:TL; Magie/Spuren sehen mit vollen Details |
-| Tell of the Forged | Erzählung des Geschmiedeten | InTe45 | HoH:TL; Mit Metallgegenstand kommunizieren |
-| The Discerning Eye | Das Unterscheidende Auge | InIm Gen | HoH:TL; Illusionen von Wirklichkeit unterscheiden |
-| The Good Witness | Der Gute Zeuge | CrMe25 | HoH:TL; Tageserinnerung bei Zielperson auffrischen |
-| The Oath of Truth | Der Eid der Wahrheit | PeCo | HoH:TL; Kleines Ritual: Wahrheitseid |
-| The Penitent's Confession | Das Geständnis des Büßers | ReMe30 | HoH:TL; Zielperson berichtet wahrheitsgemäß |
-| The Whole from the Part | Das Ganze aus dem Teil | InCo20 | HoH:TL; Geistiges Bild anhand Arkaner Verbindung |
-| The Will of Alatheia | Der Wille der Alatheia | PeCo | HoH:TL; Kleines Ritual: Schwur, Handlung zu unterlassen |
-| Trust Me | Vertrau mir | ReMe20 | HoH:TL; Haltung normalisieren (kein Ausspähen) |
-| Veil All Eyes | Schleier aller Augen | ReMe(An) | HoH:TL; Kleines Ritual: mental unsichtbar |
-| Wisdom of Athena | Weisheit der Athene | CrMe | HoH:TL; Kleines Ritual: +5 auf Menschenkenntnis/Intrige |
-| Sight of Alatheia | Sicht der Alatheia | InVi | HoH:TL; Kleines Ritual: Zweites Gesicht Wert 5 |
-| Hunter's Lethal Arrow | Tödlicher Pfeil des Jägers | PeAn40 | HoH:TL; Mutantum-Zauber: Tier sofort zerstören |
-| Shape of the Ancient Kite | Gestalt des alten Milan | MuCo40 | HoH:TL; Mutantum-Zauber: Verwandlung in Milan |
-| The Tireless Flight | Der unermüdliche Flug | ReCo20 | HoH:TL; Mutantum-Zauber: Selbstflug ohne Ermüdung |
-| Sense the True Path | Den wahren Pfad erspüren | InTe15 | HoH:TL; Mutantum-Zauber: Richtung zum nächsten Pfad |
-| Twinning the Tome | Verdoppelung des Folianten | CrAn50 Rit. | HoH:TL; Mutantum-Zauber: Buchkopie |
-| The Transformed Folio | Der verwandelte Foliant | MuAn45 Rit. | HoH:TL; Mutantum-Zauber: Buch in anderes Material |
-| (Phys. Char.) of the Followers | (Körp. Eigensch.) der Gefolgsleute | CrCo35 Rit. | HoH:TL; Kult der Helden: Eigenschaft +1 |
-| (Phys. Char.) of the Heroes | (Körp. Eigensch.) der Helden | CrCo60 Rit. | HoH:TL; Kult der Helden: Eigenschaft +3 |
-| (Mental Char.) of the Followers | (Geist. Eigensch.) der Gefolgsleute | CrMe35 Rit. | HoH:TL; Kult der Helden: Eigenschaft +1 |
-| (Mental Char.) of the Heroes | (Geist. Eigensch.) der Helden | CrMe60 Rit. | HoH:TL; Kult der Helden: Eigenschaft +3 |
-| Mercury's Blessing | Merkurs Segen | CrVi25 Rit. | HoH:TL; Kult der Helden: Merkurische Magie für ein Jahr |
-| A Simple Method for Rapid Vallation | Eine einfache Methode zur schnellen Vallation | CrTe35 | HoH:TL; Granitmauer 500 Schritt mit Wehrgang |
-| A Window of Singular Direction | Ein Fenster der einseitigen Sicht | MuTe15 | HoH:TL; Einseitig durchsichtige Wand |
-| Arming the Legion of the Dead | Bewaffnung der Legion der Toten | MuMe70 Rit. | HoH:TL; Massenversion für Geisterarmee |
-| Call the Fallen Eagles from the Mist | Die gefallenen Adler aus dem Nebel rufen | ReMe65 Rit. | HoH:TL; Massenbeschwörung heidnischer Geister |
-| Exactly to Scale | Exakt maßstabsgetreu | ReAq10 | HoH:TL; Präzises Zeichnen/Kartenherstellung |
-| False Prophecy | Falsche Prophezeiung | MuMe30 | HoH:TL; Veränderung von Traumerinnerungen |
-| Love's Unfaithful Witness | Der treulose Zeuge der Liebe | InTe35 | HoH:TL; Schmuck über Träger befragen |
-| Spectral Quinreme | Geisterquinquereme | MuMe50 | HoH:TL; Geisterschiff für Menschentransport |
-| Swords of Silver and Moonlight | Schwerter aus Silber und Mondlicht | MuMe40 | HoH:TL; Geisterausrüstung stofflich machen |
-| The Face in the Mirror | Das Gesicht im Spiegel | ReMe40 | HoH:TL; Kontrollierte Geisterbesessenheit |
-| The Unfaithful Favor | Der treulose Gunstbeweis | ReAn45 | HoH:TL; Seidentuch als Fernmordwaffe |
-| To Mark with Umbrage | Mit Düsternis zeichnen | CrIm30 | HoH:TL; Visuelle Markierung von Truppen |
-| To See as Others See | Sehen wie andere sehen | InAn40 | HoH:TL; Fernspionage über Tiere |
-| Venomous Velites | Giftige Velites | CrAn45 | HoH:TL; Giftiger Skorpionschwarm mit Rego-Requisit |
-| Voices from Hollow Spaces | Stimmen aus hohlen Räumen | ReMe25 | HoH:TL; Geisterbindung an Objekte/Orte |
+| (Mental Char.) of the Followers | (Geist. Eigensch.) der Gefolgsleute | CrMe35 Rit. | HdH:WL; Kult der Helden: Eigenschaft +1 |
+| (Mental Char.) of the Heroes | (Geist. Eigensch.) der Helden | CrMe60 Rit. | HdH:WL; Kult der Helden: Eigenschaft +3 |
+| (Phys. Char.) of the Followers | (Körp. Eigensch.) der Gefolgsleute | CrCo35 Rit. | HdH:WL; Kult der Helden: Eigenschaft +1 |
+| (Phys. Char.) of the Heroes | (Körp. Eigensch.) der Helden | CrCo60 Rit. | HdH:WL; Kult der Helden: Eigenschaft +3 |
+| By His Works | An seinen Werken | CrMe5 | HdH:WL; Eigene Erinnerung auffrischen |
+| Aura of Inconsequence | Aura der Bedeutungslosigkeit | ReMe25 | HdH:WL; Beiläufige Aufmerksamkeit ablenken |
+| Arming the Legion of the Dead | Bewaffnung der Legion der Toten | MuMe70 Rit. | HdH:WL; Massenversion für Geisterarmee |
+| Bitter Taste of Betrayal | Bitterer Geschmack des Verrats | InVi15 | HdH:WL; Aktive Magie durch bitteren Geschmack erkennen |
+| The Whole from the Part | Das Ganze aus dem Teil | InCo20 | HdH:WL; Geistiges Bild anhand Arkaner Verbindung |
+| The Face in the Mirror | Das Gesicht im Spiegel | ReMe40 | HdH:WL; Kontrollierte Geisterbesessenheit |
+| The Penitent's Confession | Das Geständnis des Büßers | ReMe30 | HdH:WL; Zielperson berichtet wahrheitsgemäß |
+| The Discerning Eye | Das Unterscheidende Auge | InIm Gen | HdH:WL; Illusionen von Wirklichkeit unterscheiden |
+| Pierce the Magic Veil | Den Magieschleier durchdringen | InVi20 | HdH:WL; Analogon zu „Piercing the Faerie Veil" für Magie-Regiones |
+| Reveal the Lingering Spirit | Den verweilenden Geist enthüllen | InMe30 | HdH:WL; Unsichtbare Geister wahrnehmen |
+| Sense the True Path | Den wahren Pfad erspüren | InTe15 | HdH:WL; Mutantum-Zauber: Richtung zum nächsten Pfad |
+| The Oath of Truth | Der Eid der Wahrheit | PeCo | HdH:WL; Kleines Ritual: Wahrheitseid |
+| The Good Witness | Der Gute Zeuge | CrMe25 | HdH:WL; Tageserinnerung bei Zielperson auffrischen |
+| The Unfaithful Favor | Der treulose Gunstbeweis | ReAn45 | HdH:WL; Seidentuch als Fernmordwaffe |
+| Love's Unfaithful Witness | Der treulose Zeuge der Liebe | InTe35 | HdH:WL; Schmuck über Träger befragen |
+| The Tireless Flight | Der unermüdliche Flug | ReCo20 | HdH:WL; Mutantum-Zauber: Selbstflug ohne Ermüdung |
+| The Transformed Folio | Der verwandelte Foliant | MuAn45 Rit. | HdH:WL; Mutantum-Zauber: Buch in anderes Material |
+| The Will of Alatheia | Der Wille der Alatheia | PeCo | HdH:WL; Kleines Ritual: Schwur, Handlung zu unterlassen |
+| Cutting the Cords | Die Bande durchtrennen | PeVi Gen Rit. | HdH:WL; Vertrautenbindung dauerhaft trennen |
+| Call the Fallen Eagles from the Mist | Die gefallenen Adler aus dem Nebel rufen | ReMe65 Rit. | HdH:WL; Massenbeschwörung heidnischer Geister |
+| A Window of Singular Direction | Ein Fenster der einseitigen Sicht | MuTe15 | HdH:WL; Einseitig durchsichtige Wand |
+| Impression of the Faded Sigil | Eindruck des verblassten Sigils | InVi30 | HdH:WL; Technik/Form/Sigil einer Spur identifizieren |
+| A Simple Method for Rapid Vallation | Eine einfache Methode zur schnellen Vallation | CrTe35 | HdH:WL; Granitmauer 500 Schritt mit Wehrgang |
+| Tell of the Forged | Erzählung des Geschmiedeten | InTe45 | HdH:WL; Mit Metallgegenstand kommunizieren |
+| Exactly to Scale | Exakt maßstabsgetreu | ReAq10 | HdH:WL; Präzises Zeichnen/Kartenherstellung |
+| False Prophecy | Falsche Prophezeiung | MuMe30 | HdH:WL; Veränderung von Traumerinnerungen |
+| Curse of Mars | Fluch des Mars | ReMe | HdH:WL; Großes Ritual: Nation mit Zwist verfluchen |
+| Curse of Thoth | Fluch des Thoth | PeVi | HdH:WL; Großes Ritual: Gruppe mit Unglück verfluchen |
+| Spectral Quinreme | Geisterquinquereme | MuMe50 | HdH:WL; Geisterschiff für Menschentransport |
+| Odor of Lingering Magic | Geruch der verbleibenden Magie | InVi30 | HdH:WL; Aktive Magie/Spuren riechen |
+| Shape of the Ancient Kite | Gestalt des alten Milan | MuCo40 | HdH:WL; Mutantum-Zauber: Verwandlung in Milan |
+| Venomous Velites | Giftige Velites | CrAn45 | HdH:WL; Giftiger Skorpionschwarm mit Rego-Requisit |
+| Circle of Clarity | Kreis der Klarheit | PeVi Gen | HdH:WL; Vim-Effekte im Kreis auflösen |
+| Mercury's Blessing | Merkurs Segen | CrVi25 Rit. | HdH:WL; Kult der Helden: Merkurische Magie für ein Jahr |
+| To Mark with Umbrage | Mit Düsternis zeichnen | CrIm30 | HdH:WL; Visuelle Markierung von Truppen |
+| Ear of Truth | Ohr der Wahrheit | InMe30 | HdH:WL; Wahrheit/Lüge beim Hören erkennen |
+| Call for Justice | Ruf nach Gerechtigkeit | ReVi | HdH:WL; Großes Ritual: Nemesis anrufen |
+| Veil All Eyes | Schleier aller Augen | ReMe(An) | HdH:WL; Kleines Ritual: mental unsichtbar |
+| Swords of Silver and Moonlight | Schwerter aus Silber und Mondlicht | MuMe40 | HdH:WL; Geisterausrüstung stofflich machen |
+| To See as Others See | Sehen wie andere sehen | InAn40 | HdH:WL; Fernspionage über Tiere |
+| Sight of Alatheia | Sicht der Alatheia | InVi | HdH:WL; Kleines Ritual: Zweites Gesicht Wert 5 |
+| Sight of the Molting Magus | Sicht des sich häutenden Magus | InCo25 | HdH:WL; Corpus-Material in Sichtlinie erkennen |
+| Sight of the Sigil | Sicht des Sigils | InVi50 | HdH:WL; Magie/Spuren sehen mit vollen Details |
+| Voices from Hollow Spaces | Stimmen aus hohlen Räumen | ReMe25 | HdH:WL; Geisterbindung an Objekte/Orte |
+| Dream of the Forged | Traum des Geschmiedeten | InTe55 Rit. | HdH:WL; Erinnerungen von Metallgegenständen ergründen |
+| Dream of the Artifice | Traum des Kunstwerks | InTe50 | HdH:WL; Erinnerungen künstlicher Steinobjekte ergründen |
+| Hunter's Lethal Arrow | Tödlicher Pfeil des Jägers | PeAn40 | HdH:WL; Mutantum-Zauber: Tier sofort zerstören |
+| Twinning the Tome | Verdoppelung des Folianten | CrAn50 Rit. | HdH:WL; Mutantum-Zauber: Buchkopie |
+| Trust Me | Vertrau mir | ReMe20 | HdH:WL; Haltung normalisieren (kein Ausspähen) |
+| Wisdom of Athena | Weisheit der Athene | CrMe | HdH:WL; Kleines Ritual: +5 auf Menschenkenntnis/Intrige |
 
 ### Ergänzungen aus Realms of Power: The Infernal (RoP:I)
 
 | Englisch (EN) | Deutsch (DE) | Kunst und Stufe | Anmerkung |
 |---|---|---|---|
-| Fanning the Infernal Flames | Das Infernale Feuer schüren | CrVi Gen | SdM:I; Machtvorrat eines Dämons wiederherstellen |
-| Plucking the Hair from the Billy Goat's Chin | Dem Ziegenbock das Barthaar zupfen | CrVi 20 | SdM:I; temporäre Arkane Verbindung zu Dämon |
-| Sulfurous Whispers | Schwefelflüstern | InVi 30 | SdM:I; Fernkommunikation mit Dämon |
-| Early Punishment for the Sinful Witch | Frühe Bestrafung der sündigen Hexe | MuVi Gen | SdM:I; Infernalen Effekt auf Infernalist zerstören |
-| The Wicked Jar | Das verwünschte Gefäß | MuVi Gen | SdM:I; Dämon an physischen Gegenstand binden |
-| Bind the Devil's Hands | Die Hände des Teufels binden | PeVi Gen | SdM:I; Infernale Kräfte in einem Raum behindern |
-| Exorcise the Filthy Spirit | Den unreinen Geist austreiben | PeVi Gen | SdM:I; Exorzismus bei Besessung |
-| Lash of the Chastened Servant | Peitsche des gezüchtigten Dieners | PeVi 15 | SdM:I; 5 Machtpunkte entziehen |
 | Adjuration of the Hell-Sworn Spirit | Beschwörung des höllenverschworenen Geistes | ReVi 35 | SdM:I; Dämon per Wahrem Namen beschwören |
-| Cleanse the Verminous Vis | Läuterung des besudelten Vis | ReVi 15 | SdM:I; infernales Vis um eine Stufe reinigen |
+| Fanning the Infernal Flames | Das Infernale Feuer schüren | CrVi Gen | SdM:I; Machtvorrat eines Dämons wiederherstellen |
+| The Wicked Jar | Das verwünschte Gefäß | MuVi Gen | SdM:I; Dämon an physischen Gegenstand binden |
+| Plucking the Hair from the Billy Goat's Chin | Dem Ziegenbock das Barthaar zupfen | CrVi 20 | SdM:I; temporäre Arkane Verbindung zu Dämon |
 | Command the Vile Spirit | Den niederträchtigen Geist befehligen | ReVi 20 | SdM:I; Dämon zum Gehorsam zwingen |
+| Exorcise the Filthy Spirit | Den unreinen Geist austreiben | PeVi Gen | SdM:I; Exorzismus bei Besessung |
+| Bind the Devil's Hands | Die Hände des Teufels binden | PeVi Gen | SdM:I; Infernale Kräfte in einem Raum behindern |
+| Early Punishment for the Sinful Witch | Frühe Bestrafung der sündigen Hexe | MuVi Gen | SdM:I; Infernalen Effekt auf Infernalist zerstören |
+| Cleanse the Verminous Vis | Läuterung des besudelten Vis | ReVi 15 | SdM:I; infernales Vis um eine Stufe reinigen |
+| Lash of the Chastened Servant | Peitsche des gezüchtigten Dieners | PeVi 15 | SdM:I; 5 Machtpunkte entziehen |
+| Sulfurous Whispers | Schwefelflüstern | InVi 30 | SdM:I; Fernkommunikation mit Dämon |
 
 ---
 *Quellen: Zauberübersetzungstabelle.md (Ars Magica Definitive Edition, Atlas Games, 2024; GitHub: OriginalMadman/Ars-Magica-Open-License) · ArM_DE_Zusatztermini.md · Houses of Hermes: True Lineages (Atlas Games, 2005) · Realms of Power: The Infernal (Atlas Games, 2006)*

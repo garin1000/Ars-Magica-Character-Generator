@@ -20,6 +20,7 @@
 | Invested Device | Bereitetes Artefakt | |
 | Lesser Enchanted Device | Schlichtes Artefakt | |
 | Charged Item | Aufgeladenes Artefakt | |
+| Single-Use Charged Items | Aufgeladene Artefakte für den einmaligen Gebrauch | HM:RE-Integrationsprojekt; hieß im Original vor der Errata „Single Cast Charged Items". Nicht mit der Tugend *Quick Charged Items* → „Schnelle Aufgeladene Artefakte" verwechseln |
 | Instilling Effects | Effekte einbetten | |
 | Preparation for Enchantment | Vorbereitung zur Verzauberung | |
 | Longevity Ritual | Langlebigkeitsritual | |
@@ -28,6 +29,7 @@
 | Extraordinary Results Chart | Tabelle außergewöhnlicher Ergebnisse | |
 | Breakthrough | Durchbruch | |
 | Shape and Material Bonus | Form- und Materialbonus | |
+| Gruagach Shape Bonuses | Gruagach-Formboni | HM:RE Kap. IV. Nicht „Gestaltboni": „Gestalt" ist dort als Gruagach-Kunst belegt (Gestaltzauber, Gestalt geben/nehmen) |
 | Vis Extraction | Vis-Gewinnung | |
 | Talisman Attunement | Talismanabstimmung | |
 | Familiar Bond | Vertrautenbindung | |
