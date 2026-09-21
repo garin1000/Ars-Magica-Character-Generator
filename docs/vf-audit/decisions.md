@@ -127,6 +127,211 @@ this one). **Check the source project before concluding the table is wrong.**
 
 ---
 
+## D17 — the Redcap's 300 apprenticeship points replace, they do not supplement
+
+**Question (Q-108).** `virtue.lone_redcap` ships `restricted_ability_xp: 300`,
+which `effective/xp.rs::build_flow_pools` treats as **additive**. F-439 was
+rated `high` if the 300 *replaces* a life-stage block and `nil` if it
+*supplements* — the only finding in the audit outright blocked on a question.
+
+**Resolved from the source, 2026-09-21. It replaces.** This is a rulebook
+reading rather than a product decision, so it is recorded rather than put to a
+choice; the evidence is below and can be overruled on evidence.
+
+**The passages.** ArMDE:4848, the *base* `virtue.redcap`:
+
+> "You **have spent fifteen years as an apprentice**, and gained a **total of 300
+> experience points in those fifteen years**."
+
+ArMDE:4321, `virtue.lone_redcap`:
+
+> "You **still** begin with 300 experience points **for your fifteen years spent
+> as an apprentice**."
+
+Both describe the **same** 300 points for the **same** fifteen years. "Still"
+means the Lone Redcap keeps what a Redcap has despite losing his Mercer House
+ties — not that he gains 300 on top of anything.
+
+**The structural proof, from `rules/core/life_stages.json`.** The engine already
+models exactly this shape for magi:
+
+| Stage | Years | XP |
+|---|---|---|
+| `childhood` | 5 | 75 native language + 45 spread = **120**, a block |
+| `apprenticeship` | **15** | **240**, a block |
+| `later_life` | — | 15 per year |
+
+**A magus's apprenticeship is a fixed block that replaces per-year later-life XP
+for those fifteen years.** The Redcap's is the identical structure with a
+different figure — fifteen years, 300 instead of 240. Reading it as additive
+would make the Redcap the only character in the game whose apprenticeship is
+funded twice.
+
+**The arithmetic, which is what F-439 is about.** A companion has no
+`apprenticeship` creation phase, so a 25-year-old Lone Redcap is funded
+childhood (120) + later life for years 5-25 (20 × 15 = 300) — and the Virtue
+then adds **another 300**. The book gives him roughly five years of ordinary
+later life plus the 300 apprenticeship block. **F-439 is confirmed at `high`**:
+the character is over-funded by around 225 experience points.
+
+### A second defect fell out of the same reading
+
+**`virtue.redcap` does not encode its 300 at all.** It carries only
+`item_level_budget: 50`, though ArMDE:4848 states the 300 as plainly as Lone
+Redcap does. So the two entries are wrong in **opposite** directions: the
+**Major** Redcap is *under*-funded by a whole apprenticeship block, while the
+**Minor** Lone Redcap is *over*-funded by one. Neither question anticipated
+this, and it is filed here rather than lost.
+
+### Remedy — this is D13's third mode, and it must wait for it
+
+The fix is **not** to delete Lone Redcap's pool and **not** to add a matching one
+to Redcap. Both entries need the **replacement** shape D13 named and did not
+build:
+
+> *Additive grant* (modelled) · *earmark of the normal budget* (D13) ·
+> **replacement of a life-stage block** (F-428, F-439, this ruling — unmodelled).
+
+`flaw.feral_upbringing` (F-428) is the same mode at the childhood block; these
+two are it at the apprenticeship block. **Design all three together**, per D13's
+closing note, or a third incompatible spelling appears.
+
+---
+
+## D16 — an absolute the engine will not model is text; a *soft* restriction is a warning
+
+Two questions, answered together because the pair sets the general rule: **how
+hard the engine pushes must match how hard the book pushes.**
+
+### Q-05 — sex restrictions: text only, no model
+
+**Scope, re-counted catalogue-wide** (B01 saw six; there are more): **20**
+entries say "This Virtue is only available to male characters" — ArMDE:3382,
+:3438, :3482, :3531, :3535, :3539, :3543, :3553 and twelve further sites. One
+states a female-only exception (`virtue.baccalaureus`, ArMDE:3474: "can be taken
+by a female character, but only if she is (or was) studying to be a physician at
+Salerno"), and ArMDE:3438 adds "who must also be eunuchs". **None of the 20
+carries the clause in data or in either locale's text.**
+
+**Ruling (Norbert, 2026-09-21): `uncomputed_rule` + `description` in both
+locales. `Entity` does NOT gain a sex field, and nothing enforces the
+restriction.**
+
+**What was and was not open.** D3 already settled the *classification* — an
+engine that cannot express a rule is grounds for `uncomputed_rule` with the rule
+written out, never `narrative` — so these six-plus entries were misclassified on
+that ground regardless. What was open was whether to build the model, which is a
+product decision and not a rulebook reading, which is why B01 escalated rather
+than guessing.
+
+**The reasoning, recorded so it is not re-litigated.** The restriction reaches
+the player as text and the troupe applies it. Building the model would mean the
+generator **refuses to build a character on the basis of sex** — a call the table
+is better placed to make than the tool. The accepted cost is that the app
+silently permits combinations the book restricts; the rule is surfaced, not
+enforced.
+
+**This is a deliberate non-goal.** A future pass, a future book or a future agent
+that finds another "only available to male characters" clause should apply this
+ruling, not re-open it.
+
+### Q-123 — soft restrictions: a warning, never an error
+
+**The passages hedge, and the data must hedge with them.** ArMDE:6494
+(`flaw.night_terrors`): "This Flaw **normally** makes seasonal Laboratory work
+impossible, and so is **not suitable** for magi." ArMDE:6514
+(`flaw.oath_of_fealty`) is the same shape. A profile `forbidden_traits` row is
+the only mechanism the engine currently offers, and it is a **hard block** —
+which says something the book does not.
+
+**Ruling (Norbert, 2026-09-21): emit a warning, never an error.**
+
+**No new machinery is needed.** `IssueSeverity::Warning` and
+`ValidationIssue::warning` already exist (`validation/mod.rs:73`, `:844`). The
+issue names the passage, appears in `Advisory` mode where the player wants
+guidance, and **never blocks a character the rules permit**.
+
+**Why not a hard block.** Making the tool stricter than the rulebook is the same
+class of error as the invented aging floor `7f5605a` was reverted for — a
+constraint with no passage behind it. "Normally" and "not suitable" are advice.
+
+**Why not text alone.** Both entries already carry the sentence in
+`description` in both locales, so the rule does reach the player — but it reaches
+them on the sheet, not at the moment they are choosing the Flaw for a magus,
+which is when it matters.
+
+### The general rule this pair establishes
+
+| The book says | The engine does |
+|---|---|
+| "may not", "cannot", "only available to" — **absolute** | hard error — *unless* the ruling is deliberately not to model it (Q-05), in which case `description` text |
+| "normally", "not suitable", "should" — **hedged** | **warning**, never an error |
+
+Apply this wherever the book hedges, rather than escalating each instance.
+
+---
+
+## D15 — the three Corrupted entries are one mechanic and get one treatment
+
+**Question (Q-93).** ArMDE:5847-5864 states the same mechanic three times — +3
+for selfish or sinful use, −3 for neutral or selfless, ±5 experience on a roll
+the modifier swung, "you may only take this Flaw once, though it can affect
+multiple …". The catalogue models it three ways:
+
+| Entry | Class | Effects |
+|---|---|---|
+| `flaw.corrupted_abilities` | `uncomputed_rule` | none |
+| `flaw.corrupted_arts` | `creation_effect` | **none** |
+| `flaw.corrupted_spells` | `in_play_effect` | `special_casting_mod: circumstantial` |
+
+At most one can be right.
+
+**Ruling (Norbert, 2026-09-21): all three `uncomputed_rule`, with the full rule
+in `description` in both locales, and `flaw.corrupted_spells`' effect deleted.**
+
+**Why downward rather than upward.** The engine computes none of it, and saying
+so is the honest classification:
+
+- The **±3 is circumstantial** — "selfish or sinful" versus "neutral or
+  selfless" is a table judgement no engine decides.
+- The **±5 experience swing** is in-play bookkeeping triggered by a roll the
+  modifier changed, which character generation never evaluates.
+- **Corrupted Abilities' ±3 is on an *Ability roll*, not a Casting Total.**
+  Unifying *upward* would give it a `special_casting_mod`, an effect naming the
+  wrong total — and Phase 0 records that no effect can name an Ability and a
+  roll modifier together. That gap is real but general, and inventing machinery
+  for a modifier whose condition is a GM judgement would buy nothing.
+
+`RULES.md:5226-5229` already reaches this conclusion for Corrupted Arts, so this
+generalises an existing reading rather than introducing one.
+
+**What this obliges.**
+
+1. **`flaw.corrupted_arts`** moves `creation_effect` → `uncomputed_rule`. It was
+   one of the five effect-less `creation_effect` entries `README.md` flagged as
+   "a lead, not a conclusion" on day one; this resolves it.
+2. **`flaw.corrupted_spells`** moves `in_play_effect` → `uncomputed_rule` and
+   **loses its `special_casting_mod`** — the only thing any of the three
+   currently computes. Deleting a shipped effect needs its own test, because the
+   Casting Total it silently contributed to changes.
+3. **`flaw.corrupted_abilities`** keeps `uncomputed_rule` and is the model the
+   other two move to.
+4. **All three carry the full passage in `description`, both locales**, per D5 —
+   including `flaw.corrupted_spells`' prerequisite, *"has learned at least 30
+   levels of formulaic spells"*, for which `Prereq` has no variant. Per D3 that
+   is grounds for `uncomputed_rule` with the rule written out, which is exactly
+   where this ruling lands it.
+
+**Interaction with D9, which is orthogonal and must not be conflated.** Each
+passage says the Flaw "can affect **multiple** Abilities / Arts / spells"
+(ArMDE:5851, :5857, :5863). These three entries are D9's motivating cases for the
+**multi-valued parameter type**, and they still need it: the *classification*
+says the engine computes nothing, while the *parameter* records which Abilities
+the player chose — data the save must round-trip. `uncomputed_rule` and a
+multi-valued parameter are both correct here, for different reasons.
+
+---
+
 ## D14 — an ability reference in an effect must be able to name its parameter
 
 **Question.** Raised by Norbert on reading D13's citation of `RULES.md:6362`,
