@@ -171,7 +171,7 @@ because that is what the verdict table gives — the finding is that it should b
 | F-13 | `virtue.arcane_lore` | 3430-3435 | desc+incompat | H | live | the Parma Magica exclusion and the Enemy-of-the-Order consequence are implemented nowhere and in neither locale |
 | F-14 | `virtue.archieunuch` | 3436-3439 | class+auth | H | live | `narrative`, Academic-Ability authorization missing |
 | F-15 | `virtue.aristotelian_training` | 3440-3443 | scope+effect | H | live | the Lab bonus is conditional in the book, unconditional in the data; two further bonuses unimplemented |
-| F-16 | `virtue.rard` | 3476-3479 | text+prov | M | live | the English `name` is the scanno "Rard"; the book's index and the table both read "Bard" — the **id** is wrong too |
+| F-16 | `virtue.rard` | 3476-3479 | text+prov | M | live | the English `name` is the scanno "Rard"; the book's index and the table both read "Bard" — the **id** is wrong too. **Do NOT change `source.anchor`**: it stays `rard` because the *heading* stays `#### Rard`, and Guard A compares the anchor against the heading. Name and id track the truth; the anchor tracks the book. Independently rediscovered by the 2026-09-21 anchor backfill, which also found the entry cross-references `Educated (Bardic)` — one of § 3.2a's four missing Virtues |
 | F-17 | `virtue.beadle` | 3480-3483 | class+auth | H | live | `narrative`, Academic-Ability authorization missing |
 | F-18 | `virtue.berserk` | 3500-3503 | auth | H | live | "You may learn Martial Abilities at character creation" unimplemented |
 | F-19 | `virtue.berserk` | 3500-3503 | effect+desc | M | live | the automatic Personality Trait Angry +2 is unimplemented and untexted |
@@ -1198,6 +1198,63 @@ F-349, F-377, F-445, F-460, F-488.
 
 **Files.** `rules/core/virtues_flaws.json`. Where the classification moves, the
 entry also needs `description` in `rules/i18n/{en,de}/virtues_flaws.json` per D5.
+
+#### 3.2a The `Educated` family — work all five together, after D14
+
+**Added 2026-09-21.** Three findings in this index are the same job and are
+currently scattered across three *kinds*, so nobody would work them together:
+**F-34** (`prov`), **F-59** (`auth`) and **F-60** (`scope`). They are one slice.
+
+**The catalogue has one of the book's five `#### Educated` headings.**
+
+| Heading | ArMDE | Catalogue |
+|---|---|---|
+| `Educated` | 3711 | ✅ `virtue.educated` |
+| `Educated (Bardic)` | 3715 | ❌ |
+| `Educated (Islamic)` | 3719 | ❌ |
+| `Educated (Hebrew)` | 3723 | ❌ |
+| `Educated (Vernacular)` | 3727 | ❌ |
+
+These are **not parameter variants**: each carries its own heading, its own
+`*Minor, General*` descriptor and its own rules paragraph, so they are five
+distinct Virtues. They are also **the whole of F-34** — the census counted 626
+headings against 622 entry starts, and every other heading maps, so closing this
+closes the catalogue's only coverage gap.
+
+**All five belong to this group.** Each grants 50 extra experience points
+restricted to a named list, and all but Bardic state the permission idiom
+outright — *"may purchase Academic Abilities during character generation"*
+(ArMDE:3721, :3725, :3729). Without an entry, the character the passage describes
+cannot be built at all: the 50 points land on `academic` Abilities, which is a
+gated category.
+
+**The Ability catalogue is already complete for them** — checked entry by entry.
+`ability.islamic_law`, `ability.judaic_lore`, `ability.theology_islam`,
+`ability.theology_judaism`, `ability.rabbinic_law`, `ability.art_of_memory` and
+the parameterized `ability.profession` all exist. **So this is data-only**: four
+new entries plus their `name`/`summary` in both locales. No Ability additions and
+no engine work beyond D14 itself.
+
+**But it cannot be done before D14, and F-60 is why.** F-60 records that base
+`virtue.educated`'s 50-point pool names `ability.dead_language` where ArMDE:3713
+says **Latin** — which is exactly the defect D14 was ruled on, *found in batch 2
+and unfixable until now*. The four new entries make it sharper still: **Islamic**
+names Arabic, Persian, Greek and Latin across both `ability.dead_language` and
+`ability.living_language` (each `parameter: "language"`), and **Hebrew** names
+Hebrew and Aramaic, plus Arabic conditionally for characters "from Iberia or the
+East". Written against today's id-only shape, every one of them would grant *any*
+language where the book names three or four. **Fix base Educated's Latin
+reference in the same pass**, so the family is read once rather than twice.
+
+**Terminology is already in place.** The 2026-09-21 table re-sync brought
+`islamische-begriffe.md` and `juedische-begriffe.md` into
+`rules/source/de/translation-tables/` — the glossaries these two Virtues need for
+their German text arrived before the entries did.
+
+**Out of scope for the anchor backfill (§ 3.14):** an entry that does not exist
+cannot carry a `source.anchor`. These four are the reason that slice reports
+651 of 655 rather than full coverage, and they should be re-run for anchors once
+the entries land.
 `crates/arm-rules/RULES.md` gains a row per entry.
 
 **Tests.** No new machinery — `validation/authorization.rs::validate_ability_authorization`

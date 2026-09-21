@@ -91,7 +91,7 @@ Decided and in use since the Flaws sweep (2026-09-15):
   `types.rs::Entity`, which is what a save serializes. Verified before assuming
   it.
 
-Three guards in `crates/arm-rules/tests/rules_source_provenance.rs` enforce it:
+Five guards in `crates/arm-rules/tests/rules_source_provenance.rs` enforce it:
 
 - `every_recorded_source_anchor_resolves_to_its_own_heading` — the anchor names a
   real heading **and that heading lies inside the cited line range**. The second
@@ -103,16 +103,37 @@ Three guards in `crates/arm-rules/tests/rules_source_provenance.rs` enforce it:
   German line-parity invariant, tested for the first time.** `CLAUDE.md` declares
   it and this document recorded that nothing checked it; anchors make it
   checkable item by item.
+- `every_anchored_catalogue_entry_records_the_heading_that_opens_its_range` —
+  tighter than the first: the anchor must be the slug of the `####` heading
+  sitting **exactly on `source.lines[0]`**, in both languages, and every entry of
+  a fully-swept catalogue must record one in both stores. "Somewhere inside the
+  range" survives a small shift; "on the first line" does not, which is the
+  point.
+- `no_source_range_runs_past_the_heading_that_follows_it` — the *end* of a range,
+  which nothing pinned before. It caught F-540: `flaw.wrathful_*` cited
+  ArMDE:7106-7119, a correct start and an extent that swallowed the
+  `# Chapter 5: Abilities` heading at :7114 and three paragraphs of the next
+  chapter, while every other guard stayed green. A range may stop a line early;
+  it may not overrun. Blockquoted sidebars and deeper sub-headings are not
+  section boundaries — established by reading all twenty-two first-run flags.
 
 The slug algorithm is not guessed: `the_heading_slug_matches_the_sources_own_generated_links`
 pins it against the sources' own generated cross-links (`#anchored-to-the-land`,
 `#hitze--und-ätzungstabelle`, the `-N` disambiguation behind `#die-gabe-2`).
 
+`regenerate_source_anchors` (same file, `#[ignore]`d) is the tool that fills both
+stores from the headings. It rewrites `rules/core/virtues_flaws.json` line by
+line rather than reserializing it, so a re-sync's diff is anchors and nothing
+else. It writes into the repository, so it is never run by the gate — invoke it
+deliberately and review the result as a diff.
+
 ## Still owed
 
-- **Rollout.** 51 of ~1000 `source` blocks carry an anchor — the core rulebook's
-  Flaws block. Every later sweep records them as it reads, per the "cheap now,
-  expensive later" argument above.
+- **Rollout.** Virtues/Flaws is complete: all 655 `source` blocks in
+  `rules/core/virtues_flaws.json` carry an English anchor, and
+  `rules/i18n/de/source_anchors.json` carries 655 German ones. The remaining
+  catalogues (abilities, arts, spells, houses, equipment, childhoods, aging
+  rows) are not yet swept; add each to `FULLY_ANCHORED_CATALOGUES` as it is.
 - A decision on code comments: `ArMDE:547` is the citation form `CLAUDE.md`
   mandates and four guards enforce. Anchors may suit data better than prose
   comments; do not change the comment convention unilaterally.

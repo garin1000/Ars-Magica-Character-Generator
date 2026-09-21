@@ -320,21 +320,39 @@ fn slugify_heading(text: &str) -> String {
         .collect()
 }
 
-/// Every Markdown heading in `text`, as `anchor -> 1-based line number`,
-/// including the generator's `-1`/`-2` disambiguation for repeated headings
-/// (which is what `#die-gabe-2` and `#abilities-1` in these files are).
-fn heading_anchors(text: &str) -> BTreeMap<String, usize> {
+/// One Markdown heading, located and slugified.
+#[derive(Clone, Debug)]
+struct Heading {
+    /// 1-based line number the `#` sits on.
+    line: usize,
+    /// How many `#` characters opened it — 4 for the `####` a catalogue item is
+    /// defined under.
+    level: usize,
+    /// Whether the heading sits inside a blockquote (`> #### …`). Those are the
+    /// books' **sidebars** — a boxed table or example belonging to the section
+    /// it is printed in, not a divider between sections.
+    blockquoted: bool,
+    /// The anchor the generator gives it, `-N` disambiguation included.
+    anchor: String,
+}
+
+/// Every Markdown heading in `text`, in document order, including the
+/// generator's `-1`/`-2` disambiguation for repeated headings (which is what
+/// `#die-gabe-2` and `#abilities-1` in these files are).
+fn headings(text: &str) -> Vec<Heading> {
     let mut seen: BTreeMap<String, usize> = BTreeMap::new();
-    let mut anchors = BTreeMap::new();
+    let mut found = Vec::new();
 
     for (index, line) in text.lines().enumerate() {
         let trimmed = line.trim_start();
         // A blockquoted heading (`> #### Environmental Temperatures`) is a
         // sidebar, and the generator anchors it like any other heading.
+        let blockquoted = trimmed.starts_with("> ");
         let trimmed = trimmed.strip_prefix("> ").unwrap_or(trimmed).trim_start();
         if !trimmed.starts_with('#') {
             continue;
         }
+        let level = trimmed.chars().take_while(|c| *c == '#').count();
         let title = trimmed.trim_start_matches('#').trim();
         if title.is_empty() {
             continue;
@@ -347,9 +365,23 @@ fn heading_anchors(text: &str) -> BTreeMap<String, usize> {
             format!("{base}-{count}")
         };
         *count += 1;
-        anchors.entry(anchor).or_insert(index + 1);
+        found.push(Heading {
+            line: index + 1,
+            level,
+            blockquoted,
+            anchor,
+        });
     }
 
+    found
+}
+
+/// Every Markdown heading in `text`, as `anchor -> 1-based line number`.
+fn heading_anchors(text: &str) -> BTreeMap<String, usize> {
+    let mut anchors = BTreeMap::new();
+    for heading in headings(text) {
+        anchors.entry(heading.anchor).or_insert(heading.line);
+    }
     anchors
 }
 
@@ -370,6 +402,34 @@ fn anchors_for(
         })
         .clone()
 }
+
+/// `rules/source/<lang>/<file>` -> its headings in document order, read once
+/// per file. The list form (rather than [`anchors_for`]'s map) is what lets a
+/// caller ask "which heading opens this line" and "where does the next one
+/// start", which is the pair the two range guards below are built on.
+fn headings_for(
+    cache: &mut BTreeMap<(String, String), Vec<Heading>>,
+    lang: &str,
+    file: &str,
+) -> Vec<Heading> {
+    cache
+        .entry((lang.to_string(), file.to_string()))
+        .or_insert_with(|| {
+            let path = rules_dir().join("source").join(lang).join(file);
+            match fs::read_to_string(&path) {
+                Ok(text) => headings(&text),
+                Err(_) => Vec::new(),
+            }
+        })
+        .clone()
+}
+
+/// The catalogue whose entries are required to carry a heading anchor in both
+/// stores. Scoped to one file on purpose: the anchor sweep is incremental
+/// (`docs/rules-source-resync.md`), and Virtues/Flaws is the catalogue it has
+/// finished. Widen this list as later catalogues are swept — never loosen the
+/// assertion instead.
+const FULLY_ANCHORED_CATALOGUES: &[&str] = &["virtues_flaws.json"];
 
 /// Every `rules/i18n/<lang>/source_anchors.json`, as
 /// `lang -> id -> (file, anchor)`. The canonical language is skipped: its
@@ -638,6 +698,442 @@ fn the_heading_slug_matches_the_sources_own_generated_links() {
     // Not headings: a hash inside prose, and a bare hash rule.
     let prose = heading_anchors("the # sign\n#\n");
     assert!(prose.is_empty(), "{prose:?}");
+}
+
+/// **Guard A — the anchor is the heading the range opens on, in both
+/// languages.**
+///
+/// [`every_recorded_source_anchor_resolves_to_its_own_heading`] only asks that
+/// the anchor's heading fall *somewhere* inside the cited range. That is too
+/// loose to survive a re-sync: a range that shifted by a line or two still
+/// contains its heading. The extraction actually produces a tighter fact —
+/// `source.lines[0]` **is** the `####` line the item is defined under — so this
+/// asserts exactly that, for the English anchor in `rules/core/` and for the
+/// German one in `rules/i18n/de/source_anchors.json` alike.
+///
+/// It is also the coverage assertion for the backfill: every entry of a
+/// catalogue in [`FULLY_ANCHORED_CATALOGUES`] must record an anchor in *both*
+/// stores, so a Virtue or Flaw added later cannot quietly arrive without the
+/// only coordinate that survives re-pagination. This is a per-entry
+/// requirement, not a count — `CLAUDE.md` → "Catalogue size is data, never
+/// code" is untouched.
+///
+/// The German half leans on the line-parity invariant `CLAUDE.md` declares:
+/// the German book mirrors the English line-by-line, so the same
+/// `source.lines[0]` locates the item's heading in both files.
+#[test]
+fn every_anchored_catalogue_entry_records_the_heading_that_opens_its_range() {
+    const GERMAN: &str = "de";
+
+    let german = localized_anchors();
+    let german_rows = german.get(GERMAN).cloned().unwrap_or_default();
+    let mut cache = BTreeMap::new();
+    let mut checked = 0usize;
+    let mut errors = Vec::new();
+
+    for found in all_source_refs() {
+        if !FULLY_ANCHORED_CATALOGUES.contains(&found.core_file.as_str()) {
+            continue;
+        }
+        checked += 1;
+
+        let english = headings_for(&mut cache, CANONICAL_LANGUAGE, &found.source_file);
+        let opening = english
+            .iter()
+            .find(|heading| heading.line as i64 == found.start);
+
+        match (&found.anchor, opening) {
+            (None, _) => errors.push(format!(
+                "{}: \"{}\" records no source.anchor. Every entry of this catalogue must carry \
+                 the heading anchor of its own definition — it is the only half of the citation \
+                 that survives a re-paginated rulebook.",
+                found.core_file, found.entry_label
+            )),
+            (Some(anchor), None) => errors.push(format!(
+                "{}: \"{}\" records anchor \"#{anchor}\", but {}:{} is not a heading line at all \
+                 — the range no longer opens on the item's definition",
+                found.core_file, found.entry_label, found.source_file, found.start
+            )),
+            (Some(anchor), Some(heading)) => {
+                if heading.level != 4 {
+                    errors.push(format!(
+                        "{}: \"{}\" opens on {}:{}, which is a level-{} heading — a catalogue \
+                         item is defined under a `####`",
+                        found.core_file,
+                        found.entry_label,
+                        found.source_file,
+                        found.start,
+                        heading.level
+                    ));
+                } else if *anchor != heading.anchor {
+                    errors.push(format!(
+                        "{}: \"{}\" records anchor \"#{anchor}\", but the heading at {}:{} slugs \
+                         to \"#{}\" — the anchor and the line range name different items",
+                        found.core_file,
+                        found.entry_label,
+                        found.source_file,
+                        found.start,
+                        heading.anchor
+                    ));
+                }
+            }
+        }
+
+        match german_rows.get(&found.entry_label) {
+            None => errors.push(format!(
+                "de/{ANCHOR_SIDECAR}: \"{}\" has no German heading anchor. Both locales are in \
+                 scope of every slice, so a swept entry carries an anchor in each.",
+                found.entry_label
+            )),
+            Some((file, anchor)) => {
+                let localized = headings_for(&mut cache, GERMAN, file);
+                match localized
+                    .iter()
+                    .find(|heading| heading.line as i64 == found.start)
+                {
+                    None => errors.push(format!(
+                        "de/{ANCHOR_SIDECAR}: \"{}\" records anchor \"#{anchor}\", but {file}:{} \
+                         — the line its English counterpart is defined on — is not a heading, so \
+                         the line-parity invariant does not hold here",
+                        found.entry_label, found.start
+                    )),
+                    Some(heading) => {
+                        if *anchor != heading.anchor {
+                            errors.push(format!(
+                                "de/{ANCHOR_SIDECAR}: \"{}\" records anchor \"#{anchor}\", but \
+                                 the heading at {file}:{} slugs to \"#{}\"",
+                                found.entry_label, found.start, heading.anchor
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    assert!(
+        checked >= MIN_RECORDED_ANCHORS,
+        "only {checked} entry/entries came from {FULLY_ANCHORED_CATALOGUES:?} — this guard is \
+         checking almost nothing"
+    );
+
+    assert!(
+        errors.is_empty(),
+        "{} anchor/heading disagreement(s):\n{}",
+        errors.len(),
+        errors.join("\n")
+    );
+}
+
+/// The heading that ends `opening`'s section: the next one that is neither a
+/// blockquoted sidebar nor a deeper sub-heading. `None` when the section runs to
+/// the end of the file.
+fn section_boundary_after<'a>(
+    file_headings: &'a [Heading],
+    opening: &Heading,
+) -> Option<&'a Heading> {
+    file_headings.iter().find(|heading| {
+        heading.line > opening.line && !heading.blockquoted && heading.level <= opening.level
+    })
+}
+
+/// Items whose own section is cut into same-level `####` pieces, so the "next
+/// heading at the same level" is still part of the item rather than the start of
+/// the next one. Each row records why, because an unexplained exemption is
+/// indistinguishable from a silenced bug.
+///
+/// [`every_subdivided_item_really_is_subdivided`] stops a row outliving its
+/// reason.
+const SUBDIVIDED_ITEMS: &[(&str, &str)] = &[(
+    "ability.hex",
+    "ArMDE:7504-7542 is the whole Hex entry, and the book lays its two tables out as \
+     sibling `####` headings rather than sidebars: `#### Hex Delay Modifiers` (:7511), which \
+     :7509 sends the reader to (\"apply the delay modifier\"), and `#### Hex Effects` (:7533), \
+     which :7525 sends the reader to (\"compare this to the Ease Factor on the Hex Effects \
+     chart\"). The next *Ability* is `#### Hunt` at :7543, exactly one line past the range's \
+     end, so the citation stops where it should.",
+)];
+
+/// **Guard B — a citation stops before the next heading.**
+///
+/// Guard A pins the *start* of a range to the item's own `####`. Nothing pinned
+/// the *end*, and that is a distinct defect: B19's F-540 had `flaw.wrathful_*`
+/// citing ArMDE:7106-7119, a correct start and an extent that swallowed the
+/// `# Chapter 5: Abilities` heading at :7114 plus three paragraphs belonging to
+/// another chapter. Every existing guard stayed green, because the range does
+/// land on non-blank lines and does contain its own heading.
+///
+/// A range may legitimately stop a line or two early — on its last body line
+/// rather than the line before the next heading — which B09, B10 and B11 all
+/// confirmed. So this forbids *overrunning* the next heading, and requires
+/// nothing about landing exactly on its doorstep.
+///
+/// Scoped to citations that open on a heading: a range that brackets table rows
+/// (aging, spell levels) has no "own section" for this question to be about.
+///
+/// Two kinds of heading are deliberately **not** section boundaries, both
+/// established by running this guard over the catalogue and reading every
+/// passage it flagged:
+///
+/// - a **blockquoted** heading (`> #### Environmental Temperatures`,
+///   ArMDE:7041) is a printed sidebar belonging to the section it sits in —
+///   Warped Senses' own text says "see sidebar" — so a range that reaches it is
+///   right to. Nineteen of the twenty-two first-run flags were this;
+/// - a **deeper** heading is a sub-section of the item, not the next item:
+///   `mythic_type.faerie_doctor` opens on `### Faerie Doctors` (ArMDE:2668) and
+///   its `#### Faerie Doctors as Mythic Companions` at ArMDE:2676 is part of it.
+///
+/// So the boundary is the next non-blockquoted heading at the same level or
+/// shallower.
+#[test]
+fn no_source_range_runs_past_the_heading_that_follows_it() {
+    let mut cache = BTreeMap::new();
+    let mut checked = 0usize;
+    let mut errors = Vec::new();
+
+    for found in all_source_refs() {
+        let file_headings = headings_for(&mut cache, CANONICAL_LANGUAGE, &found.source_file);
+        let Some(opening) = file_headings
+            .iter()
+            .find(|heading| heading.line as i64 == found.start)
+        else {
+            continue;
+        };
+        if SUBDIVIDED_ITEMS
+            .iter()
+            .any(|(id, _)| *id == found.entry_label)
+        {
+            continue;
+        }
+        let Some(next) = section_boundary_after(&file_headings, opening) else {
+            continue;
+        };
+        checked += 1;
+        if found.end >= next.line as i64 {
+            errors.push(format!(
+                "{}: \"{}\" cites {}:{}-{}, but the next heading (\"#{}\") starts at :{}. The \
+                 range runs past the end of the item's own section and into text that belongs to \
+                 something else.",
+                found.core_file,
+                found.entry_label,
+                found.source_file,
+                found.start,
+                found.end,
+                next.anchor,
+                next.line
+            ));
+        }
+    }
+
+    assert!(
+        checked >= MIN_RECORDED_ANCHORS,
+        "only {checked} citation(s) open on a heading — this guard is checking almost nothing"
+    );
+
+    assert!(
+        errors.is_empty(),
+        "{} citation(s) overrun their own section:\n{}",
+        errors.len(),
+        errors.join("\n")
+    );
+}
+
+/// [`SUBDIVIDED_ITEMS`] silences Guard B for a handful of citations, so every
+/// row must still *need* silencing. If a row's range stops before its section
+/// boundary after all — the citation was tightened, the source re-paginated, or
+/// the id renamed — the row has become a stale excuse, and the guard should say
+/// so rather than quietly cover one entry less.
+#[test]
+fn every_subdivided_item_really_is_subdivided() {
+    let all_refs = all_source_refs();
+    let mut cache = BTreeMap::new();
+
+    for (id, _reason) in SUBDIVIDED_ITEMS {
+        let found = all_refs
+            .iter()
+            .find(|found| found.entry_label == *id)
+            .unwrap_or_else(|| {
+                panic!(
+                    "SUBDIVIDED_ITEMS row \"{id}\" names an entry that no longer carries a source \
+                     citation — delete the row"
+                )
+            });
+        let file_headings = headings_for(&mut cache, CANONICAL_LANGUAGE, &found.source_file);
+        let opening = file_headings
+            .iter()
+            .find(|heading| heading.line as i64 == found.start)
+            .unwrap_or_else(|| {
+                panic!("SUBDIVIDED_ITEMS row \"{id}\" no longer opens on a heading")
+            });
+        let boundary = section_boundary_after(&file_headings, opening).unwrap_or_else(|| {
+            panic!("SUBDIVIDED_ITEMS row \"{id}\" has no following section boundary — delete it")
+        });
+        assert!(
+            found.end >= boundary.line as i64,
+            "SUBDIVIDED_ITEMS row \"{id}\" now stops at :{} without reaching \"#{}\" at :{} — it \
+             no longer needs the exemption, so delete the row and let Guard B cover it",
+            found.end,
+            boundary.anchor,
+            boundary.line
+        );
+    }
+}
+
+// --- The regenerator -------------------------------------------------------
+
+/// **The tool that satisfies the two guards above — not a test, and never run
+/// by the gate.**
+///
+/// `docs/rules-source-resync.md` describes the job this exists for: a newer
+/// rulebook edition shifts every line number at once, and the fix is to relocate
+/// each item by its heading and take the heading's new line. Doing that by hand
+/// across a 655-entry catalogue in two languages is not realistic, and it was not
+/// realistic to *create* the anchors by hand either — which is why the sweep sat
+/// at 94 of 655 for so long.
+///
+/// So this derives the anchor of every Virtue/Flaw from the `####` heading its
+/// `source.lines[0]` lands on, in English and (via the line-parity invariant) in
+/// German, and rewrites both stores. It is `#[ignore]`d because it **writes into
+/// the repository**: `cargo test --workspace` must never mutate the tree, and
+/// running it is a deliberate act (`cargo test -p arm-rules --test
+/// rules_source_provenance -- --ignored regenerate_source_anchors`) whose output
+/// is then reviewed as a diff like any other change.
+///
+/// It deliberately rewrites `rules/core/virtues_flaws.json` **line by line**
+/// rather than reserializing it. Round-tripping the whole document through
+/// `serde_json` would reflow every entry and bury the anchors in thousands of
+/// lines of formatting churn, against `CLAUDE.md` → "Canonical serialization"'s
+/// whole purpose of zero-noise diffs. The `source` block is always one line, so
+/// replacing that one line is both sufficient and minimal.
+///
+/// Correctness is not this function's claim to make:
+/// [`every_anchored_catalogue_entry_records_the_heading_that_opens_its_range`]
+/// is, and it re-derives the same fact independently from the sources.
+#[test]
+#[ignore = "writes into rules/; run deliberately after a rulebook re-sync"]
+fn regenerate_source_anchors() {
+    let catalogue = rules_dir().join("core/virtues_flaws.json");
+    let text = fs::read_to_string(&catalogue).expect("virtues_flaws.json is readable");
+
+    // The German book each English one is mirrored by, learned from the rows
+    // the sidecar already carries rather than hardcoded here.
+    let existing = localized_anchors();
+    let german_rows = existing.get("de").cloned().unwrap_or_default();
+    let mut german_book: BTreeMap<String, String> = BTreeMap::new();
+    let english_files: BTreeMap<String, String> = all_source_refs()
+        .into_iter()
+        .map(|found| (found.entry_label, found.source_file))
+        .collect();
+    for (id, (file, _)) in &german_rows {
+        if let Some(english) = english_files.get(id) {
+            german_book.insert(english.clone(), file.clone());
+        }
+    }
+
+    let mut cache = BTreeMap::new();
+    let mut german_sidecar: BTreeMap<String, (String, String)> = BTreeMap::new();
+    let mut rewritten = Vec::new();
+
+    // A handful of entries carry the block across several lines because it grew
+    // long; joining them first lets the rewrite below treat every block alike,
+    // and emits them all in the file's dominant one-line form.
+    let mut source_lines = text.lines().peekable();
+    while let Some(first) = source_lines.next() {
+        let Some((prefix, rest)) = first.split_once("\"source\": {") else {
+            rewritten.push(first.to_string());
+            continue;
+        };
+        let mut block_text = rest.to_string();
+        while !block_text.contains('}') {
+            block_text.push(' ');
+            block_text.push_str(source_lines.next().expect("the block closes").trim());
+        }
+        let (body, suffix) = block_text.rsplit_once('}').expect("the block closes");
+        let block: Value =
+            serde_json::from_str(&format!("{{{body}}}")).expect("source block parses");
+        let file = block["file"].as_str().expect("source.file is a string");
+        let start = block["lines"][0]
+            .as_u64()
+            .expect("source.lines[0] is a number") as usize;
+        let end = block["lines"][1]
+            .as_u64()
+            .expect("source.lines[1] is a number") as usize;
+
+        let anchor = anchor_opening(&mut cache, CANONICAL_LANGUAGE, file, start)
+            .unwrap_or_else(|| panic!("{file}:{start} opens a `####` heading"));
+        rewritten.push(format!(
+            "{prefix}\"source\": {{ \"anchor\": {}, \"file\": {}, \"lines\": [{start}, {end}] }}{suffix}",
+            serde_json::to_string(&anchor).expect("a string serializes"),
+            serde_json::to_string(file).expect("a string serializes"),
+        ));
+
+        let german_file = german_book
+            .get(file)
+            .unwrap_or_else(|| panic!("no German counterpart recorded for {file}"));
+        let german_anchor = anchor_opening(&mut cache, "de", german_file, start)
+            .unwrap_or_else(|| panic!("de/{german_file}:{start} opens a `####` heading"));
+        german_sidecar.insert(
+            format!("{file}\u{0}{start}\u{0}{end}"),
+            (german_file.clone(), german_anchor),
+        );
+    }
+
+    fs::write(&catalogue, format!("{}\n", rewritten.join("\n")))
+        .expect("virtues_flaws.json is writable");
+
+    // Re-read the now-anchored catalogue so the sidecar is keyed by id, which
+    // only the parsed document knows.
+    let reparsed: Value = serde_json::from_str(
+        &fs::read_to_string(&catalogue).expect("virtues_flaws.json is readable"),
+    )
+    .expect("virtues_flaws.json is valid JSON");
+    let mut rows: BTreeMap<String, (String, String)> = BTreeMap::new();
+    for entry in reparsed.as_array().expect("the catalogue is an array") {
+        let id = entry["id"]
+            .as_str()
+            .expect("an entry has an id")
+            .to_string();
+        let file = entry["source"]["file"].as_str().expect("a source file");
+        let start = entry["source"]["lines"][0].as_u64().expect("a start line") as usize;
+        let end = entry["source"]["lines"][1].as_u64().expect("an end line") as usize;
+        let key = format!("{file}\u{0}{start}\u{0}{end}");
+        let (german_file, german_anchor) = german_sidecar
+            .get(&key)
+            .unwrap_or_else(|| panic!("\"{id}\" has a German anchor"));
+        rows.insert(id, (german_file.clone(), german_anchor.clone()));
+    }
+
+    let body: Vec<String> = rows
+        .iter()
+        .map(|(id, (file, anchor))| {
+            format!(
+                "  {}: {{ \"anchor\": {}, \"file\": {} }}",
+                serde_json::to_string(id).expect("a string serializes"),
+                serde_json::to_string(anchor).expect("a string serializes"),
+                serde_json::to_string(file).expect("a string serializes"),
+            )
+        })
+        .collect();
+    fs::write(
+        rules_dir().join("i18n/de").join(ANCHOR_SIDECAR),
+        format!("{{\n{}\n}}\n", body.join(",\n")),
+    )
+    .expect("the German sidecar is writable");
+}
+
+/// The anchor of the `####` heading that opens at `line` in
+/// `rules/source/<lang>/<file>`, or `None` if that line is not a level-4
+/// heading.
+fn anchor_opening(
+    cache: &mut BTreeMap<(String, String), Vec<Heading>>,
+    lang: &str,
+    file: &str,
+    line: usize,
+) -> Option<String> {
+    headings_for(cache, lang, file)
+        .into_iter()
+        .find(|heading| heading.line == line && heading.level == 4)
+        .map(|heading| heading.anchor)
 }
 
 // --- The mechanic-vs-passage guard -----------------------------------------
