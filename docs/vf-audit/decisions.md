@@ -127,6 +127,203 @@ this one). **Check the source project before concluding the table is wrong.**
 
 ---
 
+## D10 — once means once: invert the multiplicity default
+
+**Ruling (Norbert, 2026-09-21): "if only once, it should be only once."** The
+default must be **once**, and a repeat must be declared.
+
+**The defect.** ArMDE:2814 is explicit in both directions:
+
+> "A Virtue or Flaw may be taken more than once **only if the description
+> explicitly allows it**. **Most Virtues and Flaws may only be taken once.**"
+
+`PointItem::max_total` defaults to **`u8::MAX`** (`types.rs:2209-2212`,
+`default_max_total`), and `ParameterDef::max_per_value` likewise. **The book's
+default is once; the model's default is unlimited.** They are exactly inverted,
+and the model's side is the one with no rulebook behind it.
+
+**Why this is a ruling and not a bug report.** D9 originally handled this as
+author discipline — "every added parameter carries `max_total: 1` unless the
+passage permits repeats". That is the wrong shape, because it makes correctness
+depend on remembering, on every entry, forever. It is also *demonstrably*
+insufficient: forgetting it once is exactly how `flaw.servant_of_the_land`
+(F-522) came to stack a **Major** Flaw without limit, and how
+`flaw.vulnerable_magic` (F-541) came to license 255 identical copies. A default
+that has to be overridden to be safe will be wrong again.
+
+**What this obliges.**
+
+1. **Invert `default_max_total` to 1**, and `default_max_per_value` with it.
+   Absent means once. This is test-first and the reds are the point: every entry
+   that legitimately repeats will fail until it declares so.
+2. **Declare the repeats explicitly.** **42 entries** currently rely on the
+   unlimited default (`jq`: `parameters != null and max_total == null`). Each
+   must be read against its passage and either given an explicit
+   `max_total`/`max_per_value` or left to the new default. The classic repeaters
+   — `virtue.puissant_ability`, `virtue.affinity_ability`,
+   `virtue.great_characteristic`, `virtue.minor_magical_focus`,
+   `virtue.major_magical_focus`, `virtue.deft_form` — will need one; entries like
+   `virtue.mythic_blood` and `flaw.servant_of_the_land` will not.
+3. **`is_default_max_total`'s serialization skip flips meaning**, so the
+   canonical-JSON output changes for every entry that gains an explicit value.
+   Expect a large, mechanical diff and check it is exactly the intended set.
+4. **This subsumes D9's part 2** and reaches further: D9's version covered only
+   entries *gaining* a parameter, while this covers all 42 already on the
+   default.
+
+**Existing saves: validation reports it, and `Enforced` blocks the character.**
+(Norbert, 2026-09-21.) A save written today may legitimately hold several copies
+of an entry the new default caps at 1 — the player did nothing wrong, the model
+permitted it. **No migration mutates that save.** It loads, validation reports
+the excess, and the three existing modes do the rest: `Enforced` blocks,
+`Advisory` warns, `Silent` suppresses. The player removes the extra copy
+himself.
+
+Rejected alternatives, and why: **migrating the save** — dropping the extras
+automatically — is silent data corruption, which `CLAUDE.md` rates in the top
+severity class, and it discards a choice the player made legitimately.
+**Grandfathering** would make the same entry legal or illegal depending on when
+the file was written, which is a rule no rulebook states and nothing could
+explain to the user.
+
+**This is why D10 needs no schema change.** The save *format* is untouched —
+only what validation says about it — and the machinery already exists and is
+already grant-aware: `validation/selections.rs:274-303` enforces `max_total` via
+`CODE_TOO_MANY_SELECTIONS`, and `validate_duplicate_selections` (`:237-262`)
+enforces `max_per_target` via `CODE_DUPLICATE_SELECTION`. **The whole of D10 is
+a change to two default functions plus the explicit declarations on the entries
+that legitimately repeat.** Only D9 part 3's multi-valued parameter type needs a
+`SCHEMA_VERSION` bump; the two are independent and should not be bundled.
+
+---
+
+## D9 — every stated choice is recorded, and the parameter model gains a multi-valued type
+
+**Question** (Q-86, Q-88, Q-31, Q-36, Q-95, Q-122, Q-128). The book repeatedly
+tells the player to pick something — Deleterious Circumstances' circumstance
+(ArMDE:5919, "a state, a target, or a place"), Curse of Slander's section of
+society (:5883), Demonic Familiar's kind of demon (:5930), Ability Block's class
+of Abilities (:5653). Most of those choices are recorded nowhere. Should every
+such entry carry a parameter?
+
+**Ruling (Norbert, 2026-09-21): yes — record every stated choice, *and* extend
+the model with a multi-valued parameter type.**
+
+**Starting state, verified by `jq`.** 51 of 655 entries carry parameters, across
+ten domains (`text` 19, `form` 9, `ability` 7, `realm` 5, `enumerated` 4,
+`art`/`category`/`characteristic`/`item` 2 each, `technique` 1). **Every
+parameter in the catalogue is single-valued `"type": "ref"`.**
+
+**What this obliges, in three parts.**
+
+**1. Data — every entry whose passage tells the player to choose gets a
+parameter.** Use `enumerated` where the book lists the options ("a warder,
+teacher, or paramour"); use `text` only where the choice is genuinely open.
+`corrections.md` § 3.7 lists the 26 findings already on this; it is unblocked by
+this ruling but is **not** the full set — the ruling is catalogue-wide and the
+slice must re-derive which entries state a choice.
+
+**2. Multiplicity — superseded by D10, read that instead.** This ruling
+originally required every added parameter to carry `max_total: 1` "unless the
+passage explicitly permits repeats". Norbert rejected that shape on the spot —
+*"if only once, it should be only once"* — and **D10 inverts the model default**
+so absent means once and a repeat must be declared. That is strictly better and
+strictly wider: author discipline was what failed in F-522 and F-541, and D10
+also reaches the 42 entries already riding the unlimited default, which this
+clause did not. **Do not add `max_total: 1` entry-by-entry under D9; land D10
+first and let the default do it.**
+
+**3. Engine + schema — a multi-valued parameter type.** This is the part that is
+not a data change. The three Corrupted entries let the player pick an open-ended
+*set*: ArMDE:5851 "you can choose to have it affect **multiple Abilities**",
+:5857 "it can affect **multiple Arts**", :5863 "as many of the character's
+**spells** as you wish". A single-valued `ref` misstates that rule in the
+opposite direction to recording nothing. The ruling adds the type. It pulls in:
+
+- `types.rs::ParameterDef` — a second `type` beyond `"ref"`, with an exhaustive
+  `match` so every consumer is a compile error until handled.
+- **`SCHEMA_VERSION` bump and a migration**, since a saved selection's parameter
+  value changes shape.
+- **UI** — a multi-select picker beside the existing single pickers.
+- **`max_per_target` grouping semantics.** If a parameter holds a set, "the same
+  tuple" needs a canonical form, or `{A, B}` and `{B, A}` read as two different
+  selections and the once-only rule fails again. `CLAUDE.md`'s canonical
+  serialization convention ("sort arrays by `id`/`ref` before writing JSON")
+  already supplies the answer — apply it here explicitly rather than by
+  coincidence.
+
+**Why this over the cheaper options.** The choice not being in the save is
+**data loss**, which `CLAUDE.md` rates in the top severity class alongside wrong
+rules output; and a description-only fix (D5's shape) leaves two copies of a
+Flaw indistinguishable and the Markdown export unable to print the choice at
+all. YAGNI argues against a new type for three entries, and that argument was
+heard and overruled: the alternative is shipping a model that cannot state what
+the rulebook says.
+
+**Sequencing.** Part 1 and part 2 are data and can proceed together. Part 3 is a
+separate, test-first engine slice and should land **before** the three Corrupted
+entries are touched, so those are worked once rather than twice.
+
+---
+
+## D8 — a roll-free supernatural capability is a rule, not colour
+
+**Question** (Q-76, and with it Q-64, Q-17, Q-61, Q-126). A Supernatural Virtue
+states a capability with no digit, no roll, no Ability grant and no reference to
+a rules subsystem — `virtue.voice_of_the_land` (ArMDE:5221): *"The character can
+speak with any creature whose natural habitat is a particular environment
+associated with this Virtue (including animals and magic beings), and the
+character is not normally perceived as either a threat or a prey object by these
+creatures."* Is that `narrative` or `uncomputed_rule`? Nothing in
+`rules/source/` decides it; it is a taxonomy question.
+
+**Ruling (Norbert, 2026-09-21): `uncomputed_rule`. A capability is a rule.**
+
+**Scale.** Of the **115** `supernatural`-category entries, **48** are
+`narrative` (`creation_effect` 33, `in_play_effect` 9, `uncomputed_rule` 25) —
+verified by `jq`. All 48 are in scope; this is one ruling, not 48 judgements,
+because moving one entry would make the catalogue *less* consistent.
+
+**Why.** Three independent supports, and they agree:
+
+1. The book states something that **changes what the character can do** at the
+   table — a thing the rules elsewhere require magic for. That is mechanical in
+   the sense `narrative` denies.
+2. **D3 already forbids** using the engine's incapability as grounds for
+   `narrative`, and a roll-free capability is the purest case of a rule the
+   engine cannot express.
+3. **ArMDE:2960-2962 attaches a realm association and same-realm-aura Warping
+   immunity to every Supernatural Virtue.** Read literally, no Supernatural
+   Virtue states nothing mechanical — so the `narrative` claim is false for this
+   cohort on grounds that do not depend on the capability argument at all.
+
+**What this obliges.**
+
+1. **Reclassify the 48** `supernatural` + `narrative` entries to
+   `uncomputed_rule`. Enumerate them from the data, not from this list.
+2. **A separate `description` is owed only where the `summary` does not already
+   carry the rule.** `RULES.md:4728-4731` settles this: `flaw.missing_ear` gained
+   no `description` because its passage is a single sentence its `summary`
+   already carries in full, and a `description` would be a byte-identical
+   duplicate. Most of these 48 are one-sentence capabilities. **So this is
+   largely a relabelling, not 96 new pieces of text** — check each, do not
+   assume either way.
+3. **It lands on top of the screen problem, not beside it.** Every reclassified
+   entry must satisfy `every_uncomputed_rule_entry_states_its_rule_in_every_locale`,
+   and these entries carry **no signed number and no botch term** — so they
+   depend entirely on `MECHANICAL_PHRASES`, which today has **no capability idiom
+   in either language**. Per `corrections.md` § 2.1 the screen must grow first,
+   and per § 2.1a the `flaw.wrathful_*` range must be fixed before the swept
+   block widens. **This ruling adds a third requirement to that sequence: the
+   screen needs a capability family before any of the 48 can land.**
+
+**What it does not settle.** Whether `narrative` should exist at all for
+Supernatural entries — 48 of 115 moving out leaves the class thinly populated
+there, and the remaining ones deserve a look during Phase 2 rather than a
+presumption of correctness.
+
+---
+
 ## D7 — which German name wins when the DE rulebook heading and the glossary disagree
 
 **Question.** B16 escalated two entries (Q-129) rather than judging them, because
@@ -269,14 +466,68 @@ satisfy. The neighbouring case is documented as deliberate
 incompatibility and trait checks, citing review finding B1); these two carry no
 note.
 
-**Ruling: needs a rules read first.** Not to be settled by analogy to B1.
+**First ruling: needs a rules read first.** Not to be settled by analogy to B1.
+**That read is now done — see below.**
 
-**What this obliges.** The batch that reaches `virtue.great_characteristic`
-must read its passage verbatim, plus whatever the book says about
-House-granted and type-granted Virtues, and report what the rules actually
-require of a granted Virtue's preconditions. The decision is then made on that
-evidence and appended here. Until it is, no batch marks either validator's
-behaviour a defect, and no batch marks it correct.
+### The rules read, 2026-09-21
+
+**ArMDE:3989, `virtue.great_characteristic`, verbatim:**
+
+> "You may **raise** any Characteristic that **already has a score of at least
+> +3** by one point, to no more than +5. … You may take this Virtue twice for the
+> same Characteristic, and for more than one Characteristic."
+
+**"Already has" describes the Characteristic's state, not the act of purchase.**
+The precondition is a statement about what the Virtue can legally operate on — a
+Virtue cannot raise a +1 Characteristic however it was acquired, because there is
+nothing at +3 to raise.
+
+**The "take" versus "have" split that prompted the question is a red herring.**
+ArMDE:3665 (`Demonic Might`) says "You may only **take** this Virtue if your
+character has the Demonic Blood Virtue"; ArMDE:3669 (`Demonic Powers`), the very
+next entry, states the *same* restriction as "Only a character with the Demonic
+Blood Virtue may **have** Demonic Powers". Two adjacent entries, one
+restriction, two verbs. The book is varying its prose, not drawing a technical
+distinction, so no argument may rest on that pair.
+
+### Reachability — the gap is latent, not live
+
+Checked across all of `rules/core`. Exactly **three** entries carry the governed
+effects: `virtue.great_characteristic`, `virtue.puissant_ability` and
+`flaw.poor_characteristic` (`ability_bonus` / `characteristic_score_delta_param`).
+**Nothing grants any of them** — not the seven House grants in `houses.json`,
+not the seven fixed grants in `mythic_companion_types.json`, and not the seven
+`grants_selection` targets in the catalogue. `mythic_type.nephilim` looked live
+and is not: it lists both Great Characteristics under **`required_virtues`**,
+which the player *buys*, so they reach the validators normally.
+
+**This is why it still matters.** `CLAUDE.md` makes the V/F catalogue a
+data-only extension point — "Abilities and V/F are added by editing
+`rules/core/*.json` … with zero code changes". A future House or type that
+grants Puissant Ability is a JSON edit, and **nothing would fail**.
+
+### Ruling, as taken on that evidence
+
+**Make both validators grant-aware now.** (Norbert, 2026-09-21.)
+`validate_ability_bonus_targets` and `validate_characteristic_delta_preconditions`
+must read **effective** selections — bought *and* granted — rather than bought
+only.
+
+**What this obliges, and the trap to avoid.** The change must **not** re-import
+what review finding B1 deliberately excluded. `validation/prereq.rs::PrereqCtx::build`
+records that grants "must never reach" the incompatibility and trait checks, and
+that exemption is correct: those ask *may this character hold this Virtue at
+all*, and a House grant is precisely what makes him eligible. **These two
+validators ask a different question** — *is the thing this Virtue modifies in a
+legal state* — and a grant says nothing about that. Great Characteristic's "+3
+already" is not an entitlement gate; it is a description of its operand.
+Implement the distinction explicitly, and say so in a comment at both sites,
+because the next reader will otherwise see two validators disagreeing with B1
+and "fix" one of them.
+
+Both validators currently carry **no** note either way, which is what left this
+open for the whole audit. Whichever way a future slice moves them, the reasoning
+goes in the code.
 
 ---
 
