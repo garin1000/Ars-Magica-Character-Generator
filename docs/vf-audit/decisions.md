@@ -127,6 +127,148 @@ this one). **Check the source project before concluding the table is wrong.**
 
 ---
 
+## D12 — Hermetic V/F are intrinsic or trained, and trained requires a magus
+
+**Question** (Q-90, "one ruling with 122 consequences").
+`flaw.deficient_technique` carries `prerequisites: has virtue.hermetic_magus`;
+its twin `flaw.deficient_form`, four lines away in the book, carries none.
+Either the prerequisite is a stray to delete, or it is right and 121 other
+Hermetic entries lack it.
+
+**Ruling (Norbert, 2026-09-21): neither. Differentiate *intrinsic* from
+*trained*. Techniques and Forms are available only to the hermetically trained
+Gifted, so the Deficient Art Flaws are trained, the prerequisite is CORRECT, and
+`flaw.deficient_form` is the entry that is missing it.**
+
+**This reverses the reading I was about to record, and the error is worth
+keeping.** ArMDE:2870 says a Gifted non-magus may take Hermetic V/F "which
+relate to **intrinsic ability** rather than background or training", and I
+classified a deficiency in a Technique or Form as intrinsic — it sounds like an
+innate magical trait. It is not. **A Technique or Form only exists because of
+Hermetic training**; a Gifted character who never had an apprenticeship has no
+Arts at all, so there is nothing to be deficient *in*. I reasoned from the shape
+of the words instead of from what the game object is — the same failure mode this
+audit has caught repeatedly in its own agents.
+
+**Confirmed structurally, not just textually:** only the **magus** profile has an
+`arts` creation phase. `companion`, `grog` and `mythic_companion` do not
+(`character_types.json`), so a Gifted companion cannot hold an Art in this app
+under any circumstances.
+
+### The criterion — mechanical, not a judgement call
+
+> **Does this entry operate on a game object a character can only have after
+> Hermetic training?**
+
+- **Intrinsic** — it operates on **The Gift itself**. These are exactly the three
+  entries that already gate on `virtue.the_gift`: `flaw.blatant_gift`,
+  `virtue.gentle_gift`, `flaw.suppressed_gift`. **The catalogue already had the
+  right instinct here and never generalised it.** A Gifted non-magus may take
+  these.
+- **Trained** — it operates on Techniques, Forms, spells, Casting Totals, Lab
+  Totals, Parma Magica, Arcane Connections, certámen or Twilight. **Magus only.**
+
+### What this obliges
+
+1. **Classify all 122 `hermetic`-category entries** as intrinsic or trained.
+   Scale, measured: **41** have effects touching arts/casting/lab/spell/
+   resistance/warping and are mechanically obvious; **56** carry no effects at
+   all and need their passage; the remaining ~25 need checking. **The audit has
+   just read all 122**, so derive this from the batch files rather than
+   re-reading the book.
+2. **Every trained entry gets the magus gate.** `flaw.deficient_form` is the
+   immediate, already-identified case — its twin has it and it does not.
+3. **Use `Prereq::IsMagus`, not `Has(virtue.hermetic_magus)`.** Both spellings
+   ship today — `flaw.primogeniture_lineage` uses `{"kind":"is_magus"}`,
+   `flaw.deficient_technique` uses the `Has` form — and they are equivalent only
+   because the magus profile lists `virtue.hermetic_magus` in `required_traits`.
+   `IsMagus` reads the profile's own flag (`types.rs:2685`) and is the direct
+   expression; normalise the one `Has` spelling to it.
+4. **No new field and no new category.** The existing `Prereq` machinery carries
+   it, so this is data plus one normalisation — no engine change.
+
+**What this does not settle.** Whether any *intrinsic* Hermetic entries exist
+beyond the three Gift ones. The classification pass will answer that; if the
+answer is "no others", then trained-versus-intrinsic collapses into "everything
+Hermetic except the three Gift entries requires a magus", which would be simpler
+still and should be stated that way if it holds.
+
+---
+
+## D11 — the Reputation model is right; the data is wrong, and `score` gets enforced
+
+**Question** (Q-43, Q-73, Q-80, Q-127, and Phase 0's "is a granted Reputation's
+`score` a ceiling, a fixed value or a suggestion?"). `corrections.md` § 3.11 was
+blocked on all five.
+
+**Ruling (Norbert, 2026-09-21): the model does not grow. The fix is data-only —
+*plus* `score` semantics become deliberate and enforced instead of accidental.**
+
+### Why the model does not grow — ArMDE:1093 reverses the premise
+
+> "Reputations have **a score, a content, and a type**. … They don't determine
+> how people react to characters they have heard of, **as that depends on what
+> they think of what they've heard**."
+
+The book gives a Reputation **three** components, and `types.rs::Reputation`
+carries exactly those three. So:
+
+- **Q-43 (polarity) is answered no.** "A bad Reputation at level 3" describes the
+  **content** — *Unclean*, *Usurer* — not a fourth field. The book explicitly
+  refuses to make good-versus-bad a mechanical property. Adding a polarity field
+  would invent a mechanic the rulebook does not have, which is the error
+  `7f5605a` was reverted for.
+- **Q-80 (wildcards) is already solved.** `GrantsReputation.kind: Option<..>`
+  with `None` means player-chosen, and `virtue.famous` (ArMDE:3861) uses it.
+- **Q-73 (organization scope) is answered no.** ArMDE:1093 names Local,
+  Ecclesiastical and Hermetic as the types, with Academic alongside, and the
+  ease-factor table has exactly those columns. "Among Templars", "among members
+  of his bloodline", "among the Jewish community" are **content**, not types —
+  a new enum member would be an audience the engine has no distance rules for.
+
+### `score` — enforced, exact by default, bounded where the book states a range
+
+**ArMDE:2514 settles only entitlement** — "Characters only start with a
+Reputation if they choose a Virtue or Flaw that grants one" — and says nothing
+about the number. **The semantics are therefore per-entry, from each granting
+passage**, and the passages were surveyed rather than assumed:
+
+**31 entries grant a Reputation. Exactly one states a range**:
+`flaw.outsider_major` / `_minor`, ArMDE:6554 — "a bad Reputation of **level 1 to
+3** (depending upon how easy it is to identify you)". Every other passage gives
+an exact level ("a level 4 bad Reputation", "a Reputation level of 3", "an
+Academic Reputation of 1").
+
+**What this obliges.**
+
+1. **`validate_reputations` gains a score check.** Today it validates kind and
+   count only (B18's F-525 confirmed this against `selections.rs:585-617`), so
+   the grant's `score` is enforced nowhere — which is *why* Outsider's invented
+   3 and 1 shipped without anything objecting (F-486).
+2. **Exact is the default.** The entity's Reputation score must equal the
+   grant's.
+3. **An optional upper bound carries the one exception.** Add
+   `max_score: Option<u8>` to `Effect::GrantsReputation`, `skip_serializing_if`
+   so 30 of the 31 entries' JSON is unchanged. Absent = exact; present = the
+   entity's score must lie in `[score, max_score]`. Outsider becomes
+   `score: 1, max_score: 3` on **both** magnitudes — :6556's Minor version says
+   "You **still** have the bad Reputation", i.e. the same range.
+4. **The § 3.11 findings then become plain data fixes**: add the
+   `grants_reputation` a passage states and the entry lacks (F-408
+   `flaw.excommunicate`), correct invented levels (F-486), and stop hardcoding an
+   audience the passage leaves open (F-450 `flaw.infamous` pins `kind: "local"`
+   where ArMDE:6312 names none, while its twin `virtue.famous` correctly ships
+   the wildcard).
+
+**Consequence to expect, consistent with D10.** Enforcing a field that was never
+checked **will reject characters that load cleanly today** — a save whose
+Infamous Reputation was typed as 5 becomes invalid. Same treatment as D10:
+validation reports it, `Enforced` blocks, no migration mutates the save, and the
+player corrects it. No `SCHEMA_VERSION` bump is needed for the entity side; the
+optional `max_score` is additive on the ruleset side only.
+
+---
+
 ## D10 — once means once: invert the multiplicity default
 
 **Ruling (Norbert, 2026-09-21): "if only once, it should be only once."** The
