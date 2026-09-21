@@ -127,6 +127,56 @@ this one). **Check the source project before concluding the table is wrong.**
 
 ---
 
+## D7 — which German name wins when the DE rulebook heading and the glossary disagree
+
+**Question.** B16 escalated two entries (Q-129) rather than judging them, because
+D6 rule 2 ("the glossary wins on terminology") appeared to make their shipped
+names wrong. `flaw.palsied_hands` ships *Zitternde Hände* (DE 6578's heading)
+against `tugenden-fehler.md`'s *Zittrige Hände*;
+`flaw.primogeniture_lineage` ships *Erstgeburts-Abstammung* (DE 6634) against
+`grundbegriffe.md`'s *Primogenitur-Abstammungslinie*;
+`flaw.raised_from_the_dead` ships *Vom Tode auferstanden* (DE 6646) against
+*Von den Toten Auferweckt*. `arm-de-translation` was checked and carries the
+identical table values, so none of the three is a stale copy — the disagreement
+is real.
+
+**Ruling: the DE rulebook heading wins, and all three shipped names are
+correct.** D6 rule 2 stands, but it was stated too broadly; this narrows it.
+
+**Why, and this is the part that generalises.** Two of the three table rows are
+**tagged to a different book** — `Palsied Hands` carries `HdH:WL` (*Häuser des
+Hermes: Wahre Linien*) and `Raised from the Dead` carries `SdM:G` (*Sphären der
+Macht*). Each is therefore evidence about how **that** book renders the term,
+not about how the core book does. A row sourced from one book cannot override a
+heading in another; the two renderings are both correct, for different books.
+The third, `Primogeniture Lineage`, carries no book tag at all, and the core
+book renders it at DE 6634 — so the heading is the better-sourced value there
+too.
+
+**The general rule, which supersedes D6 rule 2 wherever they touch:**
+
+1. **The DE rulebook heading is the default winner for an entry's name**, because
+   the user has that book open beside the app and the repo's line-parity
+   invariant is the navigation contract between them. An app name that does not
+   match the heading at the matching line is a name the user cannot look up.
+2. **The glossary wins only where the heading is *defective*** — where it
+   collides with another entry's heading (B13's F-444: the DE book heads both
+   `flaw.fettered_magic` and `virtue.tethered_magic` `#### Gefesselte Magie`, and
+   a collision is a defect on its face), or where the rulebook never renders the
+   term at all.
+3. **A glossary row tagged to a book other than the one the entry cites is not
+   in the dispute.** It is that book's terminology and must not override the
+   citing book's heading.
+
+**What this obliges.** Nothing in `rules/i18n/de/` changes for these three.
+Q-129's two entries move from *escalated* to **checked and clean** on the name
+question. The three table rows are annotated in both projects so the next
+German-writing agent sees which rendering belongs to which book rather than
+reading a bare disagreement — per D6, in `arm-char-gen` and `arm-de-translation`
+in the same step.
+
+---
+
 ## D5 — the description obligation follows the rule, not the classification
 
 **Question.** Today only `uncomputed_rule` must carry a `description`, enforced

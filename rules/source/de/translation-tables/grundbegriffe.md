@@ -324,7 +324,7 @@
 | Vulcanalia | Vulcanalia | Römisches Fest am 23. August; Eigenname |
 | Hobbled | Verkrüppelt | Kleiner Allgemeiner Fehler; beide Beine schwer geschädigt |
 | Confraternity Member | Bruderschaftsmitglied | Kleiner Geschichte-Fehler |
-| Primogeniture Lineage | Primogenitur-Abstammungslinie | Kleiner Hermetischer Fehler |
+| Primogeniture Lineage | Primogenitur-Abstammungslinie | Kleiner Hermetischer Fehler. **Im Grundregelwerk heißt der Fehler „Erstgeburts-Abstammung" (ArMDE:6634)**, und diese Form wird ausgeliefert. |
 | Covet Device | Gegenstandsgier | Persönlichkeitszug; zwanghafte Bindung an abgestimmten Gegenstand |
 | Craft Automata | Automatenkunst | Große Hermetische Tugend / Fertigkeit |
 

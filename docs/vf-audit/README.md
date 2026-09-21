@@ -113,8 +113,8 @@ known and are a lead, not a conclusion: `flaw.corrupted_arts`,
 | Batch | Checked | Failures | Findings | Open questions | Status |
 |---|---|---|---|---|---|
 | Phase 0 (`engine-semantics.md`) | — | 11 systemic, in 7 areas (Part C) | — | 4 | **done** |
-| B01–B15 | 525 / 655 | — | F-001 … F-480 | Q-01 … Q-123 | **done** |
-| B16–B19 | 130 remaining, ArMDE:6538-7119 | — | — | — | pending |
+| B01–B16 | 560 / 655 | — | F-001 … F-501 | Q-01 … Q-129 | **done** |
+| B17–B19 | 95 remaining, ArMDE:6663-7119 | — | — | — | pending |
 
 Phase 0 notes, which every batch agent must know before starting:
 

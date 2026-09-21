@@ -705,7 +705,7 @@
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Feral Upbringing | Wilde Erziehung | In der Wildnis aufgewachsen; nur Wildnisfertigkeiten als Ausgangsfertigkeiten |
-| Palsied Hands | Zittrige Hände | HoH:TL; Hände zittern, erschwert feinmotorische Tätigkeiten |
+| Palsied Hands | Zittrige Hände | HoH:TL; Hände zittern, erschwert feinmotorische Tätigkeiten. **Im Grundregelwerk heißt der Fehler „Zitternde Hände" (ArMDE:6578)** — beide Formen sind richtig, je nach Buch. |
 
 #### Geschichte-Fehler, Klein / Story, Minor
 
@@ -760,7 +760,7 @@
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Eremite | Eremit | SdM:G; gehört keiner heiligen Tradition an |
-| Raised from the Dead | Von den Toten Auferweckt | SdM:G; durch ein Wunder vom Tod zurückgebracht |
+| Raised from the Dead | Von den Toten Auferweckt | SdM:G; durch ein Wunder vom Tod zurückgebracht. **Im Grundregelwerk heißt der Fehler „Vom Tode auferstanden" (ArMDE:6646)** — beide Formen sind richtig, je nach Buch. |
 
 #### Allgemeine Fehler, Klein / General, Minor (SdM:G)
 
