@@ -820,6 +820,75 @@ presumption of correctness.
 
 ---
 
+## D23 — exclusions may be predicates, not only lists of ids
+
+**Question (Q-137, Q-138).** The book excludes Flaws by **description** where
+`incompatible_with` can only hold **ids**.
+
+- **Q-137** — ArMDE:6925, `flaw.university_dean`: "*can not have the Poor Flaw or
+  **any other Flaw that grants a Bad Reputation***". That set is **16 Flaw ids**
+  today and is **derivable** from the data — a Flaw either carries
+  `grants_reputation` or it does not.
+- **Q-138** — ArMDE:6148: "*Any Flaw that is **only appropriate to Hermetic
+  Magic** (for example, Deficient Technique or Unstructured Caster) cannot be
+  taken with this Flaw.*" This is **not** derivable: `categories: ["hermetic"]`
+  also contains Flaws that are not *only* Hermetic.
+
+**Ruling (Norbert, 2026-09-22): add predicate-valued exclusions.** One mechanism
+for both, rather than ids-plus-a-regenerating-test for one and prose for the
+other.
+
+**Why not the id list.** It would work for Q-137 — a test could assert the list
+still equals the derived set and fail when a seventeenth Flaw gains a Reputation
+— but it freezes a *number* of entries into data, which sits badly with
+`CLAUDE.md`'s "catalogue size is data, never code", and it does nothing at all
+for Q-138.
+
+**This is NOT what D21 added.** D21 gave the engine the ability to range over a
+**category**; these are **predicates** — "grants a Reputation", "is only
+appropriate to Hermetic Magic". Related machinery, different quantifier, and both
+are needed. Design them together for the same reason D21 refuses to be split.
+
+### Q-138's predicate already has a home — it is D12's `trained` flag
+
+**This is the part worth not rediscovering.** D12 ruled that Hermetic V/F divide
+into **intrinsic** (operating on The Gift itself) and **trained** (operating on
+Techniques, Forms, spells, Casting or Lab Totals, Parma Magica, certámen or
+Twilight — things that exist only after apprenticeship), and obliged a
+classification pass over all 122 `hermetic` entries.
+
+**"Only appropriate to Hermetic Magic" is that same predicate.** ArMDE:6148's two
+worked examples are `flaw.deficient_technique` and `flaw.unstructured_caster` —
+both `categories: ["hermetic"]`, and both squarely **trained** under D12's
+criterion. So D12's classification pass **produces the data Q-138 needs as a
+by-product**; no second judgement pass over 122 entries is required, and no new
+flag needs inventing.
+
+Q-138 therefore becomes: run D12's pass, then point the predicate at its result.
+
+### What this obliges
+
+1. **A predicate-valued exclusion shape**, designed alongside D21's category
+   variant.
+2. **Q-137's predicate is "carries a `grants_reputation` effect"** — derivable
+   with no new data. Verify the count at implementation time rather than trusting
+   16; B18 re-derived it from `jq` as **16 ids across 17 effect rows**, because
+   `flaw.failed_monk` carries two.
+3. **Q-138's predicate is D12's `trained`**, and so is **blocked on D12's
+   classification pass**, not on this ruling.
+4. **Reachability, again.** B15's F-466 correction applies here as it does to
+   D21: `validate_incompatibilities` reads **bought** selections on both sides,
+   so an exclusion that must also catch a *granted* Virtue needs `Prereq::Nor`.
+   A predicate inherits the trap.
+5. **`virtue.doctor_in_faculty` as a prerequisite is not blocked on any of
+   this** — it is a plain `Prereq::Has` and can land with F-526's other clauses.
+
+**Q-138 also unblocks an entry in another batch's span.** It sits on a **B13**
+entry and is carried by no finding in B13, B17 or the index — recorded here so
+that entry is not left silently unrated.
+
+---
+
 ## D22 — cross-book rules bind in principle; the implementation is core-book-only
 
 **Question (Q-135), two parts.** Is `flaw.seeker` magus-only? And — the policy
