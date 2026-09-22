@@ -1512,3 +1512,55 @@ category needs a narrower audience, the narrowing belongs on the **entry** as a
 rewrites what the whole category means for that character type. See **D12** for
 the criterion and **D21** for the machinery that lets a rule range over a
 category at all.
+
+---
+
+## D25 — where the book disagrees with itself, the descriptor wins and the error is recorded
+
+**Question (Q-141).** `flaw.weak_personality` ships `categories:
+["personality"]`. Its descriptor agrees — ArMDE:7077 reads *Minor,
+**Personality***, DE:7077 likewise, and the text is pure Personality (*"all
+Personality Traits must be between +1 and −1"*). But the book's own catalogue
+index puts it somewhere else: **ArMDE:5518 lists it under `### Story, Minor`**,
+and it is **absent** from the Personality, Minor list, which runs …Temperate,
+Weak-Willed. So on the narrow question the data is right and **the book is
+internally inconsistent**. The cost is user-facing, and CLAUDE.md rates that up:
+a reader working from the book's Story list filters the app by Story and the
+entry is not there.
+
+**Ruling.** `["personality"]` **stands unchanged**, and the disagreement is
+**recorded as a known source erratum** rather than left implicit.
+
+**Why the descriptor wins.** The entry's content is not story-driven in any
+respect — it constrains Personality Traits, personality rolls and social
+modifiers, and nothing about it generates a story hook. D6 and D7 already place
+a rulebook's *substantive* statement above a listing that merely points at it;
+this is the same precedence one level down, inside a single book. Adding `story`
+alongside would assert a category the descriptor denies, and it is not free:
+`story` carries a hard cap of 1 for the companion profile, so the entry would
+silently consume a Story slot.
+
+**What this obliges.**
+
+1. **A short `known source errata` note in `crates/arm-rules/RULES.md`**, naming
+   the entry, both citations (ArMDE:7077 descriptor, ArMDE:5518 index) and the
+   side taken. RULES.md is the right home because it is already the place that
+   explains why a data value is what it is; this is that, for a value whose
+   justification is a disagreement. **No new file and no new register** — the
+   audit does not need an errata *system*, it needs this fact to survive.
+2. **Establish whether it is the only one.** B19 found it in 25 entries and
+   called it the only descriptor/index disagreement *in that span*; nothing has
+   checked the other 630. The index lists are heading-delimited (`### <Category>,
+   <Magnitude>`) and mechanically readable, so a one-off sweep can compare every
+   entry's `categories`/`magnitude` against the list that names it. Run it once
+   as part of the erratum note and state the result — if there are more, they all
+   belong in the same note.
+3. **Do not derive anything from the index lists.** They are link lines, and the
+   audit already proved link hygiene unreliable: the anchor sweep found **134**
+   link targets resolving to no heading. The sweep above is a *comparison* whose
+   output a human reads, never a guard and never a source of data.
+
+**Precedent this sets.** A defect that turns out to be the book's, not ours, is
+still *written down* — at the implementation site, with both citations and the
+side taken. An undocumented correct-looking value is indistinguishable from an
+unexamined one, and the next audit pays to re-derive it.
