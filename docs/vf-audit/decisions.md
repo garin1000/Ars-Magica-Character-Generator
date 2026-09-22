@@ -1793,10 +1793,18 @@ number can therefore extend the cap. Both describe how the 21/10 is reached.
 
 Malachi (RoP:I:4942) carries False Power (Major 3), Tragic Life (Major 3), Lesser
 Malediction (Minor 1), Delusion (Minor 1), Proud (Minor 1), Tainted with Evil
-(Minor 1) — **exactly 10 Flaw points**, not 17. (His Virtue list totals 22, i.e.
-21 after the free Minor against a budget of 20: the example is **one** point over
-its own budget. That is a slip in the book and it fits no reading; it is not
-evidence for a grant of 3.)
+(Minor 1) — **exactly 10 Flaw points**, not 17.
+
+**His Virtue side proves nothing in either direction, and must not be cited.**
+ArMDE:1163 fixes the order of a template's V/F line — Gift, Social Class, Major
+Virtues, Minor Virtues, Major Flaws, Minor Flaws — and Malachi's semicolon groups
+follow it, which places **Greater Immunity inside the Minor-Virtue group** while
+ArMDE:4010 calls it *Major, Supernatural*. Read by the grouping he is one point
+**under** budget; read by our magnitudes, one point **over**. The example is
+internally inconsistent there, so neither number is evidence. An earlier draft of
+this decision cited the "one point over" reading; that was an artefact of ignoring
+ArMDE:1163 and is withdrawn. **The Flaw count above is independent of all this and
+is what this decision rests on.**
 
 ### Rejected readings — each of these has been tried and is wrong
 
