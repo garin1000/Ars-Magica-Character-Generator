@@ -2334,7 +2334,7 @@ fn dynamic_virtue_cap_codes() -> Vec<String> {
 fn devil_child_resolves_infernal_might_and_power_budget_end_to_end() {
     // Building a Devil Child mythic companion against the shipped rules must yield
     // a nonzero effective Infernal Might and power-levels budget: the type requires
-    // Demonic Blood (Infernal Might 5 + 30 power levels, RoP:Infernal:4120-4122) and
+    // Demonic Blood (Infernal Might 5 + 30 power levels, RoP:I:4120-4122) and
     // grants a choice of Demonic Might (+2) or Demonic Powers (+20 levels).
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
     let mut entity = Entity::new(

@@ -593,8 +593,8 @@ export interface EffectiveScores {
   // grants (a bought item granting a further free item), and warping grants —
   // NOT House grants alone.
   granted_selections: Selection[];
-  // Effective virtue/flaw point ceilings (base budget + Mythic Companion type
-  // bonus), so the balance bar shows the true budget (Devil Child 37/17).
+  // The character type's virtue/flaw point ceilings, so the balance bar shows the
+  // budget without recomputing it here.
   virtue_budget: number;
   flaw_budget: number;
   // The virtue/flaw points actually spent — the engine's own compute_balance
@@ -1391,15 +1391,15 @@ export interface RequiredFlaw {
 
 // A Mythic Companion type (Devil Child, Faerie Doctor, Nephilim, Spirit Votary).
 // `grants` are point-free (free status + free Minor Virtue); `required_virtues`
-// and each `required_flaws[].default` count against the budget. Mirrors the
-// engine's `MythicCompanionType`; name/description live in the rules i18n map.
+// and each `required_flaws[].default` count against the budget. A type never
+// changes the size of that budget — every Mythic Companion gets the same 10 Flaw
+// / 20 Virtue points. Mirrors the engine's `MythicCompanionType`;
+// name/description live in the rules i18n map.
 export interface MythicCompanionType {
   id: string;
   grants?: Grant[];
   required_virtues?: Selection[];
   required_flaws?: RequiredFlaw[];
-  bonus_flaw_points?: number;
-  bonus_free_virtue_points?: number;
 }
 
 // The life-stage experience rules: the blocks a character's Abilities are bought

@@ -80,7 +80,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 - Source: `ArMDE:2774`, `ArMDE:2297`
   (companions), `ArMDE:2303` (magi).
 - Implementation: `crates/arm-rules/src/validation/balance.rs` — `validate_balance`
-  (:23), `compute_balance` (:169). Emits `unbalanced_virtues` (error) when spent virtue points
+  (:23), `compute_balance` (:141). Emits `unbalanced_virtues` (error) when spent virtue points
   exceed flaw points granted, plus the `over_budget_*` totals. (Per-type point
   totals are data; see below.)
 
@@ -3809,11 +3809,11 @@ Virtue is player-chosen (`open`), not a fixed item, so there is no invented
 A Mythic Companion picks a **type** (Devil Child, Faerie Doctor, Nephilim, Spirit
 Votary) that grants a free "status" Virtue **plus** a free Minor Virtue (both
 point-free grants, via the shared `grant.rs` model), imposes a required V/F
-package that counts against the budget normally, and may raise the budget
-ceilings with per-type bonus points. Data: `rules/core/mythic_companion_types.json`
+package that counts against the budget normally. It never changes the *size* of
+the budget. Data: `rules/core/mythic_companion_types.json`
 + `rules/i18n/<lang>/mythic_companion_types.json`; engine `mythic_companion.rs`
-(`MythicCompanionType`, `RequiredFlaw`); validation `validate_mythic_type` +
-the effective-budget fold in `validate_balance`. The general rules are Core
+(`MythicCompanionType`, `RequiredFlaw`); validation `validate_mythic_type`, with
+the budget itself left to `validate_balance`. The general rules are Core
 Rules.md `ArMDE:2635-2639`; the V/F guidelines `ArMDE:2842-2851`.
 
 #### General mechanism & per-type budgets
@@ -3829,11 +3829,11 @@ The four status Virtues carry a symmetric `incompatible_with` web (each other +
 index heading these four are listed under (`ArMDE:3329-3334`), and one the
 `mythic_companion` profile alone permits, which is how "not available to grogs"
 (`ArMDE:2637`) is enforced; the free Minor and required Virtues keep their own book
-categories. Per-type bonus points fold into the balance ceilings via
-`EffectiveBudget` (`validation/balance.rs`, :90): `flaw_ceiling = base + bonus_flaw`,
-`virtue_ceiling = base + bonus_flaw·rate + bonus_free_virtue`,
-`funded = flaw·rate + bonus_free_virtue` (rate = 2). Zero for a non-mythic type,
-so the check reduces exactly to the base budget.
+categories. The balance ceilings come from the type profile alone —
+`EffectiveBudget` (`validation/balance.rs`, :86): `flaw_ceiling = flaw_points`,
+`virtue_ceiling = virtue_points`, `funded = flaw·rate` (rate = 2), i.e. 10 F / 20 V
+for every Mythic Companion. A type carries no bonus points of any kind, so the
+check is the same one every other character type gets.
 
 | Type | free status | free Minor | required Virtues (budgeted) | required Flaw (default) | bonus | Source |
 |------|-------------|-----------|------------------------------|--------------------------|-------|--------|
@@ -3914,9 +3914,11 @@ Immunity target) are M5/5b.
 > `crates/arm-rules/tests/data_integrity.rs`. Note that **Curse-Throwing appears
 > twice** in the core rules: the Virtue at `ArMDE:3625` (*Major, Supernatural*) and the
 > Supernatural **Ability** at `ArMDE:7396`; `virtue.curse_throwing` cites the former,
-> `ability.curse_throwing` the latter. The one remaining *Realms of Power* citation
-> in this section is Spirit Votary's **+7 Flaw points** budget bonus, which the core
-> mythic section genuinely does not state (see above).
+> `ability.curse_throwing` the latter. The *Realms of Power* citations that remain
+> in this section carry no mechanic the core rules lack: `RoP:I:4908-4924` states
+> the Devil Child's "21 points of Virtues for 10 points of Flaws" maximum that
+> `ArMDE:2638` already gives generally, and `RoP:M:5486` restates the 7 that falls
+> out of it. Neither is a budget bonus (see above, and D32).
 
 | Item | Kind | Source |
 |------|------|--------|
@@ -8126,9 +8128,11 @@ above (mirroring the Core Rules layout) when mechanics from a book are implement
 
 **Cited only for what the core rules do not state:**
 
-- Ars Magica 5e - Realms of Power - Magic.md (RoP:M) — Spirit Votary's **+7 Flaw points**
-  budget bonus (`RoP:M:5486`) and the general Might-vs-Parma Magic Resistance rule
-  (`RoP:M:1472`). Nothing else.
+- Ars Magica 5e - Realms of Power - Magic.md (RoP:M) — the general Might-vs-Parma
+  Magic Resistance rule (`RoP:M:1472`). Nothing else. It also restates Spirit
+  Votary's **7** at `RoP:M:5486`, but that number is the unspent remainder of the
+  core Flaw allowance rather than anything the core rules omit (D32), so no
+  mechanic rests on it.
 
 The four Mythic Companion types of M4/4d used to be listed here as the reason all
 four *Realms of Power* volumes were cited. That was wrong provenance, not a real

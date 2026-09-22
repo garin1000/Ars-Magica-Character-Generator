@@ -6,7 +6,7 @@
 //! is a data-driven profile carrying a list of point-free [`Grant`]s (its free
 //! "status" Virtue + free Minor Virtue) resolved through the shared
 //! [`crate::grant`] model, **plus** a required V/F package that counts against
-//! the point budget normally, **plus** per-type budget bonuses.
+//! the point budget normally.
 //!
 //! Free grants are budget-exempt (resolved, never stored) but **not**
 //! cap-exempt: they fold into the list [`crate::validation::validate`] checks,
@@ -14,8 +14,9 @@
 //! package is ordinary bought [`Selection`]s the UI auto-seeds; the required
 //! Flaws are swappable for a "suitable substitute agreed with the troupe", so
 //! a missing/removed required slot is a non-blocking warning, never a hard
-//! block. Per-type bonus points raise the balance ceilings (see
-//! [`crate::validation`]).
+//! block. A type never changes the *size* of the budget: every Mythic Companion
+//! gets the same 10 Flaw / 20 budgeted Virtue points, and only how they are
+//! spent differs (`docs/vf-audit/decisions.md` D32).
 //!
 //! Source: ArMDE:2635-2639 (general
 //! rules), :2643-2765 (the four types), :2842-2851 (V/F guidelines).
@@ -25,12 +26,6 @@ use serde::{Deserialize, Serialize};
 use crate::grant::{Grant, GrantConstraint, resolve_grants};
 use crate::ruleset::Ruleset;
 use crate::types::{Entity, Id, Selection, SourceRef};
-
-/// `true` when a `u8` budget bonus is its default of 0 (omitted from canonical
-/// JSON).
-fn is_zero_u8(n: &u8) -> bool {
-    *n == 0
-}
 
 /// A required Flaw a Mythic Companion type imposes, with the rules-specified
 /// `default` and the `constraint` a "suitable substitute agreed with the troupe"
@@ -66,16 +61,6 @@ pub struct MythicCompanionType {
     /// Required Flaws (budgeted), each with a default + a substitute constraint.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub required_flaws: Vec<RequiredFlaw>,
-    /// Extra Flaw points this type may take beyond the base ceiling (Devil Child
-    /// and Spirit Votary get +7). Each still funds virtue points at the type's
-    /// rate. Source: ArMDE:2664;
-    /// RoP:M:5486.
-    #[serde(default, skip_serializing_if = "is_zero_u8")]
-    pub bonus_flaw_points: u8,
-    /// Extra virtue points at no flaw cost (Devil Child gets +3, to balance the
-    /// compulsory Major Flaw). Source: ArMDE:2664.
-    #[serde(default, skip_serializing_if = "is_zero_u8")]
-    pub bonus_free_virtue_points: u8,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -150,8 +135,7 @@ mod tests {
               { "ref": "virtue.demonic_might" }, { "ref": "virtue.demonic_powers" } ] } ],
           "required_virtues": [ { "ref": "virtue.demonic_blood" } ],
           "required_flaws": [ { "default": { "ref": "flaw.tragic_life" },
-            "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["supernatural"] } } ],
-          "bonus_flaw_points": 7, "bonus_free_virtue_points": 3 }
+            "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["supernatural"] } } ] }
     ] }"#;
 
     fn ruleset() -> Ruleset {
@@ -186,19 +170,16 @@ mod tests {
     }
 
     #[test]
-    fn type_roundtrips_with_bonuses_and_package() {
+    fn type_roundtrips_with_package() {
         let mtype: MythicCompanionType = serde_json::from_str(
             r#"{ "id": "mythic_type.devil_child",
                  "grants": [ { "kind": "fixed", "item": "virtue.devil_child" } ],
                  "required_virtues": [ { "ref": "virtue.demonic_blood" } ],
                  "required_flaws": [ { "default": { "ref": "flaw.tragic_life" },
-                   "constraint": { "kind": "flaw", "magnitude": "major" } } ],
-                 "bonus_flaw_points": 7, "bonus_free_virtue_points": 3 }"#,
+                   "constraint": { "kind": "flaw", "magnitude": "major" } } ] }"#,
         )
         .unwrap();
         assert_eq!(mtype.id, Id::new("mythic_type.devil_child"));
-        assert_eq!(mtype.bonus_flaw_points, 7);
-        assert_eq!(mtype.bonus_free_virtue_points, 3);
         assert_eq!(mtype.required_virtues.len(), 1);
         assert_eq!(
             mtype.required_flaws[0].default.item_ref,
@@ -211,15 +192,25 @@ mod tests {
         );
     }
 
+    /// A type declares no budget bonus, because no type has one (D32). An older
+    /// `rules/` directory beside the binary may still carry the withdrawn
+    /// `bonus_flaw_points` / `bonus_free_virtue_points` keys; they are read as
+    /// unknown fields — ignored on load, and gone again on write — so the
+    /// inflated ceiling cannot come back through data.
     #[test]
-    fn bonuses_default_to_zero_and_are_omitted() {
-        let mtype: MythicCompanionType =
-            serde_json::from_str(r#"{ "id": "mythic_type.faerie_doctor" }"#).unwrap();
-        assert_eq!(mtype.bonus_flaw_points, 0);
-        assert_eq!(mtype.bonus_free_virtue_points, 0);
+    fn withdrawn_bonus_keys_are_ignored_and_not_written_back() {
+        let mtype: MythicCompanionType = serde_json::from_str(
+            r#"{ "id": "mythic_type.devil_child",
+                 "bonus_flaw_points": 7, "bonus_free_virtue_points": 3 }"#,
+        )
+        .unwrap();
+        assert_eq!(
+            mtype,
+            serde_json::from_str(r#"{ "id": "mythic_type.devil_child" }"#).unwrap()
+        );
         let json = serde_json::to_string(&mtype).unwrap();
-        assert!(!json.contains("bonus_flaw_points"));
-        assert!(!json.contains("bonus_free_virtue_points"));
+        assert!(!json.contains("bonus_flaw_points"), "{json}");
+        assert!(!json.contains("bonus_free_virtue_points"), "{json}");
     }
 
     #[test]

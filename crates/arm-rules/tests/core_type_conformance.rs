@@ -10,7 +10,7 @@
 use arm_rules::characteristics::Characteristic;
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;
-use arm_rules::validation::validate;
+use arm_rules::validation::{PointCeilings, ValidationIssue, effective_point_ceilings, validate};
 use std::collections::BTreeMap;
 
 fn full_ruleset() -> Ruleset {
@@ -278,6 +278,55 @@ fn mythic_companion_full_build_validates() {
     myth.xp_pool = 120;
     myth.ability_scores = vec![ability("ability.awareness", 3)];
     assert_valid("mythic_companion", &myth, &full_ruleset());
+}
+
+/// Every Mythic Companion type — whatever set the ruleset happens to ship — gets
+/// the same allowance: **10 Flaw points and 20 budgeted Virtue points**, plus the
+/// uncharged free Minor Virtue its grants supply. A type's compulsory package
+/// changes how that allowance is *spent*, never how large it is. Settled and
+/// closed in `docs/vf-audit/decisions.md` D32 (`ArMDE:2638`,
+/// `RoP:I:4912`); the shipped data once granted Devil Child and Spirit Votary a
+/// budget bonus, which this test exists to keep out.
+///
+/// Both halves of the budget are pinned, because a ceiling alone does not say a
+/// Virtue is paid for: the second assertion proves there is no unfunded headroom
+/// either, so a Virtue taken with no Flaws is still unbalanced.
+///
+/// Structural, never a total: it iterates the types the ruleset ships rather
+/// than naming them or counting them.
+#[test]
+fn every_shipped_mythic_type_budgets_ten_flaw_and_twenty_virtue_points() {
+    let ruleset = full_ruleset();
+    assert!(
+        ruleset.mythic_types().next().is_some(),
+        "the shipped ruleset declares no Mythic Companion types"
+    );
+
+    for mythic_type in ruleset.mythic_types() {
+        let mut entity = base("mythic_companion");
+        entity.mythic_type = Some(mythic_type.id.clone());
+
+        assert_eq!(
+            effective_point_ceilings(&entity, &ruleset),
+            Some(PointCeilings {
+                virtue_ceiling: 20,
+                flaw_ceiling: 10,
+            }),
+            "{} must budget 10 Flaw / 20 Virtue points (D32)",
+            mythic_type.id
+        );
+
+        // One Minor Virtue, no Flaws: nothing funds it, so it must be reported
+        // unbalanced. A type carrying free virtue points would fund it silently.
+        entity.selections = vec![sel("virtue.arcane_lore")];
+        let result = validate(&entity, &ruleset);
+        let codes: Vec<&str> = result.errors().map(|issue| issue.code.as_str()).collect();
+        assert!(
+            codes.contains(&ValidationIssue::CODE_UNBALANCED_VIRTUES),
+            "{} funds a Virtue with no Flaws, so it carries free virtue points (D32); errors: {codes:?}",
+            mythic_type.id
+        );
+    }
 }
 
 #[test]

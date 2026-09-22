@@ -897,9 +897,9 @@ describe('max_total copy cap on the Available list', () => {
 // End-to-end: Mythic Companion types (mythic-companion-only). Creating a
 // character of that type surfaces a "Type" tab (gated on the profile's
 // `has_mythic_type` flag); picking a type auto-grants its free status + Minor
-// Virtue (read-only), seeds its required V/F package as bought selections, and
-// raises the balance ceilings by the type's bonus points (Devil Child 37/17).
-// A required Flaw is swappable for a substitute.
+// Virtue (read-only) and seeds its required V/F package as bought selections,
+// which spend the profile's own 20 V / 10 F budget — no type raises it. A
+// required Flaw is swappable for a substitute.
 describe('mythic companion types', () => {
   const MYTHIC_TAB = '[data-testid="tab-mythic_type"]';
   const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -923,7 +923,7 @@ describe('mythic companion types', () => {
     await $(MYTHIC_TAB).waitForExist({ timeout: 10000 });
   });
 
-  it('grants the free status + Minor Virtue and raises the budget to the type bonus', async () => {
+  it('grants the free status + Minor Virtue and leaves the budget at the profile 20/10', async () => {
     await startCharacter('mythic_companion');
     await selectMythicType('mythic_type.devil_child');
 
@@ -932,14 +932,16 @@ describe('mythic companion types', () => {
     await $('[data-testid="mythic-granted-virtue.devil_child"]').waitForExist({ timeout: 10000 });
     await expect($('[data-testid="mythic-choice-devil_child_free_minor"]')).toExist();
 
-    // The balance bar lives on the Virtues & Flaws tab: Devil Child raises the
-    // ceilings to 37 V / 17 F (base 20/10 + 7·2 + 3 free / +7 F).
+    // The balance bar lives on the Virtues & Flaws tab. Devil Child is the type
+    // that used to claim a bonus; the bar must read the mythic companion
+    // profile's own 20 V / 10 F, which no type changes (D32). The free status
+    // Virtue and free Minor above are grants, so neither is counted against it.
     await $(VF_TAB).click();
-    await browser.waitUntil(async () => clean(await $(VIRTUE_BUDGET).getText()).includes('/ 37'), {
+    await browser.waitUntil(async () => clean(await $(VIRTUE_BUDGET).getText()).includes('/ 20'), {
       timeout: 5000,
-      timeoutMsg: 'virtue budget not raised to 37',
+      timeoutMsg: 'virtue budget is not the profile ceiling of 20',
     });
-    expect(clean(await $(FLAW_BUDGET).getText())).toContain('/ 17');
+    expect(clean(await $(FLAW_BUDGET).getText())).toContain('/ 10');
   });
 
   it('seeds the required package and offers a required-Flaw substitute', async () => {

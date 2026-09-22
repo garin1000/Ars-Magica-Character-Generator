@@ -23,8 +23,6 @@
           "constraint": { "kind": "flaw", "magnitude": "major" }
         }
       ],
-      "bonus_flaw_points": 7,
-      "bonus_free_virtue_points": 3,
       "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2643, 2666] }
     },
     {
@@ -80,7 +78,6 @@
           "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["personality"] }
         }
       ],
-      "bonus_flaw_points": 7,
       "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2741, 2764] }
     }
   ]

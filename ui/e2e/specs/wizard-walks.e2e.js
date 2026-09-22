@@ -146,15 +146,16 @@ describe('guided wizard: companion', () => {
 // The mythic companion is the only non-magus type with a step that hands the
 // character a package rather than asking for a single value: `mythic_type` sits
 // second in its flow, before Characteristics and before Virtues & Flaws, and
-// picking a type seeds free grants, required Virtues and a required Flaw, and
-// raises the point ceilings. So this walk is the one that proves a step whose
-// choice rewrites two later steps still leaves the flow completable.
+// picking a type seeds free grants, required Virtues and a required Flaw that
+// spend the same 10 Flaw / 20 Virtue budget every Mythic Companion gets. So this
+// walk is the one that proves a step whose choice rewrites two later steps still
+// leaves the flow completable.
 describe('guided wizard: mythic companion', () => {
   // Spirit Votary is the smallest of the four shipped types — two free grants
   // (Spirit Votary, Second Sight), one required Virtue (Spiritual Pact) and one
   // required Flaw (Pagan) — so the walk is about the flow rather than about
-  // untangling a seven-item package. Its +7 Flaw points leave the hand-picked Minor
-  // pair well inside the ceilings.
+  // untangling a seven-item package. Its package plus the hand-picked Minor pair
+  // sit well inside the 10 Flaw / 20 Virtue ceilings (4 F funding 4 V).
   const MYTHIC_TYPE = 'mythic_type.spirit_votary';
 
   const PLAN = {

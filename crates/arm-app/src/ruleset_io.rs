@@ -125,9 +125,9 @@ pub struct EffectiveScores {
     /// so the V/F view renders them read-only without re-deriving. Emitted in the
     /// House's declared grant order for a stable UI + snapshot ordering.
     pub granted_selections: Vec<Selection>,
-    /// Effective virtue/flaw point ceilings (base budget + Mythic Companion type
-    /// bonus) so the balance bar shows the true budget (a Devil Child's 37/17,
-    /// not the base 20/10). Budget numbers stay engine-authoritative.
+    /// The character type's virtue/flaw point ceilings, so the balance bar shows
+    /// the budget without recomputing it in TS. Budget numbers stay
+    /// engine-authoritative.
     pub virtue_budget: u32,
     pub flaw_budget: u32,
     /// The virtue/flaw points actually spent — `validation::compute_balance`'s own

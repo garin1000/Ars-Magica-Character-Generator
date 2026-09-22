@@ -66,8 +66,8 @@ pub fn rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
 /// run into one logical string is what lets a citation's continuation list
 /// (`, :NNN`) be found even when hand-wrapped prose splits it — or splits a
 /// full basename — across two physical comment lines (observed in the wild,
-/// e.g. `mythic_companion.rs::bonus_free_virtue_points`: "...Core Rules).md"
-/// wraps onto the following `///` line). Returns each block paired with the
+/// e.g. `validation/balance.rs::validate_balance`, whose parenthetical quote
+/// wraps before its `, :2297` continuations). Returns each block paired with the
 /// 1-based source line it started on, for error messages; precision beyond
 /// "which block" is not needed since a human re-finds the exact spot by
 /// searching.

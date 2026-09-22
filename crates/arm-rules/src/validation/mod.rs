@@ -8368,9 +8368,9 @@ mod tests {
 
     // --- Mythic Companion types: effective budget + validate_mythic_type -----
 
-    /// A ruleset with a mythic-companion profile (`has_mythic_type`), a plain
-    /// companion profile (base 10/10), and two types: Devil Child (+3 free V,
-    /// +7 F) and Faerie Doctor (no bonus).
+    /// A ruleset with a mythic-companion profile (`has_mythic_type`, 20/10 at
+    /// rate 2), a plain companion profile (10/10 at rate 1), and three types —
+    /// all of which share the profile's budget, since no type changes its size.
     fn mythic_ruleset() -> Ruleset {
         const ITEMS: &str = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
@@ -8406,8 +8406,7 @@ mod tests {
                   { "ref": "virtue.demonic_might" }, { "ref": "virtue.demonic_powers" } ] } ],
               "required_virtues": [ { "ref": "virtue.demonic_blood" } ],
               "required_flaws": [ { "default": { "ref": "flaw.tragic_life" },
-                "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["supernatural"] } } ],
-              "bonus_flaw_points": 7, "bonus_free_virtue_points": 3 },
+                "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["supernatural"] } } ] },
             { "id": "mythic_type.faerie_doctor" },
             { "id": "mythic_type.open_child",
               "grants": [
@@ -8440,38 +8439,26 @@ mod tests {
         e
     }
 
+    /// Every Mythic Companion type shares the profile's budget — no type raises
+    /// it (D32). Devil Child is the one that used to.
     #[test]
-    fn effective_budget_folds_devil_child_bonuses() {
+    fn effective_budget_is_the_profile_budget_for_every_mythic_type() {
         let rs = mythic_ruleset();
         let profile = rs.profile(&Id::new("mythic_companion")).unwrap();
-        let e = mythic_entity("mythic_type.devil_child");
-        let b = effective_budget(&e, &rs, profile);
-        // 20 + 7·2 + 3 = 37; 10 + 7 = 17; funded(17) = 17·2 + 3 = 37; the free
-        // headroom funds 3 virtue points with no flaws.
-        assert_eq!(b.virtue_ceiling, 37);
-        assert_eq!(b.flaw_ceiling, 17);
-        assert_eq!(b.funded(17), 37);
-        assert_eq!(b.funded(0), 3);
-    }
-
-    #[test]
-    fn effective_budget_is_base_when_type_has_no_bonus() {
-        let rs = mythic_ruleset();
-        let profile = rs.profile(&Id::new("mythic_companion")).unwrap();
-        let e = mythic_entity("mythic_type.faerie_doctor");
-        let b = effective_budget(&e, &rs, profile);
-        assert_eq!(b.virtue_ceiling, 20);
-        assert_eq!(b.flaw_ceiling, 10);
-        assert_eq!(b.funded(10), 20); // rate 2, no free headroom
-        assert_eq!(b.funded(0), 0);
+        for type_id in ["mythic_type.devil_child", "mythic_type.faerie_doctor"] {
+            let b = effective_budget(profile);
+            assert_eq!(b.virtue_ceiling, 20, "{type_id}");
+            assert_eq!(b.flaw_ceiling, 10, "{type_id}");
+            assert_eq!(b.funded(10), 20, "{type_id}"); // rate 2, no free headroom
+            assert_eq!(b.funded(0), 0, "{type_id}");
+        }
     }
 
     #[test]
     fn effective_budget_reduces_to_profile_for_non_mythic() {
         let rs = mythic_ruleset();
         let profile = rs.profile(&Id::new("companion")).unwrap();
-        let e = make_entity("companion", vec![]); // no mythic_type
-        let b = effective_budget(&e, &rs, profile);
+        let b = effective_budget(profile);
         assert_eq!(b.virtue_ceiling, 10);
         assert_eq!(b.flaw_ceiling, 10);
         assert_eq!(b.funded(10), 10); // rate 1
@@ -8481,16 +8468,15 @@ mod tests {
     #[test]
     fn effective_point_ceilings_surface_the_display_budget() {
         let rs = mythic_ruleset();
-        // Devil Child: 37 V / 17 F (base 20/10 + 7·2 + 3 free / +7 F).
+        // Every mythic type displays the profile's own 20 V / 10 F.
         let devil = mythic_entity("mythic_type.devil_child");
         assert_eq!(
             effective_point_ceilings(&devil, &rs),
             Some(PointCeilings {
-                virtue_ceiling: 37,
-                flaw_ceiling: 17
+                virtue_ceiling: 20,
+                flaw_ceiling: 10
             })
         );
-        // Faerie Doctor (no bonus) and a plain companion stay at their base.
         let faerie = mythic_entity("mythic_type.faerie_doctor");
         assert_eq!(
             effective_point_ceilings(&faerie, &rs),
@@ -8626,18 +8612,22 @@ mod tests {
     }
 
     #[test]
-    fn mythic_bonus_ignored_for_non_mythic_profile() {
+    fn stray_mythic_type_on_a_non_mythic_profile_does_not_change_its_budget() {
         // A stray mythic_type on a plain companion (hand-edited save) must not
-        // inflate its budget: effective_budget gates the type's bonuses on the
-        // profile's `has_mythic_type`, so the companion budget stays 10/10.
+        // inflate its budget. The budget comes from the profile alone, so the
+        // companion stays at 10/10 whatever type the save names.
         let rs = mythic_ruleset();
         let mut e = make_entity("companion", vec![]);
         e.mythic_type = Some(Id::new("mythic_type.devil_child"));
+        assert_eq!(
+            effective_point_ceilings(&e, &rs),
+            Some(PointCeilings {
+                virtue_ceiling: 10,
+                flaw_ceiling: 10
+            })
+        );
         let profile = rs.profile(&Id::new("companion")).unwrap();
-        let b = effective_budget(&e, &rs, profile);
-        assert_eq!(b.flaw_ceiling, 10);
-        assert_eq!(b.virtue_ceiling, 10);
-        assert_eq!(b.rate, 1);
+        assert_eq!(effective_budget(profile).rate, 1);
     }
 
     // --- Spells -----------------------------------------------------------
