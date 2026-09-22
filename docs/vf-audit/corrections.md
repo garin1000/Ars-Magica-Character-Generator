@@ -757,7 +757,7 @@ rows below are that, not an omission of mine.
 | F-517 | `flaw.slow_power` | 6759-6762 | class+desc | M | live | `narrative` on an extra preparation round; the repeat rule is correctly carried by the default `max_per_target` |
 | F-518 | `flaw.spontaneous_casting_tools` | 6779-6782 | prereq+class | H | live | "can only be taken by Verditius magi" gates nothing, so every magus of the other twelve Houses and every Gifted companion may take it and bank the Flaw point |
 | F-519 | `flaw.stockade_parma_magica` | 6787-6790 | class+prereq | M | live | `narrative` on a Magic Resistance rule; the `IsMagus` presupposition is raised as an observation, not asserted |
-| F-520 | `flaw.stuck_in_your_ways` | 6791-6794 | class+prov | M | **blocked** (Q-131) | `narrative` on a `min()` formula naming "Covenant Lore", which is in no catalogue id; the description cannot be written until Q-131 resolves |
+| F-520 | `flaw.stuck_in_your_ways` | 6791-6794 | class+prov | M | **live** (Q-131 settled) | `narrative` on a `min()` formula naming "Covenant Lore". **Q-131 resolves it to `ability.area_lore` for a covenant and `ability.organization_lore` for the other targets**, so the description can now be written in both locales and the entry reclassified `uncomputed_rule` (D20) |
 | F-521 | `flaw.study_requirement` | 6795-6798 | class+desc | M | live | `narrative` on a study prohibition; the Study Bonus compatibility is correctly *not* encoded |
 | F-522 | `flaw.servant_of_the_land` | 6717-6720 | param | H | live | parameterized with no `max_total`, so the same **Major** Flaw banks without limit. Found by B17's verification pass; **D10's motivating case** |
 
@@ -906,7 +906,7 @@ fail.
 | Finding | Blocked on | Note |
 |---|---|---|
 | F-439 | ~~Q-108~~ → **D17** | **Unblocked and confirmed at `high`.** D17 reads ArMDE:4848 against :4321 and rules the 300 points **replace** the apprenticeship block. A 25-year-old Lone Redcap is over-funded by ~225 XP. The remedy is **D13's third mode** and waits for it. |
-| F-520 | **Q-131** | the identity of "Covenant Lore"; the `description` cannot be written until it resolves. **R** — an agent can settle it. |
+| F-520 | **Q-131** | ~~the identity of "Covenant Lore"~~ — **settled 2026-09-22**: `ability.area_lore` (covenant) / `ability.organization_lore` (other targets), ArMDE:7282 vs :7674. **No longer blocking.** |
 | F-85 | **Q-10** | the German name for `virtue.fabric_ripper`; Q-10 is the Covenfolk two-sources question. |
 | F-270, F-283 | a catalogue decision | the required Virtue does not exist; the fix is either to add the entry (B02's F-34 shape) or to drop the requirement. |
 | F-496 | **settled by D7** | D7 (2026-09-21) rules the DE rulebook heading wins. The name change is **cancelled**; the table-annotation obligation remains. |
@@ -2353,7 +2353,7 @@ blocked behind D14.
 | Q-128 | should `flaw.plagued_by_supernatural_entity` carry an `entity` parameter? | — | **closed — D9: yes** |
 | Q-129 | which German name is canonical for Primogeniture Lineage and Palsied Hands? | — | **closed — D7 (2026-09-21): the DE rulebook heading wins; all three shipped names are correct** |
 | Q-130 | should a Rigid Magic magus be blocked from *selecting* a Ritual spell at creation? | N | **SETTLED — D27.** No. The list models spells **known**; selection stays legal and a Rigid Magic character holding a Ritual raises an **advisory warning**. Text on the entry per D20; the check must see *granted* Flaws too (D2). Original follows. — B17. `SpellDef::ritual: bool` exists, so the engine *could*; but ArMDE:6697 forbids **casting**, not knowing, and a magus may have learned a Ritual before acquiring the Flaw. Turns on whether spell selection models "spells known" or "spells usable" |
-| Q-131 | which catalogue Ability is "Covenant Lore"? | R | open — B17. The phrase occurs **exactly once** in the English core book (ArMDE:6793) and there is no `ability.covenant_lore`; DE's *Konventskunde* is equally absent. Candidates: `ability.area_lore`, `ability.organization_lore`. **F-520 is blocked on it**; an agent can settle it by reading the Abilities chapter |
+| Q-131 | which catalogue Ability is "Covenant Lore"? | R | **SETTLED from the source, 2026-09-22.** It is **`ability.area_lore` parameterised by the covenant**: ArMDE:7282 defines `(Area) Lore` as "Knowledge of one particular region, **covenant**, or even a village", and DE:7282 matches ("einen Konvent"). `(Organization) Lore` (ArMDE:7674) names the Church and a craft guild, never a covenant. The Flaw's closing sentence — "can also be applied to organizations other than covenants, such as abbeys, universities, guilds, or churches" — makes the reference **target-dependent**: `area_lore` for a covenant, `organization_lore` for the rest. That is why no `ability.covenant_lore` exists. **F-520 unblocked.** Original follows. — B17. The phrase occurs **exactly once** in the English core book (ArMDE:6793) and there is no `ability.covenant_lore`; DE's *Konventskunde* is equally absent. Candidates: `ability.area_lore`, `ability.organization_lore`. **F-520 is blocked on it**; an agent can settle it by reading the Abilities chapter |
 | Q-132 | should `Prereq` gain a variant that ranges over a `categories` value? | N | open — B17. `flaw.rector` requires "a Social Status Virtue" — **99** entries carry it, so an enumerated `Prereq::Any` violates CLAUDE.md's catalogue-size invariant, and description-only enforces nothing. **Decide with F-427 / Q-07 / Q-102**, which need the same machinery for ArMDE:2816, and with **F-542 / F-355**, which need its Effect-side twin |
 | Q-133 | does `flaw.short_ranged_magic`'s Lab Total halving belong in `spell_level_cap`? | N | **SETTLED — D28.** Yes: the cap becomes **range-aware** (halved for `eye`/`voice`/`sight`/`arcane_connection`, by name not by ordering). Re-keys `spell_level_cap(s)` and the picker; lowers caps, so saves legal today report and block per D10. The `flaw.savantism` sibling is **settled — D29** (one resolution point folds age band + V/F overrides; a separate validator cannot express the favored Ability's 6 above an age cap of 5). Original follows. — B17. **D1 does not reach it**: the Flaw carries no `lab_total_mod` but a *halving*, `HalvableTotal` has no member for it, and D1's scope paragraph is explicit that it governs `spell_level_cap` "and nothing else". Note D1's *generous* reasoning does **not** carry over — applying it here would **lower** the cap. Sibling: should `flaw.savantism`'s "no Ability above 3" run through `AgeAbilityCaps` / `validate_ability_age_cap`? |
 | Q-134 | the unrecorded-choice family, six named instances | — | **closed — D9** (it is the Q-86/Q-88/Q-95 family and B17 filed it as instances, not a new question). The six: `flaw.restriction`, `flaw.supernatural_nuisance`, `flaw.repellent`, `flaw.rector`, `flaw.savantism` (B17) and `flaw.vulnerable_magic` (B19). **`flaw.repellent` is materially different and must be weighed separately when the parameter shapes are chosen** — its "minor advantage" can be a **+3 Soak**, a number belonging on the sheet, where the other five are narrative labels |
@@ -2423,9 +2423,11 @@ so what follows is what is *left*, not what was there before.
    "corrections" are **reverted**. Q-65 alone is now table-vs-table and falls to
    D7 rule 3. `tmp/table-sync-check.md` carries a withdrawal banner — its
    findings stand, its verdicts do not.
-9. **Q-131** — the identity of "Covenant Lore". **Not Norbert's**: it is an
-   **R**, an agent can settle it from the Abilities chapter, and **F-520 is
-   blocked until someone does.** The cheapest open item in the audit.
+9. ~~**Q-131** — the identity of "Covenant Lore".~~ **Settled 2026-09-22** from
+   ArMDE:7282 (`(Area) Lore` covers "one particular region, **covenant**, or even
+   a village") against :7674. Target-dependent: `area_lore` for a covenant,
+   `organization_lore` for abbeys, universities, guilds and churches.
+   **F-520 unblocked.**
 
 ---
 
