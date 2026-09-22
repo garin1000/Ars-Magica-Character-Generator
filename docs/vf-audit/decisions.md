@@ -1751,3 +1751,42 @@ Tradition (`grundbegriffe.md`). We edited the **newer** source to match the
   `arm-de-translation` alike (D6), including the README correction log.
 - Do **not** re-sync the rulebook to settle this. When a current German rulebook
   does land, D7.1 returns to full force and this decision retires.
+
+---
+
+## D32 — a Mythic Companion has ten points of Flaws. Full stop.
+
+**Question.** `mythic_type.devil_child` and `mythic_type.spirit_votary` both ship
+`bonus_flaw_points: 7`, which `validation/balance.rs` adds to the profile's base
+10, giving a ceiling of **17 Flaw points** (and, at the 2:1 rate, 14 extra Virtue
+points on top of the 20).
+
+**Ruling (Norbert, 2026-09-22): ten, for every type.** ArMDE:2664's *"an
+additional seven points of Flaws"* is **not a bonus being granted**. It explains
+**how the ten are reached**: the compulsory Major Flaw is 3, and 7 more fill the
+allowance ArMDE:2638 already sets at ten.
+
+**`RULES.md:3845` records a decision that was never taken.** It states *"Verified
+maxed budget: flaw 17, virtue 20 + 14 + 3 = 37"* as settled. It was not — it is an
+earlier session's misreading written up as a ruling, and it survived because
+nothing re-derived it. **Treat it as withdrawn.**
+
+**The contradiction that exposed it.** The same passage derives the same number
+two incompatible ways: Devil Child's 7 sits *on top of* the 10 (`RULES.md:3845`),
+while Spirit Votary's is derived as *"`10 − 3 = 7` points of the Flaw allowance
+**unspent**"* (`RULES.md:3850-3857`) — i.e. *inside* the 10. Both then ship the
+same `bonus_flaw_points: 7`, so the second derivation is counted twice by its own
+arithmetic.
+
+**What this obliges.**
+
+- Drop `bonus_flaw_points` from both types (the field itself may then be dead —
+  check before keeping it). Flaw ceiling returns to **10** for every Mythic
+  Companion.
+- Rewrite `RULES.md:3840-3857` — both the table row and the two derivations.
+- **Not decided here:** Devil Child's `bonus_free_virtue_points: 3`
+  (ArMDE:2664, *"three more points of Virtues at no cost"*). That reads as a
+  genuine grant, but it was never checked against the 20/21 ceiling and must be
+  before it is trusted.
+- **Precedent:** a number in `RULES.md` presented as *verified* is not evidence
+  that anyone verified it. Re-derive from the book.
