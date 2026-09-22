@@ -820,6 +820,58 @@ presumption of correctness.
 
 ---
 
+## D21 — the engine learns to talk about categories, not just entries
+
+**Question (Q-132).** Should `Prereq` gain a variant that ranges over a
+`categories` value? `flaw.rector` requires "a Social Status Virtue", and **99**
+catalogue entries carry `social_status` — verified by `jq`.
+
+**Ruling (Norbert, 2026-09-22): yes. Add the category variant, and its
+Effect-side twin.**
+
+**Why not the alternatives.** Enumerating the 99 ids in a `Prereq::Any` breaks
+`CLAUDE.md`'s load-bearing invariant — *"Catalogue size is data, never code …
+V/F are added by editing `rules/core/*.json` with **zero code changes**"* — and
+the list would silently rot every time a Social Status is added. Text alone
+enforces nothing: under **D20** the rule would reach the player, but the app
+would keep building characters the book forbids.
+
+**One mechanism closes six open items**, which is the real argument for it:
+
+| Item | The rule it cannot express today |
+|---|---|
+| **Q-132** | `flaw.rector` — "requires a Social Status Virtue" |
+| **F-427** | ArMDE:2816 — "All characters must take **one** Social Status", enforced nowhere; `social_status` appears in `character_types.json` only under `permitted_categories`, never in a caps array |
+| **Q-07**, **Q-102** | the same ArMDE:2816 machinery |
+| **F-542** | `flaw.weak_personality` (ArMDE:7078) — "may have **no other** Personality Flaws", with four legal-today pairs inside B19's own 25 |
+| **F-355** | `flaw.ability_block` — a **category** block over Abilities (ArMDE:5653, "class of Abilities"), the Effect-side twin |
+
+**Note F-355 and F-542 are the same missing mechanism, not two** — B19's closure
+notes said so, and this ruling is where that observation pays off.
+
+### What this obliges
+
+1. **A `Prereq` variant ranging over a category.** `Prereq` is an exhaustive
+   `match` by design, so adding a variant is a compile error until every consumer
+   handles it — which is the intended safety and should not be worked around.
+2. **An Effect-side twin that can *forbid*** a category, for F-355 and F-542.
+   The engine today has a *grant* for an Ability category and no *forbid*.
+3. **ArMDE:2816 needs a floor, not only a cap.** "Must take one" is not
+   expressible as a `*_category_caps` row, which only bounds from above. Whatever
+   shape this takes must express *at least one*, or F-427 stays open with new
+   machinery sitting next to it.
+4. **Check reachability, not just the passage.** B15's F-466 correction applies:
+   `validate_incompatibilities` reads **bought** selections on both sides, so a
+   prohibition that must also catch a *granted* Virtue needs `Prereq::Nor`, not
+   `incompatible_with`. A category variant inherits that trap.
+
+**Sequencing.** Independent of D19's screen work and of D14, so it can run in
+parallel. It should *not* be split across the Prereq and Effect sides — they are
+one design, and building one first invites a second incompatible spelling, the
+same failure D13 warns about for the three XP modes.
+
+---
+
 ## D20 — RAW fidelity is the test: every rule must reach the player somehow
 
 **Question (Q-136).** Does a **surfaced-only** effect kind satisfy
