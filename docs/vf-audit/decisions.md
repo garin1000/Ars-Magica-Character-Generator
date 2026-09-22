@@ -820,6 +820,65 @@ presumption of correctness.
 
 ---
 
+## D19 — the mechanical screen matches by regex, because German negation is discontinuous
+
+**Question.** `MECHANICAL_PHRASES` in `crates/arm-rules/tests/uncomputed_clauses.rs`
+is a list of **contiguous substrings**, left-word-boundary matched. B17 measured
+that this **structurally cannot express German discontinuous negation**: four of
+the five German prohibitions in its span put one or more words between the halves
+— `kann … nicht anwenden`, `darf … nicht nehmen`. Adding those forms as literals
+would leave `every_uncomputed_rule_entry_states_its_rule_in_every_locale` **red on
+exactly the entries the reclassification is meant to fix**, and the pressure that
+creates is to reword shipped rulebook text to satisfy a detector — which is what
+`ecb5150` was written to stop.
+
+**Ruling (Norbert, 2026-09-22): use regex.**
+
+**Why the obvious objection does not apply.** The screen lives in
+`crates/arm-rules/tests/`, so `regex` enters as a **dev-dependency and ships in
+nothing**. `CLAUDE.md`'s desktop threat model rates `devDependencies` as a
+build-integrity concern, not an end-user exposure, and this one does not reach
+the bundle at all.
+
+**What this gates.** `class` (166 findings) + `desc` (116) = **282 of 544** — over
+half the correction list. `corrections.md` § 2.4 puts this first for that reason,
+and § 3.1 states it must be decided before any data lands.
+
+### What this obliges
+
+1. **Convert before extending, and prove the conversion is inert.** The existing
+   **33** literals in 15 bilingual groups must become patterns that match
+   *exactly what they match today* — same left-word-boundary semantics — with the
+   whole suite green **before** a single new family is added. A conversion that
+   silently widens the screen would change which entries are flagged and
+   invalidate the measurements B11, B12, B17 and B18 took.
+2. **The bounded-gap form is the point.** `kann\b.{0,N}\bnicht` and its relatives.
+   **N must be chosen from the German source, not guessed** — measure the actual
+   distances in the passages B17 identified and pick a bound that covers them
+   without spanning sentence boundaries.
+3. **Every added German pattern is verified against the German rulebook, not
+   against a plausible rendering of the English.** B18's F-537 found the mirror
+   defect: a needle already in the list that matches **nothing the book writes** —
+   so the list is not only incomplete, it is partly *inert*. A pattern that
+   screens zero passages is worse than an absent one, because it looks like
+   coverage.
+4. **Case sensitivity gets decided rather than inherited.** The audit already hit
+   this: `halbier` occurs 36 times case-insensitively and 31 case-sensitively,
+   because 5 occurrences are capitalised. Regex makes `(?i)` free; state the
+   choice explicitly either way.
+5. **D8's capability family still has no word-form list.** Regex does not supply
+   it. The 48 entries D8 reclassifies carry no signed number and no botch term, so
+   they depend entirely on a family that does not yet exist — see
+   `corrections.md` § 2.1b. This ruling makes that family *expressible*; it does
+   not write it.
+
+**What it does not change.** `NO_RULE_DESPITE_TOKEN` keeps its role and its
+discipline — an exemption carries the written reading somebody had to produce.
+Regex widens what the screen can see; it is not a licence to widen what counts as
+a rule.
+
+---
+
 ## D18 — the tables are NEWER than the rulebook copy, so a disagreement is not a table error
 
 **This amends D7, whose central assumption turns out to be false.** Recorded
