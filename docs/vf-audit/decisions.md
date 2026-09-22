@@ -820,6 +820,69 @@ presumption of correctness.
 
 ---
 
+## D22 — cross-book rules bind in principle; the implementation is core-book-only
+
+**Question (Q-135), two parts.** Is `flaw.seeker` magus-only? And — the policy
+call — **does a rule in another book bind an entry whose `source` cites ArMDE?**
+
+B17 escalated this rather than decide it, correctly: the second part has
+consequences far beyond the entry.
+
+### Part 2 — the policy
+
+**Ruling (Norbert, 2026-09-22): cross-book rules DO bind in principle. But the
+current implementation is core-book-only, and that boundary is stated
+explicitly rather than left implicit.**
+
+**What this obliges.**
+
+1. **Every known cross-book rule is filed as a finding**, so the debt is visible
+   instead of silent. Deferred work nobody wrote down is just a gap.
+2. **No supplement sweep is undertaken now.** Honouring the principle properly
+   means reading eight supplements for statements about core entries, which is
+   unbounded — and the half-done version is *worse than either pure position*: a
+   catalogue where some supplement rules are in and most are not, with no way to
+   tell which.
+3. **When it is undertaken, `source` must be able to hold a second citation.**
+   It is a single `SourceRef` today and structurally cannot.
+
+**The cost of deferring is currently one entry.** `flaw.seeker` is the **only**
+cross-book instance the whole audit found. The four other findings of a similar
+shape — F-442, F-452, F-453, F-478, "a rule the book states elsewhere about a
+named entry is structurally invisible" (`corrections.md` § 3.1's second blind
+spot) — are all ArMDE citing *itself*. So nothing is lost by waiting, while the
+sweep that would find more is open-ended.
+
+### Part 1 — `flaw.seeker` gets a magus prerequisite, on core-book evidence
+
+**And the two parts turn out to be independent**, which B17's framing missed.
+The entry does not need HoH:TL at all. ArMDE:6715, verbatim:
+
+> "You are a self-proclaimed member of the Seekers, a loose organization of
+> **competitive magi** searching for ancient magic and arcane artifacts. … Your
+> interests may occasionally clash with other interests of **your House** or
+> covenant."
+
+**Two core-book signals, neither of them a stated restriction, both pointing the
+same way:** the Seekers *are* an organization of magi, and the Flaw assumes the
+character has a **House** — which grogs and companions do not.
+
+**Ruling (Norbert): yes, a magus prerequisite.** Use `Prereq::IsMagus`, per D12's
+normalisation — it reads the profile's own flag (`types.rs:2685`) rather than
+requiring a specific Virtue to be selected.
+
+**What the cross-book sentence was actually doing, recorded so nobody re-reads it
+as the source of the restriction.** HoH:TL:503 says *"A magus from any House may
+be a Seeker"* — that sentence's job is to **remove a House restriction**, not to
+impose a magus one. It presupposes magus-hood only incidentally. So it is
+*consistent* with this ruling and is not its warrant.
+
+`flaw.seeker` moves from **escalated** to **checked**. Its classification stays
+`narrative`: the passage states a drive and no mechanic, and the prerequisite is
+an eligibility fact rather than a rule the entry states.
+
+---
+
 ## D21 — the engine learns to talk about categories, not just entries
 
 **Question (Q-132).** Should `Prereq` gain a variant that ranges over a
