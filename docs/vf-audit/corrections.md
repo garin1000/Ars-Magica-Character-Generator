@@ -2533,12 +2533,15 @@ threw up. Everything else below is untouched.
       field, lands beside D14); route it through **D23**'s predicate (open, but
       needs a data property the catalogue does not carry); or keep 56. Both
       derivations agree 56 is wrong.
-    - **Q-138's reading** — is ArMDE:6148's *"Any Flaw that is only appropriate
-      to Hermetic Magic cannot be taken with this Flaw"* a constraint on the
-      Major Hermetic Flaw that Flawed Powers **imports**, or a plain
-      incompatibility? **D23 assumed the second.** The grammar favours D23; the
-      semantics favour the first. **It changes what D23 builds**, so it wants
-      answering before D23 is designed, not after.
+    - ~~**Q-138's reading**~~ — **SETTLED, D33 (2026-09-22): it constrains the
+      import.** `flaw.flawed_powers` gains a **parameter** naming the imported
+      Major Hermetic Flaw, with a constraint excluding the only-Hermetic ones —
+      D14's shape, and a **D9** instance too, since the entry records no choice
+      today. **D23 assumed an incompatibility and was wrong on this entry**; its
+      mechanism still stands for Q-137. Decisive word: *"(if any)"*, which
+      concedes the character may be a magus and would otherwise bar him from
+      Deficient Technique for no stated reason. **No `incompatible_with`, no
+      `Prereq::Nor` here.**
     - **Q-67's interim** — `virtue.simple_student` grants 30 XP per *finished
       year* with no year count stated: ship no pool and put the rule in
       `description` (the recommendation, and arguably already forced by D3), or

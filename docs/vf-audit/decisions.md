@@ -828,6 +828,44 @@ presumption of correctness.
 
 ---
 
+## D33 — ArMDE:6148 restricts what Flawed Powers *imports*; it is not an incompatibility
+
+**Question (Q-138's residue).** `flaw.flawed_powers` makes the character *"suffer
+the effects of a **Major Hermetic Flaw** … applied to her Supernatural Virtues
+rather than to her Hermetic magic **(if any)**"*, then adds: *"Any Flaw that is
+only appropriate to Hermetic Magic (for example, Deficient Technique or
+Unstructured Caster) cannot be taken with this Flaw."* Does that constrain the
+**imported** Flaw, or forbid **holding** such Flaws at all?
+
+**Ruling: it constrains the import.** The character may still hold Deficient
+Technique or Unstructured Caster in her own right.
+
+**Why.** *"(if any)"* concedes the character may be a Hermetic magus. Under the
+incompatibility reading that magus is barred from Deficient Technique for a
+reason the passage never gives; under this reading the sentence says only what it
+must — a Flaw about Techniques cannot be *applied to Supernatural Virtues*, so it
+is not an eligible import.
+
+**This changes what D23 builds, which is why it was worth asking.** An import
+restriction is a **parameter constraint** (D14's shape: the imported Flaw is a
+parameter value, and the constraint restricts its domain). An incompatibility
+would have been **D23's exclusion predicate**. **D23 assumed the latter and was
+wrong on this entry.** D23's mechanism stands for Q-137; it simply does not carry
+this case.
+
+**What this obliges.**
+
+- `flaw.flawed_powers` gains a **parameter** naming the imported Major Hermetic
+  Flaw — which it does not have today (it ships no `parameters` at all) — with a
+  constraint excluding the only-Hermetic ones. This is a **D9** instance as well
+  as a D14 one: a stated choice nobody records.
+- The predicate itself is still D12's **trained** flag (D23's finding), so D12's
+  classification pass remains the prerequisite. Only the *place* it attaches
+  changes.
+- **Do not** add an `incompatible_with` or a `Prereq::Nor` for this entry.
+
+---
+
 ## D23 — exclusions may be predicates, not only lists of ids
 
 **Question (Q-137, Q-138).** The book excludes Flaws by **description** where
