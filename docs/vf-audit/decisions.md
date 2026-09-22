@@ -1650,5 +1650,27 @@ are not creation-time facts. This one **is**: the condition is the spell's own
 4. **Reclassify.** The entry is not only `in_play_effect` — half of it is a
    creation-time rule now, and the casting half still needs its D20 text.
 
-**Still open.** The sibling in Q-133's row — whether `flaw.savantism`'s "no
-Ability above 3" should run through `AgeAbilityCaps` — is **not** settled here.
+---
+
+## D29 — one resolution point for an Ability's maximum score
+
+**Question (Q-133's sibling).** Should `flaw.savantism`'s *"may not begin with an
+Ability above 3"* (ArMDE:6706) run through `AgeAbilityCaps` /
+`validate_ability_age_cap`, or sit beside it?
+
+**Ruling: through it — a single resolution point** that folds the age band with
+any V/F override, the same discipline `categories_in_force` applies to a gate
+read from two places.
+
+**Why it is not a style preference.** Savantism's two caps pull opposite ways.
+The general cap **lowers** to 3; the one favored Ability *"is limited to a score
+of 6 as a starting character"*, and the age table caps a character under 30 at
+**5** — so the favored cap **raises** above the age cap. A validator beside the
+age rule can lower but never raise, so it cannot express the 6 at all.
+
+**What this obliges.** `max_ability_score` stops being the answer and becomes an
+input: the resolution point takes the ability and the entity, folds the age band
+and the overrides, and both the validator and the UI read it. The favored Ability
+must be *recorded* to be capped at 6 — that is D9's parameter work. F-510 stays
+live and covers the rest of the entry (half XP, halved Advancement Totals, the
++3 specialty).
