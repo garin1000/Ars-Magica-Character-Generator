@@ -828,6 +828,43 @@ presumption of correctness.
 
 ---
 
+## D34 — `flaw.false_power`'s domain is the Supernatural category plus two named ids
+
+**Question (Q-103's remedy).** The entry's parameter carries
+`require_categories: ["hermetic", "special", "supernatural"]`. ArMDE:6082 governs
+with *"One of the character's **Supernatural Virtues**"* and then widens by
+example: *"can apply to Supernatural Virtues that define the character's
+background, **like** Faerie Blood, Diedne Magic, or even The Gift."* Those three
+sit in three different categories (`supernatural`, `hermetic`, `special`), which
+is why all three are admitted — at the cost of **56** Hermetic Virtues where the
+book names one.
+
+**Ruling: whitelist the named ids.** Domain = the `supernatural` category **plus
+`virtue.diedne_magic` and `virtue.the_gift`**. Both derivations agreed 56 is
+wrong; this is the remedy.
+
+**What it costs, stated plainly.** The book's *"like"* is an **open** list and a
+whitelist closes it, so a future background-defining Hermetic Virtue must be
+added by hand. That is the deliberate trade: a missing id is **visible** the
+moment someone looks for it, whereas 55 wrongly-admitted ones are invisible and
+silently let a player build something the book never contemplated.
+
+**What this obliges.**
+
+- A **one-id whitelist** field on `ParameterDef` (`allow_ids`, or equivalent),
+  additive to `require_categories`. ~1 field, and it **lands beside D14**, which
+  is already adding constraint expressiveness to parameter references — design
+  the two together.
+- **Not** routed through **D23**'s predicate. A predicate would need a data
+  property meaning "defines the character's background", which the catalogue does
+  not carry and which nothing else would use.
+- `virtue.faerie_blood` needs no entry — it is already `supernatural`.
+- **Re-derive the 56 at implementation.** The figure is a census of the
+  `hermetic` category, and the catalogue is data: assert the *behaviour* (Diedne
+  Magic admitted, an arbitrary other Hermetic Virtue refused), never the count.
+
+---
+
 ## D33 — ArMDE:6148 restricts what Flawed Powers *imports*; it is not an incompatibility
 
 **Question (Q-138's residue).** `flaw.flawed_powers` makes the character *"suffer

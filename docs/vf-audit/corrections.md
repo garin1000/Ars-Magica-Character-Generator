@@ -2406,7 +2406,7 @@ blocked behind D14.
 | Q-100 | should `SurfacedModifier` carry the id of the item that produced it? | N | open — **F-423** |
 | Q-101 | how should "once per Power" be encoded, on the twin entries that state it? | N | open |
 | Q-102 | is ArMDE:2816's total absence from the engine a deliberate deferral or a gap? | N | open — **F-427** |
-| Q-103 | `flaw.false_power`'s `require_categories` admits any Hermetic or Special Virtue where the book says *Supernatural* | R / C | **SETTLED on the rules question (revised); the REMEDY is a narrow cost call LEFT FOR NORBERT — `q-resolutions.md` § Q-103 (2026-09-22).** Neither of B13's options is what the book says: ArMDE:6082 states a **predicate** whose head noun is *Supernatural Virtues* and marks its own open-endedness with *"**like** Faerie Blood, Diedne Magic, or even The Gift"* — so *"like"* defeats a whitelist, and the shipped three-category list is reverse-engineered from the three examples' categories (one each), which is the signature of a set inferred from three points. **The first answer — the whole shape needs D23's predicate plus a new data property — was overstated, and the verification pass measured it away**: `special` contains **exactly one** Virtue (`virtue.the_gift`) and `supernatural` **is** the stated class, so **two of the three arms are already exact** and the over-permission is one arm, **55 entries**. ArMDE:6096 is the warrant for `forbid_tainted: true`. **For Norbert:** a one-id whitelist on the `hermetic` arm naming `virtue.diedne_magic` (exact for today's catalogue, closed where the book is open, ~1 optional `ParameterDef` field, lands beside D14), route it through **D23**'s predicate (open, but needs a property the catalogue does not carry — `jq` finds **zero** entries with a `realm` key), or keep 56. **Both passes agree the status quo is wrong**; until it moves, `RULES.md`'s record must say the list is an approximation with a known over-permission, as D14 required of the Covenant Upbringing record |
+| Q-103 | `flaw.false_power`'s `require_categories` admits any Hermetic or Special Virtue where the book says *Supernatural* | R / C | **FULLY SETTLED — rules question in `q-resolutions.md` § Q-103, remedy in D34 (2026-09-22): whitelist `virtue.diedne_magic` + `virtue.the_gift` alongside the `supernatural` category, via a one-id field on `ParameterDef` designed with D14.** Neither of B13's options is what the book says: ArMDE:6082 states a **predicate** whose head noun is *Supernatural Virtues* and marks its own open-endedness with *"**like** Faerie Blood, Diedne Magic, or even The Gift"* — so *"like"* defeats a whitelist, and the shipped three-category list is reverse-engineered from the three examples' categories (one each), which is the signature of a set inferred from three points. **The first answer — the whole shape needs D23's predicate plus a new data property — was overstated, and the verification pass measured it away**: `special` contains **exactly one** Virtue (`virtue.the_gift`) and `supernatural` **is** the stated class, so **two of the three arms are already exact** and the over-permission is one arm, **55 entries**. ArMDE:6096 is the warrant for `forbid_tainted: true`. **For Norbert:** a one-id whitelist on the `hermetic` arm naming `virtue.diedne_magic` (exact for today's catalogue, closed where the book is open, ~1 optional `ParameterDef` field, lands beside D14), route it through **D23**'s predicate (open, but needs a property the catalogue does not carry — `jq` finds **zero** entries with a `realm` key), or keep 56. **Both passes agree the status quo is wrong**; until it moves, `RULES.md`'s record must say the list is an approximation with a known over-permission, as D14 required of the Covenant Upbringing record |
 | Q-104 | `flaw.flawed_powers` records no parameter for the Flaw it imports, where `flaw.false_power` does | N | open |
 | Q-105 | is `flaw.form_monstrosity`'s "1 pawn of Muto vis" a mechanical clause? | N | open |
 | Q-106 | what shape should F-428's correction take? | N | open — **F-428's fix depends on it** |
@@ -2527,12 +2527,16 @@ threw up. Everything else below is untouched.
     Each is one sentence, each sits *behind* an answered question, and none is a
     reading the source can settle — they are cost or policy calls. Listed last
     because they are narrow, not because they are optional.
-    - **Q-103's remedy** — tighten `flaw.false_power`'s `hermetic` arm from 56
-      Hermetic Virtues to the one ArMDE:6082 names, via a one-id whitelist on
-      `ParameterDef` (exact today, closed where the book's *"like"* is open, ~1
-      field, lands beside D14); route it through **D23**'s predicate (open, but
-      needs a data property the catalogue does not carry); or keep 56. Both
-      derivations agree 56 is wrong.
+    - ~~**Q-103's remedy**~~ — **SETTLED, D34 (2026-09-22): whitelist the named
+      ids.** Domain becomes the `supernatural` category **plus
+      `virtue.diedne_magic` and `virtue.the_gift`**; `virtue.faerie_blood` needs
+      no entry, being `supernatural` already. A one-id whitelist field on
+      `ParameterDef`, **designed with D14**. Not routed through D23 — its
+      predicate would need a "defines the character's background" property the
+      catalogue does not carry. The cost is accepted explicitly: the book's
+      *"like"* is open and this closes it, but a missing id is **visible** where
+      55 wrongly-admitted ones are not. **Re-derive the 56 at implementation and
+      assert behaviour, never the count.**
     - ~~**Q-138's reading**~~ — **SETTLED, D33 (2026-09-22): it constrains the
       import.** `flaw.flawed_powers` gains a **parameter** naming the imported
       Major Hermetic Flaw, with a constraint excluding the only-Hermetic ones —
