@@ -1674,3 +1674,40 @@ and the overrides, and both the validator and the UI read it. The favored Abilit
 must be *recorded* to be capped at 6 — that is D9's parameter work. F-510 stays
 live and covers the rest of the entry (half XP, halved Advancement Totals, the
 +3 specialty).
+
+---
+
+## D30 — `source.anchor` is mandatory catalogue-wide, and a range ends on content
+
+**Question (Q-96, Q-124/Q-97).** Is `source.anchor` mandatory or dropped? And
+where does a `source.lines` range end — on the blank line before the next
+heading, or on the last non-blank body line? Both forms ship.
+
+**Ruling.**
+
+1. **`anchor` is mandatory everywhere**, not only for Virtues and Flaws.
+2. **A range ends on the last non-blank body line.**
+
+**Why.** D18's argument — a line number dies on a rulebook re-sync, a heading
+anchor survives — does not distinguish a spell from a Virtue. And a range that
+ends on content can be *checked* for content, which is exactly what the
+rulebook-citation guard already requires of code comments; a range ending on a
+blank line can never be.
+
+**Scale, measured.** `virtues_flaws.json` is at 655/655 (plus 655 German
+anchors and two heading-derived guards). Every other core file is at **zero**:
+360 refs in `spells.json`, ~200 more across abilities, equipment, aging, houses,
+childhoods, arts, mythic companion types and spell mastery — **563 to backfill**.
+For the range form, the only measurement is B16's span: **32 of 35** use the
+blank-line form, so the minority form wins and most rows change. Nobody has
+measured the other 620.
+
+**What this obliges.**
+
+- Backfill the 563, then make the field **non-optional** so a new entry cannot
+  ship without one. The order matters: the type change must land last.
+- Normalise every range to the non-blank form. Data-only, and re-derivable from
+  the anchors — extend `regenerate_source_anchors` (currently `#[ignore]`d)
+  rather than hand-editing.
+- Fix `RULES.md` and check 1's stated convention to agree; the disagreement
+  between them is what let the mixture survive three batches.

@@ -2318,8 +2318,8 @@ blocked behind D14.
 | Q-93 | which treatment is intended for the three Corrupted entries? | — | **closed — D15: all three `uncomputed_rule`**, full rule in `description` in both locales, and **`flaw.corrupted_spells`' `special_casting_mod` deleted** — which needs its own test, because a Casting Total silently changes. Unifying *upward* was rejected: Corrupted Abilities' ±3 is on an **Ability roll**, not a Casting Total. Orthogonal to D9, which still owes all three the multi-valued parameter |
 | Q-94 | `grants_selection` for `flaw.a_deal_with_the_devil`, and does a granted Story Flaw count toward the cap? | N | open |
 | Q-95 | can a parameter express "one or more, your choice"? | — | **closed — D9 part 3: not today, so the model gains a multi-valued parameter type.** The only part of D9 needing a **`SCHEMA_VERSION` bump**; pulls in `ParameterDef`, a migration, a multi-select UI picker and a canonical form for `max_per_target` grouping |
-| Q-96 | is the partial `source.anchor` coverage a backfill in progress or an inconsistency? | C / N | open, and **RE-RATED UP by D18**: **94 of 655 (14.4 %)**, and B19 shows the 94 are a by-product of the description-extraction pass, not a principled subset. Since the anchor survives a re-pagination and a line range does not, **backfilling to 100 % is the prerequisite for ever accepting a newer rulebook**. Decide first whether `anchor` is mandatory or dropped; D18 points at mandatory |
-| Q-97 | `RULES.md` declares a `source.lines` range wrong that the file does not have | C | open |
+| Q-96 | is the partial `source.anchor` coverage a backfill in progress or an inconsistency? | C / N | **SETTLED — D30.** Mandatory **catalogue-wide**. V/F is done (655/655 EN + DE); **563 refs in the other 11 core files have none** (360 of them spells). Backfill, then make the field non-optional — type change last. Original follows (its 14.4 % figure is **stale**). — **RE-RATED UP by D18**: **94 of 655 (14.4 %)**, and B19 shows the 94 are a by-product of the description-extraction pass, not a principled subset. Since the anchor survives a re-pagination and a line range does not, **backfilling to 100 % is the prerequisite for ever accepting a newer rulebook**. Decide first whether `anchor` is mandatory or dropped; D18 points at mandatory |
+| Q-97 | `RULES.md` declares a `source.lines` range wrong that the file does not have | C | **SETTLED — D30.** `RULES.md`'s form wins: a range ends on the last non-blank body line. `RULES.md` and check 1 must be brought into agreement — their disagreement is what let both forms ship |
 | Q-98 | how should `flaw.enfeebled`'s "double the normal number of Fatigue levels" be encoded? | N | open |
 | Q-99 | does RoP:D:5671 oblige anything of `flaw.dhimmi`, and does a supplement bind a core entry? | N | open |
 | Q-100 | should `SurfacedModifier` carry the id of the item that produced it? | N | open — **F-423** |
@@ -2346,7 +2346,7 @@ blocked behind D14.
 | Q-121 | four terminology-table rows attribute core-book Flaws to supplements — at what count does "noted" become a finding? | N | open — **F-501 raises the same rows; D6 rule 1 names "from which book"**; **D7 rule 3** makes a book tag decisive for *which heading a row governs* (F-506 is the worked case) |
 | Q-122 | should `flaw.magical_fascination`'s authorization name both Lores, or record the player's choice? | — | **closed — D9: record the choice.** **D14 supplies the missing half**: an ability reference in an effect gains a **binding** to the selecting entry's own parameter, which is exactly this shape (`virtue.student_of_realm` is its sibling defect) |
 | Q-123 | two entries state a *soft* restriction on magi, and the engine has only hard blocks | — | **closed — D16: emit a WARNING, never an error.** No new machinery — `IssueSeverity::Warning` / `ValidationIssue::warning` exist (`validation/mod.rs:73`, `:844`). A `forbidden_traits` row would say something the book (*"normally"*, *"not suitable"*) does not, which is the class of error `7f5605a` was reverted for. **Apply the hedged-versus-absolute rule wherever the book hedges, rather than escalating each instance** |
-| Q-124 | this span carries both `source.lines` conventions | C / N | open — **Q-96 family** |
+| Q-124 | this span carries both `source.lines` conventions | C / N | **SETTLED — D30** (with Q-97): a range ends on the **last non-blank body line**. That is the *minority* form (B16: 32 of 35 use the other), so most rows change; normalise mechanically from the anchors, and fix `RULES.md` and check 1 to agree |
 | Q-125 | the rulebook contradicts itself about `flaw.prohibition`'s category | R | open |
 | Q-126 | is an entry whose only mechanical content is a *selection restriction* mechanical? | — | **closed — D8: yes** |
 | Q-127 | a granted Reputation's `score` cannot hold the range ArMDE:6554 gives | — | **closed — D11: add `max_score: Option<u8>`.** Absent = exact, present = the score must lie in `[score, max_score]`. **31 entries grant a Reputation; exactly one states a range** (`flaw.outsider_*`, ArMDE:6554), so `skip_serializing_if` leaves 30 entries' JSON unchanged. Both magnitudes get `score: 1, max_score: 3` |
@@ -2414,9 +2414,9 @@ so what follows is what is *left*, not what was there before.
    D27** (the list models spells *known* — warn, never block) and **D28** (the
    cap becomes range-aware, which **lowers** it), plus **D29** for the
    `flaw.savantism` sibling named in Q-133's row.
-7. **Q-96 (+ Q-124)** — is `source.anchor` mandatory or dropped? **Re-rated up by
-   D18**: at 14.4 % coverage it is the prerequisite for ever accepting a newer
-   rulebook.
+7. ~~**Q-96 (+ Q-124, Q-97)** — is `source.anchor` mandatory or dropped?~~
+   **Settled: D30.** Mandatory catalogue-wide (**563 refs still to backfill**),
+   and a range ends on the last non-blank body line.
 8. **Q-10 / Q-40 / Q-49 / Q-65 / Q-69 / Q-71 / Q-114 / Q-121** — all need
    `arm-de-translation`, which no agent in this repository can open, **and all
    now need D18's three-way test**, which only Norbert can run because it
