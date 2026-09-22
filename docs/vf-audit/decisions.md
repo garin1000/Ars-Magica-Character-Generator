@@ -828,6 +828,62 @@ presumption of correctness.
 
 ---
 
+## D35 — 30 XP per finished year is a *rate*, so the parameter model gains a number
+
+**Question (Q-67).** `virtue.simple_student` (ArMDE:4960) grants *"30 experience
+points **per finished year** that he can apply to Latin or Artes Liberales"*, and
+states no year count. The entry ships `creation_effect` with **no effects at
+all**, so it grants nothing today.
+
+**Ruling, two parts.**
+
+1. **Model it properly: a numeric parameter and an effect that scales by it.**
+   `ParamType` has exactly one variant today (`Ref`); it gains a number variant
+   with `min`/`max`, and `restricted_ability_xp` gains the ability to multiply
+   its amount by a parameter value. Interim text-only was rejected — the XP has
+   to reach the player.
+2. **The cap is 2 finished years (60 XP), derived from the catalogue rather than
+   invented.**
+
+**Why 2, and why not an age formula.** The rate is a *family* mechanic, and the
+degrees pin the year counts:
+
+| Virtue | Years | XP | Source |
+|---|---|---|---|
+| Simple Student | 1–2 | 30/yr | ArMDE:4960 |
+| Baccalaureus Artium | **3** | **90** | ArMDE:3472 — *"30 experience points per finished year"* |
+| Magister in Artibus | **8** | **240** | ArMDE:4389 |
+| Doctor in Faculty | **10** | **300** | ArMDE:3687 |
+
+A Simple Student's **third** finished year completes the Baccalaureus, which is a
+different Virtue with its own 90 XP — so 2 is the ceiling, and ArMDE:4960 says as
+much: *"If he has finished his **second** year … he is in the liminal position of
+either applying for work or continuing his education."* The ages corroborate
+rather than drive it (Simple Student 14–16, Baccalaureus 16–19 after three
+years, both implying entry around 14).
+
+**An age formula was considered and rejected.** `age − 15` or similar breaks on
+the perpetual student: a 30-year-old Simple Student would compute 15 finished
+years and 450 restricted XP. The degree ladder has no such hole and is RAW.
+
+**What this obliges.**
+
+- `ParamType::Number { min, max }` — **designed with D9** (multi-valued
+  parameters) and **D14** (constraints on parameter references), which extend the
+  same struct. Three decisions touching `ParameterDef` must produce one coherent
+  model, not three fields.
+- A parameter-scaled `RestrictedAbilityXp`. Note this is the **additive** XP mode
+  of D13, not the earmark or the replacement mode.
+- `virtue.simple_student` gains the parameter (`years`, 1–2) and the effect, and
+  keeps `restricted to Latin or Artes Liberales`.
+- **The other three family members stay fixed totals** — their year counts are
+  stated, so 90/240/300 are correct as constants. Do not parameterise them for
+  symmetry.
+- A UI number input, and the rule in `description` in both locales regardless
+  (D20) — the cap's *reasoning* is not obvious from the entry alone.
+
+---
+
 ## D34 — `flaw.false_power`'s domain is the Supernatural category plus two named ids
 
 **Question (Q-103's remedy).** The entry's parameter carries
