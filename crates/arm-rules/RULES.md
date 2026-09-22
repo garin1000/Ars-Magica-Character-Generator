@@ -3837,32 +3837,50 @@ so the check reduces exactly to the base budget.
 
 | Type | free status | free Minor | required Virtues (budgeted) | required Flaw (default) | bonus | Source |
 |------|-------------|-----------|------------------------------|--------------------------|-------|--------|
-| Devil Child | `virtue.devil_child` | Demonic Might **or** Powers | Demonic Blood, Puissant (Guile) | Tragic Life | +7 F, **+3 free V** | `ArMDE:2643-2666` |
-| Faerie Doctor | `virtue.faerie_doctor` | Dowsing | Wise One, Curse-Throwing | Faerie Friend, Dutybound | none | `ArMDE:2668-2704` |
-| Nephilim | `virtue.nephilim` | Strong Angelic Heritage | Blood of the Nephilim, Greater Immunity, Great Sta, Great Str, Improved Characteristics, Sense Holiness | — (5 F fund the +10 V) | none | `ArMDE:2714-2739` |
-| Spirit Votary | `virtue.spirit_votary` | Second Sight | Spiritual Pact (+ 1 Major/3 Minor Supernatural, **advisory**) | Pagan | +7 F (derived, see below) | `ArMDE:2741-2764` + `ArMDE:2638` |
+| Devil Child | `virtue.devil_child` | Demonic Might **or** Powers | Demonic Blood, Puissant (Guile) | Tragic Life | **none** | `ArMDE:2643-2666`, `RoP:I:4908-4924` |
+| Faerie Doctor | `virtue.faerie_doctor` | Dowsing | Wise One, Curse-Throwing | Faerie Friend, Dutybound | **none** | `ArMDE:2668-2704` |
+| Nephilim | `virtue.nephilim` | Strong Angelic Heritage | Blood of the Nephilim, Greater Immunity, Great Sta, Great Str, Improved Characteristics, Sense Holiness | — (5 F fund the +10 V) | **none** | `ArMDE:2714-2739` |
+| Spirit Votary | `virtue.spirit_votary` | Second Sight | Spiritual Pact (+ 1 Major/3 Minor Supernatural, **advisory**) | Pagan | **none** | `ArMDE:2741-2764` + `ArMDE:2638` |
 
-- Devil Child's **+3 free V / +7 F**: `ArMDE:2664` ("three more points of Virtues
-  at no cost… and an additional seven points of Flaws"). Verified maxed budget:
-  flaw 17, virtue `20 + 14 + 3 = 37`.
-- Spirit Votary's **+7 F** is **derived from Core, not borrowed**. The type's
-  section (`ArMDE:2741-2764`) states no bonus because it does not need one: the number
-  falls out of the general Mythic Companion budget at `ArMDE:2638` ("you may take up to
-  ten points of Flaws, and each point of Flaws is worth two points of Virtues").
-  Its required Virtues cost **6** budgeted points — Spiritual Pact (Major, 3) plus
-  "either one more Major Supernatural Virtue or three Minor Supernatural Virtues"
-  (3) at `ArMDE:2750-2751`; the free status Virtue and Second Sight are grants and cost
-  nothing. Its required Flaw, Pagan (Major, 3) at `ArMDE:2756`, funds exactly those 6 at
-  the 2:1 rate. That leaves `10 − 3 = 7` points of the Flaw allowance unspent —
-  which is what `bonus_flaw_points: 7` records, and it is the same arithmetic every
-  other type follows. *Realms of Power: Magic* `RoP:M:5486` states the same 7
-  independently; Core remains the source of truth and there is no discrepancy.
+**No type carries a budget bonus. Every Mythic Companion gets 10 Flaw points and
+20 budgeted Virtue points, plus one uncharged free Minor Virtue — the "21 points
+of Virtues for 10 points of Flaws" of `ArMDE:2638` and `RoP:I:4912`.** A type's
+compulsory package changes how that allowance is *spent*, never its size. **This
+is settled and closed: see `docs/vf-audit/decisions.md` D32, which lists the five
+readings that have been tried and rejected. Do not re-derive it.**
+
+The two sentences that look like bonuses are not:
+
+- `ArMDE:2664` / `RoP:I:4924` — "three more points of Virtues at no cost … and an
+  additional seven points of Flaws" (Devil Child). `RoP:I:4912` states the
+  21-for-10 maximum **twelve lines above this sentence, in the same book, about
+  the same type**, so neither number extends the cap; they describe how it is
+  reached (the compulsory Tragic Life is 3 of the 10, leaving 7). The book's own
+  worked Devil Child, Malachi at `RoP:I:4942`, carries **exactly 10** points of
+  Flaws.
+- Spirit Votary's **7** is the *unspent remainder* of the same ten: its required
+  Virtues cost **6** budgeted points — Spiritual Pact (Major, 3) plus "either one
+  more Major Supernatural Virtue or three Minor Supernatural Virtues" (3) at
+  `ArMDE:2750-2751` — and its required Flaw, Pagan (Major, 3) at `ArMDE:2756`,
+  funds exactly those 6 at the 2:1 rate, leaving `10 − 3 = 7`. A remainder inside
+  the ten; adding it to the ten counts it twice. *Realms of Power: Magic*
+  `RoP:M:5486` states the same 7 and means the same thing.
+
+**Withdrawn.** This section previously read *"Verified maxed budget: flaw 17,
+virtue 20 + 14 + 3 = 37"*. No such decision was ever taken — it was a misreading
+recorded as a ruling, it shipped as `bonus_flaw_points: 7` on two types, and it
+contradicted the Spirit Votary derivation printed directly beneath it.
 - **Nephilim** has no bonus: its "5 points of Flaws to pay for these virtues"
   (`ArMDE:2731`) is a consequence of funding 10 pts of required Virtues at 2:1 within
   the base 10 F / 20 V, not a budget change.
-- The `20`-vs-`21` inconsistency (`ArMDE:2638` "21" vs `ArMDE:2844` "20"): the ceiling is
-  `20`; the free Minor status Virtue is a point-free grant that never consumes
-  budget (same treatment as the free House Virtue).
+- The `20` and the `21` are **not an inconsistency** — they are two different
+  quantities in one sentence. `ArMDE:2638` (and `RoP:I:4912`) gives `21` as the
+  **total** points of Virtues: `20` budgeted (10 Flaw points × the 2:1 rate) plus
+  the **free Minor Virtue**, which is a point-free grant that never consumes
+  budget (same treatment as the free House Virtue). `ArMDE:2844`'s `20` is the
+  budgeted figure alone. The ceiling the engine enforces is `20`. This section
+  previously called it an inconsistency and "resolved" it; that framing was wrong
+  (D32, rejected reading 3).
 - **Required-package enforcement is advisory** (`mythic_required_trait_missing`
   warning): the rules permit "a suitable substitute agreed with the troupe" for
   the required Flaws (`ArMDE:2660`, `ArMDE:2689`, `ArMDE:2754`), so a missing/substituted slot

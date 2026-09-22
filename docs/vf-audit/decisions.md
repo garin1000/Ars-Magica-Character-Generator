@@ -1754,39 +1754,87 @@ Tradition (`grundbegriffe.md`). We edited the **newer** source to match the
 
 ---
 
-## D32 — a Mythic Companion has ten points of Flaws. Full stop.
+## D32 — EVERY Mythic Companion has 10 Flaw points and 20 Virtue points. No exceptions, no bonuses.
 
-**Question.** `mythic_type.devil_child` and `mythic_type.spirit_votary` both ship
-`bonus_flaw_points: 7`, which `validation/balance.rs` adds to the profile's base
-10, giving a ceiling of **17 Flaw points** (and, at the 2:1 rate, 14 extra Virtue
-points on top of the 20).
+**This decision is closed. Do not reopen it, do not re-derive it, and do not
+"discover" a bonus in ArMDE:2664 or RoP:I:4924 — both sentences are read and
+disposed of below.**
 
-**Ruling (Norbert, 2026-09-22): ten, for every type.** ArMDE:2664's *"an
-additional seven points of Flaws"* is **not a bonus being granted**. It explains
-**how the ten are reached**: the compulsory Major Flaw is 3, and 7 more fill the
-allowance ArMDE:2638 already sets at ten.
+### The numbers, for every one of the four types
 
-**`RULES.md:3845` records a decision that was never taken.** It states *"Verified
-maxed budget: flaw 17, virtue 20 + 14 + 3 = 37"* as settled. It was not — it is an
-earlier session's misreading written up as a ruling, and it survived because
-nothing re-derived it. **Treat it as withdrawn.**
+| | Value | Source |
+|---|---|---|
+| Flaw points | **10** | ArMDE:2638, RoP:I:4912 |
+| Budgeted Virtue points | **20** | 10 × the 2:1 rate |
+| Free Minor Virtue | **1**, uncharged | ArMDE:2638 |
+| Virtue points *stated as a total* | **21** | = 20 budgeted + the free Minor |
+| `bonus_flaw_points` | **0** | — |
+| `bonus_free_virtue_points` | **0** | — |
 
-**The contradiction that exposed it.** The same passage derives the same number
-two incompatible ways: Devil Child's 7 sits *on top of* the 10 (`RULES.md:3845`),
-while Spirit Votary's is derived as *"`10 − 3 = 7` points of the Flaw allowance
-**unspent**"* (`RULES.md:3850-3857`) — i.e. *inside* the 10. Both then ship the
-same `bonus_flaw_points: 7`, so the second derivation is counted twice by its own
-arithmetic.
+Devil Child, Faerie Doctor, Nephilim and Spirit Votary are **identical** on all of
+these. A type's compulsory package changes how the allowance is *spent*, never how
+large it is.
 
-**What this obliges.**
+### The decisive citation
 
-- Drop `bonus_flaw_points` from both types (the field itself may then be dead —
-  check before keeping it). Flaw ceiling returns to **10** for every Mythic
-  Companion.
-- Rewrite `RULES.md:3840-3857` — both the table row and the two derivations.
-- **Not decided here:** Devil Child's `bonus_free_virtue_points: 3`
-  (ArMDE:2664, *"three more points of Virtues at no cost"*). That reads as a
-  genuine grant, but it was never checked against the 20/21 ceiling and must be
-  before it is trusted.
+**RoP:I:4912**, writing about Devil Child specifically:
+
+> "The Devil Child Virtue is a Free Virtue (like The Gift) which, **like other
+> Mythic Companion characters**, grants the player two points to spend on Virtues
+> for every point that she spends on Flaws. It also grants a free Minor Virtue,
+> **allowing a maximum of 21 points of Virtues for 10 points of Flaws**."
+
+Twelve lines later, **RoP:I:4924** gives the disputed sentence — *"three more
+points of Virtues at no cost … an additional seven points of Flaws"* — **inside
+that stated maximum, in the same book, about the same character type.** Neither
+number can therefore extend the cap. Both describe how the 21/10 is reached.
+
+### The book's own worked example agrees
+
+Malachi (RoP:I:4942) carries False Power (Major 3), Tragic Life (Major 3), Lesser
+Malediction (Minor 1), Delusion (Minor 1), Proud (Minor 1), Tainted with Evil
+(Minor 1) — **exactly 10 Flaw points**, not 17. (His Virtue list totals 22, i.e.
+21 after the free Minor against a budget of 20: the example is **one** point over
+its own budget. That is a slip in the book and it fits no reading; it is not
+evidence for a grant of 3.)
+
+### Rejected readings — each of these has been tried and is wrong
+
+1. **"`an additional seven points of Flaws` is a bonus on top of the ten."**
+   No. ArMDE:2638 and RoP:I:4912 both cap Flaws at ten, and the compulsory Major
+   Flaw is 3 of them, so 3 + 7 = 10. This is the misreading that shipped.
+2. **"`three more points of Virtues at no cost` is a grant on top of the twenty."**
+   No. RoP:I:4912 states the 21-point maximum *before* the sentence that says it.
+3. **"The 21-vs-20 in ArMDE:2638 is a contradiction to be resolved."**
+   It is not a contradiction. **21 = 20 budgeted + the free Minor Virtue.** They
+   are two different quantities in the same sentence.
+4. **"Both readings give 19 free Virtue points, so the 3 is harmless."**
+   That argument ignores that a cap is *stated*. It was made in this repository
+   on 2026-09-22 and withdrawn the same day.
+5. **"Spirit Votary's 7 is the unspent remainder, so it belongs in the data."**
+   The remainder is already inside the 10; adding it to the 10 counts it twice.
+   `RULES.md:3850-3857` derives it correctly and then encodes it wrongly.
+
+### `RULES.md:3840-3857` is WITHDRAWN
+
+It states *"Verified maxed budget: flaw 17, virtue 20 + 14 + 3 = 37"* as settled
+fact. **No such decision was ever taken.** It is an earlier session's misreading
+written up as a ruling, and it survived because nothing re-derived it. It also
+contradicts itself: Devil Child's 7 sits *on top of* the 10 there, while Spirit
+Votary's is derived as *"`10 − 3 = 7` points of the Flaw allowance **unspent**"* —
+inside the 10 — and both ship the same value.
+
+### What this obliges
+
+- Set both `bonus_flaw_points` and `bonus_free_virtue_points` to **0** for every
+  type in `rules/core/mythic_companion_types.json`; then **delete both fields
+  from the model** unless something else needs them, so the mistake cannot be
+  re-entered as data.
+- **Pin it with a test.** A ruleset-level assertion that every mythic type yields
+  a 10/20 effective budget is what stops this coming back a third time; a document
+  alone has already failed once.
+- Rewrite `RULES.md:3840-3857` — the table row, both derivations, and the
+  "20-vs-21 inconsistency" note, which is itself wrong (see rejected reading 3).
 - **Precedent:** a number in `RULES.md` presented as *verified* is not evidence
-  that anyone verified it. Re-derive from the book.
+  that anyone verified it. Re-derive from the book, and prefer the supplement that
+  states a cap over a core-book sentence that only describes a package.
