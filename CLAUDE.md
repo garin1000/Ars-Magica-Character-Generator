@@ -149,17 +149,23 @@ called an error. Re-sync by copying `translation-tables/*.md` across; the local
 `README.md` then needs its audit warning re-applied, since the source project's
 copy is worded for that project.
 
-**The tables are AI-generated and demonstrably fallible.** The V/F audit
-(2026-09-19 to -21, all 655 entries) found **ten** proven errors, and seven of
-them were the same shape: *a terminology table making a factual claim about the
-rules*. Hence the precedence rules, which live in full in
-`docs/vf-audit/decisions.md` **D6** and **D7**:
+**The tables are AI-generated and fallible — but less often than the audit first
+thought.** The V/F audit (2026-09-19 to -21, all 655 entries) recorded **ten**
+proven errors. **D31 withdrew seven of them**: they were *name* disagreements
+convicted with a heading from our **stale** German rulebook copy, which is
+circular. What survives is the shape that actually matters — *a terminology table
+making a factual claim about the rules* — and a translation revision cannot
+excuse that, because it renames rather than reassigning mechanics. Hence the
+precedence rules, which live in full in
+`docs/vf-audit/decisions.md` **D6**, **D7** and **D31**:
 
 1. A **factual claim about the rules** (which Virtue grants which Reputation, at
    which level, in which magnitude) — the **rulebook** wins, always.
-2. An **entry's name** — the **heading of the rulebook the entry cites** wins.
-   The glossary wins only where that heading is *defective*: it collides with
-   another entry's heading, or the book never renders the term.
+2. An **entry's name** — **the table wins** (D31). This reverses the original
+   rule, which gave the heading precedence: our German rulebook copy is **older**
+   than the tables, so convicting a table row with a stale heading is circular.
+   The heading regains precedence only once a current German rulebook lands, at
+   which point D31 retires.
 3. **Other terminology** — thematic table before `tugenden-fehler.md`, which is
    the broadest and so the likeliest to be wrong.
 4. A row tagged with **another book's acronym** (`HdH:WL`, `SdM:G`) is not in

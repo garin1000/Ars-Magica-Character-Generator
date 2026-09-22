@@ -1711,3 +1711,43 @@ measured the other 620.
   rather than hand-editing.
 - Fix `RULES.md` and check 1's stated convention to agree; the disagreement
   between them is what let the mixture survive three batches.
+
+---
+
+## D31 — the table wins on a NAME; the rulebook still wins on a RULE
+
+**Amends D7.1 and completes D18.** D7.1 gives the DE rulebook heading precedence
+over the glossary. That is right only while the rulebook we hold is **current**,
+and it is not: `rules/source/de/` is older than `arm-de-translation`'s tables,
+and the shipped `rules/i18n/de/` was generated from it.
+
+**The error this corrects was mine, and it is circular.** Every "DE rulebook
+heading" in `tmp/table-sync-check.md` comes from the stale copy, so every
+"table wrong" verdict uses the old edition to convict the newer table. The
+Hobbled case is the clearest: the collision argument reads *both* names out of
+the stale copy. **All 21 verdicts have to be re-derived.**
+
+**Ruling.**
+
+1. A disagreement about a **name** resolves **for the table** — it is the most
+   current German text in the repository. Adopt it into `rules/i18n/de/`.
+2. A disagreement about a **rule** — which Virtue grants which Reputation, at
+   which magnitude, in which category — still resolves **for the rulebook**
+   (D6.1, unchanged). A translation revision renames; it does not reassign
+   mechanics.
+
+**The seven already-applied corrections are reverted.** Of the ten proven table
+errors, seven were name rows decided against the stale copy: Deteriorating Power,
+Disorientating Magic, Enfeebled, Environmental Magic Condition, Environmental
+Sensitivity (`tugenden-fehler.md`), Vulnerable Magic and Vulnerable to Folk
+Tradition (`grundbegriffe.md`). We edited the **newer** source to match the
+**older** rulebook, in both projects. Restore the table wording and adopt it into
+`rules/i18n/de/`. The other three were factual claims and stand.
+
+**What this obliges.**
+
+- Re-derive `tmp/table-sync-check.md`, then adopt the table's name for the 19
+  live name disagreements and revert the 7 above — in `arm-char-gen` and
+  `arm-de-translation` alike (D6), including the README correction log.
+- Do **not** re-sync the rulebook to settle this. When a current German rulebook
+  does land, D7.1 returns to full force and this decision retires.

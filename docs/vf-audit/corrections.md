@@ -2232,7 +2232,7 @@ blocked behind D14.
 | Q-07 | ArMDE:2816's one-Social-Status rule is modelled nowhere | N | open — **rated a defect by F-427** |
 | Q-08 | the ArMDE:2960-2962 realm association is on 4 of ~115 Supernatural entries | N | open |
 | Q-09 | `virtue.common_sense`: is a guaranteed storyguide intervention mechanical? | N | open |
-| Q-10 | `virtue.covenfolk`: two canonical German sources, two names | X / N | open — **F-85 is blocked on it**; **D18** adds the newer-edition arm |
+| Q-10 | `virtue.covenfolk`: two canonical German sources, two names | X / N | **SETTLED — D31**: a *name*, so the **table** wins and its value is adopted into `rules/i18n/de/`. **F-85 unblocked.** (This is the one the source project was already ahead on — `Konventsbewohner` — which is D31's own evidence) |
 | Q-11 | `virtue.domestic_animal`: "animals only" with no engine model | N | open |
 | Q-12 | `ability.enchanting` parameterized? is `domain: "ability"` right? | N | open |
 | Q-13 | does the book distinguish "may only **take**" from "may only **have**"? | — | **closed — D2's rules read: NO.** ArMDE:3665 (*Demonic Might*) says "may only **take**" and :3669 (*Demonic Powers*), the very next entry, states the *same* restriction as "may **have**". Two adjacent entries, one restriction, two verbs. **No argument may rest on that pair** |
@@ -2262,7 +2262,7 @@ blocked behind D14.
 | Q-37 | `virtue.leper_magus`: `grants_selection` or a copied effect? | N | open |
 | Q-38 | does Greater Immunity's repeatability transfer through Lesser Immunity's cross-reference? | R | open |
 | Q-39 | `virtue.linguist`: the book rounds the XP **up**, the engine rounds the **cost** up — do they agree? | C | open |
-| Q-40 | `virtue.linguist`: the table's only row is in a supplement section and gives "Linguist" | X | open — **D18**: check the newer-edition arm before calling the row wrong |
+| Q-40 | `virtue.linguist`: the table's only row is in a supplement section and gives "Linguist" | X | **SETTLED — D31**: a *name*, so the table wins. Its being in a supplement section is a **placement** defect in the table, not grounds to reject the rendering; note the placement separately |
 | Q-41 | `virtue.lone_redcap`: is `supernatural` in the 300-point pool sourced? | R | open |
 | Q-42 | `virtue.lone_redcap` / `virtue.redcap`: nothing encodes that they are alternatives | R / N | open |
 | Q-43 | a granted Reputation has no **polarity**, so "a *poor* Reputation at level 2" is unrepresentable | — | **closed — D11: NO polarity field.** ArMDE:1093 gives a Reputation three components (score, content, type) and explicitly refuses to make good-versus-bad mechanical. "Bad" is **content**. Consequences: **F-363** stops being an engine gap, and **F-525**'s absolute becomes unenforceable by design |
@@ -2271,7 +2271,7 @@ blocked behind D14.
 | Q-46 | the leather variant of the two vessel Virtues: entry, parameter, or nothing? | N | open |
 | Q-47 | `restricted_ability_xp` cannot scope a pool to one Profession, and three entries name one | N | open |
 | Q-48 | Mercurian Magic's companion Flaw: a prerequisite the player is paid for, or a budget-exempt grant? | N | open |
-| Q-49 | the reputation table attributes to Mythic Blood a Reputation ArMDE:4588 denies | X | open — **D6 rule 1 decides it** (a terminology table making a factual claim), and **D18 does not rescue this one**: a newer edition changes *terminology*, not which Virtue grants which Reputation. The fix still needs the source project |
+| Q-49 | the reputation table attributes to Mythic Blood a Reputation ArMDE:4588 denies | X | **SETTLED — D6 rule 1**, and **D31 confirms it** (a rule fact, not a name), so this row stays a proven table error. Only the *fix* is outstanding, in the source project. — **D6 rule 1 decides it** (a terminology table making a factual claim), and **D18 does not rescue this one**: a newer edition changes *terminology*, not which Virtue grants which Reputation. The fix still needs the source project |
 | Q-50 | `mythic_type.nephilim` carries neither of ArMDE:2731's two point adjustments | R / N | open |
 | Q-51 | should Magical Blood's Magic Human variant become effects once a parameter exists? | N | open |
 | Q-52 | is `virtue.masterpiece` `creation_effect` or `in_play_effect`? | — | **answered in substance by Q-120's resolution** |
@@ -2287,13 +2287,13 @@ blocked behind D14.
 | Q-62 | `virtue.powerful_relic`: is the relic's one power charged against the power-levels budget? | R | open |
 | Q-63 | does a translation table's term bind *inside a sentence*, or only on a label? | N | open — **F-65, F-320, F-473 depend on it**; **D18** does not answer it but changes what a disagreement means |
 | Q-64 | is a supernatural *capability* with no number, no roll and no waived penalty mechanical? | — | **closed — D8: yes.** Three independent supports, incl. ArMDE:2960-2962's realm association + same-realm-aura Warping immunity on **every** Supernatural Virtue, which falsifies the `narrative` claim for this cohort on grounds independent of the capability argument |
-| Q-65 | two canonical tables give `Sense Holiness and Unholiness` different German names | X | open — **D7's three-rule test applies, now with D18's third arm** |
+| Q-65 | two canonical tables give `Sense Holiness and Unholiness` different German names | X | **PARTLY settled — D31**: the rulebook heading no longer breaks the tie, so this is now **table vs table** and falls to D7 rule 3 (thematic table before `tugenden-fehler.md`). Decide on that alone; do **not** reach for the stale heading |
 | Q-66 | does `virtue.sense_holiness_and_unholiness`'s "may overwhelm you" state a D5 rule? | N | open |
 | Q-67 | what amount should `virtue.simple_student`'s restricted XP pool carry? | R / N | open |
 | Q-68 | does Subtle Magic's "no benefits from normal gestures" add anything to the Words/Gestures table? | R | open |
-| Q-69 | a table attributes a Reputation rule to `Social Contacts` that ArMDE:4990 does not state | X | open — **D6 rule 1 decides it**; like Q-49, **D18 does not rescue it** (a factual claim, not terminology) |
+| Q-69 | a table attributes a Reputation rule to `Social Contacts` that ArMDE:4990 does not state | X | **SETTLED — D6 rule 1**, and **D31 confirms it** (a rule fact, not a name). Only the fix is outstanding. — **D6 rule 1 decides it**; like Q-49, **D18 does not rescue it** (a factual claim, not terminology) |
 | Q-70 | should `virtue.sense_passions` carry `tainted: true`? | R | open |
-| Q-71 | the German core rulebook gives `virtue.spirit_votary` two names and the tables give a third | X / N | open — **D7 rule 2: a colliding/absent heading is where the glossary wins**, and **D18** makes the third name a possible newer-edition correction rather than a third error |
+| Q-71 | the German core rulebook gives `virtue.spirit_votary` two names and the tables give a third | X / N | **SETTLED — D31**: the third name is the **table's**, and on a *name* the table wins outright — the two rulebook renderings are both from the stale copy and no longer compete. (The entry's *magnitude/category* claim is a rule fact and stays with the rulebook) |
 | Q-72 | what is the "Brother-Priest Status Virtue" that ArMDE:5111 names? | R | open — **if it is a fourth rank, F-34's census is not closed** |
 | Q-73 | which `ReputationType` carries an **organization**-scoped Reputation? | — | **closed — D11: none, and the enum does not grow.** ArMDE:1093 names Local, Ecclesiastical and Hermetic, with Academic alongside, and the ease-factor table has exactly those columns. "Among Templars", "among the Jewish community" are **content** |
 | Q-74 | how does True Faith's Magic Resistance join the per-Form grid — replace, stack, or compete? | N | open — F-329's *fix* depends on it |
@@ -2336,14 +2336,14 @@ blocked behind D14.
 | Q-111 | does `flaw.independent_craftsman`'s recategorization clause apply, given *City and Guild* is not in the repo? | N | open — **provenance: a rule from a book with no source cannot be implemented** |
 | Q-112 | does `virtue.lone_redcap` satisfy `flaw.hermetic_patron`'s "a Redcap"? | R / N | open — **F-448's fix depends on it** |
 | Q-113 | should an `advancement_mod` marker of `amount: 0` render as a word? | N | open — UI |
-| Q-114 | under D6 as corrected, does the glossary or the shipped data win on F-456 and F-457? | N | open — **D7's three-rule test now answers it; confirm** — but run **D18**'s newer-edition arm before concluding the glossary is wrong |
+| Q-114 | under D6 as corrected, does the glossary or the shipped data win on F-456 and F-457? | N | **SETTLED — D31**: the **glossary** wins; both are names. The shipped values were generated from the stale rulebook, so "shipped disagrees with the glossary" is now evidence *against* the shipped value |
 | Q-115 | is `flaw.inscribed_shadow`'s House Criamon restriction a prerequisite to encode? | R / N | open |
 | Q-116 | the book defines "combat scores"; the repo's reading excludes three of the five | R / C | open — **overturned the clean verdicts on `flaw.hobbled` and `flaw.lame`** |
 | Q-117 | two in-repo authorities give opposite readings to "the passage states the *absence* of a rule" | C / N | open — `NO_RULE_DESPITE_TOKEN` versus `RULES.md:4684` |
 | Q-118 | is `flaw.monastic_vows_hermetic`'s "you cannot own vis" mechanical, given the engine models no vis? | N | open |
 | Q-119 | is `flaw.necessary_condition`'s "you cannot cast spells at all" a mechanical absolute or a fiction condition? | N | open |
 | Q-120 | is an entry computing in both phases `creation_effect` or `in_play_effect`? | — | **closed — the enum's own doc comment: `creation_effect`** |
-| Q-121 | four terminology-table rows attribute core-book Flaws to supplements — at what count does "noted" become a finding? | N | open — **F-501 raises the same rows; D6 rule 1 names "from which book"**; **D7 rule 3** makes a book tag decisive for *which heading a row governs* (F-506 is the worked case) |
+| Q-121 | four terminology-table rows attribute core-book Flaws to supplements — at what count does "noted" become a finding? | N | **SETTLED — the count is irrelevant.** "Which book renders this entry" is a **factual claim about the rules**, so D6 rule 1 decides each row on its own and **all four are findings**; D31 does not rescue them, because a translation revision changes wording, not which book an entry is in. **F-501 raises the same rows**; D7 rule 3 stays the test for *which heading a row governs* (F-506 is the worked case) |
 | Q-122 | should `flaw.magical_fascination`'s authorization name both Lores, or record the player's choice? | — | **closed — D9: record the choice.** **D14 supplies the missing half**: an ability reference in an effect gains a **binding** to the selecting entry's own parameter, which is exactly this shape (`virtue.student_of_realm` is its sibling defect) |
 | Q-123 | two entries state a *soft* restriction on magi, and the engine has only hard blocks | — | **closed — D16: emit a WARNING, never an error.** No new machinery — `IssueSeverity::Warning` / `ValidationIssue::warning` exist (`validation/mod.rs:73`, `:844`). A `forbidden_traits` row would say something the book (*"normally"*, *"not suitable"*) does not, which is the class of error `7f5605a` was reverted for. **Apply the hedged-versus-absolute rule wherever the book hedges, rather than escalating each instance** |
 | Q-124 | this span carries both `source.lines` conventions | C / N | **SETTLED — D30** (with Q-97): a range ends on the **last non-blank body line**. That is the *minority* form (B16: 32 of 35 use the other), so most rows change; normalise mechanically from the anchors, and fix `RULES.md` and check 1 to agree |
@@ -2417,11 +2417,12 @@ so what follows is what is *left*, not what was there before.
 7. ~~**Q-96 (+ Q-124, Q-97)** — is `source.anchor` mandatory or dropped?~~
    **Settled: D30.** Mandatory catalogue-wide (**563 refs still to backfill**),
    and a range ends on the last non-blank body line.
-8. **Q-10 / Q-40 / Q-49 / Q-65 / Q-69 / Q-71 / Q-114 / Q-121** — all need
-   `arm-de-translation`, which no agent in this repository can open, **and all
-   now need D18's three-way test**, which only Norbert can run because it
-   requires the current German edition. The 21 disagreements are listed in
-   `tmp/table-sync-check.md`. **Do not auto-revert them to the heading.**
+8. ~~**Q-10 / Q-40 / Q-49 / Q-65 / Q-69 / Q-71 / Q-114 / Q-121**~~ — **all
+   settled by D31**, which removed the need for the edition check: on a *name*
+   the table wins, on a *rule fact* the rulebook does. Seven previously-applied
+   "corrections" are **reverted**. Q-65 alone is now table-vs-table and falls to
+   D7 rule 3. `tmp/table-sync-check.md` carries a withdrawal banner — its
+   findings stand, its verdicts do not.
 9. **Q-131** — the identity of "Covenant Lore". **Not Norbert's**: it is an
    **R**, an agent can settle it from the Abilities chapter, and **F-520 is
    blocked until someone does.** The cheapest open item in the audit.
