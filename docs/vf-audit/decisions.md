@@ -540,6 +540,14 @@ under any circumstances.
    expression; normalise the one `Has` spelling to it.
 4. **No new field and no new category.** The existing `Prereq` machinery carries
    it, so this is data plus one normalisation — no engine change.
+5. **Two named entries ride along, and one of them is out of every batch span.**
+   **D24** rules `flaw.weak_parens` and `virtue.skilled_parens` trained — a
+   *parens* exists only through apprenticeship — so both take the gate in this
+   pass. The Virtue appears in no batch record; do not let the pass skip it.
+6. **Finish with the positive check D24 asks for.** After classifying, confirm
+   that no entry reachable by a **Gifted non-magus** computes against a budget
+   that only exists for a magus. Weak Parens is the worked example (it subtracts
+   its −60 from `later_life_xp`); the pass must say whether it is the only one.
 
 **What this does not settle.** Whether any *intrinsic* Hermetic entries exist
 beyond the three Gift ones. The classification pass will answer that; if the
@@ -1435,3 +1443,72 @@ engine's inability as a defect.
 grounds for `uncomputed_rule` with the rule written out — it is *never* grounds
 for `narrative`. `narrative` remains a claim that the book states nothing
 mechanical, and nothing about engine capability can make that claim true.
+
+---
+
+## D24 — The Gift is necessary but not sufficient for a Hermetic Virtue or Flaw
+
+**Question (Q-140).** `flaw.weak_parens` and `virtue.skilled_parens` ship
+`prerequisites: null` and `categories: ["hermetic"]`. The `hermetic` category is
+not a magus gate: the **companion** profile permits it conditionally,
+`{"category": "hermetic", "when": {"kind": "has", "value": "virtue.the_gift"}}`
+(`rules/core/character_types.json:18`). So a Gifted, non-magus companion may
+legally select Weak Parens — and what follows is not a refusal but a **silent
+budget change**. `effective/xp.rs::general_pool_and_bonus` builds `base_general`
+from `apprenticeship_xp + post_gauntlet_xp` **only when `is_magus`**, otherwise
+from `later_life_xp`, and folds the −60 in unconditionally. A Gifted companion
+who never had a *parens* loses 60 XP from his later life and pockets a Minor
+Flaw's points for it.
+
+**Ruling, in two parts.**
+
+1. **Both entries gain `Prereq::IsMagus`.** The Flaw and its mirror Virtue are
+   treated identically, even though `virtue.skilled_parens` lies outside B19's
+   span and appears in no batch record.
+2. **Holding The Gift does not, by itself, open the `hermetic` category.** The
+   Gift is a *necessary* condition, not a sufficient one. The profile's
+   Gift-conditional permission **stays**; the second gate is the per-entry
+   `IsMagus` that **D12** puts on every *trained* Hermetic entry.
+
+**Why this is not a new judgement.** ArMDE:2880 states both halves in one
+sentence: *"Only characters with The Gift can take these Virtues and Flaws, **and
+some are only applicable to Hermetic magi who have already completed their
+training**."* Part 1 of the ruling is the second clause; the profile condition is
+the first. And `ArMDE:7074` settles which side Weak Parens falls on — its stated
+result, *"a total of 180 experience points and 90 levels of spells"*, is an
+**apprenticeship** figure and appears nowhere else. A *parens* exists only
+through apprenticeship, so both entries are **trained** under D12's criterion and
+inherit D12's gate. Q-140 therefore does not need a ruling of its own about the
+entries; it needed one about the *profile*, which is part 2.
+
+**The alternative was rejected on the book.** Dropping the companion's
+Gift-conditional permission outright contradicts **ArMDE:2840** — *"You may not
+take Hermetic Virtues and Flaws, **unless you have The Gift** (this would be
+highly unusual)"* — and would re-block `flaw.suppressed_gift`, which
+`RULES.md` row 20 made reachable on exactly that line, with `ArMDE:6805`/`:6809`
+confirming such a character does hold The Gift.
+
+**What this obliges.**
+
+- Add `"prerequisites": {"kind": "is_magus"}` to `flaw.weak_parens` and
+  `virtue.skilled_parens`. **Blocked on D12**, which decides the same thing for
+  the other 120 `hermetic` entries — doing these two alone would split one pass
+  in half.
+- Leave `character_types.json:18` and `:25` **unchanged**. The companion
+  profile's `CategoryRule` is correct as shipped; anyone reading it as
+  over-permissive must be pointed at this decision.
+- `tests/data_integrity.rs::a_companion_does_not_gift_himself_with_a_hermetic_virtue`
+  stays green and stays load-bearing — it pins the non-circularity of the leaf,
+  which part 2 depends on.
+- D12's classification pass acquires a **positive check**: after it runs, no
+  entry may be reachable by a Gifted non-magus *and* compute against a budget
+  that only exists for a magus. Weak Parens is the worked example; the pass must
+  say whether it is the only one.
+
+**Precedent this sets.** A profile's `permitted_categories` condition is a
+*membership* gate, never a *capability* gate. When an entry inside a permitted
+category needs a narrower audience, the narrowing belongs on the **entry** as a
+`Prereq`, not on the profile — otherwise one entry's requirement silently
+rewrites what the whole category means for that character type. See **D12** for
+the criterion and **D21** for the machinery that lets a rule range over a
+category at all.
