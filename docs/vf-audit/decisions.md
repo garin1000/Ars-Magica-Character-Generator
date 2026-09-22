@@ -820,6 +820,94 @@ presumption of correctness.
 
 ---
 
+## D20 — RAW fidelity is the test: every rule must reach the player somehow
+
+**Question (Q-136).** Does a **surfaced-only** effect kind satisfy
+`in_play_effect`, or is `uncomputed_rule` the honest class? It governs **19**
+entries, and two batches set opposite precedents a week apart — B17's F-515 left
+`flaw.short_ranged_magic` as `in_play_effect`; B18 escalated
+`flaw.susceptibility_to_divine_power` rather than accept that.
+
+**Norbert reframed it before ruling: *check each of them whether it is correct to
+show a number at all*.** That read was done first, and it changed the answer.
+
+### What the read established
+
+**`amount: 0` is never displayed.** `DerivedSurfacedModifiersSection.svelte:27`
+renders `{#if m.amount !== 0}`, so all 19 surface as a **bare label** with no
+figure. The `0` is a "no number" sentinel, not an invented one — which clears the
+worst suspicion, that the app was showing a number no passage supports (the
+`7f5605a` error).
+
+**Verdicts across the 19:** number right **14** · number **missing 5** · number
+wrong **0** · number falsely shown **0**. The five missing:
+`virtue.commanding_aura`, `virtue.life_boost`, `virtue.leper_magus`,
+`virtue.special_circumstances` (mitigated — its +3 is in the summary),
+`flaw.corrupted_spells`.
+
+**The worst is `virtue.commanding_aura`.** ArMDE:3585-3591 states eight figures —
+*"**Pope:** Magic Resistance 25, Soak bonus +5"* down to *"**Archbishop:** Magic
+Resistance 10, Soak Bonus +2"*. The entry ships a bare
+`magic_resistance_mod: aura_bonus` with no value, and the English summary stops
+at *"…granted by either the pope, or the Divine directly"* — before any
+mechanics. **None of the eight reaches the player anywhere.** The kind is wrong
+too: `aura_bonus` means aura-conditional, while the passage gives a flat
+rank-based resistance, and `derived.rs:296-298` cites this very range as its
+warrant.
+
+### The ruling
+
+**RAW fidelity is the test: a rule the book states must reach the player
+somehow — as a computed number, or as written text. If the engine cannot compute
+it, text is the only route, and if neither happens the app has silently dropped
+a rule.**
+
+Measured against that, **all 19 fail today**, not only the five. The fourteen
+"numerically correct" entries display a bare category label — *"Special casting:
+Circumstantial"* — which names a taxonomy slot and tells the player nothing about
+what happens. The book states a real rule; the player gets a word.
+
+**So: all 19 become `uncomputed_rule`, and all 19 owe their rule in `description`
+in both locales.** Five additionally owe the number they currently swallow.
+
+**Why the class, given it is read by no production code.** `classification`
+changes nothing the user sees; its only consequence is that `uncomputed_rule`
+entries are *required* by `every_uncomputed_rule_entry_states_its_rule_in_every_locale`
+to carry the text. **D5 already obliges all 19 regardless of label** — the
+description obligation follows the rule, not the classification. Choosing
+`uncomputed_rule` makes that obligation **enforced instead of aspirational**,
+which is the whole reason to prefer it.
+
+**This vindicates B18's instinct and corrects its example.** B18 escalated an
+entry that was numerically clean — `RULES.md:4883-4884` is accurate for once
+("carries no number of its own — it doubles whatever the scene's aura rating
+happens to be", matching ArMDE:6817) — but that entry *was* dropping its rule, so
+the escalation was right for a reason B18 did not name. B17's F-515 reading is
+superseded.
+
+### What this obliges
+
+1. **19 reclassifications** to `uncomputed_rule`, enumerated in
+   `tmp/q136-number-check.md`.
+2. **19 descriptions in both locales**, each stating what actually happens rather
+   than naming the effect family.
+3. **Five number defects fixed independently of the class** — they are the real
+   harm and reclassification alone would put none of them on screen.
+   `virtue.commanding_aura` additionally needs its effect kind reconsidered
+   (`aura_bonus` misdescribes a flat rank-based figure) and a rank parameter;
+   `corrections.md` F-39/F-40 cover the Soak half and the missing parameter,
+   **the eight MR figures and the summary truncation are new**.
+4. **These land after D19's screen work** — `corrections.md` § 2.1. All 19
+   currently sit outside what the screen can see, so reclassifying first would
+   turn the guard red on exactly the entries being fixed.
+
+**One `RULES.md` claim falls with this.** `RULES.md:4866` lists
+`flaw.corrupted_spells` under "flat casting-total bonus/penalty"; its effect list
+is only `special_casting_mod: circumstantial`. Another provenance record false as
+written.
+
+---
+
 ## D19 — the mechanical screen matches by regex, because German negation is discontinuous
 
 **Question.** `MECHANICAL_PHRASES` in `crates/arm-rules/tests/uncomputed_clauses.rs`
