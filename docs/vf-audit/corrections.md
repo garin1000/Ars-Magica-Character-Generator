@@ -17,7 +17,7 @@ full reasoning is one read away.
 `decisions.md`; open questions that still need Norbert are listed in § 6 of this
 file but are *settled* there, not here.
 
-**Coverage — THE CHECKING PASS IS COMPLETE.** Findings **F-001 … F-545** (544 of
+**Coverage — THE CHECKING PASS IS COMPLETE.** Findings **F-001 … F-552** (551 of
 them; F-44 was never issued — see the note below), open questions
 **Q-01 … Q-142**, batches **B01–B19**, **all 655 catalogue entries**
 (ArMDE:3362-7119). Every Virtue and Flaw in `rules/core/virtues_flaws.json` has
@@ -58,6 +58,13 @@ caught. The duplicate check was **extended with a body-level pass in both
 directions** across the B17-B19 boundary (§ 4.2, passes 5-7) and found **zero**
 duplicates. What it did **not** do is re-run that body-level pass over
 F-001…F-501 against each other; the original floor disclaimer still stands there.
+
+**Updated 2026-09-22.** § 6's 31 evidence-settleable questions are **answered**
+(`docs/vf-audit/q-resolutions.md`), so their rows carry a verdict instead of
+"open"; § 1 gains **seven** findings those answers turned up (**F-546 … F-552**,
+one of them already **fixed** by D32 and committed); § 7 is recounted from
+scratch. **Nothing was renumbered.** The seven new rows are in their own block at
+the end of § 1, because they belong to no batch.
 
 **Ten rulings landed after this file was first written, and several of them
 change work recorded here rather than merely adding to it.** § 2.2 (D2 is ruled),
@@ -132,6 +139,7 @@ comment wrong, a `source.lines` range off by a line) is `L`.
 | `live` | Stands. Phase 2 must fix it. |
 | `withdrawn` | Retracted, with what superseded it. **Do not work these.** |
 | `blocked` | The remedy depends on a decision that is not yet taken. Named in the row. |
+| `fixed` | **Already corrected and committed**, with the ruling and the commits named in the row. Recorded so the defect is findable and so nobody re-files or re-works it; it is **not** Phase 2 work. Added 2026-09-22 for F-546 (D32). |
 
 A row may additionally carry `dup→F-NNN`, meaning **this index** judges it the
 same defect as an earlier finding. Where the duplication is exact the status is
@@ -144,9 +152,10 @@ with a `**Verdict:**` line and no severity.
 
 ---
 
-## 1. Master index — F-001 … F-545
+## 1. Master index — F-001 … F-552
 
-Sorted by finding number, 544 rows. `ArMDE` is the entry's `source.lines` range as
+Sorted by finding number, 551 rows — 544 from the nineteen batches, plus the
+seven in the `q-resolutions.md` block at the end. `ArMDE` is the entry's `source.lines` range as
 the batch's verdict table gives it; `—` where the finding is not about one entry.
 **Note that F-540's range is the *wrong* one the data ships** (`7106-7119`),
 because that is what the verdict table gives — the finding is that it should be
@@ -550,7 +559,7 @@ because that is what the verdict table gives — the finding is that it should b
 |---|---|---|---|---|---|---|
 | F-349 | `virtue.wise_one` | 5257-5260 | class+auth | H | live | a two-category gated Ability permission with no `ability_authorization`, and `narrative` denying it |
 | F-350 | `virtue.wise_one` | 5257-5260 | desc | M | live | three clauses reach neither locale (D5) |
-| F-351 | `virtue.withstand_casting` | 5261-5282 | number | M | live | the `casting_fatigue` sign is the opposite of the engine's documented convention and of both Flaw carriers' |
+| F-351 | `virtue.withstand_casting` | 5261-5282 | number | M | live | the `casting_fatigue` sign is the opposite of the engine's documented convention and of both Flaw carriers'. **Q-81 answers it and REVERSES the remedy** (`q-resolutions.md` § Q-81): a 12-row `health_mod` census and `derived/combat.rs::fatigue_levels` prove *positive = better for the character* is deliberate and catalogue-wide, so **the three shipped amounts stay**; the defects are the doc comment on `types.rs::HealthTrack::CastingFatigue` and the Fluent label, which names a *cost* and so prints *"Casting fatigue: +1"* for a **Virtue**. Rename the label's value in **both** locales. Kind and severity left as the batch wrote them |
 | F-352 | `virtue.withstand_casting` ↔ `flaw.vulnerable_casting` | 5261-5282 | incompat | H | live | a creation-time incompatibility stated twice and encoded on neither side |
 | F-353 | `virtue.withstand_casting` | 5261-5282 | desc | M | live | a 22-line passage reaches the user as one sentence (D5) |
 | F-354 | `flaw.abandoned_apprentice` | 5641-5650 | class | M | live | a character-creation procedure and a hard consequence, classified `narrative` |
@@ -794,6 +803,37 @@ rows below are that, not an omission of mine.
 | F-544 | 7 entries: `flaw.vulnerable_casting`, `flaw.vulnerable_magic`, `flaw.warped_by_magic`, `flaw.weak_enchanter`, `flaw.weak_magic`, `flaw.weak_scholar`, `flaw.weak_spontaneous_magic` | 6993-7089 | desc | M | live | one D5 omission shape applied seven times; all seven ship **no `description` in either locale**. Two of the clauses are *ordering* rules, where order changes the arithmetic |
 | F-545 | `flaw.wanderlust` | 7015-7018 | class | M | live | a countable seasonal constraint (one place per season; two, nonconsecutive, per year) as flavour. Verdict **overturned by B19's verification pass** — "the app models no seasons" is not a ground D3 admits |
 
+### Q — `q-resolutions.md` (2026-09-22), found while answering questions, not while reading a span
+
+These seven belong to **no batch**. They were turned up by the pass that answered
+§ 6's 31 evidence-settleable questions, and each is stated in `q-resolutions.md`
+— six of them in its closing *"Things nobody asked about, found on the way"*
+section (its items 1, 2, 6, 7, 8 and 11), and **F-552** in § Q-116's own verdict,
+which ends those two entries' unrated status. They are numbered from the next
+free number and **nothing is renumbered**.
+
+**The other five items of that closing section are deliberately NOT filed as new
+rows, and here is why for each**, so the next reader does not "complete" the
+block. **Item 3** — the `casting_fatigue` read-out — lands on **F-351**, whose
+summary now carries the reversed remedy. **Item 4** — the free Well-Traveled
+Virtue and the Wealthy/Poor/Gift prohibitions on `virtue.redcap` — is already
+**F-243** and **F-242**; q-resolutions says no *question* raises them, which is
+true, but findings do. **Item 5** — `virtue.berserk`'s mandated *Angry +2* — is
+already **F-19**. **Item 9** — the `tainted`↔descriptor census, 21 ↔ 23 and
+exact — records that the data is **right** and merely suggests a cheap guard.
+**Item 10** — that `forbid_tainted` would make False Power (Sense Passions)
+unselectable — is evidence *for* Q-70's verdict, not a defect.
+
+| F | entry | ArMDE | kind | sev | status | summary |
+|---|---|---|---|---|---|---|
+| F-546 | `mythic_type.devil_child`, `mythic_type.spirit_votary` | 2638-2664 | number | H | **fixed** | `bonus_flaw_points: 7` read ArMDE:2664's *"an **additional** seven points of Flaws"* as a bonus on top of ArMDE:2638's ten, when the compulsory Major Flaw's 3 + 7 **is** the ten; `validation/balance.rs::effective_budget` folded it into the ceilings, so a Devil Child was allowed 17 Flaw / **37** Virtue points. (`q-resolutions.md` says 34, which omits the entry's own `bonus_free_virtue_points: 3`; **37** is the figure D32 quotes from the withdrawn `RULES.md:3840-3857` and the one `c3714b2` states, and it is the right one.) **Superseded and settled by D32**, which is broader — *every* Mythic Companion has 10 Flaw / 20 budgeted Virtue points, so `bonus_free_virtue_points: 3` was wrong too. **Already fixed and committed** (`212d726`, `c3714b2`): both values removed from `rules/core/mythic_companion_types.json` **and both fields removed from the model**, pinned by a ruleset-level test that iterates whatever types ship. Filed for the record only — **do not work it** |
+| F-547 | `virtue.affinity_ability` | 3372-3374 | number | H | live | `effective/xp.rs::charged_cost` computes `ceil(T·den/num)`, which **floors** the effective points where ArMDE:3374 **ceils** them; the correct inverse is `(T − 1)·den/num + 1`. Overcharges 1 XP at Ability scores **1, 4, 7, 10, 13, 16, 19** (costs ≡ 2 mod 3) — Ability 4 costs 50, the engine charges 34, 33 suffices. `virtue.linguist` (5/4) and every Art are **provably clean**, and so is Flawless Magic's 2/1. Q-39, revised: the defect is Linguist's *sibling*, not Linguist. Raises caps, so it invalidates no save. ArMDE:2443 is the regression guard |
+| F-548 | `virtue.simple_student` | 4958-4963 | audit | L | live | **D16's sex-restriction count is short by one.** D16 re-counted the family as *"20 entries … plus **one** female-only exception (`virtue.baccalaureus`, ArMDE:3474)"*; ArMDE:4960 is a **second** — *"Female characters can only take this Virtue if they are studying to be physicians at Salerno, although the Paid Rights Virtue would allow them to take this Virtue elsewhere."* Found answering Q-67. The remedy is already delivered by Q-67's reclassification (`uncomputed_rule` + `description` in both locales, which is D16's own disposal); what is owed here is the corrected count, so D16's scope is not quoted short |
+| F-549 | `virtue.potent_magic_major` / `_minor` | 4740-4781 | text+prov | L | live | **a doubled clause in the English source**: ArMDE:4742 reads *"compatible with a Magical Focus, **unlike a Magical Focus, unlike a Magical Focus,** a maga may have more than one area"*, where DE:4742 has it once. Two independent renderings disagree, so it is an **extraction artefact, not the book** — D26's decision shape (correct it in `rules/source/en/`), but **outside D26's closed scope**, which named only ArMDE:7054 and ArMDE:3502. Rated `L` on what was verified, the source file; **if the doubled clause also reached `rules/i18n/en/` it is a user-facing `text` defect and rates `M` — not checked** |
+| F-550 | `types.rs::Prereq` | — | engine | M | live | **`Prereq` has no warning severity**, so **D16's hedged→warning rule has no carrier at the entry level** — `prereq_not_met` is an error, and the profile level is the only place D16 has been applied. Q-115 makes this **live rather than latent**: ArMDE:6320 owes exactly such a warning (holds `flaw.inscribed_shadow`, not House Criamon), and the sweep finds a population of **two** with ArMDE:6957. `IssueSeverity::Warning` already exists; what is missing is a way for an *entry's* eligibility rule to reach it |
+| F-551 | `flaw.deficient_form` | 5909-5912 | text | M | live, dup→F-404 | the `name` is the flat `"Deficient Form"` in **both** locales (DE `"Defizitäre Form"`) though the entry carries a `form` parameter, so **two Deficient Form selections render identically** and the player cannot tell which Form each is. Its twin interpolates (`"Deficient {technique}"` / `"Defizitäre {technique}"`). **F-404 raises the same asymmetry from the opposite side** — it reads the catalogue's convention as *against* interpolating and calls `flaw.deficient_technique` the defect. **The two must be worked once and in one direction**; this row records the consequence that decides it, and takes no position on which way |
+| F-552 | `flaw.lame`, `flaw.hobbled` | 6330-6333, 6260-6263 | scope+prov | H | live | **both entries are under-modelled, and both stop being "checked and clean"** — B14 passed them and then escalated them itself as **Q-116**. ArMDE:16656 defines *"five combat scores: Initiative, Attack, Defense, Damage, and Soak"*, and ArMDE:22809 separates *scores* from *rolls* — only Initiative, Attack and Defense end in a stress die. So `flaw.lame` (*"other combat **scores**"*) owes `combat_mod -1` on `initiative` and `damage` **and** `soak_mod -1`, while `flaw.hobbled` (*"other combat **rolls**"*) owes `combat_mod -6` on `initiative` only. The existing Dodge-scoped `-3 defense` row on `flaw.lame` is correct and stays. **No engine change.** `RULES.md`'s *"combat rolls / combat scores"* block is **rewritten, not amended** — its conclusion *and* its warrant fail — and row 37 of `docs/open-todos.md` reopens. Scope is these **two** entries; the four ArMDE:6436, :6608, :6580, :6440 use neither phrase |
+
 ---
 
 ## 2. Ordering constraints
@@ -913,6 +953,7 @@ fail.
 | F-444 | already applied | `decisions.md` D6 now carries the corrected two-rule precedence. Verify rather than re-fix. |
 | F-525 | ~~Q-43~~ → **D11** | D11 answers Q-43 **no**: a Reputation has three components and polarity is not one. The "no positive Reputation" absolute is therefore **not enforceable even in principle**, and the whole remedy is the reclassification + `description`. |
 | F-526, F-538 | **Q-137**, remedy under-specified | F-526's `virtue.doctor_in_faculty` prerequisite lands regardless; only the seventeen-way exclusion waits. F-538's `virtue.sufi` copy is *not* sufficient — `validate_house` ignores `taken_as` by design. |
+| the **seven** remedies `q-resolutions.md` settles but cannot land | **machinery another ruling owns** | **NEW 2026-09-22.** Each question is answered; only the fix waits. **Q-117** → § 2.1b's *"declines to impose a penalty"* capability family, the same blocker as D8's 48 — it is stated in § Q-117's body and **missing from q-resolutions' own six-row table**, which is why the count here is seven. **Q-42** → Q-132 / F-427's category mechanism, which must also express a *scoped* exception. **Q-67** → a **numeric** parameter type + a parameter-scaled `RestrictedAbilityXp` (the interim `uncomputed_rule` + text is **not** blocked and should land). **Q-138** → D12's classification pass, then D23 **with a magnitude qualifier added to its scope**. **Q-29 / Q-38** → **F-141**'s parameter, then D10's explicit `max_total`. **Q-110** → a "mandates N traits at value M" field, designed with D21's Effect-side twin; **F-440**'s own fix (the validator) is *not* blocked. **Q-115** → a warning severity for `Prereq`, which is **F-550**. |
 | all `table` rows | **D6 + D18** | still not Phase 2 work — but **D18 changes the test**. A table row disagreeing with the shipped heading now has *three* possible causes, not two: a table error, a stale copy, **or a correction from a newer German edition the repo has not received**. 20 of the 21 known disagreements must **not** be auto-reverted to the heading. |
 
 ### 2.4 Within Phase 2, work order that avoids rework
@@ -1960,8 +2001,11 @@ This is the check whose absence produced **F-499**. Nobody had run it before.
 
 ### 4.1 Headline
 
-**Ten duplicate relationships across all 544 findings, and all ten are in
-F-001…F-501.** One (F-481) was already found and withdrawn by B16. **Nine were
+**Ten duplicate relationships across all 551 findings, and all ten are in
+F-001…F-501.** (**Eleven if F-551 is counted**: it carries `dup→F-404`, the only
+marker the 2026-09-22 block adds, and it is a *partial* overlap of the kind § 4.4
+collects rather than a re-rating — the two rows read the same asymmetry in
+opposite directions and must be worked once, in one direction.) One (F-481) was already found and withdrawn by B16. **Nine were
 not**, and every one of them is a *cross-span* finding — a batch following a
 pointer or a scan out of its own range and rating an entry another batch had
 already rated. Three further findings overlap an umbrella at the *site* level.
@@ -2188,7 +2232,15 @@ this section was first written, and they close **25 further questions**, so a ro
 that still reads "open" here has been re-checked against the ruling list rather
 than left standing by default.
 
-**Thirty-four of the 142 are closed**, in three tranches:
+**REVISED AGAIN 2026-09-22**, against `decisions.md` D24-D32 and against
+`docs/vf-audit/q-resolutions.md`, which answers the **31** questions that were
+settleable from the evidence. **A row that reads "open" below is a question
+nobody has answered — it is not a row nobody has looked at.** The gap this
+closes has cost the audit real rework once already, when one batch re-derived
+another's findings from a stale index.
+
+**Eighty-two of the 142 are settled or closed**, in four tranches (60 open:
+**57** `N`, **3** `R` — Q-01, Q-15, Q-72):
 
 - **Before D8 (nine).** Q-02 (D3), Q-35 (F-160), Q-52 (via Q-120's resolution),
   Q-85 (withdrawn, answered from the repo), Q-120 (the enum's own doc comment),
@@ -2217,6 +2269,35 @@ than left standing by default.
   **Q-96** from cleanup to prerequisite. **D14** closes none either, but it
   supplies the mechanism Q-122 needs and is a hard predecessor of D13 (§ 2.5).
 
+- **By D24-D31 and one source read (seventeen).** Q-140 (**D24**), Q-141
+  (**D25**), Q-142 (**D26**, and fixed), Q-130 (**D27**), Q-133 (**D28** + **D29**
+  for its sibling), Q-96 / Q-97 / Q-124 (**D30**), Q-10 / Q-40 / Q-49 / Q-65 /
+  Q-69 / Q-71 / Q-114 / Q-121 (**D31**; Q-65 is *partly* settled — it is now
+  table-vs-table and falls to D7 rule 3), and Q-131 settled from ArMDE:7282.
+  These rows keep their original settler code and carry a bold **SETTLED** in the
+  status column rather than the earlier tranches' **—**. **One exception, and it
+  breaks any filter written on the word:** Q-65 reads `**PARTLY settled — D31**`,
+  lowercase and qualified, so a `SETTLED` grep returns 47 where this tranche plus
+  the next make 48.
+
+- **By `q-resolutions.md`, 2026-09-22 (thirty-one).** Q-16, Q-18, Q-20, Q-25,
+  Q-29, Q-33, Q-38, Q-39, Q-41, Q-42, Q-50, Q-53, Q-55, Q-57, Q-62, Q-67, Q-68,
+  Q-70, Q-78, Q-79, Q-81, Q-89, Q-103, Q-109, Q-110, Q-112, Q-115, Q-116, Q-117,
+  Q-125, Q-138 — every question marked **R**, **C** or a mix, re-derived from the
+  sources and then **independently re-derived a second time**. The two
+  derivations agreed on 24 of 31, and **seven diverged** (Q-25, Q-29/Q-38, Q-39,
+  Q-50, Q-81, Q-103, Q-115). **Six of the seven overturned the first answer** and
+  those six rows say so, because a question subtle enough to be answered twice
+  differently is worth flagging to a later reader; the seventh, **Q-50**, was
+  *confirmed and extended* rather than revised — the second pass agreed on
+  Nephilim and found a new defect on its siblings, so its row claims no reversal.
+  **All 31 are settled on the question asked**, but **three carry a narrow
+  follow-on that still needs Norbert** — Q-103's remedy, Q-138's reading and
+  Q-67's interim — and **seven have a remedy blocked on machinery another ruling
+  owns**: the six `q-resolutions.md`'s own table lists (Q-29/Q-38, Q-42, Q-67,
+  Q-110, Q-115, Q-138) **plus Q-117**, whose § Q-117 obligation 4 states a blocker
+  — § 2.1b's capability family — that the table omits. Count seven.
+
 **A ruling that closes a question does not always unblock the work.** D8's 48
 reclassifications are still blocked behind § 2.1b, and D13's remedy is still
 blocked behind D14.
@@ -2238,33 +2319,33 @@ blocked behind D14.
 | Q-13 | does the book distinguish "may only **take**" from "may only **have**"? | — | **closed — D2's rules read: NO.** ArMDE:3665 (*Demonic Might*) says "may only **take**" and :3669 (*Demonic Powers*), the very next entry, states the *same* restriction as "may **have**". Two adjacent entries, one restriction, two verbs. **No argument may rest on that pair** |
 | Q-14 | where is the threshold at which an effect-bearing entry owes a `description`? | — | **closed in substance — D5** |
 | Q-15 | `virtue.craftsman`: is "Wealthy/Poor affect you normally" a clause? | R | open — settled in practice (§ 5) |
-| Q-16 | `virtue.dust_devil`: how much of Skinchanger does "this variant" inherit? | R | open |
+| Q-16 | `virtue.dust_devil`: how much of Skinchanger does "this variant" inherit? | R | **SETTLED — `q-resolutions.md` § Q-16 (2026-09-22).** Reading B: the **+3 Soak does not transfer** — ArMDE:4974's clause is quantified over *animals* and a dust devil (ArMDE:3709) is none — while the **item rules do**, because the entry swaps the focus object rather than dropping the slot. The Dove variant confirms the drafting habit: ArMDE:4984 overwrites the same sentence and **restates** the Soak; Dust Devil does not. Nothing owed, nothing blocked: the entry stays `uncomputed_rule` with no effects, and F-62's cross-reference instruction is satisfied for it |
 | Q-17 | a supernatural power described only in prose, with constraints but no number | — | **closed — D8** (with Q-61, Q-64, Q-76, Q-126): a capability is a rule → `uncomputed_rule` |
-| Q-18 | `virtue.gentle_gift`: does the book state the `has virtue.the_gift` prereq? | R | open |
+| Q-18 | `virtue.gentle_gift`: does the book state the `has virtue.the_gift` prereq? | R | **SETTLED — `q-resolutions.md` § Q-18 (2026-09-22).** **Yes**, not in the entry's body but in ArMDE:2880 (*"**Only** characters with The Gift can take these Virtues and Flaws"*) and ArMDE:2840, both absolute in D16's sense — so the shipped prerequisite is correct and the over-strict reading is refuted (ArMDE:4139's unGifted clause restricts *Inoffensive*, and :4141 redirects to a Virtue that does not exist). Nothing owed, nothing blocked. Two side effects: this is **D12's worked *intrinsic* case**, so D12's pass must **not** hand it an `IsMagus` gate; and ArMDE:2880 is the general warrant for every `hermetic` entry's Gift requirement — cite it once rather than re-derive it 122 times. F-81 unaffected |
 | Q-19 | may the catalogue assert an incompatibility no passage states, when the pair is logically contradictory? | N | open |
-| Q-20 | `virtue.fidai`: does the pretended Social Status permit a second one? | R / N | open |
+| Q-20 | `virtue.fidai`: does the pretended Social Status permit a second one? | R / N | **SETTLED — `q-resolutions.md` § Q-20 (2026-09-22).** **No.** ArMDE:2816 admits a second status only where a description *"explicitly note[s] that they are compatible"*, and the book's idiom for meeting that test is the word **compatible** (ArMDE:4325 is the one entry that uses it); ArMDE:3881 says *"**pretending** to have"*, which is the negation of having — DE:3881's *vorgeben* agrees. But the sentence **is** a stated choice, so under **D9** it owes a `ref` parameter over the `social_status` category — a **new D9 instance**, absent from § 3.7's list, for D9's catalogue-wide re-derivation. Nothing on `incompatible_with` and nothing on ArMDE:2816. F-68 is independent and stands |
 | Q-21 | `virtue.forge_companion`: is "unGifted craftsman" an encodable incompatibility? | N | open |
 | Q-22 | where does an *uncomputable* rule go on an entry that already carries an `Effect`? | — | **closed in substance — D5** |
 | Q-23 | does modelling a rule on the *type profile* make the Virtue a `creation_effect`? | N | open |
 | Q-24 | `virtue.greater_benediction`: reclassify, or renarrow `source.lines`? | N | open — narrowed by F-121 |
-| Q-25 | is "politically Criamon, created by another House's rules" a rule? | R / N | open |
+| Q-25 | is "politically Criamon, created by another House's rules" a rule? | R / N | **SETTLED (revised) — `q-resolutions.md` § Q-25 (2026-09-22).** **`narrative` → `uncomputed_rule`**, plus the passage in `description` in both locales. **The first answer — `narrative` stands, on D22's `flaw.seeker` precedent — was overturned by the verification pass**, which found ArMDE:2264: *"Membership in a House grants a particular benefit at character creation … A magus can only be a member of one House"*, which ArMDE:4039 then **decouples**; `Entity` has one `house` field and structurally cannot hold that, so **D3** governs and `narrative` is not available. The two prerequisites are unaffected and complementary: `Prereq::IsMagus` (trained under D12, so inside D12's pass, not a separate slice) and `Prereq::Nor([House("house.criamon")])` for *"any **other** House"* — a `Prereq`, **not** an `incompatible_with` row, since a House is assigned rather than bought (the D2 / F-466 trap). Not blocked |
 | Q-26 | classification and encoding for a rule that *nullifies* another Virtue's effect | N | open |
 | Q-27 | `restricted_ability_xp` authorizes permanently; ArMDE:4065 says it should not | N | open |
 | Q-28 | `virtue.guardian_angel`: encode the +5 Soak despite its condition? | N | open |
-| Q-29 | `greater_immunity` and `lesser_immunity` disagree about repeatability | R | open — **D10 supplies the mechanism** (absent now means *once*), but which of the two passages is right is still a rules read |
+| Q-29 | `greater_immunity` and `lesser_immunity` disagree about repeatability | R | **SETTLED (revised, and the audit's one genuinely *arguable* reading) — `q-resolutions.md` § Q-29 / Q-38 (2026-09-22).** The two **passages never disagreed**; the *data* did — `virtue.greater_immunity` ships `max_per_target: 255` with **no parameter**, licensing 255 *identical* copies where ArMDE:4015 says *"a different immunity each time"*, and `virtue.lesser_immunity` ships neither. **F-94 confirmed.** On whether the repeat clause travels through ArMDE:4277's bare pointer the two derivations reached **opposite** answers and neither has decisive evidence, so **the first answer (it transfers, both repeat) was overturned by the verification pass** — ArMDE:2814 allows a repeat *"only if the description **explicitly** allows it"*, and ArMDE:4283 has `virtue.lesser_power` state its own repeatability rather than inherit Greater Power's — **and D10 breaks the tie toward *once***. Record the reasoning in `RULES.md` so the pointer is not re-litigated. **Remedy BLOCKED** on F-141's parameter, then D10's explicit `max_total`. Original follows. — **D10 supplies the mechanism** (absent now means *once*), but which of the two passages is right is still a rules read |
 | Q-30 | how to model a "General **and** Hermetic" descriptor without blocking the unGifted case | N | open |
 | Q-31 | three Supernatural Virtues require player-defined content and none records it | — | **closed — D9**: record every stated choice |
 | Q-32 | `AdvancementSource` has `Teaching` but nothing for books-written | N | open |
-| Q-33 | the book gives Hermetic Prestige two different levels and the data picks one | R | open |
+| Q-33 | the book gives Hermetic Prestige two different levels and the data picks one | R | **SETTLED — `q-resolutions.md` § Q-33 (2026-09-22).** **The data is right: `score: 4` follows the entry's own descriptor** (ArMDE:4073, *"a Reputation of level 4 within the Order"*); the level-3 figure is inside a block-quoted worked example (ArMDE:2518, Darius of Flambeau), and **D25**'s precedent gives the substantive statement the win over the secondary listing. `kind: "hermetic"` is right on both passages. No data change, nothing blocked. Two obligations: one more row in **D25's `RULES.md` errata note**, worded to hold descriptor-vs-**worked-example** as well as descriptor-vs-index; and the note must say explicitly that **`max_score` is not the answer** (D11 surveyed all 31 granting passages and found exactly one range), because D11's exact enforcement now makes the book's *own printed example character* invalid in the app |
 | Q-34 | ArMDE:18432's Size-scaled Improved Characteristics is modelled nowhere and unreachable | N | open |
 | Q-35 | `virtue.knows_people`: is a once-per-story entitlement mechanical? | — | **closed — F-160** |
 | Q-36 | `virtue.lasiq`: does "some other social status, which you should choose" demand a parameter? | — | **closed — D9: yes** |
 | Q-37 | `virtue.leper_magus`: `grants_selection` or a copied effect? | N | open |
-| Q-38 | does Greater Immunity's repeatability transfer through Lesser Immunity's cross-reference? | R | open |
-| Q-39 | `virtue.linguist`: the book rounds the XP **up**, the engine rounds the **cost** up — do they agree? | C | open |
+| Q-38 | does Greater Immunity's repeatability transfer through Lesser Immunity's cross-reference? | R | **SETTLED (revised, **arguable**) — `q-resolutions.md` § Q-29 / Q-38 (2026-09-22).** **No — adopt *once* for `virtue.lesser_immunity`.** Q-29 and Q-38 are one question and were answered together; see Q-29's row for the full reconciliation. **The first answer — the bare pointer at ArMDE:4277 carries the whole entry including ArMDE:4015's repeat clause — was overturned by the verification pass** (ArMDE:2814's *"only if the description **explicitly** allows it"*, and ArMDE:4283's Lesser Power stating its own repeatability), with **D10** breaking the tie: D10 exists precisely to stop a repeat being *inferred*. Flagged as the audit's one genuinely arguable reading, to be written up in `RULES.md`. **Remedy BLOCKED** on **F-141**'s parameter (without it "a different immunity each time" is unrepresentable and `max_per_target` has no target to count), then D10's explicit `max_total` — both entries are among D10's 42. **F-140, F-141** stand |
+| Q-39 | `virtue.linguist`: the book rounds the XP **up**, the engine rounds the **cost** up — do they agree? | C | **SETTLED (revised) — `q-resolutions.md` § Q-39 (2026-09-22).** On the entry Q-39 names, **yes, they agree: `virtue.linguist` is clean at every reachable value** — every Ability cost in `abilities.json` is a multiple of 5, and at `T = 5k` both roundings give `4k`. **The first answer's impact table was overturned by the verification pass**: it was keyed by the player's *spend* `S`, where the engine is exercised by the *table cost* `T`, and the two identify different carriers. The formula survives — `effective/xp.rs::charged_cost` floors where the book ceils (ArMDE:3374 and ArMDE:4317 are word-for-word the same *gain* construction, so B05's special-case premise is false), and the correct charge is `(T − 1)·den/num + 1`. The live defect is on Linguist's **sibling**: `virtue.affinity_ability` is overcharged 1 XP at Ability scores 1, 4, 7, 10, 13, 16, 19 (costs ≡ 2 mod 3). Arts are provably clean (triangular costs are never ≡ 2 mod 3) and Flawless Magic's 2/1 is clean (the formulas coincide at `den = 1`). ArMDE:2443 endorses neither rounding and is the regression guard. Filed as **F-547**; raises caps, so no save is invalidated. Not blocked |
 | Q-40 | `virtue.linguist`: the table's only row is in a supplement section and gives "Linguist" | X | **SETTLED — D31**: a *name*, so the table wins. Its being in a supplement section is a **placement** defect in the table, not grounds to reject the rendering; note the placement separately |
-| Q-41 | `virtue.lone_redcap`: is `supernatural` in the 300-point pool sourced? | R | open |
-| Q-42 | `virtue.lone_redcap` / `virtue.redcap`: nothing encodes that they are alternatives | R / N | open |
+| Q-41 | `virtue.lone_redcap`: is `supernatural` in the 300-point pool sourced? | R | **SETTLED (challenged and CONFIRMED) — `q-resolutions.md` § Q-41 (2026-09-22).** The word is in neither passage, but the shipped list is **correct — do not remove `supernatural`.** ArMDE:4848's two sentences are separate: a *permission* over three gated categories, then a *quantity* with no category restriction, and the shipped `["academic","arcane","general","martial","supernatural"]` is all five of `AbilityCategory::ALL` — the **absence** of a funding restriction, not a restriction. The verification pass recommended dropping it on the premise that Supernatural Abilities are ungated; **that premise is false and the challenge does not survive**: the gate is per-Ability, not per-category — `validation/scores.rs::validate_supernatural_abilities` raises `CODE_SUPERNATURAL_ABILITY_REQUIRES_VIRTUE` and is called from `validation/mod.rs`. Nothing owed, nothing blocked. The same reasoning covers `virtue.mentored_by_demons`; it does **not** cover `virtue.privileged_upbringing`, whose narrower list is a genuine funding restriction (**Q-59**, untouched) |
+| Q-42 | `virtue.lone_redcap` / `virtue.redcap`: nothing encodes that they are alternatives | R / N | **SETTLED on the rules question; remedy BLOCKED — `q-resolutions.md` § Q-42 (2026-09-22).** The book **does** make them mutually exclusive, but through **ArMDE:2816**, which this repo models nowhere — not by any sentence in either entry. ArMDE:4325's compatibility note is scoped to *mundane* statuses and ArMDE:4844 makes Redcap non-mundane, so :2816's default (only one) governs. So **no pair-specific `incompatible_with` row**: singling out the pair would encode a specific rule derived from a general one nobody has modelled, which is what `7f5605a` was reverted for. File it as a worked instance against **Q-132 / Q-07 / Q-102 / F-427**, carrying a design constraint that ruling does not currently record: the mechanism must express a **scoped** exception (*"compatible with any other **mundane** Social Status"*), not a boolean "may stack". The pair's incoherence (ArMDE:4321 against :4844, :4848) is entailment, not a stated exclusion, so it turns on **Q-19** and cannot carry the verdict |
 | Q-43 | a granted Reputation has no **polarity**, so "a *poor* Reputation at level 2" is unrepresentable | — | **closed — D11: NO polarity field.** ArMDE:1093 gives a Reputation three components (score, content, type) and explicitly refuses to make good-versus-bad mechanical. "Bad" is **content**. Consequences: **F-363** stops being an engine gap, and **F-525**'s absolute becomes unenforceable by design |
 | Q-44 | no `Effect` expresses free seasons per year, though three entries modify them | N | open |
 | Q-45 | ArMDE:2816 is not a cap, and one `virtue_category_caps` row cannot express it | N | open |
@@ -2272,27 +2353,27 @@ blocked behind D14.
 | Q-47 | `restricted_ability_xp` cannot scope a pool to one Profession, and three entries name one | N | open |
 | Q-48 | Mercurian Magic's companion Flaw: a prerequisite the player is paid for, or a budget-exempt grant? | N | open |
 | Q-49 | the reputation table attributes to Mythic Blood a Reputation ArMDE:4588 denies | X | **SETTLED — D6 rule 1**, and **D31 confirms it** (a rule fact, not a name), so this row stays a proven table error. Only the *fix* is outstanding, in the source project. — **D6 rule 1 decides it** (a terminology table making a factual claim), and **D18 does not rescue this one**: a newer edition changes *terminology*, not which Virtue grants which Reputation. The fix still needs the source project |
-| Q-50 | `mythic_type.nephilim` carries neither of ArMDE:2731's two point adjustments | R / N | open |
+| Q-50 | `mythic_type.nephilim` carries neither of ArMDE:2731's two point adjustments | R / N | **SETTLED — `q-resolutions.md` § Q-50 (2026-09-22) — and the defect it turned up is already FIXED.** **It should not carry them:** ArMDE:2731 states no adjustment at all. The required list (ArMDE:2723-2730) prices to **10 bought Virtue points = 5 Flaw points** at the 2:1 rate, and the second clause's five more Flaw points for ten more Virtue points closes the standard **10 Flaw / 20 Virtue** budget exactly (ArMDE:2844). So `bonus_flaw_points: null` and `bonus_free_virtue_points: null` are **correct**, and either field would over-fund the type. Record the arithmetic in `RULES.md` so the absence reads as verified rather than unexamined (D25's closing precedent). The pass then rated `bonus_flaw_points: 7` on its two siblings a new `high` defect — **superseded by D32**, which is broader and already implemented: *every* Mythic Companion has 10 Flaw / 20 Virtue points, `bonus_free_virtue_points: 3` is **not** a sound transcription either, and both fields are now **deleted from the model** (commits `212d726`, `c3714b2`). Registered as **F-546, status `fixed`** |
 | Q-51 | should Magical Blood's Magic Human variant become effects once a parameter exists? | N | open |
 | Q-52 | is `virtue.masterpiece` `creation_effect` or `in_play_effect`? | — | **answered in substance by Q-120's resolution** |
-| Q-53 | the book names six Ability types; `AbilityCategory` has five | R / N | open |
+| Q-53 | the book names six Ability types; `AbilityCategory` has five | R / N | **SETTLED — `q-resolutions.md` § Q-53 (2026-09-22).** **Five is correct, and a sixth member would break a rule the book states.** ArMDE:9516: *"Spell mastery Abilities are their own category, and Virtues that give characters access to other categories of Ability **do not cover** spell mastery Abilities"* — a sixth member would sweep into `effective/xp.rs::magus_later_life_pool`, funding Spell Mastery from later-life XP, which is exactly what `PoolEligibility::Mastery` exists to prevent; and ArMDE:9518's *"for every possible Hermetic spell, there is a corresponding Ability"* is an open-ended set no catalogue can enumerate, so it is modelled per spell (`SpellSelection.mastery`). **No data change, no behaviour change, nothing blocked.** Q-53's premise that the divergence is undocumented is wrong — `RULES.md` already cites ArMDE:7143 and :9516; what is owed is a **doc comment on `ability.rs::AbilityCategory`**, where a reader counting members will notice |
 | Q-54 | does a glossary table govern *inside a verbatim quotation*? | N | open — **Q-63 family**; **D18** bears on it (the table may be the more current wording) |
-| Q-55 | `virtue.physician_of_salerno`: is the granted Reputation Local or Academic? | R | open — **narrowed by D11**: both are valid `ReputationType` members and the type set does **not** grow, so this is now a plain rules read, no longer "Q-73 family" |
+| Q-55 | `virtue.physician_of_salerno`: is the granted Reputation Local or Academic? | R | **SETTLED — `q-resolutions.md` § Q-55 (2026-09-22).** **Neither is stated, and `local` is positively wrong** — ArMDE:4734 says he *"carries the reputation of the school **with him**"*, which is the one type a place-scoped Reputation excludes. Under **D11**'s own worked remedy the pin is dropped and the grant ships the **player-chosen wildcard** (`kind: None`); `academic` is the better guess but is still a guess dressed as data, and the repo's own table hedges (`reputationen.md` reads *Lokal / Akademisch*, which is an accurate report of an open question and **not** a D6 error). **This is F-450's defect on a second entry** — fix the two in one pass. `score: 2` stays exact. Nothing blocked. Original follows. — **narrowed by D11**: both are valid `ReputationType` members and the type set does **not** grow, so this is now a plain rules read, no longer "Q-73 family" |
 | Q-56 | `virtue.perfectus`: should Purity and Transcendence enter the Ability catalogue? | N | open |
-| Q-57 | Potent Magic: how should the forced magnitude-variant incompatibility be lifted? | C / N | open |
+| Q-57 | Potent Magic: how should the forced magnitude-variant incompatibility be lifted? | C / N | **SETTLED — `q-resolutions.md` § Q-57 (2026-09-22).** **Neither of B07's two ways out.** `ruleset/integrity.rs::validate_magnitude_variant_exclusivity` derives a *rules fact* from an **id spelling** and pushes a load error unless both entries declare an incompatibility ArMDE:4742 denies, so the catalogue ships a wrong value because the code compels it. Exempting the pair by name puts a catalogue id in Rust — the same separability violation in a smaller font — and renaming the ids breaks every save holding one (`Selection.item_ref` is the id) and discards the book's own *"Minor or Major"* descriptor. **The fix is D10's shape:** keep the default, add one optional `skip_serializing_if` data opt-out (as D11 did for `max_score` and D13 for `from_normal_budget`), then delete the two rows — which closes **F-226**. D10 has a second claim: *"more than one area"* makes both entries legitimately repeatable, so each needs an explicit `max_total` and a D9 **area** parameter, without which the repeats are indistinguishable. Not blocked. The doubled clause found in the English source at ArMDE:4742 is **F-549** |
 | Q-58 | `virtue.ripper`: are the two fixed powers a `power_levels` grant or pre-entered powers? | N | open |
 | Q-59 | `virtue.privileged_upbringing`: can a pool-scoped permission be expressed at all? | N | open |
 | Q-60 | `virtue.personal_vis_source`: is "about one tenth" a rule or hedged guidance? | N | open — **Q-83 family** |
 | Q-61 | `virtue.rat_up_a_drainpipe`: is "a substantial advantage" mechanical? | — | **closed — D8: yes** |
-| Q-62 | `virtue.powerful_relic`: is the relic's one power charged against the power-levels budget? | R | open |
+| Q-62 | `virtue.powerful_relic`: is the relic's one power charged against the power-levels budget? | R | **SETTLED — `q-resolutions.md` § Q-62 (2026-09-22).** **No — and it must not be recorded in `Entity::powers` at all.** ArMDE:4784's subject throughout is an **item the character owns**, and the power's content is *"agreed upon with the storyguide"* with no level stated, so no budget can charge it; `effective::powers_used` charges every `Entity::powers` row against a budget this Virtue leaves at 0, so writing the relic's power down yields a false `over_power_levels`. A `power_levels` grant would invent a number (`7f5605a`), and `item_level_budget` counts Hermetic enchantment levels, which a Divine relic's power is not. **No new effect**; `true_faith_grant: 3` is correct and complete. The power and ArMDE:4786's impiety clause reach the player as text (D5/D20). Worth stating once beside `powers_used` that an owned item's power does not enter `Entity::powers` — it settles `virtue.relic` and `virtue.infernal_heirloom` too. **F-249 (`virtue.ripper`) is expressly NOT settled by this**: there the powers are the character's and their levels *are* stated — that is **Q-58**. Nothing blocked |
 | Q-63 | does a translation table's term bind *inside a sentence*, or only on a label? | N | open — **F-65, F-320, F-473 depend on it**; **D18** does not answer it but changes what a disagreement means |
 | Q-64 | is a supernatural *capability* with no number, no roll and no waived penalty mechanical? | — | **closed — D8: yes.** Three independent supports, incl. ArMDE:2960-2962's realm association + same-realm-aura Warping immunity on **every** Supernatural Virtue, which falsifies the `narrative` claim for this cohort on grounds independent of the capability argument |
 | Q-65 | two canonical tables give `Sense Holiness and Unholiness` different German names | X | **PARTLY settled — D31**: the rulebook heading no longer breaks the tie, so this is now **table vs table** and falls to D7 rule 3 (thematic table before `tugenden-fehler.md`). Decide on that alone; do **not** reach for the stale heading |
 | Q-66 | does `virtue.sense_holiness_and_unholiness`'s "may overwhelm you" state a D5 rule? | N | open |
-| Q-67 | what amount should `virtue.simple_student`'s restricted XP pool carry? | R / N | open |
-| Q-68 | does Subtle Magic's "no benefits from normal gestures" add anything to the Words/Gestures table? | R | open |
+| Q-67 | what amount should `virtue.simple_student`'s restricted XP pool carry? | R / N | **SETTLED on the rules read; exact model BLOCKED; a narrow call is LEFT FOR NORBERT — `q-resolutions.md` § Q-67 (2026-09-22).** **No single amount exists.** ArMDE:4960 states a **rate** — *"30 experience points per **finished year**"* — and fixes neither the year count (*"somewhere along his university program"*) nor a maximum, so there is no constant for `RestrictedAbilityXp.amount` and choosing one would invent a number (`7f5605a`). Meanwhile the entry ships `creation_effect` with **no `effects` array at all**, so a Simple Student currently receives **nothing** and neither locale says why. **Interim, not blocked, should land:** reclassify to `uncomputed_rule` and write the rule into `description` in both locales (D3, and D20's fidelity test, which the entry fails outright). **Exact model blocked** on a **numeric** parameter type plus a parameter-scaled `RestrictedAbilityXp` — a *third* parameter kind, not D9 part 3's multi-valued one, but worth designing alongside it. **For Norbert:** ship no pool + text (the recommendation, and arguably already forced by D3) or ship 60 (the bound before Baccalaureus). The same read found a **second female-only exception**, so D16/Q-05's count is short by one — **F-548** |
+| Q-68 | does Subtle Magic's "no benefits from normal gestures" add anything to the Words/Gestures table? | R | **SETTLED — `q-resolutions.md` § Q-68 (2026-09-22).** **No: "normal gestures" means Bold, which the table prices at 0**, so the clause restates a zero. ArMDE:9236 defines *normal* for the table (*"normally cast with a firm voice and bold gestures"*) and the twin confirms it independently — `virtue.quiet_magic`'s *"using your voice normally"* is :9236's **Firm**, also 0, and cannot point at its own name's row because there is none. DE:5075's *"nicht mehr"* is a translator's intensifier, not evidence (English is the source of truth). **Nothing computed changes and nothing is blocked**; `RULES.md`'s residual **clamp at 0** already implements this reading, so only its justification needs re-founding on ArMDE:5075 and :4824. **F-301 shrinks** to the exaggerated-gestures half plus the waived *None* penalty, and **F-239 takes the same resolution** — write the two in one pass so the parallel wording stays parallel. Worth putting in the description: the clause blocks the inference that the whole column shifts |
 | Q-69 | a table attributes a Reputation rule to `Social Contacts` that ArMDE:4990 does not state | X | **SETTLED — D6 rule 1**, and **D31 confirms it** (a rule fact, not a name). Only the fix is outstanding. — **D6 rule 1 decides it**; like Q-49, **D18 does not rescue it** (a factual claim, not terminology) |
-| Q-70 | should `virtue.sense_passions` carry `tainted: true`? | R | open |
+| Q-70 | should `virtue.sense_passions` carry `tainted: true`? | R | **SETTLED — `q-resolutions.md` § Q-70 (2026-09-22).** **No.** `tainted` is exactly the descriptor tag, and that is **measured, not assumed**: 21 descriptor lines carrying *Tainted* against 23 ids carrying the flag, the gap fully explained by two *"Major **or** Minor"* descriptors that define two ids each (ArMDE:3411, ArMDE:6081). ArMDE:4931 carries no tag. The page-170 cross-reference does not override it: ArMDE:7737 is **disjunctive** (*"either a false power … or is associated with the Infernal"*), and ArMDE:3000 states Tainted ⇒ Infernal, never the converse. Decisive corroboration from the verification pass: `flaw.false_power`'s parameter carries `forbid_tainted: true`, so tagging the entry would make **False Power (Sense Passions) unselectable** — the very arm :7737 names first. **Nothing owed on the entry, nothing blocked.** Record the census in `RULES.md`; both sides are mechanically derivable, so it is also a cheap data-integrity guard |
 | Q-71 | the German core rulebook gives `virtue.spirit_votary` two names and the tables give a third | X / N | **SETTLED — D31**: the third name is the **table's**, and on a *name* the table wins outright — the two rulebook renderings are both from the stale copy and no longer compete. (The entry's *magnitude/category* claim is a rule fact and stays with the rulebook) |
 | Q-72 | what is the "Brother-Priest Status Virtue" that ArMDE:5111 names? | R | open — **if it is a fourth rank, F-34's census is not closed** |
 | Q-73 | which `ReputationType` carries an **organization**-scoped Reputation? | — | **closed — D11: none, and the enum does not grow.** ArMDE:1093 names Local, Ecclesiastical and Hermetic, with Academic alongside, and the ease-factor table has exactly those columns. "Among Templars", "among the Jewish community" are **content** |
@@ -2300,10 +2381,10 @@ blocked behind D14.
 | Q-75 | does ArMDE:2394's "only companions can take this" bind grogs? | N | open — **F-339 depends on it** |
 | Q-76 | is a roll-free supernatural *capability* `narrative` or `uncomputed_rule`? | — | **closed — D8: `uncomputed_rule`.** **48** of the 115 `supernatural` entries move (`jq`-verified). Enumerate them **from the data**. Largely a relabelling, not 96 new texts — a `description` is owed only where the `summary` does not already carry the rule. **Blocked behind § 2.1b**: the screen needs a capability idiom first |
 | Q-77 | how should a free-text `{land}` placeholder render in German, where the article inflects? | N | open |
-| Q-78 | does `virtue.unaging`'s non-fatal-crisis clause have a home in the M6/6b7 crisis engine? | C | open |
-| Q-79 | the book files two Flaws under a magnitude their own descriptor contradicts | R | open |
+| Q-78 | does `virtue.unaging`'s non-fatal-crisis clause have a home in the M6/6b7 crisis engine? | C | **SETTLED — `q-resolutions.md` § Q-78 (2026-09-22).** **Yes, and it is small and well-scoped.** B09 looked one level too low: the split ArMDE:5189 draws is the table's **outcome type**, not `CrisisSeverity`, and `aging.rs::CrisisOutcome` has exactly the two variants the rule needs — *not potentially fatal* **is** `Bedridden` (no roll, so no death possible) and *potentially fatal* **is** every `Illness` row. So: a carrier of `virtue.unaging` who rolls a `Bedridden` row suffers no ill-effect; every `Illness` row resolves unchanged. **No new `AgingEffect` kind, no new table column, no change to `CrisisSeverity`** — and it must **not** be routed through `AgingEffect::CrisisSurvival`, because ArMDE:16636 says Virtues affecting aging rolls do not affect crisis-survival rolls. Scope it to the outcome only: Decrepitude still accrues (ArMDE:16619, and :5189's own *"only building up to give you Decrepitude points"* / *"die as normal when you reach five"*). **F-332's text obligation stands alongside** and is not replaced. Not blocked |
+| Q-79 | the book files two Flaws under a magnitude their own descriptor contradicts | R | **SETTLED (by D25) — `q-resolutions.md` § Q-79 (2026-09-22).** **The descriptor wins and `magnitude: "minor"` stands on both entries.** Verified line by line: the index heading `### Supernatural, Major` is ArMDE:5387 and both entries' index lines (ArMDE:5392 and :5393) sit under it, while their own descriptors (ArMDE:5736, :5754) read *Minor, Supernatural* — and both index lines are literally `[Name](#anchor)<br>` link lines, which D25's obligation 3 already calls unreliable (134 dead link targets). The content test agrees: ArMDE:5755's 5-XP loss and one-level botch loss is Minor-scale. **No data change, nothing blocked.** Two more rows in **D25's `RULES.md` errata note**, which must be worded to hold the **magnitude** axis as well as the category one. This answers D25's obligation 2 for B10's span — **the sweep will return a list, not a single row** (B19 one, B10 two, B16 one via Q-125), and should be budgeted as such |
 | Q-80 | is `flaw.black_sheep`'s "a bad Reputation **of your choice** at level 2" a wildcard? | — | **closed — D11: already solved.** `GrantsReputation.kind: Option<..>` with `None` *means* player-chosen, and `virtue.famous` (ArMDE:3861) already uses it. `flaw.infamous` pinning `kind: "local"` is the defect (F-450) |
-| Q-81 | which `casting_fatigue` sign convention is intended? | C / N | open — **F-351 depends on it** |
+| Q-81 | which `casting_fatigue` sign convention is intended? | C / N | **SETTLED (revised) — `q-resolutions.md` § Q-81 (2026-09-22).** **The data convention is right; the read-out is the defect.** **The first answer — flip all three shipped amounts — was overturned by the verification pass and is withdrawn**: `derived/combat.rs::fatigue_levels` proves the convention arithmetically (*"A positive delta reduces magnitude; never flip a penalty positive"*, `penalty: (base + delta).min(0)`), and a **12-row `health_mod` census across ten entries** finds *positive = better for the character* obeyed everywhere, including two computed penalty tracks. **What both passes found independently, and what matters, is that the user reads a backwards number today**: the Fluent label `Casting fatigue` / `Zauber-Erschöpfung` names a *cost*, so a Withstand Casting magus — a **Virtue** — is shown *"Casting fatigue: +1"*. **Revised remedy for F-351:** fix the doc comment on `types.rs::HealthTrack::CastingFatigue` and rename the label's value in **both** locales; **leave the three amounts alone** — cheaper, touches no shipped data, preserves the family consistency. **F-352 is confirmed outright** (ArMDE:7003 and :5269 state the creation-time exclusion verbatim on both sides), and both entries join **D10's 42**, since both passages explicitly permit repeats (*"Vulnerable Casting (2)"*, *"Withstand Casting (3)"*) and need an explicit `max_total`. `flaw.painful_magic` is mis-**tracked** rather than mis-signed (ArMDE:6576 counts pain levels for *every* spell cast, recovered separately) — flag it for the D20 text pass, do not invent a fourth track. Original follows. — **F-351 depends on it** |
 | Q-82 | may the German source be used to repair a truncated **English** sentence? | N | open — **F-370 depends on it** |
 | Q-83 | is a hedged monetary value a mechanical clause for classification purposes? | N | open |
 | Q-84 | what entity or type should hold `flaw.abandoned_apprentice`? | N | open |
@@ -2311,7 +2392,7 @@ blocked behind D14.
 | Q-86 | should every "choose the specifics" Flaw carry a parameter? | — | **closed — D9: YES, record every stated choice**, `enumerated` where the book lists the options and `text` only where the choice is genuinely open. **Catalogue-wide** — § 3.7's 26 findings are *not* the full set; the slice re-derives it. **Multiplicity is D10's, not D9's** |
 | Q-87 | should `flaw.broken_vessel` carry an enumerated `prerequisites` tree? | N | open |
 | Q-88 | should a player's free-text choice of *scope* be recorded by a parameter? | — | **closed — D9: yes** |
-| Q-89 | ArMDE:5911 says "Technique" inside *Deficient Form*'s own passage — misprint or not? | R | open |
+| Q-89 | ArMDE:5911 says "Technique" inside *Deficient Form*'s own passage — misprint or not? | R | **SETTLED — `q-resolutions.md` § Q-89 (2026-09-22).** **A misprint in the book, not in this repo.** ArMDE:5911's final sentence is byte-identical to ArMDE:5915's, where it is correct — a copy-paste from the neighbouring entry — and **the German carries it too** (DE:5911 reads *"der **Technik**"*), so it is neither an OCR slip (D26's carve-out needs the error to be the OCR's, and `Technique`/`Form` is not an OCR confusion) nor a translation slip. Two independent renderings locate it in the printed book. **No change to `rules/source/en/`, `rules/source/de/` or the shipped strings** — the `scheitest` precedent governs and D26 does not reach it. One more row in **D25's `RULES.md` errata note**. Nothing computes off it either way: `effective/xp.rs` never consults `effective/art.rs::deficient_arts`, so XP is already costed off the unhalved score for **both** Arts. **F-400 is independent and stands.** Nothing blocked |
 | Q-90 | which of the two Deficient Art entries has the right shape? | — | **closed — D12: neither, and `flaw.deficient_form` is the one missing its gate.** Hermetic V/F split **intrinsic** (operates on The Gift itself — exactly the three entries already gating on `virtue.the_gift`) from **trained** (Techniques, Forms, spells, Casting/Lab Totals, Parma, certámen, Twilight → **magus only**). Obliges classifying all **122** `hermetic` entries — measured: 41 mechanically obvious, 56 carry no effects at all, ~25 need checking — **derived from the batch files, not a re-read**. Use `Prereq::IsMagus`, and normalise `flaw.deficient_technique`'s `Has` spelling to it |
 | Q-91 | does ArMDE:5895's third sentence change **D4**'s answer for Cyclic Magic? | N | open — **D4's own slice needs it** |
 | Q-92 | how should a *mandatory earmark of the normal budget* be encoded? | — | **closed — D13: add `from_normal_budget` to `RestrictedAbilityXp` and model both clauses exactly.** An engine change for **one entry in 655** (the phrase occurs once in the rulebook) and the cheaper approximation was overruled. **§ 3.17**, and **D14 first** |
@@ -2325,21 +2406,21 @@ blocked behind D14.
 | Q-100 | should `SurfacedModifier` carry the id of the item that produced it? | N | open — **F-423** |
 | Q-101 | how should "once per Power" be encoded, on the twin entries that state it? | N | open |
 | Q-102 | is ArMDE:2816's total absence from the engine a deliberate deferral or a gap? | N | open — **F-427** |
-| Q-103 | `flaw.false_power`'s `require_categories` admits any Hermetic or Special Virtue where the book says *Supernatural* | R / C | open |
+| Q-103 | `flaw.false_power`'s `require_categories` admits any Hermetic or Special Virtue where the book says *Supernatural* | R / C | **SETTLED on the rules question (revised); the REMEDY is a narrow cost call LEFT FOR NORBERT — `q-resolutions.md` § Q-103 (2026-09-22).** Neither of B13's options is what the book says: ArMDE:6082 states a **predicate** whose head noun is *Supernatural Virtues* and marks its own open-endedness with *"**like** Faerie Blood, Diedne Magic, or even The Gift"* — so *"like"* defeats a whitelist, and the shipped three-category list is reverse-engineered from the three examples' categories (one each), which is the signature of a set inferred from three points. **The first answer — the whole shape needs D23's predicate plus a new data property — was overstated, and the verification pass measured it away**: `special` contains **exactly one** Virtue (`virtue.the_gift`) and `supernatural` **is** the stated class, so **two of the three arms are already exact** and the over-permission is one arm, **55 entries**. ArMDE:6096 is the warrant for `forbid_tainted: true`. **For Norbert:** a one-id whitelist on the `hermetic` arm naming `virtue.diedne_magic` (exact for today's catalogue, closed where the book is open, ~1 optional `ParameterDef` field, lands beside D14), route it through **D23**'s predicate (open, but needs a property the catalogue does not carry — `jq` finds **zero** entries with a `realm` key), or keep 56. **Both passes agree the status quo is wrong**; until it moves, `RULES.md`'s record must say the list is an approximation with a known over-permission, as D14 required of the Covenant Upbringing record |
 | Q-104 | `flaw.flawed_powers` records no parameter for the Flaw it imports, where `flaw.false_power` does | N | open |
 | Q-105 | is `flaw.form_monstrosity`'s "1 pawn of Muto vis" a mechanical clause? | N | open |
 | Q-106 | what shape should F-428's correction take? | N | open — **F-428's fix depends on it** |
 | Q-107 | should the two Maledictions also carry an *open grant*, on top of F-442's reclassification? | N | open |
 | Q-108 | does `virtue.lone_redcap`'s 300 XP **replace** the funding for its fifteen apprentice years, or supplement it? | — | **closed — D17: it REPLACES.** Resolved *from the source*, not by choice: ArMDE:4848 and :4321 describe the same 300 for the same fifteen years, and `life_stages.json` already models a 15-year, 240-XP apprenticeship block. **F-439 unblocked and confirmed `high`** (~225 XP over-funded). A second defect fell out: `virtue.redcap` encodes its 300 **not at all**, so the pair is wrong in opposite directions. Remedy is **§ 3.17**'s third mode |
-| Q-109 | `flaw.fury` and `virtue.berserk` state the same condition, encoded two contradictory ways | R / C | open |
-| Q-110 | ArMDE:6124's two +4 traits contradict ArMDE:2502's ±3 for a Minor Personality Flaw | R | open |
+| Q-109 | `flaw.fury` and `virtue.berserk` state the same condition, encoded two contradictory ways | R / C | **SETTLED — `q-resolutions.md` § Q-109 (2026-09-22), and both derivations reached it independently.** **They converge on `flaw.fury`'s side.** Neither condition is a character-generation fact (ArMDE:3502 needs a 9+ stress die after a wound; ArMDE:6196 a failed 9+ roll on a provoking event), and **D4** — not D1, whose scope paragraph confines it to `spell_level_cap` — rules that a condition creation cannot resolve must not be folded flat into a number printed as a result. A combat total is exactly that. So `virtue.berserk`'s `combat_mod {attack +2}`, `combat_mod {defense -2}` and `soak_mod +2` are the defect (**F-20 confirmed**, and `derived.rs::in_play_mods` sums them unconditionally today), and **`flaw.fury` is clean and needs no change** — *"-1 on all other scores and rolls"* is broader than any effect vocabulary in the engine anyway. Delete the three effects, move to `uncomputed_rule` with the conditional bonuses in `description` in both locales (D5/D20), and give it **its own test** per D15's `flaw.corrupted_spells` shape: a Soak total and two combat totals change silently for every Berserk character. Berserk's unencoded *"automatically gain the Personality Trait Angry +2"* is **F-19** and should be designed with **Q-110**'s family. Not blocked |
+| Q-110 | ArMDE:6124's two +4 traits contradict ArMDE:2502's ±3 for a Minor Personality Flaw | R | **SETTLED — `q-resolutions.md` § Q-110 (2026-09-22).** **There is no contradiction.** ArMDE:1075 hedges three times in two sentences (*"normally range between +3 and -3, **although there are exceptions**"*, *"would normally"*, *"would justify"*) and ArMDE:2502 exceeds its own range one clause after stating it, while ArMDE:6124 **commands** (*"**Select** a Personality Trait at +4, and its opposite at +4"*). **D16's table therefore inverts today's behaviour:** `validation/scores.rs::validate_personality_traits` enforces the hedged guideline as a hard error and raises **two** of them on a Minor Flaw whose own shipped description instructs the player to build it. B13's option (a) is right and (b) and (c) are excluded — (b) leaves the app rejecting a legal character, (c) invents a number (`7f5605a`). So: the ±3/±6 check becomes a **warning** and the ±6 hard cap goes with it, and **F-440 is unblocked** with its fix in the validator, not the data. **Remedy BLOCKED** on a "mandates N traits at value M" field, which nothing in `PointItem` expresses — a family of **at least five** (ArMDE:3502, :4375, :6124, :6903, :7078) that must also express **narrowing** (ArMDE:7078 constrains *all* traits to +1…-1, which is **F-542**'s observation from the other side), so design it with D21's Effect-side twin. The trait names are a **D9** `enumerated` choice |
 | Q-111 | does `flaw.independent_craftsman`'s recategorization clause apply, given *City and Guild* is not in the repo? | N | open — **provenance: a rule from a book with no source cannot be implemented** |
-| Q-112 | does `virtue.lone_redcap` satisfy `flaw.hermetic_patron`'s "a Redcap"? | R / N | open — **F-448's fix depends on it** |
+| Q-112 | does `virtue.lone_redcap` satisfy `flaw.hermetic_patron`'s "a Redcap"? | R / N | **SETTLED — `q-resolutions.md` § Q-112 (2026-09-22).** **Yes** — ArMDE:4321's first six words are *"You are a Redcap"*, and nothing in ArMDE:6248-6255 narrows the word (ArMDE:6252 uses it unqualified again). **F-448 is unblocked** and its `Any([Has(virtue.redcap), Has(virtue.lone_redcap), IsMagus])` is right, with `Prereq::IsMagus` for the magus arm per D12's normalisation. **But Q-112's stated aim is the wrong aim:** the source says the two Redcap prerequisites **must** differ. `virtue.magic_items` naming `virtue.redcap` alone is **correct**, because ArMDE:4321 itself says a Lone Redcap *"do[es] not receive magic items"* — a character who receives none cannot begin with 25 more levels of them. **Do not widen it;** note ArMDE:4321 at the entry or in `RULES.md` so the next reader does not "harmonise" the two. A stronger `incompatible_with` there is arguably owed and is **flagged, not asserted** (nothing is reachable today — `prereq_not_met` already fires). D17 untouched. Nothing blocked. Original follows. — **F-448's fix depends on it** |
 | Q-113 | should an `advancement_mod` marker of `amount: 0` render as a word? | N | open — UI |
 | Q-114 | under D6 as corrected, does the glossary or the shipped data win on F-456 and F-457? | N | **SETTLED — D31**: the **glossary** wins; both are names. The shipped values were generated from the stale rulebook, so "shipped disagrees with the glossary" is now evidence *against* the shipped value |
-| Q-115 | is `flaw.inscribed_shadow`'s House Criamon restriction a prerequisite to encode? | R / N | open |
-| Q-116 | the book defines "combat scores"; the repo's reading excludes three of the five | R / C | open — **overturned the clean verdicts on `flaw.hobbled` and `flaw.lame`** |
-| Q-117 | two in-repo authorities give opposite readings to "the passage states the *absence* of a rule" | C / N | open — `NO_RULE_DESPITE_TOKEN` versus `RULES.md:4684` |
+| Q-115 | is `flaw.inscribed_shadow`'s House Criamon restriction a prerequisite to encode? | R / N | **SETTLED (revised) — `q-resolutions.md` § Q-115 (2026-09-22).** **No hard prerequisite** — ArMDE:6320's absolute is *stigmata* (*"**Only** characters with stigmata may have this Flaw"*), which the engine models nowhere and the entry already ships as text under D3; the House clause is a hedged gloss, and a `Prereq::House` would forbid the non-Criamon stigmatic the sentence's own *"normally"* leaves room for. **But the first answer's "and no warning either" half was overturned by the verification pass**: **D16 closed Q-139 on identical wording** (ArMDE:6957's *"is **generally** restricted to magi of House Verditius"*) with the standing instruction to *"apply this wherever the book hedges, rather than escalating each instance"*. So **one warning is owed**: holds `flaw.inscribed_shadow` and is not House Criamon → **warning, never an error**, and per D2 the check must see *granted* Flaws. The widened sweep (*"generally/normally restricted"*) returns **5** hits of which **2** restrict an entry — ArMDE:6320 and ArMDE:6957 — so the population is **two**, not one. **Remedy BLOCKED: `Prereq` has no warning severity at the entry level** (`prereq_not_met` is an error), so D16's hedged→warning rule has no carrier here — registered as **F-550**, and Q-115 is what makes that gap live rather than latent |
+| Q-116 | the book defines "combat scores"; the repo's reading excludes three of the five | R / C | **SETTLED — `q-resolutions.md` § Q-116 (2026-09-22), reached independently by both derivations, reduction included.** **ArMDE:16656's defined term governs** — *"Characters have **five combat scores: Initiative, Attack, Defense, Damage, and Soak**"* — and the book distinguishes *scores* from *rolls*, which `RULES.md` does not: ArMDE:22809 says *"All combat rolls use stress dice"*, and of the five formulas at ArMDE:16658-16666 exactly three end in a stress die. So `flaw.lame`'s *"other combat **scores**"* (ArMDE:6332) and `flaw.hobbled`'s *"other combat **rolls**"* (ArMDE:6262) are **not** saying the same thing, and any reading that collapses them cannot produce the difference. `flaw.lame` gains `combat_mod -1` on `initiative` and `damage` plus `soak_mod -1` (the existing `-3 defense weapon:weapon.dodge` row is correct and stays); `flaw.hobbled` gains `combat_mod -6` on `initiative` only. **No engine change** — `CombatStat` has all four and Soak rides `soak_mod`. **Scope is two entries, not six**: the other four B14 predicted use neither phrase (ArMDE:6436, :6608, :6580, :6440) and `RULES.md`'s reading is untouched for them. `RULES.md`'s *"combat rolls / combat scores"* block is **rewritten, not amended** (both its conclusion and its warrant stop being true), row 37 of `docs/open-todos.md` **reopens**, and `data_integrity.rs::the_combat_roll_flaws_penalize_the_combat_ability_totals` is the test that must go red first. **Both entries stop being unrated: defective at `high`** — wrong numbers on a printed sheet. Not blocked. Original follows. — **overturned the clean verdicts on `flaw.hobbled` and `flaw.lame`** |
+| Q-117 | two in-repo authorities give opposite readings to "the passage states the *absence* of a rule" | C / N | **SETTLED (by D20 + D3, applied) — `q-resolutions.md` § Q-117 (2026-09-22).** **`RULES.md`'s principle survives; the `NO_RULE_DESPITE_TOKEN` exemption does not**, and D20 post-dates both authorities. ArMDE:6324 and ArMDE:6266 are the same shape — a sentence written to forestall a penalty the rest of the entry invites (that a legless character moves like `flaw.lame` or `flaw.hobbled`) — and a sentence written to stop a player applying a penalty is a rule the player needs. `flaw.horrifying_appearance_snake_legs` ships `narrative` with **no `description` in either locale** and a `summary` stopping at sentence one, so neither of D20's two routes happens: that is D20's silent drop verbatim. D3 independently forbids grounding `narrative` in what the engine computes. So: **`narrative` → `uncomputed_rule`** with the passage in both locales (DE:6266 is already complete and line-parallel), and the exemption row is **deleted, not reworded**. `jq` confirms the entry is `supernatural` + `narrative`, i.e. already one of **D8's 48** by D8's own enumeration rule — check that list before filing it as a separate move. **Remedy BLOCKED behind § 2.1b / D19**: the new text carries no signed number and no botch term, so the screen needs a *"declines to impose a penalty"* family first (*"nicht behindert"*, *"muss … weder … noch"* — both **discontinuous**, which is why D19 ruled for regex). Original follows. — `NO_RULE_DESPITE_TOKEN` versus `RULES.md:4684` |
 | Q-118 | is `flaw.monastic_vows_hermetic`'s "you cannot own vis" mechanical, given the engine models no vis? | N | open |
 | Q-119 | is `flaw.necessary_condition`'s "you cannot cast spells at all" a mechanical absolute or a fiction condition? | N | open |
 | Q-120 | is an entry computing in both phases `creation_effect` or `in_play_effect`? | — | **closed — the enum's own doc comment: `creation_effect`** |
@@ -2347,7 +2428,7 @@ blocked behind D14.
 | Q-122 | should `flaw.magical_fascination`'s authorization name both Lores, or record the player's choice? | — | **closed — D9: record the choice.** **D14 supplies the missing half**: an ability reference in an effect gains a **binding** to the selecting entry's own parameter, which is exactly this shape (`virtue.student_of_realm` is its sibling defect) |
 | Q-123 | two entries state a *soft* restriction on magi, and the engine has only hard blocks | — | **closed — D16: emit a WARNING, never an error.** No new machinery — `IssueSeverity::Warning` / `ValidationIssue::warning` exist (`validation/mod.rs:73`, `:844`). A `forbidden_traits` row would say something the book (*"normally"*, *"not suitable"*) does not, which is the class of error `7f5605a` was reverted for. **Apply the hedged-versus-absolute rule wherever the book hedges, rather than escalating each instance** |
 | Q-124 | this span carries both `source.lines` conventions | C / N | **SETTLED — D30** (with Q-97): a range ends on the **last non-blank body line**. That is the *minority* form (B16: 32 of 35 use the other), so most rows change; normalise mechanically from the anchors, and fix `RULES.md` and check 1 to agree |
-| Q-125 | the rulebook contradicts itself about `flaw.prohibition`'s category | R | open |
+| Q-125 | the rulebook contradicts itself about `flaw.prohibition`'s category | R | **SETTLED (by D25) — `q-resolutions.md` § Q-125 (2026-09-22).** **The shipped `["supernatural"]` is right, by two independent margins.** Verified line by line: the descriptor (ArMDE:6639, *Minor, Supernatural*) and the index **agree** here — ArMDE:5552's link sits under the `### Supernatural, Minor` heading at :5534 — unlike Q-79 and unlike D25's own case; and the dissent (ArMDE:6719) is a passing cross-reference inside a *different* entry, weaker even than an index line. **The mechanical test agrees too, which D25's own case did not have:** a `personality` reading would consume a Personality-Flaw slot (ArMDE:2820) and feed `validate_personality_traits`' Major-Flaw budget, while :6719's own words are that the grant *"does not count toward the character's total number of Virtues and Flaws"*. **No data change, nothing blocked**; one more row in **D25's `RULES.md` errata note** carrying all three citations and that argument, since the dissent cannot simply be adopted. **F-498 is unaffected and stands** — it names the right entry whichever category it carries |
 | Q-126 | is an entry whose only mechanical content is a *selection restriction* mechanical? | — | **closed — D8: yes** |
 | Q-127 | a granted Reputation's `score` cannot hold the range ArMDE:6554 gives | — | **closed — D11: add `max_score: Option<u8>`.** Absent = exact, present = the score must lie in `[score, max_score]`. **31 entries grant a Reputation; exactly one states a range** (`flaw.outsider_*`, ArMDE:6554), so `skip_serializing_if` leaves 30 entries' JSON unchanged. Both magnitudes get `score: 1, max_score: 3` |
 | Q-128 | should `flaw.plagued_by_supernatural_entity` carry an `entity` parameter? | — | **closed — D9: yes** |
@@ -2360,7 +2441,7 @@ blocked behind D14.
 | Q-135 | is `flaw.seeker` magus-only, and **does a rule in another book bind an entry that cites ArMDE?** | N | open — B17; **`flaw.seeker` is ESCALATED and NOT marked checked.** The entry's own pointer resolves to HoH:TL:503, *"A magus from any House may be a Seeker"* — which both *removes* a House restriction and presupposes a magus, while ArMDE:6713-6716 never says "only magi". **Question 2 is the policy call and has consequences far beyond this entry** (§ 3.1's second blind spot already records F-442/F-452/F-453/F-478 of the shape "a rule the book states elsewhere about a named entry is structurally invisible"; this is the first where "elsewhere" is another **book**). If cross-book rules bind, a **second citation** must be recorded — which `source`, a single `SourceRef`, cannot hold |
 | Q-136 | does a **surfaced-only** effect kind satisfy `in_play_effect`, or is `uncomputed_rule` the honest class? | N | open — B18; **`flaw.susceptibility_to_divine_power` is ESCALATED and NOT marked checked.** It ships `in_play_effect` with `doubled_aura_penalty`, one of eight surfaced-only kinds pushed with `amount: 0`, and `RULES.md:4882-4888` defends it in words that describe an `uncomputed_rule` (*"surfaced, not simulated"*). **B17's F-515 set the opposite precedent one batch earlier** by leaving `flaw.short_ranged_magic` `in_play_effect`. **The ruling governs 19 catalogue entries** — re-counted by B18's verification pass from `derived.rs::in_play_mods`' own `match`, correcting an earlier "at least twelve", which was the count of *effect kinds*, not entries |
 | Q-137 | `incompatible_with` holds ids; ArMDE:6925 states a **predicate** | N | open — B18, see F-526. "Any other Flaw that grants a Bad Reputation" = sixteen Flaws today. **(a)** ship the ids plus a test asserting the list equals the derived set, or **(b)** add a predicate-valued exclusion. **Not equivalent under CLAUDE.md**: (a) freezes a *number* of entries into data and is tolerable only because the test regenerates it. `virtue.doctor_in_faculty` as a prerequisite is **not** blocked on this |
-| Q-138 | ArMDE:6148 forbids a **class** of Flaws, and it sits on another batch's entry | R then N | open — B18. *"Any Flaw that is only appropriate to Hermetic Magic (for example, Deficient Technique or Unstructured Caster) cannot be taken with this Flaw."* Inside **B13**'s span and carried by no finding in B13, B17 or this index. Harder than Q-137: `categories: ["hermetic"]` includes Flaws that are not *only* Hermetic, so the data does not cleanly enumerate it. **Recorded so B13's entry is not left silently unrated** |
+| Q-138 | ArMDE:6148 forbids a **class** of Flaws, and it sits on another batch's entry | R then N | **SETTLED on the rules question and on the entry's status; remedy BLOCKED; and the *reading* is now a narrow question LEFT FOR NORBERT — `q-resolutions.md` § Q-138 (2026-09-22).** **D23 settles the mechanism and D12 supplies the predicate**: ArMDE:6148's two worked examples, `flaw.deficient_technique` and `flaw.unstructured_caster`, are both squarely **trained** under D12's criterion, which is exactly the gap B18 called harder than Q-137. **The entry is NOT unrated** — B13 checked and passed `flaw.flawed_powers` on `RULES.md`'s record that both restrictions are inexpressible, so the residue is precise: **when D23 lands, that record stops being true and must be rewritten**, as D14 required of the Covenant Upbringing record. **New design constraint neither D21 nor D23 currently carries:** the predicate must be able to name a **magnitude** and a **minimum count**, not only a category — ArMDE:6148's *"at least one **Major** Supernatural Virtue"*, the same sentence's *"a **Major** Hermetic Flaw"* (Q-104), and ArMDE:6082 (Q-103) are three sites wanting it, so fold it into D21 + D23's shared design rather than building a fourth mechanism. **Remedy BLOCKED** on D12's classification pass over the 122 `hermetic` entries, then D23. **For Norbert:** is the clause a constraint on the Major Hermetic Flaw that Flawed Powers **imports** (the verification pass's reading — the two named examples are exactly the Hermetic Flaws that cannot be re-*targeted* at a Supernatural Virtue, and the incompatibility reading would forbid a magus with Flawed Powers from holding Deficient Technique as an ordinary, unrelated Flaw, which :6148's own *"rather than to her Hermetic magic **(if any)**"* contemplates), or a plain incompatibility (**D23 assumed this**, and the grammar *"taken **with** this Flaw"* favours it)? **It changes what D23 builds, not only where it is pointed.** No data change now and no new finding against the entry; Q-104 stays separately open. Original follows. — B18. *"Any Flaw that is only appropriate to Hermetic Magic (for example, Deficient Technique or Unstructured Caster) cannot be taken with this Flaw."* Inside **B13**'s span and carried by no finding in B13, B17 or this index. Harder than Q-137: `categories: ["hermetic"]` includes Flaws that are not *only* Hermetic, so the data does not cleanly enumerate it. **Recorded so B13's entry is not left silently unrated** |
 | Q-139 | does "generally restricted" warrant a hard prerequisite? | — | **closed — D16.** ArMDE:6957's *"is **generally** restricted to magi of House Verditius"* is hedged, and D16's table maps hedged → **warning, never an error**, with the standing instruction to *"apply this wherever the book hedges, rather than escalating each instance"*. **F-533's magus half was never hedged** and needs no ruling. Q-13, which B18 called adjacent, is separately closed by D2 |
 | Q-140 | Weak Parens / Skilled Parens have no `IsMagus` prereq, and a **Gifted companion** can reach them | N | **SETTLED — D24.** Both gain `Prereq::IsMagus` (they are *trained* under D12, since :7074's 180/90 are apprenticeship figures), and the companion profile's Gift-conditional `hermetic` permission **stays**: The Gift is necessary, not sufficient (ArMDE:2880 states both halves; ArMDE:2840 forbids dropping the first). **Blocked on D12**, whose pass covers the other 120 `hermetic` entries. Original escalation follows. — B19; **both entries NOT marked checked.** `categories: ["hermetic"]` is not a magus gate — the companion profile permits it conditionally on `virtue.the_gift`. What follows is not an error but a **silent budget change**: `general_pool_and_bonus` builds the base from apprenticeship + post-gauntlet **only when `is_magus`**, otherwise from `later_life_xp`, and the −60 is folded in unconditionally. Three readings are defensible; reading 2 (add `is_magus` to both) has the strongest textual support, since :7074's 180/90 are *apprenticeship* figures. **Whatever the answer, it applies identically to `virtue.skilled_parens`**, which is out of span and appears in no batch record |
 | Q-141 | the book indexes Weak Personality under *Story, Minor*; its own descriptor says *Personality* | N | **SETTLED — D25.** `["personality"]` stands; the disagreement is recorded as a **known source erratum** in `crates/arm-rules/RULES.md` (both citations, side taken) — **no new register**. Two obligations: sweep the other 630 entries against the book's index lists once and state the result, and treat that sweep as a human-read comparison, never a guard (link hygiene is unreliable — 134 dead link targets). Original escalation follows. — B19. Descriptor (ArMDE:7077) and DE :7077 agree on *Personality* and the data follows them, so on the narrow question the data is right and **the book is internally inconsistent**. The consequence is user-facing and CLAUDE.md rates it up: a reader working from the book's Story list filters the app by Story and the entry is not there. Options: leave it; ship `["personality","story"]` (asserts a category the descriptor denies); or **record it as a known source erratum**, which B19 recommends — but **the audit has no errata register today**, and creating one is part of the decision. **The only descriptor/index disagreement in B19's 25** |
@@ -2391,6 +2472,13 @@ He works from this list, so it is ordered by consequence rather than by number.
 **Rewritten 2026-09-21:** the previous list's items 1-8 have all been ruled on,
 so what follows is what is *left*, not what was there before.
 
+**Amended 2026-09-22.** `q-resolutions.md` settled **31** questions, none of
+which was on this list — it carries what needs Norbert, and those 31 were the
+ones evidence could settle. Two consequences here: **item 4 has shrunk**, because
+Q-138's *rules* question is now answered and only a narrow reading is left; and
+**item 10 is new**, holding the three narrow follow-on calls those resolutions
+threw up. Everything else below is untouched.
+
 1. **Q-136** — does a **surfaced-only** effect kind satisfy `in_play_effect`?
    **19 catalogue entries**, and two batches have already set opposite
    precedents (B17's F-515 versus B18's escalation), so deciding it silently
@@ -2406,8 +2494,14 @@ so what follows is what is *left*, not what was there before.
    provenance policy call with consequences far beyond `flaw.seeker`, and one
    whose "yes" answer needs a data-model change (`source` is a single
    `SourceRef` and cannot hold a second citation).
-4. **Q-137 / Q-138** — `incompatible_with` holds ids where the book states a
-   predicate. Q-138 is the harder of the two and sits unrated on B13's entry.
+4. **Q-137** — `incompatible_with` holds ids where the book states a predicate.
+   ~~Q-138 is the harder of the two and sits unrated on B13's entry.~~ **Q-138 is
+   settled** (`q-resolutions.md` § Q-138): D23 supplies the mechanism, D12's
+   *trained* flag supplies the predicate, and the entry was **never unrated** —
+   B13 checked and passed it. What is left of Q-138 is the narrow *reading* in
+   item 10 below, plus one design constraint that belongs to **Q-132**'s decision
+   as much as to this one: the predicate must be able to name a **magnitude** and
+   a **minimum count**, not only a category.
 5. ~~**Q-140 / Q-141 / Q-142** — B19's three escalations.~~ **All settled:
    D24, D25, D26.** Q-142 is also already *fixed*; the other two are Phase 2 work.
 6. ~~**Q-130 / Q-133** — how far an existing mechanism reaches.~~ **Settled:
@@ -2428,6 +2522,27 @@ so what follows is what is *left*, not what was there before.
    a village") against :7674. Target-dependent: `area_lore` for a covenant,
    `organization_lore` for abbeys, universities, guilds and churches.
    **F-520 unblocked.**
+10. **Three narrow follow-on calls from `q-resolutions.md` (NEW, 2026-09-22).**
+    Each is one sentence, each sits *behind* an answered question, and none is a
+    reading the source can settle — they are cost or policy calls. Listed last
+    because they are narrow, not because they are optional.
+    - **Q-103's remedy** — tighten `flaw.false_power`'s `hermetic` arm from 56
+      Hermetic Virtues to the one ArMDE:6082 names, via a one-id whitelist on
+      `ParameterDef` (exact today, closed where the book's *"like"* is open, ~1
+      field, lands beside D14); route it through **D23**'s predicate (open, but
+      needs a data property the catalogue does not carry); or keep 56. Both
+      derivations agree 56 is wrong.
+    - **Q-138's reading** — is ArMDE:6148's *"Any Flaw that is only appropriate
+      to Hermetic Magic cannot be taken with this Flaw"* a constraint on the
+      Major Hermetic Flaw that Flawed Powers **imports**, or a plain
+      incompatibility? **D23 assumed the second.** The grammar favours D23; the
+      semantics favour the first. **It changes what D23 builds**, so it wants
+      answering before D23 is designed, not after.
+    - **Q-67's interim** — `virtue.simple_student` grants 30 XP per *finished
+      year* with no year count stated: ship no pool and put the rule in
+      `description` (the recommendation, and arguably already forced by D3), or
+      ship 60? The interim reclassification to `uncomputed_rule` should land
+      either way; only the number is in question.
 
 ---
 
@@ -2442,14 +2557,30 @@ and **every figure below was verified with a different command from the one that
 produced it.**
 
 Every number is derived **mechanically from § 1 of this file**, not recounted by
-eye, using the section's own line range (118-767) and its column positions:
+eye, using the section's own line range and its column positions:
 
 ```
-sed -n '118,767p' corrections.md | grep -a "^| F-" | cut -d'|' -f5 | ...
+sed -n '155,838p' corrections.md | grep -a "^| F-" | cut -d'|' -f5 | ...
 ```
 
-That restriction matters: eight later sections now contain tables whose rows also
-begin `| F-`, and counting the whole file returns **569** instead of 544.
+That restriction matters: **three** later sections contain tables whose rows also
+begin `| F-` — § 2.3, § 3.15 and § 3.16, **25** rows between them — so counting
+the whole file returns **576** instead of 551, and 576 − 551 = 25 checks out.
+(**Recounted 2026-09-22**: the earlier figure of "eight sections" was wrong, and
+nothing depended on it. Several further sections — § 3.5, § 4.3, § 4.4 — open
+their rows `| **F-`, which the plain pattern misses, so widen the filter before
+concluding a section has no finding rows.)
+
+**The line range moves whenever this file is edited** — it was `118,767` when
+§ 7 was first written and is `155,838` after the 2026-09-22 update. Re-derive it
+from `grep -n "^## 1\.\|^## 2\."` before quoting any figure; a stale range is a
+silently wrong count, which is the exact failure this section exists to prevent.
+
+**Every figure in § 7 was recounted from scratch on 2026-09-22**, not adjusted
+arithmetically from the previous numbers. Two of them moved for reasons that have
+nothing to do with the seven new findings, and both would have been missed by
+arithmetic: **F-520 left `blocked` for `live`** when Q-131 was settled, and
+**`fixed` is a new status** (F-546).
 
 **Column positions**, so a later reader can re-derive any figure: `f2` = finding
 number, `f3` = entry, `f4` = ArMDE, `f5` = kind, `f6` = severity, `f7` = status,
@@ -2461,65 +2592,83 @@ on the first attempt here.
 
 1. `grep -c "^### F-"` over all nineteen batch files returns **544** finding
    headings. Per batch: 33, 31, 24, 32, 39, 48, 49, 51, 40, 35, 24, 20, 17, 15,
-   21, 21, **21, 16, 7** — which sums to 544.
+   21, 21, **21, 16, 7** — which sums to 544. **The seven `q-resolutions.md`
+   findings have no batch heading**, because they belong to no batch, so
+   544 + 7 = **551**.
 2. `grep -o "^### F-[0-9]*" | sort -u | wc -l` over the same files also returns
    **544**, so no heading re-uses a number.
-3. § 1 of this file has exactly **544** rows, and **544 distinct** finding numbers
+3. § 1 of this file has exactly **551** rows, and **551 distinct** finding numbers
    (`cut`ing the number column and `sort -u`-ing it gives the same figure, so
    there are no accidental duplicate rows).
-4. Finding numbers run F-001 … F-545 with **one gap, F-44**, which
-   `batch-02.md:4` and `:534` both record as never issued. 545 − 1 = 544.
+4. Finding numbers run F-001 … F-552 with **one gap, F-44**, which
+   `batch-02.md:4` and `:534` both record as never issued. 552 − 1 = **551**.
 
-**Every kind and severity tally sums to 544**, and each is shown summing below.
+**Every kind and severity tally sums to 551**, and each is shown summing below.
 Where a figure is approximate, it says so.
 
 ### 7.2 Findings by status
 
 Derived from `cut -d'|' -f7` over § 1's rows; cross-checked by subtracting the
-non-`live` rows from 544.
+non-`live` rows from 551.
 
 | Status | Count |
 |---|---|
-| `live` | **526** (includes F-482, which is live but partly duplicates F-11 and F-100, and **F-439, unblocked by D17**) |
-| `withdrawn` | **13** — 3 by their own batch (F-299, F-373, F-481), 9 as duplicates found by **this index** (§ 4.3), 1 settled by D7 (F-496's name question). **B17-B19 add none** |
-| `blocked` | **4** — F-85 (Q-10), F-270 and F-283 (a catalogue decision), **F-520 (Q-131, new)**. **F-439 left this list** when D17 answered Q-108 |
+| `live` | **533** (includes F-482, which is live but partly duplicates F-11 and F-100; **F-439, unblocked by D17**; **F-520, unblocked by Q-131's resolution**; and **F-551, `dup→F-404`** — the two are one job in one direction) |
+| `withdrawn` | **13** — 3 by their own batch (F-299, F-373, F-481), 9 as duplicates found by **this index** (§ 4.3), 1 settled by D7 (F-496's name question). **B17-B19 and the `q-resolutions.md` block add none** |
+| `blocked` | **3** — F-85 (Q-10), F-270 and F-283 (a catalogue decision). **F-439 left this list** when D17 answered Q-108, and **F-520 left it** when Q-131 was settled from ArMDE:7282 |
 | closed by this file | **1** — F-499 |
-| **Total** | **544** |
+| `fixed` | **1** — **F-546**, settled by D32 and already committed (`212d726`, `c3714b2`) |
+| **Total** | **551** |
 
-**The blocked count is unchanged at 4 by coincidence, not by cancellation** — one
-row left and a different one arrived. Do not read "still 4" as "nothing moved".
+**The blocked count fell from 4 to 3** — F-520 was unblocked, and no new finding
+is blocked: **six of the seven new rows are `live`** and the seventh is `fixed`.
+**Seven** of § 6's newly-settled questions still have a *remedy* blocked on
+machinery (Q-29/Q-38, Q-42, Q-67, Q-110, Q-115, Q-117, Q-138), but those blocks
+sit on **questions and rulings**, not on a finding's status — they are in each
+question's own row in § 6 and summarised as one row in § 2.3. **Seven, not the
+six `q-resolutions.md`'s own table lists:** its § Q-117 states a blocker in the
+body that the table omits.
 
 **D2 blocks no individual finding**, but it blocks part of § 3.6 and is the
 audit's one genuinely pending ruling.
 
 ### 7.3 Findings by kind of defect — **primary kind**
 
-Sums to 544. Derived by `cut -d'|' -f5 | cut -d'+' -f1` over § 1's rows, so a
+Sums to 551. Derived by `cut -d'|' -f5 | cut -d'+' -f1` over § 1's rows, so a
 compound `class+desc` counts here only under `class`. **Cross-checked** by
-summing the column (544) and by the per-batch delta: B17-B19 contribute exactly
-44, distributed `class` +23, `desc` +6, `prereq` +4, `engine` +3, `text` +2,
-`param` +2, `incompat` +2, `auth` +1, `src` +1 — which itself sums to 44.
+summing the column (551) and by the per-block delta: B17-B19 contributed exactly
+44 (`class` +23, `desc` +6, `prereq` +4, `engine` +3, `text` +2, `param` +2,
+`incompat` +2, `auth` +1, `src` +1 — itself summing to 44), and the
+`q-resolutions.md` block contributes exactly 7 (`number` +2, `text` +2,
+`engine` +1, `scope` +1, `audit` +1).
 
-| Kind | Count | vs B01-B16 |
-|---|---|---|
-| `class` — misclassification | **166** | +23 |
-| `desc` — missing description (D5) | **116** | +6 |
-| `auth` — missing authorization | **39** | +1 |
-| `text` — shipped text / localization | **36** | +2 |
-| `prereq` — missing prerequisite | **34** | +4 |
-| `param` — missing/wrong parameter | **29** | +2 |
-| `incompat` — missing incompatibility | **27** | +2 |
-| `scope` — wrong scope | **24** | ±0 |
-| `effect` — missing effect | **19** | ±0 |
-| `table` — translation-table defect | **13** | ±0 |
-| `engine` — engine gap | **10** | +3 |
-| `rep` — Reputation defect | **9** | ±0 |
-| `number` — wrong number/arithmetic | **7** | ±0 |
-| `src` — `source.lines` / anchor | **6** | +1 |
-| `prov` — provenance | **5** | ±0 |
-| `mag` — magnitude/category/kind | **2** | ±0 |
-| `audit` — audit-record defect | **2** | ±0 |
-| **Total** | **544** | +44 |
+| Kind | Count | vs B01-B16 | vs the 544 |
+|---|---|---|---|
+| `class` — misclassification | **166** | +23 | ±0 |
+| `desc` — missing description (D5) | **116** | +6 | ±0 |
+| `auth` — missing authorization | **39** | +1 | ±0 |
+| `text` — shipped text / localization | **38** | +2 | **+2** |
+| `prereq` — missing prerequisite | **34** | +4 | ±0 |
+| `param` — missing/wrong parameter | **29** | +2 | ±0 |
+| `incompat` — missing incompatibility | **27** | +2 | ±0 |
+| `scope` — wrong scope | **25** | ±0 | **+1** |
+| `effect` — missing effect | **19** | ±0 | ±0 |
+| `table` — translation-table defect | **13** | ±0 | ±0 |
+| `engine` — engine gap | **11** | +3 | **+1** |
+| `rep` — Reputation defect | **9** | ±0 | ±0 |
+| `number` — wrong number/arithmetic | **9** | ±0 | **+2** |
+| `src` — `source.lines` / anchor | **6** | +1 | ±0 |
+| `prov` — provenance | **5** | ±0 | ±0 |
+| `audit` — audit-record defect | **3** | ±0 | **+1** |
+| `mag` — magnitude/category/kind | **2** | ±0 | ±0 |
+| **Total** | **551** | +44 | **+7** |
+
+**`number` was the audit's second-smallest kind and has just grown by 29 %** on
+seven findings. That is not a coincidence of sample size: **both** new `number`
+rows are *wrong arithmetic reaching a printed sheet* (`charged_cost`'s rounding,
+the Mythic Companion ceilings), and both were found by **answering a question**
+rather than by reading a span — which is what a `number` defect needs, since it
+is invisible in the entry's own JSON.
 
 **The last three batches are the most `class`-heavy in the audit**, and that is a
 fact about the span rather than about the reviewers: **more than half** of
@@ -2535,41 +2684,44 @@ side.
 ### 7.4 Findings by kind — **primary *or* secondary**
 
 A finding spanning two kinds is counted under both, so this does **not** sum to
-544. It is the better guide to slice size: § 3.2 is a 67-finding slice, not a
+551. It is the better guide to slice size: § 3.2 is a 67-finding slice, not a
 39-finding one. Derived by `cut -d'|' -f5 | tr '+' '\n'` over § 1's rows;
 cross-checked against § 7.3 — every row here must be ≥ its primary count, and
-the column total (**694**) minus 544 gives **150 secondary kinds**, which is
-exactly the number of `+` characters in the kind column (144 rows carry a `+`;
-six of them carry two).
+the column total (**703**) minus 551 gives **152 secondary kinds**, which is
+exactly the number of `+` characters in the kind column (146 rows carry a `+`;
+six of them carry two). **One row needs hand-correction and always has:**
+F-403's kind is `engine+audit (+table)`, so a naive `tr '+' '\n'` yields the
+fragments `audit (` and `table)` — they are counted below under `audit` and
+`table`.
 
 | Kind | Count | vs primary |
 |---|---|---|
 | `class` | 169 | +3 |
 | `desc` | **154** | +38 |
 | `auth` | **67** | +28 |
+| `text` | 40 | +2 |
 | `prereq` | 40 | +6 |
 | `param` | 39 | +10 |
 | `incompat` | 39 | +12 |
-| `text` | 38 | +2 |
 | `effect` | 28 | +9 |
-| `scope` | 26 | +2 |
-| `engine` | **24** | +14 |
-| `number` | 15 | +8 |
+| `scope` | 27 | +2 |
+| `engine` | **25** | +14 |
+| `number` | 17 | +8 |
+| `prov` | 15 | +10 |
 | `table` | 14 | +1 |
-| `prov` | 13 | +8 |
 | `rep` | 11 | +2 |
+| `audit` | 8 | +5 |
 | `src` | 7 | +1 |
-| `audit` | 7 | +5 |
 | `mag` | 3 | +1 |
 
-**The headline, and it has sharpened.** Three kinds are **speaking for 59 % of
+**The headline, and it has sharpened.** Three kinds are **speaking for 58 % of
 the audit by primary kind** — `class` (166), `desc` (116) and `auth` (39) make
-**321 of 544**. Under D5 the first two are one job per entry, and § 2.1 says
+**321 of 551**. Under D5 the first two are one job per entry, and § 2.1 says
 neither can start until `MECHANICAL_PHRASES` grows. **The screen fix is the
 critical path for well over half the correction list**, and § 2.1b adds a
 requirement to it that nobody has enumerated yet.
 
-**`engine` more than trebled between the two columns (10 → 24)**, which is the
+**`engine` more than doubled between the two columns (11 → 25)**, which is the
 clearest signal in this table: engine gaps are almost never the *primary*
 complaint, because a batch reports the entry it found, not the machinery it
 needs. § 3.15 is therefore a much larger body of work than a primary-kind count
@@ -2586,22 +2738,28 @@ B17-B19 used the three-point scale, plus `MEDIUM-HIGH` (→ `H`) and `LOW-MEDIUM
 (→ `M`), so § 0.2's table covers them unchanged. **They stated a severity on every
 one of their 44 findings**, which is why the `n/s` column does not move.
 
-| Severity | All 544 | Live only (526) | B17-B19's 44 |
-|---|---|---|---|
-| `H` | **202** | **195** | **11** |
-| `M` | **288** | **281** | **29** |
-| `L` | **30** | **30** | **4** |
-| `n/s` — the batch stated none | **21** | **20** | **0** |
-| — (withdrawn, no severity) | **3** | 0 | 0 |
-| **Total** | **544** | **526** | **44** |
+| Severity | All 551 | Live only (533) | B17-B19's 44 | the 7 new |
+|---|---|---|---|---|
+| `H` | **205** | **197** | **11** | **3** |
+| `M` | **290** | **284** | **29** | **2** |
+| `L` | **32** | **32** | **4** | **2** |
+| `n/s` — the batch stated none | **21** | **20** | **0** | **0** |
+| — (withdrawn, no severity) | **3** | 0 | 0 | 0 |
+| **Total** | **551** | **533** | **44** | **7** |
 
-Both totals verified two ways: the column sums, and `544 − 13 withdrawn − 4
-blocked − 1 closed = 526`. The `n/s` figure is **20 + 1** — F-403 carries the
-compound `n/s (table row: L)` and is counted once, in `n/s`.
+Both totals verified two ways: the column sums, and `551 − 13 withdrawn − 3
+blocked − 1 closed − 1 fixed = 533`. The `n/s` figure is **20 + 1** — F-403
+carries the compound `n/s (table row: L)` and is counted once, in `n/s`.
 
-**H went from 190 to 202 (+12, not +11)** because **F-439** moved out of the
-`H/nil` bucket when D17 resolved Q-108 toward "replaces". That is the one
-severity in this file changed by a ruling rather than by a new finding.
+**H went from 190 to 202 (+12, not +11)** when B17-B19 landed, because **F-439**
+moved out of the `H/nil` bucket when D17 resolved Q-108 toward "replaces". That
+was the one severity in this file changed by a ruling rather than by a new
+finding.
+
+**H is now 205 — but one of the three new `H` rows is not Phase 2 work.**
+**F-546** is `fixed`, so it counts in the `All` column and not in `Live only`;
+the other two, **F-547** and **F-552**, are both *wrong numbers on a printed
+sheet* and both are live. **Plan a slice from the live column, never the total.**
 
 `n/s` is concentrated in **B11 (16 of 24)** and **B12 (3 of 20)**, which close a
 finding with a `**Verdict:**` line instead. It is not a gap in this index.
@@ -2618,16 +2776,18 @@ less.
 | Batches indexed | **19** of 19 — **the checking pass is complete** | `ls batch-*.md` = 19; § 1 carries a block per batch |
 | Catalogue entries checked | **655** of 655 | B19's closure check (a): `jq 'length'` over `rules/core/virtues_flaws.json` = **655**, and `grep -c '"entity_kinds"'` over the same file independently = **655**. 630 + B19's 25 = 655 |
 | — *not* marked checked | **5** entries | escalations: `flaw.seeker` (Q-135), `flaw.susceptibility_to_divine_power` (Q-136), `flaw.weak_parens` (Q-140), `flaw.weak_personality` (Q-141), `flaw.waster_of_vis` (Q-142, text only). **Checked ≠ clean and checked ≠ settled** |
-| Findings | **544** (F-001…F-545, no F-44) | four agreeing cross-checks — § 7.1 |
+| Findings | **551** (F-001…F-552, no F-44) | four agreeing cross-checks — § 7.1 |
+| — from the nineteen batches | **544** | `grep -c "^### F-"` over `batch-*.md` |
+| — filed by this index from `q-resolutions.md` | **7** (F-546…F-552) | the block at the end of § 1; they belong to no batch |
 | Open questions | **142** (Q-01…Q-142) | `grep -c "^| Q-"` over § 6 = 142; `sort -u` on the id column also = 142 |
-| — closed / withdrawn | **34** | `cut -f5 \| grep -c "closed\|withdrawn"` = 34, which equals the count of `—` in the settler column, so the two encodings agree |
-| — open | **108** | 142 − 34; and the open settler codes sum to 108 independently |
-| — needing **Norbert** (`N`, `R/N`, `C/N`, `X/N`, `R then N`) | **80** | 64 + 8 + 5 + 2 + 1 |
-| — settleable by an agent (`R`, `C`, `R/C`) | **24** | 18 + 3 + 3 |
-| — needing `arm-de-translation` (`X`, `X/N`) | **6** rows | 4 + 2; more when the `N`-tagged DE ones are included, and **all of them now need D18's current-edition arm too** |
-| Rulings in `decisions.md` | **18** (D1…D18), **all taken** | `grep -c "^## D"` = 18, `sort -u` also 18. **D2 is no longer pending** |
-| — taken after this file was first written | **10** (D8-D18, less D7) | they close 25 questions — § 6 |
-| Duplicate relationships found | **10** (9 by this index, 1 already withdrawn by B16) | **unchanged: F-502…F-545 add zero**, by the seven-pass method in § 4.2 |
+| — settled / closed / withdrawn | **82** | the two encodings no longer agree and **must not be conflated**: **34** rows carry `—` in the settler column (the pre-D24 tranches), and **48** keep their original code and carry a settled marker in the status column. **A grep for `SETTLED` returns 47, not 48** — Q-65 reads `**PARTLY settled — D31**`, lowercase. Count the complement instead (see the next row), which is the only filter that does not need a special case |
+| — open | **60** | 142 − 82, and independently: every remaining row's status field begins with the literal `open`, which is the **only** reliable filter now |
+| — needing **Norbert** (`N`) | **57** of the 60 | every open row is plain `N` bar three; the **compound** codes (`R/N`, `C/N`, `X/N`, `R then N`) are now **all settled**. Three answered questions nevertheless carry a *narrow follow-on* for him — Q-103, Q-138, Q-67 — listed as § 6.2 item 10 and **not** counted here, because the question itself is closed |
+| — settleable by an agent (`R`, `C`, `R/C`) | **3** | Q-01, Q-15 (settled in practice — § 5), Q-72, all `R`. **`C` and `R/C` are exhausted** — `q-resolutions.md` cleared every one |
+| — needing `arm-de-translation` (`X`, `X/N`) | **0** open, 6 settled | all six fell to **D31** |
+| Rulings in `decisions.md` | **32** (D1…D32), **all taken** | `grep -c "^## D"` = 32, `sort -u` also 32 |
+| — taken after this file was first written | **25** — D8…D32, since tranche 1 of § 6 is *"before D8"*. D8-D18 close **25** questions; D19-D23 close none; **D24-D31** close **16**; D32 closes none but **fixes** F-546 | § 6's four-tranche list. The 17th row in that tranche is **Q-131**, settled from ArMDE:7282 rather than by a ruling |
+| Duplicate relationships found | **10** (9 by this index, 1 already withdrawn by B16), **or 11 counting F-551** | **F-502…F-545 add zero**, by the seven-pass method in § 4.2. The 2026-09-22 block adds **one `dup→` marker**, F-551 → F-404 — a *partial* overlap (the two rows read one asymmetry in opposite directions), so § 4.1 counts it separately rather than folding it into the ten |
 | Site-level overlaps inside an umbrella | **12 clusters** (§ 4.4) | 5 from B01-B16, **7 declared by B17-B19** |
 | `MECHANICAL_PHRASES` additions | **14 idiom families, ~94 word-forms** across both locales, **plus 3 structural fixes** and **one family not yet enumerated** | the families are counted from § 3.1's table; the third structural fix is F-514's `SIGN_CHARS` gap |
 | Entries D8 reclassifies with no finding number | **48** | `jq` over `rules/core/`: 48 of 115 `supernatural` entries are `narrative` |
@@ -2654,17 +2814,19 @@ be re-derived catalogue-wide rather than taken from a finding list.
   enumerated anywhere. Deriving an entry count from this table would be a guess.
 - **No estimate of Phase 2 effort.** The groups in § 3 are sized by finding count,
   which is not the same thing — and § 7.4 shows why that gap widened: `engine`
-  more than trebles between primary and secondary, and four of the largest pieces
+  more than doubles between primary and secondary, and four of the largest pieces
   of work (D9 part 3, D10, D13/D17, D14) carry **no finding number at all**.
 - **No count of the entries the rulings reach.** D8's **48**, D12's **122**,
   D10's **~42** and Q-136's **19** are listed in § 7.6 as *figures the rulings
   state*, and every one of them says to re-derive the set from the data rather
   than from a list. **None of those entries has a finding row in § 1**, so § 1's
-  544 is not a measure of how much data Phase 2 touches.
+  551 is not a measure of how much data Phase 2 touches.
 - **No re-rating.** Where a batch's severity looks wrong to me I left it and said
   so in § 0.2 rather than adjusting it silently. The one exception is **F-439**,
   whose severity was written as a conditional (`H/nil`) pending Q-108 and is now
   `H` because **D17 answered the condition** — that is a resolution, not a
-  re-rating.
+  re-rating. The 2026-09-22 update kept to that rule: **F-351's kind and severity
+  are untouched** even though Q-81 reverses its remedy, because reversing a
+  remedy is not re-rating a defect.
 - **No verdict on the five escalated entries.** They are not marked checked, and
   this file records the question rather than guessing the answer.
