@@ -1591,3 +1591,64 @@ the JSON is generated from the Markdown, so a re-extraction would revert it.
 (`docs/todo.md`) — its `original-english/reviewed/` copy carries both, at its own
 line numbers. `docs/open-todos.md` row 39 is closed for this; its other half
 (`ArMDE:6929` reads `-3penalty`, no space) stays open and is **not** covered here.
+
+---
+
+## D27 — the spell list models spells *known*, so Rigid Magic warns rather than blocks
+
+**Question (Q-130).** ArMDE:6697 gives Rigid Magic *"you cannot … **cast** Ritual
+magic"*. `SpellDef::ritual` exists, so the engine could refuse the selection.
+Does the spell list model spells **known** or spells **usable**?
+
+**Ruling: known.** Selecting a Ritual stays **legal**; a Rigid Magic character
+holding one raises an **advisory warning**, never an error.
+
+**Why.** The verb is *cast*. A magus may have learned a Ritual before acquiring
+the Flaw, and a Ritual he cannot cast is still worth holding — he can teach it or
+copy it out. Blocking would enforce something the book does not say.
+
+**This does not soften D16.** D16 governs absolutes the engine *does* model.
+Here the absolute is about casting, which a character generator does not do at
+all; the warning is a helpfulness signal about a selection the book permits, not
+a downgraded prohibition.
+
+**What this obliges.** The restriction reaches the player as text on the entry
+(D20), plus one validation rule: holds `flaw.rigid_magic` **and** a `ritual`
+spell → warning. Reachability per D2 — the Flaw may be *granted*, so the check
+must not read bought selections only.
+
+---
+
+## D28 — the spell level cap becomes range-aware for Short-Ranged Magic
+
+**Question (Q-133).** ArMDE:6739 halves the Lab Total *"when designing an effect
+or spell that has a range greater than Touch, **including Eye**"*.
+`spell_level_cap` is that gate, and the Flaw ships only
+`special_casting_mod: circumstantial`, so the halving is unmodelled.
+
+**Ruling: model it.** The cap becomes range-aware; a `flaw.short_ranged_magic`
+character's cap halves for spells whose range is beyond Touch.
+
+**Why, and why D1 does not decide it.** D1 refused nine *conditional* Lab Total
+modifiers because their conditions (experimenting, working from a text, a season)
+are not creation-time facts. This one **is**: the condition is the spell's own
+`range`, which `rules/core/spells.json` already records.
+
+**What this obliges.**
+
+1. **Re-key the cap.** `spell_level_cap` and `spell_level_caps` are keyed by
+   `(technique, form)` today, on the stated ground that a cap depends only on
+   Te/Fo. That ground no longer holds — the key gains a beyond-Touch flag, and
+   the UI picker that consumes the vector follows.
+2. **The predicate is by name, not by ordering.** Halving applies to `eye`,
+   `voice`, `sight`, `arcane_connection`; not to `personal`, `touch`. The book
+   says "including Eye" precisely because Eye's position is not obvious — do not
+   derive this from a magnitude ordering.
+3. **It lowers a cap, so saves legal today can become invalid.** Same treatment
+   as D10: validation reports it, `Enforced` blocks it, no migration and no
+   schema change.
+4. **Reclassify.** The entry is not only `in_play_effect` — half of it is a
+   creation-time rule now, and the casting half still needs its D20 text.
+
+**Still open.** The sibling in Q-133's row — whether `flaw.savantism`'s "no
+Ability above 3" should run through `AgeAbilityCaps` — is **not** settled here.
