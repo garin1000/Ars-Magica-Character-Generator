@@ -1564,3 +1564,30 @@ silently consume a Story slot.
 still *written down* — at the implementation site, with both citations and the
 side taken. An undocumented correct-looking value is indistinguishable from an
 unexamined one, and the next audit pays to re-derive it.
+
+---
+
+## D26 — a scanno is corrected in the source, not preserved
+
+**Question (Q-142).** `flaw.waster_of_vis` ships one string spelling the same
+word two ways: ArMDE:7054 reads *"one **guarter** (rounded up)"* and, six clauses
+later, *"one **quarter** of those you use"*. Does the `scheitest` precedent (a
+shipped string is a faithful copy of its source, typo included) cover it?
+
+**Ruling: no — it is a scanno, and it is corrected in `rules/source/en/` as well
+as the shipped strings.** DONE, not deferred.
+
+**Scope, as fixed.** ArMDE:7054 and ArMDE:3502 (`virtue.berserk`, *"give
+guarter"* for the idiom *give quarter*) — the second is what makes the `q`→`g`
+OCR error systematic rather than a slip. Both German lines were already correct
+(*Viertel*, *Gnade*), so no DE change. `rules/i18n/en/virtues_flaws.json` re-synced.
+
+**Where the limit is.** `scheitest` still governs a **real** typo in the source
+that reads unambiguously. A scanno is not that: it is the OCR's error, not the
+book's, and here one string contradicted itself. Fixing i18n alone was rejected —
+the JSON is generated from the Markdown, so a re-extraction would revert it.
+
+**What this obliges.** A todo is filed in `arm-de-translation`
+(`docs/todo.md`) — its `original-english/reviewed/` copy carries both, at its own
+line numbers. `docs/open-todos.md` row 39 is closed for this; its other half
+(`ArMDE:6929` reads `-3penalty`, no space) stays open and is **not** covered here.
