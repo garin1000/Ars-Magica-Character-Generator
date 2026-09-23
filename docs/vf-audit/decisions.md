@@ -828,6 +828,46 @@ presumption of correctness.
 
 ---
 
+## D43 — a restricted XP pool permits spending *itself*, and nothing more
+
+**Question (Q-27).** `types.rs::Effect::AbilityAuthorization`'s doc comment makes
+the over-reach deliberate: *"A `RestrictedAbilityXp` pool **already implies
+permission** for what it funds … since the grant would otherwise be
+unspendable."* ArMDE:4065 denies the wider half in the same breath as granting
+the pool: *"you have an additional 50 experience points to spend on Order of
+Hermes Lore, Magic Lore, or Latin. **You cannot spend other experience points on
+Magic Lore or Latin** unless the character has another Virtue or Flaw permitting
+this."*
+
+**Ruling: scope the implied permission to the pool.** `RestrictedAbilityXp`
+permits spending **its own** experience points on the listed Abilities. Spending
+**general** XP on them requires an explicit `AbilityAuthorization`.
+
+**The existing reasoning was half right, and that is why it survived.** "The
+grant would otherwise be unspendable" is a sound argument for permitting the
+*pool* — and no argument at all for permitting anything else. The doc comment
+states the narrow warrant and then takes the wide permission.
+
+**What this obliges, including the risk.**
+
+- **28 entries carry `restricted_ability_xp`.** Every one must be re-read against
+  its passage and given an `AbilityAuthorization` where the book grants general
+  access — Educated's *"You may buy Academic Abilities during character
+  generation"* is that shape and must keep working.
+- **Until that pass is complete the change removes access characters legitimately
+  have**, so the two land together: narrowing the implication and adding the
+  authorizations is **one slice**, not two. Shipping the narrowing alone is a
+  regression.
+- Rewrite the `AbilityAuthorization` doc comment; it currently records the
+  rejected reasoning as fact.
+- Re-derive the 28 at implementation; assert behaviour, not the count.
+- Note the asymmetry in ArMDE:4065 itself — it bars general XP on **Magic Lore
+  and Latin** but says nothing about **Order of Hermes Lore**, the third Ability
+  its own pool funds. Read that before encoding it; do not tidy it into a
+  symmetric rule.
+
+---
+
 ## D42 — the concept gains a default realm, and every Supernatural entry records one
 
 **Question (Q-08).** ArMDE:2961: *"**All** Supernatural Virtues and Flaws are
