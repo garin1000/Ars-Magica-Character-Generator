@@ -1101,6 +1101,17 @@ this."*
 permits spending **its own** experience points on the listed Abilities. Spending
 **general** XP on them requires an explicit `AbilityAuthorization`.
 
+**A second entry states the same rule, and it was raised separately as Q-59.**
+ArMDE:4808 (`virtue.privileged_upbringing`): *"You may not, however, buy Academic
+or Martial Abilities with your **normal pool** of experience points unless you
+have another Virtue or Flaw permitting that."* **F-234** records that the engine
+grants exactly the permission this passage forbids. B07 offered three options and
+its option (b) — separating the permission axis from the funding axis — is this
+ruling; it also said the 28-carrier survey was beyond its batch, which is why
+that survey is an obligation here. Two independent entries stating the rule is
+the strongest evidence that the over-reach is the engine's and not a
+per-entry authoring slip.
+
 **The existing reasoning was half right, and that is why it survived.** "The
 grant would otherwise be unspendable" is a sound argument for permitting the
 *pool* — and no argument at all for permitting anything else. The doc comment
