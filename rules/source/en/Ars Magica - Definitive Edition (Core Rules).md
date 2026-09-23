@@ -5722,7 +5722,7 @@ You have little or no sight. Using missile weapons is futile, reading is impossi
 
 #### Bound Casting Tools
 *Minor, Hermetic*<br>
-The magus's casting tools, as used by House Verditius, are so personal that they become lasting Arcane Connections to him. Regular casting tools remain as Arcane Connections for a few weeks, his last years.
+The magus's casting tools, as used by House Verditius, are so personal that they become lasting Arcane Connections to him. Regular casting tools remain as Arcane Connections for a few weeks, but his last for years.
 
 #### Bound Magic
 *Minor, Hermetic*<br>

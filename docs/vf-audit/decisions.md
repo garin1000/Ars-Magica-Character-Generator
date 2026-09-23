@@ -828,6 +828,44 @@ presumption of correctness.
 
 ---
 
+## D39 — a truncated English sentence is reconstructed from the English, not translated back
+
+**Question (Q-82).** ArMDE:5725 shipped *"Regular casting tools remain as Arcane
+Connections for a few weeks, **his last years**."* — not a sentence. The
+line-mirrored German is complete: *"…bleiben wenige Wochen als Arkane
+Verbindungen erhalten, die zuletzt verwendeten bleiben es **jahrelang**."* May
+the German be used to repair the English?
+
+**Ruling (Norbert): use the English source and reconstruct accordingly.**
+English stays the source of truth. The repair is an **English-side
+reconstruction from the surviving fragment**; the German may *corroborate* the
+reading but is never the source of the wording.
+
+**DONE.** ArMDE:5725 now reads *"…for a few weeks, **but** his last **for**
+years."* Two function words, both demanded by the fragment's own grammar and by
+the contrast it already sets up ("a few weeks" against "years"). The shipped
+`summary` carries only the entry's first sentence, so **no i18n change** was
+needed and no German text moved.
+
+**Why this is not a licence to back-translate.** The distinction is the whole
+ruling: a reconstruction is constrained by the English words that survived, so it
+can be checked against them. A back-translation invents English from German and
+is checkable only against the translation — which would quietly make the German
+the source of truth for English text, inverting the repository's rule.
+
+**The test for the next one.** If the surviving English does not determine the
+missing words, do **not** reconstruct. Write the rule into `description` instead
+(D20), where it is honestly our prose rather than presented as the book's.
+
+**Same class as D26**, and the same treatment: an OCR defect in the source is
+corrected in the source, because the JSON is generated from the Markdown and an
+i18n-only patch would be silently undone by re-extraction.
+
+**What remains on F-370.** Only its other half — `narrative` over an
+Arcane-Connection duration rule. The source defect is discharged.
+
+---
+
 ## D38 — "only companions can take this" is stated on the entry, not in three profile lists
 
 **Question (Q-75).** ArMDE:2394 closes with *"only companions can take this
