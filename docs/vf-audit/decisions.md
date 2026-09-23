@@ -828,6 +828,53 @@ presumption of correctness.
 
 ---
 
+## D46 — classification follows *what* is computed, never *where* it is computed
+
+**Question (Q-23).** Does a rule modelled on the **type profile** rather than on
+the Virtue make the Virtue a `creation_effect`? Raised for `virtue.the_gift` and
+`virtue.hermetic_magus`, and B04 noted it recurs for every Virtue whose mechanic
+lives on a profile.
+
+**B04's precedent has since evaporated.** Its case for `creation_effect` was that
+`virtue.devil_child` ships effect-less *"precisely because Devil Child's budget
+bonus lives on the Mythic Companion type profile"*. **D32 deleted that bonus**
+from the data *and* the model, so there is no profile-held mechanic for that
+entry to point at. The question had to be decided on its own merits.
+
+**Ruling: by what is computed, not where.**
+
+- Every rule the entry states is computed — on the entry or on a profile —
+  → **`creation_effect`**.
+- Any stated rule is computed **nowhere** → **`uncomputed_rule`**, and it owes
+  its text in both locales.
+
+**The two instances.** `virtue.the_gift` becomes **`uncomputed_rule`**:
+ArMDE:2870-2876's *"suffers all the penalties of The Gift"* reaches the player
+through no number and no text today. `virtue.hermetic_magus` stays
+**`creation_effect`** — *"All magi must take this as their Social Status, and
+only magi may take it"* is computed, via the magus profile's `required_traits`.
+
+**Why this is the only consistent line.** **D5** already holds that the
+description obligation follows the *rule*, not the label, and **D20** made
+`uncomputed_rule` the mechanism that *enforces* it. A location-based rule would
+let an entry hold uncomputed rules and owe no text merely because something
+*else* about it is computed elsewhere — which is the gap that produced D20's
+nineteen entries.
+
+**What this obliges.**
+
+- Reclassify `virtue.the_gift` and write ArMDE:2870-2876's penalties into
+  `description` in both locales.
+- **Re-examine the five effect-less `creation_effect` entries.** `README.md`
+  calls them *"a lead, not a conclusion"*, and each must now be tested against
+  this rule rather than against each other.
+- **Fix the guard's asymmetry.** `every_vf_is_classified` requires effects on
+  `in_play_effect` and not on `creation_effect`, which is why an effect-less
+  `creation_effect` passes silently today. The guard should express D46's test,
+  not the presence of an `effects` array.
+
+---
+
 ## D45 — the surfaced list is a diagnostic, so a modifier names its source
 
 **Question (Q-100).** Six shipped Flaws render as the identical unattributed
