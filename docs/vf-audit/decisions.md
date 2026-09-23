@@ -828,6 +828,47 @@ presumption of correctness.
 
 ---
 
+## D38 — "only companions can take this" is stated on the entry, not in three profile lists
+
+**Question (Q-75).** ArMDE:2394 closes with *"only companions can take this
+Virtue or Flaw"* (Wealthy / Poor). Today the rule is enforced **twice explicitly
+and once by accident**: `magus` and `mythic_companion` list both ids in
+`forbidden_traits`, while a **grog** is refused only because both entries are
+**Major** and the grog profile sets `max_major_virtues: 0` /
+`max_major_flaws: 0`. F-339 is that asymmetry.
+
+**Ruling: express it on the entry**, per **D24** — *"when an entry … needs a
+narrower audience, the narrowing belongs on the entry as a `Prereq`, not on the
+profile"*. One statement of the rule instead of three, and it cannot rot when a
+profile changes.
+
+**Why the incidental block is not good enough.** It is right by coincidence.
+Make either entry Minor, or give grogs a Major allowance, and a rule the book
+states stops being enforced — **and no test fails**, because nothing asserts the
+rule, only its side effect. That is the shape this audit has hit repeatedly:
+correct output, wrong reason, silent when the reason moves.
+
+**What this obliges.**
+
+- A `Prereq` that can name a **character type**. Only `IsMagus` exists today, and
+  it reads the profile's own `is_magus` flag rather than an id — so this is a new
+  variant, and `Prereq`'s exhaustive `match` makes adding one a compile error
+  until every site handles it (which is the point).
+- `virtue.wealthy` and `flaw.poor` carry it; **the two `forbidden_traits` entries
+  come out** once it works, or the rule is stated in two places again.
+- **The second caller is already known, and it changes the shape.** Sweeping the
+  core book for sibling sentences found exactly **two**: ArMDE:2394 and
+  **ArMDE:4375**, *"only a companion or **magus-level character** can take this
+  Virtue"* (`virtue.magical_mount`, filed as **F-553** — unencoded today, so a
+  grog may take it). That one names *two* audiences, so a single-type variant
+  must compose under `Prereq::Any`. **Design against both, not against the first.**
+  *"magus-level character"* is undefined in the passage and needs a reading before
+  the data is written; it plausibly covers `mythic_companion` too.
+- Reachability per **D2**: the check must see *granted* selections, not only
+  bought ones.
+
+---
+
 ## D37 — Magic Resistance competes, it does not stack: True Faith takes the higher total
 
 **Question (Q-74).** ArMDE:17611 gives *"a True Faith Score gains Magic
