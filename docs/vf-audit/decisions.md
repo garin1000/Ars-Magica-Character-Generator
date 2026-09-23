@@ -828,6 +828,42 @@ presumption of correctness.
 
 ---
 
+## D45 — the surfaced list is a diagnostic, so a modifier names its source
+
+**Question (Q-100).** Six shipped Flaws render as the identical unattributed
+string *"Special casting: Circumstantial"* (`amount: 0` is suppressed), and a
+character holding two of them sees the same line twice with nothing to tell them
+apart (F-423). Is `surfaced_modifiers` a **diagnostic**, where identity matters,
+or a **summary**, where it does not?
+
+**Ruling: a diagnostic.** `SurfacedModifier` gains `source: Id`, and the UI
+renders the producing item's localized name beside the family.
+
+**What changed since B12 asked.** Its strongest argument was that for the four
+`circumstantial` carriers with no `description`, the anonymous row was *the only
+thing the player is given*. **D20 removes that argument** — all 19 surfaced-only
+entries now owe their rule in `description` in both locales. The ruling therefore
+does not rest on it; it rests on the duplicate-row defect, which D20 does not
+touch.
+
+**What this obliges.**
+
+- `source: Id` on the DTO, populated at every push site in
+  `derived.rs::in_play_mods`, which already holds the item. Purely additive.
+- **Render it through the label map, never as the id.** CLAUDE.md is explicit
+  that a raw id or enum value must never reach the user; this is the same rule
+  that governs `category-<id>` and `magnitude-<id>`.
+- It widens a DTO that **crosses the IPC boundary**, so the frontend type mirror
+  and the save/round-trip surface both need checking.
+- **All five `ModifierFamily` values gain it**, not only `SpecialCasting` — the
+  defect is the DTO's, not that family's.
+- **De-duplication was considered and is not required.** Naming the source makes
+  two rows legible, which is the defect. Collapsing identical families into one
+  row listing every contributor is a further UI change and should be judged on
+  its own, not smuggled in here.
+
+---
+
 ## D44 — an entailed incompatibility may ship, but it must be marked as entailed
 
 **Question (Q-19).** `virtue.gentle_gift` and `flaw.blatant_gift` declare each
