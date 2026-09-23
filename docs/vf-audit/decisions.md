@@ -828,6 +828,45 @@ presumption of correctness.
 
 ---
 
+## D48 — a restricted pool may name Ability *instances*, and eligibility becomes a union
+
+**Question (Q-47).** `effective/xp.rs` hard-codes `instances: Vec::new()` for
+every V/F grant, commented *"A V/F grant is id/category-scoped, never
+instance-scoped."* So a pool naming `ability.profession` funds **every**
+Profession. ArMDE:4453 ties `virtue.marshal`'s 50 points to **Profession:
+Marshal**; today they buy Profession: Sailor.
+
+**Ruling: add `instances` to a V/F grant, and make eligibility the *union* of
+`abilities`, `categories` and `instances`** — replacing the current *"when
+non-empty it is the ONLY test"*.
+
+**Why the union, and it is not a preference.** `virtue.master_bard` (ArMDE:4461)
+has **one** 50-point pool funding *"Art of Memory, Profession: Storyteller,
+Profession: Poet, any Area Lore, or any Organization Lore"* — two named instances
+**and** two whole categories. Under instances-wins that entry cannot be expressed
+at all, and splitting it into two pools would invent a division of the 50 the
+book does not give.
+
+**The change is verified behaviour-preserving.** The only existing `instances`
+user is the childhood native-language pool, which builds
+`abilities: Vec::new(), categories: Vec::new(), instances: vec![native]` — and a
+union over two empty lists plus `instances` is exactly `instances`. Nothing else
+reads the field.
+
+**What this obliges.**
+
+- `instances` on the V/F grant path, the union semantics, and the doc comments
+  that currently assert the opposite as design.
+- **Three entries in B06's span need it** — `virtue.marshal`, `virtue.master_of_kennels`
+  (each one named Profession) and `virtue.master_bard` (two, plus the Lores, and
+  the Lores' unscoped funding is **correct** today). **Sweep the rest of the
+  catalogue before authoring**: B06 measured its own span only.
+- Instance scoping is **narrowing**, so a save that spent a Marshal's points on
+  Profession: Sailor becomes invalid — report and block per **D10**, no
+  migration.
+
+---
+
 ## D47 — Guild Apprentice's nullification is computable, because the "stage" is a sibling Virtue
 
 **Question (Q-26).** ArMDE:4043, `virtue.guild_apprentice`: *"The character is
