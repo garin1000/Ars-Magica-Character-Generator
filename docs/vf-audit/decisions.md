@@ -828,43 +828,60 @@ presumption of correctness.
 
 ---
 
-## D47 — a nullification bounded by an unmodelled life stage is text, not an Effect
+## D47 — Guild Apprentice's nullification is computable, because the "stage" is a sibling Virtue
 
 **Question (Q-26).** ArMDE:4043, `virtue.guild_apprentice`: *"The character is
 **not able to benefit** from either the Poor Flaw or the Wealthy Virtue … **until
 he moves to the journeyman stage**."* Both carry `later_life_xp_rate` (20 and
-10), so the app computes a rate the book denies. `incompatible_with` is the wrong
-tool twice — the book *neutralises* rather than forbids, and the field is
-symmetric, so it would force two heavily-used entries to name Guild Apprentice
-back.
+10), so the app computes a rate the book denies.
 
-**Ruling: text only.** `uncomputed_rule`, with the rule in `description` in both
-locales (D20). **No suppression variant is built.**
+**Ruling: encode the suppression**, keyed on holding `virtue.guild_apprentice`,
+and state the rule in `description` as well.
 
-**Why, and the reason is the clause I nearly skipped.** The nullification is
-**stage-bounded** — *"until he moves to the journeyman stage"*, the entry being
-*"a youth between the ages of 10 and 20"*. The engine models no stage
-progression, so any encoding would apply **permanently** and deny Wealthy's
-benefit for life: a *new* wrong number replacing the old one, and harder to
-notice because it would look computed.
+**This decision was first recorded the other way, and the first version was
+wrong.** It ruled *text only*, reasoning that the nullification is bounded by a
+life stage the engine does not model, so any encoding would apply permanently and
+deny Wealthy's benefit for life. **Norbert asked whether a Journeyman Virtue
+exists. It does** — `virtue.journeyman`, ArMDE:4159, *Minor, Social Status*,
+alongside `virtue.guild_master`, `flaw.failed_journeyman` and
+`flaw.failed_master`. The guild stages **are** modelled, as sibling Social Status
+Virtues.
 
-**One caller, checked rather than assumed.** Sweeping the core book for this
-shape found three matches and only this one qualifies: ArMDE:6046
-(`flaw.excommunicate`, *"cannot benefit from the sacraments"*) nullifies nothing
-the engine models, and ArMDE:17611 is True Faith, already settled by **D37**.
-Building an `Effect` variant for a single caller is what D38 and D21 warn
-against.
+**So the condition is trivial.** **D41** establishes that a character holds
+**one** Social Status, so *"until he moves to the journeyman stage"* means
+exactly *"while he holds Guild Apprentice"* — moving on means holding a different
+Social Status Virtue, which he cannot hold simultaneously. Nothing is permanent
+and nothing is unmodelled.
+
+**Reachability, checked.** Wealthy and Poor are Major and companion-only (D38),
+so a **companion** with Guild Apprentice + Wealthy is legal and is shown 20 XP
+per year that the book denies him.
+
+**The sibling sweep found no second caller, and no new defect.** `virtue.journeyman`
+(ArMDE:4161) and `flaw.failed_journeyman` (ArMDE:6062) state no nullification;
+`flaw.failed_master` correctly ships `grants_reputation { local, 4 }` for
+ArMDE:6066's *"bad Reputation of 4 in town"*; and `virtue.guild_master`'s
+unencoded *"You may select Academic Abilities at character generation"* is
+already **F-102**.
 
 **What this obliges.**
 
-- `virtue.guild_apprentice` → `uncomputed_rule` + description, both locales.
-- **Do not** add `incompatible_with` on it, `virtue.wealthy` or `flaw.poor`.
-- **If `EntityKind` or the life-stage model ever grows a journeyman stage, this
-  decision is void** — the rule becomes computable and should be computed.
+- A suppression keyed on the holder, not a general "nullify any effect" variant —
+  one caller, so keep it narrow (D38, D21).
+- `incompatible_with` stays **rejected**: the book neutralises rather than
+  forbids, and the field is symmetric, so it would drag `virtue.wealthy` and
+  `flaw.poor` into naming Guild Apprentice back. F-100's `incompat` half is
+  answered *against* encoding.
+- The rule still goes in `description` in both locales — the in-play progression
+  it describes is worth stating (D20).
 - The second half of Q-26 (`virtue.indescribable_face`) follows from **D46** and
   **D9**: the passage states *"more perfect"* / *"less perfect"* and no mechanic,
   so it stays **`narrative`**, while the required choice is still recorded as a
   parameter (F-112 stands on its own).
+
+**Lesson.** The first version reasoned confidently from *"the engine models no
+stage progression"* without checking whether the stage existed as an entry. The
+catalogue was one grep away.
 
 ---
 
