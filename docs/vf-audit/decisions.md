@@ -828,6 +828,54 @@ presumption of correctness.
 
 ---
 
+## D51 — prerequisite, grant or effects-only: the book says which by saying who gives it
+
+**Question (Q-37, Q-48, Q-94).** When an entry "comes with" another item, is that
+a `Prereq::Has` (the player takes it and its points count), a `grants_selection`
+(budget-exempt), or neither? The two encodings differ by one Flaw point, and B06
+would not pick between them.
+
+**Ruling: read who the book says does the giving.**
+
+| Wording | Encoding |
+|---|---|
+| *"the character **also has** …"*, *"can only be bought **if** the character also has …"* | **prerequisite** — `Prereq::Has`; the player takes it and its points count normally |
+| *"**granting** …"*, *"provides …"* | **grant** — `grants_selection`, budget-exempt |
+| *"… **at no extra cost**"* | confirms a grant; **its absence does not negate one** |
+| *"includes the **effects of** …"* | **effects only** — the item is never held |
+
+**The four worked instances.**
+
+- ArMDE:4522 `virtue.mercurian_magic` — *"All known members of the Mercurian
+  lineage **also have** the Minor Flaw Ceremonial Spontaneous Magic"*. A fact
+  about the character, not something the Virtue hands over → **prerequisite**,
+  and the player receives the Minor Flaw's point normally. This is F-196's
+  proposal, now grounded.
+- ArMDE:4588 `virtue.mythic_blood` — *"(both **at no extra cost**)"* → **grant**.
+- ArMDE:4251 `virtue.leper_magus` — **both in one sentence**: *"can only be bought
+  if the character **also has** the Leprosy Flaw"* → prerequisite, and
+  *"**granting** the Life Boost Minor Virtue"* → grant. The entry is the proof
+  that the distinction is the book's and not ours.
+- ArMDE:5907 `flaw.a_deal_with_the_devil` — *"includes the **effects of** Plagued
+  By Supernatural Entity"* → **effects only**.
+
+**Q-94's second half falls out.** It asked whether a granted Story Flaw counts
+toward the Story cap. Under the third row it never arises: the item is **not
+held**, so there is nothing to count. The effects are copied; the Flaw is not.
+
+**What this obliges.**
+
+- Encode the four above accordingly, and **do not read "at no extra cost" as
+  required** — Leper Magus would otherwise charge a point the book never asks for.
+- **Effects-only needs checking against the engine**: copying an effect without
+  holding the item may have no carrier today, and if it does not, that is a
+  finding rather than a reason to reach for `grants_selection`.
+- **Q-58 and Q-107 are not settled here.** Q-58 asks about *powers* rather than
+  items, and Q-107 about an **open** grant; both may follow, but neither was read
+  for this ruling and neither should be assumed.
+
+---
+
 ## D50 — "mechanical" is the wrong test; the test is whether a player would get it wrong
 
 **Question (the Q-83 family: Q-09, Q-60, Q-66, Q-83, Q-105, Q-118, Q-119).**
