@@ -828,6 +828,46 @@ presumption of correctness.
 
 ---
 
+## D47 — a nullification bounded by an unmodelled life stage is text, not an Effect
+
+**Question (Q-26).** ArMDE:4043, `virtue.guild_apprentice`: *"The character is
+**not able to benefit** from either the Poor Flaw or the Wealthy Virtue … **until
+he moves to the journeyman stage**."* Both carry `later_life_xp_rate` (20 and
+10), so the app computes a rate the book denies. `incompatible_with` is the wrong
+tool twice — the book *neutralises* rather than forbids, and the field is
+symmetric, so it would force two heavily-used entries to name Guild Apprentice
+back.
+
+**Ruling: text only.** `uncomputed_rule`, with the rule in `description` in both
+locales (D20). **No suppression variant is built.**
+
+**Why, and the reason is the clause I nearly skipped.** The nullification is
+**stage-bounded** — *"until he moves to the journeyman stage"*, the entry being
+*"a youth between the ages of 10 and 20"*. The engine models no stage
+progression, so any encoding would apply **permanently** and deny Wealthy's
+benefit for life: a *new* wrong number replacing the old one, and harder to
+notice because it would look computed.
+
+**One caller, checked rather than assumed.** Sweeping the core book for this
+shape found three matches and only this one qualifies: ArMDE:6046
+(`flaw.excommunicate`, *"cannot benefit from the sacraments"*) nullifies nothing
+the engine models, and ArMDE:17611 is True Faith, already settled by **D37**.
+Building an `Effect` variant for a single caller is what D38 and D21 warn
+against.
+
+**What this obliges.**
+
+- `virtue.guild_apprentice` → `uncomputed_rule` + description, both locales.
+- **Do not** add `incompatible_with` on it, `virtue.wealthy` or `flaw.poor`.
+- **If `EntityKind` or the life-stage model ever grows a journeyman stage, this
+  decision is void** — the rule becomes computable and should be computed.
+- The second half of Q-26 (`virtue.indescribable_face`) follows from **D46** and
+  **D9**: the passage states *"more perfect"* / *"less perfect"* and no mechanic,
+  so it stays **`narrative`**, while the required choice is still recorded as a
+  parameter (F-112 stands on its own).
+
+---
+
 ## D46 — classification follows *what* is computed, never *where* it is computed
 
 **Question (Q-23).** Does a rule modelled on the **type profile** rather than on
