@@ -828,6 +828,58 @@ presumption of correctness.
 
 ---
 
+## D42 — the concept gains a default realm, and every Supernatural entry records one
+
+**Question (Q-08).** ArMDE:2961: *"**All** Supernatural Virtues and Flaws are
+associated with one of the four realms."* Today **4 of ~115** record it, through
+an existing `realm` parameter domain.
+
+**The first draft of this decision quoted the book's default and ignored its
+condition** — *"this should be the choice if the character **concept** does not
+suggest another option"*. Norbert caught it: the concept is **entirely free
+text** (`name`, `description`, `concept`, `gender`, `birth_year`, every one
+documented *"no mechanical effect"*), so the condition points at something the
+model does not carry, and no per-entry default could honestly be said to follow
+the book.
+
+**Ruling, two parts.**
+
+1. **The concept gains one optional default realm**, which seeds every
+   Supernatural entry's realm.
+2. **Every Supernatural entry records a realm** — seeded from the concept,
+   overridable per entry, and **fixed** where the book fixes it (Faerie Blood
+   and Strong Faerie Blood are always Faerie, ArMDE:2961).
+
+**What it is not.** *Not* a character attribute with mechanical force. The book
+never says a character has a realm — it says each Supernatural Virtue does, and
+the concept is what *suggests* which. A character may legitimately hold a Faerie
+Blood and a Magic-realm Second Sight at once, so the concept value is a **default
+source and nothing else**. Anything that reads it as "the character's realm" is
+wrong.
+
+**Why record it at all, given the engine models no auras.** The consequences are
+in-play — *"determines how it interacts with supernatural auras"* and immunity to
+Warping from a same-realm aura — so nothing is computed at creation. The sheet
+still has to state it, because the book asserts it of every such entry and the
+player needs it at the table. D9 (record every stated choice) and D20 (the rule
+must reach the player) both bite.
+
+**What this obliges.**
+
+- One optional field in the concept phase, with a realm domain, and the UI to set
+  it. It must be **omittable** — an unset concept realm means each entry is
+  answered on its own.
+- ~111 entries gain the parameter; the book-fixed ones get a fixed value, not a
+  default.
+- **Establish which entries the book fixes before writing data.** ArMDE:2961
+  names two examples and says *"A Virtue's description notes if it is limited in
+  this way"* — so the list is discoverable per entry and must be read, not
+  guessed.
+- Assert behaviour, never the count of Supernatural entries (catalogue size is
+  data).
+
+---
+
 ## D41 — one Social Status is mandatory and hard; a second is a warning
 
 **Question (Q-45).** ArMDE:2816: *"All characters **must take one** Social
