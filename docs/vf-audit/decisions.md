@@ -828,6 +828,47 @@ presumption of correctness.
 
 ---
 
+## D52 — D4's Cyclic Magic row is amended: the Virtue and the Flaw are not symmetric
+
+**Question (Q-91).** Does ArMDE:5895's third sentence change **D4**'s answer for
+Cyclic Magic? D4's table carries one row for both entries —
+*"`virtue.cyclic_magic_positive` / `flaw.cyclic_magic_negative` | season-dependent
+| no; creation fixes no season"*.
+
+**Ruling: yes. The row is wrong for the Flaw, and the book is deliberately
+asymmetric.**
+
+| Entry | Its Lab Total condition |
+|---|---|
+| Virtue, ArMDE:3637 | *"The bonus also applies to Lab Totals **if the positive part of the cycle covers the whole season**"* |
+| Flaw, ArMDE:5895 | *"The penalty applies to Lab Totals **even if the negative period does not cover the whole of the season**"* |
+
+Both passages also fix the two halves as **equal in length** (ArMDE:3637, :5896).
+So for any cycle shorter than a season — *"solar, lunar"*, the book's own
+examples — **every** season contains negative time: the penalty always applies,
+while the bonus can never apply at all. Only a **seasonal** cycle makes the two
+behave alike.
+
+**What this obliges.**
+
+- **D4's row splits.** The Virtue's *"no"* stands. The Flaw's answer is *"yes,
+  unless the cycle is seasonal"*.
+- **The cycle type is an unrecorded choice** — the book offers *"solar, lunar, or
+  seasonal, for example"* and neither entry carries a parameter. That is a **D9**
+  instance, and it is what the Flaw's answer depends on, so D9 must land before
+  the Lab Total can be decided per character.
+- **Filed as F-555.** F-45 rates the *Virtue's* scope and F-398 the *Flaw's*
+  missing text; **no finding covered the asymmetry**, which is how one D4 row came
+  to stand for two opposite rules.
+- D4 is otherwise untouched — its other eight rows were each read from their own
+  passage and none is a pair.
+
+**Lesson.** D4 grouped two entries by their *name* rather than by their passages.
+The two sentences differ by one word — *"if"* against *"even if"* — and that word
+reverses the rule.
+
+---
+
 ## D51 — prerequisite, grant or effects-only: the book says which by saying who gives it
 
 **Question (Q-37, Q-48, Q-94).** When an entry "comes with" another item, is that
