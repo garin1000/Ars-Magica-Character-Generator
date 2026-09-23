@@ -828,6 +828,59 @@ presumption of correctness.
 
 ---
 
+## D50 — "mechanical" is the wrong test; the test is whether a player would get it wrong
+
+**Question (the Q-83 family: Q-09, Q-60, Q-66, Q-83, Q-105, Q-118, Q-119).**
+Seven open rows all ask the same thing in different clothes — is a hedged number
+mechanical? a guaranteed storyguide intervention? an absolute about a resource
+the engine does not model? a fiction condition?
+
+**Ruling: drop "mechanical" as the boundary.** A clause belongs in
+`uncomputed_rule`, owing its text in both locales, **iff the book states
+something a player or storyguide must act on — something a reader would get wrong
+by not knowing it.** `narrative` means **pure colour**: prose that states nothing
+anyone must act on.
+
+**Why the old framing failed.** It made the test turn on the *form* of the clause
+(number? roll? cap?) when what matters is its *consequence*. The two extremes of
+the family show it:
+
+- ArMDE:4730, `virtue.personal_vis_source` — *"the yield **should be about one
+  tenth** as much as the player covenant expects to gather per year"*. Hedged,
+  and still a quantity the troupe must set.
+- ArMDE:3599, `virtue.common_sense` — *"common sense (the storyguide) **alerts
+  you** to the error"*. No number, no roll, and yet a storyguide who does not
+  know it will not do it.
+
+Under the old test the first is arguably in and the second is out. Under D20 —
+*a rule must reach the player as a number or as text* — **both are in**, and so
+are the other five.
+
+**All seven resolve the same way:** `uncomputed_rule` + text. Q-60's hedged
+tenth, Q-09's guaranteed intervention, Q-66's *"may overwhelm you"*, Q-83's
+hedged monetary value, Q-105's *"1 pawn of Muto vis"*, Q-118's *"you cannot own
+vis"* and Q-119's *"you cannot cast spells at all"*.
+
+**This does not make hedged wording enforceable.** **D16** stands: hedged wording
+is a warning and never an error. D50 governs *whether the rule is carried at
+all*, not how strictly it is checked. A hedged rule is carried as text and
+enforced as nothing.
+
+**What this obliges.**
+
+1. **The seven entries** reclassify and gain descriptions in both locales.
+2. **The 335 `narrative` entries must be re-tested against this line.** That is
+   the real cost and it is not optional — 102 are `uncomputed_rule` today, and
+   D20's nineteen showed that a wrong `narrative` is how a stated rule reaches
+   nobody. Added to § 8.
+3. **The phrase screen cannot find these.** `MECHANICAL_PHRASES` matches signed
+   numbers, botch terms and set phrases; *"the storyguide alerts you"* contains
+   none. Per § 2's ordering constraint the screen must grow **before**
+   reclassification lands, and D50 widens what it has to catch — or the re-test
+   is a manual read, as the Virtues sweep already had to be.
+
+---
+
 ## D49 — free seasons per year are a creation-time constraint, and they bind the plan
 
 **Question (Q-44).** No `Effect` variant touches a per-year season count, though
