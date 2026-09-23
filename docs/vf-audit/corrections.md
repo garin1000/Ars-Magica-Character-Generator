@@ -233,7 +233,7 @@ because that is what the verdict table gives — the finding is that it should b
 | F-62 | `virtue.emir` | 3743-3746 | desc+effect | H | live | a rule stated by cross-reference to another Virtue, and the cross-reference is not followed |
 | F-63 | `virtue.enchanting_ability` | 3747-3750 | param+engine | H | live | the entry declares a choice the book demands and nothing anywhere can act on it |
 | F-64 | `virtue.enduring_constitution` | 3751-3754 | desc+effect | M | live | the +3 pain-resistance bonus is in neither the data nor either locale |
-| F-65 | `virtue.curse_throwing`, `virtue.dowsing` | 3625-3628, 3703-3706 | text | M | live | German summaries render *Ability* as "Fähigkeit"; canonical German is "Fertigkeit" |
+| F-65 | `virtue.curse_throwing`, `virtue.dowsing` | 3625-3628, 3703-3706 | text | M | live | German summaries render *Ability* as "Fähigkeit"; canonical German is "Fertigkeit". **D36**: the term binds here because the sentence names a game element the app shows |
 
 ### B03 — `batch-03.md` (ArMDE:3767-3966)
 
@@ -523,7 +523,7 @@ because that is what the verdict table gives — the finding is that it should b
 | F-317 | `virtue.templar_specialist` | 5133-5136 | class+engine | M | live | a player-chosen gated Ability group the engine cannot express, under `narrative` |
 | F-318 | `virtue.temporal_influence` | 5137-5140 | prereq | H | live | "Grogs may not take this Virtue" enforced nowhere, although the mechanism exists and is used |
 | F-319 | `virtue.tethered_magic` | 5141-5144 | class+desc | M | live | a Hermetic spell mechanic classified `narrative`, reaching neither locale *(F-432 re-rates the Flaw twin knowingly)* |
-| F-320 | `virtue.tough` | 5145-5147 | text | M | live | the German summary calls Soak "Widerstandsfähigkeit" against the canonical table and the DE rulebook |
+| F-320 | `virtue.tough` | 5145-5147 | text | M | live | the German summary calls Soak "Widerstandsfähigkeit" against the canonical table and the DE rulebook. **D36** applies (it names a displayed score); which term is canonical is **D31**'s question |
 | F-321 | `virtue.town_magistrate` | 5149-5152 | class | M | live | a Social Status with three mechanical clauses classified `narrative` |
 | F-322 | `virtue.town_magistrate` | 5149-5152 | prereq | H | live | a prerequisite the `Prereq` tree expresses exactly, and that is absent |
 | F-323 | `virtue.town_magistrate`, `virtue.university_grammar_teacher` | 5149-5152, 5195-5198 | auth | H | live | Academic permissions with no `ability_authorization` |
@@ -709,7 +709,7 @@ rows below are that, not an omission of mine.
 | F-470 | `flaw.obese` | 6516-6519 | desc | M | live | the movement penalty reaches the user in neither locale |
 | F-471 | `flaw.lycanthrope` | 6370-6377 | text | M | live | the German summary is cut mid-sentence, with no ellipsis |
 | F-472 | `virtue.cyclic_magic_positive` | 3635-3638 | text | M | **withdrawn** — dup→F-46 | same entry, same defect, same correct value as B02's F-46 (this index's determination; see § 4) |
-| F-473 | `flaw.offensive_to_beings` | 6524-6533 | text | M | live | the shipped German description calls Magical Air by a name the app does not use |
+| F-473 | `flaw.offensive_to_beings` | 6524-6533 | text | M | live | the shipped German description calls Magical Air by a name the app does not use. **The case that decided D36** — a broken cross-reference inside our own product: the reader looks for that element in the UI and it is not there |
 | F-474 | `flaw.blatant_magical_air` | 5715-5718 | prereq+incompat | H | **withdrawn** — dup→F-366+F-367 | both halves are B10's F-366 and F-367 (this index's determination; see § 4) |
 | F-475 | `virtue.alluring_to_beings` | 3388-3395 | prereq | H | **withdrawn** — dup→F-08 | same entry, same sentence as B01's F-08 (this index's determination; see § 4) |
 | F-476 | `virtue.blood_of_the_nephilim` | 3504-3518 | auth+incompat | H | **withdrawn** — dup→F-22+F-23 | both halves are B01's F-22 and F-23 (this index's determination; see § 4) |
@@ -2366,7 +2366,7 @@ blocked behind D14.
 | Q-60 | `virtue.personal_vis_source`: is "about one tenth" a rule or hedged guidance? | N | open — **Q-83 family** |
 | Q-61 | `virtue.rat_up_a_drainpipe`: is "a substantial advantage" mechanical? | — | **closed — D8: yes** |
 | Q-62 | `virtue.powerful_relic`: is the relic's one power charged against the power-levels budget? | R | **SETTLED — `q-resolutions.md` § Q-62 (2026-09-22).** **No — and it must not be recorded in `Entity::powers` at all.** ArMDE:4784's subject throughout is an **item the character owns**, and the power's content is *"agreed upon with the storyguide"* with no level stated, so no budget can charge it; `effective::powers_used` charges every `Entity::powers` row against a budget this Virtue leaves at 0, so writing the relic's power down yields a false `over_power_levels`. A `power_levels` grant would invent a number (`7f5605a`), and `item_level_budget` counts Hermetic enchantment levels, which a Divine relic's power is not. **No new effect**; `true_faith_grant: 3` is correct and complete. The power and ArMDE:4786's impiety clause reach the player as text (D5/D20). Worth stating once beside `powers_used` that an owned item's power does not enter `Entity::powers` — it settles `virtue.relic` and `virtue.infernal_heirloom` too. **F-249 (`virtue.ripper`) is expressly NOT settled by this**: there the powers are the character's and their levels *are* stated — that is **Q-58**. Nothing blocked |
-| Q-63 | does a translation table's term bind *inside a sentence*, or only on a label? | N | open — **F-65, F-320, F-473 depend on it**; **D18** does not answer it but changes what a disagreement means |
+| Q-63 | does a translation table's term bind *inside a sentence*, or only on a label? | N | **SETTLED — D36**: it binds **wherever the word names a game element the app shows** (label, summary, description, export); ordinary-language use is untouched. Test: could the reader want to *find* the thing named? **F-65, F-320 and F-473 are unblocked** — F-473 is the decisive case, a description naming an element by a word that appears nowhere in the UI. **Enforced at review, deliberately no guard** (a term-scanner would fire on every ordinary use). Which term is canonical remains **D31**'s question, not this one |
 | Q-64 | is a supernatural *capability* with no number, no roll and no waived penalty mechanical? | — | **closed — D8: yes.** Three independent supports, incl. ArMDE:2960-2962's realm association + same-realm-aura Warping immunity on **every** Supernatural Virtue, which falsifies the `narrative` claim for this cohort on grounds independent of the capability argument |
 | Q-65 | two canonical tables give `Sense Holiness and Unholiness` different German names | X | **PARTLY settled — D31**: the rulebook heading no longer breaks the tie, so this is now **table vs table** and falls to D7 rule 3 (thematic table before `tugenden-fehler.md`). Decide on that alone; do **not** reach for the stale heading |
 | Q-66 | does `virtue.sense_holiness_and_unholiness`'s "may overwhelm you" state a D5 rule? | N | open |

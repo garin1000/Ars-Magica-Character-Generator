@@ -828,6 +828,46 @@ presumption of correctness.
 
 ---
 
+## D36 — a canonical German term binds wherever it *names a game element*, prose included
+
+**Question (Q-63).** Does a translation table's term bind only on an entry's
+**label**, or also **inside a sentence**? Three findings wait on it: F-65
+(*Fähigkeit* for **Fertigkeit**), F-320 (*Widerstandsfähigkeit* for Soak) and
+F-473 (Magical Air called by a name the app does not use).
+
+**Ruling: it binds wherever the word names a game element the app shows** — a
+label, a summary, a description, an export. **Ordinary-language use of the same
+word is untouched.** All three findings are live and fixable.
+
+**Why, and F-473 is the case that decides it.** A description that names a game
+element by a word appearing nowhere in the UI is a **broken cross-reference
+inside our own product**: the player reads the tooltip, looks for that thing in
+the app, and it is not there. That is a defect, not a matter of style. F-65 and
+F-320 are milder — *Fähigkeit* and *Widerstandsfähigkeit* are ordinary German a
+reader understands — but they fail the same test, because both sentences are
+pointing at something the app displays.
+
+**The line, stated so it can be applied.** Ask whether the reader could want to
+*find* the thing named. "Deine **Fertigkeit** steigt" names the Ability score the
+app shows → binds. "Er ist eine **Fähigkeit**, die selten ist" used as plain
+German, naming nothing on screen → free.
+
+**Which term is canonical is D31's question, not this one.** D31 rules that on a
+**name** the translation table beats the German rulebook heading, our
+`rules/source/de/` copy being older. D36 only says *where* the winner binds.
+
+**What this obliges.**
+
+- Fix F-65, F-320, F-473 in `rules/i18n/de/`, and check the rest of the German
+  prose for the same shape rather than only these three.
+- **No guard.** A scanner matching table terms across German prose would fire on
+  every ordinary-language use, and the audit has already learned that a noisy
+  green guard proves nothing. This is enforced at review time, which is a
+  deliberate choice and should not be "fixed" later by adding the noisy test.
+- Both locales stay in scope of any slice that touches the text (standing rule).
+
+---
+
 ## D35 — 30 XP per finished year is a *rate*, so the parameter model gains a number
 
 **Question (Q-67).** `virtue.simple_student` (ArMDE:4960) grants *"30 experience
