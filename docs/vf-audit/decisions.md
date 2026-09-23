@@ -828,6 +828,49 @@ presumption of correctness.
 
 ---
 
+## D41 — one Social Status is mandatory and hard; a second is a warning
+
+**Question (Q-45).** ArMDE:2816: *"All characters **must take one** Social
+Status, and may only take **more than one** if the descriptions of the Virtues or
+Flaws **explicitly note that they are compatible**."* That is two rules, and a
+`virtue_category_caps` row expresses neither — it cannot state a **minimum**, and
+it cannot carry the per-entry exception.
+
+**Ruling.**
+
+1. **"Must take one" is a hard error.** It is absolute, universal and trivially
+   checkable.
+2. **A second Social Status raises a warning, never an error.** No per-entry flag.
+
+**Why the exception is not modelled — the book's three cases decide it.**
+
+| Entry | The stated exception |
+|---|---|
+| ArMDE:4325 (Redcap) | *"compatible with **any** other mundane Social Status that would **reasonably** allow you to do your job"* — hedged, examples only |
+| ArMDE:4614 | *"compatible with any Social Status **normally restricted to men**, and any Social Status compatible with…"* — a predicate, and recursive |
+| ArMDE:4441 | **requires** a second guild Social Status alongside its own |
+
+None is an id list. ArMDE:4614's predicate needs a sex model, which **Q-05/D16
+ruled out as a deliberate non-goal**, so it is unmodellable **by decision**, not
+by omission. Redcap's *"reasonably"* is D16's hedged wording, which D16 says is a
+warning and never an error. A flag would therefore hard-block pairings the book
+permits, and its author would be guessing at what "reasonably" covers.
+
+**What this obliges.**
+
+- A category **minimum** in the profile budget — new, since only caps exist.
+- A warning on a second `social_status`, carrying the entry names so the player
+  can see what was paired.
+- **Do not add a `compatible_with` list.** It would model none of the three cases
+  and would look authoritative while being a guess.
+- **This is D21's mechanism, not a new one**: D21 closes Q-07 and Q-102 as "the
+  same ArMDE:2816 machinery". D41 says what that machinery must *say*, not how it
+  ranges over a category.
+- ArMDE:4441's *requirement* of a second status is a separate obligation and is
+  **not** discharged here.
+
+---
+
 ## D40 — replacement XP is one effect that names a life stage
 
 **Question (Q-106).** `flaw.feral_upbringing` ships an **additive**
