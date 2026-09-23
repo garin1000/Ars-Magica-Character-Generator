@@ -828,6 +828,47 @@ presumption of correctness.
 
 ---
 
+## D40 — replacement XP is one effect that names a life stage
+
+**Question (Q-106).** `flaw.feral_upbringing` ships an **additive**
+`restricted_ability_xp: 120`, but ArMDE:6113 says *"In your first five years you
+gain 120 experience points"* — and the standard childhood block is **already**
+120 (`native_language_xp: 75` + `spread_xp: 45` over the same five years). The
+Flaw **replaces**; the data adds, so a feral character is funded **240** (F-428).
+
+**Ruling: one effect that names a life stage** —
+`replaces_life_stage_xp { stage, amount, abilities }` or equivalent. One concept,
+one rule, one place in the data.
+
+**It has two carriers, and they are the reason for the shape.** D13 named the
+three XP modes — additive (modelled), earmark (D13), **replacement (unmodelled)**
+— and said they must be designed together. Replacement's carriers are F-428
+(`childhood`) and **F-439** (the Redcap's 300, D17, `apprenticeship`). Both name
+a stage `rules/core/life_stages.json` already defines, so one variant covers
+both. **Design against both; a variant shaped around `childhood` alone would not
+fit apprenticeship's 15 years.**
+
+**Why not the alternatives.** A *suppress flag plus the existing additive grant*
+splits one book rule across two effects, and an entry could then carry the
+suppression without the grant — silently costing a character 120 XP, which is the
+same class of defect as the one being fixed. *Special-casing the two ids in the
+engine* puts rules in code, the inversion CLAUDE.md's data-driven design exists
+to prevent.
+
+**What this obliges.**
+
+- The variant, plus its consumer in the XP computation, plus `RULES.md`.
+- **Not covered by it, and still owed:** ArMDE:6113's *"you may not start with a
+  score in a Language"* and *"you may only choose beginning Abilities that you
+  could have learned in the wilds"*. Neither is an XP rule; they are
+  authorization rules and must not be smuggled into this effect.
+- **Saves:** replacement *lowers* a funded total, so characters legal today can
+  fail validation — same treatment as D10 and D28, reported and blocked in
+  `Enforced`, no migration and no schema change.
+- Re-derive both amounts at implementation rather than trusting 120/300 here.
+
+---
+
 ## D39 — a truncated English sentence is reconstructed from the English, not translated back
 
 **Question (Q-82).** ArMDE:5725 shipped *"Regular casting tools remain as Arcane
