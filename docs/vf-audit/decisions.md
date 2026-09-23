@@ -828,6 +828,44 @@ presumption of correctness.
 
 ---
 
+## D53 — the glossary governs inside a verbatim quotation too
+
+**Question (Q-54).** `rules/source/de/translation-tables/alterung-twilight.md:21`
+writes *Living Conditions modifier* closed — **Lebensumständemodifikator**. Our
+DE rulebook writes it hyphenated at ArMDE:4530 (*"einem +1-Bonus auf den
+**Lebensumstände-Modifikator**"*), and the German `summary` quotes that sentence
+verbatim. B06 let the rulebook govern *because* the summary is a quotation, and
+flagged that CLAUDE.md's rule is unqualified.
+
+**Ruling: the glossary governs, quotation included.**
+
+**Why, and it turns on D31.** "Verbatim" here means faithful to
+`rules/source/de/`, which **D31 established is an older copy than the tables**.
+Fidelity to a stale source is fidelity to the wrong thing. The same reasoning
+that made the table win on a *name* makes it win inside a quoted sentence.
+
+**Scope, stated because it is large.** This decides the spelling in **every**
+entry that quotes a glossary term in `summary` or `description` — which, after
+D5's corrections and D50's reclassification wave, is most of the catalogue.
+
+**What it does not license.** This is **not** permission to rewrite quoted rules
+text generally. **D39** stands: a truncated English sentence is reconstructed
+from the English and never back-translated, and the `scheitest` precedent keeps a
+faithful copy of a real typo. D53 governs **terminology inside a quotation**, not
+its wording, its facts or its structure — substitute the glossary's spelling of a
+glossary term, change nothing else.
+
+**What this obliges.**
+
+- `virtue.mild_aging` is **not** clean on check 12 after all; B06 rated it clean
+  on the rulebook-governs reading, which this reverses.
+- The sweep belongs with **D36**'s, since both ask the same thing of German prose
+  — added to § 8's row for the German text pass rather than as a separate one.
+- **The German rulebook is not edited to match.** D18 forbids re-syncing it now,
+  and the disagreement is evidence of the copy's age, not a defect in it.
+
+---
+
 ## D52 — D4's Cyclic Magic row is amended: the Virtue and the Flaw are not symmetric
 
 **Question (Q-91).** Does ArMDE:5895's third sentence change **D4**'s answer for
