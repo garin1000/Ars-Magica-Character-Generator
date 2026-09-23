@@ -828,6 +828,41 @@ presumption of correctness.
 
 ---
 
+## D44 — an entailed incompatibility may ship, but it must be marked as entailed
+
+**Question (Q-19).** `virtue.gentle_gift` and `flaw.blatant_gift` declare each
+other in `incompatible_with` (symmetric, so the load passes) and **neither
+passage states it**. The book writes this exclusion explicitly when it means it —
+ArMDE:5717 (Blatant Magical Air): *"a character may not have both Flaws"*;
+ArMDE:6895 (Unbearable to Beings): *"it cannot be combined with the Blatant
+Gift"* — both about *other* entries excluding Blatant Gift.
+
+**Ruling: keep it, as a hard block.** The pair is definitionally contradictory —
+a Gift cannot be both subtle and −6 on every interaction roll — so the exclusion
+follows from the two descriptions even though neither names the other.
+
+**The precedent, stated narrowly on purpose.** An incompatibility may be asserted
+without a passage **only when each entry's own text contradicts the other's**.
+That is *entailment*, not inference from theme, plausibility, or balance. "These
+two feel like they shouldn't combine" is not this rule, and neither is "no
+sensible character would take both".
+
+**What this obliges.**
+
+- **Mark entailed pairs in the data or in `RULES.md`**, with the two passages
+  that contradict. An unmarked unsourced constraint is indistinguishable from an
+  invented one, and the next auditor pays to re-derive it — which is exactly what
+  happened here.
+- **Measure the rest.** **81** `incompatible_with` declarations ship and nobody
+  has counted how many cite a passage. B03 deliberately left that measurement to
+  this ruling; it is now owed, and each unsourced pair must be shown to be
+  entailed or removed.
+- **Do not generalise to prerequisites.** This is about a *negative* constraint
+  between two entries whose texts collide. A missing prerequisite is an absence
+  of permission and stays "source or nothing".
+
+---
+
 ## D43 — a restricted XP pool permits spending *itself*, and nothing more
 
 **Question (Q-27).** `types.rs::Effect::AbilityAuthorization`'s doc comment makes
