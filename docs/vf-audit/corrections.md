@@ -66,6 +66,13 @@ one of them already **fixed** by D32 and committed); § 7 is recounted from
 scratch. **Nothing was renumbered.** The seven new rows are in their own block at
 the end of § 1, because they belong to no batch.
 
+**§ 8 is new and Phase 2 must not start without it.** The rulings had accumulated
+**33** separate instructions to sweep, re-derive or measure something, spread
+across 48 decisions with nothing collecting them — the same shape of gap that
+once made B16 duplicate B09's work. § 8 lists all of them. **Every figure a
+ruling quotes is a snapshot of one span, not a catalogue census**; the row says
+what to measure and why the stated number is not enough.
+
 **Ten rulings landed after this file was first written, and several of them
 change work recorded here rather than merely adding to it.** § 2.2 (D2 is ruled),
 § 3.7 (D9 unblocks, **D10 reshapes**), § 3.11 (D11 unblocks and narrows), § 3.2
@@ -2842,3 +2849,40 @@ be re-derived catalogue-wide rather than taken from a finding list.
   remedy is not re-rating a defect.
 - **No verdict on the five escalated entries.** They are not marked checked, and
   this file records the question rather than guessing the answer.
+
+---
+
+## 8. Measurements owed — every sweep and re-derivation a ruling requires
+
+**Why this section exists.** By D48 the decisions carried **33** separate
+instructions to sweep, re-derive or measure something, scattered across 48
+rulings. Each is load-bearing — a figure quoted in a decision is a *snapshot of
+one span*, not a catalogue census — and nothing collected them. That is the exact
+shape of the gap that made B16 duplicate B09's work, so it is collected here.
+
+**Read every row as "measure it, then act" — never "trust the number".** The
+audit has already been bitten by unit errors (a `halbier` count wrong by 5, eight
+wrong census figures in one batch), and by figures that were true of a span and
+quoted as true of the catalogue.
+
+| # | Ruling | What must be measured | Why the stated figure is not enough |
+|---|---|---|---|
+| 1 | **D12** | classify all **122** `hermetic` entries as intrinsic or trained | the split drives every `IsMagus` gate, and D24 adds two entries outside every batch span |
+| 2 | **D10** | the **~42** entries riding the unlimited multiplicity default | the figure is a data census that moves with the catalogue |
+| 3 | **D20** | the **19** surfaced-only entries | enumerated in `tmp/q136-number-check.md`, which is scratch, not data |
+| 4 | **D9** | which entries state a choice nobody records | the slice must re-derive the set |
+| 5 | **D25** | the other **630** entries, descriptor against the book's index lists | B19 checked 25 and found one disagreement |
+| 6 | **D30** | **563** source refs needing anchors; every `source.lines` range needing the non-blank form | B16 measured 35 ranges; nobody has measured the other 620 |
+| 7 | **D34** | the **56** Hermetic Virtues `flaw.false_power` admits | a category census; assert behaviour, never the count |
+| 8 | **D42** | which Supernatural entries the book *fixes* a realm for | ArMDE:2961 says each description notes it, so it must be read per entry |
+| 9 | **D43** | the **28** `restricted_ability_xp` carriers, each against its passage | the narrowing and the authorizations must land together or access is lost |
+| 10 | **D44** | the **81** `incompatible_with` declarations, for which cite a passage | each unsourced pair must be shown entailed or removed |
+| 11 | **D46** | the **five** effect-less `creation_effect` entries | `README.md` calls them "a lead, not a conclusion" |
+| 12 | **D48** | the catalogue, for pools that name an Ability *instance* | B06 measured its own span and found three |
+| 13 | **D23 / Q-137** | the Bad-Reputation id list | B18 got **16 ids across 17 rows**, `flaw.failed_monk` carrying two |
+| 14 | **D18 / D31** | the **21** table disagreements, re-derived under D31 | every verdict in `tmp/table-sync-check.md` is withdrawn |
+
+**Two of these are already discharged and are kept for the record**: D38's "find
+the other *only X can take this* sentences" (exactly two, the second filed as
+**F-553**), and D47's sibling sweep of the guild entries (no second caller, no
+new defect).
