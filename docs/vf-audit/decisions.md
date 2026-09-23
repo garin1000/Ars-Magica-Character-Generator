@@ -828,6 +828,42 @@ presumption of correctness.
 
 ---
 
+## D37 — Magic Resistance competes, it does not stack: True Faith takes the higher total
+
+**Question (Q-74).** ArMDE:17611 gives *"a True Faith Score gains Magic
+Resistance equal to this score multiplied by ten"*, and
+`derived/casting.rs::magic_resistance` computes nothing from it (F-329). Does it
+**replace** the per-Form grid, **stack** with it, or **compete**?
+
+**Settled from the source, not by choice.** ArMDE:2627 states the general rule:
+*"If a character receives Magic Resistance from more than one source, these
+totals **do not stack**, even if they derive from the same Realm … you simply use
+the **higher total**."*
+
+**Ruling: compete.** For each Form, resistance = **max(the Form's existing total,
+True Faith score × 10)**.
+
+**The book's exceptions confirm the default rather than undermining it** — they
+are stated per entry, and both say "add" explicitly: ArMDE:4035, a guardian
+angel's 15 *"is not compatible with a magus's Parma Magica … but it **does add**
+to the Magic Resistance resulting from Faith Points"*; ArMDE:3583, Commanding
+Aura's resistance *"is added to that of the relic"*. So an entry that adds must
+say so, and silence means compete.
+
+**What this obliges.**
+
+- `derived/casting.rs::magic_resistance` folds `effective/might.rs::true_faith`
+  in as a **floor across every Form**, not as an addend. The score is already
+  modelled (`Effect::TrueFaithGrant`, summed and clamped), so this is a consumer
+  change only — **F-329 needs no new data**.
+- **Do not generalise the max to the two exceptions above.** They are additive by
+  their own wording and belong to their own entries; folding them into the same
+  rule would be the "one mechanism for two ideas" error D21 warns about.
+- A character with **Faith Points but no True Faith Score** gets **nothing**
+  (ArMDE:17611 says so in the same breath) — the floor keys on the *score*.
+
+---
+
 ## D36 — a canonical German term binds wherever it *names a game element*, prose included
 
 **Question (Q-63).** Does a translation table's term bind only on an entry's
