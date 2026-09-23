@@ -828,6 +828,50 @@ presumption of correctness.
 
 ---
 
+## D49 — free seasons per year are a creation-time constraint, and they bind the plan
+
+**Question (Q-44).** No `Effect` variant touches a per-year season count, though
+three entries change one: `virtue.landed_noble` (ArMDE:4223, *"You must spend
+every season managing it"*), `virtue.license_of_absence` (ArMDE:4293, *"an extra
+free season each year … never more than four free seasons in a year"*) and
+`virtue.lone_redcap` (ArMDE:4323, *"You must still devote two seasons each year
+carrying messages"*, with explicit Wealthy/Poor interactions). B05 called it a
+scope decision and recommended text.
+
+**Norbert's correction: post-Gauntlet XP is not only an in-play quantity, and for
+guided creation this matters.** Checked, and it holds:
+
+- `life_stage.rs::LifeStagePlan::post_gauntlet_lab_seasons` is a **save-persisted
+  character-creation plan field**, not an in-play tally.
+- `life_stage.rs::post_gauntlet_points` subtracts `lab_season_cost` per charged
+  season from the creation budget, and ArMDE:2471 makes each point *"an
+  experience point in an Art or Ability or one level of spell"*.
+
+So a Virtue that consumes every season, or frees an extra one, changes **what the
+player may claim at creation** — and therefore his XP and spell levels.
+
+**Ruling: derive a free-seasons-per-year value from the V/F and use it to
+validate the plan.** Not a new computed axis on the sheet: the player already
+enters `post_gauntlet_lab_seasons`, and these entries constrain that entry.
+
+**What this obliges.**
+
+- An effect expressing a per-year season delta, and a derived per-year
+  free-season count with ArMDE:4293's **hard cap of four**.
+- Validation against `post_gauntlet_lab_seasons`. Mind the field's own
+  subtlety, documented on it: it counts **charged** seasons, and the fourth
+  season of a year is free (ArMDE:2482 has reached 0 by the third) — so a cap on
+  *available* seasons is not the same quantity and must not be compared naively.
+- **F-131, F-146 and F-151 change remedy**: each resolved to "write it as text",
+  which is now the *lesser* half. Text still owed (D20); the constraint is owed
+  too.
+- `virtue.lone_redcap`'s Wealthy/Poor interaction must be read with **D17**,
+  which already rules on that entry's 300 apprenticeship points.
+- **Sweep beyond B05's 35-entry window** before authoring — three in one span is
+  a floor. Added to § 8.
+
+---
+
 ## D48 — a restricted pool may name Ability *instances*, and eligibility becomes a union
 
 **Question (Q-47).** `effective/xp.rs` hard-codes `instances: Vec::new()` for
