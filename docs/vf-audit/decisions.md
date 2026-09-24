@@ -984,6 +984,13 @@ picks the wrong reading for two entries.
 - **Check the halving's base before implementing**: what is halved, and whether
   it interacts with **D49**'s creation-time advancement work, which touches the
   same budget.
+- **`flaw.incomprehensible` halves along *two* axes, not one** (found settling
+  **Q-32**). ArMDE:6296: *"Anyone trying to learn **from you or from a book you
+  have written** must halve their Advancement Total (or Lab Total, if you are a
+  magus and have written Lab Texts on some spells or enchanted items)."* So it
+  needs a `Teaching` row **and** an authoring row — the new `AdvancementSource`
+  Q-32 adds — each carrying the factor. Encoding one of them and calling the
+  entry done would drop half a stated rule.
 - The UI then renders a real number and D45's `source` names the entry producing
   it; no separate rendering ruling is needed.
 - Two carriers, measured — *"the only two of fifteen"* is B14's count and should
