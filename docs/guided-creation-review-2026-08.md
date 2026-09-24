@@ -303,7 +303,20 @@ as N ad-hoc patches.
   payload. Do together with #16 — a taller multi-line bar changes what sticky
   costs.
 
-### #15 — Apprenticeship duration is not editable — **BLOCKED ON SOURCE**
+### #15 — Apprenticeship duration is not editable — ~~**BLOCKED ON SOURCE**~~ **UNBLOCKED 2026-09-24**
+
+> **Unblocked by `docs/vf-audit/decisions.md` D56.** The block was the missing
+> *rate*: apprenticeship is priced as a flat lump, so nothing said what a partial
+> one is worth. Two things resolved it. **ArMDE:5647** proves the rules
+> contemplate a partial apprenticeship — *"Decide at what age the character was
+> abandoned. Create the character as a regular apprentice up until that age"* —
+> and **Norbert ruled the rate** on 2026-09-24: **16 experience points and 8
+> spell levels per year**, from ArMDE:2435's *"240 experience points, and 120
+> levels of spells"* over fifteen years. **Both quantities divide**, not only the
+> XP. The rate is **ours**, not printed in the book, and that is recorded rather
+> than glossed. A truncated block must also **not** enforce
+> `apprenticeship.minimum_abilities`, which describe a *completed* apprenticeship.
+> Original analysis follows.
 - **Severity** medium
 - **Where** `apprenticeship.years: 15` is a **ruleset** value
   (`rules/core/life_stages.json:16`), read at `life_stage.rs:456`; nothing in

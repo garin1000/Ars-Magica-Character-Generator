@@ -877,13 +877,41 @@ him experience points based on his age and other Virtues for his life past being
 abandoned."* So the shape is **truncated apprenticeship + later life**, and the
 age is a **numeric parameter** (D35's type; a D9 instance).
 
-**OPEN, and it needs Norbert: what is a partial apprenticeship worth?**
-Apprenticeship is priced as a **flat lump**, not a rate — *"The fifteen years of
-apprenticeship give the character 240 experience points"* — which is why
-guided-creation issue **#15** is marked *BLOCKED ON SOURCE*. ArMDE:5647 proves
-the rules **contemplate** a partial apprenticeship without supplying its value.
-Dividing 240 by 15 would be **our** number, not the book's. Nothing else here is
-blocked on this.
+**SETTLED (Norbert, 2026-09-24): a partial apprenticeship is priced by the
+year, at the rate the lump implies.** ArMDE:2435 gives *"The fifteen years of
+apprenticeship give the character **240 experience points, and 120 levels of
+spells**"*, so:
+
+| Per year | Value |
+|---|---|
+| Experience | **16** |
+| Spell levels | **8** |
+
+**Both** quantities are divided, not only the XP — the passage pairs them, and
+ArMDE:5643 has him casting spells, so granting the first without the second would
+leave a trained apprentice with none.
+
+**The rate is ours, and that is stated rather than hidden.** The book prices
+apprenticeship as a flat lump, which is why guided-creation issue **#15** is
+marked *BLOCKED ON SOURCE*; 240 ÷ 15 and 120 ÷ 15 are derivations, not printed
+figures. **This also unblocks #15**, which asked for an editable apprenticeship
+duration and was waiting on exactly this.
+
+**Spendable on what.** ArMDE:2435's own set: *"Arts or Abilities, including
+Arcane, Academic, and Martial Abilities."*
+
+**Parma Magica is allowed, and warned.** ArMDE:5648 does **not** forbid it —
+*"If the character knows the Parma Magica, he must **join the Order or be
+slain**"* — and ArMDE:5650 continues *"**Even if the character joins the
+Order**, his background continues to cause problems"*, so a Parma-knowing
+Abandoned Apprentice who joins is a character the book contemplates. Excluding
+Parma from the spendable set was considered and rejected for making that concept
+unbuildable; holding it raises an advisory instead (D16's shape for a stated
+consequence).
+
+**The truncated block must NOT enforce `apprenticeship.minimum_abilities`** —
+Latin 1, Magic Theory 1 and Parma Magica 1 describe a *completed* apprenticeship.
+A character abandoned at 14 cannot owe them.
 
 **UI: conditional phases, using the mechanism that already exists.**
 `creation_phases` is per-profile data, so a phase cannot depend on a selection
