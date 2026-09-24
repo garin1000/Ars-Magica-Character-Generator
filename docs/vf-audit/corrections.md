@@ -2181,6 +2181,47 @@ entry is opened once.
 
 ---
 
+## 4a. What this round does NOT cover — and why that is easy to miss
+
+**The failure mode, stated first because it is the point.** A finding cluster in
+which **one member fits this round's scope** can make the **whole cluster look
+covered**. The member that fits gets filed here, someone reads "those findings
+are filed", and the rest — which were never V/F data — are never queued anywhere.
+Identified 2026-09-24 by the concurrent book-template session, from a case where
+it had already happened.
+
+**The worked example.** The Knight template produced three findings. **K1** is a
+missing effect on `virtue.knight` — V/F data, this round's business, and part of
+`open-todos.md` row 45's class. **K3** and **K5** are **engine capability**:
+
+- **K5** — `EquipmentSlot::equipped` is **overloaded**, gating both whether a
+  weapon yields a Combat row and whether it adds Load. The Knight needs those
+  separated (five Combat rows including two for a great sword, ArMDE:1468-1472,
+  against an Encumbrance counting only the wielded set, ArMDE:1484). **Already
+  shipped**: since `f70c57f` made `equipped` load-bearing for Load, the fixture
+  resolves the conflict by marking the great sword unequipped and **losing its
+  two Combat rows**, on the judgement that a wrong number beats a missing row.
+- **K3** — mounted combat is unmodelled (ArMDE:16837-16839, +min(Ride, 3) to
+  Attack and Defense). The rule is trivial and `Ride` is already on the entity;
+  what is missing is anywhere to record *"mounted"*.
+
+A perfectly executed V/F round working from § 6.2 would touch **neither**, and
+K1 being correctly filed here is precisely what made them easy to overlook.
+
+**What this obliges.**
+
+- Both are in `docs/open-todos.md` **row 52**, which is the list surfaced at
+  release. They are **not** findings in § 1 and must not be added — they are not
+  V/F defects.
+- **When a finding arrives from outside this audit, ask which of its siblings are
+  not V/F data**, and confirm those have a home before treating the cluster as
+  filed.
+- The same shape may already exist inside this file: an entry whose V/F half is
+  filed while its engine half sits only in a batch record. § 8's sweeps are the
+  place to catch that.
+
+---
+
 ## 5. What Phase 2 must not re-open
 
 The batches recorded cleared negatives so a correction pass does not "fix" a thing
