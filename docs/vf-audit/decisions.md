@@ -828,6 +828,45 @@ presumption of correctness.
 
 ---
 
+## D55 — a halving gets a factor; `amount: 0` must stop meaning two things
+
+**Question (Q-113).** `RULES.md:5159` records `advancement_mod` `amount: 0` on
+`flaw.incomprehensible` and `flaw.loose_magic` as a deliberate **"halve
+advancement"** marker — the only two of fifteen `advancement_mod` rows carrying
+it. `DerivedSurfacedModifiersSection.svelte:27` guards the value with
+`{#if m.amount !== 0}`, which is right where 0 means *"no magnitude carried"*
+(A37's four surfaced kinds, A40's eight) and **wrong here**, where it means
+*halved*. The player sees a labelled row with nothing beside it, indistinguishable
+from a modifier of no size.
+
+**Ruling: give `advancement_mod` a factor, and stop overloading `amount: 0`.**
+
+**Why not text, when Q-98 chose text for the same shape.** Q-98's doubling sits
+on `casting_fatigue`, which **D45** established is *surfaced and never computed* —
+the engine does not know what a spell costs, so it cannot double it. Advancement
+is different: `advancement_mod` **is** computed and carries real values (−3 on
+`flaw.poor_student`). A halving there can be computed, so gesturing at it with a
+sentinel gives up a number the engine could get right.
+
+**The overloading is the defect, more than the rendering is.** One field means
+both *"no magnitude"* and *"halved"*, and nothing in the data distinguishes them —
+a reader of `rules/core/` cannot tell which is meant, and the UI guard silently
+picks the wrong reading for two entries.
+
+**What this obliges.**
+
+- A factor (or equivalent) on `advancement_mod`, and **`amount: 0` retired as a
+  marker** on the two carriers — leaving 0 with exactly one meaning.
+- **Check the halving's base before implementing**: what is halved, and whether
+  it interacts with **D49**'s creation-time advancement work, which touches the
+  same budget.
+- The UI then renders a real number and D45's `source` names the entry producing
+  it; no separate rendering ruling is needed.
+- Two carriers, measured — *"the only two of fifteen"* is B14's count and should
+  be re-derived, per § 8's standing rule.
+
+---
+
 ## D54 — a supplement-conditional category follows the app's *current* capability, and the flip is registered
 
 **Question (Q-111).** ArMDE:6304 ends: *"If you are **not using the rules in City
