@@ -185,6 +185,18 @@ false rejection, two more witnesses for the F-20/F-45 class, and § 4a itself.
   not do is follow each effect into the engine and check its sign against what
   the track or total counts, which entered the briefs at B12. The **scope** of
   that residue is still inferred from the brief history rather than measured.
+- **These audit files carry ~4,180 `ArMDE:NNNN` citations, and they will all
+  repoint at the next re-sync** — 470 of them in the three files a Phase 2
+  session actually works from (`corrections.md`, `decisions.md`, this one).
+  Measured 2026-09-24. **Most are recoverable and some are not**, and that is the
+  distinction to work with: a citation to a **catalogue entry's own passage** can
+  be re-found through its `source.anchor`, since all 655 carry one in both
+  stores (D30). A citation to a passage with **no entry** cannot — ArMDE:2435's
+  apprenticeship figures, ArMDE:1163's template convention, ArMDE:16656's combat
+  scores, ArMDE:2816's one-Social-Status rule. Those are the real debt, and
+  nobody has counted them. **Do not "fix" this by renumbering after a sync** —
+  that is the line-count invariant's lesson one level up.
+
 **A fourth uncertainty was resolved rather than carried:** F-442's *"named
 immunity"*, which I had flagged as unfindable, is **real and inbound** —
 ArMDE:7397 under `#### Curse-Throwing`. The lesson generalises: **a rule about an
