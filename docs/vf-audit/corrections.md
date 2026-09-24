@@ -3068,6 +3068,11 @@ quoted as true of the catalogue.
 | 13 | **D23 / Q-137** | the Bad-Reputation id list | B18 got **16 ids across 17 rows**, `flaw.failed_monk` carrying two |
 | 14 | **D18 / D31** | the **21** table disagreements, re-derived under D31 | every verdict in `tmp/table-sync-check.md` is withdrawn |
 
+**Two of these are already discharged and are kept for the record**: D38's "find
+the other *only X can take this* sentences" (exactly two, the second filed as
+**F-553**), and D47's sibling sweep of the guild entries (no second caller, no
+new defect).
+
 ### 8a. Supplement-conditional entries — revisit when supplement selection lands
 
 A planned feature will let the troupe choose which supplements are supported in
@@ -3083,7 +3088,41 @@ them by reading this list, never from memory.
 hits and the second is a creature rule (ArMDE:18519). Add a row here rather than
 inventing a mechanism if a second ever appears.
 
-**Two of these are already discharged and are kept for the record**: D38's "find
-the other *only X can take this* sentences" (exactly two, the second filed as
-**F-553**), and D47's sibling sweep of the guild entries (no second caller, no
-new defect).
+---
+
+## 9. `docs/open-todos.md`, folded in
+
+**Why.** Norbert, 2026-09-24: *"Fold the open todos into the corrections list."*
+Sixteen rows lived there while their work lived here, and **D58** settled that all
+of it is the project's. This is the mapping; `open-todos.md` keeps its own job —
+it is the list **surfaced at a release or a tag**, which this file is not.
+
+**Rows 47–54 belong to the concurrent book-template session.** They are recorded
+here, not claimed.
+
+| Row | What it is | Its home here |
+|---|---|---|
+| **38** | the `description` fill, 109 of 655; `ArMDE:3951-5282` unsurveyed | § 3.3, § 3.4 — **and D50 widens it**: all 335 `narrative` entries now need re-testing (§ 8 row 12b) |
+| **39** | ~~`guarter`~~ **done** (D26); `ArMDE:6929`'s `-3penalty` open | **Upstream now** — `CLAUDE.md` says a source defect is fixed in `arm-de-translation`, not here |
+| **40** | the search index reads `summary` only, so `description` is unsearchable | § 3.12 — grows with every D50 reclassification |
+| **41** | the Markdown export names V/F only; no rules clause reaches a sheet | § 3.12, and **D58** bites: the sheet is the product |
+| **42** | four swept Flaws state computable rules with no representation | § 3.15a |
+| **43** | anchors — **done for V/F** (655/655); the rest of the catalogue owes them | **D30**, § 8 row 6 (**563** refs) |
+| **45** | the authorization family — **scope corrected**, any category, not social-status | § 3.2, **D43**; four counterexamples (F-18, F-102, Knight, Priest) |
+| **46** | the **218 computed** V/F never audited against what the engine does | **the largest unstarted thing in this file** — no § 3 group covers it |
+| **47** | `charged_cost` overcharges an Affinity-bought score | **F-547**, with its proof and its corrected remedy note |
+| **48** | `virtue.berserk`'s three modifiers applied unconditionally | **F-20**, and the **F-45 class** (§ 3.8, **D4**) |
+| **49** | conditional casting/Lab modifiers applied flat — Ways of the Land, Special Circumstances, Cyclic | **F-45 / F-20 class**, § 3.8; **D4** governs the fix, **D52** splits the Cyclic pair |
+| **50** | six more Virtues carrying none of their stated mechanics | row 45's class; **D14** owns `virtue.student_of_realm`'s authorization half |
+| **51** | four model/storage limits the magus templates exposed | § 3.15b |
+| **52** | **K3** mounted combat, **K5** `equipped` overloaded | § 3.15b — **engine findings, not § 1 rows** (§ 4a) |
+| **53** | **W2** authorization cannot restrict | § 3.15b; **folds into row 45** — same exclusive-choice parameter as `virtue.custos` |
+| **54** | nine conversion defects in `rules/source/en/` | **Upstream** — and ArMDE:1277 is **forbidden**, not deferred (the line-count invariant) |
+
+**Two rows have no group in § 3 and that is the finding.** **Row 46** — the 218
+computed entries never checked against the engine — is the largest unstarted item
+anywhere in this audit, and § 3 has no home for it. **Row 38**'s residual is the
+other. Both predate the rulings that reshape them, so neither is simply "carry on".
+
+---
+
