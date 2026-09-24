@@ -1905,7 +1905,79 @@ a *granted* Personality Flaw would slip through.
 | F-514, F-537 | two defects in `uncomputed_clauses.rs` itself: `SIGN_CHARS` lacks U+2014, and one German needle matches nothing the German book writes. Filed `engine+audit` and worked in § 3.1 |
 | — | B15's F-472/F-474/F-475/F-476/F-477/F-479 each assert that an earlier batch "did not report" a defect that the earlier batch did report. Six false statements of record; see § 4. |
 
+### 3.0 Routing table for D19–D56 — **read this before working § 3** (NEW, 2026-09-24)
+
+**Why this exists.** § 3 was written when the audit had eighteen rulings. It
+references **D1–D18 and nothing later**. Thirty-eight further decisions have
+landed since, each recorded in `decisions.md` and in its question's row — neither
+of which a correction pass reads. A settled question also *drops out of § 6.2*,
+which is the list that says "this needs Norbert", so **closing a question can make
+its work disappear**. That is the § 4a failure mode aimed at this file's own
+structure, and Norbert found it by asking whether D56's truncated apprenticeship
+was queued. It was not.
+
+**This table routes, it does not restate.** The ruling is in `decisions.md`; this
+says where the work belongs and what it joins.
+
+| Ruling | Work | Joins |
+|---|---|---|
+| **D19** | the screen matches by **regex**; convert first and prove the conversion inert | § 3.1 |
+| **D20** | 19 entries → `uncomputed_rule` + text; **5 swallowed numbers** | § 3.3, § 3.4, § 3.9 |
+| **D21** | one **category** mechanism + its Effect-side twin | § 3.15 |
+| **D22** | cross-book rules filed as findings; implementation core-book-only | § 3.14, § 3.16 |
+| **D23** | **predicate**-valued exclusions — design with D21 | § 3.5, § 3.15 |
+| **D24** | `IsMagus` on both parens entries; profile condition **unchanged** | § 3.6 |
+| **D25** | errata note in `RULES.md`; sweep 630 entries against the index | § 3.16, § 8 |
+| **D26** | *done* (`7cd8a26`) — but see `CLAUDE.md`: repair upstream, not here | — |
+| **D27** | spell list models **known**; warn, never block | § 3.15 |
+| **D28** | `spell_level_cap` becomes **range-aware**; re-keys the picker | § 3.8, § 3.15 |
+| **D29** | **one** resolution point for an Ability's maximum score | § 3.15 |
+| **D30** | **563** anchors; every range to the non-blank form | § 3.14, § 8 |
+| **D31** | table wins on a **name**; **7 corrections reverted** in both projects | § 3.13 |
+| **D32** | *done* (`c3714b2`) | — |
+| **D33** | `flaw.flawed_powers` gains the **import parameter** — with D34 | § 3.7 |
+| **D34** | id **whitelist** on `ParameterDef` — with D14 | § 3.7 |
+| **D35** | `ParamType::Number`; cap **2 years** — with D9, D14 | § 3.7, **§ 3.17** |
+| **D36** | German term binds in prose; **no guard**, review-enforced | § 3.12 |
+| **D37** | True Faith is a **floor** across every Form, not an addend | § 3.10 |
+| **D38** | character-type `Prereq`; **two** callers (**F-553**) | § 3.6 |
+| **D39** | *done* (`cc068e2`) — same upstream caveat as D26 | — |
+| **D40** | `replaces_life_stage_xp` — **two** carriers | **§ 3.17** |
+| **D41** | category **minimum**; a second Social Status **warns** | § 3.15 |
+| **D42** | concept gains a **default realm**; ~111 entries record one | § 3.7 |
+| **D43** | pool permits **itself**; narrowing + authorizing are **one slice** | § 3.2 |
+| **D44** | mark **entailed** pairs; measure the other 80 | § 3.5, § 8 |
+| **D45** | `SurfacedModifier.source`, all five families; **IPC DTO** | § 3.15 |
+| **D46** | classification by **what** is computed; fix `every_vf_is_classified` | § 3.3, § 3.16 |
+| **D47** | encode Guild Apprentice's suppression, keyed on the holder | § 3.10 |
+| **D48** | pool `instances` + **union** eligibility; **four** carriers | § 3.7, § 3.15 |
+| **D49** | free seasons **bind the creation plan**; F-131/F-146/F-151 change remedy | **§ 3.17** |
+| **D50** | re-test **all 335** `narrative` entries against the new line | § 3.3, § 8 |
+| **D51** | prerequisite / grant / **effects-only**, per the book's wording | § 3.5, § 3.6 |
+| **D52** | D4's Cyclic row **splits**; **F-555** | § 3.8 |
+| **D53** | glossary governs in quotations; `virtue.mild_aging` not clean | § 3.12 |
+| **D54** | `flaw.independent_craftsman` → `personality`; **§ 8a** | § 3.16 |
+| **D55** | `advancement_mod` gains a **factor**; `amount: 0` stops overloading | § 3.15 |
+| **D56** | **`is_magus` splits** — ~60 sites; `Prereq::Has(the_gift)` *done* (`7ca56ad`); **truncated apprenticeship**; conditional `creation_phases` | § 3.15, **§ 3.17**, § 8 |
+
+**Three of these change § 3.17 and are marked in bold above** — D35, D40, D49 and
+D56 all touch the XP model, and D56 adds a **fourth mode** the section does not
+have (see its note below).
+
+---
+
 ### 3.17 The three XP modes — **design all three together** (NEW, 2026-09-21)
+
+> **⚠ There are FOUR modes, not three (added 2026-09-24).** **D56** requires a
+> **truncated** life-stage block — apprenticeship stopped at a chosen age, then
+> later-life XP — for `flaw.abandoned_apprentice` (ArMDE:5647: *"Decide at what
+> age the character was abandoned. Create the character as a regular apprentice
+> up until that age"*). That is **not** replacement: replacement substitutes a
+> whole block, this one shortens it. **Its rate is OPEN and needs Norbert** —
+> apprenticeship is priced as a flat lump, which is why guided-creation issue
+> **#15** is *BLOCKED ON SOURCE*, and 240 ÷ 15 would be our number rather than the
+> book's. **D35** (a numeric parameter, the age) and **D49** (free seasons binding
+> `post_gauntlet_lab_seasons`) belong in the same design pass.
 
 **Change.** Give the XP model the two shapes it lacks. This group did not exist
 when this file was written; **D13** created it, **D17** filled in its third mode,
