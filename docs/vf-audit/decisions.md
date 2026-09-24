@@ -828,6 +828,96 @@ presumption of correctness.
 
 ---
 
+## D56 — `is_magus` splits: Hermetic training and Order membership are different facts
+
+**Question (Q-84).** What entity or type holds `flaw.abandoned_apprentice`
+(*Major, Story*, ArMDE:5641-5650)? *"He knows Hermetic magic and can cast spells
+and enchant items like other magi. He is **not a member of the Order of Hermes**,
+however."*
+
+**The bind.** `is_magus` is one flag doing five jobs, and he needs four of them
+and must not have the fifth:
+
+| `is_magus` gates | He needs it? |
+|---|---|
+| the `arts` phase — the only profile that has one | **yes**, he casts spells |
+| Arcane Abilities with no further Virtue (`validation/authorization.rs`) | **yes** |
+| the apprenticeship XP shape (`effective/xp.rs`) | **partly** — see below |
+| **D12**'s gate on *trained* Hermetic V/F | **yes** — Deficient Technique and its kin are his |
+| **Houses** (`validation/magus.rs`) | **no** — he is in no Order |
+
+**Ruling (Norbert, 2026-09-24): split the flag.** `is_magus` becomes *Hermetically
+trained* and *member of the Order*. The first four rows key on **trained**;
+Houses key on **Order**.
+
+**He is a companion, and nothing about the budget changes.** Not a Mythic
+Companion — the 2:1 V/F rule does not apply to him. He is an ordinary companion
+at 1:1 who has taken a **Major Story Flaw worth 3 points**, consuming the Story
+slot.
+
+**The Flaw confers *training*, not the Gift.** The Gift is **selected**:
+`gift_policy: "allowed"` on the companion profile, and `virtue.the_gift` is
+`magnitude: "free"`, so it costs nothing. Under **D51** the passage presupposes
+the Gift (*"He **knows** Hermetic magic"*) rather than giving it, so the encoding
+is `Prereq::Has(virtue.the_gift)`. **Granting it would be a real defect**, not a
+mislabel: `effective::has_the_gift` reads the Gift to decide whether a companion
+may touch the `hermetic` category at all (D24), so a Flaw conferring it would
+bootstrap its own permission — the circularity `RULES.md` warns about for
+`gift_categories`.
+
+**This also repairs D12's gate.** D12 made *trained* Hermetic entries require
+`Prereq::IsMagus`. Under the split that becomes **requires Hermetic training**,
+and an Abandoned Apprentice passes it — correctly — where `IsMagus` would have
+refused him.
+
+**Not post-gauntlet: he never had a Gauntlet.** ArMDE:5647 gives the
+construction rule outright — *"**Decide at what age the character was abandoned.
+Create the character as a regular apprentice up until that age**, and then give
+him experience points based on his age and other Virtues for his life past being
+abandoned."* So the shape is **truncated apprenticeship + later life**, and the
+age is a **numeric parameter** (D35's type; a D9 instance).
+
+**OPEN, and it needs Norbert: what is a partial apprenticeship worth?**
+Apprenticeship is priced as a **flat lump**, not a rate — *"The fifteen years of
+apprenticeship give the character 240 experience points"* — which is why
+guided-creation issue **#15** is marked *BLOCKED ON SOURCE*. ArMDE:5647 proves
+the rules **contemplate** a partial apprenticeship without supplying its value.
+Dividing 240 by 15 would be **our** number, not the book's. Nothing else here is
+blocked on this.
+
+**UI: conditional phases, using the mechanism that already exists.**
+`creation_phases` is per-profile data, so a phase cannot depend on a selection
+today. `permitted_categories` already solved exactly this with
+`CategoryRule` — `{ category, when: <Prereq> }`, resolved once through
+`categories_in_force` against the validator's own `PrereqCtx`, `Tri::Unknown`
+treated as not-in-force. A phase rule takes the same shape, `{ phase, when }`, so
+the Arts and spells tabs appear for anyone Hermetically trained, whether by being
+a magus or by this Flaw. **One mechanism for "applies conditionally"**, which is
+what D21 and D24 both argued for.
+
+**No House-screen entry.** Houses belong to magi in the Order; he has none and
+has nothing to choose there. The Flaw in the V/F phase is the whole of it.
+
+**What this obliges.**
+
+1. **Re-read every `is_magus` site for which half it meant** — ~33 in
+   `validation/mod.rs`, ~19 in `derived.rs`, plus `types.rs`, `validation/magus.rs`,
+   `prereq.rs`, `ruleset.rs`, `effective/xp.rs`, `integrity.rs`, `life_stage.rs`,
+   `authorization.rs`. **This is the cost of the decision and it will be
+   underestimated.** Added to § 8.
+2. **`flaw.abandoned_apprentice` gains `Prereq::Has(virtue.the_gift)` — and that
+   is a defect on today's data, independent of the split.** Without it a grog or
+   an ungifted companion takes a 3-point Major Flaw for a capability he cannot
+   have: points for nothing.
+3. The age parameter, the conditional-phase rule, and D12's gate reworded from
+   `IsMagus` to *trained*.
+4. *"If the character knows the Parma Magica, he must join the Order or be
+   slain"* (ArMDE:5648) is a further rule this entry states and nothing carries —
+   text at minimum (D50), and expressible as a warning on
+   `Has(ability.parma_magica)`.
+
+---
+
 ## D55 — a halving gets a factor; `amount: 0` must stop meaning two things
 
 **Question (Q-113).** `RULES.md:5159` records `advancement_mod` `amount: 0` on
