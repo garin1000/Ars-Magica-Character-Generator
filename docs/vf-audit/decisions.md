@@ -828,6 +828,46 @@ presumption of correctness.
 
 ---
 
+## D54 — a supplement-conditional category follows the app's *current* capability, and the flip is registered
+
+**Question (Q-111).** ArMDE:6304 ends: *"If you are **not using the rules in City
+and Guild** (page 73), treat this as a **Personality** Flaw."* The descriptor
+(ArMDE:6303) and the book's index (ArMDE:5592) both say *General*, and
+`flaw.independent_craftsman` ships `["general"]`. The category is not cosmetic:
+`personality` is capped at 2 per profile (1 if Major), `general` is uncapped.
+
+**Ruling: ship `personality` now, and register the flip.**
+
+**Norbert's framing, which decides it.** A later version will let the troupe
+select which supplements are supported in character generation; this Flaw then
+switches — `general` when City and Guild is in play, `personality` when it is
+not. Until that exists, **the app supports no supplements, so the book's
+condition is satisfied today** and `general` is the value the book says is wrong
+for our situation.
+
+**Why not the alternatives.** Keeping `general` ships a value ArMDE:6304
+contradicts for an app in this state. A `ParameterDomain::Category` (`taken_as`)
+parameter would route a **saga-level** setting through an **entry-level** player
+choice, and `RULES.md`'s 2026-09-13 ruling is explicit that `taken_as` models
+*"**or**, and only *or*"* — a choice between two readings, which a conditional is
+not.
+
+**What this obliges.**
+
+- `flaw.independent_craftsman` → `categories: ["personality"]`. One word. It
+  **narrows** what is buildable, so saves legal today report and block per
+  **D10**.
+- **A standing register of supplement-conditional entries** — § 8a — so the
+  future feature flips them by reading a list rather than by someone
+  remembering. **This entry is invisible from that feature**, which is exactly
+  the § 8 problem.
+- **Measured: one instance.** A sweep for *"treat this as a"* over the core book
+  returns two hits, and the second (ArMDE:18519) is a creature rule, not a
+  recategorization. So no mechanism is warranted — a one-word data change plus
+  the register is the whole of it.
+
+---
+
 ## D53 — the glossary governs inside a verbatim quotation too
 
 **Question (Q-54).** `rules/source/de/translation-tables/alterung-twilight.md:21`
