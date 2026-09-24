@@ -202,11 +202,24 @@ lands on **non-blank lines**, so after a shift every citation still *passes*
 while pointing at the wrong text. A whole-file re-sync from upstream is a
 different act and is not covered by this rule; a hand edit is.
 
-In-place edits that keep the line count are fine, and are how source defects are
-repaired — a scanno, a stray character, a missing separator. A defect that
-*cannot* be fixed without adding a line (a dropped line break, for instance) is
-**left in place and recorded**, and waits for the next upstream re-sync. Its
-repair is not scheduled work.
+**And `rules/source/` is a COPY — repair defects upstream, not here.**
+`../arm-de-translation` holds the authoritative originals, for
+the **English** text as well as the German: its
+`original-english/reviewed/…Core Rules.md` is **newer than ours and 80 lines
+longer** (25,803 against 25,723, measured 2026-09-24). So a hand repair in this
+repo is throwaway work — the file is replaced wholesale at the next re-sync, and
+the edit is lost along with it.
+
+A source defect is therefore **recorded here and fixed there**, as a todo in
+`arm-de-translation/docs/todo.md`. In-place same-line edits here are not *wrong*,
+but they buy only the interval until the next sync, and they widen the drift
+between the two copies meanwhile. Prefer the upstream fix; make a local one only
+when something shipping depends on it now.
+
+**Corollary, and it is uncomfortable: every `ArMDE:NNNN` citation in this
+repository is already offset from the authoritative file.** That is not a reason
+to renumber anything — it is the reason `source.anchor` exists and is mandatory
+(see `docs/vf-audit/decisions.md` **D30**).
 
 ## Architecture invariants
 
