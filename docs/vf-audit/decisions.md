@@ -828,6 +828,45 @@ presumption of correctness.
 
 ---
 
+## D57 — a free-text placeholder stands in apposition, because the app cannot know its gender
+
+**Question (Q-77).** `virtue.voice_of_the_land`'s German `name` is
+`Stimme des {land}` and `virtue.ways_of_the_land`'s is `Wege des {land}`. That is
+right for masculine and neuter terrain nouns (*Stimme des Waldes*) and **wrong
+for feminine ones** (*Stimme des Steppe*, for *der Steppe*).
+
+**Ruling: apposition after a comma, uninflected** — the pattern `RULES.md:2356-2368`
+already adopted for the four `realm` items and, before that, for Folk Magic.
+
+**Why it generalises rather than being a second convention.** The realm fix was
+made because *"every German template put the token somewhere that demands
+agreement"*, producing *"Student der Das Göttliche"*. The free-text case is the
+same failure with a worse cause: a **picked** label at least has a knowable
+gender, while a **typed** one does not, so no fixed article can be right for
+every input. B09 read *"a typed word inflects however the player typed it"* as a
+reason free text differs; it is a reason to keep the word **out of** a slot that
+demands agreement, which is what apposition does.
+
+**The table is not overridden here, despite D31.** `tugenden-fehler.md:148` gives
+`Stimme des/der (Land)`. That slash is an **editorial flag for a problem**, not a
+string to ship — a user would read *"des/der"* in the middle of their own
+character's Virtue. D31 makes the table authoritative on a **term**; it does not
+turn a notation into a label.
+
+**What this obliges.**
+
+- Rewrite both German `name` templates into the apposition form, and check the
+  rest of `rules/i18n/de/` for the same shape — **`RULES.md`'s own note says ~36
+  mid-phrase templates exist**, and only the realm four have been fixed.
+- **`name_unfilled` stays as it is on both.** `derive.ts::displayName` keeps the
+  *"(Land)"* hint deliberately for mid-phrase templates; that is correct and is
+  not part of this.
+- The DE rulebook headings at 5219/5231 dodge the problem with a neuter
+  placeholder (*Stimme des (Landes)*), so they are **not** evidence for the
+  `des` form with a free-text value.
+
+---
+
 ## D56 — `is_magus` splits: Hermetic training and Order membership are different facts
 
 **Question (Q-84).** What entity or type holds `flaw.abandoned_apprentice`
