@@ -2263,7 +2263,24 @@ entry is opened once.
 
 ---
 
-## 4a. What this round does NOT cover — and why that is easy to miss
+## 4a. What this ROUND does not cover — which is not the same as out of scope
+
+> **⚠ REFRAMED BY D58 (2026-09-24).** This section listed K3, K5 and W2 as things
+> the V/F round does not cover. That was true of the **pass** and was then read as
+> true of the **project**. Norbert's goal settles it: *"an application which can
+> build all characters legal under core rules … **if mechanics are missing, the
+> mechanics need to be implemented**."* So **everything below is in scope for the
+> project** — it is queued elsewhere, not declined. The test is **does its absence
+> prevent building, or misreport, a character legal under the core rules?**
+>
+> **Two deliberate non-goals** sit outside the test and are listed together so
+> nobody mistakes them for oversights: **supplement content** (D22 — "core rules"
+> excludes it by construction) and **animal characters** (D58 — no `Cunning`, no
+> animal profile; `F-556`'s gate is the permanent answer, not a stopgap). Q-05's
+> refusal of a **sex model** is the third.
+>
+> The filing failure this section was written for stands unchanged, and is still
+> the reason to read it.
 
 **The failure mode, stated first because it is the point.** A finding cluster in
 which **one member fits this round's scope** can make the **whole cluster look
@@ -2294,7 +2311,8 @@ K1 being correctly filed here is precisely what made them easy to overlook.
 
 - Both are in `docs/open-todos.md` **row 52**, which is the list surfaced at
   release. They are **not** findings in § 1 and must not be added — they are not
-  V/F defects.
+  V/F defects. **That is a filing rule, not a scope one** (D58): they are the
+  project's work, tracked where engine work is tracked.
 - **When a finding arrives from outside this audit, ask which of its siblings are
   not V/F data**, and confirm those have a home before treating the cluster as
   filed.
@@ -2447,7 +2465,7 @@ blocked behind D14.
 | Q-08 | the ArMDE:2960-2962 realm association is on 4 of ~115 Supernatural entries | N | **SETTLED — D42**: the **concept gains one optional default realm** that seeds every Supernatural entry's realm, and every such entry records one — overridable per entry, **fixed** where the book fixes it. It is a **default source, not a character attribute**: the book never says a character has a realm, and a character may hold a Faerie Blood and a Magic-realm Second Sight at once. Nothing is computed (the engine models no auras); the sheet must state it because D9 and D20 both bite. **Read which entries the book fixes** — ArMDE:2961 says *"a Virtue's description notes if it is limited in this way"* |
 | Q-09 | `virtue.common_sense`: is a guaranteed storyguide intervention mechanical? | N | **SETTLED — D50**, which answers the whole Q-83 family at once: "mechanical" is the wrong test. ArMDE:3599's *"common sense (the storyguide) **alerts you** to the error"* has no number and no roll, and a storyguide who does not know it will not do it → **`uncomputed_rule`** + text in both locales |
 | Q-10 | `virtue.covenfolk`: two canonical German sources, two names | X / N | **SETTLED — D31**: a *name*, so the **table** wins and its value is adopted into `rules/i18n/de/`. **F-85 unblocked.** (This is the one the source project was already ahead on — `Konventsbewohner` — which is D31's own evidence) |
-| Q-11 | `virtue.domestic_animal`: "animals only" with no engine model | N | **SETTLED: the animal character stays unbuildable, but the entry must stop being selectable by a human.** ArMDE:3701 opens *"The character **is an animal** who is the property of a covenant or character"*, and the engine has no animal model at all — `Characteristic` has no **Cunning** (ArMDE names it as what an animal has instead of Intelligence, e.g. at :4375), and no profile exists. So building one is out of scope, as creature rules were in **Q-34**. **But unlike Q-34 this entry ships in the catalogue and is reachable**: it is `magnitude: "free"`, `categories: ["social_status"]`, so under **D41** a human grog or companion can satisfy his *mandatory* Social Status by declaring himself a domestic animal, at **no cost**, and the app accepts it. That is wrong output today and does not depend on any animal machinery. **Remedy**: keep the entry (it is RAW), give it the text (D50), and gate it so a human cannot take it — which needs the same **character-type `Prereq`** D38 introduces, with an animal type as its value, or an explicit exclusion until one exists. **Do not add Cunning or an animal profile for this** |
+| Q-11 | `virtue.domestic_animal`: "animals only" with no engine model | N | **SETTLED — and D58 makes it permanent: animal characters are a deliberate non-goal** (humans and covenants only), so **F-556's gate is the answer rather than a stopgap**, and no `Cunning` characteristic or animal profile is added. Original reading follows. **SETTLED: the animal character stays unbuildable, but the entry must stop being selectable by a human.** ArMDE:3701 opens *"The character **is an animal** who is the property of a covenant or character"*, and the engine has no animal model at all — `Characteristic` has no **Cunning** (ArMDE names it as what an animal has instead of Intelligence, e.g. at :4375), and no profile exists. So building one is out of scope, as creature rules were in **Q-34**. **But unlike Q-34 this entry ships in the catalogue and is reachable**: it is `magnitude: "free"`, `categories: ["social_status"]`, so under **D41** a human grog or companion can satisfy his *mandatory* Social Status by declaring himself a domestic animal, at **no cost**, and the app accepts it. That is wrong output today and does not depend on any animal machinery. **Remedy**: keep the entry (it is RAW), give it the text (D50), and gate it so a human cannot take it — which needs the same **character-type `Prereq`** D38 introduces, with an animal type as its value, or an explicit exclusion until one exists. **Do not add Cunning or an animal profile for this** |
 | Q-12 | `ability.enchanting` parameterized? is `domain: "ability"` right? | N | **SETTLED: yes, parameterised — and `domain: "ability"` is the right *kind* but cannot express the domain on its own.** ArMDE:7446's heading is `#### Enchanting **(Ability)**` and its body says *"you can influence others with **a particular performance ability**"*; the book's parenthesis is its parameter marker, exactly as in `#### (Area) Lore` — and `ability.area_lore` ships `"parameter": "area"` while `ability.enchanting` ships **none**. Same convention, parameter omitted. **The value must be a *performance* Ability, and no `category` expresses that** — the five are academic, arcane, general, martial, supernatural, and Music is plain `general`. So it needs **D34's id whitelist** on top of `domain: "ability"`. And **`virtue.enchanting_ability` grants `ability_score_grant { ability: ability.enchanting, amount: 1 }` with no instance named** — the `virtue.student_of_realm` shape that **D14** was written from, so **D14 lands first** |
 | Q-13 | does the book distinguish "may only **take**" from "may only **have**"? | — | **closed — D2's rules read: NO.** ArMDE:3665 (*Demonic Might*) says "may only **take**" and :3669 (*Demonic Powers*), the very next entry, states the *same* restriction as "may **have**". Two adjacent entries, one restriction, two verbs. **No argument may rest on that pair** |
 | Q-14 | where is the threshold at which an effect-bearing entry owes a `description`? | — | **closed in substance — D5** |

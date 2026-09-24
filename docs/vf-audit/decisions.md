@@ -828,6 +828,66 @@ presumption of correctness.
 
 ---
 
+## D58 — the goal is the scope test: build every character legal under the core rules
+
+**Norbert, 2026-09-24:** *"Goal is an application which can build all characters
+legal under core rules. … If mechanics are missing, the mechanics need to be
+implemented."*
+
+**This replaces "out of scope" as a category.** § 4a listed K3, K5 and W2 as
+things the V/F round does not cover, which was true of the *pass* and was then
+read as true of the *project*. It is not. A missing mechanic is work, not a
+boundary.
+
+### The test
+
+**Does its absence prevent building — or misreport — a character legal under the
+core rules?** If yes, it is in scope and the mechanic is implemented.
+
+| Item | Verdict |
+|---|---|
+| **K5** `equipped` overloaded | the Knight loses two Combat rows → **in** |
+| **W2** authorization cannot restrict | the app permits an illegal Wise One → **in** |
+| **Q-51** parameter-gated effects | Magic Human's Reputation 3 reaches nobody → **in** |
+| **Q-87**, **Q-11**, **D56** | block or misreport legal characters → **in** |
+| **Q-56** Purity / Transcendence | *Realms of Power: The Divine*, not core → **out** |
+
+**D22's core-book-only boundary is the goal stated precisely**, not a limitation
+to apologise for. "Legal under **core rules**" excludes supplement content by
+construction.
+
+### The two answers the test needed
+
+**1. In-play modifiers the sheet carries ARE in scope — if the sheet shows it, we
+compute it.** The character sheet is the product, so a figure a player reads off
+it must be right. K3's mounted combat, `flaw.enfeebled`'s doubled casting fatigue
+and the surfaced-modifier family are all work, not text. **This does not reopen
+Q-98 or D45**: a doubling still cannot be computed where the engine does not know
+the base (`casting_fatigue` is surfaced, not computed), and D50 still governs
+what reaches the player as text. It settles that *"it only matters in play"* is
+**not** a reason to decline a computation the sheet displays.
+
+**2. Animal characters are a deliberate non-goal.** Humans and covenants only.
+`virtue.domestic_animal` is core-book and therefore describes a legal character,
+so this is an **exception to the test, taken deliberately** — like **Q-05**'s
+refusal of a sex model. **Consequence: F-556's gate is the permanent answer, not
+a stopgap** — a human may not take the entry, the entry ships with its text
+(D50), and **no `Cunning` characteristic and no animal profile are added.**
+
+### What this obliges
+
+- **Rewrite § 4a.** It must say *which pass* does the work, never *whether the
+  project does it*. The Knight cluster stays as the worked example of the
+  filing failure; the "not ours" framing goes.
+- Anything currently resting on *"the engine cannot express it"* is re-read
+  against the test. **D3 survives** — an engine that structurally cannot express
+  a rule still yields `uncomputed_rule` **plus text** — but "cannot" now means
+  *cannot even in principle*, not *does not today*.
+- Record the two non-goals together where they can be found: **supplements**
+  (D22) and **animals** (here), alongside Q-05's **sex model**.
+
+---
+
 ## D57 — a free-text placeholder stands in apposition, because the app cannot know its gender
 
 **Question (Q-77).** `virtue.voice_of_the_land`'s German `name` is
