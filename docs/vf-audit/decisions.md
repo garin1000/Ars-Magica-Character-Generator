@@ -1160,10 +1160,13 @@ reads the field.
 
 - `instances` on the V/F grant path, the union semantics, and the doc comments
   that currently assert the opposite as design.
-- **Three entries in B06's span need it** — `virtue.marshal`, `virtue.master_of_kennels`
-  (each one named Profession) and `virtue.master_bard` (two, plus the Lores, and
-  the Lores' unscoped funding is **correct** today). **Sweep the rest of the
-  catalogue before authoring**: B06 measured its own span only.
+- **Four entries are known, not three.** B06's span has `virtue.marshal`,
+  `virtue.master_of_kennels` (each one named Profession) and `virtue.master_bard`
+  (two, plus the Lores — whose unscoped funding is **correct** today). **B02's
+  F-74 is a fourth**, outside that span: `virtue.forge_companion`'s 50 points are
+  scoped by ArMDE:3927 to *"the particular Crafts **her master** practices"* and
+  the data funds `ability.craft` unscoped, rated **H**. So "three" was never the
+  count — **sweep the catalogue before authoring**, starting from these four.
 - Instance scoping is **narrowing**, so a save that spent a Marshal's points on
   Profession: Sailor becomes invalid — report and block per **D10**, no
   migration.

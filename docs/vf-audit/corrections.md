@@ -254,7 +254,7 @@ because that is what the verdict table gives — the finding is that it should b
 | F-71 | `virtue.familiarity_with_the_fae` | 3857-3860 | auth+class | H | live | the Faerie Lore permission is computable and absent, and the entry is `uncomputed_rule` because of it *(re-found as F-407)* |
 | F-72 | `virtue.folk_magic` | 3907-3920 | auth | H | live | the (Realm) Lore the Virtue is built on is Arcane and the entry does not authorize it |
 | F-73 | `virtue.falconer` | 3847-3852 | scope | H | live | the 50-point pool funds any Dead Language and any Profession; the book names Latin and Profession: Falconer |
-| F-74 | `virtue.forge_companion` | 3925-3928 | scope | H | live | the 50-point pool funds any Craft; the book names the master's Crafts |
+| F-74 | `virtue.forge_companion` | 3925-3928 | scope | H | live | the 50-point pool funds any Craft; the book names the master's Crafts. **This is a D48 instance, and the fourth known** — B06 found three in its own span and did not have this one, so § 8 row 12's sweep starts from four. Remedy: the `instances` field D48 adds, with the union semantics. **Q-21** settles this entry's other two rules |
 | F-75 | `virtue.fast_caster` | 3865-3868 | scope | H | live | +3 Initiative unconditional in the data, scoped to spellcasting in the book, so it lands on weapon Initiative |
 | F-76 | `virtue.fast_caster` | 3865-3868 | desc+effect | M | live | the second +3 is in neither the data nor either locale |
 | F-77 | `virtue.faerie_raised_magic` | 3829-3842 | effect | M | live | "also includes the Virtue Spell Improvisation" and the included Virtue's effect is not carried |
@@ -2880,7 +2880,7 @@ quoted as true of the catalogue.
 | 9 | **D43** | the **28** `restricted_ability_xp` carriers, each against its passage | the narrowing and the authorizations must land together or access is lost |
 | 10 | **D44** | the **81** `incompatible_with` declarations, for which cite a passage | each unsourced pair must be shown entailed or removed |
 | 11 | **D46** | the **five** effect-less `creation_effect` entries | `README.md` calls them "a lead, not a conclusion" |
-| 12 | **D48** | the catalogue, for pools that name an Ability *instance* | B06 measured its own span and found three |
+| 12 | **D48** | the catalogue, for pools that name an Ability *instance* | B06 measured its own span and found three — but **F-74** (`virtue.forge_companion`, B02, **H**) is a **fourth, outside that span**, so three was never the count. Start the sweep from those four |
 | 12a | **D49** | the catalogue, for entries that change **free seasons per year** | B05 found three in a 35-entry window and treated them as unrelated omissions |
 | 12b | **D50** | **all 335 `narrative` entries**, re-tested against "would a player get it wrong without it?" | the batches classified against *"is it mechanical?"*, which D50 replaces. **The phrase screen cannot find these** — *"the storyguide alerts you"* carries no signed number, botch term or set phrase — so this is a manual read unless the screen grows first (§ 2) |
 | 13 | **D23 / Q-137** | the Bad-Reputation id list | B18 got **16 ids across 17 rows**, `flaw.failed_monk` carrying two |
