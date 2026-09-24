@@ -1947,6 +1947,11 @@ a *granted* Personality Flaw would slip through.
 
 ### 3.0 Routing table for D19–D56 — **read this before working § 3** (NEW, 2026-09-24)
 
+> **Starting Phase 2 from scratch? Read `docs/vf-audit/phase-2-handover.md`
+> first.** It orders the whole pass — **engine first, then data** — names the
+> ordering constraints that are not optional, and lists what is already done. This
+> table is its § 3 detail, not its replacement.
+
 **Why this exists.** § 3 was written when the audit had eighteen rulings. It
 references **D1–D18 and nothing later**. Thirty-eight further decisions have
 landed since, each recorded in `decisions.md` and in its question's row — neither
