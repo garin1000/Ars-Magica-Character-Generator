@@ -1848,6 +1848,45 @@ part of the fix.**
 
 ### 3.15 Engine gaps — new machinery, not data
 
+> **This is the single list of engine work. Added 2026-09-24 on Norbert asking
+> where engine changes are logged — they were in three places and none was
+> complete.** The table below stops at D18, because it was written then; the
+> second table carries D19–D58 and the concurrent session's findings. **§ 3.0
+> routes; this enumerates.** Under **D58** every row is project work: a missing
+> mechanic is a task, not a boundary.
+
+#### 3.15b Machinery the rulings since D19 require
+
+| Ruling / finding | Machinery |
+|---|---|
+| **D21** (+ F-427, F-502, F-355, F-542, Q-07, Q-102) | range over a **category** — one mechanism, with its Effect-side twin |
+| **D23** (+ Q-137) | **predicate**-valued exclusions — different quantifier from D21, designed together |
+| **Q-51**, **D33** | an effect **gated on a parameter value** — *"applies only when the parameter holds Y"*. Distinct from parameter-**valued** (`characteristic_score_delta_param`), which exists |
+| **D28** | `spell_level_cap` **range-aware**; re-keys `spell_level_caps` and the UI picker |
+| **D29** | **one** resolution point for an Ability's maximum score (age band folded with V/F overrides) |
+| **D34** | an **id whitelist** on `ParameterDef`, additive to `require_categories` |
+| **D35** | `ParamType::Number { min, max }` + a parameter-scaled `RestrictedAbilityXp` |
+| **D38** (+ **F-553**) | a `Prereq` naming a **character type**; must compose under `Any` |
+| **D40** | `replaces_life_stage_xp` — substitutes a whole block |
+| **D56** | a **truncated** life-stage block (the fourth XP mode), **conditional `creation_phases`** (`{ phase, when }`), and the **`is_magus` split** across ~60 sites |
+| **D41** | a category **minimum** in the profile budget; a warning on a second Social Status |
+| **D43** (+ F-234, F-102, F-18) | scope a pool's implied permission to **itself**; general XP needs explicit authorization |
+| **D45** (+ F-423) | `SurfacedModifier.source`, all five families — widens an **IPC-crossing DTO** |
+| **D48** (+ F-74) | pool `instances` + **union** eligibility |
+| **D50** | the phrase screen must catch clauses with no signed number — § 3.1, and it may not be mechanisable |
+| **D55** | a **factor** on `advancement_mod`; retire `amount: 0` as a marker |
+| **D42** | a **default realm** on the concept, seeding every Supernatural entry |
+| **D57** | German **apposition** templates — data, but ~36 need the sweep |
+| **W2** (`open-todos.md` row 53) | `AbilityAuthorization` cannot **restrict** — an exclusive-choice authorization. **Folds into row 45 with `virtue.custos`** |
+| **K5** (`open-todos.md` row 52) | `EquipmentSlot::equipped` is **overloaded** — gates Combat rows *and* Load; needs a third state or two flags |
+| **K3** (`open-todos.md` row 52) | mounted combat: nowhere records *"mounted"*. **In scope under D58** — the sheet shows it, so it is computed |
+
+**Two of these are not in this file's § 1 and must not be added** — K3 and K5 are
+engine findings from the book-template session and live in `open-todos.md`. That
+is a filing rule, not a scope one (§ 4a, D58).
+
+#### 3.15a The original list (D1–D18 era)
+
 **Change.** These cannot be fixed in `rules/core/`. Each needs a decision first.
 
 | Finding | Gap |
