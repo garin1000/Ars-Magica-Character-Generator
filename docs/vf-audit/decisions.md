@@ -990,11 +990,13 @@ spells**"*, so:
 ArMDE:5643 has him casting spells, so granting the first without the second would
 leave a trained apprentice with none.
 
-**The rate is ours, and that is stated rather than hidden.** The book prices
-apprenticeship as a flat lump, which is why guided-creation issue **#15** is
-marked *BLOCKED ON SOURCE*; 240 ÷ 15 and 120 ÷ 15 are derivations, not printed
-figures. **This also unblocks #15**, which asked for an editable apprenticeship
-duration and was waiting on exactly this.
+**FIXED DECISION — Norbert, 2026-09-24: *"16/8 is computed from the numbers.
+Mark that as fixed decision until I say otherwise."*** The two figures are
+**derived from the book's own**, ArMDE:2435's **240** and **120** over fifteen
+years. They are not a house rule and are **not to be reopened** as one. The book
+prices apprenticeship as a lump, which is why guided-creation issue **#15** was
+marked *BLOCKED ON SOURCE* — **and this unblocks it**, since the division is
+determinate rather than a judgement call.
 
 **Spendable on what.** ArMDE:2435's own set: *"Arts or Abilities, including
 Arcane, Academic, and Martial Abilities."*

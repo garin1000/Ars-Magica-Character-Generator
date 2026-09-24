@@ -310,11 +310,12 @@ as N ad-hoc patches.
 > one is worth. Two things resolved it. **ArMDE:5647** proves the rules
 > contemplate a partial apprenticeship — *"Decide at what age the character was
 > abandoned. Create the character as a regular apprentice up until that age"* —
-> and **Norbert ruled the rate** on 2026-09-24: **16 experience points and 8
-> spell levels per year**, from ArMDE:2435's *"240 experience points, and 120
-> levels of spells"* over fifteen years. **Both quantities divide**, not only the
-> XP. The rate is **ours**, not printed in the book, and that is recorded rather
-> than glossed. A truncated block must also **not** enforce
+> and **Norbert fixed the rate** on 2026-09-24: **16 experience points and 8
+> spell levels per year**, **computed from the book's own numbers** — ArMDE:2435's
+> *"240 experience points, and 120 levels of spells"* over fifteen years. **Both
+> quantities divide**, not only the XP. **This is a fixed decision, not a house
+> rule, and is not to be reopened as one** — the division is determinate, which is
+> what unblocks this issue. A truncated block must also **not** enforce
 > `apprenticeship.minimum_abilities`, which describe a *completed* apprenticeship.
 > Original analysis follows.
 - **Severity** medium

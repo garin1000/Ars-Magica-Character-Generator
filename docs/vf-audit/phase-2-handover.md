@@ -98,6 +98,12 @@ Follow § 3.0's routing. The large data jobs:
 - **D12's 122 `hermetic` entries** classified intrinsic vs trained, then gated.
 - **D30's 563 anchors** and the `source.lines` normalisation.
 - **D20's 19 surfaced-only entries** + five swallowed numbers.
+
+**One figure is FIXED and is not to be re-opened:** a partial apprenticeship is
+**16 experience points and 8 spell levels per year** (D56). It is **computed from
+the book's own numbers** — ArMDE:2435's *"240 experience points, and 120 levels of
+spells"* over fifteen years — not invented. **Norbert, 2026-09-24: fixed decision
+until he says otherwise.** Do not reopen it as a house-rule question.
 - **D31's German name adoptions** and the **seven reverted corrections**, in both
   projects.
 
@@ -174,9 +180,6 @@ false rejection, two more witnesses for the F-20/F-45 class, and § 4a itself.
 
 ## 8. Honest uncertainties
 
-- **The partial-apprenticeship rate (16 XP / 8 spell levels per year) is ours, not
-  the book's.** The book prices apprenticeship as a flat lump. Recorded as a
-  derivation in D56, § 3.17 and guided-creation #15.
 - **Row 46's residue is scoped by inference**, not by a read: the sign-check
   instruction entered the briefs at B12, so B01–B11 are assumed weaker. Nobody has
   verified that by re-reading them.
