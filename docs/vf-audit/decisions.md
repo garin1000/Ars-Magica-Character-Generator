@@ -2705,6 +2705,19 @@ measured the other 620.
 - Fix `RULES.md` and check 1's stated convention to agree; the disagreement
   between them is what let the mixture survive three batches.
 
+**A repair is now BLOCKED on this work, which is stronger than "benefits from
+it".** The concurrent book-template session found nine source-conversion defects
+in `rules/source/en/` (`open-todos.md` row 54). Eight are in-place single-line
+edits and safe today. The ninth, a dropped line break at **ArMDE:1277** that
+swallowed the Hunter's *"Personality Traits:"* heading into the Virtues line,
+can only be fixed by **inserting a line** — which renumbers everything below it
+and **invalidates every `ArMDE:NNNN` citation in the repository in one edit**.
+`rulebook_citations.rs` cannot detect that: it checks only that a range lands on
+non-blank lines, so every citation would still *pass* while pointing at the wrong
+text. That repair therefore waits for the anchor backfill, when provenance no
+longer rides on line numbers — the first case where a defect in our own source is
+**blocked** on D30 rather than merely easier after it.
+
 ---
 
 ## D31 — the table wins on a NAME; the rulebook still wins on a RULE
