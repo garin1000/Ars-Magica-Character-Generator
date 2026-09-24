@@ -1875,6 +1875,7 @@ part of the fix.**
 | **D48** (+ F-74) | pool `instances` + **union** eligibility |
 | **D50** | the phrase screen must catch clauses with no signed number — § 3.1, and it may not be mechanisable |
 | **D55** | a **factor** on `advancement_mod`; retire `amount: 0` as a marker |
+| **F-550** (+ **D16**, **D44**, **Q-19**, **Q-115**) | **a warning severity for `Prereq`** — `prereq_not_met` is an error, so **D16's hedged→warning rule has no carrier at the entry level**, and D44's "warn rather than forbid" option had none either. **Found 2026-09-24 by running § 4a's own sweep**: of 24 `engine`-kind findings this was the only one absent from every engine list |
 | **D42** | a **default realm** on the concept, seeding every Supernatural entry |
 | **D57** | German **apposition** templates — data, but ~36 need the sweep |
 | **W2** (`open-todos.md` row 53) | `AbilityAuthorization` cannot **restrict** — an exclusive-choice authorization. **Folds into row 45 with `virtue.custos`** |
@@ -2360,9 +2361,15 @@ K1 being correctly filed here is precisely what made them easy to overlook.
 - **When a finding arrives from outside this audit, ask which of its siblings are
   not V/F data**, and confirm those have a home before treating the cluster as
   filed.
-- The same shape may already exist inside this file: an entry whose V/F half is
-  filed while its engine half sits only in a batch record. § 8's sweeps are the
-  place to catch that.
+- ~~The same shape may already exist inside this file: an entry whose V/F half is
+  filed while its engine half sits only in a batch record.~~ **RUN 2026-09-24, and
+  it found one.** Method: every § 1 finding whose `kind` contains *engine* — **24**
+  — checked against the engine lists. **23 were filed; `F-550` was not.** It
+  records that `Prereq` has no warning severity, which is what **D16**'s
+  hedged→warning rule needs at the entry level and what **D44** and **Q-19** each
+  wanted for a "warn rather than forbid" option — three consumers, and it appeared
+  in no engine list. Now in § 3.15b. **The sweep is discharged**; re-run it if the
+  `kind` vocabulary changes.
 
 ---
 

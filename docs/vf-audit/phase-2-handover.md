@@ -185,7 +185,5 @@ false rejection, two more witnesses for the F-20/F-45 class, and § 4a itself.
   not do is follow each effect into the engine and check its sign against what
   the track or total counts, which entered the briefs at B12. The **scope** of
   that residue is still inferred from the brief history rather than measured.
-- **§ 4a's own warning has not been run**: an entry whose V/F half is filed while
-  its engine half sits only in a batch record. That sweep does not exist yet.
 - **F-442 claims a "named immunity"** neither Malediction passage contains.
   Verify before working it.
