@@ -2912,8 +2912,12 @@ pub struct SpellSelection {
 pub struct EquipmentSlot {
     /// The catalogue id of the item (a `weapon.*`, `shield.*`, or `armor.*` id).
     pub item: Id,
-    /// Whether the item is currently equipped (wielded/worn). Unequipped items
-    /// still count toward carried Load but not toward combat/Soak lines (5i).
+    /// Whether the item is currently equipped (wielded/worn). An unequipped item
+    /// is inert: it yields no combat/Soak line (5i) **and** adds no Load, so a
+    /// stowed spare weapon costs its owner no Encumbrance. That second half was
+    /// the opposite until the book's own Knight template (ArMDE:1447-1486) was
+    /// built and disagreed — see `derived/combat.rs::encumbrance` for the
+    /// reasoning and the arithmetic.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub equipped: bool,
     /// Whether this weapon's combat Ability specialization applies to it, granting

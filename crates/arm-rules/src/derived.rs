@@ -1984,9 +1984,12 @@ mod tests {
             specialization_applies: false,
         }];
         // Give the weapon Load 6 via a heavier item: use armor Load path instead.
+        // Worn, not stowed: only equipped gear counts toward Load
+        // (`combat.rs::encumbrance`), and this test needs a non-zero Encumbrance
+        // to subtract from the Casting Score.
         e.equipment = vec![EquipmentSlot {
             item: Id::new("armor.leather_scale"),
-            equipped: false,
+            equipped: true,
             specialization_applies: false,
         }];
         // Method Caster (+3 formulaic) and a Magical Focus.
@@ -3139,6 +3142,43 @@ mod tests {
         }];
         let enc = encumbrance(&e, &rs);
         assert_eq!(enc.load, 1);
+        assert_eq!(enc.burden, 1);
+        assert_eq!(enc.total, 1);
+    }
+
+    /// Only **equipped** gear counts toward Load, so a stowed spare weapon costs
+    /// the character nothing.
+    ///
+    /// The rule says to total "the Load that a character is carrying"
+    /// (ArMDE:17107) and never defines carried-but-stowed, so the book's own
+    /// worked characters are the tie-breaker. The Knight template
+    /// (ArMDE:1447-1486) lists four items — full chain mail, long sword, heater
+    /// shield **and** a great sword — and prints "Encumbrance: 2 (3)"
+    /// (ArMDE:1484). Burden 3 is Load 6-9, so the printed figure counts the
+    /// wielded set only: long sword 1 + heater 2 + chain 6 = 9. Totalling all
+    /// four gives 11, which is Burden 4. The reading is confirmed by his *other*
+    /// loadout landing on the same Burden — great sword 2 + chain 6 = 8, also
+    /// Burden 3 — which is why one printed Encumbrance serves all four of his
+    /// Combat rows.
+    #[test]
+    fn only_equipped_gear_counts_toward_load() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Str, 0);
+        e.equipment = vec![
+            EquipmentSlot {
+                item: Id::new("armor.leather_scale"),
+                equipped: true,
+                specialization_applies: false,
+            },
+            EquipmentSlot {
+                item: Id::new("armor.leather_scale"),
+                equipped: false,
+                specialization_applies: false,
+            },
+        ];
+        let enc = encumbrance(&e, &rs);
+        assert_eq!(enc.load, 1, "the stowed second item must not add Load");
         assert_eq!(enc.burden, 1);
         assert_eq!(enc.total, 1);
     }

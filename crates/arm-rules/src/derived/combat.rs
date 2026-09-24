@@ -40,12 +40,37 @@ fn burden_for_load(load: u32) -> i32 {
     burden
 }
 
-/// The character's Encumbrance. All carried equipment (equipped or not) counts
-/// toward Load. Source: ArMDE:17103-17123.
+/// The character's Encumbrance, from **equipped** gear only — a stowed spare
+/// weapon costs nothing.
+///
+/// This is a deliberate departure from the rulebook's own practice, not an
+/// attempt to copy it. The rule says to total "the Load that a character is
+/// carrying" (ArMDE:17107) and never defines carried-but-stowed, and the worked
+/// templates show the book resolving that silence the *other* way: every
+/// statblock applies one Encumbrance to every Combat row, computed from the whole
+/// carried kit. Four of them prove it, because a row's Initiative exposes the
+/// Encumbrance behind it (ArMDE:16658) and their unarmed rows still pay for the
+/// weapon not being used — the Standard Soldier's Fist at ArMDE:1354 implies 3,
+/// the Grizzled Veteran's Kick at ArMDE:1249 implies 4, the Tough Guy's Fist at
+/// ArMDE:1390 implies 3, the Specialist's Fist at ArMDE:1318 implies 2, each the
+/// full-loadout figure rather than the weapon-less one.
+///
+/// Equipped-only was chosen anyway, as the sounder model: a sheathed sword should
+/// not slow its owner down, and under the whole-kit reading merely recording gear
+/// a character owns costs them Encumbrance and Initiative. It also happens to
+/// reproduce the Knight (ArMDE:1447-1486), whose printed "Encumbrance: 2 (3)"
+/// (ArMDE:1484) omits his great sword's Load 2 and so contradicts both his own
+/// Equipment line and the method above.
+///
+/// Pinned by `derived.rs::only_equipped_gear_counts_toward_load` and by the
+/// Knight's entry in `tests/book_templates.rs`.
+///
+/// Source: ArMDE:17103-17123.
 pub fn encumbrance(entity: &Entity, ruleset: &Ruleset) -> EncumbranceTotal {
     let load: u32 = entity
         .equipment
         .iter()
+        .filter(|slot| slot.equipped)
         .map(|slot| equipment_load(ruleset, &slot.item))
         .sum();
     let burden = burden_for_load(load);
