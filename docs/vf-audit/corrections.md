@@ -3067,7 +3067,7 @@ quoted as true of the catalogue.
 | 11 | **D46** | the **five** effect-less `creation_effect` entries | `README.md` calls them "a lead, not a conclusion" |
 | 12 | **D48** | the catalogue, for pools that name an Ability *instance* | B06 measured its own span and found three — but **F-74** (`virtue.forge_companion`, B02, **H**) is a **fourth, outside that span**, so three was never the count. Start the sweep from those four |
 | 12a | **D49** | the catalogue, for entries that change **free seasons per year** | B05 found three in a 35-entry window and treated them as unrelated omissions |
-| 12e | **row 46** | the **computed** entries in **B01–B11's spans**, re-read for **arithmetic and sign** | *"check the sign of every effect against what the track or total actually counts"* entered the briefs at **B12**; B12–B19 carried it and the earlier eleven did not. **Not 218 entries untouched** — the row's premise predates the audit. B12's agent used the check to overturn a wrong `casting_fatigue` claim, which is the defect class exactly |
+| 12e | **row 46** | the computed entries in **B01–B11's spans**, traced **to their engine consumers** | **Narrower than "effects unchecked" — verified 2026-09-24.** B01–B11 *did* check effects: B05 states it asked, for every entry with effects, *"does each effect row match the passage"* and *"what else does the passage state that no effect implements"*. What entered the briefs at **B12** was the further step — *"check the **sign** of every effect against **what the track or total actually counts**"*, i.e. follow it into the engine. That is the `casting_fatigue` case: the data matched the passage, and the question was what the track counts. So the residue is a **consumer-tracing** pass, not a re-read |
 | 12d | **D57** | the **~36 mid-phrase German templates**, for tokens sitting where German demands agreement | `RULES.md` names the count; only the **four** `realm` items have been fixed, and `{land}` was found by reading one entry |
 | 12c | **D56** | **every `is_magus` site**, re-read for which of the two meanings it wanted | ~33 in `validation/mod.rs`, ~19 in `derived.rs`, plus `types.rs`, `validation/magus.rs`, `prereq.rs`, `ruleset.rs`, `effective/xp.rs`, `integrity.rs`, `life_stage.rs`, `authorization.rs`. **This is the cost of D56 and it will be underestimated** — the compiler cannot tell you which half a site meant |
 | 12b | **D50** | **all 335 `narrative` entries**, re-tested against "would a player get it wrong without it?" | the batches classified against *"is it mechanical?"*, which D50 replaces. **The phrase screen cannot find these** — *"the storyguide alerts you"* carries no signed number, botch term or set phrase — so this is a manual read unless the screen grows first (§ 2) |
@@ -3140,12 +3140,20 @@ ones, and B19's check 11 is the row's own job verbatim: *"**Engine reality** —
 every effect in the span was traced to its consumer and its arithmetic and sign
 checked."*
 
-**What is genuinely left, and it is a span question rather than an entry count.**
-*"Check the sign of every effect against what the track or total actually counts"*
-entered the briefs **from B12 onward**. B12–B19 carried it explicitly; **B01–B11
-read effects without it**. So the residue is the computed entries in B01–B11's
-spans, re-read for arithmetic and sign — not **218** entries (today: **125**
-`creation_effect` + **93** `in_play_effect`) untouched.
+**What is genuinely left is narrower than "effects unchecked", and was verified
+rather than assumed.** B01–B11 **did** check effects: B05 records that for every
+entry with `effects` it asked *"does each effect row match the passage"* and
+*"what else does the passage state that no effect implements"*. What entered the
+briefs at **B12** was the further step — *"check the **sign** of every effect
+against **what the track or total actually counts**"*, i.e. follow the effect
+into the engine.
+
+That distinction is the whole residue, and `casting_fatigue` is what it looks
+like: the data matched its passage, and the defect was only visible by asking
+what the **track** counts. So what is owed is a **consumer-tracing** pass over the
+computed entries in B01–B11's spans — not a re-read of **218** entries (today:
+**125** `creation_effect` + **93** `in_play_effect`), which is what the row's
+wording still implies.
 
 **The instruction earned its place, which is the argument for finishing it.**
 B12's verification agent used it to overturn my claim that `casting_fatigue`
