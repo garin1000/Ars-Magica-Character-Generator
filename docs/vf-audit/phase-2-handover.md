@@ -185,5 +185,9 @@ false rejection, two more witnesses for the F-20/F-45 class, and § 4a itself.
   not do is follow each effect into the engine and check its sign against what
   the track or total counts, which entered the briefs at B12. The **scope** of
   that residue is still inferred from the brief history rather than measured.
-- **F-442 claims a "named immunity"** neither Malediction passage contains.
-  Verify before working it.
+**A fourth uncertainty was resolved rather than carried:** F-442's *"named
+immunity"*, which I had flagged as unfindable, is **real and inbound** —
+ArMDE:7397 under `#### Curse-Throwing`. The lesson generalises: **a rule about an
+entry may be stated in a different entry's passage**, and checking only the
+entry's own lines will miss it. B13's cross-reference tables are where the audit
+recorded those; they are worth reading before calling a claim unsupported.
