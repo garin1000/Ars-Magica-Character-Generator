@@ -2705,18 +2705,28 @@ measured the other 620.
 - Fix `RULES.md` and check 1's stated convention to agree; the disagreement
   between them is what let the mixture survive three batches.
 
-**A repair is now BLOCKED on this work, which is stronger than "benefits from
-it".** The concurrent book-template session found nine source-conversion defects
-in `rules/source/en/` (`open-todos.md` row 54). Eight are in-place single-line
-edits and safe today. The ninth, a dropped line break at **ArMDE:1277** that
-swallowed the Hunter's *"Personality Traits:"* heading into the Virtues line,
-can only be fixed by **inserting a line** — which renumbers everything below it
-and **invalidates every `ArMDE:NNNN` citation in the repository in one edit**.
-`rulebook_citations.rs` cannot detect that: it checks only that a range lands on
-non-blank lines, so every citation would still *pass* while pointing at the wrong
-text. That repair therefore waits for the anchor backfill, when provenance no
-longer rides on line numbers — the first case where a defect in our own source is
-**blocked** on D30 rather than merely easier after it.
+**A repair here is FORBIDDEN, not deferred — and that is now a project
+invariant.** The concurrent book-template session found nine source-conversion
+defects in `rules/source/en/` (`open-todos.md` row 54). Eight are in-place
+single-line edits and safe. The ninth, a dropped line break at **ArMDE:1277**
+that swallowed the Hunter's *"Personality Traits:"* heading into the Virtues
+line, could only be fixed by **inserting a line**.
+
+**Norbert's ruling, 2026-09-24: the number of lines in a `rules/source/` file is
+never changed. Never — not for a defect, not for formatting, not as part of
+anything else.** It is now in `CLAUDE.md` beside the provenance rule.
+
+The reason is the one D30 exists for: an inserted line renumbers everything below
+it and invalidates **every** citation into that file at once — `SourceRef` ranges
+in `rules/core/` and `rules/i18n/`, `// Source:` comments, `RULES.md`, and every
+dated record under `docs/`. And **nothing detects it**: `rulebook_citations.rs`
+checks only that a range lands on non-blank lines, so after a shift every
+citation still *passes* while pointing at the wrong text.
+
+So ArMDE:1277 is **left in place and recorded**. Its repair is not scheduled
+work, and it is not "blocked on the anchor backfill" — an earlier draft of this
+paragraph said so and was wrong. A whole-file re-sync from upstream is a
+different act; a hand edit is what is barred.
 
 ---
 

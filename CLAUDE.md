@@ -191,6 +191,23 @@ English counterpart. So a German line number corresponds to the same item as
 the English line number. Such per-language provenance, when needed, lives in
 the `rules/i18n/<lang>/` layer, not in language-neutral `core/`.
 
+**NEVER change the number of lines in a file under `rules/source/`.** Not to fix
+a defect, not to improve formatting, not as part of any other change. An edit
+that adds or removes a line renumbers everything below it and silently
+invalidates **every** citation into that file — the `SourceRef` ranges in
+`rules/core/` and `rules/i18n/`, the `// Source: ArMDE:NNNN` comments, `RULES.md`,
+and every dated record under `docs/`. Nothing detects it:
+`crates/arm-rules/tests/rulebook_citations.rs` checks only that a cited range
+lands on **non-blank lines**, so after a shift every citation still *passes*
+while pointing at the wrong text. A whole-file re-sync from upstream is a
+different act and is not covered by this rule; a hand edit is.
+
+In-place edits that keep the line count are fine, and are how source defects are
+repaired — a scanno, a stray character, a missing separator. A defect that
+*cannot* be fixed without adding a line (a dropped line break, for instance) is
+**left in place and recorded**, and waits for the next upstream re-sync. Its
+repair is not scheduled work.
+
 ## Architecture invariants
 
 - **Catalogue size is data, never code.** The engine and UI must never assume the
