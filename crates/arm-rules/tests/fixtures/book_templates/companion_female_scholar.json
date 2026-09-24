@@ -1,0 +1,167 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "companion",
+  "selections": [
+    {
+      "ref": "flaw.black_sheep"
+    },
+    {
+      "ref": "flaw.driven_major"
+    },
+    {
+      "ref": "flaw.social_handicap"
+    },
+    {
+      "ref": "virtue.apt_student"
+    },
+    {
+      "ref": "virtue.book_learner"
+    },
+    {
+      "ref": "virtue.clerk"
+    },
+    {
+      "ref": "virtue.good_teacher"
+    },
+    {
+      "ref": "virtue.great_characteristic",
+      "params": {
+        "characteristic": "characteristic.int"
+      }
+    },
+    {
+      "ref": "virtue.great_characteristic",
+      "params": {
+        "characteristic": "characteristic.int"
+      }
+    },
+    {
+      "ref": "virtue.improved_characteristics"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": 1,
+    "str": -1,
+    "sta": -1,
+    "pre": 1,
+    "com": 2,
+    "dex": 0,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 2,
+      "specialty": "nunneries",
+      "parameter": "Local area"
+    },
+    {
+      "ability": "ability.artes_liberales",
+      "score": 3,
+      "specialty": "rhetoric"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 2,
+      "specialty": "scholars"
+    },
+    {
+      "ability": "ability.civil_and_canon_law",
+      "score": 1,
+      "specialty": "rights of women"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 5,
+      "specialty": "academic debate",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 2,
+      "specialty": "scholars"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 2,
+      "specialty": "lying to authority figures"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 1,
+      "specialty": "medical terms",
+      "parameter": "Arabic"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "debate",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.medicine",
+      "score": 1,
+      "specialty": "women's illnesses"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 2,
+      "specialty": "scholars",
+      "parameter": "The Church"
+    },
+    {
+      "ability": "ability.philosophiae",
+      "score": 3,
+      "specialty": "moral philosophy"
+    },
+    {
+      "ability": "ability.teaching",
+      "score": 3,
+      "specialty": "Artes Liberales"
+    },
+    {
+      "ability": "ability.theology_christian",
+      "score": 2,
+      "specialty": "status of women"
+    }
+  ],
+  "xp_pool": 345,
+  "ability_funding": "pool",
+  "age": 20,
+  "apparent_age": 20,
+  "personality_traits": [
+    {
+      "name": "Independent",
+      "value": 1
+    },
+    {
+      "name": "Scholarly",
+      "value": 3
+    },
+    {
+      "name": "Trusting",
+      "value": -2
+    }
+  ],
+  "reputations": [
+    {
+      "kind": "local",
+      "score": 2,
+      "content": "Selfish shrew"
+    }
+  ],
+  "name": "The Female Scholar",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true
+    }
+  ]
+}

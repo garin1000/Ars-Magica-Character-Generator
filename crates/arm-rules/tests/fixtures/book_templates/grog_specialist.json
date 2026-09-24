@@ -1,0 +1,139 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "grog",
+  "selections": [
+    {
+      "ref": "flaw.afflicted_tongue"
+    },
+    {
+      "ref": "flaw.obsessed_minor"
+    },
+    {
+      "ref": "flaw.poor_characteristic",
+      "params": {
+        "characteristic": "characteristic.com"
+      }
+    },
+    {
+      "ref": "virtue.affinity_ability",
+      "params": {
+        "ability": "ability.single_weapon"
+      }
+    },
+    {
+      "ref": "virtue.covenfolk"
+    },
+    {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.single_weapon"
+      }
+    },
+    {
+      "ref": "virtue.warrior"
+    }
+  ],
+  "characteristics": {
+    "int": -1,
+    "per": 0,
+    "str": 2,
+    "sta": 2,
+    "pre": -1,
+    "com": -3,
+    "dex": 3,
+    "qik": 2
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 3,
+      "specialty": "warriors",
+      "parameter": "Local area"
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 3,
+      "specialty": "running"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 4,
+      "specialty": "in combat"
+    },
+    {
+      "ability": "ability.bargain",
+      "score": 2,
+      "specialty": "weapons"
+    },
+    {
+      "ability": "ability.bows",
+      "score": 1,
+      "specialty": "short bow"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 5,
+      "specialty": "dodging"
+    },
+    {
+      "ability": "ability.carouse",
+      "score": 1,
+      "specialty": "drinking"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "talking about fighting",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.single_weapon",
+      "score": 7,
+      "specialty": "heater shield"
+    }
+  ],
+  "xp_pool": 329,
+  "ability_funding": "pool",
+  "age": 19,
+  "apparent_age": 19,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 3
+    },
+    {
+      "name": "Loyal",
+      "value": 2
+    },
+    {
+      "name": "Quiet",
+      "value": 1
+    }
+  ],
+  "name": "The Specialist",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "armor.metal_scale_full",
+      "equipped": true
+    },
+    {
+      "item": "shield.heater",
+      "equipped": true
+    },
+    {
+      "item": "weapon.axe",
+      "equipped": true,
+      "specialization_applies": true
+    },
+    {
+      "item": "weapon.fist",
+      "equipped": true
+    }
+  ]
+}

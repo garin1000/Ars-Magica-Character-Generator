@@ -1,0 +1,180 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.painful_magic"
+    },
+    {
+      "ref": "flaw.tormenting_master"
+    },
+    {
+      "ref": "flaw.weak_parens"
+    },
+    {
+      "ref": "virtue.great_characteristic",
+      "params": {
+        "characteristic": "characteristic.int"
+      }
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.improved_characteristics"
+    },
+    {
+      "ref": "virtue.life_boost"
+    },
+    {
+      "ref": "virtue.life_linked_spontaneous_magic"
+    },
+    {
+      "ref": "virtue.piercing_gaze"
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": -1,
+    "str": 0,
+    "sta": 2,
+    "pre": 0,
+    "com": 0,
+    "dex": 1,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "logic"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 2,
+      "specialty": "ambushes"
+    },
+    {
+      "ability": "ability.bargain",
+      "score": 2,
+      "specialty": "luxuries"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 3,
+      "specialty": "grappling"
+    },
+    {
+      "ability": "ability.concentration",
+      "score": 2,
+      "specialty": "spellcasting"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic terms",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 2,
+      "specialty": "spur of the moment"
+    },
+    {
+      "ability": "ability.intrigue",
+      "score": 2,
+      "specialty": "conspiracies"
+    },
+    {
+      "ability": "ability.leadership",
+      "score": 2,
+      "specialty": "long-time followers"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "arguing",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Mentem"
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Mentem"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.creo",
+      "score": 5
+    },
+    {
+      "art": "art.intellego",
+      "score": 5
+    },
+    {
+      "art": "art.mentem",
+      "score": 9
+    },
+    {
+      "art": "art.rego",
+      "score": 5
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.aura_of_rightful_authority"
+    },
+    {
+      "spell": "spell.pains_of_the_perpetual_worry"
+    },
+    {
+      "spell": "spell.posing_the_silent_question"
+    },
+    {
+      "spell": "spell.scent_of_peaceful_slumber"
+    },
+    {
+      "spell": "spell.trust_of_childlike_faith"
+    }
+  ],
+  "house": "house.tytalus",
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Argumentative",
+      "value": 3
+    },
+    {
+      "name": "Brave",
+      "value": 2
+    },
+    {
+      "name": "Trusting",
+      "value": -2
+    }
+  ],
+  "name": "The Tytalus",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true
+    }
+  ]
+}

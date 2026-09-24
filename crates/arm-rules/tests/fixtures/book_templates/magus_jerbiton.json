@@ -1,0 +1,221 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.deficient_technique",
+      "params": {
+        "technique": "art.perdo"
+      }
+    },
+    {
+      "ref": "flaw.necessary_condition"
+    },
+    {
+      "ref": "flaw.susceptibility_to_infernal_power"
+    },
+    {
+      "ref": "virtue.free_expression"
+    },
+    {
+      "ref": "virtue.gentle_gift"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.improved_characteristics"
+    },
+    {
+      "ref": "virtue.privileged_upbringing"
+    },
+    {
+      "ref": "virtue.the_gift"
+    },
+    {
+      "ref": "virtue.venus_blessing"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": 1,
+    "str": 0,
+    "sta": 0,
+    "pre": 1,
+    "com": 1,
+    "dex": 1,
+    "qik": 0
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "music"
+    },
+    {
+      "ability": "ability.carouse",
+      "score": 2,
+      "specialty": "maintaining dignity"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 3,
+      "specialty": "the opposite sex"
+    },
+    {
+      "ability": "ability.code_of_hermes",
+      "score": 1,
+      "specialty": "dealing with mundanes"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 5,
+      "specialty": "musical terms",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.etiquette",
+      "score": 2,
+      "specialty": "nobility"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 2,
+      "specialty": "nobles"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 2,
+      "specialty": "fast excuses"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "noble style",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Imaginem"
+    },
+    {
+      "ability": "ability.music",
+      "score": 4,
+      "specialty": "singing"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 2,
+      "specialty": "Jerbiton",
+      "parameter": "Order of Hermes"
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Mentem"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.corpus",
+      "score": 5
+    },
+    {
+      "art": "art.creo",
+      "score": 6
+    },
+    {
+      "art": "art.imaginem",
+      "score": 10
+    },
+    {
+      "art": "art.intellego",
+      "score": 1
+    },
+    {
+      "art": "art.muto",
+      "score": 6
+    },
+    {
+      "art": "art.perdo",
+      "score": 1
+    },
+    {
+      "art": "art.rego",
+      "score": 6
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.aura_of_ennobled_presence"
+    },
+    {
+      "spell": "spell.discern_own_illusions"
+    },
+    {
+      "spell": "spell.disguise_of_the_transformed_image"
+    },
+    {
+      "spell": "spell.illusion_of_cool_flames"
+    },
+    {
+      "spell": "spell.illusion_of_the_shifted_image"
+    },
+    {
+      "spell": "spell.notes_of_a_delightful_sound"
+    },
+    {
+      "spell": "spell.phantasm_of_the_human_form"
+    },
+    {
+      "spell": "spell.phantasm_of_the_talking_head"
+    },
+    {
+      "spell": "spell.taste_of_the_spices_and_herbs"
+    },
+    {
+      "spell": "spell.wizards_sidestep"
+    }
+  ],
+  "house": "house.jerbiton",
+  "house_choices": {
+    "jerbiton_minor_virtue": {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.music"
+      }
+    }
+  },
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 2
+    },
+    {
+      "name": "Friendly",
+      "value": 3
+    },
+    {
+      "name": "Studious",
+      "value": 1
+    }
+  ],
+  "name": "The Jerbiton",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true
+    }
+  ]
+}

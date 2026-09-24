@@ -1,0 +1,216 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.difficult_spontaneous_magic"
+    },
+    {
+      "ref": "flaw.dwarf"
+    },
+    {
+      "ref": "flaw.weak_spontaneous_magic"
+    },
+    {
+      "ref": "virtue.affinity_ability",
+      "params": {
+        "ability": "ability.craft",
+        "craft": "metalsmith"
+      }
+    },
+    {
+      "ref": "virtue.affinity_ability",
+      "params": {
+        "ability": "ability.craft",
+        "craft": "stonemason"
+      }
+    },
+    {
+      "ref": "virtue.affinity_art",
+      "params": {
+        "art": "art.terram"
+      }
+    },
+    {
+      "ref": "virtue.faerie_blood"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.craft",
+        "craft": "metalsmith"
+      }
+    },
+    {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.craft",
+        "craft": "stonemason"
+      }
+    },
+    {
+      "ref": "virtue.puissant_art",
+      "params": {
+        "art": "art.terram"
+      }
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": 0,
+    "str": -2,
+    "sta": 2,
+    "pre": 0,
+    "com": 0,
+    "dex": 1,
+    "qik": 0
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "geometry"
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 2,
+      "specialty": "endurance"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 3,
+      "specialty": "flaws in stone and metal work"
+    },
+    {
+      "ability": "ability.craft",
+      "score": 5,
+      "specialty": "iron",
+      "parameter": "metalsmith"
+    },
+    {
+      "ability": "ability.craft",
+      "score": 4,
+      "specialty": "decorations",
+      "parameter": "stonemason"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic terms",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.faerie_lore",
+      "score": 2,
+      "specialty": "dwarfs"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "talking about metal and stone",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Terram"
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Terram"
+    },
+    {
+      "ability": "ability.philosophiae",
+      "score": 1,
+      "specialty": "natural philosophy"
+    }
+  ],
+  "xp_pool": 436,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.creo",
+      "score": 7
+    },
+    {
+      "art": "art.intellego",
+      "score": 3
+    },
+    {
+      "art": "art.muto",
+      "score": 5
+    },
+    {
+      "art": "art.perdo",
+      "score": 3
+    },
+    {
+      "art": "art.rego",
+      "score": 5
+    },
+    {
+      "art": "art.terram",
+      "score": 12
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.edge_of_the_razor"
+    },
+    {
+      "spell": "spell.hands_of_the_grasping_earth"
+    },
+    {
+      "spell": "spell.pit_of_the_gaping_earth"
+    },
+    {
+      "spell": "spell.seal_the_earth"
+    },
+    {
+      "spell": "spell.the_crystal_dart"
+    },
+    {
+      "spell": "spell.touch_of_midas"
+    },
+    {
+      "spell": "spell.wall_of_protecting_stone"
+    }
+  ],
+  "house": "house.verditius",
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Disciplined",
+      "value": 3
+    },
+    {
+      "name": "Perfectionist",
+      "value": 3
+    },
+    {
+      "name": "Spontaneous",
+      "value": -2
+    }
+  ],
+  "name": "The Verditius",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true
+    }
+  ]
+}

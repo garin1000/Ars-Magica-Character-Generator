@@ -1,0 +1,121 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "grog",
+  "selections": [
+    {
+      "ref": "flaw.short_attention_span"
+    },
+    {
+      "ref": "flaw.wrathful_minor"
+    },
+    {
+      "ref": "virtue.berserk"
+    },
+    {
+      "ref": "virtue.covenfolk"
+    },
+    {
+      "ref": "virtue.large"
+    }
+  ],
+  "characteristics": {
+    "int": -2,
+    "per": -1,
+    "str": 3,
+    "sta": 2,
+    "pre": -1,
+    "com": -1,
+    "dex": 2,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 1,
+      "specialty": "streams",
+      "parameter": "Local area"
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 2,
+      "specialty": "running"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 3,
+      "specialty": "attackers"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 3,
+      "specialty": "kicking"
+    },
+    {
+      "ability": "ability.great_weapon",
+      "score": 5,
+      "specialty": "pole axe"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 1,
+      "specialty": "apologizing"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "insults",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.single_weapon",
+      "score": 1,
+      "specialty": "heater shield"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 3,
+      "specialty": "hills"
+    }
+  ],
+  "xp_pool": 270,
+  "ability_funding": "pool",
+  "age": 15,
+  "apparent_age": 15,
+  "personality_traits": [
+    {
+      "name": "Angry",
+      "value": 3
+    },
+    {
+      "name": "Brave",
+      "value": 3
+    },
+    {
+      "name": "Loyal",
+      "value": 1
+    }
+  ],
+  "name": "The Berserker",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "armor.metal_scale_full",
+      "equipped": true
+    },
+    {
+      "item": "weapon.kick",
+      "equipped": true,
+      "specialization_applies": true
+    },
+    {
+      "item": "weapon.pole_axe",
+      "equipped": true,
+      "specialization_applies": true
+    }
+  ]
+}

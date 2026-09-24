@@ -1,0 +1,211 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.ambitious_major"
+    },
+    {
+      "ref": "flaw.cyclic_magic_negative"
+    },
+    {
+      "ref": "flaw.difficult_longevity_ritual"
+    },
+    {
+      "ref": "virtue.affinity_art",
+      "params": {
+        "art": "art.auram"
+      }
+    },
+    {
+      "ref": "virtue.cyclic_magic_positive"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.major_magical_focus",
+      "params": {
+        "focus": "weather"
+      }
+    },
+    {
+      "ref": "virtue.puissant_art",
+      "params": {
+        "art": "art.auram"
+      }
+    },
+    {
+      "ref": "virtue.special_circumstances"
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 2,
+    "per": 0,
+    "str": 0,
+    "sta": 2,
+    "pre": 0,
+    "com": -1,
+    "dex": 1,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 3,
+      "specialty": "routes between settlements",
+      "parameter": "Local area"
+    },
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "astronomy"
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 1,
+      "specialty": "hiking"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 1,
+      "specialty": "weather signs"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic terms",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.hunt",
+      "score": 2,
+      "specialty": "small game"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "talking to travelers",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Auram"
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Ignem"
+    },
+    {
+      "ability": "ability.penetration",
+      "score": 2,
+      "specialty": "Auram"
+    },
+    {
+      "ability": "ability.stealth",
+      "score": 3,
+      "specialty": "in woodland"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 4,
+      "specialty": "in bad weather"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.auram",
+      "score": 12
+    },
+    {
+      "art": "art.corpus",
+      "score": 2
+    },
+    {
+      "art": "art.creo",
+      "score": 6
+    },
+    {
+      "art": "art.intellego",
+      "score": 4
+    },
+    {
+      "art": "art.mentem",
+      "score": 2
+    },
+    {
+      "art": "art.muto",
+      "score": 4
+    },
+    {
+      "art": "art.perdo",
+      "score": 3
+    },
+    {
+      "art": "art.rego",
+      "score": 5
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.clouds_of_rain_and_thunder"
+    },
+    {
+      "spell": "spell.clouds_of_summer_snow"
+    },
+    {
+      "spell": "spell.jupiters_resounding_blow"
+    },
+    {
+      "spell": "spell.pull_of_the_skybound_winds"
+    },
+    {
+      "spell": "spell.wings_of_the_soaring_wind"
+    }
+  ],
+  "house": "house.mercere",
+  "house_choices": {
+    "mercere_puissant": {
+      "ref": "virtue.puissant_art",
+      "params": {
+        "art": "art.creo"
+      }
+    }
+  },
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Ambitious",
+      "value": 6
+    },
+    {
+      "name": "Brave",
+      "value": 2
+    },
+    {
+      "name": "Wanderer",
+      "value": 3
+    }
+  ],
+  "name": "The Mercere",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.blatant_gift"
+    },
+    {
+      "ref": "flaw.deficient_form",
+      "params": {
+        "form": "art.ignem"
+      }
+    },
+    {
+      "ref": "flaw.tormenting_master"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.inoffensive_to_beings",
+      "params": {
+        "being": "being.animals"
+      }
+    },
+    {
+      "ref": "virtue.quiet_magic"
+    },
+    {
+      "ref": "virtue.quiet_magic"
+    },
+    {
+      "ref": "virtue.subtle_magic"
+    },
+    {
+      "ref": "virtue.the_gift"
+    },
+    {
+      "ref": "virtue.ways_of_the_land",
+      "params": {
+        "land": "forests"
+      }
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": 0,
+    "str": 0,
+    "sta": 1,
+    "pre": 0,
+    "com": -1,
+    "dex": 0,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 1,
+      "specialty": "forests",
+      "parameter": "Local area"
+    },
+    {
+      "ability": "ability.area_lore",
+      "score": 1,
+      "specialty": "forests",
+      "parameter": "Second area"
+    },
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "grammar"
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 2,
+      "specialty": "endurance"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 2,
+      "specialty": "people"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 2,
+      "specialty": "dodge"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic terms",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.finesse",
+      "score": 1,
+      "specialty": "targeting"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 1,
+      "specialty": "hunters"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 1,
+      "specialty": "pretending to know less than you do"
+    },
+    {
+      "ability": "ability.heartbeast",
+      "score": 2,
+      "specialty": "changing into a wolf"
+    },
+    {
+      "ability": "ability.hunt",
+      "score": 2,
+      "specialty": "small animals"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "talking about the wilderness",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Animal"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 1,
+      "specialty": "Bjornaer",
+      "parameter": "Order of Hermes"
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Animal"
+    },
+    {
+      "ability": "ability.penetration",
+      "score": 1,
+      "specialty": "Muto"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 3,
+      "specialty": "forests"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.animal",
+      "score": 8
+    },
+    {
+      "art": "art.corpus",
+      "score": 8
+    },
+    {
+      "art": "art.intellego",
+      "score": 1
+    },
+    {
+      "art": "art.muto",
+      "score": 10
+    },
+    {
+      "art": "art.perdo",
+      "score": 3
+    },
+    {
+      "art": "art.rego",
+      "score": 1
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.agony_of_the_beast"
+    },
+    {
+      "spell": "spell.circle_of_beast_warding"
+    },
+    {
+      "spell": "spell.eyes_of_the_cat"
+    },
+    {
+      "spell": "spell.gift_of_the_bears_fortitude"
+    },
+    {
+      "spell": "spell.lifting_the_dangling_puppet"
+    },
+    {
+      "spell": "spell.the_wound_that_weeps"
+    },
+    {
+      "spell": "spell.transformation_of_the_ravenous_beast_to_the_torpid_toad"
+    },
+    {
+      "spell": "spell.vipers_gaze"
+    }
+  ],
+  "house": "house.bjornaer",
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 2
+    },
+    {
+      "name": "Obedient",
+      "value": 1
+    },
+    {
+      "name": "Status-seeking",
+      "value": 2
+    }
+  ],
+  "name": "The Bjornaer",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true,
+      "specialization_applies": true
+    }
+  ]
+}

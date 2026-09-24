@@ -1,0 +1,206 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.curse_of_venus"
+    },
+    {
+      "ref": "flaw.restriction"
+    },
+    {
+      "ref": "virtue.affinity_art",
+      "params": {
+        "art": "art.intellego"
+      }
+    },
+    {
+      "ref": "virtue.clear_thinker"
+    },
+    {
+      "ref": "virtue.great_characteristic",
+      "params": {
+        "characteristic": "characteristic.per"
+      }
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.improved_characteristics"
+    },
+    {
+      "ref": "virtue.puissant_art",
+      "params": {
+        "art": "art.intellego"
+      }
+    },
+    {
+      "ref": "virtue.side_effect"
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": 3,
+    "str": 0,
+    "sta": 0,
+    "pre": 1,
+    "com": 0,
+    "dex": -2,
+    "qik": 0
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "logic"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 3,
+      "specialty": "clues"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 1,
+      "specialty": "dodging"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 2,
+      "specialty": "people you suspect"
+    },
+    {
+      "ability": "ability.code_of_hermes",
+      "score": 3,
+      "specialty": "the local Tribunal"
+    },
+    {
+      "ability": "ability.concentration",
+      "score": 1,
+      "specialty": "observing people or places"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic terms",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 4,
+      "specialty": "liars"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 2,
+      "specialty": "concealing investigations"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "questions",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Intellego"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 1,
+      "specialty": "legal cases",
+      "parameter": "Order of Hermes"
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1
+    }
+  ],
+  "xp_pool": 432,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.corpus",
+      "score": 5
+    },
+    {
+      "art": "art.imaginem",
+      "score": 6
+    },
+    {
+      "art": "art.intellego",
+      "score": 12
+    },
+    {
+      "art": "art.mentem",
+      "score": 6
+    },
+    {
+      "art": "art.perdo",
+      "score": 2
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.eyes_of_the_eagle"
+    },
+    {
+      "spell": "spell.frosty_breath_of_the_spoken_lie"
+    },
+    {
+      "spell": "spell.invisibility_of_the_standing_wizard"
+    },
+    {
+      "spell": "spell.peering_into_the_mortal_mind"
+    },
+    {
+      "spell": "spell.physicians_eye"
+    },
+    {
+      "spell": "spell.summoning_the_distant_image"
+    }
+  ],
+  "house": "house.guernicus",
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Fair",
+      "value": 2
+    },
+    {
+      "name": "Honest",
+      "value": 3
+    },
+    {
+      "name": "Nervous around the opposite sex",
+      "value": 2
+    }
+  ],
+  "reputations": [
+    {
+      "kind": "hermetic",
+      "score": 3,
+      "content": "Quaesitor"
+    }
+  ],
+  "name": "The Guernicus",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true,
+      "specialization_applies": true
+    }
+  ]
+}

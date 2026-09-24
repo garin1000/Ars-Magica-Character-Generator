@@ -1,0 +1,160 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "grog",
+  "selections": [
+    {
+      "ref": "flaw.no_sense_of_direction"
+    },
+    {
+      "ref": "flaw.overconfident_minor"
+    },
+    {
+      "ref": "flaw.weakness_minor"
+    },
+    {
+      "ref": "virtue.covenfolk"
+    },
+    {
+      "ref": "virtue.large"
+    },
+    {
+      "ref": "virtue.tough"
+    },
+    {
+      "ref": "virtue.warrior"
+    }
+  ],
+  "characteristics": {
+    "int": -1,
+    "per": 0,
+    "str": 1,
+    "sta": 3,
+    "pre": 1,
+    "com": -1,
+    "dex": 0,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 2,
+      "specialty": "brewers",
+      "parameter": "Local area"
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 1,
+      "specialty": "running"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 3,
+      "specialty": "in combat"
+    },
+    {
+      "ability": "ability.bows",
+      "score": 1,
+      "specialty": "shortbow"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 3,
+      "specialty": "grappling"
+    },
+    {
+      "ability": "ability.carouse",
+      "score": 4,
+      "specialty": "drinking"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 3,
+      "specialty": "when drunk"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 1,
+      "specialty": "magi"
+    },
+    {
+      "ability": "ability.great_weapon",
+      "score": 3,
+      "specialty": "pole axe"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 1,
+      "specialty": "lying to magi"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "talking about fighting",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.music",
+      "score": 1,
+      "specialty": "drinking songs"
+    },
+    {
+      "ability": "ability.single_weapon",
+      "score": 5,
+      "specialty": "heater shield"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 1,
+      "specialty": "on rivers"
+    },
+    {
+      "ability": "ability.thrown_weapon",
+      "score": 2,
+      "specialty": "axe"
+    }
+  ],
+  "xp_pool": 330,
+  "ability_funding": "pool",
+  "age": 19,
+  "apparent_age": 19,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 3
+    },
+    {
+      "name": "Loyal",
+      "value": 2
+    },
+    {
+      "name": "Overconfident",
+      "value": 3
+    }
+  ],
+  "name": "The Tough Guy",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "armor.metal_scale_full",
+      "equipped": true
+    },
+    {
+      "item": "shield.heater",
+      "equipped": true
+    },
+    {
+      "item": "weapon.axe",
+      "equipped": true,
+      "specialization_applies": true
+    },
+    {
+      "item": "weapon.fist",
+      "equipped": true
+    }
+  ]
+}

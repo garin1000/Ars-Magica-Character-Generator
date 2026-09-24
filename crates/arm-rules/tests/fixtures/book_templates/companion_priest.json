@@ -1,0 +1,168 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "companion",
+  "selections": [
+    {
+      "ref": "flaw.clumsy"
+    },
+    {
+      "ref": "flaw.compassionate_major"
+    },
+    {
+      "ref": "flaw.plagued_by_supernatural_entity"
+    },
+    {
+      "ref": "flaw.vow_minor"
+    },
+    {
+      "ref": "virtue.inspirational"
+    },
+    {
+      "ref": "virtue.lesser_immunity"
+    },
+    {
+      "ref": "virtue.priest"
+    },
+    {
+      "ref": "virtue.relic"
+    },
+    {
+      "ref": "virtue.sense_holiness_and_unholiness"
+    },
+    {
+      "ref": "virtue.social_contacts"
+    },
+    {
+      "ref": "virtue.student_of_realm",
+      "params": {
+        "realm": "realm.divine"
+      }
+    },
+    {
+      "ref": "virtue.well_traveled"
+    }
+  ],
+  "characteristics": {
+    "int": 1,
+    "per": 2,
+    "str": 0,
+    "sta": 0,
+    "pre": 1,
+    "com": 2,
+    "dex": -1,
+    "qik": 0
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 5,
+      "specialty": "churches",
+      "parameter": "Local area"
+    },
+    {
+      "ability": "ability.artes_liberales",
+      "score": 2,
+      "specialty": "rhetoric"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 1,
+      "specialty": "dodging"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 5,
+      "specialty": "parishioners"
+    },
+    {
+      "ability": "ability.civil_and_canon_law",
+      "score": 1,
+      "specialty": "regulations for the clergy"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "the Bible",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.dominion_lore",
+      "score": 3,
+      "specialty": "angels"
+    },
+    {
+      "ability": "ability.etiquette",
+      "score": 3,
+      "specialty": "Church"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 6,
+      "specialty": "people he knows very well"
+    },
+    {
+      "ability": "ability.intrigue",
+      "score": 1,
+      "specialty": "parishes"
+    },
+    {
+      "ability": "ability.leadership",
+      "score": 3,
+      "specialty": "preaching"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "preaching",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 3,
+      "specialty": "local diocese",
+      "parameter": "The Church"
+    },
+    {
+      "ability": "ability.sense_holiness_and_unholiness",
+      "score": 4,
+      "specialty": "angels"
+    },
+    {
+      "ability": "ability.theology_christian",
+      "score": 2,
+      "specialty": "angelology"
+    }
+  ],
+  "xp_pool": 590,
+  "ability_funding": "pool",
+  "age": 33,
+  "apparent_age": 33,
+  "personality_traits": [
+    {
+      "name": "Compassionate",
+      "value": 3
+    },
+    {
+      "name": "Loyal",
+      "value": 2
+    },
+    {
+      "name": "Pious",
+      "value": 3
+    }
+  ],
+  "name": "The Priest",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true,
+      "specialization_applies": true
+    }
+  ]
+}

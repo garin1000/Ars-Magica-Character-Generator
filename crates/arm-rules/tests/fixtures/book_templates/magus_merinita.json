@@ -1,0 +1,203 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.chaotic_magic"
+    },
+    {
+      "ref": "flaw.faerie_upbringing"
+    },
+    {
+      "ref": "flaw.plagued_by_supernatural_entity"
+    },
+    {
+      "ref": "virtue.deft_form",
+      "params": {
+        "form": "art.imaginem"
+      }
+    },
+    {
+      "ref": "virtue.free_study"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.puissant_art",
+      "params": {
+        "art": "art.imaginem"
+      }
+    },
+    {
+      "ref": "virtue.strong_faerie_blood"
+    },
+    {
+      "ref": "virtue.student_of_realm",
+      "params": {
+        "realm": "realm.faerie"
+      }
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": 1,
+    "str": -1,
+    "sta": -1,
+    "pre": 1,
+    "com": 2,
+    "dex": -1,
+    "qik": -1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "rhetoric"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 2,
+      "specialty": "gaining trust"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic terms",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.faerie_lore",
+      "score": 3,
+      "specialty": "water fay"
+    },
+    {
+      "ability": "ability.faerie_magic",
+      "score": 1,
+      "specialty": "illusions"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 2,
+      "specialty": "what people will believe"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 5,
+      "specialty": "sustained lies"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "faeries",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Imaginem"
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Mentem"
+    },
+    {
+      "ability": "ability.penetration",
+      "score": 2,
+      "specialty": "Mentem"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.corpus",
+      "score": 1
+    },
+    {
+      "art": "art.creo",
+      "score": 5
+    },
+    {
+      "art": "art.imaginem",
+      "score": 10
+    },
+    {
+      "art": "art.intellego",
+      "score": 1
+    },
+    {
+      "art": "art.mentem",
+      "score": 5
+    },
+    {
+      "art": "art.muto",
+      "score": 5
+    },
+    {
+      "art": "art.perdo",
+      "score": 2
+    },
+    {
+      "art": "art.rego",
+      "score": 5
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.image_phantom"
+    },
+    {
+      "spell": "spell.panic_of_the_trembling_heart"
+    },
+    {
+      "spell": "spell.phantasm_of_the_human_form"
+    },
+    {
+      "spell": "spell.phantasmal_animal"
+    },
+    {
+      "spell": "spell.the_call_to_slumber"
+    },
+    {
+      "spell": "spell.veil_of_invisibility"
+    },
+    {
+      "spell": "spell.wizards_sidestep"
+    }
+  ],
+  "house": "house.merinita",
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Honest",
+      "value": -2
+    },
+    {
+      "name": "Mercurial",
+      "value": 3
+    },
+    {
+      "name": "Reliable",
+      "value": -3
+    }
+  ],
+  "name": "The Merinita",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true
+    }
+  ]
+}
