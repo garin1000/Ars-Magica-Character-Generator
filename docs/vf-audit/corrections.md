@@ -3062,6 +3062,7 @@ quoted as true of the catalogue.
 | 11 | **D46** | the **five** effect-less `creation_effect` entries | `README.md` calls them "a lead, not a conclusion" |
 | 12 | **D48** | the catalogue, for pools that name an Ability *instance* | B06 measured its own span and found three — but **F-74** (`virtue.forge_companion`, B02, **H**) is a **fourth, outside that span**, so three was never the count. Start the sweep from those four |
 | 12a | **D49** | the catalogue, for entries that change **free seasons per year** | B05 found three in a 35-entry window and treated them as unrelated omissions |
+| 12e | **row 46** | the **computed** entries in **B01–B11's spans**, re-read for **arithmetic and sign** | *"check the sign of every effect against what the track or total actually counts"* entered the briefs at **B12**; B12–B19 carried it and the earlier eleven did not. **Not 218 entries untouched** — the row's premise predates the audit. B12's agent used the check to overturn a wrong `casting_fatigue` claim, which is the defect class exactly |
 | 12d | **D57** | the **~36 mid-phrase German templates**, for tokens sitting where German demands agreement | `RULES.md` names the count; only the **four** `realm` items have been fixed, and `{land}` was found by reading one entry |
 | 12c | **D56** | **every `is_magus` site**, re-read for which of the two meanings it wanted | ~33 in `validation/mod.rs`, ~19 in `derived.rs`, plus `types.rs`, `validation/magus.rs`, `prereq.rs`, `ruleset.rs`, `effective/xp.rs`, `integrity.rs`, `life_stage.rs`, `authorization.rs`. **This is the cost of D56 and it will be underestimated** — the compiler cannot tell you which half a site meant |
 | 12b | **D50** | **all 335 `narrative` entries**, re-tested against "would a player get it wrong without it?" | the batches classified against *"is it mechanical?"*, which D50 replaces. **The phrase screen cannot find these** — *"the storyguide alerts you"* carries no signed number, botch term or set phrase — so this is a manual read unless the screen grows first (§ 2) |
@@ -3109,7 +3110,7 @@ here, not claimed.
 | **42** | four swept Flaws state computable rules with no representation | § 3.15a |
 | **43** | anchors — **done for V/F** (655/655); the rest of the catalogue owes them | **D30**, § 8 row 6 (**563** refs) |
 | **45** | the authorization family — **scope corrected**, any category, not social-status | § 3.2, **D43**; four counterexamples (F-18, F-102, Knight, Priest) |
-| **46** | the **218 computed** V/F never audited against what the engine does | **the largest unstarted thing in this file** — no § 3 group covers it |
+| **46** | the **218 computed** V/F never audited against what the engine does | **largely DONE by the audit itself — the row's premise is stale.** See below |
 | **47** | `charged_cost` overcharges an Affinity-bought score | **F-547**, with its proof and its corrected remedy note |
 | **48** | `virtue.berserk`'s three modifiers applied unconditionally | **F-20**, and the **F-45 class** (§ 3.8, **D4**) |
 | **49** | conditional casting/Lab modifiers applied flat — Ways of the Land, Special Circumstances, Cyclic | **F-45 / F-20 class**, § 3.8; **D4** governs the fix, **D52** splits the Cyclic pair |
@@ -3119,10 +3120,36 @@ here, not claimed.
 | **53** | **W2** authorization cannot restrict | § 3.15b; **folds into row 45** — same exclusive-choice parameter as `virtue.custos` |
 | **54** | nine conversion defects in `rules/source/en/` | **Upstream** — and ArMDE:1277 is **forbidden**, not deferred (the line-count invariant) |
 
-**Two rows have no group in § 3 and that is the finding.** **Row 46** — the 218
-computed entries never checked against the engine — is the largest unstarted item
-anywhere in this audit, and § 3 has no home for it. **Row 38**'s residual is the
-other. Both predate the rulings that reshape them, so neither is simply "carry on".
+### Row 46 — the premise is stale, and the residue is much smaller
+
+**Corrected 2026-09-24 on Norbert's challenge** (*"Wasn't 46 done in this
+session?"*), having first written here that it was the largest unstarted item in
+the audit. It is not.
+
+The row was raised **2026-09-18**, before the batches ran, and its premise is
+*"Every sweep so far has read `narrative` entries only, so `creation_effect` and
+`in_play_effect` entries have been checked for referential integrity and never
+for correctness of the arithmetic."* **That stopped being true when the audit
+began.** The twelve-point check covered **all 655 entries**, not the `narrative`
+ones, and B19's check 11 is the row's own job verbatim: *"**Engine reality** —
+every effect in the span was traced to its consumer and its arithmetic and sign
+checked."*
+
+**What is genuinely left, and it is a span question rather than an entry count.**
+*"Check the sign of every effect against what the track or total actually counts"*
+entered the briefs **from B12 onward**. B12–B19 carried it explicitly; **B01–B11
+read effects without it**. So the residue is the computed entries in B01–B11's
+spans, re-read for arithmetic and sign — not **218** entries (today: **125**
+`creation_effect` + **93** `in_play_effect`) untouched.
+
+**The instruction earned its place, which is the argument for finishing it.**
+B12's verification agent used it to overturn my claim that `casting_fatigue`
+shipped inverted — there were three carriers, not two, and the doc comment was
+the outlier. That is precisely the defect class row 46 was written for, caught by
+the batch that first carried the check.
+
+**So it is § 8's shape, not § 3's**: a measurement owed over a known span, added
+as row **12e**.
 
 ---
 

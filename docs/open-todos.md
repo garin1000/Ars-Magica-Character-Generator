@@ -16,10 +16,12 @@ these should be tagged over silently.
 maps it to the audit group, ruling or finding that owns the work (Norbert,
 2026-09-24). **This file keeps its own job** — it is the list surfaced at a
 release, which `corrections.md` is not — so the two are a pointer pair, not a
-duplicate: **the work is described there, the release gate is here.** § 9 also
-records the two rows that have **no** § 3 group at all, which is a finding in
-itself: **row 46** (the 218 computed V/F never audited against the engine) and
-**row 38**'s residual.
+duplicate: **the work is described there, the release gate is here.** **Row 46 is largely discharged** — § 9 shows why: its premise (*"every sweep so
+far has read `narrative` entries only"*) was written on 2026-09-18, **before** the
+batches ran, and the audit's twelve-point check covered all 655 entries with
+B19's check 11 doing this row's job verbatim. The residue is narrower than the
+row reads: the computed entries in **B01–B11's** spans, since the sign-check
+instruction entered the briefs only at **B12**. Tracked as § 8 row **12e**.
 
 | # | Item | Waiting on | Raised |
 |---|---|---|---|
