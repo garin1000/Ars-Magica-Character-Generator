@@ -5086,6 +5086,71 @@ fn gentle_gift_requires_the_gift_and_not_the_order() {
     );
 }
 
+/// `ArMDE:5643` — "He **knows Hermetic magic** and can cast spells and enchant
+/// items like other magi." Hermetic magic presupposes The Gift, so the Flaw may
+/// only be taken alongside it.
+///
+/// Without the prerequisite the Flaw is **3 points for nothing**: it is *Major,
+/// Story*, and the companion profile permits `story` at `max: 1` with
+/// `max_major_flaws: null` and `gift_policy: "allowed"` — *allowed*, not
+/// required — so a companion who simply never takes The Gift banks a Major
+/// Flaw's worth of Virtue points for Hermetic training he cannot have.
+///
+/// A grog cannot reach it and is not the case to test: `story` is absent from
+/// his `permitted_categories`, his `flaw_category_caps` set
+/// `{"category": "story", "max": 0}`, his `max_major_flaws` is `0`, and
+/// `virtue.the_gift` is in his `forbidden_traits`. Four independent barriers,
+/// none of which is this rule.
+///
+/// The Gift is **required, not granted** — `virtue.the_gift` is `Free`, so
+/// requiring it costs the player nothing, and granting it would let the Flaw
+/// bootstrap the very permission `effective::has_the_gift` reads to decide
+/// whether a companion may touch the `hermetic` category at all.
+#[test]
+fn abandoned_apprentice_requires_the_gift() {
+    let rs = load_ruleset();
+    let abandoned = Id::new("flaw.abandoned_apprentice");
+    assert_eq!(
+        rs.item(&abandoned)
+            .expect("flaw.abandoned_apprentice must ship")
+            .prerequisites,
+        Some(Prereq::Has(Id::new("virtue.the_gift"))),
+        "`ArMDE:5643` has him casting spells, which presupposes The Gift"
+    );
+
+    let gifted = validate(
+        &entity(
+            "companion",
+            vec![
+                Selection::new(Id::new("virtue.the_gift")),
+                Selection::new(abandoned.clone()),
+            ],
+        ),
+        &rs,
+    );
+    assert!(
+        !gifted
+            .issues
+            .iter()
+            .any(|i| i.context.as_ref() == Some(&abandoned)),
+        "a Gifted companion may have been abandoned mid-training: {:?}",
+        gifted.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
+    );
+
+    let ungifted = validate(
+        &entity("companion", vec![Selection::new(abandoned.clone())]),
+        &rs,
+    );
+    assert!(
+        ungifted
+            .issues
+            .iter()
+            .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&abandoned)),
+        "and an unGifted one may not — he would bank 3 Flaw points for Hermetic \
+         training he cannot have"
+    );
+}
+
 /// ":3845" — "You may not have The Gift, but if your Gift was not completely
 /// destroyed, you may have some Supernatural Abilities."
 ///

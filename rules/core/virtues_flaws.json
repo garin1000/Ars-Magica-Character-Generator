@@ -15,6 +15,7 @@
     "categories": ["story"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
     "source": { "anchor": "abandoned-apprentice", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5641, 5650] }
   },
   {
