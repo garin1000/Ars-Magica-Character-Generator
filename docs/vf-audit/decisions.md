@@ -906,9 +906,15 @@ has nothing to choose there. The Flaw in the V/F phase is the whole of it.
    `authorization.rs`. **This is the cost of the decision and it will be
    underestimated.** Added to § 8.
 2. **`flaw.abandoned_apprentice` gains `Prereq::Has(virtue.the_gift)` — and that
-   is a defect on today's data, independent of the split.** Without it a grog or
-   an ungifted companion takes a 3-point Major Flaw for a capability he cannot
-   have: points for nothing.
+   is a defect on today's data, independent of the split.** The reachable case is
+   an **ungifted companion**: that profile permits `story` at `max: 1`, sets
+   `max_major_flaws: null`, and has `gift_policy: "allowed"` — *allowed*, not
+   required — so a companion who simply never takes The Gift collects **3 Flaw
+   points** for Hermetic training he cannot have. **Not a grog**, corrected on
+   Norbert's challenge: the grog profile blocks it four ways over — `story` is
+   absent from `permitted_categories`, `flaw_category_caps` sets
+   `{"category": "story", "max": 0}`, `max_major_flaws` is `0`, and
+   `virtue.the_gift` is in `forbidden_traits` with `gift_policy: "forbidden"`.
 3. The age parameter, the conditional-phase rule, and D12's gate reworded from
    `IsMagus` to *trained*.
 4. *"If the character knows the Parma Magica, he must join the Order or be
