@@ -19,8 +19,17 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { hasXvfbRun, preflightDisplay } from './display.js';
-import { startWorkerDriver, workerConfigHome, workerSuffix } from './driver.js';
-import { e2eLogDir, sharedWdioConfig } from './wdio.shared.conf.js';
+import { allDriverPorts, startWorkerDriver, workerConfigHome, workerSuffix } from './driver.js';
+import { preflightDriverPorts } from './ports.js';
+import {
+  killDriverTree,
+  pidRegistryDir,
+  reapRegisteredDrivers,
+  reapRegisteredDriversForCid,
+  registerDriverPid,
+  unregisterDriverPid,
+} from './reap.js';
+import { e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.shared.conf.js';
 
 // Xvfb offers no DRI3 extension and no GPU, so Mesa's EGL hardware probe fails
 // and falls back to swrast on its own — noisy (`libEGL warning: DRI3 ...`) and
@@ -57,6 +66,10 @@ export const e2eExportFile = path.resolve(
 );
 
 let tauriDriver;
+// `afterSession` is not handed `cid` (only `beforeSession` is — see
+// `@wdio/runner`'s `afterSessionArgs`), so it is tracked here alongside the
+// driver handle itself, the same way `tauriDriver` already is.
+let currentCid;
 
 export const config = {
   ...sharedWdioConfig(application),
@@ -83,9 +96,24 @@ export const config = {
   // onPrepare is the launcher process, the last point at which `DISPLAY` still
   // reflects the real environment — every worker below it is already inside
   // WebdriverIO's `xvfb-run` wrapper when headless.
-  onPrepare: () => {
+  onPrepare: async () => {
     const problem = preflightDisplay(process.env, { xvfbRunAvailable: hasXvfbRun() });
     if (problem) throw new Error(problem);
+
+    // Refuses immediately, naming the port, if a stale driver from a previous
+    // run is still holding one of the ports this run's workers would bind —
+    // instead of this run connecting to it and hanging the full ~120s
+    // session-creation timeout before an inscrutable `WebDriverError: timeout`
+    // (docs/open-todos.md, "the e2e harness leaks its driver processes").
+    const portProblem = await preflightDriverPorts(allDriverPorts(MAX_WORKERS));
+    if (portProblem) throw new Error(portProblem);
+
+    // The preflight above just proved every one of this run's ports is free,
+    // which means any driver a *previous* run's pid registry still names is
+    // already dead (whether cleanly reaped or a genuine orphan) — so it is
+    // safe to discard stale bookkeeping here rather than ever attempting to
+    // signal a pid that might since have been reused by an unrelated process.
+    fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
 
     // `--features e2e-testing` is what compiles in the ARM_E2E_FILE /
     // ARM_E2E_EXPORT_FILE seams this same suite relies on below (see
@@ -132,8 +160,33 @@ export const config = {
       ARM_E2E_EXPORT_FILE: e2eExportFile,
       XDG_CONFIG_HOME: workerConfigHome(repoRoot, process.env),
     });
+    // Recorded so the `onComplete`/`onWorkerEnd` safety net below can still
+    // find and terminate this driver even if this worker crashes before its
+    // own `afterSession` runs — see reap.js for why that needs a cross-process
+    // registry rather than the `tauriDriver` handle itself.
+    currentCid = cid;
+    registerDriverPid(pidRegistryDir(repoRoot), cid, tauriDriver.pid);
   },
   afterSession: () => {
-    if (tauriDriver) tauriDriver.kill();
+    if (!tauriDriver) return;
+    killDriverTree(tauriDriver);
+    unregisterDriverPid(pidRegistryDir(repoRoot), currentCid, tauriDriver.pid);
+    tauriDriver = undefined;
+  },
+  // Runs in the launcher process, per worker, just after that worker exits —
+  // including a crashed or forcibly-terminated one, which is exactly the case
+  // `afterSession` above cannot cover. Scoped to *this* worker's own cid:
+  // other workers can still be legitimately mid-session in the same shared
+  // registry, so reaping the whole thing here (as tried first) kills a
+  // sibling's still-running driver out from under it.
+  onWorkerEnd: (cid) => {
+    reapRegisteredDriversForCid(pidRegistryDir(repoRoot), cid);
+  },
+  // The final sweep, once every worker is done — safe to reap everything here
+  // because nothing is still mid-session. A normal run leaves the registry
+  // empty (each `afterSession` already cleared its own entry), so this only
+  // ever does anything when a worker's teardown did not run.
+  onComplete: () => {
+    reapRegisteredDrivers(pidRegistryDir(repoRoot));
   },
 };

@@ -8,8 +8,14 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { driverPorts, workerConfigHome, workerIndexFromCid } from './driver.js';
+import { pidRegistryDir } from './reap.js';
 import { config as portableConfig } from './wdio.portable.conf.js';
 import { config as standardConfig, e2eExportFile, e2eFile } from './wdio.conf.js';
+
+// A fixed, recognizable stand-in pid — `registerDriverPid`/`killDriverTree`
+// need a real number to write a registry filename and to assert the kill
+// signal's target against.
+const MOCK_DRIVER_PID = 987654;
 
 // Mocked so `beforeSession` can be exercised without launching a real
 // tauri-driver or hitting a real socket: `spawn` records the invocation, and
@@ -18,7 +24,7 @@ import { config as standardConfig, e2eExportFile, e2eFile } from './wdio.conf.js
 // `vi.mock` is hoisted above these imports by vitest regardless of where it
 // is written, so `spawn` above is already the mocked function.
 vi.mock('node:child_process', () => ({
-  spawn: vi.fn(() => ({ kill: vi.fn() })),
+  spawn: vi.fn(() => ({ kill: vi.fn(), pid: MOCK_DRIVER_PID })),
   spawnSync: vi.fn(),
 }));
 vi.mock('node:net', () => ({
@@ -169,6 +175,98 @@ describe.each([
       expect(options.env.ARM_E2E_EXPORT_FILE).toBeUndefined();
     });
   }
+});
+
+// U6 (docs/open-todos.md, "the e2e harness leaks its driver processes"):
+// `afterSession` must actually terminate the driver `beforeSession` spawned.
+//
+// `beforeSession` is called with `@wdio/runner`'s own `this._config` — built by
+// `deepmerge`-ing this file's exported `config` into the runner's defaults
+// (`@wdio/config`'s `ConfigParser`) — which is a *different object* from this
+// module's `export const config`. The portable config used to store the
+// handle as `config.tauriDriver`, a property of whatever object
+// `beforeSession` received; `afterSession` takes no parameter and reads the
+// bare identifier `config`, resolved by lexical scope to this file's
+// `export const config` — never the merged object `beforeSession` actually
+// mutated. So the property read back `undefined` and `.kill()` was never
+// called. Passing a shallow copy (not the same reference) as the
+// `beforeSession` parameter reproduces that mismatch faithfully; passing the
+// literal `config` object (as the `beforeSession` describe block above does,
+// to check `config.port` mutation) would not, since same-reference args are
+// exactly what makes the old bug invisible.
+describe.each([
+  ['standard', () => standardConfig],
+  ['portable', () => portableConfig],
+])('%s config afterSession', (_name, getConfig) => {
+  let killSpy;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    killSpy = vi.spyOn(process, 'kill').mockImplementation(() => true);
+    // Decontaminates a legacy artifact: the "beforeSession" describe block
+    // above passes the literal shared `config` object (not a copy) into
+    // `beforeSession`, so a leftover `config.tauriDriver` from one of those
+    // tests could otherwise leak into these — irrelevant to the fixed
+    // implementation (which never sets that property at all), but without
+    // this the reverted, buggy version's assertions become run-order
+    // dependent rather than reliably red.
+    delete getConfig().tauriDriver;
+  });
+
+  afterEach(() => {
+    killSpy.mockRestore();
+    fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
+  });
+
+  it('signals the process group of the driver beforeSession spawned', async () => {
+    const config = getConfig();
+    await config.beforeSession({ ...config }, [{}], [], '0-11');
+
+    config.afterSession();
+
+    expect(killSpy).toHaveBeenCalledWith(-MOCK_DRIVER_PID, 'SIGTERM');
+  });
+
+  it('clears the pid registry entry once the driver is reaped', async () => {
+    const config = getConfig();
+    await config.beforeSession({ ...config }, [{}], [], '0-12');
+    const registeredEntry = `0-12-${MOCK_DRIVER_PID}`;
+    expect(fs.readdirSync(pidRegistryDir(repoRoot))).toContain(registeredEntry);
+
+    config.afterSession();
+
+    expect(fs.readdirSync(pidRegistryDir(repoRoot))).not.toContain(registeredEntry);
+  });
+});
+
+// U6 round two: a real e2e run caught `onWorkerEnd` sweeping the *whole*
+// shared pid registry the instant the first worker's spec finished, killing
+// every other concurrently-running worker's still-legitimate driver (a
+// cascade of `ECONNREFUSED` across every other spec). `onWorkerEnd` must
+// touch only the cid it is told just ended.
+describe.each([
+  ['standard', () => standardConfig],
+  ['portable', () => portableConfig],
+])('%s config onWorkerEnd', (_name, getConfig) => {
+  afterEach(() => {
+    fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
+  });
+
+  it("reaps only the ended worker's own entry, never a sibling still mid-session", () => {
+    const config = getConfig();
+    const dir = pidRegistryDir(repoRoot);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.resolve(dir, '0-1-1001'), '');
+    fs.writeFileSync(path.resolve(dir, '0-2-2002'), '');
+    const killSpy = vi.spyOn(process, 'kill').mockImplementation(() => true);
+
+    config.onWorkerEnd('0-1', 0, [], 0);
+
+    expect(killSpy).toHaveBeenCalledWith(-1001, 'SIGTERM');
+    expect(killSpy).not.toHaveBeenCalledWith(-2002, 'SIGTERM');
+    expect(fs.readdirSync(dir)).toEqual(['0-2-2002']);
+    killSpy.mockRestore();
+  });
 });
 
 // A2 (spec consolidation) merged 40 single-purpose spec files into 7, and the

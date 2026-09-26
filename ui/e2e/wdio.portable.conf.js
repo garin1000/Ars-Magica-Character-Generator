@@ -16,13 +16,23 @@
 // display — the desktop session, or the Xvfb WebdriverIO starts when `DISPLAY` is
 // unset.
 
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { hasXvfbRun, preflightDisplay } from './display.js';
-import { startWorkerDriver, workerConfigHome } from './driver.js';
+import { allDriverPorts, startWorkerDriver, workerConfigHome } from './driver.js';
+import { preflightDriverPorts } from './ports.js';
+import {
+  killDriverTree,
+  pidRegistryDir,
+  reapRegisteredDrivers,
+  reapRegisteredDriversForCid,
+  registerDriverPid,
+  unregisterDriverPid,
+} from './reap.js';
 import { portableApp, stagePortableApp } from './stage-portable.js';
-import { e2eLogDir, sharedWdioConfig } from './wdio.shared.conf.js';
+import { e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.shared.conf.js';
 
 // Same fix as wdio.conf.js: Xvfb has no DRI3, so Mesa's hardware probe fails
 // and falls back to swrast noisily. Pin llvmpipe up front instead — this
@@ -33,6 +43,12 @@ process.env.GALLIUM_DRIVER = 'llvmpipe';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(dirname, '../..');
+
+let tauriDriver;
+// `afterSession` is not handed `cid` (only `beforeSession` is — see
+// `@wdio/runner`'s `afterSessionArgs`), so it is tracked here alongside the
+// driver handle itself, the same way `tauriDriver` already is.
+let currentCid;
 
 export const config = {
   ...sharedWdioConfig(portableApp),
@@ -46,9 +62,19 @@ export const config = {
   // Build the production binary, then stage it — with `rules/` beside it — where
   // Tauri cannot mistake it for a dev build. The display check runs first and runs
   // here, the last point at which `DISPLAY` still reflects the real environment.
-  onPrepare: () => {
+  onPrepare: async () => {
     const problem = preflightDisplay(process.env, { xvfbRunAvailable: hasXvfbRun() });
     if (problem) throw new Error(problem);
+
+    // Same reasoning as the standard config's onPrepare: refuse immediately,
+    // naming the port, rather than hang the session-creation timeout against a
+    // stale driver (docs/open-todos.md, "the e2e harness leaks its driver
+    // processes" — this config's own teardown bug, fixed below, is exactly
+    // what produced the stale drivers that finding was written from).
+    const portProblem = await preflightDriverPorts(allDriverPorts(MAX_WORKERS));
+    if (portProblem) throw new Error(portProblem);
+    fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
+
     stagePortableApp();
   },
 
@@ -68,12 +94,43 @@ export const config = {
   // It still needs the port and settings-file isolation the standard suite
   // gets from `startWorkerDriver`/`workerConfigHome` (driver.js) — just not the
   // file seams above.
+  //
+  // The handle used to live on `config.tauriDriver` — a property of the
+  // object `beforeSession` receives as its first argument. That object is
+  // `@wdio/runner`'s own `this._config`, built by `deepmerge`-ing this file's
+  // exported `config` into the runner's defaults, so it is a *different*
+  // object from the one this module exports. `afterSession` below takes no
+  // parameters and reads the bare identifier `config`, which JS resolves via
+  // lexical scope to this file's `export const config` — never the merged
+  // object `beforeSession` actually mutated. So `config.tauriDriver` inside
+  // `afterSession` was always `undefined`, `.kill()` was never called, and
+  // this config's tauri-driver (and the WebKitWebDriver it spawns) leaked on
+  // every run (docs/open-todos.md, "the e2e harness leaks its driver
+  // processes"). A plain module-scope variable — the standard config's
+  // `wdio.conf.js` pattern — sidesteps the object-identity question entirely.
   beforeSession: async (config, capabilities, specs, cid) => {
-    config.tauriDriver = await startWorkerDriver(config, cid, {
+    tauriDriver = await startWorkerDriver(config, cid, {
       XDG_CONFIG_HOME: workerConfigHome(repoRoot, process.env),
     });
+    currentCid = cid;
+    registerDriverPid(pidRegistryDir(repoRoot), cid, tauriDriver.pid);
   },
   afterSession: () => {
-    if (config.tauriDriver) config.tauriDriver.kill();
+    if (!tauriDriver) return;
+    killDriverTree(tauriDriver);
+    unregisterDriverPid(pidRegistryDir(repoRoot), currentCid, tauriDriver.pid);
+    tauriDriver = undefined;
+  },
+  // Scoped to *this* worker's own cid — see reap.js: other workers can still
+  // be legitimately mid-session in the same shared registry, and sweeping the
+  // whole thing here (tried first) killed a sibling's still-running driver
+  // out from under it.
+  onWorkerEnd: (cid) => {
+    reapRegisteredDriversForCid(pidRegistryDir(repoRoot), cid);
+  },
+  // Safe to reap everything here: nothing is still mid-session once
+  // `onComplete` runs.
+  onComplete: () => {
+    reapRegisteredDrivers(pidRegistryDir(repoRoot));
   },
 };

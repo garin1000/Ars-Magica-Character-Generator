@@ -27,7 +27,10 @@ import { driverPorts } from './driver.js';
  * native WebDriver ports (`driver.js`), the save/export fixtures, and the
  * app's own settings file (see each config's `beforeSession`).
  */
-const MAX_WORKERS = 4;
+// Exported so each config's `onPrepare` can hand the same number to
+// `allDriverPorts` (`driver.js`) for the port preflight — it must check every
+// port this run's workers might actually bind, not just worker 0's.
+export const MAX_WORKERS = 4;
 
 /**
  * The fields both wdio configs share verbatim, plus the one `capabilities`

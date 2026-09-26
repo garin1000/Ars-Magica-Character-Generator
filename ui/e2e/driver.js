@@ -75,6 +75,25 @@ export function driverPorts(workerIndex) {
 }
 
 /**
+ * Every port this run's workers are about to bind: both ports for worker 0
+ * through `count - 1`. What the port preflight (`ports.js`) checks in
+ * `onPrepare`, before either config spawns its own tauri-driver, so a stale
+ * driver left holding one of these ports from a previous run is refused
+ * immediately instead of hanging the full session-creation timeout.
+ *
+ * @param {number} count number of workers this run's `maxInstances` allows
+ * @returns {number[]}
+ */
+export function allDriverPorts(count) {
+  const ports = [];
+  for (let worker = 0; worker < count; worker += 1) {
+    const { port, nativePort } = driverPorts(worker);
+    ports.push(port, nativePort);
+  }
+  return ports;
+}
+
+/**
  * The suffix that makes a per-worker file name, or `''` for a lone worker.
  *
  * Specs import the save/export fixture paths as module constants and are
@@ -162,6 +181,14 @@ export async function startWorkerDriver(config, cid, extraEnv = {}) {
     {
       stdio: [null, process.stdout, process.stderr],
       env: { ...process.env, ...extraEnv },
+      // Makes tauri-driver the leader of its own process group (POSIX
+      // `setsid`) rather than sharing this worker's group. WebKitWebDriver,
+      // which tauri-driver spawns as its own child, inherits that new group
+      // id — so `reap.js`'s `killDriverTree` can terminate both by signalling
+      // the negative pid (the whole group) even if tauri-driver itself never
+      // forwards the signal to its child before exiting. See docs/open-todos.md,
+      // "the e2e harness leaks its driver processes".
+      detached: true,
     },
   );
   config.port = port;

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  allDriverPorts,
   driverPorts,
   waitForPort,
   workerConfigHome,
@@ -67,6 +68,28 @@ describe('driverPorts', () => {
       expect(port).toBeLessThan(65536);
       expect(nativePort).toBeLessThan(65536);
     }
+  });
+});
+
+describe('allDriverPorts', () => {
+  // What the port preflight (`ports.js`) checks before either config spawns
+  // its own tauri-driver: every port this run's workers are about to bind,
+  // worker 0 through `count - 1`.
+  it('lists both ports for every worker up to count', () => {
+    expect(allDriverPorts(2)).toEqual([
+      driverPorts(0).port,
+      driverPorts(0).nativePort,
+      driverPorts(1).port,
+      driverPorts(1).nativePort,
+    ]);
+  });
+
+  it('is empty for zero workers', () => {
+    expect(allDriverPorts(0)).toEqual([]);
+  });
+
+  it('includes the historical 4444/4445 pair for at least one worker', () => {
+    expect(allDriverPorts(1)).toEqual([4444, 4445]);
   });
 });
 
