@@ -6894,6 +6894,98 @@ fn a_magus_with_no_house_yet_only_warns_on_primogeniture_lineage() {
     );
 }
 
+// --- Vendetta's hedged House restriction is a warning, not an error --------
+// (F-533/F-550, D16, Q-115, Q-139)
+//
+// > "This Flaw is generally restricted to magi of House Verditius, as the
+// > custom of vendetta is limited to that House."
+// > — ArMDE:6957 (entry ArMDE:6955-6958)
+//
+// Unlike Primogeniture Lineage's unhedged "can only be taken by", this passage
+// HEDGES ("generally restricted"), and D16 maps a hedge to a warning rather
+// than an error. `flaw.vendetta` therefore carries the restriction as
+// `advisory_prerequisites` — a tree separate from the hard `prerequisites`
+// one, so the same `Prereq::House` leaf reports through the new
+// `advisory_prereq_not_met` (warning) code rather than `prereq_not_met`
+// (error). The Flaw's own magus half (Q-139, unhedged) is deliberately NOT
+// encoded here — that is slice X5's job, which this machinery unblocks.
+
+/// The issue codes raised against `flaw.vendetta` itself.
+fn vendetta_codes(rs: &Ruleset, e: &Entity) -> Vec<String> {
+    let id = Id::new("flaw.vendetta");
+    validate(e, rs)
+        .issues
+        .into_iter()
+        .filter(|i| i.context.as_ref() == Some(&id))
+        .map(|i| i.code)
+        .collect()
+}
+
+/// The data itself, pinned so a later sweep cannot quietly drop the hedge or
+/// promote it back to a hard block.
+#[test]
+fn vendetta_ships_an_advisory_house_verditius_restriction() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("flaw.vendetta"))
+        .expect("flaw.vendetta must ship in the catalogue");
+    assert_eq!(
+        item.advisory_prerequisites.as_ref(),
+        Some(&Prereq::House(Id::new("house.verditius"))),
+        "`ArMDE:6957` hedges (\"generally restricted\"), so D16 maps it to an \
+         advisory, never a hard `prerequisites` entry"
+    );
+}
+
+/// The character the Flaw is written for: no warning at all.
+#[test]
+fn a_verditius_magus_holding_vendetta_gets_no_advisory_warning() {
+    let rs = load_ruleset();
+    let mut e = entity("magus", vec![Selection::new(Id::new("flaw.vendetta"))]);
+    e.house = Some(Id::new("house.verditius"));
+
+    let codes = vendetta_codes(&rs, &e);
+    assert!(
+        codes.is_empty(),
+        "a Verditius magus is exactly who this Flaw is written for: {codes:?}"
+    );
+}
+
+/// The finding: a magus of another House now gets a WARNING naming the item —
+/// never the hard `prereq_not_met` error, because the passage hedges.
+#[test]
+fn a_magus_of_another_house_holding_vendetta_gets_an_advisory_warning_not_an_error() {
+    let rs = load_ruleset();
+    let mut e = entity("magus", vec![Selection::new(Id::new("flaw.vendetta"))]);
+    e.house = Some(Id::new("house.flambeau"));
+
+    let codes = vendetta_codes(&rs, &e);
+    assert!(
+        codes.contains(&"advisory_prereq_not_met".to_string()),
+        "the hedge is a warning: {codes:?}"
+    );
+    assert!(
+        !codes.contains(&"prereq_not_met".to_string()),
+        "a hedged restriction must never surface as the hard error code: {codes:?}"
+    );
+}
+
+/// A companion has no House at all: the leaf is `Unknown`, and D16's hedge is
+/// only worth flagging on a DEFINITE mismatch — an unresolved one stays
+/// silent, unlike the hard tree's `prereq_unevaluated`.
+#[test]
+fn a_companion_holding_vendetta_with_no_house_gets_no_advisory_warning() {
+    let rs = load_ruleset();
+    let e = entity("companion", vec![Selection::new(Id::new("flaw.vendetta"))]);
+    assert!(e.house.is_none(), "the fixture must set no House");
+
+    let codes = vendetta_codes(&rs, &e);
+    assert!(
+        !codes.contains(&"advisory_prereq_not_met".to_string()),
+        "an unresolved hedge must not warn: {codes:?}"
+    );
+}
+
 // --- A grog's Supernatural restriction had no source, and is gone (row 20) ---
 //
 // The grog profile forbade `supernatural` and left it off `permitted_categories`

@@ -54,6 +54,25 @@ pub(crate) fn validate_prerequisites(
                 _ => {}
             }
         }
+
+        // A HEDGED restriction (F-550/D16/Q-115): evaluated by the same
+        // tri-state machinery, on its OWN tree so it can never interact with
+        // the hard one under All/Any/Nor. Only a definite False is worth
+        // surfacing — an Unknown means the hedge cannot yet be resolved (e.g.
+        // no House set yet), and D16 hedges to a warning on a stated
+        // violation, not to a nag about missing data the way the hard tree's
+        // `prereq_unevaluated` does.
+        if let Some(ref advisory) = item.advisory_prerequisites {
+            let (outcome, _) = ctx.evaluate(advisory);
+            if outcome == Tri::False {
+                issues.push(ValidationIssue::warning(
+                    ValidationIssue::CODE_ADVISORY_PREREQ_NOT_MET,
+                    CreationPhase::VirtuesFlaws,
+                    args([("item", selection.item_ref.to_string())]),
+                    Some(selection.item_ref.clone()),
+                ));
+            }
+        }
     }
 }
 

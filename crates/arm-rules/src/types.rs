@@ -2285,6 +2285,28 @@ pub struct PointItem {
     /// Prerequisite expression that must hold for this item to be legal.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub prerequisites: Option<Prereq>,
+    /// A HEDGED prerequisite — the rulebook's own "generally", "normally",
+    /// "should" rather than "may not"/"only" (F-550/D16/Q-115). Evaluated by
+    /// the same [`Prereq`] tri-state machinery as `prerequisites`, but a
+    /// `Tri::False` reports the non-blocking `advisory_prereq_not_met` warning
+    /// (`validation/prereq.rs::validate_prerequisites`) instead of the hard
+    /// `prereq_not_met` error; a `Tri::Unknown` stays silent (unlike the hard
+    /// tree's `prereq_unevaluated`), since a hedge that cannot yet be resolved
+    /// is not something D16 asks the engine to nag about.
+    ///
+    /// A sibling field, not a wrapper `Prereq` variant: the hard and advisory
+    /// trees are evaluated independently, so no new fold semantics are needed
+    /// for what a `Prereq::All`/`Any`/`Nor` containing a "soft" child would
+    /// even mean. It is fully additive over the wire — every existing entry's
+    /// JSON is unchanged, since this defaults to absent — and the UI needs no
+    /// parity guard the way a new `Prereq` variant would
+    /// (`ui/src/lib/prereq-parity.test.ts`), because `Prereq` itself did not
+    /// change.
+    ///
+    /// First carrier: `flaw.vendetta` (ArMDE:6957, "generally restricted to
+    /// magi of House Verditius").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub advisory_prerequisites: Option<Prereq>,
     /// Items that may not be selected alongside this one (must be symmetric).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub incompatible_with: BTreeSet<Id>,
@@ -2428,6 +2450,8 @@ struct PointItemRepr {
     #[serde(default)]
     prerequisites: Option<Prereq>,
     #[serde(default)]
+    advisory_prerequisites: Option<Prereq>,
+    #[serde(default)]
     incompatible_with: BTreeSet<Id>,
     #[serde(default)]
     parameters: Vec<ParameterDef>,
@@ -2458,6 +2482,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             tainted,
             entity_kinds,
             prerequisites,
+            advisory_prerequisites,
             incompatible_with,
             parameters,
             effects,
@@ -2491,6 +2516,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             tainted,
             entity_kinds,
             prerequisites,
+            advisory_prerequisites,
             incompatible_with,
             parameters,
             effects,

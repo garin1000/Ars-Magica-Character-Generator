@@ -1096,6 +1096,7 @@ issue-too_many_tainted_flaws = Mehr als die Hälfte deiner Fehlerpunkte sind bef
 issue-too_large_share = { $item } macht einen größeren Anteil deiner Punkte aus, als die Regeln erlauben ({ $points } von { $total }).
 issue-prereq_not_met = Voraussetzung für { $item } nicht erfüllt.
 issue-prereq_unevaluated = Voraussetzung für { $item } konnte noch nicht geprüft werden.
+issue-advisory_prereq_not_met = Voraussetzung für { $item } ist normalerweise nicht erfüllt.
 issue-incompatible = { $item } ist mit { $other } unvereinbar.
 issue-forbidden_category = { $item } gehört zu einer verbotenen Kategorie ({ $category }).
 issue-category_not_permitted = { $item } ist in keiner erlaubten Kategorie ({ $category }).

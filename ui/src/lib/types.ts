@@ -305,6 +305,12 @@ export interface PointItem {
   // engine reads as "any kind".
   entity_kinds?: EntityKind[];
   prerequisites?: Prereq;
+  // A HEDGED prerequisite ("generally", "normally" restricted) — F-550/D16.
+  // Evaluated the same way as `prerequisites`, but a failure is reported as
+  // the `advisory_prereq_not_met` warning rather than the `prereq_not_met`
+  // error; unevaluable stays silent (no `..._unevaluated` twin). Omitted when
+  // absent, which is every entry except `flaw.vendetta`.
+  advisory_prerequisites?: Prereq;
   // Items that may not be selected alongside this one. Symmetric (the engine
   // rejects a ruleset whose declarations are one-sided) and omitted when empty.
   incompatible_with?: string[];

@@ -3020,6 +3020,7 @@
     "categories": ["story"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "advisory_prerequisites": { "kind": "house", "value": "house.verditius" },
     "source": { "anchor": "vendetta", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6955, 6958] }
   },
   {

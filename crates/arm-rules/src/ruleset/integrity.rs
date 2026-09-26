@@ -120,6 +120,9 @@ impl Ruleset {
             if let Some(ref prereq) = item.prerequisites {
                 self.validate_prereq_refs(prereq, id.as_str(), 1, errors);
             }
+            if let Some(ref advisory) = item.advisory_prerequisites {
+                self.validate_prereq_refs(advisory, id.as_str(), 1, errors);
+            }
 
             for incompat_id in &item.incompatible_with {
                 if !self.point_items.contains_key(incompat_id) {

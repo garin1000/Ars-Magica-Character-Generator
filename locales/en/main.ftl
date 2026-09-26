@@ -1039,6 +1039,7 @@ issue-too_many_tainted_flaws = More than half your Flaw points are Tainted ({ $t
 issue-too_large_share = { $item } accounts for more of your points than the rules allow it to ({ $points } of { $total }).
 issue-prereq_not_met = Prerequisite not met for { $item }.
 issue-prereq_unevaluated = Prerequisite for { $item } could not be checked yet.
+issue-advisory_prereq_not_met = Prerequisite for { $item } is not normally met.
 issue-incompatible = { $item } is incompatible with { $other }.
 issue-forbidden_category = { $item } belongs to a forbidden category ({ $category }).
 issue-category_not_permitted = { $item } is not in a permitted category ({ $category }).

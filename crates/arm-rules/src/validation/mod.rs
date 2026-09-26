@@ -150,6 +150,7 @@ impl fmt::Display for IssueSeverity {
 /// | `too_many_<category>_virtues`† | error or warning | virtues_flaws | `count`, `max` |
 /// | `prereq_not_met` | error | virtues_flaws | `item` |
 /// | `prereq_unevaluated` | warning | virtues_flaws | `item` |
+/// | `advisory_prereq_not_met` | warning | virtues_flaws | `item` |
 /// | `incompatible` | error | virtues_flaws | `item`, `other` |
 /// | `category_not_permitted` | error | virtues_flaws | `item`, `category` |
 /// | `forbidden_category` | error | virtues_flaws | `item`, `category` |
@@ -355,6 +356,11 @@ impl ValidationIssue {
     pub const CODE_PREREQ_NOT_MET: &'static str = "prereq_not_met";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_PREREQ_UNEVALUATED: &'static str = "prereq_unevaluated";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the item's
+    /// `advisory_prerequisites` tree evaluated to a definite False — a HEDGED
+    /// restriction ("generally", "normally") the rulebook states but does not
+    /// make absolute (F-550/D16/Q-115), unlike `prereq_not_met`'s hard tree.
+    pub const CODE_ADVISORY_PREREQ_NOT_MET: &'static str = "advisory_prereq_not_met";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_INCOMPATIBLE: &'static str = "incompatible";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -4922,6 +4928,107 @@ mod tests {
         assert!(
             !warning_codes.contains(&"prereq_unevaluated"),
             "a definite False must not warn: {warning_codes:?}"
+        );
+    }
+
+    // --- F-550/Q8: `advisory_prerequisites` — a hedged restriction is a
+    // warning, never an error (D16), on a separate tree from the hard one so
+    // the two never interact under All/Any/Nor. -----------------------------
+
+    #[test]
+    fn advisory_prereq_failure_warns_while_a_sibling_hard_prereq_still_errors() {
+        // Two items in one ruleset: `virtue.hard`'s House restriction is a
+        // `prerequisites` tree (unhedged, must still error) and `virtue.soft`'s
+        // is an `advisory_prerequisites` tree (hedged, must only warn). Proves
+        // the two mechanisms coexist without either softening or hardening the
+        // other.
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          {"id": "virtue.hard", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "prerequisites": {"kind": "house", "value": "house.bjornaer"}},
+          {"id": "virtue.soft", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "advisory_prerequisites": {"kind": "house", "value": "house.bjornaer"}}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = rs_with_houses(items, types);
+        let mut entity = make_entity("test_type", vec![sel("virtue.hard"), sel("virtue.soft")]);
+        entity.house = Some(Id::new("house.x"));
+
+        let result = validate(&entity, &rs);
+        let every_code = all_codes(&result);
+        assert!(
+            every_code.contains(&"prereq_not_met".to_string()),
+            "the hard prereq must still error: {every_code:?}"
+        );
+        assert!(
+            every_code.contains(&"advisory_prereq_not_met".to_string()),
+            "the hedged one must warn under its own code: {every_code:?}"
+        );
+
+        let soft_issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == "advisory_prereq_not_met")
+            .expect("advisory_prereq_not_met issue");
+        assert_eq!(soft_issue.severity, IssueSeverity::Warning);
+        assert_eq!(soft_issue.context, Some(Id::new("virtue.soft")));
+    }
+
+    #[test]
+    fn advisory_prereq_met_produces_no_warning() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          {"id": "virtue.soft", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "advisory_prerequisites": {"kind": "house", "value": "house.bjornaer"}}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = rs_with_houses(items, types);
+        let mut entity = make_entity("test_type", vec![sel("virtue.soft")]);
+        entity.house = Some(Id::new("house.bjornaer"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !all_codes(&result).contains(&"advisory_prereq_not_met".to_string()),
+            "a matching house satisfies the hedge: {:?}",
+            all_codes(&result)
+        );
+    }
+
+    #[test]
+    fn advisory_prereq_unknown_house_does_not_warn() {
+        // No house at all (e.g. a non-magus): the leaf is `Unknown`, and D16's
+        // hedge is only worth flagging on a DEFINITE mismatch, unlike the hard
+        // tree's `prereq_unevaluated`, which does warn on Unknown.
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          {"id": "virtue.soft", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "advisory_prerequisites": {"kind": "house", "value": "house.bjornaer"}}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = rs_with_houses(items, types);
+        let entity = make_entity("test_type", vec![sel("virtue.soft")]);
+        assert!(entity.house.is_none(), "the fixture must set no House");
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !all_codes(&result).contains(&"advisory_prereq_not_met".to_string()),
+            "an unresolved hedge must not warn: {:?}",
+            all_codes(&result)
         );
     }
 

@@ -190,6 +190,37 @@ describe('ValidationPanel', () => {
     expect(body).toMatch(/Tugend|Fehler/);
   });
 
+  // F-550/Q8: D16's hedged->warning rule needed a Prereq-level carrier at the
+  // entry level; `advisory_prereq_not_met` (flaw.vendetta's House Verditius
+  // hedge, F-533) is its first one. Proves the new code needs no special-case
+  // UI code — it renders like any other warning through the generic
+  // `issue-<code>` lookup, in both locales.
+  it('renders the advisory prerequisite warning through Fluent, in both locales', () => {
+    store.result = {
+      issues: [
+        issue('advisory_prereq_not_met', 'virtues_flaws', 'warning', {
+          item: 'flaw.vendetta',
+        }),
+      ],
+    };
+
+    const enBody = render(ValidationPanel).body;
+    const enText = issueMarkup(enBody, 'advisory_prereq_not_met');
+    // Not just the generic severity badge (that would pass even with no
+    // `issue-<code>` message at all): the actual wording, proving the message
+    // itself resolved rather than falling back to the raw Fluent id.
+    expect(enText).not.toContain('issue-advisory_prereq_not_met');
+    expect(enText).toMatch(/normally met/i);
+    expect(enText).toMatch(/<span class="issue-severity">Warning:<\/span> /);
+
+    store.lang = 'de';
+    const deBody = render(ValidationPanel).body;
+    const deText = issueMarkup(deBody, 'advisory_prereq_not_met');
+    expect(deText).not.toContain('issue-advisory_prereq_not_met');
+    expect(deText).toMatch(/normalerweise nicht erfüllt/);
+    expect(deText).toMatch(/<span class="issue-severity">Warnung:<\/span> /);
+  });
+
   // S2 (tmp/review/review-round-2-sabine.md): round 1's fix made the severity
   // prefix `sr-only`, which is invisible to SIGHTED users — so a colourblind
   // sighted user still had only the border/background hue swap to go on,

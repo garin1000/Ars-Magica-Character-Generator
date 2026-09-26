@@ -631,6 +631,50 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   positioning with no mechanical hook. Locked by
   `primogeniture_lineage_requires_a_magus_of_house_verditius` and the five
   behavioural tests beside it in `tests/data_integrity.rs`.
+- **Vendetta's House restriction HEDGES, unlike Primogeniture Lineage's, and a
+  hedge is a warning, never an error (F-533/F-550, D16, Q-115, Q-139).**
+
+  > "This Flaw is generally restricted to magi of House Verditius, as the
+  > custom of vendetta is limited to that House."
+  > — ArMDE:6957 (entry ArMDE:6955-6958)
+
+  Where Primogeniture Lineage's "can only be taken by" is absolute, this
+  passage says "**generally** restricted" — D16's rule is that the engine's
+  push must match the book's, so a hedge gets a warning, not a hard block.
+  `Prereq` had no warning severity to carry that (F-550): `prereq_not_met` is
+  unconditionally an error. The fix is a sibling field, not a wrapper `Prereq`
+  variant — `PointItem::advisory_prerequisites` (`types.rs`), a second,
+  independent tree evaluated by the same tri-state
+  `validation/prereq.rs::evaluate_prereq`, whose `Tri::False` reports the new
+  `advisory_prereq_not_met` (warning) code instead of `prereq_not_met` (error).
+  A sibling field rather than a `Prereq::Advisory(Box<Prereq>)` wrapper because
+  the hard and advisory trees never need to compose under `All`/`Any`/`Nor` —
+  what a "soft" child inside a hard boolean expression would even mean is
+  exactly the ambiguity a second, wholly independent tree avoids — and because
+  it needs no UI parity guard the way a new `Prereq` variant would
+  (`ui/src/lib/prereq-parity.test.ts` diffs the `Prereq` union itself, which is
+  unchanged). `Tri::Unknown` stays silent on the advisory tree (no
+  `..._unevaluated` twin): D16 hedges a STATED violation into a warning, it
+  does not ask the engine to nag about data it cannot yet see.
+
+  Data: `rules/core/virtues_flaws.json` — `flaw.vendetta` carries
+  `advisory_prerequisites: House(house.verditius)`. The Flaw's own magus half
+  (Q-139: unhedged, "The magus is engaged in…") is deliberately NOT encoded
+  here — a hard `prerequisites: IsMagus` is slice X5's job, which this
+  machinery unblocks. Tests: `vendetta_ships_an_advisory_house_verditius_restriction`
+  and the three behavioural tests beside it in `tests/data_integrity.rs`.
+
+  **Other hedges this same machinery is now owed to, not yet paid**: Q-115
+  names `flaw.inscribed_shadow` (ArMDE:6320, "generally restricted" to House
+  Criamon) as the population's other member — same shape, unencoded, no slice
+  assigned yet. D44 (Q-19) considered a warning for `virtue.gentle_gift` /
+  `flaw.blatant_gift`'s unstated `incompatible_with` but ruled the OPPOSITE way
+  — a hard block stays, because the pair is *entailed* contradiction, not a
+  hedge — so it is not a live carrier. D16's own Q-05 (20 sex-restricted
+  Virtues) and Q-123 (`flaw.night_terrors`, `flaw.oath_of_fealty`) are hedges
+  too, but of a different shape — text-only-by-design, and a profile-level
+  `forbidden_traits` softening, respectively — neither is a `Prereq`, so
+  neither is a carrier for this mechanism either.
 - **Membership uses the whole list, unless a `taken_as` selection narrows it —
   and browsing always uses the whole list.** Every rule that asks "is this item
   of category X" is a membership test over `PointItem::categories_for` (row 19,
@@ -1053,7 +1097,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :194) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :213) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
