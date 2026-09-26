@@ -3,6 +3,10 @@
 **Approved by Norbert, 2026-09-26** (rev. 3, after two Fable plan-review rounds:
 25 findings, then 7 minor — all applied).
 
+**Status, 2026-09-26: first round DONE** (`6f34a70`…`0ef6dbd`): M0, Phase 1
+(Q1–Q12, Q3b, Q4b, E2, U0), Phase 1S (S1–S4), A0–A2, U6, E1. Next: Group C (C0).
+Open: N1, N4–N7.
+
 ## Context
 
 The V/F audit's checking pass is complete (D1–D58, 0 open questions); what remains
