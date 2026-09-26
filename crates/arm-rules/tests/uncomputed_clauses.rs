@@ -64,7 +64,9 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
+use regex::Regex;
 use serde_json::Value;
 
 /// Rulebook terms for the botch-dice mechanic, lowercased. `botch` covers
@@ -165,12 +167,18 @@ fn has_botch_term(s: &str) -> bool {
 ///   it also swallows "may be taken multiple times", a repeatability rule the
 ///   engine *does* compute (`max_per_target`), so it would flag most of the
 ///   catalogue and teach nothing.
-/// - **German negation is discontinuous**, so a contiguous substring cannot
-///   express "cannot <verb>" in general: the books' own "kannst aber nicht an
-///   Wunden oder Alter sterben" is invisible to `nicht sterben`. The list
-///   carries the contiguous spelling the books also write plainly, and the gap
-///   is a known limit of a substring screen — never a reason to reword shipped
-///   text.
+/// - **German negation is discontinuous**, so a literal like `nicht sterben`
+///   cannot express "cannot <verb>" in general: the books' own "kannst aber
+///   nicht an Wunden oder Alter sterben" puts a whole clause between the two
+///   halves, invisible to a fixed two-word phrase. The list below carries only
+///   the contiguous spelling the books also write plainly. D19
+///   (`docs/vf-audit/decisions.md`) is why each entry compiles as a regex
+///   ([`MECHANICAL_PHRASE_PATTERNS`]) rather than staying a literal substring
+///   — a bounded-gap pattern (`kann\b.{0,N}\bnicht`) *can* express the
+///   discontinuous form, unlike a substring — but adding that pattern is a
+///   new family, not a conversion, so it is slice S2's job, not this one's.
+///   Converting this list to regex without widening what it matches is what
+///   [`regex_matcher_reproduces_the_recorded_s1_before_set`] proves.
 ///
 /// The rounding forms are spelled out rather than stemmed because the obvious
 /// stem, `round`, is also a unit of combat time; `rounded up`/`round up` and
@@ -219,25 +227,42 @@ const MECHANICAL_PHRASES: &[&str] = &[
     "eine magnitude",
 ];
 
-/// True when `s` uses one of [`MECHANICAL_PHRASES`], matched **at a word
-/// boundary on the left**.
+/// [`MECHANICAL_PHRASES`], compiled once as case-insensitive regexes anchored
+/// to a left word boundary — D19 (`docs/vf-audit/decisions.md`): a contiguous
+/// substring screen structurally cannot express German discontinuous
+/// negation, so the screen matches by regex instead. `\b` reproduces the
+/// substring matcher's left-boundary check exactly (no boundary on the
+/// right, for the same reason the substring version had none — see
+/// [`has_mechanical_phrase`]'s doc comment). `LazyLock` compiles the ~30
+/// patterns exactly once rather than once per catalogue entry.
+static MECHANICAL_PHRASE_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
+    MECHANICAL_PHRASES
+        .iter()
+        .map(|phrase| {
+            let pattern = format!(r"(?i)\b{}", regex::escape(phrase));
+            Regex::new(&pattern)
+                .unwrap_or_else(|e| panic!("phrase {phrase:?} compiles as a regex: {e}"))
+        })
+        .collect()
+});
+
+/// True when `s` matches any of [`MECHANICAL_PHRASE_PATTERNS`] — one of
+/// [`MECHANICAL_PHRASES`], anchored at a word boundary on the left.
 ///
-/// The boundary is load-bearing, not tidiness. A bare `contains` reads "or more"
-/// out of "f|or more| details" and so flags every entry whose only sin is
-/// pointing at a supplement — `virtue.factor` and `virtue.fidai` both arrived in
-/// the sweep that way. A phrase crossing a word boundary is a defect in the
-/// screen, and the fix belongs here rather than in a row arguing down prose that
-/// never contained the idiom.
+/// The boundary is load-bearing, not tidiness. A bare substring search reads
+/// "or more" out of "f|or more| details" and so flags every entry whose only
+/// sin is pointing at a supplement — `virtue.factor` and `virtue.fidai` both
+/// arrived in the sweep that way, which is why the regex conversion is proved
+/// inert against exactly those two entries (see
+/// [`regex_matcher_reproduces_the_recorded_s1_before_set`]). A phrase crossing
+/// a word boundary is a defect in the screen, not an idiom to argue down in a
+/// `NO_RULE_DESPITE_TOKEN` row.
 ///
-/// There is deliberately **no** boundary on the right, so a phrase still matches
-/// through a suffix — which is how the `multipli` stem earns its keep.
+/// There is deliberately **no** boundary on the right, so a phrase still
+/// matches through a suffix — which is how the `multipli` stem earns its
+/// keep.
 fn has_mechanical_phrase(s: &str) -> bool {
-    let lower = s.to_lowercase();
-    MECHANICAL_PHRASES.iter().any(|phrase| {
-        lower
-            .match_indices(phrase)
-            .any(|(at, _)| !lower[..at].ends_with(char::is_alphanumeric))
-    })
+    MECHANICAL_PHRASE_PATTERNS.iter().any(|re| re.is_match(s))
 }
 
 /// The guard's detector: does this rules text actually state a mechanical rule?
@@ -751,11 +776,13 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
     // Absolutes — a rule stated as a prohibition carries no number at all.
     // Source: ArMDE:3641 (Death Prophecy). The German clause is the *earlier*
     // sentence of the same passage on purpose: German negation is discontinuous
-    // ("kannst aber nicht an Wunden oder Alter sterben"), so a contiguous
-    // substring cannot express "cannot <verb>" in general, and the spelling the
-    // list can carry is the one the books also write plainly. That is a real
-    // limit of a substring screen, not a reason to reword the shipped text —
-    // see the note on `MECHANICAL_PHRASES`.
+    // ("kannst aber nicht an Wunden oder Alter sterben"), so the fixed literal
+    // "nicht sterben" cannot match it, and the spelling the list can carry is
+    // the one the books also write plainly. The screen now matches by regex
+    // (D19, `docs/vf-audit/decisions.md`), which *can* express the
+    // discontinuous form via a bounded-gap pattern — but adding it is a new
+    // phrase family (slice S2), not something this literal's conversion
+    // grows on its own. See the note on `MECHANICAL_PHRASES`.
     assert!(states_a_mechanical_rule(
         "You heal normally, but cannot die as a result of wounds or old age."
     ));
@@ -814,4 +841,174 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
     assert!(!states_a_mechanical_rule(
         "Der Charakter ist ein Mitglied des niederen Adels."
     ));
+}
+
+/// D19 (`docs/vf-audit/decisions.md`), slice S1: `(narrative_in_swept_blocks,
+/// uncomputed_rule_by_locale)` — the two maps both
+/// [`print_s1_before_offender_set`] and
+/// [`regex_matcher_reproduces_the_recorded_s1_before_set`] need, computed
+/// against whichever [`states_a_mechanical_rule`] is compiled in right now.
+/// Run against the pre-conversion substring matcher, this produced the
+/// committed `tests/fixtures/s1_before_offenders.json`; run against the
+/// regex matcher, it must reproduce that fixture exactly.
+fn compute_s1_offender_set() -> (BTreeMap<String, bool>, BTreeMap<String, bool>) {
+    let mut cache: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut narrative_in_swept_blocks = BTreeMap::new();
+
+    for item in catalogue() {
+        if item["classification"] != "narrative" {
+            continue;
+        }
+        let Some((file, start, end)) = source_of(&item) else {
+            continue;
+        };
+        if !is_swept(&file, start, end) {
+            continue;
+        }
+        let id = item["id"]
+            .as_str()
+            .expect("every entry has a string id")
+            .to_string();
+        let Some(passage) = bracketed_passage(&mut cache, &file, start, end) else {
+            continue;
+        };
+        narrative_in_swept_blocks.insert(id, states_a_mechanical_rule(&passage));
+    }
+
+    let mut uncomputed_rule_by_locale = BTreeMap::new();
+    let ids = ids_classified("uncomputed_rule");
+    let by_language = displayed_rules_text_by_language();
+    for (lang, displayed) in &by_language {
+        for id in &ids {
+            if let Some(text) = displayed.get(id) {
+                uncomputed_rule_by_locale
+                    .insert(format!("{lang}/{id}"), states_a_mechanical_rule(text));
+            }
+        }
+    }
+
+    (narrative_in_swept_blocks, uncomputed_rule_by_locale)
+}
+
+/// D19 slice S1: the exact before-conversion offender set, computed with the
+/// **substring** matcher this slice replaces with regex. Committed as
+/// `tests/fixtures/s1_before_offenders.json` so the regex conversion can be
+/// proved inert against real shipped data — see
+/// [`regex_matcher_reproduces_the_recorded_s1_before_set`] below. This is a
+/// one-shot snapshot helper, not an assertion: it is `#[ignore]`d so it never
+/// runs as part of the suite, and its only job is to reproduce the committed
+/// fixture by hand if the catalogue ever needs re-snapshotting (it must not,
+/// under ordinary use — the fixture is what S1's inert test checks against).
+#[test]
+#[ignore = "one-shot snapshot for D19 S1; run with `-- --ignored --nocapture` \
+            to regenerate the printed set, which must match \
+            tests/fixtures/s1_before_offenders.json"]
+fn print_s1_before_offender_set() {
+    let (narrative_in_swept_blocks, uncomputed_rule_by_locale) = compute_s1_offender_set();
+
+    println!(
+        "narrative_in_swept_blocks ({} entries):",
+        narrative_in_swept_blocks.len()
+    );
+    for (id, flagged) in &narrative_in_swept_blocks {
+        println!("{flagged}\t{id}");
+    }
+    println!(
+        "uncomputed_rule_by_locale ({} entries):",
+        uncomputed_rule_by_locale.len()
+    );
+    for (key, flagged) in &uncomputed_rule_by_locale {
+        println!("{flagged}\t{key}");
+    }
+}
+
+/// The recorded before-set from `tests/fixtures/s1_before_offenders.json`, as
+/// `(narrative_in_swept_blocks, uncomputed_rule_by_locale)` — the same shape
+/// [`compute_s1_offender_set`] returns, so the two are directly comparable.
+fn recorded_s1_before_set() -> (BTreeMap<String, bool>, BTreeMap<String, bool>) {
+    let path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/s1_before_offenders.json");
+    let text =
+        fs::read_to_string(&path).unwrap_or_else(|e| panic!("{} is readable: {e}", path.display()));
+    let value: Value = serde_json::from_str(&text)
+        .unwrap_or_else(|e| panic!("{} is valid JSON: {e}", path.display()));
+
+    let read_bool_map = |key: &str| -> BTreeMap<String, bool> {
+        value[key]
+            .as_object()
+            .unwrap_or_else(|| panic!("{key} is a JSON object in {}", path.display()))
+            .iter()
+            .map(|(id, flag)| {
+                let flag = flag
+                    .as_bool()
+                    .unwrap_or_else(|| panic!("{key}/{id} is a boolean in {}", path.display()));
+                (id.clone(), flag)
+            })
+            .collect()
+    };
+
+    (
+        read_bool_map("narrative_in_swept_blocks"),
+        read_bool_map("uncomputed_rule_by_locale"),
+    )
+}
+
+/// D19's obligation #1 (`docs/vf-audit/decisions.md`): the regex conversion
+/// must reproduce **exactly** the before-set recorded from the substring
+/// matcher, on the real shipped catalogue — not a hand-picked sample. A
+/// widened or narrowed screen would change which entries the two guards
+/// above see, invalidating the measurements B11, B12 and B17 took, and
+/// widening what the screen can see is S2's job, not this slice's.
+#[test]
+fn regex_matcher_reproduces_the_recorded_s1_before_set() {
+    let (expected_narrative, expected_uncomputed) = recorded_s1_before_set();
+    let (actual_narrative, actual_uncomputed) = compute_s1_offender_set();
+
+    let mut mismatches = Vec::new();
+
+    for (id, expected) in &expected_narrative {
+        match actual_narrative.get(id) {
+            None => mismatches.push(format!(
+                "narrative_in_swept_blocks/{id}: recorded but missing from today's catalogue"
+            )),
+            Some(actual) if actual != expected => mismatches.push(format!(
+                "narrative_in_swept_blocks/{id}: expected {expected}, got {actual}"
+            )),
+            Some(_) => {}
+        }
+    }
+    for id in actual_narrative.keys() {
+        if !expected_narrative.contains_key(id) {
+            mismatches.push(format!(
+                "narrative_in_swept_blocks/{id}: in today's catalogue but not in the recorded set"
+            ));
+        }
+    }
+
+    for (key, expected) in &expected_uncomputed {
+        match actual_uncomputed.get(key) {
+            None => mismatches.push(format!(
+                "uncomputed_rule_by_locale/{key}: recorded but missing from today's catalogue"
+            )),
+            Some(actual) if actual != expected => mismatches.push(format!(
+                "uncomputed_rule_by_locale/{key}: expected {expected}, got {actual}"
+            )),
+            Some(_) => {}
+        }
+    }
+    for key in actual_uncomputed.keys() {
+        if !expected_uncomputed.contains_key(key) {
+            mismatches.push(format!(
+                "uncomputed_rule_by_locale/{key}: in today's catalogue but not in the recorded set"
+            ));
+        }
+    }
+
+    assert!(
+        mismatches.is_empty(),
+        "D19 S1 requires the regex conversion to be INERT: it must flag exactly the entries the \
+         substring matcher flagged (tests/fixtures/s1_before_offenders.json), before any new \
+         phrase family is added — that widening is slice S2, not this one. Disagreements:\n{}",
+        mismatches.join("\n")
+    );
 }
