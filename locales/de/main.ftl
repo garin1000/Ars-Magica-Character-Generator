@@ -1024,6 +1024,10 @@ param-label-category = Kategorie
 # Tugend" (rules/source/de/Ars Magica Definitive Edition Basisregeln.md:5083),
 # wörtlich "gewählt werden, entweder als ... oder als ...".
 param-label-taken_as = Gewählt als
+# Welche eingeschränkte Fertigkeitengruppe Custos/Templerexperte/Weise Frau
+# (Weiser Mann) studiert hat — die exklusive Wahl, die ihr
+# `ability_authorization`-Gate ausliest.
+param-label-study = Studium
 
 # Lokalisierte Namen der `ParameterDomain`-Varianten der Engine — die Art von Wert,
 # die ein Parameter-Platzhalter annimmt. Gelesen nur von `unknown_param_value`, das

@@ -504,7 +504,7 @@
     "categories": ["personality"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "ability_authorization", "abilities": ["ability.dead_language"] }],
+    "effects": [{ "type": "ability_authorization", "abilities": [{ "ability": "ability.dead_language", "instance": { "literal": "latin" } }] }],
     "source": { "anchor": "covenant-upbringing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5865, 5868] }
   },
   {
@@ -3783,8 +3783,20 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "study", "type": "ref", "domain": "enumerated", "values": ["ability_category.academic", "ability_category.arcane", "ability_category.martial"] }],
+    "effects": [
+      {
+        "type": "ability_authorization",
+        "categories": [
+          { "category": "academic", "gate": { "param": "study", "equals": "ability_category.academic" } },
+          { "category": "arcane", "gate": { "param": "study", "equals": "ability_category.arcane" } },
+          { "category": "martial", "gate": { "param": "study", "equals": "ability_category.martial" } }
+        ],
+        "abilities": [{ "ability": "ability.dead_language", "instance": { "literal": "latin" } }]
+      }
+    ],
     "source": { "anchor": "custos", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3629, 3634] }
   },
   {
@@ -6107,8 +6119,14 @@
     "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }],
     "effects": [
       {
-        "type": "ability_authorization",
-        "abilities": ["ability.dominion_lore", "ability.faerie_lore", "ability.infernal_lore", "ability.magic_lore"]
+        "type": "ability_bonus_gated",
+        "amount": 2,
+        "targets": [
+          { "ability": "ability.dominion_lore", "gate": { "param": "realm", "equals": "realm.divine" } },
+          { "ability": "ability.faerie_lore", "gate": { "param": "realm", "equals": "realm.faerie" } },
+          { "ability": "ability.infernal_lore", "gate": { "param": "realm", "equals": "realm.infernal" } },
+          { "ability": "ability.magic_lore", "gate": { "param": "realm", "equals": "realm.magic" } }
+        ]
       }
     ],
     "max_total": 255,
@@ -6249,8 +6267,19 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "study", "type": "ref", "domain": "enumerated", "values": ["ability_category.academic", "ability_category.arcane", "ability_category.martial"] }],
+    "effects": [
+      {
+        "type": "ability_authorization",
+        "categories": [
+          { "category": "academic", "gate": { "param": "study", "equals": "ability_category.academic" } },
+          { "category": "arcane", "gate": { "param": "study", "equals": "ability_category.arcane" } },
+          { "category": "martial", "gate": { "param": "study", "equals": "ability_category.martial" } }
+        ]
+      }
+    ],
     "source": { "anchor": "templar-specialist", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5133, 5136] }
   },
   {
@@ -6542,8 +6571,18 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "study", "type": "ref", "domain": "enumerated", "values": ["ability_category.academic", "ability_category.arcane"] }],
+    "effects": [
+      {
+        "type": "ability_authorization",
+        "categories": [
+          { "category": "academic", "gate": { "param": "study", "equals": "ability_category.academic" } },
+          { "category": "arcane", "gate": { "param": "study", "equals": "ability_category.arcane" } }
+        ]
+      }
+    ],
     "source": { "anchor": "wise-one", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5257, 5260] }
   },
   {

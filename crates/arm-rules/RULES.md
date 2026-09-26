@@ -5801,45 +5801,32 @@ Infernal Might + power-levels budget (tested in `arm-app`'s
   was mis-tagged `narrative` from the M5/5a classification pass, so it was
   invisible to that scan and shipped with no `effects` at all — a magus or
   companion taking this Virtue got no mechanical benefit whatsoever.
-- Data: `rules/core/virtues_flaws.json` `virtue.student_of_realm` — reclassified
-  `narrative` → `creation_effect` and given
+- Data (as of this fix): `rules/core/virtues_flaws.json` `virtue.student_of_realm`
+  — reclassified `narrative` → `creation_effect` and given
   `effects: [{ "type": "ability_authorization", "abilities":
   ["ability.dominion_lore", "ability.faerie_lore", "ability.infernal_lore",
-  "ability.magic_lore"] }]`.
-- **Documented approximation, same shape as `flaw.covenant_upbringing`'s Latin
-  proxy (`ArMDE:3543-3547` above).** The Virtue's only parameter is `realm` —
-  free text when this was written, tightened to `domain: "realm"` by E2 (see
-  "The other four realm parameters" above), along with `flaw.bound_to_realm`
-  and `flaw.realm_stigmatic` beside it. Either way the value names a **Realm**,
-  not a Lore Ability, so it cannot be bound to one specific Lore ability the way
-  `Effect::AbilityBonus`'s `param` mechanism requires
-  (`selection.params.get(param) == Some(ability)` in `effective/ability.rs`,
-  which needs the parameter's *value* to literally equal the target ability
-  id). `Effect::AbilityAuthorization`, unlike `AbilityBonus`, is **not**
-  parameter-relative — it is a static `Vec<Id>` — so authorizing all four Lore
-  Abilities unconditionally is expressible without an engine change, at the
-  cost of over-authorizing: taking Student of (Divine) also nominally
-  authorizes buying Faerie/Infernal/Magic Lore at creation. This mirrors the
-  already-accepted "any dead language, not Latin alone" approximation.
-- **The `+2` bonus on the chosen Lore ("all uses of the appropriate Lore") is
-  NOT implemented here.** It genuinely needs the parameter-relative form
-  (`AbilityBonus`), which requires either a second `ability`-domain parameter
-  paired to `realm` (with a validator enforcing the pairing, since nothing
-  today stops selecting realm=Divine with ability=Faerie Lore) or a new
-  realm→Lore-ability resolution in the engine. Both are `crates/arm-rules/src`
-  changes, outside this task's file set (`derive.ts`, `SpellTab.svelte`,
-  `rules/core`, `rules/i18n`, `.github/workflows`, this file) — flagged here as
-  a follow-up, not silently dropped. E2 makes the second of the two tractable:
-  the stored value is now one of four known `Realm`s rather than any word a
-  player might type, so a realm→Lore mapping has something closed to map *from*.
-- **No test added for this fix.** `crates/arm-rules/tests/**` is outside this
-  task's file set (the parallel session owns `crates/arm-app/tests/**`; no
-  `arm-rules` test path was granted). `cargo test -p arm-rules` passed
-  unchanged after this data edit (76 tests, referential integrity intact,
-  `every_vf_is_classified` still green), but there is no regression test
-  pinning that `virtue.student_of_realm` now authorizes the four Lore
-  Abilities — a follow-up task should add one alongside the `+2` bonus fix
-  above.
+  "ability.magic_lore"] }]` — a static, unconditional `Vec<Id>`, since
+  `Effect::AbilityAuthorization` was not yet parameter-relative and the Virtue's
+  `realm` parameter names a **Realm**, not a Lore Ability, so it could not be
+  bound to one specific Lore the way `Effect::AbilityBonus`'s `param` mechanism
+  requires. This shipped two known gaps, recorded at the time as follow-ups:
+  the `+2` bonus on the chosen Lore was not implemented, and the authorization
+  was permissive rather than exact — taking Student of (Divine) also nominally
+  authorized buying Faerie/Infernal/Magic Lore at creation (P4 in
+  `docs/book-template-conformance.md`).
+- **Both gaps are fixed by Phase 2 C1** (`docs/vf-audit/design-c0-parameter-model.md`
+  § 3): see **Access to Academic / Arcane / Martial Abilities** below,
+  "Student of (Realm)'s gated bonus doubles as its own authorization" — the
+  `AbilityBonusGated` effect (targets gated on `realm`) both applies the `+2`
+  and narrows authorization to the one Lore the chosen realm names, replacing
+  the plain `ability_authorization` effect shown above entirely. Regression
+  coverage: `crates/arm-rules/tests/book_templates.rs` (`the_merinita_matches_the_book`,
+  `the_priest_matches_the_book`, `the_witch_matches_the_book`, each now
+  asserting the `X+2` printed score) and
+  `crates/arm-rules/src/validation/authorization.rs`'s
+  `student_of_realm_authorizes_only_the_chosen_realms_lore`. The Puissant-
+  Ability-for-the-same-Lore incompatibility the passage also states remains
+  unmodelled — out of this fix's scope, not silently dropped.
 
 #### Supernatural Might & Magic Resistance (Core Rules; general MR rule from Realms of Power: Magic)
 
@@ -7022,11 +7009,93 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   the grant would otherwise be unspendable. That covers Educated, Warrior, Arcane
   Lore and Privileged Upbringing from their existing data.
 - Wired Virtue/Flaw: `flaw.covenant_upbringing` gains
-  `ability_authorization: [ability.dead_language]` for "You may take Latin at
-  character creation" (`ArMDE:5867`). **Documented approximation:** authorization is by
-  ability id, so this permits any dead language, not Latin alone — the same
-  id-level proxy the `ability_score_grant` effects already use. Other access-granting
-  Virtues are a data addition, never a code change.
+  `ability_authorization: [{ ability: ability.dead_language, instance: { literal: "latin" } }]`
+  for "You may take Latin at character creation" (`ArMDE:5867`). **Phase 2 C1
+  (F-349/F-16x fix):** an id-only proxy previously permitted any dead language,
+  not Latin alone — `AbilityRef`'s `instance` field (`types.rs::AbilityRef`)
+  closes that: `ability_authorizations()` (`effective/xp.rs`) resolves the
+  literal against the bought `AbilityScore::parameter`, so only the instance
+  named actually resolves. Other access-granting Virtues are a data addition,
+  never a code change.
+- **Exclusive-choice and gated entries (W2/F-42/F-317/D14 shape 2, Phase 2
+  C1).** `Effect::AbilityAuthorization.abilities`/`.categories` are
+  `Vec<AbilityRef>`/`Vec<CategoryRef>` (`types.rs`), each optionally carrying a
+  `ParamGate { param, equals }`: an entry counts toward the authorized set only
+  when the OWNING selection's own parameter equals the gated value —
+  conditional list membership, not value substitution (see
+  `docs/vf-audit/design-c0-parameter-model.md` § 3 for why a single
+  parameter-relative binding cannot express "either/or, not both" or a
+  fixed-Lore-list bonus). Three entries use it:
+  - `virtue.wise_one` — "You may take either Arcane or Academic Abilities, but
+    not both, at character creation" (`ArMDE:5259`). A `study` parameter
+    (`domain: enumerated`, values `ability_category.academic`/`ability_category.arcane`)
+    gates two `CategoryRef`s. Choosing `academic` leaves the `arcane` entry's
+    gate false, so it contributes nothing — the naive fix (authorizing both
+    categories unconditionally) would have been an over-permission worse than
+    the original bug, since it is silent.
+  - `virtue.custos` — "either Martial, Academic, or Arcane Abilities. If you
+    choose Martial or Arcane Abilities, you may still learn to speak Latin"
+    (`ArMDE:3629-3634`). Three gated `CategoryRef`s (`study` ∈
+    `{ability_category.academic, ability_category.arcane, ability_category.martial}`)
+    plus one **ungated** `AbilityRef` (`ability.dead_language`, instance
+    `latin`) — gated and ungated entries coexist in one list with no
+    special-casing. The Latin entry is unconditional rather than only firing
+    for Martial/Arcane study, since an Academic choice already covers Latin
+    through its own category authorization; the passage's wording just
+    explains why the two non-Academic choices need the carve-out.
+  - `virtue.templar_specialist` — "one restricted group of Abilities... such
+    as Academic or Martial Abilities" (`ArMDE:5133-5136`). **The open-set
+    decision this note owes** (`docs/vf-audit/design-c0-parameter-model.md`
+    § 3 leaves three readings open): both "such as"-hedged clauses in the
+    passage — "such as craftsmen, blacksmiths, artisans, notaries, squires,
+    soldiers, scribes, or translators" and "such as Academic or Martial
+    Abilities" — give **examples**, not an exhaustive enumeration, unlike Wise
+    One's closed "either...or" and Custos's closed "either...or...or".
+    Deriving a closed set from the named *roles* does not survive scrutiny:
+    the engine has no "craft" `AbilityCategory` to map craftsman/blacksmith/
+    artisan onto (Craft Abilities are `general`, which needs no authorization
+    at all — a role the passage lists as an example of a *restricted* group
+    would then authorize nothing), so a role-based reading is not merely
+    interpretive narrowing, it is internally inconsistent with the engine's
+    own taxonomy. **Chosen instead: the categories the engine actually gates**
+    — `study` ∈ `{ability_category.academic, ability_category.arcane,
+    ability_category.martial}`, matching `rules/core/abilities.json`'s
+    `categories_requiring_virtue` exactly (not `AbilityCategory::ALL` minus
+    `supernatural`, C1's first draft): the passage says "one **restricted**
+    group of Abilities", and `general` needs no Virtue to buy at all
+    (`ArMDE:2315`), so offering it as a "restricted group" choice would
+    authorize nothing and be a meaningless option — the same reasoning that
+    rules out a role-based reading, applied to the category axis instead of
+    the role axis. There is no clean data-model way to *derive* this list
+    from `categories_requiring_virtue` at authoring time — the two live in
+    separate JSON files with no cross-reference mechanism between an
+    `Enumerated` parameter's `values` and another file's global list — so the
+    three ids are hand-authored here and must be kept in sync by hand if
+    `categories_requiring_virtue` ever changes; `data_integrity.rs`'s
+    `ENUMERATED_PARAM_ITEMS` pins the current set, so a future edit to either
+    file that breaks the correspondence is caught by name, not silently. This
+    also makes Templar Specialist's set literally identical to Custos's own
+    three categories (`virtue.custos`, ArMDE:3629-3634) — coincidental in the
+    rulebook's own wording, not engineered, but confirms the reading is not
+    arbitrarily narrow. The third option (`uncomputed_rule` with free `text`)
+    was rejected because the mechanical shape (an exclusive Ability-category
+    authorization) is not genuinely open the way a free-text descriptor is —
+    Wise One and Custos already show the shape closes to a handful of
+    categories, this entry's set is the same size as Custos's, just reached by
+    a different reading of the passage.
+- **Student of (Realm)'s gated bonus doubles as its own authorization
+  (row 50(a), Phase 2 C1 — see below, "Supernatural Might & Magic
+  Resistance" section neighbour `AbilityBonusGated`).** `virtue.student_of_realm`
+  no longer carries a separate `ability_authorization` effect; its single
+  `ability_bonus_gated` effect's four gated targets (one per realm Lore) are
+  folded into the authorized-Ability set the same way an `AbilityAuthorization`
+  entry is — a competence bonus tied to one Ability instance is itself
+  permission to own it, since the bonus could never apply to an Ability the
+  character may not buy. This is what implements the passage's own "You may
+  take that Lore at character generation even if you cannot learn other
+  Arcane Abilities" (`ArMDE:5054`) for **that** Lore only, fixing the previous
+  unconditional four-Lore authorization (P4 in
+  `docs/book-template-conformance.md`).
 - **Supernatural is deliberately excluded** from this check: `ArMDE:2315` says access "is
   granted by a separate Virtue" per Ability, which the stricter, pre-existing
   `validate_supernatural_abilities` / `supernatural_ability_requires_virtue` already

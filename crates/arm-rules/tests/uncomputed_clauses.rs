@@ -1455,11 +1455,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
          ArMDE:3609-3612",
     ),
     (
-        "virtue.custos",
-        "permission + prohibition: \"may take\" restricted Abilities, \"may not take\" \
-         Wealthy/Poor, ArMDE:3629-3634",
-    ),
-    (
         "virtue.eunuch",
         "permission: \"may take\" Academic Abilities, ArMDE:3771-3774",
     ),
@@ -1739,10 +1734,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "permission: \"may take\" Academic Abilities, ArMDE:5109-5112",
     ),
     (
-        "virtue.templar_specialist",
-        "permission: \"may take\" one restricted Ability group, ArMDE:5133-5136",
-    ),
-    (
         "virtue.temporal_influence",
         "eligibility: \"Grogs may not take this Virtue\", ArMDE:5137-5140",
     ),
@@ -1791,11 +1782,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "virtue.wisdom_from_ignorance",
         "capability: books as a training source \"provided they are unable to read the \
          language\", ArMDE:5251-5256",
-    ),
-    (
-        "virtue.wise_one",
-        "permission: \"may take either Arcane or Academic Abilities, but not both\", \
-         ArMDE:5257-5260",
     ),
     // --- Corrected disposition (post-S4 review): these two were briefly
     // parked in NO_RULE_DESPITE_TOKEN, which is wrong — that list certifies
@@ -2173,6 +2159,13 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          \"unless using a Lab Text\".",
     ),
     (
+        "virtue.custos",
+        "single clause (one restricted Ability group, exclusive choice), fully computed via a \
+         gated ability_authorization (Phase 2 C1); \"may not take\" Wealthy/Poor is a separate, \
+         unmodelled incompatibility this screen does not recognize as a mechanical token either \
+         way.",
+    ),
+    (
         "virtue.templar_commander",
         "both stated clauses (Reputation 3, the Temporal Influence + Brother-Knight grant) are \
          computed via grants_reputation and grants_selection; the wealth/tax/judge powers are \
@@ -2185,6 +2178,13 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     (
         "virtue.templar_prestige",
         "single clause (Reputation of level 4), fully computed via grants_reputation.",
+    ),
+    (
+        "virtue.templar_specialist",
+        "single clause (one restricted Ability group), fully computed via a gated \
+         ability_authorization over the three categories categories_requiring_virtue actually \
+         gates (Phase 2 C1's open-set reading of \"such as Academic or Martial\" — see \
+         RULES.md).",
     ),
     (
         "virtue.unaging",
@@ -2202,6 +2202,11 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          wealthy_and_poor_ship_with_their_rates_and_eligibility test covers it, mirroring \
          flaw.poor); the displayed text is silent on any token this screen recognizes — a \
          screen vocabulary gap, not a dropped rule.",
+    ),
+    (
+        "virtue.wise_one",
+        "single clause (either Arcane or Academic, not both), fully computed via an exclusive-\
+         choice-gated ability_authorization (Phase 2 C1, W2/F-349).",
     ),
 ];
 

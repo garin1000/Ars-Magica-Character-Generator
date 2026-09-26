@@ -829,14 +829,13 @@ fn the_merinita_matches_the_book() {
     assert_eq!(art_score(&merinita, &ruleset, "art.imaginem"), 13);
     assert_eq!(art_score(&merinita, &ruleset, "art.mentem"), 5);
 
-    // DISAGREEMENT P3 (docs/book-template-conformance.md) a third time, after the
-    // Priest and the Witch: the book prints "Faerie Lore 3+2" (ArMDE:2029) for
-    // Student of Faerie's "+2 bonus on all uses of the appropriate Lore"
-    // (ArMDE:5054), and `virtue.student_of_realm` carries no `ability_bonus`, so
-    // the engine returns the bare 3.
+    // DISAGREEMENT P3, RESOLVED (docs/book-template-conformance.md): the book
+    // prints "Faerie Lore 3+2" (ArMDE:2029) for Student of Faerie's "+2 bonus
+    // on all uses of the appropriate Lore" (ArMDE:5054); `virtue.student_of_realm`
+    // now carries a gated `ability_bonus_gated`, so the engine matches.
     assert_eq!(
         ability_score(&merinita, &ruleset, "ability.faerie_lore", None),
-        3
+        5
     );
 
     // Soak: -1 (ArMDE:2023).
@@ -1293,8 +1292,9 @@ fn the_priest_matches_the_book() {
     // F1/K1: "You may purchase Academic Abilities during character generation"
     // (ArMDE:4804) is part of the Priest Virtue, but `virtue.priest` carries no
     // effects, so his four Academic Abilities are refused. His *Arcane* one,
-    // Dominion Lore, is accepted — `virtue.student_of_realm` does carry the
-    // authorization (P3).
+    // Dominion Lore, is accepted — `virtue.student_of_realm`'s gated
+    // `ability_bonus_gated` target (realm.divine) authorizes it (P3/P4,
+    // RESOLVED).
     assert_eq!(
         error_codes(&priest, &ruleset),
         codes(&["ability_category_requires_virtue"])
@@ -1310,12 +1310,12 @@ fn the_priest_matches_the_book() {
     );
     assert_eq!(warning_codes(&priest, &ruleset), codes(&[]));
 
-    // DISAGREEMENT P3 (docs/book-template-conformance.md). The book prints
-    // "Dominion Lore 3+2 (angels)" (ArMDE:1517) — a bought 3 plus a fixed Virtue
-    // bonus of 2 (the `X+Y` format, ArMDE:1177), here Student of the Divine: "you
-    // have a +2 bonus on all uses of the appropriate Lore" (ArMDE:5054).
-    // `virtue.student_of_realm` carries the Ability authorization but no
-    // `ability_bonus`, so the engine returns the bare 3.
+    // DISAGREEMENT P3, RESOLVED (docs/book-template-conformance.md). The book
+    // prints "Dominion Lore 3+2 (angels)" (ArMDE:1517) — a bought 3 plus a fixed
+    // Virtue bonus of 2 (the `X+Y` format, ArMDE:1177), here Student of the
+    // Divine: "you have a +2 bonus on all uses of the appropriate Lore"
+    // (ArMDE:5054). `virtue.student_of_realm` now carries a gated
+    // `ability_bonus_gated`, so the engine matches.
     assert_eq!(
         arm_rules::effective::effective_ability_score(
             &priest,
@@ -1323,7 +1323,7 @@ fn the_priest_matches_the_book() {
             &arm_rules::types::Id::new("ability.dominion_lore"),
             None
         ),
-        3
+        5
     );
     // "Sense Holiness and Unholiness 4" (ArMDE:1517) is a Supernatural Ability the
     // character may hold only because a Virtue confers it (ArMDE:4928); that grant is
@@ -1437,9 +1437,9 @@ fn the_witch_matches_the_book() {
     );
     assert_eq!(warning_codes(&witch, &ruleset), codes(&[]));
 
-    // DISAGREEMENT P3 again, on the other side of the same Virtue: the book prints
-    // "Magic Lore 3+2 (regiones)" (ArMDE:1591) for Student of Magic, and the engine
-    // returns the bare 3.
+    // DISAGREEMENT P3, RESOLVED, again on the other side of the same Virtue:
+    // the book prints "Magic Lore 3+2 (regiones)" (ArMDE:1591) for Student of
+    // Magic, and the engine now matches.
     assert_eq!(
         arm_rules::effective::effective_ability_score(
             &witch,
@@ -1447,7 +1447,7 @@ fn the_witch_matches_the_book() {
             &arm_rules::types::Id::new("ability.magic_lore"),
             None
         ),
-        3
+        5
     );
 
     // Soak: +0 (Stamina). Source: ArMDE:1585.

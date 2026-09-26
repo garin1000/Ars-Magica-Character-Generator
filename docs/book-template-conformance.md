@@ -638,7 +638,7 @@ specialization toggle.
   pool is *also* read as authorization, adding it would additionally authorize
   those Abilities — none of which is gated here, so it changes nothing else.
 
-### P3 — Student of (Realm)'s +2 Lore bonus is missing from the rules data
+### P3 — RESOLVED 2026-09-26: Student of (Realm)'s +2 Lore bonus is missing from the rules data
 
 - **Book:** "you have a +2 bonus on all uses of the appropriate Lore"
   (`ArMDE:5054` `#### Student of (Realm)`), which is why the statblock prints
@@ -654,8 +654,14 @@ specialization toggle.
   parameter *is* the ability. The same passage also forbids taking Student of
   (Realm) and Puissant Ability for the same Lore — an incompatibility the data
   does not express either.
+- **Fixed (Phase 2 C1):** `virtue.student_of_realm` now carries one
+  `ability_bonus_gated` effect, one target per Lore, each gated on the entry's
+  own `realm` parameter. The Merinita, Priest and Witch all reproduce their
+  printed `X+2` figure exactly (`docs/vf-audit/design-c0-parameter-model.md`
+  § 3). The Puissant-Ability-for-the-same-Lore incompatibility remains
+  unmodelled — out of C1's scope, not silently dropped.
 
-### P4 — Student of (Realm) authorizes all four Lores, whatever realm it names
+### P4 — RESOLVED 2026-09-26: Student of (Realm) authorizes all four Lores, whatever realm it names
 
 - **Book:** "You may take that Lore at character generation even if you cannot
   learn other Arcane Abilities" (`ArMDE:5054`) — **that** Lore, the one the
@@ -670,6 +676,11 @@ specialization toggle.
   allow. Recorded rather than fixed; note that fixing it would turn three of the
   Witch's Abilities into errors unless her Wise One Arcane access is modelled too
   (W2).
+- **Fixed (Phase 2 C1):** each Lore's `ability_bonus_gated` target is gated on
+  the Virtue's own `realm` parameter (see P3), so `ability_authorizations()`'s
+  gate-active fold now authorizes only the chosen realm's Lore. The Witch's
+  other three Lores (Divine, Faerie, Infernal) are legal again only because W2
+  is fixed in the same slice — Wise One (Arcane) now genuinely authorizes them.
 
 ## The Rogue (`ArMDE:1525-1560` `#### The Rogue`)
 
@@ -722,7 +733,7 @@ not Supernatural, and goes through P4.) No
   Abilities to look right. Adding an academic category authorization alongside the
   existing earmark fixes it.
 
-### W2 — Wise One's "either Arcane or Academic, but not both" is unmodelled
+### W2 — RESOLVED 2026-09-26: Wise One's "either Arcane or Academic, but not both" is unmodelled
 
 - **Book:** "You may take either Arcane or Academic Abilities, but not both, at
   character creation" (`ArMDE:5259` `#### Wise One`). The Witch holds both —
@@ -735,6 +746,20 @@ not Supernatural, and goes through P4.) No
   rule only ever bites a character whose *only* access to a gated category is Wise
   One. Recorded because it is the other half of P4: whoever fixes Student of
   (Realm)'s over-broad authorization has to decide what Wise One grants.
+- **Fixed (Phase 2 C1):** `virtue.wise_one` now carries a `study` parameter
+  (`ability_category.academic`/`ability_category.arcane`) and an
+  `ability_authorization` whose two `CategoryRef`s are gated on it — the same
+  exclusive-choice-by-gate mechanism as Custos and Templar Specialist, decided
+  in `docs/vf-audit/design-c0-parameter-model.md` § 3. The Witch's own fixture
+  now sets `study: ability_category.arcane`, matching her four owned Arcane
+  Abilities. Custos and Templar Specialist (F-42/F-317, previously
+  `narrative`/no effects, not separately tracked in this document) are wired
+  the same way in the same slice; Templar Specialist's "such as Academic or
+  Martial" is modelled as an open choice over the three categories
+  `categories_requiring_virtue` actually gates (Academic/Arcane/Martial —
+  `general` needs no authorization at all, so offering it would be a
+  meaningless option), not a closed two-role reading — see
+  `crates/arm-rules/RULES.md`.
 
 ## Headline result — magi
 
@@ -1560,10 +1585,10 @@ to be read from `rules/core/houses.json`.
 | K4 | Knight | `Etiquette (noble) 3` reverses the declared format (`ArMDE:1480` vs `ArMDE:1177`) | n/a | (c) the book (source formatting) |
 | P1 | Priest | Priest grants Academic access (`ArMDE:4804` `#### Priest`) | `ability_category_requires_virtue` x4 | (a) rules data |
 | P2 | Priest | Well-Traveled grants 50 restricted XP (`ArMDE:5241` `#### Well-Traveled`) | no pool; all 590 must come from the general one | (a) rules data |
-| P3 | Priest, Witch | Student of (Realm) gives +2 on its Lore (`ArMDE:5054` `#### Student of (Realm)`) | Dominion Lore 3, Magic Lore 3 (no bonus) | (a) rules data |
-| P4 | Priest, Witch | Student of (Realm) opens **that** Lore only (`ArMDE:5054`) | authorizes all four Lores | (a) rules data (permissive) |
+| P3 | Priest, Witch | Student of (Realm) gives +2 on its Lore (`ArMDE:5054` `#### Student of (Realm)`) | **RESOLVED 2026-09-26** — `ability_bonus_gated`, gated on `realm`; Dominion/Magic Lore now print `3+2` | (a) rules data |
+| P4 | Priest, Witch | Student of (Realm) opens **that** Lore only (`ArMDE:5054`) | **RESOLVED 2026-09-26** — the same gate authorizes only the chosen realm's Lore | (a) rules data (permissive) |
 | W1 | Witch | Educated grants Academic access *and* 50 XP (`ArMDE:3713` `#### Educated`) | XP only → `ability_category_requires_virtue` on Medicine | (a) rules data |
-| W2 | Witch | Wise One: Arcane **or** Academic, not both (`ArMDE:5259` `#### Wise One`) | not represented | none (capability gap) |
+| W2 | Witch | Wise One: Arcane **or** Academic, not both (`ArMDE:5259` `#### Wise One`) | **RESOLVED 2026-09-26** — `study` param, exclusive-choice gate on two `CategoryRef`s | none (capability gap) |
 | MAG1 | Bjornaer, Mercere | Casting Totals with no conditional bonus applied (`ArMDE:1643-1650`, `ArMDE:1992-1996`) | +3 on every cell: Ways of the (Land), Cyclic Magic (both) and Special Circumstances are all `scope: all` | (a) rules data |
 | MAG2 | Criamon | 7 spells, 120 levels, one of them "Piercing the Magical Veil" (`ArMDE:1745`) | the spell has no entry in the book (`ArMDE:15709`) and none in the catalogue → `spell_levels_unspent` at 100/120 | (d) the book leaves it undefined |
 | MAG3 | Criamon | `Ag 0` in the Arts line (`ArMDE:1733`) | no such Art; the missing slot is Aq, Aquam (`ArMDE:8843`) | (c) the book |

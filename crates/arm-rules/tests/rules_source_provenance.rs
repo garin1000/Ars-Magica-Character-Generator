@@ -283,7 +283,7 @@ fn every_cited_source_file_exists_under_rules_source_en() {
 /// Deliberately a **sidecar** rather than a field on the localized entries in
 /// `virtues_flaws.json`:
 ///
-/// - those entries deserialize into `ruleset.rs::I18nEntry`, whose serialized
+/// - those entries deserialize into `types.rs::I18nEntry`, whose serialized
 ///   shape is a stable IPC contract the frontend binds to, and an extraction
 ///   coordinate has no business crossing that boundary into every tooltip;
 /// - it is provenance, not rules text, and `CLAUDE.md` → "Strict separation of

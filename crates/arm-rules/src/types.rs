@@ -858,6 +858,193 @@ impl ParameterDef {
     }
 }
 
+/// A value bound to a literal, or read from the SAME selection's own parameter
+/// at evaluation time (D14's two forms, `docs/vf-audit/design-c0-parameter-model.md`
+/// § 1). `#[serde(untagged)]`, distinguished by which field is present —
+/// `{ "literal": "latin" }` vs `{ "param": "medium" }` — never by a bare string,
+/// so a value can never be confused with the [`AbilityRef`]/[`CategoryRef`]
+/// shapes that embed it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ParamValue {
+    /// Fixed at authoring time: `ability.dead_language` + `instance:
+    /// { "literal": "latin" }"` (Covenant Upbringing, Custos's spoken-Latin
+    /// carve-out).
+    Literal {
+        /// The fixed instance value.
+        literal: String,
+    },
+    /// Read from `Selection::params[param]` when this effect's owning
+    /// selection is evaluated. `param` must be a key the SAME item declares
+    /// (checked at load, see `ruleset::integrity::validate_gated_ability_refs`).
+    Bound {
+        /// The declaring item's own parameter key to read at evaluation time.
+        param: String,
+    },
+}
+
+impl ParamValue {
+    /// Resolves this value against `selection`'s own parameters: a
+    /// [`Self::Literal`] resolves to itself; a [`Self::Bound`] reads
+    /// `selection.params[param]`, `None` if the key is absent or holds a
+    /// `Multi` value (which names no single instance to read).
+    pub(crate) fn resolve(&self, selection: &Selection) -> Option<String> {
+        match self {
+            ParamValue::Literal { literal } => Some(literal.clone()),
+            ParamValue::Bound { param } => selection
+                .params
+                .get(param)
+                .and_then(SelectionParamValue::as_single)
+                .map(|id| id.as_str().to_string()),
+        }
+    }
+}
+
+/// Names a parameter this item declares and the value that activates a
+/// gated [`AbilityRef`]/[`CategoryRef`] entry — conditional LIST MEMBERSHIP,
+/// not value substitution (see
+/// `docs/vf-audit/design-c0-parameter-model.md` § 3 for why: Wise One/Custos's
+/// options are Ability *categories*, which have no "instance" axis, and Student
+/// of (Realm)'s four Lores are four separate, non-parameterized Ability ids —
+/// neither fits "one parameterized ability absorbing the whole family").
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ParamGate {
+    /// A parameter key the SAME item declares.
+    pub param: String,
+    /// The literal value that activates this entry.
+    pub equals: Id,
+}
+
+impl ParamGate {
+    /// Whether this gate is active for `selection`: its named `param` (on the
+    /// SAME item) currently holds `equals`.
+    fn holds(&self, selection: &Selection) -> bool {
+        selection
+            .params
+            .get(&self.param)
+            .and_then(SelectionParamValue::as_single)
+            == Some(&self.equals)
+    }
+}
+
+/// An Ability id inside an [`Effect::AbilityAuthorization`] /
+/// [`Effect::AbilityBonusGated`] list, carrying D14's two constraints.
+/// Deserializes from a bare string for the common, unconstrained case, and
+/// serializes back to one whenever both fields are absent — so a plain
+/// `"ability.awareness"`-style entry stays byte-identical.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum AbilityRef {
+    /// A plain, unconstrained ability id.
+    Bare(Id),
+    /// A scoped reference: optionally restricted to one instance, and/or
+    /// active only when a [`ParamGate`] holds.
+    Scoped {
+        /// The referenced ability id.
+        ability: Id,
+        /// D14 shape 1: restricts to ONE instance of a *parameterized* Ability
+        /// (`ability.dead_language` + `instance: { "literal": "latin" }`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        instance: Option<ParamValue>,
+        /// This entry is authorized/active only when the OWN selection's
+        /// gate holds. Absent = unconditional.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gate: Option<ParamGate>,
+    },
+}
+
+impl AbilityRef {
+    /// The referenced ability id, regardless of variant.
+    pub(crate) fn ability(&self) -> &Id {
+        match self {
+            AbilityRef::Bare(id) => id,
+            AbilityRef::Scoped { ability, .. } => ability,
+        }
+    }
+
+    /// The instance constraint this entry declares, unresolved — `None` for a
+    /// plain (any-instance) reference.
+    pub(crate) fn instance(&self) -> Option<&ParamValue> {
+        match self {
+            AbilityRef::Bare(_) => None,
+            AbilityRef::Scoped { instance, .. } => instance.as_ref(),
+        }
+    }
+
+    /// The gate narrowing when this entry is active — `None` for an
+    /// unconditional reference.
+    pub(crate) fn gate(&self) -> Option<&ParamGate> {
+        match self {
+            AbilityRef::Bare(_) => None,
+            AbilityRef::Scoped { gate, .. } => gate.as_ref(),
+        }
+    }
+
+    /// Whether this entry counts for `selection`: unconditional, or its gate
+    /// holds. F-349's fix reads on this — an entry whose gate does not hold
+    /// contributes nothing, by construction (see
+    /// `docs/vf-audit/design-c0-parameter-model.md` § 3).
+    pub(crate) fn active_for(&self, selection: &Selection) -> bool {
+        match self.gate() {
+            None => true,
+            Some(gate) => gate.holds(selection),
+        }
+    }
+
+    /// The instance this entry restricts to, resolved against `selection` —
+    /// `None` for a plain (any-instance) reference.
+    pub(crate) fn resolved_instance(&self, selection: &Selection) -> Option<String> {
+        self.instance().and_then(|v| v.resolve(selection))
+    }
+}
+
+/// An Ability *category* inside an [`Effect::AbilityAuthorization`] list, with
+/// the same gate as [`AbilityRef`] (D14 shape 2 / W2's exclusive choice,
+/// category-scoped rather than id-scoped: Wise One, Custos, Templar
+/// Specialist).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CategoryRef {
+    /// A plain, unconstrained category.
+    Bare(AbilityCategory),
+    /// A category active only when a [`ParamGate`] holds.
+    Scoped {
+        /// The referenced category.
+        category: AbilityCategory,
+        /// This entry is authorized only when the OWN selection's gate holds.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gate: Option<ParamGate>,
+    },
+}
+
+impl CategoryRef {
+    /// The referenced category, regardless of variant.
+    pub(crate) fn category(&self) -> AbilityCategory {
+        match self {
+            CategoryRef::Bare(c) => *c,
+            CategoryRef::Scoped { category, .. } => *category,
+        }
+    }
+
+    /// The gate narrowing when this entry is active — `None` for an
+    /// unconditional reference.
+    pub(crate) fn gate(&self) -> Option<&ParamGate> {
+        match self {
+            CategoryRef::Bare(_) => None,
+            CategoryRef::Scoped { gate, .. } => gate.as_ref(),
+        }
+    }
+
+    /// Whether this entry counts for `selection`: unconditional, or its gate
+    /// holds.
+    pub(crate) fn active_for(&self, selection: &Selection) -> bool {
+        match self.gate() {
+            None => true,
+            Some(gate) => gate.holds(selection),
+        }
+    }
+}
+
 /// A mechanical effect a virtue/flaw applies to a character's scores.
 ///
 /// Effects are *parameter-relative*: each names the parameter key (see
@@ -1056,13 +1243,43 @@ pub enum Effect {
     /// funds (Warrior, Arcane Lore), since the grant would otherwise be unspendable.
     ///
     /// Source: ArMDE:2315.
+    ///
+    /// Each entry may be gated on the declaring item's own parameter (D14 shape
+    /// 1/2, W2's exclusive choice — see [`AbilityRef`]/[`CategoryRef`]): an
+    /// entry whose gate does not hold for a given selection contributes
+    /// nothing, which is what lets Wise One's "either Arcane or Academic, but
+    /// not both" (`ArMDE:5259`) be modelled as one list rather than as an
+    /// unconditional (and over-permissive) union of both.
     AbilityAuthorization {
         /// Specific Abilities permitted.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        abilities: Vec<Id>,
+        abilities: Vec<AbilityRef>,
         /// Whole categories permitted.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        categories: Vec<AbilityCategory>,
+        categories: Vec<CategoryRef>,
+    },
+    /// A competence bonus targeting one of several fixed Ability ids, each
+    /// active only when its own [`ParamGate`] holds — the gated sibling of
+    /// [`Effect::AbilityBonus`] for a target that is a **fixed list of Ability
+    /// ids**, not the selection's own free parameter (Student of (Realm)'s "+2
+    /// bonus on all uses of the appropriate Lore", row 50(a)): the four realm
+    /// Lores are four separate, non-parameterized Ability ids, not one
+    /// parameterized Ability whose value the `realm` parameter could name
+    /// directly (see `docs/vf-audit/design-c0-parameter-model.md` § 3).
+    ///
+    /// A gate-active target is also itself permission to own that Ability —
+    /// the bonus could never apply to an Ability the character may not buy —
+    /// so `ability_authorizations()` folds this the same way it folds
+    /// [`Effect::AbilityAuthorization`], which is what implements the
+    /// passage's own final clause ("You may take that Lore at character
+    /// generation even if you cannot learn other Arcane Abilities").
+    ///
+    /// Source: ArMDE:5052-5055.
+    AbilityBonusGated {
+        /// The candidate targets; only the gate-active ones apply.
+        targets: Vec<AbilityRef>,
+        /// Points added to the effective score of each active target.
+        amount: i8,
     },
     /// Adjusts the character's derived Confidence Score and Points (on top of the
     /// type profile's defaults). Signed and additive; e.g. Self-Confident grants
@@ -5761,6 +5978,33 @@ mod tests {
                 .unwrap_or_else(|| panic!("{wanted} is missing from CreationPhase::ALL"))
         };
         assert!(position(CreationPhase::Experience) < position(CreationPhase::Abilities));
+    }
+
+    /// C1's serde-error-text obligation (`docs/vf-audit/design-c0-parameter-model.md`
+    /// § 10): `AbilityRef`'s `#[serde(untagged)]` is exactly the shape known to
+    /// produce poor error text, on the same precedent as
+    /// [`profile_with_an_unknown_creation_phase_fails_to_parse`] just below.
+    /// Captured verbatim today: `data did not match any variant of untagged
+    /// enum AbilityRef` — this pins that the message still NAMES the wrapper,
+    /// so a future serde/dependency bump that drops even that (e.g. collapsing
+    /// to a bare "invalid type" with no enum name at all) is caught here
+    /// rather than silently shipping worse diagnostics.
+    #[test]
+    fn a_malformed_untagged_ability_ref_names_the_wrapper_in_its_error() {
+        let wrong_type = serde_json::from_str::<AbilityRef>(r#"{"ability": 5}"#)
+            .expect_err("a numeric ability id must not parse");
+        assert!(
+            wrong_type.to_string().contains("AbilityRef"),
+            "the error must name the untagged wrapper it failed to match: {wrong_type}"
+        );
+
+        let missing_field =
+            serde_json::from_str::<AbilityRef>(r#"{"gate": {"param": "p", "equals": "x"}}"#)
+                .expect_err("an object missing 'ability' must not parse");
+        assert!(
+            missing_field.to_string().contains("AbilityRef"),
+            "the error must name the untagged wrapper it failed to match: {missing_field}"
+        );
     }
 
     /// A profile's phases are typed, so a phase string the engine has no phase for

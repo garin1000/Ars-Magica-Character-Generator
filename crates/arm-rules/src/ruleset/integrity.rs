@@ -1886,6 +1886,111 @@ impl Ruleset {
         }
     }
 
+    /// Fails for every [`AbilityRef`] in a gated ability list (`abilities` on
+    /// `ability_authorization`, `targets` on `ability_bonus_gated`) whose
+    /// `ability` does not resolve, whose `gate.param`/`instance`'s
+    /// `Bound.param` is dangling on the SAME item, or which sets `instance`
+    /// AND `gate` to the SAME param key (see
+    /// `docs/vf-audit/design-c0-parameter-model.md` § 9 — one key cannot
+    /// simultaneously supply an entry's instance value and gate its
+    /// activation).
+    fn validate_gated_ability_refs(
+        &self,
+        item: &PointItem,
+        refs: &[AbilityRef],
+        kind: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        for r in refs {
+            self.validate_ability_ref(r.ability(), kind, id, errors);
+            if let Some(instance) = r.instance() {
+                self.validate_param_value_ref(item, instance, kind, id, errors);
+            }
+            if let Some(gate) = r.gate() {
+                self.validate_param_gate(item, gate, kind, id, errors);
+            }
+            if let (Some(ParamValue::Bound { param: bound_param }), Some(gate)) =
+                (r.instance(), r.gate())
+                && bound_param == &gate.param
+            {
+                errors.push(format!(
+                    "{id}: effect '{kind}' ability '{}' names parameter '{bound_param}' as both \
+                     its instance binding and its gate",
+                    r.ability()
+                ));
+            }
+        }
+    }
+
+    /// Fails for every [`CategoryRef`] in a gated category list
+    /// (`categories` on `ability_authorization`) whose `gate.param` is
+    /// dangling on the SAME item. The category itself is a closed Rust enum,
+    /// already caught by serde at parse time — no separate resolution check
+    /// is needed.
+    fn validate_gated_category_refs(
+        &self,
+        item: &PointItem,
+        refs: &[CategoryRef],
+        kind: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        for r in refs {
+            if let Some(gate) = r.gate() {
+                self.validate_param_gate(item, gate, kind, id, errors);
+            }
+        }
+    }
+
+    /// Fails when `gate.param` is not a key `item` declares, or when the
+    /// declared value `gate.equals` does not resolve in that parameter's own
+    /// domain (the same registry any selection naming that parameter would be
+    /// checked against — [`param_value_resolves`]).
+    fn validate_param_gate(
+        &self,
+        item: &PointItem,
+        gate: &ParamGate,
+        kind: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        let Some(def) = item.parameters.iter().find(|p| p.key == gate.param) else {
+            errors.push(format!(
+                "{id}: effect '{kind}' gate references unknown parameter '{}'",
+                gate.param
+            ));
+            return;
+        };
+        if !param_value_resolves(self, def, &gate.equals) {
+            errors.push(format!(
+                "{id}: effect '{kind}' gate parameter '{}' names value '{}', which does not \
+                 resolve in domain '{}'",
+                gate.param, gate.equals, def.domain
+            ));
+        }
+    }
+
+    /// Fails when a [`ParamValue::Bound`]'s `param` is not a key `item`
+    /// declares. A [`ParamValue::Literal`] names no parameter and needs no
+    /// check.
+    fn validate_param_value_ref(
+        &self,
+        item: &PointItem,
+        value: &ParamValue,
+        kind: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        if let ParamValue::Bound { param } = value
+            && !item.parameters.iter().any(|p| &p.key == param)
+        {
+            errors.push(format!(
+                "{id}: effect '{kind}' instance references unknown parameter '{param}'"
+            ));
+        }
+    }
+
     /// Fails for every id in a fixed ability list that does not resolve
     /// (`restricted_ability_xp`, `group_affinity_cost`).
     fn validate_ability_list_effect<'a>(
@@ -2041,6 +2146,30 @@ impl Ruleset {
                     self.validate_ability_list_effect(abilities, "group_affinity_cost", id, errors);
                     continue;
                 }
+                // The gated carrier (D14/W2): every named ability must resolve,
+                // every gate's `param` must be declared on the SAME item (and
+                // not be dangling/mistyped), and an entry may not set both
+                // `instance` and `gate` to the same param key.
+                Effect::AbilityAuthorization {
+                    abilities,
+                    categories,
+                } => {
+                    self.validate_gated_ability_refs(item, abilities, "ability_authorization", id, errors);
+                    self.validate_gated_category_refs(
+                        item,
+                        categories,
+                        "ability_authorization",
+                        id,
+                        errors,
+                    );
+                    continue;
+                }
+                // The gated-bonus carrier (Student of (Realm)'s +2 Lore): same
+                // per-target checks as `AbilityAuthorization.abilities` above.
+                Effect::AbilityBonusGated { targets, .. } => {
+                    self.validate_gated_ability_refs(item, targets, "ability_bonus_gated", id, errors);
+                    continue;
+                }
                 // Fixed nested grant: every granted id must resolve to a point item
                 // (a Virtue/Flaw), like a House grant's `item`.
                 Effect::GrantsSelection { items } => {
@@ -2116,7 +2245,6 @@ impl Ruleset {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
-                | Effect::AbilityAuthorization { .. }
                 | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::GrantsReputation { .. }

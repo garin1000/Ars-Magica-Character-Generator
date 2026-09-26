@@ -26,9 +26,10 @@ use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
 use crate::spell::{RITUAL_MIN_LEVEL, Spell, SpellDuration, SpellRange, SpellTarget, SpellsFile};
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
-    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, CategoryRule, CreationPhase, Effect, EntityTypeProfile,
-    I18nEntry, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef, ParameterDomain, PointItem,
-    Prereq, ReputationType, RulesetRef, SourceRef, SpecialCasting,
+    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityRef, CategoryRef, CategoryRule, CreationPhase,
+    Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParamGate,
+    ParamValue, ParameterDef, ParameterDomain, PointItem, Prereq, ReputationType, RulesetRef,
+    SourceRef, SpecialCasting,
 };
 
 mod accessors;
@@ -3154,6 +3155,112 @@ mod tests {
                 "a shipped ruleset ratio must load: {effect}"
             );
         }
+    }
+
+    /// Loads a catalogue whose single Virtue declares `parameters_json` and
+    /// carries one `ability_authorization` effect naming `abilities_json`/
+    /// `categories_json` (each a bare, comma-joined list of JSON entries, no
+    /// surrounding brackets) — the C1 gate/instance integrity checks'
+    /// dedicated fixture (`docs/vf-audit/design-c0-parameter-model.md` § 9).
+    fn load_with_gated_ability_authorization(
+        parameters_json: &str,
+        abilities_json: &str,
+        categories_json: &str,
+    ) -> Result<Ruleset, RulesetError> {
+        let items = format!(
+            r#"[
+              {{ "id": "virtue.tester", "kind": "virtue", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["general"],
+                 "parameters": [{parameters_json}],
+                 "effects": [{{ "type": "ability_authorization",
+                   "abilities": [{abilities_json}], "categories": [{categories_json}] }}] }},
+              {{ "id": "flaw.personality_filler", "kind": "flaw", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["personality"] }}
+            ]"#
+        );
+        let abilities = r#"{ "abilities": [
+          { "id": "ability.awareness", "category": "general" },
+          { "id": "ability.dead_language", "category": "academic", "parameter": "language" }
+        ] }"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: &items,
+            type_profiles: "[]",
+            abilities: Some(abilities),
+            ..RulesetSources::default()
+        })
+    }
+
+    /// A `CategoryRef`'s gate must name a parameter the SAME item actually
+    /// declares — otherwise it looks enforced and silently never applies.
+    #[test]
+    fn a_gate_naming_an_unknown_parameter_fails_the_load_naming_the_item() {
+        let err = load_with_gated_ability_authorization(
+            r#"{ "key": "study", "type": "ref", "domain": "enumerated", "values": ["academic", "arcane"] }"#,
+            "",
+            r#"{ "category": "academic", "gate": { "param": "no_such_param", "equals": "academic" } }"#,
+        )
+        .expect_err("a gate naming an undeclared parameter must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("no_such_param"),
+            "expected an item-and-param-naming gate error, got: {msg}"
+        );
+    }
+
+    /// A gate's `equals` must resolve in the named parameter's own domain —
+    /// the same registry a selection naming that parameter would be checked
+    /// against, via `param_value_resolves`.
+    #[test]
+    fn a_gate_value_outside_its_parameters_domain_fails_the_load_naming_the_item() {
+        let err = load_with_gated_ability_authorization(
+            r#"{ "key": "study", "type": "ref", "domain": "enumerated", "values": ["academic", "arcane"] }"#,
+            "",
+            r#"{ "category": "academic", "gate": { "param": "study", "equals": "supernatural" } }"#,
+        )
+        .expect_err("a gate value outside the enumerated list must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("supernatural"),
+            "expected a value-naming gate error, got: {msg}"
+        );
+    }
+
+    /// One parameter key cannot simultaneously supply an `AbilityRef`'s
+    /// instance value AND gate its activation — the two roles conflict (D14's
+    /// two mechanisms are structurally distinct, `docs/vf-audit/design-c0-parameter-model.md`
+    /// § 9's last row before `allow_ids`).
+    #[test]
+    fn an_ability_ref_using_the_same_parameter_for_instance_and_gate_fails_the_load() {
+        let err = load_with_gated_ability_authorization(
+            r#"{ "key": "language", "type": "ref", "domain": "text" }"#,
+            r#"{ "ability": "ability.dead_language", "instance": { "param": "language" },
+                 "gate": { "param": "language", "equals": "latin" } }"#,
+            "",
+        )
+        .expect_err("naming one param as both instance and gate must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("language"),
+            "expected a param-naming conflict error, got: {msg}"
+        );
+    }
+
+    /// The shipped gated shapes (Wise One's two `CategoryRef`s, Custos's three
+    /// plus an ungated `AbilityRef`, Covenant Upbringing's `Literal` instance)
+    /// still load — the checks above reject only the malformed shapes.
+    #[test]
+    fn ordinary_gated_ability_authorizations_load() {
+        assert!(
+            load_with_gated_ability_authorization(
+                r#"{ "key": "study", "type": "ref", "domain": "enumerated", "values": ["academic", "arcane"] }"#,
+                r#"{ "ability": "ability.dead_language", "instance": { "literal": "latin" } }"#,
+                r#"{ "category": "academic", "gate": { "param": "study", "equals": "academic" } }"#,
+            )
+            .is_ok(),
+            "a shipped-shaped gated ability_authorization must load"
+        );
     }
 
     /// D55 (Q6): `advancement_mod` must carry exactly one of `amount`/`factor`.

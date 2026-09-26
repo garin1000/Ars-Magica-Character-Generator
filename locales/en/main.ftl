@@ -972,6 +972,9 @@ param-label-category = Category
 # a Minor Social Status Virtue or a Minor Supernatural Virtue" (Ars Magica -
 # Definitive Edition (Core Rules).md:5083).
 param-label-taken_as = Taken as
+# Which restricted group of Abilities Custos/Templar Specialist/Wise One
+# studied — the exclusive choice their `ability_authorization` gate reads.
+param-label-study = Study
 
 # Localized names for the engine's `ParameterDomain` variants — the kind of value a
 # parameter slot accepts. Read only by `unknown_param_value`, which names the domain a

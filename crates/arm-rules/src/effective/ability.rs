@@ -76,6 +76,29 @@ pub fn ability_bonus(
                     bonus += i32::from(*amount);
                 }
             }
+            // The gated-target sibling (Student of (Realm)'s +2 Lore): the
+            // targets are a FIXED list on the effect itself, not read off the
+            // selection's own free parameter, so each is checked by id/gate
+            // directly rather than via `instance_key`'s selection lookup.
+            // Guarded (like the arm above) so the same variant can also sit in
+            // `irrelevant_effect_variants!`'s shared tail for the case this
+            // guard fails.
+            Effect::AbilityBonusGated { targets, amount }
+                if targets.iter().any(|t| t.ability() == ability) =>
+            {
+                for target in targets {
+                    if target.ability() != ability || !target.active_for(selection) {
+                        continue;
+                    }
+                    let matches = match instance_key {
+                        None => true,
+                        Some(_) => target.resolved_instance(selection).as_deref() == parameter,
+                    };
+                    if matches {
+                        bonus += i32::from(*amount);
+                    }
+                }
+            }
             // Not an ability bonus for this target; contributes nothing here.
             // AbilityScoreGrant is a free *floor*, applied in
             // effective_ability_score, not an additive bonus.

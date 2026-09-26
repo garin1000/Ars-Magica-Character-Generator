@@ -8,10 +8,11 @@ use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{ValidationIssue, compute_balance, validate};
 use arm_rules::{AgingRowEffect, AgingRules};
-use arm_rules::{LifeStageBlock, LifeStagePlan, XpPoolOrigin, checked_xp_allocation};
 use arm_rules::{
-    effective_art_score, effective_characteristic_after_aging, effective_characteristic_score,
+    Grant, GrantConstraint, effective_art_score, effective_characteristic_after_aging,
+    effective_characteristic_score, open_pick_satisfies, warping_owed_grants,
 };
+use arm_rules::{LifeStageBlock, LifeStagePlan, XpPoolOrigin, checked_xp_allocation};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The shipped House registry. Every helper below loads it, because the four
@@ -7890,6 +7891,43 @@ const ENUMERATED_PARAM_ITEMS: &[(&str, &str, u32, &[&str])] = &[
         6893,
         &["being.demons", "being.divine", "being.mundane_humans"],
     ),
+    // "You may take one group of restricted Abilities during character
+    // generation, either Martial, Academic, or Arcane Abilities" (ArMDE:3631)
+    // — Phase 2 C1's exclusive-choice gate (W2/F-42).
+    (
+        "virtue.custos",
+        "study",
+        3631,
+        &[
+            "ability_category.academic",
+            "ability_category.arcane",
+            "ability_category.martial",
+        ],
+    ),
+    // "You may take one RESTRICTED group of Abilities during character
+    // creation, such as Academic or Martial Abilities" (ArMDE:5135) — C1's
+    // closed reading of an open "such as" list, narrowed to the categories
+    // `rules/core/abilities.json`'s `categories_requiring_virtue` actually
+    // gates (`general` needs no authorization at all, so offering it would be
+    // a meaningless choice — RULES.md, F-317).
+    (
+        "virtue.templar_specialist",
+        "study",
+        5135,
+        &[
+            "ability_category.academic",
+            "ability_category.arcane",
+            "ability_category.martial",
+        ],
+    ),
+    // "You may take either Arcane or Academic Abilities, but not both, at
+    // character creation" (ArMDE:5259) — W2/F-349.
+    (
+        "virtue.wise_one",
+        "study",
+        5259,
+        &["ability_category.academic", "ability_category.arcane"],
+    ),
 ];
 
 #[test]
@@ -9799,4 +9837,145 @@ fn independent_craftsman_ships_as_personality_pending_city_and_guild() {
         vec!["personality".to_string()],
         "no supplement support yet, so ArMDE:6304's fallback applies (D54)"
     );
+}
+
+/// F-349's risk 2 (`docs/vf-audit/design-c0-parameter-model.md` § 3): the
+/// exclusive-choice gate is sound only WITHIN one `Selection` — a bought copy
+/// and an independently-gated GRANTED copy of the same item, voting
+/// oppositely, would union past it (each selection's fold runs on its own;
+/// there is no cross-selection dedup before the union). Not live today
+/// because no entry in the catalogue grants any of the four gated carriers —
+/// this test pins that absence, scanning every static grant target
+/// (`grants_selection`, House/Mythic-type `Fixed`/`Choice` grants) plus every
+/// Open grant's `kind`/`magnitude`/`category` constraint (House, Mythic-type,
+/// and the three warping-fill shapes), so the catalogue cannot silently
+/// reopen the trap without this test noticing. The moment one of these four
+/// becomes grantable, the fix is grant-aware deduplication (D2's territory),
+/// not a defect in this design.
+#[test]
+fn no_gated_authorization_item_is_ever_granted() {
+    let rs = load_ruleset();
+    let gated = [
+        "virtue.wise_one",
+        "virtue.custos",
+        "virtue.templar_specialist",
+        "virtue.student_of_realm",
+    ];
+
+    // 1. `grants_selection` (nested V/F grants) never names one of the four.
+    for item in rs.items() {
+        for effect in &item.effects {
+            if let Effect::GrantsSelection { items } = effect {
+                for granted in items {
+                    assert!(
+                        !gated.contains(&granted.as_str()),
+                        "{} carries a grants_selection naming gated item '{}' — F-349's \
+                         cross-selection union risk is now live",
+                        item.id,
+                        granted
+                    );
+                }
+            }
+        }
+    }
+
+    // 2. Every House/Mythic-type Fixed/Choice grant target never names one of
+    //    the four — a SPECIFIC, catalog-editable risk (unlike the Open-grant
+    //    finding below, this one genuinely does not exist today).
+    let mut fixed_and_choice_targets: Vec<Id> = Vec::new();
+    let mut collect = |grants: &[Grant]| {
+        for grant in grants {
+            match grant {
+                Grant::Fixed { item, .. } => fixed_and_choice_targets.push(item.clone()),
+                Grant::Choice { options, .. } => {
+                    fixed_and_choice_targets.extend(options.iter().map(|s| s.item_ref.clone()));
+                }
+                Grant::Open { .. } => {}
+            }
+        }
+    };
+    for house in rs.houses() {
+        collect(&house.grants);
+    }
+    for mythic_type in rs.mythic_types() {
+        collect(&mythic_type.grants);
+    }
+    for id in gated {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert!(
+            !fixed_and_choice_targets.contains(&item.id),
+            "'{id}' is named by a Fixed/Choice grant target — F-349's cross-selection union \
+             risk is now live",
+        );
+    }
+
+    // 3. Open grants (House/Mythic-type free picks, and the three
+    //    warping-fill shapes) are a DIFFERENT, broader story, discovered
+    //    while writing this test rather than assumed away: Jerbiton's free
+    //    Minor Virtue (`house.jerbiton`, `rules/core/houses.json`) is
+    //    `{ kind: virtue, magnitude: minor }` with NO category restriction at
+    //    all — and all four gated items are Minor Virtues, so EVERY one of
+    //    them (not just Wise One) already satisfies it today, along with
+    //    hundreds of other unrelated Minor Virtues in the catalogue. This is
+    //    not a defect specific to the four gated items; it is a structural
+    //    property of an unconstrained Open grant, and the design note's "not
+    //    live today: all four are bought-only" undersold it for this path.
+    //    Fixing it is D2's grant-aware-deduplication territory (per the
+    //    note's own § 3, "recorded as a coupling risk, not fixed here") — out
+    //    of C1's scope. Pinned here as a plain fact, not swept under: if this
+    //    ever tightens (Jerbiton's grant gains a category restriction, say),
+    //    this assertion starts failing and should be revisited rather than
+    //    deleted outright.
+    let jerbiton_minor_virtue = GrantConstraint {
+        kind: ItemKind::Virtue,
+        magnitude: Some(Magnitude::Minor),
+        require_categories: BTreeSet::new(),
+        forbid_categories: BTreeSet::new(),
+    };
+    for id in gated {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        let pick = Selection::new(item.id.clone());
+        assert!(
+            open_pick_satisfies(&pick, &jerbiton_minor_virtue, &rs, None),
+            "'{id}' no longer satisfies Jerbiton's unconstrained free-Minor-Virtue grant — \
+             either it is no longer a Minor Virtue (update this test) or the grant gained a \
+             restriction (update the note above and `docs/vf-audit/design-c0-parameter-model.md`)",
+        );
+    }
+
+    // The three warping-fill shapes, by contrast, genuinely do NOT reach any
+    // of the four: two are Flaw-kind (kind mismatch, all four are Virtues),
+    // and the third (a supernatural Minor Virtue) requires the `supernatural`
+    // category, which none of the four carries (they are `social_status` /
+    // `general`) — built from a companion entity whose Warping Score is high
+    // enough to owe all three at once (score >= 6), via the same public
+    // function the wizard calls.
+    let mut warping_entity = entity("companion", vec![]);
+    warping_entity.warping_points = 100;
+    let warping_open_grants: Vec<Grant> = warping_owed_grants(&warping_entity, &rs);
+    assert!(
+        warping_open_grants.len() >= 3,
+        "expected at least one Open grant of each warping-fill shape (got {})",
+        warping_open_grants.len()
+    );
+    for id in gated {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        let pick = Selection::new(item.id.clone());
+        for grant in &warping_open_grants {
+            let Grant::Open { constraint, .. } = grant else {
+                panic!("warping_owed_grants must only ever produce Open grants");
+            };
+            assert!(
+                !open_pick_satisfies(&pick, constraint, &rs, None),
+                "a warping-fill Open grant constraint now matches gated item '{id}' — F-349's \
+                 cross-selection union risk is now live",
+            );
+        }
+    }
 }

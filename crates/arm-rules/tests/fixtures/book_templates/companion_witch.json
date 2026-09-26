@@ -38,7 +38,10 @@
       "ref": "virtue.wilderness_sense"
     },
     {
-      "ref": "virtue.wise_one"
+      "ref": "virtue.wise_one",
+      "params": {
+        "study": "ability_category.arcane"
+      }
     }
   ],
   "characteristics": {

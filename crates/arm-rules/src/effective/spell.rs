@@ -30,6 +30,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::GeneralXp { .. }
         | Effect::LaterLifeXpRate { .. }
         | Effect::AbilityAuthorization { .. }
+        | Effect::AbilityBonusGated { .. }
         | Effect::LocalityAbilityCapFraction { .. }
         | Effect::ConfidenceBonus { .. }
         | Effect::SpellMasteryXp { .. }
@@ -95,6 +96,7 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // which then becomes the general pool. Adding it here would double-count.
         | Effect::LaterLifeXpRate { .. }
         | Effect::AbilityAuthorization { .. }
+        | Effect::AbilityBonusGated { .. }
         | Effect::LocalityAbilityCapFraction { .. }
         | Effect::ConfidenceBonus { .. }
         | Effect::SpellMasteryXp { .. }
@@ -483,6 +485,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::AbilityBonusGated { .. }
                 | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }

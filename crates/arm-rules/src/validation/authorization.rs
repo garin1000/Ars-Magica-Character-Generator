@@ -78,7 +78,11 @@ pub(crate) fn validate_ability_authorization(
             continue;
         }
         if authorized_categories.contains(&ability.category)
-            || authorized_abilities.contains(&entry.ability)
+            || crate::effective::authorizes_instance(
+                &authorized_abilities,
+                &entry.ability,
+                entry.parameter.as_deref(),
+            )
         {
             continue;
         }
@@ -167,14 +171,32 @@ mod tests {
         "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }] },
       { "id": "virtue.covenant_upbringing", "kind": "virtue", "classification": "creation_effect",
         "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-        "effects": [{ "type": "ability_authorization", "abilities": ["ability.dead_language"] }] },
+        "effects": [{ "type": "ability_authorization",
+          "abilities": [{ "ability": "ability.dead_language", "instance": { "literal": "latin" } }] }] },
       { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative",
         "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
       { "id": "virtue.hermetic_magus", "kind": "virtue", "classification": "narrative",
         "magnitude": "free", "categories": ["social_status"], "entity_kinds": ["character"] },
       { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
         "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"],
-        "effects": [{ "type": "confers_hermetic_training" }] }
+        "effects": [{ "type": "confers_hermetic_training" }] },
+      { "id": "virtue.wise_one", "kind": "virtue", "classification": "creation_effect",
+        "magnitude": "minor", "categories": ["social_status"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "study", "type": "ref", "domain": "enumerated",
+          "values": ["academic", "arcane"] }],
+        "effects": [{ "type": "ability_authorization",
+          "categories": [
+            { "category": "academic", "gate": { "param": "study", "equals": "academic" } },
+            { "category": "arcane", "gate": { "param": "study", "equals": "arcane" } }
+          ] }] },
+      { "id": "virtue.student_of_realm", "kind": "virtue", "classification": "creation_effect",
+        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }],
+        "effects": [{ "type": "ability_bonus_gated", "amount": 2,
+          "targets": [
+            { "ability": "ability.magic_lore", "gate": { "param": "realm", "equals": "realm.magic" } },
+            { "ability": "ability.infernal_lore", "gate": { "param": "realm", "equals": "realm.infernal" } }
+          ] }] }
     ]"#;
     const TYPES: &str = r#"[
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -195,7 +217,9 @@ mod tests {
         { "id": "ability.dead_language", "category": "academic", "parameter": "language" },
         { "id": "ability.parma_magica", "category": "arcane" },
         { "id": "ability.penetration", "category": "arcane" },
-        { "id": "ability.philosophiae", "category": "academic" }
+        { "id": "ability.philosophiae", "category": "academic" },
+        { "id": "ability.magic_lore", "category": "arcane" },
+        { "id": "ability.infernal_lore", "category": "arcane" }
       ]
     }"#;
 
@@ -209,6 +233,44 @@ mod tests {
             ..RulesetSources::default()
         })
         .unwrap()
+    }
+
+    /// A companion/magus with one parameterized ability score, for the
+    /// instance-restriction tests below (the plain [`character`] helper always
+    /// leaves `parameter: None`).
+    fn character_with_parameterized_ability(
+        type_id: &str,
+        selections: Vec<&str>,
+        ability: &str,
+        score: u8,
+        parameter: Option<&str>,
+    ) -> Entity {
+        let mut entity = character(type_id, selections, vec![]);
+        entity.ability_scores.push(AbilityScore {
+            ability: Id::new(ability),
+            parameter: parameter.map(str::to_string),
+            score,
+            specialty: None,
+        });
+        entity
+    }
+
+    /// A companion/magus holding ONE selection with a single parameter value
+    /// set (Wise One's `study`, Student of (Realm)'s `realm`), for the
+    /// exclusive-choice gate tests below.
+    fn character_with_param(
+        type_id: &str,
+        item_ref: &str,
+        param_key: &str,
+        param_value: &str,
+        abilities: Vec<(&str, u8)>,
+    ) -> Entity {
+        let mut entity = character(type_id, vec![], abilities);
+        entity.selections = vec![Selection::with_params(
+            Id::new(item_ref),
+            std::collections::BTreeMap::from([(param_key.to_string(), Id::new(param_value))]),
+        )];
+        entity
     }
 
     fn character(type_id: &str, selections: Vec<&str>, abilities: Vec<(&str, u8)>) -> Entity {
@@ -301,10 +363,12 @@ mod tests {
     /// what `ability_authorization` is for.
     #[test]
     fn an_authorizing_virtue_permits_one_ability_without_granting_xp() {
-        let entity = character(
+        let entity = character_with_parameterized_ability(
             "companion",
             vec!["virtue.covenant_upbringing"],
-            vec![("ability.dead_language", 3)],
+            "ability.dead_language",
+            3,
+            Some("latin"),
         );
         assert!(gate_issues(&validate(&entity, &rs())).is_empty());
         // It permits that Ability alone, not the whole Academic category.
@@ -314,6 +378,98 @@ mod tests {
             vec![("ability.artes_liberales", 3)],
         );
         assert_eq!(gate_issues(&validate(&broader, &rs())).len(), 1);
+    }
+
+    /// F-349/F-16x's actual fix (`docs/vf-audit/design-c0-parameter-model.md`
+    /// § 1, § 4): "You may take Latin at character creation" (`ArMDE:5867`)
+    /// authorizes Latin, not any dead language — the id-only proxy silently
+    /// over-permitted every instance of `ability.dead_language`. Once the
+    /// effect carries an `instance` restriction, Latin is still authorized but
+    /// a different dead language must be gated exactly like any other
+    /// Academic Ability.
+    #[test]
+    fn an_authorizing_virtue_with_an_instance_restriction_refuses_a_different_instance() {
+        let latin = character_with_parameterized_ability(
+            "companion",
+            vec!["virtue.covenant_upbringing"],
+            "ability.dead_language",
+            3,
+            Some("latin"),
+        );
+        assert!(
+            gate_issues(&validate(&latin, &rs())).is_empty(),
+            "issues: {:?}",
+            codes(&validate(&latin, &rs()))
+        );
+
+        let greek = character_with_parameterized_ability(
+            "companion",
+            vec!["virtue.covenant_upbringing"],
+            "ability.dead_language",
+            3,
+            Some("greek"),
+        );
+        assert_eq!(gate_issues(&validate(&greek, &rs())).len(), 1);
+    }
+
+    /// W2/F-349's exclusive-choice gate (`ArMDE:5259`: "You may take either
+    /// Arcane or Academic Abilities, but not both, at character creation").
+    /// The naive fix — authorizing both categories unconditionally — is
+    /// exactly the over-permission F-349 warns against: choosing Academic
+    /// must still refuse an Arcane Ability.
+    #[test]
+    fn wise_one_with_one_study_choice_refuses_the_other() {
+        let academic = character_with_param(
+            "companion",
+            "virtue.wise_one",
+            "study",
+            "academic",
+            vec![("ability.artes_liberales", 3)],
+        );
+        assert!(
+            gate_issues(&validate(&academic, &rs())).is_empty(),
+            "issues: {:?}",
+            codes(&validate(&academic, &rs()))
+        );
+
+        // Academic study must NOT also authorize Arcane Abilities.
+        let wrong = character_with_param(
+            "companion",
+            "virtue.wise_one",
+            "study",
+            "academic",
+            vec![("ability.magic_theory", 3)],
+        );
+        assert_eq!(gate_issues(&validate(&wrong, &rs())).len(), 1);
+    }
+
+    /// Student of (Realm)'s gated `ability_bonus_gated` targets double as
+    /// authorization (row 50(a), "even if you cannot learn other Arcane
+    /// Abilities") — but ONLY for the chosen realm's own Lore. Student of
+    /// Magic must refuse Infernal Lore.
+    #[test]
+    fn student_of_realm_authorizes_only_the_chosen_realms_lore() {
+        let magic = character_with_param(
+            "companion",
+            "virtue.student_of_realm",
+            "realm",
+            "realm.magic",
+            vec![("ability.magic_lore", 3)],
+        );
+        assert!(
+            gate_issues(&validate(&magic, &rs())).is_empty(),
+            "issues: {:?}",
+            codes(&validate(&magic, &rs()))
+        );
+
+        let wrong = character_with_param(
+            "companion",
+            "virtue.student_of_realm",
+            "realm",
+            "realm.magic",
+            vec![("ability.infernal_lore", 3)],
+        );
+        assert_eq!(gate_issues(&validate(&wrong, &rs())).len(), 1);
     }
 
     /// "…or if they are magi" (`ArMDE:7151`), and apprenticeship experience may go on

@@ -423,6 +423,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::AbilityBonusGated { .. }
                 | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }

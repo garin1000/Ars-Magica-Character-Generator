@@ -1,4 +1,13 @@
 {
+  "ability_category.academic": {
+    "name": "Akademisch"
+  },
+  "ability_category.arcane": {
+    "name": "Arkan"
+  },
+  "ability_category.martial": {
+    "name": "Kampf"
+  },
   "being.animals": {
     "name": "Tiere"
   },

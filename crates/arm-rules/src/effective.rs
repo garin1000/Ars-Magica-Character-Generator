@@ -207,6 +207,14 @@ macro_rules! irrelevant_effect_variants {
         | Effect::GeneralXp { .. }
         | Effect::LaterLifeXpRate { .. }
         | Effect::AbilityAuthorization { .. }
+        // The gated-bonus sibling (Student of (Realm)'s +2 Lore, C1): a
+        // score-space bonus, but read off a FIXED target list rather than the
+        // selection's own free parameter, so it is a no-op everywhere this
+        // tail is shared EXCEPT `ability_bonus` itself, which intercepts it
+        // with its own guarded arm above (safe per this macro's own doc
+        // comment: a guarded interesting arm may still list its variant here,
+        // for the case its guard fails).
+        | Effect::AbilityBonusGated { .. }
         | Effect::LocalityAbilityCapFraction { .. }
         | Effect::ConfidenceBonus { .. }
         | Effect::SpellMasteryXp { .. }

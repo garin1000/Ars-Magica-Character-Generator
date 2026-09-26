@@ -370,13 +370,59 @@ fn native_language_instance(
     })
 }
 
+/// One Ability instance a selection's effects authorize the character to buy —
+/// the resolved form [`ability_authorizations`]'s fold produces from an
+/// [`AbilityRef`]. `instance: None` authorizes every instance of `ability`
+/// (Second Sight, or a category-wide [`Effect::AbilityAuthorization`] entry);
+/// `Some(x)` authorizes only the instance whose bought
+/// [`crate::types::AbilityScore::parameter`] equals `x` (Covenant Upbringing's
+/// Latin proxy — this is F-349/F-16x's actual fix: without the instance,
+/// authorizing `ability.dead_language` at all would also authorize Ancient
+/// Greek).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct AuthorizedAbility {
+    pub(crate) ability: Id,
+    pub(crate) instance: Option<String>,
+}
+
+impl AuthorizedAbility {
+    /// Whether this authorization covers the bought `(ability, parameter)`
+    /// instance: the ability id matches, and either this entry authorizes any
+    /// instance (`instance: None`) or the bought instance is the one named.
+    fn covers(&self, ability: &Id, parameter: Option<&str>) -> bool {
+        self.ability == *ability
+            && (self.instance.is_none() || self.instance.as_deref() == parameter)
+    }
+}
+
+/// Whether `authorized` contains an entry covering the bought `(ability,
+/// parameter)` instance — the instance-aware membership test
+/// [`crate::validation::authorization::validate_ability_authorization`] uses in
+/// place of a bare `.contains(&id)`.
+pub(crate) fn authorizes_instance(
+    authorized: &BTreeSet<AuthorizedAbility>,
+    ability: &Id,
+    parameter: Option<&str>,
+) -> bool {
+    authorized.iter().any(|a| a.covers(ability, parameter))
+}
+
 /// The Abilities and categories the character's selections permit.
 ///
-/// A Virtue grants access two ways, and both count: an explicit
-/// [`Effect::AbilityAuthorization`], or any [`Effect::RestrictedAbilityXp`] pool —
+/// A Virtue grants access three ways, and all three count: an explicit
+/// [`Effect::AbilityAuthorization`], any [`Effect::RestrictedAbilityXp`] pool —
 /// experience earmarked for a category is evidence the category is permitted, which
 /// is what makes Warrior (Martial XP) and Arcane Lore (Arcane XP) work without
-/// further data.
+/// further data — or an [`Effect::AbilityBonusGated`] target: a competence bonus
+/// tied to a specific Ability instance is itself permission to own it, since the
+/// bonus could never apply to an Ability the character may not buy (Student of
+/// (Realm)'s "even if you cannot learn other Arcane Abilities", ArMDE:5054).
+///
+/// [`Effect::AbilityAuthorization`] and [`Effect::AbilityBonusGated`] entries may
+/// be gated on the OWNING selection's own parameter (D14/W2): an entry whose
+/// [`ParamGate`] does not hold contributes nothing, by construction — there is no
+/// "include but mark restricted" state to forget (see
+/// `docs/vf-audit/design-c0-parameter-model.md` § 3/§ 4).
 ///
 /// It lives here rather than in `validation/` because both readers need it and the
 /// layering only runs one way: `validation` already depends on `effective`
@@ -388,7 +434,7 @@ fn native_language_instance(
 pub(crate) fn ability_authorizations(
     entity: &Entity,
     ruleset: &Ruleset,
-) -> (BTreeSet<Id>, BTreeSet<AbilityCategory>) {
+) -> (BTreeSet<AuthorizedAbility>, BTreeSet<AbilityCategory>) {
     let mut abilities = BTreeSet::new();
     let mut categories = BTreeSet::new();
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -398,23 +444,61 @@ pub(crate) fn ability_authorizations(
         for effect in &item.effects {
             match effect {
                 // Experience earmarked for a category or Ability is itself
-                // permission to learn it — otherwise the grant could never be spent.
+                // permission to learn it — otherwise the grant could never be
+                // spent. A fixed id/category list (never gated, never
+                // instance-scoped): every named entry always counts.
                 Effect::RestrictedAbilityXp {
                     abilities: ids,
                     categories: cats,
                     ..
-                }
-                | Effect::AbilityAuthorization {
-                    abilities: ids,
-                    categories: cats,
                 } => {
-                    abilities.extend(ids.iter().cloned());
+                    abilities.extend(ids.iter().map(|ability| AuthorizedAbility {
+                        ability: ability.clone(),
+                        instance: None,
+                    }));
                     categories.extend(cats.iter().copied());
+                }
+                // The gated carrier (D14/W2): only the entries whose gate holds
+                // for THIS selection contribute — F-349's fix (see
+                // `docs/vf-audit/design-c0-parameter-model.md` § 3/§ 4).
+                Effect::AbilityAuthorization {
+                    abilities: refs,
+                    categories: cat_refs,
+                } => {
+                    for a in refs {
+                        if a.active_for(selection) {
+                            abilities.insert(AuthorizedAbility {
+                                ability: a.ability().clone(),
+                                instance: a.resolved_instance(selection),
+                            });
+                        }
+                    }
+                    for c in cat_refs {
+                        if c.active_for(selection) {
+                            categories.insert(c.category());
+                        }
+                    }
                 }
                 // A free score in an Ability is permission to have it, since the
                 // Virtue confers the Ability outright.
                 Effect::AbilityScoreGrant { ability, .. } => {
-                    abilities.insert(ability.clone());
+                    abilities.insert(AuthorizedAbility {
+                        ability: ability.clone(),
+                        instance: None,
+                    });
+                }
+                // The gated-bonus carrier (Student of (Realm)'s +2 Lore, row
+                // 50(a)): same gate fold as `AbilityAuthorization`, read off
+                // this effect's own target list instead.
+                Effect::AbilityBonusGated { targets, .. } => {
+                    for t in targets {
+                        if t.active_for(selection) {
+                            abilities.insert(AuthorizedAbility {
+                                ability: t.ability().clone(),
+                                instance: t.resolved_instance(selection),
+                            });
+                        }
+                    }
                 }
                 // Exhaustive so adding an Effect variant is a compile error here,
                 // not a silently-ignored authorization gap (V55). Every listed
@@ -800,7 +884,11 @@ fn magus_later_life_pool(
     Some(FlowPool {
         amount: budget.later_life_xp,
         eligibility: PoolEligibility::Ability {
-            abilities: abilities.into_iter().collect(),
+            // Funding stays id-scoped (any instance) here — narrowing a POOL to
+            // one instance is D48/C4's `instances` field, not this slice's job;
+            // C1 only tightens OWNERSHIP (`validate_ability_authorization`),
+            // which is the actual F-349 defect.
+            abilities: abilities.iter().map(|a| a.ability.clone()).collect(),
             categories: AbilityCategory::ALL
                 .into_iter()
                 .filter(|category| {
@@ -1530,8 +1618,9 @@ mod tests {
     /// V55: `ability_authorizations` used to end in a bare `_ => {}` wildcard —
     /// the only non-exhaustive `Effect` match in `effective/`. Characterizes the
     /// behaviour the explicit match must preserve: only `RestrictedAbilityXp`,
-    /// `AbilityAuthorization`, and `AbilityScoreGrant` contribute a permission;
-    /// every other effect is a no-op. `AbilityBonus` (Puissant Ability) stands in
+    /// `AbilityAuthorization`, `AbilityScoreGrant`, and `AbilityBonusGated`
+    /// (C1) contribute a permission; every other effect is a no-op.
+    /// `AbilityBonus` (Puissant Ability) stands in
     /// for the rest — it names a target ability via `params[param]` but, per the
     /// rules text (ArMDE:4814-4816), grants no permission to own that ability,
     /// only a bonus once it is already legally held.
@@ -1588,12 +1677,22 @@ mod tests {
         assert_eq!(
             abilities,
             BTreeSet::from([
-                Id::new("ability.dead_language"),
-                Id::new("ability.second_sight"),
+                AuthorizedAbility {
+                    ability: Id::new("ability.dead_language"),
+                    instance: None,
+                },
+                AuthorizedAbility {
+                    ability: Id::new("ability.second_sight"),
+                    instance: None,
+                },
             ])
         );
         // Puissant Ability names ability.single_weapon via `params[param]` but
         // must not appear: AbilityBonus grants no ownership permission.
-        assert!(!abilities.contains(&Id::new("ability.single_weapon")));
+        assert!(
+            !abilities
+                .iter()
+                .any(|a| a.ability == Id::new("ability.single_weapon"))
+        );
     }
 }

@@ -1180,6 +1180,9 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::GeneralXp { .. }
         | Effect::LaterLifeXpRate { .. }
         | Effect::AbilityAuthorization { .. }
+        // Fixed catalogue ids, never a player-typed instance: nothing here can
+        // dangle the way `AbilityBonus`'s free param can.
+        | Effect::AbilityBonusGated { .. }
         | Effect::LocalityAbilityCapFraction { .. }
         | Effect::ConfidenceBonus { .. }
         | Effect::SpellMasteryXp { .. }
