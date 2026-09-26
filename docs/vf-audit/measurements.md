@@ -434,7 +434,7 @@ hit lines are `//` comments.
 | `crates/arm-rules/src/effective.rs` | 3 | 0 | 3 |
 | `crates/arm-rules/src/validation/life_stage.rs` | 2 | 1 | 1 |
 | `crates/arm-rules/src/effective/warping.rs` | 2 | 2 | 0 |
-| `crates/arm-app/src/ruleset_io.rs` | 2 | 2 | 0 |
+| `crates/arm-app/src/ruleset_io.rs` *(M0 snapshot; both sites moved to `effective_dto.rs` in slice U0, 2026-09-26)* | 2 | 2 | 0 |
 | `crates/arm-rules/src/validation/warping.rs` | 1 | 1 | 0 |
 | `crates/arm-rules/src/export.rs` | 1 | 0 | 1 |
 | `crates/arm-rules/src/effective/reputation_and_caps.rs` | 1 | 1 | 0 |
