@@ -773,12 +773,28 @@ pub(crate) fn validate_selection_parameters(
 /// requirement that a score already exists, and abilities are bought on a later
 /// step — so filing this on `virtues_flaws` deadlocked the guided wizard, blocking
 /// a step that could not offer the fix.
+///
+/// **Grant-aware (D2, `decisions.md`):** `selections` is the folded
+/// bought-plus-granted list ([`crate::effective::selections_for_effects`]), not
+/// `entity.selections` alone — a House/type-granted Puissant Ability dangles
+/// exactly like a bought one when its target is absent. This is deliberately
+/// **not** the same choice `PrereqCtx::build` makes for the incompatibility and
+/// forbidden-trait checks (review finding B1), which stay bought-only: those ask
+/// *may this character hold this Virtue at all*, and a grant answers that
+/// question by construction. This validator asks a different one — *is the
+/// thing the Virtue modifies in a legal state* — which a grant says nothing
+/// about, so it is not exempt. Do not "align" this with B1 by reverting to
+/// `entity.selections`; that reopens D2. Whether the target ability is *held*
+/// stays read off `entity.ability_scores` (bought rows) regardless — a grant
+/// never adds a bought ability score, so that half of the question is
+/// unaffected.
 pub(crate) fn validate_ability_bonus_targets(
     entity: &Entity,
+    selections: &[Selection],
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    for selection in &entity.selections {
+    for selection in selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };

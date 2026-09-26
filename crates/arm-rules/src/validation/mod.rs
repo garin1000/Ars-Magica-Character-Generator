@@ -986,7 +986,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_required_traits(type_profile, &selected_ids, &mut issues);
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
-    validate_ability_bonus_targets(entity, ruleset, &mut issues);
+    validate_ability_bonus_targets(entity, &effective_selections, ruleset, &mut issues);
     validate_possessed_param_targets(&effective_selections, ruleset, &prereq_ctx, &mut issues);
     validate_magical_focus(&effective_selections, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
@@ -998,7 +998,12 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     // rather than relying on a covenant happening to carry no such data.
     if entity.entity_kind == EntityKind::Character {
         validate_characteristics(entity, ruleset, &mut issues);
-        validate_characteristic_delta_preconditions(entity, ruleset, &mut issues);
+        validate_characteristic_delta_preconditions(
+            entity,
+            &effective_selections,
+            ruleset,
+            &mut issues,
+        );
         validate_abilities(entity, &effective_selections, ruleset, &mut issues);
         validate_arts(entity, ruleset, &mut issues);
         validate_spells(entity, ruleset, type_profile, &mut issues);
@@ -5449,6 +5454,133 @@ mod tests {
             parameter: None,
         }];
         assert!(codes(&validate(&entity, &rs)).contains(&"unexpected_param".to_string()));
+    }
+
+    /// D2 (`decisions.md`): extends `effective_ruleset()`'s Great Characteristic
+    /// / Puissant Ability catalogue with a House that grants each directly —
+    /// reproducing D2's own example verbatim ("a Virtue granted by a House …
+    /// bypasses" the precondition/dangling-target check). Neither Virtue is
+    /// granted anywhere in `rules/core/` today (D2's reachability sweep), so
+    /// this House is test-only.
+    fn effective_ruleset_with_house_grant() -> Ruleset {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.f", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"] },
+          {"id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "parameters": [{"key": "ability", "type": "ref", "domain": "ability"}],
+           "effects": [{"type": "ability_bonus", "param": "ability", "amount": 2}]},
+          {"id": "virtue.great_characteristic", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "parameters": [{"key": "characteristic", "type": "ref", "domain": "characteristic"}],
+           "effects": [{"type": "characteristic_score_delta_param", "param": "characteristic", "amount": 1}],
+           "max_per_target": 2}
+        ]"#;
+        let types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let abilities = r#"{ "abilities": [
+          { "id": "ability.awareness", "category": "general" }
+        ] }"#;
+        let characteristics = r#"{
+          "start_points": 7,
+          "base_max": 3, "base_min": -3,
+          "costs": [
+            { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 }, { "score": 1, "cost": 1 },
+            { "score": 0, "cost": 0 },
+            { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 }, { "score": -3, "cost": -6 }
+          ]
+        }"#;
+        let houses = r#"{ "houses": [
+          { "id": "house.grants_great_str", "lineage_type": "true_lineage",
+            "grants": [ { "kind": "fixed", "item": "virtue.great_characteristic",
+                          "params": { "characteristic": "characteristic.str" } } ] },
+          { "id": "house.grants_puissant_awareness", "lineage_type": "true_lineage",
+            "grants": [ { "kind": "fixed", "item": "virtue.puissant_ability",
+                          "params": { "ability": "ability.awareness" } } ] }
+        ] }"#;
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            arts: None,
+            houses: Some(houses),
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: Some(characteristics),
+            life_stages: None,
+            childhoods: None,
+            aging: None,
+        })
+        .unwrap()
+    }
+
+    /// D2: a House-granted Great Characteristic must satisfy the same "already
+    /// at least +3" precondition as a bought one. The grant is never bought, so
+    /// the check must read *effective* selections (bought ++ granted), not
+    /// `entity.selections` alone.
+    #[test]
+    fn granted_great_characteristic_on_a_low_base_is_max_base_too_low() {
+        let rs = effective_ruleset_with_house_grant();
+        let mut entity = make_entity("companion", vec![sel("flaw.f")]);
+        entity.house = Some(Id::new("house.grants_great_str"));
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 2)]);
+        assert!(
+            codes(&validate(&entity, &rs)).contains(&"characteristic_max_base_too_low".to_string()),
+            "a granted Great Characteristic on a base-2 Str must still fail the precondition: {:?}",
+            codes(&validate(&entity, &rs))
+        );
+    }
+
+    /// The positive twin: a granted Great Characteristic on a qualifying base
+    /// (already +3) must NOT trip the precondition.
+    #[test]
+    fn granted_great_characteristic_on_a_qualifying_base_is_clean() {
+        let rs = effective_ruleset_with_house_grant();
+        let mut entity = make_entity("companion", vec![sel("flaw.f")]);
+        entity.house = Some(Id::new("house.grants_great_str"));
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+        assert!(
+            !codes(&validate(&entity, &rs))
+                .contains(&"characteristic_max_base_too_low".to_string()),
+        );
+    }
+
+    /// D2: a House-granted Puissant Ability must dangle exactly like a bought
+    /// one when its target ability is not held.
+    #[test]
+    fn granted_puissant_ability_dangling_when_target_not_held() {
+        let rs = effective_ruleset_with_house_grant();
+        let mut entity = make_entity("companion", vec![sel("flaw.f")]);
+        entity.house = Some(Id::new("house.grants_puissant_awareness"));
+        assert!(
+            codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
+            "a granted Puissant whose target ability is absent should dangle: {:?}",
+            codes(&validate(&entity, &rs))
+        );
+    }
+
+    /// The positive twin: a granted Puissant Ability whose target IS held must
+    /// not dangle.
+    #[test]
+    fn granted_puissant_ability_target_held_is_not_dangling() {
+        let rs = effective_ruleset_with_house_grant();
+        let mut entity = make_entity("companion", vec![sel("flaw.f")]);
+        entity.house = Some(Id::new("house.grants_puissant_awareness"));
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 2,
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(
+            !codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
+        );
     }
 
     fn companion_entity_eff() -> Entity {

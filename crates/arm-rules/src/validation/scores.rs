@@ -170,10 +170,26 @@ fn validate_characteristic_point_spend(
 /// Unchanged by the move from a buy-cap shift to a free score delta: the gate
 /// always read the **bought** score, and the bought score still tops out at ±3.
 ///
+/// **Grant-aware (D2, `decisions.md`):** `selections` is the folded
+/// bought-plus-granted list ([`crate::effective::selections_for_effects`]), not
+/// `entity.selections` alone — a House/type-granted Great or Poor Characteristic
+/// is held to this precondition exactly like a bought one. This is deliberately
+/// **not** the same choice `PrereqCtx::build` makes for the incompatibility and
+/// forbidden-trait checks (review finding B1), which stay bought-only: those ask
+/// *may this character hold this Virtue at all*, and a grant answers that
+/// question by construction. This validator asks a different one — *is the
+/// thing the Virtue modifies in a legal state* — which a grant says nothing
+/// about, so it is not exempt. Do not "align" this with B1 by reverting to
+/// `entity.selections`; that reopens D2. The precondition's own **target**
+/// score stays bought-only regardless (below): "already has a score of at
+/// least +3" (ArMDE:3989) describes the Characteristic's bought state, not how
+/// the Virtue granting the raise was itself acquired.
+///
 /// Source: ArMDE:3987-3989 (Great,
 /// "already … at least +3"), :6598-6600 (Poor, "already −3 or lower").
 pub(crate) fn validate_characteristic_delta_preconditions(
     entity: &Entity,
+    selections: &[Selection],
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
@@ -182,7 +198,7 @@ pub(crate) fn validate_characteristic_delta_preconditions(
     };
     let base_max = rules.base_max_score();
     let base_min = rules.base_min_score();
-    for selection in &entity.selections {
+    for selection in selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };

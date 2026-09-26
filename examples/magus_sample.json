@@ -64,6 +64,10 @@
       "parameter": "Latin"
     },
     {
+      "ability": "ability.intrigue",
+      "score": 1
+    },
+    {
       "ability": "ability.magic_theory",
       "score": 4
     },
@@ -77,7 +81,7 @@
       "specialty": "long sword"
     }
   ],
-  "xp_pool": 282,
+  "xp_pool": 287,
   "ability_funding": "pool",
   "art_scores": [
     {

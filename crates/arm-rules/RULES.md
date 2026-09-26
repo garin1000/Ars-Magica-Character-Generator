@@ -1047,7 +1047,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1044).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1060).
   The Gift policy is independent of the `is_magus` flag (an unGifted Redcap is a
   companion; a Gifted hedge wizard is not a magus).
 
@@ -1241,7 +1241,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:259).
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:275).
 
 ### Arts
 
@@ -1289,7 +1289,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:463).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:479).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -1356,6 +1356,18 @@ bleed onto the character's other areas.
   have" (`ArMDE:4814-4816`) — so the target may be picked before the score exists and
   the finding is filed on `CreationPhase::Abilities`, the step where the ability
   is bought, not on the Virtues/Flaws step that names it.
+- **Grant-aware since D2** (`docs/vf-audit/decisions.md`): `validate_ability_bonus_targets`
+  scans *effective* selections (bought ++ House/Mythic-type/`grants_selection`
+  grants) for the Virtue itself, so a granted Puissant Ability (e.g. Bonisagus's
+  free choice between Puissant Magic Theory and Puissant Intrigue,
+  `ArMDE:2270-2283`) dangles exactly like a bought one when its target is
+  unheld. Distinct from review finding B1's bought-only exemption for the
+  incompatibility/forbidden-trait checks: those ask whether the character may
+  hold the Virtue at all, this asks whether its target is in a legal state — a
+  grant answers the first question but says nothing about the second.
+  `examples/magus_sample.json`'s Bonisagus had picked Puissant Intrigue with no
+  bought Intrigue row; D2's fix surfaced it as a genuine (if minor) data defect,
+  fixed by giving the character a base Intrigue score.
 
 #### Puissant (Art) — +3 to one Art
 > "You add 3 to the value of one Art whenever you use it. This means all totals in
@@ -1418,6 +1430,16 @@ above. Both are gone.*
   parameter-relative, derived from `base_max` by the amount's sign, so it lives
   on the effect, not in the static `Prereq`. That gate is unchanged by the
   correction: it always read the bought score.
+- **Grant-aware since D2** (`docs/vf-audit/decisions.md`): the scan is over
+  *effective* selections (bought ++ House/Mythic-type/`grants_selection`
+  grants) for the Virtue/Flaw itself, so a granted Great/Poor Characteristic is
+  held to the "already at ±3" precondition exactly like a bought one — the
+  precondition's own **target** comparison stays bought-only regardless, since
+  "already has a score of at least +3" (`ArMDE:3989`) describes the
+  Characteristic's bought state, not how the Virtue was acquired. Distinct from
+  review finding B1's bought-only exemption for the incompatibility/
+  forbidden-trait checks (see the Puissant Ability entry above for the same
+  distinction, spelled out once).
 - **"to no more than +5" needs no clamp of its own.** It falls out arithmetically:
   the bought score tops out at `base_max` (+3) and `max_per_target: 2` allows at
   most two grants, so +5 is the maximum reachable. Deliberately **no ceiling is
@@ -1447,7 +1469,8 @@ once in Characteristic points.
 - Implementation: as Great above, sign-mirrored —
   `characteristic_score_bonus` sums the negative delta, and
   `validate_characteristic_delta_preconditions` flags a target whose bought score
-  is above the base floor (`characteristic_min_base_too_high`).
+  is above the base floor (`characteristic_min_base_too_high`). Grant-aware
+  since D2, same as Great above.
 
 #### Save compatibility after the row-32 correction
 A save stores **choices, not resolved values**, so a character built under the
