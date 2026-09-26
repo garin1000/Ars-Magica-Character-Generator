@@ -19,6 +19,14 @@ use std::collections::{BTreeMap, BTreeSet};
 /// (`arm-app/src/ruleset_io.rs` lists `core/houses.json` as required).
 const SHIPPED_HOUSES: &str = include_str!("../../../rules/core/houses.json");
 
+/// The shipped type-profile registry, read raw for [`profile_trait_reference_ids`]
+/// — `EntityTypeProfile::required_traits`/`forbidden_traits` are `pub` on the
+/// struct, but nothing publicly exposes the *set of all profiles* outside the
+/// crate (`Ruleset::type_profiles` is `pub(crate)`), so this test parses the
+/// same JSON the loader does rather than reaching for a production accessor
+/// that does not exist.
+const SHIPPED_TYPE_PROFILES: &str = include_str!("../../../rules/core/character_types.json");
+
 fn load_ruleset() -> Ruleset {
     Ruleset::from_sources(RulesetSources {
         id: "arm5-core",
@@ -1911,6 +1919,91 @@ fn fully_specified_companion_validates() {
     );
 }
 
+/// Every item id named in some character-type profile's `required_traits` or
+/// `forbidden_traits` (`rules/core/character_types.json`). This is the *other*
+/// mechanism (besides an item's own `effects`) that wires a V/F id to something
+/// the engine actually reads — D46's own worked example is exactly this shape:
+/// `virtue.hermetic_magus` carries no `effects`, but the magus profile's
+/// `required_traits` enforces the rule its passage states ("All magi must take
+/// this as their Social Status").
+fn profile_trait_reference_ids() -> BTreeSet<String> {
+    let profiles: Vec<serde_json::Value> =
+        serde_json::from_str(SHIPPED_TYPE_PROFILES).expect("character_types.json is valid JSON");
+    let mut ids = BTreeSet::new();
+    for profile in &profiles {
+        for field in ["required_traits", "forbidden_traits"] {
+            if let Some(list) = profile[field].as_array() {
+                for id in list {
+                    if let Some(id) = id.as_str() {
+                        ids.insert(id.to_string());
+                    }
+                }
+            }
+        }
+    }
+    ids
+}
+
+/// True when `item` is computed by *something* — D46 (`docs/vf-audit/decisions.md`):
+/// "classification follows what is computed, never where it is computed." Two
+/// sources, and only two, currently wire a V/F id to an enforced consequence:
+/// the item's own `effects`, or a character-type profile's
+/// `required_traits`/`forbidden_traits` naming it (`profile_referenced`).
+fn is_computed(item: &PointItem, profile_referenced: &BTreeSet<String>) -> bool {
+    !item.effects.is_empty() || profile_referenced.contains(item.id.as_str())
+}
+
+/// D46's shrink-only pending work-list (plan § 1, `docs/vf-audit/phase-2-plan.md`):
+/// every entry the rewritten [`every_vf_is_classified`] finds misclassified under
+/// "classification follows what is computed, never where." `measurements.md`
+/// § 8 row 11 names the five effect-less `creation_effect` entries; D46 itself
+/// names the other two, `virtue.the_gift` and `virtue.hermetic_magus`, both
+/// classified `narrative` today despite being named in a type profile's
+/// `required_traits`/`forbidden_traits` — D46 rules the *opposite* correction for
+/// each (`the_gift` to `uncomputed_rule`, `hermetic_magus` to `creation_effect`),
+/// which is exactly why classification-follows-computation cannot itself decide
+/// *which* of the two computed classes an entry belongs to — X2 does that.
+/// `(id, why)`; [`pending_d46_classification_entries_still_trip_the_guard`] keeps
+/// every row honest.
+const PENDING_D46_CLASSIFICATION: &[(&str, &str)] = &[
+    (
+        "flaw.corrupted_arts",
+        "creation_effect, carries no effects, and is named in no type profile's \
+         required_traits/forbidden_traits (measurements.md § 8 row 11)",
+    ),
+    (
+        "flaw.savantism",
+        "creation_effect, carries no effects, and is named in no type profile's \
+         required_traits/forbidden_traits (measurements.md § 8 row 11)",
+    ),
+    (
+        "virtue.devil_child",
+        "creation_effect, carries no effects, and is named in no type profile's \
+         required_traits/forbidden_traits (measurements.md § 8 row 11)",
+    ),
+    (
+        "virtue.nephilim",
+        "creation_effect, carries no effects, and is named in no type profile's \
+         required_traits/forbidden_traits (measurements.md § 8 row 11)",
+    ),
+    (
+        "virtue.simple_student",
+        "creation_effect, carries no effects, and is named in no type profile's \
+         required_traits/forbidden_traits (measurements.md § 8 row 11)",
+    ),
+    (
+        "virtue.the_gift",
+        "narrative, but named in the grog profile's forbidden_traits — D46's ruling: \
+         becomes uncomputed_rule (ArMDE:2870-2876's \"suffers all the penalties of The \
+         Gift\" is the clause that stays uncomputed)",
+    ),
+    (
+        "virtue.hermetic_magus",
+        "narrative, but named in the magus profile's required_traits — D46's ruling: \
+         stays/becomes creation_effect",
+    ),
+];
+
 /// Acceptance criterion for M5 slice 5a: every shipped Virtue/Flaw carries a
 /// `classification`. The field is required (no serde default), so an unclassified
 /// entry would already fail `load_ruleset()`; this test additionally asserts the
@@ -1941,31 +2034,54 @@ fn every_vf_is_classified() {
     assert!(uncomputed > 0, "some V/F must be uncomputed_rule");
     assert!(creation > 0, "some V/F must be creation_effect");
     assert!(in_play > 0, "some V/F must be in_play_effect");
-    // An entry carrying `effects` is mechanical, so it is neither narrative nor
-    // uncomputed_rule: it either changes a creation number (creation_effect) or
-    // modifies an in-play/derived total (in_play_effect, M5/5b). Both
-    // effect-free classes are never given an invented effect — the difference
-    // between them is whether the *rulebook* stated a rule, not the engine.
+
+    // D46: classification follows what is computed, never where. The old guard
+    // asked only whether `effects` was non-empty, and only in one direction —
+    // required on `in_play_effect`, never checked on `creation_effect` — which is
+    // why five effect-less `creation_effect` entries passed silently
+    // (measurements.md § 8 row 11). This asks the symmetric question of all four
+    // classes: the two "something is computed" classes must have a computation
+    // source, and the two "nothing is computed" classes must not.
+    let profile_referenced = profile_trait_reference_ids();
+    let mut offenders = Vec::new();
     for item in rs.items() {
-        if !item.effects.is_empty() {
-            assert_ne!(
-                item.classification,
-                Classification::Narrative,
-                "{} carries effects so must not be narrative",
-                item.id
-            );
-            assert_ne!(
-                item.classification,
-                Classification::UncomputedRule,
-                "{} carries effects, so the engine does compute something for it \
-                 — that makes it in_play_effect or creation_effect, never \
-                 uncomputed_rule",
-                item.id
-            );
+        let id = item.id.as_str();
+        if PENDING_D46_CLASSIFICATION
+            .iter()
+            .any(|(pending, _)| *pending == id)
+        {
+            continue;
+        }
+        let computed = is_computed(item, &profile_referenced);
+        match item.classification {
+            Classification::Narrative | Classification::UncomputedRule if computed => {
+                offenders.push(format!(
+                    "{id}: classified {:?}, but is computed (effects, or named in a type \
+                     profile's required_traits/forbidden_traits) — D46 says that makes it \
+                     creation_effect or in_play_effect, never {:?}",
+                    item.classification, item.classification
+                ));
+            }
+            Classification::CreationEffect | Classification::InPlayEffect if !computed => {
+                offenders.push(format!(
+                    "{id}: classified {:?}, but computes nothing — no effects, and named in \
+                     no type profile's required_traits/forbidden_traits",
+                    item.classification
+                ));
+            }
+            _ => {}
         }
     }
-    // M5/5b acceptance: every in_play_effect V/F is wired to at least one
-    // derived-total Effect variant (the 93-item in-play audit is fully wired).
+    assert!(
+        offenders.is_empty(),
+        "D46: classification must follow what is computed, never where it is computed:\n{}",
+        offenders.join("\n")
+    );
+
+    // M5/5b acceptance, unchanged and stricter than D46 alone: an in_play_effect
+    // derived-total modifier must be wired on the entry itself, not merely
+    // enforced by a profile elsewhere — a type profile's required/forbidden
+    // traits is not how a derived total (Soak, a Lab Total, …) is computed.
     for item in rs.items() {
         if item.classification == Classification::InPlayEffect {
             assert!(
@@ -1974,6 +2090,38 @@ fn every_vf_is_classified() {
                 item.id
             );
         }
+    }
+}
+
+/// The mirror of `uncomputed_clauses.rs::pending_mechanical_classification_entries_still_trip_the_screen`,
+/// for [`PENDING_D46_CLASSIFICATION`]: every pending row must still trip the D46
+/// guard, so the list can only shrink as X2 reclassifies or wires each entry —
+/// never grow stale.
+#[test]
+fn pending_d46_classification_entries_still_trip_the_guard() {
+    let rs = load_ruleset();
+    let profile_referenced = profile_trait_reference_ids();
+
+    for (id, _) in PENDING_D46_CLASSIFICATION {
+        let item = rs
+            .items()
+            .find(|item| item.id.as_str() == *id)
+            .unwrap_or_else(|| {
+                panic!(
+                    "PENDING_D46_CLASSIFICATION row \"{id}\" names an entry that is no longer \
+                     in the catalogue — delete the row"
+                )
+            });
+        let computed = is_computed(item, &profile_referenced);
+        let still_offends = match item.classification {
+            Classification::Narrative | Classification::UncomputedRule => computed,
+            Classification::CreationEffect | Classification::InPlayEffect => !computed,
+        };
+        assert!(
+            still_offends,
+            "PENDING_D46_CLASSIFICATION row \"{id}\" no longer trips the D46 guard — delete \
+             the row"
+        );
     }
 }
 

@@ -27,13 +27,16 @@
 //! `narrative` one, because that is where the whole classification partition is
 //! already checked.
 //!
-//! The third assertion of the set, *"a `narrative` entry whose cited passage
-//! carries a mechanical token is a dropped rule"*, is
-//! [`no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause`]. It is the
-//! expensive half — every red is a hand extraction out of two rulebooks — so it
-//! is **scoped by swept block** ([`SWEPT_BLOCKS`]) and widens as the sweep
-//! proceeds, exactly as `rulebook_citations.rs`'s roots function does. Landing
-//! it unscoped would have meant ~90 reds and the only route to green would have
+//! The third assertion of the set, *"a swept entry whose cited passage carries
+//! a mechanical token this entry drops"*, is
+//! [`no_swept_entry_drops_an_uncomputed_mechanical_clause`] — D5's first
+//! obligation (`docs/vf-audit/decisions.md`) made it class-agnostic: it asks
+//! this of `narrative`, `creation_effect` and `in_play_effect` alike, not only
+//! `narrative`. It is the expensive half — every red is a hand extraction out
+//! of two rulebooks — so it is **scoped by swept block** ([`SWEPT_BLOCKS`])
+//! and widens as the sweep proceeds, exactly as `rulebook_citations.rs`'s
+//! roots function does. Landing it unscoped would have meant ~90 reds and the
+//! only route to green would have
 //! been an exemption list — a backlog with a test around it.
 //!
 //! # Scope
@@ -943,15 +946,15 @@ fn every_uncomputed_rule_entry_states_its_rule_in_every_locale() {
     );
 }
 
-/// The blocks of source Markdown whose `narrative` entries have been swept —
-/// every cited passage read, every mechanical clause either written into both
-/// locales (and the entry reclassified) or confirmed absent.
+/// The blocks of source Markdown whose entries have been swept — every cited
+/// passage read, every mechanical clause either written into both locales (and
+/// the entry reclassified) or confirmed absent.
 ///
 /// Incremental **by design**, mirroring `rulebook_citations.rs`'s roots
 /// function: the sweep is a hand extraction out of two rulebooks, so landing
-/// [`no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause`] over the
-/// whole catalogue at once would have meant ~90 simultaneous reds and an
-/// exemption list as the only route to green. A row is added here — never
+/// [`no_swept_entry_drops_an_uncomputed_mechanical_clause`] over the whole
+/// catalogue at once would have meant ~90 simultaneous reds and an exemption
+/// list as the only route to green. A row is added here — never
 /// removed — when its block is clean, so the guard's coverage only ever grows
 /// and a regression inside an already-swept block fails immediately.
 ///
@@ -1126,8 +1129,8 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
 /// ([`pending_mechanical_classification_entries_still_trip_the_screen`]), so
 /// a later fix has to remove the row rather than leave a stale one — the
 /// list can only shrink. Every *unlisted* swept `narrative` entry must still
-/// pass — [`no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause`]
-/// enforces that directly, since this list is the only thing it skips besides
+/// pass — [`no_swept_entry_drops_an_uncomputed_mechanical_clause`] enforces
+/// that directly, since this list is the only thing it skips besides
 /// [`NO_RULE_DESPITE_TOKEN`]. X2 is the slice that empties it.
 const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     (
@@ -1426,6 +1429,475 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     ),
 ];
 
+/// D5's first obligation (`docs/vf-audit/decisions.md`): a `creation_effect` or
+/// `in_play_effect` entry whose cited passage states a mechanical clause the
+/// screen newly flags, where reading it finds the engine's `effects` already
+/// cover the **whole** passage — so nothing is actually dropped, and the
+/// screen's hit is a false positive on an already-computed entry. The
+/// computed-class mirror of [`NO_RULE_DESPITE_TOKEN`]: a row records that a
+/// human read the passage and the entry's own effects, and found no gap
+/// between them. [`computed_entry_covers_whole_passage_entries_still_trip_the_screen`]
+/// keeps every row honest the same way `exempted_entries_still_trip_the_screen`
+/// does for `NO_RULE_DESPITE_TOKEN`. Two shapes of false positive live here
+/// side by side, exactly as `NO_RULE_DESPITE_TOKEN` already mixes reasons:
+/// most rows are a single clause whose one number is the entry's one effect
+/// (nothing to drop); `flaw.black_sheep` and `flaw.poor` are the other shape
+/// — the displayed text already states the clause, just not in wording this
+/// screen's token vocabulary recognizes (a German synonym, an unlisted
+/// quantifier), a screen gap rather than a content gap.
+const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
+    (
+        "flaw.black_sheep",
+        "single clause (bad Reputation at level 2), fully computed via grants_reputation. \
+         DE summary already states it, using \"Ruf\" rather than the rulebook's \"Reputation\" \
+         loanword — a screen vocabulary gap (family 14 only recognizes \"Reputation der Stufe\"), \
+         not a dropped rule.",
+    ),
+    (
+        "flaw.covenant_upbringing",
+        "operative clause (\"may take Latin\") is computed via ability_authorization \
+         (over-permissively — the dead_language/Latin binding is D14's already-tracked \
+         defect, not a new one here); the rest of the passage is flavor.",
+    ),
+    (
+        "flaw.cyclic_magic_negative",
+        "both stated totals (Casting Scores, Lab Totals) are computed via two effects; \"the \
+         length of time... must be equal\" is troupe-level setup guidance, not a chargen fact.",
+    ),
+    (
+        "flaw.deficient_technique",
+        "the halving is computed via deficient_art; the Advancement-Total exception and the \
+         pre-halving XP basis are refinements of that same mechanism, handled downstream \
+         (D12's family).",
+    ),
+    (
+        "flaw.difficult_longevity_ritual",
+        "single clause (halve the Lab Total for a Longevity Ritual for this character), fully \
+         computed via magic_total_halving/lab_longevity; \"without penalty for others\" is \
+         already implicit in that total's scope.",
+    ),
+    (
+        "flaw.dwarf",
+        "all three signed numbers (Size -2, Strength -1, Stamina -1) match three effects \
+         exactly; the Giant Blood/Large/Small Frame exclusion is in incompatible_with, a \
+         separately validated field.",
+    ),
+    (
+        "flaw.failed_student",
+        "single clause (Bad Academic Reputation 2), fully computed via grants_reputation.",
+    ),
+    (
+        "flaw.flawed_parma_magica",
+        "single clause (half Magic Resistance vs one Form), fully computed via \
+         magic_resistance_mod/halved_parma.",
+    ),
+    (
+        "flaw.foreign_upbringing",
+        "single clause (locality-dependent Ability caps halved, rounded up), fully computed \
+         via locality_ability_cap_fraction; the rest is flavor.",
+    ),
+    (
+        "flaw.fragile_constitution",
+        "single clause (-3 to recovery rolls), fully computed via health_mod/recovery.",
+    ),
+    (
+        "flaw.frail",
+        "single clause (-3 Soak), fully computed via soak_mod.",
+    ),
+    (
+        "flaw.gabai",
+        "single clause (-2 local Reputation \"Tax Collector\"), fully computed via \
+         grants_reputation; the Free-Social-Status compatibility note needs no effect.",
+    ),
+    (
+        "flaw.incomprehensible",
+        "both stated halvings (teaching, authoring/Lab Texts) are computed via two \
+         advancement_mod effects with matching sources.",
+    ),
+    (
+        "flaw.outsider_major",
+        "single clause (bad Reputation, level 1-3), fully computed via grants_reputation with \
+         a matching max_score.",
+    ),
+    (
+        "flaw.outsider_minor",
+        "the Minor half of the same entry/passage. Same reading as flaw.outsider_major.",
+    ),
+    (
+        "flaw.poor",
+        "the operative clause is computed via later_life_xp_rate (the shipped \
+         wealthy_and_poor_ship_with_their_rates_and_eligibility test covers it), and the \
+         displayed text already paraphrases it (\"one fewer season\") — a screen vocabulary \
+         gap (no listed idiom for \"one fewer\"), not a dropped rule.",
+    ),
+    (
+        "flaw.poor_eyesight",
+        "single clause (-3 to sight-involving rolls, including attack/defense), computed via \
+         two combat_mod effects.",
+    ),
+    (
+        "flaw.poor_formulaic_magic",
+        "single clause (-5 to Formulaic casting rolls), fully computed via \
+         casting_total_mod/formulaic.",
+    ),
+    (
+        "flaw.poor_living_conditions",
+        "single clause (-1 Living Conditions Modifier), fully computed via \
+         aging_mod/living_conditions.",
+    ),
+    (
+        "flaw.poor_student",
+        "both stated halvings (teaching, books) are computed via two advancement_mod effects; \
+         the never-below-1 floor is the engine's generic advancement-total invariant.",
+    ),
+    (
+        "flaw.short_ranged_magic",
+        "both stated halvings (Casting Totals off Touch, Lab Total for range > Touch) are \
+         computed — special_casting_mod and halves_spell_cap_beyond_touch (Q10/D28).",
+    ),
+    (
+        "flaw.slow_reflexes",
+        "single clause (-3 Initiative), fully computed via combat_mod/initiative.",
+    ),
+    (
+        "flaw.small_frame",
+        "single clause (Size -1), fully computed via size_delta; the Giant Blood/Large/Dwarf \
+         exclusion is in incompatible_with.",
+    ),
+    (
+        "flaw.unimaginative_learner",
+        "single clause (-3 studying from raw vis), fully computed via advancement_mod/vis.",
+    ),
+    (
+        "flaw.weak_characteristics",
+        "single clause (-3 Characteristic points), fully computed via characteristic_points; \
+         \"may take twice\" is max_per_target/max_total, not an effect.",
+    ),
+    (
+        "virtue.adept_laboratory_student",
+        "single clause (+6 Lab Totals from others' lab texts), fully computed via \
+         lab_total_mod.",
+    ),
+    (
+        "virtue.apt_student",
+        "single clause (+5 Source Quality when taught), fully computed via \
+         advancement_mod/taught.",
+    ),
+    (
+        "virtue.baccalaureus",
+        "the XP grant and the Academic Reputation are both computed; the male-characters-unless \
+         exception is the same unenforced eligibility footnote every Social-Status Virtue in \
+         this block carries, not a new gap.",
+    ),
+    (
+        "virtue.crafters_healing",
+        "single clause (confers the Crafter's Healing Ability at 1), fully computed via \
+         ability_score_grant.",
+    ),
+    (
+        "virtue.curse_throwing",
+        "single clause (confers the Curse-Throwing Ability at 1), fully computed via \
+         ability_score_grant.",
+    ),
+    (
+        "virtue.cyclic_magic_positive",
+        "both stated bonuses (Casting Scores, Lab Totals when the cycle covers the whole \
+         season) are computed via two effects, matching flaw.cyclic_magic_negative's reading.",
+    ),
+    (
+        "virtue.demonic_might",
+        "single clause (+2 Infernal Might), fully computed via might_grant; the Demonic Blood \
+         prerequisite is already a `prerequisites` field.",
+    ),
+    (
+        "virtue.demonic_powers",
+        "single clause (+20 Infernal Power levels), fully computed via power_levels; the \
+         Demonic Blood prerequisite is already a `prerequisites` field.",
+    ),
+    (
+        "virtue.dowsing",
+        "single clause (confers the Dowsing Ability at 1), fully computed via \
+         ability_score_grant.",
+    ),
+    (
+        "virtue.faerie_magic",
+        "single clause (confers the Faerie Magic Ability at 1), fully computed via \
+         ability_score_grant plus the house.merinita prerequisite; the free-for-House-members \
+         grant is the Houses-phase granted_selections machinery, not this entry's own effect.",
+    ),
+    (
+        "virtue.falconer",
+        "single clause (50 XP on the named Ability list), fully computed via \
+         restricted_ability_xp.",
+    ),
+    (
+        "virtue.flawless_magic",
+        "both stated clauses (starts every spell at Mastery 1, doubled Advancement Totals) are \
+         computed in one grants_spell_mastery effect (score plus advancement_num/den).",
+    ),
+    (
+        "virtue.free_study",
+        "single clause (+3 Source Quality studying from raw vis), fully computed via \
+         advancement_mod/vis.",
+    ),
+    (
+        "virtue.the_enigma",
+        "single clause (confers Enigmatic Wisdom at 1), fully computed via ability_score_grant \
+         plus the house.criamon prerequisite; the free-for-House-members grant is the \
+         Houses-phase granted_selections machinery.",
+    ),
+];
+
+/// D5's first obligation: a `creation_effect`/`in_play_effect` entry whose
+/// passage states a mechanical clause this screen newly reaches, where the
+/// displayed text (`description` if present, else `summary`, in some shipped
+/// locale) states none — so a real clause looks dropped and needs a human
+/// read. Unlike [`COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE`], this is not yet
+/// resolved: the row only records *that* the screen still finds a gap, not
+/// that the gap is real or which text should close it — X2's job, per plan
+/// § 1 ("guard stops being class-keyed... reds go to a pending work-list").
+/// `(id, what the newly-widened screen found)`; shrink-only, like
+/// [`PENDING_MECHANICAL_CLASSIFICATION`] —
+/// [`pending_dropped_clause_entries_still_trip_the_screen`] enforces it.
+const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
+    (
+        "flaw.baneful_circumstances",
+        "orphan: \"cannot recover Fatigue, heal wounds, or recover Might\" during the \
+         circumstance has no effect at all — only the extra Aging roll is computed, \
+         ArMDE:5687-5690",
+    ),
+    (
+        "flaw.bound_to_role_role",
+        "orphan: the deprivation-check-as-food clause and \"may only be taken by grogs\" carry \
+         no effect/prerequisite — only the Unaging half is computed, ArMDE:5735-5748",
+    ),
+    (
+        "flaw.corrupted_arts",
+        "effects: null — the +3/-3 Casting Total swing and the XP gain/loss on success/failure \
+         are entirely uncomputed (also D46-pending), ArMDE:5853-5858",
+    ),
+    (
+        "flaw.creative_block",
+        "orphan: \"roll twice as many dice on the experimentation table\" has no effect — only \
+         the -3 Lab Total is computed, ArMDE:5873-5876",
+    ),
+    (
+        "flaw.excommunicate",
+        "orphan: \"cannot benefit from the sacraments\" has no effect — only the bad Reputation \
+         is computed, ArMDE:6044-6047",
+    ),
+    (
+        "flaw.failed_monk",
+        "orphan: \"may take Academic Abilities during character creation\" has no \
+         ability_authorization/restricted_ability_xp effect — only the two Reputations are \
+         computed (authorization family, X1-adjacent), ArMDE:6068-6071",
+    ),
+    (
+        "flaw.feral_scent",
+        "orphan: \"-1 penalty to social interactions\" has no effect — only the Reputation is \
+         computed, ArMDE:6106-6109",
+    ),
+    (
+        "flaw.leprosy",
+        "orphan: \"cannot gain a positive Reputation\" has no effect — only the Living \
+         Condition penalty and the Aging-Crisis Heavy Wound are computed, ArMDE:6338-6341",
+    ),
+    (
+        "flaw.monstrous_blood",
+        "orphan: \"may learn Magic Lore during character creation\" (no authorization effect) \
+         plus the entire four-way Magic-Animal/Human/Spirit/Thing sub-type system (each with its \
+         own penalty or power) — only the -1 Aging-roll base clause is computed, \
+         ArMDE:6454-6467",
+    ),
+    (
+        "flaw.obese",
+        "orphan: \"-1 to all rolls that involve moving quickly or gracefully\" has no effect — \
+         only the -3 Fatigue-roll penalty is computed, ArMDE:6516-6519",
+    ),
+    (
+        "flaw.outlaw",
+        "orphan: \"may take Martial Abilities at character generation\" has no \
+         ability_authorization effect — only the Reputation is computed (authorization family, \
+         X1-adjacent), ArMDE:6542-6545",
+    ),
+    (
+        "flaw.outlaw_leader",
+        "orphan: \"may take Martial Abilities at character generation\" has no \
+         ability_authorization effect — only the Reputation is computed (authorization family, \
+         X1-adjacent), ArMDE:6546-6549",
+    ),
+    (
+        "flaw.savantism",
+        "effects: null — the halved starting XP, halved future Advancement Totals, the score-3 \
+         starting cap, and the favored-Ability exception (+3 specialization, cap 6) are entirely \
+         uncomputed (also D46-pending), ArMDE:6703-6708",
+    ),
+    (
+        "flaw.the_constant_expression",
+        "orphan: the permanent lost Fatigue level, the Concentration roll to suppress (Ease \
+         Factor 3 + Warping), the extra botch dice on Ceremonial/Ritual casting, and the free \
+         -3 lab Safety Flaw all have no effect — only a bare \"circumstantial\" marker is \
+         computed, ArMDE:5821-5838",
+    ),
+    (
+        "flaw.usurer",
+        "orphan: the ~10 pounds of silver yearly income has no effect — only the Reputation is \
+         computed, ArMDE:6951-6954",
+    ),
+    (
+        "flaw.warped_by_magic",
+        "orphan: \"may spend experience points on Magic Lore during character creation\" has no \
+         ability_authorization effect, and the required companion Minor Flaw is unmodelled — \
+         only the Warping grant is computed, ArMDE:7019-7022",
+    ),
+    (
+        "flaw.weak_enchanter",
+        "F-544 (`docs/vf-audit/corrections.md` § 3.4): \"apply the Deficiency first and then \
+         halve the remaining total\" is an ORDERING rule the engine's single halving effect does \
+         not encode, ArMDE:7060-7063",
+    ),
+    (
+        "flaw.weak_magic",
+        "F-544: \"halve the Penetration Total after subtracting the spell level\" is an ORDERING \
+         rule the engine's single halving effect does not encode, ArMDE:7064-7067",
+    ),
+    (
+        "flaw.weak_scholar",
+        "F-544 (worked as one edit with its six siblings, per corrections.md § 3.4) — ships no \
+         description in either locale, ArMDE:7080-7083",
+    ),
+    (
+        "flaw.weak_spontaneous_magic",
+        "F-544: the stress-die-without-casting-bonus clause and the ceremonial-casting \
+         exception have no effect beyond the bare halving, ArMDE:7084-7089",
+    ),
+    (
+        "virtue.academic_concentration_subject",
+        "orphan: \"-1 to Artes Liberales rolls/totals for the other six subjects\" has no \
+         effect — only the +3 for the concentrated subject is computed, ArMDE:3362-3367",
+    ),
+    (
+        "virtue.affinity_ability",
+        "orphan: \"may exceed the normal age-based cap... by two points for that Ability\" has \
+         no visible effect on this entry (max_total 255 is not the same claim) — only the XP \
+         multiplier is computed, ArMDE:3372-3374",
+    ),
+    (
+        "virtue.affinity_art",
+        "orphan: \"may exceed the normal recommended limits\" has no visible effect on this \
+         entry (max_total 2 caps how many times it is taken, not the per-Art limit) — only the \
+         XP multiplier is computed, ArMDE:3376-3378",
+    ),
+    (
+        "virtue.arcane_lore",
+        "orphan: \"unless you have The Gift, you cannot learn Parma Magica\" and the \
+         Gifted-non-magus/Enemy-of-the-Order interaction have no effect or prerequisite — only \
+         the 50 XP grant is computed, ArMDE:3430-3435",
+    ),
+    (
+        "virtue.aristotelian_training",
+        "already flagged and NOT YET RULED ON (D4, `docs/vf-audit/decisions.md`; N6 in the \
+         phase-2 plan recommends uncomputed_rule + text): the +1 Lab Total is unconditional \
+         though the passage restricts it to synthesizing the New Aristotle, and the +1 Artes \
+         Liberales / +1 Disputatio clauses have no effect at all, ArMDE:3440-3443",
+    ),
+    (
+        "virtue.bee_king",
+        "orphan: the entire bee-command/communication power block and the automatic +10 \
+         swarm-attack damage have no effect — only the no-apparent-aging clause is computed, \
+         ArMDE:3484-3499",
+    ),
+    (
+        "virtue.blood_of_the_nephilim",
+        "orphan: the per-century Size growth, the Dominion Lore authorization, the once-per-\
+         decade aging past 150 with a -5 modifier, the Longevity-Potion immunity, the \
+         Decrepitude-driven Advancement-Total penalty, the food/starvation mechanic, and the \
+         exclusion list all have no effect — only the base Size +1 is computed, \
+         ArMDE:3504-3518",
+    ),
+    (
+        "virtue.cathedral_school_master",
+        "orphan: the age-and-Ability-score eligibility floor (Latin 5, Artes Liberales 5, \
+         Teaching 3) has no prerequisite — only the Reputation and the XP grant are computed, \
+         ArMDE:3549-3554",
+    ),
+    (
+        "virtue.clan_ilfetu",
+        "orphan: the conditional +5 family/+3 Corpus Divination bonus for a magus also \
+         Initiated into the Esoteric Mystery of Divination and Augury has no effect — only the \
+         base 50 XP grant is computed, ArMDE:3563-3566",
+    ),
+    (
+        "virtue.commanding_aura",
+        "orphan: the per-rank (Pope/Cardinal/Legatus/Archbishop) Magic Resistance and Soak \
+         bonus table, and the legatus missus's conditional loss-of-power clause, are not \
+         visibly keyed to rank — only a bare \"aura_bonus\" kind is computed, ArMDE:3579-3596",
+    ),
+    (
+        "virtue.demonic_blood",
+        "orphan: vis production on death, immunity to Warping, the doubled effective-aging-rate \
+         past 35, the attendant minor demon, and the exclusion list have no effect — only the \
+         Infernal Might and the Power levels are computed, ArMDE:3649-3662",
+    ),
+    (
+        "virtue.diedne_magic",
+        "orphan: the required Major Story Flaw (\"in addition to your normal allowance... does \
+         not grant you any points\") is a real budget-affecting clause with no effect — only \
+         the divide-by-5-or-2 casting mechanic is computed, ArMDE:3675-3682",
+    ),
+    (
+        "virtue.doctor_in_faculty",
+        "orphan: the age-and-Ability-score eligibility floor (Latin 5, Artes Liberales 5, \
+         faculty Ability 5) and the two-seasons-a-year practice obligation have no \
+         prerequisite/effect — only the Reputation and the XP grant are computed, \
+         ArMDE:3683-3698",
+    ),
+    (
+        "virtue.enduring_constitution",
+        "orphan: \"+3 on rolls to resist pain\" has no effect — only the wound/fatigue penalty \
+         reductions are computed, ArMDE:3751-3754",
+    ),
+    (
+        "virtue.faerie_blood",
+        "orphan: \"can learn Faerie Lore at character generation\" (no authorization effect) \
+         plus the entire Bee-King/Dwarf/Goblin/Satyr/Sidhe/Spinnen/Undine sub-type bonus list — \
+         only the -1 Aging-roll base clause is computed, ArMDE:3797-3820",
+    ),
+    (
+        "virtue.faerie_raised_magic",
+        "orphan: \"this Virtue also includes the Virtue Spell Improvisation\" grants a second \
+         Virtue's effect that is not itself present — only the faerie_raised casting mechanic is \
+         computed, ArMDE:3829-3842",
+    ),
+    (
+        "virtue.fast_caster",
+        "orphan: \"+3 to rolls to determine fast casting speed\" has no effect — only the +3 \
+         Initiative-to-cast is computed, ArMDE:3865-3868",
+    ),
+];
+
+/// True when **every** shipped locale's displayed rules text for `id`
+/// (`description` if present, else `summary` —
+/// [`displayed_rules_text_by_language`], the exact precedence
+/// `VirtueFlawTab.svelte`'s tooltip applies) states a mechanical rule. A
+/// locale carrying no displayed text at all counts as failing: there is
+/// nothing there to carry the clause. This is deliberately **not** "the same
+/// clause the passage names" — the screen has no way to match a specific
+/// token to a specific `Effect`, only to ask whether *some* mechanical rule
+/// reached the player in text. That coarseness is what makes
+/// [`PENDING_DROPPED_CLAUSE`] a to-be-read work-list rather than a settled
+/// verdict.
+fn displayed_text_states_a_mechanical_rule_in_every_locale(
+    id: &str,
+    by_language: &BTreeMap<String, BTreeMap<String, String>>,
+) -> bool {
+    by_language.values().all(|displayed| {
+        displayed
+            .get(id)
+            .is_some_and(|text| states_a_mechanical_rule(text))
+    })
+}
+
 /// The `source` block of a catalogue entry, as `(file, start, end)`.
 fn source_of(item: &Value) -> Option<(String, i64, i64)> {
     let source = item.get("source")?;
@@ -1467,28 +1939,48 @@ fn bracketed_passage(
     Some(lines[(start as usize - 1)..(end as usize)].join("\n"))
 }
 
-/// The third assertion: **a `narrative` entry whose cited passage states a
-/// mechanical rule has dropped that rule.**
+/// The third assertion, D5's first obligation (`docs/vf-audit/decisions.md`):
+/// **the guard stops being class-keyed.** It used to ask only "is this
+/// `narrative`, and does its passage state a rule?" — so a `creation_effect` or
+/// `in_play_effect` entry that computes *one* clause and drops the rest of its
+/// passage was examined by nothing at all (§ 3.1's second blind spot;
+/// F-461/F-465/F-470). It now asks the question D5 actually poses, of all three
+/// classes a swept passage can carry: **does this passage state a mechanical
+/// clause that reaches the player nowhere?**
 ///
-/// `narrative` means "pure personality, story, or social-status flavor" — a
-/// statement about the *rulebook*, not merely about what the engine computes.
-/// So an entry classified `narrative` whose own passage carries a signed
-/// modifier or a botch-dice clause is one of two bugs, and both are real: either
-/// the rule reaches the player nowhere (the engine models nothing *and* the
-/// displayed text, capped at the summary's first sentence, omits it), or the
-/// entry is misclassified and belongs in `uncomputed_rule` / `in_play_effect`.
+/// - `narrative` means "pure personality, story, or social-status flavor" — a
+///   statement about the *rulebook*, not merely about what the engine
+///   computes. A passage that trips the screen is a dropped rule or a
+///   misclassification, exactly as before.
+/// - `creation_effect`/`in_play_effect` entries compute *something*, but this
+///   screen cannot match a specific token to a specific `Effect` — it can only
+///   ask whether the *displayed* text (every shipped locale) also states a
+///   mechanical rule. If it does not, the passage's clause has no carrier at
+///   all: neither an effect provably covering it, nor a sentence stating it.
+///   That is exactly D5's "the obligation is that the clause reaches the
+///   player" — a `description` in every locale, or (recorded in
+///   [`COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE`]) an explicit reading that the
+///   effects already cover the whole passage.
+/// - `uncomputed_rule` is deliberately excluded here: [`states_a_mechanical_rule`]
+///   already gates it, unconditionally and catalogue-wide, in
+///   [`every_uncomputed_rule_entry_states_its_rule_in_every_locale`].
 ///
 /// This is the assertion that makes the sweep *checkable* rather than claimed.
 /// Without it, "the Flaws block is clean" is a sentence in a report; with it,
 /// re-dirtying the block is a failing build.
 #[test]
-fn no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause() {
+fn no_swept_entry_drops_an_uncomputed_mechanical_clause() {
     let mut cache: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let by_language = displayed_rules_text_by_language();
     let mut checked = 0usize;
     let mut offenders = Vec::new();
 
     for item in catalogue() {
-        if item["classification"] != "narrative" {
+        let classification = item["classification"].as_str().unwrap_or_default();
+        if !matches!(
+            classification,
+            "narrative" | "creation_effect" | "in_play_effect"
+        ) {
             continue;
         }
         let Some((file, start, end)) = source_of(&item) else {
@@ -1511,30 +2003,54 @@ fn no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause() {
         {
             continue;
         }
+        if COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE
+            .iter()
+            .any(|(allowed, _)| *allowed == id)
+        {
+            continue;
+        }
+        if PENDING_DROPPED_CLAUSE
+            .iter()
+            .any(|(pending, _)| *pending == id)
+        {
+            continue;
+        }
         let Some(passage) = bracketed_passage(&mut cache, &file, start, end) else {
             continue;
         };
-        if states_a_mechanical_rule(&passage) {
-            offenders.push(format!("{id} ({file}:{start}-{end})"));
+        if !states_a_mechanical_rule(&passage) {
+            continue;
+        }
+
+        if classification == "narrative" {
+            offenders.push(format!(
+                "{id} ({file}:{start}-{end}): narrative, but the passage states a rule"
+            ));
+            continue;
+        }
+
+        if !displayed_text_states_a_mechanical_rule_in_every_locale(id, &by_language) {
+            offenders.push(format!(
+                "{id} ({file}:{start}-{end}): {classification}, but its displayed text states \
+                 no mechanical rule in at least one shipped locale — D5's first obligation"
+            ));
         }
     }
 
     assert!(
         checked > 50,
-        "the swept-block filter matched only {checked} narrative entries, so this guard is \
-         checking almost nothing — has a SWEPT_BLOCKS range or a source file name drifted?"
+        "the swept-block filter matched only {checked} entries, so this guard is checking \
+         almost nothing — has a SWEPT_BLOCKS range or a source file name drifted?"
     );
 
     assert!(
         offenders.is_empty(),
-        "{} `narrative` Virtue/Flaw(s) inside a swept block cite a passage that states a \
-         mechanical rule (a signed modifier, a botch-dice clause, or a phrase-shaped idiom — \
-         a cap, a target number, a formula, a rounding direction, an absolute). `narrative` \
-         means the RULEBOOK says nothing mechanical, not merely that the engine computes \
-         nothing — so \
-         each of these has either dropped a rule the player never sees, or is misclassified \
-         and belongs in `uncomputed_rule` (fill `description` in every locale) or \
-         `in_play_effect`:\n{}",
+        "{} Virtue/Flaw(s) inside a swept block cite a passage that states a mechanical rule \
+         (a signed modifier, a botch-dice clause, or a phrase-shaped idiom — a cap, a target \
+         number, a formula, a rounding direction, an absolute) with no carrier reaching the \
+         player: a `narrative` entry has dropped the rule outright or is misclassified; a \
+         `creation_effect`/`in_play_effect` entry computes something but its displayed text \
+         (D5) does not state the clause in every locale:\n{}",
         offenders.len(),
         offenders.join("\n")
     );
@@ -1624,6 +2140,104 @@ fn pending_mechanical_classification_entries_still_trip_the_screen() {
             states_a_mechanical_rule(&passage),
             "PENDING_MECHANICAL_CLASSIFICATION row \"{id}\" no longer trips the mechanical-token \
              screen — nothing needs it to wait any more, so delete the row"
+        );
+    }
+}
+
+/// Every [`COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE`] row exists to silence
+/// [`no_swept_entry_drops_an_uncomputed_mechanical_clause`] for one
+/// `creation_effect`/`in_play_effect` entry, so every row must still *be*
+/// silencing something. The mirror of `exempted_entries_still_trip_the_screen`,
+/// for the computed-class allow-list rather than the `narrative` one.
+#[test]
+fn computed_entry_covers_whole_passage_entries_still_trip_the_screen() {
+    let mut cache: BTreeMap<String, Vec<String>> = BTreeMap::new();
+
+    for (id, _) in COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE {
+        let item = catalogue()
+            .into_iter()
+            .find(|item| item["id"] == *id)
+            .unwrap_or_else(|| {
+                panic!(
+                    "COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE row \"{id}\" names an entry that is no \
+                     longer in the catalogue — delete the row"
+                )
+            });
+
+        let classification = item["classification"].as_str().unwrap_or_default();
+        assert!(
+            matches!(classification, "creation_effect" | "in_play_effect"),
+            "COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE row \"{id}\" is classified {classification:?}, \
+             not creation_effect/in_play_effect — the guard it silences does not look at it, so \
+             delete the row"
+        );
+
+        let (file, start, end) =
+            source_of(&item).unwrap_or_else(|| panic!("\"{id}\" has a source block"));
+        assert!(
+            is_swept(&file, start, end),
+            "COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE row \"{id}\" cites {file}:{start}-{end}, \
+             outside every swept block — the guard it silences does not reach it, so delete \
+             the row"
+        );
+
+        let passage = bracketed_passage(&mut cache, &file, start, end)
+            .unwrap_or_else(|| panic!("\"{id}\" cites an in-bounds range"));
+        assert!(
+            states_a_mechanical_rule(&passage),
+            "COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE row \"{id}\" no longer trips the mechanical-\
+             token screen on its passage, so it is silencing nothing — delete the row"
+        );
+    }
+}
+
+/// The mirror of [`pending_mechanical_classification_entries_still_trip_the_screen`],
+/// for [`PENDING_DROPPED_CLAUSE`]: every pending row must still trip
+/// [`no_swept_entry_drops_an_uncomputed_mechanical_clause`], so the list can
+/// only shrink as X2 writes the missing `description` (or, in F-544's case,
+/// resolves the ordering rule) — never grow stale.
+#[test]
+fn pending_dropped_clause_entries_still_trip_the_screen() {
+    let mut cache: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let by_language = displayed_rules_text_by_language();
+
+    for (id, _) in PENDING_DROPPED_CLAUSE {
+        let item = catalogue()
+            .into_iter()
+            .find(|item| item["id"] == *id)
+            .unwrap_or_else(|| {
+                panic!(
+                    "PENDING_DROPPED_CLAUSE row \"{id}\" names an entry that is no longer in \
+                     the catalogue — delete the row"
+                )
+            });
+
+        let classification = item["classification"].as_str().unwrap_or_default();
+        assert!(
+            matches!(classification, "creation_effect" | "in_play_effect"),
+            "PENDING_DROPPED_CLAUSE row \"{id}\" is classified {classification:?}, not \
+             creation_effect/in_play_effect — X2 has already reclassified it, so delete the row"
+        );
+
+        let (file, start, end) =
+            source_of(&item).unwrap_or_else(|| panic!("\"{id}\" has a source block"));
+        assert!(
+            is_swept(&file, start, end),
+            "PENDING_DROPPED_CLAUSE row \"{id}\" cites {file}:{start}-{end}, outside every swept \
+             block — the guard it works around does not reach it, so delete the row"
+        );
+
+        let passage = bracketed_passage(&mut cache, &file, start, end)
+            .unwrap_or_else(|| panic!("\"{id}\" cites an in-bounds range"));
+        assert!(
+            states_a_mechanical_rule(&passage),
+            "PENDING_DROPPED_CLAUSE row \"{id}\" no longer trips the mechanical-token screen on \
+             its passage — nothing needs it to wait any more, so delete the row"
+        );
+        assert!(
+            !displayed_text_states_a_mechanical_rule_in_every_locale(id, &by_language),
+            "PENDING_DROPPED_CLAUSE row \"{id}\"'s displayed text now states a mechanical rule \
+             in every locale — the gap it recorded has been closed, so delete the row"
         );
     }
 }
@@ -2066,8 +2680,8 @@ fn every_s2_idiom_has_a_real_hit_in_its_own_language() {
 /// Before [`S2_IDIOMS`] carried these families, every row below failed — that
 /// is this test's RED, and it is the reproducible half of this slice's
 /// verbatim RED/GREEN pair (the other half is
-/// [`no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause`] going red
-/// as the newly-recognized families reach already-swept passages).
+/// [`no_swept_entry_drops_an_uncomputed_mechanical_clause`] going red as the
+/// newly-recognized families reach already-swept passages).
 #[test]
 fn each_s2_family_is_recognized_by_a_real_shipped_passage() {
     let cases: &[(&str, &str)] = &[
