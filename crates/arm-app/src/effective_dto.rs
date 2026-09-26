@@ -18,12 +18,12 @@ use arm_rules::{
     characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
     characteristic_points_granted, checked_xp_allocation, compute_balance, confidence,
     decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
-    entity_grants, focus_points_budget, focus_points_used, item_level_budget, item_level_used,
-    life_stage_spell_levels, longevity_bonus, magus_minimum_abilities, power_levels_budget,
-    powers_used, reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
-    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
-    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, warping,
-    warping_owed_grants,
+    entity_grants, focus_points_budget, focus_points_used, is_hermetically_trained,
+    item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
+    magus_minimum_abilities, power_levels_budget, powers_used, reputation_grants, size,
+    spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
+    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, warping, warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -168,9 +168,11 @@ pub struct EffectiveScores {
     /// The spell levels the chosen spells consume — the "used" side of the bar.
     pub spell_levels_used: u32,
     /// Per-Technique/Form maximum learnable spell level (Te + Fo + Int + Magic
-    /// Theory + 3), so the spell picker greys a spell above the magus's cap
-    /// without recomputing the derivation in JS. Empty for a non-magus (no Spells
-    /// tab). Engine-authoritative; the UI only reads it.
+    /// Theory + 3), so the spell picker greys a spell above the cap without
+    /// recomputing the derivation in JS. Empty for an entity that is not
+    /// Hermetically trained (no Spells tab) — by profile (a real magus) or by
+    /// selection (D56's Abandoned Apprentice). Engine-authoritative; the UI
+    /// only reads it.
     pub spell_level_caps: Vec<SpellLevelCap>,
     /// The Hermetic minimum-Ability checklist: what the Order demands (ArMDE:2437) and
     /// what the rulebook recommends (ArMDE:2451-2461), each with the character's bought
@@ -462,15 +464,12 @@ fn spell_fields(
         bonus: spell_levels_bonus(entity, ruleset),
         life_stage: life_stage_spell_levels(entity, ruleset),
         used: spell_levels_used(entity, ruleset),
-        // The per-Te/Fo cap only matters on the (magus-only) Spells tab, so it is
-        // computed only for a magus — other types ship an empty list.
-        //
-        // Bare profile rename only (compiler-forced by D56/A0's `is_magus`
-        // split): switching this to the entity-level union
-        // (`is_hermetically_trained`) is sub-slice 5's own scope, with its own
-        // first failing test (an Abandoned-Apprentice-shaped DTO test) — see
-        // `docs/vf-audit/design-a0-is-magus-split.md` § 5.
-        level_caps: if profile.is_some_and(|p| p.hermetically_trained) {
+        // The per-Te/Fo cap only matters on the Spells tab, which A2 will show
+        // for any Hermetically trained entity — profile (a real magus) or
+        // selection (the Abandoned Apprentice, D56) — so the gate reads the
+        // union, not the bare profile flag. See
+        // `docs/vf-audit/design-a0-is-magus-split.md` § 4 row 14'.
+        level_caps: if is_hermetically_trained(entity, ruleset, profile) {
             spell_level_caps(entity, ruleset)
         } else {
             Vec::new()
@@ -888,5 +887,69 @@ mod tests {
         assert_eq!(scores.xp_general_bonus, 0);
         assert_eq!(scores.xp_max_flow, 0);
         assert!(scores.restricted_xp_pools.is_empty());
+    }
+
+    /// Row 14' of `docs/vf-audit/design-a0-is-magus-split.md` § 4: this DTO's
+    /// per-Te/Fo spell-level-cap list was gated on the bare
+    /// `profile.hermetically_trained` flag, so an entity carrying
+    /// `Effect::ConfersHermeticTraining` on a non-magus profile (the
+    /// Abandoned-Apprentice shape) got an empty list — no Spells tab data —
+    /// even though D56 says he must have Casting/Lab totals same as a real
+    /// magus. Switching the gate to `is_hermetically_trained` (the
+    /// profile-OR-selection union) fixes it. Test-fixture-only, per the design
+    /// note's sub-slice ordering: the shipped `flaw.abandoned_apprentice` entry
+    /// is not touched until slice D3.
+    #[test]
+    fn spell_fields_populates_level_caps_for_a_trained_non_magus_test_fixture() {
+        use arm_rules::{EntityKind, RulesetRef, RulesetSources};
+
+        const ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "confers_hermetic_training" }] }
+        ]"#;
+        const TYPES: &str = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "personality"],
+            "hermetically_trained": false, "order_member": false, "creation_phases": [] }
+        ]"#;
+        const ARTS: &str = r#"{
+          "advancement": [{ "score": 1, "total_xp": 1 }],
+          "arts": [
+            { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.ignem", "art_type": "form" }
+          ]
+        }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            arts: Some(ARTS),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let profile = rs.profile(&Id::new("companion"));
+
+        let mut untrained = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        untrained.selections = vec![Selection::new(Id::new("flaw.optimistic"))];
+        assert!(
+            spell_fields(&untrained, &rs, profile).level_caps.is_empty(),
+            "an ordinary companion has no Spells tab"
+        );
+
+        let mut trained = untrained.clone();
+        trained.selections = vec![Selection::new(Id::new("flaw.test_confers_training"))];
+        assert!(
+            !spell_fields(&trained, &rs, profile).level_caps.is_empty(),
+            "a companion carrying a training-conferring selection must get spell-level caps \
+             too, not just the magus profile"
+        );
     }
 }
