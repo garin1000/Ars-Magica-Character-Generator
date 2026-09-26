@@ -57,8 +57,17 @@ const WIZARD_RAIL = '[data-testid="wizard-rail"]';
 const STEP_TIMEOUT = 15000;
 
 /**
- * The creation phases `typeId`'s profile declares, in its declared order, read
- * from the rules data rather than written down here.
+ * The creation phases `typeId`'s profile UNCONDITIONALLY declares, in
+ * declared order, read from the rules data rather than written down here.
+ *
+ * A `creation_phases` entry may be conditional (A2/D56's `PhaseRule`, a bare
+ * slug or a `{phase, when}` object mirroring `CategoryRule`) — the companion
+ * profile's Arts/Spells are gated on `hermetically_trained`. A blank,
+ * freshly-created character (every walk this module drives starts one) never
+ * satisfies such a condition, so a conditional entry is excluded outright
+ * rather than assumed shown: the wizard rail reads the engine's own resolved
+ * `phases_in_force`, not the raw declared list, and for a fresh character
+ * those agree only on the unconditional phases.
  *
  * @param {string} typeId character-type id
  * @returns {string[]}
@@ -70,7 +79,7 @@ export function declaredPhases(typeId) {
   if (!profile) {
     throw new Error(`no '${typeId}' profile in ${file}; it declares ${profiles.map((p) => p.id)}`);
   }
-  return profile.creation_phases;
+  return profile.creation_phases.filter((entry) => typeof entry === 'string');
 }
 
 /** Raise one Characteristic to `score` and wait for the spinner to read it back. */

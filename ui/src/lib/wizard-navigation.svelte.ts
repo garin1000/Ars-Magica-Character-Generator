@@ -20,6 +20,15 @@ export interface WizardNavigationHost {
   entityTypeId: () => string;
   result: () => ValidationResult | null;
   /**
+   * The engine's own resolution of which of the profile's declared phases
+   * currently apply (A2/D56) — `null` while it has not loaded yet (freshly
+   * entering the wizard, before the first `effectiveScores` round trip
+   * settles), which {@link WizardNavigation.phases} reads as "trust the
+   * declared list", never as "nothing is in force" — the latter would
+   * transiently collapse the rail to just Review on every wizard entry.
+   */
+  phasesInForce: () => string[] | null;
+  /**
    * Record the furthest phase reached, so a save carries the flow's progress
    * (#31). A callback rather than a write from here: the entity stays the host's
    * to own, which is what keeps this module free of it.
@@ -64,8 +73,9 @@ export class WizardNavigation {
 
   /**
    * The wizard's steps for the current character: the type profile's own
-   * ordered phases, then the terminal `review` step. Empty when no profile is
-   * loaded.
+   * ordered phases — each conditional one (A2/D56) kept only while
+   * `phasesInForce` resolves it in force — then the terminal `review` step,
+   * which is never conditional. Empty when no profile is loaded.
    *
    * A plain getter rather than `$derived`: it is read through `this.#host`,
    * which is only assigned in the constructor body, and class field
@@ -76,7 +86,15 @@ export class WizardNavigation {
    * performed the call.
    */
   get phases(): CreationPhase[] {
-    return wizardPhases(this.#host.ruleset()?.ruleset.type_profiles[this.#host.entityTypeId()]);
+    const declared = wizardPhases(
+      this.#host.ruleset()?.ruleset.type_profiles[this.#host.entityTypeId()],
+    );
+    const inForce = this.#host.phasesInForce();
+    // `null` means "not loaded yet" (see the host field's own doc): trust the
+    // declared list rather than filtering everything down to Review.
+    if (inForce === null) return declared;
+    const resolved = new Set(inForce);
+    return declared.filter((phase) => phase === 'review' || resolved.has(phase));
   }
 
   /** The phase the wizard is currently on. */

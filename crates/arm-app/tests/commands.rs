@@ -264,12 +264,44 @@ fn every_shipped_profile_declares_the_aging_phase_last() {
     assert!(ruleset.profile_count() > 0, "the ruleset ships profiles");
     for profile in ruleset.profiles() {
         assert_eq!(
-            profile.creation_phases.last(),
-            Some(&CreationPhase::Aging),
+            profile.creation_phases.last().map(|rule| rule.phase()),
+            Some(CreationPhase::Aging),
             "profile '{}' must declare the aging phase last",
             profile.id
         );
     }
+}
+
+/// A2/D56: the shipped companion profile now declares Arts/Spells
+/// conditionally on `hermetically_trained` (row 20/§ 6). A plain companion —
+/// today's status quo, since `flaw.abandoned_apprentice` is not touched until
+/// D3 — must see neither phase; a real magus, whose entries are all
+/// unconditional, still sees both.
+#[test]
+fn a_plain_shipped_companion_sees_neither_arts_nor_spells_phases() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let companion = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(ruleset.id.clone(), ruleset.version.clone()),
+    );
+    let phases = arm_rules::phases_in_force(&companion, &ruleset);
+    assert!(
+        !phases.contains(&CreationPhase::Arts) && !phases.contains(&CreationPhase::Spells),
+        "an ordinary companion must not see the Arts/Spells phases: {phases:?}"
+    );
+
+    let magus = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("magus"),
+        arm_rules::RulesetRef::new(ruleset.id.clone(), ruleset.version.clone()),
+    );
+    let magus_phases = arm_rules::phases_in_force(&magus, &ruleset);
+    assert!(
+        magus_phases.contains(&CreationPhase::Arts)
+            && magus_phases.contains(&CreationPhase::Spells),
+        "a magus must still see the Arts/Spells phases: {magus_phases:?}"
+    );
 }
 
 #[test]
@@ -318,10 +350,13 @@ fn validating_a_fresh_character_reports_its_untouched_phases() {
     );
 
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
-    let profile = ruleset.profile(&Id::new("magus")).unwrap();
     // Every declared step of a brand-new character is untouched: the read-only
     // `type` step that used to be the one exemption is gone (review #1).
-    let expected: Vec<arm_rules::CreationPhase> = profile.creation_phases.clone();
+    // `phases_in_force`, not the raw declared list (A2/D56): the magus's own
+    // entries are all unconditionally in force, so this is unchanged for the
+    // shipped profile, but it is the resolution the completeness report must
+    // agree with once a conditional phase exists at all.
+    let expected = arm_rules::phases_in_force(&entity, &ruleset);
     assert_eq!(result.completeness.incomplete_phases, expected);
 }
 

@@ -730,6 +730,13 @@ export interface EffectiveScores {
   focus_points_budget: number;
   // Points the focus powers consume: 2 per level of effect + 1 per Penetration.
   focus_points_used: number;
+  // The creation phases actually in force for THIS entity, in the profile's own
+  // declared order — the type profile's `creation_phases`, each conditional
+  // entry resolved against the entity's own selections (A2/D56). The tab list
+  // (`App.svelte`) intersects its static tab metadata against this list rather
+  // than re-deriving "is this trained/an Order member" from the bare profile
+  // flags itself.
+  phases_in_force: CreationPhase[];
 }
 
 // --- Derived play-stat totals (M5/5i), mirrored from `arm_rules::derived`.
@@ -1017,6 +1024,15 @@ export interface CategoryCap {
 // condition as a label.
 export type CategoryRule = string | { category: string; when: Prereq };
 
+// One entry on a profile's `creation_phases` list. Mirrors `CategoryRule`
+// exactly (A2/D56): a bare phase is unconditional, and the object form applies
+// only while `when` holds (the Arts/Spells phases for a type that may be
+// Hermetically trained by selection rather than by profile, e.g. the
+// Abandoned Apprentice companion). The frontend never re-implements the
+// resolution — it reads `EffectiveScores.phases_in_force`, the engine's own
+// already-resolved list, rather than evaluating `when` itself.
+export type PhaseRule = CreationPhase | { phase: CreationPhase; when: Prereq };
+
 export interface PointBudget {
   virtue_points: number;
   flaw_points: number;
@@ -1079,8 +1095,9 @@ export interface EntityTypeProfile {
   // exactly as the engine's `missing_hermetic_flaw` does.
   hermetic_flaw_categories?: string[];
   // Ordered: the guided wizard walks these in sequence. Typed in the engine too,
-  // so a phase string it has no variant for fails the ruleset load.
-  creation_phases: CreationPhase[];
+  // so a phase string it has no variant for fails the ruleset load. Each entry
+  // is a `PhaseRule` (A2/D56): a bare phase, or one conditional on `when`.
+  creation_phases: PhaseRule[];
 }
 
 export interface I18nEntry {

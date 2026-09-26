@@ -10,6 +10,7 @@ import type {
   EffectiveScores,
   House,
   LocalizedRuleset,
+  PhaseRule,
   PointItem,
   Spell,
   ValidationIssue,
@@ -370,6 +371,24 @@ describe('the guided wizard', () => {
         'abilities',
       ] as CreationPhase[],
     },
+    // A2/D56: a companion-shaped profile carrying the same conditional
+    // Arts/Spells `PhaseRule`s the shipped `character_types.json` now does, for
+    // the `phases_in_force`-respecting rail tests below.
+    companion: {
+      id: 'companion',
+      budget: { virtue_points: 10, flaw_points: 10 },
+      permitted_categories: [],
+      forbidden_categories: [],
+      creation_phases: [
+        'concept',
+        'characteristics',
+        'virtues_flaws',
+        'experience',
+        'abilities',
+        { phase: 'arts', when: { kind: 'hermetically_trained' } },
+        { phase: 'spells', when: { kind: 'hermetically_trained' } },
+      ] as PhaseRule[],
+    },
   };
 
   /** Install a validation result the wizard's gating reads. */
@@ -464,6 +483,82 @@ describe('the guided wizard', () => {
         'abilities',
         'review',
       ]);
+    });
+
+    // A2/D56: the companion profile's Arts/Spells `PhaseRule`s are conditional
+    // on `hermetically_trained`. Shipping them unconditionally in the rail (the
+    // engine-side fix's whole point) would put an Arts/Spells step in front of
+    // every companion in the guided wizard, real training or not — the rail
+    // must instead read the same resolved `phases_in_force` the direct-entry
+    // tab list does (`App.svelte`), not the raw declared list.
+    describe('the rail respects phases_in_force for a conditional phase', () => {
+      /** Override the mocked `effectiveScores` response for the next call only. */
+      function mockPhasesInForce(phases: string[] | undefined): void {
+        vi.mocked(ipc.effectiveScores).mockResolvedValueOnce({
+          ability_bonuses: [],
+          art_bonuses: [],
+          characteristic_caps: {},
+          characteristic_floors: {},
+          ...(phases === undefined ? {} : { phases_in_force: phases }),
+        } as unknown as EffectiveScores);
+      }
+
+      it('hides Arts/Spells while the condition is unmet', async () => {
+        mockPhasesInForce([
+          'concept',
+          'characteristics',
+          'virtues_flaws',
+          'experience',
+          'abilities',
+        ]);
+        await store.startWizard('companion');
+        expect(store.wizardPhases).toEqual([
+          'concept',
+          'characteristics',
+          'virtues_flaws',
+          'experience',
+          'abilities',
+          'review',
+        ]);
+      });
+
+      it('shows Arts/Spells once phases_in_force resolves them', async () => {
+        mockPhasesInForce([
+          'concept',
+          'characteristics',
+          'virtues_flaws',
+          'experience',
+          'abilities',
+          'arts',
+          'spells',
+        ]);
+        await store.startWizard('companion');
+        expect(store.wizardPhases).toEqual([
+          'concept',
+          'characteristics',
+          'virtues_flaws',
+          'experience',
+          'abilities',
+          'arts',
+          'spells',
+          'review',
+        ]);
+      });
+
+      it('shows every declared phase before phases_in_force has ever arrived, rather than collapsing to just Review', async () => {
+        mockPhasesInForce(undefined);
+        await store.startWizard('companion');
+        expect(store.wizardPhases).toEqual([
+          'concept',
+          'characteristics',
+          'virtues_flaws',
+          'experience',
+          'abilities',
+          'arts',
+          'spells',
+          'review',
+        ]);
+      });
     });
 
     /**

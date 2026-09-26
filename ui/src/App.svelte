@@ -54,29 +54,35 @@
   // (Magic Items, Equipment, Totals) follow at the end.
   //
   // Left-to-right: Details (`concept`), Characteristics, Virtues & Flaws,
-  // Experience, Abilities, the magus-only Arts and Spells, Personality &
-  // Reputations, Aging, then the magus-only Magic Items/House, the
-  // mythic-companion-only Type tab, Equipment and Totals — each gated on the
-  // profile's capability flag (never the type id), so any future capable type gets
-  // them automatically.
-  // Bare profile rename only (D56/A0's `is_magus` split, sub-slice 1): every
-  // shipped profile still sets `hermetically_trained`/`order_member` equal, so
-  // reading either alone reproduces today's `is_magus` behavior exactly. The
-  // real three-way split this const conflates (Arts/Spells/Might = trained,
-  // house_specialisation = order, D56 row 20(c)) is A2's job, via a resolved
-  // `phases_in_force` DTO field — see
-  // `docs/vf-audit/design-a0-is-magus-split.md` § 6.
-  const isMagus = $derived(
-    store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.hermetically_trained ?? false,
-  );
-  const hasMythicType = $derived(
-    store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.has_mythic_type ?? false,
-  );
+  // Experience, Abilities, the Hermetically-trained-only Arts and Spells,
+  // Personality & Reputations, Aging, then the trained-only Magic Items, the
+  // Order-only House tab, the mythic-companion-only Type tab, Equipment and
+  // Totals — each gated on a resolved fact, never the type id, so any future
+  // capable type gets them automatically.
+  //
+  // A2/D56 § 6: gated on `phases_in_force` (`EffectiveScores`), the engine's own
+  // per-entity resolution of the profile's conditional `creation_phases` —
+  // not a client-derived `isMagus`/`hasMythicType` boolean read off the bare
+  // profile flags. The bare-flag reading used to bundle Arts/Spells/Possessions
+  // (Hermetic training) and House (Order membership) under one flag, which is
+  // wrong the instant a character is trained without being an Order member (or
+  // the reverse) — row 20(c)'s conflation, fixed here at the tab-list layer by
+  // reading each fact separately rather than patched around in the component.
+  const phasesInForce = $derived(new Set(store.effective?.phases_in_force ?? []));
+  // Hermetic training has no creation phase of its own to read: Arts and Spells
+  // are both conditioned on it (`hermetically_trained`), so either's presence in
+  // the resolved set already IS the fact. Possessions (magic items/Talisman)
+  // keys on the identical condition and has no wizard phase of its own either
+  // (it has never been a guided-wizard step, see the tabs-with-no-phase note
+  // above) — reading the Arts phase's resolution for it is one fact read twice,
+  // not a second client-side evaluator.
+  const hermeticallyTrained = $derived(phasesInForce.has('arts'));
+  const hasMythicType = $derived(phasesInForce.has('mythic_type'));
   // The Supernatural (Might) tab appears for a mythic-companion-capable type
   // (Devil Child, Nephilim) or once the character has an effective Might (any type
   // that took a Might Virtue such as Demonic Blood). Magi never have Might.
   const hasMight = $derived(
-    !isMagus && (hasMythicType || (store.effective?.might ?? null) !== null),
+    !hermeticallyTrained && (hasMythicType || (store.effective?.might ?? null) !== null),
   );
   // Focus Power is a *Supernatural* Virtue (ArMDE:3895-3896) that grants no Might
   // and is open to every character type, magi included — so the tab must also
@@ -99,7 +105,7 @@
     { id: 'virtues_flaws', key: 'tab-virtues-flaws' },
     ...(hasLifeStageRules ? [{ id: 'experience' as Tab, key: 'tab-experience' }] : []),
     { id: 'abilities', key: 'tab-abilities' },
-    ...(isMagus
+    ...(hermeticallyTrained
       ? [
           { id: 'arts' as Tab, key: 'tab-arts' },
           { id: 'spells' as Tab, key: 'tab-spells' },
@@ -110,11 +116,9 @@
     // carrying either must have somewhere to edit it.
     { id: 'personality_reputations', key: 'tab-personality-reputations' },
     { id: 'aging', key: 'tab-aging' },
-    ...(isMagus
-      ? [
-          { id: 'possessions' as Tab, key: 'tab-possessions' },
-          { id: 'house_specialisation' as Tab, key: 'tab-house-specialisation' },
-        ]
+    ...(hermeticallyTrained ? [{ id: 'possessions' as Tab, key: 'tab-possessions' }] : []),
+    ...(phasesInForce.has('house_specialisation')
+      ? [{ id: 'house_specialisation' as Tab, key: 'tab-house-specialisation' }]
       : []),
     ...(hasMythicType ? [{ id: 'mythic_type' as Tab, key: 'tab-mythic-type' }] : []),
     ...(hasMight || hasFocusPower ? [{ id: 'supernatural' as Tab, key: 'tab-supernatural' }] : []),

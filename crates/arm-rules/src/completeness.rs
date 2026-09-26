@@ -56,11 +56,13 @@ pub fn completeness(entity: &Entity, ruleset: &Ruleset) -> CompletenessReport {
         return CompletenessReport::default();
     };
 
+    // `phases_in_force`, not the raw declared list: a phase whose `when`
+    // condition is not (yet) met is not shown to the player at all (A2/D56),
+    // so it must not be reported "incomplete" either — the companion's
+    // conditional `arts`/`spells` phases are the reachable case this guards.
     CompletenessReport {
-        incomplete_phases: profile
-            .creation_phases
-            .iter()
-            .copied()
+        incomplete_phases: crate::validation::phases_in_force(entity, ruleset)
+            .into_iter()
             .filter(|phase| !phase_is_engaged(*phase, entity, profile))
             .collect(),
     }

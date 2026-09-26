@@ -113,5 +113,5 @@ pub use types::{
 pub use validation::{
     AgeInSagaYear, Balance, DEFAULT_SAGA_YEAR, IssueSeverity, PointCeilings, ValidationIssue,
     ValidationResult, age_in_saga_year, birth_year_in_saga_year, compute_balance,
-    effective_point_ceilings, validate,
+    effective_point_ceilings, phases_in_force, validate,
 };

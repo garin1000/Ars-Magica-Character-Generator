@@ -3754,6 +3754,21 @@ describe('wizardPhases', () => {
   it('is empty with no profile at all, so the wizard has nothing to show', () => {
     expect(wizardPhases(undefined)).toEqual([]);
   });
+
+  it("extracts a conditional PhaseRule's own phase, ignoring its `when` (A2/D56)", () => {
+    // Deliberately declared-list-only: the guided wizard's own conditional
+    // filtering (skipping a phase whose `when` is not yet met) is out of scope
+    // for A2 — see `docs/vf-audit/design-a0-is-magus-split.md` § 6's UI note.
+    // `App.svelte`'s direct-entry tab list is the one place this slice wires
+    // to the resolved `phases_in_force`.
+    expect(
+      wizardPhases({
+        id: 't',
+        budget: { virtue_points: 10, flaw_points: 10 },
+        creation_phases: ['concept', { phase: 'arts', when: { kind: 'hermetically_trained' } }],
+      }),
+    ).toEqual(['concept', 'arts', 'review']);
+  });
 });
 
 describe('issuesForPhase', () => {

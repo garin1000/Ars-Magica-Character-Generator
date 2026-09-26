@@ -11,19 +11,20 @@
 use std::collections::BTreeMap;
 
 use arm_rules::{
-    AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence, Entity,
-    EntityTypeProfile, Grant, Id, LifeStageBudget, MagusMinimumAbility, MightScore, PointCeilings,
-    ReputationType, RestrictedXpPool, Ruleset, Selection, SpellLevelCap, SupernaturalFreeSlots,
-    ability_bonuses, ability_score_floors, aging_schedule, aging_total, art_bonuses,
-    characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, checked_xp_allocation, compute_balance, confidence,
-    decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
-    entity_grants, focus_points_budget, focus_points_used, is_hermetically_trained,
-    item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
-    magus_minimum_abilities, power_levels_budget, powers_used, reputation_grants, size,
-    spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
-    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
-    supernatural_free_slots, true_faith, warping, warping_owed_grants,
+    AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence,
+    CreationPhase, Entity, EntityTypeProfile, Grant, Id, LifeStageBudget, MagusMinimumAbility,
+    MightScore, PointCeilings, ReputationType, RestrictedXpPool, Ruleset, Selection, SpellLevelCap,
+    SupernaturalFreeSlots, ability_bonuses, ability_score_floors, aging_schedule, aging_total,
+    art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_caps,
+    characteristic_floors, characteristic_points_granted, checked_xp_allocation, compute_balance,
+    confidence, decrepitude_score, effective_characteristics, effective_might,
+    effective_point_ceilings, entity_grants, focus_points_budget, focus_points_used,
+    is_hermetically_trained, item_level_budget, item_level_used, life_stage_spell_levels,
+    longevity_bonus, magus_minimum_abilities, phases_in_force, power_levels_budget, powers_used,
+    reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
+    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
+    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, warping,
+    warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -246,6 +247,15 @@ pub struct EffectiveScores {
     /// The points the character's `focus_powers` spend — 2 per level of effect
     /// plus 1 per point of Penetration (`ArMDE:3899`).
     pub focus_points_used: u32,
+    /// The creation phases actually in force for THIS entity, in the profile's
+    /// own declared order — the type profile's `creation_phases`, each
+    /// conditional entry resolved against the entity's own selections (A2/D56,
+    /// `docs/vf-audit/design-a0-is-magus-split.md` § 6). The frontend's tab
+    /// list intersects its static tab metadata against this list rather than
+    /// re-deriving "is this trained/an Order member" from the bare profile
+    /// flags itself — the single resolution point, mirroring how
+    /// `categories_in_force` already backs `permitted_categories`.
+    pub phases_in_force: Vec<CreationPhase>,
 }
 
 /// Everything about a character's aging that does **not** depend on a die.
@@ -759,6 +769,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         power_levels_used: might_power.power_levels_used,
         focus_points_budget: might_power.focus_points_budget,
         focus_points_used: might_power.focus_points_used,
+
+        phases_in_force: phases_in_force(entity, ruleset),
     }
 }
 
@@ -950,6 +962,62 @@ mod tests {
             !spell_fields(&trained, &rs, profile).level_caps.is_empty(),
             "a companion carrying a training-conferring selection must get spell-level caps \
              too, not just the magus profile"
+        );
+    }
+
+    /// A2/D56 § 6: the frontend must not re-derive which conditional creation
+    /// phases apply (App.svelte's retired `isMagus`-style tab conflation) — it
+    /// reads the engine's own resolution instead. Test-fixture-only, same
+    /// reason as the spell-level-caps test above: the shipped
+    /// `flaw.abandoned_apprentice` entry is untouched until slice D3.
+    #[test]
+    fn effective_scores_surfaces_phases_in_force_for_a_trained_non_magus_test_fixture() {
+        use arm_rules::{CreationPhase, EntityKind, RulesetRef, RulesetSources};
+
+        const ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "confers_hermetic_training" }] }
+        ]"#;
+        const TYPES: &str = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "personality"],
+            "hermetically_trained": false, "order_member": false,
+            "creation_phases": [
+              "concept",
+              { "phase": "arts", "when": { "kind": "hermetically_trained" } },
+              { "phase": "house_specialisation", "when": { "kind": "order_member" } }
+            ] }
+        ]"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            ..RulesetSources::default()
+        })
+        .unwrap();
+
+        let mut untrained = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        untrained.selections = vec![Selection::new(Id::new("flaw.optimistic"))];
+        assert_eq!(
+            effective_scores_loaded(&untrained, &rs).phases_in_force,
+            vec![CreationPhase::Concept],
+            "an ordinary companion sees neither Arts nor House"
+        );
+
+        let mut trained = untrained.clone();
+        trained.selections = vec![Selection::new(Id::new("flaw.test_confers_training"))];
+        assert_eq!(
+            effective_scores_loaded(&trained, &rs).phases_in_force,
+            vec![CreationPhase::Concept, CreationPhase::Arts],
+            "trained-by-selection sees Arts but, correctly, not House (no Order membership)"
         );
     }
 }

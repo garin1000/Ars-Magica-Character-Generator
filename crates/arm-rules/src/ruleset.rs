@@ -2788,6 +2788,32 @@ mod tests {
         );
     }
 
+    /// A `PhaseRule::when` is the identical trust-boundary shape as a
+    /// `CategoryRule::when` (A2/D56, `docs/vf-audit/design-a0-is-magus-split.md`
+    /// § 6): both are authored in the `rules/` directory beside the binary, so
+    /// a dangling ref must fail the load rather than silently resolve to
+    /// `Tri::Unknown` (→ not-in-force) at evaluation time with no error
+    /// anywhere naming the typo.
+    #[test]
+    fn a_conditional_creation_phase_referencing_an_unknown_item_fails_the_load() {
+        let types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "creation_phases": [
+            "concept",
+            { "phase": "arts", "when": { "kind": "has", "value": "virtue.no_such_id" } }
+          ]
+        }]"#;
+
+        let err = Ruleset::from_json("test", "1", VALID_ITEMS, types).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.no_such_id") && msg.contains("companion") && msg.contains("arts"),
+            "a profile-borne `when` on a creation phase must be ref-checked \
+             like an item's prerequisite, naming the profile and the phase: {msg}"
+        );
+    }
+
     /// A `BTreeSet` made a repeated category unrepresentable; the
     /// [`CategoryRule`] `Vec` does not, so the load gate has to say no. Two
     /// entries for one category are either pure duplication or two competing

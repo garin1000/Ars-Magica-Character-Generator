@@ -69,7 +69,7 @@ pub fn is_hermetically_trained(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{Entity, EntityKind, Id, RulesetRef, Selection};
+    use crate::types::{CreationPhase, Entity, EntityKind, Id, RulesetRef, Selection};
     use crate::{Ruleset, RulesetSources};
 
     const ITEMS: &str = r#"[
@@ -154,5 +154,93 @@ mod tests {
         let entity = character("companion", vec!["flaw.optimistic"]);
         let ruleset = rs();
         assert!(!is_hermetically_trained(&entity, &ruleset, None));
+    }
+
+    // --- `phases_in_force` (A2/D56 § 6): the conditional-phase mechanism that
+    // resolves `EntityTypeProfile::creation_phases` the same way
+    // `categories_in_force` resolves `permitted_categories`. Test-fixture-only —
+    // per the design's sub-slice ordering, the shipped
+    // `flaw.abandoned_apprentice` entry gains `ConfersHermeticTraining` only in
+    // slice D3, not here.
+
+    const PHASE_TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["personality", "story"],
+        "creation_phases": [
+          "concept",
+          { "phase": "arts", "when": { "kind": "hermetically_trained" } },
+          { "phase": "spells", "when": { "kind": "hermetically_trained" } }
+        ] }
+    ]"#;
+
+    fn phase_rs() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: PHASE_TYPES,
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn phases_in_force_omits_a_conditional_phase_whose_condition_is_unmet() {
+        let entity = character("companion", vec!["flaw.optimistic"]);
+        assert_eq!(
+            crate::validation::phases_in_force(&entity, &phase_rs()),
+            vec![CreationPhase::Concept]
+        );
+    }
+
+    #[test]
+    fn phases_in_force_includes_a_conditional_phase_once_a_selection_confers_training() {
+        // The Abandoned-Apprentice-shaped test fixture: trained by selection,
+        // not by the profile flag (the companion profile here sets no
+        // `hermetically_trained: true` at all).
+        let entity = character("companion", vec!["flaw.test_confers_training"]);
+        assert_eq!(
+            crate::validation::phases_in_force(&entity, &phase_rs()),
+            vec![
+                CreationPhase::Concept,
+                CreationPhase::Arts,
+                CreationPhase::Spells
+            ]
+        );
+    }
+
+    #[test]
+    fn phases_in_force_preserves_the_profile_s_declared_order() {
+        let types = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["personality", "story"],
+            "creation_phases": [
+              { "phase": "arts", "when": { "kind": "hermetically_trained" } },
+              "concept"
+            ] }
+        ]"#;
+        let ruleset = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: types,
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let entity = character("companion", vec!["flaw.test_confers_training"]);
+        assert_eq!(
+            crate::validation::phases_in_force(&entity, &ruleset),
+            vec![CreationPhase::Arts, CreationPhase::Concept],
+            "declared order, not enum/canonical order"
+        );
+    }
+
+    #[test]
+    fn phases_in_force_is_empty_without_a_resolvable_profile() {
+        let entity = character("no_such_type", vec![]);
+        assert_eq!(
+            crate::validation::phases_in_force(&entity, &phase_rs()),
+            Vec::<CreationPhase>::new()
+        );
     }
 }

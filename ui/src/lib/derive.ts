@@ -22,6 +22,7 @@ import type {
   LifeStagePlan,
   LocalizedRuleset,
   Magnitude,
+  PhaseRule,
   PointItem,
   Prereq,
   Reputation,
@@ -1937,9 +1938,23 @@ export function invalidSelectionIds(result: ValidationResult | null | undefined)
  * Empty without a profile, so a wizard opened before the ruleset loads shows
  * nothing rather than a bogus one-step flow.
  */
+/**
+ * The phase a `PhaseRule` names, whatever its form — mirrors the engine's own
+ * `PhaseRule::phase` (A2/D56).
+ */
+function phaseOf(rule: PhaseRule): CreationPhase {
+  return typeof rule === 'string' ? rule : rule.phase;
+}
+
 export function wizardPhases(profile: EntityTypeProfile | undefined): CreationPhase[] {
   if (!profile) return [];
-  return [...profile.creation_phases, 'review'];
+  // Declared-list only, `when` ignored: the guided wizard's own conditional
+  // step-skipping is out of scope for A2 (`design-a0-is-magus-split.md` § 6's
+  // UI note names only the direct-entry tab list, which reads the resolved
+  // `phases_in_force` instead). A profile with a genuinely conditional phase
+  // — the companion's Arts/Spells — therefore still shows that wizard step
+  // unconditionally today.
+  return [...profile.creation_phases.map(phaseOf), 'review'];
 }
 
 /** The findings attributed to one creation phase — what a wizard step shows. */

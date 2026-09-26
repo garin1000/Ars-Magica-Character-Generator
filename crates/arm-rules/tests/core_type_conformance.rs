@@ -92,7 +92,11 @@ fn every_shipped_profile_declares_experience_before_abilities_and_no_type_phase(
 
     for profile in ruleset.profiles() {
         let id = &profile.id;
-        let phases = &profile.creation_phases;
+        let phases: Vec<CreationPhase> = profile
+            .creation_phases
+            .iter()
+            .map(PhaseRule::phase)
+            .collect();
         assert!(
             !phases.iter().any(|phase| phase.to_string() == "type"),
             "profile '{id}' still declares the removed `type` phase: {phases:?}"
@@ -122,7 +126,11 @@ fn every_shipped_profile_declares_experience_before_abilities_and_no_type_phase(
 fn every_shipped_profile_buys_abilities_after_virtues_flaws() {
     let ruleset = full_ruleset();
     for profile in ruleset.profiles() {
-        let phases = &profile.creation_phases;
+        let phases: Vec<CreationPhase> = profile
+            .creation_phases
+            .iter()
+            .map(PhaseRule::phase)
+            .collect();
         let virtues = phases
             .iter()
             .position(|p| *p == CreationPhase::VirtuesFlaws);
@@ -209,7 +217,11 @@ fn every_shipped_profile_declares_the_personality_reputations_phase() {
 
     for profile in ruleset.profiles() {
         let id = &profile.id;
-        let phases = &profile.creation_phases;
+        let phases: Vec<CreationPhase> = profile
+            .creation_phases
+            .iter()
+            .map(PhaseRule::phase)
+            .collect();
         assert!(
             phases.contains(&CreationPhase::PersonalityReputations),
             "profile '{id}' declares no `personality_reputations` phase, so a character \

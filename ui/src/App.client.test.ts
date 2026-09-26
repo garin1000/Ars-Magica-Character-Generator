@@ -1316,3 +1316,62 @@ describe('the active tab falls back when its own tab disappears (F8)', () => {
     );
   });
 });
+
+// A2/D56 § 6, row 20(c): the tab list used to bundle Arts/Spells/Possessions
+// AND House/Order under one client-derived `isMagus` boolean, which is wrong
+// the moment a character is Hermetically trained without being an Order member
+// (or vice versa) — unreachable on `main` before this slice (nothing built a
+// trained-non-Order character), but real once `phases_in_force` resolves each
+// fact separately. Proved with a test-only `phases_in_force` DTO fixture, per
+// the design note's sub-slice ordering: the shipped `flaw.abandoned_apprentice`
+// entry is not touched until slice D3, so this is not yet reachable through the
+// real Flaw — only through the resolved DTO field this slice wires the tab list
+// to.
+describe('the tab list reads phases_in_force, not a client-derived isMagus (A2/D56)', () => {
+  it('shows Arts, Spells and Possessions but not House for a trained-by-selection fixture', async () => {
+    await mountApp();
+    store.view = 'editor';
+    store.effective = {
+      phases_in_force: [
+        'concept',
+        'characteristics',
+        'virtues_flaws',
+        'experience',
+        'abilities',
+        'arts',
+        'spells',
+        'personality_reputations',
+        'aging',
+      ],
+    } as unknown as EffectiveScores;
+    flushSync();
+
+    expect(document.getElementById('tab-arts')).not.toBeNull();
+    expect(document.getElementById('tab-spells')).not.toBeNull();
+    expect(document.getElementById('tab-possessions')).not.toBeNull();
+    expect(document.getElementById('tab-house_specialisation')).toBeNull();
+  });
+
+  it('shows House but neither Arts/Spells nor Possessions for an Order-member-without-training fixture', async () => {
+    await mountApp();
+    store.view = 'editor';
+    store.effective = {
+      phases_in_force: [
+        'concept',
+        'characteristics',
+        'virtues_flaws',
+        'experience',
+        'abilities',
+        'house_specialisation',
+        'personality_reputations',
+        'aging',
+      ],
+    } as unknown as EffectiveScores;
+    flushSync();
+
+    expect(document.getElementById('tab-house_specialisation')).not.toBeNull();
+    expect(document.getElementById('tab-arts')).toBeNull();
+    expect(document.getElementById('tab-spells')).toBeNull();
+    expect(document.getElementById('tab-possessions')).toBeNull();
+  });
+});

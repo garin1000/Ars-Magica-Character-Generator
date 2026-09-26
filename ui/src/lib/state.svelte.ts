@@ -465,6 +465,7 @@ class AppStore {
     ruleset: () => this.ruleset,
     entityTypeId: () => this.entity.type_id,
     result: () => this.result,
+    phasesInForce: () => this.effective?.phases_in_force ?? null,
     // The one write the rail makes to the document (#31), and the reason a Next
     // dirties it. A slug, never the index it was resolved from: `creation_phases`
     // is ruleset data, so a position means nothing across builds.

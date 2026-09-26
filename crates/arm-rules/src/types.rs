@@ -2830,6 +2830,55 @@ impl CategoryRule {
     }
 }
 
+/// One entry on an [`EntityTypeProfile`]'s `creation_phases` list: either a bare
+/// phase, or a phase guarded by a `when` prerequisite. Mirrors [`CategoryRule`]
+/// exactly, for the same reason (D56/A0, `docs/vf-audit/design-a0-is-magus-split.md`
+/// § 6) — a phase can apply conditionally on Hermetic training or Order
+/// membership (the Arts/Spells phases for a type that may be trained by
+/// selection, e.g. the Abandoned Apprentice companion), and this is the one
+/// mechanism for "applies conditionally" the engine already has.
+///
+/// **An entry is in force iff `when` is absent, or `when` evaluates to
+/// [`Tri::True`](crate::validation) against the entity.** Both `False` and
+/// `Unknown` leave it out of force — the same convention `CategoryRule`
+/// established. The resolution lives in exactly one place — `phases_in_force`
+/// (`validation/selections.rs`).
+///
+/// `#[serde(untagged)]` so a bare phase slug stays a bare slug in the JSON, both
+/// on the way in and on the way out: every pre-existing `rules/` file loads
+/// unchanged and the canonical writer re-emits it byte-identically.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PhaseRule {
+    /// A bare phase — unconditionally in force.
+    Always(CreationPhase),
+    /// A phase in force only while `when` holds.
+    When {
+        /// The phase this rule governs.
+        phase: CreationPhase,
+        /// The condition under which the rule applies.
+        when: Prereq,
+    },
+}
+
+impl PhaseRule {
+    /// The phase this rule names, whatever its form.
+    pub fn phase(&self) -> CreationPhase {
+        match self {
+            PhaseRule::Always(phase) => *phase,
+            PhaseRule::When { phase, .. } => *phase,
+        }
+    }
+
+    /// The rule's condition, or `None` for the unconditional form.
+    pub fn when(&self) -> Option<&Prereq> {
+        match self {
+            PhaseRule::Always(_) => None,
+            PhaseRule::When { when, .. } => Some(when),
+        }
+    }
+}
+
 /// Data-driven profile defining constraints for an entity type
 /// (grog, companion, magus, etc.).
 ///
@@ -2946,13 +2995,15 @@ pub struct EntityTypeProfile {
     /// Gift detection silently broke the guideline.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub hermetic_flaw_categories: BTreeSet<String>,
-    /// Ordered creation phases the guided wizard walks through. Typed, so serde
-    /// itself is the load-time validator: a profile naming a phase the engine has
-    /// no [`CreationPhase`] for fails the ruleset load rather than reaching the
-    /// wizard as a step it cannot render.
+    /// Ordered creation phases the guided wizard walks through. Each entry is a
+    /// [`PhaseRule`] — a bare phase, or a phase conditional on a `when`
+    /// prerequisite (D56/A0 § 6) — resolved per-entity by `phases_in_force`.
+    /// Typed, so serde itself is the load-time validator: a profile naming a
+    /// phase the engine has no [`CreationPhase`] for fails the ruleset load
+    /// rather than reaching the wizard as a step it cannot render.
     // Order-significant (the wizard walks them in sequence): intentionally
     // exempt from `normalize`'s canonical sorting.
-    pub creation_phases: Vec<CreationPhase>,
+    pub creation_phases: Vec<PhaseRule>,
 }
 
 impl EntityTypeProfile {
@@ -5107,8 +5158,47 @@ mod tests {
         // leaves the phase order alone, which a single-phase list could not show.
         assert_eq!(
             profile.creation_phases,
-            vec![CreationPhase::Experience, CreationPhase::Concept]
+            vec![
+                PhaseRule::Always(CreationPhase::Experience),
+                PhaseRule::Always(CreationPhase::Concept)
+            ]
         );
+    }
+
+    /// Mirrors [`CategoryRule`]'s own bare-slug test: a plain phase string in
+    /// `creation_phases` must deserialize to the unconditional `Always` form,
+    /// not force every existing profile onto the object shape.
+    #[test]
+    fn phase_rule_bare_slug_stays_always_form() {
+        let phases: Vec<PhaseRule> = serde_json::from_str(r#"["concept", "arts"]"#).unwrap();
+        assert_eq!(
+            phases,
+            vec![
+                PhaseRule::Always(CreationPhase::Concept),
+                PhaseRule::Always(CreationPhase::Arts)
+            ]
+        );
+    }
+
+    /// The conditional `{phase, when}` shape (A2/D56): a phase gated on a
+    /// `Prereq`, mirroring `CategoryRule::When` exactly.
+    #[test]
+    fn phase_rule_conditional_form_roundtrips() {
+        let json = r#"{"phase": "arts", "when": {"kind": "hermetically_trained"}}"#;
+        let rule: PhaseRule = serde_json::from_str(json).unwrap();
+        assert_eq!(
+            rule,
+            PhaseRule::When {
+                phase: CreationPhase::Arts,
+                when: Prereq::HermeticallyTrained
+            }
+        );
+        assert_eq!(rule.phase(), CreationPhase::Arts);
+        assert_eq!(rule.when(), Some(&Prereq::HermeticallyTrained));
+
+        let reserialized = serde_json::to_string(&rule).unwrap();
+        let roundtripped: PhaseRule = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(rule, roundtripped);
     }
 
     #[test]
@@ -5577,6 +5667,12 @@ mod tests {
 
     /// A profile's phases are typed, so a phase string the engine has no phase for
     /// fails the load instead of reaching the wizard as a step it cannot render.
+    ///
+    /// Since `PhaseRule` (A2/D56) wraps `CreationPhase` in an untagged enum —
+    /// required so a bare phase slug keeps deserializing unchanged — serde's
+    /// untagged-enum error reporting no longer echoes the offending token
+    /// itself (it names the wrapper, not the value); the load-time refusal
+    /// itself is what this test guards, not the message's wording.
     #[test]
     fn profile_with_an_unknown_creation_phase_fails_to_parse() {
         let err = serde_json::from_str::<EntityTypeProfile>(
@@ -5588,8 +5684,8 @@ mod tests {
         )
         .expect_err("an unknown creation phase must not parse");
         assert!(
-            err.to_string().contains("not_a_phase"),
-            "the error must name the offending phase: {err}"
+            err.to_string().contains("PhaseRule"),
+            "the error must name the untagged wrapper it failed to match: {err}"
         );
     }
 

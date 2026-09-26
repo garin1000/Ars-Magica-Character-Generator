@@ -371,8 +371,9 @@ fn check_creation_phase_flow(types: &[EntityTypeProfile]) -> Vec<String> {
     let mut errors = Vec::new();
     for profile in types {
         let mut seen = BTreeSet::new();
-        for phase in &profile.creation_phases {
-            if *phase == CreationPhase::Review {
+        for rule in &profile.creation_phases {
+            let phase = rule.phase();
+            if phase == CreationPhase::Review {
                 errors.push(format!(
                     "type profile '{}' declares the synthetic '{phase}' phase, which the wizard appends itself",
                     profile.id

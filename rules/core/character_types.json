@@ -39,6 +39,8 @@
       "virtues_flaws",
       "experience",
       "abilities",
+      { "phase": "arts", "when": { "kind": "hermetically_trained" } },
+      { "phase": "spells", "when": { "kind": "hermetically_trained" } },
       "personality_reputations",
       "aging"
     ]

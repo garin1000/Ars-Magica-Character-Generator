@@ -18,7 +18,7 @@ use crate::ruleset::Ruleset;
 use crate::types::{
     AbilityFunding, CategoryCap, CategoryRule, CreationPhase, Effect, Entity, EntityKind,
     EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef,
-    ParameterDomain, PointItem, Prereq, Realm, Selection, ValidationMode,
+    ParameterDomain, PhaseRule, PointItem, Prereq, Realm, Selection, ValidationMode,
 };
 
 mod aging;
@@ -52,6 +52,7 @@ pub use aging::aging_error_issue;
 pub use balance::{Balance, PointCeilings, compute_balance, effective_point_ceilings};
 pub use life_stage::childhood_rejection_issues;
 pub use saga::{AgeInSagaYear, DEFAULT_SAGA_YEAR, age_in_saga_year, birth_year_in_saga_year};
+pub use selections::phases_in_force;
 // Load-time integrity checks an `at_most_one_of` group's members against the
 // SAME resolution a selection's value goes through, so the two can never drift.
 pub(crate) use selections::param_value_resolves;

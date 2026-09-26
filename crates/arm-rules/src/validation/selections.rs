@@ -53,6 +53,38 @@ fn categories_in_force<'a>(rules: &'a [CategoryRule], ctx: &PrereqCtx) -> BTreeS
         .collect()
 }
 
+/// The creation phases a profile's `creation_phases` list puts **in force**
+/// for this entity, in the profile's own declared order: every unconditional
+/// entry, plus every conditional one whose `when` evaluates to [`Tri::True`].
+///
+/// Mirrors [`categories_in_force`] exactly, and exists for the same reason
+/// (D56/A0, `docs/vf-audit/design-a0-is-magus-split.md` § 6): `Tri::False` and
+/// `Tri::Unknown` both leave an entry out of force, Unknown resolving in the
+/// player's favour. The single resolution point the frontend's tab list reads
+/// through the `phases_in_force` DTO field, rather than re-deriving which
+/// phases apply from the raw profile flags itself.
+///
+/// Returns an empty list when `entity.type_id` resolves to no profile — there
+/// is no declared flow to resolve phases against.
+pub fn phases_in_force(entity: &Entity, ruleset: &Ruleset) -> Vec<CreationPhase> {
+    let Some(profile) = ruleset.type_profiles.get(&entity.type_id) else {
+        return Vec::new();
+    };
+    let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+    let granted = crate::effective::entity_grants(entity, ruleset);
+    let ctx = PrereqCtx::build(entity, ruleset, Some(profile), &selected_ids, &granted);
+
+    profile
+        .creation_phases
+        .iter()
+        .filter(|rule| match rule.when() {
+            None => true,
+            Some(when) => ctx.evaluate(when).0 == Tri::True,
+        })
+        .map(PhaseRule::phase)
+        .collect()
+}
+
 pub(crate) fn validate_permitted_categories(
     entity: &Entity,
     ruleset: &Ruleset,

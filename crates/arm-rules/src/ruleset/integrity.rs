@@ -527,6 +527,7 @@ impl Ruleset {
                 errors,
             );
             self.validate_category_rule_conditions(type_id, profile, errors);
+            self.validate_phase_rule_conditions(type_id, profile, errors);
             // Intentionally unchecked: the profile's category-typed fields
             // (`permitted_categories`, `forbidden_categories`, `gift_categories`,
             // and the budget's `flaw_category_caps`) are NOT validated against the
@@ -593,6 +594,35 @@ impl Ruleset {
                 let context = format!("type profile '{type_id}': {field} '{}'", rule.category());
                 self.validate_prereq_refs(when, &context, 1, errors);
             }
+        }
+    }
+
+    /// Walks every `when` condition on a profile's `creation_phases` through the
+    /// same [`Self::validate_prereq_refs`] gate [`Self::validate_category_rule_conditions`]
+    /// already applies to `permitted_categories`/`forbidden_categories` (A2/D56,
+    /// `docs/vf-audit/design-a0-is-magus-split.md` § 6).
+    ///
+    /// A `PhaseRule::when` is authored in the `rules/` directory beside the
+    /// binary — the project's declared hostile-input surface — at the identical
+    /// trust boundary as a `CategoryRule::when`, so it must fail the load on a
+    /// dangling ref rather than silently resolve to `Tri::Unknown` (→
+    /// not-in-force) at evaluation time, hiding the phase forever with no error
+    /// anywhere naming the typo.
+    fn validate_phase_rule_conditions(
+        &self,
+        type_id: &Id,
+        profile: &EntityTypeProfile,
+        errors: &mut Vec<String>,
+    ) {
+        for rule in &profile.creation_phases {
+            let Some(when) = rule.when() else {
+                continue;
+            };
+            let context = format!(
+                "type profile '{type_id}': creation_phases '{}'",
+                rule.phase()
+            );
+            self.validate_prereq_refs(when, &context, 1, errors);
         }
     }
 

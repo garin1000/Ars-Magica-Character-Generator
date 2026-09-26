@@ -933,6 +933,58 @@ incompatibility cannot express; `ArMDE:3845`'s is not.
 of open-to-dos row 17(c): saves store choices, the engine only reports, and one
 selection clears it.
 
+#### A creation phase may carry a condition (A2/D56)
+> "He knows Hermetic magic and can cast spells and enchant items like other
+> magi. He is not a member of the Order of Hermes, however."
+> — `ArMDE:5641-5650` (Abandoned Apprentice)
+
+D56 splits the old single `is_magus` flag into *Hermetically trained*
+(`hermetically_trained`) and *member of the Order* (`order_member`) —
+`docs/vf-audit/design-a0-is-magus-split.md` has the full design. A1 landed the
+two profile booleans, the `Prereq::HermeticallyTrained`/`Prereq::OrderMember`
+variants, and the entity-level union `is_hermetically_trained` (profile flag
+OR a selection carrying `Effect::ConfersHermeticTraining`,
+`effective/hermetic_training.rs`). A2 makes the wizard's/tab list's own phase
+list follow the same union rather than the bare profile flag, mirroring
+*A category rule may carry a condition* exactly: `EntityTypeProfile::creation_phases`
+is now `Vec<PhaseRule>` (`types.rs`) — `#[serde(untagged)]` over either a bare
+phase slug or `{ phase, when: <Prereq> }` — so every existing rules file loads
+and re-emits unchanged.
+
+**Semantics, resolved once.** A phase is in force **iff** `when` is absent or
+evaluates to `Tri::True`; `Tri::False`/`Tri::Unknown` both leave it out of
+force, the same convention `categories_in_force` established. The single
+resolution point is `phases_in_force` (`validation/selections.rs`), exposed to
+`arm-app` and, through `effective_dto.rs::EffectiveScores.phases_in_force`, to
+the frontend — `ui/src/App.svelte`'s tab list intersects its static tab
+metadata against this resolved list instead of re-deriving `isMagus`-shaped
+booleans client-side. `completeness.rs::completeness` reads the same resolved
+list, so a phase not yet in force is never reported "incomplete" either.
+
+**Shipped data.** The magus profile's phases are unchanged (every entry stays
+the unconditional `Always` form — all of them are true for a magus regardless).
+The companion profile (`rules/core/character_types.json`) gains two new
+conditional entries, `{"phase": "arts", "when": {"kind": "hermetically_trained"}}`
+and the same for `spells`, inserted after `abilities` (matching the magus's own
+order). **No shipped item carries `Effect::ConfersHermeticTraining` yet** —
+`flaw.abandoned_apprentice` gains it only in slice D3, together with the
+truncated-apprenticeship XP shape it funds — so today's plain companion sees
+neither phase, exactly as before; the conditional path is proved with
+test-only ruleset fixtures (`effective/hermetic_training.rs`,
+`effective_dto.rs`, `crates/arm-app/tests/commands.rs`).
+
+**Load gate.** A `PhaseRule::when` sits at the identical trust boundary as a
+`CategoryRule::when`, so `ruleset/integrity.rs::validate_phase_rule_conditions`
+walks it through the same `validate_prereq_refs` a category rule's condition
+passes — a dangling ref fails the load rather than silently resolving to
+`Tri::Unknown` (not-in-force) with nothing naming the typo. Pinned by
+`a_conditional_creation_phase_referencing_an_unknown_item_fails_the_load`
+(`ruleset.rs`).
+
+**Save impact: none.** `Entity` carries no `creation_phases`-shaped field —
+this is ruleset shape (rules data, keyed by `ruleset.version`), not a saved
+`Selection` — so no `SCHEMA_VERSION` bump.
+
 #### Two Flaws the book indexes under General were magus-only (open-to-dos row 13)
 > **Hermetic** — "Only characters with The Gift can take these Virtues and Flaws,
 > and some are only applicable to Hermetic magi who have already completed their
@@ -1098,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1060).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1092).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1127,6 +1179,7 @@ source:
 | companion | `max_major_virtues: null`, `max_major_flaws: null` (no count cap) | no Major-count cap for companions in the book |
 | companion | `max_minor_flaws: 5` | `ArMDE:2774`, `ArMDE:2835` |
 | companion | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `ArMDE:2820`, `ArMDE:2838` (Major Personality hard); `ArMDE:2820`/`ArMDE:2976` (Personality total); `ArMDE:2818`/`ArMDE:2837` (Story) |
+| companion | `creation_phases` includes `arts`/`spells` **when** `hermetically_trained` | `ArMDE:5641-5650` (Abandoned Apprentice: "he knows Hermetic magic and can cast spells" though not the profile's magus). The conditional is now modelled — see *A creation phase may carry a condition* below. No shipped item carries the conferring effect yet (D3), so a plain companion sees neither phase today |
 | magus | `virtue_points: 10`, `flaw_points: 10` | `ArMDE:2303` ("Like companions, magi may take up to ten points of Flaws, and the same number of points of Virtues"), `ArMDE:2855` ("up to 10 points of Flaws, and an equal number of points of Virtues") |
 | magus | `max_minor_flaws: 5` | `ArMDE:2856` ("may not have more than 5 Minor Flaws") |
 | magus | `hermetically_trained: true`, `order_member: true`, `gift_policy: required`, `required_traits: [virtue.hermetic_magus]` | `ArMDE:2858` ("must take The Gift and the Hermetic Magus Social Status Virtue"), `ArMDE:2293` (only magi may take the Hermetic Magus Status) |
@@ -1546,7 +1599,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :237) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :269) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -8328,11 +8381,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:520),
-  `validate_forbidden_traits` (:541))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:552),
+  `validate_forbidden_traits` (:573))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:204),
-  `validate_parameters` (:651), `validate_duplicate_selections` (:237))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:236),
+  `validate_parameters` (:683), `validate_duplicate_selections` (:269))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

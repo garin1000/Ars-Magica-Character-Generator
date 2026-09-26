@@ -641,6 +641,16 @@ describe('editor tabs for the phases split out in Slice 3', () => {
 // gating read — rather than a list retyped here, so a phase added there without
 // an editor counterpart fails this test instead of drifting silently. Read as
 // text for the reason app.css.test.ts states: it is data, not a module.
+// A2/D56: a `creation_phases` entry is a bare slug OR `{phase, when}`
+// (`PhaseRule`, mirroring `CategoryRule`) — the companion profile now carries
+// two of the latter (Arts/Spells conditioned on `hermetically_trained`).
+type ShippedPhaseRule = string | { phase: string; when: unknown };
+
+/** The phase a `ShippedPhaseRule` names, whatever its form. */
+function phaseSlug(rule: ShippedPhaseRule): string {
+  return typeof rule === 'string' ? rule : rule.phase;
+}
+
 const shippedTypeProfiles = JSON.parse(
   readFileSync(
     fileURLToPath(new URL('../../rules/core/character_types.json', import.meta.url)),
@@ -651,7 +661,7 @@ const shippedTypeProfiles = JSON.parse(
   hermetically_trained?: boolean;
   order_member?: boolean;
   has_mythic_type?: boolean;
-  creation_phases: string[];
+  creation_phases: ShippedPhaseRule[];
 }[];
 
 // Phase slug → editor tab id, or null for a phase with no tab. `review` has
@@ -681,20 +691,35 @@ const TAB_FOR_PHASE: Record<string, string | null> = {
 const POSITION_EXEMPT = new Set(['house_specialisation', 'mythic_type']);
 
 describe('the editor tab list mirrors the shipped creation phases (#28)', () => {
-  /** Install one shipped profile, with life-stage rules, and render the editor. */
+  /**
+   * Install one shipped profile, with life-stage rules, and render the editor.
+   *
+   * A2/D56: the tab list reads `store.effective.phases_in_force` (the engine's
+   * per-entity resolution), not the raw profile flags — so this fixture feeds
+   * it every phase the profile DECLARES, exactly as if each one resolved in
+   * force. That is the correct simulation for what this describe block tests
+   * (the static declared-phase → tab mapping), and it is exactly true for
+   * every shipped profile except the companion's two new conditional
+   * Arts/Spells entries, which real training would also resolve to `true` —
+   * conditional evaluation itself is `phases_in_force`'s own concern, covered
+   * separately (`effective/hermetic_training.rs`, `effective_dto.rs`).
+   */
   function renderFor(profile: (typeof shippedTypeProfiles)[number]): string[] {
     installRuleset(profile.id);
     (store.ruleset!.ruleset.type_profiles as Record<string, unknown>)[profile.id] = profile;
     installLifeStageRules();
     resetEntity();
     store.entity.type_id = profile.id;
+    store.effective = {
+      phases_in_force: profile.creation_phases.map(phaseSlug),
+    } as unknown as EffectiveScores;
     return tabIdsInOrder(html());
   }
 
   it('knows a tab (or a deliberate absence) for every shipped phase', () => {
     for (const profile of shippedTypeProfiles) {
-      for (const phase of profile.creation_phases) {
-        expect(Object.keys(TAB_FOR_PHASE)).toContain(phase);
+      for (const rule of profile.creation_phases) {
+        expect(Object.keys(TAB_FOR_PHASE)).toContain(phaseSlug(rule));
       }
     }
   });
@@ -703,10 +728,10 @@ describe('the editor tab list mirrors the shipped creation phases (#28)', () => 
     'gives %s exactly one tab per mapped phase',
     (_id, profile) => {
       const tabs = renderFor(profile);
-      for (const phase of profile.creation_phases) {
-        const tab = TAB_FOR_PHASE[phase];
+      for (const rule of profile.creation_phases) {
+        const tab = TAB_FOR_PHASE[phaseSlug(rule)];
         if (tab === null) {
-          expect(tabs).not.toContain(phase);
+          expect(tabs).not.toContain(phaseSlug(rule));
           continue;
         }
         expect(tabs.filter((candidate) => candidate === tab)).toEqual([tab]);
@@ -719,6 +744,7 @@ describe('the editor tab list mirrors the shipped creation phases (#28)', () => 
     (_id, profile) => {
       const tabs = renderFor(profile);
       const expected = profile.creation_phases
+        .map(phaseSlug)
         .filter((phase) => !POSITION_EXEMPT.has(phase))
         .map((phase) => TAB_FOR_PHASE[phase])
         .filter((tab): tab is string => tab !== null);
