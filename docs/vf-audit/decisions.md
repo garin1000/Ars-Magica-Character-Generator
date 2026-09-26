@@ -1375,6 +1375,11 @@ Marshal**; today they buy Profession: Sailor.
 `abilities`, `categories` and `instances`** — replacing the current *"when
 non-empty it is the ONLY test"*.
 
+> **Correction (2026-09-26, C0 plan review):** the pool below is **240** points,
+> not 50 — both the shipped entry and ArMDE:4461 say *"an extra 240 experience
+> points"* — and its list also includes Faerie Lore and Magic Lore. The union
+> argument is unaffected; the figure was wrong. Do not copy "50" into data.
+
 **Why the union, and it is not a preference.** `virtue.master_bard` (ArMDE:4461)
 has **one** 50-point pool funding *"Art of Memory, Profession: Storyteller,
 Profession: Poet, any Area Lore, or any Organization Lore"* — two named instances
