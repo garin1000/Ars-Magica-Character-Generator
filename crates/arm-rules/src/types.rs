@@ -464,12 +464,26 @@ pub enum ParamType {
     /// The parameter value is a reference to another rules entity (an [`Id`]).
     #[default]
     Ref,
+    /// The parameter value is a bounded integer count, inclusive on both ends
+    /// (D35: Simple Student's 1–2 finished years). Paired one-to-one with
+    /// [`ParameterDomain::Number`] — see that variant's doc comment for why the
+    /// domain half carries no resolution logic of its own. Serializes as
+    /// `{ "number": { "min": 1, "max": 2 } }` (an externally-tagged struct
+    /// variant), never as a bare string, so it can never be confused with
+    /// [`Self::Ref`]'s scalar `"ref"` form.
+    Number {
+        /// Smallest legal value, inclusive.
+        min: i32,
+        /// Largest legal value, inclusive.
+        max: i32,
+    },
 }
 
 impl fmt::Display for ParamType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ParamType::Ref => f.write_str("ref"),
+            ParamType::Number { min, max } => write!(f, "number[{min}..={max}]"),
         }
     }
 }
@@ -569,6 +583,19 @@ pub enum ParameterDomain {
     /// descriptor is the same choice as an unpadded one — but case is the player's,
     /// and is never folded.
     Text,
+    /// Value is a bounded integer count (D35: Simple Student's 1-2 finished
+    /// years). **This is the redundant half of the [`ParamType::Number`] pair.**
+    /// It exists solely so [`ParameterDef::domain`] stays a required,
+    /// non-optional field — exactly as every other domain requires — and it
+    /// carries no resolution logic of its own: unlike every other domain, which
+    /// resolves a value against some registry (a catalogue, a closed enum, the
+    /// declaring item's own list), the actual min/max bound lives entirely on
+    /// [`ParamType::Number`], and this variant's own matching arms below do
+    /// nothing beyond naming it. A future reader must not go looking here for
+    /// range-checking logic that lives on `ParamType::Number` instead — the
+    /// same warning [`ParamType`]'s own doc comment states for its "today it
+    /// carries no behavior" case.
+    Number,
 }
 
 impl ParameterDomain {
@@ -605,6 +632,7 @@ impl fmt::Display for ParameterDomain {
             ParameterDomain::Category => f.write_str("category"),
             ParameterDomain::Realm => f.write_str("realm"),
             ParameterDomain::Text => f.write_str("text"),
+            ParameterDomain::Number => f.write_str("number"),
         }
     }
 }
@@ -1207,6 +1235,47 @@ pub enum Effect {
         abilities: Vec<Id>,
         /// Eligible ability categories (Warrior: Martial; Privileged: General,
         /// Academic, Martial).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        categories: Vec<AbilityCategory>,
+    },
+    /// D35's parameter-scaled sibling of [`Self::RestrictedAbilityXp`]: the
+    /// granted pool's `amount` is `per_unit` times the value the selection's
+    /// own `param` (a [`ParameterDomain::Number`] parameter) names, rather than
+    /// a fixed total — Simple Student, "He receives 30 experience points per
+    /// finished year that he can apply to Latin or Artes Liberales"
+    /// (ArMDE:4960), capped at 2 finished years (60 XP) by the parameter's own
+    /// `max` (`docs/vf-audit/decisions.md` D35).
+    ///
+    /// Kept as a **separate** variant rather than an `Option<(String, u32)>`
+    /// bolted onto [`Self::RestrictedAbilityXp`], on the same precedent as
+    /// [`Self::CharacteristicScoreDelta`]/[`Self::CharacteristicScoreDeltaParam`]:
+    /// a fixed-amount effect and a parameter-scaled one are already a
+    /// "Foo"/"FooParam" pair elsewhere in this file, and the flow-graph code
+    /// that reads `RestrictedAbilityXp`
+    /// (`effective/xp.rs::restricted_ability_xp_pools`) must not silently pass
+    /// through an unscaled `amount` for an entry that actually needs
+    /// `per_unit * bound value`.
+    ///
+    /// `abilities` reuses [`AbilityRef`] (not a bare `Vec<Id>`) because Simple
+    /// Student's own Latin restriction needs D14's literal-instance form from
+    /// day one — "he receives 30 experience points... that he can apply to
+    /// Latin or Artes Liberales" funds Artes Liberales at any instance (it has
+    /// none) but Dead Language only at the Latin instance specifically, never
+    /// Ancient Greek. `categories` stays a bare list, unscoped, on
+    /// `RestrictedAbilityXp`'s own precedent: an earmark/grant category is
+    /// never gated.
+    ScaledRestrictedAbilityXp {
+        /// Parameter key (a [`ParameterDomain::Number`] parameter on the SAME
+        /// item) whose value is the per-unit count.
+        param: String,
+        /// XP granted per unit named by `param` (Simple Student: 30 per
+        /// finished year).
+        per_unit: u32,
+        /// Eligible ability ids/instances (Simple Student: Artes Liberales at
+        /// any instance, Dead Language at the Latin instance only).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        abilities: Vec<AbilityRef>,
+        /// Eligible ability categories, unscoped.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         categories: Vec<AbilityCategory>,
     },
@@ -4888,6 +4957,7 @@ mod tests {
         check(ParameterDomain::Characteristic);
         check(ParameterDomain::Enumerated);
         check(ParameterDomain::Text);
+        check(ParameterDomain::Number);
         check(CastingScope::All);
         check(CastingScope::Formulaic);
         check(CastingScope::Ritual);

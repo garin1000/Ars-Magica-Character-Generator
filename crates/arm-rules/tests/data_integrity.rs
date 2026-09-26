@@ -2105,11 +2105,9 @@ const PENDING_D46_CLASSIFICATION: &[(&str, &str)] = &[
         "creation_effect, carries no effects, and is named in no type profile's \
          required_traits/forbidden_traits (measurements.md § 8 row 11)",
     ),
-    (
-        "virtue.simple_student",
-        "creation_effect, carries no effects, and is named in no type profile's \
-         required_traits/forbidden_traits (measurements.md § 8 row 11)",
-    ),
+    // `virtue.simple_student` is no longer pending: D35 (Phase 2 C3) gave it a
+    // `scaled_restricted_ability_xp` effect, so it is now computed and trips
+    // no guard.
     (
         "virtue.the_gift",
         "narrative, but named in the grog profile's forbidden_traits — D46's ruling: \
@@ -3020,6 +3018,104 @@ fn shipped_xp_granters_add_restricted_pool() {
             .iter()
             .any(|p| p.amount == 120),
         "Feral Upbringing grants a 120-xp restricted pool",
+    );
+}
+
+/// D35 (Q-67, Phase 2 C3): Simple Student's `years` parameter (1–2, capped at
+/// 60 XP total) scales the restricted-XP pool it grants — one finished year
+/// funds 30 XP, two fund 60 — and a third year is refused, since it would
+/// complete a different Virtue (Baccalaureus Artium) with its own XP figure.
+#[test]
+fn simple_student_scales_its_restricted_pool_by_finished_years() {
+    use arm_rules::restricted_xp_pools;
+    let rs = load_ruleset();
+
+    let one_year = entity(
+        "companion",
+        vec![Selection::with_params(
+            Id::new("virtue.simple_student"),
+            BTreeMap::from([("years".into(), Id::new("1"))]),
+        )],
+    );
+    assert!(
+        restricted_xp_pools(&one_year, &rs)
+            .iter()
+            .any(|p| p.amount == 30),
+        "one finished year must grant a 30-xp restricted pool, got: {:?}",
+        restricted_xp_pools(&one_year, &rs)
+    );
+
+    let two_years = entity(
+        "companion",
+        vec![Selection::with_params(
+            Id::new("virtue.simple_student"),
+            BTreeMap::from([("years".into(), Id::new("2"))]),
+        )],
+    );
+    assert!(
+        restricted_xp_pools(&two_years, &rs)
+            .iter()
+            .any(|p| p.amount == 60),
+        "two finished years must grant a 60-xp restricted pool, got: {:?}",
+        restricted_xp_pools(&two_years, &rs)
+    );
+
+    // A third year is not a legal value at all — it would complete the
+    // Baccalaureus Artium Virtue instead (D35), so the parameter's own `max`
+    // caps it and the choice is refused, not silently accepted.
+    let three_years = entity(
+        "companion",
+        vec![Selection::with_params(
+            Id::new("virtue.simple_student"),
+            BTreeMap::from([("years".into(), Id::new("3"))]),
+        )],
+    );
+    assert!(
+        issue_codes(&three_years, &rs).contains(&"unknown_param_value".to_string()),
+        "a third finished year must be refused"
+    );
+}
+
+/// D35: Simple Student funds Artes Liberales at any instance, but Dead
+/// Language only at the Latin instance — the same F-349-shaped literal-
+/// instance fix `flaw.covenant_upbringing` already relies on, so an Ancient
+/// Greek instance must not be funded by this pool.
+#[test]
+fn simple_student_funds_latin_but_not_another_dead_language() {
+    use arm_rules::checked_xp_allocation;
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![Selection::with_params(
+            Id::new("virtue.simple_student"),
+            BTreeMap::from([("years".into(), Id::new("1"))]),
+        )],
+    );
+    e.xp_pool = 0;
+    e.ability_scores = vec![
+        AbilityScore {
+            ability: Id::new("ability.dead_language"),
+            parameter: Some("latin".to_string()),
+            score: 1,
+            specialty: None,
+        },
+        AbilityScore {
+            ability: Id::new("ability.dead_language"),
+            parameter: Some("ancient_greek".to_string()),
+            score: 1,
+            specialty: None,
+        },
+    ];
+    let allocation = checked_xp_allocation(&e, &rs).unwrap();
+    let latin_only_demand = allocation.total_demand / 2;
+    let pool = allocation
+        .restricted
+        .iter()
+        .find(|p| p.amount == 30)
+        .expect("Simple Student's 30-xp pool must be present");
+    assert_eq!(
+        pool.used, latin_only_demand,
+        "the pool must fund only the Latin instance, not Ancient Greek too"
     );
 }
 

@@ -417,6 +417,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::AffinityArtCost { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
+                | Effect::ScaledRestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }

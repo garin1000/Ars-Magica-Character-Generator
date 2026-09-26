@@ -25,6 +25,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AffinityAbilityCost { .. }
         | Effect::AffinityArtCost { .. }
         | Effect::RestrictedAbilityXp { .. }
+        | Effect::ScaledRestrictedAbilityXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         | Effect::GeneralXp { .. }
@@ -88,6 +89,7 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AffinityAbilityCost { .. }
         | Effect::AffinityArtCost { .. }
         | Effect::RestrictedAbilityXp { .. }
+        | Effect::ScaledRestrictedAbilityXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         | Effect::SpellLevels { .. }
@@ -479,6 +481,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::ArtBonus { .. }
                 | Effect::AffinityArtCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
+                | Effect::ScaledRestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }

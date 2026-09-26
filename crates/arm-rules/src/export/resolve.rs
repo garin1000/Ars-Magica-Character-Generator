@@ -192,7 +192,9 @@ impl<'a> Doc<'a> {
             | ParameterDomain::Characteristic
             | ParameterDomain::Item
             | ParameterDomain::Enumerated
-            | ParameterDomain::Text => None,
+            | ParameterDomain::Text
+            // A number is printed as itself, not looked up in a taxonomy.
+            | ParameterDomain::Number => None,
         }
     }
 

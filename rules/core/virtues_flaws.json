@@ -5964,6 +5964,11 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "years", "type": { "number": { "min": 1, "max": 2 } }, "domain": "number" }],
+    "effects": [
+      { "type": "scaled_restricted_ability_xp", "param": "years", "per_unit": 30,
+        "abilities": ["ability.artes_liberales", { "ability": "ability.dead_language", "instance": { "literal": "latin" } }] }
+    ],
     "source": { "anchor": "simple-student", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4958, 4963] }
   },
   {

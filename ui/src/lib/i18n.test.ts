@@ -376,6 +376,7 @@ describe('German UI bundle', () => {
     category: true,
     realm: true,
     text: true,
+    number: true,
   };
 
   it('labels every parameter domain in both locales', () => {

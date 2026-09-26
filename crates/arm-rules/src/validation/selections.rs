@@ -667,6 +667,23 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // (ArMDE:3909).
         ParameterDomain::Realm => Realm::from_id(value).is_some(),
         ParameterDomain::Text => !value.as_str().trim().is_empty(),
+        // D35: the domain carries no registry of its own (see
+        // `ParameterDomain::Number`'s doc comment) — the bound lives on
+        // `ParamType::Number`, load-time integrity requires the two to pair,
+        // so this reads `param.param_type` rather than a second field here.
+        // A value that fails to parse as an integer, or falls outside
+        // `min..=max`, does not resolve — the same `unknown_param_value` an
+        // out-of-range Enumerated/Category value raises.
+        ParameterDomain::Number => match param.param_type {
+            ParamType::Number { min, max } => value
+                .as_str()
+                .parse::<i32>()
+                .is_ok_and(|n| (min..=max).contains(&n)),
+            // Load-time integrity rejects a `number` domain paired with any
+            // other `param_type`; if that invariant is somehow violated,
+            // resolve to nothing rather than accepting an unbounded value.
+            ParamType::Ref => false,
+        },
     }
 }
 

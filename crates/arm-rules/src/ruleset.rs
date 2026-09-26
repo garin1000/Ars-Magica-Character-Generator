@@ -28,8 +28,8 @@ use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityRef, CategoryRef, CategoryRule, CreationPhase,
     Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParamGate,
-    ParamValue, ParameterDef, ParameterDomain, PointItem, Prereq, ReputationType, RulesetRef,
-    SourceRef, SpecialCasting,
+    ParamType, ParamValue, ParameterDef, ParameterDomain, PointItem, Prereq, ReputationType,
+    RulesetRef, SourceRef, SpecialCasting,
 };
 
 mod accessors;
@@ -3328,6 +3328,174 @@ mod tests {
         );
     }
 
+    /// A single Virtue declaring one `parameters_json`-shaped parameter and one
+    /// `effect_json`-shaped effect — D35's dedicated fixture
+    /// (`docs/vf-audit/design-c0-parameter-model.md` § 9's `Number`/
+    /// `ScaledRestrictedAbilityXp` rows), on
+    /// [`load_with_gated_ability_authorization`]'s own precedent.
+    fn load_with_number_param(
+        parameters_json: &str,
+        effect_json: &str,
+    ) -> Result<Ruleset, RulesetError> {
+        let items = format!(
+            r#"[
+              {{ "id": "virtue.tester", "kind": "virtue", "classification": "creation_effect",
+                 "magnitude": "minor", "categories": ["general"],
+                 "parameters": [{parameters_json}],
+                 "effects": [{effect_json}] }},
+              {{ "id": "flaw.personality_filler", "kind": "flaw", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["personality"] }}
+            ]"#
+        );
+        let abilities = r#"{ "abilities": [
+          { "id": "ability.artes_liberales", "category": "general" },
+          { "id": "ability.dead_language", "category": "academic", "parameter": "language" }
+        ] }"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: &items,
+            type_profiles: "[]",
+            abilities: Some(abilities),
+            ..RulesetSources::default()
+        })
+    }
+
+    /// D35's central pairing invariant: `ParamType::Number`'s `min`/`max` and
+    /// `ParameterDomain::Number` must always travel together — the domain
+    /// carries no resolution logic of its own (see the domain's own doc
+    /// comment), so a mismatch would look enforced and not be.
+    #[test]
+    fn a_number_type_paired_with_a_non_number_domain_fails_the_load() {
+        let err = load_with_number_param(
+            r#"{ "key": "years", "type": { "number": { "min": 1, "max": 2 } }, "domain": "text" }"#,
+            "",
+        )
+        .expect_err("type number paired with a non-number domain must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("years"),
+            "expected an item-and-param-naming pairing error, got: {msg}"
+        );
+    }
+
+    /// The other direction of the same pairing: a `number` domain with no
+    /// `number` type would leave `param_value_resolves` with no `min`/`max`
+    /// to check against.
+    #[test]
+    fn a_number_domain_paired_with_a_non_number_type_fails_the_load() {
+        let err = load_with_number_param(
+            r#"{ "key": "years", "type": "ref", "domain": "number" }"#,
+            "",
+        )
+        .expect_err("domain number paired with a non-number type must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("years"),
+            "expected an item-and-param-naming pairing error, got: {msg}"
+        );
+    }
+
+    /// `min > max` excludes every value the parameter could ever name — the
+    /// numeric-range mirror of `max_per_value: 0`'s "unfillable" rejection.
+    #[test]
+    fn a_number_parameter_with_min_greater_than_max_fails_the_load() {
+        let err = load_with_number_param(
+            r#"{ "key": "years", "type": { "number": { "min": 3, "max": 1 } }, "domain": "number" }"#,
+            "",
+        )
+        .expect_err("min greater than max must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("years"),
+            "expected an item-and-param-naming range error, got: {msg}"
+        );
+    }
+
+    /// The shipped shape (Simple Student's `years`, 1–2) loads clean.
+    #[test]
+    fn ordinary_number_parameter_loads() {
+        assert!(
+            load_with_number_param(
+                r#"{ "key": "years", "type": { "number": { "min": 1, "max": 2 } }, "domain": "number" }"#,
+                "",
+            )
+            .is_ok(),
+            "a shipped-shaped number parameter must load"
+        );
+    }
+
+    /// A `scaled_restricted_ability_xp` effect's `param` must resolve to a
+    /// `Number`-domain parameter on the SAME item — a scaled-XP `param` must
+    /// resolve to a count, not an id or a set.
+    #[test]
+    fn a_scaled_restricted_ability_xp_param_not_of_type_number_fails_the_load() {
+        let err = load_with_number_param(
+            r#"{ "key": "years", "type": "ref", "domain": "ability" }"#,
+            r#"{ "type": "scaled_restricted_ability_xp", "param": "years", "per_unit": 30,
+                 "abilities": ["ability.artes_liberales"] }"#,
+        )
+        .expect_err("a non-number param must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester")
+                && msg.contains("scaled_restricted_ability_xp")
+                && msg.contains("years"),
+            "expected an effect-and-param-naming type error, got: {msg}"
+        );
+    }
+
+    /// The other half: naming a parameter the item never declares at all.
+    #[test]
+    fn a_scaled_restricted_ability_xp_param_naming_an_undeclared_key_fails_the_load() {
+        let err = load_with_number_param(
+            r#"{ "key": "years", "type": { "number": { "min": 1, "max": 2 } }, "domain": "number" }"#,
+            r#"{ "type": "scaled_restricted_ability_xp", "param": "no_such_param", "per_unit": 30,
+                 "abilities": ["ability.artes_liberales"] }"#,
+        )
+        .expect_err("a dangling param must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("no_such_param"),
+            "expected an unknown-parameter error, got: {msg}"
+        );
+    }
+
+    /// The shipped shape (Simple Student, § 1 of the design note): a `years`
+    /// parameter plus a `scaled_restricted_ability_xp` effect naming an
+    /// unscoped Ability and a Latin-instance-scoped one loads clean.
+    #[test]
+    fn ordinary_scaled_restricted_ability_xp_effect_loads() {
+        assert!(
+            load_with_number_param(
+                r#"{ "key": "years", "type": { "number": { "min": 1, "max": 2 } }, "domain": "number" }"#,
+                r#"{ "type": "scaled_restricted_ability_xp", "param": "years", "per_unit": 30,
+                     "abilities": ["ability.artes_liberales",
+                       { "ability": "ability.dead_language", "instance": { "literal": "latin" } }] }"#,
+            )
+            .is_ok(),
+            "the shipped Simple Student shape must load"
+        );
+    }
+
+    /// D35's gate restriction: gating on a `Number`-domain parameter is
+    /// rejected outright, since numeric-equality gating is a different,
+    /// unaddressed feature no current ruling needs (§ 9 of the design note).
+    #[test]
+    fn a_gate_naming_a_number_domain_parameter_fails_the_load() {
+        let err = load_with_gated_ability_authorization(
+            r#"{ "key": "years", "type": { "number": { "min": 1, "max": 2 } }, "domain": "number" }"#,
+            "",
+            r#"{ "category": "academic", "gate": { "param": "years", "equals": "1" } }"#,
+        )
+        .expect_err("a gate naming a number-domain parameter must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("years"),
+            "expected an item-and-param-naming gate error, got: {msg}"
+        );
+    }
+
     /// D55 (Q6): `advancement_mod` must carry exactly one of `amount`/`factor`.
     /// Neither present is a meaningless row — no modifier at all — and fails
     /// the load naming the offending item, exactly as `validate_item_ratios`
@@ -5396,6 +5564,9 @@ mod tests {
         // entry in the point-item registry. Pinned so the audit is recorded
         // rather than repeated.
         assert!(!ParameterDomain::Realm.resolves_against_items());
+        // Same silent-`false` hazard: a `number` value is a bounded integer,
+        // never a point-item id.
+        assert!(!ParameterDomain::Number.resolves_against_items());
     }
 
     #[test]

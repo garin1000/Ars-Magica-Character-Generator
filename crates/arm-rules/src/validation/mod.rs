@@ -17,9 +17,9 @@ use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
     AbilityFunding, CategoryCap, CategoryRule, CreationPhase, Effect, Entity, EntityKind,
-    EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef,
-    ParameterDomain, PhaseRule, PointItem, Prereq, Realm, Selection, SelectionParamValue,
-    ValidationMode,
+    EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParamType,
+    ParameterDef, ParameterDomain, PhaseRule, PointItem, Prereq, Realm, Selection,
+    SelectionParamValue, ValidationMode,
 };
 
 mod aging;
@@ -1174,6 +1174,9 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         Effect::ArtBonus { .. }
         | Effect::AffinityArtCost { .. }
         | Effect::RestrictedAbilityXp { .. }
+        // A pool grant, matching `RestrictedAbilityXp`'s own classification —
+        // not a bonus/shift with a dangling-target-checkable param.
+        | Effect::ScaledRestrictedAbilityXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         | Effect::SpellLevels { .. }

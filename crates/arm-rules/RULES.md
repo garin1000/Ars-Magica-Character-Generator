@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1143).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1160).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -5802,12 +5802,13 @@ real Might/power effects, a Devil Child resolves end-to-end to a nonzero effecti
 Infernal Might + power-levels budget (tested in `arm-app`'s
 `devil_child_resolves_infernal_might_and_power_budget_end_to_end`).
 
-**Deferred (3), source-not-present or no clean creation number:**
-- **Savantism, Simple Student, Corrupted Arts (3 XP)** — Savantism
-  (ArMDE:6703) *halves* starting XP (multiplicative; no variant); Simple Student (ArMDE:4958)
-  is 30 xp *per finished year* (age/life-stage, M6); Corrupted Arts (ArMDE:5853) has no
+**Deferred (2), source-not-present or no clean creation number:**
+- **Savantism, Corrupted Arts** — Savantism
+  (ArMDE:6703) *halves* starting XP (multiplicative; no variant); Corrupted Arts (ArMDE:5853) has no
   creation XP figure (its ±3 casting swing / ±5 Art xp are in-play). (Elemental
-  Magic, :3731, is now implemented in slice 5c — see its section above.)
+  Magic, :3731, is now implemented in slice 5c — see its section above. Simple
+  Student, ArMDE:4958, was the third deferred entry here — it is now wired,
+  D35/Phase 2 C3 — see **Simple Student's parameter-scaled XP grant** below.)
 
 #### Student of (Realm) — missed by the 5a-wire pass, fixed in the audit-fix round
 
@@ -6020,7 +6021,9 @@ falls outside its grant; `docs/vf-audit/decisions.md` § D11,
 - `virtue.mentored_by_demons` (ArMDE:4496-4499) — XP grant 50
 - `virtue.schooled_in_crime` (ArMDE:4884-4887) — XP grant 50
 - `virtue.shadchan` (ArMDE:4934-4939) — XP grant 50
-- `virtue.simple_student` (ArMDE:4958-4963) — XP grant 30/yr
+- `virtue.simple_student` (ArMDE:4958-4963) — parameter-scaled XP grant, 30 xp
+  per finished year (1-2 years, 60 xp cap) — see **Simple Student's
+  parameter-scaled XP grant (D35, Phase 2 C3)** below
 - `virtue.trained_assassin` (ArMDE:5153-5156) — XP grant 50
 - `virtue.venditor` (ArMDE:5207-5210) — XP grant 50
 
@@ -7134,6 +7137,89 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   no per-stage attribution at all; there the exemption stays whole-character. The
   ownership check here is unchanged either way, and the two never double-report: a
   shortfall is `not_enough_xp`, never `ability_category_requires_virtue`.
+
+#### Simple Student's parameter-scaled XP grant (D35, Phase 2 C3)
+
+> The character is a university student who has not yet taken a degree. He is
+> typically between 14 and 16 years old and somewhere along his university
+> program. He receives 30 experience points per finished year that he can
+> apply to Latin or Artes Liberales. If he has finished his second year of
+> studies, he is in the liminal position of either applying for work or
+> continuing his education.
+
+- Source: `ArMDE:4958-4963`, rule at `ArMDE:4960`.
+- **The cap is 2 finished years (60 XP), derived from the catalogue, not
+  invented.** The rate — 30 XP per finished year — is a *family* mechanic
+  shared with three other Virtues whose year counts and totals are stated
+  outright: Baccalaureus Artium (3 years, 90 XP, `ArMDE:3472`), Magister in
+  Artibus (8 years, 240 XP, `ArMDE:4389`), Doctor in Faculty (10 years, 300 XP,
+  `ArMDE:3687`). A Simple Student's **third** finished year completes the
+  Baccalaureus, a different Virtue with its own 90 XP, so 2 is the ceiling —
+  and `ArMDE:4960` says as much ("If he has finished his **second** year...").
+  An age formula (`age - 15`) was considered and rejected: it breaks on the
+  perpetual student (decisions.md D35).
+- Data: `rules/core/virtues_flaws.json` `virtue.simple_student` declares
+  `parameters: [{ key: "years", type: { number: { min: 1, max: 2 } }, domain:
+  "number" }]` and `effects: [{ type: "scaled_restricted_ability_xp", param:
+  "years", per_unit: 30, abilities: ["ability.artes_liberales", { ability:
+  "ability.dead_language", instance: { literal: "latin" } }] }]`. The Dead
+  Language entry uses D14's literal-instance form (the same fix
+  `flaw.covenant_upbringing` already carries) so the pool funds Latin
+  specifically, never Ancient Greek — Simple Student was never one of D14's
+  named carriers, but it needs the same fix the moment it is written. Only the
+  three other family members' year counts stay fixed constants (90/240/300);
+  parameterizing them for symmetry would be wrong, since the book states
+  their totals outright.
+- Engine: `ParamType::Number { min, max }` and `ParameterDomain::Number`
+  (`types.rs`) — the domain is the redundant half of the pair and carries no
+  resolution logic of its own (see its own doc comment); the bound lives on
+  `ParamType::Number` and is read in
+  `validation/selections.rs::param_value_resolves`'s `Number` arm. The grant
+  itself is `Effect::ScaledRestrictedAbilityXp { param, per_unit, abilities,
+  categories }` (`types.rs`) — the parameter-scaled sibling of
+  `Effect::RestrictedAbilityXp`, on the `CharacteristicScoreDelta`/
+  `CharacteristicScoreDeltaParam` "Foo"/"FooParam" precedent.
+  `effective/xp.rs::restricted_ability_xp_pools` reads the selection's own
+  `years` value, multiplies by `per_unit`, and resolves each `AbilityRef` into
+  an `AbilityInstanceRef` (`instances`, not `abilities` — an unscoped entry's
+  `parameter: None` already means "any instance", so Artes Liberales at any
+  instance and Dead Language at the Latin instance coexist in the same list
+  with no special-casing). No pool at all until a legal `years` value is
+  filled in — the same "a choice not yet made" reading `missing_param` gives
+  elsewhere. `ability_authorizations()` also folds this effect's `abilities`/
+  `categories` into the authorized set, exactly like `RestrictedAbilityXp` —
+  an earmark is itself permission.
+- Load-time integrity (`ruleset/integrity.rs::validate_parameter_defs`):
+  `ParamType::Number` and `ParameterDomain::Number` must pair (either half
+  without the other fails the load), and `min > max` fails the load — the
+  numeric-range mirror of `max_per_value: 0`'s "unfillable" rejection.
+  `::validate_effect_refs` requires a `scaled_restricted_ability_xp`'s `param`
+  to resolve to a **`Number`**-domain parameter on the same item (not `Ref`) —
+  a scaled-XP `param` must resolve to a count, never an id or a set — and
+  every named ability to resolve, on `AbilityAuthorization`'s own
+  `validate_gated_ability_refs` precedent. `::validate_param_gate` rejects a
+  `ParamGate` naming a `Number`-domain parameter outright: gating on numeric
+  equality is a different, unaddressed feature no current ruling needs.
+- Frontend: `ParamType`/`ParameterDomain` TS mirrors
+  (`ui/src/lib/types.ts`) gain `{ number: { min, max } }`/`'number'`, guarded
+  against the Rust source by `ui/src/lib/param-type-parity.test.ts`.
+  `ParameterPicker.svelte` gains a `number` domain branch — a bounded
+  `<input type="number" min max>`, the first numeric parameter control (every
+  other domain renders a `<select>` or free-text `<input>`). Label
+  `param-label-years` in `locales/en|de/main.ftl`, alongside the
+  `param-domain-number` entry `unknown_param_value` needs.
+- Tests: `simple_student_scales_its_restricted_pool_by_finished_years`,
+  `simple_student_funds_latin_but_not_another_dead_language`
+  (`tests/data_integrity.rs`); `a_number_type_paired_with_a_non_number_domain_fails_the_load`,
+  `a_number_domain_paired_with_a_non_number_type_fails_the_load`,
+  `a_number_parameter_with_min_greater_than_max_fails_the_load`,
+  `ordinary_number_parameter_loads`,
+  `a_scaled_restricted_ability_xp_param_not_of_type_number_fails_the_load`,
+  `a_scaled_restricted_ability_xp_param_naming_an_undeclared_key_fails_the_load`,
+  `ordinary_scaled_restricted_ability_xp_effect_loads`,
+  `a_gate_naming_a_number_domain_parameter_fails_the_load` (`ruleset.rs`);
+  `ParameterPicker.test.ts` (ssr rendering), `ParameterPicker.client.test.ts`
+  (bounded clamping), `param-type-parity.test.ts`.
 
 #### The scholarly-language expectation for Academic Abilities (M6/6b2b)
 
@@ -8545,7 +8631,7 @@ carry no source citation:
   `validate_forbidden_traits` (:585))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:236),
-  `validate_parameters` (:710), `validate_duplicate_selections` (:269))
+  `validate_parameters` (:727), `validate_duplicate_selections` (:269))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

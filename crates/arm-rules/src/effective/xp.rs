@@ -458,6 +458,26 @@ pub(crate) fn ability_authorizations(
                     }));
                     categories.extend(cats.iter().copied());
                 }
+                // D35's parameter-scaled sibling: an earmark is itself
+                // permission, exactly like `RestrictedAbilityXp` above — but
+                // `abilities` here is `Vec<AbilityRef>`, so each entry is
+                // resolved (and, in principle, gated) against THIS selection
+                // the same way `AbilityAuthorization`'s own list is below.
+                Effect::ScaledRestrictedAbilityXp {
+                    abilities: refs,
+                    categories: cats,
+                    ..
+                } => {
+                    for a in refs {
+                        if a.active_for(selection) {
+                            abilities.insert(AuthorizedAbility {
+                                ability: a.ability().clone(),
+                                instance: a.resolved_instance(selection),
+                            });
+                        }
+                    }
+                    categories.extend(cats.iter().copied());
+                }
                 // The gated carrier (D14/W2): only the entries whose gate holds
                 // for THIS selection contribute — F-349's fix (see
                 // `docs/vf-audit/design-c0-parameter-model.md` § 3/§ 4).
@@ -768,9 +788,10 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
     spends
 }
 
-/// One [`FlowPool`] per [`Effect::RestrictedAbilityXp`] grant among the
-/// entity's selections (Educated, Warrior, Privileged Upbringing, …) — pool
-/// kind 1 of 5 [`build_flow_pools`] assembles.
+/// One [`FlowPool`] per [`Effect::RestrictedAbilityXp`] or
+/// [`Effect::ScaledRestrictedAbilityXp`] grant among the entity's selections
+/// (Educated, Warrior, Privileged Upbringing, Simple Student, …) — pool kind 1
+/// of 5 [`build_flow_pools`] assembles.
 fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
     let mut flow_pools = Vec::new();
     let selections = selections_for_effects(entity, ruleset);
@@ -779,25 +800,82 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
             continue;
         };
         for effect in &item.effects {
-            if let Effect::RestrictedAbilityXp {
-                amount,
-                abilities,
-                categories,
-            } = effect
-            {
-                flow_pools.push(FlowPool {
-                    amount: *amount,
-                    eligibility: PoolEligibility::Ability {
-                        abilities: abilities.clone(),
-                        categories: categories.clone(),
-                        // A V/F grant is id/category-scoped, never instance-scoped.
-                        instances: Vec::new(),
-                        exclude: Vec::new(),
-                    },
-                    origin: XpPoolOrigin::Item {
-                        item: selection.item_ref.clone(),
-                    },
-                });
+            match effect {
+                Effect::RestrictedAbilityXp {
+                    amount,
+                    abilities,
+                    categories,
+                } => {
+                    flow_pools.push(FlowPool {
+                        amount: *amount,
+                        eligibility: PoolEligibility::Ability {
+                            abilities: abilities.clone(),
+                            categories: categories.clone(),
+                            // A V/F grant is id/category-scoped, never instance-scoped.
+                            instances: Vec::new(),
+                            exclude: Vec::new(),
+                        },
+                        origin: XpPoolOrigin::Item {
+                            item: selection.item_ref.clone(),
+                        },
+                    });
+                }
+                // D35: the grant's `amount` is `per_unit` times the value the
+                // selection's own `param` (a `Number`-domain parameter) names
+                // — no pool at all until a legal value is filled in, matching
+                // `missing_param`'s "a choice not yet made" reading elsewhere.
+                // `abilities` is `Vec<AbilityRef>` (Simple Student's Latin
+                // instance restriction, § 1 of the design note), so every
+                // active entry is resolved into an `AbilityInstanceRef` and
+                // put in `instances` — a bare (any-instance) entry there is
+                // `parameter: None`, which `AbilityInstanceRef::matches`
+                // already treats as "any instance", so an unscoped ability
+                // and an instance-scoped one coexist in the same list with no
+                // special-casing (the same reasoning covenant_upbringing's
+                // literal-instance form already established for
+                // `AbilityAuthorization`). `categories` stays a plain
+                // eligibility list; a future entry combining `categories` with
+                // an instance-scoped ability in ONE grant would need D48's
+                // union fix (C4) to see both — not needed by Simple Student,
+                // this effect's only known consumer, and out of this slice's
+                // scope.
+                Effect::ScaledRestrictedAbilityXp {
+                    param,
+                    per_unit,
+                    abilities,
+                    categories,
+                } => {
+                    let Some(units) = selection
+                        .params
+                        .get(param)
+                        .and_then(SelectionParamValue::as_single)
+                        .and_then(|v| v.as_str().parse::<u32>().ok())
+                    else {
+                        continue;
+                    };
+                    flow_pools.push(FlowPool {
+                        amount: per_unit.saturating_mul(units),
+                        eligibility: PoolEligibility::Ability {
+                            abilities: Vec::new(),
+                            categories: categories.clone(),
+                            instances: abilities
+                                .iter()
+                                .filter(|a| a.active_for(selection))
+                                .map(|a| AbilityInstanceRef {
+                                    ability: a.ability().clone(),
+                                    parameter: a.resolved_instance(selection),
+                                })
+                                .collect(),
+                            exclude: Vec::new(),
+                        },
+                        origin: XpPoolOrigin::Item {
+                            item: selection.item_ref.clone(),
+                        },
+                    });
+                }
+                // Every other effect grants nothing to a restricted Ability-XP
+                // pool.
+                _ => {}
             }
         }
     }

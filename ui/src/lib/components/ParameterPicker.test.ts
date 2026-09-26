@@ -117,6 +117,10 @@ const ITEMS: Record<string, PointItem> = {
   'virtue.ways_of_the_land': pointItem('virtue.ways_of_the_land', [
     { key: 'land', type: 'ref', domain: 'text' },
   ]),
+  // D35: Simple Student's shape — a bounded integer count, 1-2.
+  'virtue.simple_student_probe': pointItem('virtue.simple_student_probe', [
+    { key: 'years', type: { number: { min: 1, max: 2 } }, domain: 'number' },
+  ]),
   'virtue.puissant_ability': pointItem('virtue.puissant_ability', [
     { key: 'ability', type: 'ref', domain: 'ability' },
   ]),
@@ -196,6 +200,7 @@ function installRuleset(): void {
       'virtue.demonic_blood': { name: 'Demonic Blood' },
       'virtue.granted_gift': { name: 'Granted Gift' },
       'virtue.ways_of_the_land': { name: 'Ways Of The {land}' },
+      'virtue.simple_student_probe': { name: 'Simple Student Probe' },
       'virtue.puissant_ability': { name: 'Puissant {ability}' },
       'ability.awareness': { name: 'Awareness' },
       'ability.stealth': { name: 'Stealth' },
@@ -281,6 +286,12 @@ function selectFor(body: string, testid: string): string | null {
 /** Whether an `<input>` carries the testid — i.e. the fall-through text branch fired. */
 function hasInput(body: string, testid: string): boolean {
   return new RegExp(`<input[^>]*data-testid="${testid}"`, 'i').test(body);
+}
+
+/** The whole `<input data-testid="…">` element (self-closing), or null when absent. */
+function inputFor(body: string, testid: string): string | null {
+  const re = new RegExp(`<input[^>]*data-testid="${testid}"[^>]*>`, 'i');
+  return re.exec(body)?.[0] ?? null;
 }
 
 /** Visible option texts, in document order — the empty prompt included. */
@@ -432,6 +443,17 @@ describe('ParameterPicker domain branches (slice 7, #4)', () => {
     const testid = 'param-virtue.ways_of_the_land-land-0';
     // `text` references no registry, so free text is correct here and nowhere else.
     expect(hasInput(body, testid)).toBe(true);
+    expect(selectFor(body, testid)).toBeNull();
+  });
+
+  it('renders a bounded number input, not a select or a plain text box, for the number domain', () => {
+    const body = pickerBody('virtue.simple_student_probe');
+    const testid = 'param-virtue.simple_student_probe-years-0';
+    const input = inputFor(body, testid);
+    expect(input).not.toBeNull();
+    expect(input).toContain('type="number"');
+    expect(input).toContain('min="1"');
+    expect(input).toContain('max="2"');
     expect(selectFor(body, testid)).toBeNull();
   });
 

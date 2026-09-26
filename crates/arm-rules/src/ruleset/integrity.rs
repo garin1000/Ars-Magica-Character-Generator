@@ -1900,6 +1900,34 @@ impl Ruleset {
         }
     }
 
+    /// D35: fails unless `param` names a declared parameter on `item` whose
+    /// `param_type` is [`ParamType::Number`] specifically — a scaled-XP
+    /// `param` must resolve to a count, not an id, a set, or a dangling key.
+    /// A missing key and a wrong type are reported as distinct sentences, on
+    /// the precedent of every other `(param, expected_domain, kind)` site in
+    /// this function.
+    fn validate_scaled_restricted_ability_xp_param(
+        &self,
+        item: &PointItem,
+        param: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        match item.parameters.iter().find(|p| p.key == param) {
+            None => errors.push(format!(
+                "{id}: effect 'scaled_restricted_ability_xp' references unknown parameter '{param}'"
+            )),
+            Some(def) if !matches!(def.param_type, ParamType::Number { .. }) => {
+                errors.push(format!(
+                    "{id}: effect 'scaled_restricted_ability_xp' parameter '{param}' has type \
+                     '{}', expected 'number'",
+                    def.param_type
+                ));
+            }
+            Some(_) => {}
+        }
+    }
+
     /// Fails if `ability` does not resolve to a known Ability, naming the effect
     /// `kind` in the message. Shared by the fixed-ability-target effects.
     fn validate_ability_ref(&self, ability: &Id, kind: &str, id: &Id, errors: &mut Vec<String>) {
@@ -1986,6 +2014,19 @@ impl Ruleset {
             ));
             return;
         };
+        // D35: gating on numeric equality is a different, unaddressed feature
+        // no current ruling needs — a future one should compare against
+        // `min..=max` rather than a single `equals`, which is a new mechanism,
+        // not this one. Rejected outright for now rather than silently
+        // accepted (`docs/vf-audit/design-c0-parameter-model.md` § 9).
+        if def.domain == ParameterDomain::Number {
+            errors.push(format!(
+                "{id}: effect '{kind}' gate references parameter '{}' with domain 'number', \
+                 which gating does not support",
+                gate.param
+            ));
+            return;
+        }
         if !param_value_resolves(self, def, &gate.equals) {
             errors.push(format!(
                 "{id}: effect '{kind}' gate parameter '{}' names value '{}', which does not \
@@ -2160,6 +2201,23 @@ impl Ruleset {
                     self.validate_ability_list_effect(
                         abilities,
                         "restricted_ability_xp",
+                        id,
+                        errors,
+                    );
+                    continue;
+                }
+                // D35: `param` must resolve to a `Number`-domain parameter on
+                // the SAME item (a scaled-XP `param` must resolve to a count,
+                // not an id or a set) and every named ability must resolve,
+                // exactly like `AbilityAuthorization.abilities` above.
+                Effect::ScaledRestrictedAbilityXp {
+                    param, abilities, ..
+                } => {
+                    self.validate_scaled_restricted_ability_xp_param(item, param, id, errors);
+                    self.validate_gated_ability_refs(
+                        item,
+                        abilities,
+                        "scaled_restricted_ability_xp",
                         id,
                         errors,
                     );
@@ -2512,6 +2570,33 @@ fn validate_parameter_defs(
                  the restriction would be read by no one",
                 param.domain
             ));
+        }
+        // D35: `Number` is a matched pair — the type carries `min`/`max`, the
+        // domain exists only so `domain` stays non-optional (see
+        // `ParameterDomain::Number`'s doc comment). Neither half may appear
+        // without the other, and the range itself must be non-empty.
+        if param.domain == ParameterDomain::Number
+            && !matches!(param.param_type, ParamType::Number { .. })
+        {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has domain 'number' but a non-'number' \
+                 type; the 'number' domain only pairs with type 'number'"
+            ));
+        }
+        if let ParamType::Number { min, max } = param.param_type {
+            if param.domain != ParameterDomain::Number {
+                errors.push(format!(
+                    "{subject}: parameter '{key}' has type 'number' but domain '{}'; \
+                     only the 'number' domain pairs with it",
+                    param.domain
+                ));
+            }
+            if min > max {
+                errors.push(format!(
+                    "{subject}: parameter '{key}' declares a number range with min {min} \
+                     greater than max {max}"
+                ));
+            }
         }
         // A `max_per_value` of 0 forbids every value the parameter could ever
         // name, so the declaring item is unfillable — the mirror of the

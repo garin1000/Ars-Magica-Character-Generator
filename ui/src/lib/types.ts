@@ -31,7 +31,13 @@ export type CreationPhase =
 
 // Closed enums in the engine (`ParamType` / `ParameterDomain`), serialized as
 // their snake_case names.
-export type ParamType = 'ref';
+export type ParamType =
+  | 'ref'
+  // D35: a bounded integer count (Simple Student's 1-2 finished years).
+  // Externally-tagged, matching the Rust struct variant's own wire form
+  // (`{ "number": { "min": 1, "max": 2 } }`) — never a bare string, so it can
+  // never be confused with `'ref'`.
+  | { number: { min: number; max: number } };
 export type ParameterDomain =
   | 'ability'
   | 'art'
@@ -53,7 +59,12 @@ export type ParameterDomain =
   // labels come from the `realm-<id>` Fluent family, never from rules i18n
   // (a bare realm slug has no entry there) and never from a declared list.
   | 'realm'
-  | 'text';
+  | 'text'
+  // D35: a bounded integer count — the redundant half of the `ParamType`
+  // pair (see the Rust `ParameterDomain::Number` doc comment); it carries no
+  // resolution logic here either, only the `param-domain-number` label
+  // `unknown_param_value` needs.
+  | 'number';
 
 export interface ParameterDef {
   key: string;

@@ -975,6 +975,9 @@ param-label-taken_as = Taken as
 # Which restricted group of Abilities Custos/Templar Specialist/Wise One
 # studied — the exclusive choice their `ability_authorization` gate reads.
 param-label-study = Study
+# Simple Student's finished-years count (ArMDE:4960); the cap (2 years, 60 xp)
+# is the parameter's own min/max, enforced by the engine.
+param-label-years = Years
 
 # Localized names for the engine's `ParameterDomain` variants — the kind of value a
 # parameter slot accepts. Read only by `unknown_param_value`, which names the domain a
@@ -994,6 +997,7 @@ param-domain-enumerated = listed value
 param-domain-category = Category
 param-domain-realm = Realm
 param-domain-text = Text
+param-domain-number = Number
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }

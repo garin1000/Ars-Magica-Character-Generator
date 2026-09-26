@@ -1028,6 +1028,10 @@ param-label-taken_as = Gewählt als
 # (Weiser Mann) studiert hat — die exklusive Wahl, die ihr
 # `ability_authorization`-Gate ausliest.
 param-label-study = Studium
+# Die Anzahl abgeschlossener Studienjahre des Einfachen Studenten (ArMDE:4960);
+# die Obergrenze (2 Jahre, 60 EP) ist min/max des Parameters, von der Engine
+# durchgesetzt.
+param-label-years = Jahre
 
 # Lokalisierte Namen der `ParameterDomain`-Varianten der Engine — die Art von Wert,
 # die ein Parameter-Platzhalter annimmt. Gelesen nur von `unknown_param_value`, das
@@ -1052,6 +1056,7 @@ param-domain-enumerated = Listenwert
 param-domain-category = Kategorie
 param-domain-realm = Sphäre
 param-domain-text = Text
+param-domain-number = Zahl
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }

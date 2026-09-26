@@ -69,6 +69,41 @@
     setParam(key, (event.currentTarget as HTMLInputElement).value.trim());
   }
 
+  // The `{ min, max }` bound a `number`-domain parameter's own `type` carries
+  // (D35) — `ParameterDomain::Number` itself is the redundant half of the
+  // pair and carries no bound of its own (see the engine's own doc comment),
+  // so the range comes from `type`, never from `domain`.
+  function numberRange(param: ParameterDef): { min: number; max: number } | undefined {
+    return typeof param.type === 'object' ? param.type.number : undefined;
+  }
+
+  // Clamps on COMMIT (`change`, not `input`): a per-keystroke clamp would
+  // fight a player typing a legal multi-digit value into a WIDE range (D3's
+  // future truncated-apprenticeship-age reuse) by rewriting the box after the
+  // first digit. `change` fires once the value is committed (blur or Enter),
+  // so mid-typing keystrokes are never touched — the DOM shows exactly what
+  // the player types until then, exactly as the text/select branches already
+  // leave `store.setParamAt`'s write as the only source of truth for what is
+  // shown. An out-of-range or non-integer value is clamped into range (a
+  // blank box clears the choice, the same "not yet made" reading `onTypeText`
+  // already gives an empty string).
+  function onTypeNumber(
+    key: string,
+    range: { min: number; max: number } | undefined,
+    event: Event,
+  ) {
+    const raw = (event.currentTarget as HTMLInputElement).value.trim();
+    if (raw === '') {
+      setParam(key, '');
+      return;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) return;
+    const whole = Math.trunc(parsed);
+    const clamped = range ? Math.min(range.max, Math.max(range.min, whole)) : whole;
+    setParam(key, String(clamped));
+  }
+
   function abilityInstanceLabel(abilityId: string, parameter: string | null | undefined): string {
     if (!store.ruleset) return abilityId;
     return abilityDisplayName(store.ruleset, abilityId, parameter, (key) =>
@@ -515,6 +550,26 @@
           <option value="realm.{realm}">{store.t(`realm-${realm}`)}</option>
         {/each}
       </select>
+    {:else if param.domain === 'number'}
+      <!-- D35: a bounded integer count (Simple Student's finished-years, 1-2)
+           — the first numeric parameter, so the first `<input type="number">`
+           control. `min`/`max` come from the parameter's own `type` (the
+           bound lives there, not on `domain` — see `numberRange`); the
+           browser's own spinner/validity affordance guides the *keyboard*,
+           but the actual clamp is enforced in `onTypeNumber` on commit, since
+           an out-of-range value would otherwise round-trip through
+           `setParamAt` unclamped and only be caught by the engine's
+           `unknown_param_value` after a revalidate. -->
+      {@const range = numberRange(param)}
+      <input
+        type="number"
+        aria-label={typeLabel}
+        min={range?.min}
+        max={range?.max}
+        value={selection.params?.[param.key] ?? ''}
+        onchange={(e) => onTypeNumber(param.key, range, e)}
+        data-testid="param-{selection.ref}-{param.key}-{suffix}"
+      />
     {:else}
       <!-- `text` alone, and only `text`: the domain references no registry, so any
            value with non-whitespace content is legal and free text is the correct
@@ -531,10 +586,11 @@
            `ability_bonus_dangling_target` already taught us. The engine reports
            `power_dangling_target` on Review instead, where the fix lives.
            Every other domain has its
-           own select above — the engine's `ParameterDomain` doc comment says as
-           much, and #4 was exactly this fall-through catching four of them. Keep
-           that true: the domain union is closed, so a new variant belongs in a
-           branch of its own, never here. -->
+           own control above (a select, or `number`'s bounded input) — the
+           engine's `ParameterDomain` doc comment says as much, and #4 was
+           exactly this fall-through catching four of them. Keep that true:
+           the domain union is closed, so a new variant belongs in a branch of
+           its own, never here. -->
       <input
         type="text"
         aria-label={typeLabel}

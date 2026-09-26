@@ -201,6 +201,10 @@ macro_rules! irrelevant_effect_variants {
         | Effect::AffinityAbilityCost { .. }
         | Effect::AffinityArtCost { .. }
         | Effect::RestrictedAbilityXp { .. }
+        // D35's parameter-scaled sibling: same family as `RestrictedAbilityXp`
+        // above — a restricted XP pool grant, never a score bonus/shift/
+        // Affinity reduction, so a no-op in every fold that shares this tail.
+        | Effect::ScaledRestrictedAbilityXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         | Effect::SpellLevels { .. }
