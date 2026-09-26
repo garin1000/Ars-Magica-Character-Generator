@@ -1328,6 +1328,7 @@ derived-addend-casting_mod_ritual = Casting modifier (ritual)
 derived-addend-casting_mod_spontaneous = Casting modifier (spontaneous)
 derived-addend-parma = Parma Magica
 derived-addend-might = Might
+derived-addend-true_faith = True Faith
 derived-addend-armor = Armor
 derived-addend-soak_mod = Soak modifier
 derived-addend-bronze_cord = Bronze cord

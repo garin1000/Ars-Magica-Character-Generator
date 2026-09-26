@@ -429,6 +429,16 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
 /// the Form bonus is compatible with either. Limited Magic Resistance drops one
 /// named Form's bonus; Flawed Parma Magica halves the Parma contribution
 /// against one named Form. Both are per-Form, never blanket.
+///
+/// A True Faith Score adds a **third, wholly independent** source: "a True
+/// Faith Score gains Magic Resistance equal to this score multiplied by ten"
+/// (ArMDE:17611). Unlike Might, no passage states the Form bonus is compatible
+/// with it, so it competes with the Form's **entire** total, not just the
+/// might/parma base — "these totals do not stack … you simply use the higher
+/// total" (ArMDE:2627). Because it is a separate source, it is unaffected by a
+/// Flaw that reduces only the Parma/Form side (Flawed Parma Magica, Limited
+/// Magic Resistance) and so can override that Flaw's reduction on the very
+/// Form it names (D37, F-329).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MagicResistance {
     /// The Form Art id.
@@ -451,6 +461,10 @@ pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistan
     let might = crate::effective::effective_might(entity, ruleset)
         .map(|m| i32::from(m.score))
         .unwrap_or(0);
+    // True Faith's blanket floor (ArMDE:17611), compared against each Form's
+    // WHOLE total below, never added to it (ArMDE:2627). `true_faith` already
+    // sums every `Effect::TrueFaithGrant`, so this is a consumer change only.
+    let true_faith_floor = i32::from(crate::effective::true_faith(entity, ruleset)) * 10;
     let mut out = Vec::new();
     for form in ruleset.art_ids_of(ArtType::Form) {
         let fo = effective_art_score(entity, ruleset, &form);
@@ -480,7 +494,18 @@ pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistan
             Addend::new("parma", parma_for_form)
         };
         let addends = vec![Addend::new("form", form_bonus), base_addend];
-        let total = sum(&addends);
+        let ordinary_total = sum(&addends);
+        // True Faith competes with (never adds to) this Form's whole total; a
+        // higher floor replaces the breakdown entirely, since it is a single
+        // blanket source rather than a Form-plus-base composite.
+        let (addends, total) = if true_faith_floor > ordinary_total {
+            (
+                vec![Addend::new("true_faith", true_faith_floor)],
+                true_faith_floor,
+            )
+        } else {
+            (addends, ordinary_total)
+        };
         out.push(MagicResistance {
             form,
             addends,

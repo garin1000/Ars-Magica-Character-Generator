@@ -1393,6 +1393,7 @@ derived-addend-casting_mod_ritual = Zaubermodifikator (Ritual)
 derived-addend-casting_mod_spontaneous = Zaubermodifikator (spontan)
 derived-addend-parma = Parma Magica
 derived-addend-might = Macht
+derived-addend-true_faith = Wahrer Glaube
 derived-addend-armor = Rüstung
 derived-addend-soak_mod = Absorptionsmodifikator
 derived-addend-bronze_cord = Bronzene Kordel

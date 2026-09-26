@@ -941,6 +941,9 @@ mod tests {
           { "id": "flaw.susceptibility_to_faerie_power", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "magic_resistance_mod", "kind": "susceptible_faerie" }] },
+          { "id": "virtue.true_faith", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "true_faith_grant", "score": 1 }] },
           { "id": "virtue.unaging", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }] },
@@ -2760,6 +2763,94 @@ mod tests {
         let corpus = mr.iter().find(|m| m.form.as_str() == "art.corpus").unwrap();
         // max(15, 30) + Corpus 0 = 30.
         assert_eq!(corpus.total, 30);
+    }
+
+    /// A True Faith Score is a Magic Resistance **floor across every Form**:
+    /// "A character with a True Faith Score gains Magic Resistance equal to this
+    /// score multiplied by ten" (ArMDE:17611), and "these totals do not stack …
+    /// you simply use the higher total" (ArMDE:2627) — so it competes with, not
+    /// adds to, a weak Form's ordinary total (D37, F-329).
+    #[test]
+    fn true_faith_floors_a_weak_forms_magic_resistance() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.true_faith"))];
+        // No Parma, no Arts: every Form's ordinary total is 0, below the floor.
+        let mr = magic_resistance(&e, &rs);
+        let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
+        assert_eq!(ignem.total, 10, "True Faith 1 x 10 = 10 floors the Form");
+        assert!(
+            ignem
+                .addends
+                .iter()
+                .any(|a| a.label == "true_faith" && a.value == 10)
+        );
+    }
+
+    /// The floor never suppresses a stronger ordinary total — it is a `max`, not
+    /// a replacement (D37, ArMDE:2627 "the higher total").
+    #[test]
+    fn true_faith_does_not_lower_a_strong_forms_magic_resistance() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.true_faith"))];
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.parma_magica"),
+            parameter: None,
+            specialty: None,
+            score: 3,
+        }];
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.ignem"),
+            score: 10,
+        }];
+        let mr = magic_resistance(&e, &rs);
+        let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
+        // Ignem 10 + Parma 15 = 25, above the True Faith floor of 10.
+        assert_eq!(ignem.total, 25);
+        assert!(ignem.addends.iter().any(|a| a.label == "parma"));
+    }
+
+    /// The floor is a separate source from Parma, so it is untouched by a Flaw
+    /// that reduces only the Parma/Form side — it can override that reduction
+    /// on the very Form the Flaw names (D37: True Faith competes with the WHOLE
+    /// per-Form total, ArMDE:2627).
+    #[test]
+    fn true_faith_floor_overrides_a_flawed_parma_reduction() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![
+            Selection::new(Id::new("virtue.true_faith")),
+            Selection::new(Id::new("virtue.true_faith")),
+            Selection::with_params(
+                Id::new("flaw.flawed_parma"),
+                BTreeMap::from([("form".to_string(), Id::new("art.ignem"))]),
+            ),
+        ];
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.parma_magica"),
+            parameter: None,
+            specialty: None,
+            score: 3,
+        }];
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.ignem"),
+            score: 10,
+        }];
+        let mr = magic_resistance(&e, &rs);
+        // Ignem: 10 + halve(15) = 17, reduced by the Flaw, but True Faith 2 x 10
+        // = 20 is the higher total, so the floor wins on this Form too.
+        let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
+        assert_eq!(ignem.total, 20);
+        assert!(
+            ignem
+                .addends
+                .iter()
+                .any(|a| a.label == "true_faith" && a.value == 20)
+        );
+        // Corpus is untouched by the Flaw (0 + 15 = 15), also below the floor.
+        let corpus = mr.iter().find(|m| m.form.as_str() == "art.corpus").unwrap();
+        assert_eq!(corpus.total, 20);
     }
 
     /// Per-known-spell penetration = Casting Total − Level + Penetration score;
