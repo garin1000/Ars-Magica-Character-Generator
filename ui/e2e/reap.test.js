@@ -73,9 +73,9 @@ describe('reapDriverTrees', () => {
 
     reapDriverTrees([tracked], { killFn });
 
-    expect(killFn).toHaveBeenCalledWith(-111, 'SIGTERM');
-    expect(killFn).not.toHaveBeenCalledWith(-222, 'SIGTERM');
-    expect(killFn).not.toHaveBeenCalledWith(222, 'SIGTERM');
+    expect(killFn).toHaveBeenCalledWith(-tracked.pid, 'SIGTERM');
+    expect(killFn).not.toHaveBeenCalledWith(-untracked.pid, 'SIGTERM');
+    expect(killFn).not.toHaveBeenCalledWith(untracked.pid, 'SIGTERM');
   });
 
   it('terminates every handle in a list of several', () => {

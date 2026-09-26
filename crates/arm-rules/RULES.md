@@ -1156,7 +1156,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :231) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :237) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -6921,13 +6921,84 @@ Abilities are bought with experience earned in blocks, not from one bank:
   than adjusting it, because the passage states the whole rate. Engine reading where
   the text is silent: if several selections ever name a rate, the lowest applies —
   nothing ranks them, so this is the conservative and deterministic choice.
-- Eligibility, as data: `rules/core/character_types.json` — the `magus` and
-  `mythic_companion` profiles list both ids in `forbidden_traits`. The grog profile
-  needs no entry, since `max_major_flaws: 0` already puts a Major Flaw out of reach.
-  Scope reading: `ArMDE:2394` says "only companions", while `ArMDE:5237`/`ArMDE:6596` say only that
-  magi may not; a mythic companion *is* a companion in the rules' sense but is a
-  distinct profile here, so it is forbidden too — the stricter reading of the line
-  that names companions specifically.
+- **Eligibility is a `Prereq` on the entry, not three profile lists (D38, F-339).**
+  Before this milestone the "only companions" line was enforced twice
+  explicitly (`magus` and `mythic_companion` each listed both ids in
+  `forbidden_traits`) and once by accident (a grog takes no Major Flaw at all,
+  so Poor was merely out of reach, not stated — F-339's asymmetry). Making
+  either entry Minor, or giving grogs a Major allowance, would have silently
+  stopped enforcing a rule the book states, since nothing asserted the rule
+  itself, only its side effect.
+
+  Data: `rules/core/virtues_flaws.json` — `virtue.wealthy` and `flaw.poor` each
+  carry `"prerequisites": { "kind": "is_companion" }`. The two `forbidden_traits`
+  entries on `magus`/`mythic_companion` are removed — one statement of the rule
+  instead of three. Evaluated by `validation/prereq.rs::evaluate_prereq`
+  against `Prereq::IsCompanion`.
+
+  **"Companion" is a profile-level class flag, not the exact type id
+  `companion` — and Mythic Companion is inside it, not outside (owner's
+  ruling, reversing this section's own earlier reading).**
+  `rules/core/character_types.json` gives both `companion` and
+  `mythic_companion` `"is_companion": true`; `magus` and `grog` leave it unset
+  (default false).
+  `Prereq::IsCompanion` (`types.rs`) reads `EntityTypeProfile::is_companion`
+  exactly as `HermeticallyTrained`/`OrderMember` read their own profile flags
+  (D56/A0) — never the profile's `id` — so a **future** companion-like profile
+  joins this audience by setting the flag in its own JSON entry alone, with
+  **zero** change to `virtue.wealthy`, `flaw.poor`, `virtue.magical_mount`, or
+  any other item that already carries the prerequisite. This was chosen over
+  the alternative, `Any([IsCompanion-by-id, CharacterType(mythic_companion)])`
+  spelled out per item, because that form requires editing every such item's
+  `prerequisites` again each time a new companion-like profile ships — the
+  flag is the single point of extension the alternative is not.
+
+  This reverses the milestone's first-round reading (recorded here until now):
+  "`ArMDE:2394` says 'only companions', ... a mythic companion *is* a companion
+  in the rules' sense but is a distinct profile here, so it is forbidden too."
+  Norbert's clarification is unambiguous: **mythic companions are companions
+  too**, for every place the rules say "companion" — this passage's "only
+  companions" (D38) and `virtue.magical_mount`'s "companion or magus-level
+  character" (F-553, below) alike. Tests:
+  `a_companion_or_mythic_companion_may_take_wealthy_or_poor`,
+  `a_magus_or_grog_may_not_take_wealthy_or_poor`
+  (`tests/data_integrity.rs`).
+
+#### Magical Mount — companion or magus-level character (F-553)
+
+> In this case, only a companion or magus-level character can take this
+> Virtue.
+> — ArMDE:4375 (entry `ArMDE:4373-4376`)
+
+Unencoded before this milestone: the entry carried no prerequisite and no
+profile forbade it, so a grog could take it (F-553).
+
+Data: `rules/core/virtues_flaws.json` — `virtue.magical_mount` carries
+`"prerequisites": { "kind": "any", "value": [{ "kind": "is_companion" },
+{ "kind": "order_member" } ] }`. The first disjunct is the same `IsCompanion`
+flag as Wealthy/Poor above (a mythic companion counts, per Norbert's ruling).
+
+**"Magus-level character" is undefined in the passage.** Read conservatively
+as `Prereq::OrderMember` — full membership in the Order of Hermes, true only
+of the `magus` profile today (`character_types.json`) — because nothing in the
+text supports widening it further, and inventing a permission the book does
+not state is the wrong direction to be wrong in. This was weighed against
+reusing `OrderMember` unqualified per
+`docs/vf-audit/design-a0-is-magus-split.md` § "Notes for E1": `virtue.redcap`
+(ArMDE:4844) is a full Order member with no Hermetic training, built as a
+companion in this app, which is exactly who "magus-level" is *not* reaching
+for. The concern does not bite here — `order_member` is a **profile-only**
+fact (`PrereqCtx::build`, D56/A0: no entity-level override), and a
+Redcap-flavored companion's profile is `companion`, whose `order_member` is
+`false`; such a character is admitted only through the `is_companion` disjunct,
+never through `OrderMember`. Should `order_member` ever gain an entity-level
+override (the open risk `design-a0-is-magus-split.md` § 1 already records),
+this expression needs re-review — recorded here so that review has somewhere
+to start.
+
+Tests: `magical_mount_requires_companion_or_order_member`,
+`a_companion_mythic_companion_or_magus_may_take_magical_mount`,
+`a_grog_may_not_take_magical_mount` (`tests/data_integrity.rs`).
 
 #### Access to Academic / Arcane / Martial Abilities (M6/6b2b)
 

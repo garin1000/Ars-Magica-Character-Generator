@@ -1803,9 +1803,10 @@ impl Ruleset {
     /// Recursively validates that prerequisite refs resolve to known registries:
     /// [`Prereq::Has`] against point items, [`Prereq::AbilityMin`] against the
     /// ability catalogue, [`Prereq::ArtMin`] against the Art catalogue, and
-    /// [`Prereq::House`] against the House registry. `HermeticallyTrained` and
-    /// `OrderMember` carry no reference at all, so there is nothing to check
-    /// for either.
+    /// [`Prereq::House`] against the House registry. `HermeticallyTrained`,
+    /// `OrderMember`, and `IsCompanion` (D38) carry no reference at all — each
+    /// reads a bare profile flag — so there is nothing to check for any of
+    /// them.
     ///
     /// `depth` is 1 at the top-level prerequisite and increments once per
     /// `All`/`Any`/`Nor` nesting level (K8). Past [`PREREQ_MAX_DEPTH`] this
@@ -1870,8 +1871,8 @@ impl Ruleset {
                     ));
                 }
             }
-            // Bare markers, neither carrying a reference: nothing to check.
-            Prereq::HermeticallyTrained | Prereq::OrderMember => {}
+            // Bare markers, none carrying a reference: nothing to check.
+            Prereq::HermeticallyTrained | Prereq::OrderMember | Prereq::IsCompanion => {}
         }
     }
 

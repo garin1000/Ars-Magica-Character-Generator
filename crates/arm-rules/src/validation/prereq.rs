@@ -107,6 +107,10 @@ pub(crate) struct PrereqCtx<'a> {
     /// otherwise the profile's `order_member` flag alone — no entity-level
     /// override (D56/A0).
     order: Option<bool>,
+    /// `Prereq::IsCompanion`'s fact: `None` when the type profile is missing,
+    /// otherwise the profile's `is_companion` flag alone — no entity-level
+    /// override, mirroring `trained`/`order` (D38).
+    is_companion: Option<bool>,
     /// The entity's own Hermetic House, if any. `Prereq::House` compares against
     /// it: matching → True, differing → False, absent → Unknown (mirrors how
     /// `trained`/`order` yield Unknown when the profile is missing).
@@ -141,6 +145,7 @@ impl<'a> PrereqCtx<'a> {
                 || crate::effective::entity_confers_hermetic_training(entity, ruleset)
         });
         let order: Option<bool> = type_profile.map(|p| p.order_member);
+        let is_companion: Option<bool> = type_profile.map(|p| p.is_companion);
 
         // Effective score per ability: the max bought score (a parameterized
         // ability may appear more than once with different specialties; the
@@ -202,6 +207,7 @@ impl<'a> PrereqCtx<'a> {
             present_ids,
             trained,
             order,
+            is_companion,
             house: entity.house.as_ref(),
             ability_scores,
             art_scores,
@@ -268,6 +274,14 @@ fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx, depth: usize) -> (Tri, bool
         // Enforced against the profile's explicit `order_member` flag alone —
         // no entity-level override (D56/A0).
         Prereq::OrderMember => match ctx.order {
+            Some(true) => (Tri::True, false),
+            Some(false) => (Tri::False, false),
+            None => (Tri::Unknown, true),
+        },
+        // Enforced against the profile's `is_companion` flag alone (D38): a
+        // narrower audience stated on the entry rather than duplicated across
+        // every type profile's `forbidden_traits`.
+        Prereq::IsCompanion => match ctx.is_companion {
             Some(true) => (Tri::True, false),
             Some(false) => (Tri::False, false),
             None => (Tri::Unknown, true),
@@ -403,6 +417,7 @@ mod tests {
             present_ids,
             trained: None,
             order: None,
+            is_companion: None,
             house: None,
             ability_scores,
             art_scores,
@@ -426,6 +441,7 @@ mod tests {
             present_ids,
             trained: Some(true),
             order: None,
+            is_companion: None,
             house: None,
             ability_scores,
             art_scores,
@@ -462,5 +478,71 @@ mod tests {
 
         let (outcome, _) = ctx.evaluate(&Prereq::Has(Id::new("virtue.heartbeast")));
         assert_eq!(outcome, Tri::True);
+    }
+
+    /// D38/F-553: `Prereq::IsCompanion` reads the profile's own `is_companion`
+    /// flag, independent of `trained`/`order` — true for the plain `companion`
+    /// profile.
+    #[test]
+    fn evaluate_prereq_is_companion_true_when_profile_flag_is_set() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: Some(true),
+            house: None,
+            ability_scores,
+            art_scores,
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1);
+        assert_eq!(outcome, Tri::True);
+        assert!(!depended_on_unknown);
+    }
+
+    /// A resolved profile whose flag is unset is definitely False — the fact
+    /// is the flag, not any particular type id (the shipped `magus`/`grog`
+    /// profiles leave it unset; whether `mythic_companion` sets it is a data
+    /// question, covered in `tests/data_integrity.rs`).
+    #[test]
+    fn evaluate_prereq_is_companion_false_when_profile_flag_is_unset() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: Some(false),
+            house: None,
+            ability_scores,
+            art_scores,
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1);
+        assert_eq!(outcome, Tri::False);
+        assert!(!depended_on_unknown);
+    }
+
+    /// An entity whose type profile cannot be resolved leaves the fact
+    /// genuinely unknown, mirroring `HermeticallyTrained`/`OrderMember`.
+    #[test]
+    fn evaluate_prereq_is_companion_unknown_when_type_unresolved() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            house: None,
+            ability_scores,
+            art_scores,
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1);
+        assert_eq!(outcome, Tri::Unknown);
+        assert!(depended_on_unknown);
     }
 }

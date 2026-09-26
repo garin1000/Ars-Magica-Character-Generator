@@ -281,6 +281,7 @@ impl fmt::Display for Classification {
 /// { "kind": "art_min",     "value": { "art": "art.x", "score": 1 } }
 /// { "kind": "hermetically_trained" }
 /// { "kind": "order_member" }
+/// { "kind": "is_companion" }
 /// ```
 ///
 /// Adjacent tagging is used rather than serde's internal tagging
@@ -326,6 +327,16 @@ pub enum Prereq {
     /// against the type profile's `order_member` flag alone — profile-only,
     /// with no entity-level override (D56/A0).
     OrderMember,
+    /// The entity must count as a companion — a narrower audience stated on
+    /// the entry itself rather than duplicated across every type profile's
+    /// `forbidden_traits` (D38). Evaluated against the type profile's own
+    /// `is_companion` flag alone, profile-only like `HermeticallyTrained`/
+    /// `OrderMember` (D56/A0) — **not** the profile's `id`, so a future
+    /// companion-like profile joins this audience by setting the flag in
+    /// data, with no change to any item that already carries this
+    /// prerequisite. `mythic_companion` sets it too: "mythic companions are
+    /// companions too" (RULES.md records the ruling).
+    IsCompanion,
 }
 
 impl Prereq {
@@ -338,8 +349,8 @@ impl Prereq {
     /// asks: "could this item ever be legal for a character of this House?" —
     /// which depends on the expression and the House and nothing else. Every
     /// non-House leaf is therefore treated as undecided rather than as false, so
-    /// a `Has`/`AbilityMin`/`ArtMin`/`HermeticallyTrained`/`OrderMember`
-    /// prerequisite never excludes an
+    /// a `Has`/`AbilityMin`/`ArtMin`/`HermeticallyTrained`/`OrderMember`/
+    /// `IsCompanion` prerequisite never excludes an
     /// item from a menu: those resolve as the build progresses, and dropping
     /// them would be an order-dependent exclusion, harsher than the
     /// error-that-resolves model the engine uses everywhere else. A House does
@@ -382,7 +393,8 @@ impl Prereq {
             | Prereq::AbilityMin { .. }
             | Prereq::ArtMin { .. }
             | Prereq::HermeticallyTrained
-            | Prereq::OrderMember => None,
+            | Prereq::OrderMember
+            | Prereq::IsCompanion => None,
         }
     }
 
@@ -2938,6 +2950,15 @@ pub struct EntityTypeProfile {
     /// `docs/vf-audit/design-a0-is-magus-split.md` § 1. Defaults to false.
     #[serde(default, skip_serializing_if = "is_false")]
     pub order_member: bool,
+    /// Whether this character type counts as a companion for the audience
+    /// `Prereq::IsCompanion` reads (D38): true for the plain `companion`
+    /// profile and for `mythic_companion` — "mythic companions are companions
+    /// too" — so a future companion-like profile joins the audience by
+    /// setting this flag alone, with no change to any item's prerequisites.
+    /// A capability flag parallel to `has_mythic_type`; never a hardcoded
+    /// type id. Defaults to false.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub is_companion: bool,
     /// Whether this character type chooses a Mythic Companion *type* (which
     /// confers a free status/Minor Virtue and a required V/F package). A
     /// capability flag parallel to `is_magus`; the type selector and
@@ -5279,6 +5300,19 @@ mod tests {
         // The unit variant round-trips with no `value` key.
         let reserialized = serde_json::to_string(&prereq).unwrap();
         assert_eq!(reserialized, r#"{"kind":"order_member"}"#);
+        let roundtripped: Prereq = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(prereq, roundtripped);
+    }
+
+    #[test]
+    fn prereq_is_companion() {
+        let json = r#"{ "kind": "is_companion" }"#;
+        let prereq: Prereq = serde_json::from_str(json).unwrap();
+        assert_eq!(prereq, Prereq::IsCompanion);
+
+        // The unit variant round-trips with no `value` key.
+        let reserialized = serde_json::to_string(&prereq).unwrap();
+        assert_eq!(reserialized, r#"{"kind":"is_companion"}"#);
         let roundtripped: Prereq = serde_json::from_str(&reserialized).unwrap();
         assert_eq!(prereq, roundtripped);
     }

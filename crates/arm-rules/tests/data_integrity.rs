@@ -201,23 +201,135 @@ fn wealthy_and_poor_ship_with_their_rates_and_eligibility() {
         );
     }
 
-    // "Only companions can take this Virtue or Flaw." A grog is covered
-    // incidentally (its profile allows no Major V/F at all), so the two profiles
-    // that would otherwise permit them must forbid them outright.
+    // "Only companions can take this Virtue or Flaw" (D38): stated once, on the
+    // entry, as a `Prereq` — not duplicated across every type profile's
+    // `forbidden_traits`.
+    for id in ["virtue.wealthy", "flaw.poor"] {
+        assert_eq!(
+            rs.item(&Id::new(id)).unwrap().prerequisites.as_ref(),
+            Some(&Prereq::IsCompanion),
+            "{id} must restrict itself to companions on the entry (ArMDE:2394, D38)"
+        );
+    }
+    // Mythic Companion counts as a companion (Norbert's ruling, recorded in
+    // RULES.md): its profile sets `is_companion`, so it is no longer named in
+    // any `forbidden_traits` list for these two.
+    assert!(
+        rs.profile(&Id::new("mythic_companion"))
+            .unwrap()
+            .is_companion,
+        "mythic_companion must set is_companion (\"mythic companions are companions too\")"
+    );
+    assert!(
+        !rs.profile(&Id::new("magus")).unwrap().is_companion,
+        "magus must not set is_companion"
+    );
+    // The two `forbidden_traits` entries D38 replaces must be gone, or the rule
+    // is stated in two places again.
     for type_id in ["magus", "mythic_companion"] {
         let profile = rs.profile(&Id::new(type_id)).expect("profile ships");
         for id in ["virtue.wealthy", "flaw.poor"] {
             assert!(
-                profile.forbidden_traits.contains(&Id::new(id)),
-                "{type_id} must forbid {id} (ArMDE:2394)"
+                !profile.forbidden_traits.contains(&Id::new(id)),
+                "{type_id} must no longer list {id} in forbidden_traits (D38 moved it to the entry)"
             );
         }
     }
-    // The grog case, stated so the incidental cover is deliberate rather than luck.
+    // The grog's incidental cover (no Major V/F at all) is untouched by D38 and
+    // stays true regardless — it is simply no longer load-bearing for this rule.
     assert_eq!(
         rs.profile(&Id::new("grog")).unwrap().budget.max_major_flaws,
         Some(0),
-        "a grog takes no Major Flaw, so Poor is out of reach without a forbid"
+        "a grog takes no Major Flaw"
+    );
+}
+
+/// D38: a companion or a mythic companion is exactly who `ArMDE:2394` permits
+/// to take Wealthy/Poor ("mythic companions are companions too").
+#[test]
+fn a_companion_or_mythic_companion_may_take_wealthy_or_poor() {
+    let rs = load_ruleset();
+    for type_id in ["companion", "mythic_companion"] {
+        for id in ["virtue.wealthy", "flaw.poor"] {
+            let e = entity(type_id, vec![Selection::new(Id::new(id))]);
+            let codes = issue_codes(&e, &rs);
+            assert!(
+                !codes.contains(&"prereq_not_met".to_string()),
+                "{type_id} taking {id} should not report prereq_not_met: {codes:?}"
+            );
+        }
+    }
+}
+
+/// D38/F-339: a magus and a grog are neither of them companions, so each must
+/// report `prereq_not_met` for Wealthy/Poor — stated, not merely incidental
+/// (the grog case used to be covered only by its Major-V/F budget, F-339's
+/// asymmetry).
+#[test]
+fn a_magus_or_grog_may_not_take_wealthy_or_poor() {
+    let rs = load_ruleset();
+    for type_id in ["magus", "grog"] {
+        for id in ["virtue.wealthy", "flaw.poor"] {
+            let e = entity(type_id, vec![Selection::new(Id::new(id))]);
+            let codes = issue_codes(&e, &rs);
+            assert!(
+                codes.contains(&"prereq_not_met".to_string()),
+                "{type_id} taking {id} must report prereq_not_met (ArMDE:2394, D38): {codes:?}"
+            );
+        }
+    }
+}
+
+/// F-553: `virtue.magical_mount`'s "only a companion or magus-level character
+/// can take this Virtue" (`ArMDE:4375`) was unencoded before this milestone —
+/// a grog could take it. "Companion" reads as `IsCompanion` (D38: also true
+/// of `mythic_companion`); "magus-level" is undefined in the passage and is
+/// read conservatively as full Order membership (`Prereq::OrderMember`, true
+/// only of the `magus` profile today), since nothing in the text supports
+/// widening it further. See `RULES.md` for the full rationale, including the
+/// Redcap counter-example this reading was weighed against.
+#[test]
+fn magical_mount_requires_companion_or_order_member() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("virtue.magical_mount"))
+        .expect("virtue.magical_mount must ship in the catalogue");
+    assert_eq!(
+        item.prerequisites.as_ref(),
+        Some(&Prereq::Any(vec![Prereq::IsCompanion, Prereq::OrderMember])),
+        "ArMDE:4375 names two audiences: a companion, or a magus-level character (F-553)"
+    );
+}
+
+/// The audiences the passage names, `mythic_companion` included (D38).
+#[test]
+fn a_companion_mythic_companion_or_magus_may_take_magical_mount() {
+    let rs = load_ruleset();
+    for type_id in ["companion", "mythic_companion", "magus"] {
+        let e = entity(
+            type_id,
+            vec![Selection::new(Id::new("virtue.magical_mount"))],
+        );
+        let codes = issue_codes(&e, &rs);
+        assert!(
+            !codes.contains(&"prereq_not_met".to_string()),
+            "{type_id} is exactly who ArMDE:4375 permits: {codes:?}"
+        );
+    }
+}
+
+/// The finding itself: a grog is neither a companion nor an Order member.
+#[test]
+fn a_grog_may_not_take_magical_mount() {
+    let rs = load_ruleset();
+    let e = entity(
+        "grog",
+        vec![Selection::new(Id::new("virtue.magical_mount"))],
+    );
+    let codes = issue_codes(&e, &rs);
+    assert!(
+        codes.contains(&"prereq_not_met".to_string()),
+        "grog is neither a companion nor an Order member (F-553): {codes:?}"
     );
 }
 

@@ -250,7 +250,7 @@ to renumber anything — it is the reason `source.anchor` exists and is mandator
   caller level. No separate "without rule checking" branch.
 - **Prerequisites as recursive boolean expressions.** `Prereq` enum with
   `All`, `Any`, `None`, `Has`, `House`, `AbilityMin`, `ArtMin`,
-  `HermeticallyTrained`, `OrderMember` —
+  `HermeticallyTrained`, `OrderMember`, `IsCompanion` —
   exhaustive `match` so adding a variant is a compile error until handled.
 - **Two-file separation per rules domain.** Language-neutral mechanics in
   `rules/core/`, translatable text in `rules/i18n/<lang>/`, joined by stable
@@ -626,6 +626,7 @@ enum Prereq {
     ArtMin { art: Id, score: u8 },
     HermeticallyTrained,
     OrderMember,
+    IsCompanion,       // profile flag, true for companion + mythic_companion
 }
 ```
 

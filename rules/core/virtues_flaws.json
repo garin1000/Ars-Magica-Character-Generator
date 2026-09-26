@@ -2182,6 +2182,7 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "is_companion" },
     "effects": [{ "type": "later_life_xp_rate", "amount": 10 }],
     "source": { "anchor": "poor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6594, 6596] }
   },
@@ -5090,6 +5091,10 @@
     "categories": ["general"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "prerequisites": {
+      "kind": "any",
+      "value": [{ "kind": "is_companion" }, { "kind": "order_member" }]
+    },
     "source": { "anchor": "magical-mount", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4373, 4376] }
   },
   {
@@ -6490,6 +6495,7 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "is_companion" },
     "effects": [{ "type": "later_life_xp_rate", "amount": 20 }],
     "source": { "anchor": "wealthy", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5235, 5238] }
   },
