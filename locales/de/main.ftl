@@ -676,6 +676,9 @@ reputation-content-placeholder = Wofür
 # eröffnet hat — „Kirchlich 4" steht nie unerklärt da. Es gibt keine
 # Hinzufügen-Schaltfläche mehr: die Verleihung IST die Zeile.
 reputation-granted-by = Stufe { $score } von { $source }
+reputation-granted-by-ranged = von { $source }
+reputation-level-increment = { $source }-Reputation erhöhen
+reputation-level-decrement = { $source }-Reputation verringern
 # Eine Verleihung ohne festen Typ (Berühmt) überlässt den Typ dem Spieler.
 # Glossar: „Typ" für type (of a Reputation), nicht „Art"
 # (rules/source/de/translation-tables/reputationen.md:24).
@@ -1214,6 +1217,7 @@ issue-specialty_forbidden = { $ability } darf keine Spezialisierung haben ({ $sp
 issue-supernatural_ability_requires_virtue = { $ability } ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend (oder die eine freie Fertigkeit der Gabe).
 issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
 issue-reputation_not_granted = Eine Reputation ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der sie verleiht.
+issue-reputation_score_out_of_range = Eine Reputation ({ $kind }, { $content }) mit Stufe { $score } liegt außerhalb des verliehenen Bereichs ({ $min } bis { $max }).
 issue-over_item_level = Artefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-over_power_levels = Übernatürliche Kräfte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-over_focus_points = Fokussierte Mächte verbrauchen { $used } Punkte, über dem Pool von { $budget } (um { $over }).

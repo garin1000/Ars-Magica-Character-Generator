@@ -1179,8 +1179,18 @@ pub enum Effect {
         /// (any type).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         kind: Option<ReputationType>,
-        /// The level of the granted Reputation.
+        /// The level of the granted Reputation. Exact by default — the entity's
+        /// Reputation must equal this — unless `max_score` states a range
+        /// (D11/Q5, ArMDE:2514).
         score: u8,
+        /// The upper bound of a stated range, absent for the exact-by-default
+        /// case. **Exactly one** of the 31 granting entries states a range —
+        /// Outsider, "a bad Reputation of level 1 to 3" (ArMDE:6554) — so this is
+        /// `score: 1, max_score: Some(3)` on both magnitudes; every other
+        /// granter leaves it absent, and 30 of the 31 entries' JSON is
+        /// therefore unchanged.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        max_score: Option<u8>,
     },
     /// Grants a supernatural **Might Score** of `score` in the given `realm` (base
     /// 0, summed across grants of the same Realm on top of any base the entity

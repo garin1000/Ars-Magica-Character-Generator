@@ -2464,6 +2464,103 @@ fn shipped_famous_authorizes_any_reputation_kind() {
     );
 }
 
+/// D11/Q5 data fixes — `corrections.md` § 3.11's findings, each a plain data
+/// change unblocked by D11's ruling that the model does not grow: `(id, kind,
+/// score, max_score, ArMDE line)`.
+///
+/// - F-80 `virtue.frightful_presence`: "an appropriate Reputation … at a score
+///   of 2 among those you have affected" — an ad-hoc audience, not one of the
+///   four fixed types, so wildcard.
+/// - F-235 `virtue.protection`: "a Reputation (good or bad, your choice) of
+///   level 3" — audience and polarity both left to the player.
+/// - F-254 `virtue.rosh_beth_din`: "applies across his country" — wider than
+///   Local, and not Ecclesiastical/Hermetic/Academic either, so the shipped
+///   `kind: "local"` was wrong; wildcard instead.
+/// - F-312 `virtue.templar_commander`: "a Reputation of level 3 in his area" —
+///   Local, and carried by no effect at all before this fix.
+/// - F-316 `virtue.templar_prestige`: "a Reputation of level 4 within the
+///   Templars" — an organization, not one of the four fixed types, so
+///   wildcard; also reclassified from `narrative` (the passage states a
+///   mechanical rule).
+/// - F-408 `flaw.excommunicate`: "a bad reputation at level 3 within the
+///   Church" — carried by no effect at all before this fix; also reclassified.
+/// - F-450 `flaw.infamous`: "a level 4 bad Reputation" — no audience stated;
+///   its twin `virtue.famous` already ships the wildcard for the same shape.
+/// - F-484 `flaw.outlaw`: "a Reputation at level 2 for whatever got you
+///   outlawed" — no audience stated.
+/// - F-486 `flaw.outsider_major` / `_minor`: "a bad Reputation of level 1 to
+///   3" — the one entry in the whole catalogue the book states a RANGE for,
+///   on both magnitudes ("You still have the bad Reputation", `ArMDE:6556`).
+type ReputationGrantDataFix = (&'static str, Option<ReputationType>, u8, Option<u8>, u32);
+const REPUTATION_GRANT_DATA_FIXES: &[ReputationGrantDataFix] = &[
+    ("virtue.frightful_presence", None, 2, None, 3947),
+    ("virtue.protection", None, 3, None, 4812),
+    ("virtue.rosh_beth_din", None, 2, None, 4882),
+    (
+        "virtue.templar_commander",
+        Some(ReputationType::Local),
+        3,
+        None,
+        5115,
+    ),
+    ("virtue.templar_prestige", None, 4, None, 5127),
+    (
+        "flaw.excommunicate",
+        Some(ReputationType::Ecclesiastical),
+        3,
+        None,
+        6046,
+    ),
+    ("flaw.infamous", None, 4, None, 6312),
+    ("flaw.outlaw", None, 2, None, 6544),
+    (
+        "flaw.outsider_major",
+        Some(ReputationType::Local),
+        1,
+        Some(3),
+        6554,
+    ),
+    (
+        "flaw.outsider_minor",
+        Some(ReputationType::Local),
+        1,
+        Some(3),
+        6556,
+    ),
+];
+
+#[test]
+fn shipped_reputation_grants_match_their_passage_after_d11() {
+    let rs = load_ruleset();
+    for (id, expected_kind, expected_score, expected_max, line) in REPUTATION_GRANT_DATA_FIXES {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        let grant = item
+            .effects
+            .iter()
+            .find_map(|e| match e {
+                Effect::GrantsReputation {
+                    kind,
+                    score,
+                    max_score,
+                } => Some((*kind, *score, *max_score)),
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("{id} must carry a grants_reputation effect (ArMDE:{line})"));
+        assert_eq!(
+            grant,
+            (*expected_kind, *expected_score, *expected_max),
+            "{id} (ArMDE:{line})"
+        );
+        assert_eq!(
+            item.classification,
+            Classification::CreationEffect,
+            "{id} carries a reputation grant, so it is a creation_effect (ArMDE:{line})"
+        );
+    }
+}
+
 #[test]
 fn shipped_supernatural_virtues_grant_starting_score() {
     use arm_rules::effective_ability_score;

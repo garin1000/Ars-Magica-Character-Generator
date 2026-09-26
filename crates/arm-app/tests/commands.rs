@@ -1796,6 +1796,31 @@ fn load_entity_from_missing_path_is_io_error() {
 }
 
 #[test]
+fn effective_scores_surface_a_reputation_grants_max_score() {
+    // Outsider (D11/Q5): "a bad Reputation of level 1 to 3" (ArMDE:6554) is the
+    // one grant in the whole catalogue that states a range, so the UI needs the
+    // upper bound to let the player pick within it.
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut companion = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    companion
+        .selections
+        .push(Selection::new(Id::new("flaw.outsider_major")));
+    let grants = effective_scores_loaded(&companion, &ruleset).reputation_grants;
+    assert_eq!(grants.len(), 1, "{grants:?}");
+    assert_eq!(grants[0].score, 1);
+    assert_eq!(grants[0].max_score, Some(3));
+
+    // Every other granter leaves it absent — exact, not a range.
+    companion.selections = vec![Selection::new(Id::new("flaw.infamous"))];
+    let grants = effective_scores_loaded(&companion, &ruleset).reputation_grants;
+    assert_eq!(grants[0].max_score, None, "{grants:?}");
+}
+
+#[test]
 fn effective_scores_surface_confidence_and_supernatural_slots() {
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
     let mut companion = Entity::new(
@@ -1828,13 +1853,17 @@ fn effective_scores_surface_confidence_and_supernatural_slots() {
         1
     );
 
-    // Infamous surfaces a Local reputation slot naming the Flaw that opened it.
+    // Infamous surfaces a wildcard reputation slot naming the Flaw that opened
+    // it. F-450 (D11/Q5): the passage states no audience ("a level 4 bad
+    // Reputation", ArMDE:6312), so the shipped `kind: "local"` was a hardcoded
+    // invention — its twin `virtue.famous` already ships the wildcard for the
+    // same shape.
     companion
         .selections
         .push(Selection::new(Id::new("flaw.infamous")));
     let grants = effective_scores_loaded(&companion, &ruleset).reputation_grants;
     assert_eq!(grants.len(), 1, "one grant per granting V/F: {grants:?}");
-    assert_eq!(grants[0].kind, Some(arm_rules::ReputationType::Local));
+    assert_eq!(grants[0].kind, None, "Infamous fixes no Reputation type");
     assert_eq!(grants[0].score, 4);
     assert_eq!(grants[0].source, Id::new("flaw.infamous"));
 

@@ -23,8 +23,11 @@ pub struct ReputationGrant {
     pub source: Id,
     /// The Reputation type the grant fixes, or `None` when player-chosen.
     pub reputation_type: Option<ReputationType>,
-    /// The starting Reputation score the grant confers.
+    /// The starting Reputation score the grant confers, exact unless
+    /// `max_score` states a range.
     pub score: u8,
+    /// The upper bound of a stated range (D11/Q5); `None` means exact.
+    pub max_score: Option<u8>,
 }
 
 /// The Reputation grants a character holds (one per [`Effect::GrantsReputation`]),
@@ -32,11 +35,17 @@ pub struct ReputationGrant {
 pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
     let mut grants = Vec::new();
     for_each_effect!(entity, ruleset, |selection, effect| {
-        if let Effect::GrantsReputation { kind, score } = effect {
+        if let Effect::GrantsReputation {
+            kind,
+            score,
+            max_score,
+        } = effect
+        {
             grants.push(ReputationGrant {
                 source: selection.item_ref.clone(),
                 reputation_type: *kind,
                 score: *score,
+                max_score: *max_score,
             });
         }
     });

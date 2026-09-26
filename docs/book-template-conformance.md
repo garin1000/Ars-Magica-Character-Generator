@@ -1104,6 +1104,17 @@ warning set empty.
   outranks a statblock), so no change is proposed — but the disagreement is real
   and a saga that follows the templates will be one point off the Virtue as
   written.
+- **Update, Q5 (D11):** the paragraph above describes the *pre-D11* state, where
+  `validate_reputations` checked kind and count only, so "nothing objects to a
+  fixture recording 3" was literally true — score was unchecked either way. D11
+  makes score enforced and exact by default, so a stored Hermetic Reputation of
+  3 no longer validates against a grant that states exactly 4: the two are now a
+  hard mechanical contradiction, not a mere printed disagreement. Per the same
+  precedence already argued here (a Virtue's own definition outranks a
+  statblock), `magus_guernicus.json` is corrected to 4, matching
+  `magus_darius_gauntlet.json`'s existing choice — both fixtures now agree with
+  the Virtue, and the book's two witnesses to 3 stay recorded above as what the
+  book prints, not as what the character sheet holds.
 
 ### MAG12 — an Art's leftover experience has nowhere to go
 

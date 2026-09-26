@@ -1127,6 +1127,12 @@ mod tests {
             "entity_kinds": ["character"],
             "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }]
           },
+          {
+            "id": "flaw.test_reputation_range",
+            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "categories": ["social_status"],
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1, "max_score": 3 }]
+          },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
             "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
@@ -1659,15 +1665,37 @@ mod tests {
                     source: Id::new("virtue.famous"),
                     reputation_type: None,
                     score: 3,
+                    max_score: None,
                 },
                 ReputationGrant {
                     source: Id::new("flaw.infamous"),
                     reputation_type: Some(ReputationType::Local),
                     score: 4,
+                    max_score: None,
                 },
             ]
         );
         assert_eq!(reputation_grants(&xp_entity(vec![]), &rs), vec![]);
+    }
+
+    #[test]
+    fn reputation_grants_surfaces_a_max_score_when_the_grant_states_one() {
+        // Outsider's shape (D11/Q5): "a bad Reputation of level 1 to 3"
+        // (ArMDE:6554) is score 1, max_score Some(3) — an optional upper bound,
+        // absent (None) for every other granter (D10's "no ceiling" sentinel is
+        // u8::MAX elsewhere; here absence itself IS "exact, no range").
+        let rs = xp_ruleset();
+        let e = xp_entity(vec![sel("flaw.test_reputation_range")]);
+        let grants = reputation_grants(&e, &rs);
+        assert_eq!(
+            grants,
+            vec![ReputationGrant {
+                source: Id::new("flaw.test_reputation_range"),
+                reputation_type: Some(ReputationType::Local),
+                score: 1,
+                max_score: Some(3),
+            }]
+        );
     }
 
     #[test]

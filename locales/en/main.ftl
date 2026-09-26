@@ -663,6 +663,9 @@ reputation-content-placeholder = What it is for
 # "Ecclesiastical 4" is never an unexplained row. There is no add control any
 # more: the grant IS the row.
 reputation-granted-by = level { $score } from { $source }
+reputation-granted-by-ranged = from { $source }
+reputation-level-increment = Raise the { $source } Reputation
+reputation-level-decrement = Lower the { $source } Reputation
 # A grant that fixes no type (Famous) leaves the type to the player.
 reputation-kind-label = Type
 reputation-kind-choose = Choose a type
@@ -1154,6 +1157,7 @@ issue-specialty_forbidden = { $ability } may not have a specialty ({ $specialty 
 issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue (or the Gift's one free Ability).
 issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
 issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Virtue or Flaw that grants one.
+issue-reputation_score_out_of_range = A { $kind } Reputation ({ $content }) at level { $score } is outside the granted range ({ $min } to { $max }).
 issue-over_item_level = Enchanted devices total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-over_power_levels = Supernatural powers total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-over_focus_points = Focus Powers spend { $used } points, over the pool of { $budget } (by { $over }).

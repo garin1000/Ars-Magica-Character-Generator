@@ -604,6 +604,20 @@ fn the_guernicus_matches_the_book() {
     assert_eq!(error_codes(&guernicus, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&guernicus, &ruleset), codes(&[]));
 
+    // Reputation from Hermetic Prestige. DISAGREEMENT MAG11
+    // (docs/book-template-conformance.md), and the FIRST witness to it: the
+    // Virtue's own entry says level **4** (ArMDE:4071-4073 `#### Hermetic
+    // Prestige`), but this very template prints "Quaesitor (Hermetic) 3"
+    // (ArMDE:1869) — the same "3" the Darius worked example repeats
+    // (ArMDE:2518, the SECOND witness, `darius_of_flambeau_at_gauntlet_matches_the_book`
+    // below). D11/Q5 makes score enforced and exact by default, so a stored 3
+    // under a grant of exactly 4 no longer validates (the empty error set above
+    // already proves it): the fixture is corrected to 4, following the Virtue's
+    // own definition, per MAG11's precedence ruling and matching Darius's
+    // existing choice.
+    assert_eq!(guernicus.reputations.len(), 1);
+    assert_eq!(guernicus.reputations[0].score, 4);
+
     // Per +4 (ArMDE:1853) is a bought +3 lifted by Great Perception.
     assert_eq!(
         arm_rules::effective::effective_characteristic_score(

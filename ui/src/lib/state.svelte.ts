@@ -1478,6 +1478,21 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /**
+   * Relevel a stored Reputation. Only a grant stating `max_score` (D11/Q5 —
+   * Outsider alone, "a bad Reputation of level 1 to 3") offers a choice here;
+   * every exact grant fixes the level and this is never called for it. Not
+   * clamped in the store: the caller (the panel's stepper, bounded to
+   * `[grant.score, grant.max_score]`) is the only legal caller, exactly like
+   * `setReputationKind` trusts its own `<select>`'s option list.
+   */
+  setReputationScore(index: number, score: number): void {
+    this.entity.reputations = (this.entity.reputations ?? []).map((r, i) =>
+      i === index ? { ...r, score } : r,
+    );
+    this.#scheduleValidate();
+  }
+
   // --- Magic Items tab: aura, devices, familiar, talisman, longevity ---
 
   /**

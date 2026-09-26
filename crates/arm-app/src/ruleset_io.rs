@@ -383,6 +383,11 @@ pub struct ReputationGrant {
     /// The Reputation type the grant fixes, or `None` when player-chosen.
     pub kind: Option<ReputationType>,
     pub score: u8,
+    /// The upper bound of a stated range (D11/Q5), or `None` when the score is
+    /// exact. Outsider alone states one ("a bad Reputation of level 1 to 3",
+    /// ArMDE:6554); every other grant leaves this absent.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_score: Option<u8>,
 }
 
 /// The XP-bar slice of [`EffectiveScores`]: the max-flow allocation's
@@ -508,6 +513,7 @@ fn reputation_grants_for_ui(entity: &Entity, ruleset: &Ruleset) -> Vec<Reputatio
             source: grant.source,
             kind: grant.reputation_type,
             score: grant.score,
+            max_score: grant.max_score,
         })
         .collect()
 }

@@ -639,32 +639,70 @@ fn personality_out_of_range(trait_: &crate::types::PersonalityTrait, max: i8) ->
     )
 }
 
-/// Validates that every starting Reputation is backed by a granting Virtue/Flaw:
-/// the count of reputations of each `kind` must not exceed the grants of that kind
-/// (`Effect::GrantsReputation`). A player-chosen-kind grant (`kind == None`, e.g.
-/// Famous) is a wildcard authorizing one Reputation of *any* type; a Reputation
-/// consumes a matching concrete-kind slot first, falling back to a wildcard slot.
-/// Excess reputations emit `reputation_not_granted`. Source: ArMDE:2514.
+/// Validates that every starting Reputation is backed by a granting Virtue/Flaw
+/// (`Effect::GrantsReputation`) **of the right kind and at a legal score**
+/// (D11/Q5). A player-chosen-kind grant (`kind == None`, e.g. Famous) is a
+/// wildcard authorizing one Reputation of *any* type; a Reputation consumes a
+/// matching concrete-kind slot first, falling back to a wildcard slot. A grant's
+/// score is exact by default — the Reputation's score must equal it — unless the
+/// grant states `max_score`, in which case the score must lie in
+/// `[score, max_score]` (Outsider alone, ArMDE:6554).
+///
+/// A Reputation whose kind matches no remaining grant (concrete or wildcard) at
+/// all emits `reputation_not_granted`, exactly as before this ruling. One whose
+/// kind DOES match a remaining grant, but at the wrong score, emits the more
+/// specific `reputation_score_out_of_range` instead — a different finding,
+/// because the player did pick a legal audience, just not a legal level.
+/// Source: ArMDE:2514.
 pub(crate) fn validate_reputations(
     entity: &Entity,
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    use crate::types::ReputationType;
-    let mut remaining: BTreeMap<ReputationType, usize> = BTreeMap::new();
-    let mut wildcard: usize = 0;
-    for grant in crate::effective::reputation_grants(entity, ruleset) {
-        match grant.reputation_type {
-            Some(kind) => *remaining.entry(kind).or_insert(0) += 1,
-            None => wildcard += 1,
-        }
-    }
+    let mut remaining = crate::effective::reputation_grants(entity, ruleset);
+
     for reputation in &entity.reputations {
-        let slot = remaining.entry(reputation.kind).or_insert(0);
-        if *slot > 0 {
-            *slot -= 1;
-        } else if wildcard > 0 {
-            wildcard -= 1;
+        let in_range = |grant: &crate::effective::ReputationGrant| {
+            reputation.score >= grant.score
+                && reputation.score <= grant.max_score.unwrap_or(grant.score)
+        };
+
+        // A concrete-kind slot is consumed before a wildcard one, so a wildcard
+        // grant stays available for a Reputation no concrete grant covers.
+        let consumable = remaining
+            .iter()
+            .position(|g| g.reputation_type == Some(reputation.kind) && in_range(g))
+            .or_else(|| {
+                remaining
+                    .iter()
+                    .position(|g| g.reputation_type.is_none() && in_range(g))
+            });
+
+        if let Some(pos) = consumable {
+            remaining.remove(pos);
+            continue;
+        }
+
+        // No remaining grant's range accommodates this Reputation. A grant of
+        // the right kind (or a wildcard) that exists at the WRONG score is a
+        // different finding from no such grant existing at all.
+        let wrong_score = remaining
+            .iter()
+            .find(|g| g.reputation_type == Some(reputation.kind) || g.reputation_type.is_none());
+
+        if let Some(grant) = wrong_score {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_REPUTATION_SCORE_OUT_OF_RANGE,
+                CreationPhase::PersonalityReputations,
+                args([
+                    ("kind", reputation.kind.to_string()),
+                    ("content", reputation.content.clone()),
+                    ("score", reputation.score.to_string()),
+                    ("min", grant.score.to_string()),
+                    ("max", grant.max_score.unwrap_or(grant.score).to_string()),
+                ]),
+                None,
+            ));
         } else {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_REPUTATION_NOT_GRANTED,

@@ -843,19 +843,19 @@ describe('character details', () => {
     await $(PERSONALITY_TAB).click();
     await expect($('[data-testid="reputation-empty"]')).toExist();
 
-    // Infamous grants a Local Reputation. Findings 29/30: the grant IS the row —
-    // there is no add button to press (pressing it twice used to make two
-    // identical rows), so the description input exists as soon as the Flaw is
-    // taken, and the row names the Flaw that put it there. The old spec drove
-    // `reputation-add-local` and then typed into `reputation-content-0`; this
-    // one types into the same input, having asserted that no click was needed to
-    // conjure it. The saved-file assertion below is unchanged, so the
-    // round-tripped row is still proven identical.
+    // Infamous grants a player-chosen-type Reputation at level 4 (D11/Q5,
+    // F-450: the passage names no audience — "a level 4 bad Reputation",
+    // ArMDE:6312 — so the grant is a wildcard, exactly like Famous, rather
+    // than the hardcoded Local it shipped with before this fix). Findings
+    // 29/30: the grant IS the row — there is no add button to press (pressing
+    // it twice used to make two identical rows) — so the type picker exists
+    // as soon as the Flaw is taken, and the row names the Flaw that put it
+    // there. The description input stays disabled until a type is picked.
     await $(VF_TAB).click();
     await $('[data-testid="add-flaw.infamous"]').click();
     await $(PERSONALITY_TAB).click();
-    const content = await $('[data-testid="reputation-content-0"]');
-    await content.waitForExist({ timeout: 5000 });
+    const kind = await $('[data-testid="reputation-kind-0"]');
+    await kind.waitForExist({ timeout: 5000 });
     await expect($('[data-testid="reputation-add-local"]')).not.toExist();
     // The row says WHY it is there, by the Flaw's name and not its id.
     const source = await $('[data-testid="reputation-source-0"]').getText();
@@ -864,7 +864,8 @@ describe('character details', () => {
     // No remove control on a granted row — the Flaw owns it, not the player.
     await expect($('[data-testid="reputation-remove-0"]')).not.toExist();
 
-    await content.setValue('dragon slayer');
+    await kind.selectByAttribute('value', 'local');
+    await $('[data-testid="reputation-content-0"]').setValue('dragon slayer');
   });
 
   it('edits name and description in the header banner and concept on Details', async () => {

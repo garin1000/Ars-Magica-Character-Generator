@@ -136,7 +136,7 @@ export type Effect =
   | { type: 'grants_selection'; items: string[] }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
-  | { type: 'grants_reputation'; kind?: ReputationType; score: number }
+  | { type: 'grants_reputation'; kind?: ReputationType; score: number; max_score?: number }
   // M5/5b in-play effects (consumed by the derived-totals read-out, slice 5i).
   | { type: 'magical_focus'; param: string; major: boolean }
   | { type: 'casting_total_mod'; amount: number; scope: CastingScope }
@@ -938,11 +938,15 @@ export interface DerivedTotals {
 // panel, so there is nothing to press twice. `kind` is null for a
 // player-chosen-type grant (Famous), which renders as a type `<select>`;
 // `source` is the id of the granting Virtue/Flaw, shown through its i18n name so
-// the row can say WHY it is there.
+// the row can say WHY it is there. `max_score` is the upper bound of a stated
+// range (D11/Q5) — absent (undefined) means the score is exact. Outsider is
+// the one grant in the catalogue that states a range ("a bad Reputation of
+// level 1 to 3", ArMDE:6554).
 export interface ReputationGrant {
   source: string;
   kind: ReputationType | null;
   score: number;
+  max_score?: number;
 }
 
 // Per-category flaw count cap. The category is data, so the engine hardcodes no

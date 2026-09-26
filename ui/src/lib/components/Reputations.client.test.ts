@@ -45,6 +45,7 @@ function installRuleset(): void {
     i18n: {
       'flaw.infamous': { name: 'Infamous' },
       'virtue.famous': { name: 'Famous' },
+      'flaw.outsider_major': { name: 'Outsider' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -118,5 +119,99 @@ describe('Reputations writes nothing on load', () => {
     select.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
     expect(store.entity.reputations).toEqual([{ kind: 'hermetic', score: 4, content: '' }]);
+  });
+
+  it('writes the pre-filled minimum level for a ranged grant (Outsider, D11/Q5)', () => {
+    // Outsider grants Local 1, max_score 3 ("a bad Reputation of level 1 to
+    // 3", ArMDE:6554). Before the level is ever raised, the first description
+    // typed must record the grant's own score — its minimum — exactly like
+    // any exact grant, not some other figure.
+    store.effective = {
+      reputation_grants: [{ source: 'flaw.outsider_major', kind: 'local', score: 1, max_score: 3 }],
+    } as unknown as EffectiveScores;
+    app = mount(Reputations, { target });
+    flushSync();
+
+    const input = target.querySelector<HTMLInputElement>('[data-testid="reputation-content-0"]')!;
+    input.value = 'outcast';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(store.entity.reputations).toEqual([{ kind: 'local', score: 1, content: 'outcast' }]);
+  });
+});
+
+describe('Reputations level control (D11/Q5, D58)', () => {
+  // Outsider is the one grant in the catalogue stating a range: "a bad
+  // Reputation of level 1 to 3" (ArMDE:6554). A legal character with level 2
+  // or 3 must be enterable, so the panel needs a level control bounded to
+  // `[grant.score, grant.max_score]` — an exact grant (Infamous, Famous) gets
+  // none, since there is nothing to choose.
+  function installOutsiderGrant(): void {
+    store.effective = {
+      reputation_grants: [{ source: 'flaw.outsider_major', kind: 'local', score: 1, max_score: 3 }],
+    } as unknown as EffectiveScores;
+  }
+
+  it('raises the level within the grant’s range and cannot exceed max_score', () => {
+    installOutsiderGrant();
+    app = mount(Reputations, { target });
+    flushSync();
+
+    const inc = target.querySelector<HTMLButtonElement>('[data-testid="reputation-level-inc-0"]')!;
+    expect(inc).not.toBeNull();
+
+    inc.click();
+    flushSync();
+    expect(store.entity.reputations).toEqual([{ kind: 'local', score: 2, content: '' }]);
+
+    inc.click();
+    flushSync();
+    expect(store.entity.reputations).toEqual([{ kind: 'local', score: 3, content: '' }]);
+
+    // At the grant's max_score, the increment control is disabled — the
+    // Spinner's own bound, the same mechanism ArtGrid/AbilityTab use at their
+    // caps — so a further click is a no-op rather than an over-range score.
+    expect(inc.disabled).toBe(true);
+    inc.click();
+    flushSync();
+    expect(store.entity.reputations).toEqual([{ kind: 'local', score: 3, content: '' }]);
+  });
+
+  it('cannot lower the level below the grant’s minimum', () => {
+    installOutsiderGrant();
+    app = mount(Reputations, { target });
+    flushSync();
+
+    const dec = target.querySelector<HTMLButtonElement>('[data-testid="reputation-level-dec-0"]')!;
+    expect(dec.disabled).toBe(true);
+    dec.click();
+    flushSync();
+    // Still unfilled — a disabled decrement never fired addReputation.
+    expect(store.entity.reputations ?? []).toEqual([]);
+  });
+
+  it('preserves an already-typed description when the level is raised', () => {
+    installOutsiderGrant();
+    app = mount(Reputations, { target });
+    flushSync();
+
+    const input = target.querySelector<HTMLInputElement>('[data-testid="reputation-content-0"]')!;
+    input.value = 'outcast';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+
+    const inc = target.querySelector<HTMLButtonElement>('[data-testid="reputation-level-inc-0"]')!;
+    inc.click();
+    flushSync();
+    expect(store.entity.reputations).toEqual([{ kind: 'local', score: 2, content: 'outcast' }]);
+  });
+
+  it('offers no level control for an exact grant', () => {
+    // Infamous grants exactly 4 (ArMDE:6310-6312) — nothing to choose.
+    app = mount(Reputations, { target });
+    flushSync();
+
+    expect(target.querySelector('[data-testid="reputation-level-inc-0"]')).toBeNull();
+    expect(target.querySelector('[data-testid="reputation-level-dec-0"]')).toBeNull();
   });
 });

@@ -220,6 +220,7 @@ impl fmt::Display for IssueSeverity {
 /// | `supernatural_ability_requires_virtue` | error | abilities | `ability` |
 /// | `personality_trait_out_of_range` | error | personality_reputations | `name`, `value`, `max` |
 /// | `reputation_not_granted` | error | personality_reputations | `kind`, `content` |
+/// | `reputation_score_out_of_range` | error | personality_reputations | `kind`, `content`, `score`, `min`, `max` |
 /// | `over_item_level` | error | review | `used`, `budget`, `over` |
 /// | `multiple_magical_foci` | error | virtues_flaws | `count` |
 /// | `spell_ritual_legality` | error | spells | `spell`, `level` |
@@ -718,6 +719,11 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a starting Reputation is
     /// not backed by a granting Virtue/Flaw (ArMDE:2514).
     pub const CODE_REPUTATION_NOT_GRANTED: &'static str = "reputation_not_granted";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a starting Reputation IS
+    /// backed by a granting Virtue/Flaw of the right kind, but its score is
+    /// outside the range that grant states (D11/Q5). Exact by default; a range
+    /// only where the grant's `max_score` is set (Outsider alone, ArMDE:6554).
+    pub const CODE_REPUTATION_SCORE_OUT_OF_RANGE: &'static str = "reputation_score_out_of_range";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the total level of the
     /// character's enchanted devices exceeds the item-level budget the character's
     /// Virtues grant (Magic Items +25, Redcap 50; ArMDE:4347-4349, :4842-4846).
@@ -9557,6 +9563,12 @@ mod tests {
         { "id": "flaw.infamous", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
           "categories": ["general"], "entity_kinds": ["character"],
           "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }] },
+        { "id": "flaw.outsider_major", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+          "categories": ["social_status"], "entity_kinds": ["character"],
+          "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1, "max_score": 3 }] },
+        { "id": "virtue.famous_test", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+          "categories": ["social_status"], "entity_kinds": ["character"],
+          "effects": [{ "type": "grants_reputation", "score": 4 }] },
         { "id": "flaw.major_personality", "kind": "flaw", "classification": "narrative", "magnitude": "major",
           "categories": ["personality"], "entity_kinds": ["character"] }
     ]"#;
@@ -9784,5 +9796,82 @@ mod tests {
         // Infamous grants a Local reputation, covering it.
         e.selections = vec![sel("flaw.infamous")];
         assert!(!all_codes(&validate(&e, &rs)).contains(&"reputation_not_granted".to_string()));
+    }
+
+    /// D11/Q5: `validate_reputations` gains a score check. Exact is the default —
+    /// Infamous grants Local 4 (ArMDE:6310-6312), so a stored score of anything
+    /// else is `reputation_score_out_of_range`, not silently accepted the way it
+    /// was before this ruling (F-486's root cause).
+    #[test]
+    fn reputation_score_must_match_an_exact_grant() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![sel("flaw.infamous")]);
+        e.reputations = vec![Reputation {
+            kind: ReputationType::Local,
+            score: 5,
+            content: "wrong level".into(),
+        }];
+        assert!(
+            all_codes(&validate(&e, &rs)).contains(&"reputation_score_out_of_range".to_string())
+        );
+        // The exact level Infamous grants is clean.
+        e.reputations[0].score = 4;
+        assert!(
+            !all_codes(&validate(&e, &rs)).contains(&"reputation_score_out_of_range".to_string())
+        );
+    }
+
+    /// D11/Q5: the one stated exception. Outsider grants "a bad Reputation of
+    /// level 1 to 3" (ArMDE:6554) — every score in `[score, max_score]` is
+    /// legal, not just the grant's own `score`.
+    #[test]
+    fn reputation_score_within_a_stated_range_is_clean() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![sel("flaw.outsider_major")]);
+        for legal in [1u8, 2, 3] {
+            e.reputations = vec![Reputation {
+                kind: ReputationType::Local,
+                score: legal,
+                content: "outcast".into(),
+            }];
+            assert!(
+                !all_codes(&validate(&e, &rs))
+                    .contains(&"reputation_score_out_of_range".to_string()),
+                "level {legal} is inside Outsider's stated 1-to-3 range"
+            );
+        }
+        // Both above and below the stated range are illegal.
+        for illegal in [0u8, 4] {
+            e.reputations = vec![Reputation {
+                kind: ReputationType::Local,
+                score: illegal,
+                content: "outcast".into(),
+            }];
+            assert!(
+                all_codes(&validate(&e, &rs))
+                    .contains(&"reputation_score_out_of_range".to_string()),
+                "level {illegal} is outside Outsider's stated 1-to-3 range"
+            );
+        }
+    }
+
+    /// A wildcard grant (player-chosen kind, `kind: None`) is score-checked
+    /// exactly like a concrete-kind one — the kind is free, not the level.
+    #[test]
+    fn reputation_score_check_applies_to_a_wildcard_grant_too() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![sel("virtue.famous_test")]);
+        e.reputations = vec![Reputation {
+            kind: ReputationType::Hermetic,
+            score: 5,
+            content: "wrong level".into(),
+        }];
+        assert!(
+            all_codes(&validate(&e, &rs)).contains(&"reputation_score_out_of_range".to_string())
+        );
+        e.reputations[0].score = 4;
+        assert!(
+            !all_codes(&validate(&e, &rs)).contains(&"reputation_score_out_of_range".to_string())
+        );
     }
 }

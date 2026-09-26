@@ -2,7 +2,8 @@
   import { store } from '../state.svelte';
   import { grantItemLabel, reputationRows, UNFILLED_REPUTATION_INDEX } from '../derive';
   import type { ReputationRow } from '../derive';
-  import type { ReputationType } from '../types';
+  import type { ReputationGrant, ReputationType } from '../types';
+  import Spinner from './Spinner.svelte';
 
   const reputations = $derived(store.entity.reputations ?? []);
   // Reputation input is offered only for the slots a V/F grants (ArMDE:2514) —
@@ -28,6 +29,18 @@
   // A grant that fixes no type (Famous) lets the player pick one.
   const isWildcard = (row: ReputationRow): boolean => row.grant?.kind === null;
 
+  // D11/Q5 + D58: a grant states `max_score` for exactly one entry in the
+  // catalogue (Outsider, "a bad Reputation of level 1 to 3", ArMDE:6554), and
+  // a legal character at level 2 or 3 must be enterable — the app refusing a
+  // legal character is itself a defect (D58). Every other grant is exact
+  // (`max_score` absent, or equal to `score`), and gets no level control at
+  // all: there is nothing to choose. `grant.score` is always the range's own
+  // floor, so it doubles as the minimum.
+  const levelRange = (grant: ReputationGrant): { min: number; max: number } | null =>
+    grant.max_score !== undefined && grant.max_score > grant.score
+      ? { min: grant.score, max: grant.max_score }
+      : null;
+
   // Writes are lazy: the first character typed into an empty granted slot is what
   // creates the stored row, and emptying the description removes it again (an
   // undescribed Reputation records nothing the grant does not already say).
@@ -51,6 +64,19 @@
       store.removeReputationAt(row.index);
     } else {
       store.setReputationKind(row.index, kind);
+    }
+  }
+
+  // Choosing a level is itself a choice, exactly like `onKind` above — it
+  // persists immediately, with or without a description already typed. The
+  // Spinner's own `decDisabled`/`incDisabled` (bounded to the grant's
+  // `[min, max]`) are what actually keep this in range; this function trusts
+  // its only caller.
+  function onScore(row: ReputationRow, score: number): void {
+    if (row.index === UNFILLED_REPUTATION_INDEX) {
+      if (row.kind) store.addReputation(row.kind, score, row.content);
+    } else {
+      store.setReputationScore(row.index, score);
     }
   }
 </script>
@@ -101,12 +127,35 @@
             </span>
           {/if}
           {#if row.grant}
+            {@const range = levelRange(row.grant)}
             <span class="reputation-source" data-testid="reputation-source-{i}"
-              >{store.t('reputation-granted-by', {
-                score: row.score,
-                source: sourceLabel(row.grant.source),
-              })}</span
+              >{range
+                ? store.t('reputation-granted-by-ranged', { source: sourceLabel(row.grant.source) })
+                : store.t('reputation-granted-by', {
+                    score: row.score,
+                    source: sourceLabel(row.grant.source),
+                  })}</span
             >
+            {#if range}
+              <Spinner
+                decLabel={store.t('reputation-level-decrement', {
+                  source: sourceLabel(row.grant.source),
+                })}
+                decTestid="reputation-level-dec-{i}"
+                decDisabled={row.score <= range.min}
+                onDec={() => onScore(row, row.score - 1)}
+                incLabel={store.t('reputation-level-increment', {
+                  source: sourceLabel(row.grant.source),
+                })}
+                incTestid="reputation-level-inc-{i}"
+                incDisabled={row.score >= range.max}
+                onInc={() => onScore(row, row.score + 1)}
+              >
+                {#snippet children()}
+                  <span class="spinner-value" data-testid="reputation-level-{i}">{row.score}</span>
+                {/snippet}
+              </Spinner>
+            {/if}
           {/if}
           <input
             class="reputation-content"

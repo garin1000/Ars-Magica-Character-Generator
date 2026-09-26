@@ -936,8 +936,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "ecclesiastical", "score": 3 }],
     "source": { "anchor": "excommunicate", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6044, 6047] }
   },
   {
@@ -1513,7 +1514,7 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }],
+    "effects": [{ "type": "grants_reputation", "score": 4 }],
     "source": { "anchor": "infamous", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6310, 6312] }
   },
   {
@@ -2026,7 +2027,7 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 2 }],
+    "effects": [{ "type": "grants_reputation", "score": 2 }],
     "source": { "anchor": "outlaw", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6542, 6545] }
   },
   {
@@ -2047,7 +2048,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.outsider_minor"],
-    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 3 }],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1, "max_score": 3 }],
     "source": { "anchor": "outsider", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6550, 6561] }
   },
   {
@@ -2058,7 +2059,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.outsider_major"],
-    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1 }],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1, "max_score": 3 }],
     "source": { "anchor": "outsider", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6550, 6561] }
   },
   {
@@ -4308,8 +4309,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "uncomputed_rule",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "score": 2 }],
     "source": { "anchor": "frightful-presence", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3941, 3950] }
   },
   {
@@ -5625,8 +5627,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "score": 3 }],
     "source": { "anchor": "protection", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4810, 4813] }
   },
   {
@@ -5770,7 +5773,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "effects": [
-      { "type": "grants_reputation", "kind": "local", "score": 2 },
+      { "type": "grants_reputation", "score": 2 },
       { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.dead_language", "ability.rabbinic_law", "ability.theology_judaism"] },
       { "type": "grants_selection", "items": ["virtue.social_contacts"] }
     ],
@@ -6182,7 +6185,10 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "grants_selection", "items": ["virtue.brother_knight", "virtue.temporal_influence"] }],
+    "effects": [
+      { "type": "grants_reputation", "kind": "local", "score": 3 },
+      { "type": "grants_selection", "items": ["virtue.brother_knight", "virtue.temporal_influence"] }
+    ],
     "source": { "anchor": "templar-commander", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5113, 5116] }
   },
   {
@@ -6209,8 +6215,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "score": 4 }],
     "source": { "anchor": "templar-prestige", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5125, 5128] }
   },
   {

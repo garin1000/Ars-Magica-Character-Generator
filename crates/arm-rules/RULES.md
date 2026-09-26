@@ -3205,11 +3205,14 @@ approximation of "Latin").
 
 #### Templar Commander — fixed nested free Virtue grant (`grants_selection`)
 > "This Virtue also grants the Temporal Influence Minor Virtue … This Virtue
-> includes the effects of the Brother-Knight Virtue."
+> includes the effects of the Brother-Knight Virtue. … he is a wellknown figure
+> and has a Reputation of level 3 in his area."
 
 - Source: `ArMDE:5113-5116`.
 - Data: `virtue.templar_commander` — `grants_selection: [virtue.brother_knight,
-  virtue.temporal_influence]`.
+  virtue.temporal_influence]`, plus (F-312, D11/Q5) `grants_reputation{local, 3}`
+  for the "Reputation of level 3 in his area" clause, carried by no effect
+  before this fix.
 - Implementation: `Effect::GrantsSelection { items }` →
   `effective.rs::vf_granted_selections`, folded into `entity_grants` alongside House
   and Mythic grants (budget-exempt, one level of nesting — a granted item's own
@@ -5603,8 +5606,14 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `virtue.demonic_powers` (ArMDE:3669) — `power_levels{20}`
 - `virtue.strong_angelic_heritage` (ArMDE:5026, :5028) — `might_grant{divine,0}` + `power_levels{30}` (Divine Might = age÷20 entered by hand; grant establishes Realm)
 
-**Reputation grant:**
+**Reputation grant** (D11/Q5, 2026-09-26: `score` is now enforced — exact by
+default, a range only where the grant states `max_score`. `validate_reputations`
+raises `reputation_score_out_of_range` for a stored Reputation whose score
+falls outside its grant; `docs/vf-audit/decisions.md` § D11,
+`corrections.md` § 3.11):
 - `flaw.apostate` (ArMDE:5675-5678) — reputation grant bad score 4
+- `flaw.excommunicate` (ArMDE:6044-6047) — reputation grant ecclesiastical
+  score 3 (F-408: carried by no effect before this fix)
 - `flaw.failed_journeyman` (ArMDE:6060-6063) — reputation grant bad score 2
 - `flaw.failed_master` (ArMDE:6064-6067) — reputation grant bad score 4
 - `flaw.failed_monk` (ArMDE:6068-6071) — reputation grant poor score 2
@@ -5612,27 +5621,50 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `flaw.feral_scent` (ArMDE:6106-6109) — reputation grant negative score 2
 - `flaw.gabai` (ArMDE:6198-6201) — reputation grant negative score 2
 - `flaw.hedge_wizard` (ArMDE:6240-6243) — reputation grant hermetic score 3
+- `flaw.infamous` (ArMDE:6310-6312) — reputation grant player-chosen score 4
+  (F-450: no `kind` — the passage names no audience, and the shipped
+  `kind: "local"` was a hardcoded invention; its twin `virtue.famous` already
+  ships the wildcard for the same shape)
 - `flaw.infamous_master` (ArMDE:6314-6317) — reputation grant hermetic score 3
-- `flaw.outlaw` (ArMDE:6542-6545) — reputation grant score 2
+- `flaw.outlaw` (ArMDE:6542-6545) — reputation grant player-chosen score 2
+  (F-484: `kind` dropped — the passage names no audience)
 - `flaw.outlaw_leader` (ArMDE:6546-6549) — reputation grant score 3
-- `flaw.outsider_major` (ArMDE:6550-6561) — reputation grant bad score 1-3
-- `flaw.outsider_minor` (ArMDE:6550-6561) — reputation grant bad score 1-3
+- `flaw.outsider_major` (ArMDE:6550-6561) — reputation grant local score 1,
+  max_score 3 (F-486: the one entry in the catalogue the book states a range
+  for, "a bad Reputation of level 1 to 3" — was a fixed, invented score 3)
+- `flaw.outsider_minor` (ArMDE:6550-6561) — reputation grant local score 1,
+  max_score 3 (F-486, same range: ":6556 says 'You **still** have the bad
+  Reputation'" — was a fixed, invented score 1)
 - `flaw.usurer` (ArMDE:6951-6954) — reputation grant poor score 4
 - `virtue.baccalaureus` (ArMDE:3470-3475) — XP grant 90 + reputation grant academic score 1
 - `virtue.cathedral_school_master` (ArMDE:3549-3554) — XP grant 240 + reputation grant academic score 2
 - `virtue.doctor_in_faculty` (ArMDE:3683-3698) — XP grant 300 + reputation grant academic score 3
 - `virtue.famous` (ArMDE:3861-3864) — reputation grant player-chosen score 4
+- `virtue.frightful_presence` (ArMDE:3941-3950) — reputation grant player-chosen
+  score 2 (F-80: "an appropriate Reputation … at a score of 2 among those you
+  have affected" — carried by no effect before this fix)
 - `virtue.hermetic_prestige` (ArMDE:4071-4073) — reputation grant hermetic score 4
 - `virtue.lone_redcap` (ArMDE:4319-4326) — XP grant 300 + grants Virtue + reputation grant poor score 2
 - `virtue.magister_in_artibus` (ArMDE:4385-4394) — XP grant 240 + reputation grant academic score 2
 - `virtue.magister_in_medicina` (ArMDE:4395-4398) — XP grant 300 + reputation grant academic score 3
 - `virtue.master_bard` (ArMDE:4457-4462) — XP grant 240 + reputation grant local score 3
 - `virtue.physician_of_salerno` (ArMDE:4732-4735) — XP grant 50 + reputation 2
+- `virtue.protection` (ArMDE:4810-4813) — reputation grant player-chosen score 3
+  (F-235: "a Reputation (good or bad, your choice) of level 3" — carried by no
+  effect before this fix)
 - `virtue.rard` (ArMDE:3476-3479) — reputation grant local score 1
-- `virtue.rosh_beth_din` (ArMDE:4878-4883) — XP grant 50 + reputation grant good score 2 + grants Virtue
+- `virtue.rosh_beth_din` (ArMDE:4878-4883) — XP grant 50 + reputation grant
+  player-chosen score 2 + grants Virtue (F-254: `kind` dropped — "applies
+  across his country" is wider than Local and not
+  Ecclesiastical/Hermetic/Academic either, so the shipped `kind: "local"` was
+  wrong)
 - `virtue.senior_bard` (ArMDE:4904-4909) — XP grant 90 + reputation grant local score 2
 - `virtue.senior_clergy` (ArMDE:4910-4921) — reputation grant score 4
 - `virtue.templar_office_holder` (ArMDE:5121-5124) — reputation grant score 2
+- `virtue.templar_prestige` (ArMDE:5125-5128) — reputation grant player-chosen
+  score 4 (F-316: "a Reputation of level 4 within the Templars" — an
+  organization, not one of the four fixed Reputation types, so wildcard;
+  carried by no effect and classified `narrative` before this fix)
 
 **Size/characteristic delta:**
 - `virtue.blood_of_the_nephilim` (ArMDE:3509, :3511) — size delta + Dominion Lore

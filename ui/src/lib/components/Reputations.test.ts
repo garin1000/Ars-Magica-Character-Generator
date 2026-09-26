@@ -41,6 +41,7 @@ function installRuleset(): void {
       'virtue.famous': { name: 'Famous' },
       'flaw.apostate': { name: 'Apostate' },
       'virtue.senior_clergy': { name: 'Senior Clergy' },
+      'flaw.outsider_major': { name: 'Outsider' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -66,7 +67,9 @@ function resetEntity(): void {
   store.effective = null;
 }
 
-function grants(...list: { source: string; kind: string | null; score: number }[]): void {
+function grants(
+  ...list: { source: string; kind: string | null; score: number; max_score?: number }[]
+): void {
   store.effective = { reputation_grants: list } as unknown as EffectiveScores;
 }
 
@@ -126,6 +129,34 @@ describe('Reputations grant gating', () => {
     for (const label of ['Local', 'Ecclesiastical', 'Hermetic', 'Academic']) {
       expect(select![0]).toContain(label);
     }
+  });
+
+  it('pre-fills an unfilled ranged grant with its minimum level (Outsider, D11/Q5)', () => {
+    // Outsider grants Local 1, max_score 3 ("a bad Reputation of level 1 to
+    // 3", ArMDE:6554). Nothing is stored yet, so the level control must show
+    // the grant's own score — the minimum of the range — not some other
+    // figure. A ranged grant's attribution line omits the level (it says only
+    // "from { $source }") since the level control renders it instead — see
+    // the next test.
+    grants({ source: 'flaw.outsider_major', kind: 'local', score: 1, max_score: 3 });
+    const body = html();
+    const level = /data-testid="reputation-level-0"[^>]*>([\s\S]*?)<\/span>/.exec(body);
+    expect(level).not.toBeNull();
+    expect(level![1]).toContain('1');
+  });
+
+  it('offers a bounded level control for a ranged grant, but none for an exact one (D11/Q5, D58)', () => {
+    grants({ source: 'flaw.outsider_major', kind: 'local', score: 1, max_score: 3 });
+    const body = html();
+    expect(body).toContain('data-testid="reputation-level-dec-0"');
+    expect(body).toContain('data-testid="reputation-level-inc-0"');
+
+    // An exact grant (Infamous, score 4, no max_score) gets no level control —
+    // there is nothing to choose.
+    grants({ source: 'flaw.infamous', kind: 'local', score: 4 });
+    const exact = html();
+    expect(exact).not.toContain('data-testid="reputation-level-dec-0"');
+    expect(exact).not.toContain('data-testid="reputation-level-inc-0"');
   });
 
   it('renders one row per grant, in grant order', () => {
