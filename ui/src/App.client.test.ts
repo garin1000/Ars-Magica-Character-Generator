@@ -499,7 +499,7 @@ describe('the editor tabs Slice 3 splits out', () => {
     // The Totals tab reads `store.derived` unconditionally, so walking onto it
     // needs a complete fixture.
     store.derived = {
-      is_magus: false,
+      hermetically_trained: false,
       lab_totals: [],
       casting_totals: [],
       penetration: [],
@@ -576,7 +576,7 @@ describe('tablist keyboard navigation (S7/S4)', () => {
     // unconditionally — give it a minimal, complete fixture so navigating
     // there does not throw on an untested field.
     store.derived = {
-      is_magus: false,
+      hermetically_trained: false,
       lab_totals: [],
       casting_totals: [],
       penetration: [],

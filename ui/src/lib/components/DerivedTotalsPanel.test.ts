@@ -65,7 +65,7 @@ function resetEntity(): void {
 /** A minimal, complete DerivedTotals fixture; overrides layer on top. */
 function derivedFixture(overrides: Partial<DerivedTotals> = {}): DerivedTotals {
   return {
-    is_magus: true,
+    hermetically_trained: true,
     lab_totals: [],
     casting_totals: [],
     penetration: [],
@@ -175,7 +175,7 @@ describe('DerivedTotalsPanel aura bound (round 3, Task 3)', () => {
   // hinted at the real range and an out-of-range entry was silently rewritten
   // only later, at save.
   it('bounds the aura input to the engine-surfaced rules range, not the raw i32 range', () => {
-    store.derived = derivedFixture({ is_magus: true });
+    store.derived = derivedFixture({ hermetically_trained: true });
     const input = auraInputTag();
     expect(input).toContain('min="-50"');
     expect(input).toContain('max="10"');
@@ -185,7 +185,7 @@ describe('DerivedTotalsPanel aura bound (round 3, Task 3)', () => {
 
   it('reads the bound from whatever the ruleset payload carries, not a hardcoded pair', () => {
     installRuleset({ aura_modifier_min: -7, aura_modifier_max: 4 });
-    store.derived = derivedFixture({ is_magus: true });
+    store.derived = derivedFixture({ hermetically_trained: true });
     const input = auraInputTag();
     expect(input).toContain('min="-7"');
     expect(input).toContain('max="4"');
@@ -193,7 +193,7 @@ describe('DerivedTotalsPanel aura bound (round 3, Task 3)', () => {
 
   it('shows no out-of-range hint for a legal aura value', () => {
     store.entity.aura = 3;
-    store.derived = derivedFixture({ is_magus: true });
+    store.derived = derivedFixture({ hermetically_trained: true });
     const body = html();
     expect(body).not.toContain('data-testid="derived-aura-out-of-range"');
   });
@@ -208,14 +208,14 @@ describe('DerivedTotalsPanel aura bound (round 3, Task 3)', () => {
   // `DerivedAuraField.client.test.ts` and cannot be observed here at all.
   it('shows no hint for a value the player did not type, however extreme', () => {
     store.entity.aura = 999;
-    store.derived = derivedFixture({ is_magus: true });
+    store.derived = derivedFixture({ hermetically_trained: true });
     const body = html();
     expect(body).not.toContain('data-testid="derived-aura-out-of-range"');
   });
 
   it('does not describe the input before any entry has been rewritten', () => {
     store.entity.aura = 3;
-    store.derived = derivedFixture({ is_magus: true });
+    store.derived = derivedFixture({ hermetically_trained: true });
     const input = auraInputTag();
     expect(input).not.toContain('aria-describedby');
   });
@@ -240,7 +240,7 @@ describe('DerivedTotalsPanel Weak Enchanter lab-total read-out (round 3, G2)', (
   // Weak Enchanter magus saw no mechanical effect of the Flaw anywhere.
   it('shows the enchanting figure only when it differs from the plain total', () => {
     store.derived = derivedFixture({
-      is_magus: true,
+      hermetically_trained: true,
       lab_totals: [
         {
           technique: 'art.creo',
@@ -259,7 +259,7 @@ describe('DerivedTotalsPanel Weak Enchanter lab-total read-out (round 3, G2)', (
 
   it('hides the enchanting row for a magus without Weak Enchanter (enchanting === total)', () => {
     store.derived = derivedFixture({
-      is_magus: true,
+      hermetically_trained: true,
       lab_totals: [
         {
           technique: 'art.creo',

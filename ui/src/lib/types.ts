@@ -954,7 +954,10 @@ export interface SurfacedModifier {
 
 // The full read-only play-stat read-out returned by the `derived_totals` command.
 export interface DerivedTotals {
-  is_magus: boolean;
+  // D56/A0: renamed from `is_magus`, and no longer just a real magus — reads
+  // true for any entity `is_hermetically_trained` (union with an entity-level
+  // selection effect), e.g. a future Abandoned Apprentice test fixture.
+  hermetically_trained: boolean;
   lab_totals: LabTotal[];
   casting_totals: CastingTotal[];
   penetration: PenetrationLine[];

@@ -3,7 +3,7 @@
   import type { DerivedTotals } from '../types';
 
   // Split out of `DerivedTotalsPanel.svelte` (V26, full-audit round). Magus-only
-  // (the parent mounts this only inside its own `{#if d.is_magus}` block).
+  // (the parent mounts this only inside its own `{#if d.hermetically_trained}` block).
   // Self-gated on `d.familiar`, matching the original inline `{#if}` exactly.
 
   let { d }: { d: DerivedTotals } = $props();

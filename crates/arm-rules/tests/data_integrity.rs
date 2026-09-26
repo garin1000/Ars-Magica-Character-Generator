@@ -3124,7 +3124,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     let d = arm_rules::derived_totals(&e, &rs);
 
     // --- Magic totals present (magus) ------------------------------------
-    assert!(d.is_magus, "magus profile drives magic totals");
+    assert!(d.hermetically_trained, "magus profile drives magic totals");
     assert!(!d.lab_totals.is_empty(), "lab totals populated");
     assert!(!d.casting_totals.is_empty(), "casting totals populated");
 

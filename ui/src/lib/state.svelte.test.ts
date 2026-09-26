@@ -29,7 +29,7 @@ vi.mock('./ipc', () => ({
     characteristic_floors: {},
   }),
   derivedTotals: vi.fn().mockResolvedValue({
-    is_magus: false,
+    hermetically_trained: false,
     lab_totals: [],
     casting_totals: [],
     penetration: [],

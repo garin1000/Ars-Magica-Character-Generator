@@ -62,7 +62,7 @@ function resetEntity(): void {
 
 function derivedFixture(overrides: Partial<DerivedTotals> = {}): DerivedTotals {
   return {
-    is_magus: false,
+    hermetically_trained: false,
     lab_totals: [],
     casting_totals: [],
     penetration: [],

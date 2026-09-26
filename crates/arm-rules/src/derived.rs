@@ -707,8 +707,11 @@ pub fn surfaced_modifiers(entity: &Entity, ruleset: &Ruleset) -> Vec<SurfacedMod
 /// the frontend by the `derived_totals` Tauri command.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DerivedTotals {
-    /// Whether the character is a magus (magic totals are present only then).
-    pub is_magus: bool,
+    /// Whether the character is Hermetically trained (magic totals are present
+    /// only then) — `is_hermetically_trained` (D56/A0), not just a real magus
+    /// profile: an entity whose selections confer training (e.g. the Abandoned
+    /// Apprentice Flaw) reads true here too.
+    pub hermetically_trained: bool,
     /// Per-`(Technique, Form)` Lab Totals (magi only; empty otherwise).
     pub lab_totals: Vec<LabTotal>,
     /// Per-`(Technique, Form)` Casting Totals (magi only; empty otherwise).
@@ -762,17 +765,15 @@ pub struct DerivedTotals {
 /// Computes the full play-stat read-out for `entity`. Pure and read-only: reuses
 /// `effective.rs` for effective scores, Decrepitude, and Warping, and never
 /// mutates or recomputes creation legality. Magic totals are computed only for a
-/// magus (per the type profile's `hermetically_trained` flag).
+/// Hermetically trained entity (`is_hermetically_trained`, D56/A0 — not just a
+/// real magus, but also a test fixture — and, once D3 ships, the Abandoned
+/// Apprentice — whose selections confer training).
 pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
-    // Bare profile rename only (compiler-forced by D56/A0's `is_magus` split):
-    // switching this (and the `is_magus` DTO field/local name below) to the
-    // entity-level union (`is_hermetically_trained`) is sub-slice 2's own
-    // scope, with its own first failing test — see
-    // `docs/vf-audit/design-a0-is-magus-split.md` § 5.
-    let is_magus = ruleset
-        .profile(&entity.type_id)
-        .map(|p| p.hermetically_trained)
-        .unwrap_or(false);
+    let trained = crate::effective::is_hermetically_trained(
+        entity,
+        ruleset,
+        ruleset.profile(&entity.type_id),
+    );
     // A supernatural being (Might Score) has Magic Resistance too, even though it
     // is not a magus. Source: RoP:M:1472.
     let has_might = crate::effective::effective_might(entity, ruleset).is_some();
@@ -783,48 +784,48 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
     // grant. The store recomputes on every debounced keystroke, so this was the
     // hottest path in the engine. Anything else wanting the grid should take it as
     // a parameter rather than add a fourth build.
-    let lab = if is_magus {
+    let lab = if trained {
         lab_totals(entity, ruleset)
     } else {
         Vec::new()
     };
     // Bound before the struct literal so both can borrow `lab`, which is then
     // moved into the `lab_totals` field.
-    let masterpiece = if is_magus {
+    let masterpiece = if trained {
         masterpiece_item_cap(&lab, entity, ruleset)
     } else {
         None
     };
-    let familiar = if is_magus {
+    let familiar = if trained {
         familiar_readout(&lab, entity)
     } else {
         None
     };
     DerivedTotals {
-        is_magus,
+        hermetically_trained: trained,
         lab_totals: lab,
-        casting_totals: if is_magus {
+        casting_totals: if trained {
             casting_totals(entity, ruleset)
         } else {
             Vec::new()
         },
-        penetration: if is_magus {
+        penetration: if trained {
             penetration(entity, ruleset)
         } else {
             Vec::new()
         },
-        magic_resistance: if is_magus || has_might {
+        magic_resistance: if trained || has_might {
             magic_resistance(entity, ruleset)
         } else {
             Vec::new()
         },
-        longevity: if is_magus {
+        longevity: if trained {
             longevity_bonus(entity, ruleset)
         } else {
             None
         },
         masterpiece,
-        talisman_capacity: if is_magus {
+        talisman_capacity: if trained {
             talisman_capacity(entity, ruleset)
         } else {
             None
@@ -973,7 +974,10 @@ mod tests {
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "health_mod", "track": "fatigue_roll", "amount": 3 }] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "confers_hermetic_training" }] }
         ]"#;
         let types = r#"[
           { "id": "magus", "hermetically_trained": true, "order_member": true,
@@ -1902,6 +1906,74 @@ mod tests {
         assert_eq!(out.focus_powers[0].initiative, -1); // Qik 1 − magnitude 2
 
         assert!(derived_totals(&magus(), &rs).focus_powers.is_empty());
+    }
+
+    /// D56/A0's sub-slice-2 headline case: a grog (untrained profile) holding a
+    /// **test-only fixture** selection that carries `Effect::ConfersHermeticTraining`
+    /// gets the magic totals a magus gets — Lab, Casting and Penetration all
+    /// populated — because `derived_totals` must key on `is_hermetically_trained`,
+    /// not the bare profile flag. The real `flaw.abandoned_apprentice` carries no
+    /// such effect yet (D3), so it is unaffected by this fixture.
+    #[test]
+    fn derived_totals_for_a_trained_non_magus_test_fixture_include_casting_lab_and_penetration() {
+        let rs = ruleset();
+        let mut e = grog();
+        e.selections = vec![Selection::new(Id::new("flaw.test_confers_training"))];
+        set_char(&mut e, Characteristic::Int, 3);
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        e.ability_scores = vec![
+            AbilityScore {
+                ability: Id::new("ability.magic_theory"),
+                parameter: None,
+                specialty: None,
+                score: 4,
+            },
+            AbilityScore {
+                ability: Id::new("ability.penetration"),
+                parameter: None,
+                specialty: None,
+                score: 4,
+            },
+        ];
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.pilum_of_fire"),
+            level: None,
+            mastery: None,
+            parameter: None,
+            mastery_abilities: Vec::new(),
+        }];
+
+        let out = derived_totals(&e, &rs);
+        assert!(
+            out.hermetically_trained,
+            "the fixture selection must union in"
+        );
+        assert!(!out.lab_totals.is_empty(), "lab totals populated");
+        assert!(!out.casting_totals.is_empty(), "casting totals populated");
+        assert!(!out.penetration.is_empty(), "penetration lines populated");
+
+        // Without the fixture effect, the same grog gets none of them — the gate
+        // genuinely switched on, it did not stand down for every grog.
+        let mut untrained = grog();
+        untrained.characteristics = e.characteristics.clone();
+        untrained.art_scores = e.art_scores.clone();
+        untrained.ability_scores = e.ability_scores.clone();
+        untrained.spells = e.spells.clone();
+        let untrained_out = derived_totals(&untrained, &rs);
+        assert!(!untrained_out.hermetically_trained);
+        assert!(untrained_out.lab_totals.is_empty());
+        assert!(untrained_out.casting_totals.is_empty());
+        assert!(untrained_out.penetration.is_empty());
     }
 
     /// Bond-invested power levels are summed for information only: "there is no
@@ -3450,11 +3522,11 @@ mod tests {
     fn magic_totals_only_for_magi() {
         let rs = ruleset();
         let g = derived_totals(&grog(), &rs);
-        assert!(!g.is_magus);
+        assert!(!g.hermetically_trained);
         assert!(g.lab_totals.is_empty());
         assert!(g.casting_totals.is_empty());
         let m = derived_totals(&magus(), &rs);
-        assert!(m.is_magus);
+        assert!(m.hermetically_trained);
         assert!(!m.lab_totals.is_empty());
         assert!(!m.casting_totals.is_empty());
     }

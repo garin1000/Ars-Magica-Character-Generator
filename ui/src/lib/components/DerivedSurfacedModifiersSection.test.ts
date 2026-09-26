@@ -8,7 +8,7 @@ import DerivedSurfacedModifiersSection from './DerivedSurfacedModifiersSection.s
 /** A minimal, complete DerivedTotals fixture; only `surfaced_modifiers` varies. */
 function derivedFixture(surfaced_modifiers: SurfacedModifier[]): DerivedTotals {
   return {
-    is_magus: false,
+    hermetically_trained: false,
     lab_totals: [],
     casting_totals: [],
     penetration: [],

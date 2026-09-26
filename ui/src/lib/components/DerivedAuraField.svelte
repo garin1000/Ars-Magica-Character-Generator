@@ -3,7 +3,7 @@
   import { I32_MAX, I32_MIN } from '../derive';
 
   // Split out of `DerivedTotalsPanel.svelte` (V26, full-audit round). Magus-only
-  // (the parent mounts this only inside its own `{#if d.is_magus}` block), and
+  // (the parent mounts this only inside its own `{#if d.hermetically_trained}` block), and
   // otherwise fully self-sufficient off the store — mirroring how
   // `FamiliarPanel`/`TalismanPanel` mount beside `MagicPossessions` with no
   // props: nothing here comes from the parent's own `derived` read-out.

@@ -38,7 +38,7 @@
 
     <DerivedSummarySection {d} />
 
-    {#if d.is_magus}
+    {#if d.hermetically_trained}
       <DerivedAuraField />
       <DerivedLabCastingSection {d} />
       <DerivedPenetrationSection {d} />

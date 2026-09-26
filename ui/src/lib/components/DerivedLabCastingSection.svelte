@@ -5,7 +5,7 @@
   import type { Addend, CastingTotal, DerivedTotals } from '../types';
 
   // Split out of `DerivedTotalsPanel.svelte` (V26, full-audit round). Magus-only
-  // (the parent mounts this only inside its own `{#if d.is_magus}` block).
+  // (the parent mounts this only inside its own `{#if d.hermetically_trained}` block).
 
   let { d }: { d: DerivedTotals } = $props();
 
