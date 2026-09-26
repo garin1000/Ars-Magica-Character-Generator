@@ -313,6 +313,7 @@
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+    "max_total": 255,
     "source": { "anchor": "careless-with-ability", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5773, 5776] }
   },
   {
@@ -697,7 +698,6 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "max_per_target": 255,
     "source": { "anchor": "deteriorating-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5944, 5949] }
   },
   {
@@ -1030,6 +1030,7 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "flaw.false_power" },
     "parameters": [{ "key": "virtue", "type": "ref", "domain": "item", "require_categories": ["hermetic", "special", "supernatural"], "require_possessed": true, "forbid_tainted": true }],
+    "max_total": 255,
     "source": { "anchor": "false-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6080, 6097] }
   },
   {
@@ -1126,6 +1127,7 @@
     "entity_kinds": ["character"],
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "effects": [{ "type": "magic_resistance_mod", "kind": "halved_parma", "param": "form" }],
+    "max_total": 255,
     "source": { "anchor": "flawed-parma-magica", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6142, 6145] }
   },
   {
@@ -1488,7 +1490,7 @@
     "id": "flaw.independent_craftsman",
     "kind": "flaw",
     "magnitude": "minor",
-    "categories": ["general"],
+    "categories": ["personality"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "independent-craftsman", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6302, 6305] }
@@ -1614,6 +1616,7 @@
     "entity_kinds": ["character"],
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus", "param": "form" }],
+    "max_total": 255,
     "source": { "anchor": "limited-magic-resistance", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6346, 6349] }
   },
   {
@@ -1883,7 +1886,8 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }, { "key": "ability", "type": "ref", "domain": "ability", "max_per_value": 1 }],
+    "parameters": [{ "key": "realm", "type": "ref", "domain": "realm", "max_per_value": 255 }, { "key": "ability", "type": "ref", "domain": "ability", "max_per_value": 1 }],
+    "max_total": 255,
     "source": { "anchor": "necessary-realm-aura-for-ability", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6480, 6487] }
   },
   {
@@ -2182,11 +2186,12 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
+    "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic", "max_per_value": 255 }],
     "effects": [
       { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": -1 }
     ],
     "max_per_target": 2,
+    "max_total": 255,
     "source": { "anchor": "poor-characteristic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6598, 6600] }
   },
   {
@@ -2433,6 +2438,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "power", "type": "ref", "domain": "text", "require_power": true }],
+    "max_total": 255,
     "source": { "anchor": "restricted-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6687, 6690] }
   },
   {
@@ -2591,6 +2597,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "power", "type": "ref", "domain": "text", "require_power": true }],
+    "max_total": 255,
     "source": { "anchor": "slow-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6759, 6762] }
   },
   {
@@ -3066,6 +3073,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "health_mod", "track": "casting_fatigue", "amount": -1 }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "vulnerable-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6993, 7004] }
   },
   {
@@ -3075,7 +3083,6 @@
     "categories": ["hermetic"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "max_per_target": 255,
     "source": { "anchor": "vulnerable-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7005, 7010] }
   },
   {
@@ -3142,6 +3149,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "characteristic_points", "amount": -3 }],
     "max_per_target": 2,
+    "max_total": 2,
     "source": { "anchor": "weak-characteristics", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7056, 7059] }
   },
   {
@@ -3316,6 +3324,7 @@
     "effects": [
       { "type": "affinity_ability_cost", "param": "ability", "counts_as_num": 3, "counts_as_den": 2 }
     ],
+    "max_total": 255,
     "source": { "anchor": "affinity-with-ability", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3372, 3374] }
   },
   {
@@ -3822,6 +3831,7 @@
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "might_grant", "realm": "infernal", "score": 2 }],
     "max_per_target": 255,
+    "max_total": 255,
     "max_share_of_kind": { "numerator": 1, "denominator": 2 },
     "source": { "anchor": "demonic-might", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3663, 3666] }
   },
@@ -3835,6 +3845,7 @@
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "power_levels", "amount": 20 }],
     "max_per_target": 255,
+    "max_total": 255,
     "max_share_of_kind": { "numerator": 1, "denominator": 2 },
     "source": { "anchor": "demonic-powers", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3667, 3670] }
   },
@@ -4029,6 +4040,7 @@
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+    "max_total": 255,
     "source": { "anchor": "extractor-of-form-vis", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3779, 3782] }
   },
   {
@@ -4224,6 +4236,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "max_per_target": 255,
+    "max_total": 255,
     "effects": [{ "type": "focus_points", "amount": 25 }],
     "source": { "anchor": "focus-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3895, 3906] }
   },
@@ -4234,7 +4247,8 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "category", "type": "ref", "domain": "enumerated", "values": ["folk_magic.abjuration", "folk_magic.divination", "folk_magic.evil_eye", "folk_magic.healing"] }, { "key": "realm", "type": "ref", "domain": "realm", "at_most_one_of": [["realm.divine", "realm.infernal"]] }],
+    "parameters": [{ "key": "category", "type": "ref", "domain": "enumerated", "values": ["folk_magic.abjuration", "folk_magic.divination", "folk_magic.evil_eye", "folk_magic.healing"], "max_per_value": 255 }, { "key": "realm", "type": "ref", "domain": "realm", "at_most_one_of": [["realm.divine", "realm.infernal"]], "max_per_value": 255 }],
+    "max_total": 255,
     "source": { "anchor": "folk-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3907, 3920] }
   },
   {
@@ -4385,11 +4399,12 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
+    "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic", "max_per_value": 255 }],
     "effects": [
       { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": 1 }
     ],
     "max_per_target": 2,
+    "max_total": 255,
     "source": { "anchor": "great-characteristic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3987, 3989] }
   },
   {
@@ -4408,7 +4423,6 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "max_per_target": 255,
     "source": { "anchor": "greater-immunity", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4009, 4016] }
   },
   {
@@ -4420,6 +4434,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "power_levels", "amount": 50 }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "greater-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4017, 4026] }
   },
   {
@@ -4583,6 +4598,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "characteristic_points", "amount": 3 }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "improved-characteristics", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4103, 4105] }
   },
   {
@@ -4827,6 +4843,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+    "max_total": 255,
     "source": { "anchor": "learn-ability-from-mistakes", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4241, 4244] }
   },
   {
@@ -4875,6 +4892,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "power_levels", "amount": 25 }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "lesser-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4279, 4286] }
   },
   {
@@ -5018,6 +5036,7 @@
     "prerequisites": { "kind": "has", "value": "virtue.redcap" },
     "effects": [{ "type": "item_level_budget", "amount": 25 }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "magic-items", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4347, 4350] }
   },
   {
@@ -5172,6 +5191,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+    "max_total": 255,
     "source": { "anchor": "master-of-form-creatures", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4463, 4466] }
   },
   {
@@ -5193,6 +5213,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "spell_mastery_xp", "amount": 50 }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "mastered-spells", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4471, 4475] }
   },
   {
@@ -5233,6 +5254,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["academic", "arcane", "general", "martial", "supernatural"] }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "mentored-by-demons", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4496, 4499] }
   },
   {
@@ -5303,6 +5325,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "minor-enchantments", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4532, 4535] }
   },
   {
@@ -5475,6 +5498,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "power_levels", "amount": 25 }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "personal-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4714, 4727] }
   },
   {
@@ -5608,6 +5632,7 @@
     "entity_kinds": ["character"],
     "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
     "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }],
+    "max_total": 255,
     "source": { "anchor": "puissant-ability", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4814, 4816] }
   },
   {
@@ -5631,6 +5656,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "special_casting_mod", "kind": "quiet_words" }],
     "max_per_target": 2,
+    "max_total": 2,
     "source": { "anchor": "quiet-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4822, 4827] }
   },
   {
@@ -5727,6 +5753,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "power_levels", "amount": 25 }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "ritual-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4870, 4877] }
   },
   {
@@ -5950,7 +5977,6 @@
     "categories": ["general"],
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "max_per_target": 255,
     "source": { "anchor": "social-contacts", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4988, 4991] }
   },
   {
@@ -5974,6 +6000,7 @@
       { "type": "magic_resistance_mod", "kind": "aura_bonus" }
     ],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "special-circumstances", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4998, 5001] }
   },
   {
@@ -6019,6 +6046,7 @@
       { "type": "power_levels", "amount": 30 }
     ],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "strong-angelic-heritage", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5022, 5031] }
   },
   {
@@ -6057,6 +6085,7 @@
         "abilities": ["ability.dominion_lore", "ability.faerie_lore", "ability.infernal_lore", "ability.magic_lore"]
       }
     ],
+    "max_total": 255,
     "source": { "anchor": "student-of-realm", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5052, 5055] }
   },
   {
@@ -6356,6 +6385,7 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "power", "type": "ref", "domain": "text", "require_power": true }],
+    "max_total": 255,
     "source": { "anchor": "variable-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5199, 5206] }
   },
   {
@@ -6425,6 +6455,7 @@
     "entity_kinds": ["character"],
     "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "casting_total_mod", "amount": 3, "scope": "all" }],
+    "max_total": 255,
     "source": { "anchor": "ways-of-the-land", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5231, 5234] }
   },
   {
@@ -6493,6 +6524,7 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "health_mod", "track": "casting_fatigue", "amount": 1 }],
     "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "withstand-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5261, 5282] }
   }
 ]

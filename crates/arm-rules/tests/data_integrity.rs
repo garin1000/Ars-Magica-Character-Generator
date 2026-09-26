@@ -4294,11 +4294,11 @@ fn the_form_scoped_magic_resistance_flaws_name_their_form() {
              (ArMDE:{line})"
         );
         assert_eq!(
-            def.max_per_value,
-            u8::MAX,
-            "{id} needs no per-value cap: with one parameter, `max_per_target`'s \
-             own key IS the Form, so a per-value cap would be a second spelling of \
-             the same ceiling"
+            def.max_per_value, 1,
+            "{id} needs no EXPLICIT per-value cap: with one parameter, \
+             `max_per_target`'s own key IS the Form, so an explicit cap here \
+             would be a second spelling of the same ceiling. D10's default of \
+             1 already agrees with `max_per_target: 1` and adds nothing"
         );
     }
 }
@@ -6985,11 +6985,28 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 /// shipped with was over-permissive. Pinned by
 /// `the_form_scoped_magic_resistance_flaws_name_their_form` and
 /// `a_form_scoped_mr_flaw_repeats_across_forms_but_never_within_one` instead.
+///
+/// **D10's §3.7 sweep (Q4) removed four more**: `virtue.greater_immunity`
+/// ("with a **different immunity each time**", `ArMDE:4015`),
+/// `flaw.deteriorating_power` ("if the character has **more than one**
+/// Power" — implicitly a different one per copy, the same shape as
+/// `flaw.slow_power`/`flaw.restricted_power`/`virtue.variable_power`, which
+/// already carry a `power` parameter for exactly this), `virtue.social_contacts`
+/// ("**each time specifying a different social group**", `ArMDE:4990`), and
+/// `flaw.vulnerable_magic` ("so long as **a different condition** is specified
+/// for each", `ArMDE:7009`, F-541's defect). All four are **vary-the-target**,
+/// not level-stack: an identical second copy is not what the passage grants,
+/// but none of the four carries the parameter that would let the engine tell
+/// two copies apart. Adding one is D9 part 1 / slice X6, not this one — see
+/// `corrections.md` § 3.7's "catalogue sweep this group owes". The interim,
+/// safe state is the plain multiplicity default (once): each was shipping
+/// `max_per_target: 255`, now removed, so `default_max_per_target` (1) applies
+/// until X6 gives them a real target key. Pinned by
+/// `vary_the_target_items_deferred_to_x6_default_to_once` below.
 const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.demonic_might", 3665),
     ("virtue.demonic_powers", 3669),
     ("virtue.focus_power", 3903),
-    ("virtue.greater_immunity", 4015),
     ("virtue.greater_power", 4021),
     ("virtue.improved_characteristics", 4105),
     ("virtue.lesser_power", 4283),
@@ -6999,12 +7016,22 @@ const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.minor_enchantments", 4534),
     ("virtue.personal_power", 4724),
     ("virtue.ritual_power", 4874),
-    ("virtue.social_contacts", 4990),
     ("virtue.special_circumstances", 5000),
     ("virtue.strong_angelic_heritage", 5030),
     ("virtue.withstand_casting", 5265),
-    ("flaw.deteriorating_power", 5948),
     ("flaw.vulnerable_casting", 6997),
+];
+
+/// **D10's §3.7 sweep (Q4)**: the four vary-the-target items that used to sit
+/// in [`UNLIMITED_REPEAT_ITEMS`] — see that constant's doc comment for why each
+/// is disqualified. None carries the parameter its passage's "a different X
+/// each time" would need, so none can express the real rule yet; the safe
+/// interim is the plain default of once, deferred to X6 (D9 part 1) to give
+/// each a proper target parameter.
+const VARY_TARGET_DEFERRED_TO_X6_ITEMS: &[(&str, u32)] = &[
+    ("virtue.greater_immunity", 4015),
+    ("flaw.deteriorating_power", 5948),
+    ("virtue.social_contacts", 4990),
     ("flaw.vulnerable_magic", 7009),
 ];
 
@@ -8003,6 +8030,17 @@ fn shipped_repeatable_items_carry_their_rulebook_ceiling() {
             "{id} carries no target parameter, so every copy shares one \
              duplicate key and only max_per_target can permit the repeat"
         );
+        // D10: with no parameter, every copy shares ONE `(item_ref, {})` key,
+        // so `max_total` and `max_per_target` govern the exact same set of
+        // copies. The new `max_total` default of 1 would silently override a
+        // higher `max_per_target` unless declared explicitly to match.
+        assert_eq!(
+            item.max_total,
+            u8::MAX,
+            "{id} has no parameter to carry a total ceiling separately from \
+             its per-target one, so max_total must explicitly match \
+             max_per_target's 'no stated ceiling' (ArMDE:{line}, D10)"
+        );
     }
 
     for (id, line) in TWICE_ONLY_REPEAT_ITEMS {
@@ -8013,6 +8051,31 @@ fn shipped_repeatable_items_carry_their_rulebook_ceiling() {
             item.max_per_target, 2,
             "{id} may be taken exactly twice \
              (ArMDE:{line})"
+        );
+    }
+}
+
+/// D10's §3.7 sweep (Q4): the four vary-the-target items in
+/// [`VARY_TARGET_DEFERRED_TO_X6_ITEMS`] default to ONCE until X6 gives each a
+/// real target parameter — an identical second copy is never what the
+/// passage grants, and none of the four can currently record what the copies
+/// must differ BY.
+#[test]
+fn vary_the_target_items_deferred_to_x6_default_to_once() {
+    let rs = load_ruleset();
+
+    for (id, line) in VARY_TARGET_DEFERRED_TO_X6_ITEMS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert_eq!(
+            item.max_per_target, 1,
+            "{id} cannot yet express 'a different X each time' (ArMDE:{line}), \
+             so the safe interim is the plain default of once, deferred to X6"
+        );
+        assert!(
+            item.parameters.is_empty(),
+            "{id} has no target parameter yet — that is exactly what X6 adds"
         );
     }
 }
@@ -9006,4 +9069,24 @@ fn the_combat_roll_flaws_penalize_the_combat_ability_totals() {
             "{id} must not modify Initiative"
         );
     }
+}
+
+/// D54 (Q-111): `ArMDE:6304` ends "If you are not using the rules in City and
+/// Guild (page 73), treat this as a Personality Flaw." The app supports no
+/// supplements yet, so that condition is satisfied today and the shipped
+/// category must be `personality`, not the book's own descriptor/index
+/// spelling of `General` (which is the *City and Guild*-in-play reading).
+/// Registered in `corrections.md` § 8a for the future supplement-selection
+/// feature to flip back.
+#[test]
+fn independent_craftsman_ships_as_personality_pending_city_and_guild() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("flaw.independent_craftsman"))
+        .expect("flaw.independent_craftsman must ship");
+    assert_eq!(
+        item.categories,
+        vec!["personality".to_string()],
+        "no supplement support yet, so ArMDE:6304's fallback applies (D54)"
+    );
 }

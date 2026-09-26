@@ -197,6 +197,14 @@ beforeEach(() => {
   store.view = 'editor';
   resetEntity();
   installRuleset([]);
+  // D10 surfaced a pre-existing leak: `effective` is a plain field on the
+  // shared singleton, so a test that sets `store.effective` directly (rather
+  // than through `revalidate()`) left its granted selections visible to every
+  // later test in the file. That never mattered while an absent `max_total`
+  // meant unlimited; once absent came to mean "capped at one", a stray
+  // granted selection from an earlier test was enough to sit a later test's
+  // fixture AT its cap before it ever added anything.
+  store.effective = null;
 });
 
 afterEach(() => {
@@ -1366,10 +1374,15 @@ describe('addSelection', () => {
   });
 
   it('allows a parameterized item to appear several times', () => {
+    // D10: a repeat across different targets is no longer the field's
+    // default — the fixture must declare its own `max_total` explicitly, the
+    // way every shipped repeater (Puissant Ability, Great Characteristic, …)
+    // now does in `rules/core/virtues_flaws.json`.
     installRuleset([
       item({
         id: 'virtue.great',
         parameters: [{ key: 'characteristic', type: 'ref', domain: 'characteristic' }],
+        max_total: 255,
       }),
     ]);
     store.addSelection('virtue.great');
@@ -1378,7 +1391,11 @@ describe('addSelection', () => {
   });
 
   it('allows an item with max_per_target > 1 to appear several times', () => {
-    installRuleset([item({ id: 'virtue.stacks', max_per_target: 3 })]);
+    // D10: with no parameter, `max_per_target` and `max_total` govern the same
+    // set of copies, so `max_total` must explicitly match (or exceed)
+    // `max_per_target` — exactly the fix `great_characteristic` /
+    // `poor_characteristic` needed on the Rust side.
+    installRuleset([item({ id: 'virtue.stacks', max_per_target: 3, max_total: 3 })]);
     store.addSelection('virtue.stacks');
     store.addSelection('virtue.stacks');
     expect(store.entity.selections).toHaveLength(2);
@@ -1432,12 +1449,14 @@ describe('addSelection', () => {
       expect(store.entity.selections).toHaveLength(1);
     });
 
-    it('never caps an item with no stated max_total (default unlimited)', () => {
+    // D10: absent `max_total` now mirrors the engine's own default of 1
+    // (once), not unlimited — see `derive.ts::atMaxTotalRefs`'s doc comment.
+    it('caps an item with no stated max_total at one (D10 default)', () => {
       installCapped(undefined);
       store.addSelection('virtue.puissant_art');
       store.addSelection('virtue.puissant_art');
       store.addSelection('virtue.puissant_art');
-      expect(store.entity.selections).toHaveLength(3);
+      expect(store.entity.selections).toHaveLength(1);
     });
   });
 });
@@ -2657,7 +2676,9 @@ describe('removeSelectionAt', () => {
 
 describe('setParamAt', () => {
   it('sets a param on the targeted row only', () => {
-    installRuleset([item({ id: 'v.great', max_per_target: 5 })]);
+    // D10: max_total must explicitly match max_per_target when there is no
+    // parameter to separate the two axes (same fix as great_characteristic).
+    installRuleset([item({ id: 'v.great', max_per_target: 5, max_total: 5 })]);
     store.addSelection('v.great');
     store.addSelection('v.great');
     store.setParamAt(0, 'characteristic', 'characteristic.per');

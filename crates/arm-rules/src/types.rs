@@ -2269,14 +2269,18 @@ fn is_one_u8(value: &u8) -> bool {
     *value == 1
 }
 
-/// The default per-parameter-value ceiling: no stated limit. See
-/// [`ParameterDef::max_per_value`]'s doc comment for the `u8::MAX` sentinel,
-/// which it shares with [`PointItem::max_total`].
-fn default_max_per_value() -> u8 {
-    u8::MAX
+/// The default per-parameter-value ceiling: once. `ArMDE:2814` — "A Virtue or
+/// Flaw may be taken more than once only if the description explicitly allows
+/// it. Most Virtues and Flaws may only be taken once." — is a statement about
+/// the ABSENT case, so the model's default must be once, not "no stated
+/// limit" (D10). An item whose descriptor allows repeating a value must
+/// declare so explicitly, with the `u8::MAX` sentinel documented on
+/// [`ParameterDef::max_per_value`], which it shares with [`PointItem::max_total`].
+pub(crate) fn default_max_per_value() -> u8 {
+    1
 }
 
-fn is_default_max_per_value(value: &u8) -> bool {
+pub(crate) fn is_default_max_per_value(value: &u8) -> bool {
     *value == default_max_per_value()
 }
 
@@ -2289,11 +2293,16 @@ fn is_default_max_per_target(value: &u8) -> bool {
     *value == default_max_per_target()
 }
 
-/// The default total-selection ceiling: no stated limit. See
-/// [`PointItem::max_total`]'s doc comment and RULES.md, "Selection
-/// multiplicity — `max_total`", for the `u8::MAX` sentinel convention.
+/// The default total-selection ceiling: once. `ArMDE:2814` — "A Virtue or
+/// Flaw may be taken more than once only if the description explicitly allows
+/// it. Most Virtues and Flaws may only be taken once." — so absence must mean
+/// once, not "no stated limit" (D10 — the model's default used to be exactly
+/// inverted from the book's). An item whose descriptor allows repeating
+/// across targets must declare so explicitly, with the `u8::MAX` sentinel
+/// documented on this field's own doc comment and RULES.md, "Selection
+/// multiplicity — `max_total`".
 fn default_max_total() -> u8 {
-    u8::MAX
+    1
 }
 
 fn is_default_max_total(value: &u8) -> bool {
@@ -6681,8 +6690,11 @@ mod tests {
         assert_eq!(item.max_total, 3);
     }
 
+    /// D10: absent `max_total` means ONCE, not "no ceiling" — the model's
+    /// default used to be exactly the inverse of `ArMDE:2814`'s "Most Virtues
+    /// and Flaws may only be taken once."
     #[test]
-    fn max_total_defaults_to_255_and_is_omitted_when_default() {
+    fn max_total_defaults_to_one_and_is_omitted_when_default() {
         let json = r#"{
           "id": "virtue.keen_vision",
           "kind": "virtue",
@@ -6691,7 +6703,7 @@ mod tests {
           "categories": ["general"]
         }"#;
         let item: PointItem = serde_json::from_str(json).unwrap();
-        assert_eq!(item.max_total, u8::MAX);
+        assert_eq!(item.max_total, 1);
         // The default must not appear in canonical output (zero-noise diffs).
         let out = serde_json::to_string(&item).unwrap();
         assert!(
@@ -6886,6 +6898,20 @@ mod tests {
         assert_eq!(p.key, "ability");
         assert_eq!(p.param_type, ParamType::Ref);
         assert_eq!(p.domain, ParameterDomain::Ability);
+    }
+
+    /// D10: absent `max_per_value` means ONCE, not "no ceiling" — the same
+    /// inversion `max_total` gets, and for the same reason (`ArMDE:2814`).
+    #[test]
+    fn max_per_value_defaults_to_one_and_is_omitted_when_default() {
+        let json = r#"{ "key": "ability", "type": "ref", "domain": "ability" }"#;
+        let param: ParameterDef = serde_json::from_str(json).unwrap();
+        assert_eq!(param.max_per_value, 1);
+        let out = serde_json::to_string(&param).unwrap();
+        assert!(
+            !out.contains("max_per_value"),
+            "default should be skipped: {out}"
+        );
     }
 
     #[test]

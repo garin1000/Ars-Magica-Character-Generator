@@ -454,9 +454,17 @@ export function totalCopies(
  * `validate_total_selection_cap` sums. Feeds both the Available picker's
  * `disabled` predicate (C) and an open grant menu's `atCapRefs` option (E), so
  * neither offers a pick the engine's `too_many_selections` validator would
- * immediately reject. An item with no stated `max_total` (the 255 "no ceiling"
- * sentinel — `max_total` absent here) can never appear in the result, and an
- * item with zero copies never does either (it cannot be AT a cap of at least 1).
+ * immediately reject.
+ *
+ * D10: a `max_total` absent from the wire ruleset means the engine's own
+ * default of 1 (once) applied, not "no ceiling" — the engine's serializer
+ * omits the field exactly when it equals whatever the current default is, so
+ * `?? 1` here is the mirror of `default_max_total` (`crates/arm-rules/src/types.rs`),
+ * not an independent guess. An item that legitimately repeats without bound
+ * always carries an explicit `max_total` in the shipped data (255, the "no
+ * ceiling the rules state" sentinel) and so is never affected by this default.
+ * An item with zero copies is never flagged either way (it cannot be AT a cap
+ * of at least 1).
  */
 export function atMaxTotalRefs(
   localized: LocalizedRuleset,
@@ -465,8 +473,8 @@ export function atMaxTotalRefs(
 ): Set<string> {
   const refs = new Set<string>();
   for (const item of Object.values(localized.ruleset.point_items)) {
-    if (item.max_total === undefined) continue;
-    if (totalCopies(bought, granted, item.id) >= item.max_total) refs.add(item.id);
+    const max = item.max_total ?? 1;
+    if (totalCopies(bought, granted, item.id) >= max) refs.add(item.id);
   }
   return refs;
 }

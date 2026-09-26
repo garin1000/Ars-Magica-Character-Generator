@@ -2206,7 +2206,10 @@ fn validate_parameter_defs(
         if copies == CopiesJudgedTogether::No {
             for (field, declared) in [
                 ("at_most_one_of", !param.at_most_one_of.is_empty()),
-                ("max_per_value", param.max_per_value != u8::MAX),
+                (
+                    "max_per_value",
+                    !crate::types::is_default_max_per_value(&param.max_per_value),
+                ),
             ] {
                 if declared {
                     errors.push(format!(

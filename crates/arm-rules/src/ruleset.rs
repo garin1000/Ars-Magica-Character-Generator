@@ -2269,10 +2269,15 @@ mod tests {
     /// that looks like a rule and enforces nothing — exactly what the
     /// `require_categories` / `require_possessed` / `require_power` gates
     /// beside it exist to prevent.
+    ///
+    /// `max_per_value: 2` and not `1`: since D10 flipped the field's own
+    /// default to 1 (once), writing `1` explicitly is indistinguishable from
+    /// omitting it, so only a value that actually differs from the default
+    /// can prove the "was this declared at all" detection still works.
     #[test]
     fn across_copies_constraints_on_a_spell_parameter_are_rejected() {
         for constraint in [
-            r#""max_per_value": 1"#,
+            r#""max_per_value": 2"#,
             r#""at_most_one_of": [["art.ignem", "art.vim"]]"#,
         ] {
             let err = ruleset_with_spells(&format!(
@@ -5695,10 +5700,37 @@ mod tests {
     /// Row 19 "taken as": every item declaring a `category`-domain parameter
     /// must cap `max_total` at 1 — `ArMDE:5083` offers a choice between two
     /// READINGS of one item, not two items, and `taken_as` sitting inside the
-    /// `(item_ref, params)` duplicate key means a missing cap would let both
-    /// readings be held at once.
+    /// `(item_ref, params)` duplicate key means anything other than 1 would
+    /// let both readings be held at once. D10 flipped the *field's* own
+    /// default to 1, so the value under test here must be an explicit,
+    /// deliberately wrong one — omitting the field entirely no longer
+    /// violates this gate at all (see the test below).
     #[test]
-    fn taken_as_item_without_max_total_one_fails_integrity() {
+    fn taken_as_item_with_max_total_other_than_one_fails_integrity() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "virtue.sufi", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["social_status", "supernatural"],
+            "entity_kinds": ["character"], "max_total": 2,
+            "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
+                              "values": ["social_status", "supernatural"] }] }
+        ]"#;
+        let err = Ruleset::from_json("t", "1", items, VALID_TYPES)
+            .expect_err("a taken_as item with max_total other than 1 must fail integrity");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.sufi") && msg.contains("max_total"),
+            "the error must name the offending item and the field, got: {msg}"
+        );
+    }
+
+    /// D10's converse: omitting `max_total` on a `taken_as` item now defaults
+    /// to exactly 1, so this gate has nothing to reject — the general
+    /// multiplicity default already states the rule this gate used to have to
+    /// force authors to spell out.
+    #[test]
+    fn taken_as_item_with_max_total_omitted_passes_integrity() {
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
             "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
@@ -5708,12 +5740,8 @@ mod tests {
             "parameters": [{ "key": "taken_as", "type": "ref", "domain": "category",
                               "values": ["social_status", "supernatural"] }] }
         ]"#;
-        let err = Ruleset::from_json("t", "1", items, VALID_TYPES)
-            .expect_err("a taken_as item without max_total: 1 must fail integrity");
-        let msg = err.to_string();
-        assert!(
-            msg.contains("virtue.sufi") && msg.contains("max_total"),
-            "the error must name the offending item and the field, got: {msg}"
+        Ruleset::from_json("t", "1", items, VALID_TYPES).expect(
+            "an omitted max_total now defaults to 1 (D10), which already satisfies the gate",
         );
     }
 

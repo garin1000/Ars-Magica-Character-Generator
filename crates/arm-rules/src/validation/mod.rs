@@ -6993,8 +6993,17 @@ mod tests {
         );
     }
 
+    /// D10: "A Virtue or Flaw may be taken more than once only if the
+    /// description explicitly allows it. Most Virtues and Flaws may only be
+    /// taken once." (ArMDE:2814). The model's default used to be the inverse —
+    /// `u8::MAX`, "no ceiling" — which this test used to pin as correct. D10
+    /// inverts it: absent `max_total` now means once, and an item that
+    /// legitimately repeats across many targets (the real
+    /// `virtue.puissant_ability`) must declare so explicitly in
+    /// `rules/core/virtues_flaws.json`. This fixture's copy of the item
+    /// deliberately carries none, so it now exercises the DEFAULT.
     #[test]
-    fn item_with_no_max_total_is_unaffected() {
+    fn item_with_no_max_total_refuses_a_second_copy() {
         let rs = test_ruleset();
         let entity = make_entity(
             "companion",
@@ -7016,8 +7025,9 @@ mod tests {
 
         let result = validate(&entity, &rs);
         assert!(
-            !codes(&result).contains(&"too_many_selections".to_string()),
-            "an item with no stated max_total must never trip the total cap: {:?}",
+            codes(&result).contains(&"too_many_selections".to_string()),
+            "an item with no stated max_total must default to ONCE (D10), so 3 \
+             copies across 3 distinct targets must trip the total cap: {:?}",
             result.issues
         );
     }
@@ -7140,10 +7150,10 @@ mod tests {
       { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
       { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
       { "id": "flaw.necessary_aura", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
-        "categories": ["general"], "entity_kinds": ["character"],
+        "categories": ["general"], "entity_kinds": ["character"], "max_total": 255,
         "parameters": [
           { "key": "ability", "type": "ref", "domain": "ability", "max_per_value": 1 },
-          { "key": "realm", "type": "ref", "domain": "realm" }
+          { "key": "realm", "type": "ref", "domain": "realm", "max_per_value": 255 }
         ] }
     ]"#;
 
@@ -7303,8 +7313,14 @@ mod tests {
         );
     }
 
+    /// D10: absent means once. `PER_VALUE_UNCAPPED_ITEMS` declares no cap on
+    /// either key, which used to mean "no ceiling the rules state" and now
+    /// means "once per value" — the same inversion `default_max_total` gets.
+    /// An entry that genuinely repeats along one axis (Folk Magic's realm,
+    /// `ArMDE:3919`) must say so explicitly, the way
+    /// `PER_VALUE_EXPLICIT_UNLIMITED_ITEMS` below does.
     #[test]
-    fn a_parameter_with_no_stated_cap_never_trips_the_per_value_cap() {
+    fn a_parameter_with_no_stated_cap_defaults_to_once_per_value() {
         let rs = per_value_rs(PER_VALUE_UNCAPPED_ITEMS);
         let entity = per_value_entity(&[
             ("ability.artes_liberales", "realm.divine"),
@@ -7313,19 +7329,33 @@ mod tests {
 
         let found = codes(&validate(&entity, &rs));
         assert!(
-            !found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
-            "no cap in the data means no cap in the engine: {found:?}"
+            found.contains(&ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE.to_string()),
+            "no stated cap must default to once per value (D10): {found:?}"
         );
     }
 
-    /// The absent-cap default is the `u8::MAX` **sentinel** for "no ceiling the
-    /// rules state", not the number 255 — so it must not become one at 256
+    /// The same two-parameter Flaw with the `ability` key's cap EXPLICITLY
+    /// declared unlimited — the shape a legitimate repeater must now use,
+    /// since D10 flipped the silent default to once.
+    const PER_VALUE_EXPLICIT_UNLIMITED_ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
+      { "id": "flaw.necessary_aura", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
+        "categories": ["general"], "entity_kinds": ["character"],
+        "parameters": [
+          { "key": "ability", "type": "ref", "domain": "ability", "max_per_value": 255 },
+          { "key": "realm", "type": "ref", "domain": "realm" }
+        ] }
+    ]"#;
+
+    /// The declared-unlimited cap is the `u8::MAX` **sentinel** for "no ceiling
+    /// the rules state", not the number 255 — so it must not become one at 256
     /// copies. A crafted save is the only way to reach that count, and a save
     /// is a declared hostile-input surface: a finding invented there would
     /// name a rule no rulebook contains.
     #[test]
-    fn the_absent_per_value_cap_is_a_sentinel_and_not_the_number_255() {
-        let rs = per_value_rs(PER_VALUE_UNCAPPED_ITEMS);
+    fn an_explicit_unlimited_per_value_cap_is_a_sentinel_and_not_the_number_255() {
+        let rs = per_value_rs(PER_VALUE_EXPLICIT_UNLIMITED_ITEMS);
         let realms: Vec<Id> = Realm::ALL.iter().map(|realm| realm.id()).collect();
         // 256 copies naming ONE ability, all with distinct tuples, which is what
         // the counter sees; the realm values only keep the tuples apart.

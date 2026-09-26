@@ -1536,7 +1536,6 @@ carry `max_per_target: 255` in `rules/core/virtues_flaws.json`:
 | `virtue.demonic_might` | `ArMDE:3665` | "may take this Virtue more than once, though it can account for no more than half of the character's total Virtues" |
 | `virtue.demonic_powers` | `ArMDE:3669` | "may also take this Virtue more than once, though it can account for no more than half of the character's total Virtues" |
 | `virtue.focus_power` | `ArMDE:3903` | "may be taken more than once, and the points gained may be combined" |
-| `virtue.greater_immunity` | `ArMDE:4015` | "more than once, with a different immunity each time" |
 | `virtue.greater_power` | `ArMDE:4021` | "more than once, and the levels added together" |
 | `virtue.improved_characteristics` | `ArMDE:4105` | "You may take this Virtue multiple times." |
 | `virtue.lesser_power` | `ArMDE:4283` | "more than once, and the levels added together" |
@@ -1546,34 +1545,62 @@ carry `max_per_target: 255` in `rules/core/virtues_flaws.json`:
 | `virtue.minor_enchantments` | `ArMDE:4534` | "more than once: add the total levels together" |
 | `virtue.personal_power` | `ArMDE:4724` | "more than once, and the levels added together" |
 | `virtue.ritual_power` | `ArMDE:4874` | "more than once, and the levels added together" |
-| `virtue.social_contacts` | `ArMDE:4990` | "more than once, each time specifying a different social group" |
 | `virtue.special_circumstances` | `ArMDE:5000` | "more than once, but you only gain a +3 bonus even if more than one set of circumstances applies" |
 | `virtue.strong_angelic_heritage` | `ArMDE:5030` | "multiple times. Each additional time … increases by thirty the number of levels of holy powers" |
 | `virtue.withstand_casting` | `ArMDE:5265` | "more than once, and withstand 1 Fatigue level for each level of the Virtue" |
-| `flaw.deteriorating_power` | `ArMDE:5948` | "more than once, if the character has more than one Power" |
 | `flaw.vulnerable_casting` | `ArMDE:6997` | "may have, or acquire, this Flaw more than once, losing 1 extra Fatigue level for each level" |
-| `flaw.vulnerable_magic` | `ArMDE:7009` | "multiple times, so long as a different condition is specified for each" |
+
+Each of these is a **level-stack**: identical repeats are exactly what the
+passage grants (numeric pools combine, or Fatigue/level counts add), so no
+target parameter is needed and none carries one. D10 (below) additionally
+requires each to carry an explicit `max_total: 255` — with no parameter, every
+copy shares one duplicate key, so `max_total`'s own default would otherwise
+silently override the ceiling this table states.
+
+**Four more items used to sit in this table and no longer do**:
+`virtue.greater_immunity` (`ArMDE:4015`, "with a **different immunity** each
+time"), `flaw.deteriorating_power` (`ArMDE:5948`, "if the character has more
+than one Power" — implicitly a different one per copy), `virtue.social_contacts`
+(`ArMDE:4990`, "each time specifying a **different** social group"), and
+`flaw.vulnerable_magic` (`ArMDE:7009`, "so long as a **different** condition is
+specified for each"). Each of these is **vary-the-target**, not level-stack: an
+identical second copy is not what the passage grants. But none carries the
+parameter that would let the engine tell two copies apart — that is D9 part 1
+(slice X6), not this ruling — so each now carries no `max_per_target` at all
+and falls to the plain default of 1 (once), the safe interim state until X6
+adds a real target key. Pinned by
+`vary_the_target_items_deferred_to_x6_default_to_once` (`data_integrity.rs`).
 
 `flaw.flawed_parma_magica` (`ArMDE:6144`, "may purchase this Flaw more than once
 **for different Forms**") and `flaw.limited_magic_resistance` (`ArMDE:6348`,
 "multiple times, **for multiple Forms**") used to sit in that table and no longer
 do. Each names a **Form**, so each is shape 1 above rather than shape 2: the
 `form` parameter puts the Form into the duplicate key, the **default**
-`max_per_target` of 1 states the real ceiling ("once per Form"), and the absent
-`max_total` states the other half ("any number of different Forms"). The 255 they
-shipped with predated the parameter and was over-permissive — it also allowed a
-second, identical copy naming the *same* Form, which neither descriptor grants.
-Pinned by `data_integrity.rs` —
+`max_per_target` of 1 states the real ceiling ("once per Form"), and (since D10,
+below) an explicit `max_total: 255` states the other half ("any number of
+different Forms") — before D10 this was the field's own default and needed no
+declaration; D10 inverted that default, so it is now stated. The 255
+`max_per_target` they shipped with predated the parameter and was
+over-permissive — it also allowed a second, identical copy naming the *same*
+Form, which neither descriptor grants. Pinned by `data_integrity.rs` —
 `the_form_scoped_magic_resistance_flaws_name_their_form` and
-`a_form_scoped_mr_flaw_repeats_across_forms_but_never_within_one`. A
-`max_per_value` cap is deliberately **not** added: with a single parameter,
-`max_per_target`'s own key already *is* the Form, so the two would be one ceiling
-spelled twice.
+`a_form_scoped_mr_flaw_repeats_across_forms_but_never_within_one`. An
+EXPLICIT `max_per_value` cap is deliberately **not** added: with a single
+parameter, `max_per_target`'s own key already *is* the Form, so a stated cap
+would be one ceiling spelled twice — D10's per-value default of 1 already
+agrees with `max_per_target: 1` and needs no override here.
 
 Items with a stated ceiling of two: `virtue.great_characteristic` (`ArMDE:3989`),
 `virtue.quiet_magic` ("You may take this Virtue twice, and eliminate the penalty
 altogether", `ArMDE:4826`), `flaw.poor_characteristic` (`ArMDE:6600`),
-`flaw.weak_characteristics` (`ArMDE:7058`) — all `max_per_target: 2`.
+`flaw.weak_characteristics` (`ArMDE:7058`) — all `max_per_target: 2`. The two
+parameterized ones, `great_characteristic` and `poor_characteristic`, ALSO
+declare their own `characteristic` parameter's `max_per_value: 255`: without it,
+D10's per-value default of 1 would wrongly reject the legal "twice for the same
+Characteristic" repeat as a second copy naming one value — see *Selection
+multiplicity — `max_total`* below for why the unparameterized two
+(`quiet_magic`, `weak_characteristics`) need the analogous `max_total: 2` fix
+instead.
 
 #### Selection multiplicity — `max_total`
 > "You may take this Virtue twice, for two different Arts."
@@ -1610,8 +1637,29 @@ Two shapes need it, and neither was expressible with `max_per_target` alone:
    domains make the target part of the duplicate key, which is the only property
    `max_total` is compensating for.)
 
-**Same sentinel convention as `max_per_target`: absent = `u8::MAX` (255) = "no
-stated ceiling"** (see the box above). A stated ceiling is encoded literally.
+**D10 (Norbert, 2026-09-21): "if only once, it should be only once" — the
+default is inverted.**
+> "A Virtue or Flaw may be taken more than once only if the description
+> explicitly allows it. Most Virtues and Flaws may only be taken once."
+
+- Source: `ArMDE:2814`.
+
+Before D10, absent `max_total` meant `u8::MAX` — "no stated ceiling" — which is
+the exact inverse of the book's own default. `default_max_total` (`types.rs`)
+now returns 1: **absent means once**, and a repeat must be declared, the same
+inversion `ParameterDef::max_per_value` gets below. An item whose descriptor
+explicitly grants repeats across different targets must now say so with an
+explicit `max_total: 255` (unlimited) or a literal number; the machinery
+itself did not change — `validate_total_selection_cap` still enforces
+whatever value the field holds, grant-aware exactly as before — only the
+value the field holds when nothing is written changed. **No `SCHEMA_VERSION`
+bump**: the save format is untouched, only what validation says about a given
+count. A save written before D10 that legitimately held several copies of an
+item the new default now caps at 1 is not migrated — it loads, and
+`Enforced` blocks / `Advisory` warns / `Silent` suppresses, same as any other
+finding.
+
+A stated ceiling is encoded literally (Quiet Magic 2, `ArMDE:4826`).
 
 Items whose descriptor caps the TOTAL number of copies, each with the line
 that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
@@ -1626,6 +1674,67 @@ that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
 | `virtue.puissant_art` | `ArMDE:4820` | "You may take this Virtue twice, for two different Arts" |
 | `flaw.false_power` | `ArMDE:6096` | "in each subsequent instance as a Minor Flaw rather than a Major one" — only the FIRST instance is this (Major) entry; see the section below |
 
+**Every level-stack item in the `max_per_target` "no stated ceiling" table
+above now ALSO carries the matching `max_total` (255, or 2 for `quiet_magic` /
+`weak_characteristics`)**, for the reason given there: with no parameter,
+`max_per_target` and `max_total` govern the identical set of copies, so
+D10's new `max_total` default of 1 would otherwise silently override a
+higher `max_per_target` the data still states. Pinned by
+`shipped_repeatable_items_carry_their_rulebook_ceiling`'s `max_total`
+assertion (`data_integrity.rs`).
+
+**Q4's declared-repeaters sweep — the 42 entries D10 measured as riding the
+old unlimited default (`jq`: `parameters != null and max_total == null`),
+each read against its own passage.** 18 explicitly permit repeats across
+different targets and now carry `max_total: 255`:
+
+| Item | Line | Rule text (abridged) |
+|---|---|---|
+| `virtue.affinity_ability` | `ArMDE:3374` | "may take it again for different Abilities" |
+| `virtue.puissant_ability` | `ArMDE:4816` | "may take it more than once for different Abilities" |
+| `virtue.extractor_of_form_vis` | `ArMDE:3781` | "may be taken multiple times (once for each Form)" |
+| `virtue.master_of_form_creatures` | `ArMDE:4465` | "this Virtue may be taken multiple times, once for each Form" |
+| `virtue.student_of_realm` | `ArMDE:5054` | "may take this Virtue multiple times, for a different realm each time" |
+| `virtue.ways_of_the_land` | `ArMDE:5233` | "may choose this Virtue multiple times, for different types of terrain" |
+| `virtue.great_characteristic` | `ArMDE:3989` | "twice for the same Characteristic, and for more than one Characteristic" — `max_per_target: 2` stays, this states the OTHER axis |
+| `virtue.learn_ability_from_mistakes` | `ArMDE:4243` | "may take this Virtue several times, once for each Ability chosen" |
+| `virtue.folk_magic` | `ArMDE:3919` | "pick this Virtue more than once… category"; see the `max_per_value` fix below for its two axes |
+| `virtue.variable_power` | `ArMDE:5205` | "may be taken more than once, if the character has more than one power" |
+| `flaw.careless_with_ability` | `ArMDE:5775` | "may be taken more than once; each time, it applies to a different Ability" |
+| `flaw.false_power_minor` | `ArMDE:6096` | "may be taken multiple times, once for each appropriate Supernatural Virtue" |
+| `flaw.flawed_parma_magica` | `ArMDE:6144` | see above |
+| `flaw.limited_magic_resistance` | `ArMDE:6348` | see above |
+| `flaw.necessary_realm_aura_for_ability` | `ArMDE:6482` | "once for any particular Ability" — unlimited across abilities; see the `max_per_value` fix below for its `realm` axis |
+| `flaw.poor_characteristic` | `ArMDE:6600` | "twice for a single Characteristic… and multiple times for different Characteristics" — `max_per_target: 2` stays, this states the OTHER axis |
+| `flaw.restricted_power` | `ArMDE:6689` | "may be taken once for each power the character possesses" |
+| `flaw.slow_power` | `ArMDE:6761` | "may be taken more than once, if the character has multiple powers, but not more than once for a single power" |
+
+**24 do not**, and stay at the new default (1) — no data change. Verified
+directly against the passage rather than assumed, since the pre-D10 measurement
+only counted which entries rode the unlimited default, not which of them the
+book actually licenses to repeat: `flaw.anchored_to_the_land`,
+`flaw.bound_to_realm`, `flaw.bound_to_role_role`, `flaw.deficient_form`,
+`flaw.deficient_technique`, `flaw.form_monstrosity`,
+`flaw.hunger_for_form_magic`, `flaw.magical_being_companion`,
+`flaw.realm_stigmatic`, `flaw.servant_of_the_land` (confirms F-522's fix),
+`virtue.academic_concentration_subject`, `virtue.alluring_to_beings`,
+`virtue.aptitude_for_sin`, `virtue.cautious_with_ability`,
+`virtue.doctor_in_faculty`, `virtue.enchanting_ability`,
+`virtue.imbued_with_the_spirit_of_form`, `virtue.land_regio_network`,
+`virtue.mythic_blood`, `virtue.perfect_eye_for_commodity`,
+`virtue.voice_of_the_land`. **Three of these correct an assumption the D10
+ruling and the M0 measurement both named as a "classic repeater" — verifying
+rather than trusting turned up the opposite of what was expected:**
+`virtue.deft_form` (`ArMDE:3645-3648`) states no repeat permission anywhere in
+the book (checked its heading, TOC entry, index, and every other-book
+cross-reference — none states it may be taken more than once), and
+`virtue.major_magical_focus` / `virtue.minor_magical_focus`
+(`ArMDE:4405`) are affirmatively **forbidden** to repeat: "A character can have
+only one Magical Focus, either major or minor, regardless of the source of the
+focus" — which is also why the two are mutually `incompatible_with` each other.
+Verdict table: `tmp/q4-verdicts.md` (gitignored; the durable record is this
+section and the tests it is pinned by).
+
 #### Selection multiplicity — `max_per_value` (one key, not the whole tuple)
 > "A character may take this Flaw once for any particular Ability." — Necessary
 > (Realm) Aura for (Ability), `ArMDE:6482`.
@@ -1638,12 +1747,19 @@ that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
   `issue-too_many_for_param_value` (`locales/en|de/main.ftl`).
 - Data: `rules/core/virtues_flaws.json` —
   `flaw.necessary_realm_aura_for_ability`'s **`ability`** parameter,
-  `"max_per_value": 1`. Its `realm` parameter carries none.
+  `"max_per_value": 1`. Its `realm` parameter carries `"max_per_value": 255`
+  (D10): `ArMDE:6482` caps repeats on the Ability alone, and nothing limits how
+  many Realms the Flaw may be held across, but D10's new per-value default of 1
+  would otherwise wrongly reject two copies that share a Realm while naming
+  different Abilities. `virtue.folk_magic`'s `category` and `realm` parameters
+  carry the same explicit `"max_per_value": 255` for the identical reason — see
+  *Enumerated parameter domain* below, and `ArMDE:3919`'s "you can align it to
+  the same Realm as before or pick a different one".
 - Tests: `two_copies_may_not_share_a_capped_parameter_value`,
   `copies_naming_different_values_of_a_capped_parameter_are_clean`,
   `two_instances_of_one_parameterized_ability_are_two_targets`,
   `two_copies_naming_one_instance_of_a_parameterized_ability_trip_the_cap`,
-  `a_parameter_with_no_stated_cap_never_trips_the_per_value_cap`,
+  `a_parameter_with_no_stated_cap_defaults_to_once_per_value`,
   `an_identical_repeat_stays_the_duplicate_selections_finding`,
   `an_identical_repeat_draws_exactly_one_finding`,
   `legal_identical_repeats_still_count_toward_the_per_value_cap`,
@@ -1651,7 +1767,7 @@ that says so — all carry `max_total` in `rules/core/virtues_flaws.json`:
   `the_per_value_finding_names_the_key_and_the_value`,
   `the_per_value_finding_names_the_instance_it_counted`,
   `the_per_value_finding_carries_an_empty_instance_for_a_plain_ability`,
-  `the_absent_per_value_cap_is_a_sentinel_and_not_the_number_255`
+  `an_explicit_unlimited_per_value_cap_is_a_sentinel_and_not_the_number_255`
   (`validation/mod.rs`),
   `a_per_value_cap_of_zero_is_rejected`,
   `across_copies_constraints_on_a_spell_parameter_are_rejected`,
@@ -1736,13 +1852,17 @@ on the declaring record rather than on the parameter's domain — see
 from the `require_categories` / `require_possessed` / `require_power` gates
 beside it.
 
-**Same sentinel convention as `max_total`: absent = `u8::MAX` (255) = "no stated
-ceiling"**, and the validator tests for the sentinel rather than comparing
-against it. That distinction is load-bearing, not pedantry: a crafted save
-holding 256 copies naming one value would otherwise trip a cap the rules never
-state, inventing a finding out of an implementation detail. A save is a declared
-hostile-input surface, so the sentinel is checked explicitly — which also bounds
-the counting to parameters that actually declare a cap.
+**D10 inverted this field's default too: absent = 1 (once), not `u8::MAX`.**
+Before D10, absent meant "no stated ceiling"; now a repeat along one value
+must be declared explicitly with `max_per_value: 255` (the sentinel for "the
+rulebook states no limit" — see `necessary_realm_aura_for_ability`'s `realm`
+axis and `folk_magic`'s two axes above). The **enforcement** side did not
+change: the validator tests for the `u8::MAX` sentinel rather than comparing
+against it, so a crafted save holding 256 copies naming one EXPLICITLY
+unlimited value cannot trip a cap the rules never state. That distinction
+remains load-bearing: a save is a declared hostile-input surface, so the
+sentinel is checked explicitly — which also bounds the counting to parameters
+that actually declare (now: explicitly override) a cap.
 
 **`max_per_target` stays, at its default of 1.** The two are not redundant,
 because `validate_per_value_cap` counts only the copies its neighbour did not
@@ -2041,18 +2161,31 @@ a localized name and never the slug.
 six, and three — which is why the enumeration is declared per *parameter* rather
 than once globally under the shared `being` key.
 
-**Why Folk Magic has no ceiling at all.** `ArMDE:3919` grants the repeat "to acquire
-expertise in a *different* category", so the item carries **no `max_total` and
-no `max_per_target`**. It used to follow that the ceiling was the length of the
-category list — a further copy had to repeat a category, which
-`validate_duplicate_selections` rejects. The **realm axis** (see the Row 12
-section below) retired that reading: the same sentence lets each copy "align it
-to the same Realm as before or pick a different one", so two copies may share a
-category as long as their Realms differ, and the duplicate key
-`(item_ref, params)` covers both axes at once. No number is written anywhere
-still, and `max_per_target: 4` remains rejected for the original reason — it
-states a number the data already carries, and it would still permit two copies
-naming the same target.
+**Why Folk Magic has no ceiling at all — and why, since D10, that has to be
+SAID rather than left absent.** `ArMDE:3919` grants the repeat "to acquire
+expertise in a *different* category", so the item carries **no
+`max_per_target`** (the default of 1 states nothing more than "not the
+identical tuple twice", which is exactly right — see below). It used to follow
+that the ceiling was the length of the category list — a further copy had to
+repeat a category, which `validate_duplicate_selections` rejects. The **realm
+axis** (see the Row 12 section below) retired that reading: the same sentence
+lets each copy "align it to the same Realm as before or pick a different one",
+so two copies may share a category as long as their Realms differ, and the
+duplicate key `(item_ref, params)` covers both axes at once. No number is
+written anywhere still, and `max_per_target: 4` remains rejected for the
+original reason — it states a number the data already carries, and it would
+still permit two copies naming the same target.
+
+**D10 changes what "no ceiling" costs to state, not what it means.** Before
+D10, an absent `max_total` and an absent `max_per_value` on both parameters
+already meant unlimited, so nothing needed writing. D10 inverts both defaults
+to 1 (once), so all three now have to be **explicit**: `max_total: 255` at
+the item level (any number of copies, across every category/realm
+combination), and `max_per_value: 255` on BOTH `category` and `realm` (either
+axis may repeat identically, so long as the OTHER axis differs — "two copies
+may legitimately share a category" as long as their Realms differ, and vice
+versa). Omitting any of the three would silently reintroduce a cap
+`ArMDE:3919` does not state.
 
 **Load-time integrity** (`validate_parameter_defs`, applied to point items *and*
 spells, since both hold `ParameterDef`s and both resolve through the same

@@ -73,7 +73,9 @@ export interface ParameterDef {
   // How many of the item's copies may name one and the same value for THIS key.
   // Necessary (Realm) Aura for (Ability) is taken "once for any particular
   // Ability" (ArMDE:6482), a cap the whole-tuple `max_per_target` cannot state.
-  // Omitted when the rules state no such ceiling. Enforced by the engine
+  // D10: omitted means the engine's default of 1 (once); an entry that
+  // legitimately repeats one value carries an explicit 255 (Folk Magic's
+  // `realm` axis, ArMDE:3919). Enforced by the engine
   // (`too_many_for_param_value`); like `at_most_one_of`, the picker does not
   // pre-empt it — the finding names the key and the value.
   max_per_value?: number;
@@ -293,9 +295,11 @@ export interface PointItem {
   max_per_target?: number;
   // Max copies of this item TOTAL, across every distinct parameter target,
   // counting granted copies — distinct from `max_per_target`, which caps copies
-  // sharing one identical (id, params) target. Omitted when the engine's
-  // default (255) applies, i.e. "no ceiling the rules state". Mirrors the
-  // engine's `PointItem::max_total` (`crates/arm-rules/src/types.rs`).
+  // sharing one identical (id, params) target. D10: omitted means the
+  // engine's default of 1 (once), not "no ceiling" — an item that legitimately
+  // repeats across targets carries an explicit 255. See
+  // `derive.ts::atMaxTotalRefs`'s doc comment. Mirrors the engine's
+  // `PointItem::max_total` (`crates/arm-rules/src/types.rs`).
   max_total?: number;
 }
 

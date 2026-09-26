@@ -1245,6 +1245,7 @@ describe('atMaxTotalRefs', () => {
   const items = [
     item({ id: 'virtue.puissant_art', max_total: 2 }),
     item({ id: 'virtue.uncapped' }),
+    item({ id: 'virtue.explicitly_unlimited', max_total: 255 }),
   ];
   const ruleset = makeRuleset(items);
 
@@ -1267,13 +1268,21 @@ describe('atMaxTotalRefs', () => {
     expect(atMaxTotalRefs(ruleset, bought, granted).has('virtue.puissant_art')).toBe(true);
   });
 
-  it('never flags an item with no stated max_total, however many copies exist', () => {
+  // D10: absent `max_total` now mirrors the engine's own default of 1 (once),
+  // not "no ceiling" — the wire ruleset omits the field exactly when the
+  // engine's value already equals its current default.
+  it('flags an item with no stated max_total once a single copy exists (D10 default)', () => {
+    const bought = [{ ref: 'virtue.uncapped' }];
+    expect(atMaxTotalRefs(ruleset, bought, []).has('virtue.uncapped')).toBe(true);
+  });
+
+  it('never flags an item with an EXPLICIT unlimited max_total, however many copies exist', () => {
     const bought = [
-      { ref: 'virtue.uncapped' },
-      { ref: 'virtue.uncapped' },
-      { ref: 'virtue.uncapped' },
+      { ref: 'virtue.explicitly_unlimited' },
+      { ref: 'virtue.explicitly_unlimited' },
+      { ref: 'virtue.explicitly_unlimited' },
     ];
-    expect(atMaxTotalRefs(ruleset, bought, []).has('virtue.uncapped')).toBe(false);
+    expect(atMaxTotalRefs(ruleset, bought, []).has('virtue.explicitly_unlimited')).toBe(false);
   });
 
   it('leaves an item with zero copies unflagged (never over-filters)', () => {

@@ -47,7 +47,8 @@ export class SelectionWorkflow {
    * target) — the model-level guard behind the engine's
    * `too_many_selections` validator, so the store itself cannot be pushed past
    * it even though `VirtueFlawTab`'s disabled predicate is its only production
-   * caller today.
+   * caller today. D10: an absent `max_total` means the engine's own default of
+   * 1, not unlimited — see `derive.ts::atMaxTotalRefs`'s doc comment.
    */
   add(ref: string): void {
     const entity = this.#host.entity();
@@ -55,14 +56,13 @@ export class SelectionWorkflow {
     const repeatable = !!item?.parameters?.length || (item?.max_per_target ?? 1) > 1;
     const present = (entity.selections ?? []).some((s) => s.ref === ref);
     if (!repeatable && present) return;
-    if (item?.max_total !== undefined) {
-      const count = totalCopies(
-        entity.selections ?? [],
-        this.#host.effective()?.granted_selections ?? [],
-        ref,
-      );
-      if (count >= item.max_total) return;
-    }
+    const max = item?.max_total ?? 1;
+    const count = totalCopies(
+      entity.selections ?? [],
+      this.#host.effective()?.granted_selections ?? [],
+      ref,
+    );
+    if (count >= max) return;
     entity.selections = [...(entity.selections ?? []), { ref }];
     this.#host.scheduleValidate();
   }
