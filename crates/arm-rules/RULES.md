@@ -4676,6 +4676,30 @@ simulated number, because the app does not simulate those subsystems.
 modifier, but it is no longer surfaced-*only*: `aging.rs` consumes it — see
 **Aging (M6/6b6)**, and the `AgingMod` row of the in-play effect table below.
 
+**D45/F-423 — a surfaced row names its source.** Before D45, six shipped Flaws
+(`flaw.corrupted_spells`, `flaw.deleterious_circumstances`,
+`flaw.disjointed_magic`, `flaw.environmental_magic_condition`,
+`flaw.short_ranged_magic`, `flaw.the_constant_expression`) all carrying
+`special_casting_mod { circumstantial }` rendered as the byte-identical row
+"Special casting: Circumstantial", with nothing to tell a character holding
+two of them apart. `SurfacedModifier` gains `source: Option<Id>`, populated at
+every push site **inside `in_play_mods`** with the granting item's own id
+(`item.id.clone()`) — `MagicResistance`, `Aging`, `Advancement`,
+`SpecialCasting` and `AbilityRoll`. The frontend renders it through the label
+map as the item's localized name (`DerivedSurfacedModifiersSection.svelte`,
+`derived-surfaced-source`), never the raw id.
+
+`ModifierFamily::HealthRoll` is deliberately excluded, and stays `None`: unlike
+the other five, its push site sits in `surfaced_modifiers` rather than
+`in_play_mods`, reading back `InPlayMods::health_mods` — a `BTreeMap` that
+already SUMS every contributing selection's amount into one number before this
+family is built. There is no single item left to name by then (Q-81's
+twelve-row `health_mod` census found more than one Virtue/Flaw commonly
+sharing a track), so attributing one would be inventing an answer the data
+does not have. De-duplicating identical rows into one line listing every
+contributor was considered and rejected (D45): naming the source is what fixes
+the anonymity defect, and collapsing rows is a separate UI call.
+
 #### M5.5a — Longevity Ritual: stored value + live hint
 
 M5/5i **derived** the self-made aging bonus from the current Creo Corpus Lab Total.

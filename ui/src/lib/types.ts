@@ -938,6 +938,14 @@ export interface SurfacedModifier {
   // other family, so `amount: 0` keeps its original "no magnitude" reading
   // for them (e.g. Unaging's mode-toggle rows).
   factor?: AdvancementFactor;
+  // The id of the Virtue/Flaw/other item that produced this row (D45,
+  // F-423): rendered through the label map as its localized display name,
+  // never the raw id, so two carriers of the same family+detail pair (two
+  // Flaws both granting `special_casting: circumstantial`) read as two
+  // distinguishable lines. Absent only for `health_roll`: the engine sums
+  // every contributing selection's amount into one number before this
+  // family is surfaced, so there is no single item left to name.
+  source?: string;
 }
 
 // The full read-only play-stat read-out returned by the `derived_totals` command.

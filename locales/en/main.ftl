@@ -1348,6 +1348,11 @@ derived-surfaced-special_casting = Casting style
 derived-surfaced-ability_roll = Ability roll
 derived-surfaced-health_roll = Health roll
 derived-surfaced-magic_resistance = Magic Resistance
+# D45/F-423: names the Virtue/Flaw that produced a surfaced-modifier row, so two
+# carriers of the same family+detail pair no longer read as one unattributed
+# repeated line. { $source } is the item's own localized display name, never
+# the raw id.
+derived-surfaced-source = from { $source }
 derived-detail-aging_roll = Aging roll
 derived-detail-longevity_bonus = Longevity bonus
 derived-detail-no_aging = Does not age

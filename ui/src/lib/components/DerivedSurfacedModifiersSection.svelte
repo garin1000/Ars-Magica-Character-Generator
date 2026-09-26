@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { formatSigned } from '../derive';
+  import { formatSigned, grantItemLabel } from '../derive';
   import type { DerivedTotals } from '../types';
 
   // Split out of `DerivedTotalsPanel.svelte` (V26, full-audit round). Always
@@ -25,6 +25,15 @@
   function factorLabel(factor: string): string {
     return store.t(`derived-factor-${factor}`);
   }
+
+  // D45/F-423: the granting Virtue/Flaw's localized rules name, never the raw
+  // id — the same resolution the Reputation grant panel uses
+  // (`Reputations.svelte::sourceLabel`) for the same shape of problem.
+  // `source` is absent for `health_roll` (no single item to name), so the row
+  // simply carries no attribution span in that case.
+  function sourceLabel(id: string): string {
+    return store.ruleset ? grantItemLabel(store.ruleset, id, store.t) : id;
+  }
 </script>
 
 {#if d.surfaced_modifiers.length > 0}
@@ -34,6 +43,11 @@
       {#each d.surfaced_modifiers as m, i (m.family + m.detail + i)}
         <li>
           <span>{store.t(`derived-surfaced-${m.family}`)}: {detailLabel(m.family, m.detail)}</span>
+          {#if m.source}
+            <span class="modifier-source" data-testid="derived-surfaced-source-{i}"
+              >{store.t('derived-surfaced-source', { source: sourceLabel(m.source) })}</span
+            >
+          {/if}
           {#if m.factor}<span class="value">{factorLabel(m.factor)}</span>
           {:else if m.amount !== 0}<span class="value">{formatSigned(m.amount)}</span>{/if}
         </li>

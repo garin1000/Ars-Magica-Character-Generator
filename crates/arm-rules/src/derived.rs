@@ -316,6 +316,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                             detail: kind.to_string(),
                             amount: 0,
                             factor: None,
+                            source: Some(item.id.clone()),
                         })
                     }
                 },
@@ -327,6 +328,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     detail: kind.to_string(),
                     amount: i32::from(*amount),
                     factor: None,
+                    source: Some(item.id.clone()),
                 }),
                 // D55: `amount` and `factor` are mutually exclusive and load-time
                 // validated (`ruleset/integrity.rs::validate_advancement_mod_shape`),
@@ -342,6 +344,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     detail: source.to_string(),
                     amount: amount.map(i32::from).unwrap_or(0),
                     factor: *factor,
+                    source: Some(item.id.clone()),
                 }),
                 // Non-standard-casting relievers are computed into the per-cell
                 // NonStandardCasting variants; every other quirk stays surfaced.
@@ -367,6 +370,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                         detail: kind.to_string(),
                         amount: 0,
                         factor: None,
+                        source: Some(item.id.clone()),
                     }),
                 },
                 Effect::AbilityRollMod { param, amount } => m.surfaced.push(SurfacedModifier {
@@ -378,6 +382,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                         .unwrap_or_default(),
                     amount: i32::from(*amount),
                     factor: None,
+                    source: Some(item.id.clone()),
                 }),
                 // Creation-effect variants (consumed by effective.rs) and the
                 // Elemental Magic XP-space marker: no in-play modifier here.
@@ -644,6 +649,22 @@ pub struct SurfacedModifier {
     /// unambiguous "no magnitude" reading for them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub factor: Option<AdvancementFactor>,
+    /// The id of the Virtue/Flaw/other item whose selection produced this row
+    /// (D45, F-423). Before this field existed, two different carriers of the
+    /// same `family`/`detail` pair (two Flaws both granting
+    /// `SpecialCasting::Circumstantial`) rendered as the identical
+    /// unattributed line with nothing to tell them apart. Rendered through the
+    /// label map as the item's localized display name — never the raw id,
+    /// exactly like `category-<id>`/`magnitude-<id>`.
+    ///
+    /// `None` only for [`ModifierFamily::HealthRoll`]: unlike the other five
+    /// families, which push one row per producing selection directly inside
+    /// [`in_play_mods`], a surfaced health track is read back out of
+    /// `InPlayMods::health_mods`, which already sums every contributing
+    /// selection's amount into one number before [`surfaced_modifiers`] builds
+    /// the row — there is no single item left to name by then.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<Id>,
 }
 
 /// Every surfaced-only modifier the character carries, for the read-out list.
@@ -661,6 +682,7 @@ pub fn surfaced_modifiers(entity: &Entity, ruleset: &Ruleset) -> Vec<SurfacedMod
                     detail: track.to_string(),
                     amount: *amount,
                     factor: None,
+                    source: None,
                 });
             }
             HealthTrack::FatiguePenalty | HealthTrack::WoundPenalty => {}
@@ -3332,6 +3354,9 @@ mod tests {
     }
 
     /// Surfaced-only modifiers (Apt Student) are listed, not folded into a number.
+    /// D45/F-423: the row also names its source, so two carriers of the same
+    /// family+detail read as two distinguishable lines rather than one
+    /// anonymous word repeated.
     #[test]
     fn surfaced_modifiers_are_listed() {
         let rs = ruleset();
@@ -3340,7 +3365,8 @@ mod tests {
         let s = surfaced_modifiers(&e, &rs);
         assert!(s.iter().any(|m| m.family == ModifierFamily::Advancement
             && m.detail == "taught"
-            && m.amount == 5));
+            && m.amount == 5
+            && m.source == Some(Id::new("virtue.apt_student"))));
     }
 
     /// Good Teacher's authoring bonus (E2/Q-32) surfaces through the new
@@ -3592,21 +3618,23 @@ mod tests {
     }
 
     /// An AgingMod (Unaging → no_aging) is surfaced with amount 0, not simulated.
+    /// D45: names its source (`virtue.unaging`).
     #[test]
     fn aging_mod_is_surfaced() {
         let rs = ruleset();
         let mut e = magus();
         e.selections = vec![Selection::new(Id::new("virtue.unaging"))];
         let s = surfaced_modifiers(&e, &rs);
-        assert!(
-            s.iter().any(|m| m.family == ModifierFamily::Aging
-                && m.detail == "no_aging"
-                && m.amount == 0)
-        );
+        assert!(s.iter().any(|m| m.family == ModifierFamily::Aging
+            && m.detail == "no_aging"
+            && m.amount == 0
+            && m.source == Some(Id::new("virtue.unaging"))));
     }
 
     /// The multi-variant SpecialCasting arm (Diedne + Life Boost) is surfaced
-    /// labelled, one entry per variant, amount 0.
+    /// labelled, one entry per variant, amount 0. D45: each names its own
+    /// source, so the two rows (both `amount: 0`, both `SpecialCasting`) stay
+    /// distinguishable from each other.
     #[test]
     fn special_casting_cluster_is_surfaced() {
         let rs = ruleset();
@@ -3618,10 +3646,12 @@ mod tests {
         let s = surfaced_modifiers(&e, &rs);
         assert!(s.iter().any(|m| m.family == ModifierFamily::SpecialCasting
             && m.detail == "diedne"
-            && m.amount == 0));
+            && m.amount == 0
+            && m.source == Some(Id::new("virtue.diedne_magic"))));
         assert!(s.iter().any(|m| m.family == ModifierFamily::SpecialCasting
             && m.detail == "life_boost"
-            && m.amount == 0));
+            && m.amount == 0
+            && m.source == Some(Id::new("virtue.life_boost"))));
     }
 
     /// A non-flat Magic-Resistance modifier (Susceptibility to Faerie power) is
@@ -3629,6 +3659,7 @@ mod tests {
     /// folded into the flat per-Form MR number; the realm-conditional variants are
     /// listed, because "against faerie effects" is a scope the flat figure cannot
     /// carry. Source: ArMDE:6819-6826.
+    /// D45: also names its source (`flaw.susceptibility_to_faerie_power`).
     #[test]
     fn susceptibility_magic_resistance_is_surfaced() {
         let rs = ruleset();
@@ -3639,11 +3670,14 @@ mod tests {
         let s = surfaced_modifiers(&e, &rs);
         assert!(s.iter().any(|m| m.family == ModifierFamily::MagicResistance
             && m.detail == "susceptible_faerie"
-            && m.amount == 0));
+            && m.amount == 0
+            && m.source == Some(Id::new("flaw.susceptibility_to_faerie_power"))));
     }
 
     /// An AbilityRollMod (Academic Concentration) is surfaced with the free-text
-    /// subject as its detail and the bonus as its amount (ArMDE:3362-3367).
+    /// subject as its detail and the bonus as its amount (ArMDE:3362-3367). D45:
+    /// also names its source, so two Academic Concentrations on different
+    /// subjects each say which one they are.
     #[test]
     fn ability_roll_mod_is_surfaced_with_subject() {
         let rs = ruleset();
@@ -3655,7 +3689,8 @@ mod tests {
         let s = surfaced_modifiers(&e, &rs);
         assert!(s.iter().any(|m| m.family == ModifierFamily::AbilityRoll
             && m.detail == "theology"
-            && m.amount == 3));
+            && m.amount == 3
+            && m.source == Some(Id::new("virtue.academic_concentration"))));
     }
 
     /// `Effect::AbilityRollMod` (and `Effect::MagicalFocus`) carry a `text`-domain
@@ -3856,6 +3891,15 @@ mod tests {
     /// A surfaced-only health-roll track (Long-Winded → fatigue_roll +3) is listed
     /// under family "health_roll", and does not perturb the folded Fatigue
     /// penalties (ArMDE:17127-17129).
+    ///
+    /// D45 deliberately does NOT extend to `HealthRoll`: unlike the other five
+    /// families, which push one row per producing selection directly inside
+    /// `in_play_mods`, a surfaced health track is read back out of
+    /// `InPlayMods::health_mods`, which already sums every contributing
+    /// selection's amount into one number before `surfaced_modifiers` builds
+    /// this row — there is no single item left to name (Q-81's twelve-row
+    /// census found more than one Virtue/Flaw commonly sharing a track). So
+    /// `source` stays `None` here, pinned by the assertion below.
     #[test]
     fn health_roll_track_is_surfaced_not_folded() {
         let rs = ruleset();
@@ -3864,7 +3908,8 @@ mod tests {
         let s = surfaced_modifiers(&e, &rs);
         assert!(s.iter().any(|m| m.family == ModifierFamily::HealthRoll
             && m.detail == "fatigue_roll"
-            && m.amount == 3));
+            && m.amount == 3
+            && m.source.is_none()));
         // The fatigue-penalty track is untouched: Weary stays −1.
         let f = fatigue_levels(&e, &rs);
         assert_eq!(
@@ -3873,6 +3918,39 @@ mod tests {
                 .unwrap()
                 .penalty,
             -1
+        );
+    }
+
+    /// D45/F-423: `SurfacedModifier::source` must actually cross the IPC
+    /// boundary as JSON — the frontend has nothing else to read the
+    /// attribution from. `skip_serializing_if` must drop the key outright for
+    /// `None` (the pre-D45 `HealthRoll` shape) rather than emit a literal
+    /// `null`, since the Svelte component's `{#if m.source}` guard treats an
+    /// absent key and a JS `undefined` identically but would not treat a JSON
+    /// `null` that way without an explicit check.
+    #[test]
+    fn surfaced_modifier_source_serializes_present_or_absent() {
+        let named = SurfacedModifier {
+            family: ModifierFamily::Aging,
+            detail: "no_aging".to_string(),
+            amount: 0,
+            factor: None,
+            source: Some(Id::new("virtue.unaging")),
+        };
+        let json = serde_json::to_value(&named).unwrap();
+        assert_eq!(json["source"], "virtue.unaging");
+
+        let unattributed = SurfacedModifier {
+            family: ModifierFamily::HealthRoll,
+            detail: "fatigue_roll".to_string(),
+            amount: 3,
+            factor: None,
+            source: None,
+        };
+        let json = serde_json::to_value(&unattributed).unwrap();
+        assert!(
+            json.get("source").is_none(),
+            "a None source must be OMITTED, not serialized as null: {json:?}"
         );
     }
 

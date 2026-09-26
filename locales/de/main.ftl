@@ -1413,6 +1413,11 @@ derived-surfaced-special_casting = Zauberstil
 derived-surfaced-ability_roll = Fertigkeitswurf
 derived-surfaced-health_roll = Gesundheitswurf
 derived-surfaced-magic_resistance = Magieresistenz
+# D45/F-423: nennt die Tugend/den Makel, der diese Zeile erzeugt hat, damit zwei
+# Träger desselben Familie+Detail-Paars nicht mehr als eine einzige, nicht
+# zuordenbare Zeile erscheinen. { $source } ist der lokalisierte Anzeigename
+# des Eintrags, nie die rohe Id.
+derived-surfaced-source = von { $source }
 derived-detail-aging_roll = Alterungswurf
 derived-detail-longevity_bonus = Langlebigkeitsbonus
 derived-detail-no_aging = Altert nicht
