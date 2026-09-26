@@ -137,7 +137,8 @@ const magusProfiles = {
     required_traits: ['virtue.hermetic_magus'],
     gift_policy: 'required' as const,
     gift_id: 'virtue.the_gift',
-    is_magus: true,
+    hermetically_trained: true,
+    order_member: true,
     creation_phases: [],
   },
 };

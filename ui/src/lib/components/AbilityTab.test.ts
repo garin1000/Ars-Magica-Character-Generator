@@ -53,7 +53,8 @@ function installRuleset(rules: LifeStageRules | null = lifeStageRules()): void {
         companion: {
           id: 'companion',
           budget: { virtue_points: 10, flaw_points: 10 },
-          is_magus: false,
+          hermetically_trained: false,
+          order_member: false,
           gift_policy: 'forbidden',
           creation_phases: [],
         },
@@ -227,7 +228,8 @@ describe('AbilityTab mounts the magus minimums checklist (slice 6b4)', () => {
   });
 
   it('renders nothing of it when the engine sends no rows', () => {
-    // Empty for every type but a magus — the tab needs no is_magus test of its own.
+    // Empty for every type but a magus — the tab needs no hermetically_trained
+    // test of its own.
     expect(html()).not.toContain('data-testid="magus-minimums"');
   });
 });

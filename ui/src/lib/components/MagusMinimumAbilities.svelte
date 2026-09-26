@@ -15,7 +15,7 @@
   // The rows are the ENGINE's — the same reading its `magus_minimum_ability` /
   // `magus_recommended_ability` findings come from, so the list and the findings can
   // never disagree — and they are empty for every type but a magus. That is the whole
-  // gate: this component needs no `is_magus` test of its own.
+  // gate: this component needs no `hermetically_trained` test of its own.
   //
   // Because they ARE those findings, this surface duplicates the Validation panel
   // (guided-creation-review-2026-08 #12), which stays the authoritative one. So it is

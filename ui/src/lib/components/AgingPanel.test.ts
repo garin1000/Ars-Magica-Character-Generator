@@ -27,7 +27,7 @@ vi.mock('../ipc', () => ({
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import AgingPanel from './AgingPanel.svelte';
 
-/** One profile per capability the aging surfaces read; `is_magus` is the flag. */
+/** One profile per capability the aging surfaces read; `hermetically_trained` is the flag. */
 function installRuleset(): void {
   store.ruleset = {
     ruleset: {
@@ -36,7 +36,12 @@ function installRuleset(): void {
       point_items: {},
       type_profiles: {
         grog: { id: 'grog', budget: { virtue_points: 3, flaw_points: 3 } },
-        magus: { id: 'magus', budget: { virtue_points: 10, flaw_points: 10 }, is_magus: true },
+        magus: {
+          id: 'magus',
+          budget: { virtue_points: 10, flaw_points: 10 },
+          hermetically_trained: true,
+          order_member: true,
+        },
       },
       abilities: {},
       arts: {},

@@ -1043,9 +1043,12 @@ export interface EntityTypeProfile {
   forbidden_traits?: string[];
   // Whether this character type is Hermetically trained. Omitted from JSON
   // when false (the common case), so optional here. D56/A0 split the old
-  // `is_magus` into this and `order_member`; the frontend has no equivalent of
-  // the engine's entity-level union (`is_hermetically_trained`) yet — see
-  // `docs/vf-audit/design-a0-is-magus-split.md` § 6.
+  // `is_magus` into this and `order_member`; this field alone has no
+  // equivalent of the engine's entity-level union
+  // (`is_hermetically_trained`) — that reaches the frontend separately, as
+  // `DerivedTotals.hermetically_trained` (sub-slice 6). What is still missing
+  // is a resolved, phases-shaped equivalent for tab *visibility* — see
+  // `docs/vf-audit/design-a0-is-magus-split.md` § 6 (A2).
   hermetically_trained?: boolean;
   // Whether this character type is a full member of the Order of Hermes. The
   // other half of the old `is_magus` flag; every shipped profile sets it equal

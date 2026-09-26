@@ -32,7 +32,8 @@ beforeEach(() => {
         magus: {
           id: 'magus',
           budget: { virtue_points: 10, flaw_points: 10 },
-          is_magus: true,
+          hermetically_trained: true,
+          order_member: true,
           gift_policy: 'required',
           creation_phases: [],
         },

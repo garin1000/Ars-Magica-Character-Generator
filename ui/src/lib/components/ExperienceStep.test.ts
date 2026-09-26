@@ -47,7 +47,8 @@ function installRuleset(rules: LifeStageRules | null = lifeStageRules()): void {
         companion: {
           id: 'companion',
           budget: { virtue_points: 10, flaw_points: 10 },
-          is_magus: false,
+          hermetically_trained: false,
+          order_member: false,
           gift_policy: 'forbidden',
           creation_phases: [],
         },

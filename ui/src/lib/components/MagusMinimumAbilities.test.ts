@@ -175,7 +175,7 @@ beforeEach(() => {
 describe('MagusMinimumAbilities without a checklist (slice 6b4)', () => {
   it('renders nothing when the engine sends an empty list', () => {
     // Empty for every type but a magus, so absence is the whole gate — the component
-    // needs no is_magus test of its own.
+    // needs no hermetically_trained test of its own.
     setChecklist([]);
     const body = html();
     expect(has(body, 'magus-minimums')).toBe(false);

@@ -160,8 +160,8 @@
   />
   {#if lifeStage > 0}
     <!-- Read-only: levels the years past the Gauntlet already earned, listed so the
-         budget is not an unexplained total. Gated on the number alone — no is_magus
-         test, no type branch — exactly like the XP bar's life-stage lines, so a
+         budget is not an unexplained total. Gated on the number alone — no
+         hermetically_trained test, no type branch — exactly like the XP bar's life-stage lines, so a
          magus standing at its Gauntlet and every non-magus show nothing. Muted
          (`xp-life-stage`) rather than a pool entry, because there is nothing to
          spend against: these levels are counted in Available above. -->

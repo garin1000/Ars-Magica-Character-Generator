@@ -30,8 +30,8 @@ import CharacterDetails from './CharacterDetails.svelte';
 
 /**
  * A minimal localized ruleset carrying one profile per capability the tab reads.
- * `is_magus` is the flag every gate keys off — never the type id — so a future
- * spell-casting type gets the same treatment without a code change.
+ * `hermetically_trained` is the flag every gate keys off — never the type id —
+ * so a future spell-casting type gets the same treatment without a code change.
  */
 function installRuleset(): void {
   store.ruleset = {
@@ -41,7 +41,12 @@ function installRuleset(): void {
       point_items: {},
       type_profiles: {
         grog: { id: 'grog', budget: { virtue_points: 3, flaw_points: 3 } },
-        magus: { id: 'magus', budget: { virtue_points: 10, flaw_points: 10 }, is_magus: true },
+        magus: {
+          id: 'magus',
+          budget: { virtue_points: 10, flaw_points: 10 },
+          hermetically_trained: true,
+          order_member: true,
+        },
       },
       abilities: {},
       arts: {},
@@ -115,7 +120,7 @@ describe('CharacterDetails after the tab split', () => {
   });
 
   it('keeps a magus out of it just the same', () => {
-    // The old arrangement gated the ritual on `!is_magus` so a magus would not get
+    // The old arrangement gated the ritual on `!hermetically_trained` so a magus would not get
     // two homes for one. With the panel gone from here the gate goes too, and
     // neither type sees a ritual on this tab.
     resetEntity('magus');

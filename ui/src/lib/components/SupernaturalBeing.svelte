@@ -13,13 +13,14 @@
   const focusPointsUsed = $derived(store.effective?.focus_points_used ?? 0);
   const focusPowerLines = $derived(store.derived?.focus_powers ?? []);
   // "Magi never have Might" (the same rule App.svelte's tab gate states), and a
-  // magus reaches this tab only through Focus Power — so the Might block and the
-  // level-budget power list, which are a Might-being's, are not offered to him.
-  // Bare profile rename only (D56/A0): the entity-level union is sub-slice 6's
-  // scope, once the frontend has a `phases_in_force`-shaped mechanism (A2).
-  const isMagus = $derived(
-    store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.hermetically_trained ?? false,
-  );
+  // Hermetically trained entity reaches this tab only through Focus Power — so
+  // the Might block and the level-budget power list, which are a Might-being's,
+  // are not offered to it. Reads the engine's own profile-OR-selection union
+  // (`DerivedTotals.hermetically_trained`, D56/A0) rather than the bare
+  // type-profile flag: unlike App.svelte's tab *list* (still A2's job, since
+  // that needs a resolved `phases_in_force`), this is content gating inside an
+  // already-open tab, and the union already reaches the frontend today.
+  const isMagus = $derived(store.derived?.hermetically_trained ?? false);
   // Effective Might, power-levels budget and the Might-based MR are all
   // engine-authoritative — never recomputed here.
   const effectiveMight = $derived(store.effective?.might ?? null);

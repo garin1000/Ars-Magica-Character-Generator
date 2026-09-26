@@ -205,7 +205,7 @@ describe('SpellBudgetBar post-Gauntlet levels (read-only, already earned)', () =
 
   it('omits the line for a magus standing at its Gauntlet', () => {
     // Gated on the number alone, exactly like the XP bar's life-stage lines — no
-    // is_magus test, no type branch — so this also covers every non-magus.
+    // hermetically_trained test, no type branch — so this also covers every non-magus.
     setEffective(45, 120, { spell_levels_life_stage: 0 } as Partial<EffectiveScores>);
     expect(() => element(html(), 'spell-levels-post-gauntlet')).toThrow();
   });

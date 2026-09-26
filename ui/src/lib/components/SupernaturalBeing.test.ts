@@ -264,10 +264,30 @@ describe('SupernaturalBeing power list', () => {
     store.ruleset!.ruleset.type_profiles.magus = {
       hermetically_trained: true,
     } as unknown as LocalizedRuleset['ruleset']['type_profiles'][string];
+    // The engine's own union of profile-and-selection (D56/A0) is what the
+    // component actually reads (see the test below); a real magus profile
+    // agrees with it, so this fixture supplies both.
+    store.derived = { hermetically_trained: true } as unknown as DerivedTotals;
     const body = html();
     expect(has(body, 'might-add')).toBe(false);
     expect(has(body, 'power-add')).toBe(false);
     expect(has(body, 'focus-power-add')).toBe(true);
+  });
+
+  // D56/A0 row 21: the component used to read the bare type-profile flag, so
+  // an entity Hermetically trained only by a selection (the Abandoned
+  // Apprentice shape) — profile not trained, engine-computed union says
+  // trained — still saw the Might block. The gate must read the engine's own
+  // union (`DerivedTotals.hermetically_trained`, already computed since A0
+  // sub-slice 2), never re-derive "trained" from the entity's selections here.
+  it('hides the Might and level-budget blocks once the engine reports hermetically_trained, even off a non-magus profile', () => {
+    // `installRuleset()` ships no profile for `mythic_companion` at all, so the
+    // bare profile flag reads false — proving the gate is not just following
+    // the profile through some other path.
+    store.derived = { hermetically_trained: true } as unknown as DerivedTotals;
+    const body = html();
+    expect(has(body, 'might-add')).toBe(false);
+    expect(has(body, 'power-add')).toBe(false);
   });
 
   // Magnitude, Initiative and the Fatigue cost are all engine-derived
