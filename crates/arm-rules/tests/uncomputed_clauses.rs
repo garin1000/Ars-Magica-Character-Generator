@@ -91,10 +91,22 @@ fn rules_dir() -> PathBuf {
 
 /// The characters that can carry a numeric sign. Shipped rules text is ASCII
 /// only — `rules_i18n_ascii_hyphen.rs` enforces that — but the **source**
-/// Markdown writes negatives with U+2013 EN DASH and occasionally U+2212, so a
-/// detector pointed at a rulebook passage must read those too. Listing them
-/// here rather than in two detectors keeps one definition of "a sign".
-const SIGN_CHARS: &[char] = &['-', '+', '\u{2013}', '\u{2212}'];
+/// Markdown writes negatives with U+2013 EN DASH, occasionally U+2212, and
+/// (S2, F-514) U+2014 EM DASH — `flaw.poor_characteristic`'s "already —3 or
+/// lower" is the real passage that found the gap. Listing them here rather
+/// than in two detectors keeps one definition of "a sign".
+const SIGN_CHARS: &[char] = &['-', '+', '\u{2013}', '\u{2212}', '\u{2014}'];
+
+/// The sign characters that can plausibly open a *subtraction formula* whose
+/// right operand is a named quantity rather than a literal digit — F-469's
+/// "10 – Size" (`flaw.magical_being_companion`, ArMDE:6390). Deliberately
+/// **not** the ASCII hyphen: page and level ranges ("page 103-105") pair a
+/// digit with a bare hyphen constantly, and admitting it here would turn
+/// every such citation into a false positive. The rulebook's own
+/// typographic convention already keeps the two apart — a formula dash is
+/// EN DASH or MINUS SIGN, a range hyphen is ASCII — so this list trusts that
+/// convention rather than guessing from context.
+const FORMULA_DASH_CHARS: &[char] = &['\u{2013}', '\u{2212}'];
 
 /// True when `s` contains a signed number — `+3`, `-9`, or their en-dash /
 /// minus-sign spellings as the rulebooks write them. In these books the signed
@@ -107,10 +119,40 @@ const SIGN_CHARS: &[char] = &['-', '+', '\u{2013}', '\u{2212}'];
 /// is a *signed modifier*. [`has_mechanical_phrase`] is where it belongs, and
 /// splitting the two is what lets this one stay narrow without the vocabulary as
 /// a whole staying blind.
+///
+/// # Two shapes a plain "sign immediately left of a digit" check missed (S2)
+///
+/// - **Sign, space, digit** — F-464: `flaw.no_hands` (ArMDE:6498) writes
+///   "take a – 5 penalty", with a literal space between the EN DASH and the
+///   digit. Verified byte-by-byte with `od -c`.
+/// - **Digit, (space,) dash, non-digit** — F-469: `flaw.magical_being_companion`
+///   (ArMDE:6390) writes "Magic Might score of 10 – Size" — a subtraction
+///   formula whose right operand is a name, so no digit ever follows the
+///   dash. Restricted to [`FORMULA_DASH_CHARS`] for the reason its doc
+///   comment gives.
 fn has_signed_number(s: &str) -> bool {
-    let mut chars = s.chars().peekable();
-    while let Some(c) = chars.next() {
-        if SIGN_CHARS.contains(&c) && chars.peek().is_some_and(char::is_ascii_digit) {
+    let chars: Vec<char> = s.chars().collect();
+
+    let skip_spaces = |mut idx: usize| {
+        while chars.get(idx) == Some(&' ') {
+            idx += 1;
+        }
+        idx
+    };
+
+    for (i, &c) in chars.iter().enumerate() {
+        if SIGN_CHARS.contains(&c)
+            && chars
+                .get(skip_spaces(i + 1))
+                .is_some_and(char::is_ascii_digit)
+        {
+            return true;
+        }
+        if c.is_ascii_digit()
+            && chars
+                .get(skip_spaces(i + 1))
+                .is_some_and(|c| FORMULA_DASH_CHARS.contains(c))
+        {
             return true;
         }
     }
@@ -178,7 +220,7 @@ fn has_botch_term(s: &str) -> bool {
 ///   discontinuous form, unlike a substring — but adding that pattern is a
 ///   new family, not a conversion, so it is slice S2's job, not this one's.
 ///   Converting this list to regex without widening what it matches is what
-///   [`regex_matcher_reproduces_the_recorded_s1_before_set`] proves.
+///   [`regex_screen_never_loses_an_s1_recorded_flag`] proves.
 ///
 /// The rounding forms are spelled out rather than stemmed because the obvious
 /// stem, `round`, is also a unit of combat time; `rounded up`/`round up` and
@@ -195,7 +237,13 @@ const MECHANICAL_PHRASES: &[&str] = &[
     "or more",
     "oder mehr",
     "may not be greater than",
-    "darf nicht größer sein als",
+    // F-537 (S2): this needle was "darf nicht größer sein als", assuming
+    // English word order. German puts the verb clause-finally instead —
+    // `flaw.uninspirational` (ArMDE:6921) writes "darf nicht größer als 0
+    // sein" — so the literal matched nothing the book writes. Fixed to the
+    // word order the book actually uses; verified against ArMDE:6921 and one
+    // other hit.
+    "darf nicht größer als",
     "no more than",
     "nicht mehr als",
     // Target numbers.
@@ -254,7 +302,7 @@ static MECHANICAL_PHRASE_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
 /// sin is pointing at a supplement — `virtue.factor` and `virtue.fidai` both
 /// arrived in the sweep that way, which is why the regex conversion is proved
 /// inert against exactly those two entries (see
-/// [`regex_matcher_reproduces_the_recorded_s1_before_set`]). A phrase crossing
+/// [`regex_screen_never_loses_an_s1_recorded_flag`]). A phrase crossing
 /// a word boundary is a defect in the screen, not an idiom to argue down in a
 /// `NO_RULE_DESPITE_TOKEN` row.
 ///
@@ -263,12 +311,533 @@ static MECHANICAL_PHRASE_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
 /// keep.
 fn has_mechanical_phrase(s: &str) -> bool {
     MECHANICAL_PHRASE_PATTERNS.iter().any(|re| re.is_match(s))
+        || S2_IDIOM_PATTERNS.iter().any(|re| re.is_match(s))
 }
 
 /// The guard's detector: does this rules text actually state a mechanical rule?
 fn states_a_mechanical_rule(text: &str) -> bool {
     has_signed_number(text) || has_botch_term(text) || has_mechanical_phrase(text)
 }
+
+/// The rulebook language an [`S2Idiom`] must be verified against — D19's
+/// obligation 3, tightened by F-537: a German pattern is checked against the
+/// German source, not against a plausible rendering of the English, and vice
+/// versa.
+#[derive(Clone, Copy)]
+enum Language {
+    En,
+    De,
+}
+
+/// One S2 (`docs/vf-audit/corrections.md` § 3.1, plus the capability family
+/// § 2.1b/D8 requires) addition to the mechanical screen.
+///
+/// `pattern` is complete regex source — already valid, left-`\b`-anchored per
+/// [`has_mechanical_phrase`]'s no-right-boundary convention — compiled
+/// case-insensitively exactly as written. None of the idioms below contain a
+/// regex metacharacter as a literal character, which is why none needs
+/// `regex::escape`; an addition that does must escape its literal part by
+/// hand before splicing it in. `family` names the § 3.1 row (`"capability"`
+/// for D8's, which the table does not itself carry) purely for
+/// documentation and failure messages.
+struct S2Idiom {
+    pattern: &'static str,
+    language: Language,
+    family: &'static str,
+}
+
+/// D19's bounded-gap idiom for German's discontinuous modal negation
+/// ("kann … nicht anwenden", "darf … nicht nehmen"): a modal verb, then up to
+/// 40 non-period characters (never crossing a full stop, so the gap cannot
+/// span a sentence boundary), then "nicht". 40 is not a guess — B17's and
+/// this slice's own sample of real gaps (measured from the shipped German
+/// text) top out at 23 characters ("darfst die Tugend Wohlhabend nicht"); 40
+/// leaves headroom without approaching a typical sentence's length. Matches
+/// with a zero-length gap too (`{0,40}?` allows zero repetitions), which is
+/// how it also covers the contiguous spellings ("darfst nicht", "kannst
+/// nicht") without a second pattern.
+const DE_MODAL_NICHT: &str = r"\b(?:kann|kannst|können|darf|darfst|dürfen)\b[^.]{0,40}?\bnicht";
+
+/// Every S2 addition. Grouped and commented by § 3.1's family numbering.
+/// Every literal and every bounded-gap idiom here was verified against a
+/// real hit in its own language's source file before being added (D19
+/// obligation 3) — see [`every_s2_idiom_has_a_real_hit_in_its_own_language`],
+/// which checks the same claim mechanically on every future change.
+const S2_IDIOMS: &[S2Idiom] = &[
+    // --- Capability (D8 / § 2.1b) --------------------------------------
+    // D8 reclassifies 48 `supernatural` + `narrative` entries that state a
+    // roll-free capability with no signed number and no botch term, so they
+    // depend entirely on a family like this one. Derived from the 48
+    // themselves (`virtue.amorphous`'s "is able to", `virtue.see_in_darkness`'s
+    // "You can see" — too bare to add safely — `virtue.leather_ripper`'s "the
+    // supernatural ability to", `virtue.kassalan_exorcism`'s "capable of").
+    // Bare "can"/"kann" are deliberately excluded: both are among the most
+    // common words in either language's ordinary prose, and would flag most
+    // of the catalogue.
+    S2Idiom {
+        pattern: r"\bis able to",
+        language: Language::En,
+        family: "capability",
+    },
+    S2Idiom {
+        pattern: r"\bare able to",
+        language: Language::En,
+        family: "capability",
+    },
+    S2Idiom {
+        pattern: r"\bcapable of",
+        language: Language::En,
+        family: "capability",
+    },
+    S2Idiom {
+        pattern: r"\bthe ability to",
+        language: Language::En,
+        family: "capability",
+    },
+    S2Idiom {
+        pattern: r"\bin der lage",
+        language: Language::De,
+        family: "capability",
+    },
+    S2Idiom {
+        pattern: r"\bfähigkeit",
+        language: Language::De,
+        family: "capability",
+    },
+    // --- Family 1 (Prohibition) + family 3 (Absolutes beyond "cannot die")
+    // Consolidated: German negation is discontinuous (D19), so the general
+    // fix is one bounded-gap pattern binding a modal verb to a later
+    // "nicht", which subsumes every contiguous DE spelling the table lists
+    // ("darfst nicht", "kann nicht genommen werden", "kannst nicht", "kann …
+    // nicht anwenden") as the zero-gap and small-gap cases of the same
+    // idiom. English "cannot" is one word, so stemming it bare subsumes
+    // "cannot take"/"cannot walk"/"cannot cast"/"cannot permanently
+    // destroy"/"cannot gain"/"cannot die" the same way.
+    S2Idiom {
+        pattern: r"\bcannot",
+        language: Language::En,
+        family: "prohibition/absolutes",
+    },
+    S2Idiom {
+        pattern: r"\bcan't",
+        language: Language::En,
+        family: "prohibition/absolutes",
+    },
+    S2Idiom {
+        pattern: r"\bmay not take",
+        language: Language::En,
+        family: "prohibition",
+    },
+    S2Idiom {
+        pattern: r"\bmay not have",
+        language: Language::En,
+        family: "prohibition",
+    },
+    S2Idiom {
+        pattern: r"\bmay only take this",
+        language: Language::En,
+        family: "prohibition",
+    },
+    S2Idiom {
+        pattern: r"\bis impossible",
+        language: Language::En,
+        family: "prohibition",
+    },
+    S2Idiom {
+        pattern: r"\bunable to learn",
+        language: Language::En,
+        family: "prohibition",
+    },
+    S2Idiom {
+        pattern: DE_MODAL_NICHT,
+        language: Language::De,
+        family: "prohibition/absolutes",
+    },
+    S2Idiom {
+        pattern: r"\bunmöglich",
+        language: Language::De,
+        family: "prohibition",
+    },
+    S2Idiom {
+        pattern: r"\bnicht gehen",
+        language: Language::De,
+        family: "prohibition",
+    },
+    S2Idiom {
+        pattern: r"\bkönnen nichts",
+        language: Language::De,
+        family: "prohibition",
+    },
+    S2Idiom {
+        pattern: r"\bkannst keine",
+        language: Language::De,
+        family: "prohibition",
+    },
+    // --- Family 2 (Permission) ------------------------------------------
+    // The DE modal+verb pairs are one bounded-gap pattern for the same
+    // reason as the prohibition family: "darfst … wählen" and "darf …
+    // erwerben" are the same idiom with a different bound verb, not
+    // different idioms.
+    S2Idiom {
+        pattern: r"\bmay take",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\bmay learn",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\bmay purchase",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\bmay begin with",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\bcan purchase",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\bis allowed to have",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\ballows the character to purchase",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\beven if normally",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\bat character generation",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\bat character creation",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\b(?:darf|darfst|dürfen)\b[^.]{0,40}?\b(?:wählen|erwerben|erlernen|haben)",
+        language: Language::De,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\berlaubt\b[^.]{0,60}?\bzu (?:kaufen|erwerben|erlernen|wählen)",
+        language: Language::De,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\bselbst wenn du normalerweise",
+        language: Language::De,
+        family: "permission",
+    },
+    S2Idiom {
+        pattern: r"\bbei der charaktererschaffung",
+        language: Language::De,
+        family: "permission",
+    },
+    // --- Family 4 (Eligibility) -------------------------------------------
+    S2Idiom {
+        pattern: r"\bmust be\b[^.]{0,40}?\bto take this",
+        language: Language::En,
+        family: "eligibility",
+    },
+    S2Idiom {
+        pattern: r"\bmay only be taken by",
+        language: Language::En,
+        family: "eligibility",
+    },
+    S2Idiom {
+        pattern: r"\bonly characters with",
+        language: Language::En,
+        family: "eligibility",
+    },
+    // The recurring tail of the German "you must be X to take this
+    // Virtue/Flaw" idiom — verified against three real passages
+    // (ArMDE:6148, :6250, :6885 and their DE mirrors) that phrase the lead-in
+    // three different ways ("musst … sein", "muss … besitzen", "muss …
+    // sein") but always close "um dies-<en|e> <Fehler|Tugend> zu
+    // <wählen|nehmen>". Anchoring on the stable tail rather than the varying
+    // lead-in is what makes one pattern cover all three.
+    S2Idiom {
+        pattern: r"\bum dies\w*\b[^.]{0,20}?\bzu (?:wählen|nehmen)",
+        language: Language::De,
+        family: "eligibility",
+    },
+    S2Idiom {
+        pattern: r"\bdarf nur von\b[^.]{0,40}?\bgenommen werden",
+        language: Language::De,
+        family: "eligibility",
+    },
+    // --- Family 5 (Incompatibility / exclusion) --------------------------
+    S2Idiom {
+        pattern: r"\bis not compatible with",
+        language: Language::En,
+        family: "incompatibility",
+    },
+    S2Idiom {
+        pattern: r"\bis incompatible with",
+        language: Language::En,
+        family: "incompatibility",
+    },
+    S2Idiom {
+        pattern: r"\bmay not also take",
+        language: Language::En,
+        family: "incompatibility",
+    },
+    S2Idiom {
+        pattern: r"\bmay not be combined with",
+        language: Language::En,
+        family: "incompatibility",
+    },
+    S2Idiom {
+        pattern: r"\bmay not have both",
+        language: Language::En,
+        family: "incompatibility",
+    },
+    S2Idiom {
+        pattern: r"\bist nicht\b[^.]{0,40}?\bvereinbar",
+        language: Language::De,
+        family: "incompatibility",
+    },
+    S2Idiom {
+        pattern: r"\bist unvereinbar mit",
+        language: Language::De,
+        family: "incompatibility",
+    },
+    S2Idiom {
+        pattern: r"\bdarf nicht zusätzlich",
+        language: Language::De,
+        family: "incompatibility",
+    },
+    // --- Family 6 (Item transfer / composition) --------------------------
+    // F-403/F-406: exactly 4 hits in the whole English core book, 3 already
+    // non-`narrative`.
+    S2Idiom {
+        pattern: r"\bincludes the effects of",
+        language: Language::En,
+        family: "item transfer",
+    },
+    S2Idiom {
+        pattern: r"\bschließt die auswirkungen von\b[^.]{0,50}?\bein",
+        language: Language::De,
+        family: "item transfer",
+    },
+    // --- Family 7 (Multiplier stem) ---------------------------------------
+    S2Idiom {
+        pattern: r"\bmultiplier",
+        language: Language::En,
+        family: "multiplier stem",
+    },
+    S2Idiom {
+        pattern: r"\bmultiplikator",
+        language: Language::De,
+        family: "multiplier stem",
+    },
+    // --- Family 8 (Multiplier in words) ------------------------------------
+    S2Idiom {
+        pattern: r"\bdouble",
+        language: Language::En,
+        family: "multiplier in words",
+    },
+    S2Idiom {
+        pattern: r"\btwice",
+        language: Language::En,
+        family: "multiplier in words",
+    },
+    S2Idiom {
+        pattern: r"\bhalve",
+        language: Language::En,
+        family: "multiplier in words",
+    },
+    S2Idiom {
+        pattern: r"\bdoppelt",
+        language: Language::De,
+        family: "multiplier in words",
+    },
+    S2Idiom {
+        pattern: r"\bhalbiert",
+        language: Language::De,
+        family: "multiplier in words",
+    },
+    // --- Family 9 ("more" without the "or") ---------------------------------
+    // F-383's actual miss is "possibly more", not a gap-widened "or more";
+    // adding it as its own literal is simpler than a bounded-gap pattern and
+    // does not risk relaxing "or more" itself into something noisier.
+    S2Idiom {
+        pattern: r"\bpossibly more",
+        language: Language::En,
+        family: "\"more\" without \"or\"",
+    },
+    // --- Family 10 (Bare "no more") -----------------------------------------
+    S2Idiom {
+        pattern: r"\bno more",
+        language: Language::En,
+        family: "bare \"no more\"",
+    },
+    S2Idiom {
+        pattern: r"\bnicht mehr",
+        language: Language::De,
+        family: "bare \"no more\"",
+    },
+    // --- Family 11 (Floor) ---------------------------------------------------
+    S2Idiom {
+        pattern: r"\bminimum",
+        language: Language::En,
+        family: "floor",
+    },
+    S2Idiom {
+        pattern: r"\bmindest",
+        language: Language::De,
+        family: "floor",
+    },
+    // --- Family 12 (Magnitude/level stem) -------------------------------------
+    S2Idiom {
+        pattern: r"\bmagnitudes",
+        language: Language::En,
+        family: "magnitude/level stem",
+    },
+    S2Idiom {
+        pattern: r"\bone level",
+        language: Language::En,
+        family: "magnitude/level stem",
+    },
+    S2Idiom {
+        pattern: r"\bby more than one level",
+        language: Language::En,
+        family: "magnitude/level stem",
+    },
+    S2Idiom {
+        pattern: r"\bmagnituden",
+        language: Language::De,
+        family: "magnitude/level stem",
+    },
+    S2Idiom {
+        pattern: r"\bum mehr als eine stufe",
+        language: Language::De,
+        family: "magnitude/level stem",
+    },
+    // --- Family 13 (Bare imperative modifier) ---------------------------------
+    // F-489, "the sharpest miss in the batch": the rule is the entry's whole
+    // first sentence. "add" is right-bounded (unlike this module's usual
+    // convention) because without it the bare stem also matches "address",
+    // "additional" and "administrator", none of which state a rule.
+    S2Idiom {
+        pattern: r"\bsubtract",
+        language: Language::En,
+        family: "bare imperative modifier",
+    },
+    S2Idiom {
+        pattern: r"\badd\b",
+        language: Language::En,
+        family: "bare imperative modifier",
+    },
+    S2Idiom {
+        pattern: r"\bziehe",
+        language: Language::De,
+        family: "bare imperative modifier",
+    },
+    S2Idiom {
+        pattern: r"\baddiere",
+        language: Language::De,
+        family: "bare imperative modifier",
+    },
+    // --- Family 14 (Named rulebook terms) -------------------------------------
+    S2Idiom {
+        pattern: r"\badvancement total",
+        language: Language::En,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\bwealth multiplier",
+        language: Language::En,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\breputation\b[^.]{0,20}?\b(?:at|of) level",
+        language: Language::En,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\bexperience points\b[^.]{0,40}?\bmust be spent on",
+        language: Language::En,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\ban additional personality trait of",
+        language: Language::En,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\bspend a round",
+        language: Language::En,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\bgame mechanical effects",
+        language: Language::En,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\btwo dice instead of",
+        language: Language::En,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\bfortschrittssumme",
+        language: Language::De,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\breputation der stufe",
+        language: Language::De,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\berfahrungspunkte\b[^.]{0,40}?\bausgeben",
+        language: Language::De,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\beine runde lang",
+        language: Language::De,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\bspielmechanische auswirkungen",
+        language: Language::De,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        pattern: r"\bzwei würfel statt",
+        language: Language::De,
+        family: "named rulebook term",
+    },
+];
+
+/// [`S2_IDIOMS`], compiled once.
+static S2_IDIOM_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
+    S2_IDIOMS
+        .iter()
+        .map(|idiom| {
+            let source = format!("(?i){}", idiom.pattern);
+            Regex::new(&source)
+                .unwrap_or_else(|e| panic!("S2 idiom {:?} compiles as a regex: {e}", idiom.pattern))
+        })
+        .collect()
+});
 
 /// The V/F catalogue, parsed once.
 fn catalogue() -> Vec<Value> {
@@ -484,6 +1053,377 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
         "The Minor half of the same entry, citing the same passage (ArMDE:6871-6878). Same \
          reading as flaw.true_love_major.",
     ),
+    // --- S2 additions (docs/vf-audit/corrections.md § 3.1): growing the screen's
+    // families newly trips these, and reading each passage finds no rule —
+    // an idiom used non-mechanically, not a dropped clause.
+    (
+        "flaw.busybody",
+        "ArMDE:5761-5764's \"at character creation\" (family 2, permission) marks a narrative \
+         choice — whether the character's gossip network extends to the lower-class members of \
+         the covenant — not an Ability or XP authorization. Nothing is granted, nothing computed.",
+    ),
+    (
+        "flaw.compassionate_major",
+        "ArMDE:5809-5812's \"You cannot bear to see suffering in others\" (bare \"cannot\", \
+         family 1/3) is the idiom \"can't bear/stand X\" for a strong dislike, describing the \
+         character's temperament — not a capability or action the engine restricts.",
+    ),
+    (
+        "flaw.compassionate_minor",
+        "The Minor half of the same entry, citing the same passage (ArMDE:5809-5812). Same \
+         reading as flaw.compassionate_major.",
+    ),
+    (
+        "flaw.compulsive_lying_major",
+        "ArMDE:5817-5820's \"when he cannot be immediately caught out\" (bare \"cannot\", family \
+         1/3) describes a narrative CONDITION under which the compulsion manifests — not \
+         something the character himself is prohibited from doing.",
+    ),
+    (
+        "flaw.compulsive_lying_minor",
+        "The Minor half of the same entry, citing the same passage (ArMDE:5817-5820). Same \
+         reading as flaw.compulsive_lying_major.",
+    ),
+    (
+        "flaw.evil_destiny",
+        "ArMDE:6028-6035's \"He cannot discuss this openly for fear that he will be accused of \
+         infernalism\" (bare \"cannot\", family 1/3) is roleplay/storyguide guidance about a \
+         Story Flaw's secrecy premise, not a mechanical restriction on the character.",
+    ),
+    (
+        "flaw.exiled_atlantean",
+        "ArMDE:6048-6051's \"cannot return to her magic regio\" (bare \"cannot\", family 1/3) is \
+         setting background — the engine has no regio-travel mechanic and nothing about the \
+         character's computed state changes because of this sentence.",
+    ),
+    (
+        "flaw.soft_hearted",
+        "ArMDE:6775-6778's \"You cannot bear to witness suffering\" (bare \"cannot\", family 1/3) \
+         is the same \"can't bear X\" temperament idiom as flaw.compassionate_major, not a \
+         restricted capability.",
+    ),
+    (
+        "flaw.tragic_life",
+        "ArMDE:6855-6870's \"their creator cannot usually fashion an alternative situation\" \
+         (bare \"cannot\", family 1/3) describes a limit on the demon's narrative planning, not \
+         on the tainted character it names.",
+    ),
+];
+
+/// Entries a **new** S2 phrase family newly flags, where reading the passage
+/// finds a real rule the engine does not yet compute — as opposed to
+/// [`NO_RULE_DESPITE_TOKEN`], whose rows record that a human read the passage
+/// and found *no* rule. This is the opposite kind of row: the rule is real,
+/// and something else (reclassification to `uncomputed_rule` plus the
+/// `description` text in both locales, which is X2's job; the authorization
+/// family, X1's) has to land before the entry can leave `narrative` — not
+/// this test-only slice, which is why growing the screen must not itself
+/// force a data change here.
+///
+/// `(id, phrase-or-family)` — the second field names what now trips it, so
+/// the next reader does not have to re-derive it. Every commit stays green
+/// (plan § 1): each listed id must **still trip** the screen
+/// ([`pending_mechanical_classification_entries_still_trip_the_screen`]), so
+/// a later fix has to remove the row rather than leave a stale one — the
+/// list can only shrink. Every *unlisted* swept `narrative` entry must still
+/// pass — [`no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause`]
+/// enforces that directly, since this list is the only thing it skips besides
+/// [`NO_RULE_DESPITE_TOKEN`]. X2 is the slice that empties it.
+const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
+    (
+        "flaw.a_deal_with_the_devil",
+        "item transfer: \"includes the effects of\" (Plagued By Supernatural Entity), ArMDE:5905-5908",
+    ),
+    (
+        "flaw.ability_block",
+        "prohibition: \"completely unable to learn\" a class of Abilities, ArMDE:5651-5654",
+    ),
+    (
+        "flaw.bigamist",
+        "multiplier stem: \"Wealth Multiplier\" cost formula, ArMDE:5699-5702",
+    ),
+    (
+        "flaw.blackmail",
+        "\"possibly more\" (family 9): a quantified yearly value with an escalation condition, \
+         ArMDE:5707-5710",
+    ),
+    (
+        "flaw.blind",
+        "prohibition: bare \"cannot\" — \"cannot aim spells without magical aid\", ArMDE:5719-5722",
+    ),
+    (
+        "flaw.bound_magic",
+        "prohibition: bare \"cannot\" — incompatible with Harnessed Magic, ArMDE:5727-5730",
+    ),
+    (
+        "flaw.branded_criminal",
+        "prohibition + permission: \"may not take\" / \"at character creation\", ArMDE:5749-5752",
+    ),
+    (
+        "flaw.ceremonial_spontaneous_magic",
+        "incompatibility: \"is not compatible with\", ArMDE:5781-5784",
+    ),
+    (
+        "flaw.chaotic_magic",
+        "magnitude/level stem: \"by more than one level\", ArMDE:5785-5788",
+    ),
+    (
+        "flaw.companion_animal",
+        "named rulebook term: \"an additional Personality Trait of\", ArMDE:5805-5808",
+    ),
+    (
+        "flaw.consumed_casting_tools",
+        "eligibility: \"may only be taken by\" Verditius magi, ArMDE:5839-5842",
+    ),
+    (
+        "flaw.crippled",
+        "prohibition: bare \"cannot\" — \"cannot walk\", ArMDE:5877-5880",
+    ),
+    (
+        "flaw.deteriorating_power",
+        "magnitude/level stem: \"reduced by 3 magnitudes\" (D8), ArMDE:5944-5949",
+    ),
+    (
+        "flaw.diabolic_past",
+        "permission: \"may purchase\" Infernal Lore, ArMDE:5958-5961",
+    ),
+    (
+        "flaw.difficult_spontaneous_magic",
+        "prohibition: bare \"cannot\" — \"cannot use Spontaneous magic at all\" in combination, \
+         ArMDE:5966-5971",
+    ),
+    (
+        "flaw.difficult_underlings",
+        "eligibility: \"may only take this\", ArMDE:5976-5979",
+    ),
+    (
+        "flaw.disorientating_magic",
+        "named rulebook term: \"spend a round\", ArMDE:5984-5987",
+    ),
+    (
+        "flaw.enfeebled",
+        "prohibition: \"unable to learn\" / bare \"cannot\" — \"cannot train\", ArMDE:6008-6011",
+    ),
+    (
+        "flaw.envied_beauty",
+        "prohibition: \"may not have\" this Flaw without a positive Presence, ArMDE:6012-6015",
+    ),
+    (
+        "flaw.exciting_experimentation",
+        "named rulebook term: \"two dice instead of\" the normal one, ArMDE:6040-6043",
+    ),
+    (
+        "flaw.faerie_friend",
+        "permission: \"can purchase\" Faerie Lore, ArMDE:6052-6055",
+    ),
+    (
+        "flaw.faerie_upbringing",
+        "permission: \"may learn\" Faerie Lore \"at character generation\", ArMDE:6056-6059",
+    ),
+    (
+        "flaw.false_power",
+        "capability: \"the ability to\" sense the taint, plus extensive realm-interaction \
+         mechanics the passage states (D8-adjacent), ArMDE:6080-6097",
+    ),
+    (
+        "flaw.false_power_minor",
+        "The Minor half of the same entry, citing the same passage. Same trigger as \
+         flaw.false_power.",
+    ),
+    (
+        "flaw.fettered_magic",
+        "prohibition: bare \"cannot\" — incompatible with Tethered Magic, ArMDE:6114-6117",
+    ),
+    (
+        "flaw.harmless_magic",
+        "prohibition: bare \"cannot\" — \"cannot permanently destroy anything\", ArMDE:6230-6235",
+    ),
+    (
+        "flaw.hermetic_patron",
+        "eligibility: \"must be\" a Redcap or magus \"to take this\" Flaw, ArMDE:6248-6255",
+    ),
+    (
+        "flaw.imagined_folk_tradition_vulnerability",
+        "bare \"no more\" cap plus \"allows the character to purchase\"-shaped permission, \
+         ArMDE:6280-6283",
+    ),
+    (
+        "flaw.incompatible_arts",
+        "incompatibility: \"may not be combined with\" a Deficiency, ArMDE:6290-6293",
+    ),
+    (
+        "flaw.judged_unfairly",
+        "prohibition + incompatibility: bare \"cannot\" gain a Reputation, \"is incompatible \
+         with\", ArMDE:6326-6329",
+    ),
+    (
+        "flaw.magical_air",
+        "prohibition: \"may not take\" this Flaw with The Gift, ArMDE:6382-6385",
+    ),
+    (
+        "flaw.magical_being_companion",
+        "signed-number blind spot F-469 (S2, has_signed_number): \"Magic Might score of 10 – \
+         Size\" — digit, EN DASH, named quantity, ArMDE:6390",
+    ),
+    (
+        "flaw.magical_fascination",
+        "permission + bare \"no more\": \"is allowed to have\" a score of 1 (but no more), \
+         ArMDE:6392-6395",
+    ),
+    (
+        "flaw.master_of_none",
+        "prohibition: \"can't apply\" experience points earned this year, ArMDE:6418-6421",
+    ),
+    (
+        "flaw.monastic_vows_hermetic",
+        "prohibition: bare \"cannot\" — \"cannot own vis\", \"cannot marry\", ArMDE:6450-6453",
+    ),
+    (
+        "flaw.motion_sickness",
+        "multiplier in words + floor: \"double the fatigue loss\", \"minimum loss of two Fatigue \
+         levels\", ArMDE:6468-6471",
+    ),
+    (
+        "flaw.necessary_condition",
+        "prohibition: bare \"cannot\" — \"cannot cast spells at all\", ArMDE:6476-6479",
+    ),
+    (
+        "flaw.no_hands",
+        "signed-number blind spot F-464 (S2, has_signed_number): \"take a – 5 penalty\" — EN \
+         DASH, space, digit, ArMDE:6498",
+    ),
+    (
+        "flaw.no_sense_of_direction",
+        "incompatibility: \"is incompatible with\" the Well-Traveled Virtue, ArMDE:6500-6503",
+    ),
+    (
+        "flaw.outcast",
+        "prohibition: \"may not take\" the Wealthy Virtue, ArMDE:6538-6541",
+    ),
+    (
+        "flaw.pagan",
+        "permission: \"may begin with\" Magic Lore or Faerie Lore, ArMDE:6570-6573",
+    ),
+    (
+        "flaw.poor_hearing",
+        "bare imperative modifier: \"Subtract 3 from rolls involving hearing\", ArMDE:6614-6617",
+    ),
+    (
+        "flaw.restricted_learning",
+        "permission: \"at character creation\" — the five-Ability restriction itself, \
+         ArMDE:6683-6686",
+    ),
+    (
+        "flaw.restriction",
+        "prohibition: bare \"cannot\" — \"cannot cast spells at all\" under conditions, \
+         ArMDE:6691-6694",
+    ),
+    (
+        "flaw.sheltered_upbringing",
+        "prohibition: \"may not take\" several Abilities as beginning Abilities, ArMDE:6721-6724",
+    ),
+    (
+        "flaw.stockade_parma_magica",
+        "prohibition: bare \"cannot\" — \"cannot suppress your Parma\", ArMDE:6787-6790",
+    ),
+    (
+        "flaw.study_requirement",
+        "permission: \"may take both\" Study Bonus and Study Requirement, ArMDE:6795-6798",
+    ),
+    (
+        "flaw.suppressed_gift",
+        "prohibition: bare \"cannot\" — \"cannot perform Hermetic magic\", ArMDE:6803-6810",
+    ),
+    (
+        "flaw.tainted_with_evil",
+        "prohibition: \"is impossible\" — gaining a positive Reputation, ArMDE:6843-6846",
+    ),
+    (
+        "flaw.unnatural_magic",
+        "prohibition: bare \"cannot\" — \"cannot extract vis from an aura using Creo\", \
+         ArMDE:6931-6934",
+    ),
+    (
+        "flaw.vulnerable_magic",
+        "incompatibility: \"may not be combined with\" Restrictions/Necessary Conditions — F-537's \
+         and B19's own motivating example for this whole family, ArMDE:7005-7010",
+    ),
+    (
+        "flaw.wanderlust",
+        "prohibition: bare \"cannot\" — \"cannot spend more than a season in the same place\", \
+         ArMDE:7015-7018",
+    ),
+    (
+        "virtue.alim",
+        "permission: \"may purchase\" Academic Abilities \"during character generation\", \
+         ArMDE:3380-3383",
+    ),
+    (
+        "virtue.almogaten",
+        "permission: \"may take\" Martial Abilities, ArMDE:3396-3403",
+    ),
+    (
+        "virtue.almogavar",
+        "permission + prohibition: \"may take\" Martial Abilities, \"may not take\" Poor/Wealthy, \
+         ArMDE:3404-3409",
+    ),
+    (
+        "virtue.amorphous_major",
+        "capability (D8/§2.1b): \"is able to take on any human form\", ArMDE:3410-3413",
+    ),
+    (
+        "virtue.amorphous_minor",
+        "The Minor half of the same entry, citing the same passage. Same trigger as \
+         virtue.amorphous_major.",
+    ),
+    (
+        "virtue.archieunuch",
+        "permission: \"may take\" Academic Abilities, ArMDE:3436-3439",
+    ),
+    (
+        "virtue.beadle",
+        "permission: \"may purchase\" Academic Abilities \"at character generation\", \
+         ArMDE:3480-3483",
+    ),
+    (
+        "virtue.brother_chaplain",
+        "permission: \"may purchase\" Academic Abilities, ArMDE:3529-3532",
+    ),
+    (
+        "virtue.brother_knight",
+        "permission: \"may take\" Academic and Martial Abilities, ArMDE:3533-3536",
+    ),
+    (
+        "virtue.bureaucrat",
+        "permission: \"may take\" Academic Abilities, ArMDE:3541-3544",
+    ),
+    (
+        "virtue.clerk",
+        "permission: \"may take\" Academic Abilities, ArMDE:3571-3574",
+    ),
+    (
+        "virtue.covenfolk",
+        "prohibition: \"may not take\" the Wealthy Major Virtue or Poor Major Flaw, \
+         ArMDE:3609-3612",
+    ),
+    (
+        "virtue.custos",
+        "permission + prohibition: \"may take\" restricted Abilities, \"may not take\" \
+         Wealthy/Poor, ArMDE:3629-3634",
+    ),
+    (
+        "virtue.eunuch",
+        "permission: \"may take\" Academic Abilities, ArMDE:3771-3774",
+    ),
+    (
+        "virtue.failed_apprentice",
+        "permission + prohibition: \"may learn\" Academic/Arcane/Martial, \"may not have\" The \
+         Gift, ArMDE:3843-3846",
+    ),
+    (
+        "virtue.fidai",
+        "permission: \"may take\" Martial Abilities, ArMDE:3877-3882",
+    ),
 ];
 
 /// The `source` block of a catalogue entry, as `(file, start, end)`.
@@ -565,6 +1505,12 @@ fn no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause() {
         {
             continue;
         }
+        if PENDING_MECHANICAL_CLASSIFICATION
+            .iter()
+            .any(|(pending, _)| *pending == id)
+        {
+            continue;
+        }
         let Some(passage) = bracketed_passage(&mut cache, &file, start, end) else {
             continue;
         };
@@ -635,6 +1581,49 @@ fn exempted_entries_still_trip_the_screen() {
             states_a_mechanical_rule(&passage),
             "NO_RULE_DESPITE_TOKEN row \"{id}\" no longer trips the mechanical-token screen, so \
              it is silencing nothing — delete the row"
+        );
+    }
+}
+
+/// The mirror of [`exempted_entries_still_trip_the_screen`], for
+/// [`PENDING_MECHANICAL_CLASSIFICATION`] rather than [`NO_RULE_DESPITE_TOKEN`]:
+/// every pending row must still trip the screen, so the list can only shrink
+/// as X2 reclassifies entries — never grow stale.
+#[test]
+fn pending_mechanical_classification_entries_still_trip_the_screen() {
+    let mut cache: BTreeMap<String, Vec<String>> = BTreeMap::new();
+
+    for (id, _) in PENDING_MECHANICAL_CLASSIFICATION {
+        let item = catalogue()
+            .into_iter()
+            .find(|item| item["id"] == *id)
+            .unwrap_or_else(|| {
+                panic!(
+                    "PENDING_MECHANICAL_CLASSIFICATION row \"{id}\" names an entry that is no \
+                     longer in the catalogue — delete the row"
+                )
+            });
+
+        assert_eq!(
+            item["classification"], "narrative",
+            "PENDING_MECHANICAL_CLASSIFICATION row \"{id}\" is no longer `narrative` — X2 has \
+             already reclassified it, so delete the row"
+        );
+
+        let (file, start, end) =
+            source_of(&item).unwrap_or_else(|| panic!("\"{id}\" has a source block"));
+        assert!(
+            is_swept(&file, start, end),
+            "PENDING_MECHANICAL_CLASSIFICATION row \"{id}\" cites {file}:{start}-{end}, outside \
+             every swept block — the guard it works around does not reach it, so delete the row"
+        );
+
+        let passage = bracketed_passage(&mut cache, &file, start, end)
+            .unwrap_or_else(|| panic!("\"{id}\" cites an in-bounds range"));
+        assert!(
+            states_a_mechanical_rule(&passage),
+            "PENDING_MECHANICAL_CLASSIFICATION row \"{id}\" no longer trips the mechanical-token \
+             screen — nothing needs it to wait any more, so delete the row"
         );
     }
 }
@@ -846,11 +1835,12 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
 /// D19 (`docs/vf-audit/decisions.md`), slice S1: `(narrative_in_swept_blocks,
 /// uncomputed_rule_by_locale)` — the two maps both
 /// [`print_s1_before_offender_set`] and
-/// [`regex_matcher_reproduces_the_recorded_s1_before_set`] need, computed
-/// against whichever [`states_a_mechanical_rule`] is compiled in right now.
-/// Run against the pre-conversion substring matcher, this produced the
-/// committed `tests/fixtures/s1_before_offenders.json`; run against the
-/// regex matcher, it must reproduce that fixture exactly.
+/// [`regex_screen_never_loses_an_s1_recorded_flag`] need, computed against
+/// whichever [`states_a_mechanical_rule`] is compiled in right now. Run
+/// against the pre-conversion substring matcher, this produced the committed
+/// `tests/fixtures/s1_before_offenders.json`; run against the regex matcher
+/// (S1) or the regex matcher plus S2's added families, every entry that
+/// fixture recorded `true` must still be `true`.
 fn compute_s1_offender_set() -> (BTreeMap<String, bool>, BTreeMap<String, bool>) {
     let mut cache: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut narrative_in_swept_blocks = BTreeMap::new();
@@ -894,7 +1884,7 @@ fn compute_s1_offender_set() -> (BTreeMap<String, bool>, BTreeMap<String, bool>)
 /// **substring** matcher this slice replaces with regex. Committed as
 /// `tests/fixtures/s1_before_offenders.json` so the regex conversion can be
 /// proved inert against real shipped data — see
-/// [`regex_matcher_reproduces_the_recorded_s1_before_set`] below. This is a
+/// [`regex_screen_never_loses_an_s1_recorded_flag`] below. This is a
 /// one-shot snapshot helper, not an assertion: it is `#[ignore]`d so it never
 /// runs as part of the suite, and its only job is to reproduce the committed
 /// fixture by hand if the catalogue ever needs re-snapshotting (it must not,
@@ -953,62 +1943,260 @@ fn recorded_s1_before_set() -> (BTreeMap<String, bool>, BTreeMap<String, bool>) 
     )
 }
 
-/// D19's obligation #1 (`docs/vf-audit/decisions.md`): the regex conversion
-/// must reproduce **exactly** the before-set recorded from the substring
-/// matcher, on the real shipped catalogue — not a hand-picked sample. A
-/// widened or narrowed screen would change which entries the two guards
-/// above see, invalidating the measurements B11, B12 and B17 took, and
-/// widening what the screen can see is S2's job, not this slice's.
+/// D19's obligation #1 (`docs/vf-audit/decisions.md`): **immediately after
+/// the regex conversion landed (S1), and before any new family was added**,
+/// this test asserted exact equality with `s1_before_offenders.json` — the
+/// conversion had to flag *exactly* the substring matcher's set, proving the
+/// mechanical change alone (contiguous substring → regex) altered nothing.
+/// That proof is done and frozen in the S1 commit.
+///
+/// S2 (`docs/vf-audit/corrections.md` § 3.1) deliberately widens the screen
+/// with new phrase families, so an exact-equality assertion would go red on
+/// this slice's very first new family — correctly, but for a property this
+/// module no longer wants: the screen is supposed to widen as the sweep
+/// proceeds (see the module doc comment). Re-pinning an exact snapshot every
+/// time a family is added would make the fixture a chore, not a guard.
+///
+/// What stays worth guarding is the **one-directional** half: nothing that
+/// used to trip the screen may silently stop tripping it. That is a real
+/// regression — a family rewritten to be narrower, a boundary bug — and this
+/// is its guard: every entry [`recorded_s1_before_set`] marked `true` must
+/// still be `true` today. An entry recorded `false` carries no such
+/// obligation; S2 (and later slices) are free to flip those to `true`, and
+/// are expected to.
 #[test]
-fn regex_matcher_reproduces_the_recorded_s1_before_set() {
+fn regex_screen_never_loses_an_s1_recorded_flag() {
     let (expected_narrative, expected_uncomputed) = recorded_s1_before_set();
     let (actual_narrative, actual_uncomputed) = compute_s1_offender_set();
 
-    let mut mismatches = Vec::new();
+    let mut regressions = Vec::new();
 
-    for (id, expected) in &expected_narrative {
+    for (id, expected) in expected_narrative.iter().filter(|(_, flagged)| **flagged) {
         match actual_narrative.get(id) {
-            None => mismatches.push(format!(
-                "narrative_in_swept_blocks/{id}: recorded but missing from today's catalogue"
+            None => regressions.push(format!(
+                "narrative_in_swept_blocks/{id}: recorded true but missing from today's catalogue"
             )),
-            Some(actual) if actual != expected => mismatches.push(format!(
-                "narrative_in_swept_blocks/{id}: expected {expected}, got {actual}"
+            Some(actual) if actual != expected => regressions.push(format!(
+                "narrative_in_swept_blocks/{id}: recorded true, now {actual}"
             )),
             Some(_) => {}
-        }
-    }
-    for id in actual_narrative.keys() {
-        if !expected_narrative.contains_key(id) {
-            mismatches.push(format!(
-                "narrative_in_swept_blocks/{id}: in today's catalogue but not in the recorded set"
-            ));
         }
     }
 
-    for (key, expected) in &expected_uncomputed {
+    for (key, expected) in expected_uncomputed.iter().filter(|(_, flagged)| **flagged) {
         match actual_uncomputed.get(key) {
-            None => mismatches.push(format!(
-                "uncomputed_rule_by_locale/{key}: recorded but missing from today's catalogue"
+            None => regressions.push(format!(
+                "uncomputed_rule_by_locale/{key}: recorded true but missing from today's catalogue"
             )),
-            Some(actual) if actual != expected => mismatches.push(format!(
-                "uncomputed_rule_by_locale/{key}: expected {expected}, got {actual}"
+            Some(actual) if actual != expected => regressions.push(format!(
+                "uncomputed_rule_by_locale/{key}: recorded true, now {actual}"
             )),
             Some(_) => {}
         }
     }
-    for key in actual_uncomputed.keys() {
-        if !expected_uncomputed.contains_key(key) {
-            mismatches.push(format!(
-                "uncomputed_rule_by_locale/{key}: in today's catalogue but not in the recorded set"
+
+    assert!(
+        regressions.is_empty(),
+        "the screen must never silently STOP recognizing something it recognized at S1 \
+         (tests/fixtures/s1_before_offenders.json) — widening (S2 and later) is fine and \
+         expected, narrowing is a regression:\n{}",
+        regressions.join("\n")
+    );
+}
+
+/// D19 obligation 3 (`docs/vf-audit/decisions.md`) and F-537: every
+/// [`S2_IDIOMS`] pattern must actually match something the rulebook in its
+/// own tagged [`Language`] writes — not a plausible rendering of the other
+/// locale, and not nothing at all. F-537 found a German needle already in
+/// `MECHANICAL_PHRASES` (S1's 33) that matched zero real lines; this test is
+/// what stops S2's additions from repeating that. It runs the *exact* compiled
+/// pattern the detector uses, against the *whole* source file, so passing here
+/// is not merely plausible — it is a real, reproducible hit.
+#[test]
+fn every_s2_idiom_has_a_real_hit_in_its_own_language() {
+    let en_path = rules_dir()
+        .join("source/en")
+        .join("Ars Magica - Definitive Edition (Core Rules).md");
+    let de_path = rules_dir()
+        .join("source/de")
+        .join("Ars Magica Definitive Edition Basisregeln.md");
+    let en_text = fs::read_to_string(&en_path)
+        .unwrap_or_else(|e| panic!("{} is readable: {e}", en_path.display()));
+    let de_text = fs::read_to_string(&de_path)
+        .unwrap_or_else(|e| panic!("{} is readable: {e}", de_path.display()));
+
+    assert_eq!(
+        S2_IDIOMS.len(),
+        S2_IDIOM_PATTERNS.len(),
+        "S2_IDIOMS and S2_IDIOM_PATTERNS have drifted apart in length"
+    );
+
+    let mut inert = Vec::new();
+    for (idiom, pattern) in S2_IDIOMS.iter().zip(S2_IDIOM_PATTERNS.iter()) {
+        let (text, lang_name) = match idiom.language {
+            Language::En => (&en_text, "en"),
+            Language::De => (&de_text, "de"),
+        };
+        if !pattern.is_match(text) {
+            inert.push(format!(
+                "{:?} (family {:?}, {lang_name}): matches nothing in its own source file",
+                idiom.pattern, idiom.family
             ));
         }
     }
 
     assert!(
-        mismatches.is_empty(),
-        "D19 S1 requires the regex conversion to be INERT: it must flag exactly the entries the \
-         substring matcher flagged (tests/fixtures/s1_before_offenders.json), before any new \
-         phrase family is added — that widening is slice S2, not this one. Disagreements:\n{}",
-        mismatches.join("\n")
+        inert.is_empty(),
+        "F-537: an idiom that matches nothing the rulebook writes is inert coverage \
+         masquerading as coverage — fix the pattern or drop it, never weaken it into a \
+         plausible-but-unverified guess:\n{}",
+        inert.join("\n")
+    );
+}
+
+/// One representative, real, shipped passage per S2 family (§ 3.1's 14 plus
+/// the capability family § 2.1b/D8 needs), proving each family is actually
+/// recognized — not merely that *some* pattern in the combined list matches
+/// *some* text. Every EN passage is checked to trip via [`states_a_mechanical_rule`]
+/// using **only** that family's contribution where practical; where a passage
+/// unavoidably also carries an existing token (rare, and noted inline), the
+/// point still holds because the family's own sub-phrase is what a human
+/// reading the sentence would point to.
+///
+/// Before [`S2_IDIOMS`] carried these families, every row below failed — that
+/// is this test's RED, and it is the reproducible half of this slice's
+/// verbatim RED/GREEN pair (the other half is
+/// [`no_narrative_entry_in_a_swept_block_drops_a_mechanical_clause`] going red
+/// as the newly-recognized families reach already-swept passages).
+#[test]
+fn each_s2_family_is_recognized_by_a_real_shipped_passage() {
+    let cases: &[(&str, &str)] = &[
+        (
+            "capability (EN, D8/§2.1b)",
+            "You are able to fly without the need of wings.",
+        ),
+        (
+            "capability (DE, D8/§2.1b)",
+            "Du bist in der Lage, in Kampfsituationen oder bei frustrierenden Umständen in einen \
+             blinden Wutanfall zu verfallen.",
+        ),
+        (
+            "prohibition/absolutes (EN, family 1/3, bare \"cannot\")",
+            "the caster cannot change the height or diameter of the mystic tower",
+        ),
+        (
+            "prohibition (DE, family 1, bounded-gap modal negation)",
+            "Charaktere, die auf Wesen dieser Art abstoßend wirken, können diese Tugend nicht \
+             nehmen",
+        ),
+        (
+            "permission (EN, family 2, \"at character generation\")",
+            "You may take Arcane Abilities at character generation.",
+        ),
+        (
+            "permission (DE, family 2, bounded-gap modal permission)",
+            "Um diese Tugend zu wählen, musst Du Akademische Fertigkeiten erlernen dürfen.",
+        ),
+        (
+            "eligibility (EN, family 4)",
+            "You must be a Redcap or magus to take this Flaw.",
+        ),
+        (
+            "eligibility (DE, family 4, bounded-gap)",
+            "Du musst eine Rotkappe oder ein Magus sein, um diesen Fehler zu wählen.",
+        ),
+        (
+            "incompatibility (EN, family 5)",
+            "This Flaw is not compatible with the Night Terrors Flaw.",
+        ),
+        (
+            "incompatibility (DE, family 5)",
+            "Dieser Fehler ist unvereinbar mit der Tugend Vielgereist.",
+        ),
+        (
+            "item transfer (EN, family 6)",
+            "This Virtue also includes the effects of the Social Contacts Virtue.",
+        ),
+        (
+            "item transfer (DE, family 6, bounded-gap)",
+            "Dieser Fehler schließt die Auswirkungen von Gepeinigt von einem übernatürlichen \
+             Wesen ein.",
+        ),
+        (
+            "multiplier stem (EN, family 7)",
+            "they gain an extra (3 x Wealth Multiplier) Labor Points per year",
+        ),
+        (
+            "multiplier stem (DE, family 7)",
+            "ein Multiplikator von drei",
+        ),
+        (
+            "multiplier in words (EN, family 8)",
+            "must halve their Lab Total",
+        ),
+        (
+            "multiplier in words (DE, family 8)",
+            "Ein doppelter Patzer zeigt an, dass er etwa auf halbem Weg fällt",
+        ),
+        (
+            "\"possibly more\" (EN, family 9)",
+            "This benefit has a yearly value of about 50 silver pennies, possibly more if you \
+             keep the pressure on.",
+        ),
+        (
+            "bare \"no more\" (EN, family 10)",
+            "he is allowed to have a score of 1 (but no more) in either Magic or Faerie Lore",
+        ),
+        (
+            "bare \"nicht mehr\" (DE, family 10)",
+            "Du kannst dir gemessen an deinem Status nicht mehr leisten",
+        ),
+        (
+            "floor (EN, family 11, bare \"minimum\")",
+            "Magi must have the following minimum Abilities: Parma Magica 1",
+        ),
+        (
+            "floor (DE, family 11, \"mindest\" stem)",
+            "mindestens zwölf Magi aus mindestens vier verschiedenen Konventen",
+        ),
+        (
+            "magnitude stem (EN, family 12, bare \"magnitudes\")",
+            "would have one of his powers reduced by 3 magnitudes",
+        ),
+        (
+            "magnitude stem (DE, family 12, bare \"Magnituden\")",
+            "die Effektivität einer seiner Kräfte nach 50 Lebensjahren um insgesamt fünf \
+             Magnituden gesteigert wird",
+        ),
+        (
+            "bare imperative modifier (EN, family 13, \"Subtract\")",
+            "Subtract 3 from all of the character's Intelligence and Perception rolls",
+        ),
+        (
+            "bare imperative modifier (DE, family 13, \"Ziehe\")",
+            "Ziehe dein Alter ÷ 10 von allen Fortschrittssummen ab",
+        ),
+        (
+            "named rulebook term (EN, family 14, \"Reputation ... at level\")",
+            "have a poor Reputation at level 2 within your House",
+        ),
+        (
+            "named rulebook term (DE, family 14, \"Reputation der Stufe\")",
+            "Du hast eine gute Reputation der Stufe 4.",
+        ),
+    ];
+
+    let mut failures = Vec::new();
+    for (label, passage) in cases {
+        if !states_a_mechanical_rule(passage) {
+            failures.push(format!("{label}: {passage:?}"));
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "each of these is a REAL shipped passage that should trip the mechanical screen via its \
+         named S2 family, and does not:\n{}",
+        failures.join("\n")
     );
 }
