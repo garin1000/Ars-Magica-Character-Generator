@@ -395,7 +395,8 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }
                 | Effect::ElementalMagic { .. }
-                | Effect::ForbidsAbilitySpecialties => {}
+                | Effect::ForbidsAbilitySpecialties
+                | Effect::ForbidsRitualCasting => {}
             }
         }
     }

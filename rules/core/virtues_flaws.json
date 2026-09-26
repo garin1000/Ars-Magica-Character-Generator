@@ -2449,8 +2449,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "forbids_ritual_casting" }],
     "source": { "anchor": "rigid-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6695, 6698] }
   },
   {

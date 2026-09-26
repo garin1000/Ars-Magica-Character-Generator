@@ -244,6 +244,10 @@ macro_rules! irrelevant_effect_variants {
         // A creation-legality state constraint (no score, no Affinity ratio, no
         // in-play mod); consumed only by `validation/scores.rs`.
         | Effect::ForbidsAbilitySpecialties
+        // Likewise a creation-legality constraint (D27): no score, no Affinity
+        // ratio, no in-play mod; consumed only by
+        // `validation/magus.rs::validate_ritual_casting_restriction`.
+        | Effect::ForbidsRitualCasting
     };
 }
 // Re-exported (rather than left textually scoped) so the domain submodules

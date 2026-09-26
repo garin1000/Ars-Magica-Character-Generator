@@ -2050,7 +2050,8 @@ impl Ruleset {
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
                 // A bare marker: no parameter, no ref to resolve.
-                | Effect::ForbidsAbilitySpecialties => {
+                | Effect::ForbidsAbilitySpecialties
+                | Effect::ForbidsRitualCasting => {
                     continue;
                 }
             };

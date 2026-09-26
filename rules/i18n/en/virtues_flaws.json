@@ -1077,7 +1077,8 @@
   },
   "flaw.rigid_magic": {
     "name": "Rigid Magic",
-    "summary": "You cannot use vis when you cast spells."
+    "summary": "You cannot use vis when you cast spells.",
+    "description": "You cannot use vis when you cast spells. Thus, you cannot increase your spell rolls or cast Ritual magic. You can use vis in the laboratory, or to refresh a Longevity Ritual."
   },
   "flaw.rolling_stone": {
     "name": "Rolling Stone",

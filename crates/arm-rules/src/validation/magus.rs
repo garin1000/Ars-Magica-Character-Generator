@@ -431,6 +431,7 @@ pub(crate) fn validate_mythic_type(
 /// `validation/mod.rs`).
 pub(crate) fn validate_spells(
     entity: &Entity,
+    effective_selections: &[Selection],
     ruleset: &Ruleset,
     type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
@@ -455,6 +456,7 @@ pub(crate) fn validate_spells(
             .or_insert(0) += 1;
 
         validate_spell_ritual_legality(sel, spell, resolved, issues);
+        validate_ritual_casting_restriction(sel, spell, effective_selections, ruleset, issues);
         if is_magus {
             validate_spell_level_cap(entity, ruleset, sel, spell, resolved, issues);
         }
@@ -593,6 +595,44 @@ fn validate_spell_ritual_legality(
                 ("spell", sel.spell.to_string()),
                 ("level", level.to_string()),
             ]),
+            Some(sel.spell.clone()),
+        ));
+    }
+}
+
+/// D27 (`docs/vf-audit/decisions.md`): Rigid Magic (ArMDE:6695-6698) forbids
+/// using vis while casting, so it forbids **casting** Ritual magic — but the
+/// spell list here models spells *known*, not spells *castable*: a magus may
+/// have learned a Ritual before acquiring the Flaw, and one he cannot cast is
+/// still worth holding (he can teach it or copy it out). So knowing a Ritual
+/// stays legal; only an **advisory warning**, never an error.
+///
+/// Data-driven, like [`Effect::ForbidsAbilitySpecialties`]: any item carrying
+/// [`Effect::ForbidsRitualCasting`] triggers the warning on every known Ritual
+/// spell, with no id hardcoded. `selections` is the folded bought-plus-granted
+/// list, not `entity.selections` alone — D2, the Flaw may be granted, and the
+/// check must not read bought only.
+fn validate_ritual_casting_restriction(
+    sel: &SpellSelection,
+    spell: &crate::spell::Spell,
+    selections: &[Selection],
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if !spell.ritual {
+        return;
+    }
+    let restricted = selections.iter().any(|s| {
+        ruleset
+            .point_items
+            .get(&s.item_ref)
+            .is_some_and(|item| item.effects.contains(&Effect::ForbidsRitualCasting))
+    });
+    if restricted {
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_RITUAL_CASTING_RESTRICTED,
+            CreationPhase::Spells,
+            args([("spell", sel.spell.to_string())]),
             Some(sel.spell.clone()),
         ));
     }

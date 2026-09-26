@@ -1490,6 +1490,20 @@ pub enum Effect {
     /// Source: ArMDE:6943-6946, rule
     /// `ArMDE:6945`.
     ForbidsAbilitySpecialties,
+    /// Marks the character as unable to **cast** Ritual magic — Rigid Magic,
+    /// "you cannot use vis when you cast spells. Thus, you cannot … cast
+    /// Ritual magic." A no-op for effective scores and for spell selection
+    /// itself: D27 rules the spell list models spells *known*, not spells
+    /// *castable*, so holding a Ritual stays legal (a magus may have learned it
+    /// before acquiring the Flaw, or keep it to teach or copy). Consumed only
+    /// by `validation/magus.rs::validate_ritual_casting_restriction`, which
+    /// raises an **advisory warning** — never an error — on every known spell
+    /// whose catalogue entry sets `spell.rs::Spell::ritual`, while the holding
+    /// selection is in effect (bought or granted).
+    ///
+    /// Source: ArMDE:6695-6698, rule
+    /// `ArMDE:6697`.
+    ForbidsRitualCasting,
 }
 
 /// Which spells a [`Effect::CastingTotalMod`] applies to. A fixed rules taxonomy

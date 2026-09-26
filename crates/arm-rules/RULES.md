@@ -2744,7 +2744,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:780). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:820). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -2822,7 +2822,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:780) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:820) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -4172,12 +4172,43 @@ Two-level enforcement:
   `level`, ritual ⇒ `level ≥ 20`, non-ritual ⇒ `level ≤ 50`; a non-ritual spell
   may not have `duration = Year` or `target = Boundary`, nor be a Momentary Creo
   spell with `creates_lasting`. Vision target is exempt from the Boundary rule.
-- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :573, called
+- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :575, called
   from `validate_spells`, V51 split it into a named sub-check): the *resolved* learned
   level (General chosen level or fixed) must obey the same ≥20 / ≤50 bounds — a
   violation emits `spell_ritual_legality` (`CODE_SPELL_RITUAL_LEGALITY`). This
   bites for General spells whose chosen level is illegal; fixed-level spells are
   already caught at load.
+
+#### Rigid Magic — a known Ritual is an advisory warning, never a block
+> "You cannot use vis when you cast spells. Thus, you cannot increase your
+> spell rolls or cast Ritual magic. You can use vis in the laboratory, or to
+> refresh a Longevity Ritual."
+
+**Ruling: D27** (`docs/vf-audit/decisions.md`). `ArMDE:6697` forbids **casting**
+Ritual magic, not knowing it — the spell list here models spells *known*, so
+selecting a Ritual stays legal. A magus may have learned one before acquiring
+the Flaw, and a Ritual he cannot cast is still worth holding (teach it, copy it
+out). Blocking would enforce something the book does not say; the engine only
+warns.
+
+- Source: `ArMDE:6695-6698`, rule `ArMDE:6697`.
+- Data: `rules/core/virtues_flaws.json` `flaw.rigid_magic` —
+  `effects: [{ forbids_ritual_casting }]`; reclassified `narrative` →
+  `creation_effect` (D46: classification follows what is computed). The two
+  remaining clauses this does not compute — the spell-roll penalty and the
+  laboratory/Longevity-Ritual exception, both in-play rather than
+  creation-time facts — reach the player as `description` text in both locales
+  (D20), carrying the full passage rather than only the summary's first
+  sentence.
+- Implementation: `validation/magus.rs::validate_ritual_casting_restriction`,
+  called from `validate_spells` per known spell. Data-driven, like
+  `flaw.unspecialized`'s `forbids_ability_specialties` (below, "Selection
+  multiplicity" area): any item carrying `Effect::ForbidsRitualCasting`
+  triggers `ritual_casting_restricted` (`ValidationIssue::warning`, never
+  `::error`) on every held spell whose catalogue entry sets
+  `spell.rs::Spell::ritual`. Reads *effective* selections (bought ++
+  House/Mythic-type/`grants_selection` grants, D2), not `entity.selections`
+  alone — the Flaw may be granted.
 
 **Budget-modifier Virtues/Flaws (Skilled/Weak Parens).** Two Hermetic V/F modify
 the apprenticeship grant, each via *two* `Effect`s

@@ -162,7 +162,12 @@ export type Effect =
   // Unspecialized: forbids a specialty on any Ability. A creation-time
   // constraint the validator enforces (`specialty_forbidden`), not a score or
   // in-play modifier — nothing here renders it directly.
-  | { type: 'forbids_ability_specialties' };
+  | { type: 'forbids_ability_specialties' }
+  // Rigid Magic (D27): forbids casting Ritual magic. Knowing a Ritual stays
+  // legal (spells known, not spells castable) — the validator only advises
+  // (`ritual_casting_restricted`), never blocks. A creation-time constraint,
+  // not a score or in-play modifier — nothing here renders it directly.
+  | { type: 'forbids_ritual_casting' };
 
 // M5/5b scalar enums mirroring the engine (rendered via Fluent in slice 5i).
 export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' | 'spontaneous';

@@ -1136,6 +1136,7 @@ issue-spell_level_unresolved = General spell { $spell } has no chosen level yet.
 issue-over_spell_levels = Spells total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-spell_level_exceeds_cap = Spell { $spell } is level { $level }, above the maximum you can learn ({ $cap }).
 issue-spell_ritual_legality = Spell { $spell } is learned at level { $level }, which breaks the ritual level bounds (rituals at least 20, non-rituals at most 50).
+issue-ritual_casting_restricted = { $spell } is a Ritual, and Rigid Magic forbids using vis to cast it.
 issue-unknown_mastery_ability = Unknown Spell Mastery ability { $ability } chosen for { $spell }.
 issue-too_many_mastery_abilities = { $spell } has { $chosen } Mastery special abilities, above its Mastery score of { $mastery } (one per level).
 issue-duplicate_mastery_ability = Mastery ability { $ability } is chosen { $count } times for { $spell }, but may be taken only once.

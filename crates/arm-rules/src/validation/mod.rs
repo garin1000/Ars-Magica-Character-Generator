@@ -223,6 +223,7 @@ impl fmt::Display for IssueSeverity {
 /// | `over_item_level` | error | review | `used`, `budget`, `over` |
 /// | `multiple_magical_foci` | error | virtues_flaws | `count` |
 /// | `spell_ritual_legality` | error | spells | `spell`, `level` |
+/// | `ritual_casting_restricted` | warning | spells | `spell` |
 /// | `unknown_mastery_ability` | error | spells | `spell`, `ability` |
 /// | `too_many_mastery_abilities` | error | spells | `spell`, `chosen`, `mastery` |
 /// | `duplicate_mastery_ability` | error | spells | `spell`, `ability`, `count` |
@@ -684,6 +685,15 @@ impl ValidationIssue {
     /// "Formulaic and Spontaneous spells may not have a level greater than 50";
     /// not `ArMDE:12283`, the unrelated Year-duration restriction).
     pub const CODE_SPELL_RITUAL_LEGALITY: &'static str = "spell_ritual_legality";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning, never an error (D27,
+    /// `docs/vf-audit/decisions.md`): a known Ritual spell while an item carrying
+    /// [`Effect::ForbidsRitualCasting`] is in effect (e.g. Rigid Magic,
+    /// ArMDE:6695-6698 — "you cannot use vis when you cast spells. Thus, you
+    /// cannot … cast Ritual magic"). The spell list models spells *known*, not
+    /// spells *castable*, so knowing a Ritual stays legal; this only advises.
+    /// Read against `effective_selections` (bought ++ granted, D2): the Flaw may
+    /// be granted, and the check must not read bought only.
+    pub const CODE_RITUAL_CASTING_RESTRICTED: &'static str = "ritual_casting_restricted";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen Spell Mastery
     /// special ability id does not resolve against the mastery-ability catalogue.
     pub const CODE_UNKNOWN_MASTERY_ABILITY: &'static str = "unknown_mastery_ability";
@@ -1006,7 +1016,13 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         );
         validate_abilities(entity, &effective_selections, ruleset, &mut issues);
         validate_arts(entity, ruleset, &mut issues);
-        validate_spells(entity, ruleset, type_profile, &mut issues);
+        validate_spells(
+            entity,
+            &effective_selections,
+            ruleset,
+            type_profile,
+            &mut issues,
+        );
         validate_supernatural_abilities(entity, ruleset, type_profile, &mut issues);
         validate_personality_traits(entity, ruleset, &mut issues);
         validate_reputations(entity, ruleset, &mut issues);
@@ -1184,7 +1200,8 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         // Elemental Magic carries no ability/characteristic creation target.
         | Effect::ElementalMagic { .. }
         // A bare marker: no ability/characteristic creation target either.
-        | Effect::ForbidsAbilitySpecialties => EffectTarget::Other,
+        | Effect::ForbidsAbilitySpecialties
+        | Effect::ForbidsRitualCasting => EffectTarget::Other,
     }
 }
 
@@ -8783,7 +8800,13 @@ mod tests {
         { "id": "flaw.deficient_technique", "kind": "flaw", "classification": "in_play_effect",
           "magnitude": "major", "categories": ["hermetic"], "entity_kinds": ["character"],
           "parameters": [{ "key": "technique", "type": "ref", "domain": "technique" }],
-          "effects": [{ "type": "deficient_art", "param": "technique" }] }
+          "effects": [{ "type": "deficient_art", "param": "technique" }] },
+        { "id": "flaw.rigid_magic_test", "kind": "flaw", "classification": "creation_effect",
+          "magnitude": "major", "categories": ["hermetic"], "entity_kinds": ["character"],
+          "effects": [{ "type": "forbids_ritual_casting" }] },
+        { "id": "virtue.grants_rigid_magic_test", "kind": "virtue", "classification": "creation_effect",
+          "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
+          "effects": [{ "type": "grants_selection", "items": ["flaw.rigid_magic_test"] }] }
     ]"#;
     const SPELL_ARTS: &str = r#"{ "arts": [
         { "id": "art.creo", "art_type": "technique" },
@@ -9422,6 +9445,59 @@ mod tests {
         let mut e = make_entity("magus", vec![]);
         e.spells = vec![spell("spell.general_ward", Some(51))];
         assert!(all_codes(&validate(&e, &rs)).contains(&"spell_ritual_legality".to_string()));
+    }
+
+    /// D27: Rigid Magic forbids using vis while casting, so it forbids casting
+    /// Ritual magic — but the spell list models spells *known*, not spells
+    /// *castable*, so knowing one stays legal. A warning, never an error.
+    #[test]
+    fn rigid_magic_and_a_known_ritual_spell_is_a_warning() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![sel("flaw.rigid_magic_test")]);
+        e.spells = vec![spell("spell.aegis_of_the_hearth", Some(20))];
+        let result = validate(&e, &rs);
+        assert!(
+            all_codes(&result).contains(&"ritual_casting_restricted".to_string()),
+            "a known Ritual under Rigid Magic must warn: {:?}",
+            result.issues
+        );
+        assert!(
+            !codes(&result).contains(&"ritual_casting_restricted".to_string()),
+            "the restriction is advisory, never an error: {:?}",
+            result.issues
+        );
+    }
+
+    /// The flaw alone, with no Ritual known, is clean.
+    #[test]
+    fn rigid_magic_with_no_ritual_known_is_clean() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![sel("flaw.rigid_magic_test")]);
+        e.spells = vec![spell("spell.pilum_of_fire", None)];
+        assert!(!all_codes(&validate(&e, &rs)).contains(&"ritual_casting_restricted".to_string()));
+    }
+
+    /// A known Ritual with no Rigid Magic is clean.
+    #[test]
+    fn a_known_ritual_without_rigid_magic_is_clean() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.aegis_of_the_hearth", Some(20))];
+        assert!(!all_codes(&validate(&e, &rs)).contains(&"ritual_casting_restricted".to_string()));
+    }
+
+    /// D2: a *granted* Rigid Magic (never bought) must warn on a known Ritual
+    /// exactly like a bought one — the check must read effective selections.
+    #[test]
+    fn a_granted_rigid_magic_also_warns_on_a_known_ritual() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![sel("virtue.grants_rigid_magic_test")]);
+        e.spells = vec![spell("spell.aegis_of_the_hearth", Some(20))];
+        assert!(
+            all_codes(&validate(&e, &rs)).contains(&"ritual_casting_restricted".to_string()),
+            "a granted Rigid Magic must still warn: {:?}",
+            validate(&e, &rs).issues
+        );
     }
 
     /// An unknown spell id is an error.

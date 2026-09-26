@@ -1079,7 +1079,8 @@
   },
   "flaw.rigid_magic": {
     "name": "Starre Magie",
-    "summary": "Du kannst beim Wirken von Zaubern kein Vis verwenden."
+    "summary": "Du kannst beim Wirken von Zaubern keine Vis verwenden.",
+    "description": "Du kannst beim Wirken von Zaubern keine Vis verwenden. Daher kannst du deine Zauberwürfe nicht steigern und keine Ritualmagie wirken. Du kannst Vis im Labor verwenden oder ein Langlebigkeitsritual erneuern."
   },
   "flaw.rolling_stone": {
     "name": "Rastloser Wanderer",
