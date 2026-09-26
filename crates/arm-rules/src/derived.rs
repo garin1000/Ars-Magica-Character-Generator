@@ -841,6 +841,12 @@ mod tests {
           { "id": "virtue.apt_student", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "advancement_mod", "source": "taught", "amount": 5 }] },
+          { "id": "virtue.good_teacher", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [
+              { "type": "advancement_mod", "source": "teaching", "amount": 5 },
+              { "type": "advancement_mod", "source": "authoring", "amount": 3 }
+            ] },
           { "id": "virtue.quiet_magic", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
             "effects": [{ "type": "special_casting_mod", "kind": "quiet_words" }] },
@@ -3300,6 +3306,22 @@ mod tests {
         assert!(s.iter().any(|m| m.family == ModifierFamily::Advancement
             && m.detail == "taught"
             && m.amount == 5));
+    }
+
+    /// Good Teacher's authoring bonus (E2/Q-32) surfaces through the new
+    /// `AdvancementSource::Authoring`, distinct from its own teaching row.
+    #[test]
+    fn surfaced_modifiers_include_the_authoring_source() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.good_teacher"))];
+        let s = surfaced_modifiers(&e, &rs);
+        assert!(s.iter().any(|m| m.family == ModifierFamily::Advancement
+            && m.detail == "teaching"
+            && m.amount == 5));
+        assert!(s.iter().any(|m| m.family == ModifierFamily::Advancement
+            && m.detail == "authoring"
+            && m.amount == 3));
     }
 
     /// Inventive Genius folds a flat +3 into the Lab-Total `lab_mod` addend of

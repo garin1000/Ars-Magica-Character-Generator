@@ -4376,7 +4376,7 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "advancement_mod", "source": "teaching", "amount": 5 },
-      { "type": "advancement_mod", "source": "book", "amount": 3 }
+      { "type": "advancement_mod", "source": "authoring", "amount": 3 }
     ],
     "source": { "anchor": "good-teacher", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3971, 3974] }
   },

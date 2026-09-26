@@ -216,6 +216,7 @@ export type AdvancementSource =
   | 'adventure'
   | 'insight'
   | 'teaching'
+  | 'authoring'
   | 'spell_mastery'
   | 'all';
 export type SpecialCasting =

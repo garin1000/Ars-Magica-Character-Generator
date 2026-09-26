@@ -1362,6 +1362,7 @@ derived-detail-practice = Practice
 derived-detail-adventure = Adventure
 derived-detail-insight = Insight
 derived-detail-teaching = Teaching
+derived-detail-authoring = Authoring
 derived-detail-spell_mastery = Spell mastery
 derived-detail-all = All sources
 derived-detail-quiet_words = Quiet magic

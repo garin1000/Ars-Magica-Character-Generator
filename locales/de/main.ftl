@@ -1427,6 +1427,7 @@ derived-detail-practice = Übung
 derived-detail-adventure = Abenteuer
 derived-detail-insight = Einsicht
 derived-detail-teaching = Unterrichten
+derived-detail-authoring = Verfassen
 derived-detail-spell_mastery = Zaubermeisterschaft
 derived-detail-all = Alle Quellen
 derived-detail-quiet_words = Stille Magie

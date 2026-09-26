@@ -1810,6 +1810,10 @@ pub enum AdvancementSource {
     Insight,
     /// The character teaching others (Good Teacher, Incomprehensible).
     Teaching,
+    /// The character having authored a book others study from — as opposed to
+    /// `Book`, which is this character reading someone *else's* (Good
+    /// Teacher's Quality-of-authored-books bonus).
+    Authoring,
     /// Mastering spells (Loose Magic halves this advancement).
     SpellMastery,
     /// Every advancement source (Study Bonus; Unimaginative Learner).
@@ -1826,6 +1830,7 @@ impl fmt::Display for AdvancementSource {
             AdvancementSource::Adventure => "adventure",
             AdvancementSource::Insight => "insight",
             AdvancementSource::Teaching => "teaching",
+            AdvancementSource::Authoring => "authoring",
             AdvancementSource::SpellMastery => "spell_mastery",
             AdvancementSource::All => "all",
         })
@@ -4357,6 +4362,7 @@ mod tests {
         check(AdvancementSource::Adventure);
         check(AdvancementSource::Insight);
         check(AdvancementSource::Teaching);
+        check(AdvancementSource::Authoring);
         check(AdvancementSource::SpellMastery);
         check(AdvancementSource::All);
         check(SpecialCasting::QuietWords);
@@ -4584,6 +4590,10 @@ mod tests {
                 source: AdvancementSource::Taught,
                 amount: 5,
             },
+            Effect::AdvancementMod {
+                source: AdvancementSource::Authoring,
+                amount: 3,
+            },
             Effect::SpecialCastingMod {
                 kind: SpecialCasting::Diedne,
                 param: None,
@@ -4613,6 +4623,7 @@ mod tests {
         assert!(json.contains("\"type\":\"magical_focus\""));
         assert!(json.contains("\"scope\":\"formulaic_ritual\""));
         assert!(json.contains("\"total\":\"penetration\""));
+        assert!(json.contains("\"source\":\"authoring\""));
         assert!(json.contains("\"type\":\"elemental_magic\""));
         assert!(json.contains("\"type\":\"masterpiece_item\""));
     }

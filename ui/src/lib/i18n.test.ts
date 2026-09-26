@@ -527,6 +527,24 @@ describe('German UI bundle', () => {
     }
   });
 
+  // E2 (V/F audit Q-32): a new `AdvancementSource` variant, `authoring`, is
+  // rendered through `derived-detail-authoring` (`DerivedSurfacedModifiersSection.svelte`)
+  // exactly like every other scalar source. A code with no `derived-detail-<id>`
+  // message renders as its own slug, which parity alone would not catch, since a
+  // key missing from both locales is symmetrical.
+  it('names the authoring advancement source in both locales', () => {
+    for (const lang of ['en', 'de']) {
+      expect(
+        messageKeys(sourceForLang(lang)),
+        `${lang} is missing derived-detail-authoring`,
+      ).toContain('derived-detail-authoring');
+    }
+    // The German rulebook's own verb for writing a book (Basisregeln.md:6296,
+    // "aus einem von dir verfassten Buch"), matching the gerund-noun register
+    // `derived-detail-teaching` ("Unterrichten") already uses.
+    expect(translate(buildBundle('de'), 'derived-detail-authoring')).toBe('Verfassen');
+  });
+
   it('has full message-key parity between English and German', () => {
     // A missing German key silently falls back to English (or the key) at
     // runtime, so drift is invisible without this check — the same class of gap

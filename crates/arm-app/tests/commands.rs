@@ -2817,6 +2817,7 @@ fn every_advancement_source() -> Vec<arm_rules::AdvancementSource> {
         Source::Adventure,
         Source::Insight,
         Source::Teaching,
+        Source::Authoring,
         Source::SpellMastery,
         Source::All,
     ];
@@ -2831,6 +2832,7 @@ fn every_advancement_source() -> Vec<arm_rules::AdvancementSource> {
             | Source::Adventure
             | Source::Insight
             | Source::Teaching
+            | Source::Authoring
             | Source::SpellMastery
             | Source::All => {}
         }

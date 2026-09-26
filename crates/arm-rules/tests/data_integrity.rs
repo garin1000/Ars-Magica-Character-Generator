@@ -919,6 +919,46 @@ fn core_rules_tainted_virtues_carry_the_tainted_flag() {
     }
 }
 
+/// `virtue.good_teacher` (ArMDE:3971-3974) grants two distinct Quality bonuses:
+/// "Add three to the Quality of any books that you write, and five to the
+/// Source Quality for anyone who studies with you." The `+3` half is an
+/// **authoring** effect — it benefits the reader of a book *this character
+/// wrote*, not this character reading someone else's book — so it must use
+/// `AdvancementSource::Authoring`, never `AdvancementSource::Book` (the
+/// reader-side shape `virtue.book_learner` and `virtue.study_bonus` correctly
+/// use). V/F audit F-91 / Q-32: the shipped data used `book` for both rows,
+/// pointing the authoring half at the wrong person.
+#[test]
+fn good_teacher_authoring_bonus_uses_the_authoring_source_not_book() {
+    let rs = load_full_ruleset();
+
+    let item = rs
+        .item(&Id::new("virtue.good_teacher"))
+        .expect("virtue.good_teacher ships");
+
+    assert!(
+        item.effects.contains(&Effect::AdvancementMod {
+            source: AdvancementSource::Teaching,
+            amount: 5,
+        }),
+        "the Source Quality bonus for being studied with is unchanged: +5 teaching"
+    );
+    assert!(
+        item.effects.contains(&Effect::AdvancementMod {
+            source: AdvancementSource::Authoring,
+            amount: 3,
+        }),
+        "the Quality-of-authored-books bonus must be +3 authoring, not +3 book"
+    );
+    assert!(
+        !item.effects.contains(&Effect::AdvancementMod {
+            source: AdvancementSource::Book,
+            amount: 3,
+        }),
+        "the old mis-scoped book row must be gone"
+    );
+}
+
 /// The four Outer-Mystery Virtues whose descriptors state that taking them makes
 /// the character a member of a particular House must carry that House as their
 /// prerequisite, so a magus of another House cannot simply buy one.
