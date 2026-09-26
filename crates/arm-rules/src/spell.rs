@@ -45,6 +45,21 @@ pub enum SpellRange {
     ArcaneConnection,
 }
 
+impl SpellRange {
+    /// Every Range variant, RDT-chart order. Mirrors `AbilityCategory::ALL` /
+    /// `ArtType::ALL`: the fixed source `Ruleset::apply_derived_fields` derives
+    /// `ranges_beyond_touch` from, by filtering through
+    /// `effective::range_beyond_touch`.
+    pub const ALL: [SpellRange; 6] = [
+        SpellRange::Personal,
+        SpellRange::Touch,
+        SpellRange::Eye,
+        SpellRange::Voice,
+        SpellRange::Sight,
+        SpellRange::ArcaneConnection,
+    ];
+}
+
 impl fmt::Display for SpellRange {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {

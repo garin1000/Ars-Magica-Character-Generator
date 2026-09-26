@@ -278,6 +278,68 @@ describe('SpellTab ritual minimum learnable level (VA2)', () => {
   });
 });
 
+// D28 (docs/vf-audit/decisions.md): the spell-level cap is range-aware —
+// Short-Ranged Magic halves it for a spell whose Range is beyond Touch. The
+// engine surfaces two `spell_level_caps` rows per Technique/Form pair, keyed by
+// `range_beyond_touch`; the picker must read the row matching each candidate
+// spell's own Range, not just its Technique/Form.
+//
+// CLAUDE.md: fixed taxonomies stay Rust enums, and the UI must not re-hardcode
+// their values — the engine surfaces them (`Magnitude::points` →
+// `Ruleset.magnitude_points`, `AbilityCategory::ALL` →
+// `Ruleset.ability_category_order`). The "beyond Touch" whitelist follows the
+// same rule: the picker reads `ruleset.ranges_beyond_touch`
+// (`effective::range_beyond_touch` surfaced), never a Svelte-side list.
+describe('SpellTab spell-level cap is range-aware (D28)', () => {
+  const TOUCH_SPELL = 'spell.test_touch_range';
+  const EYE_SPELL = 'spell.test_eye_range';
+
+  function installRangedSpells(): void {
+    store.ruleset!.ruleset.spells = {
+      ...store.ruleset!.ruleset.spells,
+      [TOUCH_SPELL]: {
+        id: TOUCH_SPELL,
+        technique: 'art.creo',
+        form: 'art.animal',
+        level: 10,
+        range: 'touch',
+      },
+      [EYE_SPELL]: {
+        id: EYE_SPELL,
+        technique: 'art.creo',
+        form: 'art.animal',
+        level: 10,
+        range: 'eye',
+      },
+    };
+    store.ruleset!.i18n[TOUCH_SPELL] = { name: 'Test Touch-Range Spell' };
+    store.ruleset!.i18n[EYE_SPELL] = { name: 'Test Eye-Range Spell' };
+    store.effective!.spell_level_caps = [
+      { technique: 'art.creo', form: 'art.animal', range_beyond_touch: false, cap: 20 },
+      { technique: 'art.creo', form: 'art.animal', range_beyond_touch: true, cap: 9 },
+    ];
+  }
+
+  it('greys only the beyond-Touch spell when the beyond-Touch cap is lower', () => {
+    installRangedSpells();
+    store.ruleset!.ruleset.ranges_beyond_touch = ['eye', 'voice', 'sight', 'arcane_connection'];
+    const body = html();
+    expect(outer(body, `add-${TOUCH_SPELL}`)).toMatch(/aria-disabled="false"/);
+    expect(outer(body, `add-${EYE_SPELL}`)).toMatch(/aria-disabled="true"/);
+  });
+
+  it('follows the ruleset-surfaced set, not a hardcoded whitelist: a test ruleset naming Touch (not Eye) as beyond-Touch flips which spell is greyed', () => {
+    installRangedSpells();
+    // A surfaced set that disagrees with the real engine whitelist — if the
+    // picker had its own hardcoded Eye/Voice/Sight/Arcane-Connection list
+    // anywhere, this would still grey the Eye spell and this test would fail.
+    store.ruleset!.ruleset.ranges_beyond_touch = ['touch'];
+    const body = html();
+    expect(outer(body, `add-${TOUCH_SPELL}`)).toMatch(/aria-disabled="true"/);
+    expect(outer(body, `add-${EYE_SPELL}`)).toMatch(/aria-disabled="false"/);
+  });
+});
+
 // guided-creation-review-2026-08 #8: `SelectionList.svelte` opens a NEW `<ul>` per
 // group, and the row separator was a `border-bottom` suppressed on `:last-child` —
 // a selector scoped per PARENT, so the suppression fired once per group. A group

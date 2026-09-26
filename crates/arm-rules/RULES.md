@@ -2938,7 +2938,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:820). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:830). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3016,7 +3016,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:820) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:830) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -4325,6 +4325,81 @@ Tests: `deficient_technique_halves_the_spell_level_cap`,
 `a_negative_spell_level_cap_halves_downwards` (`effective.rs`);
 `deficient_technique_halves_the_per_spell_cap`,
 `a_deficiency_in_another_art_leaves_the_cap_unhalved` (`validation/mod.rs`).
+
+**D28 (`docs/vf-audit/decisions.md`): the cap becomes range-aware for
+Short-Ranged Magic, and it lowers a cap that was legal before.**
+
+> `ArMDE:6739` (Short-Ranged Magic, *Major, Hermetic*) "Halve your Casting
+> Totals whenever you are not touching the target of the spell. Halve your Lab
+> Total when designing an effect or spell that has a range greater than Touch,
+> including Eye."
+
+Unlike D1's nine, this condition **is** a creation-time fact: the spell's own
+`range` (`rules/core/spells.json`), not an in-play circumstance — which is why
+D1 does not decide it and D28 rules separately. `Effect::HalvesSpellCapBeyondTouch`
+(`types.rs`) is a bare marker, data-driven like `ForbidsRitualCasting`; no id is
+hardcoded. `effective/spell.rs::range_beyond_touch` is the by-**name** whitelist
+the halving reads — Eye, Voice, Sight, Arcane Connection, **not** Personal or
+Touch — deliberately not derived from `SpellRange`'s difficulty ordering: Eye is
+the *same* RDT difficulty as Touch, and the book names it explicitly for exactly
+that reason ("greater than Touch, **including Eye**" would be redundant to state
+if Eye already fell out of "greater than" by magnitude).
+
+**Order of operations.** The D1 flat term sums into `base` first (it is part of
+what the Lab Total *is*), then the two conditional halvings — Deficient Art and
+this one — apply. Neither passage orders the two halvings relative to each
+other, and the order between them is provably immaterial: both are a plain
+`div_euclid(_, 2)`, and floor division by 2 twice equals floor division by 4
+regardless of which comes first (the same reasoning `derived/lab.rs::creo_corpus_lab_total`
+already applies to its own Deficient/Difficult-Longevity stack).
+
+**Re-keyed.** `SpellLevelCap` (`effective/spell.rs`) gains `range_beyond_touch:
+bool` alongside `technique`/`form`; `spell_level_caps` now emits **two** rows per
+Te/Fo pair (crossed with both range classes) instead of one. The picker
+(`ui/src/lib/derive.ts`'s `nonTakeableReason` / `isDisabled`, fed by
+`SpellTab.svelte`'s `capByTeFo` map) keys its lookup on
+`` `${technique} ${form} ${beyond_touch}` ``, computing a candidate spell's own
+`beyond_touch` from its `range` via `spellRangeBeyondTouch` (`derive.ts`).
+
+**The whitelist itself is engine data, not a second copy in TypeScript.**
+`SpellRange` is a fixed taxonomy, so per the architecture invariant that
+governs `Magnitude::points` → `Ruleset.magnitude_points` and
+`AbilityCategory::ALL` → `Ruleset.ability_category_order`, the UI must not
+re-hardcode its values. `Ruleset.ranges_beyond_touch` (`ruleset.rs`) is
+`SpellRange::ALL` filtered through `effective::range_beyond_touch` — derived,
+not authored, applied by `apply_derived_fields` on both construction paths like
+the other seven engine-derived fields. `SpellTab.svelte` reads
+`ruleset.ranges_beyond_touch` (`[]` only for the instant before a ruleset has
+loaded) and passes it to `nonTakeableReason`/`isDisabled`; `spellRangeBeyondTouch`
+(`derive.ts`) is a thin `.includes()` lookup against whatever set it is given,
+carrying no whitelist of its own. Test:
+`ranges_beyond_touch_equals_the_predicate_over_every_spellrange_variant`
+(`ruleset.rs`) pins that the surfaced set is exactly the predicate over every
+variant, so the two can never drift; `SpellTab.test.ts`'s "follows the
+ruleset-surfaced set, not a hardcoded whitelist" test proves it end-to-end by
+using a ruleset whose surfaced set disagrees with the real engine whitelist.
+
+**It lowers a cap, so a save legal today can become invalid — same treatment as
+D10:** `Enforced` blocks it, `Advisory` warns, no migration and no schema
+change. `validate_spell_level_cap` (`validation/magus.rs`) computes
+`range_beyond_touch` from the resolved spell's own `range` and passes it to
+`spell_level_cap`, so the enforcement path and the surfaced picker cap can never
+disagree.
+
+**The catalogue entry stays `in_play_effect`, and it now needs a `description`
+in both locales (D20).** `flaw.short_ranged_magic` carries two clauses: the
+Lab-Total half is now computed (this section), but the Casting-Total half
+("whenever you are not touching the target of the spell") is a per-cast
+circumstance the engine cannot resolve at character-generation time and is not
+modelled by any effect — `special_casting_mod: circumstantial` already carries
+that, and D20 obliges the full rule to reach the player as text regardless, so
+`rules/i18n/{en,de}/virtues_flaws.json` now state both sentences in
+`description` (the existing `summary` already carried the Casting-Total
+sentence alone).
+
+Tests: `short_ranged_magic_halves_the_cap_only_beyond_touch`,
+`without_short_ranged_magic_the_range_flag_changes_nothing`,
+`spell_level_caps_expose_te_fo_int_mt_plus_three` (`effective.rs`).
 
 **General spells.**
 

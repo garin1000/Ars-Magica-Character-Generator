@@ -344,12 +344,15 @@ export interface ArtBonus {
   bonus: number;
 }
 
-// The maximum learnable spell level for one Technique/Form combination
-// (Te + Fo + Int + Magic Theory + 3, plus any flat lab_total_mod, D1).
-// Mirrors the engine's `SpellLevelCap`.
+// The maximum learnable spell level for one Technique/Form/range-class
+// combination (Te + Fo + Int + Magic Theory + 3, plus any flat lab_total_mod
+// (D1), further halved for a Short-Ranged-Magic holder when
+// `range_beyond_touch` is set (D28)). Mirrors the engine's `SpellLevelCap` —
+// two rows per Technique/Form pair, one per range class.
 export interface SpellLevelCap {
   technique: string;
   form: string;
+  range_beyond_touch: boolean;
   cap: number;
 }
 
@@ -1135,6 +1138,11 @@ export interface Spell {
   // A Ritual spell must be learned at level >= 20 (its minimum learnable level).
   // Present (true) only for rituals; absent = ordinary spell (minimum level 1).
   ritual?: boolean;
+  // The spell's Range (RDT chart) — 'personal' | 'touch' | 'eye' | 'voice' |
+  // 'sight' | 'arcane_connection'. Mirrors the engine's `SpellRange`. Drives
+  // Short-Ranged Magic's beyond-Touch cap halving (D28); see
+  // `spellRangeBeyondTouch` in `derive.ts`.
+  range?: string | null;
   // Selection parameters this spell requires (a meta-magic Vim spell whose target
   // (Form) is a selection declares a single `form`-domain parameter). Empty/absent
   // for ordinary spells. The chosen value is display + identity only and does NOT
@@ -1642,6 +1650,12 @@ export interface Ruleset {
   // Optional like `ritual_min_level` above, for the same reason.
   aura_modifier_min?: number;
   aura_modifier_max?: number;
+  // The `SpellRange` scalars beyond Touch (Eye, Voice, Sight, Arcane
+  // Connection), mirrored from the Rust `effective::range_beyond_touch`
+  // predicate over every `SpellRange` variant (D28) — so
+  // `derive.ts::spellRangeBeyondTouch` reads this set instead of re-hardcoding
+  // the whitelist. Optional like `ritual_min_level` above, for the same reason.
+  ranges_beyond_touch?: string[];
 }
 
 export interface LocalizedRuleset {

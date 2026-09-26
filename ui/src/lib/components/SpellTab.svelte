@@ -114,13 +114,16 @@
   const used = $derived(store.effective?.spell_levels_used ?? 0);
   const remaining = $derived(budget - used);
 
-  // The engine-authoritative per-Technique/Form spell-level cap (Te + Fo + Int +
-  // Magic Theory + 3), keyed by the "<technique> <form>" pair. Never recomputed
-  // here — the picker only reads the surfaced value.
+  // The engine-authoritative per-Technique/Form/range-class spell-level cap
+  // (Te + Fo + Int + Magic Theory + 3, D1's flat lab term, halved beyond Touch
+  // for Short-Ranged Magic per D28), keyed by the
+  // "<technique> <form> <range_beyond_touch>" triple. Never recomputed here —
+  // the picker only reads the surfaced value; `nonTakeableReason` builds the
+  // matching key from a candidate spell's own Range via `spellRangeBeyondTouch`.
   const capByTeFo = $derived.by((): Map<string, number> => {
     const m = new Map<string, number>();
     for (const c of store.effective?.spell_level_caps ?? [])
-      m.set(`${c.technique} ${c.form}`, c.cap);
+      m.set(`${c.technique} ${c.form} ${c.range_beyond_touch}`, c.cap);
     return m;
   });
   // The Ritual level floor — see `minLearnableLevel` in `derive.ts` (VA2): reads
@@ -130,6 +133,11 @@
   const ritualMinLevel = $derived(
     store.ruleset?.ruleset.ritual_min_level ?? RITUAL_MINIMUM_LEVEL_FALLBACK,
   );
+  // The Ranges beyond Touch (Eye, Voice, Sight, Arcane Connection), read from
+  // the engine-surfaced `ruleset.ranges_beyond_touch` (D28) — never a
+  // hardcoded whitelist here; `[]` only for the moment before a ruleset has
+  // loaded, when no spell exists to disable anyway.
+  const rangesBeyondTouch = $derived(store.ruleset?.ruleset.ranges_beyond_touch ?? []);
   // Spell-Mastery: the auto-mastery floor (Flawless Magic) drives each row's
   // effective mastery; the pool read-out itself lives in `SpellBudgetBar`.
   const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
@@ -197,7 +205,7 @@
   // live there alongside every other eligibility computation
   // (`eligibleForConstraint`, `filterSpells`, …), not inline in this component.
   // This component only supplies the reactive state (`selectedSpellIds`,
-  // `capByTeFo`, `remaining`, `ritualMinLevel`) they need.
+  // `capByTeFo`, `remaining`, `ritualMinLevel`, `rangesBeyondTouch`) they need.
 
   // The Ritual floor, looked up from a chosen (selected-list) row's id rather
   // than a source-list Spell object — used by the inline level spinner so it
@@ -234,7 +242,14 @@
   // shows WHY plus its description rather than the reason replacing it. Spells
   // carry no specialties, so the tooltip is otherwise text-only.
   function sourceTip(spell: Spell): TooltipContent {
-    const reason = nonTakeableReason(spell, selectedSpellIds, capByTeFo, remaining, ritualMinLevel);
+    const reason = nonTakeableReason(
+      spell,
+      selectedSpellIds,
+      capByTeFo,
+      remaining,
+      ritualMinLevel,
+      rangesBeyondTouch,
+    );
     return withReason(
       { text: store.ruleset?.i18n[spell.id]?.description ?? undefined },
       reason ? store.t(reason.key, { cap: String(reason.cap) }) : undefined,
@@ -271,7 +286,14 @@
         getId={(spell: Spell) => spell.id}
         onAdd={(spell: Spell) => add(spell)}
         disabled={(spell: Spell) =>
-          isDisabled(spell, selectedSpellIds, capByTeFo, remaining, ritualMinLevel)}
+          isDisabled(
+            spell,
+            selectedSpellIds,
+            capByTeFo,
+            remaining,
+            ritualMinLevel,
+            rangesBeyondTouch,
+          )}
         tip={(spell: Spell) => sourceTip(spell)}
       >
         {#snippet filters()}

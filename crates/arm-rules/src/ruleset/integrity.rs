@@ -2092,7 +2092,8 @@ impl Ruleset {
                 // A bare marker: no parameter, no ref to resolve.
                 | Effect::ForbidsAbilitySpecialties
                 | Effect::ForbidsRitualCasting
-                | Effect::WaivesAbilityAgeCap => {
+                | Effect::WaivesAbilityAgeCap
+                | Effect::HalvesSpellCapBeyondTouch => {
                     continue;
                 }
             };

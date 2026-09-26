@@ -6,6 +6,7 @@
 //! change.
 
 use super::*;
+use crate::spell::SpellRange;
 
 /// Sums the [`Effect::SpellLevels`] amounts across the entity's selections (may
 /// be negative; Skilled Parens +30, Weak Parens −30).
@@ -48,6 +49,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::MagicalFocus { .. }
         | Effect::CastingTotalMod { .. }
         | Effect::LabTotalMod { .. }
+        | Effect::HalvesSpellCapBeyondTouch
         | Effect::DeficientArt { .. }
         | Effect::MagicTotalHalving { .. }
         | Effect::SoakMod { .. }
@@ -109,6 +111,7 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::MagicalFocus { .. }
         | Effect::CastingTotalMod { .. }
         | Effect::LabTotalMod { .. }
+        | Effect::HalvesSpellCapBeyondTouch
         | Effect::DeficientArt { .. }
         | Effect::MagicTotalHalving { .. }
         | Effect::SoakMod { .. }
@@ -230,26 +233,83 @@ pub(crate) fn lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
     total
 }
 
+/// Whether a spell's Range makes it subject to Short-Ranged Magic's Lab-Total
+/// halving (D28, `docs/vf-audit/decisions.md`): Eye, Voice, Sight, and Arcane
+/// Connection — **not** Personal or Touch.
+///
+/// Matched **by name**, deliberately never derived from [`SpellRange`]'s
+/// difficulty ordering: Eye sits at the *same* RDT difficulty as Touch, and the
+/// book calls it out explicitly for exactly that reason — "a range greater than
+/// Touch, **including Eye**" would be redundant to state if Eye already fell out
+/// of "greater than" by magnitude. The whitelist is the honest reading; a
+/// `range > SpellRange::Touch` comparison would happen to agree today only
+/// because of `SpellRange`'s declaration order, and that is not something this
+/// rule may rely on.
+///
+/// Source: ArMDE:6739.
+pub(crate) fn range_beyond_touch(range: SpellRange) -> bool {
+    matches!(
+        range,
+        SpellRange::Eye | SpellRange::Voice | SpellRange::Sight | SpellRange::ArcaneConnection
+    )
+}
+
+/// Whether the entity holds [`Effect::HalvesSpellCapBeyondTouch`] (Short-Ranged
+/// Magic) — folded separately from [`lab_total_mod`] because this halving is
+/// conditional on the *spell being evaluated*, not a flat addend every cap
+/// reads regardless of which spell is asked about.
+fn has_short_ranged_magic(entity: &Entity, ruleset: &Ruleset) -> bool {
+    selections_for_effects(entity, ruleset)
+        .iter()
+        .any(|selection| {
+            ruleset
+                .point_items
+                .get(&selection.item_ref)
+                .is_some_and(|item| item.effects.contains(&Effect::HalvesSpellCapBeyondTouch))
+        })
+}
+
 /// The maximum level a magus may learn of a spell of the given Technique/Form:
 /// the sum of Technique, Form, Intelligence, Magic Theory and 3 (ArMDE:2465),
 /// using effective Art/Ability scores, **halved** if either Art is deficient,
-/// plus the flat [`lab_total_mod`] term (D1, `docs/vf-audit/decisions.md`).
-/// Returns an `i64` (small or negative for a beginning magus). Requisite-Art
-/// reduction is a lab-total nuance out of scope. Single source of truth: both the
-/// validation cap and the UI-surfaced cap read this, so the two can never diverge.
+/// plus the flat [`lab_total_mod`] term (D1, `docs/vf-audit/decisions.md`), and
+/// **halved again** if `range_beyond_touch` is set and the character holds
+/// Short-Ranged Magic (D28). Returns an `i64` (small or negative for a
+/// beginning magus). Requisite-Art reduction is a lab-total nuance out of
+/// scope. Single source of truth: both the validation cap and the UI-surfaced
+/// cap read this, so the two can never diverge.
 ///
-/// The halving is not a separate rule but the same sentence: `ArMDE:2465` ends
-/// "This is the appropriate Lab Total, assuming an aura modifier of +3, and thus
-/// any Virtues and Flaws your character has apply to this total if they would
-/// apply to a Lab Total in play", and a Deficiency halves every Lab Total its Art
-/// is added to (`ArMDE:5911, :5915`). So this cap halves on exactly the
-/// condition `derived/lab.rs::lab_totals` halves on — once for the pair, however
-/// many of its two Arts are deficient — and it reads the same
-/// `effective/art.rs::deficient_arts` fold to decide. `lab_total_mod` is summed
-/// into the base **before** that halving, exactly where `derived/lab.rs::lab_totals`
-/// folds its own `lab_mod` addend into `total` before the same halving.
-// Source: ArMDE:2465, :5911, :5915, :547
-pub fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, technique: &Id, form: &Id) -> i64 {
+/// `range_beyond_touch` is a fact about the **spell being asked about** (its
+/// own Range), not the character. `validation/magus.rs::validate_spell_level_cap`
+/// derives it from a real spell's `Option<SpellRange>` via the free function
+/// [`range_beyond_touch`]; [`spell_level_caps`] instead iterates both range
+/// classes directly (`false`, `true`) to synthesize the two surfaced rows.
+///
+/// **Order of operations**, from the passages: the flat D1 term is summed into
+/// `base` first (it is part of what the Lab Total *is*, `ArMDE:2465`'s closing
+/// sentence), then the two conditional halvings apply. The halving is not a
+/// separate rule but the same sentence: `ArMDE:2465` ends "This is the
+/// appropriate Lab Total, assuming an aura modifier of +3, and thus any Virtues
+/// and Flaws your character has apply to this total if they would apply to a
+/// Lab Total in play", and a Deficiency halves every Lab Total its Art is added
+/// to (`ArMDE:5911, :5915`) while Short-Ranged Magic halves it "when designing
+/// an effect or spell that has a range greater than Touch, including Eye"
+/// (`ArMDE:6739`). Nothing in either passage orders the two conditional
+/// halvings relative to each other, and — like the Deficient/Difficult-Longevity
+/// stack in `derived/lab.rs::creo_corpus_lab_total` — the order between them is
+/// provably immaterial: both are a plain `div_euclid(_, 2)`, and floor division
+/// by 2 twice equals floor division by 4 regardless of which comes first. This
+/// reads the same `effective/art.rs::deficient_arts` fold Deficient-Art halving
+/// always has, so the creation-time cap and the in-play Lab Totals can never
+/// disagree about which Arts are deficient.
+// Source: ArMDE:2465, :5911, :5915, :547, :6739
+pub fn spell_level_cap(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    technique: &Id,
+    form: &Id,
+    range_beyond_touch: bool,
+) -> i64 {
     // Read before the Art *scores* shadow `technique`/`form` with their totals.
     let deficiencies = deficient_arts(entity, ruleset);
     let deficient = deficiencies.contains(technique) || deficiencies.contains(form);
@@ -269,49 +329,63 @@ pub fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, technique: &Id, form:
         None,
     ));
     let base = tech + form + int + magic_theory + 3 + i64::from(lab_total_mod(entity, ruleset));
-    if deficient {
-        // Floor, not truncate. No halving rule names a rounding direction, so the
-        // rulebook default governs — "if it does not, round down" (ArMDE:547) —
-        // and this is the one Lab Total that is routinely negative, where `/ 2`
-        // would round -1 up to 0 and hand out a free level-0 spell. Same
-        // `div_euclid` the in-play totals halve through (`derived.rs::halve`).
-        base.div_euclid(2)
-    } else {
-        base
+    // Floor, not truncate, for both halvings below. No halving rule names a
+    // rounding direction, so the rulebook default governs — "if it does not,
+    // round down" (ArMDE:547) — and this cap is routinely negative for a
+    // beginning magus, where `/ 2` would round -1 up to 0 and hand out a free
+    // level-0 spell. Same `div_euclid` the in-play totals halve through
+    // (`derived.rs::halve`).
+    let mut cap = if deficient { base.div_euclid(2) } else { base };
+    if range_beyond_touch && has_short_ranged_magic(entity, ruleset) {
+        cap = cap.div_euclid(2);
     }
+    cap
 }
 
-/// A per-Technique/Form spell-level cap, surfaced to the frontend so the spell
-/// picker can grey a spell whose level exceeds the magus's cap without
-/// recomputing the derivation in JS. Serializes as
-/// `{ "technique": "<id>", "form": "<id>", "cap": N }`.
+/// A per-Technique/Form/range-class spell-level cap, surfaced to the frontend
+/// so the spell picker can grey a spell whose level exceeds the magus's cap
+/// without recomputing the derivation in JS. Serializes as
+/// `{ "technique": "<id>", "form": "<id>", "range_beyond_touch": bool, "cap": N }`.
+///
+/// D28 (`docs/vf-audit/decisions.md`): the cap no longer depends on Te/Fo
+/// alone once Short-Ranged Magic is in play, so the key gains
+/// `range_beyond_touch` alongside the Te/Fo pair.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SpellLevelCap {
     /// The Technique-class Art id (e.g. `art.creo`).
     pub technique: Id,
     /// The Form-class Art id (e.g. `art.ignem`).
     pub form: Id,
-    /// The maximum learnable level for this Te/Fo combination (may be negative
-    /// for a beginning magus).
+    /// Whether this row is the beyond-Touch cap (Eye, Voice, Sight, Arcane
+    /// Connection) or the ordinary Personal/Touch cap for this Te/Fo pair.
+    pub range_beyond_touch: bool,
+    /// The maximum learnable level for this Te/Fo/range-class combination (may
+    /// be negative for a beginning magus).
     pub cap: i64,
 }
 
 /// The [`spell_level_cap`] for every Technique × Form combination in the Art
-/// catalogue, sorted canonically by `(technique, form)`. The picker keys these
-/// by the pair to look up a candidate spell's cap. One entry per combo (a spell's
-/// cap depends only on its Te/Fo, never its level).
+/// catalogue, crossed with both range classes (D28), sorted canonically by
+/// `(technique, form, range_beyond_touch)`. The picker keys these by
+/// `(technique, form, range_beyond_touch)` — the last computed from a candidate
+/// spell's own Range via [`range_beyond_touch`] — to look up its cap. Two
+/// entries per Te/Fo combo (a spell's cap depends on its Te/Fo and whether its
+/// Range is beyond Touch, never its level).
 pub fn spell_level_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellLevelCap> {
     // `art_ids_of` guarantees the sort the canonical (technique, form) order needs.
     let techniques = ruleset.art_ids_of(crate::art::ArtType::Technique);
     let forms = ruleset.art_ids_of(crate::art::ArtType::Form);
-    let mut caps = Vec::with_capacity(techniques.len() * forms.len());
+    let mut caps = Vec::with_capacity(techniques.len() * forms.len() * 2);
     for technique in &techniques {
         for form in &forms {
-            caps.push(SpellLevelCap {
-                technique: technique.clone(),
-                form: form.clone(),
-                cap: spell_level_cap(entity, ruleset, technique, form),
-            });
+            for range_beyond_touch in [false, true] {
+                caps.push(SpellLevelCap {
+                    technique: technique.clone(),
+                    form: form.clone(),
+                    range_beyond_touch,
+                    cap: spell_level_cap(entity, ruleset, technique, form, range_beyond_touch),
+                });
+            }
         }
     }
     caps
@@ -419,6 +493,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::MagicalFocus { .. }
                 | Effect::CastingTotalMod { .. }
                 | Effect::LabTotalMod { .. }
+                | Effect::HalvesSpellCapBeyondTouch
                 | Effect::DeficientArt { .. }
                 | Effect::MagicTotalHalving { .. }
                 | Effect::SoakMod { .. }

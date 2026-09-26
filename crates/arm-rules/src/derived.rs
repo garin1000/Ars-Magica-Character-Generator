@@ -247,6 +247,9 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 }
                 // Already folded, above — listed so the match stays exhaustive.
                 Effect::LabTotalMod { .. } => {}
+                // Consumed only by `effective/spell.rs::spell_level_cap` (D28); a
+                // no-op for every in-play total this module computes.
+                Effect::HalvesSpellCapBeyondTouch => {}
                 Effect::DeficientArt { .. } => {}
                 Effect::MagicTotalHalving { total } => {
                     m.halvings.insert(*total);

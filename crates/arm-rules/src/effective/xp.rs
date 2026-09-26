@@ -445,6 +445,7 @@ pub(crate) fn ability_authorizations(
                 | Effect::MagicalFocus { .. }
                 | Effect::CastingTotalMod { .. }
                 | Effect::LabTotalMod { .. }
+                | Effect::HalvesSpellCapBeyondTouch
                 | Effect::DeficientArt { .. }
                 | Effect::MagicTotalHalving { .. }
                 | Effect::SoakMod { .. }

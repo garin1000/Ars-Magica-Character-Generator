@@ -1173,6 +1173,29 @@ export const ORDINARY_SPELL_MINIMUM_LEVEL = 1;
 export const RITUAL_MINIMUM_LEVEL_FALLBACK = 20;
 
 /**
+ * Whether a spell's Range makes it subject to Short-Ranged Magic's beyond-Touch
+ * cap halving (D28): present in `rangesBeyondTouch`, and an absent range is
+ * treated as not beyond Touch regardless of that set.
+ *
+ * A thin lookup, deliberately carrying no whitelist of its own: the fixed
+ * taxonomy (Eye, Voice, Sight, Arcane Connection — never Personal or Touch)
+ * lives in exactly one place, the Rust predicate
+ * `crates/arm-rules/src/effective/spell.rs::range_beyond_touch`, surfaced to
+ * the frontend as `Ruleset.ranges_beyond_touch`
+ * (`crates/arm-rules/src/ruleset.rs`). The caller (`SpellTab.svelte`) reads
+ * that surfaced set and passes it in here — this function must never
+ * re-hardcode the four scalars itself, which is exactly the CLAUDE.md
+ * "fixed taxonomies stay Rust enums" invariant `magnitude_points` /
+ * `ability_category_order` already follow.
+ */
+export function spellRangeBeyondTouch(
+  range: string | null | undefined,
+  rangesBeyondTouch: readonly string[],
+): boolean {
+  return range != null && rangesBeyondTouch.includes(range);
+}
+
+/**
  * The minimum level a spell can be learned at: a Ritual must be learned at the
  * ruleset's `ritual_min_level` (ArMDE:12293, "Ritual spells are always at
  * least level 20"), an ordinary
@@ -1201,6 +1224,14 @@ export function minLearnableLevel(
  * budget. `capByTeFo` and `remaining` are engine-authoritative figures, never
  * recomputed here.
  *
+ * `capByTeFo` is keyed `` `${technique} ${form} ${range_beyond_touch}` `` (D28):
+ * the cap depends on the spell's own Range as well as its Technique/Form, so the
+ * lookup key folds in {@link spellRangeBeyondTouch} of `spell.range` against
+ * `rangesBeyondTouch` — the engine-surfaced `Ruleset.ranges_beyond_touch` set,
+ * which the caller (`SpellTab.svelte`) reads and passes through; this function
+ * carries no whitelist of its own. `capByTeFo` itself is built from the
+ * matching `spell_level_caps` rows.
+ *
  * `selectedSpellIds` greys an ordinary fixed-level spell once selected; a
  * General spell (multiple learnable levels) or a parameterized spell (once per
  * Form) stays re-takeable and is excluded from that check — matching how
@@ -1212,12 +1243,14 @@ export function nonTakeableReason(
   capByTeFo: Map<string, number>,
   remaining: number,
   ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
+  rangesBeyondTouch: readonly string[] = [],
 ): { key: string; cap: number } | null {
   const isParametrized = (spell.parameters?.length ?? 0) > 0;
   if (spell.level != null && !isParametrized && selectedSpellIds.has(spell.id)) {
     return { key: 'spell-already-taken-reason', cap: 0 };
   }
-  const cap = capByTeFo.get(`${spell.technique} ${spell.form}`);
+  const beyondTouch = spellRangeBeyondTouch(spell.range, rangesBeyondTouch);
+  const cap = capByTeFo.get(`${spell.technique} ${spell.form} ${beyondTouch}`);
   const need = spell.level ?? minLearnableLevel(spell, ritualMinLevel);
   if (cap != null && need > cap) return { key: 'spell-cap-reason', cap };
   if (need > remaining) return { key: 'spell-budget-reason', cap: cap ?? 0 };
@@ -1231,8 +1264,18 @@ export function isDisabled(
   capByTeFo: Map<string, number>,
   remaining: number,
   ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
+  rangesBeyondTouch: readonly string[] = [],
 ): boolean {
-  return nonTakeableReason(spell, selectedSpellIds, capByTeFo, remaining, ritualMinLevel) != null;
+  return (
+    nonTakeableReason(
+      spell,
+      selectedSpellIds,
+      capByTeFo,
+      remaining,
+      ritualMinLevel,
+      rangesBeyondTouch,
+    ) != null
+  );
 }
 
 /** Highest whole score the advancement table can price (the spinner ceiling). */

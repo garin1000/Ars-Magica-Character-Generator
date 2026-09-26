@@ -69,6 +69,7 @@ import {
   selectionDisplayName,
   spellDisplayName,
   spellLevelAllocation,
+  spellRangeBeyondTouch,
   totalCopies,
   type Translate,
 } from './derive';
@@ -1631,7 +1632,7 @@ describe('nonTakeableReason', () => {
   });
 
   it('blocks when the spell level exceeds the per-Technique/Form cap', () => {
-    const cap = new Map([['art.creo art.animal', 9]]);
+    const cap = new Map([['art.creo art.animal false', 9]]);
     expect(nonTakeableReason(FIXED, new Set(), cap, 100)).toEqual({
       key: 'spell-cap-reason',
       cap: 9,
@@ -1646,7 +1647,7 @@ describe('nonTakeableReason', () => {
   });
 
   it('reports the cap alongside a budget-reason when a cap also applies', () => {
-    const cap = new Map([['art.creo art.animal', 20]]);
+    const cap = new Map([['art.creo art.animal false', 20]]);
     expect(nonTakeableReason(FIXED, new Set(), cap, 9)).toEqual({
       key: 'spell-budget-reason',
       cap: 20,
@@ -1674,6 +1675,90 @@ describe('nonTakeableReason', () => {
       cap: 0,
     });
     expect(nonTakeableReason(ritual, new Set(), new Map(), 20, 20)).toBeNull();
+  });
+
+  // D28: the cap lookup is keyed by range class too, not just Technique/Form.
+  // `rangesBeyondTouch` is the engine-surfaced `Ruleset.ranges_beyond_touch`
+  // set (never a hardcoded whitelist here — see the "follows the injected set"
+  // test below, which proves it by using a set that disagrees with the real
+  // engine whitelist).
+  it('keys the cap lookup by range class: a beyond-Touch spell reads the beyond-Touch row', () => {
+    const eyeSpell: Spell = {
+      id: 'spell.eye',
+      technique: 'art.creo',
+      form: 'art.animal',
+      level: 10,
+      range: 'eye',
+    };
+    const cap = new Map([
+      ['art.creo art.animal false', 20],
+      ['art.creo art.animal true', 9],
+    ]);
+    const rangesBeyondTouch = ['eye', 'voice', 'sight', 'arcane_connection'];
+    expect(nonTakeableReason(eyeSpell, new Set(), cap, 100, undefined, rangesBeyondTouch)).toEqual({
+      key: 'spell-cap-reason',
+      cap: 9,
+    });
+    // The same Te/Fo pair's Touch-or-nearer row is unaffected.
+    expect(nonTakeableReason(FIXED, new Set(), cap, 100, undefined, rangesBeyondTouch)).toBeNull();
+  });
+
+  // CLAUDE.md: fixed taxonomies stay Rust enums; the UI must not re-hardcode
+  // their values. This proves `nonTakeableReason` has no such hardcoded
+  // fallback: a surfaced set that disagrees with the real engine whitelist
+  // (here, 'touch' rather than 'eye' is "beyond Touch") flips which spell is
+  // greyed — the decision follows whatever set it is GIVEN, not a literal list
+  // baked into this function.
+  it('follows the injected ranges-beyond-touch set, not a hardcoded whitelist', () => {
+    const touchSpell: Spell = {
+      id: 'spell.touch',
+      technique: 'art.creo',
+      form: 'art.animal',
+      level: 10,
+      range: 'touch',
+    };
+    const eyeSpell: Spell = {
+      id: 'spell.eye',
+      technique: 'art.creo',
+      form: 'art.animal',
+      level: 10,
+      range: 'eye',
+    };
+    const cap = new Map([
+      ['art.creo art.animal false', 20],
+      ['art.creo art.animal true', 9],
+    ]);
+    const unusualRangesBeyondTouch = ['touch'];
+    expect(
+      nonTakeableReason(touchSpell, new Set(), cap, 100, undefined, unusualRangesBeyondTouch),
+    ).toEqual({ key: 'spell-cap-reason', cap: 9 });
+    expect(
+      nonTakeableReason(eyeSpell, new Set(), cap, 100, undefined, unusualRangesBeyondTouch),
+    ).toBeNull();
+  });
+});
+
+describe('spellRangeBeyondTouch', () => {
+  it('is true only for a range present in the given set', () => {
+    const ranges = ['eye', 'voice', 'sight', 'arcane_connection'];
+    expect(spellRangeBeyondTouch('eye', ranges)).toBe(true);
+    expect(spellRangeBeyondTouch('voice', ranges)).toBe(true);
+    expect(spellRangeBeyondTouch('sight', ranges)).toBe(true);
+    expect(spellRangeBeyondTouch('arcane_connection', ranges)).toBe(true);
+    expect(spellRangeBeyondTouch('personal', ranges)).toBe(false);
+    expect(spellRangeBeyondTouch('touch', ranges)).toBe(false);
+  });
+
+  it('follows the given set rather than a hardcoded whitelist', () => {
+    // An empty set means nothing is beyond Touch, even 'eye'.
+    expect(spellRangeBeyondTouch('eye', [])).toBe(false);
+    // A set naming an unusual range makes that range count instead.
+    expect(spellRangeBeyondTouch('touch', ['touch'])).toBe(true);
+  });
+
+  it('treats an absent range as not beyond Touch regardless of the set', () => {
+    expect(spellRangeBeyondTouch(undefined, ['eye'])).toBe(false);
+    expect(spellRangeBeyondTouch(null, ['eye'])).toBe(false);
   });
 });
 

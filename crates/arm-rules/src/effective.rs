@@ -227,6 +227,7 @@ macro_rules! irrelevant_effect_variants {
         | Effect::MagicalFocus { .. }
         | Effect::CastingTotalMod { .. }
         | Effect::LabTotalMod { .. }
+        | Effect::HalvesSpellCapBeyondTouch
         | Effect::DeficientArt { .. }
         | Effect::MagicTotalHalving { .. }
         | Effect::SoakMod { .. }
@@ -389,6 +390,18 @@ mod tests {
             "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "lab_total_mod", "amount": 3 }]
+          },
+          {
+            "id": "flaw.short_ranged_magic",
+            "kind": "flaw",
+            "classification": "in_play_effect",
+            "magnitude": "major",
+            "categories": ["general"],
+            "entity_kinds": ["character"],
+            "effects": [
+              { "type": "special_casting_mod", "kind": "circumstantial" },
+              { "type": "halves_spell_cap_beyond_touch" }
+            ]
           },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
             "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
@@ -2700,12 +2713,17 @@ mod tests {
         ];
         e.characteristics.insert(Characteristic::Int, 1);
         let caps = spell_level_caps(&e, &rs);
-        // The fixture has one Technique (Creo) × one Form (Ignem) → one combo.
-        assert_eq!(caps.len(), 1);
+        // The fixture has one Technique (Creo) × one Form (Ignem) → one combo,
+        // crossed with both range classes (D28) → two rows.
+        assert_eq!(caps.len(), 2);
         assert_eq!(caps[0].technique, Id::new("art.creo"));
         assert_eq!(caps[0].form, Id::new("art.ignem"));
-        // 2 (Creo) + 3 (Ignem) + 1 (Int) + 0 (no Magic Theory) + 3 = 9.
+        assert!(!caps[0].range_beyond_touch);
+        // 2 (Creo) + 3 (Ignem) + 1 (Int) + 0 (no Magic Theory) + 3 = 9, same for
+        // both rows: this fixture holds no Short-Ranged Magic.
         assert_eq!(caps[0].cap, 9);
+        assert!(caps[1].range_beyond_touch);
+        assert_eq!(caps[1].cap, 9);
     }
 
     /// A Creo 2 / Ignem 3 / Int +1 magus: the raw cap is 9.
@@ -2747,7 +2765,7 @@ mod tests {
         )]);
         // 2 + 3 + 1 + 0 + 3 = 9, halved → 4.
         assert_eq!(
-            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem")),
+            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem"), false),
             4
         );
     }
@@ -2760,7 +2778,7 @@ mod tests {
         let rs = ruleset();
         let e = cap_fixture(vec![deficient("flaw.deficient_form", "form", "art.ignem")]);
         assert_eq!(
-            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem")),
+            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem"), false),
             4
         );
     }
@@ -2777,7 +2795,7 @@ mod tests {
             deficient("flaw.deficient_form", "form", "art.ignem"),
         ]);
         assert_eq!(
-            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem")),
+            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem"), false),
             4
         );
     }
@@ -2798,11 +2816,11 @@ mod tests {
         let ignem = Id::new("art.ignem");
         // 0 + 0 + (-5) + 0 + 3 = -2, halved → -1: the halving applies below zero.
         e.characteristics.insert(Characteristic::Int, -5);
-        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem), -1);
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, false), -1);
         // 0 + 0 + (-4) + 0 + 3 = -1; floor(-1/2) = -1, where a truncating `/ 2`
         // would report 0 and hand the character a free level-0 spell.
         e.characteristics.insert(Characteristic::Int, -4);
-        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem), -1);
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, false), -1);
     }
 
     /// D1 (`docs/vf-audit/decisions.md`): every `LabTotalMod` effect applies flat
@@ -2815,9 +2833,37 @@ mod tests {
         let e = cap_fixture(vec![Selection::new(Id::new("virtue.inventive_genius"))]);
         // 2 (Creo) + 3 (Ignem) + 1 (Int) + 0 (no Magic Theory) + 3 + 3 (lab_total_mod) = 12.
         assert_eq!(
-            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem")),
+            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem"), false),
             12
         );
+    }
+
+    /// D28 (`docs/vf-audit/decisions.md`): Short-Ranged Magic halves the
+    /// spell-level cap, but only for a spell whose Range is beyond Touch — a
+    /// spell at Personal or Touch is unaffected.
+    #[test]
+    fn short_ranged_magic_halves_the_cap_only_beyond_touch() {
+        let rs = ruleset();
+        let e = cap_fixture(vec![Selection::new(Id::new("flaw.short_ranged_magic"))]);
+        let creo = Id::new("art.creo");
+        let ignem = Id::new("art.ignem");
+        // 2 + 3 + 1 + 0 + 3 = 9, unaffected at Touch or nearer.
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, false), 9);
+        // Halved beyond Touch (Eye, Voice, Sight, Arcane Connection): floor(9/2) = 4.
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, true), 4);
+    }
+
+    /// A magus without the Flaw sees no difference between the two cap rows —
+    /// `range_beyond_touch` is purely a fact about the *spell*; the halving only
+    /// bites for a holder of the Flaw.
+    #[test]
+    fn without_short_ranged_magic_the_range_flag_changes_nothing() {
+        let rs = ruleset();
+        let e = cap_fixture(vec![]);
+        let creo = Id::new("art.creo");
+        let ignem = Id::new("art.ignem");
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, false), 9);
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, true), 9);
     }
 
     /// Issue 11: with no per-character override the base budget is the type

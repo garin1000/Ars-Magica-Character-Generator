@@ -639,7 +639,8 @@ fn validate_ritual_casting_restriction(
 }
 
 /// Job 6/7: no spell's level may exceed Technique + Form + Intelligence +
-/// Magic Theory + 3 (ArMDE:2465).
+/// Magic Theory + 3 (ArMDE:2465), further halved for a Short-Ranged-Magic
+/// holder when the spell's own Range is beyond Touch (D28).
 /// Magi only — the caller gates on `is_magus`.
 fn validate_spell_level_cap(
     entity: &Entity,
@@ -652,7 +653,16 @@ fn validate_spell_level_cap(
     let Some(level) = resolved else {
         return;
     };
-    let cap = crate::effective::spell_level_cap(entity, ruleset, &spell.technique, &spell.form);
+    let range_beyond_touch = spell
+        .range
+        .is_some_and(crate::effective::range_beyond_touch);
+    let cap = crate::effective::spell_level_cap(
+        entity,
+        ruleset,
+        &spell.technique,
+        &spell.form,
+        range_beyond_touch,
+    );
     if i64::from(level) > cap {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP,

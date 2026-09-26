@@ -1214,7 +1214,8 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         // A bare marker: no ability/characteristic creation target either.
         | Effect::ForbidsAbilitySpecialties
         | Effect::ForbidsRitualCasting
-        | Effect::WaivesAbilityAgeCap => EffectTarget::Other,
+        | Effect::WaivesAbilityAgeCap
+        | Effect::HalvesSpellCapBeyondTouch => EffectTarget::Other,
     }
 }
 

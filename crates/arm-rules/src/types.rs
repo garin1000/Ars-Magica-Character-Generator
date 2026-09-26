@@ -1294,6 +1294,21 @@ pub enum Effect {
         /// Points added to (or, when negative, removed from) the Lab Total.
         amount: i8,
     },
+    /// Halves the creation-time spell-level cap
+    /// ([`crate::effective::spell_level_cap`]) for a spell whose Range is
+    /// beyond Touch — Eye, Voice, Sight, or Arcane Connection — matched **by
+    /// name** and never derived from [`crate::spell::SpellRange`]'s ordering:
+    /// Eye is the same RDT difficulty as Touch, yet the book names it
+    /// explicitly (Short-Ranged Magic). D28 (`docs/vf-audit/decisions.md`).
+    ///
+    /// A no-op everywhere else: the Flaw's sibling clause ("Halve your
+    /// Casting Totals whenever you are not touching the target of the
+    /// spell") is a per-cast circumstance the engine cannot resolve at
+    /// character-generation time, so it is not modelled by any effect and
+    /// stays textual (the catalogue entry's `description`, D20).
+    ///
+    /// Source: ArMDE:6739.
+    HalvesSpellCapBeyondTouch,
     /// Deficient Art: all casting and lab totals that add the Technique or Form
     /// named by the selection's `params[param]` are **halved** (Deficient Form
     /// excludes Magic Resistance). The param's domain is [`ParameterDomain::Technique`]

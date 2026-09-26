@@ -23,7 +23,7 @@ use crate::grant::Grant;
 use crate::house::{House, HousesFile};
 use crate::life_stage::{ChildhoodRules, LifeStageRules};
 use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
-use crate::spell::{RITUAL_MIN_LEVEL, Spell, SpellDuration, SpellTarget, SpellsFile};
+use crate::spell::{RITUAL_MIN_LEVEL, Spell, SpellDuration, SpellRange, SpellTarget, SpellsFile};
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, CategoryRule, CreationPhase, Effect, EntityTypeProfile,
@@ -69,6 +69,7 @@ mod parse;
 ///   "arts": { "art.creo": { /* Art */ } },
 ///   "art_advancement": [ { "score": 1, "total_xp": 1 } ],
 ///   "art_type_order": [ "technique", "form" ],
+///   "ranges_beyond_touch": [ "eye", "voice", "sight", "arcane_connection" ],
 ///   "ritual_min_level": 20,
 ///   "aura_modifier_min": -50,
 ///   "aura_modifier_max": 10,
@@ -250,6 +251,16 @@ pub struct Ruleset {
     /// the frontend; the `armor` field name is a stable public contract.
     #[serde(default)]
     pub(crate) armor: BTreeMap<Id, Armor>,
+    /// The [`SpellRange`] variants beyond Touch (Eye, Voice, Sight, Arcane
+    /// Connection) — Short-Ranged Magic's cap-halving predicate
+    /// (`effective::range_beyond_touch`), derived by filtering
+    /// [`SpellRange::ALL`] through it (D28). Serialized to the frontend so the
+    /// spell picker (`derive.ts::spellRangeBeyondTouch`) reads the whitelist
+    /// from engine data instead of re-hardcoding it, mirroring
+    /// `magnitude_points`. Derived data, not authored (see `magnitude_points`).
+    /// The `ranges_beyond_touch` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) ranges_beyond_touch: BTreeSet<SpellRange>,
 }
 
 /// The magnitude→points table, derived from the canonical [`Magnitude::points`].
@@ -261,7 +272,7 @@ fn derived_magnitude_points() -> BTreeMap<Magnitude, u8> {
 }
 
 impl Ruleset {
-    /// Overwrites this `Ruleset`'s seven engine-derived fields — fixed
+    /// Overwrites this `Ruleset`'s eight engine-derived fields — fixed
     /// taxonomies and engineering constants that are never authored data (see
     /// `magnitude_points`'s own doc). The single place both construction
     /// paths call: [`parse::assemble_ruleset`] (the fresh-parse path,
@@ -278,6 +289,10 @@ impl Ruleset {
         self.ritual_min_level = RITUAL_MIN_LEVEL;
         self.aura_modifier_min = AURA_MODIFIER_MIN;
         self.aura_modifier_max = AURA_MODIFIER_MAX;
+        self.ranges_beyond_touch = SpellRange::ALL
+            .into_iter()
+            .filter(|&range| crate::effective::range_beyond_touch(range))
+            .collect();
     }
 }
 
@@ -5243,6 +5258,7 @@ mod tests {
                 "magnitude_points",
                 "mythic_companion_types",
                 "point_items",
+                "ranges_beyond_touch",
                 "reputation_type_order",
                 "ritual_min_level",
                 "shields",
@@ -5271,6 +5287,13 @@ mod tests {
             obj["reputation_type_order"],
             serde_json::json!(["local", "ecclesiastical", "hermetic", "academic"])
         );
+        // D28's frontend mirror: the Ranges beyond Touch (Eye, Voice, Sight, Arcane
+        // Connection), so `derive.ts::spellRangeBeyondTouch` reads this set instead
+        // of re-hardcoding the whitelist.
+        assert_eq!(
+            obj["ranges_beyond_touch"],
+            serde_json::json!(["eye", "voice", "sight", "arcane_connection"])
+        );
         // Derived rule constant (VA2): the Ritual spell-level floor, mirrored from
         // `spell::RITUAL_MIN_LEVEL` so the UI never re-hardcodes it.
         assert_eq!(obj["ritual_min_level"], 20);
@@ -5286,10 +5309,10 @@ mod tests {
         assert_eq!(rs, restored);
     }
 
-    /// V46 characterization test: pins that the seven engine-derived fields
+    /// V46 characterization test: pins that the eight engine-derived fields
     /// (`magnitude_points`, `ability_category_order`, `art_type_order`,
     /// `reputation_type_order`, `ritual_min_level`, `aura_modifier_min`,
-    /// `aura_modifier_max`) come out
+    /// `aura_modifier_max`, `ranges_beyond_touch`) come out
     /// byte-for-byte identical whichever of the two construction paths
     /// produced the `Ruleset` — fresh-parsed via `assemble_ruleset`
     /// (`Ruleset::from_sources`) or reconstructed via
@@ -5330,11 +5353,48 @@ mod tests {
         assert_eq!(fresh.ritual_min_level, restored.ritual_min_level);
         assert_eq!(fresh.aura_modifier_min, restored.aura_modifier_min);
         assert_eq!(fresh.aura_modifier_max, restored.aura_modifier_max);
+        assert_eq!(fresh.ranges_beyond_touch, restored.ranges_beyond_touch);
         // Not a vacuous "0 == 0"/"[] == []" pass: each is genuinely non-empty.
         assert!(!fresh.magnitude_points.is_empty());
         assert!(!fresh.ability_category_order.is_empty());
         assert!(!fresh.art_type_order.is_empty());
         assert!(!fresh.reputation_type_order.is_empty());
+        assert!(!fresh.ranges_beyond_touch.is_empty());
+    }
+
+    /// D28: `ranges_beyond_touch` is not an independently-authored list — it is
+    /// exactly `effective::range_beyond_touch` filtered over every
+    /// `SpellRange::ALL` variant, so the two can never drift apart.
+    #[test]
+    fn ranges_beyond_touch_equals_the_predicate_over_every_spellrange_variant() {
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: Some(VALID_ABILITIES),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+            life_stages: None,
+            childhoods: None,
+            aging: None,
+        })
+        .unwrap();
+
+        let expected: BTreeSet<SpellRange> = SpellRange::ALL
+            .into_iter()
+            .filter(|&range| crate::effective::range_beyond_touch(range))
+            .collect();
+        assert_eq!(rs.ranges_beyond_touch, expected);
+        // Not vacuous: the predicate rejects some variants and accepts others.
+        assert!(!expected.contains(&SpellRange::Personal));
+        assert!(!expected.contains(&SpellRange::Touch));
+        assert!(expected.contains(&SpellRange::Eye));
     }
 
     #[test]

@@ -1123,7 +1123,8 @@
   },
   "flaw.short_ranged_magic": {
     "name": "Kurzreichweitige Magie",
-    "summary": "Halbiere deine Zaubersummen, wenn du das Ziel des Zaubers nicht berührst."
+    "summary": "Halbiere deine Zaubersummen, wenn du das Ziel des Zaubers nicht berührst.",
+    "description": "Halbiere deine Zaubersummen, wenn du das Ziel des Zaubers nicht berührst. Halbiere deine Laborsumme beim Entwurf eines Effekts oder Zaubers mit einer Reichweite größer als Berührung, einschließlich Auge."
   },
   "flaw.simple_minded": {
     "name": "Einfältig",

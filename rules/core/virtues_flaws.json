@@ -2556,7 +2556,10 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
+    "effects": [
+      { "type": "special_casting_mod", "kind": "circumstantial" },
+      { "type": "halves_spell_cap_beyond_touch" }
+    ],
     "source": { "anchor": "short-ranged-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6737, 6740] }
   },
   {

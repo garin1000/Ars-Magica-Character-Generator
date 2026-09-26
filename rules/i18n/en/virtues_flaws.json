@@ -1121,7 +1121,8 @@
   },
   "flaw.short_ranged_magic": {
     "name": "Short-Ranged Magic",
-    "summary": "Halve your Casting Totals whenever you are not touching the target of the spell."
+    "summary": "Halve your Casting Totals whenever you are not touching the target of the spell.",
+    "description": "Halve your Casting Totals whenever you are not touching the target of the spell. Halve your Lab Total when designing an effect or spell that has a range greater than Touch, including Eye."
   },
   "flaw.simple_minded": {
     "name": "Simple-Minded",
