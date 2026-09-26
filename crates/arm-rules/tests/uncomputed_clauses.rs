@@ -959,27 +959,38 @@ fn every_uncomputed_rule_entry_states_its_rule_in_every_locale() {
 /// and a regression inside an already-swept block fails immediately.
 ///
 /// `(file, first line, last line)`, inclusive, against `rules/source/en/`.
-const SWEPT_BLOCKS: &[(&str, i64, i64)] = &[
-    (
-        // The Flaws block: `## Flaws` to the end of `#### Wrathful`,
-        // ArMDE:5639-7113. Swept 2026-09-15; re-swept 2026-09-19 under the
-        // widened screen, which found 13 more — the first sweep could only see
-        // a signed number or a botch die, so every rule the book states in
-        // words read as flavour.
-        "Ars Magica - Definitive Edition (Core Rules).md",
-        5639,
-        7113,
-    ),
-    (
-        // The head of the Virtues block: `## Virtues` to the end of
-        // `#### Frightful Presence`, ArMDE:3360-3950. Swept 2026-09-18,
-        // re-swept 2026-09-19 with the same widening (8 more). The rest of the
-        // block (ArMDE:3951-5282) is still unswept.
-        "Ars Magica - Definitive Edition (Core Rules).md",
-        3360,
-        3950,
-    ),
-];
+const SWEPT_BLOCKS: &[(&str, i64, i64)] = &[(
+    // S4 (`docs/vf-audit/phase-2-plan.md`, Phase 1S): the whole Virtues
+    // and Flaws catalogue, `## Virtues` (ArMDE:3360) through the end of
+    // `#### Wrathful` (ArMDE:7106-7109), stopping at the closing
+    // dash-and-pull-quote block (ArMDE:7110-7113) before
+    // `# Chapter 5: Abilities` (ArMDE:7114) — never the chapter itself,
+    // which is exactly the false-offender trap
+    // corrections.md § 2.1a documents (ArMDE:7118's "Ease Factor" would
+    // otherwise flag two unrelated `narrative` Flaws). Verified against
+    // the source file: the Virtues and Flaws blocks are contiguous,
+    // `## Flaws` (ArMDE:5639) landing directly after the Virtues
+    // section's own trailing `## List of Flaws` TOC (ArMDE:5283-5638),
+    // so one range covers both — and every shipped entry's
+    // `source.lines` (checked: min 3362, max 7109) lies inside it.
+    //
+    // Two blocks, swept incrementally and merged here once contiguous:
+    // the Flaws half (originally ArMDE:5639-7113) 2026-09-15, re-swept
+    // 2026-09-19 under the widened screen (+13 — the first sweep could
+    // only see a signed number or a botch die, so every rule the book
+    // states in words read as flavour); the Virtues head (originally
+    // ArMDE:3360-3950, "to the end of `#### Frightful Presence`")
+    // 2026-09-18, re-swept 2026-09-19 with the same widening (+8). The
+    // rest of the Virtues block (ArMDE:3951-5638) was swept and the two
+    // ranges merged into one 2026-09-26 (S4), under S2's 14 widened
+    // families plus S3's class-agnostic
+    // `no_swept_entry_drops_an_uncomputed_mechanical_clause` (D5) —
+    // `every_vf_entry_lies_inside_a_swept_block` is what proves the merge
+    // covers the whole catalogue rather than claiming it.
+    "Ars Magica - Definitive Edition (Core Rules).md",
+    3360,
+    7113,
+)];
 
 /// Entries whose cited passage trips the mechanical-token screen but, on
 /// reading it, states **no rule** — so `narrative` is correct and the screen is
@@ -1110,6 +1121,40 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
         "ArMDE:6855-6870's \"their creator cannot usually fashion an alternative situation\" \
          (bare \"cannot\", family 1/3) describes a limit on the demon's narrative planning, not \
          on the tainted character it names.",
+    ),
+    // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
+    // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
+    (
+        "virtue.ghostly_warder",
+        "ArMDE:3963-3966's \"300 experience points\" belongs to the ghost, an NPC ally the \
+         Virtue describes, not to the character sheet — no PC-facing number or roll. Compare \
+         virtue.magical_warder, the same ally-template shape.",
+    ),
+    (
+        "virtue.indescribable_face",
+        "ArMDE:4107-4114 states no roll, bonus, or cap at all — \"can't turn the ability off\", \
+         \"can switch her distracting prop\" describe a narrative knack for being forgettable or \
+         memorable, with nothing for the engine to compute.",
+    ),
+    (
+        "virtue.magical_warder",
+        "ArMDE:4377-4384 describes an NPC ally (a magical being that watches over the \
+         character) with no PC-facing number — the same ally-template shape as \
+         virtue.ghostly_warder, which this entry's own text cites as an example.",
+    ),
+    (
+        "virtue.paid_rights",
+        "ArMDE:4606-4615's \"cannot\"/\"may not\" clauses (a woman \"cannot pay a fine to\" \
+         various things) describe in-fiction social restrictions this Virtue lets a female \
+         character buy an exception to — a story premise, not a PC-sheet rule with a number or \
+         an Ability authorization attached.",
+    ),
+    (
+        "virtue.tainted_treasure",
+        "ArMDE:5097-5108 states no PC-facing number — the treasure's curse (ventures fail, \
+         buildings burn) is pure story consequence, and the one concrete mechanical path it \
+         names (\"transform it into a source of the Wealthy Virtue\") is Wealthy's own already-\
+         computed later_life_xp_rate, not a new clause.",
     ),
 ];
 
@@ -1427,6 +1472,353 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "virtue.fidai",
         "permission: \"may take\" Martial Abilities, ArMDE:3877-3882",
     ),
+    // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
+    // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
+    (
+        "virtue.gorgiastic",
+        "floor: Enigmatic Wisdom \"cannot exceed 4\" without Criamon assistance, ArMDE:3979-3982",
+    ),
+    (
+        "virtue.gossip",
+        "target number + multiplier: \"a simple roll of 6+\", \"twice their actual level\", \
+         ArMDE:3983-3986",
+    ),
+    (
+        "virtue.greater_benediction",
+        "signed numbers + capability (D8-adjacent): the Flight/True Sight/Universally Liked \
+         examples carry concrete Penetration and roll bonuses, ArMDE:3991-4008",
+    ),
+    (
+        "virtue.greater_immunity",
+        "capability + eligibility: \"completely immune to one hazard\", \"may not take\" \
+         immunity to aging, ArMDE:4009-4016",
+    ),
+    (
+        "virtue.guardian_angel",
+        "signed numbers: \"+5 bonus to Soak\", \"Magic Resistance of 15\", ArMDE:4031-4036",
+    ),
+    (
+        "virtue.guild_dean",
+        "permission: \"may select\" Academic Abilities, ArMDE:4045-4048",
+    ),
+    (
+        "virtue.guild_master",
+        "permission: \"may select\" Academic Abilities, ArMDE:4049-4052",
+    ),
+    (
+        "virtue.harnessed_magic",
+        "capability: \"able to cancel\" spells by concentrating, ArMDE:4053-4058",
+    ),
+    (
+        "virtue.homing_instinct",
+        "target number: \"an Ease Factor of 6\", ArMDE:4079-4084",
+    ),
+    (
+        "virtue.imbued_with_the_spirit_of_form",
+        "named rulebook term + formula: Fatigue-for-vis substitution, \"reduces the vis \
+         requirement... by 1\", ArMDE:4085-4094",
+    ),
+    (
+        "virtue.inoffensive_to_beings",
+        "capability: the Gift \"does not bother\" beings of the chosen type is a real Gift-\
+         penalty exemption with no effect, though the eligibility half is already a \
+         `prerequisites` (any(has The Gift, has Magical Air)), ArMDE:4133-4142",
+    ),
+    (
+        "virtue.inspirational",
+        "signed number: \"+3 bonus to rolls for appropriate Personality Traits\", \
+         ArMDE:4143-4146",
+    ),
+    (
+        "virtue.intuition",
+        "target number: \"secretly roll a simple die. On a 6+\", ArMDE:4147-4150",
+    ),
+    (
+        "virtue.jurist",
+        "permission: \"may purchase\" Latin, Artes Liberales, Civil and Canon Law, \
+         ArMDE:4163-4168",
+    ),
+    (
+        "virtue.kassalan_exorcism",
+        "formulas + capability: Casting Total \"(Stamina + Organization Lore... )/2\", \
+         Penetration formula, ArMDE:4173-4186",
+    ),
+    (
+        "virtue.keen_sense_of_smell",
+        "signed number: \"+3 bonus to all rolls involving\" smell, ArMDE:4191-4194",
+    ),
+    (
+        "virtue.keen_vision",
+        "signed number: \"+3 bonus to all rolls involving sight\", ArMDE:4187-4190",
+    ),
+    (
+        "virtue.knight",
+        "permission: \"may take\" Martial Abilities, ArMDE:4195-4198",
+    ),
+    (
+        "virtue.land_regio_network",
+        "target number: \"an Ease Factor of 9\", ArMDE:4211-4218",
+    ),
+    (
+        "virtue.lasiq",
+        "permission: \"may take\" Martial Abilities, ArMDE:4233-4236",
+    ),
+    (
+        "virtue.learn_ability_from_mistakes",
+        "named rulebook term: \"gain five experience points\" on a botch/near-miss, \
+         ArMDE:4241-4244",
+    ),
+    (
+        "virtue.leather_ripper",
+        "signed number + formula: \"-9 depending on\" maneuvers, \"PeAn(He) 30 effect\", \
+         ArMDE:4245-4248",
+    ),
+    (
+        "virtue.lesser_benediction",
+        "signed numbers: the Gift of the Gab/Green Fingers/Pricking Thumbs examples carry \
+         concrete roll penalties/bonuses, ArMDE:4253-4274",
+    ),
+    (
+        "virtue.license_of_absence",
+        "named rulebook term + eligibility: an extra free season, \"four free seasons in a \
+         year\", \"may only be taken by\" Priest, ArMDE:4291-4294",
+    ),
+    (
+        "virtue.luck",
+        "signed number (open-ended, GM-adjudicated): \"+1 to +3 (storyguide's discretion)\", \
+         ArMDE:4331-4334",
+    ),
+    (
+        "virtue.magical_mount",
+        "eligibility: a gifted mount requires \"a Major Story Flaw to represent the \
+         consequences\", a real required-companion-Flaw clause, ArMDE:4373-4376",
+    ),
+    (
+        "virtue.maker_of_textured_vessels",
+        "signed number: \"+3 bonus in a single Ability\" from a crafted vessel, \
+         ArMDE:4423-4430",
+    ),
+    (
+        "virtue.maker_of_water_vessels",
+        "capability: \"swap one Ability score for the Craft: Potter score\", ArMDE:4431-4438",
+    ),
+    (
+        "virtue.mamluk",
+        "permission: \"may take\" Martial Abilities, \"may also take\" Theology: Islam, \
+         ArMDE:4443-4448",
+    ),
+    (
+        "virtue.master_of_form_creatures",
+        "permission: \"may take\" Magic Lore during character creation, ArMDE:4463-4466",
+    ),
+    (
+        "virtue.mazdean_priest",
+        "permission: \"may take\" Academic Abilities, ArMDE:4480-4487",
+    ),
+    (
+        "virtue.mendicant_friar",
+        "permission: \"may take\" Academic Abilities, ArMDE:4488-4495",
+    ),
+    (
+        "virtue.mercenary_captain",
+        "permission: \"may take\" Martial Abilities, ArMDE:4500-4505",
+    ),
+    (
+        "virtue.minor_enchantments",
+        "named rulebook term: item power levels \"must be 25 or less\", \"no single power can \
+         be greater than 30th level\", ArMDE:4532-4535",
+    ),
+    (
+        "virtue.muse",
+        "capability: \"may grant Free Expression\" or \"double the effect of Free Expression\", \
+         ArMDE:4563-4566",
+    ),
+    (
+        "virtue.natural_leader",
+        "signed number: \"+3 bonus to rolls in social situations\", ArMDE:4590-4593",
+    ),
+    (
+        "virtue.notary",
+        "permission: \"may take\" Academic Abilities, ArMDE:4598-4601",
+    ),
+    (
+        "virtue.perfect_balance",
+        "signed number: \"Add +6 to any roll to avoid falling or tripping\", ArMDE:4624-4627",
+    ),
+    (
+        "virtue.perfect_eye_for_commodity",
+        "named rulebook term: \"(3 x Wealth Multiplier) Labor Points per year\" — conditioned \
+         on the City and Guild trading rules the app does not model, the same D4/N6 shape as \
+         virtue.aristotelian_training, ArMDE:4628-4631",
+    ),
+    (
+        "virtue.perfectus",
+        "permission + eligibility: \"may not take\" Wealthy, \"may take\" Academic Abilities, \
+         \"may... take\" Purity/Transcendence Abilities if True Faith, ArMDE:4632-4641",
+    ),
+    (
+        "virtue.performance_magic",
+        "target number + formula: \"an Ease Factor of 3\", the words/gestures Ease Factor table, \
+         ArMDE:4642-4709",
+    ),
+    (
+        "virtue.piercing_gaze",
+        "signed number: \"+3 to rolls involving intimidation\", ArMDE:4736-4739",
+    ),
+    (
+        "virtue.prestigious_student",
+        "permission: \"may purchase\" Academic Abilities, ArMDE:4792-4795",
+    ),
+    (
+        "virtue.priest",
+        "permission: \"may purchase\" Academic Abilities, ArMDE:4796-4805",
+    ),
+    (
+        "virtue.religious",
+        "permission: \"may take\" Academic Abilities, ArMDE:4856-4861",
+    ),
+    (
+        "virtue.reserves_of_strength",
+        "signed number: \"add +3 to your effective Strength score\", ArMDE:4862-4865",
+    ),
+    (
+        "virtue.ripper",
+        "formula: \"a PeAn(He) 25 and a PeAn 45 effect\", ArMDE:4866-4869",
+    ),
+    (
+        "virtue.senior_master",
+        "permission: \"may select\" Academic Abilities, ArMDE:4922-4925",
+    ),
+    (
+        "virtue.sharp_ears",
+        "signed number: \"+3 bonus to all rolls involving hearing\", ArMDE:4950-4953",
+    ),
+    (
+        "virtue.side_effect",
+        "signed number (open-ended, player-chosen): \"+1 Presence bonus\", \"a bonus on \
+         Concentration rolls\", ArMDE:4954-4957",
+    ),
+    (
+        "virtue.skilled_smuggler",
+        "signed number: \"a -9 penalty on Awareness rolls\", ArMDE:4968-4971",
+    ),
+    (
+        "virtue.skinchanger",
+        "signed number + range: \"+3 is added to the character's Soak score\", \"Size -10... to \
+         Size +2\", ArMDE:4972-4975",
+    ),
+    (
+        "virtue.skinchanger_dove",
+        "signed number: \"Soak is +3 higher than usual\", ArMDE:4976-4987",
+    ),
+    (
+        "virtue.social_contacts",
+        "target number: \"a simple Presence roll against an Ease Factor of 6\", \
+         ArMDE:4988-4991",
+    ),
+    (
+        "virtue.spiritual_pact",
+        "formula: \"Presence + Magic Lore + stress die\" for a Might Pool, ArMDE:5010-5021",
+    ),
+    (
+        "virtue.strong_willed",
+        "signed number: \"+3 on any roll which may require strength of will\", ArMDE:5048-5051",
+    ),
+    (
+        "virtue.sufi",
+        "permission: \"may purchase\" Theology: Islam, Islamic Law, Dominion Lore, \
+         ArMDE:5077-5084",
+    ),
+    (
+        "virtue.supernatural_beauty",
+        "capability (open-ended, GM-adjudicated): \"once per story\" insert a fortunate \
+         coincidence, ArMDE:5089-5096",
+    ),
+    (
+        "virtue.templar_administrator",
+        "permission: \"may take\" Academic Abilities, ArMDE:5109-5112",
+    ),
+    (
+        "virtue.templar_specialist",
+        "permission: \"may take\" one restricted Ability group, ArMDE:5133-5136",
+    ),
+    (
+        "virtue.temporal_influence",
+        "eligibility: \"Grogs may not take this Virtue\", ArMDE:5137-5140",
+    ),
+    (
+        "virtue.town_magistrate",
+        "eligibility + named rulebook term: \"a score of at least 3\" in Civil and Canon Law, \
+         \"purchased for the character, during character generation\", ArMDE:5149-5152",
+    ),
+    (
+        "virtue.troubadour",
+        "permission: \"may take\" Academic skills, ArMDE:5157-5164",
+    ),
+    (
+        "virtue.troupe_upbringing",
+        "signed number: \"receive a +2 modifier\", ArMDE:5165-5168",
+    ),
+    (
+        "virtue.true_love_pc",
+        "signed number: \"add +3 to appropriate Personality Trait rolls\", ArMDE:5173-5178",
+    ),
+    (
+        "virtue.turb_trained",
+        "permission + eligibility: \"allowed to learn\" Martial Abilities, \"prohibited from \
+         being Wealthy or Poor\", ArMDE:5179-5182",
+    ),
+    (
+        "virtue.university_grammar_teacher",
+        "permission: \"may purchase\" Latin and Artes Liberales, ArMDE:5195-5198",
+    ),
+    (
+        "virtue.variable_power",
+        "formula: power level scaling by \"(age / 10)\", \"(Might Score / 5)\", \
+         ArMDE:5199-5206",
+    ),
+    (
+        "virtue.venus_blessing",
+        "signed number: \"+3 on Communication and Presence rolls\", ArMDE:5211-5214",
+    ),
+    (
+        "virtue.verditius_magic",
+        "capability: \"enabling the casting of enchantments through craft\" carries no effect \
+         at all, unlike its sibling Outer-Mystery entries (Faerie Magic, Heartbeast, The \
+         Enigma), ArMDE:5215-5217",
+    ),
+    (
+        "virtue.wisdom_from_ignorance",
+        "capability: books as a training source \"provided they are unable to read the \
+         language\", ArMDE:5251-5256",
+    ),
+    (
+        "virtue.wise_one",
+        "permission: \"may take either Arcane or Academic Abilities, but not both\", \
+         ArMDE:5257-5260",
+    ),
+    // --- Corrected disposition (post-S4 review): these two were briefly
+    // parked in NO_RULE_DESPITE_TOKEN, which is wrong — that list certifies
+    // "narrative is correct", and D46 (docs/vf-audit/decisions.md) rules the
+    // opposite for both: the stated rule *is* computed, via a character-type
+    // profile's required_traits/forbidden_traits naming the entry, so
+    // `narrative` is the misclassification, not a false-positive screen hit.
+    // Both already sit in data_integrity.rs::PENDING_D46_CLASSIFICATION for
+    // exactly this reason; this row is the mirror finding for THIS guard.
+    (
+        "virtue.the_gift",
+        "capability: \"You have the ability to work magic\", ArMDE:3967-3970 — computed via the \
+         grog profile's forbidden_traits naming virtue.the_gift (D46), so `narrative` is wrong; \
+         X2 reclassifies per D46's ruling (uncomputed_rule, for the separate ArMDE:2870-2876 \
+         penalties clause D46 also finds dropped).",
+    ),
+    (
+        "virtue.hermetic_magus",
+        "permission/eligibility: \"All magi must take this as their Social Status, and only \
+         magi may take it\", ArMDE:4067-4070 — computed via the magus profile's required_traits \
+         naming virtue.hermetic_magus (D46's own worked example), so `narrative` is wrong; X2 \
+         reclassifies to creation_effect per D46's ruling.",
+    ),
 ];
 
 /// D5's first obligation (`docs/vf-audit/decisions.md`): a `creation_effect` or
@@ -1645,6 +2037,171 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
         "single clause (confers Enigmatic Wisdom at 1), fully computed via ability_score_grant \
          plus the house.criamon prerequisite; the free-for-House-members grant is the \
          Houses-phase granted_selections machinery.",
+    ),
+    // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
+    // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
+    (
+        "virtue.giant_blood",
+        "all three signed numbers (Size +2, Strength +1, Stamina +1) match three effects \
+         exactly; the Large/Small Frame/Dwarf exclusion is in incompatible_with.",
+    ),
+    (
+        "virtue.good_teacher",
+        "both stated bonuses (+3 authoring Quality, +5 teaching Source Quality) are computed \
+         via two advancement_mod effects.",
+    ),
+    (
+        "virtue.greater_power",
+        "the power-level budget (50) is computed via power_levels; the Initiative/Fatigue-cost/\
+         Penetration formulas are the same generic power-invocation mechanism shared by \
+         Lesser/Personal/Ritual Power, not this entry's own job.",
+    ),
+    (
+        "virtue.heartbeast",
+        "single clause (confers the Heartbeast Ability at 1), fully computed via \
+         ability_score_grant plus the house.bjornaer prerequisite.",
+    ),
+    (
+        "virtue.hermetic_experience",
+        "single clause (50 XP on three named Abilities), fully computed via \
+         restricted_ability_xp; the who-may-take-it footnote is non-binding (\"usually no \
+         point\", not a prohibition).",
+    ),
+    (
+        "virtue.hermetic_prestige",
+        "single clause (Reputation of level 4 within the Order), fully computed via \
+         grants_reputation.",
+    ),
+    (
+        "virtue.independent_study",
+        "both stated bonuses (+2 practice, +3 adventure) are computed via two advancement_mod \
+         effects.",
+    ),
+    (
+        "virtue.ineslemen",
+        "both stated clauses (50 XP on named Abilities, the companion Noncombatant Flaw) are \
+         computed via restricted_ability_xp and grants_selection.",
+    ),
+    (
+        "virtue.large",
+        "single clause (Size +1), fully computed via size_delta; the Giant Blood/Small Frame/\
+         Dwarf exclusion is in incompatible_with.",
+    ),
+    (
+        "virtue.lesser_power",
+        "the power-level budget (25) is computed via power_levels, same reading as \
+         virtue.greater_power.",
+    ),
+    (
+        "virtue.lightning_reflexes",
+        "the operative bonus (+9 Initiative) is computed via combat_mod; the stress-die-plus-\
+         Quickness trigger roll is table-time GM adjudication, the same shape botch dice are.",
+    ),
+    (
+        "virtue.linguist",
+        "single clause (Language Advancement/XP increased by a quarter), fully computed via \
+         group_affinity_cost (counts_as_num/den 5/4).",
+    ),
+    (
+        "virtue.lone_redcap",
+        "the base numbers (poor Reputation 2, 300 XP, Well-Traveled grant) are all computed; \
+         the Poor/Wealthy season-count interactions are conditional narrative guidance with no \
+         number of their own beyond what those Virtues/Flaws already state.",
+    ),
+    (
+        "virtue.major_magical_focus",
+        "single clause (double the lowest applicable Art), fully computed via magical_focus \
+         (major); the worked Lab/Casting-Total example just illustrates that generic effect.",
+    ),
+    (
+        "virtue.mastered_spells",
+        "single clause (50 XP for spell mastery), fully computed via spell_mastery_xp; the \
+         Flawless Magic compatibility note needs no effect.",
+    ),
+    (
+        "virtue.masterpiece",
+        "single clause (a lesser enchanted item at character generation), fully computed via \
+         masterpiece_item; the ignore-vis-costs detail is part of that same mechanism.",
+    ),
+    (
+        "virtue.mentored_by_demons",
+        "both stated clauses (50 XP on any Ability, exceeding the age-based cap) are computed \
+         via restricted_ability_xp and waives_ability_age_cap.",
+    ),
+    (
+        "virtue.method_caster",
+        "single clause (+3 Casting Total for Formulaic/Ritual spells), fully computed via \
+         casting_total_mod.",
+    ),
+    (
+        "virtue.personal_power",
+        "the power-level budget (25) is computed via power_levels, same reading as \
+         virtue.greater_power.",
+    ),
+    (
+        "virtue.rapid_convalescence",
+        "single clause (+3 to recover-from-wounds rolls), fully computed via health_mod/\
+         recovery.",
+    ),
+    (
+        "virtue.second_sight",
+        "single clause (confers the Second Sight Ability at 1), fully computed via \
+         ability_score_grant.",
+    ),
+    (
+        "virtue.sense_holiness_and_unholiness",
+        "single clause (confers the Sense Holiness and Unholiness Ability at 1), fully \
+         computed via ability_score_grant.",
+    ),
+    (
+        "virtue.shadchan",
+        "single clause (50 XP on named social Abilities), fully computed via \
+         restricted_ability_xp.",
+    ),
+    (
+        "virtue.spirit_votary",
+        "the Second Sight grant is computed via grants_selection; the two-Virtue-points-per-\
+         Flaw-point ratio is the mythic_companion type profile's own \
+         virtue_points_per_flaw_point field, not this entry's job (D46's \"computed on a \
+         profile\" shape).",
+    ),
+    (
+        "virtue.study_bonus",
+        "both stated bonuses (+2 vis roll, +2 text Quality) are computed via two \
+         advancement_mod effects; the Art-Score-to-minimum-Presence table is an in-play \
+         gating condition on when the bonus applies, the same D4 shape as flaw.creative_block's \
+         \"unless using a Lab Text\".",
+    ),
+    (
+        "virtue.templar_commander",
+        "both stated clauses (Reputation 3, the Temporal Influence + Brother-Knight grant) are \
+         computed via grants_reputation and grants_selection; the wealth/tax/judge powers are \
+         flavor with no number of their own.",
+    ),
+    (
+        "virtue.templar_office_holder",
+        "single clause (Reputation of level 2), fully computed via grants_reputation.",
+    ),
+    (
+        "virtue.templar_prestige",
+        "single clause (Reputation of level 4), fully computed via grants_reputation.",
+    ),
+    (
+        "virtue.unaging",
+        "both stated aging exemptions are computed via two aging_mod effects (no_aging, \
+         no_apparent_aging), the same kind already relied on for virtue.bee_king.",
+    ),
+    (
+        "virtue.venditor",
+        "single clause (50 XP on named social Abilities), fully computed via \
+         restricted_ability_xp.",
+    ),
+    (
+        "virtue.wealthy",
+        "the operative clause is computed via later_life_xp_rate (the shipped \
+         wealthy_and_poor_ship_with_their_rates_and_eligibility test covers it, mirroring \
+         flaw.poor); the displayed text is silent on any token this screen recognizes — a \
+         screen vocabulary gap, not a dropped rule.",
     ),
 ];
 
@@ -1874,6 +2431,133 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
         "orphan: \"+3 to rolls to determine fast casting speed\" has no effect — only the +3 \
          Initiative-to-cast is computed, ArMDE:3865-3868",
     ),
+    // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
+    // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
+    (
+        "virtue.inventive_genius",
+        "orphan: \"If you experiment, you get +6\" has no effect — only the conditional +3 Lab \
+         Total is computed, ArMDE:4151-4154",
+    ),
+    (
+        "virtue.leper_magus",
+        "orphan: the whole wound-for-vis mechanic (Light Wound = 3 pawns through Deadly Wound \
+         = 15 pawns) has no effect — only the granted Life Boost is computed, ArMDE:4249-4252",
+    ),
+    (
+        "virtue.life_boost",
+        "orphan: the self-damage-if-over-Fatigue clause (Soak 5 x extra levels + stress die) \
+         has no effect — only the +5-per-Fatigue-level casting bonus is computed, \
+         ArMDE:4295-4298",
+    ),
+    (
+        "virtue.magian_lineage_major",
+        "orphan: the Major half's connected-Abilities XP-sharing mechanic has no effect — only \
+         the shared -1 Aging-roll base clause is computed, ArMDE:4339-4346",
+    ),
+    (
+        "virtue.magian_lineage_minor",
+        "orphan: the Minor half's own \"+3 bonus to resist the effects of disease\" has no \
+         effect — only the shared -1 Aging-roll base clause is computed, ArMDE:4339-4346",
+    ),
+    (
+        "virtue.magic_items",
+        "orphan: \"the rate at which your items are improved is increased by one level per \
+         year\" has no effect — only the starting +25 item-level budget is computed, \
+         ArMDE:4347-4350",
+    ),
+    (
+        "virtue.magic_sensitivity",
+        "orphan: \"subtract your Magic Sensitivity score from your Magic Resistance\" has no \
+         effect — only the Ability grant is computed, ArMDE:4351-4354",
+    ),
+    (
+        "virtue.magical_blood",
+        "orphan: \"may learn Magic Lore\" (no authorization effect) plus the entire four-way \
+         Magic-Animal/Human/Spirit/Thing sub-type bonus list — only the -1 Aging-roll base \
+         clause is computed, ArMDE:4359-4372",
+    ),
+    (
+        "virtue.magister_in_artibus",
+        "orphan: the age-and-Ability-score eligibility floor (25-Int years, Latin/Artes \
+         Liberales 5) has no prerequisite — only the Reputation and the XP grant are computed, \
+         ArMDE:4385-4394",
+    ),
+    (
+        "virtue.marshal",
+        "orphan: \"may take Martial Abilities freely\" has no ability_authorization effect — \
+         only the 50 XP grant is computed (authorization family, X1-adjacent), \
+         ArMDE:4449-4456",
+    ),
+    (
+        "virtue.master_of_kennels",
+        "orphan: \"may take Martial Abilities freely\" has no ability_authorization effect — \
+         only the 50 XP grant is computed (authorization family, X1-adjacent), \
+         ArMDE:4467-4470",
+    ),
+    (
+        "virtue.mercurian_magic",
+        "orphan: the Wizard's Vigil auto-knowledge, the Mastery-score stacking, and the \
+         required companion Flaw (Ceremonial Spontaneous Magic, no grants_selection) all have \
+         no effect — only a bare \"mercurian\" marker is computed, ArMDE:4514-4523",
+    ),
+    (
+        "virtue.mythic_blood",
+        "orphan: the potent-Gift Fatigue-loss reduction, the invokable magic-feat table \
+         (level+Penetration by gesture/speech), and the hereditary Personality Flaw grant all \
+         have no effect — only the included Minor Magical Focus is computed, ArMDE:4573-4589",
+    ),
+    (
+        "virtue.potent_magic_major",
+        "orphan: the whole Potent-Spells subsystem (Potency Score from Casting Items, capped \
+         by Magic Theory) has no effect — only the flat +6 Lab/Casting bonus is computed, \
+         ArMDE:4740-4781",
+    ),
+    (
+        "virtue.potent_magic_minor",
+        "orphan: the same Potent-Spells subsystem as virtue.potent_magic_major — only the flat \
+         +3 Lab/Casting bonus is computed, ArMDE:4740-4781",
+    ),
+    (
+        "virtue.redcap",
+        "orphan: the per-year item-growth rate, the free Well-Traveled grant (no \
+         grants_selection), and the free Longevity Ritual when aging starts all have no effect \
+         — only the starting +50 item-level budget is computed, ArMDE:4842-4851",
+    ),
+    (
+        "virtue.ritual_power",
+        "orphan: \"you must spend one Confidence Point for every magnitude of the effect\" has \
+         no effect — only the power-level budget (25) is computed, ArMDE:4870-4877",
+    ),
+    (
+        "virtue.rosh_beth_din",
+        "orphan: the age-and-Ability-score eligibility floor (30-Int years, Hebrew/Rabbinic \
+         Law/Theology: Judaism 5) has no prerequisite — only the Reputation, XP grant and \
+         Social Contacts grant are computed, ArMDE:4878-4883",
+    ),
+    (
+        "virtue.senior_bard",
+        "orphan: the minimum-age-22 and score-5-in-a-named-Lore eligibility floor has no \
+         prerequisite — only the Reputation and the XP grant are computed, ArMDE:4904-4909",
+    ),
+    (
+        "virtue.senior_clergy",
+        "orphan: \"may purchase Academic Abilities\" has no ability_authorization effect — only \
+         the two Reputations are computed (authorization family, X1-adjacent), \
+         ArMDE:4910-4921",
+    ),
+    (
+        "virtue.strong_angelic_heritage",
+        "orphan: the age-scaled Divine Might formula (age / 20), the vis-on-death yield, and \
+         Warping immunity are not visibly keyed to age or otherwise computed beyond a flat \
+         might_grant score of 0, ArMDE:5022-5031",
+    ),
+    (
+        "virtue.strong_faerie_blood",
+        "orphan: the age-50 aging-roll start (vs. normal 35), \"see normally in total \
+         darkness\", \"may learn Faerie Lore\", and the entire inherited Faerie Blood sub-type \
+         bonus list all have no effect — only the Second Sight grant and the -3 Aging-roll are \
+         computed, ArMDE:5032-5047",
+    ),
 ];
 
 /// True when **every** shipped locale's displayed rules text for `id`
@@ -1914,6 +2598,33 @@ fn is_swept(file: &str, start: i64, end: i64) -> bool {
     SWEPT_BLOCKS
         .iter()
         .any(|(swept_file, lo, hi)| *swept_file == file && start >= *lo && end <= *hi)
+}
+
+/// S4 (`docs/vf-audit/phase-2-plan.md`, Phase 1S): the sweep's whole point is
+/// that every passage has actually been read, so every catalogue entry's
+/// citation must lie inside *some* [`SWEPT_BLOCKS`] range — not just the
+/// entries [`no_swept_entry_drops_an_uncomputed_mechanical_clause`] happens to
+/// scope in today. An unswept entry is a hole in that guarantee: nothing says
+/// which entries it actually covers.
+#[test]
+fn every_vf_entry_lies_inside_a_swept_block() {
+    let mut unswept = Vec::new();
+    for item in catalogue() {
+        let Some((file, start, end)) = source_of(&item) else {
+            continue;
+        };
+        if !is_swept(&file, start, end) {
+            let id = item["id"].as_str().expect("every entry has a string id");
+            unswept.push(format!("{id} ({file}:{start}-{end})"));
+        }
+    }
+    assert!(
+        unswept.is_empty(),
+        "{} Virtue/Flaw(s) cite a passage outside every SWEPT_BLOCKS range, so the sweep has \
+         not actually read them:\n{}",
+        unswept.len(),
+        unswept.join("\n")
+    );
 }
 
 /// The English passage a citation brackets, reading each source file at most
