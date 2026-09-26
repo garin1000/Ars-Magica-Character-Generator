@@ -410,7 +410,8 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::FocusPoints { .. }
                 | Effect::ElementalMagic { .. }
                 | Effect::ForbidsAbilitySpecialties
-                | Effect::ForbidsRitualCasting => {}
+                | Effect::ForbidsRitualCasting
+                | Effect::WaivesAbilityAgeCap => {}
             }
         }
     }

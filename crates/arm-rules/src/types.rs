@@ -1526,6 +1526,25 @@ pub enum Effect {
     /// Source: ArMDE:6695-6698, rule
     /// `ArMDE:6697`.
     ForbidsRitualCasting,
+    /// Waives the age → maximum-Ability-score cap entirely, for every Ability —
+    /// Mentored by Demons, "Characters trained by demons may exceed the maximum
+    /// skill level for a given age provided by the character creation rules."
+    /// Unlike [`Effect::AffinityAbilityCost`]'s +2 (which still leaves a ceiling)
+    /// this removes the ceiling outright, and unlike
+    /// [`Effect::LocalityAbilityCapFraction`] (which narrows one flagged Ability)
+    /// it applies to every Ability the character holds: the passage names no
+    /// list. A bare marker with no target, consumed by the single age-cap
+    /// resolution point (D29, `effective/reputation_and_caps.rs::ability_age_cap`)
+    /// rather than by a second check beside it.
+    ///
+    /// A favored-Ability override that raises (not waives) one *named* Ability's
+    /// cap above the age band — Savantism's "may not begin with an Ability above
+    /// 3 [general], except for one favored Ability, which is limited to a score
+    /// of 6" — is a different shape (D9's parameter work) and unshipped; this
+    /// variant states no favored Ability because Mentored by Demons names none.
+    ///
+    /// Source: ArMDE:4498.
+    WaivesAbilityAgeCap,
 }
 
 /// Which spells a [`Effect::CastingTotalMod`] applies to. A fixed rules taxonomy

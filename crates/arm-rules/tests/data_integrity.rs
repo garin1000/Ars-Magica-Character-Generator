@@ -2649,6 +2649,54 @@ fn shipped_reputation_grants_match_their_passage_after_d11() {
     }
 }
 
+/// F-194/D29: `virtue.mentored_by_demons` (ArMDE:4496-4499) states "Characters
+/// trained by demons may exceed the maximum skill level for a given age
+/// provided by the character creation rules" (ArMDE:4498) — a waiver the
+/// engine enforced against with no hook, so the app refused the legal
+/// character the passage describes. The fix is a `waives_ability_age_cap`
+/// effect on the shipped entry, consumed by the D29 resolution point
+/// (`effective/reputation_and_caps.rs::ability_age_cap`).
+#[test]
+fn shipped_mentored_by_demons_carries_the_age_cap_waiver() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("virtue.mentored_by_demons"))
+        .expect("virtue.mentored_by_demons must ship");
+    assert!(
+        item.effects.contains(&Effect::WaivesAbilityAgeCap),
+        "virtue.mentored_by_demons must carry waives_ability_age_cap (ArMDE:4498)"
+    );
+}
+
+/// F-194: the character the passage describes — trained by demons, an Ability
+/// bought above the age band — must validate. A companion aged 20 (age-band
+/// cap 5, ArMDE:2366-2374) with the Virtue and Brawl bought at 7 is exactly
+/// that character.
+#[test]
+fn mentored_by_demons_character_validates_above_the_age_band() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![Selection::new(Id::new("virtue.mentored_by_demons"))],
+    );
+    e.age = Some(20);
+    e.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.brawl"),
+        parameter: None,
+        score: 7,
+        specialty: None,
+    }];
+    let result = validate(&e, &rs);
+    assert!(
+        !result
+            .issues
+            .iter()
+            .any(|i| i.code == ValidationIssue::CODE_ABILITY_ABOVE_AGE_CAP),
+        "Mentored by Demons must waive the age cap (ArMDE:4498): {:?}",
+        result.issues
+    );
+}
+
 #[test]
 fn shipped_supernatural_virtues_grant_starting_score() {
     use arm_rules::effective_ability_score;

@@ -5263,7 +5263,10 @@
     "classification": "creation_effect",
     "tainted": true,
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["academic", "arcane", "general", "martial", "supernatural"] }],
+    "effects": [
+      { "type": "restricted_ability_xp", "amount": 50, "categories": ["academic", "arcane", "general", "martial", "supernatural"] },
+      { "type": "waives_ability_age_cap" }
+    ],
     "max_per_target": 255,
     "max_total": 255,
     "source": { "anchor": "mentored-by-demons", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4496, 4499] }

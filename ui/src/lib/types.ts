@@ -178,7 +178,11 @@ export type Effect =
   // legal (spells known, not spells castable) — the validator only advises
   // (`ritual_casting_restricted`), never blocks. A creation-time constraint,
   // not a score or in-play modifier — nothing here renders it directly.
-  | { type: 'forbids_ritual_casting' };
+  | { type: 'forbids_ritual_casting' }
+  // Mentored by Demons (D29/F-194): waives the age→Ability-score cap outright,
+  // for every Ability — a creation-time constraint the engine's age-cap
+  // resolution point folds in; nothing here renders it directly.
+  | { type: 'waives_ability_age_cap' };
 
 // M5/5b scalar enums mirroring the engine (rendered via Fluent in slice 5i).
 export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' | 'spontaneous';

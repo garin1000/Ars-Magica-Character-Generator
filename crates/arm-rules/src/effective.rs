@@ -248,6 +248,10 @@ macro_rules! irrelevant_effect_variants {
         // ratio, no in-play mod; consumed only by
         // `validation/magus.rs::validate_ritual_casting_restriction`.
         | Effect::ForbidsRitualCasting
+        // A third creation-legality constraint (D29/F-194): no score, no
+        // Affinity ratio, no in-play mod; consumed only by the age-cap
+        // resolution point, `effective/reputation_and_caps.rs::ability_age_cap`.
+        | Effect::WaivesAbilityAgeCap
     };
 }
 // Re-exported (rather than left textually scoped) so the domain submodules

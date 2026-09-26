@@ -2088,7 +2088,8 @@ impl Ruleset {
                 | Effect::SpecialCastingMod { .. }
                 // A bare marker: no parameter, no ref to resolve.
                 | Effect::ForbidsAbilitySpecialties
-                | Effect::ForbidsRitualCasting => {
+                | Effect::ForbidsRitualCasting
+                | Effect::WaivesAbilityAgeCap => {
                     continue;
                 }
             };

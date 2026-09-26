@@ -403,13 +403,22 @@ fn validate_ability_score_in_range(
     }
 }
 
-/// Age → max-Ability-score cap (ArMDE:2366-2374). An Ability carrying an Affinity may exceed it by +2
-/// (ArMDE:3374), not without limit.
+/// Age → max-Ability-score cap (ArMDE:2366-2374).
+///
+/// **D29: one resolution point.** `crate::effective::ability_age_cap` folds the
+/// age band with EVERY V/F override — the Affinity +2 (ArMDE:3374), Foreign
+/// Upbringing's locality-dependent halving (ArMDE:6160), and a full waiver
+/// (Mentored by Demons, ArMDE:4498, F-194) — so this validator only compares
+/// the entry's score against that one number. It used to re-derive the
+/// Affinity override beside the resolution point instead of through it, which
+/// is exactly the "two consumers disagree" shape D29 forbids: Savantism's
+/// favored Ability needs the general cap to *lower* while the SAME resolution
+/// must let its own favored score *raise* above it, which a second check
+/// beside the cap cannot express at all.
+///
 /// The cap is read from the ruleset's age band table; a ruleset that ships
-/// none cannot enforce it, so the check is skipped. The per-ability cap, so a
-/// Flaw that halves locality-dependent Abilities (Foreign Upbringing,
-/// ArMDE:6160) is enforced on those rows
-/// alone.
+/// none cannot enforce it, so the check is skipped. `None` also covers a full
+/// waiver, which leaves nothing to compare the score against.
 fn validate_ability_age_cap(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -417,32 +426,25 @@ fn validate_ability_age_cap(
     issues: &mut Vec<ValidationIssue>,
 ) {
     if let Some(age) = entity.age
-        && let Some(base_cap) = crate::effective::ability_age_cap(entity, ruleset, &entry.ability)
-    {
-        let mut cap = u32::from(base_cap);
-        if crate::effective::ability_affinity(
+        && let Some(cap) = crate::effective::ability_age_cap(
             entity,
             ruleset,
             &entry.ability,
             entry.parameter.as_deref(),
         )
-        .is_some()
-        {
-            cap += 2;
-        }
-        if u32::from(entry.score) > cap {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_ABILITY_ABOVE_AGE_CAP,
-                CreationPhase::Abilities,
-                args([
-                    ("ability", entry.ability.to_string()),
-                    ("score", entry.score.to_string()),
-                    ("cap", cap.to_string()),
-                    ("age", age.to_string()),
-                ]),
-                Some(entry.ability.clone()),
-            ));
-        }
+        && u32::from(entry.score) > u32::from(cap)
+    {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_ABILITY_ABOVE_AGE_CAP,
+            CreationPhase::Abilities,
+            args([
+                ("ability", entry.ability.to_string()),
+                ("score", entry.score.to_string()),
+                ("cap", cap.to_string()),
+                ("age", age.to_string()),
+            ]),
+            Some(entry.ability.clone()),
+        ));
     }
 }
 

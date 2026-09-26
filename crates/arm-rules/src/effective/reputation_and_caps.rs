@@ -102,8 +102,12 @@ pub fn supernatural_free_slots(
 /// age band table (ArMDE:2366-2374). Data, not hardcoded: the bands live
 /// in `rules/core/abilities.json` (`age_ability_caps`) and are surfaced via
 /// `EffectiveScores` so the UI never re-hardcodes the table. `None` when the
-/// ruleset ships no age caps. An Ability with an Affinity may exceed this by +2
-/// (applied in validation).
+/// ruleset ships no age caps.
+///
+/// This is the band alone — no override folded in yet. [`ability_age_cap`] is
+/// the per-ability resolution point (D29) that folds every Virtue/Flaw
+/// override over this base; callers wanting the enforced cap for one Ability
+/// should read that function, not this one.
 pub fn age_max_ability_score(ruleset: &Ruleset, age: u32) -> Option<u8> {
     ruleset.age_ability_caps().max_ability_score(age)
 }
@@ -114,8 +118,29 @@ pub fn age_ability_cap(entity: &Entity, ruleset: &Ruleset) -> Option<u8> {
     age_max_ability_score(ruleset, entity.age?)
 }
 
-/// The age cap for ONE ability, after any Virtue/Flaw that narrows it for
-/// locality-dependent Abilities.
+/// Whether any held item waives the age → Ability-score cap outright
+/// (`Effect::WaivesAbilityAgeCap`; Mentored by Demons, ArMDE:4498, F-194). The
+/// waiver applies to every Ability — the passage names no list — so this is a
+/// single yes/no fact about the entity, not a per-ability one.
+fn ability_age_cap_waived(entity: &Entity, ruleset: &Ruleset) -> bool {
+    let mut waived = false;
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if matches!(effect, Effect::WaivesAbilityAgeCap) {
+            waived = true;
+        }
+    });
+    waived
+}
+
+/// **D29: the single resolution point for an Ability's maximum score.** Folds
+/// the age band (`age_ability_cap`) with EVERY Virtue/Flaw override that
+/// bears on it — a full waiver (Mentored by Demons, ArMDE:4498), the
+/// locality-dependent halving (Foreign Upbringing, ArMDE:6160), and the
+/// Affinity +2 (ArMDE:3374) — so a second check beside this one (as
+/// `validate_ability_age_cap` used to run for Affinity) can no longer
+/// disagree with it: there is nowhere else left to ask. Both the validator and
+/// any future UI surface read this function, never `age_ability_cap` +
+/// their own override logic.
 ///
 /// > The maximum scores at character creation for locality-dependent Abilities like
 /// > Language, Area Lore, or Organization Lore, as well as some social Abilities,
@@ -129,24 +154,144 @@ pub fn age_ability_cap(entity: &Entity, ruleset: &Ruleset) -> Option<u8> {
 ///
 /// The fraction rounds **up**, per the passage. Several such flaws would compose by
 /// applying the smallest resulting cap, though no shipped Flaw pairs with another.
-pub fn ability_age_cap(entity: &Entity, ruleset: &Ruleset, ability: &Id) -> Option<u8> {
+///
+/// `None` means no cap applies at all — a ruleset shipping no age bands, or a
+/// full waiver — so callers must not treat it as "very low" or "very high".
+pub fn ability_age_cap(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    ability: &Id,
+    parameter: Option<&str>,
+) -> Option<u8> {
     let base = age_ability_cap(entity, ruleset)?;
-    if !ruleset
+    if ability_age_cap_waived(entity, ruleset) {
+        return None;
+    }
+    let mut cap = base;
+    if ruleset
         .ability(ability)
         .is_some_and(|def| def.locality_dependent)
     {
-        return Some(base);
+        for_each_effect!(entity, ruleset, |_selection, effect| {
+            if let Effect::LocalityAbilityCapFraction { num, den } = effect
+                && *den > 0
+            {
+                // Ceiling division: "half (round up)".
+                let numerator = u32::from(base) * u32::from(*num) + u32::from(*den) - 1;
+                let fractioned = u8::try_from(numerator / u32::from(*den)).unwrap_or(base);
+                cap = cap.min(fractioned);
+            }
+        });
     }
-    let mut cap = base;
-    for_each_effect!(entity, ruleset, |_selection, effect| {
-        if let Effect::LocalityAbilityCapFraction { num, den } = effect
-            && *den > 0
-        {
-            // Ceiling division: "half (round up)".
-            let numerator = u32::from(base) * u32::from(*num) + u32::from(*den) - 1;
-            let fractioned = u8::try_from(numerator / u32::from(*den)).unwrap_or(base);
-            cap = cap.min(fractioned);
-        }
-    });
+    if ability_affinity(entity, ruleset, ability, parameter).is_some() {
+        // ArMDE:3374 — "exceed the normal age-based cap … by two points", not
+        // without limit, so this is an addend, never a second waiver.
+        cap = cap.saturating_add(2);
+    }
     Some(cap)
+}
+
+#[cfg(test)]
+mod age_cap_resolution_point_tests {
+    use super::*;
+    use crate::types::{Entity, EntityKind, Id, RulesetRef, Selection};
+    use crate::{Ruleset, RulesetSources};
+    use std::collections::BTreeMap;
+
+    const ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "virtue.affinity_ability", "kind": "virtue", "classification": "narrative",
+        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+        "effects": [{ "type": "affinity_ability_cost", "param": "ability", "counts_as_num": 3, "counts_as_den": 2 }] }
+    ]"#;
+    const TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general", "personality"], "creation_phases": [] }
+    ]"#;
+    // Age caps: 5 under 30.
+    const ABILITIES: &str = r#"{
+      "age_ability_caps": [ { "max_age": 29, "max_score": 5 }, { "max_score": 9 } ],
+      "abilities": [ { "id": "ability.brawl", "category": "general" } ]
+    }"#;
+
+    fn rs() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    fn companion_with_affinity(age: u32) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.age = Some(age);
+        let mut params = BTreeMap::new();
+        params.insert("ability".to_string(), Id::new("ability.brawl"));
+        entity.selections = vec![Selection::with_params(
+            Id::new("virtue.affinity_ability"),
+            params,
+        )];
+        entity
+    }
+
+    /// D29: `ability_age_cap` is documented as the resolution point for an
+    /// Ability's maximum score, yet `validate_ability_age_cap` (`validation/
+    /// scores.rs`) applies the Affinity +2 override BESIDE it rather than
+    /// through it — the "two consumers disagree" shape D29 forbids. At age 25
+    /// (base cap 5), an Affinity-bearing Ability is legal up to 7; the
+    /// resolution point must say so.
+    #[test]
+    fn the_resolution_point_folds_the_affinity_override_the_validator_applies() {
+        let ruleset = rs();
+        let entity = companion_with_affinity(25);
+        assert_eq!(
+            ability_age_cap(&entity, &ruleset, &Id::new("ability.brawl"), None),
+            Some(7),
+        );
+    }
+
+    /// F-194: Mentored by Demons waives the age cap outright. Modelled
+    /// data-driven (any item carrying `Effect::WaivesAbilityAgeCap`), not by a
+    /// hardcoded virtue id.
+    #[test]
+    fn a_waiver_effect_removes_the_cap_entirely() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "virtue.trained_beyond_years", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "waives_ability_age_cap" }] }
+        ]"#;
+        let ruleset = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.age = Some(20);
+        entity.selections = vec![Selection::new(Id::new("virtue.trained_beyond_years"))];
+        assert_eq!(
+            ability_age_cap(&entity, &ruleset, &Id::new("ability.brawl"), None),
+            None,
+            "a full waiver leaves no cap to enforce",
+        );
+    }
 }

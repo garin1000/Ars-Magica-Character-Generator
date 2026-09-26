@@ -556,11 +556,13 @@ fn characteristic_fields(entity: &Entity, ruleset: &Ruleset) -> CharacteristicFi
 ///
 /// It also carried the raw age→Ability cap until V1 (full-audit round 4) removed
 /// it: no frontend surface ever read it, and the cap the engine actually enforces
-/// is the per-ability `effective/reputation_and_caps.rs::ability_age_cap`, which
-/// halves for locality-dependent Abilities under Foreign Upbringing. Should the
-/// Ability spinner ever grey scores past the cap, it must surface THAT one as a
-/// keyed map, the way `spell_level_caps` already does for spells — not a single
-/// figure that disagrees with the validator for exactly those Abilities.
+/// is the per-ability `effective/reputation_and_caps.rs::ability_age_cap` — now
+/// the single D29 resolution point, folding the age band with every override
+/// (Foreign Upbringing's locality-dependent halving, the Affinity +2, and
+/// Mentored by Demons' full waiver, F-194). Should the Ability spinner ever
+/// grey scores past the cap, it must surface THAT one as a keyed map, the way
+/// `spell_level_caps` already does for spells — not a single figure that
+/// disagrees with the validator for exactly those Abilities.
 struct ConfidenceFields {
     confidence_score: u8,
     confidence_points: u8,

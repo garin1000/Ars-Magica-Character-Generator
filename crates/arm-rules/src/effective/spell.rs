@@ -60,7 +60,8 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AbilityRollMod { .. }
         | Effect::ElementalMagic { .. }
         | Effect::ForbidsAbilitySpecialties
-        | Effect::ForbidsRitualCasting => None,
+        | Effect::ForbidsRitualCasting
+        | Effect::WaivesAbilityAgeCap => None,
     })
 }
 
@@ -120,7 +121,8 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AbilityRollMod { .. }
         | Effect::ElementalMagic { .. }
         | Effect::ForbidsAbilitySpecialties
-        | Effect::ForbidsRitualCasting => None,
+        | Effect::ForbidsRitualCasting
+        | Effect::WaivesAbilityAgeCap => None,
     })
 }
 
@@ -397,7 +399,8 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::AbilityRollMod { .. }
                 | Effect::ElementalMagic { .. }
                 | Effect::ForbidsAbilitySpecialties
-                | Effect::ForbidsRitualCasting => None,
+                | Effect::ForbidsRitualCasting
+                | Effect::WaivesAbilityAgeCap => None,
             })
     });
     best_affinity(found)

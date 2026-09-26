@@ -457,7 +457,10 @@ pub(crate) fn ability_authorizations(
                 | Effect::AbilityRollMod { .. }
                 | Effect::ElementalMagic { .. }
                 | Effect::ForbidsAbilitySpecialties
-                | Effect::ForbidsRitualCasting => {}
+                | Effect::ForbidsRitualCasting
+                // A cap waiver raises a ceiling, not a permission to own an
+                // Ability in the first place.
+                | Effect::WaivesAbilityAgeCap => {}
             }
         }
     }

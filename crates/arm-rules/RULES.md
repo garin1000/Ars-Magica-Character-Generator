@@ -1289,7 +1289,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:479).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:481).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -4756,8 +4756,30 @@ An Ability carrying an Affinity may exceed it **by +2** — not without limit:
 > `ArMDE:3374` (Affinity with (Ability)) "you may exceed the normal age-based cap
 > during character generation … by two points for that Ability."
 
-Virtues that *raise* the cap generally are deferred (none seeded); only the
-Affinity +2 is modelled.
+**D29: one resolution point.** `ability_age_cap` (per-ability,
+`effective/reputation_and_caps.rs`) folds the age band with EVERY Virtue/Flaw
+override — the locality-dependent halving above, the Affinity +2, and the
+full waiver below — so `validate_abilities` (and any future UI surface) reads
+this one function rather than re-deriving an override beside it. It used to:
+the Affinity +2 was applied a second time, in the validator, alongside a call
+to this function that did not know about it — invisible so long as nothing
+else read the function directly, but exactly the shape that cannot express
+Savantism's favored Ability (general cap **lowers** to 3, the one favored
+Ability **raises** to 6 above an age cap of 5 — a validator beside the age
+rule can lower but never raise). Savantism itself stays unshipped (F-510); D29
+only fixes the resolution point.
+
+**F-194: Mentored by Demons waives the cap outright.**
+`Effect::WaivesAbilityAgeCap` is a bare marker (no target — the passage names
+no Ability list) that makes the per-ability resolution return `None` (no cap
+to enforce) for every Ability the character holds:
+
+> `ArMDE:4498` "Characters trained by demons may exceed the maximum skill
+> level for a given age provided by the character creation rules."
+
+`virtue.mentored_by_demons` carries it alongside its existing 50-XP grant.
+Data-driven: the engine hardcodes no virtue id, so a house rule or future
+book's item carrying the same effect is caught with zero code changes.
 
 **The Gift → one free Supernatural Ability.** A Supernatural Ability normally
 requires a granting Virtue (an `ability_score_grant` effect seeds it — Second

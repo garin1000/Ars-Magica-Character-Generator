@@ -1207,7 +1207,8 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::ElementalMagic { .. }
         // A bare marker: no ability/characteristic creation target either.
         | Effect::ForbidsAbilitySpecialties
-        | Effect::ForbidsRitualCasting => EffectTarget::Other,
+        | Effect::ForbidsRitualCasting
+        | Effect::WaivesAbilityAgeCap => EffectTarget::Other,
     }
 }
 
