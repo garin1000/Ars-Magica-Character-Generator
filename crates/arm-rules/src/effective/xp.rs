@@ -95,10 +95,22 @@ pub(crate) fn ability_affinity(
                     param,
                     counts_as_num,
                     counts_as_den,
-                } if selection.params.get(param) == Some(ability) => {
+                } if selection
+                    .params
+                    .get(param)
+                    .and_then(SelectionParamValue::as_single)
+                    == Some(ability) =>
+                {
                     let matches = match instance_key {
                         None => true,
-                        Some(key) => selection.params.get(key).map(Id::as_str) == parameter,
+                        Some(key) => {
+                            selection
+                                .params
+                                .get(key)
+                                .and_then(SelectionParamValue::as_single)
+                                .map(Id::as_str)
+                                == parameter
+                        }
                     };
                     matches.then_some((*counts_as_num, *counts_as_den))
                 }
@@ -131,7 +143,12 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                     param,
                     counts_as_num,
                     counts_as_den,
-                } if selection.params.get(param) == Some(art) => {
+                } if selection
+                    .params
+                    .get(param)
+                    .and_then(SelectionParamValue::as_single)
+                    == Some(art) =>
+                {
                     Some((*counts_as_num, *counts_as_den))
                 }
                 // Not an Affinity for this Art; no reduction here.

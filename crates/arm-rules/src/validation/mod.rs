@@ -18,7 +18,8 @@ use crate::ruleset::Ruleset;
 use crate::types::{
     AbilityFunding, CategoryCap, CategoryRule, CreationPhase, Effect, Entity, EntityKind,
     EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDef,
-    ParameterDomain, PhaseRule, PointItem, Prereq, Realm, Selection, ValidationMode,
+    ParameterDomain, PhaseRule, PointItem, Prereq, Realm, Selection, SelectionParamValue,
+    ValidationMode,
 };
 
 mod aging;

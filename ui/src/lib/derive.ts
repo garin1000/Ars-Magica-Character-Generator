@@ -410,19 +410,20 @@ export function selectionDisplayName(
  * behaviour is unchanged.
  */
 export function paramValueUsage(
-  selections: { ref: string; params?: Record<string, string> }[],
+  selections: { ref: string; params?: Record<string, string | string[]> }[],
   itemRef: string,
   key: string,
   exceptIndex: number,
-  siblingParams?: Record<string, string>,
+  siblingParams?: Record<string, string | string[]>,
 ): Map<string, number> {
-  const siblings = Object.entries(siblingParams ?? {}).filter(([k]) => k !== key);
+  const siblings = Object.entries(singleValuedParams(siblingParams)).filter(([k]) => k !== key);
   const counts = new Map<string, number>();
   selections.forEach((selection, i) => {
     if (i === exceptIndex || selection.ref !== itemRef) return;
-    const value = selection.params?.[key];
+    const value = singleParamValue(selection.params?.[key]);
     if (!value) return;
-    if (siblings.some(([k, v]) => selection.params?.[k] !== v)) return;
+    const rowParams = singleValuedParams(selection.params);
+    if (siblings.some(([k, v]) => rowParams[k] !== v)) return;
     counts.set(value, (counts.get(value) ?? 0) + 1);
   });
   return counts;
@@ -787,6 +788,36 @@ function warpingSlotKeys(constraint: GrantConstraint): { labelKey: string; count
 }
 
 /**
+ * The single-string value of one parameter slot — `undefined` for an unset key
+ * or (C0b, `docs/vf-audit/design-c0-parameter-model.md`) a multi-valued one.
+ * `Selection.params` widened to `Record<string, string | string[]>` so a
+ * future multi-select picker (C5b) can write a set, but no producer creates
+ * one yet: every reader below narrows through here rather than assuming a
+ * bare string, so a stray array value is skipped rather than mis-rendered.
+ */
+export function singleParamValue(value: string | string[] | undefined): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+/**
+ * `params` narrowed to its single-valued entries only, dropping any (not yet
+ * producible) array value — the same narrowing as {@link singleParamValue},
+ * applied to a whole map. Used wherever a full params object is handed to a
+ * surface that is still single-value-only, which today is every surface: the
+ * multi-select picker C5b adds is the first producer of a `Multi` value.
+ */
+export function singleValuedParams(
+  params: Record<string, string | string[]> | undefined,
+): Record<string, string> {
+  if (!params) return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === 'string') out[key] = value;
+  }
+  return out;
+}
+
+/**
  * The category or categories "in force" for one *selection* of `item` — the
  * single frontend resolution of "which category did this character actually
  * take it under", deliberately mirroring the engine's
@@ -939,7 +970,7 @@ export function groupSelectionsByCategory(
   const add = (row: SelectionRow): void => {
     const item = localized.ruleset.point_items[row.selection.ref];
     if (!item) return;
-    const key = selectionCategories(item, row.selection.params)[0] ?? '';
+    const key = selectionCategories(item, singleValuedParams(row.selection.params))[0] ?? '';
     const list = groups.get(key) ?? [];
     list.push(row);
     groups.set(key, list);

@@ -52,14 +52,22 @@ pub fn ability_bonus(
         // here, not a silently-ignored bonus.
         match effect {
             Effect::AbilityBonus { param, amount }
-                if selection.params.get(param) == Some(ability) =>
+                if selection
+                    .params
+                    .get(param)
+                    .and_then(SelectionParamValue::as_single)
+                    == Some(ability) =>
             {
                 let matches = match instance_key {
                     None => true,
                     // The selection must name this instance; one that omits
                     // the instance key targets no parameterized instance at
                     // all.
-                    Some(key) => match selection.params.get(key) {
+                    Some(key) => match selection
+                        .params
+                        .get(key)
+                        .and_then(SelectionParamValue::as_single)
+                    {
                         Some(named) => Some(named.as_str()) == parameter,
                         None => false,
                     },

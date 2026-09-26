@@ -6,6 +6,7 @@
     excludeSelection,
     grantItemLabel,
     sameSelection,
+    singleValuedParams,
   } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
   import type {
@@ -180,7 +181,9 @@
               >
                 <option value="-1">{store.t('mythic-choose-prompt')}</option>
                 {#each grant.options as option, i (i)}
-                  <option value={String(i)}>{label(option.ref, option.params)}</option>
+                  <option value={String(i)}
+                    >{label(option.ref, singleValuedParams(option.params))}</option
+                  >
                 {/each}
               </select>
             {:else}

@@ -210,6 +210,7 @@ pub(crate) fn validate_characteristic_delta_preconditions(
                     let Some(target) = selection
                         .params
                         .get(param)
+                        .and_then(SelectionParamValue::as_single)
                         .and_then(Characteristic::from_id)
                     else {
                         continue; // unresolved param value is reported by validate_parameters

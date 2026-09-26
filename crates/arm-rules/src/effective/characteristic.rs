@@ -136,6 +136,7 @@ pub fn characteristic_score_bonus(
                 if selection
                     .params
                     .get(param)
+                    .and_then(SelectionParamValue::as_single)
                     .and_then(Characteristic::from_id)
                     == Some(characteristic) =>
             {

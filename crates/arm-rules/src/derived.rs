@@ -56,7 +56,8 @@ use crate::ruleset::{
 };
 use crate::types::{
     AdvancementFactor, CastingScope, CombatStat, Effect, Entity, Familiar, HalvableTotal,
-    HealthTrack, Id, LongevitySource, MAX_CORD_SCORE, MagicResistanceEffect, SpecialCasting,
+    HealthTrack, Id, LongevitySource, MAX_CORD_SCORE, MagicResistanceEffect, SelectionParamValue,
+    SpecialCasting,
 };
 
 // --- Non-standard-casting penalty constants (ArMDE:9243-9245) -----------
@@ -308,12 +309,20 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // aura_bonus, :7068-7070 (Weak Magic Resistance).
                 Effect::MagicResistanceMod { kind, param } => match kind {
                     MagicResistanceEffect::NoFormBonus => {
-                        if let Some(form) = param.as_ref().and_then(|p| selection.params.get(p)) {
+                        if let Some(form) = param
+                            .as_ref()
+                            .and_then(|p| selection.params.get(p))
+                            .and_then(SelectionParamValue::as_single)
+                        {
                             m.no_form_bonus_forms.insert(form.clone());
                         }
                     }
                     MagicResistanceEffect::HalvedParma => {
-                        if let Some(form) = param.as_ref().and_then(|p| selection.params.get(p)) {
+                        if let Some(form) = param
+                            .as_ref()
+                            .and_then(|p| selection.params.get(p))
+                            .and_then(SelectionParamValue::as_single)
+                        {
                             m.halved_parma_forms.insert(form.clone());
                         }
                     }
@@ -364,7 +373,11 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                         m.gesture_reduction += SUBTLE_MAGIC_GESTURE_REDUCTION
                     }
                     SpecialCasting::DeftForm => {
-                        if let Some(form) = param.as_ref().and_then(|p| selection.params.get(p)) {
+                        if let Some(form) = param
+                            .as_ref()
+                            .and_then(|p| selection.params.get(p))
+                            .and_then(SelectionParamValue::as_single)
+                        {
                             m.deft_forms.insert(form.clone());
                         }
                     }
@@ -388,6 +401,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     detail: selection
                         .params
                         .get(param)
+                        .and_then(SelectionParamValue::as_single)
                         .map(|id| id.as_str().to_string())
                         .unwrap_or_default(),
                     amount: i32::from(*amount),

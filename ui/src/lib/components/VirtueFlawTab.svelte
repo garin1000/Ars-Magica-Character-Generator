@@ -11,6 +11,7 @@
     mandatoryTraitRefs,
     selectionCategories,
     selectionDisplayName,
+    singleValuedParams,
     type SelectionRow,
   } from '../derive';
   import { reserveTagSpace, tooltip, withReason, type TooltipContent } from '../actions';
@@ -366,7 +367,7 @@
               {@const required = mandatory.has(selection.ref)}
               <li>
                 <div class="selection-row">
-                  {@render nameWrap(selection.ref, selection.params)}
+                  {@render nameWrap(selection.ref, singleValuedParams(selection.params))}
                   {#if required}
                     <span class="row-marker">{store.t('selection-required-label')}</span>
                   {:else}
@@ -374,7 +375,7 @@
                       type="button"
                       class="icon-btn"
                       aria-label={store.t('remove-item', {
-                        name: selectionName(selection.ref, selection.params),
+                        name: selectionName(selection.ref, singleValuedParams(selection.params)),
                       })}
                       onclick={() => store.removeSelectionAt(index)}
                       data-testid="remove-{selection.ref}-{index}"
@@ -393,7 +394,7 @@
                    test id would make the two rows indistinguishable to a spec. -->
               <li data-testid="granted-selection-{item.selection.ref}-{item.grantIndex}">
                 <div class="selection-row">
-                  {@render nameWrap(item.selection.ref, item.selection.params)}
+                  {@render nameWrap(item.selection.ref, singleValuedParams(item.selection.params))}
                   <span class="row-marker">{store.t('house-granted-label')}</span>
                 </div>
               </li>

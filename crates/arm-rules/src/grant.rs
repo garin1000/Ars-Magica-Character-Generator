@@ -190,6 +190,7 @@ pub fn open_pick_satisfies(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::SelectionParamValue;
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -234,7 +235,10 @@ mod tests {
         assert_eq!(choice_key, "flambeau_puissant");
         assert_eq!(options.len(), 2);
         assert_eq!(options[0].item_ref, Id::new("virtue.puissant_art"));
-        assert_eq!(options[1].params.get("art"), Some(&Id::new("art.ignem")));
+        assert_eq!(
+            options[1].params.get("art"),
+            Some(&SelectionParamValue::Single(Id::new("art.ignem")))
+        );
     }
 
     #[test]

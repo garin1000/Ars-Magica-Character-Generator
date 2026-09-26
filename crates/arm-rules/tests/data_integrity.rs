@@ -8404,7 +8404,7 @@ fn a_free_text_realm_from_an_older_save_is_reported_in_the_players_own_words() {
     let loaded = arm_rules::load_entity_migrating(&json, 1220).expect("an older save still loads");
     assert_eq!(
         loaded.entity.selections[0].params.get("realm"),
-        Some(&typed),
+        Some(&SelectionParamValue::Single(typed.clone())),
         "the engine reports an unresolvable choice; it never rewrites the save"
     );
 

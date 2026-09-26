@@ -74,7 +74,7 @@ use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AgingLogEntry, EnchantedDevice, Entity, EntityKind, Id,
     ItemKind, MightScore, ParameterDomain, PersonalityTrait, PointItem, Realm, Selection,
-    SpellSelection, SupernaturalPower, TalismanEffect,
+    SelectionParamValue, SpellSelection, SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 

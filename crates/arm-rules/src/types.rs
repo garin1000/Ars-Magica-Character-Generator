@@ -2662,12 +2662,18 @@ impl PointItem {
     /// filtering (`grant.rs`). Deliberately NOT called by `items_by_category`
     /// (`ruleset/accessors.rs`) or any UI browsing surface — those have no
     /// selection to narrow against.
-    pub(crate) fn categories_for(&self, params: &BTreeMap<String, Id>) -> &[String] {
+    pub(crate) fn categories_for(
+        &self,
+        params: &BTreeMap<String, SelectionParamValue>,
+    ) -> &[String] {
         for param in &self.parameters {
             if param.domain != ParameterDomain::Category {
                 continue;
             }
-            let Some(value) = params.get(&param.key) else {
+            let Some(value) = params
+                .get(&param.key)
+                .and_then(SelectionParamValue::as_single)
+            else {
                 continue;
             };
             if let Some(pos) = self
@@ -3069,6 +3075,53 @@ impl EntityTypeProfile {
     }
 }
 
+/// A value bound to one of a [`Selection`]'s parameters: a single `Id` (every
+/// value this engine produces today) or a set of them (D9 part 3's
+/// multi-valued parameter — `docs/vf-audit/design-c0-parameter-model.md` § 8).
+///
+/// `#[serde(untagged)]` makes this **wire-compatible with the prior bare-`Id`
+/// shape**: `Single` serializes/deserializes as exactly the JSON string a
+/// `BTreeMap<String, Id>` value used to be, so every existing save round-trips
+/// byte-identically and this slice (C0b) owes no `SCHEMA_VERSION` bump — the
+/// bump belongs to C5a, which is the slice that actually needs to migrate a
+/// pre-existing shape. `Multi` exists so a (currently hypothetical) JSON array
+/// value already parses; nothing in this engine constructs one yet — no rules
+/// data declares a `multi_ref` parameter type, so a `Multi` can only appear via
+/// a hand-edited save. C5a owns turning that into a real feature (the
+/// canonicalizing fold and the wrong-shape check its migration adds).
+///
+/// `BTreeSet`, not `Vec`, for the same reason [`ParameterDef::at_most_one_of`]
+/// already uses it: a `BTreeSet` makes `{A,B}` and `{B,A}` compare equal by
+/// construction, which is what lets a duplicate-target check key on this value
+/// directly with no separate canonicalization step.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SelectionParamValue {
+    Single(Id),
+    Multi(BTreeSet<Id>),
+}
+
+impl SelectionParamValue {
+    /// The single `Id`, when this value is [`Self::Single`] — `None` for
+    /// [`Self::Multi`]. Every read site that resolves a parameter's value
+    /// against a registry, a gate, or an instance discriminator wants exactly
+    /// one `Id`; a `Multi` slot simply has none to give (that resolution is
+    /// C5b/C5c's job, once a producer exists), so callers treat `None` here
+    /// the same way they already treat an absent key.
+    pub fn as_single(&self) -> Option<&Id> {
+        match self {
+            Self::Single(id) => Some(id),
+            Self::Multi(_) => None,
+        }
+    }
+}
+
+impl From<Id> for SelectionParamValue {
+    fn from(id: Id) -> Self {
+        Self::Single(id)
+    }
+}
+
 /// A user's choice of a virtue/flaw with optional parameters.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Selection {
@@ -3078,7 +3131,7 @@ pub struct Selection {
     pub item_ref: Id,
     /// Parameter values keyed by [`ParameterDef::key`].
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub params: BTreeMap<String, Id>,
+    pub params: BTreeMap<String, SelectionParamValue>,
 }
 
 impl Selection {
@@ -3090,9 +3143,20 @@ impl Selection {
         }
     }
 
-    /// Creates a new selection with the given parameter values.
+    /// Creates a new selection with the given parameter values, each a single
+    /// `Id` — this engine produces no other shape today (see
+    /// [`SelectionParamValue`]'s doc comment). Kept accepting
+    /// `BTreeMap<String, Id>` rather than `BTreeMap<String, SelectionParamValue>`
+    /// so the ~150 existing call sites across the crate's tests need no
+    /// change for this purely additive type widening.
     pub fn with_params(item_ref: Id, params: BTreeMap<String, Id>) -> Self {
-        Self { item_ref, params }
+        Self {
+            item_ref,
+            params: params
+                .into_iter()
+                .map(|(k, v)| (k, SelectionParamValue::Single(v)))
+                .collect(),
+        }
     }
 }
 
@@ -7216,7 +7280,7 @@ mod tests {
         );
         assert_eq!(
             sel.params.get("ability"),
-            Some(&Id::new("ability.awareness"))
+            Some(&SelectionParamValue::Single(Id::new("ability.awareness")))
         );
     }
 

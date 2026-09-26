@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1092).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1134).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1345,7 +1345,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:275).
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:276).
 
 ### Arts
 
@@ -1393,7 +1393,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:481).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:482).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -8452,11 +8452,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:552),
-  `validate_forbidden_traits` (:573))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:564),
+  `validate_forbidden_traits` (:585))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:236),
-  `validate_parameters` (:683), `validate_duplicate_selections` (:269))
+  `validate_parameters` (:701), `validate_duplicate_selections` (:269))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

@@ -11,8 +11,8 @@ use std::collections::BTreeMap;
 
 use crate::characteristics::Characteristic;
 use crate::types::{
-    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityFunding, Entity, Id, Selection, Talisman,
-    TalismanAttunement,
+    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityFunding, Entity, Id, Selection,
+    SelectionParamValue, Talisman, TalismanAttunement,
 };
 
 /// Current save-format schema version.
@@ -305,7 +305,11 @@ fn fold_legacy_being_param(selection: &mut Selection) {
     if !REFOLDED_BEING_ITEMS.contains(&selection.item_ref.as_str()) {
         return;
     }
-    let Some(typed) = selection.params.get(BEING_PARAM_KEY) else {
+    let Some(typed) = selection
+        .params
+        .get(BEING_PARAM_KEY)
+        .and_then(SelectionParamValue::as_single)
+    else {
         return;
     };
     let folded = fold_being_label(typed.as_str());
@@ -315,9 +319,10 @@ fn fold_legacy_being_param(selection: &mut Selection) {
     else {
         return;
     };
-    selection
-        .params
-        .insert(BEING_PARAM_KEY.to_string(), Id::new(*id));
+    selection.params.insert(
+        BEING_PARAM_KEY.to_string(),
+        SelectionParamValue::Single(Id::new(*id)),
+    );
 }
 
 /// Applies [`fold_legacy_being_param`] everywhere a save can hold a [`Selection`]:
@@ -358,14 +363,21 @@ fn fold_legacy_being_params(entity: &mut Entity) {
 /// absent key raises, which is what makes a blank power and an unrecorded one read
 /// identically.
 fn trim_selection_params(selection: &mut Selection) {
+    // `Multi` values are left untouched: no producer exists yet (C5a/C5b's
+    // job), so there is no padded free-text shape to trim there today.
     let padded: Vec<String> = selection
         .params
         .iter()
-        .filter(|(_, value)| value.as_str().trim() != value.as_str())
-        .map(|(key, _)| key.clone())
+        .filter_map(|(key, value)| {
+            let single = value.as_single()?;
+            (single.as_str().trim() != single.as_str()).then(|| key.clone())
+        })
         .collect();
     for key in padded {
-        let trimmed = Id::new(selection.params[&key].as_str().trim());
+        let Some(single) = selection.params[&key].as_single() else {
+            continue;
+        };
+        let trimmed = SelectionParamValue::Single(Id::new(single.as_str().trim()));
         selection.params.insert(key, trimmed);
     }
 }
@@ -1291,6 +1303,7 @@ mod tests {
             .iter()
             .find(|selection| selection.item_ref.as_str() == item_ref)
             .and_then(|selection| selection.params.get("being"))
+            .and_then(SelectionParamValue::as_single)
             .map(|value| value.as_str().to_string())
             .unwrap_or_else(|| panic!("{item_ref} must be in the fixture with a `being` param"))
     }
@@ -1530,6 +1543,7 @@ mod tests {
             .iter()
             .find(|selection| selection.item_ref.as_str() == item_ref)
             .and_then(|selection| selection.params.get(key))
+            .and_then(SelectionParamValue::as_single)
             .map(|value| value.as_str().to_string())
             .unwrap_or_else(|| panic!("{item_ref} must be in the fixture with a `{key}` param"))
     }
@@ -1584,6 +1598,7 @@ mod tests {
             assert_eq!(
                 map.get(key)
                     .and_then(|selection| selection.params.get(param))
+                    .and_then(SelectionParamValue::as_single)
                     .map(|value| value.as_str()),
                 Some(expected),
                 "a resolved pick's params are trimmed too ({key})"

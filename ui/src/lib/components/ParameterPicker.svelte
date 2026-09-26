@@ -9,6 +9,8 @@
     groupArtsByType,
     localizedSortKey,
     paramValueUsage,
+    singleParamValue,
+    singleValuedParams,
   } from '../derive';
   import { CHARACTERISTICS, REALMS, type ParameterDef, type Selection } from '../types';
 
@@ -54,7 +56,9 @@
   }
 
   function setParam(key: string, value: string) {
-    write({ ...(selection.params ?? {}), [key]: value }, () => store.setParamAt(index, key, value));
+    write({ ...singleValuedParams(selection.params), [key]: value }, () =>
+      store.setParamAt(index, key, value),
+    );
   }
 
   function onSelect(key: string, event: Event) {
@@ -110,7 +114,7 @@
   // chosen — and it is what keeps the generic catalogue entry from being a dead end
   // of its own, since the engine expects that key (`missing_param` otherwise).
   function abilityInstanceKey(key: string): string | undefined {
-    const abilityId = selection.params?.[key];
+    const abilityId = singleParamValue(selection.params?.[key]);
     if (!abilityId) return undefined;
     return store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
   }
@@ -118,10 +122,10 @@
   // The composite value identifying this selection's current ability target, so
   // the matching <option> shows as selected.
   function abilityTargetValue(key: string): string {
-    const abilityId = selection.params?.[key];
+    const abilityId = singleParamValue(selection.params?.[key]);
     if (!abilityId) return '';
     const instanceKey = store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
-    const instance = instanceKey ? selection.params?.[instanceKey] : undefined;
+    const instance = instanceKey ? singleParamValue(selection.params?.[instanceKey]) : undefined;
     return instance ? `${abilityId}${SEP}${instance}` : abilityId;
   }
 
@@ -149,7 +153,7 @@
 
   function onSelectArt(key: string, event: Event) {
     const artId = (event.currentTarget as HTMLSelectElement).value;
-    write({ ...(selection.params ?? {}), [key]: artId }, () =>
+    write({ ...singleValuedParams(selection.params), [key]: artId }, () =>
       store.setArtBonusTarget(index, key, artId),
     );
   }
@@ -259,7 +263,7 @@
   // current target and greys out the very value it already holds. A bought
   // row being edited (`index` >= 0) carries no granted counterpart of its own,
   // so nothing is excluded in that case.
-  function grantedForUsage(): { ref: string; params?: Record<string, string> }[] {
+  function grantedForUsage(): Selection[] {
     const granted = store.effective?.granted_selections ?? [];
     return excludeSelection(granted, index === -1 ? selection : undefined);
   }
@@ -312,16 +316,13 @@
   // a granted row must never be excluded by a bought row's `index`).
   const usedAbilityTargets = $derived.by(() => {
     const counts = new Map<string, number>();
-    const addFrom = (
-      list: { ref: string; params?: Record<string, string> }[],
-      exceptIndex: number,
-    ): void => {
+    const addFrom = (list: Selection[], exceptIndex: number): void => {
       list.forEach((s, i) => {
         if (i === exceptIndex || s.ref !== selection.ref) return;
-        const abilityId = s.params?.ability;
+        const abilityId = singleParamValue(s.params?.ability);
         if (!abilityId) return;
         const key = store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
-        const instance = key ? s.params?.[key] : undefined;
+        const instance = key ? singleParamValue(s.params?.[key]) : undefined;
         const value = instance ? `${abilityId}${SEP}${instance}` : abilityId;
         counts.set(value, (counts.get(value) ?? 0) + 1);
       });

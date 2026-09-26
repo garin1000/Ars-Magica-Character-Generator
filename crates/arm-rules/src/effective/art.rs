@@ -28,7 +28,13 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
         // Exhaustive match so adding an Effect variant is a compile error
         // here, not a silently-ignored bonus.
         match effect {
-            Effect::ArtBonus { param, amount } if selection.params.get(param) == Some(art) => {
+            Effect::ArtBonus { param, amount }
+                if selection
+                    .params
+                    .get(param)
+                    .and_then(SelectionParamValue::as_single)
+                    == Some(art) =>
+            {
                 bonus += i32::from(*amount);
             }
             // Not an art bonus for this target; contributes nothing here.
@@ -121,7 +127,13 @@ pub(crate) fn deficient_arts(entity: &Entity, ruleset: &Ruleset) -> BTreeSet<Id>
     for_each_effect!(entity, ruleset, |selection, effect| {
         match effect {
             Effect::DeficientArt { param } if selection.params.contains_key(param) => {
-                arts.extend(selection.params.get(param).cloned());
+                arts.extend(
+                    selection
+                        .params
+                        .get(param)
+                        .and_then(SelectionParamValue::as_single)
+                        .cloned(),
+                );
             }
             // Not a resolved Deficiency; names no Art.
             irrelevant_effect_variants!() => {}

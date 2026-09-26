@@ -1714,7 +1714,12 @@ export interface RulesetRef {
 
 export interface Selection {
   ref: string;
-  params?: Record<string, string>;
+  // C0b (docs/vf-audit/design-c0-parameter-model.md): a value is either a
+  // single string (every value this engine produces today) or a string array
+  // (D9 part 3's multi-valued parameter — not yet producible; C5b is the
+  // first slice with a picker that writes one). Wire-compatible: a plain
+  // string still parses exactly as before.
+  params?: Record<string, string | string[]>;
 }
 
 // A whole bought Ability score with an optional free-text specialty. Keyed by

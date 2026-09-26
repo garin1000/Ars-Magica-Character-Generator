@@ -271,7 +271,7 @@ pub(crate) fn validate_duplicate_selections(
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    let mut seen: BTreeMap<(&Id, &BTreeMap<String, Id>), usize> = BTreeMap::new();
+    let mut seen: BTreeMap<(&Id, &BTreeMap<String, SelectionParamValue>), usize> = BTreeMap::new();
 
     for selection in selections {
         let key = (&selection.item_ref, &selection.params);
@@ -391,7 +391,8 @@ pub(crate) fn validate_per_value_cap(
     // Grouped by item so each item is judged over all of its own copies, and by
     // tuple within it so the per-tuple count can be capped — see "copies the
     // duplicate check did not already report" above.
-    let mut copies_by_item: BTreeMap<&Id, BTreeMap<&BTreeMap<String, Id>, usize>> = BTreeMap::new();
+    let mut copies_by_item: BTreeMap<&Id, BTreeMap<&BTreeMap<String, SelectionParamValue>, usize>> =
+        BTreeMap::new();
     for selection in selections {
         *copies_by_item
             .entry(&selection.item_ref)
@@ -417,7 +418,10 @@ pub(crate) fn validate_per_value_cap(
             let max = usize::from(param.max_per_value);
             let mut counts: BTreeMap<(&Id, Option<&str>), usize> = BTreeMap::new();
             for (params, copies) in &copies_by_tuple {
-                let Some(value) = params.get(&param.key) else {
+                let Some(value) = params
+                    .get(&param.key)
+                    .and_then(SelectionParamValue::as_single)
+                else {
                     continue; // missing_param already reported
                 };
                 // Only an `ability` domain names an Ability; on any other, a
@@ -481,11 +485,14 @@ pub(crate) fn validate_per_value_cap(
 /// a [`ParameterDef`]'s is not.
 fn ability_instance<'a>(
     ruleset: &Ruleset,
-    params: &'a BTreeMap<String, Id>,
+    params: &'a BTreeMap<String, SelectionParamValue>,
     target: &Id,
 ) -> Option<&'a str> {
     let instance_key = ruleset.abilities.get(target)?.parameter.as_deref()?;
-    params.get(instance_key).map(Id::as_str)
+    params
+        .get(instance_key)
+        .and_then(SelectionParamValue::as_single)
+        .map(Id::as_str)
 }
 
 /// Enforces every parameter's [`ParameterDef::at_most_one_of`] groups across
@@ -512,7 +519,8 @@ pub(crate) fn validate_exclusive_param_values(
 ) {
     // Grouped by item so each item is judged over all of its own copies, and
     // reported once per parameter rather than once per offending copy.
-    let mut values_by_item: BTreeMap<&Id, Vec<&BTreeMap<String, Id>>> = BTreeMap::new();
+    let mut values_by_item: BTreeMap<&Id, Vec<&BTreeMap<String, SelectionParamValue>>> =
+        BTreeMap::new();
     for selection in selections {
         values_by_item
             .entry(&selection.item_ref)
@@ -528,7 +536,11 @@ pub(crate) fn validate_exclusive_param_values(
             for group in &param.at_most_one_of {
                 let named: BTreeSet<&Id> = params_of_copies
                     .iter()
-                    .filter_map(|params| params.get(&param.key))
+                    .filter_map(|params| {
+                        params
+                            .get(&param.key)
+                            .and_then(SelectionParamValue::as_single)
+                    })
                     .filter(|value| group.contains(*value))
                     .collect();
                 if named.len() < 2 {
@@ -670,8 +682,14 @@ fn item_matches_required_categories(item: &PointItem, param: &ParameterDef) -> b
 /// were absent, so it raises `missing_param` naming the key to fill rather than
 /// `unknown_param_value`, which would render "has unknown text value " with nothing
 /// where the offending value belongs.
-pub(crate) fn param_value_is_blank(value: &Id) -> bool {
-    value.as_str().trim().is_empty()
+pub(crate) fn param_value_is_blank(value: &SelectionParamValue) -> bool {
+    match value {
+        SelectionParamValue::Single(id) => id.as_str().trim().is_empty(),
+        // No producer exists yet (§ 8, `docs/vf-audit/design-c0-parameter-model.md`);
+        // an empty set is the nearest analogue of "nothing supplied" until C5a/C5b
+        // give `Multi` a real caller.
+        SelectionParamValue::Multi(set) => set.is_empty(),
+    }
 }
 
 /// Validates that each selection of a parameterized item supplies exactly the
@@ -733,7 +751,10 @@ pub(crate) fn validate_selection_parameters(
     let mut expected = declared.clone();
     for param in &item.parameters {
         if matches!(param.domain, ParameterDomain::Ability)
-            && let Some(target) = selection.params.get(&param.key)
+            && let Some(target) = selection
+                .params
+                .get(&param.key)
+                .and_then(SelectionParamValue::as_single)
             && let Some(ability) = ruleset.abilities.get(target)
             && let Some(instance_key) = ability.parameter.as_deref()
         {
@@ -774,6 +795,11 @@ pub(crate) fn validate_selection_parameters(
         if param_value_is_blank(value) {
             continue; // reported as `missing_param` above, not as an unprintable value
         }
+        let Some(value) = value.as_single() else {
+            // A `Multi` value has no domain resolution defined yet — nothing in
+            // this engine produces one (C5a/C5b's job); skip rather than guess.
+            continue;
+        };
         let resolves = param_value_resolves(ruleset, param, value);
         if !resolves {
             issues.push(ValidationIssue::error(
@@ -842,7 +868,11 @@ pub(crate) fn validate_ability_bonus_targets(
                 EffectTarget::AbilityParam(param) => param,
                 EffectTarget::CharacteristicParamDelta { .. } | EffectTarget::Other => continue,
             };
-            let Some(target) = selection.params.get(param) else {
+            let Some(target) = selection
+                .params
+                .get(param)
+                .and_then(SelectionParamValue::as_single)
+            else {
                 continue; // missing ability key already reported by validate_parameters
             };
             // The instance discriminator, if the target ability is
@@ -932,11 +962,19 @@ pub(crate) fn validate_possessed_param_targets(
             let Some(value) = selection.params.get(&param.key) else {
                 continue; // missing_param already reported
             };
+            if param_value_is_blank(value) {
+                continue;
+            }
+            let Some(value) = value.as_single() else {
+                // A `Multi` value has no possession check defined yet — no
+                // producer exists (C5a/C5b's job).
+                continue;
+            };
             // A value that is not in the parameter's domain at all — unknown,
             // wrong category, Tainted — is already `unknown_param_value`, and
             // asking whether the character "holds" it on top of that would only
             // repeat one mistake.
-            if param_value_is_blank(value) || !param_value_resolves(ruleset, param, value) {
+            if !param_value_resolves(ruleset, param, value) {
                 continue;
             }
             if !ctx.present_ids.contains(value) {
@@ -1023,6 +1061,10 @@ pub(crate) fn validate_power_targets(
             if param_value_is_blank(value) {
                 continue;
             }
+            let Some(value) = value.as_single() else {
+                // A `Multi` value names no single power — no producer exists yet.
+                continue;
+            };
             if entity
                 .powers
                 .iter()

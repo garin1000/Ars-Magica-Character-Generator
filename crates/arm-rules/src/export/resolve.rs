@@ -121,11 +121,17 @@ impl<'a> Doc<'a> {
     pub(super) fn param_display_values(
         &self,
         item: &PointItem,
-        params: &BTreeMap<String, Id>,
+        params: &BTreeMap<String, SelectionParamValue>,
     ) -> BTreeMap<String, String> {
         let mut swallowed: BTreeSet<String> = BTreeSet::new();
         let mut rendered: BTreeMap<String, String> = BTreeMap::new();
         for (key, value) in params {
+            // C0b: only `Single` values are ever produced; a `Multi` value has
+            // no display rendering defined yet (C5b's job) and is skipped here
+            // rather than guessed at.
+            let Some(value) = value.as_single() else {
+                continue;
+            };
             if let Some(label) = self.taxonomy_label(item, key, value) {
                 rendered.insert(key.clone(), label);
                 continue;
@@ -136,7 +142,7 @@ impl<'a> Doc<'a> {
                 .placeholder_keys(value)
                 .into_iter()
                 .filter_map(|placeholder| {
-                    let sibling = params.get(&placeholder)?;
+                    let sibling = params.get(&placeholder)?.as_single()?;
                     Some((placeholder, self.param_value(sibling.as_str())))
                 })
                 .collect();
