@@ -1564,12 +1564,29 @@ than one Power" — implicitly a different one per copy), `virtue.social_contact
 (`ArMDE:4990`, "each time specifying a **different** social group"), and
 `flaw.vulnerable_magic` (`ArMDE:7009`, "so long as a **different** condition is
 specified for each"). Each of these is **vary-the-target**, not level-stack: an
-identical second copy is not what the passage grants. But none carries the
-parameter that would let the engine tell two copies apart — that is D9 part 1
-(slice X6), not this ruling — so each now carries no `max_per_target` at all
-and falls to the plain default of 1 (once), the safe interim state until X6
-adds a real target key. Pinned by
-`vary_the_target_items_deferred_to_x6_default_to_once` (`data_integrity.rs`).
+identical second copy is not what the passage grants. D10 (Q4) left each with no
+target parameter and no `max_per_target`, so each fell to the plain default of 1
+(once), the safe interim state.
+
+**Slice Q4b (D9 part 1) gave each its target parameter, applied early rather
+than waiting for the catalogue-wide X6 sweep** — a real character can legally
+take one of these twice with a different target, which the Q4 interim wrongly
+refused. `flaw.deteriorating_power` is the exact shape
+`flaw.slow_power`/`flaw.restricted_power`/`virtue.variable_power` already use
+— a free-text `power` parameter checked against `entity.powers` — so it now
+joins them in the `PER_POWER_ITEMS` table (`data_integrity.rs`), pinned by
+`shipped_per_power_items_carry_a_power_target` and its neighbouring tests. The
+other three name nothing else the sheet tracks, so each carries its own plain
+free-text parameter instead: `flaw.vulnerable_magic`'s `condition`,
+`virtue.greater_immunity`'s `hazard`, and `virtue.social_contacts`'s
+`social_group` — all `domain: "text"`, `max_total: 255` ("no ceiling the rules
+state"), `max_per_target` at D10's default of 1 (a second copy naming the same
+target still collides). Pinned by `TEXT_TARGET_PARAM_ITEMS` and
+`shipped_text_target_param_items_carry_their_target_param` /
+`text_target_param_items_repeat_across_targets_but_never_within_one`
+(`data_integrity.rs`). An older save holding one of the four with no value
+now reports `missing_param` — see `docs/open-todos.md`'s "What an older save
+still reports on open".
 
 `flaw.flawed_parma_magica` (`ArMDE:6144`, "may purchase this Flaw more than once
 **for different Forms**") and `flaw.limited_magic_resistance` (`ArMDE:6348`,
@@ -4101,7 +4118,7 @@ Immunity target) are M5/5b.
 | `virtue.nephilim` | Free, Social Status | `ArMDE:4594-4597` |
 | `virtue.blood_of_the_nephilim` | Major, Supernatural | `ArMDE:3504-3518` |
 | `virtue.strong_angelic_heritage` (req. Blood of the Nephilim) | Minor, Supernatural | `ArMDE:5022-5031` |
-| `virtue.greater_immunity` (plain; "Disease" is an in-play target, no param) | Major, Supernatural | `ArMDE:4009-4016` |
+| `virtue.greater_immunity` (carries a `hazard` text param since Q4b/D9 part 1; "Disease" is an in-play target) | Major, Supernatural | `ArMDE:4009-4016` |
 | `virtue.sense_holiness_and_unholiness` (grants `ability.sense_holiness_and_unholiness` 1) | Minor, Supernatural | `ArMDE:4926-4929` |
 | `virtue.spirit_votary` | Free, Supernatural (→ Social Status) | `ArMDE:5006-5009` |
 | `virtue.spiritual_pact` | Major, Supernatural | `ArMDE:5010-5021` |

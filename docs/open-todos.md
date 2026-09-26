@@ -311,9 +311,16 @@ store choices, not resolved values, and the engine only reports.
   the three per-power Flaws' `power` (`flaw.slow_power`, `flaw.restricted_power`,
   `virtue.variable_power`) were the original set; since then Folk Magic's `realm`,
   Curse of Slander's `taken_as`, Sufi's `taken_as`, both False Power entries'
-  `virtue`, and the two Form-scoped Magic Resistance Flaws' `form`
-  (`flaw.flawed_parma_magica`, `flaw.limited_magic_resistance`) joined it on the
-  same standing policy. The last pair is worth spelling out, because the save
+  `virtue`, the two Form-scoped Magic Resistance Flaws' `form`
+  (`flaw.flawed_parma_magica`, `flaw.limited_magic_resistance`), and — slice Q4b
+  (D9 part 1) — `flaw.deteriorating_power`'s `power`, `flaw.vulnerable_magic`'s
+  `condition`, `virtue.greater_immunity`'s `hazard`, and
+  `virtue.social_contacts`'s `social_group` joined it on the same standing
+  policy. Q4 (D10) had briefly refused a second copy of any of these four
+  outright, since none carried a target parameter yet to tell two copies
+  apart; Q4b added the parameter, so an old save holding two copies with no
+  value now reports `missing_param` on each instead. The Form-scoped pair is
+  worth spelling out, because the save
   looks unchanged while its *output* changes: before the Form existed, each Flaw
   was applied to **all ten Forms at once**, so an old save's Magic Resistance
   numbers were wrong on nine of them and a repeat purchase was indistinguishable

@@ -35,7 +35,10 @@
       "ref": "virtue.sense_holiness_and_unholiness"
     },
     {
-      "ref": "virtue.social_contacts"
+      "ref": "virtue.social_contacts",
+      "params": {
+        "social_group": "minor clergy"
+      }
     },
     {
       "ref": "virtue.student_of_realm",

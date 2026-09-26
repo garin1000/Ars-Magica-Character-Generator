@@ -6995,14 +6995,17 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 /// ("**each time specifying a different social group**", `ArMDE:4990`), and
 /// `flaw.vulnerable_magic` ("so long as **a different condition** is specified
 /// for each", `ArMDE:7009`, F-541's defect). All four are **vary-the-target**,
-/// not level-stack: an identical second copy is not what the passage grants,
-/// but none of the four carries the parameter that would let the engine tell
-/// two copies apart. Adding one is D9 part 1 / slice X6, not this one — see
-/// `corrections.md` § 3.7's "catalogue sweep this group owes". The interim,
-/// safe state is the plain multiplicity default (once): each was shipping
-/// `max_per_target: 255`, now removed, so `default_max_per_target` (1) applies
-/// until X6 gives them a real target key. Pinned by
-/// `vary_the_target_items_deferred_to_x6_default_to_once` below.
+/// not level-stack: an identical second copy is not what the passage grants.
+/// Q4 left them with no target parameter and no `max_per_target`, so each
+/// defaulted to the plain once-only ceiling as a safe interim.
+///
+/// **Slice Q4b (D9 part 1) gave each one, applied early rather than waiting
+/// for the catalogue-wide X6 sweep.** `flaw.deteriorating_power` is the exact
+/// shape `flaw.slow_power`/`flaw.restricted_power`/`virtue.variable_power`
+/// already use — a free-text `power` parameter checked against the character's
+/// own `entity.powers` — so it now sits in [`PER_POWER_ITEMS`] beside them. The
+/// other three name nothing else the sheet already tracks, so each got its own
+/// plain free-text parameter instead: see [`TEXT_TARGET_PARAM_ITEMS`] below.
 const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.demonic_might", 3665),
     ("virtue.demonic_powers", 3669),
@@ -7022,17 +7025,23 @@ const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("flaw.vulnerable_casting", 6997),
 ];
 
-/// **D10's §3.7 sweep (Q4)**: the four vary-the-target items that used to sit
-/// in [`UNLIMITED_REPEAT_ITEMS`] — see that constant's doc comment for why each
-/// is disqualified. None carries the parameter its passage's "a different X
-/// each time" would need, so none can express the real rule yet; the safe
-/// interim is the plain default of once, deferred to X6 (D9 part 1) to give
-/// each a proper target parameter.
-const VARY_TARGET_DEFERRED_TO_X6_ITEMS: &[(&str, u32)] = &[
-    ("virtue.greater_immunity", 4015),
-    ("flaw.deteriorating_power", 5948),
-    ("virtue.social_contacts", 4990),
-    ("flaw.vulnerable_magic", 7009),
+/// **Slice Q4b (D9 part 1)**: the three vary-the-target items from
+/// [`UNLIMITED_REPEAT_ITEMS`]'s doc comment that are NOT an instance of
+/// anything else the sheet already tracks (unlike a power, which resolves
+/// against `entity.powers` and so joined [`PER_POWER_ITEMS`] instead) —
+/// `(id, target parameter key, the line that grants the repeat)`. Each needs
+/// only a plain free-text parameter: the duplicate key becomes
+/// `(item_ref, {key: value})`, so two copies naming the same value collide
+/// under `max_per_target`'s default of 1, and two copies naming different
+/// values are both legal under the explicit `max_total: 255` ("no ceiling the
+/// rules state").
+const TEXT_TARGET_PARAM_ITEMS: &[(&str, &str, u32)] = &[
+    // "so long as a different condition is specified for each" (ArMDE:7009).
+    ("flaw.vulnerable_magic", "condition", 7009),
+    // "with a different immunity each time" (ArMDE:4015).
+    ("virtue.greater_immunity", "hazard", 4015),
+    // "each time specifying a different social group" (ArMDE:4990).
+    ("virtue.social_contacts", "social_group", 4990),
 ];
 
 /// Items whose descriptor states a ceiling of exactly two copies, paired with
@@ -7114,6 +7123,10 @@ const PER_POWER_ITEMS: &[(&str, u32)] = &[
     ("virtue.variable_power", 5205),
     ("flaw.restricted_power", 6689),
     ("flaw.slow_power", 6761),
+    // "This Flaw may be taken more than once, if the character has more than
+    // one Power" (ArMDE:5948) — added here by slice Q4b (D9 part 1), applied
+    // early rather than waiting for X6's catalogue-wide sweep.
+    ("flaw.deteriorating_power", 5948),
 ];
 
 /// The Power Virtues that fund `Entity::powers` — `(id, line, levels granted)`.
@@ -8055,27 +8068,67 @@ fn shipped_repeatable_items_carry_their_rulebook_ceiling() {
     }
 }
 
-/// D10's §3.7 sweep (Q4): the four vary-the-target items in
-/// [`VARY_TARGET_DEFERRED_TO_X6_ITEMS`] default to ONCE until X6 gives each a
-/// real target parameter — an identical second copy is never what the
-/// passage grants, and none of the four can currently record what the copies
-/// must differ BY.
+/// Slice Q4b (D9 part 1): each [`TEXT_TARGET_PARAM_ITEMS`] entry declares
+/// exactly one free-text parameter keyed as the table states, with no stated
+/// ceiling on the number of distinct targets and the default (1) per-target
+/// cap, so an identical second copy still collides.
 #[test]
-fn vary_the_target_items_deferred_to_x6_default_to_once() {
+fn shipped_text_target_param_items_carry_their_target_param() {
     let rs = load_ruleset();
 
-    for (id, line) in VARY_TARGET_DEFERRED_TO_X6_ITEMS {
+    for (id, key, line) in TEXT_TARGET_PARAM_ITEMS {
         let item = rs
             .item(&Id::new(*id))
             .unwrap_or_else(|| panic!("{id} must ship"));
+
         assert_eq!(
             item.max_per_target, 1,
-            "{id} cannot yet express 'a different X each time' (ArMDE:{line}), \
-             so the safe interim is the plain default of once, deferred to X6"
+            "{id} may not be taken twice for the SAME target (ArMDE:{line})"
         );
+        assert_eq!(
+            item.max_total,
+            u8::MAX,
+            "{id} states no ceiling on the number of DIFFERENT targets it may \
+             name (ArMDE:{line})"
+        );
+
+        let [param] = item.parameters.as_slice() else {
+            panic!(
+                "{id} must declare exactly one target parameter, not {:?}",
+                item.parameters
+            );
+        };
+        assert_eq!(param.key, *key, "{id}'s per-copy target is keyed `{key}`");
+        assert_eq!(
+            param.domain,
+            ParameterDomain::Text,
+            "{id}'s target is open-ended (ArMDE:{line}), not a closed list or a \
+             registry ref"
+        );
+    }
+}
+
+/// The repeat rule each descriptor states, exercised rather than asserted
+/// about: two copies naming two different targets are legal, a second copy
+/// naming the same target is not.
+#[test]
+fn text_target_param_items_repeat_across_targets_but_never_within_one() {
+    let rs = load_ruleset();
+
+    for (id, key, line) in TEXT_TARGET_PARAM_ITEMS {
+        let different = issue_codes(&entity_with_param_values(id, key, &["Alpha", "Beta"]), &rs);
         assert!(
-            item.parameters.is_empty(),
-            "{id} has no target parameter yet — that is exactly what X6 adds"
+            !different.contains(&"unexpected_param".to_string())
+                && !different.contains(&"duplicate_selection".to_string()),
+            "{id} twice for two different targets is what the descriptor \
+             permits (ArMDE:{line}): {different:?}"
+        );
+
+        let same = issue_codes(&entity_with_param_values(id, key, &["Alpha", "Alpha"]), &rs);
+        assert!(
+            same.contains(&"duplicate_selection".to_string()),
+            "{id} twice for the SAME target is a repeat the descriptor does \
+             not grant (ArMDE:{line}): {same:?}"
         );
     }
 }

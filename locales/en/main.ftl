@@ -951,6 +951,15 @@ param-label-faculty = Faculty
 param-label-commodity = Commodity
 param-label-role = Role
 param-label-power = Power
+# "Vulnerable Magic" — "so long as a different condition is specified for
+# each" (Ars Magica - Definitive Edition (Core Rules).md:7009).
+param-label-condition = Condition
+# "Greater Immunity" — "with a different immunity each time" (Ars Magica -
+# Definitive Edition (Core Rules).md:4015).
+param-label-hazard = Hazard
+# "Social Contacts" — "each time specifying a different social group" (Ars
+# Magica - Definitive Edition (Core Rules).md:4990).
+param-label-social_group = Social Group
 # The Supernatural Virtue a False Power taints (Ars Magica - Definitive Edition
 # (Core Rules).md:6096).
 param-label-virtue = Virtue

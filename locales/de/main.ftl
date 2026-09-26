@@ -992,6 +992,20 @@ param-label-role = Rolle
 # Begriff aus rules/source/de/translation-tables/tiere-kreaturen.md:144
 # („Power“ → „Kraft“).
 param-label-power = Kraft
+# „Anfällige Magie" — „solange für jede Instanz eine andere Bedingung
+# angegeben wird" (rules/source/de/Ars Magica Definitive Edition
+# Basisregeln.md:7009). Begriff aus
+# rules/source/de/translation-tables/magie-regeln.md:91
+# („Condition" → „Bedingung").
+param-label-condition = Bedingung
+# „Große Immunität" — „mit einer anderen Immunität" (rules/source/de/Ars
+# Magica Definitive Edition Basisregeln.md:4015). Rulebook term, no
+# translation-table entry.
+param-label-hazard = Gefahr
+# „Soziale Kontakte" — „jedes Mal einen anderen gesellschaftlichen Kreis
+# festlegen" (rules/source/de/Ars Magica Definitive Edition
+# Basisregeln.md:4990). Rulebook term, no translation-table entry.
+param-label-social_group = Gesellschaftlicher Kreis
 # Die Übernatürliche Tugend, die eine Falsche Macht befleckt — "einmal für jede
 # geeignete Übernatürliche Tugend, die der Charakter besitzt"
 # (rules/source/de/Ars Magica Definitive Edition Basisregeln.md:6096).

@@ -320,7 +320,8 @@
     "summary": "You have a dark outlook on life, seeing little point in acting and taking no pleasure in anything that happens."
   },
   "flaw.deteriorating_power": {
-    "name": "Deteriorating Power",
+    "name": "Deteriorating Power ({power})",
+    "name_unfilled": "Deteriorating Power",
     "summary": "Like the Variable Powers Virtue, this Flaw reduces the effectiveness of one of the character's powers (Greater, Lesser, or Ritual) over time."
   },
   "flaw.devoted_parent": {
@@ -1360,7 +1361,8 @@
     "summary": "Some magi are better able to withstand the Fatigue loss of casting spells, and some less so."
   },
   "flaw.vulnerable_magic": {
-    "name": "Vulnerable Magic",
+    "name": "Vulnerable Magic ({condition})",
+    "name_unfilled": "Vulnerable Magic",
     "summary": "The character's magic is automatically dispelled in certain uncommon circumstances."
   },
   "flaw.vulnerable_to_folk_tradition": {
@@ -1927,7 +1929,8 @@
     "summary": "You have been blessed by some supernatural power."
   },
   "virtue.greater_immunity": {
-    "name": "Greater Immunity",
+    "name": "Greater Immunity ({hazard})",
+    "name_unfilled": "Greater Immunity",
     "summary": "You are completely immune to one common, potentially deadly hazard."
   },
   "virtue.greater_power": {
@@ -2545,7 +2548,8 @@
     "summary": "This is a more powerful variant of the Minor Virtue above."
   },
   "virtue.social_contacts": {
-    "name": "Social Contacts",
+    "name": "Social Contacts ({social_group})",
+    "name_unfilled": "Social Contacts",
     "summary": "You have a broad range of acquaintances in a specific social circle (specified when this Virtue is purchased), accumulated over years of travel and socializing."
   },
   "virtue.sofer": {

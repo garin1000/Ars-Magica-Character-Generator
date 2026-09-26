@@ -321,7 +321,8 @@
     "summary": "Du hast eine düstere Lebenseinstellung, siehst kaum einen Sinn im Handeln und findest an nichts, was geschieht, Freude."
   },
   "flaw.deteriorating_power": {
-    "name": "Schwindende Macht",
+    "name": "Schwindende Macht ({power})",
+    "name_unfilled": "Schwindende Macht",
     "summary": "Ähnlich wie die Tugend Variable Mächte verringert dieser Fehler die Wirksamkeit einer der Mächte des Charakters (Große, Mindere oder Ritualmacht) im Laufe der Zeit."
   },
   "flaw.devoted_parent": {
@@ -1362,7 +1363,8 @@
     "summary": "Manche Magi können den Erschöpfungsverlust durch das Wirken von Zaubern besser verkraften, andere weniger."
   },
   "flaw.vulnerable_magic": {
-    "name": "Anfällige Magie",
+    "name": "Anfällige Magie ({condition})",
+    "name_unfilled": "Anfällige Magie",
     "summary": "Die Magie des Charakters wird unter bestimmten ungewöhnlichen Umständen automatisch aufgelöst."
   },
   "flaw.vulnerable_to_folk_tradition": {
@@ -1929,7 +1931,8 @@
     "summary": "Du wurdest von einer übernatürlichen Macht gesegnet."
   },
   "virtue.greater_immunity": {
-    "name": "Große Immunität",
+    "name": "Große Immunität ({hazard})",
+    "name_unfilled": "Große Immunität",
     "summary": "Du bist gegen eine verbreitete, potenziell tödliche Gefahr völlig immun."
   },
   "virtue.greater_power": {
@@ -2547,7 +2550,8 @@
     "summary": "Dies ist eine mächtigere Variante der Kleinen Tugend oben."
   },
   "virtue.social_contacts": {
-    "name": "Soziale Kontakte",
+    "name": "Soziale Kontakte ({social_group})",
+    "name_unfilled": "Soziale Kontakte",
     "summary": "Du verfügst über ein breites Netzwerk an Bekannten in einem bestimmten gesellschaftlichen Umfeld (das beim Erwerb dieser Tugend festgelegt wird), das du dir über Jahre des Reisens und der Geselligkeit aufgebaut hast."
   },
   "virtue.sofer": {

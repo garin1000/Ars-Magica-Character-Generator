@@ -698,6 +698,8 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "power", "type": "ref", "domain": "text", "require_power": true }],
+    "max_total": 255,
     "source": { "anchor": "deteriorating-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5944, 5949] }
   },
   {
@@ -3083,6 +3085,8 @@
     "categories": ["hermetic"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "condition", "type": "ref", "domain": "text" }],
+    "max_total": 255,
     "source": { "anchor": "vulnerable-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7005, 7010] }
   },
   {
@@ -4423,6 +4427,8 @@
     "categories": ["supernatural"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "hazard", "type": "ref", "domain": "text" }],
+    "max_total": 255,
     "source": { "anchor": "greater-immunity", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4009, 4016] }
   },
   {
@@ -5977,6 +5983,8 @@
     "categories": ["general"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "social_group", "type": "ref", "domain": "text" }],
+    "max_total": 255,
     "source": { "anchor": "social-contacts", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4988, 4991] }
   },
   {

@@ -29,7 +29,10 @@
       }
     },
     {
-      "ref": "virtue.greater_immunity"
+      "ref": "virtue.greater_immunity",
+      "params": {
+        "hazard": "Fire"
+      }
     },
     {
       "ref": "virtue.hermetic_magus"
