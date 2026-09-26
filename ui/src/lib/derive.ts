@@ -610,7 +610,8 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
     case 'has':
     case 'ability_min':
     case 'art_min':
-    case 'is_magus':
+    case 'hermetically_trained':
+    case 'order_member':
       return undefined;
   }
   // Exhaustiveness guard: `prereq` narrows to `never` here only while every

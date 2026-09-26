@@ -1773,8 +1773,9 @@ impl Ruleset {
     /// Recursively validates that prerequisite refs resolve to known registries:
     /// [`Prereq::Has`] against point items, [`Prereq::AbilityMin`] against the
     /// ability catalogue, [`Prereq::ArtMin`] against the Art catalogue, and
-    /// [`Prereq::House`] against the House registry. `IsMagus` carries no
-    /// reference at all, so there is nothing to check for it.
+    /// [`Prereq::House`] against the House registry. `HermeticallyTrained` and
+    /// `OrderMember` carry no reference at all, so there is nothing to check
+    /// for either.
     ///
     /// `depth` is 1 at the top-level prerequisite and increments once per
     /// `All`/`Any`/`Nor` nesting level (K8). Past [`PREREQ_MAX_DEPTH`] this
@@ -1839,8 +1840,8 @@ impl Ruleset {
                     ));
                 }
             }
-            // IsMagus carries no reference at all, so there is nothing to check.
-            Prereq::IsMagus => {}
+            // Bare markers, neither carrying a reference: nothing to check.
+            Prereq::HermeticallyTrained | Prereq::OrderMember => {}
         }
     }
 

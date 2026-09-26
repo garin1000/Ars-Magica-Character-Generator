@@ -443,7 +443,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   Beings items under Hermetic without their being Hermetic in play, which is what
   `index_categories` exists to record (`ArMDE:2860`'s guideline reads it, nothing
   else does); and `flaw.primogeniture_lineage`'s real restriction was never a
-  category at all — it is `All([IsMagus, House(house.verditius)])`, sourced to
+  category at all — it is `All([OrderMember, House(house.verditius)])`, sourced to
   `ArMDE:6636`. So no restriction is lost under the permissive reading.
 
   **The reasoning, recorded (was row 19, half b): the *and*-joined
@@ -591,8 +591,13 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   > — ArMDE:6636 (entry `ArMDE:6634-6637`)
 
   Data: `rules/core/virtues_flaws.json` — `flaw.primogeniture_lineage` carries
-  `prerequisites: All([IsMagus, House(house.verditius)])`. Evaluated by
-  `validation/prereq.rs::evaluate_prereq`; no engine code changed for it.
+  `prerequisites: All([OrderMember, House(house.verditius)])`. Evaluated by
+  `validation/prereq.rs::evaluate_prereq`. Migrated from `Prereq::IsMagus` in
+  D56/A0 sub-slice 4 (the enum split): `OrderMember`, not
+  `HermeticallyTrained`, because `ArMDE:6636` itself draws the disqualifying
+  line at the House — "a maga **who has left the House** is no longer a
+  candidate for Primus" — not at training, and House membership is
+  structurally an Order concern (`validate_house` gates on `order_member`).
 
   Before this the restriction was enforced by **nothing**. The Flaw ships
   `categories: ["story"]`, which the companion, mythic-companion and magus
@@ -600,26 +605,26 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   House could take it; only the grog was refused, and merely because `story` is
   not on its permitted list — the wrong reason for the right outcome.
 
-  **`Prereq::House` alone would not have done it, and the `IsMagus` conjunct is
-  not redundant.** The House leaf is tri-state (`types.rs`, `Prereq::House`): a
+  **`Prereq::House` alone would not have done it, and the `OrderMember` conjunct
+  is not redundant.** The House leaf is tri-state (`types.rs`, `Prereq::House`): a
   matching house is True, a differing one False, and **no house at all is
   `Unknown`** — which surfaces as the non-blocking `prereq_unevaluated` warning,
   not an error. A companion has no house, so a bare House leaf would merely have
   warned him. Nor does the engine forbid the value: `validate_house` returns
   early for a profile whose `order_member` is false, so a hand-edited save can put
   `house: house.verditius` on a companion, and a bare House leaf would then have
-  evaluated True and waved it through. `All([IsMagus, House(...)])`
-  short-circuits to False on any non-magus while still leaving a magus who has
-  not reached the House step on the warning — the engine's error-that-resolves
+  evaluated True and waved it through. `All([OrderMember, House(...)])`
+  short-circuits to False on any non-Order-member while still leaving a magus who
+  has not reached the House step on the warning — the engine's error-that-resolves
   model, and exactly how the four Outer-Mystery Virtues behave. This is also why
   the four existing House-prereq items (`virtue.faerie_magic`,
   `virtue.heartbeast`, `virtue.the_enigma`, `virtue.verditius_magic`) can use the
   bare leaf and this one cannot: all four are `categories: ["hermetic"]`, which
-  every non-magus profile forbids, so magus-hood was already enforced beside
-  them.
+  every non-magus profile forbids, so Order membership was already enforced
+  beside them.
 
   `Prereq::conflicts_with_house` handles the conjunction correctly for open grant
-  menus (the owed-Warping Minor-Flaw menu can offer this Flaw): `IsMagus` is
+  menus (the owed-Warping Minor-Flaw menu can offer this Flaw): `OrderMember` is
   undecided there by design, and a House leaf naming a different House sinks the
   `All`, so the item is excluded from a non-Verditius magus's menu. The UI mirror
   `houseOnlyValue` in `ui/src/lib/derive.ts` folds `all` the same way.
@@ -629,8 +634,8 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   current membership and has no notion of a former House), and the entry's "She
   is at least three places removed from the Primus", which is narrative
   positioning with no mechanical hook. Locked by
-  `primogeniture_lineage_requires_a_magus_of_house_verditius` and the five
-  behavioural tests beside it in `tests/data_integrity.rs`.
+  `primogeniture_lineage_requires_an_order_member_of_house_verditius` and the
+  five behavioural tests beside it in `tests/data_integrity.rs`.
 - **Vendetta's House restriction HEDGES, unlike Primogeniture Lineage's, and a
   hedge is a warning, never an error (F-533/F-550, D16, Q-115, Q-139).**
 
@@ -660,7 +665,9 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   Data: `rules/core/virtues_flaws.json` — `flaw.vendetta` carries
   `advisory_prerequisites: House(house.verditius)`. The Flaw's own magus half
   (Q-139: unhedged, "The magus is engaged in…") is deliberately NOT encoded
-  here — a hard `prerequisites: IsMagus` is slice X5's job, which this
+  here — a hard `prerequisites: OrderMember` (D56/A0's split; House custom is
+  the same Order concern as Primogeniture Lineage's, pending X5's own
+  confirmation) is slice X5's job, which this
   machinery unblocks. Tests: `vendetta_ships_an_advisory_house_verditius_restriction`
   and the three behavioural tests beside it in `tests/data_integrity.rs`.
 
@@ -1097,7 +1104,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :222) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :231) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.

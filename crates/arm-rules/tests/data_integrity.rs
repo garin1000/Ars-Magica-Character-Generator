@@ -6953,10 +6953,19 @@ fn items_by_category_finds_an_item_through_its_secondary_category() {
 // warning, and nothing stops a non-magus entity from carrying a `house` value
 // (`validate_house` returns early for a profile whose `order_member` is false, so a
 // hand-edited save could set one). A companion would therefore have been merely
-// warned, or — with a house in the file — waved through. `All([IsMagus,
-// House(house.verditius)])` makes every non-magus a definite error while leaving
-// a magus who has not reached the House step yet on the warning, exactly as the
-// four Outer-Mystery Virtues behave.
+// warned, or — with a house in the file — waved through. `All([OrderMember,
+// House(house.verditius)])` makes every non-Order-member a definite error while
+// leaving a magus who has not reached the House step yet on the warning, exactly
+// as the four Outer-Mystery Virtues behave.
+//
+// **`OrderMember`, not `HermeticallyTrained` (D56/A0 sub-slice 4).** `ArMDE:6636`
+// itself draws the line at the House, not at training: "This Flaw can only be
+// taken by magi of House Verditius, as a maga **who has left the House** is no
+// longer a candidate for Primus" — she has not lost her training by leaving, she
+// has lost her House membership. House membership is structurally an Order
+// concern (`validate_house` gates on `order_member`), so the disqualifying fact
+// this prerequisite must check is Order membership, exactly as
+// `docs/vf-audit/design-a0-is-magus-split.md` § 2 already argues.
 
 /// The issue codes raised against `flaw.primogeniture_lineage` itself.
 fn primogeniture_codes(rs: &Ruleset, e: &Entity) -> Vec<String> {
@@ -6969,10 +6978,13 @@ fn primogeniture_codes(rs: &Ruleset, e: &Entity) -> Vec<String> {
         .collect()
 }
 
-/// The data itself, pinned so a later sweep cannot quietly drop the `IsMagus`
-/// conjunct and silently demote the companion case back to a warning.
+/// The data itself, pinned so a later sweep cannot quietly drop the
+/// `OrderMember` conjunct and silently demote the companion case back to a
+/// warning. Migrated from `Prereq::IsMagus` in D56/A0 sub-slice 4 — see the
+/// comment above for why `OrderMember`, not `HermeticallyTrained`, is the
+/// right encoding.
 #[test]
-fn primogeniture_lineage_requires_a_magus_of_house_verditius() {
+fn primogeniture_lineage_requires_an_order_member_of_house_verditius() {
     let rs = load_ruleset();
     let item = rs
         .item(&Id::new("flaw.primogeniture_lineage"))
@@ -6980,11 +6992,11 @@ fn primogeniture_lineage_requires_a_magus_of_house_verditius() {
     assert_eq!(
         item.prerequisites.as_ref(),
         Some(&Prereq::All(vec![
-            Prereq::IsMagus,
+            Prereq::OrderMember,
             Prereq::House(Id::new("house.verditius")),
         ])),
         "`ArMDE:6636` restricts the Flaw to magi of House Verditius, and the House \
-         leaf alone leaves a non-magus merely warned"
+         leaf alone leaves a non-Order-member merely warned"
     );
 }
 
@@ -7024,7 +7036,7 @@ fn a_magus_of_another_house_may_not_take_primogeniture_lineage() {
 }
 
 /// The half a bare `Prereq::House` could not deliver: a companion has no House
-/// at all, so the House leaf is `Unknown` and only `IsMagus` can turn the
+/// at all, so the House leaf is `Unknown` and only `OrderMember` can turn the
 /// verdict into an error.
 #[test]
 fn a_companion_may_not_take_primogeniture_lineage() {

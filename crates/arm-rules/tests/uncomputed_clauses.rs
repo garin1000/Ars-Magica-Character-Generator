@@ -1046,8 +1046,8 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
          no more than an interesting feature of her background\" is a turn of phrase. The one \
          genuinely mechanical clause, \"This Flaw can only be taken by magi of House \
          Verditius\", is already *computed*: the entry carries \
-         `prerequisites: all(is_magus, house.verditius)`, so the rule is enforced rather than \
-         merely described, and describing it again would not be `uncomputed_rule`.",
+         `prerequisites: all(order_member, house.verditius)`, so the rule is enforced rather \
+         than merely described, and describing it again would not be `uncomputed_rule`.",
     ),
     (
         "flaw.true_love_major",

@@ -42,7 +42,8 @@ fn arb_prereq() -> impl Strategy<Value = Prereq> {
         arb_id().prop_map(Prereq::House),
         (arb_id(), any::<u8>()).prop_map(|(ability, score)| Prereq::AbilityMin { ability, score }),
         (arb_id(), any::<u8>()).prop_map(|(art, score)| Prereq::ArtMin { art, score }),
-        Just(Prereq::IsMagus),
+        Just(Prereq::HermeticallyTrained),
+        Just(Prereq::OrderMember),
     ];
     leaf.prop_recursive(3, 16, 4, |inner| {
         prop_oneof![

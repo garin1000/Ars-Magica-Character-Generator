@@ -2800,7 +2800,7 @@ mod tests {
           "budget": { "virtue_points": 10, "flaw_points": 10 },
           "permitted_categories": [
             "hermetic",
-            { "category": "hermetic", "when": { "kind": "is_magus" } }
+            { "category": "hermetic", "when": { "kind": "hermetically_trained" } }
           ],
           "creation_phases": []
         }]"#;
@@ -2857,12 +2857,12 @@ mod tests {
         );
     }
 
-    /// Wraps `IsMagus` (a leaf that needs no ref lookup, so it cannot itself
-    /// trigger an "unknown ref" error and confuse the depth assertion) in
-    /// `wraps` levels of `Prereq::All`. The leaf then sits at depth
-    /// `wraps + 1` (the top-level prerequisite is depth 1).
+    /// Wraps `HermeticallyTrained` (a leaf that needs no ref lookup, so it
+    /// cannot itself trigger an "unknown ref" error and confuse the depth
+    /// assertion) in `wraps` levels of `Prereq::All`. The leaf then sits at
+    /// depth `wraps + 1` (the top-level prerequisite is depth 1).
     fn nested_prereq(wraps: usize) -> Prereq {
-        let mut p = Prereq::IsMagus;
+        let mut p = Prereq::HermeticallyTrained;
         for _ in 0..wraps {
             p = Prereq::All(vec![p]);
         }

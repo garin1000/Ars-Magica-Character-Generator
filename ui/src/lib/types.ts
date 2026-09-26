@@ -256,7 +256,9 @@ export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic' | 'academic
 
 // Prerequisite expression tree. Adjacently tagged by the engine: every variant
 // is a uniform object carrying a `kind` discriminant, with any payload under
-// `value` (the unit variant `is_magus` has no `value`).
+// `value` (the unit variants `hermetically_trained`/`order_member` have no
+// `value`). D56/A0 sub-slice 4 split the old `is_magus` unit variant into
+// these two independent facts.
 export type Prereq =
   | { kind: 'all'; value: Prereq[] }
   | { kind: 'any'; value: Prereq[] }
@@ -265,7 +267,8 @@ export type Prereq =
   | { kind: 'house'; value: string }
   | { kind: 'ability_min'; value: { ability: string; score: number } }
   | { kind: 'art_min'; value: { art: string; score: number } }
-  | { kind: 'is_magus' };
+  | { kind: 'hermetically_trained' }
+  | { kind: 'order_member' };
 
 // How a V/F impacts a character mechanically (M5 slice 5a). Mirrors the engine's
 // `Classification`. Required on every PointItem.

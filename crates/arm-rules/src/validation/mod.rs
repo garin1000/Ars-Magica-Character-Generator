@@ -6503,13 +6503,13 @@ mod tests {
     }
 
     #[test]
-    fn prereq_is_magus_satisfied_on_magus_type() {
-        // A profile flagged `hermetically_trained`/`order_member: true` satisfies
-        // the still-unsplit `Prereq::IsMagus` (sub-slice 4): no warning, no error.
+    fn prereq_hermetically_trained_satisfied_on_magus_type() {
+        // A profile flagged `hermetically_trained: true` satisfies
+        // `Prereq::HermeticallyTrained`: no warning, no error.
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-           "prerequisites": {"kind": "is_magus"}}
+           "prerequisites": {"kind": "hermetically_trained"}}
         ]"#;
         let types = r#"[{
           "id": "magus_type",
@@ -6525,19 +6525,19 @@ mod tests {
         let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(
             !warning_codes.contains(&"prereq_unevaluated"),
-            "IsMagus should be enforced, not unevaluated: {warning_codes:?}"
+            "HermeticallyTrained should be enforced, not unevaluated: {warning_codes:?}"
         );
         assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
     }
 
     #[test]
-    fn prereq_is_magus_fails_on_non_magus_type() {
-        // A profile flagged `hermetically_trained`/`order_member: false` makes the
-        // still-unsplit `Prereq::IsMagus` (sub-slice 4) False: prereq_not_met fires.
+    fn prereq_hermetically_trained_fails_on_non_magus_type() {
+        // A profile flagged `hermetically_trained: false` makes
+        // `Prereq::HermeticallyTrained` False: prereq_not_met fires.
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-           "prerequisites": {"kind": "is_magus"}}
+           "prerequisites": {"kind": "hermetically_trained"}}
         ]"#;
         let types = r#"[{
           "id": "grog_type",
@@ -6552,18 +6552,18 @@ mod tests {
         let result = validate(&entity, &rs);
         assert!(
             codes(&result).contains(&"prereq_not_met".to_string()),
-            "magus-only item must fail on a non-magus type: {:?}",
+            "a trained-only item must fail on an untrained type: {:?}",
             codes(&result)
         );
     }
 
     #[test]
-    fn prereq_is_magus_unknown_without_profile() {
-        // No matching type profile -> IsMagus is Unknown -> warning.
+    fn prereq_hermetically_trained_unknown_without_profile() {
+        // No matching type profile -> HermeticallyTrained is Unknown -> warning.
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-           "prerequisites": {"kind": "is_magus"}}
+           "prerequisites": {"kind": "hermetically_trained"}}
         ]"#;
         let types = r#"[{
           "id": "some_type",
@@ -6581,14 +6581,14 @@ mod tests {
     }
 
     #[test]
-    fn prereq_is_magus_independent_of_gift_ungifted_redcap() {
-        // An unGifted Redcap is modeled as a companion-style profile: NOT a
-        // magus AND the Gift is forbidden. IsMagus must still fail, proving the
-        // flag is decoupled from gift_policy.
+    fn prereq_hermetically_trained_independent_of_gift_ungifted_redcap() {
+        // An unGifted Redcap is modeled as a companion-style profile: NOT
+        // trained AND the Gift is forbidden. HermeticallyTrained must still
+        // fail, proving the flag is decoupled from gift_policy.
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-           "prerequisites": {"kind": "is_magus"}}
+           "prerequisites": {"kind": "hermetically_trained"}}
         ]"#;
         let types = r#"[{
           "id": "ungifted_redcap",
@@ -6604,20 +6604,21 @@ mod tests {
         let result = validate(&entity, &rs);
         assert!(
             codes(&result).contains(&"prereq_not_met".to_string()),
-            "an unGifted Redcap is not a magus: {:?}",
+            "an unGifted Redcap is not Hermetically trained: {:?}",
             codes(&result)
         );
     }
 
     #[test]
-    fn prereq_is_magus_independent_of_gift_gifted_hedge_wizard() {
-        // A Gifted hedge wizard HAS The Gift but is NOT a magus. Having the Gift
-        // selected must not make IsMagus pass: prereq_not_met still fires.
+    fn prereq_hermetically_trained_independent_of_gift_gifted_hedge_wizard() {
+        // A Gifted hedge wizard HAS The Gift but is NOT Hermetically trained.
+        // Having the Gift selected must not make HermeticallyTrained pass:
+        // prereq_not_met still fires.
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
           {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-           "prerequisites": {"kind": "is_magus"}}
+           "prerequisites": {"kind": "hermetically_trained"}}
         ]"#;
         let types = r#"[{
           "id": "hedge_wizard",
@@ -6637,20 +6638,21 @@ mod tests {
         let result = validate(&entity, &rs);
         assert!(
             codes(&result).contains(&"prereq_not_met".to_string()),
-            "having The Gift does not make a magus: {:?}",
+            "having The Gift does not make one Hermetically trained: {:?}",
             codes(&result)
         );
     }
 
     #[test]
-    fn prereq_is_magus_satisfied_on_magus_type_regardless_of_gift_fields() {
-        // Sanity: the `is_magus` flag drives IsMagus, not the gift fields. A
-        // magus profile with gift_policy=required and the Gift selected passes.
+    fn prereq_hermetically_trained_satisfied_on_magus_type_regardless_of_gift_fields() {
+        // Sanity: the `hermetically_trained` flag drives HermeticallyTrained,
+        // not the gift fields. A magus profile with gift_policy=required and
+        // the Gift selected passes.
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
           {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-           "prerequisites": {"kind": "is_magus"}}
+           "prerequisites": {"kind": "hermetically_trained"}}
         ]"#;
         let types = r#"[{
           "id": "magus_type",
@@ -6668,9 +6670,187 @@ mod tests {
         let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(
             !warning_codes.contains(&"prereq_unevaluated"),
-            "IsMagus should be enforced: {warning_codes:?}"
+            "HermeticallyTrained should be enforced: {warning_codes:?}"
         );
         assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
+    }
+
+    #[test]
+    fn prereq_order_member_satisfied_on_magus_type() {
+        // The order-only mirror of `prereq_hermetically_trained_satisfied_on_magus_type`.
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "prerequisites": {"kind": "order_member"}}
+        ]"#;
+        let types = r#"[{
+          "id": "magus_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "hermetically_trained": true, "order_member": true,
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("magus_type", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
+        assert!(
+            !warning_codes.contains(&"prereq_unevaluated"),
+            "OrderMember should be enforced, not unevaluated: {warning_codes:?}"
+        );
+        assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
+    }
+
+    #[test]
+    fn prereq_order_member_fails_on_non_member_type() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "prerequisites": {"kind": "order_member"}}
+        ]"#;
+        let types = r#"[{
+          "id": "grog_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "hermetically_trained": false, "order_member": false,
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("grog_type", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"prereq_not_met".to_string()),
+            "an Order-member-only item must fail on a non-member type: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn prereq_order_member_unknown_without_profile() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "prerequisites": {"kind": "order_member"}}
+        ]"#;
+        let types = r#"[{
+          "id": "some_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("no_such_type", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
+        assert!(warning_codes.contains(&"prereq_unevaluated"));
+    }
+
+    /// D56/A0 sub-slice 4's headline case: `HermeticallyTrained` and
+    /// `OrderMember` are genuinely independent facts, proven across all four
+    /// `(trained, order)` combinations on one Redcap-and-Abandoned-Apprentice
+    /// -shaped fixture set. `virtue.redcap`-shaped (`order_member` true,
+    /// untrained) and the Abandoned Apprentice (`hermetically_trained`
+    /// unioned in via a **test-only fixture** selection, `order_member`
+    /// false) are the two off-diagonal cells neither old `is_magus` nor a
+    /// bare profile-only union could ever have told apart.
+    #[test]
+    fn prereq_order_member_and_trained_are_independent() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "confers_hermetic_training" }] },
+          {"id": "virtue.trained_gate", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "prerequisites": {"kind": "hermetically_trained"}},
+          {"id": "virtue.order_gate", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+           "prerequisites": {"kind": "order_member"}}
+        ]"#;
+        let types = r#"[
+          { "id": "magus_type", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"],
+            "hermetically_trained": true, "order_member": true, "creation_phases": [] },
+          { "id": "redcap_shaped", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"],
+            "hermetically_trained": false, "order_member": true, "creation_phases": [] },
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"],
+            "hermetically_trained": false, "order_member": false, "creation_phases": [] }
+        ]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+
+        // (true, true): a real magus.
+        let magus = make_entity(
+            "magus_type",
+            vec![sel("virtue.trained_gate"), sel("virtue.order_gate")],
+        );
+        let magus_result = validate(&magus, &rs);
+        assert!(!codes(&magus_result).contains(&"prereq_not_met".to_string()));
+
+        // (false, true): a Redcap-shaped companion — Order member, untrained.
+        let redcap = make_entity(
+            "redcap_shaped",
+            vec![sel("virtue.trained_gate"), sel("virtue.order_gate")],
+        );
+        let redcap_result = validate(&redcap, &rs);
+        let redcap_failures: Vec<&str> = redcap_result
+            .issues
+            .iter()
+            .filter(|i| i.code == "prereq_not_met")
+            .filter_map(|i| i.context.as_ref().map(Id::as_str))
+            .collect();
+        assert_eq!(
+            redcap_failures,
+            vec!["virtue.trained_gate"],
+            "Order member but untrained: only the trained gate refuses: {:?}",
+            codes(&redcap_result)
+        );
+
+        // (true, false): an Abandoned-Apprentice-shaped companion — trained by
+        // selection (test-only fixture), never an Order member.
+        let abandoned_apprentice_shaped = make_entity(
+            "companion",
+            vec![
+                sel("flaw.test_confers_training"),
+                sel("virtue.trained_gate"),
+                sel("virtue.order_gate"),
+            ],
+        );
+        let abandoned_result = validate(&abandoned_apprentice_shaped, &rs);
+        let abandoned_failures: Vec<&str> = abandoned_result
+            .issues
+            .iter()
+            .filter(|i| i.code == "prereq_not_met")
+            .filter_map(|i| i.context.as_ref().map(Id::as_str))
+            .collect();
+        assert_eq!(
+            abandoned_failures,
+            vec!["virtue.order_gate"],
+            "trained by selection but no Order membership: only the order gate refuses: {:?}",
+            codes(&abandoned_result)
+        );
+
+        // (false, false): an ordinary companion — neither.
+        let companion = make_entity(
+            "companion",
+            vec![sel("virtue.trained_gate"), sel("virtue.order_gate")],
+        );
+        let companion_result = validate(&companion, &rs);
+        let mut companion_failures: Vec<&str> = companion_result
+            .issues
+            .iter()
+            .filter(|i| i.code == "prereq_not_met")
+            .filter_map(|i| i.context.as_ref().map(Id::as_str))
+            .collect();
+        companion_failures.sort_unstable();
+        assert_eq!(
+            companion_failures,
+            vec!["virtue.order_gate", "virtue.trained_gate"],
+            "neither fact holds: both gates refuse: {:?}",
+            codes(&companion_result)
+        );
     }
 
     #[test]

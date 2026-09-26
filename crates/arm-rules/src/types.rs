@@ -279,7 +279,8 @@ impl fmt::Display for Classification {
 /// ```json
 /// { "kind": "ability_min", "value": { "ability": "ability.x", "score": 1 } }
 /// { "kind": "art_min",     "value": { "art": "art.x", "score": 1 } }
-/// { "kind": "is_magus" }
+/// { "kind": "hermetically_trained" }
+/// { "kind": "order_member" }
 /// ```
 ///
 /// Adjacent tagging is used rather than serde's internal tagging
@@ -316,9 +317,15 @@ pub enum Prereq {
     /// Evaluated against the entity's max effective Art score (bought score plus
     /// virtue bonuses such as Puissant Art); an art the entity lacks counts as 0.
     ArtMin { art: Id, score: u8 },
-    /// The entity must be a magus. Evaluated against the type profile's
-    /// explicit `is_magus` flag.
-    IsMagus,
+    /// The entity must be Hermetically trained. Evaluated against
+    /// `is_hermetically_trained` (D56/A0): the type profile's own
+    /// `hermetically_trained` flag, unioned with any selection carrying
+    /// `Effect::ConfersHermeticTraining` (e.g. the Abandoned Apprentice Flaw).
+    HermeticallyTrained,
+    /// The entity must be a full member of the Order of Hermes. Evaluated
+    /// against the type profile's `order_member` flag alone — profile-only,
+    /// with no entity-level override (D56/A0).
+    OrderMember,
 }
 
 impl Prereq {
@@ -331,7 +338,8 @@ impl Prereq {
     /// asks: "could this item ever be legal for a character of this House?" —
     /// which depends on the expression and the House and nothing else. Every
     /// non-House leaf is therefore treated as undecided rather than as false, so
-    /// a `Has`/`AbilityMin`/`ArtMin`/`IsMagus` prerequisite never excludes an
+    /// a `Has`/`AbilityMin`/`ArtMin`/`HermeticallyTrained`/`OrderMember`
+    /// prerequisite never excludes an
     /// item from a menu: those resolve as the build progresses, and dropping
     /// them would be an order-dependent exclusion, harsher than the
     /// error-that-resolves model the engine uses everywhere else. A House does
@@ -373,7 +381,8 @@ impl Prereq {
             Prereq::Has(_)
             | Prereq::AbilityMin { .. }
             | Prereq::ArtMin { .. }
-            | Prereq::IsMagus => None,
+            | Prereq::HermeticallyTrained
+            | Prereq::OrderMember => None,
         }
     }
 
@@ -4341,7 +4350,10 @@ mod tests {
     #[test]
     fn a_non_house_prerequisite_never_conflicts() {
         assert!(!Prereq::Has(Id::new("virtue.x")).conflicts_with_house(None));
-        assert!(!Prereq::IsMagus.conflicts_with_house(Some(&Id::new("house.bjornaer"))));
+        assert!(
+            !Prereq::HermeticallyTrained.conflicts_with_house(Some(&Id::new("house.bjornaer")))
+        );
+        assert!(!Prereq::OrderMember.conflicts_with_house(Some(&Id::new("house.bjornaer"))));
         assert!(
             !Prereq::AbilityMin {
                 ability: Id::new("ability.awareness"),
@@ -5156,14 +5168,27 @@ mod tests {
     }
 
     #[test]
-    fn prereq_is_magus() {
-        let json = r#"{ "kind": "is_magus" }"#;
+    fn prereq_hermetically_trained() {
+        let json = r#"{ "kind": "hermetically_trained" }"#;
         let prereq: Prereq = serde_json::from_str(json).unwrap();
-        assert_eq!(prereq, Prereq::IsMagus);
+        assert_eq!(prereq, Prereq::HermeticallyTrained);
 
         // The unit variant round-trips with no `value` key.
         let reserialized = serde_json::to_string(&prereq).unwrap();
-        assert_eq!(reserialized, r#"{"kind":"is_magus"}"#);
+        assert_eq!(reserialized, r#"{"kind":"hermetically_trained"}"#);
+        let roundtripped: Prereq = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(prereq, roundtripped);
+    }
+
+    #[test]
+    fn prereq_order_member() {
+        let json = r#"{ "kind": "order_member" }"#;
+        let prereq: Prereq = serde_json::from_str(json).unwrap();
+        assert_eq!(prereq, Prereq::OrderMember);
+
+        // The unit variant round-trips with no `value` key.
+        let reserialized = serde_json::to_string(&prereq).unwrap();
+        assert_eq!(reserialized, r#"{"kind":"order_member"}"#);
         let roundtripped: Prereq = serde_json::from_str(&reserialized).unwrap();
         assert_eq!(prereq, roundtripped);
     }

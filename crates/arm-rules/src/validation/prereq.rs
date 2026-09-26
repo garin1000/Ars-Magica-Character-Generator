@@ -77,7 +77,8 @@ pub(crate) fn validate_prerequisites(
 }
 
 /// The read-only context a prerequisite is evaluated against: which items are
-/// selected, whether the type is a magus, and the effective Ability/Art score
+/// selected, whether the entity is Hermetically trained and/or an Order
+/// member, and the effective Ability/Art score
 /// maps the `AbilityMin`/`ArtMin` thresholds compare against. Bundled so the
 /// recursive evaluator and its fold helper take one context rather than a long
 /// positional argument list.
@@ -97,10 +98,18 @@ pub(crate) struct PrereqCtx<'a> {
     /// (a House-granted Supernatural Virtue counts as possessed) rather than
     /// re-deriving it.
     pub(crate) present_ids: BTreeSet<&'a Id>,
-    is_magus: Option<bool>,
+    /// `Prereq::HermeticallyTrained`'s fact: `None` when the type profile is
+    /// missing (→ `Tri::Unknown`), otherwise the union of the profile's
+    /// `hermetically_trained` flag with `entity_confers_hermetic_training`
+    /// (D56/A0).
+    trained: Option<bool>,
+    /// `Prereq::OrderMember`'s fact: `None` when the type profile is missing,
+    /// otherwise the profile's `order_member` flag alone — no entity-level
+    /// override (D56/A0).
+    order: Option<bool>,
     /// The entity's own Hermetic House, if any. `Prereq::House` compares against
     /// it: matching → True, differing → False, absent → Unknown (mirrors how
-    /// `is_magus` yields Unknown when the profile is missing).
+    /// `trained`/`order` yield Unknown when the profile is missing).
     house: Option<&'a Id>,
     ability_scores: BTreeMap<Id, u8>,
     art_scores: BTreeMap<Id, u8>,
@@ -123,16 +132,15 @@ impl<'a> PrereqCtx<'a> {
         selected_ids: &BTreeSet<&'a Id>,
         granted: &'a [Selection],
     ) -> Self {
-        // `PrereqCtx.is_magus` and `Prereq::IsMagus` are unchanged in this
-        // sub-slice (D56/A0's design note assigns the real split — two
-        // variants, two `Option<bool>` fields — to sub-slice 4). The
-        // `EntityTypeProfile` field this reads *did* split here, so the
-        // minimal, behavior-preserving fix is the conjunction: every profile
-        // shipping today sets `hermetically_trained`/`order_member` equal (a
-        // magus sets both true, everyone else both false), so `&&` reproduces
-        // today's single `is_magus` value exactly, pending sub-slice 4's real
-        // split. See `docs/vf-audit/design-a0-is-magus-split.md` § 1, § 5.
-        let is_magus = type_profile.map(|p| p.hermetically_trained && p.order_member);
+        // `type_profile.map` short-circuits to `None` (→ `Tri::Unknown`) when
+        // the profile itself cannot be resolved, exactly mirroring how the old
+        // single `is_magus` built — the OR-check only ever runs once a profile
+        // *is* in hand. See `docs/vf-audit/design-a0-is-magus-split.md` § 1.
+        let trained: Option<bool> = type_profile.map(|p| {
+            p.hermetically_trained
+                || crate::effective::entity_confers_hermetic_training(entity, ruleset)
+        });
+        let order: Option<bool> = type_profile.map(|p| p.order_member);
 
         // Effective score per ability: the max bought score (a parameterized
         // ability may appear more than once with different specialties; the
@@ -192,7 +200,8 @@ impl<'a> PrereqCtx<'a> {
 
         PrereqCtx {
             present_ids,
-            is_magus,
+            trained,
+            order,
             house: entity.house.as_ref(),
             ability_scores,
             art_scores,
@@ -248,9 +257,17 @@ fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx, depth: usize) -> (Tri, bool
                 (Tri::False, false)
             }
         }
-        // IsMagus is enforced against the profile's explicit `is_magus` flag (a
-        // Hermetic-Magus-status type), independent of gift_policy.
-        Prereq::IsMagus => match ctx.is_magus {
+        // Enforced against `is_hermetically_trained` (D56/A0's union of the
+        // profile flag with any selection carrying
+        // `Effect::ConfersHermeticTraining`), independent of gift_policy.
+        Prereq::HermeticallyTrained => match ctx.trained {
+            Some(true) => (Tri::True, false),
+            Some(false) => (Tri::False, false),
+            None => (Tri::Unknown, true),
+        },
+        // Enforced against the profile's explicit `order_member` flag alone —
+        // no entity-level override (D56/A0).
+        Prereq::OrderMember => match ctx.order {
             Some(true) => (Tri::True, false),
             Some(false) => (Tri::False, false),
             None => (Tri::Unknown, true),
@@ -384,7 +401,8 @@ mod tests {
         let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
         let ctx = PrereqCtx {
             present_ids,
-            is_magus: None,
+            trained: None,
+            order: None,
             house: None,
             ability_scores,
             art_scores,
@@ -395,7 +413,7 @@ mod tests {
         // walking a deep tree (which would defeat the point of testing this
         // in isolation from the load-time guard).
         let (outcome, depended_on_unknown) =
-            evaluate_prereq(&Prereq::IsMagus, &ctx, PREREQ_MAX_DEPTH + 1);
+            evaluate_prereq(&Prereq::HermeticallyTrained, &ctx, PREREQ_MAX_DEPTH + 1);
         assert_eq!(outcome, Tri::Unknown);
         assert!(depended_on_unknown);
     }
@@ -406,14 +424,15 @@ mod tests {
         let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
         let ctx = PrereqCtx {
             present_ids,
-            is_magus: Some(true),
+            trained: Some(true),
+            order: None,
             house: None,
             ability_scores,
             art_scores,
         };
 
         let (outcome, depended_on_unknown) =
-            evaluate_prereq(&Prereq::IsMagus, &ctx, PREREQ_MAX_DEPTH);
+            evaluate_prereq(&Prereq::HermeticallyTrained, &ctx, PREREQ_MAX_DEPTH);
         assert_eq!(outcome, Tri::True);
         assert!(!depended_on_unknown);
     }

@@ -249,7 +249,8 @@ to renumber anything — it is the reason `source.anchor` exists and is mandator
   `ValidationMode` (Enforced / Advisory / Silent) governs enforcement at the
   caller level. No separate "without rule checking" branch.
 - **Prerequisites as recursive boolean expressions.** `Prereq` enum with
-  `All`, `Any`, `None`, `Has`, `House`, `AbilityMin`, `ArtMin`, `IsMagus` —
+  `All`, `Any`, `None`, `Has`, `House`, `AbilityMin`, `ArtMin`,
+  `HermeticallyTrained`, `OrderMember` —
   exhaustive `match` so adding a variant is a compile error until handled.
 - **Two-file separation per rules domain.** Language-neutral mechanics in
   `rules/core/`, translatable text in `rules/i18n/<lang>/`, joined by stable
@@ -623,7 +624,8 @@ enum Prereq {
     House(Id),
     AbilityMin { ability: Id, score: u8 },
     ArtMin { art: Id, score: u8 },
-    IsMagus,
+    HermeticallyTrained,
+    OrderMember,
 }
 ```
 
