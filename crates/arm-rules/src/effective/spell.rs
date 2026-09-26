@@ -201,9 +201,39 @@ pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32
     )
 }
 
+/// The flat sum of every [`Effect::LabTotalMod`] amount (Inventive Genius +3,
+/// Creative Block −3, …) across the entity's selections + grants — the same
+/// fold `derived::lab_totals`'s `lab_mod` addend sums, reused here (not
+/// duplicated) so the in-play Lab-Total grid and [`spell_level_cap`]'s D1 term
+/// can never disagree about what the flat sum is.
+///
+/// D1 (`docs/vf-audit/decisions.md`): every one of the nine carriers is
+/// individually *conditional* in the book (Inventive Genius only "if you are
+/// not using a Laboratory Text or being taught"; Potent Magic only within its
+/// focus; …), and D4 resolves those conditions for the in-play Lab Total. This
+/// function is consumed **only** by [`spell_level_cap`], which deliberately
+/// ignores every condition and always adds the flat sum — it is only a ceiling
+/// on which spells may be *chosen*, never a number printed as a play result, so
+/// the generous condition-free reading is acceptable there and nowhere else.
+pub(crate) fn lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
+    let mut total = 0i32;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::LabTotalMod { amount } = effect {
+                total += i32::from(*amount);
+            }
+        }
+    }
+    total
+}
+
 /// The maximum level a magus may learn of a spell of the given Technique/Form:
 /// the sum of Technique, Form, Intelligence, Magic Theory and 3 (ArMDE:2465),
-/// using effective Art/Ability scores, **halved** if either Art is deficient.
+/// using effective Art/Ability scores, **halved** if either Art is deficient,
+/// plus the flat [`lab_total_mod`] term (D1, `docs/vf-audit/decisions.md`).
 /// Returns an `i64` (small or negative for a beginning magus). Requisite-Art
 /// reduction is a lab-total nuance out of scope. Single source of truth: both the
 /// validation cap and the UI-surfaced cap read this, so the two can never diverge.
@@ -215,7 +245,9 @@ pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32
 /// is added to (`ArMDE:5911, :5915`). So this cap halves on exactly the
 /// condition `derived/lab.rs::lab_totals` halves on — once for the pair, however
 /// many of its two Arts are deficient — and it reads the same
-/// `effective/art.rs::deficient_arts` fold to decide.
+/// `effective/art.rs::deficient_arts` fold to decide. `lab_total_mod` is summed
+/// into the base **before** that halving, exactly where `derived/lab.rs::lab_totals`
+/// folds its own `lab_mod` addend into `total` before the same halving.
 // Source: ArMDE:2465, :5911, :5915, :547
 pub fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, technique: &Id, form: &Id) -> i64 {
     // Read before the Art *scores* shadow `technique`/`form` with their totals.
@@ -236,7 +268,7 @@ pub fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, technique: &Id, form:
         &Id::new(crate::ruleset::ID_MAGIC_THEORY),
         None,
     ));
-    let base = tech + form + int + magic_theory + 3;
+    let base = tech + form + int + magic_theory + 3 + i64::from(lab_total_mod(entity, ruleset));
     if deficient {
         // Floor, not truncate. No halving rule names a rounding direction, so the
         // rulebook default governs — "if it does not, round down" (ArMDE:547) —

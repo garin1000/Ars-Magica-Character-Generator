@@ -345,7 +345,8 @@ export interface ArtBonus {
 }
 
 // The maximum learnable spell level for one Technique/Form combination
-// (Te + Fo + Int + Magic Theory + 3). Mirrors the engine's `SpellLevelCap`.
+// (Te + Fo + Int + Magic Theory + 3, plus any flat lab_total_mod, D1).
+// Mirrors the engine's `SpellLevelCap`.
 export interface SpellLevelCap {
   technique: string;
   form: string;

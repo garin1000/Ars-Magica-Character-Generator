@@ -4265,7 +4265,7 @@ is `available`, always. Printing the editable base there instead read "150 / 120
 Available: 0" for a magus the engine considers exactly balanced, so the two figures
 are now rendered in separate slots.
 
-**Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3.**
+**Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3 + flat `lab_total_mod` (D1).**
 
 > `ArMDE:2465` "The highest level spell you can learn is equal to Technique + Form +
 > Intelligence + Magic Theory +3 … If the spell has requisites … they apply to
@@ -4282,6 +4282,23 @@ spell picker greys a spell above the cap from the one engine-authoritative value
 rather than recomputing it in JS. **Approximation:** requisite-Art reduction is a
 lab-total nuance out of M4 scope — requisites are stored on the spell for display
 but not folded into the cap.
+
+**D1 (`docs/vf-audit/decisions.md`): every flat `LabTotalMod` effect (Inventive
+Genius +3, Creative Block −3, Weak Scholar −6, Adept Laboratory Student +6,
+Aristotelian Training +1, Cyclic Magic ±3, Potent Magic Major/Minor +3/+6 —
+nine entries total) applies to this cap, its own book condition deliberately
+ignored.** Every one of the nine is individually conditional in the source text
+(a Laboratory Text, a season, a chosen focus, …); D4 resolves those conditions
+for the *in-play* Lab Total (`derived/lab.rs::lab_totals`), but this cap does
+not model lab situations at all — it is only a ceiling on which spells may be
+*chosen*, never a number printed as a play result, so the generous
+condition-free reading is acceptable here **and here only** (D1's ruling was
+withdrawn once and re-taken on this corrected, unconditional-everywhere
+reading — do not re-introduce a conditional subset). `effective/spell.rs::lab_total_mod`
+sums the flat total; `derived.rs::in_play_mods` reuses the identical function
+for its own `lab_mod` addend, so the two can never compute this sum
+differently. Test: `lab_total_mod_applies_flat_to_the_spell_level_cap`
+(`effective.rs`).
 
 **A Deficient Art halves the cap, because the cap *is* a Lab Total.** The closing
 sentence of `ArMDE:2465` above is what makes the per-spell cap subject to every Virtue

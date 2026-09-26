@@ -47,8 +47,8 @@ use crate::art::ArtType;
 use crate::characteristics::Characteristic;
 use crate::effective::{
     decrepitude_score, deficient_arts, effective_ability_score, effective_art_score,
-    effective_characteristic_after_aging, resolved_spell_level, selections_for_effects,
-    warping_points_total, warping_score,
+    effective_characteristic_after_aging, lab_total_mod, resolved_spell_level,
+    selections_for_effects, warping_points_total, warping_score,
 };
 use crate::ruleset::{
     ID_ARTES_LIBERALES, ID_CORPUS, ID_CREO, ID_MAGIC_THEORY, ID_PARMA_MAGICA, ID_PENETRATION,
@@ -208,9 +208,12 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
     // the match below, because the creation-time per-spell level cap needs the same
     // set: `ArMDE:2465` makes that cap a Lab Total, so a Deficiency halves it too.
     // One fold, so the in-play totals and the cap can never disagree about which
-    // Arts are deficient.
+    // Arts are deficient. `lab_mod` is folded the same way, by
+    // `effective/spell.rs::lab_total_mod` (D1's cap term reads the identical fold),
+    // so the two can never disagree about the flat Lab-Total-modifier sum either.
     let mut m = InPlayMods {
         deficient_arts: deficient_arts(entity, ruleset),
+        lab_mod: lab_total_mod(entity, ruleset),
         ..InPlayMods::default()
     };
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -242,8 +245,8 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 Effect::CastingTotalMod { amount, scope } => {
                     m.casting_mods.push((i32::from(*amount), *scope));
                 }
-                Effect::LabTotalMod { amount } => m.lab_mod += i32::from(*amount),
                 // Already folded, above — listed so the match stays exhaustive.
+                Effect::LabTotalMod { .. } => {}
                 Effect::DeficientArt { .. } => {}
                 Effect::MagicTotalHalving { total } => {
                     m.halvings.insert(*total);

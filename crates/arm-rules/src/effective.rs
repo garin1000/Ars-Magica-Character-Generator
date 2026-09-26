@@ -381,6 +381,15 @@ mod tests {
             "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
             "effects": [{ "type": "deficient_art", "param": "form" }]
           },
+          {
+            "id": "virtue.inventive_genius",
+            "kind": "virtue",
+            "classification": "in_play_effect",
+            "magnitude": "minor",
+            "categories": ["general"],
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "lab_total_mod", "amount": 3 }]
+          },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
             "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
@@ -2794,6 +2803,21 @@ mod tests {
         // would report 0 and hand the character a free level-0 spell.
         e.characteristics.insert(Characteristic::Int, -4);
         assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem), -1);
+    }
+
+    /// D1 (`docs/vf-audit/decisions.md`): every `LabTotalMod` effect applies flat
+    /// to the spell-level cap, its own book condition deliberately ignored —
+    /// Inventive Genius's own condition ("if you are not using a Laboratory
+    /// Text or being taught") is not modelled here, only the flat +3.
+    #[test]
+    fn lab_total_mod_applies_flat_to_the_spell_level_cap() {
+        let rs = ruleset();
+        let e = cap_fixture(vec![Selection::new(Id::new("virtue.inventive_genius"))]);
+        // 2 (Creo) + 3 (Ignem) + 1 (Int) + 0 (no Magic Theory) + 3 + 3 (lab_total_mod) = 12.
+        assert_eq!(
+            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem")),
+            12
+        );
     }
 
     /// Issue 11: with no per-character override the base budget is the type
