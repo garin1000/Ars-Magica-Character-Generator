@@ -546,7 +546,7 @@ describe('editor tabs for the phases split out in Slice 3', () => {
 
   it('opens it for a magus with a Focus Power pool, though magi never have Might', () => {
     store.ruleset!.ruleset.type_profiles.magus = {
-      is_magus: true,
+      hermetically_trained: true,
     } as unknown as LocalizedRuleset['ruleset']['type_profiles'][string];
     store.entity.type_id = 'magus';
     store.effective = { focus_points_budget: 25, might: null } as unknown as EffectiveScores;
@@ -648,7 +648,8 @@ const shippedTypeProfiles = JSON.parse(
   ),
 ) as {
   id: string;
-  is_magus?: boolean;
+  hermetically_trained?: boolean;
+  order_member?: boolean;
   has_mythic_type?: boolean;
   creation_phases: string[];
 }[];

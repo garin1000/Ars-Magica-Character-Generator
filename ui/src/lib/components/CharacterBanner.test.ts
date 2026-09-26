@@ -56,7 +56,8 @@ function magus(): EntityTypeProfile {
   return {
     id: 'magus',
     budget: { virtue_points: 10, flaw_points: 10 },
-    is_magus: true,
+    hermetically_trained: true,
+    order_member: true,
     gift_policy: 'required',
     gift_id: 'virtue.the_gift',
     creation_phases: ['experience'],

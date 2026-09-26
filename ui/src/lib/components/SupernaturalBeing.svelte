@@ -15,8 +15,10 @@
   // "Magi never have Might" (the same rule App.svelte's tab gate states), and a
   // magus reaches this tab only through Focus Power — so the Might block and the
   // level-budget power list, which are a Might-being's, are not offered to him.
+  // Bare profile rename only (D56/A0): the entity-level union is sub-slice 6's
+  // scope, once the frontend has a `phases_in_force`-shaped mechanism (A2).
   const isMagus = $derived(
-    store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.is_magus ?? false,
+    store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.hermetically_trained ?? false,
   );
   // Effective Might, power-levels budget and the Might-based MR are all
   // engine-authoritative — never recomputed here.

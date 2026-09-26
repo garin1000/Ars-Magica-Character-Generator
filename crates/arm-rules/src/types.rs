@@ -1560,6 +1560,22 @@ pub enum Effect {
     ///
     /// Source: ArMDE:4498.
     WaivesAbilityAgeCap,
+    /// Marks the character as Hermetically trained without the type profile
+    /// itself declaring so — the Abandoned Apprentice Flaw, "you have most of
+    /// the skills and knowledge of a fully trained magus, but you were never
+    /// able to complete your training and gain The Gift" (D56/A0). A bare
+    /// marker with no fields: it names no ability, no amount, nothing to
+    /// resolve, matching the shape of [`Effect::MasterpieceItem`],
+    /// [`Effect::ForbidsAbilitySpecialties`], [`Effect::ForbidsRitualCasting`]
+    /// and [`Effect::WaivesAbilityAgeCap`] above. Consumed only by
+    /// `effective/hermetic_training.rs::entity_confers_hermetic_training`,
+    /// whose union with the type profile's own `hermetically_trained` flag
+    /// (`effective/hermetic_training.rs::is_hermetically_trained`) is the
+    /// single fact every "trained" production site must read — see
+    /// `docs/vf-audit/design-a0-is-magus-split.md` § 1.
+    ///
+    /// Source: ArMDE:5641-5650.
+    ConfersHermeticTraining,
 }
 
 /// Which spells a [`Effect::CastingTotalMod`] applies to. A fixed rules taxonomy
@@ -2808,8 +2824,8 @@ impl CategoryRule {
 /// Data-driven profile defining constraints for an entity type
 /// (grog, companion, magus, etc.).
 ///
-/// As with [`Entity`], the character-only fields here (`is_magus`,
-/// `gift_policy`, `gift_id`, `gift_categories`) live flat on this generic
+/// As with [`Entity`], the character-only fields here (`hermetically_trained`,
+/// `order_member`, `gift_policy`, `gift_id`, `gift_categories`) live flat on this generic
 /// profile type as a deliberate KISS trade-off rather than in a separate
 /// character-specific profile. A covenant type simply leaves them
 /// empty/default/`None`; the engine never assumes a covenant profile populates
@@ -2838,12 +2854,32 @@ pub struct EntityTypeProfile {
     /// Item ids that may never be selected.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub forbidden_traits: BTreeSet<Id>,
-    /// Whether this character type is a Hermetic magus (possesses the Hermetic
-    /// Magus Social Status). Independent of `gift_policy`: an unGifted Redcap is a
-    /// companion (not a magus) and a Gifted hedge wizard has The Gift but is not a
-    /// magus. Drives `Prereq::IsMagus`. Defaults to false.
+    /// Whether this character type is Hermetically trained (has the skills and
+    /// knowledge of a fully trained magus), independent of Order membership —
+    /// D56/A0 splits the old single `is_magus` flag into this and
+    /// [`Self::order_member`] because a selection can confer training without
+    /// the type profile itself declaring it (the Abandoned Apprentice Flaw,
+    /// ArMDE:5641-5650): see
+    /// `effective/hermetic_training.rs::is_hermetically_trained`, the single
+    /// fact every "trained" production site must read instead of this field
+    /// alone (the profile-only sites are the documented exception — D56).
+    /// Independent of `gift_policy`: an unGifted Redcap is a companion (not
+    /// Hermetically trained) and a Gifted hedge wizard has The Gift but is not
+    /// Hermetically trained. Defaults to false.
     #[serde(default, skip_serializing_if = "is_false")]
-    pub is_magus: bool,
+    pub hermetically_trained: bool,
+    /// Whether this character type is a full member of the Order of Hermes.
+    /// The other half of the old `is_magus` flag (D56/A0): unlike
+    /// [`Self::hermetically_trained`], no entity-level override exists or is
+    /// asked for today — Houses (`validation/magus.rs::validate_house`) are
+    /// the only consequence this gates, and every House-bearing type also sets
+    /// [`Self::hermetically_trained`], so the two agree for every profile that
+    /// ships today. `virtue.redcap`/`virtue.lone_redcap` (ArMDE:4842-4851,
+    /// 4319-4326) are a recorded open risk — an Order member with no Hermetic
+    /// training — re-examined when either is encoded as a mechanic (D2/X5); see
+    /// `docs/vf-audit/design-a0-is-magus-split.md` § 1. Defaults to false.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub order_member: bool,
     /// Whether this character type chooses a Mythic Companion *type* (which
     /// confers a free status/Minor Virtue and a required V/F package). A
     /// capability flag parallel to `is_magus`; the type selector and
@@ -5208,39 +5244,69 @@ mod tests {
     }
 
     #[test]
-    fn entity_type_profile_is_magus_defaults_false_and_omitted() {
-        // Absent `is_magus` deserializes to false...
+    fn entity_type_profile_hermetically_trained_and_order_member_default_false_and_omitted() {
+        // Absent `hermetically_trained`/`order_member` deserialize to false...
         let json = r#"{
           "id": "companion",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
           "creation_phases": []
         }"#;
         let profile: EntityTypeProfile = serde_json::from_str(json).unwrap();
-        assert!(!profile.is_magus);
+        assert!(!profile.hermetically_trained);
+        assert!(!profile.order_member);
 
         // ...and a false flag is omitted from canonical JSON.
         let serialized = serde_json::to_string(&profile).unwrap();
         assert!(
-            !serialized.contains("is_magus"),
-            "false is_magus must be omitted: {serialized}"
+            !serialized.contains("hermetically_trained"),
+            "false hermetically_trained must be omitted: {serialized}"
+        );
+        assert!(
+            !serialized.contains("order_member"),
+            "false order_member must be omitted: {serialized}"
         );
     }
 
     #[test]
-    fn entity_type_profile_is_magus_true_roundtrip() {
+    fn entity_type_profile_hermetically_trained_and_order_member_true_roundtrip() {
         let json = r#"{
           "id": "magus",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
-          "is_magus": true,
+          "hermetically_trained": true,
+          "order_member": true,
           "creation_phases": []
         }"#;
         let profile: EntityTypeProfile = serde_json::from_str(json).unwrap();
-        assert!(profile.is_magus);
+        assert!(profile.hermetically_trained);
+        assert!(profile.order_member);
 
         let serialized = serde_json::to_string(&profile).unwrap();
-        assert!(serialized.contains(r#""is_magus":true"#), "{serialized}");
+        assert!(
+            serialized.contains(r#""hermetically_trained":true"#),
+            "{serialized}"
+        );
+        assert!(
+            serialized.contains(r#""order_member":true"#),
+            "{serialized}"
+        );
         let roundtripped: EntityTypeProfile = serde_json::from_str(&serialized).unwrap();
         assert_eq!(profile, roundtripped);
+    }
+
+    #[test]
+    fn entity_type_profile_hermetically_trained_and_order_member_are_independent() {
+        // A Redcap-shaped profile: Order member without Hermetic training
+        // (ArMDE:4842-4851) — the two fields must not be coupled to each
+        // other by the struct itself, only by today's shipped data.
+        let json = r#"{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "order_member": true,
+          "creation_phases": []
+        }"#;
+        let profile: EntityTypeProfile = serde_json::from_str(json).unwrap();
+        assert!(!profile.hermetically_trained);
+        assert!(profile.order_member);
     }
 
     #[test]

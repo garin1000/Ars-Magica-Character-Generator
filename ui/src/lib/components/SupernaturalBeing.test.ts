@@ -262,7 +262,7 @@ describe('SupernaturalBeing power list', () => {
   it('hides the Might and level-budget blocks for a magus, keeping the focus section', () => {
     store.entity.type_id = 'magus';
     store.ruleset!.ruleset.type_profiles.magus = {
-      is_magus: true,
+      hermetically_trained: true,
     } as unknown as LocalizedRuleset['ruleset']['type_profiles'][string];
     const body = html();
     expect(has(body, 'might-add')).toBe(false);

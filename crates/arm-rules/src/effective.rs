@@ -44,6 +44,8 @@ mod spell;
 pub use spell::*;
 mod gift_confidence;
 pub use gift_confidence::*;
+mod hermetic_training;
+pub use hermetic_training::*;
 mod might;
 pub use might::*;
 mod warping;
@@ -253,6 +255,10 @@ macro_rules! irrelevant_effect_variants {
         // Affinity ratio, no in-play mod; consumed only by the age-cap
         // resolution point, `effective/reputation_and_caps.rs::ability_age_cap`.
         | Effect::WaivesAbilityAgeCap
+        // A fourth creation-legality marker (D56/A0): no score, no Affinity
+        // ratio, no in-play mod; consumed only by
+        // `effective/hermetic_training.rs::entity_confers_hermetic_training`.
+        | Effect::ConfersHermeticTraining
     };
 }
 // Re-exported (rather than left textually scoped) so the domain submodules
@@ -1983,21 +1989,25 @@ mod tests {
     }
 
     /// A dedicated ruleset carrying both a non-magus (`companion`) and a magus
-    /// (`is_magus`) profile plus an advancement curve, so the magus-exemption can
-    /// be checked at the same Warping Score. It ships no Arts, so the engine's
-    /// magus-required-Hermetic-role integrity gate is skipped.
+    /// (`hermetically_trained`/`order_member`) profile plus an advancement curve, so
+    /// the magus-exemption can be checked at the same Warping Score. It ships no
+    /// Arts, so the engine's magus-required-Hermetic-role integrity gate is skipped.
     fn magus_owed_ruleset() -> Ruleset {
         let items = r#"[
           { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative",
             "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"],
+            "effects": [{ "type": "confers_hermetic_training" }] }
         ]"#;
         let types = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
             "permitted_categories": ["special", "personality"], "creation_phases": [] },
           { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
-            "permitted_categories": ["special", "personality"], "is_magus": true,
+            "permitted_categories": ["special", "personality"],
+            "hermetically_trained": true, "order_member": true,
             "gift_categories": ["hermetic"], "creation_phases": [] }
         ]"#;
         // Includes the engine-required Hermetic abilities: the magus type profile
@@ -2059,6 +2069,24 @@ mod tests {
         let mut magus = mundane.clone();
         magus.type_id = Id::new("magus");
         assert_eq!(warping_owed(&magus, &rs), WarpingOwed::default());
+    }
+
+    /// D56/A0: the exemption must key on `is_hermetically_trained`, not the bare
+    /// profile flag — a companion (untrained profile) holding a **test-only
+    /// fixture** selection that carries `Effect::ConfersHermeticTraining` is
+    /// equally exempt at the same Warping Score. The real
+    /// `flaw.abandoned_apprentice` is unaffected until D3 attaches the effect.
+    #[test]
+    fn a_trained_by_selection_companion_test_fixture_is_also_exempt_from_owed_warping_vf() {
+        let rs = magus_owed_ruleset();
+        let mut trained = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        trained.warping_points = 15;
+        trained.selections = vec![sel("flaw.test_confers_training")];
+        assert_eq!(warping_owed(&trained, &rs), WarpingOwed::default());
     }
 
     /// The recursion guard: choosing `warped_by_magic` (a `WarpingGrant` +5 item)
@@ -2959,7 +2987,8 @@ mod tests {
             "permitted_categories": ["general", "personality"], "creation_phases": [] },
           { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
             "permitted_categories": ["general", "personality", "hermetic"],
-            "is_magus": true, "spell_levels": 120, "creation_phases": [] }
+            "hermetically_trained": true, "order_member": true,
+            "spell_levels": 120, "creation_phases": [] }
         ]"#;
         // Ability table: 5/15/30/50/75 — the shipped Core Rules figures. The five
         // Hermetic roles are present because the magus profile above obliges any

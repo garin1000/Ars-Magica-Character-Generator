@@ -154,15 +154,17 @@ impl WarpingOwed {
     }
 }
 
-/// The Virtues/Flaws `entity` owes from Warping. Non-magi owe per the score
+/// The Virtues/Flaws `entity` owes from Warping. The untrained owe per the score
 /// (derived via the recursion-guarded [`warping_score_for_owed`], so owed fills
-/// never inflate the count); Hermetic magi (`profile.is_magus`) are exempt and
-/// owe zero — Warping gives them Wizard's Twilight instead (ArMDE:16551).
+/// never inflate the count); the Hermetically trained (`is_hermetically_trained`,
+/// D56/A0's union of the profile flag with any selection carrying
+/// [`Effect::ConfersHermeticTraining`]) are exempt and owe zero — Warping gives
+/// them Wizard's Twilight instead (ArMDE:16551). An Abandoned Apprentice casting
+/// spells is equally exposed to Twilight, so he must get the same exemption a
+/// magus gets.
 pub fn warping_owed(entity: &Entity, ruleset: &Ruleset) -> WarpingOwed {
-    if ruleset
-        .profile(&entity.type_id)
-        .is_some_and(|profile| profile.is_magus)
-    {
+    let profile = ruleset.profile(&entity.type_id);
+    if is_hermetically_trained(entity, ruleset, profile) {
         return WarpingOwed::default();
     }
     WarpingOwed::from_score(warping_score_for_owed(entity, ruleset))

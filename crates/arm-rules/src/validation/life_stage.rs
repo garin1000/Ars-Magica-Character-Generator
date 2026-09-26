@@ -84,7 +84,14 @@ pub(crate) fn validate_life_stage_plan(
 
     validate_life_stage_age_is_set(entity, issues);
 
-    let magus = type_profile.is_some_and(|profile| profile.is_magus);
+    // Profile-only, on purpose (D56/A0) — deliberately NOT the entity-level
+    // union (`effective/hermetic_training.rs::is_hermetically_trained`): an
+    // Abandoned Apprentice is trained by selection but never completed a
+    // Gauntlet, so the post-Gauntlet minimum-age/lab-season/spell-split
+    // findings below must key on the profile's own declared apprenticeship
+    // track, not on training-by-selection. See
+    // `docs/vf-audit/design-a0-is-magus-split.md` § 4 row 12 and § 7 risk 4.
+    let magus = type_profile.is_some_and(|profile| profile.hermetically_trained);
     // Every post-Gauntlet figure is read off the budget the character is actually
     // funded from, never re-derived here: `budget()` resolves the Gauntlet age (and
     // clamps it), and a second reading of that resolution could drift from the one
@@ -480,13 +487,17 @@ mod tests {
 
     const ITEMS: &str = r#"[
       { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"],
+        "effects": [{ "type": "confers_hermetic_training" }] }
     ]"#;
     const TYPES: &str = r#"[
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
         "permitted_categories": ["general", "personality"], "creation_phases": [] },
       { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
-        "permitted_categories": ["general", "personality"], "is_magus": true,
+        "permitted_categories": ["general", "personality"],
+        "hermetically_trained": true, "order_member": true,
         "creation_phases": [] }
     ]"#;
     const ABILITIES: &str = r#"{
@@ -690,6 +701,25 @@ mod tests {
         let issues = codes(&validate(&planned(3), &rs()));
         assert!(issues.contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD.into()));
         assert!(!issues.contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET.into()));
+    }
+
+    /// D56/A0's profile-only invariant: a companion (untrained profile) holding
+    /// a **test-only fixture** selection that carries
+    /// `Effect::ConfersHermeticTraining` must NOT be held to the Gauntlet-age
+    /// floor — `apprenticeship_of` (and this file's own `magus` local) key on
+    /// `profile.hermetically_trained` alone, never the entity-level union,
+    /// exactly because an Abandoned Apprentice never completed a Gauntlet.
+    /// Age 19 would trip `life_stage_age_before_gauntlet` for a real magus
+    /// (see the test above); here it must trip nothing at all.
+    #[test]
+    fn a_trained_by_selection_companion_test_fixture_is_not_held_to_the_gauntlet_floor() {
+        let mut entity = planned(19);
+        entity.selections = vec![crate::types::Selection::new(Id::new(
+            "flaw.test_confers_training",
+        ))];
+        let issues = codes(&validate(&entity, &rs()));
+        assert!(!issues.contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET.into()));
+        assert!(!issues.contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD.into()));
     }
 
     /// Later life is counted in years up to an age (ArMDE:2392), so a plan

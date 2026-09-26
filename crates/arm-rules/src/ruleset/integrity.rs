@@ -613,7 +613,10 @@ impl Ruleset {
     /// Hermetic ruleset that renamed or dropped one of the roles — in particular a
     /// magus ruleset that ships abilities but no Arts is no longer waved through.
     fn validate_engine_required_roles(&self, errors: &mut Vec<String>) {
-        let has_magus = self.type_profiles.values().any(|p| p.is_magus);
+        // Profile-level only, on purpose (D56/A0): a structural ruleset-shape
+        // check with no entity in scope, so the entity-level union
+        // (`is_hermetically_trained`) would be a category error here.
+        let has_magus = self.type_profiles.values().any(|p| p.hermetically_trained);
         if !has_magus {
             return;
         }
@@ -730,10 +733,15 @@ impl Ruleset {
             // too: a magus's later life runs only "until apprenticeship" (`ArMDE:2214`,
             // `ArMDE:2364`), so without the block the engine would cost a magus exactly as
             // it costs a companion — every year to its age, funding Arts out of a
-            // child's experience. Gated on an `is_magus` profile, like
+            // child's experience. Gated on a `hermetically_trained` profile, like
             // `validate_engine_required_roles`, because that is the condition under
-            // which the missing block is a real defect.
-            if self.type_profiles.values().any(|profile| profile.is_magus) {
+            // which the missing block is a real defect (profile-level only, D56/A0
+            // — same reasoning as that function).
+            if self
+                .type_profiles
+                .values()
+                .any(|profile| profile.hermetically_trained)
+            {
                 errors.push(
                     "life-stage rules ship no apprenticeship block, but the ruleset \
                      declares a magus type, whose later life ends at apprenticeship"
@@ -834,9 +842,14 @@ impl Ruleset {
             // A ruleset declaring Hermetic magi must declare their years after the
             // Gauntlet too. The apprenticeship block already ends a magus's later
             // life at its Gauntlet age (`ArMDE:2364`); with nothing granted for the years
-            // after it, a magus would simply lose them. Gated on an `is_magus`
-            // profile, exactly like the apprenticeship block above.
-            if self.type_profiles.values().any(|profile| profile.is_magus) {
+            // after it, a magus would simply lose them. Gated on a
+            // `hermetically_trained` profile, exactly like the apprenticeship
+            // block above (profile-level only, D56/A0).
+            if self
+                .type_profiles
+                .values()
+                .any(|profile| profile.hermetically_trained)
+            {
                 errors.push(
                     "life-stage rules ship no post-apprenticeship block, but the ruleset \
                      declares a magus type, whose years after the Gauntlet would then \
@@ -2093,7 +2106,9 @@ impl Ruleset {
                 | Effect::ForbidsAbilitySpecialties
                 | Effect::ForbidsRitualCasting
                 | Effect::WaivesAbilityAgeCap
-                | Effect::HalvesSpellCapBeyondTouch => {
+                | Effect::HalvesSpellCapBeyondTouch
+                // Identical shape: no parameter, no ref, nothing to validate.
+                | Effect::ConfersHermeticTraining => {
                     continue;
                 }
             };

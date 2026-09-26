@@ -1035,11 +1035,18 @@ export interface EntityTypeProfile {
   // Item ids that must / may never be selected. Omitted from JSON when empty.
   required_traits?: string[];
   forbidden_traits?: string[];
-  // Whether this character type is a Hermetic magus. Omitted from JSON when
-  // false (the common case), so optional here.
-  is_magus?: boolean;
+  // Whether this character type is Hermetically trained. Omitted from JSON
+  // when false (the common case), so optional here. D56/A0 split the old
+  // `is_magus` into this and `order_member`; the frontend has no equivalent of
+  // the engine's entity-level union (`is_hermetically_trained`) yet — see
+  // `docs/vf-audit/design-a0-is-magus-split.md` § 6.
+  hermetically_trained?: boolean;
+  // Whether this character type is a full member of the Order of Hermes. The
+  // other half of the old `is_magus` flag; every shipped profile sets it equal
+  // to `hermetically_trained` today.
+  order_member?: boolean;
   // Whether this type chooses a Mythic Companion type (free status/Minor Virtue
-  // + required package). Capability flag parallel to is_magus. Omitted when false.
+  // + required package). Capability flag parallel to hermetically_trained. Omitted when false.
   has_mythic_type?: boolean;
   // The magus's starting spell-levels budget (120). Omitted from JSON when 0
   // (every non-magus type), so optional here.

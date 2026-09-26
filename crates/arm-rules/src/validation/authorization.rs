@@ -25,11 +25,15 @@ use crate::ability::AbilityCategory;
 /// function gates is therefore rules *data*
 /// (`abilities.json` → `categories_requiring_virtue`), not a hardcoded list.
 ///
-/// **Magi are exempt**, per `ArMDE:7151` ("Beginning characters may only purchase
-/// Academic Abilities if they are specifically permitted to through the purchase of
-/// a Virtue, **or if they are magi**") and `ArMDE:2435`, where apprenticeship experience
-/// may be spent on "Arcane, Academic, and Martial Abilities". The exemption is read
-/// off the profile's `is_magus` flag, never a type id.
+/// **The Hermetically trained are exempt**, per `ArMDE:7151` ("Beginning characters
+/// may only purchase Academic Abilities if they are specifically permitted to
+/// through the purchase of a Virtue, **or if they are magi**") and `ArMDE:2435`,
+/// where apprenticeship experience may be spent on "Arcane, Academic, and Martial
+/// Abilities". The exemption is read off `is_hermetically_trained` (D56/A0's union
+/// of the profile flag with any selection carrying
+/// [`Effect::ConfersHermeticTraining`], e.g. the Abandoned Apprentice Flaw), never a
+/// type id — a stray Arcane Ability on a companion with no such Virtue and no such
+/// selection is still gated.
 ///
 /// The exemption is whole-character on purpose, and the other half of `ArMDE:2435` —
 /// "magi can only spend experience points on Arcane, Academic and Martial Abilities
@@ -57,8 +61,9 @@ pub(crate) fn validate_ability_authorization(
     if gated.is_empty() {
         return;
     }
-    // A magus may buy the restricted categories with no further Virtue.
-    if type_profile.is_some_and(|profile| profile.is_magus) {
+    // A Hermetically trained entity may buy the restricted categories with no
+    // further Virtue.
+    if crate::effective::is_hermetically_trained(entity, ruleset, type_profile) {
         return;
     }
 
@@ -166,7 +171,10 @@ mod tests {
       { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative",
         "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
       { "id": "virtue.hermetic_magus", "kind": "virtue", "classification": "narrative",
-        "magnitude": "free", "categories": ["social_status"], "entity_kinds": ["character"] }
+        "magnitude": "free", "categories": ["social_status"], "entity_kinds": ["character"] },
+      { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"],
+        "effects": [{ "type": "confers_hermetic_training" }] }
     ]"#;
     const TYPES: &str = r#"[
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -174,7 +182,7 @@ mod tests {
         "creation_phases": [] },
       { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
         "permitted_categories": ["general", "personality", "social_status", "special"],
-        "is_magus": true, "creation_phases": [] }
+        "hermetically_trained": true, "order_member": true, "creation_phases": [] }
     ]"#;
     const ABILITIES: &str = r#"{
       "advancement": [ { "score": 1, "total_xp": 5 }, { "score": 3, "total_xp": 30 } ],
@@ -327,6 +335,34 @@ mod tests {
             "issues: {:?}",
             codes(&validate(&entity, &rs()))
         );
+    }
+
+    /// D56/A0's sub-slice-1 headline case: a companion (untrained profile)
+    /// holding a **test-only fixture** selection that carries
+    /// `Effect::ConfersHermeticTraining` is authorized for the restricted
+    /// categories with no further Virtue — exactly like a magus — because
+    /// `is_hermetically_trained` unions the entity-level fact in. Today's
+    /// profile-only gate would refuse him (`ability_category_requires_virtue`);
+    /// the real `flaw.abandoned_apprentice` is untouched by this fixture and
+    /// stays refused until D3 attaches the effect to its shipped data.
+    #[test]
+    fn abandoned_apprentice_shaped_test_fixture_is_authorized_for_arcane_abilities_without_a_further_virtue()
+     {
+        let entity = character(
+            "companion",
+            vec!["flaw.test_confers_training"],
+            vec![("ability.magic_theory", 3)],
+        );
+        assert!(
+            gate_issues(&validate(&entity, &rs())).is_empty(),
+            "issues: {:?}",
+            codes(&validate(&entity, &rs()))
+        );
+
+        // Without the fixture effect, the same companion is refused — the gate
+        // genuinely switched on, it did not stand down for every companion.
+        let untrained = character("companion", vec![], vec![("ability.magic_theory", 3)]);
+        assert_eq!(gate_issues(&validate(&untrained, &rs())).len(), 1);
     }
 
     /// A ruleset that names no gated categories cannot enforce the rule, so the

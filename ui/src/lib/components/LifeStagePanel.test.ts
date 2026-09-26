@@ -79,7 +79,7 @@ function profile(id: string, isMagus: boolean): EntityTypeProfile {
   return {
     id,
     budget: { virtue_points: 10, flaw_points: 10 },
-    is_magus: isMagus,
+    hermetically_trained: isMagus,
     gift_policy: isMagus ? 'required' : 'forbidden',
     creation_phases: [],
   } as unknown as EntityTypeProfile;

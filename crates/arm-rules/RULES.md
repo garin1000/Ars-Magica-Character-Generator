@@ -606,7 +606,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   `Unknown`** — which surfaces as the non-blocking `prereq_unevaluated` warning,
   not an error. A companion has no house, so a bare House leaf would merely have
   warned him. Nor does the engine forbid the value: `validate_house` returns
-  early for a profile whose `is_magus` is false, so a hand-edited save can put
+  early for a profile whose `order_member` is false, so a hand-edited save can put
   `house: house.verditius` on a companion, and a bare House leaf would then have
   evaluated True and waved it through. `All([IsMagus, House(...)])`
   short-circuits to False on any non-magus while still leaving a magus who has
@@ -1092,12 +1092,12 @@ reason: a category condition would license itself.
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
 - Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1060).
-  The Gift policy is independent of the `is_magus` flag (an unGifted Redcap is a
-  companion; a Gifted hedge wizard is not a magus).
+  The Gift policy is independent of the `hermetically_trained`/`order_member` flags
+  (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :213) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :222) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -1122,7 +1122,7 @@ source:
 | companion | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `ArMDE:2820`, `ArMDE:2838` (Major Personality hard); `ArMDE:2820`/`ArMDE:2976` (Personality total); `ArMDE:2818`/`ArMDE:2837` (Story) |
 | magus | `virtue_points: 10`, `flaw_points: 10` | `ArMDE:2303` ("Like companions, magi may take up to ten points of Flaws, and the same number of points of Virtues"), `ArMDE:2855` ("up to 10 points of Flaws, and an equal number of points of Virtues") |
 | magus | `max_minor_flaws: 5` | `ArMDE:2856` ("may not have more than 5 Minor Flaws") |
-| magus | `is_magus: true`, `gift_policy: required`, `required_traits: [virtue.hermetic_magus]` | `ArMDE:2858` ("must take The Gift and the Hermetic Magus Social Status Virtue"), `ArMDE:2293` (only magi may take the Hermetic Magus Status) |
+| magus | `hermetically_trained: true`, `order_member: true`, `gift_policy: required`, `required_traits: [virtue.hermetic_magus]` | `ArMDE:2858` ("must take The Gift and the Hermetic Magus Social Status Virtue"), `ArMDE:2293` (only magi may take the Hermetic Magus Status) |
 | magus | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `ArMDE:2862` ("should not take more than two Personality Flaws, and may not take more than one Major Personality Flaw"); `ArMDE:2861` ("should not take more than one Story Flaw") |
 | magus | `virtue_category_caps`: hermetic major_only/hard `max: 1` | `ArMDE:2857` ("may not have more than one Major Hermetic Virtue") — see the Houses section |
 | magus | `hermetic_flaw_categories: [hermetic]`, and **no other profile carries the key** | `ArMDE:2860` ("You should take at least one Hermetic Flaw"), a bullet under `#### Magi` (`ArMDE:2853`). Its own field rather than a second read of `gift_categories`: the guideline asks what the BOOK lists as Hermetic, Gift detection asks what the CHARACTER is, and the two Beings Flaws answer those differently — see *Resolved (row 18)* |
@@ -2938,7 +2938,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:830). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:836). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3016,7 +3016,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:830) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:836) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -3650,7 +3650,10 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
   (`{ minor_flaws, minor_supernatural_virtues, major_flaws }`), driven by the pure
   threshold `WarpingOwed::from_score`: Minor Flaw at Score 1, a second at 3
   (`minor_flaws` cap 2); a supernatural Minor Virtue at 5; `major_flaws =
-  score.saturating_sub(5)` (Score 6 → 1, 7 → 2, …). Magi (`profile.is_magus`) owe
+  score.saturating_sub(5)` (Score 6 → 1, 7 → 2, …). The Hermetically trained
+  (`is_hermetically_trained` — D56/A0's union of the profile's
+  `hermetically_trained` flag with any selection carrying
+  `Effect::ConfersHermeticTraining`, e.g. the Abandoned Apprentice Flaw) owe
   **zero** — Warping gives them Wizard's Twilight instead (16551), which this
   core-only slice does NOT model.
 - Off-budget storage: the player's fills live in `Entity.warping_choices`
@@ -3692,7 +3695,8 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
 - **Interpretation notes.** (i) 16553 says "Mundane characters"; this core-only
   slice grants the owed V/F to **all non-magi**. Might-holders (`entity.might`) are
   absolutely immune to warping per 16483 — a flagged interpretation left to the
-  troupe, **not** specially handled here (the guard keys only on `is_magus`).
+  troupe, **not** specially handled here (the guard keys only on
+  `is_hermetically_trained`).
   (ii) The 16559 clause that the supernatural Minor Virtue "stops any further gain
   of points from living in a strong aura of the same type" is a post-creation /
   in-play effect and is **NOT** modeled.
@@ -3911,7 +3915,7 @@ resolved values); the free Virtue is **derived** at eval by
   Registry `Ruleset::houses` + integrity `validate_house_refs` (every `Fixed.item`
   / `Choice.options[].ref` resolves against `point_items`; `House.source` range is
   valid) in `ruleset/integrity.rs`; `Prereq::House` evaluation and the `validate_house` pass
-  in `validation/magus.rs` (:31). `Bonisagus`/`Mercere`/`Flambeau` reuse the generic
+  in `validation/magus.rs` (:33). `Bonisagus`/`Mercere`/`Flambeau` reuse the generic
   `virtue.puissant_ability` / `virtue.puissant_art` (target via param) — no new
   Puissant items.
 
@@ -3951,7 +3955,7 @@ resolved values); the free Virtue is **derived** at eval by
 
 - Source: `ArMDE:2860` — verbatim, a
   bullet under `#### Magi` (`ArMDE:2853`), hence no closing period.
-- A "should", so a **soft warning** — `validation/magus.rs::validate_house` (:31) emits
+- A "should", so a **soft warning** — `validation/magus.rs::validate_house` (:33) emits
   `missing_hermetic_flaw` when a magus has no selected Flaw counting as Hermetic.
 - "Counting as Hermetic" is two data lookups, never a hardcoded `"hermetic"`:
   the profile's **`hermetic_flaw_categories`** (`["hermetic"]` on the magus
@@ -4193,8 +4197,9 @@ A starting magus knows a list of spells, each drawn from the catalogue in
 requisites, parameters }`, with `level: None` marking a **General** spell learned
 at a per-character level). The chosen spells live on `Entity::spells`
 (`SpellSelection { spell, level, mastery, parameter }`); `validate_spells`
-(`validation/magus.rs`) enforces two sourced constraints, both magus-only (gated
-on the profile `is_magus`).
+(`validation/magus.rs`) enforces two sourced constraints, both gated on
+`is_hermetically_trained` (D56/A0 — not just a real magus, but any entity whose
+selections confer training, e.g. the Abandoned Apprentice Flaw).
 
 **Spell-levels budget — 120 at creation.**
 
@@ -4464,7 +4469,7 @@ Two-level enforcement:
   `level`, ritual ⇒ `level ≥ 20`, non-ritual ⇒ `level ≤ 50`; a non-ritual spell
   may not have `duration = Year` or `target = Boundary`, nor be a Momentary Creo
   spell with `creates_lasting`. Vision target is exempt from the Boundary rule.
-- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :575, called
+- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :581, called
   from `validate_spells`, V51 split it into a named sub-check): the *resolved* learned
   level (General chosen level or fixed) must obey the same ≥20 / ≤50 bounds — a
   violation emits `spell_ritual_legality` (`CODE_SPELL_RITUAL_LEGALITY`). This
@@ -4954,7 +4959,7 @@ Virtue; a **magus** gets none (his free supernatural ability is Hermetic magic):
 > magic is the single supernatural ability possessed by Hermetic magi in virtue
 > of The Gift".
 
-`effective::supernatural_free_slots` = `(has_the_gift && !is_magus ? 1 : 0, used)`;
+`effective::supernatural_free_slots` = `(has_the_gift && !hermetically_trained ? 1 : 0, used)`;
 `validate_supernatural_abilities` errors on uncovered Supernatural abilities beyond
 the free allowance (`supernatural_ability_requires_virtue`). **Companion
 `gift_policy` is `allowed`** (was `forbidden`) so a Gifted companion is legal
@@ -6274,7 +6279,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
   sorted, so `apprenticeship` leads the file.
 - Implementation: `life_stage.rs` — `ApprenticeshipRules`,
   `LifeStageRules::apprenticeship_of` (the block for a magus, `None` for anyone else,
-  read off the profile's `is_magus` flag) and `budget`, which reports
+  read off the profile's `hermetically_trained` flag alone — deliberately
+  **not** the entity-level union, D56/A0: an Abandoned Apprentice never
+  completed a Gauntlet) and `budget`, which reports
   `apprenticeship_years` / `apprenticeship_xp` as a fourth block. `total()` sums all
   four.
 - **The 120 spell levels are deliberately NOT here.** They ship as
@@ -6313,8 +6320,8 @@ Abilities are bought with experience earned in blocks, not from one bank:
   years after it separately — see the next section. An absent value read as the age
   itself until **Default Gauntlet age** (below) gave it the rulebook's own baseline
   instead. `SCHEMA_VERSION` is unchanged (14) throughout and no save migrates.
-- Load-time gate (an engine invariant, not a sourced rule): a ruleset that declares an
-  `is_magus` profile **and** ships life-stage rules must declare an apprenticeship
+- Load-time gate (an engine invariant, not a sourced rule): a ruleset that declares a
+  `hermetically_trained` profile **and** ships life-stage rules must declare an apprenticeship
   block — `Ruleset::validate_apprenticeship_refs`, gated exactly like
   `validate_engine_required_roles`. Without the block such a ruleset would cost a
   magus as a companion, counting every year to its age. **This replaces the 6b2
@@ -6408,8 +6415,8 @@ Abilities are bought with experience earned in blocks, not from one bank:
   apprenticeship's `recommended_xp` off the advancement table. The **fourth** season is
   free because `ArMDE:2482` has already reached 0 by the third — hence `max_charged`, not a
   cap on seasons.
-- Load-time gate (an engine invariant, not a sourced rule): a ruleset that declares an
-  `is_magus` profile **and** ships life-stage rules must declare the
+- Load-time gate (an engine invariant, not a sourced rule): a ruleset that declares a
+  `hermetically_trained` profile **and** ships life-stage rules must declare the
   `post_apprenticeship` block, exactly as it must declare `apprenticeship`. That block
   already ends a magus's later life at its Gauntlet age; without this one the years
   after the Gauntlet would grant nothing back, so a magus would simply lose them. Both
@@ -6634,8 +6641,10 @@ Abilities are bought with experience earned in blocks, not from one bank:
   (`ArMDE:2214`) says "any **Abilities**", step 7 (`ArMDE:2215`) "between Hermetic **Arts** and
   … Abilities". Restated for the block itself at `ArMDE:2392`.
 - Implementation: `effective/xp.rs` — `xp_allocation` pushes later life as a
-  **restricted** `PoolEligibility::Ability` pool for a magus (`is_magus &&
-  budget.later_life_xp > 0`, the same shape of guard the mastery pool uses), so Arts
+  **restricted** `PoolEligibility::Ability` pool for a magus
+  (`profile.hermetically_trained && budget.later_life_xp > 0`, the same shape of
+  guard the mastery pool uses — bare profile flag today, D56/A0's own union
+  wiring is a later sub-slice), so Arts
   fall out for free: an Ability pool never covers an Art spend. `LifeStageBlock` gains
   `LaterLife` (slug `later_life`, labelled `xp-pool-later_life` in both locales) so the
   bar can name the row.
@@ -6894,8 +6903,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - **Magi are exempt**: `ArMDE:7151` ("Beginning characters may only purchase Academic
   Abilities if they are specifically permitted to through the purchase of a Virtue,
   **or if they are magi**") and `ArMDE:2435`, where apprenticeship experience may go on
-  "Arcane, Academic, and Martial Abilities". Read from the profile's `is_magus` flag,
-  never a type id. `ArMDE:7151`'s finer "Magi without a specific Virtue may only buy
+  "Arcane, Academic, and Martial Abilities". Read from `is_hermetically_trained`
+  (D56/A0's union of the profile flag with any selection carrying
+  `Effect::ConfersHermeticTraining`), never a type id. `ArMDE:7151`'s finer "Magi without a specific Virtue may only buy
   Academic Abilities **during or after** apprenticeship" is now modelled **for a
   guided magus** (M6/6b4): the restriction is not on the Ability but on the money, so
   a magus's pre-apprenticeship experience simply cannot fund those categories — see

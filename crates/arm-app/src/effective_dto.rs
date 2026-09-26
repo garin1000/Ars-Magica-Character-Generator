@@ -464,7 +464,13 @@ fn spell_fields(
         used: spell_levels_used(entity, ruleset),
         // The per-Te/Fo cap only matters on the (magus-only) Spells tab, so it is
         // computed only for a magus — other types ship an empty list.
-        level_caps: if profile.is_some_and(|p| p.is_magus) {
+        //
+        // Bare profile rename only (compiler-forced by D56/A0's `is_magus`
+        // split): switching this to the entity-level union
+        // (`is_hermetically_trained`) is sub-slice 5's own scope, with its own
+        // first failing test (an Abandoned-Apprentice-shaped DTO test) — see
+        // `docs/vf-audit/design-a0-is-magus-split.md` § 5.
+        level_caps: if profile.is_some_and(|p| p.hermetically_trained) {
             spell_level_caps(entity, ruleset)
         } else {
             Vec::new()

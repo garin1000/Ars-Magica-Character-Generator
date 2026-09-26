@@ -9,7 +9,9 @@ use crate::life_stage::{AbilityRequirementKind, magus_minimum_abilities};
 use crate::types::SpellSelection;
 
 /// Validates a magus's Hermetic House and its specialisation picks. Runs only
-/// for a magus type (`is_magus`); no other type has a House.
+/// for an Order-member type (`profile.order_member`) — Houses are structurally
+/// an Order concern, not a training one (D56/A0): no entity-level override
+/// exists or is asked for, unlike [`validate_spells`]' `trained` gate below.
 ///
 /// - A magus with no House gets a soft `house_unset` warning — belonging to a
 ///   House is a "should" the troupe can waive, not a hard rule.
@@ -34,11 +36,13 @@ pub(crate) fn validate_house(
     type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    // Houses are a magus-only concern; a non-magus (or an unknown type) has none.
+    // Houses are an Order-only concern; a non-member (or an unknown type) has
+    // none. Profile-only, permanently — no entity ever overrides Order
+    // membership today (D56/A0).
     let Some(profile) = type_profile else {
         return;
     };
-    if !profile.is_magus {
+    if !profile.order_member {
         return;
     }
 
@@ -290,7 +294,7 @@ pub(crate) fn validate_magus_minimum_abilities(
 /// Validates a Mythic Companion's chosen *type* (Devil Child, Faerie Doctor, …):
 /// its free-Virtue grants resolve and its required V/F package is present. Gated
 /// on the profile's `has_mythic_type` capability flag (never a hardcoded type
-/// id), mirroring how [`validate_house`] gates on `is_magus`.
+/// id), mirroring how [`validate_house`] gates on `order_member`.
 ///
 /// - No type chosen → `mythic_type_unset` warning (a "should", not a hard rule).
 /// - Each `Choice`/`Open` grant pick is resolved from `entity.mythic_choices`
@@ -416,8 +420,10 @@ pub(crate) fn validate_mythic_type(
 /// the years past the Gauntlet, `ArMDE:2471`); and no spell's level may
 /// exceed Technique + Form + Intelligence + Magic Theory + 3 (ArMDE:2465).
 ///
-/// The budget and per-spell cap apply only to magi (`profile.is_magus`); a stray
-/// spell on a non-magus is ref- and dedup-checked only (spells are magus-only).
+/// The budget and per-spell cap apply only to a Hermetically trained entity
+/// (`is_hermetically_trained`, D56/A0 — the Abandoned Apprentice "casts
+/// spells" too, D56 row 1); a stray spell on an untrained entity is ref- and
+/// dedup-checked only (spells are for the trained only).
 ///
 /// V51: this used to be one ~175-line function doing all 7 checks inline.
 /// Split into named sub-checks — one per job, matching the granularity
@@ -436,7 +442,7 @@ pub(crate) fn validate_spells(
     type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    let is_magus = type_profile.is_some_and(|p| p.is_magus);
+    let trained = crate::effective::is_hermetically_trained(entity, ruleset, type_profile);
     // Identity is (spell, resolved level, parameter): a parameterized meta-magic
     // Vim spell may be taken once per distinct target (Form) (ArMDE:12353,
     // ArMDE:15791-15794).
@@ -457,7 +463,7 @@ pub(crate) fn validate_spells(
 
         validate_spell_ritual_legality(sel, spell, resolved, issues);
         validate_ritual_casting_restriction(sel, spell, effective_selections, ruleset, issues);
-        if is_magus {
+        if trained {
             validate_spell_level_cap(entity, ruleset, sel, spell, resolved, issues);
         }
         validate_spell_mastery_abilities(sel, entity, ruleset, issues);
@@ -465,7 +471,7 @@ pub(crate) fn validate_spells(
 
     validate_duplicate_spells(seen, issues);
 
-    if is_magus {
+    if trained {
         validate_spell_levels_budget(entity, ruleset, type_profile, issues);
     }
 }
@@ -641,7 +647,7 @@ fn validate_ritual_casting_restriction(
 /// Job 6/7: no spell's level may exceed Technique + Form + Intelligence +
 /// Magic Theory + 3 (ArMDE:2465), further halved for a Short-Ranged-Magic
 /// holder when the spell's own Range is beyond Touch (D28).
-/// Magi only — the caller gates on `is_magus`.
+/// Trained only — the caller gates on `is_hermetically_trained`.
 fn validate_spell_level_cap(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -701,7 +707,7 @@ fn validate_duplicate_spells(
 /// Job 7/7: the sum of chosen spell levels must not exceed the effective
 /// spell-levels budget (ArMDE:2215-2216,
 /// 2435, and the levels bought out of the years past the Gauntlet, `ArMDE:2471`).
-/// Magi only — the caller gates on `is_magus`.
+/// Trained only — the caller gates on `is_hermetically_trained`.
 fn validate_spell_levels_budget(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -979,7 +985,8 @@ mod tests {
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
         "permitted_categories": ["general", "personality"], "creation_phases": [] },
       { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
-        "permitted_categories": ["general", "personality"], "is_magus": true,
+        "permitted_categories": ["general", "personality"],
+        "hermetically_trained": true, "order_member": true,
         "creation_phases": [] }
     ]"#;
     const ABILITIES: &str = r#"{

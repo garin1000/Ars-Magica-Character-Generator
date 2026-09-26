@@ -73,7 +73,12 @@ pub fn supernatural_free_slots(
     ruleset: &Ruleset,
     profile: &EntityTypeProfile,
 ) -> SupernaturalFreeSlots {
-    let total = if has_the_gift(entity, ruleset, profile) && !profile.is_magus {
+    // Bare profile rename only (compiler-forced by D56/A0's `is_magus` split).
+    // This site is not named by any A1 sub-slice in
+    // `docs/vf-audit/design-a0-is-magus-split.md` § 5 — flagged there as an
+    // orphan needing a home before the union (`is_hermetically_trained`) is
+    // wired in; until then this stays a same-behavior rename.
+    let total = if has_the_gift(entity, ruleset, profile) && !profile.hermetically_trained {
         1
     } else {
         0

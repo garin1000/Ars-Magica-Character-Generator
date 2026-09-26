@@ -461,7 +461,12 @@ pub(crate) fn ability_authorizations(
                 | Effect::ForbidsRitualCasting
                 // A cap waiver raises a ceiling, not a permission to own an
                 // Ability in the first place.
-                | Effect::WaivesAbilityAgeCap => {}
+                | Effect::WaivesAbilityAgeCap
+                // Grants Hermetic training as a fact, not permission to own a
+                // specific Ability or category — Arcane authorization for a
+                // trained non-magus is a profile/entity-level gate in
+                // `validation/authorization.rs`, not a per-effect grant here.
+                | Effect::ConfersHermeticTraining => {}
             }
         }
     }
@@ -831,9 +836,14 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
     if let Some((rules, budget)) = &life_stage_budget {
         flow_pools.extend(childhood_native_language_pool(entity, rules, budget));
         flow_pools.push(childhood_spread_pool(entity, rules, budget));
+        // Bare profile rename only (compiler-forced by D56/A0's `is_magus`
+        // split): switching this to the entity-level union
+        // (`is_hermetically_trained`) is sub-slice 3's own scope, with its own
+        // first failing test — see
+        // `docs/vf-audit/design-a0-is-magus-split.md` § 5.
         let is_magus = ruleset
             .profile(&entity.type_id)
-            .is_some_and(|profile| profile.is_magus);
+            .is_some_and(|profile| profile.hermetically_trained);
         if is_magus {
             flow_pools.extend(magus_later_life_pool(entity, ruleset, budget));
         }
@@ -973,9 +983,13 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
 /// budget derivation), so recomputing costs nothing and keeps that function's
 /// return type a plain `Vec<FlowPool>` independent of this one's locals.
 fn general_pool_and_bonus(entity: &Entity, ruleset: &Ruleset) -> (u32, i64) {
+    // Bare profile rename only (compiler-forced by D56/A0's `is_magus` split):
+    // switching this to the entity-level union (`is_hermetically_trained`) is
+    // sub-slice 3's own scope, with its own first failing test — see
+    // `docs/vf-audit/design-a0-is-magus-split.md` § 5.
     let is_magus = ruleset
         .profile(&entity.type_id)
-        .is_some_and(|profile| profile.is_magus);
+        .is_some_and(|profile| profile.hermetically_trained);
     let life_stage_budget = ruleset
         .life_stages()
         .and_then(|rules| rules.budget(entity, ruleset).map(|budget| (rules, budget)));

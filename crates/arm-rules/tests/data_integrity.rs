@@ -139,9 +139,14 @@ fn shipped_data_passes_integrity_check() {
     assert!(rs.profile(&Id::new("magus")).is_some());
     assert!(rs.profile(&Id::new("mythic_companion")).is_some());
     // The magus is the only seeded Hermetic type.
+    let magus_profile = rs.profile(&Id::new("magus")).unwrap();
     assert!(
-        rs.profile(&Id::new("magus")).unwrap().is_magus,
-        "magus profile must carry is_magus"
+        magus_profile.hermetically_trained,
+        "magus profile must carry hermetically_trained"
+    );
+    assert!(
+        magus_profile.order_member,
+        "magus profile must carry order_member"
     );
     // Mythic Companions convert each Flaw point into two Virtue points.
     assert_eq!(
@@ -6744,12 +6749,16 @@ fn the_hermetic_flaw_guideline_counts_the_two_beings_flaws() {
 
 /// The magus profile is the one that states the guideline, because `ArMDE:2860` is a
 /// magus bullet. No other shipped profile may claim it: `validate_house`
-/// returns early for a non-magus, and a stray field would be a silent lie.
+/// returns early for a non-Order-member, and a stray field would be a silent lie.
 #[test]
 fn only_the_magus_profile_names_hermetic_flaw_categories() {
     let rs = load_ruleset();
     for profile in rs.profiles() {
-        let expected: &[&str] = if profile.is_magus { &["hermetic"] } else { &[] };
+        let expected: &[&str] = if profile.order_member {
+            &["hermetic"]
+        } else {
+            &[]
+        };
         let actual: Vec<&str> = profile
             .hermetic_flaw_categories
             .iter()
@@ -6891,7 +6900,7 @@ fn items_by_category_finds_an_item_through_its_secondary_category() {
 // `Prereq::House` ALONE would not do it. That leaf is tri-state: an absent house
 // evaluates to `Unknown`, which is the non-blocking `prereq_unevaluated`
 // warning, and nothing stops a non-magus entity from carrying a `house` value
-// (`validate_house` returns early for a profile whose `is_magus` is false, so a
+// (`validate_house` returns early for a profile whose `order_member` is false, so a
 // hand-edited save could set one). A companion would therefore have been merely
 // warned, or — with a house in the file — waved through. `All([IsMagus,
 // House(house.verditius)])` makes every non-magus a definite error while leaving

@@ -251,6 +251,10 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // no-op for every in-play total this module computes.
                 Effect::HalvesSpellCapBeyondTouch => {}
                 Effect::DeficientArt { .. } => {}
+                // A creation-time training marker, not an in-play total;
+                // no-op here — Casting/Lab Totals themselves are unaffected by
+                // *how* training was acquired.
+                Effect::ConfersHermeticTraining => {}
                 Effect::MagicTotalHalving { total } => {
                     m.halvings.insert(*total);
                 }
@@ -758,11 +762,16 @@ pub struct DerivedTotals {
 /// Computes the full play-stat read-out for `entity`. Pure and read-only: reuses
 /// `effective.rs` for effective scores, Decrepitude, and Warping, and never
 /// mutates or recomputes creation legality. Magic totals are computed only for a
-/// magus (per the type profile's `is_magus`).
+/// magus (per the type profile's `hermetically_trained` flag).
 pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
+    // Bare profile rename only (compiler-forced by D56/A0's `is_magus` split):
+    // switching this (and the `is_magus` DTO field/local name below) to the
+    // entity-level union (`is_hermetically_trained`) is sub-slice 2's own
+    // scope, with its own first failing test — see
+    // `docs/vf-audit/design-a0-is-magus-split.md` § 5.
     let is_magus = ruleset
         .profile(&entity.type_id)
-        .map(|p| p.is_magus)
+        .map(|p| p.hermetically_trained)
         .unwrap_or(false);
     // A supernatural being (Might Score) has Magic Resistance too, even though it
     // is not a magus. Source: RoP:M:1472.
@@ -967,12 +976,12 @@ mod tests {
             "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
-          { "id": "magus", "is_magus": true,
+          { "id": "magus", "hermetically_trained": true, "order_member": true,
             "budget": { "virtue_points": 10, "flaw_points": 10 },
             "permitted_categories": ["general", "hermetic"], "forbidden_categories": [],
             "required_traits": [], "forbidden_traits": [], "gift_policy": "required",
             "gift_categories": [], "creation_phases": ["concept"] },
-          { "id": "grog", "is_magus": false,
+          { "id": "grog", "hermetically_trained": false, "order_member": false,
             "budget": { "virtue_points": 3, "flaw_points": 3 },
             "permitted_categories": ["general"], "forbidden_categories": [],
             "required_traits": [], "forbidden_traits": [], "gift_policy": "forbidden",
@@ -1594,7 +1603,7 @@ mod tests {
 
     /// The magus profile of [`ruleset`], on its own.
     const MAGUS_PROFILE: &str = r#"[
-      { "id": "magus", "is_magus": true,
+      { "id": "magus", "hermetically_trained": true, "order_member": true,
         "budget": { "virtue_points": 10, "flaw_points": 10 },
         "permitted_categories": ["general", "hermetic"], "forbidden_categories": [],
         "required_traits": [], "forbidden_traits": [], "gift_policy": "required",
@@ -1634,7 +1643,7 @@ mod tests {
     #[test]
     fn talisman_capacity_is_absent_when_the_art_catalogue_defines_no_form() {
         let grog_profile = r#"[
-          { "id": "grog", "is_magus": false,
+          { "id": "grog", "hermetically_trained": false, "order_member": false,
             "budget": { "virtue_points": 3, "flaw_points": 3 },
             "permitted_categories": ["general"], "forbidden_categories": [],
             "required_traits": [], "forbidden_traits": [], "gift_policy": "forbidden",

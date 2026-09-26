@@ -21,7 +21,9 @@
   // A magus carries two ages, not one: the age it is now, and the age its Gauntlet
   // came at. So the age means something different for a magus than for anyone else,
   // which the note below says in words.
-  const isMagus = $derived(typeProfile?.is_magus ?? false);
+  // Profile-only, on purpose (D56/A0, mirroring `life_stage.rs::apprenticeship_of`):
+  // never the entity-level union — an Abandoned Apprentice never completed a Gauntlet.
+  const isMagus = $derived(typeProfile?.hermetically_trained ?? false);
   // Read here only as the Gauntlet-age field's placeholder — the age itself is
   // edited on the Details tab / Concept step and shown here read-only through
   // `AgeFields` (Slice 12, #24). The age→Ability-score cap moved to the Abilities

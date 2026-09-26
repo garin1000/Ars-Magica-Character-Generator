@@ -631,7 +631,15 @@ impl LifeStageRules {
     /// and a ruleset shipping no block declares none (`Ruleset::validate_integrity`
     /// refuses that combination for a ruleset that declares magi).
     ///
-    /// Read off the type profile's `is_magus` flag, never a type id.
+    /// Read off the type profile's `hermetically_trained` flag alone, never a type
+    /// id, and — deliberately — never the entity-level union
+    /// (`effective/hermetic_training.rs::is_hermetically_trained`) either.
+    /// **Profile-only, on purpose (D56/A0):** an Abandoned Apprentice is trained by
+    /// selection but "never able to complete [his] training" — he has NOT served
+    /// (and completed) an apprenticeship, so `apprenticeship.minimum_abilities` must
+    /// not be enforced against him. Reading the union here would be exactly the bug
+    /// D56 forbids; see `docs/vf-audit/design-a0-is-magus-split.md` § 4 row 9 and § 7
+    /// risk 4.
     pub(crate) fn apprenticeship_of(
         &self,
         entity: &Entity,
@@ -639,7 +647,7 @@ impl LifeStageRules {
     ) -> Option<&ApprenticeshipRules> {
         if !ruleset
             .profile(&entity.type_id)
-            .is_some_and(|profile| profile.is_magus)
+            .is_some_and(|profile| profile.hermetically_trained)
         {
             return None;
         }
@@ -984,7 +992,8 @@ mod tests {
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
             "permitted_categories": ["general"], "creation_phases": [] },
           { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
-            "permitted_categories": ["general"], "is_magus": true, "creation_phases": [] }
+            "permitted_categories": ["general"],
+            "hermetically_trained": true, "order_member": true, "creation_phases": [] }
         ]"#;
         Ruleset::from_json("test", "1", items, types).unwrap()
     }
@@ -1442,7 +1451,8 @@ mod tests {
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
             "permitted_categories": ["general"], "creation_phases": [] },
           { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
-            "permitted_categories": ["general"], "is_magus": true, "creation_phases": [] }
+            "permitted_categories": ["general"],
+            "hermetically_trained": true, "order_member": true, "creation_phases": [] }
         ]"#;
         let abilities = r#"{
           "advancement": [

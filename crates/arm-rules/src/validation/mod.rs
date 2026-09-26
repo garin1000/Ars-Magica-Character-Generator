@@ -964,7 +964,7 @@ impl ValidationResult {
 ///
 /// When `entity.type_id` does not resolve to a type profile, an `unknown_type`
 /// error is emitted and all profile-dependent sub-validators (balance, caps,
-/// prerequisites' `is_magus` resolution, categories, traits, gift policy) are
+/// prerequisites' `hermetically_trained`/`order_member` resolution, categories, traits, gift policy) are
 /// skipped because they have no profile to check against. A result containing
 /// only `unknown_type` therefore does NOT imply the rest of the entity is legal.
 pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
@@ -1215,7 +1215,10 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::ForbidsAbilitySpecialties
         | Effect::ForbidsRitualCasting
         | Effect::WaivesAbilityAgeCap
-        | Effect::HalvesSpellCapBeyondTouch => EffectTarget::Other,
+        | Effect::HalvesSpellCapBeyondTouch
+        // No ability/characteristic creation-time target — a training
+        // marker, not a score effect.
+        | Effect::ConfersHermeticTraining => EffectTarget::Other,
     }
 }
 
@@ -1428,13 +1431,13 @@ mod tests {
           "incompatible_with": ["virtue.heartbeast"] }
     ]"#;
 
-    /// A magus profile permitting the test categories (`is_magus` so it is a
-    /// legal House-bearer).
+    /// A magus profile permitting the test categories (`order_member` so it is
+    /// a legal House-bearer).
     const GRANT_MAGUS_TYPE: &str = r#"[{
         "id": "magus",
         "budget": { "virtue_points": 10, "flaw_points": 10 },
         "permitted_categories": ["general", "hermetic", "special", "social_status"],
-        "is_magus": true,
+        "hermetically_trained": true, "order_member": true,
         "creation_phases": []
     }]"#;
 
@@ -1519,7 +1522,7 @@ mod tests {
             "budget": { "virtue_points": 10, "flaw_points": 10 },
             "permitted_categories": ["general", "hermetic", "special", "social_status"],
             "forbidden_traits": ["virtue.heartbeast"],
-            "is_magus": true,
+            "hermetically_trained": true, "order_member": true,
             "creation_phases": []
         }]"#;
         let rs = rs_with_grant_houses(GRANT_TEST_ITEMS, types);
@@ -1562,7 +1565,7 @@ mod tests {
             "id": "magus",
             "budget": { "virtue_points": 10, "flaw_points": 10, "max_major_virtues": 0 },
             "permitted_categories": ["general", "hermetic", "special", "social_status"],
-            "is_magus": true,
+            "hermetically_trained": true, "order_member": true,
             "creation_phases": []
         }]"#;
         let rs = rs_with_grant_houses(GRANT_TEST_ITEMS, types);
@@ -1602,7 +1605,7 @@ mod tests {
           "virtue_category_caps": [
             { "category": "hermetic", "max": 1, "major_only": true, "hard": true } ] },
         "permitted_categories": ["general", "hermetic", "special", "social_status"],
-        "is_magus": true,
+        "hermetically_trained": true, "order_member": true,
         "creation_phases": []
     }]"#;
 
@@ -1918,7 +1921,7 @@ mod tests {
         "id": "magus",
         "budget": { "virtue_points": 30, "flaw_points": 30 },
         "permitted_categories": ["general", "hermetic", "special", "social_status"],
-        "is_magus": true,
+        "hermetically_trained": true, "order_member": true,
         "gift_categories": ["hermetic"],
         "hermetic_flaw_categories": ["hermetic"],
         "creation_phases": []
@@ -2392,7 +2395,7 @@ mod tests {
                 "id": "magus",
                 "budget": { "virtue_points": 30, "flaw_points": 30 },
                 "permitted_categories": ["general", "hermetic", "special", "social_status"],
-                "is_magus": true,
+                "hermetically_trained": true, "order_member": true,
                 "gift_categories": ["hermetic"],
                 "creation_phases": []
             }]"#,
@@ -2416,7 +2419,7 @@ mod tests {
                 "id": "magus",
                 "budget": { "virtue_points": 30, "flaw_points": 30 },
                 "permitted_categories": ["general", "hermetic", "special", "social_status"],
-                "is_magus": true,
+                "hermetically_trained": true, "order_member": true,
                 "hermetic_flaw_categories": ["hermetic"],
                 "creation_phases": []
             }]"#,
@@ -6501,7 +6504,8 @@ mod tests {
 
     #[test]
     fn prereq_is_magus_satisfied_on_magus_type() {
-        // A profile flagged `is_magus: true` satisfies IsMagus: no warning, no error.
+        // A profile flagged `hermetically_trained`/`order_member: true` satisfies
+        // the still-unsplit `Prereq::IsMagus` (sub-slice 4): no warning, no error.
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
@@ -6511,7 +6515,7 @@ mod tests {
           "id": "magus_type",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
           "permitted_categories": ["general"],
-          "is_magus": true,
+          "hermetically_trained": true, "order_member": true,
           "creation_phases": []
         }]"#;
         let rs = Ruleset::from_json("test", "1", items, types).unwrap();
@@ -6528,7 +6532,8 @@ mod tests {
 
     #[test]
     fn prereq_is_magus_fails_on_non_magus_type() {
-        // A profile flagged `is_magus: false` makes IsMagus False: prereq_not_met fires.
+        // A profile flagged `hermetically_trained`/`order_member: false` makes the
+        // still-unsplit `Prereq::IsMagus` (sub-slice 4) False: prereq_not_met fires.
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
@@ -6538,7 +6543,7 @@ mod tests {
           "id": "grog_type",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
           "permitted_categories": ["general"],
-          "is_magus": false,
+          "hermetically_trained": false, "order_member": false,
           "creation_phases": []
         }]"#;
         let rs = Ruleset::from_json("test", "1", items, types).unwrap();
@@ -6589,7 +6594,7 @@ mod tests {
           "id": "ungifted_redcap",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
           "permitted_categories": ["general"],
-          "is_magus": false,
+          "hermetically_trained": false, "order_member": false,
           "gift_policy": "forbidden",
           "creation_phases": []
         }]"#;
@@ -6618,7 +6623,7 @@ mod tests {
           "id": "hedge_wizard",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
           "permitted_categories": ["general", "special"],
-          "is_magus": false,
+          "hermetically_trained": false, "order_member": false,
           "gift_policy": "allowed",
           "gift_id": "virtue.the_gift",
           "creation_phases": []
@@ -6651,7 +6656,7 @@ mod tests {
           "id": "magus_type",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
           "permitted_categories": ["general", "special"],
-          "is_magus": true,
+          "hermetically_trained": true, "order_member": true,
           "gift_policy": "required",
           "gift_id": "virtue.the_gift",
           "creation_phases": []
@@ -6728,7 +6733,7 @@ mod tests {
           "id": "magus_type",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
           "permitted_categories": ["general", "hermetic"],
-          "is_magus": true,
+          "hermetically_trained": true, "order_member": true,
           "gift_policy": "required",
           "gift_id": "virtue.the_gift",
           "creation_phases": []
@@ -8951,7 +8956,10 @@ mod tests {
           "effects": [{ "type": "forbids_ritual_casting" }] },
         { "id": "virtue.grants_rigid_magic_test", "kind": "virtue", "classification": "creation_effect",
           "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
-          "effects": [{ "type": "grants_selection", "items": ["flaw.rigid_magic_test"] }] }
+          "effects": [{ "type": "grants_selection", "items": ["flaw.rigid_magic_test"] }] },
+        { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+          "magnitude": "major", "categories": ["story"], "entity_kinds": ["character"],
+          "effects": [{ "type": "confers_hermetic_training" }] }
     ]"#;
     const SPELL_ARTS: &str = r#"{ "arts": [
         { "id": "art.creo", "art_type": "technique" },
@@ -8986,7 +8994,7 @@ mod tests {
         { "id": "spell_mastery_ability.quiet_casting", "repeatable": true }
     ] }"#;
     // Life stages so a magus can be taken past its Gauntlet; the `post_apprenticeship`
-    // block is obligatory once an `is_magus` profile ships life-stage rules.
+    // block is obligatory once a `hermetically_trained` profile ships life-stage rules.
     const SPELL_LIFE_STAGES: &str = r#"{
         "apprenticeship": { "years": 15, "xp": 240, "minimum_abilities": [],
                             "recommended_abilities": [], "recommended_xp": 0 },
@@ -9001,7 +9009,8 @@ mod tests {
     // spell_levels 50 keeps the budget small enough to trip in tests.
     const SPELL_MAGUS_TYPE: &str = r#"[
         { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
-          "permitted_categories": ["hermetic"], "is_magus": true,
+          "permitted_categories": ["hermetic"],
+          "hermetically_trained": true, "order_member": true,
           "spell_levels": 50, "creation_phases": [] },
         { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
           "creation_phases": [] }
@@ -9105,6 +9114,43 @@ mod tests {
             spell("spell.ball_of_abysmal_flame", None),
         ];
         assert!(all_codes(&validate(&e, &rs)).contains(&"over_spell_levels".to_string()));
+    }
+
+    /// D56/A0: `validate_spells`' budget/cap gate must key on
+    /// `is_hermetically_trained`, not the bare `profile.hermetically_trained`
+    /// flag — a companion (untrained profile) holding a selection carrying
+    /// `Effect::ConfersHermeticTraining` is exposed to the same spell-levels
+    /// budget a magus is. The companion profile declares no `spell_levels` at
+    /// all (budget 0), so a single spell immediately overflows it once trained
+    /// — proving the gate actually switched on, not just that spells parse.
+    #[test]
+    fn a_trained_by_selection_companion_test_fixture_is_held_to_the_spell_levels_budget() {
+        let rs = spell_rs();
+        let mut e = make_entity(
+            "companion",
+            vec![Selection::new(Id::new("flaw.test_confers_training"))],
+        );
+        e.spells = vec![spell("spell.pilum_of_fire", None)];
+        assert!(
+            all_codes(&validate(&e, &rs)).contains(&"over_spell_levels".to_string()),
+            "{:?}",
+            all_codes(&validate(&e, &rs))
+        );
+
+        // Without the fixture effect the same companion is untrained: spells
+        // are ref/dedup-checked only, so no budget/cap finding fires even
+        // though the (zero) budget is equally exceeded — the real
+        // `flaw.abandoned_apprentice` is unaffected until D3 ships this same
+        // effect on the shipped data.
+        let mut untrained = make_entity("companion", vec![]);
+        untrained.spells = vec![spell("spell.pilum_of_fire", None)];
+        let codes = all_codes(&validate(&untrained, &rs));
+        assert!(
+            !codes
+                .iter()
+                .any(|c| c == "over_spell_levels" || c == "spell_level_exceeds_cap"),
+            "{codes:?}"
+        );
     }
 
     /// The levels of spells a magus took out of its post-Gauntlet points raise the
@@ -9708,7 +9754,7 @@ mod tests {
           "gift_policy": "allowed", "gift_id": "virtue.the_gift",
           "confidence_score": 1, "confidence_points": 3, "creation_phases": [] },
         { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
-          "is_magus": true, "gift_policy": "required", "gift_id": "virtue.the_gift",
+          "hermetically_trained": true, "order_member": true, "gift_policy": "required", "gift_id": "virtue.the_gift",
           "confidence_score": 1, "confidence_points": 3, "creation_phases": [] },
         { "id": "grog", "budget": { "virtue_points": 3, "flaw_points": 3 },
           "creation_phases": [] }

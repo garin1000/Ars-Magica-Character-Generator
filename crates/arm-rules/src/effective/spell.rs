@@ -63,7 +63,10 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::ElementalMagic { .. }
         | Effect::ForbidsAbilitySpecialties
         | Effect::ForbidsRitualCasting
-        | Effect::WaivesAbilityAgeCap => None,
+        | Effect::WaivesAbilityAgeCap
+        // Not a spell-levels contribution — training is a creation-legality
+        // fact, not a levels grant.
+        | Effect::ConfersHermeticTraining => None,
     })
 }
 
@@ -125,7 +128,12 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::ElementalMagic { .. }
         | Effect::ForbidsAbilitySpecialties
         | Effect::ForbidsRitualCasting
-        | Effect::WaivesAbilityAgeCap => None,
+        | Effect::WaivesAbilityAgeCap
+        // Not a general-XP contribution — the apprenticeship *shape* this
+        // confers is folded in `effective/xp.rs`, not here, or it would
+        // double-count exactly as this file's own `LaterLifeXpRate` comment
+        // warns against.
+        | Effect::ConfersHermeticTraining => None,
     })
 }
 
@@ -507,7 +515,10 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::ElementalMagic { .. }
                 | Effect::ForbidsAbilitySpecialties
                 | Effect::ForbidsRitualCasting
-                | Effect::WaivesAbilityAgeCap => None,
+                | Effect::WaivesAbilityAgeCap
+                // Not a Spell Mastery Affinity — grants no advancement
+                // multiplier.
+                | Effect::ConfersHermeticTraining => None,
             })
     });
     best_affinity(found)

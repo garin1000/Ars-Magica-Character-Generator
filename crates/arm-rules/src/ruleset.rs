@@ -4338,13 +4338,14 @@ mod tests {
     /// where the limit actually lives: in the data, at load, not on each character.
     ///
     /// Gated the same way as [`Self::validate_engine_required_roles`]: only a ruleset
-    /// declaring an `is_magus` profile is held to it, and only when it ships life
-    /// stages at all.
+    /// declaring a `hermetically_trained` profile is held to it, and only when it
+    /// ships life stages at all.
     #[test]
     fn a_magus_ruleset_shipping_life_stages_must_declare_an_apprenticeship() {
         const MAGUS_TYPES: &str = r#"[
           { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
-            "permitted_categories": ["general"], "is_magus": true, "creation_phases": [] }
+            "permitted_categories": ["general"],
+            "hermetically_trained": true, "order_member": true, "creation_phases": [] }
         ]"#;
         // The five abilities any magus ruleset shipping a catalogue must carry, plus
         // the parameterized language the childhood block names.
@@ -4512,13 +4513,14 @@ mod tests {
     /// (ArMDE:2364); without this block the years after it would grant
     /// nothing back, so the profile would simply lose them.
     ///
-    /// Gated like [`Ruleset::validate_apprenticeship_refs`]: only an `is_magus`
-    /// ruleset that ships life stages at all is held to it.
+    /// Gated like [`Ruleset::validate_apprenticeship_refs`]: only a
+    /// `hermetically_trained` ruleset that ships life stages at all is held to it.
     #[test]
     fn a_magus_ruleset_shipping_life_stages_must_declare_a_post_apprenticeship() {
         const MAGUS_TYPES: &str = r#"[
           { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
-            "permitted_categories": ["general"], "is_magus": true, "creation_phases": [] }
+            "permitted_categories": ["general"],
+            "hermetically_trained": true, "order_member": true, "creation_phases": [] }
         ]"#;
         const COMPANION_TYPES: &str = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -5572,7 +5574,7 @@ mod tests {
     /// A magus type profile. Shipping this alongside an Arts catalogue is what
     /// makes the engine-required Hermetic role check fire.
     const MAGUS_TYPE: &str = r#"[{
-      "id": "magus", "is_magus": true,
+      "id": "magus", "hermetically_trained": true, "order_member": true,
       "budget": { "virtue_points": 10, "flaw_points": 10 },
       "permitted_categories": ["general", "hermetic"],
       "gift_policy": "required",

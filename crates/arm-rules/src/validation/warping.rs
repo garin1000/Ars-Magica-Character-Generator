@@ -15,8 +15,9 @@ use crate::effective::{
 /// grants are OPEN grants ([`warping_owed_grants`]) whose picks live in
 /// `entity.warping_choices`, resolved off the creation V/F budget.
 ///
-/// - Hermetic magi are exempt (Warping gives them Wizard's Twilight instead,
-///   ArMDE:16551) → the section is skipped entirely, owing zero.
+/// - The Hermetically trained are exempt (`is_hermetically_trained`, D56/A0 —
+///   Warping gives them Wizard's Twilight instead, ArMDE:16551) → the section
+///   is skipped entirely, owing zero.
 /// - An unfilled owed slot → a non-blocking advisory per kind
 ///   (`warping_owed_minor_flaws` / `_supernatural_virtues` / `_major_flaws`) so a
 ///   still-incomplete build is flagged, never hard-blocked.
@@ -34,13 +35,14 @@ pub(crate) fn validate_warping(
     type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    // Warping-owed V/F are a non-magus concern; magi are exempt (Twilight), and an
-    // unknown type cannot be checked. `warping_owed` also returns zero for magi, so
-    // this gate mainly avoids emitting advisories for them.
-    let Some(profile) = type_profile else {
+    // Warping-owed V/F are an untrained concern; the Hermetically trained are
+    // exempt (Twilight), and an unknown type cannot be checked. `warping_owed`
+    // also returns zero for the trained, so this gate mainly avoids emitting
+    // advisories for them.
+    if type_profile.is_none() {
         return;
-    };
-    if profile.is_magus {
+    }
+    if crate::effective::is_hermetically_trained(entity, ruleset, type_profile) {
         return;
     }
 
@@ -231,7 +233,10 @@ mod tests {
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }] },
           { "id": "flaw.warped_by_magic", "kind": "flaw", "classification": "narrative",
             "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"],
-            "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }] }
+            "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }] },
+          { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["story"], "entity_kinds": ["character"],
+            "effects": [{ "type": "confers_hermetic_training" }] }
         ]"#;
         let types = r#"[
           { "id": "companion", "budget": { "virtue_points": 3, "flaw_points": 3 },
@@ -288,6 +293,25 @@ mod tests {
         assert!(
             codes(&result).contains(&"warping_owed_minor_flaws".to_string()),
             "an unfilled owed Minor Flaw should warn: {:?}",
+            result.issues
+        );
+    }
+
+    /// D56/A0: the section-skip must key on `is_hermetically_trained`, not the
+    /// bare profile flag — a companion (untrained profile) holding a
+    /// **test-only fixture** selection that carries
+    /// `Effect::ConfersHermeticTraining` gets no owed-Warping advisory at all,
+    /// same as a magus would. The real `flaw.abandoned_apprentice` is
+    /// unaffected until D3 attaches the effect.
+    #[test]
+    fn a_trained_by_selection_companion_test_fixture_owes_no_warping_advisory() {
+        let rs = warping_ruleset();
+        let mut e = companion(5); // Warping Score 1 → would owe one Minor Flaw.
+        e.selections = vec![Selection::new(Id::new("flaw.test_confers_training"))];
+        let result = validate(&e, &rs);
+        assert!(
+            !codes(&result).contains(&"warping_owed_minor_flaws".to_string()),
+            "a trained-by-selection entity must be exempt: {:?}",
             result.issues
         );
     }

@@ -123,7 +123,16 @@ impl<'a> PrereqCtx<'a> {
         selected_ids: &BTreeSet<&'a Id>,
         granted: &'a [Selection],
     ) -> Self {
-        let is_magus = type_profile.map(|p| p.is_magus);
+        // `PrereqCtx.is_magus` and `Prereq::IsMagus` are unchanged in this
+        // sub-slice (D56/A0's design note assigns the real split — two
+        // variants, two `Option<bool>` fields — to sub-slice 4). The
+        // `EntityTypeProfile` field this reads *did* split here, so the
+        // minimal, behavior-preserving fix is the conjunction: every profile
+        // shipping today sets `hermetically_trained`/`order_member` equal (a
+        // magus sets both true, everyone else both false), so `&&` reproduces
+        // today's single `is_magus` value exactly, pending sub-slice 4's real
+        // split. See `docs/vf-audit/design-a0-is-magus-split.md` § 1, § 5.
+        let is_magus = type_profile.map(|p| p.hermetically_trained && p.order_member);
 
         // Effective score per ability: the max bought score (a parameterized
         // ability may appear more than once with different specialties; the

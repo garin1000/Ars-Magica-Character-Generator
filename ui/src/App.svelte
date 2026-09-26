@@ -59,8 +59,15 @@
   // mythic-companion-only Type tab, Equipment and Totals — each gated on the
   // profile's capability flag (never the type id), so any future capable type gets
   // them automatically.
+  // Bare profile rename only (D56/A0's `is_magus` split, sub-slice 1): every
+  // shipped profile still sets `hermetically_trained`/`order_member` equal, so
+  // reading either alone reproduces today's `is_magus` behavior exactly. The
+  // real three-way split this const conflates (Arts/Spells/Might = trained,
+  // house_specialisation = order, D56 row 20(c)) is A2's job, via a resolved
+  // `phases_in_force` DTO field — see
+  // `docs/vf-audit/design-a0-is-magus-split.md` § 6.
   const isMagus = $derived(
-    store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.is_magus ?? false,
+    store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.hermetically_trained ?? false,
   );
   const hasMythicType = $derived(
     store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.has_mythic_type ?? false,

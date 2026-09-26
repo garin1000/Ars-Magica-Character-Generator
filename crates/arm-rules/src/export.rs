@@ -628,7 +628,7 @@ mod tests {
                              "at_most_one_of": [["realm.divine", "realm.infernal"]] }] }
         ]"#;
         let types = r#"[
-          { "id": "magus", "is_magus": true,
+          { "id": "magus", "hermetically_trained": true, "order_member": true,
             "budget": { "virtue_points": 10, "flaw_points": 10 },
             "permitted_categories": [], "forbidden_categories": [],
             "required_traits": [], "forbidden_traits": [],
