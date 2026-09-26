@@ -3123,7 +3123,7 @@ here, not claimed.
 | **43** | anchors — **done for V/F** (655/655); the rest of the catalogue owes them | **D30**, § 8 row 6 (**563** refs) |
 | **45** | the authorization family — **scope corrected**, any category, not social-status | § 3.2, **D43**; four counterexamples (F-18, F-102, Knight, Priest) |
 | **46** | the **218 computed** V/F never audited against what the engine does | **largely DONE by the audit itself — the row's premise is stale.** See below |
-| **47** | `charged_cost` overcharges an Affinity-bought score | **F-547**, with its proof and its corrected remedy note |
+| **47** | `charged_cost` overcharges an Affinity-bought score | **F-547** — **done 2026-09-26** (Phase 2 slice Q1); row removed from `open-todos.md` |
 | **48** | `virtue.berserk`'s three modifiers applied unconditionally | **F-20**, and the **F-45 class** (§ 3.8, **D4**) |
 | **49** | conditional casting/Lab modifiers applied flat — Ways of the Land, Special Circumstances, Cyclic | **F-45 / F-20 class**, § 3.8; **D4** governs the fix, **D52** splits the Cyclic pair |
 | **50** | six more Virtues carrying none of their stated mechanics | row 45's class; **D14** owns `virtue.student_of_realm`'s authorization half |

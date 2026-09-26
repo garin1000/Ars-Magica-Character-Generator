@@ -916,8 +916,42 @@ mod tests {
         assert_eq!(charged_cost(30, Some((1, 0))), 30);
         assert_eq!(charged_cost(30, Some((0, 1))), 30);
         // Ability table is 5× the Art table; the same ratio applies to its costs.
-        assert_eq!(charged_cost(275, Some((3, 2))), 184); // ceil(275·2/3)
+        assert_eq!(charged_cost(275, Some((3, 2))), 183); // smallest c: ceil(183·3/2)=275
         assert_eq!(charged_cost(0, Some((3, 2))), 0);
+    }
+
+    /// Row 47 / F-547: `charged_cost` computed `ceil(T·den/num)`, which overcharges
+    /// by one whenever `T·den mod num` falls strictly between 0 and `num`. The book's
+    /// own Specialist template (`ArMDE:1298-1332`) only balances if Single Weapon 7
+    /// (table cost `T=140`) under Affinity 3/2 costs 93, not the engine's old 94:
+    /// the smallest `c` with `ceil(c·3/2) ≥ 140` is `c=93`, since `ceil(93·3/2)=140`
+    /// but `ceil(92·3/2)=138 < 140`.
+    #[test]
+    fn charged_cost_is_the_smallest_charge_that_reaches_the_table_cost() {
+        assert_eq!(charged_cost(140, Some((3, 2))), 93);
+
+        // Property: for every T and ratio, the returned c is the smallest value
+        // satisfying ceil(c*num/den) >= T — i.e. c itself clears the bar and c-1
+        // does not (except at the T=0 boundary, where 0 is correct and has no
+        // predecessor to check).
+        for (num, den) in [(3u8, 2u8), (5, 4), (2, 1)] {
+            for t in 0..=500u32 {
+                let c = charged_cost(t, Some((num, den)));
+                let clears =
+                    |x: u32| x.saturating_mul(u32::from(num)).div_ceil(u32::from(den)) >= t;
+                assert!(
+                    clears(c),
+                    "T={t}, ratio={num}/{den}: c={c} does not reach the table cost"
+                );
+                if t > 0 && c > 0 {
+                    assert!(
+                        !clears(c - 1),
+                        "T={t}, ratio={num}/{den}: c-1={} already reaches the table cost, so c={c} is not minimal",
+                        c - 1
+                    );
+                }
+            }
+        }
     }
 
     /// A ruleset for the XP-pool tests: priced Ability (5×-triangular) and Art

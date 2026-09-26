@@ -23,24 +23,30 @@ use super::*;
 ///
 /// Affinity (Ability/Art) says creation XP "counts as" `num/den` of itself
 /// (3/2, rounded up): so the points actually charged to reach a fixed table cost
-/// `T` are the smallest `c` with `ceil(c·num/den) ≥ T`, which is
-/// `ceil(T·den/num)`. The worked example (Perdo 10, Art table T=55, 3/2):
-/// `ceil(55·2/3) = ceil(36.67) = 37`, which the rules say counts as 56 ≥ 55.
-/// Integer-only so the engine stays exact.
+/// `T` are the smallest `c` with `ceil(c·num/den) ≥ T`. For `T > 0` that is
+/// `floor(den·(T−1)/num) + 1`, **not** the simpler-looking `ceil(T·den/num)`.
+/// The two formulas disagree exactly when `T·den mod num` falls strictly
+/// between `0` and `den`, and overcharge by one XP in that case — row 47 /
+/// V/F-audit F-547. They agree on the rulebook's own worked example (Perdo 10,
+/// Art table T=55, 3/2: both give `floor(2·54/3)+1 = ceil(55·2/3) = 37`), which
+/// is why the bug survived undetected there; they disagree on the Specialist
+/// grog template's Single Weapon 7 (Ability table T=140, 3/2: the correct
+/// charge is `floor(2·139/3)+1 = 93`, while `ceil(140·2/3) = 94` overcharged
+/// the player by one — `docs/book-template-conformance.md` § S2).
 ///
 /// A degenerate ratio charges the **full** cost. Both halves are rejected at load
 /// (`ruleset/integrity.rs::validate_item_ratios`), so this arm is
 /// defence in depth for a ruleset that somehow reached the engine unvalidated:
-/// `den == 0` would otherwise zero the product and make every score under the
-/// Affinity free, which is the one direction that must never fail open.
+/// `den == 0` would otherwise make every score under the Affinity free, which is
+/// the one direction that must never fail open.
 ///
 /// Source: ArMDE:3372-3378, worked
 /// example `ArMDE:2443`.
 pub(crate) fn charged_cost(table_xp: u32, affinity: Option<(u8, u8)>) -> u32 {
     match affinity {
-        Some((num, den)) if num != 0 && den != 0 => table_xp
-            .saturating_mul(u32::from(den))
-            .div_ceil(u32::from(num)),
+        Some((num, den)) if num != 0 && den != 0 && table_xp != 0 => {
+            (table_xp - 1).saturating_mul(u32::from(den)) / u32::from(num) + 1
+        }
         _ => table_xp,
     }
 }

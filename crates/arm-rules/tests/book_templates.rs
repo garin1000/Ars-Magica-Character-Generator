@@ -1013,11 +1013,9 @@ fn the_verditius_matches_the_book() {
     let ruleset = full_ruleset();
     let verditius = load(include_str!("fixtures/book_templates/magus_verditius.json"));
 
-    // DISAGREEMENT MAG13 (docs/book-template-conformance.md) — the Affinity
-    // off-by-one already filed as S2 — is why this fixture carries
-    // `xp_pool: 436` where the age formula grants 435: Affinity-bought Craft
-    // (stonemason) 4 costs the book 33 experience points and the engine 34. It is
-    // the only Affinity-bought score in all twenty-three templates that trips it.
+    // Affinity-bought Craft (stonemason) 4 costs 33 experience points (row
+    // 47/F-547, formerly S2/MAG13 — `charged_cost` used to overcharge this to 34),
+    // so the fixture's `xp_pool: 435` matches the age formula's grant exactly.
     assert_eq!(error_codes(&verditius, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&verditius, &ruleset), codes(&[]));
 
@@ -1650,7 +1648,16 @@ fn the_specialist_matches_the_book() {
     let specialist = load(include_str!("fixtures/book_templates/grog_specialist.json"));
 
     assert_eq!(error_codes(&specialist, &ruleset), codes(&[]));
-    assert_eq!(warning_codes(&specialist, &ruleset), codes(&[]));
+    // Affinity now charges Single Weapon 7 at 93 XP, not the old bugged 94
+    // (row 47/F-547, formerly S2). At the book's own general-XP grant of 330
+    // (age formula: 75 + 45 + 15x14), that leaves exactly the 2 XP the book
+    // itself banks toward the next Bows increase — the printed "Bows 1 (2)"
+    // (ArMDE:1326). So `general_xp_unspent` is not a disagreement here: it is
+    // the engine correctly reproducing the book's own banked points.
+    assert_eq!(
+        warning_codes(&specialist, &ruleset),
+        codes(&["general_xp_unspent"])
+    );
 
     // Soak: +9 (full metal scale armor). Source: ArMDE:1320.
     assert_eq!(soak(&specialist, &ruleset).total, 9);

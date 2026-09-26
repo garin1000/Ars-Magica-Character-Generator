@@ -2711,16 +2711,23 @@ bytes. `Entity::normalize` sorts the list, like every other.
 
 The "counts as 1½×" rule is modelled as a cost reduction: to reach a score whose
 table cost is `T`, the XP *charged* is the smallest `c` with `ceil(c·3/2) ≥ T`,
-i.e. `charged = ceil(T·2/3)`. The cap exemption is read off the effect's presence
-(age cap itself is M4/4e).
+i.e. `charged = floor((T−1)·2/3) + 1` for `T > 0` (and `0` for `T = 0`). The cap
+exemption is read off the effect's presence (age cap itself is M4/4e).
 
 - Source: `ArMDE:3372-3374`.
 - Data: `rules/core/virtues_flaws.json` `virtue.affinity_ability` —
   `category: general`, `ability`-domain param, `effects: [{ affinity_ability_cost,
   param: "ability", counts_as_num: 3, counts_as_den: 2 }]`.
-- Implementation: `effective/xp.rs::charged_cost` (the `ceil(T·den/num)` arithmetic,
-  verified against the worked example below) + `ability_affinity`, folded into
-  `effective/xp.rs::xp_allocation` and so into `validation/magus.rs::validate_xp_pool` (:780).
+- Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
+  arithmetic, verified against the worked example below) + `ability_affinity`,
+  folded into `effective/xp.rs::xp_allocation` and so into
+  `validation/magus.rs::validate_xp_pool` (:780). **Not** the simpler
+  `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
+  example below, but overcharges by one XP whenever `T·den mod num` falls
+  strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
+  `docs/book-template-conformance.md` § S2 caught it against the Specialist grog
+  template's own printed arithmetic (Single Weapon 7, `T = 140`: the correct
+  charge is 93, not 94).
 
 #### Affinity with (Art) — creation XP counts for half again
 > "Your Advancement Totals for one Hermetic Art are increased by one half, rounded
@@ -2730,7 +2737,8 @@ i.e. `charged = ceil(T·2/3)`. The cap exemption is read off the effect's presen
 
 Worked example (`ArMDE:2443`): "He spends 37 points on Perdo, which his affinity turns
 into 56 points, so that he has Perdo 10 (1)" — Perdo 10 needs 55 on the Art table,
-and `charged_cost(55, 3/2) = ceil(55·2/3) = 37`. (Perdo is a Technique/Art; the
+and `charged_cost(55, 3/2) = floor(2·54/3) + 1 = 37` (which happens to equal
+`ceil(55·2/3)` too — see the caveat above). (Perdo is a Technique/Art; the
 identical rule applies to Abilities but against the 5×-larger Ability table.)
 
 - Source: `ArMDE:3376-3378`, example
@@ -2743,7 +2751,7 @@ identical rule applies to Abilities but against the 5×-larger Ability table.)
 
 **The ratio itself is validated at load.** `counts_as_num`/`counts_as_den` (and
 `grants_spell_mastery`'s `advancement_num`/`advancement_den`, the same ratio under
-other names) are ruleset-authored numbers that reach the `ceil(T·den/num)`
+other names) are ruleset-authored numbers that reach the `charged_cost`
 arithmetic unfiltered, so a hand-authored `0` denominator would price every score
 under the Affinity at **0 XP** — silently, in the player's favour, with the
 character still validating clean in Enforced mode.
@@ -2765,7 +2773,8 @@ family therefore carries its own message body rather than an Affinity-shaped one
 unvalidated ruleset fails safe rather than free. Tests:
 `an_affinity_with_a_zero_denominator_fails_the_load_naming_the_item` and its
 numerator / Art / group / mastery siblings, plus `ordinary_affinity_ratios_load`
-(`ruleset.rs`); `affinity_charged_cost_matches_perdo_example` (`effective.rs`).
+(`ruleset.rs`); `affinity_charged_cost_matches_perdo_example` and
+`charged_cost_is_the_smallest_charge_that_reaches_the_table_cost` (`effective.rs`).
 
 #### Educated / Warrior / Privileged Upbringing — restricted XP pools
 > Educated: "you get an additional 50 experience points, which must be spent on
