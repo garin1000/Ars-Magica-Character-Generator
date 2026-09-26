@@ -207,6 +207,26 @@ fn wealthy_and_poor_ship_with_their_rates_and_eligibility() {
     );
 }
 
+/// Row 47 / V/F-audit F-524: `flaw.unspecialized` (ArMDE:6943-6946) — "The
+/// character does not have any specialties for any of her Abilities"
+/// (ArMDE:6945) — must ship the marker effect the validator reads, and its
+/// classification must have moved off `narrative` now that the rule is
+/// computed at creation (D46: classification follows what is computed).
+#[test]
+fn unspecialized_ships_its_forbids_specialties_effect() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("flaw.unspecialized"))
+        .expect("flaw.unspecialized ships");
+    assert_eq!(item.classification, Classification::CreationEffect);
+    assert!(
+        item.effects
+            .iter()
+            .any(|e| matches!(e, Effect::ForbidsAbilitySpecialties)),
+        "flaw.unspecialized must carry Effect::ForbidsAbilitySpecialties"
+    );
+}
+
 /// Foreign Upbringing halves the creation cap on locality-dependent Abilities, so
 /// the Flaw must carry the fraction and the three Ability families the passage names
 /// must carry the flag.

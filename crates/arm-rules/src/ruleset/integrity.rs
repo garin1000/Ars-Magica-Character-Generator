@@ -2048,7 +2048,9 @@ impl Ruleset {
                 | Effect::MagicResistanceMod { .. }
                 | Effect::AgingMod { .. }
                 | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. } => {
+                | Effect::SpecialCastingMod { .. }
+                // A bare marker: no parameter, no ref to resolve.
+                | Effect::ForbidsAbilitySpecialties => {
                     continue;
                 }
             };

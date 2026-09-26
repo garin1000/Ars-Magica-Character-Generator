@@ -394,7 +394,8 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }
-                | Effect::ElementalMagic { .. } => {}
+                | Effect::ElementalMagic { .. }
+                | Effect::ForbidsAbilitySpecialties => {}
             }
         }
     }

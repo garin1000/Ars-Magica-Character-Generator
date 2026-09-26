@@ -241,6 +241,9 @@ macro_rules! irrelevant_effect_variants {
         // effective_art_score, not a flat bonus, shift, or Affinity reduction;
         // no-op in every fold that shares this tail.
         | Effect::ElementalMagic { .. }
+        // A creation-legality state constraint (no score, no Affinity ratio, no
+        // in-play mod); consumed only by `validation/scores.rs`.
+        | Effect::ForbidsAbilitySpecialties
     };
 }
 // Re-exported (rather than left textually scoped) so the domain submodules

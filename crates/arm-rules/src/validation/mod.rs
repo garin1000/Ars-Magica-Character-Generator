@@ -198,6 +198,7 @@ impl fmt::Display for IssueSeverity {
 /// | `ability_parameter_required` | error | abilities | `ability` |
 /// | `ability_score_out_of_range` | error | abilities | `ability`, `score`, `max` |
 /// | `ability_bonus_dangling_target` | error | abilities | `item`, `ability`, `parameter` |
+/// | `specialty_forbidden` | error | abilities | `ability`, `specialty` |
 /// | `unknown_art` | error | arts | `art` |
 /// | `duplicate_art` | error | arts | `art`, `count` |
 /// | `art_score_out_of_range` | error | arts | `art`, `score`, `max` |
@@ -812,6 +813,13 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a stored warping fill is
     /// keyed to a slot the character does not owe (exceeds the owed count).
     pub const CODE_WARPING_FILL_EXCESS: &'static str = "warping_fill_excess";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an Ability row carries a
+    /// non-empty `specialty` while `flaw.unspecialized` is held — "The character
+    /// does not have any specialties for any of her Abilities" (ArMDE:6945,
+    /// row 47 / V/F-audit F-524). Read against `effective_selections`
+    /// (bought ++ granted): the passage states what the character *has*, not how
+    /// the Flaw was acquired, even though no shipped profile currently grants it.
+    pub const CODE_SPECIALTY_FORBIDDEN: &'static str = "specialty_forbidden";
 
     /// Builds an issue with the given severity, code, phase, args, and context.
     pub fn new(
@@ -991,7 +999,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     if entity.entity_kind == EntityKind::Character {
         validate_characteristics(entity, ruleset, &mut issues);
         validate_characteristic_delta_preconditions(entity, ruleset, &mut issues);
-        validate_abilities(entity, ruleset, &mut issues);
+        validate_abilities(entity, &effective_selections, ruleset, &mut issues);
         validate_arts(entity, ruleset, &mut issues);
         validate_spells(entity, ruleset, type_profile, &mut issues);
         validate_supernatural_abilities(entity, ruleset, type_profile, &mut issues);
@@ -1169,7 +1177,9 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::SpecialCastingMod { .. }
         | Effect::AbilityRollMod { .. }
         // Elemental Magic carries no ability/characteristic creation target.
-        | Effect::ElementalMagic { .. } => EffectTarget::Other,
+        | Effect::ElementalMagic { .. }
+        // A bare marker: no ability/characteristic creation target either.
+        | Effect::ForbidsAbilitySpecialties => EffectTarget::Other,
     }
 }
 

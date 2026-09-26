@@ -1476,6 +1476,20 @@ pub enum Effect {
         /// The elemental Form ids the redistribution pools over.
         forms: std::collections::BTreeSet<Id>,
     },
+    /// Marks the character as forbidden from having a specialty on **any**
+    /// Ability — Unspecialized, "The character does not have any specialties
+    /// for any of her Abilities." A no-op for effective scores: nothing here
+    /// changes a computed number. Consumed only by
+    /// `validation/scores.rs::validate_ability_specialty_permitted`, which
+    /// refuses a non-empty `AbilityScore::specialty` while the holding
+    /// selection is in effect (bought or granted) — the passage forbids the
+    /// *state*, not the specialization bonus
+    /// (`derived/combat.rs::specialization_bonus`), which stays a no-op for
+    /// this Flaw rather than learning to return 0.
+    ///
+    /// Source: ArMDE:6943-6946, rule
+    /// `ArMDE:6945`.
+    ForbidsAbilitySpecialties,
 }
 
 /// Which spells a [`Effect::CastingTotalMod`] applies to. A fixed rules taxonomy

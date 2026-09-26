@@ -158,7 +158,11 @@ export type Effect =
   | { type: 'ability_roll_mod'; param: string; amount: number }
   // Elemental Magic (5c): creation-time Art-XP redistribution over the four
   // elemental Forms. Surfaced through the effective art bonus, not rendered raw.
-  | { type: 'elemental_magic'; forms: string[] };
+  | { type: 'elemental_magic'; forms: string[] }
+  // Unspecialized: forbids a specialty on any Ability. A creation-time
+  // constraint the validator enforces (`specialty_forbidden`), not a score or
+  // in-play modifier — nothing here renders it directly.
+  | { type: 'forbids_ability_specialties' };
 
 // M5/5b scalar enums mirroring the engine (rendered via Fluent in slice 5i).
 export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' | 'spontaneous';

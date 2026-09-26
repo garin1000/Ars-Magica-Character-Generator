@@ -1140,6 +1140,7 @@ issue-unknown_mastery_ability = Unknown Spell Mastery ability { $ability } chose
 issue-too_many_mastery_abilities = { $spell } has { $chosen } Mastery special abilities, above its Mastery score of { $mastery } (one per level).
 issue-duplicate_mastery_ability = Mastery ability { $ability } is chosen { $count } times for { $spell }, but may be taken only once.
 issue-ability_above_age_cap = { $ability } score { $score } exceeds the age-{ $age } maximum of { $cap }.
+issue-specialty_forbidden = { $ability } may not have a specialty ({ $specialty }) — Unspecialized forbids any Ability specialty.
 issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue (or the Gift's one free Ability).
 issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
 issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Virtue or Flaw that grants one.

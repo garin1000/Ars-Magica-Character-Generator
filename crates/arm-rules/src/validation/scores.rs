@@ -258,6 +258,7 @@ pub(crate) fn validate_characteristic_delta_preconditions(
 /// [`validate_xp_pool`], not here.
 pub(crate) fn validate_abilities(
     entity: &Entity,
+    effective_selections: &[Selection],
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
@@ -267,9 +268,9 @@ pub(crate) fn validate_abilities(
     // range checking is skipped.
     let max_score = ruleset.advancement.max_score();
 
-    // One pass, not one loop per check: each of the three checks below prices
-    // only `entry`, in `entity.ability_scores`'s own order, so calling all three
-    // per entry (rather than splitting into three separate loops) keeps
+    // One pass, not one loop per check: each of the four checks below prices
+    // only `entry`, in `entity.ability_scores`'s own order, so calling all four
+    // per entry (rather than splitting into four separate loops) keeps
     // `issues`' push order byte-identical to the original single loop — a
     // second traversal here would interleave differently the moment two
     // checks fire on different entries.
@@ -277,12 +278,58 @@ pub(crate) fn validate_abilities(
         validate_ability_known_and_parameterized(ruleset, entry, issues);
         validate_ability_score_in_range(ruleset, entry, max_score, issues);
         validate_ability_age_cap(entity, ruleset, entry, issues);
+        validate_ability_specialty_permitted(ruleset, effective_selections, entry, issues);
 
         let key = (&entry.ability, entry.parameter.as_deref());
         *seen.entry(key).or_insert(0) += 1;
     }
 
     validate_no_duplicate_abilities(&seen, issues);
+}
+
+/// Data-driven: any held item carrying [`Effect::ForbidsAbilitySpecialties`]
+/// forbids a non-empty `specialty` on every Ability row — shipped only on
+/// `flaw.unspecialized` (ArMDE:6943-6946), "The character does not have any
+/// specialties for any of her Abilities." (ArMDE:6945), but the engine
+/// hardcodes no id: a house rule or a future book's item carrying the same
+/// effect is caught with zero code changes. Nothing previously consulted this
+/// rule at all — the specialty bonus
+/// (`derived/combat.rs::specialization_bonus`) folds in `+1` for a specialty
+/// regardless (row 47 / V/F-audit F-524) — so this refuses the *state* the book
+/// forbids rather than patching the bonus, which would leave the sheet still
+/// printing a specialty the character may not have.
+///
+/// Reads `effective_selections` (bought ++ granted), not `entity.selections`:
+/// the sentence is a statement about what the character *has*, not how the
+/// holding item was acquired, so a future grant of it (no shipped profile
+/// currently grants `flaw.unspecialized`) must be caught exactly like a bought
+/// copy.
+fn validate_ability_specialty_permitted(
+    ruleset: &Ruleset,
+    effective_selections: &[Selection],
+    entry: &AbilityScore,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let Some(specialty) = entry.specialty.as_deref().filter(|s| !s.trim().is_empty()) else {
+        return;
+    };
+    let forbidden = effective_selections.iter().any(|s| {
+        ruleset
+            .point_items
+            .get(&s.item_ref)
+            .is_some_and(|item| item.effects.contains(&Effect::ForbidsAbilitySpecialties))
+    });
+    if forbidden {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_SPECIALTY_FORBIDDEN,
+            CreationPhase::Abilities,
+            args([
+                ("ability", entry.ability.to_string()),
+                ("specialty", specialty.to_string()),
+            ]),
+            Some(entry.ability.clone()),
+        ));
+    }
 }
 
 /// An ability must resolve against the catalogue (`unknown_ability`), and a
@@ -713,5 +760,120 @@ mod locality_cap_tests {
         let mut entity = companion(true, "ability.brawl", 5);
         entity.ability_scores[0].parameter = None;
         assert!(!over_cap(&entity, &rs()));
+    }
+}
+
+/// Row 47 / V/F-audit F-524: `flaw.unspecialized` (ArMDE:6943-6946) forbids the
+/// specialty *state*, and nothing previously enforced it.
+#[cfg(test)]
+mod unspecialized_flaw_tests {
+    use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
+    use crate::validation::{ValidationIssue, validate};
+    use crate::{Ruleset, RulesetSources};
+
+    const ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "flaw.unspecialized", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+        "effects": [{ "type": "forbids_ability_specialties" }] },
+      { "id": "virtue.grants_unspecialized", "kind": "virtue", "classification": "creation_effect",
+        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+        "effects": [{ "type": "grants_selection", "items": ["flaw.unspecialized"] }] },
+      { "id": "flaw.decoy_forbids_specialty", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+        "effects": [{ "type": "forbids_ability_specialties" }] }
+    ]"#;
+    const TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general"], "creation_phases": [] }
+    ]"#;
+    const ABILITIES: &str = r#"{
+      "advancement": [ { "score": 1, "total_xp": 5 } ],
+      "abilities": [ { "id": "ability.single_weapon", "category": "general" } ]
+    }"#;
+
+    fn rs() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    fn companion(selections: Vec<Selection>, specialty: Option<&str>) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.selections = selections;
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.single_weapon"),
+            parameter: None,
+            score: 1,
+            specialty: specialty.map(str::to_string),
+        }];
+        entity
+    }
+
+    fn specialty_forbidden(entity: &Entity, ruleset: &Ruleset) -> bool {
+        validate(entity, ruleset)
+            .issues
+            .iter()
+            .any(|i| i.code == ValidationIssue::CODE_SPECIALTY_FORBIDDEN)
+    }
+
+    /// The book's own contradictory pair from the finding: Unspecialized plus a
+    /// typed-in specialty on any Ability row.
+    #[test]
+    fn a_bought_specialty_under_the_flaw_is_refused() {
+        let e = companion(
+            vec![Selection::new(Id::new("flaw.unspecialized"))],
+            Some("long sword"),
+        );
+        assert!(specialty_forbidden(&e, &rs()));
+    }
+
+    #[test]
+    fn no_specialty_under_the_flaw_is_clean() {
+        let e = companion(vec![Selection::new(Id::new("flaw.unspecialized"))], None);
+        assert!(!specialty_forbidden(&e, &rs()));
+    }
+
+    #[test]
+    fn a_specialty_without_the_flaw_is_clean() {
+        let e = companion(vec![], Some("long sword"));
+        assert!(!specialty_forbidden(&e, &rs()));
+    }
+
+    /// The passage is a statement about what the character *has*, not how the
+    /// Flaw was acquired — a granted copy must count exactly like a bought one.
+    #[test]
+    fn a_granted_specialty_under_the_flaw_is_also_refused() {
+        let e = companion(
+            vec![Selection::new(Id::new("virtue.grants_unspecialized"))],
+            Some("long sword"),
+        );
+        assert!(specialty_forbidden(&e, &rs()));
+    }
+
+    /// The check must be **data-driven**: it reads `Effect::ForbidsAbilitySpecialties`
+    /// off the held item, not a hardcoded `"flaw.unspecialized"` string comparison.
+    /// `flaw.decoy_forbids_specialty` carries the same effect under a different id
+    /// and must trip the same error — proof that a second catalogue entry (a
+    /// house rule, a different book) carrying this effect works with zero code
+    /// changes, exactly like every other `Effect` variant.
+    #[test]
+    fn any_item_carrying_the_effect_forbids_the_specialty_not_only_unspecialized_by_name() {
+        let e = companion(
+            vec![Selection::new(Id::new("flaw.decoy_forbids_specialty"))],
+            Some("long sword"),
+        );
+        assert!(specialty_forbidden(&e, &rs()));
     }
 }
