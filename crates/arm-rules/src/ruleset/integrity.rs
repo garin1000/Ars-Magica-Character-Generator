@@ -115,6 +115,7 @@ impl Ruleset {
             Self::validate_index_categories(id, item, errors);
             Self::validate_item_share(id, item, errors);
             Self::validate_item_ratios(id, item, errors);
+            Self::validate_advancement_mod_shape(id, item, errors);
 
             if let Some(ref prereq) = item.prerequisites {
                 self.validate_prereq_refs(prereq, id.as_str(), 1, errors);
@@ -444,6 +445,42 @@ impl Ruleset {
             }
             if num == 0 {
                 errors.push(format!("{id}: '{kind}' has a numerator of 0; {zero_num}"));
+            }
+        }
+    }
+
+    /// D55 (Q6, V/F audit Q-113/Q-32): [`Effect::AdvancementMod`] must carry
+    /// **exactly one** of `amount`/`factor`. Neither is a meaningless row — no
+    /// modifier at all, and silently invisible everywhere the effect is
+    /// consumed. Both is contradictory rather than doubly authoritative: a
+    /// flat addend and a total-halving factor are different arithmetic
+    /// operations (add to the assembled Advancement Total vs. multiply it,
+    /// ArMDE:15989), and no shipped entry states both in one clause, so one
+    /// JSON row combining them would be inventing an order the book never
+    /// gives. Both failure modes are authoring slips, so both fail the load
+    /// naming the offending item and source — exactly as
+    /// [`Self::validate_item_ratios`] does for a nonsense ratio.
+    fn validate_advancement_mod_shape(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
+        for effect in &item.effects {
+            let Effect::AdvancementMod {
+                source,
+                amount,
+                factor,
+            } = effect
+            else {
+                continue;
+            };
+            match (amount, factor) {
+                (None, None) => errors.push(format!(
+                    "{id}: advancement_mod (source '{source}') carries neither an amount nor \
+                     a factor; it modifies nothing"
+                )),
+                (Some(_), Some(_)) => errors.push(format!(
+                    "{id}: advancement_mod (source '{source}') carries both an amount and a \
+                     factor, which is contradictory — a factor multiplies the source's \
+                     Advancement Total, an amount adds to it, and one row cannot state both"
+                )),
+                (Some(_), None) | (None, Some(_)) => {}
             }
         }
     }

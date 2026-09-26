@@ -5374,7 +5374,7 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 | `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | ArMDE:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |
 | `MagicResistanceMod { kind, param }` | MR modifiers — limited_magic_resistance (no_form_bonus), flawed_parma_magica (halved_parma), susceptibility faerie/infernal, commanding_aura & special_circumstances (aura_bonus), weak_magic_resistance (conditional_penetration_waiver). `param` names the selection key carrying the **Form** the modifier is scoped to; it is set on the first two kinds and absent on the rest, which name no Form | ArMDE:6346-6349, 6142-6145, 6819-6826, 3579-3596, 7068-7071 | **no_form_bonus and halved_parma computed** (folded into the flat per-Form MR number in `magic_resistance`, each against the one Form its own copy names — a copy naming no Form applies to none, and `missing_param` asks for the choice rather than the engine guessing it); the four conditional/situational kinds (aura_bonus, susceptible_faerie/infernal, conditional_penetration_waiver) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — each carries a scope the flat per-Form figure has no axis for (a realm, an aura, a scene condition plus the incoming spell's level), so listing them keeps them from being silently dropped *and* from being applied where the book does not apply them. `susceptible_divine` was retired in the round-5 audit: `ArMDE:6817` never mentions Magic Resistance, and the Flaw now carries `special_casting_mod { doubled_aura_penalty }` |
 | `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | ArMDE:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |
-| `AdvancementMod { source, amount }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher (+5 teaching, +3 authoring), independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible, loose_magic | ArMDE:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement) |
+| `AdvancementMod { source, amount?, factor? }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher (+5 teaching, +3 authoring), independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible (teaching ×½, authoring ×½), loose_magic (spell_mastery ×½) | ArMDE:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement); exactly one of `amount`/`factor` is present, load-validated (D55/Q6) |
 | `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic, the_constant_expression), and doubled_aura_penalty (susceptibility_to_divine_power) | ArMDE:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975, 5821-5838, 6815-6818 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
 | `AbilityRollMod { param(Text), amount }` | Ability-roll bonus in a subject — academic_concentration_subject (+3) | ArMDE:3362-3367 | surfaced |
 
@@ -5393,17 +5393,80 @@ does not exist" representation. Rank-dependent `commanding_aura` (MR
 25/soak +5 … MR 10/soak +2) is wired as `MagicResistanceMod { aura_bonus }` only;
 the rank-specific numbers are surfaced. `mythic_blood`'s bundled formulaic/ritual
 fatigue benefits beyond its Minor Focus are surfaced in the item text.
-`incomprehensible`/`loose_magic` halve advancement (amount 0 marker; surfaced).
 **E2 (V/F audit Q-32 / F-91)**: `good_teacher`'s second row used to read
 `{ source: "book", amount: 3 }` for *"Add three to the Quality of any books
 that you write"* (ArMDE:3973) — the mis-directed row, since `book` is the
 reader-side shape `book_learner`/`study_bonus` use ("Learning from a book"),
 not the character's own authorship. `AdvancementSource` gained a tenth
 variant, `Authoring`, and `good_teacher` now carries
-`{ source: "authoring", amount: 3 }` instead. `incomprehensible` also halves
-along an authoring axis (ArMDE:6296, *"or from a book you have written"*) but
-that row — and the halving factor `amount: 0` currently overloads on both
-`incomprehensible` and `loose_magic` — is **D55**'s job (Q6), not landed here.
+`{ source: "authoring", amount: 3 }` instead.
+
+**D55 (Q6, V/F audit Q-113): `amount: 0` retired as a "halved" marker — a
+factor instead.** `RULES.md`'s own note above used to read *"`incomprehensible`
+/`loose_magic` halve advancement (amount 0 marker; surfaced)"* — the overload
+D55 targets: `amount: 0` meant both *"no magnitude carried"* (every other
+surfaced family, still true) and *"halve this source's Advancement Total"*
+(these two entries only), and the UI's `{#if m.amount !== 0}` guard read the
+second case as the first, so the player saw a labelled row with nothing beside
+it. `Effect::AdvancementMod` now carries `amount: Option<i8>` **and**
+`factor: Option<AdvancementFactor>`, exactly one of which is `Some` — enforced
+at load by `ruleset/integrity.rs::validate_advancement_mod_shape`, which fails
+naming the item and source for either *neither present* (a meaningless row) or
+*both present* (contradictory: an addend and a total-multiplying factor are
+different operations, and no shipped entry states both in one clause).
+
+**The representation is a small enum, `AdvancementFactor { Half }`, not a
+`num`/`den` pair.** Every stated `AdvancementMod` factor in the core rules is a
+halving (Incomprehensible ArMDE:6296, Loose Magic ArMDE:6354-6357) — contrast
+`Effect::GrantsSpellMastery`'s `advancement_num`/`advancement_den`, which
+genuinely needs a fraction because Flawless Magic *doubles* a *different*
+total (ArMDE:3889). A fraction pair can express a zero denominator or a
+reversed ratio, which is exactly what `validate_item_ratios`'s long doc comment
+(above) exists to catch at load for the four ratio-bearing effects that need
+it; an enum carrying only the one value the rulebook states cannot express that
+nonsense at all, so no such validator is needed for this field. A second stated
+factor later is a new variant, and the exhaustive `match` in every consumer —
+`derived.rs`'s push site, `crates/arm-app/tests/commands.rs`'s
+`every_advancement_factor` Fluent-coverage tripwire — turns that into a compile
+error until it is handled, exactly as a new `AdvancementSource` already does.
+
+**Rounding: down, per the core book's own stated default.** Neither passage
+gives its halving a rounding direction of its own (Incomprehensible: "must
+halve their Advancement Total"; Loose Magic: "Your Advancement Total is halved
+whenever you try to Master spells"), so ArMDE:547 governs: *"The rules for Ars
+Magica sometimes involve division. In most cases, a rule specifies whether you
+should round up or down, but if it does not, round down."* This is a
+documented decision, not a computed one — the app does not simulate
+Advancement Totals (see this row's own last column), so there is no numeric
+`apply()` to round; a future slice that does compute one rounds down.
+
+**Order relative to an additive bonus on the same source: additive first, then
+the factor, per the book's own three-stage model** (ArMDE:15989,
+`**ADVANCEMENT TOTAL: Source Quality + Bonus from Virtues - Penalty from
+Flaws**`; ArMDE:15997-16001's three steps — Source Quality, then the Advancement
+Total, then experience points). Good Teacher's/Apt Student's bonuses act at the
+Source-Quality stage, which feeds additively into the Advancement Total's own
+formula; Incomprehensible and Loose Magic both name their halving target as
+*"their Advancement Total"* — the already-assembled figure, one stage later.
+So a character holding both an additive-source-quality entry and a
+halving-total entry on the same source would sum every stated bonus/penalty
+first, then apply the factor to that sum — not the reverse. This is stated
+here for the record: nothing in this codebase combines same-source rows into
+one number today (surfaced-only, see this row's last column), so the order has
+no live consumer yet; it binds the day one is built.
+
+**`incomprehensible` needs two factor rows, not one — the authoring axis Q-32
+introduced.** ArMDE:6296: *"Anyone trying to learn **from you or from a book
+you have written** must halve their Advancement Total…"* — a `teaching` row
+(being taught by this character) and an `authoring` row (studying from a book
+this character wrote), each `{ factor: "half" }`. `loose_magic` gets the same
+factor on its one `spell_mastery` row. Fluent: the factor renders through its
+own `derived-factor-<slug>` key (`DerivedSurfacedModifiersSection.svelte`),
+distinct from `derived-detail-<slug>`'s source-name namespace — a row carrying
+a factor names both a source and a multiplier, and confusing the two keys would
+silently collide two unrelated slugs (e.g. `teaching` is both a source name and
+would-be factor name).
+
 Conditional `CastingTotalMod`/`CombatMod`/`LabTotalMod` amounts (cyclic magic,
 potent magic, special circumstances, missing_eye's ranged −3, etc.) are folded
 **unconditionally** into the printed totals. This row previously claimed they

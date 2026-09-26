@@ -1477,7 +1477,10 @@
     "categories": ["general"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "advancement_mod", "source": "teaching", "amount": 0 }],
+    "effects": [
+      { "type": "advancement_mod", "source": "teaching", "factor": "half" },
+      { "type": "advancement_mod", "source": "authoring", "factor": "half" }
+    ],
     "source": { "anchor": "incomprehensible", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6294, 6297] }
   },
   {
@@ -1638,7 +1641,7 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "advancement_mod", "source": "spell_mastery", "amount": 0 }],
+    "effects": [{ "type": "advancement_mod", "source": "spell_mastery", "factor": "half" }],
     "source": { "anchor": "loose-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6354, 6357] }
   },
   {

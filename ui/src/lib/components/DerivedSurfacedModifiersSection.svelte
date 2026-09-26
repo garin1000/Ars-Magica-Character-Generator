@@ -15,6 +15,16 @@
     if (family === 'ability_roll') return detail;
     return store.t(`derived-detail-${detail}`);
   }
+
+  // D55 (Q6): a factor-carrying row (Incomprehensible, Loose Magic — both
+  // halve) renders its own Fluent string instead of `amount`, which carries no
+  // meaning for it. This is what `amount: 0` used to stand in for — silently,
+  // and indistinguishably from a real "no magnitude" row (e.g. Unaging) — so
+  // checking `m.factor` first is what actually fixes the ambiguity, not just
+  // moves it.
+  function factorLabel(factor: string): string {
+    return store.t(`derived-factor-${factor}`);
+  }
 </script>
 
 {#if d.surfaced_modifiers.length > 0}
@@ -24,7 +34,8 @@
       {#each d.surfaced_modifiers as m, i (m.family + m.detail + i)}
         <li>
           <span>{store.t(`derived-surfaced-${m.family}`)}: {detailLabel(m.family, m.detail)}</span>
-          {#if m.amount !== 0}<span class="value">{formatSigned(m.amount)}</span>{/if}
+          {#if m.factor}<span class="value">{factorLabel(m.factor)}</span>
+          {:else if m.amount !== 0}<span class="value">{formatSigned(m.amount)}</span>{/if}
         </li>
       {/each}
     </ul>

@@ -939,23 +939,71 @@ fn good_teacher_authoring_bonus_uses_the_authoring_source_not_book() {
     assert!(
         item.effects.contains(&Effect::AdvancementMod {
             source: AdvancementSource::Teaching,
-            amount: 5,
+            amount: Some(5),
+            factor: None,
         }),
         "the Source Quality bonus for being studied with is unchanged: +5 teaching"
     );
     assert!(
         item.effects.contains(&Effect::AdvancementMod {
             source: AdvancementSource::Authoring,
-            amount: 3,
+            amount: Some(3),
+            factor: None,
         }),
         "the Quality-of-authored-books bonus must be +3 authoring, not +3 book"
     );
     assert!(
         !item.effects.contains(&Effect::AdvancementMod {
             source: AdvancementSource::Book,
-            amount: 3,
+            amount: Some(3),
+            factor: None,
         }),
         "the old mis-scoped book row must be gone"
+    );
+}
+
+/// D55 (Q6): `flaw.incomprehensible` (ArMDE:6294-6297) halves along BOTH axes
+/// its passage names — "Anyone trying to learn from you **or from a book you
+/// have written** must halve their Advancement Total" — so it needs a
+/// `teaching` row (being taught by this character) AND an `authoring` row
+/// (studying from a book this character wrote), each carrying
+/// `AdvancementFactor::Half`, never the old `amount: 0` marker.
+/// `flaw.loose_magic` (ArMDE:6354-6357, "Your Advancement Total is halved
+/// whenever you try to Master spells") gets the same factor on its one row.
+#[test]
+fn incomprehensible_and_loose_magic_carry_a_halving_factor_not_a_zero_amount() {
+    let rs = load_full_ruleset();
+
+    let incomprehensible = rs
+        .item(&Id::new("flaw.incomprehensible"))
+        .expect("flaw.incomprehensible ships");
+    assert!(
+        incomprehensible.effects.contains(&Effect::AdvancementMod {
+            source: AdvancementSource::Teaching,
+            amount: None,
+            factor: Some(AdvancementFactor::Half),
+        }),
+        "the teaching axis must halve via a factor, not amount: 0"
+    );
+    assert!(
+        incomprehensible.effects.contains(&Effect::AdvancementMod {
+            source: AdvancementSource::Authoring,
+            amount: None,
+            factor: Some(AdvancementFactor::Half),
+        }),
+        "the authoring axis (\"or from a book you have written\") must be its own row"
+    );
+
+    let loose_magic = rs
+        .item(&Id::new("flaw.loose_magic"))
+        .expect("flaw.loose_magic ships");
+    assert!(
+        loose_magic.effects.contains(&Effect::AdvancementMod {
+            source: AdvancementSource::SpellMastery,
+            amount: None,
+            factor: Some(AdvancementFactor::Half),
+        }),
+        "Loose Magic's Spell Mastery halving must be a factor, not amount: 0"
     );
 }
 

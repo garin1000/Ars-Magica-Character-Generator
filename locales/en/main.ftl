@@ -1365,6 +1365,7 @@ derived-detail-teaching = Teaching
 derived-detail-authoring = Authoring
 derived-detail-spell_mastery = Spell mastery
 derived-detail-all = All sources
+derived-factor-half = Halved
 derived-detail-quiet_words = Quiet magic
 derived-detail-subtle_gestures = Subtle magic
 derived-detail-deft_form = Deft Form

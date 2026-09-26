@@ -3115,6 +3115,53 @@ mod tests {
         }
     }
 
+    /// D55 (Q6): `advancement_mod` must carry exactly one of `amount`/`factor`.
+    /// Neither present is a meaningless row — no modifier at all — and fails
+    /// the load naming the offending item, exactly as `validate_item_ratios`
+    /// does for a nonsense ratio.
+    #[test]
+    fn an_advancement_mod_with_neither_amount_nor_factor_fails_the_load() {
+        let err = load_with_effect(r#"{ "type": "advancement_mod", "source": "taught" }"#)
+            .expect_err("a row with no amount and no factor modifies nothing");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("advancement_mod"),
+            "expected an item-naming advancement_mod error, got: {msg}"
+        );
+    }
+
+    /// The other direction: both present is contradictory, not doubly
+    /// authoritative — a flat addend and a total-halving factor are different
+    /// operations, and nothing states which order one row combining both
+    /// would apply them in.
+    #[test]
+    fn an_advancement_mod_with_both_amount_and_factor_fails_the_load() {
+        let err = load_with_effect(
+            r#"{ "type": "advancement_mod", "source": "taught", "amount": 5, "factor": "half" }"#,
+        )
+        .expect_err("a row cannot be both a flat addend and a halving factor");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("advancement_mod"),
+            "expected an item-naming advancement_mod error, got: {msg}"
+        );
+    }
+
+    /// The two legal shapes: amount-only (Apt Student's shape) and
+    /// factor-only (Incomprehensible's, Loose Magic's) both load.
+    #[test]
+    fn ordinary_advancement_mod_shapes_load() {
+        for effect in [
+            r#"{ "type": "advancement_mod", "source": "taught", "amount": 5 }"#,
+            r#"{ "type": "advancement_mod", "source": "teaching", "factor": "half" }"#,
+        ] {
+            assert!(
+                load_with_effect(effect).is_ok(),
+                "a legal advancement_mod shape must load: {effect}"
+            );
+        }
+    }
+
     #[test]
     fn a_share_with_a_zero_denominator_fails_the_load_naming_the_item() {
         let err = load_with_share(r#"{ "numerator": 1, "denominator": 0 }"#)

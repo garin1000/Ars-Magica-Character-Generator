@@ -2840,6 +2840,40 @@ fn every_advancement_source() -> Vec<arm_rules::AdvancementSource> {
     all
 }
 
+/// Every `AdvancementFactor` (D55, Q6). A separate namespace from
+/// `every_advancement_source`'s `derived-detail-<slug>`: the factor is
+/// rendered through its own `derived-factor-<slug>` key
+/// (`DerivedSurfacedModifiersSection.svelte`), because it labels a
+/// *multiplier*, not a source — a row carrying one names both.
+fn every_advancement_factor() -> Vec<arm_rules::AdvancementFactor> {
+    use arm_rules::AdvancementFactor as Factor;
+
+    let all = vec![Factor::Half];
+    for factor in &all {
+        // Exhaustive tripwire — see `every_advancement_source`.
+        match factor {
+            Factor::Half => {}
+        }
+    }
+    all
+}
+
+/// The factor a halving `advancement_mod` row carries must render as a Fluent
+/// string in both locales, never the raw slug — the whole point of D55/Q6.
+#[test]
+fn every_advancement_factor_has_a_fluent_key_in_each_locale() {
+    for lang in ["en", "de"] {
+        let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
+        for factor in every_advancement_factor() {
+            let key = format!("derived-factor-{factor}");
+            assert!(
+                ftl.contains(&format!("{key} =")),
+                "locale '{lang}' is missing key '{key}'"
+            );
+        }
+    }
+}
+
 /// Every `SpecialCasting`. The first three are folded into casting cells rather
 /// than surfaced (`derived.rs::in_play_mods`), but they carry labels of their own
 /// and are listed here too: the classification of a quirk is a rules decision that

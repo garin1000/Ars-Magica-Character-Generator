@@ -55,8 +55,8 @@ use crate::ruleset::{
     ID_PHILOSOPHIAE, Ruleset,
 };
 use crate::types::{
-    CastingScope, CombatStat, Effect, Entity, Familiar, HalvableTotal, HealthTrack, Id,
-    LongevitySource, MAX_CORD_SCORE, MagicResistanceEffect, SpecialCasting,
+    AdvancementFactor, CastingScope, CombatStat, Effect, Entity, Familiar, HalvableTotal,
+    HealthTrack, Id, LongevitySource, MAX_CORD_SCORE, MagicResistanceEffect, SpecialCasting,
 };
 
 // --- Non-standard-casting penalty constants (ArMDE:9243-9245) -----------
@@ -315,6 +315,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                             family: ModifierFamily::MagicResistance,
                             detail: kind.to_string(),
                             amount: 0,
+                            factor: None,
                         })
                     }
                 },
@@ -325,11 +326,22 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     family: ModifierFamily::Aging,
                     detail: kind.to_string(),
                     amount: i32::from(*amount),
+                    factor: None,
                 }),
-                Effect::AdvancementMod { source, amount } => m.surfaced.push(SurfacedModifier {
+                // D55: `amount` and `factor` are mutually exclusive and load-time
+                // validated (`ruleset/integrity.rs::validate_advancement_mod_shape`),
+                // so exactly one is `Some` here. `unwrap_or(0)` on the amount side is
+                // therefore never a silent "no magnitude" collision with a real
+                // factor row: `factor` is what a reader (and the UI) checks first.
+                Effect::AdvancementMod {
+                    source,
+                    amount,
+                    factor,
+                } => m.surfaced.push(SurfacedModifier {
                     family: ModifierFamily::Advancement,
                     detail: source.to_string(),
-                    amount: i32::from(*amount),
+                    amount: amount.map(i32::from).unwrap_or(0),
+                    factor: *factor,
                 }),
                 // Non-standard-casting relievers are computed into the per-cell
                 // NonStandardCasting variants; every other quirk stays surfaced.
@@ -354,6 +366,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                         family: ModifierFamily::SpecialCasting,
                         detail: kind.to_string(),
                         amount: 0,
+                        factor: None,
                     }),
                 },
                 Effect::AbilityRollMod { param, amount } => m.surfaced.push(SurfacedModifier {
@@ -364,6 +377,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                         .map(|id| id.as_str().to_string())
                         .unwrap_or_default(),
                     amount: i32::from(*amount),
+                    factor: None,
                 }),
                 // Creation-effect variants (consumed by effective.rs) and the
                 // Elemental Magic XP-space marker: no in-play modifier here.
@@ -619,8 +633,16 @@ pub struct SurfacedModifier {
     /// The scalar/detail slug within the family (an enum's `Display`, or a free-text
     /// subject for ability-roll modifiers).
     pub detail: String,
-    /// The modifier amount (0 when the family is a mode toggle, e.g. Unaging).
+    /// The modifier amount (0 when the family is a mode toggle, e.g. Unaging,
+    /// or when `factor` is present instead — see `factor`'s own doc comment).
     pub amount: i32,
+    /// Set only for an `Advancement` row backed by
+    /// [`Effect::AdvancementMod`]'s `factor` (D55): the row is multiplicative,
+    /// not additive, and `amount` carries no meaning for it. Every other
+    /// family always ships `None` here, so `amount: 0` keeps its original,
+    /// unambiguous "no magnitude" reading for them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub factor: Option<AdvancementFactor>,
 }
 
 /// Every surfaced-only modifier the character carries, for the read-out list.
@@ -637,6 +659,7 @@ pub fn surfaced_modifiers(entity: &Entity, ruleset: &Ruleset) -> Vec<SurfacedMod
                     family: ModifierFamily::HealthRoll,
                     detail: track.to_string(),
                     amount: *amount,
+                    factor: None,
                 });
             }
             HealthTrack::FatiguePenalty | HealthTrack::WoundPenalty => {}
@@ -846,6 +869,17 @@ mod tests {
             "effects": [
               { "type": "advancement_mod", "source": "teaching", "amount": 5 },
               { "type": "advancement_mod", "source": "authoring", "amount": 3 }
+            ] },
+          { "id": "flaw.incomprehensible", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [
+              { "type": "advancement_mod", "source": "teaching", "factor": "half" },
+              { "type": "advancement_mod", "source": "authoring", "factor": "half" }
+            ] },
+          { "id": "flaw.loose_magic", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
+            "effects": [
+              { "type": "advancement_mod", "source": "spell_mastery", "factor": "half" }
             ] },
           { "id": "virtue.quiet_magic", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
@@ -3322,6 +3356,29 @@ mod tests {
         assert!(s.iter().any(|m| m.family == ModifierFamily::Advancement
             && m.detail == "authoring"
             && m.amount == 3));
+    }
+
+    /// D55 (Q6, V/F audit Q-113): Incomprehensible halves along BOTH axes —
+    /// teaching and authoring — and Loose Magic halves Spell Mastery. All
+    /// three surface with `factor: Some(Half)`, never an `amount`.
+    #[test]
+    fn surfaced_modifiers_carry_a_halving_factor_not_a_zero_amount() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![
+            Selection::new(Id::new("flaw.incomprehensible")),
+            Selection::new(Id::new("flaw.loose_magic")),
+        ];
+        let s = surfaced_modifiers(&e, &rs);
+        assert!(s.iter().any(|m| m.family == ModifierFamily::Advancement
+            && m.detail == "teaching"
+            && m.factor == Some(AdvancementFactor::Half)));
+        assert!(s.iter().any(|m| m.family == ModifierFamily::Advancement
+            && m.detail == "authoring"
+            && m.factor == Some(AdvancementFactor::Half)));
+        assert!(s.iter().any(|m| m.family == ModifierFamily::Advancement
+            && m.detail == "spell_mastery"
+            && m.factor == Some(AdvancementFactor::Half)));
     }
 
     /// Inventive Genius folds a flat +3 into the Lab-Total `lab_mod` addend of

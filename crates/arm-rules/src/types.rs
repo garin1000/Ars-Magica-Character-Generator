@@ -1423,17 +1423,29 @@ pub enum Effect {
         amount: i8,
     },
     /// A study / advancement source-quality modifier — **surfaced-only**: the app
-    /// does not simulate advancement. `source` names the advancement source,
-    /// `amount` the modifier (Apt Student +5 when taught). 5i surfaces these
-    /// labelled.
+    /// does not simulate advancement. `source` names the advancement source.
+    /// Exactly one of `amount`/`factor` is present — validated at load,
+    /// `ruleset/integrity.rs::validate_advancement_mod_shape` — never neither
+    /// and never both (D55, V/F audit Q-113/Q-32). `amount` is a flat signed
+    /// modifier to that source's Source Quality/Advancement Total (Apt Student
+    /// +5 when taught); `factor` multiplies the assembled Advancement Total
+    /// instead (Incomprehensible, Loose Magic — both state a halving, never an
+    /// amount). `amount: 0` used to double as a "halved" marker on those two
+    /// entries; it no longer does. 5i surfaces these labelled.
     ///
     /// Source: ArMDE:3422-3425 (Apt
-    /// Student).
+    /// Student), :6294-6297 (Incomprehensible), :6354-6357 (Loose Magic).
     AdvancementMod {
         /// The advancement source the modifier applies to.
         source: AdvancementSource,
-        /// Signed modifier to that source's Source Quality / advancement total.
-        amount: i8,
+        /// Signed flat modifier to that source's Source Quality/Advancement
+        /// Total. Mutually exclusive with `factor`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        amount: Option<i8>,
+        /// Multiplies the source's assembled Advancement Total instead of
+        /// adding to it. Mutually exclusive with `amount`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        factor: Option<AdvancementFactor>,
     },
     /// A special casting-style quirk. `kind` names the quirk. The three
     /// non-standard-casting penalty relievers (`quiet_words`, `subtle_gestures`,
@@ -1833,6 +1845,41 @@ impl fmt::Display for AdvancementSource {
             AdvancementSource::Authoring => "authoring",
             AdvancementSource::SpellMastery => "spell_mastery",
             AdvancementSource::All => "all",
+        })
+    }
+}
+
+/// The multiplier an [`Effect::AdvancementMod`] applies to a source's
+/// Advancement Total, when the modifier is multiplicative rather than a flat
+/// `amount`.
+///
+/// A small enum, not a `num`/`den` pair. Contrast
+/// [`Effect::GrantsSpellMastery`]'s `advancement_num`/`advancement_den`, which
+/// genuinely needs a pair — Flawless Magic *doubles* a Spell Mastery
+/// Advancement Total (ArMDE:3889), a different multiplier on a different
+/// effect. Every stated `AdvancementMod` factor in the core rules is a
+/// **halving** (Incomprehensible ArMDE:6296, Loose Magic ArMDE:6356), so an
+/// enum carrying only that one value cannot express the nonsense a fraction
+/// pair can (a zero denominator, a reversed ratio) — see
+/// `ruleset/integrity.rs::validate_item_ratios`'s doc comment for how much
+/// load-time validation a `num`/`den` pair needs to stay safe. A second stated
+/// factor later is a new variant; the exhaustive `match` in every consumer
+/// (`derived.rs`, the Fluent-key coverage test) turns that into a compile
+/// error until it is handled, exactly as a new [`AdvancementSource`] does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AdvancementFactor {
+    /// Halves the source's Advancement Total, rounded down: neither
+    /// Incomprehensible (ArMDE:6296) nor Loose Magic (ArMDE:6356) states a
+    /// rounding direction of its own, so the core book's stated default
+    /// applies (ArMDE:547: "if it does not [specify], round down").
+    Half,
+}
+
+impl fmt::Display for AdvancementFactor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            AdvancementFactor::Half => "half",
         })
     }
 }
@@ -4364,6 +4411,7 @@ mod tests {
         check(AdvancementSource::Teaching);
         check(AdvancementSource::Authoring);
         check(AdvancementSource::SpellMastery);
+        check(AdvancementFactor::Half);
         check(AdvancementSource::All);
         check(SpecialCasting::QuietWords);
         check(SpecialCasting::SubtleGestures);
@@ -4588,11 +4636,18 @@ mod tests {
             },
             Effect::AdvancementMod {
                 source: AdvancementSource::Taught,
-                amount: 5,
+                amount: Some(5),
+                factor: None,
             },
             Effect::AdvancementMod {
                 source: AdvancementSource::Authoring,
-                amount: 3,
+                amount: Some(3),
+                factor: None,
+            },
+            Effect::AdvancementMod {
+                source: AdvancementSource::Teaching,
+                amount: None,
+                factor: Some(AdvancementFactor::Half),
             },
             Effect::SpecialCastingMod {
                 kind: SpecialCasting::Diedne,
@@ -4624,6 +4679,7 @@ mod tests {
         assert!(json.contains("\"scope\":\"formulaic_ritual\""));
         assert!(json.contains("\"total\":\"penetration\""));
         assert!(json.contains("\"source\":\"authoring\""));
+        assert!(json.contains("\"factor\":\"half\""));
         assert!(json.contains("\"type\":\"elemental_magic\""));
         assert!(json.contains("\"type\":\"masterpiece_item\""));
     }

@@ -155,7 +155,16 @@ export type Effect =
   // realm- and scene-conditional kinds, which name no Form.
   | { type: 'magic_resistance_mod'; kind: MagicResistanceEffect; param?: string }
   | { type: 'aging_mod'; kind: AgingEffect; amount: number }
-  | { type: 'advancement_mod'; source: AdvancementSource; amount: number }
+  // Exactly one of `amount`/`factor` is present (D55; load-time validated,
+  // `ruleset/integrity.rs::validate_advancement_mod_shape`): `amount` is a
+  // flat signed modifier, `factor` multiplies the source's Advancement Total
+  // instead (Incomprehensible, Loose Magic — both halve, never an amount).
+  | {
+      type: 'advancement_mod';
+      source: AdvancementSource;
+      amount?: number;
+      factor?: AdvancementFactor;
+    }
   | { type: 'special_casting_mod'; kind: SpecialCasting }
   | { type: 'ability_roll_mod'; param: string; amount: number }
   // Elemental Magic (5c): creation-time Art-XP redistribution over the four
@@ -219,6 +228,11 @@ export type AdvancementSource =
   | 'authoring'
   | 'spell_mastery'
   | 'all';
+// The multiplier an `advancement_mod` factor applies (D55). A single value
+// today (every stated factor in the core rules is a halving); a new one is a
+// new union member, which every `Record<AdvancementFactor, …>` consumer turns
+// into a type error until it is handled.
+export type AdvancementFactor = 'half';
 export type SpecialCasting =
   | 'quiet_words'
   | 'subtle_gestures'
@@ -909,6 +923,11 @@ export interface SurfacedModifier {
   family: string;
   detail: string;
   amount: number;
+  // Set only for an Advancement row backed by a `factor` (D55): the row is
+  // multiplicative, and `amount` carries no meaning for it. Absent for every
+  // other family, so `amount: 0` keeps its original "no magnitude" reading
+  // for them (e.g. Unaging's mode-toggle rows).
+  factor?: AdvancementFactor;
 }
 
 // The full read-only play-stat read-out returned by the `derived_totals` command.

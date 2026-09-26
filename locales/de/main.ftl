@@ -1430,6 +1430,7 @@ derived-detail-teaching = Unterrichten
 derived-detail-authoring = Verfassen
 derived-detail-spell_mastery = Zaubermeisterschaft
 derived-detail-all = Alle Quellen
+derived-factor-half = Halbiert
 derived-detail-quiet_words = Stille Magie
 derived-detail-subtle_gestures = Subtile Magie
 derived-detail-deft_form = Gewandte Form
