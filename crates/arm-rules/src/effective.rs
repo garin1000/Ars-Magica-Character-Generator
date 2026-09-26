@@ -1166,7 +1166,10 @@ mod tests {
             "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1, "max_score": 3 }]
           },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "confers_hermetic_training" }] }
         ]"#;
         let types = r#"[
           {
@@ -1742,6 +1745,27 @@ mod tests {
 
         let ungifted = xp_entity(vec![]);
         assert_eq!(supernatural_free_slots(&ungifted, &rs, profile).total, 0);
+    }
+
+    /// D56/A0 (§ 4 row 17): the exemption must key on `is_hermetically_trained`,
+    /// not the bare profile flag — a Gifted companion (untrained profile) holding
+    /// a **test-only fixture** selection that carries
+    /// `Effect::ConfersHermeticTraining` gets the SAME zero free slot a real
+    /// magus gets, or D24's positive check ("is Weak Parens the only worked
+    /// example?") gains a second failure. The real `flaw.abandoned_apprentice`
+    /// is unaffected until D3 attaches the effect.
+    #[test]
+    fn supernatural_free_slots_grants_none_to_a_trained_by_selection_gifted_companion() {
+        let rs = xp_ruleset();
+        let profile = rs.profile(&Id::new("companion")).unwrap();
+        let gifted_and_trained = xp_entity(vec![
+            sel("virtue.the_gift"),
+            sel("flaw.test_confers_training"),
+        ]);
+        assert_eq!(
+            supernatural_free_slots(&gifted_and_trained, &rs, profile).total,
+            0
+        );
     }
 
     #[test]

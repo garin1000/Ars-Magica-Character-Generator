@@ -63,22 +63,22 @@ pub struct SupernaturalFreeSlots {
     pub used: u8,
 }
 
-/// The Gift's free Supernatural-Ability slots. A Gifted non-magus gets one free
-/// slot; a magus gets none (his free ability is Hermetic magic itself). `used`
-/// counts the Supernatural abilities the entity holds that no granting Virtue
-/// covers (a granting Virtue seeds an `ability_score_grant` floor).
+/// The Gift's free Supernatural-Ability slots. A Gifted, untrained entity gets
+/// one free slot; a Hermetically trained one gets none (his free ability is
+/// Hermetic magic itself) — `is_hermetically_trained` (D56/A0), the union of
+/// the profile flag with any selection carrying `Effect::ConfersHermeticTraining`,
+/// so an Abandoned Apprentice's free Gift-slot is 0 exactly like a real magus's.
+/// `used` counts the Supernatural abilities the entity holds that no granting
+/// Virtue covers (a granting Virtue seeds an `ability_score_grant` floor).
 /// Source: ArMDE:2874.
 pub fn supernatural_free_slots(
     entity: &Entity,
     ruleset: &Ruleset,
     profile: &EntityTypeProfile,
 ) -> SupernaturalFreeSlots {
-    // Bare profile rename only (compiler-forced by D56/A0's `is_magus` split).
-    // This site is not named by any A1 sub-slice in
-    // `docs/vf-audit/design-a0-is-magus-split.md` § 5 — flagged there as an
-    // orphan needing a home before the union (`is_hermetically_trained`) is
-    // wired in; until then this stays a same-behavior rename.
-    let total = if has_the_gift(entity, ruleset, profile) && !profile.hermetically_trained {
+    let total = if has_the_gift(entity, ruleset, profile)
+        && !crate::effective::is_hermetically_trained(entity, ruleset, Some(profile))
+    {
         1
     } else {
         0

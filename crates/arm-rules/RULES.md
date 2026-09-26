@@ -4959,7 +4959,7 @@ Virtue; a **magus** gets none (his free supernatural ability is Hermetic magic):
 > magic is the single supernatural ability possessed by Hermetic magi in virtue
 > of The Gift".
 
-`effective::supernatural_free_slots` = `(has_the_gift && !hermetically_trained ? 1 : 0, used)`;
+`effective::supernatural_free_slots` = `(has_the_gift && !is_hermetically_trained ? 1 : 0, used)`;
 `validate_supernatural_abilities` errors on uncovered Supernatural abilities beyond
 the free allowance (`supernatural_ability_requires_virtue`). **Companion
 `gift_policy` is `allowed`** (was `forbidden`) so a Gifted companion is legal
@@ -6469,8 +6469,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
   a single total of worked seasons could not tell those apart.
 - **The post-Gauntlet experience joins the *general* pool — it is not a block of its
   own.** `effective/xp.rs`'s `xp_allocation` selects `base_general` as
-  `apprenticeship_xp + post_gauntlet_xp` for a magus (saturating), leaving the
-  non-magus arm and the plan-less `xp_pool` arm untouched. Three sourced facts force
+  `apprenticeship_xp + post_gauntlet_xp` for a Hermetically trained entity
+  (`is_hermetically_trained`, D56/A0 — saturating), leaving the untrained arm and the
+  plan-less `xp_pool` arm untouched. Three sourced facts force
   the general pool rather than a restricted one:
   - `ArMDE:2216` — "Divide 30 points per year between experience points in **Arts**,
     experience points in Abilities, and levels of spells" — and `ArMDE:2471` — "Each point
@@ -6641,10 +6642,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
   (`ArMDE:2214`) says "any **Abilities**", step 7 (`ArMDE:2215`) "between Hermetic **Arts** and
   … Abilities". Restated for the block itself at `ArMDE:2392`.
 - Implementation: `effective/xp.rs` — `xp_allocation` pushes later life as a
-  **restricted** `PoolEligibility::Ability` pool for a magus
-  (`profile.hermetically_trained && budget.later_life_xp > 0`, the same shape of
-  guard the mastery pool uses — bare profile flag today, D56/A0's own union
-  wiring is a later sub-slice), so Arts
+  **restricted** `PoolEligibility::Ability` pool for a Hermetically trained
+  entity (`is_hermetically_trained(entity, ruleset, profile) && budget.later_life_xp
+  > 0`, D56/A0 — the same shape of guard the mastery pool uses), so Arts
   fall out for free: an Ability pool never covers an Art spend. `LifeStageBlock` gains
   `LaterLife` (slug `later_life`, labelled `xp-pool-later_life` in both locales) so the
   bar can name the row.

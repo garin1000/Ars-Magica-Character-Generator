@@ -8,6 +8,7 @@ use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{ValidationIssue, compute_balance, validate};
 use arm_rules::{AgingRowEffect, AgingRules};
+use arm_rules::{LifeStageBlock, LifeStagePlan, XpPoolOrigin, checked_xp_allocation};
 use arm_rules::{
     effective_art_score, effective_characteristic_after_aging, effective_characteristic_score,
 };
@@ -5554,6 +5555,56 @@ fn abandoned_apprentice_requires_the_gift() {
             .any(|i| i.code == "prereq_not_met" && i.context.as_ref() == Some(&abandoned)),
         "and an unGifted one may not — he would bank 3 Flaw points for Hermetic \
          training he cannot have"
+    );
+}
+
+/// **Pinned baseline for D3.** D56/A0's whole Group A rewire (sub-slices 1–3)
+/// deliberately leaves the shipped `flaw.abandoned_apprentice` untouched — it
+/// carries no `Effect::ConfersHermeticTraining` yet, so `is_hermetically_trained`
+/// still reads him as untrained, and his XP shape is exactly what it was on
+/// `main` before this design note: later life is his GENERAL pool (225 = 15
+/// years × 15/yr, ArMDE:2392), with no restricted, Abilities-only LaterLife
+/// pool the way a real magus gets. D3 is what must flip this pin — attaching
+/// the effect and building the truncated per-year block — and this test is
+/// the baseline it flips: if D3 lands and this test is still green unchanged,
+/// D3 did not actually wire anything.
+#[test]
+fn abandoned_apprentice_xp_shape_is_unchanged_pending_d3() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("virtue.the_gift")),
+            Selection::new(Id::new("flaw.abandoned_apprentice")),
+        ],
+    );
+    e.ability_funding = AbilityFunding::LifeStages;
+    e.age = Some(20);
+    e.life_stages = Some(LifeStagePlan {
+        native_language: Some("German".to_string()),
+        ..LifeStagePlan::default()
+    });
+    e.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.living_language"),
+        parameter: Some("German".to_string()),
+        score: 5,
+        specialty: None,
+    }];
+
+    let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
+    assert_eq!(
+        allocation.general_pool, 225,
+        "later life (15yr x 15/yr) is still the general pool, unchanged"
+    );
+    assert!(
+        !allocation.restricted.iter().any(|p| matches!(
+            p.origin,
+            XpPoolOrigin::LifeStage {
+                block: LifeStageBlock::LaterLife
+            }
+        )),
+        "no restricted LaterLife pool yet — that is D3's job: {:?}",
+        allocation.restricted
     );
 }
 

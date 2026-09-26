@@ -825,8 +825,10 @@ fn spell_mastery_flow_pool(entity: &Entity, ruleset: &Ruleset) -> Option<FlowPoo
 /// V57: assembles the five independent pool kinds above, in the fixed order
 /// the UI's XP bar and the flow-solve node indices both depend on
 /// (`restricted_xp_pools`'s output order is observable). Which block is the
-/// general pool depends on whether the character serves an apprenticeship, so
-/// the flag is read once here — off the profile, never a type id.
+/// general pool depends on whether the character is Hermetically trained
+/// (`is_hermetically_trained`, D56/A0 — the profile flag unioned with any
+/// selection carrying `Effect::ConfersHermeticTraining`), so the fact is read
+/// once here — never a type id.
 fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
     let mut flow_pools = restricted_ability_xp_pools(entity, ruleset);
 
@@ -836,15 +838,12 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
     if let Some((rules, budget)) = &life_stage_budget {
         flow_pools.extend(childhood_native_language_pool(entity, rules, budget));
         flow_pools.push(childhood_spread_pool(entity, rules, budget));
-        // Bare profile rename only (compiler-forced by D56/A0's `is_magus`
-        // split): switching this to the entity-level union
-        // (`is_hermetically_trained`) is sub-slice 3's own scope, with its own
-        // first failing test — see
-        // `docs/vf-audit/design-a0-is-magus-split.md` § 5.
-        let is_magus = ruleset
-            .profile(&entity.type_id)
-            .is_some_and(|profile| profile.hermetically_trained);
-        if is_magus {
+        let trained = crate::effective::is_hermetically_trained(
+            entity,
+            ruleset,
+            ruleset.profile(&entity.type_id),
+        );
+        if trained {
             flow_pools.extend(magus_later_life_pool(entity, ruleset, budget));
         }
     }
@@ -983,18 +982,16 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
 /// budget derivation), so recomputing costs nothing and keeps that function's
 /// return type a plain `Vec<FlowPool>` independent of this one's locals.
 fn general_pool_and_bonus(entity: &Entity, ruleset: &Ruleset) -> (u32, i64) {
-    // Bare profile rename only (compiler-forced by D56/A0's `is_magus` split):
-    // switching this to the entity-level union (`is_hermetically_trained`) is
-    // sub-slice 3's own scope, with its own first failing test — see
-    // `docs/vf-audit/design-a0-is-magus-split.md` § 5.
-    let is_magus = ruleset
-        .profile(&entity.type_id)
-        .is_some_and(|profile| profile.hermetically_trained);
+    let trained = crate::effective::is_hermetically_trained(
+        entity,
+        ruleset,
+        ruleset.profile(&entity.type_id),
+    );
     let life_stage_budget = ruleset
         .life_stages()
         .and_then(|rules| rules.budget(entity, ruleset).map(|budget| (rules, budget)));
     let base_general = match &life_stage_budget {
-        Some((_, budget)) if is_magus => budget
+        Some((_, budget)) if trained => budget
             .apprenticeship_xp
             .saturating_add(budget.post_gauntlet_xp),
         Some((_, budget)) => budget.later_life_xp,
@@ -1352,6 +1349,101 @@ mod tests {
         assert_eq!(err.limit, MAX_XP_SOLVE_NODES);
         assert_eq!(err.spends, MAX_XP_SOLVE_NODES - 2);
         assert_eq!(err.flow_pools, 0);
+    }
+
+    /// D56/A0 (§ 4 row 8, § 5 sub-slice 3): a companion (untrained profile)
+    /// carrying a **test-only fixture** selection with
+    /// `Effect::ConfersHermeticTraining`. Test-fixture-only per the design
+    /// note: `flaw.abandoned_apprentice` is not edited until D3, so this
+    /// proves only that the branch is now *capable* of selecting the
+    /// apprenticeship shape — not that D3's truncated funding exists yet
+    /// (`apprenticeship_of` stays profile-only, so `apprenticeship_xp`/
+    /// `post_gauntlet_xp` are still 0 for a non-magus profile either way).
+    const LIFE_STAGE_ITEMS: &str = r#"[
+      { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
+        "effects": [{ "type": "confers_hermetic_training" }] },
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+        "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
+    ]"#;
+    const LIFE_STAGE_ABILITIES: &str = r#"{
+      "advancement": [{ "score": 1, "total_xp": 5 }],
+      "abilities": [
+        { "id": "ability.artes_liberales", "category": "general" },
+        { "id": "ability.living_language", "category": "general", "parameter": "language" }
+      ]
+    }"#;
+    const LIFE_STAGES: &str = r#"{
+      "childhood": { "years": 5, "native_language_ability": "ability.living_language",
+                     "native_language_xp": 75, "spread_xp": 45, "spread_abilities": [] },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+
+    fn rs_with_life_stages() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: LIFE_STAGE_ITEMS,
+            type_profiles: TYPES,
+            abilities: Some(LIFE_STAGE_ABILITIES),
+            life_stages: Some(LIFE_STAGES),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    fn companion_with_life_stages(age: u32, trained: bool) -> Entity {
+        let mut e = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        e.ability_funding = crate::types::AbilityFunding::LifeStages;
+        e.age = Some(age);
+        e.life_stages = Some(crate::life_stage::LifeStagePlan::default());
+        if trained {
+            e.selections = vec![Selection::new(Id::new("flaw.test_confers_training"))];
+        }
+        e
+    }
+
+    #[test]
+    fn apprenticeship_shaped_test_fixture_selects_the_apprenticeship_xp_branch_when_trained_off_profile()
+     {
+        let rs = rs_with_life_stages();
+
+        // Untrained: later life (15/yr × 15 yrs = 225) is the GENERAL pool, and
+        // there is no restricted LaterLife pool at all — today's status quo.
+        let untrained = companion_with_life_stages(20, false);
+        let untrained_alloc = checked_xp_allocation(&untrained, &rs).unwrap();
+        assert_eq!(untrained_alloc.general_pool, 225);
+        assert!(
+            !untrained_alloc.restricted.iter().any(|p| matches!(
+                p.origin,
+                XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::LaterLife
+                }
+            )),
+            "{:?}",
+            untrained_alloc.restricted
+        );
+
+        // Trained-by-selection: the general pool selects the apprenticeship
+        // shape (apprenticeship_xp + post_gauntlet_xp — 0 + 0 today, since
+        // D3 has not yet funded it), and the SAME 225 that used to be general
+        // now surfaces as a restricted, Abilities-only LaterLife pool instead.
+        let trained = companion_with_life_stages(20, true);
+        let trained_alloc = checked_xp_allocation(&trained, &rs).unwrap();
+        assert_eq!(trained_alloc.general_pool, 0);
+        let later_life_pool = trained_alloc.restricted.iter().find(|p| {
+            matches!(
+                p.origin,
+                XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::LaterLife
+                }
+            )
+        });
+        assert_eq!(later_life_pool.map(|p| p.amount), Some(225));
     }
 
     /// Klaus F4 (round-1 MINOR), upper edge: the bound must refuse a spend
