@@ -42,56 +42,6 @@ instruction entered the briefs only at **B12**. Tracked as § 8 row **12e**.
 | 54 | **Nine conversion defects in the Core Rules Markdown, found by transcribing the 24 example characters — to be fixed UPSTREAM in `arm-de-translation`, not here.** *Venue corrected 2026-09-24 on Norbert's ruling: "The version in arm de translation is newer and with a different line count. Changing here does not make sense."* This row twice said the wrong thing before settling — first that the ninth item "waits for the re-sync" (it is forbidden, not deferred), then that the other eight were "safe in-place edits for this repo" (they are throwaway). **`rules/source/` is a copy**: the authoritative original for the **English** text as well as the German is `arm-de-translation/original-english/reviewed/…Core Rules.md`, which is newer and **80 lines longer** (25,803 against our 25,723, measured 2026-09-24 — our count independently confirmed). A hand repair here is replaced wholesale at the next sync and the edit goes with it. So all nine are **recorded here and filed there**, as a todo in `arm-de-translation/docs/todo.md`. The findings themselves are undiminished and survive a re-sync, because each is identified by what is *wrong* rather than by where it sits — and the `ArMDE:1733` case is provable rather than inferred (see (b)). All are Markdown-conversion artefacts, not rules content. **(a) A lost line break:** `ArMDE:1277` reads "Virtues and Flaws: Covenfolk, Warrior, Pessimistic Personality Traits: Brave +3, …" — the Hunter's "Personality Traits:" heading has been swallowed into the Virtues line, running the Flaw *Pessimistic* into the trait *Pessimistic*. **(b) A wrong Art abbreviation:** `ArMDE:1733` prints `Ag 0` in the Criamon's Arts line; there is no Art "Ag", the slot is Aquam, and the line carries 15 slots with only 14 valid abbreviations. **(c) Missing separators:** `ArMDE:1766` (`Giant Blood\* Major Magical Focus`, no comma), `ArMDE:1928` (a period for a comma, and `Music 4+2 (singing) Native Language`), `ArMDE:1954` and `ArMDE:2002` (`Per 0 Pre 0`), `ArMDE:1439` (a period for a comma). **(d) Stray characters:** `ArMDE:2548` (`Puissant Art Perdo)`, unmatched parenthesis), `ArMDE:1704`/`ArMDE:2153` (`Sta + 2`, space inside the value), `ArMDE:1480` (`Etiquette (noble) 3`, parameter before the score against the declared format at `ArMDE:1177`). **(a) IS FORBIDDEN TO FIX, NOT DEFERRED — and this row said "waits for the re-sync" until 2026-09-24, which was wrong.** Repairing it needs a line **inserted**, and `CLAUDE.md` now carries Norbert's invariant: *"We don't change number of lines in the source file… never."* An inserted or removed line renumbers everything below it and invalidates every citation into that file at once — `SourceRef` ranges in `rules/core/` and `rules/i18n/`, `// Source: ArMDE:NNNN` comments, `RULES.md`, and every dated record under `docs/` — and **nothing detects it**, because `rulebook_citations.rs` checks only that a cited range lands on non-blank lines, so after a shift every citation still **passes** while pointing at the wrong text. Silent, total and green: the worst failure shape available. So (a) is never repaired **in this repo** under any schedule — and as of the venue correction above it is not a local defect at all, but an upstream one like the other eight. **(b)-(d) keep their line count**, so they would have been mechanically safe here; they are still not to be done here, for the throwaway reason above. **Owner: the V/F audit session** — it is row 39's class, they have done that shape twice, and they own `arm-de-translation`'s todo file. **Blocked on Norbert confirming in *their* session**, since filing into a different repository raises the same authorization question and a relayed approval is not the same object as a direct one. Several entries also have German counterparts in the line-parallel `rules/source/de/`, whose upstream original needs the same check. Detail: `docs/book-template-conformance.md` § H1, § MAG3, § K4, § D3, and the per-section formatting notes. | (b)-(d) an implementation pass; (a) nothing, permanently | 2026-09-24 |
 | 55 | **The book-template conformance suite added 208 `ArMDE:NNNN` citations to live test code and anchored only 13 of them, so a re-sync silently repoints 195 comments that explain *why* each expectation holds.** Self-reported debt from the 2026-09-22/24 pass. The citations are correct against our copy today and `rulebook_citations.rs` verifies them — which is precisely the failure shape D30 names: after an upstream sync every one still **passes**, because the guard checks only that a range lands on non-blank lines, while the text it names has moved. Row 54 measured the drift that makes this concrete rather than theoretical: the authoritative `arm-de-translation` original is already **80 lines longer** than our copy. **Scope is `crates/arm-rules/tests/book_templates.rs` only.** The sibling `docs/book-template-conformance.md` carries 359 citations with 63 anchored and is **deliberately left alone**: `source_citations.rs` puts `docs/` outside the guard on purpose, and anchoring a dated snapshot is tidying a record. **But "dated record versus live code" is the wrong axis for judging the risk, and the right one is recoverable versus not** (the V/F audit session's framing, 2026-09-24, from the same measurement on their side — ~4,180 citations in `docs/vf-audit/`, 470 in the three files a Phase 2 session works from). A citation to a **catalogue entry's own passage** survives a re-sync wherever it sits, because all 655 V/F entries carry a `source.anchor` in both stores — that is what D30 bought. A citation to a passage with **no entry** is unrecoverable, and that is the class to act on. This test file is dense with them, because it cites the *rules text* rather than the catalogue: the apprenticeship budget (`ArMDE:2435`), the template format convention (`ArMDE:1163`), the Characteristic point-buy (`ArMDE:2342`), the age caps (`ArMDE:2368-2374`), the Load table (`ArMDE:17107`) and the Initiative formula (`ArMDE:16658`) have no entry to anchor to. Nobody has counted the entry-less citations in either file. The fix is to carry the owning `####` heading beside each citation, as the conformance doc already does for its section headers — most of these point at statblock lines inside a template, so the durable form is the template's own heading (`ArMDE:1212` becomes `ArMDE:1212` `#### The Berserker`). Mechanical, and cheapest done in one pass rather than discovered piecemeal. Related: row 43 (the catalogue anchor rollout), D30. | an implementation pass (test comments only) | 2026-09-24 |
 
-## The `EffectiveScores` DTO extraction is deferred
-
-**This is the audit's one consciously accepted architectural deferral, and this
-entry is its only record in the repository.** It was declined twice,
-independently, in round 2; both fixers wrote the reasoning into
-`tmp/review/`, which is gitignored scratch that nothing preserves, and a commit
-message then asserted it was recorded here when it was not. The gap was filed in
-round 3 and is closed by this entry — the decision itself stands and is **not**
-being re-litigated.
-
-(Note for anyone editing this entry, the same one the P8 section carries: do
-**not** write a source location as a file plus a line number here. `docs/` is
-inside the `rulebook_citations.rs` sweep, which parses anything shaped like an
-acronym followed by a colon and digits as a real rulebook citation. Name the
-**symbol** instead — the form `` `file.rs::Symbol` `` — which is also the
-convention `CLAUDE.md` requires for a cross-reference to a source file, and
-which cannot rot when the lines below it move.)
-
-**What is owed.** `crates/arm-app/src/ruleset_io.rs` carries the whole IPC
-read-out DTO layer — `ruleset_io.rs::EffectiveScores`, the private per-domain
-field structs it is assembled from (`ruleset_io.rs::XpFields`,
-`ruleset_io.rs::SpellFields`, `ruleset_io.rs::WarpingFields`,
-`ruleset_io.rs::CharacteristicFields`, `ruleset_io.rs::ConfidenceFields`,
-`ruleset_io.rs::GrantBudgetFields`, `ruleset_io.rs::DecrepitudeFaithItemFields`,
-`ruleset_io.rs::SpellMasteryFields`, `ruleset_io.rs::MightPowerFields` and their
-siblings), their assemblers, and `ruleset_io.rs::effective_scores_loaded` —
-inside a module that is also the ruleset loader, the path helpers and the aging
-commands. Roughly 730 lines of one concern under a name that promises another.
-The destination is a module of its own, `crates/arm-app/src/effective_dto.rs`.
-
-**Why it is deferred rather than done.** Moving it is not the hard part; the
-**pointers into it** are. Its cross-references span crates and documents — four
-in `crates/arm-rules/RULES.md`, one in `ui/src/lib/derive.ts`, and two in
-`docs/` — so an extraction performed inside any single slice's file list
-strands the rest, manufacturing exactly the stale-pointer defect round 2 spent a
-slice repairing. That is the whole argument, and it is the reason the move needs
-one coordinated slice rather than a spare afternoon.
-
-**The file list that slice must own**, so it is actionable rather than a wish:
-
-- `crates/arm-app/src/ruleset_io.rs` (the source), `crates/arm-app/src/lib.rs`
-  (the module declaration) and `crates/arm-app/src/commands.rs` (the callers).
-- `crates/arm-app/tests/commands.rs`.
-- `crates/arm-rules/RULES.md`, `ui/src/lib/derive.ts`, and the two `docs/`
-  references — the pointer set, which is what makes this a coordinated slice.
-
-The single DTO test inside `ruleset_io.rs`'s own `#[cfg(test)]` module moves
-with the block; leaving it behind would put a test for one module in another,
-which is the same drift in miniature.
-
 ## The e2e harness leaks its driver processes
 
 Observed directly, twice, and confirmed as the cause of a false failure — so this

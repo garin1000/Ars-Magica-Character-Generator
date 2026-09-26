@@ -2,15 +2,18 @@
 //!
 //! All filesystem IO and Tauri commands live here; the rules engine
 //! (`arm-rules`) stays pure. The command logic is split so the bulk lives in
-//! [`ruleset_io`] as webview-free functions that integration tests call
-//! directly, while [`commands`] holds only the thin Tauri shims. The Tauri
-//! `Builder` itself lives in `main.rs` so this library — and its tests —
-//! compile without the bundled frontend.
+//! [`ruleset_io`] (the ruleset loader, save/export path helpers, and the
+//! aging commands) and [`effective_dto`] (the IPC read-out DTO layer,
+//! `EffectiveScores` and its assemblers) as webview-free functions that
+//! integration tests call directly, while [`commands`] holds only the thin
+//! Tauri shims. The Tauri `Builder` itself lives in `main.rs` so this library
+//! — and its tests — compile without the bundled frontend.
 
 #![deny(clippy::all)]
 
 pub mod atomic_write;
 pub mod commands;
+pub mod effective_dto;
 pub mod error;
 pub mod menu;
 pub mod ruleset_io;

@@ -1375,7 +1375,7 @@ bleed onto the character's other areas.
   `(ability, parameter)` — a plain ability by id, a parameterized one only when
   the selection names the same instance; a selection missing the instance key
   matches nothing. `ability_bonuses` returns a per-instance `Vec<AbilityBonus>`
-  (serialized directly to the frontend by `arm-app::ruleset_io`). `validation/scores.rs`
+  (serialized directly to the frontend by `arm-app::effective_dto`). `validation/scores.rs`
   folds the per-instance bonus into the score map so `AbilityMin` is met by the
   strongest instance.
 - `ability_bonuses` iterates the **union of the Ability catalogue and the bought
@@ -1429,7 +1429,7 @@ bleed onto the character's other areas.
 - The `art_bonus` effect adds to an Art's *effective* score (Arts are not
   parameterized, so the target is matched by id alone). Implementation:
   `effective/art.rs::art_bonus`, `effective_art_score`, `art_bonuses` (serialized to
-  the frontend by `arm-app::ruleset_io`). `validation/scores.rs` folds the bonus into the
+  the frontend by `arm-app::effective_dto`). `validation/scores.rs` folds the bonus into the
   Art score map so `ArtMin` is met by the boosted score.
 - `art_bonuses` iterates the **full Art catalogue** (not just bought
   `art_scores`), emitting any nonzero effective-over-bought delta. A Puissant Art
@@ -4217,7 +4217,7 @@ sentence are deliberately split across two files. `ApprenticeshipRules` carries 
 The base budget is selected in one place, `effective::spell_levels_base` — the
 per-character `Entity::spell_levels_override` (an optional stored *choice*, an
 app affordance, not a rulebook mechanic) when set, otherwise the profile's
-`spell_levels`. Both the effective payload (`arm-app/src/ruleset_io.rs`) and the
+`spell_levels`. Both the effective payload (`arm-app/src/effective_dto.rs`) and the
 `over_spell_levels` validator (`validation/magus.rs`) call it, so the displayed
 and validated budgets cannot diverge. `spell_levels_budget` then adds the
 Skilled/Weak Parens `Effect::SpellLevels` modifiers on top of that base — and, for
@@ -4277,7 +4277,7 @@ are now rendered in separate slots.
 from the effective Art scores, the Intelligence characteristic, and effective
 Magic Theory → a spell above it emits `spell_level_exceeds_cap` (validation, in
 `validation/magus.rs`). The same function is surfaced per-Te/Fo combination as
-`spell_level_caps` → `EffectiveScores.spell_level_caps` (`ruleset_io.rs`), so the
+`spell_level_caps` → `EffectiveScores.spell_level_caps` (`effective_dto.rs`), so the
 spell picker greys a spell above the cap from the one engine-authoritative value
 rather than recomputing it in JS. **Approximation:** requisite-Art reduction is a
 lab-total nuance out of M4 scope — requisites are stored on the spell for display
@@ -4899,7 +4899,7 @@ in the source. Fluent `reputation-type-academic` (en `Academic`, de `Akademisch`
 effect, where `source` is the id of the granting Virtue/Flaw — provenance for the
 UI, not a rule value, so a granted row can say *which* V/F put it there. The app
 layer passes each grant through unchanged (`reputation_grants_for_ui`,
-`arm-app/src/ruleset_io.rs`) and the panel renders one row per grant, a
+`arm-app/src/effective_dto.rs`) and the panel renders one row per grant, a
 `<select>` over `Ruleset::reputation_type_order` for the wildcard. It used to
 **flatten** a wildcard into one entry per type, which offered four slots where
 `validate_reputations` allows one; the counts now agree.
@@ -6183,7 +6183,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   base + bonus (240 at the Gauntlet, 300 with Skilled Parens, more once the
   post-Gauntlet experience joins it); a budget field holding only the base
   would disagree with it and would have to be excluded from `total()`. The real pool
-  is surfaced instead, as `EffectiveScores.xp_general_pool` (`arm-app/ruleset_io.rs`).
+  is surfaced instead, as `EffectiveScores.xp_general_pool` (`arm-app/effective_dto.rs`).
 - **`apprenticeship_start_age` is not stored.** Apprenticeship is fifteen fixed years,
   so the span before it follows from the age the character was gauntleted at:
   `later_life_years = gauntlet_age − childhood.years − apprenticeship.years`. Verified
@@ -6384,7 +6384,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
     flow's escape hatch and was never made exclusive with a plan the way `xp_pool`
     once was — and since schema 16 `xp_pool` is not exclusive with one either (see
     *Plan vs. pool*).
-  - **App payload:** `EffectiveScores` (`arm-app/ruleset_io.rs`) carries the three
+  - **App payload:** `EffectiveScores` (`arm-app/effective_dto.rs`) carries the three
     parts of the budget separately — `spell_levels_profile_base`,
     `spell_levels_bonus` and `spell_levels_life_stage`, whose identity is
     `base + bonus + life_stage == spell_levels_budget` — so the spell-levels bar can
@@ -6587,7 +6587,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `validation/magus.rs::validate_magus_minimum_abilities` emits
   `magus_minimum_ability` (error, `abilities`, args `ability`/`min`/`score` plus an
   optional `exemplar`, context = the Ability), and `EffectiveScores.magus_minimum_abilities`
-  (`arm-app/ruleset_io.rs`) hands the whole checklist to the frontend — so a finding
+  (`arm-app/effective_dto.rs`) hands the whole checklist to the frontend — so a finding
   and the checklist a UI shows cannot disagree.
 - **An error, and unconditional.** "Would not be admitted to the Order" is a hard bar,
   and `ArMDE:2437` says nothing about how the experience was earned, so a magus built from a
@@ -7103,7 +7103,7 @@ end of this section.
     a character who actually holds a ritual — a modifier to a bonus that does not
     exist is meaningless.
 
-App/UI: `EffectiveScores` (`arm-app/src/ruleset_io.rs`) gains
+App/UI: `EffectiveScores` (`arm-app/src/effective_dto.rs`) gains
 `aging: Option<AgingReadout>` — the **die-independent** half of all of the above
 (`first_roll_age`, `begins_after_age`, the `schedule`, `rolls_owed`,
 `rolls_recorded`, `age_modifier`, `living_conditions_modifier`,

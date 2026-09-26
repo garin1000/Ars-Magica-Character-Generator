@@ -53,7 +53,7 @@ pub fn characteristic_floor(ruleset: &Ruleset, _characteristic: Characteristic) 
 /// The per-characteristic buy cap for all eight characteristics, keyed by
 /// characteristic — the spinner ceiling the UI enforces. Every characteristic
 /// has a cap, so none is omitted. The map stays per-characteristic because that
-/// is the frontend's contract (`ruleset_io.rs::EffectiveScores`) and the shape a
+/// is the frontend's contract (`effective_dto.rs::EffectiveScores`) and the shape a
 /// future book's per-Characteristic buy limit would need; today every entry is
 /// the same base cap.
 pub fn characteristic_caps(ruleset: &Ruleset) -> BTreeMap<Characteristic, i32> {

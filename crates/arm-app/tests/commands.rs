@@ -5,12 +5,13 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use arm_app::effective_dto::effective_scores_loaded;
 use arm_app::error::AppError;
 use arm_app::ruleset_io::{
     AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication,
-    apply_childhood_package_loaded, effective_scores_loaded, ensure_extension,
-    export_markdown_to_path, load_entity_from_path, load_ruleset_from_dir, missing_core_files,
-    path_text, pick_rules_dir, save_entity_to_path, validate_loaded,
+    apply_childhood_package_loaded, ensure_extension, export_markdown_to_path,
+    load_entity_from_path, load_ruleset_from_dir, missing_core_files, path_text, pick_rules_dir,
+    save_entity_to_path, validate_loaded,
 };
 use arm_rules::{
     ArtScore, CreationPhase, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode,
@@ -3271,18 +3272,18 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
 /// key itself is covered by the chained member names below.
 #[test]
 fn every_aging_field_is_mirrored_in_the_frontend_types() {
-    let readout = arm_app::ruleset_io::AgingReadout {
+    let readout = arm_app::effective_dto::AgingReadout {
         first_roll_age: 36,
         begins_after_age: 35,
         // Two years, the first dated: a `None` calendar year would be skipped and
         // hide the `year` key, so one of each proves both shapes serialize.
         schedule: vec![
-            arm_app::ruleset_io::AgingScheduleYear {
+            arm_app::effective_dto::AgingScheduleYear {
                 age: 36,
                 year: Some(1216),
                 recorded: true,
             },
-            arm_app::ruleset_io::AgingScheduleYear {
+            arm_app::effective_dto::AgingScheduleYear {
                 age: 37,
                 year: None,
                 recorded: false,

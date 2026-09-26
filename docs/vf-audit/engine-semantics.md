@@ -387,7 +387,7 @@ but only life-stage blocks construct it; `restricted_ability_xp_pools` hard-code
 
 - `effective/characteristic.rs::characteristic_points_granted`.
 - `validation/scores.rs::validate_characteristic_point_spend` — `budget = start_points + granted`; `cost > budget` → `characteristic_overspent` (error), `cost < budget` → `characteristic_points_unspent` (warning).
-- `arm-app/src/ruleset_io.rs::characteristic_fields` — surfaced as `EffectiveScores::characteristic_points_granted`; `ui/src/lib/components/CharacteristicPicker.svelte` shows `start_points + granted`.
+- `arm-app/src/effective_dto.rs::characteristic_fields` — surfaced as `EffectiveScores::characteristic_points_granted`; `ui/src/lib/components/CharacteristicPicker.svelte` shows `start_points + granted`.
 
 **Arithmetic.** `Σ i32::from(amount)` across all selections and grants. Signed,
 stacking, and **not clamped** at this layer — the net may be negative, which then
@@ -684,7 +684,7 @@ derived total consumes it).
 
 - `effective/spell.rs::spell_mastery_xp` — the sum.
 - `effective/xp.rs::spell_mastery_flow_pool` → `::build_flow_pools` → `::xp_allocation`.
-- `arm-app/src/ruleset_io.rs::spell_mastery_fields`.
+- `arm-app/src/effective_dto.rs::spell_mastery_fields`.
 
 **Arithmetic.** `Σ u32::from(amount)`, stacking. Becomes **one** `FlowPool` of that
 total capacity with `PoolEligibility::Mastery`, which funds **only** Spell Mastery
@@ -723,7 +723,7 @@ spells.
 - `effective/spell.rs::spell_mastery_advancement_affinity` — reads the ratio only.
 - `effective/spell.rs::effective_spell_mastery` — `max(bought, floor)`.
 - `effective/xp.rs::build_spends` — subtracts the floor's table cost and applies the ratio.
-- `arm-app/src/ruleset_io.rs::spell_mastery_fields` — surfaces both the floor and the authored `(num, den)` pair (deliberately the ratio, not a boolean).
+- `arm-app/src/effective_dto.rs::spell_mastery_fields` — surfaces both the floor and the authored `(num, den)` pair (deliberately the ratio, not a boolean).
 - `ruleset/integrity.rs::validate_item_ratios` (load: rejects a 0 in either half).
 
 **Arithmetic.** Two independent things in one variant.

@@ -10,12 +10,11 @@ use tauri_plugin_dialog::{DialogExt, FileDialogBuilder, MessageDialogButtons, Me
 
 use arm_rules::DerivedTotals;
 
+use crate::effective_dto::{self, EffectiveScores};
 use crate::error::AppError;
 use crate::menu::{MenuFlags, MenuLabels};
 use crate::ruleset_io;
-use crate::ruleset_io::{
-    AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication, EffectiveScores,
-};
+use crate::ruleset_io::{AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication};
 use crate::settings;
 
 /// Holds the parsed, localized ruleset so validation does not re-read and
@@ -339,7 +338,7 @@ pub fn effective_scores(
 ) -> Result<EffectiveScores, AppError> {
     let guard = ruleset_guard(&state);
     let ruleset = require_loaded(guard.as_ref())?;
-    Ok(ruleset_io::effective_scores_loaded(
+    Ok(effective_dto::effective_scores_loaded(
         &entity,
         &ruleset.ruleset,
     ))

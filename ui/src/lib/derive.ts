@@ -1098,7 +1098,7 @@ export function grantedSelectionsForSide(
  * wrongly on screen while the engine's own total stayed right. The ratio now
  * crosses the IPC boundary intact as
  * `EffectiveScores.spell_mastery_advancement_affinity`
- * (`ruleset_io.rs::spell_mastery_fields`), and the arithmetic below is the
+ * (`effective_dto.rs::spell_mastery_fields`), and the arithmetic below is the
  * engine's general one, so adding such a Virtue is once again the data-only
  * change the "catalogue size is data, never code" invariant promises.
  */
