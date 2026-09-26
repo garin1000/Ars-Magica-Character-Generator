@@ -82,6 +82,22 @@ const ITEMS: Record<string, PointItem> = {
   'virtue.narrowed_probe': pointItem('virtue.narrowed_probe', [
     { key: 'item', type: 'ref', domain: 'item', require_categories: ['supernatural'] },
   ]),
+  // D34: `allow_ids` additive to `require_categories` — False Power's own
+  // shape. `virtue.diedne_probe` stands in for Diedne Magic (named outright,
+  // ArMDE:6082, but `hermetic`, outside the required category);
+  // `virtue.other_hermetic_probe` stands in for the 55 OTHER Hermetic Virtues
+  // the bare category reading wrongly admitted and D34 closes off.
+  'virtue.allow_ids_probe': pointItem('virtue.allow_ids_probe', [
+    {
+      key: 'item',
+      type: 'ref',
+      domain: 'item',
+      require_categories: ['supernatural'],
+      allow_ids: ['virtue.diedne_probe'],
+    },
+  ]),
+  'virtue.diedne_probe': pointItem('virtue.diedne_probe', []),
+  'virtue.other_hermetic_probe': pointItem('virtue.other_hermetic_probe', []),
   // The one catalogue item of the required category, so a filter can be caught
   // filtering — every other fixture item is `hermetic`.
   'virtue.second_sight': pointItem('virtue.second_sight', [], ['supernatural']),
@@ -172,6 +188,9 @@ function installRuleset(): void {
       'flaw.deficient_technique': { name: 'Deficient {technique}' },
       'virtue.item_domain_probe': { name: 'Probe {item}' },
       'virtue.narrowed_probe': { name: 'Narrowed Probe {item}' },
+      'virtue.allow_ids_probe': { name: 'Allow Ids Probe {item}' },
+      'virtue.diedne_probe': { name: 'Diedne Probe' },
+      'virtue.other_hermetic_probe': { name: 'Other Hermetic Probe' },
       'virtue.second_sight': { name: 'Second Sight' },
       'flaw.possessed_probe': { name: 'Possessed Probe' },
       'virtue.demonic_blood': { name: 'Demonic Blood' },
@@ -340,6 +359,31 @@ describe('ParameterPicker domain branches (slice 7, #4)', () => {
     // supernatural fixture items are offered, held or not and Tainted or not:
     // this parameter narrows by category ALONE.
     expect(optionTexts(select!)).toEqual(['Item', 'Demonic Blood', 'Granted Gift', 'Second Sight']);
+  });
+
+  // D34: `allow_ids` is additive to `require_categories`, read straight off the
+  // ruleset data (`param.allow_ids`), never re-derived in TypeScript. False
+  // Power's own shape: `require_categories: ['supernatural']` widened by two
+  // named ids the category axis cannot reach.
+  it('additionally offers whitelisted ids the category alone would refuse (D34)', () => {
+    const select = selectFor(
+      pickerBody('virtue.allow_ids_probe'),
+      'param-virtue.allow_ids_probe-item-0',
+    );
+    expect(select).not.toBeNull();
+    // The three supernatural fixtures resolve via `require_categories` alone;
+    // Diedne Probe resolves ONLY via `allow_ids` despite being `hermetic`.
+    expect(optionTexts(select!)).toEqual([
+      'Item',
+      'Demonic Blood',
+      'Diedne Probe',
+      'Granted Gift',
+      'Second Sight',
+    ]);
+    // The whitelist is closed, not a fourth admitted category: an arbitrary
+    // OTHER Hermetic Virtue outside both `require_categories` and `allow_ids`
+    // must not be offered — the exact over-permission D34 closes.
+    expect(optionTexts(select!)).not.toContain('Other Hermetic Probe');
   });
 
   it('offers only Virtues the character holds when the parameter requires possession', () => {

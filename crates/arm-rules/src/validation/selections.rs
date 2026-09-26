@@ -633,8 +633,17 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // (ArMDE:6096), and the
         // descriptor's *Tainted* tag is precisely that affiliation. Entity-free,
         // so it belongs here rather than in `validate_possessed_param_targets`.
+        //
+        // `allow_ids` (D34) is additive to `require_categories`: a value
+        // resolves if EITHER test passes. False Power's domain is
+        // `supernatural` plus two named ids the category axis cannot reach
+        // (Diedne Magic is `hermetic`, The Gift is `special`,
+        // `ArMDE:6082`) — the whitelist widens by id, never by relaxing the
+        // Tainted refusal, so `forbid_tainted` still applies to a whitelisted
+        // id exactly as it does to a category match.
         ParameterDomain::Item => ruleset.point_items.get(value).is_some_and(|item| {
-            item_matches_required_categories(item, param) && !(param.forbid_tainted && item.tainted)
+            (item_matches_required_categories(item, param) || param.allow_ids.contains(value))
+                && !(param.forbid_tainted && item.tainted)
         }),
         ParameterDomain::Ability => ruleset.abilities.contains_key(value),
         ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),

@@ -652,10 +652,11 @@ pub struct ParameterDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub at_most_one_of: Vec<BTreeSet<Id>>,
     /// The largest number of the declaring item's copies that may name **one
-    /// and the same value** for this parameter. Default `u8::MAX` (255) = "no
-    /// ceiling the rules state" — the same sentinel convention
-    /// [`PointItem::max_total`] uses, and the shape of every parameter that
-    /// shipped before this field existed.
+    /// and the same value** for this parameter. Default `1` (D10: "once means
+    /// once" is the model's default, not "no stated limit") — an item whose
+    /// descriptor explicitly allows repeating one value declares the
+    /// `u8::MAX` (255) sentinel for "no ceiling the rules state", the same
+    /// sentinel convention [`PointItem::max_total`] uses.
     ///
     /// Necessary (Realm) Aura for (Ability) is the case the rules state: "A
     /// character may take this Flaw once for any particular Ability"
@@ -692,7 +693,9 @@ pub struct ParameterDef {
     /// Narrows an [`ParameterDomain::Item`] parameter to a category: if non-empty,
     /// the point item the value names must carry at least one of these categories.
     /// Empty (the default, and the shape of every parameter shipped today) means
-    /// "any point item", exactly as before this field existed.
+    /// "any point item", exactly as before this field existed — unless
+    /// [`Self::allow_ids`] (D34) also narrows the same parameter, in which case
+    /// a value resolves through EITHER test.
     ///
     /// The deliberate mirror of [`crate::grant::GrantConstraint::require_categories`],
     /// which narrows an *open grant's* pick the same way and with the same
@@ -723,6 +726,55 @@ pub struct ParameterDef {
     /// catalogue carries (nothing could ever satisfy it).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub require_categories: BTreeSet<String>,
+    /// A one-id whitelist, additive to [`Self::require_categories`]: a value
+    /// resolves if EITHER test passes — the category narrowing, OR naming one
+    /// of these ids directly. Empty (the default) leaves
+    /// [`Self::require_categories`] as the sole narrowing, exactly as before
+    /// this field existed.
+    ///
+    /// **D34** (`docs/vf-audit/decisions.md`): False Power's target is "One of
+    /// the character's Supernatural Virtues" (ArMDE:6096), widened by
+    /// `ArMDE:6082`'s own examples — "Faerie Blood, Diedne Magic, or even The
+    /// Gift" — to two Virtues whose OWN category is not `supernatural`
+    /// (Diedne Magic is `hermetic`, The Gift is `special`). A bare
+    /// `require_categories: ["hermetic", "special", "supernatural"]` reads
+    /// those two in by widening the whole category, at the cost of admitting
+    /// every OTHER Virtue either category carries (56 Hermetic Virtues where
+    /// the book names one) — invisible over-permission, not a stated rule.
+    /// The whitelist closes that: `require_categories: ["supernatural"]` plus
+    /// `allow_ids: ["virtue.diedne_magic", "virtue.the_gift"]` admits exactly
+    /// what `ArMDE:6082` names, nothing else. Faerie Blood needs no entry — it
+    /// is already `supernatural`.
+    ///
+    /// **What this costs, and why it is the deliberate trade.** `ArMDE:6082`'s
+    /// "like" is an open list; a whitelist closes it, so a future
+    /// background-defining Hermetic Virtue must be added by hand. A missing id
+    /// is visible the moment someone looks for it, whereas the 55
+    /// wrongly-admitted ones the bare-category reading produced were invisible
+    /// and let a player build something the book never contemplated.
+    ///
+    /// **Not** routed through a predicate (D33's `exclude_if`, out of this
+    /// slice's scope): a predicate needs a data property the catalogue does
+    /// not carry ("defines the character's background") and nothing else
+    /// would use it; a whitelist is a closed, hand-maintained list of exactly
+    /// two ids, not an open-ended computed test. D33's own carrier
+    /// (`flaw.flawed_powers`) is a different entry with a different shape and
+    /// is not this field's concern.
+    ///
+    /// Enforced by `validation::selections::param_value_resolves`, on
+    /// [`Self::require_categories`]'s own precedent: the narrowing IS the
+    /// domain, so a value outside both tests raises the existing
+    /// [`crate::validation::ValidationIssue::CODE_UNKNOWN_PARAM_VALUE`], not a
+    /// code of its own.
+    ///
+    /// Load-time integrity rejects the field on any domain but `item` (the
+    /// same reason it rejects a stray [`Self::require_categories`]: nothing
+    /// else resolves against the point-item catalogue) and rejects a member
+    /// that does not resolve to a real point item (the same "excludes/admits
+    /// nothing, so it would look enforced and not be" reasoning as
+    /// [`Self::require_categories`]'s own catalogue check).
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub allow_ids: BTreeSet<Id>,
     /// The point item an [`ParameterDomain::Item`] value names must be one the
     /// entity actually **holds**. `false` (the default, and the shape of every
     /// parameter shipped before False Power) means the target need not be on
@@ -835,6 +887,7 @@ impl ParameterDef {
             at_most_one_of: Vec::new(),
             max_per_value: default_max_per_value(),
             require_categories: Default::default(),
+            allow_ids: Default::default(),
             require_possessed: false,
             forbid_tainted: false,
             require_power: false,
@@ -851,6 +904,7 @@ impl ParameterDef {
             at_most_one_of: Vec::new(),
             max_per_value: default_max_per_value(),
             require_categories: Default::default(),
+            allow_ids: Default::default(),
             require_possessed: false,
             forbid_tainted: false,
             require_power: false,

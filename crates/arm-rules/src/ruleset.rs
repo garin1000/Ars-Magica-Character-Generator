@@ -2484,6 +2484,71 @@ mod tests {
         assert!(param.require_categories.contains("personality"));
     }
 
+    /// **D34** `allow_ids`: narrows the `item` domain and nothing else, on
+    /// exactly `require_categories`'s own precedent — no other domain resolves
+    /// against the point-item catalogue, so a whitelist there is read by no
+    /// one.
+    #[test]
+    fn allow_ids_on_a_non_item_param_is_rejected() {
+        for domain in ["realm", "text", "ability", "enumerated"] {
+            let values = if domain == "enumerated" {
+                r#", "values": ["x"]"#
+            } else {
+                ""
+            };
+            let err = ruleset_with_param(&format!(
+                r#"{{ "key": "target", "type": "ref", "domain": "{domain}"{values},
+                      "allow_ids": ["flaw.optimistic"] }}"#
+            ))
+            .unwrap_err();
+            let msg = err.to_string();
+            assert!(
+                msg.contains("virtue.folk_magic")
+                    && msg.contains("target")
+                    && msg.contains(domain)
+                    && msg.contains("allow_ids"),
+                "{msg}"
+            );
+        }
+    }
+
+    /// A whitelisted id that resolves to no real point item admits nothing:
+    /// every value the parameter could ever name via this id would still raise
+    /// `unknown_param_value`, so the entry would look like it widens the
+    /// domain and would not. The `at_most_one_of`/`require_categories`
+    /// "excludes/admits nothing" slip, in `allow_ids`'s own shape.
+    #[test]
+    fn allow_ids_member_naming_an_unknown_item_is_rejected() {
+        let err = ruleset_with_param(
+            r#"{ "key": "target", "type": "ref", "domain": "item",
+                 "require_categories": ["personality"],
+                 "allow_ids": ["virtue.no_such_virtue"] }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.folk_magic")
+                && msg.contains("target")
+                && msg.contains("virtue.no_such_virtue"),
+            "{msg}"
+        );
+    }
+
+    /// The positive half: an `allow_ids` member naming a real point item loads
+    /// clean, additive to `require_categories` rather than replacing it.
+    #[test]
+    fn allow_ids_member_resolving_loads_clean() {
+        let rs = ruleset_with_param(
+            r#"{ "key": "target", "type": "ref", "domain": "item",
+                 "require_categories": ["personality"],
+                 "allow_ids": ["flaw.optimistic"] }"#,
+        )
+        .unwrap();
+        let param = &rs.point_items[&Id::new("virtue.folk_magic")].parameters[0];
+        assert!(param.require_categories.contains("personality"));
+        assert!(param.allow_ids.contains(&Id::new("flaw.optimistic")));
+    }
+
     /// The catalogue gate is on `Ruleset`, not in the free shape check, so it
     /// needs wiring at each site that holds `ParameterDef`s — spells included.
     #[test]

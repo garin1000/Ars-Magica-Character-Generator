@@ -182,8 +182,9 @@
   );
 
   // The `item` domain resolves against the point-item registry, so a typed string
-  // could only ever be an internal slug. No shipped catalogue entry declares it
-  // today — the branch exists because the domain enum is exhaustive.
+  // could only ever be an internal slug. False Power's `virtue` target is the
+  // shipped user (narrowed below by `itemOptionsFor`); the branch itself exists
+  // unconditionally because the domain enum is exhaustive.
   const itemOptions = $derived(
     store.ruleset
       ? Object.keys(store.ruleset.ruleset.point_items)
@@ -208,6 +209,13 @@
   // engine — since a value names an item, not a selection of one, and
   // `index_categories` is provenance rather than membership.
   //
+  // `allow_ids` (D34) is additive to `require_categories`, mirroring the
+  // engine's own OR: an option is offered if EITHER test passes. False
+  // Power's target is `require_categories: ['supernatural']` plus
+  // `allow_ids: ['virtue.diedne_magic', 'virtue.the_gift']` — the two named
+  // Virtues the category axis alone cannot reach — read straight off the
+  // ruleset data, never re-derived here.
+  //
   // `require_possessed` and `forbid_tainted` narrow it further, and for the
   // same reason: the engine raises `param_target_not_possessed` for a Virtue
   // nobody holds and `unknown_param_value` for a Tainted one, so offering
@@ -218,10 +226,13 @@
     if (!store.ruleset) return itemOptions;
     const items = store.ruleset.ruleset.point_items;
     const required = param.require_categories;
+    const allowed = param.allow_ids;
     let options = itemOptions;
-    if (required?.length) {
-      options = options.filter((option) =>
-        required.some((category) => items[option.value]?.categories.includes(category)),
+    if (required?.length || allowed?.length) {
+      options = options.filter(
+        (option) =>
+          required?.some((category) => items[option.value]?.categories.includes(category)) ||
+          allowed?.includes(option.value),
       );
     }
     if (param.forbid_tainted) {
@@ -412,11 +423,11 @@
         {/each}
       </select>
     {:else if param.domain === 'item'}
-      <!-- Targets another catalogue item by id. Latent: no shipped entry declares
-           this domain. The menu is the point-item registry, narrowed to the
-           parameter's `require_categories` when it declares any. The branch exists
-           because the domain enum is exhaustive and a slug must never be typed by
-           hand. -->
+      <!-- Targets another catalogue item by id — False Power's `virtue` target is
+           the shipped user. The menu is the point-item registry, narrowed to the
+           parameter's `require_categories`/`allow_ids` (D34) when it declares
+           either. The branch exists unconditionally because the domain enum is
+           exhaustive and a slug must never be typed by hand. -->
       <select
         aria-label={typeLabel}
         value={selection.params?.[param.key] ?? ''}

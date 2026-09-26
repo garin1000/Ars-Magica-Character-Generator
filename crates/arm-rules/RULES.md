@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1134).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1143).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -2105,18 +2105,24 @@ magnitude change here, the per-Virtue target there.
   possession and Infernal clauses) and `ArMDE:6082` (which Virtues count).
 - Data: `rules/core/virtues_flaws.json` — both False Power entries declare
   `parameters: [{ key: "virtue", domain: "item", require_categories:
-  ["hermetic", "special", "supernatural"], require_possessed: true,
-  forbid_tainted: true }]`, and the Minor entry's `max_per_target` dropped from
-  `255` to the default `1`. Label `param-label-virtue` in
+  ["supernatural"], allow_ids: ["virtue.diedne_magic", "virtue.the_gift"],
+  require_possessed: true, forbid_tainted: true }]` (D34, C2 —
+  `require_categories` used to read `["hermetic", "special", "supernatural"]`;
+  see *The whitelist: D34* below), and the Minor entry's `max_per_target`
+  dropped from `255` to the default `1`. Label `param-label-virtue` in
   `locales/en|de/main.ftl`.
-- Engine: `ParameterDef::require_possessed` / `::forbid_tainted` (`types.rs`);
+- Engine: `ParameterDef::require_possessed` / `::forbid_tainted` /
+  `::allow_ids` (`types.rs`);
   `validation/selections.rs::validate_possessed_param_targets` (possession and
   the one-claim-per-Virtue rule) and `::param_value_resolves` (the Tainted
-  narrowing); load gate in `ruleset/integrity.rs::validate_parameter_defs`.
-- Frontend: `ParameterDef.require_possessed` / `.forbid_tainted`
-  (`ui/src/lib/types.ts`), `itemOptionsFor` + `heldItemRefs`
+  narrowing and the `allow_ids` OR); load gates in
+  `ruleset/integrity.rs::validate_parameter_defs` and `::validate_allow_ids`
+  (the catalogue half, D34).
+- Frontend: `ParameterDef.require_possessed` / `.forbid_tainted` /
+  `.allow_ids` (`ui/src/lib/types.ts`), `itemOptionsFor` + `heldItemRefs`
   (`ui/src/lib/components/ParameterPicker.svelte`).
 - Tests: `false_power_names_the_supernatural_virtue_it_taints`,
+  `false_power_admits_the_named_ids_but_not_an_arbitrary_other_hermetic_virtue`,
   `false_power_cannot_taint_a_virtue_the_character_lacks`,
   `false_power_cannot_taint_an_already_infernal_virtue`,
   `a_major_and_a_minor_false_power_cannot_taint_the_same_virtue`,
@@ -2133,19 +2139,33 @@ magnitude change here, the per-Virtue target there.
   (`validation/mod.rs`);
   `require_possessed_and_forbid_tainted_default_false_and_are_omitted_when_false`
   (`types.rs`); `possession_and_taint_flags_on_a_non_item_param_are_rejected`,
-  `possession_and_taint_flags_load_on_an_item_param` (`ruleset.rs`); and
+  `possession_and_taint_flags_load_on_an_item_param`,
+  `allow_ids_on_a_non_item_param_is_rejected`,
+  `allow_ids_member_naming_an_unknown_item_is_rejected`,
+  `allow_ids_member_resolving_loads_clean` (`ruleset.rs`); and
   `offers only Virtues the character holds when the parameter requires
-  possession` / `counts a granted row as possessed in the picker`
+  possession` / `counts a granted row as possessed in the picker` /
+  `additionally offers whitelisted ids the category alone would refuse (D34)`
   (`ui/src/lib/components/ParameterPicker.test.ts`).
 
-**Which Virtues the parameter admits, and why three categories.** `ArMDE:6096` says
+**The whitelist: D34.** `ArMDE:6096` says
 "Supernatural Virtue", but `ArMDE:6082` names three examples outright — "Faerie
 Blood, Diedne Magic, or even The Gift" — and in this catalogue those carry
 `supernatural`, `hermetic` and `special` respectively. A bare
 `require_categories: ["supernatural"]` would have refused two Virtues the source
-explicitly permits, which is wrong rules output; the three-category list is read
-straight off the book's own three examples, one category each. `special` is
-The Gift alone.
+explicitly permits, which is wrong rules output — but widening the CATEGORY
+(the entry's original `["hermetic", "special", "supernatural"]`) admits every
+OTHER Virtue either category carries too, 56 Hermetic Virtues where the book
+names one, which is over-permission just as wrong. D34's ruling: keep the
+category axis at `["supernatural"]` alone (Faerie Blood needs no further
+entry — it is already `supernatural`) and admit the other two examples by a
+**one-id whitelist**, `allow_ids: ["virtue.diedne_magic", "virtue.the_gift"]`
+— `ParameterDef::allow_ids`, additive to `require_categories`: a value
+resolves if EITHER test passes (`validation::selections::param_value_resolves`).
+`ArMDE:6082`'s "like" is an open list and the whitelist closes it, so a future
+background-defining Hermetic Virtue must be added by hand — the deliberate
+trade: a missing id is visible the moment someone looks for it, where the 55
+wrongly-admitted ones were invisible.
 
 **Possession is `Prereq::Has`'s notion, not a second one.** The check reads
 `validation::prereq::PrereqCtx::present_ids` — bought selections ++ granted rows
@@ -8525,7 +8545,7 @@ carry no source citation:
   `validate_forbidden_traits` (:585))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:236),
-  `validate_parameters` (:701), `validate_duplicate_selections` (:269))
+  `validate_parameters` (:710), `validate_duplicate_selections` (:269))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

@@ -9070,11 +9070,13 @@ fn false_power(item: &str, target: &str) -> Selection {
 /// (`ArMDE:6096`) — so every copy must NAME its Virtue, and that Virtue must be one
 /// the character actually holds and is not already Infernal.
 ///
-/// The three required categories are read off the book's own three examples at
-/// `ArMDE:6082` — "Faerie Blood, Diedne Magic, or even The Gift" — which in this
-/// catalogue carry `supernatural`, `hermetic` and `special` respectively. A
-/// bare `supernatural` would have excluded two Virtues the source names
-/// outright.
+/// **D34** (`docs/vf-audit/decisions.md`): the domain is the `supernatural`
+/// category PLUS a whitelist of the two named ids the category axis cannot
+/// reach — `ArMDE:6082` widens by NAME ("Diedne Magic, or even The Gift"), not
+/// by category, and a bare `require_categories: ["hermetic", "special",
+/// "supernatural"]` (this test's own previous assertion) wrongly admitted
+/// every OTHER Hermetic Virtue too (56 of them) where the book names one.
+/// Faerie Blood needs no whitelist entry: it is already `supernatural`.
 #[test]
 fn false_power_names_the_supernatural_virtue_it_taints() {
     let rs = load_ruleset();
@@ -9098,13 +9100,16 @@ fn false_power_names_the_supernatural_virtue_it_taints() {
         );
         assert_eq!(
             param.require_categories,
-            BTreeSet::from([
-                "hermetic".to_string(),
-                "special".to_string(),
-                "supernatural".to_string(),
-            ]),
-            "the Flaw applies to Supernatural Virtues, and :6082 names Diedne \
-             Magic (hermetic) and The Gift (special) among them"
+            BTreeSet::from(["supernatural".to_string()]),
+            "D34: the category axis alone over-admits every Hermetic/special \
+             Virtue; only 'supernatural' is a category match, the rest is the \
+             whitelist below"
+        );
+        assert_eq!(
+            param.allow_ids,
+            BTreeSet::from([Id::new("virtue.diedne_magic"), Id::new("virtue.the_gift")]),
+            "D34's whitelist: the two Virtues :6082 names outright but whose \
+             OWN category ('hermetic', 'special') the domain does not otherwise reach"
         );
         assert!(
             param.require_possessed,
@@ -9133,6 +9138,40 @@ fn false_power_names_the_supernatural_virtue_it_taints() {
         u8::MAX,
         "the book states no limit on the number of different Virtues tainted \
          (ArMDE:6096)"
+    );
+}
+
+/// D34's own trap, restated as behaviour: the two named ids resolve as
+/// targets even though their OWN category ('hermetic'/'special') is outside
+/// `require_categories: ["supernatural"]`, but an arbitrary OTHER Hermetic
+/// Virtue the book never names must still be refused — proving the whitelist
+/// is closed, not a fourth admitted category.
+#[test]
+fn false_power_admits_the_named_ids_but_not_an_arbitrary_other_hermetic_virtue() {
+    let rs = load_ruleset();
+
+    for named in ["virtue.diedne_magic", "virtue.the_gift"] {
+        let e = entity("companion", vec![false_power("flaw.false_power", named)]);
+        assert!(
+            !issue_codes(&e, &rs).contains(&"unknown_param_value".to_string()),
+            "D34: {named} is one of ArMDE:6082's own named examples, admitted \
+             by 'allow_ids' though its own category is not 'supernatural': {:?}",
+            issue_codes(&e, &rs)
+        );
+    }
+
+    // `virtue.affinity_art` is plain `hermetic` — neither `supernatural` nor
+    // one of D34's two named ids — the exact shape of the 55 Virtues the old
+    // 3-category `require_categories` wrongly admitted.
+    let other_hermetic = entity(
+        "companion",
+        vec![false_power("flaw.false_power", "virtue.affinity_art")],
+    );
+    assert!(
+        issue_codes(&other_hermetic, &rs).contains(&"unknown_param_value".to_string()),
+        "D34: the whitelist is closed — an arbitrary Hermetic Virtue outside \
+         it must be refused, not silently admitted by category: {:?}",
+        issue_codes(&other_hermetic, &rs)
     );
 }
 

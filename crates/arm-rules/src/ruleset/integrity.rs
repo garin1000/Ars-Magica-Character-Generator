@@ -147,6 +147,7 @@ impl Ruleset {
             Self::validate_taken_as_max_total(id, item, errors);
             self.validate_at_most_one_of(&item.parameters, &format!("{id}"), errors);
             self.validate_require_categories(&item.parameters, &format!("{id}"), errors);
+            self.validate_allow_ids(&item.parameters, &format!("{id}"), errors);
             self.validate_effect_refs(item, id, errors);
 
             validate_source_range(&item.source, &format!("{id}"), errors);
@@ -308,6 +309,28 @@ impl Ruleset {
                     errors.push(format!(
                         "{subject}: parameter '{key}' requires category '{category}', \
                          which no point item carries; the parameter could never be filled"
+                    ));
+                }
+            }
+        }
+    }
+
+    /// Checks that every [`ParameterDef::allow_ids`] (D34) member names a real
+    /// point item. Applied to point items *and* spells, since both hold
+    /// [`ParameterDef`]s.
+    ///
+    /// A whitelisted id that resolves to nothing admits nothing: it would sit
+    /// in the data looking like it widens the domain by one named id and
+    /// silently not — [`Self::validate_require_categories`]'s "excludes/admits
+    /// nothing" slip, in `allow_ids`'s own shape.
+    fn validate_allow_ids(&self, params: &[ParameterDef], subject: &str, errors: &mut Vec<String>) {
+        for param in params {
+            let key = &param.key;
+            for allowed_id in &param.allow_ids {
+                if !self.point_items.contains_key(allowed_id) {
+                    errors.push(format!(
+                        "{subject}: parameter '{key}' allows id '{allowed_id}', \
+                         which does not resolve to a real point item"
                     ));
                 }
             }
@@ -1766,6 +1789,7 @@ impl Ruleset {
         );
         self.validate_at_most_one_of(&spell.parameters, &format!("spell '{id}'"), errors);
         self.validate_require_categories(&spell.parameters, &format!("spell '{id}'"), errors);
+        self.validate_allow_ids(&spell.parameters, &format!("spell '{id}'"), errors);
         validate_source_range(&spell.source, &format!("spell '{id}'"), errors);
     }
 
@@ -2367,7 +2391,7 @@ enum CopiesJudgedTogether {
 /// so a spell may declare `enumerated` under exactly the same terms). `subject`
 /// is the caller's own message prefix, as with [`validate_source_range`].
 ///
-/// Six halves, all authoring slips that would otherwise be invisible:
+/// Seven halves, all authoring slips that would otherwise be invisible:
 ///
 /// - An across-copies constraint ([`ParameterDef::at_most_one_of`],
 ///   [`ParameterDef::max_per_value`]) on a record whose copies nothing weighs
@@ -2392,6 +2416,11 @@ enum CopiesJudgedTogether {
 ///   below. (The *catalogue* half of the check — that a required category is
 ///   one some point item carries — needs the registry and so lives in
 ///   [`Ruleset::validate_require_categories`].)
+/// - A [`ParameterDef::allow_ids`] (D34) list on any domain but `item`: the
+///   same reasoning as `require_categories`, since it is additive to that
+///   field and reads the same point-item catalogue. (The *catalogue* half —
+///   that a whitelisted id resolves to a real point item — needs the
+///   registry and so lives in [`Ruleset::validate_allow_ids`].)
 /// - An `enumerated`/`category` domain IS its list, so an **empty** one
 ///   resolves nothing: every selection naming that parameter would raise
 ///   `unknown_param_value` forever, and a **repeated** value is a
@@ -2442,6 +2471,17 @@ fn validate_parameter_defs(
                 "{subject}: parameter '{key}' has domain '{}' but declares \
                  'require_categories'; only an 'item' domain resolves against the \
                  point-item catalogue, so the list would narrow nothing",
+                param.domain
+            ));
+        }
+        // `allow_ids` (D34) is additive to `require_categories` and reads the
+        // same point-item catalogue, so it is rejected on exactly the same
+        // domains for exactly the same reason.
+        if !param.allow_ids.is_empty() && param.domain != ParameterDomain::Item {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has domain '{}' but declares \
+                 'allow_ids'; only an 'item' domain resolves against the \
+                 point-item catalogue, so the whitelist would admit nothing",
                 param.domain
             ));
         }

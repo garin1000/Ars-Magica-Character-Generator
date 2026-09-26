@@ -86,6 +86,13 @@ export interface ParameterDef {
   // `index_categories` is provenance. Absent on every other domain, where the
   // engine rejects it at load.
   require_categories?: string[];
+  // A one-id whitelist, additive to `require_categories`: a value resolves if
+  // EITHER test passes. False Power's target is `require_categories:
+  // ['supernatural']` plus `allow_ids: ['virtue.diedne_magic',
+  // 'virtue.the_gift']` — the two Virtues ArMDE:6082 names outright but whose
+  // OWN category ('hermetic', 'special') the domain does not otherwise reach.
+  // Absent on every other domain, where the engine rejects it at load (D34).
+  allow_ids?: string[];
   // The `item` the value names must be one the character HOLDS — bought or
   // granted, the engine's grants-inclusive `present_ids`. False Power is taken
   // "once for each appropriate Supernatural Virtue that the character
