@@ -15,6 +15,7 @@ beyond four small fixes listed under "Already done".
 
 | File | What it is |
 |---|---|
+| `docs/vf-audit/phase-2-plan.md` | **the approved slice plan (2026-09-26)** — Phase 2 and `open-todos.md` in one sequence |
 | `CLAUDE.md` | project invariants. **Read the `rules/source/` rules** — they changed on 2026-09-24 |
 | `docs/vf-audit/decisions.md` | **D1–D58**, binding. Do not re-litigate; several record *"this is closed"* explicitly |
 | `docs/vf-audit/corrections.md` § 3.0 | the **routing table** — which ruling's work joins which group |
