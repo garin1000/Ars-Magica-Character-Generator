@@ -3510,7 +3510,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_reputation", "kind": "academic", "score": 1 },
-      { "type": "restricted_ability_xp", "amount": 90, "abilities": ["ability.artes_liberales", "ability.dead_language"] }
+      { "type": "restricted_ability_xp", "amount": 90, "abilities": ["ability.artes_liberales"],
+        "instances": [{ "ability": "ability.dead_language", "instance": { "literal": "latin" } }] }
     ],
     "source": { "anchor": "baccalaureus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3470, 3475] }
   },
@@ -3660,7 +3661,11 @@
     "categories": ["hermetic"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.dead_language", "ability.magic_lore", "ability.organization_lore"] }],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.magic_lore"],
+      "instances": [
+        { "ability": "ability.dead_language", "instance": { "literal": "gothic" } },
+        { "ability": "ability.organization_lore", "instance": { "literal": "house_bjornaer" } }
+      ] }],
     "source": { "anchor": "clan-ilfetu", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3566] }
   },
   {
@@ -3746,7 +3751,8 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.bargain", "ability.craft", "ability.organization_lore", "ability.profession"] }],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.bargain", "ability.craft", "ability.profession"],
+      "instances": [{ "ability": "ability.organization_lore", "instance": { "literal": "guild" } }] }],
     "source": { "anchor": "craft-guild-training", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3613, 3616] }
   },
   {
@@ -3947,7 +3953,8 @@
       {
         "type": "restricted_ability_xp",
         "amount": 50,
-        "abilities": ["ability.artes_liberales", "ability.dead_language"]
+        "abilities": ["ability.artes_liberales"],
+        "instances": [{ "ability": "ability.dead_language", "instance": { "literal": "latin" } }]
       }
     ],
     "source": { "anchor": "educated", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] }
@@ -4154,7 +4161,11 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.area_lore", "ability.dead_language", "ability.etiquette", "ability.hunt", "ability.profession", "ability.ride"] }],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.area_lore", "ability.etiquette", "ability.hunt", "ability.ride"],
+      "instances": [
+        { "ability": "ability.dead_language", "instance": { "literal": "latin" } },
+        { "ability": "ability.profession", "instance": { "literal": "falconer" } }
+      ] }],
     "source": { "anchor": "falconer", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3847, 3852] }
   },
   {
@@ -4293,7 +4304,9 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.craft"] }],
+    "parameters": [{ "key": "craft", "type": "ref", "domain": "text" }],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50,
+      "instances": [{ "ability": "ability.craft", "instance": { "param": "craft" } }] }],
     "source": { "anchor": "forge-companion", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3925, 3928] }
   },
   {
@@ -4546,7 +4559,11 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.dead_language", "ability.magic_lore", "ability.organization_lore"] }],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.magic_lore"],
+      "instances": [
+        { "ability": "ability.dead_language", "instance": { "literal": "latin" } },
+        { "ability": "ability.organization_lore", "instance": { "literal": "order_of_hermes" } }
+      ] }],
     "source": { "anchor": "hermetic-experience", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4066] }
   },
   {
@@ -5199,7 +5216,11 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.dead_language", "ability.etiquette", "ability.hunt", "ability.profession", "ability.ride"] }],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.etiquette", "ability.hunt", "ability.ride"],
+      "instances": [
+        { "ability": "ability.dead_language", "instance": { "literal": "latin" } },
+        { "ability": "ability.profession", "instance": { "literal": "marshal" } }
+      ] }],
     "source": { "anchor": "marshal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4449, 4456] }
   },
   {
@@ -5211,7 +5232,12 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_reputation", "kind": "local", "score": 3 },
-      { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.area_lore", "ability.art_of_memory", "ability.faerie_lore", "ability.magic_lore", "ability.organization_lore", "ability.profession"] }
+      { "type": "restricted_ability_xp", "amount": 240,
+        "abilities": ["ability.area_lore", "ability.art_of_memory", "ability.faerie_lore", "ability.magic_lore", "ability.organization_lore"],
+        "instances": [
+          { "ability": "ability.profession", "instance": { "literal": "storyteller" } },
+          { "ability": "ability.profession", "instance": { "literal": "poet" } }
+        ] }
     ],
     "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4462] }
   },
@@ -5233,7 +5259,11 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.dead_language", "ability.etiquette", "ability.hunt", "ability.profession", "ability.ride"] }],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.etiquette", "ability.hunt", "ability.ride"],
+      "instances": [
+        { "ability": "ability.dead_language", "instance": { "literal": "latin" } },
+        { "ability": "ability.profession", "instance": { "literal": "master_of_kennels" } }
+      ] }],
     "source": { "anchor": "master-of-kennels", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4467, 4470] }
   },
   {
@@ -5801,7 +5831,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_reputation", "score": 2 },
-      { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.dead_language", "ability.rabbinic_law", "ability.theology_judaism"] },
+      { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.rabbinic_law", "ability.theology_judaism"],
+        "instances": [{ "ability": "ability.dead_language", "instance": { "literal": "hebrew" } }] },
       { "type": "grants_selection", "items": ["virtue.social_contacts"] }
     ],
     "source": { "anchor": "rosh-beth-din", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4878, 4883] }
@@ -5864,7 +5895,12 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_reputation", "kind": "local", "score": 2 },
-      { "type": "restricted_ability_xp", "amount": 90, "abilities": ["ability.area_lore", "ability.art_of_memory", "ability.faerie_lore", "ability.magic_lore", "ability.organization_lore", "ability.profession"] }
+      { "type": "restricted_ability_xp", "amount": 90,
+        "abilities": ["ability.area_lore", "ability.art_of_memory", "ability.faerie_lore", "ability.magic_lore", "ability.organization_lore"],
+        "instances": [
+          { "ability": "ability.profession", "instance": { "literal": "storyteller" } },
+          { "ability": "ability.profession", "instance": { "literal": "poet" } }
+        ] }
     ],
     "source": { "anchor": "senior-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4904, 4909] }
   },

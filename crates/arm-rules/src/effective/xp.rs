@@ -328,9 +328,14 @@ enum PoolEligibility {
     Ability {
         abilities: Vec<Id>,
         categories: Vec<AbilityCategory>,
-        /// Specific instances this pool funds. When non-empty it is the ONLY test —
-        /// childhood's native-language block funds one instance and nothing else,
-        /// which `abilities` (id-only) cannot express.
+        /// Specific instances this pool funds — a **union** with
+        /// `abilities`/`categories` (D48, `docs/vf-audit/decisions.md` D48),
+        /// not "when non-empty it is the ONLY test": Master Bard's one pool
+        /// funds five whole Abilities (`abilities`) AND two Profession
+        /// instances (`instances`) at once. Childhood's native-language block
+        /// happens to leave `abilities`/`categories` empty, so for it the
+        /// union degenerates to exactly `instances` — verified
+        /// behaviour-preserving, not a special case.
         instances: Vec<AbilityInstanceRef>,
         /// Instances this pool never funds, even when `abilities`/`categories`
         /// would cover them: childhood's spread excludes the native language.
@@ -407,6 +412,27 @@ pub(crate) fn authorizes_instance(
     authorized.iter().any(|a| a.covers(ability, parameter))
 }
 
+/// Resolves a gated [`AbilityRef`] list against the selection that declares
+/// it, keeping only the entries whose [`ParamGate`] holds (or is absent) and
+/// producing the concrete instance each names — D48/C4's shared resolution
+/// path (`docs/vf-audit/design-c0-parameter-model.md` § 5): both
+/// [`ability_authorizations`] (what may be OWNED) and
+/// [`restricted_ability_xp_pools`] (what a pool may FUND) call this, so the
+/// gate/instance semantics cannot drift between the two readings. An
+/// unscoped (bare) entry resolves to `parameter: None`, which
+/// [`AbilityInstanceRef::matches`] already reads as "any instance", so a
+/// scoped and an unscoped entry coexist in the same resolved list with no
+/// special-casing.
+fn resolve_ability_refs(refs: &[AbilityRef], selection: &Selection) -> Vec<AbilityInstanceRef> {
+    refs.iter()
+        .filter(|a| a.active_for(selection))
+        .map(|a| AbilityInstanceRef {
+            ability: a.ability().clone(),
+            parameter: a.resolved_instance(selection),
+        })
+        .collect()
+}
+
 /// The Abilities and categories the character's selections permit.
 ///
 /// A Virtue grants access three ways, and all three count: an explicit
@@ -445,11 +471,17 @@ pub(crate) fn ability_authorizations(
             match effect {
                 // Experience earmarked for a category or Ability is itself
                 // permission to learn it — otherwise the grant could never be
-                // spent. A fixed id/category list (never gated, never
-                // instance-scoped): every named entry always counts.
+                // spent. `abilities`/`categories` are a fixed, unscoped list
+                // (never gated, never instance-scoped): every named entry
+                // always counts. `instances` (D48/C4) IS instance-scoped, so
+                // it is resolved through the same gate/instance fold as every
+                // other `AbilityRef` list — an earmark for one specific
+                // instance (Marshal's Profession: Marshal) authorizes only
+                // that instance, not the whole Ability id.
                 Effect::RestrictedAbilityXp {
                     abilities: ids,
                     categories: cats,
+                    instances: refs,
                     ..
                 } => {
                     abilities.extend(ids.iter().map(|ability| AuthorizedAbility {
@@ -457,6 +489,12 @@ pub(crate) fn ability_authorizations(
                         instance: None,
                     }));
                     categories.extend(cats.iter().copied());
+                    abilities.extend(resolve_ability_refs(refs, selection).into_iter().map(
+                        |r| AuthorizedAbility {
+                            ability: r.ability,
+                            instance: r.parameter,
+                        },
+                    ));
                 }
                 // D35's parameter-scaled sibling: an earmark is itself
                 // permission, exactly like `RestrictedAbilityXp` above — but
@@ -468,14 +506,12 @@ pub(crate) fn ability_authorizations(
                     categories: cats,
                     ..
                 } => {
-                    for a in refs {
-                        if a.active_for(selection) {
-                            abilities.insert(AuthorizedAbility {
-                                ability: a.ability().clone(),
-                                instance: a.resolved_instance(selection),
-                            });
-                        }
-                    }
+                    abilities.extend(resolve_ability_refs(refs, selection).into_iter().map(
+                        |r| AuthorizedAbility {
+                            ability: r.ability,
+                            instance: r.parameter,
+                        },
+                    ));
                     categories.extend(cats.iter().copied());
                 }
                 // The gated carrier (D14/W2): only the entries whose gate holds
@@ -485,14 +521,12 @@ pub(crate) fn ability_authorizations(
                     abilities: refs,
                     categories: cat_refs,
                 } => {
-                    for a in refs {
-                        if a.active_for(selection) {
-                            abilities.insert(AuthorizedAbility {
-                                ability: a.ability().clone(),
-                                instance: a.resolved_instance(selection),
-                            });
-                        }
-                    }
+                    abilities.extend(resolve_ability_refs(refs, selection).into_iter().map(
+                        |r| AuthorizedAbility {
+                            ability: r.ability,
+                            instance: r.parameter,
+                        },
+                    ));
                     for c in cat_refs {
                         if c.active_for(selection) {
                             categories.insert(c.category());
@@ -511,14 +545,12 @@ pub(crate) fn ability_authorizations(
                 // 50(a)): same gate fold as `AbilityAuthorization`, read off
                 // this effect's own target list instead.
                 Effect::AbilityBonusGated { targets, .. } => {
-                    for t in targets {
-                        if t.active_for(selection) {
-                            abilities.insert(AuthorizedAbility {
-                                ability: t.ability().clone(),
-                                instance: t.resolved_instance(selection),
-                            });
-                        }
-                    }
+                    abilities.extend(resolve_ability_refs(targets, selection).into_iter().map(
+                        |r| AuthorizedAbility {
+                            ability: r.ability,
+                            instance: r.parameter,
+                        },
+                    ));
                 }
                 // Exhaustive so adding an Effect variant is a compile error here,
                 // not a silently-ignored authorization gap (V55). Every listed
@@ -616,12 +648,12 @@ fn pool_covers(eligibility: &PoolEligibility, spend: &Spend) -> bool {
             if exclude.iter().any(|e| e.matches(ability, parameter)) {
                 return false;
             }
-            if !instances.is_empty() {
-                // An instance list is exhaustive for this pool, not additive: the
-                // native-language block funds exactly its one instance.
-                return instances.iter().any(|i| i.matches(ability, parameter));
-            }
-            abilities.contains(ability) || categories.contains(category)
+            // D48: union, not "instances non-empty is the only test" — Master
+            // Bard's pool must cover both its plain `abilities`/`categories`
+            // eligibility AND its two Profession instances at once.
+            instances.iter().any(|i| i.matches(ability, parameter))
+                || abilities.contains(ability)
+                || categories.contains(category)
         }
         (PoolEligibility::Mastery, SpendKind::Mastery) => true,
         // Every remaining combination is explicitly uncovered, so a new
@@ -801,18 +833,26 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
         };
         for effect in &item.effects {
             match effect {
+                // D48/C4: `instances` is resolved through the same
+                // `resolve_ability_refs` helper `ability_authorizations` uses,
+                // and unions with `abilities`/`categories` in `pool_covers`
+                // rather than overriding them — Master Bard's one 240-point
+                // pool needs both a plain ability/category eligibility (Area
+                // Lore, Faerie Lore, Magic Lore, Organization Lore, Art of
+                // Memory) AND two instance-scoped entries (Profession:
+                // Storyteller, Profession: Poet) at once.
                 Effect::RestrictedAbilityXp {
                     amount,
                     abilities,
                     categories,
+                    instances,
                 } => {
                     flow_pools.push(FlowPool {
                         amount: *amount,
                         eligibility: PoolEligibility::Ability {
                             abilities: abilities.clone(),
                             categories: categories.clone(),
-                            // A V/F grant is id/category-scoped, never instance-scoped.
-                            instances: Vec::new(),
+                            instances: resolve_ability_refs(instances, selection),
                             exclude: Vec::new(),
                         },
                         origin: XpPoolOrigin::Item {
@@ -825,20 +865,12 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                 // — no pool at all until a legal value is filled in, matching
                 // `missing_param`'s "a choice not yet made" reading elsewhere.
                 // `abilities` is `Vec<AbilityRef>` (Simple Student's Latin
-                // instance restriction, § 1 of the design note), so every
-                // active entry is resolved into an `AbilityInstanceRef` and
-                // put in `instances` — a bare (any-instance) entry there is
-                // `parameter: None`, which `AbilityInstanceRef::matches`
-                // already treats as "any instance", so an unscoped ability
-                // and an instance-scoped one coexist in the same list with no
-                // special-casing (the same reasoning covenant_upbringing's
-                // literal-instance form already established for
-                // `AbilityAuthorization`). `categories` stays a plain
-                // eligibility list; a future entry combining `categories` with
-                // an instance-scoped ability in ONE grant would need D48's
-                // union fix (C4) to see both — not needed by Simple Student,
-                // this effect's only known consumer, and out of this slice's
-                // scope.
+                // instance restriction, § 1 of the design note), resolved the
+                // same way `RestrictedAbilityXp.instances` is above — a bare
+                // (any-instance) entry resolves to `parameter: None`, which
+                // `AbilityInstanceRef::matches` already treats as "any
+                // instance", so an unscoped ability and an instance-scoped one
+                // coexist in the same list with no special-casing.
                 Effect::ScaledRestrictedAbilityXp {
                     param,
                     per_unit,
@@ -858,14 +890,7 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                         eligibility: PoolEligibility::Ability {
                             abilities: Vec::new(),
                             categories: categories.clone(),
-                            instances: abilities
-                                .iter()
-                                .filter(|a| a.active_for(selection))
-                                .map(|a| AbilityInstanceRef {
-                                    ability: a.ability().clone(),
-                                    parameter: a.resolved_instance(selection),
-                                })
-                                .collect(),
+                            instances: resolve_ability_refs(abilities, selection),
                             exclude: Vec::new(),
                         },
                         origin: XpPoolOrigin::Item {

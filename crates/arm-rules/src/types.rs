@@ -1220,23 +1220,35 @@ pub enum Effect {
     },
     /// A restricted pool of experience points, spendable only on Abilities (never
     /// Arts) the grant is eligible for: an ability qualifies if its id is in
-    /// `abilities` **or** its category is in `categories`. The general
-    /// [`Entity::xp_pool`] still covers anything; unused restricted XP is wasted.
-    /// Stacks across selections. Educated (specific ids), Warrior / Privileged
-    /// Upbringing (categories).
+    /// `abilities`, its category is in `categories`, **or** it matches one of
+    /// `instances` — the three are a **union** (D48,
+    /// `docs/vf-audit/decisions.md` D48), not "instances-only when non-empty".
+    /// The general [`Entity::xp_pool`] still covers anything; unused restricted
+    /// XP is wasted. Stacks across selections. Educated (specific ids), Warrior
+    /// / Privileged Upbringing (categories), Marshal / Master Bard (instances).
     ///
     /// Source: ArMDE:3711-3713
     /// (Educated), `ArMDE:5227-5229` (Warrior), `ArMDE:4806-4808` (Privileged Upbringing).
     RestrictedAbilityXp {
         /// Points granted to this restricted pool.
         amount: u32,
-        /// Eligible ability ids (Educated: Latin + Artes Liberales).
+        /// Eligible ability ids, any instance (Educated: Artes Liberales).
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         abilities: Vec<Id>,
         /// Eligible ability categories (Warrior: Martial; Privileged: General,
         /// Academic, Martial).
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         categories: Vec<AbilityCategory>,
+        /// Specific ability instances this pool also funds (D48: Marshal's
+        /// Profession: Marshal, Master Bard's Profession: Storyteller/Poet) —
+        /// reuses [`AbilityRef`], the same literal/bound-instance mechanism D14
+        /// built for [`Self::AbilityAuthorization`], rather than a second type
+        /// for the same idea. Resolved against the owning selection by
+        /// `effective/xp.rs::resolve_ability_refs`, the helper shared with the
+        /// authorization fold so the two readings ("what may I own" vs "what
+        /// may this pool fund") cannot drift apart.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        instances: Vec<AbilityRef>,
     },
     /// D35's parameter-scaled sibling of [`Self::RestrictedAbilityXp`]: the
     /// granted pool's `amount` is `per_unit` times the value the selection's

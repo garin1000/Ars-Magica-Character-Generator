@@ -2196,10 +2196,23 @@ impl Ruleset {
                 // Fixed eligibility list: validate each named ability id resolves,
                 // like AbilityScoreGrant.ability and AbilityMin. The eligible
                 // categories are a loose namespace matched at eval, not a registry,
-                // so they are not checked here.
-                Effect::RestrictedAbilityXp { abilities, .. } => {
+                // so they are not checked here. `instances` (D48) is a gated
+                // `AbilityRef` list exactly like `AbilityAuthorization.abilities`,
+                // so it gets the same per-target checks.
+                Effect::RestrictedAbilityXp {
+                    abilities,
+                    instances,
+                    ..
+                } => {
                     self.validate_ability_list_effect(
                         abilities,
+                        "restricted_ability_xp",
+                        id,
+                        errors,
+                    );
+                    self.validate_gated_ability_refs(
+                        item,
+                        instances,
                         "restricted_ability_xp",
                         id,
                         errors,

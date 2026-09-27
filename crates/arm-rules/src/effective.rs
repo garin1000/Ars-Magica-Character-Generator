@@ -24,8 +24,8 @@ use crate::characteristics::Characteristic;
 use crate::grant::{Grant, GrantConstraint, resolve_grants};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    AgingEffect, Effect, Entity, EntityTypeProfile, Id, ItemKind, Magnitude, MightScore, Realm,
-    ReputationType, Selection, SelectionParamValue, SpellSelection,
+    AbilityRef, AgingEffect, Effect, Entity, EntityTypeProfile, Id, ItemKind, Magnitude,
+    MightScore, Realm, ReputationType, Selection, SelectionParamValue, SpellSelection,
 };
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;

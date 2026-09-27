@@ -6799,11 +6799,24 @@ Abilities are bought with experience earned in blocks, not from one bank:
   would therefore fail for every non-English user, which is worse than
   under-enforcing. **The consequence, stated plainly: a magus whose only dead language
   is Greek 1 passes `ArMDE:2437`.** The same id-level proxy `ability.scholarly_language`
-  (`rules/core/abilities.json`) and `flaw.covenant_upbringing`'s
-  `ability_authorization` already use. `AbilityRequirement::parameter` exists unused so
+  (`rules/core/abilities.json`) uses. `AbilityRequirement::parameter` exists unused so
   a future language registry tightens this by filling one JSON field, with no code
   change; the test `latin_is_matched_by_ability_id_not_by_instance` pins the current
   behaviour so it can never become accidental.
+  **This is now a deliberate divergence from `flaw.covenant_upbringing`'s own
+  Latin check, not a shared choice — stale wording here used to say the two
+  agreed.** Phase 2 C1 scoped `covenant_upbringing`'s `ability_authorization` to
+  the literal instance `latin` (`AbilityRef.instance`), and Phase 2 C4 does the
+  same for ten more restricted-XP pools (Educated, Marshal, Master Bard, …,
+  below). The two mechanisms answer the free-text risk oppositely, on purpose,
+  because they fail in opposite directions: this minimum-abilities gate is a
+  hard bar a legitimately-qualified magus must never wrongly fail, so it stays
+  id-only and permanently over-wide; an authorization/pool-funding grant is a
+  spending permission that must never wrongly over-permit (F-349/F-16x, D48),
+  so it accepts the locale risk and matches the literal instead. A saga whose
+  players type a non-English or misspelled instance value gets the wide
+  reading here and the narrow (occasionally wrong) one there — two different,
+  independently justified trade-offs, not one drifted out of sync.
 - **The widening is PERMANENT, and a `language.*` catalogue is rejected — not
   deferred (guided-creation review #32, Slice 7).** The obvious way to make "Latin 1"
   enforceable is a language catalogue so the requirement can name Latin by id. **It
@@ -7208,6 +7221,120 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   other domain renders a `<select>` or free-text `<input>`). Label
   `param-label-years` in `locales/en|de/main.ftl`, alongside the
   `param-domain-number` entry `unknown_param_value` needs.
+
+#### D48 — restricted pools that fund an Ability *instance* (Phase 2 C4)
+
+> Marshal: "A marshal receives 50 extra experience points at character
+> generation to spend on the abilities Animal Handling, Etiquette, Hunt,
+> Latin, Profession: Marshal and Ride" (`ArMDE:4455`). Master Bard: "an extra
+> 240 experience points to spend on Art of Memory, Profession: Storyteller,
+> Profession: Poet, any Area Lore, any Organization Lore, Faerie Lore, or
+> Magic Lore" (`ArMDE:4461`).
+
+- Source: see the per-entry list below; each line cites its own passage.
+- **Ruling (`docs/vf-audit/decisions.md` D48):** `Effect::RestrictedAbilityXp`
+  gains `instances: Vec<AbilityRef>` (D14's literal/bound-instance form, reused
+  rather than a second mechanism), and pool eligibility becomes the **union**
+  of `abilities` (id, any instance), `categories`, and `instances` (id **and**
+  a specific instance) — replacing the previous "when `instances` is non-empty
+  it is the ONLY test", which cannot express Master Bard's one pool funding
+  five whole Abilities **and** two specific Profession instances at once.
+  `effective/xp.rs::pool_covers`'s `Ability` arm is now
+  `instances.any(matches) || abilities.contains(ability) || categories.contains(category)`
+  (minus `exclude`, checked first, unchanged).
+- **One resolution path, not two.** `effective/xp.rs::resolve_ability_refs`
+  (new) filters a `&[AbilityRef]` by `active_for(selection)` and resolves each
+  to an `AbilityInstanceRef` — the exact fold `ability_authorizations`'s
+  `AbilityAuthorization`/`ScaledRestrictedAbilityXp`/`AbilityBonusGated` arms
+  and `RestrictedAbilityXp`'s own new `instances` fold, plus
+  `restricted_ability_xp_pools`'s `RestrictedAbilityXp`/`ScaledRestrictedAbilityXp`
+  arms, all now call — so "what may I own" (`ability_authorizations`) and
+  "what may this pool fund" (`restricted_ability_xp_pools`) cannot drift apart
+  on gate/instance semantics. Behaviour-preserving: the full suite is green
+  before and after this refactor (no data changed by it alone).
+- **An earmarked instance is itself permission**, same reasoning as an
+  earmarked id/category: `ability_authorizations`'s `RestrictedAbilityXp` arm
+  now also folds `instances` into the authorized set, each entry authorizing
+  only the instance it names — Marshal funding Profession: Marshal no longer
+  authorizes owning Profession: Sailor for free either.
+- Load-time integrity (`ruleset/integrity.rs::validate_effect_refs`): a
+  `restricted_ability_xp`'s `instances` gets the same
+  `validate_gated_ability_refs` check `AbilityAuthorization.abilities` already
+  has (every named ability resolves; a dangling gate/`Bound` param is
+  rejected; `instance` and `gate` may not name the same param key).
+- **The 12-pool sweep (measurements.md § 8 row 12), each passage re-read
+  directly and confirmed — none rejected:**
+  - `virtue.marshal` (`ArMDE:4449-4456`) — "Latin, Profession: Marshal" scoped;
+    Animal Handling/Etiquette/Hunt/Ride stay unscoped.
+  - `virtue.master_of_kennels` (`ArMDE:4467-4470`) — same shape, "Profession:
+    Master of Kennels".
+  - `virtue.master_bard` (`ArMDE:4457-4462`) — "Profession: Storyteller,
+    Profession: Poet" scoped; Area Lore/Art of Memory/Faerie Lore/Magic
+    Lore/Organization Lore stay unscoped. **Regression tests**
+    (`tests/d48_instance_pools.rs`): `amount` stays **240** (Faerie Lore 9 +
+    Magic Lore 2 = 225 + 15 = 240 XP, fully funded with no general pool at
+    all; +1 more XP of demand overflows), and Faerie Lore/Magic Lore stay
+    eligible.
+  - `virtue.senior_bard` (`ArMDE:4904-4909`) — same six-Ability/two-Profession
+    shape as Master Bard, amount 90 (unchanged).
+  - `virtue.falconer` (`ArMDE:3847-3852`) — "Latin, Profession: Falconer"
+    scoped; Animal Handling/Area Lore/Etiquette/Hunt/Ride stay unscoped.
+  - `virtue.craft_guild_training` (`ArMDE:3613-3616`) — "any Craft or
+    Profession Abilities, Bargain, or Organization Lore: **Guild**" — only
+    Organization Lore is instance-scoped (`guild`); Craft and Profession stay
+    unscoped ("any"), matching the passage's own wording.
+  - `virtue.educated` (`ArMDE:3711-3713`) — "Latin and Artes Liberales" — Latin
+    scoped, Artes Liberales unscoped (not itself parameterized). Reuses the
+    literal-instance form `flaw.covenant_upbringing` (C1) already established,
+    rather than inventing a second one.
+  - `virtue.baccalaureus` (`ArMDE:3470-3475`) — same "Latin and Artes
+    Liberales" shape, amount 90.
+  - `virtue.hermetic_experience` (`ArMDE:4063-4066`) — "Order of Hermes Lore,
+    Magic Lore, or Latin" — Order of Hermes Lore (`order_of_hermes`) and Latin
+    scoped; Magic Lore (not parameterized) stays unscoped.
+  - `virtue.clan_ilfetu` (`ArMDE:3563-3566`) — "House Bjornaer Lore, Magic Lore
+    … and Gothic" — House Bjornaer Lore (`house_bjornaer`) and Gothic scoped;
+    Magic Lore stays unscoped. The specialty "(with a specialty in the Great
+    Beasts)" is not modelled — specialties are free text on the bought score,
+    orthogonal to instance scoping.
+  - `virtue.rosh_beth_din` (`ArMDE:4878-4883`) — "the required Abilities"
+    resolves against the Virtue's own prerequisite: "scores of at least 5 in
+    **Hebrew**, Rabbinic Law, and Theology: Judaism" — Hebrew scoped; Rabbinic
+    Law and Theology: Judaism are fixed, non-parameterized ids and stay
+    unscoped.
+  - `virtue.forge_companion` (`ArMDE:3925-3928`, F-74) — "raise the particular
+    Crafts her master practices." **No existing mechanism records "her
+    master"** — the engine has no cross-character relationship at all, so
+    which Craft(s) a Verditius's unGifted craftsman may fund cannot be *read
+    off* anything; it is a fact only the player can supply. **Modelled as a
+    new `text`-domain parameter** (`craft`), read via `AbilityRef.instance:
+    { param: "craft" }` — the same `Bound`-instance form C0 designed for F-63
+    (`AbilityScoreGrantParam`, C5c), applied here to a pool-funding entry
+    instead of a floor grant. **This narrows the passage's plural "Crafts" to
+    one recorded choice**, same as any other Virtue capped at one selection
+    (Forge Companion is Social Status, D41): a master who practices more than
+    one Craft cannot have all of them funded by a single `craft` value. That
+    is a real, stated limitation, not a silent one — recorded here rather than
+    left for someone to rediscover — and it is still strictly better than
+    today's unscoped `ability.craft` (funds literally any Craft in the
+    catalogue, matching no master at all).
+  - **Not instance-scoped, confirmed by the same re-read**:
+    `flaw.feral_upbringing` ("(Area) Lore", i.e. any), `virtue.schooled_in_crime`,
+    `virtue.shadchan`, `virtue.venditor` — each names its Abilities plainly,
+    with no "the" / specific-instance wording.
+- **D10, no migration.** Instance scoping narrows ownership, so a save that
+  spent Marshal's/Master of Kennels'/etc. points on the wrong Profession (or
+  Educated's on a non-Latin dead language) becomes invalid — reported (a new
+  `not_enough_xp` shortfall, or `ability_category_requires_virtue` if that was
+  the character's only academic authorization) and blocked, never silently
+  migrated. Swept `examples/` and every book-template fixture for a holder:
+  only `crates/arm-rules/tests/fixtures/book_templates/companion_witch.json`
+  holds one of the twelve (`virtue.educated`) with a Dead Language score — its
+  `parameter` was `"Latin"` (capitalised), which no longer matches the literal
+  `"latin"` this fix and `flaw.covenant_upbringing`/`virtue.custos` (C1) all
+  use; fixed to lowercase in the fixture (the language spoken is unchanged,
+  only its stored slug), restoring `the_witch_matches_the_book`'s previously
+  green result. No other fixture or `examples/` save holds any of the twelve.
 - Tests: `simple_student_scales_its_restricted_pool_by_finished_years`,
   `simple_student_funds_latin_but_not_another_dead_language`
   (`tests/data_integrity.rs`); `a_number_type_paired_with_a_non_number_domain_fails_the_load`,
