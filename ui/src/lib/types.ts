@@ -421,6 +421,29 @@ export interface AbilityFloor {
   floor: number;
 }
 
+// A once-only Virtue/Flaw item's own parameter, Bound to one Ability in a
+// currently-active effect the character holds. Mirrors the engine's
+// `LinkTarget` (design-cv-catalogued-values.md § 6.3).
+export interface LinkTarget {
+  item: string;
+  param: string;
+}
+
+// The engine-built parameter-picker options for one catalogued-or-linkable
+// Ability — the UI must not derive any of this itself. Mirrors the engine's
+// `AbilityParameterOptions` (design-cv-catalogued-values.md § 6.3). `catalogued`
+// holds ids only — the UI localizes the name through the i18n it already has,
+// never rendering a raw id. `hint` (§ 11 item 2) is set only when a bought
+// free-text value on this ability leaves a Literal or Bound instance unmet;
+// the UI never queries the ruleset to decide this itself. No picker consumes
+// this yet (CV7).
+export interface AbilityParameterOptions {
+  ability: string;
+  catalogued: string[];
+  linked: LinkTarget[];
+  hint: boolean;
+}
+
 // One restricted experience pool (Educated/Warrior/Privileged) with how much of
 // it the allocation consumes. Mirrors the engine's `RestrictedXpPool`. Eligible
 // by ability id OR ability category; empty arrays are omitted by the engine.

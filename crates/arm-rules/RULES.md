@@ -7464,6 +7464,36 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   passes vacuously today, mirroring the C0 §3 precedent). No `SCHEMA_VERSION`
   bump: `Linked` already shipped inside CV4's 17 → 18 (design § 3.2), and
   adding resolution logic on top is purely additive for existing v18 data.
+- **CV6, `AbilityParameterOptions` (design § 6.3, § 11 item 2).** Engine-built
+  parameter-picker options, one entry per Ability that is either catalogued or
+  offers at least one link target to the character — `effective/
+  parameter_options.rs::ability_parameter_options`. `catalogued` reads
+  straight off `Ruleset::parameter_catalogues()` in catalogue order (ids only,
+  independent of the character); `linked` reuses CV5's `ability_authorizations`
+  output (`AuthorizedAbility::bound_source`/`ambiguous`) rather than
+  re-scanning effects, filtering out `ambiguous` entries per design § 4.1 ("an
+  ambiguous source is not offered as a link target"), sorted/deduplicated via
+  the new `LinkTarget`'s derived `Ord` for a deterministic picker order. The
+  conditional hint (§ 11 item 2, replacing an earlier "static, always shown"
+  recommendation) is `true` only when a bought `Text` value on that ability
+  fails to satisfy at least one SCOPED (`Literal`- or non-ambiguous `Bound`-
+  derived) `AuthorizedAbility` entry from one of the character's own items —
+  `AuthorizedAbility::covers` (made `pub(crate)`, previously private) is the
+  shared test, so the hint can never disagree with what actually funds/
+  authorizes. An unscoped entry (no instance restriction at all) contributes
+  nothing to the hint, and neither does an ambiguous one (nothing typed could
+  satisfy it anyway). `EffectiveScores::ability_parameter_options`
+  (`arm-app/src/effective_dto.rs`) carries it over IPC; the TS mirror
+  (`AbilityParameterOptions`/`LinkTarget`, `ui/src/lib/types.ts`) is NOT yet
+  added to the TS `EffectiveScores` interface — the existing
+  `effective-scores-consumers.test.ts` guard requires a real shipped consumer
+  for every `EffectiveScores` field, and CV6 ships no UI at all (CV7 wires the
+  picker and adds the field + its first consumer together, rather than this
+  slice adding an orphaned field to dodge that guard). Tests:
+  `crates/arm-rules/tests/cv6_ability_parameter_options.rs`;
+  `arm-app/src/effective_dto.rs::tests::effective_scores_surfaces_ability_parameter_options`;
+  `ui/src/lib/ability-parameter-options-parity.test.ts` (Rust struct fields vs.
+  the TS mirror, text-diffed like `param-type-parity.test.ts`).
 - Tests: `simple_student_scales_its_restricted_pool_by_finished_years`,
   `simple_student_funds_latin_but_not_another_dead_language`
   (`tests/data_integrity.rs`); `a_number_type_paired_with_a_non_number_domain_fails_the_load`,

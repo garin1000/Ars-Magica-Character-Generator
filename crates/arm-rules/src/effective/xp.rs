@@ -454,8 +454,11 @@ impl AuthorizedAbility {
     /// restated here because `AuthorizedAbility` and `AbilityInstanceRef` are
     /// deliberately separate types (one names ownership permission, the other
     /// a pool's funding scope) that must not drift apart in what "satisfies"
-    /// means.
-    fn covers(&self, ability: &Id, parameter: Option<&AbilityParameterValue>) -> bool {
+    /// means. `pub(crate)`: also read by
+    /// [`crate::effective::ability_parameter_options`]'s conditional hint
+    /// (design § 11 item 2), which needs the identical "does this bought
+    /// value satisfy that scoped entry" test rather than a second copy of it.
+    pub(crate) fn covers(&self, ability: &Id, parameter: Option<&AbilityParameterValue>) -> bool {
         if self.ambiguous {
             return false;
         }

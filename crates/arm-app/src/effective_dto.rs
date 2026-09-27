@@ -11,20 +11,20 @@
 use std::collections::BTreeMap;
 
 use arm_rules::{
-    AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence,
-    CreationPhase, Entity, EntityTypeProfile, Grant, Id, LifeStageBudget, MagusMinimumAbility,
-    MightScore, PointCeilings, ReputationType, RestrictedXpPool, Ruleset, Selection, SpellLevelCap,
-    SupernaturalFreeSlots, ability_bonuses, ability_score_floors, aging_schedule, aging_total,
-    art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_caps,
-    characteristic_floors, characteristic_points_granted, checked_xp_allocation, compute_balance,
-    confidence, decrepitude_score, effective_characteristics, effective_might,
-    effective_point_ceilings, entity_grants, focus_points_budget, focus_points_used,
-    is_hermetically_trained, item_level_budget, item_level_used, life_stage_spell_levels,
-    longevity_bonus, magus_minimum_abilities, phases_in_force, power_levels_budget, powers_used,
-    reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
-    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
-    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, warping,
-    warping_owed_grants,
+    AbilityBonus, AbilityFloor, AbilityParameterOptions, ArtBonus, Characteristic,
+    CharacteristicBonus, Confidence, CreationPhase, Entity, EntityTypeProfile, Grant, Id,
+    LifeStageBudget, MagusMinimumAbility, MightScore, PointCeilings, ReputationType,
+    RestrictedXpPool, Ruleset, Selection, SpellLevelCap, SupernaturalFreeSlots, ability_bonuses,
+    ability_parameter_options, ability_score_floors, aging_schedule, aging_total, art_bonuses,
+    characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
+    characteristic_points_granted, checked_xp_allocation, compute_balance, confidence,
+    decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
+    entity_grants, focus_points_budget, focus_points_used, is_hermetically_trained,
+    item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
+    magus_minimum_abilities, phases_in_force, power_levels_budget, powers_used, reputation_grants,
+    size, spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
+    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, warping, warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -256,6 +256,12 @@ pub struct EffectiveScores {
     /// flags itself — the single resolution point, mirroring how
     /// `categories_in_force` already backs `permitted_categories`.
     pub phases_in_force: Vec<CreationPhase>,
+    /// The parameter-picker options for every catalogued-or-linkable Ability
+    /// (design-cv-catalogued-values.md § 6.3): catalogue ids, the character's
+    /// own link targets, and the conditional free-text hint (§ 11 item 2).
+    /// The UI must not derive any of this itself — CV6 ships the engine
+    /// output only; CV7 wires the picker.
+    pub ability_parameter_options: Vec<AbilityParameterOptions>,
 }
 
 /// Everything about a character's aging that does **not** depend on a die.
@@ -771,6 +777,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         focus_points_used: might_power.focus_points_used,
 
         phases_in_force: phases_in_force(entity, ruleset),
+
+        ability_parameter_options: ability_parameter_options(entity, ruleset),
     }
 }
 
@@ -837,6 +845,44 @@ mod tests {
             spell_mastery_fields(&entity, &localized.ruleset).advancement_affinity,
             Some(authored),
             "the DTO must carry the authored (num, den), not a boolean"
+        );
+    }
+
+    /// CV6 (design-cv-catalogued-values.md § 6.3): `AbilityParameterOptions`
+    /// must reach the frontend through this DTO, not a separate command — the
+    /// same "engine ships a per-character derived list, UI only renders it"
+    /// precedent `ability_bonuses`/`magus_minimum_abilities` already follow.
+    #[test]
+    fn effective_scores_surfaces_ability_parameter_options() {
+        let localized = load_ruleset_from_dir(&repo_root().join("rules"), "en").unwrap();
+        let mut entity = Entity::new(
+            arm_rules::EntityKind::Character,
+            Id::new("companion"),
+            arm_rules::RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.selections = vec![Selection::with_params(
+            Id::new("virtue.craft_guild_training"),
+            std::collections::BTreeMap::from([(
+                "guild".to_string(),
+                Id::new("Smiths' Guild of Verdi"),
+            )]),
+        )];
+
+        let scores = effective_scores_loaded(&entity, &localized.ruleset);
+        let organization_lore = scores
+            .ability_parameter_options
+            .iter()
+            .find(|o| o.ability == Id::new("ability.organization_lore"))
+            .expect("ability.organization_lore must have an options entry");
+        assert!(
+            organization_lore
+                .linked
+                .iter()
+                .any(|link| link.item == Id::new("virtue.craft_guild_training")
+                    && link.param == "guild"),
+            "expected a link target naming Craft Guild Training's own 'guild' parameter, got: \
+             {:?}",
+            organization_lore.linked
         );
     }
 

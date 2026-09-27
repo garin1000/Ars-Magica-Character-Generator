@@ -73,14 +73,15 @@ pub use derived::{
 // bare names such as `size`, `warping`, `confidence`, and `true_faith` are the
 // intentional crate-root compute API that `arm-app` imports by name.
 pub use effective::{
-    AbilityBonus, AbilityFloor, AbilityInstanceRef, ArtBonus, CharacteristicBonus, Confidence,
-    LifeStageBlock, ReputationGrant, RestrictedXpPool, SpellLevelCap, SupernaturalFreeSlots,
-    Warping, WarpingOwed, XpAllocation, XpPoolOrigin, XpSolveBoundExceeded, ability_bonus,
-    ability_bonuses, ability_score_floors, age_ability_cap, age_max_ability_score, art_bonus,
-    art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_cap,
-    characteristic_caps, characteristic_floor, characteristic_floors,
-    characteristic_points_granted, characteristic_score_bonus, checked_xp_allocation, confidence,
-    decrepitude_points_total, decrepitude_score, effective_ability_score, effective_art_score,
+    AbilityBonus, AbilityFloor, AbilityInstanceRef, AbilityParameterOptions, ArtBonus,
+    CharacteristicBonus, Confidence, LifeStageBlock, LinkTarget, ReputationGrant, RestrictedXpPool,
+    SpellLevelCap, SupernaturalFreeSlots, Warping, WarpingOwed, XpAllocation, XpPoolOrigin,
+    XpSolveBoundExceeded, ability_bonus, ability_bonuses, ability_parameter_options,
+    ability_score_floors, age_ability_cap, age_max_ability_score, art_bonus, art_bonuses,
+    characteristic_aging_drops, characteristic_bonuses, characteristic_cap, characteristic_caps,
+    characteristic_floor, characteristic_floors, characteristic_points_granted,
+    characteristic_score_bonus, checked_xp_allocation, confidence, decrepitude_points_total,
+    decrepitude_score, effective_ability_score, effective_art_score,
     effective_characteristic_after_aging, effective_characteristic_score,
     effective_characteristics, effective_might, effective_spell_mastery, entity_grants,
     focus_points_budget, focus_points_used, is_hermetically_trained, item_level_budget,
