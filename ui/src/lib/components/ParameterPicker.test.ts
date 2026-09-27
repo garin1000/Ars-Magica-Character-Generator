@@ -10,6 +10,7 @@ import type {
   ParameterDef,
   PointItem,
   Selection,
+  Spell,
 } from '../types';
 
 // ParameterPicker reads the shared store singleton (the ruleset's Art / point-item
@@ -163,6 +164,28 @@ const ITEMS: Record<string, PointItem> = {
       values: ['social_status', 'supernatural'],
     },
   ]),
+  // C5b (D9 part 3, § 8): Corrupted Spells' own shape — "as many of the
+  // character's spells as you wish" (ArMDE:5859-5864), so the domain resolves
+  // against `Entity.spells`, never the whole spell catalogue. Modelled on the
+  // fixture in `crates/arm-rules/tests/c5a_multi_ref_parameter.rs` under a
+  // probe id, since no shipped entry uses `multi_ref` yet (C5c).
+  'flaw.corrupted_spells_probe': pointItem(
+    'flaw.corrupted_spells_probe',
+    [{ key: 'targets', type: 'multi_ref', domain: 'spell' }],
+    ['general'],
+  ),
+};
+
+/** Catalogue spells: two the fixture character has learned, one it has not —
+ *  so a domain: spell picker can be caught offering only the learned ones. */
+const SPELLS: Record<string, Spell> = {
+  'spell.pilum_of_fire': { id: 'spell.pilum_of_fire', technique: 'art.creo', form: 'art.ignem' },
+  'spell.aegis_of_the_hearth': {
+    id: 'spell.aegis_of_the_hearth',
+    technique: 'art.rego',
+    form: 'art.aquam',
+  },
+  'spell.unlearned_probe': { id: 'spell.unlearned_probe', technique: 'art.creo', form: 'art.rego' },
 };
 
 function installRuleset(): void {
@@ -183,7 +206,7 @@ function installRuleset(): void {
       },
       abilities: ABILITIES,
       arts: ARTS,
-      spells: {},
+      spells: SPELLS,
       houses: {},
       mythic_types: {},
       magnitude_points: { free: 0, minor: 1, major: 3 },
@@ -223,6 +246,10 @@ function installRuleset(): void {
       'folk_magic.divination': { name: 'Divination' },
       'folk_magic.healing': { name: 'Healing' },
       'virtue.sufi': { name: 'Sufi' },
+      'flaw.corrupted_spells_probe': { name: 'Corrupted Spells Probe' },
+      'spell.pilum_of_fire': { name: 'Pilum of Fire' },
+      'spell.aegis_of_the_hearth': { name: 'Aegis of the Hearth' },
+      'spell.unlearned_probe': { name: 'Unlearned Probe' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -320,6 +347,22 @@ function optionTexts(select: string): string[] {
 /** The `aria-label` of an element's opening tag. */
 function ariaLabel(element: string): string {
   return /aria-label="([^"]*)"/.exec(element)?.[1] ?? '';
+}
+
+/**
+ * The whole `<fieldset data-testid="…">…</fieldset>` element — the multi_ref
+ * control's own container (C5b), or null when absent. Named separately from
+ * `selectFor`/`inputFor`: a `multi_ref` parameter is a checkbox GROUP, not a
+ * single control, so its container is a `<fieldset>`, not a `<select>`/`<input>`.
+ */
+function fieldsetFor(body: string, testid: string): string | null {
+  const re = new RegExp(`<fieldset[^>]*data-testid="${testid}"[^>]*>[\\s\\S]*?</fieldset>`, 'i');
+  return re.exec(body)?.[0] ?? null;
+}
+
+/** Visible checkbox option labels within a fieldset, in document order. */
+function checkboxLabels(fieldset: string): string[] {
+  return [...fieldset.matchAll(/<span>([\s\S]*?)<\/span>/g)].map((m) => m[1].trim());
 }
 
 beforeEach(() => {
@@ -861,5 +904,58 @@ describe('ParameterPicker folds granted rows into per-target usage (grant-awaren
     );
     expect(optionByText(select!, 'Ignem')).not.toContain('disabled');
     expect(optionByText(select!, 'Aquam')).toContain('disabled');
+  });
+});
+
+// C5b (D9 part 3, `docs/vf-audit/design-c0-parameter-model.md` § 8, § 10): the
+// multi-select picker for a `multi_ref` parameter. `flaw.corrupted_spells_probe`
+// stands in for Corrupted Spells (ArMDE:5859-5864) — no shipped entry uses
+// `multi_ref` yet (that is C5c), so this exercises the fixture item directly,
+// mirroring `crates/arm-rules/tests/c5a_multi_ref_parameter.rs`'s own approach.
+//
+// RED-CHECKPOINT PHASE 1: `ParameterPicker.svelte`'s `param.type === 'multi_ref'`
+// branch is a deliberately empty stub (see its own comment), so every test below
+// is expected to fail at its `fieldsetFor(...)` assertion until phase 2 fills the
+// branch in.
+describe('ParameterPicker multi_ref parameter (C5b, D9 part 3)', () => {
+  const TESTID = 'param-flaw.corrupted_spells_probe-targets-0';
+
+  it('renders a multi-select fieldset with localized option names, never raw ids', () => {
+    store.entity.spells = [
+      { spell: 'spell.pilum_of_fire' },
+      { spell: 'spell.aegis_of_the_hearth' },
+    ];
+    const fieldset = fieldsetFor(pickerBody('flaw.corrupted_spells_probe'), TESTID);
+    expect(fieldset).not.toBeNull();
+    expect(checkboxLabels(fieldset!)).toEqual(['Pilum of Fire', 'Aegis of the Hearth']);
+    expect(checkboxLabels(fieldset!).join(' ')).not.toContain('spell.');
+  });
+
+  it("lists only the character's own learned spells, not the whole catalogue", () => {
+    // `spell.unlearned_probe` is a real catalogue entry (SPELLS) the character
+    // has NOT learned — ArMDE:5859-5863 names "the character's spells", not
+    // any spell in the rules, so it must not be offered.
+    store.entity.spells = [{ spell: 'spell.pilum_of_fire' }];
+    const fieldset = fieldsetFor(pickerBody('flaw.corrupted_spells_probe'), TESTID);
+    expect(fieldset).not.toBeNull();
+    expect(checkboxLabels(fieldset!)).toEqual(['Pilum of Fire']);
+    expect(checkboxLabels(fieldset!)).not.toContain('Unlearned Probe');
+  });
+
+  it('renders no options at all when the character has learned no spells', () => {
+    store.entity.spells = [];
+    const fieldset = fieldsetFor(pickerBody('flaw.corrupted_spells_probe'), TESTID);
+    expect(fieldset).not.toBeNull();
+    expect(checkboxLabels(fieldset!)).toEqual([]);
+  });
+
+  // RED-CHECKPOINT (phase 2, appended after the coordinator's go-ahead): an
+  // empty checklist with no explanation is confusing (Sabine-shaped
+  // accessibility concern) — a localized hint, never hardcoded, per CLAUDE.md.
+  it('shows a localized hint instead of a bare empty list when nothing is choosable', () => {
+    store.entity.spells = [];
+    const fieldset = fieldsetFor(pickerBody('flaw.corrupted_spells_probe'), TESTID);
+    expect(fieldset).not.toBeNull();
+    expect(fieldset).toContain(store.t('param-multi-ref-empty'));
   });
 });

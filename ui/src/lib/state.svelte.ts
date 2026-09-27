@@ -1104,6 +1104,17 @@ class AppStore {
   }
 
   /**
+   * Set a `multi_ref` parameter (D9 part 3, C5b) to the given set of values —
+   * the picker's multi-select control hands over the WHOLE checked set on
+   * every toggle, never one member at a time.
+   *
+   * @see SelectionWorkflow.setMultiParamAt
+   */
+  setMultiParamAt(index: number, key: string, values: Iterable<string>): void {
+    this.#selectionWorkflow.setMultiParamAt(index, key, values);
+  }
+
+  /**
    * Point an ability-bonus selection (Puissant Ability) at a specific ability
    * *instance*.
    *

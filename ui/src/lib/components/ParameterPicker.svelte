@@ -6,13 +6,16 @@
     abilityParamKey,
     artLabel,
     artsOfType,
+    canonicalizeMultiRefValue,
     displayName,
     excludeSelection,
     groupArtsByType,
     localizedSortKey,
+    multiParamValue,
     paramValueUsage,
     singleParamValue,
     singleValuedParams,
+    spellName,
   } from '../derive';
   import { CHARACTERISTICS, REALMS, type ParameterDef, type Selection } from '../types';
 
@@ -49,7 +52,7 @@
    * or fall back to editing the bought row in place. `next` is always the FULL
    * next params object, mirroring what the index-path store method would write.
    */
-  function write(next: Record<string, string>, editRow: () => void): void {
+  function write(next: Record<string, string | string[]>, editRow: () => void): void {
     if (commit) {
       commit({ ref: selection.ref, params: next });
       return;
@@ -104,6 +107,50 @@
     const whole = Math.trunc(parsed);
     const clamped = range ? Math.min(range.max, Math.max(range.min, whole)) : whole;
     setParam(key, String(clamped));
+  }
+
+  // Options for a `multi_ref` parameter — the only domain shipping today is
+  // `spell` (Corrupted Spells, C5c): the character's OWN learned spells
+  // (`Entity.spells`), never the whole spell catalogue — § 8's own "the
+  // character's spells" reading (ArMDE:5859-5863). Deduplicated by base spell
+  // id (a parameterized spell may carry several instances) and left in the
+  // order the character learned them: nothing about "affect this spell" needs
+  // a second sort axis, unlike the catalogue-wide lists above. A `multi_ref`
+  // param currently only ever pairs with `spell` (C5a's own
+  // `ParameterDomain::Spell` doc comment), so every other domain falls to the
+  // empty defensive fallback rather than a branch of its own.
+  function multiRefOptions(param: ParameterDef): { value: string; label: string }[] {
+    if (param.domain !== 'spell') return [];
+    const localized = store.ruleset;
+    if (!localized) return [];
+    const seen = new Set<string>();
+    const options: { value: string; label: string }[] = [];
+    for (const row of store.entity.spells ?? []) {
+      if (seen.has(row.spell)) continue;
+      seen.add(row.spell);
+      options.push({ value: row.spell, label: spellName(localized, row.spell) });
+    }
+    return options;
+  }
+
+  // Toggles one value of a multi_ref parameter's set. Unlike a single-select's
+  // onchange, there is no "current value" to read off the control that fired —
+  // every OTHER checkbox in the group keeps its own independent state — so the
+  // next set is this row's existing set plus/minus the one value the event
+  // names, canonicalized (§ 8) before it is written so two players checking the
+  // same values in different orders always write the identical array, and
+  // unchecking the last one writes an empty array rather than dropping the key
+  // (C5a's `missing_param`-not-`param_wrong_shape` semantics need the key
+  // present).
+  function onToggleMulti(key: string, value: string, event: Event): void {
+    const checked = (event.currentTarget as HTMLInputElement).checked;
+    const current = new Set(multiParamValue(selection.params?.[key]));
+    if (checked) current.add(value);
+    else current.delete(value);
+    const canonical = canonicalizeMultiRefValue(current);
+    write({ ...singleValuedParams(selection.params), [key]: canonical }, () =>
+      store.setMultiParamAt(index, key, canonical),
+    );
   }
 
   function abilityInstanceLabel(abilityId: string, parameter: string | null | undefined): string {
@@ -391,48 +438,81 @@
        `area`), rendered as a control of its own below rather than inside the same
        label, so each control keeps exactly one label. -->
   {@const instanceKey = param.domain === 'ability' ? abilityInstanceKey(param.key) : undefined}
-  <label class="param">
-    {#if param.domain === 'characteristic'}
-      <select
-        aria-label={typeLabel}
-        value={selection.params?.[param.key] ?? ''}
-        onchange={(e) => onSelect(param.key, e)}
-        data-testid="param-{selection.ref}-{param.key}-{suffix}"
-      >
-        <option value="" disabled>{typeLabel}</option>
-        {#each CHARACTERISTICS as characteristic (characteristic)}
-          <option
-            value="characteristic.{characteristic}"
-            disabled={full(used, `characteristic.${characteristic}`)}
-          >
-            {store.t(`characteristic-${characteristic}`)}
-          </option>
+  {#if param.type === 'multi_ref'}
+    <!-- The multi-select control for a MultiRef parameter (D9 part 3, C5b) —
+         a checkbox GROUP, so its container is a `<fieldset>`/`<legend>`, never
+         a `<label>` (a label wraps ONE control, not several). Checked FIRST,
+         ahead of every domain branch below, so a future multi_ref param on the
+         `ability`/`art` domain (C5c's Corrupted Abilities/Arts) renders here
+         rather than falling into that domain's single-select branch. Follows
+         the same checkbox-list markup `LivingConditionsPicker.svelte` already
+         uses (`.checkbox.inline`, a `<ul>` of `<li>` rows) — one accessible
+         multi-select pattern, not two that could drift. -->
+    {@const options = multiRefOptions(param)}
+    <fieldset class="param multi-ref" data-testid="param-{selection.ref}-{param.key}-{suffix}">
+      <legend>{typeLabel}</legend>
+      {#if options.length === 0}
+        <p class="hint">{store.t('param-multi-ref-empty')}</p>
+      {/if}
+      <ul>
+        {#each options as option (option.value)}
+          <li>
+            <label class="checkbox inline">
+              <input
+                type="checkbox"
+                checked={multiParamValue(selection.params?.[param.key]).includes(option.value)}
+                onchange={(e) => onToggleMulti(param.key, option.value, e)}
+                data-testid="param-{selection.ref}-{param.key}-{suffix}-{option.value}"
+              />
+              <span>{option.label}</span>
+            </label>
+          </li>
         {/each}
-      </select>
-    {:else if param.domain === 'ability'}
-      <!-- Targets an Ability from the catalogue — it need not be on the sheet yet,
+      </ul>
+    </fieldset>
+  {:else}
+    <label class="param">
+      {#if param.domain === 'characteristic'}
+        <select
+          aria-label={typeLabel}
+          value={selection.params?.[param.key] ?? ''}
+          onchange={(e) => onSelect(param.key, e)}
+          data-testid="param-{selection.ref}-{param.key}-{suffix}"
+        >
+          <option value="" disabled>{typeLabel}</option>
+          {#each CHARACTERISTICS as characteristic (characteristic)}
+            <option
+              value="characteristic.{characteristic}"
+              disabled={full(used, `characteristic.${characteristic}`)}
+            >
+              {store.t(`characteristic-${characteristic}`)}
+            </option>
+          {/each}
+        </select>
+      {:else if param.domain === 'ability'}
+        <!-- Targets an Ability from the catalogue — it need not be on the sheet yet,
            since abilities are bought on a later step. For (Area) Lore each area is
            its own target, so the character's own areas are listed alongside the
            generic entry (which the instance input below completes). -->
-      <select
-        aria-label={typeLabel}
-        value={abilityTargetValue(param.key)}
-        onchange={(e) => onSelectAbility(param.key, e)}
-        data-testid="param-{selection.ref}-{param.key}-{suffix}"
-      >
-        <option value="" disabled>{typeLabel}</option>
-        <!-- Keyed by index as well as value: two instances of a parameterized
+        <select
+          aria-label={typeLabel}
+          value={abilityTargetValue(param.key)}
+          onchange={(e) => onSelectAbility(param.key, e)}
+          data-testid="param-{selection.ref}-{param.key}-{suffix}"
+        >
+          <option value="" disabled>{typeLabel}</option>
+          <!-- Keyed by index as well as value: two instances of a parameterized
              ability whose parameter is still unset share the same bare id, and a
              duplicate key throws `each_key_duplicate` (in production too), which
              would kill this whole tab's render. -->
-        {#each abilityOptions as instance, i (`${instance.value}:${i}`)}
-          <option value={instance.value} disabled={full(usedAbilityTargets, instance.value)}>
-            {instance.label}
-          </option>
-        {/each}
-      </select>
-    {:else if param.domain === 'art' || param.domain === 'technique' || param.domain === 'form'}
-      <!-- Targets a Hermetic Art. `art` accepts either class; `technique` and `form`
+          {#each abilityOptions as instance, i (`${instance.value}:${i}`)}
+            <option value={instance.value} disabled={full(usedAbilityTargets, instance.value)}>
+              {instance.label}
+            </option>
+          {/each}
+        </select>
+      {:else if param.domain === 'art' || param.domain === 'technique' || param.domain === 'form'}
+        <!-- Targets a Hermetic Art. `art` accepts either class; `technique` and `form`
            are the same control narrowed to one, because the engine validates those
            two as an Art id PLUS the right ArtType and raises unknown_param_value
            otherwise. One branch for all three, so the narrowed domains cannot fall
@@ -440,46 +520,46 @@
            `max_per_target` keeps the same Art from being picked twice. The param key
            is unrelated to the domain — Affinity with (Art) keys on `art`, Deft (Form)
            on `form`. -->
-      {@const artChoices =
-        param.domain === 'technique'
-          ? techniqueOptions
-          : param.domain === 'form'
-            ? formOptions
-            : artOptions}
-      <select
-        aria-label={typeLabel}
-        value={selection.params?.[param.key] ?? ''}
-        onchange={(e) => onSelectArt(param.key, e)}
-        data-testid="param-{selection.ref}-{param.key}-{suffix}"
-      >
-        <option value="" disabled>{typeLabel}</option>
-        {#each artChoices as art (art.value)}
-          <option value={art.value} disabled={full(used, art.value)}>
-            {art.label}
-          </option>
-        {/each}
-      </select>
-    {:else if param.domain === 'item'}
-      <!-- Targets another catalogue item by id — False Power's `virtue` target is
+        {@const artChoices =
+          param.domain === 'technique'
+            ? techniqueOptions
+            : param.domain === 'form'
+              ? formOptions
+              : artOptions}
+        <select
+          aria-label={typeLabel}
+          value={selection.params?.[param.key] ?? ''}
+          onchange={(e) => onSelectArt(param.key, e)}
+          data-testid="param-{selection.ref}-{param.key}-{suffix}"
+        >
+          <option value="" disabled>{typeLabel}</option>
+          {#each artChoices as art (art.value)}
+            <option value={art.value} disabled={full(used, art.value)}>
+              {art.label}
+            </option>
+          {/each}
+        </select>
+      {:else if param.domain === 'item'}
+        <!-- Targets another catalogue item by id — False Power's `virtue` target is
            the shipped user. The menu is the point-item registry, narrowed to the
            parameter's `require_categories`/`allow_ids` (D34) when it declares
            either. The branch exists unconditionally because the domain enum is
            exhaustive and a slug must never be typed by hand. -->
-      <select
-        aria-label={typeLabel}
-        value={selection.params?.[param.key] ?? ''}
-        onchange={(e) => onSelect(param.key, e)}
-        data-testid="param-{selection.ref}-{param.key}-{suffix}"
-      >
-        <option value="" disabled>{typeLabel}</option>
-        {#each itemOptionsFor(param) as option (option.value)}
-          <option value={option.value} disabled={full(used, option.value)}>
-            {option.label}
-          </option>
-        {/each}
-      </select>
-    {:else if param.domain === 'enumerated'}
-      <!-- The parameter carries its own closed list, so the menu is the DATA's
+        <select
+          aria-label={typeLabel}
+          value={selection.params?.[param.key] ?? ''}
+          onchange={(e) => onSelect(param.key, e)}
+          data-testid="param-{selection.ref}-{param.key}-{suffix}"
+        >
+          <option value="" disabled>{typeLabel}</option>
+          {#each itemOptionsFor(param) as option (option.value)}
+            <option value={option.value} disabled={full(used, option.value)}>
+              {option.label}
+            </option>
+          {/each}
+        </select>
+      {:else if param.domain === 'enumerated'}
+        <!-- The parameter carries its own closed list, so the menu is the DATA's
            `values` and nothing narrows a catalogue: Folk Magic's four spell
            categories, the (Beings) classes. Each id is mapped through the rules
            i18n here — options do NOT get localized for free (`resolveIssueArgValue`
@@ -487,25 +567,25 @@
            the slug would be the same violation as hardcoding a string.
            `max_per_target` greys out a value another copy already holds, which is
            what caps Folk Magic at one copy per category. -->
-      <select
-        aria-label={typeLabel}
-        value={selection.params?.[param.key] ?? ''}
-        onchange={(e) => onSelect(param.key, e)}
-        data-testid="param-{selection.ref}-{param.key}-{suffix}"
-      >
-        <option value="" disabled>{typeLabel}</option>
-        {#each param.values ?? [] as value (value)}
-          <option {value} disabled={full(used, value)}>
-            {store.ruleset
-              ? displayName(store.ruleset, value, undefined, (key) =>
-                  store.t('param-hint', { label: store.t(`param-label-${key}`) }),
-                )
-              : value}
-          </option>
-        {/each}
-      </select>
-    {:else if param.domain === 'category'}
-      <!-- The item is "taken as" one of its OWN listed categories — Sufi
+        <select
+          aria-label={typeLabel}
+          value={selection.params?.[param.key] ?? ''}
+          onchange={(e) => onSelect(param.key, e)}
+          data-testid="param-{selection.ref}-{param.key}-{suffix}"
+        >
+          <option value="" disabled>{typeLabel}</option>
+          {#each param.values ?? [] as value (value)}
+            <option {value} disabled={full(used, value)}>
+              {store.ruleset
+                ? displayName(store.ruleset, value, undefined, (key) =>
+                    store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+                  )
+                : value}
+            </option>
+          {/each}
+        </select>
+      {:else if param.domain === 'category'}
+        <!-- The item is "taken as" one of its OWN listed categories — Sufi
            (ArMDE:5083) "either as a
            Minor Social Status Virtue or a Minor Supernatural Virtue". The menu
            is the item's own declared `values` (a subset of its `categories`,
@@ -515,21 +595,21 @@
            for a bare category slug. `max_per_target` (default 1, and every
            `taken_as` item's `max_total` is forced to 1 too) greys out a
            reading another copy already holds. -->
-      <select
-        aria-label={typeLabel}
-        value={selection.params?.[param.key] ?? ''}
-        onchange={(e) => onSelect(param.key, e)}
-        data-testid="param-{selection.ref}-{param.key}-{suffix}"
-      >
-        <option value="" disabled>{typeLabel}</option>
-        {#each param.values ?? [] as value (value)}
-          <option {value} disabled={full(used, value)}>
-            {store.t(`category-${value}`)}
-          </option>
-        {/each}
-      </select>
-    {:else if param.domain === 'realm'}
-      <!-- The supernatural realm the item is aligned to — Folk Magic
+        <select
+          aria-label={typeLabel}
+          value={selection.params?.[param.key] ?? ''}
+          onchange={(e) => onSelect(param.key, e)}
+          data-testid="param-{selection.ref}-{param.key}-{suffix}"
+        >
+          <option value="" disabled>{typeLabel}</option>
+          {#each param.values ?? [] as value (value)}
+            <option {value} disabled={full(used, value)}>
+              {store.t(`category-${value}`)}
+            </option>
+          {/each}
+        </select>
+      {:else if param.domain === 'realm'}
+        <!-- The supernatural realm the item is aligned to — Folk Magic
            (ArMDE:3909) "The choice of
            (Realm) Lore also determines which supernatural realm his magic is
            aligned to". The four Realms are a closed engine taxonomy, so the menu
@@ -541,19 +621,19 @@
            align it to the same Realm as before or pick a different one", so a
            Realm another copy holds stays offered. What may not be repeated is
            the whole target, which `usage()` now judges across every axis. -->
-      <select
-        aria-label={typeLabel}
-        value={selection.params?.[param.key] ?? ''}
-        onchange={(e) => onSelect(param.key, e)}
-        data-testid="param-{selection.ref}-{param.key}-{suffix}"
-      >
-        <option value="" disabled>{typeLabel}</option>
-        {#each REALMS as realm (realm)}
-          <option value="realm.{realm}">{store.t(`realm-${realm}`)}</option>
-        {/each}
-      </select>
-    {:else if param.domain === 'number'}
-      <!-- D35: a bounded integer count (Simple Student's finished-years, 1-2)
+        <select
+          aria-label={typeLabel}
+          value={selection.params?.[param.key] ?? ''}
+          onchange={(e) => onSelect(param.key, e)}
+          data-testid="param-{selection.ref}-{param.key}-{suffix}"
+        >
+          <option value="" disabled>{typeLabel}</option>
+          {#each REALMS as realm (realm)}
+            <option value="realm.{realm}">{store.t(`realm-${realm}`)}</option>
+          {/each}
+        </select>
+      {:else if param.domain === 'number'}
+        <!-- D35: a bounded integer count (Simple Student's finished-years, 1-2)
            — the first numeric parameter, so the first `<input type="number">`
            control. `min`/`max` come from the parameter's own `type` (the
            bound lives there, not on `domain` — see `numberRange`); the
@@ -562,18 +642,18 @@
            an out-of-range value would otherwise round-trip through
            `setParamAt` unclamped and only be caught by the engine's
            `unknown_param_value` after a revalidate. -->
-      {@const range = numberRange(param)}
-      <input
-        type="number"
-        aria-label={typeLabel}
-        min={range?.min}
-        max={range?.max}
-        value={selection.params?.[param.key] ?? ''}
-        onchange={(e) => onTypeNumber(param.key, range, e)}
-        data-testid="param-{selection.ref}-{param.key}-{suffix}"
-      />
-    {:else}
-      <!-- `text` alone, and only `text`: the domain references no registry, so any
+        {@const range = numberRange(param)}
+        <input
+          type="number"
+          aria-label={typeLabel}
+          min={range?.min}
+          max={range?.max}
+          value={selection.params?.[param.key] ?? ''}
+          onchange={(e) => onTypeNumber(param.key, range, e)}
+          data-testid="param-{selection.ref}-{param.key}-{suffix}"
+        />
+      {:else}
+        <!-- `text` alone, and only `text`: the domain references no registry, so any
            value with non-whitespace content is legal and free text is the correct
            control. That "non-empty" claim is now ENFORCED rather than merely
            asserted here: `onTypeText` trims (as does `store.setParamAt`, and the
@@ -593,16 +673,17 @@
            exactly this fall-through catching four of them. Keep that true:
            the domain union is closed, so a new variant belongs in a branch of
            its own, never here. -->
-      <input
-        type="text"
-        aria-label={typeLabel}
-        placeholder={typeLabel}
-        value={selection.params?.[param.key] ?? ''}
-        oninput={(e) => onTypeText(param.key, e)}
-        data-testid="param-{selection.ref}-{param.key}-{suffix}"
-      />
-    {/if}
-  </label>
+        <input
+          type="text"
+          aria-label={typeLabel}
+          placeholder={typeLabel}
+          value={selection.params?.[param.key] ?? ''}
+          oninput={(e) => onTypeText(param.key, e)}
+          data-testid="param-{selection.ref}-{param.key}-{suffix}"
+        />
+      {/if}
+    </label>
+  {/if}
   {#if instanceKey}
     <!-- The area/language the chosen parameterized target names. Free text, exactly
          as on the Abilities tab: the value is the player's own, backed by no

@@ -11,6 +11,7 @@
     mandatoryTraitRefs,
     selectionCategories,
     selectionDisplayName,
+    selectionDisplayParams,
     singleValuedParams,
     type SelectionRow,
   } from '../derive';
@@ -227,6 +228,16 @@
   function selectionName(ref: string, params: Record<string, string> | undefined): string {
     return store.ruleset ? selectionDisplayName(store.ruleset, ref, params, store.t) : ref;
   }
+
+  // C5b: a `multi_ref` value (D9 part 3) must show as a joined, localized list
+  // ("Pilum of Fire, Aegis of the Hearth"), never dropped the way
+  // `singleValuedParams` alone drops it. Falls back to the plain single-valued
+  // narrowing before a ruleset is loaded, matching every other resolver here.
+  function displayParams(selection: Selection): Record<string, string> {
+    return store.ruleset
+      ? selectionDisplayParams(store.ruleset, selection.params, store.t)
+      : singleValuedParams(selection.params);
+  }
 </script>
 
 <!-- Only the item's intrinsic tags (its categories + its magnitude) stack in the
@@ -367,7 +378,7 @@
               {@const required = mandatory.has(selection.ref)}
               <li>
                 <div class="selection-row">
-                  {@render nameWrap(selection.ref, singleValuedParams(selection.params))}
+                  {@render nameWrap(selection.ref, displayParams(selection))}
                   {#if required}
                     <span class="row-marker">{store.t('selection-required-label')}</span>
                   {:else}
@@ -375,7 +386,7 @@
                       type="button"
                       class="icon-btn"
                       aria-label={store.t('remove-item', {
-                        name: selectionName(selection.ref, singleValuedParams(selection.params)),
+                        name: selectionName(selection.ref, displayParams(selection)),
                       })}
                       onclick={() => store.removeSelectionAt(index)}
                       data-testid="remove-{selection.ref}-{index}"
@@ -394,7 +405,7 @@
                    test id would make the two rows indistinguishable to a spec. -->
               <li data-testid="granted-selection-{item.selection.ref}-{item.grantIndex}">
                 <div class="selection-row">
-                  {@render nameWrap(item.selection.ref, singleValuedParams(item.selection.params))}
+                  {@render nameWrap(item.selection.ref, displayParams(item.selection))}
                   <span class="row-marker">{store.t('house-granted-label')}</span>
                 </div>
               </li>

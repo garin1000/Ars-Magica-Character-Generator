@@ -2814,6 +2814,52 @@ describe('setParamAt', () => {
   });
 });
 
+// --- setMultiParamAt() (C5b, D9 part 3) --------------------------------------
+
+// RED-CHECKPOINT: `store.setMultiParamAt` does not exist yet (phase 1 shipped
+// no store/workflow method at all, since the picker's multi_ref branch was an
+// empty stub with nothing to call it). Expected to fail — at runtime, calling
+// an undefined method — until phase 2 adds `SelectionWorkflow.setMultiParamAt`
+// and the `AppStore` passthrough.
+describe('setMultiParamAt (C5b)', () => {
+  beforeEach(() => {
+    installRuleset([
+      item({
+        id: 'flaw.corrupted_spells_probe',
+        kind: 'flaw',
+        // D10: a repeatable item's own `max_total` — otherwise the default of
+        // 1 blocks the second row the "targeted row only" test below adds.
+        max_total: 2,
+        parameters: [{ key: 'targets', type: 'multi_ref', domain: 'spell' }],
+      }),
+    ]);
+    store.addSelection('flaw.corrupted_spells_probe');
+  });
+
+  it('writes a sorted, deduplicated array — the canonical form § 8 requires', () => {
+    store.setMultiParamAt(0, 'targets', [
+      'spell.pilum_of_fire',
+      'spell.aegis_of_the_hearth',
+      'spell.pilum_of_fire',
+    ]);
+    expect(store.entity.selections![0].params).toEqual({
+      targets: ['spell.aegis_of_the_hearth', 'spell.pilum_of_fire'],
+    });
+  });
+
+  it('writes an empty array (not an absent key) when handed no values', () => {
+    store.setMultiParamAt(0, 'targets', ['spell.pilum_of_fire']);
+    store.setMultiParamAt(0, 'targets', []);
+    expect(store.entity.selections![0].params).toEqual({ targets: [] });
+  });
+
+  it('sets the param on the targeted row only', () => {
+    store.addSelection('flaw.corrupted_spells_probe');
+    store.setMultiParamAt(0, 'targets', ['spell.pilum_of_fire']);
+    expect(store.entity.selections![1]).toEqual({ ref: 'flaw.corrupted_spells_probe' });
+  });
+});
+
 // --- setAbilityBonusTarget() ------------------------------------------------
 
 describe('setAbilityBonusTarget', () => {

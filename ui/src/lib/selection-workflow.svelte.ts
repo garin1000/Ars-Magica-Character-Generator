@@ -14,7 +14,7 @@
 // holds a copy, so `AppStore` stays the sole owner of the document and `dirty`
 // keeps comparing the very object these methods mutate.
 
-import { totalCopies } from './derive';
+import { canonicalizeMultiRefValue, totalCopies } from './derive';
 import type { EffectiveScores, Entity, LocalizedRuleset } from './types';
 
 /** The slice of `AppStore` the selection workflow needs, as live accessors so it
@@ -91,6 +91,30 @@ export class SelectionWorkflow {
     const trimmed = value.trim();
     entity.selections = (entity.selections ?? []).map((s, i) =>
       i === index ? { ...s, params: { ...(s.params ?? {}), [key]: trimmed } } : s,
+    );
+    this.#host.scheduleValidate();
+  }
+
+  /**
+   * Set one `multi_ref` parameter of one selection row to a whole SET of
+   * values (D9 part 3, C5b) — a whole-set replace, since the picker always
+   * recomputes the complete checked set on each toggle rather than adding or
+   * removing one member at a time through this method.
+   *
+   * Canonicalized here, not by the caller: identity for a `multi_ref` value
+   * is the sorted, deduplicated SET (§ 8), the same reason `setParamAt` above
+   * trims — the write path is the one place that guarantees it regardless of
+   * what a caller happens to hand in, so two players checking the same values
+   * in different orders always write the identical array. An empty array is
+   * kept (not dropped): C5a's `Multi(BTreeSet::new())` is a present-but-blank
+   * value the engine reports as `missing_param`, distinct from the key being
+   * absent entirely.
+   */
+  setMultiParamAt(index: number, key: string, values: Iterable<string>): void {
+    const entity = this.#host.entity();
+    const canonical = canonicalizeMultiRefValue(values);
+    entity.selections = (entity.selections ?? []).map((s, i) =>
+      i === index ? { ...s, params: { ...(s.params ?? {}), [key]: canonical } } : s,
     );
     this.#host.scheduleValidate();
   }

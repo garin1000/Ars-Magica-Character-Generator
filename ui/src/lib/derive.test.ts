@@ -24,6 +24,7 @@ import {
   childhoodSlots,
   combatRowLabel,
   atMaxTotalRefs,
+  canonicalizeMultiRefValue,
   displayName,
   excludeSelection,
   eligibleForConstraint,
@@ -1207,6 +1208,40 @@ describe('paramValueUsage', () => {
     expect(
       paramValueUsage(selections, 'virtue.great', 'characteristic', 0).get('characteristic.per'),
     ).toBe(1);
+  });
+});
+
+// C5b (docs/vf-audit/design-c0-parameter-model.md § 8, § 10): the frontend
+// mirror of the engine's `BTreeSet<Id>` canonicalization for a `multi_ref`
+// parameter's value — a written array must always come out sorted and
+// deduplicated, matching what a reload through the engine would produce, so
+// two build orders of the same set never disagree (§ 8's own worked claim for
+// `max_per_target` grouping).
+//
+// RED-CHECKPOINT PHASE 1: `canonicalizeMultiRefValue` is currently a stub that
+// always returns `[]` (see its doc comment in `derive.ts`) — the first two
+// tests below pin the MISSING sort+dedup behavior and are expected to fail
+// until phase 2 implements it. The third (empty input) is already GREEN: an
+// empty array canonicalizes to an empty array either way, a property of the
+// stub as much as the real implementation, exactly as the engine's own
+// `Multi(BTreeSet::new())` stays the empty set on either side of C5a
+// (`crates/arm-rules/tests/c5a_multi_ref_parameter.rs`).
+describe('canonicalizeMultiRefValue (C5b)', () => {
+  it('sorts and deduplicates into the same canonical order the engine writes', () => {
+    expect(
+      canonicalizeMultiRefValue(['ability.brawl', 'ability.awareness', 'ability.brawl']),
+    ).toEqual(['ability.awareness', 'ability.brawl']);
+  });
+
+  it('produces the identical canonical array regardless of build order', () => {
+    const builtOneWay = canonicalizeMultiRefValue(['ability.brawl', 'ability.awareness']);
+    const builtTheOtherWay = canonicalizeMultiRefValue(['ability.awareness', 'ability.brawl']);
+    expect(builtOneWay).toEqual(['ability.awareness', 'ability.brawl']);
+    expect(builtOneWay).toEqual(builtTheOtherWay);
+  });
+
+  it('canonicalizes an empty input to an empty array', () => {
+    expect(canonicalizeMultiRefValue([])).toEqual([]);
   });
 });
 

@@ -394,6 +394,36 @@ export function selectionDisplayName(
 }
 
 /**
+ * `selection.params` narrowed to the single-valued shape {@link selectionDisplayName}
+ * needs, but WITHOUT dropping a `multi_ref` (C5b, D9 part 3) value the way
+ * {@link singleValuedParams} does — a `Multi` value is instead resolved to one
+ * joined, localized string ("Pilum of Fire, Aegis of the Hearth"), so a name
+ * template's `{token}` still fills with something a player reads rather than
+ * falling back to the unfilled hint. Each member goes through the SAME
+ * per-value resolver a single-valued token already uses
+ * ({@link selectionParamLabel}), so an Ability or Art target would resolve
+ * exactly the same way if a future `multi_ref` pairs with those domains
+ * (C5c) — only `spell` ships today. An empty set resolves to an empty
+ * string, which `displayName`'s own `filled()` check treats as "not filled",
+ * matching the blank/`missing_param` reading every other empty value already
+ * gets.
+ */
+export function selectionDisplayParams(
+  localized: LocalizedRuleset,
+  params: Record<string, string | string[]> | undefined,
+  t: Translate,
+): Record<string, string> {
+  if (!params) return {};
+  const singles = singleValuedParams(params);
+  const out: Record<string, string> = { ...singles };
+  for (const [key, value] of Object.entries(params)) {
+    if (!Array.isArray(value)) continue;
+    out[key] = value.map((member) => selectionParamLabel(localized, singles, member, t)).join(', ');
+  }
+  return out;
+}
+
+/**
  * How many *other* selections of `itemRef` already use each parameter value, for
  * the param `key`. Used to gray out a target that has hit the item's
  * `max_per_target` cap (e.g. Perception, once Great Characteristic was taken for
@@ -817,6 +847,31 @@ export function singleValuedParams(
     if (typeof value === 'string') out[key] = value;
   }
   return out;
+}
+
+/**
+ * Canonical (sorted, deduplicated) form of a `multi_ref` parameter's values —
+ * the frontend mirror of the engine's `BTreeSet<Id>` canonicalization (§ 8,
+ * `docs/vf-audit/design-c0-parameter-model.md`), so a written array always
+ * matches what a reload would produce, and two build orders of the same set
+ * write byte-identically (`{A,B}` and `{B,A}` are the same value). A `Set`'s
+ * insertion order is otherwise arbitrary from the caller's point of view (the
+ * picker builds one from a toggle), so this is the one place that order is
+ * pinned down before the value is written.
+ */
+export function canonicalizeMultiRefValue(values: Iterable<string>): string[] {
+  return [...new Set(values)].sort();
+}
+
+/**
+ * The array value of one parameter slot — `[]` for an unset key or (still) a
+ * single-string one. The `Multi` counterpart of {@link singleParamValue}: the
+ * multi-select picker (C5b) is the first and, before C5c, only reader of a
+ * `Multi` value, so this narrows the same `string | string[] | undefined`
+ * union from the other direction.
+ */
+export function multiParamValue(value: string | string[] | undefined): string[] {
+  return Array.isArray(value) ? value : [];
 }
 
 /**

@@ -994,6 +994,11 @@ param-label-study = Study
 # is the parameter's own min/max, enforced by the engine.
 param-label-years = Years
 
+# C5b: the multi-select checklist (a `multi_ref` parameter, D9 part 3) shown
+# instead of a bare, unexplained empty list when there is nothing to choose
+# from — e.g. Corrupted Spells before the character has learned any spells.
+param-multi-ref-empty = No options available yet.
+
 # CV7: the Ability parameter picker's combo box (design-cv-catalogued-values.md
 # § 6.1/§ 6.3/§ 6.4). The free-text escape when neither a catalogue value nor a
 # linked Virtue names the player's answer.

@@ -1050,6 +1050,12 @@ param-label-study = Studium
 # durchgesetzt.
 param-label-years = Jahre
 
+# C5b: Die Mehrfachauswahl-Checkliste (ein `multi_ref`-Parameter, D9 Teil 3)
+# zeigt diesen Hinweis statt einer unerklärten leeren Liste, wenn es nichts
+# zur Auswahl gibt — z. B. Verderbte Zauber, bevor der Charakter Zauber
+# gelernt hat.
+param-multi-ref-empty = Noch keine Auswahlmöglichkeiten.
+
 # CV7: Die Auswahlliste des Fertigkeit-Parameters (design-cv-catalogued-values.md
 # § 6.1/§ 6.3/§ 6.4). Der Freitext-Ausweg, wenn weder ein Katalogwert noch eine
 # verknüpfte Tugend die Antwort des Spielers trifft.

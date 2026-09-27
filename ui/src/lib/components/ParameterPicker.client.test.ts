@@ -178,3 +178,171 @@ describe('ParameterPicker number domain bounded input (D35)', () => {
     expect(selection().params?.years).toBe('');
   });
 });
+
+// C5b (D9 part 3, `docs/vf-audit/design-c0-parameter-model.md` § 8, § 10): the
+// multi-select control for a `multi_ref` parameter — `flaw.corrupted_spells_probe`
+// stands in for Corrupted Spells (ArMDE:5859-5864), since no shipped entry uses
+// `multi_ref` yet (C5c). A `client` test, because selecting/deselecting a
+// checkbox and observing the resulting write and the live `store.dirty` flag are
+// both actions/reactive reads SSR cannot exercise (see this file's own header
+// comment on why the D35 number-domain tests above are `client` too).
+//
+// RED-CHECKPOINT PHASE 1: `ParameterPicker.svelte`'s `param.type === 'multi_ref'`
+// branch is a deliberately empty stub, so no checkbox exists yet — every test
+// below is expected to fail at its OWN `expect(cb).not.toBeNull()` (or
+// `expect(fieldset()).not.toBeNull()`) assertion, which is the right place to
+// fail: it names exactly the missing control, rather than crashing later on a
+// null dereference.
+describe('ParameterPicker multi-select (multi_ref, C5b, D9 part 3)', () => {
+  const MULTI_ITEM = {
+    id: 'flaw.corrupted_spells_probe',
+    kind: 'flaw',
+    magnitude: 'minor',
+    categories: ['general'],
+    classification: 'uncomputed_rule',
+    entity_kinds: ['character'],
+    parameters: [{ key: 'targets', type: 'multi_ref', domain: 'spell' }],
+  } as unknown as PointItem;
+
+  const LEARNED_A = 'spell.pilum_of_fire';
+  const LEARNED_B = 'spell.aegis_of_the_hearth';
+  const UNLEARNED = 'spell.unlearned_probe';
+  const TESTID = 'param-flaw.corrupted_spells_probe-targets-0';
+
+  let multiTarget: HTMLElement;
+  let multiApp: { setSelection: (next: Selection) => void } | undefined;
+
+  function fieldset(): HTMLElement | null {
+    return multiTarget.querySelector(`[data-testid="${TESTID}"]`);
+  }
+  function checkbox(spellId: string): HTMLInputElement | null {
+    return multiTarget.querySelector(`[data-testid="${TESTID}-${spellId}"]`);
+  }
+  function multiSelection(): Selection {
+    return (store.entity.selections ?? [])[0];
+  }
+
+  /**
+   * A CLEAN saved baseline (`store.dirty === false`) that already carries the
+   * probe selection and the character's two learned spells. `store.save()`
+   * (not `open()`) is the mechanism: `save()`/`#writeTo()` has no
+   * dirty-check/discard-prompt gate of its own (only `open()`/`newDocument()`
+   * do), so assigning the fixture entity and immediately saving it — through
+   * the mocked `ipc.saveEntity` — marks exactly that state as the baseline
+   * with no discard-prompt dance to race against.
+   */
+  async function establishCleanMultiRefBaseline(): Promise<void> {
+    store.ruleset!.ruleset.point_items['flaw.corrupted_spells_probe'] = MULTI_ITEM;
+    store.ruleset!.ruleset.spells = {
+      [LEARNED_A]: { id: LEARNED_A, technique: 'art.creo', form: 'art.ignem' },
+      [LEARNED_B]: { id: LEARNED_B, technique: 'art.rego', form: 'art.aquam' },
+      [UNLEARNED]: { id: UNLEARNED, technique: 'art.creo', form: 'art.rego' },
+    };
+    store.ruleset!.i18n['flaw.corrupted_spells_probe'] = { name: 'Corrupted Spells Probe' };
+    store.ruleset!.i18n[LEARNED_A] = { name: 'Pilum of Fire' };
+    store.ruleset!.i18n[LEARNED_B] = { name: 'Aegis of the Hearth' };
+    store.ruleset!.i18n[UNLEARNED] = { name: 'Unlearned Probe' };
+    store.entity = {
+      schema_version: SCHEMA_VERSION,
+      ruleset: { id: 'test', version: '1' },
+      entity_kind: 'character',
+      type_id: 'magus',
+      selections: [{ ref: 'flaw.corrupted_spells_probe', params: {} }],
+      characteristics: {} as Entity['characteristics'],
+      characteristic_descriptions: {},
+      ability_scores: [],
+      xp_pool: 0,
+      ability_funding: 'pool',
+      saga_year: 1220,
+      art_scores: [],
+      personality_traits: [],
+      reputations: [],
+      spells: [{ spell: LEARNED_A }, { spell: LEARNED_B }],
+    };
+    store.currentPath = null;
+    await store.save();
+  }
+
+  beforeEach(async () => {
+    await establishCleanMultiRefBaseline();
+    multiTarget = document.createElement('div');
+    document.body.appendChild(multiTarget);
+    multiApp = mount(ParameterPickerHarness, {
+      target: multiTarget,
+      props: { initial: multiSelection(), index: 0, params: MULTI_ITEM.parameters! },
+    }) as unknown as { setSelection: (next: Selection) => void };
+    flushSync();
+  });
+
+  afterEach(() => {
+    if (multiApp) unmount(multiApp);
+    multiApp = undefined;
+    multiTarget?.remove();
+  });
+
+  /** Toggles a checkbox and re-syncs the harness with the fresh `Selection`
+   *  `store.setMultiParamAt` (once it exists, phase 2) writes — mirrors
+   *  `setAndCommit` above. Asserts the checkbox exists FIRST, so a phase-1
+   *  RED fails there rather than crashing on a null dereference. */
+  function toggle(spellId: string, checked: boolean): void {
+    const cb = checkbox(spellId);
+    expect(cb).not.toBeNull();
+    cb!.checked = checked;
+    cb!.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    multiApp?.setSelection(multiSelection());
+    flushSync();
+  }
+
+  it('renders one checkbox per learned spell and none for an unlearned one', () => {
+    expect(fieldset()).not.toBeNull();
+    expect(checkbox(LEARNED_A)).not.toBeNull();
+    expect(checkbox(LEARNED_B)).not.toBeNull();
+    expect(checkbox(UNLEARNED)).toBeNull();
+  });
+
+  it('selecting two values writes them as a sorted, deduplicated array', () => {
+    // Click order deliberately reversed from sorted order ('spell.aegis_of_the_hearth'
+    // < 'spell.pilum_of_fire'), so a passing test proves canonicalization runs
+    // rather than merely preserving insertion order.
+    toggle(LEARNED_A, true);
+    toggle(LEARNED_B, true);
+    expect(multiSelection().params?.targets).toEqual([LEARNED_B, LEARNED_A]);
+  });
+
+  it('deselecting one value removes only that member', () => {
+    toggle(LEARNED_A, true);
+    toggle(LEARNED_B, true);
+    toggle(LEARNED_A, false);
+    expect(multiSelection().params?.targets).toEqual([LEARNED_B]);
+  });
+
+  it('is keyboard-operable — a native checkbox needs no key handler of its own', () => {
+    const cb = checkbox(LEARNED_A);
+    expect(cb).not.toBeNull();
+    expect(cb!.type).toBe('checkbox');
+    // A real, reachable Tab stop — the DOM's own answer to "can the keyboard
+    // land here" (mirrors `ArtGrid.client.test.ts`'s Sabine-3 precedent).
+    expect(cb!.tabIndex).toBeGreaterThanOrEqual(0);
+    // `.click()` is the same DOM outcome (checked flips, `change` fires) a
+    // Space/Enter press on a focused checkbox produces natively — a native
+    // <input type="checkbox"> needs no bespoke keydown handler for this.
+    cb!.click();
+    flushSync();
+    multiApp?.setSelection(multiSelection());
+    flushSync();
+    expect(multiSelection().params?.targets).toEqual([LEARNED_A]);
+  });
+
+  it('flips the dirty flag when a value is toggled', () => {
+    expect(store.dirty).toBe(false);
+    toggle(LEARNED_A, true);
+    expect(store.dirty).toBe(true);
+  });
+
+  it('writes an empty (not absent) array once every value is unchecked — the blank/missing-param state (C5a semantics)', () => {
+    toggle(LEARNED_A, true);
+    toggle(LEARNED_A, false);
+    expect(multiSelection().params?.targets).toEqual([]);
+  });
+});

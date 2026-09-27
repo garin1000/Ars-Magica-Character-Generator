@@ -628,3 +628,40 @@ describe('VirtueFlawTab selected-row rules text is keyboard-reachable (Sabine 3)
     expect(wrap![0]).toContain('tabindex="0"');
   });
 });
+
+// C5b (D9 part 3, § 10.1): a chosen `multi_ref` selection's row must show every
+// value as a localized, joined name ("Pilum of Fire, Aegis of the Hearth"),
+// never a raw id and never the unfilled-token hint — `singleValuedParams`
+// (still the ONLY resolver wired in before this slice) drops an array value
+// entirely, so today the row falls back to the placeholder hint instead.
+//
+// RED-CHECKPOINT: expected to fail until phase 2 wires a join-aware resolver
+// in (`selectionDisplayParams` in `derive.ts`) ahead of `singleValuedParams`
+// at this component's three call sites.
+describe("VirtueFlawTab shows a multi_ref selection's values as joined, localized names (C5b)", () => {
+  const CORRUPTED_SPELLS_PROBE = 'flaw.corrupted_spells_probe';
+
+  beforeEach(() => {
+    store.ruleset!.ruleset.point_items[CORRUPTED_SPELLS_PROBE] = item({
+      id: CORRUPTED_SPELLS_PROBE,
+      categories: ['general'],
+      parameters: [{ key: 'targets', type: 'multi_ref', domain: 'spell' }],
+    });
+    store.ruleset!.i18n[CORRUPTED_SPELLS_PROBE] = { name: 'Corrupted Spells ({targets})' };
+    store.ruleset!.i18n['spell.pilum_of_fire'] = { name: 'Pilum of Fire' };
+    store.ruleset!.i18n['spell.aegis_of_the_hearth'] = { name: 'Aegis of the Hearth' };
+    resetEntity([
+      {
+        ref: CORRUPTED_SPELLS_PROBE,
+        params: { targets: ['spell.pilum_of_fire', 'spell.aegis_of_the_hearth'] },
+      },
+    ]);
+  });
+
+  it('joins each value into its localized name, never a raw id or the unfilled hint', () => {
+    const outline = columnOutline(html());
+    expect(outline).toContain('Corrupted Spells (Pilum of Fire, Aegis of the Hearth)');
+    expect(outline.join(' ')).not.toContain('spell.');
+    expect(outline.join(' ')).not.toContain('{targets}');
+  });
+});
