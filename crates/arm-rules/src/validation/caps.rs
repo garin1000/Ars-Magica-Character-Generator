@@ -44,6 +44,26 @@ pub(crate) fn validate_caps(
             .count()
     };
 
+    // The same match, but naming which items matched rather than merely
+    // counting them (D41/B2): a category-cap ceiling warning must name the
+    // paired entries, not just say "2 of 1". Sorted so a pair reports in a
+    // stable order across runs.
+    let matching_ids = |pred: &dyn Fn(&PointItem, &Selection) -> bool| -> Vec<Id> {
+        let mut ids: Vec<Id> = entity
+            .selections
+            .iter()
+            .filter(|s| {
+                ruleset
+                    .point_items
+                    .get(&s.item_ref)
+                    .is_some_and(|item| pred(item, s))
+            })
+            .map(|s| s.item_ref.clone())
+            .collect();
+        ids.sort();
+        ids
+    };
+
     let count_args = |n: usize, max: u8| args([("count", n.to_string()), ("max", max.to_string())]);
 
     // --- Hard caps ("may not ...") → blocking errors ---
@@ -112,13 +132,14 @@ pub(crate) fn validate_caps(
             // Social Status must not count against a Supernatural cap, and vice
             // versa — `ArMDE:5083` is a choice between the two readings, not both at
             // once.
-            let n = count(&|i, s| {
-                i.kind == kind
+            let matched = matching_ids(&|i, s| {
+                (cap.both_kinds || i.kind == kind)
                     && i.categories_for(&s.params)
                         .iter()
                         .any(|c| c == &cap.category)
                     && (!cap.major_only || i.magnitude == Magnitude::Major)
             });
+            let n = matched.len();
 
             if n > cap.max as usize {
                 let code = if cap.major_only {
@@ -126,7 +147,17 @@ pub(crate) fn validate_caps(
                 } else {
                     format!("too_many_{}_{}", cap.category, noun)
                 };
-                let cap_args = count_args(n, cap.max);
+                // D41: a soft ceiling (a second Social Status, say) must name
+                // the paired entries so the player can see what was paired —
+                // not category-specific, so any ceiling breach gets this for
+                // free. Only the first two matches are named (every shipped
+                // ceiling caps at 1 or 2 today, so a third is not yet
+                // reachable; naming more would need a third arg key).
+                let mut cap_args = count_args(n, cap.max);
+                if let [first, second, ..] = matched.as_slice() {
+                    cap_args.insert("item".to_string(), first.to_string());
+                    cap_args.insert("other".to_string(), second.to_string());
+                }
 
                 if cap.hard {
                     issues.push(ValidationIssue::error(

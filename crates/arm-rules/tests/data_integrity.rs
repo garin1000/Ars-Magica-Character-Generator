@@ -2018,6 +2018,9 @@ fn fully_specified_companion_validates() {
                 BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
             ),
             Selection::new(Id::new("flaw.poor_student")),
+            // B2/D41 (ArMDE:2816): every character must take one Social
+            // Status — free, so the point balance is untouched.
+            Selection::new(Id::new("virtue.craftsman")),
         ],
     );
     // Int +2 (3) + Per +1 (1) + Sta -1 (-1) + others 0 = 3 <= 7 (under -> warning only).
@@ -2454,6 +2457,10 @@ fn companion_balanced_entity_validates() {
         vec![
             Selection::new(Id::new("virtue.keen_vision")),
             Selection::new(Id::new("flaw.poor_student")),
+            // B2/D41 (ArMDE:2816): every character must take one Social
+            // Status — free, so `virtue_points`/`flaw_points` below are
+            // untouched.
+            Selection::new(Id::new("virtue.craftsman")),
         ],
     );
 
@@ -2503,6 +2510,10 @@ fn grog_type_restricts_major_virtues() {
         vec![
             Selection::new(Id::new("virtue.keen_vision")),
             Selection::new(Id::new("flaw.poor_student")),
+            // B2/D41 (ArMDE:2816): every character must take one Social
+            // Status — free, so this isolates the Major-virtue restriction
+            // exactly as before.
+            Selection::new(Id::new("virtue.craftsman")),
         ],
     );
 

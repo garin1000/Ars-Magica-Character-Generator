@@ -264,6 +264,15 @@ describe('the guided aging step', () => {
 
   it('reaches an aging step that owes a young character nothing', async () => {
     await startWizard('grog');
+    // B2/D41 (ArMDE:2816): every character must take one Social Status before
+    // Next unblocks past `virtues_flaws` — free, so it does not touch this
+    // spec's aging figures. This grog is reused by every later `it()` in this
+    // describe (via `standOnWizardStep`), so this is the one place it needs it.
+    await advanceWizardTo('virtues_flaws');
+    const addStatus = await $('[data-testid="add-virtue.craftsman"]');
+    await addStatus.waitForExist({ timeout: STEP_TIMEOUT });
+    await addStatus.click();
+
     // Aging, not life-stage funding, is what this file is about — see
     // `useFlatPoolFunding`'s doc comment for why the guided default otherwise
     // blocks `Next` on `experience` before this test ever reaches `aging`.
@@ -849,6 +858,15 @@ describe('the aging crisis', () => {
 
   it('sends a grog of 40 to the Crisis Table and asks for the second die', async () => {
     await startWizard('grog');
+    // B2/D41 (ArMDE:2816): every character must take one Social Status before
+    // Next unblocks past `virtues_flaws` — free, so it does not touch this
+    // spec's crisis figures. This grog is reused by every later `it()` in
+    // this describe, so this is the one place it needs it.
+    await advanceWizardTo('virtues_flaws');
+    const addStatus = await $('[data-testid="add-virtue.craftsman"]');
+    await addStatus.waitForExist({ timeout: STEP_TIMEOUT });
+    await addStatus.click();
+
     await useFlatPoolFunding();
     await advanceWizardTo('aging');
     expect(await currentWizardPhase()).toBe('aging');

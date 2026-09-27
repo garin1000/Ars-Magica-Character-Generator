@@ -3268,6 +3268,19 @@ pub struct CategoryCap {
     /// combination).
     #[serde(default, skip_serializing_if = "is_false")]
     pub min_hard: bool,
+    /// Counts BOTH Virtues and Flaws sharing this category, regardless of
+    /// which array (`virtue_category_caps`/`flaw_category_caps`) this row
+    /// lives in — B2/ArMDE:2816: "All characters must take one Social
+    /// Status", and the book's own Social Status entries are a mix of
+    /// Virtues (`virtue.gentleman`) and Flaws (`flaw.outlaw`), so a
+    /// Virtue-only or Flaw-only count would wrongly refuse a character
+    /// legitimately represented by the other kind. `false` (the default, and
+    /// every cap shipped before D41) preserves the existing convention: the
+    /// surrounding array alone determines which kind counts (a Major
+    /// Hermetic FLAW like `flaw.suppressed_gift` must NOT count toward the
+    /// Major Hermetic VIRTUE cap, which stays kind-scoped).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub both_kinds: bool,
 }
 
 /// `skip_serializing_if` predicate: omits a `bool` field from canonical JSON
@@ -8090,6 +8103,7 @@ mod tests {
             hard: false,
             min: None,
             min_hard: false,
+            both_kinds: false,
         };
         let json = serde_json::to_string(&bare).unwrap();
         assert!(
@@ -8104,6 +8118,7 @@ mod tests {
             hard: false,
             min: Some(1),
             min_hard: true,
+            both_kinds: true,
         };
         let json = serde_json::to_string(&floored).unwrap();
         let back: CategoryCap = serde_json::from_str(&json).unwrap();

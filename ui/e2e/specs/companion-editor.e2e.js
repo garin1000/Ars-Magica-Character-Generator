@@ -265,8 +265,11 @@ describe('Ability parameter picker (CV7): choosing a catalogued value', () => {
 // error-severity issue through the same render path the over-budget case uses.
 describe('validation errors', () => {
   it('shows a localized, error-severity issue for a forbidden-category selection', async () => {
-    // A fresh companion, so "no issues before any selection" below is about this
-    // character rather than whatever the previous spec left behind.
+    // A fresh companion already carries exactly one issue: the mandatory Social
+    // Status floor (D41, ArMDE:2816) — the same shape as a fresh magus already
+    // showing a missing required-trait error. So "before any other selection"
+    // means exactly one issue, matched by its code (never by English text), not
+    // zero — a `no-issues` empty state would be wrong now, not a defect.
     await startCharacter('companion');
 
     // The shared validation bar (bottom) reports for the whole character; the V/F
@@ -274,26 +277,28 @@ describe('validation errors', () => {
     const vfTab = await $('[data-testid="tab-virtues_flaws"]');
     await vfTab.waitForExist({ timeout: 30000 });
 
-    // No issues before any selection.
-    await expect($('[data-testid="no-issues"]')).toExist();
+    const issueList = await $('[data-testid="issue-list"]');
+    await issueList.waitForExist({ timeout: 5000 });
+    const itemsBefore = await $$('[data-testid="issue-list"] li');
+    expect(itemsBefore.length).toBe(1);
+    await expect(
+      $('[data-testid="issue-list"] li[data-code="too_few_social_status_virtues"]'),
+    ).toExist();
 
     await vfTab.click();
     const addForbidden = await $('[data-testid="add-flaw.blatant_gift"]');
     await addForbidden.waitForExist({ timeout: 10000 });
     await addForbidden.click();
 
-    // The issue list now contains at least one error-severity issue.
-    const issueList = await $('[data-testid="issue-list"]');
-    await issueList.waitForExist({ timeout: 5000 });
-
-    const errors = await $$('[data-severity="error"]');
-    expect(await errors.length).toBeGreaterThan(0);
+    // The forbidden-category issue now joins the pre-existing floor one,
+    // matched by its own code rather than by list position.
+    const forbidden = await $('[data-testid="issue-list"] li[data-code="forbidden_category"]');
+    await forbidden.waitForExist({ timeout: 5000 });
 
     // The message is localized (names the offending item, never a raw id or the
     // i18n key): a raw slug rendered as a label would violate the strict
     // data-kind separation in CLAUDE.md.
-    const firstError = errors[0];
-    const text = await firstError.getText();
+    const text = await forbidden.getText();
     expect(text).not.toContain('issue-');
     expect(text).not.toContain('flaw.blatant_gift');
     expect(text).toContain('Blatant Gift');
@@ -515,6 +520,10 @@ describe('phase-3 virtue/flaw effects', () => {
 // magnitude pair of the same Flaw (Ambitious).
 describe('mutually exclusive Virtues/Flaws', () => {
   const INCOMPATIBLE_ISSUE = '[data-testid="issue-list"] li[data-code="incompatible"]';
+  // D41/ArMDE:2816's mandatory floor — present on every fresh companion, so a
+  // "clean sheet" below means this ONE issue alone, not an empty list.
+  const SOCIAL_STATUS_FLOOR_ISSUE =
+    '[data-testid="issue-list"] li[data-code="too_few_social_status_virtues"]';
 
   async function addButton(ref) {
     const button = await $(`[data-testid="add-${ref}"]`);
@@ -562,13 +571,29 @@ describe('mutually exclusive Virtues/Flaws', () => {
       { timeout: 5000, timeoutMsg: 'expected an error-severity incompatibility issue' },
     );
 
-    // Clear both picks so the magnitude-pair case starts from a clean sheet.
+    // Clear both picks so the magnitude-pair case starts from a clean sheet —
+    // which, post-D41, means exactly the mandatory Social Status floor issue
+    // and nothing else, matched by code rather than an empty-state testid.
     for (const ref of ['virtue.gentle_gift', 'flaw.blatant_gift']) {
       const remove = await $(`[data-testid^="remove-${ref}-"]`);
       await remove.waitForExist({ timeout: 5000 });
       await remove.click();
     }
-    await $('[data-testid="no-issues"]').waitForExist({ timeout: 5000 });
+    // Wait for the INCOMPATIBLE finding itself to clear, not merely for the
+    // floor issue to (still) exist — the floor was never gone (it names no
+    // item these two picks touch), so its presence alone proves nothing about
+    // whether the debounced revalidation for the removals has landed yet.
+    await browser.waitUntil(async () => !(await $(INCOMPATIBLE_ISSUE).isExisting()), {
+      timeout: 5000,
+      timeoutMsg: 'the incompatible finding should clear once both picks are removed',
+    });
+    await $(SOCIAL_STATUS_FLOOR_ISSUE).waitForExist({ timeout: 5000 });
+    const itemsAfter = await $$('[data-testid="issue-list"] li');
+    const codesAfter = [];
+    for (let i = 0; i < itemsAfter.length; i++) {
+      codesAfter.push(await itemsAfter[i].getAttribute('data-code'));
+    }
+    expect(codesAfter).toEqual(['too_few_social_status_virtues']);
   });
 
   it('greys out the Major variant of an already selected Minor Flaw', async () => {

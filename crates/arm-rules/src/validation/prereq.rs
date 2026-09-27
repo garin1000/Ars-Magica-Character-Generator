@@ -34,7 +34,10 @@ pub(crate) fn validate_prerequisites(
         };
 
         if let Some(ref prereq) = item.prerequisites {
-            let (outcome, depended_on_unknown) = ctx.evaluate(prereq);
+            // B2/ArMDE:4441: an item's own prerequisite excludes its own
+            // contribution to `HasCategory` — see `evaluate_for_item`'s doc
+            // comment.
+            let (outcome, depended_on_unknown) = ctx.evaluate_for_item(prereq, &selection.item_ref);
             match outcome {
                 Tri::False => {
                     issues.push(ValidationIssue::error(
@@ -64,7 +67,7 @@ pub(crate) fn validate_prerequisites(
         // violation, not to a nag about missing data the way the hard tree's
         // `prereq_unevaluated` does.
         if let Some(ref advisory) = item.advisory_prerequisites {
-            let (outcome, _) = ctx.evaluate(advisory);
+            let (outcome, _) = ctx.evaluate_for_item(advisory, &selection.item_ref);
             if outcome == Tri::False {
                 issues.push(ValidationIssue::warning(
                     ValidationIssue::CODE_ADVISORY_PREREQ_NOT_MET,
@@ -126,7 +129,15 @@ pub(crate) struct PrereqCtx<'a> {
     /// (ArMDE:6671-6674) is satisfied by a
     /// House-granted Social Status exactly as by a bought one, the same reach
     /// `present_ids` already gives `Has`.
-    held_categories: BTreeSet<String>,
+    ///
+    /// Keyed on category, valued on the `item_ref`s that contribute it (not a
+    /// bare `BTreeSet<String>`) so [`evaluate_for_item`](PrereqCtx::evaluate_for_item)
+    /// can ask "does some item OTHER than the one asking hold this category" —
+    /// B2/ArMDE:4441: `virtue.male_guild_sponsor` is itself `social_status`, so
+    /// a self-blind `HasCategory` on its own prerequisite would be trivially
+    /// satisfied by itself and never actually require the SEPARATE guild
+    /// status the book demands.
+    held_categories: BTreeMap<String, BTreeSet<Id>>,
 }
 
 impl<'a> PrereqCtx<'a> {
@@ -218,11 +229,18 @@ impl<'a> PrereqCtx<'a> {
         // `Prereq::HasCategory`'s grants-inclusive category set (B1/D21):
         // every bought-OR-granted selection's in-force categories, read the
         // taken-as-aware way `categories_for` already resolves for the
-        // bought-only profile-level gates.
-        let mut held_categories: BTreeSet<String> = BTreeSet::new();
+        // bought-only profile-level gates. Attributed per contributing
+        // `item_ref` (B2) so a self-excluding lookup can tell "held by this
+        // item alone" from "held by some OTHER item too".
+        let mut held_categories: BTreeMap<String, BTreeSet<Id>> = BTreeMap::new();
         for selection in entity.selections.iter().chain(granted.iter()) {
             if let Some(item) = ruleset.point_items.get(&selection.item_ref) {
-                held_categories.extend(item.categories_for(&selection.params).iter().cloned());
+                for category in item.categories_for(&selection.params) {
+                    held_categories
+                        .entry(category.clone())
+                        .or_default()
+                        .insert(selection.item_ref.clone());
+                }
             }
         }
 
@@ -241,8 +259,29 @@ impl<'a> PrereqCtx<'a> {
     /// Evaluates a prerequisite expression to a tri-state against this
     /// context. Thin wrapper over the free recursive [`evaluate_prereq`]
     /// starting at depth 1 (the top level of the expression tree).
+    ///
+    /// Excludes no item's own contribution: correct for a PROFILE-level gate
+    /// (`CategoryRule.when`) that belongs to no single selection. An item's
+    /// OWN `prerequisites`/`advisory_prerequisites` must go through
+    /// [`Self::evaluate_for_item`] instead (B2).
     pub(crate) fn evaluate(&self, prereq: &Prereq) -> (Tri, bool) {
-        evaluate_prereq(prereq, self, 1)
+        evaluate_prereq(prereq, self, 1, None)
+    }
+
+    /// Evaluates a prerequisite as `item_ref`'s OWN statement about itself
+    /// (`PointItem::prerequisites`/`advisory_prerequisites`) — B2/ArMDE:4441.
+    ///
+    /// A prerequisite states what the REST of the character must hold, not
+    /// what the item itself trivially supplies. `Prereq::HasCategory`
+    /// therefore excludes `item_ref`'s own contributed categories: without
+    /// this, an item whose own category equals the category it asks about
+    /// (`virtue.male_guild_sponsor` is itself `social_status`) would be
+    /// self-satisfied and could never actually require holding a SEPARATE
+    /// item of that category. Every other `Prereq` variant is unaffected —
+    /// `Has(id)` etc. never risk this trap, since no shipped item names
+    /// itself.
+    pub(crate) fn evaluate_for_item(&self, prereq: &Prereq, item_ref: &Id) -> (Tri, bool) {
+        evaluate_prereq(prereq, self, 1, Some(item_ref))
     }
 }
 
@@ -258,7 +297,12 @@ impl<'a> PrereqCtx<'a> {
 /// `Ruleset::validate_prereq_refs` (see that function's doc), so this branch
 /// exists only to degrade gracefully rather than overflow the stack should a
 /// `Prereq` tree ever reach evaluation some other way.
-fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx, depth: usize) -> (Tri, bool) {
+fn evaluate_prereq(
+    prereq: &Prereq,
+    ctx: &PrereqCtx,
+    depth: usize,
+    excluding: Option<&Id>,
+) -> (Tri, bool) {
     if depth > PREREQ_MAX_DEPTH {
         return (Tri::Unknown, true);
     }
@@ -271,15 +315,33 @@ fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx, depth: usize) -> (Tri, bool
         //   Any (OR) : trigger on True   -> short-circuit True;  all-known -> False
         //   Nor      : trigger on True   -> short-circuit False; all-known -> True
         // In every case a surviving Unknown makes the whole expression Unknown.
-        Prereq::All(children) => {
-            fold_children(children, ctx, depth, Tri::False, Tri::False, Tri::True)
-        }
-        Prereq::Any(children) => {
-            fold_children(children, ctx, depth, Tri::True, Tri::True, Tri::False)
-        }
-        Prereq::Nor(children) => {
-            fold_children(children, ctx, depth, Tri::True, Tri::False, Tri::True)
-        }
+        Prereq::All(children) => fold_children(
+            children,
+            ctx,
+            depth,
+            excluding,
+            Tri::False,
+            Tri::False,
+            Tri::True,
+        ),
+        Prereq::Any(children) => fold_children(
+            children,
+            ctx,
+            depth,
+            excluding,
+            Tri::True,
+            Tri::True,
+            Tri::False,
+        ),
+        Prereq::Nor(children) => fold_children(
+            children,
+            ctx,
+            depth,
+            excluding,
+            Tri::True,
+            Tri::False,
+            Tri::True,
+        ),
         Prereq::Has(id) => {
             if ctx.present_ids.contains(id) {
                 (Tri::True, false)
@@ -342,9 +404,19 @@ fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx, depth: usize) -> (Tri, bool
         },
         // Static (an item's own category never depends on missing data), so
         // always a definite True/False, never Unknown — matching `Has`'s own
-        // shape (design § 3a site 2).
+        // shape (design § 3a site 2). Self-excluding (B2/ArMDE:4441): when
+        // evaluated for a specific item (`excluding`), an item contributing
+        // ONLY via that item's own selection does not count — see
+        // `PrereqCtx::evaluate_for_item`'s doc comment.
         Prereq::HasCategory(category) => {
-            if ctx.held_categories.contains(category.as_str()) {
+            let held = ctx
+                .held_categories
+                .get(category.as_str())
+                .is_some_and(|contributors| match excluding {
+                    Some(self_id) => contributors.iter().any(|id| id != self_id),
+                    None => !contributors.is_empty(),
+                });
+            if held {
                 (Tri::True, false)
             } else {
                 (Tri::False, false)
@@ -366,6 +438,7 @@ fn fold_children(
     children: &[Prereq],
     ctx: &PrereqCtx,
     depth: usize,
+    excluding: Option<&Id>,
     trigger: Tri,
     short_circuit: Tri,
     all_known: Tri,
@@ -373,7 +446,7 @@ fn fold_children(
     let mut depended = false;
     let mut saw_unknown = false;
     for child in children {
-        let (outcome, dep) = evaluate_prereq(child, ctx, depth + 1);
+        let (outcome, dep) = evaluate_prereq(child, ctx, depth + 1, excluding);
         if outcome == trigger {
             return (short_circuit, false);
         }
@@ -455,15 +528,19 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
-            held_categories: BTreeSet::new(),
+            held_categories: BTreeMap::new(),
         };
 
         // A single leaf, but evaluated as though it were already past the
         // depth limit — proves the guard fires on `depth`, not on actually
         // walking a deep tree (which would defeat the point of testing this
         // in isolation from the load-time guard).
-        let (outcome, depended_on_unknown) =
-            evaluate_prereq(&Prereq::HermeticallyTrained, &ctx, PREREQ_MAX_DEPTH + 1);
+        let (outcome, depended_on_unknown) = evaluate_prereq(
+            &Prereq::HermeticallyTrained,
+            &ctx,
+            PREREQ_MAX_DEPTH + 1,
+            None,
+        );
         assert_eq!(outcome, Tri::Unknown);
         assert!(depended_on_unknown);
     }
@@ -480,11 +557,11 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
-            held_categories: BTreeSet::new(),
+            held_categories: BTreeMap::new(),
         };
 
         let (outcome, depended_on_unknown) =
-            evaluate_prereq(&Prereq::HermeticallyTrained, &ctx, PREREQ_MAX_DEPTH);
+            evaluate_prereq(&Prereq::HermeticallyTrained, &ctx, PREREQ_MAX_DEPTH, None);
         assert_eq!(outcome, Tri::True);
         assert!(!depended_on_unknown);
     }
@@ -531,10 +608,10 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
-            held_categories: BTreeSet::new(),
+            held_categories: BTreeMap::new(),
         };
 
-        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1);
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
         assert_eq!(outcome, Tri::True);
         assert!(!depended_on_unknown);
     }
@@ -555,10 +632,10 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
-            held_categories: BTreeSet::new(),
+            held_categories: BTreeMap::new(),
         };
 
-        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1);
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
         assert_eq!(outcome, Tri::False);
         assert!(!depended_on_unknown);
     }
@@ -577,10 +654,10 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
-            held_categories: BTreeSet::new(),
+            held_categories: BTreeMap::new(),
         };
 
-        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1);
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
         assert_eq!(outcome, Tri::Unknown);
         assert!(depended_on_unknown);
     }
@@ -600,11 +677,14 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
-            held_categories: BTreeSet::from(["social_status".to_string()]),
+            held_categories: BTreeMap::from([(
+                "social_status".to_string(),
+                BTreeSet::from([Id::new("virtue.some_status")]),
+            )]),
         };
 
         let (outcome, depended_on_unknown) =
-            evaluate_prereq(&Prereq::HasCategory("social_status".into()), &ctx, 1);
+            evaluate_prereq(&Prereq::HasCategory("social_status".into()), &ctx, 1, None);
         assert_eq!(outcome, Tri::True);
         assert!(!depended_on_unknown);
     }
@@ -623,11 +703,11 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
-            held_categories: BTreeSet::new(),
+            held_categories: BTreeMap::new(),
         };
 
         let (outcome, depended_on_unknown) =
-            evaluate_prereq(&Prereq::HasCategory("social_status".into()), &ctx, 1);
+            evaluate_prereq(&Prereq::HasCategory("social_status".into()), &ctx, 1, None);
         assert_eq!(outcome, Tri::False);
         assert!(!depended_on_unknown);
     }
@@ -657,5 +737,59 @@ mod tests {
 
         let (outcome, _) = ctx.evaluate(&Prereq::HasCategory("social_status".into()));
         assert_eq!(outcome, Tri::True);
+    }
+
+    /// B2/ArMDE:4441: `Prereq::HasCategory`, evaluated via
+    /// [`PrereqCtx::evaluate_for_item`] as an item's own prerequisite about
+    /// ITSELF, excludes that item's own contribution. An item whose own
+    /// category is `social_status` and whose own prerequisite is
+    /// `HasCategory("social_status")` — exactly `virtue.male_guild_sponsor`'s
+    /// shape — must fail when held ALONE (nothing else supplies the
+    /// category), and must succeed once a SECOND, distinct `social_status`
+    /// item is held too.
+    #[test]
+    fn evaluate_for_item_excludes_the_asking_items_own_category() {
+        let items = r#"[
+          { "id": "virtue.self_ref_status", "kind": "virtue", "classification": "narrative",
+            "magnitude": "free", "categories": ["social_status"], "entity_kinds": ["character"] },
+          { "id": "virtue.other_status", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["social_status"], "entity_kinds": ["character"] },
+          { "id": "flaw.filler_personality", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+        ]"#;
+        let ruleset = Ruleset::from_json("test", "1", items, "[]").unwrap();
+        let prereq = Prereq::HasCategory("social_status".into());
+        let item_ref = Id::new("virtue.self_ref_status");
+
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            crate::RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.selections = vec![Selection::new(item_ref.clone())];
+
+        // Held ALONE: no OTHER item contributes `social_status`, so the
+        // asking item's own row must not satisfy its own prerequisite.
+        let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+        let ctx = PrereqCtx::build(&entity, &ruleset, None, &selected_ids, &[]);
+        let (outcome, _) = ctx.evaluate_for_item(&prereq, &item_ref);
+        assert_eq!(
+            outcome,
+            Tri::False,
+            "held alone, the asking item's own category must not satisfy its own HasCategory"
+        );
+
+        // Holding a SECOND, distinct `social_status` item satisfies it.
+        entity
+            .selections
+            .push(Selection::new(Id::new("virtue.other_status")));
+        let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+        let ctx = PrereqCtx::build(&entity, &ruleset, None, &selected_ids, &[]);
+        let (outcome, _) = ctx.evaluate_for_item(&prereq, &item_ref);
+        assert_eq!(
+            outcome,
+            Tri::True,
+            "a SEPARATE social_status item must satisfy the asking item's own HasCategory"
+        );
     }
 }

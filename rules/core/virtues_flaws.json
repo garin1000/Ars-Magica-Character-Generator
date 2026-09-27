@@ -5201,6 +5201,7 @@
     "categories": ["social_status"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has_category", "value": "social_status" },
     "source": { "anchor": "male-guild-sponsor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4439, 4442] }
   },
   {

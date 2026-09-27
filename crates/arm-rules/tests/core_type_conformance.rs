@@ -244,6 +244,9 @@ fn grog_full_build_validates() {
         (Characteristic::Qik, 1),
     ]);
     grog.selections = vec![
+        // B2/D41 (ArMDE:2816): every character must take one Social Status —
+        // free, so the balance above is untouched.
+        sel("virtue.craftsman"),
         sel("virtue.tough"),
         sel("flaw.clumsy"),
         sel("flaw.ability_block"),
@@ -267,6 +270,9 @@ fn companion_full_build_validates() {
         (Characteristic::Pre, 1),
     ]);
     comp.selections = vec![
+        // B2/D41 (ArMDE:2816): every character must take one Social Status —
+        // free, so the balance above is untouched.
+        sel("virtue.wanderer"),
         sel("virtue.tough"),
         sel("virtue.arcane_lore"),
         sel("flaw.clumsy"),
@@ -289,7 +295,13 @@ fn mythic_companion_full_build_validates() {
     let mut myth = base("mythic_companion");
     myth.mythic_type = Some(Id::new("mythic_type.nephilim"));
     myth.characteristics = BTreeMap::from([(Characteristic::Int, 2), (Characteristic::Sta, 1)]);
-    myth.selections = vec![sel("virtue.arcane_lore"), sel("flaw.clumsy")];
+    // B2/D41 (ArMDE:2816): every character must take one Social Status — free,
+    // so the balance is untouched.
+    myth.selections = vec![
+        sel("virtue.arcane_lore"),
+        sel("virtue.craftsman"),
+        sel("flaw.clumsy"),
+    ];
     myth.xp_pool = 120;
     myth.ability_scores = vec![ability("ability.awareness", 3)];
     assert_valid("mythic_companion", &myth, &full_ruleset());

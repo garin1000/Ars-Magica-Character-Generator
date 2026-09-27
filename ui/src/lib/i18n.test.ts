@@ -529,6 +529,56 @@ describe('German UI bundle', () => {
     }
   });
 
+  // B2 (D41, ArMDE:2816): `CategoryCap.min`/`min_hard` (B1, landed) is the
+  // floor twin of the ceiling test above, composed by `caps.rs` the same way
+  // (`too_few_<category>_<noun>`, or `too_few_major_…` for a Major-only cap).
+  // Walked from the shipped `character_types.json`, never spelled out, on the
+  // identical reasoning: a floor is DATA (CLAUDE.md), so adding one must not
+  // silently print a raw code into the validation panel. The guard against an
+  // empty set is deliberately load-bearing here, not just defensive: B2's own
+  // data (a `social_status` row with `min: 1`) has not landed yet, so today
+  // this set IS empty and the test fails for exactly that reason.
+  it('names every category floor the shipped character types declare, in both locales', () => {
+    interface CategoryCap {
+      category: string;
+      min?: number;
+      major_only?: boolean;
+    }
+    interface TypeProfile {
+      id: string;
+      budget: { flaw_category_caps?: CategoryCap[]; virtue_category_caps?: CategoryCap[] };
+    }
+    const profiles: TypeProfile[] = JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL('../../../rules/core/character_types.json', import.meta.url)),
+        'utf-8',
+      ),
+    );
+
+    /** The code exactly as `caps.rs`'s floor half composes it. */
+    const codeFor = (cap: CategoryCap, noun: string) =>
+      cap.major_only ? `too_few_major_${cap.category}_${noun}` : `too_few_${cap.category}_${noun}`;
+
+    const codes = new Set<string>();
+    for (const profile of profiles) {
+      for (const cap of profile.budget.flaw_category_caps ?? [])
+        if (cap.min !== undefined) codes.add(codeFor(cap, 'flaws'));
+      for (const cap of profile.budget.virtue_category_caps ?? [])
+        if (cap.min !== undefined) codes.add(codeFor(cap, 'virtues'));
+    }
+    // A guard over an empty set would pass vacuously — and today it IS empty
+    // (D41's `social_status` floor has not landed), so this is this test's
+    // own red.
+    expect(codes.size).toBeGreaterThan(0);
+
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      for (const code of codes) {
+        expect(keys, `${lang} is missing issue-${code}`).toContain(`issue-${code}`);
+      }
+    }
+  });
+
   // E2 (V/F audit Q-32): a new `AdvancementSource` variant, `authoring`, is
   // rendered through `derived-detail-authoring` (`DerivedSurfacedModifiersSection.svelte`)
   // exactly like every other scalar source. A code with no `derived-detail-<id>`

@@ -164,7 +164,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   below under-count their points; `core_rules_tainted_virtues_carry_the_tainted_flag`
   in `crates/arm-rules/tests/data_integrity.rs` now pins a sample of tagged
   entries plus that control.
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:200).
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:231).
   The book frames the limit as a "should", so it is a **non-blocking warning**,
   measured against the points **actually taken** (not the type budget): a side
   warns when `2·tainted_points > total_points` for that side (Virtue / Flaw).
@@ -214,7 +214,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   Tainted precedent.** `validate_share_of_kind_cap` takes the **folded**
   selection list (bought ++ granted), because **Devil Child grants a free
   Demonic Might or Demonic Powers** (`ArMDE:3673`) and a granted copy is still a copy
-  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :200) reads raw
+  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :231) reads raw
   `entity.selections` and so counts only bought ones — arguably right for Tainted,
   which the book frames as a character-generation guideline. Two identically
   worded "half" rules therefore disagree about grants **on purpose**; do not
@@ -1156,7 +1156,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :261) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :300) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -4134,6 +4134,42 @@ resolved values); the free Virtue is **derived** at eval by
   emitting `too_many_major_hermetic_virtues` (code derived as
   `too_many_[major_]<category>_virtues`). Fluent key `issue-too_many_major_hermetic_virtues`
   in both locales; `dynamic_virtue_cap_codes()` extends the Fluent-coverage test.
+
+#### Social Status — mandatory floor, soft ceiling (D41/B2)
+> "All characters must take one Social Status, and may only take more than one
+> if the descriptions of the Virtues or Flaws explicitly note that they are
+> compatible."
+
+- Source: `ArMDE:2816`.
+- `CategoryCap` gains `min`/`min_hard` (a floor, additive to the existing
+  ceiling-only `max`/`hard`) and `both_kinds` (counts Virtues AND Flaws
+  sharing the category, regardless of which array the row lives in — the
+  book's own Social Status entries are a mix of both, e.g. `virtue.gentleman`
+  and `flaw.outlaw`; `false` by default preserves every OTHER shipped cap's
+  kind-scoped behavior).
+- Data: every profile in `rules/core/character_types.json` —
+  `virtue_category_caps: [{ "category": "social_status", "max": 1, "hard":
+  false, "min": 1, "min_hard": true, "both_kinds": true }]`. D41 rules the
+  floor hard (an absolute "must") and the ceiling soft, and explicitly rejects
+  a `compatible_with` list — it would model none of ArMDE:4325/4614/4441's
+  three different exception shapes and would look authoritative while
+  guessing.
+- Implementation: `validation/caps.rs::validate_caps` (:22)'s existing
+  category-cap loop, extended with the floor half (code
+  `too_few_[major_]<category>_<flaws|virtues>`, severity following `min_hard`
+  rather than `hard`) and, on a ceiling breach, naming the first two matched
+  entries in `args` (`item`/`other`, sorted) so the warning shows what was
+  paired rather than a bare count. Fluent keys
+  `issue-too_few_social_status_virtues` / `issue-too_many_social_status_virtues`
+  in both locales.
+- `virtue.male_guild_sponsor` (`ArMDE:4439-4442`) needs a SEPARATE guild
+  Social Status: `prerequisites: { "kind": "has_category", "value":
+  "social_status" }`, evaluated via `validation/prereq.rs::PrereqCtx::evaluate_for_item`,
+  which excludes the asking item's OWN contributed categories — otherwise the
+  prereq would be trivially satisfied by the item's own `social_status`
+  category. See `docs/vf-audit/decisions.md` D41 and
+  `docs/vf-audit/design-b0-ranging-and-predicates.md`'s 2026-09-27
+  amendments.
 
 #### ≥1 Hermetic Flaw (magus guideline)
 > You should take at least one Hermetic Flaw

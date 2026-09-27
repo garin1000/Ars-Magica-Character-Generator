@@ -45,7 +45,9 @@ describe('guided wizard: grog', () => {
     // 3 + 3 + 1 = the ruleset's 7 starting Characteristic points, spent exactly.
     characteristics: { int: 2, sta: 2, per: 1 },
     flaws: ['flaw.disfigured'],
-    virtues: ['virtue.keen_vision'],
+    // B2/D41 (ArMDE:2816): every character must take one Social Status —
+    // free, so the balance comment above still holds.
+    virtues: ['virtue.covenfolk', 'virtue.keen_vision'],
     xpPool: '75',
     abilities: ['ability.awareness', 'ability.athletics'],
     // #33 gave grogs the `personality_reputations` phase, which their profile had been
@@ -77,6 +79,7 @@ describe('guided wizard: grog', () => {
     expect(saved.characteristics.int).toBe(2);
     expect(saved.selections.map((s) => s.ref).sort()).toEqual([
       'flaw.disfigured',
+      'virtue.covenfolk',
       'virtue.keen_vision',
     ]);
     expect(saved.ability_scores.map((a) => a.ability).sort()).toEqual([
@@ -108,7 +111,9 @@ describe('guided wizard: companion', () => {
     concept: 'A physician who travels with the covenant and asks too many questions.',
     characteristics: { int: 2, sta: 2, per: 1 },
     flaws: ['flaw.disfigured'],
-    virtues: ['virtue.keen_vision'],
+    // B2/D41 (ArMDE:2816): every character must take one Social Status —
+    // free, so the balance comment above still holds.
+    virtues: ['virtue.keen_vision', 'virtue.wanderer'],
     xpPool: '120',
     abilities: ['ability.awareness', 'ability.folk_ken'],
     personalityTrait: 'Curious',
@@ -164,7 +169,9 @@ describe('guided wizard: mythic companion', () => {
     mythicType: MYTHIC_TYPE,
     characteristics: { int: 2, sta: 2, per: 1 },
     flaws: ['flaw.disfigured'],
-    virtues: ['virtue.keen_vision'],
+    // B2/D41 (ArMDE:2816): every character must take one Social Status —
+    // free, so the balance comment above still holds.
+    virtues: ['virtue.keen_vision', 'virtue.wanderer'],
     xpPool: '120',
     abilities: ['ability.awareness', 'ability.folk_ken'],
     personalityTrait: 'Reverent',
@@ -198,6 +205,7 @@ describe('guided wizard: mythic companion', () => {
       'flaw.pagan',
       'virtue.keen_vision',
       'virtue.spiritual_pact',
+      'virtue.wanderer',
     ]);
 
     expect(await $('[data-testid="identity-name"]').getValue()).toBe(PLAN.name);

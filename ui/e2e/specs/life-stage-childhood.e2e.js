@@ -144,6 +144,16 @@ async function describedByIds(selector) {
 describe('life-stage funding and Sample Childhoods', () => {
   it('defaults to life-stage funding, with the typed pool one click away (M6/D2)', async () => {
     await startWizard('companion');
+    // B2/D41 (ArMDE:2816): every character must take one Social Status before
+    // Next unblocks past `virtues_flaws` — free, so it does not touch this
+    // spec's Ability/XP figures. The companion built here is reused by every
+    // later `it()` in this describe (via `standOnWizardStep`), so this is the
+    // one place that needs it.
+    await advanceWizardTo('virtues_flaws');
+    const addStatus = await $('[data-testid="add-virtue.craftsman"]');
+    await addStatus.waitForExist({ timeout: STEP_TIMEOUT });
+    await addStatus.click();
+
     await advanceWizardTo('experience');
     await $(PANEL).waitForExist({ timeout: BOOT_TIMEOUT });
 

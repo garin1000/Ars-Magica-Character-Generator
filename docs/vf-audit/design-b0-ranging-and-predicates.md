@@ -498,6 +498,30 @@ guarding the two real consumers directly — no recursion, no wrapper, and no
 new control flow beyond the one extra `&&` each of § 3c's two real sites
 already needs for its own logic.
 
+**Amendment, 2026-09-27 (B2/ArMDE:4441).** `Prereq::HasCategory`, when
+evaluated as an item's OWN `prerequisites`/`advisory_prerequisites`
+(`PrereqCtx::evaluate_for_item`), excludes that item's own contributed
+categories — a prerequisite states what the REST of the character holds, and
+`virtue.male_guild_sponsor` is itself `social_status`, so a self-blind
+evaluation would be trivially satisfied by itself and never actually require
+the SEPARATE guild status ArMDE:4441 demands. `held_categories` is now keyed
+on category → contributing `item_ref`s (not a bare set) so this exclusion is
+possible; every OTHER caller (`CategoryRule.when`, a profile-level gate
+belonging to no single selection) keeps using the non-excluding
+`PrereqCtx::evaluate`.
+
+**Amendment, 2026-09-27 (B2/ArMDE:2816, second note).** ArMDE:2816 reads
+"Virtues **or** Flaws", and the catalogue ships Social Status as both kinds
+(`virtue.gentleman`; `flaw.outlaw`) — so a Virtue-only count on the
+`social_status` `virtue_category_caps` row would wrongly refuse a character
+represented solely by a Social Status Flaw. `CategoryCap` gains
+`both_kinds: bool` (default `false`, preserving every OTHER shipped cap's
+existing kind-scoped behavior — a Major Hermetic Flaw like
+`flaw.suppressed_gift` must NOT start counting toward the Major Hermetic
+Virtue cap): `true` on this one row makes its count span both Virtues and
+Flaws sharing the category, regardless of which array the row itself lives
+in.
+
 ---
 
 ## 5. Load-time integrity checks
