@@ -53,9 +53,9 @@ sequences.
   `arm-app` load/path code (U0, A1's `arm-app` sub-slice, the U-batch).
 - **Schema bumps — one criterion:** the saved shape or meaning moves → bump,
   with a test-first migration on untrusted `schema_version`, never two per slice;
-  byte-compatible additive `serde(default)` → no bump. So: **C5a** (multi-valued
-  parameter), **F1** (`equipped` changes meaning), **X9b** (`virtue.rard` id
-  rename) bump; **D42** concept realm and **F2** K3 mount record do not, unless
+  byte-compatible additive `serde(default)` → no bump. So: **CV** (catalogued
+  Ability parameter values, 17→18), **C5a** (multi-valued parameter, 18→19),
+  **F1** (`equipped` changes meaning), **X9b** (`virtue.rard` id rename) bump; **D42** concept realm and **F2** K3 mount record do not, unless
   F0 finds otherwise; **A1** only if A0 finds the entity stores the flag.
 - **Design notes** (A0, B0, C0, D0, F0) are reviewed by the plan-reviewer, then
   the architect (one after the other), before their first implementation slice.
@@ -145,6 +145,16 @@ whitelist (D33's "minus trained-only" constraint is a predicate → B3) · C3 (M
 D35 `ParamType::Number` · C4 (M) D48 instances + union · C5a (M) D9p3 type +
 migration (**bump**) · C5b (M) multi-select picker · C5c (S) D15's three
 Corrupted entries; F-42/F-63/F-317 player-chosen Ability group.
+
+**CV — catalogued parameter values (inserted 2026-09-27, after C4, before
+C5a).** Found by Norbert: C1/C4's literal instances (`language = latin`,
+`profession = marshal`, …) matched free text, so "Latin" or "Latein" silently
+failed. Where a rule must recognise a value, the Ability parameter now draws
+from a catalogue of ids with localized names and a free-text fallback. Existing
+saves migrate by EN/DE name (bump 17→18). Spec:
+`docs/vf-audit/design-cv-catalogued-values.md`. It runs under the **red
+checkpoint** protocol: tests are written and verified red before any
+implementation.
 
 **B — ranging and predicates (after C1).** B0 (S) design · B1 (M) D21 category
 prohibition (F-355/F-542/F-511) + category prereq (F-502, F-427); D40's feral

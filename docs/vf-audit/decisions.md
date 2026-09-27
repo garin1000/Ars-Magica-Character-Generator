@@ -828,6 +828,34 @@ presumption of correctness.
 
 ---
 
+## D59 — a rule-recognised Ability parameter is a catalogue id, a Virtue link, or free text
+
+**Norbert, 2026-09-27**, after C1/C4's literal instances (`language = latin`,
+`profession = marshal`) turned out to match **free text**, so "Latin" and
+"Latein" both silently failed.
+
+**Ruling.**
+
+1. Where a rule names one specific value (Latin, Profession: Marshal, Order of
+   Hermes Lore), the Ability parameter draws from a **catalogue of ids** with
+   localized names, with free text as the fallback. Old saves migrate by EN/DE
+   name (case-insensitive), in their own schema bump.
+2. Where a rule names **the character's own** organization or craft
+   (Craft Guild Training's "Organization Lore: Guild", ArMDE:3615; Educated
+   (Vernacular)'s "the character's company", ArMDE:3729; Forge Companion's
+   "Crafts her master practices", ArMDE:3927), it is **not** a catalogue value.
+   The Virtue records it as a parameter, and the Ability **links** to that
+   parameter. **Link, not copy**: a rename on the Virtue follows through.
+3. A link may target only a **once-only** item (selections have no stable id).
+   It resolves against effective selections. When its Virtue is removed it
+   becomes text, keeping the last value; it is never saved dangling.
+4. The Ability parameter field is a **combo box whose options the engine
+   builds**: catalogue values, linkable Virtue parameters, and free text.
+
+**Spec:** `design-cv-catalogued-values.md`; plan slice **CV**.
+
+---
+
 ## D58 — the goal is the scope test: build every character legal under the core rules
 
 **Norbert, 2026-09-24:** *"Goal is an application which can build all characters
