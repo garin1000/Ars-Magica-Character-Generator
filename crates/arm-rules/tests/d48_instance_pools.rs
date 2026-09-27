@@ -87,7 +87,9 @@ fn marshal_pool_does_not_fund_an_unrelated_profession_instance() {
 #[test]
 fn marshal_pool_funds_its_own_named_profession_instance() {
     let ruleset = full_ruleset();
-    let marshal = companion_with("virtue.marshal", "ability.profession", "marshal");
+    // CV3 (design-cv-catalogued-values.md § 1.1): the shipped literal becomes
+    // the catalogue id `profession.marshal`, not the bare rulebook word.
+    let marshal = companion_with("virtue.marshal", "ability.profession", "profession.marshal");
 
     let allocation = checked_xp_allocation(&marshal, &ruleset).expect("solve stays in bounds");
 
@@ -160,7 +162,12 @@ fn master_bard_pool_is_exactly_240_and_still_funds_faerie_and_magic_lore() {
 fn master_bard_pool_funds_storyteller_and_faerie_lore_but_not_an_unrelated_profession() {
     let ruleset = full_ruleset();
 
-    let storyteller = companion_with("virtue.master_bard", "ability.profession", "storyteller");
+    // CV3: catalogue id `profession.storyteller`, not the bare rulebook word.
+    let storyteller = companion_with(
+        "virtue.master_bard",
+        "ability.profession",
+        "profession.storyteller",
+    );
     let allocation = checked_xp_allocation(&storyteller, &ruleset).expect("solve stays in bounds");
     assert_eq!(allocation.max_flow, allocation.total_demand);
 

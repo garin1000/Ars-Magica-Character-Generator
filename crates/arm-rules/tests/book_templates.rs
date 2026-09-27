@@ -1421,6 +1421,14 @@ fn the_rogue_matches_the_book() {
 #[test]
 fn the_witch_matches_the_book() {
     let ruleset = full_ruleset();
+    // CV3 (design-cv-catalogued-values.md § 1.1): the fixture's Dead Language
+    // score holds the INTERIM value "language.latin" (the catalogue id), not
+    // the human-typed "Latin" — under CV3 a `Literal` instance still matches
+    // `AbilityScore.parameter` by plain string equality (`AbilityScore.parameter`
+    // stays `Option<String>` until CV4), so the id is the only value Educated's
+    // literal-instance pool actually funds today. CV4 must restore "Latin"
+    // once `AbilityParameterValue`/name-matching and the migration fold exist
+    // (design note § 5.3, § 5.7) — CV4's fold matches names, not ids.
     let witch = load(include_str!("fixtures/book_templates/companion_witch.json"));
 
     // DISAGREEMENT W1 (docs/book-template-conformance.md). Educated is "You may

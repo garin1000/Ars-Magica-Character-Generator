@@ -3109,7 +3109,9 @@ fn simple_student_funds_latin_but_not_another_dead_language() {
     e.ability_scores = vec![
         AbilityScore {
             ability: Id::new("ability.dead_language"),
-            parameter: Some("latin".to_string()),
+            // CV3 (design-cv-catalogued-values.md § 1.1): the shipped literal
+            // becomes the catalogue id `language.latin`, not the bare word.
+            parameter: Some("language.latin".to_string()),
             score: 1,
             specialty: None,
         },

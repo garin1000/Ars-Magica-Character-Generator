@@ -7281,8 +7281,15 @@ Tests: `magical_mount_requires_companion_or_order_member`,
     scoped; Animal Handling/Area Lore/Etiquette/Hunt/Ride stay unscoped.
   - `virtue.craft_guild_training` (`ArMDE:3613-3616`) — "any Craft or
     Profession Abilities, Bargain, or Organization Lore: **Guild**" — only
-    Organization Lore is instance-scoped (`guild`); Craft and Profession stay
-    unscoped ("any"), matching the passage's own wording.
+    Organization Lore is instance-scoped; Craft and Profession stay unscoped
+    ("any"), matching the passage's own wording. "Guild" itself is not a
+    catalogue value (CV3, `docs/vf-audit/design-cv-catalogued-values.md` § 1.1):
+    the character's own guild is local and specific, unlike the ten universal
+    values below, so the item declares its own `guild` text parameter
+    (ArMDE:3615) and its pool's Organization Lore instance is `Bound` to it —
+    the same mechanism `virtue.forge_companion`'s `craft` parameter already
+    uses (see that entry below), applied here to a pool-funding entry instead
+    of an XP-space Art boost.
   - `virtue.educated` (`ArMDE:3711-3713`) — "Latin and Artes Liberales" — Latin
     scoped, Artes Liberales unscoped (not itself parameterized). Reuses the
     literal-instance form `flaw.covenant_upbringing` (C1) already established,
@@ -7335,6 +7342,34 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   use; fixed to lowercase in the fixture (the language spoken is unchanged,
   only its stored slug), restoring `the_witch_matches_the_book`'s previously
   green result. No other fixture or `examples/` save holds any of the twelve.
+- **CV3, literal instances become catalogue ids**
+  (`docs/vf-audit/design-cv-catalogued-values.md`). The ten rulebook words the
+  pool sweep above names as literal instances (`latin`, `gothic`, `hebrew`,
+  `falconer`, `marshal`, `storyteller`, `poet`, `master_of_kennels`,
+  `house_bjornaer`, `order_of_hermes`) are now the catalogue ids CV1/CV2 shipped
+  (`language.latin`, …, `organization.order_of_hermes`) — comparing a
+  case/language-independent id rather than an exact-cased rulebook word (D14's
+  original defect). Load-time integrity
+  (`ruleset/integrity.rs::validate_literal_instance`) fails loudly if a
+  `Literal` instance on a `catalogued: true` Ability names an id outside that
+  Ability's own catalogue. **`companion_witch.json`'s Dead Language score holds
+  the interim value `"language.latin"`, not the human-typed `"Latin"`** — under
+  `AbilityScore.parameter`'s still-plain `Option<String>` (pre-CV4), a `Literal`
+  only matches by exact string equality, so the id is the only value that
+  keeps `the_witch_matches_the_book` green. **CV4 must restore `"Latin"`**
+  once `AbilityParameterValue`/name-matching and the migration fold exist (§
+  5.3 of the design note) — CV4's fold matches *names*, not ids, so the
+  human-typed word is the value CV4's own fixture set expects (see its
+  own § 5.7 test-obligation list, which already spells out this exact
+  fixture and value).
+- **CV3, Bound/Link once-only.** Load-time integrity
+  (`ruleset/integrity.rs::validate_param_value_ref`) now also rejects a
+  `Bound`-instance-declaring item whose `max_total` allows more than one copy:
+  `(item_ref, param)` is the only handle a Bound source (or, later, a Link
+  target, CV5) can name, so two copies would be ambiguous by construction, not
+  merely at runtime (design note § 7). A no-op for every item shipped today —
+  `virtue.forge_companion` and `virtue.craft_guild_training` both already
+  default to `max_total: 1` (D10).
 - Tests: `simple_student_scales_its_restricted_pool_by_finished_years`,
   `simple_student_funds_latin_but_not_another_dead_language`
   (`tests/data_integrity.rs`); `a_number_type_paired_with_a_non_number_domain_fails_the_load`,

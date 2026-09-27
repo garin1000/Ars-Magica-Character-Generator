@@ -938,6 +938,7 @@ param-label-characteristic = Characteristic
 param-label-organization = Organization
 param-label-mystery_cult = Mystery Cult
 param-label-craft = Craft
+param-label-guild = Guild
 param-label-profession = Profession
 param-label-form = Form
 # For the `item` domain: no shipped catalogue entry declares one yet, but the domain

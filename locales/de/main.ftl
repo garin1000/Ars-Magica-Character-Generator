@@ -974,6 +974,7 @@ param-label-characteristic = Eigenschaft
 param-label-organization = Organisation
 param-label-mystery_cult = Mysterienkult
 param-label-craft = Handwerk
+param-label-guild = Zunft
 param-label-profession = Beruf
 param-label-form = Form
 # Für die Domäne `item`: noch kein ausgelieferter Katalogeintrag deklariert eine, aber

@@ -1969,8 +1969,11 @@ impl Ruleset {
     /// Fails for every [`AbilityRef`] in a gated ability list (`abilities` on
     /// `ability_authorization`, `targets` on `ability_bonus_gated`) whose
     /// `ability` does not resolve, whose `gate.param`/`instance`'s
-    /// `Bound.param` is dangling on the SAME item, or which sets `instance`
-    /// AND `gate` to the SAME param key (see
+    /// `Bound.param` is dangling on the SAME item, whose declaring item's
+    /// `max_total` allows more than one copy of a `Bound` instance, whose
+    /// `Literal` instance does not resolve in the referenced Ability's own
+    /// catalogue (`docs/vf-audit/design-cv-catalogued-values.md` § 7, CV3), or
+    /// which sets `instance` AND `gate` to the SAME param key (see
     /// `docs/vf-audit/design-c0-parameter-model.md` § 9 — one key cannot
     /// simultaneously supply an entry's instance value and gate its
     /// activation).
@@ -1985,7 +1988,7 @@ impl Ruleset {
         for r in refs {
             self.validate_ability_ref(r.ability(), kind, id, errors);
             if let Some(instance) = r.instance() {
-                self.validate_param_value_ref(item, instance, kind, id, errors);
+                self.validate_param_value_ref(item, r.ability(), instance, kind, id, errors);
             }
             if let Some(gate) = r.gate() {
                 self.validate_param_gate(item, gate, kind, id, errors);
@@ -2065,21 +2068,80 @@ impl Ruleset {
     }
 
     /// Fails when a [`ParamValue::Bound`]'s `param` is not a key `item`
-    /// declares. A [`ParamValue::Literal`] names no parameter and needs no
-    /// check.
+    /// declares, or when `item` declaring it allows more than one copy
+    /// (design note § 7, CV3): `(item_ref, param)` is the only handle a Bound
+    /// source (or, later, a Link target) can name, so a `max_total` above 1
+    /// would make it ambiguous between copies by construction, not merely at
+    /// runtime — the entity-level ambiguity a bought-plus-granted duplicate
+    /// can still cause is a separate, unrelated concern this cannot rule out.
+    /// A [`ParamValue::Literal`] instead names one value that must resolve in
+    /// the catalogue the referenced Ability's own `parameter` key selects
+    /// (`docs/vf-audit/design-cv-catalogued-values.md`).
     fn validate_param_value_ref(
         &self,
         item: &PointItem,
+        ability: &Id,
         value: &ParamValue,
         kind: &str,
         id: &Id,
         errors: &mut Vec<String>,
     ) {
-        if let ParamValue::Bound { param } = value
-            && !item.parameters.iter().any(|p| &p.key == param)
-        {
+        match value {
+            ParamValue::Bound { param } => {
+                if !item.parameters.iter().any(|p| &p.key == param) {
+                    errors.push(format!(
+                        "{id}: effect '{kind}' instance references unknown parameter '{param}'"
+                    ));
+                }
+                if item.max_total > 1 {
+                    errors.push(format!(
+                        "{id}: declares a Bound instance (parameter '{param}'), so 'max_total' \
+                         must be 1, not {} — (item, param) is the only handle a Bound source \
+                         has, and more than one copy would make it ambiguous by construction",
+                        item.max_total
+                    ));
+                }
+            }
+            ParamValue::Literal { literal } => {
+                self.validate_literal_instance(ability, literal, id, kind, errors);
+            }
+        }
+    }
+
+    /// A [`ParamValue::Literal`] restricting a `catalogued: true` Ability must
+    /// name a real value in the catalogue that Ability's own `parameter` key
+    /// selects — fail loudly with the offending literal id and the ability id
+    /// (design note § 7, CV3), mirroring how the `Bound` branch above fails
+    /// loudly on a dangling parameter key. An ability that does not resolve,
+    /// is not catalogued, or is catalogued against a shape
+    /// [`Self::validate_catalogued_abilities`] has already rejected is
+    /// deliberately left alone here — this check only ever ADDS to that one's
+    /// errors, never duplicates them.
+    fn validate_literal_instance(
+        &self,
+        ability_id: &Id,
+        literal: &str,
+        item_id: &Id,
+        kind: &str,
+        errors: &mut Vec<String>,
+    ) {
+        let Some(ability) = self.abilities.get(ability_id) else {
+            return;
+        };
+        if !ability.catalogued {
+            return;
+        }
+        let Some(parameter) = &ability.parameter else {
+            return;
+        };
+        let catalogue_id = Id::new(format!("catalogue.{parameter}"));
+        let Some(catalogue) = self.parameter_catalogues.get(&catalogue_id) else {
+            return;
+        };
+        if catalogue.value(&Id::new(literal)).is_none() {
             errors.push(format!(
-                "{id}: effect '{kind}' instance references unknown parameter '{param}'"
+                "{item_id}: effect '{kind}' ability '{ability_id}' names literal instance \
+                 '{literal}', which does not resolve in catalogue '{catalogue_id}'"
             ));
         }
     }
