@@ -70,7 +70,13 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::WaivesAbilityAgeCap
         // Not a spell-levels contribution — training is a creation-legality
         // fact, not a levels grant.
-        | Effect::ConfersHermeticTraining => None,
+        | Effect::ConfersHermeticTraining
+        // B1/D21: category/ability prohibitions and the Feral whitelist — no
+        // spell-levels contribution, same reasoning as the markers above.
+        | Effect::ForbidsAbilityCategory { .. }
+        | Effect::ForbidsItemCategory { .. }
+        | Effect::ForbidsAbilities { .. }
+        | Effect::RestrictsAbilityCategoryToAbilities { .. } => None,
     })
 }
 
@@ -141,7 +147,13 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // confers is folded in `effective/xp.rs`, not here, or it would
         // double-count exactly as this file's own `LaterLifeXpRate` comment
         // warns against.
-        | Effect::ConfersHermeticTraining => None,
+        | Effect::ConfersHermeticTraining
+        // B1/D21: category/ability prohibitions and the Feral whitelist — no
+        // general-XP contribution, same reasoning as the markers above.
+        | Effect::ForbidsAbilityCategory { .. }
+        | Effect::ForbidsItemCategory { .. }
+        | Effect::ForbidsAbilities { .. }
+        | Effect::RestrictsAbilityCategoryToAbilities { .. } => None,
     })
 }
 
@@ -530,7 +542,13 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::WaivesAbilityAgeCap
                 // Not a Spell Mastery Affinity — grants no advancement
                 // multiplier.
-                | Effect::ConfersHermeticTraining => None,
+                | Effect::ConfersHermeticTraining
+                // B1/D21: category/ability prohibitions and the Feral
+                // whitelist — no advancement multiplier either.
+                | Effect::ForbidsAbilityCategory { .. }
+                | Effect::ForbidsItemCategory { .. }
+                | Effect::ForbidsAbilities { .. }
+                | Effect::RestrictsAbilityCategoryToAbilities { .. } => None,
             })
     });
     best_affinity(found)

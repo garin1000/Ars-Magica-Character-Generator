@@ -4,6 +4,7 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
+use crate::ability::AbilityCategory;
 use crate::types::AbilityParameterValue;
 
 /// The category an issue message names when it has room for exactly one, taken
@@ -43,6 +44,14 @@ fn first_in_force(in_force: &[String]) -> &str {
 /// The single resolution point for both gates below, so they cannot disagree
 /// about which entries apply — the same "decide it once" discipline
 /// `PointItem::categories_for` applies to an item's own categories.
+///
+/// **Bought-only by design.** This reads a PROFILE's own category lists,
+/// which state a rule about the character TYPE, so a House-granted item
+/// legitimately never counts toward or against them. For the different
+/// question an ITEM's own `Prereq::HasCategory` asks — "does this entity, by
+/// any means, hold something of category X" — see `PrereqCtx.held_categories`
+/// (`validation/prereq.rs`), the grant-aware twin `Has`-style prerequisites
+/// need (B1/D21).
 fn categories_in_force<'a>(rules: &'a [CategoryRule], ctx: &PrereqCtx) -> BTreeSet<&'a str> {
     rules
         .iter()
@@ -162,6 +171,17 @@ pub(crate) fn validate_permitted_categories(
     }
 }
 
+/// Enforces a PROFILE's `forbidden_categories` list — a category the
+/// character TYPE never permits, regardless of which item carries it.
+///
+/// Distinct from [`validate_category_effect_prohibitions`], which enforces
+/// the opposite axis: an ITEM's own `Effect::ForbidsItemCategory`/
+/// `ForbidsAbilityCategory`/`ForbidsAbilities`/
+/// `RestrictsAbilityCategoryToAbilities`, a prohibition ONE selection places
+/// on another (D21/F-355/F-542/F-511, B1). Both are "category-shaped", but
+/// the source of the rule differs — profile-declared vs. item-authored — so
+/// they stay two functions rather than one: extending the wrong one silently
+/// enforces a rule against the wrong audience.
 pub(crate) fn validate_forbidden_categories(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -231,6 +251,167 @@ pub(crate) fn validate_forbidden_categories(
             ]),
             Some(selection.item_ref.clone()),
         ));
+    }
+}
+
+/// Enforces the four item-authored category/ability prohibitions (B1/D21/
+/// F-355/F-542/F-511, D40 residual): `Effect::ForbidsAbilityCategory`,
+/// `ForbidsItemCategory`, `ForbidsAbilities`, and
+/// `RestrictsAbilityCategoryToAbilities`. See `validate_forbidden_categories`'s
+/// doc comment for why this is a second function rather than folded into
+/// that one.
+///
+/// Grant-aware on both sides (D2, design § 4): `selections` is the caller's
+/// folded bought-plus-granted list, so the forbidding item's own effect
+/// applies whether it was bought or granted, and the forbidden target — an
+/// Ability held bought-or-granted, or another V/F selection held
+/// bought-or-granted — is read the same way, closing the F-466 reachability
+/// trap `validate_incompatibilities`/`validate_forbidden_categories` are
+/// deliberately bought-only about (B15).
+///
+/// `RestrictsAbilityCategoryToAbilities`'s whitelists INTERSECT when two apply
+/// to the same category (D60.2): folded once, category-by-category, before
+/// any Ability is checked — never per-selection, or a second, narrower
+/// restriction would only ever be checked against its OWN forbidding item
+/// rather than against the character's whole held-Ability set.
+pub(crate) fn validate_category_effect_prohibitions(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    selections: &[Selection],
+    issues: &mut Vec<ValidationIssue>,
+) {
+    // Every Ability id this entity holds, bought or granted: bought
+    // `entity.ability_scores` plus any `AbilityScoreGrant`/
+    // `AbilityScoreGrantParam` floor. `ability_score_floors` is itself
+    // grant-aware (it folds `selections_for_effects`, not bought selections
+    // alone), so this set already spans both sides D2 requires.
+    let mut held_abilities: BTreeSet<Id> = entity
+        .ability_scores
+        .iter()
+        .map(|a| a.ability.clone())
+        .collect();
+    held_abilities.extend(
+        crate::effective::ability_score_floors(entity, ruleset)
+            .into_iter()
+            .map(|floor| floor.ability),
+    );
+
+    // D60.2: fold every `RestrictsAbilityCategoryToAbilities` effect into one
+    // intersected whitelist PER category (narrowing only, never widening),
+    // and separately track which forbidding item(s) contributed to each
+    // category's restriction, for the issue message.
+    let mut restricted: BTreeMap<AbilityCategory, BTreeSet<Id>> = BTreeMap::new();
+    let mut restricting_items: BTreeMap<AbilityCategory, BTreeSet<Id>> = BTreeMap::new();
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::RestrictsAbilityCategoryToAbilities { category, allowed } = effect {
+                restricted
+                    .entry(*category)
+                    .and_modify(|set| *set = set.intersection(allowed).cloned().collect())
+                    .or_insert_with(|| allowed.clone());
+                restricting_items
+                    .entry(*category)
+                    .or_default()
+                    .insert(selection.item_ref.clone());
+            }
+        }
+    }
+    for ability_id in &held_abilities {
+        let Some(ability) = ruleset.abilities.get(ability_id) else {
+            continue; // unknown_ability already reported
+        };
+        let Some(allowed) = restricted.get(&ability.category) else {
+            continue;
+        };
+        if allowed.contains(ability_id) {
+            continue;
+        }
+        let other = restricting_items
+            .get(&ability.category)
+            .map(|ids| ids.iter().map(Id::to_string).collect::<Vec<_>>().join(", "))
+            .unwrap_or_default();
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_ABILITY_FORBIDDEN_BY_EFFECT,
+            CreationPhase::Abilities,
+            args([("ability", ability_id.to_string()), ("other", other)]),
+            Some(ability_id.clone()),
+        ));
+    }
+
+    // `ForbidsAbilityCategory` / `ForbidsAbilities` / `ForbidsItemCategory`:
+    // each checked against the SAME grant-aware `held_abilities` set (the
+    // first two) or against every OTHER effective selection (the third).
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::ForbidsAbilityCategory { category } = effect {
+                for ability_id in &held_abilities {
+                    if ruleset
+                        .abilities
+                        .get(ability_id)
+                        .is_some_and(|a| a.category == *category)
+                    {
+                        issues.push(ValidationIssue::error(
+                            ValidationIssue::CODE_ABILITY_FORBIDDEN_BY_EFFECT,
+                            CreationPhase::Abilities,
+                            args([
+                                ("ability", ability_id.to_string()),
+                                ("other", selection.item_ref.to_string()),
+                            ]),
+                            Some(ability_id.clone()),
+                        ));
+                    }
+                }
+            }
+            if let Effect::ForbidsAbilities { abilities } = effect {
+                for ability_id in abilities {
+                    if held_abilities.contains(ability_id) {
+                        issues.push(ValidationIssue::error(
+                            ValidationIssue::CODE_ABILITY_FORBIDDEN_BY_EFFECT,
+                            CreationPhase::Abilities,
+                            args([
+                                ("ability", ability_id.to_string()),
+                                ("other", selection.item_ref.to_string()),
+                            ]),
+                            Some(ability_id.clone()),
+                        ));
+                    }
+                }
+            }
+            if let Effect::ForbidsItemCategory { category } = effect {
+                for other in selections {
+                    // Excludes the forbidding selection from being compared
+                    // against itself — "no OTHER Virtue/Flaw" (ArMDE:7078).
+                    if std::ptr::eq(other, selection) {
+                        continue;
+                    }
+                    let Some(other_item) = ruleset.point_items.get(&other.item_ref) else {
+                        continue;
+                    };
+                    if other_item
+                        .categories_for(&other.params)
+                        .iter()
+                        .any(|c| c == category)
+                    {
+                        issues.push(ValidationIssue::error(
+                            ValidationIssue::CODE_CATEGORY_FORBIDDEN_BY_EFFECT,
+                            CreationPhase::VirtuesFlaws,
+                            args([
+                                ("item", other.item_ref.to_string()),
+                                ("category", category.clone()),
+                                ("other", selection.item_ref.to_string()),
+                            ]),
+                            Some(other.item_ref.clone()),
+                        ));
+                    }
+                }
+            }
+        }
     }
 }
 

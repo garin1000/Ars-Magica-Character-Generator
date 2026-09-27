@@ -156,6 +156,8 @@ impl fmt::Display for IssueSeverity {
 /// | `incompatible` | error | virtues_flaws | `item`, `other` |
 /// | `category_not_permitted` | error | virtues_flaws | `item`, `category` |
 /// | `forbidden_category` | error | virtues_flaws | `item`, `category` |
+/// | `category_forbidden_by_effect` | error | virtues_flaws | `item`, `category`, `other` |
+/// | `ability_forbidden_by_effect` | error | abilities | `ability`, `other` |
 /// | `missing_required_trait` | error | virtues_flaws | `item` |
 /// | `forbidden_trait` | error | virtues_flaws | `item` |
 /// | `missing_param` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key` |
@@ -266,6 +268,14 @@ impl fmt::Display for IssueSeverity {
 /// virtue cap produces `too_many_major_hermetic_virtues` (error); a new category
 /// requires its matching `issue-<code>` Fluent key.
 ///
+/// B1/D21/F-427: the same cap's `min`/`min_hard` fields (additive, ceiling-only
+/// caps unaffected) emit the mirror-shaped `too_few_<category>_<flaws|virtues>`
+/// (or `too_few_major_<category>_…` when `major_only`) the same way — severity
+/// follows `min_hard`, not `hard`, and the phase is likewise always
+/// `virtues_flaws`. No shipped cap sets `min` yet (B2/D41's data), so this
+/// family is unreachable in the shipped catalogue until then; declared here so
+/// the moment it IS shipped, its Fluent key is not forgotten.
+///
 /// Every creation phase now appears in some row. `concept` was the last exception —
 /// free text with nothing to violate — until Slice 12 linked the age to the birth
 /// year, which put an arithmetic advisory on that step. The test pins the (now
@@ -371,6 +381,23 @@ impl ValidationIssue {
     pub const CODE_CATEGORY_NOT_PERMITTED: &'static str = "category_not_permitted";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_FORBIDDEN_CATEGORY: &'static str = "forbidden_category";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: D21/F-542 —
+    /// `Effect::ForbidsItemCategory`, another Virtue/Flaw whose in-force
+    /// category is one this entity's own selections forbid (B1), reachable
+    /// bought or granted on either side. Filed under `virtues_flaws`, the step
+    /// that owns both sides of this interaction.
+    pub const CODE_CATEGORY_FORBIDDEN_BY_EFFECT: &'static str = "category_forbidden_by_effect";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: D21/F-355, F-511, D40
+    /// residual — `Effect::ForbidsAbilityCategory`/`ForbidsAbilities`/
+    /// `RestrictsAbilityCategoryToAbilities`, an Ability this entity's own
+    /// selections forbid or fail to whitelist, by category or by id (B1),
+    /// reachable bought or granted on either side. Filed under `abilities`,
+    /// not `virtues_flaws` — the same "where the fix is" reasoning
+    /// [`crate::validation::selections::validate_ability_bonus_targets`]'s
+    /// doc comment states: an Ability is bought on a later step than the
+    /// forbidding Virtue/Flaw, so filing this on `virtues_flaws` would file
+    /// it before the violation the wizard can even show becomes visible.
+    pub const CODE_ABILITY_FORBIDDEN_BY_EFFECT: &'static str = "ability_forbidden_by_effect";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_MISSING_REQUIRED_TRAIT: &'static str = "missing_required_trait";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -1037,6 +1064,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_incompatibilities(entity, ruleset, &selected_ids, &mut issues);
     validate_permitted_categories(entity, ruleset, type_profile, &prereq_ctx, &mut issues);
     validate_forbidden_categories(entity, ruleset, type_profile, &prereq_ctx, &mut issues);
+    validate_category_effect_prohibitions(entity, ruleset, &effective_selections, &mut issues);
     validate_required_traits(type_profile, &selected_ids, &mut issues);
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
@@ -1260,7 +1288,15 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::HalvesSpellCapBeyondTouch
         // No ability/characteristic creation-time target — a training
         // marker, not a score effect.
-        | Effect::ConfersHermeticTraining => EffectTarget::Other,
+        | Effect::ConfersHermeticTraining
+        // B1/D21: these four name a fixed category or a fixed id list, never
+        // a player-chosen dangling param — the same classification
+        // `AbilityScoreGrant` gets above. Consumed only by the dedicated
+        // grant-aware prohibition validator (`validation/selections.rs`).
+        | Effect::ForbidsAbilityCategory { .. }
+        | Effect::ForbidsItemCategory { .. }
+        | Effect::ForbidsAbilities { .. }
+        | Effect::RestrictsAbilityCategoryToAbilities { .. } => EffectTarget::Other,
     }
 }
 

@@ -647,6 +647,7 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
     case 'hermetically_trained':
     case 'order_member':
     case 'is_companion':
+    case 'has_category':
       return undefined;
   }
   // Exhaustiveness guard: `prereq` narrows to `never` here only while every

@@ -210,7 +210,15 @@ export type Effect =
   // Mentored by Demons (D29/F-194): waives the age→Ability-score cap outright,
   // for every Ability — a creation-time constraint the engine's age-cap
   // resolution point folds in; nothing here renders it directly.
-  | { type: 'waives_ability_age_cap' };
+  | { type: 'waives_ability_age_cap' }
+  // B1 (D21/F-355, F-542, F-511; D40 residual): category/ability
+  // prohibitions and the Feral Upbringing whitelist. All four are
+  // creation-time constraints a dedicated validator enforces; nothing here
+  // renders any of them directly.
+  | { type: 'forbids_ability_category'; category: string }
+  | { type: 'forbids_item_category'; category: string }
+  | { type: 'forbids_abilities'; abilities: string[] }
+  | { type: 'restricts_ability_category_to_abilities'; category: string; allowed: string[] };
 
 // M5/5b scalar enums mirroring the engine (rendered via Fluent in slice 5i).
 export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' | 'spontaneous';
@@ -291,7 +299,9 @@ export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic' | 'academic
 // are companions too"), so a narrower audience ("only companions can take
 // this") lives on the entry rather than duplicated across every type
 // profile's forbidden traits, and a future companion-like profile joins by
-// setting the flag alone.
+// setting the flag alone. `has_category` (D21/F-502) is the category-ranging
+// twin of `has`: the entity must hold (bought or granted) at least one item
+// whose in-force category is `value`.
 export type Prereq =
   | { kind: 'all'; value: Prereq[] }
   | { kind: 'any'; value: Prereq[] }
@@ -302,7 +312,8 @@ export type Prereq =
   | { kind: 'art_min'; value: { art: string; score: number } }
   | { kind: 'hermetically_trained' }
   | { kind: 'order_member' }
-  | { kind: 'is_companion' };
+  | { kind: 'is_companion' }
+  | { kind: 'has_category'; value: string };
 
 // How a V/F impacts a character mechanically (M5 slice 5a). Mirrors the engine's
 // `Classification`. Required on every PointItem.

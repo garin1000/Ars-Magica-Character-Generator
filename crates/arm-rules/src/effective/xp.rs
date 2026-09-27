@@ -880,7 +880,15 @@ pub(crate) fn ability_authorizations(
                 // specific Ability or category — Arcane authorization for a
                 // trained non-magus is a profile/entity-level gate in
                 // `validation/authorization.rs`, not a per-effect grant here.
-                | Effect::ConfersHermeticTraining => {}
+                | Effect::ConfersHermeticTraining
+                // B1/D21: these are PROHIBITIONS (forbid/narrow), never an
+                // authorization grant — they stay independent of this fold,
+                // exactly as design § 4 states, so `xp_allocation` never
+                // treats a forbid as permission to fund the forbidden target.
+                | Effect::ForbidsAbilityCategory { .. }
+                | Effect::ForbidsItemCategory { .. }
+                | Effect::ForbidsAbilities { .. }
+                | Effect::RestrictsAbilityCategoryToAbilities { .. } => {}
             }
         }
     }

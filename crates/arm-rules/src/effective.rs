@@ -398,6 +398,13 @@ macro_rules! irrelevant_effect_variants {
         // ratio, no in-play mod; consumed only by
         // `effective/hermetic_training.rs::entity_confers_hermetic_training`.
         | Effect::ConfersHermeticTraining
+        // B1/D21: category/ability prohibitions and the Feral whitelist — no
+        // score, no Affinity ratio, no in-play mod; consumed only by the
+        // dedicated grant-aware validator in `validation/selections.rs`.
+        | Effect::ForbidsAbilityCategory { .. }
+        | Effect::ForbidsItemCategory { .. }
+        | Effect::ForbidsAbilities { .. }
+        | Effect::RestrictsAbilityCategoryToAbilities { .. }
     };
 }
 // Re-exported (rather than left textually scoped) so the domain submodules

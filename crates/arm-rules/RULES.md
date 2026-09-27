@@ -164,7 +164,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   below under-count their points; `core_rules_tainted_virtues_carry_the_tainted_flag`
   in `crates/arm-rules/tests/data_integrity.rs` now pins a sample of tagged
   entries plus that control.
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:167).
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:200).
   The book frames the limit as a "should", so it is a **non-blocking warning**,
   measured against the points **actually taken** (not the type budget): a side
   warns when `2·tainted_points > total_points` for that side (Virtue / Flaw).
@@ -214,7 +214,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   Tainted precedent.** `validate_share_of_kind_cap` takes the **folded**
   selection list (bought ++ granted), because **Devil Child grants a free
   Demonic Might or Demonic Powers** (`ArMDE:3673`) and a granted copy is still a copy
-  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :167) reads raw
+  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :200) reads raw
   `entity.selections` and so counts only bought ones — arguably right for Tainted,
   which the book frames as a character-generation guideline. Two identically
   worded "half" rules therefore disagree about grants **on purpose**; do not
@@ -1150,16 +1150,121 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1246).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1432).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :240) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :261) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
+
+#### Category-ranging Prereq/Effect + ability prohibitions (B1/D21/D40/D41) — `Prereq::HasCategory`, `Effect::ForbidsAbilityCategory`/`ForbidsItemCategory`/`ForbidsAbilities`/`RestrictsAbilityCategoryToAbilities`, `CategoryCap.min`/`min_hard`
+> "The character must have a Social Status Virtue dictating his place within
+> the university." (Rector/Proctor)
+
+> "You are completely unable to learn a certain class of Abilities... This may
+> be Martial Abilities, or a more limited set of the others." (Ability Block)
+
+> "...all Personality Traits must be between +1 and -1... The character may
+> have no other Personality Flaws or Virtues or Flaws that grant Personality
+> Traits." (Weak Personality)
+
+> "You may not take Bargain, Charm, Etiquette, Folk Ken, Guile, Intrigue, or
+> Leadership as beginning Abilities, but you may learn them in play."
+> (Sheltered Upbringing)
+
+> "You may only choose beginning Abilities that you could have learned in the
+> wilds." (Feral Upbringing)
+
+- Source: `ArMDE:6671-6674` (Rector/Proctor),
+  `ArMDE:5651-5654` (Ability Block), `ArMDE:7076-7079` (Weak Personality),
+  `ArMDE:6721-6724` (Sheltered Upbringing), `ArMDE:6110-6113` (Feral
+  Upbringing), `ArMDE:2816` (Social Status floor — "must take one").
+- **One design slice, five findings.** F-502/F-427/F-355/F-542/F-511 and D40's
+  authorization residual all range over a category or a fixed id list rather
+  than a single named item, which `Prereq`/`Effect` could not express before
+  B1. Designed together in `docs/vf-audit/design-b0-ranging-and-predicates.md`
+  (D21, D40, D41, D60.2) rather than landed as five incompatible spellings.
+- **`Prereq::HasCategory(String)`** (`types.rs`) — the category-ranging twin of
+  `Has`: satisfied when the entity holds (bought or granted) at least one item
+  whose in-force category matches. Evaluated via `PrereqCtx.held_categories`
+  (`validation/prereq.rs::PrereqCtx::build`, folded from bought ++ granted
+  selections' `categories_for`), a definite True/False, never Unknown — an
+  item's own category is static, unlike a fact the entity has not yet
+  supplied. `flaw.rector`'s prerequisite is this slice's worked example (data
+  is X5/B2's, not B1's).
+- **`Effect::ForbidsAbilityCategory { category: AbilityCategory }`** (Ability
+  Block, F-355) and **`Effect::ForbidsItemCategory { category: String }`**
+  (Weak Personality clause 1, F-542) are the twin *forbid* half D21 asks for —
+  one concept (a category-scoped prohibition), realized as an Ability-axis/
+  item-axis sibling pair on the same precedent as
+  `AbilityScoreGrant`/`CharacteristicScoreDelta`, since `AbilityCategory` is a
+  closed 5-value enum while `PointItem::categories` is free-form (one untagged
+  type across both would be ambiguous at the wire — both legally contain the
+  bare string `"general"`).
+- **`Effect::ForbidsAbilities { abilities: BTreeSet<Id> }`** (Sheltered
+  Upbringing, F-511) is a third, id-list sub-shape — the passage names seven
+  specific Abilities, not a whole category.
+- **`Effect::RestrictsAbilityCategoryToAbilities { category: AbilityCategory, allowed: BTreeSet<Id> }`**
+  (Feral Upbringing, D40's authorization residual — the XP half is
+  `replaces_life_stage_xp`, group D's, not this one) narrows a normally-open
+  category to a named whitelist — the first "positive override of the
+  default-permitted set" in the engine, rather than a forbid or an
+  authorization. **D60.2 (Norbert, 2026-09-27): the whitelist applies to
+  BEGINNING Abilities only, and two stacked whitelists INTERSECT** (a
+  character under two "only these" constraints means "only in both"). **This
+  engine draws no in-play/beginning distinction at all** —
+  `Entity::ability_scores` carries no life-stage-block or timing field, and no
+  restricted-XP pool (including the LaterLife block,
+  `effective/xp.rs::magus_later_life_pool`) is tracked per bought score
+  either, so "beginning Abilities" and "the whole of `entity.ability_scores`"
+  are the same set by construction — not a simplification, the honest shape
+  of what this app (which builds the character as of saga-start only) can
+  express. The same holds for `ForbidsAbilities` above.
+- **All four forbid/restrict effects are consumed by one grant-aware
+  validator**: `validation/selections.rs::validate_category_effect_prohibitions`
+  (:277). Grant-aware on both sides (D2): the forbidding item's effect applies
+  bought or granted, and the forbidden target (an Ability held via
+  `entity.ability_scores` or an `AbilityScoreGrant`/`AbilityScoreGrantParam`
+  floor, or another V/F selection) is read the same way — closing the F-466
+  reachability trap `validate_incompatibilities`/`validate_forbidden_categories`
+  are deliberately bought-only about (B15). **No soft/advisory forbid exists**
+  — every violation is a hard error (`ability_forbidden_by_effect` /
+  `category_forbidden_by_effect`), matching `Effect::ForbidsAbilitySpecialties`'s
+  precedent. Distinct from `validate_forbidden_categories` (a PROFILE's own
+  category list, not an ITEM's authored prohibition against another) — see
+  both functions' doc comments for the cross-reference.
+- **`CategoryCap.min`/`min_hard`** (`types.rs`, additive on the existing
+  ceiling-only struct) give ArMDE:2816's "must take one Social Status" a
+  floor mechanism — `max`/`hard` alone can only bound from above. Enforced in
+  `validation/caps.rs::validate_caps`, alongside the existing ceiling
+  (`too_many_<category>_<flaws|virtues>`), as the mirror-shaped
+  `too_few_<category>_<flaws|virtues>` (or the `major_only` form), severity
+  following `min_hard` independently of the ceiling's own `hard` — D41 needs
+  floor=hard, ceiling=soft on the SAME `social_status` row. The `social_status`
+  data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
+- **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
+  category must be declared by at least one point item
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :1993, shared by
+  `validate_prereq_refs` :1917 and `validate_effect_refs` :2340) —
+  deliberately NOT the same as `validate_type_profile_refs`'s documented
+  non-check of a type profile's category fields (those name a legitimately
+  forward-declared category with no item yet; these sit on an item's own
+  prerequisites/effects and claim the catalogue as it stands). Every
+  `ForbidsAbilities`/`RestrictsAbilityCategoryToAbilities` ability id must
+  resolve, and an `allowed` id's OWN category must match the effect's stated
+  `category` (a whitelist entry outside its own category can never apply — a
+  form of dead data). `CategoryCap.min > max` is rejected as unsatisfiable, and
+  `min_hard` with `min` absent is rejected as meaningless
+  (`ruleset/integrity.rs::validate_category_cap_floors`, :644).
+- Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
+  `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
+- Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
+  (hand-authored fixtures; the real catalogue entries this note names are
+  Phase 3 data work, not B1's).
 
 ### Data-driven rule values — `rules/core/character_types.json`
 
@@ -1599,7 +1704,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :270) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :456) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -9075,11 +9180,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:565),
-  `validate_forbidden_traits` (:586))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:751),
+  `validate_forbidden_traits` (:772))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:237),
-  `validate_parameters` (:759), `validate_duplicate_selections` (:270))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:423),
+  `validate_parameters` (:945), `validate_duplicate_selections` (:456))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

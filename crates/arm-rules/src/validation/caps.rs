@@ -119,31 +119,64 @@ pub(crate) fn validate_caps(
                         .any(|c| c == &cap.category)
                     && (!cap.major_only || i.magnitude == Magnitude::Major)
             });
-            if n <= cap.max as usize {
-                continue;
+
+            if n > cap.max as usize {
+                let code = if cap.major_only {
+                    format!("too_many_major_{}_{}", cap.category, noun)
+                } else {
+                    format!("too_many_{}_{}", cap.category, noun)
+                };
+                let cap_args = count_args(n, cap.max);
+
+                if cap.hard {
+                    issues.push(ValidationIssue::error(
+                        &code,
+                        CreationPhase::VirtuesFlaws,
+                        cap_args,
+                        None,
+                    ));
+                } else {
+                    issues.push(ValidationIssue::warning(
+                        &code,
+                        CreationPhase::VirtuesFlaws,
+                        cap_args,
+                        None,
+                    ));
+                }
             }
 
-            let code = if cap.major_only {
-                format!("too_many_major_{}_{}", cap.category, noun)
-            } else {
-                format!("too_many_{}_{}", cap.category, noun)
-            };
-            let cap_args = count_args(n, cap.max);
+            // B1/D21/F-427/D41: the floor half, additive to the ceiling
+            // above and independent of it (no `continue` between them — a
+            // malformed cap could in principle trip both, though the
+            // load-time `min <= max` check makes that unreachable in
+            // practice). ArMDE:2816's "must take one Social Status" is the
+            // first data user (B2/D41); `min` stays `None` for every OTHER
+            // shipped cap, so this is a no-op there.
+            if let Some(min) = cap.min
+                && n < min as usize
+            {
+                let code = if cap.major_only {
+                    format!("too_few_major_{}_{}", cap.category, noun)
+                } else {
+                    format!("too_few_{}_{}", cap.category, noun)
+                };
+                let floor_args = args([("count", n.to_string()), ("min", min.to_string())]);
 
-            if cap.hard {
-                issues.push(ValidationIssue::error(
-                    &code,
-                    CreationPhase::VirtuesFlaws,
-                    cap_args,
-                    None,
-                ));
-            } else {
-                issues.push(ValidationIssue::warning(
-                    &code,
-                    CreationPhase::VirtuesFlaws,
-                    cap_args,
-                    None,
-                ));
+                if cap.min_hard {
+                    issues.push(ValidationIssue::error(
+                        &code,
+                        CreationPhase::VirtuesFlaws,
+                        floor_args,
+                        None,
+                    ));
+                } else {
+                    issues.push(ValidationIssue::warning(
+                        &code,
+                        CreationPhase::VirtuesFlaws,
+                        floor_args,
+                        None,
+                    ));
+                }
             }
         }
     };

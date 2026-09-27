@@ -19,6 +19,7 @@
 //! it for the considered-and-rejected note.
 
 use super::*;
+use crate::types::CategoryCap;
 use crate::validation::param_value_resolves;
 
 /// What a zero denominator does to an Affinity-style cost ratio — see
@@ -579,6 +580,18 @@ impl Ruleset {
             );
             self.validate_category_rule_conditions(type_id, profile, errors);
             self.validate_phase_rule_conditions(type_id, profile, errors);
+            Self::validate_category_cap_floors(
+                type_id,
+                "flaw_category_caps",
+                &profile.budget.flaw_category_caps,
+                errors,
+            );
+            Self::validate_category_cap_floors(
+                type_id,
+                "virtue_category_caps",
+                &profile.budget.virtue_category_caps,
+                errors,
+            );
             // Intentionally unchecked: the profile's category-typed fields
             // (`permitted_categories`, `forbidden_categories`, `gift_categories`,
             // and the budget's `flaw_category_caps`) are NOT validated against the
@@ -615,6 +628,38 @@ impl Ruleset {
                 errors.push(format!(
                     "type profile '{type_id}': {field} repeats '{}'",
                     rule.category()
+                ));
+            }
+        }
+    }
+
+    /// Validates a [`CategoryCap`]'s floor fields (B1/D21/F-427): `min` above
+    /// `max` is an unsatisfiable range (nothing could ever satisfy "at least
+    /// N, at most M<N"), and `min_hard` with `min` absent is a hardness flag
+    /// with no floor to be hard about — meaningless, and very likely an
+    /// authoring slip (the ceiling's `hard` field was meant instead).
+    /// Deliberately NOT a category-existence check — see this function's
+    /// caller's own doc comment on why `CategoryCap.category` itself stays
+    /// unchecked against the point-item catalogue.
+    fn validate_category_cap_floors(
+        type_id: &Id,
+        field: &str,
+        caps: &[CategoryCap],
+        errors: &mut Vec<String>,
+    ) {
+        for cap in caps {
+            if let Some(min) = cap.min
+                && min > cap.max
+            {
+                errors.push(format!(
+                    "type profile '{type_id}': {field} '{}' has min {min} above its own max {}",
+                    cap.category, cap.max
+                ));
+            }
+            if cap.min_hard && cap.min.is_none() {
+                errors.push(format!(
+                    "type profile '{type_id}': {field} '{}' sets min_hard with no min",
+                    cap.category
                 ));
             }
         }
@@ -1925,7 +1970,35 @@ impl Ruleset {
             }
             // Bare markers, none carrying a reference: nothing to check.
             Prereq::HermeticallyTrained | Prereq::OrderMember | Prereq::IsCompanion => {}
+            // B1/D21/F-502: `category` has no closed registry (free-form, like
+            // `PointItem::categories` itself), so the only referential check
+            // available is "does at least one point item declare it" — the
+            // same typo-catching role `Has`/`House` play for an id. Distinct
+            // from `validate_type_profile_refs`'s DELIBERATE non-check of a
+            // profile's category fields (`permitted_categories`,
+            // `forbidden_categories`, `flaw_category_caps`/
+            // `virtue_category_caps`): those name a forward-declared category
+            // that may legitimately have no item yet, while THIS `Prereq`
+            // sits on an item's own `prerequisites` and states a claim about
+            // the catalogue as it stands today.
+            Prereq::HasCategory(category) => {
+                if !self.category_declared_by_some_item(category) {
+                    errors.push(format!(
+                        "{context}: prerequisite references category '{category}' that no point \
+                         item declares"
+                    ));
+                }
+            }
         }
+    }
+
+    /// Whether at least one point item in the catalogue carries `category`
+    /// among its own [`PointItem::categories`] — the referential check
+    /// `Prereq::HasCategory` and `Effect::ForbidsItemCategory` share (B1/D21).
+    fn category_declared_by_some_item(&self, category: &str) -> bool {
+        self.point_items
+            .values()
+            .any(|item| item.has_category(category))
     }
 
     /// D35: fails unless `param` names a declared parameter on `item` whose
@@ -2501,6 +2574,53 @@ impl Ruleset {
                 | Effect::HalvesSpellCapBeyondTouch
                 // Identical shape: no parameter, no ref, nothing to validate.
                 | Effect::ConfersHermeticTraining => {
+                    continue;
+                }
+                // A closed enum (`AbilityCategory`), serde-checked at parse
+                // time — nothing left to check referentially (B1/D21/F-355).
+                Effect::ForbidsAbilityCategory { .. } => continue,
+                // The item-axis twin of `Prereq::HasCategory`: same
+                // referential check, same reasoning (B1/D21/F-542).
+                Effect::ForbidsItemCategory { category } => {
+                    if !self.category_declared_by_some_item(category) {
+                        errors.push(format!(
+                            "{id}: effect 'forbids_item_category' references category \
+                             '{category}' that no point item declares"
+                        ));
+                    }
+                    continue;
+                }
+                // A fixed id list, exactly like `GroupAffinityCost.abilities`
+                // above (B1/D21/F-511).
+                Effect::ForbidsAbilities { abilities } => {
+                    self.validate_ability_list_effect(abilities, "forbids_abilities", id, errors);
+                    continue;
+                }
+                // B1/D40 residual: every listed ability must resolve, AND its
+                // OWN category must match the effect's stated `category` — a
+                // whitelist entry outside its own stated category can never
+                // apply (Feral Upbringing's whitelist is General-only; naming
+                // a Supernatural ability there would be silent dead data).
+                Effect::RestrictsAbilityCategoryToAbilities { category, allowed } => {
+                    self.validate_ability_list_effect(
+                        allowed,
+                        "restricts_ability_category_to_abilities",
+                        id,
+                        errors,
+                    );
+                    for ability_id in allowed {
+                        let Some(ability) = self.abilities.get(ability_id) else {
+                            continue; // already reported above
+                        };
+                        if ability.category != *category {
+                            errors.push(format!(
+                                "{id}: effect 'restricts_ability_category_to_abilities' allows \
+                                 '{ability_id}', whose category is '{}', not the effect's own \
+                                 '{category}'",
+                                ability.category
+                            ));
+                        }
+                    }
                     continue;
                 }
             };

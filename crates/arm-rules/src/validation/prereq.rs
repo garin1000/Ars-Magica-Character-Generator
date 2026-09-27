@@ -118,6 +118,15 @@ pub(crate) struct PrereqCtx<'a> {
     house: Option<&'a Id>,
     ability_scores: BTreeMap<Id, u8>,
     art_scores: BTreeMap<Id, u8>,
+    /// `Prereq::HasCategory`'s fact (B1/D21/F-502): every in-force category
+    /// ([`PointItem::categories_for`]) of every bought-OR-granted item this
+    /// entity holds — the grant-aware twin of
+    /// [`crate::validation::selections::categories_in_force`]'s bought-only
+    /// fold. `flaw.rector`'s "must have a Social Status Virtue"
+    /// (ArMDE:6671-6674) is satisfied by a
+    /// House-granted Social Status exactly as by a bought one, the same reach
+    /// `present_ids` already gives `Has`.
+    held_categories: BTreeSet<String>,
 }
 
 impl<'a> PrereqCtx<'a> {
@@ -206,6 +215,17 @@ impl<'a> PrereqCtx<'a> {
             present_ids.insert(&g.item_ref);
         }
 
+        // `Prereq::HasCategory`'s grants-inclusive category set (B1/D21):
+        // every bought-OR-granted selection's in-force categories, read the
+        // taken-as-aware way `categories_for` already resolves for the
+        // bought-only profile-level gates.
+        let mut held_categories: BTreeSet<String> = BTreeSet::new();
+        for selection in entity.selections.iter().chain(granted.iter()) {
+            if let Some(item) = ruleset.point_items.get(&selection.item_ref) {
+                held_categories.extend(item.categories_for(&selection.params).iter().cloned());
+            }
+        }
+
         PrereqCtx {
             present_ids,
             trained,
@@ -214,6 +234,7 @@ impl<'a> PrereqCtx<'a> {
             house: entity.house.as_ref(),
             ability_scores,
             art_scores,
+            held_categories,
         }
     }
 
@@ -319,6 +340,16 @@ fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx, depth: usize) -> (Tri, bool
             Some(_) => (Tri::False, false),
             None => (Tri::Unknown, true),
         },
+        // Static (an item's own category never depends on missing data), so
+        // always a definite True/False, never Unknown — matching `Has`'s own
+        // shape (design § 3a site 2).
+        Prereq::HasCategory(category) => {
+            if ctx.held_categories.contains(category.as_str()) {
+                (Tri::True, false)
+            } else {
+                (Tri::False, false)
+            }
+        }
     }
 }
 
@@ -424,6 +455,7 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
+            held_categories: BTreeSet::new(),
         };
 
         // A single leaf, but evaluated as though it were already past the
@@ -448,6 +480,7 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
+            held_categories: BTreeSet::new(),
         };
 
         let (outcome, depended_on_unknown) =
@@ -498,6 +531,7 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
+            held_categories: BTreeSet::new(),
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1);
@@ -521,6 +555,7 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
+            held_categories: BTreeSet::new(),
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1);
@@ -542,10 +577,85 @@ mod tests {
             house: None,
             ability_scores,
             art_scores,
+            held_categories: BTreeSet::new(),
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1);
         assert_eq!(outcome, Tri::Unknown);
         assert!(depended_on_unknown);
+    }
+
+    /// B1/D21/F-502: `Prereq::HasCategory` is a definite True when
+    /// `held_categories` names it — never Unknown, matching `Has`'s own
+    /// static shape (an item's own category never depends on missing data).
+    #[test]
+    fn evaluate_prereq_has_category_true_when_held() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeSet::from(["social_status".to_string()]),
+        };
+
+        let (outcome, depended_on_unknown) =
+            evaluate_prereq(&Prereq::HasCategory("social_status".into()), &ctx, 1);
+        assert_eq!(outcome, Tri::True);
+        assert!(!depended_on_unknown);
+    }
+
+    /// The refusal half: a category not in `held_categories` is a definite
+    /// False.
+    #[test]
+    fn evaluate_prereq_has_category_false_when_not_held() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeSet::new(),
+        };
+
+        let (outcome, depended_on_unknown) =
+            evaluate_prereq(&Prereq::HasCategory("social_status".into()), &ctx, 1);
+        assert_eq!(outcome, Tri::False);
+        assert!(!depended_on_unknown);
+    }
+
+    /// `PrereqCtx::build` folds `held_categories` grant-aware (bought OR
+    /// granted), the same reach `present_ids` gives `Has` — a category held
+    /// only via a granted row (never bought) must still satisfy
+    /// `HasCategory`.
+    #[test]
+    fn prereq_ctx_build_folds_held_categories_from_granted_selections_too() {
+        let items = r#"[
+          { "id": "virtue.some_status", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["social_status"], "entity_kinds": ["character"] },
+          { "id": "flaw.filler_personality", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+        ]"#;
+        let ruleset = Ruleset::from_json("test", "1", items, "[]").unwrap();
+        let entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            crate::RulesetRef::new(Id::new("test"), "1"),
+        );
+        let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+        let granted = vec![Selection::new(Id::new("virtue.some_status"))];
+
+        let ctx = PrereqCtx::build(&entity, &ruleset, None, &selected_ids, &granted);
+
+        let (outcome, _) = ctx.evaluate(&Prereq::HasCategory("social_status".into()));
+        assert_eq!(outcome, Tri::True);
     }
 }

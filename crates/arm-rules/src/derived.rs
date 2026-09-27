@@ -444,7 +444,14 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::ElementalMagic { .. }
                 | Effect::ForbidsAbilitySpecialties
                 | Effect::ForbidsRitualCasting
-                | Effect::WaivesAbilityAgeCap => {}
+                | Effect::WaivesAbilityAgeCap
+                // B1/D21: creation-time authorization constraints (a
+                // category/id forbid, the Feral whitelist) — not an in-play
+                // total, no different from `ForbidsAbilitySpecialties` above.
+                | Effect::ForbidsAbilityCategory { .. }
+                | Effect::ForbidsItemCategory { .. }
+                | Effect::ForbidsAbilities { .. }
+                | Effect::RestrictsAbilityCategoryToAbilities { .. } => {}
             }
         }
     }

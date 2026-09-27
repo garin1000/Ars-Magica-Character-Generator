@@ -337,6 +337,15 @@ pub enum Prereq {
     /// prerequisite. `mythic_companion` sets it too: "mythic companions are
     /// companions too" (RULES.md records the ruling).
     IsCompanion,
+    /// The entity must hold (bought or granted) at least one item whose
+    /// in-force category is this string — the category-ranging twin of
+    /// [`Self::Has`], evaluated the same grant-aware way (D21;
+    /// `flaw.rector`'s "must have a Social Status Virtue", ArMDE:6671-6674).
+    /// A free-form category string rather than a closed registry, matching
+    /// [`PointItem::categories`] — enumerating every item of a category in a
+    /// `Prereq::Any` would freeze a catalogue count into code (CLAUDE.md:
+    /// "Catalogue size is data, never code").
+    HasCategory(String),
 }
 
 impl Prereq {
@@ -394,7 +403,8 @@ impl Prereq {
             | Prereq::ArtMin { .. }
             | Prereq::HermeticallyTrained
             | Prereq::OrderMember
-            | Prereq::IsCompanion => None,
+            | Prereq::IsCompanion
+            | Prereq::HasCategory(_) => None,
         }
     }
 
@@ -2000,6 +2010,66 @@ pub enum Effect {
     ///
     /// Source: ArMDE:5641-5650.
     ConfersHermeticTraining,
+    /// Forbids the character from holding any Ability of the given
+    /// [`AbilityCategory`] — Ability Block, "completely unable to learn a
+    /// certain class of Abilities... This may be Martial Abilities, or a more
+    /// limited set of the others" (D21/F-355). The Ability-axis half of D21's
+    /// category-prohibition pair; see [`Effect::ForbidsItemCategory`] for the
+    /// V/F-axis twin. Consumed by a dedicated grant-aware validator
+    /// (`validation/selections.rs`), not by any score fold — a no-op
+    /// everywhere in [`crate::effective`].
+    ///
+    /// Source: ArMDE:5651-5654.
+    ForbidsAbilityCategory {
+        /// The forbidden Ability category.
+        category: AbilityCategory,
+    },
+    /// Forbids the character from holding any OTHER Virtue/Flaw whose
+    /// in-force category is this string — Weak Personality, "The character
+    /// may have no other Personality Flaws or Virtues..." (D21/F-542 clause
+    /// 1). `String`, not [`AbilityCategory`]: [`PointItem::categories`] is
+    /// free-form, so this is the item-axis twin of
+    /// [`Effect::ForbidsAbilityCategory`], not the same field reused — the two
+    /// domains legally share bare strings (`"general"` names both an Ability
+    /// category and nothing on the item axis), so one untagged type across
+    /// both would be ambiguous at the wire.
+    ///
+    /// Source: ArMDE:7076-7079.
+    ForbidsItemCategory {
+        /// The forbidden item category.
+        category: String,
+    },
+    /// Forbids the character from holding any of these specific Ability ids
+    /// as a BEGINNING Ability — Sheltered Upbringing, "You may not take
+    /// Bargain, Charm, Etiquette, Folk Ken, Guile, Intrigue, or Leadership as
+    /// beginning Abilities, but you may learn them in play" (D21/F-511). A
+    /// third, id-list sub-shape distinct from both category forbids above —
+    /// the passage names specific Abilities, not a whole category.
+    ///
+    /// Source: ArMDE:6721-6724.
+    ForbidsAbilities {
+        /// The forbidden Ability ids.
+        abilities: std::collections::BTreeSet<Id>,
+    },
+    /// Narrows a normally-open [`AbilityCategory`] down to a named whitelist,
+    /// for BEGINNING Abilities only — Feral Upbringing, "You may only choose
+    /// beginning Abilities that you could have learned in the wilds"
+    /// (D40 residual, ArMDE:6110-6113). Unlike every other effect in this
+    /// family, this does not forbid something normally open or authorize
+    /// something normally gated — it narrows the default-permitted `general`
+    /// category to `allowed` (D60.2: creation-time only, per Sheltered
+    /// Upbringing's own "but you may learn them in play" carve-out; two
+    /// stacked whitelists intersect rather than the later one replacing the
+    /// earlier).
+    ///
+    /// Source: ArMDE:6110-6113.
+    RestrictsAbilityCategoryToAbilities {
+        /// The Ability category this restriction narrows.
+        category: AbilityCategory,
+        /// The only Ability ids still legal as a beginning Ability of
+        /// `category` while this effect is in force.
+        allowed: std::collections::BTreeSet<Id>,
+    },
 }
 
 /// Which spells a [`Effect::CastingTotalMod`] applies to. A fixed rules taxonomy
@@ -3184,6 +3254,20 @@ pub struct CategoryCap {
     /// If true the cap is a blocking error; otherwise a non-blocking warning.
     #[serde(default, skip_serializing_if = "is_false")]
     pub hard: bool,
+    /// Minimum required count (a floor, additive to the existing ceiling-only
+    /// `max`) — D21/F-427, ArMDE:2816: "All characters must take one Social
+    /// Status". `None` (the default, and every cap shipped before D41) states
+    /// no floor. B2 (D41) is this mechanism's first data user.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<u8>,
+    /// If true, falling below `min` is a blocking error; otherwise a
+    /// non-blocking warning. Independent of `hard`, which governs the
+    /// ceiling alone — D41 needs floor=hard, ceiling=soft on the SAME row
+    /// (Social Status: mandatory, but a second one is only ever a warning).
+    /// Meaningless with `min` absent (load-time integrity rejects that
+    /// combination).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub min_hard: bool,
 }
 
 /// `skip_serializing_if` predicate: omits a `bool` field from canonical JSON
@@ -7942,5 +8026,89 @@ mod tests {
         let reserialized = serde_json::to_string(&prereq).unwrap();
         let roundtripped: Prereq = serde_json::from_str(&reserialized).unwrap();
         assert_eq!(prereq, roundtripped);
+    }
+
+    /// B1/D21 (F-502): `Prereq::HasCategory` survives a `kind`-tagged JSON
+    /// round-trip, matching `prereq_art_min_roundtrip`'s pattern for the
+    /// existing scalar-payload variants.
+    #[test]
+    fn prereq_has_category_roundtrip() {
+        let json = r#"{"kind": "has_category", "value": "social_status"}"#;
+        let prereq: Prereq = serde_json::from_str(json).unwrap();
+        assert_eq!(prereq, Prereq::HasCategory("social_status".into()));
+
+        let reserialized = serde_json::to_string(&prereq).unwrap();
+        let roundtripped: Prereq = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(prereq, roundtripped);
+    }
+
+    /// B1/D21 (F-355, F-542, F-511, D40 residual): the four new category/
+    /// ability-prohibition `Effect` variants survive a `type`-tagged JSON
+    /// round-trip, on `might_effects_round_trip`'s pattern.
+    #[test]
+    fn b1_category_and_ability_prohibition_effects_roundtrip() {
+        let effects = vec![
+            Effect::ForbidsAbilityCategory {
+                category: AbilityCategory::Martial,
+            },
+            Effect::ForbidsItemCategory {
+                category: "personality".into(),
+            },
+            Effect::ForbidsAbilities {
+                abilities: std::collections::BTreeSet::from([
+                    Id::new("ability.bargain"),
+                    Id::new("ability.charm"),
+                ]),
+            },
+            Effect::RestrictsAbilityCategoryToAbilities {
+                category: AbilityCategory::General,
+                allowed: std::collections::BTreeSet::from([
+                    Id::new("ability.athletics"),
+                    Id::new("ability.awareness"),
+                ]),
+            },
+        ];
+        let json = serde_json::to_string(&effects).unwrap();
+        let back: Vec<Effect> = serde_json::from_str(&json).unwrap();
+        assert_eq!(effects, back);
+        assert!(json.contains("\"type\":\"forbids_ability_category\""));
+        assert!(json.contains("\"type\":\"forbids_item_category\""));
+        assert!(json.contains("\"type\":\"forbids_abilities\""));
+        assert!(json.contains("\"type\":\"restricts_ability_category_to_abilities\""));
+    }
+
+    /// B1/D41: `CategoryCap.min`/`min_hard` are additive and independent of
+    /// the existing ceiling fields — absent by default (an old cap's JSON is
+    /// unaffected), present only when authored, matching `hard`'s own
+    /// `skip_serializing_if` convention.
+    #[test]
+    fn category_cap_min_round_trip() {
+        let bare = CategoryCap {
+            category: "story".into(),
+            max: 1,
+            major_only: false,
+            hard: false,
+            min: None,
+            min_hard: false,
+        };
+        let json = serde_json::to_string(&bare).unwrap();
+        assert!(
+            !json.contains("min"),
+            "an absent floor must not appear: {json}"
+        );
+
+        let floored = CategoryCap {
+            category: "social_status".into(),
+            max: 1,
+            major_only: false,
+            hard: false,
+            min: Some(1),
+            min_hard: true,
+        };
+        let json = serde_json::to_string(&floored).unwrap();
+        let back: CategoryCap = serde_json::from_str(&json).unwrap();
+        assert_eq!(floored, back);
+        assert!(json.contains("\"min\":1"));
+        assert!(json.contains("\"min_hard\":true"));
     }
 }
