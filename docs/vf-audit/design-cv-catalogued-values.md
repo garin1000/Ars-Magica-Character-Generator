@@ -1065,16 +1065,17 @@ Cross-cutting: `crates/arm-rules/tests/rulebook_citations.rs` and
 
 ## 11. Risks and open points for Norbert
 
-Only two remain open; everything else raised across all three reviews of this
-note is now decided or closed.
+**Both decided by Norbert, 2026-09-27.** Nothing remains open.
 
-1. **§ 1.2 — catalogue the five universal Educated-family values (four
-   languages + Merchant) now, or wait for that slice?** Recommended: now
-   (cheap, already sourced, avoids re-opening this file). Decide before CV1.
-2. **§ 4 — static hint vs. conditional hint** for an uncatalogued/"Other…"
-   choice (a hint that only fires when some live literal actually targets the
-   ability instance in question is more precise but requires the picker to
-   query the whole ruleset for a match; recommended: static, always shown).
+1. **§ 1.2: catalogue the five universal Educated-family values (four
+   languages plus Merchant) now.** They land in CV1.
+2. **§ 4: the hint is conditional.** It shows only when the free-text choice
+   actually costs the player something, i.e. a literal or bound instance on one
+   of the character's own items targets this Ability and is unmet. Otherwise no
+   hint is shown, so Craft and Area Lore rows carry no permanent noise. The
+   engine decides it and surfaces it with the Ability's options (§ 6.3); the UI
+   does not query the ruleset itself. This replaces the note's earlier "static,
+   always shown" recommendation.
 
 ---
 
