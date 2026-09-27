@@ -183,6 +183,7 @@ K3 + Berserk, Ways of the Land, Cyclic (D52), Special Circumstances.
 |---|---|---|---|
 | X1 | Authorization family + D43 **one slice**: row 45 survey (any category), row 48 auth half, row 50 (b)–(d), § 3.2 incl. the 27 `class+auth` entries' reclassification, § 3.2a's four Educated entries + base Latin, W2/custos. **Plus (found in C1):** `house.jerbiton`'s free Minor Virtue Open grant can grant any of the four gated items (`wise_one`, `custos`, `templar_specialist`, `student_of_realm`), so a granted plus a bought copy with different choices could union to an over-permission (F-349 across selections). Check that `max_total` is grant-aware, or restrict the grant | C1, D1 | L |
 | X2 | Reclassification + descriptions **excluding § 3.2's entries**: S3/S4 work-lists emptied, D8's 48, D20's 19 + 5 numbers, D50's 335 re-test, row 38 residual, `virtue.the_gift` (D46) | S1–S4 | L |
+| X2t | D60.3: `virtue.true_friend_pc`, `flaw.true_friend_major`/`_minor` as twins of the True Love entries (data only, both locales, twin-parity test); lands with X2's `true_love_pc` description | X2 | S |
 | X3 | D12's 122 intrinsic/trained, gated on *trained*; D24; **acceptance: no Gifted non-magus computes against a magus budget** (D12.6) | A1 | M |
 | X4 | § 3.5: Wealthy/Poor closed set (F-340), D44 over M0's figure, predicate cases incl. Q-138 | B3, X3 | M |
 | X5 | § 3.6: F-518/F-532/F-533, F-502, D38 data, D51, D41's guild requirement data; F-270/F-283 (add if the book has the heading, else drop) | A1, E1, Q8, B1 | M |

@@ -839,6 +839,14 @@ presumption of correctness.
 2. **Feral Upbringing's Ability whitelist applies to beginning Abilities only**
    (ArMDE:6113), as Sheltered Upbringing leaves in-play learning open. If two
    such restrictions ever stack, their lists **intersect**.
+3. **True Friend is a first-class entry** (amended the same day). The book
+   allows the rename for both True Love (PC) (ArMDE:5177) and the True Love
+   Story Flaw (ArMDE:6875), and names "the Minor Virtue True Friend" in its own
+   right (ArMDE:10852). So `virtue.true_friend_pc`, `flaw.true_friend_major` and
+   `flaw.true_friend_minor` copy their twins' mechanics and source lines, with
+   the name *Wahrer Freund* (`tugenden-fehler.md`). A test pins twin parity.
+   The book states no incompatibility with True Love, so none is added; the
+   major/minor exclusion is mirrored. Plan slice **X2t**.
 
 ---
 
