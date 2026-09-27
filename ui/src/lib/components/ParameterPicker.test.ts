@@ -47,6 +47,13 @@ const ABILITIES: Record<string, Ability> = {
   'ability.awareness': { id: 'ability.awareness', category: 'general' },
   'ability.stealth': { id: 'ability.stealth', category: 'general' },
   'ability.area_lore': { id: 'ability.area_lore', category: 'general', parameter: 'area' },
+  // CV8: a CATALOGUED parameterized ability, distinct from `area_lore`'s free
+  // text — so a bought instance naming a catalogue id is exercised too.
+  'ability.dead_language': {
+    id: 'ability.dead_language',
+    category: 'academic',
+    parameter: 'language',
+  },
 };
 
 function pointItem(
@@ -205,6 +212,12 @@ function installRuleset(): void {
       'ability.awareness': { name: 'Awareness' },
       'ability.stealth': { name: 'Stealth' },
       'ability.area_lore': { name: '{area} Lore' },
+      'ability.dead_language': { name: '{language} (Dead Language)' },
+      // Deliberately the GERMAN name for the catalogue id, regardless of
+      // `store.lang` — proves resolution reads the merged `ruleset.i18n`, not a
+      // structural id-guess (which would read the English-shaped "Latin" no
+      // matter what `store.lang` is). Matches AbilityTab.test.ts's CV7 precedent.
+      'language.latin': { name: 'Latein' },
       'virtue.folk_magic': { name: 'Folk Magic {category}' },
       'folk_magic.abjuration': { name: 'Abjuration' },
       'folk_magic.divination': { name: 'Divination' },
@@ -676,6 +689,20 @@ describe('ParameterPicker ability domain (manual-testing-findings-2026-09-03 #5)
     expect(optionTexts(select!)).toContain('Brandenburg Lore');
     // …and the generic entry stays, so a second area can still be chosen.
     expect(optionTexts(select!)).toContain('(Area) Lore');
+  });
+
+  // CV8 (design-cv-catalogued-values.md § 6.4): a bought CATALOGUED instance
+  // must show its localized name here too, not just for the `Text`-shaped
+  // "Brandenburg" case above — this is the target-picker's own leg of the "no
+  // raw id ever rendered" contract, distinct from `AbilityTab.test.ts`'s
+  // coverage of the SOURCE ability row.
+  it('resolves a CATALOGUED instance through the rules i18n, never the raw catalogue id', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.dead_language', score: 1, parameter: { id: 'language.latin' } },
+    ] as Entity['ability_scores'];
+    const select = selectFor(pickerBody('virtue.puissant_ability'), TESTID);
+    expect(optionTexts(select!)).toContain('Latein (Dead Language)');
+    expect(optionTexts(select!).join(' ')).not.toContain('language.latin');
   });
 
   it('lists an owned plain ability exactly once', () => {

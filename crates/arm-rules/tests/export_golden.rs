@@ -15,7 +15,7 @@
 use arm_rules::export::{LABEL_KEYS, character_markdown};
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
-use arm_rules::{Characteristic, CrisisSeverity};
+use arm_rules::{Characteristic, CrisisSeverity, parse_catalogue_names};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The whole shipped ruleset, localized with the shipped English rules text.
@@ -404,4 +404,200 @@ fn rendering_the_same_magus_twice_is_byte_identical() {
         character_markdown(&entity, &ruleset, &labels),
         character_markdown(&entity, &ruleset, &labels)
     );
+}
+
+// --- CV8 (design-cv-catalogued-values.md § 6.4): display/export parity -----
+//
+// CV7 already made `export/resolve.rs::Doc::ability_param_value` the single
+// resolver for a bought Ability's stored `AbilityParameterValue`; what CV8 owes
+// is proof, not new production code — the design row's own words: "already
+// benefits from CV7's `LocalizedRuleset.i18n` merge, but its own
+// humanize-fallback code path is unchanged". These are the "one Rust test"
+// § 6.4 promises for the resolver (the TS twin is `AbilityTab.test.ts`'s
+// "shows a catalogued value by its localized name, never the raw id").
+
+/// The whole shipped ruleset, localized with the shipped German rules text —
+/// the DE counterpart of `shipped_ruleset()`, needed to prove a `Catalogued`
+/// value resolves through REAL per-language i18n rather than the id's-own-
+/// final-segment fallback (which happens to read "Latin" in English too, so an
+/// English-only test cannot tell the two apart).
+fn shipped_ruleset_de() -> LocalizedRuleset {
+    let ruleset = Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+        type_profiles: include_str!("../../../rules/core/character_types.json"),
+        abilities: Some(include_str!("../../../rules/core/abilities.json")),
+        arts: Some(include_str!("../../../rules/core/arts.json")),
+        houses: Some(include_str!("../../../rules/core/houses.json")),
+        mythic_types: Some(include_str!(
+            "../../../rules/core/mythic_companion_types.json"
+        )),
+        spells: Some(include_str!("../../../rules/core/spells.json")),
+        spell_mastery_abilities: Some(include_str!(
+            "../../../rules/core/spell_mastery_abilities.json"
+        )),
+        equipment: Some(include_str!("../../../rules/core/equipment.json")),
+        characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+        life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
+        childhoods: None,
+        aging: Some(include_str!("../../../rules/core/aging.json")),
+        parameter_catalogues: Some(include_str!(
+            "../../../rules/core/parameter_catalogues.json"
+        )),
+    })
+    .expect("the shipped ruleset loads");
+    LocalizedRuleset::from_merged(
+        ruleset,
+        &[
+            include_str!("../../../rules/i18n/de/virtues_flaws.json"),
+            include_str!("../../../rules/i18n/de/abilities.json"),
+            include_str!("../../../rules/i18n/de/arts.json"),
+            include_str!("../../../rules/i18n/de/houses.json"),
+            include_str!("../../../rules/i18n/de/mythic_companion_types.json"),
+            include_str!("../../../rules/i18n/de/spells.json"),
+            include_str!("../../../rules/i18n/de/spell_mastery_abilities.json"),
+            include_str!("../../../rules/i18n/de/equipment.json"),
+            include_str!("../../../rules/i18n/de/aging.json"),
+        ],
+    )
+    .expect("the shipped German rules text loads")
+}
+
+/// Merges a catalogue's per-language display names into `localized.i18n`,
+/// mirroring `arm-app::ruleset_io::merge_catalogue_display_names` exactly —
+/// that function lives in the `arm-app` crate, which this pure-engine test
+/// cannot depend on, so this reproduces its effect on the SAME public map
+/// (`LocalizedRuleset.i18n`) via the SAME public parser
+/// (`arm_rules::parse_catalogue_names`), so `Catalogued` is resolved the same
+/// way the real app loads it, not just through its defense-in-depth fallback.
+fn merge_catalogue_names(localized: &mut LocalizedRuleset, catalogue_json: &str) {
+    for (id, name) in parse_catalogue_names(catalogue_json).expect("catalogue names parse") {
+        localized.i18n.insert(
+            id,
+            I18nEntry {
+                name,
+                name_unfilled: None,
+                summary: None,
+                description: None,
+                abbreviation: None,
+                specialties: Vec::new(),
+            },
+        );
+    }
+}
+
+/// A companion holding all three `AbilityParameterValue` shapes at once:
+/// `Catalogued` (Dead Language: Latin), `Linked` (Organization Lore following
+/// Craft Guild Training's current guild), and `Text` (Area Lore: Provence).
+fn entity_with_every_parameter_kind() -> Entity {
+    let mut e = Entity::new(
+        EntityKind::Character,
+        Id::new("companion"),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    e.selections = vec![Selection::with_params(
+        Id::new("virtue.craft_guild_training"),
+        BTreeMap::from([("guild".to_string(), Id::new("Smiths' Guild of Verdi"))]),
+    )];
+    e.ability_scores = vec![
+        AbilityScore {
+            ability: Id::new("ability.dead_language"),
+            score: 4,
+            specialty: None,
+            parameter: Some(AbilityParameterValue::Catalogued {
+                id: Id::new("language.latin"),
+            }),
+        },
+        AbilityScore {
+            ability: Id::new("ability.organization_lore"),
+            score: 2,
+            specialty: None,
+            parameter: Some(AbilityParameterValue::Linked {
+                item: Id::new("virtue.craft_guild_training"),
+                param: "guild".to_string(),
+            }),
+        },
+        AbilityScore {
+            ability: Id::new("ability.area_lore"),
+            score: 1,
+            specialty: None,
+            parameter: Some(AbilityParameterValue::text("Provence")),
+        },
+    ];
+    e.normalize();
+    e
+}
+
+/// No surface may print a raw catalogue id (`language.latin`) or the bare
+/// `(item, param)` pair (`virtue.craft_guild_training`/`guild`) as visible
+/// text — only the resolved/localized name design § 6.4 requires. A search
+/// for the catalogue-prefixed id form covers every catalogue family this
+/// design introduces, not only the one this fixture happens to exercise.
+fn assert_no_raw_parameter_id(rendered: &str) {
+    for prefix in ["language.", "organization.", "profession."] {
+        assert!(
+            !rendered.contains(prefix),
+            "export must never print a raw catalogue id (prefix {prefix:?} found):\n{rendered}"
+        );
+    }
+    assert!(
+        !rendered.contains("virtue.craft_guild_training"),
+        "export must never print a raw (item, param) link pair as text:\n{rendered}"
+    );
+}
+
+#[test]
+fn a_catalogued_a_linked_and_a_text_ability_parameter_render_localized_in_english() {
+    let mut ruleset = shipped_ruleset();
+    merge_catalogue_names(
+        &mut ruleset,
+        include_str!("../../../rules/i18n/en/parameter_catalogue.json"),
+    );
+    let entity = entity_with_every_parameter_kind();
+    let rendered = character_markdown(&entity, &ruleset, &synthetic_labels())
+        .expect("every id in the fixture is real");
+
+    assert!(
+        rendered.contains("Latin (Dead Language)"),
+        "a Catalogued value must show its EN localized name:\n{rendered}"
+    );
+    assert!(
+        rendered.contains("Smiths' Guild of Verdi Lore"),
+        "a Linked value must show the source Virtue's CURRENT resolved text:\n{rendered}"
+    );
+    assert!(
+        rendered.contains("Provence Lore"),
+        "a Text value must pass through unchanged:\n{rendered}"
+    );
+    assert_no_raw_parameter_id(&rendered);
+}
+
+#[test]
+fn a_catalogued_a_linked_and_a_text_ability_parameter_render_localized_in_german() {
+    let mut ruleset = shipped_ruleset_de();
+    merge_catalogue_names(
+        &mut ruleset,
+        include_str!("../../../rules/i18n/de/parameter_catalogue.json"),
+    );
+    let entity = entity_with_every_parameter_kind();
+    let rendered = character_markdown(&entity, &ruleset, &synthetic_labels())
+        .expect("every id in the fixture is real");
+
+    assert!(
+        rendered.contains("Latein (Tote Sprache)"),
+        "a Catalogued value must show its DE localized name — proving real \
+         i18n resolution, not the EN-shaped structural id fallback which also \
+         happens to read \"Latin\":\n{rendered}"
+    );
+    assert!(
+        rendered.contains("Smiths' Guild of Verdi-Kunde"),
+        "a Linked value must show the source Virtue's CURRENT resolved text, \
+         DE-templated:\n{rendered}"
+    );
+    assert!(
+        rendered.contains("Provence-Kunde"),
+        "a Text value must pass through unchanged, DE-templated:\n{rendered}"
+    );
+    assert_no_raw_parameter_id(&rendered);
 }

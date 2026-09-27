@@ -259,6 +259,26 @@ describe('MagusMinimumAbilities checklist (slice 6b4)', () => {
     expect(body).not.toContain('{language}');
   });
 
+  // CV8 (design-cv-catalogued-values.md § 6.4): `instanceOf` must resolve a
+  // CATALOGUED bought instance the same way it already resolves `Text`
+  // (the test above) — through `abilityParamDisplay`, never the raw id.
+  it('names each Ability through the rules i18n for a CATALOGUED bought instance too', () => {
+    // Deliberately the GERMAN name for the catalogue id, regardless of
+    // `store.lang` — proves the row reads the merged `ruleset.i18n`, not a
+    // structural "humanize the id" guess (which would read the
+    // English-shaped "Latin" no matter what `store.lang` is). Matches
+    // `AbilityTab.test.ts`'s CV7 precedent.
+    store.ruleset!.i18n['language.latin'] = { name: 'Latein' };
+    store.entity.ability_scores = [
+      { ability: 'ability.dead_language', parameter: { id: 'language.latin' }, score: 4 },
+    ] as Entity['ability_scores'];
+    setChecklist([row('ability.dead_language', 1, 4, 'required')]);
+    const body = html();
+    const latin = element(body, 'magus-minimum-ability.dead_language');
+    expect(clean(latin.text)).toContain('Latein (Dead Language)');
+    expect(clean(latin.text)).not.toContain('language.latin');
+  });
+
   it('names the Ability without a doubled placeholder when nothing is bought yet', () => {
     // #13: with no instance held, the generic "(Language)" hint used to be stacked on
     // the template's own "(Dead Language)" literal, reading
