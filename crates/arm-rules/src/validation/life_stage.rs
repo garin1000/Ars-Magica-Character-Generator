@@ -8,6 +8,7 @@ use super::*;
 
 use crate::childhood::ChildhoodRejection;
 use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
+use crate::types::AbilityParameterValue;
 
 /// Validates a character built through its life stages.
 ///
@@ -212,7 +213,11 @@ fn validate_life_stage_native_language(
         Some(language) => {
             let bought = entity.ability_scores.iter().any(|score| {
                 score.ability == rules.childhood.native_language_ability
-                    && score.parameter.as_deref() == Some(language.as_str())
+                    && score
+                        .parameter
+                        .as_ref()
+                        .and_then(AbilityParameterValue::match_key)
+                        == Some(language.as_str())
                     && score.score > 0
             });
             if !bought {
@@ -479,7 +484,9 @@ fn parameter_key(ability: &Id, ruleset: &Ruleset) -> String {
 mod tests {
     use crate::childhood::ChildhoodRejection;
     use crate::life_stage::LifeStagePlan;
-    use crate::types::{AbilityFunding, AbilityScore, Entity, EntityKind, Id, RulesetRef};
+    use crate::types::{
+        AbilityFunding, AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef,
+    };
     use crate::validation::{
         IssueSeverity, ValidationIssue, ValidationResult, childhood_rejection_issues, validate,
     };
@@ -595,7 +602,7 @@ mod tests {
         });
         entity.ability_scores = vec![AbilityScore {
             ability: Id::new("ability.living_language"),
-            parameter: Some("German".into()),
+            parameter: Some(AbilityParameterValue::text("German")),
             score: 5,
             specialty: None,
         }];
@@ -1006,7 +1013,7 @@ mod tests {
         let mut entity = planned(25);
         entity.ability_scores = vec![AbilityScore {
             ability: Id::new("ability.area_lore"),
-            parameter: Some("German".into()),
+            parameter: Some(AbilityParameterValue::text("German")),
             score: 2,
             specialty: None,
         }];
@@ -1027,7 +1034,7 @@ mod tests {
         let mut entity = planned(25);
         entity.ability_scores = vec![AbilityScore {
             ability: Id::new("ability.living_language"),
-            parameter: Some("German".into()),
+            parameter: Some(AbilityParameterValue::text("German")),
             score: 0,
             specialty: None,
         }];

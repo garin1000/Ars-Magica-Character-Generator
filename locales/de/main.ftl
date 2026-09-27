@@ -534,6 +534,22 @@ aging-points-heading = Alterungspunkte pro Eigenschaft
 # fest verdrahteten ", ".
 aging-migration-notice = Dieser Charakter wurde in einem älteren Format gespeichert. Die Alterungspunkte für { $characteristics } wurden als kleinstmögliche Summe rekonstruiert, die die gespeicherten Werte noch ergibt; die ursprünglichen Werte ließen sich nicht wiederherstellen. Beim Speichern werden die rekonstruierten Werte übernommen.
 aging-migration-list-separator = ,
+# Einmalig nach dem Öffnen eines Spielstands, dessen parametrisierter
+# Fertigkeitswert (ein Gebiet, eine Sprache, …) in keiner der beiden Sprachen
+# den Namen eines Katalogeintrags ergab (CV4b,
+# design-cv-catalogued-values.md § 5.5). Ein Literal wird nur von einem
+# erkannten Katalogwert erfüllt, daher kann ein nicht erkannter Wert
+# stillschweigend aufhören zu berechtigen oder zu finanzieren. Trennzeichen wie
+# restricted-xp-list-separator, über Fluent statt eines fest verdrahteten ", ".
+unresolved-catalogued-parameter-notice = Dieser Charakter wurde mit einem Wert gespeichert, den der Regelkatalog nicht kennt: { $items }. Der Wert wurde genau wie eingegeben beibehalten — prüfe, ob alles, was davon abhängt, noch funktioniert.
+unresolved-catalogued-parameter-item = { $ability } („{ $text }“)
+unresolved-catalogued-parameter-list-separator = ,
+# Das positive Gegenstück: Ein Wert WURDE erkannt und mit seinem Katalogeintrag
+# verknüpft, sodass eine Umbenennung oder ein Sprachwechsel weiterhin korrekt
+# aufgelöst wird.
+migrated-catalogued-parameter-notice = { $items } wurden anhand des eingegebenen Textes erkannt und mit ihrem Katalogeintrag verknüpft.
+migrated-catalogued-parameter-item = { $ability }: „{ $text }“ → { $resolved }
+migrated-catalogued-parameter-list-separator = ,
 warping-points-label = Verzerrungspunkte
 twilight-scars-label = Zwielichtnarben
 twilight-scar-placeholder = Beschreibe die Narbe

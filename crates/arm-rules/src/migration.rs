@@ -10,9 +10,10 @@
 use std::collections::BTreeMap;
 
 use crate::characteristics::Characteristic;
+use crate::ruleset::Ruleset;
 use crate::types::{
-    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityFunding, Entity, Id, Selection,
-    SelectionParamValue, Talisman, TalismanAttunement,
+    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityFunding, AbilityParameterValue, Entity, Id,
+    Selection, SelectionParamValue, Talisman, TalismanAttunement,
 };
 
 /// Current save-format schema version.
@@ -121,7 +122,30 @@ use crate::types::{
 /// default, not a constant. [`crate::DEFAULT_SAGA_YEAR`] stays the engine's own
 /// fallback of last resort: what [`Entity::new`] starts at, and what
 /// `serde(default)` fills into a hand-edited schema-17 save that omits the key.
-pub const SCHEMA_VERSION: u32 = 17;
+///
+/// Bumped 17 → 18 for CV4 (`docs/vf-audit/design-cv-catalogued-values.md`):
+/// [`crate::types::AbilityScore::parameter`] widens from a bare `Option<String>`
+/// to `Option<AbilityParameterValue>` (D14 fix) — a Literal instance's match no
+/// longer depends on exact-string equality in a single language. The bump is
+/// earned by a genuine shape move, exactly like 13 → 14's talisman field: a
+/// pre-18 save's bare-string `"parameter": "Latin"` is not a shape the new
+/// typed enum accepts on its own, so [`wrap_legacy_ability_parameters`]
+/// rewraps it into `{"text": "Latin"}` before the typed parse — run
+/// unconditionally, regardless of the claimed `schema_version` (§ 5.1/§ 5.2).
+/// [`fold_catalogue_matching`] then upgrades any resulting `Text` value that
+/// spells out a catalogue entry's name (either locale) into `Catalogued { id
+/// }` (§ 5.3) — value-driven and idempotent, so it runs on every load, not
+/// just a migrating one, and stamps no version of its own; the version bump
+/// belongs to the wire-shape change alone.
+pub const SCHEMA_VERSION: u32 = 18;
+
+/// `(ability, original text, resolved catalogue id)` — see
+/// [`LoadedEntity::migrated_catalogued_parameters`]. A named alias rather than
+/// the bare tuple keeps [`fold_catalogue_matching`]'s signature readable
+/// (clippy's `type_complexity`).
+type MigratedCatalogueParameters = Vec<(Id, String, Id)>;
+/// `(ability, text)` — see [`LoadedEntity::unresolved_catalogued_parameters`].
+type UnresolvedCatalogueParameters = Vec<(Id, String)>;
 
 /// The outcome of loading an entity save, including any schema migration applied.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -133,6 +157,21 @@ pub struct LoadedEntity {
     /// The caller surfaces a localized notice; the engine holds no user-facing
     /// string.
     pub migrated_aging_characteristics: Vec<Characteristic>,
+    /// Parameterized Ability rows whose free-text value was recognized as a
+    /// catalogue entry's name (either locale) and folded from `Text` into
+    /// `Catalogued` — `(ability, original text, resolved catalogue id)`, in the
+    /// order encountered (design § 5.3/§ 5.5). Empty when nothing matched.
+    pub migrated_catalogued_parameters: MigratedCatalogueParameters,
+    /// Parameterized Ability rows whose free-text value did NOT match any
+    /// catalogue entry's name in either locale, and so stayed `Text` unchanged —
+    /// `(ability, text)` (design § 5.3/§ 5.5: "never guessed"). Empty when
+    /// nothing was left unresolved (including when the ability is not
+    /// catalogued, in which case this fold does not apply to it at all). The
+    /// caller surfaces this as a localized notice, exactly like
+    /// [`Self::migrated_aging_characteristics`] — the player is told a value
+    /// went unrecognized rather than left to discover a silently broken
+    /// authorization later.
+    pub unresolved_catalogued_parameters: UnresolvedCatalogueParameters,
 }
 
 /// The minimal lifetime aging-point total that forces exactly `drops`
@@ -402,6 +441,113 @@ fn trim_all_selection_params(entity: &mut Entity) {
     }
 }
 
+/// Rewrites every legacy bare-string `ability_scores[].parameter` into the new
+/// tagged shape `{"text": <string>}`, before the typed parse. A bare string
+/// cannot self-report "id" vs "text" the way [`SelectionParamValue`]'s
+/// scalar/array split already could, so — unlike that field — this one is not
+/// wire-compatible without a rewrite (design § 5.1).
+///
+/// Runs regardless of the claimed `schema_version` — a hand-edited save can
+/// claim any version alongside a legacy bare-string `parameter`, and the shape
+/// is rewrapped either way (design § 5.2). Idempotent: a `parameter` that is
+/// already an object (any schema-18+ save, or one this same pre-pass already
+/// rewrote) is untouched; only a JSON *string* value is rewrapped.
+///
+/// Untrusted input: a linear walk over `ability_scores`, an array already
+/// bounded by the file the player opened — no recursion, no
+/// attacker-controlled loop count beyond "one iteration per ability the save
+/// already lists" (design § 5.2).
+fn wrap_legacy_ability_parameters(value: &mut serde_json::Value) {
+    let Some(scores) = value
+        .get_mut("ability_scores")
+        .and_then(|v| v.as_array_mut())
+    else {
+        return;
+    };
+    for score in scores {
+        let Some(obj) = score.as_object_mut() else {
+            continue;
+        };
+        if let Some(serde_json::Value::String(text)) = obj.get("parameter").cloned() {
+            obj.insert("parameter".into(), serde_json::json!({ "text": text }));
+        }
+    }
+}
+
+/// The catalogue-matching fold (design § 5.3): upgrades a parameterized
+/// Ability's `Text { text }` value to `Catalogued { id }` where `text`
+/// case-insensitively, trimmed-ly spells out one of the ability's catalogue's
+/// values' names, in either locale — never guessed, so an unmatched or
+/// ambiguous value stays `Text` unchanged and is reported.
+///
+/// A no-op for any `AbilityScore` whose value is not `Text` (`Catalogued` and
+/// `Linked` pass through untouched — idempotent, and safe to run on every
+/// load, not just a migrating one) or whose ability is not catalogued at all
+/// (`ability.craft`, `ability.area_lore`, `ability.mystery_cult_lore` stay
+/// free text by design, D9).
+///
+/// "Exactly one match" is well-defined because ruleset load already rejects a
+/// catalogue whose values collide under this same trimmed/case-folded name
+/// comparison (§ 2.2) — so at most one catalogue value can match a given
+/// folded text within one catalogue.
+fn fold_catalogue_matching(
+    entity: &mut Entity,
+    ruleset: &Ruleset,
+    catalogue_names: &BTreeMap<Id, Vec<String>>,
+) -> (MigratedCatalogueParameters, UnresolvedCatalogueParameters) {
+    let mut migrated = Vec::new();
+    let mut unresolved = Vec::new();
+    for score in &mut entity.ability_scores {
+        let Some(AbilityParameterValue::Text { text }) = &score.parameter else {
+            continue;
+        };
+        let Some(ability) = ruleset.ability(&score.ability) else {
+            continue;
+        };
+        if !ability.catalogued {
+            continue;
+        }
+        let Some(key) = ability.parameter.as_deref() else {
+            continue;
+        };
+        let catalogue_id = Id::new(format!("catalogue.{key}"));
+        let Some(catalogue) = ruleset.parameter_catalogues().get(&catalogue_id) else {
+            continue;
+        };
+        let folded_text = fold_catalogue_value_name(text);
+        let matched = catalogue.values.iter().find(|value| {
+            catalogue_names
+                .get(&value.id)
+                .into_iter()
+                .flatten()
+                .any(|name| fold_catalogue_value_name(name) == folded_text)
+        });
+        match matched {
+            Some(value) => {
+                migrated.push((score.ability.clone(), text.clone(), value.id.clone()));
+                score.parameter = Some(AbilityParameterValue::Catalogued {
+                    id: value.id.clone(),
+                });
+            }
+            None => {
+                unresolved.push((score.ability.clone(), text.clone()));
+            }
+        }
+    }
+    (migrated, unresolved)
+}
+
+/// Folds a value's display name for case-insensitive, trimmed comparison — the
+/// SAME fold [`crate::catalogue::load_catalogue_names`] applies to its own
+/// cross-locale collision check (§ 2.2/§ 7), so "exactly one match" here relies
+/// on the identical notion of "the same name" that guard already enforces at
+/// load. Kept as its own small function (rather than inlined) so a future
+/// caller of § 4 rule 2's live content-match (CV5) reuses this exact fold
+/// rather than a second, potentially-diverging implementation (design § 4).
+fn fold_catalogue_value_name(name: &str) -> String {
+    name.trim().to_lowercase()
+}
+
 /// Deserializes an entity from JSON, applying backward-compatible save
 /// migrations, and reports what was migrated.
 ///
@@ -475,9 +621,21 @@ fn trim_all_selection_params(entity: &mut Entity) {
 /// malformed current field does. A fold that quietly yielded nothing would still get
 /// the version stamped, so the load would look successful and the next save would
 /// drop the legacy key — losing the data permanently.
+///
+/// `ruleset`/`catalogue_names` are new as of the 17 → 18 bump (design § 5.6):
+/// the catalogue-matching fold above needs to know which abilities are
+/// catalogued and what their catalogue values are named in each locale, and
+/// this crate has no filesystem and cannot load its own rules data — so the
+/// caller (which already owns ruleset loading/caching for every other command)
+/// hands both in. `catalogue_names` covers **both** shipped locales at once,
+/// independent of whichever language the UI happens to be showing, because
+/// recognizing a value must not depend on which language the player was using
+/// when they typed it.
 pub fn load_entity_migrating(
     json: &str,
     default_saga_year: i32,
+    ruleset: &Ruleset,
+    catalogue_names: &BTreeMap<Id, Vec<String>>,
 ) -> Result<LoadedEntity, serde_json::Error> {
     let mut value: serde_json::Value = serde_json::from_str(json)?;
     let legacy = value
@@ -486,6 +644,7 @@ pub fn load_entity_migrating(
     let legacy_attunements = value
         .as_object_mut()
         .and_then(|obj| obj.remove("talisman_attunements"));
+    wrap_legacy_ability_parameters(&mut value);
     // Dispatch on the key's absence, never on the recorded `schema_version`: a
     // hand-edited save may carry any version alongside either shape. Read before the
     // deserialization below, because `serde(default)` would make the two
@@ -579,18 +738,42 @@ pub fn load_entity_migrating(
     }
 
     migrated_aging_characteristics.sort();
+    let (migrated_catalogued_parameters, unresolved_catalogued_parameters) =
+        fold_catalogue_matching(&mut entity, ruleset, catalogue_names);
     Ok(LoadedEntity {
         entity,
         migrated_aging_characteristics,
+        migrated_catalogued_parameters,
+        unresolved_catalogued_parameters,
     })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ruleset::RulesetSources;
     use crate::types::{EntityKind, RulesetRef};
     use crate::validation::DEFAULT_SAGA_YEAR;
     use pretty_assertions::assert_eq;
+
+    /// A ruleset carrying no catalogued abilities and no catalogue values —
+    /// every test in this module exercises a migration fold unrelated to
+    /// `AbilityScore.parameter` (aging, talisman, funding, saga year), so
+    /// [`fold_catalogue_matching`] is a no-op against it (no catalogued
+    /// ability to fold).
+    fn empty_ruleset() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            point_items: "[]",
+            type_profiles: "[]",
+            ..RulesetSources::default()
+        })
+        .expect("an empty ruleset loads")
+    }
+
+    /// The matching, empty `catalogue_names` map (see [`empty_ruleset`]).
+    fn empty_catalogue_names() -> BTreeMap<Id, Vec<String>> {
+        BTreeMap::new()
+    }
 
     /// A legacy save carrying `aging_reductions` migrates: the completed drops are
     /// folded into `aging_points` as the minimal total reproducing them, the field
@@ -606,7 +789,13 @@ mod tests {
           "characteristics": { "com": 2 },
           "aging_reductions": { "com": 1 }
         }"#;
-        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            old,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         assert_eq!(
             loaded.migrated_aging_characteristics,
             vec![Characteristic::Com]
@@ -645,7 +834,13 @@ mod tests {
         );
         entity.aging_points.insert(Characteristic::Sta, 4);
         let json = serde_json::to_string(&entity).unwrap();
-        let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            &json,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         assert!(loaded.migrated_aging_characteristics.is_empty());
         assert_eq!(
             loaded
@@ -673,7 +868,8 @@ mod tests {
         }"#;
         // An Iberia saga, deliberately NOT the engine's 1220: what an old save
         // inherits is the year the user configured, not a constant.
-        let loaded = load_entity_migrating(old, 1197).unwrap();
+        let loaded =
+            load_entity_migrating(old, 1197, &empty_ruleset(), &empty_catalogue_names()).unwrap();
         assert_eq!(loaded.entity.saga_year, 1197);
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
@@ -699,14 +895,19 @@ mod tests {
           "age": 30,
           "birth_year": 1167
         }"#;
-        let migrated = load_entity_migrating(old, 1197).unwrap().entity;
+        let migrated = load_entity_migrating(old, 1197, &empty_ruleset(), &empty_catalogue_names())
+            .unwrap()
+            .entity;
         assert_eq!(migrated.saga_year, 1197);
 
         let saved = serde_json::to_string_pretty(&migrated).unwrap();
         assert!(saved.contains(r#""saga_year": 1197"#), "{saved}");
 
         // A different default: 1197 may now only come from the file.
-        let reloaded = load_entity_migrating(&saved, 1000).unwrap().entity;
+        let reloaded =
+            load_entity_migrating(&saved, 1000, &empty_ruleset(), &empty_catalogue_names())
+                .unwrap()
+                .entity;
         assert_eq!(reloaded.saga_year, 1197);
         assert_eq!(reloaded, migrated, "nothing was lost or invented");
 
@@ -735,8 +936,13 @@ mod tests {
                   "saga_year": 1197
                 }}"#
             );
-            let error = load_entity_migrating(&future, DEFAULT_SAGA_YEAR)
-                .expect_err("a save from the future must not be opened");
+            let error = load_entity_migrating(
+                &future,
+                DEFAULT_SAGA_YEAR,
+                &empty_ruleset(),
+                &empty_catalogue_names(),
+            )
+            .expect_err("a save from the future must not be opened");
             let message = error.to_string();
             assert!(
                 message.contains(&claimed.to_string()),
@@ -756,8 +962,13 @@ mod tests {
             }}"#,
             SCHEMA_VERSION
         );
-        let loaded = load_entity_migrating(&current, DEFAULT_SAGA_YEAR)
-            .expect("this build's own version opens");
+        let loaded = load_entity_migrating(
+            &current,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect("this build's own version opens");
         assert_eq!(loaded.entity.saga_year, 1197);
     }
 
@@ -791,8 +1002,13 @@ mod tests {
                   "aura": {stored}
                 }}"#
             );
-            let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR)
-                .expect("an out-of-range aura is clamped, not refused");
+            let loaded = load_entity_migrating(
+                &json,
+                DEFAULT_SAGA_YEAR,
+                &empty_ruleset(),
+                &empty_catalogue_names(),
+            )
+            .expect("an out-of-range aura is clamped, not refused");
             assert_eq!(
                 loaded.entity.aura, expected,
                 "aura {stored} must load clamped to {expected}"
@@ -820,16 +1036,26 @@ mod tests {
               "aura": 5
             }}"#
         );
-        let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR)
-            .unwrap()
-            .entity;
+        let loaded = load_entity_migrating(
+            &json,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
         assert_eq!(loaded.aura, 5);
 
         let saved = serde_json::to_string_pretty(&loaded).unwrap();
         assert!(saved.contains(r#""aura": 5"#), "{saved}");
-        let reloaded = load_entity_migrating(&saved, DEFAULT_SAGA_YEAR)
-            .unwrap()
-            .entity;
+        let reloaded = load_entity_migrating(
+            &saved,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
         assert_eq!(reloaded, loaded, "nothing was lost or invented");
         assert_eq!(serde_json::to_string_pretty(&reloaded).unwrap(), saved);
     }
@@ -851,7 +1077,13 @@ mod tests {
                   "aura": {legal}
                 }}"#
             );
-            let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR).unwrap();
+            let loaded = load_entity_migrating(
+                &json,
+                DEFAULT_SAGA_YEAR,
+                &empty_ruleset(),
+                &empty_catalogue_names(),
+            )
+            .unwrap();
             assert_eq!(loaded.entity.aura, legal, "a legal aura is left alone");
         }
     }
@@ -873,7 +1105,13 @@ mod tests {
             { "description": "Controlling things at a distance", "bonus": 4 }
           ]
         }"#;
-        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            old,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         let talisman = loaded
             .entity
             .talisman
@@ -905,7 +1143,13 @@ mod tests {
           "type_id": "magus",
           "talisman_attunements": []
         }"#;
-        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            old,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         assert!(loaded.entity.talisman.is_none(), "no phantom talisman");
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
@@ -935,7 +1179,13 @@ mod tests {
           },
           "talisman_attunements": [{ "description": "Stale", "bonus": 3000 }]
         }"#;
-        let loaded = load_entity_migrating(both, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            both,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         let talisman = loaded.entity.talisman.as_ref().expect("talisman kept");
         assert_eq!(talisman.description, "An ash staff");
         assert_eq!(talisman.attunements.len(), 1, "legacy row not merged in");
@@ -966,7 +1216,13 @@ mod tests {
           "talisman": {},
           "talisman_attunements": [{ "description": "Warding", "bonus": 5 }]
         }"#;
-        let loaded = load_entity_migrating(both, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            both,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         let talisman = loaded
             .entity
             .talisman
@@ -1006,7 +1262,13 @@ mod tests {
           "talisman": { "description": "An ash staff" },
           "talisman_attunements": [{ "description": "Warding", "bonus": 5 }]
         }"#;
-        let loaded = load_entity_migrating(both, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            both,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         let talisman = loaded
             .entity
             .talisman
@@ -1043,7 +1305,13 @@ mod tests {
           "talisman": {},
           "talisman_attunements": []
         }"#;
-        let loaded = load_entity_migrating(both, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            both,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         assert_eq!(
             loaded.entity.talisman,
             Some(Talisman::default()),
@@ -1076,15 +1344,25 @@ mod tests {
             { "description": "Projecting bolts and missiles", "bonus": 3000 }
           ]
         }"#;
-        let err = load_entity_migrating(broken, DEFAULT_SAGA_YEAR)
-            .expect_err("a malformed legacy attunement list must not load as an empty talisman")
-            .to_string();
+        let err = load_entity_migrating(
+            broken,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect_err("a malformed legacy attunement list must not load as an empty talisman")
+        .to_string();
         assert!(err.contains("3000") && err.contains("i8"), "{err}");
         // Positive control: the same document with the bonus in range loads, so the
         // failure above is the legacy row and nothing else.
         let fixed = broken.replace("3000", "3");
-        let loaded =
-            load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the in-range twin loads");
+        let loaded = load_entity_migrating(
+            &fixed,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect("the in-range twin loads");
         assert_eq!(
             loaded
                 .entity
@@ -1103,12 +1381,23 @@ mod tests {
           "type_id": "magus",
           "talisman_attunements": [{ "description": "Warding", "bonus": "5" }]
         }"#;
-        let err = load_entity_migrating(stringly, DEFAULT_SAGA_YEAR)
-            .expect_err("a stringly-typed bonus must not load")
-            .to_string();
+        let err = load_entity_migrating(
+            stringly,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect_err("a stringly-typed bonus must not load")
+        .to_string();
         assert!(err.contains("i8"), "{err}");
         let fixed = stringly.replace("\"5\"", "5");
-        load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the numeric twin loads");
+        load_entity_migrating(
+            &fixed,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect("the numeric twin loads");
 
         let nulled = r#"{
           "schema_version": 13,
@@ -1117,12 +1406,23 @@ mod tests {
           "type_id": "magus",
           "talisman_attunements": null
         }"#;
-        let err = load_entity_migrating(nulled, DEFAULT_SAGA_YEAR)
-            .expect_err("a null legacy list must not load")
-            .to_string();
+        let err = load_entity_migrating(
+            nulled,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect_err("a null legacy list must not load")
+        .to_string();
         assert!(err.contains("null") && err.contains("sequence"), "{err}");
         let fixed = nulled.replace("null", "[]");
-        load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the empty-list twin loads");
+        load_entity_migrating(
+            &fixed,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect("the empty-list twin loads");
     }
 
     /// The same guarantee for the older `aging_reductions` fold: a legacy map that
@@ -1142,13 +1442,23 @@ mod tests {
           "characteristics": { "com": 2 },
           "aging_reductions": { "com": 300 }
         }"#;
-        let err = load_entity_migrating(out_of_range, DEFAULT_SAGA_YEAR)
-            .expect_err("an out-of-u8 drop count must not load")
-            .to_string();
+        let err = load_entity_migrating(
+            out_of_range,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect_err("an out-of-u8 drop count must not load")
+        .to_string();
         assert!(err.contains("300") && err.contains("u8"), "{err}");
         let fixed = out_of_range.replace("300", "1");
-        let loaded =
-            load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the in-range twin loads");
+        let loaded = load_entity_migrating(
+            &fixed,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect("the in-range twin loads");
         assert_eq!(
             loaded.migrated_aging_characteristics,
             vec![Characteristic::Com]
@@ -1161,16 +1471,26 @@ mod tests {
           "type_id": "companion",
           "aging_reductions": { "cun": 1 }
         }"#;
-        let err = load_entity_migrating(unknown_key, DEFAULT_SAGA_YEAR)
-            .expect_err("an unknown Characteristic key must not load")
-            .to_string();
+        let err = load_entity_migrating(
+            unknown_key,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect_err("an unknown Characteristic key must not load")
+        .to_string();
         assert!(err.contains("cun"), "{err}");
         // Positive control: `int` is a real Characteristic, so the twin loads — the
         // Creature Format's Cunning score is deliberately not a variant (see
         // `Familiar::characteristics`).
         let fixed = unknown_key.replace("cun", "int");
-        let loaded =
-            load_entity_migrating(&fixed, DEFAULT_SAGA_YEAR).expect("the known-key twin loads");
+        let loaded = load_entity_migrating(
+            &fixed,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .expect("the known-key twin loads");
         assert_eq!(
             loaded.migrated_aging_characteristics,
             vec![Characteristic::Int]
@@ -1190,7 +1510,7 @@ mod tests {
     /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 17);
+        assert_eq!(SCHEMA_VERSION, 18);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -1199,7 +1519,13 @@ mod tests {
           "apparent_age": 45,
           "aging_log": [{ "year": 1220, "effect": "Lost a point of Stamina" }]
         }"#;
-        let loaded = load_entity_migrating(schema_14, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            schema_14,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         assert!(
             loaded.migrated_aging_characteristics.is_empty(),
             "the bump migrates nothing"
@@ -1216,13 +1542,14 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// The 16 → 17 bump, pinned. One field: [`Entity::saga_year`] (C8) — the saga
-    /// year moved out of the machine-global settings file and onto the document,
-    /// because a storyguide runs more than one saga and a single stored number was
-    /// wrong for all but one of them.
+    /// The 17 → 18 bump CV4 owes (`docs/vf-audit/design-cv-catalogued-values.md`):
+    /// [`crate::types::AbilityScore::parameter`] widened from a bare
+    /// `Option<String>` to `Option<AbilityParameterValue>`, so a Literal
+    /// instance's match no longer depends on exact-string equality in a single
+    /// language (D14).
     #[test]
-    fn schema_version_is_17() {
-        assert_eq!(SCHEMA_VERSION, 17);
+    fn schema_version_is_18() {
+        assert_eq!(SCHEMA_VERSION, 18);
     }
 
     /// A save written before the funding discriminator existed carries a
@@ -1239,7 +1566,13 @@ mod tests {
           "age": 25,
           "life_stages": { "native_language": "German" }
         }"#;
-        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            old,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         assert_eq!(loaded.entity.ability_funding, AbilityFunding::LifeStages);
         assert!(loaded.entity.life_stages.is_some(), "the plan is kept");
         // A fold happened, so the version is stamped.
@@ -1257,7 +1590,13 @@ mod tests {
           "type_id": "companion",
           "xp_pool": 240
         }"#;
-        let loaded = load_entity_migrating(old, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            old,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         assert_eq!(loaded.entity.ability_funding, AbilityFunding::Pool);
         assert_eq!(loaded.entity.xp_pool, 240, "the typed pool is kept");
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
@@ -1314,7 +1653,13 @@ mod tests {
     /// case- and whitespace-insensitively.
     #[test]
     fn a_v0_2_x_save_migrates_its_typed_being_values_in_both_languages() {
-        let loaded = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            V0_2_X_SAVE,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         let entity = &loaded.entity;
 
         assert_eq!(
@@ -1354,7 +1699,13 @@ mod tests {
                   ]
                 }}"#
             );
-            let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR).unwrap();
+            let loaded = load_entity_migrating(
+                &json,
+                DEFAULT_SAGA_YEAR,
+                &empty_ruleset(),
+                &empty_catalogue_names(),
+            )
+            .unwrap();
             assert_eq!(
                 being_param(&loaded.entity, "virtue.inoffensive_to_beings"),
                 expected,
@@ -1396,7 +1747,13 @@ mod tests {
     /// as written — which is also what makes the fold idempotent.
     #[test]
     fn an_already_migrated_being_value_is_left_alone() {
-        let loaded = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            V0_2_X_SAVE,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         assert_eq!(
             being_param(&loaded.entity, "virtue.inoffensive_to_beings"),
             "being.faeries"
@@ -1410,7 +1767,13 @@ mod tests {
     /// so the fold is keyed on the three items that actually changed.
     #[test]
     fn a_being_param_that_is_still_free_text_is_never_folded() {
-        let loaded = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            V0_2_X_SAVE,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         assert_eq!(
             being_param(&loaded.entity, "virtue.alluring_to_beings"),
             "Faeries",
@@ -1439,7 +1802,13 @@ mod tests {
                   ]
                 }}"#
             );
-            let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR).unwrap();
+            let loaded = load_entity_migrating(
+                &json,
+                DEFAULT_SAGA_YEAR,
+                &empty_ruleset(),
+                &empty_catalogue_names(),
+            )
+            .unwrap();
             assert_eq!(being_param(&loaded.entity, item_ref), "dragons");
         }
     }
@@ -1450,7 +1819,13 @@ mod tests {
     /// `missing_param` is the correct outcome and the player supplies it once.
     #[test]
     fn a_choice_the_old_save_never_stored_is_not_invented() {
-        let loaded = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR).unwrap();
+        let loaded = load_entity_migrating(
+            V0_2_X_SAVE,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
         for item_ref in ["flaw.slow_power", "virtue.folk_magic"] {
             let selection = loaded
                 .entity
@@ -1472,13 +1847,23 @@ mod tests {
     /// nothing.
     #[test]
     fn migrating_a_v0_2_x_save_twice_changes_nothing() {
-        let once = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR)
-            .unwrap()
-            .entity;
+        let once = load_entity_migrating(
+            V0_2_X_SAVE,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
         let json = serde_json::to_string(&once).unwrap();
-        let twice = load_entity_migrating(&json, DEFAULT_SAGA_YEAR)
-            .unwrap()
-            .entity;
+        let twice = load_entity_migrating(
+            &json,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
         assert_eq!(once, twice);
     }
 
@@ -1489,15 +1874,25 @@ mod tests {
     /// save rather than repeating.)
     #[test]
     fn a_migrated_save_is_byte_stable_across_a_save_load_save_cycle() {
-        let mut first = load_entity_migrating(V0_2_X_SAVE, DEFAULT_SAGA_YEAR)
-            .unwrap()
-            .entity;
+        let mut first = load_entity_migrating(
+            V0_2_X_SAVE,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
         first.normalize();
         let first_bytes = serde_json::to_string_pretty(&first).unwrap();
 
-        let mut second = load_entity_migrating(&first_bytes, DEFAULT_SAGA_YEAR)
-            .unwrap()
-            .entity;
+        let mut second = load_entity_migrating(
+            &first_bytes,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
         second.normalize();
         let second_bytes = serde_json::to_string_pretty(&second).unwrap();
 
@@ -1556,9 +1951,14 @@ mod tests {
     /// selection can live is trimmed before the entity reaches anyone.
     #[test]
     fn load_trims_the_whitespace_around_every_param_value() {
-        let entity = load_entity_migrating(PADDED_PARAMS_SAVE, DEFAULT_SAGA_YEAR)
-            .unwrap()
-            .entity;
+        let entity = load_entity_migrating(
+            PADDED_PARAMS_SAVE,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
 
         assert_eq!(
             param_of(&entity, "flaw.lesser_power", "power"),
@@ -1613,15 +2013,25 @@ mod tests {
     /// settles at the first save instead of churning the file on every open.
     #[test]
     fn trimming_params_at_load_is_idempotent_and_byte_stable() {
-        let mut first = load_entity_migrating(PADDED_PARAMS_SAVE, DEFAULT_SAGA_YEAR)
-            .unwrap()
-            .entity;
+        let mut first = load_entity_migrating(
+            PADDED_PARAMS_SAVE,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
         first.normalize();
         let first_bytes = serde_json::to_string_pretty(&first).unwrap();
 
-        let mut second = load_entity_migrating(&first_bytes, DEFAULT_SAGA_YEAR)
-            .unwrap()
-            .entity;
+        let mut second = load_entity_migrating(
+            &first_bytes,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
         second.normalize();
         let second_bytes = serde_json::to_string_pretty(&second).unwrap();
 

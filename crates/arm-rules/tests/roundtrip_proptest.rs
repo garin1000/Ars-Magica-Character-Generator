@@ -4,10 +4,10 @@
 //! canonical (input-order-independent) output.
 
 use arm_rules::{
-    AbilityFunding, AbilityScore, AgingLogEntry, ArtScore, Characteristic, EnchantedDevice, Entity,
-    EntityKind, EquipmentSlot, Familiar, FocusPower, Id, MightScore, PersonalityTrait, Prereq,
-    Realm, Reputation, ReputationType, RulesetRef, Selection, SpellSelection, SupernaturalPower,
-    Talisman, TalismanAttunement, TalismanEffect, TwilightScar,
+    AbilityFunding, AbilityParameterValue, AbilityScore, AgingLogEntry, ArtScore, Characteristic,
+    EnchantedDevice, Entity, EntityKind, EquipmentSlot, Familiar, FocusPower, Id, MightScore,
+    PersonalityTrait, Prereq, Realm, Reputation, ReputationType, RulesetRef, Selection,
+    SpellSelection, SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar,
 };
 use proptest::prelude::*;
 
@@ -72,12 +72,25 @@ fn arb_power() -> impl Strategy<Value = SupernaturalPower> {
     })
 }
 
+/// All three [`AbilityParameterValue`] shapes (design note § 3), not just
+/// `Text` — a generator that only ever produced one variant would silently
+/// stop exercising two-thirds of the type the moment it widened from a bare
+/// string.
+fn arb_ability_parameter_value() -> impl Strategy<Value = AbilityParameterValue> {
+    prop_oneof![
+        arb_small_id().prop_map(|id| AbilityParameterValue::Catalogued { id }),
+        (arb_small_id(), arb_name())
+            .prop_map(|(item, param)| AbilityParameterValue::Linked { item, param }),
+        arb_name().prop_map(AbilityParameterValue::text),
+    ]
+}
+
 fn arb_ability_score() -> impl Strategy<Value = AbilityScore> {
     (
         arb_small_id(),
         0u8..4,
         prop::option::of(arb_name()),
-        prop::option::of(arb_name()),
+        prop::option::of(arb_ability_parameter_value()),
     )
         .prop_map(|(ability, score, specialty, parameter)| AbilityScore {
             ability,

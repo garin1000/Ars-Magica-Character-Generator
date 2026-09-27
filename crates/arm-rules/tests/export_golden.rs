@@ -159,7 +159,7 @@ fn golden_magus() -> Entity {
             ability: Id::new("ability.area_lore"),
             score: 2,
             specialty: Some("legends".to_string()),
-            parameter: Some("Provence".to_string()),
+            parameter: Some(AbilityParameterValue::text("Provence")),
         },
         AbilityScore {
             ability: Id::new("ability.artes_liberales"),

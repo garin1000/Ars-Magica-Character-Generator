@@ -101,6 +101,63 @@ impl<'a> Doc<'a> {
         escape_cell(self.ruleset.display_name(&Id::new(raw)).unwrap_or(raw))
     }
 
+    /// The display value for a parameterized Ability's stored
+    /// [`AbilityParameterValue`] (CV4) — never the raw wire shape and never a
+    /// bare catalogue slug (this module's own "never render a raw slug"
+    /// contract, audit finding E5).
+    ///
+    /// `Text` goes through [`Self::param_value`] unchanged — exactly the
+    /// pre-CV4 behavior, since the field was a bare string then. `Catalogued`
+    /// has no localized-name resolution wired to export yet (`catalogue_names`
+    /// is a migration-time, both-locales map, not part of the single-language
+    /// [`crate::ruleset::LocalizedRuleset`] this module reads — CV6/CV8's
+    /// display-resolution function is the real fix); until then it falls back
+    /// to a readable label derived from the id's own final segment
+    /// (`language.latin` → "Latin"), a structural transform rather than a raw
+    /// slug. `Linked` (CV5) has no resolver yet, so it renders as empty rather
+    /// than a raw `(item, param)` pair.
+    pub(super) fn ability_param_value(&self, value: &AbilityParameterValue) -> String {
+        match value {
+            AbilityParameterValue::Text { text } => self.param_value(text),
+            AbilityParameterValue::Catalogued { id } => {
+                let owned;
+                let resolved = match self.ruleset.display_name(id) {
+                    Some(name) => name,
+                    None => {
+                        owned = humanize_catalogue_id(id.as_str());
+                        owned.as_str()
+                    }
+                };
+                escape_cell(resolved)
+            }
+            AbilityParameterValue::Linked { .. } => String::new(),
+        }
+    }
+}
+
+/// A readable label derived from a catalogue id's own final segment
+/// (`language.latin` → "Latin", `organization.house_bjornaer` → "House
+/// Bjornaer") — a structural transform, not a hardcoded per-value string, and
+/// strictly more readable than printing the slug outright. Mirrors the
+/// frontend's `humanizeCatalogueId` (`ui/src/lib/derive.ts`) so the interim
+/// fallback reads the same on both surfaces until CV6/CV8's real localized
+/// resolution replaces both.
+fn humanize_catalogue_id(id: &str) -> String {
+    let last = id.rsplit('.').next().unwrap_or(id);
+    last.split('_')
+        .filter(|word| !word.is_empty())
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                None => String::new(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+impl<'a> Doc<'a> {
     /// The display values for one selection's parameters, keyed as its name template
     /// expects them.
     ///

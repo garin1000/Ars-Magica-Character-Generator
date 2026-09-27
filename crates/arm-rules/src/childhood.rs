@@ -21,7 +21,7 @@ use std::collections::BTreeMap;
 
 use crate::ability::AdvancementTable;
 use crate::ruleset::Ruleset;
-use crate::types::{AbilityScore, Entity, Id, SourceRef, is_false};
+use crate::types::{AbilityParameterValue, AbilityScore, Entity, Id, SourceRef, is_false};
 
 /// One Ability score a Sample Childhood package grants.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -331,7 +331,12 @@ pub fn apply_package(
         } else {
             None
         };
-        raise_score(&mut scores, &entry.ability, parameter, entry.score);
+        raise_score(
+            &mut scores,
+            &entry.ability,
+            parameter.map(AbilityParameterValue::text),
+            entry.score,
+        );
     }
 
     if !rejections.is_empty() {
@@ -360,7 +365,12 @@ fn filled_slot_value<'a>(slot_values: &'a BTreeMap<String, String>, slot: &str) 
 /// Raises the `(ability, parameter)` row to `score`, adding it when the
 /// character has none. The raise is monotone — a higher bought score stands —
 /// and an existing row keeps everything else it carries, its specialty included.
-fn raise_score(scores: &mut Vec<AbilityScore>, ability: &Id, parameter: Option<String>, score: u8) {
+fn raise_score(
+    scores: &mut Vec<AbilityScore>,
+    ability: &Id,
+    parameter: Option<AbilityParameterValue>,
+    score: u8,
+) {
     if let Some(existing) = scores
         .iter_mut()
         .find(|row| row.ability == *ability && row.parameter == parameter)
@@ -745,7 +755,15 @@ mod tests {
         entity
             .ability_scores
             .iter()
-            .map(|row| (row.ability.as_str(), row.parameter.as_deref(), row.score))
+            .map(|row| {
+                (
+                    row.ability.as_str(),
+                    row.parameter
+                        .as_ref()
+                        .and_then(AbilityParameterValue::match_key),
+                    row.score,
+                )
+            })
             .collect()
     }
 

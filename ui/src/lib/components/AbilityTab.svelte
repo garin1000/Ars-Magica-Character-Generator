@@ -3,6 +3,8 @@
   import {
     abilityDisplayName,
     abilityLabel,
+    abilityParamDisplay,
+    abilityParamKey,
     filterAbilities,
     groupAbilitiesByCategory,
     groupAbilitySelectionsByCategory,
@@ -13,7 +15,7 @@
     type IndexedAbilityScore,
   } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
-  import type { Ability, AbilityCategory, AbilityScore } from '../types';
+  import type { Ability, AbilityCategory, AbilityParamValue, AbilityScore } from '../types';
   import MagusMinimumAbilities from './MagusMinimumAbilities.svelte';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
@@ -188,24 +190,27 @@
     return store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
   }
 
-  function selectedName(abilityId: string, value: string | null | undefined): string {
+  function selectedName(abilityId: string, value: AbilityParamValue | null | undefined): string {
     if (!store.ruleset) return abilityId;
-    return abilityDisplayName(store.ruleset, abilityId, value, (key) =>
+    return abilityDisplayName(store.ruleset, abilityId, abilityParamDisplay(value), (key) =>
       store.t('param-hint', { label: store.t(`param-label-${key}`) }),
     );
   }
 
-  function bonusOf(abilityId: string, parameter: string | null | undefined): number {
+  // `abilityParamKey` (not `abilityParamDisplay`): this is an instance-identity
+  // comparison against the engine-derived `AbilityBonus.parameter`, which is
+  // always a plain string (design § 6.2's rationale) — not a display.
+  function bonusOf(abilityId: string, parameter: AbilityParamValue | null | undefined): number {
     return (
       store.effective?.ability_bonuses?.find(
-        (b) => b.ability === abilityId && (b.parameter ?? null) === (parameter ?? null),
+        (b) => b.ability === abilityId && (b.parameter ?? null) === abilityParamKey(parameter),
       )?.bonus ?? 0
     );
   }
 
   // A virtue-granted free starting score (e.g. Second Sight 1) is a floor on the
   // bought score, so it raises the effective score; granted abilities are plain.
-  function floorOf(abilityId: string, parameter: string | null | undefined): number {
+  function floorOf(abilityId: string, parameter: AbilityParamValue | null | undefined): number {
     if (parameter != null) return 0;
     return store.effective?.ability_score_floors?.find((f) => f.ability === abilityId)?.floor ?? 0;
   }
@@ -214,7 +219,7 @@
   function effectiveOf(
     score: number,
     abilityId: string,
-    parameter: string | null | undefined,
+    parameter: AbilityParamValue | null | undefined,
   ): number {
     return Math.max(score, floorOf(abilityId, parameter)) + bonusOf(abilityId, parameter);
   }
@@ -224,12 +229,16 @@
   // keystroke; the badge is a bought+modifier pair, and mixing a fresh half with a
   // stale one renders a total true of no character. Matched by ability + parameter
   // rather than by row index, so the pairing survives a row being removed above it.
+  // Compared via `abilityParamKey`, not `===`: the settled snapshot's `parameter`
+  // is a structurally-equal but distinct object, which `===` would never match.
   // @see AppStore.readSettled
   function settledScoreOf(entry: AbilityScore): number {
     return store.readSettled(
       (e) =>
         e.ability_scores?.find(
-          (a) => a.ability === entry.ability && (a.parameter ?? null) === (entry.parameter ?? null),
+          (a) =>
+            a.ability === entry.ability &&
+            abilityParamKey(a.parameter) === abilityParamKey(entry.parameter),
         )?.score ?? 0,
     );
   }
@@ -400,7 +409,7 @@
                   class="ability-param"
                   placeholder={store.t(`param-label-${key}`)}
                   aria-invalid={invalid ? 'true' : undefined}
-                  value={entry.parameter ?? ''}
+                  value={abilityParamDisplay(entry.parameter)}
                   oninput={(e) =>
                     store.setAbilityParameterAt(i, (e.currentTarget as HTMLInputElement).value)}
                   data-testid="ability-param-{entry.ability}-{i}"

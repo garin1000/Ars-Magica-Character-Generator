@@ -27,6 +27,14 @@ use crate::settings;
 #[derive(Default)]
 pub struct AppState {
     pub ruleset: RwLock<Option<LocalizedRuleset>>,
+    /// Every catalogue value's display name, **both locales at once**, loaded
+    /// alongside `ruleset` by [`load_ruleset`] — CV4's dependency for
+    /// [`arm_rules::load_entity_migrating`]'s catalogue-matching fold (design
+    /// § 5.6). Deliberately not folded into `ruleset`/`LocalizedRuleset`, which
+    /// only ever carries one active language's text at a time; migration must
+    /// recognize a value regardless of which language the player was using when
+    /// they typed it.
+    pub catalogue_names: RwLock<Option<std::collections::BTreeMap<Id, Vec<String>>>>,
     /// Mirror of the frontend's unsaved-changes state, so the window-close and
     /// app-quit handlers can prompt before discarding without a round-trip.
     pub close_guard: Mutex<CloseGuardState>,
@@ -297,7 +305,20 @@ pub fn load_ruleset(
     let localized =
         ruleset_io::load_ruleset_from_dir(&rules_dir, &lang).map_err(AppError::reported)?;
 
+    // Both locales, always, independent of `lang` (design § 5.3/§ 5.6): migration
+    // must recognize a catalogue value's name regardless of which language the
+    // player was using when they typed it. A failure here does not fail the whole
+    // ruleset load — the picker/migration simply see no catalogue names yet, the
+    // same "not populated" shape `AppState::catalogue_names` starts in — since a
+    // player already relies on the ruleset itself being usable.
+    let catalogue_names =
+        ruleset_io::load_catalogue_names_from_dir(&rules_dir, &localized.ruleset).ok();
+
     *state.ruleset.write().expect("ruleset lock poisoned") = Some(localized.clone());
+    *state
+        .catalogue_names
+        .write()
+        .expect("catalogue names lock poisoned") = catalogue_names;
 
     Ok(localized)
 }
@@ -760,6 +781,72 @@ pub struct OpenedDocument {
     /// frontend resolves the localized notice from them, as it does for every
     /// other engine output.
     pub migrated_aging_characteristics: Vec<Characteristic>,
+    /// Parameterized Ability rows whose free-text value did NOT match any
+    /// catalogue entry's name in either locale, and so stayed free text (CV4b,
+    /// design § 5.5) — empty for a save with nothing unresolved.
+    ///
+    /// A previously working-by-luck authorization or restricted-pool funding
+    /// can silently stop applying once a Literal instance is satisfied only by
+    /// a `Catalogued` value (design § 4 rule 1), so this must reach the player,
+    /// not stay an engine-only report (Viktor #4's aging precedent again). The
+    /// Ability travels as its own id, never a sentence: the frontend resolves
+    /// the localized name from it, exactly as `migrated_aging_characteristics`
+    /// does.
+    ///
+    pub unresolved_catalogued_parameters: Vec<UnresolvedCatalogueParameter>,
+    /// Parameterized Ability rows whose free-text value WAS recognized as a
+    /// catalogue entry's name and folded into `Catalogued` (CV4b, design §
+    /// 5.5) — empty for a save with nothing recognized. A positive counterpart
+    /// to [`Self::unresolved_catalogued_parameters`]: "what you typed is now
+    /// linked to its catalogue entry," so a rename or a future locale switch
+    /// still resolves correctly.
+    ///
+    pub migrated_catalogued_parameters: Vec<MigratedCatalogueParameter>,
+}
+
+/// One parameterized Ability instance whose stored value did not match any
+/// catalogue entry's name in either locale, so it stayed free text — see
+/// [`OpenedDocument::unresolved_catalogued_parameters`].
+#[derive(serde::Serialize)]
+pub struct UnresolvedCatalogueParameter {
+    pub ability: Id,
+    pub text: String,
+}
+
+/// One parameterized Ability instance whose free-text value WAS recognized as
+/// a catalogue entry's name and folded into `Catalogued` — see
+/// [`OpenedDocument::migrated_catalogued_parameters`].
+#[derive(serde::Serialize)]
+pub struct MigratedCatalogueParameter {
+    pub ability: Id,
+    pub text: String,
+    pub resolved: Id,
+}
+
+/// Builds the frontend-facing [`OpenedDocument`] from the engine's migration
+/// outcome. Extracted so [`load_entity`]'s command body and this crate's own
+/// tests share one conversion, rather than each hand-building the struct
+/// literal and risking the two drifting apart.
+pub fn opened_document(path: String, loaded: arm_rules::LoadedEntity) -> OpenedDocument {
+    OpenedDocument {
+        path,
+        entity: loaded.entity,
+        migrated_aging_characteristics: loaded.migrated_aging_characteristics,
+        unresolved_catalogued_parameters: loaded
+            .unresolved_catalogued_parameters
+            .into_iter()
+            .map(|(ability, text)| UnresolvedCatalogueParameter { ability, text })
+            .collect(),
+        migrated_catalogued_parameters: loaded
+            .migrated_catalogued_parameters
+            .into_iter()
+            .map(|(ability, text, resolved)| MigratedCatalogueParameter {
+                ability,
+                text,
+                resolved,
+            })
+            .collect(),
+    }
 }
 
 /// Writes the entity as canonical JSON. When `path` is `Some`, writes straight to
@@ -901,8 +988,30 @@ pub fn export_label_keys() -> Vec<String> {
 
 /// Prompts for a file and deserializes the entity from it, returning it paired
 /// with its path. Returns `None` if the dialog was cancelled.
+///
+/// **Gains a `NotLoaded` guard at CV4** (design § 5.6): opening a save now needs
+/// a loaded ruleset to migrate against (recognizing a catalogue value's name),
+/// which this command never needed before. The `Option<&Ruleset>` read here is
+/// threaded straight through to [`ruleset_io::load_entity_from_path`] with no
+/// gate of its own, exactly mirroring `export_markdown_to_path` just above:
+/// that function does its own `NotLoaded` check on the `Option`, so only the
+/// lock-acquisition half of the pair applies here — `None` reports
+/// [`AppError::NotLoaded`] rather than panicking or reading a stale ruleset.
 #[tauri::command]
-pub async fn load_entity(app: AppHandle) -> Result<Option<OpenedDocument>, AppError> {
+pub async fn load_entity(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<Option<OpenedDocument>, AppError> {
+    // `load_entity_from_path` (owned by `ruleset_io.rs`) does its own
+    // `NotLoaded` check on the `Option`, so only the lock-acquisition half of
+    // the pair applies here (mirrors `export_markdown_to_path` above).
+    let guard = ruleset_guard(&state);
+    let ruleset = guard.as_ref().map(|localized| &localized.ruleset);
+    let catalogue_names_guard = state
+        .catalogue_names
+        .read()
+        .expect("catalogue names lock poisoned");
+
     let path = match e2e_file_override() {
         Some(path) => path,
         None => {
@@ -931,10 +1040,11 @@ pub async fn load_entity(app: AppHandle) -> Result<Option<OpenedDocument>, AppEr
     // it is the one the user has configured for new documents — read here, because
     // `arm-rules` has no filesystem and cannot.
     let default_saga_year = read_settings(app).default_saga_year;
-    let loaded = ruleset_io::load_entity_from_path(&path, default_saga_year)?;
-    Ok(Some(OpenedDocument {
-        path: reported,
-        entity: loaded.entity,
-        migrated_aging_characteristics: loaded.migrated_aging_characteristics,
-    }))
+    let loaded = ruleset_io::load_entity_from_path(
+        &path,
+        default_saga_year,
+        ruleset,
+        catalogue_names_guard.as_ref(),
+    )?;
+    Ok(Some(opened_document(reported, loaded)))
 }

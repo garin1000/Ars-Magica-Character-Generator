@@ -6,6 +6,7 @@ import type {
   AbilityBonus,
   AbilityCategory,
   AbilityFloor,
+  AbilityParamValue,
   AbilityScore,
   Addend,
   Art,
@@ -1319,6 +1320,61 @@ export function maxAbilityScore(advancement: { score: number }[] | undefined): n
 }
 
 /**
+ * Recovers the identity string a pre-CV4 `AbilityScore.parameter` used to be —
+ * `Catalogued`'s id or `Text`'s text, compared as bare strings — exactly
+ * preserving today's `===`-shaped behavior now that the field is object-shaped
+ * (`docs/vf-audit/design-cv-catalogued-values.md` § 3).
+ *
+ * **Not** the final matching rule: design § 4 rule 1 says a rules-authored
+ * `Literal` instance is satisfied ONLY by `Catalogued`, never by `Text`
+ * holding the same letters, and § 6.2's `sameParam` also case-folds and
+ * resolves `Linked` targets. Both are CV7/CV8 work; this is the interim,
+ * type-correct shim every UI site that merely needs "which instance is this"
+ * (not a rules-literal test) uses until then — the same scoping the Rust
+ * engine's own `AbilityParameterValue::match_key` shim documents.
+ * `Linked` has no resolver yet, so it yields no key at all (never guessed).
+ */
+export function abilityParamKey(p: AbilityParamValue | string | null | undefined): string | null {
+  if (p == null) return null;
+  if (typeof p === 'string') return p;
+  if ('id' in p) return p.id;
+  if ('text' in p) return p.text;
+  return null; // Linked (CV5+): no resolver yet.
+}
+
+/**
+ * Minimal display adapter (CV4-scoped): a parameterized Ability's stored value
+ * as a human-readable string, never the raw wire shape (`{"id": …}` or
+ * `{"item": …, "param": …}`) and never a bare catalogue slug.
+ *
+ * `Catalogued` has no localized-name resolution wired to the frontend yet —
+ * that is CV6's `AbilityParameterOptions` derived output and CV8's single
+ * engine-owned display-resolution function (design § 6.3/§ 6.4). Until then
+ * this falls back to a readable label derived from the id's own final
+ * segment (`language.latin` → "Latin", `organization.house_bjornaer` →
+ * "House Bjornaer") — a structural transform, not a hardcoded per-value
+ * string, and strictly more readable than printing the slug outright.
+ * `Linked` (CV5+) has no resolver yet, so it renders as empty rather than a
+ * raw `(item, param)` pair.
+ */
+export function abilityParamDisplay(p: AbilityParamValue | string | null | undefined): string {
+  if (p == null) return '';
+  if (typeof p === 'string') return p;
+  if ('text' in p) return p.text;
+  if ('id' in p) return humanizeCatalogueId(p.id);
+  return ''; // Linked (CV5+): no resolver yet.
+}
+
+function humanizeCatalogueId(id: string): string {
+  const last = id.includes('.') ? (id.split('.').pop() ?? id) : id;
+  return last
+    .split('_')
+    .filter((word) => word.length > 0)
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
  * Localized ability name with its parameter interpolated. For a parameterized
  * ability the i18n name is a template ("{area} Lore" / "{area}-Kunde"); the
  * `{param}` token is filled with `value`, or with a localized hint like "(Area)"
@@ -1778,6 +1834,86 @@ export function agingMigrationNotice(
   return t('aging-migration-notice', {
     characteristics: characteristics.map((id) => t(`characteristic-${id}`)).join(separator),
   });
+}
+
+/** One row {@link unresolvedCatalogueParameterNotice} composes a sentence from. */
+export interface UnresolvedCatalogueParameterLike {
+  ability: string;
+  text: string;
+}
+
+/**
+ * The localized "these values could not be matched to a known entry" notice
+ * (CV4b, design § 5.5), or `null` when there is nothing to say.
+ *
+ * A previously working-by-luck authorization or restricted-pool funding can
+ * silently stop applying once a Literal instance is satisfied only by a
+ * `Catalogued` value (design § 4 rule 1) — a stray case or language mismatch
+ * that used to `==`-match by luck no longer does — so the player is told
+ * which rows are affected, rather than left to discover it as an unexplained
+ * validation error later.
+ *
+ * The Ability arrives as its own id (`commands.rs`'s
+ * `OpenedDocument::unresolved_catalogued_parameters`), never as a sentence:
+ * {@link abilityDisplayName} resolves the localized name from it, exactly as
+ * {@link agingMigrationNotice} does for its own Characteristics. `null` when
+ * there is no ruleset loaded yet, since no Ability name could be resolved.
+ */
+export function unresolvedCatalogueParameterNotice(
+  localized: LocalizedRuleset | null,
+  items: readonly UnresolvedCatalogueParameterLike[],
+  t: Translate,
+): string | null {
+  if (items.length === 0 || !localized) return null;
+  const separator = `${t('unresolved-catalogued-parameter-list-separator')} `;
+  const named = items
+    .map((item) =>
+      t('unresolved-catalogued-parameter-item', {
+        ability: abilityDisplayName(localized, item.ability, null, paramHint(t)),
+        text: item.text,
+      }),
+    )
+    .join(separator);
+  return t('unresolved-catalogued-parameter-notice', { items: named });
+}
+
+/** One row {@link migratedCatalogueParameterNotice} composes a sentence from. */
+export interface MigratedCatalogueParameterLike {
+  ability: string;
+  text: string;
+  resolved: string;
+}
+
+/**
+ * The localized "these values were recognized and linked to their catalogue
+ * entry" notice (CV4b, design § 5.5) — the positive counterpart to
+ * {@link unresolvedCatalogueParameterNotice} — or `null` when there is
+ * nothing to say.
+ *
+ * Both the Ability and the resolved catalogue value travel as their own ids,
+ * never a sentence: the Ability goes through {@link abilityDisplayName} like
+ * every other engine output, and the resolved catalogue id goes through
+ * {@link abilityParamDisplay} — which, until CV6/CV8's real localized
+ * catalogue-name resolution ships, falls back to a readable label derived
+ * from the id's own final segment rather than ever printing the raw slug.
+ */
+export function migratedCatalogueParameterNotice(
+  localized: LocalizedRuleset | null,
+  items: readonly MigratedCatalogueParameterLike[],
+  t: Translate,
+): string | null {
+  if (items.length === 0 || !localized) return null;
+  const separator = `${t('migrated-catalogued-parameter-list-separator')} `;
+  const named = items
+    .map((item) =>
+      t('migrated-catalogued-parameter-item', {
+        ability: abilityDisplayName(localized, item.ability, null, paramHint(t)),
+        text: item.text,
+        resolved: abilityParamDisplay({ id: item.resolved }),
+      }),
+    )
+    .join(separator);
+  return t('migrated-catalogued-parameter-notice', { items: named });
 }
 
 /** How a magus's spent spell levels split between the base budget, its V/F modifier and its years as a magus. */

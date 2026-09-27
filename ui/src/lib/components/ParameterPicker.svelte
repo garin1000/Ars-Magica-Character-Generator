@@ -2,6 +2,8 @@
   import { store } from '../state.svelte';
   import {
     abilityDisplayName,
+    abilityParamDisplay,
+    abilityParamKey,
     artLabel,
     artsOfType,
     displayName,
@@ -135,10 +137,10 @@
         const generic = { value: id, label: abilityInstanceLabel(id, undefined) };
         if (!catalogue[id]?.parameter) return [generic];
         const instances = rows
-          .filter((row) => row.ability === id && row.parameter)
+          .filter((row) => row.ability === id && abilityParamKey(row.parameter))
           .map((row) => ({
-            value: `${id}${SEP}${row.parameter}`,
-            label: abilityInstanceLabel(id, row.parameter),
+            value: `${id}${SEP}${abilityParamKey(row.parameter)}`,
+            label: abilityInstanceLabel(id, abilityParamDisplay(row.parameter)),
           }));
         return [generic, ...instances];
       });

@@ -13,7 +13,7 @@
 // holds a copy, so `AppStore` stays the sole owner of the document and `dirty`
 // keeps comparing the very object these methods mutate.
 
-import type { Entity, LocalizedRuleset } from './types';
+import type { AbilityParamValue, Entity, LocalizedRuleset } from './types';
 
 /** The slice of `AppStore` the Ability workflow needs, as live accessors so it
  * always reads/writes the host's *current* state — `entity` stays owned by
@@ -71,9 +71,15 @@ export class AbilityWorkflow {
     this.#host.scheduleValidate();
   }
 
+  /**
+   * The free-text input still writes only `Text` — the combo box that also
+   * offers a catalogue entry or a linked Virtue/Flaw parameter is CV7's job
+   * (design § 6.1/§ 6.3); this is the "Other…" escape it will fall back to.
+   */
   setParameterAt(index: number, value: string): void {
     const entity = this.#host.entity();
-    const param = value.trim() ? value.trim() : undefined;
+    const trimmed = value.trim();
+    const param: AbilityParamValue | undefined = trimmed ? { text: trimmed } : undefined;
     entity.ability_scores = (entity.ability_scores ?? []).map((a, i) =>
       i === index ? { ...a, parameter: param } : a,
     );

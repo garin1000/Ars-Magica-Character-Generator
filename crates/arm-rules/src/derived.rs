@@ -2392,6 +2392,8 @@ mod tests {
         let loaded = crate::load_entity_migrating(
             &serde_json::to_string(&e).unwrap(),
             crate::DEFAULT_SAGA_YEAR,
+            &rs,
+            &BTreeMap::new(),
         )
         .unwrap()
         .entity;
@@ -3907,6 +3909,8 @@ mod tests {
         let loaded = crate::load_entity_migrating(
             &serde_json::to_string(&e).unwrap(),
             crate::DEFAULT_SAGA_YEAR,
+            &rs,
+            &BTreeMap::new(),
         )
         .unwrap()
         .entity;

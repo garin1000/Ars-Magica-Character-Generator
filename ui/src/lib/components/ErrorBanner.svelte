@@ -61,3 +61,27 @@
     >
   </div>
 {/if}
+
+{#if store.unresolvedCatalogueNotice}
+  <!-- CV4b (design § 5.5): a parameterized Ability's stored value did not match
+       any catalogue entry's name in either locale, and so stayed free text. Not
+       an error, and its own sibling block for the same reason `migration-notice`
+       is one: a Literal-only match (design § 4 rule 1) can silently stop
+       applying once a value is no longer a `Catalogued` id, so the player is
+       told which rows are affected rather than left to find out later. -->
+  <div class="error-banner-block">
+    <span class="migration-notice" role="status" data-testid="unresolved-catalogue-notice"
+      >{store.unresolvedCatalogueNotice}</span
+    >
+  </div>
+{/if}
+
+{#if store.migratedCatalogueNotice}
+  <!-- The positive counterpart above: a value WAS recognized and linked to its
+       catalogue entry. -->
+  <div class="error-banner-block">
+    <span class="migration-notice" role="status" data-testid="migrated-catalogue-notice"
+      >{store.migratedCatalogueNotice}</span
+    >
+  </div>
+{/if}

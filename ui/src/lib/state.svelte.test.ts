@@ -3525,8 +3525,8 @@ describe('applyChildhoodPackage', () => {
       ...plain(store.entity),
       life_stages: { native_language: 'German', childhood_package: 'childhood.traveling' },
       ability_scores: [
-        { ability: 'ability.living_language', score: 5, parameter: 'German' },
-        { ability: 'ability.area_lore', score: 1, parameter: 'Rhine' },
+        { ability: 'ability.living_language', score: 5, parameter: { text: 'German' } },
+        { ability: 'ability.area_lore', score: 1, parameter: { text: 'Rhine' } },
       ],
     };
   }
@@ -3976,7 +3976,7 @@ describe('setAbilityParameterAt', () => {
     expect(store.entity.ability_scores![1]).toEqual({
       ability: 'ability.area_lore',
       score: 2,
-      parameter: 'Rhine',
+      parameter: { text: 'Rhine' },
     });
     expect(store.entity.ability_scores![0]).toEqual({ ability: 'ability.area_lore', score: 1 });
   });

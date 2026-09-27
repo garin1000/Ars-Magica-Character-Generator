@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { requirementAbilityLabel, requirementExemplarNote } from '../derive';
+  import { abilityParamDisplay, requirementAbilityLabel, requirementExemplarNote } from '../derive';
   import type { MagusMinimumAbility } from '../types';
 
   // What the Order demands of every magus, as a checklist.
@@ -40,7 +40,7 @@
     for (const bought of store.entity.ability_scores ?? []) {
       if (bought.ability !== row.ability) continue;
       if (!best || bought.score > best.score) {
-        best = { score: bought.score, parameter: bought.parameter ?? null };
+        best = { score: bought.score, parameter: abilityParamDisplay(bought.parameter) || null };
       }
     }
     return best?.parameter ?? null;

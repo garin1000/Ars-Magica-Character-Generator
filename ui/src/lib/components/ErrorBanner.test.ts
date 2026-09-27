@@ -72,6 +72,8 @@ beforeEach(() => {
   resetEntity();
   store.error = null;
   store.migratedAgingCharacteristics = [];
+  store.unresolvedCatalogueParameters = [];
+  store.migratedCatalogueParameters = [];
 });
 
 // Slice 3 handoff, finished here: the notice composer, both locales' strings and
@@ -138,5 +140,79 @@ describe('ErrorBanner — the schema-migration notice', () => {
     store.migratedAgingCharacteristics = ['com'];
 
     expect(html().toLowerCase()).toMatch(/smallest|minimal|approximat/);
+  });
+});
+
+// CV4b (design § 5.5, plan-review gap): an unresolved catalogued parameter — a
+// value that did not spell out any catalogue entry's name in either locale and
+// so stayed free text — must reach the player exactly like a migrated aging
+// Characteristic does. § 4 rule 1's Literal-only matching means a
+// previously-working-by-luck authorization or restricted-pool funding can
+// silently stop applying, so staying silent here would hide exactly that.
+describe('ErrorBanner — the unresolved-catalogued-parameter notice', () => {
+  it('renders nothing when nothing is unresolved', () => {
+    const body = html();
+    expect(openTag(body, 'unresolved-catalogue-notice')).toBeNull();
+  });
+
+  it('renders the notice with the Ability’s localized name, never the raw id', () => {
+    store.ruleset!.i18n['ability.dead_language'] = { name: 'Dead Language' };
+    store.unresolvedCatalogueParameters = [{ ability: 'ability.dead_language', text: 'Klingon' }];
+
+    const body = html();
+
+    expect(openTag(body, 'unresolved-catalogue-notice')).not.toBeNull();
+    expect(body).toContain('Dead Language');
+    expect(body).toContain('Klingon');
+    expect(body).not.toContain('ability.dead_language');
+  });
+
+  it('announces the notice politely, never as an alert', () => {
+    store.ruleset!.i18n['ability.dead_language'] = { name: 'Dead Language' };
+    store.unresolvedCatalogueParameters = [{ ability: 'ability.dead_language', text: 'Klingon' }];
+
+    const tag = openTag(html(), 'unresolved-catalogue-notice')!;
+
+    expect(tag).toContain('role="status"');
+    expect(tag).not.toContain('role="alert"');
+  });
+});
+
+// CV4b's positive counterpart (design § 5.5): a value the fold DID recognize as
+// a catalogue entry's name is reported too — "what you typed is now linked to
+// its catalogue entry" — not only the failure case above.
+describe('ErrorBanner — the migrated-catalogued-parameter notice', () => {
+  it('renders nothing when nothing was recognized', () => {
+    const body = html();
+    expect(openTag(body, 'migrated-catalogue-notice')).toBeNull();
+  });
+
+  it('renders the notice with the localized Ability name and the resolved catalogue value, never a raw id', () => {
+    store.ruleset!.i18n['ability.dead_language'] = { name: 'Dead Language' };
+    store.migratedCatalogueParameters = [
+      { ability: 'ability.dead_language', text: 'latein', resolved: 'language.latin' },
+    ];
+
+    const body = html();
+
+    expect(openTag(body, 'migrated-catalogue-notice')).not.toBeNull();
+    expect(body).toContain('Dead Language');
+    expect(body).toContain('latein');
+    // The resolved catalogue id must render as a name, not the slug itself.
+    expect(body).toContain('Latin');
+    expect(body).not.toContain('language.latin');
+    expect(body).not.toContain('ability.dead_language');
+  });
+
+  it('announces the notice politely, never as an alert', () => {
+    store.ruleset!.i18n['ability.dead_language'] = { name: 'Dead Language' };
+    store.migratedCatalogueParameters = [
+      { ability: 'ability.dead_language', text: 'latein', resolved: 'language.latin' },
+    ];
+
+    const tag = openTag(html(), 'migrated-catalogue-notice')!;
+
+    expect(tag).toContain('role="status"');
+    expect(tag).not.toContain('role="alert"');
   });
 });

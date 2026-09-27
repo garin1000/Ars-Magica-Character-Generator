@@ -4,6 +4,7 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
+use crate::types::AbilityParameterValue;
 
 /// Tri-state outcome of evaluating a prerequisite expression.
 ///
@@ -163,7 +164,9 @@ impl<'a> PrereqCtx<'a> {
                 entity,
                 ruleset,
                 &a.ability,
-                a.parameter.as_deref(),
+                a.parameter
+                    .as_ref()
+                    .and_then(AbilityParameterValue::match_key),
             );
             let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
             let entry = ability_scores.entry(a.ability.clone()).or_insert(0);

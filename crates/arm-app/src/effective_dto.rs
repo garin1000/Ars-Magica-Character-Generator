@@ -781,7 +781,7 @@ mod tests {
     use std::fs;
     use std::path::{Path, PathBuf};
 
-    use crate::ruleset_io::load_ruleset_from_dir;
+    use crate::ruleset_io::{load_catalogue_names_from_dir, load_ruleset_from_dir};
 
     /// The repository root — `crates/arm-app` is two levels below it.
     fn repo_root() -> PathBuf {
@@ -803,8 +803,17 @@ mod tests {
     #[test]
     fn the_mastery_affinity_reaches_the_frontend_as_the_authored_ratio() {
         let localized = load_ruleset_from_dir(&repo_root().join("rules"), "en").unwrap();
+        let names =
+            load_catalogue_names_from_dir(&repo_root().join("rules"), &localized.ruleset).unwrap();
         let json = fs::read_to_string(repo_root().join("examples/magus_sample.json")).unwrap();
-        let mut entity: Entity = serde_json::from_str(&json).unwrap();
+        let mut entity: Entity = arm_rules::load_entity_migrating(
+            &json,
+            arm_rules::DEFAULT_SAGA_YEAR,
+            &localized.ruleset,
+            &names,
+        )
+        .unwrap()
+        .entity;
         let granting = Id::new("virtue.flawless_magic");
         entity.selections.push(Selection::new(granting.clone()));
 

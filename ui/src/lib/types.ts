@@ -1740,6 +1740,14 @@ export interface Selection {
   params?: Record<string, string | string[]>;
 }
 
+// A parameterized Ability's player-supplied value (CV4, D14;
+// `docs/vf-audit/design-cv-catalogued-values.md` § 3): three disjoint shapes,
+// discriminated structurally by which key is present — mirrors
+// `arm_rules::types::AbilityParameterValue`. `Linked` (§ 3, CV5) is not yet
+// produced or resolved anywhere in the UI; the shape exists so a save round
+// trips it unchanged.
+export type AbilityParamValue = { id: string } | { item: string; param: string } | { text: string };
+
 // A whole bought Ability score with an optional free-text specialty. Keyed by
 // (ability, specialty): the same parameterized ability may appear more than once.
 export interface AbilityScore {
@@ -1748,7 +1756,7 @@ export interface AbilityScore {
   specialty?: string | null;
   // Player-supplied value for a parameterized ability (e.g. the area for
   // (Area) Lore). Part of the instance identity, so several can coexist.
-  parameter?: string | null;
+  parameter?: AbilityParamValue | null;
 }
 
 // A whole bought Art score (magi only). Arts are not parameterized and carry no

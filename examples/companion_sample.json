@@ -1,5 +1,5 @@
 {
-  "schema_version": 17,
+  "schema_version": 18,
   "ruleset": {
     "id": "arm5-core",
     "version": "2024.1"
@@ -30,7 +30,7 @@
     {
       "ability": "ability.living_language",
       "score": 5,
-      "parameter": "German"
+      "parameter": { "text": "German" }
     }
   ],
   "xp_pool": 120,

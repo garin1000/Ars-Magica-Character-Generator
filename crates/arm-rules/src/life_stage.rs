@@ -16,7 +16,7 @@ use std::collections::BTreeSet;
 
 use crate::effective::selections_for_effects;
 use crate::ruleset::Ruleset;
-use crate::types::{AbilityFunding, Effect, Entity, Id, is_zero};
+use crate::types::{AbilityFunding, AbilityParameterValue, Effect, Entity, Id, is_zero};
 
 /// The life-stage experience rules, loaded from `rules/core/life_stages.json`.
 // No `Default`: every field is authored data with no meaningful zero (a childhood
@@ -291,10 +291,13 @@ pub fn magus_minimum_abilities(entity: &Entity, ruleset: &Ruleset) -> Vec<MagusM
                 .iter()
                 .filter(|bought| {
                     bought.ability == requirement.ability
-                        && requirement
-                            .parameter
-                            .as_ref()
-                            .is_none_or(|wanted| bought.parameter.as_ref() == Some(wanted))
+                        && requirement.parameter.as_ref().is_none_or(|wanted| {
+                            bought
+                                .parameter
+                                .as_ref()
+                                .and_then(AbilityParameterValue::match_key)
+                                == Some(wanted.as_str())
+                        })
                 })
                 .map(|bought| bought.score)
                 .max()
@@ -1494,7 +1497,7 @@ mod tests {
             .into_iter()
             .map(|(ability, parameter, score)| crate::types::AbilityScore {
                 ability: Id::new(ability),
-                parameter: parameter.map(str::to_string),
+                parameter: parameter.map(crate::types::AbilityParameterValue::text),
                 score,
                 specialty: None,
             })
@@ -1671,7 +1674,7 @@ mod tests {
             json.contains(r#""childhood_package": "childhood.athletic""#),
             "{json}"
         );
-        assert!(json.contains(r#""schema_version": 17"#), "{json}");
+        assert!(json.contains(r#""schema_version": 18"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
@@ -1729,10 +1732,11 @@ mod tests {
         );
         // The post-Gauntlet fields are additive and bumped nothing of their own;
         // the literal is here so a bump has to be a conscious edit (15 came from
-        // the widened aging log, 16 from the funding discriminator and 17 from the
-        // per-document saga year, not from this plan).
-        assert_eq!(SCHEMA_VERSION, 17);
-        assert!(json.contains(r#""schema_version": 17"#), "{json}");
+        // the widened aging log, 16 from the funding discriminator, 17 from the
+        // per-document saga year and 18 from CV4's ability-parameter widening, not
+        // from this plan).
+        assert_eq!(SCHEMA_VERSION, 18);
+        assert!(json.contains(r#""schema_version": 18"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(back.life_stages, Some(out_of_apprenticeship));

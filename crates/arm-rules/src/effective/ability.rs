@@ -90,6 +90,17 @@ pub fn ability_bonus(
                     if target.ability() != ability || !target.active_for(selection) {
                         continue;
                     }
+                    // Interim plain-string shim, deliberately not yet
+                    // rewritten to design § 4 rule 1 (`Literal` satisfied only
+                    // by `Catalogued`): no shipped `AbilityBonusGated` target
+                    // declares an `instance` restriction at all (Student of
+                    // (Realm)'s targets are unscoped, gated only), so this
+                    // branch is latent, not live, exactly like the C0 §3/§4.2
+                    // precedent this crate already tracks for a different
+                    // gate. Threading the typed `AbilityParameterValue`
+                    // through `ability_bonus`'s whole call graph to fix an
+                    // unreachable branch is CV5's job, alongside the rest of
+                    // §4's Bound/Link matching.
                     let matches = match instance_key {
                         None => true,
                         Some(_) => target.resolved_instance(selection).as_deref() == parameter,
@@ -120,7 +131,13 @@ pub fn effective_ability_score(
     let bought = entity
         .ability_scores
         .iter()
-        .filter(|a| &a.ability == ability && a.parameter.as_deref() == parameter)
+        .filter(|a| {
+            &a.ability == ability
+                && a.parameter
+                    .as_ref()
+                    .and_then(AbilityParameterValue::match_key)
+                    == parameter
+        })
         .map(|a| i32::from(a.score))
         .max()
         .unwrap_or(0);
@@ -193,7 +210,13 @@ pub fn ability_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityBonus> 
         }
     }
     for score in &entity.ability_scores {
-        let instance = (&score.ability, score.parameter.as_deref());
+        let instance = (
+            &score.ability,
+            score
+                .parameter
+                .as_ref()
+                .and_then(AbilityParameterValue::match_key),
+        );
         if seen.insert(instance) {
             instances.push(instance);
         }

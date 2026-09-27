@@ -244,7 +244,7 @@ describe('MagusMinimumAbilities checklist (slice 6b4)', () => {
 
   it('names each Ability through the rules i18n, with the bought instance filled in', () => {
     store.entity.ability_scores = [
-      { ability: 'ability.dead_language', parameter: 'Latin', score: 4 },
+      { ability: 'ability.dead_language', parameter: { text: 'Latin' }, score: 4 },
     ] as Entity['ability_scores'];
     // A requirement naming NO exemplar, which is the case the instance labels: where
     // the rules do name one it heads the row instead (see the exemplar suite below).

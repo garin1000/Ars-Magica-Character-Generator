@@ -973,7 +973,9 @@ fn origin_args(origin: &XpPoolOrigin) -> (&'static str, String) {
 #[cfg(test)]
 mod tests {
     use crate::effective::MAX_XP_SOLVE_NODES;
-    use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
+    use crate::types::{
+        AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection,
+    };
     use crate::validation::{IssueSeverity, ValidationIssue, ValidationResult, validate};
     use crate::{CreationPhase, Ruleset, RulesetSources};
 
@@ -1082,7 +1084,7 @@ mod tests {
             .into_iter()
             .map(|(ability, parameter, score)| AbilityScore {
                 ability: Id::new(ability),
-                parameter: parameter.map(str::to_string),
+                parameter: parameter.map(AbilityParameterValue::text),
                 score,
                 specialty: None,
             })

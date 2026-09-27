@@ -1150,13 +1150,13 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1160).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1164).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :237) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :240) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -1393,7 +1393,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:482).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:497).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -1599,7 +1599,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :269) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :270) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -7370,6 +7370,40 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   merely at runtime (design note § 7). A no-op for every item shipped today —
   `virtue.forge_companion` and `virtue.craft_guild_training` both already
   default to `max_total: 1` (D10).
+- **CV4, `AbilityScore.parameter` widens to `AbilityParameterValue`**
+  (`types.rs::AbilityParameterValue`) — `Catalogued { id }` / `Linked { item,
+  param }` (type only; nothing produces or resolves one until CV5) / `Text
+  { text }`, `#[serde(untagged, deny_unknown_fields)]` so a value naming keys
+  from more than one variant fails the whole load rather than silently
+  matching the first structural fit. `migration.rs::wrap_legacy_ability_parameters`
+  rewraps a pre-CV4 bare-string `parameter` into `{"text": …}` before the typed
+  parse, unconditionally (not gated on the claimed `schema_version`);
+  `migration.rs::fold_catalogue_matching` then upgrades a `Text` value into
+  `Catalogued { id }` where it case-insensitively, trimmed-ly spells out a
+  catalogue entry's name in either locale (§ 5.3), reporting both the
+  resolved and the unresolved cases on `LoadedEntity`. `SCHEMA_VERSION` 17 →
+  18. **`companion_witch.json`'s Dead Language score is restored to the
+  human-typed `"Latin"`**, exactly as the CV3 note above anticipated — the
+  fold now resolves it to `language.latin` at load, so
+  `the_witch_matches_the_book` stays green against the player-typed word, not
+  the interim id.
+- **CV4, Literal-only matching (design § 4 rule 1).** A `ParamValue::Literal`
+  instance is satisfied ONLY by a bought `AbilityParameterValue::Catalogued`
+  with the matching id — never by `Text` holding the identical letters, which
+  is exactly D14's original defect restated one layer up (a stray case/
+  language mismatch used to silently fail; now a `Text` value can never pass
+  at all, catalogued or not). Implemented in
+  `effective/xp.rs::AbilityInstanceRef::satisfied_by` and
+  `effective/xp.rs::AuthorizedAbility::covers` (shared via
+  `effective/xp.rs::instance_satisfied`), which both distinguish a
+  `Literal`-derived restriction (`requires_catalogued: true`) from a `Bound`-
+  or plain-text-derived one — Bound's own structural/content matching (design
+  § 4 rule 2) is CV5 work and keeps the pre-CV4 plain-string comparison until
+  then. `effective/ability.rs`'s `AbilityBonusGated` target comparison is
+  **not** yet rewritten to this rule — no shipped `ability_bonus_gated` effect
+  declares an `instance` restriction, so the gap is latent, not live, exactly
+  as design § 4.2 records for the Bound/Link ambiguity guard; CV5 covers it
+  alongside the rest of § 4.
 - Tests: `simple_student_scales_its_restricted_pool_by_finished_years`,
   `simple_student_funds_latin_but_not_another_dead_language`
   (`tests/data_integrity.rs`); `a_number_type_paired_with_a_non_number_domain_fails_the_load`,
@@ -8789,11 +8823,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:564),
-  `validate_forbidden_traits` (:585))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:565),
+  `validate_forbidden_traits` (:586))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:236),
-  `validate_parameters` (:727), `validate_duplicate_selections` (:269))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:237),
+  `validate_parameters` (:728), `validate_duplicate_selections` (:270))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

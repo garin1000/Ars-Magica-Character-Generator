@@ -257,13 +257,34 @@ pub struct AbilityInstanceRef {
     /// whatever its instance.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameter: Option<String>,
+    /// True when `parameter` was resolved from a rules-authored
+    /// `ParamValue::Literal` (design § 4 rule 1), rather than from a `Bound`
+    /// instance or plain free text (childhood's native-language instance).
+    /// Governs [`Self::satisfied_by`]: a `Literal`-derived instance is
+    /// satisfied ONLY by a bought `AbilityParameterValue::Catalogued` with the
+    /// same id, never by `Text` holding the identical letters — a literal can
+    /// never mean "whichever spelling happens to match". Every other origin
+    /// keeps the interim plain-string comparison unchanged (full `Bound`
+    /// structural/content matching is CV5).
+    #[serde(default, skip_serializing_if = "crate::types::is_false")]
+    pub requires_catalogued: bool,
 }
 
 impl AbilityInstanceRef {
     /// Whether this ref names the given bought instance.
-    fn matches(&self, ability: &Id, parameter: Option<&str>) -> bool {
-        self.ability == *ability
-            && (self.parameter.is_none() || self.parameter.as_deref() == parameter)
+    fn matches(&self, ability: &Id, parameter: Option<&AbilityParameterValue>) -> bool {
+        self.ability == *ability && (self.parameter.is_none() || self.satisfied_by(parameter))
+    }
+
+    /// Whether the bought `parameter` satisfies this instance restriction
+    /// (design § 4 rule 1 — see [`Self::requires_catalogued`]'s doc for the
+    /// rule this implements). `None` (no instance restriction at all) is
+    /// vacuously satisfied, matching [`Self::matches`]'s own short-circuit.
+    pub(crate) fn satisfied_by(&self, parameter: Option<&AbilityParameterValue>) -> bool {
+        match self.parameter.as_deref() {
+            Some(target) => instance_satisfied(target, self.requires_catalogued, parameter),
+            None => true,
+        }
     }
 }
 
@@ -312,7 +333,7 @@ enum SpendKind {
     Ability {
         ability: Id,
         category: AbilityCategory,
-        parameter: Option<String>,
+        parameter: Option<AbilityParameterValue>,
     },
     /// An Art score — funded from the general pool only.
     Art,
@@ -372,6 +393,8 @@ fn native_language_instance(
     Some(AbilityInstanceRef {
         ability: rules.childhood.native_language_ability.clone(),
         parameter: Some(language),
+        // Free text the plan itself chose, not a rules-authored Literal.
+        requires_catalogued: false,
     })
 }
 
@@ -380,23 +403,55 @@ fn native_language_instance(
 /// [`AbilityRef`]. `instance: None` authorizes every instance of `ability`
 /// (Second Sight, or a category-wide [`Effect::AbilityAuthorization`] entry);
 /// `Some(x)` authorizes only the instance whose bought
-/// [`crate::types::AbilityScore::parameter`] equals `x` (Covenant Upbringing's
+/// [`crate::types::AbilityScore::parameter`] satisfies `x` (Covenant Upbringing's
 /// Latin proxy — this is F-349/F-16x's actual fix: without the instance,
 /// authorizing `ability.dead_language` at all would also authorize Ancient
-/// Greek).
+/// Greek). `requires_catalogued` mirrors [`AbilityInstanceRef::requires_catalogued`]
+/// (design § 4 rule 1): true when `instance` was resolved from a
+/// `ParamValue::Literal`, satisfied ONLY by a bought `Catalogued` with the same
+/// id, never by `Text` holding the identical letters.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct AuthorizedAbility {
     pub(crate) ability: Id,
     pub(crate) instance: Option<String>,
+    pub(crate) requires_catalogued: bool,
 }
 
 impl AuthorizedAbility {
     /// Whether this authorization covers the bought `(ability, parameter)`
     /// instance: the ability id matches, and either this entry authorizes any
-    /// instance (`instance: None`) or the bought instance is the one named.
-    fn covers(&self, ability: &Id, parameter: Option<&str>) -> bool {
+    /// instance (`instance: None`) or the bought instance satisfies the one
+    /// named (design § 4 rule 1).
+    fn covers(&self, ability: &Id, parameter: Option<&AbilityParameterValue>) -> bool {
         self.ability == *ability
-            && (self.instance.is_none() || self.instance.as_deref() == parameter)
+            && match self.instance.as_deref() {
+                Some(target) => instance_satisfied(target, self.requires_catalogued, parameter),
+                None => true,
+            }
+    }
+}
+
+/// Whether a bought `parameter` satisfies a resolved instance restriction
+/// named `target` (design § 4 rule 1): when the restriction came from a
+/// rules-authored `ParamValue::Literal` (`requires_catalogued`), it is
+/// satisfied ONLY by a bought `Catalogued` with the same id, never by `Text`
+/// holding the identical letters. Every other origin (a `Bound` instance —
+/// full structural/content matching is CV5 — or plain free text) keeps the
+/// interim plain-string comparison. Shared by
+/// [`AbilityInstanceRef::satisfied_by`] and [`AuthorizedAbility::covers`] so
+/// the two "does this bought instance satisfy that resolved target" checks
+/// cannot drift apart.
+fn instance_satisfied(
+    target: &str,
+    requires_catalogued: bool,
+    parameter: Option<&AbilityParameterValue>,
+) -> bool {
+    match parameter {
+        Some(AbilityParameterValue::Catalogued { id }) => id.as_str() == target,
+        Some(AbilityParameterValue::Text { text }) => {
+            !requires_catalogued && text.as_str() == target
+        }
+        Some(AbilityParameterValue::Linked { .. }) | None => false,
     }
 }
 
@@ -407,7 +462,7 @@ impl AuthorizedAbility {
 pub(crate) fn authorizes_instance(
     authorized: &BTreeSet<AuthorizedAbility>,
     ability: &Id,
-    parameter: Option<&str>,
+    parameter: Option<&AbilityParameterValue>,
 ) -> bool {
     authorized.iter().any(|a| a.covers(ability, parameter))
 }
@@ -429,6 +484,10 @@ fn resolve_ability_refs(refs: &[AbilityRef], selection: &Selection) -> Vec<Abili
         .map(|a| AbilityInstanceRef {
             ability: a.ability().clone(),
             parameter: a.resolved_instance(selection),
+            requires_catalogued: matches!(
+                a.instance(),
+                Some(crate::types::ParamValue::Literal { .. })
+            ),
         })
         .collect()
 }
@@ -487,12 +546,14 @@ pub(crate) fn ability_authorizations(
                     abilities.extend(ids.iter().map(|ability| AuthorizedAbility {
                         ability: ability.clone(),
                         instance: None,
+                        requires_catalogued: false,
                     }));
                     categories.extend(cats.iter().copied());
                     abilities.extend(resolve_ability_refs(refs, selection).into_iter().map(
                         |r| AuthorizedAbility {
                             ability: r.ability,
                             instance: r.parameter,
+                            requires_catalogued: r.requires_catalogued,
                         },
                     ));
                 }
@@ -510,6 +571,7 @@ pub(crate) fn ability_authorizations(
                         |r| AuthorizedAbility {
                             ability: r.ability,
                             instance: r.parameter,
+                            requires_catalogued: r.requires_catalogued,
                         },
                     ));
                     categories.extend(cats.iter().copied());
@@ -525,6 +587,7 @@ pub(crate) fn ability_authorizations(
                         |r| AuthorizedAbility {
                             ability: r.ability,
                             instance: r.parameter,
+                            requires_catalogued: r.requires_catalogued,
                         },
                     ));
                     for c in cat_refs {
@@ -539,6 +602,7 @@ pub(crate) fn ability_authorizations(
                     abilities.insert(AuthorizedAbility {
                         ability: ability.clone(),
                         instance: None,
+                        requires_catalogued: false,
                     });
                 }
                 // The gated-bonus carrier (Student of (Realm)'s +2 Lore, row
@@ -549,6 +613,7 @@ pub(crate) fn ability_authorizations(
                         |r| AuthorizedAbility {
                             ability: r.ability,
                             instance: r.parameter,
+                            requires_catalogued: r.requires_catalogued,
                         },
                     ));
                 }
@@ -644,7 +709,7 @@ fn pool_covers(eligibility: &PoolEligibility, spend: &Spend) -> bool {
                 parameter,
             },
         ) => {
-            let parameter = parameter.as_deref();
+            let parameter = parameter.as_ref();
             if exclude.iter().any(|e| e.matches(ability, parameter)) {
                 return false;
             }
@@ -751,7 +816,14 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
         // first point". So only the score above the granted floor is charged —
         // the floor's own table cost is subtracted before Affinity is applied.
         // Source: ArMDE:2639.
-        let floor = granted_ability_floor(entity, ruleset, &a.ability, a.parameter.as_deref());
+        let floor = granted_ability_floor(
+            entity,
+            ruleset,
+            &a.ability,
+            a.parameter
+                .as_ref()
+                .and_then(AbilityParameterValue::match_key),
+        );
         let floor_table = u8::try_from(floor)
             .ok()
             .filter(|f| *f > 0)
@@ -760,7 +832,14 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
         let payable = table.saturating_sub(floor_table);
         let cost = charged_cost(
             payable,
-            ability_affinity(entity, ruleset, &a.ability, a.parameter.as_deref()),
+            ability_affinity(
+                entity,
+                ruleset,
+                &a.ability,
+                a.parameter
+                    .as_ref()
+                    .and_then(AbilityParameterValue::match_key),
+            ),
         );
         // A catalogue-known ability carries its category (for restricted-pool
         // eligibility); an unknown one funds from the general pool only, like an Art.
@@ -1783,10 +1862,12 @@ mod tests {
                 AuthorizedAbility {
                     ability: Id::new("ability.dead_language"),
                     instance: None,
+                    requires_catalogued: false,
                 },
                 AuthorizedAbility {
                     ability: Id::new("ability.second_sight"),
                     instance: None,
+                    requires_catalogued: false,
                 },
             ])
         );

@@ -365,7 +365,7 @@ fn magus_full_build_validates() {
             ability: Id::new("ability.dead_language"),
             score: 4,
             specialty: Some("Latin".into()),
-            parameter: Some("Latin".into()),
+            parameter: Some(AbilityParameterValue::text("Latin")),
         },
         ability("ability.artes_liberales", 1),
         ability("ability.magic_theory", 3),

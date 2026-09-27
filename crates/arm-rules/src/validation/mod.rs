@@ -5454,7 +5454,7 @@ mod tests {
             ability: Id::new("ability.area_lore"),
             score,
             specialty: None,
-            parameter: Some(area.to_string()),
+            parameter: Some(AbilityParameterValue::text(area)),
         }
     }
 
@@ -6399,13 +6399,13 @@ mod tests {
                 ability: Id::new("ability.living_language"),
                 score: 5,
                 specialty: None,
-                parameter: Some("German".into()),
+                parameter: Some(AbilityParameterValue::text("German")),
             },
             AbilityScore {
                 ability: Id::new("ability.living_language"),
                 score: 1,
                 specialty: None,
-                parameter: Some("Latin".into()),
+                parameter: Some(AbilityParameterValue::text("Latin")),
             },
         ];
         assert!(
@@ -6424,13 +6424,13 @@ mod tests {
                 ability: Id::new("ability.living_language"),
                 score: 5,
                 specialty: None,
-                parameter: Some("German".into()),
+                parameter: Some(AbilityParameterValue::text("German")),
             },
             AbilityScore {
                 ability: Id::new("ability.living_language"),
                 score: 2,
                 specialty: None,
-                parameter: Some("German".into()),
+                parameter: Some(AbilityParameterValue::text("German")),
             },
         ];
         assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()));

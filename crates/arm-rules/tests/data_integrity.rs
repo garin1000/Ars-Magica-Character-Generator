@@ -2037,7 +2037,7 @@ fn fully_specified_companion_validates() {
             ability: Id::new("ability.living_language"),
             score: 5,
             specialty: None,
-            parameter: Some("German".into()),
+            parameter: Some(AbilityParameterValue::text("German")),
         },
     ];
     // Awareness 2 (15 xp) + Living Language 5 (75 xp) = 90 spent; give a pool that
@@ -3111,13 +3111,17 @@ fn simple_student_funds_latin_but_not_another_dead_language() {
             ability: Id::new("ability.dead_language"),
             // CV3 (design-cv-catalogued-values.md § 1.1): the shipped literal
             // becomes the catalogue id `language.latin`, not the bare word.
-            parameter: Some("language.latin".to_string()),
+            // CV4 § 4 rule 1: a Literal instance is satisfied ONLY by
+            // `Catalogued`, never `Text` holding the identical letters.
+            parameter: Some(AbilityParameterValue::Catalogued {
+                id: Id::new("language.latin"),
+            }),
             score: 1,
             specialty: None,
         },
         AbilityScore {
             ability: Id::new("ability.dead_language"),
-            parameter: Some("ancient_greek".to_string()),
+            parameter: Some(AbilityParameterValue::text("ancient_greek")),
             score: 1,
             specialty: None,
         },
@@ -5817,7 +5821,7 @@ fn abandoned_apprentice_xp_shape_is_unchanged_pending_d3() {
     });
     e.ability_scores = vec![AbilityScore {
         ability: Id::new("ability.living_language"),
-        parameter: Some("German".to_string()),
+        parameter: Some(AbilityParameterValue::text("German")),
         score: 5,
         specialty: None,
     }];
@@ -8560,7 +8564,9 @@ fn a_free_text_realm_from_an_older_save_is_reported_in_the_players_own_words() {
     // The file is the player's. Loading it back leaves the typed word exactly
     // as written — no fold, no blank, no guessed Realm.
     let json = serde_json::to_string(&saved).expect("an entity serializes");
-    let loaded = arm_rules::load_entity_migrating(&json, 1220).expect("an older save still loads");
+    let names = BTreeMap::new();
+    let loaded = arm_rules::load_entity_migrating(&json, 1220, &rs, &names)
+        .expect("an older save still loads");
     assert_eq!(
         loaded.entity.selections[0].params.get("realm"),
         Some(&SelectionParamValue::Single(typed.clone())),
@@ -9664,9 +9670,15 @@ fn missing_param_targets(entity: &Entity, rs: &Ruleset) -> Vec<(String, String)>
 #[test]
 fn a_v0_2_x_saves_typed_being_values_resolve_after_migration() {
     let rs = load_ruleset();
-    let entity = arm_rules::load_entity_migrating(V0_2_X_MAGUS_SAVE, arm_rules::DEFAULT_SAGA_YEAR)
-        .expect("a v0.2.x save still loads")
-        .entity;
+    let names = BTreeMap::new();
+    let entity = arm_rules::load_entity_migrating(
+        V0_2_X_MAGUS_SAVE,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        &rs,
+        &names,
+    )
+    .expect("a v0.2.x save still loads")
+    .entity;
 
     let codes = issue_codes(&entity, &rs);
     assert!(
@@ -9688,9 +9700,15 @@ fn a_v0_2_x_saves_typed_being_values_resolve_after_migration() {
 #[test]
 fn the_choices_a_v0_2_x_save_never_stored_stay_one_actionable_issue_each() {
     let rs = load_ruleset();
-    let entity = arm_rules::load_entity_migrating(V0_2_X_MAGUS_SAVE, arm_rules::DEFAULT_SAGA_YEAR)
-        .expect("a v0.2.x save still loads")
-        .entity;
+    let names = BTreeMap::new();
+    let entity = arm_rules::load_entity_migrating(
+        V0_2_X_MAGUS_SAVE,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        &rs,
+        &names,
+    )
+    .expect("a v0.2.x save still loads")
+    .entity;
 
     assert_eq!(
         missing_param_targets(&entity, &rs),
@@ -9728,7 +9746,8 @@ fn a_genuine_too_many_selections_survives_the_being_migration() {
         { "ref": "flaw.unbearable_to_beings", "params": { "being": "Demons" } }
       ]
     }"#;
-    let entity = arm_rules::load_entity_migrating(save, arm_rules::DEFAULT_SAGA_YEAR)
+    let names = BTreeMap::new();
+    let entity = arm_rules::load_entity_migrating(save, arm_rules::DEFAULT_SAGA_YEAR, &rs, &names)
         .expect("a v0.2.x save still loads")
         .entity;
 

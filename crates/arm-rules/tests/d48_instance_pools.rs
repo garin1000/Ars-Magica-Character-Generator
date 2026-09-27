@@ -12,7 +12,9 @@
 
 use arm_rules::checked_xp_allocation;
 use arm_rules::ruleset::{Ruleset, RulesetSources};
-use arm_rules::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
+use arm_rules::types::{
+    AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection,
+};
 
 fn full_ruleset() -> Ruleset {
     Ruleset::from_sources(RulesetSources {
@@ -40,7 +42,33 @@ fn full_ruleset() -> Ruleset {
     .expect("shipped core ruleset loads")
 }
 
+/// `parameter` is wrapped as `Catalogued`, not `Text`: every instance this
+/// helper is called with below names a real `catalogue.profession` value
+/// (`profession.marshal`, `profession.storyteller`) — design § 4 rule 1's
+/// `Literal` instance is satisfied ONLY by a `Catalogued` id match, never by
+/// `Text` holding the identical letters.
 fn companion_with(selection: &str, ability: &str, parameter: &str) -> Entity {
+    companion_with_parameter(
+        selection,
+        ability,
+        AbilityParameterValue::Catalogued {
+            id: Id::new(parameter),
+        },
+    )
+}
+
+/// The `sailor` sibling above: a Profession instance NOT in the catalogue at
+/// all (D48's negative case), so it stays free `Text` — exactly what a
+/// player who typed an uncatalogued profession would have stored.
+fn companion_with_text(selection: &str, ability: &str, parameter: &str) -> Entity {
+    companion_with_parameter(selection, ability, AbilityParameterValue::text(parameter))
+}
+
+fn companion_with_parameter(
+    selection: &str,
+    ability: &str,
+    parameter: AbilityParameterValue,
+) -> Entity {
     let mut e = Entity::new(
         EntityKind::Character,
         Id::new("companion"),
@@ -55,7 +83,7 @@ fn companion_with(selection: &str, ability: &str, parameter: &str) -> Entity {
         ability: Id::new(ability),
         score: 1,
         specialty: None,
-        parameter: Some(parameter.to_string()),
+        parameter: Some(parameter),
     }];
     e
 }
@@ -68,7 +96,7 @@ fn companion_with(selection: &str, ability: &str, parameter: &str) -> Entity {
 #[test]
 fn marshal_pool_does_not_fund_an_unrelated_profession_instance() {
     let ruleset = full_ruleset();
-    let sailor = companion_with("virtue.marshal", "ability.profession", "sailor");
+    let sailor = companion_with_text("virtue.marshal", "ability.profession", "sailor");
 
     let allocation = checked_xp_allocation(&sailor, &ruleset).expect("solve stays in bounds");
 
@@ -146,7 +174,7 @@ fn master_bard_pool_is_exactly_240_and_still_funds_faerie_and_magic_lore() {
         ability: Id::new("ability.organization_lore"),
         score: 1,
         specialty: None,
-        parameter: Some("guild".to_string()),
+        parameter: Some(AbilityParameterValue::text("guild")),
     });
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
     assert_eq!(allocation.total_demand, 245);
@@ -171,7 +199,7 @@ fn master_bard_pool_funds_storyteller_and_faerie_lore_but_not_an_unrelated_profe
     let allocation = checked_xp_allocation(&storyteller, &ruleset).expect("solve stays in bounds");
     assert_eq!(allocation.max_flow, allocation.total_demand);
 
-    let sailor = companion_with("virtue.master_bard", "ability.profession", "sailor");
+    let sailor = companion_with_text("virtue.master_bard", "ability.profession", "sailor");
     let allocation = checked_xp_allocation(&sailor, &ruleset).expect("solve stays in bounds");
     assert!(allocation.max_flow < allocation.total_demand);
 

@@ -81,7 +81,7 @@ pub(crate) fn validate_ability_authorization(
             || crate::effective::authorizes_instance(
                 &authorized_abilities,
                 &entry.ability,
-                entry.parameter.as_deref(),
+                entry.parameter.as_ref(),
             )
         {
             continue;
@@ -159,7 +159,9 @@ pub(crate) fn validate_academic_language(
 
 #[cfg(test)]
 mod tests {
-    use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
+    use crate::types::{
+        AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection,
+    };
     use crate::validation::{ValidationIssue, ValidationResult, validate};
     use crate::{CreationPhase, Ruleset, RulesetSources};
 
@@ -238,6 +240,10 @@ mod tests {
     /// A companion/magus with one parameterized ability score, for the
     /// instance-restriction tests below (the plain [`character`] helper always
     /// leaves `parameter: None`).
+    /// `parameter` is wrapped as `Catalogued`, not `Text`: this helper backs
+    /// the instance-restriction gate tests below, which name a
+    /// `ParamValue::Literal` (design § 4 rule 1) — satisfied ONLY by a
+    /// `Catalogued` id match, never by `Text` holding the identical letters.
     fn character_with_parameterized_ability(
         type_id: &str,
         selections: Vec<&str>,
@@ -248,7 +254,7 @@ mod tests {
         let mut entity = character(type_id, selections, vec![]);
         entity.ability_scores.push(AbilityScore {
             ability: Id::new(ability),
-            parameter: parameter.map(str::to_string),
+            parameter: parameter.map(|id| AbilityParameterValue::Catalogued { id: Id::new(id) }),
             score,
             specialty: None,
         });

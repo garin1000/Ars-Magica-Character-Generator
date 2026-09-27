@@ -24,8 +24,9 @@ use crate::characteristics::Characteristic;
 use crate::grant::{Grant, GrantConstraint, resolve_grants};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    AbilityRef, AgingEffect, Effect, Entity, EntityTypeProfile, Id, ItemKind, Magnitude,
-    MightScore, Realm, ReputationType, Selection, SelectionParamValue, SpellSelection,
+    AbilityParameterValue, AbilityRef, AgingEffect, Effect, Entity, EntityTypeProfile, Id,
+    ItemKind, Magnitude, MightScore, Realm, ReputationType, Selection, SelectionParamValue,
+    SpellSelection,
 };
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -530,7 +531,7 @@ mod tests {
             ability: Id::new("ability.area_lore"),
             score,
             specialty: None,
-            parameter: Some(area.to_string()),
+            parameter: Some(AbilityParameterValue::text(area)),
         }
     }
 
@@ -3123,7 +3124,7 @@ mod tests {
         });
         entity.ability_scores = vec![AbilityScore {
             ability: Id::new("ability.living_language"),
-            parameter: Some("German".into()),
+            parameter: Some(AbilityParameterValue::text("German")),
             score: 5,
             specialty: None,
         }];
@@ -3251,7 +3252,7 @@ mod tests {
         let mut entity = planned_companion();
         entity.ability_scores.push(AbilityScore {
             ability: Id::new("ability.living_language"),
-            parameter: Some("French".into()),
+            parameter: Some(AbilityParameterValue::text("French")),
             score: 3, // 30 xp: more than the 45 spread can spare alongside nothing else
             specialty: None,
         });
@@ -3395,7 +3396,7 @@ mod tests {
         let mut magus = planned_magus();
         magus.ability_scores.push(AbilityScore {
             ability: Id::new("ability.dead_language"),
-            parameter: Some("Latin".into()),
+            parameter: Some(AbilityParameterValue::text("Latin")),
             score: 3,
             specialty: None,
         });

@@ -41,6 +41,15 @@ fn sample_entity() -> Entity {
     serde_json::from_str(&json).unwrap()
 }
 
+/// The real shipped ruleset + catalogue names, for `load_entity_from_path`'s
+/// CV4 dependency — every test in this file that loads a save through the real
+/// app path needs both (design § 5.6).
+fn shipped_ruleset_and_names() -> (Ruleset, BTreeMap<Id, Vec<String>>) {
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+    let names = load_catalogue_names_from_dir(&rules_dir(), &localized.ruleset).unwrap();
+    (localized.ruleset, names)
+}
+
 #[test]
 fn load_ruleset_yields_companion_profile_and_all_items() {
     let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
@@ -329,7 +338,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     // The shipped sample now carries characteristics, ability scores, and a bank,
     // and is kept at the current schema version so a save/load round trip on it is
     // an identity (see `save_then_load_round_trips_with_byte_stable_canonical_json`).
-    assert_eq!(entity.schema_version, 17);
+    assert_eq!(entity.schema_version, 18);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -928,13 +937,19 @@ fn save_then_load_round_trips_with_byte_stable_canonical_json() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("character.json");
     let entity = sample_entity();
+    let (ruleset, names) = shipped_ruleset_and_names();
 
     save_entity_to_path(&entity, &path).unwrap();
     let first = fs::read_to_string(&path).unwrap();
 
-    let reloaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
-        .unwrap()
-        .entity;
+    let reloaded = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap()
+    .entity;
     assert_eq!(reloaded, entity, "round trip must preserve the entity");
 
     // Re-saving the reloaded entity yields byte-identical output.
@@ -970,11 +985,17 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     )
     .unwrap();
 
-    let migrated = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
-        .unwrap()
-        .entity;
+    let (ruleset, names) = shipped_ruleset_and_names();
+    let migrated = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap()
+    .entity;
     assert_eq!(
-        migrated.schema_version, 17,
+        migrated.schema_version, 18,
         "the field move bumps the schema"
     );
     let talisman = migrated
@@ -992,7 +1013,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     let written = fs::read_to_string(&path).unwrap();
     assert!(!written.contains("talisman_attunements"), "got: {written}");
     assert!(written.contains("\"talisman\""), "got: {written}");
-    assert!(written.contains("\"schema_version\": 17"), "got: {written}");
+    assert!(written.contains("\"schema_version\": 18"), "got: {written}");
 }
 
 /// C8: the app's load door is what carries the user's configured default into the
@@ -1018,14 +1039,19 @@ fn a_pre_17_save_inherits_the_configured_default_through_the_real_load_path() {
     )
     .unwrap();
 
-    let migrated = load_entity_from_path(&path, 1197).unwrap().entity;
+    let (ruleset, names) = shipped_ruleset_and_names();
+    let migrated = load_entity_from_path(&path, 1197, Some(&ruleset), Some(&names))
+        .unwrap()
+        .entity;
     assert_eq!(migrated.saga_year, 1197);
     assert_eq!(migrated.schema_version, arm_rules::SCHEMA_VERSION);
 
     // Round trip: saved and reopened under a DIFFERENT default, the year the
     // document now owns is the one that answers.
     save_entity_to_path(&migrated, &path).unwrap();
-    let reopened = load_entity_from_path(&path, 1000).unwrap().entity;
+    let reopened = load_entity_from_path(&path, 1000, Some(&ruleset), Some(&names))
+        .unwrap()
+        .entity;
     assert_eq!(reopened.saga_year, 1197);
 }
 
@@ -1039,7 +1065,7 @@ fn save_stamps_current_schema_version() {
     save_entity_to_path(&entity, &path).unwrap();
     let written = fs::read_to_string(&path).unwrap();
     assert!(
-        written.contains("\"schema_version\": 17"),
+        written.contains("\"schema_version\": 18"),
         "save must stamp the current schema version, got: {written}"
     );
 }
@@ -1224,7 +1250,14 @@ fn the_load_reports_which_characteristics_a_migration_rewrote() {
     )
     .unwrap();
 
-    let loaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
+    let (ruleset, names) = shipped_ruleset_and_names();
+    let loaded = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap();
     assert_eq!(
         loaded.migrated_aging_characteristics,
         vec![arm_rules::Characteristic::Com],
@@ -1242,7 +1275,14 @@ fn an_up_to_date_save_reports_no_migration() {
     let path = tmp.path().join("current.armc");
     save_entity_to_path(&sample_entity(), &path).unwrap();
 
-    let loaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR).unwrap();
+    let (ruleset, names) = shipped_ruleset_and_names();
+    let loaded = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap();
     assert!(loaded.migrated_aging_characteristics.is_empty());
 }
 
@@ -1263,6 +1303,8 @@ fn the_opened_document_dto_carries_the_migration_report_to_the_frontend() {
         path: "/home/u/gerhard.armc".to_owned(),
         entity: sample_entity(),
         migrated_aging_characteristics: vec![arm_rules::Characteristic::Com],
+        unresolved_catalogued_parameters: Vec::new(),
+        migrated_catalogued_parameters: Vec::new(),
     };
     let json: serde_json::Value = serde_json::to_value(&document).unwrap();
 
@@ -1273,6 +1315,127 @@ fn the_opened_document_dto_carries_the_migration_report_to_the_frontend() {
         serde_json::json!(["com"]),
         "the frontend needs the Characteristics themselves, never an English \
          sentence: it resolves its own Fluent notice from them"
+    );
+}
+
+/// CV4b (design § 5.5, plan-review gap): an unresolved catalogued parameter —
+/// a value that did not spell out any catalogue entry's name in either locale
+/// and so stayed free text — must reach the frontend exactly like a migrated
+/// aging Characteristic does, not stay an engine-only report. A previously
+/// working-by-luck authorization or restricted-pool funding can silently stop
+/// applying once § 4 rule 1's Literal-only matching is enforced, so the player
+/// must be told, not left to discover it.
+///
+/// End-to-end through the real load path (`load_entity_from_path`), not a
+/// hand-built `LoadedEntity`: this is what actually proves an unknown language
+/// in a real save reaches the wire DTO. The Ability travels as its own id, not
+/// a sentence — the frontend resolves the localized name, exactly as
+/// `migrated_aging_characteristics` documents for its own case.
+#[test]
+fn opened_document_carries_unresolved_catalogued_parameters() {
+    use arm_app::commands::opened_document;
+
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("unknown-language.json");
+    fs::write(
+        &path,
+        format!(
+            r#"{{
+              "schema_version": 18,
+              "ruleset": {{ "id": "{RULESET_ID}", "version": "{RULESET_VERSION}" }},
+              "entity_kind": "character",
+              "type_id": "companion",
+              "ability_scores": [
+                {{ "ability": "ability.dead_language", "score": 1, "parameter": {{ "text": "Klingon" }} }}
+              ]
+            }}"#
+        ),
+    )
+    .unwrap();
+
+    let (ruleset, names) = shipped_ruleset_and_names();
+    let loaded = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap();
+    assert_eq!(
+        loaded.unresolved_catalogued_parameters,
+        vec![(Id::new("ability.dead_language"), "Klingon".to_string())],
+        "sanity: the engine's own report must already carry it"
+    );
+
+    // Through the SAME conversion `load_entity`'s command body uses, not a
+    // hand-built literal — so this proves the wiring, not just the type.
+    let document = opened_document(path.to_string_lossy().into_owned(), loaded);
+    let json: serde_json::Value = serde_json::to_value(&document).unwrap();
+
+    assert_eq!(
+        json["unresolved_catalogued_parameters"],
+        serde_json::json!([{ "ability": "ability.dead_language", "text": "Klingon" }]),
+        "the frontend needs the Ability id and the typed text themselves, \
+         never an English sentence and never a raw id rendered as one: got {json}"
+    );
+}
+
+/// CV4b's positive counterpart (design § 5.5): a value the fold DID recognize
+/// as a catalogue entry's name is reported too — "what you typed is now
+/// linked to its catalogue entry" — not only the failure case. Same
+/// through-the-real-conversion shape as the test above.
+#[test]
+fn opened_document_carries_migrated_catalogued_parameters() {
+    use arm_app::commands::opened_document;
+
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("recognized-language.json");
+    fs::write(
+        &path,
+        format!(
+            r#"{{
+              "schema_version": 18,
+              "ruleset": {{ "id": "{RULESET_ID}", "version": "{RULESET_VERSION}" }},
+              "entity_kind": "character",
+              "type_id": "companion",
+              "ability_scores": [
+                {{ "ability": "ability.dead_language", "score": 1, "parameter": {{ "text": "latin" }} }}
+              ]
+            }}"#
+        ),
+    )
+    .unwrap();
+
+    let (ruleset, names) = shipped_ruleset_and_names();
+    let loaded = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap();
+    assert_eq!(
+        loaded.migrated_catalogued_parameters,
+        vec![(
+            Id::new("ability.dead_language"),
+            "latin".to_string(),
+            Id::new("language.latin")
+        )],
+        "sanity: the engine's own report must already carry it"
+    );
+
+    let document = opened_document(path.to_string_lossy().into_owned(), loaded);
+    let json: serde_json::Value = serde_json::to_value(&document).unwrap();
+
+    assert_eq!(
+        json["migrated_catalogued_parameters"],
+        serde_json::json!([{
+            "ability": "ability.dead_language",
+            "text": "latin",
+            "resolved": "language.latin"
+        }]),
+        "the frontend needs the Ability id, the typed text AND the resolved \
+         catalogue id themselves, never an English sentence: got {json}"
     );
 }
 
@@ -1323,9 +1486,15 @@ fn sample_save_loads_with_defaulted_aging_warping_annotations() {
     // A shipped example save carries none of the new annotation fields; loading it
     // must fill them with their empty/None defaults (additive backward compat).
     let path = repo_root().join("examples/companion_sample.json");
-    let entity = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
-        .unwrap()
-        .entity;
+    let (ruleset, names) = shipped_ruleset_and_names();
+    let entity = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap()
+    .entity;
     assert_eq!(entity.apparent_age, None);
     assert!(entity.warping_effect.is_empty());
     assert!(entity.decrepitude_effect.is_empty());
@@ -1378,10 +1547,16 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("magus.json");
     save_entity_to_path(&entity, &path).unwrap();
-    let reloaded = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
-        .unwrap()
-        .entity;
-    assert_eq!(reloaded.schema_version, 17);
+    let names = load_catalogue_names_from_dir(&rules_dir(), &ruleset).unwrap();
+    let reloaded = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap()
+    .entity;
+    assert_eq!(reloaded.schema_version, 18);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 
@@ -1828,12 +2003,42 @@ fn effective_scores_surface_virtue_flaw_balance() {
 
 #[test]
 fn load_entity_from_missing_path_is_io_error() {
+    let (ruleset, names) = shipped_ruleset_and_names();
     let err = load_entity_from_path(
         &repo_root().join("does/not/exist.json"),
         arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
     )
     .unwrap_err();
     assert!(matches!(err, AppError::Io { .. }), "got {err:?}");
+}
+
+/// CV4's new guard (design § 5.6): opening a save before any ruleset has loaded
+/// fails with the same `AppError::NotLoaded` every other ruleset-dependent
+/// command reports, rather than a panic or a confusing deserialize error. The
+/// absent ruleset is an argument here (mirroring `export_markdown_to_path`'s own
+/// `Option` gate), which is what makes the case reachable without a Tauri
+/// runtime — the app's own `commands::load_entity` shim reads this same
+/// `Option` from `AppState.ruleset`, which starts `None` until `load_ruleset`
+/// succeeds.
+///
+/// A freshly-constructed `Entity` (no ability scores) is used here rather
+/// than `sample_entity()`, so this test fails for the guard's own reason and
+/// not for an unrelated ability-parameter parse issue.
+#[test]
+fn load_entity_without_a_loaded_ruleset_is_not_loaded_error() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("character.json");
+    let entity = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    save_entity_to_path(&entity, &path).unwrap();
+
+    let err = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR, None, None).unwrap_err();
+    assert!(matches!(err, AppError::NotLoaded), "got {err:?}");
 }
 
 #[test]
@@ -2192,12 +2397,22 @@ fn life_stage_companion(native_language: &str) -> Entity {
 }
 
 /// The entity's Ability rows as `(ability, parameter, score)`, in the canonical
-/// order the applied entity comes back normalized into.
+/// order the applied entity comes back normalized into. Every parameter this
+/// module's fixtures produce is free text (`AbilityParameterValue::Text`, e.g.
+/// a native language) — a `Catalogued`/`Linked` value has no bare-string form
+/// and is deliberately not matched here.
 fn ability_rows(entity: &Entity) -> Vec<(&str, Option<&str>, u8)> {
     entity
         .ability_scores
         .iter()
-        .map(|row| (row.ability.as_str(), row.parameter.as_deref(), row.score))
+        .map(|row| {
+            let parameter = match &row.parameter {
+                Some(arm_rules::AbilityParameterValue::Text { text }) => Some(text.as_str()),
+                Some(_) => panic!("this test module's fixtures only ever produce free text"),
+                None => None,
+            };
+            (row.ability.as_str(), parameter, row.score)
+        })
         .collect()
 }
 
@@ -4202,10 +4417,16 @@ fn every_example_save_parses_and_validates() {
         .collect();
     entries.sort();
 
+    let names = load_catalogue_names_from_dir(&rules_dir(), &ruleset).unwrap();
     for path in entries {
-        let entity = load_entity_from_path(&path, arm_rules::DEFAULT_SAGA_YEAR)
-            .unwrap_or_else(|e| panic!("{} failed to load: {e}", path.display()))
-            .entity;
+        let entity = load_entity_from_path(
+            &path,
+            arm_rules::DEFAULT_SAGA_YEAR,
+            Some(&ruleset),
+            Some(&names),
+        )
+        .unwrap_or_else(|e| panic!("{} failed to load: {e}", path.display()))
+        .entity;
         let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
         assert!(
             result.is_valid(),
@@ -4223,7 +4444,8 @@ fn every_example_save_parses_and_validates() {
 
 /// C8 / Trap 2. `examples/` is deliberately **not** uniform, and this test is why.
 ///
-/// `companion_sample.json` had to be regenerated at schema 17: it is the fixture
+/// `companion_sample.json` had to be regenerated at the current schema (18, as of
+/// CV4): it is the fixture
 /// `save_then_load_round_trips_with_byte_stable_canonical_json` compares a save
 /// against, so a stale version there makes the round trip a non-identity. The other
 /// three are left at schema 16 on purpose — regenerating all four would leave the
@@ -4245,14 +4467,17 @@ fn the_examples_keep_a_genuine_pre_migration_fixture() {
 
     // Opened with an Iberia default, it becomes an Iberia character: the year comes
     // from the caller, never from a constant.
-    let migrated = load_entity_from_path(&pre_migration, 1197).unwrap().entity;
+    let (ruleset, names) = shipped_ruleset_and_names();
+    let migrated = load_entity_from_path(&pre_migration, 1197, Some(&ruleset), Some(&names))
+        .unwrap()
+        .entity;
     assert_eq!(migrated.saga_year, 1197);
     assert_eq!(migrated.schema_version, arm_rules::SCHEMA_VERSION);
 
     // And the current fixture is genuinely current, so the round-trip test above is
     // comparing like with like.
     let current = fs::read_to_string(repo_root().join("examples/companion_sample.json")).unwrap();
-    assert!(current.contains("\"schema_version\": 17"), "got {current}");
+    assert!(current.contains("\"schema_version\": 18"), "got {current}");
     assert!(current.contains("\"saga_year\": 1220"), "got {current}");
 }
 

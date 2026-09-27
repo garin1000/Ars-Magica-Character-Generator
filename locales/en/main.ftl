@@ -524,6 +524,20 @@ aging-points-heading = Aging points per Characteristic
 # hardcoded ", ".
 aging-migration-notice = This character was saved in an older format. The Aging points for { $characteristics } were rebuilt as the smallest total that still produces the recorded scores, so the original figures could not be recovered. Saving will keep the rebuilt values.
 aging-migration-list-separator = ,
+# Shown after opening a save whose parameterized Ability value (an Area, a
+# language, …) did not spell out any catalogue entry's name in either locale
+# (CV4b, design-cv-catalogued-values.md § 5.5). A Literal instance is satisfied
+# only by a recognized catalogue value, so an unrecognized one can silently
+# stop authorizing or funding what it used to. Separator as
+# restricted-xp-list-separator, via Fluent rather than a hardcoded ", ".
+unresolved-catalogued-parameter-notice = This character was saved with a value the rules catalogue does not recognize: { $items }. It was kept exactly as typed, but check that anything relying on it still works.
+unresolved-catalogued-parameter-item = { $ability } ("{ $text }")
+unresolved-catalogued-parameter-list-separator = ,
+# The positive counterpart: a value WAS recognized and linked to its catalogue
+# entry, so a rename or a locale switch still resolves correctly from here on.
+migrated-catalogued-parameter-notice = { $items } were recognized from what you typed and are now linked to their catalogue entry.
+migrated-catalogued-parameter-item = { $ability }: "{ $text }" → { $resolved }
+migrated-catalogued-parameter-list-separator = ,
 warping-points-label = Warping points
 twilight-scars-label = Twilight Scars
 twilight-scar-placeholder = Describe the scar

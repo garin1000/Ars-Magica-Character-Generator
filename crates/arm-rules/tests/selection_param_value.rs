@@ -12,16 +12,61 @@
 
 use arm_rules::DEFAULT_SAGA_YEAR;
 use arm_rules::migration::load_entity_migrating;
+use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::{Id, Selection, SelectionParamValue};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
 /// C0b's own promise: this slice moves a value TYPE, not the save format, so
-/// the bump stays with C5a's array fold.
+/// the bump stays with C5a's array fold. (The constant has since moved again,
+/// to 18, for CV4's unrelated ability-parameter widening — this assertion
+/// tracks the current value, not C0b's own contribution to it.)
 #[test]
 fn c0b_does_not_bump_schema_version() {
-    assert_eq!(arm_rules::migration::SCHEMA_VERSION, 17);
+    assert_eq!(arm_rules::migration::SCHEMA_VERSION, 18);
+}
+
+/// The real shipped ruleset + catalogue names — CV4's `load_entity_migrating`
+/// dependency (design § 5.6), loaded exactly the way `arm-app`'s
+/// `commands.rs::load_ruleset` does, so this golden sweep exercises the same
+/// data every real character load does.
+fn shipped_ruleset_and_names() -> (Ruleset, BTreeMap<Id, Vec<String>>) {
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let rules = manifest.join("../../rules");
+    let ruleset = Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: &fs::read_to_string(rules.join("core/virtues_flaws.json")).unwrap(),
+        type_profiles: &fs::read_to_string(rules.join("core/character_types.json")).unwrap(),
+        abilities: Some(&fs::read_to_string(rules.join("core/abilities.json")).unwrap()),
+        arts: Some(&fs::read_to_string(rules.join("core/arts.json")).unwrap()),
+        houses: Some(&fs::read_to_string(rules.join("core/houses.json")).unwrap()),
+        mythic_types: Some(
+            &fs::read_to_string(rules.join("core/mythic_companion_types.json")).unwrap(),
+        ),
+        spells: Some(&fs::read_to_string(rules.join("core/spells.json")).unwrap()),
+        spell_mastery_abilities: Some(
+            &fs::read_to_string(rules.join("core/spell_mastery_abilities.json")).unwrap(),
+        ),
+        equipment: Some(&fs::read_to_string(rules.join("core/equipment.json")).unwrap()),
+        characteristics: Some(
+            &fs::read_to_string(rules.join("core/characteristics.json")).unwrap(),
+        ),
+        life_stages: Some(&fs::read_to_string(rules.join("core/life_stages.json")).unwrap()),
+        childhoods: Some(&fs::read_to_string(rules.join("core/childhoods.json")).unwrap()),
+        aging: Some(&fs::read_to_string(rules.join("core/aging.json")).unwrap()),
+        parameter_catalogues: Some(
+            &fs::read_to_string(rules.join("core/parameter_catalogues.json")).unwrap(),
+        ),
+    })
+    .expect("shipped core ruleset loads");
+    let en_names = fs::read_to_string(rules.join("i18n/en/parameter_catalogue.json")).unwrap();
+    let de_names = fs::read_to_string(rules.join("i18n/de/parameter_catalogue.json")).unwrap();
+    let names =
+        arm_rules::load_catalogue_names(ruleset.parameter_catalogues(), &en_names, &de_names)
+            .expect("catalogue names load");
+    (ruleset, names)
 }
 
 #[test]
@@ -125,17 +170,18 @@ fn every_example_and_book_template_save_round_trips_byte_identically() {
         files.len()
     );
 
+    let (ruleset, names) = shipped_ruleset_and_names();
     for path in files {
         let original = fs::read_to_string(&path)
             .unwrap_or_else(|e| panic!("{} readable: {e}", path.display()));
 
-        let mut first = load_entity_migrating(&original, DEFAULT_SAGA_YEAR)
+        let mut first = load_entity_migrating(&original, DEFAULT_SAGA_YEAR, &ruleset, &names)
             .unwrap_or_else(|e| panic!("{} loads: {e}", path.display()))
             .entity;
         first.normalize();
         let first_bytes = serde_json::to_string_pretty(&first).unwrap();
 
-        let mut second = load_entity_migrating(&first_bytes, DEFAULT_SAGA_YEAR)
+        let mut second = load_entity_migrating(&first_bytes, DEFAULT_SAGA_YEAR, &ruleset, &names)
             .unwrap_or_else(|e| panic!("{} reloads: {e}", path.display()))
             .entity;
         second.normalize();

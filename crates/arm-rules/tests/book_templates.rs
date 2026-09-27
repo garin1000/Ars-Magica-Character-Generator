@@ -56,11 +56,26 @@ fn full_ruleset() -> Ruleset {
     .expect("shipped core ruleset loads")
 }
 
+/// The shipped catalogue names — CV4's dependency for
+/// [`arm_rules::load_entity_migrating`] (design § 5.6), both locales at once.
+fn catalogue_names() -> std::collections::BTreeMap<Id, Vec<String>> {
+    let ruleset = full_ruleset();
+    let en = include_str!("../../../rules/i18n/en/parameter_catalogue.json");
+    let de = include_str!("../../../rules/i18n/de/parameter_catalogue.json");
+    arm_rules::load_catalogue_names(ruleset.parameter_catalogues(), en, de)
+        .expect("catalogue names load")
+}
+
 /// Parses a fixture through the engine's real save-load path.
 fn load(json: &str) -> Entity {
-    arm_rules::load_entity_migrating(json, arm_rules::validation::DEFAULT_SAGA_YEAR)
-        .expect("book template fixture parses")
-        .entity
+    arm_rules::load_entity_migrating(
+        json,
+        arm_rules::validation::DEFAULT_SAGA_YEAR,
+        &full_ruleset(),
+        &catalogue_names(),
+    )
+    .expect("book template fixture parses")
+    .entity
 }
 
 /// The set of error-severity issue codes validation reports, deduplicated — two
@@ -1421,14 +1436,16 @@ fn the_rogue_matches_the_book() {
 #[test]
 fn the_witch_matches_the_book() {
     let ruleset = full_ruleset();
-    // CV3 (design-cv-catalogued-values.md § 1.1): the fixture's Dead Language
-    // score holds the INTERIM value "language.latin" (the catalogue id), not
-    // the human-typed "Latin" — under CV3 a `Literal` instance still matches
-    // `AbilityScore.parameter` by plain string equality (`AbilityScore.parameter`
-    // stays `Option<String>` until CV4), so the id is the only value Educated's
-    // literal-instance pool actually funds today. CV4 must restore "Latin"
-    // once `AbilityParameterValue`/name-matching and the migration fold exist
-    // (design note § 5.3, § 5.7) — CV4's fold matches names, not ids.
+    // CV4 (design-cv-catalogued-values.md § 5.7, § 10's CV4 row): the fixture's
+    // Dead Language score is restored to the human-typed "Latin" — CV3's interim
+    // stopgap ("language.latin", the catalogue id, matched by plain string
+    // equality against the Literal) is no longer needed once `AbilityScore`
+    // holds `AbilityParameterValue`. **Red-checkpoint phase 1**: the
+    // catalogue-name-matching fold (§ 5.3, "Latin" → `Catalogued
+    // {"language.latin"}`) is a CV4-phase-2 stub that does not resolve
+    // anything yet, so "Latin" stays `Text` and Educated's literal-instance
+    // pool does not fund it — this assertion block is expected to fail here and
+    // pass again once the real fold lands.
     let witch = load(include_str!("fixtures/book_templates/companion_witch.json"));
 
     // DISAGREEMENT W1 (docs/book-template-conformance.md). Educated is "You may
@@ -1870,8 +1887,16 @@ fn darius_of_flambeau_at_gauntlet_matches_the_book() {
     // Apprenticeship Abilities, the four the book names a cost for (ArMDE:2441):
     // "50 exp for Latin 4, 50 exp on Magic Theory 4, 30 exp on Artes Liberales 3
     // … 15 exp on Penetration 2".
+    // The fixture types "Latin" (ArMDE:2441's own word); the catalogue-matching
+    // fold (design § 5.3) resolves it to `Catalogued{id: language.latin}`, so the
+    // instance query below names the resolved id, not the player-typed word.
     assert_eq!(
-        ability_score(&darius, &ruleset, "ability.dead_language", Some("Latin")),
+        ability_score(
+            &darius,
+            &ruleset,
+            "ability.dead_language",
+            Some("language.latin")
+        ),
         4
     );
     assert_eq!(

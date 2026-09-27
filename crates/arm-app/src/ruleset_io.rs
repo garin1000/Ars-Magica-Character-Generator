@@ -756,12 +756,30 @@ pub fn export_markdown_to_path(
 /// documents. The engine cannot read that file — it has no filesystem at all — so
 /// this crate, which owns the settings, hands it in. The caller passes
 /// [`crate::settings::Settings::default_saga_year`].
+///
+/// `ruleset`/`catalogue_names` are CV4's new dependency on [`arm_rules::load_entity_migrating`]
+/// (design § 5.6): the engine has no filesystem and cannot load its own rules
+/// data, so this crate, which already owns ruleset loading and caching for every
+/// other command, hands both in. **`ruleset: None` fails with
+/// [`AppError::NotLoaded`]** rather than reading a stale or default ruleset —
+/// mirroring [`export_markdown_to_path`]'s own `Option` gate just above, which is
+/// what makes the "opened before any ruleset loaded" case reachable without a
+/// Tauri runtime. `catalogue_names: None` does not fail the load on its own (a
+/// ruleset can be loaded a beat before its catalogue names finish resolving); it
+/// simply means no free-text value is recognized as a catalogue entry's name
+/// this load.
 pub fn load_entity_from_path(
     path: &Path,
     default_saga_year: i32,
+    ruleset: Option<&Ruleset>,
+    catalogue_names: Option<&BTreeMap<Id, Vec<String>>>,
 ) -> Result<arm_rules::LoadedEntity, AppError> {
+    let ruleset = ruleset.ok_or(AppError::NotLoaded)?;
+    let empty_catalogue_names = BTreeMap::new();
+    let catalogue_names = catalogue_names.unwrap_or(&empty_catalogue_names);
     let json = fs::read_to_string(path)?;
-    let loaded = arm_rules::load_entity_migrating(&json, default_saga_year)?;
+    let loaded =
+        arm_rules::load_entity_migrating(&json, default_saga_year, ruleset, catalogue_names)?;
     if !loaded.migrated_aging_characteristics.is_empty() {
         let characteristics: Vec<String> = loaded
             .migrated_aging_characteristics

@@ -2917,7 +2917,7 @@ describe('unboughtModifiedAbilities', () => {
     // inventing — and could not be rendered, having no parameter field to edit.
     expect(
       unboughtModifiedAbilities(
-        [{ ability: 'ability.area_lore', score: 2, parameter: 'Brandenburg' }],
+        [{ ability: 'ability.area_lore', score: 2, parameter: { text: 'Brandenburg' } }],
         [{ ability: 'ability.area_lore', parameter: 'Bavaria', bonus: 2 }],
         [],
       ),

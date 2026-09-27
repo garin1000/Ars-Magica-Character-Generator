@@ -397,6 +397,50 @@ export interface OpenedDocument {
    * invites a consumer to branch on a case that never occurs.
    */
   migrated_aging_characteristics: Characteristic[];
+  /**
+   * Parameterized Ability rows whose free-text value did NOT match any
+   * catalogue entry's name in either locale, and so stayed free text (CV4b,
+   * design § 5.5) — absent/empty for a save with nothing unresolved.
+   *
+   * A previously working-by-luck authorization or restricted-pool funding can
+   * silently stop applying once a Literal instance is satisfied only by a
+   * `Catalogued` value, so this must reach the player. The Ability travels as
+   * its own id, never a sentence: `derive.ts::unresolvedCatalogueParameterNotice`
+   * resolves the localized name from it, exactly as
+   * `migrated_aging_characteristics` does for its own case.
+   *
+   * Optional, unlike its sibling above: this field is new, and test doubles
+   * built before it existed should not all need updating to spell out a case
+   * they are not exercising.
+   */
+  unresolved_catalogued_parameters?: UnresolvedCatalogueParameter[];
+  /**
+   * Parameterized Ability rows whose free-text value WAS recognized as a
+   * catalogue entry's name and folded into `Catalogued` (CV4b, design § 5.5)
+   * — a positive counterpart to {@link OpenedDocument.unresolved_catalogued_parameters}.
+   */
+  migrated_catalogued_parameters?: MigratedCatalogueParameter[];
+}
+
+/**
+ * One parameterized Ability instance whose stored value did not match any
+ * catalogue entry's name in either locale, so it stayed free text. Mirrors
+ * `commands.rs::UnresolvedCatalogueParameter`.
+ */
+export interface UnresolvedCatalogueParameter {
+  ability: string;
+  text: string;
+}
+
+/**
+ * One parameterized Ability instance whose free-text value WAS recognized as
+ * a catalogue entry's name and folded into `Catalogued`. Mirrors
+ * `commands.rs::MigratedCatalogueParameter`.
+ */
+export interface MigratedCatalogueParameter {
+  ability: string;
+  text: string;
+  resolved: string;
 }
 
 export function loadEntity(): Promise<OpenedDocument | null> {

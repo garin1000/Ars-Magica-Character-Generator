@@ -6,7 +6,7 @@
 use super::*;
 use crate::characteristics::CharacteristicRules;
 use crate::ruleset::ENGINE_REQUIRED_CATEGORY_PERSONALITY;
-use crate::types::AbilityScore;
+use crate::types::{AbilityParameterValue, AbilityScore};
 
 /// Validates Characteristic point-buy: each score must be a legal table value
 /// and within the characteristic's per-target buy range, and the total cost must
@@ -297,7 +297,13 @@ pub(crate) fn validate_abilities(
         validate_ability_age_cap(entity, ruleset, entry, issues);
         validate_ability_specialty_permitted(ruleset, effective_selections, entry, issues);
 
-        let key = (&entry.ability, entry.parameter.as_deref());
+        let key = (
+            &entry.ability,
+            entry
+                .parameter
+                .as_ref()
+                .and_then(AbilityParameterValue::match_key),
+        );
         *seen.entry(key).or_insert(0) += 1;
     }
 
@@ -365,7 +371,13 @@ fn validate_ability_known_and_parameterized(
             Some(entry.ability.clone()),
         )),
         Some(ability) => {
-            if ability.parameter.is_some() && entry.parameter.as_deref().is_none_or(str::is_empty) {
+            if ability.parameter.is_some()
+                && entry
+                    .parameter
+                    .as_ref()
+                    .and_then(AbilityParameterValue::match_key)
+                    .is_none_or(str::is_empty)
+            {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_ABILITY_PARAMETER_REQUIRED,
                     CreationPhase::Abilities,
@@ -431,7 +443,10 @@ fn validate_ability_age_cap(
             entity,
             ruleset,
             &entry.ability,
-            entry.parameter.as_deref(),
+            entry
+                .parameter
+                .as_ref()
+                .and_then(AbilityParameterValue::match_key),
         )
         && u32::from(entry.score) > u32::from(cap)
     {
@@ -727,7 +742,9 @@ pub(crate) fn validate_reputations(
 // documentation), and `clippy::items_after_test_module` says so.
 #[cfg(test)]
 mod locality_cap_tests {
-    use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
+    use crate::types::{
+        AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection,
+    };
     use crate::validation::{ValidationIssue, validate};
     use crate::{Ruleset, RulesetSources};
 
@@ -782,7 +799,7 @@ mod locality_cap_tests {
         }
         entity.ability_scores = vec![AbilityScore {
             ability: Id::new(ability),
-            parameter: Some("Bavaria".into()),
+            parameter: Some(AbilityParameterValue::text("Bavaria")),
             score,
             specialty: None,
         }];

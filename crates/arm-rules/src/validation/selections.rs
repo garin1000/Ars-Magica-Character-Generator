@@ -4,6 +4,7 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
+use crate::types::AbilityParameterValue;
 
 /// The category an issue message names when it has room for exactly one, taken
 /// from the list [`PointItem::categories_for`] put *in force* for that
@@ -908,10 +909,13 @@ pub(crate) fn validate_ability_bonus_targets(
             // `validate_per_value_cap` composing one `(ability, instance)`
             // target rather than two spellings of it.
             let instance = ability_instance(ruleset, &selection.params, target);
-            let has_instance = entity
-                .ability_scores
-                .iter()
-                .any(|a| &a.ability == target && a.parameter.as_deref() == instance);
+            let has_instance = entity.ability_scores.iter().any(|a| {
+                &a.ability == target
+                    && a.parameter
+                        .as_ref()
+                        .and_then(AbilityParameterValue::match_key)
+                        == instance
+            });
             if !has_instance {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_ABILITY_BONUS_DANGLING_TARGET,

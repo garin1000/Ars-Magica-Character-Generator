@@ -27,7 +27,12 @@ import {
   defaultChildhoodDraft,
   type ChildhoodDraft,
 } from './childhood-workflow.svelte';
-import { agingMigrationNotice, mandatoryTraitRefs } from './derive';
+import {
+  agingMigrationNotice,
+  mandatoryTraitRefs,
+  migratedCatalogueParameterNotice,
+  unresolvedCatalogueParameterNotice,
+} from './derive';
 import { EquipmentWorkflow } from './equipment-workflow.svelte';
 import { FileOperations } from './file-operations.svelte';
 import { HouseWorkflow } from './house-workflow.svelte';
@@ -36,7 +41,12 @@ import * as ipc from './ipc';
 import { MythicWorkflow } from './mythic-workflow.svelte';
 import { SelectionWorkflow } from './selection-workflow.svelte';
 import { SpellWorkflow } from './spell-workflow.svelte';
-import type { AgingNote, CloseGuardLabels } from './ipc';
+import type {
+  AgingNote,
+  CloseGuardLabels,
+  MigratedCatalogueParameter,
+  UnresolvedCatalogueParameter,
+} from './ipc';
 import type { DocumentAction, MenuFlags } from './menu';
 import type {
   AbilityFunding,
@@ -79,7 +89,7 @@ const VALIDATE_DEBOUNCE_MS = 150;
  * Mirrors `arm_rules::SCHEMA_VERSION` by hand; the Rust constant is the source
  * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
-export const SCHEMA_VERSION = 17;
+export const SCHEMA_VERSION = 18;
 
 /**
  * The saga year a document starts at when nothing else says otherwise — the
@@ -533,6 +543,8 @@ class AppStore {
       // A cancelled save never reaches this callback, so the notice survives a
       // dialog the player backed out of.
       this.migratedAgingCharacteristics = [];
+      this.unresolvedCatalogueParameters = [];
+      this.migratedCatalogueParameters = [];
     },
     setError: (error) => {
       this.error = error;
@@ -587,6 +599,57 @@ class AppStore {
    */
   get migrationNotice(): string | null {
     return agingMigrationNotice(this.migratedAgingCharacteristics, this.t);
+  }
+
+  /**
+   * Parameterized Ability rows whose free-text value did NOT match any
+   * catalogue entry's name in either locale, and so stayed free text (CV4b,
+   * design § 5.5), for the document currently open. Empty when nothing was
+   * left unresolved.
+   *
+   * Kept as `(ability, text)` rather than a finished sentence, exactly like
+   * {@link migratedAgingCharacteristics}, so {@link unresolvedCatalogueNotice}
+   * re-composes in the new language when the user switches locale.
+   *
+   * Cleared on the same lifecycle as {@link migratedAgingCharacteristics}:
+   * `open`, `newDocument`, `#instantiateCharacter`, and a successful save.
+   */
+  unresolvedCatalogueParameters = $state<UnresolvedCatalogueParameter[]>([]);
+
+  /**
+   * The localized "these values could not be matched to a known entry" notice
+   * for the open document, or `null` when there is nothing to say.
+   *
+   * This matters because § 4 rule 1's Literal-only matching means a
+   * previously working-by-luck authorization or restricted-pool funding can
+   * silently stop applying the moment a rename or a case/language mismatch
+   * puts a value outside exact-string luck — the player is entitled to know
+   * which rows are affected, not discover it as an unexplained validation
+   * error later.
+   */
+  get unresolvedCatalogueNotice(): string | null {
+    return unresolvedCatalogueParameterNotice(
+      this.ruleset,
+      this.unresolvedCatalogueParameters,
+      this.t,
+    );
+  }
+
+  /**
+   * Parameterized Ability rows whose free-text value WAS recognized as a
+   * catalogue entry's name and folded into `Catalogued` (CV4b, design § 5.5),
+   * for the document currently open. Empty when nothing was recognized. The
+   * positive counterpart to {@link unresolvedCatalogueParameters}.
+   */
+  migratedCatalogueParameters = $state<MigratedCatalogueParameter[]>([]);
+
+  /**
+   * The localized "these values were recognized and linked to their catalogue
+   * entry" notice for the open document, or `null` when there is nothing to
+   * say.
+   */
+  get migratedCatalogueNotice(): string | null {
+    return migratedCatalogueParameterNotice(this.ruleset, this.migratedCatalogueParameters, this.t);
   }
 
   /**
@@ -2428,6 +2491,8 @@ class AppStore {
         // before the snapshot for no reason but order-of-reading; it is view
         // state about the load, never part of the document.
         this.migratedAgingCharacteristics = loaded.migrated_aging_characteristics ?? [];
+        this.unresolvedCatalogueParameters = loaded.unresolved_catalogued_parameters ?? [];
+        this.migratedCatalogueParameters = loaded.migrated_catalogued_parameters ?? [];
         // A different document from here on, so the components that keep
         // per-document UI state locally retire theirs (@see documentEpoch).
         // Bumped only on a SUCCESSFUL load: a cancelled dialog replaced nothing.
@@ -2491,6 +2556,8 @@ class AppStore {
     // with it — leaving it up over a new character would report a rewrite that
     // never happened to it.
     this.migratedAgingCharacteristics = [];
+    this.unresolvedCatalogueParameters = [];
+    this.migratedCatalogueParameters = [];
     // Likewise every component's own per-document state (@see documentEpoch).
     this.#documentEpoch += 1;
     this.filters = defaultPickerFilters();
@@ -2564,6 +2631,8 @@ class AppStore {
     this.currentPath = null;
     // Goes with the outgoing document, exactly as in `newDocument()`.
     this.migratedAgingCharacteristics = [];
+    this.unresolvedCatalogueParameters = [];
+    this.migratedCatalogueParameters = [];
     // As does every component's own per-document state (@see documentEpoch).
     this.#documentEpoch += 1;
     this.filters = defaultPickerFilters();

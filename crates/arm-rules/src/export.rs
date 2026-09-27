@@ -72,9 +72,9 @@ use crate::effective::{
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
-    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AgingLogEntry, EnchantedDevice, Entity, EntityKind, Id,
-    ItemKind, MightScore, ParameterDomain, PersonalityTrait, PointItem, Realm, Selection,
-    SelectionParamValue, SpellSelection, SupernaturalPower, TalismanEffect,
+    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityParameterValue, AgingLogEntry, EnchantedDevice,
+    Entity, EntityKind, Id, ItemKind, MightScore, ParameterDomain, PersonalityTrait, PointItem,
+    Realm, Selection, SelectionParamValue, SpellSelection, SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 
@@ -572,10 +572,10 @@ mod tests {
     use crate::characteristics::Characteristic;
     use crate::ruleset::RulesetSources;
     use crate::types::{
-        AbilityScore, AgingLogEntry, ArtScore, EquipmentSlot, Familiar, FocusPower, I18nEntry,
-        LongevityRitual, LongevitySource, Magnitude, MightScore, PersonalityTrait, Realm,
-        Reputation, ReputationType, RulesetRef, Selection, SpellSelection, Talisman,
-        TalismanAttunement, TwilightScar,
+        AbilityParameterValue, AbilityScore, AgingLogEntry, ArtScore, EquipmentSlot, Familiar,
+        FocusPower, I18nEntry, LongevityRitual, LongevitySource, Magnitude, MightScore,
+        PersonalityTrait, Realm, Reputation, ReputationType, RulesetRef, Selection, SpellSelection,
+        Talisman, TalismanAttunement, TwilightScar,
     };
     use pretty_assertions::assert_eq;
 
@@ -949,7 +949,7 @@ mod tests {
                 ability: Id::new("ability.area_lore"),
                 score: 2,
                 specialty: Some("legends".to_string()),
-                parameter: Some("Provence".to_string()),
+                parameter: Some(AbilityParameterValue::text("Provence")),
             },
             AbilityScore {
                 ability: Id::new("ability.magic_theory"),
@@ -1907,13 +1907,13 @@ mod tests {
                 ability: Id::new("ability.area_lore"),
                 score: 2,
                 specialty: None,
-                parameter: Some("Provence".to_string()),
+                parameter: Some(AbilityParameterValue::text("Provence")),
             },
             AbilityScore {
                 ability: Id::new("ability.area_lore"),
                 score: 1,
                 specialty: Some("legends".to_string()),
-                parameter: Some("the Rhine".to_string()),
+                parameter: Some(AbilityParameterValue::text("the Rhine")),
             },
         ];
         e.normalize();

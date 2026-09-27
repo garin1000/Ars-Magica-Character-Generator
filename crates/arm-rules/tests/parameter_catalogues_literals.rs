@@ -11,7 +11,9 @@ use std::collections::BTreeMap;
 
 use arm_rules::checked_xp_allocation;
 use arm_rules::ruleset::{Ruleset, RulesetSources};
-use arm_rules::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
+use arm_rules::types::{
+    AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection,
+};
 
 // --- Load-integrity: a Literal instance must resolve inside the catalogue
 // named by its ability's own `parameter` key (design note § 7) ---------------
@@ -173,6 +175,10 @@ fn full_ruleset() -> Ruleset {
     .expect("shipped core ruleset loads")
 }
 
+/// `parameter` is wrapped as `Catalogued`, not `Text`: every call below names a
+/// real catalogue id (`language.gothic`, `organization.house_bjornaer`, …), and
+/// design § 4 rule 1's `Literal` instance is satisfied ONLY by a `Catalogued`
+/// id match, never by `Text` holding the identical letters.
 fn companion_with(selection: &str, ability: &str, parameter: &str) -> Entity {
     let mut e = Entity::new(
         EntityKind::Character,
@@ -185,7 +191,9 @@ fn companion_with(selection: &str, ability: &str, parameter: &str) -> Entity {
         ability: Id::new(ability),
         score: 1,
         specialty: None,
-        parameter: Some(parameter.to_string()),
+        parameter: Some(AbilityParameterValue::Catalogued {
+            id: Id::new(parameter),
+        }),
     }];
     e
 }
@@ -285,7 +293,7 @@ fn craft_guild_training_funds_the_organization_lore_matching_its_own_guild() {
         ability: Id::new("ability.organization_lore"),
         score: 1,
         specialty: None,
-        parameter: Some("Smiths' Guild of Verdi".to_string()),
+        parameter: Some(AbilityParameterValue::text("Smiths' Guild of Verdi")),
     }];
 
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
@@ -313,7 +321,7 @@ fn craft_guild_training_does_not_fund_a_different_organization_lore() {
         ability: Id::new("ability.organization_lore"),
         score: 1,
         specialty: None,
-        parameter: Some("A Completely Different Guild".to_string()),
+        parameter: Some(AbilityParameterValue::text("A Completely Different Guild")),
     }];
 
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");

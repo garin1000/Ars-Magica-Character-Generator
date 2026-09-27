@@ -224,20 +224,23 @@ impl<'a> Doc<'a> {
         let mut rows: Vec<Vec<String>> = Vec::new();
         for bought in &e.ability_scores {
             let mut values: BTreeMap<String, String> = BTreeMap::new();
-            if let Some(parameter) = &bought.parameter {
+            if let Some(parameter) = bought.parameter.as_ref() {
                 let key = self
                     .rules()
                     .ability(&bought.ability)
                     .and_then(|a| a.parameter.clone())
                     .unwrap_or_else(|| UNKNOWN_PARAM_KEY.to_string());
-                values.insert(key, self.param_value(parameter));
+                values.insert(key, self.ability_param_value(parameter));
             }
             let score = i32::from(bought.score);
             let effective = effective_ability_score(
                 e,
                 self.rules(),
                 &bought.ability,
-                bought.parameter.as_deref(),
+                bought
+                    .parameter
+                    .as_ref()
+                    .and_then(AbilityParameterValue::match_key),
             );
             rows.push(vec![
                 self.parameterized_name(&bought.ability, &values),

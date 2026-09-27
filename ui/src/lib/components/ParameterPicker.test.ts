@@ -670,7 +670,7 @@ describe('ParameterPicker ability domain (manual-testing-findings-2026-09-03 #5)
 
   it("still lists the character's own instances of a parameterized ability", () => {
     store.entity.ability_scores = [
-      { ability: 'ability.area_lore', score: 2, parameter: 'Brandenburg' },
+      { ability: 'ability.area_lore', score: 2, parameter: { text: 'Brandenburg' } },
     ] as Entity['ability_scores'];
     const select = selectFor(pickerBody('virtue.puissant_ability'), TESTID);
     expect(optionTexts(select!)).toContain('Brandenburg Lore');
@@ -704,7 +704,7 @@ describe('ParameterPicker ability domain (manual-testing-findings-2026-09-03 #5)
 
   it('leaves a parameterized ability open once one of its instances is claimed', () => {
     store.entity.ability_scores = [
-      { ability: 'ability.area_lore', score: 2, parameter: 'Brandenburg' },
+      { ability: 'ability.area_lore', score: 2, parameter: { text: 'Brandenburg' } },
     ] as Entity['ability_scores'];
     store.entity.selections = [
       {

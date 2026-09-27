@@ -3512,6 +3512,95 @@ impl Selection {
     }
 }
 
+/// A parameterized [`AbilityScore`]'s player-supplied value (D14; see
+/// `docs/vf-audit/design-cv-catalogued-values.md` § 3) — three disjoint shapes,
+/// discriminated structurally by which keys are present:
+///
+/// - [`Self::Catalogued`] — a chosen entry from the [`crate::catalogue::Catalogue`]
+///   named by the ability's `parameter` key (e.g. `language.latin`). Matches a
+///   rules-authored `ParamValue::Literal` **by id**, exactly (design § 4).
+/// - [`Self::Linked`] — follows a Virtue/Flaw selection's own parameter live
+///   (e.g. "the guild I'm already a member of via Craft Guild Training"),
+///   rather than a second, independently-typed copy of the same fact. The type
+///   lands in CV4; nothing produces or resolves one until CV5 wires up § 4.1's
+///   Bound/Link matching.
+/// - [`Self::Text`] — free text: no catalogue, or the player picked "Other…", or
+///   a link target vanished/became ambiguous and was converted here.
+///
+/// `#[serde(untagged)]`, exactly like [`SelectionParamValue`]: the three
+/// variants' field-name sets never overlap, so serde discriminates
+/// unambiguously.
+///
+/// **`deny_unknown_fields`** (design § 3.3): a value naming keys from more than
+/// one variant at once (e.g. `{"id": …, "item": …, "param": …}`) is not a shape
+/// any writer of this format produces — only a hand-edited or adversarial save
+/// could contain it. Without this attribute, serde's untagged default would try
+/// each variant in order and silently accept the first structural match while
+/// dropping the unrecognised extra fields (here, matching `Catalogued { id }`
+/// and silently discarding `item`/`param`). With it, every variant's parse
+/// attempt fails on the other variants' fields, so the untagged enum as a whole
+/// fails with "data did not match any variant" and the whole entity load fails
+/// — loud and safe, rather than a quiet misread.
+///
+/// **Wire-compatibility.** A bare JSON string (every pre-CV4 save) is not a
+/// shape any of these three variants accepts — [`crate::migration`]'s raw
+/// pre-pass ([`crate::migration::wrap_legacy_ability_parameters`]) rewraps it
+/// into `{"text": …}` before the typed parse ever sees it, regardless of the
+/// save's claimed `schema_version`.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields, untagged)]
+pub enum AbilityParameterValue {
+    /// A chosen catalogue entry: matches a `Literal` by id, exactly.
+    Catalogued {
+        /// The catalogue value's id (e.g. `language.latin`).
+        id: Id,
+    },
+    /// Resolves against the CURRENT value of `item`'s own `param` at read time —
+    /// so renaming the guild on the Virtue renames every linked Ability row too.
+    /// Not yet produced or resolved anywhere in the engine (CV5).
+    Linked {
+        /// The declaring selection's item id (e.g. `virtue.craft_guild_training`).
+        item: Id,
+        /// The declaring item's own parameter key to read at evaluation time.
+        param: String,
+    },
+    /// Free text, exactly like the pre-CV4 bare string.
+    Text {
+        /// The player-typed value.
+        text: String,
+    },
+}
+
+impl AbilityParameterValue {
+    /// Wraps `text` as a [`Self::Text`] value. A small, test-and-call-site
+    /// convenience (design § 5.6a) — turns `Some("Latin".to_string())`-shaped
+    /// construction into `Some(AbilityParameterValue::text("Latin"))` rather than
+    /// a hand-written struct literal at each of the ~25 sites across the crate
+    /// that build a free-text parameter value.
+    pub fn text(text: impl Into<String>) -> Self {
+        Self::Text { text: text.into() }
+    }
+
+    /// A plain string identity key, for the sites that only need to know
+    /// "which instance is this" (grouping bought scores by `(ability,
+    /// parameter)`, duplicate detection, "is a parameter present at all",
+    /// picking which already-bought instance a caller means) — **never** for
+    /// testing whether this value satisfies a rules-authored
+    /// `ParamValue::Literal`. That comparison is design § 4 rule 1's job,
+    /// implemented in `effective/xp.rs` (`AbilityInstanceRef::satisfied_by`):
+    /// a `Literal` is satisfied ONLY by `Catalogued` with a matching id, never
+    /// by `Text` holding the identical letters, which is exactly the
+    /// distinction collapsing to a bare string here would erase. `Linked` has
+    /// no resolver yet (CV5), so it yields no key at all (never guessed).
+    pub(crate) fn match_key(&self) -> Option<&str> {
+        match self {
+            AbilityParameterValue::Catalogued { id } => Some(id.as_str()),
+            AbilityParameterValue::Text { text } => Some(text.as_str()),
+            AbilityParameterValue::Linked { .. } => None,
+        }
+    }
+}
+
 /// A character's whole bought score in one Ability, with an optional specialty.
 ///
 /// The score is the *bought* value (ability XP is spent in whole points, so an
@@ -3535,7 +3624,7 @@ pub struct AbilityScore {
     /// ability's identity: instances with different parameters are distinct, so a
     /// character may hold several `(Area) Lore`s. `None` for plain abilities.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub parameter: Option<String>,
+    pub parameter: Option<AbilityParameterValue>,
 }
 
 /// A whole bought Hermetic Art score. Arts are not parameterized and carry no
@@ -4813,8 +4902,23 @@ mod tests {
     // only as the route a save takes in; the migration subsystem itself is tested in
     // `migration.rs`.
     use crate::load_entity_migrating;
+    use crate::ruleset::{Ruleset, RulesetSources};
     use crate::validation::DEFAULT_SAGA_YEAR;
     use pretty_assertions::assert_eq;
+    use std::collections::BTreeMap;
+
+    /// An empty ruleset + empty catalogue names — the two tests below route
+    /// through [`load_entity_migrating`] only for a field-serialization round
+    /// trip, unrelated to catalogued parameters.
+    fn empty_ruleset_and_names() -> (Ruleset, BTreeMap<Id, Vec<String>>) {
+        let ruleset = Ruleset::from_sources(RulesetSources {
+            point_items: "[]",
+            type_profiles: "[]",
+            ..RulesetSources::default()
+        })
+        .expect("an empty ruleset loads");
+        (ruleset, BTreeMap::new())
+    }
 
     fn house(id: &str) -> Prereq {
         Prereq::House(Id::new(id))
@@ -5971,7 +6075,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 17"#));
+        assert!(json.contains(r#""schema_version": 18"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -6501,7 +6605,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 17"#));
+        assert!(json.contains(r#""schema_version": 18"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -6864,7 +6968,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 17"#));
+        assert!(json.contains(r#""schema_version": 18"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -7177,10 +7281,11 @@ mod tests {
     /// Source: ArMDE:16621, :16624-16632.
     #[test]
     fn a_resolved_crisis_round_trips_and_needs_no_schema_bump() {
-        // 17 is schema 17's own bump (the per-document saga year); the Crisis
-        // widening contributed nothing to it, and nor did 16's funding discriminator.
+        // 18 is CV4's own bump (the ability-parameter type widening); the Crisis
+        // widening contributed nothing to it, and nor did 16's funding discriminator
+        // or 17's saga year.
         assert_eq!(
-            SCHEMA_VERSION, 17,
+            SCHEMA_VERSION, 18,
             "a purely additive widening earns no bump"
         );
 
@@ -7266,7 +7371,8 @@ mod tests {
         // And a pool-funded character keeping a plan round-trips as pool-funded.
         entity.life_stages = Some(crate::life_stage::LifeStagePlan::default());
         let json = serde_json::to_string(&entity).unwrap();
-        let back = load_entity_migrating(&json, DEFAULT_SAGA_YEAR)
+        let (rs, names) = empty_ruleset_and_names();
+        let back = load_entity_migrating(&json, DEFAULT_SAGA_YEAR, &rs, &names)
             .unwrap()
             .entity;
         assert_eq!(back.ability_funding, AbilityFunding::Pool);
@@ -7319,7 +7425,8 @@ mod tests {
                   "wizard_furthest_phase": "{slug}"
                 }}"#
             );
-            let loaded = load_entity_migrating(&save, DEFAULT_SAGA_YEAR)
+            let (rs, names) = empty_ruleset_and_names();
+            let loaded = load_entity_migrating(&save, DEFAULT_SAGA_YEAR, &rs, &names)
                 .unwrap_or_else(|e| panic!("a save carrying '{slug}' must still load: {e}"));
             assert_eq!(
                 loaded.entity.wizard_furthest_phase,
@@ -7350,7 +7457,7 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""warping_choices""#), "{json}");
-        assert!(json.contains(r#""schema_version": 17"#), "{json}");
+        assert!(json.contains(r#""schema_version": 18"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
