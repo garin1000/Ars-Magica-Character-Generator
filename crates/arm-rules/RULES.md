@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1432).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1427).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1248,7 +1248,7 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :1993, shared by
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :1998, shared by
   `validate_prereq_refs` :1917 and `validate_effect_refs` :2340) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
@@ -1704,7 +1704,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :456) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :451) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -9180,11 +9180,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:751),
-  `validate_forbidden_traits` (:772))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:746),
+  `validate_forbidden_traits` (:767))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:423),
-  `validate_parameters` (:945), `validate_duplicate_selections` (:456))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:418),
+  `validate_parameters` (:940), `validate_duplicate_selections` (:451))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,
