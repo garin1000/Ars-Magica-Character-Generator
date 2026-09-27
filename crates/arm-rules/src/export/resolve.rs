@@ -264,7 +264,11 @@ impl<'a> Doc<'a> {
             | ParameterDomain::Enumerated
             | ParameterDomain::Text
             // A number is printed as itself, not looked up in a taxonomy.
-            | ParameterDomain::Number => None,
+            | ParameterDomain::Number
+            // A spell id is a catalogue-shaped id (resolved against the
+            // character's own learned spells, not a fixed taxonomy), so it
+            // takes the ordinary value path exactly like Ability/Item.
+            | ParameterDomain::Spell => None,
         }
     }
 

@@ -684,7 +684,38 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
             // other `param_type`; if that invariant is somehow violated,
             // resolve to nothing rather than accepting an unbounded value.
             ParamType::Ref => false,
+            ParamType::MultiRef => false,
         },
+        // This function reads only `ruleset`, but a spell value resolves against
+        // the OWNING character's own learned spells (`Entity::spells`), not a
+        // ruleset-level registry — the one domain with no ruleset-only answer.
+        // Always `false` here; the real, entity-aware resolution is
+        // `multi_param_value_resolves`, which every `Spell`-domain caller uses
+        // instead (a `Single` value under a `Spell`-domain parameter would reach
+        // this function today, but load-time integrity requires this domain to
+        // pair with `multi_ref`, so that shape does not occur in practice — see
+        // `docs/vf-audit/design-c0-parameter-model.md` § 8).
+        ParameterDomain::Spell => false,
+    }
+}
+
+/// Resolves one member of a [`SelectionParamValue::Multi`] set against
+/// `param`'s domain — the `Multi` counterpart to [`param_value_resolves`],
+/// needed because [`ParameterDomain::Spell`] has no ruleset-only registry:
+/// Corrupted Spells (ArMDE:5859-5863) resolves against the character's own
+/// learned spells, so this reads `entity` where [`param_value_resolves`] reads
+/// only `ruleset` (`docs/vf-audit/design-c0-parameter-model.md` § 8). Every
+/// other domain defers to [`param_value_resolves`] — the same registries a
+/// `Single` value under that domain would already be checked against.
+pub(crate) fn multi_param_value_resolves(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    param: &ParameterDef,
+    value: &Id,
+) -> bool {
+    match param.domain {
+        ParameterDomain::Spell => entity.spells.iter().any(|s| &s.spell == value),
+        _ => param_value_resolves(ruleset, param, value),
     }
 }
 
@@ -731,7 +762,13 @@ pub(crate) fn validate_parameters(
     issues: &mut Vec<ValidationIssue>,
 ) {
     for selection in &entity.selections {
-        validate_selection_parameters(selection, ruleset, CreationPhase::VirtuesFlaws, issues);
+        validate_selection_parameters(
+            entity,
+            selection,
+            ruleset,
+            CreationPhase::VirtuesFlaws,
+            issues,
+        );
     }
 }
 
@@ -748,7 +785,13 @@ pub(crate) fn validate_parameters(
 /// `phase` is the caller's, not this function's: the same three codes are fixed on
 /// the V/F step for a bought selection, on the House or Mythic-type step for an
 /// open grant, and only in the finished character for a Warping fill.
+///
+/// `entity` is needed only for a [`ParamType::MultiRef`] parameter's
+/// [`ParameterDomain::Spell`] members (C5a): resolving them reads the OWNING
+/// character's own `entity.spells`, via [`multi_param_value_resolves`], rather
+/// than a ruleset-only registry — see that function's doc comment.
 pub(crate) fn validate_selection_parameters(
+    entity: &Entity,
     selection: &Selection,
     ruleset: &Ruleset,
     phase: CreationPhase,
@@ -814,7 +857,10 @@ pub(crate) fn validate_selection_parameters(
     }
 
     // Resolve values for domains that have a registry (Item -> point items,
-    // Ability -> ability catalogue, Art -> art catalogue).
+    // Ability -> ability catalogue, Art -> art catalogue), and check that a
+    // value's SHAPE (`Single` vs `Multi`) actually matches what the parameter's
+    // own `param_type` declares (C5a, `docs/vf-audit/design-c0-parameter-model.md`
+    // § 8/§ 9) before trying to resolve it at all.
     for param in &item.parameters {
         let Some(value) = selection.params.get(&param.key) else {
             continue; // missing already reported above
@@ -822,24 +868,60 @@ pub(crate) fn validate_selection_parameters(
         if param_value_is_blank(value) {
             continue; // reported as `missing_param` above, not as an unprintable value
         }
-        let Some(value) = value.as_single() else {
-            // A `Multi` value has no domain resolution defined yet — nothing in
-            // this engine produces one (C5a/C5b's job); skip rather than guess.
-            continue;
-        };
-        let resolves = param_value_resolves(ruleset, param, value);
-        if !resolves {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
-                phase,
-                args([
-                    ("item", selection.item_ref.to_string()),
-                    ("key", param.key.clone()),
-                    ("value", value.to_string()),
-                    ("domain", param.domain.to_string()),
-                ]),
-                Some(selection.item_ref.clone()),
-            ));
+        let is_multi_ref = matches!(param.param_type, ParamType::MultiRef);
+        match (value, is_multi_ref) {
+            // The old, pre-`multi_ref` shape on a key the ruleset now declares
+            // multi-valued: present and well-formed as a scalar — a choice the
+            // player already made under the item's *previous* shape — so this is
+            // `param_wrong_shape`, not `missing_param` (an unmade choice) or
+            // `unknown_param_value` (the scalar id itself may well resolve).
+            (SelectionParamValue::Single(_), true)
+            // The mirror case: a set stored under a key the ruleset does not (or
+            // no longer) declare multi-valued. No producer builds this today, but
+            // a hand-edited save is exactly `CLAUDE.md`'s trust boundary.
+            | (SelectionParamValue::Multi(_), false) => {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_PARAM_WRONG_SHAPE,
+                    phase,
+                    args([
+                        ("item", selection.item_ref.to_string()),
+                        ("key", param.key.clone()),
+                    ]),
+                    Some(selection.item_ref.clone()),
+                ));
+            }
+            (SelectionParamValue::Single(id), false) => {
+                if !param_value_resolves(ruleset, param, id) {
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
+                        phase,
+                        args([
+                            ("item", selection.item_ref.to_string()),
+                            ("key", param.key.clone()),
+                            ("value", id.to_string()),
+                            ("domain", param.domain.to_string()),
+                        ]),
+                        Some(selection.item_ref.clone()),
+                    ));
+                }
+            }
+            (SelectionParamValue::Multi(set), true) => {
+                for id in set {
+                    if !multi_param_value_resolves(entity, ruleset, param, id) {
+                        issues.push(ValidationIssue::error(
+                            ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
+                            phase,
+                            args([
+                                ("item", selection.item_ref.to_string()),
+                                ("key", param.key.clone()),
+                                ("value", id.to_string()),
+                                ("domain", param.domain.to_string()),
+                            ]),
+                            Some(selection.item_ref.clone()),
+                        ));
+                    }
+                }
+            }
         }
     }
 }
@@ -1201,5 +1283,72 @@ pub(crate) fn validate_gift_policy(
             }
         }
         GiftPolicy::Allowed => {}
+    }
+}
+
+#[cfg(test)]
+mod multi_ref_tests {
+    //! C5a (`docs/vf-audit/design-c0-parameter-model.md` § 8): direct,
+    //! white-box tests of [`multi_param_value_resolves`] — the entity-aware
+    //! `Multi` counterpart to [`param_value_resolves`], needed because
+    //! [`ParameterDomain::Spell`] resolves against the OWNING character's own
+    //! learned spells, not a ruleset registry `param_value_resolves` alone
+    //! could read. Lives beside the function under test (`pub(crate)`, no
+    //! existing test module in this file) rather than in the crate's giant
+    //! shared `validation::tests` module.
+    use super::*;
+    use crate::ruleset::Ruleset;
+    use crate::types::{ParameterDef, SpellSelection};
+
+    fn empty_ruleset() -> Ruleset {
+        Ruleset::from_json("t", "1", "[]", "[]").expect("an empty ruleset loads")
+    }
+
+    fn entity_with_spell(spell: &str) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            crate::types::RulesetRef::new(Id::new("t"), "1"),
+        );
+        entity.spells = vec![SpellSelection {
+            spell: Id::new(spell),
+            level: None,
+            mastery: None,
+            parameter: None,
+            mastery_abilities: Vec::new(),
+        }];
+        entity
+    }
+
+    fn spell_param() -> ParameterDef {
+        ParameterDef::new("targets", ParamType::MultiRef, ParameterDomain::Spell)
+    }
+
+    /// The positive case D9/C5a's Corrupted Spells needs: a spell the
+    /// character has actually learned resolves against `entity.spells`.
+    #[test]
+    fn a_learned_spell_resolves_against_the_characters_own_spells() {
+        let entity = entity_with_spell("spell.pilum_of_fire");
+        let ruleset = empty_ruleset();
+        let param = spell_param();
+        assert!(
+            multi_param_value_resolves(&entity, &ruleset, &param, &Id::new("spell.pilum_of_fire")),
+            "a spell the character has learned must resolve in the spell domain"
+        );
+    }
+
+    /// The refusal half: ArMDE:5859-5863 states the 30-level prerequisite and
+    /// the "as many of the character's spells" scope against spells already
+    /// learned — a spell the character never learned must NOT resolve, even
+    /// though it may be a perfectly real spell in the ruleset's catalogue.
+    #[test]
+    fn an_unlearned_spell_does_not_resolve() {
+        let entity = entity_with_spell("spell.pilum_of_fire");
+        let ruleset = empty_ruleset();
+        let param = spell_param();
+        assert!(
+            !multi_param_value_resolves(&entity, &ruleset, &param, &Id::new("spell.never_learned")),
+            "a spell the character never learned must not resolve"
+        );
     }
 }

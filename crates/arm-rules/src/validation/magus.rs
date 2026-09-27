@@ -147,6 +147,7 @@ pub(crate) fn validate_house(
                 // exactly like a bought selection. (A `Choice` pick carries the
                 // params the ruleset data declares, so it needs no check.)
                 validate_selection_parameters(
+                    entity,
                     pick,
                     ruleset,
                     CreationPhase::HouseSpecialisation,
@@ -377,7 +378,13 @@ pub(crate) fn validate_mythic_type(
                     ));
                 }
                 // Same parameter checks the House Open grant applies.
-                validate_selection_parameters(pick, ruleset, CreationPhase::MythicType, issues);
+                validate_selection_parameters(
+                    entity,
+                    pick,
+                    ruleset,
+                    CreationPhase::MythicType,
+                    issues,
+                );
             }
         }
     }

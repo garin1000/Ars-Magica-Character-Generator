@@ -19,12 +19,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// C0b's own promise: this slice moves a value TYPE, not the save format, so
-/// the bump stays with C5a's array fold. (The constant has since moved again,
-/// to 18, for CV4's unrelated ability-parameter widening — this assertion
-/// tracks the current value, not C0b's own contribution to it.)
+/// the bump belongs elsewhere (D9's schema criterion, realized by C5a as a pure
+/// version marker — see `SCHEMA_VERSION`'s own doc comment for why no fold rides
+/// on it). The constant has since moved twice more — to 18 for CV4's unrelated
+/// ability-parameter widening, then to 19 for C5a itself — this assertion tracks
+/// the current value, not C0b's own contribution to it (still zero).
 #[test]
 fn c0b_does_not_bump_schema_version() {
-    assert_eq!(arm_rules::migration::SCHEMA_VERSION, 18);
+    assert_eq!(arm_rules::migration::SCHEMA_VERSION, 19);
 }
 
 /// The real shipped ruleset + catalogue names — CV4's `load_entity_migrating`

@@ -2058,6 +2058,17 @@ impl Ruleset {
             ));
             return;
         }
+        // C5a (§ 9): a gate reads exactly ONE value out of `Selection::params[param]`
+        // at fold time (`ParamGate::holds`), so it must not name a `multi_ref`
+        // parameter, which has no single value to read.
+        if def.param_type == ParamType::MultiRef {
+            errors.push(format!(
+                "{id}: effect '{kind}' gate references parameter '{}', which is 'multi_ref' \
+                 and has no single value to gate on",
+                gate.param
+            ));
+            return;
+        }
         if !param_value_resolves(self, def, &gate.equals) {
             errors.push(format!(
                 "{id}: effect '{kind}' gate parameter '{}' names value '{}', which does not \
@@ -2088,10 +2099,22 @@ impl Ruleset {
     ) {
         match value {
             ParamValue::Bound { param } => {
-                if !item.parameters.iter().any(|p| &p.key == param) {
-                    errors.push(format!(
-                        "{id}: effect '{kind}' instance references unknown parameter '{param}'"
-                    ));
+                match item.parameters.iter().find(|p| &p.key == param) {
+                    None => {
+                        errors.push(format!(
+                            "{id}: effect '{kind}' instance references unknown parameter '{param}'"
+                        ));
+                    }
+                    // C5a (§ 9): a `Bound` instance reads exactly ONE value out of
+                    // the named parameter too (`ParamValue::resolve`), so it must
+                    // not name a `multi_ref` parameter either.
+                    Some(def) if def.param_type == ParamType::MultiRef => {
+                        errors.push(format!(
+                            "{id}: effect '{kind}' instance references parameter '{param}', \
+                             which is 'multi_ref' and has no single value to bind"
+                        ));
+                    }
+                    Some(_) => {}
                 }
                 if item.max_total > 1 {
                     errors.push(format!(
@@ -2700,6 +2723,24 @@ fn validate_parameter_defs(
                      greater than max {max}"
                 ));
             }
+        }
+        // D9 part 3 (§ 9): `multi_ref` paired with a domain that itself makes no
+        // sense multi-valued is rejected explicitly rather than left silently
+        // meaningless. `number` is already caught above (a `multi_ref` type is
+        // never `ParamType::Number`), but this check names the combination
+        // directly so the rejection is not merely an accidental side effect of
+        // that separate rule.
+        if param.param_type == ParamType::MultiRef
+            && matches!(
+                param.domain,
+                ParameterDomain::Text | ParameterDomain::Number
+            )
+        {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has type 'multi_ref' but domain '{}', which \
+                 cannot hold a set of values",
+                param.domain
+            ));
         }
         // A `max_per_value` of 0 forbids every value the parameter could ever
         // name, so the declaring item is unfillable — the mirror of the

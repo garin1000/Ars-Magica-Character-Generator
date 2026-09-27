@@ -477,6 +477,16 @@ pub enum ParamType {
         /// Largest legal value, inclusive.
         max: i32,
     },
+    /// The parameter value is an open-ended SET of ids (D9 part 3: "you can
+    /// choose to have it affect multiple Abilities", ArMDE:5851 et al. —
+    /// `docs/vf-audit/design-c0-parameter-model.md` § 8). Stored as
+    /// [`crate::types::SelectionParamValue::Multi`], a `BTreeSet<Id>` rather
+    /// than a `Vec<Id>`, so `{A,B}` and `{B,A}` are the same value by
+    /// construction and need no separate canonicalization step before
+    /// `max_per_target`'s duplicate-target key compares two selections.
+    /// Serializes as the bare string `"multi_ref"`, never confused with
+    /// [`Self::Ref`]'s own `"ref"` or [`Self::Number`]'s tagged-object form.
+    MultiRef,
 }
 
 impl fmt::Display for ParamType {
@@ -484,6 +494,7 @@ impl fmt::Display for ParamType {
         match self {
             ParamType::Ref => f.write_str("ref"),
             ParamType::Number { min, max } => write!(f, "number[{min}..={max}]"),
+            ParamType::MultiRef => f.write_str("multi_ref"),
         }
     }
 }
@@ -596,6 +607,19 @@ pub enum ParameterDomain {
     /// same warning [`ParamType`]'s own doc comment states for its "today it
     /// carries no behavior" case.
     Number,
+    /// Value is a spell id (e.g. `spell.pilum_of_fire`) — but resolved against
+    /// the OWNING character's own learned spells (`Entity::spells`), never
+    /// against the ruleset's whole spell catalogue. Corrupted Spells
+    /// (ArMDE:5859-5863) states both its 30-level prerequisite and its
+    /// "as many of the character's spells as you wish" scope against spells
+    /// **already learned** — there is no "any spell in the rules" reading to
+    /// opt out of, unlike [`Self::Item`]'s optional `require_possessed`, so
+    /// this domain is inherently possession-scoped and needs no sibling flag
+    /// (`docs/vf-audit/design-c0-parameter-model.md` § 8). In practice this
+    /// domain only ever pairs with [`ParamType::MultiRef`] (the three
+    /// Corrupted entries all let the player name a set), but nothing in the
+    /// type system forces that pairing.
+    Spell,
 }
 
 impl ParameterDomain {
@@ -633,6 +657,7 @@ impl fmt::Display for ParameterDomain {
             ParameterDomain::Realm => f.write_str("realm"),
             ParameterDomain::Text => f.write_str("text"),
             ParameterDomain::Number => f.write_str("number"),
+            ParameterDomain::Spell => f.write_str("spell"),
         }
     }
 }
@@ -6075,7 +6100,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 18"#));
+        assert!(json.contains(r#""schema_version": 19"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -6605,7 +6630,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 18"#));
+        assert!(json.contains(r#""schema_version": 19"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -6968,7 +6993,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 18"#));
+        assert!(json.contains(r#""schema_version": 19"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -7281,11 +7306,11 @@ mod tests {
     /// Source: ArMDE:16621, :16624-16632.
     #[test]
     fn a_resolved_crisis_round_trips_and_needs_no_schema_bump() {
-        // 18 is CV4's own bump (the ability-parameter type widening); the Crisis
-        // widening contributed nothing to it, and nor did 16's funding discriminator
-        // or 17's saga year.
+        // 19 is C5a's own bump (the multi-valued parameter type); the Crisis
+        // widening contributed nothing to it, and nor did 16's funding discriminator,
+        // 17's saga year, or 18's ability-parameter type widening (CV4).
         assert_eq!(
-            SCHEMA_VERSION, 18,
+            SCHEMA_VERSION, 19,
             "a purely additive widening earns no bump"
         );
 
@@ -7457,7 +7482,7 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""warping_choices""#), "{json}");
-        assert!(json.contains(r#""schema_version": 18"#), "{json}");
+        assert!(json.contains(r#""schema_version": 19"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);

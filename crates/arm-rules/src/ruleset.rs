@@ -3524,6 +3524,93 @@ mod tests {
         );
     }
 
+    /// C5a (§ 9 of the design note): a gate can only read exactly ONE value out
+    /// of `Selection::params[param]` at evaluation time, so it must not name a
+    /// [`ParamType::MultiRef`] parameter, which has no single value to give.
+    #[test]
+    fn a_gate_naming_a_multi_ref_parameter_fails_the_load() {
+        let err = load_with_gated_ability_authorization(
+            r#"{ "key": "targets", "type": "multi_ref", "domain": "ability" }"#,
+            "",
+            r#"{ "category": "academic", "gate": { "param": "targets", "equals": "ability.awareness" } }"#,
+        )
+        .expect_err("a gate naming a multi_ref parameter must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("targets"),
+            "expected an item-and-param-naming gate error, got: {msg}"
+        );
+    }
+
+    /// The `ParamValue::Bound` half of the same rule: a `Bound` instance reads
+    /// exactly one value out of the named parameter too, so it must not name a
+    /// [`ParamType::MultiRef`] parameter either (§ 9).
+    #[test]
+    fn a_bound_instance_naming_a_multi_ref_parameter_fails_the_load() {
+        let err = load_with_gated_ability_authorization(
+            r#"{ "key": "targets", "type": "multi_ref", "domain": "ability" }"#,
+            r#"{ "ability": "ability.dead_language", "instance": { "param": "targets" } }"#,
+            "",
+        )
+        .expect_err("a Bound instance naming a multi_ref parameter must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("targets"),
+            "expected an item-and-param-naming instance error, got: {msg}"
+        );
+    }
+
+    /// § 9: `ParamType::MultiRef` paired with a domain that itself makes no
+    /// sense multi-valued (`text`, `number`) is rejected explicitly rather than
+    /// left silently meaningless.
+    #[test]
+    fn a_multi_ref_type_paired_with_a_text_domain_fails_the_load() {
+        let err = load_with_number_param(
+            r#"{ "key": "targets", "type": "multi_ref", "domain": "text" }"#,
+            "",
+        )
+        .expect_err("multi_ref paired with domain text must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("targets"),
+            "expected an item-and-param-naming type error, got: {msg}"
+        );
+    }
+
+    /// The other domain § 9 names as nonsensical for `multi_ref`.
+    #[test]
+    fn a_multi_ref_type_paired_with_a_number_domain_fails_the_load() {
+        let err = load_with_number_param(
+            r#"{ "key": "targets", "type": "multi_ref", "domain": "number" }"#,
+            "",
+        )
+        .expect_err("multi_ref paired with domain number must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("targets"),
+            "expected an item-and-param-naming type error, got: {msg}"
+        );
+    }
+
+    /// The shipped shapes (the three Corrupted entries, D9 part 3, C5c): a
+    /// `multi_ref` parameter over a sensible domain (`ability`, and the new
+    /// character-scoped `spell` domain) loads clean.
+    #[test]
+    fn ordinary_multi_ref_parameters_load() {
+        for domain in ["ability", "art", "item", "spell"] {
+            assert!(
+                load_with_number_param(
+                    &format!(
+                        r#"{{ "key": "targets", "type": "multi_ref", "domain": "{domain}" }}"#
+                    ),
+                    "",
+                )
+                .is_ok(),
+                "a multi_ref parameter over domain '{domain}' must load"
+            );
+        }
+    }
+
     /// D55 (Q6): `advancement_mod` must carry exactly one of `amount`/`factor`.
     /// Neither present is a meaningless row — no modifier at all — and fails
     /// the load naming the offending item, exactly as `validate_item_ratios`

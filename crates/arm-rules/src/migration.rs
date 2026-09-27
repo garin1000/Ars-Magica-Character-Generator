@@ -137,7 +137,25 @@ use crate::types::{
 /// }` (§ 5.3) — value-driven and idempotent, so it runs on every load, not
 /// just a migrating one, and stamps no version of its own; the version bump
 /// belongs to the wire-shape change alone.
-pub const SCHEMA_VERSION: u32 = 18;
+///
+/// Bumped 18 → 19 for C5a (`docs/vf-audit/design-c0-parameter-model.md` § 8):
+/// `ParamType::MultiRef` and `ParameterDomain::Spell` land, and selection-parameter
+/// validation gains a shape check (`CODE_PARAM_WRONG_SHAPE`) between a
+/// `multi_ref`-declared key and the `Single`/`Multi` value actually stored under
+/// it. This is a **pure version marker** — no fold runs and none is owed: unlike
+/// 13 → 14's talisman move, no wire shape changes here at all.
+/// [`crate::types::SelectionParamValue::Multi`] was already parseable with no
+/// bump owed since C0b (wire-compatible: a bare-string value still deserializes
+/// as `Single`), and `Multi`'s canonical (sorted, deduplicated) form falls out
+/// of `BTreeSet<Id>` for free on deserialize — so there is no shape for a fold
+/// to repair and none is added for this bump. The bump is earned purely by the
+/// FORWARD direction, on the same precedent as 14 → 15 and 16 → 17: an older
+/// (pre-19) build has no `CODE_PARAM_WRONG_SHAPE` check and no `multi_ref`
+/// type at all, so it would silently accept — or silently mis-read — a shape a
+/// v19-aware validator correctly rejects. Refusing the load outright
+/// (`entity.schema_version > SCHEMA_VERSION`) is exactly how that older build
+/// learns not to try, rather than misvalidating in silence.
+pub const SCHEMA_VERSION: u32 = 19;
 
 /// `(ability, original text, resolved catalogue id)` — see
 /// [`LoadedEntity::migrated_catalogued_parameters`]. A named alias rather than
@@ -1573,7 +1591,7 @@ mod tests {
     /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 18);
+        assert_eq!(SCHEMA_VERSION, 19);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -1605,14 +1623,49 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// The 17 → 18 bump CV4 owes (`docs/vf-audit/design-cv-catalogued-values.md`):
-    /// [`crate::types::AbilityScore::parameter`] widened from a bare
-    /// `Option<String>` to `Option<AbilityParameterValue>`, so a Literal
-    /// instance's match no longer depends on exact-string equality in a single
-    /// language (D14).
+    /// The 18 → 19 bump C5a owes (`docs/vf-audit/design-c0-parameter-model.md`
+    /// § 8, § 10): `ParamType::MultiRef`/`ParameterDomain::Spell` land, and
+    /// selection-parameter validation gains the `param_wrong_shape` check. See
+    /// [`SCHEMA_VERSION`]'s own doc comment for why this bump is a pure version
+    /// marker with no fold.
     #[test]
-    fn schema_version_is_18() {
-        assert_eq!(SCHEMA_VERSION, 18);
+    fn schema_version_is_19() {
+        assert_eq!(SCHEMA_VERSION, 19);
+    }
+
+    /// C5a's bump is a **pure version marker**: no shape moved, so no fold
+    /// dispatches on anything for it. A save already at schema 18, with nothing
+    /// any OTHER fold above would touch either, therefore loads completely
+    /// unchanged — its recorded `schema_version` stays exactly what the file
+    /// said (18) rather than being bumped in memory, precisely like every other
+    /// marker-only bump above (10 → 11, 11 → 12, 12 → 13): it becomes 19 only on
+    /// the next save, via `arm-app`'s unconditional stamp
+    /// (`ruleset_io.rs::save_entity_to_path`).
+    #[test]
+    fn a_clean_schema_18_save_loads_unchanged_under_the_19_build() {
+        let json = r#"{
+          "schema_version": 18,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "saga_year": 1220,
+          "xp_pool": 240
+        }"#;
+        let loaded = load_entity_migrating(
+            json,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
+        assert_eq!(
+            loaded.entity.schema_version, 18,
+            "no fold exists for 18 -> 19 (a pure version marker), so a save with \
+             nothing else to migrate keeps its recorded version until the next save"
+        );
+        assert_eq!(loaded.entity.xp_pool, 240);
+        assert_eq!(loaded.entity.saga_year, 1220);
     }
 
     /// A save written before the funding discriminator existed carries a

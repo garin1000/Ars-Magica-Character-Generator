@@ -161,6 +161,7 @@ impl fmt::Display for IssueSeverity {
 /// | `missing_param` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key` |
 /// | `unexpected_param` | error | virtues_flaws, house_specialisation, mythic_type, review | `item`, `key` |
 /// | `unknown_param_value` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key`, `value`, `domain` |
+/// | `param_wrong_shape` | error | virtues_flaws, house_specialisation, mythic_type, review | `item`, `key` |
 /// | `exclusive_param_values` | error | virtues_flaws | `item`, `key`, `count` |
 /// | `too_many_for_param_value` | error | virtues_flaws | `item`, `key`, `value`, `parameter`, `count`, `max` |
 /// | `param_target_not_possessed` | error | virtues_flaws | `item`, `key`, `value` |
@@ -380,6 +381,21 @@ impl ValidationIssue {
     pub const CODE_UNEXPECTED_PARAM: &'static str = "unexpected_param";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_UNKNOWN_PARAM_VALUE: &'static str = "unknown_param_value";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a selection's stored
+    /// value for a [`crate::types::ParamType::MultiRef`]-declared key is a
+    /// bare scalar (`SelectionParamValue::Single`), not a set
+    /// (`SelectionParamValue::Multi`) — the old, pre-`multi_ref` shape on a key
+    /// the ruleset now declares multi-valued (C5a,
+    /// `docs/vf-audit/design-c0-parameter-model.md` § 8).
+    ///
+    /// Distinct from [`Self::CODE_MISSING_PARAM`]: the key is **present** and
+    /// its value parses fine as a `Single(Id)` — a choice the player already
+    /// made under the item's *previous* shape — so reporting "you haven't
+    /// chosen yet" would be actively misleading. Also distinct from
+    /// [`Self::CODE_UNKNOWN_PARAM_VALUE`]: the scalar id itself may well
+    /// resolve in the parameter's domain — the defect is the *shape*, not the
+    /// value.
+    pub const CODE_PARAM_WRONG_SHAPE: &'static str = "param_wrong_shape";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: copies of one item name
     /// two or more parameter values that a
     /// [`ParameterDef::at_most_one_of`](crate::types::ParameterDef::at_most_one_of)

@@ -678,7 +678,7 @@ describe('the guided aging step', () => {
     // Derived from the age against the saga year, and NOT a schema change: both
     // fields have always been stored (Slice 12, #25 — no `SCHEMA_VERSION` bump).
     expect(saved.birth_year).toBe(1180);
-    expect(saved.schema_version).toBe(18);
+    expect(saved.schema_version).toBe(19);
     // The widened log entry is the whole record of the year: what was rolled, what
     // it totalled, the conditions in force, the points it awarded — and now the
     // calendar year. The engine has always written `year` as `birth_year + age`

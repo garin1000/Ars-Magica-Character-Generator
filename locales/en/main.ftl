@@ -1032,6 +1032,7 @@ param-domain-category = Category
 param-domain-realm = Realm
 param-domain-text = Text
 param-domain-number = Number
+param-domain-spell = Spell
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }
@@ -1096,6 +1097,7 @@ issue-unexpected_param = { $item } has an unexpected parameter { $key }.
 # the player's choice is not lost — they read what they had typed and pick the
 # matching value. `$domain` is now a word (`param-domain-<id>`), never the enum slug.
 issue-unknown_param_value = { $item } parameter { $key }: unknown value { $value } (expected: { $domain }).
+issue-param_wrong_shape = { $item } parameter { $key } names a single value, but this parameter now accepts a set — choose again.
 # Core Rules.md:3919 — "a character cannot have access to both the Divine and
 # Infernal Realms". Which values exclude each other is rules data
 # (`ParameterDef.at_most_one_of`), never a hardcoded pair, so this message names

@@ -1094,6 +1094,7 @@ param-domain-category = Kategorie
 param-domain-realm = Sphäre
 param-domain-text = Text
 param-domain-number = Zahl
+param-domain-spell = Zauber
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }
@@ -1160,6 +1161,7 @@ issue-unexpected_param = { $item } hat einen unerwarteten Parameter { $key }.
 # Nachgestellt in Klammern statt als Kompositum („{ $domain }-Wert“), weil das Wort
 # aus den Daten kommt und sich nicht zuverlässig zusammensetzen oder beugen lässt.
 issue-unknown_param_value = { $item }, Parameter { $key }: unbekannter Wert { $value } (erwartet: { $domain }).
+issue-param_wrong_shape = { $item }, Parameter { $key }: nennt einen Einzelwert, das Feld erwartet inzwischen eine Menge — bitte neu wählen.
 # Basisregeln — Core Rules.md:3919: "a character cannot have access to both the
 # Divine and Infernal Realms". Welche Werte einander ausschließen, steht in den
 # Regeldaten (`ParameterDef.at_most_one_of`) und nie fest im Text — daher nennt

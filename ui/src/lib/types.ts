@@ -37,7 +37,12 @@ export type ParamType =
   // Externally-tagged, matching the Rust struct variant's own wire form
   // (`{ "number": { "min": 1, "max": 2 } }`) — never a bare string, so it can
   // never be confused with `'ref'`.
-  | { number: { min: number; max: number } };
+  | { number: { min: number; max: number } }
+  // D9 part 3 (C5a, `docs/vf-audit/design-c0-parameter-model.md` § 8): an
+  // open-ended SET of ids (the three Corrupted entries: "you can choose to
+  // have it affect multiple Abilities", ArMDE:5851 et al.). Type-level parity
+  // only in this slice — no picker control exists yet (C5b's job).
+  | 'multi_ref';
 export type ParameterDomain =
   | 'ability'
   | 'art'
@@ -64,7 +69,12 @@ export type ParameterDomain =
   // pair (see the Rust `ParameterDomain::Number` doc comment); it carries no
   // resolution logic here either, only the `param-domain-number` label
   // `unknown_param_value` needs.
-  | 'number';
+  | 'number'
+  // C5a: a spell id, resolved against the OWNING character's OWN learned
+  // spells (`Entity.spells`), never the ruleset's whole spell catalogue —
+  // Corrupted Spells (ArMDE:5859-5863). In practice only ever paired with
+  // `multi_ref`.
+  | 'spell';
 
 export interface ParameterDef {
   key: string;

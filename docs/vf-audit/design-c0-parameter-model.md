@@ -732,20 +732,43 @@ home.
 so C5a's own bump moves to 18 → 19. No other content below changes — only the
 version numbers.
 
-**What must fold, and why a bump is owed even though no pre-18 save can
-currently hold a `MultiRef` value:** no shipped version has ever been able to
-write an array-valued `params` entry, so there is no *existing* save this
-migration must repair. The bump exists so the engine can state, load-bearing
-and testably, "a `params` value may be an array from schema 19 on" — and so
-the one real fold this slice owns is defensive, not corrective: **canonicalize
-any multi-valued selection's array into sorted, de-duplicated form on load**,
-unconditionally (not gated on `schema_version < 18`, since malformed or
-hand-edited input is exactly `CLAUDE.md`'s stated trust boundary — the save
-file the user opens). Test-first, on crafted input:
+**Implementation finding (C5a phase 2), overriding this section's original
+"what must fold" premise: no canonicalizing fold is needed at all.** The
+premise below assumed `MultiRef`'s canonical (sorted, deduplicated) form would
+need code to enforce it. It does not: `SelectionParamValue::Multi` is a
+`BTreeSet<Id>` (landed in C0b, ahead of this slice), and `BTreeSet`
+deserialization already sorts and deduplicates on insert — `["ability.brawl",
+"ability.awareness", "ability.brawl"]` parses straight into the canonical
+two-element set `{ability.awareness, ability.brawl}` with zero lines of fold
+code. The RED this section originally proposed for that shape is therefore
+**already green the moment `ParamType::MultiRef` exists** — proven, not just
+argued, by `crates/arm-rules/tests/c5a_multi_ref_parameter.rs`'s
+`multi_values_built_in_either_order_serialize_identically_and_sorted` and
+`two_selections_naming_the_same_set_in_different_order_collide_as_duplicates`.
+**Why the bump is still owed even though nothing folds:** D9's own schema
+criterion is about *validation*, not wire shape — a v19 save may contain a
+`Multi` value under a key whose ruleset parameter is genuinely `multi_ref`,
+and only a v19-aware validator knows to shape-check it
+(`CODE_PARAM_WRONG_SHAPE`, added this slice). An older (pre-19) build has
+neither the type nor the check, so it must refuse the load outright
+(`entity.schema_version > SCHEMA_VERSION`) rather than silently accepting or
+misreading that shape — the same forward-compatibility reasoning
+`crate::migration::SCHEMA_VERSION`'s own doc comment gives for the 14 → 15 and
+16 → 17 bumps. The bump is therefore a **pure version marker**: see
+`crates/arm-rules/src/migration.rs::schema_version_is_19` and
+`a_clean_schema_18_save_loads_unchanged_under_the_19_build`, which pins that a
+save with nothing to migrate keeps its recorded version exactly as read,
+becoming 19 only on the next save (`ruleset_io.rs::save_entity_to_path`'s
+unconditional stamp) — precisely like every other marker-only bump (10 → 11,
+11 → 12, 12 → 13) before it.
 
-- RED: a hand-crafted save with `"targets": ["ability.brawl", "ability.awareness", "ability.brawl"]`
+The original text below is kept for its still-relevant half — the
+`CODE_PARAM_WRONG_SHAPE` reasoning — with only the canonicalization RED struck:
+
+- ~~RED: a hand-crafted save with `"targets": ["ability.brawl", "ability.awareness", "ability.brawl"]`
   (unsorted, duplicated) must load with `targets == {ability.awareness, ability.brawl}`
-  (a two-element `BTreeSet`) — fails today because the type does not exist.
+  (a two-element `BTreeSet`) — fails today because the type does not exist.~~
+  **Superseded above: this is already true with no fold, the moment the type exists.**
 - RED: a save with `"targets": "ability.brawl"` (old-shape single value on a
   key that is now `multi_ref` in the ruleset) must be reported under a
   **new, distinct code — `CODE_PARAM_WRONG_SHAPE`, not `CODE_MISSING_PARAM`**.
@@ -807,7 +830,7 @@ clear error listing offending IDs" and the existing `integrity.rs` style
 | **C2** | D34 `allow_ids`; `flaw.false_power`/`_minor`'s domain narrowed from 227 to 56+2; **opportunistic doc fix**: `ParameterDef::max_per_value`'s doc comment still states the pre-D10 default of 255 — correct it to 1 while this slice already touches the struct's neighbouring doc comments | a test asserting `virtue.diedne_magic` resolves and an arbitrary other `hermetic` Virtue does not | No | No |
 | **C3** | D35 `ParamType::Number`, `ParameterDomain::Number` (with its redundant-half doc comment, § 1), `ScaledRestrictedAbilityXp`; `virtue.simple_student`; the 6 no-op sites + `validate_effect_refs`'s new real arm for this variant (§ 1a) | a red asserting 1 finished year → 30 XP, 2 → 60, and the parameter rejects 3 | **Yes** — a number `<input>` picker (new UI control, no prior numeric parameter existed); `ParamType`/`ParameterDomain` TS mirrors gain `number` — **first slice where a Rust/TS parity test earns its keep** (see § 10.1) | No |
 | **C4** | D48 `instances` field + union `pool_covers`; re-derive and confirm the 12 pools (measurements row 12); **`virtue.master_bard`'s two regression tests (§ 5)**; **refactor `ability_authorizations` into the shared `resolve_ability_refs` used by both the authorization fold and the pool-eligibility fold (§ 1a site 12), so there is one resolution path for gate/instance evaluation, not two that could drift** | a red on `virtue.marshal` funding Profession: Sailor today (should fail once instance-scoped); a green pinning `virtue.master_bard`'s `amount == 240` and its full 6-Ability set unchanged | No | No |
-| **C5a** | D9 part 3 engine only: `ParamType::MultiRef`, `ParameterDomain::Spell` (character-scoped, § 8), the canonicalizing migration | the two migration reds in § 8 | No (engine + migration only — C0b already moved the type, so no C1 consumer needs touching here) | **Yes — 18 → 19** (CV takes 17 → 18 ahead of this slice) |
+| **C5a** | D9 part 3 engine only: `ParamType::MultiRef`, `ParameterDomain::Spell` (character-scoped, § 8), `CODE_PARAM_WRONG_SHAPE`. **No canonicalizing migration exists or is needed** — `SelectionParamValue::Multi`'s `BTreeSet<Id>` (C0b) already sorts/dedupes on deserialize for free, so the 18 → 19 bump is a documented **no-op version marker** (see § 8's implementation-finding note) | the wrong-shape red in § 8, plus the three load-time integrity reds (a gate/bound naming a `MultiRef` param; `MultiRef` paired with `text`/`number`) | No (engine + migration only — C0b already moved the type, so no C1 consumer needs touching here) | **Yes — 18 → 19** (CV takes 17 → 18 ahead of this slice), pure version marker, no fold |
 | **C5b** | Multi-select UI picker (`ParameterPicker.svelte`), keyed on `param.param_type == MultiRef`; `selection-workflow.svelte.ts` and `art-workflow.svelte.ts`'s param-write helpers widen to accept a set (§ 10.1) | a `.client.test.ts` mounting the picker and asserting a checked/unchecked toggle writes/removes a set member | **Yes** | No |
 | **C5c** | D15's three Corrupted entries (multi-valued data); F-42/F-63/F-317 (reusing C1's gate — **not** `MultiRef`); **`AbilityScoreGrantParam` is introduced here** (F-63, § 1a) — it does not exist before this slice, so nothing in C1/C3/C4/C5a/C5b references it | per-entry reds: Corrupted Abilities round-trips a 2-element set; Custos authorizes exactly one of Martial/Academic/Arcane; Enchanting Ability grants a floor in the player-chosen medium instance | No | No |
 

@@ -137,7 +137,7 @@ fn validate_warping_fill_picks(
         // a bought selection gets.
         // A Warping fill lives on no creation step, so its parameter problems are
         // fixable only in the finished character.
-        validate_selection_parameters(pick, ruleset, CreationPhase::Review, issues);
+        validate_selection_parameters(entity, pick, ruleset, CreationPhase::Review, issues);
     }
 }
 

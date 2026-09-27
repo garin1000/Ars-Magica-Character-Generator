@@ -1674,7 +1674,7 @@ mod tests {
             json.contains(r#""childhood_package": "childhood.athletic""#),
             "{json}"
         );
-        assert!(json.contains(r#""schema_version": 18"#), "{json}");
+        assert!(json.contains(r#""schema_version": 19"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
@@ -1733,10 +1733,10 @@ mod tests {
         // The post-Gauntlet fields are additive and bumped nothing of their own;
         // the literal is here so a bump has to be a conscious edit (15 came from
         // the widened aging log, 16 from the funding discriminator, 17 from the
-        // per-document saga year and 18 from CV4's ability-parameter widening, not
-        // from this plan).
-        assert_eq!(SCHEMA_VERSION, 18);
-        assert!(json.contains(r#""schema_version": 18"#), "{json}");
+        // per-document saga year, 18 from CV4's ability-parameter widening, and 19
+        // from C5a's multi-valued parameter type, not from this plan).
+        assert_eq!(SCHEMA_VERSION, 19);
+        assert!(json.contains(r#""schema_version": 19"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(back.life_stages, Some(out_of_apprenticeship));
