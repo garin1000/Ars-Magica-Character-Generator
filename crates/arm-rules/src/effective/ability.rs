@@ -151,30 +151,48 @@ pub fn effective_ability_score(
     bought.max(floor) + ability_bonus(entity, ruleset, ability, parameter)
 }
 
-/// The highest free starting score granted to `ability` by any
-/// [`Effect::AbilityScoreGrant`] (e.g. Second Sight seeding Second Sight 1). The
-/// target is fixed by the granting virtue, so it matches by ability id. Granted
-/// abilities are plain (single-instance), so only the parameter-less instance
-/// receives the floor. Grants do not stack — a higher grant wins — so this is a
-/// `max`, not a sum, and it costs no experience (see [`crate::validation`]).
+/// The highest free starting score granted to the `(ability, parameter)`
+/// instance by any [`Effect::AbilityScoreGrant`] (e.g. Second Sight seeding
+/// Second Sight 1 — fixed, unparameterized, so it only ever matches
+/// `parameter: None`) or [`Effect::AbilityScoreGrantParam`] (F-63, Enchanting
+/// Ability: the floor applies only at the ONE instance the grant's own
+/// `instance` resolves to — `resolve_instance` is the same Bound/Literal/plain
+/// resolution [`crate::effective::resolve_ability_refs`] uses, so this cannot
+/// drift from how the identical grant is read for authorization). Grants do
+/// not stack — a higher grant wins — so this is a `max`, not a sum, and it
+/// costs no experience (see [`crate::validation`]).
 pub(crate) fn granted_ability_floor(
     entity: &Entity,
     ruleset: &Ruleset,
     ability: &Id,
     parameter: Option<&str>,
 ) -> i32 {
-    if parameter.is_some() {
-        return 0;
-    }
     let mut floor = 0;
-    for_each_effect!(entity, ruleset, |_selection, effect| {
-        if let Effect::AbilityScoreGrant {
-            ability: granted,
-            amount,
-        } = effect
-            && granted == ability
-        {
-            floor = floor.max(i32::from(*amount));
+    for_each_effect!(entity, ruleset, |selection, effect| {
+        match effect {
+            Effect::AbilityScoreGrant {
+                ability: granted,
+                amount,
+            } if granted == ability && parameter.is_none() => {
+                floor = floor.max(i32::from(*amount));
+            }
+            Effect::AbilityScoreGrantParam {
+                ability: granted,
+                instance,
+                amount,
+            } if granted == ability => {
+                let resolved = crate::effective::resolve_instance(
+                    granted.clone(),
+                    instance.as_ref(),
+                    entity,
+                    ruleset,
+                    selection,
+                );
+                if resolved.parameter.as_deref() == parameter {
+                    floor = floor.max(i32::from(*amount));
+                }
+            }
+            _ => {}
         }
     });
     floor
@@ -246,23 +264,56 @@ pub fn ability_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityBonus> 
 pub struct AbilityFloor {
     /// The granted ability's id.
     pub ability: Id,
+    /// The instance this floor applies to (F-63, `Effect::AbilityScoreGrantParam`)
+    /// — `None` for a plain, unparameterized grant
+    /// ([`Effect::AbilityScoreGrant`]), matching [`AbilityBonus::parameter`]'s
+    /// own reasoning: the UI badge must land on the right row, never on every
+    /// instance of the ability.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
     /// The free bought-score floor (the highest grant, if several apply).
     pub floor: i32,
 }
 
-/// Every ability granted a free starting score by an [`Effect::AbilityScoreGrant`],
-/// each at its highest grant. Ordered by ability id (deduped), so the frontend can
-/// show the floor as the ability's effective score without recomputing it.
+/// Every ability granted a free starting score by an [`Effect::AbilityScoreGrant`]
+/// or [`Effect::AbilityScoreGrantParam`] (F-63), each at its highest grant per
+/// `(ability, parameter)` instance. Ordered by `(ability, parameter)` (deduped),
+/// so the frontend can show the floor as the ability's effective score without
+/// recomputing it.
 pub fn ability_score_floors(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityFloor> {
-    let mut floors: BTreeMap<Id, i32> = BTreeMap::new();
-    for_each_effect!(entity, ruleset, |_selection, effect| {
-        if let Effect::AbilityScoreGrant { ability, amount } = effect {
-            let floor = floors.entry(ability.clone()).or_insert(0);
-            *floor = (*floor).max(i32::from(*amount));
+    let mut floors: BTreeMap<(Id, Option<String>), i32> = BTreeMap::new();
+    for_each_effect!(entity, ruleset, |selection, effect| {
+        match effect {
+            Effect::AbilityScoreGrant { ability, amount } => {
+                let floor = floors.entry((ability.clone(), None)).or_insert(0);
+                *floor = (*floor).max(i32::from(*amount));
+            }
+            Effect::AbilityScoreGrantParam {
+                ability,
+                instance,
+                amount,
+            } => {
+                let resolved = crate::effective::resolve_instance(
+                    ability.clone(),
+                    instance.as_ref(),
+                    entity,
+                    ruleset,
+                    selection,
+                );
+                let floor = floors
+                    .entry((ability.clone(), resolved.parameter))
+                    .or_insert(0);
+                *floor = (*floor).max(i32::from(*amount));
+            }
+            _ => {}
         }
     });
     floors
         .into_iter()
-        .map(|(ability, floor)| AbilityFloor { ability, floor })
+        .map(|((ability, parameter), floor)| AbilityFloor {
+            ability,
+            parameter,
+            floor,
+        })
         .collect()
 }

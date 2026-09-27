@@ -56,7 +56,7 @@
     { "id": "ability.dominion_lore", "category": "arcane", "requires_training": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7435, 7438] } },
     { "id": "ability.dowsing", "category": "supernatural", "requires_training": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7439, 7442] } },
     { "id": "ability.embitterment", "category": "supernatural", "requires_training": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7443, 7445] } },
-    { "id": "ability.enchanting", "category": "supernatural", "requires_training": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7446, 7453] } },
+    { "id": "ability.enchanting", "category": "supernatural", "requires_training": true, "parameter": "medium", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7446, 7453] } },
     { "id": "ability.enigmatic_wisdom", "category": "arcane", "requires_training": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7454, 7455] } },
     { "id": "ability.entrancement", "category": "supernatural", "requires_training": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7457, 7469] } },
     { "id": "ability.etiquette", "category": "general", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7470, 7473] } },

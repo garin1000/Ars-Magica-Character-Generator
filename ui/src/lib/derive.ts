@@ -2523,6 +2523,11 @@ export const UNBOUGHT_ROW_INDEX = -1;
  * name its instance anyway (the parameter lives on the bought entry). Each row
  * reads score 0 — the bought score, which is what it is — and carries
  * {@link UNBOUGHT_ROW_INDEX} so the renderer knows not to offer edits.
+ *
+ * A parameterized floor (F-63, Enchanting Ability) is excluded the same way a
+ * parameterized bonus already is: `floor.parameter != null` means the grant
+ * applies only to the chosen medium instance, which — like a parameterized
+ * bonus — cannot be named by an invented, instance-less row.
  */
 export function unboughtModifiedAbilities(
   scores: AbilityScore[],
@@ -2535,7 +2540,7 @@ export function unboughtModifiedAbilities(
     if (bonus.parameter == null && !boughtIds.has(bonus.ability)) unbought.add(bonus.ability);
   }
   for (const floor of floors) {
-    if (!boughtIds.has(floor.ability)) unbought.add(floor.ability);
+    if (floor.parameter == null && !boughtIds.has(floor.ability)) unbought.add(floor.ability);
   }
   return [...unbought].map((ability) => ({
     entry: { ability, score: 0 },

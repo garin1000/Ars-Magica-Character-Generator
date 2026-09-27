@@ -3560,6 +3560,75 @@ mod tests {
         );
     }
 
+    /// F-63/C5c (§ 9 of the design note): `Effect::AbilityScoreGrantParam`'s
+    /// fixed `ability` target must resolve, exactly like every other
+    /// fixed-target effect (`ability_score_grant`, `restricted_ability_xp`).
+    #[test]
+    fn an_ability_score_grant_param_naming_an_unknown_ability_fails_the_load() {
+        let err = load_with_number_param(
+            "",
+            r#"{ "type": "ability_score_grant_param", "ability": "ability.nonexistent", "amount": 1 }"#,
+        )
+        .expect_err("a dangling ability_score_grant_param target must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("ability.nonexistent"),
+            "expected an item-and-ability-naming error, got: {msg}"
+        );
+    }
+
+    /// F-63/C5c (§ 9): `AbilityScoreGrantParam.instance`'s `Bound.param` must
+    /// name a parameter the SAME item declares — the identical dangling-param
+    /// check `AbilityRef.instance` already gets via `validate_param_value_ref`,
+    /// reused rather than re-written.
+    #[test]
+    fn an_ability_score_grant_param_bound_instance_naming_an_undeclared_parameter_fails_the_load() {
+        let err = load_with_number_param(
+            "",
+            r#"{ "type": "ability_score_grant_param", "ability": "ability.artes_liberales",
+                 "instance": { "param": "medium" }, "amount": 1 }"#,
+        )
+        .expect_err("a Bound instance naming an undeclared parameter must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("medium"),
+            "expected an item-and-param-naming instance error, got: {msg}"
+        );
+    }
+
+    /// F-63/C5c (§ 9): the same one-value-per-read rule `AbilityRef.instance`
+    /// already enforces — a `Bound` instance may not name a `multi_ref`
+    /// parameter, which has no single value to bind.
+    #[test]
+    fn an_ability_score_grant_param_bound_instance_naming_a_multi_ref_parameter_fails_the_load() {
+        let err = load_with_number_param(
+            r#"{ "key": "medium", "type": "multi_ref", "domain": "ability" }"#,
+            r#"{ "type": "ability_score_grant_param", "ability": "ability.artes_liberales",
+                 "instance": { "param": "medium" }, "amount": 1 }"#,
+        )
+        .expect_err("a Bound instance naming a multi_ref parameter must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("medium"),
+            "expected an item-and-param-naming instance error, got: {msg}"
+        );
+    }
+
+    /// The shipped shape (Enchanting Ability, F-63): a `medium` text parameter
+    /// plus an `ability_score_grant_param` effect bound to it loads clean.
+    #[test]
+    fn ordinary_ability_score_grant_param_effect_loads() {
+        assert!(
+            load_with_number_param(
+                r#"{ "key": "medium", "type": "ref", "domain": "text" }"#,
+                r#"{ "type": "ability_score_grant_param", "ability": "ability.artes_liberales",
+                     "instance": { "param": "medium" }, "amount": 1 }"#,
+            )
+            .is_ok(),
+            "the shipped Enchanting Ability shape must load"
+        );
+    }
+
     /// § 9: `ParamType::MultiRef` paired with a domain that itself makes no
     /// sense multi-valued (`text`, `number`) is rejected explicitly rather than
     /// left silently meaningless.

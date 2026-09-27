@@ -243,11 +243,13 @@
   },
   "flaw.corrupted_arts": {
     "name": "Verderbte Künste",
-    "summary": "Der Charakter hat eine der Hermetischen Künste aus einer verderbten Quelle studiert."
+    "summary": "Der Charakter hat eine der Hermetischen Künste aus einer verderbten Quelle studiert.",
+    "description": "Der Charakter hat eine der Hermetischen Künste aus einer verderbten Quelle studiert. Die Verwendung einer verderbten Kunst für eine selbstsüchtige oder sündige Handlung erhält einen +3-Bonus auf den Zaubersumme des Charakters. Gelingt der Wurf durch diesen Bonus (d. h. er wäre ohne ihn misslungen), gewinnt er sofort 5 Erfahrungspunkte in dieser Kunst. Jedoch erhalten Verwendungen der Kunst, die neutral oder selbstlos sind, eine -3-Strafe, und misslingt der Wurf durch diese Strafe, verliert er sofort 5 Erfahrungspunkte in der Kunst.\n\nJede Verwendung einer verderbten Kunst befleckt die Magie des Charakters und lässt sie unheilig erscheinen. Du darfst diesen Fehler nur einmal nehmen, obwohl er mehrere Künste betreffen kann."
   },
   "flaw.corrupted_spells": {
     "name": "Verderbte Zauber",
-    "summary": "Der Charakter hat mindestens 30 Stufen formulaischer Zauber aus einer auf irgendeine Weise verderbten Quelle erlernt."
+    "summary": "Der Charakter hat mindestens 30 Stufen formulaischer Zauber aus einer auf irgendeine Weise verderbten Quelle erlernt.",
+    "description": "Der Charakter hat mindestens 30 Stufen formulaischer Zauber aus einer auf irgendeine Weise verderbten Quelle erlernt. Die Verwendung eines verderbten Zaubers für eine selbstsüchtige oder sündige Handlung erhält einen +3-Bonus auf den Zaubersumme und die Penetrationssumme des Charakters. Gelingt der Wurf durch diesen Bonus (d. h. der Zauber wäre ohne ihn misslungen oder hätte Erschöpfung verursacht), gewinnt er sofort 5 Erfahrungspunkte für die Meisterschaft dieses Zaubers. Jedoch erhalten Verwendungen des Zaubers, die neutral oder selbstlos sind, eine -3-Strafe, und misslingt der Wurf oder erschöpft er sich durch diese Strafe, verliert er sofort 5 Erfahrungspunkte. Würde dies zu negativen Erfahrungspunkten führen, vergisst er den Zauber vollständig.\n\nJede Verwendung eines verderbten Zaubers ist befleckt und erscheint unheilig. Du darfst diesen Fehler nur einmal nehmen, obwohl er so viele Zauber des Charakters betreffen kann, wie du möchtest."
   },
   "flaw.covenant_upbringing": {
     "name": "Konventsprägung",
@@ -1748,7 +1750,7 @@
     "summary": "Dies entspricht der Ritter-Tugend, doch aufgrund der recht anderen Erziehung muslimischer Emire bist du wahrscheinlich ebenso versiert in Jagd, religiösen Lehren und Kultur wie in kriegerischen Belangen."
   },
   "virtue.enchanting_ability": {
-    "name": "Bezaubernde {ability}",
+    "name": "Bezaubernde {medium}",
     "summary": "Wenn du dich darauf konzentrierst, kannst du mit einer bestimmten Art künstlerischen Ausdrucks magisch Gefühle und Überzeugungen in anderen hervorrufen: Musik, Tanz, Zeichnen, Geschichtenerzählen oder sogar Handwerk."
   },
   "virtue.enduring_constitution": {

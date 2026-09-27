@@ -2306,6 +2306,30 @@ impl Ruleset {
                     self.validate_ability_ref(ability, "ability_score_grant", id, errors);
                     continue;
                 }
+                // F-63's Enchanting Ability grant (§ 9,
+                // `docs/vf-audit/design-c0-parameter-model.md`): the fixed
+                // `ability` target must resolve, exactly like
+                // `AbilityScoreGrant` above, and an `instance` restriction gets
+                // the identical dangling-param/non-`MultiRef` check
+                // `AbilityRef.instance` already gets via
+                // `validate_param_value_ref` — reused rather than re-written,
+                // so the two cannot drift on what a `Bound` param must satisfy.
+                Effect::AbilityScoreGrantParam {
+                    ability, instance, ..
+                } => {
+                    self.validate_ability_ref(ability, "ability_score_grant_param", id, errors);
+                    if let Some(instance) = instance {
+                        self.validate_param_value_ref(
+                            item,
+                            ability,
+                            instance,
+                            "ability_score_grant_param",
+                            id,
+                            errors,
+                        );
+                    }
+                    continue;
+                }
                 // Fixed eligibility list: validate each named ability id resolves,
                 // like AbilityScoreGrant.ability and AbilityMin. The eligible
                 // categories are a loose namespace matched at eval, not a registry,

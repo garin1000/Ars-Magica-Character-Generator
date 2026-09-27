@@ -1049,6 +1049,13 @@ param-label-study = Studium
 # die Obergrenze (2 Jahre, 60 EP) ist min/max des Parameters, von der Engine
 # durchgesetzt.
 param-label-years = Jahre
+# Die Mehrfachwahl der drei Verderbt-Einträge (D9 Teil 3, D15, ArMDE:5847-5864)
+# — welche Fertigkeiten/Künste/Zauber der Fehler betrifft.
+param-label-targets = Ziele
+# Das vom Spieler gewählte künstlerische Medium der Bezaubernden (Fertigkeit)
+# (ArMDE:3747-3750, F-63) — "Musik, Tanz, Zeichnen, Geschichtenerzählen, sogar
+# Handwerk".
+param-label-medium = Medium
 
 # C5b: Die Mehrfachauswahl-Checkliste (ein `multi_ref`-Parameter, D9 Teil 3)
 # zeigt diesen Hinweis statt einer unerklärten leeren Liste, wenn es nichts

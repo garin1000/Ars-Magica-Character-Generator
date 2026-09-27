@@ -5370,7 +5370,7 @@ supplement; `virtue.factor` (ArMDE:3793-3796) and `virtue.fidai`
 ### In-play effect families (definitive input to slice 4 / 5b)
 
 - **Magical Focus (major/minor)** — `virtue.major_magical_focus` (ArMDE:4399-4422), `virtue.minor_magical_focus` (ArMDE:4536-4538), `virtue.mythic_blood` (ArMDE:4573-4589)
-- **Flat casting-total bonus/penalty** — `virtue.method_caster` (ArMDE:4524-4527), `flaw.poor_formulaic_magic` (ArMDE:6610-6613), `flaw.afflicted_tongue` (ArMDE:5655-5658), `virtue.life_boost` (ArMDE:4295-4298), `virtue.leper_magus` (ArMDE:4249-4252), `virtue.cyclic_magic_positive` (ArMDE:3635-3638), `flaw.cyclic_magic_negative` (ArMDE:5893-5896), `virtue.special_circumstances` (ArMDE:4998-5001), `virtue.ways_of_the_land` (ArMDE:5231-5234), `flaw.corrupted_spells` (ArMDE:5859-5864)
+- **Flat casting-total bonus/penalty** — `virtue.method_caster` (ArMDE:4524-4527), `flaw.poor_formulaic_magic` (ArMDE:6610-6613), `flaw.afflicted_tongue` (ArMDE:5655-5658), `virtue.life_boost` (ArMDE:4295-4298), `virtue.leper_magus` (ArMDE:4249-4252), `virtue.cyclic_magic_positive` (ArMDE:3635-3638), `flaw.cyclic_magic_negative` (ArMDE:5893-5896), `virtue.special_circumstances` (ArMDE:4998-5001), `virtue.ways_of_the_land` (ArMDE:5231-5234) (`flaw.corrupted_spells`, ArMDE:5859-5864, left this list in Phase 2 C5c/D15 — see **Corrupted Abilities/Arts/Spells** below)
 - **Spontaneous-magic casting modifier** — `flaw.weak_spontaneous_magic` (ArMDE:7084-7089), `virtue.diedne_magic` (ArMDE:3675-3682), `virtue.faerie_raised_magic` (ArMDE:3829-3842), `virtue.spell_improvisation` (ArMDE:5002-5005), `virtue.life_linked_spontaneous_magic` (ArMDE:4299-4306)
 - **Art-halving (Technique / Form)** — `flaw.deficient_technique` (ArMDE:5913-5915), `flaw.deficient_form` (ArMDE:5909-5912)
 - **Circumstantial casting/lab penalty (surfaced)** — `flaw.deleterious_circumstances` (ArMDE:5917-5920), `flaw.environmental_magic_condition` (ArMDE:6020-6023), `flaw.short_ranged_magic` (ArMDE:6737-6740), `flaw.disjointed_magic` (ArMDE:5972-5975), `flaw.the_constant_expression` (ArMDE:5821-5838)
@@ -5645,7 +5645,7 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 | `MagicResistanceMod { kind, param }` | MR modifiers — limited_magic_resistance (no_form_bonus), flawed_parma_magica (halved_parma), susceptibility faerie/infernal, commanding_aura & special_circumstances (aura_bonus), weak_magic_resistance (conditional_penetration_waiver). `param` names the selection key carrying the **Form** the modifier is scoped to; it is set on the first two kinds and absent on the rest, which name no Form | ArMDE:6346-6349, 6142-6145, 6819-6826, 3579-3596, 7068-7071 | **no_form_bonus and halved_parma computed** (folded into the flat per-Form MR number in `magic_resistance`, each against the one Form its own copy names — a copy naming no Form applies to none, and `missing_param` asks for the choice rather than the engine guessing it); the four conditional/situational kinds (aura_bonus, susceptible_faerie/infernal, conditional_penetration_waiver) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — each carries a scope the flat per-Form figure has no axis for (a realm, an aura, a scene condition plus the incoming spell's level), so listing them keeps them from being silently dropped *and* from being applied where the book does not apply them. `susceptible_divine` was retired in the round-5 audit: `ArMDE:6817` never mentions Magic Resistance, and the Flaw now carries `special_casting_mod { doubled_aura_penalty }` |
 | `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | ArMDE:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |
 | `AdvancementMod { source, amount?, factor? }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher (+5 teaching, +3 authoring), independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible (teaching ×½, authoring ×½), loose_magic (spell_mastery ×½) | ArMDE:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement); exactly one of `amount`/`factor` is present, load-validated (D55/Q6) |
-| `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic, the_constant_expression), and doubled_aura_penalty (susceptibility_to_divine_power) | ArMDE:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975, 5821-5838, 6815-6818 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
+| `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, disjointed_magic, the_constant_expression), and doubled_aura_penalty (susceptibility_to_divine_power). **`corrupted_spells` left this family in Phase 2 C5c (D15)**: its `special_casting_mod { circumstantial }` is deleted — the ±3 is on an *Ability/Casting roll a GM judges selfish-or-sinful*, which this family cannot express any more precisely than any other uncomputed rule, so D15 reclassifies all three Corrupted entries `uncomputed_rule` instead (see **Corrupted Abilities/Arts/Spells** below) | ArMDE:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5972-5975, 5821-5838, 6815-6818 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
 | `AbilityRollMod { param(Text), amount }` | Ability-roll bonus in a subject — academic_concentration_subject (+3) | ArMDE:3362-3367 | surfaced |
 
 **Modeling notes / accepted approximations** (each surfaced in 5i's labelled
@@ -5808,7 +5808,10 @@ Infernal Might + power-levels budget (tested in `arm-app`'s
   creation XP figure (its ±3 casting swing / ±5 Art xp are in-play). (Elemental
   Magic, :3731, is now implemented in slice 5c — see its section above. Simple
   Student, ArMDE:4958, was the third deferred entry here — it is now wired,
-  D35/Phase 2 C3 — see **Simple Student's parameter-scaled XP grant** below.)
+  D35/Phase 2 C3 — see **Simple Student's parameter-scaled XP grant** below.
+  Corrupted Arts's "are in-play" half is also now stale: Phase 2 C5c/D15
+  removes even the in-play reading — see **Corrupted Abilities/Arts/Spells &
+  Enchanting (Ability) (F-63)** below.)
 
 #### Student of (Realm) — missed by the 5a-wire pass, fixed in the audit-fix round
 
@@ -5913,7 +5916,7 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `virtue.corpse_magic` (ArMDE:3605-3608) — free starting Supernatural Ability score
 - `virtue.crafters_healing` (ArMDE:3617-3620) — free starting Supernatural Ability score
 - `virtue.embitterment` (ArMDE:3739-3742) — free starting Supernatural Ability score
-- `virtue.enchanting_ability` (ArMDE:3747-3750) — free starting Supernatural Ability score
+- `virtue.enchanting_ability` (ArMDE:3747-3750) — free starting Supernatural Ability score (Phase 2 C5c/F-63: moved from a plain, unconditional `ability_score_grant` to the parameter-bound `ability_score_grant_param`, so the floor applies only at the player's chosen `medium` instance — see **Corrupted Abilities/Arts/Spells & Enchanting (Ability) (F-63)** below)
 - `virtue.entrancement` (ArMDE:3767-3770) — free starting Supernatural Ability score
 - `virtue.font_of_knowledge` (ArMDE:3921-3924) — free starting Supernatural Ability score
 - `virtue.hex` (ArMDE:4075-4078) — free starting Supernatural Ability score
@@ -6005,7 +6008,7 @@ falls outside its grant; `docs/vf-audit/decisions.md` § D11,
 - `virtue.relic` (ArMDE:4852-4855) — True Faith score 1
 
 **XP grant:**
-- `flaw.corrupted_arts` (ArMDE:5853-5858) — grants XP swing at creation + situational casting
+- `flaw.corrupted_arts` (ArMDE:5853-5858) — grants XP swing at creation + situational casting (**superseded, Phase 2 C5c/D15**: it never actually carried an effect at any point — see **Corrupted Abilities/Arts/Spells & Enchanting (Ability) (F-63)** below, which reclassifies it `uncomputed_rule` with no effects at all, same as its two siblings)
 - `flaw.feral_upbringing` (ArMDE:6110-6113) — XP grant 120
 - `flaw.savantism` (ArMDE:6703-6708) — halves starting XP
 - `virtue.arcane_lore` (ArMDE:3430-3435) — XP grant 50
@@ -7573,6 +7576,98 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   `a_gate_naming_a_number_domain_parameter_fails_the_load` (`ruleset.rs`);
   `ParameterPicker.test.ts` (ssr rendering), `ParameterPicker.client.test.ts`
   (bounded clamping), `param-type-parity.test.ts`.
+
+#### Corrupted Abilities/Arts/Spells & Enchanting (Ability) (D9 part 3, D15, F-63, Phase 2 C5c)
+
+> Corrupted Abilities: "Any use of a corrupted Ability is an unholy act, which
+> can be sensed by Divine Powers. You may only take this Flaw once, though you
+> can choose to have it affect multiple Abilities if you wish" (`ArMDE:5847-5852`).
+> Corrupted Arts: "Any use of a corrupted Art taints the character's magic,
+> causing it to appear unholy. You may only take this Flaw once, though it can
+> affect multiple Arts" (`ArMDE:5853-5858`). Corrupted Spells: "Any use of a
+> corrupted spell is tainted and appears unholy. You may only take this Flaw
+> once, though it can affect as many of the character's spells as you wish"
+> (`ArMDE:5859-5864`). Enchanting (Ability): "Choosing this Virtue confers the
+> Ability Enchanting (Ability) 1" (`ArMDE:3747-3750`).
+
+- Source: `ArMDE:5847-5852` (Corrupted Abilities), `ArMDE:5853-5858` (Corrupted
+  Arts), `ArMDE:5859-5864` (Corrupted Spells), `ArMDE:3747-3750` (Enchanting
+  (Ability)).
+- **Ruling (`docs/vf-audit/decisions.md` D15):** the three Corrupted entries
+  are one mechanic (a book-repeated ±3 roll bonus/±5 XP swing on a GM's
+  selfish-or-sinful judgement call), so they get one treatment —
+  `uncomputed_rule`, no effects at all, with the full passage in `description`
+  in both locales. `flaw.corrupted_arts` moves off `creation_effect` (it never
+  actually carried an effect); `flaw.corrupted_spells` moves off
+  `in_play_effect` and **loses its `special_casting_mod { circumstantial }`**
+  — the only thing any of the three computed — since the modifier's condition
+  ("selfish or sinful" vs. "neutral or selfless") is a table judgement no
+  engine decides, and unifying upward would need an effect naming an Ability
+  roll and a Casting Total together, which the effect vocabulary does not
+  support (and D15 does not ask for). `flaw.corrupted_abilities` was already
+  `uncomputed_rule` and is the model the other two move to.
+- **D9 part 3 — the `multi_ref` parameter (§ 8, `design-c0-parameter-model.md`):**
+  each entry declares one `targets` parameter, `type: "multi_ref"`, over the
+  domain its own passage names — `ability` (Corrupted Abilities), `art`
+  (Corrupted Arts), `spell` (Corrupted Spells, resolved against the character's
+  OWN `entity.spells`, per `ParameterDomain::Spell`'s possession-scoped
+  reading — there is no "any spell in the rules" reading the 30-level
+  prerequisite would even permit). The classification says the engine computes
+  nothing; the parameter still records which targets the player chose, so the
+  choice round-trips through save/load and prints on the Markdown export —
+  `uncomputed_rule` and a multi-valued parameter are both correct here, for
+  different reasons (D15's own note on the interaction).
+- **F-63 — `Effect::AbilityScoreGrantParam` (§ 2, `design-c0-parameter-model.md`):**
+  `virtue.enchanting_ability` moves from a bare `ability_score_grant` (which
+  ignored its own declared parameter entirely — the shipped `"ability"`/
+  `domain: ability` parameter let the player choose ANY Supernatural Ability,
+  never read by the effect, and the floor applied unconditionally) to
+  `ability_score_grant_param { ability: "ability.enchanting", instance: {
+  "param": "medium" }, amount: 1 }`, paired with a new `medium` parameter,
+  `domain: text` (the passage's "even craftwork" hedges its list as
+  illustrative, not exhaustive — D9's "text only where the choice is genuinely
+  open"). `ability.enchanting` itself (`rules/core/abilities.json`) gains
+  `"parameter": "medium"`, so the bought Ability row and the Virtue's grant
+  share the same instance axis.
+  - **Wired through the existing D59/CV Bound/Link model, not a second path**
+    (orchestrator ruling, Phase 2 go-ahead): `effective/xp.rs::resolve_instance`
+    is factored out of `resolve_ability_refs` (identical Bound/Literal/plain
+    resolution, now shared by both the `Vec<AbilityRef>` fold and this single-
+    instance grant) and reused by three call sites — `ability_authorizations`'s
+    new `AbilityScoreGrantParam` arm (below), and
+    `effective/ability.rs::granted_ability_floor`/`ability_score_floors` (whose
+    `if parameter.is_some() { return 0; }` early return previously made a
+    parameter-bound floor grant impossible at all). `AbilityFloor` gains a
+    `parameter: Option<String>` field (mirrors `AbilityBonus::parameter`) so
+    the UI badge lands on the chosen medium's row, never on every instance —
+    `AbilityTab.svelte::floorOf` and `derive.ts::unboughtModifiedAbilities`
+    updated to match on `(ability, parameter)` via `sameParam`, exactly like
+    the existing bonus path.
+  - **Correction to this note's own design doc, dated 2026-09-27 (Phase 2
+    go-ahead ruling):** `design-c0-parameter-model.md` § 1a row 12
+    (`effective/xp.rs::ability_authorizations`) originally read
+    `AbilityScoreGrantParam` as a no-op there, "a floor grant is not an
+    authorization path" — but `AbilityScoreGrant`, this variant's own
+    unparameterized sibling, is NOT a no-op at that same site (it inserts an
+    `AuthorizedAbility`, "a free score in an Ability is permission to have
+    it"). The row was stale, not the code: `AbilityScoreGrantParam` gets a
+    **real** arm too, scoped to the resolved instance via `resolve_instance`.
+    This is also what lets `ability_parameter_options` (CV) offer the Virtue's
+    own `medium` parameter as a LINK target for the Ability's picker
+    (`AuthorizedAbility::bound_source`) instead of making the player retype
+    the medium as free text.
+- Tests: `crates/arm-rules/tests/c5c_corrupted_and_enchanting.rs` (13 cases:
+  the three entries' shipped `multi_ref` parameters and domains, the D15
+  reclassification and effect removal, both locales' descriptions, a
+  duplicate-target collision, Corrupted Spells' possession-scoped resolution,
+  the F-63 floor applying only at the chosen medium and nowhere else, and the
+  authorization fix via a `Linked` bought instance);
+  `effective/xp.rs::ability_authorizations_reads_only_the_three_permission_granting_effects`
+  (unchanged — still exercises only the pre-existing three; the new fourth
+  case is `c5c_corrupted_and_enchanting.rs`'s own);
+  `ui/src/lib/components/AbilityTab.test.ts`'s "parameter-scoped floors
+  (F-63)"; `ui/src/lib/derive.test.ts`'s `unboughtModifiedAbilities` floor
+  case.
 
 #### The scholarly-language expectation for Academic Abilities (M6/6b2b)
 

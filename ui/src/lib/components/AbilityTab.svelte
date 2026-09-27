@@ -234,11 +234,17 @@
     );
   }
 
-  // A virtue-granted free starting score (e.g. Second Sight 1) is a floor on the
-  // bought score, so it raises the effective score; granted abilities are plain.
+  // A virtue-granted free starting score (e.g. Second Sight 1, or Enchanting
+  // Ability's F-63 medium-scoped grant) is a floor on the bought score, so it
+  // raises the effective score. Matched by ability + parameter exactly like
+  // `bonusOf`, via `sameParam`, so a parameter-bound grant (Enchanting) lands
+  // on the chosen instance's row and never on every instance of the ability.
   function floorOf(abilityId: string, parameter: AbilityParamValue | null | undefined): number {
-    if (parameter != null) return 0;
-    return store.effective?.ability_score_floors?.find((f) => f.ability === abilityId)?.floor ?? 0;
+    return (
+      store.effective?.ability_score_floors?.find(
+        (f) => f.ability === abilityId && sameParam(f.parameter ?? null, parameter, resolvedLinks),
+      )?.floor ?? 0
+    );
   }
 
   // The effective score shown: max(bought, granted floor) + bonus.

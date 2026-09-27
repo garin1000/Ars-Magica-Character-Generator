@@ -2963,6 +2963,20 @@ describe('unboughtModifiedAbilities', () => {
       ),
     ).toEqual([]);
   });
+
+  it('omits a parameterized FLOOR too (F-63), for the identical reason', () => {
+    // Enchanting Ability's grant (`AbilityFloor.parameter`) is scoped to one
+    // medium instance the character has not necessarily bought yet — an
+    // invented row could not name which one, exactly like a parameterized
+    // bonus above.
+    expect(
+      unboughtModifiedAbilities(
+        [],
+        [],
+        [{ ability: 'ability.enchanting', parameter: 'storytelling', floor: 1 }],
+      ),
+    ).toEqual([]);
+  });
 });
 
 describe('filterEquipment', () => {

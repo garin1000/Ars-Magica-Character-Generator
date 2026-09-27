@@ -425,9 +425,12 @@ export interface CharacteristicBonus {
 }
 
 // A free starting-score floor a virtue grants to an ability (e.g. Second Sight →
-// Second Sight 1). Mirrors the engine's `AbilityFloor`.
+// Second Sight 1). Mirrors the engine's `AbilityFloor`. `parameter` (F-63,
+// Enchanting Ability) names the ONE instance a parameter-bound grant applies
+// to — absent for a plain, unparameterized grant.
 export interface AbilityFloor {
   ability: string;
+  parameter?: string;
   floor: number;
 }
 

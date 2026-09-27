@@ -420,6 +420,8 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::ScaledRestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
+                // Creation-time floor grant (F-63/C5c), not an in-play total.
+                | Effect::AbilityScoreGrantParam { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }

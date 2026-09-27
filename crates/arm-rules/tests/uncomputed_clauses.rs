@@ -2233,11 +2233,11 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
         "orphan: the deprivation-check-as-food clause and \"may only be taken by grogs\" carry \
          no effect/prerequisite — only the Unaging half is computed, ArMDE:5735-5748",
     ),
-    (
-        "flaw.corrupted_arts",
-        "effects: null — the +3/-3 Casting Total swing and the XP gain/loss on success/failure \
-         are entirely uncomputed (also D46-pending), ArMDE:5853-5858",
-    ),
+    // `flaw.corrupted_arts` resolved (Phase 2 C5c, D15): reclassified
+    // `uncomputed_rule` with the full passage in `description` in both
+    // locales, so it no longer trips this creation_effect/in_play_effect-
+    // scoped screen at all — it is now covered by
+    // `every_uncomputed_rule_entry_states_its_rule_in_every_locale` instead.
     (
         "flaw.creative_block",
         "orphan: \"roll twice as many dice on the experimentation table\" has no effect — only \

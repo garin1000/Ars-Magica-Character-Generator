@@ -329,6 +329,11 @@ macro_rules! irrelevant_effect_variants {
         | Effect::ScaledRestrictedAbilityXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
+        // The parameter-relative sibling (F-63, C5c): a free *floor* restricted
+        // to one instance, exactly like `AbilityScoreGrant` above — a no-op in
+        // every fold this tail serves (bonus/shift/Affinity-reduction), never a
+        // bonus in its own right.
+        | Effect::AbilityScoreGrantParam { .. }
         | Effect::SpellLevels { .. }
         | Effect::GeneralXp { .. }
         | Effect::LaterLifeXpRate { .. }
@@ -2508,6 +2513,7 @@ mod tests {
             ability_score_floors(&e, &rs),
             vec![AbilityFloor {
                 ability: Id::new("ability.second_sight"),
+                parameter: None,
                 floor: 1,
             }]
         );

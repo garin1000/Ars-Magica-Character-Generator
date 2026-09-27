@@ -993,6 +993,12 @@ param-label-study = Study
 # Simple Student's finished-years count (ArMDE:4960); the cap (2 years, 60 xp)
 # is the parameter's own min/max, enforced by the engine.
 param-label-years = Years
+# The three Corrupted entries' multi-valued choice (D9 part 3, D15,
+# ArMDE:5847-5864) — which Abilities/Arts/spells the Flaw affects.
+param-label-targets = Targets
+# Enchanting (Ability)'s player-chosen artistic medium (ArMDE:3747-3750, F-63)
+# — "music, dance, drawing, storytelling, even craftwork".
+param-label-medium = Medium
 
 # C5b: the multi-select checklist (a `multi_ref` parameter, D9 part 3) shown
 # instead of a bare, unexplained empty list when there is nothing to choose

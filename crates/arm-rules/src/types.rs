@@ -1342,6 +1342,32 @@ pub enum Effect {
         /// The free bought-score floor granted.
         amount: u8,
     },
+    /// The parameter-relative sibling of [`Self::AbilityScoreGrant`] (F-63,
+    /// `docs/vf-audit/design-c0-parameter-model.md` § 2): grants the same free
+    /// bought-score floor, but restricted to the ONE ability *instance* the
+    /// declaring item's own parameter names, rather than to the whole ability
+    /// unconditionally. Enchanting (Ability) confers "the Ability Enchanting
+    /// (Ability) 1" where "(Ability)" is a player-chosen medium (music, dance,
+    /// storytelling, "even craftwork") — `instance` reads that choice via
+    /// [`ParamValue::Bound`], so the floor applies to the chosen medium's
+    /// instance alone, never to every instance of `ability`. Kept as a
+    /// separate "Foo"/"FooParam" variant rather than an `Option<ParamValue>`
+    /// field bolted onto [`Self::AbilityScoreGrant`], on the same precedent as
+    /// [`Self::CharacteristicScoreDelta`]/[`Self::CharacteristicScoreDeltaParam`].
+    ///
+    /// Source: ArMDE:3747-3750.
+    AbilityScoreGrantParam {
+        /// The ability granted a free starting score.
+        ability: Id,
+        /// The instance this grant restricts to — `None` for a plain
+        /// (single-instance) ability. Not expected to occur in practice (a
+        /// plain-ability grant has no reason to use this variant over
+        /// [`Self::AbilityScoreGrant`]), but the type does not forbid it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        instance: Option<ParamValue>,
+        /// The free bought-score floor granted.
+        amount: u8,
+    },
     /// Adds `amount` levels to the magus's spell-levels budget (on top of the
     /// type profile's [`PointBudget`]-adjacent `spell_levels`). Signed: Skilled
     /// Parens grants +30, Weak Parens −30. The grants from every matching

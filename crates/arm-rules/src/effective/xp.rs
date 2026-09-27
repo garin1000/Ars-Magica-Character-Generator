@@ -574,52 +574,70 @@ fn resolve_ability_refs(
     refs.iter()
         .filter(|a| a.active_for(selection))
         .map(|a| {
-            let ability = a.ability().clone();
-            let Some(crate::types::ParamValue::Bound { param }) = a.instance() else {
-                return AbilityInstanceRef {
-                    ability,
-                    parameter: a.resolved_instance(selection),
-                    requires_catalogued: matches!(
-                        a.instance(),
-                        Some(crate::types::ParamValue::Literal { .. })
-                    ),
-                    bound_source: None,
-                    ambiguous: false,
-                };
-            };
-            // Design § 4.1: resolved against effective selections, not just
-            // read off `selection` directly — the SAME declaring item may be
-            // held again elsewhere (bought + granted), which is exactly the
-            // ambiguity this guards against.
-            match resolve_link(entity, ruleset, &selection.item_ref, param) {
-                LinkResolution::Resolved(value) => AbilityInstanceRef {
-                    ability,
-                    parameter: value,
-                    requires_catalogued: false,
-                    bound_source: Some((selection.item_ref.clone(), param.clone())),
-                    ambiguous: false,
-                },
-                LinkResolution::Ambiguous(_) => AbilityInstanceRef {
-                    ability,
-                    parameter: None,
-                    requires_catalogued: false,
-                    bound_source: None,
-                    ambiguous: true,
-                },
-                // `selection` is itself an occurrence of its own declaring
-                // item, so zero occurrences cannot happen here in practice;
-                // treated defensively as unset (matches nothing but an
-                // explicit empty `Text`).
-                LinkResolution::Dangling => AbilityInstanceRef {
-                    ability,
-                    parameter: None,
-                    requires_catalogued: false,
-                    bound_source: Some((selection.item_ref.clone(), param.clone())),
-                    ambiguous: false,
-                },
-            }
+            resolve_instance(
+                a.ability().clone(),
+                a.instance(),
+                entity,
+                ruleset,
+                selection,
+            )
         })
         .collect()
+}
+
+/// Resolves a single instance constraint (`Literal`, `Bound`, or absent)
+/// against the selection that declares it — the Bound/Literal/plain
+/// resolution [`resolve_ability_refs`] applies per `AbilityRef` entry,
+/// factored out so [`ability_authorizations`]'s `AbilityScoreGrantParam` arm
+/// (F-63, D59/CV: the Ability instance LINKS to the granting Virtue's own
+/// parameter rather than a second, invented resolution path) can resolve its
+/// own single `instance` the identical way.
+pub(crate) fn resolve_instance(
+    ability: Id,
+    instance: Option<&crate::types::ParamValue>,
+    entity: &Entity,
+    ruleset: &Ruleset,
+    selection: &Selection,
+) -> AbilityInstanceRef {
+    let Some(crate::types::ParamValue::Bound { param }) = instance else {
+        return AbilityInstanceRef {
+            ability,
+            parameter: instance.and_then(|v| v.resolve(selection)),
+            requires_catalogued: matches!(instance, Some(crate::types::ParamValue::Literal { .. })),
+            bound_source: None,
+            ambiguous: false,
+        };
+    };
+    // Design § 4.1: resolved against effective selections, not just read off
+    // `selection` directly — the SAME declaring item may be held again
+    // elsewhere (bought + granted), which is exactly the ambiguity this
+    // guards against.
+    match resolve_link(entity, ruleset, &selection.item_ref, param) {
+        LinkResolution::Resolved(value) => AbilityInstanceRef {
+            ability,
+            parameter: value,
+            requires_catalogued: false,
+            bound_source: Some((selection.item_ref.clone(), param.clone())),
+            ambiguous: false,
+        },
+        LinkResolution::Ambiguous(_) => AbilityInstanceRef {
+            ability,
+            parameter: None,
+            requires_catalogued: false,
+            bound_source: None,
+            ambiguous: true,
+        },
+        // `selection` is itself an occurrence of its own declaring item, so
+        // zero occurrences cannot happen here in practice; treated
+        // defensively as unset (matches nothing but an explicit empty `Text`).
+        LinkResolution::Dangling => AbilityInstanceRef {
+            ability,
+            parameter: None,
+            requires_catalogued: false,
+            bound_source: Some((selection.item_ref.clone(), param.clone())),
+            ambiguous: false,
+        },
+    }
 }
 
 /// The Abilities and categories the character's selections permit.
@@ -749,6 +767,34 @@ pub(crate) fn ability_authorizations(
                         requires_catalogued: false,
                         bound_source: None,
                         ambiguous: false,
+                    });
+                }
+                // F-63/C5c: the parameter-relative sibling of `AbilityScoreGrant`
+                // above authorizes too, on the identical reasoning — a free score
+                // is permission to have it — but scoped to the ONE instance the
+                // grant resolves, via the shared `resolve_instance` helper
+                // (design § 2/§ 4; corrects § 1a row 12, which read this as a
+                // no-op — see `docs/vf-audit/design-c0-parameter-model.md`'s
+                // dated correction note). `bound_source`, when present, is what
+                // lets `ability_parameter_options` offer this Virtue's own
+                // parameter as a LINK target for the Ability's picker (D59/CV),
+                // rather than making the player retype the medium as free text.
+                Effect::AbilityScoreGrantParam {
+                    ability, instance, ..
+                } => {
+                    let resolved = resolve_instance(
+                        ability.clone(),
+                        instance.as_ref(),
+                        entity,
+                        ruleset,
+                        selection,
+                    );
+                    abilities.insert(AuthorizedAbility {
+                        ability: resolved.ability,
+                        instance: resolved.parameter,
+                        requires_catalogued: resolved.requires_catalogued,
+                        bound_source: resolved.bound_source,
+                        ambiguous: resolved.ambiguous,
                     });
                 }
                 // The gated-bonus carrier (Student of (Realm)'s +2 Lore, row

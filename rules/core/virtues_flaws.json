@@ -474,6 +474,7 @@
     "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "targets", "type": "multi_ref", "domain": "ability" }],
     "source": { "anchor": "corrupted-abilities", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5847, 5852] }
   },
   {
@@ -481,9 +482,10 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "creation_effect",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "targets", "type": "multi_ref", "domain": "art" }],
     "source": { "anchor": "corrupted-arts", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5853, 5858] }
   },
   {
@@ -491,10 +493,10 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
-    "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
+    "parameters": [{ "key": "targets", "type": "multi_ref", "domain": "spell" }],
     "source": { "anchor": "corrupted-spells", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5859, 5864] }
   },
   {
@@ -4001,8 +4003,8 @@
     "categories": ["supernatural"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
-    "effects": [{ "type": "ability_score_grant", "ability": "ability.enchanting", "amount": 1 }],
+    "parameters": [{ "key": "medium", "type": "ref", "domain": "text" }],
+    "effects": [{ "type": "ability_score_grant_param", "ability": "ability.enchanting", "instance": { "param": "medium" }, "amount": 1 }],
     "source": { "anchor": "enchanting-ability", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3747, 3750] }
   },
   {

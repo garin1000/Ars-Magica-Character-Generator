@@ -1209,6 +1209,10 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::ScaledRestrictedAbilityXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
+        // A fixed floor grant restricted to one instance (F-63/C5c) — no
+        // creation-time dangling-target check here, matching
+        // `AbilityScoreGrant`'s own classification just above.
+        | Effect::AbilityScoreGrantParam { .. }
         | Effect::SpellLevels { .. }
         | Effect::GeneralXp { .. }
         | Effect::LaterLifeXpRate { .. }

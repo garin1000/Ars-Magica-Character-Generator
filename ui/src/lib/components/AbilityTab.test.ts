@@ -446,6 +446,43 @@ describe('AbilityTab unbought bonus rows (#17)', () => {
   });
 });
 
+// F-63 (Enchanting Ability, `docs/vf-audit/decisions.md` D14/design-c0 § 2): a
+// virtue's floor grant can be restricted to ONE bought instance
+// (`AbilityFloor.parameter`), never applying to every instance of the Ability
+// — the same "lands on the right row" requirement `AbilityBonus.parameter`
+// already established for bonuses.
+describe('AbilityTab parameter-scoped floors (F-63)', () => {
+  it('applies a parameter-bound floor to the matching bought instance', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.parma_magica', score: 0, parameter: { text: 'storytelling' } },
+    ];
+    store.effective = {
+      ability_bonuses: [],
+      ability_score_floors: [
+        { ability: 'ability.parma_magica', parameter: 'storytelling', floor: 1 },
+      ],
+    } as unknown as EffectiveScores;
+    const body = html();
+    const badge = /data-testid="ability-eff-ability.parma_magica-0"[^>]*>([\s\S]*?)</.exec(body);
+    expect(badge).not.toBeNull();
+    expect(badge![1]).toContain('1');
+  });
+
+  it('does not apply the same floor to a DIFFERENT bought instance', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.parma_magica', score: 0, parameter: { text: 'dance' } },
+    ];
+    store.effective = {
+      ability_bonuses: [],
+      ability_score_floors: [
+        { ability: 'ability.parma_magica', parameter: 'storytelling', floor: 1 },
+      ],
+    } as unknown as EffectiveScores;
+    const body = html();
+    expect(body).not.toContain('data-testid="ability-eff-ability.parma_magica-0"');
+  });
+});
+
 // --- manual-testing-findings #21: the age cap note is gone --------------------
 //
 // This component is BOTH surfaces — the editor's Abilities tab and the wizard's

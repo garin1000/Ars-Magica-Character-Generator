@@ -2099,11 +2099,9 @@ fn is_computed(item: &PointItem, profile_referenced: &BTreeSet<String>) -> bool 
 /// `(id, why)`; [`pending_d46_classification_entries_still_trip_the_guard`] keeps
 /// every row honest.
 const PENDING_D46_CLASSIFICATION: &[(&str, &str)] = &[
-    (
-        "flaw.corrupted_arts",
-        "creation_effect, carries no effects, and is named in no type profile's \
-         required_traits/forbidden_traits (measurements.md § 8 row 11)",
-    ),
+    // `flaw.corrupted_arts` resolved (Phase 2 C5c, D15): reclassified
+    // `uncomputed_rule`, so it no longer trips this creation_effect-scoped
+    // guard at all.
     (
         "flaw.savantism",
         "creation_effect, carries no effects, and is named in no type profile's \

@@ -242,11 +242,13 @@
   },
   "flaw.corrupted_arts": {
     "name": "Corrupted Arts",
-    "summary": "The character has studied one of the Hermetic Arts from a corrupted source."
+    "summary": "The character has studied one of the Hermetic Arts from a corrupted source.",
+    "description": "The character has studied one of the Hermetic Arts from a corrupted source. Use of a corrupted Art for a selfish or sinful action receives a +3 bonus to the character's Casting Total. Succeeding in a roll because of this bonus (that is, when without it the roll would have failed) means he immediately acquires 5 experience points in that Art. However, uses of the Art that are neutral or selfless receive a -3 penalty, and if you fail the roll because of this penalty, he immediately loses 5 experience points in the Art.\n\nAny use of a corrupted Art taints the character's magic, causing it to appear unholy. You may only take this Flaw once, though it can affect multiple Arts."
   },
   "flaw.corrupted_spells": {
     "name": "Corrupted Spells",
-    "summary": "The character has learned at least 30 levels of formulaic spells from a source that has been corrupted in some way."
+    "summary": "The character has learned at least 30 levels of formulaic spells from a source that has been corrupted in some way.",
+    "description": "The character has learned at least 30 levels of formulaic spells from a source that has been corrupted in some way. Use of a corrupted spell for a selfish or sinful action receives a +3 bonus to the character's Casting Total and Penetration Total. Succeeding in a roll because of this bonus (that is, when without it the spell would have failed or cost Fatigue) means he immediately acquires 5 experience points towards mastery of that spell. However, uses of the spell that are neutral or selfless receive a -3 penalty, and if you fail the roll or he fatigues himself because of this penalty, he immediately loses 5 experience points. If this would result in negative experience, he forgets the spell completely.\n\nAny use of a corrupted spell is tainted and appears unholy. You may only take this Flaw once, though it can affect as many of the character's spells as you wish."
   },
   "flaw.covenant_upbringing": {
     "name": "Covenant Upbringing",
@@ -1746,7 +1748,7 @@
     "summary": "This is the same as the Knight Virtue, though due to the rather different upbringing of Muslim emirs, you are likely to be as skilled with hunting, religious teachings, and culture as you are with martial pursuits."
   },
   "virtue.enchanting_ability": {
-    "name": "Enchanting {ability}",
+    "name": "Enchanting {medium}",
     "summary": "When you set your mind to it, you can magically induce emotions and beliefs in others with a particular kind of artistic expression: music, dance, drawing, storytelling, even craftwork."
   },
   "virtue.enduring_constitution": {

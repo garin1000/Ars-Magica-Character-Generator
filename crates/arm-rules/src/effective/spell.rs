@@ -28,6 +28,8 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::ScaledRestrictedAbilityXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
+        // F-63/C5c: a floor grant, not a spell-levels contribution.
+        | Effect::AbilityScoreGrantParam { .. }
         | Effect::GeneralXp { .. }
         | Effect::LaterLifeXpRate { .. }
         | Effect::AbilityAuthorization { .. }
@@ -92,6 +94,8 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::ScaledRestrictedAbilityXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
+        // F-63/C5c: a floor grant, not a general-XP contribution.
+        | Effect::AbilityScoreGrantParam { .. }
         | Effect::SpellLevels { .. }
         // The later-life RATE is not a pool bonus: it multiplies out into the
         // life-stage budget (see `life_stage::LifeStageRules::later_life_budget`),
@@ -484,6 +488,8 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::ScaledRestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
+                // F-63/C5c: a floor grant, no advancement Affinity.
+                | Effect::AbilityScoreGrantParam { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
