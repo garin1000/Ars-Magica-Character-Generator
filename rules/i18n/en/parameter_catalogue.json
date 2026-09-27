@@ -1,0 +1,17 @@
+{ "names": [
+  { "id": "language.arabic", "name": "Arabic" },
+  { "id": "language.aramaic", "name": "Aramaic" },
+  { "id": "language.gothic", "name": "Gothic" },
+  { "id": "language.greek", "name": "Greek" },
+  { "id": "language.hebrew", "name": "Hebrew" },
+  { "id": "language.latin", "name": "Latin" },
+  { "id": "language.persian", "name": "Persian" },
+  { "id": "organization.house_bjornaer", "name": "House Bjornaer" },
+  { "id": "organization.order_of_hermes", "name": "Order of Hermes" },
+  { "id": "profession.falconer", "name": "Falconer" },
+  { "id": "profession.marshal", "name": "Marshal" },
+  { "id": "profession.master_of_kennels", "name": "Master of Kennels" },
+  { "id": "profession.merchant", "name": "Merchant" },
+  { "id": "profession.poet", "name": "Poet" },
+  { "id": "profession.storyteller", "name": "Storyteller" }
+] }

@@ -9056,6 +9056,65 @@ The House row is the only one resting on a rule, and it is the same choice the
 resolution*); the report merely observes that the choice has not been made, and
 still does not require it.
 
+### Catalogued parameter values (CV1) — `catalogue.rs`
+
+Fixes the D14 literal-instance defect: matching a rules-authored
+`ParamValue::Literal` (e.g. an Educated Virtue's Latin exemplar) against a
+player-typed `AbilityScore.parameter` used to be plain `==` on two strings, so
+a correct answer in the wrong case or language ("Latein" for a German player)
+silently failed to authorize or fund. See
+`docs/vf-audit/design-cv-catalogued-values.md` (Revision 4) for the full
+design; this slice (CV1) ships only the catalogue data, its i18n names, and
+their load-time integrity — the `Ability`/`AbilityScore` matching fix itself
+lands in CV2 onward.
+
+- Data: `rules/core/parameter_catalogues.json` — three catalogues
+  (`catalogue.language`, `catalogue.organization`, `catalogue.profession`),
+  each value citing the ArMDE passage that names it as a fixed, universal
+  value rather than a character-specific one (the design note § 1.1 explains
+  why "Organization Lore: Guild" was rejected as a catalogue candidate on
+  exactly this ground).
+- i18n: `rules/i18n/{en,de}/parameter_catalogue.json` — `{ "names": [{"id",
+  "name"}, …] }`, one entry per catalogue value, both locales. German names
+  follow `CLAUDE.md`'s translation-table precedence: `orden-tribunale.md:16`
+  confirms "House Bjornaer"; no table exists for language/profession names
+  (checked `islamische-begriffe.md`, `juedische-begriffe.md`, `fertigkeiten.md`),
+  so those fall through to the DE rulebook, which mirrors the English file
+  line-for-line (design note § 9).
+- Implementation: `crates/arm-rules/src/catalogue.rs` — `Catalogue`,
+  `CatalogueValue`, `load_parameter_catalogues`, `load_catalogue_names`.
+  Standalone loaders, **not yet wired into `Ruleset`/`RulesetSources`** — CV2
+  wires `Ability.catalogued` and the referential-integrity check that
+  resolves a `ParamValue::Literal` against a catalogue.
+- Load-time integrity, enforced by `load_parameter_catalogues`/
+  `load_catalogue_names` themselves (not yet `Ruleset::validate_integrity` —
+  CV2 moves it there): catalogue ids and value ids unique, both sorted by id,
+  each catalogue non-empty; every value has both an `en` and a `de` name; no
+  two values within one catalogue collide under trimmed, case-folded
+  comparison across the union of their `en`/`de` names.
+
+| id | EN name | DE name | Source |
+|---|---|---|---|
+| `language.arabic` | Arabic | Arabisch | `ArMDE:3719-3721` |
+| `language.aramaic` | Aramaic | Aramäisch | `ArMDE:3723-3725` |
+| `language.gothic` | Gothic | Gotisch | `ArMDE:3563-3565` |
+| `language.greek` | Greek | Griechisch | `ArMDE:3719-3721` |
+| `language.hebrew` | Hebrew | Hebräisch | `ArMDE:3723-3725` |
+| `language.latin` | Latin | Latein | `ArMDE:3711-3713` |
+| `language.persian` | Persian | Persisch | `ArMDE:3719-3721` |
+| `organization.house_bjornaer` | House Bjornaer | Haus Bjornaer | `ArMDE:3563-3565` |
+| `organization.order_of_hermes` | Order of Hermes | Orden des Hermes | `ArMDE:4063-4065` |
+| `profession.falconer` | Falconer | Falkner | `ArMDE:3847-3852` |
+| `profession.marshal` | Marshal | Marschall | `ArMDE:4449-4453` |
+| `profession.master_of_kennels` | Master of Kennels | Meister der Hundezwinger | `ArMDE:4467-4470` |
+| `profession.merchant` | Merchant | Kaufmann | `ArMDE:3727-3729` |
+| `profession.poet` | Poet | Dichter | `ArMDE:4456-4461` |
+| `profession.storyteller` | Storyteller | Geschichtenerzähler | `ArMDE:4456-4461` |
+
+Tests: `crates/arm-rules/tests/parameter_catalogues.rs` — fixture-based
+loading, both-locale names, duplicate-id and cross-locale-collision failures,
+plus `shipped_catalogues_and_names_load_clean` against the real shipped files.
+
 ---
 
 ## Other available books

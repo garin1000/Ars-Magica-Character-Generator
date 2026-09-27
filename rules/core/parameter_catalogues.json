@@ -1,0 +1,34 @@
+{
+  "catalogues": [
+    {
+      "id": "catalogue.language",
+      "values": [
+        { "id": "language.arabic", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] } },
+        { "id": "language.aramaic", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3723, 3725] } },
+        { "id": "language.gothic", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
+        { "id": "language.greek", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] } },
+        { "id": "language.hebrew", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3723, 3725] } },
+        { "id": "language.latin", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] } },
+        { "id": "language.persian", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] } }
+      ]
+    },
+    {
+      "id": "catalogue.organization",
+      "values": [
+        { "id": "organization.house_bjornaer", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
+        { "id": "organization.order_of_hermes", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4065] } }
+      ]
+    },
+    {
+      "id": "catalogue.profession",
+      "values": [
+        { "id": "profession.falconer", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3847, 3852] } },
+        { "id": "profession.marshal", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4449, 4453] } },
+        { "id": "profession.master_of_kennels", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4467, 4470] } },
+        { "id": "profession.merchant", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3727, 3729] } },
+        { "id": "profession.poet", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4456, 4461] } },
+        { "id": "profession.storyteller", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4456, 4461] } }
+      ]
+    }
+  ]
+}

@@ -15,6 +15,9 @@ pub use aging::{
     resolve_crisis_row, resolve_outcome, resolve_year, revert_year,
 };
 pub mod art;
+pub mod catalogue;
+#[doc(inline)]
+pub use catalogue::{Catalogue, CatalogueValue, load_catalogue_names, load_parameter_catalogues};
 pub mod characteristics;
 pub mod childhood;
 pub mod completeness;

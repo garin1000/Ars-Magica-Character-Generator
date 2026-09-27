@@ -129,8 +129,12 @@ pub struct PostApprenticeshipRules {
 /// Ability id, since an instance value is free-text player input with no
 /// localization path (a German player types "Latein"). The match therefore stays
 /// **deliberately wider than the rules' letter**, permanently: languages are
-/// troupe-defined free text and the rulebook publishes no language list, so there is
-/// no catalogue for a requirement to point at and never will be. See `RULES.md`.
+/// troupe-defined free text and the rulebook publishes no language list, so
+/// this requirement stays instance-blind by design even after CV
+/// (`docs/vf-audit/design-cv-catalogued-values.md`) adds a `language` catalogue
+/// for literal instances elsewhere — narrowing to one instance here would
+/// misstate ArMDE:7151/:2437's *any-qualifying-language* rule, not merely widen
+/// an implementation gap. See `RULES.md`.
 /// [`Self::exemplar`] is the honesty fix for that widening.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AbilityRequirement {
