@@ -828,6 +828,20 @@ presumption of correctness.
 
 ---
 
+## D60 — True Love's reciprocity is text; Feral Upbringing's whitelist is creation-only
+
+**Norbert, 2026-09-27**, on B0's open questions (`design-b0-ranging-and-predicates.md` § 9).
+
+1. **F-334 (`virtue.true_love_pc`) stays text only.** ArMDE:5175's reciprocity
+   constrains a second character, which a one-entity save cannot see. The
+   reciprocity rule and ArMDE:5177's "True Friend" rename go into `description`
+   in both locales (X2). B3 builds no `Prereq` for it.
+2. **Feral Upbringing's Ability whitelist applies to beginning Abilities only**
+   (ArMDE:6113), as Sheltered Upbringing leaves in-play learning open. If two
+   such restrictions ever stack, their lists **intersect**.
+
+---
+
 ## D59 — a rule-recognised Ability parameter is a catalogue id, a Virtue link, or free text
 
 **Norbert, 2026-09-27**, after C1/C4's literal instances (`language = latin`,

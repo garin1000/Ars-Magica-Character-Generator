@@ -580,6 +580,10 @@ landed `ParamGate` — so they may run in either order or, given the plan's
 
 ## 9. Open questions for Norbert
 
+**Both resolved 2026-09-27 as recommended — see `decisions.md` D60.** F-334 is
+text only (X2), so B3 builds no parameter-comparing `Prereq`; Feral Upbringing's
+whitelist is creation-only, intersecting if stacked.
+
 1. **F-334 — does the plan's "parameter-comparing prereq" supersede the
    original "cannot be, full stop" closure?** The D1–D18-era ruling
    (`batch-09.md`, corrections.md § 3.15a) is unambiguous: a cross-*character*
