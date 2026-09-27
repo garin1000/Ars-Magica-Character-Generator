@@ -202,6 +202,7 @@ impl fmt::Display for IssueSeverity {
 /// | `ability_score_out_of_range` | error | abilities | `ability`, `score`, `max` |
 /// | `ability_bonus_dangling_target` | error | abilities | `item`, `ability`, `parameter` |
 /// | `specialty_forbidden` | error | abilities | `ability`, `specialty` |
+/// | `ambiguous_bound_parameter` | error | abilities | `item`, `ability`, `param` |
 /// | `unknown_art` | error | arts | `art` |
 /// | `duplicate_art` | error | arts | `art`, `count` |
 /// | `art_score_out_of_range` | error | arts | `art`, `score`, `max` |
@@ -844,6 +845,19 @@ impl ValidationIssue {
     /// (bought ++ granted): the passage states what the character *has*, not how
     /// the Flaw was acquired, even though no shipped profile currently grants it.
     pub const CODE_SPECIALTY_FORBIDDEN: &'static str = "specialty_forbidden";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Bound source (a
+    /// pool's own `ParamValue::Bound` instance) or a `Linked` target's
+    /// `(item, param)` names a declaring item held more than once among
+    /// effective (bought ∪ granted) selections — design § 4.1's ambiguity
+    /// guard. Never resolved by guessing: the offending link/pool satisfies
+    /// nothing until the duplicate is resolved.
+    ///
+    /// Latent in practice today: no shipped grant duplicates a Bound/Link-
+    /// declaring item (design § 4.2's data-integrity pin,
+    /// `no_bound_or_link_declaring_item_is_ever_granted`), so this is reachable
+    /// only via a hand-edited or direct-unchecked save holding the same
+    /// once-only item twice.
+    pub const CODE_AMBIGUOUS_BOUND_PARAMETER: &'static str = "ambiguous_bound_parameter";
 
     /// Builds an issue with the given severity, code, phase, args, and context.
     pub fn new(

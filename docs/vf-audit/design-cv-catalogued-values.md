@@ -606,6 +606,20 @@ Virtue/Flaw removal flow **before** the selection is actually spliced out (so
 5.4 uses for a load-time dangling link, so there is exactly one place that
 decides what "losing your link target" means.
 
+**[implemented, CV5] Shipped engine-only; the UI call site is CV7's, not
+CV5's** (§ 10's slice table already scoped it that way). `unlink_ability_parameters`
+is a real, tested function in `effective.rs` as of CV5 — but nothing in
+`ui/src` calls it yet, because CV5 ships no UI at all. CV7's own row ("removal
+flow calls § 5.5") is where the Virtue/Flaw removal handler must call this
+function **before** applying the removal, exactly as documented above. Since §
+7's integrity rule pins every Bound/Link-declaring item to `max_total <= 1`
+and § 4.2 pins that none is ever granted, a link's target is always a bought,
+once-only selection — so there are exactly **two** ways a link's target can
+actually disappear, both of them CV7's to wire: the player removes that
+Virtue/Flaw selection outright, or clears its own parameter (the guild/craft
+text) back to empty. There is no third path (no grant can ever remove itself
+out from under a link).
+
 **Reporting.** `LoadedEntity` gains fields mirroring the existing
 `migrated_aging_characteristics` precedent:
 

@@ -1393,7 +1393,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:497).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:529).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -7402,8 +7402,68 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   then. `effective/ability.rs`'s `AbilityBonusGated` target comparison is
   **not** yet rewritten to this rule — no shipped `ability_bonus_gated` effect
   declares an `instance` restriction, so the gap is latent, not live, exactly
-  as design § 4.2 records for the Bound/Link ambiguity guard; CV5 covers it
-  alongside the rest of § 4.
+  as design § 4.2 records for the Bound/Link ambiguity guard. **Still true
+  after CV5** (see CV5's own entry below): CV5 rewired every shipped Bound/Link
+  site (`RestrictedAbilityXp`/`ScaledRestrictedAbilityXp`/`AbilityAuthorization`/
+  `AbilityBonusGated`'s OWN `resolve_ability_refs`-derived `instances`, in
+  `ability_authorizations`/`restricted_ability_xp_pools`), but NOT this one
+  bonus-comparison branch, which reads a plain `parameter: Option<&str>` match
+  key rather than the typed `AbilityParameterValue` and would need its own,
+  wider threading through every `ability_bonus` caller — deferred until a book
+  ships a gated `AbilityBonusGated` target with an `instance` restriction to
+  actually exercise it.
+- **CV5, Bound/Link matching (design § 4), the ambiguity guard (§ 4.1), the
+  dangling/ambiguous-link fold (§ 5.4), and the unlink operation (§ 5.5).**
+  `effective.rs::resolve_link` resolves a `ParamValue::Bound` source or an
+  `AbilityParameterValue::Linked` target's `(item, param)` against effective
+  (bought ∪ granted, D2) selections: zero occurrences → `Dangling`; exactly one
+  → `Resolved`; more than one → `Ambiguous` (carrying the bought copy's value
+  only when exactly one occurrence is bought — "bought beats granted", §
+  4.1). `effective/xp.rs::resolve_ability_refs` calls it for every
+  `ParamValue::Bound` instance instead of reading `selection.params` directly,
+  so `AbilityInstanceRef`/`AuthorizedAbility` gain `bound_source: Option<(Id,
+  String)>` and `ambiguous: bool`. Matching
+  (`AbilityInstanceRef::satisfied_by`/`AuthorizedAbility::covers`, shared via
+  the new `effective/xp.rs::bound_instance_satisfied`) checks `ambiguous`
+  first (satisfies nothing, full stop), then applies rule 1 (a bought `Linked`
+  naming the SAME `(item, param)` — no string comparison) or rule 2 (a bought
+  `Text`/`Catalogued` whose content equals the Bound source's current value,
+  case-folded and trimmed via the now-`pub(crate)` `catalogue::fold_name` —
+  the SAME fold the load-time catalogue-matching fold uses, so the two can
+  never disagree on "does this text spell out this value"). A bought
+  `Catalogued` compares its raw id (not a localized name) against the Bound
+  source's text — full both-locale name resolution at this layer would need
+  `catalogue_names` threaded into `effective`/`validation`, which no shipped
+  Bound-declaring item's data exercises (guild/craft are always free text),
+  so it is deferred rather than built for a case nothing reaches.
+  `validation/scores.rs::validate_ability_parameter_link` emits
+  `issue-ambiguous_bound_parameter` for a bought `Linked` value that resolves
+  ambiguous — telling the player WHY a link stopped funding, since the
+  matching layer already silently treats it as satisfying nothing.
+  `migration.rs::fold_dangling_and_ambiguous_links` runs unconditionally on
+  every load (value-driven, no version signal, exactly like
+  `trim_all_selection_params`): a `Linked` value that resolves `Dangling` or
+  `Resolved(None)` folds to empty `Text`; one that resolves `Ambiguous` folds
+  to `Text` holding the provenance fallback; both are reported on
+  `LoadedEntity::dangling_links`/`ambiguous_links` (`(ability, item, param)`
+  triples). `effective.rs::unlink_ability_parameters` is the same conversion
+  as an engine-owned operation the UI must call BEFORE splicing out a removed
+  Virtue/Flaw selection, so "last resolvable value" is still readable —
+  **wiring the Virtue/Flaw removal flow to call it is CV7's job, not CV5's**
+  (CV5 ships it engine-only, per the design note's own slice table). Since a
+  link can only ever target a once-only (`max_total <= 1`, § 7), never-granted
+  (§ 4.2) bought selection, the only two paths that can actually orphan a link
+  are the player removing that exact Virtue/Flaw selection, or clearing its
+  own parameter (the guild/craft text) back to empty — there is no third way
+  to lose a link target. `export/resolve.rs::Doc::ability_param_value`'s
+  `Linked` arm now calls `resolve_link` too (§ 6.4's "one engine function"),
+  showing the ambiguity fallback rather than a blank cell — never a raw id or
+  `(item, param)` pair. Tests: `crates/arm-rules/tests/cv5_bound_link_matching.rs`,
+  `cv5_link_fold_and_unlink.rs`; `data_integrity.rs`'s
+  `no_bound_or_link_declaring_item_is_ever_granted` (design § 4.2's mitigation,
+  passes vacuously today, mirroring the C0 §3 precedent). No `SCHEMA_VERSION`
+  bump: `Linked` already shipped inside CV4's 17 → 18 (design § 3.2), and
+  adding resolution logic on top is purely additive for existing v18 data.
 - Tests: `simple_student_scales_its_restricted_pool_by_finished_years`,
   `simple_student_funds_latin_but_not_another_dead_language`
   (`tests/data_integrity.rs`); `a_number_type_paired_with_a_non_number_domain_fails_the_load`,

@@ -97,6 +97,125 @@ pub(crate) fn fold_granted_selections<'a>(
     }
 }
 
+/// Design § 4.1: resolving a `ParamValue::Bound` source or an
+/// [`AbilityParameterValue::Linked`] target's `(item, param)` against
+/// `entity`'s effective (bought ∪ granted, D2) selections — shared by matching
+/// (design § 4), the dangling/ambiguous-link fold (design § 5.4, `migration.rs`),
+/// and display (design § 6.4), so all three read the SAME rule for "what does
+/// this link currently mean," never three independent readings that could
+/// disagree.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum LinkResolution {
+    /// Exactly one effective occurrence of `item`; its current `param` value,
+    /// `None` if the parameter is declared but was never filled in.
+    Resolved(Option<String>),
+    /// Zero effective occurrences — `item` is not held at all.
+    Dangling,
+    /// More than one effective occurrence (design § 4.1) — never guessed.
+    /// Carries the BOUGHT copy's value when exactly one of the occurrences is
+    /// the bought one (§ 4.1's "bought beats granted" display fallback);
+    /// `None` when the ambiguity is between two granted copies (latent today,
+    /// § 4.2's data-integrity pin).
+    Ambiguous(Option<String>),
+}
+
+/// Resolves `(item, param)` against `entity`'s effective selections (design §
+/// 4.1's ambiguity guard): zero occurrences of `item` among bought ∪ granted
+/// selections is [`LinkResolution::Dangling`]; exactly one resolves normally;
+/// more than one is [`LinkResolution::Ambiguous`], carrying the BOUGHT copy's
+/// value only when exactly one of the occurrences is bought (§ 4.1's "bought
+/// beats granted" display fallback) — `None` when the ambiguity is between
+/// two granted copies (latent today, § 4.2's data-integrity pin) or more than
+/// one bought copy.
+pub(crate) fn resolve_link(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    item: &Id,
+    param: &str,
+) -> LinkResolution {
+    let effective = selections_for_effects(entity, ruleset);
+    let value_of = |s: &Selection| -> Option<String> {
+        s.params
+            .get(param)
+            .and_then(SelectionParamValue::as_single)
+            .map(|id| id.as_str().to_string())
+    };
+    let mut occurrences = effective.iter().filter(|s| s.item_ref == *item);
+    let Some(first) = occurrences.next() else {
+        return LinkResolution::Dangling;
+    };
+    if occurrences.next().is_none() {
+        return LinkResolution::Resolved(value_of(first));
+    }
+    let bought: Vec<&Selection> = entity
+        .selections
+        .iter()
+        .filter(|s| s.item_ref == *item)
+        .collect();
+    let fallback = match bought.as_slice() {
+        [only] => value_of(only),
+        _ => None,
+    };
+    LinkResolution::Ambiguous(fallback)
+}
+
+/// Design § 5.5: converts every bought [`crate::types::AbilityScore`] whose
+/// `parameter` is [`AbilityParameterValue::Linked`] to `removed_item` into
+/// [`AbilityParameterValue::Text`] holding its last resolvable value — called
+/// by the UI's Virtue/Flaw removal flow BEFORE the selection is actually
+/// spliced out of `entity.selections`, so "last resolvable value" is still
+/// readable. Returns the abilities converted, for the caller's notice.
+///
+/// The load-time dangling-link fold (design § 5.4, `migration.rs`) is the only
+/// other place that performs this conversion — a caller must call this
+/// function, never reimplement the conversion, so "losing your link target"
+/// means one thing everywhere.
+///
+/// Links can only ever target a once-only (`max_total <= 1`, design § 7),
+/// never-granted (design § 4.2) bought selection — so the only two ways a
+/// link's target actually disappears are the player removing that Virtue/Flaw
+/// selection outright, or clearing its own parameter (the guild/craft text)
+/// back to empty. Both must route through this function before applying the
+/// change; wiring the Virtue/Flaw removal flow to call it is CV7's job
+/// (`ui/src/lib` — see `RULES.md`), not CV5's.
+pub fn unlink_ability_parameters(
+    entity: &mut Entity,
+    ruleset: &Ruleset,
+    removed_item: &Id,
+) -> Vec<Id> {
+    // Read the target BEFORE any mutation — `entity.ability_scores` cannot be
+    // borrowed mutably while `resolve_link` below borrows the whole `entity`
+    // immutably, so the affected rows are collected first.
+    let targets: Vec<(usize, Id, String)> = entity
+        .ability_scores
+        .iter()
+        .enumerate()
+        .filter_map(|(index, score)| match &score.parameter {
+            Some(AbilityParameterValue::Linked { item, param }) if item == removed_item => {
+                Some((index, score.ability.clone(), param.clone()))
+            }
+            _ => None,
+        })
+        .collect();
+
+    let mut converted = Vec::new();
+    for (index, ability, param) in targets {
+        // Resolved BEFORE the selection is spliced out by the caller, so this
+        // still sees `removed_item` as one of its own effective occurrences —
+        // "last resolvable value" (design § 5.5).
+        let last_value = match resolve_link(entity, ruleset, removed_item, &param) {
+            LinkResolution::Resolved(value) => value,
+            LinkResolution::Ambiguous(fallback) => fallback,
+            LinkResolution::Dangling => None,
+        }
+        .unwrap_or_default();
+        entity.ability_scores[index].parameter = Some(AbilityParameterValue::text(last_value));
+        converted.push(ability);
+    }
+    converted.sort();
+    converted
+}
+
 /// Scans every `(selection, effect)` pair the entity's effective selections
 /// ([`selections_for_effects`]) contribute — the shared "for each selection, for
 /// each of its item's effects, skip a selection whose item does not resolve"

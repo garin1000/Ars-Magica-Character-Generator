@@ -296,6 +296,7 @@ pub(crate) fn validate_abilities(
         validate_ability_score_in_range(ruleset, entry, max_score, issues);
         validate_ability_age_cap(entity, ruleset, entry, issues);
         validate_ability_specialty_permitted(ruleset, effective_selections, entry, issues);
+        validate_ability_parameter_link(entity, ruleset, entry, issues);
 
         let key = (
             &entry.ability,
@@ -386,6 +387,37 @@ fn validate_ability_known_and_parameterized(
                 ));
             }
         }
+    }
+}
+
+/// Design § 4.1: a bought `Linked` value whose declaring item resolves
+/// AMBIGUOUS (more than one effective occurrence, design §4.1) is never
+/// guessed — the pool/authorization matching already treats it as satisfying
+/// nothing (`AbilityInstanceRef`/`AuthorizedAbility`'s `ambiguous` flag); this
+/// tells the player WHY, so a duplicate selection is not left silently
+/// unfunded with no explanation.
+fn validate_ability_parameter_link(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    entry: &AbilityScore,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let Some(AbilityParameterValue::Linked { item, param }) = &entry.parameter else {
+        return;
+    };
+    if let crate::effective::LinkResolution::Ambiguous(_) =
+        crate::effective::resolve_link(entity, ruleset, item, param)
+    {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_AMBIGUOUS_BOUND_PARAMETER,
+            CreationPhase::Abilities,
+            args([
+                ("item", item.to_string()),
+                ("ability", entry.ability.to_string()),
+                ("param", param.clone()),
+            ]),
+            Some(entry.ability.clone()),
+        ));
     }
 }
 

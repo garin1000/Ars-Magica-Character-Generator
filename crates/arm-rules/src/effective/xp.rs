@@ -254,7 +254,9 @@ pub struct AbilityInstanceRef {
     /// The ability.
     pub ability: Id,
     /// The instance value, for a parameterized ability. `None` matches the ability
-    /// whatever its instance.
+    /// whatever its instance — UNLESS [`Self::bound_source`] is set, in which case
+    /// this is the Bound source's own current value (`None` when declared but
+    /// never filled in).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameter: Option<String>,
     /// True when `parameter` was resolved from a rules-authored
@@ -263,27 +265,50 @@ pub struct AbilityInstanceRef {
     /// Governs [`Self::satisfied_by`]: a `Literal`-derived instance is
     /// satisfied ONLY by a bought `AbilityParameterValue::Catalogued` with the
     /// same id, never by `Text` holding the identical letters — a literal can
-    /// never mean "whichever spelling happens to match". Every other origin
-    /// keeps the interim plain-string comparison unchanged (full `Bound`
-    /// structural/content matching is CV5).
+    /// never mean "whichever spelling happens to match".
     #[serde(default, skip_serializing_if = "crate::types::is_false")]
     pub requires_catalogued: bool,
+    /// Present when this restriction derives from a `ParamValue::Bound` rather
+    /// than a `Literal` or plain free text (design § 4): the declaring item id
+    /// and its own parameter key, resolved via [`resolve_link`] against
+    /// effective selections. Governs [`Self::satisfied_by`]: a Bound source is
+    /// satisfied by rule 1 (a bought `Linked` naming this SAME `(item, param)`,
+    /// no string comparison) or rule 2 (bought `Text`/`Catalogued` content
+    /// equal to [`Self::parameter`], case-folded and trimmed) — never by the
+    /// plain-string comparison a `Literal` or free-text instance uses.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bound_source: Option<(Id, String)>,
+    /// True when the Bound source above resolved AMBIGUOUS (design § 4.1: more
+    /// than one effective occurrence of the declaring item) — satisfies
+    /// NOTHING, ever, overriding even `parameter: None`'s ordinary "matches any
+    /// instance" meaning.
+    #[serde(default, skip_serializing_if = "crate::types::is_false")]
+    pub ambiguous: bool,
 }
 
 impl AbilityInstanceRef {
     /// Whether this ref names the given bought instance.
     fn matches(&self, ability: &Id, parameter: Option<&AbilityParameterValue>) -> bool {
-        self.ability == *ability && (self.parameter.is_none() || self.satisfied_by(parameter))
+        self.ability == *ability && self.satisfied_by(parameter)
     }
 
     /// Whether the bought `parameter` satisfies this instance restriction
-    /// (design § 4 rule 1 — see [`Self::requires_catalogued`]'s doc for the
-    /// rule this implements). `None` (no instance restriction at all) is
-    /// vacuously satisfied, matching [`Self::matches`]'s own short-circuit.
+    /// (design § 4). An ambiguous Bound source ([`Self::ambiguous`]) satisfies
+    /// nothing, checked first so it overrides every other case. Otherwise: a
+    /// Bound-origin restriction ([`Self::bound_source`]) matches by design §
+    /// 4's rule 1/2; anything else falls back to the plain-string comparison
+    /// (`Literal` or free text). No restriction at all (`parameter: None` and
+    /// no `bound_source`) is vacuously satisfied.
     pub(crate) fn satisfied_by(&self, parameter: Option<&AbilityParameterValue>) -> bool {
-        match self.parameter.as_deref() {
-            Some(target) => instance_satisfied(target, self.requires_catalogued, parameter),
-            None => true,
+        if self.ambiguous {
+            return false;
+        }
+        match (&self.bound_source, self.parameter.as_deref()) {
+            (Some((item, param)), target) => {
+                bound_instance_satisfied(item, param, target, parameter)
+            }
+            (None, Some(target)) => instance_satisfied(target, self.requires_catalogued, parameter),
+            (None, None) => true,
         }
     }
 }
@@ -395,6 +420,8 @@ fn native_language_instance(
         parameter: Some(language),
         // Free text the plan itself chose, not a rules-authored Literal.
         requires_catalogued: false,
+        bound_source: None,
+        ambiguous: false,
     })
 }
 
@@ -415,18 +442,32 @@ pub(crate) struct AuthorizedAbility {
     pub(crate) ability: Id,
     pub(crate) instance: Option<String>,
     pub(crate) requires_catalogued: bool,
+    /// Mirrors [`AbilityInstanceRef::bound_source`] — see its docs.
+    pub(crate) bound_source: Option<(Id, String)>,
+    /// Mirrors [`AbilityInstanceRef::ambiguous`] — see its docs.
+    pub(crate) ambiguous: bool,
 }
 
 impl AuthorizedAbility {
     /// Whether this authorization covers the bought `(ability, parameter)`
-    /// instance: the ability id matches, and either this entry authorizes any
-    /// instance (`instance: None`) or the bought instance satisfies the one
-    /// named (design § 4 rule 1).
+    /// instance — the same rule [`AbilityInstanceRef::satisfied_by`] applies,
+    /// restated here because `AuthorizedAbility` and `AbilityInstanceRef` are
+    /// deliberately separate types (one names ownership permission, the other
+    /// a pool's funding scope) that must not drift apart in what "satisfies"
+    /// means.
     fn covers(&self, ability: &Id, parameter: Option<&AbilityParameterValue>) -> bool {
+        if self.ambiguous {
+            return false;
+        }
         self.ability == *ability
-            && match self.instance.as_deref() {
-                Some(target) => instance_satisfied(target, self.requires_catalogued, parameter),
-                None => true,
+            && match (&self.bound_source, self.instance.as_deref()) {
+                (Some((item, param)), target) => {
+                    bound_instance_satisfied(item, param, target, parameter)
+                }
+                (None, Some(target)) => {
+                    instance_satisfied(target, self.requires_catalogued, parameter)
+                }
+                (None, None) => true,
             }
     }
 }
@@ -435,9 +476,10 @@ impl AuthorizedAbility {
 /// named `target` (design § 4 rule 1): when the restriction came from a
 /// rules-authored `ParamValue::Literal` (`requires_catalogued`), it is
 /// satisfied ONLY by a bought `Catalogued` with the same id, never by `Text`
-/// holding the identical letters. Every other origin (a `Bound` instance —
-/// full structural/content matching is CV5 — or plain free text) keeps the
-/// interim plain-string comparison. Shared by
+/// holding the identical letters. Every other origin (plain free text, e.g.
+/// childhood's native-language instance) keeps the plain-string comparison.
+/// Never called for a `Bound`-origin restriction — see
+/// [`bound_instance_satisfied`] for that. Shared by
 /// [`AbilityInstanceRef::satisfied_by`] and [`AuthorizedAbility::covers`] so
 /// the two "does this bought instance satisfy that resolved target" checks
 /// cannot drift apart.
@@ -452,6 +494,45 @@ fn instance_satisfied(
             !requires_catalogued && text.as_str() == target
         }
         Some(AbilityParameterValue::Linked { .. }) | None => false,
+    }
+}
+
+/// Whether a bought `parameter` satisfies a `Bound` source's resolved state
+/// (design § 4): `item`/`param` are the declaring item's own handle (the
+/// SAME pair a bought [`AbilityParameterValue::Linked`] would name); `target`
+/// is the source's own CURRENT value, resolved via [`resolve_link`] (`None`
+/// when its parameter was declared but never filled in — matches nothing here
+/// but an explicit empty `Text`, exactly like any other unset comparison).
+///
+/// - **Rule 1** (structural link match): a bought `Linked` naming this SAME
+///   `(item, param)` — no string comparison at all, true by construction, and
+///   immune to `target` ever changing.
+/// - **Rule 2** (content match): a bought `Text` or `Catalogued` whose content
+///   equals `target`, case-folded and trimmed via [`crate::catalogue::fold_name`]
+///   — the SAME fold the load-time catalogue-matching fold uses (design § 4:
+///   "reuses § 5.4's own catalogue-name-matching logic"), so a player who typed
+///   the value by hand instead of linking it is not punished for case or
+///   whitespace.
+///
+/// Shared by [`AbilityInstanceRef::satisfied_by`] and
+/// [`AuthorizedAbility::covers`], exactly like [`instance_satisfied`].
+fn bound_instance_satisfied(
+    item: &Id,
+    param: &str,
+    target: Option<&str>,
+    parameter: Option<&AbilityParameterValue>,
+) -> bool {
+    match parameter {
+        Some(AbilityParameterValue::Linked {
+            item: linked_item,
+            param: linked_param,
+        }) => linked_item == item && linked_param == param,
+        Some(AbilityParameterValue::Text { text }) => target
+            .is_some_and(|t| crate::catalogue::fold_name(text) == crate::catalogue::fold_name(t)),
+        Some(AbilityParameterValue::Catalogued { id }) => target.is_some_and(|t| {
+            crate::catalogue::fold_name(id.as_str()) == crate::catalogue::fold_name(t)
+        }),
+        None => false,
     }
 }
 
@@ -477,17 +558,63 @@ pub(crate) fn authorizes_instance(
 /// unscoped (bare) entry resolves to `parameter: None`, which
 /// [`AbilityInstanceRef::matches`] already reads as "any instance", so a
 /// scoped and an unscoped entry coexist in the same resolved list with no
-/// special-casing.
-fn resolve_ability_refs(refs: &[AbilityRef], selection: &Selection) -> Vec<AbilityInstanceRef> {
+/// special-casing. `entity`/`ruleset` are needed only for a `ParamValue::Bound`
+/// instance (design § 4.1): resolving it via [`resolve_link`] against
+/// EFFECTIVE selections, not just `selection` itself, is what catches a
+/// bought-plus-granted duplicate of the declaring item.
+fn resolve_ability_refs(
+    refs: &[AbilityRef],
+    entity: &Entity,
+    ruleset: &Ruleset,
+    selection: &Selection,
+) -> Vec<AbilityInstanceRef> {
     refs.iter()
         .filter(|a| a.active_for(selection))
-        .map(|a| AbilityInstanceRef {
-            ability: a.ability().clone(),
-            parameter: a.resolved_instance(selection),
-            requires_catalogued: matches!(
-                a.instance(),
-                Some(crate::types::ParamValue::Literal { .. })
-            ),
+        .map(|a| {
+            let ability = a.ability().clone();
+            let Some(crate::types::ParamValue::Bound { param }) = a.instance() else {
+                return AbilityInstanceRef {
+                    ability,
+                    parameter: a.resolved_instance(selection),
+                    requires_catalogued: matches!(
+                        a.instance(),
+                        Some(crate::types::ParamValue::Literal { .. })
+                    ),
+                    bound_source: None,
+                    ambiguous: false,
+                };
+            };
+            // Design § 4.1: resolved against effective selections, not just
+            // read off `selection` directly — the SAME declaring item may be
+            // held again elsewhere (bought + granted), which is exactly the
+            // ambiguity this guards against.
+            match resolve_link(entity, ruleset, &selection.item_ref, param) {
+                LinkResolution::Resolved(value) => AbilityInstanceRef {
+                    ability,
+                    parameter: value,
+                    requires_catalogued: false,
+                    bound_source: Some((selection.item_ref.clone(), param.clone())),
+                    ambiguous: false,
+                },
+                LinkResolution::Ambiguous(_) => AbilityInstanceRef {
+                    ability,
+                    parameter: None,
+                    requires_catalogued: false,
+                    bound_source: None,
+                    ambiguous: true,
+                },
+                // `selection` is itself an occurrence of its own declaring
+                // item, so zero occurrences cannot happen here in practice;
+                // treated defensively as unset (matches nothing but an
+                // explicit empty `Text`).
+                LinkResolution::Dangling => AbilityInstanceRef {
+                    ability,
+                    parameter: None,
+                    requires_catalogued: false,
+                    bound_source: Some((selection.item_ref.clone(), param.clone())),
+                    ambiguous: false,
+                },
+            }
         })
         .collect()
 }
@@ -547,15 +674,21 @@ pub(crate) fn ability_authorizations(
                         ability: ability.clone(),
                         instance: None,
                         requires_catalogued: false,
+                        bound_source: None,
+                        ambiguous: false,
                     }));
                     categories.extend(cats.iter().copied());
-                    abilities.extend(resolve_ability_refs(refs, selection).into_iter().map(
-                        |r| AuthorizedAbility {
-                            ability: r.ability,
-                            instance: r.parameter,
-                            requires_catalogued: r.requires_catalogued,
-                        },
-                    ));
+                    abilities.extend(
+                        resolve_ability_refs(refs, entity, ruleset, selection)
+                            .into_iter()
+                            .map(|r| AuthorizedAbility {
+                                ability: r.ability,
+                                instance: r.parameter,
+                                requires_catalogued: r.requires_catalogued,
+                                bound_source: r.bound_source,
+                                ambiguous: r.ambiguous,
+                            }),
+                    );
                 }
                 // D35's parameter-scaled sibling: an earmark is itself
                 // permission, exactly like `RestrictedAbilityXp` above — but
@@ -567,13 +700,17 @@ pub(crate) fn ability_authorizations(
                     categories: cats,
                     ..
                 } => {
-                    abilities.extend(resolve_ability_refs(refs, selection).into_iter().map(
-                        |r| AuthorizedAbility {
-                            ability: r.ability,
-                            instance: r.parameter,
-                            requires_catalogued: r.requires_catalogued,
-                        },
-                    ));
+                    abilities.extend(
+                        resolve_ability_refs(refs, entity, ruleset, selection)
+                            .into_iter()
+                            .map(|r| AuthorizedAbility {
+                                ability: r.ability,
+                                instance: r.parameter,
+                                requires_catalogued: r.requires_catalogued,
+                                bound_source: r.bound_source,
+                                ambiguous: r.ambiguous,
+                            }),
+                    );
                     categories.extend(cats.iter().copied());
                 }
                 // The gated carrier (D14/W2): only the entries whose gate holds
@@ -583,13 +720,17 @@ pub(crate) fn ability_authorizations(
                     abilities: refs,
                     categories: cat_refs,
                 } => {
-                    abilities.extend(resolve_ability_refs(refs, selection).into_iter().map(
-                        |r| AuthorizedAbility {
-                            ability: r.ability,
-                            instance: r.parameter,
-                            requires_catalogued: r.requires_catalogued,
-                        },
-                    ));
+                    abilities.extend(
+                        resolve_ability_refs(refs, entity, ruleset, selection)
+                            .into_iter()
+                            .map(|r| AuthorizedAbility {
+                                ability: r.ability,
+                                instance: r.parameter,
+                                requires_catalogued: r.requires_catalogued,
+                                bound_source: r.bound_source,
+                                ambiguous: r.ambiguous,
+                            }),
+                    );
                     for c in cat_refs {
                         if c.active_for(selection) {
                             categories.insert(c.category());
@@ -603,19 +744,25 @@ pub(crate) fn ability_authorizations(
                         ability: ability.clone(),
                         instance: None,
                         requires_catalogued: false,
+                        bound_source: None,
+                        ambiguous: false,
                     });
                 }
                 // The gated-bonus carrier (Student of (Realm)'s +2 Lore, row
                 // 50(a)): same gate fold as `AbilityAuthorization`, read off
                 // this effect's own target list instead.
                 Effect::AbilityBonusGated { targets, .. } => {
-                    abilities.extend(resolve_ability_refs(targets, selection).into_iter().map(
-                        |r| AuthorizedAbility {
-                            ability: r.ability,
-                            instance: r.parameter,
-                            requires_catalogued: r.requires_catalogued,
-                        },
-                    ));
+                    abilities.extend(
+                        resolve_ability_refs(targets, entity, ruleset, selection)
+                            .into_iter()
+                            .map(|r| AuthorizedAbility {
+                                ability: r.ability,
+                                instance: r.parameter,
+                                requires_catalogued: r.requires_catalogued,
+                                bound_source: r.bound_source,
+                                ambiguous: r.ambiguous,
+                            }),
+                    );
                 }
                 // Exhaustive so adding an Effect variant is a compile error here,
                 // not a silently-ignored authorization gap (V55). Every listed
@@ -931,7 +1078,7 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                         eligibility: PoolEligibility::Ability {
                             abilities: abilities.clone(),
                             categories: categories.clone(),
-                            instances: resolve_ability_refs(instances, selection),
+                            instances: resolve_ability_refs(instances, entity, ruleset, selection),
                             exclude: Vec::new(),
                         },
                         origin: XpPoolOrigin::Item {
@@ -969,7 +1116,7 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                         eligibility: PoolEligibility::Ability {
                             abilities: Vec::new(),
                             categories: categories.clone(),
-                            instances: resolve_ability_refs(abilities, selection),
+                            instances: resolve_ability_refs(abilities, entity, ruleset, selection),
                             exclude: Vec::new(),
                         },
                         origin: XpPoolOrigin::Item {
@@ -1863,11 +2010,15 @@ mod tests {
                     ability: Id::new("ability.dead_language"),
                     instance: None,
                     requires_catalogued: false,
+                    bound_source: None,
+                    ambiguous: false,
                 },
                 AuthorizedAbility {
                     ability: Id::new("ability.second_sight"),
                     instance: None,
                     requires_catalogued: false,
+                    bound_source: None,
+                    ambiguous: false,
                 },
             ])
         );

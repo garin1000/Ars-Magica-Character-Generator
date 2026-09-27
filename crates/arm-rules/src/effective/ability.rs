@@ -90,17 +90,23 @@ pub fn ability_bonus(
                     if target.ability() != ability || !target.active_for(selection) {
                         continue;
                     }
-                    // Interim plain-string shim, deliberately not yet
-                    // rewritten to design § 4 rule 1 (`Literal` satisfied only
-                    // by `Catalogued`): no shipped `AbilityBonusGated` target
-                    // declares an `instance` restriction at all (Student of
-                    // (Realm)'s targets are unscoped, gated only), so this
-                    // branch is latent, not live, exactly like the C0 §3/§4.2
-                    // precedent this crate already tracks for a different
-                    // gate. Threading the typed `AbilityParameterValue`
-                    // through `ability_bonus`'s whole call graph to fix an
-                    // unreachable branch is CV5's job, alongside the rest of
-                    // §4's Bound/Link matching.
+                    // Interim plain-string shim, still NOT rewritten to design
+                    // § 4's Bound/Link matching even after CV5: no shipped
+                    // `AbilityBonusGated` target declares an `instance`
+                    // restriction at all (Student of (Realm)'s targets are
+                    // unscoped, gated only), so this branch is latent, not
+                    // live, exactly like the C0 §3/§4.2 precedent this crate
+                    // already tracks for a different gate. CV5 threaded §4's
+                    // matching through `effective/xp.rs`'s `AbilityInstanceRef`/
+                    // `AuthorizedAbility` call graph (ownership permission and
+                    // XP-pool funding), which is where every shipped Bound/
+                    // Link site actually lives — `ability_bonus`'s own
+                    // `parameter: Option<&str>` signature (a plain match key,
+                    // not the typed `AbilityParameterValue`) would need its own
+                    // wider threading through every caller for a branch no
+                    // rules data reaches; deferred until a book ships a gated
+                    // `AbilityBonusGated` target with an `instance` restriction
+                    // to actually exercise it.
                     let matches = match instance_key {
                         None => true,
                         Some(_) => target.resolved_instance(selection).as_deref() == parameter,

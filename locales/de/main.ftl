@@ -1241,6 +1241,7 @@ issue-too_many_mastery_abilities = { $spell } hat { $chosen } Meisterschaftsfäh
 issue-duplicate_mastery_ability = Meisterschaftsfähigkeit { $ability } wurde { $count }-mal für { $spell } gewählt, darf aber nur einmal genommen werden.
 issue-ability_above_age_cap = { $ability } mit Wert { $score } überschreitet das Maximum von { $cap } für Alter { $age }.
 issue-specialty_forbidden = { $ability } darf keine Spezialisierung haben ({ $specialty }) — Nicht spezialisiert verbietet jede Spezialisierung einer Fertigkeit.
+issue-ambiguous_bound_parameter = { $item } wird mehr als einmal gehalten; der verknüpfte Wert von { $ability } kann erst aufgelöst werden, wenn das Duplikat entfernt wurde.
 issue-supernatural_ability_requires_virtue = { $ability } ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend (oder die eine freie Fertigkeit der Gabe).
 issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
 issue-reputation_not_granted = Eine Reputation ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der sie verleiht.

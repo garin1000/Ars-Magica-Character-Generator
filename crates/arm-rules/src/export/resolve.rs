@@ -114,8 +114,11 @@ impl<'a> Doc<'a> {
     /// display-resolution function is the real fix); until then it falls back
     /// to a readable label derived from the id's own final segment
     /// (`language.latin` → "Latin"), a structural transform rather than a raw
-    /// slug. `Linked` (CV5) has no resolver yet, so it renders as empty rather
-    /// than a raw `(item, param)` pair.
+    /// slug. `Linked` (design § 6.4) resolves via [`crate::effective::resolve_link`]
+    /// against effective selections — the SAME resolver the load-time fold and
+    /// matching use, so "what does this link currently mean" cannot disagree
+    /// across readers — and shows the deterministic ambiguity fallback rather
+    /// than a blank cell (design § 4.1); never a raw id or `(item, param)` pair.
     pub(super) fn ability_param_value(&self, value: &AbilityParameterValue) -> String {
         match value {
             AbilityParameterValue::Text { text } => self.param_value(text),
@@ -130,7 +133,15 @@ impl<'a> Doc<'a> {
                 };
                 escape_cell(resolved)
             }
-            AbilityParameterValue::Linked { .. } => String::new(),
+            AbilityParameterValue::Linked { item, param } => {
+                let resolved =
+                    match crate::effective::resolve_link(self.entity, self.rules(), item, param) {
+                        crate::effective::LinkResolution::Resolved(value) => value,
+                        crate::effective::LinkResolution::Ambiguous(fallback) => fallback,
+                        crate::effective::LinkResolution::Dangling => None,
+                    };
+                escape_cell(&resolved.unwrap_or_default())
+            }
         }
     }
 }

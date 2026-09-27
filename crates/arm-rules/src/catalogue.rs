@@ -183,7 +183,12 @@ fn parse_names(json: &str) -> Result<BTreeMap<Id, String>, RulesetError> {
 }
 
 /// Folds a name for case-insensitive, trimmed comparison (design note § 2.2).
-fn fold_name(name: &str) -> String {
+/// `pub(crate)`: also the SAME fold [`crate::migration`]'s catalogue-matching
+/// load fold and `effective::xp`'s live Bound/Link rule-2 content match use —
+/// one place that knows "does this text spell out this value's name",
+/// design-cv-catalogued-values.md § 4/§ 5.3, never two independent
+/// implementations that could disagree.
+pub(crate) fn fold_name(name: &str) -> String {
     name.trim().to_lowercase()
 }
 

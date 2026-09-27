@@ -146,6 +146,12 @@ pub const SCHEMA_VERSION: u32 = 18;
 type MigratedCatalogueParameters = Vec<(Id, String, Id)>;
 /// `(ability, text)` — see [`LoadedEntity::unresolved_catalogued_parameters`].
 type UnresolvedCatalogueParameters = Vec<(Id, String)>;
+/// `(ability, target item, param)` — see [`LoadedEntity::dangling_links`] and
+/// [`LoadedEntity::ambiguous_links`]. The same shape serves both: a dangling
+/// link (zero effective occurrences of `item`) and an ambiguous one (more than
+/// one, design § 4.1) are reported identically, just filed under different
+/// fields.
+type LinkFoldReport = Vec<(Id, Id, String)>;
 
 /// The outcome of loading an entity save, including any schema migration applied.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -172,6 +178,22 @@ pub struct LoadedEntity {
     /// went unrecognized rather than left to discover a silently broken
     /// authorization later.
     pub unresolved_catalogued_parameters: UnresolvedCatalogueParameters,
+    /// Parameterized Ability rows whose `Linked` value named a declaring item
+    /// held ZERO times among effective (bought ∪ granted) selections — the
+    /// Virtue was removed, never held, or the save is hand-edited — folded to
+    /// `Text` (design § 5.4). `(ability, target item, param)`. Empty when
+    /// nothing was dangling. The caller surfaces this as a localized notice,
+    /// exactly like [`Self::unresolved_catalogued_parameters`] — a silently
+    /// lost authorization is the failure mode this exists to prevent.
+    pub dangling_links: LinkFoldReport,
+    /// Parameterized Ability rows whose `Linked` value named a declaring item
+    /// held MORE THAN ONCE among effective selections (design § 4.1's
+    /// ambiguity guard) — never guessed, folded to `Text` holding the
+    /// provenance-based fallback value. `(ability, target item, param)`. Empty
+    /// when nothing was ambiguous — today, always empty in practice, since
+    /// § 4.2 pins that no shipped grant ever duplicates a Bound/Link-declaring
+    /// item; reachable only via a hand-edited or direct-unchecked save.
+    pub ambiguous_links: LinkFoldReport,
 }
 
 /// The minimal lifetime aging-point total that forces exactly `drops`
@@ -514,13 +536,13 @@ fn fold_catalogue_matching(
         let Some(catalogue) = ruleset.parameter_catalogues().get(&catalogue_id) else {
             continue;
         };
-        let folded_text = fold_catalogue_value_name(text);
+        let folded_text = crate::catalogue::fold_name(text);
         let matched = catalogue.values.iter().find(|value| {
             catalogue_names
                 .get(&value.id)
                 .into_iter()
                 .flatten()
-                .any(|name| fold_catalogue_value_name(name) == folded_text)
+                .any(|name| crate::catalogue::fold_name(name) == folded_text)
         });
         match matched {
             Some(value) => {
@@ -537,15 +559,53 @@ fn fold_catalogue_matching(
     (migrated, unresolved)
 }
 
-/// Folds a value's display name for case-insensitive, trimmed comparison — the
-/// SAME fold [`crate::catalogue::load_catalogue_names`] applies to its own
-/// cross-locale collision check (§ 2.2/§ 7), so "exactly one match" here relies
-/// on the identical notion of "the same name" that guard already enforces at
-/// load. Kept as its own small function (rather than inlined) so a future
-/// caller of § 4 rule 2's live content-match (CV5) reuses this exact fold
-/// rather than a second, potentially-diverging implementation (design § 4).
-fn fold_catalogue_value_name(name: &str) -> String {
-    name.trim().to_lowercase()
+/// Design § 5.4: walks every `AbilityScore` whose `parameter` is
+/// [`AbilityParameterValue::Linked`] and resolves it via
+/// [`crate::effective::resolve_link`] (§ 4.1's ambiguity guard) against the
+/// entity's effective selections. A dangling link (zero occurrences) or one
+/// whose target's parameter was declared but never filled in is folded to
+/// `Text` holding that value (empty when none); an ambiguous link (more than
+/// one occurrence) is folded to `Text` holding the provenance-based fallback.
+/// Runs unconditionally on every load, not gated on `schema_version < 18` — a
+/// dangling or ambiguous link can arise on an up-to-date save just as easily
+/// (a later ruleset revision removed the item, or a duplicate selection
+/// exists).
+///
+fn fold_dangling_and_ambiguous_links(
+    entity: &mut Entity,
+    ruleset: &Ruleset,
+) -> (LinkFoldReport, LinkFoldReport) {
+    let targets: Vec<(usize, Id, Id, String)> = entity
+        .ability_scores
+        .iter()
+        .enumerate()
+        .filter_map(|(index, score)| match &score.parameter {
+            Some(AbilityParameterValue::Linked { item, param }) => {
+                Some((index, score.ability.clone(), item.clone(), param.clone()))
+            }
+            _ => None,
+        })
+        .collect();
+
+    let mut dangling = Vec::new();
+    let mut ambiguous = Vec::new();
+    for (index, ability, item, param) in targets {
+        let resolution = crate::effective::resolve_link(entity, ruleset, &item, &param);
+        let (report, fold_value): (Option<&mut LinkFoldReport>, Option<String>) = match resolution {
+            crate::effective::LinkResolution::Resolved(Some(_)) => (None, None),
+            crate::effective::LinkResolution::Resolved(None)
+            | crate::effective::LinkResolution::Dangling => (Some(&mut dangling), None),
+            crate::effective::LinkResolution::Ambiguous(fallback) => {
+                (Some(&mut ambiguous), fallback)
+            }
+        };
+        if let Some(report) = report {
+            report.push((ability, item, param));
+            entity.ability_scores[index].parameter =
+                Some(AbilityParameterValue::text(fold_value.unwrap_or_default()));
+        }
+    }
+    (dangling, ambiguous)
 }
 
 /// Deserializes an entity from JSON, applying backward-compatible save
@@ -740,11 +800,14 @@ pub fn load_entity_migrating(
     migrated_aging_characteristics.sort();
     let (migrated_catalogued_parameters, unresolved_catalogued_parameters) =
         fold_catalogue_matching(&mut entity, ruleset, catalogue_names);
+    let (dangling_links, ambiguous_links) = fold_dangling_and_ambiguous_links(&mut entity, ruleset);
     Ok(LoadedEntity {
         entity,
         migrated_aging_characteristics,
         migrated_catalogued_parameters,
         unresolved_catalogued_parameters,
+        dangling_links,
+        ambiguous_links,
     })
 }
 

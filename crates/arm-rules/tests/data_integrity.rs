@@ -10158,3 +10158,127 @@ fn no_gated_authorization_item_is_ever_granted() {
         }
     }
 }
+
+/// CV5's mitigation, mirroring the precedent immediately above (design §
+/// 4.2, `docs/vf-audit/design-cv-catalogued-values.md`): the ambiguity guard
+/// on a Bound source / Link target (§ 4.1) is real, tested, correct-by-
+/// construction defense-in-depth — but the "bought + granted" duplicate it
+/// defends against is not reachable through any SHIPPED data path today,
+/// because nothing grants either Bound-declaring item
+/// (`virtue.craft_guild_training`, `virtue.forge_companion`). This test pins
+/// that absence, scanning every static grant target exactly like the
+/// precedent, so the catalogue cannot silently reopen the ambiguity without
+/// this test noticing. The moment one of these two becomes grantable, the
+/// ambiguity guard becomes live with someone told, rather than silently.
+#[test]
+fn no_bound_or_link_declaring_item_is_ever_granted() {
+    let rs = load_ruleset();
+    let bound_declaring = ["virtue.craft_guild_training", "virtue.forge_companion"];
+
+    // 1. `grants_selection` (nested V/F grants) never names either item.
+    for item in rs.items() {
+        for effect in &item.effects {
+            if let Effect::GrantsSelection { items } = effect {
+                for granted in items {
+                    assert!(
+                        !bound_declaring.contains(&granted.as_str()),
+                        "{} carries a grants_selection naming Bound-declaring item '{}' — \
+                         design § 4.1's ambiguity guard is now live",
+                        item.id,
+                        granted
+                    );
+                }
+            }
+        }
+    }
+
+    // 2. Every House/Mythic-type Fixed/Choice grant target never names either
+    //    item — a specific, catalogue-editable risk.
+    let mut fixed_and_choice_targets: Vec<Id> = Vec::new();
+    let mut collect = |grants: &[Grant]| {
+        for grant in grants {
+            match grant {
+                Grant::Fixed { item, .. } => fixed_and_choice_targets.push(item.clone()),
+                Grant::Choice { options, .. } => {
+                    fixed_and_choice_targets.extend(options.iter().map(|s| s.item_ref.clone()));
+                }
+                Grant::Open { .. } => {}
+            }
+        }
+    };
+    for house in rs.houses() {
+        collect(&house.grants);
+    }
+    for mythic_type in rs.mythic_types() {
+        collect(&mythic_type.grants);
+    }
+    for id in bound_declaring {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert!(
+            !fixed_and_choice_targets.contains(&item.id),
+            "'{id}' is named by a Fixed/Choice grant target — design § 4.1's ambiguity guard \
+             is now live",
+        );
+    }
+
+    // 3. Open grants (House/Mythic-type free picks, and the three
+    //    warping-fill shapes): both items are Minor Virtues with no
+    //    category exclusive to them, so — exactly as the precedent test
+    //    above documents for its own four gated items — an unconstrained
+    //    Open grant (Jerbiton's free Minor Virtue) already structurally
+    //    reaches them. This is not a defect specific to these two items; it
+    //    is the same structural property of an unconstrained Open grant the
+    //    precedent already pins. Fixing it is D2's grant-aware-deduplication
+    //    territory, out of CV5's scope — recorded here as a plain fact, not
+    //    swept under.
+    let jerbiton_minor_virtue = GrantConstraint {
+        kind: ItemKind::Virtue,
+        magnitude: Some(Magnitude::Minor),
+        require_categories: BTreeSet::new(),
+        forbid_categories: BTreeSet::new(),
+    };
+    for id in bound_declaring {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        let pick = Selection::new(item.id.clone());
+        assert!(
+            open_pick_satisfies(&pick, &jerbiton_minor_virtue, &rs, None),
+            "'{id}' no longer satisfies Jerbiton's unconstrained free-Minor-Virtue grant — \
+             either it is no longer a Minor Virtue (update this test) or the grant gained a \
+             restriction (update the note above)",
+        );
+    }
+
+    // The three warping-fill shapes do NOT reach either item: both are
+    // Virtue-kind with categories `general`/`social_status`, and none of the
+    // three warping-fill shapes is an unconstrained Virtue grant (two are
+    // Flaw-kind; the third requires the `supernatural` category, which
+    // neither item carries).
+    let mut warping_entity = entity("companion", vec![]);
+    warping_entity.warping_points = 100;
+    let warping_open_grants: Vec<Grant> = warping_owed_grants(&warping_entity, &rs);
+    assert!(
+        warping_open_grants.len() >= 3,
+        "expected at least one Open grant of each warping-fill shape (got {})",
+        warping_open_grants.len()
+    );
+    for id in bound_declaring {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        let pick = Selection::new(item.id.clone());
+        for grant in &warping_open_grants {
+            let Grant::Open { constraint, .. } = grant else {
+                panic!("warping_owed_grants must only ever produce Open grants");
+            };
+            assert!(
+                !open_pick_satisfies(&pick, constraint, &rs, None),
+                "a warping-fill Open grant constraint now matches Bound-declaring item '{id}' \
+                 — design § 4.1's ambiguity guard is now live",
+            );
+        }
+    }
+}
