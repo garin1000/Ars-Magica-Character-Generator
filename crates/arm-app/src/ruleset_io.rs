@@ -18,7 +18,7 @@ use arm_rules::{
     AgingError, AgingNote, AgingOutcome, AgingTotal, AgingYearRequest, Characteristic,
     CrisisPreview, Entity, EntityKind, Id, LocalizedRuleset, Ruleset, RulesetSources,
     ValidationIssue, ValidationMode, ValidationResult, aging_total, apply_childhood_package,
-    resolve_outcome, resolve_year, revert_year, validate,
+    load_catalogue_names, resolve_outcome, resolve_year, revert_year, validate,
 };
 use serde::{Deserialize, Serialize};
 
@@ -423,7 +423,7 @@ fn ruleset_identity_error(message: &str) -> AppError {
 /// none of this subsystem" signal there (characteristics/life_stages/
 /// childhoods/aging may all be `""`), but the file itself must still exist —
 /// that is exactly the presence this list checks.
-const REQUIRED_CORE_FILES: [&str; 14] = [
+const REQUIRED_CORE_FILES: [&str; 15] = [
     RULESET_IDENTITY_FILE,
     "core/virtues_flaws.json",
     "core/character_types.json",
@@ -438,6 +438,7 @@ const REQUIRED_CORE_FILES: [&str; 14] = [
     "core/life_stages.json",
     "core/childhoods.json",
     "core/aging.json",
+    "core/parameter_catalogues.json",
 ];
 
 /// The [`REQUIRED_CORE_FILES`] that `dir` does NOT carry, in their fixed
@@ -503,9 +504,10 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         life_stages_json,
         childhoods_json,
         aging_json,
-    ]: [String; 14] = core
+        parameter_catalogues_json,
+    ]: [String; 15] = core
         .try_into()
-        .expect("REQUIRED_CORE_FILES has exactly 14 entries");
+        .expect("REQUIRED_CORE_FILES has exactly 15 entries");
 
     // The identity the DATA declares, never one this binary holds: see
     // [`RULESET_IDENTITY_FILE`].
@@ -540,6 +542,11 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         // tables, which stands the aging subsystem down rather than letting the
         // engine invent a table.
         aging: (!aging_json.is_empty()).then_some(aging_json.as_str()),
+        // And likewise: an empty parameter-catalogues file means the ruleset
+        // ships no catalogued Ability parameters at all (every Ability stays
+        // free text, as before CV1).
+        parameter_catalogues: (!parameter_catalogues_json.is_empty())
+            .then_some(parameter_catalogues_json.as_str()),
     })?;
     // Load the requested language's rules text. For any non-English language,
     // English is loaded as a per-field fallback so a not-yet-translated string
@@ -555,6 +562,31 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         LocalizedRuleset::from_merged_with_fallback(ruleset, &i18n_refs, &fallback_refs)?
     };
     Ok(localized)
+}
+
+/// Reads `i18n/{en,de}/parameter_catalogue.json` — **both locales, always**,
+/// independent of the requested UI language — and resolves them against
+/// `ruleset`'s own loaded catalogues, so every catalogue value's display name
+/// is known regardless of which language the player was using when they typed
+/// it (design note § 5.3). Unlike [`read_i18n_sources`] (one active language +
+/// English fallback, merged into [`LocalizedRuleset::i18n`]), this file's
+/// `{ "names": [...] }` shape is not the general per-id i18n map shape, so it
+/// is never merged into it — see `catalogue.rs`'s module doc comment.
+///
+/// Composes with [`pick_rules_dir`] exactly like [`load_ruleset_from_dir`]
+/// does: `rules_dir` is whatever directory the caller already resolved
+/// (including the portable-build fallback), not re-resolved here.
+///
+/// STUB (red-checkpoint protocol, CV2 phase 1): always succeeds with an empty
+/// map, regardless of `rules_dir`/`ruleset` — phase 2 reads the real files.
+pub fn load_catalogue_names_from_dir(
+    rules_dir: &Path,
+    ruleset: &Ruleset,
+) -> Result<BTreeMap<Id, Vec<String>>, AppError> {
+    let en_json = fs::read_to_string(rules_dir.join("i18n/en/parameter_catalogue.json"))?;
+    let de_json = fs::read_to_string(rules_dir.join("i18n/de/parameter_catalogue.json"))?;
+    let names = load_catalogue_names(ruleset.parameter_catalogues(), &en_json, &de_json)?;
+    Ok(names)
 }
 
 /// Reads the ten `i18n/<lang>/*.json` rules-text files for a language, in the

@@ -4,17 +4,24 @@
 //! exact-string equality in a single language (D14; see
 //! `docs/vf-audit/design-cv-catalogued-values.md`).
 //!
-//! **CV1 scope only.** This module loads `rules/core/parameter_catalogues.json`
-//! (the language-neutral catalogue + value ids, each with a [`SourceRef`]) and
+//! This module loads `rules/core/parameter_catalogues.json` (the
+//! language-neutral catalogue + value ids, each with a [`SourceRef`]) and
 //! validates it against the i18n name files
 //! (`rules/i18n/{en,de}/parameter_catalogue.json`) independently of any single
 //! active UI language — deliberately outside [`crate::ruleset::LocalizedRuleset`],
 //! which only ever holds one language's text at a time (design note § 2.3,
-//! § 5.3). `load_parameter_catalogues`/`load_catalogue_names` are standalone
-//! loaders, not yet wired into [`crate::ruleset::Ruleset`]/`RulesetSources` —
-//! that wiring (so an `Ability`'s `catalogued` parameter and a
-//! `ParamValue::Literal` can resolve against a catalogue) is CV2's first red,
-//! not CV1's (design note § 10, CV1/CV2 rows).
+//! § 5.3).
+//!
+//! **CV2 wires catalogues into [`crate::ruleset::Ruleset`] itself**
+//! (`Ruleset::from_sources` parses + pre-integrity-checks
+//! `RulesetSources::parameter_catalogues` via [`parse_parameter_catalogues_file`]/
+//! [`parameter_catalogue_integrity_errors`] below, exactly like every other
+//! catalogue file; `Ruleset::validate_integrity` cross-checks a `catalogued`
+//! Ability's `parameter` key against it). [`load_parameter_catalogues`] stays a
+//! public standalone convenience wrapper over the same two functions — CV1's
+//! tests use it directly, and it costs nothing to keep. [`load_catalogue_names`]
+//! stays standalone too, by design: it needs BOTH locales at once, which
+//! `Ruleset`/`LocalizedRuleset` never carry together.
 
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -56,31 +63,44 @@ struct ParameterCataloguesFile {
     catalogues: Vec<Catalogue>,
 }
 
-/// Parses `rules/core/parameter_catalogues.json` into catalogues keyed by id.
-///
-/// Validates (design note § 2.2/§ 7), failing loudly and naming every
+/// Parses `rules/core/parameter_catalogues.json` into a raw, unindexed list —
+/// no integrity checks yet. Used by [`crate::ruleset::parse::parse_sources`]
+/// (CV2), which accumulates every catalog's pre-integrity errors together
+/// (via [`parameter_catalogue_integrity_errors`]) before failing, exactly like
+/// `check_duplicate_ids` does for abilities/houses/etc. — so a raw parse here
+/// must not itself reject a duplicate id; only a malformed-JSON parse error is
+/// fatal at this stage.
+pub(crate) fn parse_parameter_catalogues_file(json: &str) -> Result<Vec<Catalogue>, RulesetError> {
+    let file: ParameterCataloguesFile =
+        serde_json::from_str(json).map_err(|e| RulesetError::parse("parameter catalogues", e))?;
+    Ok(file.catalogues)
+}
+
+/// The pre-integrity checks CV1 defined for the parsed (not yet indexed)
+/// catalogue list (design note § 2.2/§ 7), failing loudly and naming every
 /// offending id:
 /// - catalogue ids unique across the file;
 /// - each catalogue's `values` non-empty;
 /// - value ids unique within their own catalogue;
 /// - catalogues, and each catalogue's values, sorted by id (canonical
 ///   serialization — `CLAUDE.md` → "Canonical serialization").
-pub fn load_parameter_catalogues(json: &str) -> Result<BTreeMap<Id, Catalogue>, RulesetError> {
-    let file: ParameterCataloguesFile =
-        serde_json::from_str(json).map_err(|e| RulesetError::parse("parameter catalogues", e))?;
-
+///
+/// Shared by [`load_parameter_catalogues`] (standalone) and
+/// `Ruleset::from_sources`'s pre-integrity pipeline (CV2) — one implementation,
+/// not two that could disagree.
+pub(crate) fn parameter_catalogue_integrity_errors(catalogues: &[Catalogue]) -> Vec<String> {
     let mut errors = Vec::new();
 
     collect_duplicates(
-        file.catalogues.iter().map(|c| &c.id),
+        catalogues.iter().map(|c| &c.id),
         "parameter catalogue",
         &mut errors,
     );
-    if !is_sorted_by_id(&file.catalogues, |c| &c.id) {
+    if !is_sorted_by_id(catalogues, |c| &c.id) {
         errors.push("parameter catalogues are not sorted by id".to_string());
     }
 
-    for catalogue in &file.catalogues {
+    for catalogue in catalogues {
         if catalogue.values.is_empty() {
             errors.push(format!(
                 "parameter catalogue '{}' has no values",
@@ -101,15 +121,21 @@ pub fn load_parameter_catalogues(json: &str) -> Result<BTreeMap<Id, Catalogue>, 
         }
     }
 
+    errors
+}
+
+/// Parses `rules/core/parameter_catalogues.json` into catalogues keyed by id,
+/// validating it standalone (see [`parameter_catalogue_integrity_errors`]).
+/// Public convenience wrapper over the two functions above, kept for CV1's own
+/// tests and any other caller that wants a catalogue file's own integrity
+/// checked in isolation, without a whole `Ruleset` around it.
+pub fn load_parameter_catalogues(json: &str) -> Result<BTreeMap<Id, Catalogue>, RulesetError> {
+    let catalogues = parse_parameter_catalogues_file(json)?;
+    let errors = parameter_catalogue_integrity_errors(&catalogues);
     if !errors.is_empty() {
         return Err(IntegrityError::new(errors).into());
     }
-
-    Ok(file
-        .catalogues
-        .into_iter()
-        .map(|c| (c.id.clone(), c))
-        .collect())
+    Ok(catalogues.into_iter().map(|c| (c.id.clone(), c)).collect())
 }
 
 /// Pushes a `"duplicate {label} ID: '{id}'"` error for every id seen more than

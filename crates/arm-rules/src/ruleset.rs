@@ -252,6 +252,14 @@ pub struct Ruleset {
     /// the frontend; the `armor` field name is a stable public contract.
     #[serde(default)]
     pub(crate) armor: BTreeMap<Id, Armor>,
+    /// Catalogued parameter values (CV1/CV2, `docs/vf-audit/design-cv-catalogued-values.md`)
+    /// keyed by catalogue id — the closed lists a `catalogued: true` Ability's
+    /// parameter, and a `ParamValue::Literal` instance, resolve against.
+    /// Defaulted so a ruleset shipped before CV2 still deserializes. Serialized
+    /// whole to the frontend; the `parameter_catalogues` field name is a stable
+    /// public contract.
+    #[serde(default)]
+    pub(crate) parameter_catalogues: BTreeMap<Id, crate::catalogue::Catalogue>,
     /// The [`SpellRange`] variants beyond Touch (Eye, Voice, Sight, Arcane
     /// Connection) — Short-Ranged Magic's cap-halving predicate
     /// (`effective::range_beyond_touch`), derived by filtering
@@ -353,6 +361,11 @@ pub struct RulesetSources<'a> {
     /// or `None` for a ruleset that ships no aging rules — which stands the aging
     /// subsystem down entirely rather than letting the engine invent a table.
     pub aging: Option<&'a str>,
+    /// Parameter-catalogues JSON (`{ "catalogues": [...] }`, CV1/CV2's
+    /// `rules/core/parameter_catalogues.json`), or `None` for a ruleset that
+    /// ships none — which leaves every Ability's parameter uncatalogued (free
+    /// text only), exactly as before CV1.
+    pub parameter_catalogues: Option<&'a str>,
 }
 
 /// A [`Ruleset`] paired with localized display text for a single language.
@@ -976,6 +989,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
         assert_eq!(rs.item_count(), 6);
@@ -999,6 +1013,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
         assert_eq!(no_abilities.ability_count(), 0);
@@ -1034,6 +1049,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         });
         assert!(
             rs.is_ok(),
@@ -1090,6 +1106,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         assert!(
@@ -1128,6 +1145,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         assert!(
@@ -1162,6 +1180,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
         assert_eq!(rs.house_count(), 2);
@@ -1186,6 +1205,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
         assert_eq!(none.house_count(), 0);
@@ -1219,6 +1239,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
         assert_eq!(rs.art_count(), 2);
@@ -1254,6 +1275,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
     }
 
@@ -1297,6 +1319,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
         // Mythic Companion type accessors.
@@ -1456,6 +1479,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -1494,6 +1518,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -1530,6 +1555,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -1568,6 +1594,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -1602,6 +1629,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -3689,6 +3717,7 @@ mod tests {
             life_stages: Some(life_stages),
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
         let rules = rs.life_stages().expect("life-stage rules loaded");
@@ -4471,6 +4500,7 @@ mod tests {
             life_stages: Some(life_stages),
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         let msg = err.to_string();
@@ -5589,6 +5619,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
 
@@ -5628,6 +5659,7 @@ mod tests {
                 // `life_stage_rules_load_from_their_own_file`.
                 "magnitude_points",
                 "mythic_companion_types",
+                "parameter_catalogues",
                 "point_items",
                 "ranges_beyond_touch",
                 "reputation_type_order",
@@ -5709,6 +5741,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
 
@@ -5754,6 +5787,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
 
@@ -6299,6 +6333,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -6338,6 +6373,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -6377,6 +6413,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -6415,6 +6452,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -6459,6 +6497,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -6497,6 +6536,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {
@@ -6535,6 +6575,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap_err();
         match err {

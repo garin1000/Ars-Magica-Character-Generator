@@ -6,7 +6,8 @@
 //! [`Ruleset::from_sources`] used to be one 267-line function (GC3); it is now
 //! a short pipeline over four named steps — parse
 //! ([`parse_sources`]), pre-integrity checks ([`check_duplicate_ids`],
-//! [`check_scholarly_language`], [`check_creation_phase_flow`]), and assembly
+//! [`check_scholarly_language`], [`check_creation_phase_flow`], and (CV2)
+//! [`crate::catalogue::parameter_catalogue_integrity_errors`]), and assembly
 //! ([`assemble_ruleset`]) — with no change to the checks themselves or the
 //! order errors accumulate in.
 
@@ -40,6 +41,7 @@ impl Ruleset {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
     }
 
@@ -71,6 +73,7 @@ impl Ruleset {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
     }
 
@@ -104,6 +107,7 @@ impl Ruleset {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
     }
 
@@ -124,6 +128,9 @@ impl Ruleset {
         // cached ruleset arriving through `from_serialized` is held to the same
         // standard as a freshly parsed one.
         errors.extend(check_creation_phase_flow(&parsed.types));
+        errors.extend(crate::catalogue::parameter_catalogue_integrity_errors(
+            &parsed.parameter_catalogues,
+        ));
         if !errors.is_empty() {
             return Err(IntegrityError::new(errors).into());
         }
@@ -166,6 +173,7 @@ struct ParsedSources {
     life_stage_rules: Option<LifeStageRules>,
     childhoods_file: ChildhoodsFile,
     aging_rules: Option<AgingRules>,
+    parameter_catalogues: Vec<crate::catalogue::Catalogue>,
 }
 
 /// Parses each named source string into its typed file shape. An absent
@@ -187,6 +195,7 @@ fn parse_sources(sources: RulesetSources) -> Result<ParsedSources, RulesetError>
         life_stages,
         childhoods,
         aging,
+        parameter_catalogues,
         ..
     } = sources;
 
@@ -243,6 +252,10 @@ fn parse_sources(sources: RulesetSources) -> Result<ParsedSources, RulesetError>
             serde_json::from_str(json).map_err(|e| RulesetError::parse(parse_source::AGING, e))?,
         ),
     };
+    // An absent parameter-catalogues file is equivalent to an empty `"{}"` —
+    // no catalogued Ability is loadable, but nothing else is affected.
+    let parameter_catalogues =
+        crate::catalogue::parse_parameter_catalogues_file(parameter_catalogues.unwrap_or("{}"))?;
 
     Ok(ParsedSources {
         items,
@@ -258,6 +271,7 @@ fn parse_sources(sources: RulesetSources) -> Result<ParsedSources, RulesetError>
         life_stage_rules,
         childhoods_file,
         aging_rules,
+        parameter_catalogues,
     })
 }
 
@@ -414,6 +428,7 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         life_stage_rules,
         childhoods_file,
         aging_rules,
+        parameter_catalogues,
     } = parsed;
 
     // The eight engine-derived fields below (magnitude_points through
@@ -454,6 +469,7 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         weapons: index_by_id(equipment_file.weapons, |w| w.id.clone()),
         shields: index_by_id(equipment_file.shields, |s| s.id.clone()),
         armor: index_by_id(equipment_file.armor, |a| a.id.clone()),
+        parameter_catalogues: index_by_id(parameter_catalogues, |c| c.id.clone()),
     };
     ruleset.apply_derived_fields();
     ruleset

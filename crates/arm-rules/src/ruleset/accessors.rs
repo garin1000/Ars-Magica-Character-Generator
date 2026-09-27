@@ -87,6 +87,26 @@ impl Ruleset {
         &self.advancement
     }
 
+    /// Looks up a catalogued-parameter-value catalogue by id (`catalogue.language`).
+    pub fn catalogue(&self, id: &Id) -> Option<&crate::catalogue::Catalogue> {
+        self.parameter_catalogues.get(id)
+    }
+
+    /// Iterates all catalogued-parameter-value catalogues in id order.
+    pub fn catalogues(&self) -> impl Iterator<Item = &crate::catalogue::Catalogue> {
+        self.parameter_catalogues.values()
+    }
+
+    /// The raw catalogue-id → [`crate::catalogue::Catalogue`] map, exposed
+    /// (rather than only [`Self::catalogue`]/[`Self::catalogues`]) because
+    /// [`crate::catalogue::load_catalogue_names`] takes the whole map so it can
+    /// validate/report per-catalogue name collisions; keeping that function's
+    /// signature keyed by map, not iterator, avoids a second signature just for
+    /// this one caller.
+    pub fn parameter_catalogues(&self) -> &BTreeMap<Id, crate::catalogue::Catalogue> {
+        &self.parameter_catalogues
+    }
+
     /// The age → maximum-Ability-score band table (ArMDE:2366-2374). Empty when the
     /// ruleset ships no age caps.
     pub fn age_ability_caps(&self) -> &AgeAbilityCaps {

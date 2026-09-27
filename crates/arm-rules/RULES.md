@@ -9056,7 +9056,7 @@ The House row is the only one resting on a rule, and it is the same choice the
 resolution*); the report merely observes that the choice has not been made, and
 still does not require it.
 
-### Catalogued parameter values (CV1) — `catalogue.rs`
+### Catalogued parameter values (CV1/CV2) — `catalogue.rs`
 
 Fixes the D14 literal-instance defect: matching a rules-authored
 `ParamValue::Literal` (e.g. an Educated Virtue's Latin exemplar) against a
@@ -9064,9 +9064,10 @@ player-typed `AbilityScore.parameter` used to be plain `==` on two strings, so
 a correct answer in the wrong case or language ("Latein" for a German player)
 silently failed to authorize or fund. See
 `docs/vf-audit/design-cv-catalogued-values.md` (Revision 4) for the full
-design; this slice (CV1) ships only the catalogue data, its i18n names, and
-their load-time integrity — the `Ability`/`AbilityScore` matching fix itself
-lands in CV2 onward.
+design. CV1 shipped the catalogue data, its i18n names, and their standalone
+load-time integrity; CV2 wires all of it into the real `Ruleset` load path and
+adds `Ability.catalogued` — the `AbilityScore`-side matching fix itself (Bound/
+Link resolution) lands in CV3 onward.
 
 - Data: `rules/core/parameter_catalogues.json` — three catalogues
   (`catalogue.language`, `catalogue.organization`, `catalogue.profession`),
@@ -9082,16 +9083,37 @@ lands in CV2 onward.
   so those fall through to the DE rulebook, which mirrors the English file
   line-for-line (design note § 9).
 - Implementation: `crates/arm-rules/src/catalogue.rs` — `Catalogue`,
-  `CatalogueValue`, `load_parameter_catalogues`, `load_catalogue_names`.
-  Standalone loaders, **not yet wired into `Ruleset`/`RulesetSources`** — CV2
-  wires `Ability.catalogued` and the referential-integrity check that
-  resolves a `ParamValue::Literal` against a catalogue.
-- Load-time integrity, enforced by `load_parameter_catalogues`/
-  `load_catalogue_names` themselves (not yet `Ruleset::validate_integrity` —
-  CV2 moves it there): catalogue ids and value ids unique, both sorted by id,
+  `CatalogueValue`, `parse_parameter_catalogues_file` (raw parse) and
+  `parameter_catalogue_integrity_errors` (the shared checks below), which
+  `load_parameter_catalogues` composes into the CV1 standalone entry point
+  and `ruleset/parse.rs::{parse_sources,check_duplicate_ids,assemble_ruleset}`
+  (CV2) compose into the real `Ruleset::from_sources` load path — one
+  implementation, not two that could disagree. `load_catalogue_names` stays
+  standalone by design: it needs BOTH locales at once, which
+  `Ruleset`/`LocalizedRuleset` never carry together.
+- `Ability.catalogued: bool` (`ability.rs`) — `true` for `ability.dead_language`,
+  `ability.living_language`, `ability.profession`, `ability.organization_lore`
+  (design note § 1.3; matches the four catalogues above by parameter key).
+  `ability.craft`/`ability.area_lore`/`ability.mystery_cult_lore` stay
+  uncatalogued. `catalogued: true` does **not** forbid free text: a picker
+  offers the catalogue's values plus an "Other…" escape (CV6/CV7), and an
+  unrecognised typed value simply stays `Text`, never guessed.
+- Load-time integrity: catalogue ids and value ids unique, both sorted by id,
   each catalogue non-empty; every value has both an `en` and a `de` name; no
   two values within one catalogue collide under trimmed, case-folded
-  comparison across the union of their `en`/`de` names.
+  comparison across the union of their `en`/`de` names (all enforced in
+  `Ruleset::from_sources`'s pre-integrity pass, CV2). A `catalogued` Ability
+  must declare a `parameter` and that key must name a catalogue that exists
+  (`Ruleset::validate_catalogued_abilities`, `ruleset/integrity.rs` — a
+  referential check, so it runs post-assembly like every other cross-catalogue
+  reference, not in the pre-integrity pass).
+- arm-app: `core/parameter_catalogues.json` is a `REQUIRED_CORE_FILES` entry
+  (`ruleset_io.rs`) read by `load_ruleset_from_dir` like every other core file
+  (empty file = the ruleset ships no catalogues). `load_catalogue_names_from_dir`
+  reads `i18n/{en,de}/parameter_catalogue.json` — **both, always**, regardless
+  of the requested UI language — against the loaded ruleset's own catalogues;
+  composes with the portable-fallback directory `pick_rules_dir` resolves,
+  exactly like `load_ruleset_from_dir` does.
 
 | id | EN name | DE name | Source |
 |---|---|---|---|
@@ -9111,9 +9133,15 @@ lands in CV2 onward.
 | `profession.poet` | Poet | Dichter | `ArMDE:4456-4461` |
 | `profession.storyteller` | Storyteller | Geschichtenerzähler | `ArMDE:4456-4461` |
 
-Tests: `crates/arm-rules/tests/parameter_catalogues.rs` — fixture-based
+Tests: `crates/arm-rules/tests/parameter_catalogues.rs` — CV1's fixture-based
 loading, both-locale names, duplicate-id and cross-locale-collision failures,
 plus `shipped_catalogues_and_names_load_clean` against the real shipped files.
+`crates/arm-rules/tests/parameter_catalogues_ruleset.rs` — CV2's real-load-path
+wiring (`Ruleset::from_sources` exposes catalogues, a broken catalogue fails
+the real load, the four listed Abilities read as `catalogued`, and the two
+`Ability.catalogued` integrity gaps). `crates/arm-app/tests/commands.rs` —
+`load_catalogue_names_reads_both_locales_from_the_shipped_rules_dir` and
+`load_catalogue_names_works_through_the_portable_fallback_directory`.
 
 ---
 

@@ -122,6 +122,15 @@ pub struct Ability {
     /// Upbringing).
     #[serde(default, skip_serializing_if = "is_false")]
     pub locality_dependent: bool,
+    /// Whether this ability's parameter values are looked up in the
+    /// `rules/core/parameter_catalogues.json` catalogue whose id is
+    /// `catalogue.<parameter key>` (CV1/CV2,
+    /// `docs/vf-audit/design-cv-catalogued-values.md`). `false` (default) means
+    /// the parameter stays free text with no catalogue — unchanged for
+    /// `craft`/`area`/`mystery_cult`. `true` requires `parameter: Some(_)` and a
+    /// matching catalogue to exist (`Ruleset::validate_integrity`).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub catalogued: bool,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,

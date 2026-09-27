@@ -49,6 +49,9 @@ fn full_ruleset() -> Ruleset {
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: None,
         aging: Some(include_str!("../../../rules/core/aging.json")),
+        parameter_catalogues: Some(include_str!(
+            "../../../rules/core/parameter_catalogues.json"
+        )),
     })
     .expect("shipped core ruleset loads")
 }

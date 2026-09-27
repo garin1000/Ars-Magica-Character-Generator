@@ -752,6 +752,7 @@ mod tests {
             life_stages: Some(life_stages),
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap();
         let i18n = r#"{

@@ -155,6 +155,7 @@ mod tests {
             life_stages: None,
             childhoods: None,
             aging: None,
+            parameter_catalogues: None,
         })
         .unwrap()
     }

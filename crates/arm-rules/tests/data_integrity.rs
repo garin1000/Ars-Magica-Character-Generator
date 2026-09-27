@@ -38,6 +38,9 @@ fn load_ruleset() -> Ruleset {
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         houses: Some(SHIPPED_HOUSES),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+        parameter_catalogues: Some(include_str!(
+            "../../../rules/core/parameter_catalogues.json"
+        )),
         ..RulesetSources::default()
     })
     .unwrap()
@@ -62,6 +65,9 @@ fn load_ruleset_with_spells() -> Ruleset {
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: None,
         aging: None,
+        parameter_catalogues: Some(include_str!(
+            "../../../rules/core/parameter_catalogues.json"
+        )),
     })
     .unwrap()
 }
@@ -87,6 +93,9 @@ fn load_ruleset_with_mastery_abilities() -> Ruleset {
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: None,
         aging: None,
+        parameter_catalogues: Some(include_str!(
+            "../../../rules/core/parameter_catalogues.json"
+        )),
     })
     .unwrap()
 }
@@ -110,6 +119,9 @@ fn load_ruleset_with_equipment() -> Ruleset {
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: None,
         aging: None,
+        parameter_catalogues: Some(include_str!(
+            "../../../rules/core/parameter_catalogues.json"
+        )),
     })
     .unwrap()
 }
@@ -1574,6 +1586,7 @@ fn weapon_with_non_combat_ability_rejected_at_load() {
         life_stages: None,
         childhoods: None,
         aging: None,
+        parameter_catalogues: None,
     })
     .unwrap_err();
     assert!(
@@ -1605,6 +1618,7 @@ fn weapon_with_unknown_ability_rejected_at_load() {
         life_stages: None,
         childhoods: None,
         aging: None,
+        parameter_catalogues: None,
     })
     .unwrap_err();
     assert!(
@@ -3191,6 +3205,9 @@ fn load_full_ruleset() -> Ruleset {
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: Some(SHIPPED_CHILDHOODS),
         aging: Some(SHIPPED_AGING),
+        parameter_catalogues: Some(include_str!(
+            "../../../rules/core/parameter_catalogues.json"
+        )),
     })
     .unwrap()
 }
@@ -5141,6 +5158,9 @@ fn an_exemplar_slug_is_not_treated_as_a_referential_integrity_ref() {
             life_stages: Some(life_stages),
             childhoods: None,
             aging: None,
+            parameter_catalogues: Some(include_str!(
+                "../../../rules/core/parameter_catalogues.json"
+            )),
         })
     };
     if let Err(err) = load(life_stages) {
@@ -6462,6 +6482,9 @@ fn shipped_items_with_supernatural_flaw_cap() -> Ruleset {
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         houses: Some(SHIPPED_HOUSES),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+        parameter_catalogues: Some(include_str!(
+            "../../../rules/core/parameter_catalogues.json"
+        )),
         ..RulesetSources::default()
     })
     .unwrap()

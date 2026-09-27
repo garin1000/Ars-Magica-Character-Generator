@@ -10,8 +10,8 @@ use arm_app::error::AppError;
 use arm_app::ruleset_io::{
     AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication,
     apply_childhood_package_loaded, ensure_extension, export_markdown_to_path,
-    load_entity_from_path, load_ruleset_from_dir, missing_core_files, path_text, pick_rules_dir,
-    save_entity_to_path, validate_loaded,
+    load_catalogue_names_from_dir, load_entity_from_path, load_ruleset_from_dir,
+    missing_core_files, path_text, pick_rules_dir, save_entity_to_path, validate_loaded,
 };
 use arm_rules::{
     ArtScore, CreationPhase, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode,
@@ -463,7 +463,8 @@ fn missing_core_files_names_every_absent_file() {
     assert!(missing.contains(&"core/life_stages.json"));
     assert!(missing.contains(&"core/childhoods.json"));
     assert!(missing.contains(&"core/aging.json"));
-    assert_eq!(missing.len(), 12);
+    assert!(missing.contains(&"core/parameter_catalogues.json"));
+    assert_eq!(missing.len(), 13);
 }
 
 #[test]
@@ -474,7 +475,7 @@ fn missing_core_files_is_empty_for_the_real_shipped_rules_directory() {
 #[test]
 fn missing_core_files_is_the_full_list_for_a_directory_that_does_not_exist() {
     let missing = missing_core_files(&PathBuf::from("/does/not/exist/at/all"));
-    assert_eq!(missing.len(), 14);
+    assert_eq!(missing.len(), 15);
 }
 
 /// A temp copy of the shipped `rules/` (core + English i18n) whose
@@ -650,6 +651,7 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("core/life_stages.json"), "").unwrap();
     fs::write(tmp.path().join("core/childhoods.json"), "").unwrap();
     fs::write(tmp.path().join("core/aging.json"), "").unwrap();
+    fs::write(tmp.path().join("core/parameter_catalogues.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
@@ -719,6 +721,7 @@ fn integrity_failure_preserves_individual_messages() {
     fs::write(tmp.path().join("core/life_stages.json"), "").unwrap();
     fs::write(tmp.path().join("core/childhoods.json"), "").unwrap();
     fs::write(tmp.path().join("core/aging.json"), "").unwrap();
+    fs::write(tmp.path().join("core/parameter_catalogues.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
@@ -874,6 +877,7 @@ fn over_budget_virtues_is_reported() {
     let arts = fs::read_to_string(core.join("arts.json")).unwrap();
     let characteristics = fs::read_to_string(core.join("characteristics.json")).unwrap();
     let houses = fs::read_to_string(core.join("houses.json")).unwrap();
+    let parameter_catalogues = fs::read_to_string(core.join("parameter_catalogues.json")).unwrap();
     let tiny_type = r#"[{
         "id": "tiny",
         "budget": { "virtue_points": 1, "flaw_points": 10 },
@@ -892,6 +896,7 @@ fn over_budget_virtues_is_reported() {
         arts: Some(&arts),
         houses: Some(&houses),
         characteristics: Some(characteristics.as_str()),
+        parameter_catalogues: Some(&parameter_catalogues),
         ..RulesetSources::default()
     })
     .unwrap();
@@ -4249,4 +4254,41 @@ fn the_examples_keep_a_genuine_pre_migration_fixture() {
     let current = fs::read_to_string(repo_root().join("examples/companion_sample.json")).unwrap();
     assert!(current.contains("\"schema_version\": 17"), "got {current}");
     assert!(current.contains("\"saga_year\": 1220"), "got {current}");
+}
+
+// --- CV2: arm-app reads the catalogue name files (design note § 5.3, § 10) ---
+
+/// `load_catalogue_names_from_dir` must read BOTH shipped
+/// `i18n/{en,de}/parameter_catalogue.json` files against the real, shipped
+/// ruleset's catalogues, regardless of the app's active UI language.
+#[test]
+fn load_catalogue_names_reads_both_locales_from_the_shipped_rules_dir() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+
+    let names = load_catalogue_names_from_dir(&rules_dir(), &ruleset).unwrap();
+
+    let latin_names = names
+        .get(&Id::new("language.latin"))
+        .unwrap_or_else(|| panic!("language.latin must have resolved names, got {names:?}"));
+    assert!(latin_names.iter().any(|n| n == "Latin"));
+    assert!(latin_names.iter().any(|n| n == "Latein"));
+}
+
+/// The portable Linux layout: `pick_rules_dir` resolves the real directory
+/// (skipping the nonexistent system resource path), and the catalogue-names
+/// loader must work identically against whatever directory that resolves to,
+/// not just a directly-named one.
+#[test]
+fn load_catalogue_names_works_through_the_portable_fallback_directory() {
+    let empty = tempfile::tempdir().unwrap();
+    let resolved = pick_rules_dir(&[empty.path().to_path_buf(), rules_dir()])
+        .expect("the real rules dir must be picked over the empty candidate");
+    let ruleset = load_ruleset_from_dir(&resolved, "en").unwrap().ruleset;
+
+    let names = load_catalogue_names_from_dir(&resolved, &ruleset).unwrap();
+
+    assert!(
+        names.contains_key(&Id::new("organization.order_of_hermes")),
+        "got {names:?}"
+    );
 }

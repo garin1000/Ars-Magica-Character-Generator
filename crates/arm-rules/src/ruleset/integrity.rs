@@ -45,6 +45,7 @@ impl Ruleset {
         let mut errors = Vec::new();
 
         self.validate_point_items(&mut errors);
+        self.validate_catalogued_abilities(&mut errors);
         self.validate_incompatibility_symmetry(&mut errors);
         self.validate_magnitude_variant_exclusivity(&mut errors);
 
@@ -151,6 +152,33 @@ impl Ruleset {
             self.validate_effect_refs(item, id, errors);
 
             validate_source_range(&item.source, &format!("{id}"), errors);
+        }
+    }
+
+    /// A `catalogued: true` Ability (design note § 2.2, CV2) must declare a
+    /// `parameter` key (there is nothing to catalogue otherwise) and that key
+    /// must name a catalogue that actually exists (`catalogue.<key>`) — a
+    /// referential check, so it runs here rather than in `parse.rs`'s
+    /// pre-integrity pass, exactly like every other cross-catalogue reference.
+    fn validate_catalogued_abilities(&self, errors: &mut Vec<String>) {
+        for ability in self.abilities.values() {
+            if !ability.catalogued {
+                continue;
+            }
+            let Some(parameter) = &ability.parameter else {
+                errors.push(format!(
+                    "ability '{}' is catalogued but takes no parameter",
+                    ability.id
+                ));
+                continue;
+            };
+            let catalogue_id = Id::new(format!("catalogue.{parameter}"));
+            if !self.parameter_catalogues.contains_key(&catalogue_id) {
+                errors.push(format!(
+                    "ability '{}' is catalogued against '{catalogue_id}', which does not exist",
+                    ability.id
+                ));
+            }
         }
     }
 
