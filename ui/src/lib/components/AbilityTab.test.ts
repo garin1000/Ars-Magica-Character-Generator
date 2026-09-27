@@ -492,3 +492,125 @@ describe('AbilityTab selected-row rules text is keyboard-reachable (Sabine 3)', 
     expect(name![0]).toContain('tabindex="0"');
   });
 });
+
+// CV7 (design-cv-catalogued-values.md § 6.1/§ 6.3/§ 6.4): the parameter picker
+// consumes `store.effective.ability_parameter_options`, which the UI must not
+// derive itself. Red-checkpoint protocol, phase 1: `AbilityTab.svelte`'s
+// template is untouched, so every assertion below fails looking for markup
+// that does not exist yet.
+describe('AbilityTab parameter picker (CV7)', () => {
+  beforeEach(() => {
+    store.ruleset!.ruleset.abilities = {
+      ...store.ruleset!.ruleset.abilities,
+      'ability.organization_lore': {
+        id: 'ability.organization_lore',
+        category: 'academic',
+        parameter: 'organization',
+      },
+      'ability.dead_language': {
+        id: 'ability.dead_language',
+        category: 'academic',
+        parameter: 'language',
+      },
+    };
+    store.ruleset!.i18n = {
+      ...store.ruleset!.i18n,
+      // Deliberately the GERMAN name, regardless of `store.lang` — proves the
+      // row reads the engine-merged `ruleset.i18n`, not a structural
+      // "humanize the id" guess (which would produce the English-shaped
+      // "Latin" no matter what `store.lang` is).
+      'language.latin': { name: 'Latein' },
+      'virtue.craft_guild_training': { name: 'Craft Guild Training' },
+    };
+  });
+
+  it('shows a catalogued value by its localized name, never the raw id', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.dead_language', score: 1, parameter: { id: 'language.latin' } },
+    ];
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.dead_language',
+          catalogued: ['language.gothic', 'language.latin'],
+          linked: [],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+
+    const body = html();
+    expect(body).toContain('Latein');
+    // The raw id legitimately appears in the combo option's OWN wire
+    // `value="cat:language.latin"` attribute; what must never appear is the id
+    // as visible TEXT (i.e. as an option's label) — checked as a bare text
+    // node between tags, distinct from the attribute form.
+    expect(body).not.toContain('>language.latin<');
+  });
+
+  it('shows a "follows the Virtue" indicator for a Linked value', () => {
+    store.entity.ability_scores = [
+      {
+        ability: 'ability.organization_lore',
+        score: 1,
+        parameter: { item: 'virtue.craft_guild_training', param: 'guild' },
+      },
+    ];
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.organization_lore',
+          catalogued: [],
+          linked: [
+            {
+              item: 'virtue.craft_guild_training',
+              param: 'guild',
+              resolved: "Smiths' Guild of Verdi",
+            },
+          ],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+
+    const body = html();
+    expect(body).toContain('data-testid="ability-param-linked-ability.organization_lore-0"');
+    expect(body).toContain('Craft Guild Training');
+  });
+
+  it('shows the conditional hint only when the engine sets it', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.dead_language', score: 1, parameter: { text: 'Latin' } },
+    ];
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.dead_language',
+          catalogued: ['language.latin'],
+          linked: [],
+          hint: true,
+        },
+      ],
+    } as unknown as EffectiveScores;
+
+    expect(html()).toContain('data-testid="ability-param-hint-ability.dead_language-0"');
+  });
+
+  it('renders no hint when the engine does not set it', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.dead_language', score: 1, parameter: { text: 'Klingon' } },
+    ];
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.dead_language',
+          catalogued: ['language.latin'],
+          linked: [],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+
+    expect(html()).not.toContain('data-testid="ability-param-hint-ability.dead_language-0"');
+  });
+});

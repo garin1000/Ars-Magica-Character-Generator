@@ -1050,6 +1050,26 @@ param-label-study = Studium
 # durchgesetzt.
 param-label-years = Jahre
 
+# CV7: Die Auswahlliste des Fertigkeit-Parameters (design-cv-catalogued-values.md
+# § 6.1/§ 6.3/§ 6.4). Der Freitext-Ausweg, wenn weder ein Katalogwert noch eine
+# verknüpfte Tugend die Antwort des Spielers trifft.
+ability-param-other = Andere…
+# Anzeige eines verknüpften Werts, die „folgt einer Tugend“ von einem
+# eingetippten Wert unterscheidet, der zufällig gerade übereinstimmt — $item
+# ist der lokalisierte Name der Quelle, $value ihr aktuell aufgelöster Text.
+ability-param-follows = Folgt { $item }: { $value }
+# DIESELBE Anzeige, wenn die Quelle der Verknüpfung gerade nicht aufgelöst
+# werden kann (entfernt, oder mehrfach gehalten) — sichtbar anders als die
+# Anzeige oben, damit eine defekte Verknüpfung nie mit einer funktionierenden
+# verwechselt wird. Der Befund `issue-ambiguous_bound_parameter` erklärt, warum.
+ability-param-unresolved = Folgt { $item } (nicht auflösbar)
+# Bedingter Hinweis (design § 11 Punkt 2): erscheint nur, wenn der eingetippte
+# Freitext eine Instanz aus einem Literal oder einer Verknüpfung eines
+# eigenen Gegenstands unerfüllt lässt — der Freitext kostet den Spieler eine
+# Berechtigung, die ein Katalogwert oder eine Verknüpfung stattdessen gewähren
+# würde.
+ability-param-hint = Ein Katalogwert oder eine verknüpfte Tugend könnte etwas berechtigen, das dieser Freitext nicht gewährt.
+
 # Lokalisierte Namen der `ParameterDomain`-Varianten der Engine — die Art von Wert,
 # die ein Parameter-Platzhalter annimmt. Gelesen nur von `unknown_param_value`, das
 # die Domäne nennt, in der ein gespeicherter Wert nicht aufgelöst werden konnte; die

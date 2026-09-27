@@ -50,6 +50,7 @@ import type {
 import type { DocumentAction, MenuFlags } from './menu';
 import type {
   AbilityFunding,
+  AbilityParamValue,
   AppError,
   Characteristic,
   DerivedTotals,
@@ -1039,19 +1040,66 @@ class AppStore {
     this.#selectionWorkflow.add(ref);
   }
 
-  /** Selection edits are by row index, since a repeatable item has several rows.
-   *  @see SelectionWorkflow.removeAt */
-  removeSelectionAt(index: number): void {
+  /**
+   * Selection edits are by row index, since a repeatable item has several
+   * rows.
+   *
+   * CV7 (design § 5.5, `docs/vf-audit/design-cv-catalogued-values.md`): a
+   * removed Virtue/Flaw may be the source a bought Ability's parameter is
+   * `Linked` to — the engine owns that conversion
+   * (`arm_rules::unlink_ability_parameters`), so this calls it BEFORE
+   * splicing the selection out, exactly as the load-time dangling-link fold
+   * does. Never reimplemented here.
+   *
+   * Calling the engine is skipped when nothing currently offered as a link
+   * target names this item — the common case (removing a plain Virtue/Flaw)
+   * stays fully synchronous, so this never turns an ordinary removal into an
+   * awaited round trip. `unlink_ability_parameters` is itself a correct
+   * no-op when nothing is linked to `ref`, so this check is a latency
+   * optimization, not a second copy of the engine's own decision.
+   *
+   * @see SelectionWorkflow.removeAt
+   */
+  async removeSelectionAt(index: number): Promise<void> {
+    const ref = this.entity.selections?.[index]?.ref;
+    if (ref && this.#isLinkSource(ref)) {
+      const updated = await ipc.unlinkAbilityParameters(this.entity, ref);
+      this.entity.ability_scores = updated.ability_scores;
+    }
     this.#selectionWorkflow.removeAt(index);
+  }
+
+  /** Whether any currently-offered link target names `ref` as its source
+   *  item (`AbilityParameterOptions.linked`, design § 6.3) — the cheap,
+   *  engine-derived check {@link removeSelectionAt}/{@link setParamAt} use
+   *  to decide whether the unlink round trip is worth making at all. */
+  #isLinkSource(ref: string): boolean {
+    return (this.effective?.ability_parameter_options ?? []).some((o) =>
+      o.linked.some((lt) => lt.item === ref),
+    );
   }
 
   /**
    * Set one parameter of one selection row. The value is trimmed, never
    * case-folded — parameter values decide a selection's identity.
    *
+   * CV7: clearing a Bound-declaring item's own parameter back to empty is the
+   * OTHER way a link's target can disappear (design § 5.5) — the same engine
+   * operation runs first, converting any Linked Ability score to Text
+   * holding the last resolvable value, before the empty value is applied.
+   *
+   * Only a transition TO empty calls the engine — a non-empty edit (a
+   * rename) must keep a live link tracking the NEW value (D59 point 2), never
+   * freeze it to the old one.
+   *
    * @see SelectionWorkflow.setParamAt
    */
-  setParamAt(index: number, key: string, value: string): void {
+  async setParamAt(index: number, key: string, value: string): Promise<void> {
+    const ref = this.entity.selections?.[index]?.ref;
+    if (ref && value.trim() === '' && this.#isLinkSource(ref)) {
+      const updated = await ipc.unlinkAbilityParameters(this.entity, ref);
+      this.entity.ability_scores = updated.ability_scores;
+    }
     this.#selectionWorkflow.setParamAt(index, key, value);
   }
 
@@ -1119,6 +1167,16 @@ class AppStore {
   /** @see AbilityWorkflow.setParameterAt */
   setAbilityParameterAt(index: number, value: string): void {
     this.#abilityWorkflow.setParameterAt(index, value);
+  }
+
+  /**
+   * Writes a full parameter value chosen from the picker's combo box — a
+   * catalogue entry or a link target (CV7). `undefined` clears it.
+   *
+   * @see AbilityWorkflow.setParameterValueAt
+   */
+  setAbilityParameterValueAt(index: number, value: AbilityParamValue | undefined): void {
+    this.#abilityWorkflow.setParameterValueAt(index, value);
   }
 
   setXpPool(xp: number): void {

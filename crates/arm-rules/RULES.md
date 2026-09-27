@@ -7494,6 +7494,73 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   `arm-app/src/effective_dto.rs::tests::effective_scores_surfaces_ability_parameter_options`;
   `ui/src/lib/ability-parameter-options-parity.test.ts` (Rust struct fields vs.
   the TS mirror, text-diffed like `param-type-parity.test.ts`).
+- **CV7, the picker (design § 6.1/§ 6.2/§ 6.3/§ 6.4, § 5.5).** Pulls forward
+  three pieces the design note's own slice table had scoped to CV8 — a live
+  picker cannot ship without them without either rendering a raw/humanized id
+  or silently breaking bonus/floor matching the moment it writes a `Linked`
+  value, so the note's CV7/CV8 rows were revised to match what actually
+  shipped here (§ 10 of the design note records the correction).
+  - `LinkTarget` gains `resolved: Option<String>` (`effective/
+    parameter_options.rs`) — carries the ALREADY-COMPUTED
+    `AuthorizedAbility::instance` value through, not a second resolution, so
+    the picker can label a link target ("Follows «Craft Guild Training»:
+    Smiths' Guild of Verdi") without its own lookup.
+  - `arm-app::ruleset_io::merge_catalogue_display_names` reads the ACTIVE
+    language's `i18n/<lang>/parameter_catalogue.json`
+    (`arm_rules::parse_catalogue_names`, `catalogue.rs`) and merges each
+    catalogue value's own-language name into `LocalizedRuleset.i18n` at load —
+    the SAME map every other id's display name already lives in (design §
+    2.3), so `ui/src/lib/derive.ts::abilityParamDisplay`'s `Catalogued` arm
+    resolves through it exactly like `displayName` does elsewhere, falling
+    back to `humanizeCatalogueId` only when a name is genuinely absent.
+    Best-effort like `load_catalogue_names_from_dir`'s own `.ok()`: a missing
+    or malformed name file does not fail the whole ruleset load.
+  - `ui/src/lib/derive.ts::sameParam`/`normalizeParam`/`resolvedLinksFrom`
+    (design § 6.2) — the UI's structural, same-entity comparison for a
+    `.parameter` value, resolving a `Linked` value to its CURRENT text via
+    `resolvedLinks` (every offered link target's `LinkTarget.resolved`,
+    flattened once per `derive()` pass) rather than comparing `(item, param)`
+    pairs. `AbilityTab.svelte`'s `bonusOf`/`settledScoreOf` both route through
+    it now, replacing the CV4-era `abilityParamKey` identity comparison there.
+  - The combo box itself: `AbilityTab.svelte`'s parameter `<select>`, built
+    entirely from `store.effective.ability_parameter_options` (catalogue
+    values, then link targets, then "Other…" — one engine-decided order).
+    Choosing a catalogue entry writes `{id}`; choosing a link target writes
+    `{item, param}`; choosing "Other…" reveals the existing free-text escape.
+    Choosing any entry REPLACES the stored value outright — there is no
+    "keep both" state. A `Linked` value's own row shows a "follows the
+    Virtue" indicator (`ability-param-follows`, both locales) naming the
+    source and its current text, or a visibly distinct
+    `ability-param-unresolved` indicator when the source cannot currently be
+    resolved (removed, or ambiguous — `issue-ambiguous_bound_parameter`
+    explains why). The conditional hint (`options.hint`) renders as
+    `ability-param-hint` when set.
+  - The removal/clear flow: `arm_rules::unlink_ability_parameters` (CV5) now
+    has an IPC command, `commands::unlink_ability_parameters`
+    (`arm-app/src/commands.rs`, guarded like every other ruleset-needing
+    command, delegating to `ruleset_io::unlink_ability_parameters_loaded`),
+    registered in `main.rs`. `ui/src/lib/state.svelte.ts`'s
+    `AppStore.removeSelectionAt`/`setParamAt` call it BEFORE applying the
+    change whenever the affected item is currently offered as a link source
+    (`#isLinkSource`, a latency optimization over the engine's own correct
+    no-op, not a second copy of its decision) — `removeSelectionAt`
+    unconditionally, `setParamAt` only when clearing an existing value to
+    empty (a non-empty edit is a rename a live link must keep tracking, D59
+    point 2). Both methods are now `async`; the synchronous fast path (the
+    common case, a non-linking item) still resolves within the same tick, so
+    `state.svelte.test.ts`'s existing synchronous assertions needed no
+    changes.
+  - Tests: `crates/arm-rules/tests/cv7_link_target_resolved.rs`;
+    `crates/arm-app/tests/commands.rs`'s
+    `load_ruleset_localizes_catalogue_value_names_in_{english,german}` and
+    `unlink_ability_parameters_converts_a_linked_ability_score_to_text`;
+    `ui/src/lib/derive.test.ts`'s `sameParam`/`normalizeParam`/
+    `resolvedLinksFrom` suites; `ui/src/lib/state.svelte.test.ts`'s
+    `setAbilityParameterValueAt` and the two unlink-flow `describe` blocks;
+    `AbilityTab.test.ts`/`AbilityTab.client.test.ts`'s "parameter picker
+    (CV7)" suites (localized names never a raw id as visible text, the
+    indicators, the hint, keyboard-operable native `<select>`, the live
+    removal conversion).
 - Tests: `simple_student_scales_its_restricted_pool_by_finished_years`,
   `simple_student_funds_latin_but_not_another_dead_language`
   (`tests/data_integrity.rs`); `a_number_type_paired_with_a_non_number_domain_fails_the_load`,

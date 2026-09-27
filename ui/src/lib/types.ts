@@ -427,6 +427,10 @@ export interface AbilityFloor {
 export interface LinkTarget {
   item: string;
   param: string;
+  // The item's OWN current value for `param` (design § 6.4), resolved by the
+  // engine so the picker never looks this up itself — `null` when the
+  // parameter is declared but not yet filled in.
+  resolved: string | null;
 }
 
 // The engine-built parameter-picker options for one catalogued-or-linkable
@@ -435,8 +439,8 @@ export interface LinkTarget {
 // holds ids only — the UI localizes the name through the i18n it already has,
 // never rendering a raw id. `hint` (§ 11 item 2) is set only when a bought
 // free-text value on this ability leaves a Literal or Bound instance unmet;
-// the UI never queries the ruleset to decide this itself. No picker consumes
-// this yet (CV7).
+// the UI never queries the ruleset to decide this itself. Consumed by
+// `AbilityTab.svelte`'s combo box (CV7).
 export interface AbilityParameterOptions {
   ability: string;
   catalogued: string[];
@@ -784,6 +788,10 @@ export interface EffectiveScores {
   // than re-deriving "is this trained/an Order member" from the bare profile
   // flags itself.
   phases_in_force: CreationPhase[];
+  // CV7: the Ability parameter picker's engine-built option list, one entry per
+  // catalogued-or-linkable Ability (design § 6.3). The UI must not derive this
+  // itself — see `AbilityParameterOptions`'s own doc comment.
+  ability_parameter_options: AbilityParameterOptions[];
 }
 
 // --- Derived play-stat totals (M5/5i), mirrored from `arm_rules::derived`.
@@ -1766,9 +1774,8 @@ export interface Selection {
 // A parameterized Ability's player-supplied value (CV4, D14;
 // `docs/vf-audit/design-cv-catalogued-values.md` § 3): three disjoint shapes,
 // discriminated structurally by which key is present — mirrors
-// `arm_rules::types::AbilityParameterValue`. `Linked` (§ 3, CV5) is not yet
-// produced or resolved anywhere in the UI; the shape exists so a save round
-// trips it unchanged.
+// `arm_rules::types::AbilityParameterValue`. `Linked` is written and resolved
+// by the picker's combo box (CV7, `AbilityTab.svelte`).
 export type AbilityParamValue = { id: string } | { item: string; param: string } | { text: string };
 
 // A whole bought Ability score with an optional free-text specialty. Keyed by

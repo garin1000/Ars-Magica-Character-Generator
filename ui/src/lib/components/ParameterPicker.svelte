@@ -140,7 +140,7 @@
           .filter((row) => row.ability === id && abilityParamKey(row.parameter))
           .map((row) => ({
             value: `${id}${SEP}${abilityParamKey(row.parameter)}`,
-            label: abilityInstanceLabel(id, abilityParamDisplay(row.parameter)),
+            label: abilityInstanceLabel(id, abilityParamDisplay(row.parameter, localized)),
           }));
         return [generic, ...instances];
       });

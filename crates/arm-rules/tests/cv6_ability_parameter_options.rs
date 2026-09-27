@@ -106,6 +106,10 @@ fn organization_lore_lists_a_link_target_for_craft_guild_training() {
         entry.linked.contains(&LinkTarget {
             item: Id::new("virtue.craft_guild_training"),
             param: "guild".into(),
+            // CV7 adds `resolved` — this fixture's own guild value (see
+            // cv7_link_target_resolved.rs for the dedicated resolved-value
+            // coverage).
+            resolved: Some("Smiths' Guild of Verdi".into()),
         }),
         "expected a link target naming Craft Guild Training's own 'guild' parameter, got: {:?}",
         entry.linked

@@ -40,7 +40,10 @@
     for (const bought of store.entity.ability_scores ?? []) {
       if (bought.ability !== row.ability) continue;
       if (!best || bought.score > best.score) {
-        best = { score: bought.score, parameter: abilityParamDisplay(bought.parameter) || null };
+        best = {
+          score: bought.score,
+          parameter: abilityParamDisplay(bought.parameter, localized) || null,
+        };
       }
     }
     return best?.parameter ?? null;

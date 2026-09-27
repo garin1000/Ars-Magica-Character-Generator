@@ -71,6 +71,10 @@ vi.mock('./ipc', () => ({
   writeSettings: vi.fn().mockResolvedValue(undefined),
   deriveAge: vi.fn().mockResolvedValue({ age: 0, issues: [] }),
   deriveBirthYear: vi.fn().mockResolvedValue(0),
+  // CV7: the removal/clear flow's engine round trip (design § 5.5). Defaults to
+  // handing the SAME entity back unchanged; tests that care about the
+  // conversion override this per case.
+  unlinkAbilityParameters: vi.fn().mockImplementation((entity: Entity) => Promise.resolve(entity)),
 }));
 
 // Import the singleton after the mock is registered.
@@ -3985,6 +3989,180 @@ describe('setAbilityParameterAt', () => {
     store.setAbilityParameterAt(0, 'Rhine');
     store.setAbilityParameterAt(0, '   ');
     expect(store.entity.ability_scores![0].parameter).toBeUndefined();
+  });
+});
+
+// --- setAbilityParameterValueAt() (CV7) -------------------------------------
+
+describe('setAbilityParameterValueAt', () => {
+  /** A loaded document (dirty === false) already carrying one ability row —
+   *  `store.open()` establishes both the row and a clean baseline in one
+   *  step, unlike a direct `entity.ability_scores = […]` write, which would
+   *  itself already differ from the freshly-reset baseline. */
+  async function openWithOrgLoreRow(): Promise<void> {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/saga.armc',
+      entity: {
+        ...store.entity,
+        ability_scores: [{ ability: 'ability.organization_lore', score: 1 }],
+      },
+      migrated_aging_characteristics: [],
+    });
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+  }
+
+  beforeEach(async () => {
+    await openWithOrgLoreRow();
+  });
+
+  it('writes a Catalogued value chosen from the combo box', () => {
+    store.setAbilityParameterValueAt(0, { id: 'language.latin' });
+    expect(store.entity.ability_scores![0].parameter).toEqual({ id: 'language.latin' });
+  });
+
+  it('writes a Linked value chosen from the combo box', () => {
+    store.setAbilityParameterValueAt(0, {
+      item: 'virtue.craft_guild_training',
+      param: 'guild',
+    });
+    expect(store.entity.ability_scores![0].parameter).toEqual({
+      item: 'virtue.craft_guild_training',
+      param: 'guild',
+    });
+  });
+
+  it('replaces a Linked value with a Catalogued one — never keeps both', () => {
+    store.setAbilityParameterValueAt(0, { item: 'virtue.craft_guild_training', param: 'guild' });
+    store.setAbilityParameterValueAt(0, { id: 'language.latin' });
+    expect(store.entity.ability_scores![0].parameter).toEqual({ id: 'language.latin' });
+  });
+
+  it('dirties the document', () => {
+    expect(store.dirty).toBe(false);
+    store.setAbilityParameterValueAt(0, { id: 'language.latin' });
+    expect(store.dirty).toBe(true);
+  });
+});
+
+// --- CV7: the removal/clear flow calls the engine's unlink operation --------
+
+describe('removeSelectionAt calls unlink_ability_parameters before removing (CV7, design § 5.5)', () => {
+  beforeEach(() => {
+    vi.mocked(ipc.unlinkAbilityParameters).mockClear();
+    store.entity.selections = [{ ref: 'virtue.craft_guild_training' }];
+    store.entity.ability_scores = [
+      {
+        ability: 'ability.organization_lore',
+        score: 1,
+        parameter: { item: 'virtue.craft_guild_training', param: 'guild' },
+      },
+    ];
+    // The removal flow only pays for the round trip when the removed item is
+    // a currently-offered link source (a latency optimization over the
+    // ordinary, non-linking removal) — mirrors what the real
+    // `ability_parameter_options` derived output would report.
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.organization_lore',
+          catalogued: [],
+          linked: [
+            {
+              item: 'virtue.craft_guild_training',
+              param: 'guild',
+              resolved: "Smiths' Guild of Verdi",
+            },
+          ],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+  });
+
+  it('converts a Linked Ability score to Text before splicing the selection out', async () => {
+    vi.mocked(ipc.unlinkAbilityParameters).mockResolvedValueOnce({
+      ...store.entity,
+      ability_scores: [
+        {
+          ability: 'ability.organization_lore',
+          score: 1,
+          parameter: { text: "Smiths' Guild of Verdi" },
+        },
+      ],
+    });
+
+    await store.removeSelectionAt(0);
+
+    expect(ipc.unlinkAbilityParameters).toHaveBeenCalledWith(
+      expect.anything(),
+      'virtue.craft_guild_training',
+    );
+    expect(store.entity.ability_scores![0].parameter).toEqual({
+      text: "Smiths' Guild of Verdi",
+    });
+    expect(store.entity.selections).toEqual([]);
+  });
+});
+
+describe('setParamAt calls unlink_ability_parameters when clearing a Bound source to empty (CV7, design § 5.5)', () => {
+  beforeEach(() => {
+    vi.mocked(ipc.unlinkAbilityParameters).mockClear();
+    store.entity.selections = [
+      { ref: 'virtue.craft_guild_training', params: { guild: "Smiths' Guild of Verdi" } },
+    ];
+    store.entity.ability_scores = [
+      {
+        ability: 'ability.organization_lore',
+        score: 1,
+        parameter: { item: 'virtue.craft_guild_training', param: 'guild' },
+      },
+    ];
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.organization_lore',
+          catalogued: [],
+          linked: [
+            {
+              item: 'virtue.craft_guild_training',
+              param: 'guild',
+              resolved: "Smiths' Guild of Verdi",
+            },
+          ],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+  });
+
+  it('converts a Linked Ability score to Text before the clear is applied', async () => {
+    vi.mocked(ipc.unlinkAbilityParameters).mockResolvedValueOnce({
+      ...store.entity,
+      ability_scores: [
+        {
+          ability: 'ability.organization_lore',
+          score: 1,
+          parameter: { text: "Smiths' Guild of Verdi" },
+        },
+      ],
+    });
+
+    await store.setParamAt(0, 'guild', '');
+
+    expect(ipc.unlinkAbilityParameters).toHaveBeenCalledWith(
+      expect.anything(),
+      'virtue.craft_guild_training',
+    );
+    expect(store.entity.ability_scores![0].parameter).toEqual({
+      text: "Smiths' Guild of Verdi",
+    });
+  });
+
+  it('does not call it for a non-empty edit — a live link must keep tracking a rename', async () => {
+    await store.setParamAt(0, 'guild', "Smiths' Guild of Fenster");
+    expect(ipc.unlinkAbilityParameters).not.toHaveBeenCalled();
   });
 });
 

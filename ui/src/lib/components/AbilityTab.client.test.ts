@@ -20,6 +20,12 @@ vi.mock('../ipc', () => ({
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
+  unlinkAbilityParameters: vi.fn().mockImplementation((entity: Entity) => Promise.resolve(entity)),
+  // The native discard-confirmation answer, for the one CV7 test that drives
+  // `store.open()` — short-circuits `FileOperations.confirmDiscard` before it
+  // ever falls back to the in-app prompt, mirroring `state.svelte.test.ts`'s
+  // own default.
+  confirmDiscard: vi.fn().mockResolvedValue(true),
 }));
 
 import * as ipc from '../ipc';
@@ -158,5 +164,165 @@ describe('AbilityTab effective-score badge staleness (#16)', () => {
 
     await answer(1, 3);
     expect(badge()).toBe('7');
+  });
+});
+
+// CV7 (design-cv-catalogued-values.md § 6.1/§ 6.3, § 5.5): the parameter
+// picker combo box, and the removal flow's live conversion. Red-checkpoint
+// protocol, phase 1: `AbilityTab.svelte`'s template is untouched, so every
+// assertion below that queries for the combo box's markup fails looking for
+// an element that does not exist yet.
+describe('AbilityTab parameter picker combo box (CV7)', () => {
+  const ORG_LORE = 'ability.organization_lore';
+  const CGT = 'virtue.craft_guild_training';
+
+  function installCv7Ruleset(): void {
+    store.ruleset!.ruleset.abilities = {
+      ...store.ruleset!.ruleset.abilities,
+      [ORG_LORE]: { id: ORG_LORE, category: 'academic', parameter: 'organization' },
+    };
+    // The shared fixture only lists 'general' — 'academic' must join it or
+    // `groupAbilitySelectionsByCategory` silently drops this row's whole
+    // category group.
+    store.ruleset!.ruleset.ability_category_order = [
+      ...store.ruleset!.ruleset.ability_category_order,
+      'academic',
+    ];
+    store.ruleset!.i18n = {
+      ...store.ruleset!.i18n,
+      'language.latin': { name: 'Latin' },
+      [CGT]: { name: 'Craft Guild Training' },
+    };
+  }
+
+  function setOptions(linked: { item: string; param: string; resolved: string | null }[]): void {
+    store.effective = {
+      ability_bonuses: [],
+      ability_parameter_options: [
+        {
+          ability: ORG_LORE,
+          catalogued: ['language.latin'],
+          linked,
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+  }
+
+  const COMBO_TESTID = `ability-param-select-${ORG_LORE}-0`;
+
+  /** Throws a clear, diagnostic message rather than a bare TypeError when the
+   *  combo box does not exist yet (red-checkpoint protocol, CV7 phase 1). */
+  function comboSelect(): HTMLSelectElement {
+    const el = target.querySelector<HTMLSelectElement>(`[data-testid="${COMBO_TESTID}"]`);
+    if (!el) throw new Error(`combo box not rendered: no [data-testid="${COMBO_TESTID}"]`);
+    return el;
+  }
+
+  beforeEach(() => {
+    installCv7Ruleset();
+    store.entity.ability_scores = [{ ability: ORG_LORE, score: 1 }];
+    setOptions([]);
+    flushSync();
+  });
+
+  it('offers a real, labeled, focusable native <select> — never a raw id in an option label', () => {
+    setOptions([{ item: CGT, param: 'guild', resolved: "Smiths' Guild of Verdi" }]);
+    flushSync();
+    const select = comboSelect();
+    expect(select.tagName).toBe('SELECT');
+    expect(select.getAttribute('aria-label')).toBeTruthy();
+    expect(select.disabled).toBe(false);
+    // The raw id legitimately backs the option's OWN `value="cat:…"` wire
+    // attribute; `textContent` is the visible label text alone, and that must
+    // never show it.
+    expect(select.textContent).not.toContain('language.latin');
+  });
+
+  it('selecting a catalogued option writes {id: ...}', () => {
+    const select = comboSelect()!;
+    select.value = 'cat:language.latin';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.ability_scores![0].parameter).toEqual({ id: 'language.latin' });
+  });
+
+  it('selecting a linked option writes {item, param}', () => {
+    setOptions([{ item: CGT, param: 'guild', resolved: "Smiths' Guild of Verdi" }]);
+    flushSync();
+    const select = comboSelect()!;
+    select.value = `link:${CGT}\u0000guild`;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.ability_scores![0].parameter).toEqual({ item: CGT, param: 'guild' });
+  });
+
+  it('choosing a different option after being linked unlinks it — never keeps both', () => {
+    setOptions([{ item: CGT, param: 'guild', resolved: "Smiths' Guild of Verdi" }]);
+    store.entity.ability_scores = [
+      { ability: ORG_LORE, score: 1, parameter: { item: CGT, param: 'guild' } },
+    ];
+    flushSync();
+    const select = comboSelect()!;
+    select.value = 'cat:language.latin';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.ability_scores![0].parameter).toEqual({ id: 'language.latin' });
+  });
+
+  it('dirties the document when a combo option is chosen', async () => {
+    // A clean baseline WITH the row: `store.open()` is the one flow that
+    // resets `dirty` to false while also replacing the entity, unlike the
+    // shared `beforeEach`'s direct `ability_scores` write (already a change
+    // from whatever baseline preceded it). `effectiveScores` resolves once,
+    // immediately, for this load's own revalidate — overriding the file's
+    // deferred mock for exactly one call — then `setOptions` restores the
+    // combo box's fixture for the actual assertion below.
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/saga.armc',
+      entity: { ...store.entity, ability_scores: [{ ability: ORG_LORE, score: 1 }] },
+      migrated_aging_characteristics: [],
+    });
+    vi.mocked(ipc.effectiveScores).mockResolvedValueOnce({
+      ability_bonuses: [],
+      ability_parameter_options: [],
+    } as unknown as EffectiveScores);
+
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+    setOptions([]);
+    flushSync();
+
+    expect(store.dirty).toBe(false);
+    const select = comboSelect();
+    select.value = 'cat:language.latin';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.dirty).toBe(true);
+  });
+
+  it('removing the linking Virtue converts the row to text live, without a reload', async () => {
+    setOptions([{ item: CGT, param: 'guild', resolved: "Smiths' Guild of Verdi" }]);
+    store.entity.selections = [{ ref: CGT }];
+    store.entity.ability_scores = [
+      { ability: ORG_LORE, score: 1, parameter: { item: CGT, param: 'guild' } },
+    ];
+    flushSync();
+
+    vi.mocked(ipc.unlinkAbilityParameters).mockResolvedValueOnce({
+      ...store.entity,
+      ability_scores: [
+        { ability: ORG_LORE, score: 1, parameter: { text: "Smiths' Guild of Verdi" } },
+      ],
+    });
+
+    await store.removeSelectionAt(0);
+    flushSync();
+
+    expect(store.entity.selections).toEqual([]);
+    expect(store.entity.ability_scores![0].parameter).toEqual({
+      text: "Smiths' Guild of Verdi",
+    });
   });
 });

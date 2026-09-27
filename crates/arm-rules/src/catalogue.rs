@@ -182,6 +182,17 @@ fn parse_names(json: &str) -> Result<BTreeMap<Id, String>, RulesetError> {
     Ok(file.names.into_iter().map(|n| (n.id, n.name)).collect())
 }
 
+/// Parses ONE locale's `parameter_catalogue.json` into an id → name map for
+/// that locale alone — unlike [`load_catalogue_names`], which deliberately
+/// combines both locales for migration matching, this is what
+/// `arm-app::ruleset_io::load_ruleset_from_dir` needs to merge a catalogue
+/// value's display name into [`crate::ruleset::LocalizedRuleset::i18n`] for
+/// the single ACTIVE UI language (design § 2.3/§ 6.4, CV7) — the same map
+/// every other id's display name already lives in.
+pub fn parse_catalogue_names(json: &str) -> Result<BTreeMap<Id, String>, RulesetError> {
+    parse_names(json)
+}
+
 /// Folds a name for case-insensitive, trimmed comparison (design note § 2.2).
 /// `pub(crate)`: also the SAME fold [`crate::migration`]'s catalogue-matching
 /// load fold and `effective::xp`'s live Bound/Link rule-2 content match use —

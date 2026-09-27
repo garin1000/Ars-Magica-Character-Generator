@@ -18,7 +18,8 @@ use arm_rules::{
     AgingError, AgingNote, AgingOutcome, AgingTotal, AgingYearRequest, Characteristic,
     CrisisPreview, Entity, EntityKind, Id, LocalizedRuleset, Ruleset, RulesetSources,
     ValidationIssue, ValidationMode, ValidationResult, aging_total, apply_childhood_package,
-    load_catalogue_names, resolve_outcome, resolve_year, revert_year, validate,
+    load_catalogue_names, resolve_outcome, resolve_year, revert_year, unlink_ability_parameters,
+    validate,
 };
 use serde::{Deserialize, Serialize};
 
@@ -554,14 +555,74 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     // than rendering empty. English needs no fallback (it is the source of truth).
     let i18n = read_i18n_sources(rules_dir, lang)?;
     let i18n_refs: Vec<&str> = i18n.iter().map(String::as_str).collect();
-    let localized = if lang == "en" {
+    let mut localized = if lang == "en" {
         LocalizedRuleset::from_merged(ruleset, &i18n_refs)?
     } else {
         let fallback = read_i18n_sources(rules_dir, "en")?;
         let fallback_refs: Vec<&str> = fallback.iter().map(String::as_str).collect();
         LocalizedRuleset::from_merged_with_fallback(ruleset, &i18n_refs, &fallback_refs)?
     };
+    merge_catalogue_display_names(&mut localized, rules_dir, lang);
     Ok(localized)
+}
+
+/// Merges each shipped catalogue value's OWN-language display name
+/// (`i18n/<lang>/parameter_catalogue.json`) into `localized.i18n`, so a
+/// catalogue id (`language.latin`) resolves through the exact same
+/// `LocalizedRuleset.i18n` map — and the exact same frontend `displayName`
+/// call — every other id already does (design § 2.3/§ 6.4): "the picker's
+/// chrome is Fluent; the catalogue entries are rules-i18n, exactly like every
+/// other rules-text/UI-chrome split in this codebase."
+///
+/// Deliberately best-effort, like [`load_catalogue_names_from_dir`]'s own
+/// `.ok()` above it: a ruleset with no (or malformed) catalogue name file
+/// still loads — the picker/export simply fall back to
+/// `export/resolve.rs::humanize_catalogue_id`-shaped display, never a hard
+/// load failure over auxiliary naming text.
+///
+fn merge_catalogue_display_names(localized: &mut LocalizedRuleset, rules_dir: &Path, lang: &str) {
+    let Ok(lang) = validated_language_tag(lang) else {
+        return;
+    };
+    let Ok(json) =
+        fs::read_to_string(rules_dir.join(format!("i18n/{lang}/parameter_catalogue.json")))
+    else {
+        return;
+    };
+    let Ok(names) = arm_rules::parse_catalogue_names(&json) else {
+        return;
+    };
+    for (id, name) in names {
+        localized.i18n.insert(
+            id,
+            arm_rules::I18nEntry {
+                name,
+                name_unfilled: None,
+                summary: None,
+                description: None,
+                abbreviation: None,
+                specialties: Vec::new(),
+            },
+        );
+    }
+}
+
+/// Design § 5.5: converts every bought Ability score linked to
+/// `removed_item`'s own parameter into free text holding its last resolvable
+/// value, via the SAME engine operation the load-time dangling-link fold
+/// uses ([`arm_rules::unlink_ability_parameters`]) — the frontend's Virtue/Flaw
+/// removal flow calls this BEFORE removing the selection, so "last resolvable
+/// value" is still readable (CV7, `docs/vf-audit/design-cv-catalogued-values.md`
+/// § 5.5).
+///
+pub fn unlink_ability_parameters_loaded(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    removed_item: &Id,
+) -> Entity {
+    let mut updated = entity.clone();
+    unlink_ability_parameters(&mut updated, ruleset, removed_item);
+    updated
 }
 
 /// Reads `i18n/{en,de}/parameter_catalogue.json` — **both locales, always**,

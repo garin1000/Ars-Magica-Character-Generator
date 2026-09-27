@@ -225,6 +225,35 @@ describe('Puissant Ability targets one ability instance', () => {
   });
 });
 
+// CV7 (design-cv-catalogued-values.md § 6.1/§ 6.3): the Ability parameter
+// picker is a combo box built entirely from the engine's own
+// `AbilityParameterOptions`, so a catalogued value (Dead Language's Latin) is
+// chosen from a closed list rather than typed by hand, and must show its
+// LOCALIZED name on the sheet — never the raw catalogue id.
+describe('Ability parameter picker (CV7): choosing a catalogued value', () => {
+  it('Dead Language → Latin shows the localized label, never the raw catalogue id', async () => {
+    await startCharacter('companion');
+
+    const abilitiesTab = await $('[data-testid="tab-abilities"]');
+    await abilitiesTab.waitForExist({ timeout: 30000 });
+    await abilitiesTab.click();
+    await $('[data-testid="xp-pool"]').waitForExist({ timeout: 10000 });
+    await $('[data-testid="xp-pool"]').setValue(100);
+
+    await $('[data-testid="add-ability.dead_language"]').click();
+    const combo = await $('[data-testid="ability-param-select-ability.dead_language-0"]');
+    await combo.waitForExist({ timeout: 5000 });
+    await combo.selectByAttribute('value', 'cat:language.latin');
+
+    const label = await $('.ability-selection .item-name');
+    await browser.waitUntil(async () => (await label.getText()).includes('Latin'), {
+      timeout: 5000,
+      timeoutMsg: 'the row never showed the localized "Latin" label',
+    });
+    expect(await label.getText()).not.toContain('language.latin');
+  });
+});
+
 // End-to-end: an illegal selection surfaces a localized error in the validation
 // panel.
 //

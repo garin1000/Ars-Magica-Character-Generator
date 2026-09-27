@@ -16,6 +16,7 @@ fn main() {
             commands::effective_scores,
             commands::derived_totals,
             commands::apply_childhood_package,
+            commands::unlink_ability_parameters,
             commands::aging_preview,
             commands::aging_apply,
             commands::aging_revert,

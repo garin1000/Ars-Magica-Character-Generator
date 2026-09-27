@@ -994,6 +994,25 @@ param-label-study = Study
 # is the parameter's own min/max, enforced by the engine.
 param-label-years = Years
 
+# CV7: the Ability parameter picker's combo box (design-cv-catalogued-values.md
+# § 6.1/§ 6.3/§ 6.4). The free-text escape when neither a catalogue value nor a
+# linked Virtue names the player's answer.
+ability-param-other = Other…
+# A linked value's indicator, distinguishing "this follows a Virtue" from a
+# plain typed value that happens to currently agree with it — $item is the
+# source item's own localized name, $value its current resolved text.
+ability-param-follows = Follows { $item }: { $value }
+# The SAME indicator, when the link's source cannot currently be resolved
+# (removed, or held more than once) — visibly distinct from the "fine" chip
+# above so a broken link is never confused with a working one. The
+# `issue-ambiguous_bound_parameter` validation issue explains why.
+ability-param-unresolved = Follows { $item } (unresolved)
+# Conditional hint (design § 11 item 2): shown only when the bought free-text
+# value leaves a Literal or Bound instance from one of the character's own
+# items unmet — the free-text choice is costing the player an authorization a
+# catalogue value or a link would grant instead.
+ability-param-hint = A catalogue value or a linked Virtue may authorize something this free text does not.
+
 # Localized names for the engine's `ParameterDomain` variants — the kind of value a
 # parameter slot accepts. Read only by `unknown_param_value`, which names the domain a
 # stored value failed to resolve in; the engine emits the enum's serialized name, and

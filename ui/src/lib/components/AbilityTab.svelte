@@ -4,18 +4,26 @@
     abilityDisplayName,
     abilityLabel,
     abilityParamDisplay,
-    abilityParamKey,
+    displayName,
     filterAbilities,
     groupAbilitiesByCategory,
     groupAbilitySelectionsByCategory,
     invalidSelectionIds,
     maxAbilityScore,
+    resolvedLinksFrom,
+    sameParam,
     unboughtModifiedAbilities,
     UNBOUGHT_ROW_INDEX,
     type IndexedAbilityScore,
   } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
-  import type { Ability, AbilityCategory, AbilityParamValue, AbilityScore } from '../types';
+  import type {
+    Ability,
+    AbilityCategory,
+    AbilityParameterOptions,
+    AbilityParamValue,
+    AbilityScore,
+  } from '../types';
   import MagusMinimumAbilities from './MagusMinimumAbilities.svelte';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
@@ -190,20 +198,38 @@
     return store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
   }
 
+  // CV7 (design § 6.2/§ 6.3): every currently-offered link target's CURRENT
+  // resolved text, keyed the way `sameParam`/`normalizeParam`/`abilityParamDisplay`
+  // all read it — computed once per derive() pass, never recomputed per row.
+  const resolvedLinks = $derived(
+    resolvedLinksFrom(store.effective?.ability_parameter_options ?? []),
+  );
+
+  // This ability's engine-built picker options (design § 6.3), or `undefined`
+  // for an ability that is neither catalogued nor link-eligible — which keeps
+  // its plain free-text input (§ 6.1).
+  function optionsFor(abilityId: string): AbilityParameterOptions | undefined {
+    return store.effective?.ability_parameter_options?.find((o) => o.ability === abilityId);
+  }
+
   function selectedName(abilityId: string, value: AbilityParamValue | null | undefined): string {
     if (!store.ruleset) return abilityId;
-    return abilityDisplayName(store.ruleset, abilityId, abilityParamDisplay(value), (key) =>
-      store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+    return abilityDisplayName(
+      store.ruleset,
+      abilityId,
+      abilityParamDisplay(value, store.ruleset, resolvedLinks),
+      (key) => store.t('param-hint', { label: store.t(`param-label-${key}`) }),
     );
   }
 
-  // `abilityParamKey` (not `abilityParamDisplay`): this is an instance-identity
-  // comparison against the engine-derived `AbilityBonus.parameter`, which is
-  // always a plain string (design § 6.2's rationale) — not a display.
+  // `sameParam` (not `===`): this is an instance-identity comparison against
+  // the engine-derived `AbilityBonus.parameter`, which is always id-shaped
+  // (design § 6.2's rationale) — so it must resolve for a `Catalogued`/
+  // `Linked` bought value exactly as it used to for a bare `Text` string.
   function bonusOf(abilityId: string, parameter: AbilityParamValue | null | undefined): number {
     return (
       store.effective?.ability_bonuses?.find(
-        (b) => b.ability === abilityId && (b.parameter ?? null) === abilityParamKey(parameter),
+        (b) => b.ability === abilityId && sameParam(b.parameter ?? null, parameter, resolvedLinks),
       )?.bonus ?? 0
     );
   }
@@ -229,16 +255,17 @@
   // keystroke; the badge is a bought+modifier pair, and mixing a fresh half with a
   // stale one renders a total true of no character. Matched by ability + parameter
   // rather than by row index, so the pairing survives a row being removed above it.
-  // Compared via `abilityParamKey`, not `===`: the settled snapshot's `parameter`
-  // is a structurally-equal but distinct object, which `===` would never match.
+  // Compared via `sameParam`, not `===`: the settled snapshot's `parameter` is
+  // a structurally-equal but distinct object, which `===` would never match —
+  // and a `Linked` value's identity is its CURRENT resolved text, not its
+  // `(item, param)` pair, so a rename must not desync the pairing.
   // @see AppStore.readSettled
   function settledScoreOf(entry: AbilityScore): number {
     return store.readSettled(
       (e) =>
         e.ability_scores?.find(
           (a) =>
-            a.ability === entry.ability &&
-            abilityParamKey(a.parameter) === abilityParamKey(entry.parameter),
+            a.ability === entry.ability && sameParam(a.parameter, entry.parameter, resolvedLinks),
         )?.score ?? 0,
     );
   }
@@ -251,6 +278,66 @@
       listLabel: store.t('ability-specialties-label'),
       list: entry?.specialties ?? [],
     };
+  }
+
+  // === Parameter combo box (CV7, design § 6.1/§ 6.3) ===
+
+  // Separator joining a link target's item id and param key into one option
+  // value — mirrors `ParameterPicker.svelte`'s own `SEP` (a NUL never appears
+  // in an id or a player-typed guild/craft name).
+  const SEP = String.fromCharCode(0);
+
+  /** The combo box's own selected `<option>` value for the row's current stored
+   *  shape — never a raw id/pair, only ever one of the three tagged forms this
+   *  same picker writes. */
+  function comboValue(parameter: AbilityParamValue | null | undefined): string {
+    if (parameter == null) return 'other';
+    if ('id' in parameter) return `cat:${parameter.id}`;
+    if ('item' in parameter) return `link:${parameter.item}${SEP}${parameter.param}`;
+    return 'other';
+  }
+
+  /** Choosing any combo entry REPLACES whatever was stored before — there is
+   *  no "keep both" state (design § 6.3). Choosing "Other…" clears to empty
+   *  free text, which reveals the escape input below. */
+  function onParamSelect(index: number, event: Event): void {
+    const raw = (event.currentTarget as HTMLSelectElement).value;
+    if (raw.startsWith('cat:')) {
+      store.setAbilityParameterValueAt(index, { id: raw.slice('cat:'.length) });
+      return;
+    }
+    if (raw.startsWith('link:')) {
+      const [item, param] = raw.slice('link:'.length).split(SEP);
+      store.setAbilityParameterValueAt(index, { item, param });
+      return;
+    }
+    store.setAbilityParameterValueAt(index, undefined);
+  }
+
+  function isLinked(
+    parameter: AbilityParamValue | null | undefined,
+  ): parameter is { item: string; param: string } {
+    return parameter != null && 'item' in parameter;
+  }
+
+  /** The combo box's "Other…" entry is selected: no value, or a plain typed
+   *  one — reveals the free-text escape input. */
+  function isOther(parameter: AbilityParamValue | null | undefined): boolean {
+    return parameter == null || 'text' in parameter;
+  }
+
+  /** A linked value's source is offered as a resolvable target right now —
+   *  the SAME `resolvedLinks` map `sameParam`/`abilityParamDisplay` read, so
+   *  "linked and fine" cannot disagree between the indicator and the display
+   *  value it names. `false` for a link whose source vanished or became
+   *  ambiguous (the `issue-ambiguous_bound_parameter` validation issue names
+   *  it, distinctly, for the case that is reachable at all — design § 4.2). */
+  function linkResolves(parameter: { item: string; param: string }): boolean {
+    return `${parameter.item}${SEP}${parameter.param}` in resolvedLinks;
+  }
+
+  function linkSourceName(parameter: { item: string; param: string }): string {
+    return store.ruleset ? displayName(store.ruleset, parameter.item) : parameter.item;
   }
 </script>
 
@@ -319,6 +406,7 @@
             {@const unbought = i === UNBOUGHT_ROW_INDEX}
             {@const id = rowSuffix(i)}
             {@const key = paramKey(entry.ability)}
+            {@const options = optionsFor(entry.ability)}
             {@const invalid = invalidIds.has(entry.ability)}
             <!-- The bought score the badge below is paired with (#16) — held to the
                  generation the modifiers were computed for, while `entry.score`
@@ -404,16 +492,88 @@
                 </button>
               {/if}
               {#if key && !unbought}
-                <input
-                  type="text"
-                  class="ability-param"
-                  placeholder={store.t(`param-label-${key}`)}
-                  aria-invalid={invalid ? 'true' : undefined}
-                  value={abilityParamDisplay(entry.parameter)}
-                  oninput={(e) =>
-                    store.setAbilityParameterAt(i, (e.currentTarget as HTMLInputElement).value)}
-                  data-testid="ability-param-{entry.ability}-{i}"
-                />
+                {#if options}
+                  <!-- The engine-built combo box (design § 6.1/§ 6.3): catalogue
+                       values first, then the character's own link targets, then
+                       the free-text "Other…" escape — one stable order, and the
+                       UI derives none of it itself. -->
+                  <select
+                    class="ability-param-select"
+                    aria-label={store.t(`param-label-${key}`)}
+                    aria-invalid={invalid ? 'true' : undefined}
+                    value={comboValue(entry.parameter)}
+                    onchange={(e) => onParamSelect(i, e)}
+                    data-testid="ability-param-select-{entry.ability}-{id}"
+                  >
+                    {#each options.catalogued as catId (catId)}
+                      <option value="cat:{catId}">
+                        {store.ruleset ? displayName(store.ruleset, catId) : catId}
+                      </option>
+                    {/each}
+                    {#each options.linked as link (link.item + SEP + link.param)}
+                      <option value="link:{link.item}{SEP}{link.param}">
+                        {store.t('ability-param-follows', {
+                          item: linkSourceName(link),
+                          value: link.resolved ?? '',
+                        })}
+                      </option>
+                    {/each}
+                    <option value="other">{store.t('ability-param-other')}</option>
+                  </select>
+                  {#if isOther(entry.parameter)}
+                    <input
+                      type="text"
+                      class="ability-param"
+                      placeholder={store.t(`param-label-${key}`)}
+                      aria-invalid={invalid ? 'true' : undefined}
+                      value={abilityParamDisplay(entry.parameter, store.ruleset, resolvedLinks)}
+                      oninput={(e) =>
+                        store.setAbilityParameterAt(i, (e.currentTarget as HTMLInputElement).value)}
+                      data-testid="ability-param-{entry.ability}-{i}"
+                    />
+                  {/if}
+                  {#if isLinked(entry.parameter)}
+                    {#if linkResolves(entry.parameter)}
+                      <span
+                        class="ability-param-linked"
+                        data-testid="ability-param-linked-{entry.ability}-{id}"
+                      >
+                        {store.t('ability-param-follows', {
+                          item: linkSourceName(entry.parameter),
+                          value: abilityParamDisplay(entry.parameter, store.ruleset, resolvedLinks),
+                        })}
+                      </span>
+                    {:else}
+                      <span
+                        class="ability-param-linked ability-param-linked-unresolved"
+                        data-testid="ability-param-linked-{entry.ability}-{id}"
+                      >
+                        {store.t('ability-param-unresolved', {
+                          item: linkSourceName(entry.parameter),
+                        })}
+                      </span>
+                    {/if}
+                  {/if}
+                  {#if options.hint}
+                    <span
+                      class="ability-param-hint"
+                      data-testid="ability-param-hint-{entry.ability}-{id}"
+                    >
+                      {store.t('ability-param-hint')}
+                    </span>
+                  {/if}
+                {:else}
+                  <input
+                    type="text"
+                    class="ability-param"
+                    placeholder={store.t(`param-label-${key}`)}
+                    aria-invalid={invalid ? 'true' : undefined}
+                    value={abilityParamDisplay(entry.parameter, store.ruleset, resolvedLinks)}
+                    oninput={(e) =>
+                      store.setAbilityParameterAt(i, (e.currentTarget as HTMLInputElement).value)}
+                    data-testid="ability-param-{entry.ability}-{i}"
+                  />
+                {/if}
               {/if}
             </li>
           {/snippet}

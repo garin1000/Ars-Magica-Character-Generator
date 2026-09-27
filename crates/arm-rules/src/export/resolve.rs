@@ -108,13 +108,15 @@ impl<'a> Doc<'a> {
     ///
     /// `Text` goes through [`Self::param_value`] unchanged — exactly the
     /// pre-CV4 behavior, since the field was a bare string then. `Catalogued`
-    /// has no localized-name resolution wired to export yet (`catalogue_names`
-    /// is a migration-time, both-locales map, not part of the single-language
-    /// [`crate::ruleset::LocalizedRuleset`] this module reads — CV6/CV8's
-    /// display-resolution function is the real fix); until then it falls back
-    /// to a readable label derived from the id's own final segment
-    /// (`language.latin` → "Latin"), a structural transform rather than a raw
-    /// slug. `Linked` (design § 6.4) resolves via [`crate::effective::resolve_link`]
+    /// resolves through `self.ruleset.display_name(id)` — CV7 merges each
+    /// catalogue value's own-language name into `LocalizedRuleset.i18n` at
+    /// load (`arm-app::ruleset_io::merge_catalogue_display_names`), the SAME
+    /// map every other id's display name already lives in, so a ruleset
+    /// loaded through the real app path resolves here for free. The
+    /// id's-own-final-segment fallback (`language.latin` → "Latin") stays as
+    /// defense-in-depth for a hand-built ruleset that never merged catalogue
+    /// names in (e.g. a test fixture), never printing the raw slug either
+    /// way. `Linked` (design § 6.4) resolves via [`crate::effective::resolve_link`]
     /// against effective selections — the SAME resolver the load-time fold and
     /// matching use, so "what does this link currently mean" cannot disagree
     /// across readers — and shows the deterministic ambiguity fallback rather

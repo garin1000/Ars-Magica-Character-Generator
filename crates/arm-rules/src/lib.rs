@@ -17,7 +17,10 @@ pub use aging::{
 pub mod art;
 pub mod catalogue;
 #[doc(inline)]
-pub use catalogue::{Catalogue, CatalogueValue, load_catalogue_names, load_parameter_catalogues};
+pub use catalogue::{
+    Catalogue, CatalogueValue, load_catalogue_names, load_parameter_catalogues,
+    parse_catalogue_names,
+};
 pub mod characteristics;
 pub mod childhood;
 pub mod completeness;

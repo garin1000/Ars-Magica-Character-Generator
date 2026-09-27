@@ -11,10 +11,12 @@ use arm_app::ruleset_io::{
     AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication,
     apply_childhood_package_loaded, ensure_extension, export_markdown_to_path,
     load_catalogue_names_from_dir, load_entity_from_path, load_ruleset_from_dir,
-    missing_core_files, path_text, pick_rules_dir, save_entity_to_path, validate_loaded,
+    missing_core_files, path_text, pick_rules_dir, save_entity_to_path,
+    unlink_ability_parameters_loaded, validate_loaded,
 };
 use arm_rules::{
-    ArtScore, CreationPhase, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode,
+    AbilityParameterValue, AbilityScore, ArtScore, CreationPhase, Entity, Id, Ruleset,
+    RulesetSources, Selection, ValidationMode,
 };
 use pretty_assertions::assert_eq;
 use std::collections::BTreeMap;
@@ -4515,5 +4517,84 @@ fn load_catalogue_names_works_through_the_portable_fallback_directory() {
     assert!(
         names.contains_key(&Id::new("organization.order_of_hermes")),
         "got {names:?}"
+    );
+}
+
+// --- CV7: catalogue value names reach the FRONTEND's own i18n map (design
+// § 2.3/§ 6.4, § 10) -----------------------------------------------------
+
+/// `load_catalogue_names_from_dir` (above) is a migration-only, both-locales
+/// index — it never reaches the frontend. The picker instead needs a
+/// catalogue id to resolve through the SAME `LocalizedRuleset.i18n` map every
+/// other id already does, in the ACTIVE language alone, so `displayName`
+/// needs no second code path. Red-checkpoint protocol, phase 1:
+/// `merge_catalogue_display_names` is a no-op stub, so this fails until phase
+/// 2 wires it in.
+#[test]
+fn load_ruleset_localizes_catalogue_value_names_in_english() {
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+
+    assert_eq!(
+        localized
+            .i18n
+            .get(&Id::new("language.latin"))
+            .map(|e| e.name.as_str()),
+        Some("Latin"),
+        "expected the English catalogue name merged into the frontend's own i18n map"
+    );
+}
+
+/// Same fixture, German — proving the merge is language-aware, not a single
+/// hardcoded name.
+#[test]
+fn load_ruleset_localizes_catalogue_value_names_in_german() {
+    let localized = load_ruleset_from_dir(&rules_dir(), "de").unwrap();
+
+    assert_eq!(
+        localized
+            .i18n
+            .get(&Id::new("language.latin"))
+            .map(|e| e.name.as_str()),
+        Some("Latein"),
+        "expected the German catalogue name merged into the frontend's own i18n map"
+    );
+}
+
+// --- CV7: the removal flow's engine operation (design § 5.5, § 10) ---------
+
+/// The Virtue/Flaw removal flow calls `unlink_ability_parameters` BEFORE
+/// removing the source selection, so a bought Ability `Linked` to it keeps
+/// its last resolvable value as free text rather than going dangling. Red-
+/// checkpoint protocol, phase 1: `unlink_ability_parameters_loaded` is a
+/// clone-only stub, so this fails until phase 2 calls the real engine
+/// operation.
+#[test]
+fn unlink_ability_parameters_converts_a_linked_ability_score_to_text() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = sample_entity();
+    entity.selections = vec![Selection::with_params(
+        Id::new("virtue.craft_guild_training"),
+        BTreeMap::from([("guild".to_string(), Id::new("Smiths' Guild of Verdi"))]),
+    )];
+    entity.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.organization_lore"),
+        score: 1,
+        specialty: None,
+        parameter: Some(AbilityParameterValue::Linked {
+            item: Id::new("virtue.craft_guild_training"),
+            param: "guild".to_string(),
+        }),
+    }];
+
+    let updated = unlink_ability_parameters_loaded(
+        &entity,
+        &ruleset,
+        &Id::new("virtue.craft_guild_training"),
+    );
+
+    assert_eq!(
+        updated.ability_scores[0].parameter,
+        Some(AbilityParameterValue::text("Smiths' Guild of Verdi")),
+        "the linked Ability score must convert to Text holding the last resolvable value"
     );
 }

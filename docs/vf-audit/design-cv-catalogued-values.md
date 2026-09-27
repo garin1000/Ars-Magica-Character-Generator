@@ -777,22 +777,29 @@ type AbilityParamValue = { id: string } | { item: string; param: string } | { te
 // "" fallback for a dangling/ambiguous link, computed once per derive() pass,
 // never recomputed by the picker or by this helper.
 //
-// Bonus/floor targets from `store.effective` (engine-derived: `resolved_instance`
-// output) are, and remain, plain strings — they are always id-shaped once CV3
-// lands (a literal's resolved instance IS a catalogue id; a `Bound` param reads a
-// Selection's OWN parameter, an unrelated Id, never arbitrary free text). So a
-// bare string on either side of `sameParam` normalizes to the "id" kind, never
-// the "text" kind — this is what keeps a `Text{"language.latin"}` (a
-// pathological but legal free-text value that happens to spell out an id) from
-// wrongly matching a bonus target string "language.latin": one normalizes to
-// kind "text", the other to kind "id", and they compare unequal — exactly
-// mirroring § 4's rule that free text never satisfies a `Literal`.
+// [decided, CV7 implementation correction, 2026-09-27 — supersedes the
+// paragraph this replaces] A bonus/floor target (`AbilityBonus.parameter`) is
+// NOT always id-shaped: it names whichever instance ITS OWN picker pointed
+// at (`ParameterPicker.svelte`'s ability-target dropdown), which for an
+// UNCATALOGUED ability (Puissant (Area) Lore targeting "Brandenburg") is
+// genuine free text, not a catalogue id. Tagging a bare string as kind "id"
+// unconditionally (this note's original text) broke exactly that case —
+// found via a real e2e regression, `companion-editor.e2e.js`'s "Puissant
+// Ability targets one ability instance" — because it then refused to match
+// the bought `Text{"Brandenburg"}` row the bonus is about.
+//
+// The fix: a bare string is its OWN, deliberately promiscuous "raw" kind,
+// matching by value alone against EITHER a `Catalogued` or a `Text` value.
+// The anti-pathological guard survives only where it is actually meaningful
+// — comparing two ACTUAL `AbilityParamValue`s against each other (as
+// `settledScoreOf` does, two bought rows) — never between a bare engine
+// string and a typed value.
 function normalizeParam(
   p: AbilityParamValue | string | null | undefined,
   resolvedLinks: Record<string, string>,
-): { kind: 'id' | 'text'; value: string } | null {
+): { kind: 'id' | 'text' | 'raw'; value: string } | null {
   if (p == null) return null;
-  if (typeof p === 'string') return { kind: 'id', value: p };
+  if (typeof p === 'string') return { kind: 'raw', value: p };
   if ('id' in p) return { kind: 'id', value: p.id };
   if ('item' in p) return { kind: 'text', value: resolvedLinks[`${p.item}\u0000${p.param}`] ?? '' };
   return { kind: 'text', value: p.text };
@@ -806,6 +813,7 @@ export function sameParam(
   const na = normalizeParam(a, resolvedLinks);
   const nb = normalizeParam(b, resolvedLinks);
   if (na === null || nb === null) return na === nb;
+  if (na.kind === 'raw' || nb.kind === 'raw') return na.value === nb.value;
   return na.kind === nb.kind && na.value === nb.value;
 }
 ```
@@ -1069,8 +1077,8 @@ implementation line, per the red-checkpoint protocol.
 | CV4 | `AbilityScore.parameter: Option<AbilityParameterValue>` (all 3 variants land here per § 3.2's uniformity and § 3's wire-compatibility argument, though only `Catalogued`/`Text` are reachable through the UI until CV5-7) + § 3.3's `deny_unknown_fields` hostile-input rejection + every read/compare site in § 5.6's table + § 4's Literal-only matching (Bound/Link matching is CV5) + § 5.1's raw pre-pass + § 5.3's catalogue-matching fold + § 5.6's `load_entity_migrating`/`ruleset_io`/`commands.rs` signature and guard changes + `SCHEMA_VERSION` 17→18 + `LoadedEntity`/Fluent report | **L** | `examples/magus_sample.json` loads at schema 17 (with a real `&Ruleset` and `&catalogue_names` fixture) and resolves to `Catalogued{"language.latin"}` — not a fresh hand-written value | Ships the original D14 fix standalone — CV5-8 are a pure follow-on enhancement, separately shippable in sequence. `AbilityParameterValue::Linked` the *type* can land here (it costs nothing extra once the enum exists), but no code produces or resolves one until CV5. **Must also revert `crates/arm-rules/tests/fixtures/book_templates/companion_witch.json`'s Dead Language score from the interim id `"language.latin"` (CV3) back to the human-typed `"Latin"`** — CV3 left it as the id only because a `Literal` still matches `AbilityScore.parameter` by plain string equality pre-CV4 (`AbilityScore.parameter` was still `Option<String>`); once § 5.3's name-matching fold exists, "Latin" is the value CV4's own § 5.7 test-obligation list already expects, and the id would no longer be the player-typed shape this slice's migration fold is supposed to prove itself against. |
 | CV5 | § 4's Bound/Link matching (structural-or-content) + § 4.1's ambiguity guard + § 4.2's `no_bound_or_link_declaring_item_is_ever_granted` mitigation test + § 5.4's dangling/ambiguous-link fold + § 5.5's unlink operation and reporting fields | **L** | a character `Linked` to Craft Guild Training's `guild` satisfies its own pool; removing that Virtue converts the link to `Text` with the last value; a bought-plus-granted duplicate with a link into it resolves `Ambiguous` and raises the Fluent issue, never picking either value | Engine-only; no UI yet — an inert-but-correct intermediate state |
 | CV6 | `AbilityParameterOptions` derived output (§ 6.3), excluding ambiguous sources from `linked` | **M** | a character holding Craft Guild Training with `guild` set sees it in `organization_lore`'s option list; an ambiguous source is not offered | Engine, no UI |
-| CV7 | Picker consumes § 6.3's options (§ 6.1); "follows the Virtue" / ambiguous indicators (§ 6.4); unlink-on-reselect; removal flow calls § 5.5 | **M** | `AbilityTab.client.test.ts`: selecting a linked option writes `{item,param}`; removing the source Virtue converts it live; an ambiguous link renders its distinct indicator | `.client.test.ts` |
-| CV8 | `sameParam`/`normalizeParam` extended (§ 6.2) + display/export parity (§ 6.4, § 6.6's full site table) + TS mirror (§ 6.5) | **S/M** | a linked ability's bonus/floor still resolves via `sameParam`; export never prints a raw id or `(item,param)` pair; `export_golden.rs`'s fixture stays byte-identical | Closes "no raw id ever rendered" for this new surface |
+| CV7 | Picker consumes § 6.3's options (§ 6.1); "follows the Virtue" / unresolved-link indicators (§ 6.4); unlink-on-reselect; removal AND clear-to-empty flows call § 5.5; **pulled forward from CV8**: `sameParam`/`normalizeParam`/`resolvedLinksFrom` (§ 6.2), `LinkTarget.resolved` (a carried-through `AuthorizedAbility::instance`, not a new resolution), and real localized catalogue names merged into `LocalizedRuleset.i18n` at load (§ 2.3/§ 6.4) | **M/L** | `AbilityTab.client.test.ts`: selecting a linked option writes `{item,param}`; removing the source Virtue converts it live; `sameParam` unit tests; `AbilityTab.test.ts`: a catalogued value shows its localized name, never the raw id as visible text | `.client.test.ts`. **[decided, 2026-09-27]** A live picker cannot ship without the three pulled-forward pieces: it would otherwise render a raw/humanized-guess id (violating "never render a raw id as a label") and silently break bonus/floor matching the instant it writes a `Linked` value — CV8's own boundary assumed an inert interim state CV7 no longer leaves behind. `AbilityParameterOptions.linked[].resolved` reuses `ability_authorizations`' already-computed value; no new engine resolution pass. |
+| CV8 | Remaining display/export parity (§ 6.4, § 6.6's full site table) not already covered by CV7's `abilityParamDisplay`/`sameParam` rewiring — the `export/resolve.rs` fallback chain (already benefits from CV7's `LocalizedRuleset.i18n` merge, but its own humanize-fallback code path is unchanged) + `export_golden.rs`'s byte-identical fixture check + any `.parameter` comparison site § 6.6 lists that CV7's own `AbilityTab.svelte`/`ParameterPicker.svelte`/`MagusMinimumAbilities.svelte` updates did not reach | **S** | export never prints a raw id or `(item,param)` pair; `export_golden.rs`'s fixture stays byte-identical | Narrower than originally scoped — CV7 closed most of "no raw id ever rendered" for this surface already |
 
 Cross-cutting: `crates/arm-rules/tests/rulebook_citations.rs` and
 `source_citations.rs` gates apply to every new comment/citation CV1–CV8 add.

@@ -389,6 +389,26 @@ pub fn apply_childhood_package(
     ))
 }
 
+/// Converts every bought Ability score `Linked` to `removed_item`'s own
+/// parameter into free text holding its last resolvable value (design § 5.5,
+/// `docs/vf-audit/design-cv-catalogued-values.md`), returning the whole
+/// updated entity. The frontend's Virtue/Flaw removal/clear flow calls this
+/// BEFORE applying the change that would otherwise strand the link (CV7).
+#[tauri::command]
+pub fn unlink_ability_parameters(
+    entity: Entity,
+    removed_item: String,
+    state: State<'_, AppState>,
+) -> Result<Entity, AppError> {
+    let guard = ruleset_guard(&state);
+    let ruleset = require_loaded(guard.as_ref())?;
+    Ok(ruleset_io::unlink_ability_parameters_loaded(
+        &entity,
+        &ruleset.ruleset,
+        &Id::new(removed_item),
+    ))
+}
+
 /// Reads one year's aging roll without writing anything: the AGING TOTAL the typed
 /// `die` makes at `age`, and the row it lands on.
 ///

@@ -85,4 +85,21 @@ export class AbilityWorkflow {
     );
     this.#host.scheduleValidate();
   }
+
+  /**
+   * Writes a FULL parameter value directly — the combo box's other two
+   * entries, a catalogue choice (`{id}`) or a link target (`{item, param}`)
+   * (design § 6.1/§ 6.3, CV7). `setParameterAt` above stays the "Other…"
+   * free-text escape's own write path; choosing a different combo entry
+   * always REPLACES whatever was stored before, never merges with it — there
+   * is no "keep both" state (design § 6.3).
+   *
+   */
+  setParameterValueAt(index: number, value: AbilityParamValue | undefined): void {
+    const entity = this.#host.entity();
+    entity.ability_scores = (entity.ability_scores ?? []).map((a, i) =>
+      i === index ? { ...a, parameter: value } : a,
+    );
+    this.#host.scheduleValidate();
+  }
 }

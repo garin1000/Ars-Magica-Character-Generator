@@ -6,6 +6,7 @@ import type {
   AbilityBonus,
   AbilityCategory,
   AbilityFloor,
+  AbilityParameterOptions,
   AbilityParamValue,
   AbilityScore,
   Addend,
@@ -1343,26 +1344,115 @@ export function abilityParamKey(p: AbilityParamValue | string | null | undefined
 }
 
 /**
- * Minimal display adapter (CV4-scoped): a parameterized Ability's stored value
- * as a human-readable string, never the raw wire shape (`{"id": …}` or
+ * The one display resolver for a parameterized Ability's stored value (design
+ * § 6.4): a human-readable string, never the raw wire shape (`{"id": …}` or
  * `{"item": …, "param": …}`) and never a bare catalogue slug.
  *
- * `Catalogued` has no localized-name resolution wired to the frontend yet —
- * that is CV6's `AbilityParameterOptions` derived output and CV8's single
- * engine-owned display-resolution function (design § 6.3/§ 6.4). Until then
- * this falls back to a readable label derived from the id's own final
- * segment (`language.latin` → "Latin", `organization.house_bjornaer` →
- * "House Bjornaer") — a structural transform, not a hardcoded per-value
- * string, and strictly more readable than printing the slug outright.
- * `Linked` (CV5+) has no resolver yet, so it renders as empty rather than a
- * raw `(item, param)` pair.
+ * `Catalogued` resolves through `localized.i18n` — the SAME merged map every
+ * other id's display name lives in (CV7: the engine merges each catalogue
+ * value's own-language name into it at load, `arm-app::ruleset_io`) — falling
+ * back to a readable label derived from the id's own final segment
+ * (`language.latin` → "Latin") only when `localized` is absent or the id is
+ * unexpectedly missing from it, never printing the raw slug either way.
+ * `Linked` resolves via `resolvedLinks` (design § 6.2's `resolvedLinksFrom`),
+ * the SAME map `sameParam`/`normalizeParam` read, so "what does this link
+ * currently mean" cannot disagree between the value shown and the value
+ * matched — `''` for a target that does not (or no longer) resolve.
  */
-export function abilityParamDisplay(p: AbilityParamValue | string | null | undefined): string {
+export function abilityParamDisplay(
+  p: AbilityParamValue | string | null | undefined,
+  localized?: LocalizedRuleset | null,
+  resolvedLinks?: Record<string, string>,
+): string {
   if (p == null) return '';
   if (typeof p === 'string') return p;
   if ('text' in p) return p.text;
-  if ('id' in p) return humanizeCatalogueId(p.id);
-  return ''; // Linked (CV5+): no resolver yet.
+  if ('id' in p) return localized?.i18n[p.id]?.name ?? humanizeCatalogueId(p.id);
+  return resolvedLinks?.[`${p.item}\u0000${p.param}`] ?? '';
+}
+
+/**
+ * Every distinct `(item, param)` pair currently offered as a link target,
+ * across every ability's picker options, keyed the same way
+ * {@link normalizeParam} reads them — one flat map built once per `derive()`
+ * pass (design § 6.2), never recomputed by the picker or by `sameParam`
+ * itself. A Bound-declaring item's own parameter targets exactly one
+ * ability by construction, so each `(item, param)` pair appears in at most
+ * one entry's `linked` list.
+ */
+export function resolvedLinksFrom(options: AbilityParameterOptions[]): Record<string, string> {
+  const resolved: Record<string, string> = {};
+  for (const option of options) {
+    for (const link of option.linked) {
+      resolved[`${link.item}\u0000${link.param}`] = link.resolved ?? '';
+    }
+  }
+  return resolved;
+}
+
+/**
+ * Recovers a stored/engine-derived parameter value's identity for STRUCTURAL
+ * comparison (design § 6.2): a `Catalogued` id and a `Text` value both
+ * normalize to their own kind, but a `Linked` value normalizes to the
+ * CURRENT resolved text of its target (via `resolvedLinks`), not to its
+ * `(item, param)` pair — so two rows following the same Virtue compare equal
+ * exactly when that Virtue's value would make them equal.
+ *
+ * Kind-tagged (`'id' | 'text' | 'raw'`), not a bare string, so `Catalogued`
+ * and `Text` never cross-match by coincidence: two bought rows are always
+ * compared as actual `AbilityParamValue`s (`settledScoreOf`), so a
+ * pathological `Text{"language.latin"}` must not equal a DIFFERENT row's
+ * `Catalogued{"language.latin"}`, mirroring § 4 rule 1's "a literal is never
+ * satisfied by free text holding the same letters".
+ *
+ * A bare engine-derived string (`AbilityBonus.parameter`) is its OWN,
+ * deliberately promiscuous `'raw'` kind rather than being folded into `'id'`:
+ * unlike a rules-authored `Literal`'s resolved instance (always a catalogue
+ * id), a bonus/floor target names whatever instance ITS OWN picker pointed
+ * at — the SAME `Id`-typed selection parameter regardless of whether that
+ * instance happens to be a catalogued ability (Puissant Dead Language,
+ * `"language.latin"`) or an uncatalogued one (Puissant (Area) Lore,
+ * `"Brandenburg"`, genuine free text). So `'raw'` matches by value alone
+ * against either kind — `sameParam` below only refuses a match between two
+ * *typed* values (`'id'` vs `'text'`), never between a bare string and either.
+ */
+export function normalizeParam(
+  p: AbilityParamValue | string | null | undefined,
+  resolvedLinks: Record<string, string>,
+): { kind: 'id' | 'text' | 'raw'; value: string } | null {
+  if (p == null) return null;
+  if (typeof p === 'string') return { kind: 'raw', value: p };
+  if ('id' in p) return { kind: 'id', value: p.id };
+  if ('item' in p) {
+    return { kind: 'text', value: resolvedLinks[`${p.item}\u0000${p.param}`] ?? '' };
+  }
+  return { kind: 'text', value: p.text };
+}
+
+/**
+ * Structural equality for `AbilityScore.parameter` (design § 6.2): the
+ * comparison every `.parameter` site in `AbilityTab.svelte` needs once the
+ * field is object-shaped, so a bonus/floor/settled-snapshot lookup still
+ * resolves for a `Catalogued` or `Linked` value the way a bare-string `===`
+ * used to for `Text` alone. Deliberately no case-folding here — that is § 4
+ * rule 2's RULES-engine, pool-satisfaction fuzz; this is a UI, same-entity
+ * comparison where both sides are already-resolved or literally the same
+ * stored value, and importing fuzz would let two visibly-different rows
+ * report as "the same bonus".
+ *
+ * A `'raw'` kind on either side matches by value alone, regardless of the
+ * other side's kind — see {@link normalizeParam}'s doc comment for why.
+ */
+export function sameParam(
+  a: AbilityParamValue | string | null | undefined,
+  b: AbilityParamValue | string | null | undefined,
+  resolvedLinks: Record<string, string>,
+): boolean {
+  const na = normalizeParam(a, resolvedLinks);
+  const nb = normalizeParam(b, resolvedLinks);
+  if (na === null || nb === null) return na === nb;
+  if (na.kind === 'raw' || nb.kind === 'raw') return na.value === nb.value;
+  return na.kind === nb.kind && na.value === nb.value;
 }
 
 function humanizeCatalogueId(id: string): string {
@@ -1893,9 +1983,8 @@ export interface MigratedCatalogueParameterLike {
  * Both the Ability and the resolved catalogue value travel as their own ids,
  * never a sentence: the Ability goes through {@link abilityDisplayName} like
  * every other engine output, and the resolved catalogue id goes through
- * {@link abilityParamDisplay} — which, until CV6/CV8's real localized
- * catalogue-name resolution ships, falls back to a readable label derived
- * from the id's own final segment rather than ever printing the raw slug.
+ * {@link abilityParamDisplay}'s real localized catalogue-name resolution
+ * (CV7), never the raw slug.
  */
 export function migratedCatalogueParameterNotice(
   localized: LocalizedRuleset | null,
@@ -1909,7 +1998,7 @@ export function migratedCatalogueParameterNotice(
       t('migrated-catalogued-parameter-item', {
         ability: abilityDisplayName(localized, item.ability, null, paramHint(t)),
         text: item.text,
-        resolved: abilityParamDisplay({ id: item.resolved }),
+        resolved: abilityParamDisplay({ id: item.resolved }, localized),
       }),
     )
     .join(separator);

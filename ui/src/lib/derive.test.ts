@@ -66,6 +66,9 @@ import {
   resolveIssueArgs,
   restrictedPoolLabel,
   RITUAL_MINIMUM_LEVEL_FALLBACK,
+  normalizeParam,
+  resolvedLinksFrom,
+  sameParam,
   selectionDisplayName,
   spellDisplayName,
   spellLevelAllocation,
@@ -78,6 +81,8 @@ import { buildBundle, translate as formatMessage } from './i18n';
 import type { Lang } from './i18n';
 import type {
   Ability,
+  AbilityParameterOptions,
+  AbilityParamValue,
   Art,
   ChildhoodPackage,
   CreationPhase,
@@ -4416,5 +4421,137 @@ describe('reputationRows', () => {
 
   it('is empty when there is neither a grant nor a stored Reputation', () => {
     expect(reputationRows([], [])).toEqual([]);
+  });
+});
+
+// --- sameParam() / normalizeParam() / resolvedLinksFrom() (CV7, design § 6.2) ----
+
+describe('resolvedLinksFrom', () => {
+  it('flattens every offered link target into an (item, param) -> resolved map', () => {
+    const options: AbilityParameterOptions[] = [
+      {
+        ability: 'ability.organization_lore',
+        catalogued: [],
+        linked: [
+          {
+            item: 'virtue.craft_guild_training',
+            param: 'guild',
+            resolved: "Smiths' Guild of Verdi",
+          },
+        ],
+        hint: false,
+      },
+    ];
+    expect(resolvedLinksFrom(options)).toEqual({
+      'virtue.craft_guild_training\u0000guild': "Smiths' Guild of Verdi",
+    });
+  });
+
+  it('is empty when nothing is currently offered as a link target', () => {
+    expect(resolvedLinksFrom([])).toEqual({});
+  });
+});
+
+describe('normalizeParam', () => {
+  const resolvedLinks = { 'virtue.craft_guild_training\u0000guild': "Smiths' Guild of Verdi" };
+
+  it('normalizes null/undefined to null', () => {
+    expect(normalizeParam(null, resolvedLinks)).toBeNull();
+    expect(normalizeParam(undefined, resolvedLinks)).toBeNull();
+  });
+
+  it('normalizes an engine-derived bare string to kind "raw"', () => {
+    expect(normalizeParam('language.latin', resolvedLinks)).toEqual({
+      kind: 'raw',
+      value: 'language.latin',
+    });
+  });
+
+  it('normalizes Catalogued to kind "id"', () => {
+    const value: AbilityParamValue = { id: 'language.latin' };
+    expect(normalizeParam(value, resolvedLinks)).toEqual({ kind: 'id', value: 'language.latin' });
+  });
+
+  it('normalizes Text to kind "text"', () => {
+    const value: AbilityParamValue = { text: 'Klingon' };
+    expect(normalizeParam(value, resolvedLinks)).toEqual({ kind: 'text', value: 'Klingon' });
+  });
+
+  it('normalizes Linked to kind "text", resolved via resolvedLinks', () => {
+    const value: AbilityParamValue = { item: 'virtue.craft_guild_training', param: 'guild' };
+    expect(normalizeParam(value, resolvedLinks)).toEqual({
+      kind: 'text',
+      value: "Smiths' Guild of Verdi",
+    });
+  });
+
+  it('normalizes a dangling Linked value to an empty "text"', () => {
+    const value: AbilityParamValue = { item: 'virtue.nonexistent', param: 'guild' };
+    expect(normalizeParam(value, resolvedLinks)).toEqual({ kind: 'text', value: '' });
+  });
+});
+
+describe('sameParam', () => {
+  const resolvedLinks = { 'virtue.craft_guild_training\u0000guild': "Smiths' Guild of Verdi" };
+
+  it('two null/undefined values are the same', () => {
+    expect(sameParam(null, undefined, resolvedLinks)).toBe(true);
+  });
+
+  it('a value and null are never the same', () => {
+    const value: AbilityParamValue = { id: 'language.latin' };
+    expect(sameParam(value, null, resolvedLinks)).toBe(false);
+  });
+
+  it('two Catalogued values with the same id are the same', () => {
+    const a: AbilityParamValue = { id: 'language.latin' };
+    const b: AbilityParamValue = { id: 'language.latin' };
+    expect(sameParam(a, b, resolvedLinks)).toBe(true);
+  });
+
+  it('two Catalogued values with different ids are not the same', () => {
+    const a: AbilityParamValue = { id: 'language.latin' };
+    const b: AbilityParamValue = { id: 'language.gothic' };
+    expect(sameParam(a, b, resolvedLinks)).toBe(false);
+  });
+
+  it('Catalogued and Text holding the identical letters are never the same', () => {
+    // Mirrors the engine's own § 4 rule 1: a literal is never satisfied by
+    // free text holding the same letters, and the UI's own identity
+    // comparison must not blur that distinction either.
+    const catalogued: AbilityParamValue = { id: 'language.latin' };
+    const text: AbilityParamValue = { text: 'language.latin' };
+    expect(sameParam(catalogued, text, resolvedLinks)).toBe(false);
+  });
+
+  it('a Linked value is the same as Text holding its CURRENT resolved value', () => {
+    const linked: AbilityParamValue = { item: 'virtue.craft_guild_training', param: 'guild' };
+    const text: AbilityParamValue = { text: "Smiths' Guild of Verdi" };
+    expect(sameParam(linked, text, resolvedLinks)).toBe(true);
+  });
+
+  it('two Linked values naming the same (item, param) are the same', () => {
+    const a: AbilityParamValue = { item: 'virtue.craft_guild_training', param: 'guild' };
+    const b: AbilityParamValue = { item: 'virtue.craft_guild_training', param: 'guild' };
+    expect(sameParam(a, b, resolvedLinks)).toBe(true);
+  });
+
+  it('a bare engine-derived string matches Text holding the same value', () => {
+    // Corrected during CV7 implementation, verified against a genuine e2e
+    // regression: Puissant (Area) Lore's own bonus target ("Brandenburg") is
+    // NOT a catalogue id — it names whichever instance ITS OWN picker
+    // pointed at, which for an uncatalogued ability is genuine free text. A
+    // bare string is deliberately promiscuous ('raw', normalizeParam's own
+    // doc comment) and matches by value regardless of the other side's kind
+    // — unlike two ACTUAL AbilityParamValues (Catalogued vs Text), which
+    // still never cross-match (see the test above).
+    const text: AbilityParamValue = { text: 'language.latin' };
+    expect(sameParam('language.latin', text, resolvedLinks)).toBe(true);
+  });
+
+  it('two ACTUAL typed values still never cross-match on identical letters', () => {
+    const catalogued: AbilityParamValue = { id: 'language.latin' };
+    const text: AbilityParamValue = { text: 'language.latin' };
+    expect(sameParam(catalogued, text, resolvedLinks)).toBe(false);
   });
 });

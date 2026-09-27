@@ -161,6 +161,18 @@ export function applyChildhoodPackage(
 }
 
 /**
+ * Converts every bought Ability score `Linked` to `removedItem`'s own
+ * parameter into free text holding its last resolvable value (design § 5.5,
+ * `docs/vf-audit/design-cv-catalogued-values.md`), returning the whole
+ * updated entity. The Virtue/Flaw removal flow calls this BEFORE the
+ * selection is actually removed — the engine owns the conversion; the
+ * frontend must not reimplement it.
+ */
+export function unlinkAbilityParameters(entity: Entity, removedItem: string): Promise<Entity> {
+  return invoke('unlink_ability_parameters', { entity, removedItem });
+}
+
+/**
  * Where one aging row's points go. `kind` is the question to ask: the table names
  * the Characteristic itself, the player picks it, or the points must reach the next
  * level of Decrepitude. `characteristic` is present only for `named`.

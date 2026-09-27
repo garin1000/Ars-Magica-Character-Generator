@@ -17,6 +17,14 @@ pub struct LinkTarget {
     pub item: Id,
     /// The declaring item's own parameter key.
     pub param: String,
+    /// The item's OWN current value for `param`, resolved the same way every
+    /// other reader resolves a Bound source (design § 6.4) — `None` when the
+    /// parameter is declared but not yet filled in. Bundled here so the picker
+    /// can label a link target ("linked to «Craft Guild Training»: Smiths'
+    /// Guild of Verdi") without a second, UI-side lookup; an ambiguous source
+    /// is already excluded from `linked` entirely (design § 4.1), so every
+    /// `LinkTarget` this struct carries resolves unambiguously by construction.
+    pub resolved: Option<String>,
 }
 
 /// The engine-built parameter-picker options for one catalogued-or-linkable
@@ -72,8 +80,18 @@ pub fn ability_parameter_options(
         let mut linked: Vec<LinkTarget> = authorized
             .iter()
             .filter(|a| a.ability == ability.id && !a.ambiguous)
-            .filter_map(|a| a.bound_source.clone())
-            .map(|(item, param)| LinkTarget { item, param })
+            .filter_map(|a| {
+                let (item, param) = a.bound_source.clone()?;
+                // `AuthorizedAbility::instance` IS the Bound source's own
+                // current value once `bound_source` is set (see its own doc
+                // comment) — already computed by `ability_authorizations`, so
+                // this is a carry-through, not a second resolution.
+                Some(LinkTarget {
+                    item,
+                    param,
+                    resolved: a.instance.clone(),
+                })
+            })
             .collect();
         linked.sort();
         linked.dedup();
