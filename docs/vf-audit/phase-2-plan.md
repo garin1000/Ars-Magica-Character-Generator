@@ -4,8 +4,10 @@
 25 findings, then 7 minor — all applied).
 
 **Status, 2026-09-26: first round DONE** (`6f34a70`…`0ef6dbd`): M0, Phase 1
-(Q1–Q12, Q3b, Q4b, E2, U0), Phase 1S (S1–S4), A0–A2, U6, E1. Next: Group C (C0).
-Open: N1, N4–N7.
+(Q1–Q12, Q3b, Q4b, E2, U0), Phase 1S (S1–S4), A0–A2, U6, E1.
+**Status, 2026-09-27:** C0, C0b, C1–C4 done; **CV1–CV8 done** (`61b0e23`…`c06e1fa`,
+schema 18, D59). Next: C5a (schema 18→19). Since CV1 every slice has run under
+the red-checkpoint protocol. Open: N1, N4–N7.
 
 ## Context
 
