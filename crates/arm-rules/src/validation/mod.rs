@@ -190,6 +190,7 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_age_unset` | error | experience | (none) |
 /// | `life_stage_age_before_childhood` | error | experience | `age`, `min` |
 /// | `life_stage_age_before_gauntlet` | error | experience | `age`, `min` |
+/// | `life_stage_age_before_truncation` | error | experience | `age`, `min` |
 /// | `life_stage_gauntlet_age_after_age` | error | experience | `gauntlet_age`, `age` |
 /// | `life_stage_lab_seasons_out_of_range` | error | experience | `seasons`, `max`, `years` |
 /// | `life_stage_lab_seasons_without_years` | error | experience | `seasons` |
@@ -602,6 +603,18 @@ impl ValidationIssue {
     /// [`ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD`]; one wrong age
     /// produces one of the two, never both.
     pub const CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET: &'static str = "life_stage_age_before_gauntlet";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a NON-magus (Redcap,
+    /// Lone Redcap — an apprenticeship-shaped `Effect::ReplacesLifeStageXp`
+    /// carrier, D40/D2) is younger than childhood plus the years its own
+    /// effect carves out of later life, so it cannot have lived that many
+    /// years of training. The non-magus counterpart of
+    /// [`ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET`] — reused
+    /// verbatim (not forked) for D3's truncated-apprenticeship carrier too
+    /// (`docs/vf-audit/design-d0-xp-modes.md` § 4, Revision 4 R3-2), since
+    /// both ask the identical question of the identical
+    /// `extra_apprenticeship_years`-derived figure.
+    pub const CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION: &'static str =
+        "life_stage_age_before_truncation";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the stored Gauntlet age is
     /// later than the character's own age, putting the Gauntlet in its future
     /// (ArMDE:2216). [`crate::life_stage::LifeStageRules::budget`] clamps the
@@ -1266,6 +1279,10 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         // A pool grant, matching `RestrictedAbilityXp`'s own classification —
         // not a bonus/shift with a dangling-target-checkable param.
         | Effect::ScaledRestrictedAbilityXp { .. }
+        // D40/D2: also a pool grant (a replacement rather than an addition),
+        // same classification — checked instead by
+        // `ruleset/integrity.rs::validate_effect_refs`'s own dedicated arm.
+        | Effect::ReplacesLifeStageXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         // A fixed floor grant restricted to one instance (F-63/C5c) — no

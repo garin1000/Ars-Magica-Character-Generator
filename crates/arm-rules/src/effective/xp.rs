@@ -784,6 +784,24 @@ pub(crate) fn ability_authorizations(
                 // soak/magic-resistance/aging/advancement/casting-style/roll
                 // modifiers, Elemental Magic) modify a derived total computed
                 // over Abilities/Arts already owned, never ownership itself.
+                // D40/D2: a replacement pool is itself permission for what it
+                // funds, same reasoning as `RestrictedAbilityXp` above —
+                // unscoped `abilities`/`categories` only (no `instances`
+                // field on this variant).
+                Effect::ReplacesLifeStageXp {
+                    abilities: ids,
+                    categories: cats,
+                    ..
+                } => {
+                    abilities.extend(ids.iter().map(|ability| AuthorizedAbility {
+                        ability: ability.clone(),
+                        instance: None,
+                        requires_catalogued: false,
+                        bound_source: None,
+                        ambiguous: false,
+                    }));
+                    categories.extend(cats.iter().copied());
+                }
                 Effect::AbilityBonus { .. }
                 | Effect::CharacteristicScoreDeltaParam { .. }
                 | Effect::ArtBonus { .. }
@@ -1280,6 +1298,34 @@ fn spell_mastery_flow_pool(entity: &Entity, ruleset: &Ruleset) -> Option<FlowPoo
     })
 }
 
+/// The entity's own `Effect::ReplacesLifeStageXp` naming `wanted`, if any
+/// (D40/D2: `flaw.feral_upbringing` names `ChildhoodSpread`; `virtue.redcap`/
+/// `virtue.lone_redcap` name `Apprenticeship`) — cloned out of the owning
+/// item's effects so [`build_flow_pools`] can build an ordinary [`FlowPool`]
+/// from it without holding a borrow across the whole function. A shipped
+/// ruleset never grants two carriers of the same stage to one character, so
+/// the first match found is authoritative.
+fn life_stage_replacement(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    wanted: LifeStageBlock,
+) -> Option<(u32, Vec<Id>, Vec<AbilityCategory>)> {
+    selections_for_effects(entity, ruleset)
+        .iter()
+        .filter_map(|selection| ruleset.point_items.get(&selection.item_ref))
+        .flat_map(|item| &item.effects)
+        .find_map(|effect| match effect {
+            Effect::ReplacesLifeStageXp {
+                stage,
+                amount,
+                abilities,
+                categories,
+                ..
+            } if *stage == wanted => Some((*amount, abilities.clone(), categories.clone())),
+            _ => None,
+        })
+}
+
 /// Builds every restricted [`FlowPool`] the entity's selections and life stages
 /// grant — the non-general supply side of [`xp_allocation`]'s flow solve.
 /// Extracted from `xp_allocation` (pure code motion, no behavior change): the
@@ -1302,8 +1348,29 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
         .life_stages()
         .and_then(|rules| rules.budget(entity, ruleset).map(|budget| (rules, budget)));
     if let Some((rules, budget)) = &life_stage_budget {
-        flow_pools.extend(childhood_native_language_pool(entity, rules, budget));
-        flow_pools.push(childhood_spread_pool(entity, rules, budget));
+        // D40/D2: a childhood replacement (Feral Upbringing) swaps BOTH
+        // ordinary childhood pools for one restricted pool of its own — no
+        // native-language carve-out at all, matching ArMDE:6112's "may not
+        // start with a score in a Language" (never merely an unset one).
+        if let Some((amount, abilities, categories)) =
+            life_stage_replacement(entity, ruleset, LifeStageBlock::ChildhoodSpread)
+        {
+            flow_pools.push(FlowPool {
+                amount,
+                eligibility: PoolEligibility::Ability {
+                    abilities,
+                    categories,
+                    instances: Vec::new(),
+                    exclude: Vec::new(),
+                },
+                origin: XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::ChildhoodSpread,
+                },
+            });
+        } else {
+            flow_pools.extend(childhood_native_language_pool(entity, rules, budget));
+            flow_pools.push(childhood_spread_pool(entity, rules, budget));
+        }
         let trained = crate::effective::is_hermetically_trained(
             entity,
             ruleset,
@@ -1311,6 +1378,25 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
         );
         if trained {
             flow_pools.extend(magus_later_life_pool(entity, ruleset, budget));
+        }
+        // D40/D2: an apprenticeship-shaped replacement (Redcap, Lone Redcap)
+        // funds its own restricted pool — SOURCE-fed, never `general`: its XP
+        // does not buy Arts, matching ArMDE:4848's Abilities-only categories.
+        if let Some((amount, abilities, categories)) =
+            life_stage_replacement(entity, ruleset, LifeStageBlock::Apprenticeship)
+        {
+            flow_pools.push(FlowPool {
+                amount,
+                eligibility: PoolEligibility::Ability {
+                    abilities,
+                    categories,
+                    instances: Vec::new(),
+                    exclude: Vec::new(),
+                },
+                origin: XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::Apprenticeship,
+                },
+            });
         }
     }
 

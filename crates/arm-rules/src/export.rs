@@ -260,6 +260,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "warping-label",
     "warping-points-label",
     "xp-pool",
+    "xp-pool-apprenticeship",
     "xp-pool-childhood_native_language",
     "xp-pool-childhood_spread",
     "xp-pool-later_life",

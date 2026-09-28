@@ -543,11 +543,18 @@ export interface RestrictedXpPool {
 }
 
 // A block of life-stage experience that funds purchases on its own terms
-// (`LifeStageBlock`). Apprenticeship is absent on purpose: whichever block funds
-// anything the character may learn is the general pool and needs no slug, and for a
-// magus that is apprenticeship. Later life is here because for a magus it is
-// restricted — Abilities only, never an Art.
-export type LifeStageBlock = 'childhood_native_language' | 'childhood_spread' | 'later_life';
+// (`LifeStageBlock`). A REAL magus's own apprenticeship is absent on purpose:
+// whichever block funds anything the character may learn is the general pool and
+// needs no slug, and for a magus that is apprenticeship. Later life is here because
+// for a magus it is restricted — Abilities only, never an Art. `apprenticeship` here
+// is a DIFFERENT thing (D40/D2): an apprenticeship-SHAPED restricted pool for a
+// character who is not hermetically trained by profile (Redcap, Lone Redcap) — it
+// does not fund an Art either, so it needs a slug the real magus block does not.
+export type LifeStageBlock =
+  | 'childhood_native_language'
+  | 'childhood_spread'
+  | 'later_life'
+  | 'apprenticeship';
 
 export type XpPoolOrigin =
   | { kind: 'item'; item: string }

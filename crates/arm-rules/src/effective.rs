@@ -331,6 +331,9 @@ macro_rules! irrelevant_effect_variants {
         // above — a restricted XP pool grant, never a score bonus/shift/
         // Affinity reduction, so a no-op in every fold that shares this tail.
         | Effect::ScaledRestrictedAbilityXp { .. }
+        // D40/D2's replacement sibling: a life-stage XP replacement, never a
+        // score bonus/shift/Affinity reduction either — same reasoning.
+        | Effect::ReplacesLifeStageXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         // The parameter-relative sibling (F-63, C5c): a free *floor* restricted
@@ -3160,7 +3163,20 @@ mod tests {
           { "id": "flaw.covenant_upbringing", "kind": "flaw", "classification": "creation_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "ability_authorization",
-                          "abilities": ["ability.dead_language"] }] }
+                          "abilities": ["ability.dead_language"] }] },
+          { "id": "flaw.test_feral_upbringing", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "replaces_life_stage_xp", "stage": "childhood_spread",
+                          "amount": 120, "abilities": ["ability.swim"] }] },
+          { "id": "virtue.test_redcap", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["hermetic"], "entity_kinds": ["character"],
+            "effects": [{ "type": "replaces_life_stage_xp", "stage": "apprenticeship",
+                          "amount": 300, "years": 15,
+                          "categories": ["academic", "arcane", "general", "martial"] }] },
+          { "id": "flaw.test_church_upbringing", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "restricted_ability_xp", "amount": 25, "from_normal_budget": true,
+                          "abilities": ["ability.artes_liberales"] }] }
         ]"#;
         let types = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -3776,9 +3792,18 @@ mod tests {
     /// print its own slug.
     #[test]
     fn life_stage_blocks_include_later_life() {
-        assert_eq!(LifeStageBlock::ALL.len(), 3);
+        assert_eq!(LifeStageBlock::ALL.len(), 4);
         assert!(LifeStageBlock::ALL.contains(&LifeStageBlock::LaterLife));
         assert_eq!(LifeStageBlock::LaterLife.to_string(), "later_life");
+    }
+
+    /// D40/D2: the apprenticeship-*shaped* replacement block (Redcap, Lone
+    /// Redcap) is a fourth, distinct tag from a real magus's own
+    /// apprenticeship (which needs none, § doc comment on the enum).
+    #[test]
+    fn life_stage_blocks_include_the_apprenticeship_replacement() {
+        assert!(LifeStageBlock::ALL.contains(&LifeStageBlock::Apprenticeship));
+        assert_eq!(LifeStageBlock::Apprenticeship.to_string(), "apprenticeship");
     }
 
     /// Each life-stage pool says where it came from, so the XP bar can label it
@@ -3800,5 +3825,295 @@ mod tests {
             }),
             "origins: {origins:?}"
         );
+    }
+
+    // --- D40/D2: replacement XP (Feral Upbringing, Redcap, Lone Redcap) ------
+
+    /// A companion holding nothing but the Flaw, unaged plan defaulted, no
+    /// native language recorded — ArMDE:6112: "you may not start with a score
+    /// in a Language". `native_language: None` is the correct shape for this
+    /// carrier, not merely an unset field.
+    fn feral_companion(age: u32) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.ability_funding = crate::types::AbilityFunding::LifeStages;
+        entity.age = Some(age);
+        entity.life_stages = Some(crate::life_stage::LifeStagePlan::default());
+        entity.selections = vec![Selection::new(Id::new("flaw.test_feral_upbringing"))];
+        entity
+    }
+
+    /// D40/D2: Feral Upbringing's whole childhood collapses to ONE restricted
+    /// pool of 120 (ArMDE:6110-6113), never the standard native(75)+spread(45)
+    /// PLUS an additive grant (F-428's 240 bug). No native-language pool at
+    /// all — not merely an empty one — matching "may not start with a score
+    /// in a Language". RED today: `build_flow_pools` does not yet look for a
+    /// `ChildhoodSpread`-stage replacement, so the standard spread pool is
+    /// still built alongside the Flaw's own (still-additive, pre-fix) grant.
+    #[test]
+    fn a_feral_upbringing_shaped_replacement_collapses_childhood_to_one_pool() {
+        let rs = life_stage_ruleset();
+        let allocation = xp_allocation(&feral_companion(25), &rs);
+
+        let childhood_pools: Vec<_> = allocation
+            .restricted
+            .iter()
+            .filter(|p| {
+                matches!(
+                    p.origin,
+                    XpPoolOrigin::LifeStage {
+                        block: LifeStageBlock::ChildhoodNativeLanguage
+                            | LifeStageBlock::ChildhoodSpread
+                    }
+                )
+            })
+            .collect();
+        assert_eq!(
+            childhood_pools.len(),
+            1,
+            "exactly one collapsed childhood pool, no separate native pool: {childhood_pools:?}"
+        );
+        assert_eq!(
+            childhood_pools[0].origin,
+            XpPoolOrigin::LifeStage {
+                block: LifeStageBlock::ChildhoodSpread
+            }
+        );
+        assert_eq!(childhood_pools[0].amount, 120);
+        assert_eq!(childhood_pools[0].abilities, vec![Id::new("ability.swim")]);
+        assert!(
+            !allocation.restricted.iter().any(|p| matches!(
+                &p.origin,
+                XpPoolOrigin::Item { item } if *item == Id::new("flaw.test_feral_upbringing")
+            )),
+            "the replacement fully absorbs the effect — no separate additive \
+             grant may survive beside it: {:?}",
+            allocation.restricted
+        );
+    }
+
+    /// D63: the wilderness list/"no Language" rule bind ONLY Feral's own
+    /// 120-XP first-five-years pool — later life is ordinary, unrestricted
+    /// general XP for a companion, so Church Upbringing's earmark (D1/D13) is
+    /// spendable on a Feral character from THAT pool, capped exactly as it
+    /// would be for anyone else. Not a red today (D1's cap logic is
+    /// independent of the childhood shape), but a lock: the two effects must
+    /// keep composing correctly once D2 lands.
+    #[test]
+    fn a_feral_upbringing_companion_can_still_spend_later_life_general_xp() {
+        let rs = life_stage_ruleset();
+        let mut entity = feral_companion(25);
+        entity
+            .selections
+            .push(Selection::new(Id::new("flaw.covenant_upbringing")));
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.dead_language"),
+            parameter: Some(AbilityParameterValue::text("Latin")),
+            score: 3,
+            specialty: None,
+        }];
+
+        let allocation = xp_allocation(&entity, &rs);
+        assert!(
+            allocation.general_pool > 0,
+            "later life must still fund the general pool: {:?}",
+            allocation.general_pool
+        );
+    }
+
+    /// A companion holding the apprenticeship-shaped replacement Virtue
+    /// (Redcap/Lone Redcap's shape): its own 300 XP funds a SOURCE-fed
+    /// restricted pool — never `general`, since it does not buy Arts
+    /// (ArMDE:4848) — while its 15 years are carved out of later life, which
+    /// stays the companion's own general pool, reduced accordingly. RED
+    /// today: `build_flow_pools` does not yet look for an
+    /// `Apprenticeship`-stage replacement at all, so no such pool exists and
+    /// later life runs uncarved.
+    #[test]
+    fn a_redcap_shaped_replacement_funds_a_source_pool_not_general() {
+        let rs = life_stage_ruleset();
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.ability_funding = crate::types::AbilityFunding::LifeStages;
+        entity.age = Some(25);
+        entity.life_stages = Some(crate::life_stage::LifeStagePlan::default());
+        entity.selections = vec![Selection::new(Id::new("virtue.test_redcap"))];
+
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(
+            allocation.general_pool, 75,
+            "later life alone, 15 years carved: (25 - 5 - 15) x 15 = 75"
+        );
+        let pool = allocation
+            .restricted
+            .iter()
+            .find(|p| {
+                matches!(
+                    p.origin,
+                    XpPoolOrigin::LifeStage {
+                        block: LifeStageBlock::Apprenticeship
+                    }
+                )
+            })
+            .expect("an apprenticeship-shaped restricted pool must exist");
+        assert_eq!(pool.amount, 300);
+        assert_eq!(
+            pool.categories,
+            vec![
+                AbilityCategory::Academic,
+                AbilityCategory::Arcane,
+                AbilityCategory::General,
+                AbilityCategory::Martial,
+            ]
+        );
+    }
+
+    /// D63: the wilderness list binds ONLY the 120-XP first-five-years pool.
+    /// A Feral character old enough to have later-life years can fund a
+    /// non-wilderness Ability (here, Living Language — general category, not
+    /// among the Flaw's nine named Abilities) from later-life GENERAL XP —
+    /// and the 120-XP pool must refuse it (its eligibility is fixed to the
+    /// nine names, never the ordinary childhood spread list). RED today:
+    /// `build_flow_pools` still creates the STANDARD childhood-spread pool
+    /// (which lists Living Language), so the restricted pool wrongly funds it
+    /// first, ahead of general.
+    #[test]
+    fn a_feral_upbringing_companion_funds_a_non_wilderness_ability_from_later_life_general_only() {
+        let rs = life_stage_ruleset();
+        let mut entity = feral_companion(25);
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.living_language"),
+            parameter: Some(AbilityParameterValue::text("French")),
+            score: 1,
+            specialty: None,
+        }];
+
+        let allocation = xp_allocation(&entity, &rs);
+        assert!(
+            allocation.general_used >= 5,
+            "later-life general must fund the non-wilderness Ability: {:?}",
+            allocation.general_used
+        );
+        let feral_pool = allocation
+            .restricted
+            .iter()
+            .find(|p| {
+                matches!(
+                    p.origin,
+                    XpPoolOrigin::LifeStage {
+                        block: LifeStageBlock::ChildhoodSpread
+                    }
+                )
+            })
+            .expect("the 120-XP pool must exist");
+        assert_eq!(
+            feral_pool.used, 0,
+            "the 120-XP wilderness pool must refuse a non-wilderness Ability: {feral_pool:?}"
+        );
+    }
+
+    /// ArMDE:6112: "you may not start with a score in a Language" — a Feral
+    /// character gets NO early-childhood native-language grant, even when a
+    /// native language IS recorded on the plan (proving the pool's absence is
+    /// structural, not merely "nobody set one"). RED today: with a language
+    /// set, `childhood_native_language_pool` still builds a real 75-XP pool.
+    #[test]
+    fn a_feral_upbringing_companion_with_a_native_language_set_still_gets_no_native_pool() {
+        let rs = life_stage_ruleset();
+        let mut entity = feral_companion(25);
+        entity.life_stages = Some(crate::life_stage::LifeStagePlan {
+            native_language: Some("German".into()),
+            ..crate::life_stage::LifeStagePlan::default()
+        });
+
+        let allocation = xp_allocation(&entity, &rs);
+        assert!(
+            !allocation.restricted.iter().any(|p| matches!(
+                p.origin,
+                XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::ChildhoodNativeLanguage
+                }
+            )),
+            "a native language named on the plan must still grant no pool: {:?}",
+            allocation.restricted
+        );
+    }
+
+    /// D13 x D40/D2: Church Upbringing's earmark and Feral Upbringing's own
+    /// replacement pool are independent — the earmark draws from (and is
+    /// capped at) later-life GENERAL only, never the 120-XP wilderness pool,
+    /// and the Feral pool is untouched by it. A young age (6: one year of
+    /// later life, 15 XP — below the 25 earmark) proves the cap; age 25
+    /// (300 XP of later life) proves the ordinary, uncapped case. RED today:
+    /// the Feral pool is not yet collapsed to a fixed 120, so its `amount`
+    /// assertion fails regardless of the earmark math.
+    /// One case per function (not a loop over both ages) so a failure in the
+    /// young-age case can never mask the normal-age case from ever running —
+    /// each must show its own pass/fail independently.
+    fn assert_feral_and_church_upbringing_combine_correctly(
+        age: u32,
+        expected_general_after_earmark: u32,
+        expected_earmark: u32,
+    ) {
+        let rs = life_stage_ruleset();
+        let mut entity = feral_companion(age);
+        entity
+            .selections
+            .push(Selection::new(Id::new("flaw.test_church_upbringing")));
+
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(
+            allocation.general_pool, expected_general_after_earmark,
+            "age {age}: later-life general minus the capped earmark"
+        );
+        let earmark_pool = allocation
+            .restricted
+            .iter()
+            .find(|p| {
+                matches!(&p.origin, XpPoolOrigin::Item { item }
+                    if *item == Id::new("flaw.test_church_upbringing"))
+            })
+            .expect("the earmark pool must exist");
+        assert_eq!(
+            earmark_pool.amount, expected_earmark,
+            "age {age}: the earmark caps at what general holds"
+        );
+        let feral_pool = allocation
+            .restricted
+            .iter()
+            .find(|p| {
+                matches!(
+                    p.origin,
+                    XpPoolOrigin::LifeStage {
+                        block: LifeStageBlock::ChildhoodSpread
+                    }
+                )
+            })
+            .expect("the Feral pool must exist");
+        assert_eq!(
+            feral_pool.amount, 120,
+            "age {age}: the Feral pool is untouched by the earmark"
+        );
+    }
+
+    /// A young age (6: one year of later life, 15 XP) — below the earmark's
+    /// nominal 25, so the cap binds: `earmark_effective = amount.min(remaining)`.
+    #[test]
+    fn a_young_feral_upbringing_companion_caps_the_church_upbringing_earmark() {
+        assert_feral_and_church_upbringing_combine_correctly(6, 0, 15);
+    }
+
+    /// A normal age (25: twenty years of later life, 300 XP) — well above the
+    /// earmark's nominal 25, so the cap does not bind and the ordinary
+    /// D13/D1 shape applies unchanged by Feral's own childhood replacement.
+    #[test]
+    fn a_grown_feral_upbringing_companion_pays_the_church_upbringing_earmark_in_full() {
+        assert_feral_and_church_upbringing_combine_correctly(25, 275, 25);
     }
 }

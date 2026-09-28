@@ -195,6 +195,7 @@ describe('German UI bundle', () => {
         'xp-pool-childhood_native_language',
         'xp-pool-childhood_spread',
         'xp-pool-later_life',
+        'xp-pool-apprenticeship',
       ]) {
         expect(keys, `${lang} dropped the issue-arg key ${slugKey}`).toContain(slugKey);
       }

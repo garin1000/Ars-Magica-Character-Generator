@@ -21,7 +21,7 @@ use crate::childhood::ChildhoodPackage;
 use crate::equipment::{Armor, EquipmentFile, Shield, Weapon};
 use crate::grant::Grant;
 use crate::house::{House, HousesFile};
-use crate::life_stage::{ChildhoodRules, LifeStageRules};
+use crate::life_stage::{ChildhoodRules, LifeStageBlock, LifeStageRules};
 use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
 use crate::spell::{RITUAL_MIN_LEVEL, Spell, SpellDuration, SpellRange, SpellTarget, SpellsFile};
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
@@ -3503,6 +3503,78 @@ mod tests {
             )
             .is_ok(),
             "the shipped Simple Student shape must load"
+        );
+    }
+
+    /// D40/D2's integrity table: `years` may only be non-zero when `stage` is
+    /// `apprenticeship` — a flat block replacement (childhood) does not carve
+    /// any span.
+    #[test]
+    fn a_replaces_life_stage_xp_with_years_on_a_non_apprenticeship_stage_fails_the_load() {
+        let err = load_with_effect(
+            r#"{ "type": "replaces_life_stage_xp", "stage": "childhood_spread",
+                 "amount": 120, "years": 5, "abilities": ["ability.awareness"] }"#,
+        )
+        .expect_err("years on a childhood-shaped replacement must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("replaces_life_stage_xp"),
+            "expected an item-naming replacement error, got: {msg}"
+        );
+    }
+
+    /// The other half of the same rule: `years == 0` on the apprenticeship
+    /// stage is a years-carving replacement with nothing to carve — dead data.
+    #[test]
+    fn a_replaces_life_stage_xp_apprenticeship_stage_with_zero_years_fails_the_load() {
+        let err = load_with_effect(
+            r#"{ "type": "replaces_life_stage_xp", "stage": "apprenticeship",
+                 "amount": 300, "categories": ["general"] }"#,
+        )
+        .expect_err("a zero-years apprenticeship replacement must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("replaces_life_stage_xp"),
+            "expected an item-naming replacement error, got: {msg}"
+        );
+    }
+
+    /// `abilities` gets the same referential check `RestrictedAbilityXp`
+    /// already gets — every named id must resolve.
+    #[test]
+    fn a_replaces_life_stage_xp_naming_an_unknown_ability_fails_the_load() {
+        let err = load_with_effect(
+            r#"{ "type": "replaces_life_stage_xp", "stage": "childhood_spread",
+                 "amount": 120, "abilities": ["ability.no_such_ability"] }"#,
+        )
+        .expect_err("a dangling ability id must fail the load");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("ability.no_such_ability"),
+            "expected an unknown-ability error, got: {msg}"
+        );
+    }
+
+    /// The shipped shapes load clean: Feral Upbringing's flat childhood
+    /// replacement (no `years`) and Redcap's years-carving apprenticeship
+    /// replacement (broad categories, no `abilities`) both load without error.
+    #[test]
+    fn ordinary_replaces_life_stage_xp_effects_load() {
+        assert!(
+            load_with_effect(
+                r#"{ "type": "replaces_life_stage_xp", "stage": "childhood_spread",
+                     "amount": 120, "abilities": ["ability.awareness"] }"#,
+            )
+            .is_ok(),
+            "the Feral Upbringing shape must load"
+        );
+        assert!(
+            load_with_effect(
+                r#"{ "type": "replaces_life_stage_xp", "stage": "apprenticeship",
+                     "amount": 300, "years": 15, "categories": ["general"] }"#,
+            )
+            .is_ok(),
+            "the Redcap shape must load"
         );
     }
 

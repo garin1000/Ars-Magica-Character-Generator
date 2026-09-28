@@ -258,6 +258,11 @@ restricted-xp-list-separator = ,
 xp-pool-childhood_native_language = Native language
 xp-pool-childhood_spread = Early childhood
 xp-pool-later_life = Later life (Abilities only)
+# D40/D2: an apprenticeship-SHAPED replacement pool (Redcap, Lone Redcap) —
+# distinct from a real magus's own apprenticeship, which funds the general
+# pool and carries no chip of its own (`xp-pool-block-apprenticeship` names a
+# DIFFERENT thing: that pool's own bar row, not this restricted-pool label).
+xp-pool-apprenticeship = Apprenticeship (Abilities only)
 # The Abilities funding switch. Experience either comes from one pool the player
 # enters, or the character's life stages earn it. The switch is not a stored flag:
 # a life-stage plan on the character IS guided funding, so a loaded save lands in
@@ -1169,6 +1174,7 @@ issue-academic_ability_without_scholarly_language = An Academic Ability normally
 issue-life_stage_age_unset = Enter the character's age: later life earns experience per year, so with no age only childhood's blocks can be counted.
 issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, which lasts { $min } years — there are no later-life years to earn experience in.
 issue-life_stage_age_before_gauntlet = No magus is gauntleted at { $age }: the Gauntlet comes no earlier than { $min } — childhood plus fifteen years of apprenticeship.
+issue-life_stage_age_before_truncation = Age { $age } is too young to have completed { $min } years of childhood and apprenticeship-shaped training.
 issue-life_stage_gauntlet_age_after_age = The Gauntlet at { $gauntlet_age } is still ahead of this magus, who is { $age }; the years as a magus are counted forward from the Gauntlet.
 issue-life_stage_lab_seasons_out_of_range = { $seasons } lab seasons is more than the { $max } that { $years } year(s) as a magus can be charged for.
 issue-life_stage_lab_seasons_without_years = { $seasons } lab seasons are recorded, but this character has no years as a magus to work them in.

@@ -518,6 +518,45 @@ was removed as YAGNI (no shipped data used it); D2's replacement pool alone
 enforces Feral's wilderness list and "no Language" rule, for its first five
 years only, so D2's brief does **not** add a second effect to the entry.
 
+**Amendment (2026-09-28, Norbert, D2 phase-2 review), ruling 1 — pool mode.**
+`ReplacesLifeStageXp` applies **only** under `AbilityFunding::LifeStages`
+(`build_flow_pools`'s `if let Some((rules, budget)) = &life_stage_budget`
+branch). In pool mode the player's typed `Entity::xp_pool` total is the
+authority — there is no childhood or apprenticeship *block* for a replacement
+to replace — so adding the Flaw/Virtue's 120/300-XP pool on top would
+double-count experience already inside that typed figure. Both Feral
+Upbringing and the apprenticeship-shaped carriers therefore grant **nothing**
+under pool funding; confirmed by
+`pool_funding_grants_no_replacement_pool_for_feral_or_redcap`
+(`tests/data_integrity.rs`). The pre-existing
+`shipped_xp_granters_add_restricted_pool` test, which checked Feral's pool via
+a bare pool-funded entity (the OLD additive effect worked in every funding
+mode), is updated to assert it under life-stage funding instead.
+
+**Amendment (2026-09-28, Norbert, D2 phase-2 review), ruling 3 — a fourth age
+check, reusing D3's planned code.** A Redcap or Lone Redcap younger than
+`childhood.years` plus the carved apprenticeship years (5 + 15 = 20 against
+the shipped ruleset) must raise a **hard error**, not silently carve fewer
+years than the effect states: `later_life_years`'s `saturating_sub` already
+does not panic, but an impossible timeline (an 18-year-old who has supposedly
+lived 15 years of apprenticeship-shaped training after a 5-year childhood)
+must not pass with no finding at all — the same class of defect as D3's own
+R3-2 (`CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION`, § 4). **Reused, not forked**:
+both checks ask the identical question — "does the training years carved out
+of later life exceed what this character's age could have lived?" — of the
+identical `extra_apprenticeship_years`-derived figure (D2's own carve today;
+D3 widens the SAME helper with a third candidate, `years_completed`, per § 4's
+existing text). `validate_life_stage_age_meets_minimum`
+(`validation/life_stage.rs:149-190`) therefore gains this branch now, ahead of
+D3, as a fourth case (magus / childhood / **carved-training**), gated on
+`extra_apprenticeship_years(entity, ruleset) > 0` rather than on D3's
+not-yet-existing `budget.truncated_training_years` field — D3 will fold its own
+candidate into the same gate/branch when it lands, not add a fifth. Same
+Fluent key (`issue-life_stage_age_before_truncation`, both locales), same
+error severity, same `Experience` phase, same `age`/`min` args. Red test:
+`a_redcap_younger_than_childhood_plus_the_carved_apprenticeship_years_is_an_error`
+(age 18, `min: "20"`).
+
 ### Integrity
 
 | Field | Rejected when |

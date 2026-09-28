@@ -26,6 +26,8 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AffinityArtCost { .. }
         | Effect::RestrictedAbilityXp { .. }
         | Effect::ScaledRestrictedAbilityXp { .. }
+        // D40/D2: a life-stage XP replacement, not a spell-levels contribution.
+        | Effect::ReplacesLifeStageXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         // F-63/C5c: a floor grant, not a spell-levels contribution.
@@ -101,6 +103,10 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AffinityArtCost { .. }
         | Effect::RestrictedAbilityXp { .. }
         | Effect::ScaledRestrictedAbilityXp { .. }
+        // D40/D2: folded in `effective/xp.rs`, not here, or it would
+        // double-count exactly as this file's own `LaterLifeXpRate` comment
+        // warns against.
+        | Effect::ReplacesLifeStageXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         // F-63/C5c: a floor grant, not a general-XP contribution.
@@ -504,6 +510,9 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::AffinityArtCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
                 | Effect::ScaledRestrictedAbilityXp { .. }
+                // D40/D2: not a Spell Mastery Affinity — grants no advancement
+                // multiplier.
+                | Effect::ReplacesLifeStageXp { .. }
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 // F-63/C5c: a floor grant, no advancement Affinity.

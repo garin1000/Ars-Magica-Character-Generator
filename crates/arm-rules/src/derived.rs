@@ -440,6 +440,9 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::GroupAffinityCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
                 | Effect::ScaledRestrictedAbilityXp { .. }
+                // D40/D2: a creation-time life-stage XP replacement, not an
+                // in-play total.
+                | Effect::ReplacesLifeStageXp { .. }
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 // Creation-time floor grant (F-63/C5c), not an in-play total.

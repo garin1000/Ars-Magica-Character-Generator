@@ -100,7 +100,7 @@ pub(crate) fn validate_life_stage_plan(
     // established.
     let budget = rules.budget(entity, ruleset);
 
-    validate_life_stage_age_meets_minimum(entity, rules, magus, budget, issues);
+    validate_life_stage_age_meets_minimum(entity, ruleset, rules, magus, budget, issues);
 
     // "**Hermetic Magi Only (Optional):** Years after apprenticeship"
     // (ArMDE:2216), so the three post-Gauntlet choices are checked for a
@@ -148,6 +148,7 @@ fn validate_life_stage_age_is_set(entity: &Entity, issues: &mut Vec<ValidationIs
 /// still identical and this check sees exactly what it always saw.
 fn validate_life_stage_age_meets_minimum(
     entity: &Entity,
+    ruleset: &Ruleset,
     rules: &LifeStageRules,
     magus: bool,
     budget: Option<LifeStageBudget>,
@@ -156,36 +157,44 @@ fn validate_life_stage_age_meets_minimum(
     let Some(age) = entity.age else {
         return;
     };
-    let (subject_age, min_age) = if magus {
+    // D40/D2 (amendment, ruling 3): a NON-magus carrying an apprenticeship-
+    // shaped `ReplacesLifeStageXp` (Redcap, Lone Redcap) carves its own
+    // `years` out of later life exactly as a magus's apprenticeship does, so
+    // it gets the identical class of floor — reusing the SAME gate
+    // `life_stage.rs::budget()` itself reads (`extra_apprenticeship_years`),
+    // never re-derived. D3 later folds a third candidate into that same
+    // helper rather than adding a fifth branch here.
+    let carved_training_years = crate::life_stage::extra_apprenticeship_years(entity, ruleset);
+    let (subject_age, min_age, code) = if magus {
         (
             budget.map_or(age, |budget| budget.gauntlet_age),
             rules.minimum_gauntlet_age(),
+            ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
+        )
+    } else if carved_training_years > 0 {
+        (
+            age,
+            rules.childhood.years.saturating_add(carved_training_years),
+            ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION,
         )
     } else {
-        (age, rules.childhood.years)
+        (
+            age,
+            rules.childhood.years,
+            ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD,
+        )
     };
     if subject_age < min_age {
-        // Two emit sites rather than one with a computed code, so each names its
-        // own const and phase where the contract-table scanner can read them.
         let issue_args = args([
             ("age", subject_age.to_string()),
             ("min", min_age.to_string()),
         ]);
-        issues.push(if magus {
-            ValidationIssue::error(
-                ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
-                CreationPhase::Experience,
-                issue_args,
-                None,
-            )
-        } else {
-            ValidationIssue::error(
-                ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD,
-                CreationPhase::Experience,
-                issue_args,
-                None,
-            )
-        });
+        issues.push(ValidationIssue::error(
+            code,
+            CreationPhase::Experience,
+            issue_args,
+            None,
+        ));
     }
 }
 

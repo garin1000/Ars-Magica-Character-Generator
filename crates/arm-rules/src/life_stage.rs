@@ -491,15 +491,22 @@ impl LifeStageBudget {
 /// A fixed taxonomy (the rules grant exactly these), so an enum: adding a block is
 /// a compile error until the UI labels it.
 ///
-/// **Apprenticeship is absent, and later life is present.** Whichever block funds
-/// anything the character may learn is the *general* pool and needs no slug: for a
-/// magus that is apprenticeship, whose experience "can be spent on Arts or
-/// Abilities" (ArMDE:2435). Later life buys "any **Abilities**" (`ArMDE:2214`,
-/// `ArMDE:2392`) and, for a magus, ends where apprenticeship begins — so it is a
-/// restricted pool of its own, listed here. For a grog or companion later life is
-/// still the general pool; the enum names the blocks that *can* be restricted, and
-/// which pools a character actually gets is decided in
-/// [`crate::effective::xp_allocation`].
+/// **A real magus's own apprenticeship is absent, and later life is present.**
+/// Whichever block funds anything the character may learn is the *general*
+/// pool and needs no slug: for a magus that is apprenticeship, whose
+/// experience "can be spent on Arts or Abilities" (ArMDE:2435). Later life
+/// buys "any **Abilities**" (`ArMDE:2214`, `ArMDE:2392`) and, for a magus,
+/// ends where apprenticeship begins — so it is a restricted pool of its own,
+/// listed here. For a grog or companion later life is still the general pool;
+/// the enum names the blocks that *can* be restricted, and which pools a
+/// character actually gets is decided in [`crate::effective::xp_allocation`].
+///
+/// [`Self::Apprenticeship`] (D40/D2) is a DIFFERENT thing from a real magus's
+/// own apprenticeship, which is why the paragraph above still holds: it is a
+/// replacement-effect-driven, apprenticeship-*shaped* restricted pool for a
+/// character who is NOT hermetically trained by profile (Redcap, Lone
+/// Redcap), so unlike a magus's own it does need a slug — it does not fund
+/// anything the character may learn (Arts included), only Abilities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LifeStageBlock {
@@ -507,20 +514,31 @@ pub enum LifeStageBlock {
     /// language instance (ArMDE:2378).
     ChildhoodNativeLanguage,
     /// Childhood's restricted spread: spendable only on the childhood Ability list,
-    /// and never on the native language (`ArMDE:2378`).
+    /// and never on the native language (`ArMDE:2378`). Also carries a Feral
+    /// Upbringing character's whole-childhood replacement (D40/D2): the same
+    /// tag, reused rather than a fourth one, since the replacement pool is
+    /// exactly this shape (no native-language carve-out) with a different
+    /// eligibility list.
     ChildhoodSpread,
     /// Later life: for a magus, the years before apprenticeship, spendable on
     /// Abilities alone and never on an Art (`ArMDE:2214`, `ArMDE:2392`).
     LaterLife,
+    /// A replacement-effect-driven, apprenticeship-shaped block for a
+    /// character who is NOT hermetically trained by profile (Redcap, Lone
+    /// Redcap) — distinct from a real magus's own apprenticeship, which
+    /// needs no slug of its own (it folds straight into the general pool;
+    /// see [`LifeStageBudget::apprenticeship_xp`]'s own doc comment). D40/D2.
+    Apprenticeship,
 }
 
 impl LifeStageBlock {
     /// Every block, the single source of the set (the UI's labels are checked
     /// against it).
-    pub const ALL: [LifeStageBlock; 3] = [
+    pub const ALL: [LifeStageBlock; 4] = [
         LifeStageBlock::ChildhoodNativeLanguage,
         LifeStageBlock::ChildhoodSpread,
         LifeStageBlock::LaterLife,
+        LifeStageBlock::Apprenticeship,
     ];
 }
 
@@ -530,8 +548,36 @@ impl fmt::Display for LifeStageBlock {
             LifeStageBlock::ChildhoodNativeLanguage => "childhood_native_language",
             LifeStageBlock::ChildhoodSpread => "childhood_spread",
             LifeStageBlock::LaterLife => "later_life",
+            LifeStageBlock::Apprenticeship => "apprenticeship",
         })
     }
+}
+
+/// D40/D2's years-carving replacement (Redcap, Lone Redcap): the largest
+/// `years` named by any effective selection's `Effect::ReplacesLifeStageXp{
+/// stage: Apprenticeship, years, ..}` — 0 when none carries one. D3 widens
+/// this SAME function with a third candidate (`years_completed`); a shipped
+/// ruleset never grants two such carriers to one character, so `.max()`
+/// (not summing) is defensive rather than load-bearing today. `pub(crate)`:
+/// also read by the fourth branch of
+/// `validation/life_stage.rs::validate_life_stage_age_meets_minimum` (the
+/// reused `CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION`), which gates on the
+/// identical figure rather than re-deriving it.
+pub(crate) fn extra_apprenticeship_years(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    selections_for_effects(entity, ruleset)
+        .iter()
+        .filter_map(|selection| ruleset.point_items.get(&selection.item_ref))
+        .flat_map(|item| &item.effects)
+        .filter_map(|effect| match effect {
+            Effect::ReplacesLifeStageXp {
+                stage: LifeStageBlock::Apprenticeship,
+                years,
+                ..
+            } => Some(*years),
+            _ => None,
+        })
+        .max()
+        .unwrap_or(0)
 }
 
 impl LifeStageRules {
@@ -573,7 +619,21 @@ impl LifeStageRules {
         }
         let plan = entity.life_stages.as_ref()?;
         let apprenticeship = self.apprenticeship_of(entity, ruleset);
-        let apprenticeship_years = apprenticeship.map_or(0, |block| block.years);
+        // F2 (`docs/vf-audit/design-d0-xp-modes.md` § 3): sourced ONLY from a
+        // real magus's own block — this is what the struct field below and
+        // `apprenticeship_xp` both read, and it must keep meaning exactly
+        // what its doc comment states ("15 for a magus, 0 for anyone else")
+        // for a D2/D3 carrier too.
+        let magus_apprenticeship_years = apprenticeship.map_or(0, |block| block.years);
+        // A SEPARATE, struct-field-BLIND local: widened by an
+        // apprenticeship-shaped `ReplacesLifeStageXp` replacement (Redcap,
+        // Lone Redcap), which carves its own years out of later life exactly
+        // as a real magus's apprenticeship does. `.max()`, not
+        // `.saturating_add()` — mutually exclusive in practice, since
+        // nothing in the catalogue lets a character be both. Feeds ONLY
+        // `later_life_years` below.
+        let later_life_carve_years =
+            magus_apprenticeship_years.max(extra_apprenticeship_years(entity, ruleset));
         // "**Hermetic Magi Only (Optional):** Years after apprenticeship"
         // (ArMDE:2216), so the stored
         // Gauntlet age is read for a character that serves an apprenticeship and
@@ -600,7 +660,7 @@ impl LifeStageRules {
                 .and_then(|block| plan.gauntlet_age.or(block.default_gauntlet_age))
                 .map_or(age, |gauntlet| gauntlet.min(age))
         });
-        let later_life_years = self.later_life_years(gauntlet_age, apprenticeship_years);
+        let later_life_years = self.later_life_years(gauntlet_age, later_life_carve_years);
         let later_life_rate = self.later_life_rate(entity, ruleset);
         let post_gauntlet_years = entity.age.unwrap_or(0).saturating_sub(gauntlet_age);
         let post_gauntlet_points = self.post_gauntlet_points(plan, post_gauntlet_years);
@@ -615,7 +675,7 @@ impl LifeStageRules {
             later_life_years,
             later_life_rate,
             later_life_xp: later_life_years.saturating_mul(later_life_rate),
-            apprenticeship_years,
+            apprenticeship_years: magus_apprenticeship_years,
             // Apprenticeship is a fixed block like childhood, so it does not scale
             // with an age; 0 for anyone who serves none.
             apprenticeship_xp: apprenticeship.map_or(0, |block| block.xp),
@@ -1221,6 +1281,89 @@ mod tests {
         assert_eq!(budget.later_life_years, 0);
         assert_eq!(budget.later_life_xp, 0);
         assert_eq!(budget.total(), 360);
+    }
+
+    // --- D40/D2: the apprenticeship-shaped replacement (Redcap, Lone Redcap) --
+
+    /// A ruleset carrying one companion-shaped Virtue with a
+    /// `replaces_life_stage_xp` effect naming `apprenticeship` — the shape
+    /// `virtue.redcap`/`virtue.lone_redcap` will ship, with `years`/`amount`
+    /// left as constructor arguments so the crafted-maximum-values red can
+    /// reuse the same fixture.
+    fn apprenticeship_replacement_ruleset(years: u32, amount: u32) -> Ruleset {
+        let items = format!(
+            r#"[
+              {{ "id": "virtue.test_redcap", "kind": "virtue", "classification": "creation_effect",
+                 "magnitude": "major", "categories": ["social_status"], "entity_kinds": ["character"],
+                 "effects": [{{ "type": "replaces_life_stage_xp", "stage": "apprenticeship",
+                                "amount": {amount}, "years": {years},
+                                "categories": ["academic", "arcane", "general", "martial", "supernatural"] }}] }},
+              {{ "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+                 "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }}
+            ]"#
+        );
+        let types = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "academic", "arcane", "martial", "supernatural"],
+            "creation_phases": [] }
+        ]"#;
+        Ruleset::from_json("test", "1", &items, types).unwrap()
+    }
+
+    /// D40/D2's F2 fix: an apprenticeship-shaped replacement carves its own
+    /// `years` out of later life exactly as a real magus's apprenticeship
+    /// does, while `LifeStageBudget.apprenticeship_years` — documented "15
+    /// for a magus, 0 for anyone else" — stays 0 for this NON-hermetically-
+    /// trained-by-profile carrier: the widened local feeds `later_life_years`
+    /// alone, never that struct field. A 25-year-old Redcap-shaped companion
+    /// therefore has 5 years of later life left (25 − 5 childhood − 15
+    /// carved), at 15/year = 75.
+    #[test]
+    fn an_apprenticeship_shaped_replacement_carves_later_life_but_not_the_struct_field() {
+        let rs = apprenticeship_replacement_ruleset(15, 300);
+        let mut entity = companion(vec!["virtue.test_redcap"]);
+        entity.age = Some(25);
+        entity.life_stages = Some(LifeStagePlan::default());
+
+        let budget = rules()
+            .budget(&entity, &rs)
+            .expect("a companion with a plan");
+        assert_eq!(
+            budget.later_life_years, 5,
+            "25 - 5 (childhood) - 15 (carved) = 5"
+        );
+        assert_eq!(budget.later_life_xp, 75);
+        assert_eq!(
+            budget.apprenticeship_years, 0,
+            "NOT a real magus's own apprenticeship — the struct field keeps its \
+             documented meaning"
+        );
+        assert_eq!(budget.apprenticeship_xp, 0);
+    }
+
+    /// F3-style robustness (the design note's "crafted-maximum-values" red):
+    /// a ruleset-authored `years`/`amount` at `u32::MAX` — the parameter has
+    /// no runtime bound of its own the way D3's `years_completed` does, since
+    /// `years`/`amount` here are fixed, ruleset-authored numbers, not a
+    /// player-facing parameter — must saturate rather than panic under
+    /// `overflow-checks = true` (the dev/test profile's default, `Cargo.
+    /// toml:17-26`'s own reasoning for why release enables it too).
+    #[test]
+    fn an_apprenticeship_shaped_replacement_at_u32_max_saturates_without_panicking() {
+        let rs = apprenticeship_replacement_ruleset(u32::MAX, u32::MAX);
+        let mut entity = companion(vec!["virtue.test_redcap"]);
+        entity.age = Some(25);
+        entity.life_stages = Some(LifeStagePlan::default());
+
+        let budget = rules()
+            .budget(&entity, &rs)
+            .expect("a companion with a plan");
+        assert_eq!(
+            budget.later_life_years, 0,
+            "later life saturates to 0 rather than underflowing"
+        );
+        assert_eq!(budget.later_life_xp, 0);
+        assert_eq!(budget.apprenticeship_years, 0);
     }
 
     // --- life as a magus after the Gauntlet (M6/6b5) -------------------------

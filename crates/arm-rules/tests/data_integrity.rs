@@ -3019,7 +3019,7 @@ fn shipped_supernatural_virtues_grant_starting_score() {
 #[test]
 fn shipped_xp_granters_add_restricted_pool() {
     use arm_rules::restricted_xp_pools;
-    let rs = load_ruleset();
+    let rs = load_ruleset_with_spells();
     // Arcane Lore → +50 XP restricted to Arcane abilities (ArMDE:3432).
     let e = entity(
         "companion",
@@ -3032,16 +3032,23 @@ fn shipped_xp_granters_add_restricted_pool() {
             .any(|p| p.amount == 50 && p.categories.contains(&AbilityCategory::Arcane)),
         "Arcane Lore grants a 50-xp Arcane-restricted pool",
     );
-    // Feral Upbringing → 120 XP on a fixed ability list (ArMDE:6112).
-    let fu = entity(
+    // Feral Upbringing → 120 XP on a fixed ability list (ArMDE:6112) — a
+    // life-stage-block REPLACEMENT (D40/D2/D0-Rev-2026-09-28 ruling 1), so it
+    // only manifests under life-stage funding: in pool mode there is no
+    // childhood block to replace (see `pool_funding_grants_no_replacement_
+    // pool_for_feral_or_redcap` below).
+    let mut fu = entity(
         "companion",
         vec![Selection::new(Id::new("flaw.feral_upbringing"))],
     );
+    fu.ability_funding = AbilityFunding::LifeStages;
+    fu.age = Some(20);
+    fu.life_stages = Some(LifeStagePlan::default());
     assert!(
         restricted_xp_pools(&fu, &rs)
             .iter()
             .any(|p| p.amount == 120),
-        "Feral Upbringing grants a 120-xp restricted pool",
+        "Feral Upbringing grants a 120-xp restricted pool under life-stage funding",
     );
 }
 
@@ -6096,6 +6103,324 @@ fn from_normal_budget_does_not_bypass_the_existing_ability_list_integrity_check(
         message.contains("ability.no_such_ability"),
         "the error must name the offending id: {message}"
     );
+}
+
+// --- D2 (D40): the replacement effect (Feral Upbringing, Redcap, Lone Redcap) --
+
+/// ArMDE:6110-6113: Feral Upbringing's 120 XP REPLACES the standard childhood
+/// block, it does not add to it (F-428). The shipped shape today is still the
+/// pre-D2 additive `restricted_ability_xp` — this must become
+/// `replaces_life_stage_xp` naming `childhood_spread`.
+#[test]
+fn feral_upbringing_ships_the_replacement_effect_shape() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("flaw.feral_upbringing"))
+        .expect("flaw.feral_upbringing must ship");
+    assert_eq!(item.classification, Classification::CreationEffect);
+    assert!(
+        item.effects.contains(&Effect::ReplacesLifeStageXp {
+            stage: LifeStageBlock::ChildhoodSpread,
+            amount: 120,
+            abilities: vec![
+                Id::new("ability.animal_handling"),
+                Id::new("ability.area_lore"),
+                Id::new("ability.athletics"),
+                Id::new("ability.awareness"),
+                Id::new("ability.brawl"),
+                Id::new("ability.hunt"),
+                Id::new("ability.stealth"),
+                Id::new("ability.survival"),
+                Id::new("ability.swim"),
+            ],
+            categories: Vec::new(),
+            years: 0,
+        }),
+        "flaw.feral_upbringing's effects do not match ArMDE:6110-6113: {:?}",
+        item.effects
+    );
+}
+
+/// ArMDE:4842-4851, :4848: "You have spent fifteen years as an apprentice,
+/// and gained a total of 300 experience points in those fifteen years" — the
+/// shipped Virtue ships NO XP effect at all today (D17's "second defect").
+#[test]
+fn redcap_ships_the_replacement_effect_shape() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("virtue.redcap"))
+        .expect("virtue.redcap must ship");
+    assert_eq!(item.classification, Classification::CreationEffect);
+    assert!(
+        item.effects.contains(&Effect::ReplacesLifeStageXp {
+            stage: LifeStageBlock::Apprenticeship,
+            amount: 300,
+            abilities: Vec::new(),
+            categories: vec![
+                AbilityCategory::Academic,
+                AbilityCategory::Arcane,
+                AbilityCategory::General,
+                AbilityCategory::Martial,
+                AbilityCategory::Supernatural,
+            ],
+            years: 15,
+        }),
+        "virtue.redcap's effects do not match ArMDE:4848: {:?}",
+        item.effects
+    );
+}
+
+/// ArMDE:4319-4326, :4321: "You still begin with 300 experience points for
+/// your fifteen years spent as an apprentice" — the shipped Virtue ships the
+/// pre-D2 additive `restricted_ability_xp` today (F-439).
+#[test]
+fn lone_redcap_ships_the_replacement_effect_shape() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("virtue.lone_redcap"))
+        .expect("virtue.lone_redcap must ship");
+    assert_eq!(item.classification, Classification::CreationEffect);
+    assert!(
+        item.effects.contains(&Effect::ReplacesLifeStageXp {
+            stage: LifeStageBlock::Apprenticeship,
+            amount: 300,
+            abilities: Vec::new(),
+            categories: vec![
+                AbilityCategory::Academic,
+                AbilityCategory::Arcane,
+                AbilityCategory::General,
+                AbilityCategory::Martial,
+                AbilityCategory::Supernatural,
+            ],
+            years: 15,
+        }),
+        "virtue.lone_redcap's effects do not match ArMDE:4321: {:?}",
+        item.effects
+    );
+    assert!(
+        item.effects.contains(&Effect::GrantsReputation {
+            kind: Some(ReputationType::Hermetic),
+            score: 2,
+            max_score: None,
+            gate: None,
+        }),
+        "the Hermetic Reputation grant must survive the fix untouched: {:?}",
+        item.effects
+    );
+}
+
+/// F-428: a Feral-Upbringing-shaped companion's whole childhood is 120 XP,
+/// never the standard 120 PLUS an additive 120 (240). No separate
+/// native-language pool either — ArMDE:6112's "may not start with a score in
+/// a Language".
+#[test]
+fn feral_upbringing_childhood_totals_120_not_240() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.feral_upbringing"))],
+    );
+    e.ability_funding = AbilityFunding::LifeStages;
+    e.age = Some(20);
+    e.life_stages = Some(LifeStagePlan::default());
+
+    let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
+    let childhood_pools: Vec<_> = allocation
+        .restricted
+        .iter()
+        .filter(|p| {
+            matches!(
+                p.origin,
+                XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::ChildhoodNativeLanguage
+                        | LifeStageBlock::ChildhoodSpread
+                }
+            )
+        })
+        .collect();
+    assert_eq!(
+        childhood_pools.len(),
+        1,
+        "exactly one collapsed childhood pool: {childhood_pools:?}"
+    );
+    assert_eq!(childhood_pools[0].amount, 120);
+    assert!(
+        !allocation.restricted.iter().any(|p| matches!(
+            &p.origin,
+            XpPoolOrigin::Item { item } if *item == Id::new("flaw.feral_upbringing")
+        )),
+        "no separate additive grant may survive beside the replacement: {:?}",
+        allocation.restricted
+    );
+}
+
+/// F-439/D17: a 25-year-old Redcap-shaped companion's total budget is
+/// 495 (120 childhood + 300 apprenticeship + 75 later life), never 720 — the
+/// design note's own worked example, checked against BOTH shipped carriers.
+#[test]
+fn redcap_and_lone_redcap_total_budget_is_495_not_720() {
+    let rs = load_ruleset_with_spells();
+    for carrier in ["virtue.redcap", "virtue.lone_redcap"] {
+        let mut e = entity("companion", vec![Selection::new(Id::new(carrier))]);
+        e.ability_funding = AbilityFunding::LifeStages;
+        e.age = Some(25);
+        e.life_stages = Some(LifeStagePlan {
+            native_language: Some("German".to_string()),
+            ..LifeStagePlan::default()
+        });
+
+        let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
+        assert_eq!(
+            allocation.general_pool, 75,
+            "{carrier}: later life alone, 15 years carved: (25 - 5 - 15) x 15 = 75"
+        );
+        let apprenticeship_pool = allocation
+            .restricted
+            .iter()
+            .find(|p| {
+                matches!(
+                    p.origin,
+                    XpPoolOrigin::LifeStage {
+                        block: LifeStageBlock::Apprenticeship
+                    }
+                )
+            })
+            .unwrap_or_else(|| panic!("{carrier}: an apprenticeship-shaped pool must exist"));
+        assert_eq!(apprenticeship_pool.amount, 300, "{carrier}");
+        let childhood_total: u32 = allocation
+            .restricted
+            .iter()
+            .filter(|p| {
+                matches!(
+                    p.origin,
+                    XpPoolOrigin::LifeStage {
+                        block: LifeStageBlock::ChildhoodNativeLanguage
+                            | LifeStageBlock::ChildhoodSpread
+                    }
+                )
+            })
+            .map(|p| p.amount)
+            .sum();
+        assert_eq!(
+            allocation.general_pool + apprenticeship_pool.amount + childhood_total,
+            495,
+            "{carrier}: 120 + 300 + 75 = 495, never 720"
+        );
+    }
+}
+
+/// Norbert's ruling (D0 § D2 amendment, dated 2026-09-28), reading (a):
+/// `ReplacesLifeStageXp` applies ONLY under `AbilityFunding::LifeStages`. In
+/// pool mode the player's typed `xp_pool` total is the authority, and a Feral
+/// or Redcap-shaped 120/300-XP pool on top would double-count experience
+/// already inside that typed total — there is no childhood or apprenticeship
+/// BLOCK in pool mode for the effect to replace. Both carriers must grant
+/// NOTHING when the entity is pool-funded (the default `ability_funding`, and
+/// what `entity()` builds).
+#[test]
+fn pool_funding_grants_no_replacement_pool_for_feral_or_redcap() {
+    use arm_rules::restricted_xp_pools;
+    let rs = load_ruleset_with_spells();
+
+    let feral = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.feral_upbringing"))],
+    );
+    assert_eq!(
+        restricted_xp_pools(&feral, &rs),
+        Vec::new(),
+        "pool-funded Feral Upbringing must grant no pool at all: {:?}",
+        restricted_xp_pools(&feral, &rs)
+    );
+
+    let redcap = entity("companion", vec![Selection::new(Id::new("virtue.redcap"))]);
+    assert!(
+        !restricted_xp_pools(&redcap, &rs).iter().any(|p| matches!(
+            p.origin,
+            XpPoolOrigin::LifeStage {
+                block: LifeStageBlock::Apprenticeship
+            }
+        )),
+        "pool-funded Redcap must grant no apprenticeship-shaped pool: {:?}",
+        restricted_xp_pools(&redcap, &rs)
+    );
+}
+
+/// Norbert's ruling: Redcaps are companions (ArMDE:2279) whose apprenticeship
+/// is a FIXED 300 XP over fifteen years (ArMDE:4848, :4321) — never scaled by
+/// Wealthy/Poor's rate, which only touches ordinary later life. A Lone Redcap
+/// with Wealthy therefore has its 300-XP apprenticeship pool untouched, and
+/// its remaining later-life years (age 25: 20 total − 15 carved = 5) at the
+/// RAISED rate of 20/year (100 XP), not the base 15/year.
+#[test]
+fn lone_redcap_apprenticeship_is_flat_and_later_life_uses_wealthys_rate() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("virtue.lone_redcap")),
+            Selection::new(Id::new("virtue.wealthy")),
+        ],
+    );
+    e.ability_funding = AbilityFunding::LifeStages;
+    e.age = Some(25);
+    e.life_stages = Some(LifeStagePlan::default());
+
+    let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
+    assert_eq!(
+        allocation.general_pool, 100,
+        "5 later-life years x Wealthy's 20/year = 100, not the base 15/year"
+    );
+    let apprenticeship_pool = allocation
+        .restricted
+        .iter()
+        .find(|p| {
+            matches!(
+                p.origin,
+                XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::Apprenticeship
+                }
+            )
+        })
+        .expect("the apprenticeship-shaped pool must exist");
+    assert_eq!(
+        apprenticeship_pool.amount, 300,
+        "the fixed 300 XP is unaffected by Wealthy's rate"
+    );
+}
+
+/// Norbert's ruling: a Redcap or Lone Redcap younger than childhood plus the
+/// carved apprenticeship years (5 + 15 = 20 for the shipped ruleset) must
+/// raise a hard error, not silently carve fewer years than the effect states
+/// — the same class of defect D3's own `CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION`
+/// exists to catch (D0 Rev 4, R3-2), reused here rather than forked: both are
+/// "training years carved from later life exceed what this character's age
+/// could have lived." RED today: nothing checks this, so an 18-year-old
+/// Redcap's `later_life_years` simply saturates to 0 with no finding.
+#[test]
+fn a_redcap_younger_than_childhood_plus_the_carved_apprenticeship_years_is_an_error() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity("companion", vec![Selection::new(Id::new("virtue.redcap"))]);
+    e.ability_funding = AbilityFunding::LifeStages;
+    e.age = Some(18);
+    e.life_stages = Some(LifeStagePlan::default());
+
+    let result = validate(&e, &rs);
+    let issue = result
+        .issues
+        .iter()
+        .find(|i| i.code == "life_stage_age_before_truncation")
+        .unwrap_or_else(|| {
+            panic!(
+                "an 18-year-old Redcap cannot have lived 5 years of childhood plus 15 \
+                 carved years of apprenticeship-shaped training: {:?}",
+                result.issues
+            )
+        });
+    assert_eq!(issue.severity, arm_rules::IssueSeverity::Error);
+    assert_eq!(issue.phase, CreationPhase::Experience);
+    assert_eq!(issue.args.get("age").map(String::as_str), Some("18"));
+    assert_eq!(issue.args.get("min").map(String::as_str), Some("20"));
 }
 
 /// ":3845" — "You may not have The Gift, but if your Gift was not completely

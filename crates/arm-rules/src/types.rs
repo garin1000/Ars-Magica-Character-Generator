@@ -14,7 +14,7 @@ use std::fmt;
 use crate::ability::AbilityCategory;
 use crate::aging::CrisisSeverity;
 use crate::characteristics::Characteristic;
-use crate::life_stage::LifeStagePlan;
+use crate::life_stage::{LifeStageBlock, LifeStagePlan};
 // The save-migration subsystem lives in `migration.rs`; `Entity::new` stamps the
 // version, and the doc comments here link to it.
 pub(crate) use crate::migration::SCHEMA_VERSION;
@@ -1434,6 +1434,41 @@ pub enum Effect {
         /// Eligible ability categories, unscoped.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         categories: Vec<AbilityCategory>,
+    },
+    /// D40 (`docs/vf-audit/decisions.md` D40): replaces a named life-stage
+    /// block's normal grant with a different total and eligibility, rather
+    /// than adding to it — `flaw.feral_upbringing` (ArMDE:6110-6113) and
+    /// `virtue.redcap`/`virtue.lone_redcap` (ArMDE:4842-4851, :4319-4326) each
+    /// shipped their own bug (F-428/F-439) from reusing the additive
+    /// [`Self::RestrictedAbilityXp`] for a passage that replaces a block
+    /// instead. Consumed differently per `stage` — see
+    /// `life_stage::LifeStageRules::budget`/`effective::xp::build_flow_pools`
+    /// — exactly as [`LifeStageBlock`]'s three pre-existing variants already
+    /// are (`childhood_native_language_pool`/`childhood_spread_pool`/
+    /// `magus_later_life_pool`, three separate functions sharing one enum).
+    ReplacesLifeStageXp {
+        /// Which block this replaces.
+        stage: LifeStageBlock,
+        /// The replacement's total XP.
+        amount: u32,
+        /// Eligible ability ids (empty when eligibility is purely by category —
+        /// Redcap/Lone Redcap name only categories).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        abilities: Vec<Id>,
+        /// Eligible ability categories (empty when eligibility is purely by
+        /// id — Feral Upbringing names only ids).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        categories: Vec<AbilityCategory>,
+        /// Years carved out of later life in place of this block — meaningful
+        /// ONLY for [`LifeStageBlock::Apprenticeship`]; `0` (skipped) for a
+        /// flat block replacement (childhood), which does not touch any span.
+        /// Authored per entry rather than derived from the ruleset's own magus
+        /// `ApprenticeshipRules.years`, because the carrier's OWN passage
+        /// states its span independently (ArMDE:4321: "your fifteen years")
+        /// and a companion-shaped ruleset need not ship a magus block at all
+        /// for this effect to be well-formed.
+        #[serde(default, skip_serializing_if = "is_zero")]
+        years: u32,
     },
     /// Adjusts the Characteristic-buy budget by `amount` (on top of
     /// [`crate::characteristics::CharacteristicRules::start_points`]). Signed:

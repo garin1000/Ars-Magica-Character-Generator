@@ -3284,6 +3284,104 @@ equal footing (`docs/vf-audit/design-d0-xp-modes.md` § 2).
 - The Flaw's own escape clause ("unless the character has a Virtue that
   permits it") is **not modelled** — text only, in `description`, both locales.
 
+#### Feral Upbringing, Redcap, Lone Redcap — replacing a life-stage block (D40, D2)
+
+A **fourth** XP mode, distinct from the additive grants and the D13 earmark
+above: these three REPLACE a named life-stage block's own normal grant with a
+different total and eligibility, rather than adding to it. The pre-D2 data
+shipped all three as additive `RestrictedAbilityXp` grants stacked on top of
+the standard block, over-funding the character (F-428, F-439). Modelled as
+`Effect::ReplacesLifeStageXp { stage, amount, abilities, categories, years }`,
+naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
+`effective/xp.rs::build_flow_pools` rather than `restricted_ability_xp_pools`
+(`docs/vf-audit/design-d0-xp-modes.md` § 3).
+
+> "You grew up in the wilderness … You may only choose beginning Abilities
+> that you could have learned in the wilds. In particular, you may not start
+> with a score in a Language. In your first five years you gain 120
+> experience points, which must be split between (Area) Lore, Animal
+> Handling, Athletics, Awareness, Brawl, Hunt, Stealth, Survival, and Swim."
+
+- Source: `ArMDE:6110-6113` (Feral Upbringing).
+- Data: `rules/core/virtues_flaws.json` `flaw.feral_upbringing` —
+  `effects: [{ replaces_life_stage_xp, stage: childhood_spread, amount: 120,
+  abilities: [the nine names above] }]`. `years` absent (0): a flat block
+  replacement never carves a span.
+- Implementation: `build_flow_pools` skips BOTH ordinary childhood pools
+  (native-language and spread) when a `ChildhoodSpread`-stage replacement is
+  present, and pushes exactly ONE `FlowPool` from the replacement's own
+  `amount`/`abilities`, tagged `origin: LifeStage{block: ChildhoodSpread}` —
+  the SAME tag the ordinary spread pool uses (reuses `XpBar.svelte`'s existing
+  "spread-only" display branch, zero new UI). No native-language pool at all,
+  matching "may not start with a score in a Language" — structural, not merely
+  "nobody set one" (proved by
+  `a_feral_upbringing_companion_with_a_native_language_set_still_gets_no_native_pool`,
+  `crates/arm-rules/src/effective.rs`).
+- **D63 (Norbert, 2026-09-28):** the wilderness list and "no Language" rule
+  bind ONLY this 120-XP first-five-years pool, never later life — a Feral
+  character still funds Latin (or any other Ability) from ordinary later-life
+  general XP, and Church Upbringing's earmark (D13/D1) composes with it
+  unchanged, capped against that same general pool.
+- **Pool-mode scoping (Norbert, 2026-09-28):** the replacement fires only
+  under `AbilityFunding::LifeStages` (`build_flow_pools`'s life-stage-budget
+  branch) — under pool/direct-entry funding there is no childhood block to
+  replace, so the character's typed `xp_pool` is the sole authority and the
+  Flaw grants nothing extra. See
+  `pool_funding_grants_no_replacement_pool_for_feral_or_redcap`
+  (`tests/data_integrity.rs`).
+
+> "You are trained in a similar manner to magi, and may take Academic,
+> Arcane, and Martial Abilities during character generation. You have spent
+> fifteen years as an apprentice, and gained a total of 300 experience points
+> in those fifteen years. … You must spend two seasons per year delivering
+> messages for the Order."
+
+- Source: Redcap `ArMDE:4842-4851, :4848`; Lone Redcap `ArMDE:4319-4326,
+  :4321` ("You still begin with 300 experience points for your fifteen years
+  spent as an apprentice").
+- Data: `rules/core/virtues_flaws.json` `virtue.redcap` (adds
+  `replaces_life_stage_xp` alongside its existing `item_level_budget: 50`) and
+  `virtue.lone_redcap` (replaces its old additive `restricted_ability_xp`) —
+  both `{ replaces_life_stage_xp, stage: apprenticeship, amount: 300,
+  years: 15, categories: [academic, arcane, general, martial, supernatural] }`.
+  Redcaps are companions (ArMDE:2279), never magi, so this is the ONLY place
+  either carries an apprenticeship-shaped block.
+- Implementation: `life_stage.rs::extra_apprenticeship_years` (`pub(crate)`)
+  reads the largest `years` named by any effective `ReplacesLifeStageXp{
+  stage: Apprenticeship, ..}` — 0 when none. `budget()` feeds this into a
+  SEPARATE local, `later_life_carve_years =
+  magus_apprenticeship_years.max(extra_apprenticeship_years(..))`, which goes
+  ONLY into `later_life_years(gauntlet_age, later_life_carve_years)` — never
+  into `LifeStageBudget.apprenticeship_years` itself, which stays sourced from
+  a real magus's own block alone (its doc comment's "15 for a magus, 0 for
+  anyone else" holds for a Redcap too). `build_flow_pools` then pushes the
+  300-XP pool as an ordinary `SOURCE`-fed `FlowPool`
+  (`origin: LifeStage{block: Apprenticeship}`) — never `general`, since
+  ArMDE:4848 excludes Arts. A 25-year-old Redcap/Lone Redcap therefore totals
+  120 (childhood) + 300 (apprenticeship-shaped) + 75 (5 later-life years ×
+  15/year) = 495, never 720 (F-439's over-funded shape) or 420 (Redcap's own
+  previously-unfunded shape).
+- **Wealthy/Poor (Norbert, 2026-09-28):** the 300 XP is a FIXED figure, never
+  scaled by `later_life_rate` — only the ordinary later-life years after the
+  carve are, e.g. a Lone Redcap with Wealthy gets 5 years × 20/year = 100, not
+  15/year. Confirmed by
+  `lone_redcap_apprenticeship_is_flat_and_later_life_uses_wealthys_rate`.
+- **Age check (Norbert, 2026-09-28), reusing D3's own planned code:** a
+  Redcap or Lone Redcap younger than `childhood.years` plus the carved years
+  (5 + 15 = 20 against the shipped ruleset) raises
+  `CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION` (error, `Experience` phase, `age`/
+  `min` args) — the SAME code D3 plans for the truncated-apprenticeship
+  carrier (`docs/vf-audit/design-d0-xp-modes.md` § 4, R3-2), reused rather
+  than forked: both ask "does the training years carved out of later life
+  exceed what this age could have lived?" of the identical
+  `extra_apprenticeship_years`-derived figure.
+  `validate_life_stage_age_meets_minimum` (`validation/life_stage.rs`) gains
+  this as a fourth branch (magus / childhood / **carved-training**), gated on
+  `extra_apprenticeship_years(entity, ruleset) > 0` rather than a
+  not-yet-existing D3 field — D3 will fold its own candidate into the same
+  gate, not add a fifth branch. Fluent: `issue-life_stage_age_before_
+  truncation`, both locales.
+
 #### Improved Characteristics — +3 Characteristic-buy points
 > "You have an additional three points to spend on buying Characteristics … You
 > may take this Virtue multiple times."

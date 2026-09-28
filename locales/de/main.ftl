@@ -271,6 +271,12 @@ restricted-xp-list-separator = ,
 xp-pool-childhood_native_language = Muttersprache
 xp-pool-childhood_spread = Frühe Kindheit
 xp-pool-later_life = Späteres Leben (nur Fertigkeiten)
+# D40/D2: ein lehrlingszeit-FÖRMIGER Ersatzvorrat (Redcap, Lone Redcap) —
+# unterscheidet sich von der echten Lehrlingszeit eines Magiers, die den
+# allgemeinen Vorrat speist und keinen eigenen Chip trägt
+# (`xp-pool-block-apprenticeship` benennt etwas ANDERES: die Zeile dieses
+# Vorrats in der Leiste, nicht dieses Label eines beschränkten Vorrats).
+xp-pool-apprenticeship = Lehrlingszeit (nur Fertigkeiten)
 # Der Umschalter für die Herkunft der Erfahrung der Fertigkeiten. Sie stammt
 # entweder aus einem selbst eingetragenen Vorrat oder aus den Lebensabschnitten des
 # Charakters. Der Umschalter ist kein gespeichertes Kennzeichen: ein Plan der
@@ -1236,6 +1242,7 @@ issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit 
 issue-life_stage_age_unset = Trage das Alter des Charakters ein: das spätere Leben erbringt Erfahrungspunkte pro Jahr, ohne Alter zählen daher nur die Blöcke der Kindheit.
 issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindheit, die { $min } Jahre dauert — es gibt keine späteren Lebensjahre, in denen Erfahrung erworben wird.
 issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit { $age } Jahren ab: Sie kommt frühestens mit { $min } — Kindheit plus fünfzehn Jahre Lehrlingszeit.
+issue-life_stage_age_before_truncation = Alter { $age } ist zu jung, um { $min } Jahre aus Kindheit und lehrlingszeit-förmiger Ausbildung durchlaufen zu haben.
 issue-life_stage_gauntlet_age_after_age = Die Lehrlingsprüfung mit { $gauntlet_age } liegt für diesen Magus mit { $age } Jahren noch in der Zukunft; die Jahre als Magus werden ab der Lehrlingsprüfung gezählt.
 issue-life_stage_lab_seasons_out_of_range = { $seasons } Quartale Laborarbeit sind mehr als die { $max }, die { $years } Jahre als Magus tragen können.
 issue-life_stage_lab_seasons_without_years = { $seasons } Quartale Laborarbeit sind eingetragen, aber dieser Charakter hat keine Jahre als Magus, in denen sie stattfinden könnten.

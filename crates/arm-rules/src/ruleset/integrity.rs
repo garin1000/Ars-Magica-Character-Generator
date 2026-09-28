@@ -2475,6 +2475,43 @@ impl Ruleset {
                     );
                     continue;
                 }
+                // D40/D2's integrity table: every named ability id must
+                // resolve (`categories` is the closed enum, serde-checked,
+                // like `RestrictedAbilityXp` above); `years` may be non-zero
+                // ONLY for the `Apprenticeship` stage (a years-carving
+                // replacement), and must NOT be zero there either — a
+                // years-carving replacement with nothing to carve is dead
+                // data.
+                Effect::ReplacesLifeStageXp {
+                    stage,
+                    abilities,
+                    years,
+                    ..
+                } => {
+                    self.validate_ability_list_effect(
+                        abilities,
+                        "replaces_life_stage_xp",
+                        id,
+                        errors,
+                    );
+                    match stage {
+                        LifeStageBlock::Apprenticeship if *years == 0 => {
+                            errors.push(format!(
+                                "{id}: effect 'replaces_life_stage_xp' names stage \
+                                 'apprenticeship' but 'years' is 0 — nothing to carve"
+                            ));
+                        }
+                        LifeStageBlock::Apprenticeship => {}
+                        _ if *years != 0 => {
+                            errors.push(format!(
+                                "{id}: effect 'replaces_life_stage_xp' names stage '{stage}', \
+                                 which does not carve years, but 'years' is {years}"
+                            ));
+                        }
+                        _ => {}
+                    }
+                    continue;
+                }
                 // Fixed group of abilities the Affinity covers (Linguist).
                 Effect::GroupAffinityCost { abilities, .. } => {
                     self.validate_ability_list_effect(abilities, "group_affinity_cost", id, errors);
