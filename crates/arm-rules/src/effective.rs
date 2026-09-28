@@ -31,7 +31,6 @@ use crate::types::{
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
-use std::fmt;
 
 mod ability;
 pub use ability::*;
@@ -40,6 +39,11 @@ pub use art::*;
 mod characteristic;
 pub use characteristic::*;
 mod xp;
+/// Re-exported here rather than defined here: `LifeStageBlock` lives in
+/// `crate::life_stage` (`types.rs` names it as `Effect` data, and `types → life_stage`
+/// is the crate's established dependency direction, never `types → effective`), but
+/// every existing consumer of `effective::LifeStageBlock` keeps resolving unchanged.
+pub use crate::life_stage::LifeStageBlock;
 pub use xp::*;
 mod spell;
 pub use spell::*;

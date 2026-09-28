@@ -198,53 +198,6 @@ pub enum XpPoolOrigin {
     },
 }
 
-/// A block of life-stage experience that funds purchases on its own terms.
-///
-/// A fixed taxonomy (the rules grant exactly these), so an enum: adding a block is
-/// a compile error until the UI labels it.
-///
-/// **Apprenticeship is absent, and later life is present.** Whichever block funds
-/// anything the character may learn is the *general* pool and needs no slug: for a
-/// magus that is apprenticeship, whose experience "can be spent on Arts or
-/// Abilities" (ArMDE:2435). Later life buys "any **Abilities**" (`ArMDE:2214`,
-/// `ArMDE:2392`) and, for a magus, ends where apprenticeship begins — so it is a
-/// restricted pool of its own, listed here. For a grog or companion later life is
-/// still the general pool; the enum names the blocks that *can* be restricted, and
-/// which pools a character actually gets is decided in [`xp_allocation`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum LifeStageBlock {
-    /// Childhood's native-language experience: spendable only on the native
-    /// language instance (ArMDE:2378).
-    ChildhoodNativeLanguage,
-    /// Childhood's restricted spread: spendable only on the childhood Ability list,
-    /// and never on the native language (`ArMDE:2378`).
-    ChildhoodSpread,
-    /// Later life: for a magus, the years before apprenticeship, spendable on
-    /// Abilities alone and never on an Art (`ArMDE:2214`, `ArMDE:2392`).
-    LaterLife,
-}
-
-impl LifeStageBlock {
-    /// Every block, the single source of the set (the UI's labels are checked
-    /// against it).
-    pub const ALL: [LifeStageBlock; 3] = [
-        LifeStageBlock::ChildhoodNativeLanguage,
-        LifeStageBlock::ChildhoodSpread,
-        LifeStageBlock::LaterLife,
-    ];
-}
-
-impl fmt::Display for LifeStageBlock {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            LifeStageBlock::ChildhoodNativeLanguage => "childhood_native_language",
-            LifeStageBlock::ChildhoodSpread => "childhood_spread",
-            LifeStageBlock::LaterLife => "later_life",
-        })
-    }
-}
-
 /// One instance of an ability: the id plus, for a parameterized ability, the
 /// instance value ("Living Language (German)"). Childhood's blocks need this
 /// granularity — the 75 points buy the native language and the 45 may buy any
