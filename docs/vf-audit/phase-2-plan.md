@@ -7,8 +7,9 @@
 (Q1–Q12, Q3b, Q4b, E2, U0), Phase 1S (S1–S4), A0–A2, U6, E1.
 **Status, 2026-09-28:** **Groups C and B done** — C0…C5c (schema 19); B0 note
 (rev. 3, D60), B1–B5; B-boundary e2e 10/10 (one retry: `wizard-flow.e2e.js`
-"warns about unspent experience", a flake to watch). Next: D0 (design note incl.
-D49). Every slice runs under the red-checkpoint protocol. Open: N1, N4–N7.
+"warns about unspent experience", a flake to watch). **Group D done** (D0 rev. 5,
+D1–D3, B1c; D4 dropped by D62; D-boundary e2e 10/10). Next: F0. Every slice runs
+under the red-checkpoint protocol. N1, N4–N7 answered (D65).
 **Added 2026-09-28:** B1c (after D1) removes B1's unused
 `RestrictsAbilityCategoryToAbilities`. D63 moved Feral's whitelist into its
 D2 replacement pool, so the effect has no carrier.
