@@ -438,6 +438,10 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. }
+                // B3/D23/F-542: a narrative Personality-Trait grant, not an
+                // in-play total — consumed only by
+                // `ItemPredicate::GrantsPersonalityTrait`'s derivation.
+                | Effect::GrantsPersonalityTrait
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }

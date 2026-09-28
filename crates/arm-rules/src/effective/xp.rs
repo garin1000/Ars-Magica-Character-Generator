@@ -853,6 +853,9 @@ pub(crate) fn ability_authorizations(
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. }
+                // B3/D23/F-542: consumed only by
+                // `ItemPredicate::GrantsPersonalityTrait`'s derivation.
+                | Effect::GrantsPersonalityTrait
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }

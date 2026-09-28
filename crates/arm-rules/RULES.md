@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1427).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1495).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1226,7 +1226,7 @@ reason: a category condition would license itself.
   express. The same holds for `ForbidsAbilities` above.
 - **All four forbid/restrict effects are consumed by one grant-aware
   validator**: `validation/selections.rs::validate_category_effect_prohibitions`
-  (:277). Grant-aware on both sides (D2): the forbidding item's effect applies
+  (:279). Grant-aware on both sides (D2): the forbidding item's effect applies
   bought or granted, and the forbidden target (an Ability held via
   `entity.ability_scores` or an `AbilityScoreGrant`/`AbilityScoreGrantParam`
   floor, or another V/F selection) is read the same way — closing the F-466
@@ -1704,7 +1704,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :451) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :509) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -4170,6 +4170,70 @@ resolved values); the free Virtue is **derived** at eval by
   category. See `docs/vf-audit/decisions.md` D41 and
   `docs/vf-audit/design-b0-ranging-and-predicates.md`'s 2026-09-27
   amendments.
+
+#### Predicate-valued exclusions (B3/D23/D33) — `ItemPredicate`, `ParameterDef::exclude_if`, `PointItem::excluded_if_holds`
+> "Any Flaw that is only appropriate to Hermetic Magic (for example,
+> Deficient Technique or Unstructured Caster) cannot be taken with this
+> Flaw." (Flawed Powers, imported-Flaw constraint)
+
+> "...can not have the Poor Flaw or any other Flaw that grants a Bad
+> Reputation." (University Dean)
+
+> "...or Virtues or Flaws that grant Personality Traits." (Weak Personality,
+> second clause)
+
+- Source: `ArMDE:6146-6148` (Flawed Powers), `ArMDE:6923-6926` (University
+  Dean), `ArMDE:7076-7079` (Weak Personality, second clause).
+- **The gap.** The book excludes some Flaws by DESCRIPTION — "grants a Bad
+  Reputation", "only appropriate to Hermetic Magic" — where
+  `incompatible_with`/`Effect::ForbidsItemCategory` can only exclude by id or
+  by category (D23). C0 § 7 designed the vocabulary but did not build it; B3
+  builds the enum, both consumer fields, both consumers, and the load-time
+  checks in the same slice (`docs/vf-audit/design-b0-ranging-and-predicates.md`
+  § 1's correction).
+- **`ItemPredicate`** (`types.rs`) — a closed, snake_case-tagged enum:
+  `Trained` (D12's intrinsic/trained classification, reads `PointItem::trained`
+  — populated wholesale by D12's classification pass, X3, not this slice;
+  every shipped item is `false` until then), `GrantsReputation` (derivable:
+  carries an `Effect::GrantsReputation`), `GrantsPersonalityTrait` (derivable:
+  carries the new, FIELDLESS `Effect::GrantsPersonalityTrait` marker —
+  deliberately no `name`/`value`, since a trait's wording is exactly the
+  translatable string `rules/core/` may never carry; the entry's own i18n
+  `description` already states it, and D3 keeps the value itself free text on
+  the entity). `ItemPredicate::holds_for` is the ONE evaluator both consumers
+  below share, so the two mechanisms cannot drift on what a predicate means.
+- **`ParameterDef::exclude_if: Option<ItemPredicate>`** (D33) narrows an
+  `item`-domain parameter by predicate, additive to `require_categories`/
+  `allow_ids`/`forbid_tainted`: a candidate resolves only if it does NOT
+  satisfy the predicate. Flawed Powers' own fix is a D9/D14 instance too (a
+  stated choice nobody recorded) — its own JSON is Phase 3's, once B3's
+  machinery exists. Enforced by
+  `validation/selections.rs::param_value_resolves`'s `Item` domain arm,
+  reported as the existing `unknown_param_value` (the narrowing IS the
+  domain, on `forbid_tainted`'s own precedent).
+- **`PointItem::excluded_if_holds: Vec<ItemPredicate>`** (D23) — a
+  ONE-DIRECTIONAL point-item-level exclusion: this item is illegal while ANY
+  OTHER effective (bought or granted) selection satisfies one of these
+  predicates. `flaw.university_dean`'s worked example:
+  `excluded_if_holds: ["grants_reputation"]` (`Poor` itself stays a plain
+  `incompatible_with` id — it does not "grant a Reputation", it is the OTHER
+  named exclusion). Enforced by
+  `validation/selections.rs::validate_excluded_if_holds` (grant-aware on both
+  sides, D2 — closing the F-466 reachability trap
+  `validate_incompatibilities`/`validate_forbidden_categories` are
+  deliberately bought-only about, B15, the same reach
+  `validate_category_effect_prohibitions` already gives D21's prohibitions —
+  see both functions' doc comments for the cross-reference). New error code
+  `excluded_by_predicate` (args `item`/`other`/`predicate`).
+- **Load-time integrity**: `exclude_if` is rejected on any domain but `item`
+  (`ruleset/integrity.rs::validate_parameter_defs`, on `allow_ids`'s own
+  precedent); `excluded_if_holds`/`exclude_if` values need no further check —
+  `ItemPredicate` is a closed enum, serde-checked at parse time.
+- Fluent: `issue-excluded_by_predicate` — both locales.
+- Tests: `crates/arm-rules/tests/b3_predicate_exclusions.rs` (hand-authored
+  fixtures with invented ids; the real catalogue entries this note names —
+  `flaw.flawed_powers`, `flaw.university_dean`, `flaw.weak_personality` — are
+  Phase 3 data work, not B3's).
 
 #### ≥1 Hermetic Flaw (magus guideline)
 > You should take at least one Hermetic Flaw
@@ -9216,11 +9280,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:746),
-  `validate_forbidden_traits` (:767))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:804),
+  `validate_forbidden_traits` (:825))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:418),
-  `validate_parameters` (:940), `validate_duplicate_selections` (:451))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:476),
+  `validate_parameters` (:1008), `validate_duplicate_selections` (:509))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

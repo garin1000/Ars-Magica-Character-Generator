@@ -936,6 +936,38 @@ pub struct ParameterDef {
     /// a power's name, so the restriction would look enforced and be read by no one.
     #[serde(default, skip_serializing_if = "is_false")]
     pub require_power: bool,
+    /// Narrows a [`ParameterDomain::Item`] parameter by DESCRIPTION rather
+    /// than by category: a value resolves only if the named item does NOT
+    /// satisfy this [`ItemPredicate`]. `None` (the default) leaves every
+    /// other narrowing test as the sole gate, exactly as before this field
+    /// existed.
+    ///
+    /// **D33** (`docs/vf-audit/decisions.md`): `flaw.flawed_powers` imports a
+    /// Major Hermetic Flaw, but "Any Flaw that is only appropriate to
+    /// Hermetic Magic... cannot be taken with this Flaw" (ArMDE:6148) — a
+    /// constraint on WHICH Flaw may be imported, not an incompatibility with
+    /// holding one in one's own right (D33 corrects an earlier reading that
+    /// would have modelled this as an exclusion instead). `exclude_if:
+    /// "trained"` on the imported-Flaw parameter is the fix: [`Self::domain`]
+    /// stays `item` + `require_categories: ["hermetic"]`, and this field
+    /// additionally refuses any candidate for which
+    /// [`ItemPredicate::Trained`] holds.
+    ///
+    /// **Not** the same mechanism as [`Self::allow_ids`] (D34): a whitelist is
+    /// a closed, hand-maintained list of exact ids; this is an open-ended
+    /// computed test over a property the catalogue does not enumerate by id.
+    ///
+    /// Enforced by `validation::selections::param_value_resolves`, on
+    /// [`Self::forbid_tainted`]'s own precedent: the narrowing IS the domain,
+    /// so a value failing this test raises the existing
+    /// [`crate::validation::ValidationIssue::CODE_UNKNOWN_PARAM_VALUE`], not a
+    /// code of its own.
+    ///
+    /// Load-time integrity rejects the field on any domain but `item`, for
+    /// the same reason it rejects a stray [`Self::allow_ids`]: nothing else
+    /// resolves against the point-item catalogue.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exclude_if: Option<ItemPredicate>,
 }
 
 impl ParameterDef {
@@ -954,6 +986,7 @@ impl ParameterDef {
             require_possessed: false,
             forbid_tainted: false,
             require_power: false,
+            exclude_if: None,
         }
     }
 
@@ -971,6 +1004,7 @@ impl ParameterDef {
             require_possessed: false,
             forbid_tainted: false,
             require_power: false,
+            exclude_if: None,
         }
     }
 }
@@ -1626,6 +1660,30 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         max_score: Option<u8>,
     },
+    /// Marks that this item grants (in the book's own narrative sense) a
+    /// Personality Trait — e.g. Berserk's "Angry +2" (Q-resolutions #5) or
+    /// Companion Animal's fixed trait (F-389). **Consumed only by
+    /// [`ItemPredicate::GrantsPersonalityTrait`]'s derivation** (B3/F-542
+    /// clause 2: "Virtues or Flaws that grant Personality Traits" is a
+    /// predicate, not a category — `flaw.weak_personality`'s second clause).
+    /// The trait itself stays player-recorded free text in
+    /// `Entity::personality_traits` (D3): this effect adds no fold of its
+    /// own into that list, on the same "narrative grant, not an engine
+    /// total" precedent every existing "grants a Personality Trait" entry
+    /// already carries as `Classification::UncomputedRule` — the V/F audit's
+    /// batch-11 and batch-19 passes verified directly that no prior `Effect`
+    /// variant modelled this at all, so B3 introduces the shape the
+    /// predicate needs to derive from, without changing how any trait is
+    /// actually recorded.
+    ///
+    /// **A fieldless marker, deliberately** (orchestrator amendment,
+    /// 2026-09-28): the trait's name is exactly the translatable string
+    /// `rules/core/` may never carry (CLAUDE.md, "strict separation of data
+    /// kinds") — its wording already lives in the entry's own i18n
+    /// `description`, and D3 keeps the value itself free text on the entity.
+    /// A `name`/`value` pair here would duplicate that text in the
+    /// language-neutral layer for no consumer's benefit.
+    GrantsPersonalityTrait,
     /// Grants a supernatural **Might Score** of `score` in the given `realm` (base
     /// 0, summed across grants of the same Realm on top of any base the entity
     /// enters). Demonic Blood grants Infernal Might 5; Demonic Might adds +2 more.
@@ -2070,6 +2128,84 @@ pub enum Effect {
         /// `category` while this effect is in force.
         allowed: std::collections::BTreeSet<Id>,
     },
+}
+
+/// A property-based test over a [`PointItem`], for an exclusion the rulebook
+/// states by DESCRIPTION rather than by id ([`PointItem::incompatible_with`])
+/// or by category ([`Effect::ForbidsItemCategory`]) — D23/D33
+/// (`docs/vf-audit/design-c0-parameter-model.md` § 7,
+/// `docs/vf-audit/design-b0-ranging-and-predicates.md` § 2). Shared vocabulary
+/// for BOTH of this family's consumers, so a predicate is spelled once
+/// regardless of which reads it: [`ParameterDef::exclude_if`] (D33, a
+/// parameter-domain narrowing — `flaw.flawed_powers` may only import a Flaw
+/// this predicate does NOT hold for) and [`PointItem::excluded_if_holds`]
+/// (D23, a point-item-level exclusion — `flaw.university_dean` is illegal
+/// while ANY other effective selection this predicate DOES hold for is also
+/// held).
+///
+/// A closed, serde-checked enum (B3's own scope — C0 § 7 designed this
+/// vocabulary but did not build it; verified directly,
+/// `grep -rn "ItemPredicate" crates/arm-rules/src` was empty before this
+/// slice).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ItemPredicate {
+    /// D12's intrinsic/trained classification: an item that "operates on
+    /// Techniques, Forms, spells, Casting/Lab Totals, Parma Magica, certámen
+    /// or Twilight" (Q-138, ArMDE:6146-6148, Flawed Powers — "Any Flaw that
+    /// is only appropriate to Hermetic Magic... cannot be taken with this
+    /// Flaw"). Reads [`PointItem::trained`], which D12's classification pass
+    /// (X3) populates wholesale; every item defaults to `false` until then,
+    /// so this predicate never excludes anything in the SHIPPED catalogue
+    /// today — B3 builds the machinery and proves it against hand-authored
+    /// fixtures that set the flag directly (design-b0 § 1 point 5), not
+    /// against real data.
+    Trained,
+    /// Carries an [`Effect::GrantsReputation`] effect (Q-137,
+    /// `flaw.university_dean`, ArMDE:6923-6926: "can not have the Poor Flaw
+    /// or any other Flaw that grants a Bad Reputation"). Derivable with no
+    /// new data: `item.effects.iter().any(|e| matches!(e,
+    /// Effect::GrantsReputation { .. }))`.
+    GrantsReputation,
+    /// Carries an [`Effect::GrantsPersonalityTrait`] effect (F-542 clause 2,
+    /// `flaw.weak_personality`, ArMDE:7076-7079: "...or Virtues or Flaws that
+    /// grant Personality Traits"). Same derivable shape as
+    /// [`Self::GrantsReputation`], scanning for
+    /// [`Effect::GrantsPersonalityTrait`] instead.
+    GrantsPersonalityTrait,
+}
+
+impl ItemPredicate {
+    /// Whether `item` satisfies this predicate — the ONE evaluator shared by
+    /// [`ParameterDef::exclude_if`] and [`PointItem::excluded_if_holds`]
+    /// (design-c0 § 11's open convergence point, closed here) so the two
+    /// mechanisms cannot drift on what a predicate means.
+    pub(crate) fn holds_for(&self, item: &PointItem) -> bool {
+        match self {
+            ItemPredicate::Trained => item.trained,
+            ItemPredicate::GrantsReputation => item
+                .effects
+                .iter()
+                .any(|e| matches!(e, Effect::GrantsReputation { .. })),
+            ItemPredicate::GrantsPersonalityTrait => item
+                .effects
+                .iter()
+                .any(|e| matches!(e, Effect::GrantsPersonalityTrait)),
+        }
+    }
+}
+
+impl std::fmt::Display for ItemPredicate {
+    /// Renders the same snake_case tag serde uses, for validation-issue
+    /// message arguments (`ValidationIssue::CODE_EXCLUDED_BY_PREDICATE`'s
+    /// `$predicate`), on [`ParameterDomain`]'s own precedent.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ItemPredicate::Trained => f.write_str("trained"),
+            ItemPredicate::GrantsReputation => f.write_str("grants_reputation"),
+            ItemPredicate::GrantsPersonalityTrait => f.write_str("grants_personality_trait"),
+        }
+    }
 }
 
 /// Which spells a [`Effect::CastingTotalMod`] applies to. A fixed rules taxonomy
@@ -2804,6 +2940,21 @@ pub struct PointItem {
     /// Source: ArMDE:2998-3002.
     #[serde(default, skip_serializing_if = "is_false")]
     pub tainted: bool,
+    /// D12's intrinsic/trained classification: `true` when this item
+    /// operates on Techniques, Forms, spells, Casting/Lab Totals, Parma
+    /// Magica, certámen, or Twilight — things that exist only after
+    /// apprenticeship — as opposed to an "intrinsic" item operating on The
+    /// Gift itself. Read by [`ItemPredicate::Trained`] (Q-138/B3,
+    /// `flaw.flawed_powers`'s "only appropriate to Hermetic Magic" import
+    /// constraint).
+    ///
+    /// **Populated wholesale by D12's classification pass (X3), not this
+    /// slice.** `false` (the default) is every shipped item's value today —
+    /// B3 builds the field and the machinery that reads it; hand-authored
+    /// test fixtures set it directly to exercise that machinery ahead of
+    /// X3's real catalogue pass (design-b0 § 1 point 5).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub trained: bool,
     /// Entity kinds this item may be selected for. Empty means any kind.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub entity_kinds: BTreeSet<EntityKind>,
@@ -2835,6 +2986,24 @@ pub struct PointItem {
     /// Items that may not be selected alongside this one (must be symmetric).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub incompatible_with: BTreeSet<Id>,
+    /// This item is illegal while ANY OTHER effective (bought or granted)
+    /// selection satisfies one of these predicates — D23/B3,
+    /// `flaw.university_dean`: "can not have the Poor Flaw or any other Flaw
+    /// that grants a Bad Reputation" names [`ItemPredicate::GrantsReputation`]
+    /// (`Poor` itself is a plain [`Self::incompatible_with`] id; it does not
+    /// "grant a Reputation", it is the OTHER named exclusion).
+    ///
+    /// **One-directional**, unlike [`Self::incompatible_with`]: the 16
+    /// Reputation-granting Flaws need no reciprocal declaration back onto
+    /// themselves. Grant-aware on both sides, exactly like
+    /// `validation::selections::validate_category_effect_prohibitions` (D2,
+    /// closing the F-466 reachability trap
+    /// [`Self::incompatible_with`]/`validate_forbidden_categories` are
+    /// deliberately bought-only about, B15) — whether THIS item is itself in
+    /// effect, and whether the OTHER item satisfying the predicate is present
+    /// at all, are each read bought-or-granted.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub excluded_if_holds: Vec<ItemPredicate>,
     /// Parameter slots a selection of this item must fill.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<ParameterDef>,
@@ -2971,6 +3140,8 @@ struct PointItemRepr {
     #[serde(default)]
     tainted: bool,
     #[serde(default)]
+    trained: bool,
+    #[serde(default)]
     entity_kinds: BTreeSet<EntityKind>,
     #[serde(default)]
     prerequisites: Option<Prereq>,
@@ -2978,6 +3149,8 @@ struct PointItemRepr {
     advisory_prerequisites: Option<Prereq>,
     #[serde(default)]
     incompatible_with: BTreeSet<Id>,
+    #[serde(default)]
+    excluded_if_holds: Vec<ItemPredicate>,
     #[serde(default)]
     parameters: Vec<ParameterDef>,
     #[serde(default)]
@@ -3005,10 +3178,12 @@ impl TryFrom<PointItemRepr> for PointItem {
             index_categories,
             classification,
             tainted,
+            trained,
             entity_kinds,
             prerequisites,
             advisory_prerequisites,
             incompatible_with,
+            excluded_if_holds,
             parameters,
             effects,
             max_per_target,
@@ -3039,10 +3214,12 @@ impl TryFrom<PointItemRepr> for PointItem {
             index_categories,
             classification,
             tainted,
+            trained,
             entity_kinds,
             prerequisites,
             advisory_prerequisites,
             incompatible_with,
+            excluded_if_holds,
             parameters,
             effects,
             max_per_target,

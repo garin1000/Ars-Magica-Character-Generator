@@ -259,7 +259,9 @@ pub(crate) fn validate_forbidden_categories(
 /// `ForbidsItemCategory`, `ForbidsAbilities`, and
 /// `RestrictsAbilityCategoryToAbilities`. See `validate_forbidden_categories`'s
 /// doc comment for why this is a second function rather than folded into
-/// that one.
+/// that one. Distinct from [`validate_excluded_if_holds`] (D23/B3) the same
+/// way: this enforces a category/ability prohibition, that one a PREDICATE
+/// over another item's properties — related axes, not the same one.
 ///
 /// Grant-aware on both sides (D2, design § 4): `selections` is the caller's
 /// folded bought-plus-granted list, so the forbidding item's own effect
@@ -409,6 +411,62 @@ pub(crate) fn validate_category_effect_prohibitions(
                             Some(other.item_ref.clone()),
                         ));
                     }
+                }
+            }
+        }
+    }
+}
+
+/// Enforces `PointItem::excluded_if_holds` (D23/B3, `flaw.university_dean`'s
+/// "can not have the Poor Flaw or any other Flaw that grants a Bad
+/// Reputation", ArMDE:6923-6926): a selection is illegal while ANY OTHER
+/// effective (bought or granted) selection's item satisfies one of the
+/// predicates it declares, evaluated by [`ItemPredicate::holds_for`] (the ONE
+/// evaluator [`ParameterDef::exclude_if`] also uses, so the two mechanisms
+/// cannot drift on what a predicate means).
+///
+/// One-directional and grant-aware on both sides — `selections` is the
+/// caller's folded bought-plus-granted list, so both which selection carries
+/// the exclusion and which OTHER selection satisfies the predicate are read
+/// bought-or-granted, closing the F-466 reachability trap
+/// `validate_incompatibilities`/`validate_forbidden_categories` are
+/// deliberately bought-only about (B15) — the same reach
+/// [`validate_category_effect_prohibitions`] already gives D21's
+/// category/ability prohibitions. Distinct from that function: this enforces
+/// a PREDICATE over another item's properties (D23), not a category/ability
+/// prohibition (D21) — see its own doc comment for the same cross-reference
+/// in the other direction.
+pub(crate) fn validate_excluded_if_holds(
+    ruleset: &Ruleset,
+    selections: &[Selection],
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        if item.excluded_if_holds.is_empty() {
+            continue;
+        }
+        for other in selections {
+            if std::ptr::eq(other, selection) {
+                continue;
+            }
+            let Some(other_item) = ruleset.point_items.get(&other.item_ref) else {
+                continue;
+            };
+            for predicate in &item.excluded_if_holds {
+                if predicate.holds_for(other_item) {
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_EXCLUDED_BY_PREDICATE,
+                        CreationPhase::VirtuesFlaws,
+                        args([
+                            ("item", selection.item_ref.to_string()),
+                            ("other", other.item_ref.to_string()),
+                            ("predicate", predicate.to_string()),
+                        ]),
+                        Some(selection.item_ref.clone()),
+                    ));
                 }
             }
         }
@@ -823,9 +881,19 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // `ArMDE:6082`) — the whitelist widens by id, never by relaxing the
         // Tainted refusal, so `forbid_tainted` still applies to a whitelisted
         // id exactly as it does to a category match.
+        //
+        // `exclude_if` (D33/B3) narrows the SAME domain by description
+        // rather than category: a candidate satisfying the predicate is
+        // refused regardless of which of the two tests above admitted it —
+        // `flaw.flawed_powers`'s imported Flaw must not be `trained`
+        // (ArMDE:6146-6148) even though it already passed
+        // `require_categories: ["hermetic"]`.
         ParameterDomain::Item => ruleset.point_items.get(value).is_some_and(|item| {
             (item_matches_required_categories(item, param) || param.allow_ids.contains(value))
                 && !(param.forbid_tainted && item.tainted)
+                && !param
+                    .exclude_if
+                    .is_some_and(|predicate| predicate.holds_for(item))
         }),
         ParameterDomain::Ability => ruleset.abilities.contains_key(value),
         ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),

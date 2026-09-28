@@ -359,6 +359,10 @@ macro_rules! irrelevant_effect_variants {
         | Effect::CharacteristicScoreDelta { .. }
         | Effect::GroupAffinityCost { .. }
         | Effect::GrantsReputation { .. }
+        // B3/D23/F-542: a narrative Personality-Trait grant, consumed only by
+        // `ItemPredicate::GrantsPersonalityTrait`'s derivation — no score, no
+        // Affinity ratio, no in-play mod.
+        | Effect::GrantsPersonalityTrait
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
         | Effect::FocusPoints { .. }

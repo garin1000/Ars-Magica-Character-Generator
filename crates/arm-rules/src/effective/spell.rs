@@ -47,6 +47,9 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::CharacteristicScoreDelta { .. }
         | Effect::GroupAffinityCost { .. }
         | Effect::GrantsReputation { .. }
+        // B3/D23/F-542: a narrative Personality-Trait grant, consumed only
+        // by `ItemPredicate::GrantsPersonalityTrait`'s derivation.
+        | Effect::GrantsPersonalityTrait
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
         | Effect::FocusPoints { .. }
@@ -122,6 +125,9 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::CharacteristicScoreDelta { .. }
         | Effect::GroupAffinityCost { .. }
         | Effect::GrantsReputation { .. }
+        // B3/D23/F-542: a narrative Personality-Trait grant, consumed only
+        // by `ItemPredicate::GrantsPersonalityTrait`'s derivation.
+        | Effect::GrantsPersonalityTrait
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
         | Effect::FocusPoints { .. }
@@ -519,6 +525,9 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. }
+                // B3/D23/F-542: consumed only by
+                // `ItemPredicate::GrantsPersonalityTrait`'s derivation.
+                | Effect::GrantsPersonalityTrait
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }

@@ -158,6 +158,7 @@ impl fmt::Display for IssueSeverity {
 /// | `forbidden_category` | error | virtues_flaws | `item`, `category` |
 /// | `category_forbidden_by_effect` | error | virtues_flaws | `item`, `category`, `other` |
 /// | `ability_forbidden_by_effect` | error | abilities | `ability`, `other` |
+/// | `excluded_by_predicate` | error | virtues_flaws | `item`, `other`, `predicate` |
 /// | `missing_required_trait` | error | virtues_flaws | `item` |
 /// | `forbidden_trait` | error | virtues_flaws | `item` |
 /// | `missing_param` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key` |
@@ -398,6 +399,18 @@ impl ValidationIssue {
     /// forbidding Virtue/Flaw, so filing this on `virtues_flaws` would file
     /// it before the violation the wizard can even show becomes visible.
     pub const CODE_ABILITY_FORBIDDEN_BY_EFFECT: &'static str = "ability_forbidden_by_effect";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: D23/B3 —
+    /// [`crate::types::PointItem::excluded_if_holds`], another Virtue/Flaw
+    /// this entity holds (bought or granted) satisfies a predicate this item
+    /// declares itself illegal alongside (e.g. "grants a Reputation",
+    /// `flaw.university_dean`). One-directional and grant-aware on both
+    /// sides, on [`Self::CODE_CATEGORY_FORBIDDEN_BY_EFFECT`]'s own precedent.
+    /// Filed under `virtues_flaws`, the step that owns both sides.
+    ///
+    /// **PHASE 1 STUB (B3 red-checkpoint)**: declared so tests can name it;
+    /// no validator raises it yet — see
+    /// `crates/arm-rules/tests/b3_predicate_exclusions.rs`.
+    pub const CODE_EXCLUDED_BY_PREDICATE: &'static str = "excluded_by_predicate";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_MISSING_REQUIRED_TRAIT: &'static str = "missing_required_trait";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -1065,6 +1078,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_permitted_categories(entity, ruleset, type_profile, &prereq_ctx, &mut issues);
     validate_forbidden_categories(entity, ruleset, type_profile, &prereq_ctx, &mut issues);
     validate_category_effect_prohibitions(entity, ruleset, &effective_selections, &mut issues);
+    validate_excluded_if_holds(ruleset, &effective_selections, &mut issues);
     validate_required_traits(type_profile, &selected_ids, &mut issues);
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
@@ -1261,6 +1275,9 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::CharacteristicScoreDelta { .. }
         | Effect::GroupAffinityCost { .. }
         | Effect::GrantsReputation { .. }
+        // B3/D23/F-542: fixed player-typed fields (`name`, `value`), never a
+        // dangling id/ability/characteristic reference.
+        | Effect::GrantsPersonalityTrait
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
         | Effect::FocusPoints { .. }

@@ -125,7 +125,20 @@ export interface ParameterDef {
   // Supernatural Virtues that are affiliated to the Infernal realm in the first
   // place" (ArMDE:6096).
   forbid_tainted?: boolean;
+  // Narrows the `item` domain by DESCRIPTION rather than category: a value
+  // resolves only if the named item does NOT satisfy this predicate (D33,
+  // `flaw.flawed_powers`'s "only appropriate to Hermetic Magic" import
+  // constraint). Absent on every other domain, where the engine rejects it
+  // at load. Not yet consumed by any picker — the resolved option list an
+  // IPC command hands the frontend already reflects it server-side.
+  exclude_if?: ItemPredicate;
 }
+
+// A property-based test over a point item, for an exclusion the rulebook
+// states by description rather than by id (`PointItem.incompatible_with`) or
+// category (`Effect.forbids_item_category`) — D23/D33. Mirrors the engine's
+// `ItemPredicate`, a closed 3-member enum.
+export type ItemPredicate = 'trained' | 'grants_reputation' | 'grants_personality_trait';
 
 // Mechanical effect a virtue/flaw applies. `ability_bonus` adds to an ability's
 // effective score (Puissant Ability +2); `characteristic_score_delta_param`
@@ -362,6 +375,10 @@ export interface PointItem {
   // Items that may not be selected alongside this one. Symmetric (the engine
   // rejects a ruleset whose declarations are one-sided) and omitted when empty.
   incompatible_with?: string[];
+  // This item is illegal while ANY OTHER effective (bought or granted)
+  // selection satisfies one of these predicates (D23/B3) — one-directional,
+  // unlike `incompatible_with`. Omitted when empty.
+  excluded_if_holds?: ItemPredicate[];
   parameters?: ParameterDef[];
   effects?: Effect[];
   // Max selections per (id, params) target. Omitted when the default (1).

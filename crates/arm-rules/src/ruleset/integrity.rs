@@ -2553,6 +2553,9 @@ impl Ruleset {
                 | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::GrantsReputation { .. }
+                // B3/D23/F-542: `name`/`value` are free-text/plain fields,
+                // nothing to resolve referentially.
+                | Effect::GrantsPersonalityTrait
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }
@@ -2810,6 +2813,18 @@ fn validate_parameter_defs(
                 "{subject}: parameter '{key}' has domain '{}' but declares \
                  'allow_ids'; only an 'item' domain resolves against the \
                  point-item catalogue, so the whitelist would admit nothing",
+                param.domain
+            ));
+        }
+        // `exclude_if` (D33/B3) narrows the SAME domain by description rather
+        // than category or a hand-maintained list, but reads the identical
+        // point-item catalogue, so it is rejected on exactly the same domain
+        // for exactly the same reason.
+        if param.exclude_if.is_some() && param.domain != ParameterDomain::Item {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has domain '{}' but declares \
+                 'exclude_if'; only an 'item' domain resolves against the \
+                 point-item catalogue, so the predicate would exclude nothing",
                 param.domain
             ));
         }

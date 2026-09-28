@@ -1164,6 +1164,7 @@ issue-forbidden_category = { $item } gehört zu einer verbotenen Kategorie ({ $c
 issue-category_not_permitted = { $item } ist in keiner erlaubten Kategorie ({ $category }).
 issue-category_forbidden_by_effect = { $item } ist verboten, solange { $other } gilt (Kategorie { $category }).
 issue-ability_forbidden_by_effect = { $ability } ist verboten, solange { $other } gilt.
+issue-excluded_by_predicate = { $item } ist verboten, solange { $other } gilt ({ $predicate }).
 issue-wrong_entity_kind = { $item } ist für die Wesensart { $entity_kind } nicht zulässig.
 issue-duplicate_selection = { $item } ist { $count }-mal ausgewählt, darf aber höchstens { $max }-mal für dasselbe Ziel gewählt werden.
 issue-too_many_selections = { $item } ist insgesamt { $count }-mal über alle Ziele hinweg ausgewählt, darf aber insgesamt höchstens { $max }-mal gewählt werden.

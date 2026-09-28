@@ -208,6 +208,15 @@ enum ItemPredicate {
     GrantsPersonalityTrait,
 }
 
+// **Amendment, 2026-09-28 (orchestrator, B3 phase-1 review):** the carrier
+// effect this predicate scans for, `Effect::GrantsPersonalityTrait`, did not
+// exist anywhere in the tree (verified: batch-11/batch-19 audits) and B3
+// built it as a FIELDLESS marker (`{ "type": "grants_personality_trait" }`,
+// no `name`/`value`) — a trait's name is exactly the translatable string
+// `rules/core/` may never carry (CLAUDE.md), its wording already lives in
+// each entry's i18n `description`, and D3 keeps the value itself free text
+// on the entity, so no consumer in this slice needs the fields carried.
+
 // B4 — Q-51's parameter gate, REVISED in Revision 3 (architect finding #1):
 // no wrapper variant. An optional `gate` field added directly to the two
 // concrete carriers Q-51 names, on the SAME embedded-gate idiom C0/C1 already
