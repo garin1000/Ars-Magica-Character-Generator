@@ -828,6 +828,29 @@ presumption of correctness.
 
 ---
 
+## D63 — Feral Upbringing restricts its own first five years only (amends D60.2)
+
+**Norbert, 2026-09-28:** *"Feral replaces first 5 years. Church comes later,
+from the general pool"*. For example, a child who spends five years in the
+wild, is then adopted and raised by the Church, and can still become a master
+craftsman or a magus.
+
+**Ruling.** ArMDE:6112's wilderness list and its "no Language" rule bind only
+Feral's **120-XP pool for the first five years**, which replaces early
+childhood (D40, plan slice D2). They do **not** bind later-life XP. D60.2's
+creation-wide whitelist reading is withdrawn. Church Upbringing's earmark
+(ArMDE:5791) is therefore spendable on a Feral character, from later-life
+general XP.
+
+**Consequences.**
+- D2 models Feral as a restricted replacement pool only, with no
+  `RestrictsAbilityCategoryToAbilities` effect.
+- B1's `RestrictsAbilityCategoryToAbilities` has no carrier left, since no
+  shipped data ever used it.
+- D1 caps an earmark at the available general XP, so the total never rises.
+
+---
+
 ## D62 — free seasons are not modelled; D49 becomes text (supersedes D49)
 
 **Norbert, 2026-09-28**: "If none creation-relevant, it's not necessary to model."
