@@ -44,7 +44,8 @@
   },
   "flaw.abandoned_apprentice": {
     "name": "Abandoned Apprentice",
-    "summary": "The character was abandoned by his master midway through his Hermetic training."
+    "summary": "The character was abandoned by his master midway through his Hermetic training.",
+    "description": "The character was abandoned by his master midway through his Hermetic training. He knows Hermetic magic and can cast spells and enchant items like other magi. He is not a member of the Order of Hermes, however. Some Tribunals rule that an apprentice has a year to find another parens before he is hunted down and slain like a Marched magus. Most Tribunals rule that abandoning an apprentice is a low crime, and if the character makes his situation known his parens may face legal action. Decide at what age the character was abandoned. Create the character as a regular apprentice up until that age, and then give him experience points based on his age and other Virtues for his life past being abandoned. If the character knows the Parma Magica, he must join the Order or be slain. Even if the character joins the Order, his background continues to cause problems for him."
   },
   "flaw.ability_block": {
     "name": "Ability Block",

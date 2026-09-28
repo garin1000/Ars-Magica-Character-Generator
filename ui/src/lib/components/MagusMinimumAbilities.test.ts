@@ -40,6 +40,8 @@ function lifeStageRules(): LifeStageRules {
       recommended_xp: 90,
       xp: 240,
       years: 15,
+      truncated_xp_per_year: 16,
+      truncated_spell_levels_per_year: 8,
     },
     childhood: {
       years: 5,

@@ -588,6 +588,23 @@ export interface LifeStageBudget {
   post_gauntlet_spell_levels: number;
   // The rest of them, which are experience.
   post_gauntlet_xp: number;
+  // Years of a truncated apprenticeship this character completed before
+  // abandonment (D56/D62/D3) — 0 for anyone not carrying such a selection,
+  // magi included. Distinct from apprenticeship_years above, which is real
+  // magus apprenticeship only.
+  truncated_training_years: number;
+  // Experience the truncated years grant, folded into the general pool
+  // alongside apprenticeship_xp/post_gauntlet_xp.
+  truncated_training_xp: number;
+  // Spell levels the truncated years grant, folded alongside
+  // post_gauntlet_spell_levels.
+  truncated_training_spell_levels: number;
+  // D64: years lived AFTER the truncated block, up to the character's own
+  // age — 0 for anyone not funding a truncated apprenticeship.
+  truncated_training_post_span_years: number;
+  // Experience the post-span years grant — GENERAL (Arts or Abilities
+  // alike), unlike the pre-span's Abilities-only later_life_xp above.
+  truncated_training_post_span_xp: number;
 }
 
 // A character's life-stage choices — never its resolved numbers (see
@@ -1700,6 +1717,11 @@ export interface ApprenticeshipRules {
   recommended_xp: number;
   xp: number;
   years: number;
+  // D56/D3: the truncated apprenticeship's fixed per-year rates (16 XP, 8
+  // spell levels), derived from xp/years and the magus profile's own
+  // spell_levels/years — FIXED, not a house rule.
+  truncated_xp_per_year: number;
+  truncated_spell_levels_per_year: number;
 }
 
 // An Ability score a rule demands. Mirrors the engine's `AbilityRequirement`;

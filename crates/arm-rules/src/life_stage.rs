@@ -17,7 +17,9 @@ use std::fmt;
 
 use crate::effective::selections_for_effects;
 use crate::ruleset::Ruleset;
-use crate::types::{AbilityFunding, AbilityParameterValue, Effect, Entity, Id, is_zero};
+use crate::types::{
+    AbilityFunding, AbilityParameterValue, Effect, Entity, Id, SelectionParamValue, is_zero,
+};
 
 /// The life-stage experience rules, loaded from `rules/core/life_stages.json`.
 // No `Default`: every field is authored data with no meaningful zero (a childhood
@@ -89,6 +91,20 @@ pub struct ApprenticeshipRules {
     pub xp: u32,
     /// Years apprenticeship covers ("The fifteen years of apprenticeship", `ArMDE:2435`).
     pub years: u32,
+    /// Experience a truncated apprenticeship (D56/D62/D3 — the Abandoned
+    /// Apprentice, ArMDE:5641-5650) grants per year completed — FIXED at 16,
+    /// derived from `xp`/`years` above (`240/15`, `decisions.md` D56 — "not
+    /// to be reopened as a house rule"). Required (not `#[serde(default)]`):
+    /// a ruleset shipping this block must state it explicitly, on the same
+    /// footing as `xp`/`years` themselves, so the mandatory bound-consistency
+    /// integrity check (`ruleset/integrity.rs`) always has a real number to
+    /// verify against rather than a silently-defaulted one.
+    pub truncated_xp_per_year: u32,
+    /// Spell levels a truncated apprenticeship grants per year completed —
+    /// FIXED at 8, derived from the magus type profile's `spell_levels`/
+    /// `years` (`120/15`), the same `decisions.md` D56 derivation as
+    /// [`Self::truncated_xp_per_year`]. Required for the identical reason.
+    pub truncated_spell_levels_per_year: u32,
 }
 
 /// Life as a magus after the Gauntlet: what each year out of apprenticeship is
@@ -424,11 +440,19 @@ pub struct LifeStageBudget {
     pub childhood_native_xp: u32,
     /// Experience for the childhood spread (45).
     pub childhood_spread_xp: u32,
-    /// Years of later life lived (age − childhood years).
+    /// Years of later life lived (age − childhood years) — for a character
+    /// funding a truncated apprenticeship (D64), the PRE-span alone (before
+    /// the truncated block's hypothetical start), since the years after it
+    /// are a separate field ([`Self::truncated_training_post_span_years`])
+    /// with different eligibility (Arts as well as Abilities).
     pub later_life_years: u32,
     /// Experience earned per year of later life for this character (15/20/10).
     pub later_life_rate: u32,
-    /// Experience from later life (`later_life_years × later_life_rate`).
+    /// Experience from later life (`later_life_years × later_life_rate`) —
+    /// Abilities-only and restricted, exactly like a real magus's own
+    /// pre-apprenticeship later life ([`crate::effective`]'s
+    /// `magus_later_life_pool`, keyed on `is_hermetically_trained`
+    /// generically, not on a real magus profile).
     pub later_life_xp: u32,
     /// Years of apprenticeship served (15 for a magus, 0 for anyone else).
     pub apprenticeship_years: u32,
@@ -463,6 +487,36 @@ pub struct LifeStageBudget {
     pub post_gauntlet_spell_levels: u32,
     /// The rest of [`Self::post_gauntlet_points`], which is experience.
     pub post_gauntlet_xp: u32,
+    /// Years of a truncated apprenticeship this character completed before
+    /// abandonment (D56/D62/D3) — `0` for anyone not carrying an effective
+    /// [`crate::types::Effect::TruncatedApprenticeshipXp`] selection whose
+    /// sibling [`crate::types::Effect::ConfersHermeticTrainingIf`] gate has
+    /// resolved, a real magus included. Distinct from
+    /// [`Self::apprenticeship_years`], which is a real magus's own
+    /// apprenticeship alone.
+    pub truncated_training_years: u32,
+    /// Experience the truncated years grant, at the FIXED per-year rate
+    /// (`ApprenticeshipRules::truncated_xp_per_year`, D56 — 16/year) — folded
+    /// into the **general** pool alongside [`Self::apprenticeship_xp`]/
+    /// [`Self::post_gauntlet_xp`] (`effective/xp.rs::general_pool_and_bonus`).
+    pub truncated_training_xp: u32,
+    /// Spell levels the truncated years grant, at the FIXED per-year rate
+    /// (`ApprenticeshipRules::truncated_spell_levels_per_year`, D56 —
+    /// 8/year), folded into `effective/spell.rs::life_stage_spell_levels`.
+    pub truncated_training_spell_levels: u32,
+    /// D64: years lived AFTER the truncated block, up to the character's own
+    /// age — `age − (start + truncated_training_years)`, where `start` is
+    /// the apprenticeship's hypothetical beginning
+    /// ([`LifeStageRules::truncated_apprenticeship_start`]). `0` for anyone
+    /// not funding a truncated apprenticeship.
+    pub truncated_training_post_span_years: u32,
+    /// Experience the post-span years grant, at the ordinary later-life rate
+    /// — but **general** (Arts or Abilities alike, D64: "the character
+    /// 'knows Hermetic magic' with his Arts already opened", ArMDE:5643),
+    /// unlike the PRE-span's Abilities-only [`Self::later_life_xp`]. Folded
+    /// into the general pool alongside [`Self::truncated_training_xp`]
+    /// (`effective/xp.rs::general_pool_and_bonus`).
+    pub truncated_training_post_span_xp: u32,
     // Deliberately NOT a field: what a post-Gauntlet year is worth. Unlike
     // `later_life_rate`, which Wealthy and Poor change per character (`ArMDE:2394`), the 30
     // of `ArMDE:2471` never varies — so there is nothing per-character to report, and a UI
@@ -555,14 +609,16 @@ impl fmt::Display for LifeStageBlock {
 
 /// D40/D2's years-carving replacement (Redcap, Lone Redcap): the largest
 /// `years` named by any effective selection's `Effect::ReplacesLifeStageXp{
-/// stage: Apprenticeship, years, ..}` — 0 when none carries one. D3 widens
-/// this SAME function with a third candidate (`years_completed`); a shipped
-/// ruleset never grants two such carriers to one character, so `.max()`
-/// (not summing) is defensive rather than load-bearing today. `pub(crate)`:
-/// also read by the fourth branch of
-/// `validation/life_stage.rs::validate_life_stage_age_meets_minimum` (the
-/// reused `CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION`), which gates on the
-/// identical figure rather than re-deriving it.
+/// stage: Apprenticeship, years, ..}` — 0 when none carries one. **Not**
+/// widened by D3/D64 (an earlier design draft planned to; superseded — see
+/// `docs/vf-audit/design-d0-xp-modes.md` Revision 5): a truncated
+/// apprenticeship carves a gap out of the MIDDLE of later life, leaving a
+/// pre-span and a post-span, which this single "years to remove from the
+/// end" helper cannot express — [`truncated_apprenticeship_start`] and
+/// [`truncated_apprentice_years_completed`] are D3's own, separate
+/// machinery. `pub(crate)`: also read by
+/// `validation/life_stage.rs::validate_life_stage_age_meets_minimum`'s
+/// Redcap-shaped branch.
 pub(crate) fn extra_apprenticeship_years(entity: &Entity, ruleset: &Ruleset) -> u32 {
     selections_for_effects(entity, ruleset)
         .iter()
@@ -578,6 +634,42 @@ pub(crate) fn extra_apprenticeship_years(entity: &Entity, ruleset: &Ruleset) -> 
         })
         .max()
         .unwrap_or(0)
+}
+
+/// D3/D64: the truncated apprenticeship's own `years_completed`, once BOTH
+/// halves of F1's paired gate resolve on the SAME item — a
+/// `Effect::TruncatedApprenticeshipXp{param}` alongside a
+/// `Effect::ConfersHermeticTrainingIf{param}` naming the IDENTICAL `param`.
+/// `None` while unanswered (F1's own "never a silent zero" — a caller must
+/// treat `None` as "not a truncated apprentice", never as 0 years), and
+/// `None` for a real magus even if one somehow carried the effect (callers
+/// additionally gate on [`LifeStageRules::apprenticeship_of`] returning
+/// `None`, the D56 asymmetry).
+pub(crate) fn truncated_apprentice_years_completed(
+    entity: &Entity,
+    ruleset: &Ruleset,
+) -> Option<u32> {
+    selections_for_effects(entity, ruleset)
+        .iter()
+        .filter_map(|selection| {
+            let item = ruleset.point_items.get(&selection.item_ref)?;
+            let param = item.effects.iter().find_map(|effect| match effect {
+                Effect::TruncatedApprenticeshipXp { param } => Some(param),
+                _ => None,
+            })?;
+            let gate_resolved = item.effects.iter().any(|effect| {
+                matches!(effect, Effect::ConfersHermeticTrainingIf { param: p } if p == param)
+            });
+            if !gate_resolved {
+                return None;
+            }
+            selection
+                .params
+                .get(param)
+                .and_then(SelectionParamValue::as_single)
+                .and_then(|v| v.as_str().parse::<u32>().ok())
+        })
+        .next()
 }
 
 impl LifeStageRules {
@@ -634,6 +726,14 @@ impl LifeStageRules {
         // `later_life_years` below.
         let later_life_carve_years =
             magus_apprenticeship_years.max(extra_apprenticeship_years(entity, ruleset));
+        // D3/D64: a truncated apprenticeship (Abandoned Apprentice) — mutually
+        // exclusive with the Redcap-shaped carve above in practice (nothing
+        // in the catalogue grants both), and with a real magus's own
+        // apprenticeship (D56's asymmetry: `apprenticeship_of` stays
+        // profile-only, so a real magus never resolves here even if some
+        // future data mistakenly granted him the effect).
+        let years_completed = truncated_apprentice_years_completed(entity, ruleset)
+            .filter(|_| apprenticeship.is_none());
         // "**Hermetic Magi Only (Optional):** Years after apprenticeship"
         // (ArMDE:2216), so the stored
         // Gauntlet age is read for a character that serves an apprenticeship and
@@ -660,8 +760,32 @@ impl LifeStageRules {
                 .and_then(|block| plan.gauntlet_age.or(block.default_gauntlet_age))
                 .map_or(age, |gauntlet| gauntlet.min(age))
         });
-        let later_life_years = self.later_life_years(gauntlet_age, later_life_carve_years);
         let later_life_rate = self.later_life_rate(entity, ruleset);
+        // D3/D64: when a truncated apprenticeship is active, `later_life_years`
+        // becomes the PRE-span alone (childhood to the hypothetical `start`,
+        // Abilities-only) rather than running to `gauntlet_age`/the
+        // character's own age — the years after `start + years_completed`
+        // are a separate, GENERAL-funding post-span, computed alongside the
+        // truncated block below. Every other character (real magus, Redcap-
+        // shaped, ordinary companion) keeps today's single merged span,
+        // unaffected.
+        let (later_life_years, post_span_years) = match years_completed.and_then(|years| {
+            self.truncated_apprenticeship_start(plan)
+                .map(|start| (years, start))
+        }) {
+            Some((years, start)) => {
+                let pre = self.later_life_years(start, 0);
+                let post = entity
+                    .age
+                    .unwrap_or(0)
+                    .saturating_sub(start.saturating_add(years));
+                (pre, post)
+            }
+            None => (
+                self.later_life_years(gauntlet_age, later_life_carve_years),
+                0,
+            ),
+        };
         let post_gauntlet_years = entity.age.unwrap_or(0).saturating_sub(gauntlet_age);
         let post_gauntlet_points = self.post_gauntlet_points(plan, post_gauntlet_years);
         // "Each point can be an experience point in an Art or Ability or one level of
@@ -669,6 +793,23 @@ impl LifeStageRules {
         // stored figure the years cannot pay for takes nothing away from the rest
         // (the validator reports it).
         let post_gauntlet_spell_levels = plan.post_gauntlet_spell_levels.min(post_gauntlet_points);
+        // D56/D3: the truncated block's own 16/8-per-year rates — FIXED data
+        // on the ruleset (`ApprenticeshipRules::truncated_xp_per_year`/
+        // `truncated_spell_levels_per_year`), `saturating_mul`'d exactly like
+        // `ScaledRestrictedAbilityXp`'s own precedent (F3,
+        // `effective/xp.rs::restricted_ability_xp_pools`) so a crafted save's
+        // absurd `years_completed` cannot panic under `overflow-checks =
+        // true`. `0` unless BOTH a resolved `years_completed` AND an
+        // `apprenticeship` block exist — R3-3's integrity check guarantees
+        // the latter whenever the former is possible in a loaded ruleset.
+        let (truncated_training_xp, truncated_training_spell_levels) =
+            match (years_completed, self.apprenticeship.as_ref()) {
+                (Some(years), Some(rules)) => (
+                    rules.truncated_xp_per_year.saturating_mul(years),
+                    rules.truncated_spell_levels_per_year.saturating_mul(years),
+                ),
+                _ => (0, 0),
+            };
         Some(LifeStageBudget {
             childhood_native_xp: self.childhood.native_language_xp,
             childhood_spread_xp: self.childhood.spread_xp,
@@ -684,6 +825,11 @@ impl LifeStageRules {
             post_gauntlet_points,
             post_gauntlet_spell_levels,
             post_gauntlet_xp: post_gauntlet_points.saturating_sub(post_gauntlet_spell_levels),
+            truncated_training_years: years_completed.unwrap_or(0),
+            truncated_training_xp,
+            truncated_training_spell_levels,
+            truncated_training_post_span_years: post_span_years,
+            truncated_training_post_span_xp: post_span_years.saturating_mul(later_life_rate),
         })
     }
 
@@ -740,6 +886,29 @@ impl LifeStageRules {
     /// (`ArMDE:2216`, `ArMDE:2471`), counted in [`Self::budget`].
     pub fn later_life_years(&self, stop_age: u32, apprenticeship_years: u32) -> u32 {
         stop_age.saturating_sub(self.childhood.years.saturating_add(apprenticeship_years))
+    }
+
+    /// D64: the truncated apprenticeship's hypothetical starting age — the
+    /// Gauntlet age a real apprenticeship would have reached (the plan's own
+    /// [`LifeStagePlan::gauntlet_age`], else the ruleset's
+    /// [`ApprenticeshipRules::default_gauntlet_age`]), minus
+    /// [`ApprenticeshipRules::years`]. Deliberately **not** clamped to the
+    /// character's own age, unlike a real magus's own Gauntlet age
+    /// ([`Self::budget`]'s `gauntlet_age` local): this is a hypothetical
+    /// milestone the character never reached, not an event they lived
+    /// through, so clamping it would let a young Abandoned Apprentice's
+    /// "start" silently collapse toward their own age instead of correctly
+    /// reporting an impossible timeline.
+    ///
+    /// `None` when the ruleset ships no `apprenticeship` block, or the block
+    /// and the plan both name no Gauntlet age — R3-3's mandatory integrity
+    /// check refuses any ruleset shipping an item that needs this while
+    /// shipping no block at all, so `None` here means "not applicable to
+    /// this ruleset", never "silently 0".
+    pub(crate) fn truncated_apprenticeship_start(&self, plan: &LifeStagePlan) -> Option<u32> {
+        let rules = self.apprenticeship.as_ref()?;
+        let gauntlet = plan.gauntlet_age.or(rules.default_gauntlet_age)?;
+        Some(gauntlet.saturating_sub(rules.years))
     }
 
     /// The apprenticeship this character serves, if any: the block for a magus, and
@@ -857,7 +1026,9 @@ mod tests {
           { "ability": "ability.magic_theory", "min_score": 3 },
           { "ability": "ability.parma_magica", "min_score": 1 }
         ],
-        "recommended_xp": 90
+        "recommended_xp": 90,
+        "truncated_xp_per_year": 16,
+        "truncated_spell_levels_per_year": 8
       },
       "childhood": {
         "years": 5,

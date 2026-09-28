@@ -138,6 +138,11 @@ function budget(years: number, rate: number): LifeStageBudget {
     post_gauntlet_points: 0,
     post_gauntlet_spell_levels: 0,
     post_gauntlet_xp: 0,
+    truncated_training_years: 0,
+    truncated_training_xp: 0,
+    truncated_training_spell_levels: 0,
+    truncated_training_post_span_years: 0,
+    truncated_training_post_span_xp: 0,
   };
 }
 

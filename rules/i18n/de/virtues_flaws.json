@@ -44,7 +44,8 @@
   },
   "flaw.abandoned_apprentice": {
     "name": "Verlassener Lehrling",
-    "summary": "Der Charakter wurde von seinem Meister mitten in seiner hermetischen Ausbildung im Stich gelassen."
+    "summary": "Der Charakter wurde von seinem Meister mitten in seiner hermetischen Ausbildung im Stich gelassen.",
+    "description": "Der Charakter wurde von seinem Meister mitten in seiner hermetischen Ausbildung im Stich gelassen. Er kennt die hermetische Magie und kann wie andere Magi Zauber wirken und Artefakte verzaubern. Er ist jedoch kein Mitglied des Ordens des Hermes. Manche Tribunale urteilen, dass ein Lehrling ein Jahr Zeit hat, einen neuen Parens zu finden, bevor er wie ein mit dem Ordensbann belegter Magus gejagt und getötet wird. Die meisten Tribunale urteilen, dass das Verlassen eines Lehrlings ein niederes Vergehen darstellt, und falls der Charakter seine Lage bekannt macht, kann sein Parens rechtliche Konsequenzen zu spüren bekommen. Entscheide, in welchem Alter der Charakter verlassen wurde. Erschaffe den Charakter wie einen regulären Lehrling bis zu diesem Alter, und vergib ihm dann Erfahrungspunkte entsprechend seinem Alter und weiteren Tugenden für sein Leben nach dem Verlassenwerden. Kennt der Charakter die Parma Magica, muss er dem Orden beitreten oder wird getötet. Auch wenn der Charakter dem Orden beitritt, bereitet ihm sein Hintergrund weiterhin Schwierigkeiten."
   },
   "flaw.ability_block": {
     "name": "Fähigkeitsblock",

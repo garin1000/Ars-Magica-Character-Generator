@@ -4826,7 +4826,13 @@ mod tests {
     /// Loads a ruleset whose apprenticeship block is `apprenticeship`, against the
     /// life-stage abilities fixture.
     fn apprenticeship_ruleset(apprenticeship: &str) -> Result<Ruleset, RulesetError> {
-        let life_stages = APPRENTICESHIP_LIFE_STAGES.replace("APPRENTICESHIP", apprenticeship);
+        // D3/D56: the two truncated-training rates are required fields none
+        // of these tests are about — appended here so every caller need not
+        // repeat them.
+        let apprenticeship = format!(
+            r#"{apprenticeship}, "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8"#
+        );
+        let life_stages = APPRENTICESHIP_LIFE_STAGES.replace("APPRENTICESHIP", &apprenticeship);
         Ruleset::from_sources(RulesetSources {
             id: "test",
             version: "1",
@@ -5025,7 +5031,8 @@ mod tests {
           "childhood""#,
             r#"{
           "apprenticeship": { "years": 15, "xp": 240, "recommended_xp": 0,
-                              "minimum_abilities": [], "recommended_abilities": [] },
+                              "minimum_abilities": [], "recommended_abilities": [],
+                              "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8 },
           "childhood""#,
         );
         assert!(load(MAGUS_TYPES, Some(&with_block)).is_ok());
@@ -5165,7 +5172,8 @@ mod tests {
         /// Everything a magus ruleset needs except the years after the Gauntlet.
         const WITHOUT_POST: &str = r#"{
           "apprenticeship": { "years": 15, "xp": 240, "recommended_xp": 0,
-                              "minimum_abilities": [], "recommended_abilities": [] },
+                              "minimum_abilities": [], "recommended_abilities": [],
+                              "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8 },
           "childhood": {
             "years": 5,
             "native_language_ability": "ability.living_language",

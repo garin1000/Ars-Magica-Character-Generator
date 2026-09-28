@@ -668,7 +668,8 @@ mod tests {
           "apprenticeship": {
             "years": 15, "xp": 240, "recommended_xp": 0,
             "minimum_abilities": [{ "ability": "ability.parma_magica", "min_score": 1 }],
-            "recommended_abilities": []
+            "recommended_abilities": [],
+            "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8
           },
           "childhood": {
             "years": 5,

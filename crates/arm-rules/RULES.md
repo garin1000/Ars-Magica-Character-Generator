@@ -1241,7 +1241,7 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2007, shared by
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2068, shared by
   `validate_prereq_refs` :1931 and `validate_effect_refs` :2354) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
@@ -1249,7 +1249,7 @@ reason: a category condition would license itself.
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :653).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :654).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -3366,21 +3366,103 @@ naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
   carve are, e.g. a Lone Redcap with Wealthy gets 5 years × 20/year = 100, not
   15/year. Confirmed by
   `lone_redcap_apprenticeship_is_flat_and_later_life_uses_wealthys_rate`.
-- **Age check (Norbert, 2026-09-28), reusing D3's own planned code:** a
-  Redcap or Lone Redcap younger than `childhood.years` plus the carved years
-  (5 + 15 = 20 against the shipped ruleset) raises
-  `CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION` (error, `Experience` phase, `age`/
-  `min` args) — the SAME code D3 plans for the truncated-apprenticeship
-  carrier (`docs/vf-audit/design-d0-xp-modes.md` § 4, R3-2), reused rather
-  than forked: both ask "does the training years carved out of later life
-  exceed what this age could have lived?" of the identical
-  `extra_apprenticeship_years`-derived figure.
-  `validate_life_stage_age_meets_minimum` (`validation/life_stage.rs`) gains
-  this as a fourth branch (magus / childhood / **carved-training**), gated on
-  `extra_apprenticeship_years(entity, ruleset) > 0` rather than a
-  not-yet-existing D3 field — D3 will fold its own candidate into the same
-  gate, not add a fifth branch. Fluent: `issue-life_stage_age_before_
-  truncation`, both locales.
+- **Age check (Norbert, 2026-09-28):** a Redcap or Lone Redcap younger than
+  `childhood.years` plus the carved years (5 + 15 = 20 against the shipped
+  ruleset) raises `CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION` (error, `Experience`
+  phase, `age`/`min` args) — the SAME code the truncated-apprenticeship
+  carrier below uses, reused rather than forked, though the two carriers'
+  `min` formulas differ (`childhood.years + carved_years` here;
+  `truncated_apprenticeship_start(..) + years_completed` below — mutually
+  exclusive in the catalogue, so `validate_life_stage_age_meets_minimum`
+  (`validation/life_stage.rs`) tries the truncated-apprenticeship formula
+  first and falls back to this one). Fluent:
+  `issue-life_stage_age_before_truncation`, both locales.
+
+#### Abandoned Apprentice — truncated apprenticeship, funding two later-life spans (D56, D62, D64, D3)
+
+> "Decide at what age the character was abandoned. Create the character as a
+> regular apprentice up until that age, and then give him experience points
+> based on his age and other Virtues for his life past being abandoned. If
+> the character knows the Parma Magica, he must join the Order or be slain."
+
+- Source: `ArMDE:5641-5650`.
+- **D56/D62 (Norbert):** the character is Hermetically trained by selection,
+  not by profile — `is_magus` splits into *trained*/*Order member*
+  (`effective/hermetic_training.rs`) — and the parameter he records is
+  `years_completed` (1..=`apprenticeship.years - 1`), not an age.
+- **D64 (Norbert, 2026-09-28):** the ordinary later-life years split into TWO
+  spans around the truncated block, not one merged span (superseding an
+  earlier draft of this design): the years BEFORE it stay Abilities-only
+  (the Arts are not open yet); the years AFTER it may fund Arts as well
+  (`"he knows Hermetic magic"`, `ArMDE:5643` — his Arts are already open).
+- Data: `rules/core/virtues_flaws.json` `flaw.abandoned_apprentice` —
+  `parameters: [{ key: years_completed, type: { number: { min: 1, max: 14 } },
+  domain: number }]`, `effects: [{ confers_hermetic_training_if,
+  param: years_completed }, { truncated_apprenticeship_xp,
+  param: years_completed }]`, `advisory_prerequisites: { none: [{ ability_min,
+  ability: ability.parma_magica, score: 1 }] }` (Parma advisory, see below).
+  `rules/core/life_stages.json` `apprenticeship.truncated_xp_per_year: 16`,
+  `truncated_spell_levels_per_year: 8` — FIXED, derived from `ArMDE:2435`'s
+  240 XP / 120 spell levels over 15 years (`decisions.md` D56, "not to be
+  reopened as a house rule").
+- **`Effect::ConfersHermeticTrainingIf { param }`** — the conditional sibling
+  of the bare `ConfersHermeticTraining` marker (same "Foo"/"FooParam"
+  precedent as `AbilityScoreGrant`/`AbilityScoreGrantParam`): true only once
+  the OWNING selection's own `param` resolves to ANY value — a presence
+  test. Without this, `is_hermetically_trained` would flip true the instant
+  the Flaw is picked, before `years_completed` is answered, funding nothing
+  (F1). `effective/hermetic_training.rs::entity_confers_hermetic_training`
+  gains a second match arm for it, the bare marker's seven existing sites
+  untouched.
+- **`Effect::TruncatedApprenticeshipXp { param }`** — funds the GENERAL pool
+  (unlike `ReplacesLifeStageXp`, which replaces a RESTRICTED block), at
+  `truncated_xp_per_year`/`truncated_spell_levels_per_year` times the
+  resolved `years_completed`, `saturating_mul`'d (F3 — matches
+  `ScaledRestrictedAbilityXp`'s own precedent, so a crafted `years_completed`
+  at `u32::MAX` cannot panic under `overflow-checks = true`).
+- **The two later-life spans, and the "start" they pivot on:**
+  `life_stage.rs::LifeStageRules::truncated_apprenticeship_start` — the
+  Gauntlet age a real apprenticeship would have reached (the plan's own
+  `gauntlet_age`, else `apprenticeship.default_gauntlet_age`) minus
+  `apprenticeship.years` — deliberately NOT clamped to the character's own
+  age (unlike a real magus's Gauntlet age): this is a hypothetical milestone
+  he never reached. Worked example (age 20, `years_completed` 7, shipped
+  data): `start = 25 - 15 = 10`. Pre-span `10 - childhood.years(5) = 5` years
+  × 15/yr = 75 XP, reuses the EXISTING `later_life_xp`/
+  `LifeStageBlock::LaterLife` restricted-pool plumbing verbatim (no new tag).
+  Post-span `20 - (10 + 7) = 3` years × 15/yr = 45 XP, folded into
+  `general_pool_and_bonus` alongside `truncated_training_xp` (16×7=112) —
+  `general_pool = 157`, never the pre-D64 merged 120-all-restricted shape.
+  `LifeStageBudget` gains `truncated_training_years/xp/spell_levels` and
+  `truncated_training_post_span_years/xp`.
+- **Age check:** `life_stage::truncated_apprentice_years_completed` (the
+  presence-gated `years_completed` reader, shared by `budget()` and the
+  validator so the two can never derive different figures) feeds
+  `validate_life_stage_age_meets_minimum` a `min = start + years_completed`
+  branch, ahead of the Redcap-shaped one above — `CODE_LIFE_STAGE_AGE_BEFORE_
+  TRUNCATION`, error, `Experience` phase. A 15-year-old with 7 years
+  completed is refused (`min: 17`, the OLD childhood-only formula's `12`
+  would have missed this entirely); a 6-year-old with 14 is refused
+  (`min: 24`).
+- **Integrity (mandatory, not a nice-to-have):** `years_completed`'s
+  authored `max` must equal `apprenticeship.years - 1` exactly
+  (`ruleset/integrity.rs::validate_truncated_apprenticeship_param`) — "taken
+  from the ruleset rather than hardcoded" (Norbert). An item declaring
+  `TruncatedApprenticeshipXp`/`ConfersHermeticTrainingIf` in a ruleset
+  shipping NO `apprenticeship` block at all is rejected outright, naming the
+  item — not silently skipped.
+- **Parma advisory:** `advisory_prerequisites: Nor([AbilityMin{
+  ability.parma_magica, 1}])` — a HEDGED restriction (F-550/Q8's existing
+  machinery), warning only when Parma Magica IS known (`ArMDE:5647`: "if the
+  character knows the Parma Magica, he must join the Order or be slain" —
+  the danger is in knowing it unjoined, never in lacking it).
+  `Prereq::Has(ability.parma_magica)` — an earlier design draft's own
+  example — is WRONG for this: `Has` resolves against selected point items
+  (Virtues/Flaws), never `Entity::ability_scores`; `AbilityMin` is the
+  variant that reads scores.
+- Tests: `crates/arm-rules/src/effective/hermetic_training.rs`,
+  `crates/arm-rules/src/effective/xp.rs`, `crates/arm-rules/src/validation/
+  {authorization,life_stage}.rs`, `crates/arm-rules/tests/data_integrity.rs`.
 
 #### Improved Characteristics — +3 Characteristic-buy points
 > "You have an additional three points to spend on buying Characteristics … You

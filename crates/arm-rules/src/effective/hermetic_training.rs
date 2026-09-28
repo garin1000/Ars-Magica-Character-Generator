@@ -33,9 +33,18 @@ pub fn entity_confers_hermetic_training(entity: &Entity, ruleset: &Ruleset) -> b
             .point_items
             .get(&selection.item_ref)
             .is_some_and(|item| {
-                item.effects
-                    .iter()
-                    .any(|effect| matches!(effect, Effect::ConfersHermeticTraining))
+                item.effects.iter().any(|effect| match effect {
+                    Effect::ConfersHermeticTraining => true,
+                    // D3/R3-1 (F1): the conditional sibling resolves only
+                    // once the OWNING selection's own param is answered — a
+                    // presence test, so the character reads as untrained
+                    // (never a silent zero) in the gap between picking the
+                    // Flaw and answering its one parameter.
+                    Effect::ConfersHermeticTrainingIf { param } => {
+                        selection.params.contains_key(param)
+                    }
+                    _ => false,
+                })
             })
     })
 }
@@ -71,6 +80,7 @@ mod tests {
     use super::*;
     use crate::types::{CreationPhase, Entity, EntityKind, Id, RulesetRef, Selection};
     use crate::{Ruleset, RulesetSources};
+    use std::collections::BTreeMap;
 
     const ITEMS: &str = r#"[
       { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
@@ -93,6 +103,57 @@ mod tests {
             version: "1",
             point_items: ITEMS,
             type_profiles: TYPES,
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    /// D3: `flaw.test_truncated_apprentice`'s `TruncatedApprenticeshipXp`
+    /// needs an `apprenticeship` block to bound its parameter against
+    /// (R3-3). Kept fully separate from [`rs`]/[`ITEMS`]/[`TYPES`] above
+    /// (which every OTHER test in this module still uses) rather than
+    /// widening them: `TYPES` ships a `magus` profile, and a ruleset that
+    /// pairs a magus profile with `life_stages`/`abilities` at all pulls in
+    /// the unrelated engine-required-roles check (the full Hermetic ability
+    /// roster, a `post_apprenticeship` block) — noise this module's own
+    /// tests (the training-gate boolean) have nothing to do with. A
+    /// companion-only fixture sidesteps that entirely.
+    const TRUNCATED_ITEMS: &str = r#"[
+      { "id": "flaw.test_truncated_apprentice", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["story"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "years_completed", "type": { "number": { "min": 1, "max": 14 } }, "domain": "number" }],
+        "effects": [
+          { "type": "confers_hermetic_training_if", "param": "years_completed" },
+          { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
+        ] },
+      { "id": "flaw.test_filler_personality", "kind": "flaw", "classification": "narrative",
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+    ]"#;
+    const TRUNCATED_TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["story", "personality"], "creation_phases": [] }
+    ]"#;
+    const TRUNCATED_LIFE_STAGES: &str = r#"{
+      "apprenticeship": { "default_gauntlet_age": 25, "years": 15, "xp": 240,
+                           "minimum_abilities": [], "recommended_abilities": [], "recommended_xp": 0,
+                           "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8 },
+      "childhood": { "years": 5, "native_language_ability": "ability.living_language",
+                     "native_language_xp": 75, "spread_xp": 45, "spread_abilities": [] },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+    const TRUNCATED_ABILITIES: &str = r#"{
+      "advancement": [{ "score": 1, "total_xp": 5 }],
+      "abilities": [{ "id": "ability.living_language", "category": "general", "parameter": "language" }]
+    }"#;
+
+    fn truncated_apprentice_rs() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: TRUNCATED_ITEMS,
+            type_profiles: TRUNCATED_TYPES,
+            abilities: Some(TRUNCATED_ABILITIES),
+            life_stages: Some(TRUNCATED_LIFE_STAGES),
             ..RulesetSources::default()
         })
         .unwrap()
@@ -154,6 +215,34 @@ mod tests {
         let entity = character("companion", vec!["flaw.optimistic"]);
         let ruleset = rs();
         assert!(!is_hermetically_trained(&entity, &ruleset, None));
+    }
+
+    /// D3/R3-1 (F1): the transition state — the Flaw selected, its one
+    /// parameter unanswered. `ConfersHermeticTrainingIf`'s presence gate must
+    /// read false here, exactly like holding no such selection at all, so the
+    /// character never reads as trained-but-funded-with-nothing.
+    #[test]
+    fn entity_confers_hermetic_training_is_false_when_the_sibling_param_is_unanswered() {
+        let entity = character("companion", vec!["flaw.test_truncated_apprentice"]);
+        assert!(!entity_confers_hermetic_training(
+            &entity,
+            &truncated_apprentice_rs()
+        ));
+    }
+
+    /// The instant the parameter resolves, the gate flips true — the SAME
+    /// item's `TruncatedApprenticeshipXp` now has a value to fund from too.
+    #[test]
+    fn entity_confers_hermetic_training_is_true_once_the_sibling_param_resolves() {
+        let mut entity = character("companion", vec![]);
+        entity.selections = vec![Selection::with_params(
+            Id::new("flaw.test_truncated_apprentice"),
+            BTreeMap::from([("years_completed".into(), Id::new("7"))]),
+        )];
+        assert!(entity_confers_hermetic_training(
+            &entity,
+            &truncated_apprentice_rs()
+        ));
     }
 
     // --- `phases_in_force` (A2/D56 § 6): the conditional-phase mechanism that

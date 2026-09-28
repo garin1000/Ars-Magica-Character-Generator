@@ -1001,6 +1001,10 @@ param-label-study = Study
 # Simple Student's finished-years count (ArMDE:4960); the cap (2 years, 60 xp)
 # is the parameter's own min/max, enforced by the engine.
 param-label-years = Years
+# Abandoned Apprentice's years of apprenticeship completed before abandonment
+# (ArMDE:5641-5650, D56/D62/D3); the cap (apprenticeship.years - 1) is the
+# parameter's own min/max, enforced by the engine.
+param-label-years_completed = Years completed
 # The three Corrupted entries' multi-valued choice (D9 part 3, D15,
 # ArMDE:5847-5864) — which Abilities/Arts/spells the Flaw affects.
 param-label-targets = Targets

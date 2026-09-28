@@ -856,6 +856,15 @@ pub(crate) fn ability_authorizations(
                 // trained non-magus is a profile/entity-level gate in
                 // `validation/authorization.rs`, not a per-effect grant here.
                 | Effect::ConfersHermeticTraining
+                // The conditional sibling (D3/R3-1): identical reasoning.
+                | Effect::ConfersHermeticTrainingIf { .. }
+                // D3: an Abandoned Apprentice's Arcane/Academic/Martial access
+                // comes from `is_hermetically_trained`'s whole-character
+                // exemption (`validation/authorization.rs`, fed by either
+                // `ConfersHermeticTraining` or `ConfersHermeticTrainingIf`),
+                // not from this variant, which only SIZES a pool the
+                // exemption has already opened.
+                | Effect::TruncatedApprenticeshipXp { .. }
                 // B1/D21: these are PROHIBITIONS (forbid), never an
                 // authorization grant — they stay independent of this fold,
                 // exactly as design § 4 states, so `xp_allocation` never
@@ -1565,9 +1574,17 @@ fn pre_earmark_general_xp(entity: &Entity, ruleset: &Ruleset) -> u32 {
         .life_stages()
         .and_then(|rules| rules.budget(entity, ruleset).map(|budget| (rules, budget)));
     match &life_stage_budget {
+        // D3/D64: a real magus's apprenticeship_xp/post_gauntlet_xp terms sit
+        // alongside an Abandoned Apprentice's truncated_training_xp (16×years)
+        // and the D64 post-span (Arts-or-Abilities, after the truncated
+        // block) — mutually exclusive in practice (a real magus has 0 for the
+        // latter two; an Abandoned Apprentice has 0 for the former two), so
+        // summing all four is safe and avoids a third branch.
         Some((_, budget)) if trained => budget
             .apprenticeship_xp
-            .saturating_add(budget.post_gauntlet_xp),
+            .saturating_add(budget.post_gauntlet_xp)
+            .saturating_add(budget.truncated_training_xp)
+            .saturating_add(budget.truncated_training_post_span_xp),
         Some((_, budget)) => budget.later_life_xp,
         None => entity.xp_pool,
     }
@@ -1975,7 +1992,14 @@ mod tests {
         "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
         "effects": [{ "type": "confers_hermetic_training" }] },
       { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-        "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
+        "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "flaw.test_truncated_apprentice", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "years_completed", "type": { "number": { "min": 1, "max": 14 } }, "domain": "number" }],
+        "effects": [
+          { "type": "confers_hermetic_training_if", "param": "years_completed" },
+          { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
+        ] }
     ]"#;
     const LIFE_STAGE_ABILITIES: &str = r#"{
       "advancement": [{ "score": 1, "total_xp": 5 }],
@@ -1985,9 +2009,19 @@ mod tests {
       ]
     }"#;
     const LIFE_STAGES: &str = r#"{
+      "apprenticeship": { "default_gauntlet_age": 25, "years": 15, "xp": 240,
+                           "minimum_abilities": [], "recommended_abilities": [], "recommended_xp": 0,
+                           "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8 },
       "childhood": { "years": 5, "native_language_ability": "ability.living_language",
                      "native_language_xp": 75, "spread_xp": 45, "spread_abilities": [] },
       "later_life": { "xp_per_year": 15 }
+    }"#;
+    /// D64: the post-span (after the truncated block) may fund Arts — an
+    /// Arts catalogue nothing else in this module's fixtures needs, so it is
+    /// additive here rather than widening `LIFE_STAGE_ABILITIES`.
+    const LIFE_STAGE_ARTS: &str = r#"{
+      "advancement": [{ "score": 1, "total_xp": 130 }],
+      "arts": [{ "id": "art.creo", "art_type": "technique" }]
     }"#;
 
     fn rs_with_life_stages() -> Ruleset {
@@ -1997,6 +2031,7 @@ mod tests {
             point_items: LIFE_STAGE_ITEMS,
             type_profiles: TYPES,
             abilities: Some(LIFE_STAGE_ABILITIES),
+            arts: Some(LIFE_STAGE_ARTS),
             life_stages: Some(LIFE_STAGES),
             ..RulesetSources::default()
         })
@@ -2055,6 +2090,161 @@ mod tests {
             )
         });
         assert_eq!(later_life_pool.map(|p| p.amount), Some(225));
+    }
+
+    /// A companion holding `flaw.test_truncated_apprentice`, optionally with
+    /// `years_completed` answered — the D3/D56 shape, test-fixture-only
+    /// (D0 § 4's own carrier is `flaw.abandoned_apprentice`, edited only in
+    /// the real Flaw's own tests, `crates/arm-rules/tests/data_integrity.rs`).
+    fn companion_with_truncated_apprenticeship(age: u32, years_completed: Option<&str>) -> Entity {
+        let mut e = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        e.ability_funding = crate::types::AbilityFunding::LifeStages;
+        e.age = Some(age);
+        e.life_stages = Some(crate::life_stage::LifeStagePlan::default());
+        e.selections = vec![match years_completed {
+            Some(years) => Selection::with_params(
+                Id::new("flaw.test_truncated_apprentice"),
+                BTreeMap::from([("years_completed".into(), Id::new(years))]),
+            ),
+            None => Selection::new(Id::new("flaw.test_truncated_apprentice")),
+        }];
+        e
+    }
+
+    /// D3/R3-1 (F1), the transition-state red the architect's own note calls
+    /// out as owed FIRST: the Flaw selected, `years_completed` unanswered —
+    /// `is_hermetically_trained` must read false and the general pool must
+    /// still be the ordinary companion `later_life_xp` (225), never a silent
+    /// zero. `checked_xp_allocation` is the ONE evaluation path (CLAUDE.md);
+    /// there is no separate Advisory/Silent computation to diverge from it.
+    #[test]
+    fn truncated_apprentice_with_years_completed_unanswered_reads_untrained_with_ordinary_xp() {
+        let rs = rs_with_life_stages();
+        let entity = companion_with_truncated_apprenticeship(20, None);
+        assert!(!crate::effective::is_hermetically_trained(
+            &entity,
+            &rs,
+            rs.profile(&Id::new("companion"))
+        ));
+        let allocation = checked_xp_allocation(&entity, &rs).unwrap();
+        assert_eq!(
+            allocation.general_pool, 225,
+            "unanswered parameter must never silently zero the general pool"
+        );
+    }
+
+    /// D3/D56/D64: once `years_completed` resolves, the general pool folds in
+    /// `16 × years` (16×7=112) alongside the untouched apprenticeship_xp/
+    /// post_gauntlet_xp terms (both 0 for a non-magus profile) AND the
+    /// post-span ordinary later-life years, which D64 opens to Arts as well
+    /// as Abilities. RED today: `LifeStageBudget::truncated_training_xp` is a
+    /// signature-only stub (phase 1) that reads 0 regardless of the answered
+    /// parameter, and the pre/post split itself does not exist yet — every
+    /// later-life year, trained or not, is still one merged span.
+    ///
+    /// The arithmetic (age 20, `apprenticeship.years` 15, default Gauntlet
+    /// age 25, `years_completed` 7 — D64's own worked example): apprenticeship
+    /// "starts" at `25 − 15 = 10`. Pre-span (before the start, Abilities-only,
+    /// since the Arts are not opened yet): `10 − childhood.years(5) = 5`
+    /// years × 15/yr = 75, a RESTRICTED pool. Post-span (after abandonment,
+    /// Arts-or-Abilities): `20 − (10 + 7) = 3` years × 15/yr = 45, GENERAL.
+    /// `general_pool = 45 (post-span) + 112 (truncated) = 157`;
+    /// `apprenticeship_xp`/`post_gauntlet_xp` stay 0 (non-magus profile).
+    #[test]
+    fn truncated_apprentice_with_years_completed_answered_funds_16_xp_per_year() {
+        let rs = rs_with_life_stages();
+        let entity = companion_with_truncated_apprenticeship(20, Some("7"));
+        assert!(crate::effective::is_hermetically_trained(
+            &entity,
+            &rs,
+            rs.profile(&Id::new("companion"))
+        ));
+        let allocation = checked_xp_allocation(&entity, &rs).unwrap();
+        assert_eq!(
+            allocation.general_pool, 157,
+            "post-span (45, Arts-or-Abilities) + truncated (112) — got: {allocation:?}"
+        );
+        let later_life_pool = allocation.restricted.iter().find(|p| {
+            matches!(
+                p.origin,
+                XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::LaterLife
+                }
+            )
+        });
+        assert_eq!(
+            later_life_pool.map(|p| p.amount),
+            Some(75),
+            "the pre-span (5yr x 15/yr), Abilities-only, restricted: {:?}",
+            allocation.restricted
+        );
+    }
+
+    /// D64's own new obligation: the post-span (45 XP, Arts-or-Abilities)
+    /// must actually be spendable on an Art, not just counted — and the
+    /// pre-span (75 XP, Abilities-only) must never fund one. An Art costing
+    /// 130 XP is UNFUNDABLE from the truncated block alone (112) but IS
+    /// fundable once the post-span's 45 joins it in `general_pool` (157) —
+    /// the number is chosen to distinguish the two. RED today for the same
+    /// reason as the test above: the split does not exist, so the Art is
+    /// refused (max_flow stuck at 112, or lower still while the pre/post
+    /// split and truncated fold are both unimplemented).
+    #[test]
+    fn truncated_apprentice_funds_an_art_from_the_post_span_but_never_the_pre_span() {
+        let rs = rs_with_life_stages();
+        let mut entity = companion_with_truncated_apprenticeship(20, Some("7"));
+        entity.art_scores = vec![crate::types::ArtScore {
+            art: Id::new("art.creo"),
+            score: 1,
+        }];
+        let allocation = checked_xp_allocation(&entity, &rs).unwrap();
+        assert_eq!(allocation.total_demand, 130);
+        assert_eq!(
+            allocation.max_flow, 130,
+            "the Art must be fully funded from the post-span + truncated general pool (157 available): {allocation:?}"
+        );
+        assert_eq!(allocation.general_used, 130);
+        let later_life_pool = allocation.restricted.iter().find(|p| {
+            matches!(
+                p.origin,
+                XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::LaterLife
+                }
+            )
+        });
+        assert_eq!(
+            later_life_pool.map(|p| p.used),
+            Some(0),
+            "an Art spend must never draw on the Abilities-only pre-span pool: {:?}",
+            allocation.restricted
+        );
+    }
+
+    /// F3 (architect, MAJOR): a crafted `years_completed` at `u32::MAX` — a
+    /// legal parse, illegal per the parameter's own declared range, exactly
+    /// the shape a hand-edited save can carry — must saturate rather than
+    /// panic under `overflow-checks = true` (`Cargo.toml`). RED today for the
+    /// same reason as the answered-state test above: the stub reads 0, not
+    /// `u32::MAX`.
+    #[test]
+    fn truncated_apprentice_with_a_crafted_maximum_years_completed_saturates_without_panicking() {
+        let rs = rs_with_life_stages();
+        let years = u32::MAX.to_string();
+        let entity = companion_with_truncated_apprenticeship(20, Some(&years));
+        let budget = rs
+            .life_stages()
+            .unwrap()
+            .budget(&entity, &rs)
+            .expect("life-stage funded entity yields a budget");
+        assert_eq!(
+            budget.truncated_training_xp,
+            u32::MAX,
+            "must saturate, never wrap or panic"
+        );
     }
 
     /// Klaus F4 (round-1 MINOR), upper edge: the bound must refuse a spend

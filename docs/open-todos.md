@@ -260,6 +260,14 @@ store choices, not resolved values, and the engine only reports.
   `b4_parameter_gated_effects.rs::an_older_magical_blood_selection_with_no_params_reports_missing_param`,
   `::magic_animal_bloodline_does_not_require_the_characteristic_param`,
   `::magic_human_bloodline_still_requires_the_characteristic_param`.
+  Phase 2 D3 (D56/D62/D64) added a sixth: `flaw.abandoned_apprentice`'s new
+  `years_completed` (which year of apprenticeship the character was
+  abandoned in, ArMDE:5641-5650) — a save written before D3 holds the Flaw
+  with no such param (it did not exist to store), and now reports
+  `missing_param` until the player fills it in. Meanwhile the character
+  reads as untrained and gets the ordinary companion later-life total, never
+  a silent zero (F1) — the engine's one evaluation path, not a special case
+  for old saves.
 - **`prereq_not_met`** where the eligibility gates bite — a character holding The
   Gift plus Offensive to (Beings) without the Gentle Gift, which `ArMDE:6530` has
   always forbidden and nothing checked. Not hypothetical: it is the exact shape of

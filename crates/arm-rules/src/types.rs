@@ -1470,6 +1470,35 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "is_zero")]
         years: u32,
     },
+    /// D56/D62/D3 (`docs/vf-audit/design-d0-xp-modes.md` § 4): the Abandoned
+    /// Apprentice's truncated Hermetic training, "you have most of the skills
+    /// and knowledge of a fully trained magus" (ArMDE:5641-5650) — funds the
+    /// **general** pool (Arts or Abilities alike, ArMDE:2435) at
+    /// `ApprenticeshipRules::truncated_xp_per_year` /
+    /// `truncated_spell_levels_per_year` (16/8, D56's FIXED derivation from
+    /// ArMDE:2435's 240/120 over 15 years) times `param`'s resolved value —
+    /// the years of apprenticeship completed before abandonment (D62: a year
+    /// count, not an age to subtract). Distinct from
+    /// [`Self::ReplacesLifeStageXp`], which replaces a RESTRICTED block's
+    /// total: this funds the GENERAL pool and additionally carves `param`'s
+    /// years out of later life (`life_stage::extra_apprenticeship_years`),
+    /// which `ReplacesLifeStageXp`'s own `years` field does independently for
+    /// its own (restricted) shape — reusing `ScaledRestrictedAbilityXp` here
+    /// would be wrong for the identical reason `ReplacesLifeStageXp` is not a
+    /// wider `RestrictedAbilityXp`.
+    ///
+    /// Must resolve TOGETHER with a [`Self::ConfersHermeticTrainingIf`] on the
+    /// SAME item naming the SAME `param` (F1/R3-1,
+    /// `effective::hermetic_training::entity_confers_hermetic_training`) — see
+    /// that variant's own doc comment for why a silent zero would otherwise
+    /// result the instant the Flaw is picked, before its one parameter is
+    /// answered.
+    TruncatedApprenticeshipXp {
+        /// Parameter key (a [`ParameterDomain::Number`] parameter on the SAME
+        /// item) naming the years of apprenticeship completed before
+        /// abandonment.
+        param: String,
+    },
     /// Adjusts the Characteristic-buy budget by `amount` (on top of
     /// [`crate::characteristics::CharacteristicRules::start_points`]). Signed:
     /// Improved Characteristics grants +3 (`ArMDE:4103-4105`), Weak Characteristics
@@ -2209,6 +2238,34 @@ pub enum Effect {
     ///
     /// Source: ArMDE:5641-5650.
     ConfersHermeticTraining,
+    /// The conditional sibling of [`Self::ConfersHermeticTraining`] (same
+    /// "Foo"/"FooParam"-style precedent as
+    /// [`Self::AbilityScoreGrant`]/[`Self::AbilityScoreGrantParam`], Revision 4
+    /// architect finding R3-1): confers Hermetic training only once the OWNING
+    /// selection's own `params[param]` resolves to a value — any value, a
+    /// PRESENCE test, not [`ParamGate`]'s equality test, so the two stay
+    /// deliberately separate mechanisms. D3's own carrier
+    /// (`flaw.abandoned_apprentice`) is the first and, today, only user: the
+    /// training marker and [`Self::TruncatedApprenticeshipXp`]'s own payoff
+    /// must resolve TOGETHER, or an Abandoned Apprentice reads as
+    /// trained-but-funded-with-nothing the instant the Flaw is picked, before
+    /// its `years_completed` parameter is answered — a real, ordinary-use bug
+    /// (F1, `docs/vf-audit/design-d0-xp-modes.md` § 4), not a crafted-input
+    /// edge case: every OTHER parameterized grant in this engine is additive
+    /// on top of an otherwise-unaffected base, so an unanswered parameter
+    /// costs nothing; this is the first case where a SIBLING effect switches
+    /// which base applies at all. Widening the bare marker in place (Revision
+    /// 3's first draft) was rejected: it would force `{ .. }` onto every one
+    /// of that variant's seven existing production sites for a field none of
+    /// them read. `entity_confers_hermetic_training` gains a second match arm
+    /// for this variant rather than widening its first.
+    ///
+    /// Source: ArMDE:5641-5650.
+    ConfersHermeticTrainingIf {
+        /// Parameter key on the SAME item; presence (not any particular
+        /// value) activates this marker.
+        param: String,
+    },
     /// Forbids the character from holding any Ability of the given
     /// [`AbilityCategory`] — Ability Block, "completely unable to learn a
     /// certain class of Abilities... This may be Martial Abilities, or a more

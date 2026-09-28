@@ -256,6 +256,8 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // no-op here — Casting/Lab Totals themselves are unaffected by
                 // *how* training was acquired.
                 Effect::ConfersHermeticTraining => {}
+                // The conditional sibling (D3/R3-1): identical reasoning.
+                Effect::ConfersHermeticTrainingIf { .. } => {}
                 Effect::MagicTotalHalving { total } => {
                     m.halvings.insert(*total);
                 }
@@ -443,6 +445,9 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // D40/D2: a creation-time life-stage XP replacement, not an
                 // in-play total.
                 | Effect::ReplacesLifeStageXp { .. }
+                // D3: a creation-time general-XP/life-stage-years grant, not
+                // an in-play total either.
+                | Effect::TruncatedApprenticeshipXp { .. }
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 // Creation-time floor grant (F-63/C5c), not an in-play total.

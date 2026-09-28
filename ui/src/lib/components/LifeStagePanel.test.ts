@@ -52,6 +52,8 @@ function lifeStageRules(): LifeStageRules {
       recommended_xp: 0,
       xp: 240,
       years: 15,
+      truncated_xp_per_year: 16,
+      truncated_spell_levels_per_year: 8,
     },
     post_apprenticeship: {
       points_per_year: 30,
@@ -169,6 +171,11 @@ function magusBudget(age: number, seasons = 0, spellLevels = 0): LifeStageBudget
     post_gauntlet_points: points,
     post_gauntlet_spell_levels: spellLevels,
     post_gauntlet_xp: points - spellLevels,
+    truncated_training_years: 0,
+    truncated_training_xp: 0,
+    truncated_training_spell_levels: 0,
+    truncated_training_post_span_years: 0,
+    truncated_training_post_span_xp: 0,
   };
 }
 

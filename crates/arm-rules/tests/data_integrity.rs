@@ -12,7 +12,9 @@ use arm_rules::{
     Grant, GrantConstraint, effective_art_score, effective_characteristic_after_aging,
     effective_characteristic_score, open_pick_satisfies, warping_owed_grants,
 };
-use arm_rules::{LifeStageBlock, LifeStagePlan, XpPoolOrigin, checked_xp_allocation};
+use arm_rules::{
+    LifeStageBlock, LifeStagePlan, XpPoolOrigin, checked_xp_allocation, life_stage_spell_levels,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The shipped House registry. Every helper below loads it, because the four
@@ -38,6 +40,11 @@ fn load_ruleset() -> Ruleset {
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         houses: Some(SHIPPED_HOUSES),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+        // D3: `flaw.abandoned_apprentice` now carries `TruncatedApprenticeshipXp`,
+        // which R3-3's integrity check requires an `apprenticeship` block to
+        // bound against — the shipped ruleset always ships one, so this
+        // lighter test loader must too.
+        life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         parameter_catalogues: Some(include_str!(
             "../../../rules/core/parameter_catalogues.json"
         )),
@@ -5148,7 +5155,9 @@ fn an_exemplar_slug_is_not_treated_as_a_referential_integrity_ref() {
         "recommended_abilities": [],
         "recommended_xp": 0,
         "xp": 240,
-        "years": 15
+        "years": 15,
+        "truncated_xp_per_year": 16,
+        "truncated_spell_levels_per_year": 8
       },
       "childhood": {
         "years": 5,
@@ -5782,7 +5791,14 @@ fn abandoned_apprentice_requires_the_gift() {
             "companion",
             vec![
                 Selection::new(Id::new("virtue.the_gift")),
-                Selection::new(abandoned.clone()),
+                // D3: `years_completed` answered, so the sole remaining
+                // finding this test polices for (a prereq failure) stays
+                // observable on its own — leaving it blank would also raise
+                // the ordinary, unrelated `missing_param` finding.
+                Selection::with_params(
+                    abandoned.clone(),
+                    BTreeMap::from([("years_completed".into(), Id::new("7"))]),
+                ),
             ],
         ),
         &rs,
@@ -5810,24 +5826,36 @@ fn abandoned_apprentice_requires_the_gift() {
     );
 }
 
-/// **Pinned baseline for D3.** D56/A0's whole Group A rewire (sub-slices 1–3)
-/// deliberately leaves the shipped `flaw.abandoned_apprentice` untouched — it
-/// carries no `Effect::ConfersHermeticTraining` yet, so `is_hermetically_trained`
-/// still reads him as untrained, and his XP shape is exactly what it was on
-/// `main` before this design note: later life is his GENERAL pool (225 = 15
-/// years × 15/yr, ArMDE:2392), with no restricted, Abilities-only LaterLife
-/// pool the way a real magus gets. D3 is what must flip this pin — attaching
-/// the effect and building the truncated per-year block — and this test is
-/// the baseline it flips: if D3 lands and this test is still green unchanged,
-/// D3 did not actually wire anything.
+/// **The pin D3 flips.** D56/A0's whole Group A rewire (sub-slices 1–3)
+/// deliberately left the shipped `flaw.abandoned_apprentice` untouched, so its
+/// XP shape was exactly what it was before this design note: later life as
+/// his GENERAL pool (225 = 15 years × 15/yr), no restricted, Abilities-only
+/// LaterLife pool the way a real magus gets. D3's own job (A0 § 5 hand-off
+/// note item 2 — "an Abandoned Apprentice built at a chosen age gets exactly
+/// 16 × years XP and 8 × years spell levels... landing all at once") is to
+/// flip that: a 20-year-old who completed 7 years of truncated apprenticeship
+/// training before abandonment gets 16×7=112 general XP (the fixed per-year
+/// rate D56 derives from ArMDE:2435's 240/120 over 15 years) and 8×7=56 spell
+/// levels, not the untouched Flaw's 225. D64 (Norbert, 2026-09-28) further
+/// splits the ordinary later-life years around the truncated block: the
+/// years BEFORE it stay Abilities-only (the Arts are not opened yet), the
+/// years AFTER it may fund Arts as well, alongside the truncated block, in
+/// GENERAL. RED today: the shipped item carries no `years_completed`
+/// parameter and no `TruncatedApprenticeshipXp`/`ConfersHermeticTrainingIf`
+/// effects yet — that data edit is D3's own scope, landing together with the
+/// engine wiring (no over-funding window per A0's own reasoning: today's
+/// shape is a known, not-yet-fixed defect).
 #[test]
-fn abandoned_apprentice_xp_shape_is_unchanged_pending_d3() {
+fn abandoned_apprentice_completed_years_fund_16_xp_and_8_spell_levels_per_year() {
     let rs = load_ruleset_with_spells();
     let mut e = entity(
         "companion",
         vec![
             Selection::new(Id::new("virtue.the_gift")),
-            Selection::new(Id::new("flaw.abandoned_apprentice")),
+            Selection::with_params(
+                Id::new("flaw.abandoned_apprentice"),
+                BTreeMap::from([("years_completed".into(), Id::new("7"))]),
+            ),
         ],
     );
     e.ability_funding = AbilityFunding::LifeStages;
@@ -5844,19 +5872,165 @@ fn abandoned_apprentice_xp_shape_is_unchanged_pending_d3() {
     }];
 
     let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
+    // D64 arithmetic (age 20, shipped apprenticeship.years 15, default
+    // Gauntlet age 25, years_completed 7): apprenticeship "starts" at
+    // 25-15=10. Pre-span (before the start, Abilities-only — the Arts are
+    // not opened yet): 10 - childhood.years(5) = 5 years x 15/yr = 75, a
+    // RESTRICTED pool. Post-span (after abandonment, Arts-or-Abilities):
+    // 20 - (10+7) = 3 years x 15/yr = 45, GENERAL alongside the truncated
+    // block. `general_pool` = 45 (post-span) + 112 (truncated) = 157;
+    // apprenticeship_xp/post_gauntlet_xp stay 0 (non-magus profile).
     assert_eq!(
-        allocation.general_pool, 225,
-        "later life (15yr x 15/yr) is still the general pool, unchanged"
+        allocation.general_pool, 157,
+        "post-span (45, Arts-or-Abilities) + truncated (112), general pool: {allocation:?}"
     );
-    assert!(
-        !allocation.restricted.iter().any(|p| matches!(
+    let later_life_pool = allocation.restricted.iter().find(|p| {
+        matches!(
             p.origin,
             XpPoolOrigin::LifeStage {
                 block: LifeStageBlock::LaterLife
             }
-        )),
-        "no restricted LaterLife pool yet — that is D3's job: {:?}",
+        )
+    });
+    assert_eq!(
+        later_life_pool.map(|p| p.amount),
+        Some(75),
+        "the pre-span (5yr x 15/yr), Abilities-only, restricted: {:?}",
         allocation.restricted
+    );
+    assert_eq!(
+        life_stage_spell_levels(&e, &rs),
+        56,
+        "7 completed years must fund 8 spell levels/year"
+    );
+}
+
+/// D3's own shipped-data edit (A0 § 5 hand-off note item 1): the real
+/// `flaw.abandoned_apprentice` must carry a `years_completed` Number
+/// parameter bounded `1..=14` (`apprenticeship.years(15) - 1`, mandatory
+/// per the ruleset's own bound-consistency check), the
+/// `ConfersHermeticTrainingIf`/`TruncatedApprenticeshipXp` effect pair naming
+/// it, and the Parma-known advisory (D56, ArMDE:5647: "if the character
+/// knows the Parma Magica, he must join the Order or be slain"). RED: none of
+/// this is on the shipped item yet.
+#[test]
+fn abandoned_apprentice_ships_the_truncated_training_shape() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("flaw.abandoned_apprentice"))
+        .expect("flaw.abandoned_apprentice must ship");
+    assert!(
+        item.parameters.iter().any(|p| p.key == "years_completed"
+            && p.domain == ParameterDomain::Number
+            && p.param_type == ParamType::Number { min: 1, max: 14 }),
+        "must declare a years_completed Number parameter bounded 1..=14: {:?}",
+        item.parameters
+    );
+    assert!(
+        item.effects.contains(&Effect::ConfersHermeticTrainingIf {
+            param: "years_completed".to_string()
+        }),
+        "must confer Hermetic training once years_completed resolves: {:?}",
+        item.effects
+    );
+    assert!(
+        item.effects.contains(&Effect::TruncatedApprenticeshipXp {
+            param: "years_completed".to_string()
+        }),
+        "must fund the truncated block off years_completed: {:?}",
+        item.effects
+    );
+    assert!(
+        item.advisory_prerequisites.is_some(),
+        "must carry the Parma-known advisory (D56, ArMDE:5647)"
+    );
+}
+
+// --- D3 (D56/D62): mandatory ruleset-load integrity for the truncated ------
+// --- apprenticeship parameter (Revision 3/4) -------------------------------
+
+/// D3, Revision 3 (mandatory, not "nice to have" — Norbert's own "taken from
+/// the ruleset rather than hardcoded"): `years_completed`'s authored `max`
+/// must equal `apprenticeship.years − 1` exactly. RED: no such check exists
+/// yet, so a mismatched `max` (10, against a 15-year block whose bound must
+/// be 14) loads without complaint.
+#[test]
+fn years_completed_max_must_equal_apprenticeship_years_minus_one() {
+    let items = r#"[
+      { "id": "flaw.bad_bound", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "years_completed", "type": { "number": { "min": 1, "max": 10 } }, "domain": "number" }],
+        "effects": [
+          { "type": "confers_hermetic_training_if", "param": "years_completed" },
+          { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
+        ] }
+    ]"#;
+    let types = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["personality"], "creation_phases": [] }
+    ]"#;
+    let life_stages = r#"{
+      "apprenticeship": { "years": 15, "xp": 240, "minimum_abilities": [],
+                           "recommended_abilities": [], "recommended_xp": 0,
+                           "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8 },
+      "childhood": { "years": 5, "native_language_ability": "ability.living_language",
+                     "native_language_xp": 75, "spread_xp": 45, "spread_abilities": [] },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+    let abilities = r#"{
+      "advancement": [{ "score": 1, "total_xp": 5 }],
+      "abilities": [{ "id": "ability.living_language", "category": "general", "parameter": "language" }]
+    }"#;
+    let err = Ruleset::from_sources(RulesetSources {
+        id: "test",
+        version: "1",
+        point_items: items,
+        type_profiles: types,
+        abilities: Some(abilities),
+        life_stages: Some(life_stages),
+        ..RulesetSources::default()
+    })
+    .expect_err("a years_completed max not matching apprenticeship.years - 1 must be rejected");
+    let message = err.to_string();
+    assert!(
+        message.contains("flaw.bad_bound"),
+        "must name the offending item: {message}"
+    );
+}
+
+/// D3, Revision 4 (architect finding R3-3): an item declaring
+/// `TruncatedApprenticeshipXp`/`ConfersHermeticTrainingIf` with NO
+/// `apprenticeship` block at all is meaningless data — nothing bounds the
+/// parameter's `max` against — so it must be rejected outright, not silently
+/// skipped (`CLAUDE.md`'s "fail loudly with clear error listing offending
+/// IDs"). RED: no such check exists yet.
+#[test]
+fn truncated_apprenticeship_effect_without_an_apprenticeship_block_is_rejected() {
+    let items = r#"[
+      { "id": "flaw.bad_no_block", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "years_completed", "type": { "number": { "min": 1, "max": 14 } }, "domain": "number" }],
+        "effects": [
+          { "type": "confers_hermetic_training_if", "param": "years_completed" },
+          { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
+        ] }
+    ]"#;
+    let types = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["personality"], "creation_phases": [] }
+    ]"#;
+    let err = Ruleset::from_sources(RulesetSources {
+        id: "test",
+        version: "1",
+        point_items: items,
+        type_profiles: types,
+        ..RulesetSources::default()
+    })
+    .expect_err("a truncated-apprenticeship effect with no apprenticeship block must be rejected");
+    let message = err.to_string();
+    assert!(
+        message.contains("flaw.bad_no_block"),
+        "must name the offending item: {message}"
     );
 }
 
@@ -7068,6 +7242,10 @@ fn shipped_items_with_supernatural_flaw_cap() -> Ruleset {
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         houses: Some(SHIPPED_HOUSES),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+        // D3: this loader carries the real shipped `virtues_flaws.json`,
+        // whose `flaw.abandoned_apprentice` needs an `apprenticeship` block
+        // to bound its `TruncatedApprenticeshipXp` parameter against.
+        life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         parameter_catalogues: Some(include_str!(
             "../../../rules/core/parameter_catalogues.json"
         )),

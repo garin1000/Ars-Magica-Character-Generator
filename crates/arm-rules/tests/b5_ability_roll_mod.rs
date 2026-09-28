@@ -190,6 +190,10 @@ fn load_shipped_ruleset() -> Ruleset {
         abilities: Some(include_str!("../../../rules/core/abilities.json")),
         houses: Some(include_str!("../../../rules/core/houses.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+        // D3: `flaw.abandoned_apprentice` now carries `TruncatedApprenticeshipXp`,
+        // which requires an `apprenticeship` block to bound its parameter
+        // against — the shipped ruleset always ships one.
+        life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         parameter_catalogues: Some(include_str!(
             "../../../rules/core/parameter_catalogues.json"
         )),

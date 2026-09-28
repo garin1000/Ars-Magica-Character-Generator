@@ -13,9 +13,16 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
+    "advisory_prerequisites": { "kind": "none",
+      "value": [{ "kind": "ability_min", "value": { "ability": "ability.parma_magica", "score": 1 } }] },
+    "parameters": [{ "key": "years_completed", "type": { "number": { "min": 1, "max": 14 } }, "domain": "number" }],
+    "effects": [
+      { "type": "confers_hermetic_training_if", "param": "years_completed" },
+      { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
+    ],
     "source": { "anchor": "abandoned-apprentice", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5641, 5650] }
   },
   {

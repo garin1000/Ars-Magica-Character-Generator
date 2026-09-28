@@ -1198,9 +1198,103 @@ F1-F6 confirmed closed against current code; 2 new MAJOR + 1 new MINOR.
 
 No new open questions; § 6.1 (the earmark-capacity question) is unchanged.
 
+## Revision 5 (2026-09-28) — D64, and the Parma advisory's wrong `has` JSON
+
+Applied during D3's implementation (RED-checkpoint fix round), against two
+findings the implementer surfaced rather than silently working around.
+
+**Fix 1 — § 4's Parma advisory JSON cites the wrong `Prereq` variant.** The
+shipped-data example gives
+`{ "kind": "nor", "value": [{ "kind": "has", "value": "ability.parma_magica" }] }`.
+This is wrong: `Prereq::Has` resolves against `PrereqCtx::present_ids` — the
+entity's bought/granted **point-item** (Virtue/Flaw) selections
+(`validation/prereq.rs::present_ids`) — never against `Entity::ability_scores`.
+Parma Magica is an **Ability**, so `Has` can never see it; the correct variant
+is `Prereq::AbilityMin { ability, score }`, which is what `PrereqCtx` actually
+threads Ability scores through. Corrected shape:
+
+```json
+"advisory_prerequisites": { "kind": "none",
+  "value": [{ "kind": "ability_min", "value": { "ability": "ability.parma_magica", "score": 1 } }] }
+```
+
+(`"none"` is the Nor variant's serde tag, `#[serde(rename = "none")]` —
+unrelated to this fix, restated here only because the corrected snippet
+carries it too.) Verified fixture-only in `validation/life_stage.rs`'s test
+module: Parma known (score ≥ 1) → `CODE_ADVISORY_PREREQ_NOT_MET`, a
+**warning**, matching ArMDE:5647 ("if the character knows the Parma Magica, he
+must join the Order or be slain" — the danger is in knowing it unjoined, not
+in lacking it); Parma absent (score 0, the ordinary Abandoned-Apprentice case)
+→ **no** warning, correctly, since the `Nor` holds. Both are green today: the
+mechanism (F-550/Q8) is generic and independent of D3's own effects, so
+nothing here was ever a red to fix — only the note's example was wrong.
+
+**Fix 2 — D64 (Norbert, 2026-09-28, `decisions.md` D64): the ordinary
+later-life years around the truncated block are NOT one merged span.**
+ArMDE:5647 gives the years after abandonment "experience points based on his
+age and other Virtues" without saying where they may go, and the character
+"knows Hermetic magic" (ArMDE:5643) with his Arts already opened — so the
+years *after* abandonment may fund Arts as well as Abilities. The years
+*before* it stay Abilities-only, since the Arts are not open yet. This
+**replaces** § 4's "merged into one bucket" table row and the "no
+counterpart in D40's shape" framing it depended on — the truncated block now
+has THREE spans, not two:
+
+| Span | Years | Funding |
+|---|---|---|
+| Childhood | `childhood.years` (5, unchanged) | 120 XP, restricted |
+| **Pre-span** (childhood → apprenticeship start) | `start − childhood.years` | ordinary later-life rate, **Abilities-only, restricted** (`LifeStageBlock::LaterLife`, same tag/shape a real magus's own pre-apprenticeship later life already gets — D64 does not need a new tag) |
+| Truncated training | `years_completed` | `16 × years_completed` XP, `8 × years_completed` spell levels, **general** |
+| **Post-span** (abandonment → age) | `age − (start + years_completed)` | ordinary later-life rate, **general** (Arts or Abilities) |
+
+`start` = the apprenticeship's hypothetical beginning: the plan's own
+`gauntlet_age` if set, else `apprenticeship.default_gauntlet_age`, minus
+`apprenticeship.years` — all ruleset/plan data, no new field (25 − 15 = 10
+against the shipped ruleset, matching a real magus's own apprenticeship start
+via the Darius example, `ArMDE:2402`).
+
+**Worked example (age 20, `years_completed` 7, shipped data):** `start =
+25 − 15 = 10`. Pre-span `10 − 5 = 5` years × 15/yr = **75**, restricted.
+Post-span `20 − (10 + 7) = 3` years × 15/yr = **45**, general. Truncated
+`16 × 7 = 112`, general. `general_pool = 45 + 112 = 157` (apprenticeship_xp/
+post_gauntlet_xp stay 0, non-magus profile); the restricted LaterLife pool
+carries only the pre-span's **75**, not the pre-D64 merged 120 — the 45 that
+used to sit there moved into general, which is the entire point of the
+ruling, not a loss.
+
+**The age check's bound moves with it.** § 4's R3-2 fix compared age against
+`childhood.years + truncated_training_years`; D64 restates the requirement as
+`age ≥ start + years_completed` — `start` already subsumes childhood plus the
+ordinary pre-span, so `childhood.years` no longer appears in the comparison
+directly. Worked examples: age 6 / `years_completed` 14 now compares against
+`min = 10 + 14 = 24` (not the pre-D64 `19`); age 15 / `years_completed` 7
+compares against `min = 10 + 7 = 17` — a case the OLD, childhood-only formula
+(`5 + 7 = 12`) would have missed entirely (15 clears 12), which is why this
+second example is the one worth pinning as its own red, not a restatement of
+the first.
+
+**Consequence for § 4's engine-change text (not re-derived here in full,
+since this is a documentation amendment, not a fresh implementation plan):**
+`budget()` needs a THIRD span computation alongside childhood and the
+truncated block — a `start` helper reading `plan.gauntlet_age.or(apprenticeship
+.default_gauntlet_age)` and `apprenticeship.years` directly (bypassing
+`apprenticeship_of()`'s profile gate, the same way `TruncatedApprenticeshipXp`
+itself already must), then `pre_span_years = start.saturating_sub(childhood
+.years)` and `post_span_years = age.saturating_sub(start.saturating_add(
+years_completed))`. `LifeStageBudget` needs the post-span's own XP field
+(folded into `general_pool_and_bonus` alongside `truncated_training_xp`) —
+the pre-span reuses the EXISTING `later_life_xp`/`LifeStageBlock::LaterLife`
+plumbing verbatim, just fed a smaller year count than the old merged
+computation gave it. `extra_apprenticeship_years`/`later_life_carve_years`'s
+role changes from "years to carve out of one later-life span" to "the pre-span's
+own boundary" — the exact reshaping is phase-2's to work out at implementation
+time, not pinned further here.
+
 ## Verdict
 
-COMPLETE — ready for re-review. One item remains genuinely open for Norbert
+Superseded in part by Revision 5 (D64: the truncated block's XP shape gains a
+third, general-funding post-span; the Parma advisory's shipped-data example is
+corrected). Otherwise COMPLETE. One item remains genuinely open for Norbert
 (§ 6.1) and is not an invented ruling.
 
 ## New Learnings

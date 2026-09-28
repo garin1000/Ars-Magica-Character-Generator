@@ -77,6 +77,12 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // Not a spell-levels contribution — training is a creation-legality
         // fact, not a levels grant.
         | Effect::ConfersHermeticTraining
+        | Effect::ConfersHermeticTrainingIf { .. }
+        // D3: the 8×years spell-levels term is folded via
+        // `LifeStageBudget.truncated_training_spell_levels`
+        // (`life_stage::LifeStageRules::budget`), a SEPARATE selector —
+        // adding it here too would double-count.
+        | Effect::TruncatedApprenticeshipXp { .. }
         // B1/D21: category/ability prohibitions — no spell-levels
         // contribution, same reasoning as the markers above.
         | Effect::ForbidsAbilityCategory { .. }
@@ -161,6 +167,11 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // double-count exactly as this file's own `LaterLifeXpRate` comment
         // warns against.
         | Effect::ConfersHermeticTraining
+        | Effect::ConfersHermeticTrainingIf { .. }
+        // D3: the 16×years XP term is folded via `general_pool_and_bonus`
+        // (`effective/xp.rs`), not this per-effect fold — same reasoning as
+        // `ConfersHermeticTraining` above.
+        | Effect::TruncatedApprenticeshipXp { .. }
         // B1/D21: category/ability prohibitions — no general-XP
         // contribution, same reasoning as the markers above.
         | Effect::ForbidsAbilityCategory { .. }
@@ -214,7 +225,14 @@ pub fn life_stage_spell_levels(entity: &Entity, ruleset: &Ruleset) -> u32 {
     ruleset
         .life_stages()
         .and_then(|rules| rules.budget(entity, ruleset))
-        .map_or(0, |budget| budget.post_gauntlet_spell_levels)
+        .map_or(0, |budget| {
+            // D3/D56: an Abandoned Apprentice's truncated block also grants
+            // spell levels (8×years) — mutually exclusive with a real
+            // magus's post-Gauntlet split in practice, so summing is safe.
+            budget
+                .post_gauntlet_spell_levels
+                .saturating_add(budget.truncated_training_spell_levels)
+        })
 }
 
 /// The magus's effective spell-levels budget: the base ([`spell_levels_base`])
@@ -562,6 +580,10 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 // Not a Spell Mastery Affinity — grants no advancement
                 // multiplier.
                 | Effect::ConfersHermeticTraining
+                | Effect::ConfersHermeticTrainingIf { .. }
+                // D3: a general-XP/life-stage-years grant, no advancement
+                // multiplier either.
+                | Effect::TruncatedApprenticeshipXp { .. }
                 // B1/D21: category/ability prohibitions — no advancement
                 // multiplier either.
                 | Effect::ForbidsAbilityCategory { .. }

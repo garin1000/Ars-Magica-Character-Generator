@@ -1032,7 +1032,9 @@ mod tests {
           { "ability": "ability.magic_theory", "min_score": 3 },
           { "ability": "ability.parma_magica", "min_score": 1 }
         ],
-        "recommended_xp": 90
+        "recommended_xp": 90,
+        "truncated_xp_per_year": 16,
+        "truncated_spell_levels_per_year": 8
       },
       "childhood": {
         "years": 5,

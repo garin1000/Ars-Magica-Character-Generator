@@ -1341,6 +1341,13 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         // No ability/characteristic creation-time target — a training
         // marker, not a score effect.
         | Effect::ConfersHermeticTraining
+        // The conditional sibling (D3/R3-1): identical reasoning.
+        | Effect::ConfersHermeticTrainingIf { .. }
+        // D3: a pool grant (general, not restricted), matching
+        // `RestrictedAbilityXp`'s own classification — no dangling-target
+        // check here; checked instead by
+        // `ruleset/integrity.rs::validate_effect_refs`'s own dedicated arm.
+        | Effect::TruncatedApprenticeshipXp { .. }
         // B1/D21: these three name a fixed category or a fixed id list, never
         // a player-chosen dangling param — the same classification
         // `AbilityScoreGrant` gets above. Consumed only by the dedicated
@@ -9314,7 +9321,8 @@ mod tests {
     // block is obligatory once a `hermetically_trained` profile ships life-stage rules.
     const SPELL_LIFE_STAGES: &str = r#"{
         "apprenticeship": { "years": 15, "xp": 240, "minimum_abilities": [],
-                            "recommended_abilities": [], "recommended_xp": 0 },
+                            "recommended_abilities": [], "recommended_xp": 0,
+                            "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8 },
         "childhood": { "years": 5, "native_language_ability": "ability.living_language",
                        "native_language_xp": 75, "spread_xp": 45,
                        "spread_abilities": ["ability.living_language"] },

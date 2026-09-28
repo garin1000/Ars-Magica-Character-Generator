@@ -58,6 +58,7 @@ impl Ruleset {
 
         self.validate_childhood_refs(&mut errors);
         self.validate_apprenticeship_refs(&mut errors);
+        self.validate_truncated_apprenticeship_param(&mut errors);
         self.validate_post_apprenticeship_rules(&mut errors);
         self.validate_aging_rules(&mut errors);
         self.validate_childhood_packages(&mut errors);
@@ -944,6 +945,66 @@ impl Ruleset {
                  not the stated {}",
                 apprenticeship.recommended_xp
             ));
+        }
+    }
+
+    /// D3, Revision 3/4 (mandatory bound-consistency check, and R3-3):
+    /// every item declaring [`Effect::TruncatedApprenticeshipXp`] names a
+    /// `Number`-domain parameter (`years_completed`) whose authored `max`
+    /// must equal `apprenticeship.years − 1` exactly — "taken from the
+    /// ruleset rather than hardcoded" (Norbert), not a house-rule
+    /// transcription to trust blindly. Two failures, both load-time, both
+    /// naming the offending item:
+    ///
+    /// - **No `apprenticeship` block at all**: the parameter's bound has
+    ///   nothing to verify against, so the item's own shape is meaningless
+    ///   data — rejected outright, not silently skipped
+    ///   (`CLAUDE.md`'s "fail loudly with clear error listing offending
+    ///   IDs").
+    /// - **A block exists, but `max` disagrees**: completing all
+    ///   `apprenticeship.years` is a finished apprenticeship, not an
+    ///   abandoned one (D62), so the bound is exactly `years − 1`, no more
+    ///   and no less.
+    ///
+    /// Runs from [`Ruleset::validate_integrity`] beside
+    /// [`Self::validate_apprenticeship_refs`], so a cached ruleset returning
+    /// through [`Ruleset::from_serialized`] is held to the same standard.
+    /// The parameter's own referential existence (declared on the same item,
+    /// `Number`-domain) is [`Self::validate_effect_refs`]'s job; this check
+    /// additionally prices its bound against the ruleset's own data.
+    fn validate_truncated_apprenticeship_param(&self, errors: &mut Vec<String>) {
+        for (id, item) in &self.point_items {
+            let Some(param) = item.effects.iter().find_map(|effect| match effect {
+                Effect::TruncatedApprenticeshipXp { param } => Some(param.as_str()),
+                _ => None,
+            }) else {
+                continue;
+            };
+            let Some(apprenticeship) = self
+                .life_stages
+                .as_ref()
+                .and_then(|rules| rules.apprenticeship.as_ref())
+            else {
+                errors.push(format!(
+                    "{id}: effect 'truncated_apprenticeship_xp' requires an \
+                     apprenticeship block, but the ruleset ships none"
+                ));
+                continue;
+            };
+            let Some(def) = item.parameters.iter().find(|p| p.key == param) else {
+                continue; // dangling param: already reported by validate_effect_refs
+            };
+            let ParamType::Number { max, .. } = def.param_type else {
+                continue; // wrong domain/type: already reported by validate_effect_refs
+            };
+            let expected_max = i32::try_from(apprenticeship.years.saturating_sub(1)).unwrap_or(0);
+            if max != expected_max {
+                errors.push(format!(
+                    "{id}: effect 'truncated_apprenticeship_xp' parameter '{param}' has \
+                     max {max}, expected {expected_max} (apprenticeship.years - 1 = {})",
+                    apprenticeship.years
+                ));
+            }
         }
     }
 
@@ -2475,6 +2536,14 @@ impl Ruleset {
                     );
                     continue;
                 }
+                // D3: `param` must resolve to a `Number`-domain parameter on
+                // the SAME item — the truncated block is priced per year, so
+                // its `param` must name a count, not an id or a set, exactly
+                // like `ScaledRestrictedAbilityXp.param` above. Falls through
+                // to the shared domain-check tail below.
+                Effect::TruncatedApprenticeshipXp { param } => {
+                    (param, ParameterDomain::Number, "truncated_apprenticeship_xp")
+                }
                 // D40/D2's integrity table: every named ability id must
                 // resolve (`categories` is the closed enum, serde-checked,
                 // like `RestrictedAbilityXp` above); `years` may be non-zero
@@ -2654,6 +2723,21 @@ impl Ruleset {
                 | Effect::HalvesSpellCapBeyondTouch
                 // Identical shape: no parameter, no ref, nothing to validate.
                 | Effect::ConfersHermeticTraining => {
+                    continue;
+                }
+                // D3/R3-1: presence-only gate — `param` must resolve to a
+                // declared parameter on the SAME item, but (unlike
+                // `TruncatedApprenticeshipXp` above) ANY domain, since this
+                // only tests whether ANYTHING was chosen, not what kind of
+                // value it is. Its own `continue` arm rather than falling
+                // through the shared tail, which always enforces one fixed
+                // domain.
+                Effect::ConfersHermeticTrainingIf { param } => {
+                    if item.parameters.iter().all(|p| &p.key != param) {
+                        errors.push(format!(
+                            "{id}: effect 'confers_hermetic_training_if' references unknown parameter '{param}'"
+                        ));
+                    }
                     continue;
                 }
                 // A closed enum (`AbilityCategory`), serde-checked at parse

@@ -889,6 +889,10 @@ fn over_budget_virtues_is_reported() {
     let characteristics = fs::read_to_string(core.join("characteristics.json")).unwrap();
     let houses = fs::read_to_string(core.join("houses.json")).unwrap();
     let parameter_catalogues = fs::read_to_string(core.join("parameter_catalogues.json")).unwrap();
+    // D3: `flaw.abandoned_apprentice` now carries `TruncatedApprenticeshipXp`,
+    // which requires an `apprenticeship` block to bound its parameter
+    // against — the shipped ruleset always ships one.
+    let life_stages = fs::read_to_string(core.join("life_stages.json")).unwrap();
     let tiny_type = r#"[{
         "id": "tiny",
         "budget": { "virtue_points": 1, "flaw_points": 10 },
@@ -907,6 +911,7 @@ fn over_budget_virtues_is_reported() {
         arts: Some(&arts),
         houses: Some(&houses),
         characteristics: Some(characteristics.as_str()),
+        life_stages: Some(&life_stages),
         parameter_catalogues: Some(&parameter_catalogues),
         ..RulesetSources::default()
     })
@@ -3408,6 +3413,13 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         post_gauntlet_points: 950,
         post_gauntlet_spell_levels: 300,
         post_gauntlet_xp: 650,
+        // D3/D64: 0 for this magus fixture, like every other non-Abandoned-
+        // Apprentice character — still mirrored so a future rename is caught.
+        truncated_training_years: 0,
+        truncated_training_xp: 0,
+        truncated_training_spell_levels: 0,
+        truncated_training_post_span_years: 0,
+        truncated_training_post_span_xp: 0,
     };
     let rules = arm_rules::LifeStageRules {
         apprenticeship: Some(arm_rules::ApprenticeshipRules {
@@ -3431,6 +3443,8 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
             recommended_xp: 90,
             xp: 240,
             years: 15,
+            truncated_xp_per_year: 16,
+            truncated_spell_levels_per_year: 8,
         }),
         childhood: arm_rules::ChildhoodRules {
             years: 5,

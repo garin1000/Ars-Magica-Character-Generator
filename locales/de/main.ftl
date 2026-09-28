@@ -1058,6 +1058,11 @@ param-label-study = Studium
 # die Obergrenze (2 Jahre, 60 EP) ist min/max des Parameters, von der Engine
 # durchgesetzt.
 param-label-years = Jahre
+# Die Anzahl der vor der Verstoßung abgeschlossenen Lehrjahre des Verlassenen
+# Lehrlings (ArMDE:5641-5650, D56/D62/D3); die Obergrenze
+# (apprenticeship.years - 1) ist min/max des Parameters, von der Engine
+# durchgesetzt.
+param-label-years_completed = Abgeschlossene Jahre
 # Die Mehrfachwahl der drei Verderbt-Einträge (D9 Teil 3, D15, ArMDE:5847-5864)
 # — welche Fertigkeiten/Künste/Zauber der Fehler betrifft.
 param-label-targets = Ziele

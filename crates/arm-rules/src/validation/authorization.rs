@@ -237,6 +237,59 @@ mod tests {
         .unwrap()
     }
 
+    /// D3: `flaw.test_truncated_apprentice`'s `TruncatedApprenticeshipXp`
+    /// needs an `apprenticeship` block to bound its parameter against
+    /// (R3-3). Kept fully separate from [`rs`]/[`ITEMS`] (which every OTHER
+    /// test in this module still uses) rather than widening them: `TYPES`
+    /// ships a `magus` profile, and pairing that with `life_stages` at all
+    /// pulls in the unrelated engine-required-roles check (a
+    /// `post_apprenticeship` block) — noise this one test (the whole-
+    /// character exemption) has nothing to do with. A companion-only
+    /// fixture sidesteps that entirely.
+    const TRUNCATED_ITEMS: &str = r#"[
+      { "id": "flaw.test_truncated_apprentice", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "years_completed", "type": { "number": { "min": 1, "max": 14 } }, "domain": "number" }],
+        "effects": [
+          { "type": "confers_hermetic_training_if", "param": "years_completed" },
+          { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
+        ] }
+    ]"#;
+    const TRUNCATED_TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general", "personality", "social_status", "special"],
+        "creation_phases": [] }
+    ]"#;
+    const TRUNCATED_LIFE_STAGES: &str = r#"{
+      "apprenticeship": { "default_gauntlet_age": 25, "years": 15, "xp": 240,
+                           "minimum_abilities": [], "recommended_abilities": [], "recommended_xp": 0,
+                           "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8 },
+      "childhood": { "years": 5, "native_language_ability": "ability.living_language",
+                     "native_language_xp": 75, "spread_xp": 45, "spread_abilities": [] },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+    const TRUNCATED_ABILITIES: &str = r#"{
+      "advancement": [ { "score": 1, "total_xp": 5 }, { "score": 3, "total_xp": 30 } ],
+      "categories_requiring_virtue": ["academic", "arcane", "martial"],
+      "abilities": [
+        { "id": "ability.magic_theory", "category": "arcane" },
+        { "id": "ability.living_language", "category": "general", "parameter": "language" }
+      ]
+    }"#;
+
+    fn truncated_apprentice_rs() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: TRUNCATED_ITEMS,
+            type_profiles: TRUNCATED_TYPES,
+            abilities: Some(TRUNCATED_ABILITIES),
+            life_stages: Some(TRUNCATED_LIFE_STAGES),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
     /// A companion/magus with one parameterized ability score, for the
     /// instance-restriction tests below (the plain [`character`] helper always
     /// leaves `parameter: None`).
@@ -525,6 +578,33 @@ mod tests {
         // genuinely switched on, it did not stand down for every companion.
         let untrained = character("companion", vec![], vec![("ability.magic_theory", 3)]);
         assert_eq!(gate_issues(&validate(&untrained, &rs())).len(), 1);
+    }
+
+    /// D3/R3-1: the conditional sibling, once its own `years_completed`
+    /// parameter resolves, must grant the SAME whole-character exemption as
+    /// the bare marker above — an Abandoned-Apprentice-shaped fixture with
+    /// the parameter answered buys Arcane Abilities with no further Virtue.
+    /// RED against the phase-1 stub (`effective/hermetic_training.rs`'s
+    /// `ConfersHermeticTrainingIf` arm is a documented no-op, always false,
+    /// until phase 2 wires the real presence gate): `is_hermetically_trained`
+    /// stays false, so this Ability is refused exactly like an ordinary
+    /// companion's.
+    #[test]
+    fn truncated_apprentice_shaped_test_fixture_is_authorized_for_arcane_abilities_once_years_completed_resolves()
+     {
+        let entity = character_with_param(
+            "companion",
+            "flaw.test_truncated_apprentice",
+            "years_completed",
+            "7",
+            vec![("ability.magic_theory", 3)],
+        );
+        let rs = truncated_apprentice_rs();
+        assert!(
+            gate_issues(&validate(&entity, &rs)).is_empty(),
+            "issues: {:?}",
+            codes(&validate(&entity, &rs))
+        );
     }
 
     /// A ruleset that names no gated categories cannot enforce the rule, so the

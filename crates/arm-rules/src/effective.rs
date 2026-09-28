@@ -410,6 +410,15 @@ macro_rules! irrelevant_effect_variants {
         // ratio, no in-play mod; consumed only by
         // `effective/hermetic_training.rs::entity_confers_hermetic_training`.
         | Effect::ConfersHermeticTraining
+        // The conditional sibling (D3/R3-1): same reasoning, consumed by the
+        // SAME function's second match arm.
+        | Effect::ConfersHermeticTrainingIf { .. }
+        // D56/D62/D3: funds the general XP pool and carves years out of later
+        // life (`effective/xp.rs::general_pool_and_bonus`,
+        // `life_stage::extra_apprenticeship_years`) — never a score
+        // bonus/shift/Affinity reduction, so a no-op in every fold this tail
+        // shares, same family as `RestrictedAbilityXp`/`ReplacesLifeStageXp`.
+        | Effect::TruncatedApprenticeshipXp { .. }
         // B1/D21: category/ability prohibitions — no score, no Affinity
         // ratio, no in-play mod; consumed only by the dedicated grant-aware
         // validator in `validation/selections.rs`.
@@ -3236,7 +3245,9 @@ mod tests {
             "xp": 240,
             "minimum_abilities": [],
             "recommended_abilities": [],
-            "recommended_xp": 0
+            "recommended_xp": 0,
+            "truncated_xp_per_year": 16,
+            "truncated_spell_levels_per_year": 8
           },
           "childhood": {
             "years": 5,

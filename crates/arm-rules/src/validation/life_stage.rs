@@ -161,15 +161,30 @@ fn validate_life_stage_age_meets_minimum(
     // shaped `ReplacesLifeStageXp` (Redcap, Lone Redcap) carves its own
     // `years` out of later life exactly as a magus's apprenticeship does, so
     // it gets the identical class of floor — reusing the SAME gate
-    // `life_stage.rs::budget()` itself reads (`extra_apprenticeship_years`),
-    // never re-derived. D3 later folds a third candidate into that same
-    // helper rather than adding a fifth branch here.
+    // `life_stage.rs::budget()` itself reads (`extra_apprenticeship_years`).
     let carved_training_years = crate::life_stage::extra_apprenticeship_years(entity, ruleset);
+    // D3/D64: a truncated apprenticeship's own bound — `start +
+    // years_completed`, where `start` is the SAME hypothetical apprenticeship
+    // beginning `budget()` computes the pre/post span split from
+    // (`LifeStageRules::truncated_apprenticeship_start`), never re-derived
+    // differently. `None` when no such selection resolves (the F1 gate is
+    // unanswered, or none is held at all).
+    let truncated_bound = entity.life_stages.as_ref().and_then(|plan| {
+        let years = crate::life_stage::truncated_apprentice_years_completed(entity, ruleset)?;
+        let start = rules.truncated_apprenticeship_start(plan)?;
+        Some(start.saturating_add(years))
+    });
     let (subject_age, min_age, code) = if magus {
         (
             budget.map_or(age, |budget| budget.gauntlet_age),
             rules.minimum_gauntlet_age(),
             ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
+        )
+    } else if let Some(min_age) = truncated_bound {
+        (
+            age,
+            min_age,
+            ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION,
         )
     } else if carved_training_years > 0 {
         (
@@ -495,18 +510,29 @@ mod tests {
     use crate::life_stage::LifeStagePlan;
     use crate::types::{
         AbilityFunding, AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef,
+        Selection,
     };
     use crate::validation::{
         IssueSeverity, ValidationIssue, ValidationResult, childhood_rejection_issues, validate,
     };
     use crate::{CreationPhase, Ruleset, RulesetSources};
+    use std::collections::BTreeMap;
 
     const ITEMS: &str = r#"[
       { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
         "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
       { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
         "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"],
-        "effects": [{ "type": "confers_hermetic_training" }] }
+        "effects": [{ "type": "confers_hermetic_training" }] },
+      { "id": "flaw.test_truncated_apprentice", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"],
+        "parameters": [{ "key": "years_completed", "type": { "number": { "min": 1, "max": 14 } }, "domain": "number" }],
+        "effects": [
+          { "type": "confers_hermetic_training_if", "param": "years_completed" },
+          { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
+        ],
+        "advisory_prerequisites": { "kind": "none",
+          "value": [{ "kind": "ability_min", "value": { "ability": "ability.parma_magica", "score": 1 } }] } }
     ]"#;
     const TYPES: &str = r#"[
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -550,7 +576,9 @@ mod tests {
         "xp": 240,
         "minimum_abilities": [],
         "recommended_abilities": [],
-        "recommended_xp": 0
+        "recommended_xp": 0,
+        "truncated_xp_per_year": 16,
+        "truncated_spell_levels_per_year": 8
       },
       "childhood": {
         "years": 5,
@@ -671,6 +699,123 @@ mod tests {
         let result = validate(&planned(3), &rs());
         assert!(
             codes(&result).contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD.into()),
+            "issues: {:?}",
+            codes(&result)
+        );
+    }
+
+    /// D3/R3-2 (architect's own worked example), bound updated per D64: a
+    /// 6-year-old companion who has supposedly completed 14 years of
+    /// truncated apprenticeship training is an impossible timeline. D64's age
+    /// check is `age >= start + years_completed`, where `start` (the
+    /// apprenticeship's hypothetical beginning) is the default Gauntlet
+    /// age(25) minus `apprenticeship.years`(15) = 10 — so `min = 10 + 14 =
+    /// 24`, not the pre-D64 `childhood.years(5) + 14 = 19`. RED today:
+    /// `extra_apprenticeship_years` does not yet fold in
+    /// `TruncatedApprenticeshipXp`'s years at all (D3's own widening of the
+    /// SAME `.max()` chain D2 introduced), so `carved_training_years` stays 0
+    /// and this falls through to the childhood-only floor (5), which a
+    /// 6-year-old clears — no finding at all, silently accepting an
+    /// impossible character.
+    #[test]
+    fn a_six_year_old_with_14_years_of_truncated_training_completed_is_an_error() {
+        let mut entity = planned(6);
+        entity.selections = vec![Selection::with_params(
+            Id::new("flaw.test_truncated_apprentice"),
+            BTreeMap::from([("years_completed".into(), Id::new("14"))]),
+        )];
+        let result = validate(&entity, &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION)
+            .unwrap_or_else(|| {
+                panic!(
+                    "a 6-year-old cannot have completed 14 years of training: {:?}",
+                    codes(&result)
+                )
+            });
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Experience);
+        assert_eq!(issue.args.get("age").map(String::as_str), Some("6"));
+        assert_eq!(issue.args.get("min").map(String::as_str), Some("24"));
+    }
+
+    /// D64's own tightened bound, at the edge the old (childhood-only)
+    /// formula would have missed entirely: a 15-year-old with 7 years of
+    /// truncated training completed. Old formula: `min = childhood.years(5) + 7 = 12`
+    /// — 15 clears it, no error. New formula: `min = start(10) + 7 = 17`
+    /// — 15 does NOT clear it, so this must be an error the old formula
+    /// could never have raised.
+    #[test]
+    fn a_fifteen_year_old_with_7_years_of_truncated_training_completed_is_an_error() {
+        let mut entity = planned(15);
+        entity.selections = vec![Selection::with_params(
+            Id::new("flaw.test_truncated_apprentice"),
+            BTreeMap::from([("years_completed".into(), Id::new("7"))]),
+        )];
+        let result = validate(&entity, &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_TRUNCATION)
+            .unwrap_or_else(|| {
+                panic!(
+                    "a 15-year-old cannot have completed 7 years of training \
+                     starting at the default apprenticeship start (10): {:?}",
+                    codes(&result)
+                )
+            });
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Experience);
+        assert_eq!(issue.args.get("age").map(String::as_str), Some("15"));
+        assert_eq!(issue.args.get("min").map(String::as_str), Some("17"));
+    }
+
+    /// D3/D56 Parma advisory (ArMDE:5647: "If the character knows the Parma
+    /// Magica, he must join the Order or be slain") — a HEDGED restriction,
+    /// F-550/Q8's existing machinery, generic and independent of D3's own new
+    /// effects. **Knowing Parma is the trigger, not the absence of it**: the
+    /// fixture's `advisory_prerequisites` is `Nor([AbilityMin{parma_magica,
+    /// 1}])`, so it is violated (a warning) only once Parma resolves TRUE —
+    /// at Parma 0 the Nor holds and there is nothing to warn about. This
+    /// test (Parma known) is GREEN today: the mechanism needs no D3 wiring.
+    #[test]
+    fn a_truncated_apprentice_who_knows_parma_magica_gets_an_advisory_warning() {
+        let mut entity = planned(20);
+        entity.selections = vec![Selection::with_params(
+            Id::new("flaw.test_truncated_apprentice"),
+            BTreeMap::from([("years_completed".into(), Id::new("7"))]),
+        )];
+        entity.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.parma_magica"),
+            parameter: None,
+            score: 1,
+            specialty: None,
+        });
+        let result = validate(&entity, &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_ADVISORY_PREREQ_NOT_MET)
+            .unwrap_or_else(|| panic!("expected a Parma advisory warning: {:?}", codes(&result)));
+        assert_eq!(issue.severity, IssueSeverity::Warning);
+    }
+
+    /// The counterpart to the test above: at Parma 0 the SAME fixture's
+    /// advisory is satisfied (`Nor` holds), so it must NOT fire — asserted
+    /// explicitly so a future change to the gate direction cannot flip both
+    /// tests green by accident.
+    #[test]
+    fn a_truncated_apprentice_without_parma_magica_gets_no_advisory_warning() {
+        let mut entity = planned(20);
+        entity.selections = vec![Selection::with_params(
+            Id::new("flaw.test_truncated_apprentice"),
+            BTreeMap::from([("years_completed".into(), Id::new("7"))]),
+        )];
+        let result = validate(&entity, &rs());
+        assert!(
+            !codes(&result).contains(&ValidationIssue::CODE_ADVISORY_PREREQ_NOT_MET.into()),
             "issues: {:?}",
             codes(&result)
         );
