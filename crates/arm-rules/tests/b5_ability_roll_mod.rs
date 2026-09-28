@@ -4,30 +4,43 @@
 //! `Effect::AbilityRollMod` (parameter-relative: Academic Concentration's
 //! free-text subject) is renamed to `Effect::AbilityRollModParam`, and the
 //! base name `Effect::AbilityRollMod { ability, amount }` now names a FIXED
-//! Ability for a roll-only modifier — Poor Hearing's "Subtract 3 from rolls
-//! involving hearing" (ArMDE:6614-6617), which the parameter-relative shape
-//! cannot express (there is no parameter to read the target Ability from; the
-//! Flaw itself fixes it). Same naming-collision convention `AbilityScoreGrant`/
-//! `AbilityScoreGrantParam` and `CharacteristicScoreDelta`/
-//! `CharacteristicScoreDeltaParam` already use.
+//! Ability for a roll-only modifier, for a passage that names one Ability
+//! with no further condition. Same naming-collision convention
+//! `AbilityScoreGrant`/`AbilityScoreGrantParam` and
+//! `CharacteristicScoreDelta`/`CharacteristicScoreDeltaParam` already use.
+//!
+//! **D61 correction (`docs/vf-audit/decisions.md`, 2026-09-28): the mechanism's
+//! worked example is NOT Poor Hearing.** B5's original design picked
+//! `flaw.poor_hearing` ("Subtract 3 from rolls involving hearing",
+//! ArMDE:6614-6617) as its worked example, which is wrong: "rolls involving
+//! hearing" is conditioned on a SENSE, exactly like Corrupted's "selfish or
+//! sinful" (D15) — a table judgement, not a fixed Ability, since it hits
+//! Awareness rolls made by sight or smell just as wrongly as it misses
+//! non-Awareness hearing rolls. Sense/situation-conditioned modifiers stay
+//! `uncomputed_rule` text (see `shipped_poor_hearing_stays_textual_per_d61`
+//! below, and its twin `shipped_convoluted_mind_stays_textual_per_d61` —
+//! Convoluted Mind's "+3 on all Infernal Lore rolls **to determine what a
+//! demon will do**" narrows the same way).
+//!
+//! The mechanism's real, genuine carriers are three Flaws whose passage names
+//! one Ability with NO further condition: `flaw.poor_concentration` (-3
+//! Concentration, ArMDE:6602-6605), `flaw.inconstant_magic` (-3 Finesse,
+//! ArMDE:6298-6301), and `flaw.clumsy_magic` (-3 Finesse, ArMDE:5801-5804).
 //!
 //! Ruleset-JSON-only rename (design § 6): no `SCHEMA_VERSION` bump. The one
-//! known carrier, `virtue.academic_concentration_subject`, is updated in the
-//! same commit (`rules/core/virtues_flaws.json`) so it keeps resolving under
-//! the new `ability_roll_mod_param` tag.
+//! known parameter-relative carrier, `virtue.academic_concentration_subject`,
+//! is updated in the same commit (`rules/core/virtues_flaws.json`) so it
+//! keeps resolving under the new `ability_roll_mod_param` tag.
 //!
 //! Both variants are surfaced-only (5i): neither ever perturbs a bought or
 //! effective Ability score.
-//!
-//! RED-CHECKPOINT PROTOCOL, phase 1: `Effect::AbilityRollMod`'s fixed-target
-//! shape is declared but every consuming match arm is a documented no-op
-//! (`derived.rs::in_play_mods`, `ruleset/integrity.rs::validate_effect_refs`) —
-//! deliberately, so the tests below fail for the right reason (missing
-//! behavior, not a compile error or an unrelated cascade).
 
 use arm_rules::ruleset::{Ruleset, RulesetSources};
-use arm_rules::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
+use arm_rules::types::{
+    AbilityScore, Classification, Entity, EntityKind, Id, RulesetRef, Selection,
+};
 use arm_rules::{ModifierFamily, effective_ability_score, surfaced_modifiers};
+use serde_json::Value;
 use std::collections::BTreeMap;
 
 /// `ruleset/integrity.rs::validate_engine_required_categories`: any non-empty
@@ -185,24 +198,179 @@ fn load_shipped_ruleset() -> Ruleset {
     .expect("the shipped ruleset must load")
 }
 
-/// A data red (design § 7/§ 8's B5 row): `flaw.poor_hearing` (ArMDE:6614-6617)
-/// ships `narrative` with no effects today. Fails until B5's own worked
-/// example authors the effect and reclassifies the entry to `in_play_effect`.
-/// Checks the STRUCTURED `ability` field (coordinator review), not `detail`.
-#[test]
-fn shipped_poor_hearing_surfaces_minus_three_to_awareness() {
+// --- (e) D61: sense/situation-conditioned modifiers stay text-only ---------
+
+/// Shared assertion for a D61 sense/situation-conditioned entry: it must
+/// carry NO computed effect at all — `uncomputed_rule`, no surfaced
+/// modifier — and its rule must reach the player as `description` text, in
+/// every shipped locale, containing the given phrase verbatim.
+fn assert_shipped_uncomputed_roll_text(id: &str, checks: &[(&str, &str, &str)]) {
     let rs = load_shipped_ruleset();
-    let entity = companion(vec![Selection::new(Id::new("flaw.poor_hearing"))]);
+    let item = rs
+        .item(&Id::new(id))
+        .unwrap_or_else(|| panic!("{id} must be in the shipped catalogue"));
+    assert_eq!(
+        item.classification,
+        Classification::UncomputedRule,
+        "D61: a sense/situation-conditioned modifier is a table judgement, so {id} must be \
+         classified uncomputed_rule, not {:?}",
+        item.classification
+    );
+
+    let entity = companion(vec![Selection::new(Id::new(id))]);
+    let s = surfaced_modifiers(&entity, &rs);
+    assert!(
+        !s.iter().any(|m| m.source == Some(Id::new(id))),
+        "D61: {id} must surface NO computed modifier at all (the rule is text-only) — \
+         surfaced: {s:?}"
+    );
+
+    for (lang, i18n_json, rule_phrase) in checks {
+        let entries: BTreeMap<String, Value> =
+            serde_json::from_str(i18n_json).expect("i18n virtues_flaws.json is valid JSON");
+        let entry = entries
+            .get(id)
+            .unwrap_or_else(|| panic!("{id} must have an i18n entry"));
+        let description = entry
+            .get("description")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        assert!(
+            description.contains(rule_phrase),
+            "D61: {lang}/{id}'s `description` must carry the rule verbatim (expected to \
+             contain {rule_phrase:?}) — description: {description:?}"
+        );
+    }
+}
+
+/// D61 (`docs/vf-audit/decisions.md`, 2026-09-28): B5's worked example above
+/// was wrong. "Subtract 3 from rolls involving hearing" (ArMDE:6614-6617) is a
+/// modifier conditioned on a SENSE, like Corrupted's "selfish or sinful"
+/// (D15) — a table judgement, not a fixed-Ability roll modifier: it hits
+/// Awareness rolls made by sight or smell just as wrongly as it misses
+/// non-Awareness hearing rolls (a Perception roll, following speech).
+#[test]
+fn shipped_poor_hearing_stays_textual_per_d61() {
+    assert_shipped_uncomputed_roll_text(
+        "flaw.poor_hearing",
+        &[
+            (
+                "en",
+                include_str!("../../../rules/i18n/en/virtues_flaws.json"),
+                "rolls involving hearing",
+            ),
+            (
+                "de",
+                include_str!("../../../rules/i18n/de/virtues_flaws.json"),
+                "die das Hören beinhalten",
+            ),
+        ],
+    );
+}
+
+/// D61 (coordinator correction, 2026-09-28): `virtue.convoluted_mind`
+/// (ArMDE:3601-3604) is NOT a genuine carrier despite naming Infernal Lore
+/// outright — "+3 bonus on all Infernal Lore rolls **to determine what a
+/// demon will do**" narrows the modifier to a subset of Infernal Lore rolls,
+/// exactly Poor Hearing's error: Infernal Lore has uses beyond predicting a
+/// demon's action, and none of those other uses get the +3. Stays
+/// `uncomputed_rule` text, already shipped correctly — this pins it so a
+/// future edit cannot silently turn it into a fixed `ability_roll_mod`.
+#[test]
+fn shipped_convoluted_mind_stays_textual_per_d61() {
+    assert_shipped_uncomputed_roll_text(
+        "virtue.convoluted_mind",
+        &[
+            (
+                "en",
+                include_str!("../../../rules/i18n/en/virtues_flaws.json"),
+                "Infernal Lore rolls to determine what a demon will do",
+            ),
+            (
+                "de",
+                include_str!("../../../rules/i18n/de/virtues_flaws.json"),
+                "Infernalkunde-Würfe, um zu bestimmen, was ein Dämon tun wird",
+            ),
+        ],
+    );
+}
+
+// --- (f) F-489's genuine class-A carriers (coordinator correction, Phase 1b)
+
+/// Shared assertion for a genuine class-A carrier of the fixed-target
+/// `ability_roll_mod` shape: the passage names one Ability with no further
+/// condition, unlike Poor Hearing's and Convoluted Mind's sense/situation-
+/// conditioned family (D61). Checks three things: the entry is
+/// `in_play_effect`; it surfaces the modifier in the structured `ability`
+/// field; and it never perturbs the bought or effective score of the Ability
+/// it modifies (surfaced-only, design § 1).
+fn assert_shipped_roll_mod_carrier(id: &str, ability: &str, amount: i32) {
+    let rs = load_shipped_ruleset();
+    let item = rs
+        .item(&Id::new(id))
+        .unwrap_or_else(|| panic!("{id} must be in the shipped catalogue"));
+    assert_eq!(
+        item.classification,
+        Classification::InPlayEffect,
+        "{id}: a roll modifier naming one Ability with no further condition is computed, so \
+         classification must be in_play_effect, not {:?}",
+        item.classification
+    );
+
+    let mut entity = companion(vec![Selection::new(Id::new(id))]);
     let s = surfaced_modifiers(&entity, &rs);
     assert!(
         s.iter().any(|m| m.family == ModifierFamily::AbilityRoll
-            && m.ability == Some(Id::new("ability.awareness"))
-            && m.amount == -3
-            && m.source == Some(Id::new("flaw.poor_hearing"))),
-        "flaw.poor_hearing (ArMDE:6614-6617) must surface -3 to Awareness rolls once its \
-         fixed-target ability_roll_mod effect is authored, in the structured `ability` field \
+            && m.ability == Some(Id::new(ability))
+            && m.amount == amount
+            && m.source == Some(Id::new(id))),
+        "{id} must surface {amount:+} to {ability} rolls in the structured `ability` field \
          — surfaced: {s:?}"
     );
+
+    entity.ability_scores.push(AbilityScore {
+        ability: Id::new(ability),
+        score: 3,
+        specialty: None,
+        parameter: None,
+    });
+    let bought = entity.ability_scores[0].score;
+    let effective = effective_ability_score(&entity, &rs, &Id::new(ability), None);
+    assert_eq!(
+        bought, 3,
+        "{id} must never touch the bought score of {ability}"
+    );
+    assert_eq!(
+        effective, 3,
+        "{id} is a roll-only modifier and must never change the bought/effective score of \
+         {ability} — effective: {effective}"
+    );
+}
+
+/// `flaw.poor_concentration` (ArMDE:6602-6605): "The character has a -3
+/// penalty to Concentration rolls." — unconditional, names Concentration
+/// outright.
+#[test]
+fn shipped_poor_concentration_surfaces_minus_three_to_concentration() {
+    assert_shipped_roll_mod_carrier("flaw.poor_concentration", "ability.concentration", -3);
+}
+
+/// `flaw.inconstant_magic` (ArMDE:6298-6301): "The character suffers a -3
+/// penalty to all Finesse rolls." — unconditional; the rest of the passage
+/// describes unrelated narrative effects on the character's spells, not a
+/// condition on this modifier.
+#[test]
+fn shipped_inconstant_magic_surfaces_minus_three_to_finesse() {
+    assert_shipped_roll_mod_carrier("flaw.inconstant_magic", "ability.finesse", -3);
+}
+
+/// `flaw.clumsy_magic` (ArMDE:5801-5804): "You receive a -3 penalty to any
+/// rolls involving Finesse." — unconditional; the passage's other clause (an
+/// aiming roll of 0 auto-botching) is a separate rule about a different
+/// mechanic (the botch die), not a condition on this penalty.
+#[test]
+fn shipped_clumsy_magic_surfaces_minus_three_to_finesse() {
+    assert_shipped_roll_mod_carrier("flaw.clumsy_magic", "ability.finesse", -3);
 }
 
 // --- (d) regression: the renamed param-based shape keeps working ----------

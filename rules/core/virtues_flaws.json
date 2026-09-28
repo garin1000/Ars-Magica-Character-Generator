@@ -375,8 +375,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "uncomputed_rule",
+    "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_roll_mod", "ability": "ability.finesse", "amount": -3 }],
     "source": { "anchor": "clumsy-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5801, 5804] }
   },
   {
@@ -1490,8 +1491,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "uncomputed_rule",
+    "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_roll_mod", "ability": "ability.finesse", "amount": -3 }],
     "source": { "anchor": "inconstant-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6298, 6301] }
   },
   {
@@ -2208,8 +2210,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "uncomputed_rule",
+    "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_roll_mod", "ability": "ability.concentration", "amount": -3 }],
     "source": { "anchor": "poor-concentration", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6602, 6605] }
   },
   {
@@ -2240,9 +2243,8 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "ability_roll_mod", "ability": "ability.awareness", "amount": -3 }],
     "source": { "anchor": "poor-hearing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6614, 6617] }
   },
   {

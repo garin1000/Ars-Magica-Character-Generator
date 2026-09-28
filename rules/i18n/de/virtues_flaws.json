@@ -1004,7 +1004,8 @@
   },
   "flaw.poor_hearing": {
     "name": "Schlechtes Hörvermögen",
-    "summary": "Ziehe 3 von Würfen ab, die das Hören beinhalten."
+    "summary": "Ziehe 3 von Würfen ab, die das Hören beinhalten.",
+    "description": "Ziehe 3 von Würfen ab, die das Hören beinhalten. Sprache, die für andere aufgrund von Sprache, Dialekt oder Akzent schwer zu verstehen ist, ist für dich fast unmöglich zu folgen. Du tust oft so, als würdest du Leuten zuhören, obwohl du es in Wirklichkeit nicht tust."
   },
   "flaw.poor_living_conditions": {
     "name": "Schlechte Lebensbedingungen",

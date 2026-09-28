@@ -1003,7 +1003,8 @@
   },
   "flaw.poor_hearing": {
     "name": "Poor Hearing",
-    "summary": "Subtract 3 from rolls involving hearing."
+    "summary": "Subtract 3 from rolls involving hearing.",
+    "description": "Subtract 3 from rolls involving hearing. Speech that is hard for others to understand because of language, dialect, or accent is almost impossible for you to follow. You often pretend to be listening to people when in fact you are not."
   },
   "flaw.poor_living_conditions": {
     "name": "Poor Living Conditions",

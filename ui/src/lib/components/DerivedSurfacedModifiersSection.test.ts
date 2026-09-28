@@ -142,48 +142,51 @@ describe('DerivedSurfacedModifiersSection attributes a row to its source (D45, F
   });
 });
 
-// B5 (coordinator review, post-phase-1 design decision): a fixed-target
-// `ability_roll_mod` row (Poor Hearing: -3 to Awareness) names its Ability
-// through the STRUCTURED `ability` field, never through the free-text
-// `detail` a parameter-based row (Academic Concentration) uses — a raw
-// catalogue id must never reach a field this component renders verbatim
-// (CLAUDE.md). The panel must resolve `ability` the same way every other
-// catalogue id is resolved: through the ruleset's own i18n, not a hardcoded
-// slug or the id itself.
+// B5 (coordinator review, post-phase-1 design decision; D61 corrected the
+// worked example from Poor Hearing to Poor Concentration — Poor Hearing's
+// "rolls involving hearing" is sense-conditioned and stays text, see
+// `docs/vf-audit/decisions.md` D61): a fixed-target `ability_roll_mod` row
+// (Poor Concentration: -3 to Concentration) names its Ability through the
+// STRUCTURED `ability` field, never through the free-text `detail` a
+// parameter-based row (Academic Concentration) uses — a raw catalogue id
+// must never reach a field this component renders verbatim (CLAUDE.md). The
+// panel must resolve `ability` the same way every other catalogue id is
+// resolved: through the ruleset's own i18n, not a hardcoded slug or the id
+// itself.
 describe('DerivedSurfacedModifiersSection renders a fixed-target ability_roll_mod (B5)', () => {
   it('renders the localized English Ability name, never the raw id', () => {
     store.lang = 'en';
-    installRulesetNaming('ability.awareness', 'Awareness');
+    installRulesetNaming('ability.concentration', 'Concentration');
     const body = html(
       derivedFixture([
         {
           family: 'ability_roll',
           detail: '',
           amount: -3,
-          source: 'flaw.poor_hearing',
-          ability: 'ability.awareness',
+          source: 'flaw.poor_concentration',
+          ability: 'ability.concentration',
         },
       ]),
     );
-    expect(body).toContain('Awareness');
-    expect(body).not.toContain('ability.awareness');
+    expect(body).toContain('Concentration');
+    expect(body).not.toContain('ability.concentration');
   });
 
   it('renders the localized German Ability name, never the raw id', () => {
     store.lang = 'de';
-    installRulesetNaming('ability.awareness', 'Wahrnehmung');
+    installRulesetNaming('ability.concentration', 'Konzentration');
     const body = html(
       derivedFixture([
         {
           family: 'ability_roll',
           detail: '',
           amount: -3,
-          source: 'flaw.poor_hearing',
-          ability: 'ability.awareness',
+          source: 'flaw.poor_concentration',
+          ability: 'ability.concentration',
         },
       ]),
     );
-    expect(body).toContain('Wahrnehmung');
-    expect(body).not.toContain('ability.awareness');
+    expect(body).toContain('Konzentration');
+    expect(body).not.toContain('ability.concentration');
   });
 });
