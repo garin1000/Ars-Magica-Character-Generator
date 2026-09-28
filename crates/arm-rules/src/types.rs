@@ -2048,14 +2048,40 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         param: Option<String>,
     },
+    /// A flat modifier to rolls of a FIXED Ability, named directly by this
+    /// entry rather than by a player-chosen parameter (Poor Hearing: -3 to
+    /// Awareness rolls) — the fixed-target twin of
+    /// [`Self::AbilityRollModParam`]'s free-text subject, on the same
+    /// "base name = fixed target, `...Param` = parameter-relative target"
+    /// convention [`Self::AbilityScoreGrant`]/[`Self::AbilityScoreGrantParam`]
+    /// and [`Self::CharacteristicScoreDelta`]/[`Self::CharacteristicScoreDeltaParam`]
+    /// already follow (B5/F-489: `AbilityRollMod` predates the convention,
+    /// which is why the OLD parameter-relative shape is the one that got
+    /// renamed, not this one). **Surfaced-only**: it modifies rolls, not the
+    /// bought/effective Ability score, so it never perturbs creation. 5i
+    /// surfaces it labelled.
+    ///
+    /// Source: ArMDE:6614-6617 (Poor Hearing, the worked example).
+    AbilityRollMod {
+        /// The Ability this modifier always targets.
+        ability: Id,
+        /// Points added to rolls of that ability.
+        amount: i8,
+    },
     /// A flat modifier to rolls of a specific Ability in the free-text subject
     /// named by the selection's `params[param]` (Academic Concentration: a bonus
     /// to Concentration for one field of study). **Surfaced-only**: it modifies
     /// rolls, not the bought/effective Ability score, so it never perturbs
     /// creation. 5i surfaces it labelled.
     ///
+    /// Renamed from `AbilityRollMod` (B5/F-489): the base name now names the
+    /// FIXED-target twin above. Ruleset-JSON-only rename (no `SCHEMA_VERSION`
+    /// bump — `Effect` lives in `rules/core/`, not in saves): the one known
+    /// carrier, `virtue.academic_concentration_subject`, is updated in the
+    /// same commit.
+    ///
     /// Source: ArMDE:3362-3367.
-    AbilityRollMod {
+    AbilityRollModParam {
         /// Parameter key whose free-text value names the subject/field.
         param: String,
         /// Points added to rolls of the ability in that subject.
@@ -5760,9 +5786,13 @@ mod tests {
                 kind: SpecialCasting::DeftForm,
                 param: Some("form".into()),
             },
-            Effect::AbilityRollMod {
+            Effect::AbilityRollModParam {
                 param: "subject".into(),
                 amount: 3,
+            },
+            Effect::AbilityRollMod {
+                ability: Id::new("ability.awareness"),
+                amount: -3,
             },
             Effect::ElementalMagic {
                 forms: std::collections::BTreeSet::from([

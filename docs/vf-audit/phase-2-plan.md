@@ -5,9 +5,10 @@
 
 **Status, 2026-09-26: first round DONE** (`6f34a70`…`0ef6dbd`): M0, Phase 1
 (Q1–Q12, Q3b, Q4b, E2, U0), Phase 1S (S1–S4), A0–A2, U6, E1.
-**Status, 2026-09-27:** **Group C done** — C0, C0b, C1–C4, CV1–CV8 (D59),
-C5a–C5c; schema 19. Next: B0 (design note, co-designed D33 predicate). Since CV1
-every slice has run under the red-checkpoint protocol. Open: N1, N4–N7.
+**Status, 2026-09-28:** **Groups C and B done** — C0…C5c (schema 19); B0 note
+(rev. 3, D60), B1–B5; B-boundary e2e 10/10 (one retry: `wizard-flow.e2e.js`
+"warns about unspent experience", a flake to watch). Next: D0 (design note incl.
+D49). Every slice runs under the red-checkpoint protocol. Open: N1, N4–N7.
 
 ## Context
 

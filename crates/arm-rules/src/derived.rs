@@ -336,6 +336,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                             amount: 0,
                             factor: None,
                             source: Some(item.id.clone()),
+                            ability: None,
                         })
                     }
                 },
@@ -348,6 +349,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     amount: i32::from(*amount),
                     factor: None,
                     source: Some(item.id.clone()),
+                    ability: None,
                 }),
                 // D55: `amount` and `factor` are mutually exclusive and load-time
                 // validated (`ruleset/integrity.rs::validate_advancement_mod_shape`),
@@ -364,6 +366,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     amount: amount.map(i32::from).unwrap_or(0),
                     factor: *factor,
                     source: Some(item.id.clone()),
+                    ability: None,
                 }),
                 // Non-standard-casting relievers are computed into the per-cell
                 // NonStandardCasting variants; every other quirk stays surfaced.
@@ -394,9 +397,10 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                         amount: 0,
                         factor: None,
                         source: Some(item.id.clone()),
+                        ability: None,
                     }),
                 },
-                Effect::AbilityRollMod { param, amount } => m.surfaced.push(SurfacedModifier {
+                Effect::AbilityRollModParam { param, amount } => m.surfaced.push(SurfacedModifier {
                     family: ModifierFamily::AbilityRoll,
                     detail: selection
                         .params
@@ -407,6 +411,24 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     amount: i32::from(*amount),
                     factor: None,
                     source: Some(item.id.clone()),
+                    // A free-text subject, not a catalogue Ability id — the
+                    // structured field is reserved for the fixed-target shape
+                    // below (coordinator review, post-B5-phase-1).
+                    ability: None,
+                }),
+                // B5/F-489: the fixed-target twin, named directly by the entry
+                // (Poor Hearing: -3 to Awareness). `ability` is structured,
+                // never `detail` — the UI resolves it through ruleset i18n
+                // (`abilityLabel`'s own path), exactly like a bought Ability's
+                // name, so a raw catalogue id never reaches a field the
+                // component renders verbatim.
+                Effect::AbilityRollMod { ability, amount } => m.surfaced.push(SurfacedModifier {
+                    family: ModifierFamily::AbilityRoll,
+                    detail: String::new(),
+                    amount: i32::from(*amount),
+                    factor: None,
+                    source: Some(item.id.clone()),
+                    ability: Some(ability.clone()),
                 }),
                 // Creation-effect variants (consumed by effective.rs) and the
                 // Elemental Magic XP-space marker: no in-play modifier here.
@@ -704,6 +726,17 @@ pub struct SurfacedModifier {
     /// the row — there is no single item left to name by then.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<Id>,
+    /// The FIXED Ability a [`Effect::AbilityRollMod`] row targets (coordinator
+    /// review, post-B5-phase-1): a structured id, resolved by the UI through
+    /// the same ruleset-i18n path `abilityLabel` already uses for a bought
+    /// Ability's own name — never through `detail`, which stays reserved for
+    /// the free-text subject a [`Effect::AbilityRollModParam`] row carries
+    /// (Academic Concentration). Rendering `detail` verbatim is only ever
+    /// correct for player-typed text; a catalogue id must never reach the
+    /// same field, or it renders as a bare slug (CLAUDE.md). `None` for every
+    /// other family, and for the parameter-relative `AbilityRoll` row.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ability: Option<Id>,
 }
 
 /// Every surfaced-only modifier the character carries, for the read-out list.
@@ -722,6 +755,7 @@ pub fn surfaced_modifiers(entity: &Entity, ruleset: &Ruleset) -> Vec<SurfacedMod
                     amount: *amount,
                     factor: None,
                     source: None,
+                    ability: None,
                 });
             }
             HealthTrack::FatiguePenalty | HealthTrack::WoundPenalty => {}
@@ -995,7 +1029,7 @@ mod tests {
           { "id": "virtue.academic_concentration", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "parameters": [{ "key": "subject", "type": "ref", "domain": "text" }],
-            "effects": [{ "type": "ability_roll_mod", "param": "subject", "amount": 3 }] },
+            "effects": [{ "type": "ability_roll_mod_param", "param": "subject", "amount": 3 }] },
           { "id": "flaw.weak_spontaneous", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
             "effects": [{ "type": "magic_total_halving", "total": "spontaneous_casting" }] },
@@ -3885,7 +3919,7 @@ mod tests {
             && m.source == Some(Id::new("flaw.susceptibility_to_faerie_power"))));
     }
 
-    /// An AbilityRollMod (Academic Concentration) is surfaced with the free-text
+    /// An AbilityRollModParam (Academic Concentration) is surfaced with the free-text
     /// subject as its detail and the bonus as its amount (ArMDE:3362-3367). D45:
     /// also names its source, so two Academic Concentrations on different
     /// subjects each say which one they are.
@@ -3904,7 +3938,7 @@ mod tests {
             && m.source == Some(Id::new("virtue.academic_concentration"))));
     }
 
-    /// `Effect::AbilityRollMod` (and `Effect::MagicalFocus`) carry a `text`-domain
+    /// `Effect::AbilityRollModParam` (and `Effect::MagicalFocus`) carry a `text`-domain
     /// parameter, so its value reaches the sheet verbatim as a surfaced modifier's
     /// detail. Row 10: a padded descriptor is the same descriptor, and the load-time
     /// trim is what makes that true here — so a save holding " Theology " surfaces
@@ -4149,6 +4183,7 @@ mod tests {
             amount: 0,
             factor: None,
             source: Some(Id::new("virtue.unaging")),
+            ability: None,
         };
         let json = serde_json::to_value(&named).unwrap();
         assert_eq!(json["source"], "virtue.unaging");
@@ -4159,6 +4194,7 @@ mod tests {
             amount: 3,
             factor: None,
             source: None,
+            ability: None,
         };
         let json = serde_json::to_value(&unattributed).unwrap();
         assert!(

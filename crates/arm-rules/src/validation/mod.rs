@@ -1314,6 +1314,7 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::AdvancementMod { .. }
         | Effect::SpecialCastingMod { .. }
         | Effect::AbilityRollMod { .. }
+        | Effect::AbilityRollModParam { .. }
         // Elemental Magic carries no ability/characteristic creation target.
         | Effect::ElementalMagic { .. }
         // A bare marker: no ability/characteristic creation target either.

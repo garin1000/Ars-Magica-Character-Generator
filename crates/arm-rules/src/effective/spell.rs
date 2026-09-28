@@ -67,6 +67,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AdvancementMod { .. }
         | Effect::SpecialCastingMod { .. }
         | Effect::AbilityRollMod { .. }
+        | Effect::AbilityRollModParam { .. }
         | Effect::ElementalMagic { .. }
         | Effect::ForbidsAbilitySpecialties
         | Effect::ForbidsRitualCasting
@@ -145,6 +146,7 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AdvancementMod { .. }
         | Effect::SpecialCastingMod { .. }
         | Effect::AbilityRollMod { .. }
+        | Effect::AbilityRollModParam { .. }
         | Effect::ElementalMagic { .. }
         | Effect::ForbidsAbilitySpecialties
         | Effect::ForbidsRitualCasting
@@ -545,6 +547,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
                 | Effect::AbilityRollMod { .. }
+                | Effect::AbilityRollModParam { .. }
                 | Effect::ElementalMagic { .. }
                 | Effect::ForbidsAbilitySpecialties
                 | Effect::ForbidsRitualCasting

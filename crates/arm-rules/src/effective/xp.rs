@@ -873,6 +873,7 @@ pub(crate) fn ability_authorizations(
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
                 | Effect::AbilityRollMod { .. }
+                | Effect::AbilityRollModParam { .. }
                 | Effect::ElementalMagic { .. }
                 | Effect::ForbidsAbilitySpecialties
                 | Effect::ForbidsRitualCasting

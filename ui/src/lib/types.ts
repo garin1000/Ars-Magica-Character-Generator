@@ -244,7 +244,11 @@ export type Effect =
       factor?: AdvancementFactor;
     }
   | { type: 'special_casting_mod'; kind: SpecialCasting }
-  | { type: 'ability_roll_mod'; param: string; amount: number }
+  // B5/F-489: fixed target, named directly by the entry (Poor Hearing: -3 to
+  // Awareness) — the parameter-relative shape below carries the OLD
+  // `ability_roll_mod` tag's original meaning under its renamed tag.
+  | { type: 'ability_roll_mod'; ability: string; amount: number }
+  | { type: 'ability_roll_mod_param'; param: string; amount: number }
   // Elemental Magic (5c): creation-time Art-XP redistribution over the four
   // elemental Forms. Surfaced through the effective art bonus, not rendered raw.
   | { type: 'elemental_magic'; forms: string[] }
@@ -1093,6 +1097,13 @@ export interface SurfacedModifier {
   // every contributing selection's amount into one number before this
   // family is surfaced, so there is no single item left to name.
   source?: string;
+  // The FIXED Ability a fixed-target `ability_roll_mod` row targets
+  // (coordinator review, post-B5-phase-1): resolved through the same
+  // ruleset-i18n path `abilityLabel` uses for a bought Ability's own name —
+  // never rendered from `detail`, which stays reserved for a parameter-based
+  // row's free-text subject (Academic Concentration). Absent for every other
+  // family, and for the parameter-relative `ability_roll` row.
+  ability?: string;
 }
 
 // The full read-only play-stat read-out returned by the `derived_totals` command.

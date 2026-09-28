@@ -383,6 +383,7 @@ macro_rules! irrelevant_effect_variants {
         | Effect::AdvancementMod { .. }
         | Effect::SpecialCastingMod { .. }
         | Effect::AbilityRollMod { .. }
+        | Effect::AbilityRollModParam { .. }
         // Elemental Magic is an XP-space Art boost applied in
         // effective_art_score, not a flat bonus, shift, or Affinity reduction;
         // no-op in every fold that shares this tail.

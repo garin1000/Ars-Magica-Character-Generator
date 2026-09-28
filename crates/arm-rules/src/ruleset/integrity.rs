@@ -2388,8 +2388,14 @@ impl Ruleset {
                 Effect::MagicalFocus { param, .. } => {
                     (param, ParameterDomain::Text, "magical_focus")
                 }
-                Effect::AbilityRollMod { param, .. } => {
-                    (param, ParameterDomain::Text, "ability_roll_mod")
+                Effect::AbilityRollModParam { param, .. } => {
+                    (param, ParameterDomain::Text, "ability_roll_mod_param")
+                }
+                // B5/F-489: fixed target, exactly like `AbilityScoreGrant`
+                // above — validate the directly-stored ability id resolves.
+                Effect::AbilityRollMod { ability, .. } => {
+                    self.validate_ability_ref(ability, "ability_roll_mod", id, errors);
+                    continue;
                 }
                 // Deficient Art targets a Technique OR a Form; the declared
                 // param's domain (technique/form) is what fixes the class.

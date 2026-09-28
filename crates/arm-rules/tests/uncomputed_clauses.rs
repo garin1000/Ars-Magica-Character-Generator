@@ -1353,10 +1353,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "permission: \"may begin with\" Magic Lore or Faerie Lore, ArMDE:6570-6573",
     ),
     (
-        "flaw.poor_hearing",
-        "bare imperative modifier: \"Subtract 3 from rolls involving hearing\", ArMDE:6614-6617",
-    ),
-    (
         "flaw.restricted_learning",
         "permission: \"at character creation\" — the five-Ability restriction itself, \
          ArMDE:6683-6686",

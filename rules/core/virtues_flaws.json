@@ -2240,8 +2240,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_roll_mod", "ability": "ability.awareness", "amount": -3 }],
     "source": { "anchor": "poor-hearing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6614, 6617] }
   },
   {
@@ -3315,7 +3316,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "subject", "type": "ref", "domain": "text" }],
-    "effects": [{ "type": "ability_roll_mod", "param": "subject", "amount": 3 }],
+    "effects": [{ "type": "ability_roll_mod_param", "param": "subject", "amount": 3 }],
     "source": { "anchor": "academic-concentration-subject", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3362, 3367] }
   },
   {

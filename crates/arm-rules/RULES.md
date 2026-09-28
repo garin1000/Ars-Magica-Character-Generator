@@ -5171,7 +5171,8 @@ variants, circumstantial halvings, doubled aura penalties) stays surfaced-only.
 
 **Surfaced-only families** (study / conditional-casting /
 wound-recovery / conditional MR: `AdvancementMod`, the non-computed
-`SpecialCastingMod` kinds, `AbilityRollMod`, the `HealthTrack::{FatigueRoll,
+`SpecialCastingMod` kinds, `AbilityRollMod`/`AbilityRollModParam` (B5/F-489: the
+fixed-target and parameter-relative twins alike), the `HealthTrack::{FatigueRoll,
 CastingFatigue, Recovery}` tracks, and the `MagicResistanceMod`
 kinds that are neither `no_form_bonus` nor `halved_parma`
 — `ModifierFamily::MagicResistance` — aura_bonus, the two realm
@@ -5973,7 +5974,8 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 | `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | ArMDE:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |
 | `AdvancementMod { source, amount?, factor? }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher (+5 teaching, +3 authoring), independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible (teaching ×½, authoring ×½), loose_magic (spell_mastery ×½) | ArMDE:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement); exactly one of `amount`/`factor` is present, load-validated (D55/Q6) |
 | `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, disjointed_magic, the_constant_expression), and doubled_aura_penalty (susceptibility_to_divine_power). **`corrupted_spells` left this family in Phase 2 C5c (D15)**: its `special_casting_mod { circumstantial }` is deleted — the ±3 is on an *Ability/Casting roll a GM judges selfish-or-sinful*, which this family cannot express any more precisely than any other uncomputed rule, so D15 reclassifies all three Corrupted entries `uncomputed_rule` instead (see **Corrupted Abilities/Arts/Spells** below) | ArMDE:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5972-5975, 5821-5838, 6815-6818 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
-| `AbilityRollMod { param(Text), amount }` | Ability-roll bonus in a subject — academic_concentration_subject (+3) | ArMDE:3362-3367 | surfaced |
+| `AbilityRollMod { ability, amount }` | Fixed-target Ability-roll modifier (B5/F-489): the entry itself names the Ability — poor_hearing (Awareness, −3) | ArMDE:6614-6617 | surfaced |
+| `AbilityRollModParam { param(Text), amount }` | Ability-roll bonus in a subject the player names (renamed from `AbilityRollMod`, B5/F-489 — the naming convention's `...Param` = parameter-relative twin) — academic_concentration_subject (+3) | ArMDE:3362-3367 | surfaced |
 
 **Modeling notes / accepted approximations** (each surfaced in 5i's labelled
 read-out, so precision is not lost to the player): `weak_spontaneous_magic` maps
@@ -9488,7 +9490,7 @@ Tests: `a_blank_text_param_reads_as_a_missing_choice` (`validation/mod.rs`),
 `load_trims_the_whitespace_around_every_param_value` and
 `trimming_params_at_load_is_idempotent_and_byte_stable` (`migration.rs`),
 `a_padded_ability_roll_mod_subject_surfaces_trimmed` (`derived.rs` — the
-`text`-domain parameter of `Effect::AbilityRollMod` reaches the sheet verbatim),
+`text`-domain parameter of `Effect::AbilityRollModParam` reaches the sheet verbatim),
 plus `setParamAt` / `setAbilityBonusTarget` trim cases in
 `ui/src/lib/state.svelte.test.ts` and the dirty-flag guard in
 `ui/src/App.client.test.ts`.
