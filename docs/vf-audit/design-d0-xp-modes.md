@@ -978,6 +978,10 @@ hardcoded" — settled, not open.
 
 ### 6.1 — When an earmark's `amount` exceeds what its eligible Abilities can absorb (§ 2)
 
+**Resolved 2026-09-28 (Norbert): as recommended.** The shortfall is lost and
+surfaced by the existing `CODE_RESTRICTED_XP_UNSPENT` warning, with no refund to
+the general pool.
+
 D13 does not rule on this — see § 2's "capacity does not move" correction for
 the full argument. Recommendation: accept the shortfall, surfaced only via
 the existing `CODE_RESTRICTED_XP_UNSPENT` warning, rather than building a
