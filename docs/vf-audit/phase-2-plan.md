@@ -9,6 +9,9 @@
 (rev. 3, D60), B1–B5; B-boundary e2e 10/10 (one retry: `wizard-flow.e2e.js`
 "warns about unspent experience", a flake to watch). Next: D0 (design note incl.
 D49). Every slice runs under the red-checkpoint protocol. Open: N1, N4–N7.
+**Added 2026-09-28:** B1c (after D1) removes B1's unused
+`RestrictsAbilityCategoryToAbilities`. D63 moved Feral's whitelist into its
+D2 replacement pool, so the effect has no carrier.
 
 ## Context
 
