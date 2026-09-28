@@ -79,6 +79,8 @@ sequences.
 
 | # | Question | Recommendation | Gates |
 |---|---|---|---|
+**All five answered 2026-09-28, see `decisions.md` D65.** N1: uncomputed entries get `description ?? summary`, and computed entries **their summary**. N4: whole. N5: all four parts in this round. N6: text. N7: nothing upstream.
+
 | N1 | Row 41: V/F text in the Markdown export | name + `description ?? summary` for `uncomputed_rule`; name otherwise | X8c |
 | N4 | Row 40: index a long `description` whole? | whole | X8b |
 | N5 | Row 51 (a)–(d), one call each | (a), (d) now as data; (b), (c) later (bump) | X10 |
@@ -199,12 +201,14 @@ K3 + Berserk, Ways of the Land, Cyclic (D52), Special Circumstances.
 | X8a | § 3.12: truncation sub-slice, D53, D36, D57's ~36 apposition templates | — | M |
 | X8b | Row 40 search index (N4) | X2 | S |
 | X8c | Row 41 export (N1) | X2 | S |
-| X8d | D31: re-derive the 21 verdicts **into `measurements.md`**, adopt 19 names, revert 7; upstream half under N7 | N7 | M |
+| X8d | D31: re-derive the 21 verdicts **into `measurements.md`**, adopt 19 names, revert 7; nothing filed upstream (D65), the fixes are recorded here for Norbert | — | M |
 | X9a | D30 anchors per catalogue — **spike first** for table-derived catalogues (aging, equipment, characteristics have no `####`); range normalisation; RULES.md/check-1 convention aligned; `anchor` non-optional **last** | M0 | L |
 | X9b | F-16 `virtue.rard` id rename (**bump**) | — | S |
 | X9c | D25's 630-entry descriptor sweep; § 3.14 `prov` findings; F-500 integrity check | — | L |
 | X9d | Row 55: heading beside each citation in `book_templates.rs`. *Coord.* | — | S |
-| X10 | Row 51 per N5. *Coord.* | N5 | S |
+| X10 | Row 51 (a) Tremere's focus names certamen, (d) Grapple row and Piercing the Magical Veil, as data (D65). *Coord.* | — | S |
+| X10b | Row 51 (b): banked XP beside an Art or Ability score (**bump**; D65) | X10 | M |
+| X10c | Row 51 (c): a per-spell "within the Magical Focus" marker (**bump**; D65) | X10b | M |
 
 ### Phase U — product and infra (batched, e2e once per batch)
 

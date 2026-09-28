@@ -828,6 +828,20 @@ presumption of correctness.
 
 ---
 
+## D65 — the plan's five open decisions (N1, N4–N7)
+
+**Norbert, 2026-09-28.**
+
+| # | Ruling | Slice |
+|---|---|---|
+| N1 | Markdown export: an `uncomputed_rule` V/F carries `description ?? summary`, and a computed V/F carries its `summary` | X8c |
+| N4 | The V/F search indexes `summary` and the whole `description` | X8b |
+| N5 | Row 51, all four in this round: (a) Tremere's granted Minor Magical Focus names certamen (ArMDE:2064, :2281), as data; (d) a Grapple equipment row (ArMDE:1774) and `spell.piercing_the_magical_veil` from the source's own figures; (b) banked XP beside Art and Ability scores (bump); (c) a per-spell "within the focus" marker (bump). If the source does not give a value, report it, never invent it | X10, X10b, X10c |
+| N6 | `virtue.aristotelian_training` (ArMDE:3442): `uncomputed_rule` with the full rule as text, since every clause is a condition decided at the table (as D61) | X7a |
+| N7 | Nothing is filed or edited in `arm-de-translation`. Upstream fixes are recorded here, and Norbert carries them over | X8d |
+
+---
+
 ## D64 — an Abandoned Apprentice's years after abandonment may fund Arts
 
 **Norbert, 2026-09-28.** ArMDE:5647 gives the years after abandonment
