@@ -828,6 +828,23 @@ presumption of correctness.
 
 ---
 
+## D61 — "rolls involving <a sense>" is a table call, so it stays text
+
+**Norbert, 2026-09-28**, after B5 encoded Poor Hearing (ArMDE:6616, "Subtract 3
+from rolls involving hearing") as -3 to Awareness rolls. That is wrong both ways:
+it hits Awareness rolls by sight or smell, and misses hearing rolls that use no
+Awareness (a Perception roll, following speech).
+
+**Ruling.** A modifier conditioned on a sense, like D15's "selfish or sinful",
+is a table judgement. It stays in `description` in both locales, with no
+computed effect. That covers Poor Hearing, Sharp Ears (ArMDE:4952), Keen Vision
+(ArMDE:4189), Susceptibility to Sunlight (ArMDE:6829, sight in bright light),
+and the non-combat half of Poor Eyesight (ArMDE:6608). Poor Eyesight's attack
+and defence -3 is stated outright, so it stays computed. A sheet list of
+situational modifiers was offered and **not** chosen.
+
+---
+
 ## D60 — True Love's reciprocity is text; Feral Upbringing's whitelist is creation-only
 
 **Norbert, 2026-09-27**, on B0's open questions (`design-b0-ranging-and-predicates.md` § 9).
