@@ -35,11 +35,16 @@ pub struct ReputationGrant {
 pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
     let mut grants = Vec::new();
     for_each_effect!(entity, ruleset, |selection, effect| {
+        // B4/Q-51: this grant applies only when `gate` holds (Magical Blood's
+        // Magic Human clause) — `is_none_or` so an ungated entry (every OTHER
+        // carrier) still applies unconditionally.
         if let Effect::GrantsReputation {
             kind,
             score,
             max_score,
+            gate,
         } = effect
+            && gate.as_ref().is_none_or(|g| g.holds(selection))
         {
             grants.push(ReputationGrant {
                 source: selection.item_ref.clone(),

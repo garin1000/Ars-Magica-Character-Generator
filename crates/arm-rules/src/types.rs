@@ -968,6 +968,23 @@ pub struct ParameterDef {
     /// resolves against the point-item catalogue.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exclude_if: Option<ItemPredicate>,
+    /// This parameter is only REQUIRED (raises `missing_param` when unfilled)
+    /// when the OWNING selection's own [`ParamGate`] holds — the
+    /// `missing_param` twin of [`Effect::CharacteristicScoreDeltaParam`]'s
+    /// `gate` field (B4/Q-51). `None` (the default) means unconditionally
+    /// required, exactly as before this field existed.
+    ///
+    /// Magical Blood's own worked example: `characteristic` is meaningless
+    /// for Magic Animal/Spirit/Thing (ArMDE:4359-4372), so it is required
+    /// only when `bloodline` equals `bloodline.magic_human` — a Magic Animal
+    /// character must never be forced to fill a Characteristic the clause
+    /// never reads.
+    ///
+    /// Load-time integrity validates `gate.param` with the SAME
+    /// `ruleset::integrity::validate_param_gate` C1 built for
+    /// `AbilityRef`/`CategoryRef`'s own gate — not a new invention.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub required_if: Option<ParamGate>,
 }
 
 impl ParameterDef {
@@ -987,6 +1004,7 @@ impl ParameterDef {
             forbid_tainted: false,
             require_power: false,
             exclude_if: None,
+            required_if: None,
         }
     }
 
@@ -1005,6 +1023,7 @@ impl ParameterDef {
             forbid_tainted: false,
             require_power: false,
             exclude_if: None,
+            required_if: None,
         }
     }
 }
@@ -1068,8 +1087,12 @@ pub struct ParamGate {
 
 impl ParamGate {
     /// Whether this gate is active for `selection`: its named `param` (on the
-    /// SAME item) currently holds `equals`.
-    fn holds(&self, selection: &Selection) -> bool {
+    /// SAME item) currently holds `equals`. `pub(crate)` (B4/Q-51): the two
+    /// real consumer arms this gate's own field guards
+    /// (`characteristic_score_bonus`, `reputation_and_caps.rs::reputation_grants`)
+    /// live outside `types.rs`, unlike `AbilityRef`/`CategoryRef`'s
+    /// `active_for` wrappers, which stay in this module.
+    pub(crate) fn holds(&self, selection: &Selection) -> bool {
         selection
             .params
             .get(&self.param)
@@ -1196,6 +1219,34 @@ impl CategoryRef {
     }
 }
 
+/// Which of the two shapes a [`Effect::CharacteristicScoreDeltaParam`] follows
+/// (coordinator review, post-B4): the RULE this states is data, never inferred
+/// from whether the effect happens to carry a [`ParamGate`]. A future gated
+/// effect with Great-Characteristic-style semantics (raising ABOVE the cap)
+/// must not silently inherit Magical Blood's WITHIN-cap clamp merely for being
+/// gated — the two are independent axes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum CharacteristicDeltaCap {
+    /// Great (Characteristic) +1 / Poor (Characteristic) −1's own shape
+    /// (ArMDE:3987-3989/:6598-6600): the delta requires the bought score to
+    /// ALREADY be at the base cap/floor
+    /// (`validate_characteristic_delta_preconditions`), and the RESULT is
+    /// deliberately left uncapped (Giant Blood reaches +6, `ArMDE:3977`). The
+    /// default — every entry that predates this field keeps this behavior
+    /// exactly, byte-identical, no `SCHEMA_VERSION` bump.
+    #[default]
+    AboveBase,
+    /// Magical Blood's Magic Human shape (ArMDE:4367, B4/Q-51): no
+    /// pre-existing-score precondition at all, but the contribution itself is
+    /// clamped so `bought + contribution` never crosses the base cap/floor
+    /// (`gated_characteristic_delta_contribution`,
+    /// `effective/characteristic.rs`). Independent of `gate` — an UNGATED
+    /// `within_base` delta clamps too, and a GATED `above_base` one (the
+    /// default) keeps the old precondition.
+    WithinBase,
+}
+
 /// A mechanical effect a virtue/flaw applies to a character's scores.
 ///
 /// Effects are *parameter-relative*: each names the parameter key (see
@@ -1233,6 +1284,20 @@ pub enum Effect {
         param: String,
         /// The free effective-score delta per selection (may be negative).
         amount: i8,
+        /// This grant applies only when the OWNING selection's own gate holds
+        /// (Q-51/B4: Magical Blood's Magic Human clause, gated on its
+        /// `bloodline` parameter). Absent for every OTHER existing carrier —
+        /// additive, byte-compatible, no `SCHEMA_VERSION` bump (`Effect` lives
+        /// in ruleset JSON, not in saves).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gate: Option<ParamGate>,
+        /// Which precondition/clamp shape this delta follows — see
+        /// [`CharacteristicDeltaCap`]. Independent of `gate`: this is the
+        /// field the coordinator's review insisted the rule live on, not the
+        /// mere presence of a gate. Defaults to [`CharacteristicDeltaCap::AboveBase`],
+        /// so every entry shipped before this field keeps its exact behavior.
+        #[serde(default, skip_serializing_if = "is_default_characteristic_delta_cap")]
+        cap: CharacteristicDeltaCap,
     },
     /// Adds `amount` to the effective score of the Art named by the selection's
     /// `params[param]` (e.g. Puissant Art, +3). Arts are not parameterized, so the
@@ -1659,6 +1724,11 @@ pub enum Effect {
         /// therefore unchanged.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         max_score: Option<u8>,
+        /// This grant applies only when the OWNING selection's own gate holds
+        /// — same meaning as [`Self::CharacteristicScoreDeltaParam`]'s own
+        /// `gate` field (Q-51/B4).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gate: Option<ParamGate>,
     },
     /// Marks that this item grants (in the book's own narrative sense) a
     /// Personality Trait — e.g. Berserk's "Angry +2" (Q-resolutions #5) or
@@ -3079,6 +3149,13 @@ pub(crate) fn default_max_per_value() -> u8 {
 
 pub(crate) fn is_default_max_per_value(value: &u8) -> bool {
     *value == default_max_per_value()
+}
+
+/// `skip_serializing_if` for [`CharacteristicDeltaCap`] — every entry shipped
+/// before this field existed is `AboveBase`, so this keeps every one of them
+/// byte-identical.
+pub(crate) fn is_default_characteristic_delta_cap(cap: &CharacteristicDeltaCap) -> bool {
+    *cap == CharacteristicDeltaCap::AboveBase
 }
 
 /// The default selection multiplicity: an item may be taken once per target.
@@ -7882,6 +7959,8 @@ mod tests {
             vec![Effect::CharacteristicScoreDeltaParam {
                 param: "characteristic".into(),
                 amount: 1,
+                gate: None,
+                cap: CharacteristicDeltaCap::AboveBase,
             }]
         );
     }

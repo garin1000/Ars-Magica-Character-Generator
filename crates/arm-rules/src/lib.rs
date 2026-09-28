@@ -109,14 +109,14 @@ pub use spell::{Spell, SpellDuration, SpellRange, SpellTarget};
 pub use spell_mastery::SpellMasteryAbility;
 pub use types::{
     AbilityFunding, AbilityParameterValue, AbilityScore, AdvancementFactor, AdvancementSource,
-    AgingEffect, AgingLogEntry, ArtScore, CastingScope, CategoryCap, CategoryRule, Classification,
-    CombatStat, CreationPhase, Effect, EnchantedDevice, Entity, EntityKind, EntityTypeProfile,
-    EquipmentSlot, Familiar, FocusPower, GiftPolicy, HalvableTotal, HealthTrack, I18nEntry, Id,
-    ItemKind, ItemPredicate, LineRange, LongevityRitual, LongevitySource, MagicResistanceEffect,
-    Magnitude, MightScore, ParamType, ParameterDef, ParameterDomain, PersonalityTrait, PointBudget,
-    PointItem, Prereq, Realm, Reputation, ReputationType, RulesetRef, Selection, SourceRef,
-    SpecialCasting, SpellSelection, SupernaturalPower, Talisman, TalismanAttunement,
-    TalismanEffect, TwilightScar, ValidationMode,
+    AgingEffect, AgingLogEntry, ArtScore, CastingScope, CategoryCap, CategoryRule,
+    CharacteristicDeltaCap, Classification, CombatStat, CreationPhase, Effect, EnchantedDevice,
+    Entity, EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, FocusPower, GiftPolicy,
+    HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind, ItemPredicate, LineRange, LongevityRitual,
+    LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType, ParameterDef,
+    ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm, Reputation,
+    ReputationType, RulesetRef, Selection, SourceRef, SpecialCasting, SpellSelection,
+    SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar, ValidationMode,
 };
 pub use validation::{
     AgeInSagaYear, Balance, DEFAULT_SAGA_YEAR, IssueSeverity, PointCeilings, ValidationIssue,

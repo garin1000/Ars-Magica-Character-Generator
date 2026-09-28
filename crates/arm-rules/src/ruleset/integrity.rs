@@ -152,6 +152,15 @@ impl Ruleset {
             self.validate_allow_ids(&item.parameters, &format!("{id}"), errors);
             self.validate_effect_refs(item, id, errors);
 
+            // B4/Q-51: a `required_if` gate is validated by the SAME
+            // `validate_param_gate` C1 already built for `AbilityRef`/
+            // `CategoryRef`'s own gate — not a new invention.
+            for param in &item.parameters {
+                if let Some(gate) = &param.required_if {
+                    self.validate_param_gate(item, gate, "parameter_required_if", id, errors);
+                }
+            }
+
             validate_source_range(&item.source, &format!("{id}"), errors);
         }
     }
@@ -2348,11 +2357,25 @@ impl Ruleset {
                 Effect::AbilityBonus { param, .. } => {
                     (param, ParameterDomain::Ability, "ability_bonus")
                 }
-                Effect::CharacteristicScoreDeltaParam { param, .. } => (
-                    param,
-                    ParameterDomain::Characteristic,
-                    "characteristic_score_delta_param",
-                ),
+                // B4/Q-51: `gate.param`, when present, is validated by the
+                // SAME `validate_param_gate` C1 already built for
+                // `AbilityRef`/`CategoryRef`'s own gate — not a new invention.
+                Effect::CharacteristicScoreDeltaParam { param, gate, .. } => {
+                    if let Some(gate) = gate {
+                        self.validate_param_gate(
+                            item,
+                            gate,
+                            "characteristic_score_delta_param",
+                            id,
+                            errors,
+                        );
+                    }
+                    (
+                        param,
+                        ParameterDomain::Characteristic,
+                        "characteristic_score_delta_param",
+                    )
+                }
                 Effect::ArtBonus { param, .. } => (param, ParameterDomain::Art, "art_bonus"),
                 Effect::AffinityAbilityCost { param, .. } => {
                     (param, ParameterDomain::Ability, "affinity_ability_cost")
@@ -2537,6 +2560,18 @@ impl Ruleset {
                     }
                     continue;
                 }
+                // B4/Q-51: `gate.param`, when present, is validated by the
+                // SAME `validate_param_gate` C1 already built for
+                // `AbilityRef`/`CategoryRef`'s own gate — not a new invention.
+                // Pulled out of the param-less tail below because this is the
+                // one member of that list that now carries an optional
+                // referential check.
+                Effect::GrantsReputation { gate, .. } => {
+                    if let Some(gate) = gate {
+                        self.validate_param_gate(item, gate, "grants_reputation", id, errors);
+                    }
+                    continue;
+                }
                 // No parameter or ref to resolve: the grant is intrinsic. The
                 // param-less / non-`deft_form` SpecialCasting quirks fall here.
                 Effect::SpellMasteryXp { .. }
@@ -2552,7 +2587,6 @@ impl Ruleset {
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
-                | Effect::GrantsReputation { .. }
                 // B3/D23/F-542: `name`/`value` are free-text/plain fields,
                 // nothing to resolve referentially.
                 | Effect::GrantsPersonalityTrait

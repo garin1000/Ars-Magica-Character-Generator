@@ -132,6 +132,18 @@ const ITEMS: Record<string, PointItem> = {
   'virtue.puissant_ability': pointItem('virtue.puissant_ability', [
     { key: 'ability', type: 'ref', domain: 'ability' },
   ]),
+  // B4/Q-51: a `required_if`-gated parameter (Magical Blood's `characteristic`,
+  // meaningless for Magic Animal/Spirit/Thing) — `target` is required only
+  // when `axis` equals `on`.
+  'virtue.gated_param_probe': pointItem('virtue.gated_param_probe', [
+    { key: 'axis', type: 'ref', domain: 'enumerated', values: ['on', 'off'] },
+    {
+      key: 'target',
+      type: 'ref',
+      domain: 'characteristic',
+      required_if: { param: 'axis', equals: 'on' },
+    },
+  ]),
   // Two axes, exactly as the shipped entry has them (ArMDE:3909). The
   // `enumerated` spell category declares its own closed list, so its option set
   // comes from the DATA and not from any catalogue the store holds — three
@@ -232,6 +244,7 @@ function installRuleset(): void {
       'virtue.ways_of_the_land': { name: 'Ways Of The {land}' },
       'virtue.simple_student_probe': { name: 'Simple Student Probe' },
       'virtue.puissant_ability': { name: 'Puissant {ability}' },
+      'virtue.gated_param_probe': { name: 'Gated Param Probe' },
       'ability.awareness': { name: 'Awareness' },
       'ability.stealth': { name: 'Stealth' },
       'ability.area_lore': { name: '{area} Lore' },
@@ -957,5 +970,28 @@ describe('ParameterPicker multi_ref parameter (C5b, D9 part 3)', () => {
     const fieldset = fieldsetFor(pickerBody('flaw.corrupted_spells_probe'), TESTID);
     expect(fieldset).not.toBeNull();
     expect(fieldset).toContain(store.t('param-multi-ref-empty'));
+  });
+});
+
+// B4/Q-51: `required_if` (Magical Blood's `characteristic`, meaningless for
+// Magic Animal/Spirit/Thing) hides the gated parameter's control entirely
+// while its gate does not hold — asking for a Characteristic the clause never
+// reads would be a dead end nothing on screen explains.
+describe('ParameterPicker required_if gate (B4/Q-51)', () => {
+  const TESTID = 'param-virtue.gated_param_probe-target-0';
+
+  it('hides the gated control while the gate does not hold', () => {
+    const select = selectFor(pickerBody('virtue.gated_param_probe', 0, { axis: 'off' }), TESTID);
+    expect(select).toBeNull();
+  });
+
+  it('shows the gated control once the gate holds', () => {
+    const select = selectFor(pickerBody('virtue.gated_param_probe', 0, { axis: 'on' }), TESTID);
+    expect(select).not.toBeNull();
+  });
+
+  it('hides the gated control when the gate parameter is entirely unfilled', () => {
+    const select = selectFor(pickerBody('virtue.gated_param_probe'), TESTID);
+    expect(select).toBeNull();
   });
 });

@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1495).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1510).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1248,7 +1248,7 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :1998, shared by
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2007, shared by
   `validate_prereq_refs` :1917 and `validate_effect_refs` :2340) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
@@ -1259,7 +1259,7 @@ reason: a category condition would license itself.
   `category` (a whitelist entry outside its own category can never apply — a
   form of dead data). `CategoryCap.min > max` is rejected as unsatisfiable, and
   `min_hard` with `min` absent is rejected as meaningless
-  (`ruleset/integrity.rs::validate_category_cap_floors`, :644).
+  (`ruleset/integrity.rs::validate_category_cap_floors`, :653).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -1450,7 +1450,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:276).
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:291).
 
 ### Arts
 
@@ -1498,7 +1498,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:529).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:544).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -4234,6 +4234,128 @@ resolved values); the free Virtue is **derived** at eval by
   fixtures with invented ids; the real catalogue entries this note names —
   `flaw.flawed_powers`, `flaw.university_dean`, `flaw.weak_personality` — are
   Phase 3 data work, not B3's).
+
+#### Parameter-gated effects (B4/Q-51) — `Effect::CharacteristicScoreDeltaParam.gate`/`GrantsReputation.gate`, Magical Blood's Magic Human clause
+> "In addition, she receives a minor physical advantage appropriate to one of
+> the four different types of magic beings (magic animals, magic humans,
+> magic spirits, and magic things), the one that is associated with the
+> character's background. ... *Magic Human:* The character may increase one
+> of his Characteristics by 1, but not above +3. ... The character also has a
+> positive Reputation at level 3 among others of his bloodline."
+
+- Source: `ArMDE:4359-4372` (Magical Blood, full passage).
+- **The gap.** An `Effect` fires for every copy of its owning item regardless
+  of a parameter's value, so encoding Magic Human's Characteristic/Reputation
+  clauses directly would wrongly apply them to Magic Animal/Spirit/Thing too
+  (the F-45/F-20 shape). The missing machinery is "this effect applies only
+  when parameter X holds value Y" — parameter-**gated**, distinct from
+  parameter-**valued** (`characteristic_score_delta_param`'s own `param`,
+  which already existed).
+- **`gate: Option<ParamGate>`** added directly to `Effect::CharacteristicScoreDeltaParam`
+  and `Effect::GrantsReputation` (`types.rs`) — the SAME embedded-gate idiom
+  C0/C1 already established for `AbilityRef::Scoped`/`CategoryRef::Scoped`/
+  `AbilityBonusGated`, not a new wrapper variant (`docs/vf-audit/design-b0-ranging-and-predicates.md`
+  Revision 3 rejects a generic `Effect::Gated` wrapper on YAGNI grounds: Q-51
+  names exactly two concrete carriers, so a direct field does the identical
+  job with no `Box`, no second closed enum). `#[serde(default,
+  skip_serializing_if = "Option::is_none")]` — additive, byte-compatible, no
+  `SCHEMA_VERSION` bump (`Effect` lives in ruleset JSON, not in saves).
+  `ParamGate::holds` is `pub(crate)` (was private to `types.rs`) so the two
+  real consumer arms below, which live in different modules, can call it.
+- **Consumer arms**: `effective/characteristic.rs::characteristic_score_bonus`
+  and `effective/reputation_and_caps.rs::reputation_grants` each guard their
+  existing match arm with `gate.as_ref().is_none_or(|g| g.holds(selection))` —
+  an absent gate (every OTHER carrier) still applies unconditionally.
+- **Load-time integrity**: `gate.param` on either variant is validated by the
+  SAME `ruleset/integrity.rs::validate_param_gate` C1 already built for
+  `AbilityRef`/`CategoryRef`'s own gate (dangling param, or a `MultiRef`
+  param, which has no single value to gate on) — not a new invention, wired
+  in `validate_effect_refs`.
+- **Data**: `rules/core/virtues_flaws.json` `virtue.magical_blood` gains a
+  `bloodline` (`enumerated`, values `bloodline.magic_animal`/`magic_human`/
+  `magic_spirit`/`magic_thing`, localized in both locales like `being.*`/
+  `folk_magic.*`) and a `characteristic` (`characteristic`-domain, player's
+  choice — ArMDE:4367 names Strength/Stamina/Presence as illustrative
+  examples, not a restriction) parameter, plus two effects gated on
+  `{ "param": "bloodline", "equals": "bloodline.magic_human" }`:
+  `characteristic_score_delta_param` (+1) and `grants_reputation` (score 3,
+  `kind` absent — "among others of his bloodline" fits no fixed
+  `ReputationType`, matching Famous's player-chosen-type precedent). The
+  pre-existing `aging_mod` effect (-1 Aging rolls, shared by all four
+  bloodlines) is untouched; classification stays `in_play_effect` — D46's
+  "classification follows what is computed, never where" does not
+  distinguish which `Effect` family an item may mix. Magic Lore's
+  authorization and the Animal/Spirit/Thing sub-type bonuses stay
+  uncomputed, but their prose now lives in `description` in both locales,
+  verbatim from the source — `uncomputed_clauses.rs`'s own
+  `no_swept_entry_drops_an_uncomputed_mechanical_clause` screen is what
+  requires that (a passage stating a mechanical rule needs the SAME in
+  displayed text), and its passing is what let this entry's row leave
+  `PENDING_DROPPED_CLAUSE` entirely rather than merely be reworded.
+- **Gap 1 — `characteristic` must not be required for Magic Animal/Spirit/
+  Thing.** `ParameterDef.required_if: Option<ParamGate>` (`types.rs`) — a
+  declared parameter is only REQUIRED (raises `missing_param`) when the
+  OWNING selection's own gate holds; `None` (the default) means
+  unconditionally required, as before this field existed. Consumed by
+  `validation/selections.rs::validate_selection_parameters`: the "expected"
+  set (governs `unexpected_param`) is unchanged, but a SEPARATE "required"
+  set (governs `missing_param`) drops a key whose `required_if` gate does not
+  hold. `virtue.magical_blood`'s `characteristic` parameter carries
+  `required_if: { "param": "bloodline", "equals": "bloodline.magic_human" }`
+  — an older save with neither param reports `missing_param` for `bloodline`
+  only; once `bloodline=magic_human` is chosen, `characteristic` becomes
+  required in turn. Load-time integrity: the SAME `validate_param_gate`
+  reused again, wired at the point-item call site. UI:
+  `ParameterPicker.svelte` hides the control entirely while a `required_if`
+  gate does not hold (`ui/src/lib/types.ts::ParamGate`, mirrored onto both
+  `ParameterDef.required_if` and `Effect`'s two `gate` fields, which the
+  Rust-side field additions had left unmirrored — corrected in the same
+  slice).
+- **Gap 2 — "but not above +3" (ArMDE:4367).** First cut wrongly inferred the
+  rule from `gate.is_some()`: "gated ⇒ no must-already-be-at-cap precondition,
+  and clamp to the base cap" ties Magic Human's WITHIN-the-cap shape to the
+  mere presence of a gate, so a future GATED effect with Great-Characteristic
+  semantics (raising ABOVE the cap) would silently inherit the wrong rule.
+  Corrected (coordinator review, post-B4) to explicit data:
+  **`CharacteristicDeltaCap`** (`types.rs`, closed 2-variant enum,
+  `#[serde(default)]` on the `cap` field it names) — `AboveBase` (the
+  default: every entry shipped before this field keeps its exact behavior,
+  byte-identical, no `SCHEMA_VERSION` bump) is Great/Poor Characteristic's own
+  shape (requires the bought score already at the cap/floor, result left
+  uncapped); `WithinBase` is Magical Blood's Magic Human shape (no such
+  precondition, contribution clamped instead). `gate` and `cap` are
+  independent axes: `gate` governs WHETHER a delta applies at all;
+  `cap` governs HOW its contribution is computed once it does — a hypothetical
+  GATED `AboveBase` delta keeps the old precondition exactly like an ungated
+  one, and an UNGATED `WithinBase` delta clamps with no gate at all.
+  `validate_characteristic_delta_preconditions` (`scores.rs`) skips its
+  precondition only on `cap: WithinBase` (not on `gate.is_some()` — the
+  `gate` field was removed from `EffectTarget::CharacteristicParamDelta`
+  entirely once nothing there read it any more); `characteristic_score_bonus`
+  (`effective/characteristic.rs`) reads `cap` to choose between the raw
+  `amount` and `capped_characteristic_delta_contribution`'s clamp:
+  `(base_max - bought).clamp(0, amount)` for a positive `amount` (zero once
+  bought is already at the cap), sign-mirrored against `base_min` for a
+  negative one (no shipped entry uses that direction yet). Falls back to the
+  raw `amount`, unclamped, when the ruleset carries no `characteristic_rules`
+  at all (lean test fixtures). `virtue.magical_blood`'s
+  `characteristic_score_delta_param` effect carries both `gate` and
+  `cap: "within_base"`. Mirrored in `ui/src/lib/types.ts`'s `cap?:
+  'above_base' | 'within_base'`, kept `effect-parity.test.ts` green.
+- Tests: `crates/arm-rules/tests/b4_parameter_gated_effects.rs` — hand-authored
+  fixture (gate held/not held, both variants) plus a shipped-data pair
+  against the real `virtue.magical_blood` entry; two load-time-refusal tests
+  (dangling gate param, `multi_ref` gate param) reusing `validate_param_gate`;
+  a serde round-trip pinning that `gate: None`/default `cap` serializes
+  byte-identically to the pre-B4 shape; gap 1's missing-param-scoping pair
+  (Magic Animal never asked, Magic Human still asked); gap 2's cap-clamp pair
+  (already-at-+3 does not overshoot, below-+3 does not misfire the
+  Great-Characteristic-shaped precondition) PLUS the decoupling pair (a
+  GATED `AboveBase` delta keeps the old precondition; an UNGATED `WithinBase`
+  delta clamps) proving `cap` and `gate` are independent.
+  `ui/src/lib/components/ParameterPicker.test.ts` — an SSR render trio for
+  `required_if` (gate held shows the control, gate not held or the gate
+  parameter unfilled hides it).
 
 #### ≥1 Hermetic Flaw (magus guideline)
 > You should take at least one Hermetic Flaw

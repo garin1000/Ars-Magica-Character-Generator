@@ -987,6 +987,9 @@ param-label-focus = Fokus
 param-label-area = Gebiet
 param-label-language = Sprache
 param-label-characteristic = Eigenschaft
+# Magisches Blut, die vier Blutlinien-Subtypen — Magisches Tier/Magischer
+# Mensch/Magischer Geist/Magisches Ding (ArMDE:4359-4372).
+param-label-bloodline = Blutlinie
 param-label-organization = Organisation
 param-label-mystery_cult = Mysterienkult
 param-label-craft = Handwerk

@@ -101,6 +101,45 @@ pub fn size(entity: &Entity, ruleset: &Ruleset) -> i32 {
     total
 }
 
+/// The clamped contribution of a [`CharacteristicDeltaCap::WithinBase`]
+/// [`Effect::CharacteristicScoreDeltaParam`] (B4/Q-51) — `amount` reduced so
+/// `bought + contribution` never crosses the ruleset's base cap (positive
+/// `amount`) or floor (negative `amount`). Keyed on `cap`, never on whether
+/// the effect happens to carry a `gate` — the two are independent axes
+/// (coordinator review, post-B4). Falls back to the raw `amount`, unclamped,
+/// when the ruleset carries no `characteristic_rules` at all (lean test
+/// fixtures) — permissive by default, on
+/// `validate_characteristic_delta_preconditions`'s own
+/// `let Some(rules) = ... else { return }` precedent.
+fn capped_characteristic_delta_contribution(
+    ruleset: &Ruleset,
+    entity: &Entity,
+    characteristic: Characteristic,
+    amount: i8,
+) -> i32 {
+    let Some(rules) = ruleset.characteristic_rules() else {
+        return i32::from(amount);
+    };
+    let bought = i32::from(
+        entity
+            .characteristics
+            .get(&characteristic)
+            .copied()
+            .unwrap_or(0),
+    );
+    match amount.signum() {
+        1 => match rules.base_max_score() {
+            Some(cap) => (i32::from(cap) - bought).clamp(0, i32::from(amount)),
+            None => i32::from(amount),
+        },
+        -1 => match rules.base_min_score() {
+            Some(floor) => (i32::from(floor) - bought).clamp(i32::from(amount), 0),
+            None => i32::from(amount),
+        },
+        _ => 0,
+    }
+}
+
 /// The free effective-score bonus a virtue/flaw grants to `characteristic`,
 /// summed across selections. Costs no buy points and stacks on top of the bought
 /// score. Two shapes contribute, and both are free:
@@ -111,10 +150,25 @@ pub fn size(entity: &Entity, ruleset: &Ruleset) -> i32 {
 ///   targets — Great (Characteristic) +1 (`ArMDE:3989`), Poor -1
 ///   (`ArMDE:6600`).
 ///
-/// **No ceiling is applied here, deliberately.** `ArMDE:3977` says Giant Blood's
-/// bonus "may raise your scores in those Characteristics as high as +6", so a
-/// clamp at +5 would be wrong; Great's own "to no more than +5" falls out of its
-/// `max_per_target: 2` over a bought score capped at +3.
+/// **No ceiling is applied to an `AboveBase` delta, deliberately.**
+/// `ArMDE:3977` says Giant Blood's bonus "may raise your scores in those
+/// Characteristics as high as +6", so a clamp at +5 would be wrong; Great's
+/// own "to no more than +5" falls out of its `max_per_target: 2` over a
+/// bought score capped at +3. This is [`CharacteristicDeltaCap::AboveBase`]
+/// (the default) — data, never inferred from whether the effect happens to
+/// carry a `gate` (coordinator review, post-B4).
+///
+/// **A `WithinBase` delta is clamped to the base cap/floor instead.** Magical
+/// Blood's Magic Human clause reads "may increase one of his Characteristics
+/// by 1, but not above +3" (ArMDE:4367) — the OPPOSITE shape from Great
+/// Characteristic: no "must already be at the cap" precondition
+/// (`validate_characteristic_delta_preconditions` skips `WithinBase` deltas
+/// entirely), but the contribution itself must never push the bought score
+/// past the printed cap/floor. `(base_max - bought).clamp(0, amount)` for a
+/// positive `amount` — zero once bought is already at the cap, `amount` in
+/// full while there is still room — sign-mirrored for a negative `amount`
+/// against `base_min`, on the same precedent even though no shipped entry
+/// uses that direction yet.
 pub fn characteristic_score_bonus(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -132,15 +186,36 @@ pub fn characteristic_score_bonus(
             } if Characteristic::from_id(target) == Some(characteristic) => {
                 bonus += i32::from(*amount);
             }
-            Effect::CharacteristicScoreDeltaParam { param, amount }
-                if selection
-                    .params
-                    .get(param)
-                    .and_then(SelectionParamValue::as_single)
-                    .and_then(Characteristic::from_id)
-                    == Some(characteristic) =>
+            Effect::CharacteristicScoreDeltaParam {
+                param,
+                amount,
+                gate,
+                cap,
+            } if selection
+                .params
+                .get(param)
+                .and_then(SelectionParamValue::as_single)
+                .and_then(Characteristic::from_id)
+                == Some(characteristic) =>
             {
-                bonus += i32::from(*amount);
+                // Coordinator review, post-B4: `gate` governs WHETHER this
+                // delta applies at all (an ungated entry always does); `cap`
+                // — data, never inferred from `gate.is_some()` — governs HOW
+                // the contribution is computed once it does.
+                let active = gate.as_ref().is_none_or(|g| g.holds(selection));
+                if active {
+                    bonus += match cap {
+                        CharacteristicDeltaCap::AboveBase => i32::from(*amount),
+                        CharacteristicDeltaCap::WithinBase => {
+                            capped_characteristic_delta_contribution(
+                                ruleset,
+                                entity,
+                                characteristic,
+                                *amount,
+                            )
+                        }
+                    };
+                }
             }
             // Targets another Characteristic, or is not a score delta at all.
             // CharacteristicPoints grants budget, not a score, and is read by

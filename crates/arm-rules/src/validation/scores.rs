@@ -206,7 +206,22 @@ pub(crate) fn validate_characteristic_delta_preconditions(
             // The exhaustive Effect match lives once, in effect_target (V71):
             // adding a variant is a compile error there, not here.
             let (amount, target, base) = match effect_target(effect) {
-                EffectTarget::CharacteristicParamDelta { param, amount } => {
+                // Coordinator review, post-B4: this precondition is skipped
+                // by `cap` (data), never by `gate.is_some()` — a GATED
+                // `AboveBase` delta (hypothetical today, no shipped entry)
+                // keeps this precondition exactly like an ungated one; only
+                // `WithinBase` (Magical Blood's Magic Human clause) skips it,
+                // clamping instead (`characteristic_score_bonus`).
+                EffectTarget::CharacteristicParamDelta {
+                    cap: CharacteristicDeltaCap::WithinBase,
+                    ..
+                } => continue,
+                EffectTarget::CharacteristicParamDelta {
+                    param,
+                    amount,
+                    cap: CharacteristicDeltaCap::AboveBase,
+                    ..
+                } => {
                     let Some(target) = selection
                         .params
                         .get(param)

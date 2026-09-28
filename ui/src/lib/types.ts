@@ -132,6 +132,21 @@ export interface ParameterDef {
   // at load. Not yet consumed by any picker — the resolved option list an
   // IPC command hands the frontend already reflects it server-side.
   exclude_if?: ItemPredicate;
+  // This parameter is only REQUIRED when the OWNING selection's own gate
+  // holds (B4/Q-51) — Magical Blood's `characteristic` is meaningless for
+  // Magic Animal/Spirit/Thing, so it is required only when `bloodline`
+  // equals `bloodline.magic_human`. `ParameterPicker` reads this to hide the
+  // control entirely when the gate does not hold, matching the engine's own
+  // `missing_param` relaxation (`validation/selections.rs`).
+  required_if?: ParamGate;
+}
+
+// Names a parameter this item declares and the literal value that activates
+// something conditional on it — mirrors the engine's `ParamGate` (C0/C1),
+// read directly off the OWNING selection's own `params[param]`.
+export interface ParamGate {
+  param: string;
+  equals: string;
 }
 
 // A property-based test over a point item, for an exclusion the rulebook
@@ -148,7 +163,22 @@ export type ItemPredicate = 'trained' | 'grants_reputation' | 'grants_personalit
 // value.
 export type Effect =
   | { type: 'ability_bonus'; param: string; amount: number }
-  | { type: 'characteristic_score_delta_param'; param: string; amount: number }
+  | {
+      type: 'characteristic_score_delta_param';
+      param: string;
+      amount: number;
+      // B4/Q-51: applies only when the OWNING selection's own gate holds
+      // (Magical Blood's Magic Human clause). Absent for every other carrier
+      // (Great/Poor Characteristic), which apply unconditionally.
+      gate?: ParamGate;
+      // Which precondition/clamp shape this delta follows — data, never
+      // inferred from whether `gate` is present (coordinator review, post-B4).
+      // `above_base` (the default, omitted from the JSON) is Great/Poor
+      // Characteristic's own uncapped shape; `within_base` (Magical Blood's
+      // Magic Human clause) clamps to the base cap/floor instead. Mirrors the
+      // engine's `CharacteristicDeltaCap`.
+      cap?: 'above_base' | 'within_base';
+    }
   | { type: 'art_bonus'; param: string; amount: number }
   | { type: 'affinity_ability_cost'; param: string; counts_as_num: number; counts_as_den: number }
   | { type: 'affinity_art_cost'; param: string; counts_as_num: number; counts_as_den: number }
@@ -177,7 +207,14 @@ export type Effect =
   | { type: 'grants_selection'; items: string[] }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
-  | { type: 'grants_reputation'; kind?: ReputationType; score: number; max_score?: number }
+  | {
+      type: 'grants_reputation';
+      kind?: ReputationType;
+      score: number;
+      max_score?: number;
+      // Same meaning as `characteristic_score_delta_param`'s own `gate` (B4/Q-51).
+      gate?: ParamGate;
+    }
   // M5/5b in-play effects (consumed by the derived-totals read-out, slice 5i).
   | { type: 'magical_focus'; param: string; major: boolean }
   | { type: 'casting_total_mod'; amount: number; scope: CastingScope }

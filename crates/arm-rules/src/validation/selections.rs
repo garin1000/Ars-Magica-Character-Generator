@@ -1081,7 +1081,22 @@ pub(crate) fn validate_selection_parameters(
         }
     }
 
-    for missing in expected.difference(&filled) {
+    // B4/Q-51: a declared param whose `required_if` gate does NOT hold is
+    // still a LEGAL key (stays in `expected`, so filling it is never
+    // `unexpected_param`), but is not yet REQUIRED — Magic Animal/Spirit/Thing
+    // must never be forced to fill `characteristic`, which only the Magic
+    // Human clause reads. Dynamically-added ability-instance keys (above)
+    // carry no `required_if` of their own, so they are unaffected.
+    let mut required = expected.clone();
+    for param in &item.parameters {
+        if let Some(gate) = &param.required_if
+            && !gate.holds(selection)
+        {
+            required.remove(param.key.as_str());
+        }
+    }
+
+    for missing in required.difference(&filled) {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_MISSING_PARAM,
             phase,

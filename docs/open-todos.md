@@ -247,6 +247,19 @@ store choices, not resolved values, and the engine only reports.
   the old blanket behaviour. There is no correct Form to migrate to: the choice
   was never stored. Pinned by
   `data_integrity.rs::an_mr_flaw_selection_written_before_the_form_parameter_reports_missing_param`.
+  Phase 2 B4 (Q-51) added a fifth: `virtue.magical_blood`'s new `bloodline`
+  (which bloodline the character has, ArMDE:4359-4372) and `characteristic`
+  (which Characteristic the Magic Human clause raises, ArMDE:4367) — a save
+  written before B4 holds the Virtue with neither param, and now reports
+  `missing_param` for `bloodline`, same standing policy, no special casing.
+  `characteristic` is declared `required_if: bloodline=magic_human` (also B4,
+  same slice): it stays silent until `bloodline` is filled, and only THEN, if
+  the player named Magic Human specifically, does it report `missing_param`
+  in turn — never for Magic Animal/Spirit/Thing, which the clause never
+  reads. Pinned by
+  `b4_parameter_gated_effects.rs::an_older_magical_blood_selection_with_no_params_reports_missing_param`,
+  `::magic_animal_bloodline_does_not_require_the_characteristic_param`,
+  `::magic_human_bloodline_still_requires_the_characteristic_param`.
 - **`prereq_not_met`** where the eligibility gates bite — a character holding The
   Gift plus Offensive to (Beings) without the Gentle Gift, which `ArMDE:6530` has
   always forbidden and nothing checked. Not hypothetical: it is the exact shape of

@@ -2920,6 +2920,7 @@ fn shipped_reputation_grants_match_their_passage_after_d11() {
                     kind,
                     score,
                     max_score,
+                    gate: _,
                 } => Some((*kind, *score, *max_score)),
                 _ => None,
             })

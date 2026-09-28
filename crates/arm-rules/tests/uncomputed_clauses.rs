@@ -2476,12 +2476,6 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          effect — only the Ability grant is computed, ArMDE:4351-4354",
     ),
     (
-        "virtue.magical_blood",
-        "orphan: \"may learn Magic Lore\" (no authorization effect) plus the entire four-way \
-         Magic-Animal/Human/Spirit/Thing sub-type bonus list — only the -1 Aging-roll base \
-         clause is computed, ArMDE:4359-4372",
-    ),
-    (
         "virtue.magister_in_artibus",
         "orphan: the age-and-Ability-score eligibility floor (25-Int years, Latin/Artes \
          Liberales 5) has no prerequisite — only the Reputation and the XP grant are computed, \

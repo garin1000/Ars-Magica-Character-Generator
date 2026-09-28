@@ -26,6 +26,18 @@
   "being.mundane_humans": {
     "name": "Sterbliche Menschen"
   },
+  "bloodline.magic_animal": {
+    "name": "Magisches Tier"
+  },
+  "bloodline.magic_human": {
+    "name": "Magischer Mensch"
+  },
+  "bloodline.magic_spirit": {
+    "name": "Magischer Geist"
+  },
+  "bloodline.magic_thing": {
+    "name": "Magisches Ding"
+  },
   "flaw.a_deal_with_the_devil": {
     "name": "Ein Pakt mit dem Teufel",
     "summary": "Der Charakter hat seine Seele dem Teufel verkauft und sieht sich nun der ewigen Verdammnis geweiht."
@@ -2203,7 +2215,8 @@
   },
   "virtue.magical_blood": {
     "name": "Magisches Blut",
-    "summary": "Das Wesen des Charakters wurde durch den Kontakt mit der Magiesphäre verbessert – oft durch ein magisches Wesen –, was seiner wahren Gestalt besondere übernatürliche Eigenschaften verleiht."
+    "summary": "Das Wesen des Charakters wurde durch den Kontakt mit der Magiesphäre verbessert – oft durch ein magisches Wesen –, was seiner wahren Gestalt besondere übernatürliche Eigenschaften verleiht.",
+    "description": "Das Wesen des Charakters wurde durch den Kontakt mit der Magiesphäre verbessert – oft durch ein magisches Wesen –, was seiner wahren Gestalt besondere übernatürliche Eigenschaften verleiht. Dies verändert das äußere Erscheinungsbild des Charakters üblicherweise so stark, dass andere erkennen können, dass etwas Ungewöhnliches an ihr ist; die Leute mögen sagen, sie habe magisches Blut – oder „Feenblut\" (da viele Menschen im Mythischen Europa die Unterschiede zwischen der Magie- und der Feensphäre nicht verstehen).\n\nDer Charakter darf beim Erschaffen bereits Magiekunde erlernen und ist widerstandsfähig gegen das Altern: Er erhält einen Bonus von -1 auf alle Alterungswürfe. Darüber hinaus erhält er einen kleinen körperlichen Vorteil, der zu einem der vier verschiedenen Typen magischer Wesen passt (magische Tiere, magische Menschen, magische Geister und magische Dinge) – zu jenem Typ, der mit dem Hintergrund des Charakters verknüpft ist. Einige Beispiele folgen; du kannst aber auch eigene erfinden.\n\nMagisches Tier: Der Charakter besitzt ein körperliches Merkmal, das normalerweise mit Tieren assoziiert wird, wie Flügel, Schuppen, Kiemen, Zähne oder Klauen. Diese verleihen bis zu +3 auf geeignete Tätigkeiten oder ermöglichen es dem Charakter, Handlungen auszuführen, die einem normalen Charakter nicht möglich wären (etwa Fliegen oder unter Wasser atmen). Dieses Merkmal ist sehr schwer zu verbergen und macht den Charakter offensichtlich verschieden von anderen Menschen.\n\nMagischer Mensch: Der Charakter darf eine seiner Eigenschaften um 1 steigern, jedoch nicht über +3. Häufig sind dies Stärke oder Ausdauer (um das Blut von Riesenvorfahren darzustellen) oder Präsenz (um das Blut gottgleicher Wesen darzustellen). Dies verleiht dem Charakter oft ein überirdisches Äußeres. Außerdem besitzt der Charakter eine positive Reputation auf Stufe 3 bei anderen Angehörigen seiner Blutlinie.\n\nMagischer Geist: Der Charakter erlangt eine passende Übernatürliche Fertigkeit (eine, die mit einer Kleinen Tugend verbunden ist), etwa Magiegespür, Vorahnungen, Zweites Gesicht oder Natursinn, mit einem Anfangswert von 1. Wann immer der Charakter diese Fertigkeit einsetzt, wird sein Erscheinungsbild jedoch offensichtlich übernatürlich. So könnten sich seine Augen zum Beispiel schwarz färben, er könnte einen Fuß vom Boden abheben oder sein Haar könnte von einem Wind bewegt werden, den niemand sonst spürt.\n\nMagisches Ding: Der Charakter besitzt eine Mindere oder Persönliche Kraft, die mit einem Objekt oder Ding verbunden ist. Wann immer sie den Effekt aktiviert, verändert sich ihr Äußeres ebenfalls auf eine Weise, die zur Form der Kraft passt. Eine Kraft, die gegen Flammen schützt, lässt beispielsweise ihre Haut von Ruß schwärzen und nach Rauch riechen; eine Kraft, die ihr ermöglicht auf dem Wasser zu gehen, könnte sie halbtransparent wie Wasser werden lassen."
   },
   "virtue.magical_memory": {
     "name": "Magisches Gedächtnis",

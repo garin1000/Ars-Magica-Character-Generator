@@ -16,9 +16,9 @@ use crate::completeness::{CompletenessReport, completeness};
 use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    AbilityFunding, CategoryCap, CategoryRule, CreationPhase, Effect, Entity, EntityKind,
-    EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParamType,
-    ParameterDef, ParameterDomain, PhaseRule, PointItem, Prereq, Realm, Selection,
+    AbilityFunding, CategoryCap, CategoryRule, CharacteristicDeltaCap, CreationPhase, Effect,
+    Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH,
+    ParamType, ParameterDef, ParameterDomain, PhaseRule, PointItem, Prereq, Realm, Selection,
     SelectionParamValue, ValidationMode,
 };
 
@@ -1216,10 +1216,24 @@ pub(crate) fn validate_known_refs(
 /// unhandled in the other. Routing both through this function makes it one
 /// compile error, in one place, again.
 pub(crate) enum EffectTarget<'a> {
-    /// `Effect::CharacteristicScoreDeltaParam { param, amount }`: grants a free
-    /// score delta to the characteristic named by `param`, whose "must already
-    /// be at ±3" precondition reads that characteristic's bought score.
-    CharacteristicParamDelta { param: &'a str, amount: i8 },
+    /// `Effect::CharacteristicScoreDeltaParam { param, amount, cap, .. }`:
+    /// grants a free score delta to the characteristic named by `param`. Which
+    /// precondition/clamp shape applies is `cap`
+    /// ([`CharacteristicDeltaCap`]) — data, not inferred from whether the
+    /// effect happens to carry a `gate` (coordinator review, post-B4):
+    /// `AboveBase` (Great/Poor Characteristic's own shape) requires the
+    /// bought score to already be at the cap/floor and leaves the result
+    /// uncapped; `WithinBase` (Magical Blood's Magic Human clause) carries no
+    /// such precondition and clamps the contribution instead — see
+    /// `validate_characteristic_delta_preconditions`'s own `cap` match. This
+    /// classification has no need of `gate` itself — WHETHER the effect
+    /// applies is a fold-time concern (`characteristic_score_bonus`), not a
+    /// creation-time-target one.
+    CharacteristicParamDelta {
+        param: &'a str,
+        amount: i8,
+        cap: CharacteristicDeltaCap,
+    },
     /// `Effect::AbilityBonus { param, .. }` or `Effect::AffinityAbilityCost {
     /// param, .. }`: both attach to a held ability instance named by `param`
     /// and dangle the same way if that instance is absent.
@@ -1234,12 +1248,16 @@ pub(crate) enum EffectTarget<'a> {
 /// checks. See [`EffectTarget`] for why this match is centralized.
 pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
     match effect {
-        Effect::CharacteristicScoreDeltaParam { param, amount } => {
-            EffectTarget::CharacteristicParamDelta {
-                param,
-                amount: *amount,
-            }
-        }
+        Effect::CharacteristicScoreDeltaParam {
+            param,
+            amount,
+            cap,
+            ..
+        } => EffectTarget::CharacteristicParamDelta {
+            param,
+            amount: *amount,
+            cap: *cap,
+        },
         Effect::AbilityBonus { param, .. } | Effect::AffinityAbilityCost { param, .. } => {
             EffectTarget::AbilityParam(param)
         }
