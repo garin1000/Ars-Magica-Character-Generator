@@ -6,6 +6,7 @@
   { "id": "language.hebrew", "name": "Hebräisch" },
   { "id": "language.latin", "name": "Latein" },
   { "id": "language.persian", "name": "Persisch" },
+  { "id": "organization.church", "name": "Kirche" },
   { "id": "organization.house_bjornaer", "name": "Haus Bjornaer" },
   { "id": "organization.order_of_hermes", "name": "Orden des Hermes" },
   { "id": "profession.falconer", "name": "Falkner" },

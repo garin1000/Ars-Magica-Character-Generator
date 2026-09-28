@@ -15,6 +15,7 @@
     {
       "id": "catalogue.organization",
       "values": [
+        { "id": "organization.church", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5791, 5791] } },
         { "id": "organization.house_bjornaer", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
         { "id": "organization.order_of_hermes", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4065] } }
       ]

@@ -348,8 +348,17 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["personality"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "restricted_ability_xp", "amount": 25,
+        "abilities": ["ability.artes_liberales", "ability.music", "ability.theology_christian"],
+        "instances": [
+          { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } },
+          { "ability": "ability.organization_lore", "instance": { "literal": "organization.church" } }
+        ],
+        "from_normal_budget": true }
+    ],
     "source": { "anchor": "church-upbringing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5789, 5792] }
   },
   {

@@ -150,6 +150,16 @@ base_general' = base_general - Σ(earmark.amount for every from_normal_budget=tr
 flow_pools    += one ordinary FlowPool per earmark (SOURCE-fed, same as Educated/Warrior)
 ```
 
+**Amendment (2026-09-28, caught in D1 review):** the subtraction above is
+unconditional and is wrong when `base_general` is itself smaller than the
+earmark (a young character, or a Feral Upbringing character whose childhood
+block D2 replaces) — `saturating_sub` floors general at 0 while the
+SOURCE-fed pool still offers the full nominal amount, so the total **rises**,
+exactly what D13 forbids. Fixed shape: `earmark_effective =
+amount.min(base_general)`, general shrinking by exactly `earmark_effective`
+(processed one earmark at a time against the shrinking remainder, for the
+general case of more than one) — never the raw `amount`.
+
 Total supply (`base_general' + Σ earmarks + other pools`) is algebraically
 identical to today's `base_general + other pools` — **capacity does not
 move.** The earmark pool now goes through `two_phase_max_flow`'s **existing**

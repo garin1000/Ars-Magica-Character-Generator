@@ -3242,6 +3242,58 @@ approximation of "Latin").
 - Permission unlock (Academic/Martial purchasable only with such a Virtue) is
   **deferred** — not enforced in this phase.
 
+#### Church Upbringing — a restricted-XP earmark of the NORMAL budget (D13)
+> "The player must spend 25 experience points from the normal budget on Artes
+> Liberales, Latin, Music, Organization Lore: Church, or Theology. Unless the
+> character has a Virtue that permits it, no other experience points may be
+> spent on Academic Abilities."
+
+A **third** XP mode, distinct from Educated/Warrior/Privileged Upbringing above:
+those are *additive* grants (new points on top of the budget); this earmarks 25
+of the budget the character *already has*, narrowing only which Abilities that
+slice may fund. Modelled with `RestrictedAbilityXp.from_normal_budget: bool`
+rather than a fourth pool shape, so the flow-solve's existing two-phase
+restricted-pool preference (see above) funds it deterministically instead of
+inventing a `general → pool` edge that competes with ordinary general spends on
+equal footing (`docs/vf-audit/design-d0-xp-modes.md` § 2).
+
+- Source: `ArMDE:5789-5791`.
+- Data: `rules/core/virtues_flaws.json` `flaw.church_upbringing` — `classification:
+  creation_effect`, `effects: [{ restricted_ability_xp, amount: 25,
+  from_normal_budget: true, abilities: [ability.artes_liberales, ability.music,
+  ability.theology_christian], instances: [dead_language:language.latin,
+  organization_lore:organization.church] }]`. The `25` lives here. Latin and
+  Organization Lore: Church are instance-scoped (D14/D48's existing mechanism,
+  same as Educated's Latin above); `organization.church`
+  (`rules/core/parameter_catalogues.json` `catalogue.organization`) is new,
+  sourced at `ArMDE:5791` (the only place the rulebook names it).
+- Implementation: `effective/xp.rs::general_pool_and_bonus` subtracts every
+  `from_normal_budget: true` grant's `amount` from the general pool's own base,
+  in every funding branch (life-stage or `xp_pool`), and
+  `restricted_ability_xp_pools` funds the earmark as an ordinary `SOURCE`-fed
+  `FlowPool` of that same size — total capacity is unchanged, only reassigned.
+  **Capped, not unconditional**: when the earmark exceeds the general pool it
+  would draw from, the amount actually shifted is `amount.min(base_general)`,
+  never more than the character has — otherwise a young or otherwise
+  general-XP-poor character's total budget would *rise* by taking the Flaw,
+  which is exactly the ceiling D13 forbids.
+- Authorization comes free, exactly as it does for Educated/Warrior/Privileged
+  above: `ability_authorizations`'s existing `RestrictedAbilityXp` arm folds
+  `abilities`/`instances` regardless of `from_normal_budget`, so the earmark's
+  five named entries are authorized and every *other* Academic Ability stays
+  gated by `categories_requiring_virtue` — clause 2 of the passage, with no
+  second effect.
+- Validation: **zero new validator code.** `CODE_RESTRICTED_XP_UNSPENT`
+  (`validation/magus.rs`, see above) already warns on any under-spent
+  `FlowPool`; an earmark that cannot be fully absorbed (its eligible Abilities
+  capped below 25, or the general pool itself too small) is lost, not refunded
+  to general, and surfaced only by that existing warning — Norbert's resolution
+  of `docs/vf-audit/design-d0-xp-modes.md` § 6.1 (2026-09-28): D13 does not rule
+  on the shortfall case, and a refund mechanism would reopen the over-funding
+  risk the earmark exists to close.
+- The Flaw's own escape clause ("unless the character has a Virtue that
+  permits it") is **not modelled** — text only, in `description`, both locales.
+
 #### Improved Characteristics — +3 Characteristic-buy points
 > "You have an additional three points to spend on buying Characteristics … You
 > may take this Virtue multiple times."

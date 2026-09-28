@@ -1383,6 +1383,16 @@ pub enum Effect {
         /// may this pool fund") cannot drift apart.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         instances: Vec<AbilityRef>,
+        /// D13: this grant is not additional supply — it earmarks part of the
+        /// GENERAL pool the character already has. `general_pool_and_bonus`
+        /// subtracts every earmark's `amount` from the general base before this
+        /// pool is built as an ordinary source-fed `FlowPool`, so the character's
+        /// total budget is unchanged; only which Abilities the earmarked slice may
+        /// fund narrows. `false` (the default) preserves every existing carrier's
+        /// current, additive meaning — Educated, Warrior, Privileged Upbringing
+        /// are real grants, not earmarks, and must not lose XP by this change.
+        #[serde(default, skip_serializing_if = "is_false")]
+        from_normal_budget: bool,
     },
     /// D35's parameter-scaled sibling of [`Self::RestrictedAbilityXp`]: the
     /// granted pool's `amount` is `per_unit` times the value the selection's
@@ -8089,6 +8099,31 @@ mod tests {
         assert!(
             !out.contains("max_share_of_kind"),
             "an absent share must be skipped: {out}"
+        );
+    }
+
+    #[test]
+    fn restricted_ability_xp_from_normal_budget_defaults_false_and_stays_out_of_json() {
+        // D13: every pre-existing carrier's JSON (Educated, Warrior, Privileged
+        // Upbringing, ...) predates `from_normal_budget` and must keep meaning
+        // "additive grant", byte-identical, now that the field exists.
+        let old_json =
+            r#"{"type":"restricted_ability_xp","amount":50,"abilities":["ability.magic_lore"]}"#;
+        let effect: Effect = serde_json::from_str(old_json).unwrap();
+        assert_eq!(
+            effect,
+            Effect::RestrictedAbilityXp {
+                amount: 50,
+                abilities: vec![Id::new("ability.magic_lore")],
+                categories: Vec::new(),
+                instances: Vec::new(),
+                from_normal_budget: false,
+            }
+        );
+        let round_tripped = serde_json::to_string(&effect).unwrap();
+        assert_eq!(
+            round_tripped, old_json,
+            "an entry that never set the flag must not grow a `from_normal_budget` key"
         );
     }
 

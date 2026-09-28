@@ -5853,6 +5853,251 @@ fn abandoned_apprentice_xp_shape_is_unchanged_pending_d3() {
     );
 }
 
+// --- D0-groundwork/D1 (D13): the Church Upbringing earmark -----------------
+
+/// The shipped `flaw.church_upbringing` carries exactly the earmark D13/D0 § 2
+/// specifies: `creation_effect`, one `RestrictedAbilityXp` with
+/// `from_normal_budget: true`, ArMDE:5791's five named Abilities (Latin and
+/// Organization Lore: Church as instance-scoped `dead_language`/
+/// `organization_lore` entries, per D14/D48's existing mechanism — the other
+/// three are bare ids), amount 25.
+#[test]
+fn church_upbringing_ships_the_earmark_effect_shape() {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new("flaw.church_upbringing"))
+        .expect("flaw.church_upbringing must ship");
+    assert_eq!(item.classification, Classification::CreationEffect);
+    assert!(
+        item.effects.contains(&Effect::RestrictedAbilityXp {
+            amount: 25,
+            abilities: vec![
+                Id::new("ability.artes_liberales"),
+                Id::new("ability.music"),
+                Id::new("ability.theology_christian"),
+            ],
+            categories: Vec::new(),
+            instances: vec![
+                AbilityRef::Scoped {
+                    ability: Id::new("ability.dead_language"),
+                    instance: Some(ParamValue::Literal {
+                        literal: "language.latin".to_string(),
+                    }),
+                    gate: None,
+                },
+                AbilityRef::Scoped {
+                    ability: Id::new("ability.organization_lore"),
+                    instance: Some(ParamValue::Literal {
+                        literal: "organization.church".to_string(),
+                    }),
+                    gate: None,
+                },
+            ],
+            from_normal_budget: true,
+        }),
+        "flaw.church_upbringing's effects do not match ArMDE:5791: {:?}",
+        item.effects
+    );
+}
+
+/// D13's canonical case: the earmark shrinks the GENERAL pool by exactly its
+/// own amount, so the character's total budget (general + the earmark's own
+/// restricted pool) is unchanged from taking the Flaw. RED today — the engine
+/// does not yet read `from_normal_budget`, so `general_pool` stays 225 and the
+/// character is over-funded by 25.
+#[test]
+fn church_upbringing_earmark_shrinks_general_pool_by_its_amount() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.church_upbringing"))],
+    );
+    e.ability_funding = AbilityFunding::LifeStages;
+    e.age = Some(20);
+    e.life_stages = Some(LifeStagePlan::default());
+
+    let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
+    assert_eq!(
+        allocation.general_pool, 200,
+        "later life (15yr x 15/yr = 225) minus the 25-point earmark"
+    );
+    let earmark = allocation
+        .restricted
+        .iter()
+        .find(|p| matches!(&p.origin, XpPoolOrigin::Item { item } if *item == Id::new("flaw.church_upbringing")))
+        .expect("the earmark must appear as its own restricted pool");
+    assert_eq!(earmark.amount, 25);
+    assert_eq!(
+        allocation.general_pool + earmark.amount,
+        225,
+        "capacity must not move: general + earmark == the pre-Flaw total"
+    );
+}
+
+/// Clause 2 (D13): the earmark is itself authorization for exactly the five
+/// named entries, and for nothing else — "no other experience points may be
+/// spent on Academic Abilities" (`ArMDE:5791`). Already true today:
+/// `ability_authorizations`'s `RestrictedAbilityXp` arm folds `abilities`/
+/// `instances` regardless of `from_normal_budget` ("authorization comes free",
+/// D13/D0 § 2) — this test is a confirmation lock, not a red.
+#[test]
+fn church_upbringing_earmark_authorizes_only_its_named_abilities() {
+    let rs = load_ruleset();
+    let mut e = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.church_upbringing"))],
+    );
+    e.xp_pool = 1_000;
+    e.ability_scores = vec![
+        AbilityScore {
+            ability: Id::new("ability.artes_liberales"),
+            parameter: None,
+            score: 1,
+            specialty: None,
+        },
+        AbilityScore {
+            ability: Id::new("ability.philosophiae"),
+            parameter: None,
+            score: 1,
+            specialty: None,
+        },
+    ];
+
+    let result = validate(&e, &rs);
+    assert!(
+        !result.issues.iter().any(|i| i.code
+            == ValidationIssue::CODE_ABILITY_CATEGORY_REQUIRES_VIRTUE
+            && i.args.get("ability").map(String::as_str) == Some("ability.artes_liberales")),
+        "the earmark's own named Ability must be authorized: {:?}",
+        result.issues
+    );
+    assert!(
+        result.issues.iter().any(|i| i.code
+            == ValidationIssue::CODE_ABILITY_CATEGORY_REQUIRES_VIRTUE
+            && i.args.get("ability").map(String::as_str) == Some("ability.philosophiae")),
+        "an Academic Ability the earmark does NOT name must stay gated: {:?}",
+        result.issues
+    );
+}
+
+/// D13 obligation #3 plus D0 § 2's resolved § 6.1: an earmark left unspent
+/// raises the same `CODE_RESTRICTED_XP_UNSPENT` warning every other restricted
+/// pool already gets (zero new validator code), and the shortfall is never
+/// refunded to general — the general pool stays shrunk by the FULL earmark
+/// amount regardless of how much of it the player actually spent. RED today
+/// for the budget-shrink half (`general_pool` is still 225, not 200); the
+/// warning itself already fires unaffected by D1 (the pool exists and is
+/// under-spent either way).
+#[test]
+fn church_upbringing_unspent_earmark_is_not_refunded_and_still_warns() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.church_upbringing"))],
+    );
+    e.ability_funding = AbilityFunding::LifeStages;
+    e.age = Some(20);
+    e.life_stages = Some(LifeStagePlan::default());
+    // Spends only 5 of the earmarked 25 (Music, score 1) — legal, just partial.
+    e.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.music"),
+        parameter: None,
+        score: 1,
+        specialty: None,
+    }];
+
+    let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
+    assert_eq!(
+        allocation.general_pool, 200,
+        "the earmark's full 25 leaves general, spent or not — no refund"
+    );
+
+    let result = validate(&e, &rs);
+    let warning = result
+        .issues
+        .iter()
+        .find(|i| {
+            i.code == ValidationIssue::CODE_RESTRICTED_XP_UNSPENT
+                && i.args.get("origin").map(String::as_str) == Some("flaw.church_upbringing")
+        })
+        .expect("an unspent earmark must warn, same as any other restricted pool");
+    assert_eq!(warning.args.get("amount").map(String::as_str), Some("25"));
+    assert_eq!(warning.args.get("used").map(String::as_str), Some("5"));
+    assert_eq!(warning.args.get("unspent").map(String::as_str), Some("20"));
+}
+
+/// New gap caught in review (2026-09-28): D0 § 2's subtraction is unconditional
+/// (`base_general' = base_general − amount`), so on a character whose general
+/// budget is itself SMALLER than the earmark, a plain `saturating_sub` floors
+/// general at 0 while the SOURCE-fed earmark pool still offers the full
+/// nominal amount — the total RISES, exactly what D13 forbids. The fix caps
+/// the earmark at what general can actually supply
+/// (`earmark_effective = amount.min(base_general)`), so the total the flow
+/// solve can ever place (`max_flow`) never exceeds the ORIGINAL general pool
+/// even when the character has bought enough eligible-Ability score to want
+/// more. RED today: a naive/absent cap lets `max_flow` reach
+/// `min(total_demand, 15 + 25) = 30`.
+#[test]
+fn church_upbringing_earmark_cannot_inflate_a_general_pool_smaller_than_itself() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.church_upbringing"))],
+    );
+    e.ability_funding = AbilityFunding::LifeStages;
+    e.age = Some(6); // later life: 1 year x 15/yr = 15, well under the 25 earmark.
+    e.life_stages = Some(LifeStagePlan::default());
+    // Music (eligible, general category) at score 3 = 30 XP demand — more than
+    // the 15-point general budget the character actually has.
+    e.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.music"),
+        parameter: None,
+        score: 3,
+        specialty: None,
+    }];
+
+    let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
+    assert_eq!(
+        allocation.max_flow, 15,
+        "total fundable must equal the pre-Flaw general pool (15), never more, \
+         even though the earmark's nominal amount (25) and the demand (30) both exceed it"
+    );
+}
+
+/// The new field changes nothing about the existing integrity checks a
+/// `RestrictedAbilityXp` effect already receives — `validate_ability_list_effect`
+/// still rejects an unresolvable ability id whether or not `from_normal_budget`
+/// is set, since its match arm already ends `..` (D0 § 2 "Engine change" step
+/// 5 / integrity note).
+#[test]
+fn from_normal_budget_does_not_bypass_the_existing_ability_list_integrity_check() {
+    let items = r#"[
+      { "id": "flaw.filler", "kind": "flaw", "classification": "narrative",
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+      { "id": "flaw.bad_earmark", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"],
+        "effects": [{ "type": "restricted_ability_xp", "amount": 25,
+          "abilities": ["ability.no_such_ability"], "from_normal_budget": true }] }
+    ]"#;
+    let types = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general"], "creation_phases": [] }
+    ]"#;
+    let err = Ruleset::from_sources(RulesetSources {
+        id: "test",
+        version: "1",
+        point_items: items,
+        type_profiles: types,
+        ..RulesetSources::default()
+    })
+    .expect_err("an unresolvable ability id must still be rejected at load");
+    let message = err.to_string();
+    assert!(
+        message.contains("ability.no_such_ability"),
+        "the error must name the offending id: {message}"
+    );
+}
+
 /// ":3845" — "You may not have The Gift, but if your Gift was not completely
 /// destroyed, you may have some Supernatural Abilities."
 ///

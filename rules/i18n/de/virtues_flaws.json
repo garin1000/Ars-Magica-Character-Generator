@@ -196,7 +196,8 @@
   },
   "flaw.church_upbringing": {
     "name": "Kirchliche Erziehung",
-    "summary": "Dieser Fehler betrifft Kinder, die von der Kirche unterrichtet und größtenteils von Klerikern aufgezogen wurden – ein Schicksal, das einige Waisen, uneheliche Kinder, Begabte Kinder und andere Außenseiter trifft."
+    "summary": "Dieser Fehler betrifft Kinder, die von der Kirche unterrichtet und größtenteils von Klerikern aufgezogen wurden – ein Schicksal, das einige Waisen, uneheliche Kinder, Begabte Kinder und andere Außenseiter trifft.",
+    "description": "Dieser Fehler betrifft Kinder, die von der Kirche unterrichtet und größtenteils von Klerikern aufgezogen wurden – ein Schicksal, das einige Waisen, uneheliche Kinder, Begabte Kinder und andere Außenseiter trifft. Die Kirche handelt möglicherweise aus Nächstenliebe, oder eine wohlhabende Person hat dafür bezahlt, ein schwieriges Kind diskret aus dem Weg zu schaffen. Diese abgeschottete Erziehung lässt den Charakter weniger gut über den Rest der Gesellschaft Bescheid wissen, den er unstrukturiert, ungehobelt und verwirrend findet. Der Spieler muss 25 Erfahrungspunkte aus dem normalen Budget für Artes Liberales, Latein, Musik, Ordenskunde: Kirche oder Theologie ausgeben. Sofern der Charakter keine Tugend besitzt, die es erlaubt, dürfen keine weiteren Erfahrungspunkte für Akademische Fertigkeiten ausgegeben werden."
   },
   "flaw.close_family_ties": {
     "name": "Enge Familienbande",

@@ -1066,6 +1066,12 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
 /// of 5 [`build_flow_pools`] assembles.
 fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
     let mut flow_pools = Vec::new();
+    // The ONE place the earmark cap (D13/D0 § 2, amended) is computed is
+    // `capped_earmark_amounts` — consumed here positionally (encounter order),
+    // never re-derived, so this function and `general_pool_and_bonus` cannot
+    // independently drift on the same number.
+    let capped_earmarks = capped_earmark_amounts(entity, ruleset);
+    let mut next_earmark = capped_earmarks.into_iter();
     let selections = selections_for_effects(entity, ruleset);
     for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -1086,9 +1092,22 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                     abilities,
                     categories,
                     instances,
+                    from_normal_budget,
                 } => {
+                    // D13/D0 § 2 (amended): an earmark is not additional supply
+                    // — it draws from the general pool the character already
+                    // has, so its own `FlowPool` may claim at most what
+                    // `capped_earmark_amounts` computed for it, never the raw
+                    // nominal `amount`. Every other grant here (Educated,
+                    // Warrior, Privileged Upbringing — `from_normal_budget:
+                    // false`) is additive and unaffected.
+                    let pool_amount = if *from_normal_budget {
+                        next_earmark.next().unwrap_or(0)
+                    } else {
+                        *amount
+                    };
                     flow_pools.push(FlowPool {
-                        amount: *amount,
+                        amount: pool_amount,
                         eligibility: PoolEligibility::Ability {
                             abilities: abilities.clone(),
                             categories: categories.clone(),
@@ -1429,7 +1448,29 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
 /// cheap, pure, side-effect-free lookups (a profile map lookup; a life-stage
 /// budget derivation), so recomputing costs nothing and keeps that function's
 /// return type a plain `Vec<FlowPool>` independent of this one's locals.
+///
+/// **D13/D0 § 2 (amended): narrowed by every `from_normal_budget: true` earmark
+/// before `general_bonus` applies**, in every branch above alike — an earmark
+/// (Church Upbringing) is not additional supply, it constrains part of the
+/// budget the character already has, so it must shrink the same base whether
+/// that base came from a life-stage block or a directly-entered `xp_pool`.
+/// [`capped_earmark_amounts`] is the ONE place the cap itself is computed.
 fn general_pool_and_bonus(entity: &Entity, ruleset: &Ruleset) -> (u32, i64) {
+    let pre_earmark_general = pre_earmark_general_xp(entity, ruleset);
+    let earmarked: u32 = capped_earmark_amounts(entity, ruleset).into_iter().sum();
+    let base_general = pre_earmark_general.saturating_sub(earmarked);
+    let general_bonus = general_xp_bonus(entity, ruleset);
+    let general_pool = clamp_to_u32(i64::from(base_general) + general_bonus);
+    (general_pool, general_bonus)
+}
+
+/// The general pool's base BEFORE any `from_normal_budget` earmark narrows it
+/// — exactly [`general_pool_and_bonus`]'s own base-general computation prior to
+/// D13/D0 § 2, extracted so [`capped_earmark_amounts`] can seed its shrinking
+/// remainder from the IDENTICAL figure `general_pool_and_bonus` subtracts from
+/// (both call sites are cheap, pure lookups, so recomputing costs nothing — see
+/// `general_pool_and_bonus`'s own doc comment).
+fn pre_earmark_general_xp(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let trained = crate::effective::is_hermetically_trained(
         entity,
         ruleset,
@@ -1438,16 +1479,53 @@ fn general_pool_and_bonus(entity: &Entity, ruleset: &Ruleset) -> (u32, i64) {
     let life_stage_budget = ruleset
         .life_stages()
         .and_then(|rules| rules.budget(entity, ruleset).map(|budget| (rules, budget)));
-    let base_general = match &life_stage_budget {
+    match &life_stage_budget {
         Some((_, budget)) if trained => budget
             .apprenticeship_xp
             .saturating_add(budget.post_gauntlet_xp),
         Some((_, budget)) => budget.later_life_xp,
         None => entity.xp_pool,
-    };
-    let general_bonus = general_xp_bonus(entity, ruleset);
-    let general_pool = clamp_to_u32(i64::from(base_general) + general_bonus);
-    (general_pool, general_bonus)
+    }
+}
+
+/// The ONE evaluation path for D13/D0 § 2's earmark cap (amended 2026-09-28):
+/// every `from_normal_budget: true` earmark's EFFECTIVE amount, in the same
+/// order [`restricted_ability_xp_pools`] encounters them — each capped at
+/// `amount.min(remaining)`, processed one earmark at a time against a
+/// shrinking remainder seeded at [`pre_earmark_general_xp`], never the raw
+/// nominal `amount`. Uncapped, a character whose general budget is itself
+/// smaller than the earmark (a young character; a Feral Upbringing character
+/// whose childhood block D2 replaces with a restricted pool) would see its
+/// total RISE by taking the Flaw: `saturating_sub` floors general at 0 while an
+/// uncapped `SOURCE`-fed pool would still offer the full amount.
+///
+/// Both consumers read this SAME `Vec` rather than each re-deriving the cap —
+/// `general_pool_and_bonus` sums it for the amount subtracted from general,
+/// `restricted_ability_xp_pools` consumes it positionally (by encounter order)
+/// to size each earmark's own `FlowPool`. A first draft computed the cap twice,
+/// independently, in both functions; refactored here (refactor-green, no
+/// behavior change) because two evaluation paths for one number drift.
+fn capped_earmark_amounts(entity: &Entity, ruleset: &Ruleset) -> Vec<u32> {
+    let mut remaining = pre_earmark_general_xp(entity, ruleset);
+    let mut effective_amounts = Vec::new();
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::RestrictedAbilityXp {
+                amount,
+                from_normal_budget: true,
+                ..
+            } = effect
+            {
+                let effective = (*amount).min(remaining);
+                remaining = remaining.saturating_sub(effective);
+                effective_amounts.push(effective);
+            }
+        }
+    }
+    effective_amounts
 }
 
 /// The flow graph's node-index scheme: source(0) → sink(1); general(2) and

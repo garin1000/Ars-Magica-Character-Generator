@@ -195,7 +195,8 @@
   },
   "flaw.church_upbringing": {
     "name": "Church Upbringing",
-    "summary": "This Flaw covers children schooled by the Church and mostly raised by clerics as well, a fate befalling some orphans, bastards, Gifted children, and other misfits."
+    "summary": "This Flaw covers children schooled by the Church and mostly raised by clerics as well, a fate befalling some orphans, bastards, Gifted children, and other misfits.",
+    "description": "This Flaw covers children schooled by the Church and mostly raised by clerics as well, a fate befalling some orphans, bastards, Gifted children, and other misfits. The Church may act out of charity or a wealthy individual may have paid to discreetly get a difficult child out of the way. This secluded upbringing leaves the character less knowledgeable about the rest of society, which he finds unstructured, uncouth, and confusing. The player must spend 25 experience points from the normal budget on Artes Liberales, Latin, Music, Organization Lore: Church, or Theology. Unless the character has a Virtue that permits it, no other experience points may be spent on Academic Abilities."
   },
   "flaw.close_family_ties": {
     "name": "Close Family Ties",
