@@ -828,6 +828,26 @@ presumption of correctness.
 
 ---
 
+## D62 — free seasons are not modelled; D49 becomes text (supersedes D49)
+
+**Norbert, 2026-09-28**: "If none creation-relevant, it's not necessary to model."
+Checked. **Non-magi:** later-life XP is a flat rate, *"15 experience points per
+year … Wealthy … 20 … Poor … 10"* (ArMDE:2214, :2394), already data
+(`later_life_xp_rate`). Seasons never enter it. **Magi:** post-Gauntlet lab
+seasons are already capped at 3 per year (`life_stages.json`
+`max_charged_lab_seasons_per_year`). The only magus-eligible season cost,
+Regular (ArMDE:6677, "Magi can be Regular"), leaves 4 − 1 = 3, which does not
+move that cap. The season rules of Landed Noble, License of Absence, Lone
+Redcap, Redcap, Wealthy, Poor and Regular stay in `description`. **Plan slice
+D4 is dropped.**
+
+**D3 input, same day:** apprenticeship defaults to ages 10–25 (Gauntlet 25,
+ArMDE:1601). An Abandoned Apprentice records the **years of apprenticeship
+completed**, not an age, and the years after abandonment follow the later-life
+rules.
+
+---
+
 ## D61 — "rolls involving <a sense>" is a table call, so it stays text
 
 **Norbert, 2026-09-28**, after B5 encoded Poor Hearing (ArMDE:6616, "Subtract 3
