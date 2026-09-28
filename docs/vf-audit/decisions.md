@@ -828,6 +828,22 @@ presumption of correctness.
 
 ---
 
+## D64 — an Abandoned Apprentice's years after abandonment may fund Arts
+
+**Norbert, 2026-09-28.** ArMDE:5647 gives the years after abandonment
+"experience points based on his age and other Virtues" and does not say where
+they may go. The character "knows Hermetic magic" (ArMDE:5643), with his Arts
+already opened.
+
+**Ruling.** The ordinary later-life years **after** the truncated apprenticeship
+may fund Arts as well as Abilities. The years **before** it stay Abilities-only,
+since the Arts are not opened yet. The two spans are separate pools. The
+apprenticeship starts at the character's Gauntlet age (default 25, ArMDE:1601)
+minus `apprenticeship.years`. The age check requires age ≥ start +
+`years_completed`.
+
+---
+
 ## D63 — Feral Upbringing restricts its own first five years only (amends D60.2)
 
 **Norbert, 2026-09-28:** *"Feral replaces first 5 years. Church comes later,
