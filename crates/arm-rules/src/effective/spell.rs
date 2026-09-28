@@ -75,12 +75,11 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // Not a spell-levels contribution — training is a creation-legality
         // fact, not a levels grant.
         | Effect::ConfersHermeticTraining
-        // B1/D21: category/ability prohibitions and the Feral whitelist — no
-        // spell-levels contribution, same reasoning as the markers above.
+        // B1/D21: category/ability prohibitions — no spell-levels
+        // contribution, same reasoning as the markers above.
         | Effect::ForbidsAbilityCategory { .. }
         | Effect::ForbidsItemCategory { .. }
-        | Effect::ForbidsAbilities { .. }
-        | Effect::RestrictsAbilityCategoryToAbilities { .. } => None,
+        | Effect::ForbidsAbilities { .. } => None,
     })
 }
 
@@ -156,12 +155,11 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // double-count exactly as this file's own `LaterLifeXpRate` comment
         // warns against.
         | Effect::ConfersHermeticTraining
-        // B1/D21: category/ability prohibitions and the Feral whitelist — no
-        // general-XP contribution, same reasoning as the markers above.
+        // B1/D21: category/ability prohibitions — no general-XP
+        // contribution, same reasoning as the markers above.
         | Effect::ForbidsAbilityCategory { .. }
         | Effect::ForbidsItemCategory { .. }
-        | Effect::ForbidsAbilities { .. }
-        | Effect::RestrictsAbilityCategoryToAbilities { .. } => None,
+        | Effect::ForbidsAbilities { .. } => None,
     })
 }
 
@@ -555,12 +553,11 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 // Not a Spell Mastery Affinity — grants no advancement
                 // multiplier.
                 | Effect::ConfersHermeticTraining
-                // B1/D21: category/ability prohibitions and the Feral
-                // whitelist — no advancement multiplier either.
+                // B1/D21: category/ability prohibitions — no advancement
+                // multiplier either.
                 | Effect::ForbidsAbilityCategory { .. }
                 | Effect::ForbidsItemCategory { .. }
-                | Effect::ForbidsAbilities { .. }
-                | Effect::RestrictsAbilityCategoryToAbilities { .. } => None,
+                | Effect::ForbidsAbilities { .. } => None,
             })
     });
     best_affinity(found)

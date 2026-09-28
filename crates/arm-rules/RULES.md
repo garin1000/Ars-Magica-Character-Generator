@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1510).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1460).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1161,7 +1161,7 @@ reason: a category condition would license itself.
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
 
-#### Category-ranging Prereq/Effect + ability prohibitions (B1/D21/D40/D41) — `Prereq::HasCategory`, `Effect::ForbidsAbilityCategory`/`ForbidsItemCategory`/`ForbidsAbilities`/`RestrictsAbilityCategoryToAbilities`, `CategoryCap.min`/`min_hard`
+#### Category-ranging Prereq/Effect + ability prohibitions (B1/D21/D41) — `Prereq::HasCategory`, `Effect::ForbidsAbilityCategory`/`ForbidsItemCategory`/`ForbidsAbilities`, `CategoryCap.min`/`min_hard`
 > "The character must have a Social Status Virtue dictating his place within
 > the university." (Rector/Proctor)
 
@@ -1176,18 +1176,20 @@ reason: a category condition would license itself.
 > Leadership as beginning Abilities, but you may learn them in play."
 > (Sheltered Upbringing)
 
-> "You may only choose beginning Abilities that you could have learned in the
-> wilds." (Feral Upbringing)
-
 - Source: `ArMDE:6671-6674` (Rector/Proctor),
   `ArMDE:5651-5654` (Ability Block), `ArMDE:7076-7079` (Weak Personality),
-  `ArMDE:6721-6724` (Sheltered Upbringing), `ArMDE:6110-6113` (Feral
-  Upbringing), `ArMDE:2816` (Social Status floor — "must take one").
-- **One design slice, five findings.** F-502/F-427/F-355/F-542/F-511 and D40's
-  authorization residual all range over a category or a fixed id list rather
-  than a single named item, which `Prereq`/`Effect` could not express before
-  B1. Designed together in `docs/vf-audit/design-b0-ranging-and-predicates.md`
-  (D21, D40, D41, D60.2) rather than landed as five incompatible spellings.
+  `ArMDE:6721-6724` (Sheltered Upbringing), `ArMDE:2816` (Social Status floor —
+  "must take one").
+- **One design slice, five findings.** F-502/F-427/F-355/F-542/F-511 all
+  range over a category or a fixed id list rather than a single named item,
+  which `Prereq`/`Effect` could not express before B1. Designed together in
+  `docs/vf-audit/design-b0-ranging-and-predicates.md` (D21, D41) rather than
+  landed as five incompatible spellings. (D40's own authorization residual —
+  Feral Upbringing's `RestrictsAbilityCategoryToAbilities` whitelist, and
+  D60.2's stacking rule for it — was withdrawn by D63/B1c: no shipped data
+  ever used the variant, so it was removed as YAGNI. Feral Upbringing's
+  wilderness list is D2's, `docs/vf-audit/design-d0-xp-modes.md`'s
+  replacement-pool mechanism, not this slice's.)
 - **`Prereq::HasCategory(String)`** (`types.rs`) — the category-ranging twin of
   `Has`: satisfied when the entity holds (bought or granted) at least one item
   whose in-force category matches. Evaluated via `PrereqCtx.held_categories`
@@ -1207,26 +1209,17 @@ reason: a category condition would license itself.
   bare string `"general"`).
 - **`Effect::ForbidsAbilities { abilities: BTreeSet<Id> }`** (Sheltered
   Upbringing, F-511) is a third, id-list sub-shape — the passage names seven
-  specific Abilities, not a whole category.
-- **`Effect::RestrictsAbilityCategoryToAbilities { category: AbilityCategory, allowed: BTreeSet<Id> }`**
-  (Feral Upbringing, D40's authorization residual — the XP half is
-  `replaces_life_stage_xp`, group D's, not this one) narrows a normally-open
-  category to a named whitelist — the first "positive override of the
-  default-permitted set" in the engine, rather than a forbid or an
-  authorization. **D60.2 (Norbert, 2026-09-27): the whitelist applies to
-  BEGINNING Abilities only, and two stacked whitelists INTERSECT** (a
-  character under two "only these" constraints means "only in both"). **This
-  engine draws no in-play/beginning distinction at all** —
-  `Entity::ability_scores` carries no life-stage-block or timing field, and no
-  restricted-XP pool (including the LaterLife block,
-  `effective/xp.rs::magus_later_life_pool`) is tracked per bought score
-  either, so "beginning Abilities" and "the whole of `entity.ability_scores`"
-  are the same set by construction — not a simplification, the honest shape
-  of what this app (which builds the character as of saga-start only) can
-  express. The same holds for `ForbidsAbilities` above.
-- **All four forbid/restrict effects are consumed by one grant-aware
-  validator**: `validation/selections.rs::validate_category_effect_prohibitions`
-  (:279). Grant-aware on both sides (D2): the forbidding item's effect applies
+  specific Abilities, not a whole category. **This engine draws no
+  in-play/beginning distinction at all** — `Entity::ability_scores` carries no
+  life-stage-block or timing field, and no restricted-XP pool (including the
+  LaterLife block, `effective/xp.rs::magus_later_life_pool`) is tracked per
+  bought score either, so "beginning Abilities" and "the whole of
+  `entity.ability_scores`" are the same set by construction — not a
+  simplification, the honest shape of what this app (which builds the
+  character as of saga-start only) can express.
+- **All three forbid effects are consumed by one grant-aware validator**:
+  `validation/selections.rs::validate_category_effect_prohibitions`
+  (:274). Grant-aware on both sides (D2): the forbidding item's effect applies
   bought or granted, and the forbidden target (an Ability held via
   `entity.ability_scores` or an `AbilityScoreGrant`/`AbilityScoreGrantParam`
   floor, or another V/F selection) is read the same way — closing the F-466
@@ -1249,17 +1242,14 @@ reason: a category condition would license itself.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
   (`ruleset/integrity.rs::category_declared_by_some_item`, :2007, shared by
-  `validate_prereq_refs` :1917 and `validate_effect_refs` :2340) —
+  `validate_prereq_refs` :1931 and `validate_effect_refs` :2354) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
   prerequisites/effects and claim the catalogue as it stands). Every
-  `ForbidsAbilities`/`RestrictsAbilityCategoryToAbilities` ability id must
-  resolve, and an `allowed` id's OWN category must match the effect's stated
-  `category` (a whitelist entry outside its own category can never apply — a
-  form of dead data). `CategoryCap.min > max` is rejected as unsatisfiable, and
-  `min_hard` with `min` absent is rejected as meaningless
-  (`ruleset/integrity.rs::validate_category_cap_floors`, :653).
+  `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
+  rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :653).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -1704,7 +1694,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :509) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :459) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -9456,11 +9446,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:804),
-  `validate_forbidden_traits` (:825))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:754),
+  `validate_forbidden_traits` (:775))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:476),
-  `validate_parameters` (:1008), `validate_duplicate_selections` (:509))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:426),
+  `validate_parameters` (:958), `validate_duplicate_selections` (:459))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

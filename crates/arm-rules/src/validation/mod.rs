@@ -388,11 +388,10 @@ impl ValidationIssue {
     /// bought or granted on either side. Filed under `virtues_flaws`, the step
     /// that owns both sides of this interaction.
     pub const CODE_CATEGORY_FORBIDDEN_BY_EFFECT: &'static str = "category_forbidden_by_effect";
-    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: D21/F-355, F-511, D40
-    /// residual — `Effect::ForbidsAbilityCategory`/`ForbidsAbilities`/
-    /// `RestrictsAbilityCategoryToAbilities`, an Ability this entity's own
-    /// selections forbid or fail to whitelist, by category or by id (B1),
-    /// reachable bought or granted on either side. Filed under `abilities`,
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: D21/F-355, F-511 —
+    /// `Effect::ForbidsAbilityCategory`/`ForbidsAbilities`, an Ability this
+    /// entity's own selections forbid, by category or by id (B1), reachable
+    /// bought or granted on either side. Filed under `abilities`,
     /// not `virtues_flaws` — the same "where the fix is" reasoning
     /// [`crate::validation::selections::validate_ability_bonus_targets`]'s
     /// doc comment states: an Ability is bought on a later step than the
@@ -1325,14 +1324,13 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         // No ability/characteristic creation-time target — a training
         // marker, not a score effect.
         | Effect::ConfersHermeticTraining
-        // B1/D21: these four name a fixed category or a fixed id list, never
+        // B1/D21: these three name a fixed category or a fixed id list, never
         // a player-chosen dangling param — the same classification
         // `AbilityScoreGrant` gets above. Consumed only by the dedicated
         // grant-aware prohibition validator (`validation/selections.rs`).
         | Effect::ForbidsAbilityCategory { .. }
         | Effect::ForbidsItemCategory { .. }
-        | Effect::ForbidsAbilities { .. }
-        | Effect::RestrictsAbilityCategoryToAbilities { .. } => EffectTarget::Other,
+        | Effect::ForbidsAbilities { .. } => EffectTarget::Other,
     }
 }
 

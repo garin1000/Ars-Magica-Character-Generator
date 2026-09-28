@@ -4,7 +4,6 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
-use crate::ability::AbilityCategory;
 use crate::types::AbilityParameterValue;
 
 /// The category an issue message names when it has room for exactly one, taken
@@ -176,9 +175,8 @@ pub(crate) fn validate_permitted_categories(
 ///
 /// Distinct from [`validate_category_effect_prohibitions`], which enforces
 /// the opposite axis: an ITEM's own `Effect::ForbidsItemCategory`/
-/// `ForbidsAbilityCategory`/`ForbidsAbilities`/
-/// `RestrictsAbilityCategoryToAbilities`, a prohibition ONE selection places
-/// on another (D21/F-355/F-542/F-511, B1). Both are "category-shaped", but
+/// `ForbidsAbilityCategory`/`ForbidsAbilities`, a prohibition ONE selection
+/// places on another (D21/F-355/F-542/F-511, B1). Both are "category-shaped", but
 /// the source of the rule differs — profile-declared vs. item-authored — so
 /// they stay two functions rather than one: extending the wrong one silently
 /// enforces a rule against the wrong audience.
@@ -254,14 +252,13 @@ pub(crate) fn validate_forbidden_categories(
     }
 }
 
-/// Enforces the four item-authored category/ability prohibitions (B1/D21/
-/// F-355/F-542/F-511, D40 residual): `Effect::ForbidsAbilityCategory`,
-/// `ForbidsItemCategory`, `ForbidsAbilities`, and
-/// `RestrictsAbilityCategoryToAbilities`. See `validate_forbidden_categories`'s
-/// doc comment for why this is a second function rather than folded into
-/// that one. Distinct from [`validate_excluded_if_holds`] (D23/B3) the same
-/// way: this enforces a category/ability prohibition, that one a PREDICATE
-/// over another item's properties — related axes, not the same one.
+/// Enforces the three item-authored category/ability prohibitions (B1/D21/
+/// F-355/F-542/F-511): `Effect::ForbidsAbilityCategory`, `ForbidsItemCategory`,
+/// and `ForbidsAbilities`. See `validate_forbidden_categories`'s doc comment
+/// for why this is a second function rather than folded into that one.
+/// Distinct from [`validate_excluded_if_holds`] (D23/B3) the same way: this
+/// enforces a category/ability prohibition, that one a PREDICATE over
+/// another item's properties — related axes, not the same one.
 ///
 /// Grant-aware on both sides (D2, design § 4): `selections` is the caller's
 /// folded bought-plus-granted list, so the forbidding item's own effect
@@ -271,11 +268,9 @@ pub(crate) fn validate_forbidden_categories(
 /// trap `validate_incompatibilities`/`validate_forbidden_categories` are
 /// deliberately bought-only about (B15).
 ///
-/// `RestrictsAbilityCategoryToAbilities`'s whitelists INTERSECT when two apply
-/// to the same category (D60.2): folded once, category-by-category, before
-/// any Ability is checked — never per-selection, or a second, narrower
-/// restriction would only ever be checked against its OWN forbidding item
-/// rather than against the character's whole held-Ability set.
+/// (D63 withdrew `RestrictsAbilityCategoryToAbilities` — Feral Upbringing's
+/// wilderness whitelist and D60.2's intersection logic that once lived here —
+/// as B1c's YAGNI removal: no shipped data ever used the variant.)
 pub(crate) fn validate_category_effect_prohibitions(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -297,51 +292,6 @@ pub(crate) fn validate_category_effect_prohibitions(
             .into_iter()
             .map(|floor| floor.ability),
     );
-
-    // D60.2: fold every `RestrictsAbilityCategoryToAbilities` effect into one
-    // intersected whitelist PER category (narrowing only, never widening),
-    // and separately track which forbidding item(s) contributed to each
-    // category's restriction, for the issue message.
-    let mut restricted: BTreeMap<AbilityCategory, BTreeSet<Id>> = BTreeMap::new();
-    let mut restricting_items: BTreeMap<AbilityCategory, BTreeSet<Id>> = BTreeMap::new();
-    for selection in selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::RestrictsAbilityCategoryToAbilities { category, allowed } = effect {
-                restricted
-                    .entry(*category)
-                    .and_modify(|set| *set = set.intersection(allowed).cloned().collect())
-                    .or_insert_with(|| allowed.clone());
-                restricting_items
-                    .entry(*category)
-                    .or_default()
-                    .insert(selection.item_ref.clone());
-            }
-        }
-    }
-    for ability_id in &held_abilities {
-        let Some(ability) = ruleset.abilities.get(ability_id) else {
-            continue; // unknown_ability already reported
-        };
-        let Some(allowed) = restricted.get(&ability.category) else {
-            continue;
-        };
-        if allowed.contains(ability_id) {
-            continue;
-        }
-        let other = restricting_items
-            .get(&ability.category)
-            .map(|ids| ids.iter().map(Id::to_string).collect::<Vec<_>>().join(", "))
-            .unwrap_or_default();
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_ABILITY_FORBIDDEN_BY_EFFECT,
-            CreationPhase::Abilities,
-            args([("ability", ability_id.to_string()), ("other", other)]),
-            Some(ability_id.clone()),
-        ));
-    }
 
     // `ForbidsAbilityCategory` / `ForbidsAbilities` / `ForbidsItemCategory`:
     // each checked against the SAME grant-aware `held_abilities` set (the

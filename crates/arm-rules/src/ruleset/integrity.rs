@@ -2639,33 +2639,6 @@ impl Ruleset {
                     self.validate_ability_list_effect(abilities, "forbids_abilities", id, errors);
                     continue;
                 }
-                // B1/D40 residual: every listed ability must resolve, AND its
-                // OWN category must match the effect's stated `category` — a
-                // whitelist entry outside its own stated category can never
-                // apply (Feral Upbringing's whitelist is General-only; naming
-                // a Supernatural ability there would be silent dead data).
-                Effect::RestrictsAbilityCategoryToAbilities { category, allowed } => {
-                    self.validate_ability_list_effect(
-                        allowed,
-                        "restricts_ability_category_to_abilities",
-                        id,
-                        errors,
-                    );
-                    for ability_id in allowed {
-                        let Some(ability) = self.abilities.get(ability_id) else {
-                            continue; // already reported above
-                        };
-                        if ability.category != *category {
-                            errors.push(format!(
-                                "{id}: effect 'restricts_ability_category_to_abilities' allows \
-                                 '{ability_id}', whose category is '{}', not the effect's own \
-                                 '{category}'",
-                                ability.category
-                            ));
-                        }
-                    }
-                    continue;
-                }
             };
             match item.parameters.iter().find(|p| &p.key == param) {
                 None => errors.push(format!(

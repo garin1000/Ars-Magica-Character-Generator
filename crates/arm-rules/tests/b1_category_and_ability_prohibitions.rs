@@ -1,18 +1,23 @@
 //! B1 (`docs/vf-audit/design-b0-ranging-and-predicates.md`, D21/F-355/F-542/
-//! F-511, D40 residual, D41's floor mechanism, F-502) — RED-checkpoint phase 1
-//! tests.
+//! F-511, D41's floor mechanism, F-502) — RED-checkpoint phase 1 tests.
 //!
 //! Every behavior asserted here is, as of this commit, a documented no-op stub
-//! (`Prereq::HasCategory` in `validation/prereq.rs::evaluate_prereq`, the four
-//! new `Effect` variants in `ruleset/integrity.rs::validate_effect_refs`, and
-//! `CategoryCap.min`/`min_hard` unconsumed by `validation/caps.rs`). These
+//! (`Prereq::HasCategory` in `validation/prereq.rs::evaluate_prereq`, the
+//! three `Effect` variants in `ruleset/integrity.rs::validate_effect_refs`,
+//! and `CategoryCap.min`/`min_hard` unconsumed by `validation/caps.rs`). These
 //! tests MUST fail today, for the reason each doc comment states, and go green
 //! only once phase 2 wires the real evaluator/validator logic behind them.
 //!
 //! Fixtures are hand-authored throughout — the real catalogue entries this
 //! note names (`flaw.ability_block`, `flaw.rector`, `flaw.weak_personality`,
-//! `flaw.sheltered_upbringing`, `flaw.feral_upbringing`) are Phase 3's data
-//! work (design note § 7), not B1's.
+//! `flaw.sheltered_upbringing`) are Phase 3's data work (design note § 7), not
+//! B1's.
+//!
+//! D40's residual (Feral Upbringing's wilderness whitelist,
+//! `Effect::RestrictsAbilityCategoryToAbilities`) was withdrawn by D63
+//! (`docs/vf-audit/decisions.md`) and removed by B1c as YAGNI: no shipped data
+//! ever used it. § F below is B1c's own RED-checkpoint regression test, not
+//! part of the original B1 phase 1 red.
 
 use arm_rules::ruleset::Ruleset;
 use arm_rules::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
@@ -322,65 +327,6 @@ fn ruleset_load_rejects_a_dangling_forbids_abilities_target() {
     );
 }
 
-/// `Effect::RestrictsAbilityCategoryToAbilities` naming an ability the
-/// catalogue does not declare must fail to load. Fails today for the same
-/// stub reason.
-#[test]
-fn ruleset_load_rejects_a_dangling_restricts_ability_category_target() {
-    let items = format!(
-        r#"[
-      {{ "id": "flaw.feral_upbringing", "kind": "flaw", "classification": "creation_effect",
-        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-        "effects": [ {{ "type": "restricts_ability_category_to_abilities",
-          "category": "general", "allowed": ["ability.no_such_ability"] }} ] }},
-      {PERSONALITY_FILLER}
-    ]"#
-    );
-    let types = r#"[
-      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
-        "creation_phases": ["virtues_flaws"] }
-    ]"#;
-    let abilities = r#"{ "abilities": [ { "id": "ability.awareness", "category": "general" } ] }"#;
-    let result = Ruleset::from_json_with_abilities("test", "1", &items, types, abilities);
-    assert!(
-        result.is_err(),
-        "a restricts_ability_category_to_abilities entry naming an ability the \
-         catalogue lacks must fail to load (B1 phase 2 not yet wired)"
-    );
-}
-
-/// `Effect::RestrictsAbilityCategoryToAbilities.allowed` naming an ability
-/// whose OWN category differs from the effect's stated `category` must fail
-/// to load — a whitelist entry outside its own stated category can never
-/// apply, so it is silent dead data otherwise (design § 5). Fails today for
-/// the same stub reason.
-#[test]
-fn ruleset_load_rejects_an_allowed_ability_outside_its_stated_category() {
-    let items = format!(
-        r#"[
-      {{ "id": "flaw.feral_upbringing", "kind": "flaw", "classification": "creation_effect",
-        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-        "effects": [ {{ "type": "restricts_ability_category_to_abilities",
-          "category": "general", "allowed": ["ability.parma_magica"] }} ] }},
-      {PERSONALITY_FILLER}
-    ]"#
-    );
-    let types = r#"[
-      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
-        "creation_phases": ["virtues_flaws"] }
-    ]"#;
-    // `ability.parma_magica` is Supernatural, not General — a real category
-    // mismatch, not a dangling id.
-    let abilities =
-        r#"{ "abilities": [ { "id": "ability.parma_magica", "category": "supernatural" } ] }"#;
-    let result = Ruleset::from_json_with_abilities("test", "1", &items, types, abilities);
-    assert!(
-        result.is_err(),
-        "an allowed ability outside the effect's own stated category must fail \
-         to load (B1 phase 2 not yet wired)"
-    );
-}
-
 /// `CategoryCap.min > max` is an unsatisfiable range and must fail to load.
 /// Fails today because no integrity check reads `CategoryCap.min` at all.
 /// `items` is deliberately empty — `validate_engine_required_categories` is
@@ -629,22 +575,32 @@ fn forbids_abilities_blocks_a_granted_ability_score_floor_too() {
     );
 }
 
-// --- F: D40 residual (Feral Upbringing) — RestrictsAbilityCategoryToAbilities
+// --- F: D63 removal — RestrictsAbilityCategoryToAbilities has no carrier ---
 //
-// D60.2: the whitelist applies to BEGINNING Abilities only, and two stacked
-// whitelists intersect. The "creation-only, in-play untouched" half carries
-// the SAME caveat as § E above — restated, not re-argued: this engine has no
-// data representation of post-creation ("in play") Ability acquisition at
-// all, so there is no narrower creation-only subset to express; the
-// restriction necessarily applies to the whole of `entity.ability_scores`.
+// D40's residual (Feral Upbringing's wilderness whitelist, D60.2's stacking
+// rule) is withdrawn by D63: no shipped data ever used the variant, so B1c
+// removes it as YAGNI. The behavior tests that once lived in this section
+// (whitelist enforcement, stacked-restriction intersection) are removed along
+// with the variant; only the regression test below — proving the JSON tag is
+// now unrecognized — remains.
 
-fn ruleset_with_feral_upbringing() -> Ruleset {
+/// D63 (`docs/vf-audit/decisions.md`) withdraws D60.2's creation-wide
+/// whitelist reading: Feral Upbringing's wilderness list lives only in its
+/// own first-five-years replacement pool (D2), so no shipped data ever uses
+/// `Effect::RestrictsAbilityCategoryToAbilities`. B1c removes the variant as
+/// YAGNI. Until that removal lands, this JSON still deserializes into the
+/// (still-present) variant and the ruleset loads successfully — so this
+/// assertion is RED today. It must go GREEN once the variant is deleted from
+/// `types.rs`, at which point `"type": "restricts_ability_category_to_abilities"`
+/// is an unknown enum tag and `serde_json` fails to parse the item.
+#[test]
+fn ruleset_load_rejects_unknown_restricts_ability_category_variant() {
     let items = format!(
         r#"[
       {{ "id": "flaw.feral_upbringing", "kind": "flaw", "classification": "creation_effect",
         "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
         "effects": [ {{ "type": "restricts_ability_category_to_abilities",
-          "category": "general", "allowed": ["ability.awareness", "ability.athletics"] }} ] }},
+          "category": "general", "allowed": ["ability.awareness"] }} ] }},
       {PERSONALITY_FILLER}
     ]"#
     );
@@ -652,126 +608,11 @@ fn ruleset_with_feral_upbringing() -> Ruleset {
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
         "creation_phases": ["virtues_flaws"] }
     ]"#;
-    let abilities = r#"{ "abilities": [
-      { "id": "ability.awareness", "category": "general" },
-      { "id": "ability.athletics", "category": "general" },
-      { "id": "ability.bargain", "category": "general" }
-    ] }"#;
-    Ruleset::from_json_with_abilities("test", "1", &items, types, abilities)
-        .expect("hand-authored fixture must load")
-}
-
-/// A beginning Ability in the restricted category NOT on the whitelist must
-/// be refused. Fails today — nothing in `validate()` reads
-/// `Effect::RestrictsAbilityCategoryToAbilities` at all.
-#[test]
-fn restricts_ability_category_blocks_an_unlisted_ability_in_the_restricted_category() {
-    let ruleset = ruleset_with_feral_upbringing();
-    let entity = companion(
-        vec![sel("flaw.feral_upbringing")],
-        vec![ability_score("ability.bargain", 3)],
-    );
-    let result = validate(&entity, &ruleset);
+    let abilities = r#"{ "abilities": [ { "id": "ability.awareness", "category": "general" } ] }"#;
+    let result = Ruleset::from_json_with_abilities("test", "1", &items, types, abilities);
     assert!(
-        has_code(
-            &result.issues,
-            ValidationIssue::CODE_ABILITY_FORBIDDEN_BY_EFFECT
-        ),
-        "an unlisted general Ability must be refused under the whitelist \
-         (B1 phase 2 not yet wired) — issues: {:?}",
-        result.issues
-    );
-}
-
-/// Control: a listed Ability is fine. Passes today and must keep passing.
-#[test]
-fn restricts_ability_category_allows_a_listed_ability() {
-    let ruleset = ruleset_with_feral_upbringing();
-    let entity = companion(
-        vec![sel("flaw.feral_upbringing")],
-        vec![ability_score("ability.awareness", 3)],
-    );
-    let result = validate(&entity, &ruleset);
-    assert!(
-        !has_code(
-            &result.issues,
-            ValidationIssue::CODE_ABILITY_FORBIDDEN_BY_EFFECT
-        ),
-        "a whitelisted Ability must never trip the restriction — issues: {:?}",
-        result.issues
-    );
-}
-
-fn ruleset_with_two_stacked_restrictions() -> Ruleset {
-    let items = format!(
-        r#"[
-      {{ "id": "flaw.feral_upbringing", "kind": "flaw", "classification": "creation_effect",
-        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-        "effects": [ {{ "type": "restricts_ability_category_to_abilities",
-          "category": "general", "allowed": ["ability.awareness", "ability.athletics"] }} ] }},
-      {{ "id": "flaw.second_restriction", "kind": "flaw", "classification": "creation_effect",
-        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
-        "effects": [ {{ "type": "restricts_ability_category_to_abilities",
-          "category": "general", "allowed": ["ability.athletics", "ability.bargain"] }} ] }},
-      {PERSONALITY_FILLER}
-    ]"#
-    );
-    let types = r#"[
-      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
-        "creation_phases": ["virtues_flaws"] }
-    ]"#;
-    let abilities = r#"{ "abilities": [
-      { "id": "ability.awareness", "category": "general" },
-      { "id": "ability.athletics", "category": "general" },
-      { "id": "ability.bargain", "category": "general" }
-    ] }"#;
-    Ruleset::from_json_with_abilities("test", "1", &items, types, abilities)
-        .expect("hand-authored fixture must load")
-}
-
-/// D60.2's stacking rule, kept half: `ability.athletics` is on BOTH
-/// whitelists (`{awareness, athletics}` ∩ `{athletics, bargain}` =
-/// `{athletics}`), so it must stay legal under two stacked restrictions.
-/// Fails today for the same reason as every other test in this file — no
-/// consumer exists yet, so this passes VACUOUSLY today (no error either way)
-/// and must keep passing, meaningfully, once phase 2 wires intersection.
-#[test]
-fn restricts_ability_category_stacked_restrictions_keep_the_common_ability() {
-    let ruleset = ruleset_with_two_stacked_restrictions();
-    let entity = companion(
-        vec![sel("flaw.feral_upbringing"), sel("flaw.second_restriction")],
-        vec![ability_score("ability.athletics", 3)],
-    );
-    let result = validate(&entity, &ruleset);
-    assert!(
-        !has_code(
-            &result.issues,
-            ValidationIssue::CODE_ABILITY_FORBIDDEN_BY_EFFECT
-        ),
-        "an Ability on BOTH stacked whitelists must stay legal — issues: {:?}",
-        result.issues
-    );
-}
-
-/// D60.2's stacking rule, excluded half: `ability.awareness` is on the FIRST
-/// whitelist only — the intersection excludes it, so two stacked
-/// restrictions must be STRICTER than either alone. Fails today because
-/// nothing reads the effect at all (no error is raised for anything yet).
-#[test]
-fn restricts_ability_category_stacked_restrictions_exclude_an_ability_on_only_one_list() {
-    let ruleset = ruleset_with_two_stacked_restrictions();
-    let entity = companion(
-        vec![sel("flaw.feral_upbringing"), sel("flaw.second_restriction")],
-        vec![ability_score("ability.awareness", 3)],
-    );
-    let result = validate(&entity, &ruleset);
-    assert!(
-        has_code(
-            &result.issues,
-            ValidationIssue::CODE_ABILITY_FORBIDDEN_BY_EFFECT
-        ),
-        "an Ability on only ONE of two stacked whitelists must be refused \
-         (intersection, not union; B1 phase 2 not yet wired) — issues: {:?}",
-        result.issues
+        result.is_err(),
+        "restricts_ability_category_to_abilities must be an unknown effect \
+         type once B1c removes the variant (D63) — it still loaded: {result:?}"
     );
 }

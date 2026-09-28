@@ -265,14 +265,12 @@ export type Effect =
   // for every Ability — a creation-time constraint the engine's age-cap
   // resolution point folds in; nothing here renders it directly.
   | { type: 'waives_ability_age_cap' }
-  // B1 (D21/F-355, F-542, F-511; D40 residual): category/ability
-  // prohibitions and the Feral Upbringing whitelist. All four are
-  // creation-time constraints a dedicated validator enforces; nothing here
-  // renders any of them directly.
+  // B1 (D21/F-355, F-542, F-511): category/ability prohibitions. All three
+  // are creation-time constraints a dedicated validator enforces; nothing
+  // here renders any of them directly.
   | { type: 'forbids_ability_category'; category: string }
   | { type: 'forbids_item_category'; category: string }
-  | { type: 'forbids_abilities'; abilities: string[] }
-  | { type: 'restricts_ability_category_to_abilities'; category: string; allowed: string[] };
+  | { type: 'forbids_abilities'; abilities: string[] };
 
 // M5/5b scalar enums mirroring the engine (rendered via Fluent in slice 5i).
 export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' | 'spontaneous';

@@ -787,3 +787,8 @@ Applied all 4 architect-review findings (`tmp/b0-architect-review.md`):
 4. **LOW** — added a cross-referencing doc-comment requirement (§ 4) on
    `categories_in_force` ("bought-only by design; see `held_categories` for
    the grant-aware twin"), so the two same-shaped helpers are not conflated.
+
+## Amendment (2026-09-28, D63/B1c)
+
+`Effect::RestrictsAbilityCategoryToAbilities` (D40 residual, § 1/§ 2/§ 4/§ 5)
+is withdrawn and removed as YAGNI: no shipped data ever used it.

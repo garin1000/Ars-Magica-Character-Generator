@@ -513,6 +513,11 @@ it is B1's `Effect::RestrictsAbilityCategoryToAbilities` (already designed,
 `design-b0-ranging-and-predicates.md` § 1, B1), landed independently. D2's
 brief must add the second effect to the same entry, not invent a third.
 
+**Amendment (2026-09-28, D63):** withdrawn — `RestrictsAbilityCategoryToAbilities`
+was removed as YAGNI (no shipped data used it); D2's replacement pool alone
+enforces Feral's wilderness list and "no Language" rule, for its first five
+years only, so D2's brief does **not** add a second effect to the entry.
+
 ### Integrity
 
 | Field | Rejected when |

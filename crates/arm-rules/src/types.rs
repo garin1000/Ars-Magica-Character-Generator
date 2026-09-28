@@ -2215,25 +2215,6 @@ pub enum Effect {
         /// The forbidden Ability ids.
         abilities: std::collections::BTreeSet<Id>,
     },
-    /// Narrows a normally-open [`AbilityCategory`] down to a named whitelist,
-    /// for BEGINNING Abilities only — Feral Upbringing, "You may only choose
-    /// beginning Abilities that you could have learned in the wilds"
-    /// (D40 residual, ArMDE:6110-6113). Unlike every other effect in this
-    /// family, this does not forbid something normally open or authorize
-    /// something normally gated — it narrows the default-permitted `general`
-    /// category to `allowed` (D60.2: creation-time only, per Sheltered
-    /// Upbringing's own "but you may learn them in play" carve-out; two
-    /// stacked whitelists intersect rather than the later one replacing the
-    /// earlier).
-    ///
-    /// Source: ArMDE:6110-6113.
-    RestrictsAbilityCategoryToAbilities {
-        /// The Ability category this restriction narrows.
-        category: AbilityCategory,
-        /// The only Ability ids still legal as a beginning Ability of
-        /// `category` while this effect is in force.
-        allowed: std::collections::BTreeSet<Id>,
-    },
 }
 
 /// A property-based test over a [`PointItem`], for an exclusion the rulebook
@@ -8376,9 +8357,11 @@ mod tests {
         assert_eq!(prereq, roundtripped);
     }
 
-    /// B1/D21 (F-355, F-542, F-511, D40 residual): the four new category/
-    /// ability-prohibition `Effect` variants survive a `type`-tagged JSON
-    /// round-trip, on `might_effects_round_trip`'s pattern.
+    /// B1/D21 (F-355, F-542, F-511): the three category/ability-prohibition
+    /// `Effect` variants survive a `type`-tagged JSON round-trip, on
+    /// `might_effects_round_trip`'s pattern. (A fourth,
+    /// `RestrictsAbilityCategoryToAbilities`, was removed by D63/B1c: no
+    /// shipped data ever used it.)
     #[test]
     fn b1_category_and_ability_prohibition_effects_roundtrip() {
         let effects = vec![
@@ -8394,13 +8377,6 @@ mod tests {
                     Id::new("ability.charm"),
                 ]),
             },
-            Effect::RestrictsAbilityCategoryToAbilities {
-                category: AbilityCategory::General,
-                allowed: std::collections::BTreeSet::from([
-                    Id::new("ability.athletics"),
-                    Id::new("ability.awareness"),
-                ]),
-            },
         ];
         let json = serde_json::to_string(&effects).unwrap();
         let back: Vec<Effect> = serde_json::from_str(&json).unwrap();
@@ -8408,7 +8384,6 @@ mod tests {
         assert!(json.contains("\"type\":\"forbids_ability_category\""));
         assert!(json.contains("\"type\":\"forbids_item_category\""));
         assert!(json.contains("\"type\":\"forbids_abilities\""));
-        assert!(json.contains("\"type\":\"restricts_ability_category_to_abilities\""));
     }
 
     /// B1/D41: `CategoryCap.min`/`min_hard` are additive and independent of
