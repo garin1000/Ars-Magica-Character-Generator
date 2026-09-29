@@ -828,6 +828,35 @@ presumption of correctness.
 
 ---
 
+## D70 — X6 scoping answers
+
+**Norbert, 2026-09-29** (details in `tmp/x6-scope.md`).
+
+- **Order of work.** The design note, the engine and the 16 rule-driving
+  parameters come before Friday 2026-10-02. The 26 label-only parameters, the
+  three retypes and D42 come after.
+- **Q-X6-1.** Commanding Aura gets the four ranks (ArMDE:3585-3591) plus King
+  (ArMDE:17651: MR 10, Soak +2). The wife rule (ArMDE:17652) stays text.
+- **Q-X6-2.** Turb Trained gets a choice of dead language, a parameter over
+  the catalogue's dead languages bound to the authorization (ArMDE:5181).
+- **Q-X6-3.** Repellent gets an enumerated choice: natural weapons, scales
+  (Soak +3, computed), dark sight, custom (ArMDE:6681).
+- **Q-X6-4.** Every new parameter is required, so old saves report
+  `missing_param` until it is filled (D10's policy). Retyped text values are not
+  migrated. No schema bump.
+- **Q-X6-5 (D42).** An entry's realm is resolved when read: the entry's
+  override, else the concept's realm, else Magic (ArMDE:2960). Only overrides are
+  stored.
+- **Q-X6-6 (D42).** Fix the 17 fixed entries and the 1 subset, plus three
+  entailed ones: Bee King Faerie (ArMDE:3486), Commanding Aura Divine
+  (ArMDE:3581), Raised from the Dead Divine (ArMDE:6648). Spiritual Pact and
+  Warped by Magic default to Magic, and Hex to Infernal; changing them warns.
+
+**Scheduling, orchestrator:** Mercurian Magic's prerequisite goes to X5, so
+X7b-d drops its F-196 test.
+
+---
+
 ## D69 — X7b-e's three open items (row 42)
 
 **Norbert, 2026-09-29** (details in `tmp/x7be-verdicts.md`).
