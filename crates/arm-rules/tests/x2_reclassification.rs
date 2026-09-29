@@ -253,6 +253,8 @@ fn rules_dir() -> PathBuf {
 // text is always capture group 1 in both branches.
 static LINK_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\[([^\]]+)\]\((?:<[^>]*>|[^)]*)\)").unwrap());
+static EMPHASIS_BOLD_STAR_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\*\*([^*\n]+)\*\*").unwrap());
 static EMPHASIS_STAR_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\*([^*\n]+)\*").unwrap());
 static EMPHASIS_UNDERSCORE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"_([^_\n]+)_").unwrap());
@@ -264,14 +266,46 @@ static EN_DASH_BEFORE_DIGIT_RE: LazyLock<Regex> =
 /// immediately before an ASCII digit becomes the ASCII hyphen-minus (the
 /// rulebook Markdown's own convention for a negative number, per
 /// `rules_i18n_ascii_hyphen.rs`'s doc comment); Markdown emphasis (`*text*`,
-/// `_text_`) and link syntax (`[text](url)`) collapse to their inner text.
-/// Nothing else may differ — no synonym swap, no restructuring, no added or
-/// removed clause.
+/// `**text**`, `_text_`) and link syntax (`[text](url)`) collapse to their
+/// inner text. Nothing else may differ — no synonym swap, no restructuring,
+/// no added or removed clause.
+///
+/// **Bold before single-star, and this order matters.** [`EMPHASIS_STAR_RE`]
+/// matches a single `*...*` span; run on `**X**` alone (no
+/// [`EMPHASIS_BOLD_STAR_RE`] pass first) it cannot see the outer `**` pair as
+/// a unit. It instead matches the *inner* single-star pair — the second `*`
+/// of the opening `**` against the first `*` of the closing `**` — leaving
+/// one bare `*` stranded on each edge: `**X**` alone becomes `*X*`, not `X`.
+/// Two adjacent bold spans compound this into a visible defect rather than a
+/// merely redundant one: `**X** OR **Y**` collapsed to `*X OR Y*`, because
+/// the stray edge stars end up bracketing the whole run. Stripping `**...**`
+/// first removes the double-star pairs as units, so the later single-star
+/// pass has nothing left to misparse.
 fn normalize_markdown(s: &str) -> String {
     let s = LINK_RE.replace_all(s, "$1");
+    let s = EMPHASIS_BOLD_STAR_RE.replace_all(&s, "$1");
     let s = EMPHASIS_STAR_RE.replace_all(&s, "$1");
     let s = EMPHASIS_UNDERSCORE_RE.replace_all(&s, "$1");
     EN_DASH_BEFORE_DIGIT_RE.replace_all(&s, "-$1").into_owned()
+}
+
+/// Bug guard (fix-round, 2026-09-29): [`EMPHASIS_STAR_RE`] matches a single
+/// `*...*` span, so on `**X**` it cannot see the outer pair as a unit — it
+/// finds the *inner* single-star pair first (the second `*` of the opening
+/// `**` paired with the first `*` of the closing `**`) and leaves one bare
+/// `*` stranded on each edge. Two adjacent bold spans joined by "OR" compound
+/// this: `**X** OR **Y**` collapses to `*X OR Y*` instead of `X OR Y`. This
+/// is exactly the shape that reached `virtue.performance_magic` and
+/// `virtue.personal_power` in both shipped locales.
+#[test]
+fn normalize_markdown_strips_adjacent_bold_spans() {
+    assert_eq!(normalize_markdown("**X** OR **Y**"), "X OR Y");
+    assert_eq!(normalize_markdown("**X**"), "X");
+    assert_eq!(normalize_markdown("*X*"), "X");
+    assert_eq!(
+        normalize_markdown("This is **bold** inside a sentence."),
+        "This is bold inside a sentence."
+    );
 }
 
 /// Every line of `file` under `rules/source/<lang>/`, cached per
@@ -626,6 +660,37 @@ fn x2_shipped_descriptions_match_their_cited_passage_verbatim() {
          allowed, docs/open-todos.md row 38):\n\n{}",
         offenders.len(),
         offenders.join("\n\n")
+    );
+}
+
+/// Bug guard (fix-round, 2026-09-29): a stray `*` in a shipped `description`
+/// is always leftover Markdown emphasis/bold that [`normalize_markdown`]
+/// failed to fully strip when the description was authored — never
+/// intentional shipped text (`uebersetzungsregeln.md` never uses `*` as a
+/// display glyph). Catalogue-wide, not scoped to [`X2_VERBATIM_SCOPE`], so it
+/// also catches a future slice's data reintroducing the same bug shape.
+#[test]
+fn no_shipped_description_contains_a_literal_asterisk() {
+    let rs = load_ruleset();
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+
+    let mut offenders = Vec::new();
+    for item in rs.items() {
+        for (lang, loc) in [("en", &loc_en), ("de", &loc_de)] {
+            if let Some(desc) = loc.description(&item.id)
+                && desc.contains('*')
+            {
+                offenders.push(format!("{lang}/{}: {desc:?}", item.id.as_str()));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "{} shipped description(s) contain a literal '*' (unstripped Markdown emphasis):\n\n{}",
+        offenders.len(),
+        offenders.join("\n")
     );
 }
 
