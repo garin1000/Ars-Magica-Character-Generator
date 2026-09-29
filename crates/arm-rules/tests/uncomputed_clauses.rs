@@ -995,6 +995,137 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::En,
         family: "cross-reference",
     },
+    // --- Family 16 (X2b Phase 2 additions, 2026-09-29) ---------------------
+    // Writing X2b's verbatim descriptions re-exposed genuine D8/D50-shaped
+    // rules this screen did not yet recognize under their real phrasing. Each
+    // pattern was verified against the one real passage that motivated it.
+    S2Idiom {
+        // virtue.immune_to_disease (ArMDE:4095-4098): "the lesser demons that
+        // cause most diseases refuse to harm him".
+        pattern: r"\brefuse to harm\b",
+        language: Language::En,
+        family: "capability/immunity",
+    },
+    S2Idiom {
+        // virtue.immune_to_disease (ArMDE:4095-4098, DE): "die niederen
+        // Dämonen ... weigern sich, ihm Schaden zuzufügen".
+        pattern: r"\bweigern sich\b[^.]{0,40}?\bzuzufügen\b",
+        language: Language::De,
+        family: "capability/immunity",
+    },
+    S2Idiom {
+        // virtue.immunity_to_cold (ArMDE:4099-4102): "Normal cold does not
+        // harm you".
+        pattern: r"\bdoes not harm\b",
+        language: Language::En,
+        family: "capability/immunity",
+    },
+    S2Idiom {
+        // virtue.immunity_to_cold (ArMDE:4099-4102, DE): "Normale Kälte
+        // schadet dir nicht" — negation on a plain verb, not a modal, so
+        // DE_MODAL_NICHT (which requires a modal verb before the gap) does
+        // not reach it; narrower-bound than DE_MODAL_NICHT since "schadet"
+        // is not itself a modal.
+        pattern: r"\bschadet\b[^.]{0,20}?\bnicht\b",
+        language: Language::De,
+        family: "capability/immunity",
+    },
+    S2Idiom {
+        // virtue.infernal_heirloom (ArMDE:4127-4132): "an effect once per day
+        // that is equivalent to a Hermetic spell of level 25" — the formula
+        // family's existing "equal to"/"entspricht" pair does not cover this
+        // synonym.
+        pattern: r"\bequivalent to\b",
+        language: Language::En,
+        family: "formula",
+    },
+    S2Idiom {
+        // virtue.just_an_instant (ArMDE:4169-4172): "does not need to make
+        // Awareness checks" — a roll exemption the existing "does not
+        // suffer"/"do not suffer" idiom does not reach.
+        pattern: r"\bdoes not need to\b",
+        language: Language::En,
+        family: "exemption",
+    },
+    S2Idiom {
+        // virtue.just_an_instant (ArMDE:4169-4172, DE): "muss keine
+        // Wahrnehmungswürfe ablegen" — an obligation negated with "keine"
+        // bound to a later verb, distinct from the modal+keine prohibition
+        // family (whose verb set is darf/darfst/dürfen/kann/kannst/können,
+        // not muss).
+        pattern: r"\bmuss keine\b[^.]{0,40}?\bablegen\b",
+        language: Language::De,
+        family: "exemption",
+    },
+    S2Idiom {
+        // virtue.knows_people (ArMDE:4199-4206): "a character with this
+        // Virtue may ask for a bait" — a real, invokable ability the existing
+        // permission family's "may take"/"may learn"/"may purchase" trio does
+        // not cover.
+        pattern: r"\bmay ask for\b",
+        language: Language::En,
+        family: "permission",
+    },
+    S2Idiom {
+        // virtue.landed_noble (ArMDE:4219-4228): "you may not impose the
+        // death penalty" — the existing "may not take"/"may not have"
+        // prohibition idioms do not cover this verb.
+        pattern: r"\bmay not impose\b",
+        language: Language::En,
+        family: "prohibition",
+    },
+    S2Idiom {
+        // virtue.lesser_immunity (ArMDE:4275-4278): "You are immune to some
+        // hazard".
+        pattern: r"\bimmune to\b",
+        language: Language::En,
+        family: "capability/immunity",
+    },
+    S2Idiom {
+        // virtue.lesser_immunity (ArMDE:4275-4278, DE): "Du bist immun gegen
+        // eine Gefahr".
+        pattern: r"\bimmun gegen\b",
+        language: Language::De,
+        family: "capability/immunity",
+    },
+    S2Idiom {
+        // virtue.life_linked_spontaneous_magic (ArMDE:4299-4306): "you must
+        // expend one additional Fatigue level per five points" — the German
+        // mirror already trips the screen via a hyphenated "Stufe-10-Effekt"
+        // (has_signed_number's hyphen-before-digit case), so no DE pattern is
+        // needed here.
+        pattern: r"\bmust expend\b",
+        language: Language::En,
+        family: "named rulebook term",
+    },
+    S2Idiom {
+        // virtue.magical_memory (ArMDE:4355-4358): "You need not keep
+        // laboratory texts".
+        pattern: r"\bneed not\b",
+        language: Language::En,
+        family: "exemption",
+    },
+    S2Idiom {
+        // virtue.magical_memory (ArMDE:4355-4358, DE): "Du brauchst keine
+        // Labortexte ... aufzubewahren".
+        pattern: r"\bbrauchst keine\b",
+        language: Language::De,
+        family: "exemption",
+    },
+    S2Idiom {
+        // virtue.male_guild_sponsor (ArMDE:4439-4442): "his field of work,
+        // which is otherwise restricted to men".
+        pattern: r"\brestricted to\b",
+        language: Language::En,
+        family: "eligibility",
+    },
+    S2Idiom {
+        // virtue.male_guild_sponsor (ArMDE:4439-4442, DE): "sein
+        // Arbeitsbereich ... der andernfalls Männern vorbehalten ist".
+        pattern: r"\bvorbehalten\b",
+        language: Language::De,
+        family: "eligibility",
+    },
 ];
 
 /// [`S2_IDIOMS`], compiled once.
@@ -1300,18 +1431,18 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // tmp/x2a-verdicts.md. Removed from here — the passage genuinely states a
     // rule, so `no_swept_entry_drops_an_uncomputed_mechanical_clause` should
     // bite it directly rather than stay silenced.
-    (
-        "virtue.indescribable_face",
-        "ArMDE:4107-4114 states no roll, bonus, or cap at all — \"can't turn the ability off\", \
-         \"can switch her distracting prop\" describe a narrative knack for being forgettable or \
-         memorable, with nothing for the engine to compute.",
-    ),
-    (
-        "virtue.magical_warder",
-        "ArMDE:4377-4384 describes an NPC ally (a magical being that watches over the \
-         character) with no PC-facing number — the same ally-template shape as \
-         virtue.ghostly_warder, which this entry's own text cites as an example.",
-    ),
+    // virtue.indescribable_face: OQ-6 re-test (X2b) overturns this row — the
+    // "no roll, bonus, or cap" reading missed that ArMDE:4109's "A player who
+    // selects this Virtue for his character needs to select which form of the
+    // Virtue his character has" is a real, mandatory creation-time choice
+    // (D50: a player who does not know it will not make it), even though
+    // neither form's behavior is itself computed. Reclassifies to
+    // uncomputed_rule; see tmp/x2b-verdicts.md.
+    // virtue.magical_warder: OQ-6 re-test (X2b) overturns this row too, on the
+    // same clause X2a already reversed for its own cited sibling: ArMDE:4381
+    // "leave your presence for up to half a day" is the identical
+    // storyguide-enforced utility limit that flipped virtue.ghostly_warder.
+    // Reclassifies to uncomputed_rule; see tmp/x2b-verdicts.md.
     (
         "virtue.paid_rights",
         "ArMDE:4606-4615's \"cannot\"/\"may not\" clauses (a woman \"cannot pay a fine to\" \
@@ -1548,6 +1679,46 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "prohibition: bare \"cannot\" — \"cannot spend more than a season in the same place\", \
          ArMDE:7015-7018",
     ),
+    // --- X2b Phase 2 fix-round additions (2026-09-29): new S2 idioms written
+    // to satisfy X2b's own entries' verbatim descriptions newly sweep these
+    // six entries elsewhere in the catalogue, all still `narrative`, all
+    // outside X2b's own range (ArMDE:4067-4442) — filed here per that row's
+    // classification precondition rather than resolved, exactly as any other
+    // PMC row awaiting its own slice.
+    (
+        "flaw.lecherous_major",
+        "\"need not\" idiom (added for virtue.magical_memory): \"you need not be any good at \
+         seduction\", ArMDE:6334-6337",
+    ),
+    (
+        "flaw.lecherous_minor",
+        "The Minor half of the same entry, citing the same passage. Same trigger as \
+         flaw.lecherous_major.",
+    ),
+    (
+        "flaw.slothful",
+        "\"need not\" idiom: \"very good at coming up with excuses as to why things need not be \
+         done right now\", ArMDE:6751-6754",
+    ),
+    (
+        "flaw.tzadik_nistar",
+        "\"need not\" idiom: \"a character need not be Jewish to take this Flaw\", ArMDE:6883-6886",
+    ),
+    (
+        "flaw.vendetta",
+        "\"restricted to\" idiom (added for virtue.male_guild_sponsor): \"This Flaw is generally \
+         restricted to magi of House Verditius\", ArMDE:6955-6958",
+    ),
+    (
+        "virtue.partner",
+        "\"need not\" idiom: \"need not purchase that Virtue if she has this one\", \
+         ArMDE:4616-4619",
+    ),
+    (
+        "virtue.templar_confrere_or_consoeur",
+        "\"need not\" idiom: \"His membership is generally temporary (although it need not be)\", \
+         ArMDE:5117-5120",
+    ),
     // virtue.amorphous_major/_minor, virtue.covenfolk: resolved (X2a) — the
     // capability clause reclassifies to uncomputed_rule (amorphous) or the
     // entry's own incompatible_with turns out to cover the whole passage
@@ -1560,86 +1731,18 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // virtue.greater_immunity, virtue.guardian_angel, virtue.harnessed_magic:
     // resolved (X2a) — all six reclassify narrative -> uncomputed_rule, see
     // tmp/x2a-verdicts.md.
-    (
-        "virtue.homing_instinct",
-        "target number: \"an Ease Factor of 6\", ArMDE:4079-4084",
-    ),
-    (
-        "virtue.imbued_with_the_spirit_of_form",
-        "named rulebook term + formula: Fatigue-for-vis substitution, \"reduces the vis \
-         requirement... by 1\", ArMDE:4085-4094",
-    ),
-    (
-        "virtue.inoffensive_to_beings",
-        "capability: the Gift \"does not bother\" beings of the chosen type is a real Gift-\
-         penalty exemption with no effect, though the eligibility half is already a \
-         `prerequisites` (any(has The Gift, has Magical Air)), ArMDE:4133-4142",
-    ),
-    (
-        "virtue.inspirational",
-        "signed number: \"+3 bonus to rolls for appropriate Personality Traits\", \
-         ArMDE:4143-4146",
-    ),
-    (
-        "virtue.intuition",
-        "target number: \"secretly roll a simple die. On a 6+\", ArMDE:4147-4150",
-    ),
-    (
-        "virtue.kassalan_exorcism",
-        "formulas + capability: Casting Total \"(Stamina + Organization Lore... )/2\", \
-         Penetration formula, ArMDE:4173-4186",
-    ),
-    (
-        "virtue.keen_sense_of_smell",
-        "signed number: \"+3 bonus to all rolls involving\" smell, ArMDE:4191-4194",
-    ),
-    (
-        "virtue.keen_vision",
-        "signed number: \"+3 bonus to all rolls involving sight\", ArMDE:4187-4190",
-    ),
-    (
-        "virtue.land_regio_network",
-        "target number: \"an Ease Factor of 9\", ArMDE:4211-4218",
-    ),
-    (
-        "virtue.learn_ability_from_mistakes",
-        "named rulebook term: \"gain five experience points\" on a botch/near-miss, \
-         ArMDE:4241-4244",
-    ),
-    (
-        "virtue.leather_ripper",
-        "signed number + formula: \"-9 depending on\" maneuvers, \"PeAn(He) 30 effect\", \
-         ArMDE:4245-4248",
-    ),
-    (
-        "virtue.lesser_benediction",
-        "signed numbers: the Gift of the Gab/Green Fingers/Pricking Thumbs examples carry \
-         concrete roll penalties/bonuses, ArMDE:4253-4274",
-    ),
-    (
-        "virtue.license_of_absence",
-        "named rulebook term + eligibility: an extra free season, \"four free seasons in a \
-         year\", \"may only be taken by\" Priest, ArMDE:4291-4294",
-    ),
-    (
-        "virtue.luck",
-        "signed number (open-ended, GM-adjudicated): \"+1 to +3 (storyguide's discretion)\", \
-         ArMDE:4331-4334",
-    ),
-    (
-        "virtue.magical_mount",
-        "eligibility: a gifted mount requires \"a Major Story Flaw to represent the \
-         consequences\", a real required-companion-Flaw clause, ArMDE:4373-4376",
-    ),
-    (
-        "virtue.maker_of_textured_vessels",
-        "signed number: \"+3 bonus in a single Ability\" from a crafted vessel, \
-         ArMDE:4423-4430",
-    ),
-    (
-        "virtue.maker_of_water_vessels",
-        "capability: \"swap one Ability score for the Craft: Potter score\", ArMDE:4431-4438",
-    ),
+    // virtue.homing_instinct, virtue.imbued_with_the_spirit_of_form,
+    // virtue.inspirational, virtue.intuition, virtue.kassalan_exorcism,
+    // virtue.keen_sense_of_smell, virtue.keen_vision, virtue.land_regio_network,
+    // virtue.learn_ability_from_mistakes, virtue.leather_ripper,
+    // virtue.lesser_benediction, virtue.license_of_absence, virtue.luck,
+    // virtue.maker_of_textured_vessels, virtue.maker_of_water_vessels: resolved
+    // (X2b) — all reclassify narrative -> uncomputed_rule, see
+    // tmp/x2b-verdicts.md. virtue.inoffensive_to_beings and virtue.magical_mount
+    // also resolved (X2b): both reclassify to uncomputed_rule too (a real,
+    // separately uncomputed clause survives their own `prerequisites`), so both
+    // are removed from here AND from
+    // data_integrity.rs::PENDING_D67_CLASSIFICATION.
     (
         "virtue.minor_enchantments",
         "named rulebook term: item power levels \"must be 25 or less\", \"no single power can \
@@ -1765,13 +1868,10 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // D46/D67 (`x2_reclassification.rs`); removed from
     // data_integrity.rs::PENDING_D46_CLASSIFICATION too, see
     // tmp/x2a-verdicts.md.
-    (
-        "virtue.hermetic_magus",
-        "permission/eligibility: \"All magi must take this as their Social Status, and only \
-         magi may take it\", ArMDE:4067-4070 — computed via the magus profile's required_traits \
-         naming virtue.hermetic_magus (D46's own worked example), so `narrative` is wrong; X2 \
-         reclassifies to creation_effect per D46's ruling.",
-    ),
+    // virtue.hermetic_magus: resolved (X2b) — reclassifies to creation_effect
+    // per D46's own ruling (ArMDE:4067-4070, computed via the magus profile's
+    // required_traits); removed from data_integrity.rs::PENDING_D46_CLASSIFICATION
+    // too, see tmp/x2b-verdicts.md.
     // --- X2a fix-round additions (2026-09-29): the new "capability"/
     // "eligibility" idioms above newly sweep these two real, not-yet-landed
     // findings. Neither is on the X2a worklist (`tmp/x2-worklist.md` § 1 rows
@@ -1784,12 +1884,10 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
          `narrative`, no `prerequisites`, no effect; the restriction reaches the player nowhere \
          today",
     ),
-    (
-        "virtue.lesser_purifying_touch",
-        "capability/restriction limiter: \"You can only choose an illness, not an injury or \
-         other misfortune\", ArMDE:4287-4290 — `narrative`, the same shape as its sibling \
-         virtue.greater_purifying_touch (X2a) before its own restoration",
-    ),
+    // virtue.lesser_purifying_touch: resolved (X2b) — reclassifies to
+    // uncomputed_rule (ArMDE:4287-4290, "You can only choose an illness, not an
+    // injury or other misfortune" is a real restriction the summary does not
+    // carry), see tmp/x2b-verdicts.md.
 ];
 
 /// D5's first obligation (`docs/vf-audit/decisions.md`): a `creation_effect` or
@@ -1820,6 +1918,15 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
 /// [`no_swept_entry_drops_an_uncomputed_mechanical_clause`] for the
 /// now-uncomputed Casting clause, so no exemption is needed at all.
 const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
+    (
+        "virtue.hermetic_magus",
+        "X2b (tmp/x2b-verdicts.md), D46's own named case: the whole passage in ArMDE:4067-4070 \
+         (\"All magi must take this as their Social Status, and only magi may take it\") is \
+         computed by the magus character-type profile's `required_traits` naming this entry, not \
+         by any effect/description of the entry's own; classification moved narrative -> \
+         creation_effect and no separate description is owed (the entry also already carries a \
+         `prerequisites: has(virtue.the_gift)`, computed twice over).",
+    ),
     (
         "virtue.covenfolk",
         "X2a (tmp/x2a-verdicts.md): the only mechanical clause in ArMDE:3609-3612 — \"You may not \
@@ -1920,18 +2027,16 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
         "single clause (\"may select\" Academic Abilities), fully computed via \
          ability_authorization (X1/D43).",
     ),
-    (
-        "virtue.jurist",
-        "single clause (\"may purchase\" Latin, Artes Liberales, Civil and Canon Law), fully \
-         computed via ability_authorization (X1/D43, id-form).",
-    ),
-    (
-        "virtue.knight",
-        "operative clause (\"may take\" Martial Abilities) is computed via \
-         ability_authorization (X1/D43); \"the Wealthy Virtue and Poor Flaw affect you \
-         normally\" states there is NO special interaction, so nothing is dropped; the \
-         male-only eligibility note is flavor.",
-    ),
+    // virtue.jurist, virtue.knight: moved to PENDING_DROPPED_CLAUSE (X2b) — F-123
+    // (`docs/vf-audit/corrections.md`) is a live finding neither this row nor the
+    // rest of this block's "male-only eligibility note is flavor" precedent
+    // accounted for: D5 obliges the male-only restriction to reach the player as
+    // TEXT even though D58/Q-05 (no sex model) means it is never computed. Both
+    // entries' own ability_authorization clause is genuinely fully computed;
+    // only that one clause was dropped from the certification (Knight's
+    // equipment-access clause is additionally uncomputed, but that gap is K5/F0
+    // engine work — `docs/vf-audit/design-f0-book-template-engine.md` — tracked
+    // separately, not X2's). See tmp/x2b-verdicts.md.
     (
         "virtue.mamluk",
         "operative clause (\"may take\" Martial Abilities, \"may also take\" Theology: Islam) is \
@@ -2213,12 +2318,6 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          via two advancement_mod effects.",
     ),
     (
-        "virtue.greater_power",
-        "the power-level budget (50) is computed via power_levels; the Initiative/Fatigue-cost/\
-         Penetration formulas are the same generic power-invocation mechanism shared by \
-         Lesser/Personal/Ritual Power, not this entry's own job.",
-    ),
-    (
         "virtue.heartbeast",
         "single clause (confers the Heartbeast Ability at 1), fully computed via \
          ability_score_grant plus the house.bjornaer prerequisite.",
@@ -2249,32 +2348,42 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
         "single clause (Size +1), fully computed via size_delta; the Giant Blood/Small Frame/\
          Dwarf exclusion is in incompatible_with.",
     ),
-    (
-        "virtue.lesser_power",
-        "the power-level budget (25) is computed via power_levels, same reading as \
-         virtue.greater_power.",
-    ),
+    // virtue.lesser_power: moved to PENDING_DROPPED_CLAUSE (X2b) — F-142
+    // (`docs/vf-audit/corrections.md`) is a live finding this row did not
+    // account for: the Initiative formula (Quickness - twice power magnitude),
+    // the Fatigue-cost scaling by level, and the one-for-one Penetration
+    // purchase (ArMDE:4279-4286) reach the player nowhere. This departs from
+    // X2a's "no action" call on the identically-shaped virtue.greater_power
+    // (same gap, same live F-96 finding, apparently not read this closely) —
+    // flagged here for the record, not fixed (out of this slice's range). See
+    // tmp/x2b-verdicts.md.
     (
         "virtue.lightning_reflexes",
         "the operative bonus (+9 Initiative) is computed via combat_mod; the stress-die-plus-\
          Quickness trigger roll is table-time GM adjudication, the same shape botch dice are.",
     ),
-    (
-        "virtue.linguist",
-        "single clause (Language Advancement/XP increased by a quarter), fully computed via \
-         group_affinity_cost (counts_as_num/den 5/4).",
-    ),
-    (
-        "virtue.lone_redcap",
-        "the base numbers (poor Reputation 2, 300 XP, Well-Traveled grant) are all computed; \
-         the Poor/Wealthy season-count interactions are conditional narrative guidance with no \
-         number of their own beyond what those Virtues/Flaws already state.",
-    ),
-    (
-        "virtue.major_magical_focus",
-        "single clause (double the lowest applicable Art), fully computed via magical_focus \
-         (major); the worked Lab/Casting-Total example just illustrates that generic effect.",
-    ),
+    // virtue.linguist: moved to PENDING_DROPPED_CLAUSE (X2b) — F-150: ArMDE:4315's
+    // "All Advancement Totals for any Language are increased by a quarter" is a
+    // distinct in-play XP-gain-rate rule from "any experience points you put
+    // into any language at character generation" (ArMDE:4316-4317), which is the
+    // one `group_affinity_cost` actually implements (its own doc comment: "XP
+    // put into any language 'counts as' num/den of itself"). The Advancement
+    // Totals half reaches the player nowhere. See tmp/x2b-verdicts.md.
+    // virtue.lone_redcap: moved to PENDING_DROPPED_CLAUSE (X2b) — F-151's `desc`
+    // half: the two-seasons-of-service obligation ("or... declared Orbus"), the
+    // Poor/Wealthy season-count interactions, and the mundane-Social-Status
+    // compatibility note (ArMDE:4319-4326) reach the player nowhere; the base
+    // numbers this row cites (Reputation, 300 XP, Well-Traveled) genuinely are
+    // computed. F-151's `rep` half (the Reputation's polarity) is a possible
+    // numeric-correctness defect, not a description gap — X7's concern, not
+    // noted further here. See tmp/x2b-verdicts.md.
+    // virtue.major_magical_focus: moved to PENDING_DROPPED_CLAUSE (X2b) — F-174:
+    // the requisite rule ("the lowest applicable score may be one of the
+    // requisites"), the lab-activity restriction ("cannot be focused on
+    // laboratory activities, although a focus does apply to laboratory
+    // activities"), and the breadth rule ("smaller than a single Art, but may be
+    // spread over several Arts") reach the player nowhere (ArMDE:4399-4422); only
+    // the doubling itself is computed. See tmp/x2b-verdicts.md.
     (
         "virtue.mastered_spells",
         "single clause (50 XP for spell mastery), fully computed via spell_mastery_xp; the \
@@ -2595,17 +2704,12 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
         "orphan: \"If you experiment, you get +6\" has no effect — only the conditional +3 Lab \
          Total is computed, ArMDE:4151-4154",
     ),
-    (
-        "virtue.leper_magus",
-        "orphan: the whole wound-for-vis mechanic (Light Wound = 3 pawns through Deadly Wound \
-         = 15 pawns) has no effect — only the granted Life Boost is computed, ArMDE:4249-4252",
-    ),
-    (
-        "virtue.life_boost",
-        "orphan: the self-damage-if-over-Fatigue clause (Soak 5 x extra levels + stress die) \
-         has no effect — only the +5-per-Fatigue-level casting bonus is computed, \
-         ArMDE:4295-4298",
-    ),
+    // virtue.leper_magus, virtue.life_boost: removed (X2b, D20) — both are two
+    // of D20's five "number missing" surfaced-only entries
+    // (`docs/vf-audit/decisions.md` D20), so a description alone does not
+    // resolve them while they stay in_play_effect: both reclassify fully to
+    // uncomputed_rule, with dedicated numeric tests in `x2_reclassification.rs`
+    // (mirroring X2a's virtue.commanding_aura). See tmp/x2b-verdicts.md.
     (
         "virtue.magian_lineage_major",
         "orphan: the Major half's connected-Abilities XP-sharing mechanic has no effect — only \
@@ -2629,10 +2733,23 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     ),
     (
         "virtue.magister_in_artibus",
-        "orphan: the age-and-Ability-score eligibility floor (25-Int years, Latin/Artes \
-         Liberales 5) has no prerequisite — only the Reputation and the XP grant are computed, \
-         ArMDE:4385-4394",
+        "orphan (X2b widened this reading — F-170 alongside the existing F-171): the \
+         age-and-Ability-score eligibility floor (25-Int years, Latin/Artes Liberales 5) and the \
+         two-seasons teaching obligation have no prerequisite/effect, and \"only available to \
+         male characters\" (F-170) reaches the player nowhere either — only the Reputation and \
+         the XP grant are computed, ArMDE:4385-4394",
     ),
+    // virtue.greater_power, virtue.jurist, virtue.knight, virtue.lesser_power,
+    // virtue.linguist, virtue.lone_redcap, virtue.major_magical_focus: resolved
+    // (X2b Phase 2) — each now ships the full cited passage as its
+    // `description` in both locales, which by construction restates whatever
+    // token got the row flagged onto this list in the first place; removed
+    // from here (own class unchanged: creation_effect except major_magical_focus,
+    // which stays in_play_effect). virtue.knight's equipment-access clause is
+    // still real engine work (K5/F0,
+    // `docs/vf-audit/design-f0-book-template-engine.md`) — the text now states
+    // it (D5), but computing it is still out of X2's scope. See
+    // tmp/x2b-verdicts.md.
     (
         "virtue.marshal",
         "orphan: \"may take Martial Abilities freely\" has no ability_authorization effect — \

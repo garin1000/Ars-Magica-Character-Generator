@@ -4729,7 +4729,7 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
     "source": { "anchor": "hermetic-magus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4067, 4070] }
@@ -4759,7 +4759,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "homing-instinct", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4079, 4084] }
   },
@@ -4768,7 +4768,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "source": { "anchor": "imbued-with-the-spirit-of-form", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4085, 4094] }
@@ -4778,7 +4778,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
     "source": { "anchor": "immune-to-disease", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4095, 4098] }
@@ -4788,7 +4788,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "immunity-to-cold", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4099, 4102] }
   },
@@ -4822,7 +4822,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "indescribable-face", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4107, 4114] }
   },
@@ -4854,7 +4854,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
     "source": { "anchor": "infernal-heirloom", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4127, 4132] }
@@ -4865,7 +4865,7 @@
     "magnitude": "minor",
     "categories": ["general"],
     "index_categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "any", "value": [{ "kind": "has", "value": "virtue.the_gift" }, { "kind": "has", "value": "flaw.magical_air" }] },
     "parameters": [{ "key": "being", "type": "ref", "domain": "enumerated", "values": ["being.animals", "being.demons", "being.divine", "being.faeries", "being.magical_creatures"] }],
@@ -4877,7 +4877,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "inspirational", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4143, 4146] }
   },
@@ -4886,7 +4886,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "intuition", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4147, 4150] }
   },
@@ -4938,7 +4938,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "just-an-instant", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4169, 4172] }
   },
@@ -4947,7 +4947,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "kassalan-exorcism", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4173, 4186] }
   },
@@ -4956,7 +4956,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "keen-sense-of-smell", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4191, 4194] }
   },
@@ -4965,7 +4965,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "keen-vision", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4187, 4190] }
   },
@@ -4984,7 +4984,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "knows-people", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4199, 4206] }
   },
@@ -5002,7 +5002,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
     "source": { "anchor": "land-regio-network", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4211, 4218] }
@@ -5012,7 +5012,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "landed-noble", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4219, 4228] }
   },
@@ -5051,7 +5051,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
     "max_total": 255,
@@ -5062,7 +5062,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "leather-ripper", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4245, 4248] }
   },
@@ -5071,7 +5071,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "special_casting_mod", "kind": "life_boost" }],
     "source": { "anchor": "leper-magus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4249, 4252] }
@@ -5081,7 +5081,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "lesser-benediction", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4253, 4274] }
   },
@@ -5090,7 +5090,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "lesser-immunity", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4275, 4278] }
   },
@@ -5111,7 +5111,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "lesser-purifying-touch", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4287, 4290] }
   },
@@ -5120,7 +5120,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "license-of-absence", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4291, 4294] }
   },
@@ -5129,7 +5129,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "special_casting_mod", "kind": "life_boost" }],
     "source": { "anchor": "life-boost", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4295, 4298] }
@@ -5139,7 +5139,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "special_casting_mod", "kind": "life_linked_spontaneous" }],
     "source": { "anchor": "life-linked-spontaneous-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4299, 4306] }
@@ -5202,7 +5202,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "luck", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4331, 4334] }
   },
@@ -5294,7 +5294,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "magical-memory", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4355, 4358] }
   },
@@ -5303,7 +5303,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "prerequisites": {
       "kind": "any",
@@ -5316,7 +5316,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "magical-warder", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4377, 4384] }
   },
@@ -5364,7 +5364,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "maker-of-textured-vessels", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4423, 4430] }
   },
@@ -5373,7 +5373,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "maker-of-water-vessels", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4431, 4438] }
   },
@@ -5382,7 +5382,7 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has_category", "value": "social_status" },
     "source": { "anchor": "male-guild-sponsor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4439, 4442] }

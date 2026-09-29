@@ -2138,11 +2138,8 @@ const PENDING_D46_CLASSIFICATION: &[(&str, &str)] = &[
     // uncomputed_rule per D46's ruling, with a dedicated test in
     // `x2_reclassification.rs` (ArMDE:2870-2876's "suffers all the penalties of
     // The Gift" clause) — see tmp/x2a-verdicts.md.
-    (
-        "virtue.hermetic_magus",
-        "narrative, but named in the magus profile's required_traits — D46's ruling: \
-         stays/becomes creation_effect",
-    ),
+    // `virtue.hermetic_magus` is no longer pending here (X2b): reclassified to
+    // creation_effect per D46's ruling, see tmp/x2b-verdicts.md.
 ];
 
 /// D67's shrink-only pending work-list (`docs/vf-audit/decisions.md` D67, X2
@@ -2419,18 +2416,13 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     // _minor and gentle_gift reclassify to uncomputed_rule (a real, separately
     // uncomputed clause survives the constraint). `every_vf_is_classified`
     // bites each directly now. See tmp/x2a-verdicts.md.
-    (
-        "virtue.inoffensive_to_beings",
-        "narrative, but declares prerequisites — D67 counts that as computed",
-    ),
-    (
-        "virtue.magical_mount",
-        "narrative, but declares prerequisites — D67 counts that as computed",
-    ),
-    (
-        "virtue.male_guild_sponsor",
-        "narrative, but declares prerequisites — D67 counts that as computed",
-    ),
+    // virtue.inoffensive_to_beings, virtue.magical_mount, virtue.male_guild_sponsor:
+    // resolved (X2b) — all three reclassify to uncomputed_rule, not
+    // creation_effect: a real, separately uncomputed clause survives each
+    // entry's own `prerequisites` (inoffensive_to_beings: the Gift-does-not-
+    // bother capability; magical_mount: the required companion Major Story
+    // Flaw; male_guild_sponsor: the female-only restriction). `every_vf_is_classified`
+    // bites each directly now. See tmp/x2b-verdicts.md.
     (
         "virtue.verditius_magic",
         "narrative, but declares prerequisites — D67 counts that as computed",

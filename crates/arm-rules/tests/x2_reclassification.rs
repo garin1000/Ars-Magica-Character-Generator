@@ -458,6 +458,58 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     "virtue.guild_apprentice",
     "virtue.harnessed_magic",
     "virtue.heartbeast",
+    // X2b (`tmp/x2-worklist.md` § 1 rows 52-102, `tmp/x2b-verdicts.md`), 47 ids
+    // with a description obligation — hermetic_magus (no desc), journeyman,
+    // laborer and latent_magic_ability (stay narrative, no rule stated) are
+    // deliberately not here, matching X2a's craftsman/domestic_animal/factor/
+    // gentleman precedent.
+    "virtue.homing_instinct",
+    "virtue.imbued_with_the_spirit_of_form",
+    "virtue.immune_to_disease",
+    "virtue.immunity_to_cold",
+    "virtue.indescribable_face",
+    "virtue.infernal_heirloom",
+    "virtue.inoffensive_to_beings",
+    "virtue.inspirational",
+    "virtue.intuition",
+    "virtue.inventive_genius",
+    "virtue.jurist",
+    "virtue.just_an_instant",
+    "virtue.kassalan_exorcism",
+    "virtue.keen_vision",
+    "virtue.keen_sense_of_smell",
+    "virtue.knight",
+    "virtue.knows_people",
+    "virtue.land_regio_network",
+    "virtue.landed_noble",
+    "virtue.learn_ability_from_mistakes",
+    "virtue.leather_ripper",
+    "virtue.leper_magus",
+    "virtue.lesser_benediction",
+    "virtue.lesser_immunity",
+    "virtue.lesser_power",
+    "virtue.lesser_purifying_touch",
+    "virtue.license_of_absence",
+    "virtue.life_boost",
+    "virtue.life_linked_spontaneous_magic",
+    "virtue.linguist",
+    "virtue.lone_redcap",
+    "virtue.long_winded",
+    "virtue.luck",
+    "virtue.magian_lineage_major",
+    "virtue.magian_lineage_minor",
+    "virtue.magic_items",
+    "virtue.magic_sensitivity",
+    "virtue.magical_memory",
+    "virtue.magical_blood",
+    "virtue.magical_mount",
+    "virtue.magical_warder",
+    "virtue.magister_in_artibus",
+    "virtue.magister_in_medicina",
+    "virtue.major_magical_focus",
+    "virtue.maker_of_textured_vessels",
+    "virtue.maker_of_water_vessels",
+    "virtue.male_guild_sponsor",
 ];
 
 /// D5/D46: a shipped `description` is a rule's only carrier once the entry
@@ -572,5 +624,281 @@ fn emir_carries_the_same_computed_effects_as_knight() {
         "D46/D67: Emir carries a computed effect but its own passage (\"This is the same as \
          the Knight Virtue\") still leaves Knight's other clauses uncomputed, so it stays \
          uncomputed_rule regardless of Knight's own classification"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// X2b (`tmp/x2-worklist.md` § 1 rows 52-102, ArMDE:4067-4442) — see
+// `tmp/x2b-verdicts.md` for the full per-entry citation and rationale this file
+// intentionally does not re-derive inline.
+// ---------------------------------------------------------------------------
+
+/// X2b: entries that compute nothing today, whose passage the mechanical-token
+/// screen does not flag (so no pending list carries them), and that D8/D50 all
+/// the same require to become `uncomputed_rule` with their rule written into
+/// `description` in both locales. `(id, why)` — see `tmp/x2b-verdicts.md` for
+/// the full reading.
+const X2B_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
+    (
+        "virtue.immune_to_disease",
+        "D8 capability: the character is marked as a demon's property, so the lesser demons \
+         that cause most diseases refuse to harm him (ArMDE:4095-4098); no number, no roll, no \
+         idiom the screen recognizes",
+    ),
+    (
+        "virtue.immunity_to_cold",
+        "D8 capability: \"Normal cold does not harm you\" (ArMDE:4099-4102); no number, no roll",
+    ),
+    (
+        "virtue.infernal_heirloom",
+        "D8 capability + a frequency figure: each heirloom \"may create an effect once per day \
+         that is equivalent to a Hermetic spell of level 25\" (ArMDE:4127-4132); an unsigned \
+         number is not a modifier the screen recognizes (states_a_mechanical_rule's own \
+         documented exclusion)",
+    ),
+    (
+        "virtue.lesser_immunity",
+        "D8 capability + cross-reference: \"immune to some hazard which is either rare, or not \
+         deadly, or both\" (ArMDE:4275-4278); Greater Immunity itself carries no effect to \
+         inherit, unlike Emir/Knight",
+    ),
+    (
+        "virtue.just_an_instant",
+        "D50: \"does not need to make Awareness checks\" (ArMDE:4169-4172) exempts a roll \
+         requirement a player must know applies; no signed number, no recognized idiom",
+    ),
+    (
+        "virtue.knows_people",
+        "D50: \"Once per story or session, a character with this Virtue may ask for a bait\" \
+         (ArMDE:4199-4206) is a real, invokable ability with a real frequency limit; 0 effects",
+    ),
+    (
+        "virtue.landed_noble",
+        "D50: \"you may not impose the death penalty, nor may you mutilate criminals\" and, if \
+         Poor, \"you must spend every season managing it, or it may collapse completely\" \
+         (ArMDE:4219-4228) are real constraints a player/storyguide must apply; F-131",
+    ),
+    (
+        "virtue.magical_memory",
+        "D50: \"You need not keep laboratory texts... to get the benefit of a Lab Text\" \
+         (ArMDE:4355-4358) is a real exemption from the normal Lab Text requirement; F-162",
+    ),
+    (
+        "virtue.life_linked_spontaneous_magic",
+        "D20: one of the fourteen \"number right\" surfaced-only entries — the per-five-points \
+         Fatigue rule and the wound conversion (ArMDE:4299-4306) reach the player only as a bare \
+         `special_casting_mod` label, not text; F-148",
+    ),
+];
+
+#[test]
+fn x2b_entries_reclassify_to_uncomputed_rule_with_a_description() {
+    let rs = load_ruleset();
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+
+    let mut offenders = Vec::new();
+    for (id, why) in X2B_RECLASSIFY_WITH_DESCRIPTION {
+        let classification = classification_of(&rs, id);
+        if classification != Classification::UncomputedRule {
+            offenders.push(format!(
+                "{id}: classified {classification:?}, expected UncomputedRule ({why})"
+            ));
+        }
+        for (lang, loc) in [("en", &loc_en), ("de", &loc_de)] {
+            if displayed_text(loc, id).is_none() {
+                offenders.push(format!(
+                    "{lang}/{id}: no displayed rules text at all ({why})"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2b (tmp/x2b-verdicts.md): these entries must reclassify to `uncomputed_rule` and carry \
+         a description in every locale — a Phase 2 data change, not yet landed:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// D20's two other "number missing" entries in this slice (alongside
+/// virtue.commanding_aura, X2a): `docs/vf-audit/decisions.md` D20 names
+/// `virtue.leper_magus` and `virtue.life_boost` among the five surfaced-only
+/// entries whose number reaches the player nowhere. Both share the same
+/// `special_casting_mod` effect kind (`life_boost`) with no numeric field, so
+/// X2b owns only the reclassification and the text+numbers; the effect-kind
+/// fix (if any) is X6's.
+#[test]
+fn leper_magus_reclassifies_and_states_its_wound_for_vis_figures() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.leper_magus"),
+        Classification::UncomputedRule,
+        "D20: ArMDE:4249-4252's wound-for-vis figures reach the player nowhere under a bare \
+         `special_casting_mod` kind; virtue.leper_magus must reclassify to uncomputed_rule"
+    );
+
+    // ArMDE:4249-4252, one pawn figure per wound severity (Light through Deadly).
+    // The book itself is inconsistent about digits vs. words: the English passage
+    // spells Light/Medium/Heavy as words ("three pawns", "six pawns", "nine
+    // pawns") but Incapacitating/Deadly as digits ("12 pawns", "15 pawns"); the
+    // German translation spells all five as words. A verbatim description must
+    // keep whichever form the book uses, so the check is per-language rather
+    // than a single digit list.
+    const FIGURES: &[(&str, &str)] = &[
+        ("three", "drei"),
+        ("six", "sechs"),
+        ("nine", "neun"),
+        ("12", "zwölf"),
+        ("15", "fünfzehn"),
+    ];
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, index) in [("en", &loc_en, 0usize), ("de", &loc_de, 1usize)] {
+        let text = displayed_text(loc, "virtue.leper_magus").unwrap_or_default();
+        for figure_pair in FIGURES {
+            let figure = if index == 0 {
+                figure_pair.0
+            } else {
+                figure_pair.1
+            };
+            if !text.contains(figure) {
+                offenders.push(format!(
+                    "{lang}/virtue.leper_magus: displayed text {text:?} is missing the {figure}-\
+                     pawn wound figure"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2b (tmp/x2b-verdicts.md), D20's missing-number finding for leper_magus:\n{}",
+        offenders.join("\n")
+    );
+}
+
+#[test]
+fn life_boost_reclassifies_and_states_its_fatigue_figures() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.life_boost"),
+        Classification::UncomputedRule,
+        "D20: ArMDE:4295-4298's +5-per-Fatigue-level bonus and its damage formula reach the \
+         player nowhere under a bare `special_casting_mod` kind; virtue.life_boost must \
+         reclassify to uncomputed_rule"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc) in [("en", &loc_en), ("de", &loc_de)] {
+        let text = displayed_text(loc, "virtue.life_boost").unwrap_or_default();
+        // ArMDE:4295-4298: "+5" per level, and the worked example's "15" damage
+        // (three levels x 5).
+        for figure in ["5", "15"] {
+            if !text.contains(figure) {
+                offenders.push(format!(
+                    "{lang}/virtue.life_boost: displayed text {text:?} is missing the {figure} \
+                     figure"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2b (tmp/x2b-verdicts.md), D20's missing-number finding for life_boost:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-173's second half (`docs/vf-audit/corrections.md`): virtue.magister_in_medicina's
+/// own summary states no mechanical token at all, so the coarse screen never
+/// reaches this entry to record a pending row for it — ArMDE:4397-4398's
+/// "available to female characters, although they must have graduated from
+/// Salerno, male characters may have graduated from any of the medical
+/// schools" reaches the player nowhere. `classification` stays `creation_effect`
+/// (its Reputation + restricted-XP effects already duplicate Doctor in
+/// (Faculty)'s exactly, resolving F-173's other half); only a targeted content
+/// check catches this kind of gap.
+#[test]
+fn magister_in_medicina_states_its_salerno_restriction() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.magister_in_medicina"),
+        Classification::CreationEffect,
+        "F-173: the Reputation and restricted-XP grants are genuinely computed; only the \
+         Salerno restriction is missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    // A bare "Salerno" substring is already satisfied by the shipped summary's
+    // list of medical schools ("Salerno, Cremona, Montpellier, or Bologna") —
+    // that is not the restriction. The needles below are unique to the
+    // restriction clause itself (ArMDE:4397's "although they must have
+    // graduated from Salerno" / the DE mirror's "an der Schule von Salerno
+    // graduiert").
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "graduated from Salerno"),
+        ("de", &loc_de, "an der Schule von Salerno graduiert"),
+    ] {
+        let text = displayed_text(loc, "virtue.magister_in_medicina").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.magister_in_medicina: displayed text {text:?} does not state the \
+                 Salerno restriction (ArMDE:4397-4398)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2b (tmp/x2b-verdicts.md), F-173: virtue.magister_in_medicina's description must state \
+         the female-Salerno/male-any-school restriction in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-153 (`docs/vf-audit/corrections.md`): virtue.long_winded's own summary
+/// already states its "+3 on all your Fatigue rolls" bonus in both locales, so
+/// the coarse mechanical-token screen cannot see the one clause it drops —
+/// ArMDE:4329's "This bonus does not apply to casting spells" reaches the
+/// player nowhere. `classification` stays `in_play_effect` (the bonus itself is
+/// genuinely computed via `health_mod`/`fatigue_roll`); only a targeted content
+/// check catches this kind of gap.
+#[test]
+fn long_winded_states_its_casting_exclusion() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.long_winded"),
+        Classification::InPlayEffect,
+        "F-153: the +3 Fatigue-roll bonus is genuinely computed; only the casting-spells \
+         exclusion is missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [("en", &loc_en, "casting"), ("de", &loc_de, "Zaubern")] {
+        let text = displayed_text(loc, "virtue.long_winded").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.long_winded: displayed text {text:?} does not state the \
+                 casting-spells exclusion (ArMDE:4329)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2b (tmp/x2b-verdicts.md), F-153: virtue.long_winded's description must state \"this \
+         bonus does not apply to casting spells\" in both locales:\n{}",
+        offenders.join("\n")
     );
 }

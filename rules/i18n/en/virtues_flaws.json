@@ -2013,7 +2013,8 @@
   },
   "virtue.greater_power": {
     "name": "Greater Power",
-    "summary": "The character has a supernatural power that he can activate at will."
+    "summary": "The character has a supernatural power that he can activate at will.",
+    "description": "The character has a supernatural power that he can activate at will. If you take the Virtue once, this is a single power, equivalent to a Formulaic Hermetic spell with a level of 50 or lower. You may also spend levels one-for-one to give the power Penetration; otherwise, it has a Penetration of zero.\n\nThis Virtue may be taken more than once, and the levels added together to create several powers. For example, a character who took the Virtue twice could have a power with a level of 60 and a Penetration of 0, and a second power with a level and Penetration of 20 each. By default, there should be one power per Virtue, as this Virtue is intended for powers that are individually significant. See Lesser Power (page 90) if you want your character to have multiple minor powers. However, the troupe may allow the character to take more powers if they have a strong thematic link.\n\nThe power has an Initiative equal to the character's Quickness - (power magnitude/2) (rounded down). It costs one Fatigue level to activate if its level is less than or equal to 50, or two Fatigue levels if its level is 51 to 100. Higher level effects are unlikely to make sense.\n\nThis Virtue may be associated with any supernatural realm. If you have access to other books, such as Realms of Power: The Divine, Revised Edition Realms of Power: The Infernal, Realms of Power: Faerie, or Hedge Magic Revised Edition, you may want to base the power on a different system of supernatural powers, to get something more appropriate to the character. If you do, remember that the levels of effects may work on different scales for different systems, and you may want to change the number of levels of effect. The power must be associated with the same supernatural realm as the system on which it is based. (If you have access to other books, you may want to restrict powers based on Hermetic magic to the Magic realm.)"
   },
   "virtue.greater_purifying_touch": {
     "name": "Greater Purifying Touch",
@@ -2070,19 +2071,23 @@
   },
   "virtue.homing_instinct": {
     "name": "Homing Instinct",
-    "summary": "The character always knows precisely how to get from where she is to a number of locations equal to her Intelligence Score (a minimum of 1)."
+    "summary": "The character always knows precisely how to get from where she is to a number of locations equal to her Intelligence Score (a minimum of 1).",
+    "description": "The character always knows precisely how to get from where she is to a number of locations equal to her Intelligence Score (a minimum of 1). To add a location to the character's repertoire she must be at that location, the location must be open to the air (so it cannot be inside, for example), and the player must make an Intelligence + Concentration Roll against an Ease Factor of 6. If this would increase the number of known locations beyond the character's limit, then another location must be \"forgotten.\"\n\nIn addition, the character has a fixed Arcane Connection to locations that she knows, which may be exploited in the usual ways (page 219). This Arcane Connection is an artifact of the mind, and so may not be given to another character."
   },
   "virtue.imbued_with_the_spirit_of_form": {
     "name": "Imbued with the Spirit of {form}",
-    "summary": "The magus has absorbed some of the powers of an elemental or other magic object (perhaps by consuming it)."
+    "summary": "The magus has absorbed some of the powers of an elemental or other magic object (perhaps by consuming it).",
+    "description": "The magus has absorbed some of the powers of an elemental or other magic object (perhaps by consuming it). This act taints the magus, so that any being with a Magic Might associated with the Form of this Virtue can sense his nature when nearby. Typically, weak creatures will be afraid of the magus and powerful ones will attempt to kill him.\n\nWhenever casting a spell or performing a Laboratory Activity that requires vis of the chosen Form, the magus may substitute Long-Term Fatigue Levels for the vis. Each Long-Term Fatigue Level lost reduces the vis requirement of the spell or effect by 1. When casting a spell the Fatigue Levels are lost after the spell is cast. For Laboratory Activities the Fatigue loss lasts for the duration of the Laboratory process (that is, at least a season), and Fatigue Levels substituted for vis do not count towards the magi's limit of vis expenditure in a season. The magus takes the Fatigue Penalty to his Lab Total.\n\nNote that studying vis is not a Laboratory activity, so the magus may not substitute Fatigue Levels for vis when studying.\n\nFor example, a magus casting an Enchantment of the Scrying Pool ritual (InAq 30, page 322), requires 6 pawns of some combination of Intellego and Aquam vis. If the magus is Imbued with the Spirit of Aquam, he may tire himself (losing three Long Term Fatigue Levels), and reduce the vis requirement by 3."
   },
   "virtue.immune_to_disease": {
     "name": "Immune to Disease",
-    "summary": "The character is marked as the property of a very powerful demon, and the lesser demons that cause most diseases refuse to harm him."
+    "summary": "The character is marked as the property of a very powerful demon, and the lesser demons that cause most diseases refuse to harm him.",
+    "description": "The character is marked as the property of a very powerful demon, and the lesser demons that cause most diseases refuse to harm him. Even characters who turn against their masters retain this protection, because the mark is indelible, and disease demons are not usually very bright. A few diseases, for example, those sent as scourges by God, affect the character normally."
   },
   "virtue.immunity_to_cold": {
     "name": "Immunity to Cold",
-    "summary": "Normal cold does not harm you, nor does it make you feel uncomfortable."
+    "summary": "Normal cold does not harm you, nor does it make you feel uncomfortable.",
+    "description": "Normal cold does not harm you, nor does it make you feel uncomfortable. You do not need warm environments to remain healthy. Extreme, magically created cold, such as the effect of Wizard's Icy Grip (page 346), still affects you normally."
   },
   "virtue.improved_characteristics": {
     "name": "Improved Characteristics",
@@ -2094,7 +2099,8 @@
   },
   "virtue.indescribable_face": {
     "name": "Indescribable Face",
-    "summary": "After meeting this character, other characters usually find it hard to describe him sufficiently well to separate him from others."
+    "summary": "After meeting this character, other characters usually find it hard to describe him sufficiently well to separate him from others.",
+    "description": "After meeting this character, other characters usually find it hard to describe him sufficiently well to separate him from others. Some forgettable characters are just average height and weight, with unremarkable features. Others have a particular feature which is so striking it crowds out other memories. He has an ostentatious hat. She was carrying a little dog. The characters can recall the striking feature, but little else. A player who selects this Virtue for his character needs to select which form of the Virtue his character has.\n\nA character who is simply average is always forgettable. He can't turn the ability off and may use props when building a Reputation among other criminals. He may be \"that guy in the black gloves who strangles people,\" for example, although no-one recalls precisely what he looks like. Intimately related characters can eventually become sufficiently used to the character's forgettable face that they remember it.\n\nA character who distracts with a prop is memorable when she wishes to be. She can simply not use her devices of distraction if she wishes to make an impression. She can also switch her distracting prop. For example if she hears that someone is looking for a lady with a curious dog, she might switch to a baby, or a curious hat. A character who distracts with props is usually not recognized by random people in crowds (whose eves also follow the prop, not the face), but this protection is less perfect than a truly forgettable face."
   },
   "virtue.induction": {
     "name": "Induction",
@@ -2106,19 +2112,23 @@
   },
   "virtue.infernal_heirloom": {
     "name": "Infernal Heirloom",
-    "summary": "Infernal heirlooms are magical items that the character inherits from a diabolist, or, more rarely, finds."
+    "summary": "Infernal heirlooms are magical items that the character inherits from a diabolist, or, more rarely, finds.",
+    "description": "Infernal heirlooms are magical items that the character inherits from a diabolist, or, more rarely, finds. The character has the use of the item, without having to deal with the demon that created it. The item is extremely useful in some way, but each use draws its owner closer to the character, as the demon attempts to reclaim its treasure.\n\nMost Infernal heirlooms have only a single effect, and they are usually triggered by a minor act of, or intention to, sin. As a guideline, each heirloom may create an effect once per day that is equivalent to a Hermetic spell of level 25. Items that produce less powerful effects may be used more frequently at the troupe's discretion."
   },
   "virtue.inoffensive_to_beings": {
     "name": "Inoffensive to {being}",
-    "summary": "This Virtue is associated with one of five classes of beings: animals, divine beings, faeries, demons, or magical creatures."
+    "summary": "This Virtue is associated with one of five classes of beings: animals, divine beings, faeries, demons, or magical creatures.",
+    "description": "This Virtue is associated with one of five classes of beings: animals, divine beings, faeries, demons, or magical creatures. These last four include characters associated with the Divine, Faerie, Infernal, or Magic realm, respectively, through Supernatural Virtues or Flaws, as well as beings with Might.\n\nThe character's Gift does not bother beings of this sort, although it still has the normal effects on others. For example, Inoffensive to Animals makes it easier for her to get along with mundane beasts. Animals who react positively to The Gift still react positively to her, since she does have The Gift, but those that do not are not disturbed by her presence.\n\nYou may not take this Virtue more than once; characters who are Inoffensive to more than one type of being should take Gentle Gift instead. UnGifted characters may take this Virtue only if they have the Flaw Magical Air.\n\nNote that Inoffensive to Mundane Humans is not available as a Minor Virtue; take Gentle Gift instead."
   },
   "virtue.inspirational": {
     "name": "Inspirational",
-    "summary": "You are a stirring speaker or a heroic figure, and can urge people to great efforts."
+    "summary": "You are a stirring speaker or a heroic figure, and can urge people to great efforts.",
+    "description": "You are a stirring speaker or a heroic figure, and can urge people to great efforts. You give targets a +3 bonus to rolls for appropriate Personality Traits."
   },
   "virtue.intuition": {
     "name": "Intuition",
-    "summary": "You have a natural sensitivity that allows you to make the right decisions more often than luck can account for."
+    "summary": "You have a natural sensitivity that allows you to make the right decisions more often than luck can account for.",
+    "description": "You have a natural sensitivity that allows you to make the right decisions more often than luck can account for. Whenever you are given a choice in which luck plays a major role (such as deciding which of three unexplored paths to follow), you have a good chance of choosing correctly. The storyguide should secretly roll a simple die. On a 6+, your intuition kicks in and you make whatever might be considered the \"right\" decision. Otherwise, you fail to get any flash of insight and must make the decision without aid."
   },
   "virtue.inventive_genius": {
     "name": "Inventive Genius",
@@ -2135,31 +2145,38 @@
   },
   "virtue.jurist": {
     "name": "Jurist",
-    "summary": "The character is a judge, advocate, or procurator essentially a medieval lawyer in some capacity."
+    "summary": "The character is a judge, advocate, or procurator essentially a medieval lawyer in some capacity.",
+    "description": "The character is a judge, advocate, or procurator essentially a medieval lawyer in some capacity. At character generation he may purchase the Abilities Latin, Artes Liberales, and Civil and Canon Law. He is not necessarily university trained, as he may have obtained his education through private schools, tutors, or a cathedral school, and need not have a degree. If he is a cleric, he works in an ecclesiastical setting: the papal curia, the College of Cardinals, or a bishop's or archbishop's office. If he is a layman, he works for a secular prince or town municipality.\n\nThis Virtue is compatible with the Baccalaureus, Magister in Artibus, and Doctor in (Faculty) Virtues, as a jurist may have a university education. It is also compatible with the Priest and Mendicant Friar Virtues. It is only available to male characters."
   },
   "virtue.just_an_instant": {
     "name": "Just an Instant",
-    "summary": "A character with this Virtue, who has had a few seconds to look about a room, does not need to make Awareness checks to detect or remember anything of interest on the room's exposed surfaces."
+    "summary": "A character with this Virtue, who has had a few seconds to look about a room, does not need to make Awareness checks to detect or remember anything of interest on the room's exposed surfaces.",
+    "description": "A character with this Virtue, who has had a few seconds to look about a room, does not need to make Awareness checks to detect or remember anything of interest on the room's exposed surfaces. Some characters use this Virtue to discover the layout of a space so they can navigate it in the dark, while others use it to save time while stealing. Characters with this Virtue are also useful lab assistants, because they know where everything is, and are aware of experiments about to critically fail."
   },
   "virtue.kassalan_exorcism": {
     "name": "Kassalan Exorcism",
-    "summary": "You are capable of performing minor exorcism spells through your knowledge of the rites of the Mortuary Society of Kassala in Alodia, the most remote of the three Nubian kingdoms on the southern reaches of the Nile."
+    "summary": "You are capable of performing minor exorcism spells through your knowledge of the rites of the Mortuary Society of Kassala in Alodia, the most remote of the three Nubian kingdoms on the southern reaches of the Nile.",
+    "description": "You are capable of performing minor exorcism spells through your knowledge of the rites of the Mortuary Society of Kassala in Alodia, the most remote of the three Nubian kingdoms on the southern reaches of the Nile. You can cast spells in a very limited focus, namely wards against ghosts and the physical dead (using the Rego Corpus or Rego Mentem guidelines), and spells to strip Might from these same beings (using the Perdo Vim guidelines). You cannot create spells that affect other spirits or creatures who are not the walking dead, but your spells are equally effective against creatures from any Realm. Wards created with this Virtue need not be circular. but can instead block the threshold(s) of a room; this is still treated as a Duration: Ring, Target: Circle spell for level calculations.\n\nTo cast a spell you must expend a Fatigue level, whether the spell succeeds or fails. You must also spend at least 5 minutes preparing the spell, during which time you need unbroken concentration and expend one handful of Kassalan Dust. The spell is designed exactly like a Hermetic spell; if affecting a ghost you must be able to sense your target. Your Casting Total is equal to (Stamina + Organization Lore: Mortuary Society + Aura modifier + stress die) / 2. Penetration is calculated in the normal fashion: Casting Total – Spell Level + Penetration modifiers. Kassalan Exorcism is aligned to the Magic Realm.\n\nKassalan Dust\n\nMade by the Mortuary Society of Kassala, this dust has powdered gold as its main component, with myrrh and other spices making up the rest. Twenty handfuls contain about a Mythic Pound's worth of gold dust.\n\nKassalan Dust is necessary for Kassalan Exorcism, but grants no bonus. A handful also adds +3 to uses of the Corpse Magic Supernatural Ability to command a corpse to return to its grave or prevent it from being affected by Corpse Magic. Multiple handfuls provide no additional effect. Kassalan Dust has a Shape & Material bonus of +3 against the dead. The recipe is known to anyone with Organization Lore: Mortuary Society.\n\nMore details on the Kassalan Mortuary Society can be found in Lands of the Nile, from page 88."
   },
   "virtue.keen_sense_of_smell": {
     "name": "Keen Sense of Smell",
-    "summary": "The character's nose is more sensitive than normal for a human."
+    "summary": "The character's nose is more sensitive than normal for a human.",
+    "description": "The character's nose is more sensitive than normal for a human. He gets a +3 bonus to all rolls involving his sense of smell, including following tracks with the Hunt Ability."
   },
   "virtue.keen_vision": {
     "name": "Keen Vision",
-    "summary": "+3 to sight-based rolls."
+    "summary": "+3 to sight-based rolls.",
+    "description": "You can see farther and more clearly than most. You get a +3 bonus to all rolls involving sight, not including attacks with missile weapons."
   },
   "virtue.knight": {
     "name": "Knight",
-    "summary": "You are a knight, a member of the noble classes and one of the elite warriors of Europe."
+    "summary": "You are a knight, a member of the noble classes and one of the elite warriors of Europe.",
+    "description": "You are a knight, a member of the noble classes and one of the elite warriors of Europe. Unless you are Poor, you may have high quality weapons and armor, and a horse. Typical armaments for a mid-13th century knight are lance, sword, heater shield, a complete mail suit, and a warhorse. You may take Martial Abilities during character generation. The Wealthy Virtue and Poor Flaw affect you normally. This Virtue is only available to male characters, and is compatible with the Landed Noble Virtue."
   },
   "virtue.knows_people": {
     "name": "Knows People",
-    "summary": "Your social contacts are not important for what they give you directly: they are important because they allow you to match up the desires of your various friends."
+    "summary": "Your social contacts are not important for what they give you directly: they are important because they allow you to match up the desires of your various friends.",
+    "description": "Your social contacts are not important for what they give you directly: they are important because they allow you to match up the desires of your various friends. A skilled socialite is a middleman, who is owed gratitude for bringing opportunities to his friends, not someone who demands favors based on friendship.\n\nOnce per story or session, a character with this Virtue may ask for a bait for a non-player character. A bait is the beginning of a scene or short, secondary story, outside the main story being told, which if completed allows the character to gain aid from the nominated target. For example, if the player characters are unable to gain the assistance of a nobleman, a player may demand a bait. In the game, this means the character uses his social skills to determine the needs of the nobleman, and to hint that he may know a third person with a solution. If the troupe then plays out a brief scene in which the nobleman's problem is sorted out, he becomes more biddable.\n\nTroupes may veto any use of these connections which spoils the tension and pace of the game."
   },
   "virtue.laborer": {
     "name": "Laborer",
@@ -2167,11 +2184,13 @@
   },
   "virtue.land_regio_network": {
     "name": "{land} Regio Network",
-    "summary": "The character has access to an extensive network of regiones, perhaps located in the depths of many lakes throughout Mythic Europe, or hidden above the clouds in the sky, or buried in subterranean caves under the ground."
+    "summary": "The character has access to an extensive network of regiones, perhaps located in the depths of many lakes throughout Mythic Europe, or hidden above the clouds in the sky, or buried in subterranean caves under the ground.",
+    "description": "The character has access to an extensive network of regiones, perhaps located in the depths of many lakes throughout Mythic Europe, or hidden above the clouds in the sky, or buried in subterranean caves under the ground. The character is associated with one particular type of regio network.\n\nOnce the character is in such a regio he may travel to any other regio in the network; travel time is one Diameter regardless of geographic distance. To determine whether the character knows the location of a networked regio in a particular locale an Intelligence + (Area) Lore roll is made against an Ease Factor of 9. The character knows how to enter these regiones and can, if he chooses, guide other characters into the regiones — although other characters must be able to survive in the environment of the regio.\n\nAccess to the network may be ultimately controlled by other characters or powers."
   },
   "virtue.landed_noble": {
     "name": "Landed Noble",
-    "summary": "You owe fealty and service to a higher noble, and control land, serfs, and men-at-arms."
+    "summary": "You owe fealty and service to a higher noble, and control land, serfs, and men-at-arms.",
+    "description": "You owe fealty and service to a higher noble, and control land, serfs, and men-at-arms. You have half a dozen servants at your manor house, including a couple of bodyguards. Your servants should be controlled by the rest of the troupe. You have sworn an Oath of Fealty, and so it would be reasonable to balance this Virtue with that Flaw. You get the normal points for Oath of Fealty if you do. You are wealthier than most characters, but have no additional free time. You have the power to enforce the law within your fief, but you may not impose the death penalty, nor may you mutilate criminals. Floggings and fines are the normal penalties you impose.\n\nIf you are Poor, your fief is either very small, or in a poor area for farming with few other resources. You must spend every season managing it, or it may collapse completely, leaving you effectively landless. You are no wealthier than most average characters, and you have only a couple of servants.\n\nWealthy Landed Nobles control more than one fief, and have bailiffs or stewards for each, so that they do not need to devote any time to looking after their lands. You are significantly richer than most Wealthy characters, and could afford to build a small castle or a large chapel within a cathedral. You have around fifty servants, including a significant number of warriors.\n\nThis Status Virtue is compatible with the Knight Minor Status Virtue, but unlike that Virtue it is available to male and female characters."
   },
   "virtue.large": {
     "name": "Large",
@@ -2187,43 +2206,53 @@
   },
   "virtue.learn_ability_from_mistakes": {
     "name": "Learn {ability} From Mistakes",
-    "summary": "You are able to improve a particular Ability through the expedient of repeated failure."
+    "summary": "You are able to improve a particular Ability through the expedient of repeated failure.",
+    "description": "You are able to improve a particular Ability through the expedient of repeated failure. The first time in a given game session that you botch a roll or fail by exactly one point, you gain five experience points in the Ability. The roll must have come up naturally in the course of the story. You may take this Virtue several times, once for each Ability chosen."
   },
   "virtue.leather_ripper": {
     "name": "Leather Ripper",
-    "summary": "This character has the supernatural ability to destroy a group of leather objects."
+    "summary": "This character has the supernatural ability to destroy a group of leather objects.",
+    "description": "This character has the supernatural ability to destroy a group of leather objects. This causes metal armor to fall away, as the strips holding it together disintegrate. It destroys the tack of a horseman, forcing a Ride roll, with penalties of up to -9 depending on how dangerous his current maneuvers are. It can destroy the scabbard, belt and boots of a foe, allowing the ripper to flee or attack. This is a PeAn(He) 30 effect with +0 Penetration. The character must concentrate for a moment and spend a Fatigue level to activate the power, but does not need to speak or gesture."
   },
   "virtue.leper_magus": {
     "name": "Leper Magus",
-    "summary": "This Virtue describes the mystic legacy passed on from Tytalus to Hariste's line through the vector of leprosy."
+    "summary": "This Virtue describes the mystic legacy passed on from Tytalus to Hariste's line through the vector of leprosy.",
+    "description": "This Virtue describes the mystic legacy passed on from Tytalus to Hariste's line through the vector of leprosy. This Virtue can only be bought if the character also has the Leprosy Flaw, and is only available to magi trained in House Tytalus. It allows him to draw upon the strength of his body to increase the power of his magic, granting the Life Boost Minor Virtue. He can also draw even deeper into this power if he desires, mortifying his disease-ridden flesh to produce vis to power his own spells. The vis generated in this way can only be used by the magus himself, in spellcasting or laboratory activities (but not study), and cannot be stored in any way — in fact, it never leaves his body. By accepting a Light Wound, the magus can infuse a single magical working with three pawns of vis, of any Technique or Form. A Medium Wound supplies six pawns, a Heavy Wound nine pawns, an Incapacitating Wound 12 pawns, and a Deadly Wound (killing the magus) 15 pawns. Any vis that is produced beyond the magus's capacity to use in the current magical activity is lost, as is any vis surplus to the requirements of the activity to which this power is applied. Leprotic wounds open on the magus's body as he calls upon this power, but not quickly enough to affect the Casting Total of a non-Ritual spell affected by this power. All Lab Totals suffer the wound penalty as normal, as do the Casting Totals of spells that take more than one round to cast (such as Ritual spells). The character makes no Recovery rolls for this wound until the magical activity that the vis is being used for is complete (i.e., at the end of the casting of the spell, or the end of a season for lab work). While this means that the wound cannot get better, it also means that it does not risk worsening. Since the power is expressed from the pain of this wound, magic used to negate that pain also negates the benefits of this Virtue. A wound taken in this fashion must heal completely before the power may be used again, and any character using this power more than three times a year must make an extra Aging roll in winter."
   },
   "virtue.lesser_benediction": {
     "name": "Lesser Benediction",
-    "summary": "You have been blessed by some supernatural power."
+    "summary": "You have been blessed by some supernatural power.",
+    "description": "You have been blessed by some supernatural power. The effects of the benediction should be comparable to other Minor Virtues. (See insert for examples.)\n\nLesser Benediction Examples\n\nGift of the Gab\n\nYou are a very convincing speaker, anyone attempting to detect untruth in your words receives a -3 penalty to their rolls.\n\nGreen Fingers\n\nPlants always prosper under your care. Your crops never suffer from natural diseases or pests so long as you personally tend to them, and you can therefore get half as much again in terms of yield as others.\n\nPricking Thumbs\n\nIf you are in the presence of someone who bears you ill will, you feel a pricking sensation in your thumbs. You cannot distinguish one enemy from a crowd with this ability.\n\nUnusually Fecund\n\nEvery sexual encounter with a partner of the opposite sex results in conception."
   },
   "virtue.lesser_immunity": {
     "name": "Lesser Immunity",
-    "summary": "You are immune to some hazard which is either rare, or not deadly, or both."
+    "summary": "You are immune to some hazard which is either rare, or not deadly, or both.",
+    "description": "You are immune to some hazard which is either rare, or not deadly, or both. See Greater Immunity, page 83."
   },
   "virtue.lesser_power": {
     "name": "Lesser Power",
-    "summary": "The character has a supernatural power that he can activate at will."
+    "summary": "The character has a supernatural power that he can activate at will.",
+    "description": "The character has a supernatural power that he can activate at will. This is one or more powers. equivalent to Formulaic Hermetic spells with total levels of 25 or lower. Each power has an Initiative equal to the character's Quickness - (twice power magnitude). It costs one Fatigue level to activate if its level is less than or equal to 25. two Fatigue levels if its level is 26 to 50, and so on. Note that powers with a level of 26 or higher cost less Fatigue if created using the Greater Power Virtue. You may also spend levels onefor-one to give the power Penetration; otherwise, it has a Penetration of zero.\n\nThis Virtue may be taken more than once, and the levels added together to create several powers. For example, a character who took the Virtue twice could have a power with a level of 30 and a Penetration of 0, and a second power with a level and Penetration of 10 each.\n\nThis Virtue may be associated with any supernatural realm. If you have access to other books, such as Realms of Power: The Divine Revised Edition, Realms of Power: The Infernal, Realms of Power: Faerie, or Hedge Magic Revised Edition, you may want to base the power on a different system of supernatural powers, to get something more appropriate to the character. If you do, remember that the levels of effects may work on different scales for different systems, and you may want to change the number of levels of effect. The power must be associated with the same supernatural realm as the system on which it is based. (If you have access to other books, you may want to restrict powers based on Hermetic magic to the Magic realm.)"
   },
   "virtue.lesser_purifying_touch": {
     "name": "Lesser Purifying Touch",
-    "summary": "You can, with a touch and the expenditure of a Fatigue level, heal a specific illness."
+    "summary": "You can, with a touch and the expenditure of a Fatigue level, heal a specific illness.",
+    "description": "You can, with a touch and the expenditure of a Fatigue level, heal a specific illness. This illness should be one that people often recover from on their own, or one that is not particularly serious. You can only choose an illness, not an injury or other misfortune. See page 406 for rules on diseases, and Art and Academe, page 45 for more detail."
   },
   "virtue.license_of_absence": {
     "name": "License of Absence",
-    "summary": "This priest character has a license of absence that relieves him from some duties."
+    "summary": "This priest character has a license of absence that relieves him from some duties.",
+    "description": "This priest character has a license of absence that relieves him from some duties. The license might be valid for only a few years or it could be valid indefinitely. The character has an extra free season each year, but sometimes it is expected that the extra season is used for study. This Virtue is compatible with the Wealthy Virtue and Poor Flaw. A Wealthy priest with a license of absence thus has the whole year free; a character can never have more than four free seasons in a year. A license of absence may only be taken by a character with the Priest Social Status. It may not be taken by Senior Clergy."
   },
   "virtue.life_boost": {
     "name": "Life Boost",
-    "summary": "You may boost your Formulaic or Ritual spell casting totals by expending additional Fatigue levels."
+    "summary": "You may boost your Formulaic or Ritual spell casting totals by expending additional Fatigue levels.",
+    "description": "You may boost your Formulaic or Ritual spell casting totals by expending additional Fatigue levels. Each Fatigue level gives you an additional bonus of +5 on the roll, which can yield very impressive Penetration totals. You may burn more Fatigue levels than you possess. If you do, you must Soak damage, without the help of armor. The Damage total is 5 for every additional Fatigue level spent, plus a stress die. Thus, if you spend three additional levels, you must Soak a damage of 15 + stress die, with your Soak (no armor) + stress die. Fatigue levels spent in this way are spent regardless of the success or failure of the casting roll, and any wounds taken are similarly taken even if you fail to cast the spell. You can kill yourself doing this. The total number of Fatigue levels to be used must be committed before the casting roll is made."
   },
   "virtue.life_linked_spontaneous_magic": {
     "name": "Life-Linked Spontaneous Magic",
-    "summary": "You can do more with spontaneous magic than most magi at the cost of your own life energy."
+    "summary": "You can do more with spontaneous magic than most magi at the cost of your own life energy.",
+    "description": "You can do more with spontaneous magic than most magi at the cost of your own life energy. When you decide to use this ability in casting a spontaneous spell, you declare the level of effect you wish to produce before rolling. This level may include a number of levels of Penetration (see page 169). For example, you can choose to cast a level 10 effect at level 20, to give a Penetration of 10 plus your Penetration score.\n\nRoll to cast a Fatiguing Spontaneous spell. If your result after division is higher than the level you declared, you spend only one Fatigue level as usual. If your result after division is less than the level you declared, you must expend one additional Fatigue level per five points (or fraction thereof) by which you missed the target level. If you run out of Fatigue levels, you take a wound. The number of levels still needed for the spell is treated as the amount by which a Damage total exceeds your Soak, and you take the corresponding wound. You can kill yourself this way.\n\nA maga with this Virtue may still cast Fatiguing Spontaneous spells normally."
   },
   "virtue.light_touch": {
     "name": "Light Touch",
@@ -2236,19 +2265,23 @@
   },
   "virtue.linguist": {
     "name": "Linguist",
-    "summary": "You are extremely proficient learning new languages."
+    "summary": "You are extremely proficient learning new languages.",
+    "description": "You are extremely proficient learning new languages. All Advancement Totals for any Language are increased by a quarter, rounded up, as are any experience points you put into any language at character generation. Both Living and Dead languages are augmented with this Virtue."
   },
   "virtue.lone_redcap": {
     "name": "Lone Redcap",
-    "summary": "You are a Redcap who does not maintain ties to a Mercer House, and thus do not receive magic items or Longevity Rituals."
+    "summary": "You are a Redcap who does not maintain ties to a Mercer House, and thus do not receive magic items or Longevity Rituals.",
+    "description": "You are a Redcap who does not maintain ties to a Mercer House, and thus do not receive magic items or Longevity Rituals. You still begin with 300 experience points for your fifteen years spent as an apprentice, and receive the benefits of the Well-Traveled virtue, but you are estranged from the other Redcaps in your area, and have a poor Reputation at level 2 within your House.\n\nYou must still devote two seasons each year carrying messages and performing other services for the Order, for if you do not there is the possibility you will be declared Orbus and thrown out of your House. This work pays enough for you to live on if you do not belong to a covenant, unless you take the Poor flaw and must work a third season as well. If you take the Wealthy virtue, you can maintain your position with only a single season of effort each year.\n\nThis social status is compatible with any other mundane Social Status Virtue that would reasonably allow you to do your job as a Redcap, such as Merchant or Mendicant Friar."
   },
   "virtue.long_winded": {
     "name": "Long-Winded",
-    "summary": "You can last longer when exerting yourself than most, and gain +3 on all your Fatigue rolls."
+    "summary": "You can last longer when exerting yourself than most, and gain +3 on all your Fatigue rolls.",
+    "description": "You can last longer when exerting yourself than most, and gain +3 on all your Fatigue rolls. This bonus does not apply to casting spells."
   },
   "virtue.luck": {
     "name": "Luck",
-    "summary": "You perform well in situations where luck is more of a factor than skill or talent."
+    "summary": "You perform well in situations where luck is more of a factor than skill or talent.",
+    "description": "You perform well in situations where luck is more of a factor than skill or talent. You get +1 to +3 (storyguide's discretion) on rolls in such situations, depending upon how much luck is involved. You do well at games of chance, but may be labeled a cheater if you play them too often."
   },
   "virtue.lupus_the_wolf": {
     "name": "Lupus (the Wolf)",
@@ -2277,15 +2310,18 @@
   },
   "virtue.magical_memory": {
     "name": "Magical Memory",
-    "summary": "Your memory has been developed to remember magical rather than mundane things."
+    "summary": "Your memory has been developed to remember magical rather than mundane things.",
+    "description": "Your memory has been developed to remember magical rather than mundane things. You need not keep laboratory texts (see page 262) of your creations to get the benefit of a Lab Text when reproducing them. If you have created an effect by following another magus's Lab Text once, you may get the same benefit in future without needing to have the text available."
   },
   "virtue.magical_mount": {
     "name": "Magical Mount",
-    "summary": "The character has a mount, beast-of-burden, or \"guard dog,\" a creature that has Cunning instead of Intelligence and a Magic Might Score of up to 25."
+    "summary": "The character has a mount, beast-of-burden, or \"guard dog,\" a creature that has Cunning instead of Intelligence and a Magic Might Score of up to 25.",
+    "description": "The character has a mount, beast-of-burden, or \"guard dog,\" a creature that has Cunning instead of Intelligence and a Magic Might Score of up to 25. It has an extra Personality Trait (Loyal 0) and will obey simple verbal commands. If it has a positive Cunning score, the creature is also able to perform limited acts on its own initiative. If the character is incapable of training the creature himself, it must have been a gift from another character (probably a powerful magus) and the character must take a Major Story Flaw to represent the consequences: Favors, to represent his debt to his patron, is the simplest, but Enemies, if the mount was lured away, is also a possibility. In this case, only a companion or magus-level character can take this Virtue."
   },
   "virtue.magical_warder": {
     "name": "Magical Warder",
-    "summary": "The character has a magical being that accompanies him, watches over him, and sees that he comes to no harm."
+    "summary": "The character has a magical being that accompanies him, watches over him, and sees that he comes to no harm.",
+    "description": "The character has a magical being that accompanies him, watches over him, and sees that he comes to no harm. It does not require anything from the character in return for its service, but note that the more powerful the warder, the less willing or able it is to help the character, and the less often it is available to protect him.\n\nA classic example is the ghost of someone close to the character. The ghost is invisible and silent to anyone but you, unless they have Second Sight or some other supernatural means of detecting it. It can see and hear what is going on around you, and leave your presence for up to half a day, so it makes a good spy. See page 457 for example statistics for such a Magical Warder.\n\nDesign this being as a magic character, using the guidelines in Chapter 13, or in Realms of Power: Magic — a ghostly warder is a good example of a companion character; it is less powerful and basically an extension of the character's will, while a more powerful Warder's assistance is rarer and even more circumstantial."
   },
   "virtue.magister_in_artibus": {
     "name": "Magister in Artibus",
@@ -2293,23 +2329,28 @@
   },
   "virtue.magister_in_medicina": {
     "name": "Magister in Medicina",
-    "summary": "The character has achieved a doctorate in medicine from one of the medical schools of Europe (Salerno, Cremona, Montpellier, or Bologna), and completed his two years' compulsory teaching."
+    "summary": "The character has achieved a doctorate in medicine from one of the medical schools of Europe (Salerno, Cremona, Montpellier, or Bologna), and completed his two years' compulsory teaching.",
+    "description": "The character has achieved a doctorate in medicine from one of the medical schools of Europe (Salerno, Cremona, Montpellier, or Bologna), and completed his two years' compulsory teaching. This Virtue offers the same benefits as Doctor in (Faculty). This Virtue is compatible with the Hermetic Magus, and Priest Virtues. Note that this Virtue is available to female characters, although they must have graduated from Salerno, male characters may have graduated from any of the medical schools."
   },
   "virtue.major_magical_focus": {
     "name": "Major Magical Focus",
-    "summary": "Your magic is much more potent in a fairly limited area, such as weather, necromancy, birds, or emotions."
+    "summary": "Your magic is much more potent in a fairly limited area, such as weather, necromancy, birds, or emotions.",
+    "description": "Your magic is much more potent in a fairly limited area, such as weather, necromancy, birds, or emotions. This area should be smaller than a single Art, but may be spread over several Arts necromancy, for example, covers both Corpus and Mentem effects. You cannot be focused on laboratory activities, although a focus does apply to laboratory activities.\n\nWhen you cast a spell or generate a Lab Total within your focus, add the lowest applicable Art score twice. If a spell has requisites, the lowest applicable score may be one of the requisites, rather than one of the primary Arts. Thus, if a magus with a focus on birds was casting a spell to turn a bird into pure flame, MuAn (Ig), with Muto 14, An 18, and Ig 10, his final total would be 34 + other modifiers: 14 from Muto, and 20 from adding Ignem twice. If he was casting a spell to turn a bird into another sort of bird, MuAn with no requisites, his total would be 46 + other modifiers, 18 from Animal and 28 from adding Muto twice.\n\nA character can have only one Magical Focus, either major or minor, regardless of the source of the focus.\n\nSample Major Magical Foci\n\nThis list is merely exemplary. Other foci are possible.\n\n- Animal: Birds, or mammals, or domesticated animals. - Aquam: Salt water or fresh water. - Auram: Weather. - Corpus: Men or women. - Herbam: Trees or food plants. - Imaginem: Visual images, auditory images, tactile images, or taste and smell together. - Mentem: Emotions or memories. - Terram: Metals or stone. - Necromancy: Corpus and Mentem as applied to the bodies and spirits of dead people. - Damage: Any Art, as long as the effect does damage directly, either by inflicting a wound or doing a certain amount of damage which can be soaked. - Disguise: Changing the appearance of something, by any means."
   },
   "virtue.maker_of_textured_vessels": {
     "name": "Maker of Textured Vessels",
-    "summary": "Textured vessels are those which have mystical patterns impressed into their surfaces before firing."
+    "summary": "Textured vessels are those which have mystical patterns impressed into their surfaces before firing.",
+    "description": "Textured vessels are those which have mystical patterns impressed into their surfaces before firing. A character with this Virtue has a repertoire of shapes: one shape per level in the Craft: Potter Ability. Each shape corresponds to an Ability, and the character gains additional shapes as the Craft skill increases. The character takes one season to learn each added shape when her Ability increases, and requires the assistance of someone who already knows the new shape desired.\n\nCrafting a vessel costs one Long-Term Fatigue level. Each vessel grants a +3 bonus in a single Ability. The materials used while attempting the roll must have been stored inside the vessel. Storing materials for Abilities in pots does not cause Warping. The first time a character uses a pot in this way, it accepts the user as its owner, and provides no bonus for anyone else. A pot is an Arcane Connection to its master. Characters with Magic Resistance cannot be claimed by pots, and gain no benefit from them.\n\nA separate version of this Virtue allows the character to make leather vessels, and relies on Craft: Leatherworker. It is otherwise identical. In the African cultures where this Virtue is most common, the pottery version is associated with women, and the leather version with men, but this does not limit which characters can take either Virtue."
   },
   "virtue.maker_of_water_vessels": {
     "name": "Maker of Water Vessels",
-    "summary": "A character who drinks from a magical water vessel made by a character with this Virtue may swap one Ability score for the Craft: Potter score of the crafter at the time the vessel was made."
+    "summary": "A character who drinks from a magical water vessel made by a character with this Virtue may swap one Ability score for the Craft: Potter score of the crafter at the time the vessel was made.",
+    "description": "A character who drinks from a magical water vessel made by a character with this Virtue may swap one Ability score for the Craft: Potter score of the crafter at the time the vessel was made. This effect lasts for one scene or three minutes, whichever is longer. Each vessel is tied, at its creation, to a particular Ability, by its shape.\n\nEach character knows a variety of vessel shapes, each shape corresponding to a single Ability. A starting character knows a number of shapes equal to her Craft: Potter score. The character takes one season to learn a new shape when her Ability increases, and requires the assistance of someone who already knows the new shape desired. Making a vessel costs a Long-Term Fatigue level.\n\nAfter a vessel is drunk from the first time, it takes the drinker as its owner. Other drinkers gain no benefit from the vessel, and it becomes an Arcane Connection to its owner. Characters with Magic Resistance cannot be claimed by vessels. The first drink from an unowned vessel, which establishes ownership, causes Warping, unless the drinker has Supernatural Virtues. Similarly, drinking from a vessel one does not own causes Warping, unless the drinker has Supernatural Virtues. A separate version of this Virtue allows the character to make leather vessels, and relies on Craft: Leatherworker. It is otherwise identical. In the African cultures where this Virtue is most common, the pottery version is associated with women, and the leather version with men, but this does not limit which characters can take either Virtue."
   },
   "virtue.male_guild_sponsor": {
     "name": "Male Guild Sponsor",
-    "summary": "The character's father or husband is a guild craftsman and she has been allowed entry into his field of work, which is otherwise restricted to men."
+    "summary": "The character's father or husband is a guild craftsman and she has been allowed entry into his field of work, which is otherwise restricted to men.",
+    "description": "The character's father or husband is a guild craftsman and she has been allowed entry into his field of work, which is otherwise restricted to men. The character may work at her trade, following the same procedures as the regular male workers. Every guild allows such members, so she may practice any craft she desires. The character must select a separate guild Social Status Virtue as well as this free Virtue to represent her status in the guild system. This Virtue is only available to female characters, and is compatible with all Social Status Virtues"
   },
   "virtue.mamluk": {
     "name": "Mamluk",

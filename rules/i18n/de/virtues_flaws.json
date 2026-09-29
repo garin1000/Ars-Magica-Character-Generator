@@ -2015,7 +2015,8 @@
   },
   "virtue.greater_power": {
     "name": "Große Macht",
-    "summary": "Der Charakter besitzt eine übernatürliche Macht, die er nach Belieben aktivieren kann."
+    "summary": "Der Charakter besitzt eine übernatürliche Macht, die er nach Belieben aktivieren kann.",
+    "description": "Der Charakter besitzt eine übernatürliche Macht, die er nach Belieben aktivieren kann. Wenn du die Tugend einmal nimmst, ist dies eine einzelne Macht, die einem formulaischen hermetischen Zauber der Stufe 50 oder niedriger entspricht. Du kannst auch Stufen eins-zu-eins aufwenden, um der Macht Penetration zu verleihen; andernfalls hat sie eine Penetration von null.\n\nDiese Tugend kann mehr als einmal genommen werden, und die Stufen werden zusammengezählt, um mehrere Mächte zu erschaffen. Ein Charakter, der die Tugend zweimal nimmt, könnte beispielsweise eine Macht der Stufe 60 mit einer Penetration von 0 und eine zweite Macht mit einer Stufe und Penetration von je 20 besitzen. Standardmäßig sollte es eine Macht pro Tugend geben, da diese Tugend für Mächte gedacht ist, die einzeln bedeutsam sind. Siehe Mindere Macht (Seite 90), wenn dein Charakter mehrere kleinere Mächte haben soll. Die Spieltruppe kann dem Charakter jedoch erlauben, mehr Mächte zu nehmen, wenn sie einen starken thematischen Zusammenhang haben.\n\nDie Macht hat eine Initiative gleich der Schnelligkeit des Charakters – (Magnitude der Macht / 2) (abgerundet). Das Aktivieren kostet eine Erschöpfungsstufe, wenn ihre Stufe 50 oder niedriger ist, oder zwei Erschöpfungsstufen, wenn ihre Stufe 51 bis 100 beträgt. Noch höhere Effektstufen sind wahrscheinlich nicht sinnvoll.\n\nDiese Tugend kann mit jeder übernatürlichen Sphäre verbunden werden. Wenn du Zugang zu anderen Büchern hast, wie Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Sphären der Macht: Das Infernale, Sphären der Macht: Feenwelt oder Heckenzauber (Überarbeitete Ausgabe), kannst du die Macht auf einem anderen System übernatürlicher Kräfte aufbauen, um etwas Charaktergerechteres zu erhalten. Beachte dabei, dass Effektstufen in verschiedenen Systemen unterschiedliche Bedeutung haben können, und du möglicherweise die Anzahl der Effektstufen anpassen möchtest. Die Macht muss derselben übernatürlichen Sphäre zugeordnet sein wie das System, auf dem sie basiert. (Wenn du Zugang zu anderen Büchern hast, möchtest du möglicherweise Mächte, die auf hermetischer Magie basieren, auf die Magiesphäre beschränken.)"
   },
   "virtue.greater_purifying_touch": {
     "name": "Große Reinigende Berührung",
@@ -2072,19 +2073,23 @@
   },
   "virtue.homing_instinct": {
     "name": "Heimfindungsinstinkt",
-    "summary": "Der Charakter weiß stets genau, wie er von seinem aktuellen Standort zu einer Anzahl von Orten gelangt, die seinem Intelligenzwert entspricht (mindestens jedoch 1)."
+    "summary": "Der Charakter weiß stets genau, wie er von seinem aktuellen Standort zu einer Anzahl von Orten gelangt, die seinem Intelligenzwert entspricht (mindestens jedoch 1).",
+    "description": "Der Charakter weiß stets genau, wie er von seinem aktuellen Standort zu einer Anzahl von Orten gelangt, die seinem Intelligenzwert entspricht (mindestens jedoch 1). Um einen Ort in das Repertoire des Charakters aufzunehmen, muss er sich an diesem Ort befinden, der Ort muss im Freien liegen (darf also beispielsweise nicht im Inneren eines Gebäudes sein), und der Spieler muss einen Intelligenz + Konzentrations-Wurf gegen einen Schwierigkeitsgrad von 6 schaffen. Würde dies die Anzahl der bekannten Orte über das Limit des Charakters hinaus erhöhen, muss ein anderer Ort „vergessen\" werden.\n\nDarüber hinaus hat der Charakter eine feste Arkane Verbindung zu den Orten, die er kennt, die auf die übliche Weise genutzt werden kann (Seite 219). Diese Arkane Verbindung ist ein Artefakt des Geistes und kann daher nicht an einen anderen Charakter weitergegeben werden."
   },
   "virtue.imbued_with_the_spirit_of_form": {
     "name": "Durchdrungen vom Geist der {form}",
-    "summary": "Der Magus hat einen Teil der Kräfte eines Elementarwesens oder eines anderen magischen Objekts absorbiert (vielleicht durch Verzehr)."
+    "summary": "Der Magus hat einen Teil der Kräfte eines Elementarwesens oder eines anderen magischen Objekts absorbiert (vielleicht durch Verzehr).",
+    "description": "Der Magus hat einen Teil der Kräfte eines Elementarwesens oder eines anderen magischen Objekts absorbiert (vielleicht durch Verzehr). Dieser Vorgang trübt den Magus, sodass jedes Wesen mit einer Magischen Macht, die mit der Form dieser Tugend verknüpft ist, seine Natur in der Nähe wahrnehmen kann. Schwache Kreaturen werden in der Regel Angst vor dem Magus haben, während mächtige versuchen werden, ihn zu töten.\n\nWann immer der Magus einen Zauber wirkt oder eine Laborarbeit ausführt, die Vis der gewählten Form erfordert, kann er langfristige Erschöpfungsstufen als Ersatz für die Vis einsetzen. Jede verlorene langfristige Erschöpfungsstufe verringert den Vis-Bedarf des Zaubers oder Effekts um 1. Beim Wirken eines Zaubers gehen die Erschöpfungsstufen nach dem Zaubern verloren. Bei Laborarbeiten hält der Erschöpfungsverlust für die Dauer des Laborprozesses an (also mindestens ein Quartal), und als Vis-Ersatz eingesetzte Erschöpfungsstufen zählen nicht zur Vis-Ausgabenbeschränkung des Magus pro Quartal. Der Magus erleidet den Erschöpfungsabzug auf seine Laborsumme.\n\nBeachte, dass das Studieren von Vis keine Laborarbeit ist, weshalb der Magus beim Vis-Studium keine Erschöpfungsstufen als Vis-Ersatz einsetzen kann.\n\nAls Beispiel: Ein Magus, der den Zauber Verzauberung des Spionagepools als Ritual wirkt (InAq 30, Seite 322), benötigt 6 Bauern irgendeiner Kombination aus Intellego- und Aquam-Vis. Ist der Magus Durchdrungen vom Geist des Aquam, kann er sich ermüden (und dabei drei langfristige Erschöpfungsstufen verlieren) und damit den Vis-Bedarf um 3 verringern."
   },
   "virtue.immune_to_disease": {
     "name": "Immun gegen Krankheit",
-    "summary": "Der Charakter ist als Eigentum eines sehr mächtigen Dämons gekennzeichnet, und die niederen Dämonen, die die meisten Krankheiten verursachen, weigern sich, ihm Schaden zuzufügen."
+    "summary": "Der Charakter ist als Eigentum eines sehr mächtigen Dämons gekennzeichnet, und die niederen Dämonen, die die meisten Krankheiten verursachen, weigern sich, ihm Schaden zuzufügen.",
+    "description": "Der Charakter ist als Eigentum eines sehr mächtigen Dämons gekennzeichnet, und die niederen Dämonen, die die meisten Krankheiten verursachen, weigern sich, ihm Schaden zuzufügen. Selbst Charaktere, die sich gegen ihre Meister wenden, behalten diesen Schutz, da die Markierung unauslöschlich ist und Krankheitsdämonen in der Regel nicht sonderlich klug sind. Einige Krankheiten – zum Beispiel solche, die Gott als Geißel schickt – betreffen den Charakter normal."
   },
   "virtue.immunity_to_cold": {
     "name": "Unempfindlichkeit gegen Kälte",
-    "summary": "Normale Kälte schadet dir nicht, noch bereitet sie dir Unbehagen."
+    "summary": "Normale Kälte schadet dir nicht, noch bereitet sie dir Unbehagen.",
+    "description": "Normale Kälte schadet dir nicht, noch bereitet sie dir Unbehagen. Du benötigst keine warme Umgebung, um gesund zu bleiben. Extreme, magisch erzeugte Kälte, wie etwa der Effekt von Eisiger Griff des Zauberers (Seite 346), betrifft dich jedoch weiterhin normal."
   },
   "virtue.improved_characteristics": {
     "name": "Verbesserte Eigenschaften",
@@ -2096,7 +2101,8 @@
   },
   "virtue.indescribable_face": {
     "name": "Unscheinbares Gesicht",
-    "summary": "Nachdem andere Charaktere diesen Charakter getroffen haben, fällt es ihnen in der Regel schwer, ihn so zu beschreiben, dass er sich hinreichend von anderen unterscheiden ließe."
+    "summary": "Nachdem andere Charaktere diesen Charakter getroffen haben, fällt es ihnen in der Regel schwer, ihn so zu beschreiben, dass er sich hinreichend von anderen unterscheiden ließe.",
+    "description": "Nachdem andere Charaktere diesen Charakter getroffen haben, fällt es ihnen in der Regel schwer, ihn so zu beschreiben, dass er sich hinreichend von anderen unterscheiden ließe. Manche vergesslichen Charaktere sind schlicht von durchschnittlicher Größe und Statur, mit unauffälligen Zügen. Andere haben ein bestimmtes Merkmal, das so auffällig ist, dass es alle anderen Erinnerungen verdrängt. Er trägt einen protzigen Hut. Sie hatte ein kleines Hündchen dabei. Die Charaktere können sich an das auffällige Merkmal erinnern, an kaum etwas anderes jedoch. Ein Spieler, der diese Tugend für seinen Charakter wählt, muss festlegen, welche Form der Tugend sein Charakter hat.\n\nEin Charakter, der schlicht durchschnittlich ist, ist immer vergesslich. Er kann diese Eigenschaft nicht abschalten und nutzt möglicherweise Requisiten, wenn er sich unter anderen Kriminellen eine Reputation aufbaut. Er kann zum Beispiel „der Typ mit den schwarzen Handschuhen, der Leute erdrosselt\" sein, obwohl sich niemand genau erinnert, wie er aussieht. Eng verbundene Charaktere können sich mit der Zeit so sehr an das vergessliche Gesicht des Charakters gewöhnen, dass sie es sich einprägen.\n\nEin Charakter, der mit einem Requisit ablenkt, kann nach Belieben auffällig sein. Er muss seine Ablenkungsmittel einfach nicht einsetzen, wenn er einen Eindruck hinterlassen möchte. Er kann sein ablenkendes Requisit auch wechseln. Hört er beispielsweise, dass jemand nach einer Dame mit einem seltsamen Hund sucht, könnte er auf ein Baby oder einen kuriosen Hut wechseln. Ein Charakter, der mit Requisiten ablenkt, wird von zufälligen Menschen in Menschenmassen in der Regel nicht erkannt (deren Augen ebenfalls dem Requisit folgen und nicht dem Gesicht), doch dieser Schutz ist weniger vollkommen als ein wirklich vergessliches Gesicht."
   },
   "virtue.induction": {
     "name": "Einflüstern",
@@ -2108,19 +2114,23 @@
   },
   "virtue.infernal_heirloom": {
     "name": "Infernales Erbstück",
-    "summary": "Infernale Erbstücke sind magische Gegenstände, die der Charakter von einem Diabolisten erbt oder, seltener, findet."
+    "summary": "Infernale Erbstücke sind magische Gegenstände, die der Charakter von einem Diabolisten erbt oder, seltener, findet.",
+    "description": "Infernale Erbstücke sind magische Gegenstände, die der Charakter von einem Diabolisten erbt oder, seltener, findet. Der Charakter hat den Gebrauch des Gegenstands, ohne sich mit dem Dämon auseinandersetzen zu müssen, der ihn erschaffen hat. Der Gegenstand ist auf irgendeine Weise äußerst nützlich, doch jede Verwendung bringt seinen Besitzer dem Charakter des Dämons näher, da dieser versucht, seinen Schatz zurückzufordern.\n\nDie meisten infernalen Erbstücke haben nur einen einzigen Effekt, und sie werden in der Regel durch eine geringfügige Sünde oder die Absicht zur Sünde ausgelöst. Als Richtlinie gilt: Jedes Erbstück kann einmal pro Tag einen Effekt erzeugen, der einem Hermetischen Zauber der Stufe 25 entspricht. Gegenstände mit weniger mächtigen Effekten dürfen nach Ermessen der Spieltruppe häufiger eingesetzt werden."
   },
   "virtue.inoffensive_to_beings": {
     "name": "Unauffällig für {being}",
-    "summary": "Diese Tugend ist mit einer von fünf Klassen von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen oder magischen Kreaturen."
+    "summary": "Diese Tugend ist mit einer von fünf Klassen von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen oder magischen Kreaturen.",
+    "description": "Diese Tugend ist mit einer von fünf Klassen von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen oder magischen Kreaturen. Die letzten vier umfassen Charaktere, die durch Übernatürliche Tugenden oder Fehler mit der Göttlichen, der Feensphäre, der Hölle oder der Magischen Sphäre verbunden sind, sowie Wesen mit Macht.\n\nDie Gabe des Charakters stört Wesen dieser Art nicht, obwohl sie bei anderen weiterhin die normale Wirkung hat. So erleichtert zum Beispiel Ungefährlich für Tiere den Umgang mit gewöhnlichen Tieren. Tiere, die auf die Gabe positiv reagieren, reagieren weiterhin positiv auf ihn, da er die Gabe tatsächlich besitzt, aber diejenigen, die von ihr gestört werden, sind nicht durch seine Anwesenheit beunruhigt.\n\nDu kannst diese Tugend nicht mehr als einmal nehmen; Charaktere, die für mehr als eine Art von Wesen ungefährlich sind, sollten stattdessen die Sanfte Gabe nehmen. UnBegabte Charaktere dürfen diese Tugend nur nehmen, wenn sie den Fehler Magische Ausstrahlung haben.\n\nBeachte, dass Ungefährlich für gewöhnliche Menschen nicht als Kleine Tugend verfügbar ist; nimm stattdessen die Sanfte Gabe."
   },
   "virtue.inspirational": {
     "name": "Inspirierend",
-    "summary": "Du bist ein mitreißender Redner oder eine Heldenfigur und kannst Menschen zu großen Leistungen anspornen."
+    "summary": "Du bist ein mitreißender Redner oder eine Heldenfigur und kannst Menschen zu großen Leistungen anspornen.",
+    "description": "Du bist ein mitreißender Redner oder eine Heldenfigur und kannst Menschen zu großen Leistungen anspornen. Du gewährst Zielen einen +3-Bonus auf Würfe für angemessene Persönlichkeitseigenschaften."
   },
   "virtue.intuition": {
     "name": "Intuition",
-    "summary": "Du besitzt eine natürliche Feinfühligkeit, die es dir erlaubt, häufiger die richtigen Entscheidungen zu treffen, als das Glück erklären könnte."
+    "summary": "Du besitzt eine natürliche Feinfühligkeit, die es dir erlaubt, häufiger die richtigen Entscheidungen zu treffen, als das Glück erklären könnte.",
+    "description": "Du besitzt eine natürliche Feinfühligkeit, die es dir erlaubt, häufiger die richtigen Entscheidungen zu treffen, als das Glück erklären könnte. Wann immer du vor einer Entscheidung stehst, bei der Glück eine wichtige Rolle spielt (etwa die Wahl zwischen drei unerkundeten Wegen), hast du eine gute Chance, die richtige zu treffen. Der Spielleiter würfelt heimlich einen einfachen Würfel. Bei einem Ergebnis von 6 oder mehr setzt deine Intuition ein und du triffst die Entscheidung, die als „richtig\" gelten kann. Andernfalls erhältst du keine Eingebung und musst ohne Hilfe entscheiden."
   },
   "virtue.inventive_genius": {
     "name": "Erfinderisches Genie",
@@ -2137,31 +2147,38 @@
   },
   "virtue.jurist": {
     "name": "Jurist",
-    "summary": "Der Charakter ist Richter, Anwalt oder Prokurator – im Wesentlichen ein mittelalterlicher Rechtsgelehrter in irgendeiner Funktion."
+    "summary": "Der Charakter ist Richter, Anwalt oder Prokurator – im Wesentlichen ein mittelalterlicher Rechtsgelehrter in irgendeiner Funktion.",
+    "description": "Der Charakter ist Richter, Anwalt oder Prokurator – im Wesentlichen ein mittelalterlicher Rechtsgelehrter in irgendeiner Funktion. Bei der Charaktererschaffung darf er die Fertigkeiten Latein, Artes Liberales sowie Zivil- und Kanonisches Recht erwerben. Er muss nicht zwingend an einer Universität ausgebildet worden sein, da er seine Bildung auch durch Privatschulen, Hauslehrer oder eine Domschule erlangt haben kann, und braucht keinen akademischen Grad. Ist er Kleriker, wirkt er in einem kirchlichen Umfeld: der päpstlichen Kurie, dem Kardinalskollegium oder dem Büro eines Bischofs oder Erzbischofs. Ist er Laie, arbeitet er für einen weltlichen Fürsten oder eine Stadtgemeinde.\n\nDiese Tugend ist kompatibel mit den Tugenden Baccalaureus, Magister in Artibus und Doktor der (Fakultät), da ein Jurist über eine Universitätsausbildung verfügen kann. Sie ist auch kompatibel mit den Tugenden Priester und Bettelorden. Sie steht nur männlichen Charakteren zur Verfügung."
   },
   "virtue.just_an_instant": {
     "name": "Nur einen Moment",
-    "summary": "Ein Charakter mit dieser Tugend, der einige Sekunden Zeit hatte, einen Raum zu überblicken, muss keine Wahrnehmungswürfe ablegen, um etwas Interessantes auf den zugänglichen Oberflächen des Raumes zu entdecken oder sich daran zu erinnern."
+    "summary": "Ein Charakter mit dieser Tugend, der einige Sekunden Zeit hatte, einen Raum zu überblicken, muss keine Wahrnehmungswürfe ablegen, um etwas Interessantes auf den zugänglichen Oberflächen des Raumes zu entdecken oder sich daran zu erinnern.",
+    "description": "Ein Charakter mit dieser Tugend, der einige Sekunden Zeit hatte, einen Raum zu überblicken, muss keine Wahrnehmungswürfe ablegen, um etwas Interessantes auf den zugänglichen Oberflächen des Raumes zu entdecken oder sich daran zu erinnern. Manche Charaktere nutzen diese Tugend, um die Anordnung eines Raumes zu erfassen, damit sie ihn im Dunkeln durchqueren können, andere nutzen sie, um beim Stehlen Zeit zu sparen. Charaktere mit dieser Tugend sind auch nützliche Laborassistenten, da sie wissen, wo sich alles befindet, und Experimente bemerken, die kurz vor einem kritischen Versagen stehen."
   },
   "virtue.kassalan_exorcism": {
     "name": "Kassalanischer Exorzismus",
-    "summary": "Du bist in der Lage, kleinere Exorzismus-Zauber durch dein Wissen über die Riten der Bestattungsgesellschaft von Kassala in Alodia auszuführen, dem abgelegensten der drei nubischen Königreiche an den südlichen Ausläufern des Nils."
+    "summary": "Du bist in der Lage, kleinere Exorzismus-Zauber durch dein Wissen über die Riten der Bestattungsgesellschaft von Kassala in Alodia auszuführen, dem abgelegensten der drei nubischen Königreiche an den südlichen Ausläufern des Nils.",
+    "description": "Du bist in der Lage, kleinere Exorzismus-Zauber durch dein Wissen über die Riten der Bestattungsgesellschaft von Kassala in Alodia auszuführen, dem abgelegensten der drei nubischen Königreiche an den südlichen Ausläufern des Nils. Du kannst Zauber in einem sehr begrenzten Fokus wirken, nämlich Bannzauber gegen Geister und körperlich Tote (nach den Rego Corpus- oder Rego Mentem-Leitlinien) sowie Zauber, um diesen Wesen Macht zu entziehen (nach den Perdo Vim-Leitlinien). Du kannst keine Zauber erschaffen, die andere Geister oder Kreaturen betreffen, die keine wandelnden Toten sind, doch deine Zauber sind gegen Kreaturen aus jeder Sphäre gleich wirksam. Mit dieser Tugend erschaffene Bannzauber müssen nicht kreisförmig sein, sondern können stattdessen die Schwelle(n) eines Raumes blockieren; dies wird für die Stufenberechnung dennoch als Dauer: Ring, Ziel: Kreis-Zauber behandelt.\n\nUm einen Zauber zu wirken, musst du eine Erschöpfungsstufe aufwenden, unabhängig davon, ob der Zauber gelingt oder misslingt. Du musst außerdem mindestens 5 Minuten den Zauber vorbereiten, während du ununterbrochene Konzentration benötigst und eine Handvoll Kassalanischen Staub aufwendest. Der Zauber wird genau wie ein Hermetischer Zauber entworfen; wenn du einen Geist beeinflussen willst, musst du dein Ziel wahrnehmen können. Deine Zaubersumme beträgt (Ausdauer + Organisationskunde: Bestattungsgesellschaft + Aura-Modifikator + Stresswürfel) / 2. Die Penetration wird auf normale Weise berechnet: Zaubersumme – Stufe des Zaubers + Penetrationsmodifikatoren. Kassalanischer Exorzismus ist der Magischen Sphäre zugeordnet.\n\nKassalanischer Staub\n\nDieser von der Bestattungsgesellschaft von Kassala hergestellte Staub besteht hauptsächlich aus Goldstaub, ergänzt durch Myrrhe und andere Gewürze. Zwanzig Handvoll enthalten etwa ein Mythisches Pfund Goldstaub.\n\nKassalanischer Staub ist für den Kassalanischen Exorzismus notwendig, gewährt jedoch keinen Bonus. Eine Handvoll fügt außerdem +3 zu Einsätzen der Übernatürlichen Fertigkeit Leichenmagie hinzu, um einen Leichnam anzuweisen, in sein Grab zurückzukehren oder davor zu bewahren, von Leichenmagie beeinflusst zu werden. Mehrere Handvoll bringen keinen zusätzlichen Effekt. Kassalanischer Staub hat einen Form- und Materialbonus von +3 gegen Tote. Das Rezept ist jedem bekannt, der über Organisationskunde: Bestattungsgesellschaft verfügt.\n\nWeitere Details über die Kassalanische Bestattungsgesellschaft finden sich in Länder des Nils, ab Seite 88."
   },
   "virtue.keen_sense_of_smell": {
     "name": "Feiner Geruchssinn",
-    "summary": "Die Nase des Charakters ist empfindlicher als bei einem normalen Menschen."
+    "summary": "Die Nase des Charakters ist empfindlicher als bei einem normalen Menschen.",
+    "description": "Die Nase des Charakters ist empfindlicher als bei einem normalen Menschen. Er erhält einen +3-Bonus auf alle Würfe, die seinen Geruchssinn beinhalten, einschließlich des Spurenverfolgens mit der Fertigkeit Jagen."
   },
   "virtue.keen_vision": {
     "name": "Scharfe Sicht",
-    "summary": "+3 auf sichtbasierte Würfe."
+    "summary": "+3 auf sichtbasierte Würfe.",
+    "description": "Du kannst weiter und klarer sehen als die meisten. Du erhältst einen +3-Bonus auf alle Würfe, die das Sehen beinhalten, ausgenommen Angriffe mit Fernkampfwaffen."
   },
   "virtue.knight": {
     "name": "Ritter",
-    "summary": "Du bist ein Ritter, ein Angehöriger des Adels und einer der Elitekrieger Europas."
+    "summary": "Du bist ein Ritter, ein Angehöriger des Adels und einer der Elitekrieger Europas.",
+    "description": "Du bist ein Ritter, ein Angehöriger des Adels und einer der Elitekrieger Europas. Sofern du nicht Arm bist, darfst du hochwertige Waffen und Rüstungen sowie ein Pferd besitzen. Typische Ausrüstung eines Ritters Mitte des 13. Jahrhunderts sind Lanze, Schwert, Dreieckschild, vollständige Kettenrüstung und ein Streitross. Du kannst bei der Charaktererschaffung Kampffertigkeiten nehmen. Die Tugend Wohlhabend und der Fehler Arm betreffen dich normal. Diese Tugend steht nur männlichen Charakteren zur Verfügung und ist kompatibel mit der Tugend Landadliger."
   },
   "virtue.knows_people": {
     "name": "Kennt die richtigen Leute",
-    "summary": "Deine sozialen Kontakte sind nicht wegen dem wichtig, was sie dir direkt verschaffen: Sie sind wichtig, weil sie dir ermöglichen, die Wünsche deiner verschiedenen Bekannten zusammenzuführen."
+    "summary": "Deine sozialen Kontakte sind nicht wegen dem wichtig, was sie dir direkt verschaffen: Sie sind wichtig, weil sie dir ermöglichen, die Wünsche deiner verschiedenen Bekannten zusammenzuführen.",
+    "description": "Deine sozialen Kontakte sind nicht wegen dem wichtig, was sie dir direkt verschaffen: Sie sind wichtig, weil sie dir ermöglichen, die Wünsche deiner verschiedenen Bekannten zusammenzuführen. Ein gewandter Gesellschaftsmensch ist ein Vermittler, dem für das Zuführen von Gelegenheiten an Freunde Dankbarkeit geschuldet wird, nicht jemand, der auf Freundschaft basierend Gefälligkeiten einfordert.\n\nEinmal pro Geschichte oder Spielsitzung darf ein Charakter mit dieser Tugend einen Köder für einen Nicht-Spieler-Charakter verlangen. Ein Köder ist der Beginn einer Szene oder kurzen Nebengeschichte außerhalb der Hauptgeschichte, die, wenn sie abgeschlossen wird, dem Charakter ermöglicht, vom genannten Ziel Unterstützung zu erhalten. Sind die Spielercharaktere beispielsweise nicht in der Lage, die Unterstützung eines Adeligen zu gewinnen, kann ein Spieler einen Köder verlangen. Im Spiel bedeutet dies, dass der Charakter seine sozialen Fertigkeiten einsetzt, um die Bedürfnisse des Adeligen zu ermitteln und anzudeuten, dass er möglicherweise einen Dritten kennt, der eine Lösung hat. Spielt die Spieltruppe dann eine kurze Szene aus, in der das Problem des Adeligen gelöst wird, wird er gefügiger.\n\nDie Spieltruppe kann jeden Einsatz dieser Verbindungen ablehnen, der die Spannung und das Tempo des Spiels beeinträchtigt."
   },
   "virtue.laborer": {
     "name": "Tagelöhner",
@@ -2169,11 +2186,13 @@
   },
   "virtue.land_regio_network": {
     "name": "{land}Regio-Netz",
-    "summary": "Der Charakter hat Zugang zu einem ausgedehnten Netz von Regiones, die sich vielleicht in den Tiefen vieler Seen im Mythischen Europa befinden, hoch über den Wolken am Himmel verborgen sind oder in unterirdischen Höhlen unter der Erde liegen."
+    "summary": "Der Charakter hat Zugang zu einem ausgedehnten Netz von Regiones, die sich vielleicht in den Tiefen vieler Seen im Mythischen Europa befinden, hoch über den Wolken am Himmel verborgen sind oder in unterirdischen Höhlen unter der Erde liegen.",
+    "description": "Der Charakter hat Zugang zu einem ausgedehnten Netz von Regiones, die sich vielleicht in den Tiefen vieler Seen im Mythischen Europa befinden, hoch über den Wolken am Himmel verborgen sind oder in unterirdischen Höhlen unter der Erde liegen. Der Charakter ist mit einer bestimmten Art von Regio-Netz verbunden.\n\nSobald der Charakter sich in einer solchen Regio befindet, kann er zu jeder anderen Regio im Netz reisen; die Reisezeit beträgt einen Durchmesser, unabhängig von der geografischen Entfernung. Um festzustellen, ob der Charakter den Standort einer vernetzten Regio in einem bestimmten Gebiet kennt, wird ein Intelligenz + Gebietskunde-Wurf gegen einen Schwierigkeitsgrad von 9 vorgenommen. Der Charakter weiß, wie man diese Regiones betritt, und kann, wenn er möchte, andere Charaktere in die Regiones führen – obwohl diese anderen Charaktere in der Lage sein müssen, in der Umgebung der Regio zu überleben.\n\nDer Zugang zum Netz kann letztlich von anderen Charakteren oder Mächten kontrolliert werden."
   },
   "virtue.landed_noble": {
     "name": "Landadliger",
-    "summary": "Du schuldest einem höheren Adligen Lehnseid und Dienst und hast die Kontrolle über Land, Leibeigene und Bewaffnete."
+    "summary": "Du schuldest einem höheren Adligen Lehnseid und Dienst und hast die Kontrolle über Land, Leibeigene und Bewaffnete.",
+    "description": "Du schuldest einem höheren Adligen Lehnseid und Dienst und hast die Kontrolle über Land, Leibeigene und Bewaffnete. Du hast ein halbes Dutzend Diener in deinem Herrensitz, darunter ein paar Leibwächter. Deine Diener sollten vom Rest der Spieltruppe gespielt werden. Du hast einen Treueeid geschworen, weshalb es sinnvoll wäre, diese Tugend mit jenem Fehler zu balancieren. Du erhältst die normalen Punkte für den Treueeid, wenn du das tust. Du bist wohlhabender als die meisten Charaktere, hast aber keine zusätzliche Freizeit. Du hast die Macht, das Recht innerhalb deines Lehens durchzusetzen, darfst aber nicht die Todesstrafe verhängen und darfst Verbrecher auch nicht verstümmeln. Prügel und Geldbußen sind die üblichen Strafen, die du verhängst.\n\nBist du Arm, ist dein Lehen entweder sehr klein oder liegt in einer landwirtschaftlich schlechten Gegend mit wenigen anderen Ressourcen. Du musst jedes Quartal damit verbringen, es zu verwalten, sonst könnte es völlig zusammenbrechen und dich effektiv landlos zurücklassen. Du bist nicht wohlhabender als die meisten durchschnittlichen Charaktere und hast nur ein paar Diener.\n\nWohlhabende Landadlige kontrollieren mehr als ein Lehen und haben für jedes Bailiffs oder Verwalter, sodass sie keine Zeit damit verbringen müssen, ihre Ländereien zu beaufsichtigen. Du bist deutlich reicher als die meisten wohlhabenden Charaktere und könntest dir leisten, ein kleines Schloss oder eine große Kapelle in einer Kathedrale zu bauen. Du hast etwa fünfzig Diener, darunter eine beträchtliche Anzahl von Kriegern.\n\nDieser Soziale Status ist kompatibel mit der Kleinen Status-Tugend Ritter, steht aber im Gegensatz zu jener Tugend sowohl männlichen als auch weiblichen Charakteren zur Verfügung."
   },
   "virtue.large": {
     "name": "Großgewachsen",
@@ -2189,43 +2208,53 @@
   },
   "virtue.learn_ability_from_mistakes": {
     "name": "{ability} durch Fehler lernen",
-    "summary": "Du bist in der Lage, eine bestimmte Fertigkeit durch wiederholtes Scheitern zu verbessern."
+    "summary": "Du bist in der Lage, eine bestimmte Fertigkeit durch wiederholtes Scheitern zu verbessern.",
+    "description": "Du bist in der Lage, eine bestimmte Fertigkeit durch wiederholtes Scheitern zu verbessern. Beim ersten Mal in einer gegebenen Spielsitzung, dass du einen Wurf verpatzst oder um genau einen Punkt verfehlst, erhältst du fünf Erfahrungspunkte in der Fertigkeit. Der Wurf muss sich natürlich im Verlauf der Geschichte ergeben haben. Du kannst diese Tugend mehrmals nehmen, je einmal für jede gewählte Fertigkeit."
   },
   "virtue.leather_ripper": {
     "name": "Lederreißer",
-    "summary": "Dieser Charakter hat die übernatürliche Fähigkeit, eine Gruppe von Ledergegenständen zu zerstören."
+    "summary": "Dieser Charakter hat die übernatürliche Fähigkeit, eine Gruppe von Ledergegenständen zu zerstören.",
+    "description": "Dieser Charakter hat die übernatürliche Fähigkeit, eine Gruppe von Ledergegenständen zu zerstören. Dadurch fällt Metallrüstungen auseinander, da die sie zusammenhaltenden Riemen zerfallen. Es zerstört das Zaumzeug eines Reiters und erzwingt einen Reitenwurf mit Abzügen von bis zu -9, je nach der Gefährlichkeit seiner aktuellen Manöver. Es kann Scheide, Gürtel und Stiefel eines Feindes zerstören und erlaubt dem Lederreißer so zu fliehen oder anzugreifen. Dies ist ein PeAn(He) 30-Effekt mit +0 Penetration. Der Charakter muss sich einen Moment konzentrieren und eine Erschöpfungsstufe aufwenden, um die Kraft zu aktivieren, muss aber nicht sprechen oder gestikulieren."
   },
   "virtue.leper_magus": {
     "name": "Lepra-Magus",
-    "summary": "Diese Tugend beschreibt das mystische Erbe, das von Tytalus über den Vektor der Lepra an Haristes Linie weitergegeben wurde."
+    "summary": "Diese Tugend beschreibt das mystische Erbe, das von Tytalus über den Vektor der Lepra an Haristes Linie weitergegeben wurde.",
+    "description": "Diese Tugend beschreibt das mystische Erbe, das von Tytalus über den Vektor der Lepra an Haristes Linie weitergegeben wurde. Diese Tugend kann nur genommen werden, wenn der Charakter auch den Fehler Lepra hat, und steht nur Magi zur Verfügung, die im Haus Tytalus ausgebildet wurden. Sie ermöglicht es ihm, die Stärke seines Körpers zu nutzen, um die Kraft seiner Magie zu steigern, indem er die Kleine Tugend Lebensstärkung erhält. Er kann auch noch tiefer in diese Kraft schöpfen, wenn er es wünscht, indem er sein krankheitsgeplagtes Fleisch mortifiziert, um Vis zu erzeugen, mit der er seine eigenen Zauber antreibt. Die so erzeugte Vis kann nur vom Magus selbst verwendet werden – beim Zaubern oder bei Laborarbeiten (aber nicht beim Studium) – und kann in keiner Weise gelagert werden; tatsächlich verlässt sie seinen Körper nie. Indem er eine Leichte Wunde akzeptiert, kann der Magus ein einzelnes magisches Wirken mit drei Bauern Vis beliebiger Technik oder Form versorgen. Eine Mittelschwere Wunde liefert sechs Bauern, eine Schwere Wunde neun Bauern, eine Lähmende Wunde zwölf Bauern und eine Tödliche Wunde (die den Magus tötet) fünfzehn Bauern. Jede Vis, die über die Kapazität des Magus hinaus erzeugt wird, die er in der aktuellen magischen Tätigkeit verwenden kann, geht verloren, ebenso wie jede Vis, die über den Bedarf der Tätigkeit hinausgeht, auf die diese Kraft angewendet wird. Lepröse Wunden öffnen sich am Körper des Magus, wenn er diese Kraft ruft, aber nicht schnell genug, um die Zaubersumme eines Nicht-Ritual-Zaubers zu beeinflussen, auf den diese Kraft angewendet wird. Alle Laborsummen erleiden den Wundabzug wie üblich, ebenso die Zaubersummen von Zaubern, die mehr als eine Runde zum Wirken benötigen (wie Ritualzauber). Der Charakter macht keine Genesungswürfe für diese Wunde, bis die magische Tätigkeit, für die die Vis verwendet wird, abgeschlossen ist (d. h. am Ende der Zauberrede oder am Ende eines Quartals für Laborarbeiten). Das bedeutet, dass die Wunde zwar nicht besser werden kann, aber auch nicht das Risiko besteht, dass sie sich verschlimmert. Da die Kraft aus dem Schmerz dieser Wunde entsteht, negiert Magie, die diesen Schmerz aufhebt, auch die Vorteile dieser Tugend. Eine auf diese Weise erlittene Wunde muss vollständig heilen, bevor die Kraft erneut verwendet werden kann, und jeder Charakter, der diese Kraft mehr als dreimal im Jahr einsetzt, muss im Winter einen zusätzlichen Alterungswurf ablegen."
   },
   "virtue.lesser_benediction": {
     "name": "Kleine Segnung",
-    "summary": "Du wurdest von einer übernatürlichen Macht gesegnet."
+    "summary": "Du wurdest von einer übernatürlichen Macht gesegnet.",
+    "description": "Du wurdest von einer übernatürlichen Macht gesegnet. Die Auswirkungen der Segnung sollten vergleichbar mit anderen Kleinen Tugenden sein. (Siehe Einschub für Beispiele.)\n\nBeispiele für Kleine Segnungen\n\nRedegewandtheit\n\nDu bist ein sehr überzeugender Redner; jeder, der versucht, Unwahrheiten in deinen Worten aufzuspüren, erhält einen -3-Abzug auf seine Würfe.\n\nGrüner Daumen\n\nPflanzen gedeihen immer unter deiner Fürsorge. Deine Ernte leidet niemals unter natürlichen Krankheiten oder Schädlingen, solange du persönlich dafür sorgst, und du kannst daher halb so viel mehr Ertrag erzielen wie andere.\n\nKribbelnde Daumen\n\nBefindest du dich in der Gegenwart von jemandem, der dir Böses will, verspürst du ein Kribbeln in den Daumen. Du kannst damit keinen einzelnen Feind aus einer Menge herausidentifizieren.\n\nUngewöhnlich fruchtbar\n\nJede sexuelle Begegnung mit einem Partner des anderen Geschlechts führt zu einer Empfängnis."
   },
   "virtue.lesser_immunity": {
     "name": "Mindere Immunität",
-    "summary": "Du bist immun gegen eine Gefahr, die entweder selten oder nicht tödlich ist – oder beides."
+    "summary": "Du bist immun gegen eine Gefahr, die entweder selten oder nicht tödlich ist – oder beides.",
+    "description": "Du bist immun gegen eine Gefahr, die entweder selten oder nicht tödlich ist – oder beides. Siehe Große Immunität, Seite 83."
   },
   "virtue.lesser_power": {
     "name": "Mindere Macht",
-    "summary": "Der Charakter hat eine übernatürliche Kraft, die er nach Belieben aktivieren kann."
+    "summary": "Der Charakter hat eine übernatürliche Kraft, die er nach Belieben aktivieren kann.",
+    "description": "Der Charakter hat eine übernatürliche Kraft, die er nach Belieben aktivieren kann. Dies sind eine oder mehrere Kräfte, die Hermetischen Formulaischen Zaubern mit einer Gesamtstufe von 25 oder weniger entsprechen. Jede Kraft hat eine Initiative, die der Schnelligkeit des Charakters minus dem Doppelten der Kraft-Magnitude entspricht. Das Aktivieren kostet eine Erschöpfungsstufe, wenn ihre Stufe 25 oder darunter liegt, zwei Erschöpfungsstufen bei Stufe 26 bis 50 und so weiter. Beachte, dass Kräfte mit einer Stufe von 26 oder höher mit der Tugend Große Macht weniger Erschöpfung kosten. Du kannst auch Stufen im Verhältnis eins zu eins ausgeben, um der Kraft Penetration zu geben; andernfalls hat sie eine Penetration von null.\n\nDiese Tugend kann mehr als einmal genommen werden, und die Stufen werden zusammengezählt, um mehrere Kräfte zu erschaffen. Zum Beispiel könnte ein Charakter, der die Tugend zweimal genommen hat, eine Kraft mit einer Stufe von 30 und einer Penetration von 0 sowie eine zweite Kraft mit einer Stufe und Penetration von jeweils 10 haben.\n\nDiese Tugend kann mit jeder übernatürlichen Sphäre verbunden sein. Hast du Zugang zu anderen Büchern, wie etwa Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Sphären der Macht: Das Infernale, Sphären der Macht: Feenwelt oder Heckenzauber Überarbeitete Ausgabe, kannst du die Kraft auf ein anderes System übernatürlicher Kräfte basieren, um etwas zu erhalten, das zum Charakter besser passt. Bedenke dabei, dass die Stufenskala für Effekte in verschiedenen Systemen unterschiedlich sein kann, und du möglicherweise die Anzahl der Effektstufen anpassen möchtest. Die Kraft muss mit derselben übernatürlichen Sphäre verbunden sein wie das System, auf dem sie basiert. (Hast du Zugang zu anderen Büchern, möchtest du Kräfte, die auf Hermetischer Magie basieren, vielleicht auf die Magiesphäre beschränken.)"
   },
   "virtue.lesser_purifying_touch": {
     "name": "Mindere Reinigende Berührung",
-    "summary": "Du kannst durch eine Berührung und den Aufwand einer Erschöpfungsstufe eine bestimmte Krankheit heilen."
+    "summary": "Du kannst durch eine Berührung und den Aufwand einer Erschöpfungsstufe eine bestimmte Krankheit heilen.",
+    "description": "Du kannst durch eine Berührung und den Aufwand einer Erschöpfungsstufe eine bestimmte Krankheit heilen. Diese Krankheit sollte eine sein, von der sich Menschen oft von selbst erholen, oder eine, die nicht besonders schwerwiegend ist. Du kannst nur eine Krankheit wählen, keine Verletzung oder sonstige Heimsuchung. Siehe Seite 406 für Regeln zu Krankheiten und Art und Academe, Seite 45 für weitere Details."
   },
   "virtue.license_of_absence": {
     "name": "Beurlaubungslizenz",
-    "summary": "Dieser Priestercharakter hat eine Beurlaubungslizenz, die ihn von einigen Pflichten befreit."
+    "summary": "Dieser Priestercharakter hat eine Beurlaubungslizenz, die ihn von einigen Pflichten befreit.",
+    "description": "Dieser Priestercharakter hat eine Beurlaubungslizenz, die ihn von einigen Pflichten befreit. Die Lizenz kann nur für wenige Jahre oder auf unbestimmte Zeit gültig sein. Der Charakter hat jedes Jahr ein zusätzliches freies Quartal, doch es wird manchmal erwartet, dass das zusätzliche Quartal für das Studium genutzt wird. Diese Tugend ist kompatibel mit der Tugend Wohlhabend und dem Fehler Arm. Ein wohlhabender Priester mit einer Beurlaubungslizenz hat damit das gesamte Jahr frei; ein Charakter kann jedoch niemals mehr als vier freie Quartale pro Jahr haben. Eine Beurlaubungslizenz kann nur von einem Charakter mit dem Sozialen Status Priester genommen werden. Sie kann nicht von Hochrangigen Klerikern genommen werden."
   },
   "virtue.life_boost": {
     "name": "Lebensstärkung",
-    "summary": "Du kannst deine Zaubersummen für Formulaische oder Ritualzauber steigern, indem du zusätzliche Erschöpfungsstufen aufwendest."
+    "summary": "Du kannst deine Zaubersummen für Formulaische oder Ritualzauber steigern, indem du zusätzliche Erschöpfungsstufen aufwendest.",
+    "description": "Du kannst deine Zaubersummen für Formulaische oder Ritualzauber steigern, indem du zusätzliche Erschöpfungsstufen aufwendest. Jede Erschöpfungsstufe gibt dir einen zusätzlichen Bonus von +5 auf den Wurf, was sehr beeindruckende Penetrationswerte ergeben kann. Du kannst mehr Erschöpfungsstufen verbrennen, als du besitzt. Tust du das, musst du Schaden absorbieren, ohne die Hilfe von Rüstung. Der Schadenssumme beträgt 5 für jede zusätzlich aufgewendete Erschöpfungsstufe, plus ein Stresswürfel. Wendest du also drei zusätzliche Stufen auf, musst du einen Schaden von 15 + Stresswürfel absorbieren, mit deiner Absorption (ohne Rüstung) + Stresswürfel. Auf diese Weise aufgewendete Erschöpfungsstufen werden unabhängig vom Erfolg oder Misserfolg des Zauberwurfs aufgewendet, und ebenso werden erlittene Wunden auch dann erlitten, wenn du den Zauber nicht wirkst. Du kannst dich damit selbst töten. Die Gesamtzahl der zu verwendenden Erschöpfungsstufen muss vor dem Zauberwurf festgelegt werden."
   },
   "virtue.life_linked_spontaneous_magic": {
     "name": "Lebensgebundene Spontane Magie",
-    "summary": "Du kannst mit spontaner Magie mehr erreichen als die meisten Magi, auf Kosten deiner eigenen Lebensenergie."
+    "summary": "Du kannst mit spontaner Magie mehr erreichen als die meisten Magi, auf Kosten deiner eigenen Lebensenergie.",
+    "description": "Du kannst mit spontaner Magie mehr erreichen als die meisten Magi, auf Kosten deiner eigenen Lebensenergie. Wenn du dich entscheidest, diese Fähigkeit beim Wirken eines spontanen Zaubers einzusetzen, gibst du die gewünschte Effektstufe vor dem Wurf an. Diese Stufe kann eine Anzahl von Penetrationsstufen einschließen (siehe Seite 169). Du kannst zum Beispiel wählen, einen Stufe-10-Effekt auf Stufe 20 zu wirken, um eine Penetration von 10 plus deinen Penetrationswert zu erhalten.\n\nWürfle, um einen Ermüdenden Spontanzauber zu wirken. Ist dein Ergebnis nach der Division höher als die von dir angegebene Stufe, wendest du wie üblich nur eine Erschöpfungsstufe auf. Ist dein Ergebnis nach der Division niedriger als die von dir angegebene Stufe, musst du für je fünf Punkte (oder einen Teil davon), um die du die Zielstufe verfehlt hast, eine zusätzliche Erschöpfungsstufe aufwenden. Gehen dir die Erschöpfungsstufen aus, erleidest du eine Wunde. Die Anzahl der noch für den Zauber benötigten Stufen wird als der Betrag behandelt, um den eine Schadenssumme deine Absorption übersteigt, und du erleidest die entsprechende Wunde. Du kannst dich damit selbst töten.\n\nEine Maga mit dieser Tugend kann weiterhin Ermüdende Spontanzauber normal wirken."
   },
   "virtue.light_touch": {
     "name": "Leichte Berührung",
@@ -2238,19 +2267,23 @@
   },
   "virtue.linguist": {
     "name": "Sprachbegabt",
-    "summary": "Du bist außerordentlich begabt darin, neue Sprachen zu erlernen."
+    "summary": "Du bist außerordentlich begabt darin, neue Sprachen zu erlernen.",
+    "description": "Du bist außerordentlich begabt darin, neue Sprachen zu erlernen. Alle Fortschrittssummen für jede Sprache werden um ein Viertel erhöht (aufgerundet), ebenso wie alle Erfahrungspunkte, die du bei der Charaktererschaffung in eine Sprache investierst. Sowohl Lebende als auch Tote Sprachen werden mit dieser Tugend gefördert."
   },
   "virtue.lone_redcap": {
     "name": "Einsame Rotkappe",
-    "summary": "Du bist eine Rotkappe, die keine Bindungen an ein Mercere-Haus unterhält und daher weder Zauberartefakte noch Langlebigkeitsrituale erhält."
+    "summary": "Du bist eine Rotkappe, die keine Bindungen an ein Mercere-Haus unterhält und daher weder Zauberartefakte noch Langlebigkeitsrituale erhält.",
+    "description": "Du bist eine Rotkappe, die keine Bindungen an ein Mercere-Haus unterhält und daher weder Zauberartefakte noch Langlebigkeitsrituale erhält. Du beginnst dennoch mit 300 Erfahrungspunkten für deine fünfzehn als Lehrling verbrachten Jahre und erhältst die Vorteile der Tugend Vielgereist, bist jedoch von den anderen Rotkappen in deiner Gegend entfremdet und hast eine schlechte Reputation der Stufe 2 innerhalb deines Hauses.\n\nDu musst weiterhin jedes Jahr zwei Quartale damit verbringen, Nachrichten zu überbringen und andere Dienste für den Orden zu leisten, denn tust du das nicht, besteht die Möglichkeit, dass du als Orbus erklärt und aus deinem Haus ausgeschlossen wirst. Diese Arbeit reicht aus, um davon zu leben, wenn du keinem Konvent angehörst, sofern du nicht den Fehler Arm nimmst und ein drittes Quartal arbeiten musst. Nimmst du die Tugend Wohlhabend, kannst du deine Stellung mit nur einem Quartal Einsatz pro Jahr aufrechterhalten.\n\nDieser Soziale Status ist mit jedem anderen weltlichen Sozialen Status vereinbar, der dir vernünftigerweise erlaubt, deinen Job als Rotkappe zu erledigen, wie etwa Händler oder Bettelorden."
   },
   "virtue.long_winded": {
     "name": "Ausdauernd",
-    "summary": "Du kannst dich länger anstrengen als die meisten und erhältst +3 auf alle deine Erschöpfungswürfe."
+    "summary": "Du kannst dich länger anstrengen als die meisten und erhältst +3 auf alle deine Erschöpfungswürfe.",
+    "description": "Du kannst dich länger anstrengen als die meisten und erhältst +3 auf alle deine Erschöpfungswürfe. Dieser Bonus gilt nicht für das Wirken von Zaubern."
   },
   "virtue.luck": {
     "name": "Glück",
-    "summary": "Du erzielst gute Ergebnisse in Situationen, in denen Glück mehr eine Rolle spielt als Können oder Talent."
+    "summary": "Du erzielst gute Ergebnisse in Situationen, in denen Glück mehr eine Rolle spielt als Können oder Talent.",
+    "description": "Du erzielst gute Ergebnisse in Situationen, in denen Glück mehr eine Rolle spielt als Können oder Talent. Du erhältst +1 bis +3 (nach Ermessen des Spielleiters) auf Würfe in solchen Situationen, je nachdem, wie viel Glück im Spiel ist. Du spielst gut bei Glücksspielen, könntest aber als Betrüger abgestempelt werden, wenn du sie zu oft spielst."
   },
   "virtue.lupus_the_wolf": {
     "name": "Lupus (der Wolf)",
@@ -2279,15 +2312,18 @@
   },
   "virtue.magical_memory": {
     "name": "Magisches Gedächtnis",
-    "summary": "Dein Gedächtnis wurde entwickelt, um magische statt alltägliche Dinge zu behalten."
+    "summary": "Dein Gedächtnis wurde entwickelt, um magische statt alltägliche Dinge zu behalten.",
+    "description": "Dein Gedächtnis wurde entwickelt, um magische statt alltägliche Dinge zu behalten. Du brauchst keine Labortexte (siehe Seite 262) deiner Erschaffungen aufzubewahren, um beim Reproduzieren den Vorteil eines Labtextes zu erhalten. Hast du einen Effekt einmal nach dem Labortext eines anderen Magus erschaffen, kannst du künftig denselben Vorteil erhalten, ohne den Text vorliegen zu haben."
   },
   "virtue.magical_mount": {
     "name": "Magisches Reittier",
-    "summary": "Der Charakter besitzt ein Reittier, Lasttier oder einen „Wachhund\" – eine Kreatur, die Scharfsinn statt Intelligenz besitzt und einen Machtwert von bis zu 25."
+    "summary": "Der Charakter besitzt ein Reittier, Lasttier oder einen „Wachhund\" – eine Kreatur, die Scharfsinn statt Intelligenz besitzt und einen Machtwert von bis zu 25.",
+    "description": "Der Charakter besitzt ein Reittier, Lasttier oder einen „Wachhund\" – eine Kreatur, die Scharfsinn statt Intelligenz besitzt und einen Machtwert von bis zu 25. Sie hat eine zusätzliche Persönlichkeitseigenschaft (Loyal 0) und gehorcht einfachen verbalen Befehlen. Besitzt sie einen positiven Scharfsinnwert, ist die Kreatur außerdem in der Lage, begrenzt aus eigener Initiative zu handeln. Wenn der Charakter nicht in der Lage ist, die Kreatur selbst zu trainieren, muss sie ein Geschenk eines anderen Charakters (wahrscheinlich eines mächtigen Magus) gewesen sein, und der Charakter muss einen Großen Geschichte-Fehler wählen, um die Konsequenzen darzustellen: Gefälligkeiten, um die Schuld gegenüber seinem Gönner zu verkörpern, ist die einfachste Möglichkeit; Feinde, falls das Reittier weggelockt wurde, ist ebenfalls denkbar. In diesem Fall kann nur ein Gefährte oder ein Charakter auf Magus-Ebene diese Tugend nehmen."
   },
   "virtue.magical_warder": {
     "name": "Magischer Hüter",
-    "summary": "Der Charakter wird von einem magischen Wesen begleitet, das über ihn wacht und darauf achtet, dass ihm kein Schaden widerfährt."
+    "summary": "Der Charakter wird von einem magischen Wesen begleitet, das über ihn wacht und darauf achtet, dass ihm kein Schaden widerfährt.",
+    "description": "Der Charakter wird von einem magischen Wesen begleitet, das über ihn wacht und darauf achtet, dass ihm kein Schaden widerfährt. Das Wesen fordert nichts vom Charakter als Gegenleistung für seinen Dienst; beachte jedoch, dass ein mächtigerer Wächter weniger willens oder in der Lage ist, dem Charakter zu helfen, und seltener verfügbar ist, um ihn zu beschützen.\n\nEin klassisches Beispiel ist das Gespenst einer dem Charakter nahestehenden Person. Das Gespenst ist für jeden unsichtbar und unhörbar außer für dich, es sei denn, jemand besitzt das Zweite Gesicht oder ein anderes übernatürliches Mittel, es zu entdecken. Es kann sehen und hören, was um dich herum vorgeht, und deiner Gegenwart bis zu einem halben Tag fernbleiben – es ist daher ein guter Spion. Beispielwerte für einen solchen Magischen Wächter finden sich auf Seite 457.\n\nGestalte dieses Wesen als magischen Charakter nach den Richtlinien in Kapitel 13 oder in Sphären der Macht: Magie – ein geisterhafter Wächter ist ein gutes Beispiel für einen Gefährtencharakter; er ist weniger mächtig und im Grunde eine Verlängerung des Willens des Charakters, während die Unterstützung eines mächtigeren Wächters seltener und noch situationsabhängiger ist."
   },
   "virtue.magister_in_artibus": {
     "name": "Magister in Artibus",
@@ -2295,23 +2331,28 @@
   },
   "virtue.magister_in_medicina": {
     "name": "Magister in Medicina",
-    "summary": "Der Charakter hat an einer der medizinischen Schulen Europas (Salerno, Cremona, Montpellier oder Bologna) einen Doktortitel in Medizin erlangt und seine obligatorischen zwei Jahre Pflichtlehre absolviert."
+    "summary": "Der Charakter hat an einer der medizinischen Schulen Europas (Salerno, Cremona, Montpellier oder Bologna) einen Doktortitel in Medizin erlangt und seine obligatorischen zwei Jahre Pflichtlehre absolviert.",
+    "description": "Der Charakter hat an einer der medizinischen Schulen Europas (Salerno, Cremona, Montpellier oder Bologna) einen Doktortitel in Medizin erlangt und seine obligatorischen zwei Jahre Pflichtlehre absolviert. Diese Tugend bietet dieselben Vorteile wie Doktor in (Fachgebiet). Sie ist kompatibel mit den Tugenden Hermetischer Magus und Priester. Beachte: Diese Tugend steht auch weiblichen Charakteren zur Verfügung, obwohl diese nur an der Schule von Salerno graduiert haben müssen, während männliche Charaktere an jeder der medizinischen Schulen graduiert haben können."
   },
   "virtue.major_magical_focus": {
     "name": "Großer Magischer Fokus",
-    "summary": "Deine Magie ist in einem recht begrenzten Bereich deutlich wirkungsvoller, etwa Wetter, Nekromantie, Vögel oder Gefühle."
+    "summary": "Deine Magie ist in einem recht begrenzten Bereich deutlich wirkungsvoller, etwa Wetter, Nekromantie, Vögel oder Gefühle.",
+    "description": "Deine Magie ist in einem recht begrenzten Bereich deutlich wirkungsvoller, etwa Wetter, Nekromantie, Vögel oder Gefühle. Dieser Bereich sollte kleiner sein als eine einzelne Kunst, darf sich aber über mehrere Künste erstrecken – Nekromantie beispielsweise umfasst sowohl Corpus- als auch Mentem-Effekte. Du kannst keinen Fokus auf Laboraktivitäten haben, obwohl ein Fokus durchaus auf Laboraktivitäten angewandt wird.\n\nWenn du einen Zauber wirkst oder eine Laborsumme innerhalb deines Fokus berechnest, addiere den niedrigsten anwendbaren Kunstwert zweifach. Besitzt ein Zauber Requisiten, kann der niedrigste anwendbare Wert einer der Requisiten sein anstatt einer der primären Künste. Hat ein Magus also einen Fokus auf Vögel und wirkt einen Zauber, der einen Vogel in reines Feuer verwandelt (MuAn mit Ig als Requisit), mit Muto 14, Animal 18 und Ignem 10, beträgt seine Gesamtsumme 34 plus weitere Modifikatoren: 14 von Muto und 20 durch die doppelte Addition von Ignem. Wirkt er einen Zauber, der einen Vogel in einen anderen Vogel verwandelt (MuAn ohne Requisiten), beträgt seine Summe 46 plus weitere Modifikatoren: 18 von Animal und 28 durch die doppelte Addition von Muto.\n\nEin Charakter kann nur einen Magischen Fokus besitzen, ob groß oder klein, unabhängig von der Quelle des Fokus.\n\nBeispiele für Große Magische Foki\n\nDiese Liste ist lediglich beispielhaft. Andere Foki sind möglich.\n\n- Animal: Vögel oder Säugetiere oder domestizierte Tiere. - Aquam: Salzwasser oder Süßwasser. - Auram: Wetter. - Corpus: Männer oder Frauen. - Herbam: Bäume oder Nutzpflanzen. - Imaginem: Visuelle Bilder, Klangbilder, Tastbilder oder Geschmack und Geruch gemeinsam. - Mentem: Gefühle oder Erinnerungen. - Terram: Metalle oder Stein. - Nekromantie: Corpus und Mentem, angewandt auf Körper und Geister Verstorbener. - Schaden: Jede Kunst, solange der Effekt direkt Schaden verursacht, entweder durch das Zufügen einer Wunde oder durch eine bestimmte Schadensmenge, die absorbiert werden kann. - Verkleidung: Das Verändern des Erscheinungsbildes von etwas, mit beliebigen Mitteln."
   },
   "virtue.maker_of_textured_vessels": {
     "name": "Hersteller gemusterter Gefäße",
-    "summary": "Gemusterte Gefäße sind solche, in deren Oberflächen vor dem Brennen mystische Muster eingedrückt wurden."
+    "summary": "Gemusterte Gefäße sind solche, in deren Oberflächen vor dem Brennen mystische Muster eingedrückt wurden.",
+    "description": "Gemusterte Gefäße sind solche, in deren Oberflächen vor dem Brennen mystische Muster eingedrückt wurden. Ein Charakter mit dieser Tugend besitzt ein Repertoire an Formen: eine Form pro Stufe der Fertigkeit Handwerk: Töpfer. Jede Form entspricht einer Fertigkeit, und der Charakter erlangt zusätzliche Formen, wenn die Handwerksfertigkeit steigt. Der Charakter benötigt ein Quartal, um jede neue Form zu erlernen, wenn seine Fertigkeit steigt, und er braucht die Unterstützung von jemandem, der die gewünschte neue Form bereits kennt.\n\nDas Herstellen eines Gefäßes kostet eine Langzeit-Erschöpfungsstufe. Jedes Gefäß verleiht +3 auf eine einzelne Fertigkeit. Die Materialien, die beim Würfelwurf verwendet werden, müssen im Gefäß aufbewahrt worden sein. Das Aufbewahren von Materialien für Fertigkeiten in Töpfen verursacht keine Verzerrung. Das erste Mal, wenn ein Charakter einen Topf auf diese Weise verwendet, nimmt er den Benutzer als seinen Eigentümer an und gewährt keinem anderen mehr einen Bonus. Ein Topf ist eine Arkane Verbindung zu seinem Meister. Charaktere mit Magieresistenz können nicht von Töpfen beansprucht werden und erhalten keinen Nutzen aus ihnen.\n\nEine gesonderte Version dieser Tugend erlaubt dem Charakter, Ledergefäße herzustellen, und stützt sich auf Handwerk: Lederarbeiter. Sie ist ansonsten identisch. In den afrikanischen Kulturen, in denen diese Tugend am häufigsten vorkommt, ist die Töpferversion mit Frauen und die Lederversion mit Männern verbunden; dies schränkt jedoch nicht ein, welche Charaktere welche Version nehmen können."
   },
   "virtue.maker_of_water_vessels": {
     "name": "Hersteller von Wassergefäßen",
-    "summary": "Ein Charakter, der aus einem magischen Wassergefäß trinkt, das von einem Charakter mit dieser Tugend hergestellt wurde, darf einen Fertigkeitswert gegen den Handwerk: Töpfer-Wert des Herstellers zum Zeitpunkt der Herstellung des Gefäßes tauschen."
+    "summary": "Ein Charakter, der aus einem magischen Wassergefäß trinkt, das von einem Charakter mit dieser Tugend hergestellt wurde, darf einen Fertigkeitswert gegen den Handwerk: Töpfer-Wert des Herstellers zum Zeitpunkt der Herstellung des Gefäßes tauschen.",
+    "description": "Ein Charakter, der aus einem magischen Wassergefäß trinkt, das von einem Charakter mit dieser Tugend hergestellt wurde, darf einen Fertigkeitswert gegen den Handwerk: Töpfer-Wert des Herstellers zum Zeitpunkt der Herstellung des Gefäßes tauschen. Dieser Effekt hält eine Szene oder drei Minuten an, je nachdem, was länger ist. Jedes Gefäß ist bei seiner Herstellung durch seine Form an eine bestimmte Fertigkeit gebunden.\n\nJeder Charakter kennt eine Vielzahl von Gefäßformen, wobei jede Form einer einzelnen Fertigkeit entspricht. Ein beginnender Charakter kennt eine Anzahl von Formen, die seinem Handwerk: Töpfer-Wert entspricht. Der Charakter benötigt ein Quartal, um eine neue Form zu erlernen, wenn seine Fertigkeit steigt, und er braucht die Unterstützung von jemandem, der die gewünschte neue Form bereits kennt. Das Herstellen eines Gefäßes kostet eine Langzeit-Erschöpfungsstufe.\n\nNachdem ein Gefäß zum ersten Mal getrunken wurde, nimmt es den Trinker als seinen Eigentümer an. Anderen Trinkern gewährt das Gefäß keinen Nutzen, und es wird zu einer Arkanen Verbindung zu seinem Eigentümer. Charaktere mit Magieresistenz können nicht von Gefäßen beansprucht werden. Der erste Trunk aus einem unbesessenen Gefäß – durch den das Eigentum begründet wird – verursacht Verzerrung, es sei denn, der Trinker besitzt Übernatürliche Tugenden. Ebenso verursacht das Trinken aus einem Gefäß, das man nicht besitzt, Verzerrung, es sei denn, der Trinker besitzt Übernatürliche Tugenden. Eine gesonderte Version dieser Tugend erlaubt dem Charakter, Ledergefäße herzustellen, und stützt sich auf Handwerk: Lederarbeiter. Sie ist ansonsten identisch. In den afrikanischen Kulturen, in denen diese Tugend am häufigsten vorkommt, ist die Töpferversion mit Frauen und die Lederversion mit Männern verbunden; dies schränkt jedoch nicht ein, welche Charaktere welche Version nehmen können."
   },
   "virtue.male_guild_sponsor": {
     "name": "Männlicher Gildensponsor",
-    "summary": "Der Vater oder Ehemann des Charakters ist ein Gildenhandwerker und hat ihr den Eintritt in seinen Arbeitsbereich erlaubt, der andernfalls Männern vorbehalten ist."
+    "summary": "Der Vater oder Ehemann des Charakters ist ein Gildenhandwerker und hat ihr den Eintritt in seinen Arbeitsbereich erlaubt, der andernfalls Männern vorbehalten ist.",
+    "description": "Der Vater oder Ehemann des Charakters ist ein Gildenhandwerker und hat ihr den Eintritt in seinen Arbeitsbereich erlaubt, der andernfalls Männern vorbehalten ist. Der Charakter darf ihrem Handwerk nachgehen und dabei denselben Verfahren folgen wie die regulären männlichen Arbeiter. Jede Gilde gestattet solchen Mitgliedern, also darf sie jedes Handwerk ausüben, das sie wünscht. Der Charakter muss zusätzlich zu dieser freien Tugend eine gesonderte Sozialer-Status-Tugend der Gilde wählen, um seinen Stand im Gildensystem darzustellen. Diese Tugend ist nur weiblichen Charakteren zugänglich und ist mit allen Sozialer-Status-Tugenden kompatibel."
   },
   "virtue.mamluk": {
     "name": "Mamluk",
