@@ -155,7 +155,13 @@
      outside on the dark side. Its edge is defined by its `--accent` border and
      `--shadow-pop`, the same two things that define it in the dark. */
   --bg: #f0eeea;
-  --panel: #fafaf8;
+  /* U5 (P7, `docs/open-todos.md`, 2026-09-13): "table and panel backgrounds
+     should be a lighter beige, not white" — this was #fafaf8, a near-neutral
+     (R-B of 2). #f7f3ea is a warm, clearly-tinted beige (R-B of 13) that keeps
+     the ladder above (panel the brightest of the three) and stays comfortably
+     above 4.5:1 against `--ink`, computed in `app.css.test.ts` rather than
+     eyeballed. */
+  --panel: #f7f3ea;
   --surface-raised: #f5f4f0;
   --surface-overlay: #ffffff;
 
@@ -337,27 +343,20 @@ h6 {
   gap: 0.75rem;
 }
 
-/* The Ars Magica Open License attribution mark. Sized so that the CONTROLS set
-   the row's height and the mark never does — see app.css.test.ts, which derives
-   the ceiling from the shared `select, input, button` rule rather than restating
-   a number. */
+/* The Ars Magica Open License attribution mark. Moved into `.char-banner` by
+   U4/P5 (`docs/open-todos.md`) — right-bound beside the type/name column,
+   sized to THEIR combined height now, not the header's. See app.css.test.ts,
+   which derives the ceiling from `.char-type`'s and `.name-input`'s own
+   font-sizes rather than restating a number: 2.4rem clears both a floor of one
+   name-line and a ceiling of the two lines combined. */
 .app-logo {
-  height: 1.5rem;
+  height: 2.4rem;
   width: auto;
 }
 
-/* Active save's file name (with an ASCII dirty marker), so the current document
-   and its unsaved state are visible on-screen and not only in the OS window
-   title. It leads the row now that the logo and the title have left it. */
-.doc-status {
-  color: var(--muted);
-  font-size: var(--font-small);
-  font-variant-numeric: tabular-nums;
-}
-
-/* The auto margin lives here rather than on `.doc-status`, which used to carry
-   it: the status is absent on the startup screen, and the controls have to end
-   up on the right on that screen too. */
+/* The auto margin pushes what is left in the header (the error banner) to the
+   right on every screen, including the startup one, which renders nothing
+   here at all. */
 .controls {
   display: flex;
   gap: 1rem;
@@ -590,13 +589,47 @@ button:disabled {
 }
 
 /* Character name + short description, edited in place between the app header
-   and the tab bar. Borderless until hovered/focused so they read as text. */
+   and the tab bar. Borderless until hovered/focused so they read as text.
+
+   U4 (P5+P6, `docs/open-todos.md`): a ROW now, not a column — the type/name/
+   description column plus the licence logo, right-bound beside it. The logo
+   sits here as a plain second flex item rather than under a `margin-left:
+   auto` of its own: `.char-banner-main`'s `flex: 1` already claims every
+   pixel neither column needs, which pushes the logo to the row's end without
+   a second, driftable answer to the same question. `align-items: flex-start`
+   keeps the logo pinned to the TOP of the row rather than centred against the
+   full three-line column (type + name + description), since it is sized to
+   the first two lines only (its own rule below). */
 .char-banner {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--region-border);
+}
+
+/* The type/name/description column — what `.char-banner` itself used to be,
+   before U4 gave it a second column (the logo) and needed a row instead. */
+.char-banner-main {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  padding: 0.5rem 1.5rem;
-  border-bottom: 1px solid var(--region-border);
+  flex: 1;
+  min-width: 0;
+}
+
+/* The one-liner description beside the guided-creation entry (P6). A flex row
+   so the button takes only the width its label needs and the description
+   takes the rest — see the `.desc-input` override below the shared
+   `.char-banner .name-input, .char-banner .desc-input` rule, which is what
+   makes that true instead of the `width: 100%` that rule declares for a lone
+   input on its own line. (Declared AFTER it deliberately: both selectors carry
+   equal specificity, so source order is what lets this one win.) */
+.char-banner-desc-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 /* Read-only character type, above the name: chosen once at creation, so it is
@@ -653,6 +686,17 @@ button:disabled {
 .char-banner .desc-input::placeholder {
   color: var(--muted);
   opacity: var(--dim-chrome);
+}
+
+/* Overrides the shared rule above for the description specifically, now that
+   it shares its row with the guided-creation button (P6): `flex: 1` lets it
+   take the row's spare width instead of the fixed `width: 100%` that assumed
+   it was alone on its line, and `width: auto` is what stops that percentage
+   from still winning as a computed-width floor underneath the flex sizing. */
+.char-banner-desc-row .desc-input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
 }
 
 /* Multi-line free-text fields (character concept and the warping effect on the
@@ -2449,18 +2493,6 @@ ul {
   overflow-y: auto;
 }
 
-/* What is left of the header's document strip after C3c retired the toolbar:
-   the guided-creation entry and the error banner. It stays a flex row of its own
-   rather than letting the two become direct children of `.controls`, because
-   `.controls` aligns to `flex-end` — which would bottom-align a small-type error
-   line against a full-height button instead of centring them on each other, the
-   way the strip they came from did. */
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
 /* A failed-operation banner: the start screen's ruleset load failure, the
    header's error line. NOT named `.error` (guided-creation-review-2026-08
    #6): a bare one-word class carrying typography collides with every element that
@@ -2481,11 +2513,11 @@ ul {
 }
 
 /* The banner and its technical-detail disclosure as one block (E4). A column,
-   because both of its mounts want the detail UNDER the sentence rather than
-   beside it: `.header-actions` is a flex ROW, so without this the disclosure
-   would become a second item on the chrome strip and open into a column as wide
-   as its own label. `align-items: flex-start` keeps the collapsed summary at its
-   own width instead of stretching it across the block. */
+   because its mount wants the detail UNDER the sentence rather than beside it:
+   `.controls` is a flex ROW, so without this the disclosure would become a
+   second item on the chrome strip and open into a column as wide as its own
+   label. `align-items: flex-start` keeps the collapsed summary at its own
+   width instead of stretching it across the block. */
 .error-banner-block {
   display: flex;
   flex-direction: column;

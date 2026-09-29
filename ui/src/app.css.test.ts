@@ -364,6 +364,33 @@ describe('app.css', () => {
     }
   });
 
+  // U5 (P7, `docs/open-todos.md`, 2026-09-13): "Table and panel backgrounds
+  // should be a lighter beige, not white" — the light palette's `--panel` was
+  // #fafaf8 (R-B of 2: a near-neutral, not a tint), and `.derived-table` and
+  // every `.panel` (AgingPanel, VirtueFlawTab's source panels, …) paint from
+  // it, so ONE token carries both. Proven rather than eyeballed, per P7's own
+  // instruction: a warm bias wide enough to actually read as beige, and the
+  // 4.5:1 obligation against `--ink` computed in BOTH palettes — the dark
+  // palette's panel is already not white, so this only has to stay true of it,
+  // not change to satisfy it.
+  it('gives the light palette a beige panel, not a flat white one, and keeps it AA (P7)', () => {
+    const panel = tokenValue(LIGHT, '--panel');
+    const [r, g, b] = channels(panel).map((value) => Math.round(value * 255));
+    expect(
+      r - b,
+      `light --panel ${panel} should read as a warm beige, not a neutral white`,
+    ).toBeGreaterThanOrEqual(8);
+    expect(r, `light --panel ${panel} should shade warm (R >= G >= B)`).toBeGreaterThanOrEqual(g);
+    expect(g).toBeGreaterThanOrEqual(b);
+
+    for (const selector of [DARK, LIGHT]) {
+      expect(
+        contrastRatio(tokenValue(selector, '--ink'), tokenValue(selector, '--panel')),
+        `${selector}: --ink over --panel`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   // E4's technical-detail disclosure is new running text on the window
   // background — the start screen's error block and the header's both sit
   // directly on `--bg`, neither declaring a surface of its own. It dims nothing
@@ -946,13 +973,6 @@ describe('app.css', () => {
   // "header real estate"), because a stylesheet can only pin the numbers that were
   // chosen, never the box they produce. These are the fast guards on those numbers.
 
-  /** The shared `select, input, button` base rule — what sizes the header's row. */
-  const controlBaseBody = (): string => {
-    const block = /^select,\ninput,\nbutton\s*\{([^}]*)\}/m.exec(cssWithoutComments);
-    expect(block, 'app.css should declare a shared control base rule').not.toBeNull();
-    return block![1];
-  };
-
   it('keeps the whole header on a single row', () => {
     // Asserted as an ABSENCE, because the bug was a rule and not a missing one:
     // `.brand` existed only to hold `flex: 1 1 100%`, and nothing in the header
@@ -973,18 +993,38 @@ describe('app.css', () => {
     expect(vertical).toBeGreaterThan(0);
   });
 
-  it('sizes the logo so it can never be the thing setting the header height', () => {
+  // U4 (P5, `docs/open-todos.md`, 2026-09-13): the logo left the header for
+  // `.char-banner`, right-bound beside the character-type/name column, "sized
+  // to the combined height of the character-type and character-name lines" —
+  // a different ceiling than the header's own control row, which no longer
+  // constrains it at all now that it is not there. Modelled the same way the
+  // retired header test modelled the control row: each line's own font-size at
+  // an ordinary ~1.2 line-height, with padding/border left out of the model
+  // exactly as that one left out everything but the line box it was budgeting.
+  it('sizes the logo to the type-plus-name lines it now sits beside, not the header row (P5)', () => {
     const logoPx = lengthPx(/height:\s*([^;]+);/.exec(ruleBody('app-logo'))![1]);
 
-    // Derived from the control that DOES set the row height — the Settings button
-    // — rather than compared against a number someone picked: its line box plus
-    // the shared vertical padding and its 1px border pair. A logo taller than that
-    // makes the licence mark, not the app's controls, the header's height budget.
-    const [controlVertical] = paddingPx(controlBaseBody());
-    const controlRowPx = ROOT_FONT_PX * 1.2 + 2 * controlVertical + 2;
+    const typeLinePx = scaleStepRem('font-small') * ROOT_FONT_PX * 1.2;
+    const nameLinePx = 1.4 * ROOT_FONT_PX * 1.2; // `.char-banner .name-input`'s own font-size
+    const twoLineCeilingPx = typeLinePx + nameLinePx;
 
     expect(logoPx).toBeGreaterThan(0);
-    expect(logoPx).toBeLessThanOrEqual(controlRowPx);
+    // Tall enough to read as spanning BOTH lines, not a sliver dwarfed by them.
+    expect(logoPx).toBeGreaterThanOrEqual(nameLinePx);
+    expect(logoPx).toBeLessThanOrEqual(twoLineCeilingPx);
+  });
+
+  // P5's placement: right-bound beside the type/name column, which the
+  // structural tests in `CharacterBanner.test.ts` already pin (source order +
+  // an intervening `.char-banner-main` wrapper). This is the layout rule that
+  // makes "right-bound" true: the row is a flex row, and the main column's
+  // `flex: 1` is what pushes the logo to its end — not an explicit
+  // `margin-left: auto` on the logo, which would be a second, driftable answer
+  // to the same question.
+  it('lays the banner out as a row so the logo can sit right-bound beside the column (P5)', () => {
+    expect(ruleBody('char-banner')).not.toMatch(/flex-direction:\s*column/);
+    expect(ruleBody('char-banner-main')).toMatch(/flex-direction:\s*column/);
+    expect(ruleBody('char-banner-main')).toMatch(/flex:\s*1/);
   });
 
   it('centres the characteristics panel itself, in either mount', () => {

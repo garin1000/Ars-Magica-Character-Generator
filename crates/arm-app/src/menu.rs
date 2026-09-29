@@ -41,9 +41,20 @@ pub const ACTION_SAVE: &str = "menu.save";
 pub const ACTION_SAVE_AS: &str = "menu.save-as";
 pub const ACTION_EXPORT: &str = "menu.export";
 pub const ACTION_SETTINGS: &str = "menu.settings";
+/// Window → Fullscreen, on the two desktops where the predefined role is a
+/// dead click (P1, `docs/open-todos.md`): muda's Windows and GTK backends
+/// implement no OS behaviour for [`PredefinedRole::Fullscreen`] at all, only
+/// macOS's does (`toggleFullScreen:`,
+/// muda-0.19.3/src/platform_impl/macos/mod.rs:989). [`window_section`] gives
+/// Windows and Linux a real `Action` instead; macOS keeps the native
+/// predefined item, which genuinely works there. Carries no accelerator,
+/// exactly like muda's own non-macOS default for this role.
+pub const ACTION_FULLSCREEN: &str = "menu.fullscreen";
 
-/// Every action id the menu can emit. The frontend maps each to the very store
-/// action that owns the file operation; see `ui/src/lib/menu.ts`.
+/// Every action id the menu can emit. The frontend maps each to the store
+/// action it runs — the five document actions plus Settings to
+/// `store.runDocumentAction`, Fullscreen to the window itself rather than a
+/// document action (`ui/src/lib/menu.ts`, `App.svelte`'s `runMenuAction`).
 pub const ACTION_IDS: &[&str] = &[
     ACTION_NEW,
     ACTION_OPEN,
@@ -51,6 +62,7 @@ pub const ACTION_IDS: &[&str] = &[
     ACTION_SAVE_AS,
     ACTION_EXPORT,
     ACTION_SETTINGS,
+    ACTION_FULLSCREEN,
 ];
 
 /// The Tauri event a chosen menu item is announced on. A menu click is handled
@@ -280,17 +292,38 @@ fn edit_section(labels: &MenuLabels) -> MenuSection {
 
 /// The Window submenu. `CloseWindow` is a close *request*, so it reaches the
 /// unsaved-changes guard in `main.rs` like the title-bar X does.
-fn window_section(labels: &MenuLabels) -> MenuSection {
-    section(
-        SECTION_WINDOW,
-        &labels.window,
+///
+/// Fullscreen (P1, `docs/open-todos.md`) is a real [`MenuEntry::Action`] on
+/// every desktop except macOS, not [`PredefinedRole::Fullscreen`]: muda's
+/// Windows and GTK backends implement no OS behaviour for that role at all —
+/// only macOS's does (`toggleFullScreen:`,
+/// muda-0.19.3/src/platform_impl/macos/mod.rs:989) — so on the other two the
+/// predefined item was a click that did nothing, confirmed on Windows hardware
+/// as well as Linux. The frontend handles the action id itself
+/// (`App.svelte`'s `runMenuAction`), through `getCurrentWindow().setFullscreen()`
+/// — the real Tauri window API, entirely independent of muda's menu backend.
+fn window_section(platform: Platform, labels: &MenuLabels) -> MenuSection {
+    let fullscreen = if platform == Platform::MacOs {
+        predefined(PredefinedRole::Fullscreen, &labels.fullscreen)
+    } else {
+        action(ACTION_FULLSCREEN, &labels.fullscreen, true)
+    };
+
+    // Linux/BSD (muda's GTK backend, see `menu_model`'s doc comment) cannot
+    // honour Minimize or CloseWindow as predefined items, but Fullscreen is a
+    // plain custom `Action` now — the same kind of item the File section
+    // already renders correctly there — so it alone is offered.
+    let items = if platform == Platform::Other {
+        vec![fullscreen]
+    } else {
         vec![
             predefined(PredefinedRole::Minimize, &labels.minimize),
-            predefined(PredefinedRole::Fullscreen, &labels.fullscreen),
+            fullscreen,
             MenuEntry::Separator,
             predefined(PredefinedRole::CloseWindow, &labels.close_window),
-        ],
-    )
+        ]
+    };
+    section(SECTION_WINDOW, &labels.window, items)
 }
 
 /// The menu `platform` should show.
@@ -308,12 +341,14 @@ fn window_section(labels: &MenuLabels) -> MenuSection {
 ///   which ends the message loop instead of raising a close request, so it
 ///   would walk straight past the guard. Window → Close Window posts `WM_CLOSE`
 ///   (`muda-0.19.3/src/platform_impl/windows/mod.rs:1220`) and is guarded, so that is the offered way out.
-/// * **Linux/BSD** — File only. muda's GTK backend renders just Separator,
-///   Copy, Cut, Paste, SelectAll and About and silently drops every other
-///   predefined item (`muda-0.19.3/src/platform_impl/gtk/mod.rs:36-43`), and
-///   even those four are inert unless tauri's `linux-libxdo` feature is
-///   enabled, which it is not. An Edit menu there would be four dead entries
-///   and a Window menu would be empty.
+/// * **Linux/BSD** — File, plus a Window section carrying only the Fullscreen
+///   action. muda's GTK backend renders just Separator, Copy, Cut, Paste,
+///   SelectAll and About and silently drops every other predefined item
+///   (`muda-0.19.3/src/platform_impl/gtk/mod.rs:36-43`), and even those four
+///   are inert unless tauri's `linux-libxdo` feature is enabled, which it is
+///   not. An Edit menu there would be four dead entries, and Minimize/
+///   CloseWindow would be two more — but Fullscreen is a plain custom
+///   `Action` (P1), which GTK renders exactly as it renders every File item.
 pub fn menu_model(platform: Platform, labels: &MenuLabels, flags: &MenuFlags) -> Vec<MenuSection> {
     let mut file_items = document_actions(labels, flags);
     if platform != Platform::MacOs {
@@ -340,10 +375,10 @@ pub fn menu_model(platform: Platform, labels: &MenuLabels, flags: &MenuFlags) ->
             ),
             file,
             edit_section(labels),
-            window_section(labels),
+            window_section(platform, labels),
         ],
-        Platform::Windows => vec![file, edit_section(labels), window_section(labels)],
-        Platform::Other => vec![file],
+        Platform::Windows => vec![file, edit_section(labels), window_section(platform, labels)],
+        Platform::Other => vec![file, window_section(platform, labels)],
     }
 }
 

@@ -1,6 +1,7 @@
 // End-to-end: app-wide chrome that is not owned by any one editor tab — boot
-// state and entry, the header's document-status readout, German localization of
-// the chrome itself, and the window.close() bridge for a CLEAN document.
+// state and entry, the window title's document readout (P3/U3 moved this off
+// an on-screen chip), German localization of the chrome itself, and the
+// window.close() bridge for a CLEAN document.
 //
 // A2 (spec consolidation) merged four previously separate spec files into this
 // one, in this fixed order, for two hazards that only exist once they share a
@@ -84,13 +85,13 @@ describe('app entry', () => {
     expect(await $('[data-testid="doc-status"]').isExisting()).toBe(false);
     expect(await $('[data-testid="mode-select"]').isExisting()).toBe(false);
 
-    // The app's own preferences ARE offered here — they are not about a document.
-    await expect($('[data-testid="settings-button"]')).toExist();
+    // U2 (P2, `docs/open-todos.md`): the Settings button is gone from every
+    // screen, including this one — the native menu's Settings item (and its
+    // Ctrl+, chord) is the only way in now.
+    expect(await $('[data-testid="settings-button"]').isExisting()).toBe(false);
 
-    // And the language is offered a second time, on this screen itself (C4). The
-    // settings button says "Settings" in whatever language the app is running in,
-    // which on a first launch is English; a reader who cannot read that word would
-    // otherwise have no way to the one control that fixes it.
+    // The language IS still offered a second time, on this screen itself (C4),
+    // independent of the Settings dialog the button used to open.
     await expect($('[data-testid="start-language-select"]')).toExist();
   });
 
@@ -179,20 +180,26 @@ describe('app entry', () => {
   });
 });
 
-describe('header document status', () => {
-  const STATUS = '[data-testid="doc-status"]';
-
-  it('shows unsaved, then dirty, then the file name after save', async () => {
-    // A brand-new character has never been saved, which is the state the first
-    // assertion below is about — and the status only exists in the editor, never
-    // on the startup screen.
+// U3 (P3+P4, `docs/open-todos.md`, 2026-09-13) retired the on-screen
+// `doc-status` chip this describe used to read — the window title is now the
+// SOLE carrier of this state (P3: the character's own name, falling back to
+// the file name, falling back to the localized "Untitled" placeholder; P4:
+// the chip said the same thing twice). `document.title` is a plain DOM read,
+// not `getText()` on a possibly-clipped element, so it needs none of
+// `clean()`'s bidi-mark stripping — Fluent's isolation marks land in rendered
+// text nodes, not in a property assignment.
+describe('the window title reflects the open document (P3/U3)', () => {
+  it('shows Untitled, then the dirty marker, then the file name after save', async () => {
+    // A brand-new, never-named, never-saved character: the localized
+    // "Untitled" placeholder, clean — P3's bullet 3+4 fallback chain, with no
+    // character name typed so the file-name fallback below is reachable.
     await startCharacter('companion');
     await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
-    const status = await $(STATUS);
-    await status.waitForExist({ timeout: 10000 });
-
-    // A fresh, never-saved document: an "unsaved" label, no file name, no marker.
-    const initial = clean(await status.getText());
+    await browser.waitUntil(
+      async () => !(await browser.execute(() => document.title)).startsWith('Ars Magica'),
+      { timeout: 10000, timeoutMsg: 'the title should move past the bare app title' },
+    );
+    const initial = await browser.execute(() => document.title);
     expect(initial).not.toContain('.json');
     expect(initial.startsWith('*')).toBe(false);
 
@@ -201,12 +208,13 @@ describe('header document status', () => {
     const intInc = await $('[data-testid="char-inc-int"]');
     await intInc.waitForExist({ timeout: 10000 });
     await intInc.click();
-    await browser.waitUntil(async () => clean(await status.getText()).startsWith('*'), {
-      timeout: 5000,
-      timeoutMsg: 'editing should show the dirty marker in the header',
-    });
+    await browser.waitUntil(
+      async () => (await browser.execute(() => document.title)).startsWith('*'),
+      { timeout: 5000, timeoutMsg: 'editing should show the dirty marker in the title' },
+    );
 
-    // Saving shows the file name on-screen and clears the dirty marker.
+    // Saving shows the file name (the character still has none of its own) and
+    // clears the dirty marker.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
     await runDocumentAction('save');
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
@@ -215,83 +223,73 @@ describe('header document status', () => {
     });
     await browser.waitUntil(
       async () => {
-        const t = clean(await status.getText());
+        const t = await browser.execute(() => document.title);
         // Derived, never literal: the fixture carries a per-worker suffix so
         // parallel workers cannot clobber each other's save file, so the name
-        // the header shows is only knowable from the path the config handed us.
+        // the title shows is only knowable from the path the config handed us.
         return t.includes(path.basename(e2eFile)) && !t.startsWith('*');
       },
       {
         timeout: 5000,
-        timeoutMsg: 'header should show the saved file name without a dirty marker',
+        timeoutMsg: 'title should show the saved file name without a dirty marker',
       },
     );
   });
 });
 
-// C5. The header is chrome, and every pixel of it is charged to the character
-// surfaces below on a window whose `minHeight` is 900 (tauri.conf.json). It used
-// to take a whole second row: `.brand` declared `flex: 1 1 100%`, so the controls
-// wrapped at EVERY width — an unconditional break no available width could undo —
-// and above and below that sat 1rem of padding around a 2.25rem logo and an `<h1>`
-// repeating the OS window title.
-//
-// Measured in the real engine, because that is the only place a height exists.
-// `render` from `svelte/server` attaches no stylesheet and happy-dom performs no
-// layout, so app.css.test.ts can pin the numbers that were CHOSEN but never the
-// box they produce.
+// C5's original point survives harder than ever: the header is chrome, and
+// every pixel of it is charged to the character surfaces below on a window
+// whose `minHeight` is 900 (tauri.conf.json). U2/U3/U4 (`docs/open-todos.md`)
+// stripped it down to the `<h1>` (sr-only, zero visual height) and the error
+// banner (empty on a clean run) — the Settings button, the document-status
+// chip and the logo all left it, to the native menu, the window title and
+// `CharacterBanner` respectively.
 describe('header real estate', () => {
-  it('spends one row on the header, with the logo in its upper right', async () => {
+  it('spends no meaningful height on the header now that only the error banner is left', async () => {
     await startCharacter('companion');
-    await $('[data-testid="doc-status"]').waitForExist({ timeout: 30000 });
+    await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
+
+    const height = await browser.execute(
+      () => document.querySelector('.app-header').getBoundingClientRect().height,
+    );
+    // No fixed floor to beat any more (113px, then 48px): the header carries no
+    // visible control at all on a clean run, only its own padding and the
+    // bottom rule.
+    expect(height).toBeGreaterThan(0);
+    expect(height).toBeLessThanOrEqual(40);
+  });
+});
+
+// U4 (P5, `docs/open-todos.md`): the licence logo moved into `CharacterBanner`,
+// right-bound beside the character-type/name column, sized to their combined
+// height. Measured in the real engine, because that is the only place a box
+// exists — `render` from `svelte/server` attaches no stylesheet and happy-dom
+// performs no layout, so `app.css.test.ts` can only pin the numbers that were
+// CHOSEN, never the box a real engine actually lays out.
+describe('the licence logo beside the character name (U4/P5)', () => {
+  it('sits right-bound after the type/name/description column, sized to roughly its first two lines', async () => {
+    await startCharacter('companion');
+    await $('[data-testid="identity-name"]').waitForExist({ timeout: 30000 });
 
     const box = await browser.execute(() => {
       const rect = (el) => {
-        if (!el) return null;
         const r = el.getBoundingClientRect();
         return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, height: r.height };
       };
-      const header = document.querySelector('.app-header');
+      const banner = document.querySelector('.char-banner');
       return {
-        header: rect(header),
-        logo: rect(header.querySelector('.app-logo')),
-        status: rect(header.querySelector('[data-testid="doc-status"]')),
-        settings: rect(header.querySelector('[data-testid="settings-button"]')),
+        banner: rect(banner),
+        logo: rect(banner.querySelector('.app-logo')),
+        main: rect(banner.querySelector('.char-banner-main')),
       };
     });
 
-    // THE BUDGET. One row of controls, its padding and the bottom rule. The header
-    // measured 113px before this slice, which is where the number to beat comes
-    // from; 48 is comfortably above what a single control row needs and still less
-    // than half of what was there.
-    // Measured at 38.8px here against 96.8px before the slice — the budget below
-    // is the guard, not the achievement.
-    expect(box.header.height).toBeLessThanOrEqual(48);
-
-    // ONE ROW, not merely a shorter stack: the three things on it all overlap each
-    // other's vertical band. A wrapped header could satisfy the height budget alone
-    // by shedding padding, and would still be the layout this slice is about.
-    for (const child of [box.logo, box.status, box.settings]) {
-      // `null` would mean the element left the header altogether — the logo, the
-      // status and the Settings button all have to still BE here.
-      expect(child).not.toBe(null);
-      expect(child.top).toBeGreaterThanOrEqual(box.header.top - 1);
-      expect(child.bottom).toBeLessThanOrEqual(box.header.bottom + 1);
-    }
-    expect(box.logo.top).toBeLessThan(box.settings.bottom);
-    expect(box.settings.top).toBeLessThan(box.logo.bottom);
-    expect(box.status.top).toBeLessThan(box.settings.bottom);
-
-    // …and the logo is the rightmost thing on that row — the upper right corner.
-    expect(box.logo.left).toBeGreaterThanOrEqual(box.settings.right);
-    expect(box.logo.right).toBeLessThanOrEqual(box.header.right);
-    // The document status keeps the left, where the eye starts.
-    expect(box.status.left).toBeLessThan(box.settings.left);
-
-    // The dirty marker's only on-screen home survives the shrink AND stays
-    // readable: `getText()` returns '' for an element clipped by `overflow:
-    // hidden`, so this fails loudly if the tightened row started clipping.
-    expect(clean(await $('[data-testid="doc-status"]').getText())).not.toBe('');
+    // Right-bound: after the type/name/description column, inside the banner.
+    expect(box.logo.left).toBeGreaterThanOrEqual(box.main.right);
+    expect(box.logo.right).toBeLessThanOrEqual(box.banner.right + 1);
+    // Sized to roughly the first two lines, not the whole three-line column.
+    expect(box.logo.height).toBeGreaterThan(0);
+    expect(box.logo.height).toBeLessThan(box.main.height);
   });
 });
 

@@ -27,10 +27,9 @@ theme-dark = Dark
 
 # The settings dialog (C4): language, appearance, validation strictness and — since
 # C8 — the saga year new documents start at, all persisted across restarts.
-# Reachable from the native menu's Settings item and from the header button on
-# every screen.
+# Reachable from the native menu's Settings item (U2/P2 retired the header's own
+# button — the menu is the only way in now, on every screen).
 settings-title = Settings
-settings-open = Settings
 settings-close = Close
 # The saga year a NEWLY created character or covenant is stamped with. Deliberately
 # not "Saga year": the saga year itself belongs to each document (`saga-year-label`),
@@ -923,18 +922,17 @@ discard-changes-message = This character has unsaved changes. If you continue, t
 discard-changes-confirm = Discard changes
 discard-changes-cancel = Cancel
 
-# Window title. { $name } is the file name, { $app } the application name; the
-# dirty variant prepends an ASCII marker for a document with unsaved edits.
+# Window title. { $name } is the character's own name, falling back to the
+# open file's name, falling back to `app-title-untitled` below when neither is
+# set; { $app } is the application name. The dirty variant prepends an ASCII
+# marker for a document with unsaved edits — including a brand-new, never-saved
+# one (P3/U3, `docs/open-todos.md`).
 app-title-document = { $name } — { $app }
 app-title-document-dirty = *{ $name } — { $app }
 
-# On-screen document status shown in the header (not only in the OS window
-# title): the active save's file name, with an ASCII marker prepended for a
-# document with unsaved edits, or a label for a document that has never been saved.
-app-document-name = { $name }
-app-document-name-dirty = *{ $name }
-app-document-unsaved = Unsaved document
-app-document-unsaved-dirty = *Unsaved document
+# The window title's own placeholder name, for a character with no name of its
+# own and no save file yet.
+app-title-untitled = Untitled
 
 # Hint shown for an unfilled parameter slot in an item name, e.g. "Puissant (Ability)".
 param-hint = ({ $label })

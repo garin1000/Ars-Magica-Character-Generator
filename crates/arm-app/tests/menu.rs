@@ -10,10 +10,10 @@
 use std::collections::BTreeSet;
 
 use arm_app::menu::{
-    ACTION_EXPORT, ACTION_IDS, ACTION_NEW, ACTION_OPEN, ACTION_SAVE, ACTION_SAVE_AS,
-    ACTION_SETTINGS, InstalledMenuItem, InstalledMenuSection, MENU_ACTION_EVENT, MenuEntry,
-    MenuFlags, MenuLabels, MenuSection, Platform, PredefinedRole, SECTION_APP, SECTION_EDIT,
-    SECTION_FILE, SECTION_WINDOW, is_menu_action_id, menu_model,
+    ACTION_EXPORT, ACTION_FULLSCREEN, ACTION_IDS, ACTION_NEW, ACTION_OPEN, ACTION_SAVE,
+    ACTION_SAVE_AS, ACTION_SETTINGS, InstalledMenuItem, InstalledMenuSection, MENU_ACTION_EVENT,
+    MenuEntry, MenuFlags, MenuLabels, MenuSection, Platform, PredefinedRole, SECTION_APP,
+    SECTION_EDIT, SECTION_FILE, SECTION_WINDOW, is_menu_action_id, menu_model,
 };
 
 /// A [`MenuLabels`] whose every field carries a unique, recognisable sentinel,
@@ -307,12 +307,21 @@ fn no_two_menu_items_answer_to_the_same_chord() {
 // would produce a second, hand-maintained answer to a question the library
 // already answers — and one that a Linux developer machine could never catch
 // being wrong, since `Platform::MacOs`'s model is only ever built in a test.
+//
+// Fullscreen is excluded from both checks below: it deliberately carries no
+// accelerator at all (`ACTION_FULLSCREEN`'s own doc comment — matching muda's
+// own non-macOS default for the predefined role it replaces), and it is not
+// even an `Action` on macOS, where the native predefined item stays. Neither
+// property is what this test is about.
 #[test]
 fn the_chords_name_the_cross_platform_modifier_rather_than_branching_by_hand() {
     let mut per_platform = Vec::new();
     for platform in Platform::ALL {
         let declared = action_accelerators(&model_for(*platform, &all_enabled()));
         for (id, chord) in &declared {
+            if id == ACTION_FULLSCREEN {
+                continue;
+            }
             let chord = chord
                 .as_deref()
                 .unwrap_or_else(|| panic!("{id} has no chord"));
@@ -321,7 +330,10 @@ fn the_chords_name_the_cross_platform_modifier_rather_than_branching_by_hand() {
                 "{platform:?}: {id} declares {chord}, which hardcodes one platform's modifier"
             );
         }
-        let mut sorted = declared;
+        let mut sorted: Vec<_> = declared
+            .into_iter()
+            .filter(|(id, _)| id != ACTION_FULLSCREEN)
+            .collect();
         sorted.sort();
         per_platform.push(sorted);
     }
@@ -362,7 +374,10 @@ fn settings_sits_under_the_app_menu_on_macos_and_under_file_elsewhere() {
 // and it has to land on the right item.
 #[test]
 fn a_cleared_flag_disables_exactly_its_own_action() {
-    for cleared in ACTION_IDS {
+    // Fullscreen carries no `MenuFlags` field at all (`window_section` hardcodes
+    // its `enabled` to `true`) — it is window chrome, not a document action, so
+    // there is nothing in `MenuFlags` for this loop to clear for it.
+    for cleared in ACTION_IDS.iter().filter(|id| **id != ACTION_FULLSCREEN) {
         let mut flags = all_enabled();
         match *cleared {
             ACTION_NEW => flags.new = false,
@@ -393,8 +408,10 @@ fn a_cleared_flag_disables_exactly_its_own_action() {
 // muda 0.19.3's GTK backend renders only Separator/Copy/Cut/Paste/SelectAll/
 // About as predefined items and silently drops the rest, and even those four
 // are inert unless tauri's `linux-libxdo` feature is on (which it is not). An
-// Edit menu there would be three dead entries and a Window menu would be empty,
-// so this desktop gets the File menu it can actually honour.
+// Edit menu there would be three dead entries and Minimize/CloseWindow would
+// be two more, so this desktop gets no predefined item anywhere — but P1 gives
+// it a Window section anyway, carrying only the Fullscreen action, which is a
+// plain custom `MenuEntry::Action` and therefore not subject to any of this.
 #[test]
 fn the_linux_menu_asks_the_os_for_nothing_gtk_cannot_honour() {
     let model = model_for(Platform::Other, &all_enabled());
@@ -405,7 +422,12 @@ fn the_linux_menu_asks_the_os_for_nothing_gtk_cannot_honour() {
         "the GTK menu must contain no predefined item"
     );
     let ids: Vec<&str> = model.iter().map(|section| section.id.as_str()).collect();
-    assert_eq!(ids, vec![SECTION_FILE]);
+    assert_eq!(ids, vec![SECTION_FILE, SECTION_WINDOW]);
+    let window = section(&model, SECTION_WINDOW).expect("a Window section");
+    assert_eq!(
+        action_ids(std::slice::from_ref(window)),
+        vec![ACTION_FULLSCREEN.to_string()]
+    );
 }
 
 // The unsaved-changes guard is a MANDATORY product behavior (CLAUDE.md), and a
@@ -435,6 +457,50 @@ fn only_macos_offers_quit_and_only_through_the_predefined_item() {
     }
 }
 
+// P1 (`docs/open-todos.md`): Window → Fullscreen does nothing on Windows or
+// Linux — confirmed on real Windows hardware as well as Linux. The menu MODEL
+// tests above (`the_file_menu_offers_every_document_action_on_every_platform`,
+// `every_document_action_carries_the_chord_the_os_draws_beside_it`, …) can only
+// ever prove that an item exists and parses correctly; they cannot prove a
+// click does anything, because `PredefinedRole::Fullscreen` has NO OS
+// implementation in muda's Windows or GTK backends — only macOS's does
+// (`toggleFullScreen:`, muda-0.19.3/src/platform_impl/macos/mod.rs:989). So the
+// fix is not a missing handler bolted onto the predefined item — there is
+// nothing on those two backends to bolt it to — it is to stop using a
+// predefined item there at all, and make Fullscreen a real `Action` routed
+// through the SAME single dispatch path every document action already takes
+// (`forward_menu_action` → `menu://action` → the frontend's
+// `getCurrentWindow().setFullscreen()`, proved end-to-end by
+// `App.client.test.ts`'s `the fullscreen menu action actually toggles the
+// window (U1/P1)` — no Tauri window exists in this crate's tests to click
+// through, and WebDriver cannot press a native accelerator either).
+#[test]
+fn fullscreen_is_a_real_action_on_windows_and_linux_not_a_dead_predefined_item() {
+    for platform in [Platform::Windows, Platform::Other] {
+        let model = model_for(platform, &all_enabled());
+        let window = section(&model, SECTION_WINDOW)
+            .unwrap_or_else(|| panic!("{platform:?} should offer a Window section"));
+        assert!(
+            action_ids(std::slice::from_ref(window)).contains(&ACTION_FULLSCREEN.to_string()),
+            "{platform:?}: Window → Fullscreen should be a real action the frontend can \
+             actually handle, not a dead predefined item"
+        );
+        assert!(
+            !predefined_roles(std::slice::from_ref(window)).contains(&PredefinedRole::Fullscreen),
+            "{platform:?}: no OS implementation exists for this predefined role outside macOS"
+        );
+    }
+
+    // macOS is untouched: `toggleFullScreen:` genuinely works there, so nothing
+    // is broken to fix and the native item stays.
+    let mac = model_for(Platform::MacOs, &all_enabled());
+    let mac_window = section(&mac, SECTION_WINDOW).expect("macOS should offer a Window section");
+    assert!(
+        predefined_roles(std::slice::from_ref(mac_window)).contains(&PredefinedRole::Fullscreen),
+        "macOS should keep the native Fullscreen item"
+    );
+}
+
 // Ids cross the IPC boundary and are matched by the frontend, so they are a
 // contract: stable slugs, never text, never repeated.
 #[test]
@@ -447,7 +513,8 @@ fn section_and_action_ids_are_unique_stable_slugs() {
             "menu.save",
             "menu.save-as",
             "menu.export",
-            "menu.settings"
+            "menu.settings",
+            "menu.fullscreen"
         ]
     );
     assert_eq!(

@@ -24,6 +24,17 @@ export type DocumentAction = 'new' | 'open' | 'save' | 'saveAs' | 'export' | 'se
 export const MENU_ACTION_EVENT = 'menu://action';
 
 /**
+ * Window → Fullscreen's menu item id (`arm_app::menu::ACTION_FULLSCREEN`), on
+ * every desktop except macOS — see that constant's own doc comment for why
+ * macOS keeps the native predefined item instead. NOT a {@link DocumentAction}:
+ * it is window chrome, not a document operation, so `App.svelte`'s
+ * `runMenuAction` handles it itself, through `getCurrentWindow().setFullscreen()`
+ * — the real Tauri window API, entirely independent of the menu backend that
+ * left it a dead click on Windows and Linux (P1, `docs/open-todos.md`).
+ */
+export const FULLSCREEN_ACTION_ID = 'menu.fullscreen';
+
+/**
  * Menu item id (`arm_app::menu::ACTION_IDS`) -> the store action it runs.
  * Nothing here reimplements a file operation: each action names the very store
  * method `runDocumentAction` dispatches to. Since C3c removed the toolbar and

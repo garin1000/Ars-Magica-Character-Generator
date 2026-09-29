@@ -161,31 +161,28 @@ describe('App screens', () => {
     expect(openTag(body, 'no-issues')).toBeNull();
   });
 
-  // UPDATED BY C4, from "keeps only the language control in the header". C4 moved
-  // the language and the validation mode into the settings dialog, so what the
-  // header keeps is the way IN to them — a button, on every screen, since the
-  // preferences belong to the app rather than to a document.
-  it('offers settings from the header on the startup screen', () => {
+  // U2 (P2, `docs/open-todos.md`, 2026-09-13): the in-page Settings button is
+  // gone — settings are reachable from the native menu (and its Ctrl+, chord)
+  // now, on every screen, so the in-window button was a second way to reach a
+  // preference the menu already offers. The dialog itself is untouched, only
+  // the button that opened it from here goes; `store.settingsOpen` still gates
+  // it and `store.openSettings()` (routed through the menu's `settings` action)
+  // is still how it opens.
+  it('offers no settings button in the header on the startup screen', () => {
     store.view = 'start';
     const body = html();
 
-    expect(openTag(body, 'settings-button')).not.toBeNull();
+    expect(openTag(body, 'settings-button')).toBeNull();
     // The two controls that used to sit here live in the dialog now, and the dialog
     // is closed, so neither is on screen.
     expect(openTag(body, 'language-select')).toBeNull();
     expect(openTag(body, 'mode-select')).toBeNull();
     // The status would read "unsaved" for a document that does not exist.
-    //
-    // Saving is unavailable here too, and used to be asserted as an absent
-    // `save-button`. Since C3c that availability is a DISABLED MENU ITEM, which
-    // no rendered string can show — the claim lives in `state.svelte.test.ts`'s
-    // "withholds the document-writing actions on the startup screen", against
-    // `documentActionEnabled` itself.
     expect(openTag(body, 'doc-status')).toBeNull();
   });
 
-  it('offers settings from the header in the editor too', () => {
-    expect(openTag(html(), 'settings-button')).not.toBeNull();
+  it('offers no settings button in the editor either', () => {
+    expect(openTag(html(), 'settings-button')).toBeNull();
   });
 
   // --- the header's real estate (C5) -----------------------------------------
@@ -234,35 +231,36 @@ describe('App screens', () => {
     expect(alt![1]).toBe(store.t('app-logo-alt'));
   });
 
-  it('puts the logo last in the header, out of the way of what the user reads', () => {
+  // U4 (P5, `docs/open-todos.md`): the logo moves out of the header entirely —
+  // right-bound beside the character-type/name column in `CharacterBanner`
+  // (`CharacterBanner.test.ts` pins it landing there). The header no longer
+  // renders it at all.
+  it('keeps the licence logo out of the header — it moved beside the character name (U4/P5)', () => {
     const header = headerMarkup(html());
-    // Reading order as well as visual order: the licence mark is the least
-    // important thing on the row, so it comes after the document status and after
-    // every control rather than leading the header the way it used to.
-    expect(header.indexOf('class="app-logo"')).toBeGreaterThan(
-      header.indexOf('data-testid="settings-button"'),
-    );
-    expect(header.indexOf('class="app-logo"')).toBeGreaterThan(
-      header.indexOf('data-testid="doc-status"'),
-    );
+    expect(header).not.toContain('class="app-logo"');
   });
 
-  // GREEN ON ARRIVAL, and deliberately so: this pins SURVIVAL through the shrink
-  // rather than new behaviour. `.doc-status` is the only on-screen surface for
-  // unsaved state since C3c retired the toolbar, and it sat inside the `.brand`
-  // wrapper this slice deletes.
-  it('keeps the document status and its ASCII dirty marker in the header', () => {
+  // U3 (P3+P4, `docs/open-todos.md`, 2026-09-13): the on-screen "document
+  // status" chip is gone outright. The window title already carries the file
+  // name with the same ASCII dirty marker (`app-title-document(-dirty)`,
+  // S4/`App.client.test.ts`) — showing both said the same thing twice, and P4
+  // asks for exactly the on-screen half to go.
+  it('carries no on-screen document-status chip any more (U3/P3+P4)', () => {
     store.currentPath = '/saves/bonisagus.armc.json';
     const header = headerMarkup(html());
-    expect(header).toContain('data-testid="doc-status"');
-    expect(textOf(html(), 'doc-status')).toContain('bonisagus.armc.json');
+    expect(header).not.toContain('data-testid="doc-status"');
+    expect(openTag(html(), 'doc-status')).toBeNull();
+  });
 
-    // The marker is the dirty variant of that same key, and it must be a plain
-    // ASCII asterisk — never a typographic glyph (CLAUDE.md).
-    for (const key of ['app-document-name-dirty', 'app-document-unsaved-dirty']) {
-      const label = store.t(key, { name: 'bonisagus.armc.json' });
-      expect(label.codePointAt(0), key).toBe(0x2a);
-    }
+  // The on-screen chip is gone, but the safety property it used to prove stays
+  // true of its surviving carrier: the window-title dirty marker is still a
+  // plain ASCII asterisk, never a typographic glyph (CLAUDE.md).
+  it('keeps the window-title dirty marker a plain ASCII asterisk', () => {
+    const label = store.t('app-title-document-dirty', {
+      name: 'bonisagus.armc.json',
+      app: store.t('app-title'),
+    });
+    expect(label.codePointAt(0)).toBe(0x2a);
   });
 
   it('renders no settings dialog until it is asked for', () => {
@@ -276,7 +274,9 @@ describe('App screens', () => {
     expect(openTag(body, 'identity-name')).not.toBeNull();
     expect(openTag(body, 'tab-details')).not.toBeNull();
     expect(openTag(body, 'no-issues')).not.toBeNull();
-    expect(openTag(body, 'doc-status')).not.toBeNull();
+    // U3: the on-screen document-status chip is gone (P4); the window title is
+    // its surviving carrier (S4, already covered elsewhere).
+    expect(openTag(body, 'doc-status')).toBeNull();
   });
 
   it('shows the character type as a read-only label, not a selector', () => {
@@ -425,7 +425,13 @@ describe('the header after the document toolbar', () => {
 // in the header while the five that were went to the menu. Offered
 // CONDITIONALLY: a save from another ruleset may name a type this build has no
 // profile for, and a wizard with no rail is not a screen to enter.
-describe('the guided-creation entry in the header', () => {
+//
+// U4 (P6) moves the button itself out of the header and onto the same row as
+// the character's one-liner description, in `CharacterBanner` — pinned
+// structurally in `CharacterBanner.test.ts`. These assertions are unchanged:
+// they only ever checked the testid's presence/text/absence, never its
+// location, so they still hold for wherever it renders.
+describe('the guided-creation entry beside the character description (U4/P6)', () => {
   it('offers continuing the loaded character in the guided flow', () => {
     installRuleset('companion');
     const body = html();
@@ -488,14 +494,17 @@ describe('App and the guided wizard', () => {
   // actions in the guided wizard too" pins `documentActionEnabled` for
   // `view === 'wizard'`. What is still a rendering — and so still belongs here —
   // is the rest of the header.
-  it('keeps the banner and the document controls', () => {
+  //
+  // U2/U3: the settings button and the on-screen document-status chip are both
+  // gone now (the native menu is the only way to Settings; the window title
+  // alone carries the file name/dirty state), on every screen including this
+  // one.
+  it('keeps the banner, with no settings button and no document-status chip', () => {
     const body = html();
     expect(openTag(body, 'character-type')).not.toBeNull();
     expect(openTag(body, 'identity-name')).not.toBeNull();
-    // `mode-select` stood here until C4 moved it into the settings dialog. What the
-    // header keeps on every screen — the wizard included — is the way in to it.
-    expect(openTag(body, 'settings-button')).not.toBeNull();
-    expect(openTag(body, 'doc-status')).not.toBeNull();
+    expect(openTag(body, 'settings-button')).toBeNull();
+    expect(openTag(body, 'doc-status')).toBeNull();
   });
 
   // The wizard docks its own step-scoped panel; a second, unfiltered one below it

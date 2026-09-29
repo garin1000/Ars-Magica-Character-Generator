@@ -3,7 +3,7 @@
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { store } from './lib/state.svelte';
   import { onMenuAction, setAppMenu, updateCloseGuard } from './lib/ipc';
-  import { MENU_ACTIONS, menuLabels } from './lib/menu';
+  import { FULLSCREEN_ACTION_ID, MENU_ACTIONS, menuLabels } from './lib/menu';
   import type { AppError } from './lib/types';
   import SettingsDialog from './lib/components/SettingsDialog.svelte';
   import StartScreen from './lib/components/StartScreen.svelte';
@@ -30,7 +30,6 @@
   import ValidationPanel from './lib/components/ValidationPanel.svelte';
   import ErrorBanner from './lib/components/ErrorBanner.svelte';
   import DiscardPrompt from './lib/components/DiscardPrompt.svelte';
-  import logoUrl from './lib/assets/logo.png';
 
   type Tab =
     | 'characteristics'
@@ -230,8 +229,31 @@
     };
   });
 
+  /**
+   * Toggle the OS window's fullscreen state (U1/P1). Window chrome, not a
+   * document action, so it goes straight to the real Tauri window API rather
+   * than through `store.runDocumentAction` — the fix for Window → Fullscreen
+   * doing nothing on Windows/Linux is exactly that muda's menu backend has no
+   * OS implementation for the predefined role there at all
+   * (`crates/arm-app/src/menu.rs::ACTION_FULLSCREEN`), so nothing routed
+   * through the menu itself could ever have reached the window.
+   *
+   * A rejection is swallowed, like the title-bar effect's `setTitle` call: a
+   * fullscreen toggle failing is cosmetic, not the safety-critical
+   * unsaved-changes guarantee the close guard exists for.
+   */
+  async function toggleFullscreen(): Promise<void> {
+    const window = getCurrentWindow();
+    const isFullscreen = await window.isFullscreen();
+    await window.setFullscreen(!isFullscreen);
+  }
+
   /** Route a native menu item to the store action it names, gate included. */
   function runMenuAction(id: string): void {
+    if (id === FULLSCREEN_ACTION_ID) {
+      void toggleFullscreen().catch(() => {});
+      return;
+    }
     const action = MENU_ACTIONS[id];
     // An id this build does not know (a renamed item, a stale menu) is ignored
     // rather than thrown: the menu is chrome, and a throw here would surface
@@ -289,9 +311,25 @@
   // so a leaked one keeps writing into the store for the life of the webview.
   $effect(() => store.watchSystemTheme());
 
-  // Keep the document title localized rather than hardcoded in HTML. Once a file
-  // is being tracked, show "name — app" (with an ASCII dirty marker for unsaved
-  // edits) via a parametrized Fluent key — never string-composed here.
+  // Keep the document title localized rather than hardcoded in HTML. Show
+  // "name — app" (with an ASCII dirty marker for unsaved edits) via a
+  // parametrized Fluent key — never string-composed here.
+  //
+  // P3 (`docs/open-todos.md`, U3): the title names the CHARACTER, "as is
+  // conventional for desktop applications" — the character's own `name`, not
+  // the save file's. Falls back to the file name where the character has none
+  // (an old save with no name field, or one not yet typed in), and then to the
+  // new `app-title-untitled` label where NEITHER exists — a brand-new,
+  // never-named, never-saved character. The dirty marker reads `store.dirty`
+  // alone (CLAUDE.md: no second, duplicated notion of "unsaved") and applies
+  // in every one of those three cases, which the pre-P3 effect did not: it
+  // branched on `currentFileName === null` only, so an unsaved edit on a
+  // never-saved document showed the bare app title with no marker at all.
+  //
+  // `store.view === 'start'` is its own branch, checked first: the startup
+  // screen has no character on it at all (the entity there is a placeholder,
+  // never a real one — see `AppStore.view`'s own doc comment), so it is the
+  // one case none of the three name fallbacks above may apply to.
   //
   // S4 (full-audit UX): `document.title` alone never reached the native OS
   // window's own title bar — a Tauri window's chrome does not mirror the HTML
@@ -301,14 +339,17 @@
   // update failing is cosmetic, not the safety-critical unsaved-changes
   // guarantee that guard exists for.
   $effect(() => {
-    const name = store.currentFileName;
-    const title =
-      name === null
-        ? store.t('app-title')
-        : store.t(store.dirty ? 'app-title-document-dirty' : 'app-title-document', {
-            name,
-            app: store.t('app-title'),
-          });
+    let title: string;
+    if (store.view === 'start') {
+      title = store.t('app-title');
+    } else {
+      const name =
+        store.entity.name?.trim() || store.currentFileName || store.t('app-title-untitled');
+      title = store.t(store.dirty ? 'app-title-document-dirty' : 'app-title-document', {
+        name,
+        app: store.t('app-title'),
+      });
+    }
     document.title = title;
     void getCurrentWindow()
       .setTitle(title)
@@ -432,78 +473,28 @@
          inside the window was duplicated chrome.
          It is `.sr-only` rather than deleted, because deleting it would take the
          document's ONLY top-level heading with it, and with it the app's only
-         accessible name in-window: the logo beside it is the Ars Magica Open
-         License mark and its alt says exactly that, which is the right name for
-         what the image is and the wrong one for what the application is. -->
+         accessible name in-window: the licence logo (now in `CharacterBanner`,
+         U4) is the Ars Magica Open License mark and its alt says exactly that,
+         which is the right name for what the image is and the wrong one for
+         what the application is. -->
     <h1 class="sr-only">{store.t('app-title')}</h1>
-    <!-- Active save's file name + ASCII dirty marker, on-screen (not only in the
-         OS window title). Reuses the derived currentFileName/dirty state; a null
-         file name means the document has never been saved. Hidden on the startup
-         screen, where it would report an unsaved document that does not exist.
-         First on the row, where the eye starts — it is the only on-screen surface
-         for unsaved state since C3c retired the toolbar. -->
-    {#if store.view !== 'start'}
-      <span class="doc-status" data-testid="doc-status">
-        {#if store.currentFileName === null}
-          {store.t(store.dirty ? 'app-document-unsaved-dirty' : 'app-document-unsaved')}
-        {:else}
-          {store.t(store.dirty ? 'app-document-name-dirty' : 'app-document-name', {
-            name: store.currentFileName,
-          })}
-        {/if}
-      </span>
-    {/if}
-    <!-- The app's own preferences — language, appearance, validation strictness —
-         live behind ONE button now (C4), on every screen, because none of the
-         three is about a character. The language dropdown and the Validation
-         dropdown used to sit here loose; they are the settings dialog's fields
-         now, unchanged, so neither gained a second definition.
-
-         New/Open/Save/Save As/Export are NOT here. C3c retired the toolbar that
-         held them: they are the native menu's (C3a) and the keyboard's, and a
-         third rendering of the same five actions was a third copy of the gate
-         `store.documentActionEnabled` exists to be the only answer to. What
-         stayed is what was never a document action — the way into the settings,
-         the entry into the guided flow, and the error banner.
-
-         `documentActionEnabled('settings')` is what disables it, not `store.busy`
-         directly: the menu item, the button and the dispatcher all have to answer
-         the same question, and the store is where that answer lives. -->
+    <!-- U2 (P2, `docs/open-todos.md`): the Settings button is gone — settings
+         are reachable from the native menu (and its Ctrl+, chord) on every
+         screen now, so the in-window button was a second way to the same
+         preferences dialog, which stays (`SettingsDialog` below) untouched.
+         U3 (P3+P4): the on-screen document-status chip is gone too — the
+         window-title effect above already carries the character name (or the
+         file name, or "Untitled") with the same ASCII dirty marker, so showing
+         both said the same thing twice. U4 (P5+P6): the licence logo and the
+         guided-creation entry both moved into `CharacterBanner`, beside the
+         character name — see there. What is left in the header is the error
+         banner alone, still on every screen except the startup one (it has its
+         own error surface, `StartScreen.svelte`). -->
     <div class="controls">
-      <button
-        type="button"
-        onclick={() => store.runDocumentAction('settings')}
-        disabled={!store.documentActionEnabled('settings')}
-        data-testid="settings-button"
-      >
-        {store.t('settings-open')}
-      </button>
       {#if store.view !== 'start'}
-        <div class="header-actions">
-          <!-- Take the character on screen into the guided flow (#31). Offered
-               only from the editor — the wizard is where it leads — and only for
-               a type the loaded ruleset declares a profile for, since the
-               profile's phases ARE the rail. -->
-          {#if store.view === 'editor' && store.canEnterWizard}
-            <button
-              type="button"
-              onclick={() => store.enterWizard()}
-              disabled={store.busy}
-              data-testid="wizard-continue-button"
-            >
-              {store.t('action-continue-in-wizard')}
-            </button>
-          {/if}
-          <ErrorBanner />
-        </div>
+        <ErrorBanner />
       {/if}
     </div>
-    <!-- The Ars Magica Open License attribution mark, in the upper right and last
-         in reading order: it names neither the app nor anything the user acts on,
-         so it comes after the status and after every control rather than leading
-         the header the way it used to. Small enough that the controls, not the
-         mark, set the row's height (app.css). -->
-    <img class="app-logo" src={logoUrl} alt={store.t('app-logo-alt')} />
   </header>
 
   {#if store.view === 'start'}

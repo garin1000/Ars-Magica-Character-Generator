@@ -138,3 +138,45 @@ describe('CharacterBanner names the character type and nothing else', () => {
     expect(body).not.toContain('type-label =');
   });
 });
+
+// U4 (P5+P6, `docs/open-todos.md`, 2026-09-13): the licence logo moves out of
+// `App.svelte`'s header and into this banner, right-bound beside the
+// character-type/name column; the guided-creation entry moves here too, onto
+// the same row as the one-liner description. `App.test.ts` pins the logo's and
+// the button's ABSENCE from the header; these pin their arrival here.
+describe('CharacterBanner carries the logo and the guided-creation entry (U4)', () => {
+  it('renders the licence logo beside the type/name column', () => {
+    expect(render(CharacterBanner).body).toMatch(/<img[^>]*class="app-logo"[^>]*>/);
+  });
+
+  // "Right-bound... sized to the combined height of the character-type and
+  // character-name lines" (P5): the logo sits AFTER the type/name/description
+  // column, in source order, inside the same `.char-banner` row.
+  it('right-bounds the logo after the type/name/description column', () => {
+    const body = render(CharacterBanner).body;
+    const banner = /<section class="char-banner">([\s\S]*)<\/section>/.exec(body);
+    expect(banner, 'a .char-banner section').not.toBeNull();
+    const mainIndex = banner![1].indexOf('char-banner-main');
+    expect(mainIndex, 'a .char-banner-main column').toBeGreaterThanOrEqual(0);
+    expect(banner![1].indexOf('class="app-logo"')).toBeGreaterThan(mainIndex);
+  });
+
+  // "Move 'continue in guided creation' to below the logo, on the same line as
+  // the character one-liner description" (P6) — `identity-description`
+  // (placeholder: "e.g. Knight of the Teutonic Order…") IS that one-liner.
+  it('puts the guided-creation entry on the same row as the one-liner description', () => {
+    store.view = 'editor';
+    const body = render(CharacterBanner).body;
+    const row = /<div class="char-banner-desc-row">([\s\S]*?)<\/div>/.exec(body);
+    expect(row, 'a .char-banner-desc-row wrapper').not.toBeNull();
+    expect(row![1]).toContain('data-testid="identity-description"');
+    expect(row![1]).toContain('data-testid="wizard-continue-button"');
+  });
+
+  it('withholds the guided-creation entry while the wizard is already on screen', () => {
+    store.view = 'wizard';
+    const body = render(CharacterBanner).body;
+    expect(body).not.toContain('data-testid="wizard-continue-button"');
+    store.view = 'editor';
+  });
+});

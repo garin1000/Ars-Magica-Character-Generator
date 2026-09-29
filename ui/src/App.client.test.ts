@@ -21,9 +21,26 @@ import type { DerivedTotals, EffectiveScores, Entity, LocalizedRuleset } from '.
 // into its own chrome automatically. `getCurrentWindow` is hoisted so the
 // SAME mock function backs every `getCurrentWindow()` call, letting tests
 // assert on it directly.
-const { setTitleMock } = vi.hoisted(() => ({ setTitleMock: vi.fn().mockResolvedValue(undefined) }));
+// U1 (P1): Window → Fullscreen had no handler outside macOS — muda's Windows
+// and GTK backends never implement the predefined role at all (see
+// `crates/arm-app/tests/menu.rs`'s
+// `fullscreen_is_a_real_action_on_windows_and_linux_not_a_dead_predefined_item`),
+// so the fix routes it through `getCurrentWindow().isFullscreen()`/`setFullscreen()`
+// exactly like the title-bar effect already reaches `setTitle` — real Tauri
+// window API, decoupled from muda's menu backend entirely. `isFullscreenMock`
+// and `setFullscreenMock` join `setTitleMock` on the SAME hoisted mock so every
+// `getCurrentWindow()` call in the component sees them.
+const { setTitleMock, isFullscreenMock, setFullscreenMock } = vi.hoisted(() => ({
+  setTitleMock: vi.fn().mockResolvedValue(undefined),
+  isFullscreenMock: vi.fn().mockResolvedValue(false),
+  setFullscreenMock: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ setTitle: setTitleMock }),
+  getCurrentWindow: () => ({
+    setTitle: setTitleMock,
+    isFullscreen: isFullscreenMock,
+    setFullscreen: setFullscreenMock,
+  }),
 }));
 
 vi.mock('./lib/ipc', () => ({
@@ -145,6 +162,8 @@ function lastMirroredDirty(): boolean {
 
 beforeEach(() => {
   setTitleMock.mockReset().mockResolvedValue(undefined);
+  isFullscreenMock.mockReset().mockResolvedValue(false);
+  setFullscreenMock.mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.setAppMenu).mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.onMenuAction)
     .mockReset()
@@ -749,21 +768,63 @@ describe('the palette follows the OS unless told otherwise', () => {
 });
 
 // S4 (full-audit UX): App.svelte already computed the right localized title
-// string into `document.title` (the `app-title-document(-dirty)` Fluent
-// keys — NOT `app-document-name(-dirty)`, which are shaped for the on-screen
-// `doc-status` chip beside the app logo and carry no " — app" suffix at all),
+// string into `document.title` (the `app-title-document(-dirty)` Fluent keys),
 // but a Tauri window's native chrome does not read `document.title` — only
 // `getCurrentWindow().setTitle(...)` reaches it. So the title bar itself never
 // showed the open file name or the unsaved marker. SSR never runs an `$effect`
 // body, so this can only be proven mounted.
-describe('the native window title reflects the open document (S4)', () => {
-  it('sets no document-specific title before a file has ever been saved', async () => {
+//
+// P3/U3 (`docs/open-todos.md`) later retired the doc-status chip these keys'
+// old comment contrasted against — the on-screen `app-document-name(-dirty)`/
+// `app-document-unsaved(-dirty)` keys it named are gone with it, and the
+// window title is the SOLE surviving carrier of this state.
+describe('the native window title reflects the open document (S4, P3/U3)', () => {
+  // P3 (`docs/open-todos.md`): the title used to be built from the FILE name
+  // alone (`store.currentFileName`), which is not what P3 asks for — "put the
+  // CHARACTER name in the window title". These four tests are the coordinator's
+  // four required behaviours, in order. Every scenario below explicitly sets
+  // `store.view`: it is the signal that distinguishes "no character exists yet"
+  // (the startup screen, bullet 4) from "a real, merely unnamed/unsaved
+  // character" (bullet 3) — the fixture's own `resetEntity()` gives even the
+  // startup screen a real `type_id`, unlike the shipped app, so the title
+  // effect cannot tell the two apart by looking at the entity; it has to read
+  // the screen.
+
+  // Bullet 4: no entity at all.
+  it('shows the bare app title on the startup screen, with no character at all', async () => {
+    store.view = 'start';
     await mountApp();
-    expect(setTitleMock).toHaveBeenCalledWith(store.t('app-title'));
+    expect(setTitleMock).toHaveBeenLastCalledWith(store.t('app-title'));
   });
 
-  it('sets the native title to the file name once a file is tracked', async () => {
+  // Bullet 1: the character's own name, not the file name, once one is set —
+  // proven against a document that ALSO has a file tracked, so a regression
+  // back to file-name titling cannot hide behind "there was no file anyway".
+  it('titles the window from the character name once one is set, not the file name', async () => {
     await mountApp();
+    store.view = 'editor';
+    store.currentPath = '/tmp/example.armc.json';
+    flushSync();
+    setTitleMock.mockClear();
+
+    store.entity.name = 'Bonisagus of Bonisagus';
+    flushSync();
+
+    // The edit dirties the document too, so this is also the dirty variant —
+    // the clean one is proven by "drops the dirty marker…" below with the
+    // file-name fallback, since both variants share one Fluent key pair.
+    expect(setTitleMock).toHaveBeenLastCalledWith(
+      store.t('app-title-document-dirty', {
+        name: 'Bonisagus of Bonisagus',
+        app: store.t('app-title'),
+      }),
+    );
+  });
+
+  // Bullet 3, first fallback: file name, once the character has no name.
+  it('falls back to the file name once a file is tracked and the character has no name', async () => {
+    await mountApp();
+    store.view = 'editor';
     store.currentPath = '/tmp/example.armc.json';
     flushSync();
 
@@ -772,13 +833,54 @@ describe('the native window title reflects the open document (S4)', () => {
     );
   });
 
+  // Bullet 3, second fallback: the new localized "Untitled" label, with
+  // neither a character name nor a file.
+  it('falls back to the localized "Untitled" label with no character name and no file', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    expect(setTitleMock).toHaveBeenLastCalledWith(
+      store.t('app-title-document', {
+        name: store.t('app-title-untitled'),
+        app: store.t('app-title'),
+      }),
+    );
+  });
+
+  // Bullet 2: the asterisk appears whenever `store.dirty` is true, INCLUDING a
+  // brand-new, never-saved, unnamed character — today's code shows the bare
+  // app title here with no asterisk at all, because it only ever branches on
+  // `currentFileName === null` and never reads `dirty` in that branch.
+  it('marks the title dirty even for a brand-new, never-saved, unnamed character', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+    setTitleMock.mockClear();
+
+    store.entity.description = 'a dirtying edit';
+    flushSync();
+
+    const title = store.t('app-title-document-dirty', {
+      name: store.t('app-title-untitled'),
+      app: store.t('app-title'),
+    });
+    expect(setTitleMock).toHaveBeenLastCalledWith(title);
+    expect(setTitleMock.mock.lastCall![0]).toBe(document.title);
+    // The dirty source stays `AppStore.dirty` alone (CLAUDE.md): the marker
+    // must still be the plain ASCII asterisk that guard already uses, never a
+    // second, duplicated notion of "unsaved".
+    expect(title.codePointAt(0)).toBe(0x2a);
+  });
+
   it('marks the native title dirty with the same ASCII marker as document.title', async () => {
     await mountApp();
+    store.view = 'editor';
     store.currentPath = '/tmp/example.armc.json';
     flushSync();
     setTitleMock.mockClear();
 
-    store.entity.name = 'a dirtying edit';
+    store.entity.description = 'a dirtying edit';
     flushSync();
 
     expect(setTitleMock).toHaveBeenLastCalledWith(
@@ -789,16 +891,17 @@ describe('the native window title reflects the open document (S4)', () => {
 
   it('drops the dirty marker once the edit is saved back to the baseline', async () => {
     await mountApp();
+    store.view = 'editor';
     store.currentPath = '/tmp/example.armc.json';
     flushSync();
 
-    store.entity.name = 'a dirtying edit';
+    store.entity.description = 'a dirtying edit';
     flushSync();
     expect(setTitleMock).toHaveBeenLastCalledWith(
       store.t('app-title-document-dirty', { name: 'example.armc.json', app: store.t('app-title') }),
     );
 
-    delete store.entity.name;
+    delete store.entity.description;
     flushSync();
     expect(setTitleMock).toHaveBeenLastCalledWith(
       store.t('app-title-document', { name: 'example.armc.json', app: store.t('app-title') }),
@@ -1081,6 +1184,42 @@ describe('the native application menu', () => {
     flushSync();
 
     expect(unlisten).toHaveBeenCalled();
+  });
+
+  // U1/P1. This is the "no browser.keys" activation proof `crates/arm-app/tests/menu.rs`
+  // cannot give on its own: that file proves the Rust MODEL now offers a real
+  // `menu.fullscreen` action instead of a dead predefined item, but nothing
+  // there can prove a click on it actually does anything — there is no live
+  // Tauri window in a `cargo test` run. This is: `chooseMenuItem` delivers the
+  // id exactly as the Rust menu-event bridge would, and a mounted component is
+  // required because `getCurrentWindow()` is only ever called from a live
+  // effect/handler, never under SSR.
+  describe('the fullscreen menu action actually toggles the window (U1/P1)', () => {
+    it('enters fullscreen when the window is not already fullscreen', async () => {
+      await mountApp();
+      isFullscreenMock.mockResolvedValue(false);
+
+      chooseMenuItem('menu.fullscreen');
+
+      await vi.waitFor(() => expect(setFullscreenMock).toHaveBeenCalled(), {
+        timeout: 300,
+        interval: 20,
+      });
+      expect(setFullscreenMock).toHaveBeenCalledWith(true);
+    });
+
+    it('exits fullscreen when the window is already fullscreen', async () => {
+      await mountApp();
+      isFullscreenMock.mockResolvedValue(true);
+
+      chooseMenuItem('menu.fullscreen');
+
+      await vi.waitFor(() => expect(setFullscreenMock).toHaveBeenCalled(), {
+        timeout: 300,
+        interval: 20,
+      });
+      expect(setFullscreenMock).toHaveBeenCalledWith(false);
+    });
   });
 });
 

@@ -14,7 +14,6 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
-import path from 'node:path';
 
 import {
   clean,
@@ -1110,7 +1109,6 @@ describe('longevity ritual', () => {
 // ARM_E2E_EXPORT_FILE seam (see crates/arm-app/src/commands.rs), a fixed `.md`
 // path separate from the JSON save file the other specs round-trip.
 describe('markdown export', () => {
-  const STATUS = '[data-testid="doc-status"]';
   const NAME = 'Marcus of Bonisagus';
 
   // The two file bindings this describe round-trips, under names matching the
@@ -1348,31 +1346,35 @@ describe('markdown export', () => {
       timeout: 10000,
       timeoutMsg: 'save did not write the file',
     });
-    const status = await $(STATUS);
+    // P3/U3 (`docs/open-todos.md`) moved this state off the retired `doc-status`
+    // chip and onto the window title alone — and the character HAS a name
+    // (`NAME`, typed in this describe's `before`), so the title shows THAT
+    // rather than the file's own name: P3's priority is the character name
+    // first, the file name only once the character has none.
     await browser.waitUntil(
       async () => {
-        const text = clean(await status.getText());
-        // Derived, never literal — the fixture name carries a per-worker
-        // suffix (see `app-shell.e2e.js`'s header-status describe for the same
-        // reasoning).
-        return text.includes(path.basename(saveFile)) && !text.startsWith('*');
+        const title = await browser.execute(() => document.title);
+        return title.includes(NAME) && !title.startsWith('*');
       },
-      { timeout: 5000, timeoutMsg: 'the header should show the saved file with no dirty marker' },
+      {
+        timeout: 5000,
+        timeoutMsg: 'the title should show the character name with no dirty marker',
+      },
     );
 
     // Edit again so the document is unmistakably dirty, then export.
     await clickTab('characteristics');
     await $('[data-testid="char-inc-int"]').click();
-    await browser.waitUntil(async () => clean(await status.getText()).startsWith('*'), {
-      timeout: 5000,
-      timeoutMsg: 'editing should show the dirty marker',
-    });
-    const before = clean(await status.getText());
+    await browser.waitUntil(
+      async () => (await browser.execute(() => document.title)).startsWith('*'),
+      { timeout: 5000, timeoutMsg: 'editing should show the dirty marker' },
+    );
+    const before = await browser.execute(() => document.title);
 
     await exportSheet(EN_LAST_SECTION);
 
     // The export changed nothing about the document's identity or dirtiness.
-    expect(clean(await status.getText())).toBe(before);
+    expect(await browser.execute(() => document.title)).toBe(before);
 
     // And Save still writes the JSON to the file the export never touched.
     fs.unlinkSync(saveFile);

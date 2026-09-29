@@ -196,19 +196,22 @@ export async function waitForIdle() {
 /**
  * Open the settings dialog (C4) and leave it open.
  *
- * The header button rather than the native menu's Settings item: a native menu
- * is not in the webview, so WebDriver cannot click it, and the seam would take
- * this helper out of the portable run. Both routes call the same
- * `store.runDocumentAction('settings')`.
+ * U2 (P2, `docs/open-todos.md`) retired the header's own Settings button — the
+ * native menu's Settings item is the only way in now, so this goes through
+ * {@link runDocumentAction} exactly like the five document actions already do,
+ * onto the very same `store.runDocumentAction('settings')` the button used to
+ * call.
+ *
+ * NOT available in the portable run, which builds without `e2e-testing` (the
+ * seam this now depends on is inert there) — `portable-rules.e2e.js` opens the
+ * dialog for itself rather than importing this helper, and its own comment
+ * records the gap the button's removal leaves there.
  */
 export async function openSettings() {
   const dialog = await $(SETTINGS_DIALOG);
   if (await dialog.isExisting()) return;
 
-  const button = await $('[data-testid="settings-button"]');
-  await button.waitForExist({ timeout: BOOT_TIMEOUT });
-  await button.waitForClickable({ timeout: STEP_TIMEOUT });
-  await button.click();
+  await runDocumentAction('settings');
   await dialog.waitForExist({ timeout: STEP_TIMEOUT });
 }
 

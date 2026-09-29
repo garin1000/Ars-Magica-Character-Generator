@@ -7,9 +7,8 @@
 // keeps its own local selectors and helpers scoped to its block, since several
 // of them reused the same constant names (`SCHEDULE`, `DIE_INPUT`,
 // `AGING_TOTAL`, `APPLY`, `REVERT_FIRST_YEAR`, `LONGEVITY_ADD`,
-// `LONGEVITY_BONUS`, `LOG_EMPTY`, `AGE_INPUT`, `DOC_STATUS`, `DOCKED_ISSUES`,
-// `TAB_BAR`) with the same values but no reason to share a single module-level
-// binding.
+// `LONGEVITY_BONUS`, `LOG_EMPTY`, `AGE_INPUT`, `DOCKED_ISSUES`, `TAB_BAR`) with
+// the same values but no reason to share a single module-level binding.
 //
 // `the saga year` is internally order-dependent (`it`#4 reads what `it`#2/#3
 // set; `it`#5 reads what `it`#4 saved), writes persisted settings, and calls
@@ -103,7 +102,6 @@ describe('the guided aging step', () => {
   const TAB_BAR = '[role="tablist"]';
   // The editor's own aging tab, mirroring the wizard's `aging` phase (#28).
   const AGING_TAB = '[data-testid="tab-aging"]';
-  const DOC_STATUS = '[data-testid="doc-status"]';
   // The docked step panel, scoped: other surfaces render `data-code` nodes too.
   const DOCKED_ISSUES = '[data-testid="issue-list"]';
 
@@ -574,10 +572,13 @@ describe('the guided aging step', () => {
     // it, because the die is UI-only state the entity never holds.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
     await runDocumentAction('save');
-    await browser.waitUntil(async () => !clean(await $(DOC_STATUS).getText()).startsWith('*'), {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'saving should clear the dirty marker before the die is typed',
-    });
+    await browser.waitUntil(
+      async () => !(await browser.execute(() => document.title)).startsWith('*'),
+      {
+        timeout: STEP_TIMEOUT,
+        timeoutMsg: 'saving should clear the dirty marker before the die is typed',
+      },
+    );
 
     // The calculator defaults to the first year the log does not record — 36.
     await rollDie(8, 14);
@@ -604,7 +605,7 @@ describe('the guided aging step', () => {
     // the document is not even dirty.
     expect(Object.values(await agingPoints()).every((points) => points === '0')).toBe(true);
     expect(await $(LOG_EMPTY).isExisting()).toBe(true);
-    expect(clean(await $(DOC_STATUS).getText()).startsWith('*')).toBe(false);
+    expect((await browser.execute(() => document.title)).startsWith('*')).toBe(false);
   });
 
   it('applies a year, which settles the owed-rolls warning as the log fills', async () => {
@@ -1096,7 +1097,6 @@ describe('the saga year', () => {
   const BIRTH_YEAR_INPUT = '[data-testid="identity-birth-year"]';
   const SAGA_YEAR_INPUT = '[data-testid="saga-year-input"]';
   const SAGA_YEAR_HINT = '[data-testid="saga-year-hint"]';
-  const DOC_STATUS = '[data-testid="doc-status"]';
   // The docked step panel, scoped: other surfaces render `data-code` nodes too.
   const DOCKED_ISSUES = '[data-testid="issue-list"]';
   const CLAMP_CODE = 'saga_year_before_birth_year';
@@ -1194,11 +1194,13 @@ describe('the saga year', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'save did not write the file',
     });
-    const status = await $(DOC_STATUS);
-    await browser.waitUntil(async () => !clean(await status.getText()).startsWith('*'), {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'the document should be clean immediately after a save',
-    });
+    await browser.waitUntil(
+      async () => !(await browser.execute(() => document.title)).startsWith('*'),
+      {
+        timeout: STEP_TIMEOUT,
+        timeoutMsg: 'the document should be clean immediately after a save',
+      },
+    );
     // The save wrote the year too — it is stored state, not a preference (C8).
     expect(JSON.parse(fs.readFileSync(e2eFile, 'utf-8')).saga_year).toBe(1220);
 
@@ -1212,10 +1214,10 @@ describe('the saga year', () => {
 
     // C8's inversion, and the assertion with teeth: the year is part of what an
     // unsaved file would lose, so the unsaved-changes guard has to see it move.
-    await browser.waitUntil(async () => clean(await status.getText()).startsWith('*'), {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'moving the saga year must dirty the document',
-    });
+    await browser.waitUntil(
+      async () => (await browser.execute(() => document.title)).startsWith('*'),
+      { timeout: STEP_TIMEOUT, timeoutMsg: 'moving the saga year must dirty the document' },
+    );
     // The file on disk is still the one that was saved, unchanged.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
     expect(saved.age).toBe(30);

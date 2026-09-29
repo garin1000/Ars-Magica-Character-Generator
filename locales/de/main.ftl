@@ -29,15 +29,15 @@ theme-dark = Dunkel
 # Der Einstellungsdialog (C4): Sprache, Erscheinungsbild, Prüfstrenge und — seit
 # C8 — das Jahr der Saga, mit dem neue Dokumente beginnen, alle über Neustarts
 # hinweg gespeichert. Erreichbar über den Eintrag „Einstellungen“ im nativen Menü
-# und über die Schaltfläche in der Kopfzeile, auf jedem Bildschirm.
+# (U2/P2 hat die eigene Schaltfläche in der Kopfzeile entfernt — das Menü ist
+# jetzt der einzige Weg, auf jedem Bildschirm).
 settings-title = Einstellungen
-settings-open = Einstellungen
 settings-close = Schließen
 # Das Jahr der Saga, mit dem ein NEU angelegter Charakter oder Konvent gestempelt
 # wird. Bewusst nicht „Jahr der Saga“: das Jahr selbst gehört zu jedem Dokument
 # (`saga-year-label`), dies legt nur das nächste fest. „Saga“ bleibt unübersetzt
-# (rules/source/de/translation-tables/grundbegriffe.md:104), „Dokument“ folgt der
-# in `app-document-unsaved` bereits verwendeten Wortwahl.
+# (rules/source/de/translation-tables/grundbegriffe.md:104), „Dokument“ ist die
+# App-weite Bezeichnung für eine gespeicherte Datei, unabhängig vom Charaktertyp.
 settings-default-saga-year-label = Jahr der Saga für neue Dokumente
 
 type-label = Charaktertyp
@@ -961,18 +961,17 @@ discard-changes-message = Dieser Charakter hat ungespeicherte Änderungen. Wenn 
 discard-changes-confirm = Änderungen verwerfen
 discard-changes-cancel = Abbrechen
 
-# Fenstertitel. { $name } ist der Dateiname, { $app } der Anwendungsname; die
-# Variante mit ungespeicherten Änderungen stellt eine ASCII-Markierung voran.
+# Fenstertitel. { $name } ist zuerst der Name des Charakters, sonst der Name der
+# geöffneten Datei, sonst `app-title-untitled` unten; { $app } der
+# Anwendungsname. Die Variante mit ungespeicherten Änderungen stellt eine
+# ASCII-Markierung voran — auch für einen neuen, noch nie gespeicherten
+# Charakter (P3/U3, `docs/open-todos.md`).
 app-title-document = { $name } — { $app }
 app-title-document-dirty = *{ $name } — { $app }
 
-# Dokumentstatus in der Kopfzeile (nicht nur im Fenstertitel): der Dateiname der
-# aktiven Speicherung, mit vorangestellter ASCII-Markierung für ungespeicherte
-# Änderungen, oder eine Bezeichnung für ein noch nie gespeichertes Dokument.
-app-document-name = { $name }
-app-document-name-dirty = *{ $name }
-app-document-unsaved = Ungespeichertes Dokument
-app-document-unsaved-dirty = *Ungespeichertes Dokument
+# Der Platzhaltername im Fenstertitel für einen Charakter ohne eigenen Namen
+# und ohne Speicherdatei.
+app-title-untitled = Unbenannt
 
 # Hinweis für einen nicht ausgefüllten Parameter-Platzhalter im Namen, z. B. „Begabung in (Fertigkeit)“.
 param-hint = ({ $label })

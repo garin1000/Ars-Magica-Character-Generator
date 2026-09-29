@@ -84,9 +84,10 @@ describe('guided creation wizard', () => {
     const label = clean(await $(CHARACTER_TYPE).getText());
     expect(label).toContain('Magus');
     expect(label).not.toContain('type-magus');
-    // The validation mode moved into the settings dialog in C4; what the wizard
-    // header keeps is the way in to it.
-    await expect($('[data-testid="settings-button"]')).toExist();
+    // The validation mode moved into the settings dialog in C4; U2 (P2) then
+    // retired the header's own way in to it, so the native menu's Settings item
+    // is the only route now, in the wizard as on every other screen.
+    expect(await $('[data-testid="settings-button"]').isExisting()).toBe(false);
 
     // Slice 2 (#1) deleted the read-only `type` step; manual-testing-findings #3 then
     // deleted the explanatory lines its content had been relocated into. The banner
@@ -280,14 +281,13 @@ describe('guided creation wizard', () => {
 //
 // It also checks the unsaved-changes guard's new interaction on the real binary: a
 // rail click still costs nothing, while a Next onto a step never reached before
-// marks the document changed (the header's ASCII `*`).
+// marks the document changed (the window title's ASCII `*`).
 //
 // A grog is the subject: the shortest declared flow, and `virtues_flaws` is a step
 // a fresh grog can reach with nothing filled in.
 describe('opening a saved character into the guided wizard', () => {
   const WIZARD_RAIL = '[data-testid="wizard-rail"]';
   const START_OPEN_WIZARD = '[data-testid="start-open-wizard"]';
-  const STATUS = '[data-testid="doc-status"]';
   const FINISH = '[data-testid="wizard-finish"]';
   const NAME_INPUT = '[data-testid="identity-name"]';
 
@@ -317,9 +317,10 @@ describe('opening a saved character into the guided wizard', () => {
     await $(WIZARD_RAIL).waitForExist({ timeout: STEP_TIMEOUT });
   }
 
-  /** Whether the header shows the ASCII dirty marker. */
+  /** Whether the window title shows the ASCII dirty marker (P3/U3 moved this off
+   *  the retired `doc-status` chip and onto the title alone). */
   async function isDirty() {
-    return clean(await $(STATUS).getText()).startsWith('*');
+    return (await browser.execute(() => document.title)).startsWith('*');
   }
 
   it('resumes a mid-flow save on the step it was left on', async () => {
@@ -1119,5 +1120,38 @@ describe('tab area at a short window height', () => {
     expect(m.mainScrollHeight).toBeLessThanOrEqual(m.mainClientHeight + 1);
     expect(m.listClientHeight).toBeGreaterThan(MIN_USABLE_LIST);
     expect(m.panelScrollHeight).toBeLessThanOrEqual(m.panelClientHeight + 1);
+  });
+
+  // U7 (`docs/open-todos.md`, "`.icon-btn` lost its e2e coverage"). `app.css`'s
+  // `.icon-btn` rule claims a WCAG 2.5.8 pointer-target floor of 24x24 CSS px —
+  // every `×` remove button and every `+`/`-` stepper — but the spec that used
+  // to measure the RENDERED button went dark in the 43->10 spec consolidation
+  // and nothing noticed: `grep -rn "icon-btn" ui/e2e/` came back empty. The only
+  // surviving guard (`app.css.test.ts`) can prove the DECLARED width/height and
+  // nothing else — it cannot see a button squeezed by its container, which is
+  // exactly the failure a real layout catches and the reason this spec existed.
+  // The Characteristics tab's Spinner steppers are used rather than the V/F
+  // remove button this describe happens to be sitting on: they render
+  // unconditionally on a fresh character, with no dependency on which Virtues
+  // happen to be pre-selected.
+  it('keeps every icon button at the WCAG 2.5.8 pointer-target floor', async () => {
+    await setWindowHeight(DEFAULT_SIZE.height);
+    await $('[data-testid="tab-characteristics"]').click();
+    await $('.icon-btn').waitForExist({ timeout: 10000 });
+
+    const boxes = await browser.execute(() =>
+      [...document.querySelectorAll('.icon-btn')].map((btn) => {
+        const rect = btn.getBoundingClientRect();
+        return [rect.width, rect.height];
+      }),
+    );
+    expect(boxes.length).toBeGreaterThan(0);
+    for (const [width, height] of boxes) {
+      expect(width).toBeGreaterThanOrEqual(24);
+      expect(height).toBeGreaterThanOrEqual(24);
+    }
+
+    // Hand the next spec in this file the tab it expects.
+    await $('[data-testid="tab-virtues_flaws"]').click();
   });
 });
