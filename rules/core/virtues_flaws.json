@@ -3447,7 +3447,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.amorphous_minor"],
@@ -3458,7 +3458,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.amorphous_major"],
@@ -3479,7 +3479,7 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
     "source": { "anchor": "apprentice", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3418, 3421] }
@@ -3533,7 +3533,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "lab_total_mod", "amount": 1 }],
     "source": { "anchor": "aristotelian-training", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3440, 3443] }
@@ -3753,7 +3753,7 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["supernatural"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "magic_resistance_mod", "kind": "aura_bonus" }],
     "source": { "anchor": "commanding-aura", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3579, 3596] }
@@ -3763,7 +3763,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "common-sense", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3597, 3600] }
   },
@@ -3792,7 +3792,7 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.poor", "virtue.wealthy"],
     "source": { "anchor": "covenfolk", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3609, 3612] }
@@ -3938,7 +3938,7 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["mythic_companion"],
-    "classification": "creation_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.faerie_doctor", "virtue.nephilim", "virtue.spirit_votary", "virtue.the_gift"],
     "source": { "anchor": "devil-child-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3671, 3674] }
@@ -3948,7 +3948,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "special_casting_mod", "kind": "diedne" }],
     "source": { "anchor": "diedne-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3675, 3682] }
@@ -3965,7 +3965,7 @@
       { "type": "grants_reputation", "kind": "academic", "score": 3 },
       { "type": "restricted_ability_xp", "amount": 300, "categories": ["academic"] }
     ],
-    "source": { "anchor": "doctor-in-faculty", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3683, 3698] }
+    "source": { "anchor": "doctor-in-faculty", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3683, 3692] }
   },
   {
     "id": "virtue.domestic_animal",
@@ -4126,8 +4126,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "emir", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3743, 3746] }
   },
   {
@@ -4280,7 +4281,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "special_casting_mod", "kind": "faerie_raised" }],
     "source": { "anchor": "faerie-raised-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3829, 3842] }
@@ -4354,7 +4355,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "feather-messenger", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3869, 3872] }
   },
@@ -4507,7 +4508,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "gender-shift", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3951, 3954] }
   },
@@ -4516,7 +4517,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.blatant_gift"],
     "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
@@ -4536,7 +4537,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "ghostly-warder", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3963, 3966] }
   },
@@ -4573,7 +4574,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "gorgiastic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3979, 3982] }
   },
@@ -4582,7 +4583,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "gossip", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3983, 3986] }
   },
@@ -4606,7 +4607,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "greater-benediction", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3991, 4008] }
   },
@@ -4615,7 +4616,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "hazard", "type": "ref", "domain": "text" }],
     "max_total": 255,
@@ -4638,7 +4639,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "greater-purifying-touch", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4027, 4030] }
   },
@@ -4647,7 +4648,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "guardian-angel", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4031, 4036] }
   },
@@ -4656,7 +4657,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "guest-of-house-criamon", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4037, 4040] }
   },
@@ -4665,7 +4666,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "guild-apprentice", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4041, 4044] }
   },
@@ -4694,7 +4695,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "harnessed-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4053, 4058] }
   },
@@ -6580,7 +6581,7 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["special"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.failed_apprentice", "virtue.nephilim", "virtue.spirit_votary"],
     "source": { "anchor": "the-gift-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3967, 3970] }

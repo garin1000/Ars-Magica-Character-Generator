@@ -5921,6 +5921,30 @@ itself out of "f|or more| details" and flags every entry pointing at a
 supplement; `virtue.factor` (ArMDE:3793-3796) and `virtue.fidai`
 (ArMDE:3877-3882) arrived that way and are not reclassified.
 
+### D67 — the classification guard also reads `prerequisites`/`incompatible_with` (2026-09-29)
+
+The acceptance guard above (`tests/data_integrity.rs::every_vf_is_classified`)
+originally read only `effects` (plus a type profile's `required_traits`/
+`forbidden_traits`) to decide whether an entry was "computed". D46
+(`docs/vf-audit/decisions.md`) already held that classification follows *what*
+is computed, never *where* — but the guard's own `is_computed` check was
+narrower than that ruling: an entry whose only enforced constraint was a
+`prerequisites` or `incompatible_with` field (a selection constraint, not an
+`Effect`) still read as "computes nothing" and so could never be
+`creation_effect`/`in_play_effect` under the guard, only `narrative` or
+`uncomputed_rule`. D67 widens `is_computed` to read all four sources
+(`effects`, `prerequisites`, `incompatible_with`, profile trait references) and
+resolves the resulting edge case explicitly: **an entry may be
+`uncomputed_rule` even while something else about it is computed** —
+`uncomputed_rule` is exempt from the "must compute something" /
+"must compute nothing" split the guard applies to the other three classes.
+This is what lets `virtue.the_gift` (computed via the grog profile's
+`forbidden_traits`, per D46's own worked example) and `virtue.devil_child`
+(computed via its `incompatible_with`) both classify `uncomputed_rule` for a
+genuinely dropped clause — the free-Virtue grant in `devil_child`'s case, the
+ArMDE:2870-2876 penalties clause in `the_gift`'s — without the guard treating
+the entry's other, already-enforced constraint as a contradiction.
+
 ### Roadmap corrections applied here
 
 - **Wealthy / Poor are `narrative`.** Core defines only advancement-*season*

@@ -2088,12 +2088,18 @@ fn profile_trait_reference_ids() -> BTreeSet<String> {
 }
 
 /// True when `item` is computed by *something* — D46 (`docs/vf-audit/decisions.md`):
-/// "classification follows what is computed, never where it is computed." Two
-/// sources, and only two, currently wire a V/F id to an enforced consequence:
-/// the item's own `effects`, or a character-type profile's
-/// `required_traits`/`forbidden_traits` naming it (`profile_referenced`).
+/// "classification follows what is computed, never where it is computed." D67
+/// widens this to four sources, all wiring a V/F id to an enforced consequence:
+/// the item's own `effects`; its `prerequisites`; its `incompatible_with`; or a
+/// character-type profile's `required_traits`/`forbidden_traits` naming it
+/// (`profile_referenced`). D67: "a selection constraint the engine enforces
+/// (prerequisites, incompatible_with, profile traits) counts as computed,
+/// following D46's `hermetic_magus` precedent."
 fn is_computed(item: &PointItem, profile_referenced: &BTreeSet<String>) -> bool {
-    !item.effects.is_empty() || profile_referenced.contains(item.id.as_str())
+    !item.effects.is_empty()
+        || item.prerequisites.is_some()
+        || !item.incompatible_with.is_empty()
+        || profile_referenced.contains(item.id.as_str())
 }
 
 /// D46's shrink-only pending work-list (plan § 1, `docs/vf-audit/phase-2-plan.md`):
@@ -2114,32 +2120,320 @@ const PENDING_D46_CLASSIFICATION: &[(&str, &str)] = &[
     // guard at all.
     (
         "flaw.savantism",
-        "creation_effect, carries no effects, and is named in no type profile's \
-         required_traits/forbidden_traits (measurements.md § 8 row 11)",
+        "creation_effect, carries no effects, no prerequisites, no incompatible_with, and is \
+         named in no type profile's required_traits/forbidden_traits (measurements.md § 8 row \
+         11)",
     ),
-    (
-        "virtue.devil_child",
-        "creation_effect, carries no effects, and is named in no type profile's \
-         required_traits/forbidden_traits (measurements.md § 8 row 11)",
-    ),
-    (
-        "virtue.nephilim",
-        "creation_effect, carries no effects, and is named in no type profile's \
-         required_traits/forbidden_traits (measurements.md § 8 row 11)",
-    ),
+    // `virtue.devil_child` and `virtue.nephilim` are no longer pending here: D67
+    // widened `is_computed` to read `incompatible_with`, and both carry one
+    // (each names the other, plus `virtue.faerie_doctor`/`virtue.the_gift`), so
+    // they are now computed and trip no guard under this list. Still on the X2
+    // work-list — the routed sub-slice re-examines their `creation_effect`
+    // classification against D67's "only stated rule" test, which `is_computed`
+    // cannot itself decide.
     // `virtue.simple_student` is no longer pending: D35 (Phase 2 C3) gave it a
     // `scaled_restricted_ability_xp` effect, so it is now computed and trips
     // no guard.
-    (
-        "virtue.the_gift",
-        "narrative, but named in the grog profile's forbidden_traits — D46's ruling: \
-         becomes uncomputed_rule (ArMDE:2870-2876's \"suffers all the penalties of The \
-         Gift\" is the clause that stays uncomputed)",
-    ),
+    // `virtue.the_gift` is no longer pending here (X2a): reclassified to
+    // uncomputed_rule per D46's ruling, with a dedicated test in
+    // `x2_reclassification.rs` (ArMDE:2870-2876's "suffers all the penalties of
+    // The Gift" clause) — see tmp/x2a-verdicts.md.
     (
         "virtue.hermetic_magus",
         "narrative, but named in the magus profile's required_traits — D46's ruling: \
          stays/becomes creation_effect",
+    ),
+];
+
+/// D67's shrink-only pending work-list (`docs/vf-audit/decisions.md` D67, X2
+/// scoping): every entry [`is_computed`]'s widened definition — `prerequisites`
+/// and `incompatible_with` now count as computed, not only `effects` and profile
+/// traits — finds computed while still classified `narrative`. D67: "a selection
+/// constraint the engine enforces (prerequisites, incompatible_with, profile
+/// traits) counts as computed … so an entry whose only stated rule is such a
+/// constraint is `creation_effect`." X2 reclassifies each from its own passage;
+/// `is_computed` cannot itself decide *which* computed class an entry belongs
+/// to, only that it is not `narrative`.
+///
+/// Disjoint from [`PENDING_D46_CLASSIFICATION`] by construction —
+/// `virtue.hermetic_magus` and `virtue.the_gift` also trip on the widened
+/// definition (a prerequisite and an `incompatible_with` respectively) but stay
+/// on that list; neither is duplicated here. `(id, why)`;
+/// [`pending_d67_classification_entries_still_trip_the_guard`] keeps every row
+/// honest.
+const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
+    (
+        "flaw.ambitious_major",
+        "narrative, but declares incompatible_with (Ambitious Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.ambitious_minor",
+        "narrative, but declares incompatible_with (Ambitious Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.avaricious_major",
+        "narrative, but declares incompatible_with (Avaricious Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.avaricious_minor",
+        "narrative, but declares incompatible_with (Avaricious Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.beloved_rival_major",
+        "narrative, but declares incompatible_with (Beloved Rival Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.beloved_rival_minor",
+        "narrative, but declares incompatible_with (Beloved Rival Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.compassionate_major",
+        "narrative, but declares incompatible_with (Compassionate Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.compassionate_minor",
+        "narrative, but declares incompatible_with (Compassionate Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.compulsion_major",
+        "narrative, but declares incompatible_with (Compulsion Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.compulsion_minor",
+        "narrative, but declares incompatible_with (Compulsion Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.compulsive_lying_major",
+        "narrative, but declares incompatible_with (Compulsive Lying Minor) — D67 counts that as \
+         computed",
+    ),
+    (
+        "flaw.compulsive_lying_minor",
+        "narrative, but declares incompatible_with (Compulsive Lying Major) — D67 counts that as \
+         computed",
+    ),
+    (
+        "flaw.depraved_major",
+        "narrative, but declares incompatible_with (Depraved Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.depraved_minor",
+        "narrative, but declares incompatible_with (Depraved Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.driven_major",
+        "narrative, but declares incompatible_with (Driven Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.driven_minor",
+        "narrative, but declares incompatible_with (Driven Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.envious_major",
+        "narrative, but declares incompatible_with (Envious Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.envious_minor",
+        "narrative, but declares incompatible_with (Envious Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.false_power_minor",
+        "narrative, but declares prerequisites — D67 counts that as computed",
+    ),
+    (
+        "flaw.gender_nonconforming_major",
+        "narrative, but declares incompatible_with (Gender Nonconforming Minor) — D67 counts \
+         that as computed",
+    ),
+    (
+        "flaw.gender_nonconforming_minor",
+        "narrative, but declares incompatible_with (Gender Nonconforming Major) — D67 counts \
+         that as computed",
+    ),
+    (
+        "flaw.generous_major",
+        "narrative, but declares incompatible_with (Generous Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.generous_minor",
+        "narrative, but declares incompatible_with (Generous Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.greedy_major",
+        "narrative, but declares incompatible_with (Greedy Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.greedy_minor",
+        "narrative, but declares incompatible_with (Greedy Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.hatred_major",
+        "narrative, but declares incompatible_with (Hatred Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.hatred_minor",
+        "narrative, but declares incompatible_with (Hatred Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.higher_purpose_major",
+        "narrative, but declares incompatible_with (Higher Purpose Minor) — D67 counts that as \
+         computed",
+    ),
+    (
+        "flaw.higher_purpose_minor",
+        "narrative, but declares incompatible_with (Higher Purpose Major) — D67 counts that as \
+         computed",
+    ),
+    (
+        "flaw.lecherous_major",
+        "narrative, but declares incompatible_with (Lecherous Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.lecherous_minor",
+        "narrative, but declares incompatible_with (Lecherous Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.magical_air",
+        "narrative, but declares incompatible_with (Blatant Gift) — D67 counts that as computed",
+    ),
+    (
+        "flaw.meddler_major",
+        "narrative, but declares incompatible_with (Meddler Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.meddler_minor",
+        "narrative, but declares incompatible_with (Meddler Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.obsessed_major",
+        "narrative, but declares incompatible_with (Obsessed Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.obsessed_minor",
+        "narrative, but declares incompatible_with (Obsessed Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.optimistic_major",
+        "narrative, but declares incompatible_with (Optimistic Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.optimistic_minor",
+        "narrative, but declares incompatible_with (Optimistic Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.overconfident_major",
+        "narrative, but declares incompatible_with (Overconfident Minor) — D67 counts that as \
+         computed",
+    ),
+    (
+        "flaw.overconfident_minor",
+        "narrative, but declares incompatible_with (Overconfident Major) — D67 counts that as \
+         computed",
+    ),
+    (
+        "flaw.oversensitive_major",
+        "narrative, but declares incompatible_with (Oversensitive Minor) — D67 counts that as \
+         computed",
+    ),
+    (
+        "flaw.oversensitive_minor",
+        "narrative, but declares incompatible_with (Oversensitive Major) — D67 counts that as \
+         computed",
+    ),
+    (
+        "flaw.pious_major",
+        "narrative, but declares incompatible_with (Pious Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.pious_minor",
+        "narrative, but declares incompatible_with (Pious Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.primogeniture_lineage",
+        "narrative, but declares prerequisites — D67 counts that as computed",
+    ),
+    (
+        "flaw.proud_major",
+        "narrative, but declares incompatible_with (Proud Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.proud_minor",
+        "narrative, but declares incompatible_with (Proud Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.rebellious_major",
+        "narrative, but declares incompatible_with (Rebellious Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.rebellious_minor",
+        "narrative, but declares incompatible_with (Rebellious Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.reckless_major",
+        "narrative, but declares incompatible_with (Reckless Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.reckless_minor",
+        "narrative, but declares incompatible_with (Reckless Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.suppressed_gift",
+        "narrative, but declares prerequisites — D67 counts that as computed",
+    ),
+    (
+        "flaw.true_love_major",
+        "narrative, but declares incompatible_with (True Love Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.true_love_minor",
+        "narrative, but declares incompatible_with (True Love Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.vow_major",
+        "narrative, but declares incompatible_with (Vow Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.vow_minor",
+        "narrative, but declares incompatible_with (Vow Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.weakness_major",
+        "narrative, but declares incompatible_with (Weakness Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.weakness_minor",
+        "narrative, but declares incompatible_with (Weakness Major) — D67 counts that as computed",
+    ),
+    (
+        "flaw.wrathful_major",
+        "narrative, but declares incompatible_with (Wrathful Minor) — D67 counts that as computed",
+    ),
+    (
+        "flaw.wrathful_minor",
+        "narrative, but declares incompatible_with (Wrathful Major) — D67 counts that as computed",
+    ),
+    // virtue.amorphous_major, virtue.amorphous_minor, virtue.apprentice,
+    // virtue.covenfolk, virtue.gentle_gift: resolved (X2a) — apprentice and
+    // covenfolk reclassify to creation_effect (their incompatible_with/
+    // prerequisites turn out to cover the whole passage); amorphous_major/
+    // _minor and gentle_gift reclassify to uncomputed_rule (a real, separately
+    // uncomputed clause survives the constraint). `every_vf_is_classified`
+    // bites each directly now. See tmp/x2a-verdicts.md.
+    (
+        "virtue.inoffensive_to_beings",
+        "narrative, but declares prerequisites — D67 counts that as computed",
+    ),
+    (
+        "virtue.magical_mount",
+        "narrative, but declares prerequisites — D67 counts that as computed",
+    ),
+    (
+        "virtue.male_guild_sponsor",
+        "narrative, but declares prerequisites — D67 counts that as computed",
+    ),
+    (
+        "virtue.verditius_magic",
+        "narrative, but declares prerequisites — D67 counts that as computed",
     ),
 ];
 
@@ -2174,37 +2468,43 @@ fn every_vf_is_classified() {
     assert!(creation > 0, "some V/F must be creation_effect");
     assert!(in_play > 0, "some V/F must be in_play_effect");
 
-    // D46: classification follows what is computed, never where. The old guard
+    // D46/D67: classification follows what is computed, never where — and
+    // `uncomputed_rule` carries its text regardless of what else is computed
+    // (D67's resolution of OQ-1: a partly-computed entry may still be
+    // `uncomputed_rule`, so that class is never an offender here). The old guard
     // asked only whether `effects` was non-empty, and only in one direction —
     // required on `in_play_effect`, never checked on `creation_effect` — which is
     // why five effect-less `creation_effect` entries passed silently
-    // (measurements.md § 8 row 11). This asks the symmetric question of all four
-    // classes: the two "something is computed" classes must have a computation
-    // source, and the two "nothing is computed" classes must not.
+    // (measurements.md § 8 row 11). This asks the question D67 states: a
+    // `narrative` entry must compute nothing (effects, prerequisites,
+    // incompatible_with, or a profile trait reference), and a `creation_effect`/
+    // `in_play_effect` entry must compute something.
     let profile_referenced = profile_trait_reference_ids();
     let mut offenders = Vec::new();
     for item in rs.items() {
         let id = item.id.as_str();
         if PENDING_D46_CLASSIFICATION
             .iter()
+            .chain(PENDING_D67_CLASSIFICATION)
             .any(|(pending, _)| *pending == id)
         {
             continue;
         }
         let computed = is_computed(item, &profile_referenced);
         match item.classification {
-            Classification::Narrative | Classification::UncomputedRule if computed => {
+            Classification::Narrative if computed => {
                 offenders.push(format!(
-                    "{id}: classified {:?}, but is computed (effects, or named in a type \
-                     profile's required_traits/forbidden_traits) — D46 says that makes it \
-                     creation_effect or in_play_effect, never {:?}",
-                    item.classification, item.classification
+                    "{id}: classified Narrative, but is computed (effects, prerequisites, \
+                     incompatible_with, or named in a type profile's \
+                     required_traits/forbidden_traits) — D67 says that makes it at least \
+                     creation_effect, never Narrative",
                 ));
             }
             Classification::CreationEffect | Classification::InPlayEffect if !computed => {
                 offenders.push(format!(
-                    "{id}: classified {:?}, but computes nothing — no effects, and named in \
-                     no type profile's required_traits/forbidden_traits",
+                    "{id}: classified {:?}, but computes nothing — no effects, no \
+                     prerequisites, no incompatible_with, and named in no type profile's \
+                     required_traits/forbidden_traits",
                     item.classification
                 ));
             }
@@ -2213,7 +2513,7 @@ fn every_vf_is_classified() {
     }
     assert!(
         offenders.is_empty(),
-        "D46: classification must follow what is computed, never where it is computed:\n{}",
+        "D46/D67: classification must follow what is computed, never where it is computed:\n{}",
         offenders.join("\n")
     );
 
@@ -2253,8 +2553,10 @@ fn pending_d46_classification_entries_still_trip_the_guard() {
             });
         let computed = is_computed(item, &profile_referenced);
         let still_offends = match item.classification {
-            Classification::Narrative | Classification::UncomputedRule => computed,
+            Classification::Narrative => computed,
             Classification::CreationEffect | Classification::InPlayEffect => !computed,
+            // D67: uncomputed_rule is never an offender, whatever it computes.
+            Classification::UncomputedRule => false,
         };
         assert!(
             still_offends,
@@ -2262,6 +2564,57 @@ fn pending_d46_classification_entries_still_trip_the_guard() {
              the row"
         );
     }
+}
+
+/// The mirror of [`pending_d46_classification_entries_still_trip_the_guard`],
+/// for [`PENDING_D67_CLASSIFICATION`]: every pending row must still trip the
+/// D46/D67 guard, so the list can only shrink as X2 reclassifies each entry —
+/// never grow stale.
+#[test]
+fn pending_d67_classification_entries_still_trip_the_guard() {
+    let rs = load_ruleset();
+    let profile_referenced = profile_trait_reference_ids();
+
+    for (id, _) in PENDING_D67_CLASSIFICATION {
+        let item = rs
+            .items()
+            .find(|item| item.id.as_str() == *id)
+            .unwrap_or_else(|| {
+                panic!(
+                    "PENDING_D67_CLASSIFICATION row \"{id}\" names an entry that is no longer \
+                     in the catalogue — delete the row"
+                )
+            });
+        let computed = is_computed(item, &profile_referenced);
+        let still_offends = match item.classification {
+            Classification::Narrative => computed,
+            Classification::CreationEffect | Classification::InPlayEffect => !computed,
+            Classification::UncomputedRule => false,
+        };
+        assert!(
+            still_offends,
+            "PENDING_D67_CLASSIFICATION row \"{id}\" no longer trips the D67 guard — delete \
+             the row"
+        );
+    }
+}
+
+/// No id may sit on both pending lists at once — each would silently mask the
+/// other's shrink-only invariant test (an entry that stops tripping the guard
+/// via one list's removal could still be hidden by the other), and D67 states
+/// the two lists are disjoint by construction.
+#[test]
+fn pending_d46_and_d67_classification_lists_are_disjoint() {
+    let overlap: Vec<&str> = PENDING_D46_CLASSIFICATION
+        .iter()
+        .map(|(id, _)| *id)
+        .filter(|id| PENDING_D67_CLASSIFICATION.iter().any(|(d67, _)| d67 == id))
+        .collect();
+    assert!(
+        overlap.is_empty(),
+        "id(s) exempted on both PENDING_D46_CLASSIFICATION and \
+         PENDING_D67_CLASSIFICATION: {overlap:?}"
+    );
 }
 
 #[test]

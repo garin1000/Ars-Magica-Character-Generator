@@ -1496,7 +1496,8 @@
   },
   "virtue.academic_concentration_subject": {
     "name": "Academic Concentration {subject}",
-    "summary": "The character has concentrated in one of the seven subjects of Artes Liberales, in preference to the other six."
+    "summary": "The character has concentrated in one of the seven subjects of Artes Liberales, in preference to the other six.",
+    "description": "The character has concentrated in one of the seven subjects of Artes Liberales, in preference to the other six. He may add +3 to his Artes Liberales score for that subject. However, he must subtract 1 from Artes Liberales rolls and totals for the subjects he did not concentrate in. Include the bonus and penalty modifier in every total that Artes Liberales is used for, including writing books. This Virtue is incompatible with the Virtue Puissant Artes Liberales. Puissant Artes Liberales means a character is particularly adept with all seven liberal arts, while Academic Concentration means the character focused on one liberal art in preference to the others.\n\nWith troupe approval, this Virtue could be extended to Philosophiae. It is not allowed for any other Ability besides Artes Liberales and Philosophiae."
   },
   "virtue.adept_laboratory_student": {
     "name": "Adept Laboratory Student",
@@ -1504,11 +1505,13 @@
   },
   "virtue.affinity_ability": {
     "name": "Affinity with {ability}",
-    "summary": "Experience put into one Ability counts for half again, and that Ability is exempt from the age-based cap."
+    "summary": "Experience put into one Ability counts for half again, and that Ability is exempt from the age-based cap.",
+    "description": "All Advancement Totals for one Ability are increased by half, rounded up, as are any experience points you put in that Ability at character creation. You may only take this Virtue once for a given Ability, but may take it again for different Abilities. If you take this Virtue for an Ability, you may exceed the normal age-based cap during character generation (see page 48) by two points for that Ability."
   },
   "virtue.affinity_art": {
     "name": "Affinity with {art}",
-    "summary": "Experience put into one Art counts for half again. May be taken twice, for two Arts."
+    "summary": "Experience put into one Art counts for half again. May be taken twice, for two Arts.",
+    "description": "Your Advancement Totals for one Hermetic Art are increased by one half, rounded up. At character creation, any experience points you put into that Art are also increased by one half (rounded up), and you may exceed the normal recommended limits. You may take this Virtue twice, for two different Arts."
   },
   "virtue.alim": {
     "name": "'Alim",
@@ -1530,15 +1533,18 @@
   },
   "virtue.almogavar": {
     "name": "Almogavar",
-    "summary": "The character is a member of a band of mercenaries and raiders, living a life of adventure according to a code of honor and discipline."
+    "summary": "The character is a member of a band of mercenaries and raiders, living a life of adventure according to a code of honor and discipline.",
+    "description": "The character is a member of a band of mercenaries and raiders, living a life of adventure according to a code of honor and discipline. He shares a bond of solidarity with his fellows, and they can depend on each other's loyalty. He has Standard Armaments, and may take Martial Abilities. He may choose to be the Adalil, the second-in-command, at no additional cost, getting an increase in both authority and responsibility. He is supported by his unit, and may not take the Poor Flaw or Wealthy Virtue.\n\nThese characters are from the Iberian Peninsula, and if they are particularly far from home the troupe may rule that this is not available as a social status."
   },
   "virtue.amorphous_major": {
     "name": "Amorphous (Major)",
-    "summary": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being."
+    "summary": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being.",
+    "description": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being. The character develops this ability because his body has adopted the almost-gaseous property of demonic flesh, so any apparent changes in size or fitness are cosmetic, and do not affect the character's statistics. Some amorphous people can select a single shape at midnight, which is the Major form of the Virtue. Its Minor form allows the character to change shape only after having performed a significant act linked to the Obsession of the sponsoring demon. The character may only change to his birth form by selecting it once the conditions of transformation have been met, or involuntarily changing shape when dying or entering holy ground."
   },
   "virtue.amorphous_minor": {
     "name": "Amorphous (Minor)",
-    "summary": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being."
+    "summary": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being.",
+    "description": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being. The character develops this ability because his body has adopted the almost-gaseous property of demonic flesh, so any apparent changes in size or fitness are cosmetic, and do not affect the character's statistics. Some amorphous people can select a single shape at midnight, which is the Major form of the Virtue. Its Minor form allows the character to change shape only after having performed a significant act linked to the Obsession of the sponsoring demon. The character may only change to his birth form by selecting it once the conditions of transformation have been met, or involuntarily changing shape when dying or entering holy ground."
   },
   "virtue.animal_ken": {
     "name": "Animal Ken",
@@ -1559,7 +1565,8 @@
   },
   "virtue.arcane_lore": {
     "name": "Arcane Lore",
-    "summary": "You may take Arcane Abilities during character generation."
+    "summary": "You may take Arcane Abilities during character generation.",
+    "description": "You may take Arcane Abilities during character generation. Unless you have The Gift, you cannot learn Parma Magica. You get an additional 50 experience points, which must be spent on Arcane Abilities.\n\nA Gifted character who is not a Hermetic magus and knows Parma Magica must take the Major Story Flaw Enemy: Entire Order of Hermes, as magi are bound by their Oath to slav the character on sight, unless he immediately joins the Order. Such a character cannot be played in a normal saga, as the other player characters have to kill him."
   },
   "virtue.archieunuch": {
     "name": "Archieunuch",
@@ -1567,7 +1574,8 @@
   },
   "virtue.aristotelian_training": {
     "name": "Aristotelian Training",
-    "summary": "The character is trained in the New Aristotle, having received his instruction from a teacher using recently translated texts of Aristotle in preference to the normal curriculum."
+    "summary": "The character is trained in the New Aristotle, having received his instruction from a teacher using recently translated texts of Aristotle in preference to the normal curriculum.",
+    "description": "The character is trained in the New Aristotle, having received his instruction from a teacher using recently translated texts of Aristotle in preference to the normal curriculum. The character gains a +1 bonus on Artes Liberales rolls for grammar, logic, and rhetoric, as well as a +1 bonus when calculating Disputatio Totals (see Art and Academe, page 103, for details). A magus with this Virtue may add +1 to his Lab Totals if attempting to synthesize the New Aristotle with Magic Theory (as described on page 11 of Art and Academe). This Virtue is compatible with Puissant Artes Liberales."
   },
   "virtue.atlantean_magic": {
     "name": "Atlantean Magic",
@@ -1584,7 +1592,8 @@
   },
   "virtue.bee_king": {
     "name": "Bee King",
-    "summary": "Bee Kingship is the result of descent from particular faeries, and thus a form of faerie blood."
+    "summary": "Bee Kingship is the result of descent from particular faeries, and thus a form of faerie blood.",
+    "description": "Bee Kingship is the result of descent from particular faeries, and thus a form of faerie blood. It grants the following advantages:\n\nBee Kings do not appear to age after reaching maturity, but every Bee King not killed by circumstances dies of a rapid illness precisely a century after birth.\n\nAny Bee King may command any group of bees to perform any action of which they are physically capable, even if it will lead to their deaths. Usual instructions like attacking people, increasing the population of the hive, or constructing objects from wax continue to be performed until the instruction is countermanded (Penetration 50). Simple commands of a sentence or less long can be given orally.\n\nBee Kings may communicate complex messages to bees by having a single bee land on the Bee King's tongue. This bee then acts as the king's representative to the hive. Bee Kings can understand the speech of hives, and can read the minds of bees that they are touching.\n\nBee Kings are never stung by any variety of biting insect. An attacking bee swarm is treated as an environmental effect, rather than an opposing mêlee group. The swarm does +10 damage automatically each round. This damage may be Soaked normally.\n\nNote that, in Mythic Europe, bees have kings, not queens, but a female character with this Virtue may choose to call herself a Bee Queen.\n\nThis is a Supernatural Virtue, and you cannot lose it when being trained as a magus (see page 269). If your master cannot preserve the ability, you cannot be trained."
   },
   "virtue.berserk": {
     "name": "Berserk",
@@ -1593,7 +1602,8 @@
   },
   "virtue.blood_of_the_nephilim": {
     "name": "Blood of the Nephilim",
-    "summary": "You descend from the Nephilim; your Size grows and you age very slowly."
+    "summary": "You descend from the Nephilim; your Size grows and you age very slowly.",
+    "description": "You have the blood of angels in your veins and descend from the great heroes of the Antediluvian Age, the Nephilim. Unless you take the Mythic Companion Virtue, your heritage is somewhat diluted, although still significant.\n\nYour Size is increased to +1, and this increases by +1 for every century you are alive.\n\nYou may learn Dominion Lore during character creation without needing to take the Arcane Lore Minor Virtue.\n\nYou age incredibly slowly, and may live for hundreds of years. You need make an aging roll only once every ten years after the age of 150, and receive a -5 to Aging Rolls. You gain no benefit from Longevity Potions or any magic or supernatural power that slows or relieves Aging or Decrepitude. Once you gain your first Decrepitude Point, it becomes increasingly difficult for you to learn new things: subtract your age ÷ 10 from all Advancement Totals, although the Advancement Total for a season cannot drop below 1.\n\nDue to your great size, you must eat vast amounts of food (equal to what three normal people would eat in a day), and have the Minor Personality Flaw Greedy (which counts as one of your normal Flaws). If you go without food for even a single day you fall into a deep slumber, a kind of supernatural hibernation. You will starve to death in (2 + your Divine Might) days unless you are fed your own body weight in food. After awakening, you suffer a number of lost Long Term Fatigue Levels equal to the number of days you went without food. (Note that this Virtue does not itself grant Divine Might; see Strong Angelic Heritage, later.)\n\nYou may not take The Gift or True Faith, Hermetic Virtues or Flaws, Methods or Powers (see Realms of Power: The Divine, Revised Edition, pages 46-56), Virtues such as Giant, Mythic, or Faerie Blood, Flaws such as Age Quickly or Lycanthrope, or Virtues or Flaws that affect your Size. A descendant of the Nephilim without Divine Might could, in theory, learn supernatural powers (other than Divine Methods and Powers) from any realm, but that is very rare. Magi and Grogs may not take this Virtue."
   },
   "virtue.book_learner": {
     "name": "Book Learner",
@@ -1627,7 +1637,8 @@
   },
   "virtue.cathedral_school_master": {
     "name": "Cathedral School Master",
-    "summary": "The character teaches at a cathedral school, one of the many that dot Mythic Europe."
+    "summary": "The character teaches at a cathedral school, one of the many that dot Mythic Europe.",
+    "description": "The character teaches at a cathedral school, one of the many that dot Mythic Europe. He is at least (30 – Intelligence) vears old and must have scores of 5 in Latin and Artes Liberales, and a Teaching score of at least 3. He may learn any Academic Ability, and may teach it to his students. He is typically not a university man, but was instructed at a cathedral school. He receives 240 additional experience points, which may be spent on Academic Abilities and Teaching. The character has an Academic Reputation of 2.\n\nThis Virtue is compatible with the Baccalaureus and Priest Virtues. Characters with higher university degrees should take those Virtues instead; a magister or doctor gains no additional status from teaching at a cathedral school. This Virtue is only available to male characters."
   },
   "virtue.cautious_sorcerer": {
     "name": "Cautious Sorcerer",
@@ -1641,7 +1652,8 @@
   },
   "virtue.clan_ilfetu": {
     "name": "Clan Ilfetu",
-    "summary": "The character is a member of Clan Ilfetu within House Bjornaer, and has received extra training in the rituals of the House."
+    "summary": "The character is a member of Clan Ilfetu within House Bjornaer, and has received extra training in the rituals of the House.",
+    "description": "The character is a member of Clan Ilfetu within House Bjornaer, and has received extra training in the rituals of the House. You receive 50 extra experience points that may be spent on House Bjornaer Lore, Magic Lore (with a specialty in the Great Beasts), and Gothic, the dead language that the House uses for all of its rituals. It is possible that the magus has also been Initiated into the Esoteric Mystery of Divination and Augury (see The Mysteries Revised Edition, page 58); if so, that Virtue must be purchased with the normal allowance of ten points of Virtues and Flaws. Clan Ilfetu teaches the Divination method of haemagmomancy, which is divination by observing the blood splatters of wounded animals; this gives the following bonuses to Divination: +5 family, +3 Corpus. See Houses of Hermes: Mystery Cults, page 12, for more details on House Bjornaer and the role of Clan Ilfetu."
   },
   "virtue.clear_thinker": {
     "name": "Clear Thinker",
@@ -1659,11 +1671,13 @@
   },
   "virtue.commanding_aura": {
     "name": "Commanding Aura",
-    "summary": "This supernatural power is granted to characters by either the pope, or the Divine directly."
+    "summary": "This supernatural power is granted to characters by either the pope, or the Divine directly.",
+    "description": "This supernatural power is granted to characters by either the pope, or the Divine directly. It is an inherent benefit of Church office. Most characters with this Virtue also have the Senior Clergy Social Status Virtue.\n\nThe character has a power equivalent to the Hermetic spell Aura of Rightful Authority (page 357), but with Voice Range; this power has no cost, and no Penetration. The character also has a Magic Resistance and a Soak bonus that depend upon his rank in the Church. If the character carries a relic, this Magic Resistance is added to that of the relic.\n\nPope: Magic Resistance 25, Soak bonus +5.\n\nCardinal, or legatus a latere: Magic Resistance 20, Soak Bonus +4.\n\nLegatus missus: Magic Resistance 15, Soak Bonus +3.\n\nArchbishop: Magic Resistance 10, Soak Bonus +2.\n\nPapal legates are the representatives of the pope. If the legatus missus — a lower grade with limited powers — delays or deviates from his mission, then his Commanding Aura ceases to work until he completes penance. The Commanding Aura is also lost when a legatus missus completes his mission.\n\nSome lay rulers ordained by the pope (mostly kings and emperors) also have a Commanding Aura. See Realms of Power: The Divine, Revised Edition, page 42."
   },
   "virtue.common_sense": {
     "name": "Common Sense",
-    "summary": "Whenever you are about to do something contrary to what is sensible in the game setting, common sense (the storyguide) alerts you to the error."
+    "summary": "Whenever you are about to do something contrary to what is sensible in the game setting, common sense (the storyguide) alerts you to the error.",
+    "description": "Whenever you are about to do something contrary to what is sensible in the game setting, common sense (the storyguide) alerts you to the error. This is an excellent Virtue for a beginning player, as it legitimizes any help the storyguide may give."
   },
   "virtue.convoluted_mind": {
     "name": "Convoluted Mind",
@@ -1714,11 +1728,13 @@
   },
   "virtue.demonic_blood": {
     "name": "Demonic Blood",
-    "summary": "A demon is your parent; you have an Infernal Might and Infernal Powers."
+    "summary": "A demon is your parent; you have an Infernal Might and Infernal Powers.",
+    "description": "The character has a demon as a parent, and was conceived for a specific task by her Infernal mother or father. Because of this, she is an Infernal being and possesses an Infernal Might (Corpus) score of 5. This grants her Magic Resistance. Her body also contains one pawn of Corpus vis, which can only be extracted once she is dead. She is immune to Warping of any kind, need not eat or drink, and cannot produce a child; however, she suffers the natural urges associated with these activities, and may be required to make Personality rolls to overcome her desires.\n\nShe has up to 30 levels of Infernal Powers that may be invoked by spending Might Points. Design the effects using Hermetic spell guidelines, or the maleficia guidelines (see Realms of Power: The Infernal, Chapter 10: The Maleficia), taking into account the Powers of the demon parent. The Might cost for each Power is equal to its magnitude divided by two, rounded down (but always at least one point). These may be constant effects designed in the usual fashion (Sun duration, two uses per day, and an Environmental Trigger, see page 257), her Might Pool is always reduced by the cost of such a Power, and she cannot turn these Powers off. The Initiative total of each Power is the character's Quickness.\n\nShe may be unaware of her true heritage, in which case she probably has either the Delusion or Manufactured Ignorance Flaw to explain her remarkable capabilities. She has the close attention of Hell, and thus should offset this Virtue with a Story Flaw to reflect that attention, such as, Tragic Life. The character may learn Infernal Lore during character creation without needing to take the Arcane Lore Minor Virtue.\n\nShe is attended at nearly all times by a minor demon, which tends to remain in spiritual form, watching over her; if necessary, it protects her on behalf of her creator/parent. This demon is a ruach, who can use its Misfortune Power to blight her enemies. If she is unaware of her demonic heritage, she either considers herself exceedingly lucky, or believes the attending demon to be a Magical or Divine spirit. However, this attendant demon means that her demonic parent can always find her, and is kept apprised of what she is up to.\n\nA Demonic Blooded character's life span is short — roughly half that of a pure-blooded human. Her effective age (which applies as if it were her real age when creating a Longevity Ritual and when making rolls on the Aging Table) increases two years for every year that passes, and you must make two aging rolls each year once her effective age reaches 35. There is no way to halt or slow this other than Longevity Rituals, if she can convince someone to make one for her. However, she does not show the effects of aging; any Aging Points acquired do not get applied to her Characteristics, although they do still count as experience points towards Decrepitude.\n\nYou cannot take the Infernal Blessings Virtue described in Realms of Power: The Infernal; the Demonic Powers Virtue replaces that Virtue for the demon-blooded. You may not take any Virtue that affiliates her with a realm other than the Infernal. Also, you cannot take the Unaging Virtue or the Age Quickly Flaw. She may not have children, and so cannot have Dependents of this sort."
   },
   "virtue.demonic_might": {
     "name": "Demonic Might",
-    "summary": "Increases your Infernal Might. Requires Demonic Blood."
+    "summary": "Increases your Infernal Might. Requires Demonic Blood.",
+    "description": "You may only take this Virtue if your character has the Demonic Blood Virtue. Her Infernal Might increases by 2 points. Upon her death, her body contains a number of pawns of Corpus vis equal to her (Infernal Might / 5), rounding up. You may take this Virtue more than once, though it can account for no more than half of the character's total Virtues."
   },
   "virtue.demonic_powers": {
     "name": "Demonic Powers",
@@ -1726,15 +1742,18 @@
   },
   "virtue.devil_child": {
     "name": "Devil Child",
-    "summary": "Free status Virtue for a Mythic Companion born of demonic parents; incompatible with The Gift."
+    "summary": "Free status Virtue for a Mythic Companion born of demonic parents; incompatible with The Gift.",
+    "description": "This Virtue has no cost, and can only be taken for a Mythic Companion who has been born with demonic parents. The character gets the Demonic Might or Demonic Powers (player's choice) Minor Virtue free."
   },
   "virtue.diedne_magic": {
     "name": "Diedne Magic",
-    "summary": "Your magic lineage and traditions are from the druids and the vanquished former house of Diedne, making you especially skilled with Spontaneous magic."
+    "summary": "Your magic lineage and traditions are from the druids and the vanquished former house of Diedne, making you especially skilled with Spontaneous magic.",
+    "description": "Your magic lineage and traditions are from the druids and the vanquished former house of Diedne, making you especially skilled with Spontaneous magic. When you cast a Spontaneous spell without expending Fatigue, you may choose to divide by 5 or by 2. If you choose to divide by 5, you need not roll a stress die, and cannot botch, just as normal. If you choose to divide by 2, you must roll a stress die, and may botch.\n\nWhen you expend Fatigue on casting a spontaneous spell, the lowest applicable Art is doubled before the whole total is divided by two. You still roll a stress die, and may botch.\n\nYou must keep your lineage hidden from the Order, giving you a Major Story Flaw — Dark Secret is an obvious choice, but you may choose a different one with troupe approval. This is in addition to your normal allowance of Flaws, and does not grant you any points with which to buy Virtues."
   },
   "virtue.doctor_in_faculty": {
     "name": "Doctor in {faculty}",
-    "summary": "The character has graduated from one of the higher faculties of a university, in medicine, civil or canon law, or theology, having already received his magister in artibus license, and may instruct fellow students."
+    "summary": "The character has graduated from one of the higher faculties of a university, in medicine, civil or canon law, or theology, having already received his magister in artibus license, and may instruct fellow students.",
+    "description": "The character has graduated from one of the higher faculties of a university, in medicine, civil or canon law, or theology, having already received his magister in artibus license, and may instruct fellow students. The character may teach anywhere, even at a university that he did not attend. This is the highest educational license in Mythic Europe. A doctor of medicine is also titled magister in medicina, having typically been taught in one of the southern universities.\n\nA character starting the game with this Virtue must be at least (27 Intelligence) years old. He must have a score of 5 in Latin. Artes Liberales, and the Ability that correlates to his faculty degree. The character has spent ten years at a university and receives an additional 300 experience points, which must be spent on Latin and Academic Abilities. He also begins the game with an Academic Reputation of 3.\n\nLike other working characters, he must spend two seasons a year practicing his profession, either teaching or working in a secular or ecclesiastical court. Both the Wealthy Virtue and the Poor Flaw are allowable, but players must decide what calamity befell such an erudite scholar if he is Poor, for which he receives a Bad Reputation at a level of 2.\n\nThis Virtue is compatible with the Hermetic Magus, Mendicant Friar, and Priest Virtues. It is only available to male characters, with the exception of Doctors in Medicine who graduated from Salerno. That university does train female physicians."
   },
   "virtue.domestic_animal": {
     "name": "Domestic Animal",
@@ -1779,7 +1798,8 @@
   },
   "virtue.emir": {
     "name": "Emir",
-    "summary": "This is the same as the Knight Virtue, though due to the rather different upbringing of Muslim emirs, you are likely to be as skilled with hunting, religious teachings, and culture as you are with martial pursuits."
+    "summary": "This is the same as the Knight Virtue, though due to the rather different upbringing of Muslim emirs, you are likely to be as skilled with hunting, religious teachings, and culture as you are with martial pursuits.",
+    "description": "This is the same as the Knight Virtue, though due to the rather different upbringing of Muslim emirs, you are likely to be as skilled with hunting, religious teachings, and culture as you are with martial pursuits."
   },
   "virtue.enchanting_ability": {
     "name": "Enchanting {medium}",
@@ -1787,7 +1807,8 @@
   },
   "virtue.enduring_constitution": {
     "name": "Enduring Constitution",
-    "summary": "You can withstand pain and fatigue."
+    "summary": "You can withstand pain and fatigue.",
+    "description": "You can withstand pain and fatigue. Decrease the penalties for reduced Fatigue levels by one point, and reduce your total penalty from wounds by onespoint (but not below zero). You also get +3 on rolls to resist pain."
   },
   "virtue.enduring_magic": {
     "name": "Enduring Magic",
@@ -1833,7 +1854,8 @@
   },
   "virtue.faerie_blood": {
     "name": "Faerie Blood",
-    "summary": "Somewhere in your ancestry there is a faerie, and this relation gives you an intuitive grasp of the motivations and personalities of those supernatural folk."
+    "summary": "Somewhere in your ancestry there is a faerie, and this relation gives you an intuitive grasp of the motivations and personalities of those supernatural folk.",
+    "description": "Somewhere in your ancestry there is a faerie, and this relation gives you an intuitive grasp of the motivations and personalities of those supernatural folk. Faeries are more comfortable around you than around other humans, and given time, may even forget the mortal blood in your veins.\n\nYou are resistant to aging, and get -1 to all aging rolls.\n\nCharacters with Faerie Blood can learn Faerie Lore at character generation.\n\nType of Faerie Blood (pick one, or create a similar one):\n\nBlood of the Bee King: The descendants of Bee Kings may give simple instructions to bees they touch, and may understand the thoughts dominating hives of bees. They are unable to give bees instructions that will kill them, except to command warrior bees to attack, since warrior bees are so willing to die (Penetration 25).\n\nDwarf Blood: You are descended from the master craftsmen of the fay, and get a +1 bonus to any total including a Craft Ability.\n\nGoblin Blood: Your ancestors were the sneaky inhabitants of the shadows underground, and you get a +1 bonus on all totals involving stealth.\n\nSatyr Blood: The satyrs are notoriously lecherous. You get a +1 bonus to Communication and Presence totals when dealing with sexually compatible characters.\n\nSidhe Blood: You are descended from one of the noble fay who rule the lands of Summer and Sunlight. Because of the striking and unusual qualities of your nature add +1 to your Presence, but not to more than +3. Many mortals may consider you fascinating or alluring.\n\nStinnen Blood: A character who has Spinnen Blood can convert his or her own body weight of fiber into cloth per day, simply by touching it. Old cloth, or products made of cloth fibers, can be unwoven using the same ability, but this counts toward the maximum weight of cloth a character can alter per day. Some Spinnen, particularly those who have served as companions to magi, create other useful objects, like tents, ropes, or sails in lieu of the same weight of cloth. These characters are from a single family line that originated near Ghent; see The Lion and the Lily, page 97, for details of how most of the family live.\n\nUndine Blood: The undines are the faeries of the water, and you get a +2 bonus to any action taken underwater, which will partially offset any penalty applied."
   },
   "virtue.faerie_doctor": {
     "name": "Faerie Doctor",
@@ -1845,7 +1867,8 @@
   },
   "virtue.faerie_raised_magic": {
     "name": "Faerie-Raised Magic",
-    "summary": "The character's experience with faeries and the Faerie realm has conditioned him to invent spells very quickly; to him, Formulaic spells seem like inherent powers that you can learn through observation and experimentation."
+    "summary": "The character's experience with faeries and the Faerie realm has conditioned him to invent spells very quickly; to him, Formulaic spells seem like inherent powers that you can learn through observation and experimentation.",
+    "description": "The character's experience with faeries and the Faerie realm has conditioned him to invent spells very quickly; to him, Formulaic spells seem like inherent powers that you can learn through observation and experimentation.\n\nBecause of this, he can teach himself spells outside of the laboratory. You may spend experience points from Exposure, Adventure, and Practice on spells you could normally invent that mimic faerie powers or other supernatural effects your character has observed that season.\n\nTo invent a spell in this way, the magus's Technique + Form + Intelligence + Magic Theory must at least equal (the spell's level – 10), and you must spend a number of experience points equal to (the spell magnitude + 4). Spells of level 5 or less cost their level in experience points (but always at least 1). For example, a level 2 spell costs 2 experience points, and a Level 15 spell costs 7 experience points. The magus cannot invent Ritual spells in this way.\n\nIf the magus already knows a spell that is similar to one he wishes to invent (see Similar Spells, page 260), any experience points you spend towards learning that spell are increased by one-half, rounded up. This means that a level 25 spell would cost 6 experience points instead of 9, for example.\n\nThis Virtue also includes the Virtue Spell Improvisation. That is, you may add the magnitude of a known Formulaic spell as a bonus to your character's Casting Total when spontaneously casting a spell that is similar to it.\n\nIf you take this Virtue during character creation, you should normally take the Faerie Upbringing Flaw. Because the magus's master also had to teach him about human society, he probably had less time to teach him Hermetic magic. It is possible that the apprentice invented Formulaic spells quickly enough on his own to compensate for this, but you might take the Weak Parens Flaw to suggest this limitation of his apprenticeship."
   },
   "virtue.failed_apprentice": {
     "name": "Failed Apprentice",
@@ -1871,11 +1894,13 @@
   },
   "virtue.fast_caster": {
     "name": "Fast Caster",
-    "summary": "Your magic takes less time to perform than that of other magi."
+    "summary": "Your magic takes less time to perform than that of other magi.",
+    "description": "Your magic takes less time to perform than that of other magi. You gain +3 to Initiative to cast spells in combat and +3 to rolls to determine fast casting speed."
   },
   "virtue.feather_messenger": {
     "name": "Feather Messenger",
-    "summary": "This Virtue is only available to a character who can take the form of a bird (which may be her natural form)."
+    "summary": "This Virtue is only available to a character who can take the form of a bird (which may be her natural form).",
+    "description": "This Virtue is only available to a character who can take the form of a bird (which may be her natural form). She can painlessly separate a feather from her body, and use it to write as a quill, controlling its movements telepathically while it remains within sight. The quill doesn't need ink; it provides it magically. After she finishes writing, the character can reattach the feather if in bird form. The quality of the character as a scribe does not differ between human and bird forms. The character can also pull off feathers in bird form, turn into a human, and still mentally control the dropped feathers. This Virtue is particularly associated with a north African magical tradition called the Daughters of Four Fathers (see Between Sand & Sea, page 107)."
   },
   "virtue.ferocity": {
     "name": "Ferocity",
@@ -1936,11 +1961,13 @@
   },
   "virtue.gender_shift": {
     "name": "Gender Shift",
-    "summary": "Each midnight, the character may choose to change genders."
+    "summary": "Each midnight, the character may choose to change genders.",
+    "description": "Each midnight, the character may choose to change genders. The character's male and female forms are consistent across transformations, and usually appear to be blood kin of each other. The character's Personality Traits may vary slightly between forms. Pregnant characters may not use this ability."
   },
   "virtue.gentle_gift": {
     "name": "Gentle Gift",
-    "summary": "Your Gift does not disturb others."
+    "summary": "Your Gift does not disturb others.",
+    "description": "Unlike other magi, whose Magical nature disturbs normal people and animals, your Gift is subtle and quiet. You do not suffer the usual penalties when interacting with people and animals."
   },
   "virtue.gentleman": {
     "name": "Gentleman/woman",
@@ -1948,7 +1975,8 @@
   },
   "virtue.ghostly_warder": {
     "name": "Ghostly Warder",
-    "summary": "A ghost watches over you."
+    "summary": "A ghost watches over you.",
+    "description": "A ghost watches over you. It might be a grandparent, a childhood friend, or anyone else who cares for you enough to stay around after death. The ghost is invisible and silent to all but you and those with Second Sight (see page 170). It can see and hear what is going on around you and makes an excellent spy, since it can leave your presence once per day for up to half an hour. However, death does not leave people in their normal state of mind, so the ghost probably has some quirks that make it less than dependable — it might even encourage you to join it on the other side. The ghost has 300 experience points in various Abilities that it can use to advise you, and ghosts may take any Abilities. See page 457 for an example of a ghostly warder. This is a more specific version of Magical Warder (see later), and is an example of that Virtue."
   },
   "virtue.giant_blood": {
     "name": "Giant Blood",
@@ -1960,11 +1988,13 @@
   },
   "virtue.gorgiastic": {
     "name": "Gorgiastic",
-    "summary": "These magi, or their ancestors, have rejected the teachings of House Criamon and left the House."
+    "summary": "These magi, or their ancestors, have rejected the teachings of House Criamon and left the House.",
+    "description": "These magi, or their ancestors, have rejected the teachings of House Criamon and left the House. These magi may have Enigmatic Wisdom and House Criamon Lore scores after character creation. The character's Enigmatic Wisdom Score cannot exceed 4 without the assistance of Criamon magi, or a magical breakthrough. House Criamon attempts to convince Gorgiastic magi to rejoin. Gorgiastic magi do not usually have Criamon markings, but develop them if they begin to delve into the causes of things; for more details, see Houses of Hermes: Mystery Cults, House Criamon."
   },
   "virtue.gossip": {
     "name": "Gossip",
-    "summary": "You have regular social contacts in the area that provide you with all kinds of information about local social and political goingson."
+    "summary": "You have regular social contacts in the area that provide you with all kinds of information about local social and political goingson.",
+    "description": "You have regular social contacts in the area that provide you with all kinds of information about local social and political goingson. On a simple roll of 6+, you hear interesting news before almost everyone else. You treat all local Reputations as twice their actual level. With some well-placed words, you may be able to bestow new Reputations (whether deserved or not). You quite likely have a Reputation too — as a gossip."
   },
   "virtue.great_characteristic": {
     "name": "Great {characteristic}",
@@ -1972,12 +2002,14 @@
   },
   "virtue.greater_benediction": {
     "name": "Greater Benediction",
-    "summary": "You have been blessed by some supernatural power."
+    "summary": "You have been blessed by some supernatural power.",
+    "description": "You have been blessed by some supernatural power. The effects of the benediction should be comparable to other Major Virtues. (See insert for examples.)\n\nGreater Benediction Examples\n\nFlight\n\nYou are able to fly without the need of wings. Every time you take to the air, you lose a Long-Term Fatigue Level, and can remain airborne for a maximum of an hour, traveling up to fifty miles in this hour. Once you touch the ground, your current flight ends regardless of how much of your hour has elapsed. You require a prop to fly, such as a carpet or staff, but any prop of the appropriate type suffices.\n\nTrue Sight\n\nYou are rarely fooled by glamour or illusions that change the appearance of something (although a false image that does not change any particular thing's appearance, such as from a Creo Imaginem spell, still fools you). Further, you can always detect the true form of a shapechanged creature (although not members of House Bjornaer, since both their human and animal forms are \"true\" forms). This power has a Penetration of 20.\n\nUniversally Liked\n\nEveryone who knows you is your friend. You receive a +3 bonus to all social rolls with people who have known you more than one month. Anyone who tries to act against you by swaying the emotions or opinions of others has +3 added to all Ease Factors. This effect has a Penetration of 0."
   },
   "virtue.greater_immunity": {
     "name": "Greater Immunity ({hazard})",
     "name_unfilled": "Greater Immunity",
-    "summary": "You are completely immune to one common, potentially deadly hazard."
+    "summary": "You are completely immune to one common, potentially deadly hazard.",
+    "description": "You are completely immune to one hazard which is both common and potentially deadly. For example, you might be immune to fire or to iron (and only iron) weapons. You may not take immunity to aging — see the Unaging Minor Virtue (page 114) instead. This immunity applies to mundane and magical versions of the thing. If you are immune to fire, you are also immune to magically created fire.\n\nOne important possibility is immunity to deprivation, which means that you suffer no loss of Fatigue or wounds from going without air, food or drink. However, you cannot regain long-term Fatigue without rest and sustenance, and if you are injured deprivation could cause your wounds to worsen.\n\nYou may take this Virtue more than once, with a different immunity each time."
   },
   "virtue.greater_power": {
     "name": "Greater Power",
@@ -1985,19 +2017,23 @@
   },
   "virtue.greater_purifying_touch": {
     "name": "Greater Purifying Touch",
-    "summary": "You can, with a touch and the expenditure of a Fatigue level, cure a single serious disease."
+    "summary": "You can, with a touch and the expenditure of a Fatigue level, cure a single serious disease.",
+    "description": "You can, with a touch and the expenditure of a Fatigue level, cure a single serious disease. This disease should be either life-threatening or seriously disabling, and should be one from which people do not normally recover by themselves. You must choose the disease that you can cure when you take this Virtue, and you can only cure that disease. You can only choose a disease, not other types of injury or misfortune. See page 406 for more information on diseases, and Art and Academe, page 45 for more detail."
   },
   "virtue.guardian_angel": {
     "name": "Guardian Angel",
-    "summary": "You have learned to hear the words of a divine watcher who gives you practical and spiritual advice."
+    "summary": "You have learned to hear the words of a divine watcher who gives you practical and spiritual advice.",
+    "description": "You have learned to hear the words of a divine watcher who gives you practical and spiritual advice. The angel whispers in your ear and tells you what is best for you spiritually, rather than materially. He approves of violence only when there is a holy reason — often difficult to demonstrate. If you act against the angel's advice, he may leave you until you correct your ways. The angel has only a limited awareness of your thoughts, but when you speak aloud, he can hear and converse with you.\n\nYour guardian angel can also help in two practical ways. First, he can grant you a +5 bonus to Soak. Second, he can grant you a Magic Resistance of 15. This Magic Resistance is not compatible with a magus's Parma Magica, or Magic Resistance from most other sources, but it does add to the Magic Resistance resulting from Faith Points (see page 419). The angel only grants you these bonuses if you are acting in accordance with God's will."
   },
   "virtue.guest_of_house_criamon": {
     "name": "Guest of House Criamon",
-    "summary": "Magi with this Virtue are, politically, members of House Criamon, but may be created using the rules for any other House."
+    "summary": "Magi with this Virtue are, politically, members of House Criamon, but may be created using the rules for any other House.",
+    "description": "Magi with this Virtue are, politically, members of House Criamon, but may be created using the rules for any other House. Guests are offered membership, which Criamon see as a political formality, for many reasons. The troupe and player should determine why the character found it necessary to find sanctuary with this House."
   },
   "virtue.guild_apprentice": {
     "name": "Guild Apprentice",
-    "summary": "The character is a youth between the ages of 10 and 20 who is learning his trade from a guild master or journeyman."
+    "summary": "The character is a youth between the ages of 10 and 20 who is learning his trade from a guild master or journeyman.",
+    "description": "The character is a youth between the ages of 10 and 20 who is learning his trade from a guild master or journeyman. He has entered into a contract with his master that guarantees his training. The character is not able to benefit from either the Poor Flaw or the Wealthy Virtue, since he is essentially the property of his master, until he moves to the journeyman rank. Most of his time is spent in ways determined by his master."
   },
   "virtue.guild_dean": {
     "name": "Guild Dean",
@@ -2009,7 +2045,8 @@
   },
   "virtue.harnessed_magic": {
     "name": "Harnessed Magic",
-    "summary": "You have great control over your spells."
+    "summary": "You have great control over your spells.",
+    "description": "You have great control over your spells. You are able to cancel any of your spells simply by concentrating. You can even cancel the magic in magic items which you created. The act of canceling your magic should be treated as if you were casting a spell for timing and concentration purposes. If you are distracted and fail a Concentration roll, another attempt may be made in a later round. Spells and magic items can be canceled out over any distance, but once they have been canceled, you must recast a spell or reinvest a power in a magic item to start the effect again.\n\nThe drawback is that when you die, all of your spells and magic items sputter out."
   },
   "virtue.heartbeast": {
     "name": "Heartbeast",
@@ -2702,7 +2739,8 @@
   },
   "virtue.the_gift": {
     "name": "The Gift",
-    "summary": "You have the ability to work magic."
+    "summary": "You have the ability to work magic.",
+    "description": "You have the ability to work magic. See earlier, page 63, for full details.\n\nThe Gift is a special Virtue, because it has no cost. The character suffers all the penalties of The Gift, just as magi do (see page 203), but can be taught Supernatural Abilities without having to take the corresponding Virtues (see page 383 for rules). Most importantly, the character can be taught Hermetic Magic, so all magi must have this Virtue. A character with The Gift, even if he is not a magus, may take Hermetic Virtues and Flaws which relate to intrinsic ability rather than background or training."
   },
   "virtue.tough": {
     "name": "Tough",

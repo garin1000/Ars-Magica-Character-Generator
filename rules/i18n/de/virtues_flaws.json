@@ -1498,7 +1498,8 @@
   },
   "virtue.academic_concentration_subject": {
     "name": "Akademische Vertiefung {subject}",
-    "summary": "Der Charakter hat sich auf eines der sieben Fächer der Artes Liberales spezialisiert und die anderen sechs dabei vernachlässigt."
+    "summary": "Der Charakter hat sich auf eines der sieben Fächer der Artes Liberales spezialisiert und die anderen sechs dabei vernachlässigt.",
+    "description": "Der Charakter hat sich auf eines der sieben Fächer der Artes Liberales spezialisiert und die anderen sechs dabei vernachlässigt. Er darf +3 zu seinem Artes-Liberales-Wert für dieses Fach addieren. Allerdings muss er 1 von allen Artes-Liberales-Würfen und -Summen für die nicht spezialisierten Fächer abziehen. Bonus und Abzug sind in jeden Gesamtwert einzurechnen, für den Artes Liberales verwendet wird – einschließlich des Schreibens von Büchern. Diese Tugend ist unvereinbar mit der Tugend Begabung in Artes Liberales. Begabung in Artes Liberales bedeutet, dass ein Charakter mit allen sieben freien Künsten besonders vertraut ist, während Akademische Spezialisierung bedeutet, dass der Charakter eine freie Kunst auf Kosten der anderen vertieft hat.\n\nMit Zustimmung der Spieltruppe kann diese Tugend auf Philosophiae ausgeweitet werden. Für andere Fertigkeiten außer Artes Liberales und Philosophiae ist sie nicht zulässig."
   },
   "virtue.adept_laboratory_student": {
     "name": "Begabter Laborlehrling",
@@ -1506,11 +1507,13 @@
   },
   "virtue.affinity_ability": {
     "name": "Affinität zu {ability}",
-    "summary": "Erfahrung, die du in eine Fertigkeit steckst, zählt anderthalbfach, und diese Fertigkeit ist von der altersbedingten Obergrenze ausgenommen."
+    "summary": "Erfahrung, die du in eine Fertigkeit steckst, zählt anderthalbfach, und diese Fertigkeit ist von der altersbedingten Obergrenze ausgenommen.",
+    "description": "Alle Fortschrittssummen für eine Fertigkeit werden um die Hälfte erhöht, aufgerundet, ebenso wie alle Erfahrungspunkte, die du bei der Charaktererschaffung in diese Fertigkeit investierst. Du kannst diese Tugend für eine bestimmte Fertigkeit nur einmal nehmen, aber für verschiedene Fertigkeiten erneut. Wenn du diese Tugend für eine Fertigkeit nimmst, darfst du während der Charaktererschaffung die normale altersbedingte Obergrenze (siehe Seite 48) für diese Fertigkeit um zwei Punkte überschreiten."
   },
   "virtue.affinity_art": {
     "name": "Affinität zu {art}",
-    "summary": "Erfahrung, die du in eine Kunst steckst, zählt anderthalbfach. Kann zweimal gewählt werden, für zwei Künste."
+    "summary": "Erfahrung, die du in eine Kunst steckst, zählt anderthalbfach. Kann zweimal gewählt werden, für zwei Künste.",
+    "description": "Deine Fortschrittssummen für eine hermetische Kunst werden um die Hälfte erhöht, aufgerundet. Bei der Charaktererschaffung werden alle in diese Kunst investierten Erfahrungspunkte ebenfalls um die Hälfte erhöht (aufgerundet), und du darfst die normalen empfohlenen Grenzen überschreiten. Du kannst diese Tugend zweimal nehmen, für zwei verschiedene Künste."
   },
   "virtue.alim": {
     "name": "'Alim",
@@ -1532,15 +1535,18 @@
   },
   "virtue.almogavar": {
     "name": "Almogavar",
-    "summary": "Der Charakter ist ein Mitglied einer Söldner- und Räuberschar und lebt ein Leben voller Abenteuer nach einem Ehrenkodex und strikter Disziplin."
+    "summary": "Der Charakter ist ein Mitglied einer Söldner- und Räuberschar und lebt ein Leben voller Abenteuer nach einem Ehrenkodex und strikter Disziplin.",
+    "description": "Der Charakter ist ein Mitglied einer Söldner- und Räuberschar und lebt ein Leben voller Abenteuer nach einem Ehrenkodex und strikter Disziplin. Er teilt ein Band der Solidarität mit seinen Gefährten, und sie können sich gegenseitig auf ihre Loyalität verlassen. Er hat Standardausrüstung und darf Kampffertigkeiten nehmen. Er kann ohne zusätzliche Kosten der Adalil, der Stellvertreter des Anführers, sein, was ihm mehr Autorität und Verantwortung einbringt. Er wird von seiner Einheit versorgt und darf nicht den Fehler Arm oder die Tugend Wohlhabend nehmen.\n\nDiese Charaktere stammen von der Iberischen Halbinsel, und wenn sie besonders weit von zu Hause entfernt sind, kann die Spieltruppe entscheiden, dass dies nicht als Sozialer Status verfügbar ist."
   },
   "virtue.amorphous_major": {
     "name": "Amorph (Groß)",
-    "summary": "Der Charakter kann jede menschliche Gestalt annehmen, solange sie nicht erkennbar zu einem bestimmten Menschen gehört."
+    "summary": "Der Charakter kann jede menschliche Gestalt annehmen, solange sie nicht erkennbar zu einem bestimmten Menschen gehört.",
+    "description": "Der Charakter kann jede menschliche Gestalt annehmen, solange sie nicht erkennbar zu einem bestimmten Menschen gehört. Der Charakter entwickelt diese Fähigkeit, weil sein Körper die nahezu gasförmige Eigenschaft dämonischen Fleisches angenommen hat; daher sind alle scheinbaren Veränderungen in Größe oder körperlicher Verfassung rein äußerlich und beeinflussen die Spielwerte des Charakters nicht. Manche amorphen Menschen können um Mitternacht eine einzige Gestalt wählen – das ist die Große Form der Tugend. Ihre Kleine Form erlaubt dem Charakter nur dann eine Gestaltsveränderung, wenn er eine bedeutsame Handlung vollzogen hat, die mit der Besessenheit des beteiligten Dämons verknüpft ist. Der Charakter kann nur dann zu seiner Geburtsgestalt zurückkehren, wenn er die Bedingungen der Verwandlung erfüllt hat oder wenn er unfreiwillig die Gestalt wechselt – beim Sterben oder beim Betreten geweihten Bodens."
   },
   "virtue.amorphous_minor": {
     "name": "Amorph (Klein)",
-    "summary": "Der Charakter kann jede menschliche Gestalt annehmen, solange sie nicht erkennbar zu einem bestimmten Menschen gehört."
+    "summary": "Der Charakter kann jede menschliche Gestalt annehmen, solange sie nicht erkennbar zu einem bestimmten Menschen gehört.",
+    "description": "Der Charakter kann jede menschliche Gestalt annehmen, solange sie nicht erkennbar zu einem bestimmten Menschen gehört. Der Charakter entwickelt diese Fähigkeit, weil sein Körper die nahezu gasförmige Eigenschaft dämonischen Fleisches angenommen hat; daher sind alle scheinbaren Veränderungen in Größe oder körperlicher Verfassung rein äußerlich und beeinflussen die Spielwerte des Charakters nicht. Manche amorphen Menschen können um Mitternacht eine einzige Gestalt wählen – das ist die Große Form der Tugend. Ihre Kleine Form erlaubt dem Charakter nur dann eine Gestaltsveränderung, wenn er eine bedeutsame Handlung vollzogen hat, die mit der Besessenheit des beteiligten Dämons verknüpft ist. Der Charakter kann nur dann zu seiner Geburtsgestalt zurückkehren, wenn er die Bedingungen der Verwandlung erfüllt hat oder wenn er unfreiwillig die Gestalt wechselt – beim Sterben oder beim Betreten geweihten Bodens."
   },
   "virtue.animal_ken": {
     "name": "Tierverständnis",
@@ -1561,7 +1567,8 @@
   },
   "virtue.arcane_lore": {
     "name": "Arkanes Wissen",
-    "summary": "Du kannst während der Charaktererschaffung Arkane Fertigkeiten erwerben."
+    "summary": "Du kannst während der Charaktererschaffung Arkane Fertigkeiten erwerben.",
+    "description": "Du kannst während der Charaktererschaffung Arkane Fertigkeiten erwerben. Sofern du nicht die Gabe besitzt, kannst du die Parma Magica nicht erlernen. Du erhältst zusätzliche 50 Erfahrungspunkte, die ausschließlich für Arkane Fertigkeiten ausgegeben werden müssen.\n\nEin begabter Charakter, der kein hermetischer Magus ist und die Parma Magica kennt, muss den Großen Geschichte-Fehler Feind: Gesamter Orden des Hermes nehmen, da Magi durch ihren Eid verpflichtet sind, den Charakter auf der Stelle zu töten, sofern er nicht sofort dem Orden beitritt. Ein solcher Charakter kann in einer normalen Saga nicht gespielt werden, da die anderen Spielercharaktere ihn töten müssen."
   },
   "virtue.archieunuch": {
     "name": "Archieunuch",
@@ -1569,7 +1576,8 @@
   },
   "virtue.aristotelian_training": {
     "name": "Aristotelische Ausbildung",
-    "summary": "Der Charakter wurde in der Neuen Aristotelischen Lehre ausgebildet und hat seinen Unterricht von einem Lehrer erhalten, der kürzlich übersetzte Aristoteles-Texte anstelle des üblichen Lehrplans verwendet."
+    "summary": "Der Charakter wurde in der Neuen Aristotelischen Lehre ausgebildet und hat seinen Unterricht von einem Lehrer erhalten, der kürzlich übersetzte Aristoteles-Texte anstelle des üblichen Lehrplans verwendet.",
+    "description": "Der Charakter wurde in der Neuen Aristotelischen Lehre ausgebildet und hat seinen Unterricht von einem Lehrer erhalten, der kürzlich übersetzte Aristoteles-Texte anstelle des üblichen Lehrplans verwendet. Der Charakter erhält einen +1-Bonus auf Artes-Liberales-Würfe für Grammatik, Logik und Rhetorik sowie einen +1-Bonus bei der Berechnung von Disputatio-Summen (siehe Kunst & Gelehrsamkeit, Seite 103, für Details). Ein Magus mit dieser Tugend kann +1 zu seinen Laborsummen addieren, wenn er versucht, die Neue Aristotelische Lehre mit der Magietheorie zu verbinden (wie auf Seite 11 von Kunst & Gelehrsamkeit beschrieben). Diese Tugend ist mit Begabung in Artes Liberales vereinbar."
   },
   "virtue.atlantean_magic": {
     "name": "Atlantische Magie",
@@ -1586,7 +1594,8 @@
   },
   "virtue.bee_king": {
     "name": "Bienenkönig",
-    "summary": "Das Bienenkönigstum ist das Ergebnis einer Abstammung von bestimmten Feen und damit eine Form von Feenblut."
+    "summary": "Das Bienenkönigstum ist das Ergebnis einer Abstammung von bestimmten Feen und damit eine Form von Feenblut.",
+    "description": "Das Bienenkönigstum ist das Ergebnis einer Abstammung von bestimmten Feen und damit eine Form von Feenblut. Es verleiht folgende Vorteile:\n\nBienenkönige scheinen nach dem Erreichen der Reife nicht zu altern, doch jeder Bienenkönig, der nicht durch äußere Umstände stirbt, stirbt an einer schnell verlaufenden Krankheit genau ein Jahrhundert nach seiner Geburt.\n\nJeder Bienenkönig kann jede Bienengruppe anweisen, jede Handlung durchzuführen, zu der sie physisch in der Lage sind, selbst wenn dies zu ihrem Tod führt. Übliche Anweisungen wie das Angreifen von Menschen, die Erhöhung der Bienenhauspopulation oder das Bauen von Wachsobjekten werden weiterhin ausgeführt, bis die Anweisung widerrufen wird (Penetration 50). Einfache Befehle von einem Satz oder kürzer können mündlich erteilt werden.\n\nBienenkönige können Bienen komplexe Botschaften übermitteln, indem sie eine einzige Biene auf der Zunge des Bienenkönigs landen lassen. Diese Biene fungiert dann als Repräsentant des Königs gegenüber dem Bienenstock. Bienenkönige können die Sprache von Bienenstöcken verstehen und können die Gedanken von Bienen lesen, die sie berühren.\n\nBienenkönige werden niemals von einer Bienenart gestochen. Ein angreifender Bienenschwarm wird als Umwelteffekt behandelt, nicht als feindliche Kampfgruppe. Der Schwarm verursacht automatisch +10 Schaden pro Runde. Dieser Schaden kann normal absorbiert werden.\n\nZu beachten ist, dass Bienen im Mythischen Europa Könige haben, keine Königinnen, doch ein weiblicher Charakter mit dieser Tugend kann sich selbst nach Belieben Bienenkönigin nennen.\n\nDies ist eine Übernatürliche Tugend, und du kannst sie nicht verlieren, wenn du als Magus ausgebildet wirst (siehe Seite 269). Wenn dein Meister die Fähigkeit nicht erhalten kann, kannst du nicht ausgebildet werden."
   },
   "virtue.berserk": {
     "name": "Berserker",
@@ -1595,7 +1604,8 @@
   },
   "virtue.blood_of_the_nephilim": {
     "name": "Blut der Nephilim",
-    "summary": "Du stammst von den Nephilim ab; deine Größe wächst und du alterst sehr langsam."
+    "summary": "Du stammst von den Nephilim ab; deine Größe wächst und du alterst sehr langsam.",
+    "description": "Du hast das Blut der Engel in deinen Adern und stammst von den großen Helden des Antediluvianischen Zeitalters ab, den Nephilim. Sofern du nicht die Tugend Mythischer Gefährte nimmst, ist dein Erbe etwas verdünnt, wenn auch noch immer bedeutsam.\n\nDeine Größe wird auf +1 erhöht und steigt für jedes Jahrhundert, das du lebst, um weitere +1.\n\nDu kannst während der Charaktererschaffung Dominiumkunde erlernen, ohne die Kleine Tugend Arkanes Wissen nehmen zu müssen.\n\nDu alterst unglaublich langsam und kannst Hunderte von Jahren leben. Du musst erst nach dem Alter von 150 einen Alterungswurf vornehmen, und zwar nur einmal alle zehn Jahre, und erhältst -5 auf Alterungswürfe. Du profitierst weder von Langlebigkeitsritualen noch von Magie oder übernatürlichen Kräften, die das Altern oder die Gebrechlichkeit verlangsamen oder lindern. Sobald du deinen ersten Gebrechlichkeitspunkt erwirbst, wird es für dich zunehmend schwieriger, neue Dinge zu lernen: Ziehe dein Alter ÷ 10 von allen Fortschrittssummen ab, obwohl die Fortschrittssumme für ein Quartal nicht unter 1 fallen kann.\n\nAufgrund deiner gewaltigen Größe musst du riesige Mengen Nahrung zu dir nehmen (entsprechend dem Tagesbedarf von drei normalen Menschen) und hast den Kleinen Persönlichkeits-Fehler Gierig (der als einer deiner normalen Fehler zählt). Wenn du auch nur einen einzigen Tag ohne Nahrung bleibst, verfällst du in einen tiefen Schlaf, eine Art übernatürlichen Winterschlaf. Du verhungerst in (2 + dein Göttlicher Machtwert) Tagen, sofern du nicht mit deinem eigenen Körpergewicht an Nahrung versorgt wirst. Nach dem Erwachen erleidest du eine Anzahl verlorener Langzeiterschöpfungsstufen, die der Anzahl der Tage entspricht, an denen du ohne Nahrung warst. (Zu beachten ist, dass diese Tugend selbst keinen Göttlichen Machtwert verleiht; siehe Starkes Engelserbe weiter unten.)\n\nDu kannst nicht die Gabe oder Wahren Glauben, Hermetische Tugenden oder Fehler, Methoden oder Kräfte (siehe Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Seiten 46-56), Tugenden wie Riesen-, Mythisches oder Feenblut, Fehler wie Schnelles Altern oder Werwolf, oder Tugenden oder Fehler nehmen, die deine Größe beeinflussen. Ein Nachkomme der Nephilim ohne Göttlichen Machtwert könnte theoretisch übernatürliche Kräfte (außer Göttlichen Methoden und Kräften) aus irgendeiner Sphäre erlernen, aber das ist sehr selten. Magi und Grogs dürfen diese Tugend nicht nehmen."
   },
   "virtue.book_learner": {
     "name": "Bücherwurm",
@@ -1629,7 +1639,8 @@
   },
   "virtue.cathedral_school_master": {
     "name": "Domschulmeister",
-    "summary": "Der Charakter unterrichtet an einer Domschule, einer der vielen, die das Mythische Europa durchziehen."
+    "summary": "Der Charakter unterrichtet an einer Domschule, einer der vielen, die das Mythische Europa durchziehen.",
+    "description": "Der Charakter unterrichtet an einer Domschule, einer der vielen, die das Mythische Europa durchziehen. Er ist mindestens (30 – Intelligenz) Jahre alt und muss Werte von 5 in Latein und Artes Liberales sowie einen Unterrichten-Wert von mindestens 3 haben. Er kann jede Akademische Fertigkeit erlernen und sie seinen Schülern beibringen. In der Regel ist er kein Universitätsmensch, sondern wurde an einer Domschule ausgebildet. Er erhält 240 zusätzliche Erfahrungspunkte, die für Akademische Fertigkeiten und Unterrichten ausgegeben werden können. Der Charakter hat eine Akademische Reputation von 2.\n\nDiese Tugend ist mit den Tugenden Baccalaureus und Priester vereinbar. Charaktere mit höheren Universitätsabschlüssen sollten stattdessen jene Tugenden nehmen; ein Magister oder Doktor gewinnt keinen zusätzlichen Status durch das Unterrichten an einer Domschule. Diese Tugend steht nur männlichen Charakteren zur Verfügung."
   },
   "virtue.cautious_sorcerer": {
     "name": "Vorsichtiger Zauberer",
@@ -1643,7 +1654,8 @@
   },
   "virtue.clan_ilfetu": {
     "name": "Clan Ilfetu",
-    "summary": "Der Charakter ist Mitglied des Clans Ilfetu innerhalb des Hauses Bjornaer und hat eine zusätzliche Ausbildung in den Ritualen des Hauses erhalten."
+    "summary": "Der Charakter ist Mitglied des Clans Ilfetu innerhalb des Hauses Bjornaer und hat eine zusätzliche Ausbildung in den Ritualen des Hauses erhalten.",
+    "description": "Der Charakter ist Mitglied des Clans Ilfetu innerhalb des Hauses Bjornaer und hat eine zusätzliche Ausbildung in den Ritualen des Hauses erhalten. Du erhältst 50 zusätzliche Erfahrungspunkte, die für Haus-Bjornaer-Kunde, Magiekunde (mit einer Spezialisierung auf die Großen Tiere) und Gotisch, die tote Sprache, die das Haus für alle seine Rituale verwendet, ausgegeben werden können. Es ist möglich, dass der Magus auch in das Esoterische Mysterium der Weissagung und Zeichendeutung eingeweiht wurde (siehe Die Mysterien (Überarbeitete Ausgabe), Seite 58); wenn dies der Fall ist, muss jene Tugend mit dem normalen Kontingent von zehn Punkten an Tugenden und Fehlern erworben werden. Clan Ilfetu lehrt die Weissagungsmethode der Hämagomantie, also die Weissagung durch Beobachtung der Blutspritzer verwundeter Tiere; dies gibt folgende Boni auf Weissagung und Zeichendeutung: +5 Familie, +3 Corpus. Siehe Häuser des Hermes: Mysterienkulte, Seite 12, für weitere Details zu Haus Bjornaer und der Rolle des Clans Ilfetu."
   },
   "virtue.clear_thinker": {
     "name": "Klarer Denker",
@@ -1661,11 +1673,13 @@
   },
   "virtue.commanding_aura": {
     "name": "Befehlende Aura",
-    "summary": "Diese übernatürliche Kraft wird Charakteren entweder vom Papst oder direkt vom Göttlichen verliehen."
+    "summary": "Diese übernatürliche Kraft wird Charakteren entweder vom Papst oder direkt vom Göttlichen verliehen.",
+    "description": "Diese übernatürliche Kraft wird Charakteren entweder vom Papst oder direkt vom Göttlichen verliehen. Sie ist ein inhärenter Vorteil des Kirchenamtes. Die meisten Charaktere mit dieser Tugend haben auch die Tugend Sozialer Status: Höherer Klerus.\n\nDer Charakter besitzt eine Kraft, die dem Hermetischen Zauber Aura der Rechtmäßigen Autorität (Seite 357) entspricht, jedoch mit Reichweite Stimme; diese Kraft hat keinen Kosten und keine Penetration. Der Charakter hat außerdem eine Magieresistenz und einen Absorptionsbonus, die von seinem Rang in der Kirche abhängen. Wenn der Charakter eine Reliquie trägt, wird diese Magieresistenz zu der der Reliquie addiert.\n\nPapst: Magieresistenz 25, Absorptionsbonus +5.\n\nKardinal oder Legatus a latere: Magieresistenz 20, Absorptionsbonus +4.\n\nLegatus missus: Magieresistenz 15, Absorptionsbonus +3.\n\nErzbischof: Magieresistenz 10, Absorptionsbonus +2.\n\nPäpstliche Legaten sind Vertreter des Papstes. Wenn der Legatus missus – ein niedrigerer Rang mit begrenzten Vollmachten – seine Mission verzögert oder von ihr abweicht, hört seine Befehlsaura auf zu wirken, bis er Buße getan hat. Die Befehlsaura geht auch verloren, wenn ein Legatus missus seine Mission abschließt.\n\nEinige weltliche Herrscher, die vom Papst ordiniert wurden (hauptsächlich Könige und Kaiser), haben ebenfalls eine Befehlsaura. Siehe Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Seite 42."
   },
   "virtue.common_sense": {
     "name": "Gesunder Menschenverstand",
-    "summary": "Wann immer du dabei bist, etwas zu tun, das dem gesunden Menschenverstand im Spielumfeld widerspricht, macht dich der gesunde Menschenverstand (der Spielleiter) auf den Fehler aufmerksam."
+    "summary": "Wann immer du dabei bist, etwas zu tun, das dem gesunden Menschenverstand im Spielumfeld widerspricht, macht dich der gesunde Menschenverstand (der Spielleiter) auf den Fehler aufmerksam.",
+    "description": "Wann immer du dabei bist, etwas zu tun, das dem gesunden Menschenverstand im Spielumfeld widerspricht, macht dich der gesunde Menschenverstand (der Spielleiter) auf den Fehler aufmerksam. Dies ist eine ausgezeichnete Tugend für einen Anfänger, da sie jede Hilfe legitimiert, die der Spielleiter leisten könnte."
   },
   "virtue.convoluted_mind": {
     "name": "Verschlungener Geist",
@@ -1716,11 +1730,13 @@
   },
   "virtue.demonic_blood": {
     "name": "Dämonisches Blut",
-    "summary": "Ein Elternteil ist ein Dämon; du besitzt einen infernalischen Machtwert und infernalische Kräfte."
+    "summary": "Ein Elternteil ist ein Dämon; du besitzt einen infernalischen Machtwert und infernalische Kräfte.",
+    "description": "Der Charakter hat einen Dämon als Elternteil und wurde von seinem höllischen Vater oder seiner höllischen Mutter für eine bestimmte Aufgabe gezeugt. Aufgrund dessen ist sie ein Höllisches Wesen und besitzt einen Infernalen Machtwert (Corpus) von 5. Dies verleiht ihr Magieresistenz. Ihr Körper enthält auch einen Bauern Corpus-Vis, der erst nach ihrem Tod gewonnen werden kann. Sie ist gegen Verzerrung jeglicher Art immun, muss nicht essen oder trinken und kann kein Kind bekommen; sie verspürt jedoch die natürlichen Triebe, die mit diesen Tätigkeiten verbunden sind, und kann aufgefordert werden, Persönlichkeitswürfe abzulegen, um ihren Begierden zu widerstehen.\n\nSie hat bis zu 30 Stufen Höllischer Kräfte, die durch Ausgeben von Machtpunkten eingesetzt werden können. Gestalte die Effekte mithilfe Hermetischer Zauberrichtlinien oder der Maleficia-Richtlinien (siehe Sphären der Macht: Das Infernale, Kapitel 10: Die Maleficia), unter Berücksichtigung der Kräfte des dämonischen Elternteils. Die Machtkosten für jede Kraft entsprechen ihrer Magnitude geteilt durch zwei, abgerundet (mindestens jedoch ein Punkt). Diese können als konstante Effekte gestaltet sein, die auf die übliche Weise entworfen werden (Dauer Sonne, zwei Anwendungen pro Tag und ein Umgebungsauslöser, siehe Seite 257); ihr Machtvorrat wird in diesem Fall stets um die Kosten einer solchen Kraft verringert, und sie kann diese Kräfte nicht abschalten. Der Initiativewert jeder Kraft ist die Schnelligkeit des Charakters.\n\nSie ist sich ihrer wahren Herkunft möglicherweise nicht bewusst; in diesem Fall hat sie wahrscheinlich entweder den Fehler Wahnvorstellung oder den Fehler Fabrizierte Unwissenheit, um ihre außergewöhnlichen Fähigkeiten zu erklären. Sie steht unter der besonderen Aufmerksamkeit der Hölle und sollte daher diese Tugend mit einem Geschichte-Fehler ausgleichen, der diese Aufmerksamkeit widerspiegelt, z. B. Tragisches Leben. Der Charakter kann während der Charaktererschaffung Infernalkunde erlernen, ohne die Kleine Tugend Arkanes Wissen nehmen zu müssen.\n\nIhr ist fast ständig ein kleiner Dämon zugeteilt, der in der Regel in geistiger Form bleibt und über sie wacht; wenn nötig, schützt er sie im Auftrag ihres Schöpfers/Elternteils. Dieser Dämon ist ein Ruach, der seine Unheilsmacht einsetzen kann, um ihre Feinde zu verderben. Wenn sie ihrer dämonischen Herkunft nicht bewusst ist, hält sie sich entweder für ungewöhnlich glücklich oder betrachtet den begleitenden Dämon als einen Magischen oder Göttlichen Geist. Dieser begleitende Dämon bedeutet jedoch, dass ihr dämonisches Elternteil sie jederzeit finden und über ihre Aktivitäten auf dem Laufenden gehalten werden kann.\n\nDas Leben einer Charakter mit Dämonischem Blut ist kurz – ungefähr halb so lang wie das eines reinblütigen Menschen. Ihr effektives Alter (das beim Erschaffen eines Langlebigkeitsrituals und beim Würfeln auf der Alterungstabelle wie ihr tatsächliches Alter gilt) steigt für jedes vergangene Jahr um zwei Jahre, und du musst einmal pro Jahr zwei Alterungswürfe vornehmen, sobald ihr effektives Alter 35 erreicht. Es gibt keine Möglichkeit, dies zu stoppen oder zu verlangsamen, außer durch Langlebigkeitsrituale, sofern sie jemanden dazu überreden kann, eines für sie herzustellen. Sie zeigt jedoch keine Anzeichen von Alterung; erworbene Alterungspunkte werden nicht auf ihre Eigenschaften angewendet, zählen aber weiterhin als Erfahrungspunkte für die Gebrechlichkeit.\n\nDu kannst nicht die Tugend Infernaler Segen nehmen, die in Sphären der Macht: Das Infernale beschrieben wird; die Tugend Dämonische Kräfte ersetzt jene Tugend für den dämonisch Geblüteten. Du kannst keine Tugend nehmen, die sie mit einer anderen Sphäre als der Höllensphäre verbindet. Außerdem kannst du nicht die Tugend Kein Altern oder den Fehler Schnelles Altern nehmen. Sie kann keine Kinder haben und daher auch keine Schützlinge dieser Art."
   },
   "virtue.demonic_might": {
     "name": "Dämonische Macht",
-    "summary": "Erhöht deinen infernalischen Machtwert. Erfordert Dämonisches Blut."
+    "summary": "Erhöht deinen infernalischen Machtwert. Erfordert Dämonisches Blut.",
+    "description": "Du kannst diese Tugend nur nehmen, wenn dein Charakter die Tugend Dämonisches Blut hat. Ihr Infernaler Machtwert steigt um 2 Punkte. Bei ihrem Tod enthält ihr Körper eine Anzahl von Bauern Corpus-Vis, die ihrem (Infernalen Machtwert / 5), aufgerundet, entspricht. Du kannst diese Tugend mehr als einmal nehmen, obwohl sie nicht mehr als die Hälfte der gesamten Tugenden des Charakters ausmachen darf."
   },
   "virtue.demonic_powers": {
     "name": "Dämonische Kräfte",
@@ -1728,15 +1744,18 @@
   },
   "virtue.devil_child": {
     "name": "Teufelskind",
-    "summary": "Freie Status-Tugend für einen mythischen Gefährten dämonischer Abstammung; unvereinbar mit der Gabe."
+    "summary": "Freie Status-Tugend für einen mythischen Gefährten dämonischer Abstammung; unvereinbar mit der Gabe.",
+    "description": "Diese Tugend hat keine Kosten und kann nur für einen Mythischen Gefährten genommen werden, der von dämonischen Eltern geboren wurde. Der Charakter erhält nach Wahl des Spielers die Kleine Tugend Dämonische Macht oder Dämonische Kräfte kostenlos."
   },
   "virtue.diedne_magic": {
     "name": "Diedne-Magie",
-    "summary": "Deine magische Abstammung und Tradition stammt von den Druiden und dem unterworfenen ehemaligen Haus Diedne, was dich besonders geschickt in Spontaner Magie macht."
+    "summary": "Deine magische Abstammung und Tradition stammt von den Druiden und dem unterworfenen ehemaligen Haus Diedne, was dich besonders geschickt in Spontaner Magie macht.",
+    "description": "Deine magische Abstammung und Tradition stammt von den Druiden und dem unterworfenen ehemaligen Haus Diedne, was dich besonders geschickt in Spontaner Magie macht. Wenn du einen Spontanzauber wirkst, ohne Erschöpfung aufzuwenden, kannst du wählen, ob du durch 5 oder durch 2 teilst. Wenn du durch 5 teilst, brauchst du keinen Stresswürfel zu werfen und kannst keinen Patzer erleiden, wie es normalerweise der Fall ist. Wenn du durch 2 teilst, musst du einen Stresswürfel werfen und kannst einen Patzer erleiden.\n\nWenn du Erschöpfung beim Wirken eines Spontanzaubers aufwendest, wird die niedrigste anwendbare Kunst verdoppelt, bevor die Gesamtsumme durch zwei geteilt wird. Du würfelst weiterhin einen Stresswürfel und kannst einen Patzer erleiden.\n\nDu musst deine Abstammung vor dem Orden verborgen halten, was dir einen Großen Geschichte-Fehler einbringt – Dunkles Geheimnis ist eine naheliegende Wahl, aber du kannst mit Zustimmung der Spieltruppe einen anderen wählen. Dies ist zusätzlich zu deiner normalen Zahl an Fehlern und gewährt dir keine Punkte, mit denen du Tugenden kaufen kannst."
   },
   "virtue.doctor_in_faculty": {
     "name": "Doktor der {faculty}",
-    "summary": "Der Charakter hat eine der höheren Fakultäten einer Universität in Medizin, Zivil- oder Kanonischem Recht oder Theologie abgeschlossen, nachdem er bereits seine Magister-in-Artibus-Lizenz erworben hat, und darf Kommilitonen unterrichten."
+    "summary": "Der Charakter hat eine der höheren Fakultäten einer Universität in Medizin, Zivil- oder Kanonischem Recht oder Theologie abgeschlossen, nachdem er bereits seine Magister-in-Artibus-Lizenz erworben hat, und darf Kommilitonen unterrichten.",
+    "description": "Der Charakter hat eine der höheren Fakultäten einer Universität in Medizin, Zivil- oder Kanonischem Recht oder Theologie abgeschlossen, nachdem er bereits seine Magister-in-Artibus-Lizenz erworben hat, und darf Kommilitonen unterrichten. Der Charakter kann überall unterrichten, auch an einer Universität, die er nicht besucht hat. Dies ist die höchste Bildungslizenz im Mythischen Europa. Ein Doktor der Medizin trägt auch den Titel Magister in Medicina, da er in der Regel an einer der südlichen Universitäten ausgebildet wurde.\n\nEin Charakter, der das Spiel mit dieser Tugend beginnt, muss mindestens (27 – Intelligenz) Jahre alt sein. Er muss einen Wert von 5 in Latein, Artes Liberales und der Fertigkeit haben, die seiner Fakultät entspricht. Der Charakter hat zehn Jahre an einer Universität verbracht und erhält 300 zusätzliche Erfahrungspunkte, die für Latein und Akademische Fertigkeiten ausgegeben werden müssen. Er beginnt das Spiel außerdem mit einer Akademischen Reputation von 3.\n\nWie andere berufstätige Charaktere muss er zwei Quartale pro Jahr in seiner Profession tätig sein, entweder lehrend oder an einem weltlichen oder kirchlichen Gericht arbeitend. Sowohl die Tugend Wohlhabend als auch der Fehler Arm sind zulässig, aber Spieler müssen entscheiden, welches Missgeschick einem solch gelehrten Akademiker widerfahren ist, wenn er Arm ist, wofür er eine Schlechte Reputation auf Stufe 2 erhält.\n\nDiese Tugend ist mit den Tugenden Hermetischer Magus, Bettelbruder und Priester vereinbar. Sie steht nur männlichen Charakteren zur Verfügung, mit Ausnahme von Doktoren der Medizin, die in Salerno graduiert haben. Diese Universität bildet tatsächlich weibliche Ärztinnen aus."
   },
   "virtue.domestic_animal": {
     "name": "Haustier",
@@ -1781,7 +1800,8 @@
   },
   "virtue.emir": {
     "name": "Emir",
-    "summary": "Dies entspricht der Ritter-Tugend, doch aufgrund der recht anderen Erziehung muslimischer Emire bist du wahrscheinlich ebenso versiert in Jagd, religiösen Lehren und Kultur wie in kriegerischen Belangen."
+    "summary": "Dies entspricht der Ritter-Tugend, doch aufgrund der recht anderen Erziehung muslimischer Emire bist du wahrscheinlich ebenso versiert in Jagd, religiösen Lehren und Kultur wie in kriegerischen Belangen.",
+    "description": "Dies entspricht der Ritter-Tugend, doch aufgrund der recht anderen Erziehung muslimischer Emire bist du wahrscheinlich ebenso versiert in Jagd, religiösen Lehren und Kultur wie in kriegerischen Belangen."
   },
   "virtue.enchanting_ability": {
     "name": "Bezaubernde {medium}",
@@ -1789,7 +1809,8 @@
   },
   "virtue.enduring_constitution": {
     "name": "Ausdauernde Konstitution",
-    "summary": "Du kannst Schmerz und Erschöpfung ertragen."
+    "summary": "Du kannst Schmerz und Erschöpfung ertragen.",
+    "description": "Du kannst Schmerz und Erschöpfung ertragen. Verringere die Abzüge für verringerte Erschöpfungsstufen um einen Punkt und reduziere deinen Gesamtabzug aus Wunden um einen Punkt (jedoch nicht unter null). Du erhältst außerdem +3 auf Würfe, um Schmerz zu widerstehen."
   },
   "virtue.enduring_magic": {
     "name": "Anhaltende Magie",
@@ -1835,7 +1856,8 @@
   },
   "virtue.faerie_blood": {
     "name": "Feenblut",
-    "summary": "Irgendwo in deiner Ahnenreihe findet sich eine Fee, und diese Verwandtschaft verleiht dir ein intuitives Gespür für die Beweggründe und Persönlichkeiten dieser übernatürlichen Wesen."
+    "summary": "Irgendwo in deiner Ahnenreihe findet sich eine Fee, und diese Verwandtschaft verleiht dir ein intuitives Gespür für die Beweggründe und Persönlichkeiten dieser übernatürlichen Wesen.",
+    "description": "Irgendwo in deiner Ahnenreihe findet sich eine Fee, und diese Verwandtschaft verleiht dir ein intuitives Gespür für die Beweggründe und Persönlichkeiten dieser übernatürlichen Wesen. Feen fühlen sich in deiner Nähe wohler als bei anderen Menschen und könnten mit der Zeit sogar das sterbliche Blut in deinen Adern vergessen.\n\nDu alterst langsamer und erhältst -1 auf alle Alterungswürfe.\n\nCharaktere mit Feenblut können Feenkunde bereits bei der Charaktererschaffung erlernen.\n\nArt des Feenbluts (eines auswählen oder ein ähnliches erschaffen):\n\nBlut des Bienenkönigs: Die Nachkommen von Bienenkönigen können Bienen, die sie berühren, einfache Anweisungen erteilen und die dominierenden Gedanken von Bienenvölkern verstehen. Sie können Bienen keine Anweisungen geben, die sie töten würden, außer Kriegerbienen zum Angriff zu befehlen, da Kriegerbienen so bereit sind zu sterben (Penetration 25).\n\nZwergenblut: Du stammst von den Meisterhandwerkern der Feen ab und erhältst +1 Bonus auf jeden Gesamtwert, der eine Handwerks-Fertigkeit einschließt.\n\nKoboldblut: Deine Vorfahren waren die hinterlistigen Bewohner der Untergrundschatten, und du erhältst +1 Bonus auf alle Gesamtwerte, die Schleichen betreffen.\n\nSatyrblut: Die Satyrn sind für ihre Lüsternheit bekannt. Du erhältst +1 Bonus auf Kommunikations- und Präsenz-Gesamtwerte im Umgang mit sexuell kompatiblen Charakteren.\n\nSidhe-Blut: Du stammst von einer der adeligen Feen ab, die die Lande des Sommers und des Sonnenlichts beherrschen. Aufgrund der auffälligen und ungewöhnlichen Qualitäten deiner Natur erhältst du +1 auf deine Präsenz, jedoch nicht über +3 hinaus. Viele Sterbliche könnten dich faszinierend oder verführerisch finden.\n\nSpinnen-Blut: Ein Charakter mit Spinnen-Blut kann täglich sein oder ihr eigenes Körpergewicht an Fasern in Stoff umwandeln, indem er diese einfach berührt. Alte Stoffe oder Produkte aus Stofffasern können mit derselben Fähigkeit aufgewebt werden, was jedoch auf das maximale Gewicht an Stoff angerechnet wird, das ein Charakter pro Tag verändern kann. Einige Spinnen, insbesondere jene, die als Gefährten von Magi gedient haben, erschaffen stattdessen andere nützliche Gegenstände wie Zelte, Seile oder Segel im gleichen Gewicht. Diese Charaktere entstammen einer einzigen Familienlinie, die ihren Ursprung in der Nähe von Gent hat; weitere Details über das Leben der meisten Familienmitglieder finden sich in Der Löwe und die Lilie, Seite 97.\n\nUndinen-Blut: Die Undinen sind die Wasserfeen, und du erhältst +2 Bonus auf alle Aktionen, die unter Wasser durchgeführt werden, was teilweise etwaige Abzüge ausgleicht."
   },
   "virtue.faerie_doctor": {
     "name": "Feendoktor",
@@ -1847,7 +1869,8 @@
   },
   "virtue.faerie_raised_magic": {
     "name": "Feengeprägte Magie",
-    "summary": "Die Erfahrungen des Charakters mit Feen und der Feensphäre haben ihn dazu gebracht, Zauber sehr schnell zu erfinden; für ihn wirken formulaische Zauber wie angeborene Kräfte, die man durch Beobachtung und Experimentieren erlernen kann."
+    "summary": "Die Erfahrungen des Charakters mit Feen und der Feensphäre haben ihn dazu gebracht, Zauber sehr schnell zu erfinden; für ihn wirken formulaische Zauber wie angeborene Kräfte, die man durch Beobachtung und Experimentieren erlernen kann.",
+    "description": "Die Erfahrungen des Charakters mit Feen und der Feensphäre haben ihn dazu gebracht, Zauber sehr schnell zu erfinden; für ihn wirken formulaische Zauber wie angeborene Kräfte, die man durch Beobachtung und Experimentieren erlernen kann.\n\nDaher kann er sich Zauber außerhalb des Laboratoriums selbst beibringen. Du kannst Erfahrungspunkte aus Exposition, Abenteuern und Übung auf Zauber verwenden, die du normalerweise erfinden könntest und die Feenkräfte oder andere übernatürliche Effekte nachahmen, die dein Charakter in diesem Quartal beobachtet hat.\n\nUm einen Zauber auf diese Weise zu erfinden, muss die Summe aus Technik + Form + Intelligenz + Magietheorie des Magus mindestens (Zauberstufe – 10) betragen, und du musst eine Anzahl von Erfahrungspunkten aufwenden, die (der Magnitude des Zaubers + 4) entspricht. Zauber der Stufe 5 oder niedriger kosten ihre Stufe in Erfahrungspunkten (jedoch stets mindestens 1). Ein Zauber der Stufe 2 kostet beispielsweise 2 Erfahrungspunkte, ein Zauber der Stufe 15 kostet 7 Erfahrungspunkte. Der Magus kann auf diese Weise keine Ritualzauber erfinden.\n\nKennt der Magus bereits einen Zauber, der dem zu erfindenden ähnlich ist (siehe Ähnliche Zauber, Seite 260), werden alle Erfahrungspunkte, die du zum Erlernen dieses Zaubers aufwendest, um die Hälfte erhöht, aufgerundet. Das bedeutet, dass ein Zauber der Stufe 25 statt 9 nur 6 Erfahrungspunkte kosten würde.\n\nDiese Tugend schließt auch die Tugend Zauberimprovisation ein. Das bedeutet, du kannst die Magnitude eines bekannten formulaischen Zaubers als Bonus zu deiner Zaubersumme hinzufügen, wenn du spontan einen ähnlichen Zauber wirkst.\n\nWenn du diese Tugend bei der Charaktererschaffung wählst, solltest du normalerweise den Feenaufgewachsen-Fehler wählen. Da der Meister des Magus ihn auch über die menschliche Gesellschaft unterrichten musste, hatte er wahrscheinlich weniger Zeit, ihm hermetische Magie beizubringen. Es ist möglich, dass der Lehrling formulaische Zauber schnell genug selbst erfunden hat, um dies auszugleichen, aber du könntest den Schwacher-Parens-Fehler wählen, um diese Einschränkung seiner Lehrzeit anzudeuten."
   },
   "virtue.failed_apprentice": {
     "name": "Gescheiterter Lehrling",
@@ -1873,11 +1896,13 @@
   },
   "virtue.fast_caster": {
     "name": "Schneller Zauberer",
-    "summary": "Deine Magie erfordert weniger Zeit als die anderer Magi."
+    "summary": "Deine Magie erfordert weniger Zeit als die anderer Magi.",
+    "description": "Deine Magie erfordert weniger Zeit als die anderer Magi. Du erhältst +3 auf Initiative zum Zaubern im Kampf und +3 auf Würfe zur Bestimmung der Schnellzauber-Geschwindigkeit."
   },
   "virtue.feather_messenger": {
     "name": "Federbote",
-    "summary": "Diese Tugend steht nur einem Charakter zur Verfügung, der die Form eines Vogels annehmen kann (was auch ihre natürliche Form sein kann)."
+    "summary": "Diese Tugend steht nur einem Charakter zur Verfügung, der die Form eines Vogels annehmen kann (was auch ihre natürliche Form sein kann).",
+    "description": "Diese Tugend steht nur einem Charakter zur Verfügung, der die Form eines Vogels annehmen kann (was auch ihre natürliche Form sein kann). Sie kann schmerzlos eine Feder von ihrem Körper ablösen und diese als Federkiel zum Schreiben verwenden, wobei sie deren Bewegungen telepathisch kontrolliert, solange er sich in Sichtweite befindet. Der Kiel benötigt keine Tinte; er erzeugt sie magisch. Nach Abschluss des Schreibens kann der Charakter die Feder wieder befestigen, wenn er sich in Vogelform befindet. Die Qualität des Charakters als Schreiber unterscheidet sich nicht zwischen menschlicher und Vogelform. Der Charakter kann in Vogelform auch Federn abziehen, sich in einen Menschen verwandeln und die fallen gelassenen Federn gedanklich weiterhin kontrollieren. Diese Tugend ist besonders mit einer nordafrikanischen magischen Tradition namens „Töchter der Vier Väter\" verbunden (siehe Zwischen Sand und Meer, Seite 107)."
   },
   "virtue.ferocity": {
     "name": "Wildheit",
@@ -1938,11 +1963,13 @@
   },
   "virtue.gender_shift": {
     "name": "Geschlechtswechsel",
-    "summary": "Jeden Mitternacht kann der Charakter wählen, das Geschlecht zu wechseln."
+    "summary": "Jeden Mitternacht kann der Charakter wählen, das Geschlecht zu wechseln.",
+    "description": "Jeden Mitternacht kann der Charakter wählen, das Geschlecht zu wechseln. Die männliche und weibliche Form des Charakters sind über alle Verwandlungen hinweg konsistent und sehen einander üblicherweise wie Blutsverwandte aus. Die Persönlichkeitseigenschaften des Charakters können sich zwischen den Formen leicht unterscheiden. Schwangere Charaktere können diese Fähigkeit nicht nutzen."
   },
   "virtue.gentle_gift": {
     "name": "Sanfte Gabe",
-    "summary": "Deine Gabe verstört andere nicht."
+    "summary": "Deine Gabe verstört andere nicht.",
+    "description": "Im Gegensatz zu anderen Magi, deren magische Natur normale Menschen und Tiere beunruhigt, ist deine Gabe subtil und still. Du leidest nicht unter den üblichen Abzügen im Umgang mit Menschen und Tieren."
   },
   "virtue.gentleman": {
     "name": "Edelmann / Edelfrau",
@@ -1950,7 +1977,8 @@
   },
   "virtue.ghostly_warder": {
     "name": "Geisterhafter Hüter",
-    "summary": "Ein Geist wacht über dich."
+    "summary": "Ein Geist wacht über dich.",
+    "description": "Ein Geist wacht über dich. Es könnte sich um einen Großelternteil, einen Jugendfreund oder eine andere Person handeln, die sich genug um dich sorgt, um nach dem Tod bei dir zu bleiben. Der Geist ist für alle außer dir und jenen mit dem Zweiten Gesicht unsichtbar und unhörbar (siehe Seite 170). Er kann sehen und hören, was um dich herum geschieht, und ist ein ausgezeichneter Spion, da er einmal täglich für bis zu eine halbe Stunde deine Nähe verlassen kann. Der Tod hinterlässt Menschen jedoch nicht in ihrem normalen Geisteszustand, sodass der Geist wahrscheinlich einige Eigenheiten hat, die ihn unzuverlässig machen – er könnte dich sogar ermutigen, ihm auf die andere Seite zu folgen. Der Geist verfügt über 300 Erfahrungspunkte in verschiedenen Fertigkeiten, die er verwenden kann, um dich zu beraten, und Geister dürfen jede Fertigkeit besitzen. Siehe Seite 457 für ein Beispiel eines geistigen Wächters. Dies ist eine spezifischere Version des Magischen Wächters (siehe weiter unten) und ein Beispiel für jene Tugend."
   },
   "virtue.giant_blood": {
     "name": "Riesenblut",
@@ -1962,11 +1990,13 @@
   },
   "virtue.gorgiastic": {
     "name": "Gorgiast",
-    "summary": "Diese Magi oder ihre Vorfahren haben die Lehren des Hauses Criamon abgelehnt und das Haus verlassen."
+    "summary": "Diese Magi oder ihre Vorfahren haben die Lehren des Hauses Criamon abgelehnt und das Haus verlassen.",
+    "description": "Diese Magi oder ihre Vorfahren haben die Lehren des Hauses Criamon abgelehnt und das Haus verlassen. Diese Magi dürfen nach der Charaktererschaffung Werte in Enigmatischer Weisheit und Hauskundige: Criamon besitzen. Der Wert der Enigmatischen Weisheit des Charakters kann ohne die Hilfe von Criamon-Magi oder einen magischen Durchbruch 4 nicht überschreiten. Haus Criamon versucht, Gorgiast-Magi zur Rückkehr zu bewegen. Gorgiast-Magi haben in der Regel keine Criamon-Markierungen, entwickeln diese jedoch, wenn sie beginnen, den Ursachen der Dinge nachzuforschen; weitere Details finden sich in Häuser des Hermes: Mysterienkultee, Haus Criamon."
   },
   "virtue.gossip": {
     "name": "Klatschbase",
-    "summary": "Du verfügst über regelmäßige soziale Kontakte in der Gegend, die dir allerlei Informationen über lokale gesellschaftliche und politische Vorgänge liefern."
+    "summary": "Du verfügst über regelmäßige soziale Kontakte in der Gegend, die dir allerlei Informationen über lokale gesellschaftliche und politische Vorgänge liefern.",
+    "description": "Du verfügst über regelmäßige soziale Kontakte in der Gegend, die dir allerlei Informationen über lokale gesellschaftliche und politische Vorgänge liefern. Bei einem einfachen Wurf von 6+, erfährst du interessante Neuigkeiten fast vor allen anderen. Du behandelst alle lokalen Reputationen als doppelt so hoch wie ihren tatsächlichen Wert. Mit einigen gezielt platzierten Worten kannst du möglicherweise neue Reputationen verleihen (ob verdient oder nicht). Du hast höchstwahrscheinlich selbst eine Reputation – als Klatschbase."
   },
   "virtue.great_characteristic": {
     "name": "Hervorragende {characteristic}",
@@ -1974,12 +2004,14 @@
   },
   "virtue.greater_benediction": {
     "name": "Große Segnung",
-    "summary": "Du wurdest von einer übernatürlichen Macht gesegnet."
+    "summary": "Du wurdest von einer übernatürlichen Macht gesegnet.",
+    "description": "Du wurdest von einer übernatürlichen Macht gesegnet. Die Auswirkungen der Segnung sollten mit anderen Großen Tugenden vergleichbar sein. (Siehe Kasten für Beispiele.)\n\nBeispiele für Große Segnungen\n\nFlug\n\nDu bist in der Lage zu fliegen, ohne Flügel zu benötigen. Jedes Mal, wenn du dich in die Luft erhebst, verlierst du eine Langzeit-Erschöpfungsstufe und kannst maximal eine Stunde in der Luft bleiben, wobei du in dieser Stunde bis zu fünfzig Meilen zurücklegen kannst. Sobald du den Boden berührst, endet dein aktueller Flug, unabhängig davon, wie viel von deiner Stunde noch verbleibt. Du benötigst ein Hilfsmittel zum Fliegen, wie einen Teppich oder einen Stab, aber jedes Hilfsmittel des entsprechenden Typs genügt.\n\nWahres Sehen\n\nDu wirst selten durch Glamour oder Illusionen getäuscht, die das Aussehen von etwas verändern (obwohl ein falsches Bild, das das Aussehen eines bestimmten Dings nicht verändert, wie das eines Creo-Imaginem-Zaubers, dich dennoch täuscht). Darüber hinaus kannst du stets die wahre Form eines gestaltwandelnden Wesens erkennen (allerdings nicht die Mitglieder des Hauses Bjornaer, da sowohl ihre menschliche als auch ihre tierische Form „wahre\" Formen sind). Diese Macht hat eine Penetration von 20.\n\nAllgemein beliebt\n\nJeder, der dich kennt, ist dein Freund. Du erhältst +3 Bonus auf alle sozialen Würfe mit Personen, die dich seit mehr als einem Monat kennen. Wer versucht, gegen dich vorzugehen, indem er die Gefühle oder Meinungen anderer beeinflusst, erhält +3 auf alle Schwierigkeitsgrade. Dieser Effekt hat eine Penetration von 0."
   },
   "virtue.greater_immunity": {
     "name": "Große Immunität ({hazard})",
     "name_unfilled": "Große Immunität",
-    "summary": "Du bist gegen eine verbreitete, potenziell tödliche Gefahr völlig immun."
+    "summary": "Du bist gegen eine verbreitete, potenziell tödliche Gefahr völlig immun.",
+    "description": "Du bist vollständig immun gegen eine Gefahr, die sowohl häufig als auch potenziell tödlich ist. Du könntest beispielsweise gegen Feuer oder gegen Eisenwaffen (und nur Eisenwaffen) immun sein. Du darfst keine Immunität gegen Altern nehmen – siehe stattdessen die kleine Tugend Nicht alternd (Seite 114). Diese Immunität gilt für gewöhnliche und magische Varianten der Sache. Wenn du gegen Feuer immun bist, bist du auch gegen magisch erschaffenes Feuer immun.\n\nEine wichtige Möglichkeit ist die Immunität gegen Entbehrung, was bedeutet, dass du keinen Erschöpfungs- oder Wundenverlust durch den Mangel an Luft, Nahrung oder Wasser erleidest. Du kannst jedoch keine Langzeit-Erschöpfungsstufen ohne Ruhe und Versorgung wiedererlangen, und wenn du verletzt bist, könnte Entbehrung dazu führen, dass sich deine Wunden verschlechtern.\n\nDu kannst diese Tugend mehr als einmal nehmen, jedes Mal mit einer anderen Immunität."
   },
   "virtue.greater_power": {
     "name": "Große Macht",
@@ -1987,19 +2019,23 @@
   },
   "virtue.greater_purifying_touch": {
     "name": "Große Reinigende Berührung",
-    "summary": "Du kannst mit einer Berührung und dem Aufwand einer Erschöpfungsstufe eine einzelne schwere Krankheit heilen."
+    "summary": "Du kannst mit einer Berührung und dem Aufwand einer Erschöpfungsstufe eine einzelne schwere Krankheit heilen.",
+    "description": "Du kannst mit einer Berührung und dem Aufwand einer Erschöpfungsstufe eine einzelne schwere Krankheit heilen. Diese Krankheit sollte entweder lebensbedrohlich oder schwer behindernd sein und eine sein, von der Menschen sich normalerweise nicht von selbst erholen. Du musst die Krankheit, die du heilen kannst, beim Nehmen dieser Tugend festlegen, und du kannst nur diese Krankheit heilen. Du kannst nur eine Krankheit wählen, keine anderen Arten von Verletzungen oder Unglück. Weitere Informationen zu Krankheiten finden sich auf Seite 406, und in Artes et Academiae, Seite 45, finden sich ausführlichere Details."
   },
   "virtue.guardian_angel": {
     "name": "Schutzengel",
-    "summary": "Du hast gelernt, die Worte eines göttlichen Wächters zu vernehmen, der dir praktische und spirituelle Ratschläge erteilt."
+    "summary": "Du hast gelernt, die Worte eines göttlichen Wächters zu vernehmen, der dir praktische und spirituelle Ratschläge erteilt.",
+    "description": "Du hast gelernt, die Worte eines göttlichen Wächters zu vernehmen, der dir praktische und spirituelle Ratschläge erteilt. Der Engel flüstert dir ins Ohr und sagt dir, was geistlich – und nicht materiell – das Beste für dich ist. Er billigt Gewalt nur, wenn ein heiliger Grund vorliegt, was oft schwer zu belegen ist. Handelst du gegen den Rat des Engels, kann er dich verlassen, bis du deinen Weg korrigiert hast. Der Engel hat nur ein begrenztes Bewusstsein von deinen Gedanken, doch wenn du laut sprichst, kann er hören und sich mit dir unterhalten.\n\nDein Schutzengel kann auch auf zwei praktische Weisen helfen. Erstens kann er dir einen Bonus von +5 auf die Absorption gewähren. Zweitens kann er dir eine Magieresistenz von 15 verleihen. Diese Magieresistenz ist nicht mit der Parma Magica eines Magus oder der Magieresistenz aus den meisten anderen Quellen vereinbar, addiert sich jedoch zur Magieresistenz, die aus Glaubenspunkten resultiert (siehe Seite 419). Der Engel gewährt dir diese Boni nur, wenn du im Einklang mit Gottes Willen handelst."
   },
   "virtue.guest_of_house_criamon": {
     "name": "Gast des Hauses Criamon",
-    "summary": "Magi mit dieser Tugend sind politisch gesehen Mitglieder des Hauses Criamon, können jedoch nach den Regeln für jedes andere Haus erschaffen werden."
+    "summary": "Magi mit dieser Tugend sind politisch gesehen Mitglieder des Hauses Criamon, können jedoch nach den Regeln für jedes andere Haus erschaffen werden.",
+    "description": "Magi mit dieser Tugend sind politisch gesehen Mitglieder des Hauses Criamon, können jedoch nach den Regeln für jedes andere Haus erschaffen werden. Gäste werden aus vielen Gründen eine Mitgliedschaft angeboten, die Criamon als politische Formalität betrachtet, und ihnen wird so Zuflucht in diesem Haus gewährt. Die Spieltruppe und der Spieler sollten gemeinsam bestimmen, warum der Charakter es für notwendig erachtete, beim diesem Haus Zuflucht zu suchen."
   },
   "virtue.guild_apprentice": {
     "name": "Gilden-Lehrling",
-    "summary": "Der Charakter ist ein Jugendlicher im Alter zwischen 10 und 20 Jahren, der bei einem Gildenmeister oder Gesellen sein Handwerk erlernt."
+    "summary": "Der Charakter ist ein Jugendlicher im Alter zwischen 10 und 20 Jahren, der bei einem Gildenmeister oder Gesellen sein Handwerk erlernt.",
+    "description": "Der Charakter ist ein Jugendlicher im Alter zwischen 10 und 20 Jahren, der bei einem Gildenmeister oder Gesellen sein Handwerk erlernt. Er hat einen Vertrag mit seinem Meister abgeschlossen, der seine Ausbildung garantiert. Der Charakter kann weder vom Fehler Arm noch von der Tugend Wohlhabend profitieren, da er im Wesentlichen das Eigentum seines Meisters ist, bis er den Rang eines Gesellen erreicht. Der größte Teil seiner Zeit wird auf eine Weise verbracht, die sein Meister bestimmt."
   },
   "virtue.guild_dean": {
     "name": "Gildendekan",
@@ -2011,7 +2047,8 @@
   },
   "virtue.harnessed_magic": {
     "name": "Gezügelte Magie",
-    "summary": "Du hast große Kontrolle über deine Zauber."
+    "summary": "Du hast große Kontrolle über deine Zauber.",
+    "description": "Du hast große Kontrolle über deine Zauber. Du kannst jeden deiner Zauber einfach durch Konzentration aufheben. Du kannst sogar die Magie in Zauberartefakten aufheben, die du erschaffen hast. Das Aufheben deiner Magie sollte für Timing- und Konzentrationszwecke so behandelt werden, als würdest du einen Zauber wirken. Wirst du abgelenkt und misslingt dir ein Konzentrationswurf, kann in einer späteren Runde ein weiterer Versuch unternommen werden. Zauber und Zauberartefakte können über jede Entfernung hinweg aufgehoben werden, doch sobald sie aufgehoben wurden, musst du einen Zauber neu wirken oder eine Kraft in einem Zauberartefakt neu einbetten, um den Effekt erneut zu starten.\n\nDer Nachteil ist, dass beim Tod alle deine Zauber und Zauberartefakte erlöschen."
   },
   "virtue.heartbeast": {
     "name": "Herztier",
@@ -2705,7 +2742,8 @@
   },
   "virtue.the_gift": {
     "name": "Die Gabe",
-    "summary": "Du hast die Fähigkeit, Magie zu wirken."
+    "summary": "Du hast die Fähigkeit, Magie zu wirken.",
+    "description": "Du besitzt die Fähigkeit, Magie zu wirken. Vollständige Einzelheiten finden sich weiter oben auf Seite 63.\n\nDie Gabe ist eine besondere Tugend, weil sie keine Kosten hat. Der Charakter erleidet alle Nachteile der Gabe, genauso wie Magi (siehe Seite 203), kann aber ohne die entsprechenden Tugenden wählen zu müssen in Übernatürlichen Fertigkeiten unterwiesen werden (siehe Seite 383 für die Regeln). Am wichtigsten ist, dass der Charakter in Hermetischer Magie unterwiesen werden kann, weshalb alle Magi diese Tugend haben müssen. Ein Charakter mit der Gabe, auch wenn er kein Magus ist, darf Hermetische Tugenden und Fehler wählen, die sich auf innere Begabung statt auf Herkunft oder Ausbildung beziehen."
   },
   "virtue.tough": {
     "name": "Zäh",
