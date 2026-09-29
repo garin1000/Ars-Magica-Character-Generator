@@ -202,9 +202,9 @@ K3 + Berserk, Ways of the Land, Cyclic (D52), Special Circumstances.
 | X5 | § 3.6: F-518/F-532/F-533, F-502, D38 data, D51, D41's guild requirement data; F-270/F-283 (add if the book has the heading, else drop) | A1, E1, Q8, B1 | M |
 | X6 | § 8 row 4 read first; D9p1 parameters (incl. turb_trained's open dead-language choice, found in X1), Q-134, D33/D34 data, D42 default realm | C2–C5, X3, B3 | L |
 | X7a | § 3.8: D4 lab rows, D47, N6; Cyclic Lab row | Q7, X6 | M |
-| X7b-e | Engine for row 42: per-Characteristic buy cap, Personality-Trait validation; each row-42 item (incl. the 2026-09-19 nineteen) gets a D58 compute/text verdict | F2 | M |
-| X7b-d | § 3.9 wrong numbers + § 3.10 missing effects + row 42 data | X7b-e | M |
-| X7c | Row 46 residue (§ 8 12e): consumer-tracing B01–B11 | X7b-d | M |
+| X7b-e | **All of row 42**, engine and data together: a D58 compute/text verdict for each item (incl. the 2026-09-19 nineteen); per-Characteristic buy cap and Personality-Trait validation where the verdict says compute; the data for those entries. An entry both here and in § 3.9/§ 3.10 belongs here | F2 | M |
+| X7b-d | § 3.9 wrong numbers + § 3.10 missing effects, **excluding row-42 entries** (X7b-e's) | F2 | M |
+| X7c | Row 46 residue (§ 8 12e): consumer-tracing B01–B11 | X7b-e, X7b-d | M |
 | X8a | § 3.12: truncation sub-slice, D53, D36, D57's ~36 apposition templates | — | M |
 | X8b | Row 40 search index (N4) | X2 | S |
 | X8c | Row 41 export (N1) | X2 | S |
@@ -231,7 +231,7 @@ except U3.
 ```
 M0 → Phase 1 → 1S → A0 → A1 → A2 → E1 → C0…C5c → B0…B5 → D0…D4 → F0…F2
 1S → X2 → X8b, X8c        C1+D1 → X1        A1 → X3 → X6 → X7a
-B1/B3/E1/Q8 → X4, X5      F2 → X7b-e → X7b-d → X7c      X8a, X8d, X9*, U* interleave
+B1/B3/E1/Q8 → X4, X5      F2 → {X7b-e, X7b-d} → X7c      X8a, X8d, X9*, U* interleave
 ```
 
 Handover's hard constraints: A first (Phase 1 exempt, § 3) · D14 (C1) before D13
