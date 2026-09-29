@@ -6026,7 +6026,22 @@ site normalizes to `HermeticallyTrained`.
 | every Hermetic entry except the three Gift ones requires Hermetic training | `ArMDE:2870` ("A character with The Gift... may take Hermetic Virtues and Flaws which relate to intrinsic ability rather than background or training"), `ArMDE:2880` ("some are only applicable to Hermetic magi who have already completed their training") |
 
 X3a lands the gate on the 55 Hermetic Virtues (`rules/core/virtues_flaws.json`);
-the 64 Hermetic Flaws follow in X3b/X3c (`tmp/x3-scope.md`).
+the 64 Hermetic Flaws follow in X3b/X3c (`tmp/x3-scope.md`). X3b (33 Flaws,
+`flaw.bound_casting_tools`…`flaw.necessary_condition`) and X3c (31 Flaws,
+`flaw.painful_magic`…`flaw.weird_magic`) land the same `trained`+gate pair on
+every remaining Hermetic Flaw, including the folded House leaves
+`flaw.brutal_artist`/House Jerbiton, `flaw.consumed_casting_tools`/House
+Verditius (X3b), and `flaw.spontaneous_casting_tools`/House Verditius (X3c),
+and normalize `flaw.deficient_technique`'s prerequisite from
+`Has(virtue.hermetic_magus)` to `HermeticallyTrained` (D12.3/D56). Every
+Hermetic-category entry now lands in exactly one of the five buckets
+`tests/x3_trained_gate.rs::hermetic_catalogue_is_fully_classified_by_x3a_or_pending`
+checks. Where the added `prerequisites` leaf newly makes a still-`narrative`
+entry "computed" per D67, the id is added to
+`tests/data_integrity.rs::PENDING_D67_CLASSIFICATION` (23 entries) rather than
+reclassified here — the same shape X3a already used for
+`virtue.side_effect`/`virtue.tethered_magic`; reclassifying each from its own
+passage is X2's routed work.
 
 ### D69/X7b-e — row 42 compute verdicts (2026-09-29)
 

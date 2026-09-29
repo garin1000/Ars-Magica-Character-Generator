@@ -17,19 +17,31 @@
 //! gate — with a guard that they agree; no engine change.
 //!
 //! **X3a's data pass has landed** (the 55 Hermetic Virtues, `tmp/x3-scope.md`
-//! § 2, plus the workspace-wide guards). The 64 Hermetic Flaws are X3b/X3c and
-//! stay on the pending lists below (`PENDING_HERMETIC_FLAWS`,
-//! `PENDING_HERMETIC_MAGUS_SPELLING`) until those slices land: every test that
-//! touches a pending entry asserts the entry still shows its live defect, so
-//! the lists can only shrink, never widen, and green here is compatible with
-//! the fix still being outstanding. See `tmp/x3a-verdicts.md` for the full
-//! per-entry citation and `tmp/x3a-handover.md` for what Phase 2 did.
+//! § 2, plus the workspace-wide guards). **X3b's Phase 1 has landed its own
+//! 33 Hermetic Flaws — `flaw.bound_casting_tools` through
+//! `flaw.necessary_condition` — into `X3B_FLAWS`, RED until X3b's Phase 2 sets
+//! their data.** **X3c's Phase 1 (this file) has now landed its own 31
+//! Flaws — `flaw.painful_magic` through `flaw.weird_magic` — into
+//! `X3C_FLAWS`, RED until X3c's Phase 2 sets their data.**
+//! `PENDING_HERMETIC_FLAWS` is now empty (X3c's own 31 ids all moved into
+//! `X3C_FLAWS`) but kept, not deleted, for the same reason
+//! `PENDING_HERMETIC_MAGUS_SPELLING` is kept empty: it is still referenced by
+//! name (the `flaw.weak_parens`/`flaw.restriction` behavioral tests below,
+//! and the whole-catalogue guard's bucket list), and an empty-but-named list
+//! is the honest shape if a future hermetic entry is ever added mid-catalogue
+//! and needs staging. `PENDING_HERMETIC_MAGUS_SPELLING` is likewise still
+//! empty — X3b's single occupant, `flaw.deficient_technique`, moved to
+//! `X3B_FLAWS` and its normalization is that slice's own RED. See
+//! `tmp/x3a-verdicts.md` / `tmp/x3b-verdicts.md` / `tmp/x3c-verdicts.md` for
+//! the full per-entry citation and `tmp/x3a-handover.md` / `tmp/x3b-handover.md`
+//! / `tmp/x3c-handover.md` for what each slice's Phase 2 must do.
 //!
 //! Per CLAUDE.md's catalogue-size invariant, the whole-catalogue guard
 //! (`hermetic_catalogue_is_fully_classified_by_x3a_or_pending`) never asserts
-//! a total count — every hermetic entry must land in exactly one of three
-//! named buckets (the three Gift entries / X3a's 55 / the pending list), and
-//! an entry in none of them fails loudly rather than being silently skipped.
+//! a total count — every hermetic entry must land in exactly one of five
+//! named buckets (the three Gift entries / X3a's 55 / X3b's 33 / X3c's 31 /
+//! the now-always-empty pending list), and an entry in none of them fails
+//! loudly rather than being silently skipped.
 
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;
@@ -225,11 +237,13 @@ fn d12_6_gifted_companion_weak_parens_refused_or_neutral() {
     }
 }
 
-/// `flaw.restriction` (X3b scope — Major Hermetic Flaw, ArMDE:6691-6694, no
+/// `flaw.restriction` (X3c scope — Major Hermetic Flaw, ArMDE:6691-6694, no
 /// prerequisite shipped today): "Flaw points from a trained Flaw". While
 /// `flaw.restriction` is on `PENDING_HERMETIC_FLAWS`, this asserts the live
-/// defect persists; once X3b gates it, the pending row is removed and this
-/// asserts the fix instead.
+/// defect persists; once X3c gates it, the pending row is removed and this
+/// asserts the fix instead. (This comment previously said "X3b scope" —
+/// mislabeled; `flaw.restriction` was always in X3c's alphabetical span,
+/// `flaw.painful_magic`…`flaw.weird_magic`.)
 #[test]
 fn d12_6_gifted_companion_trained_flaw_banks_no_points_or_refused() {
     let rs = load_ruleset();
@@ -247,7 +261,7 @@ fn d12_6_gifted_companion_trained_flaw_banks_no_points_or_refused() {
     if PENDING_HERMETIC_FLAWS.contains(&restriction.as_str()) {
         assert!(
             !refused && flaw_points != baseline_flaw_points,
-            "flaw.restriction is on PENDING_HERMETIC_FLAWS (X3b) but no longer shows the live \
+            "flaw.restriction is on PENDING_HERMETIC_FLAWS (X3c) but no longer shows the live \
              defect (refused: {refused}, flaw_points: {flaw_points}, baseline: \
              {baseline_flaw_points}) — remove it from the pending list and update this test to \
              assert the fix"
@@ -323,22 +337,20 @@ fn trained_flag_and_gate_always_agree() {
     }
 }
 
-/// X3b: `flaw.deficient_technique`'s prerequisite still uses the retired
-/// `Has(virtue.hermetic_magus)` spelling. Normalizing it to `HermeticallyTrained`
-/// now (ahead of X3b) would flip its gate detection true while its `trained`
-/// flag stays false, breaking `trained_flag_and_gate_always_agree` — fixing
-/// that requires also setting `trained: true`, which in turn requires removing
-/// it from `PENDING_HERMETIC_FLAWS`, which the whole-catalogue guard's
-/// three-bucket match has no room for without X3b's own reclassification pass.
-/// So the spelling fix is deferred whole, not piecemeal, to X3b. Kept honest
-/// like the other pending lists: the one listed id must still use the old
-/// spelling; shrinks to empty when X3b lands.
-const PENDING_HERMETIC_MAGUS_SPELLING: &[&str] = &["flaw.deficient_technique"];
+/// D12.3: `flaw.deficient_technique` is the one shipped entry using the
+/// retired `Has(virtue.hermetic_magus)` spelling. X3b (this file, Phase 1)
+/// moves it into `X3B_FLAWS` — normalizing the spelling to
+/// `HermeticallyTrained` alongside setting `trained: true` is exactly the
+/// data change X3b's Phase 2 owes, so this list is empty now and this test is
+/// unconditionally RED on `flaw.deficient_technique` until that data lands.
+/// Kept as a named list (not deleted outright) so a future slice that ever
+/// needs to stage a spelling fix has the same honest-pending shape to reuse.
+const PENDING_HERMETIC_MAGUS_SPELLING: &[&str] = &[];
 
 /// D12.3: no prerequisite anywhere in the catalogue may use the retired
 /// `Has(virtue.hermetic_magus)` spelling, except the entries on
-/// `PENDING_HERMETIC_MAGUS_SPELLING` (X3b), which must still show the old
-/// spelling — the guard can only shrink that list, never widen it.
+/// `PENDING_HERMETIC_MAGUS_SPELLING` (empty as of X3b), which must still show
+/// the old spelling — the guard can only shrink that list, never widen it.
 #[test]
 fn no_prerequisite_uses_has_hermetic_magus_spelling() {
     let rs = load_ruleset();
@@ -494,81 +506,181 @@ const X3A_VIRTUES: &[(&str, Gate)] = &[
     ("virtue.withstand_casting", Gate::Trained), // ArMDE:5261-5282, Casting Total
 ];
 
-/// The 64 Hermetic Flaws (X3b's 33 + X3c's 31) — out of X3a's data scope.
-/// Kept honest: each listed id must still be non-compliant (neither `trained`
-/// nor a gate), so a future slice that fixes one WITHOUT removing it here
-/// breaks loudly instead of silently. Shrinks only as X3b/X3c land. Also
-/// consulted directly by `d12_6_gifted_companion_weak_parens_refused_or_neutral`
-/// (`flaw.weak_parens`, X3c) and
-/// `d12_6_gifted_companion_trained_flaw_banks_no_points_or_refused`
-/// (`flaw.restriction`, X3b): while either id is listed here, its behavioral
-/// test asserts the live D12.6 defect persists rather than the fix.
-const PENDING_HERMETIC_FLAWS: &[&str] = &[
-    "flaw.bound_casting_tools",
-    "flaw.bound_magic",
-    "flaw.brutal_artist",
-    "flaw.careless_sorcerer",
-    "flaw.ceremonial_spontaneous_magic",
-    "flaw.chaotic_magic",
-    "flaw.clumsy_magic",
-    "flaw.consumed_casting_tools",
-    "flaw.corrupted_arts",
-    "flaw.corrupted_spells",
-    "flaw.creative_block",
-    "flaw.cyclic_magic_negative",
-    "flaw.deficient_form",
-    "flaw.deficient_technique",
-    "flaw.deleterious_circumstances",
-    "flaw.difficult_longevity_ritual",
-    "flaw.difficult_spontaneous_magic",
-    "flaw.disjointed_magic",
-    "flaw.disorientating_magic",
-    "flaw.environmental_magic_condition",
-    "flaw.exciting_experimentation",
-    "flaw.fettered_magic",
-    "flaw.flawed_parma_magica",
-    "flaw.harmless_magic",
-    "flaw.hedge_wizard",
-    "flaw.incompatible_arts",
-    "flaw.inconstant_magic",
-    "flaw.infamous_master",
-    "flaw.limited_magic_resistance",
-    "flaw.loose_magic",
-    "flaw.magic_addiction",
-    "flaw.monastic_vows_hermetic",
-    "flaw.necessary_condition",
-    "flaw.painful_magic",
-    "flaw.poor_formulaic_magic",
-    "flaw.restriction",
-    "flaw.rigid_magic",
-    "flaw.short_lived_magic",
-    "flaw.short_ranged_magic",
-    "flaw.slow_caster",
-    "flaw.spontaneous_casting_tools",
-    "flaw.stockade_parma_magica",
-    "flaw.study_requirement",
-    "flaw.susceptibility_to_divine_power",
-    "flaw.susceptibility_to_faerie_power",
-    "flaw.susceptibility_to_infernal_power",
-    "flaw.the_constant_expression",
-    "flaw.twilight_prone",
-    "flaw.unimaginative_learner",
-    "flaw.unnatural_magic",
-    "flaw.unpredictable_magic",
-    "flaw.unstructured_caster",
-    "flaw.vulnerable_casting",
-    "flaw.vulnerable_magic",
-    "flaw.vulnerable_to_folk_tradition",
-    "flaw.warped_magic",
-    "flaw.waster_of_vis",
-    "flaw.weak_enchanter",
-    "flaw.weak_magic",
-    "flaw.weak_magic_resistance",
-    "flaw.weak_parens",
-    "flaw.weak_scholar",
-    "flaw.weak_spontaneous_magic",
-    "flaw.weird_magic",
+/// X3b's 33 Hermetic Flaws (`tmp/x3-scope.md` § 2:
+/// `flaw.bound_casting_tools`…`flaw.necessary_condition`, alphabetical). Same
+/// shape as `X3A_VIRTUES`: the expected gate kind, with the passage wording
+/// that decides it (D68.2: `order_member` where the text names the Order, a
+/// House, or the Gauntlet; `hermetically_trained` otherwise). RED until
+/// X3b's Phase 2 sets the data.
+///
+/// Most entries operate on Techniques/Forms/spells/Casting or Lab
+/// Totals/Parma/Spell Mastery — D12's own criterion — with no Order/House/
+/// Gauntlet audience language; a per-id citation for each would just repeat
+/// that same fact, so only the genuinely borderline or House-gated entries
+/// carry an inline note.
+const X3B_FLAWS: &[(&str, Gate)] = &[
+    (
+        "flaw.bound_casting_tools",
+        Gate::Trained,
+        // ArMDE:5723-5726 mentions "House Verditius" only to explain that
+        // casting tools are a Verditius-specific mechanic (ArMDE:767,
+        // :10090) — background, not an eligibility clause, unlike Consumed
+        // Casting Tools' explicit "may only be taken by Verditius magi"
+        // three entries later (ArMDE:5841). BORDERLINE — see report.
+    ),
+    ("flaw.bound_magic", Gate::Trained), // ArMDE:5727-5730, spells/magic items
+    (
+        "flaw.brutal_artist",
+        Gate::Order,
+        // ArMDE:5757-5760: "only available to magi of House Jerbiton" —
+        // folded House gate (F-359); see
+        // `x3b_folded_house_gates_carry_their_house_leaf`.
+    ),
+    ("flaw.careless_sorcerer", Gate::Trained), // ArMDE:5769-5772, botch dice when casting spells
+    ("flaw.ceremonial_spontaneous_magic", Gate::Trained), // ArMDE:5781-5784, Spontaneous magic
+    ("flaw.chaotic_magic", Gate::Trained),     // ArMDE:5785-5788, spontaneous spell effect
+    ("flaw.clumsy_magic", Gate::Trained),      // ArMDE:5801-5804, aiming rolls/Finesse
+    (
+        "flaw.consumed_casting_tools",
+        Gate::Order,
+        // ArMDE:5839-5842: "This Flaw may only be taken by Verditius magi" —
+        // folded House gate (F-390); see
+        // `x3b_folded_house_gates_carry_their_house_leaf`.
+    ),
+    ("flaw.corrupted_arts", Gate::Trained), // ArMDE:5853-5858, an Art's Casting Total
+    ("flaw.corrupted_spells", Gate::Trained), // ArMDE:5859-5864, formulaic spells
+    ("flaw.creative_block", Gate::Trained), // ArMDE:5873-5876, Lab Total
+    ("flaw.cyclic_magic_negative", Gate::Trained), // ArMDE:5893-5896, Lab Total/Casting Score
+    ("flaw.deficient_form", Gate::Trained), // ArMDE:5909-5912, a Form (D12's own worked example)
+    (
+        "flaw.deficient_technique",
+        Gate::Trained,
+        // ArMDE:5913-5915, a Technique. D12.3/D56: normalizes the retired
+        // Has(virtue.hermetic_magus) spelling to HermeticallyTrained — see
+        // `no_prerequisite_uses_has_hermetic_magus_spelling`.
+    ),
+    ("flaw.deleterious_circumstances", Gate::Trained), // ArMDE:5917-5920, magic totals (D68.1)
+    ("flaw.difficult_longevity_ritual", Gate::Trained), // ArMDE:5962-5965, Lab Total (D68.1)
+    ("flaw.difficult_spontaneous_magic", Gate::Trained), // ArMDE:5966-5971, Spontaneous magic
+    ("flaw.disjointed_magic", Gate::Trained), // ArMDE:5972-5975, spells/Techniques and Forms
+    ("flaw.disorientating_magic", Gate::Trained), // ArMDE:5984-5987, after casting a spell
+    ("flaw.environmental_magic_condition", Gate::Trained), // ArMDE:6020-6023, Casting/Lab Totals
+    ("flaw.exciting_experimentation", Gate::Trained), // ArMDE:6040-6043, lab experimentation tables
+    ("flaw.fettered_magic", Gate::Trained), // ArMDE:6114-6117, spells/magic items as Arcane Connections
+    ("flaw.flawed_parma_magica", Gate::Trained), // ArMDE:6142-6145, Parma Magica
+    ("flaw.harmless_magic", Gate::Trained), // ArMDE:6230-6235, Perdo spells
+    (
+        "flaw.hedge_wizard",
+        Gate::Order,
+        // ArMDE:6240-6243: "a negative Reputation within the Order of
+        // Hermes... even though you are a member of the Order" — an
+        // eligibility/membership fact (D68.2), not flavor; same shape as
+        // `virtue.hermetic_prestige` (X3a).
+    ),
+    ("flaw.incompatible_arts", Gate::Trained), // ArMDE:6290-6293, Techniques and Forms
+    ("flaw.inconstant_magic", Gate::Trained),  // ArMDE:6298-6301, spellcasting/Finesse
+    (
+        "flaw.infamous_master",
+        Gate::Order,
+        // ArMDE:6314-6317: "don't deserve to be a member of the Order... a
+        // bad Reputation... among magi" — same shape as Hedge Wizard.
+    ),
+    ("flaw.limited_magic_resistance", Gate::Trained), // ArMDE:6346-6349, Magic Resistance/Parma
+    ("flaw.loose_magic", Gate::Trained),              // ArMDE:6354-6357, Spell Mastery
+    ("flaw.magic_addiction", Gate::Trained),          // ArMDE:6378-6381, spellcasting
+    (
+        "flaw.monastic_vows_hermetic",
+        Gate::Trained,
+        // ArMDE:6450-6453 mentions "your order" (ArMDE:6452) — a religious
+        // order (monastic vows), NOT the Order of Hermes; operates on vis
+        // ownership and magic devices.
+    ),
+    ("flaw.necessary_condition", Gate::Trained), // ArMDE:6476-6479, casting spells
 ];
+
+/// X3c's 31 Hermetic Flaws (`tmp/x3-scope.md` § 2: `flaw.painful_magic`…
+/// `flaw.weird_magic`, alphabetical). Same shape as `X3B_FLAWS`: the expected
+/// gate kind, with the passage wording that decides it (D68.2: `order_member`
+/// where the text names the Order, a House, or the Gauntlet;
+/// `hermetically_trained` otherwise). RED until X3c's Phase 2 sets the data.
+///
+/// 30 of the 31 operate on Techniques/Forms/spells/Casting or Lab
+/// Totals/Parma/Twilight/raw vis — D12's own criterion — with no Order/House/
+/// Gauntlet audience language; a per-id citation for each would just repeat
+/// that same fact, so only the one House-gated entry carries an inline note.
+/// `flaw.vulnerable_casting`'s "Magi of the Mercurian cults" mention is
+/// background flavor, not an eligibility clause — the same reading D68.12
+/// already gave `virtue.mercurian_magic`'s near-identical wording in X3a — so
+/// it is not listed on the STOP-list below.
+const X3C_FLAWS: &[(&str, Gate)] = &[
+    ("flaw.painful_magic", Gate::Trained), // ArMDE:6574-6577, casting-fatigue penalty
+    ("flaw.poor_formulaic_magic", Gate::Trained), // ArMDE:6610-6613, Formulaic spell rolls
+    ("flaw.restriction", Gate::Trained),   // ArMDE:6691-6694, casting spells (Q-X4-1's own example)
+    ("flaw.rigid_magic", Gate::Trained),   // ArMDE:6695-6698, vis when casting/Ritual magic
+    ("flaw.short_lived_magic", Gate::Trained), // ArMDE:6729-6732, spell duration
+    ("flaw.short_ranged_magic", Gate::Trained), // ArMDE:6737-6740, Casting/Lab Totals
+    ("flaw.slow_caster", Gate::Trained),   // ArMDE:6755-6758, spellcasting time
+    (
+        "flaw.spontaneous_casting_tools",
+        Gate::Order,
+        // ArMDE:6779-6782: "This Flaw can only be taken by Verditius magi" —
+        // folded House gate (F-518); see
+        // `x3c_folded_house_gate_carries_its_house_leaf`.
+    ),
+    ("flaw.stockade_parma_magica", Gate::Trained), // ArMDE:6787-6790, Parma Magica
+    ("flaw.study_requirement", Gate::Trained),     // ArMDE:6795-6798, studying an Art
+    ("flaw.susceptibility_to_divine_power", Gate::Trained), // ArMDE:6815-6818, D68.1's Magic Resistance group
+    ("flaw.susceptibility_to_faerie_power", Gate::Trained), // ArMDE:6819-6822, Magic Resistance/Parma
+    ("flaw.susceptibility_to_infernal_power", Gate::Trained), // ArMDE:6823-6826, Magic Resistance
+    ("flaw.the_constant_expression", Gate::Trained), // ArMDE:5821-5838, Spontaneous magic/Lab safety
+    ("flaw.twilight_prone", Gate::Trained),          // ArMDE:6879-6882, Twilight
+    (
+        "flaw.unimaginative_learner",
+        Gate::Trained,
+        // ArMDE:6915-6918, D68.1's raw-vis group (studying from raw vis)
+    ),
+    ("flaw.unnatural_magic", Gate::Trained), // ArMDE:6931-6934, Creo rituals/vis extraction
+    ("flaw.unpredictable_magic", Gate::Trained), // ArMDE:6935-6938, casting magic/botch dice
+    ("flaw.unstructured_caster", Gate::Trained), // ArMDE:6947-6950, Formulaic/Ritual spells
+    (
+        "flaw.vulnerable_casting",
+        Gate::Trained,
+        // ArMDE:6993-7004 mentions "Magi of the Mercurian cults" only as
+        // background (who commonly has the Flaw), not an eligibility clause —
+        // same reading as `virtue.mercurian_magic` (X3a, D68.12).
+    ),
+    ("flaw.vulnerable_magic", Gate::Trained), // ArMDE:7005-7010, dispelling active spells
+    ("flaw.vulnerable_to_folk_tradition", Gate::Trained), // ArMDE:7011-7014, Magic Resistance/Penetration
+    ("flaw.warped_magic", Gate::Trained),                 // ArMDE:7023-7026, spell side effect
+    (
+        "flaw.waster_of_vis",
+        Gate::Trained,
+        // ArMDE:7052-7055, D68.1's raw-vis group (using raw vis/Ritual casting)
+    ),
+    ("flaw.weak_enchanter", Gate::Trained), // ArMDE:7060-7063, Lab Total (enchanted items)
+    ("flaw.weak_magic", Gate::Trained),     // ArMDE:7064-7067, Penetration Total
+    ("flaw.weak_magic_resistance", Gate::Trained), // ArMDE:7068-7071, Magic Resistance/Penetration
+    (
+        "flaw.weak_parens",
+        Gate::Trained,
+        // ArMDE:7072-7074 — D24: a parens exists only via apprenticeship;
+        // D12.6's own worked example.
+    ),
+    ("flaw.weak_scholar", Gate::Trained), // ArMDE:7080-7083, Lab Totals
+    ("flaw.weak_spontaneous_magic", Gate::Trained), // ArMDE:7084-7089, Casting Score/spontaneous magic
+    ("flaw.weird_magic", Gate::Trained),            // ArMDE:7098-7101, botch dice on spellcasting
+];
+
+/// X3a/X3b/X3c's data pass now covers all 122 `hermetic`-category entries
+/// (`tmp/x3-scope.md` § 1's own count: 3 Gift + 55 Virtues + 33 + 31 Flaws),
+/// so no hermetic entry should ever need to be staged here again. Kept empty
+/// rather than deleted, for the same reason `PENDING_HERMETIC_MAGUS_SPELLING`
+/// is kept empty: both the `flaw.weak_parens`/`flaw.restriction` behavioral
+/// tests below and the whole-catalogue guard's bucket list still reference it
+/// by name, and an empty-but-named list is the honest shape to reuse if a
+/// future hermetic entry is ever added mid-catalogue and needs staging before
+/// its own gate lands.
+const PENDING_HERMETIC_FLAWS: &[&str] = &[];
 
 /// D68.3's per-entry shape, table-driven, for X3a's 55 Virtues. RED now for
 /// every entry: nothing in the shipped catalogue carries `trained: true` yet
@@ -620,17 +732,116 @@ fn x3a_folded_house_gates_carry_their_house_leaf() {
     }
 }
 
+/// D68.3's per-entry shape, table-driven, for X3b's 33 Flaws. RED now for
+/// every entry: nothing in the shipped catalogue carries `trained: true` for
+/// these yet (X3a's Phase 2 only touched the 55 Virtues).
+#[test]
+fn x3b_flaws_carry_trained_and_the_expected_gate() {
+    let rs = load_ruleset();
+    for (id, gate) in X3B_FLAWS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must exist in the shipped catalogue"));
+        assert!(item.trained, "{id}: must carry trained: true (D12/D68.1)");
+        let has_gate = item
+            .prerequisites
+            .as_ref()
+            .is_some_and(|p| contains_gate(p, *gate));
+        assert!(
+            has_gate,
+            "{id}: must carry a {gate:?} prerequisite leaf (D68.2), got {:?}",
+            item.prerequisites
+        );
+    }
+}
+
+/// The two X3b Flaws among the five House gates X5's findings state on
+/// Hermetic entries, folded into X3 (F-359, F-390): each needs its own House
+/// leaf ALONGSIDE the `order_member` gate, in the established
+/// `all[order_member, house(x)]` shape.
+#[test]
+fn x3b_folded_house_gates_carry_their_house_leaf() {
+    let rs = load_ruleset();
+    for (id, house) in [
+        ("flaw.brutal_artist", "house.jerbiton"), // ArMDE:5759 "magi of House Jerbiton"
+        ("flaw.consumed_casting_tools", "house.verditius"), // ArMDE:5841 "Verditius magi"
+    ] {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} must exist"));
+        let has_house = item
+            .prerequisites
+            .as_ref()
+            .is_some_and(|p| contains_house(p, &Id::new(house)));
+        assert!(
+            has_house,
+            "{id}: must carry a House({house}) leaf alongside order_member, got {:?}",
+            item.prerequisites
+        );
+    }
+}
+
+/// D68.3's per-entry shape, table-driven, for X3c's 31 Flaws. RED now for
+/// every entry: nothing in the shipped catalogue carries `trained: true` for
+/// these yet (X3a/X3b's Phase 2 only touched the 55 Virtues and 33 Flaws).
+#[test]
+fn x3c_flaws_carry_trained_and_the_expected_gate() {
+    let rs = load_ruleset();
+    for (id, gate) in X3C_FLAWS {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must exist in the shipped catalogue"));
+        assert!(item.trained, "{id}: must carry trained: true (D12/D68.1)");
+        let has_gate = item
+            .prerequisites
+            .as_ref()
+            .is_some_and(|p| contains_gate(p, *gate));
+        assert!(
+            has_gate,
+            "{id}: must carry a {gate:?} prerequisite leaf (D68.2), got {:?}",
+            item.prerequisites
+        );
+    }
+}
+
+/// The one X3c Flaw among the five House gates X5's findings state on
+/// Hermetic entries, folded into X3 (F-518): it needs its own House leaf
+/// ALONGSIDE the `order_member` gate, in the established
+/// `all[order_member, house(x)]` shape.
+#[test]
+fn x3c_folded_house_gate_carries_its_house_leaf() {
+    let rs = load_ruleset();
+    let id = "flaw.spontaneous_casting_tools";
+    let house = "house.verditius"; // ArMDE:6781 "may only be taken by Verditius magi"
+    let item = rs
+        .item(&Id::new(id))
+        .unwrap_or_else(|| panic!("{id} must exist"));
+    let has_house = item
+        .prerequisites
+        .as_ref()
+        .is_some_and(|p| contains_house(p, &Id::new(house)));
+    assert!(
+        has_house,
+        "{id}: must carry a House({house}) leaf alongside order_member, got {:?}",
+        item.prerequisites
+    );
+}
+
 /// D68.3's whole-catalogue classification: every `hermetic`-category entry
-/// lands in exactly one of three buckets — the three Gift entries (neither
-/// trained nor gated), X3a's 55 Virtues (fully compliant — RED today), or the
-/// pending 64 Flaws (kept honest: must still be non-compliant). An entry in
-/// none of the three is a data-shape the test suite has never seen and fails
-/// loudly rather than silently passing (CLAUDE.md's catalogue-size
-/// invariant: no total is ever asserted here).
+/// lands in exactly one of five buckets — the three Gift entries (neither
+/// trained nor gated), X3a's 55 Virtues, X3b's 33 Flaws, X3c's 31 Flaws (all
+/// three Flaw/Virtue buckets fully compliant — RED today until each slice's
+/// Phase 2 lands), or the now-always-empty pending list (kept honest: any
+/// future id staged there must still be non-compliant). An entry in none of
+/// the five is a data-shape the test suite has never seen and fails loudly
+/// rather than silently passing (CLAUDE.md's catalogue-size invariant: no
+/// total is ever asserted here).
 #[test]
 fn hermetic_catalogue_is_fully_classified_by_x3a_or_pending() {
     let rs = load_ruleset();
     let x3a_ids: std::collections::BTreeSet<&str> = X3A_VIRTUES.iter().map(|(id, _)| *id).collect();
+    let x3b_ids: std::collections::BTreeSet<&str> = X3B_FLAWS.iter().map(|(id, _)| *id).collect();
+    let x3c_ids: std::collections::BTreeSet<&str> = X3C_FLAWS.iter().map(|(id, _)| *id).collect();
     let pending_ids: std::collections::BTreeSet<&str> =
         PENDING_HERMETIC_FLAWS.iter().copied().collect();
 
@@ -651,31 +862,57 @@ fn hermetic_catalogue_is_fully_classified_by_x3a_or_pending() {
                 "{id}: X3a virtue must carry its expected gate, got {:?}",
                 item.prerequisites
             );
+        } else if let Some((_, gate)) = X3B_FLAWS.iter().find(|(fid, _)| *fid == id) {
+            assert!(item.trained, "{id}: X3b flaw must carry trained: true");
+            assert!(
+                item.prerequisites
+                    .as_ref()
+                    .is_some_and(|p| contains_gate(p, *gate)),
+                "{id}: X3b flaw must carry its expected gate, got {:?}",
+                item.prerequisites
+            );
+        } else if let Some((_, gate)) = X3C_FLAWS.iter().find(|(fid, _)| *fid == id) {
+            assert!(item.trained, "{id}: X3c flaw must carry trained: true");
+            assert!(
+                item.prerequisites
+                    .as_ref()
+                    .is_some_and(|p| contains_gate(p, *gate)),
+                "{id}: X3c flaw must carry its expected gate, got {:?}",
+                item.prerequisites
+            );
         } else if pending_ids.contains(id) {
             let compliant =
                 item.trained && item.prerequisites.as_ref().is_some_and(contains_any_gate);
             assert!(
                 !compliant,
-                "{id}: appears on X3a's pending list (X3b/X3c scope) but is already \
-                 trained+gated — remove it from PENDING_HERMETIC_FLAWS"
+                "{id}: appears on the pending list but is already trained+gated — remove it \
+                 from PENDING_HERMETIC_FLAWS"
             );
         } else {
             panic!(
                 "{id}: unclassified hermetic-category entry — not one of the three Gift \
-                 entries, not in X3A_VIRTUES, not in PENDING_HERMETIC_FLAWS. Classify it \
-                 (this guards the catalogue-size invariant: a newly added hermetic entry \
-                 must not be silently skipped)."
+                 entries, not in X3A_VIRTUES, not in X3B_FLAWS, not in X3C_FLAWS, not in \
+                 PENDING_HERMETIC_FLAWS. Classify it (this guards the catalogue-size \
+                 invariant: a newly added hermetic entry must not be silently skipped)."
             );
         }
     }
 
-    // Sanity: the three constant buckets above account for every Virtue in
-    // X3A_VIRTUES and the exact ids named in PENDING_HERMETIC_FLAWS — a typo'd
-    // id in either list would otherwise just never match anything in the loop
-    // above and silently pass.
+    // Sanity: the constant buckets above account for every Virtue/Flaw named
+    // in X3A_VIRTUES/X3B_FLAWS/X3C_FLAWS/PENDING_HERMETIC_FLAWS — a typo'd id
+    // in any list would otherwise just never match anything in the loop above
+    // and silently pass.
     for id in x3a_ids {
         rs.item(&Id::new(id))
             .unwrap_or_else(|| panic!("X3A_VIRTUES: {id} must exist in the shipped catalogue"));
+    }
+    for id in x3b_ids {
+        rs.item(&Id::new(id))
+            .unwrap_or_else(|| panic!("X3B_FLAWS: {id} must exist in the shipped catalogue"));
+    }
+    for id in x3c_ids {
+        rs.item(&Id::new(id))
+            .unwrap_or_else(|| panic!("X3C_FLAWS: {id} must exist in the shipped catalogue"));
     }
     for id in pending_ids {
         rs.item(&Id::new(id)).unwrap_or_else(|| {

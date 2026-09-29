@@ -2452,6 +2452,106 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
         "virtue.tethered_magic",
         "narrative, but declares prerequisites — D68 counts that as computed",
     ),
+    // X3b/X3c (D12/D68): the same Phase 2 gate-data pass adds a
+    // hermetically_trained/order_member prerequisite to every remaining
+    // `narrative`-classified Hermetic Flaw, which D67 counts as computed even
+    // though each still states a genuinely uncomputed clause that does not fit
+    // `uncomputed_rule`'s own mechanical-token screen
+    // (`tests/uncomputed_clauses.rs`) — same shape as X3a's
+    // virtue.side_effect/virtue.tethered_magic above. Reclassifying each is X2's
+    // own routed work, not this data-only slice's.
+    (
+        "flaw.bound_casting_tools",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.bound_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.ceremonial_spontaneous_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.chaotic_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.consumed_casting_tools",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.difficult_spontaneous_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.disorientating_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.exciting_experimentation",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.fettered_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.harmless_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.incompatible_arts",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.monastic_vows_hermetic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.necessary_condition",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.restriction",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.short_lived_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.slow_caster",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.spontaneous_casting_tools",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.stockade_parma_magica",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.study_requirement",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.unnatural_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.unstructured_caster",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.vulnerable_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "flaw.warped_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
 ];
 
 /// Acceptance criterion for M5 slice 5a: every shipped Virtue/Flaw carries a
