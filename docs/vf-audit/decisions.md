@@ -862,6 +862,9 @@ rulings:
 - Special Circumstances' +3 stays text, since there is no toggle (D4/D58);
 - X6b checks the existing `catalogue.language` values for Turb Trained.
 
+**X5b, Norbert:** Master Bard's Profession clause is enforced as "some
+Profession at 5", the id-level check already used for the Latin minimums.
+
 **Scheduling, orchestrator:** Mercurian Magic's prerequisite goes to X5, so
 X7b-d drops its F-196 test.
 
