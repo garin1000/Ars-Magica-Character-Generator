@@ -833,8 +833,9 @@ presumption of correctness.
 **Norbert, 2026-09-29** (details in `tmp/x6-scope.md`).
 
 - **Order of work.** The design note, the engine and the 16 rule-driving
-  parameters come before Friday 2026-10-02. The 26 label-only parameters, the
-  three retypes and D42 come after.
+  parameters come before Friday 2026-10-02. D42 follows before Friday if
+  capacity remains. The 26 label-only parameters and the three retypes come
+  after.
 - **Q-X6-1.** Commanding Aura gets the four ranks (ArMDE:3585-3591) plus King
   (ArMDE:17651: MR 10, Soak +2). The wife rule (ArMDE:17652) stays text.
 - **Q-X6-2.** Turb Trained gets a choice of dead language, a parameter over
