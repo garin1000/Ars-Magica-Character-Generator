@@ -851,6 +851,18 @@ presumption of correctness.
    Range/Duration/Target are copied from Piercing the Faerie Veil, its named
    sibling (ArMDE:15709). This is an inference and is recorded as one in
    RULES.md.
+7. **Priest's parish-priest ban on Poor** (ArMDE:4800, :4802) is text only.
+8. **Major/Minor twin exclusions need their own passage per pair.** ArMDE:2814
+   is not a blanket source for them. A pair without a passage loses its
+   exclusion, and the integrity guard changes with it. ArMDE:4405 (Magical
+   Focus) keeps its exclusion.
+9. **Grog gates use a new `Prereq::IsGrog`**, a profile flag shaped like
+   `IsCompanion`, with UI parity.
+10. **The guild and university status prerequisites** (ArMDE:4441, :6673) become
+   `any[...]` over named, book-defined id lists.
+11. **Mythic Blood's hereditary Minor Personality Flaw** (ArMDE:4588) is an open
+   grant. It costs no points but counts toward the Personality caps
+   (ArMDE:2820).
 
 ---
 
