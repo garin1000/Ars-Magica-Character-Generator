@@ -853,6 +853,15 @@ presumption of correctness.
   (ArMDE:3581), Raised from the Dead Divine (ArMDE:6648). Spiritual Pact and
   Warped by Magic default to Magic, and Hex to Infernal; changing them warns.
 
+**The X6-0 note's open points** (`docs/vf-audit/design-x6-parameters.md` § 5),
+Norbert: two Commanding Aura MR bonuses add up. Ability Block's `custom`
+choice stays text permanently. Warped Senses' incompatibilities are a hard
+error while its -2 stays text. The orchestrator settles the rest from existing
+rulings:
+- the relic stub may land before X7b-d's F-256;
+- Special Circumstances' +3 stays text, since there is no toggle (D4/D58);
+- X6b checks the existing `catalogue.language` values for Turb Trained.
+
 **Scheduling, orchestrator:** Mercurian Magic's prerequisite goes to X5, so
 X7b-d drops its F-196 test.
 
