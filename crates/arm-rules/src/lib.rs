@@ -112,10 +112,10 @@ pub use types::{
     AgingEffect, AgingLogEntry, ArtScore, CastingScope, CategoryCap, CategoryRule,
     CharacteristicDeltaCap, Classification, CombatStat, CreationPhase, Effect, EnchantedDevice,
     Entity, EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, FocusPower, GiftPolicy,
-    HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind, ItemPredicate, LineRange, LongevityRitual,
-    LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType, ParameterDef,
-    ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm, Reputation,
-    ReputationType, RulesetRef, Selection, SourceRef, SpecialCasting, SpellSelection,
+    HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind, ItemPredicate, LineRange, LoadoutState,
+    LongevityRitual, LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType,
+    ParameterDef, ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm,
+    Reputation, ReputationType, RulesetRef, Selection, SourceRef, SpecialCasting, SpellSelection,
     SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar, ValidationMode,
 };
 pub use validation::{

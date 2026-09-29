@@ -412,7 +412,7 @@ describe('spells', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(19);
+    expect(saved.schema_version).toBe(20);
     expect(saved.spells.some((s) => s.spell === 'spell.pilum_of_fire')).toBe(true);
     expect(
       saved.spells.some((s) => s.spell === 'spell.aegis_of_the_hearth' && s.level === 200),
@@ -566,7 +566,7 @@ describe('familiar', () => {
     // Every statblock field reaches disk, at the engine's current schema — the
     // statblock fields are additive, so 5.5c bumped nothing of its own.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(19);
+    expect(saved.schema_version).toBe(20);
     expect(saved.familiar.name).toBe('Corvus');
     expect(saved.familiar.animal).toBe('raven');
     expect(saved.familiar.size).toBe(-4);
@@ -738,7 +738,7 @@ describe('talisman', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(19);
+    expect(saved.schema_version).toBe(20);
     expect(saved.talisman_attunements).toBeUndefined();
     expect(saved.talisman.description).toBe('An ash staff shod with silver');
     expect(saved.talisman.attunements).toEqual([
@@ -1217,17 +1217,18 @@ describe('markdown export', () => {
     });
     await addSpell.click();
 
-    // A carried weapon. Picking one equips it, which is what produces a Combat
-    // line, so this only confirms the state rather than toggling it.
+    // A carried weapon. Picking one wields it by default (K5), which is what
+    // produces a Combat line, so this only confirms the state rather than
+    // changing it.
     await clickTab('equipment');
     const addWeapon = await $('[data-testid="add-weapon.sword_long"]');
     await addWeapon.waitForExist({ timeout: 10000 });
     await addWeapon.click();
-    const equipped = await $('[data-testid="equipment-equipped-0"]');
-    await equipped.waitForExist({ timeout: 5000 });
-    await browser.waitUntil(async () => await equipped.isSelected(), {
+    const loadout = await $('[data-testid="equipment-loadout-0"]');
+    await loadout.waitForExist({ timeout: 5000 });
+    await browser.waitUntil(async () => (await loadout.getValue()) === 'wielded', {
       timeout: 5000,
-      timeoutMsg: 'a newly carried weapon should be equipped',
+      timeoutMsg: 'a newly carried weapon should default to wielded',
     });
 
     // One magic possession: an assumed aura and an enchanted device.

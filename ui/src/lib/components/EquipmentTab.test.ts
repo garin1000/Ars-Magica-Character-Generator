@@ -148,3 +148,25 @@ describe('EquipmentTab separates a header-less group from the one above it (#8)'
     expect(appCss).not.toMatch(/^\.equipment-list li:last-child/m);
   });
 });
+
+// K5 (design-f0-book-template-engine.md § 2a): the old boolean Equipped
+// checkbox conflated "yields a Combat row" and "contributes Load" —
+// `EquipmentSlot.equipped` is replaced by the three-state
+// `EquipmentSlot.loadout` ('stowed' | 'carried' | 'wielded'), rendered as a
+// tri-state selector reflecting the slot's current `loadout`.
+describe('EquipmentTab loadout control (K5)', () => {
+  it('renders a tri-state loadout control reflecting the slot state, not a boolean checkbox', () => {
+    store.entity.equipment = [{ item: SWORD, loadout: 'carried' }];
+    const region = selectedRegion(html());
+
+    const control = /<select[^>]*data-testid="equipment-loadout-0"[^>]*>[\s\S]*?<\/select>/.exec(
+      region,
+    );
+    expect(control).not.toBeNull();
+    const options = [...(control?.[0] ?? '').matchAll(/<option value="([^"]+)"/g)].map((m) => m[1]);
+    expect(options.sort()).toEqual(['carried', 'stowed', 'wielded']);
+
+    // The old boolean control must be gone, not merely supplemented.
+    expect(region).not.toContain('data-testid="equipment-equipped-0"');
+  });
+});

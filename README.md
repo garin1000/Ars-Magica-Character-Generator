@@ -229,7 +229,10 @@ focus.
 
 - **Equipment.** An Equipment tab — available to every character type — records
   the weapons, shields, and armor a character carries from the Core Rules
-  equipment catalogue (English + German), marking each equipped.
+  equipment catalogue (English + German), marking each Stowed, Carried, or
+  Wielded — a Carried weapon still shows up in the computed Combat rows but
+  costs no Encumbrance, matching how the rulebook's own worked characters
+  carry a spare weapon.
 
 - **Catalogues.** The full Core Rules Ability catalogue and the full 15-Art
   catalogue (English + German) ship with localized descriptions; abilities also

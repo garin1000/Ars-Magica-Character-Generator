@@ -1279,7 +1279,14 @@ equipment-group-shields = Shields
 equipment-group-armor = Armor
 # Accessible name for the kind filter select, which carries no visible label.
 equipment-group-filter-label = Filter by equipment type
-equipment-equipped-label = Equipped
+# Accessible name for the tri-state loadout select (K5), which carries no
+# visible label.
+equipment-loadout-label = Loadout
+# The three loadout states (K5): Stowed yields no Combat row and no Load;
+# Carried yields a Combat row but no Load; Wielded yields both.
+equipment-loadout-stowed = Stowed
+equipment-loadout-carried = Carried
+equipment-loadout-wielded = Wielded
 equipment-specialization-label = Specialization applies (+1)
 equipment-empty = No equipment.
 
@@ -1494,5 +1501,3 @@ export-items-hooks = Hooks
 # character's House, mythic type or Warping grants (never counted in the balance).
 export-granted = Granted
 export-xp-restricted = Restricted experience
-export-yes = Yes
-export-no = No

@@ -184,7 +184,7 @@ fn fully_populated_entity() -> Entity {
 
     e.equipment = vec![EquipmentSlot {
         item: Id::new("weapon.sword_long"),
-        equipped: true,
+        loadout: LoadoutState::Wielded,
         specialization_applies: true,
     }];
     e.might = Some(MightScore {

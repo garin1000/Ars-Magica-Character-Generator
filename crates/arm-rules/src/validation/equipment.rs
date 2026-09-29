@@ -43,7 +43,7 @@ pub(crate) fn validate_equipment(
             continue;
         };
 
-        if slot.equipped
+        if slot.loadout == LoadoutState::Wielded
             && let Some(required) = min_strength
             && required > strength
         {
@@ -77,14 +77,14 @@ fn warn_shield_with_two_handed_weapon(
     let equipped_shield = entity
         .equipment
         .iter()
-        .any(|s| s.equipped && ruleset.shield(&s.item).is_some());
+        .any(|s| s.loadout == LoadoutState::Wielded && ruleset.shield(&s.item).is_some());
     if !equipped_shield {
         return;
     }
     let equipped_weapons: Vec<_> = entity
         .equipment
         .iter()
-        .filter(|s| s.equipped)
+        .filter(|s| s.loadout == LoadoutState::Wielded)
         .filter_map(|s| ruleset.weapon(&s.item))
         .collect();
     let all_two_handed =

@@ -155,7 +155,23 @@ use crate::types::{
 /// v19-aware validator correctly rejects. Refusing the load outright
 /// (`entity.schema_version > SCHEMA_VERSION`) is exactly how that older build
 /// learns not to try, rather than misvalidating in silence.
-pub const SCHEMA_VERSION: u32 = 19;
+///
+/// Bumped 19 → 20 for F1 (K5,
+/// `docs/vf-audit/design-f0-book-template-engine.md` § 6): [`EquipmentSlot::
+/// equipped`](crate::types::EquipmentSlot) (a `bool`) is replaced by
+/// [`EquipmentSlot::loadout`](crate::types::EquipmentSlot::loadout) (a
+/// [`LoadoutState`](crate::types::LoadoutState) three-state enum), because a
+/// boolean cannot express "yields a Combat row but contributes no Load" — the
+/// book's own Knight template wants exactly that for his carried spare great
+/// sword. This is a genuine per-element shape move, not an addition, so
+/// [`load_entity_migrating`] folds any legacy `equipped: true`/`false` into
+/// `loadout: "wielded"`/`"stowed"` before the typed parse, the same
+/// dispatch-on-absence idiom as every fold above, generalized one level down
+/// (§ 6's own note): there is no single top-level boolean here, so the fold
+/// captures — before the loop — whether ANY equipment element still lacks
+/// `loadout`, and stamps [`SCHEMA_VERSION`] once afterward on that flag, rather
+/// than per element.
+pub const SCHEMA_VERSION: u32 = 20;
 
 /// `(ability, original text, resolved catalogue id)` — see
 /// [`LoadedEntity::migrated_catalogued_parameters`]. A named alias rather than
@@ -514,6 +530,56 @@ fn wrap_legacy_ability_parameters(value: &mut serde_json::Value) {
     }
 }
 
+/// Rewrites every legacy `equipment[].equipped: bool` into `loadout:
+/// LoadoutState`, before the typed parse (K5, F1 —
+/// `docs/vf-audit/design-f0-book-template-engine.md` § 6). Unlike the four
+/// single top-level-boolean folds this function's caller also runs
+/// (`aging_reductions`, `talisman_attunements`, `ability_funding`,
+/// `saga_year`), the legacy shape here lives per equipment-array ELEMENT, so
+/// this fold generalizes the same dispatch-on-absence idiom one level down:
+/// each element is folded independently.
+///
+/// Returns whether ANY element still lacked `loadout` before the fold ran —
+/// the caller stamps [`SCHEMA_VERSION`] on that flag, exactly once, after
+/// deserializing: a genuine per-element shape move earns the bump, the same
+/// criterion every other meaning-changing fold above uses.
+///
+/// Dispatch is on `loadout`'s presence, never `equipped`'s or the claimed
+/// `schema_version`: an element that already carries `loadout` is left
+/// untouched (idempotent, matching every sibling fold), even if it also
+/// carries a stray `equipped` key — a hand-edited or partially migrated save
+/// may carry either shape, or both, at any claimed version.
+fn fold_legacy_equipment_loadout(value: &mut serde_json::Value) -> bool {
+    let equipment_loadout_absent = value
+        .get("equipment")
+        .and_then(|v| v.as_array())
+        .into_iter()
+        .flatten()
+        .any(|slot| slot.get("loadout").is_none());
+
+    if let Some(equipment) = value.get_mut("equipment").and_then(|v| v.as_array_mut()) {
+        for slot in equipment {
+            let Some(obj) = slot.as_object_mut() else {
+                continue;
+            };
+            if obj.contains_key("loadout") {
+                continue;
+            }
+            let was_equipped = obj
+                .get("equipped")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false);
+            obj.remove("equipped");
+            obj.insert(
+                "loadout".into(),
+                serde_json::json!(if was_equipped { "wielded" } else { "stowed" }),
+            );
+        }
+    }
+
+    equipment_loadout_absent
+}
+
 /// The catalogue-matching fold (design § 5.3): upgrades a parameterized
 /// Ability's `Text { text }` value to `Catalogued { id }` where `text`
 /// case-insensitively, trimmed-ly spells out one of the ability's catalogue's
@@ -723,6 +789,7 @@ pub fn load_entity_migrating(
         .as_object_mut()
         .and_then(|obj| obj.remove("talisman_attunements"));
     wrap_legacy_ability_parameters(&mut value);
+    let equipment_loadout_absent = fold_legacy_equipment_loadout(&mut value);
     // Dispatch on the key's absence, never on the recorded `schema_version`: a
     // hand-edited save may carry any version alongside either shape. Read before the
     // deserialization below, because `serde(default)` would make the two
@@ -781,6 +848,15 @@ pub fn load_entity_migrating(
         entity.schema_version = SCHEMA_VERSION;
     }
 
+    if equipment_loadout_absent {
+        // K5 (F1): at least one equipment element still carried the legacy
+        // `equipped: bool` shape (or omitted both keys) before
+        // `fold_legacy_equipment_loadout` ran above — a genuine per-element shape
+        // move, so the version is stamped, same as every other meaning-changing
+        // fold in this function.
+        entity.schema_version = SCHEMA_VERSION;
+    }
+
     if saga_year_absent {
         // Pre-17: the saga year lived in `settings.json`, machine-globally. The value
         // the document inherits is therefore the one the user has configured — handed
@@ -833,7 +909,7 @@ pub fn load_entity_migrating(
 mod tests {
     use super::*;
     use crate::ruleset::RulesetSources;
-    use crate::types::{EntityKind, RulesetRef};
+    use crate::types::{EntityKind, LoadoutState, RulesetRef};
     use crate::validation::DEFAULT_SAGA_YEAR;
     use pretty_assertions::assert_eq;
 
@@ -1591,7 +1667,7 @@ mod tests {
     /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 19);
+        assert_eq!(SCHEMA_VERSION, 20);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -1623,14 +1699,12 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// The 18 → 19 bump C5a owes (`docs/vf-audit/design-c0-parameter-model.md`
-    /// § 8, § 10): `ParamType::MultiRef`/`ParameterDomain::Spell` land, and
-    /// selection-parameter validation gains the `param_wrong_shape` check. See
-    /// [`SCHEMA_VERSION`]'s own doc comment for why this bump is a pure version
-    /// marker with no fold.
+    /// The current-version pin, advanced at every bump (most recently 19 → 20 for
+    /// F1/K5's `EquipmentSlot::loadout` move — see [`SCHEMA_VERSION`]'s own doc
+    /// comment for why that bump owns a fold, unlike C5a's 18 → 19 pure marker).
     #[test]
-    fn schema_version_is_19() {
-        assert_eq!(SCHEMA_VERSION, 19);
+    fn schema_version_is_20() {
+        assert_eq!(SCHEMA_VERSION, 20);
     }
 
     /// C5a's bump is a **pure version marker**: no shape moved, so no fold
@@ -2152,6 +2226,226 @@ mod tests {
         let second_bytes = serde_json::to_string_pretty(&second).unwrap();
 
         assert_eq!(first, second);
+        assert_eq!(first_bytes, second_bytes);
+    }
+
+    // --- F1/K5: `EquipmentSlot::equipped` (bool) -> `EquipmentSlot::loadout`
+    // (`LoadoutState`) — design-f0-book-template-engine.md § 6. RED CHECKPOINT:
+    // the fold itself is not implemented yet (green phase); these pin the fold's
+    // eventual contract, per § 6's own four-fixture enumeration.
+
+    /// The core red (§ 6 item 2): a legacy `"equipped": true` must become
+    /// `loadout: Wielded`. Before the fold exists, `loadout` is filled only by its
+    /// own `#[serde(default)]` (`Stowed`) and the legacy key is silently dropped
+    /// (no `deny_unknown_fields`) — so this assertion fails until the fold
+    /// translates it.
+    #[test]
+    fn legacy_equipped_true_migrates_to_wielded_loadout() {
+        let old = r#"{
+          "schema_version": 19,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "saga_year": 1220,
+          "equipment": [
+            { "item": "weapon.sword_long", "equipped": true }
+          ]
+        }"#;
+        let loaded = load_entity_migrating(
+            old,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
+        assert_eq!(loaded.entity.equipment.len(), 1);
+        assert_eq!(loaded.entity.equipment[0].loadout, LoadoutState::Wielded);
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+
+        // The legacy key never survives the fold into a re-saved document.
+        let json = serde_json::to_string(&loaded.entity).unwrap();
+        assert!(!json.contains("equipped"), "got {json}");
+    }
+
+    /// Control case (§ 6): `"equipped": false`, or the key absent entirely,
+    /// already deserializes to `Stowed` via `loadout`'s own `#[serde(default)]` —
+    /// no fold is needed for the VALUE to come out right. The note's own words
+    /// (§ 6, "What an old save becomes"): "every equipped-`true` slot →
+    /// `loadout: "wielded"` (identical derived figures); every
+    /// equipped-`false`-or-absent slot → `loadout: "stowed"` (identical derived
+    /// figures — the post-K2 behavior)." Already green today for the VALUE;
+    /// kept so a future refactor of the fold cannot flip it. The re-serialized
+    /// document must also carry no stray `equipped` key, matching the same
+    /// requirement pinned for the `true` case in
+    /// [`legacy_equipped_true_migrates_to_wielded_loadout`].
+    #[test]
+    fn legacy_equipped_false_or_absent_already_defaults_to_stowed() {
+        for equipped_json in ["\"equipped\": false,", ""] {
+            let old = format!(
+                r#"{{
+                  "schema_version": 19,
+                  "ruleset": {{ "id": "arm5-core", "version": "2024.1" }},
+                  "entity_kind": "character",
+                  "type_id": "companion",
+                  "ability_funding": "pool",
+                  "saga_year": 1220,
+                  "equipment": [
+                    {{ "item": "weapon.sword_long", {equipped_json} "specialization_applies": false }}
+                  ]
+                }}"#
+            );
+            let loaded = load_entity_migrating(
+                &old,
+                DEFAULT_SAGA_YEAR,
+                &empty_ruleset(),
+                &empty_catalogue_names(),
+            )
+            .unwrap();
+            assert_eq!(
+                loaded.entity.equipment[0].loadout,
+                LoadoutState::Stowed,
+                "input {old}"
+            );
+            let json = serde_json::to_string(&loaded.entity).unwrap();
+            assert!(!json.contains("equipped"), "got {json}");
+        }
+    }
+
+    /// Control case (§ 6, third fixture): a document already at the current shape
+    /// (`loadout` present) is untouched — the eventual fold's
+    /// `obj.contains_key("loadout")` short-circuit, matching every sibling fold's
+    /// own idempotence. Already green today (plain deserialization, no fold
+    /// involved).
+    #[test]
+    fn a_document_already_carrying_loadout_is_left_untouched() {
+        let current = r#"{
+          "schema_version": 20,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "saga_year": 1220,
+          "equipment": [
+            { "item": "weapon.sword_great", "loadout": "carried" }
+          ]
+        }"#;
+        let loaded = load_entity_migrating(
+            current,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
+        assert_eq!(loaded.entity.equipment[0].loadout, LoadoutState::Carried);
+        assert_eq!(loaded.entity.schema_version, 20);
+    }
+
+    /// The "both keys present" case (§ 6, fourth fixture): a hand-edited or
+    /// partially migrated save carrying BOTH `equipped` and `loadout`. The eventual
+    /// fold dispatches on `loadout`'s presence, never `equipped`'s, so this is a
+    /// no-op: `loadout` keeps its own value, unaffected by the stray legacy key,
+    /// which is dropped on the next save. Already green today (plain
+    /// deserialization already reads `loadout` and silently drops the unrecognized
+    /// `equipped`).
+    #[test]
+    fn a_document_carrying_both_legacy_and_current_keys_keeps_the_current_value() {
+        let hand_edited = r#"{
+          "schema_version": 20,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "saga_year": 1220,
+          "equipment": [
+            { "item": "weapon.sword_great", "equipped": true, "loadout": "carried" }
+          ]
+        }"#;
+        let loaded = load_entity_migrating(
+            hand_edited,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
+        assert_eq!(loaded.entity.equipment[0].loadout, LoadoutState::Carried);
+
+        let json = serde_json::to_string(&loaded.entity).unwrap();
+        assert!(!json.contains("\"equipped\""), "got {json}");
+    }
+
+    /// The crafted/untrusted-`schema_version` case: a save dishonestly claims the
+    /// CURRENT version (implying "nothing to migrate") while still carrying the
+    /// legacy `equipped` shape. Dispatch is on the legacy key's absence, never on
+    /// the recorded version — this project's own governing rule for every fold —
+    /// so a claimed-current version must not skip the equipment fold either. Red
+    /// for the same reason as [`legacy_equipped_true_migrates_to_wielded_loadout`]:
+    /// nothing yet reads the legacy key regardless of the claimed version.
+    #[test]
+    fn a_crafted_schema_version_claiming_current_does_not_skip_the_equipment_fold() {
+        let dishonest = format!(
+            r#"{{
+              "schema_version": {SCHEMA_VERSION},
+              "ruleset": {{ "id": "arm5-core", "version": "2024.1" }},
+              "entity_kind": "character",
+              "type_id": "companion",
+              "ability_funding": "pool",
+              "saga_year": 1220,
+              "equipment": [
+                {{ "item": "weapon.sword_long", "equipped": true }}
+              ]
+            }}"#
+        );
+        let loaded = load_entity_migrating(
+            &dishonest,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
+        assert_eq!(loaded.entity.equipment[0].loadout, LoadoutState::Wielded);
+    }
+
+    /// A save already at schema 20, in the new per-element `loadout` shape,
+    /// round-trips byte-identically across a load/save/load cycle — the same
+    /// property [`a_migrated_save_is_byte_stable_across_a_save_load_save_cycle`]
+    /// pins for the pre-14 talisman shape, restated for K5's per-element fold.
+    #[test]
+    fn a_v20_equipment_save_round_trips_byte_identically() {
+        let current = r#"{
+          "schema_version": 20,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "saga_year": 1220,
+          "equipment": [
+            { "item": "weapon.sword_great", "loadout": "carried" },
+            { "item": "armor.chain_mail_full", "loadout": "wielded" }
+          ]
+        }"#;
+        let mut first = load_entity_migrating(
+            current,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
+        first.normalize();
+        let first_bytes = serde_json::to_string_pretty(&first).unwrap();
+
+        let mut second = load_entity_migrating(
+            &first_bytes,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap()
+        .entity;
+        second.normalize();
+        let second_bytes = serde_json::to_string_pretty(&second).unwrap();
+
         assert_eq!(first_bytes, second_bytes);
     }
 }

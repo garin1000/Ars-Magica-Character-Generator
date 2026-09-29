@@ -56,6 +56,7 @@ import type {
   DerivedTotals,
   EffectiveScores,
   Entity,
+  LoadoutState,
   LocalizedRuleset,
   LongevitySource,
   Realm,
@@ -90,7 +91,7 @@ const VALIDATE_DEBOUNCE_MS = 150;
  * Mirrors `arm_rules::SCHEMA_VERSION` by hand; the Rust constant is the source
  * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
-export const SCHEMA_VERSION = 19;
+export const SCHEMA_VERSION = 20;
 
 /**
  * The saga year a document starts at when nothing else says otherwise — the
@@ -2310,9 +2311,9 @@ class AppStore {
     this.#equipmentWorkflow.removeAt(index);
   }
 
-  /** @see EquipmentWorkflow.setEquipped */
-  setEquipmentEquipped(index: number, equipped: boolean): void {
-    this.#equipmentWorkflow.setEquipped(index, equipped);
+  /** @see EquipmentWorkflow.setLoadout */
+  setEquipmentLoadout(index: number, loadout: LoadoutState): void {
+    this.#equipmentWorkflow.setLoadout(index, loadout);
   }
 
   /** Toggle whether the weapon's Ability specialization applies (+1 Atk/Def).

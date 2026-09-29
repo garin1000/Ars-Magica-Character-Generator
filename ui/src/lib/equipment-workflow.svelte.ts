@@ -7,7 +7,7 @@
 // holds a copy, so `AppStore` stays the sole owner of the document and `dirty`
 // keeps comparing the very object these methods mutate.
 
-import type { Entity } from './types';
+import type { Entity, LoadoutState } from './types';
 
 /** The slice of `AppStore` the equipment workflow needs, as live accessors so it
  * always reads/writes the host's *current* state — `entity` stays owned by
@@ -25,11 +25,13 @@ export class EquipmentWorkflow {
     this.#host = host;
   }
 
-  /** Add a carried equipment slot referencing a catalogue weapon/shield/armor id. */
+  /** Add a carried equipment slot referencing a catalogue weapon/shield/armor id.
+   * Defaults to `wielded` — the same "adding equips by default" behavior K2's
+   * boolean `equipped: true` default gave. */
   add(item: string): void {
     if (!item) return;
     const entity = this.#host.entity();
-    entity.equipment = [...(entity.equipment ?? []), { item, equipped: true }];
+    entity.equipment = [...(entity.equipment ?? []), { item, loadout: 'wielded' }];
     this.#host.scheduleValidate();
   }
 
@@ -39,10 +41,11 @@ export class EquipmentWorkflow {
     this.#host.scheduleValidate();
   }
 
-  setEquipped(index: number, equipped: boolean): void {
+  /** Set the slot's loadout state (K5): stowed / carried / wielded. */
+  setLoadout(index: number, loadout: LoadoutState): void {
     const entity = this.#host.entity();
     entity.equipment = (entity.equipment ?? []).map((slot, i) =>
-      i === index ? { ...slot, equipped } : slot,
+      i === index ? { ...slot, loadout } : slot,
     );
     this.#host.scheduleValidate();
   }

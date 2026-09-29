@@ -106,21 +106,21 @@
 
 ### equipment-group-weapons
 
-| identity-name | equipment-equipped-label |
+| identity-name | equipment-loadout-label |
 | --- | --- |
-| Long Sword | export-yes |
+| Long Sword | equipment-loadout-wielded |
 
 ### equipment-group-shields
 
-| identity-name | equipment-equipped-label |
+| identity-name | equipment-loadout-label |
 | --- | --- |
-| Round Shield | export-yes |
+| Round Shield | equipment-loadout-wielded |
 
 ### equipment-group-armor
 
-| identity-name | equipment-equipped-label |
+| identity-name | equipment-loadout-label |
 | --- | --- |
-| Leather Scale (Partial) | export-no |
+| Leather Scale (Partial) | equipment-loadout-stowed |
 
 ## derived-section-combat
 

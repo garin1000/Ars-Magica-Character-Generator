@@ -705,14 +705,14 @@ describe('totals tab', () => {
     await addWeapon.click();
     await addWeapon.click();
 
-    // Two selected slots, both equipped (adding equips by default), so the engine
-    // emits two combat lines carrying the same `weapon` id.
+    // Two selected slots, both wielded (adding wields by default, K5), so the
+    // engine emits two combat lines carrying the same `weapon` id.
     const secondSlot = await $('[data-testid="equipment-name-1"]');
     await secondSlot.waitForExist({ timeout: 10000 });
     expect(clean(await $('[data-testid="equipment-name-0"]').getText())).toBe(WEAPON_NAME);
     expect(clean(await secondSlot.getText())).toBe(WEAPON_NAME);
-    expect(await $('[data-testid="equipment-equipped-0"]').isSelected()).toBe(true);
-    expect(await $('[data-testid="equipment-equipped-1"]').isSelected()).toBe(true);
+    expect(await $('[data-testid="equipment-loadout-0"]').getValue()).toBe('wielded');
+    expect(await $('[data-testid="equipment-loadout-1"]').getValue()).toBe('wielded');
 
     // THE REGRESSION: the Totals panel must actually mount. A duplicate-key throw
     // leaves this waiting forever.

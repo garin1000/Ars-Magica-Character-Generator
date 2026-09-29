@@ -165,6 +165,7 @@
     },
     {
       "item": "weapon.sword_great",
+      "loadout": "carried",
       "specialization_applies": true
     },
     {

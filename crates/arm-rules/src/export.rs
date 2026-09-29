@@ -169,10 +169,13 @@ pub const LABEL_KEYS: &[&str] = &[
     "derived-wound-light",
     "derived-wound-medium",
     "device-level-label",
-    "equipment-equipped-label",
     "equipment-group-armor",
     "equipment-group-shields",
     "equipment-group-weapons",
+    "equipment-loadout-carried",
+    "equipment-loadout-label",
+    "equipment-loadout-stowed",
+    "equipment-loadout-wielded",
     "export-col-effective",
     "export-col-magnitude",
     "export-col-penalty",
@@ -183,10 +186,8 @@ pub const LABEL_KEYS: &[&str] = &[
     "export-granted",
     "export-items-boons",
     "export-items-hooks",
-    "export-no",
     "export-untitled",
     "export-xp-restricted",
-    "export-yes",
     "familiar-animal-label",
     "familiar-cord-bronze",
     "familiar-cord-gold",
@@ -574,9 +575,9 @@ mod tests {
     use crate::ruleset::RulesetSources;
     use crate::types::{
         AbilityParameterValue, AbilityScore, AgingLogEntry, ArtScore, EquipmentSlot, Familiar,
-        FocusPower, I18nEntry, LongevityRitual, LongevitySource, Magnitude, MightScore,
-        PersonalityTrait, Realm, Reputation, ReputationType, RulesetRef, Selection, SpellSelection,
-        Talisman, TalismanAttunement, TwilightScar,
+        FocusPower, I18nEntry, LoadoutState, LongevityRitual, LongevitySource, Magnitude,
+        MightScore, PersonalityTrait, Realm, Reputation, ReputationType, RulesetRef, Selection,
+        SpellSelection, Talisman, TalismanAttunement, TwilightScar,
     };
     use pretty_assertions::assert_eq;
 
@@ -724,6 +725,9 @@ mod tests {
             { "id": "weapon.long_sword", "kind": "melee", "init_mod": 2, "attack_mod": 4,
               "defense_mod": 1, "damage_mod": 6, "min_strength": 0, "load": 1,
               "ability": "ability.single_weapon" },
+            { "id": "weapon.great_sword", "kind": "melee", "init_mod": 2, "attack_mod": 5,
+              "defense_mod": 2, "damage_mod": 9, "min_strength": 0, "load": 2,
+              "two_handed": true, "ability": "ability.single_weapon" },
             { "id": "weapon.sling", "kind": "missile", "init_mod": 0, "attack_mod": 2,
               "defense_mod": 0, "damage_mod": 3, "min_strength": -1, "load": 0,
               "range": 30, "ability": "ability.single_weapon" },
@@ -789,6 +793,7 @@ mod tests {
           "spell.wizards_boost_form": { "name": "Wizard's Boost of {form}" },
           "spell_mastery_ability.penetration": { "name": "Penetration" },
           "weapon.long_sword": { "name": "Long Sword" },
+          "weapon.great_sword": { "name": "Great Sword" },
           "weapon.sling": { "name": "Sling" },
           "shield.round": { "name": "Round Shield" },
           "armor.leather_scale": { "name": "Leather Scale" },
@@ -1013,17 +1018,17 @@ mod tests {
         e.equipment = vec![
             EquipmentSlot {
                 item: Id::new("weapon.long_sword"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("weapon.sling"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("armor.leather_scale"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
         ];
@@ -2320,22 +2325,27 @@ mod tests {
     // --- equipment --------------------------------------------------------
 
     #[test]
-    fn equipment_is_grouped_by_catalogue_kind_with_the_equipped_marker() {
+    fn equipment_is_grouped_by_catalogue_kind_with_the_loadout_marker() {
         let mut e = magus();
         e.equipment = vec![
             EquipmentSlot {
                 item: Id::new("weapon.long_sword"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
+                specialization_applies: false,
+            },
+            EquipmentSlot {
+                item: Id::new("weapon.great_sword"),
+                loadout: LoadoutState::Carried,
                 specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("shield.round"),
-                equipped: false,
+                loadout: LoadoutState::Stowed,
                 specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("armor.leather_scale"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
         ];
@@ -2348,17 +2358,21 @@ mod tests {
                 ("equipment-group-weapons", "Weapons"),
                 ("equipment-group-shields", "Shields"),
                 ("equipment-group-armor", "Armor"),
-                ("export-yes", "Yes"),
-                ("export-no", "No"),
+                ("equipment-loadout-wielded", "Wielded"),
+                ("equipment-loadout-carried", "Carried"),
+                ("equipment-loadout-stowed", "Stowed"),
             ]),
         );
         assert!(doc.contains("## Equipment\n"), "{doc}");
         assert!(doc.contains("### Weapons\n"), "{doc}");
-        assert!(doc.contains("| Long Sword | Yes |"), "{doc}");
+        assert!(doc.contains("| Long Sword | Wielded |"), "{doc}");
+        // K5: a Carried weapon prints its own distinct state, not folded into
+        // "Wielded" or "Stowed".
+        assert!(doc.contains("| Great Sword | Carried |"), "{doc}");
         assert!(doc.contains("### Shields\n"), "{doc}");
-        assert!(doc.contains("| Round Shield | No |"), "{doc}");
+        assert!(doc.contains("| Round Shield | Stowed |"), "{doc}");
         assert!(doc.contains("### Armor\n"), "{doc}");
-        assert!(doc.contains("| Leather Scale | Yes |"), "{doc}");
+        assert!(doc.contains("| Leather Scale | Wielded |"), "{doc}");
     }
 
     #[test]
@@ -2400,7 +2414,7 @@ mod tests {
         let mut e = fully_populated_magus();
         e.equipment.push(EquipmentSlot {
             item: Id::new("shield.round"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         });
         e.normalize();
@@ -3152,7 +3166,7 @@ mod tests {
         }];
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.trebuchet"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         }];
         let doc = character_markdown(
@@ -3292,7 +3306,7 @@ mod tests {
         let mut e = magus();
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.dodge"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         }];
         let doc = character_markdown(&e, &ruleset(), &no_labels());

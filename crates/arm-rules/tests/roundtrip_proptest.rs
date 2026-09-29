@@ -5,8 +5,8 @@
 
 use arm_rules::{
     AbilityFunding, AbilityParameterValue, AbilityScore, AgingLogEntry, ArtScore, Characteristic,
-    EnchantedDevice, Entity, EntityKind, EquipmentSlot, Familiar, FocusPower, Id, MightScore,
-    PersonalityTrait, Prereq, Realm, Reputation, ReputationType, RulesetRef, Selection,
+    EnchantedDevice, Entity, EntityKind, EquipmentSlot, Familiar, FocusPower, Id, LoadoutState,
+    MightScore, PersonalityTrait, Prereq, Realm, Reputation, ReputationType, RulesetRef, Selection,
     SpellSelection, SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar,
 };
 use proptest::prelude::*;
@@ -156,11 +156,19 @@ fn arb_twilight_scar() -> impl Strategy<Value = TwilightScar> {
     arb_name().prop_map(|description| TwilightScar { description })
 }
 
+fn arb_loadout_state() -> impl Strategy<Value = LoadoutState> {
+    prop_oneof![
+        Just(LoadoutState::Stowed),
+        Just(LoadoutState::Carried),
+        Just(LoadoutState::Wielded),
+    ]
+}
+
 fn arb_equipment_slot() -> impl Strategy<Value = EquipmentSlot> {
-    (arb_small_id(), any::<bool>(), any::<bool>()).prop_map(
-        |(item, equipped, specialization_applies)| EquipmentSlot {
+    (arb_small_id(), arb_loadout_state(), any::<bool>()).prop_map(
+        |(item, loadout, specialization_applies)| EquipmentSlot {
             item,
-            equipped,
+            loadout,
             specialization_applies,
         },
     )

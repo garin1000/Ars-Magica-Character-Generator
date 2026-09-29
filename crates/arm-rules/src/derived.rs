@@ -56,8 +56,8 @@ use crate::ruleset::{
 };
 use crate::types::{
     AdvancementFactor, CastingScope, CombatStat, Effect, Entity, Familiar, HalvableTotal,
-    HealthTrack, Id, LongevitySource, MAX_CORD_SCORE, MagicResistanceEffect, SelectionParamValue,
-    SpecialCasting,
+    HealthTrack, Id, LoadoutState, LongevitySource, MAX_CORD_SCORE, MagicResistanceEffect,
+    SelectionParamValue, SpecialCasting,
 };
 
 // --- Non-standard-casting penalty constants (ArMDE:9243-9245) -----------
@@ -2207,7 +2207,7 @@ mod tests {
         // A weapon of Load 6 → Burden 3; Strength 0 → Encumbrance 3.
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.long_sword"),
-            equipped: false,
+            loadout: LoadoutState::Stowed,
             specialization_applies: false,
         }];
         // Give the weapon Load 6 via a heavier item: use armor Load path instead.
@@ -2216,7 +2216,7 @@ mod tests {
         // to subtract from the Casting Score.
         e.equipment = vec![EquipmentSlot {
             item: Id::new("armor.leather_scale"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         }];
         // Method Caster (+3 formulaic) and a Magical Focus.
@@ -3167,12 +3167,12 @@ mod tests {
         e.equipment = vec![
             EquipmentSlot {
                 item: Id::new("weapon.long_sword"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("shield.round"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
         ];
@@ -3222,7 +3222,7 @@ mod tests {
         }];
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.long_sword"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         }];
         let lines = combat_totals(&e, &rs);
@@ -3230,6 +3230,31 @@ mod tests {
         assert!(lines[0].shields.is_empty());
         // Defense = Qik 1 + Ability 4 + WpnDef 1 = 6, no shield anywhere.
         assert_eq!(lines[0].defense, 6);
+    }
+
+    /// K5 red (`docs/vf-audit/design-f0-book-template-engine.md` § 2a): a
+    /// `Carried` weapon yields a Combat row but contributes no Load — the
+    /// Knight's own carried great sword (ArMDE:1470-1471). The row-emission
+    /// filter in `combat_totals` still reads `== Wielded` only (the F1 stub,
+    /// left unchanged pending the green-phase K5 fix — see the `TODO(K5, ...)`
+    /// comment there), so this fails today: a Carried weapon yields no line at
+    /// all.
+    #[test]
+    fn a_carried_weapon_yields_a_combat_row_with_no_load() {
+        let rs = ruleset();
+        let mut e = grog();
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.great_sword"),
+            loadout: LoadoutState::Carried,
+            specialization_applies: false,
+        }];
+        let lines = combat_totals(&e, &rs);
+        assert_eq!(
+            lines.len(),
+            1,
+            "a Carried weapon must still yield a Combat row (K5)"
+        );
+        assert_eq!(encumbrance(&e, &rs).load, 0, "Carried gear adds no Load");
     }
 
     /// Several equipped shields stay summed into one pseudo-shield, and the
@@ -3249,13 +3274,13 @@ mod tests {
         }];
         let round_shield = || EquipmentSlot {
             item: Id::new("shield.round"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         };
         e.equipment = vec![
             EquipmentSlot {
                 item: Id::new("weapon.long_sword"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
             round_shield(),
@@ -3295,12 +3320,12 @@ mod tests {
         e.equipment = vec![
             EquipmentSlot {
                 item: Id::new("weapon.great_sword"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("shield.round"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
         ];
@@ -3341,7 +3366,7 @@ mod tests {
         }];
         let long_sword = || EquipmentSlot {
             item: Id::new("weapon.long_sword"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: true,
         };
         e.equipment = vec![long_sword()];
@@ -3401,12 +3426,12 @@ mod tests {
         e.equipment = vec![
             EquipmentSlot {
                 item: Id::new("weapon.long_sword"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("armor.leather_scale"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
         ];
@@ -3437,7 +3462,7 @@ mod tests {
         });
         e.equipment = vec![EquipmentSlot {
             item: Id::new("armor.leather_scale"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         }];
         let s = soak(&e, &rs);
@@ -3454,7 +3479,7 @@ mod tests {
         set_char(&mut e, Characteristic::Str, 0);
         e.equipment = vec![EquipmentSlot {
             item: Id::new("armor.leather_scale"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         }];
         let enc = encumbrance(&e, &rs);
@@ -3485,12 +3510,12 @@ mod tests {
         e.equipment = vec![
             EquipmentSlot {
                 item: Id::new("armor.leather_scale"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("armor.leather_scale"),
-                equipped: false,
+                loadout: LoadoutState::Stowed,
                 specialization_applies: false,
             },
         ];
@@ -3778,7 +3803,7 @@ mod tests {
         set_char(&mut e, Characteristic::Str, 3); // Str 3 → Encumbrance 0 with Load 1.
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.long_sword"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         }];
         // Baseline Init = Qik 1 + WpnInit 2 − Enc 0 = 3.
@@ -3801,12 +3826,12 @@ mod tests {
         e.equipment = vec![
             EquipmentSlot {
                 item: Id::new("weapon.long_sword"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("weapon.dodge"),
-                equipped: true,
+                loadout: LoadoutState::Wielded,
                 specialization_applies: false,
             },
         ];

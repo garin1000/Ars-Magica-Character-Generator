@@ -5,7 +5,7 @@ import type { Entity, LocalizedRuleset } from '../types';
 
 // G17 (full-audit backlog, Tier 3-4): the SSR tests in EquipmentTab.test.ts only
 // cover narrow accessible-name/separator regressions — nothing exercised adding an
-// item from the SourcePicker, removing one, or toggling its Equipped state, i.e. the
+// item from the SourcePicker, removing one, or changing its loadout state, i.e. the
 // tab's actual reason for existing. Those are event-listener paths (`onclick`/
 // `onchange`), which SSR never runs (CLAUDE.md: "event listeners" require a client
 // test), so this file mounts the real component and clicks the real controls,
@@ -73,7 +73,7 @@ function resetEntity(): void {
     personality_traits: [],
     reputations: [],
     spells: [],
-    equipment: [{ item: SWORD, equipped: false }],
+    equipment: [{ item: SWORD, loadout: 'stowed' }],
   };
   store.effective = null;
   store.result = { issues: [] };
@@ -107,8 +107,8 @@ describe('EquipmentTab real interaction paths (G17)', () => {
     flushSync();
 
     expect(store.entity.equipment).toEqual([
-      { item: SWORD, equipped: false },
-      { item: AXE, equipped: true },
+      { item: SWORD, loadout: 'stowed' },
+      { item: AXE, loadout: 'wielded' },
     ]);
     // The addition is reflected in the rendered selected list, not just the store.
     const names = [...target.querySelectorAll('[data-testid^="equipment-name-"]')].map(
@@ -134,22 +134,22 @@ describe('EquipmentTab real interaction paths (G17)', () => {
     expect(target.querySelector('[data-testid="equipment-name-0"]')).toBeNull();
   });
 
-  it('toggles the Equipped checkbox', () => {
+  // K5 (design-f0-book-template-engine.md § 2a): the boolean Equipped checkbox
+  // is replaced by a tri-state `<select>` — stowed / carried / wielded.
+  it('changes the loadout via the tri-state control', () => {
+    store.entity.equipment = [{ item: SWORD, loadout: 'stowed' }];
     target = document.createElement('div');
     document.body.appendChild(target);
     app = mount(EquipmentTab, { target });
     flushSync();
 
-    const checkbox = target.querySelector(
-      '[data-testid="equipment-equipped-0"]',
-    ) as HTMLInputElement;
-    expect(checkbox).toBeTruthy();
-    expect(checkbox.checked).toBe(false);
+    const select = target.querySelector('[data-testid="equipment-loadout-0"]') as HTMLSelectElement;
+    expect(select).toBeTruthy();
 
-    checkbox.click();
+    select.value = 'carried';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
 
-    expect(checkbox.checked).toBe(true);
-    expect(store.entity.equipment).toEqual([{ item: SWORD, equipped: true }]);
+    expect(store.entity.equipment).toEqual([{ item: SWORD, loadout: 'carried' }]);
   });
 });

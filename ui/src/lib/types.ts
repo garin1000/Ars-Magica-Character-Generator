@@ -1591,11 +1591,18 @@ export interface Armor {
   load: number;
 }
 
+// How a piece of equipment is currently carried (K5). Replaces the K2-era
+// `equipped: boolean`, which conflated two independent facts: whether the slot
+// yields a Combat row, and whether it contributes Load. A `Carried` weapon (the
+// Knight's own spare great sword) yields a Combat row but no Load; `Wielded` is
+// K2's old `equipped: true` behavior unchanged; `Stowed` is the default.
+export type LoadoutState = 'stowed' | 'carried' | 'wielded';
+
 // A piece of equipment the character carries: a reference to a catalogue weapon,
-// shield, or armor id, plus whether it is currently equipped (wielded/worn).
+// shield, or armor id, plus how it is currently carried (K5).
 export interface EquipmentSlot {
   item: string;
-  equipped?: boolean;
+  loadout?: LoadoutState; // omitted = 'stowed'
   // Whether this weapon's combat Ability specialization applies to it, granting
   // +1 to the weapon's Attack and Defense (ArMDE:7122, :7139). Additive/optional.
   specialization_applies?: boolean;

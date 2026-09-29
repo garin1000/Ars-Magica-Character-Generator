@@ -512,9 +512,9 @@ impl<'a> Doc<'a> {
         }
     }
 
-    /// The carried equipment, grouped weapons / shields / armor with the equipped
-    /// marker. An id no catalogue holds is not printed;
-    /// [`crate::validation::validate`] reports it as `unknown_equipment`.
+    /// The carried equipment, grouped weapons / shields / armor with the loadout
+    /// state (K5: Stowed / Carried / Wielded). An id no catalogue holds is not
+    /// printed; [`crate::validation::validate`] reports it as `unknown_equipment`.
     pub(super) fn write_equipment(&self, out: &mut String) {
         let mut body = String::new();
         for (class, heading_key) in EQUIPMENT_GROUPS {
@@ -526,11 +526,7 @@ impl<'a> Doc<'a> {
                 .map(|slot| {
                     vec![
                         escape_cell(&self.name(&slot.item)),
-                        self.label(if slot.equipped {
-                            "export-yes"
-                        } else {
-                            "export-no"
-                        }),
+                        self.label(&format!("equipment-loadout-{}", slot.loadout)),
                     ]
                 })
                 .collect();
@@ -540,7 +536,7 @@ impl<'a> Doc<'a> {
             self.section(&mut body, 3, heading_key);
             let headers = [
                 self.label("identity-name"),
-                self.label("equipment-equipped-label"),
+                self.label("equipment-loadout-label"),
             ];
             table(&mut body, &headers, &rows);
         }

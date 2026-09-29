@@ -1267,21 +1267,21 @@ fn the_knight_matches_the_book() {
         stats(line(&lines, "weapon.fist", false)),
         (0, Some(5), 5, Some(1))
     );
-    // DISAGREEMENT K3 and K5 (docs/book-template-conformance.md): the book prints
-    // five Combat rows and the engine emits four of the on-foot set.
+    // DISAGREEMENT K3 (docs/book-template-conformance.md): the book prints five
+    // Combat rows, and once F1's K5 fix lands the engine emits five of the
+    // on-foot set too — the two *mounted* rows (ArMDE:1468, :1470) still have no
+    // counterpart at all. "A mounted character adds his Ride score, to a maximum
+    // of +3, to his Attack and Defense Totals" (ArMDE:16839), and the book's
+    // mounted lines are exactly the on-foot ones plus +3/+3 at Ride 5. Nothing in
+    // the save format records being mounted yet (K3, deferred to F2).
     //
-    // K3 — the two *mounted* rows (ArMDE:1468, :1470) have no counterpart at all.
-    // "A mounted character adds his Ride score, to a maximum of +3, to his Attack
-    // and Defense Totals" (ArMDE:16839), and the book's mounted lines are exactly
-    // the on-foot ones plus +3/+3 at Ride 5. Nothing in the save format records
-    // being mounted.
-    //
-    // K5 — the **great sword** rows (ArMDE:1470-1471) are absent because
-    // `EquipmentSlot::equipped` is overloaded: it gates BOTH whether a weapon
-    // yields a Combat row AND whether it contributes Load. The book wants the
-    // stowed alternate weapon to do the first and not the second, which one flag
-    // cannot express. The fixture resolves it in favour of the Encumbrance
-    // figure, since a wrong number beats a missing row.
+    // K5 (RED at F1 phase 1 — design-f0-book-template-engine.md § 8): the
+    // **great sword** row (ArMDE:1470-1471) needs the fixture's great sword at
+    // `loadout: "carried"` (F1 phase 2 data edit, not yet made) AND
+    // `combat_totals`'s row filter widened to `!= Stowed` (F1 phase 2 code
+    // change, not yet made) before this assertion goes green. `weapon.sword_great`
+    // is `two_handed` (`rules/core/equipment.json:31`), so it contributes exactly
+    // ONE new bare line, never a shield-paired second one.
     let emitted: Vec<(&str, bool)> = lines
         .iter()
         .map(|l| (l.weapon.as_str(), !l.shields.is_empty()))
@@ -1291,6 +1291,7 @@ fn the_knight_matches_the_book() {
         vec![
             ("weapon.fist", true),
             ("weapon.fist", false),
+            ("weapon.sword_great", false),
             ("weapon.sword_long", true),
             ("weapon.sword_long", false),
         ]

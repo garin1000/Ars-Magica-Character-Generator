@@ -227,17 +227,17 @@ fn golden_magus() -> Entity {
     e.equipment = vec![
         EquipmentSlot {
             item: Id::new("weapon.sword_long"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: true,
         },
         EquipmentSlot {
             item: Id::new("shield.round"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         },
         EquipmentSlot {
             item: Id::new("armor.leather_scale_partial"),
-            equipped: false,
+            loadout: LoadoutState::Stowed,
             specialization_applies: false,
         },
     ];

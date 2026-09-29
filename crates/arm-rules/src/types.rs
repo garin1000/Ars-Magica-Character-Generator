@@ -4194,33 +4194,72 @@ pub struct SpellSelection {
     pub mastery_abilities: Vec<Id>,
 }
 
+/// How a piece of equipment is currently carried. A fixed rules taxonomy
+/// (CLAUDE.md), replacing the K2-era `EquipmentSlot::equipped: bool`, which
+/// conflated two independent facts (K5, `docs/vf-audit/design-f0-book-template-
+/// engine.md` § 1): whether the slot yields a Combat row, and whether it
+/// contributes Load. Derives matched to [`EquipmentSlot`]'s own stack, since
+/// `EquipmentSlot` is kept sorted by [`Entity::normalize`], which needs every
+/// field — `loadout` included — to be `Ord`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum LoadoutState {
+    /// Not currently carried on the character's person: no Combat row, no Load.
+    #[default]
+    Stowed,
+    /// Carried and wieldable, but not currently wielded: yields a Combat row,
+    /// contributes no Load (the Knight's carried great sword, K5).
+    Carried,
+    /// Actively wielded/worn: yields a Combat row AND contributes Load (K2's
+    /// existing behavior, unchanged).
+    Wielded,
+}
+
+impl fmt::Display for LoadoutState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            LoadoutState::Stowed => "stowed",
+            LoadoutState::Carried => "carried",
+            LoadoutState::Wielded => "wielded",
+        })
+    }
+}
+
 /// A piece of equipment the character carries: a reference to a catalogue weapon,
-/// shield, or armor id, plus whether it is currently equipped (wielded / worn).
-/// Only the choice is stored — combat totals, Soak, and Encumbrance are derived
-/// downstream (5i) from the referenced catalogue row. Kept sorted via
-/// [`Entity::normalize`]. Source: ArMDE:16944-17011 (the equipment tables),
-/// :17103-17123 (Encumbrance, computed in the derived-totals slice).
+/// shield, or armor id, plus how it is currently carried (K5). Only the choice is
+/// stored — combat totals, Soak, and Encumbrance are derived downstream (5i) from
+/// the referenced catalogue row. Kept sorted via [`Entity::normalize`]. Source:
+/// ArMDE:16944-17011 (the equipment tables), :17103-17123 (Encumbrance, computed
+/// in the derived-totals slice).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct EquipmentSlot {
     /// The catalogue id of the item (a `weapon.*`, `shield.*`, or `armor.*` id).
     pub item: Id,
-    /// Whether the item is currently equipped (wielded/worn). An unequipped item
-    /// is inert: it yields no combat/Soak line (5i) **and** adds no Load, so a
-    /// stowed spare weapon costs its owner no Encumbrance. That second half was
-    /// the opposite until the book's own Knight template (ArMDE:1447-1486) was
-    /// built and disagreed — see `derived/combat.rs::encumbrance` for the
-    /// reasoning and the arithmetic.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub equipped: bool,
+    /// How this item is currently carried (K5). [`LoadoutState::Stowed`] is
+    /// inert: it yields no combat/Soak line (5i) and adds no Load, so a stowed
+    /// spare weapon costs its owner no Encumbrance. [`LoadoutState::Carried`]
+    /// yields a Combat row but no Load — the book's own Knight template
+    /// (ArMDE:1447-1486) wants exactly that for his alternate great sword, which
+    /// one boolean could not express. [`LoadoutState::Wielded`] is K2's existing
+    /// behavior (Combat row AND Load), unchanged. See
+    /// `derived/combat.rs::encumbrance` for the Load reasoning and the arithmetic.
+    #[serde(default, skip_serializing_if = "is_stowed")]
+    pub loadout: LoadoutState,
     /// Whether this weapon's combat Ability specialization applies to it, granting
     /// +1 to the weapon's Attack and Defense (the specialty must be aligned to this
     /// specific weapon; Damage/Initiative do not use the Ability). Only meaningful
     /// for a weapon slot whose Ability carries a specialty. Additive and
     /// serde-defaulted — old saves omit the key and deserialize to `false`, a new
     /// save with `false` omits it on write (SCHEMA_VERSION unchanged), exactly like
-    /// the sibling `equipped` field. Source: ArMDE:7122, :7139.
+    /// the sibling `loadout` field. Source: ArMDE:7122, :7139.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub specialization_applies: bool,
+}
+
+/// `skip_serializing_if` predicate: omits `loadout` from canonical JSON when it
+/// holds its `Stowed` default, keeping the common case out of the data.
+fn is_stowed(loadout: &LoadoutState) -> bool {
+    *loadout == LoadoutState::Stowed
 }
 
 /// A named Personality Trait with a value in −3..+3 (or ±6 for the trait
@@ -6590,7 +6629,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 19"#));
+        assert!(json.contains(r#""schema_version": 20"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -7120,7 +7159,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 19"#));
+        assert!(json.contains(r#""schema_version": 20"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -7483,7 +7522,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 19"#));
+        assert!(json.contains(r#""schema_version": 20"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -7796,11 +7835,12 @@ mod tests {
     /// Source: ArMDE:16621, :16624-16632.
     #[test]
     fn a_resolved_crisis_round_trips_and_needs_no_schema_bump() {
-        // 19 is C5a's own bump (the multi-valued parameter type); the Crisis
-        // widening contributed nothing to it, and nor did 16's funding discriminator,
-        // 17's saga year, or 18's ability-parameter type widening (CV4).
+        // 20 is F1's own bump (`EquipmentSlot::loadout`); the Crisis widening
+        // contributed nothing to it, nor to 19's multi-valued parameter type
+        // (C5a), 16's funding discriminator, 17's saga year, or 18's
+        // ability-parameter type widening (CV4).
         assert_eq!(
-            SCHEMA_VERSION, 19,
+            SCHEMA_VERSION, 20,
             "a purely additive widening earns no bump"
         );
 
@@ -7972,7 +8012,7 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""warping_choices""#), "{json}");
-        assert!(json.contains(r#""schema_version": 19"#), "{json}");
+        assert!(json.contains(r#""schema_version": 20"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);

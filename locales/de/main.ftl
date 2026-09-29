@@ -1353,7 +1353,15 @@ equipment-group-shields = Schilde
 equipment-group-armor = Rüstungen
 # Barrierefreier Name für die Typ-Filterauswahl ohne eigene sichtbare Beschriftung.
 equipment-group-filter-label = Nach Ausrüstungstyp filtern
-equipment-equipped-label = Ausgerüstet
+# Barrierefreier Name für die dreistufige Trageweise-Auswahl (K5) ohne eigene
+# sichtbare Beschriftung.
+equipment-loadout-label = Trageweise
+# Die drei Trageweisen (K5): Verstaut liefert weder Kampfwerte-Zeile noch
+# Traglast; Mitgeführt liefert eine Kampfwerte-Zeile, aber keine Traglast;
+# Angelegt liefert beides.
+equipment-loadout-stowed = Verstaut
+equipment-loadout-carried = Mitgeführt
+equipment-loadout-wielded = Angelegt
 equipment-specialization-label = Spezialisierung greift (+1)
 equipment-empty = Keine Ausrüstung.
 
@@ -1570,5 +1578,3 @@ export-items-hooks = Haken
 # Budgets, die Haus, mythischer Typ oder Verzerrung gewähren (nie in der Bilanz).
 export-granted = Gewährt
 export-xp-restricted = Eingeschränkte Erfahrungspunkte
-export-yes = Ja
-export-no = Nein

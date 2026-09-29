@@ -70,7 +70,7 @@ pub fn encumbrance(entity: &Entity, ruleset: &Ruleset) -> EncumbranceTotal {
     let load: u32 = entity
         .equipment
         .iter()
-        .filter(|slot| slot.equipped)
+        .filter(|slot| slot.loadout == LoadoutState::Wielded)
         .map(|slot| equipment_load(ruleset, &slot.item))
         .sum();
     let burden = burden_for_load(load);
@@ -133,8 +133,9 @@ pub struct CombatLine {
     pub range: Option<u16>,
 }
 
-/// Combat lines: **one or two** per equipped weapon. With a shield equipped, a
-/// one-handed weapon yields a with-shield line (every equipped shield's Init/Atk/Def
+/// Combat lines: **one or two** per Carried-or-Wielded weapon (K5) — a Stowed
+/// weapon yields none. With a shield Wielded, a
+/// one-handed weapon yields a with-shield line (every Wielded shield's Init/Atk/Def
 /// modifiers added — Source: ArMDE:16656)
 /// followed by a bare line, because the fighter may drop the shield at will and a
 /// Single Weapon specialty "covers using that weapon with any shield or none"
@@ -155,7 +156,7 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     let shield_ids: Vec<Id> = entity
         .equipment
         .iter()
-        .filter(|s| s.equipped && ruleset.shield(&s.item).is_some())
+        .filter(|s| s.loadout == LoadoutState::Wielded && ruleset.shield(&s.item).is_some())
         .map(|s| s.item.clone())
         .collect();
     let (shield_init, shield_attack, shield_defense) = shield_ids
@@ -202,7 +203,14 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     let atk_def_enc = 0;
 
     let mut out = Vec::new();
-    for slot in entity.equipment.iter().filter(|s| s.equipped) {
+    // K5: a Carried weapon (no Load) still yields a Combat row — the Knight's own
+    // spare great sword (ArMDE:1470-1471). Only Stowed gear is excluded; Wielded
+    // keeps its existing behavior unchanged.
+    for slot in entity
+        .equipment
+        .iter()
+        .filter(|s| s.loadout != LoadoutState::Stowed)
+    {
         let Some(weapon) = ruleset.weapon(&slot.item) else {
             continue;
         };
@@ -306,7 +314,7 @@ pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
     let armor: i32 = entity
         .equipment
         .iter()
-        .filter(|s| s.equipped)
+        .filter(|s| s.loadout == LoadoutState::Wielded)
         .filter_map(|s| ruleset.armor_item(&s.item))
         .map(|a| i32::from(a.protection))
         .sum();

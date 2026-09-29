@@ -1755,7 +1755,7 @@ fn validate_equipment_unknown_ref_and_min_strength() {
     // Unknown id → error.
     e.equipment = vec![EquipmentSlot {
         item: Id::new("weapon.nonexistent"),
-        equipped: true,
+        loadout: LoadoutState::Wielded,
         specialization_applies: false,
     }];
     let result = validate(&e, &rs);
@@ -1768,7 +1768,7 @@ fn validate_equipment_unknown_ref_and_min_strength() {
     e.characteristics.insert(Characteristic::Str, -1);
     e.equipment = vec![EquipmentSlot {
         item: Id::new("weapon.warhammer"),
-        equipped: true,
+        loadout: LoadoutState::Wielded,
         specialization_applies: false,
     }];
     let result = validate(&e, &rs);
@@ -1800,7 +1800,7 @@ fn validate_equipment_shield_warns_and_armor_never_warns() {
     e.characteristics.insert(Characteristic::Str, -1);
     e.equipment = vec![EquipmentSlot {
         item: Id::new("shield.heater"),
-        equipped: true,
+        loadout: LoadoutState::Wielded,
         specialization_applies: false,
     }];
     let result = validate(&e, &rs);
@@ -1830,7 +1830,7 @@ fn validate_equipment_shield_warns_and_armor_never_warns() {
     e.characteristics.insert(Characteristic::Str, -5);
     e.equipment = vec![EquipmentSlot {
         item: Id::new("armor.chain_mail_full"),
-        equipped: true,
+        loadout: LoadoutState::Wielded,
         specialization_applies: false,
     }];
     let result = validate(&e, &rs);
@@ -1862,12 +1862,12 @@ fn shield_with_only_two_handed_weapons_warns() {
     e.equipment = vec![
         EquipmentSlot {
             item: Id::new("weapon.sword_great"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         },
         EquipmentSlot {
             item: Id::new("shield.heater"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         },
     ];
@@ -1882,7 +1882,7 @@ fn shield_with_only_two_handed_weapons_warns() {
     // Add a one-handed weapon: the shield is now usable, so the advisory clears.
     e.equipment.push(EquipmentSlot {
         item: Id::new("weapon.sword_long"),
-        equipped: true,
+        loadout: LoadoutState::Wielded,
         specialization_applies: false,
     });
     let result = validate(&e, &rs);
@@ -1903,7 +1903,7 @@ fn specialization_applies_round_trips_and_sorts() {
     // Skip-when-false keeps the JSON noise-free; true is written.
     let off = EquipmentSlot {
         item: Id::new("weapon.sword_long"),
-        equipped: true,
+        loadout: LoadoutState::Wielded,
         specialization_applies: false,
     };
     let off_json = serde_json::to_string(&off).unwrap();
@@ -1934,12 +1934,12 @@ fn normalize_sorts_equipment() {
     e.equipment = vec![
         EquipmentSlot {
             item: Id::new("weapon.warhammer"),
-            equipped: false,
+            loadout: LoadoutState::Stowed,
             specialization_applies: false,
         },
         EquipmentSlot {
             item: Id::new("armor.chain_mail_full"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         },
     ];
@@ -3316,17 +3316,17 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     e.equipment = vec![
         EquipmentSlot {
             item: Id::new("weapon.axe"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         },
         EquipmentSlot {
             item: Id::new("shield.round"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         },
         EquipmentSlot {
             item: Id::new("armor.chain_mail_partial"),
-            equipped: true,
+            loadout: LoadoutState::Wielded,
             specialization_applies: false,
         },
     ];

@@ -17,9 +17,9 @@ use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
     AbilityFunding, CategoryCap, CategoryRule, CharacteristicDeltaCap, CreationPhase, Effect,
-    Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH,
-    ParamType, ParameterDef, ParameterDomain, PhaseRule, PointItem, Prereq, Realm, Selection,
-    SelectionParamValue, ValidationMode,
+    Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind, LoadoutState, Magnitude,
+    PREREQ_MAX_DEPTH, ParamType, ParameterDef, ParameterDomain, PhaseRule, PointItem, Prereq,
+    Realm, Selection, SelectionParamValue, ValidationMode,
 };
 
 mod aging;

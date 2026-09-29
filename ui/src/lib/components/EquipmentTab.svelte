@@ -6,7 +6,7 @@
     type EquipmentKind,
     type SelectedEquipmentGroup,
   } from '../derive';
-  import type { EquipmentSlot } from '../types';
+  import type { EquipmentSlot, LoadoutState } from '../types';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
 
@@ -83,17 +83,20 @@
     },
   ]);
 
-  // The specialization toggle is meaningful only for an equipped weapon whose
-  // combat Ability carries a non-empty specialty on this character — otherwise it
-  // is a dead toggle (ArMDE:7122, :7139), so we render it only when applicable.
+  // The specialization toggle is meaningful for a Carried or Wielded weapon
+  // (K5 — a Carried weapon still gets its own Combat row) whose combat Ability
+  // carries a non-empty specialty on this character — otherwise it is a dead
+  // toggle (ArMDE:7122, :7139), so we render it only when applicable.
   function specializationApplicable(slot: EquipmentSlot): boolean {
-    if (!slot.equipped) return false;
+    if ((slot.loadout ?? 'stowed') === 'stowed') return false;
     const weapon = store.ruleset?.ruleset?.weapons?.[slot.item];
     if (!weapon) return false;
     return (store.entity.ability_scores ?? []).some(
       (a) => a.ability === weapon.ability && (a.specialty ?? '').trim() !== '',
     );
   }
+
+  const LOADOUT_STATES: LoadoutState[] = ['stowed', 'carried', 'wielded'];
 </script>
 
 <div class="region-row">
@@ -143,16 +146,20 @@
               <span class="equipment-name" data-testid="equipment-name-{i}"
                 >{nameOf(slot.item)}</span
               >
-              <label class="checkbox inline">
-                <input
-                  type="checkbox"
-                  checked={slot.equipped ?? false}
-                  onchange={(e) =>
-                    store.setEquipmentEquipped(i, (e.currentTarget as HTMLInputElement).checked)}
-                  data-testid="equipment-equipped-{i}"
-                />
-                <span>{store.t('equipment-equipped-label')}</span>
-              </label>
+              <select
+                value={slot.loadout ?? 'stowed'}
+                onchange={(e) =>
+                  store.setEquipmentLoadout(
+                    i,
+                    (e.currentTarget as HTMLSelectElement).value as LoadoutState,
+                  )}
+                aria-label={store.t('equipment-loadout-label')}
+                data-testid="equipment-loadout-{i}"
+              >
+                {#each LOADOUT_STATES as state (state)}
+                  <option value={state}>{store.t(`equipment-loadout-${state}`)}</option>
+                {/each}
+              </select>
               {#if specializationApplicable(slot)}
                 <label class="checkbox inline">
                   <input
