@@ -167,6 +167,30 @@ describe('filterItems', () => {
     expect(filterItems(rs, items, { text: 'demons' }).map((i) => i.id)).toEqual(['virtue.corrupt']);
   });
 
+  // D65 N4: the search indexes the FULL description, not just the summary.
+  it('matches text found only in the full description', () => {
+    const lore = item({ id: 'virtue.lore', categories: ['general'] });
+    const rsWithDescription = makeRuleset([lore], {
+      i18n: {
+        'virtue.lore': {
+          name: 'Lore Keeper',
+          summary: 'Remembers old tales.',
+          description: 'Knows the location of hidden ruins.',
+        },
+      },
+    });
+    // Only in description.
+    expect(filterItems(rsWithDescription, [lore], { text: 'ruins' }).map((i) => i.id)).toEqual([
+      'virtue.lore',
+    ]);
+    // Only in summary — must still match.
+    expect(filterItems(rsWithDescription, [lore], { text: 'old' }).map((i) => i.id)).toEqual([
+      'virtue.lore',
+    ]);
+    // In neither — must not match.
+    expect(filterItems(rsWithDescription, [lore], { text: 'zorlac' }).map((i) => i.id)).toEqual([]);
+  });
+
   // A descriptor may name two categories (virtue.sufi is "Social Status,
   // Supernatural"). Membership tests read the WHOLE list — only display and
   // grouping use the primary — so filtering on the secondary must find it.
@@ -226,6 +250,39 @@ describe('filterItems', () => {
       filterItems(rs, items, { categories: ['story'], text: 'giant' }).map((i) => i.id),
     ).toEqual([]);
   });
+});
+
+// D65 N4: pin against the SHIPPED i18n in both locales, so this fails if the
+// search stops indexing `description` (rather than only against a fixture).
+describe('filterItems — description search reaches shipped data (D65 N4)', () => {
+  function shippedItems(lang: string): LocalizedRuleset['i18n'] {
+    return JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL(`../../../rules/i18n/${lang}/virtues_flaws.json`, import.meta.url)),
+        'utf-8',
+      ),
+    ) as LocalizedRuleset['i18n'];
+  }
+
+  // flaw.abandoned_apprentice's description carries several sentences past its
+  // summary; "Marched"/"Ordensbann" appear only in that tail.
+  const id = 'flaw.abandoned_apprentice';
+  const cases: Array<{ lang: string; word: string }> = [
+    { lang: 'en', word: 'marched' },
+    { lang: 'de', word: 'ordensbann' },
+  ];
+
+  for (const { lang, word } of cases) {
+    it(`finds "${word}" only in the ${lang} description`, () => {
+      const i18n = shippedItems(lang);
+      expect(i18n[id]?.summary?.toLowerCase()).not.toContain(word);
+      expect(i18n[id]?.description?.toLowerCase()).toContain(word);
+
+      const flaw = item({ id, kind: 'flaw', categories: ['story'] });
+      const localized = makeRuleset([flaw], { i18n });
+      expect(filterItems(localized, [flaw], { text: word }).map((i) => i.id)).toEqual([id]);
+    });
+  }
 });
 
 describe('filterAbilities', () => {

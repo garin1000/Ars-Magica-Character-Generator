@@ -102,14 +102,18 @@ export function addendBreakdown(addends: Addend[], t: Translate): string {
  * matches what the user actually sees: the raw template with braces stripped (so
  * an unresolved token like `language` still matches), the fully rendered label
  * with its param hint resolved (so the visible "(Language)"/"(Sprache)" is
- * indexed in the active language), and the summary. Without a translator only
- * the template + summary are indexed (the pre-render fallback).
+ * indexed in the active language), and the summary and full description (D65
+ * N4 — a word appearing only in the longer `description` must still be
+ * findable). Without a translator only the template + summary + description
+ * are indexed (the pre-render fallback).
  */
 function searchHaystack(localized: LocalizedRuleset, id: string, t?: Translate): string {
   const entry = localized.i18n[id];
   const template = (entry?.name ?? id).replace(/[{}]/g, '');
   const rendered = t ? displayName(localized, id, undefined, paramHint(t)) : template;
-  return normalizeSearch(`${template} ${rendered} ${entry?.summary ?? ''}`);
+  return normalizeSearch(
+    `${template} ${rendered} ${entry?.summary ?? ''} ${entry?.description ?? ''}`,
+  );
 }
 
 /** Facets a Virtue/Flaw list can be filtered by. All optional; omitted = no constraint. */
@@ -648,6 +652,8 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
     case 'order_member':
     case 'is_companion':
     case 'has_category':
+    case 'age_min':
+    case 'has_category_at_magnitude':
       return undefined;
   }
   // Exhaustiveness guard: `prereq` narrows to `never` here only while every
