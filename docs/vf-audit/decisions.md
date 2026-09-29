@@ -828,6 +828,32 @@ presumption of correctness.
 
 ---
 
+## D68 — X3/X4/X10 scoping answers
+
+**Norbert, 2026-09-29** (questions in `tmp/x3-scope.md`, `tmp/x10-verdicts.md`).
+
+1. **The 15 ambiguous Hermetic entries are trained.** This applies D12's own
+   criterion rather than a new ruling: raw vis, Parma, casting and lab totals
+   (Longevity Rituals included) and Magical Focus are all trained objects. So
+   D12 collapses to "every Hermetic entry except the three Gift ones requires
+   a magus".
+2. **Order-audience gates follow the wording.** `order_member` applies where the
+   text names the Order, a House or the Gauntlet, and `hermetically_trained`
+   applies otherwise.
+3. **Training is stated twice:** the `trained` flag plus a `prerequisites`
+   gate, with a guard that they agree. No engine change.
+4. **Flawed Powers' import filter is a new predicate, `requires_hermetic_arts`.**
+   It amends D23/D33. Deficient Technique and Unstructured Caster are in it;
+   Restriction and Necessary Condition are not, so they are importable.
+5. **Grapple** (ArMDE:18561, Natural Weapons Table) has no mounted twin (D66
+   flag).
+6. **`spell.piercing_the_magical_veil`** takes InVi 20 from ArMDE:1745, and its
+   Range/Duration/Target are copied from Piercing the Faerie Veil, its named
+   sibling (ArMDE:15709). This is an inference and is recorded as one in
+   RULES.md.
+
+---
+
 ## D67 — how D46 reads a partly computed entry (X2 scoping, OQ-1/2/7)
 
 **Orchestrator, 2026-09-29, applying D46 and D20. Norbert may override.**
