@@ -3361,7 +3361,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "lab_total_mod", "amount": 6 }],
     "source": { "anchor": "adept-laboratory-student", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3368, 3371] }
   },
@@ -3385,7 +3387,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
     "effects": [
       { "type": "affinity_art_cost", "param": "art", "counts_as_num": 3, "counts_as_den": 2 }
@@ -3544,7 +3548,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "atlantean-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3444, 3469] }
   },
   {
@@ -3620,7 +3626,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "boosted-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3523, 3528] }
   },
   {
@@ -3692,7 +3700,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "cautious-sorcerer", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3555, 3558] }
   },
   {
@@ -3711,7 +3721,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [{ "kind": "order_member" }, { "kind": "house", "value": "house.bjornaer" }] },
     "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.magic_lore"],
       "instances": [
         { "ability": "ability.dead_language", "instance": { "literal": "language.gothic" } },
@@ -3866,7 +3878,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "lab_total_mod", "amount": 3 }],
     "source": { "anchor": "cyclic-magic-positive", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3635, 3638] }
   },
@@ -3885,7 +3899,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }],
     "source": { "anchor": "deft-form", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3645, 3648] }
@@ -3949,7 +3965,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [{ "kind": "hermetically_trained" }, { "kind": "order_member" }] },
     "effects": [{ "type": "special_casting_mod", "kind": "diedne" }],
     "source": { "anchor": "diedne-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3675, 3682] }
   },
@@ -4102,7 +4120,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [
       {
         "type": "elemental_magic",
@@ -4161,7 +4181,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "enduring-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3755, 3758] }
   },
   {
@@ -4200,7 +4222,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "exotic-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3775, 3778] }
   },
   {
@@ -4209,7 +4233,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "max_total": 255,
     "source": { "anchor": "extractor-of-form-vis", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3779, 3782] }
@@ -4271,8 +4297,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
-    "prerequisites": { "kind": "house", "value": "house.merinita" },
+    "prerequisites": { "kind": "all", "value": [{ "kind": "order_member" }, { "kind": "house", "value": "house.merinita" }] },
     "effects": [{ "type": "ability_score_grant", "ability": "ability.faerie_magic", "amount": 1 }],
     "source": { "anchor": "faerie-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3825, 3827] }
   },
@@ -4282,7 +4309,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "special_casting_mod", "kind": "faerie_raised" }],
     "source": { "anchor": "faerie-raised-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3829, 3842] }
   },
@@ -4346,7 +4375,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "combat_mod", "amount": 3, "target": "initiative" }],
     "source": { "anchor": "fast-caster", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3865, 3868] }
   },
@@ -4394,7 +4425,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [
       { "type": "grants_spell_mastery", "score": 1, "advancement_num": 2, "advancement_den": 1 }
     ],
@@ -4406,7 +4439,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "flexible-formulaic-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3891, 3894] }
   },
   {
@@ -4489,7 +4524,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "advancement_mod", "source": "vis", "amount": 3 }],
     "source": { "anchor": "free-study", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3937, 3940] }
   },
@@ -4575,7 +4612,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [{ "kind": "hermetically_trained" }, { "kind": "order_member" }] },
     "source": { "anchor": "gorgiastic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3979, 3982] }
   },
   {
@@ -4658,7 +4697,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "order_member" },
     "source": { "anchor": "guest-of-house-criamon", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4037, 4040] }
   },
   {
@@ -4696,7 +4737,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "harnessed-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4053, 4058] }
   },
   {
@@ -4705,8 +4748,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
-    "prerequisites": { "kind": "house", "value": "house.bjornaer" },
+    "prerequisites": { "kind": "all", "value": [{ "kind": "order_member" }, { "kind": "house", "value": "house.bjornaer" }] },
     "effects": [{ "type": "ability_score_grant", "ability": "ability.heartbeast", "amount": 1 }],
     "source": { "anchor": "heartbeast", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4059, 4061] }
   },
@@ -4740,7 +4784,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "order_member" },
     "effects": [{ "type": "grants_reputation", "kind": "hermetic", "score": 4 }],
     "source": { "anchor": "hermetic-prestige", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4071, 4073] }
   },
@@ -4769,7 +4815,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "source": { "anchor": "imbued-with-the-spirit-of-form", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4085, 4094] }
   },
@@ -4896,7 +4944,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "lab_total_mod", "amount": 3 }],
     "source": { "anchor": "inventive-genius", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4151, 4154] }
   },
@@ -5072,7 +5122,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [{ "kind": "order_member" }, { "kind": "house", "value": "house.tytalus" }] },
     "effects": [{ "type": "special_casting_mod", "kind": "life_boost" }],
     "source": { "anchor": "leper-magus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4249, 4252] }
   },
@@ -5130,7 +5182,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "special_casting_mod", "kind": "life_boost" }],
     "source": { "anchor": "life-boost", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4295, 4298] }
   },
@@ -5140,7 +5194,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "special_casting_mod", "kind": "life_linked_spontaneous" }],
     "source": { "anchor": "life-linked-spontaneous-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4299, 4306] }
   },
@@ -5295,7 +5351,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "magical-memory", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4355, 4358] }
   },
   {
@@ -5353,7 +5411,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "incompatible_with": ["virtue.minor_magical_focus"],
     "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "magical_focus", "param": "focus", "major": true }],
@@ -5470,7 +5530,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "spell_mastery_xp", "amount": 50 }],
     "max_per_target": 255,
     "max_total": 255,
@@ -5482,7 +5544,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [{ "kind": "hermetically_trained" }, { "kind": "order_member" }] },
     "effects": [{ "type": "masterpiece_item" }],
     "source": { "anchor": "masterpiece", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4476, 4479] }
   },
@@ -5557,7 +5621,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "special_casting_mod", "kind": "mercurian" }],
     "source": { "anchor": "mercurian-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4514, 4523] }
   },
@@ -5567,7 +5633,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "casting_total_mod", "amount": 3, "scope": "formulaic_ritual" }],
     "source": { "anchor": "method-caster", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4524, 4527] }
   },
@@ -5601,7 +5669,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "incompatible_with": ["virtue.major_magical_focus"],
     "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "magical_focus", "param": "focus", "major": false }],
@@ -5631,7 +5701,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "mystical-choreography", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4567, 4572] }
   },
   {
@@ -5640,7 +5712,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "magical_focus", "param": "focus", "major": false }],
     "source": { "anchor": "mythic-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4573, 4589] }
@@ -5745,7 +5819,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "performance-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4642, 4709] }
   },
   {
@@ -5776,7 +5852,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "personal-vis-source", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4728, 4731] }
   },
   {
@@ -5807,7 +5885,9 @@
     "magnitude": "major",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "incompatible_with": ["virtue.potent_magic_minor"],
     "effects": [
       { "type": "casting_total_mod", "amount": 6, "scope": "all" },
@@ -5821,7 +5901,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "incompatible_with": ["virtue.potent_magic_major"],
     "effects": [
       { "type": "casting_total_mod", "amount": 3, "scope": "all" },
@@ -5913,7 +5995,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
     "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }],
     "max_total": 2,
@@ -5925,7 +6009,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "special_casting_mod", "kind": "quiet_words" }],
     "max_per_target": 2,
     "max_total": 2,
@@ -6075,7 +6161,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "advancement_mod", "source": "insight", "amount": 1 }],
     "source": { "anchor": "secondary-insight", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4892, 4895] }
   },
@@ -6208,7 +6296,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "narrative",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "side-effect", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4954, 4957] }
   },
   {
@@ -6235,7 +6325,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [
       { "type": "spell_levels", "amount": 30 },
       { "type": "general_xp", "amount": 60 }
@@ -6295,7 +6387,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "magic_resistance_mod", "kind": "aura_bonus" }],
     "max_per_target": 255,
     "max_total": 255,
@@ -6307,7 +6401,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "special_casting_mod", "kind": "spell_improvisation" }],
     "source": { "anchor": "spell-improvisation", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5002, 5005] }
   },
@@ -6399,7 +6495,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [
       { "type": "advancement_mod", "source": "vis", "amount": 2 },
       { "type": "advancement_mod", "source": "book", "amount": 2 }
@@ -6412,7 +6510,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "special_casting_mod", "kind": "subtle_gestures" }],
     "source": { "anchor": "subtle-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5073, 5076] }
   },
@@ -6562,7 +6662,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "narrative",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "source": { "anchor": "tethered-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5141, 5144] }
   },
   {
@@ -6571,8 +6673,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "creation_effect",
+    "trained": true,
     "entity_kinds": ["character"],
-    "prerequisites": { "kind": "house", "value": "house.criamon" },
+    "prerequisites": { "kind": "all", "value": [{ "kind": "order_member" }, { "kind": "house", "value": "house.criamon" }] },
     "effects": [{ "type": "ability_score_grant", "ability": "ability.enigmatic_wisdom", "amount": 1 }],
     "source": { "anchor": "the-enigma", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3759, 3761] }
   },
@@ -6749,8 +6852,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "narrative",
+    "trained": true,
     "entity_kinds": ["character"],
-    "prerequisites": { "kind": "house", "value": "house.verditius" },
+    "prerequisites": { "kind": "all", "value": [{ "kind": "order_member" }, { "kind": "house", "value": "house.verditius" }] },
     "source": { "anchor": "verditius-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5215, 5217] }
   },
   {
@@ -6878,7 +6982,9 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "in_play_effect",
+    "trained": true,
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "hermetically_trained" },
     "effects": [{ "type": "health_mod", "track": "casting_fatigue", "amount": 1 }],
     "max_per_target": 255,
     "max_total": 255,

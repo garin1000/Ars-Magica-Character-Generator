@@ -6004,6 +6004,30 @@ the entry's other, already-enforced constraint as a contradiction.
   Reputation at level 4 (5a-wire may add a player-selected `kind` param to
   `GrantsReputation`).
 
+### D12/D68 — the trained gate on Hermetic Virtues and Flaws (X3, 2026-09-29)
+
+Every `hermetic`-category entry is either **intrinsic** — it operates on The
+Gift itself (`flaw.blatant_gift`, `virtue.gentle_gift`, `flaw.suppressed_gift`,
+the only three exceptions) — or **trained**: it operates on a Technique, Form,
+spell, Casting/Lab Total, Parma Magica, Arcane Connection, certámen, or
+Twilight, none of which exist before Hermetic training (D12, D68.1). Training
+is stated twice per entry, with a guard
+(`tests/x3_trained_gate.rs::trained_flag_and_gate_always_agree`) that the two
+never disagree: `PointItem::trained: true`, plus a `prerequisites` leaf —
+`{"kind": "hermetically_trained"}`, or `{"kind": "order_member"}` where the
+passage names the Order, a House, or the Gauntlet (D68.2, D68.12) — the latter
+combined with any existing House leaf under `all[...]` (e.g.
+`virtue.clan_ilfetu`, `virtue.the_enigma`). No `Prereq` a shipped entry once
+spelled as `Has(virtue.hermetic_magus)` survives this pass (D12.3/D56); every
+site normalizes to `HermeticallyTrained`.
+
+| Value | Source |
+|---|---|
+| every Hermetic entry except the three Gift ones requires Hermetic training | `ArMDE:2870` ("A character with The Gift... may take Hermetic Virtues and Flaws which relate to intrinsic ability rather than background or training"), `ArMDE:2880` ("some are only applicable to Hermetic magi who have already completed their training") |
+
+X3a lands the gate on the 55 Hermetic Virtues (`rules/core/virtues_flaws.json`);
+the 64 Hermetic Flaws follow in X3b/X3c (`tmp/x3-scope.md`).
+
 ### In-play effect families (definitive input to slice 4 / 5b)
 
 - **Magical Focus (major/minor)** — `virtue.major_magical_focus` (ArMDE:4399-4422), `virtue.minor_magical_focus` (ArMDE:4536-4538), `virtue.mythic_blood` (ArMDE:4573-4589)

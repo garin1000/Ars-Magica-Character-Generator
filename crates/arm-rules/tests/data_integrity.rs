@@ -1155,7 +1155,10 @@ fn incomprehensible_and_loose_magic_carry_a_halving_factor_not_a_zero_amount() {
 
 /// The four Outer-Mystery Virtues whose descriptors state that taking them makes
 /// the character a member of a particular House must carry that House as their
-/// prerequisite, so a magus of another House cannot simply buy one.
+/// prerequisite, so a magus of another House cannot simply buy one — alongside
+/// `order_member`, added by X3a/D68.2 (every Hermetic entry gates on Hermetic
+/// training, and `order_member` where the passage names the Order, a House, or
+/// the Gauntlet, per D12/D68).
 ///
 /// > You have been initiated into the Outer Mystery of the Heartbeast (see page
 /// > 233), and thus are a member of House Bjornaer.
@@ -1165,7 +1168,8 @@ fn incomprehensible_and_loose_magic_carry_a_halving_factor_not_a_zero_amount() {
 /// Merinita), `ArMDE:5217` (Verditius Magic → Verditius). No other free-Virtue
 /// descriptor in the core rules makes that claim, so `virtue.hermetic_prestige`
 /// (Guernicus) is the control: its House grants it, but the Virtue itself says
-/// nothing about membership and must stay House-free.
+/// nothing about membership and must stay House-free — though it does carry its
+/// own `order_member` gate (ArMDE:4071-4073, "a Reputation... within the Order").
 #[test]
 fn outer_mystery_virtues_require_the_house_their_descriptor_confers() {
     let rs = load_full_ruleset();
@@ -1183,8 +1187,12 @@ fn outer_mystery_virtues_require_the_house_their_descriptor_confers() {
             .unwrap_or_else(|| panic!("{virtue} ships"));
         assert_eq!(
             item.prerequisites,
-            Some(Prereq::House(Id::new(house))),
-            "{virtue} states it makes you a member of {house}, so it must require that House"
+            Some(Prereq::All(vec![
+                Prereq::OrderMember,
+                Prereq::House(Id::new(house))
+            ])),
+            "{virtue} states it makes you a member of {house}, so it must require that House \
+             (D68.2 adds order_member alongside it)"
         );
     }
 
@@ -1192,8 +1200,10 @@ fn outer_mystery_virtues_require_the_house_their_descriptor_confers() {
         .item(&Id::new("virtue.hermetic_prestige"))
         .expect("virtue.hermetic_prestige ships");
     assert_eq!(
-        control.prerequisites, None,
-        "a free Virtue whose descriptor claims no House membership must stay House-free"
+        control.prerequisites,
+        Some(Prereq::OrderMember),
+        "a free Virtue whose descriptor claims no House membership must stay House-free, but \
+         still gates on order_member (D68.2, ArMDE:4071-4073)"
     );
 }
 
@@ -2426,6 +2436,21 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     (
         "virtue.verditius_magic",
         "narrative, but declares prerequisites — D67 counts that as computed",
+    ),
+    // virtue.side_effect, virtue.tethered_magic: X3a (D12/D68) adds the
+    // hermetically_trained prerequisite every Hermetic entry now carries, which
+    // D67 counts as computed even though each still states a genuinely
+    // uncomputed clause (Side Effect's open-ended troupe-defined bonus; Tethered
+    // Magic's Arcane Connection side effect) — neither fits `uncomputed_rule`'s
+    // own mechanical-token screen (`tests/uncomputed_clauses.rs`), so they stay
+    // `narrative` and pending here instead.
+    (
+        "virtue.side_effect",
+        "narrative, but declares prerequisites — D68 counts that as computed",
+    ),
+    (
+        "virtue.tethered_magic",
+        "narrative, but declares prerequisites — D68 counts that as computed",
     ),
 ];
 
