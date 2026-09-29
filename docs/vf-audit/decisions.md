@@ -863,6 +863,10 @@ presumption of correctness.
 11. **Mythic Blood's hereditary Minor Personality Flaw** (ArMDE:4588) is an open
    grant. It costs no points but counts toward the Personality caps
    (ArMDE:2820).
+12. **X3a's borderline six.** Masterpiece (the Gauntlet), Diedne Magic
+   (hidden from the Order) and Gorgiastic (left House Criamon, still in the
+   Order) gate on `order_member` as well as training. Exotic Casting, Mercurian
+   Magic and Mythic Blood gate on training only.
 
 ---
 
