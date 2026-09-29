@@ -840,7 +840,18 @@ presumption of correctness.
 3. **Folk Magic's Casting Total: text.** The formula needs an Aura term the app
    does not track (row 49), so no partial total is shown.
 
-**Scheduling, orchestrator:** X7b-e owns Flawed Powers' "at least one Major
+4. **X4's entailed twins stay blocked** (D44 entailment): Outsider
+   (ArMDE:6554, :6556), True Love the Flaw (ArMDE:6877), Amorphous
+   (ArMDE:3412), Magian Lineage (ArMDE:4345). They are marked as entailed.
+5. **Blood of the Nephilim's Size clause** (ArMDE:3517, "such as") becomes a
+   new "affects Size" tag. Every entry that changes Size is tagged, and the tag
+   is excluded.
+6. **The same-choice constraint is built now in X4:** Student of (Realm) with
+   Puissant Ability for the same Lore (ArMDE:5054), and Academic Concentration
+   with Puissant Artes Liberales (ArMDE:3364).
+
+**Scheduling, orchestrator:** Raised from the Dead belongs to X7b-e (D69.1),
+and X7b-d drops its F-494 test. X7b-e owns Flawed Powers' "at least one Major
 Supernatural Virtue" prerequisite. X4 keeps only its `requires_hermetic_arts`
 import filter (D68.4).
 
