@@ -727,6 +727,10 @@ Adjustment.
 
 ## 9. Open questions for Norbert
 
+**Both resolved 2026-09-29 (Norbert) as recommended.** (1) Ways of the (Land)'s
+combat clause needs nothing more: the full rule already lives in `description`.
+(2) `Entity.mounted: bool` is enough, and a richer mount record is not planned.
+
 | # | Question | Recommendation |
 |---|---|---|
 | 1 | Ways of the (Land) also says *"+3 bonus to all rolls, including combat... that directly involve that area and its inhabitants"* (`ArMDE:5233`) — the data carries no `combat_mod` at all today, only `casting_total_mod`. Is the missing combat clause in scope for F2, or does it belong in the same bucket as row 45 (a missing-authorization-shaped gap, fixed alongside a broader data survey)? | Leave out of F2 (F2 fixes an *unconditional* application; this is a *missing* effect — a different defect shape) and file it as a new open-todos row for a Phase-3 data slice. Since the Virtue is going to `uncomputed_rule` anyway (§ 2c), the missing clause needs no effect at all — it is already covered by the same `description` that carries the Casting clause, so there is nothing to add beyond filing the observation. |
