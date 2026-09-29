@@ -1003,6 +1003,7 @@ param-label-years = Years
 # (ArMDE:5641-5650, D56/D62/D3); the cap (apprenticeship.years - 1) is the
 # parameter's own min/max, enforced by the engine.
 param-label-years_completed = Years completed
+param-label-years_since_resurrection = Years since resurrection
 # The three Corrupted entries' multi-valued choice (D9 part 3, D15,
 # ArMDE:5847-5864) — which Abilities/Arts/spells the Flaw affects.
 param-label-targets = Targets
@@ -1228,6 +1229,7 @@ issue-specialty_forbidden = { $ability } may not have a specialty ({ $specialty 
 issue-ambiguous_bound_parameter = { $item } is held more than once; { $ability }'s linked value cannot be resolved until the duplicate is removed.
 issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue (or the Gift's one free Ability).
 issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
+issue-fickle_nature_trait_pair_missing = { $item } requires at least two Personality Traits at exactly { $value } (a matched pair).
 issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Virtue or Flaw that grants one.
 issue-reputation_score_out_of_range = A { $kind } Reputation ({ $content }) at level { $score } is outside the granted range ({ $min } to { $max }).
 issue-over_item_level = Enchanted devices total { $used } levels, over the budget of { $budget } (by { $over }).
@@ -1434,6 +1436,7 @@ derived-surfaced-special_casting = Casting style
 derived-surfaced-ability_roll = Ability roll
 derived-surfaced-health_roll = Health roll
 derived-surfaced-magic_resistance = Magic Resistance
+derived-surfaced-physical_activity = Physical activity
 # D45/F-423: names the Virtue/Flaw that produced a surfaced-modifier row, so two
 # carriers of the same family+detail pair no longer read as one unattributed
 # repeated line. { $source } is the item's own localized display name, never

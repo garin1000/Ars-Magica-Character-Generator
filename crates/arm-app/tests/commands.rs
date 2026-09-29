@@ -3239,6 +3239,7 @@ fn every_modifier_family() -> Vec<arm_rules::ModifierFamily> {
         Family::AbilityRoll,
         Family::HealthRoll,
         Family::MagicResistance,
+        Family::PhysicalActivity,
     ];
     for family in &all {
         // Exhaustive tripwire — see `every_advancement_source`.
@@ -3248,7 +3249,8 @@ fn every_modifier_family() -> Vec<arm_rules::ModifierFamily> {
             | Family::SpecialCasting
             | Family::AbilityRoll
             | Family::HealthRoll
-            | Family::MagicResistance => {}
+            | Family::MagicResistance
+            | Family::PhysicalActivity => {}
         }
     }
     all

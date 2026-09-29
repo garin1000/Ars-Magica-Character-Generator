@@ -1156,7 +1156,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :300) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :320) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -1241,8 +1241,8 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2068, shared by
-  `validate_prereq_refs` :1931 and `validate_effect_refs` :2354) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2081, shared by
+  `validate_prereq_refs` :1992 and `validate_effect_refs` :2428) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
@@ -1351,7 +1351,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
   `base_max_score`, `base_min_score`); enforced in
-  `validation/scores.rs` — `validate_characteristics` (:32) (off-table
+  `validation/scores.rs` — `validate_characteristics` (:33) (off-table
   out-of-range error, above-cap / below-floor errors against the buy range,
   overspent error, points-unspent warning). The out-of-range error is what a save
   written against the old invented rows now trips — see *Save compatibility*
@@ -1440,7 +1440,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:291).
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:299).
 
 ### Arts
 
@@ -1488,7 +1488,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:544).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:552).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -3475,7 +3475,7 @@ naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
   the `max_per_target` — see *Selection multiplicity* above. Copies stack: two
   grant 6 points.
 - Implementation: `effective/characteristic.rs::characteristic_points_granted` sums the grants;
-  `validation/scores.rs::validate_characteristics` (:32) budget = `start_points + granted`. The
+  `validation/scores.rs::validate_characteristics` (:33) budget = `start_points + granted`. The
   per-characteristic +3 *cap* is unchanged (only Great Characteristic widens it).
 
 #### Weak Characteristics — −3 Characteristic-buy points (`characteristic_points`, signed)
@@ -6027,6 +6027,95 @@ site normalizes to `HermeticallyTrained`.
 
 X3a lands the gate on the 55 Hermetic Virtues (`rules/core/virtues_flaws.json`);
 the 64 Hermetic Flaws follow in X3b/X3c (`tmp/x3-scope.md`).
+
+### D69/X7b-e — row 42 compute verdicts (2026-09-29)
+
+Eight `docs/open-todos.md` row-42 entries move from `uncomputed_rule`-with-no-
+wiring to `uncomputed_rule`-with-partial-effects (D67: an entry stays
+`uncomputed_rule` whenever any stated clause is left uncomputed, whatever else
+it computes). Full per-entry citation and D58 reasoning:
+`tmp/x7be-verdicts.md`; engine design sketch: `tmp/x7be-handover.md`.
+
+- **Uninspirational** (`ArMDE:6919-6922`) — "His Presence and Communication may
+  not be greater than 0" is a new `Effect::CharacteristicMax { characteristic,
+  max }`, folded by `effective/characteristic.rs::characteristic_cap`, which
+  became **entity-aware** (previously ruleset-global only). Two instances (Pre,
+  Com), both `max: 0`. The four named Abilities' -3
+  ("Leadership, Charm, Intrigue, Etiquette") reuse the existing
+  `Effect::AbilityRollMod`. The "Personality Rolls" clause has no Ability to
+  attach to and stays text.
+- **Weak Personality** (`ArMDE:7076-7079`) — "all Personality Traits must be
+  between +1 and -1" is a new `Effect::PersonalityTraitRange { max }`, read by
+  `validation/scores.rs::validate_personality_traits` as a per-entity override
+  that REPLACES (not composes with) the universal ±3/Major-Personality-Flaw-±6
+  scheme. "No other Personality Flaws or Virtues/Flaws that grant Personality
+  Traits" is data-only: `excluded_if_holds: ["grants_personality_trait"]` plus
+  `Effect::ForbidsItemCategory { category: "personality" }` — both already-built
+  machinery whose doc comments (`types.rs`) name this entry as the intended
+  consumer. The roll-ceiling-at-6 clause stays text.
+- **Fickle Nature** (`ArMDE:6122-6124`) — "Select a Personality Trait at +4,
+  and its opposite at +4" is a new `Effect::RequiresPersonalityTraitPair
+  { value }`, read by the new
+  `validation/scores.rs::validate_personality_trait_pairs`, which requires at
+  least two distinct `personality_traits` entries at exactly `value`. New
+  issue code `fickle_nature_trait_pair_missing`. The "opposite" pairing itself
+  is unverified free text (D61's shape — the passage's own list is
+  illustrative, not closed).
+- **Lingering Injury** (`ArMDE:6350-6353`) — "-1 to physical activity rolls...
+  multiplied by whatever the penalty is by 1 + (Decrepitude Score)" is a new
+  `Effect::DecrepitudeScaledRollMod { amount }` and a new
+  `ModifierFamily::PhysicalActivity`, folded in `derived.rs::in_play_mods` as
+  `amount * (1 + decrepitude_score)`. The aggravated (-3) alternative stays
+  text: whether a wound was caused by a botch is not tracked anywhere on
+  `Entity`.
+- **Servant of the (Land)** (`ArMDE:6717-6720`) — "the character has the Minor
+  Personality Flaw: Prohibition, but this does not count toward the
+  character's total number of Virtues and Flaws" is the existing
+  `Effect::GrantsSelection { items: ["flaw.prohibition"] }` (a granted item is
+  already free of the point budget by construction) — no new engine
+  capability. Stays `uncomputed_rule`, not `creation_effect`: the passage's
+  curse-on-failure clause is a GM-adjudicated in-play consequence with no fixed
+  sheet number.
+- **University Dean** (`ArMDE:6923-6926`) — "must have the Virtue Doctor in
+  (Faculty), be at least 40 years old, and can not have the Poor Flaw or any
+  other Flaw that grants a Bad Reputation" is a new `Prereq::AgeMin(u32)`
+  (`ArMDE:6923-6926`, evaluated against `Entity::age`; unset age is
+  `Tri::Unknown`, mirroring `Prereq::House`), combined under `all[...]` with
+  the existing `Prereq::Has(virtue.doctor_in_faculty)`; `incompatible_with:
+  ["flaw.poor"]` (added symmetrically to `flaw.poor` too, per the
+  incompatibility-symmetry guard) and `excluded_if_holds: ["grants_reputation"]`
+  — the latter two are data-only against already-built machinery.
+- **Flawed Powers** (`ArMDE:6146-6149`) — "must have at least one Major
+  Supernatural Virtue to take this Flaw" is a new `Prereq::HasCategoryAtMagnitude
+  { category, magnitude, item_kind }`, the magnitude/kind-filtered twin of
+  `Prereq::HasCategory` (D68.4's scheduling note: X7b-e owns this
+  prerequisite; X4 keeps only the separate `requires_hermetic_arts` import
+  filter). `item_kind` is required because `categories` is shared free-form
+  vocabulary between Virtues and Flaws — `flaw.raised_from_the_dead` is
+  itself a Major `supernatural`-category Flaw, so a kind-blind test would be
+  wrongly satisfied by it.
+- **Raised from the Dead** (`ArMDE:6646-6649`, D69.1) — "at least three
+  Warping points, plus one Warping point for every year that has passed since
+  you were resurrected" is a new `Effect::WarpingGrantParam { param,
+  base_points }` (D64's Abandoned Apprentice `years_completed` precedent): a
+  new `years_since_resurrection` number parameter, folded by
+  `effective/warping.rs::warping_grant_points_in` as `base_points + years`
+  (years defaults to 0 when unanswered). "A level 4 reputation in the area
+  where the miracle occurred" reuses the existing `Effect::GrantsReputation
+  { kind: local, score: 4 }`. The ongoing "+1 Warping point every year you
+  continue living" clause is NOT creation-time (an accrual, not a constant)
+  and stays text.
+
+| Value | Source |
+|---|---|
+| Uninspirational's Presence/Communication cap of 0 | `ArMDE:6919-6922` |
+| Uninspirational's four named Abilities' -3 | `ArMDE:6919-6922` |
+| Weak Personality's ±1 trait range | `ArMDE:7076-7079` |
+| Fickle Nature's matched-pair value (+4) | `ArMDE:6122-6124` |
+| Lingering Injury's -1 base, ×(1 + Decrepitude Score) | `ArMDE:6350-6352` |
+| University Dean's age floor (40) | `ArMDE:6923-6926` |
+| Flawed Powers' Major-Supernatural-Virtue prerequisite | `ArMDE:6146-6149` |
+| Raised from the Dead's 3-point Warping floor + 1/year + level-4 Reputation | `ArMDE:6646-6649` |
 
 ### In-play effect families (definitive input to slice 4 / 5b)
 

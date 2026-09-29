@@ -9,11 +9,15 @@
 
 use super::*;
 
-/// The Warping Points granted by [`Effect::WarpingGrant`] (Warped by Magic → 5),
-/// summed across selections and derived grants. The grant's declared *score* field
-/// is **not** read here — the Warping Score is derived by inverting the advancement
-/// curve over the point total (see [`warping_score`]), so the score is computed
-/// from points alone and the two can never disagree.
+/// The Warping Points granted by [`Effect::WarpingGrant`] (Warped by Magic → 5)
+/// and [`Effect::WarpingGrantParam`] (Raised from the Dead, D69/X7b-e: `base_points`
+/// plus one per year named by the owning selection's own parameter — an
+/// unanswered parameter contributes 0 extra years), summed across selections
+/// and derived grants. `WarpingGrant`'s declared *score* field is **not** read
+/// here — the Warping Score is derived by inverting the advancement curve
+/// over the point total (see [`warping_score`]), so the score is computed
+/// from points alone and the two can never disagree; `WarpingGrantParam`
+/// carries no `score` field at all, for the same reason.
 fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
     let mut points = 0u32;
     for selection in selections {
@@ -21,12 +25,23 @@ fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
             continue;
         };
         for effect in &item.effects {
-            if let Effect::WarpingGrant {
-                score: _,
-                points: p,
-            } = effect
-            {
-                points += u32::from(*p);
+            match effect {
+                Effect::WarpingGrant {
+                    score: _,
+                    points: p,
+                } => {
+                    points += u32::from(*p);
+                }
+                Effect::WarpingGrantParam { param, base_points } => {
+                    let years = selection
+                        .params
+                        .get(param)
+                        .and_then(SelectionParamValue::as_single)
+                        .and_then(|v| v.as_str().parse::<u32>().ok())
+                        .unwrap_or(0);
+                    points += u32::from(*base_points) + years;
+                }
+                _ => {}
             }
         }
     }
@@ -176,9 +191,12 @@ pub fn warping_owed(entity: &Entity, ruleset: &Ruleset) -> WarpingOwed {
 /// it in validation and drops it in [`warping_granted_selections`].
 pub(crate) fn item_carries_warping_grant(item_ref: &Id, ruleset: &Ruleset) -> bool {
     ruleset.point_items.get(item_ref).is_some_and(|item| {
-        item.effects
-            .iter()
-            .any(|effect| matches!(effect, Effect::WarpingGrant { .. }))
+        item.effects.iter().any(|effect| {
+            matches!(
+                effect,
+                Effect::WarpingGrant { .. } | Effect::WarpingGrantParam { .. }
+            )
+        })
     })
 }
 

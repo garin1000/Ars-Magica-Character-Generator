@@ -5,6 +5,7 @@
 
 use super::*;
 use crate::characteristics::CharacteristicRules;
+use crate::effective::{for_each_effect, selections_for_effects};
 use crate::ruleset::ENGINE_REQUIRED_CATEGORY_PERSONALITY;
 use crate::types::{AbilityParameterValue, AbilityScore};
 
@@ -46,7 +47,13 @@ pub(crate) fn validate_characteristics(
             continue;
         }
         // A priced score still has to sit within the buy range.
-        validate_characteristic_within_cap_and_floor(ruleset, characteristic, score, issues);
+        validate_characteristic_within_cap_and_floor(
+            entity,
+            ruleset,
+            characteristic,
+            score,
+            issues,
+        );
     }
 
     validate_characteristic_point_spend(entity, rules, ruleset, issues);
@@ -88,12 +95,13 @@ fn validate_characteristic_is_legal_score(
 /// range — the shipped one does not (its table *is* ±3), so this is the guard
 /// that keeps a wider third-party table honest.
 fn validate_characteristic_within_cap_and_floor(
+    entity: &Entity,
     ruleset: &Ruleset,
     characteristic: Characteristic,
     score: i8,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    let cap = crate::effective::characteristic_cap(ruleset, characteristic);
+    let cap = crate::effective::characteristic_cap(ruleset, entity, characteristic);
     let floor = crate::effective::characteristic_floor(ruleset, characteristic);
     if i32::from(score) > cap {
         issues.push(ValidationIssue::error(
@@ -676,19 +684,199 @@ pub(crate) fn validate_personality_traits(
     let mut traits: Vec<&crate::types::PersonalityTrait> =
         entity.personality_traits.iter().collect();
     traits.sort_by(|a, b| a.name.cmp(&b.name));
-    let mut over_three_budget = major_personality_flaws;
+    // D69/X7b-e row 42: Weak Personality tightens the universal ±3 range to
+    // ±1 (ArMDE:7076-7079) while it is held (bought or granted). The
+    // Major-Personality-Flaw ±6 budget exception is skipped entirely once any
+    // selection carries a tightened range — the tightened range REPLACES the
+    // whole scheme rather than composing with it; no shipped entry needs
+    // both at once.
+    let mut tightened_max: Option<i8> = None;
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        match effect {
+            Effect::PersonalityTraitRange { max } => {
+                tightened_max = Some(tightened_max.map_or(*max, |m| m.min(*max)));
+            }
+            // Exhaustive so adding an Effect variant is a compile error here,
+            // not a silently-ignored personality-trait-range override.
+            Effect::AbilityBonus { .. }
+            | Effect::CharacteristicScoreDeltaParam { .. }
+            | Effect::ArtBonus { .. }
+            | Effect::AffinityAbilityCost { .. }
+            | Effect::AffinityArtCost { .. }
+            | Effect::GroupAffinityCost { .. }
+            | Effect::RestrictedAbilityXp { .. }
+            | Effect::ScaledRestrictedAbilityXp { .. }
+            | Effect::ReplacesLifeStageXp { .. }
+            | Effect::TruncatedApprenticeshipXp { .. }
+            | Effect::CharacteristicPoints { .. }
+            | Effect::AbilityScoreGrant { .. }
+            | Effect::AbilityScoreGrantParam { .. }
+            | Effect::SpellLevels { .. }
+            | Effect::GeneralXp { .. }
+            | Effect::LaterLifeXpRate { .. }
+            | Effect::LocalityAbilityCapFraction { .. }
+            | Effect::AbilityAuthorization { .. }
+            | Effect::AbilityBonusGated { .. }
+            | Effect::ConfidenceBonus { .. }
+            | Effect::SpellMasteryXp { .. }
+            | Effect::GrantsSpellMastery { .. }
+            | Effect::GrantsSelection { .. }
+            | Effect::ItemLevelBudget { .. }
+            | Effect::MasterpieceItem
+            | Effect::TrueFaithGrant { .. }
+            | Effect::WarpingGrant { .. }
+            | Effect::WarpingGrantParam { .. }
+            | Effect::SizeDelta { .. }
+            | Effect::CharacteristicScoreDelta { .. }
+            | Effect::CharacteristicMax { .. }
+            | Effect::GrantsReputation { .. }
+            | Effect::GrantsPersonalityTrait
+            | Effect::RequiresPersonalityTraitPair { .. }
+            | Effect::MightGrant { .. }
+            | Effect::PowerLevels { .. }
+            | Effect::FocusPoints { .. }
+            | Effect::MagicalFocus { .. }
+            | Effect::CastingTotalMod { .. }
+            | Effect::LabTotalMod { .. }
+            | Effect::HalvesSpellCapBeyondTouch
+            | Effect::DeficientArt { .. }
+            | Effect::MagicTotalHalving { .. }
+            | Effect::SoakMod { .. }
+            | Effect::CombatMod { .. }
+            | Effect::HealthMod { .. }
+            | Effect::MagicResistanceMod { .. }
+            | Effect::AgingMod { .. }
+            | Effect::AdvancementMod { .. }
+            | Effect::SpecialCastingMod { .. }
+            | Effect::AbilityRollMod { .. }
+            | Effect::AbilityRollModParam { .. }
+            | Effect::ElementalMagic { .. }
+            | Effect::ForbidsAbilitySpecialties
+            | Effect::ForbidsRitualCasting
+            | Effect::WaivesAbilityAgeCap
+            | Effect::ConfersHermeticTraining
+            | Effect::ConfersHermeticTrainingIf { .. }
+            | Effect::ForbidsAbilityCategory { .. }
+            | Effect::ForbidsItemCategory { .. }
+            | Effect::ForbidsAbilities { .. }
+            | Effect::DecrepitudeScaledRollMod { .. } => {}
+        }
+    });
+    let effective_max = tightened_max.unwrap_or(3);
+    let allow_major_flaw_budget = tightened_max.is_none();
+
+    let mut over_budget = major_personality_flaws;
     for trait_ in traits {
         let magnitude = trait_.value.unsigned_abs();
         if magnitude > 6 {
             issues.push(personality_out_of_range(trait_, 6));
-        } else if magnitude > 3 {
-            if over_three_budget > 0 {
-                over_three_budget -= 1;
+        } else if i32::from(magnitude) > i32::from(effective_max) {
+            if allow_major_flaw_budget && over_budget > 0 {
+                over_budget -= 1;
             } else {
-                issues.push(personality_out_of_range(trait_, 3));
+                issues.push(personality_out_of_range(trait_, effective_max));
             }
         }
     }
+}
+
+/// Validates that every selection carrying
+/// [`Effect::RequiresPersonalityTraitPair`] (Fickle Nature, "Select a
+/// Personality Trait at +4, and its opposite at +4", ArMDE:6122-6124) is
+/// backed by at least two distinct [`crate::types::PersonalityTrait`] entries
+/// at exactly the required value. The "opposite" pairing itself is a table
+/// judgement over free text and is not verified — only the count.
+pub(crate) fn validate_personality_trait_pairs(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for_each_effect!(entity, ruleset, |selection, effect| {
+        match effect {
+            Effect::RequiresPersonalityTraitPair { value } => {
+                let matching = entity
+                    .personality_traits
+                    .iter()
+                    .filter(|t| t.value == *value)
+                    .count();
+                if matching < 2 {
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_FICKLE_NATURE_TRAIT_PAIR_MISSING,
+                        CreationPhase::PersonalityReputations,
+                        args([
+                            ("item", selection.item_ref.to_string()),
+                            ("value", value.to_string()),
+                        ]),
+                        Some(selection.item_ref.clone()),
+                    ));
+                }
+            }
+            // Exhaustive so adding an Effect variant is a compile error here,
+            // not a silently-ignored trait-pair requirement.
+            Effect::AbilityBonus { .. }
+            | Effect::CharacteristicScoreDeltaParam { .. }
+            | Effect::ArtBonus { .. }
+            | Effect::AffinityAbilityCost { .. }
+            | Effect::AffinityArtCost { .. }
+            | Effect::GroupAffinityCost { .. }
+            | Effect::RestrictedAbilityXp { .. }
+            | Effect::ScaledRestrictedAbilityXp { .. }
+            | Effect::ReplacesLifeStageXp { .. }
+            | Effect::TruncatedApprenticeshipXp { .. }
+            | Effect::CharacteristicPoints { .. }
+            | Effect::AbilityScoreGrant { .. }
+            | Effect::AbilityScoreGrantParam { .. }
+            | Effect::SpellLevels { .. }
+            | Effect::GeneralXp { .. }
+            | Effect::LaterLifeXpRate { .. }
+            | Effect::LocalityAbilityCapFraction { .. }
+            | Effect::AbilityAuthorization { .. }
+            | Effect::AbilityBonusGated { .. }
+            | Effect::ConfidenceBonus { .. }
+            | Effect::SpellMasteryXp { .. }
+            | Effect::GrantsSpellMastery { .. }
+            | Effect::GrantsSelection { .. }
+            | Effect::ItemLevelBudget { .. }
+            | Effect::MasterpieceItem
+            | Effect::TrueFaithGrant { .. }
+            | Effect::WarpingGrant { .. }
+            | Effect::WarpingGrantParam { .. }
+            | Effect::SizeDelta { .. }
+            | Effect::CharacteristicScoreDelta { .. }
+            | Effect::CharacteristicMax { .. }
+            | Effect::GrantsReputation { .. }
+            | Effect::GrantsPersonalityTrait
+            | Effect::PersonalityTraitRange { .. }
+            | Effect::MightGrant { .. }
+            | Effect::PowerLevels { .. }
+            | Effect::FocusPoints { .. }
+            | Effect::MagicalFocus { .. }
+            | Effect::CastingTotalMod { .. }
+            | Effect::LabTotalMod { .. }
+            | Effect::HalvesSpellCapBeyondTouch
+            | Effect::DeficientArt { .. }
+            | Effect::MagicTotalHalving { .. }
+            | Effect::SoakMod { .. }
+            | Effect::CombatMod { .. }
+            | Effect::HealthMod { .. }
+            | Effect::MagicResistanceMod { .. }
+            | Effect::AgingMod { .. }
+            | Effect::AdvancementMod { .. }
+            | Effect::SpecialCastingMod { .. }
+            | Effect::AbilityRollMod { .. }
+            | Effect::AbilityRollModParam { .. }
+            | Effect::ElementalMagic { .. }
+            | Effect::ForbidsAbilitySpecialties
+            | Effect::ForbidsRitualCasting
+            | Effect::WaivesAbilityAgeCap
+            | Effect::ConfersHermeticTraining
+            | Effect::ConfersHermeticTrainingIf { .. }
+            | Effect::ForbidsAbilityCategory { .. }
+            | Effect::ForbidsItemCategory { .. }
+            | Effect::ForbidsAbilities { .. }
+            | Effect::DecrepitudeScaledRollMod { .. } => {}
+        }
+    });
 }
 
 fn personality_out_of_range(trait_: &crate::types::PersonalityTrait, max: i8) -> ValidationIssue {

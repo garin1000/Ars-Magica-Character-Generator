@@ -554,7 +554,7 @@ fn characteristic_fields(entity: &Entity, ruleset: &Ruleset) -> CharacteristicFi
     CharacteristicFields {
         ability_bonuses: ability_bonuses(entity, ruleset),
         art_bonuses: art_bonuses(entity, ruleset),
-        caps: characteristic_caps(ruleset),
+        caps: characteristic_caps(ruleset, entity),
         floors: characteristic_floors(ruleset),
         points_granted: characteristic_points_granted(entity, ruleset),
         ability_score_floors: ability_score_floors(entity, ruleset),

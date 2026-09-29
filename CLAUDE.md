@@ -627,6 +627,10 @@ enum Prereq {
     HermeticallyTrained,
     OrderMember,
     IsCompanion,       // profile flag, true for companion + mythic_companion
+    HasCategory(String),   // holds (bought or granted) an item of this category
+    AgeMin(u32),       // entity.age >= this; unset age is Unknown, not False
+    HasCategoryAtMagnitude { category: String, magnitude: Magnitude, item_kind: ItemKind },
+        // magnitude/kind-filtered twin of HasCategory (e.g. "a Major Supernatural Virtue")
 }
 ```
 

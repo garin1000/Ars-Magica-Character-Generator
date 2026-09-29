@@ -138,6 +138,18 @@ pub(crate) struct PrereqCtx<'a> {
     /// satisfied by itself and never actually require the SEPARATE guild
     /// status the book demands.
     held_categories: BTreeMap<String, BTreeSet<Id>>,
+    /// `Prereq::AgeMin`'s fact (D69/X7b-e row 42): the entity's own
+    /// [`Entity::age`], `None` when unset (genuinely unknown, mirroring
+    /// `trained`/`order`/`house`).
+    age: Option<u32>,
+    /// `Prereq::HasCategoryAtMagnitude`'s fact (D69/X7b-e row 42): every
+    /// bought-OR-granted item's in-force categories, keyed by `(category,
+    /// kind)` and valued on the magnitude each contributing `item_ref`
+    /// carries — the magnitude- and kind-aware twin of
+    /// [`Self::held_categories`]. Kept as its own map (rather than widening
+    /// `held_categories`) so `Prereq::HasCategory`'s existing kind-blind
+    /// query is unaffected.
+    held_categories_by_kind: BTreeMap<(String, ItemKind), BTreeMap<Id, Magnitude>>,
 }
 
 impl<'a> PrereqCtx<'a> {
@@ -233,6 +245,8 @@ impl<'a> PrereqCtx<'a> {
         // `item_ref` (B2) so a self-excluding lookup can tell "held by this
         // item alone" from "held by some OTHER item too".
         let mut held_categories: BTreeMap<String, BTreeSet<Id>> = BTreeMap::new();
+        let mut held_categories_by_kind: BTreeMap<(String, ItemKind), BTreeMap<Id, Magnitude>> =
+            BTreeMap::new();
         for selection in entity.selections.iter().chain(granted.iter()) {
             if let Some(item) = ruleset.point_items.get(&selection.item_ref) {
                 for category in item.categories_for(&selection.params) {
@@ -240,6 +254,10 @@ impl<'a> PrereqCtx<'a> {
                         .entry(category.clone())
                         .or_default()
                         .insert(selection.item_ref.clone());
+                    held_categories_by_kind
+                        .entry((category.clone(), item.kind))
+                        .or_default()
+                        .insert(selection.item_ref.clone(), item.magnitude);
                 }
             }
         }
@@ -253,6 +271,8 @@ impl<'a> PrereqCtx<'a> {
             ability_scores,
             art_scores,
             held_categories,
+            age: entity.age,
+            held_categories_by_kind,
         }
     }
 
@@ -422,6 +442,38 @@ fn evaluate_prereq(
                 (Tri::False, false)
             }
         }
+        // D69/X7b-e row 42: an unset age is genuinely unknown (mirrors
+        // `House`'s own `None` → `Tri::Unknown`), never a definite failure.
+        Prereq::AgeMin(min) => match ctx.age {
+            Some(age) if age >= *min => (Tri::True, false),
+            Some(_) => (Tri::False, false),
+            None => (Tri::Unknown, true),
+        },
+        // D69/X7b-e row 42/D68.4: static (like `HasCategory`, never Unknown),
+        // self-excluding the same way (B2).
+        Prereq::HasCategoryAtMagnitude {
+            category,
+            magnitude,
+            item_kind,
+        } => {
+            let held = ctx
+                .held_categories_by_kind
+                .get(&(category.clone(), *item_kind))
+                .is_some_and(|contributors| {
+                    contributors.iter().any(|(id, held_magnitude)| {
+                        *held_magnitude >= *magnitude
+                            && match excluding {
+                                Some(self_id) => id != self_id,
+                                None => true,
+                            }
+                    })
+                });
+            if held {
+                (Tri::True, false)
+            } else {
+                (Tri::False, false)
+            }
+        }
     }
 }
 
@@ -529,6 +581,8 @@ mod tests {
             ability_scores,
             art_scores,
             held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
         };
 
         // A single leaf, but evaluated as though it were already past the
@@ -558,6 +612,8 @@ mod tests {
             ability_scores,
             art_scores,
             held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
         };
 
         let (outcome, depended_on_unknown) =
@@ -609,6 +665,8 @@ mod tests {
             ability_scores,
             art_scores,
             held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
@@ -633,6 +691,8 @@ mod tests {
             ability_scores,
             art_scores,
             held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
@@ -655,6 +715,8 @@ mod tests {
             ability_scores,
             art_scores,
             held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
@@ -681,6 +743,8 @@ mod tests {
                 "social_status".to_string(),
                 BTreeSet::from([Id::new("virtue.some_status")]),
             )]),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
         };
 
         let (outcome, depended_on_unknown) =
@@ -704,6 +768,8 @@ mod tests {
             ability_scores,
             art_scores,
             held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
         };
 
         let (outcome, depended_on_unknown) =

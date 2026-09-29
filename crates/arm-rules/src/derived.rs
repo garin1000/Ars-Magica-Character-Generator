@@ -432,6 +432,21 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     source: Some(item.id.clone()),
                     ability: Some(ability.clone()),
                 }),
+                // D69/X7b-e row 42: Lingering Injury's category-wide penalty,
+                // multiplied by 1 + Decrepitude Score (ArMDE:6350-6352). The
+                // aggravated (-3) alternative stays text (no aggravation
+                // tracking exists on `Entity`).
+                Effect::DecrepitudeScaledRollMod { amount } => {
+                    let multiplier = 1 + i32::from(decrepitude_score(entity, ruleset));
+                    m.surfaced.push(SurfacedModifier {
+                        family: ModifierFamily::PhysicalActivity,
+                        detail: String::new(),
+                        amount: i32::from(*amount) * multiplier,
+                        factor: None,
+                        source: Some(item.id.clone()),
+                        ability: None,
+                    });
+                }
                 // Creation-effect variants (consumed by effective.rs) and the
                 // Elemental Magic XP-space marker: no in-play modifier here.
                 Effect::AbilityBonus { .. }
@@ -465,13 +480,27 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
+                // D69/X7b-e: the parameterized Warping grant (Raised from the
+                // Dead) is a creation-time total, not an in-play total;
+                // consumed only by `effective/warping.rs`.
+                | Effect::WarpingGrantParam { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                // D69/X7b-e: a creation-time buy-cap shift (Uninspirational),
+                // not an in-play total; consumed only by
+                // `effective/characteristic.rs::characteristic_cap`.
+                | Effect::CharacteristicMax { .. }
                 | Effect::GrantsReputation { .. }
                 // B3/D23/F-542: a narrative Personality-Trait grant, not an
                 // in-play total — consumed only by
                 // `ItemPredicate::GrantsPersonalityTrait`'s derivation.
                 | Effect::GrantsPersonalityTrait
+                // D69/X7b-e: creation-legality constraints (Weak
+                // Personality's tightened range, Fickle Nature's trait-pair
+                // requirement) — no in-play total; consumed only by
+                // `validation/scores.rs`.
+                | Effect::PersonalityTraitRange { .. }
+                | Effect::RequiresPersonalityTraitPair { .. }
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }
@@ -681,6 +710,10 @@ pub enum ModifierFamily {
     /// Realm-conditional / situational Magic-Resistance modifiers that cannot be
     /// folded into the flat per-Form MR number (aura bonus, realm susceptibilities).
     MagicResistance,
+    /// A roll penalty over an unenumerated category of physical-activity rolls,
+    /// scaled by Decrepitude (Lingering Injury and similar) — no existing family
+    /// fits a category-wide, Decrepitude-scaled penalty.
+    PhysicalActivity,
 }
 
 impl std::fmt::Display for ModifierFamily {
@@ -692,6 +725,7 @@ impl std::fmt::Display for ModifierFamily {
             ModifierFamily::AbilityRoll => "ability_roll",
             ModifierFamily::HealthRoll => "health_roll",
             ModifierFamily::MagicResistance => "magic_resistance",
+            ModifierFamily::PhysicalActivity => "physical_activity",
         })
     }
 }

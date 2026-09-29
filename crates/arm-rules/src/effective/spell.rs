@@ -45,13 +45,21 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::MasterpieceItem
         | Effect::TrueFaithGrant { .. }
         | Effect::WarpingGrant { .. }
+        // D69/X7b-e: a Warping grant, not a spell-levels/general-XP contribution.
+        | Effect::WarpingGrantParam { .. }
         | Effect::SizeDelta { .. }
         | Effect::CharacteristicScoreDelta { .. }
+        // D69/X7b-e: a Characteristic buy-cap shift, not a contribution here.
+        | Effect::CharacteristicMax { .. }
         | Effect::GroupAffinityCost { .. }
         | Effect::GrantsReputation { .. }
         // B3/D23/F-542: a narrative Personality-Trait grant, consumed only
         // by `ItemPredicate::GrantsPersonalityTrait`'s derivation.
         | Effect::GrantsPersonalityTrait
+        // D69/X7b-e: creation-legality constraints on Personality Traits, not
+        // a contribution here.
+        | Effect::PersonalityTraitRange { .. }
+        | Effect::RequiresPersonalityTraitPair { .. }
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
         | Effect::FocusPoints { .. }
@@ -87,7 +95,9 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // contribution, same reasoning as the markers above.
         | Effect::ForbidsAbilityCategory { .. }
         | Effect::ForbidsItemCategory { .. }
-        | Effect::ForbidsAbilities { .. } => None,
+        | Effect::ForbidsAbilities { .. }
+        // D69/X7b-e: a surfaced-only roll penalty, not a contribution here.
+        | Effect::DecrepitudeScaledRollMod { .. } => None,
     })
 }
 
@@ -133,13 +143,21 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::MasterpieceItem
         | Effect::TrueFaithGrant { .. }
         | Effect::WarpingGrant { .. }
+        // D69/X7b-e: a Warping grant, not a spell-levels/general-XP contribution.
+        | Effect::WarpingGrantParam { .. }
         | Effect::SizeDelta { .. }
         | Effect::CharacteristicScoreDelta { .. }
+        // D69/X7b-e: a Characteristic buy-cap shift, not a contribution here.
+        | Effect::CharacteristicMax { .. }
         | Effect::GroupAffinityCost { .. }
         | Effect::GrantsReputation { .. }
         // B3/D23/F-542: a narrative Personality-Trait grant, consumed only
         // by `ItemPredicate::GrantsPersonalityTrait`'s derivation.
         | Effect::GrantsPersonalityTrait
+        // D69/X7b-e: creation-legality constraints on Personality Traits, not
+        // a contribution here.
+        | Effect::PersonalityTraitRange { .. }
+        | Effect::RequiresPersonalityTraitPair { .. }
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
         | Effect::FocusPoints { .. }
@@ -176,7 +194,9 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // contribution, same reasoning as the markers above.
         | Effect::ForbidsAbilityCategory { .. }
         | Effect::ForbidsItemCategory { .. }
-        | Effect::ForbidsAbilities { .. } => None,
+        | Effect::ForbidsAbilities { .. }
+        // D69/X7b-e: a surfaced-only roll penalty, not a contribution here.
+        | Effect::DecrepitudeScaledRollMod { .. } => None,
     })
 }
 
@@ -548,13 +568,17 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
+                | Effect::WarpingGrantParam { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                | Effect::CharacteristicMax { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. }
                 // B3/D23/F-542: consumed only by
                 // `ItemPredicate::GrantsPersonalityTrait`'s derivation.
                 | Effect::GrantsPersonalityTrait
+                | Effect::PersonalityTraitRange { .. }
+                | Effect::RequiresPersonalityTraitPair { .. }
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }
@@ -588,7 +612,8 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 // multiplier either.
                 | Effect::ForbidsAbilityCategory { .. }
                 | Effect::ForbidsItemCategory { .. }
-                | Effect::ForbidsAbilities { .. } => None,
+                | Effect::ForbidsAbilities { .. }
+                | Effect::DecrepitudeScaledRollMod { .. } => None,
             })
     });
     best_affinity(found)

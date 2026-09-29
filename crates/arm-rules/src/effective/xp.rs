@@ -888,12 +888,21 @@ pub(crate) fn ability_authorizations(entity: &Entity, ruleset: &Ruleset) -> Abil
                 | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
+                // D69/X7b-e: a Warping grant, not an Ability authorization.
+                | Effect::WarpingGrantParam { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                // D69/X7b-e: a Characteristic buy-cap shift, not an Ability
+                // authorization.
+                | Effect::CharacteristicMax { .. }
                 | Effect::GrantsReputation { .. }
                 // B3/D23/F-542: consumed only by
                 // `ItemPredicate::GrantsPersonalityTrait`'s derivation.
                 | Effect::GrantsPersonalityTrait
+                // D69/X7b-e: creation-legality constraints on Personality
+                // Traits, not an Ability authorization.
+                | Effect::PersonalityTraitRange { .. }
+                | Effect::RequiresPersonalityTraitPair { .. }
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }
@@ -938,7 +947,10 @@ pub(crate) fn ability_authorizations(entity: &Entity, ruleset: &Ruleset) -> Abil
                 // treats a forbid as permission to fund the forbidden target.
                 | Effect::ForbidsAbilityCategory { .. }
                 | Effect::ForbidsItemCategory { .. }
-                | Effect::ForbidsAbilities { .. } => {}
+                | Effect::ForbidsAbilities { .. }
+                // D69/X7b-e: a surfaced-only roll penalty, not an Ability
+                // authorization.
+                | Effect::DecrepitudeScaledRollMod { .. } => {}
             }
         }
     }

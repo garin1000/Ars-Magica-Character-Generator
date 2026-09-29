@@ -1062,6 +1062,7 @@ param-label-years = Jahre
 # (apprenticeship.years - 1) ist min/max des Parameters, von der Engine
 # durchgesetzt.
 param-label-years_completed = Abgeschlossene Jahre
+param-label-years_since_resurrection = Jahre seit der Auferstehung
 # Die Mehrfachwahl der drei Verderbt-Einträge (D9 Teil 3, D15, ArMDE:5847-5864)
 # — welche Fertigkeiten/Künste/Zauber der Fehler betrifft.
 param-label-targets = Ziele
@@ -1298,6 +1299,7 @@ issue-specialty_forbidden = { $ability } darf keine Spezialisierung haben ({ $sp
 issue-ambiguous_bound_parameter = { $item } wird mehr als einmal gehalten; der verknüpfte Wert von { $ability } kann erst aufgelöst werden, wenn das Duplikat entfernt wurde.
 issue-supernatural_ability_requires_virtue = { $ability } ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend (oder die eine freie Fertigkeit der Gabe).
 issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
+issue-fickle_nature_trait_pair_missing = { $item } erfordert mindestens zwei Persönlichkeitseigenschaften mit genau dem Wert { $value } (ein zusammengehöriges Paar).
 issue-reputation_not_granted = Eine Reputation ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der sie verleiht.
 issue-reputation_score_out_of_range = Eine Reputation ({ $kind }, { $content }) mit Stufe { $score } liegt außerhalb des verliehenen Bereichs ({ $min } bis { $max }).
 issue-over_item_level = Artefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
@@ -1511,6 +1513,7 @@ derived-surfaced-special_casting = Zauberstil
 derived-surfaced-ability_roll = Fertigkeitswurf
 derived-surfaced-health_roll = Gesundheitswurf
 derived-surfaced-magic_resistance = Magieresistenz
+derived-surfaced-physical_activity = Körperliche Aktivität
 # D45/F-423: nennt die Tugend/den Makel, der diese Zeile erzeugt hat, damit zwei
 # Träger desselben Familie+Detail-Paars nicht mehr als eine einzige, nicht
 # zuordenbare Zeile erscheinen. { $source } ist der lokalisierte Anzeigename

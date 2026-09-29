@@ -2059,6 +2059,19 @@ impl Ruleset {
                     ));
                 }
             }
+            // D69/X7b-e row 42: a bare threshold, nothing to check.
+            Prereq::AgeMin(_) => {}
+            // D69/X7b-e row 42/D68.4: same referential check as `HasCategory`
+            // above — the magnitude/kind narrowing carries no separate
+            // reference of its own to verify.
+            Prereq::HasCategoryAtMagnitude { category, .. } => {
+                if !self.category_declared_by_some_item(category) {
+                    errors.push(format!(
+                        "{context}: prerequisite references category '{category}' that no point \
+                         item declares"
+                    ));
+                }
+            }
         }
     }
 
@@ -2544,6 +2557,13 @@ impl Ruleset {
                 Effect::TruncatedApprenticeshipXp { param } => {
                     (param, ParameterDomain::Number, "truncated_apprenticeship_xp")
                 }
+                // D69/X7b-e: `param` must resolve to a `Number`-domain
+                // parameter on the SAME item — Raised from the Dead's years
+                // since resurrection, exactly like `TruncatedApprenticeshipXp`
+                // above.
+                Effect::WarpingGrantParam { param, .. } => {
+                    (param, ParameterDomain::Number, "warping_grant_param")
+                }
                 // D40/D2's integrity table: every named ability id must
                 // resolve (`categories` is the closed enum, serde-checked,
                 // like `RestrictedAbilityXp` above); `years` may be non-zero
@@ -2632,6 +2652,16 @@ impl Ruleset {
                     }
                     continue;
                 }
+                // D69/X7b-e: same fixed-target check as
+                // `CharacteristicScoreDelta` above.
+                Effect::CharacteristicMax { characteristic, .. } => {
+                    if crate::characteristics::Characteristic::from_id(characteristic).is_none() {
+                        errors.push(format!(
+                            "{id}: effect 'characteristic_max' references unknown characteristic '{characteristic}'"
+                        ));
+                    }
+                    continue;
+                }
                 // The Form-scoped `deft_form` quirk names a Form via its param,
                 // resolved against the selection's params exactly as
                 // `deficient_art` resolves its Art (see the SpecialCastingMod doc
@@ -2702,6 +2732,11 @@ impl Ruleset {
                 // B3/D23/F-542: `name`/`value` are free-text/plain fields,
                 // nothing to resolve referentially.
                 | Effect::GrantsPersonalityTrait
+                // D69/X7b-e: plain numeric fields, nothing to resolve
+                // referentially.
+                | Effect::PersonalityTraitRange { .. }
+                | Effect::RequiresPersonalityTraitPair { .. }
+                | Effect::DecrepitudeScaledRollMod { .. }
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }

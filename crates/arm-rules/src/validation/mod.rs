@@ -228,6 +228,7 @@ impl fmt::Display for IssueSeverity {
 /// | `ability_above_age_cap` | error | abilities | `ability`, `score`, `cap`, `age` |
 /// | `supernatural_ability_requires_virtue` | error | abilities | `ability` |
 /// | `personality_trait_out_of_range` | error | personality_reputations | `name`, `value`, `max` |
+/// | `fickle_nature_trait_pair_missing` | error | personality_reputations | `item`, `value` |
 /// | `reputation_not_granted` | error | personality_reputations | `kind`, `content` |
 /// | `reputation_score_out_of_range` | error | personality_reputations | `kind`, `content`, `score`, `min`, `max` |
 /// | `over_item_level` | error | review | `used`, `budget`, `over` |
@@ -793,6 +794,12 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Personality Trait is
     /// outside ±3 (or beyond the ±6 allowance a Major Personality Flaw grants).
     pub const CODE_PERSONALITY_TRAIT_OUT_OF_RANGE: &'static str = "personality_trait_out_of_range";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a selection carrying
+    /// [`crate::types::Effect::RequiresPersonalityTraitPair`] (Fickle Nature,
+    /// ArMDE:6122-6124) is not backed by at least two Personality Traits at
+    /// the exact required value (D69/X7b-e row 42).
+    pub const CODE_FICKLE_NATURE_TRAIT_PAIR_MISSING: &'static str =
+        "fickle_nature_trait_pair_missing";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a starting Reputation is
     /// not backed by a granting Virtue/Flaw (ArMDE:2514).
     pub const CODE_REPUTATION_NOT_GRANTED: &'static str = "reputation_not_granted";
@@ -1123,6 +1130,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         );
         validate_supernatural_abilities(entity, ruleset, type_profile, &mut issues);
         validate_personality_traits(entity, ruleset, &mut issues);
+        validate_personality_trait_pairs(entity, ruleset, &mut issues);
         validate_reputations(entity, ruleset, &mut issues);
         validate_devices(entity, ruleset, &mut issues);
         validate_powers(entity, ruleset, &mut issues);
@@ -1305,13 +1313,22 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::MasterpieceItem
         | Effect::TrueFaithGrant { .. }
         | Effect::WarpingGrant { .. }
+        // D69/X7b-e: a parameterized Warping grant, checked instead by
+        // `ruleset/integrity.rs::validate_effect_refs`'s own dedicated arm.
+        | Effect::WarpingGrantParam { .. }
         | Effect::SizeDelta { .. }
         | Effect::CharacteristicScoreDelta { .. }
+        // D69/X7b-e: a fixed-target buy-cap shift, same classification as
+        // `CharacteristicScoreDelta` just above.
+        | Effect::CharacteristicMax { .. }
         | Effect::GroupAffinityCost { .. }
         | Effect::GrantsReputation { .. }
         // B3/D23/F-542: fixed player-typed fields (`name`, `value`), never a
         // dangling id/ability/characteristic reference.
         | Effect::GrantsPersonalityTrait
+        // D69/X7b-e: plain numeric fields, never a dangling reference either.
+        | Effect::PersonalityTraitRange { .. }
+        | Effect::RequiresPersonalityTraitPair { .. }
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
         | Effect::FocusPoints { .. }
@@ -1354,7 +1371,10 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         // grant-aware prohibition validator (`validation/selections.rs`).
         | Effect::ForbidsAbilityCategory { .. }
         | Effect::ForbidsItemCategory { .. }
-        | Effect::ForbidsAbilities { .. } => EffectTarget::Other,
+        | Effect::ForbidsAbilities { .. }
+        // D69/X7b-e: a surfaced-only roll penalty, no ability/characteristic
+        // creation-time target here.
+        | Effect::DecrepitudeScaledRollMod { .. } => EffectTarget::Other,
     }
 }
 

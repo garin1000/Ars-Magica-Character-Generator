@@ -362,14 +362,29 @@ macro_rules! irrelevant_effect_variants {
         | Effect::MasterpieceItem
         | Effect::TrueFaithGrant { .. }
         | Effect::WarpingGrant { .. }
+        // D69/X7b-e: the parameterized Warping grant (Raised from the Dead) —
+        // no score, no Affinity ratio; consumed only by `effective/warping.rs`.
+        | Effect::WarpingGrantParam { .. }
         | Effect::SizeDelta { .. }
         | Effect::CharacteristicScoreDelta { .. }
+        // D69/X7b-e: a buy-cap shift (Uninspirational), guarded above in
+        // `characteristic_cap` — listed here for the guard-fail case, same
+        // precedent as `CharacteristicScoreDeltaParam`'s own entry.
+        | Effect::CharacteristicMax { .. }
         | Effect::GroupAffinityCost { .. }
         | Effect::GrantsReputation { .. }
         // B3/D23/F-542: a narrative Personality-Trait grant, consumed only by
         // `ItemPredicate::GrantsPersonalityTrait`'s derivation — no score, no
         // Affinity ratio, no in-play mod.
         | Effect::GrantsPersonalityTrait
+        // D69/X7b-e: creation-legality constraints (Weak Personality's
+        // tightened range, Fickle Nature's trait-pair requirement) — no
+        // score, no Affinity ratio; consumed only by `validation/scores.rs`.
+        | Effect::PersonalityTraitRange { .. }
+        | Effect::RequiresPersonalityTraitPair { .. }
+        // D69/X7b-e: Lingering Injury's surfaced-only roll penalty — no
+        // score, no Affinity ratio; consumed only by `derived.rs`.
+        | Effect::DecrepitudeScaledRollMod { .. }
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
         | Effect::FocusPoints { .. }
@@ -818,7 +833,8 @@ mod tests {
     fn the_buy_range_is_the_base_limits() {
         // The printed table IS the buy range; nothing widens it.
         let rs = ruleset();
-        assert_eq!(characteristic_cap(&rs, Characteristic::Str), 3);
+        let e = entity(vec![]);
+        assert_eq!(characteristic_cap(&rs, &e, Characteristic::Str), 3);
         assert_eq!(characteristic_floor(&rs, Characteristic::Str), -3);
     }
 
@@ -835,7 +851,7 @@ mod tests {
         );
         // ...the bought score is untouched, and so is the range it may occupy.
         assert_eq!(e.characteristics[&Characteristic::Str], 3);
-        assert_eq!(characteristic_cap(&rs, Characteristic::Str), 3);
+        assert_eq!(characteristic_cap(&rs, &e, Characteristic::Str), 3);
         assert_eq!(characteristic_floor(&rs, Characteristic::Str), -3);
     }
 
@@ -863,7 +879,7 @@ mod tests {
         );
         assert_eq!(e.characteristics[&Characteristic::Str], -3);
         assert_eq!(characteristic_floor(&rs, Characteristic::Str), -3);
-        assert_eq!(characteristic_cap(&rs, Characteristic::Str), 3);
+        assert_eq!(characteristic_cap(&rs, &e, Characteristic::Str), 3);
     }
 
     #[test]
@@ -912,7 +928,8 @@ mod tests {
     #[test]
     fn cap_and_floor_maps_cover_all_eight_characteristics() {
         let rs = ruleset();
-        let caps = characteristic_caps(&rs);
+        let e = entity(vec![]);
+        let caps = characteristic_caps(&rs, &e);
         let floors = characteristic_floors(&rs);
         assert_eq!(caps.len(), Characteristic::ALL.len());
         assert_eq!(floors.len(), Characteristic::ALL.len());
@@ -935,7 +952,8 @@ mod tests {
             ..RulesetSources::default()
         })
         .unwrap();
-        assert_eq!(characteristic_cap(&rs, Characteristic::Str), 0);
+        let e = entity(vec![]);
+        assert_eq!(characteristic_cap(&rs, &e, Characteristic::Str), 0);
         assert_eq!(characteristic_floor(&rs, Characteristic::Str), 0);
     }
 

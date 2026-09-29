@@ -1120,6 +1120,7 @@
     "categories": ["personality"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "requires_personality_trait_pair", "value": 4 }],
     "source": { "anchor": "fickle-nature", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6122, 6125] }
   },
   {
@@ -1161,6 +1162,10 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "prerequisites": {
+      "kind": "has_category_at_magnitude",
+      "value": { "category": "supernatural", "magnitude": "major", "item_kind": "virtue" }
+    },
     "source": { "anchor": "flawed-powers", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6146, 6149] }
   },
   {
@@ -1655,6 +1660,7 @@
     "categories": ["general"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "decrepitude_scaled_roll_mod", "amount": -1 }],
     "source": { "anchor": "lingering-injury", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6350, 6353] }
   },
   {
@@ -2216,7 +2222,7 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "incompatible_with": ["virtue.covenfolk", "virtue.custos"],
+    "incompatible_with": ["flaw.university_dean", "virtue.covenfolk", "virtue.custos"],
     "prerequisites": { "kind": "is_companion" },
     "effects": [{ "type": "later_life_xp_rate", "amount": 10 }],
     "source": { "anchor": "poor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6594, 6596] }
@@ -2366,6 +2372,13 @@
     "categories": ["story", "supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [
+      { "key": "years_since_resurrection", "type": { "number": { "min": 0, "max": 200 } }, "domain": "number" }
+    ],
+    "effects": [
+      { "type": "warping_grant_param", "param": "years_since_resurrection", "base_points": 3 },
+      { "type": "grants_reputation", "kind": "local", "score": 4 }
+    ],
     "source": { "anchor": "raised-from-the-dead", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6646, 6649] }
   },
   {
@@ -2547,6 +2560,7 @@
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
+    "effects": [{ "type": "grants_selection", "items": ["flaw.prohibition"] }],
     "source": { "anchor": "servant-of-the-land", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6717, 6720] }
   },
   {
@@ -2977,6 +2991,14 @@
     "categories": ["general"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "characteristic_max", "characteristic": "characteristic.pre", "max": 0 },
+      { "type": "characteristic_max", "characteristic": "characteristic.com", "max": 0 },
+      { "type": "ability_roll_mod", "ability": "ability.leadership", "amount": -3 },
+      { "type": "ability_roll_mod", "ability": "ability.charm", "amount": -3 },
+      { "type": "ability_roll_mod", "ability": "ability.intrigue", "amount": -3 },
+      { "type": "ability_roll_mod", "ability": "ability.etiquette", "amount": -3 }
+    ],
     "source": { "anchor": "uninspirational", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6919, 6922] }
   },
   {
@@ -2986,6 +3008,15 @@
     "categories": ["story"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "prerequisites": {
+      "kind": "all",
+      "value": [
+        { "kind": "has", "value": "virtue.doctor_in_faculty" },
+        { "kind": "age_min", "value": 40 }
+      ]
+    },
+    "incompatible_with": ["flaw.poor"],
+    "excluded_if_holds": ["grants_reputation"],
     "source": { "anchor": "university-dean", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6923, 6926] }
   },
   {
@@ -3254,6 +3285,11 @@
     "categories": ["personality"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "excluded_if_holds": ["grants_personality_trait"],
+    "effects": [
+      { "type": "personality_trait_range", "max": 1 },
+      { "type": "forbids_item_category", "category": "personality" }
+    ],
     "source": { "anchor": "weak-personality", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7076, 7079] }
   },
   {

@@ -353,7 +353,13 @@ export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic' | 'academic
 // profile's forbidden traits, and a future companion-like profile joins by
 // setting the flag alone. `has_category` (D21/F-502) is the category-ranging
 // twin of `has`: the entity must hold (bought or granted) at least one item
-// whose in-force category is `value`.
+// whose in-force category is `value`. `age_min` (D69/X7b-e, University Dean)
+// requires the entity's own age to be at least `value` years. `has_category_at_magnitude`
+// (D69/X7b-e/D68.4, Flawed Powers) is `has_category`'s magnitude- and kind-filtered
+// twin: the entity must hold at least one item of `item_kind` whose in-force
+// category is `category`, at or above `magnitude`.
+type HasCategoryAtMagnitudeValue = { category: string; magnitude: Magnitude; item_kind: ItemKind };
+
 export type Prereq =
   | { kind: 'all'; value: Prereq[] }
   | { kind: 'any'; value: Prereq[] }
@@ -365,7 +371,9 @@ export type Prereq =
   | { kind: 'hermetically_trained' }
   | { kind: 'order_member' }
   | { kind: 'is_companion' }
-  | { kind: 'has_category'; value: string };
+  | { kind: 'has_category'; value: string }
+  | { kind: 'age_min'; value: number }
+  | { kind: 'has_category_at_magnitude'; value: HasCategoryAtMagnitudeValue };
 
 // How a V/F impacts a character mechanically (M5 slice 5a). Mirrors the engine's
 // `Classification`. Required on every PointItem.

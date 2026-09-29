@@ -18,22 +18,43 @@ pub struct CharacteristicBonus {
 }
 
 /// The highest score `characteristic` may be **bought** to: the ruleset's base
-/// cap, which is the top row of the printed point-buy table (+3).
+/// cap (the top row of the printed point-buy table, +3), lowered by the
+/// lowest [`Effect::CharacteristicMax`] any effective (bought or granted)
+/// selection carries for this Characteristic — Uninspirational's Presence/
+/// Communication cap of 0 (D69/X7b-e, ArMDE:6919-6922).
 ///
-/// Nothing widens it. Great (Characteristic) does not unlock a purchase — it
+/// Nothing WIDENS it. Great (Characteristic) does not unlock a purchase — it
 /// *performs the raise itself* ("You may raise any Characteristic … by one
 /// point"), which the engine models as a free
 /// [`Effect::CharacteristicScoreDeltaParam`] read by
 /// [`characteristic_score_bonus`]. The printed table stops at ±3 and prices no
-/// +4, so there is no cost a cap-shift reading could charge.
+/// +4, so there is no cost a cap-shift reading could charge upward — only a
+/// `CharacteristicMax` narrows it, and only downward (`.min`).
 ///
 /// Source: ArMDE:2346-2354 (the table),
-/// :4105 (the +3 cap on the bought score), :3987-3989 (Great grants the point).
-pub fn characteristic_cap(ruleset: &Ruleset, _characteristic: Characteristic) -> i32 {
-    ruleset
+/// :4105 (the +3 cap on the bought score), :3987-3989 (Great grants the point),
+/// :6919-6922 (Uninspirational lowers it).
+pub fn characteristic_cap(
+    ruleset: &Ruleset,
+    entity: &Entity,
+    characteristic: Characteristic,
+) -> i32 {
+    let mut cap = ruleset
         .characteristic_rules()
         .and_then(|rules| rules.base_max_score())
-        .map_or(0, i32::from)
+        .map_or(0, i32::from);
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        match effect {
+            Effect::CharacteristicMax {
+                characteristic: target,
+                max,
+            } if Characteristic::from_id(target) == Some(characteristic) => {
+                cap = cap.min(i32::from(*max));
+            }
+            irrelevant_effect_variants!() => {}
+        }
+    });
+    cap
 }
 
 /// The lowest score `characteristic` may be **bought** to: the ruleset's base
@@ -56,10 +77,10 @@ pub fn characteristic_floor(ruleset: &Ruleset, _characteristic: Characteristic) 
 /// is the frontend's contract (`effective_dto.rs::EffectiveScores`) and the shape a
 /// future book's per-Characteristic buy limit would need; today every entry is
 /// the same base cap.
-pub fn characteristic_caps(ruleset: &Ruleset) -> BTreeMap<Characteristic, i32> {
+pub fn characteristic_caps(ruleset: &Ruleset, entity: &Entity) -> BTreeMap<Characteristic, i32> {
     Characteristic::ALL
         .into_iter()
-        .map(|c| (c, characteristic_cap(ruleset, c)))
+        .map(|c| (c, characteristic_cap(ruleset, entity, c)))
         .collect()
 }
 

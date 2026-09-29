@@ -2979,7 +2979,7 @@ fn shipped_score_effects_apply() {
         Characteristic::Qik,
         Characteristic::Int,
     ] {
-        assert_eq!(characteristic_cap(&rs, characteristic), 3);
+        assert_eq!(characteristic_cap(&rs, &e, characteristic), 3);
         assert_eq!(characteristic_floor(&rs, characteristic), -3);
     }
 }

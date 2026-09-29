@@ -346,6 +346,37 @@ pub enum Prereq {
     /// `Prereq::Any` would freeze a catalogue count into code (CLAUDE.md:
     /// "Catalogue size is data, never code").
     HasCategory(String),
+    /// The entity must be at least this many years old (University Dean,
+    /// ArMDE:6923-6926: "must ... be at least 40 years old"). Evaluated
+    /// against [`Entity::age`]: an unset age is genuinely unknown (mirrors
+    /// `House`'s own `None` → `Tri::Unknown`), never a definite failure —
+    /// the same "resolves as the build progresses" reasoning
+    /// [`Self::conflicts_with_house`]'s doc comment gives for `Has`/
+    /// `AbilityMin`/`ArtMin`.
+    ///
+    /// Source: ArMDE:6923-6926 (D69, X7b-e row 42).
+    AgeMin(u32),
+    /// The entity must hold (bought or granted) at least one item of the
+    /// given [`ItemKind`] whose in-force category is this string, at or
+    /// above the given [`Magnitude`] — the magnitude-filtered twin of
+    /// [`Self::HasCategory`] (Flawed Powers, ArMDE:6146-6149: "at least one
+    /// Major Supernatural Virtue"). `item_kind` is required because
+    /// [`PointItem::categories`] is shared free-form vocabulary across
+    /// Virtues AND Flaws — `flaw.raised_from_the_dead` is itself a Major
+    /// `supernatural`-category FLAW, so a kind-blind category+magnitude test
+    /// would be satisfied by a Flaw the passage does not mean at all.
+    /// Evaluated the same grant-aware way as `HasCategory` (D21).
+    ///
+    /// Source: ArMDE:6146-6149 (D69, D68.4; X7b-e owns this prerequisite,
+    /// X4 keeps only the separate Hermetic-Flaw import filter).
+    HasCategoryAtMagnitude {
+        /// The category string to match, e.g. `"supernatural"`.
+        category: String,
+        /// The minimum magnitude a matching item must carry.
+        magnitude: Magnitude,
+        /// Which item kind (Virtue vs Flaw) a matching item must be.
+        item_kind: ItemKind,
+    },
 }
 
 impl Prereq {
@@ -404,7 +435,9 @@ impl Prereq {
             | Prereq::HermeticallyTrained
             | Prereq::OrderMember
             | Prereq::IsCompanion
-            | Prereq::HasCategory(_) => None,
+            | Prereq::HasCategory(_)
+            | Prereq::AgeMin(_)
+            | Prereq::HasCategoryAtMagnitude { .. } => None,
         }
     }
 
@@ -1740,6 +1773,31 @@ pub enum Effect {
         /// Warping Points added.
         points: u8,
     },
+    /// The parameterized sibling of [`Self::WarpingGrant`] (Raised from the
+    /// Dead, D69.1): grants `base_points` Warping Points unconditionally, plus
+    /// one per unit named by the OWNING selection's `params[param]` — "at
+    /// least three Warping points, plus one Warping point for every year that
+    /// has passed since you were resurrected" (ArMDE:6648). An unanswered
+    /// parameter contributes 0 extra, following every other parameterized
+    /// grant's "additive on top of an otherwise-unaffected base" convention
+    /// (see [`Self::ConfersHermeticTrainingIf`]'s doc comment) — never a
+    /// missing-data error, since the floor points are unconditional. No
+    /// `score` field, unlike `WarpingGrant`: the Warping Score is always
+    /// derived from the point total alone
+    /// (`effective/warping.rs::warping_score`), never authored directly, so a
+    /// parameterized grant carries nothing that could disagree with it. The
+    /// ongoing "+1 Warping point every year you continue living" clause is
+    /// NOT this effect's concern — it is a per-year accrual after creation,
+    /// not a creation-time constant (D69.1), and stays text.
+    ///
+    /// Source: ArMDE:6646-6649.
+    WarpingGrantParam {
+        /// Parameter key (a `ParameterDomain::Number` parameter on the SAME
+        /// item) naming the years since resurrection.
+        param: String,
+        /// Warping Points granted regardless of the parameter.
+        base_points: u8,
+    },
     /// Adds `amount` to the character's derived Size (base 0). Size is not a
     /// bought Characteristic; it is a separate racial stat modified only by these
     /// grants (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2). Summed across
@@ -1767,6 +1825,25 @@ pub enum Effect {
         characteristic: Id,
         /// The free effective-score bonus per selection (may be negative).
         amount: i8,
+    },
+    /// Lowers the **buy cap** of a fixed Characteristic while this selection
+    /// is in effect (bought or granted) — Uninspirational, "His Presence and
+    /// Communication may not be greater than 0" (ArMDE:6919-6922). The
+    /// sign-mirror of [`Self::CharacteristicScoreDelta`]'s free bonus: this
+    /// narrows the printed ±3 buy RANGE itself rather than adding a free
+    /// delta on top. Folded by
+    /// [`crate::effective::characteristic_cap`] as the lowest `max` any
+    /// effective selection carries for the named Characteristic, floored
+    /// against the ruleset's own base cap never being raised by this effect
+    /// (only lowered). Two instances on Uninspirational's own entry (Pre,
+    /// Com), each `max: 0`.
+    ///
+    /// Source: ArMDE:6919-6922 (D69, X7b-e row 42).
+    CharacteristicMax {
+        /// The Characteristic id (`characteristic.pre`, …) this cap targets.
+        characteristic: Id,
+        /// The lowered buy cap.
+        max: i8,
     },
     /// Authorizes the character to start with one Reputation of the given `kind`
     /// at the given `score` (content is player-supplied). A starting Reputation is
@@ -1828,6 +1905,34 @@ pub enum Effect {
     /// A `name`/`value` pair here would duplicate that text in the
     /// language-neutral layer for no consumer's benefit.
     GrantsPersonalityTrait,
+    /// Tightens the universal ±3 Personality Trait range
+    /// (`validation/scores.rs::validate_personality_traits`, ArMDE:2500-2503)
+    /// to `max` while this selection is in effect (bought or granted) — Weak
+    /// Personality, "all Personality Traits must be between +1 and -1"
+    /// (ArMDE:7076-7079). The universal Major-Personality-Flaw ±6 budget
+    /// exception is skipped entirely once any selection carries this effect,
+    /// since the tightened range replaces the whole scheme rather than
+    /// composing with it — no shipped entry needs both at once.
+    ///
+    /// Source: ArMDE:7076-7079 (D69, X7b-e row 42).
+    PersonalityTraitRange {
+        /// The tightened `|value|` ceiling.
+        max: i8,
+    },
+    /// Requires at least two distinct [`crate::types::PersonalityTrait`]
+    /// entries at exactly `value` while this selection is in effect — Fickle
+    /// Nature, "Select a Personality Trait at +4, and its opposite at +4"
+    /// (ArMDE:6122-6124). The "opposite" pairing itself (Happy/Sad, etc.) is a
+    /// table judgement over free text — the passage's own "Typical
+    /// Personality Traits are:" is illustrative, not a closed list — so only
+    /// the count at the exact value is verified, never which two traits.
+    /// Consumed by `validation/scores.rs::validate_personality_trait_pairs`.
+    ///
+    /// Source: ArMDE:6122-6124 (D69, X7b-e row 42).
+    RequiresPersonalityTraitPair {
+        /// The exact trait value both members of the pair must carry.
+        value: i8,
+    },
     /// Grants a supernatural **Might Score** of `score` in the given `realm` (base
     /// 0, summed across grants of the same Realm on top of any base the entity
     /// enters). Demonic Blood grants Infernal Might 5; Demonic Might adds +2 more.
@@ -2306,6 +2411,26 @@ pub enum Effect {
     ForbidsAbilities {
         /// The forbidden Ability ids.
         abilities: std::collections::BTreeSet<Id>,
+    },
+    /// A roll penalty over an unenumerated category of rolls ("physical
+    /// activity"), scaled by `1 + Decrepitude Score` — Lingering Injury, "a
+    /// -1 to your physical activity rolls (this can be as high as -3 if the
+    /// wound was particularly severe, or aggravated by a botch), multiplied
+    /// by whatever the penalty is by 1 + (Decrepitude Score)"
+    /// (ArMDE:6350-6352). `amount` carries only the un-aggravated base (-1):
+    /// the aggravated alternative (-3) depends on whether the wound was
+    /// caused by a botch, a fact [`crate::types::Entity`] does not track
+    /// anywhere today, so that branch stays text (a partly-computed entry
+    /// stays `uncomputed_rule`, D67). Surfaced rather than folded into a
+    /// simulated total, on the same precedent as every other
+    /// `ModifierFamily` — `crate::derived::ModifierFamily::PhysicalActivity`
+    /// is the family this produces, since no existing family fits a
+    /// category-wide, Decrepitude-scaled penalty.
+    ///
+    /// Source: ArMDE:6350-6352 (D69, X7b-e row 42).
+    DecrepitudeScaledRollMod {
+        /// The un-aggravated base penalty, before the Decrepitude multiplier.
+        amount: i8,
     },
 }
 
