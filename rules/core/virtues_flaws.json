@@ -597,10 +597,7 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [
-      { "type": "casting_total_mod", "amount": -3, "scope": "all" },
-      { "type": "lab_total_mod", "amount": -3 }
-    ],
+    "effects": [{ "type": "lab_total_mod", "amount": -3 }],
     "source": { "anchor": "cyclic-magic-negative", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5893, 5896] }
   },
   {
@@ -3560,13 +3557,8 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "effects": [
-      { "type": "combat_mod", "amount": 2, "target": "attack" },
-      { "type": "combat_mod", "amount": -2, "target": "defense" },
-      { "type": "soak_mod", "amount": 2 }
-    ],
     "source": { "anchor": "berserk", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3500, 3503] }
   },
   {
@@ -3834,10 +3826,7 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [
-      { "type": "casting_total_mod", "amount": 3, "scope": "all" },
-      { "type": "lab_total_mod", "amount": 3 }
-    ],
+    "effects": [{ "type": "lab_total_mod", "amount": 3 }],
     "source": { "anchor": "cyclic-magic-positive", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3635, 3638] }
   },
   {
@@ -6112,10 +6101,7 @@
     "categories": ["hermetic"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [
-      { "type": "casting_total_mod", "amount": 3, "scope": "all" },
-      { "type": "magic_resistance_mod", "kind": "aura_bonus" }
-    ],
+    "effects": [{ "type": "magic_resistance_mod", "kind": "aura_bonus" }],
     "max_per_target": 255,
     "max_total": 255,
     "source": { "anchor": "special-circumstances", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4998, 5001] }
@@ -6589,10 +6575,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
-    "effects": [{ "type": "casting_total_mod", "amount": 3, "scope": "all" }],
     "max_total": 255,
     "source": { "anchor": "ways-of-the-land", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5231, 5234] }
   },

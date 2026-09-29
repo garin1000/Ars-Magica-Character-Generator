@@ -170,3 +170,30 @@ describe('EquipmentTab loadout control (K5)', () => {
     expect(region).not.toContain('data-testid="equipment-equipped-0"');
   });
 });
+
+// K3 (design-f0-book-template-engine.md § 2b): a whole-character "mounted"
+// toggle — Attack/Defense on every non-body-attack Combat line add min(Ride,
+// 3). RED CHECKPOINT: the control does not exist yet (phase 2 UI work).
+describe('EquipmentTab mounted toggle (K3)', () => {
+  it('renders a checkbox reflecting entity.mounted, with an accessible Fluent label', () => {
+    store.entity.mounted = true;
+    const body = html();
+
+    const checkbox = /<input[^>]*data-testid="mounted-toggle"[^>]*>/.exec(body);
+    expect(checkbox).not.toBeNull();
+    expect(checkbox![0]).toContain('checked');
+
+    const label = /<label[^>]*>[\s\S]*?data-testid="mounted-toggle"[\s\S]*?<\/label>/.exec(body);
+    expect(label).not.toBeNull();
+    expect(label![0]).toContain('Mounted');
+  });
+
+  it('reflects an unset (false) entity.mounted as unchecked', () => {
+    store.entity.mounted = undefined;
+    const body = html();
+
+    const checkbox = /<input[^>]*data-testid="mounted-toggle"[^>]*>/.exec(body);
+    expect(checkbox).not.toBeNull();
+    expect(checkbox![0]).not.toContain('checked');
+  });
+});

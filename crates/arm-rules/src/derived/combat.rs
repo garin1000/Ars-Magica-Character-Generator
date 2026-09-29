@@ -131,6 +131,12 @@ pub struct CombatLine {
     /// The weapon's Range in paces (missile / thrown); `None` for melee.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub range: Option<u16>,
+    /// True for the mounted twin of this line (K3): Attack and Defense add
+    /// `min(Ride, 3)`; Initiative and Damage are untouched, per the passage.
+    /// Never part of a save — `CombatLine` is a derived read-out. Source:
+    /// ArMDE:16837-16839.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub mounted: bool,
 }
 
 /// Combat lines: **one or two** per Carried-or-Wielded weapon (K5) — a Stowed
@@ -244,6 +250,10 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
                     .damage_mod
                     .map(|m| strength + i32::from(m) + cm(CombatStat::Damage, &slot.item)),
                 range: weapon.range,
+                // Every line built here is the on-foot/unmounted one; the
+                // mounted twin pass below (K3) appends the mounted set
+                // afterward, never in this closure.
+                mounted: false,
             };
         let bare = || wielding(Vec::new(), 0, 0, 0);
         // A two-handed weapon cannot be paired with a shield, so it takes none of
@@ -264,6 +274,29 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
         ));
         out.push(bare());
     }
+
+    // K3: a mounted character adds min(Ride, 3) to Attack and Defense
+    // (ArMDE:16837-16839). Scoped to weapons that are not body attacks (D66,
+    // `Weapon::body_attack` — never `min_strength` or any other unrelated
+    // field): the Knight's own template prints no mounted Fist row
+    // (ArMDE:1467-1472). Appended after the on-foot set, one twin per
+    // existing non-body-attack line, in the same relative order.
+    if entity.mounted {
+        let ride =
+            effective_ability_score(entity, ruleset, &Id::new("ability.ride"), None).clamp(0, 3);
+        let twins: Vec<CombatLine> = out
+            .iter()
+            .filter(|l| ruleset.weapon(&l.weapon).is_some_and(|w| !w.body_attack))
+            .map(|l| CombatLine {
+                attack: l.attack.map(|a| a + ride),
+                defense: l.defense + ride,
+                mounted: true,
+                ..l.clone()
+            })
+            .collect();
+        out.extend(twins);
+    }
+
     out
 }
 

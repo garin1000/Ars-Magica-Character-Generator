@@ -1289,6 +1289,13 @@ equipment-loadout-carried = Carried
 equipment-loadout-wielded = Wielded
 equipment-specialization-label = Specialization applies (+1)
 equipment-empty = No equipment.
+# K3 (design-f0-book-template-engine.md § 2b): whole-character toggle, adds
+# min(Ride, 3) to Attack/Defense on every combat line that is not a body
+# attack (Fist/Kick/Dodge).
+mounted-label = Mounted
+# Appended to a combat line's name when it is the mounted twin (K3); the
+# surrounding parentheses and leading space are composed where this is used.
+derived-combat-mounted-suffix = mounted
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

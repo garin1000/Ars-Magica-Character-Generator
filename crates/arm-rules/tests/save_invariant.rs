@@ -201,6 +201,12 @@ fn fully_populated_entity() -> Entity {
         max_level: 15,
         penetration: 4,
     }];
+    // F2/K3 (design-f0-book-template-engine.md § 2b): a stored CHOICE, not a
+    // derived value — RED CHECKPOINT until `mounted` is added to
+    // ALLOWED_ENTITY_KEYS below (deliberately not done yet: this file's own
+    // reason for existing is to force that a new persisted field gets a
+    // documented, deliberate blessing rather than serializing silently).
+    e.mounted = true;
 
     e.normalize();
     e
@@ -271,6 +277,11 @@ const ALLOWED_ENTITY_KEYS: &[&str] = &[
     // (`effective::focus_points_budget`), and that is computed at evaluation time.
     // Deliberately separate from `powers`, which is a different currency.
     "focus_powers",
+    // F2/K3 (design-f0-book-template-engine.md § 2b): a stored CHOICE, not a
+    // derived value — whether the character is CURRENTLY fighting mounted.
+    // `combat_totals` derives the mounted Combat lines from it at evaluation
+    // time; this field only records the player's toggle.
+    "mounted",
 ];
 
 #[test]

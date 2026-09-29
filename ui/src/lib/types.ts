@@ -1006,6 +1006,9 @@ export interface CombatLine {
   defense: number;
   damage?: number | null;
   range?: number | null;
+  // True for the mounted twin of this line (K3): Attack/Defense add
+  // min(Ride, 3). Never part of a save — CombatLine is a derived read-out.
+  mounted?: boolean;
 }
 
 // The Soak read-out.
@@ -1571,6 +1574,9 @@ export interface Weapon {
   load: number;
   range?: number | null;
   ability: string;
+  // True for an unarmed strike (Dodge/Fist/Kick) — K3's mounted-twin gate
+  // reads this alone (D66), never min_strength or any other field.
+  body_attack?: boolean;
 }
 
 // A catalogue shield. Its modifiers add to the wielded weapon's line (slice 5i).
@@ -2081,6 +2087,10 @@ export interface Entity {
   // The character's Focus Powers, charged against the separate Focus Power point
   // pool (ArMDE:3899). Omitted when empty.
   focus_powers?: FocusPower[];
+  // Whether the character is currently fighting mounted (K3): derived combat
+  // totals add a second, mounted line per weapon that is not a body attack,
+  // adding min(Ride, 3) to Attack and Defense. Omitted = false.
+  mounted?: boolean;
 }
 
 export interface ValidationIssue {

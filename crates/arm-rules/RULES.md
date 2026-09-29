@@ -5938,7 +5938,7 @@ supplement; `virtue.factor` (ArMDE:3793-3796) and `virtue.fidai`
 ### In-play effect families (definitive input to slice 4 / 5b)
 
 - **Magical Focus (major/minor)** — `virtue.major_magical_focus` (ArMDE:4399-4422), `virtue.minor_magical_focus` (ArMDE:4536-4538), `virtue.mythic_blood` (ArMDE:4573-4589)
-- **Flat casting-total bonus/penalty** — `virtue.method_caster` (ArMDE:4524-4527), `flaw.poor_formulaic_magic` (ArMDE:6610-6613), `flaw.afflicted_tongue` (ArMDE:5655-5658), `virtue.life_boost` (ArMDE:4295-4298), `virtue.leper_magus` (ArMDE:4249-4252), `virtue.cyclic_magic_positive` (ArMDE:3635-3638), `flaw.cyclic_magic_negative` (ArMDE:5893-5896), `virtue.special_circumstances` (ArMDE:4998-5001), `virtue.ways_of_the_land` (ArMDE:5231-5234) (`flaw.corrupted_spells`, ArMDE:5859-5864, left this list in Phase 2 C5c/D15 — see **Corrupted Abilities/Arts/Spells** below)
+- **Flat casting-total bonus/penalty** — `virtue.method_caster` (ArMDE:4524-4527), `flaw.poor_formulaic_magic` (ArMDE:6610-6613), `flaw.afflicted_tongue` (ArMDE:5655-5658), `virtue.life_boost` (ArMDE:4295-4298), `virtue.leper_magus` (ArMDE:4249-4252) (`flaw.corrupted_spells`, ArMDE:5859-5864, left this list in Phase 2 C5c/D15; `virtue.cyclic_magic_positive`/`flaw.cyclic_magic_negative`/`virtue.special_circumstances`/`virtue.ways_of_the_land` left it in F2/D61 — see **Berserk / Ways of the Land / Cyclic Magic / Special Circumstances** below)
 - **Spontaneous-magic casting modifier** — `flaw.weak_spontaneous_magic` (ArMDE:7084-7089), `virtue.diedne_magic` (ArMDE:3675-3682), `virtue.faerie_raised_magic` (ArMDE:3829-3842), `virtue.spell_improvisation` (ArMDE:5002-5005), `virtue.life_linked_spontaneous_magic` (ArMDE:4299-4306)
 - **Art-halving (Technique / Form)** — `flaw.deficient_technique` (ArMDE:5913-5915), `flaw.deficient_form` (ArMDE:5909-5912)
 - **Circumstantial casting/lab penalty (surfaced)** — `flaw.deleterious_circumstances` (ArMDE:5917-5920), `flaw.environmental_magic_condition` (ArMDE:6020-6023), `flaw.short_ranged_magic` (ArMDE:6737-6740), `flaw.disjointed_magic` (ArMDE:5972-5975), `flaw.the_constant_expression` (ArMDE:5821-5838)
@@ -6069,7 +6069,7 @@ supplement; `virtue.factor` (ArMDE:3793-3796) and `virtue.fidai`
 - **Flat Soak bonus/penalty** — `virtue.tough` (ArMDE:5145-5147), `flaw.frail` (ArMDE:6190-6193)
 - **Wound/fatigue penalty delta** — `virtue.enduring_constitution` (ArMDE:3751-3754), `flaw.low_tolerance` (ArMDE:6366-6369), `flaw.painful_magic` (ArMDE:6574-6577), `flaw.vulnerable_casting` (ArMDE:6993-7004), `virtue.withstand_casting` (ArMDE:5261-5282), `flaw.obese` (ArMDE:6516-6519), `flaw.short_of_breath` (ArMDE:6733-6736), `virtue.long_winded` (ArMDE:4327-4330)
 - **Wound-recovery modifier** — `flaw.fragile_constitution` (ArMDE:6186-6189), `virtue.rapid_convalescence` (ArMDE:4834-4837)
-- **Combat total modifier (atk/def/init/dam)** — `virtue.berserk` (ArMDE:3500-3503), `flaw.hobbled` (ArMDE:6260-6263), `flaw.lame` (ArMDE:6330-6333), `flaw.missing_hand` (ArMDE:6438-6441), `flaw.missing_eye` (ArMDE:6434-6437), `flaw.poor_eyesight` (ArMDE:6606-6609), `flaw.palsied_hands` (ArMDE:6578-6581), `flaw.slow_reflexes` (ArMDE:6763-6766), `virtue.lightning_reflexes` (ArMDE:4311-4314), `virtue.fast_caster` (ArMDE:3865-3868)
+- **Combat total modifier (atk/def/init/dam)** — `flaw.hobbled` (ArMDE:6260-6263), `flaw.lame` (ArMDE:6330-6333), `flaw.missing_hand` (ArMDE:6438-6441), `flaw.missing_eye` (ArMDE:6434-6437), `flaw.poor_eyesight` (ArMDE:6606-6609), `flaw.palsied_hands` (ArMDE:6578-6581), `flaw.slow_reflexes` (ArMDE:6763-6766), `virtue.lightning_reflexes` (ArMDE:4311-4314), `virtue.fast_caster` (ArMDE:3865-3868) (`virtue.berserk`, ArMDE:3500-3503, left this list in F2/D61 — see **Berserk / Ways of the Land / Cyclic Magic / Special Circumstances** below)
 
   **What "combat rolls" / "combat scores" was read to mean.** Several of these
   Flaws penalize "combat rolls" or "combat scores" without naming the totals.
@@ -6208,7 +6208,7 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 | `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | ArMDE:5913-5915, 5909-5912 | computed |
 | `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic. Two items have left this family: weak_magic_resistance in the round-5 audit (`ArMDE:7070` halves nothing), and flawed_parma_magica with row 35 (it halves one *addend* against one *Form*, which is not a whole total — see **Magic-resistance modifier** above). `HalvableTotal::MagicResistance` was deleted with the second of them | ArMDE:7084-7089, 7060-7063, 5962-5964, 7064-7067 | **computed** (round-2 audit finding GD3 closed the last gap): `spontaneous_casting`, `penetration`, `lab_longevity` (since M5.5a), and now `lab_enchanting` too — folded into the new `LabTotal.enchanting` field in `derived/lab.rs::lab_totals` (Deficiency first, then this halving, per `ArMDE:7060-7063`'s own stated order). Round 3 (G1) wired `enchanting` into `masterpiece_item_cap` too — the one remaining consumer of a Lab Total that used to read `total` instead — and into the frontend `LabTotal` type / `DerivedTotalsPanel` (G2) |
 | `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | ArMDE:5145-5147, 6190-6193, 3500-3503 | computed |
-| `CombatMod { amount, target, weapon }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | ArMDE:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed; conditional ones folded **unconditionally** and **not labelled** — `CombatLine` carries no `addends` at all. `weapon` restricts a figure to one weapon's lines and **replaces** the same item's unscoped figure there (only `flaw.lame`'s -3 on `weapon.dodge`, ArMDE:6332); an unresolvable weapon fails referential integrity |
+| `CombatMod { amount, target, weapon }` | Combat init/atk/def — hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | ArMDE:6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed, **not labelled** — `CombatLine` carries no `addends` at all. `weapon` restricts a figure to one weapon's lines and **replaces** the same item's unscoped figure there (only `flaw.lame`'s -3 on `weapon.dodge`, ArMDE:6332); an unresolvable weapon fails referential integrity. `virtue.berserk` (ArMDE:3500-3503) used to be the one **conditional** carrier here ("while berserk", folded unconditionally) — F2 (D61/D15) deletes its three effects outright and reclassifies it `uncomputed_rule` instead of surfacing the condition; see **Berserk / Ways of the Land / Cyclic Magic / Special Circumstances** below |
 | `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | ArMDE:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |
 | `MagicResistanceMod { kind, param }` | MR modifiers — limited_magic_resistance (no_form_bonus), flawed_parma_magica (halved_parma), susceptibility faerie/infernal, commanding_aura & special_circumstances (aura_bonus), weak_magic_resistance (conditional_penetration_waiver). `param` names the selection key carrying the **Form** the modifier is scoped to; it is set on the first two kinds and absent on the rest, which name no Form | ArMDE:6346-6349, 6142-6145, 6819-6826, 3579-3596, 7068-7071 | **no_form_bonus and halved_parma computed** (folded into the flat per-Form MR number in `magic_resistance`, each against the one Form its own copy names — a copy naming no Form applies to none, and `missing_param` asks for the choice rather than the engine guessing it); the four conditional/situational kinds (aura_bonus, susceptible_faerie/infernal, conditional_penetration_waiver) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — each carries a scope the flat per-Form figure has no axis for (a realm, an aura, a scene condition plus the incoming spell's level), so listing them keeps them from being silently dropped *and* from being applied where the book does not apply them. `susceptible_divine` was retired in the round-5 audit: `ArMDE:6817` never mentions Magic Resistance, and the Flaw now carries `special_casting_mod { doubled_aura_penalty }` |
 | `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | ArMDE:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |
@@ -10032,6 +10032,140 @@ the real load, the four listed Abilities read as `catalogued`, and the two
 `Ability.catalogued` integrity gaps). `crates/arm-app/tests/commands.rs` —
 `load_catalogue_names_reads_both_locales_from_the_shipped_rules_dir` and
 `load_catalogue_names_works_through_the_portable_fallback_directory`.
+
+---
+
+#### Mounted Combat (K3, Phase 2 Group F, `design-f0-book-template-engine.md`)
+
+> "A mounted character adds his Ride score, to a maximum of +3, to his Attack
+> and Defense Totals, due to higher position and control of a large animal."
+> (`ArMDE:16837-16839`, full passage; heading `ArMDE:16837`.)
+
+- **`Entity.mounted: bool`** (additive, `serde(default)`, no `SCHEMA_VERSION`
+  bump — byte-compatible with every existing save, absent/false ≡ today's
+  behavior) records the player's toggle. `combat_totals` appends a **second,
+  mounted** `CombatLine` per existing line, adding `min(Ride, 3)` to Attack and
+  Defense only — Initiative and Damage are untouched, per the passage. The
+  twins are appended **after** the full on-foot set, in the same relative
+  order as the line each doubles (a filter + map over the already-built
+  vector, then `extend`), never interleaved with it.
+- **The Fist/Kick/Dodge exclusion is a template match, not a stated rule.**
+  The passage above names no weapon and no exception at all. The one place a
+  mounted twin is actually checkable against the book — the Knight's own
+  statblock (`ArMDE:1467-1472`) — prints mounted rows for both his weapon
+  lines but **not** for Fist. D66 (`docs/vf-audit/decisions.md`, Norbert,
+  2026-09-29) rules that the engine reproduce that template via an
+  **explicit, purpose-named catalogue field**, `Weapon::body_attack: bool`
+  (`rules/core/equipment.json`, set on `weapon.dodge`/`weapon.fist`/
+  `weapon.kick` only) — never `min_strength` or any other field whose
+  documented purpose is unrelated (the exact "rules meaning inferred from an
+  unrelated field" mistake D52 already named once). Reproducing a template's
+  presentation, deliberately, is one of this project's recorded "(d)
+  unsettled, resolved as a presentation choice" outcomes (alongside K3's own
+  mounted-twin scoping and K5's `LoadoutState`), not a mechanic the Mounted
+  Combat passage itself contains.
+- **Integrity check** (`data_integrity.rs::body_attack_is_set_on_exactly_the_three_body_attacks`):
+  a structural invariant on named items (CLAUDE.md: "never exact catalogue
+  totals") — exactly `weapon.dodge`/`weapon.fist`/`weapon.kick` carry
+  `body_attack: true`, no other shipped weapon does.
+- **The Knight, reproduced exactly** (`ArMDE:1467-1472`): with the fixture's
+  `mounted: true` and Ride 5 (capped at +3), `combat_totals` returns all eight
+  lines the book's five-row block implies once the engine's own "dropped
+  shield" bare line (K5) is accounted for — long sword+shield and the great
+  sword each gain a mounted twin; Fist stays singular. Long sword+shield
+  (mounted): Atk +17, Def +17; great sword (mounted): Atk +16, Def +13 — both
+  exact. `book_templates.rs::the_knight_matches_the_book`.
+- UI: a whole-character "Mounted" checkbox (`EquipmentTab.svelte`,
+  `data-testid="mounted-toggle"`) → `state.svelte.ts::AppStore.setMounted`.
+  Fluent `mounted-label` (en/de); `derived-combat-mounted-suffix` (en/de,
+  reserved for the "(mounted)" row-name suffix — not yet consumed by
+  `export/sections.rs::combat_line_name` or the UI's mirror, since neither
+  needed changing for the derived figures themselves to be correct; wiring
+  the suffix in is cosmetic follow-up, not gated on anything here).
+- Source: `ArMDE:16837-16839`. `derived/combat.rs::combat_totals` /
+  `types.rs::Entity::mounted` / `derived/combat.rs::CombatLine::mounted` /
+  `equipment.rs::Weapon::body_attack`.
+
+#### Berserk / Ways of the Land / Cyclic Magic / Special Circumstances (D61, D15, Phase 2 Group F)
+
+> Berserk: "While berserk, you get +2 to Attack and Soak scores, but suffer a
+> -2 penalty to Defense." (`ArMDE:3500-3503`.) Ways of the Land: "You get a +3
+> bonus to all rolls, including combat and Casting Scores, that directly
+> involve that area and its inhabitants" (`ArMDE:5231-5234`). Cyclic Magic
+> (positive): "At those times, you receive a +3 bonus to all Casting Scores.
+> The bonus also applies to Lab Totals if the positive part of the cycle
+> covers the whole season." (`ArMDE:3635-3638`.) Cyclic Magic (negative): the
+> mirrored -3 penalty (`ArMDE:5893-5896`). Special Circumstances: "gaining a
+> +3 bonus to your Casting Scores and Magic Resistance"
+> (`ArMDE:4998-5001`).
+
+- **The defect these four/five ids shared:** each bonus/penalty is stated as
+  conditional in its own passage ("while berserk", "that directly involve that
+  area", "at those times", "in certain uncommon situations") but was folded
+  into the engine's totals **unconditionally** — the printed book templates
+  disagreed (the Berserker's Soak/Attack/Defense, the Bjornaer's and the
+  Mercere's Casting Totals all print the **not-active** figure). No template
+  anywhere prints the boosted/penalized state as a second row the way K3's
+  Mounted Combat does, so D58's "extra row where the template prints one" is
+  not in tension with deleting rather than surfacing (`docs/vf-audit/
+  design-f0-book-template-engine.md` § 1a).
+- **Ruling (D61, invoking D15's already-shipped `flaw.corrupted_spells`
+  precedent):** delete the conditional effect(s) outright — no new `Effect`
+  field, no `ModifierFamily`, no surfaced row — and reclassify per what
+  remains (`Classification`'s own rule, `types.rs:224-227`: an entry the
+  engine computes *something* for is `in_play_effect` even if its passage also
+  states an uncomputable clause; zero remaining effects makes it
+  `uncomputed_rule`).
+  - **`virtue.berserk`**: all three effects deleted (`combat_mod` ×2,
+    `soak_mod`) → `uncomputed_rule`. The Berserker's printed Soak/Pole Axe/Kick
+    figures (Soak +9, +13/+7, +6/+4, `ArMDE:1212-1215`) are now exact.
+  - **`virtue.ways_of_the_land`**: its one `casting_total_mod` deleted →
+    `uncomputed_rule`. Its `description` (both locales) already stated the
+    full passage before this change and needed no authoring. The Bjornaer's
+    printed Casting Totals (`ArMDE:1643-1650`) are now exact.
+  - **`virtue.cyclic_magic_positive` / `flaw.cyclic_magic_negative`**: only
+    the `casting_total_mod` clause is deleted; the `lab_total_mod` (X7a's
+    separate, still-open Lab Total correctness question) is untouched, so both
+    entries **stay** `in_play_effect`. The two `COMPUTED_ENTRY_COVERS_WHOLE_
+    PASSAGE` exemption rows in `uncomputed_clauses.rs` that used to read "both
+    stated bonuses... are computed via two effects" are **removed** (not left
+    stale) — that guard matches by id only and never re-checks its own prose
+    claim, so a stale row would silence it forever. Removal alone (with the
+    new `description`, below) satisfies `no_swept_entry_drops_an_uncomputed_
+    mechanical_clause` without any exemption at all.
+  - **`virtue.special_circumstances`**: only its `casting_total_mod` is
+    deleted; `magic_resistance_mod { aura_bonus }` (a pre-existing, already-
+    correct D58 family) is untouched, so it too **stays** `in_play_effect`.
+  - The Mercere's printed Casting Totals (`ArMDE:1992-1996`, +26/+35) are now
+    exact — all three conditional carriers (Cyclic ± and Special
+    Circumstances) used to apply their casting bonus/penalty at once, by day
+    and by night, in a storm and out of one, for a net unconditional +3.
+- **Descriptions added, both locales** (`rules/i18n/{en,de}/virtues_flaws.json`):
+  `virtue.berserk` (its `summary` alone states no number, so a `description`
+  is mandatory for `every_uncomputed_rule_entry_states_its_rule_in_every_locale`),
+  `virtue.cyclic_magic_positive`, `flaw.cyclic_magic_negative` (both needed
+  one for `no_swept_entry_drops_an_uncomputed_mechanical_clause` once their
+  exemption rows were removed), and `virtue.special_circumstances` (not guard-
+  mandatory — its `summary` already states the +3 — added anyway for
+  consistency with the other four). While adding
+  `virtue.cyclic_magic_positive`'s DE `description`, its DE `summary` was
+  found truncated mid-word ("Deine Magie ist auf einen Naturzyklus abgestimmt
+  (z.") — a pre-existing extraction defect unrelated to F2, fixed in the same
+  change since it sat in the exact entry being edited.
+- **Row 45 (X1) is explicitly untouched here:** Berserk's missing
+  `ability_authorization` (Martial Abilities at character creation,
+  `ArMDE:3502`) is a *different* defect (a missing effect, not an
+  unconditional one) and belongs to X1's own assignment, not this fix.
+  Likewise Ways of the Land's missing combat-roll clause
+  (`ArMDE:5233`, "+3 bonus to all rolls, including combat...") needs no
+  effect of its own now that the Virtue is `uncomputed_rule` — the clause is
+  already covered by the same `description` that carries the Casting clause.
+- Source: `ArMDE:3500-3503`, `ArMDE:5231-5234`, `ArMDE:3635-3638`,
+  `ArMDE:5893-5896`, `ArMDE:4998-5001`.
+  `crates/arm-rules/tests/f2_conditional_modifiers.rs` (classification/effects/
+  description, all five ids); `uncomputed_clauses.rs::no_swept_entry_drops_an_
+  uncomputed_mechanical_clause`; `book_templates.rs::the_berserker_matches_the_book`
+  / `the_bjornaer_matches_the_book` / `the_mercere_matches_the_book`.
 
 ---
 

@@ -1364,6 +1364,14 @@ equipment-loadout-carried = Mitgeführt
 equipment-loadout-wielded = Angelegt
 equipment-specialization-label = Spezialisierung greift (+1)
 equipment-empty = Keine Ausrüstung.
+# K3 (design-f0-book-template-engine.md § 2b): Umschalter für den ganzen
+# Charakter, addiert min(Reiten, 3) auf Angriff/Verteidigung jeder
+# Kampfwerte-Zeile, die kein Körperangriff ist (Faust/Tritt/Ausweichen).
+mounted-label = Beritten
+# An den Namen einer Kampfwerte-Zeile angehängt, wenn sie der berittene
+# Zwilling ist (K3); die umgebenden Klammern und das führende Leerzeichen
+# werden dort komponiert, wo dies verwendet wird.
+derived-combat-mounted-suffix = beritten
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

@@ -152,4 +152,23 @@ describe('EquipmentTab real interaction paths (G17)', () => {
 
     expect(store.entity.equipment).toEqual([{ item: SWORD, loadout: 'carried' }]);
   });
+
+  // K3 (design-f0-book-template-engine.md § 2b): toggling "mounted" calls
+  // store.setMounted, which does not exist yet (phase 2) — RED CHECKPOINT.
+  it('toggles mounted via store.setMounted', () => {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(EquipmentTab, { target });
+    flushSync();
+
+    const checkbox = target.querySelector('[data-testid="mounted-toggle"]') as HTMLInputElement;
+    expect(checkbox).toBeTruthy();
+    expect(checkbox.checked).toBe(false);
+
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+
+    expect(store.entity.mounted).toBe(true);
+  });
 });

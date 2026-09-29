@@ -134,6 +134,15 @@
   </section>
   <section class="region region-selected">
     <h2 class="region-title">{store.t('selections-title')}</h2>
+    <label class="checkbox inline">
+      <input
+        type="checkbox"
+        checked={store.entity.mounted ?? false}
+        onchange={(e) => store.setMounted((e.currentTarget as HTMLInputElement).checked)}
+        data-testid="mounted-toggle"
+      />
+      <span>{store.t('mounted-label')}</span>
+    </label>
     <div class="selected-frame">
       <!-- The frame carries the border and its padding; this inner box does the
            scrolling, so the padding stays a gap the rows cannot scroll into. -->

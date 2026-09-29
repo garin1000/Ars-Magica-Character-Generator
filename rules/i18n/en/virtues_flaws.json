@@ -297,7 +297,8 @@
   },
   "flaw.cyclic_magic_negative": {
     "name": "Cyclic Magic (negative)",
-    "summary": "As with the Hermetic Virtue, your magic is attuned to some cycle of nature and is less potent at specific times."
+    "summary": "As with the Hermetic Virtue, your magic is attuned to some cycle of nature and is less potent at specific times.",
+    "description": "As with the Hermetic Virtue, your magic is attuned to some cycle of nature and is less potent at specific times. You have a -3 penalty to all Lab Totals and Casting Scores during that time. The penalty applies to Lab Totals even if the negative period does not cover the whole of the season. The length of time during which you are at a disadvantage must be equal to the time when there is no penalty."
   },
   "flaw.dark_secret": {
     "name": "Dark Secret",
@@ -1587,7 +1588,8 @@
   },
   "virtue.berserk": {
     "name": "Berserk",
-    "summary": "You are capable of entering a blinding rage when in combat or frustrating situations."
+    "summary": "You are capable of entering a blinding rage when in combat or frustrating situations.",
+    "description": "You are capable of entering a blinding rage when in combat or frustrating situations. You automatically gain the Personality Trait Angry +2 (or more, at your option). Any time you take a wound or wound an enemy, roll a stress die and add your Angry score. A roll of 9+ means you go berserk. The storyguide can also call for a roll when you are strongly frustrated. You may deliberately try to go berserk. In this case, you only need a 6+ when you take a wound or wound an enemy, or a 9+ if you have not been wounded or caused a wound. While berserk, you get +2 to Attack and Soak scores, but suffer a -2 penalty to Defense. While berserk, you cannot retreat, hesitate to attack, or give quarter. If you are still berserk when there are no enemies present, you attack your friends. You may roll once per round to calm down if you desire, requiring a stress die + Perception – Angry against an Ease Factor of 6. You may learn Martial Abilities at character creation."
   },
   "virtue.blood_of_the_nephilim": {
     "name": "Blood of the Nephilim",
@@ -1698,7 +1700,8 @@
   },
   "virtue.cyclic_magic_positive": {
     "name": "Cyclic Magic (positive)",
-    "summary": "Your magic is attuned to some cycle of nature (solar, lunar, or seasonal, for example) and as such, is more potent at specific times."
+    "summary": "Your magic is attuned to some cycle of nature (solar, lunar, or seasonal, for example) and as such, is more potent at specific times.",
+    "description": "Your magic is attuned to some cycle of nature (solar, lunar, or seasonal, for example) and as such, is more potent at specific times. At those times, you receive a +3 bonus to all Casting Scores. The bonus also applies to Lab Totals if the positive part of the cycle covers the whole season. The cycle of your magic must be regular and approved by the storyguide. Furthermore, the length of time when the bonus applies must be equal to the amount of time when it does not."
   },
   "virtue.death_prophecy": {
     "name": "Death Prophecy",
@@ -2586,7 +2589,8 @@
   },
   "virtue.special_circumstances": {
     "name": "Special Circumstances",
-    "summary": "You are able to perform magic better in certain uncommon situations (such as during a storm or while touching the target), gaining a +3 bonus to your Casting Scores and Magic Resistance."
+    "summary": "You are able to perform magic better in certain uncommon situations (such as during a storm or while touching the target), gaining a +3 bonus to your Casting Scores and Magic Resistance.",
+    "description": "You are able to perform magic better in certain uncommon situations (such as during a storm or while touching the target), gaining a +3 bonus to your Casting Scores and Magic Resistance. (A character only gains a bonus to Magic Resistance if she has Magic Resistance from another source.) You may take this Virtue more than once, but you only gain a +3 bonus even if more than one set of circumstances applies."
   },
   "virtue.spell_improvisation": {
     "name": "Spell Improvisation",

@@ -412,6 +412,9 @@ fn arb_entity() -> impl Strategy<Value = Entity> {
         // clamp `normalize()` applies is pinned as idempotent: re-normalizing an
         // already-normalized entity must not move it again.
         -30i32..31,
+        // F2/K3: a plain scalar bool, not a sorted list — generated here rather
+        // than in `SortedLists`.
+        any::<bool>(),
     )
         .prop_map(
             |(
@@ -426,6 +429,7 @@ fn arb_entity() -> impl Strategy<Value = Entity> {
                 wizard_furthest_phase,
                 sorted_lists,
                 aura,
+                mounted,
             )| {
                 let mut entity = Entity::new(entity_kind, type_id, RulesetRef::new(rs_id, "1"));
                 entity.schema_version = schema_version;
@@ -435,6 +439,7 @@ fn arb_entity() -> impl Strategy<Value = Entity> {
                 entity.ability_funding = ability_funding;
                 entity.wizard_furthest_phase = wizard_furthest_phase;
                 entity.aura = aura;
+                entity.mounted = mounted;
                 sorted_lists.install(&mut entity);
                 entity.normalize();
                 entity

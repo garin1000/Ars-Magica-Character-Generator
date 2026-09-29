@@ -2322,6 +2322,13 @@ class AppStore {
     this.#equipmentWorkflow.setSpecialization(index, specialization_applies);
   }
 
+  /** Toggle whether the character is currently fighting mounted (K3): adds
+   *  min(Ride, 3) to Attack/Defense on every non-body-attack Combat line. */
+  setMounted(mounted: boolean): void {
+    this.entity.mounted = mounted;
+    this.#scheduleValidate();
+  }
+
   /** Set a free-text identity/flavor field (no mechanical effect). */
   setIdentity(
     field: 'name' | 'description' | 'concept' | 'gender' | 'sigil' | 'covenant_name' | 'parens',

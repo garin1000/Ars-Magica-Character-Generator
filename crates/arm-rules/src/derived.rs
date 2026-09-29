@@ -1074,7 +1074,8 @@ mod tests {
           { "id": "ability.artes_liberales", "category": "academic" },
           { "id": "ability.philosophiae", "category": "academic" },
           { "id": "ability.single_weapon", "category": "martial" },
-          { "id": "ability.brawl", "category": "general", "combat_ability": true }
+          { "id": "ability.brawl", "category": "general", "combat_ability": true },
+          { "id": "ability.ride", "category": "general" }
         ] }"#;
         let arts = r#"{
           "advancement": [
@@ -1108,7 +1109,7 @@ mod tests {
               "defense_mod": 2, "damage_mod": 9, "min_strength": 0, "load": 2,
               "two_handed": true, "ability": "ability.single_weapon" },
             { "id": "weapon.dodge", "kind": "melee", "init_mod": 0, "defense_mod": 0,
-              "load": 0, "ability": "ability.brawl" }
+              "load": 0, "ability": "ability.brawl", "body_attack": true }
           ],
           "shields": [
             { "id": "shield.round", "init_mod": 0, "attack_mod": 0, "defense_mod": 2,
@@ -3523,6 +3524,123 @@ mod tests {
         assert_eq!(enc.load, 1, "the stowed second item must not add Load");
         assert_eq!(enc.burden, 1);
         assert_eq!(enc.total, 1);
+    }
+
+    // --- F2/K3: mounted combat (design-f0-book-template-engine.md § 2b, D66)
+    // — RED CHECKPOINT: `combat_totals`'s mounted-twin pass is not implemented
+    // yet (phase 2); every line built today has `mounted: false` unconditionally
+    // (the stub), so every "twin present" lookup below panics until it lands.
+
+    /// "A mounted character adds his Ride score, to a maximum of +3, to his
+    /// Attack and Defense Totals" (ArMDE:16839). Ride 5 caps at +3; Initiative
+    /// and Damage are untouched.
+    #[test]
+    fn mounted_twin_adds_ride_capped_at_three_to_attack_and_defense() {
+        let rs = ruleset();
+        let mut e = grog();
+        e.mounted = true;
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.ride"),
+            score: 5,
+            specialty: None,
+            parameter: None,
+        }];
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.long_sword"),
+            loadout: LoadoutState::Wielded,
+            specialization_applies: false,
+        }];
+        let lines = combat_totals(&e, &rs);
+        let base = lines
+            .iter()
+            .find(|l| l.weapon.as_str() == "weapon.long_sword" && !l.mounted)
+            .expect("unmounted line present");
+        let twin = lines
+            .iter()
+            .find(|l| l.weapon.as_str() == "weapon.long_sword" && l.mounted)
+            .expect("mounted twin present — Ride 5 caps at +3 (ArMDE:16839)");
+        assert_eq!(twin.attack, base.attack.map(|a| a + 3));
+        assert_eq!(twin.defense, base.defense + 3);
+        assert_eq!(twin.initiative, base.initiative, "Initiative is untouched");
+        assert_eq!(twin.damage, base.damage, "Damage is untouched");
+    }
+
+    /// Below the +3 cap, the Ride bonus is uncapped: Ride 2 adds +2.
+    #[test]
+    fn mounted_twin_ride_bonus_is_uncapped_below_three() {
+        let rs = ruleset();
+        let mut e = grog();
+        e.mounted = true;
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.ride"),
+            score: 2,
+            specialty: None,
+            parameter: None,
+        }];
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.long_sword"),
+            loadout: LoadoutState::Wielded,
+            specialization_applies: false,
+        }];
+        let lines = combat_totals(&e, &rs);
+        let base = lines
+            .iter()
+            .find(|l| l.weapon.as_str() == "weapon.long_sword" && !l.mounted)
+            .expect("unmounted line present");
+        let twin = lines
+            .iter()
+            .find(|l| l.weapon.as_str() == "weapon.long_sword" && l.mounted)
+            .expect("mounted twin present at Ride 2 (+2, uncapped)");
+        assert_eq!(twin.attack, base.attack.map(|a| a + 2));
+        assert_eq!(twin.defense, base.defense + 2);
+    }
+
+    /// D66: the mounted twin is gated on `Weapon::body_attack` alone. Dodge
+    /// (a body attack) must get no mounted twin, reproducing the Knight's own
+    /// template (no mounted Fist row, ArMDE:1467-1472).
+    #[test]
+    fn body_attack_weapon_gets_no_mounted_twin() {
+        let rs = ruleset();
+        let mut e = grog();
+        e.mounted = true;
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.ride"),
+            score: 5,
+            specialty: None,
+            parameter: None,
+        }];
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.dodge"),
+            loadout: LoadoutState::Wielded,
+            specialization_applies: false,
+        }];
+        let lines = combat_totals(&e, &rs);
+        assert!(
+            !lines
+                .iter()
+                .any(|l| l.weapon.as_str() == "weapon.dodge" && l.mounted),
+            "a body attack (Weapon::body_attack) must get no mounted twin (D66)"
+        );
+    }
+
+    /// Control case: `entity.mounted` defaults to `false`, so an unmounted
+    /// entity's combat lines never carry a mounted twin (already true today,
+    /// since the twin pass does not exist yet — pinned so a future refactor
+    /// cannot flip it).
+    #[test]
+    fn unmounted_entity_produces_no_mounted_lines() {
+        let rs = ruleset();
+        let mut e = grog();
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.long_sword"),
+            loadout: LoadoutState::Wielded,
+            specialization_applies: false,
+        }];
+        let lines = combat_totals(&e, &rs);
+        assert!(
+            !lines.iter().any(|l| l.mounted),
+            "entity.mounted defaults to false"
+        );
     }
 
     /// Wound ranges for Size 0 and Size +1 (ArMDE:17167-17180).

@@ -118,12 +118,26 @@ fn warning_codes(entity: &Entity, ruleset: &Ruleset) -> BTreeSet<String> {
 }
 
 /// One way of wielding a weapon: `with_shield` picks between the two lines the
-/// engine emits for a one-handed weapon carried alongside a shield.
+/// engine emits for a one-handed weapon carried alongside a shield. Always
+/// picks the UNMOUNTED line — mounted twins (K3) are appended after the loop
+/// in `combat_totals`, so the on-foot line this helper has always found stays
+/// the first match even once twins exist.
 fn line<'a>(lines: &'a [CombatLine], weapon: &str, with_shield: bool) -> &'a CombatLine {
     lines
         .iter()
-        .find(|l| l.weapon.as_str() == weapon && !l.shields.is_empty() == with_shield)
+        .find(|l| l.weapon.as_str() == weapon && !l.shields.is_empty() == with_shield && !l.mounted)
         .unwrap_or_else(|| panic!("no {weapon} line (with_shield={with_shield}) in {lines:#?}"))
+}
+
+/// The mounted twin (K3) of the line [`line`] would find: same predicate, plus
+/// `mounted: true`.
+fn mounted_line<'a>(lines: &'a [CombatLine], weapon: &str, with_shield: bool) -> &'a CombatLine {
+    lines
+        .iter()
+        .find(|l| l.weapon.as_str() == weapon && !l.shields.is_empty() == with_shield && l.mounted)
+        .unwrap_or_else(|| {
+            panic!("no mounted {weapon} line (with_shield={with_shield}) in {lines:#?}")
+        })
 }
 
 /// Init / Attack / Defense / Damage, in the order the book's Combat rows print.
@@ -289,26 +303,26 @@ fn the_bjornaer_matches_the_book() {
         (1, None, 4, None)
     );
 
-    // DISAGREEMENT MAG1 (docs/book-template-conformance.md), the same shape as
-    // the Berserker's B2. The book prints MuAn +19, PeAn +12, ReAn +10 and the
-    // Corpus mirror of each (ArMDE:1643-1650) — Technique + Form + Stamina, with
-    // nothing else. The engine adds 3 to every one of them, because
-    // `virtue.ways_of_the_land` carries its +3 as an unconditional
-    // `casting_total_mod` with `scope: all`, while the rules grant it only on
-    // "rolls ... that directly involve that area and its inhabitants"
-    // (ArMDE:5233). No Magical Focus, so no focused figure.
+    // F2 (design-f0-book-template-engine.md § 1a/§ 2c, D61) — RED CHECKPOINT:
+    // DISAGREEMENT MAG1 is resolved by deleting Ways of the Land's
+    // `casting_total_mod` and reclassifying it to `uncomputed_rule` — no
+    // template ever prints the boosted figure. The book prints MuAn +19,
+    // PeAn +12, ReAn +10 and the Corpus mirror of each (ArMDE:1643-1650) —
+    // Technique + Form + Stamina, with nothing else. No Magical Focus, so no
+    // focused figure. `rules/core/virtues_flaws.json` has not been edited yet,
+    // so the engine still adds the unconditional +3 until it is.
     let casting = |spell: &str| spell_casting(&bjornaer, &ruleset, spell);
     assert_eq!(
         casting("spell.transformation_of_the_ravenous_beast_to_the_torpid_toad"),
-        (22, None)
+        (19, None)
     );
-    assert_eq!(casting("spell.agony_of_the_beast"), (15, None));
-    assert_eq!(casting("spell.circle_of_beast_warding"), (13, None));
-    assert_eq!(casting("spell.vipers_gaze"), (13, None));
-    assert_eq!(casting("spell.eyes_of_the_cat"), (22, None));
-    assert_eq!(casting("spell.gift_of_the_bears_fortitude"), (22, None));
-    assert_eq!(casting("spell.the_wound_that_weeps"), (15, None));
-    assert_eq!(casting("spell.lifting_the_dangling_puppet"), (13, None));
+    assert_eq!(casting("spell.agony_of_the_beast"), (12, None));
+    assert_eq!(casting("spell.circle_of_beast_warding"), (10, None));
+    assert_eq!(casting("spell.vipers_gaze"), (10, None));
+    assert_eq!(casting("spell.eyes_of_the_cat"), (19, None));
+    assert_eq!(casting("spell.gift_of_the_bears_fortitude"), (19, None));
+    assert_eq!(casting("spell.the_wound_that_weeps"), (12, None));
+    assert_eq!(casting("spell.lifting_the_dangling_puppet"), (10, None));
 }
 
 // --- Bonisagus (ArMDE:1654-1700 `#### Bonisagus`) ---------------------------
@@ -807,24 +821,26 @@ fn the_mercere_matches_the_book() {
         (1, None, 1, None)
     );
 
-    // DISAGREEMENT MAG1 again (docs/book-template-conformance.md), with three
-    // conditional modifiers instead of one. The book's Cr 9 + Au 15 + Sta +2 = 26
-    // base, 35 within the Major Magical Focus (Weather) — ArMDE:1992-1996 prints
-    // +26 for the two non-weather spells and +35 for the two weather ones. The
-    // engine returns 29 / 38, because Cyclic Magic (Positive) +3, Cyclic Magic
-    // (Negative) -3 and Special Circumstances +3 are all encoded as
-    // `casting_total_mod` with `scope: all`, so all three apply at once — by day
-    // and by night, in a storm and out of one — for a net +3.
+    // F2 (design-f0-book-template-engine.md § 1a/§ 2c, D61) — RED CHECKPOINT:
+    // DISAGREEMENT MAG1 is resolved by deleting the Casting-Total clause from
+    // all three conditional carriers (Cyclic Magic Positive/Negative, Special
+    // Circumstances) and keeping each entry's other, untouched effect (Lab
+    // Total / aura_bonus — X7a's separate problem). The book's Cr 9 + Au 15 +
+    // Sta +2 = 26 base, 35 within the Major Magical Focus (Weather) —
+    // ArMDE:1992-1996 prints +26 for the two non-weather spells and +35 for
+    // the two weather ones. `rules/core/virtues_flaws.json` has not been
+    // edited yet, so the engine still returns 29 / 38 (the net +3 from all
+    // three unconditional casting_total_mod effects) until it is.
     let casting = |spell: &str| spell_casting(&mercere, &ruleset, spell);
-    assert_eq!(casting("spell.jupiters_resounding_blow"), (29, Some(38)));
-    assert_eq!(casting("spell.clouds_of_rain_and_thunder"), (29, Some(38)));
-    assert_eq!(casting("spell.clouds_of_summer_snow"), (29, Some(38)));
-    assert_eq!(casting("spell.pull_of_the_skybound_winds"), (29, Some(38)));
+    assert_eq!(casting("spell.jupiters_resounding_blow"), (26, Some(35)));
+    assert_eq!(casting("spell.clouds_of_rain_and_thunder"), (26, Some(35)));
+    assert_eq!(casting("spell.clouds_of_summer_snow"), (26, Some(35)));
+    assert_eq!(casting("spell.pull_of_the_skybound_winds"), (26, Some(35)));
     // DISAGREEMENT MAG7: the book prints +27 here (ArMDE:1996) where every other
     // Creo Auram row on the same statblock reads +26 or +35, and nothing in the
     // Arts line makes 27 reachable — the Rego requisite of Cr(Re)Au adds nothing
     // to a Casting Total (ArMDE:9089).
-    assert_eq!(casting("spell.wings_of_the_soaring_wind"), (29, Some(38)));
+    assert_eq!(casting("spell.wings_of_the_soaring_wind"), (26, Some(35)));
 }
 
 // --- Merinita (ArMDE:2000-2048 `#### Merinita`) -----------------------------
@@ -1267,33 +1283,63 @@ fn the_knight_matches_the_book() {
         stats(line(&lines, "weapon.fist", false)),
         (0, Some(5), 5, Some(1))
     );
-    // DISAGREEMENT K3 (docs/book-template-conformance.md): the book prints five
-    // Combat rows, and once F1's K5 fix lands the engine emits five of the
-    // on-foot set too — the two *mounted* rows (ArMDE:1468, :1470) still have no
-    // counterpart at all. "A mounted character adds his Ride score, to a maximum
-    // of +3, to his Attack and Defense Totals" (ArMDE:16839), and the book's
-    // mounted lines are exactly the on-foot ones plus +3/+3 at Ride 5. Nothing in
-    // the save format records being mounted yet (K3, deferred to F2).
-    //
-    // K5 (RED at F1 phase 1 — design-f0-book-template-engine.md § 8): the
-    // **great sword** row (ArMDE:1470-1471) needs the fixture's great sword at
-    // `loadout: "carried"` (F1 phase 2 data edit, not yet made) AND
-    // `combat_totals`'s row filter widened to `!= Stowed` (F1 phase 2 code
-    // change, not yet made) before this assertion goes green. `weapon.sword_great`
-    // is `two_handed` (`rules/core/equipment.json:31`), so it contributes exactly
-    // ONE new bare line, never a shield-paired second one.
-    let emitted: Vec<(&str, bool)> = lines
+    // Great sword (on foot): Init +2, Atk +13, Def +10, Dam +10 (ArMDE:1471).
+    // Already exact today — F1's K5 fix (the `loadout: "carried"` row) needs no
+    // F2 change to be right; this is a control assertion, not a new red.
+    assert_eq!(
+        stats(line(&lines, "weapon.sword_great", false)),
+        (2, Some(13), 10, Some(10))
+    );
+
+    // K3 (RED CHECKPOINT — design-f0-book-template-engine.md § 2b, D66): the
+    // book prints TWO mounted rows (ArMDE:1468, :1470), each the on-foot figure
+    // plus min(Ride, 3) = +3 (Ride 5, ArMDE:1480) on Attack and Defense only.
+    // Long sword and heater shield (mounted): Init +2, Atk +17, Def +17, Dam +7
+    // (ArMDE:1468).
+    assert_eq!(
+        stats(mounted_line(&lines, "weapon.sword_long", true)),
+        (2, Some(17), 17, Some(7))
+    );
+    // Great sword (mounted): Init +2, Atk +16, Def +13, Dam +10 (ArMDE:1470).
+    assert_eq!(
+        stats(mounted_line(&lines, "weapon.sword_great", false)),
+        (2, Some(16), 13, Some(10))
+    );
+    // Fist gets NO mounted twin (D66: `weapon.fist` is a body attack) — the
+    // book's own template prints no mounted Fist row (ArMDE:1472).
+    assert!(
+        !lines
+            .iter()
+            .any(|l| l.weapon.as_str() == "weapon.fist" && l.mounted),
+        "Fist must never gain a mounted twin"
+    );
+
+    // The book prints five Combat rows; the engine's own model additionally
+    // computes a "dropped shield" bare line the book does not print (K5), so
+    // five-becomes-eight once K3's mounted twins land: Fist stays singular (2
+    // lines); the great sword's bare line and the long sword's with-shield/bare
+    // pair each gain a mounted twin, appended after the on-foot set — per
+    // design-f0-book-template-engine.md § 2b's sketch, the twin pass filters
+    // and maps over the already-built on-foot lines and extends the vector, so
+    // every twin lands after all five on-foot lines, in the same relative
+    // order as the line it doubles. Confirms the fixture's `mounted: true` is
+    // required (§ 9 of the design note): with it absent, `combat_totals` still
+    // returns the pre-F2 five and every element below reads `mounted: false`.
+    let emitted: Vec<(&str, bool, bool)> = lines
         .iter()
-        .map(|l| (l.weapon.as_str(), !l.shields.is_empty()))
+        .map(|l| (l.weapon.as_str(), !l.shields.is_empty(), l.mounted))
         .collect();
     assert_eq!(
         emitted,
         vec![
-            ("weapon.fist", true),
-            ("weapon.fist", false),
-            ("weapon.sword_great", false),
-            ("weapon.sword_long", true),
-            ("weapon.sword_long", false),
+            ("weapon.fist", true, false),
+            ("weapon.fist", false, false),
+            ("weapon.sword_great", false, false),
+            ("weapon.sword_long", true, false),
+            ("weapon.sword_long", false, false),
+            ("weapon.sword_great", false, true),
+            ("weapon.sword_long", true, true),
+            ("weapon.sword_long", false, true),
         ]
     );
 }
@@ -1533,13 +1579,14 @@ fn the_berserker_matches_the_book() {
         codes(&["too_many_personality_flaws"])
     );
 
-    // DISAGREEMENT B2 (docs/book-template-conformance.md). The book prints
-    // Soak: +9 (Stamina +2, full metal scale armor +7) — ArMDE:1215. The engine
-    // returns 11, because `virtue.berserk` carries its Soak/Attack/Defense
-    // modifiers as unconditional `in_play_effect`s, while the rules apply them
-    // only "while berserk" (ArMDE:3502). The book is right; the rules data is
-    // missing the condition.
-    assert_eq!(soak(&berserker, &ruleset).total, 11);
+    // F2 (design-f0-book-template-engine.md § 1a/§ 2c, D61/D15) — RED
+    // CHECKPOINT: DISAGREEMENT B2 is resolved by deleting Berserk's
+    // Soak/Attack/Defense effects and reclassifying it to `uncomputed_rule`
+    // (no template anywhere shows the "while berserk" figure). The book
+    // prints Soak: +9 (Stamina +2, full metal scale armor +7) — ArMDE:1215.
+    // `rules/core/virtues_flaws.json` has not been edited yet, so the engine
+    // still returns 11 (the old unconditional +2 Soak) until it is.
+    assert_eq!(soak(&berserker, &ruleset).total, 9);
 
     let fatigue: Vec<i32> = fatigue_levels(&berserker, &ruleset)
         .iter()
@@ -1556,20 +1603,19 @@ fn the_berserker_matches_the_book() {
     let enc = encumbrance(&berserker, &ruleset);
     assert_eq!((enc.burden, enc.total), (3, 0));
 
-    // DISAGREEMENT B2 again, on both weapon lines. The book prints
+    // F2 — RED CHECKPOINT: same fix, on both weapon lines. The book prints
     // Pole Axe: Init +2, Attack +13, Defense +7, Damage +14 (ArMDE:1212) and
     // Kick: Init +0, Attack +6, Defense +4, Damage +6 (ArMDE:1213) — the
-    // *not*-berserk figures. The engine adds Berserk's +2 Attack / -2 Defense to
-    // every line, so each Attack is 2 high and each Defense 2 low. Initiative and
-    // Damage, which Berserk does not touch, match the book exactly.
+    // figures once Berserk's unconditional +2 Attack / -2 Defense is deleted.
+    // Initiative and Damage, which Berserk never touched, already match.
     let lines = combat_totals(&berserker, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.pole_axe", false)),
-        (2, Some(15), 5, Some(14))
+        (2, Some(13), 7, Some(14))
     );
     assert_eq!(
         stats(line(&lines, "weapon.kick", false)),
-        (0, Some(8), 2, Some(6))
+        (0, Some(6), 4, Some(6))
     );
 }
 

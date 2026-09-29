@@ -5240,6 +5240,14 @@ pub struct Entity {
     /// does not move. Source: `ArMDE:3899`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub focus_powers: Vec<FocusPower>,
+    /// Whether the character is currently fighting mounted (K3): `combat_totals`
+    /// adds a second, mounted [`crate::derived::CombatLine`] per line whose weapon
+    /// is not a body attack, adding `min(Ride, 3)` to Attack and Defense. Additive
+    /// and serde-defaulted: absent/false means every existing save's behavior is
+    /// unchanged (no mounted lines), so no [`SCHEMA_VERSION`] bump is needed for
+    /// this field (design-f0-book-template-engine.md § 6). Source: ArMDE:16837-16839.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub mounted: bool,
 }
 
 /// The engine's own fallback for [`Entity::saga_year`].
@@ -5326,6 +5334,7 @@ impl Entity {
             might: None,
             powers: Vec::new(),
             focus_powers: Vec::new(),
+            mounted: false,
         }
     }
 
@@ -6623,6 +6632,7 @@ mod tests {
             might: None,
             powers: Vec::new(),
             focus_powers: Vec::new(),
+            mounted: false,
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
@@ -6917,6 +6927,7 @@ mod tests {
             might: None,
             powers: Vec::new(),
             focus_powers: Vec::new(),
+            mounted: false,
         };
 
         // Serialization is canonical only after normalize(); derive-based

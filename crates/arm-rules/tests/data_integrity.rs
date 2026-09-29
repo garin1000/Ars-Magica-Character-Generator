@@ -11040,3 +11040,37 @@ fn no_bound_or_link_declaring_item_is_ever_granted() {
         }
     }
 }
+
+// --- F2/K3: `Weapon::body_attack` (design-f0-book-template-engine.md § 2b/§ 5,
+// D66) — a structural invariant on named items (CLAUDE.md: "never exact
+// catalogue totals"), not a catalogue-size assertion. RED CHECKPOINT: the
+// shipped `rules/core/equipment.json` has not been edited yet (phase 2), so
+// every weapon's `body_attack` still defaults to false and this test fails
+// until the three body-attack rows gain the flag.
+
+/// Exactly `weapon.dodge`/`weapon.fist`/`weapon.kick` carry `body_attack ==
+/// true`; no other shipped weapon does. The engine reads this field alone to
+/// decide which lines get no mounted twin (D66) — never `min_strength` or any
+/// other unrelated property (the mistake D66 explicitly rejects).
+#[test]
+fn body_attack_is_set_on_exactly_the_three_body_attacks() {
+    let rs = load_ruleset_with_equipment();
+    const EXPECTED: &[&str] = &["weapon.dodge", "weapon.fist", "weapon.kick"];
+
+    for id in EXPECTED {
+        let weapon = rs
+            .weapon(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship"));
+        assert!(weapon.body_attack, "{id} must carry body_attack: true");
+    }
+
+    let unexpected: Vec<&str> = rs
+        .weapons()
+        .filter(|w| w.body_attack && !EXPECTED.contains(&w.id.as_str()))
+        .map(|w| w.id.as_str())
+        .collect();
+    assert!(
+        unexpected.is_empty(),
+        "only the three body attacks may carry body_attack: true, got also {unexpected:?}"
+    );
+}

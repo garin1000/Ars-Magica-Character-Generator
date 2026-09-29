@@ -149,6 +149,7 @@
   ],
   "name": "The Knight",
   "saga_year": 1220,
+  "mounted": true,
   "equipment": [
     {
       "item": "armor.chain_mail_full",

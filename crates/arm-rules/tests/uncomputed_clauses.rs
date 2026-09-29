@@ -1819,6 +1819,17 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
 /// — the displayed text already states the clause, just not in wording this
 /// screen's token vocabulary recognizes (a German synonym, an unlisted
 /// quantifier), a screen gap rather than a content gap.
+///
+/// F2 (design-f0-book-template-engine.md § 2c/Revision 3 MAJOR #3, D61):
+/// `virtue.cyclic_magic_positive` and `flaw.cyclic_magic_negative` used to
+/// carry a row here reading "both stated bonuses... are computed via two
+/// effects" — true only while both `casting_total_mod` and `lab_total_mod`
+/// were computed. Deleting the Casting clause's effect makes that claim
+/// false, and this guard matches by id only, so a stale row would go on
+/// silencing the screen forever. Removed, not rewritten: the added
+/// `description` (both locales) alone is enough to satisfy
+/// [`no_swept_entry_drops_an_uncomputed_mechanical_clause`] for the
+/// now-uncomputed Casting clause, so no exemption is needed at all.
 const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     (
         "flaw.black_sheep",
@@ -1832,11 +1843,6 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
         "operative clause (\"may take Latin\") is computed via ability_authorization \
          (over-permissively — the dead_language/Latin binding is D14's already-tracked \
          defect, not a new one here); the rest of the passage is flavor.",
-    ),
-    (
-        "flaw.cyclic_magic_negative",
-        "both stated totals (Casting Scores, Lab Totals) are computed via two effects; \"the \
-         length of time... must be equal\" is troupe-level setup guidance, not a chargen fact.",
     ),
     (
         "flaw.deficient_technique",
@@ -1972,11 +1978,6 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
         "virtue.curse_throwing",
         "single clause (confers the Curse-Throwing Ability at 1), fully computed via \
          ability_score_grant.",
-    ),
-    (
-        "virtue.cyclic_magic_positive",
-        "both stated bonuses (Casting Scores, Lab Totals when the cycle covers the whole \
-         season) are computed via two effects, matching flaw.cyclic_magic_negative's reading.",
     ),
     (
         "virtue.demonic_might",

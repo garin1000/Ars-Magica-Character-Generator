@@ -115,6 +115,16 @@ pub struct Weapon {
     /// The combat Ability this weapon uses (e.g. `ability.single_weapon`,
     /// `ability.brawl`, `ability.bows`).
     pub ability: Id,
+    /// True for an unarmed strike (Dodge, Fist, Kick) with no weapon in hand.
+    /// Its ONLY consumer is K3's mounted-twin gate in `combat_totals` (D66) — it
+    /// must never be read as a proxy for anything else (`min_strength` already
+    /// exists for "can this be wielded at all," a different question). Default
+    /// false; only the three body attacks set it. This reproduces the Knight's
+    /// own printed template (five rows, no mounted Fist row,
+    /// ArMDE:1467-1472), not a rule the Mounted Combat passage itself states —
+    /// see the `RULES.md` note under Mounted Combat (Norbert's D66 ruling).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub body_attack: bool,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -234,6 +244,7 @@ mod tests {
             range: None,
             two_handed: false,
             ability: Id::new("ability.brawl"),
+            body_attack: true,
             source: None,
         };
         let out = serde_json::to_string(&w).unwrap();
@@ -242,6 +253,35 @@ mod tests {
         assert!(!out.contains("min_strength"), "n/a strength skipped: {out}");
         assert!(!out.contains("range"), "melee range skipped: {out}");
         assert_eq!(serde_json::from_str::<Weapon>(&out).unwrap(), w);
+    }
+
+    /// `body_attack` defaults to false and is skipped when false (D66); the
+    /// three body attacks (Dodge/Fist/Kick) are the only shipped entries that
+    /// set it true — see
+    /// `data_integrity.rs::body_attack_is_set_on_exactly_the_three_body_attacks`
+    /// for the shipped-catalogue integrity check.
+    #[test]
+    fn body_attack_defaults_false_and_skips_when_false() {
+        let json = r#"{
+          "id": "weapon.sword_long", "kind": "melee", "init_mod": 2, "attack_mod": 4,
+          "defense_mod": 1, "damage_mod": 6, "min_strength": 0, "load": 1,
+          "ability": "ability.single_weapon"
+        }"#;
+        let w: Weapon = serde_json::from_str(json).unwrap();
+        assert!(!w.body_attack);
+        let out = serde_json::to_string(&w).unwrap();
+        assert!(!out.contains("body_attack"), "false skipped: {out}");
+
+        let dodge = Weapon {
+            body_attack: true,
+            ..w
+        };
+        let out_dodge = serde_json::to_string(&dodge).unwrap();
+        assert!(
+            out_dodge.contains("body_attack"),
+            "true serialized: {out_dodge}"
+        );
+        assert_eq!(serde_json::from_str::<Weapon>(&out_dodge).unwrap(), dodge);
     }
 
     /// `two_handed` defaults to false and is skipped when false; a two-handed

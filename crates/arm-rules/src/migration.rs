@@ -2448,4 +2448,71 @@ mod tests {
 
         assert_eq!(first_bytes, second_bytes);
     }
+
+    // --- F2/K3: `Entity.mounted` (design-f0-book-template-engine.md § 6) —
+    // purely additive, `serde(default)` + `skip_serializing_if`, no fold, no
+    // SCHEMA_VERSION bump. These are control cases (already green as soon as
+    // the stub field carries the right serde attributes): unlike F1's
+    // `loadout` rename, nothing here needs translating from a legacy shape.
+
+    /// A v20 save written before `mounted` existed lacks the key entirely; it
+    /// must default to `false`, and the round trip must not introduce the key
+    /// (`skip_serializing_if` on the false default).
+    #[test]
+    fn absent_mounted_defaults_to_false_and_round_trips_without_the_key() {
+        let old = r#"{
+          "schema_version": 20,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "saga_year": 1220
+        }"#;
+        let loaded = load_entity_migrating(
+            old,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
+        assert!(!loaded.entity.mounted);
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+
+        let json = serde_json::to_string(&loaded.entity).unwrap();
+        assert!(!json.contains("mounted"), "got {json}");
+    }
+
+    /// `mounted: true` survives a load/save cycle and the key is written back.
+    #[test]
+    fn mounted_true_round_trips_and_serializes() {
+        let current = r#"{
+          "schema_version": 20,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "saga_year": 1220,
+          "mounted": true
+        }"#;
+        let loaded = load_entity_migrating(
+            current,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
+        assert!(loaded.entity.mounted);
+
+        let json = serde_json::to_string(&loaded.entity).unwrap();
+        assert!(json.contains(r#""mounted":true"#), "got {json}");
+
+        let reloaded = load_entity_migrating(
+            &json,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
+        assert!(reloaded.entity.mounted);
+    }
 }

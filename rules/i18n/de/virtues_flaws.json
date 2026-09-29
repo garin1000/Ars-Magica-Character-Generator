@@ -298,7 +298,8 @@
   },
   "flaw.cyclic_magic_negative": {
     "name": "Zyklische Magie (negativ)",
-    "summary": "Wie bei der hermetischen Tugend ist deine Magie auf einen Naturzyklus abgestimmt und zu bestimmten Zeiten weniger potent."
+    "summary": "Wie bei der hermetischen Tugend ist deine Magie auf einen Naturzyklus abgestimmt und zu bestimmten Zeiten weniger potent.",
+    "description": "Wie bei der hermetischen Tugend ist deine Magie auf einen Naturzyklus abgestimmt und zu bestimmten Zeiten weniger potent. Du hast eine -3-Strafe auf alle Laborsummen und Zauberwerte während dieser Zeit. Die Strafe gilt für Laborsummen, auch wenn die negative Phase nicht das gesamte Quartal umfasst. Der Zeitraum, in dem du im Nachteil bist, muss gleich lang sein wie der Zeitraum ohne Strafe."
   },
   "flaw.dark_secret": {
     "name": "Dunkles Geheimnis",
@@ -1589,7 +1590,8 @@
   },
   "virtue.berserk": {
     "name": "Berserker",
-    "summary": "Du bist in der Lage, in Kampfsituationen oder bei frustrierenden Umständen in einen blinden Wutanfall zu verfallen."
+    "summary": "Du bist in der Lage, in Kampfsituationen oder bei frustrierenden Umständen in einen blinden Wutanfall zu verfallen.",
+    "description": "Du bist in der Lage, in Kampfsituationen oder bei frustrierenden Umständen in einen blinden Wutanfall zu verfallen. Du erhältst automatisch die Persönlichkeitseigenschaft Wütend +2 (oder mehr, nach deiner Wahl). Jedes Mal, wenn du eine Wunde erleidest oder einem Feind eine zufügst, würfle einen Stresswürfel und addiere deinen Wütend-Wert. Ein Ergebnis von 9 oder mehr bedeutet, dass du in Raserei verfällst. Der Spielleiter kann auch dann einen Wurf verlangen, wenn du stark frustriert bist. Du kannst absichtlich versuchen, in Raserei zu verfallen. In diesem Fall brauchst du nur 6 oder mehr, wenn du eine Wunde erhältst oder einem Feind eine zufügst, oder 9 oder mehr, wenn du weder verwundet wurdest noch eine Wunde verursacht hast. Während du rasend bist, erhältst du +2 auf Angriffs- und Absorptionswerte, erleidest jedoch einen -2-Abzug auf die Verteidigung. Während du rasend bist, kannst du dich nicht zurückziehen, zögerst nicht anzugreifen und gewährst keine Gnade. Wenn du noch rasend bist, aber keine Feinde mehr vorhanden sind, greifst du deine Freunde an. Du kannst einmal pro Runde würfeln, um dich zu beruhigen, falls du es wünschst; dies erfordert einen Stresswurf + Wahrnehmung – Wütend gegen einen Schwierigkeitsgrad von 6. Du kannst Kampffertigkeiten bei der Charaktererschaffung erlernen."
   },
   "virtue.blood_of_the_nephilim": {
     "name": "Blut der Nephilim",
@@ -1700,7 +1702,8 @@
   },
   "virtue.cyclic_magic_positive": {
     "name": "Zyklische Magie (positiv)",
-    "summary": "Deine Magie ist auf einen Naturzyklus abgestimmt (z."
+    "summary": "Deine Magie ist auf einen Naturzyklus abgestimmt (z. B. solar, lunar oder saisonal) und ist daher zu bestimmten Zeiten besonders potent.",
+    "description": "Deine Magie ist auf einen Naturzyklus abgestimmt (z. B. solar, lunar oder saisonal) und ist daher zu bestimmten Zeiten besonders potent. Zu diesen Zeiten erhältst du einen +3-Bonus auf alle Zauberwerte. Der Bonus gilt auch für Laborsummen, wenn der positive Teil des Zyklus die gesamte Saison abdeckt. Der Zyklus deiner Magie muss regelmäßig und vom Spielleiter genehmigt sein. Außerdem muss der Zeitraum, in dem der Bonus gilt, gleich lang sein wie der Zeitraum, in dem er nicht gilt."
   },
   "virtue.death_prophecy": {
     "name": "Todesprophezeiung",
@@ -2588,7 +2591,8 @@
   },
   "virtue.special_circumstances": {
     "name": "Besondere Umstände",
-    "summary": "Du kannst in bestimmten ungewöhnlichen Situationen besser zaubern (etwa während eines Sturms oder während du das Ziel berührst) und erhältst einen Bonus von +3 auf deinen Zauberwert und deine Magieresistenz."
+    "summary": "Du kannst in bestimmten ungewöhnlichen Situationen besser zaubern (etwa während eines Sturms oder während du das Ziel berührst) und erhältst einen Bonus von +3 auf deinen Zauberwert und deine Magieresistenz.",
+    "description": "Du kannst in bestimmten ungewöhnlichen Situationen besser zaubern (etwa während eines Sturms oder während du das Ziel berührst) und erhältst einen Bonus von +3 auf deinen Zauberwert und deine Magieresistenz. (Ein Charakter erhält nur dann einen Bonus auf die Magieresistenz, wenn er bereits aus einer anderen Quelle über Magieresistenz verfügt.) Du kannst diese Tugend mehrfach wählen, erhältst jedoch nur einmal +3, selbst wenn mehrere der festgelegten Umstände gleichzeitig zutreffen."
   },
   "virtue.spell_improvisation": {
     "name": "Zauberimprovisation",

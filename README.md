@@ -232,7 +232,10 @@ focus.
   equipment catalogue (English + German), marking each Stowed, Carried, or
   Wielded — a Carried weapon still shows up in the computed Combat rows but
   costs no Encumbrance, matching how the rulebook's own worked characters
-  carry a spare weapon.
+  carry a spare weapon. A "Mounted" toggle adds a second Combat line per
+  weapon (min(Ride, 3) to Attack/Defense; body attacks like Fist get none),
+  reproducing the printed statblocks that show mounted and on-foot figures
+  side by side.
 
 - **Catalogues.** The full Core Rules Ability catalogue and the full 15-Art
   catalogue (English + German) ship with localized descriptions; abilities also
