@@ -299,6 +299,16 @@ pub struct XpAllocation {
 struct Spend {
     cost: u32,
     kind: SpendKind,
+    /// D43: whether the GENERAL pool may fund this spend at all — true for
+    /// every Art/Mastery spend and for an Ability spend that is ungated,
+    /// covered by the hermetically-trained exemption, or EXPLICITLY
+    /// authorized (never merely pool-implied). `false` means only a
+    /// restricted pool naming this spend may fund it — demand beyond that
+    /// pool's capacity surfaces as the ordinary XP shortfall
+    /// (`not_enough_xp`), never `ability_category_requires_virtue` (which
+    /// `validate_ability_authorization` still grants on the pool-implied set
+    /// alone, so OWNING the Ability stays legal either way).
+    general_eligible: bool,
 }
 
 /// What a [`Spend`] buys — decides which restricted pools may fund it (the general
@@ -593,16 +603,67 @@ pub(crate) fn resolve_instance(
     }
 }
 
-/// The Abilities and categories the character's selections permit.
+/// [`ability_authorizations`]'s split result (D43,
+/// `docs/vf-audit/decisions.md`). **Owning** a gated Ability is legal under
+/// EITHER half — [`ability_is_authorized`] is called once per half and OR'd,
+/// which is what [`crate::validation::authorization::validate_ability_authorization`]'s
+/// existence check does, unchanged from before D43. **Funding** a spend from
+/// GENERAL xp requires the EXPLICIT half specifically
+/// ([`build_spends`]/[`magus_later_life_pool`]): a
+/// [`Effect::RestrictedAbilityXp`]/[`Effect::ScaledRestrictedAbilityXp`]/
+/// [`Effect::ReplacesLifeStageXp`] pool earmarks part of the budget for what
+/// it funds and implies nothing about spending beyond it — "A `Restricted­Ability­Xp`
+/// pool already implies permission for what it funds... since the grant would
+/// otherwise be unspendable" is right about *ownership* and wrong about
+/// *funding*, which is exactly D43's correction (`virtue.privileged_upbringing`,
+/// ArMDE:4806-4808: "You may not... buy Academic or Martial Abilities with your
+/// normal pool of experience points unless you have another Virtue or Flaw
+/// permitting that").
+pub(crate) struct AbilityAuthorizations {
+    /// An [`Effect::AbilityAuthorization`], a free grant
+    /// ([`Effect::AbilityScoreGrant`]/[`Effect::AbilityScoreGrantParam`]), or an
+    /// [`Effect::AbilityBonusGated`] target — permission that holds regardless
+    /// of which XP funds the spend.
+    pub(crate) explicit_abilities: BTreeSet<AuthorizedAbility>,
+    /// See [`Self::explicit_abilities`].
+    pub(crate) explicit_categories: BTreeSet<AbilityCategory>,
+    /// A `RestrictedAbilityXp`/`ScaledRestrictedAbilityXp`/`ReplacesLifeStageXp`
+    /// pool — permission that holds only for spending that pool's own points.
+    pub(crate) pool_abilities: BTreeSet<AuthorizedAbility>,
+    /// See [`Self::pool_abilities`].
+    pub(crate) pool_categories: BTreeSet<AbilityCategory>,
+}
+
+/// The single predicate D43 asks not to be forked: whether `ability` (in
+/// `category`, with `parameter`) is authorized for OWNERSHIP under the given
+/// pair of sets. Called twice — once per [`AbilityAuthorizations`] half, OR'd
+/// — by the existence check; called once, against the EXPLICIT half alone, by
+/// the general-XP-funding check (`build_spends`).
+pub(crate) fn ability_is_authorized(
+    category: AbilityCategory,
+    ability: &Id,
+    parameter: Option<&AbilityParameterValue>,
+    authorized_categories: &BTreeSet<AbilityCategory>,
+    authorized_abilities: &BTreeSet<AuthorizedAbility>,
+) -> bool {
+    authorized_categories.contains(&category)
+        || authorizes_instance(authorized_abilities, ability, parameter)
+}
+
+/// The Abilities and categories the character's selections permit, split into
+/// [`AbilityAuthorizations::explicit_abilities`]/`explicit_categories` and
+/// `pool_abilities`/`pool_categories` (D43).
 ///
-/// A Virtue grants access three ways, and all three count: an explicit
-/// [`Effect::AbilityAuthorization`], any [`Effect::RestrictedAbilityXp`] pool —
-/// experience earmarked for a category is evidence the category is permitted, which
-/// is what makes Warrior (Martial XP) and Arcane Lore (Arcane XP) work without
-/// further data — or an [`Effect::AbilityBonusGated`] target: a competence bonus
-/// tied to a specific Ability instance is itself permission to own it, since the
-/// bonus could never apply to an Ability the character may not buy (Student of
-/// (Realm)'s "even if you cannot learn other Arcane Abilities", ArMDE:5054).
+/// A Virtue grants EXPLICIT access two ways: an
+/// [`Effect::AbilityAuthorization`], or an [`Effect::AbilityBonusGated`]
+/// target — a competence bonus tied to a specific Ability instance is itself
+/// permission to own it, since the bonus could never apply to an Ability the
+/// character may not buy (Student of (Realm)'s "even if you cannot learn other
+/// Arcane Abilities", ArMDE:5054). A [`Effect::RestrictedAbilityXp`] pool
+/// grants POOL-IMPLIED access only — experience earmarked for a category is
+/// evidence the category is permitted UP TO WHAT THE POOL FUNDS, which is what
+/// makes Warrior (Martial XP) and Arcane Lore (Arcane XP) work without further
+/// data, but is not itself permission to spend beyond it (D43).
 ///
 /// [`Effect::AbilityAuthorization`] and [`Effect::AbilityBonusGated`] entries may
 /// be gated on the OWNING selection's own parameter (D14/W2): an entry whose
@@ -615,14 +676,13 @@ pub(crate) fn resolve_instance(
 /// ([`validate_ability_authorization`](crate::validation) calls
 /// [`selections_for_effects`]), so `effective` calling back into `validation` would
 /// invert it. The two readers are that validator, which gates *owning* a gated
-/// Ability, and [`xp_allocation`], which decides which of a magus's blocks may
-/// *fund* one.
-pub(crate) fn ability_authorizations(
-    entity: &Entity,
-    ruleset: &Ruleset,
-) -> (BTreeSet<AuthorizedAbility>, BTreeSet<AbilityCategory>) {
-    let mut abilities = BTreeSet::new();
-    let mut categories = BTreeSet::new();
+/// Ability (reading both halves), and [`xp_allocation`], which decides which of
+/// a magus's blocks may *fund* one (reading the explicit half only).
+pub(crate) fn ability_authorizations(entity: &Entity, ruleset: &Ruleset) -> AbilityAuthorizations {
+    let mut explicit_abilities = BTreeSet::new();
+    let mut explicit_categories = BTreeSet::new();
+    let mut pool_abilities = BTreeSet::new();
+    let mut pool_categories = BTreeSet::new();
     for selection in selections_for_effects(entity, ruleset).iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
@@ -630,29 +690,30 @@ pub(crate) fn ability_authorizations(
         for effect in &item.effects {
             match effect {
                 // Experience earmarked for a category or Ability is itself
-                // permission to learn it — otherwise the grant could never be
-                // spent. `abilities`/`categories` are a fixed, unscoped list
-                // (never gated, never instance-scoped): every named entry
-                // always counts. `instances` (D48/C4) IS instance-scoped, so
-                // it is resolved through the same gate/instance fold as every
-                // other `AbilityRef` list — an earmark for one specific
-                // instance (Marshal's Profession: Marshal) authorizes only
-                // that instance, not the whole Ability id.
+                // permission to spend THAT pool's own points on it — D43:
+                // pool-implied, not explicit. `abilities`/`categories` are a
+                // fixed, unscoped list (never gated, never instance-scoped):
+                // every named entry always counts. `instances` (D48/C4) IS
+                // instance-scoped, so it is resolved through the same
+                // gate/instance fold as every other `AbilityRef` list — an
+                // earmark for one specific instance (Marshal's Profession:
+                // Marshal) authorizes only that instance, not the whole
+                // Ability id.
                 Effect::RestrictedAbilityXp {
                     abilities: ids,
                     categories: cats,
                     instances: refs,
                     ..
                 } => {
-                    abilities.extend(ids.iter().map(|ability| AuthorizedAbility {
+                    pool_abilities.extend(ids.iter().map(|ability| AuthorizedAbility {
                         ability: ability.clone(),
                         instance: None,
                         requires_catalogued: false,
                         bound_source: None,
                         ambiguous: false,
                     }));
-                    categories.extend(cats.iter().copied());
-                    abilities.extend(
+                    pool_categories.extend(cats.iter().copied());
+                    pool_abilities.extend(
                         resolve_ability_refs(refs, entity, ruleset, selection)
                             .into_iter()
                             .map(|r| AuthorizedAbility {
@@ -664,17 +725,17 @@ pub(crate) fn ability_authorizations(
                             }),
                     );
                 }
-                // D35's parameter-scaled sibling: an earmark is itself
-                // permission, exactly like `RestrictedAbilityXp` above — but
-                // `abilities` here is `Vec<AbilityRef>`, so each entry is
-                // resolved (and, in principle, gated) against THIS selection
-                // the same way `AbilityAuthorization`'s own list is below.
+                // D35's parameter-scaled sibling: pool-implied, exactly like
+                // `RestrictedAbilityXp` above — but `abilities` here is
+                // `Vec<AbilityRef>`, so each entry is resolved (and, in
+                // principle, gated) against THIS selection the same way
+                // `AbilityAuthorization`'s own list is below.
                 Effect::ScaledRestrictedAbilityXp {
                     abilities: refs,
                     categories: cats,
                     ..
                 } => {
-                    abilities.extend(
+                    pool_abilities.extend(
                         resolve_ability_refs(refs, entity, ruleset, selection)
                             .into_iter()
                             .map(|r| AuthorizedAbility {
@@ -685,16 +746,18 @@ pub(crate) fn ability_authorizations(
                                 ambiguous: r.ambiguous,
                             }),
                     );
-                    categories.extend(cats.iter().copied());
+                    pool_categories.extend(cats.iter().copied());
                 }
                 // The gated carrier (D14/W2): only the entries whose gate holds
                 // for THIS selection contribute — F-349's fix (see
                 // `docs/vf-audit/design-c0-parameter-model.md` § 3/§ 4).
+                // EXPLICIT — the book states this permission separately from
+                // any pool.
                 Effect::AbilityAuthorization {
                     abilities: refs,
                     categories: cat_refs,
                 } => {
-                    abilities.extend(
+                    explicit_abilities.extend(
                         resolve_ability_refs(refs, entity, ruleset, selection)
                             .into_iter()
                             .map(|r| AuthorizedAbility {
@@ -707,14 +770,14 @@ pub(crate) fn ability_authorizations(
                     );
                     for c in cat_refs {
                         if c.active_for(selection) {
-                            categories.insert(c.category());
+                            explicit_categories.insert(c.category());
                         }
                     }
                 }
                 // A free score in an Ability is permission to have it, since the
-                // Virtue confers the Ability outright.
+                // Virtue confers the Ability outright. EXPLICIT.
                 Effect::AbilityScoreGrant { ability, .. } => {
-                    abilities.insert(AuthorizedAbility {
+                    explicit_abilities.insert(AuthorizedAbility {
                         ability: ability.clone(),
                         instance: None,
                         requires_catalogued: false,
@@ -732,6 +795,7 @@ pub(crate) fn ability_authorizations(
                 // lets `ability_parameter_options` offer this Virtue's own
                 // parameter as a LINK target for the Ability's picker (D59/CV),
                 // rather than making the player retype the medium as free text.
+                // EXPLICIT (a free grant, like `AbilityScoreGrant`).
                 Effect::AbilityScoreGrantParam {
                     ability, instance, ..
                 } => {
@@ -742,7 +806,7 @@ pub(crate) fn ability_authorizations(
                         ruleset,
                         selection,
                     );
-                    abilities.insert(AuthorizedAbility {
+                    explicit_abilities.insert(AuthorizedAbility {
                         ability: resolved.ability,
                         instance: resolved.parameter,
                         requires_catalogued: resolved.requires_catalogued,
@@ -752,9 +816,9 @@ pub(crate) fn ability_authorizations(
                 }
                 // The gated-bonus carrier (Student of (Realm)'s +2 Lore, row
                 // 50(a)): same gate fold as `AbilityAuthorization`, read off
-                // this effect's own target list instead.
+                // this effect's own target list instead. EXPLICIT.
                 Effect::AbilityBonusGated { targets, .. } => {
-                    abilities.extend(
+                    explicit_abilities.extend(
                         resolve_ability_refs(targets, entity, ruleset, selection)
                             .into_iter()
                             .map(|r| AuthorizedAbility {
@@ -787,20 +851,23 @@ pub(crate) fn ability_authorizations(
                 // D40/D2: a replacement pool is itself permission for what it
                 // funds, same reasoning as `RestrictedAbilityXp` above —
                 // unscoped `abilities`/`categories` only (no `instances`
-                // field on this variant).
+                // field on this variant). POOL-IMPLIED (D43): it earmarks a
+                // whole life stage's budget for named categories/abilities,
+                // exactly the "otherwise unspendable" reasoning D43 scopes to
+                // the pool itself, not to spending beyond it.
                 Effect::ReplacesLifeStageXp {
                     abilities: ids,
                     categories: cats,
                     ..
                 } => {
-                    abilities.extend(ids.iter().map(|ability| AuthorizedAbility {
+                    pool_abilities.extend(ids.iter().map(|ability| AuthorizedAbility {
                         ability: ability.clone(),
                         instance: None,
                         requires_catalogued: false,
                         bound_source: None,
                         ambiguous: false,
                     }));
-                    categories.extend(cats.iter().copied());
+                    pool_categories.extend(cats.iter().copied());
                 }
                 Effect::AbilityBonus { .. }
                 | Effect::CharacteristicScoreDeltaParam { .. }
@@ -875,7 +942,12 @@ pub(crate) fn ability_authorizations(
             }
         }
     }
-    (abilities, categories)
+    AbilityAuthorizations {
+        explicit_abilities,
+        explicit_categories,
+        pool_abilities,
+        pool_categories,
+    }
 }
 
 /// Whether a restricted pool may fund a spend. Ability pools cover only Ability
@@ -994,6 +1066,16 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
     // Spends: abilities (Affinity-reduced, with category for eligibility) + arts +
     // per-spell Spell Mastery Abilities.
     let mut spends: Vec<Spend> = Vec::new();
+    // D43: whether the GENERAL pool may fund a given Ability spend — computed
+    // once (not per spend) since none of these depend on which Ability is
+    // being priced.
+    let gated = ruleset.categories_requiring_virtue();
+    let hermetically_trained = crate::effective::is_hermetically_trained(
+        entity,
+        ruleset,
+        ruleset.profile(&entity.type_id),
+    );
+    let auth = ability_authorizations(entity, ruleset);
     for a in &entity.ability_scores {
         let Some(table) = ruleset.advancement.xp_for_score(a.score) else {
             continue;
@@ -1030,16 +1112,38 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
         );
         // A catalogue-known ability carries its category (for restricted-pool
         // eligibility); an unknown one funds from the general pool only, like an Art.
-        let kind = ruleset
-            .abilities
-            .get(&a.ability)
-            .map(|def| SpendKind::Ability {
-                ability: a.ability.clone(),
-                category: def.category,
-                parameter: a.parameter.clone(),
-            })
-            .unwrap_or(SpendKind::Art);
-        spends.push(Spend { cost, kind });
+        let (kind, general_eligible) = match ruleset.abilities.get(&a.ability) {
+            Some(def) => {
+                // D43: the general edge is open unless this Ability's category
+                // is gated AND nothing but a pool permits it — the SAME
+                // predicate `validate_ability_authorization`'s existence check
+                // uses, applied to the EXPLICIT half alone (`ability_is_authorized`'s
+                // own docs).
+                let general_eligible = hermetically_trained
+                    || ability_is_authorized(
+                        def.category,
+                        &a.ability,
+                        a.parameter.as_ref(),
+                        &auth.explicit_categories,
+                        &auth.explicit_abilities,
+                    )
+                    || !gated.contains(&def.category);
+                (
+                    SpendKind::Ability {
+                        ability: a.ability.clone(),
+                        category: def.category,
+                        parameter: a.parameter.clone(),
+                    },
+                    general_eligible,
+                )
+            }
+            None => (SpendKind::Art, true),
+        };
+        spends.push(Spend {
+            cost,
+            kind,
+            general_eligible,
+        });
     }
     for a in &entity.art_scores {
         let Some(table) = ruleset.art_advancement.xp_for_score(a.score) else {
@@ -1049,6 +1153,7 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
         spends.push(Spend {
             cost,
             kind: SpendKind::Art,
+            general_eligible: true,
         });
     }
     // Spell Mastery is an Ability (ArMDE:9516, :7143) bought from the
@@ -1081,6 +1186,7 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
         spends.push(Spend {
             cost,
             kind: SpendKind::Mastery,
+            general_eligible: true,
         });
     }
     spends
@@ -1267,7 +1373,10 @@ fn magus_later_life_pool(
     if budget.later_life_xp == 0 {
         return None;
     }
-    let (abilities, authorized_categories) = ability_authorizations(entity, ruleset);
+    // D43: the EXPLICIT half only — a pool-implied permission (Warrior's own
+    // Martial-XP earmark, say) does not widen what this UNRESTRICTED block may
+    // fund; only a stated permission (Educated, Covenant Upbringing) does.
+    let auth = ability_authorizations(entity, ruleset);
     let gated = ruleset.categories_requiring_virtue();
     Some(FlowPool {
         amount: budget.later_life_xp,
@@ -1276,11 +1385,15 @@ fn magus_later_life_pool(
             // one instance is D48/C4's `instances` field, not this slice's job;
             // C1 only tightens OWNERSHIP (`validate_ability_authorization`),
             // which is the actual F-349 defect.
-            abilities: abilities.iter().map(|a| a.ability.clone()).collect(),
+            abilities: auth
+                .explicit_abilities
+                .iter()
+                .map(|a| a.ability.clone())
+                .collect(),
             categories: AbilityCategory::ALL
                 .into_iter()
                 .filter(|category| {
-                    !gated.contains(category) || authorized_categories.contains(category)
+                    !gated.contains(category) || auth.explicit_categories.contains(category)
                 })
                 .collect(),
             instances: Vec::new(),
@@ -1738,8 +1851,13 @@ fn build_capacity_matrix(
     }
     for (j, spend) in spends.iter().enumerate() {
         cap[layout.spend_node(j)][FlowGraphLayout::SINK] = spend.cost;
-        // The general pool can fund any spend.
-        cap[FlowGraphLayout::GENERAL][layout.spend_node(j)] = spend.cost;
+        // The general pool can fund any spend it is eligible for (D43: not a
+        // gated Ability that only a restricted pool permits).
+        cap[FlowGraphLayout::GENERAL][layout.spend_node(j)] = if spend.general_eligible {
+            spend.cost
+        } else {
+            0
+        };
         for (i, pool) in flow_pools.iter().enumerate() {
             if pool_covers(&pool.eligibility, spend) {
                 cap[layout.pool_node(i)][layout.spend_node(j)] = spend.cost;
@@ -2319,7 +2437,8 @@ mod tests {
     /// `AbilityBonus` (Puissant Ability) stands in
     /// for the rest — it names a target ability via `params[param]` but, per the
     /// rules text (ArMDE:4814-4816), grants no permission to own that ability,
-    /// only a bonus once it is already legally held.
+    /// only a bonus once it is already legally held. D43 additionally
+    /// characterizes which of the two contributes to EACH half.
     #[test]
     fn ability_authorizations_reads_only_the_three_permission_granting_effects() {
         let items = r#"[
@@ -2368,10 +2487,16 @@ mod tests {
             ),
         ];
 
-        let (abilities, categories) = ability_authorizations(&e, &rs);
-        assert_eq!(categories, BTreeSet::from([AbilityCategory::Martial]));
+        let auth = ability_authorizations(&e, &rs);
+        // D43: Warrior's category pool is POOL-implied; Covenant Upbringing's
+        // `AbilityAuthorization` and Second Sight's free grant are EXPLICIT.
         assert_eq!(
-            abilities,
+            auth.pool_categories,
+            BTreeSet::from([AbilityCategory::Martial])
+        );
+        assert_eq!(auth.explicit_categories, BTreeSet::new());
+        assert_eq!(
+            auth.explicit_abilities,
             BTreeSet::from([
                 AuthorizedAbility {
                     ability: Id::new("ability.dead_language"),
@@ -2389,11 +2514,15 @@ mod tests {
                 },
             ])
         );
+        assert_eq!(auth.pool_abilities, BTreeSet::new());
         // Puissant Ability names ability.single_weapon via `params[param]` but
-        // must not appear: AbilityBonus grants no ownership permission.
+        // must not appear in EITHER half: AbilityBonus grants no ownership
+        // permission.
         assert!(
-            !abilities
+            !auth
+                .explicit_abilities
                 .iter()
+                .chain(auth.pool_abilities.iter())
                 .any(|a| a.ability == Id::new("ability.single_weapon"))
         );
     }

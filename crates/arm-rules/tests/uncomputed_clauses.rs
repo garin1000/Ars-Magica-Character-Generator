@@ -1204,10 +1204,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "prohibition: bare \"cannot\" — incompatible with Harnessed Magic, ArMDE:5727-5730",
     ),
     (
-        "flaw.branded_criminal",
-        "prohibition + permission: \"may not take\" / \"at character creation\", ArMDE:5749-5752",
-    ),
-    (
         "flaw.ceremonial_spontaneous_magic",
         "incompatibility: \"is not compatible with\", ArMDE:5781-5784",
     ),
@@ -1230,10 +1226,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     (
         "flaw.deteriorating_power",
         "magnitude/level stem: \"reduced by 3 magnitudes\" (D8), ArMDE:5944-5949",
-    ),
-    (
-        "flaw.diabolic_past",
-        "permission: \"may purchase\" Infernal Lore, ArMDE:5958-5961",
     ),
     (
         "flaw.difficult_spontaneous_magic",
@@ -1261,14 +1253,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "named rulebook term: \"two dice instead of\" the normal one, ArMDE:6040-6043",
     ),
     (
-        "flaw.faerie_friend",
-        "permission: \"can purchase\" Faerie Lore, ArMDE:6052-6055",
-    ),
-    (
-        "flaw.faerie_upbringing",
-        "permission: \"may learn\" Faerie Lore \"at character generation\", ArMDE:6056-6059",
-    ),
-    (
         "flaw.false_power",
         "capability: \"the ability to\" sense the taint, plus extensive realm-interaction \
          mechanics the passage states (D8-adjacent), ArMDE:6080-6097",
@@ -1291,11 +1275,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "eligibility: \"must be\" a Redcap or magus \"to take this\" Flaw, ArMDE:6248-6255",
     ),
     (
-        "flaw.imagined_folk_tradition_vulnerability",
-        "bare \"no more\" cap plus \"allows the character to purchase\"-shaped permission, \
-         ArMDE:6280-6283",
-    ),
-    (
         "flaw.incompatible_arts",
         "incompatibility: \"may not be combined with\" a Deficiency, ArMDE:6290-6293",
     ),
@@ -1312,11 +1291,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "flaw.magical_being_companion",
         "signed-number blind spot F-469 (S2, has_signed_number): \"Magic Might score of 10 – \
          Size\" — digit, EN DASH, named quantity, ArMDE:6390",
-    ),
-    (
-        "flaw.magical_fascination",
-        "permission + bare \"no more\": \"is allowed to have\" a score of 1 (but no more), \
-         ArMDE:6392-6395",
     ),
     (
         "flaw.master_of_none",
@@ -1347,10 +1321,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     (
         "flaw.outcast",
         "prohibition: \"may not take\" the Wealthy Virtue, ArMDE:6538-6541",
-    ),
-    (
-        "flaw.pagan",
-        "permission: \"may begin with\" Magic Lore or Faerie Lore, ArMDE:6570-6573",
     ),
     (
         "flaw.restricted_learning",
@@ -1398,20 +1368,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
          ArMDE:7015-7018",
     ),
     (
-        "virtue.alim",
-        "permission: \"may purchase\" Academic Abilities \"during character generation\", \
-         ArMDE:3380-3383",
-    ),
-    (
-        "virtue.almogaten",
-        "permission: \"may take\" Martial Abilities, ArMDE:3396-3403",
-    ),
-    (
-        "virtue.almogavar",
-        "permission + prohibition: \"may take\" Martial Abilities, \"may not take\" Poor/Wealthy, \
-         ArMDE:3404-3409",
-    ),
-    (
         "virtue.amorphous_major",
         "capability (D8/§2.1b): \"is able to take on any human form\", ArMDE:3410-3413",
     ),
@@ -1421,47 +1377,9 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
          virtue.amorphous_major.",
     ),
     (
-        "virtue.archieunuch",
-        "permission: \"may take\" Academic Abilities, ArMDE:3436-3439",
-    ),
-    (
-        "virtue.beadle",
-        "permission: \"may purchase\" Academic Abilities \"at character generation\", \
-         ArMDE:3480-3483",
-    ),
-    (
-        "virtue.brother_chaplain",
-        "permission: \"may purchase\" Academic Abilities, ArMDE:3529-3532",
-    ),
-    (
-        "virtue.brother_knight",
-        "permission: \"may take\" Academic and Martial Abilities, ArMDE:3533-3536",
-    ),
-    (
-        "virtue.bureaucrat",
-        "permission: \"may take\" Academic Abilities, ArMDE:3541-3544",
-    ),
-    (
-        "virtue.clerk",
-        "permission: \"may take\" Academic Abilities, ArMDE:3571-3574",
-    ),
-    (
         "virtue.covenfolk",
         "prohibition: \"may not take\" the Wealthy Major Virtue or Poor Major Flaw, \
          ArMDE:3609-3612",
-    ),
-    (
-        "virtue.eunuch",
-        "permission: \"may take\" Academic Abilities, ArMDE:3771-3774",
-    ),
-    (
-        "virtue.failed_apprentice",
-        "permission + prohibition: \"may learn\" Academic/Arcane/Martial, \"may not have\" The \
-         Gift, ArMDE:3843-3846",
-    ),
-    (
-        "virtue.fidai",
-        "permission: \"may take\" Martial Abilities, ArMDE:3877-3882",
     ),
     // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
     // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
@@ -1487,14 +1405,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     (
         "virtue.guardian_angel",
         "signed numbers: \"+5 bonus to Soak\", \"Magic Resistance of 15\", ArMDE:4031-4036",
-    ),
-    (
-        "virtue.guild_dean",
-        "permission: \"may select\" Academic Abilities, ArMDE:4045-4048",
-    ),
-    (
-        "virtue.guild_master",
-        "permission: \"may select\" Academic Abilities, ArMDE:4049-4052",
     ),
     (
         "virtue.harnessed_magic",
@@ -1525,11 +1435,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "target number: \"secretly roll a simple die. On a 6+\", ArMDE:4147-4150",
     ),
     (
-        "virtue.jurist",
-        "permission: \"may purchase\" Latin, Artes Liberales, Civil and Canon Law, \
-         ArMDE:4163-4168",
-    ),
-    (
         "virtue.kassalan_exorcism",
         "formulas + capability: Casting Total \"(Stamina + Organization Lore... )/2\", \
          Penetration formula, ArMDE:4173-4186",
@@ -1543,16 +1448,8 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "signed number: \"+3 bonus to all rolls involving sight\", ArMDE:4187-4190",
     ),
     (
-        "virtue.knight",
-        "permission: \"may take\" Martial Abilities, ArMDE:4195-4198",
-    ),
-    (
         "virtue.land_regio_network",
         "target number: \"an Ease Factor of 9\", ArMDE:4211-4218",
-    ),
-    (
-        "virtue.lasiq",
-        "permission: \"may take\" Martial Abilities, ArMDE:4233-4236",
     ),
     (
         "virtue.learn_ability_from_mistakes",
@@ -1594,27 +1491,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "capability: \"swap one Ability score for the Craft: Potter score\", ArMDE:4431-4438",
     ),
     (
-        "virtue.mamluk",
-        "permission: \"may take\" Martial Abilities, \"may also take\" Theology: Islam, \
-         ArMDE:4443-4448",
-    ),
-    (
-        "virtue.master_of_form_creatures",
-        "permission: \"may take\" Magic Lore during character creation, ArMDE:4463-4466",
-    ),
-    (
-        "virtue.mazdean_priest",
-        "permission: \"may take\" Academic Abilities, ArMDE:4480-4487",
-    ),
-    (
-        "virtue.mendicant_friar",
-        "permission: \"may take\" Academic Abilities, ArMDE:4488-4495",
-    ),
-    (
-        "virtue.mercenary_captain",
-        "permission: \"may take\" Martial Abilities, ArMDE:4500-4505",
-    ),
-    (
         "virtue.minor_enchantments",
         "named rulebook term: item power levels \"must be 25 or less\", \"no single power can \
          be greater than 30th level\", ArMDE:4532-4535",
@@ -1629,10 +1505,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "signed number: \"+3 bonus to rolls in social situations\", ArMDE:4590-4593",
     ),
     (
-        "virtue.notary",
-        "permission: \"may take\" Academic Abilities, ArMDE:4598-4601",
-    ),
-    (
         "virtue.perfect_balance",
         "signed number: \"Add +6 to any roll to avoid falling or tripping\", ArMDE:4624-4627",
     ),
@@ -1641,11 +1513,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "named rulebook term: \"(3 x Wealth Multiplier) Labor Points per year\" — conditioned \
          on the City and Guild trading rules the app does not model, the same D4/N6 shape as \
          virtue.aristotelian_training, ArMDE:4628-4631",
-    ),
-    (
-        "virtue.perfectus",
-        "permission + eligibility: \"may not take\" Wealthy, \"may take\" Academic Abilities, \
-         \"may... take\" Purity/Transcendence Abilities if True Faith, ArMDE:4632-4641",
     ),
     (
         "virtue.performance_magic",
@@ -1657,28 +1524,12 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "signed number: \"+3 to rolls involving intimidation\", ArMDE:4736-4739",
     ),
     (
-        "virtue.prestigious_student",
-        "permission: \"may purchase\" Academic Abilities, ArMDE:4792-4795",
-    ),
-    (
-        "virtue.priest",
-        "permission: \"may purchase\" Academic Abilities, ArMDE:4796-4805",
-    ),
-    (
-        "virtue.religious",
-        "permission: \"may take\" Academic Abilities, ArMDE:4856-4861",
-    ),
-    (
         "virtue.reserves_of_strength",
         "signed number: \"add +3 to your effective Strength score\", ArMDE:4862-4865",
     ),
     (
         "virtue.ripper",
         "formula: \"a PeAn(He) 25 and a PeAn 45 effect\", ArMDE:4866-4869",
-    ),
-    (
-        "virtue.senior_master",
-        "permission: \"may select\" Academic Abilities, ArMDE:4922-4925",
     ),
     (
         "virtue.sharp_ears",
@@ -1716,31 +1567,13 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "signed number: \"+3 on any roll which may require strength of will\", ArMDE:5048-5051",
     ),
     (
-        "virtue.sufi",
-        "permission: \"may purchase\" Theology: Islam, Islamic Law, Dominion Lore, \
-         ArMDE:5077-5084",
-    ),
-    (
         "virtue.supernatural_beauty",
         "capability (open-ended, GM-adjudicated): \"once per story\" insert a fortunate \
          coincidence, ArMDE:5089-5096",
     ),
     (
-        "virtue.templar_administrator",
-        "permission: \"may take\" Academic Abilities, ArMDE:5109-5112",
-    ),
-    (
         "virtue.temporal_influence",
         "eligibility: \"Grogs may not take this Virtue\", ArMDE:5137-5140",
-    ),
-    (
-        "virtue.town_magistrate",
-        "eligibility + named rulebook term: \"a score of at least 3\" in Civil and Canon Law, \
-         \"purchased for the character, during character generation\", ArMDE:5149-5152",
-    ),
-    (
-        "virtue.troubadour",
-        "permission: \"may take\" Academic skills, ArMDE:5157-5164",
     ),
     (
         "virtue.troupe_upbringing",
@@ -1749,15 +1582,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     (
         "virtue.true_love_pc",
         "signed number: \"add +3 to appropriate Personality Trait rolls\", ArMDE:5173-5178",
-    ),
-    (
-        "virtue.turb_trained",
-        "permission + eligibility: \"allowed to learn\" Martial Abilities, \"prohibited from \
-         being Wealthy or Poor\", ArMDE:5179-5182",
-    ),
-    (
-        "virtue.university_grammar_teacher",
-        "permission: \"may purchase\" Latin and Artes Liberales, ArMDE:5195-5198",
     ),
     (
         "virtue.variable_power",
@@ -1831,6 +1655,186 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
 /// [`no_swept_entry_drops_an_uncomputed_mechanical_clause`] for the
 /// now-uncomputed Casting clause, so no exemption is needed at all.
 const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
+    (
+        "flaw.diabolic_past",
+        "single clause (\"may purchase... Infernal Lore, even if... not permitted to buy Arcane \
+         Abilities\"), fully computed via ability_authorization (X1/D43).",
+    ),
+    (
+        "flaw.faerie_friend",
+        "single clause (\"can purchase\" Faerie Lore \"even if... normally restricted\"), fully \
+         computed via ability_authorization (X1/D43).",
+    ),
+    (
+        "flaw.faerie_upbringing",
+        "single clause (\"may learn\" Faerie Lore \"at character generation\"), fully computed \
+         via ability_authorization (X1/D43).",
+    ),
+    (
+        "flaw.pagan",
+        "operative clause (\"may begin with\" Magic Lore or Faerie Lore) is computed via \
+         ability_authorization (X1/D43); the regional Novgorod exception is a setting note, not \
+         a numeric rule.",
+    ),
+    (
+        "virtue.alim",
+        "operative clause (\"may purchase\" Academic Abilities) is computed via \
+         ability_authorization (X1/D43); \"male characters only\" is a flavor/eligibility note, \
+         not a numeric rule.",
+    ),
+    (
+        "virtue.almogaten",
+        "operative clause (\"may take\" Martial Abilities) is computed via ability_authorization \
+         (X1/D43); the Standard Armaments/Wealthy-Poor variant and the Iberian-availability note \
+         are flavor.",
+    ),
+    (
+        "virtue.archieunuch",
+        "operative clause (\"may take\" Academic Abilities) is computed via \
+         ability_authorization (X1/D43); the eunuch/male eligibility note is flavor.",
+    ),
+    (
+        "virtue.beadle",
+        "single clause (\"may purchase\" Academic Abilities \"at character generation\"), fully \
+         computed via ability_authorization (X1/D43).",
+    ),
+    (
+        "virtue.brother_chaplain",
+        "single clause (\"may purchase\" Academic Abilities), fully computed via \
+         ability_authorization (X1/D43).",
+    ),
+    (
+        "virtue.brother_knight",
+        "operative clause (\"may take\" Academic and Martial Abilities) is computed via \
+         ability_authorization (X1/D43); the equipment grant (\"high-quality weapons and armor, \
+         and two horses\") names no signed number the screen recognizes.",
+    ),
+    (
+        "virtue.bureaucrat",
+        "single clause (\"may take\" Academic Abilities), fully computed via \
+         ability_authorization (X1/D43).",
+    ),
+    (
+        "virtue.clerk",
+        "operative clause (\"may take\" Academic Abilities) is computed via \
+         ability_authorization (X1/D43); the clergy-order/marriage eligibility prose is flavor.",
+    ),
+    (
+        "virtue.eunuch",
+        "operative clause (\"may take\" Academic Abilities) is computed via \
+         ability_authorization (X1/D43); the male/castration eligibility note is flavor.",
+    ),
+    (
+        "virtue.failed_apprentice",
+        "operative clause (\"may learn\" Academic/Arcane/Martial Abilities) is computed via \
+         ability_authorization (X1/D43); \"may not have The Gift\" is already \
+         incompatible_with:[virtue.the_gift]; \"you may have some Supernatural Abilities\" \
+         names no specific Ability and is gated per-Ability by validate_supernatural_abilities \
+         regardless (ArMDE:2315).",
+    ),
+    (
+        "virtue.fidai",
+        "single clause (\"may take\" Martial Abilities \"at character creation\"), fully \
+         computed via ability_authorization (X1/D43).",
+    ),
+    (
+        "virtue.guild_dean",
+        "single clause (\"may select\" Academic Abilities), fully computed via \
+         ability_authorization (X1/D43).",
+    ),
+    (
+        "virtue.guild_master",
+        "single clause (\"may select\" Academic Abilities), fully computed via \
+         ability_authorization (X1/D43).",
+    ),
+    (
+        "virtue.jurist",
+        "single clause (\"may purchase\" Latin, Artes Liberales, Civil and Canon Law), fully \
+         computed via ability_authorization (X1/D43, id-form).",
+    ),
+    (
+        "virtue.knight",
+        "operative clause (\"may take\" Martial Abilities) is computed via \
+         ability_authorization (X1/D43); \"the Wealthy Virtue and Poor Flaw affect you \
+         normally\" states there is NO special interaction, so nothing is dropped; the \
+         male-only eligibility note is flavor.",
+    ),
+    (
+        "virtue.mamluk",
+        "operative clause (\"may take\" Martial Abilities, \"may also take\" Theology: Islam) is \
+         computed via ability_authorization (X1/D43); the male-only/companion-compatibility \
+         notes are flavor.",
+    ),
+    (
+        "virtue.master_of_form_creatures",
+        "operative clause (\"may take\" Magic Lore) is computed via ability_authorization \
+         (X1/D43); \"may be taken multiple times, once for each Form\" is already max_total:255.",
+    ),
+    (
+        "virtue.mazdean_priest",
+        "operative clause (\"may take\" Academic Abilities) is computed via \
+         ability_authorization (X1/D43); the Outsider-Flaw suggestion and male-only note are \
+         flavor.",
+    ),
+    (
+        "virtue.mercenary_captain",
+        "operative clause (\"may take\" Martial Abilities) is computed via \
+         ability_authorization (X1/D43); the Poor/Wealthy company-size prose names no signed \
+         modifier.",
+    ),
+    (
+        "virtue.notary",
+        "operative clause (\"may take\" Academic Abilities) is computed via \
+         ability_authorization (X1/D43); \"notaries may not be members of the clergy\" is an \
+         eligibility restriction on a Social Status the app does not model as a cross-Virtue \
+         exclusion set.",
+    ),
+    (
+        "virtue.prestigious_student",
+        "operative clause (\"may purchase\" Academic Abilities) is computed via \
+         ability_authorization (X1/D43); \"must take a Social Status Virtue\" is a companion \
+         co-requirement already required whole-character (D41).",
+    ),
+    (
+        "virtue.religious",
+        "operative clause (\"may take\" Academic Abilities) is computed via \
+         ability_authorization (X1/D43); the Wealthy/Poor advisory note and the pointer to \
+         alternate Virtues are flavor.",
+    ),
+    (
+        "virtue.senior_master",
+        "single clause (\"may select\" Academic Abilities), fully computed via \
+         ability_authorization (X1/D43).",
+    ),
+    (
+        "virtue.town_magistrate",
+        "operative clause (\"Academic Abilities may be bought\") is computed via \
+         ability_authorization (X1/D43); the Ability-3 (Civil and Canon Law) prerequisite is a \
+         separate, unencoded `prereq`-kind finding (F-322) the screen does not itself detect.",
+    ),
+    (
+        "virtue.sufi",
+        "operative clause (\"may purchase\" Theology: Islam, Islamic Law, Dominion Lore) is \
+         computed via ability_authorization (X1/D43, id-form); the no-points Story Flaw \
+         mechanic (F-303) is a separate, untracked finding, not this row's concern.",
+    ),
+    (
+        "virtue.templar_administrator",
+        "operative clause (\"may take\" Academic Abilities) is computed via \
+         ability_authorization (X1/D43); the Status-substitution rule and male-only note are \
+         flavor.",
+    ),
+    (
+        "virtue.troubadour",
+        "operative clause (\"may take\" Academic skills) is computed via ability_authorization \
+         (X1/D43); the Wealthy/Poor advisory note and companion Virtue suggestions are flavor.",
+    ),
+    (
+        "virtue.university_grammar_teacher",
+        "single clause (\"may purchase\" Latin and Artes Liberales), fully computed via \
+         ability_authorization (X1/D43, id-form); \"should have a score in Teaching\" is a soft \
+         recommendation (\"should\", not \"must\").",
+    ),
     (
         "flaw.black_sheep",
         "single clause (bad Reputation at level 2), fully computed via grants_reputation. \
@@ -2219,6 +2223,49 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
 /// [`PENDING_MECHANICAL_CLASSIFICATION`] —
 /// [`pending_dropped_clause_entries_still_trip_the_screen`] enforces it.
 const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
+    (
+        "flaw.branded_criminal",
+        "orphan: \"you may not take the Wealthy Virtue\" carries no incompatible_with — F-340's \
+         family, a separate slice (X4), not this row's ability_authorization fix, ArMDE:5749-5752",
+    ),
+    (
+        "flaw.magical_fascination",
+        "orphan: \"a score of 1 (but no more)\" cap is D3-inexpressible — no score-cap effect \
+         exists; the either/or Lore permission itself is computed via ability_authorization, \
+         ArMDE:6392-6395",
+    ),
+    (
+        "virtue.almogavar",
+        "orphan: \"may not take the Poor Flaw or Wealthy Virtue\" carries no incompatible_with — \
+         F-340's family, a separate slice (X4), not this row's ability_authorization fix, \
+         ArMDE:3404-3409",
+    ),
+    (
+        "virtue.mendicant_friar",
+        "orphan: \"You may not take the Wealthy Virtue or Poor Flaw\" carries no \
+         incompatible_with — F-340's family, a separate slice (X4), not this row's \
+         ability_authorization fix, ArMDE:4488-4495",
+    ),
+    (
+        "virtue.perfectus",
+        "orphan: \"may not take Wealthy\" carries no incompatible_with (F-340's family, X4), and \
+         the conditional \"may... take Purity or Transcendence Abilities\" (only with True \
+         Faith) is a second, unencoded permission distinct from the plain Academic one this row \
+         adds — a separate finding, ArMDE:4632-4641",
+    ),
+    (
+        "virtue.priest",
+        "orphan: \"If you are a parish priest, you cannot take the Poor Flaw\" is a conditional \
+         prohibition the engine has no \"is a parish priest\" fact to gate on — distinct from \
+         the F-340 blanket Wealthy/Poor exclusion family; the Academic-Ability permission itself \
+         is computed via ability_authorization, ArMDE:4800",
+    ),
+    (
+        "virtue.turb_trained",
+        "orphan: \"prohibited from being Wealthy or Poor\" carries no incompatible_with (F-340's \
+         family, X4); the single-dead-language grant needs a player-chosen `language` parameter \
+         (X6/D9p1) rather than custos's fixed-Latin shape — both deferred, ArMDE:5179-5182",
+    ),
     (
         "flaw.baneful_circumstances",
         "orphan: \"cannot recover Fatigue, heal wounds, or recover Might\" during the \

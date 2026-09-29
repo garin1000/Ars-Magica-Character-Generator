@@ -46,11 +46,17 @@ use crate::ability::AbilityCategory;
 /// two mechanisms are disjoint, which is what keeps a single purchase from being
 /// reported twice.
 ///
-/// A Virtue grants access two ways, and both count: an explicit
+/// A Virtue grants access two ways, and both count for OWNERSHIP: an explicit
 /// [`Effect::AbilityAuthorization`], or any [`Effect::RestrictedAbilityXp`] pool —
-/// experience earmarked for a category is evidence the category is permitted, which
-/// is what makes Warrior (Martial XP) and Arcane Lore (Arcane XP) work without
-/// further data.
+/// experience earmarked for a category is evidence the category is permitted
+/// UP TO WHAT THE POOL FUNDS, which is what makes Warrior (Martial XP) and
+/// Arcane Lore (Arcane XP) work without further data. **D43** (`docs/vf-audit/decisions.md`):
+/// a pool earmark does NOT also license spending *general* XP on the same
+/// category/Ability — `effective::xp::build_spends` reads the explicit half of
+/// [`crate::effective::ability_authorizations`] alone for that question, so a
+/// character who tries to fund more than a pool provides gets the ordinary XP
+/// shortfall (`not_enough_xp`) there, never this code — the two checks
+/// (own it at all vs. fund it from general XP) are disjoint on purpose.
 pub(crate) fn validate_ability_authorization(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -67,8 +73,7 @@ pub(crate) fn validate_ability_authorization(
         return;
     }
 
-    let (authorized_abilities, authorized_categories) =
-        crate::effective::ability_authorizations(entity, ruleset);
+    let auth = crate::effective::ability_authorizations(entity, ruleset);
 
     for entry in &entity.ability_scores {
         let Some(ability) = ruleset.ability(&entry.ability) else {
@@ -77,13 +82,21 @@ pub(crate) fn validate_ability_authorization(
         if !gated.contains(&ability.category) {
             continue;
         }
-        if authorized_categories.contains(&ability.category)
-            || crate::effective::authorizes_instance(
-                &authorized_abilities,
-                &entry.ability,
-                entry.parameter.as_ref(),
-            )
-        {
+        // D43: owning the Ability is legal under EITHER half — the same
+        // predicate, applied twice.
+        if crate::effective::ability_is_authorized(
+            ability.category,
+            &entry.ability,
+            entry.parameter.as_ref(),
+            &auth.explicit_categories,
+            &auth.explicit_abilities,
+        ) || crate::effective::ability_is_authorized(
+            ability.category,
+            &entry.ability,
+            entry.parameter.as_ref(),
+            &auth.pool_categories,
+            &auth.pool_abilities,
+        ) {
             continue;
         }
         issues.push(ValidationIssue::error(

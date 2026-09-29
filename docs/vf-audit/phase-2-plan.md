@@ -9,8 +9,9 @@
 (rev. 3, D60), B1–B5; B-boundary e2e 10/10 (one retry: `wizard-flow.e2e.js`
 "warns about unspent experience", a flake to watch). **Group D done** (D0 rev. 5,
 D1–D3, B1c; D4 dropped by D62; D-boundary e2e 10/10). **Group F done** (F0 rev. 3,
-F1 schema 20, F2; e2e 10/10, portable 1/1). **Phase 2 is complete.** Next: Phase 3,
-X1. Every slice runs
+F1 schema 20, F2; e2e 10/10, portable 1/1). **Phase 2 is complete.** **2026-09-29:**
+X1 done (D43: general XP funds only explicitly authorized spends); U batch
+implemented. Next: X2. Every slice runs
 under the red-checkpoint protocol. N1, N4–N7 answered (D65).
 **Added 2026-09-28:** B1c (after D1) removes B1's unused
 `RestrictsAbilityCategoryToAbilities`. D63 moved Feral's whitelist into its
@@ -194,9 +195,9 @@ K3 + Berserk, Ways of the Land, Cyclic (D52), Special Circumstances.
 | X2 | Reclassification + descriptions **excluding § 3.2's entries**: S3/S4 work-lists emptied, D8's 48, D20's 19 + 5 numbers, D50's 335 re-test, row 38 residual, `virtue.the_gift` (D46) | S1–S4 | L |
 | X2t | D60.3: `virtue.true_friend_pc`, `flaw.true_friend_major`/`_minor` as twins of the True Love entries (data only, both locales, twin-parity test); lands with X2's `true_love_pc` description | X2 | S |
 | X3 | D12's 122 intrinsic/trained, gated on *trained*; D24; **acceptance: no Gifted non-magus computes against a magus budget** (D12.6) | A1 | M |
-| X4 | § 3.5: Wealthy/Poor closed set (F-340), D44 over M0's figure, predicate cases incl. Q-138 | B3, X3 | M |
+| X4 | § 3.5: Wealthy/Poor closed set (F-340), incl. the gaps X1 found on almogavar, turb_trained, branded_criminal, mendicant_friar, priest; D44 over M0's figure, predicate cases incl. Q-138 | B3, X3 | M |
 | X5 | § 3.6: F-518/F-532/F-533, F-502, D38 data, D51, D41's guild requirement data; F-270/F-283 (add if the book has the heading, else drop) | A1, E1, Q8, B1 | M |
-| X6 | § 8 row 4 read first; D9p1 parameters, Q-134, D33/D34 data, D42 default realm | C2–C5, X3, B3 | L |
+| X6 | § 8 row 4 read first; D9p1 parameters (incl. turb_trained's open dead-language choice, found in X1), Q-134, D33/D34 data, D42 default realm | C2–C5, X3, B3 | L |
 | X7a | § 3.8: D4 lab rows, D47, N6; Cyclic Lab row | Q7, X6 | M |
 | X7b-e | Engine for row 42: per-Characteristic buy cap, Personality-Trait validation; each row-42 item (incl. the 2026-09-19 nineteen) gets a D58 compute/text verdict | F2 | M |
 | X7b-d | § 3.9 wrong numbers + § 3.10 missing effects + row 42 data | X7b-e | M |
@@ -207,7 +208,7 @@ K3 + Berserk, Ways of the Land, Cyclic (D52), Special Circumstances.
 | X8d | D31: re-derive the 21 verdicts **into `measurements.md`**, adopt 19 names, revert 7; nothing filed upstream (D65), the fixes are recorded here for Norbert | — | M |
 | X9a | D30 anchors per catalogue — **spike first** for table-derived catalogues (aging, equipment, characteristics have no `####`); range normalisation; RULES.md/check-1 convention aligned; `anchor` non-optional **last** | M0 | L |
 | X9b | F-16 `virtue.rard` id rename (**bump**) | — | S |
-| X9c | D25's 630-entry descriptor sweep; § 3.14 `prov` findings; F-500 integrity check | — | L |
+| X9c | D25's 630-entry descriptor sweep; § 3.14 `prov` findings (incl. `virtue.perfectus`'s `source.lines` running into the next entry, found in X1); F-500 integrity check | — | L |
 | X9d | Row 55: heading beside each citation in `book_templates.rs`. *Coord.* | — | S |
 | X10 | Row 51 (a) Tremere's focus names certamen, (d) Grapple row and Piercing the Magical Veil, as data (D65). *Coord.* | — | S |
 | X10b | Row 51 (b): banked XP beside an Art or Ability score (**bump**; D65) | X10 | M |

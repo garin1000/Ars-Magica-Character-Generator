@@ -87,20 +87,6 @@ fn error_codes(entity: &Entity, ruleset: &Ruleset) -> BTreeSet<String> {
         .collect()
 }
 
-/// The `context` ids of every error carrying `code`, deduplicated — so a
-/// disagreement can name *which* items the engine refused rather than only that it
-/// refused something. The companion templates need it: three of them trip
-/// `ability_category_requires_virtue`, but over different Abilities and for
-/// different reasons.
-fn error_contexts(entity: &Entity, ruleset: &Ruleset, code: &str) -> BTreeSet<String> {
-    validate(entity, ruleset)
-        .errors()
-        .filter(|issue| issue.code == code)
-        .filter_map(|issue| issue.context.as_ref())
-        .map(|id| id.as_str().to_string())
-        .collect()
-}
-
 /// Builds an expected code set from a literal list, so a test reads as a set.
 fn codes(list: &[&str]) -> BTreeSet<String> {
     list.iter().map(|c| (*c).to_string()).collect()
@@ -1162,27 +1148,12 @@ fn the_female_scholar_matches_the_book() {
         "fixtures/book_templates/companion_female_scholar.json"
     ));
 
-    // DISAGREEMENT F1 (docs/book-template-conformance.md). Clerk's own
-    // description grants Academic access — "Due to your training, you may take
-    // Academic Abilities during character generation" (ArMDE:3573) — but
-    // `virtue.clerk` in `rules/core/virtues_flaws.json` carries no effects at all,
-    // so the engine refuses her six Academic Abilities. The book is right; the
-    // rules data is short an authorization.
-    assert_eq!(
-        error_codes(&scholar, &ruleset),
-        codes(&["ability_category_requires_virtue"])
-    );
-    assert_eq!(
-        error_contexts(&scholar, &ruleset, "ability_category_requires_virtue"),
-        codes(&[
-            "ability.artes_liberales",
-            "ability.civil_and_canon_law",
-            "ability.dead_language",
-            "ability.medicine",
-            "ability.philosophiae",
-            "ability.theology_christian",
-        ])
-    );
+    // DISAGREEMENT F1 (docs/book-template-conformance.md) — RESOLVED (X1/D43).
+    // Clerk's own description grants Academic access — "Due to your training,
+    // you may take Academic Abilities during character generation" (ArMDE:3573)
+    // — and `virtue.clerk` now carries `ability_authorization{categories:[academic]}`,
+    // so her six Academic Abilities are legal, matching the book.
+    assert_eq!(error_codes(&scholar, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&scholar, &ruleset), codes(&[]));
 
     // Soak: -1 (Stamina). Source: ArMDE:1433.
@@ -1220,18 +1191,12 @@ fn the_knight_matches_the_book() {
         "fixtures/book_templates/companion_knight.json"
     ));
 
-    // DISAGREEMENT K1 (docs/book-template-conformance.md), the same shape as F1
-    // and as the Berserker's B1. The Knight Virtue says "You may take Martial
-    // Abilities during character generation" (ArMDE:4197), but `virtue.knight`
-    // carries no effects, so Great Weapon 5 and Single Weapon 5 are both refused.
-    assert_eq!(
-        error_codes(&knight, &ruleset),
-        codes(&["ability_category_requires_virtue"])
-    );
-    assert_eq!(
-        error_contexts(&knight, &ruleset, "ability_category_requires_virtue"),
-        codes(&["ability.great_weapon", "ability.single_weapon"])
-    );
+    // DISAGREEMENT K1 (docs/book-template-conformance.md) — RESOLVED (X1/D43),
+    // the same shape as F1 and as the Berserker's B1. The Knight Virtue says
+    // "You may take Martial Abilities during character generation" (ArMDE:4197),
+    // and `virtue.knight` now carries `ability_authorization{categories:[martial]}`,
+    // so Great Weapon 5 and Single Weapon 5 are both legal, matching the book.
+    assert_eq!(error_codes(&knight, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&knight, &ruleset), codes(&[]));
 
     // "Single Weapon 5+2 (heater shield)" (ArMDE:1480) — Puissant Single Weapon's
@@ -1353,26 +1318,24 @@ fn the_priest_matches_the_book() {
         "fixtures/book_templates/companion_priest.json"
     ));
 
-    // DISAGREEMENT P1 (docs/book-template-conformance.md), a third instance of
-    // F1/K1: "You may purchase Academic Abilities during character generation"
-    // (ArMDE:4804) is part of the Priest Virtue, but `virtue.priest` carries no
-    // effects, so his four Academic Abilities are refused. His *Arcane* one,
-    // Dominion Lore, is accepted — `virtue.student_of_realm`'s gated
-    // `ability_bonus_gated` target (realm.divine) authorizes it (P3/P4,
-    // RESOLVED).
-    assert_eq!(
-        error_codes(&priest, &ruleset),
-        codes(&["ability_category_requires_virtue"])
-    );
-    assert_eq!(
-        error_contexts(&priest, &ruleset, "ability_category_requires_virtue"),
-        codes(&[
-            "ability.artes_liberales",
-            "ability.civil_and_canon_law",
-            "ability.dead_language",
-            "ability.theology_christian",
-        ])
-    );
+    // DISAGREEMENT P1 (docs/book-template-conformance.md) — RESOLVED (X1/D43),
+    // a third instance of F1/K1: "You may purchase Academic Abilities during
+    // character generation" (ArMDE:4804) is part of the Priest Virtue, and
+    // `virtue.priest` now carries `ability_authorization{categories:[academic]}`,
+    // so his four Academic Abilities are legal. His *Arcane* one, Dominion Lore,
+    // is accepted — `virtue.student_of_realm`'s gated `ability_bonus_gated`
+    // target (realm.divine) authorizes it (P3/P4, RESOLVED).
+    //
+    // `xp_pool` moved 590 → 540 in the same change (X1/D43). Well-Traveled now
+    // carries its own 50-point restricted pool (ArMDE:5239-5242) covering
+    // exactly six of the Abilities on this sheet (Area Lore, Charm, Etiquette,
+    // Folk Ken, Living Language, Organization Lore). `two_phase_max_flow`
+    // (`effective/xp.rs`) fills restricted pools before General, so those 50
+    // points now come from Well-Traveled rather than General — the fixture's
+    // total demand (590) is unchanged, but General's own share of it is 540;
+    // leaving it at 590 left 50 General points genuinely unspent
+    // (`general_xp_unspent`).
+    assert_eq!(error_codes(&priest, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&priest, &ruleset), codes(&[]));
 
     // DISAGREEMENT P3, RESOLVED (docs/book-template-conformance.md). The book
@@ -1483,33 +1446,16 @@ fn the_rogue_matches_the_book() {
 #[test]
 fn the_witch_matches_the_book() {
     let ruleset = full_ruleset();
-    // CV4 (design-cv-catalogued-values.md § 5.7, § 10's CV4 row): the fixture's
-    // Dead Language score is restored to the human-typed "Latin" — CV3's interim
-    // stopgap ("language.latin", the catalogue id, matched by plain string
-    // equality against the Literal) is no longer needed once `AbilityScore`
-    // holds `AbilityParameterValue`. **Red-checkpoint phase 1**: the
-    // catalogue-name-matching fold (§ 5.3, "Latin" → `Catalogued
-    // {"language.latin"}`) is a CV4-phase-2 stub that does not resolve
-    // anything yet, so "Latin" stays `Text` and Educated's literal-instance
-    // pool does not fund it — this assertion block is expected to fail here and
-    // pass again once the real fold lands.
     let witch = load(include_str!("fixtures/book_templates/companion_witch.json"));
 
-    // DISAGREEMENT W1 (docs/book-template-conformance.md). Educated is "You may
-    // purchase Academic Abilities during character generation" plus 50 experience
-    // points "which must be spent on Latin and Artes Liberales" (ArMDE:3713), but
-    // `virtue.educated` encodes only the earmarked experience. The engine reads an
-    // earmarked pool as permission for exactly what it names, so Artes Liberales
-    // and Latin pass and **Medicine** — Academic, and not on the XP list — does
-    // not. The category authorization is missing from the rules data.
-    assert_eq!(
-        error_codes(&witch, &ruleset),
-        codes(&["ability_category_requires_virtue"])
-    );
-    assert_eq!(
-        error_contexts(&witch, &ruleset, "ability_category_requires_virtue"),
-        codes(&["ability.medicine"])
-    );
+    // DISAGREEMENT W1 (docs/book-template-conformance.md) — RESOLVED (X1/D43).
+    // Educated is "You may purchase Academic Abilities during character
+    // generation" plus 50 experience points "which must be spent on Latin and
+    // Artes Liberales" (ArMDE:3713); `virtue.educated` now carries
+    // `ability_authorization{categories:[academic]}` in addition to its
+    // earmarked pool, so Medicine — Academic, and not on the XP list — is
+    // legal too, matching the book.
+    assert_eq!(error_codes(&witch, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&witch, &ruleset), codes(&[]));
 
     // DISAGREEMENT P3, RESOLVED, again on the other side of the same Virtue:
@@ -1558,17 +1504,14 @@ fn the_berserker_matches_the_book() {
     let ruleset = full_ruleset();
     let berserker = load(include_str!("fixtures/book_templates/grog_berserker.json"));
 
-    // DISAGREEMENT B1 (docs/book-template-conformance.md). The Berserker buys
-    // Great Weapon 5 and Single Weapon 1 with no Warrior, and the engine gates
-    // Martial Abilities behind a Virtue (ArMDE:2392). Berserk IS such a Virtue —
-    // "You may learn Martial Abilities at character creation" (ArMDE:3502) — but
-    // `virtue.berserk` in `rules/core/virtues_flaws.json` carries no
-    // authorization effect, so the engine refuses a legal character. The book is
-    // right; the rules data is short an effect.
-    assert_eq!(
-        error_codes(&berserker, &ruleset),
-        codes(&["ability_category_requires_virtue"])
-    );
+    // DISAGREEMENT B1 (docs/book-template-conformance.md) — RESOLVED (X1/D43).
+    // The Berserker buys Great Weapon 5 and Single Weapon 1 with no Warrior,
+    // and the engine gates Martial Abilities behind a Virtue (ArMDE:2392).
+    // Berserk IS such a Virtue — "You may learn Martial Abilities at character
+    // creation" (ArMDE:3502) — and `virtue.berserk` now carries
+    // `ability_authorization{categories:[martial]}`, so both weapons are legal,
+    // matching the book.
+    assert_eq!(error_codes(&berserker, &ruleset), codes(&[]));
     // DISAGREEMENT B3 (docs/book-template-conformance.md). Short Attention Span
     // and Wrathful (Minor) are both Personality Flaws, and the grog rule is "You
     // should not take more than one Personality Flaw" (ArMDE:2827). The engine is

@@ -10167,6 +10167,193 @@ the real load, the four listed Abilities read as `catalogued`, and the two
   uncomputed_mechanical_clause`; `book_templates.rs::the_berserker_matches_the_book`
   / `the_bjornaer_matches_the_book` / `the_mercere_matches_the_book`.
 
+  **Amended by X1/D43** (below): Berserk's `ability_authorization` (Martial
+  Abilities, `ArMDE:3500-3503`) is a permanent grant, so it survives this
+  fix's deletions and D46 keeps the entry `creation_effect`, not
+  `uncomputed_rule` — `f2_conditional_modifiers.rs::berserk_loses_every_
+  conditional_effect_and_stays_a_creation_effect` supersedes the test named
+  above.
+
+#### Row 45 (X1) — the `ability_authorization` backfill + D43 (`docs/vf-audit/decisions.md`)
+
+**D43's ruling.** A `RestrictedAbilityXp`/`ScaledRestrictedAbilityXp`/
+`ReplacesLifeStageXp` pool permits spending **its own** earmarked points on the
+Abilities/categories it names, and nothing more — general XP on the same
+category still needs an explicit `Effect::AbilityAuthorization`. The old
+`ability_authorizations` folded both into one unconditional set, so a
+category-scoped pool (Privileged Upbringing, Hermetic Experience) silently
+authorized spending general XP on the whole category too (`ArMDE:4806-4808`,
+`ArMDE:4063-4066`, both stating the opposite: "You may not... buy Academic or
+Martial Abilities with your normal pool of experience points unless you have
+another Virtue or Flaw permitting that").
+
+**Engine (`crates/arm-rules/src/effective/xp.rs`,
+`crates/arm-rules/src/validation/authorization.rs`,
+`crates/arm-rules/src/effective/parameter_options.rs`):**
+
+- `xp.rs::AbilityAuthorizations` replaces the old bare
+  `(BTreeSet<AuthorizedAbility>, BTreeSet<AbilityCategory>)` tuple with two
+  pairs of sets: `explicit_abilities`/`explicit_categories` (an
+  `AbilityAuthorization`, `AbilityScoreGrant`/`AbilityScoreGrantParam`, or
+  `AbilityBonusGated` target — permission that holds regardless of which XP
+  funds the spend) and `pool_abilities`/`pool_categories`
+  (`RestrictedAbilityXp`/`ScaledRestrictedAbilityXp`/`ReplacesLifeStageXp` —
+  permission scoped to that pool's own points).
+- `xp.rs::ability_is_authorized` is the one shared predicate D43 asks not to
+  be forked: `(category, ability, parameter, categories_set, abilities_set) ->
+  bool`. `validation/authorization.rs::validate_ability_authorization` (the
+  OWNERSHIP check) calls it twice — once per half, OR'd — unchanged in effect
+  from before D43. `xp.rs::build_spends` (the FUNDING check) calls it once,
+  against the explicit half alone.
+- `xp.rs::Spend` gained `general_eligible: bool`, true for every Art/Mastery
+  spend and for an Ability spend that is ungated, hermetically-trained-exempt,
+  or explicitly authorized. `xp.rs::build_capacity_matrix`'s GENERAL→spend edge
+  is `spend.general_eligible ? spend.cost : 0` (was an unconditional
+  `spend.cost`) — a spend only a pool permits gets pool edges only, so demand
+  above the pool surfaces as the ordinary `not_enough_xp` shortfall, never
+  `ability_category_requires_virtue` (existence stays legal either way).
+- `xp.rs::magus_later_life_pool` reads the explicit set only — a pool-implied
+  permission (Warrior's own Martial-XP earmark) does not widen what a magus's
+  unrestricted later-life block may fund.
+- `effective/parameter_options.rs::ability_parameter_options` unions both
+  halves — owning-at-all vs. funding-from-general is a funding question, not a
+  picker one.
+
+**Data — 62 entries backfilled with an `ability_authorization` effect** (the
+verdict table's `docs/vf-audit/corrections.md` § 3.2/§ 3.2a "primary auth" +
+"class+auth" findings, all in `rules/core/virtues_flaws.json`; most also
+reclassify `narrative`/`uncomputed_rule` → `creation_effect` since the entry
+now computes something, D46):
+
+*Category grant* — `virtue.alim` (academic, `ArMDE:3380-3383`),
+`virtue.almogaten` (martial, `ArMDE:3396-3403`), `virtue.almogavar` (martial,
+`ArMDE:3404-3409`), `virtue.archieunuch` (academic, `ArMDE:3436-3439`), `virtue.beadle`
+(academic, `ArMDE:3480-3483`), `virtue.berserk` (martial, `ArMDE:3500-3503`),
+`virtue.brother_chaplain` (academic, `ArMDE:3529-3532`), `virtue.brother_knight`
+(academic+martial, `ArMDE:3533-3536`), `virtue.brother_sergeant` (martial,
+`ArMDE:3537-3540`), `virtue.bureaucrat` (academic, `ArMDE:3541-3544`), `virtue.clerk`
+(academic, `ArMDE:3571-3574`), `virtue.educated` (academic, `ArMDE:3711-3713`),
+`virtue.eunuch` (academic, `ArMDE:3771-3774`), `virtue.failed_apprentice`
+(academic+arcane+martial, `ArMDE:3843-3846`), `flaw.branded_criminal` (martial,
+`ArMDE:5749-5752`), `virtue.fidai` (martial, `ArMDE:3877-3882`), `virtue.guild_dean`
+(academic, `ArMDE:4045-4048`), `virtue.guild_master` (academic, `ArMDE:4049-4052`),
+`virtue.knight` (martial, `ArMDE:4195-4198`), `virtue.lasiq` (martial,
+`ArMDE:4233-4236`), `virtue.marshal` (martial, `ArMDE:4449-4456`), `virtue.master_bard`
+(arcane, `ArMDE:4457-4462`), `virtue.master_of_kennels` (martial, `ArMDE:4467-4470`),
+`virtue.mazdean_priest` (academic, `ArMDE:4480-4487`), `virtue.mendicant_friar`
+(academic, `ArMDE:4488-4495`), `virtue.mercenary_captain` (martial,
+`ArMDE:4500-4505`), `virtue.notary` (academic, `ArMDE:4598-4601`), `virtue.perfectus`
+(academic, `ArMDE:4632-4641`), `virtue.prestigious_student` (academic,
+`ArMDE:4792-4795`), `virtue.priest` (academic, `ArMDE:4796-4805`), `virtue.redcap`
+(academic+arcane+martial, `ArMDE:4842-4851`), `virtue.religious` (academic,
+`ArMDE:4856-4861`), `virtue.rosh_beth_din` (academic, `ArMDE:4878-4883`),
+`virtue.senior_clergy` (academic, `ArMDE:4910-4921`), `virtue.senior_master`
+(academic, `ArMDE:4922-4925`), `virtue.templar_administrator` (academic,
+`ArMDE:5109-5112`), `virtue.town_magistrate` (academic, `ArMDE:5149-5152`),
+`virtue.troubadour` (academic, `ArMDE:5157-5164`), `virtue.turb_trained` (martial
+half only — the dead-language half needs a player-chosen `language` parameter,
+deferred, `ArMDE:5179-5182`), `virtue.venditor` (academic, `ArMDE:5207-5210`),
+`flaw.failed_monk` (academic, `ArMDE:6068-6071`), `flaw.outlaw` (martial,
+`ArMDE:6542-6545`), `flaw.outlaw_leader` (martial, `ArMDE:6546-6549`).
+
+*Single-Ability grant* — `virtue.blood_of_the_nephilim` (dominion_lore,
+`ArMDE:3504-3518`), `virtue.demonic_blood` (infernal_lore, `ArMDE:3649-3662`),
+`virtue.faerie_blood` (faerie_lore, `ArMDE:3797-3820`),
+`virtue.familiarity_with_the_fae` (faerie_lore, `ArMDE:3857-3860`),
+`virtue.magical_blood` (magic_lore, `ArMDE:4359-4372`),
+`virtue.master_of_form_creatures` (magic_lore, `ArMDE:4463-4466`),
+`virtue.strong_faerie_blood` (faerie_lore, `ArMDE:5032-5047`),
+`flaw.diabolic_past` (infernal_lore, `ArMDE:5958-5961`), `flaw.faerie_friend`
+(faerie_lore, `ArMDE:6052-6055`), `flaw.faerie_upbringing` (faerie_lore,
+`ArMDE:6056-6059`), `flaw.monstrous_blood` (magic_lore, `ArMDE:6454-6467`),
+`flaw.warped_by_magic` (magic_lore, `ArMDE:7019-7022`),
+`flaw.imagined_folk_tradition_vulnerability` (faerie_lore, `ArMDE:6280-6283`),
+`flaw.magical_fascination` (faerie_lore+magic_lore, `ArMDE:6392-6395`),
+`flaw.pagan` (faerie_lore+magic_lore, `ArMDE:6570-6573`).
+
+*Id-form (named Abilities, not a whole category)* —
+`virtue.lupus_the_wolf` (artes_liberales + Latin, `ArMDE:4335-4338`),
+`virtue.simple_student` (artes_liberales + Latin, `ArMDE:4958-4963`),
+`virtue.university_grammar_teacher` (artes_liberales + Latin,
+`ArMDE:5195-5198`), `virtue.jurist` (artes_liberales, civil_and_canon_law, Latin,
+`ArMDE:4163-4168`), `virtue.sufi` (theology_islam, islamic_law, dominion_lore,
+`ArMDE:5077-5084`), `virtue.mamluk` (theology_islam id + martial category,
+`ArMDE:4443-4448`), `virtue.senior_bard` (all four realm Lores,
+`ArMDE:4904-4909`).
+
+*Realm-gated (D14-shape-2, same `ParamGate` `virtue.student_of_realm` already
+uses)* — `virtue.folk_magic`: one `ability_authorization` naming all four Realm
+Lores, each gated `realm == <its realm>` (`ArMDE:3907-3920`).
+
+**Five entries beyond the verdict table, added after `book_templates.rs`
+regressions surfaced they needed the same fix:** `virtue.warrior` (martial,
+"You may acquire Martial Abilities during character creation", `ArMDE:5227-
+5229`, in addition to its existing 50xp pool), `virtue.arcane_lore` (arcane,
+"You may take Arcane Abilities during character generation", `ArMDE:3430-3435`,
+likewise), `virtue.cathedral_school_master` (academic, "He may learn any
+Academic Ability", `ArMDE:3549-3554`), `virtue.magister_in_artibus` (academic, "You
+may buy Academic Abilities during character generation", `ArMDE:4385-4394`),
+`virtue.mentored_by_demons` (academic+arcane+martial, "Students of demons may
+also have Abilities that are usually restricted to suitable backgrounds" —
+read as authorizing the three gated categories, `ArMDE:4496-4499`).
+
+**The Educated family (§ 3.2a) — four new entries, `ArMDE:3715-3729`.**
+`virtue.educated_bardic` (`ArMDE:3715-3717`) states only a 50xp pool (Art of Memory,
+Profession: Storyteller/Poet, any Area/Organization Lore) and no separate
+"may purchase Academic Abilities" sentence — under D43 it carries **no**
+`ability_authorization`, the clean minimal case the ruling exists for: owning
+Art of Memory stays legal only up to what the pool funds
+(`d43_educated_bardic_refuses_spending_beyond_its_pool`). Its three siblings
+each state the broader sentence too, so each gets
+`ability_authorization{categories:[academic]}` alongside its own pool:
+`virtue.educated_islamic` (`ArMDE:3719-3721`), `virtue.educated_hebrew`
+(`ArMDE:3723-3725`, its "Characters from Iberia or the East may also spend some of
+these points on Arabic" clause is stated in `description`/`summary` rather
+than computed — the condition is regional, not a fact the engine tracks),
+`virtue.educated_vernacular` (`ArMDE:3727-3729`). German heading anchors added to
+`rules/i18n/de/source_anchors.json` (`gebildet-bardisch`, `gebildet-islamisch`,
+`gebildet-hebräisch`, `gebildet-weltlich`), same lines as the English
+(`ArMDE`-parallel German source).
+
+**`virtue.well_traveled`** (`ArMDE:5239-5242`, was `narrative` with no
+effects): "fifty bonus experience points to spend on living languages, Area
+Lores, and Bargain, Carouse, Charm, Etiquette, Folk Ken, or Guile" — every
+target is `general` category (ungated), so no `ability_authorization` is
+needed, only the missing `restricted_ability_xp` pool + reclass to
+`creation_effect`. **Follow-on fixture fix:** `companion_priest.json`'s
+`xp_pool` moved 590 → 540 — the priest holds several of Well-Traveled's pool
+targets, and `xp.rs::two_phase_max_flow` fills restricted pools before
+GENERAL, so those 50 points now come from the pool rather than GENERAL; the
+fixture's total demand (590) is unchanged but GENERAL's own share of it is
+540, and leaving it at 590 left 50 points genuinely unspent
+(`general_xp_unspent`).
+
+**`virtue.custos`/`virtue.covenfolk` ↔ `virtue.wealthy`/`flaw.poor`
+(row 45, `ArMDE:3629-3634`/`ArMDE:3609-3612`):** "you may not take the Wealthy
+Virtue or Poor Flaw" / "You may not take the Wealthy Major Virtue or the Poor
+Major Flaw" — `incompatible_with` added on all four entries (symmetric edges).
+
+**Deferred, recorded rather than fixed here (each a `PENDING_DROPPED_CLAUSE`
+row in `uncomputed_clauses.rs`, citing the deferring slice):** the Wealthy/
+Poor `incompatible_with` gap on `virtue.almogavar`/`virtue.mendicant_friar`/
+`virtue.perfectus`/`virtue.turb_trained`/`flaw.branded_criminal` and
+`virtue.priest`'s conditional parish-priest Poor-Flaw prohibition (F-340's
+family, X4); `virtue.turb_trained`'s open dead-language parameter (X6/D9p1);
+`virtue.town_magistrate`'s Ability-3 prerequisite (F-322); `flaw.
+magical_fascination`'s "score of 1, but no more" cap (D3-inexpressible).
+
+**Tests:** `crates/arm-rules/tests/x1_authorization_family.rs` (new, 13
+tests — the contract for this slice); `book_templates.rs` (DISAGREEMENTS F1/
+K1/P1/W1/B1 resolved: `the_female_scholar_matches_the_book`,
+`the_knight_matches_the_book`, `the_priest_matches_the_book`,
+`the_witch_matches_the_book`, `the_berserker_matches_the_book` now assert
+`codes(&[])`); `f2_conditional_modifiers.rs::berserk_loses_every_
+conditional_effect_and_stays_a_creation_effect` (D46 re-scope, above);
+`uncomputed_clauses.rs` (~60 `PENDING_MECHANICAL_CLASSIFICATION` rows removed,
+now `COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE`, or `PENDING_DROPPED_CLAUSE` for the
+genuine residual gaps above); `rules_source_provenance.rs` (the four new DE
+anchors).
+
 ---
 
 ## Other available books

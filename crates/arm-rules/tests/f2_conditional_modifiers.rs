@@ -1,11 +1,21 @@
 //! F2's conditional-modifier fix (design-f0-book-template-engine.md § 1a/§ 2c,
 //! D61 invoking D15's already-shipped `flaw.corrupted_spells` precedent):
-//! Berserk and Ways of the Land lose every effect and reclassify to
-//! `uncomputed_rule`; Cyclic Magic (both ids) and Special Circumstances lose
-//! only their unconditional Casting-Total clause and keep their other,
-//! untouched effect, classification unchanged. Both changes must reach the
-//! player through `description` in every locale where the guards in
+//! Berserk and Ways of the Land lose every *conditional* effect (the "while
+//! berserk"/"in that terrain" combat and Casting-Total figures no template
+//! ever prints); Cyclic Magic (both ids) and Special Circumstances lose only
+//! their unconditional Casting-Total clause and keep their other, untouched
+//! effect, classification unchanged. Both changes must reach the player
+//! through `description` in every locale where the guards in
 //! `uncomputed_clauses.rs` require it.
+//!
+//! **Amended by X1/D43** (`docs/vf-audit/decisions.md`): Berserk separately
+//! gained a PERMANENT, unconditional `ability_authorization` — ArMDE:3500-3503
+//! "You may learn Martial Abilities at character creation" is not the
+//! conditional "while berserk" figure F2 deleted, so it is not affected by
+//! this file's ruling and survives. Per D46 (classification follows what IS
+//! computed, never where), an entry that computes something is
+//! `creation_effect` — Berserk no longer reclassifies to `uncomputed_rule`,
+//! it just loses its conditional trio.
 //!
 //! RED CHECKPOINT: this file pins the FINAL shape of the five catalogue
 //! entries. `rules/core/virtues_flaws.json` and the two `rules/i18n/<lang>/
@@ -47,20 +57,33 @@ fn full_ruleset() -> Ruleset {
 /// template anywhere shows the "+2/-2/+2 while berserk" state — "are you
 /// currently berserk" is exactly D61's uncomputable shape. D15's shipped
 /// precedent (`flaw.corrupted_spells`) is delete + reclassify, not surface.
+///
+/// Amended by X1/D43: Berserk's OTHER, unconditional grant — "You may learn
+/// Martial Abilities at character creation" (ArMDE:3500-3503) — is not the
+/// conditional combat figure this test is about, so it is untouched by F2 and
+/// keeps the entry `creation_effect` per D46 (classification follows what IS
+/// computed).
 #[test]
-fn berserk_loses_every_effect_and_becomes_uncomputed_rule() {
+fn berserk_loses_every_conditional_effect_and_stays_a_creation_effect() {
     let rs = full_ruleset();
     let item = rs
         .item(&Id::new("virtue.berserk"))
         .expect("virtue.berserk must ship");
     assert_eq!(
         item.classification,
-        Classification::UncomputedRule,
-        "no template ever prints a boosted Berserk figure, so no effect survives (D61/D15)"
+        Classification::CreationEffect,
+        "the permanent ability_authorization (X1/D43) is computed, so D46 keeps this creation_effect"
     );
-    assert!(
-        item.effects.is_empty(),
-        "the combat_mod x2 + soak_mod trio must be deleted outright, not surfaced"
+    assert_eq!(
+        item.effects,
+        vec![Effect::AbilityAuthorization {
+            abilities: vec![],
+            categories: vec![arm_rules::types::CategoryRef::Bare(
+                arm_rules::AbilityCategory::Martial
+            )],
+        }],
+        "the combat_mod x2 + soak_mod trio must be deleted outright, not surfaced — only the \
+         unconditional Martial-Ability grant (X1/D43) survives"
     );
 }
 

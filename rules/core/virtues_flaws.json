@@ -263,8 +263,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "branded-criminal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5749, 5752] }
   },
   {
@@ -741,8 +742,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.infernal_lore"] }],
     "source": { "anchor": "diabolic-past", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5958, 5961] }
   },
   {
@@ -971,8 +973,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore"] }],
     "source": { "anchor": "faerie-friend", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6052, 6055] }
   },
   {
@@ -980,8 +983,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["personality"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore"] }],
     "source": { "anchor": "faerie-upbringing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6056, 6059] }
   },
   {
@@ -1013,7 +1017,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_reputation", "kind": "local", "score": 2 },
-      { "type": "grants_reputation", "kind": "ecclesiastical", "score": 2 }
+      { "type": "grants_reputation", "kind": "ecclesiastical", "score": 2 },
+      { "type": "ability_authorization", "categories": ["academic"] }
     ],
     "source": { "anchor": "failed-monk", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6068, 6071] }
   },
@@ -1463,8 +1468,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["personality"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore"] }],
     "source": { "anchor": "imagined-folk-tradition-vulnerability", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6280, 6283] }
   },
   {
@@ -1736,8 +1742,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["personality"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore", "ability.magic_lore"] }],
     "source": { "anchor": "magical-fascination", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6392, 6395] }
   },
   {
@@ -1872,7 +1879,10 @@
     "categories": ["supernatural"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }],
+    "effects": [
+      { "type": "aging_mod", "kind": "aging_roll", "amount": -1 },
+      { "type": "ability_authorization", "abilities": ["ability.magic_lore"] }
+    ],
     "source": { "anchor": "monstrous-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6454, 6467] }
   },
   {
@@ -2047,7 +2057,10 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "grants_reputation", "score": 2 }],
+    "effects": [
+      { "type": "grants_reputation", "score": 2 },
+      { "type": "ability_authorization", "categories": ["martial"] }
+    ],
     "source": { "anchor": "outlaw", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6542, 6545] }
   },
   {
@@ -2057,7 +2070,10 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 3 }],
+    "effects": [
+      { "type": "grants_reputation", "kind": "local", "score": 3 },
+      { "type": "ability_authorization", "categories": ["martial"] }
+    ],
     "source": { "anchor": "outlaw-leader", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6546, 6549] }
   },
   {
@@ -2127,8 +2143,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["personality"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore", "ability.magic_lore"] }],
     "source": { "anchor": "pagan", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6570, 6573] }
   },
   {
@@ -2199,6 +2216,7 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.covenfolk", "virtue.custos"],
     "prerequisites": { "kind": "is_companion" },
     "effects": [{ "type": "later_life_xp_rate", "amount": 10 }],
     "source": { "anchor": "poor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6594, 6596] }
@@ -3141,7 +3159,10 @@
     "categories": ["supernatural"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }],
+    "effects": [
+      { "type": "warping_grant", "score": 1, "points": 5 },
+      { "type": "ability_authorization", "abilities": ["ability.magic_lore"] }
+    ],
     "source": { "anchor": "warped-by-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7019, 7022] }
   },
   {
@@ -3377,8 +3398,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "alim", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3380, 3383] }
   },
   {
@@ -3405,8 +3427,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "almogaten", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3396, 3403] }
   },
   {
@@ -3414,8 +3437,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "almogavar", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3404, 3409] }
   },
   {
@@ -3488,7 +3512,10 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["arcane"] }],
+    "effects": [
+      { "type": "restricted_ability_xp", "amount": 50, "categories": ["arcane"] },
+      { "type": "ability_authorization", "categories": ["arcane"] }
+    ],
     "source": { "anchor": "arcane-lore", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3430, 3435] }
   },
   {
@@ -3496,8 +3523,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "archieunuch", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3436, 3439] }
   },
   {
@@ -3538,8 +3566,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "beadle", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3480, 3483] }
   },
   {
@@ -3557,8 +3586,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "uncomputed_rule",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "berserk", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3500, 3503] }
   },
   {
@@ -3568,7 +3598,10 @@
     "categories": ["supernatural"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "size_delta", "amount": 1 }],
+    "effects": [
+      { "type": "size_delta", "amount": 1 },
+      { "type": "ability_authorization", "abilities": ["ability.dominion_lore"] }
+    ],
     "source": { "anchor": "blood-of-the-nephilim", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3504, 3518] }
   },
   {
@@ -3595,8 +3628,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "brother-chaplain", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3529, 3532] }
   },
   {
@@ -3604,8 +3638,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic", "martial"] }],
     "source": { "anchor": "brother-knight", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3533, 3536] }
   },
   {
@@ -3613,8 +3648,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "brother-sergeant", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3537, 3540] }
   },
   {
@@ -3622,8 +3658,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "bureaucrat", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3541, 3544] }
   },
   {
@@ -3644,7 +3681,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_reputation", "kind": "academic", "score": 2 },
-      { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.teaching"], "categories": ["academic"] }
+      { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.teaching"], "categories": ["academic"] },
+      { "type": "ability_authorization", "categories": ["academic"] }
     ],
     "source": { "anchor": "cathedral-school-master", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3549, 3554] }
   },
@@ -3695,8 +3733,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "clerk", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3571, 3574] }
   },
   {
@@ -3755,6 +3794,7 @@
     "categories": ["social_status"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.poor", "virtue.wealthy"],
     "source": { "anchor": "covenfolk", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3609, 3612] }
   },
   {
@@ -3805,6 +3845,7 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.poor", "virtue.wealthy"],
     "parameters": [{ "key": "study", "type": "ref", "domain": "enumerated", "values": ["ability_category.academic", "ability_category.arcane", "ability_category.martial"] }],
     "effects": [
       {
@@ -3859,7 +3900,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "might_grant", "realm": "infernal", "score": 5 },
-      { "type": "power_levels", "amount": 30 }
+      { "type": "power_levels", "amount": 30 },
+      { "type": "ability_authorization", "abilities": ["ability.infernal_lore"] }
     ],
     "source": { "anchor": "demonic-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3649, 3662] }
   },
@@ -3966,9 +4008,93 @@
         "amount": 50,
         "abilities": ["ability.artes_liberales"],
         "instances": [{ "ability": "ability.dead_language", "instance": { "literal": "language.latin" } }]
-      }
+      },
+      { "type": "ability_authorization", "categories": ["academic"] }
     ],
     "source": { "anchor": "educated", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] }
+  },
+  {
+    "id": "virtue.educated_bardic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "categories": ["general"],
+    "classification": "creation_effect",
+    "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "restricted_ability_xp",
+        "amount": 50,
+        "abilities": ["ability.area_lore", "ability.art_of_memory", "ability.organization_lore"],
+        "instances": [
+          { "ability": "ability.profession", "instance": { "literal": "profession.storyteller" } },
+          { "ability": "ability.profession", "instance": { "literal": "profession.poet" } }
+        ]
+      }
+    ],
+    "source": { "anchor": "educated-bardic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3715, 3717] }
+  },
+  {
+    "id": "virtue.educated_hebrew",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "categories": ["general"],
+    "classification": "creation_effect",
+    "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "restricted_ability_xp",
+        "amount": 50,
+        "abilities": ["ability.judaic_lore", "ability.theology_judaism"],
+        "instances": [
+          { "ability": "ability.dead_language", "instance": { "literal": "language.aramaic" } },
+          { "ability": "ability.dead_language", "instance": { "literal": "language.hebrew" } }
+        ]
+      },
+      { "type": "ability_authorization", "categories": ["academic"] }
+    ],
+    "source": { "anchor": "educated-hebrew", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3723, 3725] }
+  },
+  {
+    "id": "virtue.educated_islamic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "categories": ["general"],
+    "classification": "creation_effect",
+    "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "restricted_ability_xp",
+        "amount": 50,
+        "abilities": ["ability.artes_liberales", "ability.islamic_law", "ability.theology_islam"],
+        "instances": [
+          { "ability": "ability.dead_language", "instance": { "literal": "language.arabic" } },
+          { "ability": "ability.dead_language", "instance": { "literal": "language.greek" } },
+          { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } },
+          { "ability": "ability.dead_language", "instance": { "literal": "language.persian" } }
+        ]
+      },
+      { "type": "ability_authorization", "categories": ["academic"] }
+    ],
+    "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] }
+  },
+  {
+    "id": "virtue.educated_vernacular",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "categories": ["general"],
+    "classification": "creation_effect",
+    "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "restricted_ability_xp",
+        "amount": 50,
+        "categories": ["academic"],
+        "abilities": ["ability.bargain", "ability.living_language", "ability.organization_lore"],
+        "instances": [{ "ability": "ability.profession", "instance": { "literal": "profession.merchant" } }]
+      },
+      { "type": "ability_authorization", "categories": ["academic"] }
+    ],
+    "source": { "anchor": "educated-vernacular", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3727, 3729] }
   },
   {
     "id": "virtue.elemental_magic",
@@ -4062,8 +4188,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "eunuch", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3771, 3774] }
   },
   {
@@ -4120,7 +4247,10 @@
     "categories": ["supernatural"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }],
+    "effects": [
+      { "type": "aging_mod", "kind": "aging_roll", "amount": -1 },
+      { "type": "ability_authorization", "abilities": ["ability.faerie_lore"] }
+    ],
     "source": { "anchor": "faerie-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3797, 3820] }
   },
   {
@@ -4160,9 +4290,10 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.the_gift"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic", "arcane", "martial"] }],
     "source": { "anchor": "failed-apprentice", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3843, 3846] }
   },
   {
@@ -4193,8 +4324,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "uncomputed_rule",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore"] }],
     "source": { "anchor": "familiarity-with-the-fae", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3857, 3860] }
   },
   {
@@ -4241,8 +4373,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "fidai", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3877, 3882] }
   },
   {
@@ -4292,9 +4425,20 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "uncomputed_rule",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "category", "type": "ref", "domain": "enumerated", "values": ["folk_magic.abjuration", "folk_magic.divination", "folk_magic.evil_eye", "folk_magic.healing"], "max_per_value": 255 }, { "key": "realm", "type": "ref", "domain": "realm", "at_most_one_of": [["realm.divine", "realm.infernal"]], "max_per_value": 255 }],
+    "effects": [
+      {
+        "type": "ability_authorization",
+        "abilities": [
+          { "ability": "ability.dominion_lore", "gate": { "param": "realm", "equals": "realm.divine" } },
+          { "ability": "ability.faerie_lore", "gate": { "param": "realm", "equals": "realm.faerie" } },
+          { "ability": "ability.infernal_lore", "gate": { "param": "realm", "equals": "realm.infernal" } },
+          { "ability": "ability.magic_lore", "gate": { "param": "realm", "equals": "realm.magic" } }
+        ]
+      }
+    ],
     "max_total": 255,
     "source": { "anchor": "folk-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3907, 3920] }
   },
@@ -4530,8 +4674,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "guild-dean", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4045, 4048] }
   },
   {
@@ -4539,8 +4684,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "guild-master", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4049, 4052] }
   },
   {
@@ -4776,8 +4922,14 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "ability_authorization",
+        "abilities": ["ability.artes_liberales", "ability.civil_and_canon_law", { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } }]
+      }
+    ],
     "source": { "anchor": "jurist", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4163, 4168] }
   },
   {
@@ -4821,8 +4973,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "knight", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4195, 4198] }
   },
   {
@@ -4878,8 +5031,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "lasiq", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4233, 4236] }
   },
   {
@@ -5056,8 +5210,14 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "ability_authorization",
+        "abilities": ["ability.artes_liberales", { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } }]
+      }
+    ],
     "source": { "anchor": "lupus-the-wolf", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4335, 4338] }
   },
   {
@@ -5123,7 +5283,8 @@
       { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": 1,
         "gate": { "param": "bloodline", "equals": "bloodline.magic_human" }, "cap": "within_base" },
       { "type": "grants_reputation", "score": 3,
-        "gate": { "param": "bloodline", "equals": "bloodline.magic_human" } }
+        "gate": { "param": "bloodline", "equals": "bloodline.magic_human" } },
+      { "type": "ability_authorization", "abilities": ["ability.magic_lore"] }
     ],
     "source": { "anchor": "magical-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4359, 4372] }
   },
@@ -5167,7 +5328,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_reputation", "kind": "academic", "score": 2 },
-      { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.teaching"], "categories": ["academic"] }
+      { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.teaching"], "categories": ["academic"] },
+      { "type": "ability_authorization", "categories": ["academic"] }
     ],
     "source": { "anchor": "magister-in-artibus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4385, 4394] }
   },
@@ -5229,8 +5391,11 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "ability_authorization", "abilities": ["ability.theology_islam"], "categories": ["martial"] }
+    ],
     "source": { "anchor": "mamluk", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4443, 4448] }
   },
   {
@@ -5240,11 +5405,14 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.etiquette", "ability.hunt", "ability.ride"],
-      "instances": [
-        { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } },
-        { "ability": "ability.profession", "instance": { "literal": "profession.marshal" } }
-      ] }],
+    "effects": [
+      { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.etiquette", "ability.hunt", "ability.ride"],
+        "instances": [
+          { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } },
+          { "ability": "ability.profession", "instance": { "literal": "profession.marshal" } }
+        ] },
+      { "type": "ability_authorization", "categories": ["martial"] }
+    ],
     "source": { "anchor": "marshal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4449, 4456] }
   },
   {
@@ -5261,7 +5429,8 @@
         "instances": [
           { "ability": "ability.profession", "instance": { "literal": "profession.storyteller" } },
           { "ability": "ability.profession", "instance": { "literal": "profession.poet" } }
-        ] }
+        ] },
+      { "type": "ability_authorization", "categories": ["arcane"] }
     ],
     "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4462] }
   },
@@ -5270,9 +5439,10 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.magic_lore"] }],
     "max_total": 255,
     "source": { "anchor": "master-of-form-creatures", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4463, 4466] }
   },
@@ -5283,11 +5453,14 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.etiquette", "ability.hunt", "ability.ride"],
-      "instances": [
-        { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } },
-        { "ability": "ability.profession", "instance": { "literal": "profession.master_of_kennels" } }
-      ] }],
+    "effects": [
+      { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.etiquette", "ability.hunt", "ability.ride"],
+        "instances": [
+          { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } },
+          { "ability": "ability.profession", "instance": { "literal": "profession.master_of_kennels" } }
+        ] },
+      { "type": "ability_authorization", "categories": ["martial"] }
+    ],
     "source": { "anchor": "master-of-kennels", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4467, 4470] }
   },
   {
@@ -5317,8 +5490,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "mazdean-priest", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4480, 4487] }
   },
   {
@@ -5326,8 +5500,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "mendicant-friar", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4488, 4495] }
   },
   {
@@ -5340,7 +5515,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "restricted_ability_xp", "amount": 50, "categories": ["academic", "arcane", "general", "martial", "supernatural"] },
-      { "type": "waives_ability_age_cap" }
+      { "type": "waives_ability_age_cap" },
+      { "type": "ability_authorization", "categories": ["academic", "arcane", "martial"] }
     ],
     "max_per_target": 255,
     "max_total": 255,
@@ -5351,8 +5527,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "mercenary-captain", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4500, 4505] }
   },
   {
@@ -5491,8 +5668,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "notary", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4598, 4601] }
   },
   {
@@ -5555,8 +5733,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "perfectus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4632, 4641] }
   },
   {
@@ -5674,8 +5853,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "prestigious-student", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4792, 4795] }
   },
   {
@@ -5683,8 +5863,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "priest", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4796, 4805] }
   },
   {
@@ -5796,7 +5977,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "item_level_budget", "amount": 50 },
-      { "type": "replaces_life_stage_xp", "stage": "apprenticeship", "amount": 300, "years": 15, "categories": ["academic", "arcane", "general", "martial", "supernatural"] }
+      { "type": "replaces_life_stage_xp", "stage": "apprenticeship", "amount": 300, "years": 15, "categories": ["academic", "arcane", "general", "martial", "supernatural"] },
+      { "type": "ability_authorization", "categories": ["academic", "arcane", "martial"] }
     ],
     "source": { "anchor": "redcap", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4842, 4851] }
   },
@@ -5815,8 +5997,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "religious", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4856, 4861] }
   },
   {
@@ -5860,7 +6043,8 @@
       { "type": "grants_reputation", "score": 2 },
       { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.rabbinic_law", "ability.theology_judaism"],
         "instances": [{ "ability": "ability.dead_language", "instance": { "literal": "language.hebrew" } }] },
-      { "type": "grants_selection", "items": ["virtue.social_contacts"] }
+      { "type": "grants_selection", "items": ["virtue.social_contacts"] },
+      { "type": "ability_authorization", "categories": ["academic"] }
     ],
     "source": { "anchor": "rosh-beth-din", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4878, 4883] }
   },
@@ -5927,7 +6111,11 @@
         "instances": [
           { "ability": "ability.profession", "instance": { "literal": "profession.storyteller" } },
           { "ability": "ability.profession", "instance": { "literal": "profession.poet" } }
-        ] }
+        ] },
+      {
+        "type": "ability_authorization",
+        "abilities": ["ability.dominion_lore", "ability.faerie_lore", "ability.infernal_lore", "ability.magic_lore"]
+      }
     ],
     "source": { "anchor": "senior-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4904, 4909] }
   },
@@ -5940,7 +6128,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_reputation", "kind": "local", "score": 4 },
-      { "type": "grants_reputation", "kind": "ecclesiastical", "score": 4 }
+      { "type": "grants_reputation", "kind": "ecclesiastical", "score": 4 },
+      { "type": "ability_authorization", "categories": ["academic"] }
     ],
     "source": { "anchor": "senior-clergy", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4910, 4921] }
   },
@@ -5949,8 +6138,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "senior-master", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4922, 4925] }
   },
   {
@@ -6030,7 +6220,11 @@
     "parameters": [{ "key": "years", "type": { "number": { "min": 1, "max": 2 } }, "domain": "number" }],
     "effects": [
       { "type": "scaled_restricted_ability_xp", "param": "years", "per_unit": 30,
-        "abilities": ["ability.artes_liberales", { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } }] }
+        "abilities": ["ability.artes_liberales", { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } }] },
+      {
+        "type": "ability_authorization",
+        "abilities": ["ability.artes_liberales", { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } }]
+      }
     ],
     "source": { "anchor": "simple-student", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4958, 4963] }
   },
@@ -6161,7 +6355,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_selection", "items": ["virtue.second_sight"] },
-      { "type": "aging_mod", "kind": "aging_roll", "amount": -3 }
+      { "type": "aging_mod", "kind": "aging_roll", "amount": -3 },
+      { "type": "ability_authorization", "abilities": ["ability.faerie_lore"] }
     ],
     "source": { "anchor": "strong-faerie-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5032, 5047] }
   },
@@ -6225,7 +6420,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status", "supernatural"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "parameters": [
       {
@@ -6234,6 +6429,9 @@
         "domain": "category",
         "values": ["social_status", "supernatural"]
       }
+    ],
+    "effects": [
+      { "type": "ability_authorization", "abilities": ["ability.dominion_lore", "ability.islamic_law", "ability.theology_islam"] }
     ],
     "max_total": 1,
     "source": { "anchor": "sufi", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5077, 5084] }
@@ -6272,8 +6470,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "templar-administrator", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5109, 5112] }
   },
   {
@@ -6401,8 +6600,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "town-magistrate", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5149, 5152] }
   },
   {
@@ -6420,8 +6620,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "troubadourtrobairitz", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5157, 5164] }
   },
   {
@@ -6457,8 +6658,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "turb-trained", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5179, 5182] }
   },
   {
@@ -6497,8 +6699,14 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "ability_authorization",
+        "abilities": ["ability.artes_liberales", { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } }]
+      }
+    ],
     "source": { "anchor": "university-grammar-teacher", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5195, 5198] }
   },
   {
@@ -6519,7 +6727,10 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.bargain", "ability.charm", "ability.folk_ken", "ability.guile", "ability.intrigue", "ability.living_language"] }],
+    "effects": [
+      { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.bargain", "ability.charm", "ability.folk_ken", "ability.guile", "ability.intrigue", "ability.living_language"] },
+      { "type": "ability_authorization", "categories": ["academic"] }
+    ],
     "source": { "anchor": "venditor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5207, 5210] }
   },
   {
@@ -6567,7 +6778,10 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }],
+    "effects": [
+      { "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] },
+      { "type": "ability_authorization", "categories": ["martial"] }
+    ],
     "source": { "anchor": "warrior", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5227, 5229] }
   },
   {
@@ -6588,6 +6802,7 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.covenfolk", "virtue.custos"],
     "prerequisites": { "kind": "is_companion" },
     "effects": [{ "type": "later_life_xp_rate", "amount": 20 }],
     "source": { "anchor": "wealthy", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5235, 5238] }
@@ -6597,8 +6812,15 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "restricted_ability_xp",
+        "amount": 50,
+        "abilities": ["ability.area_lore", "ability.bargain", "ability.carouse", "ability.charm", "ability.etiquette", "ability.folk_ken", "ability.guile", "ability.living_language"]
+      }
+    ],
     "source": { "anchor": "well-traveled", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5239, 5242] }
   },
   {

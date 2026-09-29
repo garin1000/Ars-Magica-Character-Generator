@@ -71,7 +71,14 @@ pub fn ability_parameter_options(
     entity: &Entity,
     ruleset: &Ruleset,
 ) -> Vec<AbilityParameterOptions> {
-    let (authorized, _categories) = ability_authorizations(entity, ruleset);
+    // D43 split doesn't matter for a UI hint (own it at all vs. fund it from
+    // general XP is a funding question, not a picker one) — union both halves.
+    let auth = ability_authorizations(entity, ruleset);
+    let authorized: BTreeSet<AuthorizedAbility> = auth
+        .explicit_abilities
+        .into_iter()
+        .chain(auth.pool_abilities)
+        .collect();
 
     let mut options = Vec::new();
     for ability in ruleset.abilities() {

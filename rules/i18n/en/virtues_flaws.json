@@ -1753,6 +1753,22 @@
     "name": "Educated",
     "summary": "+50 experience points, spent only on Latin and Artes Liberales. You may buy Academic Abilities."
   },
+  "virtue.educated_bardic": {
+    "name": "Educated (Bardic)",
+    "summary": "+50 experience points, spent on Art of Memory, Profession: Storyteller, Profession: Poet, any Area Lore, or any Organization Lore."
+  },
+  "virtue.educated_hebrew": {
+    "name": "Educated (Hebrew)",
+    "summary": "+50 experience points, spent on some or all of Hebrew, Aramaic, Theology: Judaism, and Judaic Lore (plus Arabic, for characters from Iberia or the East). You may buy Academic Abilities."
+  },
+  "virtue.educated_islamic": {
+    "name": "Educated (Islamic)",
+    "summary": "+50 experience points, spent on some or all of Arabic, Persian, Greek, Latin, Theology: Islam, Islamic Law, and Artes Liberales. You may buy Academic Abilities."
+  },
+  "virtue.educated_vernacular": {
+    "name": "Educated (Vernacular)",
+    "summary": "+50 experience points, spent on Academic Abilities, Bargain, your company's Organization Lore, Profession: Merchant, or the language of trade. You may buy Academic Abilities."
+  },
   "virtue.elemental_magic": {
     "name": "Elemental Magic",
     "summary": "You have been trained in the ability to manipulate raw elemental Forms (Aquam, Auram, Ignem, and Terram), and view them as a connected whole rather than four separate Arts."

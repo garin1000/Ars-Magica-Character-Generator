@@ -1755,6 +1755,22 @@
     "name": "Gebildet",
     "summary": "+50 Erfahrungspunkte, nur für Latein und Artes Liberales. Du darfst Akademische Fertigkeiten erwerben."
   },
+  "virtue.educated_bardic": {
+    "name": "Gebildet (Bardisch)",
+    "summary": "+50 Erfahrungspunkte für Gedächtniskunst, Beruf: Geschichtenerzähler, Beruf: Dichter, jede Gebietskunde oder jede Organisationskunde."
+  },
+  "virtue.educated_hebrew": {
+    "name": "Gebildet (Hebräisch)",
+    "summary": "+50 Erfahrungspunkte für Hebräisch, Aramäisch, Theologie: Judentum und Jüdische Kunde (plus Arabisch für Charaktere aus Iberien oder dem Orient). Du darfst Akademische Fertigkeiten erwerben."
+  },
+  "virtue.educated_islamic": {
+    "name": "Gebildet (Islamisch)",
+    "summary": "+50 Erfahrungspunkte für Arabisch, Persisch, Griechisch, Latein, Theologie: Islam, Islamisches Recht und Artes Liberales. Du darfst Akademische Fertigkeiten erwerben."
+  },
+  "virtue.educated_vernacular": {
+    "name": "Gebildet (Weltlich)",
+    "summary": "+50 Erfahrungspunkte für Akademische Fertigkeiten, Feilschen, die Organisationskunde deines Unternehmens, Beruf: Kaufmann oder die Handelssprache. Du darfst Akademische Fertigkeiten erwerben."
+  },
   "virtue.elemental_magic": {
     "name": "Elementarmagie",
     "summary": "Du wurdest in der Fähigkeit ausgebildet, rohe elementare Formen (Aquam, Auram, Ignem und Terram) zu manipulieren, und betrachtest sie als zusammenhängendes Ganzes statt als vier getrennte Künste."
