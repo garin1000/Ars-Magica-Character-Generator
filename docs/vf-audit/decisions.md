@@ -828,6 +828,24 @@ presumption of correctness.
 
 ---
 
+## D69 — X7b-e's three open items (row 42)
+
+**Norbert, 2026-09-29** (details in `tmp/x7be-verdicts.md`).
+
+1. **Raised from the Dead: the creation-time Warping and Reputation are
+   computed** from a "years since resurrection" number parameter (D64's
+   pattern). The yearly accrual after creation stays text.
+2. **Viaticarus: text.** "Social interaction rolls" names no Ability list, and
+   none is invented (D61's shape).
+3. **Folk Magic's Casting Total: text.** The formula needs an Aura term the app
+   does not track (row 49), so no partial total is shown.
+
+**Scheduling, orchestrator:** X7b-e owns Flawed Powers' "at least one Major
+Supernatural Virtue" prerequisite. X4 keeps only its `requires_hermetic_arts`
+import filter (D68.4).
+
+---
+
 ## D68 — X3/X4/X10 scoping answers
 
 **Norbert, 2026-09-29** (questions in `tmp/x3-scope.md`, `tmp/x10-verdicts.md`).
