@@ -896,6 +896,9 @@ import filter (D68.4).
    (hidden from the Order) and Gorgiastic (left House Criamon, still in the
    Order) gate on `order_member` as well as training. Exotic Casting, Mercurian
    Magic and Mythic Blood gate on training only.
+13. **Bound Casting Tools** (ArMDE:5723-5726) gates on training only.
+   "As used by House Verditius" explains the mechanic and is not an
+   eligibility clause. Consumed Casting Tools keeps its explicit Verditius gate.
 
 ---
 
