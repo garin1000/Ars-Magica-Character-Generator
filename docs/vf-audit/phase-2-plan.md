@@ -11,7 +11,10 @@
 D1–D3, B1c; D4 dropped by D62; D-boundary e2e 10/10). **Group F done** (F0 rev. 3,
 F1 schema 20, F2; e2e 10/10, portable 1/1). **Phase 2 is complete.** **2026-09-29:**
 X1 done (D43: general XP funds only explicitly authorized spends); U batch
-implemented. Next: X2. Every slice runs
+implemented. X2a, X2b done. **Re-prioritised for a working app on 2026-10-03
+(Norbert):** after X2c, X2 pauses and the wrong-rules-output slices run
+first — X3, X7b-e, X7b-d, X4, X5, X7c, X6, X7a, X10 (a, d) — then a full
+review. X2d–h, X2t, X8, X9, X10b/c follow afterwards. Every slice runs
 under the red-checkpoint protocol. N1, N4–N7 answered (D65).
 **Added 2026-09-28:** B1c (after D1) removes B1's unused
 `RestrictsAbilityCategoryToAbilities`. D63 moved Feral's whitelist into its
