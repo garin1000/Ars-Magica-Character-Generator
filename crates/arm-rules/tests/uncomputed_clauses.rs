@@ -1126,6 +1126,149 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::De,
         family: "eligibility",
     },
+    // --- Family 17 (X2c Phase 2 additions, 2026-09-29) ----------------------
+    // Writing X2c's verbatim descriptions re-exposed genuine D5/D8/D50-shaped
+    // rules this screen did not yet recognize under their real phrasing. Each
+    // pattern was verified against the one real passage that motivated it.
+    S2Idiom {
+        // virtue.muqta_muq_ta (ArMDE:4559-4562): "All rules for the Landed
+        // Noble Virtue apply" — a cross-reference to another entry's rules,
+        // in different words than Emir's own "is the same as the ... Virtue".
+        pattern: r"\brules for the\b[^.]{0,40}?\bapply\b",
+        language: Language::En,
+        family: "cross-reference",
+    },
+    S2Idiom {
+        // virtue.muqta_muq_ta (ArMDE:4559-4562, DE): "Es gelten alle Regeln
+        // für die Tugend Landadliger" — German's verb-first word order for
+        // the same cross-reference.
+        pattern: r"\bes gelten\b[^.]{0,40}?\bregeln für\b",
+        language: Language::De,
+        family: "cross-reference",
+    },
+    S2Idiom {
+        // virtue.muse (ArMDE:4563-4566, DE): "kann ... verdoppeln" — the
+        // infinitive of the existing "doppelt" stem, which only covers the
+        // participle ("verdoppelt"); "verdoppeln" shares no suffix with it.
+        pattern: r"\bverdoppeln\b",
+        language: Language::De,
+        family: "multiplier in words",
+    },
+    S2Idiom {
+        // virtue.mystical_choreography (ArMDE:4567-4572): "five minutes per
+        // magnitude", "one minute per magnitude" — a rate scaled by
+        // magnitude, distinct from the existing "magnitudes" (plural) stem.
+        pattern: r"\bper magnitude\b",
+        language: Language::En,
+        family: "magnitude/level stem",
+    },
+    S2Idiom {
+        // virtue.mystical_choreography (ArMDE:4567-4572, DE): "fünf Minuten
+        // pro Magnitude", "eine Minute pro Magnitude".
+        pattern: r"\bpro magnitude\b",
+        language: Language::De,
+        family: "magnitude/level stem",
+    },
+    S2Idiom {
+        // virtue.nephilim (ArMDE:4594-4597): "You receive the Strong Angelic
+        // Heritage Virtue free" — a real, zero-cost grant, unlike anything
+        // the existing "add"/"grants_*" idioms name.
+        pattern: r"\breceive the\b[^.]{0,60}?\bfree\b",
+        language: Language::En,
+        family: "grant",
+    },
+    S2Idiom {
+        // virtue.nephilim (ArMDE:4594-4597, DE): "Du erhältst die Tugend
+        // Starkes Engelserbe kostenlos".
+        pattern: r"\berhältst die\b[^.]{0,60}?\bkostenlos\b",
+        language: Language::De,
+        family: "grant",
+    },
+    S2Idiom {
+        // virtue.perfect_eye_for_commodity (ArMDE:4628-4631, DE): "(3 ×
+        // Wohlstandsmultiplikator)" — German compounds glue the stem onto
+        // the preceding noun with no word boundary, which the existing
+        // `\bmultiplikator` (left-anchored) cannot cross.
+        pattern: r"multiplikator",
+        language: Language::De,
+        family: "multiplier stem",
+    },
+    S2Idiom {
+        // virtue.personal_vis_source (ArMDE:4728-4731): "about one tenth as
+        // much as" — D50's own hedged-fraction worked example.
+        pattern: r"\bone tenth\b",
+        language: Language::En,
+        family: "formula",
+    },
+    S2Idiom {
+        // virtue.personal_vis_source (ArMDE:4728-4731, DE): "etwa ein
+        // Zehntel dessen".
+        pattern: r"\bein zehntel\b",
+        language: Language::De,
+        family: "formula",
+    },
+    S2Idiom {
+        // virtue.rabbi (ArMDE:4828-4833), also virtue.mazdean_priest
+        // (ArMDE:4480-4487) and virtue.mamluk (ArMDE:4443-4448): "This
+        // Virtue is only available to male characters" — a sex-eligibility
+        // restriction (D5/F-123) in a shape none of the existing eligibility
+        // idioms ("may only be taken by", "only characters with") covers.
+        pattern: r"\bonly available to\b[^.]{0,20}?\bcharacters\b",
+        language: Language::En,
+        family: "eligibility",
+    },
+    S2Idiom {
+        // The same restriction's two DE verb phrasings: mamluk/mazdean_priest
+        // write "ist nur männlichen Charakteren zugänglich", rabbi writes
+        // "steht nur männlichen Charakteren zur Verfügung" — anchored on the
+        // stable "nur ... Charakteren" core rather than either verb.
+        pattern: r"\bnur\b[^.]{0,20}?\bcharakteren\b[^.]{0,20}?\b(?:zugänglich|verfügung)\b",
+        language: Language::De,
+        family: "eligibility",
+    },
+    S2Idiom {
+        // virtue.rat_up_a_drainpipe (ArMDE:4838-4841): "a substantial
+        // advantage in opposed Athletics rolls" — F-241's hedged,
+        // storyguide-adjudicated modifier (D50), unsigned and unquantified.
+        pattern: r"\bsubstantial advantage\b",
+        language: Language::En,
+        family: "hedged bonus",
+    },
+    S2Idiom {
+        // virtue.rat_up_a_drainpipe (ArMDE:4838-4841, DE): "einen
+        // erheblichen Vorteil bei gegnerischen Athletik-Würfen".
+        pattern: r"\berheblichen vorteil\b",
+        language: Language::De,
+        family: "hedged bonus",
+    },
+    S2Idiom {
+        // virtue.see_in_darkness (ArMDE:4896-4899): "your eyesight is not
+        // more acute than ordinary people's" — the limiting clause on an
+        // otherwise-bare capability; this file's own header already
+        // documents "You can see" as too bare to add safely, so the limiter
+        // is the idiom instead.
+        pattern: r"\bnot more acute than\b",
+        language: Language::En,
+        family: "capability limiter",
+    },
+    S2Idiom {
+        // virtue.see_in_darkness (ArMDE:4896-4899, DE): "Dein Sehvermögen
+        // nicht schärfer als das normaler Menschen" — negation on a plain
+        // predicate adjective, not a modal verb, so DE_MODAL_NICHT does not
+        // reach it.
+        pattern: r"\bnicht schärfer als\b",
+        language: Language::De,
+        family: "capability limiter",
+    },
+    S2Idiom {
+        // virtue.puissant_ability (ArMDE:4814-4816, DE): "addierst 2 zu
+        // ihrem Wert"; virtue.puissant_art (ArMDE:4818-4820, DE): "addierst
+        // 3 zum Wert einer Kunst" — the second-person conjugation of the
+        // existing "addiere" stem, which covers the imperative form only.
+        pattern: r"\baddierst\b",
+        language: Language::De,
+        family: "bare imperative modifier",
+    },
 ];
 
 /// [`S2_IDIOMS`], compiled once.
@@ -1443,13 +1586,14 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // "leave your presence for up to half a day" is the identical
     // storyguide-enforced utility limit that flipped virtue.ghostly_warder.
     // Reclassifies to uncomputed_rule; see tmp/x2b-verdicts.md.
-    (
-        "virtue.paid_rights",
-        "ArMDE:4606-4615's \"cannot\"/\"may not\" clauses (a woman \"cannot pay a fine to\" \
-         various things) describe in-fiction social restrictions this Virtue lets a female \
-         character buy an exception to — a story premise, not a PC-sheet rule with a number or \
-         an Ability authorization attached.",
-    ),
+    // virtue.paid_rights: OQ-6 re-test (X2c) overturns this row — the "cannot
+    // pay a fine to" readings still hold (in-fiction social premise), but
+    // ArMDE:4606-4615's own permission grant ("only available to female
+    // characters, and is compatible with any Social Status that is normally
+    // restricted to men") is the same real, separately-uncomputed eligibility/
+    // compatibility shape X2b already reclassified for
+    // virtue.male_guild_sponsor. Reclassifies to uncomputed_rule; see
+    // tmp/x2c-verdicts.md.
     (
         "virtue.tainted_treasure",
         "ArMDE:5097-5108 states no PC-facing number — the treasure's curse (ventures fail, \
@@ -1710,11 +1854,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
          restricted to magi of House Verditius\", ArMDE:6955-6958",
     ),
     (
-        "virtue.partner",
-        "\"need not\" idiom: \"need not purchase that Virtue if she has this one\", \
-         ArMDE:4616-4619",
-    ),
-    (
         "virtue.templar_confrere_or_consoeur",
         "\"need not\" idiom: \"His membership is generally temporary (although it need not be)\", \
          ArMDE:5117-5120",
@@ -1743,47 +1882,11 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // separately uncomputed clause survives their own `prerequisites`), so both
     // are removed from here AND from
     // data_integrity.rs::PENDING_D67_CLASSIFICATION.
-    (
-        "virtue.minor_enchantments",
-        "named rulebook term: item power levels \"must be 25 or less\", \"no single power can \
-         be greater than 30th level\", ArMDE:4532-4535",
-    ),
-    (
-        "virtue.muse",
-        "capability: \"may grant Free Expression\" or \"double the effect of Free Expression\", \
-         ArMDE:4563-4566",
-    ),
-    (
-        "virtue.natural_leader",
-        "signed number: \"+3 bonus to rolls in social situations\", ArMDE:4590-4593",
-    ),
-    (
-        "virtue.perfect_balance",
-        "signed number: \"Add +6 to any roll to avoid falling or tripping\", ArMDE:4624-4627",
-    ),
-    (
-        "virtue.perfect_eye_for_commodity",
-        "named rulebook term: \"(3 x Wealth Multiplier) Labor Points per year\" — conditioned \
-         on the City and Guild trading rules the app does not model, the same D4/N6 shape as \
-         virtue.aristotelian_training, ArMDE:4628-4631",
-    ),
-    (
-        "virtue.performance_magic",
-        "target number + formula: \"an Ease Factor of 3\", the words/gestures Ease Factor table, \
-         ArMDE:4642-4709",
-    ),
-    (
-        "virtue.piercing_gaze",
-        "signed number: \"+3 to rolls involving intimidation\", ArMDE:4736-4739",
-    ),
-    (
-        "virtue.reserves_of_strength",
-        "signed number: \"add +3 to your effective Strength score\", ArMDE:4862-4865",
-    ),
-    (
-        "virtue.ripper",
-        "formula: \"a PeAn(He) 25 and a PeAn 45 effect\", ArMDE:4866-4869",
-    ),
+    // virtue.minor_enchantments, virtue.muse, virtue.natural_leader,
+    // virtue.perfect_balance, virtue.perfect_eye_for_commodity,
+    // virtue.performance_magic, virtue.piercing_gaze,
+    // virtue.reserves_of_strength, virtue.ripper: resolved (X2c) — all nine
+    // reclassify narrative -> uncomputed_rule, see tmp/x2c-verdicts.md.
     (
         "virtue.sharp_ears",
         "signed number: \"+3 bonus to all rolls involving hearing\", ArMDE:4950-4953",
@@ -2037,35 +2140,33 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     // equipment-access clause is additionally uncomputed, but that gap is K5/F0
     // engine work — `docs/vf-audit/design-f0-book-template-engine.md` — tracked
     // separately, not X2's). See tmp/x2b-verdicts.md.
-    (
-        "virtue.mamluk",
-        "operative clause (\"may take\" Martial Abilities, \"may also take\" Theology: Islam) is \
-         computed via ability_authorization (X1/D43); the male-only/companion-compatibility \
-         notes are flavor.",
-    ),
+    // virtue.mamluk, virtue.mazdean_priest, virtue.notary: moved to
+    // PENDING_DROPPED_CLAUSE (X2c) — each entry's own male-only (or,
+    // notary's, clergy/secular-law) restriction is a real, separately
+    // uncomputed clause, not flavor, on the same D5/F-123 reading that
+    // overturned virtue.jurist/virtue.knight in X2b: an eligibility note
+    // reaches the player as TEXT even though D58/Q-05 (no sex model) means it
+    // is never computed. Each entry's own ability_authorization clause is
+    // genuinely fully computed; only that one clause was dropped from the
+    // certification. See tmp/x2c-verdicts.md.
     (
         "virtue.master_of_form_creatures",
         "operative clause (\"may take\" Magic Lore) is computed via ability_authorization \
          (X1/D43); \"may be taken multiple times, once for each Form\" is already max_total:255.",
     ),
     (
-        "virtue.mazdean_priest",
-        "operative clause (\"may take\" Academic Abilities) is computed via \
-         ability_authorization (X1/D43); the Outsider-Flaw suggestion and male-only note are \
-         flavor.",
+        "virtue.master_of_kennels",
+        "both stated clauses (50 XP pool on named abilities, \"may take Martial Abilities \
+         freely\") are computed via restricted_ability_xp/ability_authorization (X1/D43); the \
+         staff/privilege-of-riding/respect prose is flavor. Moved here from \
+         PENDING_DROPPED_CLAUSE (X2c) — its own orphan comment predated X1's authorization work \
+         and is now stale; re-reading finds no residue. See tmp/x2c-verdicts.md.",
     ),
     (
         "virtue.mercenary_captain",
         "operative clause (\"may take\" Martial Abilities) is computed via \
          ability_authorization (X1/D43); the Poor/Wealthy company-size prose names no signed \
          modifier.",
-    ),
-    (
-        "virtue.notary",
-        "operative clause (\"may take\" Academic Abilities) is computed via \
-         ability_authorization (X1/D43); \"notaries may not be members of the clergy\" is an \
-         eligibility restriction on a Social Status the app does not model as a cross-Virtue \
-         exclusion set.",
     ),
     (
         "virtue.prestigious_student",
@@ -2389,25 +2490,19 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
         "single clause (50 XP for spell mastery), fully computed via spell_mastery_xp; the \
          Flawless Magic compatibility note needs no effect.",
     ),
-    (
-        "virtue.masterpiece",
-        "single clause (a lesser enchanted item at character generation), fully computed via \
-         masterpiece_item; the ignore-vis-costs detail is part of that same mechanism.",
-    ),
+    // virtue.masterpiece, virtue.method_caster, virtue.personal_power: moved
+    // to PENDING_DROPPED_CLAUSE (X2c) — each certification missed a real,
+    // separately uncomputed clause: masterpiece's own vis-cost waiver
+    // ("You ignore vis costs"), method_caster's own "if you vary at all...
+    // you do not get this bonus" gate, and personal_power's own Initiative
+    // formula/Fatigue-cost scaling/Penetration-purchase rule — the last
+    // being exactly the reading that already overturned virtue.greater_power
+    // (X2b) for the identically-worded "same reading as greater_power"
+    // claim. See tmp/x2c-verdicts.md.
     (
         "virtue.mentored_by_demons",
         "both stated clauses (50 XP on any Ability, exceeding the age-based cap) are computed \
          via restricted_ability_xp and waives_ability_age_cap.",
-    ),
-    (
-        "virtue.method_caster",
-        "single clause (+3 Casting Total for Formulaic/Ritual spells), fully computed via \
-         casting_total_mod.",
-    ),
-    (
-        "virtue.personal_power",
-        "the power-level budget (25) is computed via power_levels, same reading as \
-         virtue.greater_power.",
     ),
     (
         "virtue.rapid_convalescence",
@@ -2752,16 +2847,23 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // tmp/x2b-verdicts.md.
     (
         "virtue.marshal",
-        "orphan: \"may take Martial Abilities freely\" has no ability_authorization effect — \
-         only the 50 XP grant is computed (authorization family, X1-adjacent), \
-         ArMDE:4449-4456",
+        "orphan (X2c corrected this reading — the original \"no ability_authorization\" claim \
+         is stale: X1 already added it): \"It functions as the Ability Medicine for the purpose \
+         of treating veterinary diseases, and for surgery involving these animals\" has no \
+         effect at all — the 50 XP grant and the Martial Abilities authorization are both \
+         genuinely computed, ArMDE:4449-4456",
     ),
-    (
-        "virtue.master_of_kennels",
-        "orphan: \"may take Martial Abilities freely\" has no ability_authorization effect — \
-         only the 50 XP grant is computed (authorization family, X1-adjacent), \
-         ArMDE:4467-4470",
-    ),
+    // virtue.master_of_kennels: moved to COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE
+    // (X2c) — its own orphan comment above predated X1's authorization work
+    // and is now stale; re-reading finds no residue beyond flavor. See
+    // tmp/x2c-verdicts.md.
+    // virtue.mamluk, virtue.mazdean_priest, virtue.masterpiece,
+    // virtue.method_caster, virtue.notary, virtue.personal_power: resolved
+    // (X2c Phase 2) — each now ships the full cited passage as its
+    // `description` in both locales, restating the clause that got each row
+    // flagged onto this list in the first place; removed from here (own
+    // classification unchanged for every one of the six). See
+    // tmp/x2c-verdicts.md.
     (
         "virtue.mercurian_magic",
         "orphan: the Wizard's Vigil auto-knowledge, the Mastery-score stacking, and the \
@@ -2825,6 +2927,24 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          darkness\", \"may learn Faerie Lore\", and the entire inherited Faerie Blood sub-type \
          bonus list all have no effect — only the Second Sight grant and the -3 Aging-roll are \
          computed, ArMDE:5032-5047",
+    ),
+    // --- X2c Phase 2 fix-round (2026-09-29): the new "eligibility" idiom
+    // ("only available to ... characters") this slice added to catch its own
+    // mamluk/mazdean_priest/rabbi finding newly sweeps these two entries too
+    // — both outside X2c's own range (`tmp/x2-worklist.md` rows 103-153),
+    // real dropped clauses, not this slice's to fix. Filed here per the same
+    // D5 shape rather than left silently uncaught.
+    (
+        "virtue.brother_sergeant",
+        "orphan: \"This Virtue is only available to male characters\" reaches the player \
+         nowhere — the Martial Abilities authorization is genuinely computed, ArMDE:3537-3540",
+    ),
+    (
+        "virtue.trained_assassin",
+        "orphan: \"This Virtue is only available to characters with one of the Social Status \
+         Virtues of the Nizaris\" (an eligibility restriction on another Virtue, not a \
+         sex-eligibility one) reaches the player nowhere — the 50 XP grant is genuinely \
+         computed, ArMDE:5153-5156",
     ),
 ];
 

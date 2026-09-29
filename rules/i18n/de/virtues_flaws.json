@@ -2356,15 +2356,18 @@
   },
   "virtue.mamluk": {
     "name": "Mamluk",
-    "summary": "Du bist ein ehemaliger Militärsklave, als Kind gekauft, in einer Militärschule ausgebildet, im Islam erzogen und beim Erwachsenwerden freigelassen."
+    "summary": "Du bist ein ehemaliger Militärsklave, als Kind gekauft, in einer Militärschule ausgebildet, im Islam erzogen und beim Erwachsenwerden freigelassen.",
+    "description": "Du bist ein ehemaliger Militärsklave, als Kind gekauft, in einer Militärschule ausgebildet, im Islam erzogen und beim Erwachsenwerden freigelassen. Du bist wahrscheinlich türkischer Herkunft, könntest aber auch mongolisch oder sogar griechisch sein. Wahrscheinlich wurdest du im Umgang mit Lanzen, Bögen, Schilden, Kettenhemden und Lamellenrüstungen (gleiche Werte wie Kettenpanzer) sowie ein oder zwei Schwertern ausgebildet, sowohl zu Fuß als auch zu Pferde – allerdings bedeutet das nicht notwendigerweise, dass du zu Spielbeginn im Besitz dieser Ausrüstung bist (nach Ermessen des Spielleiters).\n\nDu darfst beim Erschaffen Kampffertigkeiten nehmen, und als Sonderfall darfst du auch die Fertigkeit Theologie: Islam nehmen, selbst wenn du nicht die Kleine Allgemeine Tugend Gebildet besitzt. Diese Tugend ist nur männlichen Charakteren zugänglich und ist (ausschließlich für Gefährten) kompatibel sowohl mit der Emir- als auch der Muqta'-Tugend, da viele Mamluken in der muslimischen Hierarchie aufgestiegen sind."
   },
   "virtue.marshal": {
     "name": "Marschall",
-    "summary": "Die Ställe eines Adligen benötigen einen Spezialisten, der die Pflege, Fütterung und das Wohl der Tiere koordiniert."
+    "summary": "Die Ställe eines Adligen benötigen einen Spezialisten, der die Pflege, Fütterung und das Wohl der Tiere koordiniert.",
+    "description": "Die Ställe eines Adligen benötigen einen Spezialisten, der die Pflege, Fütterung und das Wohl der Tiere koordiniert. Diese Person wird Marschall genannt, und der Titel genießt erhebliches Ansehen. Der Marschall von England ist der königliche Beamte, der für die Kavallerie des Königs verantwortlich ist; doch selbst der Marschall eines Barons ist eine bedeutende Persönlichkeit, angesichts der entscheidenden Rolle, die Pferde in Krieg und Jagd sowie bei alltäglichen Reisen spielen.\n\nEin Marschall sollte die Fertigkeit Beruf: Marschall nehmen, die das Verstehen, den Kauf und die Pflege von Pferden umfasst. Sie funktioniert wie die Fertigkeit Medizin für die Behandlung tierärztlicher Krankheiten und für chirurgische Eingriffe bei diesen Tieren. Ein Marschall erhält beim Erschaffen 50 zusätzliche Erfahrungspunkte, die er auf die Fertigkeiten Tierumgang, Etikette, Jagen, Latein, Beruf: Marschall und Reiten aufteilen darf, und kann Kampffertigkeiten frei nehmen.\n\nEin Marschall kann andere Spezialisten beaufsichtigen, darunter Hufschmiede, die Hufeisen anfertigen; Lederarbeiter, die Zaumzeug, Geschirr und Sättel herstellen; sowie das ausgebildete Personal, das das tägliche Striegeln und Ausmisten der Ställe übernimmt."
   },
   "virtue.master_bard": {
     "name": "Meisterbarde",
-    "summary": "Der Charakter hat mindestens neun Jahre an einer Bardenschule studiert und ist ein Meister seines Handwerks, genannt Anruth."
+    "summary": "Der Charakter hat mindestens neun Jahre an einer Bardenschule studiert und ist ein Meister seines Handwerks, genannt Anruth.",
+    "description": "Der Charakter hat mindestens neun Jahre an einer Bardenschule studiert und ist ein Meister seines Handwerks, genannt Anruth. Er hat eine Lehrposition an einer renommierten Schule inne oder eine offizielle Stelle bei einem irischen Clanchef; so oder so bringt ihm dies eine Lokale Reputation auf Stufe 3 ein. Wenn er an einer Schule tätig ist, ist er verpflichtet, mindestens zwei Quartale im Jahr zu unterrichten; wenn er für einen Herrn arbeitet, verbringt er stattdessen zwei Quartale damit, Lobgedichte und Geschichten für seinen Gönner zu verfassen.\n\nDer Charakter sollte mindestens 25 Jahre alt sein und muss mindestens 5 in Beruf: Geschichtenerzähler oder Dichter haben sowie 5 in mindestens einer der Fertigkeiten Gebiets-Kunde, Organisations-Kunde, Feenkunde oder Magiekunde. Du kannst beim Erschaffen Erfahrungspunkte für Arkane Fertigkeiten ausgeben und hast 240 zusätzliche Erfahrungspunkte für Gedächtniskunst, Beruf: Geschichtenerzähler, Beruf: Dichter, beliebige Gebiets-Kunde, beliebige Organisations-Kunde, Feenkunde oder Magiekunde. Dieser Soziale Status ist nur in Irland verfügbar."
   },
   "virtue.master_of_form_creatures": {
     "name": "Meister der {form}-Kreaturen",
@@ -2380,11 +2383,13 @@
   },
   "virtue.masterpiece": {
     "name": "Meisterstück",
-    "summary": "Aus einem wohlwollenden Grund hat der Parens des Magus ihm erlaubt, das Schlichte Artefakt zu behalten, das er zur Demonstration seiner Fähigkeiten als Magus für seine Lehrlingsprüfung hergestellt hat."
+    "summary": "Aus einem wohlwollenden Grund hat der Parens des Magus ihm erlaubt, das Schlichte Artefakt zu behalten, das er zur Demonstration seiner Fähigkeiten als Magus für seine Lehrlingsprüfung hergestellt hat.",
+    "description": "Aus einem wohlwollenden Grund hat der Parens des Magus ihm erlaubt, das Schlichte Artefakt zu behalten, das er zur Demonstration seiner Fähigkeiten als Magus für seine Lehrlingsprüfung hergestellt hat. Dieses Meisterstück muss ein Schlichtes Artefakt sein. Entwirf ein Schlichtes Artefakt, das dein Charakter anhand seiner Laborsummen beim Erschaffen herstellen könnte, nach den regulären Regeln für die Konstruktion eines solchen Gegenstands. Vis-Kosten entfallen, da der Parens des Magus diese aus seinen Laborvorräten bereitgestellt hat. Diese Lehrlingsprüfung ist für Haus Verditius üblich, aber auch eine Maga aus einem anderen Haus kann sie als Prüfungsform gewählt haben."
   },
   "virtue.mazdean_priest": {
     "name": "Mazdeanischer Priester",
-    "summary": "Dein Charakter ist ein ordinierter mazdeanischer Priester, eingeweiht als Mobed."
+    "summary": "Dein Charakter ist ein ordinierter mazdeanischer Priester, eingeweiht als Mobed.",
+    "description": "Dein Charakter ist ein ordinierter mazdeanischer Priester, eingeweiht als Mobed. Dies bedeutet, dass der Charakter die verschiedenen Rituale und Zeremonien durchführen darf, wie das Yasna, das Vivevdat, die Navjote, Hochzeiten, Beerdigungen, offizielle Gebete, Reinigungsrituale, die Entzündung heiliger Feuer und die Einweihung neuer Priester. In mazdeanischen Gemeinschaften wird dein Charakter in hohem Ansehen gehalten und mit großem Respekt behandelt. Der Charakter trägt reinweiße Kleidung und bedeckt bei der Durchführung von Zeremonien sein Gesicht mit einem weißen Schleier, um die heilige Flamme vor seinem Atem und Speichel zu schützen. Weitere Details zum mythischen Zoroastrismus finden sich in The Cradle and the Crescent, Kapitel 5.\n\nAls Mobed lebt dein Charakter in einer Gemeinschaft, die wahrscheinlich einen Feuertempel besitzt. Dies bedeutet, dass dein Charakter mühsame und zeitaufwendige religiöse und zeremonielle Pflichten hat. Der größte Teil deiner Zeit wird mit Beten, der Durchführung ritueller Reinigungsriten und der Pflege des heiligen Feuers verbracht. Wenn du Wohlhabend bist, hast du mehrere Ervads (Juniorpriester), die viele der mühsameren Aufgaben übernehmen. Wenn du Arm bist, spiegelt dies wahrscheinlich die schlechte Lage der Mazdeaner in der Gemeinschaft im Allgemeinen wider, und du könntest auch den Fehler Außenseiter besitzen.\n\nDein Charakter darf beim Erschaffen Akademische Fertigkeiten nehmen. Die meisten solcher Charaktere nehmen den Kleinen Persönlichkeits-Fehler Gelübde, um den dauernden Zustand ritueller Reinheit und die Hingabe an die Gemeinschaft widerzuspiegeln. Dies kann nur der Soziale Status deines Charakters sein, wenn er in einer mazdeanischen Gemeinschaft lebt; all diese Gemeinschaften liegen östlich des Mythischen Europas, und die meisten davon in Persien. Ein mazdeanischer Priester im Exil in Europa sollte eine andere Sozialer-Status-Tugend oder einen Fehler nehmen, wie zuvor besprochen. Diese Tugend ist nur männlichen Charakteren zugänglich."
   },
   "virtue.mendicant_friar": {
     "name": "Bettelbruder",
@@ -2412,7 +2417,8 @@
   },
   "virtue.method_caster": {
     "name": "Methodischer Zauberer",
-    "summary": "Du bist hervorragend im Wirken formulaischer Zauber, da du eine beständige und präzise Methode zu deren Ausführung perfektioniert hast."
+    "summary": "Du bist hervorragend im Wirken formulaischer Zauber, da du eine beständige und präzise Methode zu deren Ausführung perfektioniert hast.",
+    "description": "Du bist hervorragend im Wirken formulaischer Zauber, da du eine beständige und präzise Methode zu deren Ausführung perfektioniert hast. Du erhältst +3 auf die Zaubersumme jedes formulaischen oder rituellen Zaubers, den du wirkst. Weichst du jedoch auch nur geringfügig von deiner präzisen Methode ab (indem du Gesten oder Aussprache veränderst), erhältst du diesen Bonus nicht."
   },
   "virtue.mild_aging": {
     "name": "Leichtes Altern",
@@ -2420,23 +2426,28 @@
   },
   "virtue.minor_enchantments": {
     "name": "Kleine Verzauberungen",
-    "summary": "Der Charakter besitzt ein oder mehrere Gegenstände mit magischen Kräften."
+    "summary": "Der Charakter besitzt ein oder mehrere Gegenstände mit magischen Kräften.",
+    "description": "Der Charakter besitzt ein oder mehrere Gegenstände mit magischen Kräften. Diese sollten als hermetische Verzauberungen entworfen werden, und die Gesamtstufen der Kräfte aller Gegenstände, nach Anpassung für Nutzungen pro Tag und dergleichen, dürfen 25 nicht übersteigen. Der Charakter darf diese Tugend mehr als einmal nehmen: Addiere die Gesamtstufen, aber keine einzelne Kraft darf höher als Stufe 30 sein. Verliert er den Gegenstand oder wird er zerstört, ist er dauerhaft verloren."
   },
   "virtue.minor_magical_focus": {
     "name": "Kleiner Magischer Fokus",
-    "summary": "Deine Magie ist auf ein enges Gebiet abgestimmt; innerhalb davon zählt der niedrigste anwendbare Kunstwert doppelt."
+    "summary": "Deine Magie ist auf ein enges Gebiet abgestimmt; innerhalb davon zählt der niedrigste anwendbare Kunstwert doppelt.",
+    "description": "Deine Magie ist auf ein enges Feld besonders abgestimmt, etwa Selbstverwandlung, Raubvögel oder Heilung. Im Allgemeinen sollte das Feld etwas enger sein als eine einzelne Technik- und Form-Kombination, obwohl es eingeschränkte Bereiche mehrerer solcher Kombinationen umfassen darf. Heilung beispielsweise ist ein Teil von Creo Corpus, Creo Animal und möglicherweise Creo Herbam. Du kannst keinen Fokus auf eine Laboraktivität haben, etwa das Erschaffen von aufgeladenen Artefakten, obwohl ein Fokus durchaus auf Laboraktivitäten angewandt wird."
   },
   "virtue.muqta_muq_ta": {
     "name": "Muqta'",
-    "summary": "Du bist ein bedeutender Emir, dem ein Iqta' (vergleichbar einem feudalen Lehen) anvertraut wurde."
+    "summary": "Du bist ein bedeutender Emir, dem ein Iqta' (vergleichbar einem feudalen Lehen) anvertraut wurde.",
+    "description": "Du bist ein bedeutender Emir, dem ein Iqta' (vergleichbar einem feudalen Lehen) anvertraut wurde. Es gelten alle Regeln für die Tugend Landadliger, außer dass die meisten Muslime die Kleine Status-Tugend Emir nehmen anstatt Ritter."
   },
   "virtue.muse": {
     "name": "Muse",
-    "summary": "Eine Muse besitzt jene seltene Schönheit, die andere dazu anregt, sich zu Würdigem aufzuschwingen."
+    "summary": "Eine Muse besitzt jene seltene Schönheit, die andere dazu anregt, sich zu Würdigem aufzuschwingen.",
+    "description": "Eine Muse besitzt jene seltene Schönheit, die andere dazu anregt, sich zu Würdigem aufzuschwingen. Ein Charakter mit dieser Tugend kann einem einzelnen anderen Charakter Freie Ausdrucksfähigkeit verleihen oder den Effekt der Freien Ausdrucksfähigkeit, die ein einzelner Charakter bereits besitzt, verdoppeln, solange die Muse bei ihm ist. Der Künstler hält die Muse üblicherweise in so hohem Ansehen, dass er das Bedürfnis verspürt, sich ständig zu verbessern – sowohl in der Kunsttechnik als auch als Mensch –, um der Aufmerksamkeit der Muse würdig zu sein. Musen können beiderlei Geschlechts sein und müssen keinen schönen Körper haben."
   },
   "virtue.mystical_choreography": {
     "name": "Mystische Choreographie",
-    "summary": "Die Geschicklichkeit des Magus im Umgang mit Körperhaltung und -bewegung ermöglicht es ihm, die für die Durchführung Zeremonieller Magie benötigte Zeit zu verkürzen."
+    "summary": "Die Geschicklichkeit des Magus im Umgang mit Körperhaltung und -bewegung ermöglicht es ihm, die für die Durchführung Zeremonieller Magie benötigte Zeit zu verkürzen.",
+    "description": "Die Geschicklichkeit des Magus im Umgang mit Körperhaltung und -bewegung ermöglicht es ihm, die für die Durchführung Zeremonieller Magie benötigte Zeit zu verkürzen. Der Charakter führt Zeremonien gemäß Seite 217 durch, benötigt jedoch nur fünf Minuten pro Magnitude. Hat der Charakter einen vorbereiteten Raum, egal wie vorläufig, reduziert sich dies auf eine Minute pro Magnitude.\n\nDiese Tugend ist besonders wichtig für jene Jerbiton-Magi, die das zeremonielle Zaubern einsetzen, um die Abzüge durch das Dominium zu überwinden."
   },
   "virtue.mythic_blood": {
     "name": "Mythisches Blut",
@@ -2444,15 +2455,18 @@
   },
   "virtue.natural_leader": {
     "name": "Natürlicher Anführer",
-    "summary": "Der Charakter ist eine dominante Persönlichkeit mit einem Auftreten, das andere dazu bringt, zu tun, was er sagt."
+    "summary": "Der Charakter ist eine dominante Persönlichkeit mit einem Auftreten, das andere dazu bringt, zu tun, was er sagt.",
+    "description": "Der Charakter ist eine dominante Persönlichkeit mit einem Auftreten, das andere dazu bringt, zu tun, was er sagt. Sein selbstsicheres Wesen verleiht ihm +3 auf Würfe in sozialen Situationen, in denen er die Führung übernimmt; Menschen folgen eher seinen Befehlen oder tun, was er vorschlägt. Wenn er die Gabe besitzt, kann dieser Bonus vorübergehend dazu beitragen, den sozialen Abzug der Gabe zu überwinden, dank der Stärke seiner dominanten Persönlichkeit."
   },
   "virtue.nephilim": {
     "name": "Nephilim",
-    "summary": "Freie Status-Tugend für einen göttlichen Riesen der alten Mythen; unvereinbar mit der Gabe."
+    "summary": "Freie Status-Tugend für einen göttlichen Riesen der alten Mythen; unvereinbar mit der Gabe.",
+    "description": "Du bist einer der Nephilim und ein Mythischer Gefährte (Seite 63). Du erhältst die Tugend Starkes Engelserbe kostenlos."
   },
   "virtue.notary": {
     "name": "Notar",
-    "summary": "Notare sind Rechtsbeamte im Dienst von Herrschaften oder Städten."
+    "summary": "Notare sind Rechtsbeamte im Dienst von Herrschaften oder Städten.",
+    "description": "Notare sind Rechtsbeamte im Dienst von Herrschaften oder Städten. Zu deinen Aufgaben gehören das Aufsetzen von Verträgen, das Bezeugen von Urkunden, die Beglaubigung von Transaktionen und Dokumenten sowie das Anbringen eines eigens entworfenen Siegels. Notare erhalten ihr Gehalt von ihrem Arbeitgeber in der Regel zu Weihnachten. Notare haben nur Zuständigkeit in bestimmten Herrschaften oder Städten, etwa der Grafschaft Nîmes oder der Stadt Montpellier. Die Tugend Wohlhabend und der Fehler Arm wirken sich normal auf dich aus. Aufgrund deiner Ausbildung darfst du beim Erschaffen Akademische Fertigkeiten nehmen; Notare dürfen jedoch keine Mitglieder des Klerus sein und unterliegen dem weltlichen Recht."
   },
   "virtue.nuntius": {
     "name": "Nuntius",
@@ -2460,11 +2474,13 @@
   },
   "virtue.paid_rights": {
     "name": "Erkaufte Rechte",
-    "summary": "Die mittelalterliche Gesellschaft hat viele Verbote gegen Frauen, die Autorität innehaben, was sich in der Beschränkung vieler Sozialer-Status-Tugenden auf Männer widerspiegelt."
+    "summary": "Die mittelalterliche Gesellschaft hat viele Verbote gegen Frauen, die Autorität innehaben, was sich in der Beschränkung vieler Sozialer-Status-Tugenden auf Männer widerspiegelt.",
+    "description": "Die mittelalterliche Gesellschaft hat viele Verbote gegen Frauen, die Autorität innehaben, was sich in der Beschränkung vieler Sozialer-Status-Tugenden auf Männer widerspiegelt. Diese Regelungen müssen durchgesetzt werden, um wirksam zu sein, und eine Frau mit ausreichendem Reichtum kann sich oft eine Ausnahme von der Durchsetzung oder sogar die Erlaubnis erkaufen, etwas zu tun, das normalerweise verboten ist. Eine Frau, die eine Baronin aus eigenem Recht sein möchte, muss dem König lediglich genug Geld zahlen, dass er es erlaubt. Möchte eine Frau ein kleineres Lehen aus eigenem Recht besitzen, nicht wie befohlen heiraten und nicht unter Vormundschaft stehen, muss sie ihrem Vormund lediglich eine ausreichend große Abstandszahlung leisten.\n\nEin Spieler kann diese Tugend nehmen, um festzuhalten, dass ein weiblicher Charakter das Recht erkauft hat, etwas Bestimmtes zu tun, das Frauen allgemein untersagt ist. Sie kann auch einen Geschichte-Fehler nehmen, der die Missbilligung ihrer Familie über diese Verwendung ihrer Mittel, die Frustration von Freiern, die ihr Land durch Heirat erlangen wollen, oder andere Formen sozialer Ächtung darstellt – obwohl dies nicht erforderlich ist.\n\nEs gibt jedoch einige wenige Verbote, von denen eine Frau sich nicht durch Zahlung freikaufen kann. Sie kann keine Zahlung leisten, um irgendetwas zu tun, was nur Männern in der Verwaltungsstruktur der Kirche erlaubt ist, was Universitäten und Kathedralschulen einschließt. Sie könnte eine Zahlung leisten, um an einer Universität studieren zu dürfen, aber nicht um zu graduieren und den damit verbundenen sozialen Status zu erlangen. Ebenso kann eine Frau keine Zahlung leisten, um in die Kleinen oder Heiligen Weihen ordiniert zu werden, etwa als Priesterin. Es ist auch schwierig für eine Frau, den Rang eines Ritters zu erlangen. Es gibt einige Beispiele weiblicher Ritter in der Volksüberlieferung, also ist es nicht unmöglich. Aber eine Rittersfrau benötigt eine ungewöhnliche Hintergrundgeschichte und sollte wirklich einen Geschichte-Fehler haben, der dies widerspiegelt.\n\nDiese Tugend ist nur weiblichen Charakteren zugänglich und ist mit jedem Sozialen Status kompatibel, der normalerweise auf Männer beschränkt ist, sowie mit jedem Sozialen Status, der mit dem durch die erkauften Rechte erlangten Status kompatibel ist."
   },
   "virtue.partner": {
     "name": "Partner",
-    "summary": "Der Charakter hat einen großen finanziellen Anteil an einem wohlhabenden Handelsunternehmen."
+    "summary": "Der Charakter hat einen großen finanziellen Anteil an einem wohlhabenden Handelsunternehmen.",
+    "description": "Der Charakter hat einen großen finanziellen Anteil an einem wohlhabenden Handelsunternehmen. Dies sichert dem Charakter ein Einkommen, das dem eines kleinen Adligen entspricht, jedoch ohne militärische Gepflogenheiten. Der Capo des Unternehmens ist seinen Partnern gegenüber rechenschaftspflichtig, und diese dürfen, wenn durchführbar, ihre Gewinne als Dienste von den Kapitänen und Faktoren des Hauses in Anspruch nehmen. Ein Partner darf ohne Erwerb der entsprechenden Tugend in jeder der Rollen des Hauses agieren – außer in der Rolle des Capo –, mit Genehmigung der Spieltruppe. Das heißt, ein Partner, der zugleich Faktor, Handelsabenteurer, lokaler Frachtführer oder städtischer Kaufmann ist, muss diese Tugend nicht kaufen, wenn er diese eine besitzt."
   },
   "virtue.peasant": {
     "name": "Bauer",
@@ -2472,11 +2488,13 @@
   },
   "virtue.perfect_balance": {
     "name": "Vollkommenes Gleichgewicht",
-    "summary": "Du beherrschst es, dein Gleichgewicht zu halten, besonders auf schmalen Vorsprüngen oder Seilen."
+    "summary": "Du beherrschst es, dein Gleichgewicht zu halten, besonders auf schmalen Vorsprüngen oder Seilen.",
+    "description": "Du beherrschst es, dein Gleichgewicht zu halten, besonders auf schmalen Vorsprüngen oder Seilen. Addiere +6 auf jeden Wurf, um ein Fallen oder Stolpern zu vermeiden."
   },
   "virtue.perfect_eye_for_commodity": {
     "name": "Untrüglicher Blick für {commodity}",
-    "summary": "Für eine bestimmte Ware und daraus hergestellte Produkte kann der Charakter niemals eine ungenaue Werteinschätzung vornehmen."
+    "summary": "Für eine bestimmte Ware und daraus hergestellte Produkte kann der Charakter niemals eine ungenaue Werteinschätzung vornehmen.",
+    "description": "Für eine bestimmte Ware und daraus hergestellte Produkte kann der Charakter niemals eine ungenaue Werteinschätzung vornehmen. Ein Charakter mit einem untrüglichen Blick für Wolle zum Beispiel kann Wolle durch Berühren klassifizieren und ihren Preis stets genau abschätzen. Der Charakter kann auch Wollstoff und Wollestickereiarbeiten bewerten. Ein Charakter mit einem untrüglichen Blick für Edelsteine erkennt stets gefälschte, gerissene und illusorische Steine. Charaktere mit dieser Tugend sind begehrte Angestellte und werden gelegentlich von anderen Händlern als Berater bezahlt. Solange sie ausschließlich mit der Ware handeln, die zu dieser Tugend passt, ist der Charakter sehr erfolgreich. Wenn du die Handelsregeln aus Stadt & Gilde verwendest, erhalten sie zusätzliche (3 × Wohlstandsmultiplikator) Arbeitspunkte pro Jahr."
   },
   "virtue.perfectus": {
     "name": "Perfectus",
@@ -2484,7 +2502,8 @@
   },
   "virtue.performance_magic": {
     "name": "Aufführungsmagie",
-    "summary": "Im Mythischen Europa haben viele hermetische Magi gelernt, ihre magischen Praktiken zu verschleiern, indem sie diese vollständig in eine gewöhnliche Tätigkeit oder Handlung einbetten, in der sie hervorragend sind."
+    "summary": "Im Mythischen Europa haben viele hermetische Magi gelernt, ihre magischen Praktiken zu verschleiern, indem sie diese vollständig in eine gewöhnliche Tätigkeit oder Handlung einbetten, in der sie hervorragend sind.",
+    "description": "Im Mythischen Europa haben viele hermetische Magi gelernt, ihre magischen Praktiken zu verschleiern, indem sie diese vollständig in eine gewöhnliche Tätigkeit oder Handlung einbetten, in der sie hervorragend sind. Diese Tugend erlaubt dem Magus, das Zauberwirken zu verbergen, indem er die Handlungen oder Worte einer Fertigkeit anstelle der normalen Hermetischen Gesten und Worte verwendet, und erlaubt ihm, einen Zauber aufrechtzuerhalten, ohne Konzentrationswürfe zu benötigen.\n\nWenn die Tugend erworben wird, gib die Fertigkeit an, auf die sie sich anwendet. Du darfst jede Handwerks-, Berufs- oder andere Fertigkeit mit einer klar erkennbaren verbalen oder körperlichen Praxis wählen. Du darfst keine Sprach-, Übernatürliche, Akademische oder Arkane Fertigkeit wählen.\n\nEs gibt unterschiedliche Tugenden für jede mögliche Fertigkeit, da jede andere Methoden erlaubt, ihre Handlungen in die Magie einzubinden: Das Kennen einer Methode der Aufführungsmagie erlaubt dem Magus nicht, irgendeine andere Fertigkeit für die Magie zu nutzen.\n\nDie Handlungen oder Worte der Praxis sind der Kern dieser Tugend, nicht die Produkte des Handwerks. Eine Fertigkeit, die verbal ist (wie das Geschichtenerzählen), ersetzt die Worte des Zauberwirkens; ebenso ersetzt eine Fertigkeit, die körperlich ist (wie Jagen), die Gesten. Eine Fertigkeit, die sowohl verbale als auch körperliche Aspekte umfasst (wie Musik oder Mimentheater), erlaubt dem Ausführenden mehr Flexibilität.\n\nDer Magus muss die Fertigkeit tatsächlich ausführen, um als Nutzer dieser Tugend zu gelten; andere Tugenden oder Meisterschaftsfertigkeiten heben diese Anforderung nicht auf. Er kann zum Beispiel nicht lautlos singen, aber er kann lautlos jagen.\n\nWorte oder Gesten, die nicht durch Aufführungsmagie ersetzt werden, bleiben als normale mystische Bestandteile des Zauberwirkens: Verwende die normalen Regeln und Anpassungen (einschließlich Tugenden wie Stille Magie und Meisterschaftsfertigkeiten wie Stilles Zaubern).\n\nDer Magus kann wählen, laut zu vokalisieren oder übertrieben zu gestikulieren, und erhält die entsprechenden Boni wie für laute Worte oder übertriebene Gesten. Umstehende können dies als ungewöhnliche Aktivität bemerken und Interesse zeigen, wo sie es andernfalls nicht würden.\n\nAufführung (Dauer): Der Zauber hält an, solange der Wirker die Aufführungsfertigkeit ausführt. Aufführung entspricht der Dauer Konzentration.\n\nUm einen Zauber mit Aufführungs-Dauer zu wirken, muss dem Magus ein Wurf gelingen (einfacher oder Stresswürfel, je nach Umständen) auf Eigenschaft (variiert je nach Fertigkeit) + Fertigkeit gegen einen Schwierigkeitsgrad von 3.\n\nDer Zauber misslingt, wenn dieser Wurf misslingt, und patzert, wenn der Wurf patzert. Der Zauber endet, wenn der Magus aufhört, die Fertigkeit auszuführen; solange die Aufführung andauert, sind jedoch weder Konzentrations- noch Fertigkeitswürfe erforderlich, um den Zauber aufrechtzuerhalten.\n\nFormulaische Zauber müssen mit der neuen Dauer entworfen werden, um diese Fertigkeit zu nutzen; falls so konzipiert, kann der Zauber nicht ohne Aufführung gewirkt werden.\n\nBeispiel\n\nHarald kennt Aufführungsmagie (Jagen), wirkt Jägers Spuren des Feenglanzes (eine Variante von Spuren des Feenglanzes) und besteht seinen einfachen Jagenwurf. Sein magisch verbessertes Sehvermögen hält an, solange er die Jagd fortsetzt, auch wenn er durch Geplauder oder anderes Zauberwirken abgelenkt wird.\n\nOrlando singt, während er eine Gesungene Lampe ohne Flamme wirkt. Das Licht hält an, solange er weitersängt, wie schlecht auch immer, endet jedoch, wenn er aufhört zu singen. Da er einem widerspenstigen Grog dringende Anweisungen mitteilen muss, nutzt er ein verzaubertes Artefakt mit Aufrechterhaltung des anspruchsvollen Zaubers, um den Spruch aufrechtzuerhalten, während er aufhört zu singen und den Grog anbrüllt, bevor er seine gesungene Aufführung wieder aufnimmt, ehe der Aufrechterhaltungseffekt endet.\n\nAufführungsfertigkeiten\n\nVon den in diesem Buch aufgeführten Fertigkeiten eignen sich folgende für die Aufführungsmagie (obwohl nicht alle besonders wirksam sind und manche schwer effektiv einzusetzen sein mögen):\n\n*Körperlich:* Athletik, Raufen, Chirurgie, Jagen, Fingerfertigkeit, Reiten, Schleichen, Schwimmen, Bogenschießen, Große Waffe, Einzelwaffe, Wurfwaffe\n\n*VERBAL:* Feilschen, Charme, Täuschung, Intrige, Führung, Unterrichten\n\n*VERBAL UND KÖRPERLICH:* Tierumgang, Zechen, Musik\n\n*Variabel:* Handwerk (Art), Beruf (Art)\n\nObwohl Raufen und Kampffertigkeiten in der Aufführungsmagie verwendet werden können, muss der Magus halb-rituelle Bewegungen ausführen, um Zauber zu wirken – als Reaktion auf die Anforderungen des Zaubers, nicht auf die Aktionen eines Gegners. Befindet sich der Magus im Kampf, darf er Aufführungsmagie (Raufen oder Kampffertigkeiten) nur nutzen, wenn der Spieler einen Stresswürfel mit drei zusätzlichen Patzerwürfeln wirft und alle Nicht-Patzer als Würfelergebnis null wertet. (Dies stellt dar, dass der Gegner ignoriert und der Zauber gewirkt wird.)\n\nZauberhafter Gesang (Aufführungsmagie)\n\nAufführungsmagie (Musik) ist oft als Zauberhafter Gesang bekannt.\n\nMusik ist unter den Aufführungsmagic-Fertigkeiten ungewöhnlich – vielleicht weil Instrumentalmusik der menschlichen Stimme ähnelt –, insofern dass das Spielen einer Melodie auf einem Instrument frei entweder oder beide von Gesten und Worten ersetzen kann. Der Magus muss ein Instrument spielen, um Gesten zu ersetzen, hat aber die freie Wahl, ob er singt oder eine Melodie spielt, um mystische Worte zu ersetzen. Blasinstrumente erfordern das Spielen einer Melodie, um Worte zu ersetzen, da man beim Spielen einer Flöte nicht gleichzeitig singen kann!\n\nZauberhafter Gesang kann als reines Singen ausgeführt werden, ohne Gesten zu ersetzen (mit normalen Zauberwirken-Abzügen oder den Vorteilen der Subtilen Magie), oder ohne Singen ausgeführt werden (wenn der Magus eine Instrumentalmelodie spielt), kann aber nicht schweigend ausgeführt werden.\n\nWenn die Stimmreichweite mit Zauberhaftem Gesang verwendet wird, trägt der Zauber so weit, wie die Musik (Gesang oder Instrument) gehört werden könnte. Bei manchen lauten Instrumenten kann dies eine beträchtliche Entfernung sein.\n\nAufführungsmagie erkennen\n\nDie meisten Menschen erkennen das Ausführen einer Fertigkeit nicht als Zauberwirken, sodass der Ausführende offener agieren kann als die meisten Magi; selbst andere hermetische Magi erkennen seine Handlungen nicht automatisch.\n\nWenn ein hermetischer Magus darüber nachdenkt, Schnellzaubern einzusetzen, um einem Zauber entgegenzuwirken, und der Wirker Hermetische Worte und Gesten verwendet, kann ein Magus die Form automatisch bestimmen (Seite 217). Unter anderen Umständen muss der Magus die Form selbst herausfinden.\n\n*DIE FORM EINES MAGISCHEN EFFEKTS BESTIMMEN: Stresswürfel + Wahrnehmung + Wahrnehmung vs. 15 – Effektmagnitude*\n\nWird der Zauber mit gewöhnlichen Worten oder Gesten gewirkt, wird der Schwierigkeitsgrad wie folgt angepasst:\n\n-3 wenn Hermetische Worte gesprochen werden (und gehört werden können) +0 wenn Hermetische Gesten ausgeführt werden (und gesehen werden können) +3 wenn sowohl Worte als auch Gesten gewöhnlich sind"
   },
   "virtue.persona": {
     "name": "Persona",
@@ -2492,11 +2511,13 @@
   },
   "virtue.personal_power": {
     "name": "Persönliche Kraft",
-    "summary": "Der Charakter besitzt eine übernatürliche Kraft, die er nach Belieben aktivieren kann."
+    "summary": "Der Charakter besitzt eine übernatürliche Kraft, die er nach Belieben aktivieren kann.",
+    "description": "Der Charakter besitzt eine übernatürliche Kraft, die er nach Belieben aktivieren kann. Es handelt sich um eine einzelne Kraft, die einem formulaischen hermetischen Zauber mit einer Stufe von 25 oder weniger entspricht. Die Initiative der Kraft entspricht der Schnelligkeit des Charakters – (Magnitude der Kraft/2). Sie kostet eine Erschöpfungsstufe zur Aktivierung, wenn ihre Stufe 50 oder weniger beträgt, und zwei Erschöpfungsstufen, wenn ihre Stufe zwischen 51 und 100 liegt. Du kannst außerdem Stufen im Verhältnis eins zu eins aufwenden, um der Kraft Penetration zu verleihen; andernfalls hat sie eine Penetration von null.\n\nDer Effekt muss mindestens eines der folgenden Kriterien erfüllen:\n\n*Der Effekt muss Reichweite: Persönlich haben, ODER Der Effekt muss dauerhaft sein*\n\nDiese Tugend kann mehrfach gewählt werden, und die Stufen werden addiert, um mehrere Kräfte zu erschaffen. Ein Charakter, der die Tugend zweimal wählt, könnte zum Beispiel eine Kraft mit Stufe 30 und Penetration 0 sowie eine zweite Kraft mit Stufe 10 und Penetration 10 besitzen. Beachte, dass viele Kräfte mit Reichweite Persönlich keinen Penetrationswert benötigen, da sie die Magieresistenz des Wirkenden (falls vorhanden) nicht durchdringen müssen und kein anderes Ziel treffen können. Wenn der Charakter voraussichtlich Wesen mit Magieresistenz beeinflussen möchte, während er unter dem Effekt der Persönlichen Kraft steht, kann Penetration wertvoll sein (weitere Einzelheiten zur Funktionsweise der Penetration findest Du im Kapitel Hermetische Magie).\n\nDiese Tugend kann mit jeder übernatürlichen Sphäre verbunden sein. Wenn Du Zugang zu anderen Büchern hast, wie etwa Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Sphären der Macht: Das Infernale, Sphären der Macht: Feenwelt oder Heckenzauber (Überarbeitete Ausgabe), kannst Du die Kraft auf einem anderen System übernatürlicher Kräfte aufbauen, um etwas zu erhalten, das besser zum Charakter passt. Denke dabei daran, dass die Stufenwerte von Effekten bei verschiedenen Systemen auf unterschiedlichen Skalen funktionieren können, und passe die Anzahl der Effektstufen gegebenenfalls an. Die Kraft muss derselben übernatürlichen Sphäre zugeordnet sein wie das System, auf dem sie basiert. (Wenn Du Zugang zu anderen Büchern hast, empfiehlt es sich, Kräfte auf Basis hermetischer Magie auf die Magiesphäre zu beschränken.)"
   },
   "virtue.personal_vis_source": {
     "name": "Persönliche Vis-Quelle",
-    "summary": "Du hast exklusiven Zugang zu einer Versorgung mit rohem Vis."
+    "summary": "Du hast exklusiven Zugang zu einer Versorgung mit rohem Vis.",
+    "description": "Du hast exklusiven Zugang zu einer Versorgung mit rohem Vis. Lege Menge und Art in Absprache mit Deiner Spieltruppe fest; der Ertrag sollte etwa ein Zehntel dessen betragen, was der Spielerkonvent zu Beginn der Saga jährlich zu gewinnen erwartet. Der Ertrag Deiner Quelle verändert sich im Laufe der Zeit normalerweise nicht, selbst wenn der Konvent neue Quellen erschließt."
   },
   "virtue.physician_of_salerno": {
     "name": "Arzt von Salerno",
@@ -2504,7 +2525,8 @@
   },
   "virtue.piercing_gaze": {
     "name": "Durchdringender Blick",
-    "summary": "Wenn Du Menschen eindringlich anschaust, vermittelst Du ihnen das unbehagliche Gefühl, als würdest Du in ihre Seelen blicken."
+    "summary": "Wenn Du Menschen eindringlich anschaust, vermittelst Du ihnen das unbehagliche Gefühl, als würdest Du in ihre Seelen blicken.",
+    "description": "Wenn Du Menschen eindringlich anschaust, vermittelst Du ihnen das unbehagliche Gefühl, als würdest Du in ihre Seelen blicken. Personen mit Hintergedanken, schlechtem Gewissen oder einer verlogenen Zunge müssen Würfe gegen eine angemessene Persönlichkeitseigenschaft, Täuschung oder was der Spielleiter für geeignet hält ablegen, um ruhig zu bleiben. Außerdem erhältst Du einen Bonus von +3 auf Würfe, die Einschüchterung beinhalten. Feen und Dämonen lässt Deine Kraft unbeeindruckt."
   },
   "virtue.potent_magic_major": {
     "name": "Potente Magie (Groß)",
@@ -2516,7 +2538,8 @@
   },
   "virtue.powerful_relic": {
     "name": "Mächtige Reliquie",
-    "summary": "Du besitzt eine ungewöhnlich mächtige Reliquie mit einem Wahrer-Glaube-Wert von 3."
+    "summary": "Du besitzt eine ungewöhnlich mächtige Reliquie mit einem Wahrer-Glaube-Wert von 3.",
+    "description": "Du besitzt ein ungewöhnlich mächtiges Relikt mit einem Wahrer-Glaube-Wert von 3. Das Relikt besitzt außerdem eine Kraft, die in Absprache mit dem Spielleiter festgelegt werden sollte (siehe Relikte, Seite 419). Wie bei der Kleinen Allgemeinen Tugend Relikt kann der Gegenstand in jeden anderen Gegenstand eingebaut werden, den Du besitzt, etwa in ein Schwert oder ein Amulett.\n\nEin so mächtiges Relikt zu besitzen ist eine große Verantwortung, und Dein Charakter sollte sich entsprechend verhalten. Wenn Du Dich jemals gottlos verhältst (nach Beurteilung des Spielleiters), hört das Relikt auf zu funktionieren, bis angemessene Buße geleistet wurde."
   },
   "virtue.premonitions": {
     "name": "Vorahnungen",
@@ -2536,23 +2559,28 @@
   },
   "virtue.protection": {
     "name": "Schutz",
-    "summary": "Du stehst unter der Schirmherrschaft einer mächtigen Person, normalerweise eines Adligen oder eines hochrangigen Kirchenwürdenträgers (andere Möglichkeiten sind denkbar, sofern der Spielleiter zustimmt)."
+    "summary": "Du stehst unter der Schirmherrschaft einer mächtigen Person, normalerweise eines Adligen oder eines hochrangigen Kirchenwürdenträgers (andere Möglichkeiten sind denkbar, sofern der Spielleiter zustimmt).",
+    "description": "Du stehst unter der Schirmherrschaft einer mächtigen Person, normalerweise eines Adligen oder eines hochrangigen Kirchenwürdenträgers (andere Möglichkeiten sind denkbar, sofern der Spielleiter zustimmt). Wer von Deinem bevorzugten Status weiß, behandelt Dich mit Vorsicht; wer es nicht weiß, zahlt oft den Preis. Du hast eine Reputation (gut oder schlecht, nach Deiner Wahl) von Stufe 3, die höher sein kann, wenn Dein Beschützer besonders bedeutend oder bekannt ist."
   },
   "virtue.puissant_ability": {
     "name": "Begabung in {ability}",
-    "summary": "+2 auf alle Würfe mit einer Fertigkeit."
+    "summary": "+2 auf alle Würfe mit einer Fertigkeit.",
+    "description": "Du bist in einer bestimmten Fertigkeit besonders geschickt und addierst 2 zu ihrem Wert, wann immer Du sie einsetzt. Beachte, dass Du eine Fertigkeit im Allgemeinen nicht einsetzt, wenn Du sie lernst, über sie schreibst oder jemandem hilfst, sie zu verbessern. Du kannst diese Tugend für eine bestimmte Fertigkeit nur einmal wählen, aber für verschiedene Fertigkeiten mehrfach."
   },
   "virtue.puissant_art": {
     "name": "Begabung in {art}",
-    "summary": "+3 auf alle Summen mit einer Kunst. Kann zweimal gewählt werden, für zwei Künste."
+    "summary": "+3 auf alle Summen mit einer Kunst. Kann zweimal gewählt werden, für zwei Künste.",
+    "description": "Du addierst 3 zum Wert einer Kunst, wann immer Du sie einsetzt. Das bedeutet alle Summen, in denen der Wert der Kunst Teil der Summe ist. Es gilt nicht beim Lernen, Unterrichten oder Schreiben über die Kunst. Du kannst diese Tugend zweimal wählen, für zwei verschiedene Künste. Wenn ein Zauber Requisiten hat, beziehe den Bonus aus Begabung in (Kunst) mit dieser Kunst ein, wenn Du berechnest, welche Kunst höher ist. Wenn die Kunst mit Begabung höher ist, gilt der Bonus nicht für das Requisit."
   },
   "virtue.quiet_magic": {
     "name": "Stille Magie",
-    "summary": "Du kannst Zauber ohne Abzug mit nur leiser Stimme wirken und erhältst nur einen Abzug von -5, wenn Du überhaupt nicht sprichst."
+    "summary": "Du kannst Zauber ohne Abzug mit nur leiser Stimme wirken und erhältst nur einen Abzug von -5, wenn Du überhaupt nicht sprichst.",
+    "description": "Du kannst Zauber ohne Abzug mit nur leiser Stimme wirken und erhältst nur einen Abzug von -5, wenn Du überhaupt nicht sprichst. Du erhältst keinen Vorteil davon, Deine Stimme normal einzusetzen, aber Du erhältst den normalen Bonus für den Einsatz einer schallenden Stimme. Die Reichweite von Zaubern mit Reichweite Stimme wird normal bestimmt, abhängig davon, wie laut Deine Stimme ist.\n\nDu kannst diese Tugend zweimal wählen und den Abzug vollständig eliminieren."
   },
   "virtue.rabbi": {
     "name": "Rabbi",
-    "summary": "Dein Charakter ist ein ordinierter Rabbi, ein Lehrer und weiser Mann der jüdischen Gemeinschaft."
+    "summary": "Dein Charakter ist ein ordinierter Rabbi, ein Lehrer und weiser Mann der jüdischen Gemeinschaft.",
+    "description": "Dein Charakter ist ein ordinierter Rabbi, ein Lehrer und weiser Mann der jüdischen Gemeinschaft. Ihm wird der Respekt entgegengebracht, der ihm von allen in seiner Gemeinschaft zusteht, die ihn um Führung und Rat angehen. Als Rabbi wird von Deinem Charakter erwartet, Schüler zu unterrichten, über das Gesetz zu studieren und zu schreiben sowie über Fälle zu urteilen, die vor dem jüdischen Gericht verhandelt werden.\n\nDer Rabbi muss die Tugend Gebildet (Hebräisch) wählen, um die erforderlichen Akademischen Fertigkeiten zu erhalten. Diese Tugend steht nur männlichen Charakteren zur Verfügung."
   },
   "virtue.rapid_convalescence": {
     "name": "Schnelle Genesung",
@@ -2564,7 +2592,8 @@
   },
   "virtue.rat_up_a_drainpipe": {
     "name": "Ratte im Abflussrohr",
-    "summary": "Durch eine Mischung aus Akrobatik, Klettern und Ausweichen kann dieser Charakter durch städtische Gebiete laufen, als ob er ungehindert wäre."
+    "summary": "Durch eine Mischung aus Akrobatik, Klettern und Ausweichen kann dieser Charakter durch städtische Gebiete laufen, als ob er ungehindert wäre.",
+    "description": "Durch eine Mischung aus Akrobatik, Klettern und Ausweichen kann dieser Charakter durch städtische Gebiete laufen, als ob er ungehindert wäre. Dies verschafft einen erheblichen Vorteil bei gegnerischen Athletik-Würfen, die eine Verfolgungsjagd darstellen."
   },
   "virtue.redcap": {
     "name": "Rotkappe",
@@ -2572,7 +2601,8 @@
   },
   "virtue.relic": {
     "name": "Reliquie",
-    "summary": "Du besitzt eine heilige Reliquie, etwa den Fingerknöchelknochen eines Heiligen, mit einem Wahrer-Glaube-Wert von 1."
+    "summary": "Du besitzt eine heilige Reliquie, etwa den Fingerknöchelknochen eines Heiligen, mit einem Wahrer-Glaube-Wert von 1.",
+    "description": "Du besitzt ein heiliges Relikt, etwa den Fingerknöchelknochen eines Heiligen, mit einem Wahrer-Glaube-Wert von 1. Es kann in jeden anderen Gegenstand eingebaut werden, den Du besitzt (zum Beispiel ein Schwert). Das Relikt besitzt keine zusätzlichen Kräfte. Regeln für Relikte und Wahren Glauben findest Du in Kapitel 12: Sphären."
   },
   "virtue.religious": {
     "name": "Ordensangehöriger",
@@ -2580,11 +2610,13 @@
   },
   "virtue.reserves_of_strength": {
     "name": "Kraftreserven",
-    "summary": "Einmal pro Tag kannst Du in der Not eine außergewöhnliche Kraftleistung vollbringen."
+    "summary": "Einmal pro Tag kannst Du in der Not eine außergewöhnliche Kraftleistung vollbringen.",
+    "description": "Einmal pro Tag kannst Du in der Not eine außergewöhnliche Kraftleistung vollbringen. Für die Dauer der Handlung addierst Du +3 zu Deinem effektiven Stärkewert. Danach musst Du jedoch zwei Erschöpfungswürfe ablegen."
   },
   "virtue.ripper": {
     "name": "Aufschlitzer",
-    "summary": "Ein Aufschlitzer besitzt zwei Kräfte."
+    "summary": "Ein Aufschlitzer besitzt zwei Kräfte.",
+    "description": "Ein Aufschlitzer besitzt zwei Kräfte. Er kann auf Sichtweite, ohne Worte oder Gesten, durch Aufwenden einer Erschöpfungsstufe ein einzelnes Stück Stoff zerstören oder ein einzelnes Tier ausweiden. Es handelt sich um einen PeAn(He)-25-Effekt und einen PeAn-45-Effekt, jeder mit Penetration +0. Beachte, dass diese Beschreibung bewusst einschränkend ist: Ein Aufschlitzer kann einem Pferd kein Bein brechen oder es erblinden lassen. Er kann kein Seil durchtrennen. Er kann Dinge nicht mit seinem Geist sauber aufschneiden. Der Aufschlitzer hat zwei völlig unveränderliche Effekte."
   },
   "virtue.ritual_power": {
     "name": "Ritualmacht",
@@ -2596,7 +2628,8 @@
   },
   "virtue.schooled_in_crime": {
     "name": "In der Kriminalität geschult",
-    "summary": "Der Charakter wurde ausgiebig in kriminellen Künsten ausgebildet und erhält 50 zusätzliche Erfahrungspunkte für Fertigkeiten, die mit Diebstahl in Verbindung stehen."
+    "summary": "Der Charakter wurde ausgiebig in kriminellen Künsten ausgebildet und erhält 50 zusätzliche Erfahrungspunkte für Fertigkeiten, die mit Diebstahl in Verbindung stehen.",
+    "description": "Der Charakter wurde ausgiebig in kriminellen Künsten ausgebildet und erhält 50 zusätzliche Erfahrungspunkte für Fertigkeiten, die mit Diebstahl in Verbindung stehen. Gebietskundearten, Athletik, Wahrnehmung, Feilschen, Raufen, Charme, Täuschung, Fingerfertigkeit und Schleichen sind alle geeignet; andere Fertigkeiten können mit Zustimmung der Spieltruppe zu dieser Liste hinzugefügt werden."
   },
   "virtue.second_sight": {
     "name": "Zweites Gesicht",
@@ -2604,11 +2637,13 @@
   },
   "virtue.secondary_insight": {
     "name": "Nebenerkenntnis",
-    "summary": "Deine Methode des magischen Studiums ist besonders vielseitig."
+    "summary": "Deine Methode des magischen Studiums ist besonders vielseitig.",
+    "description": "Deine Methode des magischen Studiums ist besonders vielseitig. Wenn Du ein Quartal damit verbringst, eine der magischen Techniken aus einem Buch, bei einem Lehrer oder aus rohem Vis zu studieren, erhältst Du außerdem einen einzelnen Erfahrungspunkt in beliebigen 4 Formen Deiner Wahl. Wenn Du eine der magischen Formen studierst, erhältst Du außerdem einen einzelnen Erfahrungspunkt in beliebigen 2 separaten Techniken Deiner Wahl. Du kannst nicht mehr als einen Bonus-Erfahrungspunkt in eine einzelne Kunst einbringen und kannst in jedem Quartal andere Künste für den Bonus-Erfahrungspunkt wählen, selbst wenn Du dieselbe Kunst aus derselben Quelle weiter studierst. Diese Bonus-Erfahrungspunkte werden durch Affinitäten oder andere Faktoren nicht erhöht."
   },
   "virtue.see_in_darkness": {
     "name": "Im Dunkeln sehen",
-    "summary": "Du kannst in vollständiger Dunkelheit sehen."
+    "summary": "Du kannst in vollständiger Dunkelheit sehen.",
+    "description": "Du kannst in vollständiger Dunkelheit sehen. Ansonsten ist Dein Sehvermögen nicht schärfer als das normaler Menschen, und Du siehst nicht weiter als normale Menschen bei Tageslicht sehen würden."
   },
   "virtue.self_confident": {
     "name": "Selbstbewusst",

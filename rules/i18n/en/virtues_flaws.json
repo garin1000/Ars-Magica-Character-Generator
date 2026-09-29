@@ -2354,15 +2354,18 @@
   },
   "virtue.mamluk": {
     "name": "Mamluk",
-    "summary": "You are a former military slave, bought as a child, trained at a military school and educated in Islam, and then freed upon reaching adulthood."
+    "summary": "You are a former military slave, bought as a child, trained at a military school and educated in Islam, and then freed upon reaching adulthood.",
+    "description": "You are a former military slave, bought as a child, trained at a military school and educated in Islam, and then freed upon reaching adulthood. You are probably Turkish, but you may also be Mongol or even Greek. You are likely to have been trained in the use of lances, bows, shields, chainmail, and lamellar armor (same statistics as chainmail) and one or two swords, both on foot and on horseback, though this does not necessarily mean that you will own these at the start of the game (storyguide's option).\n\nYou may take Martial Abilities at character creation, and as a special case you may also take the Ability Theology: Islam, even if you do not have the Minor General Virtue Educated. This Virtue is only available to male characters, and (for Companion characters only) is compatible with both the Emir and Muqta' Virtues, as many Mamluks have climbed high in the Muslim hierarchy."
   },
   "virtue.marshal": {
     "name": "Marshal",
-    "summary": "A noble's stables require a specialist to coordinate the care, feeding, and welfare of the animals."
+    "summary": "A noble's stables require a specialist to coordinate the care, feeding, and welfare of the animals.",
+    "description": "A noble's stables require a specialist to coordinate the care, feeding, and welfare of the animals. This person is called a marshal, and the title holds considerable honor. The Marshal of England is the king's official in charge of his cavalry, but even the marshal of a baron is an important personage, given the vital roles played by horses in warfare and hunting, as well as routine travel.\n\nA marshal should take the Ability Profession: Marshal, which deals with understanding, purchasing, and caring for horses. It functions as the Ability Medicine for the purpose of treating veterinary diseases, and for surgery involving these animals. A marshal receives 50 extra experience points at character generation to spend on the abilities Animal Handling, Etiquette, Hunt, Latin, Profession: Marshal and Ride, and may take Martial Abilities freely.\n\nA marshal may overseen other specialists, including farriers who make horseshoes; leatherworkers who produce tack, harness, and saddles; and the trained staff who administer day-to-day grooming and mucking out of the stables."
   },
   "virtue.master_bard": {
     "name": "Master Bard",
-    "summary": "The character has spent at least nine years of study at a bardic school and is a master of the trade, called an Anruth."
+    "summary": "The character has spent at least nine years of study at a bardic school and is a master of the trade, called an Anruth.",
+    "description": "The character has spent at least nine years of study at a bardic school and is a master of the trade, called an Anruth. He has a teaching position at a prestigious school, or else an official position with an Irish clan chief; either way this earns him a Local Reputation at level 3. If resident at a school, he has an obligation to teach for at least two seasons a year; if he works for a lord, two seasons are instead spent composing praise poems and stories for his patron.\n\nThe character should be at least 25 years old, and must have a Profession: Storyteller or Poet of at least 5, and also a 5 in at least one of Area Lore, Organization Lore, Faerie Lore, or Magic Lore. You can spend experience points on Arcane Abilities at character creation, and have an extra 240 experience points to spend on Art of Memory, Profession: Storyteller, Profession: Poet, any Area Lore, any Organization Lore, Faerie Lore, or Magic Lore. This Social Status is only available in Ireland."
   },
   "virtue.master_of_form_creatures": {
     "name": "Master of {form} Creatures",
@@ -2378,11 +2381,13 @@
   },
   "virtue.masterpiece": {
     "name": "Masterpiece",
-    "summary": "For some benevolent reason, the magus's parens has allowed him to keep the lesser enchanted item he made to prove himself a magus and pass his Gauntlet."
+    "summary": "For some benevolent reason, the magus's parens has allowed him to keep the lesser enchanted item he made to prove himself a magus and pass his Gauntlet.",
+    "description": "For some benevolent reason, the magus's parens has allowed him to keep the lesser enchanted item he made to prove himself a magus and pass his Gauntlet. This masterpiece must be a lesser enchanted item. You should design a lesser enchanted item that your character could make based on his Lab Totals at character generation, following the regular rules for construction of such a device. You ignore vis costs, as the magus's parens provided those from her laboratory stores. This Gauntlet test is standard for House Verditius, but a maga from another House may have chosen to impose it."
   },
   "virtue.mazdean_priest": {
     "name": "Mazdean Priest",
-    "summary": "Your character is an ordained Mazdean priest, initiated as a mobed."
+    "summary": "Your character is an ordained Mazdean priest, initiated as a mobed.",
+    "description": "Your character is an ordained Mazdean priest, initiated as a mobed. This means that the character may carry out the various rituals and ceremonies, such as the Yasna, Vivevdat, Navjote, marriage, burial, official prayers, purification rituals, lighting of sacred fires, and initiation of new priests. In Mazdean communities, your character is held in high regard and treated with great respect. The character wears pure white clothes and, when performing ceremonies, covers his face with a white veil to protect the sacred flame from his breath and saliva. See The Cradle and the Crescent. Chapter 5 for more details on Mythic Zoroastrianism.\n\nAs a mobed, your character resides in a community that likely has a fire temple. This means that your character has arduous and time-consuming religious and ceremonial duties. Most of your time is spent praying, performing ritual purification rites and tending to the sacred fire. If you are Wealthy, you have several ervads (junior priests) who perform many of the more arduous tasks. If you are Poor, it likely reflects the poor station of Mazdeans in the community in general, and you may also possess the Outsider Flaw.\n\nYour character may take Academic Abilities at character generation. Most such characters take the Minor Personality Flaw Vow to reflect your constant state of ritual purity, and dedication to your community. This can only be your character's social status if he lives in a Mazdean community, all of which are to the east of Mythic Europe, and most of which are in Persia. A Mazdean priest in exile in Europe should take a different Social Ŝtatus Virtue or Flaw, as discussed earlier. This Virtue is only available to male characters."
   },
   "virtue.mendicant_friar": {
     "name": "Mendicant Friar",
@@ -2410,7 +2415,8 @@
   },
   "virtue.method_caster": {
     "name": "Method Caster",
-    "summary": "You are excellent at formulaic spells, as you have perfected a consistent and precise method for casting them."
+    "summary": "You are excellent at formulaic spells, as you have perfected a consistent and precise method for casting them.",
+    "description": "You are excellent at formulaic spells, as you have perfected a consistent and precise method for casting them. You gain a +3 bonus to the Casting Total of any Formulaic or Ritual spell you cast. However, if you vary at all from your precise method (by altering your gestures or voicing), you do not get this bonus."
   },
   "virtue.mild_aging": {
     "name": "Mild Aging",
@@ -2418,23 +2424,28 @@
   },
   "virtue.minor_enchantments": {
     "name": "Minor Enchantments",
-    "summary": "The character has one or more items in his possession that have magical powers."
+    "summary": "The character has one or more items in his possession that have magical powers.",
+    "description": "The character has one or more items in his possession that have magical powers. These should be designed as Hermetic enchantments, and the total levels of powers in all the items, after adjustment for uses per day and so forth, must be 25 or less. The character may take this Virtue more than once: add the total levels together, but no single power can be greater than 30th level. If he loses the item or it is destroyed, then it is gone for good."
   },
   "virtue.minor_magical_focus": {
     "name": "Minor Magical Focus",
-    "summary": "Your magic is attuned to a narrow field; add the lowest applicable Art score twice within it."
+    "summary": "Your magic is attuned to a narrow field; add the lowest applicable Art score twice within it.",
+    "description": "Your magic is particularly attuned to some narrow field, such as self-transformation, birds of prey, or healing. In general, the field should be slightly narrower than a single Technique and Form combination, although it may include restricted areas of several such combinations. Healing, for example, is a part of Creo Corpus, Creo Animal, and possibly Creo Herbam, You cannot be focused on a laboratory activity, such as creating charged items, although a focus does apply to laboratory activities."
   },
   "virtue.muqta_muq_ta": {
     "name": "Muqta' (Muq-Ta')",
-    "summary": "You are an important emir, entrusted with an iqta' (iq-TAW', similar to a feudal fief)."
+    "summary": "You are an important emir, entrusted with an iqta' (iq-TAW', similar to a feudal fief).",
+    "description": "You are an important emir, entrusted with an iqta' (iq-TAW', similar to a feudal fief). All rules for the Landed Noble Virtue apply, except that most Muslims take the Minor Status Virtue Emir, rather than Knight."
   },
   "virtue.muse": {
     "name": "Muse",
-    "summary": "A muse possesses that rare beauty that encourages others to rise to worthiness."
+    "summary": "A muse possesses that rare beauty that encourages others to rise to worthiness.",
+    "description": "A muse possesses that rare beauty that encourages others to rise to worthiness. A character with this Virtue may grant Free Expression to a single other character, or can double the effect of Free Expression that a single character already possesses, while the muse is with him. The artist typically holds the muse in such high regard that he feels the need to continually improve, both in artistic technique and as a person, to be worthy of the muse's attention. Muses may be of either sex, and need not have beautiful bodies."
   },
   "virtue.mystical_choreography": {
     "name": "Mystical Choreography",
-    "summary": "The magus's skill at manipulating the shape and movement of the body allows him to reduce the amount of time required to perform Ceremonial Magic."
+    "summary": "The magus's skill at manipulating the shape and movement of the body allows him to reduce the amount of time required to perform Ceremonial Magic.",
+    "description": "The magus's skill at manipulating the shape and movement of the body allows him to reduce the amount of time required to perform Ceremonial Magic. The character performs ceremonies as per page 217, but requires only five minutes per magnitude. If the character has a prepared space, no matter how temporary, this falls to one minute per magnitude.\n\nThis Virtue is particularly important to those Jerbiton magi who use ceremonial casting to overcome the penalties associated with the Dominion."
   },
   "virtue.mythic_blood": {
     "name": "Mythic Blood",
@@ -2442,15 +2453,18 @@
   },
   "virtue.natural_leader": {
     "name": "Natural Leader",
-    "summary": "The character is a dominant person with a demeanor that encourages others to do what he says."
+    "summary": "The character is a dominant person with a demeanor that encourages others to do what he says.",
+    "description": "The character is a dominant person with a demeanor that encourages others to do what he says. His self-assured manner gives him a +3 bonus to rolls in social situations in which he takes the lead; people are more likely to follow his orders or do as he suggests. If he is Gifted, this bonus can temporarily help to overcome the social penalty of The Gift, due to the strength of his domineering personality."
   },
   "virtue.nephilim": {
     "name": "Nephilim",
-    "summary": "Free status Virtue for a divine giant of ancient myth; incompatible with The Gift."
+    "summary": "Free status Virtue for a divine giant of ancient myth; incompatible with The Gift.",
+    "description": "You are one of the Nephilim, and a Mythic Companion (page 63). You receive the Strong Angelic Heritage Virtue free."
   },
   "virtue.notary": {
     "name": "Notary",
-    "summary": "Notaries are legal officials employed by lords or towns."
+    "summary": "Notaries are legal officials employed by lords or towns.",
+    "description": "Notaries are legal officials employed by lords or towns. Your responsibilities include drawing up contracts, witnessing charters, verifying transactions and documents, and affixing a specially designed seal. Notaries generally receive their salary from their employer on Christmas. Notaries only have jurisdiction in specific realms or towns, such as the County of Nimes or the city of Montpellier. The Wealthy Virtue and Poor Flaw affect you normally. Due to your training, you may take Academic Abilities during character creation; however, notaries may not be members of the clergy and are subject to secular law."
   },
   "virtue.nuntius": {
     "name": "Nuntius",
@@ -2458,11 +2472,13 @@
   },
   "virtue.paid_rights": {
     "name": "Paid Rights",
-    "summary": "Medieval society has many prohibitions against women holding authority, reflected in the restriction of many Social Status Virtues to men."
+    "summary": "Medieval society has many prohibitions against women holding authority, reflected in the restriction of many Social Status Virtues to men.",
+    "description": "Medieval society has many prohibitions against women holding authority, reflected in the restriction of many Social Status Virtues to men. These provisions need to be enforced for them to be effective, and a woman with sufficient wealth can often buy an exclusion from enforcement, or even permission to do something that is normally forbidden. All a woman need do, if she wishes to be a baroness in her own right, is pay the king enough money that he allows it. All a woman need do if she wishes to hold a smaller fief in her own right, not marry as directed, and not be in wardship, is pay a large enough fine to her guardian.\n\nA player may take this Virtue to note that a female character has paid for the right to do a certain thing that is generally forbidden for women. She may also take a Story Flaw that represents her family's displeasure at this use of her funds, the frustrations of suitors who would take her land by marriage, or other forms of social opprobrium, although this is not required.\n\nThere are, however, a few prohibitions that a woman cannot pay a fine to ignore. She cannot pay a fine to do anything that only men are permitted to do in the administrative structure of the Church, which includes universities and cathedral schools. She could pay a fine to be allowed to study at a university, but not to graduate and gain the accompanying social status. Similarly, a woman cannot pay a fine to be ordained into Minor or Holy Orders, for example as a priest. It is also difficult for a woman to gain the rank of knight. There are some examples of female knights in folklore, so it is not impossible. But a female knight needs an unusual back story, and really ought to have a Story Flaw reflecting that.\n\nThis Virtue is only available to female characters, and is compatible with any Social Status that is normally restricted to men, and any Social Status compatible with the Social Status acquired through the paid rights."
   },
   "virtue.partner": {
     "name": "Partner",
-    "summary": "The character has a large financial stake in a wealthy trading company."
+    "summary": "The character has a large financial stake in a wealthy trading company.",
+    "description": "The character has a large financial stake in a wealthy trading company. This provides sufficient income for the character to live as well as a minor member of the nobility, but without military trappings. The company's capo is answerable to his partners, and they are permitted, when practicable, to take their profits in service from the house's captains and factors, if they wish. A partner may act in any of the roles of the house without taking the Virtue that corresponds to that role, save the role of capo, with the permission of the troupe. That is, a partner who is also a factor, merchant adventurer, local carrier, or urban merchant need not purchase that Virtue if she has this one."
   },
   "virtue.peasant": {
     "name": "Peasant",
@@ -2470,11 +2486,13 @@
   },
   "virtue.perfect_balance": {
     "name": "Perfect Balance",
-    "summary": "You are skilled at keeping your balance, especially on narrow ledges or tightropes."
+    "summary": "You are skilled at keeping your balance, especially on narrow ledges or tightropes.",
+    "description": "You are skilled at keeping your balance, especially on narrow ledges or tightropes. Add +6 to any roll to avoid falling or tripping."
   },
   "virtue.perfect_eye_for_commodity": {
     "name": "Perfect Eye for {commodity}",
-    "summary": "For one commodity, and products manufactured from it, the character never fails to make an accurate assessment of value."
+    "summary": "For one commodity, and products manufactured from it, the character never fails to make an accurate assessment of value.",
+    "description": "For one commodity, and products manufactured from it, the character never fails to make an accurate assessment of value. A character who has a perfect eye for wool, for example, can class wool by touch and always estimate its price accurately. The character can also price woolen cloth and woolen embroidery. A character with a perfect eye for gemstones can always spot fake, cracked, and illusory stones. Characters with this Virtue are prized employees, and are occasionally paid as consultants by other merchants. So long as they trade exclusively in the commodity that matches this Virtue, the character is very successful. If you are using the trading rules in City and Guild, they gain an extra (3 x Wealth Multiplier) Labor Points per year."
   },
   "virtue.perfectus": {
     "name": "Perfectus",
@@ -2482,7 +2500,8 @@
   },
   "virtue.performance_magic": {
     "name": "Performance Magic",
-    "summary": "In Mythic Europe, many Hermetic magi have learned how to disguise their magical practices by incorporating them fully into a mundane task or action at which they excel."
+    "summary": "In Mythic Europe, many Hermetic magi have learned how to disguise their magical practices by incorporating them fully into a mundane task or action at which they excel.",
+    "description": "In Mythic Europe, many Hermetic magi have learned how to disguise their magical practices by incorporating them fully into a mundane task or action at which they excel. This Virtue lets the magus conceal spellcasting by using the actions or words of some Ability to replace the normal Hermetic gestures and words, and lets him maintain a spell without needing Concentration rolls.\n\nWhen the Virtue is acquired, specify the Ability to which it applies. You may choose any Craft, Profession, or other Ability with a clear verbal or physical practice. You may not choose any Language, Supernatural, Academic, or Arcane Ability.\n\nThere are distinct Virtues for each possible Ability, as each allows different methods to work its actions into magic: knowing one method of Performance Magic does not let the magus use any other Ability in magic.\n\nIt is the action or words of the practice that are the focus of this Virtue, not the products of craft-working. An Ability that is verbal (such as storytelling) replaces the words of spellcasting, similarly, an Ability that is physical (such as hunting) replaces gestures. An Ability that encompasses both verbal and physical aspects (such as music, or mumming (acting)) allows the performer more flexibility.\n\nThe magus must actually perform the Ability to count as using this Virtue, and other Virtues or Mastery Abilities do not remove that requirement. For example, he cannot sing silently, although he can hunt silently.\n\nWords or gestures that are not being replaced by Performance Magic remain as normal mystical components of spell-casting: use the normal rules and adjustments (including Virtues such as Quiet Magic and Mastery Abilities such as Still Casting).\n\nThe magus may choose to vocalize loudly, or move exaggeratedly, and gain the equivalent bonuses as for loud words or exaggerated gestures. Bystanders may notice this as unusual activity, and take interest where they might not otherwise.\n\nPerformance (Duration): The spell lasts as long as the caster performs the Performance Ability. Performance is equivalent to Concentration Duration.\n\nTo cast a Performance Duration spell, the magus must succeed in a roll (simple or stress die, according to circumstances) of Characteristic (varies with Ability) + Ability against an Ease Factor of 3.\n\nThe spell fails if this fails, and botches if the roll botches. The spell ends when the magus ceases to perform the Ability, but no Concentration or Ability rolls are needed to maintain the spell while the performance continues.\n\nFormulaic spells must be devised with the new Duration to use this Ability, if so designed, the spell cannot be cast without performing.\n\nExample\n\nHarold knows Performance Magic (Hunt), casts Hunter's Tracks of the Faerie Glow (a variant of Tracks of the Faerie Glow), and succeeds with his simple Hunt roll. His magically enhanced vision persists as long as he keeps up the hunt, even if he is distracted by chatter or other spellcasting.\n\nOrlando sings while he casts a Sung Lamp Without Flame. The light continues while he continues to sing, however badly, but ends when he stops singing. Needing to convey urgent instructions to a recalcitrant grog, he uses an enchanted device with Maintaining the Demanding Spell to maintain the spell while he stops to shout at the grog, before the Maintaining effect ends he resumes his sung performance.\n\nPerformance Abilities\n\nOf the Abilities listed in this book, the following qualify for Performance Magic (although not all are particularly effective, and some may be hard to use effectively):\n\n*Physical:* Athletics, Brawl, Chirurgy, Hunt, Legerdemain, Ride, Stealth, Swim, Bows, Great Weapon, Single Weapon, Thrown Weapon\n\n*VERBAL:* Bargain, Charm, Guile, Intrigue, Leadership, Teaching\n\n*VERBAL AND PHYSICAL:* Animal Handling, Carouse, Music\n\n*Variable:* Craft (Type), Profession (Type)\n\nWhile Brawl and Martial Abilities may be used in Performance Magic, the magus needs to perform semi-ritualistic movements to cast spells, responding to the needs of the spell, not to the actions of an opponent. If the magus is in combat, then he may only use Performance Magic (Brawl or Martial Abilities) if the player rolls a stress die with three extra botch dice, and treats all nonbotches as die rolls of zero. (This represents ignoring the opponent and casting the spell.)\n\nSorcerous Music (Performance Magic)\n\nPerformance Magic (Music) is often known as Sorcerous Music.\n\nMusic is unusual among Performance Magic Abilities perhaps because instrumental music is similar to the human voice — in that playing a tune on an instrument can freely replace either or both of gestures and words. The magus needs to play an instrument in order to replace gestures, but has a free choice as to whether he sings or plays a tune to replace mystical words. Indeed, wind instruments require that he play a tune to replace words, as he cannot sing while playing a whistle!\n\nSorcerous Music can be performed as singing-only and not replace gestures (with normal spellcasting penalties or the benefits of Subtle Magic), or can be performed without singing (if the magus plays an instrumental tune), but cannot be performed silently.\n\nWhen using Voice Range with Sorcerous Music, the spell carries as far as the music (song or instrument) could be heard. For some loud instruments, this may be a long way.\n\nRecognizing Performance Magic\n\nMost people do not recognize performing an Ability as spellcasting, so the performer may act more openly than most magi, even other Hermetic magi do not automatically recognize his actions.\n\nIf a Hermetic magus contemplates Fast Casting to oppose a spell and the caster is using Hermetic words and gestures, a magus may determine the Form automatically (page 217). In other circumstances, the magus must work the Form out.\n\n*DETERMINING THE FORM OF A MAGICAL EFFECT: Stress Die + Perception + Awareness vs. 15 – effect magnitude*\n\nIf the spell is being cast with mundane words or gestures, the Ease Factor is adjusted as follows:\n\n-3 if Hermetic words are spoken (and can be heard) +0 if Hermetic gestures are made (and seen) +3 if both words and gestures are mundane"
   },
   "virtue.persona": {
     "name": "Persona",
@@ -2490,11 +2509,13 @@
   },
   "virtue.personal_power": {
     "name": "Personal Power",
-    "summary": "The character has a supernatural power that he can activate at will."
+    "summary": "The character has a supernatural power that he can activate at will.",
+    "description": "The character has a supernatural power that he can activate at will. This is a single power, equivalent to a Formulaic Hermetic spell with a level of 25 or lower. The power has an Initiative equal to the character's Quickness – (power magnitude/2). It costs one Fatigue level to activate if its level is less than or equal to 50, and two Fatigue levels if its level is 51 to 100. You may also spend levels one-for-one to give the power Penetration; otherwise, it has a Penetration of zero.\n\nThe effect must meet at least one of the following criteria:\n\n*The effect must be Range: Personal, OR The effect must be constant*\n\nThis Virtue may be taken more than once, and the levels added together to create several powers. For example, a character who took the Virtue twice could have a power with a level of 30 and a Penetration of 0, and a second power with a level and Penetration of 10 each. Note that many powers with a Personal Range do not need a Penetration score, as they do not need to Penetrate the caster's Magic Resistance (if any), and cannot affect any other target. If the character is likely to want to affect creatures with Magic Resistance while under the effect of the Personal Power, then Penetration may be valuable (see the Hermetic Magic chapter for further details on the functioning of Penetration).\n\nThis Virtue may be associated with any supernatural realm. If you have access to other books, such as Realms of Power: The Divine Revised Edition, Realms of Power: The Infernal, Realms of Power: Faerie, or Hedge Magic Revised Edition, you may want to base the power on a different system of supernatural powers, to get something more appropriate to the character. If you do, remember that the levels of effects may work on different scales for different systems, and you may want to change the number of levels of effect. The power must be associated with the same supernatural realm as the system on which it is based. (If you have access to other books, you may want to restrict powers based on Hermetic magic to the Magic realm.)"
   },
   "virtue.personal_vis_source": {
     "name": "Personal Vis Source",
-    "summary": "You have exclusive access to a supply of raw vis."
+    "summary": "You have exclusive access to a supply of raw vis.",
+    "description": "You have exclusive access to a supply of raw vis. Determine the amount and type with the help of your troupe, the yield should be about one tenth as much as the player covenant expects to gather per year at the beginning of the saga. The yield of your source does not normally change over the course of time, even if the covenant uncovers new sources."
   },
   "virtue.physician_of_salerno": {
     "name": "Physician of Salerno",
@@ -2502,7 +2523,8 @@
   },
   "virtue.piercing_gaze": {
     "name": "Piercing Gaze",
-    "summary": "By staring intently at people you make them feel uneasy, as if you are peering into their souls."
+    "summary": "By staring intently at people you make them feel uneasy, as if you are peering into their souls.",
+    "description": "By staring intently at people you make them feel uneasy, as if you are peering into their souls. Those with ulterior motives, uneasy consciences, or lying tongues must make rolls against an appropriate Personality Trait, Guile, or whatever the storyguide deems appropriate, to remain calm. Furthermore, you gain a +3 to rolls involving intimidation. Faeries and demons are unfazed by your power."
   },
   "virtue.potent_magic_major": {
     "name": "Potent Magic (Major)",
@@ -2514,7 +2536,8 @@
   },
   "virtue.powerful_relic": {
     "name": "Powerful Relic",
-    "summary": "You own an unusually powerful relic with a True Faith score of 3."
+    "summary": "You own an unusually powerful relic with a True Faith score of 3.",
+    "description": "You own an unusually powerful relic with a True Faith score of 3. The relic also has one power, which should be agreed upon with the storyguide (see Relics, page 419). As with the Minor General Virtue Relic, the item may be built into any other item that you possess, like a sword or a pendant.\n\nOwning such a powerful relic is a great responsibility, and your character should behave in an appropriate manner. If you ever behave impiously (as judged by the storyguide) your relic will cease to function until suitable penance is made."
   },
   "virtue.premonitions": {
     "name": "Premonitions",
@@ -2534,23 +2557,28 @@
   },
   "virtue.protection": {
     "name": "Protection",
-    "summary": "You are under the aegis of a powerful person, usually a noble or high-ranking Church official (though other options are possible, if the storyguide approves)."
+    "summary": "You are under the aegis of a powerful person, usually a noble or high-ranking Church official (though other options are possible, if the storyguide approves).",
+    "description": "You are under the aegis of a powerful person, usually a noble or high-ranking Church official (though other options are possible, if the storyguide approves). Those who know of your favored status treat you carefully, those who do not often pay the price. You have a Reputation (good or bad, your choice) of level 3, which could be higher if your protector is particularly great or well-known."
   },
   "virtue.puissant_ability": {
     "name": "Puissant {ability}",
-    "summary": "+2 to all rolls with one Ability."
+    "summary": "+2 to all rolls with one Ability.",
+    "description": "You are particularly adept with one Ability, and add 2 to its value whenever you use it. Note that you do not, in general, use an Ability when learning it, writing about it, or helping someone else to improve it. You may only take this Virtue once for a given Ability, but may take it more than once for different Abilities."
   },
   "virtue.puissant_art": {
     "name": "Puissant {art}",
-    "summary": "+3 to all totals using one Art. May be taken twice, for two Arts."
+    "summary": "+3 to all totals using one Art. May be taken twice, for two Arts.",
+    "description": "You add 3 to the value of one Art whenever you use it. This means all totals in which the score of the Art is part of the total. It does not apply when learning, teaching, or writing about the Art. You may take this Virtue twice, for two different Arts. If a spell has requisites, include the bonus from Puissant Art with that Art when calculating which Art is higher. If the Puissant Art is higher, the bonus does not apply to the requisite."
   },
   "virtue.quiet_magic": {
     "name": "Quiet Magic",
-    "summary": "You can cast spells using only a soft voice at no penalty, and at only a -5 penalty if you do not speak at all."
+    "summary": "You can cast spells using only a soft voice at no penalty, and at only a -5 penalty if you do not speak at all.",
+    "description": "You can cast spells using only a soft voice at no penalty, and at only a -5 penalty if you do not speak at all. You gain no benefits from using your voice normally but gain the normal benefit for using a booming voice. The range of Voice Range spells is determined normally, based on how loud your voice is.\n\nYou may take this Virtue twice, and eliminate the penalty altogether."
   },
   "virtue.rabbi": {
     "name": "Rabbi",
-    "summary": "Your character is an ordained Rabbi, a teacher and wise man of the Jewish community."
+    "summary": "Your character is an ordained Rabbi, a teacher and wise man of the Jewish community.",
+    "description": "Your character is an ordained Rabbi, a teacher and wise man of the Jewish community. He is afforded the respect due from all within his community, who look to him for leadership and guidance. As a rabbi, your character is expected to teach students, to study and write upon the law, and to pass judgment upon cases brought before the Jewish court.\n\nThe rabbi must take the Educated (Hebrew) Virtue to provide the required Academic Abilities. This Virtue is only available to male characters."
   },
   "virtue.rapid_convalescence": {
     "name": "Rapid Convalescence",
@@ -2562,7 +2590,8 @@
   },
   "virtue.rat_up_a_drainpipe": {
     "name": "Rat Up a Drainpipe",
-    "summary": "Using a mixture of acrobatics, climbing and dodging, this character can run through urban areas as if unobstructed."
+    "summary": "Using a mixture of acrobatics, climbing and dodging, this character can run through urban areas as if unobstructed.",
+    "description": "Using a mixture of acrobatics, climbing and dodging, this character can run through urban areas as if unobstructed. This gives a substantial advantage in opposed Athletics rolls which represent being chased."
   },
   "virtue.redcap": {
     "name": "Redcap",
@@ -2570,7 +2599,8 @@
   },
   "virtue.relic": {
     "name": "Relic",
-    "summary": "You own a holy relic, such as the finger bone of a saint, with a True Faith Score of one."
+    "summary": "You own a holy relic, such as the finger bone of a saint, with a True Faith Score of one.",
+    "description": "You own a holy relic, such as the finger bone of a saint, with a True Faith Score of one. This can be built into any other item you possess (a sword, for instance). The relic does not possess any additional powers. See Chapter 12: Realms for rules for relics and True Faith."
   },
   "virtue.religious": {
     "name": "Religious",
@@ -2578,11 +2608,13 @@
   },
   "virtue.reserves_of_strength": {
     "name": "Reserves of Strength",
-    "summary": "Once per day, when in need, you can perform an incredible feat of strength."
+    "summary": "Once per day, when in need, you can perform an incredible feat of strength.",
+    "description": "Once per day, when in need, you can perform an incredible feat of strength. For the duration of the action, add +3 to your effective Strength score. Afterwards, though, you must make two Fatigue rolls."
   },
   "virtue.ripper": {
     "name": "Ripper",
-    "summary": "A ripper has two powers."
+    "summary": "A ripper has two powers.",
+    "description": "A ripper has two powers. He can destroy a single piece of cloth, or disembowel a single animal, by spending a Fatigue level, at Sight range, without words or gestures. These are a PeAn(He) 25 and a PeAn 45 effect, each with +0 Penetration. Note that this description is deliberately limiting: a ripper can't break a horse's leg or send it blind. A ripper cannot sever a rope. A ripper cannot cleanly slice things with his mind. The ripper has two, entirely inflexible, effects."
   },
   "virtue.ritual_power": {
     "name": "Ritual Power",
@@ -2594,7 +2626,8 @@
   },
   "virtue.schooled_in_crime": {
     "name": "Schooled in Crime",
-    "summary": "The character has been trained extensively in the criminal arts, and has 50 additional experience to spend on Abilities related to thievery."
+    "summary": "The character has been trained extensively in the criminal arts, and has 50 additional experience to spend on Abilities related to thievery.",
+    "description": "The character has been trained extensively in the criminal arts, and has 50 additional experience to spend on Abilities related to thievery. Area Lore, Athletics, Awareness, Bargain, Brawl, Charm, Guile, Legerdemain and Stealth are all suitable, and other Abilities may be added to this list with troupe approval."
   },
   "virtue.second_sight": {
     "name": "Second Sight",
@@ -2602,11 +2635,13 @@
   },
   "virtue.secondary_insight": {
     "name": "Secondary Insight",
-    "summary": "Your method of magical study is especially versatile."
+    "summary": "Your method of magical study is especially versatile.",
+    "description": "Your method of magical study is especially versatile. When you spend a season studying one of the magical Techniques from a book, a teacher, or raw vis, you also gain a single experience point in any 4 Forms of your choosing. When studying one of the magical Forms, you also gain a single experience point in any 2 separate Techniques of your choosing. You may not put more than one bonus experience point into a single Art, and may choose different Arts to receive the bonus experience points in each season, even when continuing to study the same Art from the same source. These bonus experience points are not increased by Affinities or any other factors."
   },
   "virtue.see_in_darkness": {
     "name": "See in Darkness",
-    "summary": "You can see in complete darkness."
+    "summary": "You can see in complete darkness.",
+    "description": "You can see in complete darkness. Other than that, your eyesight is not more acute than ordinary people's, and you do not see farther than normal people would see in daylight."
   },
   "virtue.self_confident": {
     "name": "Self-Confident",
