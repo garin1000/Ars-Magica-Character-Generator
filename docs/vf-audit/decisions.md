@@ -828,6 +828,26 @@ presumption of correctness.
 
 ---
 
+## D67 — how D46 reads a partly computed entry (X2 scoping, OQ-1/2/7)
+
+**Orchestrator, 2026-09-29, applying D46 and D20. Norbert may override.**
+The S3 guard (`data_integrity.rs::every_vf_is_classified`) rejects
+`uncomputed_rule` on any entry that computes something. That contradicts D46,
+which makes a partly computed `virtue.the_gift` `uncomputed_rule`, and D20,
+which makes 19 entries with surfaced effects `uncomputed_rule`.
+
+**Ruling.** An entry with any stated rule computed nowhere is `uncomputed_rule`,
+whatever else it computes. The guard checks only what can be checked
+mechanically: `narrative` computes nothing; `creation_effect`/`in_play_effect`
+compute something; `uncomputed_rule` carries its text (the existing locale
+test). A selection constraint the engine enforces (`prerequisites`,
+`incompatible_with`, profile traits) counts as computed, following D46's
+`hermetic_magus` precedent. So an entry whose only stated rule is such a
+constraint is `creation_effect`. Whether a rule is fully computed stays a
+per-entry reading, not a guard check.
+
+---
+
 ## D66 — mounted combat lines follow the book's template, via an explicit weapon flag
 
 **Norbert, 2026-09-29.** ArMDE:16839 adds Ride (max +3) to "his Attack and
