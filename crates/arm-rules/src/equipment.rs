@@ -256,9 +256,9 @@ mod tests {
     }
 
     /// `body_attack` defaults to false and is skipped when false (D66); the
-    /// three body attacks (Dodge/Fist/Kick) are the only shipped entries that
+    /// body attacks (Dodge/Fist/Grapple/Kick) are the only shipped entries that
     /// set it true — see
-    /// `data_integrity.rs::body_attack_is_set_on_exactly_the_three_body_attacks`
+    /// `data_integrity.rs::body_attack_is_set_on_exactly_the_body_attacks`
     /// for the shipped-catalogue integrity check.
     #[test]
     fn body_attack_defaults_false_and_skips_when_false() {

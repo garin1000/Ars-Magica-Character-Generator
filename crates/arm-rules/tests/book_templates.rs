@@ -25,7 +25,7 @@ use arm_rules::derived::{
     penetration, soak, wound_ranges,
 };
 use arm_rules::ruleset::{Ruleset, RulesetSources};
-use arm_rules::types::{Entity, Id};
+use arm_rules::types::{Entity, Id, SelectionParamValue};
 use arm_rules::validation::validate;
 use std::collections::BTreeSet;
 
@@ -453,6 +453,33 @@ fn the_criamon_matches_the_book() {
     assert_eq!(casting("spell.circular_ward_against_demons"), (16, None));
 }
 
+/// X10(d) target shape (`docs/vf-audit/decisions.md` D65 row N5,
+/// `tmp/x10-verdicts.md`). MAG2 (`docs/book-template-conformance.md`) is resolved
+/// by adding `spell.piercing_the_magical_veil` to `rules/core/spells.json` — In Vi
+/// 20, the Technique/Form/level *and* Casting Total the book itself prints for it,
+/// "Piercing the Magical Veil (InVi 20/+18)" (`ArMDE:1745`), distinct from its
+/// Faerie-veil sibling that same line links to and from which the extraction
+/// folded it (see MAG2's full account and `ArMDE:15709`, which only *names* the
+/// Magical/Divine/Infernal siblings without printing Range/Duration/Target for
+/// any of them — a gap `tmp/x10-verdicts.md` records and does not invent a value
+/// for). Once that entry ships, this fixture — the book's own seven spells,
+/// unlike `magus_criamon.json`'s six — reaches the printed 120/120 exactly. RED
+/// until the spell exists in the catalogue.
+#[test]
+fn the_criamon_reaches_120_spell_levels_once_piercing_the_magical_veil_exists() {
+    let ruleset = full_ruleset();
+    let criamon = load(include_str!(
+        "fixtures/book_templates/magus_criamon_full.json"
+    ));
+
+    assert_eq!(error_codes(&criamon, &ruleset), codes(&[]));
+    assert_eq!(warning_codes(&criamon, &ruleset), codes(&[]));
+
+    // "Piercing the Magical Veil" (InVi 20/+18). Source: ArMDE:1745.
+    let casting = |spell: &str| spell_casting(&criamon, &ruleset, spell);
+    assert_eq!(casting("spell.piercing_the_magical_veil"), (18, None));
+}
+
 // --- Ex Miscellanea (ArMDE:1752-1801 `#### Ex Miscellanea`) -----------------
 
 #[test]
@@ -510,21 +537,31 @@ fn the_ex_miscellanea_matches_the_book() {
     assert_eq!((enc.burden, enc.total), (0, 0));
 
     // Dodging: Init -2, Atk n/a, Def +1, Dam n/a. Source: ArMDE:1773.
-    // DISAGREEMENT MAG5 (docs/book-template-conformance.md): the book's second
-    // Combat row, "Grappling" (ArMDE:1774), has no engine counterpart — there is
-    // no grapple entry in `rules/core/equipment.json` and a row is derived only
-    // from an equipped weapon — so Dodging is the only line emitted.
+    // Grappling: Init -2, Attack +2, Defense +2, Damage n/a. Source: ArMDE:1774.
+    // X10(d) target shape (docs/vf-audit/decisions.md D65 row N5,
+    // tmp/x10-verdicts.md). MAG5 (docs/book-template-conformance.md) is resolved
+    // by a zero-Load `weapon.grapple` in `rules/core/equipment.json` (Ability
+    // Brawl, Init/Attack/Defense mods 0, no Damage) — the figures the bestiary's
+    // own Natural Weapons Table gives for "Grapple" (ArMDE:18561), which the book
+    // itself says use "Combat Statistics ... calculated as normal" (ArMDE:18551),
+    // i.e. the same formula `derived/combat.rs::combat_totals` already applies to
+    // a magus. Run through that formula with this magus's own Brawl 3
+    // (grappling) — a specialty aligned to the fixture's grapple slot — and her
+    // Dex/Qik -2, it reproduces her printed Grappling row exactly. RED until that
+    // row ships.
     let lines = combat_totals(&ex_misc, &ruleset);
+    let weapon_ids: BTreeSet<&str> = lines.iter().map(|l| l.weapon.as_str()).collect();
     assert_eq!(
-        lines
-            .iter()
-            .map(|l| l.weapon.as_str())
-            .collect::<Vec<&str>>(),
-        vec!["weapon.dodge"]
+        weapon_ids,
+        BTreeSet::from(["weapon.dodge", "weapon.grapple"])
     );
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (-2, None, 1, None)
+    );
+    assert_eq!(
+        stats(line(&lines, "weapon.grapple", false)),
+        (-2, Some(2), 2, None)
     );
 
     // Casting Totals, ArMDE:1793-1799. Major Magical Focus (stone), so each cell
@@ -903,6 +940,25 @@ fn the_tremere_matches_the_book() {
 
     assert_eq!(error_codes(&tremere, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&tremere, &ruleset), codes(&[]));
+
+    // X10(a) target shape (docs/vf-audit/decisions.md D65 row N5,
+    // tmp/x10-verdicts.md). MAG10 (docs/book-template-conformance.md) is resolved
+    // by a `params: { "focus": "certamen" } }` on House Tremere's fixed grant in
+    // `rules/core/houses.json` — "Minor Magical Focus(certamen)\*" (ArMDE:2064),
+    // the asterisk marking it the free House Virtue, and the House table's "Minor
+    // Magical Focus (certamen)." (ArMDE:2281). RED until that param ships.
+    let tremere_grants = arm_rules::house::granted_selections(&tremere, &ruleset);
+    let focus_grant = tremere_grants
+        .iter()
+        .find(|s| s.item_ref == Id::new("virtue.minor_magical_focus"))
+        .unwrap_or_else(|| panic!("House Tremere must grant Minor Magical Focus"));
+    assert_eq!(
+        focus_grant
+            .params
+            .get("focus")
+            .and_then(SelectionParamValue::as_single),
+        Some(&Id::new("certamen"))
+    );
 
     // Arts: Cr 5, In 5, Mu 5, Pe 5, Re 5, Aq 8 (3), Au 9 (1), Ig 9 (1), Me 1,
     // Te 9 (1) — ArMDE:2081. The four elemental Forms are bought at Aq 3, Au 6,

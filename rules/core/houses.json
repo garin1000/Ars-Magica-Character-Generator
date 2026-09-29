@@ -106,7 +106,13 @@
     {
       "id": "house.tremere",
       "lineage_type": "true_lineage",
-      "grants": [{ "kind": "fixed", "item": "virtue.minor_magical_focus" }],
+      "grants": [
+        {
+          "kind": "fixed",
+          "item": "virtue.minor_magical_focus",
+          "params": { "focus": "certamen" }
+        }
+      ],
       "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
     },
     {

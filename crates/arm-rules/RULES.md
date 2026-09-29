@@ -4661,11 +4661,14 @@ The named Virtues a House grants, and the Mystery Abilities their
 
 All four Mystery Virtues (The Enigma, Faerie Magic, Heartbeast, Verditius Magic)
 are **Minor** — the free House Virtue is Minor per `ArMDE:2859`, so none of them can
-trip the ≤1-Major-Hermetic-Virtue cap even when granted. Magical Focus's field is
-freeform prose (doesn't fit the ref-only param model), so Tremere grants a plain
-`fixed virtue.minor_magical_focus` with no param. Ex Miscellanea's Minor Hermetic
-Virtue is player-chosen (`open`), not a fixed item, so there is no invented
-`virtue.ex_misc_minor_hermetic`.
+trip the ≤1-Major-Hermetic-Virtue cap even when granted. Tremere's own Magical
+Focus field is book-given, not freeform: "Minor Magical Focus (certamen)\*"
+(`ArMDE:2064`, the House's descriptive template) and the House table's "Minor
+Magical Focus (certamen)." (`ArMDE:2281`) both name it, so House Tremere's grant
+carries `"params": { "focus": "certamen" }` on its
+`fixed virtue.minor_magical_focus` (X10(a), D65 row N5). Ex Miscellanea's Minor
+Hermetic Virtue is player-chosen (`open`), not a fixed item, so there is no
+invented `virtue.ex_misc_minor_hermetic`.
 
 ---
 
@@ -5236,6 +5239,33 @@ in `rules/core/spells.json` (`Spell::parameters`, a `Vec<ParameterDef>` in
 `spell.rs`) and the matching
 `({form})` placeholder in the localized name in both i18n files.
 
+**`spell.piercing_the_magical_veil` (X10(d), D65 row N5, D68.6) is a hand-added
+exception to the 5d extraction, not a run of `extract_spells.py`.** The Criamon's
+own spell list names it directly:
+
+> `ArMDE:1745` "Piercing the Magical Veil (InVi 20/+18) (see Piercing the Faerie
+> Veil)"
+
+— Technique Intellego, Form Vim, level 20 (the Casting Total, +18, cross-checks
+against her printed Arts with no adjustment needed). The link target,
+`#piercing-the-faerie-veil`, is `spell.piercing_the_faerie_veil`'s own entry
+(`ArMDE:15705-15710`); its closing line only **names** the Magical/Divine/
+Infernal variants without printing a statblock for any of them:
+
+> `ArMDE:15709` "There are separate but related spells for Divine, Magical and
+> Infernal regiones."
+
+So Range/Duration/Target are **copied from that sibling** (`personal` /
+`concentration` / `vision`) as a recorded inference, per D68.6 — not a value the
+book states for the Magical veil itself. The `description` in both i18n files is
+correspondingly minimal (states the "see Piercing the Faerie Veil" cross-
+reference and that the book prints no separate effect text), to satisfy
+`data_integrity.rs::english_i18n_covers_all_spells` /
+`german_i18n_covers_all_spells` (every catalogued spell needs a description)
+without inventing rules text the source does not give. German name from the
+line-parallel German source at the same `ArMDE:1745`: "Den magischen Schleier
+durchdringen".
+
 ---
 
 ## Equipment: weapons / shields / armor (M5/5h)
@@ -5284,6 +5314,20 @@ weapon"). `validate_weapon_refs` (in `ruleset/integrity.rs`) requires each weapo
 `combat_ability` in data — Brawl (the combat Ability for unarmed/improvised
 weapons, which the rules class as General). 25 melee weapons + 3 shields.
 
+**`weapon.grapple`** (X10(d), D65 row N5, D68.5) is not a Melee Weapon
+Statistics row: the human table above prints no Grapple line at all. Its
+figures are the bestiary's **Natural Weapons Table** instead, which the book
+itself says use "Combat Statistics ... calculated as normal" (`ArMDE:18551`) —
+the same formula this engine already applies to a magus:
+
+> `ArMDE:18561` "| Grapple | 0 | 0 | 0 | n/a |"
+
+`Init 0, Atk 0, Dfn 0, Dam n/a`, Ability Brawl, Load 0, `body_attack: true`
+(D66) — like Dodge/Fist/Kick, Grapple has no separate mounted-combat twin
+printed anywhere for anyone, so `data_integrity.rs::
+body_attack_is_set_on_exactly_the_body_attacks`'s `EXPECTED` list now
+names all four. 26 melee weapons + 3 shields (33 weapons total).
+
 **`Ability.combat_ability` data flag** (`rules/core/abilities.json`, set on
 `ability.brawl`; consumed by `validate_weapon_refs`): Brawl is the non-Martial
 combat Ability, so the engine drives the weapon-Ability exception from this flag
@@ -5300,11 +5344,12 @@ differently just sets the flag).
 > `ArMDE:17005-17011` "| Axe, Throwing | Thrown | 0 | +2 | 0 | +6 | 5 | 0 | 1 … | Bow,
 > Short | Bow | –1 | +3 | 0 | +6 | 15 | –1 | 2 |"
 
-7 missile-table weapons (32 weapons total).
+7 missile-table weapons (33 weapons total, including `weapon.grapple` above).
 
 **`n/a` cells** are `Option::None`: Dodge has no Attack/Damage; the body attacks
-(Dodge/Fist/Kick) have no minimum-Strength — distinct from a real `0` (Fist's `+0`
-Attack). `min_strength` for a weapon and a shield are met separately (`ArMDE:16997`).
+(Dodge/Fist/Grapple/Kick) have no minimum-Strength — distinct from a real `0`
+(Fist's `+0` Attack). `min_strength` for a weapon and a shield are met separately
+(`ArMDE:16997`).
 
 **Weapon + shield combine** — a weapon+shield combatant **adds both** rows'
 modifiers (computed in 5i):
@@ -10081,17 +10126,20 @@ the real load, the four listed Abilities read as `catalogued`, and the two
   2026-09-29) rules that the engine reproduce that template via an
   **explicit, purpose-named catalogue field**, `Weapon::body_attack: bool`
   (`rules/core/equipment.json`, set on `weapon.dodge`/`weapon.fist`/
-  `weapon.kick` only) — never `min_strength` or any other field whose
+  `weapon.grapple`/`weapon.kick` only — `weapon.grapple` added by X10(d), D68.5,
+  the same unmounted-body-attack template) — never `min_strength` or any other field whose
   documented purpose is unrelated (the exact "rules meaning inferred from an
   unrelated field" mistake D52 already named once). Reproducing a template's
   presentation, deliberately, is one of this project's recorded "(d)
   unsettled, resolved as a presentation choice" outcomes (alongside K3's own
   mounted-twin scoping and K5's `LoadoutState`), not a mechanic the Mounted
   Combat passage itself contains.
-- **Integrity check** (`data_integrity.rs::body_attack_is_set_on_exactly_the_three_body_attacks`):
+- **Integrity check** (`data_integrity.rs::body_attack_is_set_on_exactly_the_body_attacks`):
   a structural invariant on named items (CLAUDE.md: "never exact catalogue
-  totals") — exactly `weapon.dodge`/`weapon.fist`/`weapon.kick` carry
-  `body_attack: true`, no other shipped weapon does.
+  totals") — exactly `weapon.dodge`/`weapon.fist`/`weapon.grapple`/`weapon.kick`
+  carry `body_attack: true`, no other shipped weapon does. (The test's own name
+  still says "three"; X10(d) adds the fourth to its `EXPECTED` list without
+  renaming it.)
 - **The Knight, reproduced exactly** (`ArMDE:1467-1472`): with the fixture's
   `mounted: true` and Ride 5 (capped at +3), `combat_totals` returns all eight
   lines the book's five-row block implies once the engine's own "dropped

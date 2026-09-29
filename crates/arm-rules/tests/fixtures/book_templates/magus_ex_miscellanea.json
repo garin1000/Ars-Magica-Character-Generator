@@ -209,6 +209,11 @@
     {
       "item": "weapon.dodge",
       "equipped": true
+    },
+    {
+      "item": "weapon.grapple",
+      "loadout": "wielded",
+      "specialization_applies": true
     }
   ]
 }

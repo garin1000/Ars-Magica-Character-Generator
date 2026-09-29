@@ -1,0 +1,201 @@
+{
+  "schema_version": 17,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.incomprehensible"
+    },
+    {
+      "ref": "flaw.magic_addiction"
+    },
+    {
+      "ref": "flaw.twilight_prone"
+    },
+    {
+      "ref": "virtue.flexible_formulaic_magic"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.magic_sensitivity"
+    },
+    {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.enigmatic_wisdom"
+      }
+    },
+    {
+      "ref": "virtue.side_effect"
+    },
+    {
+      "ref": "virtue.study_bonus"
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": 0,
+    "str": 0,
+    "sta": 2,
+    "pre": 2,
+    "com": -3,
+    "dex": 0,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "rhetoric"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 5,
+      "specialty": "educated people"
+    },
+    {
+      "ability": "ability.concentration",
+      "score": 3,
+      "specialty": "spell casting"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Enigmatic terms",
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.enigmatic_wisdom",
+      "score": 3,
+      "specialty": "riddles"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 1,
+      "specialty": "educated people"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "long words",
+      "parameter": "Native language"
+    },
+    {
+      "ability": "ability.magic_sensitivity",
+      "score": 2,
+      "specialty": "auras"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Vim"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 1,
+      "specialty": "mysteries",
+      "parameter": "Order of Hermes"
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.creo",
+      "score": 4
+    },
+    {
+      "art": "art.imaginem",
+      "score": 2
+    },
+    {
+      "art": "art.intellego",
+      "score": 6
+    },
+    {
+      "art": "art.mentem",
+      "score": 1
+    },
+    {
+      "art": "art.muto",
+      "score": 4
+    },
+    {
+      "art": "art.perdo",
+      "score": 4
+    },
+    {
+      "art": "art.rego",
+      "score": 4
+    },
+    {
+      "art": "art.vim",
+      "score": 10
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.aura_of_ennobled_presence"
+    },
+    {
+      "spell": "spell.circular_ward_against_demons",
+      "level": 20
+    },
+    {
+      "spell": "spell.phantasm_of_the_talking_head"
+    },
+    {
+      "spell": "spell.piercing_the_faerie_veil"
+    },
+    {
+      "spell": "spell.piercing_the_magical_veil"
+    },
+    {
+      "spell": "spell.unravelling_the_fabric_of_form",
+      "level": 20,
+      "parameter": "art.imaginem"
+    },
+    {
+      "spell": "spell.wind_of_mundane_silence",
+      "level": 20
+    }
+  ],
+  "house": "house.criamon",
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Enthusiastic",
+      "value": 3
+    },
+    {
+      "name": "Friendly",
+      "value": 2
+    },
+    {
+      "name": "Practical",
+      "value": -3
+    }
+  ],
+  "name": "The Criamon",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "equipped": true
+    }
+  ]
+}

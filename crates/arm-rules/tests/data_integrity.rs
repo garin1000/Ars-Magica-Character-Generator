@@ -11398,9 +11398,14 @@ fn no_bound_or_link_declaring_item_is_ever_granted() {
 /// decide which lines get no mounted twin (D66) — never `min_strength` or any
 /// other unrelated property (the mistake D66 explicitly rejects).
 #[test]
-fn body_attack_is_set_on_exactly_the_three_body_attacks() {
+fn body_attack_is_set_on_exactly_the_body_attacks() {
     let rs = load_ruleset_with_equipment();
-    const EXPECTED: &[&str] = &["weapon.dodge", "weapon.fist", "weapon.kick"];
+    const EXPECTED: &[&str] = &[
+        "weapon.dodge",
+        "weapon.fist",
+        "weapon.grapple",
+        "weapon.kick",
+    ];
 
     for id in EXPECTED {
         let weapon = rs

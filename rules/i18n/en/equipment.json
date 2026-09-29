@@ -25,6 +25,7 @@
   "weapon.fist": { "name": "Fist" },
   "weapon.flail": { "name": "Flail" },
   "weapon.gauntlet": { "name": "Gauntlet" },
+  "weapon.grapple": { "name": "Grapple" },
   "weapon.hatchet": { "name": "Hatchet" },
   "weapon.javelin": { "name": "Javelin" },
   "weapon.kick": { "name": "Kick" },

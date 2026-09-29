@@ -25,6 +25,7 @@
   "weapon.fist": { "name": "Faust" },
   "weapon.flail": { "name": "Dreschflegel" },
   "weapon.gauntlet": { "name": "Panzerhandschuh" },
+  "weapon.grapple": { "name": "Greifen" },
   "weapon.hatchet": { "name": "Beil" },
   "weapon.javelin": { "name": "Wurfspeer" },
   "weapon.kick": { "name": "Tritt" },
