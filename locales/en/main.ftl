@@ -1499,6 +1499,9 @@ export-col-points = Points
 # Header of the exported spell list's one Arts-and-level column: the Technique and
 # Form abbreviations followed by the level, the rulebook's own short form (CrIg20).
 export-col-spell-code = TeFo/Level
+# Rules-text column of the exported Virtue/Flaw tables: an uncomputed-rule entry's
+# description (falling back to its summary), or a computed entry's summary.
+export-col-summary = Summary
 export-col-total = Total
 # Type column of the exported Virtue/Flaw tables: the item's category (Hermetic,
 # Story, …), the same value the in-app badge shows via `category-<id>`.

@@ -29,25 +29,25 @@
 
 ### items-virtues-title
 
-| identity-name | export-col-type | export-col-magnitude |
-| --- | --- | --- |
-| Hermetic Magus | category-social_status | magnitude-free |
-| Minor Magical Focus (fire) | category-hermetic | magnitude-minor |
-| Puissant Magic Theory | category-general | magnitude-minor |
-| The Gift | category-special | magnitude-free |
-| Warrior | category-general | magnitude-minor |
+| identity-name | export-col-type | export-col-magnitude | export-col-summary |
+| --- | --- | --- | --- |
+| Hermetic Magus | category-social_status | magnitude-free | You are a member of the Order of Hermes. |
+| Minor Magical Focus (fire) | category-hermetic | magnitude-minor | Your magic is attuned to a narrow field; add the lowest applicable Art score twice within it. |
+| Puissant Magic Theory | category-general | magnitude-minor | +2 to all rolls with one Ability. |
+| The Gift | category-special | magnitude-free | You have the ability to work magic. See earlier, page 63, for full details.  The Gift is a special Virtue, because it has no cost. The character suffers all the penalties of The Gift, just as magi do (see page 203), but can be taught Supernatural Abilities without having to take the corresponding Virtues (see page 383 for rules). Most importantly, the character can be taught Hermetic Magic, so all magi must have this Virtue. A character with The Gift, even if he is not a magus, may take Hermetic Virtues and Flaws which relate to intrinsic ability rather than background or training. |
+| Warrior | category-general | magnitude-minor | +50 experience points, spent only on Martial Abilities, which you may acquire at character creation. |
 
 #### export-granted
 
-| identity-name | export-col-type | export-col-magnitude |
-| --- | --- | --- |
-| Puissant Intrigue | category-general | magnitude-minor |
+| identity-name | export-col-type | export-col-magnitude | export-col-summary |
+| --- | --- | --- | --- |
+| Puissant Intrigue | category-general | magnitude-minor | +2 to all rolls with one Ability. |
 
 ### items-flaws-title
 
-| identity-name | export-col-type | export-col-magnitude |
-| --- | --- | --- |
-| Blatant Gift | category-hermetic | magnitude-major |
+| identity-name | export-col-type | export-col-magnitude | export-col-summary |
+| --- | --- | --- | --- |
+| Blatant Gift | category-hermetic | magnitude-major | People immediately realize that there is something strange about you, even if they do not know you are a magus. Animals are extremely disturbed, frightened, and possibly enraged by your presence. You suffer a -6 penalty on all interaction rolls with normal people and animals, and should see page 203 for further discussion of this Flaw's effects. |
 
 - **items-virtues-title**: 3 / 10
 - **items-flaws-title**: 3 / 10

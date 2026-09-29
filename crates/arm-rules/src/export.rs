@@ -72,9 +72,10 @@ use crate::effective::{
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
-    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityParameterValue, AgingLogEntry, EnchantedDevice,
-    Entity, EntityKind, Id, ItemKind, MightScore, ParameterDomain, PersonalityTrait, PointItem,
-    Realm, Selection, SelectionParamValue, SpellSelection, SupernaturalPower, TalismanEffect,
+    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityParameterValue, AgingLogEntry, Classification,
+    EnchantedDevice, Entity, EntityKind, Id, ItemKind, MightScore, ParameterDomain,
+    PersonalityTrait, PointItem, Realm, Selection, SelectionParamValue, SpellSelection,
+    SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 
@@ -181,6 +182,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "export-col-penalty",
     "export-col-points",
     "export-col-spell-code",
+    "export-col-summary",
     "export-col-total",
     "export-col-type",
     "export-granted",
@@ -1568,11 +1570,15 @@ mod tests {
                 ("items-virtues-title", "Virtues"),
                 ("export-col-type", "Type"),
                 ("export-col-magnitude", "Magnitude"),
+                ("export-col-summary", "Summary"),
                 ("category-hermetic", "Hermetic"),
                 ("magnitude-minor", "Minor"),
             ]),
         );
-        assert!(doc.contains("| Name | Type | Magnitude |\n"), "{doc}");
+        assert!(
+            doc.contains("| Name | Type | Magnitude | Summary |\n"),
+            "{doc}"
+        );
         assert!(
             doc.contains("| Puissant Creo | Hermetic | Minor |"),
             "{doc}"

@@ -862,6 +862,10 @@ rulings:
 - Special Circumstances' +3 stays text, since there is no toggle (D4/D58);
 - X6b checks the existing `catalogue.language` values for Turb Trained.
 
+**X2d, Norbert:** True Faith's description (F-330) is composed from its own
+entry plus the rules of the "True Faith" section (ArMDE:17603 onward), in
+The Gift's `COMPOSED_DESCRIPTIONS` shape (D46).
+
 **X5b, Norbert:** Master Bard's Profession clause is enforced as "some
 Profession at 5", the id-level check already used for the Latin minimums.
 

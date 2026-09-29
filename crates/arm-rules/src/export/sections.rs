@@ -147,6 +147,7 @@ impl<'a> Doc<'a> {
                 self.label("identity-name"),
                 self.label("export-col-type"),
                 self.label("export-col-magnitude"),
+                self.label("export-col-summary"),
             ];
             table(&mut body, &headers, &bought);
             if granted_rows.is_empty() {
@@ -194,6 +195,19 @@ impl<'a> Doc<'a> {
     /// list separator. Dropping the secondaries would hide, say, that Suppressed
     /// Gift is a Story Flaw as well as a Hermetic one. Categories are catalogue
     /// *data*, so that family is not enumerated in [`LABEL_KEYS`] (see its docs).
+    ///
+    /// The trailing "text" cell is the item's rules text (D65 N1): an
+    /// `uncomputed_rule` entry — one the engine computes no effect for, so the
+    /// sheet's prose *is* the rule — shows its full `description`, falling back to
+    /// `summary` when the id carries no description at all; every other
+    /// classification (`creation_effect` / `in_play_effect`, already reflected
+    /// elsewhere on the sheet as a number, and `narrative`, flavor text with no
+    /// mechanical claim) shows only the shorter `summary`. A description can
+    /// contain literal `\n\n` paragraph breaks, which would otherwise split a
+    /// Markdown table row; [`escape_cell`] already flattens newlines to spaces for
+    /// every other free-text cell, so the same rule collapses a multi-paragraph
+    /// description to one line rather than growing a second table shape just for
+    /// this column.
     fn item_rows(&self, selections: &[Selection], kind: ItemKind) -> Vec<Vec<String>> {
         selections
             .iter()
@@ -203,6 +217,14 @@ impl<'a> Doc<'a> {
                     return None;
                 }
                 let values = self.param_display_values(item, &selection.params);
+                let text = match item.classification {
+                    Classification::UncomputedRule => self
+                        .ruleset
+                        .description(&selection.item_ref)
+                        .or_else(|| self.ruleset.summary(&selection.item_ref)),
+                    _ => self.ruleset.summary(&selection.item_ref),
+                }
+                .unwrap_or_default();
                 Some(vec![
                     self.parameterized_name(&selection.item_ref, &values),
                     item.categories
@@ -211,6 +233,7 @@ impl<'a> Doc<'a> {
                         .collect::<Vec<_>>()
                         .join(&self.list_separator()),
                     self.label(&format!("magnitude-{}", item.magnitude)),
+                    escape_cell(text),
                 ])
             })
             .collect()

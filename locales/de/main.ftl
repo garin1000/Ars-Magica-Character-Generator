@@ -1577,6 +1577,10 @@ export-col-points = Punkte
 # Kopf der einen Kunst-und-Stufe-Spalte der exportierten Zauberliste: die Kürzel von
 # Technik und Form, gefolgt von der Stufe — die Kurzform des Regelwerks (CrIg20).
 export-col-spell-code = TeFo/Stufe
+# Regeltext-Spalte der exportierten Tugend-/Fehler-Tabellen: die Beschreibung eines
+# unberechneten Eintrags (ersatzweise seine Zusammenfassung), oder die
+# Zusammenfassung eines berechneten Eintrags.
+export-col-summary = Zusammenfassung
 export-col-total = Summe
 # Typ-Spalte der exportierten Tugend-/Fehler-Tabellen: die Kategorie des Eintrags
 # (Hermetisch, Geschichte, …) — derselbe Wert, den das Abzeichen in der App über
