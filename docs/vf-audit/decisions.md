@@ -828,6 +828,21 @@ presumption of correctness.
 
 ---
 
+## D66 — mounted combat lines follow the book's template, via an explicit weapon flag
+
+**Norbert, 2026-09-29.** ArMDE:16839 adds Ride (max +3) to "his Attack and
+Defense Totals" when mounted, and names no weapon. The Knight's statblock
+(ArMDE:1467-1472) prints mounted twins for its two weapon lines only; Fist has
+none.
+
+**Ruling: reproduce the template.** An explicit weapon-catalogue field marks the
+lines that get no mounted twin (Fist, Kick, Dodge). The engine reads that field,
+never `min_strength` or any other unrelated property. This is a deliberate
+presentation choice taken from the book's own template, not a rule the passage
+states, and `RULES.md` says so.
+
+---
+
 ## D65 — the plan's five open decisions (N1, N4–N7)
 
 **Norbert, 2026-09-28.**
