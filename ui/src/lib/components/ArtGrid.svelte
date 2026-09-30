@@ -101,7 +101,8 @@
                 <input
                   type="number"
                   min="0"
-                  class="spinner-value-input"
+                  class="spinner-value-input banked-xp"
+                  class:banked-xp-zero={bankedXpOf(art.id) === 0}
                   aria-label={store.t('art-banked-xp-label')}
                   value={bankedXpOf(art.id)}
                   oninput={(e) =>
@@ -110,7 +111,7 @@
                       Number((e.currentTarget as HTMLInputElement).value),
                     )}
                   data-testid="art-banked-xp-{art.id}"
-                />
+                /><span class="banked-xp-unit" aria-hidden="true">{store.t('xp-unit-abbr')}</span>
                 {#if bonus !== 0}
                   <span class="eff-slot">
                     <span class="eff-badge" data-testid="art-eff-{art.id}">

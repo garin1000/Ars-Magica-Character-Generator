@@ -406,11 +406,11 @@
                     class="casting-total-badge"
                     data-testid="spell-casting-total-{chosen.spell}-{i}"
                   >
-                    {store.t('spell-casting-total-label')}: {total}
+                    {store.t('spell-casting-total', { total: String(total) })}
                   </span>
                 {/if}
                 {#if cat && hasFocusFigure(cat)}
-                  <label class="within-focus-toggle">
+                  <label class="checkbox inline within-focus-toggle">
                     <input
                       type="checkbox"
                       aria-label={store.t('spell-within-focus-label')}
@@ -421,7 +421,7 @@
                           (e.currentTarget as HTMLInputElement).checked,
                         )}
                       data-testid="spell-within-focus-{chosen.spell}-{i}"
-                    />
+                    /><span>{store.t('spell-within-focus-label')}</span>
                   </label>
                 {/if}
                 {#if isParametrized(chosen.spell)}

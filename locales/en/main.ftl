@@ -372,6 +372,11 @@ ability-score-label = Score
 # X10b: the number input for the "Z" of the book's own "X (Z)" notation
 # (ArMDE:1177) — XP already banked toward the next score.
 ability-banked-xp-label = Banked XP
+# UI review 2026-09-30b #2: the always-visible unit caption beside the
+# banked-XP input on Arts/Abilities rows (the input's own aria-label already
+# says "Banked XP" in full). Shared by both tabs, which already share one XP
+# pool (see the Arts comment below).
+xp-unit-abbr = XP
 ability-specialty-label = Specialty
 # Heading for the rulebook's list of example specialties shown in the picker.
 ability-specialties-label = Specialties
@@ -404,7 +409,9 @@ spell-level-label = Level
 # cover it. The player's own claim the spell falls within that focus.
 spell-within-focus-label = Within focus
 # X10c (D73.2): the in-app per-spell Casting Total beside a known spell.
-spell-casting-total-label = Casting Total
+# UI review 2026-09-30b #5: the value is baked into this one message rather
+# than concatenated with a literal ": " in the template.
+spell-casting-total = Casting Total: { $total }
 # The min/max level range filter (two inputs, inclusive bounds; empty = open).
 spell-level-min-label = Min level
 spell-level-max-label = Max level

@@ -394,7 +394,16 @@ magus-recommended-label = Empfohlene Mindestfertigkeiten
 ability-score-label = Wert
 # X10b: Eingabefeld für das „Z“ der buchtypischen Notation „X (Z)“
 # (ArMDE:1177) — bereits angespartes EP für den nächsten Wert.
-ability-banked-xp-label = Angespartes EP
+# UI review 2026-09-30b #4: "Angespartes EP" war neutrum-singular flektiert,
+# obwohl "EP" das Plural "Erfahrungspunkte" abkürzt
+# (translation-tables/labor-fortschritt.md:46) — starke Flexion im Plural
+# endet auf "-e", nicht "-es".
+ability-banked-xp-label = Angesparte EP
+# UI review 2026-09-30b #2: die stets sichtbare Einheiten-Beschriftung neben
+# dem Eingabefeld für angespartes EP (das aria-label des Feldes nennt es schon
+# ausgeschrieben). Von beiden Reitern geteilt, die sich ohnehin einen
+# EP-Vorrat teilen (siehe Kommentar zu den Künsten unten).
+xp-unit-abbr = EP
 ability-specialty-label = Spezialisierung
 # Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.
 ability-specialties-label = Spezialisierungen
@@ -410,7 +419,7 @@ art-type-technique = Techniken
 art-type-form = Formen
 # X10b: Eingabefeld für das „Z“ der buchtypischen Notation „X (Z)“
 # (ArMDE:1179) — bereits angespartes EP für den nächsten Wert.
-art-banked-xp-label = Angespartes EP
+art-banked-xp-label = Angesparte EP
 art-add = Kunst hinzufügen
 # Je Zeile benannt ($name ist der Anzeigename der Kunst) — dieselbe Begründung
 # wie bei ability-increment/-decrement oben.
@@ -428,7 +437,9 @@ spell-level-label = Stufe
 # Zauber innerhalb dieses Fokus liegt.
 spell-within-focus-label = Im Fokus
 # X10c (D73.2): die Zaubersumme eines bekannten Zaubers in der App.
-spell-casting-total-label = Zaubersumme
+# UI review 2026-09-30b #5: der Wert steckt in dieser einen Nachricht statt in
+# der Vorlage mit einem literalen ": " verkettet zu werden.
+spell-casting-total = Zaubersumme: { $total }
 spell-level-min-label = Stufe min
 spell-level-max-label = Stufe max
 spell-group-header = { $technique } { $form }

@@ -464,7 +464,8 @@
                 <input
                   type="number"
                   min="0"
-                  class="spinner-value-input"
+                  class="spinner-value-input banked-xp"
+                  class:banked-xp-zero={bankedXpOf(entry) === 0}
                   aria-label={store.t('ability-banked-xp-label')}
                   value={bankedXpOf(entry)}
                   oninput={(e) =>
@@ -473,7 +474,7 @@
                       Number((e.currentTarget as HTMLInputElement).value),
                     )}
                   data-testid="ability-banked-xp-{entry.ability}-{id}"
-                />
+                /><span class="banked-xp-unit" aria-hidden="true">{store.t('xp-unit-abbr')}</span>
               {/if}
               {#if effectiveOf(settledScore, entry.ability, entry.parameter) !== settledScore}
                 <span class="eff-slot">

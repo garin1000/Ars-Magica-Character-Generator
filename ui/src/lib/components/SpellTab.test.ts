@@ -474,6 +474,20 @@ describe('SpellTab within-focus toggle (X10c)', () => {
     store.entity.spells = [{ spell: SPELL, mastery: 1, within_focus: true }];
     expect(toggleTag(html())).toContain('checked');
   });
+
+  // UI review 2026-09-30b #1 (HIGH): the checkbox carried only an aria-label,
+  // with no sibling text a sighted user could read — every other checkbox in
+  // the app (ParameterPicker's multi_ref options, LivingConditionsPicker) pairs
+  // one. The aria-label stays (pinned above), so this is additive, not a
+  // replacement of the accessible name.
+  it('pairs the checkbox with a visible caption, not just an aria-label', () => {
+    installDerived(true);
+    const label = /<label class="checkbox inline within-focus-toggle">([\s\S]*?)<\/label>/.exec(
+      html(),
+    );
+    expect(label, 'within-focus toggle <label>').not.toBeNull();
+    expect(label![1]).toContain('<span>Within focus</span>');
+  });
 });
 
 // X10c (design-x10bc-save-format.md § 3, D73.2): "X10c covers the marker and
@@ -481,7 +495,7 @@ describe('SpellTab within-focus toggle (X10c)', () => {
 // between the two figures `casting_totals` already computed via the pure
 // `spellCastingTotal` selector (mirrors
 // `crates/arm-rules/src/derived/casting.rs::spell_casting_total`). Labelled
-// via the Fluent key `spell-casting-total-label` ("Casting Total").
+// via the Fluent key `spell-casting-total` ("Casting Total: { $total }").
 describe('SpellTab in-app Casting Total (D73.2)', () => {
   function installDerived(formulaic: number, withinFocusFormulaic?: number): void {
     store.derived = {
@@ -521,5 +535,27 @@ describe('SpellTab in-app Casting Total (D73.2)', () => {
   it('hides the total before any derived totals have been computed', () => {
     store.derived = null;
     expect(html()).not.toContain(`data-testid="spell-casting-total-${SPELL}-0"`);
+  });
+});
+
+// UI review 2026-09-30b #5 (MEDIUM): the ": " between the label and the value
+// was a literal in the template, not part of a Fluent message — every other
+// composite label in this locale family (`spell-mastery-pool`,
+// `spell-mastery-xp`) embeds its value via a placeable instead. A source scan,
+// not a rendered-output check: "Casting Total: 29" reads identically either
+// way, so only reading the template itself can tell the fixed template from
+// the composed message.
+describe('SpellTab Casting Total composed via one Fluent placeable (Sabine review #5)', () => {
+  const source = readFileSync(
+    fileURLToPath(new URL('./SpellTab.svelte', import.meta.url)),
+    'utf-8',
+  );
+
+  it('does not concatenate a hardcoded ": " separator around the label in the template', () => {
+    expect(source).not.toMatch(/casting-total-label'\)\s*}\s*:\s*\{total\}/);
+  });
+
+  it('interpolates the total into a single Fluent message', () => {
+    expect(source).toMatch(/store\.t\('spell-casting-total',\s*\{\s*total:/);
   });
 });

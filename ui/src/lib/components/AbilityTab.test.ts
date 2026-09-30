@@ -685,4 +685,22 @@ describe('AbilityTab banked XP input (X10b)', () => {
     store.entity.ability_scores = [{ ability: 'ability.athletics', score: 3, banked_xp: 6 }];
     expect(bankedXpTag(html())).toContain('value="6"');
   });
+
+  // UI review 2026-09-30b #2 (HIGH): the input carried no visible caption
+  // (aria-label only) and was permanently full-strength on every bought
+  // Ability row regardless of whether anything is banked.
+  it('shows a visible unit caption beside the banked-XP input', () => {
+    expect(html()).toContain('<span class="banked-xp-unit" aria-hidden="true">XP</span>');
+  });
+
+  it('dims the banked-XP control to a hint when nothing is banked, without hiding or disabling it', () => {
+    const zeroTag = bankedXpTag(html());
+    expect(zeroTag).toContain('banked-xp-zero');
+    expect(zeroTag).not.toContain('disabled');
+    expect(zeroTag).not.toContain('aria-hidden');
+
+    store.entity.ability_scores = [{ ability: 'ability.athletics', score: 3, banked_xp: 6 }];
+    // A row that already holds a non-zero value is never dimmed.
+    expect(bankedXpTag(html())).not.toContain('banked-xp-zero');
+  });
 });

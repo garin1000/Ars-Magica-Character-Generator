@@ -217,4 +217,26 @@ describe('ArtGrid banked XP input (X10b)', () => {
     const body = html();
     expect(tagContaining(body, 'data-testid="art-banked-xp-art.creo"')).toContain('value="7"');
   });
+
+  // UI review 2026-09-30b #2 (HIGH): the input carried no visible caption
+  // (aria-label only) and was permanently full-strength on every one of the
+  // 15 always-shown Art rows regardless of whether anything is banked.
+  it('shows a visible unit caption beside the banked-XP input', () => {
+    expect(html()).toContain('<span class="banked-xp-unit" aria-hidden="true">XP</span>');
+  });
+
+  it('dims the banked-XP control to a hint when nothing is banked, without hiding or disabling it', () => {
+    const zeroTag = tagContaining(html(), 'data-testid="art-banked-xp-art.creo"');
+    expect(zeroTag).toContain('banked-xp-zero');
+    // Keyboard-reachable either way: never disabled, never removed from the
+    // accessibility tree.
+    expect(zeroTag).not.toContain('disabled');
+    expect(zeroTag).not.toContain('aria-hidden');
+
+    store.entity.art_scores = [{ art: CREO, score: 4, banked_xp: 7 }];
+    // A row that already holds a non-zero value is never dimmed.
+    expect(tagContaining(html(), 'data-testid="art-banked-xp-art.creo"')).not.toContain(
+      'banked-xp-zero',
+    );
+  });
 });

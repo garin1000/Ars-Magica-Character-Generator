@@ -1431,6 +1431,28 @@ ul {
   font-variant-numeric: tabular-nums;
 }
 
+/* Banked-XP progressive disclosure (Sabine review 2026-09-30b #2): the input
+   stays in the DOM and in the tab order ALWAYS — a value already banked must
+   never be hidden, and typing a new one must never require a mouse. With
+   nothing banked it is dimmed to a near-invisible hint instead, so it does not
+   compete with the score spinner on every row of the two busiest tabs;
+   `:focus` restores it in full the moment it is used. The unit caption dims
+   in step via the adjacent-sibling combinator, since the two are not wrapped
+   in a shared element. */
+.banked-xp-unit {
+  font-size: var(--font-chrome);
+  color: var(--muted);
+  margin-left: 0.15rem;
+}
+
+.banked-xp-zero:not(:focus) {
+  opacity: 0.35;
+}
+
+.banked-xp-zero:not(:focus) + .banked-xp-unit {
+  opacity: 0.35;
+}
+
 /* Read-only effective score shown when a virtue bonus applies: an important
    value, so a large plain accent number rather than a small pill. */
 .eff-badge {
@@ -1678,6 +1700,23 @@ ul {
    remove button would trail the wrapped controls mid-row. */
 .spell-list li > button:last-child {
   margin-left: auto;
+}
+
+/* Per-spell Casting Total (X10c, D73.2): a computed, important value — like
+   `.eff-badge`, a plain accent figure rather than a small pill, so it reads at
+   a glance beside the spell name instead of blending into chip-shaped chrome. */
+.casting-total-badge {
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The within-focus checkbox's own spacing; `.checkbox.inline` on the same
+   label (added alongside) gives it the box-then-caption layout every other
+   checkbox in the app uses. */
+.within-focus-toggle {
+  margin-left: 0.3rem;
 }
 
 /* The detail-panel layout: the editor's Details tab (identity, age, the Confidence
