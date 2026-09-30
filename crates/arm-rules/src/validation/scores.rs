@@ -996,13 +996,9 @@ mod locality_cap_tests {
         if foreign {
             entity.selections = vec![Selection::new(Id::new("flaw.foreign_upbringing"))];
         }
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new(ability),
-            parameter: Some(AbilityParameterValue::text("Bavaria")),
-            score,
-            specialty: None,
-            banked_xp: 0,
-        }];
+        let mut a = AbilityScore::new(Id::new(ability), score);
+        a.parameter = Some(AbilityParameterValue::text("Bavaria"));
+        entity.ability_scores = vec![a];
         entity
     }
 
@@ -1086,13 +1082,9 @@ mod unspecialized_flaw_tests {
             RulesetRef::new(Id::new("test"), "1"),
         );
         entity.selections = selections;
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.single_weapon"),
-            parameter: None,
-            score: 1,
-            specialty: specialty.map(str::to_string),
-            banked_xp: 0,
-        }];
+        let mut a = AbilityScore::new(Id::new("ability.single_weapon"), 1);
+        a.specialty = specialty.map(str::to_string);
+        entity.ability_scores = vec![a];
         entity
     }
 

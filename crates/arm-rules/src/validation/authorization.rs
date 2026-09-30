@@ -318,13 +318,9 @@ mod tests {
         parameter: Option<&str>,
     ) -> Entity {
         let mut entity = character(type_id, selections, vec![]);
-        entity.ability_scores.push(AbilityScore {
-            ability: Id::new(ability),
-            parameter: parameter.map(|id| AbilityParameterValue::Catalogued { id: Id::new(id) }),
-            score,
-            specialty: None,
-            banked_xp: 0,
-        });
+        let mut a = AbilityScore::new(Id::new(ability), score);
+        a.parameter = parameter.map(|id| AbilityParameterValue::Catalogued { id: Id::new(id) });
+        entity.ability_scores.push(a);
         entity
     }
 
@@ -358,13 +354,7 @@ mod tests {
             .collect();
         entity.ability_scores = abilities
             .into_iter()
-            .map(|(id, score)| AbilityScore {
-                ability: Id::new(id),
-                parameter: None,
-                score,
-                specialty: None,
-                banked_xp: 0,
-            })
+            .map(|(id, score)| AbilityScore::new(Id::new(id), score))
             .collect();
         entity.xp_pool = 500;
         entity

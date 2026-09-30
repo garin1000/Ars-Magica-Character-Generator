@@ -1765,14 +1765,7 @@ mod multi_ref_tests {
             Id::new("companion"),
             crate::types::RulesetRef::new(Id::new("t"), "1"),
         );
-        entity.spells = vec![SpellSelection {
-            spell: Id::new(spell),
-            level: None,
-            mastery: None,
-            parameter: None,
-            mastery_abilities: Vec::new(),
-            within_focus: false,
-        }];
+        entity.spells = vec![SpellSelection::new(Id::new(spell))];
         entity
     }
 

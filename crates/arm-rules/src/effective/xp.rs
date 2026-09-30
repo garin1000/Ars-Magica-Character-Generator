@@ -1975,13 +1975,7 @@ mod tests {
         );
         e.xp_pool = 1_000_000;
         e.ability_scores = (0..count)
-            .map(|_| AbilityScore {
-                ability: Id::new("ability.artes_liberales"),
-                parameter: None,
-                score: 1,
-                specialty: None,
-                banked_xp: 0,
-            })
+            .map(|_| AbilityScore::new(Id::new("ability.artes_liberales"), 1))
             .collect();
         e
     }
@@ -2281,11 +2275,7 @@ mod tests {
     fn truncated_apprentice_funds_an_art_from_the_post_span_but_never_the_pre_span() {
         let rs = rs_with_life_stages();
         let mut entity = companion_with_truncated_apprenticeship(20, Some("7"));
-        entity.art_scores = vec![crate::types::ArtScore {
-            art: Id::new("art.creo"),
-            score: 1,
-            banked_xp: 0,
-        }];
+        entity.art_scores = vec![crate::types::ArtScore::new(Id::new("art.creo"), 1)];
         let allocation = checked_xp_allocation(&entity, &rs).unwrap();
         assert_eq!(allocation.total_demand, 130);
         assert_eq!(

@@ -282,7 +282,9 @@ pub struct ResolvedRealmEntry {
     /// different overrides, so `item_ref` alone cannot key a row; this
     /// matches the `index` the V/F tab already keys a selection row by.
     pub index: usize,
+    /// The selection's `PointItem` id, for display alongside the resolved realm.
     pub item_ref: Id,
+    /// The realm [`arm_rules::resolve_realm`] resolved this selection to.
     pub realm: Realm,
     pub fixed: bool,
 }
@@ -990,13 +992,7 @@ mod tests {
         // the app-layer consequence — far over the bound must surface as zeroed
         // totals rather than a panic.
         e.ability_scores = (0..2049)
-            .map(|_| AbilityScore {
-                ability: Id::new("ability.artes_liberales"),
-                parameter: None,
-                score: 1,
-                specialty: None,
-                banked_xp: 0,
-            })
+            .map(|_| AbilityScore::new(Id::new("ability.artes_liberales"), 1))
             .collect();
 
         let scores = effective_scores_loaded(&e, &rs);

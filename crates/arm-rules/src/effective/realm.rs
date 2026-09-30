@@ -36,7 +36,9 @@ pub enum RealmWarning {
 /// The outcome of resolving one Supernatural entry's realm association.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ResolvedRealm {
+    /// The resolved realm.
     pub realm: Realm,
+    /// A non-blocking condition noticed while resolving `realm`, if any.
     pub warning: Option<RealmWarning>,
 }
 

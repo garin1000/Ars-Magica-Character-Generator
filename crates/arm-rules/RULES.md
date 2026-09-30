@@ -11320,7 +11320,7 @@ gate contributes nothing.
 
 - Engine: `types.rs::Effect::SoakMod`, `Effect::CharacteristicScoreDelta`,
   `Effect::AbilityRollMod`, `Effect::MagicResistanceMod` (each gains `gate`;
-  `MagicResistanceMod` also gains `amount: i32`). Consumers: `derived.rs::in_play_mods`
+  `MagicResistanceMod` also gains `amount: i8`). Consumers: `derived.rs::in_play_mods`
   (`SoakMod`, `AbilityRollMod`, `MagicResistanceMod`'s `AuraBonus` arm — folded
   into a new `InPlayMods::aura_bonus` field), `effective/characteristic.rs::characteristic_score_bonus`
   (`CharacteristicScoreDelta`).

@@ -487,7 +487,11 @@ export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic' | 'academic
 // (unlike `is_companion`/`is_grog`, which read a profile FLAG) —
 // `virtue.domestic_animal` gates on an id no shipped profile carries, so no
 // human character type can ever satisfy it.
-type HasCategoryAtMagnitudeValue = { category: string; magnitude: Magnitude; item_kind: ItemKind };
+export type HasCategoryAtMagnitudeValue = {
+  category: string;
+  magnitude: Magnitude;
+  item_kind: ItemKind;
+};
 
 export type Prereq =
   | { kind: 'all'; value: Prereq[] }

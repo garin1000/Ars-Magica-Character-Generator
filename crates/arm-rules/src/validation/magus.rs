@@ -1091,12 +1091,10 @@ mod tests {
         entity.xp_pool = 500;
         entity.ability_scores = scores
             .into_iter()
-            .map(|(ability, parameter, score)| AbilityScore {
-                ability: Id::new(ability),
-                parameter: parameter.map(AbilityParameterValue::text),
-                score,
-                specialty: None,
-                banked_xp: 0,
+            .map(|(ability, parameter, score)| {
+                let mut a = AbilityScore::new(Id::new(ability), score);
+                a.parameter = parameter.map(AbilityParameterValue::text);
+                a
             })
             .collect();
         entity

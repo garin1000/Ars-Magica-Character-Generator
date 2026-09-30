@@ -949,85 +949,44 @@ mod tests {
         ];
         e.xp_pool = 240;
         e.ability_scores = vec![
-            AbilityScore {
-                ability: Id::new("ability.awareness"),
-                score: 3,
-                specialty: Some("searching".to_string()),
-                parameter: None,
-                banked_xp: 0,
+            {
+                let mut a = AbilityScore::new(Id::new("ability.awareness"), 3);
+                a.specialty = Some("searching".to_string());
+                a
             },
-            AbilityScore {
-                ability: Id::new("ability.area_lore"),
-                score: 2,
-                specialty: Some("legends".to_string()),
-                parameter: Some(AbilityParameterValue::text("Provence")),
-                banked_xp: 0,
+            {
+                let mut a = AbilityScore::new(Id::new("ability.area_lore"), 2);
+                a.specialty = Some("legends".to_string());
+                a.parameter = Some(AbilityParameterValue::text("Provence"));
+                a
             },
-            AbilityScore {
-                ability: Id::new("ability.magic_theory"),
-                score: 4,
-                specialty: None,
-                parameter: None,
-                banked_xp: 0,
-            },
-            AbilityScore {
-                ability: Id::new("ability.parma_magica"),
-                score: 3,
-                specialty: None,
-                parameter: None,
-                banked_xp: 0,
-            },
-            AbilityScore {
-                ability: Id::new("ability.single_weapon"),
-                score: 4,
-                specialty: Some("long sword".to_string()),
-                parameter: None,
-                banked_xp: 0,
+            AbilityScore::new(Id::new("ability.magic_theory"), 4),
+            AbilityScore::new(Id::new("ability.parma_magica"), 3),
+            {
+                let mut a = AbilityScore::new(Id::new("ability.single_weapon"), 4);
+                a.specialty = Some("long sword".to_string());
+                a
             },
         ];
         e.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 10,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.muto"),
-                score: 5,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.corpus"),
-                score: 5,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.ignem"),
-                score: 8,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.vim"),
-                score: 5,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 10),
+            ArtScore::new(Id::new("art.muto"), 5),
+            ArtScore::new(Id::new("art.corpus"), 5),
+            ArtScore::new(Id::new("art.ignem"), 8),
+            ArtScore::new(Id::new("art.vim"), 5),
         ];
         e.spells = vec![
-            SpellSelection {
-                spell: Id::new("spell.pilum_of_fire"),
-                level: None,
-                mastery: Some(2),
-                parameter: None,
-                mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
-                within_focus: false,
+            {
+                let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+                s.mastery = Some(2);
+                s.mastery_abilities = vec![Id::new("spell_mastery_ability.penetration")];
+                s
             },
-            SpellSelection {
-                spell: Id::new("spell.wizards_boost_form"),
-                level: Some(15),
-                mastery: None,
-                parameter: Some("art.ignem".to_string()),
-                mastery_abilities: Vec::new(),
-                within_focus: false,
+            {
+                let mut s = SpellSelection::new(Id::new("spell.wizards_boost_form"));
+                s.level = Some(15);
+                s.parameter = Some("art.ignem".to_string());
+                s
             },
         ];
         e.equipment = vec![
@@ -1903,12 +1862,10 @@ mod tests {
     #[test]
     fn abilities_list_specialty_bought_and_effective_scores() {
         let mut e = magus();
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 3,
-            specialty: Some("searching".to_string()),
-            parameter: None,
-            banked_xp: 0,
+        e.ability_scores = vec![{
+            let mut a = AbilityScore::new(Id::new("ability.awareness"), 3);
+            a.specialty = Some("searching".to_string());
+            a
         }];
         e.selections = vec![Selection::with_params(
             Id::new("virtue.puissant_ability"),
@@ -1930,19 +1887,16 @@ mod tests {
     fn two_instances_of_one_ability_stay_separate_rows() {
         let mut e = magus();
         e.ability_scores = vec![
-            AbilityScore {
-                ability: Id::new("ability.area_lore"),
-                score: 2,
-                specialty: None,
-                parameter: Some(AbilityParameterValue::text("Provence")),
-                banked_xp: 0,
+            {
+                let mut a = AbilityScore::new(Id::new("ability.area_lore"), 2);
+                a.parameter = Some(AbilityParameterValue::text("Provence"));
+                a
             },
-            AbilityScore {
-                ability: Id::new("ability.area_lore"),
-                score: 1,
-                specialty: Some("legends".to_string()),
-                parameter: Some(AbilityParameterValue::text("the Rhine")),
-                banked_xp: 0,
+            {
+                let mut a = AbilityScore::new(Id::new("ability.area_lore"), 1);
+                a.specialty = Some("legends".to_string());
+                a.parameter = Some(AbilityParameterValue::text("the Rhine"));
+                a
             },
         ];
         e.normalize();
@@ -1955,13 +1909,7 @@ mod tests {
     fn the_xp_pool_reports_the_general_draw_and_each_restricted_pool() {
         let mut e = magus();
         e.xp_pool = 60;
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 3,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 3)];
         e.selections = vec![Selection::new(Id::new("virtue.warrior"))];
         let doc = character_markdown(
             &e,
@@ -1989,13 +1937,7 @@ mod tests {
         let mut e = magus();
         e.xp_pool = 1_000_000;
         e.ability_scores = (0..crate::effective::MAX_XP_SOLVE_NODES)
-            .map(|_| AbilityScore {
-                ability: Id::new("ability.awareness"),
-                score: 1,
-                specialty: None,
-                parameter: None,
-                banked_xp: 0,
-            })
+            .map(|_| AbilityScore::new(Id::new("ability.awareness"), 1))
             .collect();
         let doc = super::character_markdown(
             &e,
@@ -2030,12 +1972,10 @@ mod tests {
     fn a_granted_ability_the_character_bought_too_gets_no_second_row() {
         let mut e = magus();
         e.selections = vec![Selection::new(Id::new("virtue.second_sight"))];
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.second_sight"),
-            score: 3,
-            specialty: Some("visions".to_string()),
-            parameter: None,
-            banked_xp: 0,
+        e.ability_scores = vec![{
+            let mut a = AbilityScore::new(Id::new("ability.second_sight"), 3);
+            a.specialty = Some("visions".to_string());
+            a
         }];
         let doc = character_markdown(&e, &ruleset(), &no_labels());
         // The catalogue names the Virtue and the Ability it grants identically (the
@@ -2055,13 +1995,7 @@ mod tests {
     fn granted_ability_rows_follow_the_bought_ones() {
         let mut e = magus();
         e.selections = vec![Selection::new(Id::new("virtue.second_sight"))];
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 2)];
         let doc = character_markdown(&e, &ruleset(), &no_labels());
         // Scoped to the Abilities table: the catalogue names the Virtue and the
         // Ability it grants identically (the real rulebook does too), and the
@@ -2207,16 +2141,8 @@ mod tests {
     fn arts_are_split_into_techniques_and_forms() {
         let mut e = magus();
         e.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 10,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.ignem"),
-                score: 8,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 10),
+            ArtScore::new(Id::new("art.ignem"), 8),
         ];
         let doc = character_markdown(
             &e,
@@ -2237,11 +2163,7 @@ mod tests {
     #[test]
     fn an_art_bonus_fills_the_effective_column() {
         let mut e = magus();
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 10,
-            banked_xp: 0,
-        }];
+        e.art_scores = vec![ArtScore::new(Id::new("art.creo"), 10)];
         e.selections = vec![Selection::with_params(
             Id::new("virtue.puissant_art"),
             BTreeMap::from([("art".to_string(), Id::new("art.creo"))]),
@@ -2257,11 +2179,7 @@ mod tests {
     #[test]
     fn every_catalogue_art_gets_a_row_once_any_art_is_scored() {
         let mut e = magus();
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.ignem"),
-            score: 8,
-            banked_xp: 0,
-        }];
+        e.art_scores = vec![ArtScore::new(Id::new("art.ignem"), 8)];
         let doc = character_markdown(
             &e,
             &ruleset(),
@@ -2300,13 +2218,11 @@ mod tests {
     #[test]
     fn spells_list_their_art_code_and_mastery() {
         let mut e = magus();
-        e.spells = vec![SpellSelection {
-            spell: Id::new("spell.pilum_of_fire"),
-            level: None,
-            mastery: Some(2),
-            parameter: None,
-            mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
-            within_focus: false,
+        e.spells = vec![{
+            let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+            s.mastery = Some(2);
+            s.mastery_abilities = vec![Id::new("spell_mastery_ability.penetration")];
+            s
         }];
         let doc = character_markdown(
             &e,
@@ -2333,13 +2249,10 @@ mod tests {
     #[test]
     fn a_general_spell_with_no_chosen_level_shows_the_general_marker() {
         let mut e = magus();
-        e.spells = vec![SpellSelection {
-            spell: Id::new("spell.wizards_boost_form"),
-            level: None,
-            mastery: None,
-            parameter: Some("art.ignem".to_string()),
-            mastery_abilities: Vec::new(),
-            within_focus: false,
+        e.spells = vec![{
+            let mut s = SpellSelection::new(Id::new("spell.wizards_boost_form"));
+            s.parameter = Some("art.ignem".to_string());
+            s
         }];
         let doc = character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]));
         assert!(doc.contains("| Wizard's Boost of Ignem |"), "{doc}");
@@ -3192,11 +3105,7 @@ mod tests {
     fn entries_absent_from_the_catalogue_are_not_printed() {
         let mut e = magus();
         e.selections = vec![Selection::new(Id::new("virtue.from_another_ruleset"))];
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.imaginem"),
-            score: 4,
-            banked_xp: 0,
-        }];
+        e.art_scores = vec![ArtScore::new(Id::new("art.imaginem"), 4)];
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.trebuchet"),
             loadout: LoadoutState::Wielded,
@@ -3222,13 +3131,10 @@ mod tests {
     #[test]
     fn an_unknown_spell_fails_the_export_naming_it() {
         let mut e = magus();
-        e.spells = vec![SpellSelection {
-            spell: Id::new("spell.from_another_ruleset"),
-            level: None,
-            mastery: None,
-            parameter: Some("free text".to_string()),
-            mastery_abilities: Vec::new(),
-            within_focus: false,
+        e.spells = vec![{
+            let mut s = SpellSelection::new(Id::new("spell.from_another_ruleset"));
+            s.parameter = Some("free text".to_string());
+            s
         }];
         let err =
             super::character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]))

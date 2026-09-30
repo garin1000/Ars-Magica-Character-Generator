@@ -1095,13 +1095,9 @@ mod tests {
     }
 
     fn lore(area: &str, score: u8) -> AbilityScore {
-        AbilityScore {
-            ability: Id::new("ability.area_lore"),
-            score,
-            specialty: None,
-            parameter: Some(AbilityParameterValue::text(area)),
-            banked_xp: 0,
-        }
+        let mut a = AbilityScore::new(Id::new("ability.area_lore"), score);
+        a.parameter = Some(AbilityParameterValue::text(area));
+        a
     }
 
     fn great(characteristic: Characteristic) -> Selection {
@@ -1122,13 +1118,7 @@ mod tests {
     fn puissant_ability_adds_two_to_its_target() {
         let rs = ruleset();
         let mut e = entity(vec![puissant("ability.awareness")]);
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 3,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 3)];
         assert_eq!(
             ability_bonus(&e, &rs, &Id::new("ability.awareness"), None),
             2
@@ -1370,11 +1360,7 @@ mod tests {
     fn puissant_art_adds_three_to_its_target() {
         let rs = ruleset();
         let mut e = entity(vec![puissant_art("art.ignem")]);
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.ignem"),
-            score: 5,
-            banked_xp: 0,
-        }];
+        e.art_scores = vec![ArtScore::new(Id::new("art.ignem"), 5)];
         assert_eq!(art_bonus(&e, &rs, &Id::new("art.ignem")), 3);
         assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 8);
     }
@@ -1403,16 +1389,8 @@ mod tests {
         let rs = ruleset();
         let mut e = entity(vec![puissant_art("art.ignem")]);
         e.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 3,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.ignem"),
-                score: 2,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 3),
+            ArtScore::new(Id::new("art.ignem"), 2),
         ];
         // Only Ignem is boosted; Creo has no bonus and is omitted.
         assert_eq!(
@@ -1474,20 +1452,8 @@ mod tests {
         let rs = ruleset();
         let mut e = entity(vec![puissant("ability.awareness")]);
         e.ability_scores = vec![
-            AbilityScore {
-                ability: Id::new("ability.awareness"),
-                score: 2,
-                specialty: None,
-                parameter: None,
-                banked_xp: 0,
-            },
-            AbilityScore {
-                ability: Id::new("ability.stealth"),
-                score: 1,
-                specialty: None,
-                parameter: None,
-                banked_xp: 0,
-            },
+            AbilityScore::new(Id::new("ability.awareness"), 2),
+            AbilityScore::new(Id::new("ability.stealth"), 1),
         ];
 
         let abilities = ability_bonuses(&e, &rs);
@@ -1831,13 +1797,7 @@ mod tests {
     }
 
     fn plain(ability: &str, score: u8) -> AbilityScore {
-        AbilityScore {
-            ability: Id::new(ability),
-            score,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }
+        AbilityScore::new(Id::new(ability), score)
     }
 
     fn sel(id: &str) -> Selection {
@@ -1852,11 +1812,7 @@ mod tests {
     fn affinity_with_art_reduces_charged_xp() {
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel_param("virtue.affinity_art", "art", "art.creo")]);
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 5,
-            banked_xp: 0,
-        }]; // table 15
+        e.art_scores = vec![ArtScore::new(Id::new("art.creo"), 5)]; // table 15
         let alloc = xp_allocation(&e, &rs);
         // ceil(15·2/3) = 10, not 15.
         assert_eq!(alloc.total_demand, 10);
@@ -2121,35 +2077,17 @@ mod tests {
         assert_eq!(spell_mastery_floor(&flawless, &rs), 1);
         // A spell with no bought mastery still has effective mastery 1 under the
         // floor; a higher bought mastery wins.
-        let unbought = SpellSelection {
-            spell: Id::new("spell.x"),
-            level: None,
-            mastery: None,
-            parameter: None,
-            mastery_abilities: Vec::new(),
-            within_focus: false,
-        };
+        let unbought = SpellSelection::new(Id::new("spell.x"));
         assert_eq!(effective_spell_mastery(&unbought, &flawless, &rs), 1);
-        let bought = SpellSelection {
-            spell: Id::new("spell.x"),
-            level: None,
-            mastery: Some(3),
-            parameter: None,
-            mastery_abilities: Vec::new(),
-            within_focus: false,
-        };
+        let mut bought = SpellSelection::new(Id::new("spell.x"));
+        bought.mastery = Some(3);
         assert_eq!(effective_spell_mastery(&bought, &flawless, &rs), 3);
     }
 
     fn mastered(spell: &str, score: u8) -> SpellSelection {
-        SpellSelection {
-            spell: Id::new(spell),
-            level: None,
-            mastery: Some(score),
-            parameter: None,
-            mastery_abilities: Vec::new(),
-            within_focus: false,
-        }
+        let mut s = SpellSelection::new(Id::new(spell));
+        s.mastery = Some(score);
+        s
     }
 
     #[test]
@@ -3104,11 +3042,7 @@ mod tests {
                 BTreeMap::from([("art".into(), Id::new("art.ignem"))]),
             ),
         );
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.ignem"),
-            score: 2,
-            banked_xp: 0,
-        }];
+        e.art_scores = vec![ArtScore::new(Id::new("art.ignem"), 2)];
         // The House-granted Puissant Ignem (+3) stacks on the bought score.
         assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 5);
         // A non-targeted Art is untouched by the grant.
@@ -3205,11 +3139,7 @@ mod tests {
     }
 
     fn art_row(art: &str, score: u8) -> ArtScore {
-        ArtScore {
-            art: Id::new(art),
-            score,
-            banked_xp: 0,
-        }
+        ArtScore::new(Id::new(art), score)
     }
 
     /// Three elemental Forms bought at score 6 (21 table-XP each) and one at score 4
@@ -3354,16 +3284,8 @@ mod tests {
         let rs = ruleset();
         let mut e = entity(vec![]);
         e.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 2,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.ignem"),
-                score: 3,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 2),
+            ArtScore::new(Id::new("art.ignem"), 3),
         ];
         e.characteristics.insert(Characteristic::Int, 1);
         let caps = spell_level_caps(&e, &rs);
@@ -3384,16 +3306,8 @@ mod tests {
     fn cap_fixture(selections: Vec<Selection>) -> Entity {
         let mut e = entity(selections);
         e.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 2,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.ignem"),
-                score: 3,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 2),
+            ArtScore::new(Id::new("art.ignem"), 3),
         ];
         e.characteristics.insert(Characteristic::Int, 1);
         e
@@ -3727,12 +3641,10 @@ mod tests {
             native_language: Some("German".into()),
             ..crate::life_stage::LifeStagePlan::default()
         });
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.living_language"),
-            parameter: Some(AbilityParameterValue::text("German")),
-            score: 5,
-            specialty: None,
-            banked_xp: 0,
+        entity.ability_scores = vec![{
+            let mut a = AbilityScore::new(Id::new("ability.living_language"), 5);
+            a.parameter = Some(AbilityParameterValue::text("German"));
+            a
         }];
         entity
     }
@@ -3820,13 +3732,9 @@ mod tests {
     fn the_spread_block_pays_for_a_childhood_ability() {
         let rs = life_stage_ruleset();
         let mut entity = planned_companion();
-        entity.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.swim"),
-            parameter: None,
-            score: 2,
-            specialty: None,
-            banked_xp: 0,
-        });
+        entity
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.swim"), 2));
         let allocation = xp_allocation(&entity, &rs);
         assert_eq!(allocation.total_demand, 90, "75 + 15");
         assert_eq!(allocation.max_flow, 90);
@@ -3838,13 +3746,9 @@ mod tests {
     fn an_ability_off_the_childhood_list_falls_to_later_life() {
         let rs = life_stage_ruleset();
         let mut entity = planned_companion();
-        entity.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.concentration"),
-            parameter: None,
-            score: 2,
-            specialty: None,
-            banked_xp: 0,
-        });
+        entity
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.concentration"), 2));
         let allocation = xp_allocation(&entity, &rs);
         assert_eq!(allocation.max_flow, 90, "fully funded");
         assert_eq!(allocation.general_used, 15, "later life pays the 15");
@@ -3858,12 +3762,10 @@ mod tests {
     fn a_second_living_language_draws_the_spread_not_the_native_block() {
         let rs = life_stage_ruleset();
         let mut entity = planned_companion();
-        entity.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.living_language"),
-            parameter: Some(AbilityParameterValue::text("French")),
-            score: 3, // 30 xp: more than the 45 spread can spare alongside nothing else
-            specialty: None,
-            banked_xp: 0,
+        entity.ability_scores.push({
+            let mut a = AbilityScore::new(Id::new("ability.living_language"), 3); // 30 xp: more than the 45 spread can spare alongside nothing else
+            a.parameter = Some(AbilityParameterValue::text("French"));
+            a
         });
         let allocation = xp_allocation(&entity, &rs);
         assert_eq!(allocation.total_demand, 105, "75 + 30");
@@ -3892,13 +3794,9 @@ mod tests {
             Id::new("virtue.affinity_with_ability"),
             BTreeMap::from([("ability".to_string(), Id::new("ability.swim"))]),
         )];
-        entity.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.swim"),
-            parameter: None,
-            score: 2,
-            specialty: None,
-            banked_xp: 0,
-        });
+        entity
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.swim"), 2));
         let allocation = xp_allocation(&entity, &rs);
         assert_eq!(allocation.total_demand, 85, "75 + ceil(15 * 2/3) = 75 + 10");
     }
@@ -3963,13 +3861,9 @@ mod tests {
         let rs = life_stage_ruleset();
         let mut magus = planned_magus();
         // Concentration 3 — a General Ability, 30 experience points.
-        magus.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.concentration"),
-            parameter: None,
-            score: 3,
-            specialty: None,
-            banked_xp: 0,
-        });
+        magus
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.concentration"), 3));
         let allocation = xp_allocation(&magus, &rs);
         let pool = later_life_pool(&allocation).expect("a guided magus has a later-life pool");
         assert_eq!(pool.amount, 75, "five years at 15 a year");
@@ -3979,13 +3873,9 @@ mod tests {
         // Artes Liberales 3 — Academic, so the same 30 points cannot come from
         // before apprenticeship, and the apprenticeship pool takes it instead.
         magus.ability_scores.pop();
-        magus.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.artes_liberales"),
-            parameter: None,
-            score: 3,
-            specialty: None,
-            banked_xp: 0,
-        });
+        magus
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.artes_liberales"), 3));
         let allocation = xp_allocation(&magus, &rs);
         assert_eq!(later_life_pool(&allocation).expect("still there").used, 0);
         assert_eq!(allocation.general_used, 30, "apprenticeship funds it");
@@ -4006,12 +3896,10 @@ mod tests {
     fn an_authorizing_virtue_lets_pre_apprenticeship_experience_buy_a_gated_ability() {
         let rs = life_stage_ruleset();
         let mut magus = planned_magus();
-        magus.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.dead_language"),
-            parameter: Some(AbilityParameterValue::text("Latin")),
-            score: 3,
-            specialty: None,
-            banked_xp: 0,
+        magus.ability_scores.push({
+            let mut a = AbilityScore::new(Id::new("ability.dead_language"), 3);
+            a.parameter = Some(AbilityParameterValue::text("Latin"));
+            a
         });
 
         // Without the Flaw, the 30 points must come from apprenticeship.
@@ -4027,13 +3915,9 @@ mod tests {
 
         // It authorizes that Ability alone: Artes Liberales stays out.
         magus.ability_scores.pop();
-        magus.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.artes_liberales"),
-            parameter: None,
-            score: 3,
-            specialty: None,
-            banked_xp: 0,
-        });
+        magus
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.artes_liberales"), 3));
         let allocation = xp_allocation(&magus, &rs);
         assert_eq!(later_life_pool(&allocation).expect("a pool").used, 0);
         assert_eq!(allocation.general_used, 30);
@@ -4067,16 +3951,8 @@ mod tests {
         let rs = life_stage_ruleset();
         let mut magus = experienced_magus();
         magus.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 20,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.ignem"),
-                score: 20,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 20),
+            ArtScore::new(Id::new("art.ignem"), 20),
         ];
         let allocation = xp_allocation(&magus, &rs);
         assert_eq!(
@@ -4102,18 +3978,10 @@ mod tests {
     fn post_gauntlet_years_leave_later_life_restricted() {
         let rs = life_stage_ruleset();
         let mut magus = experienced_magus();
-        magus.art_scores = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 5,
-            banked_xp: 0,
-        }];
-        magus.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.artes_liberales"),
-            parameter: None,
-            score: 3,
-            specialty: None,
-            banked_xp: 0,
-        });
+        magus.art_scores = vec![ArtScore::new(Id::new("art.creo"), 5)];
+        magus
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.artes_liberales"), 3));
         let allocation = xp_allocation(&magus, &rs);
         let pool = later_life_pool(&allocation).expect("an experienced magus still has one");
         assert_eq!(pool.amount, 75, "five years at 15 a year, unchanged");
@@ -4369,12 +4237,10 @@ mod tests {
         entity
             .selections
             .push(Selection::new(Id::new("flaw.covenant_upbringing")));
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.dead_language"),
-            parameter: Some(AbilityParameterValue::text("Latin")),
-            score: 3,
-            specialty: None,
-            banked_xp: 0,
+        entity.ability_scores = vec![{
+            let mut a = AbilityScore::new(Id::new("ability.dead_language"), 3);
+            a.parameter = Some(AbilityParameterValue::text("Latin"));
+            a
         }];
 
         let allocation = xp_allocation(&entity, &rs);
@@ -4448,12 +4314,10 @@ mod tests {
     fn a_feral_upbringing_companion_funds_a_non_wilderness_ability_from_later_life_general_only() {
         let rs = life_stage_ruleset();
         let mut entity = feral_companion(25);
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.living_language"),
-            parameter: Some(AbilityParameterValue::text("French")),
-            score: 1,
-            specialty: None,
-            banked_xp: 0,
+        entity.ability_scores = vec![{
+            let mut a = AbilityScore::new(Id::new("ability.living_language"), 1);
+            a.parameter = Some(AbilityParameterValue::text("French"));
+            a
         }];
 
         let allocation = xp_allocation(&entity, &rs);

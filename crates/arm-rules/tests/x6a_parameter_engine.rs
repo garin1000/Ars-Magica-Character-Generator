@@ -248,7 +248,7 @@ mod e1_gated_effects {
     }
 
     /// Representative red (design-x6-parameters.md § 4, e1/e2):
-    /// `MagicResistanceMod` gains `amount: i32` paired with `gate`, and
+    /// `MagicResistanceMod` gains `amount: i8` paired with `gate`, and
     /// `magic_resistance()` folds every active `AuraBonus` on top of the
     /// existing per-Form/True-Faith total (Commanding Aura, Pope rank: MR 25).
     #[test]

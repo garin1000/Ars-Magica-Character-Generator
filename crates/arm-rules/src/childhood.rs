@@ -378,13 +378,9 @@ fn raise_score(
         existing.score = existing.score.max(score);
         return;
     }
-    scores.push(AbilityScore {
-        ability: ability.clone(),
-        score,
-        specialty: None,
-        parameter,
-        banked_xp: 0,
-    });
+    let mut row = AbilityScore::new(ability.clone(), score);
+    row.parameter = parameter;
+    scores.push(row);
 }
 
 #[cfg(test)]

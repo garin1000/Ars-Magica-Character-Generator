@@ -982,7 +982,7 @@ impl ValidationIssue {
     /// `RealmAssociation::Subset` entry (Manifest Sin) has no override and no
     /// concept realm inside its subset, so resolution cannot honestly fall
     /// back to Magic. `args` carries `item`.
-    pub const CODE_REALM_UNANSWERED_SUBSET: &'static str = "realm_unset_subset";
+    pub const CODE_REALM_UNSET_SUBSET: &'static str = "realm_unset_subset";
     /// See [`Self::CODE_UNKNOWN_TYPE`]. Error (D74 Q2): an `association`
     /// override names a realm outside a `RealmAssociation::Subset` entry's
     /// allowed list. `args` carries `item` and `value`.
@@ -5286,13 +5286,7 @@ mod tests {
     fn ability_min_met_when_bought_score_at_or_above_threshold() {
         let rs = ability_min_ruleset();
         let mut entity = make_entity("test_type", vec![sel("virtue.a")]);
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 3,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 3)];
 
         let result = validate(&entity, &rs);
         // The lone minor virtue is unbalanced (no funding flaw), so the entity is
@@ -5307,13 +5301,7 @@ mod tests {
     fn ability_min_not_met_when_bought_score_below_threshold() {
         let rs = ability_min_ruleset();
         let mut entity = make_entity("test_type", vec![sel("virtue.a")]);
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 2)];
 
         let result = validate(&entity, &rs);
         let codes: Vec<String> = codes(&result);
@@ -5395,13 +5383,7 @@ mod tests {
                 puissant("ability.awareness"),
             ],
         );
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 1,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 1)];
         let result = validate(&entity, &rs);
         assert!(
             !codes(&result).contains(&"prereq_not_met".to_string()),
@@ -5414,13 +5396,7 @@ mod tests {
     fn ability_min_not_met_at_base_one_without_bonus() {
         let rs = effective_ruleset();
         let mut entity = make_entity("companion", vec![sel("virtue.requires_awareness_3")]);
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 1,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 1)];
         assert!(codes(&validate(&entity, &rs)).contains(&"prereq_not_met".to_string()));
     }
 
@@ -5670,13 +5646,9 @@ mod tests {
     }
 
     fn lore_score(area: &str, score: u8) -> AbilityScore {
-        AbilityScore {
-            ability: Id::new("ability.area_lore"),
-            score,
-            specialty: None,
-            parameter: Some(AbilityParameterValue::text(area)),
-            banked_xp: 0,
-        }
+        let mut a = AbilityScore::new(Id::new("ability.area_lore"), score);
+        a.parameter = Some(AbilityParameterValue::text(area));
+        a
     }
 
     #[test]
@@ -5739,13 +5711,7 @@ mod tests {
     fn puissant_plain_target_held_is_not_dangling() {
         let rs = effective_ruleset();
         let mut entity = make_entity("companion", vec![puissant("ability.awareness")]);
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 2)];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
         );
@@ -5816,13 +5782,7 @@ mod tests {
                 "Brandenburg",
             )],
         );
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 2)];
         assert!(codes(&validate(&entity, &rs)).contains(&"unexpected_param".to_string()));
     }
 
@@ -5943,13 +5903,7 @@ mod tests {
         let rs = effective_ruleset_with_house_grant();
         let mut entity = make_entity("companion", vec![sel("flaw.f")]);
         entity.house = Some(Id::new("house.grants_puissant_awareness"));
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 2)];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
         );
@@ -6056,13 +6010,7 @@ mod tests {
     fn unknown_ability_is_error() {
         let rs = traits_ruleset();
         let mut entity = companion_entity();
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.nonexistent"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.nonexistent"), 2)];
         assert!(codes(&validate(&entity, &rs)).contains(&"unknown_ability".to_string()));
     }
 
@@ -6075,13 +6023,7 @@ mod tests {
         let rs = traits_ruleset();
         let mut entity = companion_entity();
         entity.characteristics = BTreeMap::from([(Characteristic::Str, 4)]); // out of range
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.nonexistent"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.nonexistent"), 2)];
 
         // As a character, both stray fields are flagged.
         let char_codes = codes(&validate(&entity, &rs));
@@ -6106,20 +6048,8 @@ mod tests {
         let rs = traits_ruleset();
         let mut entity = companion_entity();
         entity.ability_scores = vec![
-            AbilityScore {
-                ability: Id::new("ability.awareness"),
-                score: 2,
-                specialty: None,
-                parameter: None,
-                banked_xp: 0,
-            },
-            AbilityScore {
-                ability: Id::new("ability.awareness"),
-                score: 3,
-                specialty: None,
-                parameter: None,
-                banked_xp: 0,
-            },
+            AbilityScore::new(Id::new("ability.awareness"), 2),
+            AbilityScore::new(Id::new("ability.awareness"), 3),
         ];
         assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()));
     }
@@ -6130,13 +6060,7 @@ mod tests {
         let mut entity = companion_entity();
         // Awareness 3 costs 30 xp; pool of 40 covers it.
         entity.xp_pool = 40;
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 3,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 3)];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()),
             "30 xp spent within a 40 pool"
@@ -6149,13 +6073,7 @@ mod tests {
         let mut entity = companion_entity();
         // Awareness 3 costs 30 xp; pool of 10 is not enough.
         entity.xp_pool = 10;
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 3,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 3)];
         assert!(codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()));
     }
 
@@ -6214,16 +6132,8 @@ mod tests {
         // Creo 5 (15) + Ignem 3 (6) = 21 xp; the shared pool of 21 is enough.
         e.xp_pool = 21;
         e.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 5,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.ignem"),
-                score: 3,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 5),
+            ArtScore::new(Id::new("art.ignem"), 3),
         ];
         let found = codes(&validate(&e, &rs));
         assert!(!found.contains(&"not_enough_xp".to_string()), "{found:?}");
@@ -6235,11 +6145,7 @@ mod tests {
         let mut e = make_entity("companion", vec![]);
         // Creo 5 costs 15 xp; the shared pool of 10 is not enough.
         e.xp_pool = 10;
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 5,
-            banked_xp: 0,
-        }];
+        e.art_scores = vec![ArtScore::new(Id::new("art.creo"), 5)];
         assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
     }
 
@@ -6249,18 +6155,8 @@ mod tests {
         // 20 overspends by 1, a pool of 21 does not.
         let rs = arts_ruleset();
         let mut e = make_entity("companion", vec![]);
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 3,
-            banked_xp: 0,
-        }];
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 2)];
+        e.art_scores = vec![ArtScore::new(Id::new("art.creo"), 3)];
         e.xp_pool = 20;
         assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
         e.xp_pool = 21;
@@ -9490,27 +9386,18 @@ mod tests {
     }
 
     fn spell(id: &str, level: Option<u8>) -> SpellSelection {
-        SpellSelection {
-            spell: Id::new(id),
-            level,
-            mastery: None,
-            parameter: None,
-            mastery_abilities: Vec::new(),
-            within_focus: false,
-        }
+        let mut s = SpellSelection::new(Id::new(id));
+        s.level = level;
+        s
     }
 
     /// A spell selection carrying a chosen parameter (e.g. the target `(Form)` of
     /// a meta-magic Vim spell).
     fn spell_param(id: &str, level: Option<u8>, parameter: &str) -> SpellSelection {
-        SpellSelection {
-            spell: Id::new(id),
-            level,
-            mastery: None,
-            parameter: Some(parameter.to_string()),
-            mastery_abilities: Vec::new(),
-            within_focus: false,
-        }
+        let mut s = SpellSelection::new(Id::new(id));
+        s.level = level;
+        s.parameter = Some(parameter.to_string());
+        s
     }
 
     /// A magus whose chosen spell levels stay within budget (and each within its
@@ -10256,13 +10143,7 @@ mod tests {
     }
 
     fn ability(id: &str, score: u8) -> AbilityScore {
-        AbilityScore {
-            ability: Id::new(id),
-            score,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }
+        AbilityScore::new(Id::new(id), score)
     }
 
     #[test]

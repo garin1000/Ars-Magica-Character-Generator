@@ -403,38 +403,21 @@ mod tests {
     #[test]
     fn a_bought_ability_finishes_the_abilities_step() {
         let mut entity = character("grog");
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            parameter: None,
-            score: 2,
-            specialty: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 2)];
         assert!(!incomplete(&entity).contains(&CreationPhase::Abilities));
     }
 
     #[test]
     fn a_bought_art_finishes_the_arts_step() {
         let mut entity = magus();
-        entity.art_scores = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 5,
-            banked_xp: 0,
-        }];
+        entity.art_scores = vec![ArtScore::new(Id::new("art.creo"), 5)];
         assert!(!incomplete(&entity).contains(&CreationPhase::Arts));
     }
 
     #[test]
     fn a_known_spell_finishes_the_spells_step() {
         let mut entity = magus();
-        entity.spells = vec![SpellSelection {
-            spell: Id::new("spell.pilum_of_fire"),
-            level: None,
-            mastery: None,
-            mastery_abilities: Vec::new(),
-            parameter: None,
-            within_focus: false,
-        }];
+        entity.spells = vec![SpellSelection::new(Id::new("spell.pilum_of_fire"))];
         assert!(!incomplete(&entity).contains(&CreationPhase::Spells));
     }
 

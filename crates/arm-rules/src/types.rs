@@ -2460,8 +2460,8 @@ pub enum Effect {
         /// Commanding Aura figure — Pope rank grants 25). `0` (the default)
         /// for every kind that carries no number of its own. Additive, no
         /// `SCHEMA_VERSION` bump (`Effect` lives in ruleset JSON, not saves).
-        #[serde(default, skip_serializing_if = "is_zero_i32")]
-        amount: i32,
+        #[serde(default, skip_serializing_if = "is_zero_i8")]
+        amount: i8,
         /// This modifier applies only when the OWNING selection's own gate
         /// holds (Commanding Aura's `rank` enumeration). Absent for every
         /// existing carrier.
@@ -4765,6 +4765,21 @@ pub struct AbilityScore {
     pub banked_xp: u32,
 }
 
+impl AbilityScore {
+    /// A bought ability score with no specialty, no parameter, and no banked
+    /// XP — the shape every pre-X10b save had throughout. Set the optional
+    /// fields on the returned value for the sites that need them.
+    pub fn new(ability: Id, score: u8) -> Self {
+        Self {
+            ability,
+            score,
+            specialty: None,
+            parameter: None,
+            banked_xp: 0,
+        }
+    }
+}
+
 /// A whole bought Hermetic Art score. Arts are not parameterized and carry no
 /// specialty, so an instance is identified by `art` alone. Like Abilities, the XP
 /// to reach the score is priced from the ruleset's *Art* advancement table (a
@@ -4783,6 +4798,17 @@ pub struct ArtScore {
     /// byte-identity reason.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub banked_xp: u32,
+}
+
+impl ArtScore {
+    /// A bought Art score with no banked XP.
+    pub fn new(art: Id, score: u8) -> Self {
+        Self {
+            art,
+            score,
+            banked_xp: 0,
+        }
+    }
 }
 
 /// A spell the character knows (magi only). Saves store the choice, not the
@@ -4834,6 +4860,23 @@ pub struct SpellSelection {
     /// last, same byte-identity reasoning as [`AbilityScore::banked_xp`].
     #[serde(default, skip_serializing_if = "is_false")]
     pub within_focus: bool,
+}
+
+impl SpellSelection {
+    /// An ordinary, unmastered, unparameterized spell selection (a fixed-level
+    /// spell with no mastery, no meta-magic parameter, and not within Focus).
+    /// Set the optional fields on the returned value for the sites that need
+    /// them.
+    pub fn new(spell: Id) -> Self {
+        Self {
+            spell,
+            level: None,
+            mastery: None,
+            parameter: None,
+            mastery_abilities: Vec::new(),
+            within_focus: false,
+        }
+    }
 }
 
 /// How a piece of equipment is currently carried. A fixed rules taxonomy
@@ -7375,30 +7418,17 @@ mod tests {
             ],
             characteristics: BTreeMap::from([(Characteristic::Int, 2), (Characteristic::Sta, -1)]),
             characteristic_descriptions: BTreeMap::new(),
-            ability_scores: vec![AbilityScore {
-                ability: Id::new("ability.awareness"),
-                score: 3,
-                specialty: Some("searching".into()),
-                parameter: None,
-                banked_xp: 0,
+            ability_scores: vec![{
+                let mut a = AbilityScore::new(Id::new("ability.awareness"), 3);
+                a.specialty = Some("searching".into());
+                a
             }],
             xp_pool: 30,
             life_stages: None,
             ability_funding: AbilityFunding::Pool,
             wizard_furthest_phase: Some("abilities".into()),
-            art_scores: vec![ArtScore {
-                art: Id::new("art.creo"),
-                score: 5,
-                banked_xp: 0,
-            }],
-            spells: vec![SpellSelection {
-                spell: Id::new("spell.pilum_of_fire"),
-                level: None,
-                mastery: None,
-                parameter: None,
-                mastery_abilities: Vec::new(),
-                within_focus: false,
-            }],
+            art_scores: vec![ArtScore::new(Id::new("art.creo"), 5)],
+            spells: vec![SpellSelection::new(Id::new("spell.pilum_of_fire"))],
             spell_levels_override: None,
             house: None,
             house_choices: BTreeMap::new(),
@@ -7651,21 +7681,11 @@ mod tests {
             RulesetRef::new(Id::new("arm5-core"), "2024.1"),
         );
         entity.spells = vec![
-            SpellSelection {
-                spell: Id::new("spell.unseen_arm"),
-                level: None,
-                mastery: None,
-                parameter: None,
-                mastery_abilities: Vec::new(),
-                within_focus: false,
-            },
-            SpellSelection {
-                spell: Id::new("spell.aegis_of_the_hearth"),
-                level: Some(20),
-                mastery: None,
-                parameter: None,
-                mastery_abilities: Vec::new(),
-                within_focus: false,
+            SpellSelection::new(Id::new("spell.unseen_arm")),
+            {
+                let mut s = SpellSelection::new(Id::new("spell.aegis_of_the_hearth"));
+                s.level = Some(20);
+                s
             },
         ];
         entity.normalize();
@@ -8860,20 +8880,8 @@ mod tests {
             RulesetRef::new(Id::new("arm5-core"), "2024.1"),
         );
         entity.ability_scores = vec![
-            AbilityScore {
-                ability: Id::new("ability.swim"),
-                score: 2,
-                specialty: None,
-                parameter: None,
-                banked_xp: 0,
-            },
-            AbilityScore {
-                ability: Id::new("ability.awareness"),
-                score: 3,
-                specialty: None,
-                parameter: None,
-                banked_xp: 0,
-            },
+            AbilityScore::new(Id::new("ability.swim"), 2),
+            AbilityScore::new(Id::new("ability.awareness"), 3),
         ];
         entity.normalize();
         let json = serde_json::to_string(&entity).unwrap();
@@ -9174,6 +9182,35 @@ mod tests {
             sel.params.get("ability"),
             Some(&SelectionParamValue::Single(Id::new("ability.awareness")))
         );
+    }
+
+    #[test]
+    fn ability_score_new_defaults_optional_fields() {
+        let score = AbilityScore::new(Id::new("ability.awareness"), 3);
+        assert_eq!(score.ability, Id::new("ability.awareness"));
+        assert_eq!(score.score, 3);
+        assert_eq!(score.specialty, None);
+        assert_eq!(score.parameter, None);
+        assert_eq!(score.banked_xp, 0);
+    }
+
+    #[test]
+    fn art_score_new_defaults_banked_xp() {
+        let score = ArtScore::new(Id::new("art.creo"), 5);
+        assert_eq!(score.art, Id::new("art.creo"));
+        assert_eq!(score.score, 5);
+        assert_eq!(score.banked_xp, 0);
+    }
+
+    #[test]
+    fn spell_selection_new_defaults_optional_fields() {
+        let spell = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+        assert_eq!(spell.spell, Id::new("spell.pilum_of_fire"));
+        assert_eq!(spell.level, None);
+        assert_eq!(spell.mastery, None);
+        assert_eq!(spell.parameter, None);
+        assert!(spell.mastery_abilities.is_empty());
+        assert!(!spell.within_focus);
     }
 
     #[test]

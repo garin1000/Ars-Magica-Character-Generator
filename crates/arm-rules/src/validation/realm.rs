@@ -83,7 +83,7 @@ pub(crate) fn validate_realm_associations(
             }
             Some(RealmWarning::UnansweredSubset) => {
                 issues.push(ValidationIssue::warning(
-                    ValidationIssue::CODE_REALM_UNANSWERED_SUBSET,
+                    ValidationIssue::CODE_REALM_UNSET_SUBSET,
                     CreationPhase::VirtuesFlaws,
                     args([("item", selection.item_ref.to_string())]),
                     Some(selection.item_ref.clone()),

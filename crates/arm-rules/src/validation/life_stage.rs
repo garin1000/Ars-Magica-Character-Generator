@@ -637,12 +637,10 @@ mod tests {
             native_language: Some("German".into()),
             ..LifeStagePlan::default()
         });
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.living_language"),
-            parameter: Some(AbilityParameterValue::text("German")),
-            score: 5,
-            specialty: None,
-            banked_xp: 0,
+        entity.ability_scores = vec![{
+            let mut a = AbilityScore::new(Id::new("ability.living_language"), 5);
+            a.parameter = Some(AbilityParameterValue::text("German"));
+            a
         }];
         entity
     }
@@ -788,13 +786,9 @@ mod tests {
             Id::new("flaw.test_truncated_apprentice"),
             BTreeMap::from([("years_completed".into(), Id::new("7"))]),
         )];
-        entity.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.parma_magica"),
-            parameter: None,
-            score: 1,
-            specialty: None,
-            banked_xp: 0,
-        });
+        entity
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.parma_magica"), 1));
         let result = validate(&entity, &rs());
         let issue = result
             .issues
@@ -1167,12 +1161,10 @@ mod tests {
     #[test]
     fn an_area_lore_named_after_the_language_does_not_satisfy_the_native_language() {
         let mut entity = planned(25);
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.area_lore"),
-            parameter: Some(AbilityParameterValue::text("German")),
-            score: 2,
-            specialty: None,
-            banked_xp: 0,
+        entity.ability_scores = vec![{
+            let mut a = AbilityScore::new(Id::new("ability.area_lore"), 2);
+            a.parameter = Some(AbilityParameterValue::text("German"));
+            a
         }];
 
         let result = validate(&entity, &rs());
@@ -1189,12 +1181,10 @@ mod tests {
     #[test]
     fn a_native_language_row_at_zero_does_not_satisfy_the_native_language() {
         let mut entity = planned(25);
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.living_language"),
-            parameter: Some(AbilityParameterValue::text("German")),
-            score: 0,
-            specialty: None,
-            banked_xp: 0,
+        entity.ability_scores = vec![{
+            let mut a = AbilityScore::new(Id::new("ability.living_language"), 0);
+            a.parameter = Some(AbilityParameterValue::text("German"));
+            a
         }];
 
         let result = validate(&entity, &rs());
@@ -1368,13 +1358,9 @@ mod tests {
         magus.type_id = Id::new("magus");
         // Academic, so only apprenticeship's 240 may fund it — the 75 of later life
         // stays untouched.
-        magus.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.artes_liberales"),
-            parameter: None,
-            score: 3,
-            specialty: None,
-            banked_xp: 0,
-        });
+        magus
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.artes_liberales"), 3));
 
         let origins: Vec<(String, String)> = validate(&magus, &rs())
             .issues
