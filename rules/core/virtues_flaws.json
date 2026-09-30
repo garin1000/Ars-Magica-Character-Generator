@@ -3850,6 +3850,11 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [
+      { "kind": "ability_min", "value": { "ability": "ability.artes_liberales", "score": 5 } },
+      { "kind": "ability_min", "value": { "ability": "ability.teaching", "score": 3 } },
+      { "kind": "ability_min", "value": { "ability": "ability.dead_language", "score": 5 } }
+    ] },
     "effects": [
       { "type": "grants_reputation", "kind": "academic", "score": 2 },
       { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.teaching"], "categories": ["academic"] },
@@ -4141,6 +4146,10 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [
+      { "kind": "ability_min", "value": { "ability": "ability.artes_liberales", "score": 5 } },
+      { "kind": "ability_min", "value": { "ability": "ability.dead_language", "score": 5 } }
+    ] },
     "parameters": [{ "key": "faculty", "type": "ref", "domain": "text" }],
     "effects": [
       { "type": "grants_reputation", "kind": "academic", "score": 3 },
@@ -5335,8 +5344,12 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "uncomputed_rule",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [
+      { "kind": "has", "value": "virtue.priest" },
+      { "kind": "none", "value": [{ "kind": "has", "value": "virtue.senior_clergy" }] }
+    ] },
     "source": { "anchor": "license-of-absence", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4291, 4294] }
   },
   {
@@ -5548,6 +5561,10 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [
+      { "kind": "ability_min", "value": { "ability": "ability.dead_language", "score": 5 } },
+      { "kind": "ability_min", "value": { "ability": "ability.artes_liberales", "score": 5 } }
+    ] },
     "effects": [
       { "type": "grants_reputation", "kind": "academic", "score": 2 },
       { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.teaching"], "categories": ["academic"] },
@@ -5562,6 +5579,11 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [
+      { "kind": "ability_min", "value": { "ability": "ability.dead_language", "score": 5 } },
+      { "kind": "ability_min", "value": { "ability": "ability.artes_liberales", "score": 5 } },
+      { "kind": "ability_min", "value": { "ability": "ability.medicine", "score": 5 } }
+    ] },
     "effects": [
       { "type": "grants_reputation", "kind": "academic", "score": 3 },
       { "type": "restricted_ability_xp", "amount": 300, "categories": ["academic"] }
@@ -5646,6 +5668,15 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [
+      { "kind": "ability_min", "value": { "ability": "ability.profession", "score": 5 } },
+      { "kind": "any", "value": [
+        { "kind": "ability_min", "value": { "ability": "ability.area_lore", "score": 5 } },
+        { "kind": "ability_min", "value": { "ability": "ability.organization_lore", "score": 5 } },
+        { "kind": "ability_min", "value": { "ability": "ability.faerie_lore", "score": 5 } },
+        { "kind": "ability_min", "value": { "ability": "ability.magic_lore", "score": 5 } }
+      ] }
+    ] },
     "effects": [
       { "type": "grants_reputation", "kind": "local", "score": 3 },
       { "type": "restricted_ability_xp", "amount": 240,
@@ -6289,6 +6320,11 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "all", "value": [
+      { "kind": "ability_min", "value": { "ability": "ability.rabbinic_law", "score": 5 } },
+      { "kind": "ability_min", "value": { "ability": "ability.theology_judaism", "score": 5 } },
+      { "kind": "ability_min", "value": { "ability": "ability.dead_language", "score": 5 } }
+    ] },
     "effects": [
       { "type": "grants_reputation", "score": 2 },
       { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.rabbinic_law", "ability.theology_judaism"],
@@ -6869,6 +6905,10 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "any", "value": [
+      { "kind": "ability_min", "value": { "ability": "ability.civil_and_canon_law", "score": 3 } },
+      { "kind": "ability_min", "value": { "ability": "ability.common_law", "score": 3 } }
+    ] },
     "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "town-magistrate", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5149, 5152] }
   },
@@ -6879,6 +6919,10 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "any", "value": [
+      { "kind": "has", "value": "virtue.fidai" },
+      { "kind": "has", "value": "virtue.lasiq" }
+    ] },
     "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.athletics", "ability.guile", "ability.stealth"], "categories": ["martial"] }],
     "source": { "anchor": "trained-assassin", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5153, 5156] }
   },

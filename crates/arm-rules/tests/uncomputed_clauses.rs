@@ -2961,17 +2961,6 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          no effect — only the power-level budget (25) is computed, ArMDE:4870-4877",
     ),
     (
-        "virtue.rosh_beth_din",
-        "orphan: the age-and-Ability-score eligibility floor (30-Int years, Hebrew/Rabbinic \
-         Law/Theology: Judaism 5) has no prerequisite — only the Reputation, XP grant and \
-         Social Contacts grant are computed, ArMDE:4878-4883",
-    ),
-    (
-        "virtue.senior_bard",
-        "orphan: the minimum-age-22 and score-5-in-a-named-Lore eligibility floor has no \
-         prerequisite — only the Reputation and the XP grant are computed, ArMDE:4904-4909",
-    ),
-    (
         "virtue.senior_clergy",
         "orphan (X2d corrected this reading — the Academic-Abilities claim is stale: X1 already \
          added it): the Wealthy/Poor choice note and the Abbess-only/not-ordained women's \

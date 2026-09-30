@@ -2521,7 +2521,8 @@
   },
   "virtue.physician_of_salerno": {
     "name": "Arzt von Salerno",
-    "summary": "Der Charakter hat die berühmte Schule von Salerno besucht, die bedeutendste Stätte medizinischen Wissens."
+    "summary": "Der Charakter hat die berühmte Schule von Salerno besucht, die bedeutendste Stätte medizinischen Wissens.",
+    "description": "Der Charakter hat die berühmte Schule von Salerno besucht, die bedeutendste Stätte medizinischen Wissens. Er trägt nicht nur die Reputation der Schule mit sich (was ihm die Reputation Arzt von Salerno 2 verleiht), sondern hat auch einzigartige medizinische Verfahren erlernt, wie etwa die Zubereitung von Betäubungsmitteln. Diese Tugend gewährt zusätzliche 50 Erfahrungspunkte, die für Medizin, Philosophiae und medizinische Formeln ausgegeben werden können (sofern Du die Regeln aus Kunst & Gelehrsamkeit, Kapitel Fünf verwendest). Um diese Tugend zu wählen, musst Du Akademische Fertigkeiten erlernen dürfen."
   },
   "virtue.piercing_gaze": {
     "name": "Durchdringender Blick",
@@ -2624,7 +2625,8 @@
   },
   "virtue.rosh_beth_din": {
     "name": "Rosh Beth Din",
-    "summary": "Der Rosh Beth Din, oder Vorsitzender des Gerichts, führt den Vorsitz am rabbinischen Gericht Beth Din."
+    "summary": "Der Rosh Beth Din, oder Vorsitzender des Gerichts, führt den Vorsitz am rabbinischen Gericht Beth Din.",
+    "description": "Der Rosh Beth Din, oder Vorsitzender des Gerichts, führt den Vorsitz am rabbinischen Gericht Beth Din. Dein Charakter muss mindestens (30 – Int) Jahre alt sein, um diese Tugend wählen zu können, und muss mindestens einen Wert von 5 in Hebräisch, Rabbinisches Recht und Theologie: Judentum haben. Dein Charakter kann bei der Charaktererschaffung Akademische Fertigkeiten erwerben und erhält 50 zusätzliche Erfahrungspunkte, die für die erforderlichen Fertigkeiten ausgegeben werden müssen.\n\nDer Rosh Beth Din erhält die gute Reputation Rosh Beth Din +2, die in seinem gesamten Land gilt. Diese Tugend beinhaltet auch die Effekte der Tugend Soziale Kontakte, und Du kannst innerhalb jeder jüdischen Gemeinschaft, die eine Jeschiwa unterhält, Kontakte finden. Diese Tugend steht nur männlichen Charakteren zur Verfügung."
   },
   "virtue.schooled_in_crime": {
     "name": "In der Kriminalität geschult",
@@ -2651,7 +2653,8 @@
   },
   "virtue.senior_bard": {
     "name": "Älterer Barde",
-    "summary": "Der Charakter hat fünf oder sechs Jahre an einer Bardenschule verbracht und ist entsprechend als Cano oder Cli eingestuft."
+    "summary": "Der Charakter hat fünf oder sechs Jahre an einer Bardenschule verbracht und ist entsprechend als Cano oder Cli eingestuft.",
+    "description": "Der Charakter hat fünf oder sechs Jahre an einer Bardenschule verbracht und ist entsprechend als Cano oder Cli eingestuft. Der Charakter besitzt eine Lokale Reputation von 2, die seinen Ruhm als Geschichtenerzähler widerspiegelt.\n\nDer Charakter hat ein Mindestalter von 22 Jahren, und Du kannst bei der Charaktererschaffung Erfahrungspunkte für jede Sphärenkunde ausgeben, auch wenn Du andernfalls keine Arkanen Fertigkeiten erwerben könntest. Der Charakter sollte mindestens eine Gebiets-, Sphären- oder Organisationskunde mit einem Wert von 5 haben und erhält 90 zusätzliche Erfahrungspunkte für Gedächtniskunst, Beruf: Geschichtenerzähler, Beruf: Dichter, jede Gebietskunde, jede Organisationskunde, Feenkunde oder Magiekunde. Dieser Sozialer Status ist nur in Hibernia verfügbar."
   },
   "virtue.senior_clergy": {
     "name": "Höherer Klerus",

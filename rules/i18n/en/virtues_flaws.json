@@ -2519,7 +2519,8 @@
   },
   "virtue.physician_of_salerno": {
     "name": "Physician of Salerno",
-    "summary": "The character has attended the famed School of Salerno, the pre-eminent source of medical learning."
+    "summary": "The character has attended the famed School of Salerno, the pre-eminent source of medical learning.",
+    "description": "The character has attended the famed School of Salerno, the pre-eminent source of medical learning. Not only does he carry the reputation of the school with him (granting a Reputation of Physician of Salerno 2), but he has also learned some unique medical procedures such as the preparation of anesthetics. This Virtue grants an additional 50 experience points to spend on Medicine, Philosophiae, and medical formulae (if you are using the rules in Art and Academe, Chapter Five). To take this Virtue, you must be able to take Academic Abilities."
   },
   "virtue.piercing_gaze": {
     "name": "Piercing Gaze",
@@ -2622,7 +2623,8 @@
   },
   "virtue.rosh_beth_din": {
     "name": "Rosh Beth Din",
-    "summary": "The Rosh Beth Din, or Head of the Court, presides at the Beth Din rabbinic court."
+    "summary": "The Rosh Beth Din, or Head of the Court, presides at the Beth Din rabbinic court.",
+    "description": "The Rosh Beth Din, or Head of the Court, presides at the Beth Din rabbinic court. Your character must be (30 – Int) years old to take this Virtue and have scores of at least 5 in Hebrew, Rabbinic Law, and Theology: Judaism. Your character may purchase Academic Abilities at character generation and gains 50 extra experience points to be spent on the required Abilities.\n\nThe Rosh Beth Din gains the +2 good Reputation Rosh Beth Din, which applies across his country. This Virtue also includes the effects of the Social Contacts Virtue and you are able to find contacts within any Jewish community that supports a yeshivah. This Virtue is only available to male characters."
   },
   "virtue.schooled_in_crime": {
     "name": "Schooled in Crime",
@@ -2649,7 +2651,8 @@
   },
   "virtue.senior_bard": {
     "name": "Senior Bard",
-    "summary": "The character has spent five or six years at a bardic school, and is ranked a Cano or Cli respectively."
+    "summary": "The character has spent five or six years at a bardic school, and is ranked a Cano or Cli respectively.",
+    "description": "The character has spent five or six years at a bardic school, and is ranked a Cano or Cli respectively. The character has a Local Reputation of 2 representing his fame as a storyteller.\n\nThe character has a minimum age of 22, and you can spend experience points on any Realm Lore at character creation even if otherwise unable to take Arcane Abilities. The character should have at least one Area Lore, Realm Lore, or Organization Lore at a score of 5, and has an extra 90 experience points to spend on Art of Memory, Profession: Storyteller, Profession: Poet, any Area Lore, any Organization Lore, Faerie Lore, or Magic Lore. This Social Status is only available in Hibernia."
   },
   "virtue.senior_clergy": {
     "name": "Senior Clergy",
