@@ -1151,8 +1151,8 @@ describe('ParameterPicker multi_ref parameter — ability domain (functional rev
 });
 
 // Functional review 2026-09-30 #2 (MED): the single-select ability `<select>`
-// (`abilityOptions`, `ParameterPicker.svelte:177-195`) takes no `param`
-// argument and never filters by `require_ability_categories`/`forbid_ids`,
+// (then `abilityOptions`, now `ParameterPicker.svelte::abilityOptionsFor`) took
+// no `param` argument and never filtered by `require_ability_categories`/`forbid_ids`,
 // unlike the sibling `itemOptionsFor`. Fixture parameter, not
 // `virtue.performance_magic` — a concurrent RC slice is changing that entry's
 // own data, so this proves the FILTER MECHANISM instead.

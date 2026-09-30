@@ -2202,18 +2202,16 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     // in the passage states a rule (fictional-succession colour only) — see
     // `primogeniture_lineage_reclassifies_to_creation_effect` in
     // x2_reclassification.rs.
-    (
-        "flaw.suppressed_gift",
-        "narrative, but declares prerequisites — D67 counts that as computed",
-    ),
-    (
-        "flaw.true_love_major",
-        "narrative, but declares incompatible_with (True Love Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.true_love_minor",
-        "narrative, but declares incompatible_with (True Love Major) — D67 counts that as computed",
-    ),
+    // flaw.suppressed_gift: resolved (X2h, tmp/x2h-verdicts.md) —
+    // reclassifies narrative -> uncomputed_rule (the `has(virtue.the_gift)`
+    // prerequisite is computed, but "cannot perform Hermetic magic" and its
+    // siblings are a real, separately uncomputed rule).
+    // flaw.true_love_major, flaw.true_love_minor: resolved (X2h,
+    // tmp/x2h-verdicts.md) — reclassify narrative -> creation_effect, not
+    // uncomputed_rule: the one genuinely mechanical clause (the magnitude
+    // split) is fully computed via the two-entry split + `incompatible_with`,
+    // and nothing else in the passage states a rule (Story-Flaw fiction). See
+    // `true_love_reclassifies_to_creation_effect` (x2_reclassification.rs).
     // virtue.amorphous_major, virtue.amorphous_minor, virtue.apprentice,
     // virtue.covenfolk, virtue.gentle_gift: resolved (X2a) — apprentice and
     // covenfolk reclassify to creation_effect (their incompatible_with/
@@ -2284,42 +2282,13 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     // monastic_vows_hermetic above, reclassifies narrative -> uncomputed_rule.
     // flaw.restriction: resolved (X2g) — same D67 shape as
     // monastic_vows_hermetic above, reclassifies narrative -> uncomputed_rule.
-    (
-        "flaw.short_lived_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.slow_caster",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.spontaneous_casting_tools",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.stockade_parma_magica",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.study_requirement",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.unnatural_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.unstructured_caster",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.vulnerable_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.warped_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
+    // flaw.short_lived_magic, flaw.slow_caster, flaw.spontaneous_casting_tools,
+    // flaw.stockade_parma_magica, flaw.study_requirement, flaw.unnatural_magic,
+    // flaw.unstructured_caster, flaw.vulnerable_magic, flaw.warped_magic:
+    // resolved (X2h, tmp/x2h-verdicts.md) — all nine reclassify narrative ->
+    // uncomputed_rule; each still states a genuinely uncomputed clause beyond
+    // the blanket hermetically_trained gate (X3b/X3c) that put them on this
+    // list in the first place.
 ];
 
 /// Acceptance criterion for M5 slice 5a: every shipped Virtue/Flaw carries a

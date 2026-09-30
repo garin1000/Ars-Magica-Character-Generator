@@ -1225,7 +1225,8 @@
   },
   "flaw.sheltered_upbringing": {
     "name": "Sheltered Upbringing",
-    "summary": "You grew up completely separated from society, knowing only your parents or mentor."
+    "summary": "You grew up completely separated from society, knowing only your parents or mentor.",
+    "description": "You grew up completely separated from society, knowing only your parents or mentor. Recently you have been introduced to a wondrous new world of strangers, and you are overwhelmed. Depending on your personality, you might react with contempt, fear, or wonder. You are unable to function normally because you cannot understand most human customs. You may not take Bargain, Charm, Etiquette, Folk Ken, Guile, Intrigue, or Leadership as beginning Abilities, but you may learn them in play."
   },
   "flaw.short_attention_span": {
     "name": "Short Attention Span",
@@ -1233,11 +1234,13 @@
   },
   "flaw.short_lived_magic": {
     "name": "Short-Lived Magic",
-    "summary": "Your spells do not last as long as they should."
+    "summary": "Your spells do not last as long as they should.",
+    "description": "Your spells do not last as long as they should. Spells that should last a year, last a moon; those of a moon, only to the next sunrise or sundown; and those of a sun, merely Diameter. Diameter, Concentration, Ring, and Momentary spells are not affected."
   },
   "flaw.short_of_breath": {
     "name": "Short of Breath",
-    "summary": "The character cannot last as long as others when exerting himself and quickly tires during extended physical activity."
+    "summary": "The character cannot last as long as others when exerting himself and quickly tires during extended physical activity.",
+    "description": "The character cannot last as long as others when exerting himself and quickly tires during extended physical activity. He receives a —3 penalty to all Stamina rolls to avoid fatigue, including rolls to maintain Concentration."
   },
   "flaw.short_ranged_magic": {
     "name": "Short-Ranged Magic",
@@ -1259,12 +1262,14 @@
   },
   "flaw.slow_caster": {
     "name": "Slow Caster",
-    "summary": "Your magic requires more time to prepare and execute than that of other magi."
+    "summary": "Your magic requires more time to prepare and execute than that of other magi.",
+    "description": "Your magic requires more time to prepare and execute than that of other magi. Your Formulaic spells take two rounds to cast; Spontaneous spells also take two rounds unless you fast-cast, in which case they take one round casting time. Fast-cast Mastered spells also take the normal oneround time. You can still cast Muto Vim spells on your own spells, but the casting process takes longer. Ritual spells and ceremonial castings are performed as normal, since all magi must cast them slowly and carefully."
   },
   "flaw.slow_power": {
     "name": "Slow Power ({power})",
     "name_unfilled": "Slow Power",
-    "summary": "One of the character's supernatural powers is very slow, so that it requires an additional round of preparation to activate."
+    "summary": "One of the character's supernatural powers is very slow, so that it requires an additional round of preparation to activate.",
+    "description": "One of the character's supernatural powers is very slow, so that it requires an additional round of preparation to activate. This Flaw may be taken more than once, if the character has multiple powers, but not more than once for a single power."
   },
   "flaw.slow_reflexes": {
     "name": "Slow Reflexes",
@@ -1285,7 +1290,8 @@
   },
   "flaw.spontaneous_casting_tools": {
     "name": "Spontaneous Casting Tools",
-    "summary": "The character must use casting tools to cast spontaneous spells just as he does for casting formulaic spells."
+    "summary": "The character must use casting tools to cast spontaneous spells just as he does for casting formulaic spells.",
+    "description": "The character must use casting tools to cast spontaneous spells just as he does for casting formulaic spells. He has 15 individual tools, one for each Art, which he must use in various combinations to cast spontaneous spells. This Flaw can only be taken by Verditius magi."
   },
   "flaw.stigmatic_catalyst": {
     "name": "Stigmatic Catalyst",
@@ -1294,15 +1300,18 @@
   },
   "flaw.stockade_parma_magica": {
     "name": "Stockade Parma Magica",
-    "summary": "Because of your restricted understanding of Parma Magica, you cannot suppress your Parma once it is erected."
+    "summary": "Because of your restricted understanding of Parma Magica, you cannot suppress your Parma once it is erected.",
+    "description": "Because of your restricted understanding of Parma Magica, you cannot suppress your Parma once it is erected. Any friendly spell or magical affect must penetrate your Parma Magica to affect you, just as if it were a hostile spell."
   },
   "flaw.stuck_in_your_ways": {
     "name": "Stuck in Your Ways",
-    "summary": "Having come from a covenant, this character knows how things must be done to best serve the needs of covenfolk and magi alike."
+    "summary": "Having come from a covenant, this character knows how things must be done to best serve the needs of covenfolk and magi alike.",
+    "description": "Having come from a covenant, this character knows how things must be done to best serve the needs of covenfolk and magi alike. Only, his new home does things differently. And they're wrong. When making Stress Rolls against his Profession Abilities or any Ability concerning his new covenant, such as Leadership or Folk Ken, this character uses the lower of that Ability score and his current Covenant Lore Ability for his current covenant. Note that bonuses from Puissant or other Virtues still apply to the roll. This Flaw can also be applied to organizations other than covenants, such as abbeys, universities, guilds, or churches."
   },
   "flaw.study_requirement": {
     "name": "Study Requirement",
-    "summary": "You are unable to study magic from books or vis alone."
+    "summary": "You are unable to study magic from books or vis alone.",
+    "description": "You are unable to study magic from books or vis alone. You must study in the presence of the appropriate Art. For example, you need to sit next to a brook or pond to study Aquam, or a large fire to study Ignem. Growing things are good for Creo, decaying ones good for Perdo. As your knowledge grows, you need to work with larger and larger quantities. See the Study Bonus Virtue on page 110 for a list of examples. You may take both Study Bonus and Study Requirement."
   },
   "flaw.supernatural_nuisance": {
     "name": "Supernatural Nuisance",
@@ -1310,7 +1319,8 @@
   },
   "flaw.suppressed_gift": {
     "name": "Suppressed Gift",
-    "summary": "The character has The Gift but cannot access its power, having temporarily lost his magical ability through mishap or some other misfortune."
+    "summary": "The character has The Gift but cannot access its power, having temporarily lost his magical ability through mishap or some other misfortune.",
+    "description": "The character has The Gift but cannot access its power, having temporarily lost his magical ability through mishap or some other misfortune. While the Gift is suppressed, the character cannot perform Hermetic magic, improve his Arts, or perform the Parma Magica. His Arts do provide him with Magic Resistance and he continues to suffer the negative social penalties of The Gift. Such a character may still use Supernatural Virtues and Abilities. He may be a member of the Order of Hermes, depending on when his Gift was suppressed.\n\nHow The Gift returns should be decided by the storyguide. Examples are surviving a laboratory disaster while assisting another magus (perhaps that was how Suppressed Gift was gained), comprehending a Temporary Twilight while in a powerful regio, visiting the Magic Realm and succeeding in some task, or undergoing a year's instruction from an elder dragon.\n\nThe troupe should consider carefully how the character will fit into the saga. If he replaces a player's magus, he has a very serious Flaw. If he replaces a companion, he will become much more powerful when the Story Flaw is resolved. Either approach can work, with care."
   },
   "flaw.surgical_empiricus": {
     "name": "Surgical Empiricus",
@@ -1336,7 +1346,8 @@
   },
   "flaw.susceptibility_to_warping": {
     "name": "Susceptibility to Warping",
-    "summary": "Your character's constant exposure to magic has made him more susceptible to supernatural Warping than he might otherwise be."
+    "summary": "Your character's constant exposure to magic has made him more susceptible to supernatural Warping than he might otherwise be.",
+    "description": "Your character's constant exposure to magic has made him more susceptible to supernatural Warping than he might otherwise be.\n\nIn any year in which the character gains a Warping Point from any Realm or any source (including Longevity Rituals, living within an aura, and powerful supernatural effects), the character gains one additional Warping Point associated with that same Realm. This means that if he gains a single Warping Point from each Realm in a year, he gains four additional Warping Points, one from each Realm, at the end of that year.\n\nThese additional points do not contribute to Wizard's Twilight or to other events caused by the acquisition of Warping Points as they accrete slowly over the course of the year."
   },
   "flaw.tainted_offspring": {
     "name": "Tainted Offspring",
@@ -1344,7 +1355,8 @@
   },
   "flaw.tainted_with_evil": {
     "name": "Tainted With Evil",
-    "summary": "An air of corruption surrounds you as a result of something you, your parents, or your ancestors did."
+    "summary": "An air of corruption surrounds you as a result of something you, your parents, or your ancestors did.",
+    "description": "An air of corruption surrounds you as a result of something you, your parents, or your ancestors did. Others naturally feel very ill at ease around you, and can easily grow to hate you. Gaining a positive Reputation is impossible. Magi do not react as strongly to this attribute as normal people."
   },
   "flaw.temperate": {
     "name": "Temperate",
@@ -1366,7 +1378,16 @@
   },
   "flaw.tragic_life": {
     "name": "Tragic Life",
-    "summary": "Demons have manipulated your life to your own detriment; you are Tainted."
+    "summary": "Demons have manipulated your life to your own detriment; you are Tainted.",
+    "description": "The character's life has been manipulated by demons to ensure that she will act in a certain way in response to important events, usually to her own detriment and in such a way as to further a particular demon's aims. This means that she is a tainted character.\n\nTainted characters are produced as tools, to influence pivotal events. This Flaw represents two factors: the events that the demons have designed the person to influence are likely to happen, and the person has been designed and conditioned to behave predictably when her moment of destiny arrives. Tainted people are likely, at their point of destiny, to choose to sin, and so cause terrible events. The repercussions of the tragedy they create often harm the tainted person. The predisposition toward sin at the character's pivotal moment should be represented with a sinful Personality Trait.\n\nTainted people have difficult lives, but are not doomed from the moment of their conception. They have five sources of hope.\n\n- Demons do not foresee the future, they simply predict it through extremely skilled judgments. Arbitrary occurrences can ruin their schemes. - The process of creating and training tainted people contains random factors. These include inherited Flaws, like Tainted with Evil or Disfigured, which are personally painful, but might distance the character from her designed destiny. - The character's relationships with other humans also provide unpredictable elements. Most significantly, virtuous humans may notice the tainted person's tendency toward a certain type of sin, and teach them to resist it. - Humans have free will. All deception aside, the tainted person still has the power to choose not to perform sins. The tainted person may not understand this, or may feel that the sin she performed is minor and justified given the situation in which she is presented with her choice, but the choice is still entirely and absolutely hers. - Finally, the agents of the Divine meddle in the plans of Infernal lords.\n\nTainted characters are designed for specific situations. Characters who struggle successfully against their destiny find that their creator cannot usually fashion an alternative situation to which the tainted person is perfectly suited. The tainted character loses the Tragic Life Flaw, but usually gains the Plagued by Supernatural Entity Flaw instead, as the demonic lord vents his spite on the character."
+  },
+  "flaw.true_friend_major": {
+    "name": "True Friend (Major)",
+    "summary": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered."
+  },
+  "flaw.true_friend_minor": {
+    "name": "True Friend (Minor)",
+    "summary": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered."
   },
   "flaw.true_love_major": {
     "name": "True Love (Major)",
@@ -1429,7 +1450,8 @@
   },
   "flaw.unnatural_magic": {
     "name": "Unnatural Magic",
-    "summary": "Because of the unreal and illusory nature of your magic, none of the character's Creo rituals have a permanent effect."
+    "summary": "Because of the unreal and illusory nature of your magic, none of the character's Creo rituals have a permanent effect.",
+    "description": "Because of the unreal and illusory nature of your magic, none of the character's Creo rituals have a permanent effect. Wounds magically closed with The Chirurgeon's Healing Touch (CrCo20), for example, reopen again as soon as he finishes casting the spell, as the magic truly lasts only a moment. He also cannot extract vis from an aura using Creo, since his version of that Art is too unstable for the vis to remain in a lasting physical form."
   },
   "flaw.unpredictable_magic": {
     "name": "Unpredictable Magic",
@@ -1438,7 +1460,8 @@
   },
   "flaw.unruly_air": {
     "name": "Unruly Air",
-    "summary": "The character has a penchant for stirring up situations, making pleasant events better and unpleasant ones worse."
+    "summary": "The character has a penchant for stirring up situations, making pleasant events better and unpleasant ones worse.",
+    "description": "The character has a penchant for stirring up situations, making pleasant events better and unpleasant ones worse. Whenever the character is in a social situation with multiple people, his slightest behavior will subtly push others to extreme behavior. He is either the life of the party, or its death, depending on the prevailing mood of the crowd. His influence is linked to his magical nature, so that others with Magic Resistance are not influenced by him."
   },
   "flaw.unspecialized": {
     "name": "Unspecialized",
@@ -1446,11 +1469,13 @@
   },
   "flaw.unstructured_caster": {
     "name": "Unstructured Caster",
-    "summary": "You have never quite mastered the intricacies of spellcasting, and are unable to perform Formulaic magic without extreme effort."
+    "summary": "You have never quite mastered the intricacies of spellcasting, and are unable to perform Formulaic magic without extreme effort.",
+    "description": "You have never quite mastered the intricacies of spellcasting, and are unable to perform Formulaic magic without extreme effort. You cast all Formulaic spells as though they were Ritual spells (including the need for vis), and you may not learn Ritual spells at all. You cast Spontaneous spells normally."
   },
   "flaw.usurer": {
     "name": "Usurer",
-    "summary": "You often lend silver or other valuables to people at interest rates that many consider abusive."
+    "summary": "You often lend silver or other valuables to people at interest rates that many consider abusive.",
+    "description": "You often lend silver or other valuables to people at interest rates that many consider abusive. You get away with this somehow, possibly because you belong to a group that can avoid moral judgment for these actions, because you operate outside of the law, or perhaps because you lend a type of currency not accepted by the mundane population. You receive the equivalent of approximately ten pounds of silver each year from interest payments, though you may occasionally need to chase down debtors, and you have a poor reputation (Usurer) at level 4 within your community and the local region."
   },
   "flaw.vendetta": {
     "name": "Vendetta",
@@ -1468,24 +1493,29 @@
   },
   "flaw.visions": {
     "name": "Visions",
-    "summary": "You often see images related to emotionally or magically laden events."
+    "summary": "You often see images related to emotionally or magically laden events.",
+    "description": "You often see images related to emotionally or magically laden events. A vision might be of the past, a possible future, or a distant occurrence, and is often symbolic or confusing. Visions usually come to you at quiet times or in places connected with a powerful emotional or magical event, such as the site of a patricide or diabolic sacrifice. Your visions may warn you of dangers to come, or get you involved in matters you would otherwise have avoided. The visions come purely at the storyguide's discretion, and reveal only what he wants to reveal."
   },
   "flaw.vow_major": {
     "name": "Vow (Major)",
-    "summary": "You have sworn to do something difficult, and breaking your vow is a serious matter."
+    "summary": "You have sworn to do something difficult, and breaking your vow is a serious matter.",
+    "description": "You have sworn to do something difficult, and breaking your vow is a serious matter. Example vows include never raising a weapon, never speaking, or living in poverty. If you do fail to uphold your vow, you must perform some kind of atonement, whether it be religious penance or coming to terms with your failure in some other way. A Vow that is a Major Flaw must be a vow to do something, rather than refrain from something, so that it can drive you to act."
   },
   "flaw.vow_minor": {
     "name": "Vow (Minor)",
-    "summary": "You have sworn to do something difficult, and breaking your vow is a serious matter."
+    "summary": "You have sworn to do something difficult, and breaking your vow is a serious matter.",
+    "description": "You have sworn to do something difficult, and breaking your vow is a serious matter. Example vows include never raising a weapon, never speaking, or living in poverty. If you do fail to uphold your vow, you must perform some kind of atonement, whether it be religious penance or coming to terms with your failure in some other way. A Vow that is a Major Flaw must be a vow to do something, rather than refrain from something, so that it can drive you to act."
   },
   "flaw.vulnerable_casting": {
     "name": "Vulnerable Casting",
-    "summary": "Some magi are better able to withstand the Fatigue loss of casting spells, and some less so."
+    "summary": "Some magi are better able to withstand the Fatigue loss of casting spells, and some less so.",
+    "description": "Some magi are better able to withstand the Fatigue loss of casting spells, and some less so. If a maga has this Flaw, then whenever she is about to lose Fatigue from casting a spell, she loses 1 more Fatigue level than normal. If the spell would have been cast without Fatigue loss, then she still loses no Fatigue.\n\nA maga may have, or acquire, this Flaw more than once, losing 1 extra Fatigue level for each level of this Flaw. If she has Vulnerable Casting (2), then she loses 2 extra Fatigue levels whenever she casts a fatiguing spell.\n\nMagi of the Mercurian cults often succumb to this Flaw, but other magi may suffer from it, regardless of their affiliation.\n\nThe Flaw increases the severity of the Fatigue lost, in the exact manner of the existing Fatigue loss. Thus, if a maga casts a Formulaic spell, the Fatigue is short-term Fatigue, easily recovered, and if she runs out of Fatigue levels she is rendered unconscious, loss of extra Fatigue levels results in her being unconscious for one hour for each overflowing level, and so does the Fatigue from Vulnerable Casting. If, on the other hand, she casts a Ritual spell, then this is long-term Fatigue, and losing more Fatigue than she has remaining causes wounds, so the increased Fatigue of Vulnerable Casting does the same.\n\nYou may not start your character with both Vulnerable Casting and Withstand Casting, but the maga may acquire either in the course of play (from Initiation, Ordeals, or Twilight effects). In this case, apply the vulnerability first, then withstand the increased loss."
   },
   "flaw.vulnerable_magic": {
     "name": "Vulnerable Magic ({condition})",
     "name_unfilled": "Vulnerable Magic",
-    "summary": "The character's magic is automatically dispelled in certain uncommon circumstances."
+    "summary": "The character's magic is automatically dispelled in certain uncommon circumstances.",
+    "description": "The character's magic is automatically dispelled in certain uncommon circumstances. Examples include: when touching iron, when under the influence of the Divine, when crossing over running water, when his name is spoken three times, or when he is not touching the ground. This condition immediately ends the duration of a spell when it is applied to the target, or all of your active spells when applied to you.\n\nThis Flaw may be taken multiple times, so long as a different condition is specified for each. It may not be combined with Restrictions or Necessary Conditions that have the same (or equivalent) conditions."
   },
   "flaw.vulnerable_to_folk_tradition": {
     "name": "Vulnerable to Folk Tradition",
@@ -1494,15 +1524,18 @@
   },
   "flaw.wanderlust": {
     "name": "Wanderlust",
-    "summary": "The character feels compelled to travel with a passion that is so strong that he cannot spend more than a season in the same place."
+    "summary": "The character feels compelled to travel with a passion that is so strong that he cannot spend more than a season in the same place.",
+    "description": "The character feels compelled to travel with a passion that is so strong that he cannot spend more than a season in the same place. The character can only spend two (nonconsecutive) seasons each year in the same area, and must spend the intervening seasons traveling to different locales — places he has never been. If for some reason he cannot travel, he will become very uncomfortable; this discomfort should cause stories in the same way as the travel would."
   },
   "flaw.warped_by_magic": {
     "name": "Warped by Magic",
-    "summary": "The character's adventures have exposed him to powerful magical forces that have left a mark on him."
+    "summary": "The character's adventures have exposed him to powerful magical forces that have left a mark on him.",
+    "description": "The character's adventures have exposed him to powerful magical forces that have left a mark on him. He has five Warping Points and a Warping Score of 1, including a Minor Flaw (which is not balanced by a Virtue) that somehow reflects the source of the Warping. His encounters allow you to spend experience points on Magic Lore during character creation. A magus may take this Flaw to represent Warping gained before his apprenticeship. With the permission of the troupe, this Flaw may be modified to represent Warping from other Realms."
   },
   "flaw.warped_magic": {
     "name": "Warped Magic",
-    "summary": "Your magic is accompanied by some unpleasant side effect that always manifests itself the same way, but with increasing intensity according to the level of the spell."
+    "summary": "Your magic is accompanied by some unpleasant side effect that always manifests itself the same way, but with increasing intensity according to the level of the spell.",
+    "description": "Your magic is accompanied by some unpleasant side effect that always manifests itself the same way, but with increasing intensity according to the level of the spell. Examples include nearby items become hot or nearby plant matter becomes shriveled and wilted. This effect may cause trouble from time to time, but is usually just annoying."
   },
   "flaw.warped_senses": {
     "name": "Warped Senses",
@@ -1520,11 +1553,13 @@
   },
   "flaw.weak_enchanter": {
     "name": "Weak Enchanter",
-    "summary": "Your Gift is ill attuned to creating enchanted devices."
+    "summary": "Your Gift is ill attuned to creating enchanted devices.",
+    "description": "Your Gift is ill attuned to creating enchanted devices. Halve your Lab Total whenever you create or investigate an enchanted item. If you have a Deficiency that counts as part of the Lab Total, apply the Deficiency first and then halve the remaining total."
   },
   "flaw.weak_magic": {
     "name": "Weak Magic",
-    "summary": "Your magic is particularly bad at penetrating Magic Resistance."
+    "summary": "Your magic is particularly bad at penetrating Magic Resistance.",
+    "description": "Your magic is particularly bad at penetrating Magic Resistance. You halve the normal Penetration Total for all spells, and only get half the normal benefit when instilling Penetration into an item. Note that you halve the Penetration Total, after subtracting the spell level and making any adjustments for the use of Arcane Connections. You do not halve the Casting Total and calculate Penetration from that."
   },
   "flaw.weak_magic_resistance": {
     "name": "Weak Magic Resistance",
@@ -1541,11 +1576,13 @@
   },
   "flaw.weak_scholar": {
     "name": "Weak Scholar",
-    "summary": "You don't understand laboratory guidance very well."
+    "summary": "You don't understand laboratory guidance very well.",
+    "description": "You don't understand laboratory guidance very well. You get a -6 penalty to Lab Totals when working from the Lab Texts of others, including when re-inventing spells."
   },
   "flaw.weak_spontaneous_magic": {
     "name": "Weak Spontaneous Magic",
-    "summary": "You may not exert yourself when casting spontaneous magic, so you always divide your Casting Score by five."
+    "summary": "You may not exert yourself when casting spontaneous magic, so you always divide your Casting Score by five.",
+    "description": "You may not exert yourself when casting spontaneous magic, so you always divide your Casting Score by five. In stressful conditions you must still roll a stress die to see if you botch, but the die roll does not add to your casting total. You may still use ceremonial casting.\n\nThis Flaw may be combined with Difficult Spontaneous Magic (page 126) to create a magus who cannot cast spontaneous magic at all."
   },
   "flaw.weak_willed": {
     "name": "Weak-Willed",
@@ -3064,6 +3101,11 @@
     "name": "True Faith",
     "summary": "Through piety and holy devotion you have faith that can move mountains.",
     "description": "Through piety and holy devotion you have faith that can move mountains. You have a True Faith score of 1 and can gain more. For more about True Faith, see page 419.\n\nThose who give up mundane pursuits entirely and selflessly dedicate themselves to leading holy lives benefit from True Faith. True Faith is measured in Faith Points, which represent a person's connection to God. Those with True Faith may be Jewish, Christian, or Muslim, and, it seems, need not be wholly orthodox.\n\nTrue Faith, like Confidence, has a Score and Points. Taking the True Faith Major Virtue grants you a True Faith Score of 1, and a single Faith Point. Only by possessing the True Faith Major Virtue may a character have a True Faith score. Any character may possess any number of Faith Points (gained through the sacraments, a pilgrimage, or other holy endeavors) that once spent, do not return.\n\nYou may spend Faith Points like Confidence Points (and may spend as many Faith Points at once as your True Faith Score), as long as you are acting in accordance with God's will. If you do not possess a True Faith Score, then you may only spend one Faith Point at a time.\n\nA character with Faith Points but no True Faith Score does not benefit from Magic Resistance. A character with a True Faith Score gains Magic Resistance equal to this score multiplied by ten.\n\nTRUE FAITH MAGIC RESISTANCE: True Faith Score X 10\n\nEach dawn, you regain a number of Faith Points up to your True Faith Score, although if you already have more Faith Points than your True Faith Score, you do not gain additional Points.\n\nFor more details on True Faith, see Realms of Power: The Divine Revised Edition, page 56."
+  },
+  "virtue.true_friend_pc": {
+    "name": "True Friend (PC)",
+    "summary": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered.",
+    "description": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered. Whenever you are suffering, in danger, or dejected, the thought of your love gives you strength to persevere. Thus, you may add +3 to appropriate Personality Trait rolls, and add additional bonuses as allowed by the storyguide (never in excess of +3) to activities that will return you to your love, or save her life. In dire need, she may even come to rescue you. On the other hand, you are tied to your lover, to whom you must return frequently. If you do not, you may suffer penalties to most actions requiring spirit due to melancholy. If any enchantment keeps you from your true love's side, the power of your devotion can probably break it. Your True Love is another player character, who must also have this Virtue. True Love is never one-sided.\n\nThis Virtue may be renamed 'True Friend' to cover equally close attachments which are not romantic."
   },
   "virtue.true_love_pc": {
     "name": "True Love (PC)",

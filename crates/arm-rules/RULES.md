@@ -6243,7 +6243,7 @@ exempted pair) lets the guard skip a pair entirely rather than force it:
 | Verdict | Pairs | Treatment |
 |---|---|---|
 | Sourced, keep hard-blocked | `major_magical_focus`/`minor_magical_focus` | unchanged — `ArMDE:4405` |
-| Entailed (D44), keep hard-blocked | Outsider, True Love (Flaw), Amorphous, Magian Lineage | unchanged — each side's OWN text contradicts the other (`ArMDE:6554`/`ArMDE:6556`, `ArMDE:6877`, `ArMDE:3412`, `ArMDE:4345`) |
+| Entailed (D44), keep hard-blocked | Outsider, True Love (Flaw), True Friend (Flaw, X2t), Amorphous, Magian Lineage | unchanged — each side's OWN text contradicts the other (`ArMDE:6554`/`ArMDE:6556`, `ArMDE:6877`, `ArMDE:6877`, `ArMDE:3412`, `ArMDE:4345`) |
 | Unsourced, REMOVE | the 26 personality Flaws (Ambitious … Wrathful) + Potent Magic | `incompatible_with` deleted, `skip_magnitude_variant_guard: true` added to both sides; Potent Magic's removal is itself sourced — `ArMDE:4742` "a maga may have more than one area of Potent Magic" |
 | Hedged (D16), convert to advisory | Beloved Rival | `incompatible_with` deleted, `skip_magnitude_variant_guard: true` added; `advisory_prerequisites: {"kind":"none","value":[{"kind":"has","value":"flaw.beloved_rival_<sibling>"}]}` added on each side instead — `ArMDE:5697` "the troupe **may** allow the character to take both" |
 
@@ -6370,6 +6370,108 @@ pain is stated in prose, not as a digit — a screen vocabulary gap, not a
 dropped rule) and `flaw.primogeniture_lineage` moves from `NO_RULE_DESPITE_TOKEN`
 to the same list (its own reasoning was always an argument for `creation_effect`,
 not for staying `narrative`).
+
+### X2h + X2t — rows 375-432 (ArMDE:6709-7109, `tmp/x2h-verdicts.md`, `tmp/x2t-handover.md`)
+
+The last Flaws block (`flaw.secretive` through `flaw.wrathful_minor`), plus
+D60.3's True Friend twin. 21 reclassifications (`narrative` →
+`uncomputed_rule`, full cited passage as `description`), 5 more
+`in_play_effect` → `uncomputed_rule` (D20, classification-only — four already
+stated their rule in `summary`), 8 classification-unchanged
+description-completions, and one classification *up*-grade
+(`narrative` → `creation_effect`) that a concurrent slice's premise had
+assumed would stay `narrative`:
+
+| Entry | Change | Source |
+|---|---|---|
+| `flaw.sheltered_upbringing` | `narrative` → `uncomputed_rule`; full passage as `description` (the seven forbidden beginning Abilities) | `ArMDE:6721-6724` |
+| `flaw.short_lived_magic` | `narrative` → `uncomputed_rule`; full passage as `description` (the year→moon/moon→sun/sun→Diameter duration table) | `ArMDE:6729-6732` |
+| `flaw.slow_caster` | `narrative` → `uncomputed_rule`; full passage as `description` (two-round casting, with the fast-cast/Mastered/Muto Vim/Ritual exceptions) | `ArMDE:6755-6758` |
+| `flaw.spontaneous_casting_tools` | `narrative` → `uncomputed_rule`; full passage as `description` — the Verditius-only eligibility is already computed (`prerequisites: all(order_member, house.verditius)`, a concurrent slice), but the casting-tools clause itself is a separate, still-uncomputed rule | `ArMDE:6779-6782` |
+| `flaw.stockade_parma_magica` | `narrative` → `uncomputed_rule`; full passage as `description` (cannot suppress Parma once erected) | `ArMDE:6787-6790` |
+| `flaw.stuck_in_your_ways` | `narrative` → `uncomputed_rule`; full passage as `description` (the lower-of Ability/Covenant Lore roll substitution) | `ArMDE:6791-6794` |
+| `flaw.study_requirement` | `narrative` → `uncomputed_rule`; full passage as `description` (must study in presence of the Art; may take both Study Bonus and Study Requirement) | `ArMDE:6795-6798` |
+| `flaw.suppressed_gift` | `narrative` → `uncomputed_rule`; full 3-paragraph passage as `description` (cannot perform Hermetic magic/improve Arts/Parma Magica while Arts still grant MR and the social penalty persists) | `ArMDE:6803-6810` |
+| `flaw.unnatural_magic` | `narrative` → `uncomputed_rule`; full passage as `description` (Creo rituals have no permanent effect; cannot extract vis via Creo) | `ArMDE:6931-6934` |
+| `flaw.unstructured_caster` | `narrative` → `uncomputed_rule`; full passage as `description` (all Formulaic cast as Ritual incl. vis need; no Ritual spells at all) | `ArMDE:6947-6950` |
+| `flaw.vulnerable_magic` | `narrative` → `uncomputed_rule`; full 2-paragraph passage as `description` (dispelling conditions; repeatable per distinct condition; not combinable with Restrictions/Necessary Conditions) | `ArMDE:7005-7010` |
+| `flaw.warped_magic` | `narrative` → `uncomputed_rule`; full passage as `description` (side-effect intensity scales with spell level) — survives its own blanket `hermetically_trained` gate (X3b/X3c) the same way `flaw.short_lived_magic`/`flaw.slow_caster` do | `ArMDE:7023-7026` |
+| `flaw.tainted_with_evil` | `narrative` → `uncomputed_rule`; full passage as `description` (gaining a positive Reputation is impossible) | `ArMDE:6843-6846` |
+| `flaw.wanderlust` | `narrative` → `uncomputed_rule`; full passage as `description` (two nonconsecutive seasons/year cap, D62's stays-text shape) | `ArMDE:7015-7018` |
+| `flaw.unruly_air` | `narrative` → `uncomputed_rule` (D8, `categories:["supernatural"]`); full passage as `description` (Magic Resistance holders are not influenced) | `ArMDE:6939-6942` |
+| `flaw.visions` | `narrative` → `uncomputed_rule` (D8); full passage as `description` (visions come purely at the storyguide's discretion) | `ArMDE:6985-6988` |
+| `flaw.slow_power` | `narrative` → `uncomputed_rule` (D8); full passage as `description` (repeatable but not more than once per single power — `max_per_target` still unenforced) | `ArMDE:6759-6762` |
+| `flaw.susceptibility_to_warping` | `narrative` → `uncomputed_rule` (D8); full 3-paragraph passage as `description` (one extra Warping Point per Realm already gaining one that year) | `ArMDE:6831-6838` |
+| `flaw.vow_major`/`flaw.vow_minor` | `narrative` → `uncomputed_rule`; same shared passage as `description` on both (the guaranteed-atonement clause; the Major variant's own "vow to DO something, not refrain" constraint) | `ArMDE:6989-6992` |
+| `flaw.tragic_life` | `narrative` → `uncomputed_rule` (OQ-6 overturn of its own `NO_RULE_DESPITE_TOKEN` row — that row addressed only the "cannot" token, missing ArMDE:6859's separate sinful-Personality-Trait creation-time instruction); full 5-paragraph passage (incl. the five-sources-of-hope bullet list) as `description` | `ArMDE:6855-6870` |
+| `flaw.short_ranged_magic` | `in_play_effect` → `uncomputed_rule` (D20/OQ-2: a numerically-correct surfaced effect with no text stating which two halvings apply is not enough); classification-only — already had a full verbatim `description` from an earlier slice | `ArMDE:6737-6740` |
+| `flaw.susceptibility_to_divine_power`/`_faerie_power`/`_infernal_power`, `flaw.weak_magic_resistance` | `in_play_effect` → `uncomputed_rule` (D20, same "number right, text missing" shape); classification-only — each `summary` already states its own figures | `ArMDE:6815-6818`, `ArMDE:6819-6822`, `ArMDE:6823-6826`, `ArMDE:7068-7071` |
+| `flaw.short_of_breath` | classification unchanged (`in_play_effect`); `description` added (the −3 Stamina-roll-to-avoid-fatigue penalty, already fully computed via `health_mod`) | `ArMDE:6733-6736` |
+| `flaw.vulnerable_casting` | classification unchanged (`in_play_effect`); `description` added, full 4-paragraph passage (the extra-Fatigue-loss-per-instance rule stays computed; the missing text was the Vulnerable/Withstand resolution ORDER) | `ArMDE:6993-7004` |
+| `flaw.usurer` | classification unchanged (`creation_effect`); `description` added (F-544: the "ten pounds of silver" interest-income figure, alongside the already-computed Reputation grant) | `ArMDE:6951-6954` |
+| `flaw.warped_by_magic` | classification unchanged (`creation_effect`); `description` added (F-544: the "spend experience points on Magic Lore" creation-time grant, alongside the already-computed Warping/`ability_authorization` effects) | `ArMDE:7019-7022` |
+| `flaw.weak_enchanter` | classification unchanged (`in_play_effect`); `description` added (F-544: apply the Deficiency first, then halve the remainder — the ordering the bare `magic_total_halving` effect doesn't state) | `ArMDE:7060-7063` |
+| `flaw.weak_magic` | classification unchanged (`in_play_effect`); `description` added (F-544: halve Penetration Total AFTER subtracting spell level/Arcane Connection adjustments, not halve the Casting Total) | `ArMDE:7064-7067` |
+| `flaw.weak_scholar` | classification unchanged (`in_play_effect`); `description` added (F-544: the −6 penalty applies specifically to Lab Totals from others' Lab Texts) | `ArMDE:7080-7083` |
+| `flaw.weak_spontaneous_magic` | classification unchanged (`in_play_effect`); `description` added (F-544: ceremonial casting remains available despite the Casting Score halving) | `ArMDE:7084-7089` |
+| `flaw.true_love_major`/`flaw.true_love_minor` | **`narrative` → `creation_effect`** (D67, same shape as `flaw.primogeniture_lineage`, X2g): the one genuinely mechanical clause — the Major/Minor magnitude choice — is already fully computed via the two-entry split plus mutual `incompatible_with`; the rest is Story-Flaw fiction. No `description` owed. This overturns a concurrent slice's premise that True Love would stay `narrative` (flagged in `tmp/x2h-verdicts.md` for X2t) | `ArMDE:6871-6878` |
+
+D60.3 (X2t): `virtue.true_friend_pc`, `flaw.true_friend_major`,
+`flaw.true_friend_minor` are new ids copying their True Love twins'
+mechanics, categories, classification, and source *verbatim* — there is no
+separate `#### True Friend` heading in either language, only a rename
+sentence inside True Love's own passage in each (`ArMDE:5177` for the PC
+Virtue, `ArMDE:6875` for the Flaw pair). Per the True Love reclassification
+above, the Flaw pair copies the FINAL (`creation_effect`) classification, not
+the `narrative` one an earlier premise assumed. `virtue.true_friend_pc`'s
+`description` is `virtue.true_love_pc`'s own, copied byte-for-byte —
+including its own "This Virtue may be renamed 'True Friend'" sentence, which
+reads as redundant once the entry is itself named that, but is what
+verbatim fidelity means here (no separate passage exists to draw different
+text from). `rules/i18n/de/source_anchors.json` gets matching rows for all
+three (same anchors as their twins: `wahre-liebe`, `wahre-liebe-sc`), and
+`x4_incompatibilities.rs::ENTAILED_TWIN_PAIRS` gets the True Friend pair
+alongside True Love's own (same D44 entailment, same cited passage).
+
+Nine `uncomputed_clauses.rs` mechanical-token screen misses this slice's
+reclassifications tripped are fixed with narrowly-scoped `S2_IDIOM`
+additions, several needed in both locales for different reasons per language
+(a German verb conjugation the existing stem missed, a subordinate clause's
+verb-final word order, or simply a phrase with no mirror yet): `"two
+rounds"`/`"zwei Runden"` (slow_caster), `"the lower of"`/`"niedrigeren
+Wert"` (stuck_in_your_ways), `"additional Warping Point"`/`"zusätzlichen
+Verzerrungspunkt"` (susceptibility_to_warping), `"not influenced"`/bounded
+`"nicht … beeinflusst"` (unruly_air), `"purely at the storyguide's
+discretion"`/`"ausschließlich nach dem Ermessen des Spielleiters"` (visions —
+narrowed to the fuller phrase specifically because the bare "storyguide's
+discretion"/"Ermessen des Spielleiters" also hits three unrelated,
+already-settled narrative entries: `flaw.demonic_familiar`, `flaw.favors`,
+`virtue.latent_magic_ability`), `"rather than refrain"`/`"anstatt etwas zu
+unterlassen"` (vow), `"according to the level of the spell"`/`"zunehmender
+Intensität"` (warped_magic), `"are not affected"` EN-only (short_lived_magic
+— the existing `"not affected by"` idiom requires an object this passage
+doesn't have), `"not more than"` EN-only (slow_power — the base list only has
+"no more than"), `"may not learn"` EN-only (unstructured_caster), `"ten
+pounds of silver"`/`"zehn Pfund Silber"` (usurer), `"experience points on
+Magic Lore"`/`"Erfahrungspunkte auf Magiekunde"` (warped_by_magic), a DE-only
+`\bhalbier` stem widening the existing `\bhalbiert` idiom to cover the
+imperative/2nd-person conjugations `short_ranged_magic`/`weak_magic` actually
+use, a DE-only `"nicht als Anfangsfertigkeiten nehmen"` (sheltered_upbringing
+— the German modal/negation gap exceeds `DE_MODAL_NICHT`'s 40-character
+bound), a DE-only `"kann nur von … gewählt werden"` (spontaneous_casting_tools
+— neither existing "kann nur für"/"darf nur von" idiom covers this verb
+pairing), and a DE-only `"keine alternative … kann"` (tragic_life — the
+subordinate clause's modal verb sits AFTER "keine", the reverse of the
+existing bounded-gap idiom's word order; narrowed to "keine alternative"
+specifically because the bare form also closed `PENDING_DROPPED_CLAUSE`'s
+`virtue.redcap` row for an unrelated reason).
+
+`tests/fixtures/s1_before_offenders.json` drops its `flaw.true_love_major`/
+`flaw.true_love_minor` rows: both were recorded `true` (tripped the screen)
+back when the pair was still `narrative`, and `regex_screen_never_loses_an_s1_recorded_flag`
+only tracks entries `compute_s1_offender_set` still classifies `narrative`
+today — once reclassified, the pair leaves that population entirely, which
+is a data change this slice made deliberately, not a screen regression.
 
 ### In-play effect families (definitive input to slice 4 / 5b)
 

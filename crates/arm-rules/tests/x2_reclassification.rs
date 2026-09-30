@@ -745,6 +745,49 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     "flaw.restricted_power",
     "flaw.restriction",
     "flaw.savantism",
+    // X2h (tmp/x2h-verdicts.md, rows 375-432, ArMDE:6709-7109): 21 entries
+    // reclassified narrative -> uncomputed_rule with the full cited passage
+    // as `description` in both locales (20 bulk-table + tragic_life
+    // dedicated); `flaw.short_ranged_magic` (D20, classification-only this
+    // slice, in_play_effect -> uncomputed_rule) already carried a full
+    // verbatim description from an earlier slice, gated here for the first
+    // time; and 8 entries whose classification is unchanged but whose
+    // description was completed to the full cited passage
+    // (`flaw.short_of_breath`/`flaw.vulnerable_casting`, dedicated tests,
+    // plus the F-544 PENDING_DROPPED_CLAUSE group of 6). `virtue.true_friend_pc`
+    // (X2t, D60.3) copies `virtue.true_love_pc`'s own verbatim description
+    // byte-for-byte.
+    "flaw.sheltered_upbringing",
+    "flaw.short_lived_magic",
+    "flaw.short_of_breath",
+    "flaw.short_ranged_magic",
+    "flaw.slow_caster",
+    "flaw.slow_power",
+    "flaw.spontaneous_casting_tools",
+    "flaw.stockade_parma_magica",
+    "flaw.stuck_in_your_ways",
+    "flaw.study_requirement",
+    "flaw.suppressed_gift",
+    "flaw.susceptibility_to_warping",
+    "flaw.tainted_with_evil",
+    "flaw.tragic_life",
+    "flaw.unnatural_magic",
+    "flaw.unruly_air",
+    "flaw.unstructured_caster",
+    "flaw.usurer",
+    "flaw.visions",
+    "flaw.vow_major",
+    "flaw.vow_minor",
+    "flaw.vulnerable_casting",
+    "flaw.vulnerable_magic",
+    "flaw.wanderlust",
+    "flaw.warped_by_magic",
+    "flaw.warped_magic",
+    "flaw.weak_enchanter",
+    "flaw.weak_magic",
+    "flaw.weak_scholar",
+    "flaw.weak_spontaneous_magic",
+    "virtue.true_friend_pc",
 ];
 
 /// D5/D46: a shipped `description` is a rule's only carrier once the entry
@@ -2953,5 +2996,452 @@ fn primogeniture_lineage_reclassifies_to_creation_effect() {
         Classification::CreationEffect,
         "X2g (tmp/x2g-verdicts.md), D67: the only stated rule is already computed via \
          `prerequisites`, so this reclassifies to creation_effect, not uncomputed_rule"
+    );
+}
+
+// ============================================================================
+// X2h (`tmp/x2-worklist.md` rows 375-432, ArMDE:6709-7109): the last Flaws,
+// `flaw.secretive` through `flaw.wrathful_minor`. See `tmp/x2h-verdicts.md`
+// for the full per-entry reading.
+// ============================================================================
+
+/// Entries that compute nothing today, whose passage the mechanical-token
+/// screen does not always flag (so no pending list carries all of them), and
+/// that D8/D20/D46/D50/D62/D67 all the same require to become
+/// `uncomputed_rule` with their rule written into `description` in both
+/// locales. `(id, why)` — see `tmp/x2h-verdicts.md` for the full reading.
+/// Minimal check (classification + "some displayed text exists"), same shape
+/// as `X2G_RECLASSIFY_WITH_DESCRIPTION`: the stronger verbatim check is
+/// `x2_shipped_descriptions_match_their_cited_passage_verbatim`, once Phase 2
+/// adds these ids to `X2_VERBATIM_SCOPE`.
+const X2H_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
+    (
+        "flaw.sheltered_upbringing",
+        "D50/PMC: ArMDE:6721-6724 — \"may not take\" seven named Abilities as beginning \
+         Abilities, computed nowhere",
+    ),
+    (
+        "flaw.short_lived_magic",
+        "D50/D67: ArMDE:6729-6732's duration-reduction table (year->moon, moon->sun-cycle, \
+         sun->Diameter) is a real uncomputed clause surviving the entry's own \
+         `hermetically_trained` gate",
+    ),
+    (
+        "flaw.slow_caster",
+        "D50/D67: ArMDE:6755-6758 — Formulaic/Spontaneous casting takes two rounds instead of \
+         one (with fast-cast/Mastered/Muto Vim/Ritual exceptions), computed nowhere",
+    ),
+    (
+        "flaw.spontaneous_casting_tools",
+        "D67: a concurrent slice added `prerequisites: all(order_member, house.verditius)` for \
+         the Verditius-only eligibility clause, but ArMDE:6779-6782's \"must use casting tools \
+         to cast spontaneous spells\" is a real, separately uncomputed rule that survives it",
+    ),
+    (
+        "flaw.stockade_parma_magica",
+        "D50/D67: ArMDE:6787-6790 — cannot suppress Parma once erected, computed nowhere",
+    ),
+    (
+        "flaw.study_requirement",
+        "D50/D67: ArMDE:6795-6798 — must study in the presence of the appropriate Art, and may \
+         take both Study Bonus and Study Requirement, computed nowhere",
+    ),
+    (
+        "flaw.suppressed_gift",
+        "D50/D67: ArMDE:6803-6810 — cannot perform Hermetic magic/improve Arts/Parma Magica \
+         while suppressed (Arts still grant MR, Gift's social penalty still applies, may still \
+         use Supernatural V/A, may remain an OoH member), computed nowhere despite the entry's \
+         own `has(virtue.the_gift)` prerequisite",
+    ),
+    (
+        "flaw.unnatural_magic",
+        "D50/D67: ArMDE:6931-6934 — Creo rituals have no permanent effect, and cannot extract \
+         vis from an aura using Creo, computed nowhere",
+    ),
+    (
+        "flaw.unstructured_caster",
+        "D50/D67: ArMDE:6947-6950 — casts all Formulaic spells as Ritual (incl. vis need) and \
+         may not learn Ritual spells at all, computed nowhere",
+    ),
+    (
+        "flaw.vulnerable_magic",
+        "D50/D67: ArMDE:7005-7010 — the dispelling-condition examples, the repeatable-with- \
+         different-conditions clause, and \"may not be combined with\" Restrictions/Necessary \
+         Conditions, computed nowhere",
+    ),
+    (
+        "flaw.warped_magic",
+        "D50/D67: ArMDE:7023-7026 — the side effect's intensity scales with the level of the \
+         spell cast, a storyguide-narration rule computed nowhere despite the entry's blanket \
+         `hermetically_trained` gate (X3b/X3c)",
+    ),
+    (
+        "flaw.tainted_with_evil",
+        "D50/PMC: ArMDE:6843-6846 — \"Gaining a positive Reputation is impossible\", computed \
+         nowhere",
+    ),
+    (
+        "flaw.wanderlust",
+        "D50/PMC: ArMDE:7015-7018 — can only spend two nonconsecutive seasons a year in the \
+         same area and must travel to new locales the rest of the time (D62's own shape), \
+         computed nowhere",
+    ),
+    (
+        "flaw.stuck_in_your_ways",
+        "D50: ArMDE:6791-6794 — uses the lower of the Ability score and the character's current \
+         Covenant Lore for stress rolls concerning his new covenant, a roll-substitution rule \
+         computed nowhere",
+    ),
+    (
+        "flaw.unruly_air",
+        "D8: categories:[\"supernatural\"], ArMDE:6939-6942 — others with Magic Resistance are \
+         not influenced by the character, computed nowhere",
+    ),
+    (
+        "flaw.visions",
+        "D8: categories:[\"story\",\"supernatural\"], ArMDE:6985-6988 — visions come purely at \
+         the storyguide's discretion, computed nowhere",
+    ),
+    (
+        "flaw.slow_power",
+        "D8: categories:[\"supernatural\"], ArMDE:6759-6762 — the repeatable-but-not-more-than- \
+         once-for-a-single-power cap is not enforced (`max_per_target` unset), computed nowhere",
+    ),
+    (
+        "flaw.susceptibility_to_warping",
+        "D8: categories:[\"supernatural\"], ArMDE:6831-6838 — gains one additional Warping \
+         Point per Realm already gaining one that year (capped at four/year, no Twilight \
+         contribution), computed nowhere",
+    ),
+    (
+        "flaw.vow_major",
+        "D50: ArMDE:6989-6992 — breaking the vow requires a guaranteed atonement (D50's Q-09 \
+         shape), and the Major variant must be a vow to DO something rather than refrain, \
+         computed nowhere",
+    ),
+    (
+        "flaw.vow_minor",
+        "D50: ArMDE:6989-6992 — the same shared guaranteed-atonement clause as flaw.vow_major, \
+         computed nowhere",
+    ),
+];
+
+#[test]
+fn x2h_entries_reclassify_to_uncomputed_rule_with_a_description() {
+    let rs = load_ruleset();
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+
+    let mut offenders = Vec::new();
+    for (id, why) in X2H_RECLASSIFY_WITH_DESCRIPTION {
+        let classification = classification_of(&rs, id);
+        if classification != Classification::UncomputedRule {
+            offenders.push(format!(
+                "{id}: classified {classification:?}, expected UncomputedRule ({why})"
+            ));
+        }
+        for (lang, loc) in [("en", &loc_en), ("de", &loc_de)] {
+            if displayed_text(loc, id).is_none() {
+                offenders.push(format!(
+                    "{lang}/{id}: no displayed rules text at all ({why})"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2h (tmp/x2h-verdicts.md): these entries must reclassify to `uncomputed_rule` and \
+         carry displayed rules text in every locale — a Phase 2 data change, not yet landed:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// OQ-6 overturn of `flaw.tragic_life`'s own `NO_RULE_DESPITE_TOKEN` row: that
+/// row's reading addressed only the "cannot" token ("describes a limit on the
+/// demon's narrative planning"), which still holds, but missed ArMDE:6859's
+/// separate, real creation-time instruction — "The predisposition toward sin
+/// at the character's pivotal moment should be represented with a sinful
+/// Personality Trait" — the same shape that already overturned
+/// `ghostly_warder`/`magical_warder`/`paid_rights`/`tainted_treasure`.
+#[test]
+fn tragic_life_states_its_sinful_personality_trait_instruction() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.tragic_life"),
+        Classification::UncomputedRule,
+        "OQ-6: ArMDE:6859's sinful-Personality-Trait instruction is a real creation-time rule \
+         computed nowhere; flaw.tragic_life must reclassify to uncomputed_rule"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "sinful Personality Trait"),
+        ("de", &loc_de, "sündhaften Persönlichkeitszug"),
+    ] {
+        let text = displayed_text(loc, "flaw.tragic_life").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/flaw.tragic_life: displayed text {text:?} does not state the sinful- \
+                 Personality-Trait instruction (ArMDE:6859)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2h (tmp/x2h-verdicts.md), OQ-6: flaw.tragic_life's description must state the sinful- \
+         Personality-Trait instruction in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// D67: both `flaw.true_love_major`/`_minor`'s own `PENDING_D67_CLASSIFICATION`
+/// rows (`data_integrity.rs`) and `NO_RULE_DESPITE_TOKEN` row
+/// (`uncomputed_clauses.rs`) are removed in favor of this dedicated test — the
+/// one genuinely mechanical clause (the Major/Minor magnitude choice) is fully
+/// computed via the two-entry split plus their mutual `incompatible_with`, and
+/// the rest of the passage is Story-Flaw fiction (D60's own reasoning for the
+/// twin PC Virtue). Same shape as `flaw.primogeniture_lineage`'s X2g
+/// resolution: `creation_effect`, not `uncomputed_rule`, and no description is
+/// owed. X2t (True Friend, D60.3) copies True Love's classification too.
+#[test]
+fn true_love_reclassifies_to_creation_effect() {
+    let rs = load_ruleset();
+    for id in ["flaw.true_love_major", "flaw.true_love_minor"] {
+        assert_eq!(
+            classification_of(&rs, id),
+            Classification::CreationEffect,
+            "X2h (tmp/x2h-verdicts.md), D67: {id}'s only stated rule is already computed via \
+             the Major/Minor split + incompatible_with, so this reclassifies to creation_effect, \
+             not uncomputed_rule"
+        );
+    }
+}
+
+/// D20 (`docs/vf-audit/decisions.md`): five of the nineteen surfaced-only
+/// entries fall in this range. All were numerically correct but displayed a
+/// bare category label with no description stating which figures apply — D20
+/// requires a computed number AND text, so all five reclassify
+/// `in_play_effect` -> `uncomputed_rule`. Four already state their rule in
+/// `summary` (classification-only fix); `flaw.short_ranged_magic` already has
+/// a full verbatim `description` in both locales (its own
+/// `COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE` row is removed, OQ-2).
+/// `(id, needle_en, needle_de)`.
+const X2H_D20_NUMERIC: &[(&str, &str, &str)] = &[
+    (
+        "flaw.short_ranged_magic",
+        "Lab Total when designing an effect",
+        "Laborsumme beim Entwurf",
+    ),
+    (
+        "flaw.susceptibility_to_divine_power",
+        "suffer twice the normal penalties",
+        "doppelt so starke normale Strafen",
+    ),
+    (
+        "flaw.susceptibility_to_faerie_power",
+        "Magic Resistance score, including Parma Magica, against faerie effects is halved",
+        "Magieresistenzwert, einschließlich der Parma Magica, gegen Feeneffekte halbiert",
+    ),
+    (
+        "flaw.susceptibility_to_infernal_power",
+        "only half your normal Magic Resistance score against infernal effects",
+        "nur die Hälfte deines normalen Magieresistenzwerts gegen Höllische Effekte",
+    ),
+    (
+        "flaw.weak_magic_resistance",
+        "do not subtract the level of the effect from the casting total before calculating \
+         Penetration",
+        "ziehe nicht die Stufe des Effekts von der Zaubersumme ab, bevor du die Penetration \
+         berechnest",
+    ),
+];
+
+#[test]
+fn x2h_d20_entries_reclassify_and_state_their_figures() {
+    let rs = load_ruleset();
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+
+    let mut offenders = Vec::new();
+    for (id, needle_en, needle_de) in X2H_D20_NUMERIC {
+        let classification = classification_of(&rs, id);
+        if classification != Classification::UncomputedRule {
+            offenders.push(format!(
+                "{id}: classified {classification:?}, expected UncomputedRule (D20)"
+            ));
+        }
+        for (lang, loc, needle) in [("en", &loc_en, needle_en), ("de", &loc_de, needle_de)] {
+            let text = displayed_text(loc, id).unwrap_or_default();
+            if !text.contains(needle) {
+                offenders.push(format!(
+                    "{lang}/{id}: displayed text {text:?} does not state {needle:?}"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2h (tmp/x2h-verdicts.md), D20: these five entries must reclassify to `uncomputed_rule` \
+         and state their own figures in every locale:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-513: `flaw.short_of_breath` ships one `health_mod`/`fatigue_roll` effect
+/// (amount -3) fully computing the passage's one clause, but carries no
+/// `description` in either locale (summary is a paraphrase with no number) —
+/// classification stays `in_play_effect`, description is owed.
+#[test]
+fn short_of_breath_states_its_stamina_roll_penalty() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.short_of_breath"),
+        Classification::InPlayEffect,
+        "the -3 Stamina-roll-to-avoid-fatigue penalty stays fully computed via health_mod; only \
+         the description is missing"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "Stamina rolls to avoid fatigue, including rolls to maintain Concentration",
+        ),
+        (
+            "de",
+            &loc_de,
+            "Ausdauerwürfe, um Erschöpfung zu vermeiden, einschließlich Würfe zur \
+             Aufrechterhaltung der Konzentration",
+        ),
+    ] {
+        let text = displayed_text(loc, "flaw.short_of_breath").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/flaw.short_of_breath: displayed text {text:?} does not state the \
+                 Stamina-roll penalty (ArMDE:6733-6736)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2h (tmp/x2h-verdicts.md), F-513: flaw.short_of_breath's description must state its \
+         Stamina-roll penalty in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-544 group: `flaw.vulnerable_casting` ships a Fatigue-loss-increase effect
+/// but neither locale states ArMDE:7003's resolution ORDER when the Flaw
+/// stacks with Withstand Casting ("apply the vulnerability first, then
+/// withstand the increased loss") — the mirror finding of
+/// `withstand_casting_states_its_vulnerable_casting_ordering`, which covers
+/// the same clause from the other entry's own passage/description.
+/// Classification stays `in_play_effect`.
+#[test]
+fn vulnerable_casting_states_its_ordering_rule() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.vulnerable_casting"),
+        Classification::InPlayEffect,
+        "the extra-Fatigue-level-per-instance clause stays fully computed; only the ordering \
+         clause's description is missing"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "apply the vulnerability first, then withstand the increased loss",
+        ),
+        (
+            "de",
+            &loc_de,
+            "wird zuerst die Anfälligkeit angewendet und dann dem erhöhten Verlust widerstanden",
+        ),
+    ] {
+        let text = displayed_text(loc, "flaw.vulnerable_casting").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/flaw.vulnerable_casting: displayed text {text:?} does not state the \
+                 Vulnerable/Withstand ordering rule (ArMDE:7003)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2h (tmp/x2h-verdicts.md), F-544: flaw.vulnerable_casting's description must state the \
+         ordering rule in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-544 group (`docs/vf-audit/corrections.md` § 3.4): the six
+/// `PENDING_DROPPED_CLAUSE` rows this slice removed, each needing only a
+/// description (classification already correct). `(id, needle_en, needle_de)`.
+const X2H_PDC_DESCRIPTION: &[(&str, &str, &str)] = &[
+    ("flaw.usurer", "ten pounds of silver", "zehn Pfund Silber"),
+    (
+        "flaw.warped_by_magic",
+        "spend experience points on Magic Lore",
+        "Erfahrungspunkte auf Magiekunde auszugeben",
+    ),
+    (
+        "flaw.weak_enchanter",
+        "apply the Deficiency first and then halve the remaining total",
+        "wende die Defizitäre Kunst zuerst an und halbiere dann die verbleibende Summe",
+    ),
+    (
+        "flaw.weak_magic",
+        "after subtracting the spell level",
+        "nachdem du die Zauberstufe abgezogen",
+    ),
+    (
+        "flaw.weak_scholar",
+        "Lab Totals when working from the Lab Texts of others",
+        "Laborsummen, wenn du nach den Labortexten anderer arbeitest",
+    ),
+    (
+        "flaw.weak_spontaneous_magic",
+        "may still use ceremonial casting",
+        "kannst weiterhin zeremonielles Zaubern einsetzen",
+    ),
+];
+
+#[test]
+fn x2h_pdc_entries_state_their_dropped_clause() {
+    let rs = load_ruleset();
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+
+    let mut offenders = Vec::new();
+    for (id, needle_en, needle_de) in X2H_PDC_DESCRIPTION {
+        for (lang, loc, needle) in [("en", &loc_en, needle_en), ("de", &loc_de, needle_de)] {
+            let text = displayed_text(loc, id).unwrap_or_default();
+            if !text.contains(needle) {
+                offenders.push(format!(
+                    "{lang}/{id}: displayed text {text:?} does not state {needle:?}"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2h (tmp/x2h-verdicts.md), F-544: these entries' description must state their own \
+         dropped clause in both locales (classification unchanged):\n{}",
+        offenders.join("\n")
     );
 }

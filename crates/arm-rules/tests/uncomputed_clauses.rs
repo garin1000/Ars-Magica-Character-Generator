@@ -1576,6 +1576,260 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::De,
         family: "prohibition",
     },
+    // --- X2h (tmp/x2h-verdicts.md, ArMDE:6709-7109) ---------------------
+    // Phase 2 reclassified 21 entries in this range to `uncomputed_rule`;
+    // `every_uncomputed_rule_entry_states_its_rule_in_every_locale` then
+    // requires the shipped description to trip the screen in BOTH locales.
+    // Each row below was verified against the actual rulebook passage
+    // (D19 obligation 3) before being added, not merely against the shipped
+    // description text.
+    S2Idiom {
+        // flaw.slow_caster (ArMDE:6755-6758): "Your Formulaic spells take
+        // two rounds to cast" — a real timing penalty (double the normal
+        // one-round cast), spelled as a word rather than a digit.
+        pattern: r"\btwo rounds\b",
+        language: Language::En,
+        family: "cap",
+    },
+    S2Idiom {
+        // flaw.slow_caster (ArMDE:6755-6758, DE): "Deine Formulaischen
+        // Zauber benötigen zwei Runden zum Wirken" — same word-spelled
+        // timing penalty.
+        pattern: r"\bzwei runden\b",
+        language: Language::De,
+        family: "cap",
+    },
+    S2Idiom {
+        // flaw.stuck_in_your_ways (ArMDE:6791-6794): "this character uses
+        // the lower of that Ability score and his current Covenant Lore
+        // Ability" — a real roll-substitution rule with no signed number.
+        pattern: r"\bthe lower of\b",
+        language: Language::En,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.stuck_in_your_ways (ArMDE:6791-6794, DE): "verwendet dieser
+        // Charakter den niedrigeren Wert aus seiner Fertigkeit..." — the
+        // same roll-substitution rule.
+        pattern: r"\bniedrigeren wert\b",
+        language: Language::De,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.susceptibility_to_warping (ArMDE:6831-6838): "the character
+        // gains one additional Warping Point" / "he gains four additional
+        // Warping Points" — the extra-Warping-Point rule is spelled with
+        // word numbers ("one"/"four"), not digits, so it carries no signed
+        // number for `has_signed_number` to catch.
+        pattern: r"\badditional warping point\b",
+        language: Language::En,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.susceptibility_to_warping (ArMDE:6831-6838, DE): "erhält der
+        // Charakter einen zusätzlichen Verzerrungspunkt" — same word-spelled
+        // rule.
+        pattern: r"\bzusätzlichen verzerrungspunkt\b",
+        language: Language::De,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.unruly_air (ArMDE:6939-6942): "others with Magic Resistance
+        // are not influenced by him" — a real, absolute exemption (D8
+        // capability), phrased differently from the existing "not affected
+        // by"/"nicht betroffen" pair.
+        pattern: r"\bnot influenced\b",
+        language: Language::En,
+        family: "capability",
+    },
+    S2Idiom {
+        // flaw.unruly_air (ArMDE:6939-6942, DE): "andere mit Magieresistenz
+        // nicht von ihm beeinflusst werden" — same exemption; "nicht" and
+        // "beeinflusst" sit 12 characters apart ("von ihm "), inside a
+        // bounded gap rather than contiguous.
+        pattern: r"\bnicht\b[^.]{0,20}?\bbeeinflusst",
+        language: Language::De,
+        family: "capability",
+    },
+    S2Idiom {
+        // flaw.visions (ArMDE:6985-6988): "The visions come purely at the
+        // storyguide's discretion" — D8/story: the rule that visions are
+        // entirely GM-adjudicated, not a signed number or phrase idiom
+        // already in the base list. Scoped to the fuller "purely at..."
+        // phrase rather than the bare "storyguide's discretion": that
+        // shorter form also hits flaw.demonic_familiar's "At the
+        // storyguide's discretion, this Flaw may be taken to represent
+        // other sorts of demons" (ArMDE:5930) and flaw.favors' "at the
+        // storyguide's discretion" (ArMDE:6100) and
+        // virtue.latent_magic_ability's "At the storyguide's discretion,
+        // this quality might appear" (ArMDE:4239) — three unrelated,
+        // already-settled narrative entries (X2b: latent_magic_ability
+        // "stays narrative, no rule stated") whose own discretion clause is
+        // pure reflavoring permission, not a rule this entry drops.
+        pattern: r"\bpurely at the storyguide's discretion\b",
+        language: Language::En,
+        family: "capability",
+    },
+    S2Idiom {
+        // flaw.visions (ArMDE:6985-6988, DE): "Die Visionen kommen
+        // ausschließlich nach dem Ermessen des Spielleiters" — same
+        // GM-discretion rule, same narrowing reason as the EN row above (the
+        // bare "Ermessen des Spielleiters" also hits the German mirrors of
+        // demonic_familiar/favors/latent_magic_ability).
+        pattern: r"\bausschließlich nach dem ermessen des spielleiters\b",
+        language: Language::De,
+        family: "capability",
+    },
+    S2Idiom {
+        // flaw.vow_major/flaw.vow_minor (ArMDE:6989-6992): "A Vow that is a
+        // Major Flaw must be a vow to do something, rather than refrain from
+        // something" — OQ-09's real creation-time constraint on which kind
+        // of vow qualifies as Major. Distinct from the "must perform some
+        // kind of atonement" clause the `restricted_power`/"special
+        // ceremony" idiom's own comment already flags as NOT a computed rule
+        // in this entry — this is the separate, genuinely mechanical clause.
+        pattern: r"\brather than refrain\b",
+        language: Language::En,
+        family: "obligation",
+    },
+    S2Idiom {
+        // flaw.vow_major/flaw.vow_minor (ArMDE:6989-6992, DE): "muss ein
+        // Gelübde sein, etwas zu tun, anstatt etwas zu unterlassen" — same
+        // Major-vow constraint.
+        pattern: r"\banstatt etwas zu unterlassen\b",
+        language: Language::De,
+        family: "obligation",
+    },
+    S2Idiom {
+        // flaw.warped_magic (ArMDE:7023-7026): "with increasing intensity
+        // according to the level of the spell" — a real scaling rule (side
+        // effect severity tracks spell level) stated in words.
+        pattern: r"\baccording to the level of the spell\b",
+        language: Language::En,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.warped_magic (ArMDE:7023-7026, DE): "mit zunehmender
+        // Intensität entsprechend der Stufe des Zaubers" — same scaling
+        // rule.
+        pattern: r"\bzunehmender intensität\b",
+        language: Language::De,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.short_lived_magic (ArMDE:6729-6732): "Diameter, Concentration,
+        // Ring, and Momentary spells are not affected" — an absolute
+        // exemption from the duration-reduction rule, phrased without "by"
+        // (an object), so it does not trip the existing "not affected by"
+        // idiom.
+        pattern: r"\bare not affected\b",
+        language: Language::En,
+        family: "capability",
+    },
+    S2Idiom {
+        // flaw.slow_power (ArMDE:6759-6762): "not more than once for a
+        // single power" — the repeatability cap, spelled "not more than"
+        // rather than the base list's "no more than".
+        pattern: r"\bnot more than\b",
+        language: Language::En,
+        family: "cap",
+    },
+    S2Idiom {
+        // flaw.unstructured_caster (ArMDE:6947-6950): "you may not learn
+        // Ritual spells at all" — a real, absolute restriction distinct from
+        // the base list's "may not take"/"may not be" phrasing.
+        pattern: r"\bmay not learn\b",
+        language: Language::En,
+        family: "prohibition",
+    },
+    S2Idiom {
+        // flaw.short_ranged_magic (ArMDE:6737-6740, DE): "Halbiere deine
+        // Zaubersummen..." / "Halbiere deine Laborsumme..."; flaw.weak_magic
+        // (ArMDE:7064-7067, DE): "Du halbierst die normale
+        // Penetrationssumme..." — the imperative ("du") and 2nd-person
+        // ("du ... -st") conjugations of "halve", neither of which the
+        // existing `\bhalbiert` (3rd person/past participle) idiom matches.
+        // Widened to the bare stem, no right boundary — the same shape as
+        // the existing `\bmultipl`-family stems — rather than one idiom per
+        // conjugation.
+        pattern: r"\bhalbier",
+        language: Language::De,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.sheltered_upbringing (ArMDE:6721-6724, DE): "Du darfst
+        // Feilschen, Charme, Etikette, Menschenkenntnis, Täuschung, Intrige
+        // oder Führung nicht als Anfangsfertigkeiten nehmen" — the English
+        // mirror already matches the base list's "may not take", but the
+        // German modal ("darfst") and its "nicht" sit more than
+        // [`DE_MODAL_NICHT`]'s 40-character bound apart (the seven named
+        // Abilities sit between them), so this is the distinctive tail
+        // phrase instead.
+        pattern: r"\bnicht als anfangsfertigkeiten nehmen\b",
+        language: Language::De,
+        family: "prohibition",
+    },
+    S2Idiom {
+        // flaw.spontaneous_casting_tools (ArMDE:6779-6782, DE): "Dieser
+        // Fehler kann nur von Verditius-Magi gewählt werden" — the English
+        // mirror already matches the base list's "can only", but the German
+        // uses "kann nur von ... gewählt werden", which neither the existing
+        // "darf nur von ... genommen werden" nor "kann nur für ... genommen
+        // werden" idioms cover (different modal/verb pairing).
+        pattern: r"\bkann nur von\b[^.]{0,40}?\bgewählt werden",
+        language: Language::De,
+        family: "prohibition",
+    },
+    S2Idiom {
+        // flaw.usurer (ArMDE:6951-6954): "You receive the equivalent of
+        // approximately ten pounds of silver each year from interest
+        // payments" — F-544's dropped clause, an amount spelled in words
+        // rather than digits.
+        pattern: r"\bten pounds of silver\b",
+        language: Language::En,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.usurer (ArMDE:6951-6954, DE): "Du erhältst jährlich das
+        // Äquivalent von ungefähr zehn Pfund Silber" — same word-spelled
+        // amount.
+        pattern: r"\bzehn pfund silber\b",
+        language: Language::De,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.warped_by_magic (ArMDE:7019-7022): "His encounters allow you
+        // to spend experience points on Magic Lore during character
+        // creation" — F-544's dropped clause, a creation-time XP grant.
+        pattern: r"\bexperience points on magic lore\b",
+        language: Language::En,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.warped_by_magic (ArMDE:7019-7022, DE): "erlauben es dir, ...
+        // Erfahrungspunkte auf Magiekunde auszugeben" — same XP grant.
+        pattern: r"\berfahrungspunkte auf magiekunde\b",
+        language: Language::De,
+        family: "formula",
+    },
+    S2Idiom {
+        // flaw.tragic_life (ArMDE:6855-6870, DE): "...dass ihr Schöpfer
+        // normalerweise keine alternative Situation herbeiführen kann..." —
+        // the English mirror already matches the base list's bare
+        // `\bcannot`, but the German subordinate clause puts the modal verb
+        // LAST ("keine ... kann", not "kann ... keine"), the reverse of the
+        // existing bounded-gap idiom's word order. Scoped to "keine
+        // alternative" rather than a bare "keine ... kann": the broader gap
+        // also closed `PENDING_DROPPED_CLAUSE`'s virtue.redcap row for an
+        // unrelated reason — "keine hermetische Magie wirken kannst" ("cannot
+        // work Hermetic magic") is just this Virtue's own defining trait, not
+        // the tracked gap (the per-year item-growth rate, the free
+        // Well-Traveled grant, the free Longevity Ritual) — so the pattern is
+        // narrowed to the word actually adjoining "keine" in *this* passage.
+        pattern: r"\bkeine alternative\b[^.]{0,40}?\bkann\b",
+        language: Language::De,
+        family: "prohibition",
+    },
 ];
 
 /// [`S2_IDIOMS`], compiled once.
@@ -1809,24 +2063,25 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // row here to still cite a `narrative` entry, and this one no longer is.
     // See `primogeniture_lineage_reclassifies_to_creation_effect`
     // (`x2_reclassification.rs`) for the pinned target classification.
-    (
-        "flaw.true_love_major",
-        "ArMDE:6871-6878 trips on \"equal to\" inside \"If the True Love is competent, equal to \
-         or better than the player character, then this is only a Minor Flaw\" — a comparison \
-         of two people's competence, not a formula. The clause it sits in is the book choosing \
-         *which magnitude* of the Flaw applies, and that choice is already data: the catalogue \
-         splits this passage into a Major and a Minor entry whose `magnitude` fields carry \
-         exactly that rule, and marks them `incompatible_with` each other. Nothing is dropped, \
-         because there is no third thing for the text to say. The rest of the passage — the \
-         bond cannot be sundered, no magic can make you hate your love, the True Love must be \
-         a non-player character — is Story-Flaw premise stated in fiction the engine has no \
-         concept of.",
-    ),
-    (
-        "flaw.true_love_minor",
-        "The Minor half of the same entry, citing the same passage (ArMDE:6871-6878). Same \
-         reading as flaw.true_love_major.",
-    ),
+    // "flaw.true_love_major"/"flaw.true_love_minor" (ArMDE:6871-6878) are
+    // REMOVED here (X2h, tmp/x2h-verdicts.md, D67): this row's own reading
+    // ("nothing is dropped, because there is no third thing for the text to
+    // say") was an argument for reclassifying to `creation_effect`, not for
+    // staying `narrative` — both ids are ALSO on
+    // `data_integrity.rs::PENDING_D67_CLASSIFICATION` (declare
+    // `incompatible_with` each other), whose own documentation states
+    // unambiguously that `is_computed` "cannot itself decide which computed
+    // class an entry belongs to, only that it is not narrative." The one
+    // genuinely mechanical clause (the Major/Minor magnitude split) is fully
+    // computed via the two-entry split + `incompatible_with`; the rest is
+    // Story-Flaw fiction (D60's own reasoning for the twin PC Virtue). Same
+    // shape as `flaw.primogeniture_lineage`'s X2g resolution.
+    // `exempted_entries_still_trip_the_screen` requires every row here to
+    // still cite a `narrative` entry, and neither one is, once reclassified.
+    // See `true_love_reclassifies_to_creation_effect`
+    // (`x2_reclassification.rs`) for the pinned target classification. X2t
+    // (True Friend, D60.3) copies True Love's classification too — flagged in
+    // the handover.
     // --- S2 additions (docs/vf-audit/corrections.md § 3.1): growing the screen's
     // families newly trips these, and reading each passage finds no rule —
     // an idiom used non-mechanically, not a dropped clause.
@@ -1884,12 +2139,17 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
          is the same \"can't bear X\" temperament idiom as flaw.compassionate_major, not a \
          restricted capability.",
     ),
-    (
-        "flaw.tragic_life",
-        "ArMDE:6855-6870's \"their creator cannot usually fashion an alternative situation\" \
-         (bare \"cannot\", family 1/3) describes a limit on the demon's narrative planning, not \
-         on the tainted character it names.",
-    ),
+    // "flaw.tragic_life" (ArMDE:6855-6870) is REMOVED here (X2h,
+    // tmp/x2h-verdicts.md, OQ-6): this row's own reading addressed only the
+    // "cannot" token ("describes a limit on the demon's narrative planning"),
+    // which still holds, but it missed ArMDE:6859's separate, real
+    // creation-time instruction — "The predisposition toward sin at the
+    // character's pivotal moment should be represented with a sinful
+    // Personality Trait" — the same D50/OQ-6 shape that already overturned
+    // `ghostly_warder`/`magical_warder`/`paid_rights`/`tainted_treasure`.
+    // Reclassifies to `uncomputed_rule`. See
+    // `tragic_life_states_its_sinful_personality_trait_instruction`
+    // (`x2_reclassification.rs`).
     // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
     // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
     // virtue.ghostly_warder: OQ-6 re-test (X2a) overturns this row rather than
@@ -1941,6 +2201,23 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
          only think about one thing at a time\" — a Personality Flaw's temperament description \
          (easily confused, needs clear instructions), with no roll, cap, or number attached. \
          Pure narrative flavour.",
+    ),
+    // --- X2h additions (tmp/x2h-verdicts.md): moved from
+    // PENDING_MECHANICAL_CLASSIFICATION — re-read against D50 finds nothing a
+    // player or storyguide must act on, the same "need not" false-positive
+    // shape as flaw.lecherous_major/_minor above.
+    (
+        "flaw.slothful",
+        "ArMDE:6751-6754's \"need not\" idiom — \"very good at coming up with excuses as to why \
+         things need not be done right now\" — states no restriction, cap, or roll: a Personality \
+         Flaw's temperament description, pure narrative flavour.",
+    ),
+    (
+        "flaw.tzadik_nistar",
+        "ArMDE:6883-6886's \"need not\" idiom — \"a character need not be Jewish to take this \
+         Flaw\" — is a pure eligibility disclaimer (removing a possible misconception), not a \
+         restriction. The rest of the passage (consequences \"defined by the storyguide\") is \
+         story colour, the same shape as flaw.visions/flaw.tainted_offspring.",
     ),
 ];
 
@@ -2034,41 +2311,13 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // something, but the conditional-restriction-plus-enchanted-item clause is
     // a real, separately uncomputed rule), full passage (ArMDE:6691-6694) as
     // description in both locales.
-    (
-        "flaw.sheltered_upbringing",
-        "prohibition: \"may not take\" several Abilities as beginning Abilities, ArMDE:6721-6724",
-    ),
-    (
-        "flaw.stockade_parma_magica",
-        "prohibition: bare \"cannot\" — \"cannot suppress your Parma\", ArMDE:6787-6790",
-    ),
-    (
-        "flaw.study_requirement",
-        "permission: \"may take both\" Study Bonus and Study Requirement, ArMDE:6795-6798",
-    ),
-    (
-        "flaw.suppressed_gift",
-        "prohibition: bare \"cannot\" — \"cannot perform Hermetic magic\", ArMDE:6803-6810",
-    ),
-    (
-        "flaw.tainted_with_evil",
-        "prohibition: \"is impossible\" — gaining a positive Reputation, ArMDE:6843-6846",
-    ),
-    (
-        "flaw.unnatural_magic",
-        "prohibition: bare \"cannot\" — \"cannot extract vis from an aura using Creo\", \
-         ArMDE:6931-6934",
-    ),
-    (
-        "flaw.vulnerable_magic",
-        "incompatibility: \"may not be combined with\" Restrictions/Necessary Conditions — F-537's \
-         and B19's own motivating example for this whole family, ArMDE:7005-7010",
-    ),
-    (
-        "flaw.wanderlust",
-        "prohibition: bare \"cannot\" — \"cannot spend more than a season in the same place\", \
-         ArMDE:7015-7018",
-    ),
+    // flaw.sheltered_upbringing, flaw.stockade_parma_magica,
+    // flaw.study_requirement, flaw.suppressed_gift, flaw.tainted_with_evil,
+    // flaw.unnatural_magic, flaw.vulnerable_magic, flaw.wanderlust: resolved
+    // (X2h, tmp/x2h-verdicts.md) — all eight reclassify narrative ->
+    // uncomputed_rule, each passage's real clause is a genuine dropped rule
+    // (D50/D67). `no_swept_entry_drops_an_uncomputed_mechanical_clause` now
+    // bites each directly.
     // --- X2b Phase 2 fix-round additions (2026-09-29): new S2 idioms written
     // to satisfy X2b's own entries' verbatim descriptions newly sweep these
     // six entries elsewhere in the catalogue, all still `narrative`, all
@@ -2152,12 +2401,15 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // 1-51); each is a genuine dropped clause for a later X2 slice. (A third,
     // virtue.simple_student, is NOT narrative — creation_effect — so it cannot
     // live here; see PENDING_DROPPED_CLAUSE below.)
-    (
-        "flaw.spontaneous_casting_tools",
-        "eligibility: \"This Flaw can only be taken by Verditius magi\", ArMDE:6779-6782 — \
-         `narrative`, no `prerequisites`, no effect; the restriction reaches the player nowhere \
-         today",
-    ),
+    // flaw.spontaneous_casting_tools: resolved (X2h, tmp/x2h-verdicts.md) —
+    // a concurrent slice landed `prerequisites: all(order_member,
+    // house.verditius)` for this entry since this row was filed, so the
+    // eligibility clause it names ("can only be taken by Verditius magi") is
+    // now computed — but ArMDE:6779-6782's casting-tools requirement ("must
+    // use casting tools to cast spontaneous spells") is a real, separately
+    // uncomputed rule that survives it (D67), so the entry still reclassifies
+    // narrative -> uncomputed_rule, just not for the reason this row
+    // originally gave.
     // virtue.lesser_purifying_touch: resolved (X2b) — reclassifies to
     // uncomputed_rule (ArMDE:4287-4290, "You can only choose an illness, not an
     // injury or other misfortune" is a real restriction the summary does not
@@ -2529,11 +2781,15 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          engine has no model of, and \"an interesting feature of her background\" is a turn of \
          phrase — neither is a rule this entry drops. No separate description is owed.",
     ),
-    (
-        "flaw.short_ranged_magic",
-        "both stated halvings (Casting Totals off Touch, Lab Total for range > Touch) are \
-         computed — special_casting_mod and halves_spell_cap_beyond_touch (Q10/D28).",
-    ),
+    // flaw.short_ranged_magic: OVERTURNED (X2h, tmp/x2h-verdicts.md, D20/OQ-2)
+    // — both halvings really are computed, but D20 rules that a numerically
+    // correct surfaced effect is not enough: the rule must reach the player
+    // as a computed number OR as text, and this entry displays a bare
+    // category label with no description stating which two halvings apply.
+    // Reclassifies in_play_effect -> uncomputed_rule (it already has a full
+    // verbatim description in both locales, so this is classification-only).
+    // See `x2h_d20_entries_reclassify_and_state_their_figures`
+    // (`x2_reclassification.rs`).
     (
         "flaw.slow_reflexes",
         "single clause (-3 Initiative), fully computed via combat_mod/initiative.",
@@ -2948,38 +3204,12 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // classification stays in_play_effect, description is owed. Removing the
     // row is enough — `no_swept_entry_drops_an_uncomputed_mechanical_clause`
     // bites it directly. See tmp/x2e-verdicts.md.
-    (
-        "flaw.usurer",
-        "orphan: the ~10 pounds of silver yearly income has no effect — only the Reputation is \
-         computed, ArMDE:6951-6954",
-    ),
-    (
-        "flaw.warped_by_magic",
-        "orphan: \"may spend experience points on Magic Lore during character creation\" has no \
-         ability_authorization effect, and the required companion Minor Flaw is unmodelled — \
-         only the Warping grant is computed, ArMDE:7019-7022",
-    ),
-    (
-        "flaw.weak_enchanter",
-        "F-544 (`docs/vf-audit/corrections.md` § 3.4): \"apply the Deficiency first and then \
-         halve the remaining total\" is an ORDERING rule the engine's single halving effect does \
-         not encode, ArMDE:7060-7063",
-    ),
-    (
-        "flaw.weak_magic",
-        "F-544: \"halve the Penetration Total after subtracting the spell level\" is an ORDERING \
-         rule the engine's single halving effect does not encode, ArMDE:7064-7067",
-    ),
-    (
-        "flaw.weak_scholar",
-        "F-544 (worked as one edit with its six siblings, per corrections.md § 3.4) — ships no \
-         description in either locale, ArMDE:7080-7083",
-    ),
-    (
-        "flaw.weak_spontaneous_magic",
-        "F-544: the stress-die-without-casting-bonus clause and the ceremonial-casting \
-         exception have no effect beyond the bare halving, ArMDE:7084-7089",
-    ),
+    // flaw.usurer, flaw.warped_by_magic, flaw.weak_enchanter, flaw.weak_magic,
+    // flaw.weak_scholar, flaw.weak_spontaneous_magic: resolved (X2h,
+    // tmp/x2h-verdicts.md, F-544 group) — all six get a description stating
+    // their own dropped clause, classification unchanged.
+    // `no_swept_entry_drops_an_uncomputed_mechanical_clause` bites each
+    // directly now that the row is gone.
     // X2a (tmp/x2a-verdicts.md) resolved 14 rows here, all "class stays, desc
     // owed": virtue.academic_concentration_subject, virtue.affinity_ability,
     // virtue.affinity_art, virtue.arcane_lore, virtue.bee_king,

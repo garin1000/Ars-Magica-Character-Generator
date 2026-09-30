@@ -511,6 +511,10 @@ fn magical_focus_twins_stay_hard_blocked() {
 const ENTAILED_TWIN_PAIRS: &[(&str, &str)] = &[
     ("flaw.outsider_major", "flaw.outsider_minor"),
     ("flaw.true_love_major", "flaw.true_love_minor"),
+    // X2t (D60.3): True Friend copies True Love's own passage (ArMDE:6877)
+    // verbatim, including the same alternate, mutually exclusive competence
+    // levels for the same named NPC — same entailment, same reasoning.
+    ("flaw.true_friend_major", "flaw.true_friend_minor"),
     ("virtue.amorphous_major", "virtue.amorphous_minor"),
     ("virtue.magian_lineage_major", "virtue.magian_lineage_minor"),
 ];

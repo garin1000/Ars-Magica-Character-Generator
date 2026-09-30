@@ -1227,7 +1227,8 @@
   },
   "flaw.sheltered_upbringing": {
     "name": "Behütete Kindheit",
-    "summary": "Du bist vollständig von der Gesellschaft getrennt aufgewachsen und kanntest nur deine Eltern oder deinen Mentor."
+    "summary": "Du bist vollständig von der Gesellschaft getrennt aufgewachsen und kanntest nur deine Eltern oder deinen Mentor.",
+    "description": "Du bist vollständig von der Gesellschaft getrennt aufgewachsen und kanntest nur deine Eltern oder deinen Mentor. Kürzlich wurdest du in eine wunderbare neue Welt voller Fremder eingeführt und bist überwältigt. Abhängig von deiner Persönlichkeit könntest du mit Verachtung, Angst oder Staunen reagieren. Du bist unfähig, normal zu funktionieren, weil du die meisten menschlichen Gebräuche nicht verstehst. Du darfst Feilschen, Charme, Etikette, Menschenkenntnis, Täuschung, Intrige oder Führung nicht als Anfangsfertigkeiten nehmen, kannst sie aber im Spielverlauf erlernen."
   },
   "flaw.short_attention_span": {
     "name": "Kurze Aufmerksamkeitsspanne",
@@ -1235,11 +1236,13 @@
   },
   "flaw.short_lived_magic": {
     "name": "Kurzlebige Magie",
-    "summary": "Deine Zauber dauern nicht so lange, wie sie sollten."
+    "summary": "Deine Zauber dauern nicht so lange, wie sie sollten.",
+    "description": "Deine Zauber dauern nicht so lange, wie sie sollten. Zauber, die ein Jahr dauern sollten, dauern einen Mond; jene eines Mondes nur bis zum nächsten Sonnenauf- oder -untergang; und jene einer Sonne lediglich einen Durchmesser. Zauber mit Dauer Durchmesser, Konzentration, Ring und Momentan sind nicht betroffen."
   },
   "flaw.short_of_breath": {
     "name": "Kurzatmig",
-    "summary": "Der Charakter kann beim Anstrengen nicht so lange durchhalten wie andere und ermüdet bei längerer körperlicher Aktivität schnell."
+    "summary": "Der Charakter kann beim Anstrengen nicht so lange durchhalten wie andere und ermüdet bei längerer körperlicher Aktivität schnell.",
+    "description": "Der Charakter kann beim Anstrengen nicht so lange durchhalten wie andere und ermüdet bei längerer körperlicher Aktivität schnell. Er erhält -3 auf alle Ausdauerwürfe, um Erschöpfung zu vermeiden, einschließlich Würfe zur Aufrechterhaltung der Konzentration."
   },
   "flaw.short_ranged_magic": {
     "name": "Kurzreichweitige Magie",
@@ -1261,12 +1264,14 @@
   },
   "flaw.slow_caster": {
     "name": "Langsamer Zauberer",
-    "summary": "Deine Magie benötigt mehr Zeit zur Vorbereitung und Ausführung als die anderer Magi."
+    "summary": "Deine Magie benötigt mehr Zeit zur Vorbereitung und Ausführung als die anderer Magi.",
+    "description": "Deine Magie benötigt mehr Zeit zur Vorbereitung und Ausführung als die anderer Magi. Deine Formulaischen Zauber benötigen zwei Runden zum Wirken; Spontane Zauber benötigen ebenfalls zwei Runden, es sei denn, du wirkst sie schnell, wobei sie eine Runde Wirken benötigen. Schnell gewirkte Gemeisterte Zauber benötigen ebenfalls die normale Zeit von einer Runde. Du kannst immer noch Muto Vim-Zauber auf deine eigenen Zauber wirken, aber der Wirkvorgang dauert länger. Ritualzauber und zeremonielle Wirkungen werden wie üblich durchgeführt, da alle Magi sie langsam und sorgfältig wirken müssen."
   },
   "flaw.slow_power": {
     "name": "Langsame Kraft ({power})",
     "name_unfilled": "Langsame Kraft",
-    "summary": "Eine der übernatürlichen Kräfte des Charakters ist sehr langsam, sodass sie eine zusätzliche Vorbereitungsrunde zur Aktivierung benötigt."
+    "summary": "Eine der übernatürlichen Kräfte des Charakters ist sehr langsam, sodass sie eine zusätzliche Vorbereitungsrunde zur Aktivierung benötigt.",
+    "description": "Eine der übernatürlichen Kräfte des Charakters ist sehr langsam, sodass sie eine zusätzliche Vorbereitungsrunde zur Aktivierung benötigt. Dieser Fehler darf mehr als einmal genommen werden, wenn der Charakter mehrere Kräfte hat, aber nicht mehr als einmal für eine einzelne Kraft."
   },
   "flaw.slow_reflexes": {
     "name": "Langsame Reflexe",
@@ -1287,7 +1292,8 @@
   },
   "flaw.spontaneous_casting_tools": {
     "name": "Spontane Zauberwerkzeuge",
-    "summary": "Der Charakter muss Zauberwerkzeuge einsetzen, um spontane Zauber zu wirken, genauso wie er es für formulaische Zauber tut."
+    "summary": "Der Charakter muss Zauberwerkzeuge einsetzen, um spontane Zauber zu wirken, genauso wie er es für formulaische Zauber tut.",
+    "description": "Der Charakter muss Zauberwerkzeuge einsetzen, um spontane Zauber zu wirken, genauso wie er es für formulaische Zauber tut. Er besitzt 15 einzelne Werkzeuge, eines für jede Kunst, die er in verschiedenen Kombinationen einsetzen muss, um spontane Zauber zu wirken. Dieser Fehler kann nur von Verditius-Magi gewählt werden."
   },
   "flaw.stigmatic_catalyst": {
     "name": "Stigmatischer Katalysator",
@@ -1296,15 +1302,18 @@
   },
   "flaw.stockade_parma_magica": {
     "name": "Palisaden-Parma Magica",
-    "summary": "Aufgrund deines eingeschränkten Verständnisses der Parma Magica kannst du deine Parma nicht unterdrücken, sobald du sie errichtet hast."
+    "summary": "Aufgrund deines eingeschränkten Verständnisses der Parma Magica kannst du deine Parma nicht unterdrücken, sobald du sie errichtet hast.",
+    "description": "Aufgrund deines eingeschränkten Verständnisses der Parma Magica kannst du deine Parma nicht unterdrücken, sobald du sie errichtet hast. Jeder freundliche Zauber oder magische Effekt muss deine Parma Magica durchdringen, um dich zu beeinflussen, genau als wäre er ein feindlicher Zauber."
   },
   "flaw.stuck_in_your_ways": {
     "name": "Festgefahren",
-    "summary": "Da dieser Charakter aus einem Konvent stammt, weiß er, wie die Dinge getan werden müssen, um den Bedürfnissen von Konventsbewohnern und Magi gleichermaßen am besten zu dienen."
+    "summary": "Da dieser Charakter aus einem Konvent stammt, weiß er, wie die Dinge getan werden müssen, um den Bedürfnissen von Konventsbewohnern und Magi gleichermaßen am besten zu dienen.",
+    "description": "Da dieser Charakter aus einem Konvent stammt, weiß er, wie die Dinge getan werden müssen, um den Bedürfnissen von Konventsbewohnern und Magi gleichermaßen am besten zu dienen. Nur macht sein neues Zuhause die Dinge anders. Und sie liegen damit falsch. Bei Stresswürfen auf seine Berufsfertigkeiten oder jede Fertigkeit, die seinen neuen Konvent betrifft, wie etwa Führung oder Menschenkenntnis, verwendet dieser Charakter den niedrigeren Wert aus seiner Fertigkeit und seiner aktuellen Konventskunde für seinen derzeitigen Konvent. Beachte, dass Boni aus Begabung oder anderen Tugenden weiterhin auf den Wurf angewendet werden. Dieser Fehler kann auch auf andere Organisationen als Konvente angewendet werden, wie Abteien, Universitäten, Gilden oder Kirchen."
   },
   "flaw.study_requirement": {
     "name": "Studienbedingung",
-    "summary": "Du bist nicht in der Lage, Magie allein aus Büchern oder Vis zu studieren."
+    "summary": "Du bist nicht in der Lage, Magie allein aus Büchern oder Vis zu studieren.",
+    "description": "Du bist nicht in der Lage, Magie allein aus Büchern oder Vis zu studieren. Du musst in Gegenwart der entsprechenden Kunst studieren. Um zum Beispiel Aquam zu studieren, musst du neben einem Bach oder Teich sitzen, oder neben einem großen Feuer, um Ignem zu studieren. Wachsendes ist gut für Creo, Verfallendes gut für Perdo. Je mehr dein Wissen wächst, desto größere Mengen musst du zur Hand haben. Siehe die Tugend Studierbonus auf Seite 110 für eine Liste von Beispielen. Du kannst sowohl Studierbonus als auch Studienbedingung nehmen."
   },
   "flaw.supernatural_nuisance": {
     "name": "Übernatürliche Plage",
@@ -1312,7 +1321,8 @@
   },
   "flaw.suppressed_gift": {
     "name": "Unterdrückte Gabe",
-    "summary": "Der Charakter besitzt die Gabe, kann aber nicht auf ihre Kraft zugreifen, da er seine magische Fähigkeit vorübergehend durch einen Missgeschick oder ein anderes Unglück verloren hat."
+    "summary": "Der Charakter besitzt die Gabe, kann aber nicht auf ihre Kraft zugreifen, da er seine magische Fähigkeit vorübergehend durch einen Missgeschick oder ein anderes Unglück verloren hat.",
+    "description": "Der Charakter besitzt die Gabe, kann aber nicht auf ihre Kraft zugreifen, da er seine magische Fähigkeit vorübergehend durch einen Missgeschick oder ein anderes Unglück verloren hat. Während die Gabe unterdrückt ist, kann der Charakter keine hermetische Magie wirken, seine Künste verbessern oder die Parma Magica praktizieren. Seine Künste verleihen ihm jedoch weiterhin Magieresistenz, und er leidet weiterhin unter den negativen sozialen Nachteilen der Gabe. Ein solcher Charakter kann weiterhin übernatürliche Tugenden und Fertigkeiten einsetzen. Er kann je nach dem Zeitpunkt der Unterdrückung Mitglied des Ordens des Hermes sein.\n\nWie die Gabe zurückkehrt, sollte vom Spielleiter entschieden werden. Beispiele sind das Überstehen einer Laborkatastrophe beim Assistieren eines anderen Magus (vielleicht war dies der Grund, weshalb die Unterdrückte Gabe erworben wurde), das Verstehen eines Vorübergehenden Zwielichts in einer mächtigen Regio, der Besuch der Magiesphäre und das Gelingen einer bestimmten Aufgabe, oder eine einjährige Unterweisung durch einen alten Drachen.\n\nDie Spieltruppe sollte sorgfältig bedenken, wie der Charakter in die Saga passen wird. Ersetzt er den Magus eines Spielers, hat er einen sehr ernsthaften Fehler. Ersetzt er einen Gefährten, wird er deutlich mächtiger, wenn der Geschichte-Fehler aufgelöst wird. Beide Ansätze können mit Bedacht funktionieren."
   },
   "flaw.surgical_empiricus": {
     "name": "Chirurgischer Empiriker",
@@ -1338,7 +1348,8 @@
   },
   "flaw.susceptibility_to_warping": {
     "name": "Anfälligkeit für Verzerrung",
-    "summary": "Die ständige Exposition des Charakters gegenüber Magie hat ihn anfälliger für übernatürliche Verzerrung gemacht, als er es sonst wäre."
+    "summary": "Die ständige Exposition des Charakters gegenüber Magie hat ihn anfälliger für übernatürliche Verzerrung gemacht, als er es sonst wäre.",
+    "description": "Die ständige Exposition des Charakters gegenüber Magie hat ihn anfälliger für übernatürliche Verzerrung gemacht, als er es sonst wäre.\n\nIn jedem Jahr, in dem der Charakter einen Verzerrungspunkt aus irgendeiner Sphäre oder irgendeiner Quelle erhält (einschließlich Langlebigkeitsrituale, Leben innerhalb einer Aura und mächtige übernatürliche Effekte), erhält der Charakter einen zusätzlichen Verzerrungspunkt, der mit derselben Sphäre verbunden ist. Das bedeutet: Erhält er in einem Jahr einen einzelnen Verzerrungspunkt aus jeder Sphäre, erhält er am Ende dieses Jahres vier zusätzliche Verzerrungspunkte, je einen aus jeder Sphäre.\n\nDiese zusätzlichen Punkte tragen nicht zum Zwielicht oder anderen Ereignissen bei, die durch die Anhäufung von Verzerrungspunkten verursacht werden, da sie sich langsam über den Verlauf des Jahres ansammeln."
   },
   "flaw.tainted_offspring": {
     "name": "Befleckter Nachkomme",
@@ -1346,7 +1357,8 @@
   },
   "flaw.tainted_with_evil": {
     "name": "Mit dem Bösen befleckt",
-    "summary": "Eine Aura der Verdorbenheit umgibt dich als Folge von etwas, das du, deine Eltern oder deine Vorfahren getan haben."
+    "summary": "Eine Aura der Verdorbenheit umgibt dich als Folge von etwas, das du, deine Eltern oder deine Vorfahren getan haben.",
+    "description": "Eine Aura der Verdorbenheit umgibt dich als Folge von etwas, das du, deine Eltern oder deine Vorfahren getan haben. Andere fühlen sich natürlich sehr unwohl in deiner Nähe und können leicht dazu gebracht werden, dich zu hassen. Es ist unmöglich, eine positive Reputation zu erlangen. Magi reagieren nicht so stark auf dieses Merkmal wie normale Menschen."
   },
   "flaw.temperate": {
     "name": "Gemäßigt",
@@ -1368,7 +1380,16 @@
   },
   "flaw.tragic_life": {
     "name": "Tragisches Leben",
-    "summary": "Dämonen haben dein Leben zu deinem Nachteil manipuliert; du bist befleckt."
+    "summary": "Dämonen haben dein Leben zu deinem Nachteil manipuliert; du bist befleckt.",
+    "description": "Das Leben des Charakters wurde von Dämonen manipuliert, um sicherzustellen, dass sie als Reaktion auf wichtige Ereignisse auf eine bestimmte Weise handelt, normalerweise zu ihrem eigenen Nachteil und auf eine Weise, die die Pläne eines bestimmten Dämons fördert. Dies macht sie zu einem verdorbenen Charakter.\n\nVerdorbene Charaktere werden als Werkzeuge geschaffen, um bedeutsame Ereignisse zu beeinflussen. Dieser Fehler repräsentiert zwei Faktoren: Die Ereignisse, für die der Dämon die Person bestimmt hat, werden wahrscheinlich eintreten, und die Person wurde entworfen und konditioniert, um sich vorhersehbar zu verhalten, wenn ihr Schicksalsmoment kommt. Verdorbene Menschen neigen dazu, an ihrem Schicksalsmoment zu sündigen und dadurch schreckliche Ereignisse herbeizuführen. Die Nachwirkungen der von ihnen verursachten Tragödie schaden dem verdorbenen Menschen oft. Die Neigung zur Sünde am Wendepunkt des Charakters sollte durch einen sündhaften Persönlichkeitszug dargestellt werden.\n\nVerdorbene Menschen haben schwierige Leben, sind aber nicht von dem Moment ihrer Empfängnis an dem Untergang geweiht. Sie haben fünf Quellen der Hoffnung.\n\n- Dämonen sehen die Zukunft nicht voraus, sie sagen sie lediglich durch äußerst geschickte Urteile voraus. Willkürliche Ereignisse können ihre Pläne zunichte machen. - Der Prozess der Erschaffung und Schulung verdorbener Menschen enthält zufällige Faktoren. Dazu gehören ererbte Fehler wie Mit Böse Befleckt oder Entstellt, die persönlich schmerzhaft sind, den Charakter aber von seinem vorgesehenen Schicksal entfernen könnten. - Die Beziehungen des Charakters zu anderen Menschen bieten ebenfalls unvorhersehbare Elemente. Am bedeutsamsten: tugendhafte Menschen können die Neigung der verdorbenen Person zu einer bestimmten Art von Sünde bemerken und ihr beibringen, ihr zu widerstehen. - Menschen haben freien Willen. Aller Täuschung zum Trotz hat die verdorbene Person immer noch die Macht, sich gegen die Sünde zu entscheiden. Die verdorbene Person versteht dies möglicherweise nicht, oder fühlt, dass die von ihr begangene Sünde gering und angesichts der Situation, in der sie vor die Wahl gestellt wird, gerechtfertigt ist – aber die Wahl liegt völlig und absolut bei ihr. - Schließlich mischen sich die Agenten des Göttlichen in die Pläne der Höllenfürsten ein.\n\nVerdorbene Charaktere sind für bestimmte Situationen entworfen. Charaktere, die erfolgreich gegen ihr Schicksal ankämpfen, stellen fest, dass ihr Schöpfer normalerweise keine alternative Situation herbeiführen kann, für die der verdorbene Mensch perfekt geeignet ist. Der verdorbene Charakter verliert den Fehler Tragisches Leben, erhält aber in der Regel stattdessen den Fehler Geplagt durch übernatürliches Wesen, da der dämonische Herr seinen Groll an dem Charakter auslässt."
+  },
+  "flaw.true_friend_major": {
+    "name": "Wahrer Freund (Groß)",
+    "summary": "Du hast den einen Menschen gefunden, der in der ganzen Schöpfung für dich bestimmt ist, und die Verbindung zwischen euch beiden kann nicht zerrissen werden."
+  },
+  "flaw.true_friend_minor": {
+    "name": "Wahrer Freund (Klein)",
+    "summary": "Du hast den einen Menschen gefunden, der in der ganzen Schöpfung für dich bestimmt ist, und die Verbindung zwischen euch beiden kann nicht zerrissen werden."
   },
   "flaw.true_love_major": {
     "name": "Wahre Liebe (Groß)",
@@ -1431,7 +1452,8 @@
   },
   "flaw.unnatural_magic": {
     "name": "Unnatürliche Magie",
-    "summary": "Aufgrund der unwirklichen und illusionären Natur der Magie des Charakters haben keine seiner Creo-Rituale einen dauerhaften Effekt."
+    "summary": "Aufgrund der unwirklichen und illusionären Natur der Magie des Charakters haben keine seiner Creo-Rituale einen dauerhaften Effekt.",
+    "description": "Aufgrund der unwirklichen und illusionären Natur der Magie des Charakters haben keine seiner Creo-Rituale einen dauerhaften Effekt. Wunden, die zum Beispiel magisch mit Der heilende Eingriff des Chirurgen (CrCo20) geschlossen wurden, öffnen sich wieder, sobald er den Zauber beendet hat, da die Magie wirklich nur einen Moment anhält. Er kann auch keine Vis aus einer Aura mit Creo gewinnen, da seine Version dieser Kunst zu instabil ist, als dass das Vis in einer dauerhaften physischen Form verbleiben könnte."
   },
   "flaw.unpredictable_magic": {
     "name": "Unberechenbare Magie",
@@ -1440,7 +1462,8 @@
   },
   "flaw.unruly_air": {
     "name": "Ungebändigte Ausstrahlung",
-    "summary": "Der Charakter hat eine Neigung, Situationen aufzurühren, angenehme Ereignisse zu verbessern und unangenehme zu verschlimmern."
+    "summary": "Der Charakter hat eine Neigung, Situationen aufzurühren, angenehme Ereignisse zu verbessern und unangenehme zu verschlimmern.",
+    "description": "Der Charakter hat eine Neigung, Situationen aufzurühren, angenehme Ereignisse zu verbessern und unangenehme zu verschlimmern. Wann immer der Charakter in einer sozialen Situation mit mehreren Personen ist, wird sein geringfügigstes Verhalten andere subtil zu extremem Verhalten treiben. Er ist entweder die Seele der Party oder ihr Tod, je nach der vorherrschenden Stimmung der Menge. Sein Einfluss ist mit seiner magischen Natur verknüpft, so dass andere mit Magieresistenz nicht von ihm beeinflusst werden."
   },
   "flaw.unspecialized": {
     "name": "Nicht spezialisiert",
@@ -1448,11 +1471,13 @@
   },
   "flaw.unstructured_caster": {
     "name": "Unstrukturierter Zauberer",
-    "summary": "Du hast die Feinheiten des Zauberwirkens nie wirklich gemeistert und bist nicht in der Lage, Formulaische Magie ohne extreme Anstrengung zu wirken."
+    "summary": "Du hast die Feinheiten des Zauberwirkens nie wirklich gemeistert und bist nicht in der Lage, Formulaische Magie ohne extreme Anstrengung zu wirken.",
+    "description": "Du hast die Feinheiten des Zauberwirkens nie wirklich gemeistert und bist nicht in der Lage, Formulaische Magie ohne extreme Anstrengung zu wirken. Du wirkst alle Formulaischen Zauber so, als wären sie Ritualzauber (einschließlich des Vis-Bedarfs), und du kannst überhaupt keine Ritualzauber erlernen. Spontane Zauber wirkst du normal."
   },
   "flaw.usurer": {
     "name": "Wucherer",
-    "summary": "Du verleiht oft Silber oder andere Wertsachen an Menschen zu Zinssätzen, die viele als missbräuchlich betrachten."
+    "summary": "Du verleiht oft Silber oder andere Wertsachen an Menschen zu Zinssätzen, die viele als missbräuchlich betrachten.",
+    "description": "Du verleiht oft Silber oder andere Wertsachen an Menschen zu Zinssätzen, die viele als missbräuchlich betrachten. Du kommst irgendwie damit durch, vielleicht weil du einer Gruppe angehörst, die moralisches Urteil für diese Handlungen vermeiden kann, weil du außerhalb des Gesetzes operierst, oder vielleicht weil du eine Art von Währung verleihst, die von der sterblichen Bevölkerung nicht akzeptiert wird. Du erhältst jährlich das Äquivalent von ungefähr zehn Pfund Silber aus Zinszahlungen, obwohl du gelegentlich Schuldner aufspüren musst, und du hast eine schlechte Reputation (Wucherer) auf Stufe 4 innerhalb deiner Gemeinschaft und der lokalen Region."
   },
   "flaw.vendetta": {
     "name": "Vendetta",
@@ -1470,24 +1495,29 @@
   },
   "flaw.visions": {
     "name": "Visionen",
-    "summary": "Du siehst oft Bilder, die mit emotional oder magisch aufgeladenen Ereignissen zusammenhängen."
+    "summary": "Du siehst oft Bilder, die mit emotional oder magisch aufgeladenen Ereignissen zusammenhängen.",
+    "description": "Du siehst oft Bilder, die mit emotional oder magisch aufgeladenen Ereignissen zusammenhängen. Eine Vision könnte von der Vergangenheit, einer möglichen Zukunft oder einem fernen Geschehen handeln und ist oft symbolisch oder verwirrend. Visionen kommen dir normalerweise in ruhigen Momenten oder an Orten, die mit einem mächtigen emotionalen oder magischen Ereignis verbunden sind, wie dem Ort eines Vatersmordes oder eines diabolischen Opfers. Deine Visionen können dich vor bevorstehenden Gefahren warnen oder dich in Angelegenheiten verwickeln, die du sonst gemieden hättest. Die Visionen kommen ausschließlich nach dem Ermessen des Spielleiters, der nur das enthüllt, was er enthüllen möchte."
   },
   "flaw.vow_major": {
     "name": "Gelübde (Groß)",
-    "summary": "Du hast geschworen, etwas Schwieriges zu tun, und das Brechen deines Gelübdes ist eine ernsthafte Angelegenheit."
+    "summary": "Du hast geschworen, etwas Schwieriges zu tun, und das Brechen deines Gelübdes ist eine ernsthafte Angelegenheit.",
+    "description": "Du hast geschworen, etwas Schwieriges zu tun, und das Brechen deines Gelübdes ist eine ernsthafte Angelegenheit. Beispielhafte Gelübde schließen ein, niemals eine Waffe zu erheben, niemals zu sprechen oder in Armut zu leben. Wenn du dein Gelübde nicht einhältst, musst du eine Art Wiedergutmachung leisten, sei es religiöse Buße oder eine andere Weise, mit deinem Scheitern umzugehen. Ein Gelübde, das ein Großer Fehler ist, muss ein Gelübde sein, etwas zu tun, anstatt etwas zu unterlassen, damit es dich zum Handeln antreiben kann."
   },
   "flaw.vow_minor": {
     "name": "Gelübde (Klein)",
-    "summary": "Du hast geschworen, etwas Schwieriges zu tun, und das Brechen deines Gelübdes ist eine ernsthafte Angelegenheit."
+    "summary": "Du hast geschworen, etwas Schwieriges zu tun, und das Brechen deines Gelübdes ist eine ernsthafte Angelegenheit.",
+    "description": "Du hast geschworen, etwas Schwieriges zu tun, und das Brechen deines Gelübdes ist eine ernsthafte Angelegenheit. Beispielhafte Gelübde schließen ein, niemals eine Waffe zu erheben, niemals zu sprechen oder in Armut zu leben. Wenn du dein Gelübde nicht einhältst, musst du eine Art Wiedergutmachung leisten, sei es religiöse Buße oder eine andere Weise, mit deinem Scheitern umzugehen. Ein Gelübde, das ein Großer Fehler ist, muss ein Gelübde sein, etwas zu tun, anstatt etwas zu unterlassen, damit es dich zum Handeln antreiben kann."
   },
   "flaw.vulnerable_casting": {
     "name": "Anfälliges Zaubern",
-    "summary": "Manche Magi können den Erschöpfungsverlust durch das Wirken von Zaubern besser verkraften, andere weniger."
+    "summary": "Manche Magi können den Erschöpfungsverlust durch das Wirken von Zaubern besser verkraften, andere weniger.",
+    "description": "Manche Magi können den Erschöpfungsverlust durch das Wirken von Zaubern besser verkraften, andere weniger. Wenn eine Maga diesen Fehler hat, verliert sie jedes Mal, wenn sie durch das Wirken eines Zaubers Erschöpfung verlieren würde, eine zusätzliche Erschöpfungsstufe mehr als normal. Wenn der Zauber ohne Erschöpfungsverlust gewirkt worden wäre, verliert sie weiterhin keine Erschöpfung.\n\nEine Maga kann diesen Fehler mehrmals haben oder erwerben, und verliert für jede Stufe dieses Fehlers eine zusätzliche Erschöpfungsstufe. Hat sie Anfälliges Zaubern (2), verliert sie beim Wirken eines erschöpfenden Zaubers 2 zusätzliche Erschöpfungsstufen.\n\nMagi der Merkurischen Kulte verfallen diesem Fehler oft, aber auch andere Magi können darunter leiden, unabhängig von ihrer Zugehörigkeit.\n\nDer Fehler erhöht die Schwere der verlorenen Erschöpfung, genau in der Weise des bestehenden Erschöpfungsverlusts. Wirkt eine Maga also einen Formulaischen Zauber, ist die Erschöpfung kurzfristig und leicht zu erholen, und wenn ihr die Erschöpfungsstufen ausgehen, wird sie bewusstlos; der Verlust zusätzlicher Erschöpfungsstufen lässt sie für jede überlaufende Stufe eine Stunde lang bewusstlos sein, und so auch die Erschöpfung durch Anfälliges Zaubern. Wenn sie hingegen einen Ritualzauber wirkt, handelt es sich um langfristige Erschöpfung, und das Verlieren von mehr Erschöpfung als sie noch hat, verursacht Wunden, so dass auch die erhöhte Erschöpfung durch Anfälliges Zaubern dasselbe tut.\n\nDu darfst deinen Charakter nicht mit sowohl Anfälligem Zaubern als auch Zaubern widerstehen beginnen, aber die Maga kann beides im Laufe des Spiels erwerben (durch Einweihung, Prüfungen oder Zwielichteffekte). In diesem Fall wird zuerst die Anfälligkeit angewendet und dann dem erhöhten Verlust widerstanden."
   },
   "flaw.vulnerable_magic": {
     "name": "Verwundbare Magie ({condition})",
     "name_unfilled": "Verwundbare Magie",
-    "summary": "Die Magie des Charakters wird unter bestimmten ungewöhnlichen Umständen automatisch aufgelöst."
+    "summary": "Die Magie des Charakters wird unter bestimmten ungewöhnlichen Umständen automatisch aufgelöst.",
+    "description": "Die Magie des Charakters wird unter bestimmten ungewöhnlichen Umständen automatisch aufgelöst. Beispiele hierfür sind: beim Berühren von Eisen, unter dem Einfluss des Göttlichen, beim Überqueren von fließendem Wasser, wenn sein Name dreimal gesprochen wird, oder wenn er den Boden nicht berührt. Diese Bedingung beendet sofort die Dauer eines Zaubers, wenn sie auf das Ziel angewendet wird, oder alle deiner aktiven Zauber, wenn sie auf dich angewendet wird.\n\nDieser Fehler kann mehrmals genommen werden, solange für jede Instanz eine andere Bedingung angegeben wird. Er kann nicht mit Einschränkungen oder Notwendigen Bedingungen kombiniert werden, die dieselben (oder gleichwertige) Bedingungen haben."
   },
   "flaw.vulnerable_to_folk_tradition": {
     "name": "Anfällig für Volkszauber",
@@ -1496,15 +1526,18 @@
   },
   "flaw.wanderlust": {
     "name": "Wanderlust",
-    "summary": "Der Charakter fühlt sich getrieben zu reisen mit einer Leidenschaft, die so stark ist, dass er nicht mehr als ein Quartal an demselben Ort verbringen kann."
+    "summary": "Der Charakter fühlt sich getrieben zu reisen mit einer Leidenschaft, die so stark ist, dass er nicht mehr als ein Quartal an demselben Ort verbringen kann.",
+    "description": "Der Charakter fühlt sich getrieben zu reisen mit einer Leidenschaft, die so stark ist, dass er nicht mehr als ein Quartal an demselben Ort verbringen kann. Der Charakter kann nur zwei (nicht aufeinanderfolgende) Quartale pro Jahr in demselben Gebiet verbringen und muss die dazwischenliegenden Quartale damit verbringen, zu verschiedenen Orten zu reisen — Orte, an denen er noch nie gewesen ist. Wenn er aus irgendeinem Grund nicht reisen kann, wird er sehr unbehaglich werden; dieses Unbehagen sollte auf dieselbe Weise Geschichten erzeugen wie das Reisen selbst."
   },
   "flaw.warped_by_magic": {
     "name": "Durch Magie Verzerrt",
-    "summary": "Die Abenteuer des Charakters haben ihn mächtigen magischen Kräften ausgesetzt, die eine Spur an ihm hinterlassen haben."
+    "summary": "Die Abenteuer des Charakters haben ihn mächtigen magischen Kräften ausgesetzt, die eine Spur an ihm hinterlassen haben.",
+    "description": "Die Abenteuer des Charakters haben ihn mächtigen magischen Kräften ausgesetzt, die eine Spur an ihm hinterlassen haben. Er hat fünf Verzerrungspunkte und einen Verzerrungswert von 1, einschließlich eines Kleinen Fehlers (der nicht durch eine Tugend ausgeglichen wird), der irgendwie die Quelle der Verzerrung widerspiegelt. Seine Begegnungen erlauben es dir, während der Charaktererschaffung Erfahrungspunkte auf Magiekunde auszugeben. Ein Magus kann diesen Fehler nehmen, um Verzerrung darzustellen, die vor seiner Lehrlingschaft erworben wurde. Mit der Erlaubnis der Spieltruppe kann dieser Fehler angepasst werden, um Verzerrung aus anderen Sphären darzustellen."
   },
   "flaw.warped_magic": {
     "name": "Verzerrte Magie",
-    "summary": "Deine Magie wird von einem unangenehmen Nebeneffekt begleitet, der sich immer auf dieselbe Weise manifestiert, aber mit zunehmender Intensität entsprechend der Stufe des Zaubers."
+    "summary": "Deine Magie wird von einem unangenehmen Nebeneffekt begleitet, der sich immer auf dieselbe Weise manifestiert, aber mit zunehmender Intensität entsprechend der Stufe des Zaubers.",
+    "description": "Deine Magie wird von einem unangenehmen Nebeneffekt begleitet, der sich immer auf dieselbe Weise manifestiert, aber mit zunehmender Intensität entsprechend der Stufe des Zaubers. Beispiele hierfür sind: nahe gelegene Gegenstände werden heiß, oder nahe gelegenes Pflanzenmaterial wird vertrocknet und welk. Dieser Effekt kann von Zeit zu Zeit Probleme verursachen, ist aber meistens nur lästig."
   },
   "flaw.warped_senses": {
     "name": "Verzerrte Sinne",
@@ -1522,11 +1555,13 @@
   },
   "flaw.weak_enchanter": {
     "name": "Schwacher Verzauberer",
-    "summary": "Deine Gabe ist schlecht dazu geeignet, verzauberte Gegenstände zu erschaffen."
+    "summary": "Deine Gabe ist schlecht dazu geeignet, verzauberte Gegenstände zu erschaffen.",
+    "description": "Deine Gabe ist schlecht dazu geeignet, verzauberte Gegenstände zu erschaffen. Halbiere deine Laborsumme, wann immer du einen verzauberten Gegenstand erschaffst oder untersuchst. Wenn du eine Defizitäre Kunst hast, die als Teil der Laborsumme zählt, wende die Defizitäre Kunst zuerst an und halbiere dann die verbleibende Summe."
   },
   "flaw.weak_magic": {
     "name": "Schwache Magie",
-    "summary": "Deine Magie ist besonders schlecht darin, Magieresistenz zu durchdringen."
+    "summary": "Deine Magie ist besonders schlecht darin, Magieresistenz zu durchdringen.",
+    "description": "Deine Magie ist besonders schlecht darin, Magieresistenz zu durchdringen. Du halbierst die normale Penetrationssumme für alle Zauber und erhältst nur den halben normalen Nutzen, wenn du Penetration in einen Gegenstand einbettest. Beachte, dass du die Penetrationssumme halbierst, nachdem du die Zauberstufe abgezogen und etwaige Anpassungen für den Einsatz von Arkanen Verbindungen vorgenommen hast. Du halbierst nicht die Zaubersumme und berechnest daraus die Penetration."
   },
   "flaw.weak_magic_resistance": {
     "name": "Schwache Magieresistenz",
@@ -1543,11 +1578,13 @@
   },
   "flaw.weak_scholar": {
     "name": "Schwacher Gelehrter",
-    "summary": "Du verstehst Labortexte nicht sehr gut."
+    "summary": "Du verstehst Labortexte nicht sehr gut.",
+    "description": "Du verstehst Labortexte nicht sehr gut. Du erhältst einen -6-Abzug auf Laborsummen, wenn du nach den Labortexten anderer arbeitest, auch beim Neu-Erfinden von Zaubern."
   },
   "flaw.weak_spontaneous_magic": {
     "name": "Schwache Spontane Magie",
-    "summary": "Du darfst dich beim Wirken von Spontanmagie nicht anstrengen, teilst also deinen Zauberwert immer durch fünf."
+    "summary": "Du darfst dich beim Wirken von Spontanmagie nicht anstrengen, teilst also deinen Zauberwert immer durch fünf.",
+    "description": "Du darfst dich beim Wirken von Spontanmagie nicht anstrengen, teilst also deinen Zauberwert immer durch fünf. Unter Stressbedingungen musst du dennoch einen Stresswürfel würfeln, um zu prüfen, ob du einen Patzer erleidest, aber der Würfelwurf addiert sich nicht zu deiner Zaubersumme. Du kannst weiterhin zeremonielles Zaubern einsetzen.\n\nDieser Fehler kann mit Schwierige Spontane Magie (Seite 126) kombiniert werden, um einen Magus zu erschaffen, der überhaupt keine Spontanmagie wirken kann."
   },
   "flaw.weak_willed": {
     "name": "Willensschwach",
@@ -3067,6 +3104,11 @@
     "name": "Wahrer Glaube",
     "summary": "Durch Frömmigkeit und heilige Hingabe hast du einen Glauben, der Berge versetzt.",
     "description": "Durch Frömmigkeit und heilige Hingabe hast du einen Glauben, der Berge versetzt. Du hast einen Wert von 1 im Wahren Glauben und kannst weitere erlangen. Mehr über den Wahren Glauben findest du auf Seite 419.\n\nWer weltliche Belange vollständig aufgibt und sein Leben selbstlos einem heiligen Lebenswandel widmet, kommt in den Genuss des Wahren Glaubens. Wahrer Glaube wird in Glaubenspunkten gemessen, die die Verbindung einer Person zu Gott darstellen. Jene mit Wahrem Glauben können Juden, Christen oder Muslime sein und müssen dabei, so scheint es, nicht vollständig rechtgläubig sein.\n\nWahrer Glaube hat, wie Selbstvertrauen, sowohl einen Wert als auch Punkte. Die Große Tugend Wahrer Glaube verleiht einen Wahrer-Glaube-Wert von 1 und einen einzelnen Glaubenspunkt. Nur wer die Große Tugend Wahrer Glaube besitzt, kann einen Wahrer-Glaube-Wert haben. Jeder Charakter kann eine beliebige Anzahl von Glaubenspunkten besitzen (gewonnen durch Sakramente, eine Pilgerreise oder andere fromme Taten); einmal ausgegeben, kehren sie nicht zurück.\n\nGlaubenspunkte dürfen wie Selbstvertrauenspunkte ausgegeben werden (und es dürfen dabei so viele Glaubenspunkte auf einmal eingesetzt werden, wie der Wahrer-Glaube-Wert beträgt), solange man im Einklang mit Gottes Willen handelt. Wer keinen Wahrer-Glaube-Wert besitzt, darf jeweils nur einen Glaubenspunkt auf einmal einsetzen.\n\nEin Charakter mit Glaubenspunkten, aber ohne Wahrer-Glaube-Wert, erhält keine Magieresistenz. Ein Charakter mit einem Wahrer-Glaube-Wert erhält Magieresistenz in Höhe dieses Wertes multipliziert mit zehn.\n\nMAGIERESISTENZ DURCH WAHREN GLAUBEN: Wahrer-Glaube-Wert × 10\n\nMit jedem Morgengrauen werden Glaubenspunkte bis zur Höhe des Wahrer-Glaube-Wertes aufgefrischt. Wer bereits mehr Glaubenspunkte hat als sein Wahrer-Glaube-Wert beträgt, erhält keine zusätzlichen Punkte.\n\nWeitere Einzelheiten zum Wahren Glauben finden sich in Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Seite 56."
+  },
+  "virtue.true_friend_pc": {
+    "name": "Wahrer Freund (SC)",
+    "summary": "Du hast die eine Person gefunden, die in der gesamten Schöpfung für dich bestimmt ist, und die Bindung zwischen euch kann nicht getrennt werden.",
+    "description": "Du hast die eine Person gefunden, die in der gesamten Schöpfung für dich bestimmt ist, und die Bindung zwischen euch kann nicht getrennt werden. Wann immer du leidest, in Gefahr bist oder niedergeschlagen bist, gibt dir der Gedanke an deine Liebe die Kraft, durchzuhalten. Du kannst daher +3 auf passende Persönlichkeitseigenschaft-Würfe addieren und zusätzliche Boni, die der Spielleiter erlaubt (niemals mehr als +3 insgesamt), auf Handlungen, die dich zu deiner Liebe zurückführen oder ihr Leben retten. In äußerster Not mag sie sogar kommen, um dich zu retten. Andererseits bist du an deine Geliebte gebunden, zu der du häufig zurückkehren musst. Tust du das nicht, können dir bei den meisten Handlungen, die Willenskraft erfordern, Malus-Punkte durch Melancholie entstehen. Wenn irgendeine Verzauberung dich von der Seite deiner wahren Liebe fernhält, kann die Kraft deiner Hingabe sie wahrscheinlich brechen. Deine Wahre Liebe ist ein anderer Spielercharakter, der ebenfalls diese Tugend besitzen muss. Wahre Liebe ist niemals einseitig.\n\nDiese Tugend kann in „Wahrer Freund\" umbenannt werden, um gleichermaßen enge Bindungen zu umfassen, die nicht romantischer Natur sind."
   },
   "virtue.true_love_pc": {
     "name": "Wahre Liebe (SC)",
