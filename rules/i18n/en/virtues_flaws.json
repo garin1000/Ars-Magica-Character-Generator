@@ -67,7 +67,8 @@
   },
   "flaw.age_quickly": {
     "name": "Age Quickly",
-    "summary": "Probably due to a curse or a magical disaster, you age twice as fast as normal people."
+    "summary": "Probably due to a curse or a magical disaster, you age twice as fast as normal people.",
+    "description": "Probably due to a curse or a magical disaster, you age twice as fast as normal people. Your effective age (which applies as if it were your actual age when creating a Longevity Ritual, and when making rolls on the aging table) increases two years for every year that passes, and you make two aging rolls each year. It is possible to halt or slow the decline by supernatural means, such as Longevity Rituals, but they must deal with your effective age, not your chronological age."
   },
   "flaw.ambitious_major": {
     "name": "Ambitious (Major)",
@@ -105,7 +106,8 @@
   },
   "flaw.baneful_circumstances": {
     "name": "Baneful Circumstances",
-    "summary": "Something about the character's supernatural nature weakens him in relatively common circumstances, such as when touching the ground or when in the presence of women."
+    "summary": "Something about the character's supernatural nature weakens him in relatively common circumstances, such as when touching the ground or when in the presence of women.",
+    "description": "Something about the character's supernatural nature weakens him in relatively common circumstances, such as when touching the ground or when in the presence of women. At these times, the character cannot recover Fatigue, heal wounds, or recover Might, and if at the end of the year the character has spent more than half of his time subject to these conditions, he must make an additional Aging roll even if he is normally immune to aging because of a Longevity Ritual or Might Score."
   },
   "flaw.beloved_rival_major": {
     "name": "Beloved Rival (Major)",
@@ -284,7 +286,8 @@
   },
   "flaw.creative_block": {
     "name": "Creative Block",
-    "summary": "You have problems creating new things in the lab."
+    "summary": "You have problems creating new things in the lab.",
+    "description": "You have problems creating new things in the lab. You take a -3 penalty to all Lab Totals unless you are using a Laboratory Text or being taught. If you experiment, roll twice as many dice on the experimentation table."
   },
   "flaw.crippled": {
     "name": "Crippled",
@@ -2141,7 +2144,8 @@
   },
   "virtue.inventive_genius": {
     "name": "Inventive Genius",
-    "summary": "Invention comes naturally to you."
+    "summary": "Invention comes naturally to you.",
+    "description": "Invention comes naturally to you. You get +3 to your Lab Total if you are not using a Laboratory Text or being taught. If you experiment, you get +6."
   },
   "virtue.jack_of_all_trades": {
     "name": "Jack-of-All-Trades",
@@ -2298,11 +2302,13 @@
   },
   "virtue.magian_lineage_major": {
     "name": "Magian Lineage (Major)",
-    "summary": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia."
+    "summary": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia.",
+    "description": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia. Many mobeds, the priests of Zoroastrianism, possess this Virtue, either Minor or Major, but it is not a requisite. Details about Mythic Zoroastrianism can be found in The Cradle and the Crescent, Chapter 5.\n\nMinor: Your character's lineage is weak, although he or she is still ethnically Magian, and gains a strong constitution due to his purity. The character gains a -1 bonus to Aging rolls and a +3 bonus to resist the effects of disease.\n\nMajor: In addition to the benefits of the Minor Virtue. your character has an affinity with the ancient prophetic and other mystical arts of their ancestors. The player must choose three Arcane or Supernatural Abilities which the character need not start play with, and which cannot be True Names. These Abilities are considered connected, so that whenever your character gains experience from a source dedicated to one of these Abilities, he gains half the Source Quality (round up) in experience points in each of the other two Abilities. A character must have access to a Supernatural Ability in one of the normal ways, such as taking the Virtue at character creation or Initiating it later, in order to put any experience points into it. If you choose a Supernatural Ability that your character does not yet have access to, any experience points generated for it by this Virtue before the character gains access to the Ability are lost."
   },
   "virtue.magian_lineage_minor": {
     "name": "Magian Lineage (Minor)",
-    "summary": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia."
+    "summary": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia.",
+    "description": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia. Many mobeds, the priests of Zoroastrianism, possess this Virtue, either Minor or Major, but it is not a requisite. Details about Mythic Zoroastrianism can be found in The Cradle and the Crescent, Chapter 5.\n\nMinor: Your character's lineage is weak, although he or she is still ethnically Magian, and gains a strong constitution due to his purity. The character gains a -1 bonus to Aging rolls and a +3 bonus to resist the effects of disease.\n\nMajor: In addition to the benefits of the Minor Virtue. your character has an affinity with the ancient prophetic and other mystical arts of their ancestors. The player must choose three Arcane or Supernatural Abilities which the character need not start play with, and which cannot be True Names. These Abilities are considered connected, so that whenever your character gains experience from a source dedicated to one of these Abilities, he gains half the Source Quality (round up) in experience points in each of the other two Abilities. A character must have access to a Supernatural Ability in one of the normal ways, such as taking the Virtue at character creation or Initiating it later, in order to put any experience points into it. If you choose a Supernatural Ability that your character does not yet have access to, any experience points generated for it by this Virtue before the character gains access to the Ability are lost."
   },
   "virtue.magic_items": {
     "name": "Magic Items",
@@ -2761,7 +2767,8 @@
   },
   "virtue.strong_faerie_blood": {
     "name": "Strong Faerie Blood",
-    "summary": "The blood of the fay is strong in you."
+    "summary": "The blood of the fay is strong in you.",
+    "description": "The blood of the fay is strong in you. Perhaps one of your parents was actually a faerie, or maybe you were conceived or born in a place of great faerie power. This ancestry grants you several abilities.\n\nFirst, you have natural longevity. You start making aging rolls at the age of fifty, rather than the normal 35, and get -3 to Aging Rolls, cumulative with any other bonuses.\n\nSecond, you have faerie eyes. This gives you the Virtue Second Sight (see page 106) at no cost, and you can see normally in total darkness or semi-darkness, such as in deep woods or at night. Your eyes look mostly normal, but are an unusual and vivid color.\n\nThird, you may learn Faerie Lore during character generation.\n\nFinally, you get the benefits of a particular type of fay heritage, as given in the Virtue Faerie Blood (page 79). Your specific fay heritage is clearly visible. Choose one physical quirk, such as small horns, literally blue blood, or eyes without irises and pupils, appropriate to the faeries from which you are descended.\n\nYou may not have both Faerie Blood and Strong Faerie Blood.\n\nThis is a Supernatural Virtue, and you cannot lose it when being trained as a magus (see page 64). If your master cannot preserve the ability, you cannot be trained."
   },
   "virtue.strong_willed": {
     "name": "Strong-Willed",

@@ -459,6 +459,12 @@ const COMPOSED_DESCRIPTIONS: &[(&str, &[(u32, u32)])] = &[
 /// including `virtue.devil_child` (row 21, routed into X2a's own range by the
 /// coordinator rather than a later slice).
 const X2_VERBATIM_SCOPE: &[&str] = &[
+    // X7c (`tmp/x7c-verdicts.md` Phase 2): three entries whose second stated
+    // clause reached the player nowhere (D46/D67) — reclassified to
+    // `uncomputed_rule` with the full cited passage as `description`.
+    "flaw.age_quickly",
+    "flaw.baneful_circumstances",
+    "flaw.creative_block",
     "virtue.academic_concentration_subject",
     "virtue.affinity_ability",
     "virtue.affinity_art",

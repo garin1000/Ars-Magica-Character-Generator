@@ -49,7 +49,7 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": 0 }],
     "source": { "anchor": "age-quickly", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5659, 5662] }
@@ -137,7 +137,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": 0 }],
     "source": { "anchor": "baneful-circumstances", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5687, 5690] }
@@ -561,7 +561,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
@@ -4275,13 +4275,17 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "company", "type": "ref", "domain": "text" }],
     "effects": [
       {
         "type": "restricted_ability_xp",
         "amount": 50,
         "categories": ["academic"],
-        "abilities": ["ability.bargain", "ability.living_language", "ability.organization_lore"],
-        "instances": [{ "ability": "ability.profession", "instance": { "literal": "profession.merchant" } }]
+        "abilities": ["ability.bargain", "ability.living_language"],
+        "instances": [
+          { "ability": "ability.profession", "instance": { "literal": "profession.merchant" } },
+          { "ability": "ability.organization_lore", "instance": { "param": "company" } }
+        ]
       },
       { "type": "ability_authorization", "categories": ["academic"] }
     ],
@@ -5116,7 +5120,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["hermetic"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
@@ -5459,7 +5463,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.magian_lineage_minor"],
     "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }],
@@ -5470,7 +5474,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.magian_lineage_major"],
     "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }],
@@ -6060,7 +6064,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "effects": [
-      { "type": "grants_reputation", "kind": "local", "score": 2 },
+      { "type": "grants_reputation", "score": 2 },
       { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.medicine", "ability.philosophiae"] }
     ],
     "source": { "anchor": "physician-of-salerno", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4732, 4735] }
@@ -6648,7 +6652,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["supernatural"],
-    "classification": "creation_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [
       { "type": "grants_selection", "items": ["virtue.second_sight"] },

@@ -67,7 +67,8 @@
   },
   "flaw.age_quickly": {
     "name": "Schnelles Altern",
-    "summary": "Wahrscheinlich infolge eines Fluches oder eines magischen Unglücks alterst du doppelt so schnell wie normale Menschen."
+    "summary": "Wahrscheinlich infolge eines Fluches oder eines magischen Unglücks alterst du doppelt so schnell wie normale Menschen.",
+    "description": "Wahrscheinlich infolge eines Fluches oder eines magischen Unglücks alterst du doppelt so schnell wie normale Menschen. Dein effektives Alter (das bei der Erstellung eines Langlebigkeitsrituals und bei Würfen auf der Alterungstabelle wie dein tatsächliches Alter gilt) steigt pro vergehendem Jahr um zwei Jahre, und du machst jedes Jahr zwei Alterungswürfe. Es ist möglich, den Verfall durch übernatürliche Mittel, wie Langlebigkeitsrituale, aufzuhalten oder zu verlangsamen, doch diese müssen mit deinem effektiven Alter umgehen, nicht mit deinem chronologischen Alter."
   },
   "flaw.ambitious_major": {
     "name": "Ehrgeizig (Groß)",
@@ -105,7 +106,8 @@
   },
   "flaw.baneful_circumstances": {
     "name": "Schädliche Umstände",
-    "summary": "Irgendetwas an der übernatürlichen Natur des Charakters schwächt ihn unter relativ häufigen Umständen, etwa beim Berühren des Bodens oder in Gegenwart von Frauen."
+    "summary": "Irgendetwas an der übernatürlichen Natur des Charakters schwächt ihn unter relativ häufigen Umständen, etwa beim Berühren des Bodens oder in Gegenwart von Frauen.",
+    "description": "Irgendetwas an der übernatürlichen Natur des Charakters schwächt ihn unter relativ häufigen Umständen, etwa beim Berühren des Bodens oder in Gegenwart von Frauen. Zu diesen Zeiten kann der Charakter keine Erschöpfung zurückgewinnen, keine Wunden heilen und keine Macht regenerieren. Verbringt der Charakter am Ende des Jahres mehr als die Hälfte seiner Zeit unter diesen Bedingungen, muss er einen zusätzlichen Alterungswurf ablegen, selbst wenn er normalerweise durch ein Langlebigkeitsritual oder einen Machtwert vor dem Altern geschützt ist."
   },
   "flaw.beloved_rival_major": {
     "name": "Geliebter Rivale (Groß)",
@@ -285,7 +287,8 @@
   },
   "flaw.creative_block": {
     "name": "Schaffensblockade",
-    "summary": "Du hast Probleme damit, neue Dinge im Labor zu erschaffen."
+    "summary": "Du hast Probleme damit, neue Dinge im Labor zu erschaffen.",
+    "description": "Du hast Probleme damit, neue Dinge im Labor zu erschaffen. Du erleidest eine -3-Strafe auf alle Laborsummen, es sei denn, du verwendest einen Labortext oder wirst unterrichtet. Wenn du experimentierst, würfle doppelt so viele Würfel auf der Experimentiertabelle."
   },
   "flaw.crippled": {
     "name": "Verkrüppelt",
@@ -2143,7 +2146,8 @@
   },
   "virtue.inventive_genius": {
     "name": "Erfinderisches Genie",
-    "summary": "Erfinden liegt dir im Blut."
+    "summary": "Erfinden liegt dir im Blut.",
+    "description": "Erfinden liegt dir im Blut. Du erhältst +3 auf deine Laborsumme, wenn du keinen Labortext verwendest und auch nicht unterrichtet wirst. Wenn du experimentierst, erhältst du +6."
   },
   "virtue.jack_of_all_trades": {
     "name": "Alleskönner",
@@ -2300,11 +2304,13 @@
   },
   "virtue.magian_lineage_major": {
     "name": "Magische Abstammung (Groß)",
-    "summary": "Diese Tugend macht den Charakter zu einem echten Blutsnachkommen des medischen Stammes der Magier, der ursprünglichen Priesterkaste Persiens."
+    "summary": "Diese Tugend macht den Charakter zu einem echten Blutsnachkommen des medischen Stammes der Magier, der ursprünglichen Priesterkaste Persiens.",
+    "description": "Diese Tugend macht den Charakter zu einem echten Blutsnachkommen des medischen Stammes der Magier, der ursprünglichen Priesterkaste Persiens. Viele Mobeds, die Priester des Zoroastrismus, besitzen diese Tugend, entweder in der Kleinen oder der Großen Form, doch sie ist keine Voraussetzung. Einzelheiten zum Mythischen Zoroastrismus finden sich in Der Halbmond und die Wiege, Kapitel 5.\n\nKlein: Die Abstammungslinie deines Charakters ist schwach, obwohl er oder sie ethnisch gesehen ein Magier ist und aufgrund seiner Reinheit eine robuste Konstitution erlangt. Der Charakter erhält einen -1-Bonus auf Alterungswürfe und einen +3-Bonus, um den Auswirkungen von Krankheiten zu widerstehen.\n\nGroß: Zusätzlich zu den Vorteilen der Kleinen Tugend hat dein Charakter eine Affinität zu den alten prophetischen und anderen mystischen Künsten seiner Vorfahren. Der Spieler muss drei Arkane oder Übernatürliche Fertigkeiten wählen, mit denen der Charakter nicht notwendigerweise zu Beginn des Spiels vertraut sein muss und die keine Wahren Namen sein dürfen. Diese Fertigkeiten gelten als miteinander verbunden, sodass dein Charakter, wann immer er Erfahrung aus einer Quelle erhält, die einer dieser Fertigkeiten gewidmet ist, die Hälfte der Quellenqualität (aufgerundet) als Erfahrungspunkte in jede der beiden anderen Fertigkeiten erhält. Ein Charakter muss auf eine der üblichen Weisen Zugang zu einer Übernatürlichen Fertigkeit haben – etwa durch das Nehmen der Tugend bei der Charaktererschaffung oder durch spätere Einweihung –, um Erfahrungspunkte in sie investieren zu können. Wählst du eine Übernatürliche Fertigkeit, zu der dein Charakter noch keinen Zugang hat, gehen alle Erfahrungspunkte, die durch diese Tugend für sie generiert werden, bevor der Charakter Zugang zu der Fertigkeit erhält, verloren."
   },
   "virtue.magian_lineage_minor": {
     "name": "Magische Abstammung (Klein)",
-    "summary": "Diese Tugend macht den Charakter zu einem echten Blutsnachkommen des medischen Stammes der Magier, der ursprünglichen Priesterkaste Persiens."
+    "summary": "Diese Tugend macht den Charakter zu einem echten Blutsnachkommen des medischen Stammes der Magier, der ursprünglichen Priesterkaste Persiens.",
+    "description": "Diese Tugend macht den Charakter zu einem echten Blutsnachkommen des medischen Stammes der Magier, der ursprünglichen Priesterkaste Persiens. Viele Mobeds, die Priester des Zoroastrismus, besitzen diese Tugend, entweder in der Kleinen oder der Großen Form, doch sie ist keine Voraussetzung. Einzelheiten zum Mythischen Zoroastrismus finden sich in Der Halbmond und die Wiege, Kapitel 5.\n\nKlein: Die Abstammungslinie deines Charakters ist schwach, obwohl er oder sie ethnisch gesehen ein Magier ist und aufgrund seiner Reinheit eine robuste Konstitution erlangt. Der Charakter erhält einen -1-Bonus auf Alterungswürfe und einen +3-Bonus, um den Auswirkungen von Krankheiten zu widerstehen.\n\nGroß: Zusätzlich zu den Vorteilen der Kleinen Tugend hat dein Charakter eine Affinität zu den alten prophetischen und anderen mystischen Künsten seiner Vorfahren. Der Spieler muss drei Arkane oder Übernatürliche Fertigkeiten wählen, mit denen der Charakter nicht notwendigerweise zu Beginn des Spiels vertraut sein muss und die keine Wahren Namen sein dürfen. Diese Fertigkeiten gelten als miteinander verbunden, sodass dein Charakter, wann immer er Erfahrung aus einer Quelle erhält, die einer dieser Fertigkeiten gewidmet ist, die Hälfte der Quellenqualität (aufgerundet) als Erfahrungspunkte in jede der beiden anderen Fertigkeiten erhält. Ein Charakter muss auf eine der üblichen Weisen Zugang zu einer Übernatürlichen Fertigkeit haben – etwa durch das Nehmen der Tugend bei der Charaktererschaffung oder durch spätere Einweihung –, um Erfahrungspunkte in sie investieren zu können. Wählst du eine Übernatürliche Fertigkeit, zu der dein Charakter noch keinen Zugang hat, gehen alle Erfahrungspunkte, die durch diese Tugend für sie generiert werden, bevor der Charakter Zugang zu der Fertigkeit erhält, verloren."
   },
   "virtue.magic_items": {
     "name": "Zauberartefakte",
@@ -2763,7 +2769,8 @@
   },
   "virtue.strong_faerie_blood": {
     "name": "Starkes Feenblut",
-    "summary": "Das Blut der Feen ist stark in dir."
+    "summary": "Das Blut der Feen ist stark in dir.",
+    "description": "Das Blut der Feen ist stark in dir. Vielleicht war einer deiner Eltern tatsächlich eine Fee, oder du wurdest an einem Ort großer Feenkraft empfangen oder geboren. Diese Abstammung verleiht dir mehrere Fähigkeiten.\n\nErstens hast du natürliche Langlebigkeit. Du beginnst erst im Alter von fünfzig Jahren Alterungswürfe zu machen, anstatt der üblichen 35, und erhältst -3 auf Alterungswürfe, kumulativ mit allen anderen Boni.\n\nZweitens hast du Feenaugen. Das verleiht dir die Tugend Zweites Gesicht (siehe Seite 106) ohne Kosten, und du kannst bei völliger Dunkelheit oder Halbdunkel normal sehen, etwa in tiefem Waldesdunkel oder in der Nacht. Deine Augen sehen größtenteils normal aus, weisen jedoch eine ungewöhnliche und lebhafte Farbe auf.\n\nDrittens darfst du Feenkunde während der Charaktererschaffung erlernen.\n\nSchließlich erhältst du die Vorteile einer bestimmten Art von Feenabstammung, wie in der Tugend Feenblut (Seite 79) angegeben. Deine spezifische Feenabstammung ist klar erkennbar. Wähle eine körperliche Besonderheit, etwa kleine Hörner, buchstäblich blaues Blut oder Augen ohne Iris und Pupillen, die zu den Feen passt, von denen du abstammst.\n\nDu kannst nicht sowohl Feenblut als auch Starkes Feenblut besitzen.\n\nDies ist eine Übernatürliche Tugend, und du kannst sie bei der Ausbildung als Magus nicht verlieren (siehe Seite 64). Wenn dein Meister die Fähigkeit nicht erhalten kann, kannst du nicht ausgebildet werden."
   },
   "virtue.strong_willed": {
     "name": "Willensstark",

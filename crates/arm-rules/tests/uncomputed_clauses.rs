@@ -2706,12 +2706,10 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          family, X4); the single-dead-language grant needs a player-chosen `language` parameter \
          (X6/D9p1) rather than custos's fixed-Latin shape — both deferred, ArMDE:5179-5182",
     ),
-    (
-        "flaw.baneful_circumstances",
-        "orphan: \"cannot recover Fatigue, heal wounds, or recover Might\" during the \
-         circumstance has no effect at all — only the extra Aging roll is computed, \
-         ArMDE:5687-5690",
-    ),
+    // flaw.baneful_circumstances resolved (X7c, Phase 2, D46/D67): reclassified
+    // `uncomputed_rule` with the full passage in `description` in both
+    // locales, so it no longer trips this creation_effect/in_play_effect-
+    // scoped screen — see tmp/x7c-verdicts.md.
     (
         "flaw.bound_to_role_role",
         "orphan: the deprivation-check-as-food clause and \"may only be taken by grogs\" carry \
@@ -2722,11 +2720,9 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // locales, so it no longer trips this creation_effect/in_play_effect-
     // scoped screen at all — it is now covered by
     // `every_uncomputed_rule_entry_states_its_rule_in_every_locale` instead.
-    (
-        "flaw.creative_block",
-        "orphan: \"roll twice as many dice on the experimentation table\" has no effect — only \
-         the -3 Lab Total is computed, ArMDE:5873-5876",
-    ),
+    // flaw.creative_block resolved (X7c, Phase 2, D46/D67): reclassified
+    // `uncomputed_rule` with the full passage in `description` in both
+    // locales — see tmp/x7c-verdicts.md.
     (
         "flaw.excommunicate",
         "orphan: \"cannot benefit from the sacraments\" has no effect — only the bad Reputation \
@@ -2856,27 +2852,21 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     ),
     // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
     // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
-    (
-        "virtue.inventive_genius",
-        "orphan: \"If you experiment, you get +6\" has no effect — only the conditional +3 Lab \
-         Total is computed, ArMDE:4151-4154",
-    ),
+    // virtue.inventive_genius resolved (X7c, Phase 2, D46/D67): reclassified
+    // `uncomputed_rule` with the full passage in `description` in both
+    // locales — see tmp/x7c-verdicts.md.
     // virtue.leper_magus, virtue.life_boost: removed (X2b, D20) — both are two
     // of D20's five "number missing" surfaced-only entries
     // (`docs/vf-audit/decisions.md` D20), so a description alone does not
     // resolve them while they stay in_play_effect: both reclassify fully to
     // uncomputed_rule, with dedicated numeric tests in `x2_reclassification.rs`
     // (mirroring X2a's virtue.commanding_aura). See tmp/x2b-verdicts.md.
-    (
-        "virtue.magian_lineage_major",
-        "orphan: the Major half's connected-Abilities XP-sharing mechanic has no effect — only \
-         the shared -1 Aging-roll base clause is computed, ArMDE:4339-4346",
-    ),
-    (
-        "virtue.magian_lineage_minor",
-        "orphan: the Minor half's own \"+3 bonus to resist the effects of disease\" has no \
-         effect — only the shared -1 Aging-roll base clause is computed, ArMDE:4339-4346",
-    ),
+    // virtue.magian_lineage_major/_minor resolved (X7c, Phase 2, D46/D67):
+    // both reclassified `uncomputed_rule` with the full passage (including the
+    // disease-resistance clause) in `description` in both locales — the
+    // Major's connected-Abilities XP-sharing clause remains a separate, still
+    // open gap (`tmp/x6-scope.md` § 1 "M-group", F-157/F-158) that this fix
+    // does not touch. See tmp/x7c-verdicts.md.
     (
         "virtue.magic_items",
         "orphan: \"the rate at which your items are improved is increased by one level per \
@@ -2973,13 +2963,9 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          Warping immunity are not visibly keyed to age or otherwise computed beyond a flat \
          might_grant score of 0, ArMDE:5022-5031",
     ),
-    (
-        "virtue.strong_faerie_blood",
-        "orphan: the age-50 aging-roll start (vs. normal 35), \"see normally in total \
-         darkness\", \"may learn Faerie Lore\", and the entire inherited Faerie Blood sub-type \
-         bonus list all have no effect — only the Second Sight grant and the -3 Aging-roll are \
-         computed, ArMDE:5032-5047",
-    ),
+    // virtue.strong_faerie_blood resolved (X7c, Phase 2, D46/D67): reclassified
+    // `uncomputed_rule` with the full passage in `description` in both
+    // locales — see tmp/x7c-verdicts.md.
     // --- X2d (tmp/x2d-verdicts.md, 2026-09-29): ten rows moved here from
     // COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE — each certification missed a real,
     // live-finding-backed residue. virtue.shadchan's gap was closed in Phase 2
