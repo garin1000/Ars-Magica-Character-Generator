@@ -35,7 +35,11 @@
       }
     },
     {
-      "ref": "virtue.strong_faerie_blood"
+      "ref": "virtue.strong_faerie_blood",
+      "params": {
+        "heritage": "heritage.undine",
+        "quirk": "webbed fingers"
+      }
     },
     {
       "ref": "virtue.student_of_realm",

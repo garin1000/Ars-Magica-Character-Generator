@@ -255,6 +255,10 @@ const MECHANICAL_PHRASES: &[&str] = &[
     // Formulas.
     "equal to",
     "entspricht",
+    // X2f (2026-09-30): `flaw.form_monstrosity` (ArMDE:6164) states "which
+    // corresponds to a magical Form" — the same equivalence idiom as "equal
+    // to"/"entspricht", just a different English verb for it.
+    "corresponds to",
     "multiply",
     "multiplied",
     "multiplizier",
@@ -1428,6 +1432,56 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::De,
         family: "arcane connection duration",
     },
+    // --- Family 17 (X2f Phase 2 additions, 2026-09-30) -----------------------
+    S2Idiom {
+        // flaw.fluctuating_fortune (ArMDE:6150-6153): "followed by the Poor
+        // Flaw the next... followed by a year in which he has to work three"
+        // — a concrete, unmodelled toggling mechanic the screen's existing
+        // idioms do not recognize.
+        pattern: r"\bfollowed by a year",
+        language: Language::En,
+        family: "toggling condition",
+    },
+    S2Idiom {
+        // flaw.fluctuating_fortune (ArMDE:6150-6153, DE): "gefolgt von einem
+        // Jahr mit dem Fehler Arm" / "gefolgt von einem Jahr, in dem er drei
+        // arbeiten muss".
+        pattern: r"\bgefolgt von einem jahr",
+        language: Language::De,
+        family: "toggling condition",
+    },
+    S2Idiom {
+        // flaw.greater_malediction/flaw.lesser_malediction (ArMDE:6210-6213,
+        // 6342-6345): "The effects of the curse should be comparable to
+        // those of other Major Flaws" / "...should be about as bad as other
+        // Minor General Flaws" — a real, storyguide-actionable severity
+        // calibration (D8/F-442), not mere colour.
+        pattern: r"\beffects of the curse should be",
+        language: Language::En,
+        family: "curse severity",
+    },
+    S2Idiom {
+        // Same two entries, DE mirror: "Die Auswirkungen des Fluchs sollten
+        // denen anderer Großer Fehler vergleichbar sein" / "Die Auswirkungen
+        // des Fluches sollten ungefähr so schlimm sein wie andere Kleine
+        // Allgemeine Fehler" — declension differs (Fluchs/Fluches), so the
+        // stem is matched with no right boundary, same convention as
+        // `\bhalve`/`\bhalbiert` above.
+        pattern: r"\bauswirkungen des fluch",
+        language: Language::De,
+        family: "curse severity",
+    },
+    S2Idiom {
+        // flaw.judged_unfairly (ArMDE:6326-6329, DE): "dieser Fehler ist mit
+        // jeder Tugend unvereinbar" — the same incompatibility idiom as
+        // `\bist unvereinbar mit`/`\bist nicht ... vereinbar` above, but in
+        // the word order "ist mit X unvereinbar" (verb-final unvereinbar),
+        // which neither existing incompatibility pattern covers. Verified: a
+        // single real hit in the whole DE source.
+        pattern: r"\bist mit\b[^.]{0,40}?\bunvereinbar",
+        language: Language::De,
+        family: "incompatibility",
+    },
 ];
 
 /// [`S2_IDIOMS`], compiled once.
@@ -1629,14 +1683,29 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
         "The Minor half of the same entry, citing the same passage (ArMDE:6562-6565). Same \
          reading as flaw.overconfident_major.",
     ),
+    // flaw.horrifying_appearance_snake_legs: OVERTURNED (X2f) — this reading
+    // (no rule, "or more" only counts tails) still holds on its own terms, but
+    // D8 overrides it regardless: the entry is categories:["supernatural"],
+    // and D8 reclassifies every `supernatural` + `narrative` entry to
+    // `uncomputed_rule` on the "a capability is a rule" argument, independent
+    // of whether the mechanical-token screen would itself have caught
+    // anything. Removing the row lets
+    // `no_swept_entry_drops_an_uncomputed_mechanical_clause` bite it directly
+    // (the "or more" token still trips the screen, which is sufficient).
+    // See tmp/x2f-verdicts.md.
     (
-        "flaw.horrifying_appearance_snake_legs",
-        "ArMDE:6264-6267 counts tails, not dice: \"your hips give rise to two or more \
-         snake-like tails\". The \"or more\" is the only token, and what it quantifies is the \
-         character's anatomy — the passage's one near-mechanical sentence, \"Your movement is \
-         not hindered under most circumstances\", explicitly declines to impose a penalty. \
-         Nothing rolls, nothing is capped, nothing is modified. Pure body-horror description, \
-         which is `narrative`.",
+        "flaw.lecherous_major",
+        "ArMDE:6334-6337's \"you need not be any good at seduction; skill here merely changes \
+         the kinds of problems you encounter\" states no restriction, cap, or roll — a bare \
+         disclaimer that no skill gates this Flaw, the same non-mechanical \"need not\" shape \
+         (family 1/3-adjacent) as flaw.slothful/flaw.tzadik_nistar. Moved from \
+         PENDING_MECHANICAL_CLASSIFICATION (X2f): re-read against D50 finds nothing a player or \
+         storyguide must act on.",
+    ),
+    (
+        "flaw.lecherous_minor",
+        "The Minor half of the same entry, citing the same passage (ArMDE:6334-6337). Same \
+         reading as flaw.lecherous_major.",
     ),
     (
         "flaw.primogeniture_lineage",
@@ -1709,12 +1778,15 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
          infernalism\" (bare \"cannot\", family 1/3) is roleplay/storyguide guidance about a \
          Story Flaw's secrecy premise, not a mechanical restriction on the character.",
     ),
-    (
-        "flaw.exiled_atlantean",
-        "ArMDE:6048-6051's \"cannot return to her magic regio\" (bare \"cannot\", family 1/3) is \
-         setting background — the engine has no regio-travel mechanic and nothing about the \
-         character's computed state changes because of this sentence.",
-    ),
+    // flaw.exiled_atlantean: OVERTURNED (X2f) — D8 overrides this reading
+    // regardless of whether the passage's "cannot return to her magic regio"
+    // is itself a computed rule. D8: "A capability is a rule", and applies to
+    // every `supernatural`-category `narrative` entry without exception — the
+    // ruling's own count (48 of 115) is not scoped to Virtues, and this Flaw
+    // is categories:["supernatural"]. Reclassifies to uncomputed_rule with the
+    // full passage in description (both locales); removing the row lets
+    // `no_swept_entry_drops_an_uncomputed_mechanical_clause` bite it directly.
+    // See tmp/x2f-verdicts.md.
     (
         "flaw.soft_hearted",
         "ArMDE:6775-6778's \"You cannot bear to witness suffering\" (bare \"cannot\", family 1/3) \
@@ -1810,52 +1882,26 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // reclassification target is `uncomputed_rule`, not a misclassification —
     // Phase 2's job. `no_swept_entry_drops_an_uncomputed_mechanical_clause`
     // bites each directly now that the row is gone.
-    (
-        "flaw.disorientating_magic",
-        "named rulebook term: \"spend a round\", ArMDE:5984-5987",
-    ),
-    (
-        "flaw.enfeebled",
-        "prohibition: \"unable to learn\" / bare \"cannot\" — \"cannot train\", ArMDE:6008-6011",
-    ),
-    (
-        "flaw.envied_beauty",
-        "prohibition: \"may not have\" this Flaw without a positive Presence, ArMDE:6012-6015",
-    ),
-    (
-        "flaw.exciting_experimentation",
-        "named rulebook term: \"two dice instead of\" the normal one, ArMDE:6040-6043",
-    ),
-    (
-        "flaw.false_power",
-        "capability: \"the ability to\" sense the taint, plus extensive realm-interaction \
-         mechanics the passage states (D8-adjacent), ArMDE:6080-6097",
-    ),
-    (
-        "flaw.false_power_minor",
-        "The Minor half of the same entry, citing the same passage. Same trigger as \
-         flaw.false_power.",
-    ),
-    (
-        "flaw.fettered_magic",
-        "prohibition: bare \"cannot\" — incompatible with Tethered Magic, ArMDE:6114-6117",
-    ),
-    (
-        "flaw.harmless_magic",
-        "prohibition: bare \"cannot\" — \"cannot permanently destroy anything\", ArMDE:6230-6235",
-    ),
+    // X2f (`tmp/x2-worklist.md` rows 261-317, `tmp/x2f-verdicts.md`): all 10
+    // rows below (disorientating_magic, enfeebled, envied_beauty,
+    // exciting_experimentation, false_power, false_power_minor,
+    // fettered_magic, harmless_magic, incompatible_arts, judged_unfairly)
+    // resolved the same way: each passage genuinely states an uncomputed rule
+    // (D46/D50), reclassification target `uncomputed_rule`, Phase 2's job.
+    // `no_swept_entry_drops_an_uncomputed_mechanical_clause` bites each
+    // directly now that the row is gone.
     // flaw.hermetic_patron: resolved (X5a) — the "must be a Redcap or magus"
     // eligibility clause is now a `prerequisites` gate (D68.2); reclassifies
     // narrative -> creation_effect. See tmp/x5-verdicts.md.
-    (
-        "flaw.incompatible_arts",
-        "incompatibility: \"may not be combined with\" a Deficiency, ArMDE:6290-6293",
-    ),
-    (
-        "flaw.judged_unfairly",
-        "prohibition + incompatibility: bare \"cannot\" gain a Reputation, \"is incompatible \
-         with\", ArMDE:6326-6329",
-    ),
+    // flaw.lecherous_major, flaw.lecherous_minor: OVERTURNED (X2f) — this was
+    // a placeholder row from the X2b Phase 2 fix-round ("filed here per that
+    // row's classification precondition rather than resolved"), never a
+    // confirmed drop. ArMDE:6334-6337's "you need not be any good at
+    // seduction; skill here merely changes the kinds of problems you
+    // encounter" states no restriction, cap, or roll — it is the same
+    // non-mechanical "need not" shape as flaw.slothful/flaw.tzadik_nistar's
+    // own family, a false positive of the idiom, not a dropped rule. Moved to
+    // NO_RULE_DESPITE_TOKEN; see tmp/x2f-verdicts.md.
     (
         "flaw.magical_being_companion",
         "signed-number blind spot F-469 (S2, has_signed_number): \"Magic Might score of 10 – \
@@ -1889,11 +1935,12 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // counts as computed, so both already reclassified to `creation_effect`
     // and stopped tripping this guard. Removed per shrink-only list
     // semantics, same convention as the 13 X2e rows above.
-    (
-        "flaw.restricted_learning",
-        "permission: \"at character creation\" — the five-Ability restriction itself, \
-         ArMDE:6683-6686",
-    ),
+    // flaw.restricted_learning: resolved (X6b, design-x6-parameters.md e5) —
+    // the five-Ability restriction now carries a `restricted_ability_xp`
+    // effect (with `abilities_param` unioning the Supernatural-category
+    // grant) and a dedicated `validate_ability_xp_scope` validator, so it
+    // reclassified to `creation_effect` and stopped tripping this guard
+    // (which requires `narrative`). Removed per shrink-only list semantics.
     (
         "flaw.restriction",
         "prohibition: bare \"cannot\" — \"cannot cast spells at all\" under conditions, \
@@ -1939,17 +1986,8 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // six entries elsewhere in the catalogue, all still `narrative`, all
     // outside X2b's own range (ArMDE:4067-4442) — filed here per that row's
     // classification precondition rather than resolved, exactly as any other
-    // PMC row awaiting its own slice.
-    (
-        "flaw.lecherous_major",
-        "\"need not\" idiom (added for virtue.magical_memory): \"you need not be any good at \
-         seduction\", ArMDE:6334-6337",
-    ),
-    (
-        "flaw.lecherous_minor",
-        "The Minor half of the same entry, citing the same passage. Same trigger as \
-         flaw.lecherous_major.",
-    ),
+    // PMC row awaiting its own slice. (flaw.lecherous_major/_minor:
+    // OVERTURNED and moved to NO_RULE_DESPITE_TOKEN — see X2f above.)
     (
         "flaw.slothful",
         "\"need not\" idiom: \"very good at coming up with excuses as to why things need not be \
@@ -2337,6 +2375,15 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          advancement_mod effects with matching sources.",
     ),
     (
+        "flaw.failed_monk",
+        "all three stated clauses (bad Reputation 2 local, bad Reputation 2 ecclesiastical, \
+         Academic-Ability authorization) are computed via two grants_reputation effects plus \
+         ability_authorization; \"no longer need to observe monastic vows\" and the Failed-Nun \
+         naming note are flavor. Moved here from PENDING_DROPPED_CLAUSE (X2f) — its own orphan \
+         comment predated the authorization work and is now stale; re-reading finds no residue. \
+         See tmp/x2f-verdicts.md.",
+    ),
+    (
         "flaw.outsider_major",
         "single clause (bad Reputation, level 1-3), fully computed via grants_reputation with \
          a matching max_score.",
@@ -2699,12 +2746,12 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          the F-340 blanket Wealthy/Poor exclusion family; the Academic-Ability permission itself \
          is computed via ability_authorization, ArMDE:4800",
     ),
-    (
-        "virtue.turb_trained",
-        "orphan: \"prohibited from being Wealthy or Poor\" carries no incompatible_with (F-340's \
-         family, X4); the single-dead-language grant needs a player-chosen `language` parameter \
-         (X6/D9p1) rather than custos's fixed-Latin shape — both deferred, ArMDE:5179-5182",
-    ),
+    // virtue.turb_trained: resolved — the Wealthy/Poor exclusion landed
+    // (X4, `incompatible_with`), and the single-dead-language grant now
+    // carries a player-chosen `language` parameter bound to
+    // `ability.dead_language` via `AbilityRef::Scoped` (X6b,
+    // design-x6-parameters.md e5, ArMDE:5179-5182). Both clauses this row
+    // recorded are computed; removed.
     // flaw.baneful_circumstances resolved (X7c, Phase 2, D46/D67): reclassified
     // `uncomputed_rule` with the full passage in `description` in both
     // locales, so it no longer trips this creation_effect/in_play_effect-
@@ -2723,33 +2770,41 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // flaw.creative_block resolved (X7c, Phase 2, D46/D67): reclassified
     // `uncomputed_rule` with the full passage in `description` in both
     // locales — see tmp/x7c-verdicts.md.
-    (
-        "flaw.excommunicate",
-        "orphan: \"cannot benefit from the sacraments\" has no effect — only the bad Reputation \
-         is computed, ArMDE:6044-6047",
-    ),
-    (
-        "flaw.failed_monk",
-        "orphan: \"may take Academic Abilities during character creation\" has no \
-         ability_authorization/restricted_ability_xp effect — only the two Reputations are \
-         computed (authorization family, X1-adjacent), ArMDE:6068-6071",
-    ),
-    (
-        "flaw.feral_scent",
-        "orphan: \"-1 penalty to social interactions\" has no effect — only the Reputation is \
-         computed, ArMDE:6106-6109",
-    ),
-    (
-        "flaw.leprosy",
-        "orphan: \"cannot gain a positive Reputation\" has no effect — only the Living \
-         Condition penalty and the Aging-Crisis Heavy Wound are computed, ArMDE:6338-6341",
-    ),
+    // flaw.excommunicate, flaw.feral_scent, flaw.leprosy: resolved (X2f) —
+    // each orphan is real and still unaddressed; removing the rows lets
+    // `no_swept_entry_drops_an_uncomputed_mechanical_clause` bite each
+    // directly (classification stays creation_effect/in_play_effect; D5
+    // obliges the missing clause into description). See tmp/x2f-verdicts.md.
+    // flaw.failed_monk: resolved (X2f) — this row's own finding (missing
+    // ability_authorization) is now STALE: the shipped entry already carries
+    // `ability_authorization categories:[academic]` alongside both
+    // Reputations, so all three of the passage's mechanical clauses are
+    // computed; the rest ("no longer need to observe monastic vows", "Female
+    // characters may take this Flaw as Failed Nun") is flavor/naming, not a
+    // rule. Same shape as virtue.master_of_kennels's own X2c move: moved to
+    // COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE below. See tmp/x2f-verdicts.md.
+    // flaw.imagined_folk_tradition_vulnerability: NOT added here (X2f) — its
+    // real D3-inexpressible cap ("a score of 1 (but no more)" on Faerie Lore,
+    // ArMDE:6280-6283, flagged by tmp/rules-md-audit-2026-09-30.md item 5, same
+    // shape as flaw.magical_fascination above) is invisible to THIS list's own
+    // validity check: the entry's shipped summary is the passage's own first
+    // sentence, "...has other game mechanical effects as well" / "...hat...
+    // auch andere spielmechanische Auswirkungen", which itself trips the
+    // "named rulebook term" idiom pair (`game mechanical effects` /
+    // `spielmechanische auswirkungen`) in both locales — a screen false
+    // positive: the phrase *claims* an effect exists without stating it, yet
+    // satisfies `displayed_text_states_a_mechanical_rule_in_every_locale`
+    // regardless. `pending_dropped_clause_entries_still_trip_the_screen`
+    // therefore refuses this row ("displayed text now states a mechanical
+    // rule in every locale — delete the row"). See instead
+    // `imagined_folk_tradition_vulnerability_states_its_faerie_lore_cap` in
+    // x2_reclassification.rs, a dedicated test the screen cannot fool.
     (
         "flaw.monstrous_blood",
-        "orphan: \"may learn Magic Lore during character creation\" (no authorization effect) \
-         plus the entire four-way Magic-Animal/Human/Spirit/Thing sub-type system (each with its \
-         own penalty or power) — only the -1 Aging-roll base clause is computed, \
-         ArMDE:6454-6467",
+        "orphan (X6b narrowed, design-x6-parameters.md e1): the Magic Human branch is now \
+         computed (`characteristic_score_delta_param`/`grants_reputation`, gated on `bloodline`), \
+         but Magic Animal's -3 penalty, Magic Spirit's -3 Intelligence/Perception penalty, and \
+         Magic Thing's Lesser Power remain uncomputed, ArMDE:6454-6467",
     ),
     (
         "flaw.obese",
@@ -2770,9 +2825,10 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     ),
     (
         "flaw.savantism",
-        "effects: null — the halved starting XP, halved future Advancement Totals, the score-3 \
-         starting cap, and the favored-Ability exception (+3 specialization, cap 6) are entirely \
-         uncomputed (also D46-pending), ArMDE:6703-6708",
+        "orphan (X6b narrowed, design-x6-parameters.md e6): the favored-Ability cap (6) and the \
+         all-other cap (3) are now computed through `ability_age_cap`'s single resolution point; \
+         the halved starting XP, halved future Advancement Totals, and the +3 specialization roll \
+         remain uncomputed — handed to X7b-d's F-510, ArMDE:6703-6708",
     ),
     // flaw.the_constant_expression: resolved (X2e) — the permanent lost
     // Fatigue level, the Concentration roll to suppress (Ease Factor 3 +

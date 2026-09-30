@@ -6335,6 +6335,16 @@ standalone gate for this one entry would pre-empt that slice's design.
 - **Spontaneous-magic casting modifier** — `flaw.weak_spontaneous_magic` (ArMDE:7084-7089), `virtue.diedne_magic` (ArMDE:3675-3682), `virtue.faerie_raised_magic` (ArMDE:3829-3842), `virtue.spell_improvisation` (ArMDE:5002-5005), `virtue.life_linked_spontaneous_magic` (ArMDE:4299-4306)
 - **Art-halving (Technique / Form)** — `flaw.deficient_technique` (ArMDE:5913-5915), `flaw.deficient_form` (ArMDE:5909-5912)
 - **Circumstantial casting/lab penalty (surfaced)** — `flaw.deleterious_circumstances` (ArMDE:5917-5920), `flaw.environmental_magic_condition` (ArMDE:6020-6023), `flaw.short_ranged_magic` (ArMDE:6737-6740), `flaw.disjointed_magic` (ArMDE:5972-5975), `flaw.the_constant_expression` (ArMDE:5821-5838)
+
+  **X2f Phase 2/D20/D67 correction:** three of these five —
+  `flaw.deleterious_circumstances`, `flaw.disjointed_magic` and
+  `flaw.environmental_magic_condition` — are `uncomputed_rule`, not
+  `in_play_effect`. D20 rules that a bare `special_casting_mod: circumstantial`
+  label with no number is a surfaced-only effect that tells the player
+  nothing, so the rule's only real carrier is `description`; D67 lets the
+  entry keep the `special_casting_mod` effect it still computes regardless of
+  the classification. `flaw.short_ranged_magic` and
+  `flaw.the_constant_expression` are unaffected by this slice.
 - **Doubled aura penalties (surfaced)** — `flaw.susceptibility_to_divine_power` (ArMDE:6815-6818), `special_casting_mod { doubled_aura_penalty }`
 
   > `ArMDE:6817` — "You are especially sensitive to the Dominion and suffer twice
@@ -11175,6 +11185,213 @@ though the -2 penalty itself stays text (D61).
 relic/True-Faith composition split (F-256, X7b-d); Commanding Aura stacking,
 Turb Trained's dead-language catalogue dependency, and Special Circumstances'
 +3 (design note § 5, Norbert's answers recorded in `decisions.md` D70).
+
+---
+
+## X6b — the 16 rule-driving entries' data (`docs/vf-audit/design-x6-parameters.md` § 2)
+
+Data only — every field below rides X6a's already-shipped `Effect`/`ParameterDef`/
+`PointItem` machinery; no engine change. Tests:
+`crates/arm-rules/tests/x6b_parameter_data.rs`, one behavioral test (or a
+required/negative pair) per entry, against the SHIPPED `rules/core/*.json`.
+
+- **`virtue.commanding_aura`** — `rank` enumerated {`archbishop`,
+  `cardinal_legatus`, `king`, `legatus_missus`, `pope`}. Ten gated effects
+  (one `magic_resistance_mod`/`soak_mod` pair per rank): Pope MR 25/Soak +5,
+  Cardinal or Legatus a Latere MR 20/+4, Legatus Missus MR 15/+3, Archbishop
+  MR 10/+2 (ArMDE:3585-3591), King MR 10/+2 (ArMDE:17651, D70 Q-X6-1). The
+  MR bonuses ADD across active sources, per e2's existing `max()`/sum fold.
+  The wife rule (ArMDE:17652) and lay-ruler cross-reference (ArMDE:3595)
+  stay text. **Classification stays `uncomputed_rule`** — D20/X2a already
+  pinned this (`x2_reclassification.rs::commanding_aura_reclassifies_and_states_its_eight_figures`),
+  so the gated effects sit alongside the existing eight-figure description,
+  not instead of it — the same shape `flaw.repellent`/
+  `virtue.special_circumstances` below already use.
+- **`flaw.savantism`** — `favored` (`ability` domain). Two effects fold into
+  `ability_age_cap` (e6): `ability_score_cap_override_param{max:6}` on the
+  favored Ability (overrides the age band, ArMDE:6705), `ability_score_cap_all_except{max:3}`
+  on every other (lowers it). The halved starting XP, halved Advancement
+  Totals, and the +3 specialization roll stay handed to X7b-d's F-510 — not
+  this slice's concern (removed from `PENDING_D46_CLASSIFICATION` in
+  `data_integrity.rs` and narrowed in `uncomputed_clauses.rs`'s
+  `PENDING_DROPPED_CLAUSE`, both now that the cap half is computed).
+- **`flaw.restricted_learning`** — `abilities` (`multi_ref`/`ability`,
+  `exact_count: 5`, ArMDE:6685). `restricted_ability_xp{amount:0,
+  categories:[supernatural], abilities_param:"abilities"}` (e5): the five
+  named Abilities plus any Supernatural Ability a Virtue grants are the ONLY
+  funding targets. Reclassified `narrative` → `creation_effect` (D67; row
+  removed from `uncomputed_clauses.rs`'s `PENDING_MECHANICAL_CLASSIFICATION`);
+  gained a full `description` in both locales (the prior entry carried only
+  `summary`, and the looser creation_effect-scoped screen still needs the
+  rule stated).
+- **`virtue.faerie_blood` / `virtue.strong_faerie_blood`** — shared `heritage`
+  enumerated {`bee_king`, `custom`, `dwarf`, `goblin`, `satyr`, `sidhe`,
+  `spinnen`, `undine`} (E+, ArMDE:3805-3819/:5032-5047 — "or create a similar
+  one"). Sidhe: `characteristic_score_delta{characteristic.pre, amount:1,
+  gate}` (ArMDE:3815). Dwarf: `ability_roll_mod{ability.craft, amount:1,
+  gate}` (ArMDE:3809, surfaced-only). Goblin/Satyr/Spinnen/Undine/Bee
+  King/custom stay text (D61) — Satyr/Goblin/Undine's own totals name no
+  fixed target the engine's vocabulary can bind to. **Known gap, flagged for
+  Norbert:** Sidhe's own text caps at "+1 to Presence, but not to more than
+  +3" (ArMDE:3815), but `CharacteristicScoreDelta` (unlike its
+  `CharacteristicScoreDeltaParam` sibling) carries no `cap` field — only a
+  fixed-target, always-additive delta, the same shape Great
+  Characteristic/Giant Blood use to legitimately EXCEED +3. Adding a `cap`
+  field to `CharacteristicScoreDelta` is a small, engine-side, additive
+  change (mirroring `CharacteristicDeltaCap` onto the fixed-target variant)
+  that X6b's data-only scope does not cover; until it lands, a Sidhe
+  character whose bought Presence is already +3 shows +4, one over the
+  book's stated ceiling. Strong Faerie Blood additionally carries an
+  unconditional `quirk` (`text`, ArMDE:5042 — "Choose one physical quirk").
+- **`flaw.monstrous_blood`** — reuses Magical Blood's own `bloodline`
+  enumerated {`custom`, `magic_animal`, `magic_human`, `magic_spirit`,
+  `magic_thing`} (same four background types, ArMDE:6454-6467 vs. Magical
+  Blood's ArMDE:4359-4372) plus a `characteristic` (`characteristic` domain,
+  `required_if: bloodline==magic_human`). Magic Human:
+  `characteristic_score_delta_param{amount:-1, gate, cap:within_base}` +
+  `grants_reputation{score:3, gate}` — B4's Magical Blood pattern, sign
+  flipped (decrease, not increase) and the Reputation framed as "poor"
+  (ArMDE:6462). Magic Animal/Spirit/Thing's own penalties/powers stay text
+  (no fixed Characteristic/roll target to bind to).
+- **`flaw.ability_block`** — a three-parameter either/or, since
+  `ParamGate` has no OR/disjunction and `class`'s domain must be exactly
+  `ability_category` (no room for a `custom` sentinel inside a closed
+  5-member enum, unlike the Enumerated-domain E+ entries above): `scope`
+  enumerated {`category`, `custom`} (always required) selects the branch;
+  `class` (`ability_category` domain, `required_if: scope==category`)
+  drives `forbids_ability_category_param{param:"class"}` (e5); `custom`
+  (`text`, `required_if: scope==custom`) stays permanently text (D70: no
+  closed domain to validate a free-text Ability list against, ArMDE:5653
+  states no count to bound it). Reclassified `uncomputed_rule` →
+  `creation_effect` (D67; its existing full-passage `description` in both
+  locales already satisfied the looser screen, so no text change needed).
+- **`flaw.vengeful_powers`** — `taken_as` (`category` domain,
+  {`hermetic`, `story`}, `max_total: 1`) records which reading applies
+  (ArMDE:6975: "may be taken as a Hermetic Flaw... more commonly associated
+  with Supernatural Abilities"); `categories` widened to `["story",
+  "hermetic"]`. Data only — category membership is read by X3's trained
+  gate / House credit through the existing `categories_for` machinery, no
+  new effect. **Added to `x3_trained_gate.rs`'s `PENDING_HERMETIC_FLAWS`**
+  (not gated `trained`/`prerequisites`): those fields apply to the WHOLE
+  item unconditionally, and there is no per-value conditional `Prereq`, so
+  gating it would wrongly block the ordinary Story reading for a non-magus.
+  A real per-value gate is a future engine change, not this slice's.
+- **`virtue.potent_magic_major` / `_minor`** — `field` (`text`,
+  `max_total: 255` — "more than one area of Potent Magic", ArMDE:4742). Data
+  only: the +3/+6 bonus is X7b-d's D4 fix (already landed,
+  `derived.rs::D4_WITHIN_FOCUS_ONLY`/`in_play_lab_total_mod_within_focus`),
+  coordinated with, not duplicated by, this slice.
+- **`virtue.special_circumstances`** — `circumstance` (`text`). Closes
+  F-541/F-287 (the duplicate-copy inversion): `max_per_target: 255` removed
+  (reverts to the default 1, now meaningful since the parameter makes two
+  identical copies an exact-tuple duplicate), `max_total: 255` kept
+  explicit. Moved from `data_integrity.rs`'s `UNLIMITED_REPEAT_ITEMS` to its
+  `TEXT_TARGET_PARAM_ITEMS`. **Classification and the existing
+  `magic_resistance_mod{aura_bonus}` effect (amount 0, inert) stay
+  untouched** — `f2_conditional_modifiers.rs::special_circumstances_keeps_only_magic_resistance_mod`
+  pins `uncomputed_rule`; the +3 stays surfaced-only text (D45/D58/D70: no
+  "circumstance is active" toggle exists).
+- **`virtue.performance_magic`** — `ability` (`ability` domain,
+  `require_ability_categories:[general]`, `max_total: 255` — "distinct
+  Virtues for each possible Ability", ArMDE:4648). e3's category narrowing
+  IS the "not Language, Supernatural, Academic, or Arcane" exclusion
+  (ArMDE:4646): General is the one category left. No effect — the picker/
+  validator domain is the whole of D9's obligation here; classification
+  stays `uncomputed_rule`.
+- **`virtue.magian_lineage_major`** — `abilities` (`multi_ref`/`ability`,
+  `require_ability_categories:[arcane, supernatural]`,
+  `forbid_ids:[ability.true_names]`, `exact_count: 3`, ArMDE:4345). No
+  catalogued `ability.true_names` exists yet to prove `forbid_ids`
+  behaviorally against (pinned as a direct data assertion,
+  `x6b_parameter_data.rs::magian_lineage_major_data_forbids_true_names`);
+  the field is still correct and future-proof the moment that Ability is
+  added. The connected-XP rule (halving between the three) stays text
+  (in-play, D61). Classification stays `uncomputed_rule` (unchanged;
+  already carried its own `aging_mod` effect at this classification before
+  X6b).
+- **`flaw.repellent`** — `feature` enumerated {`custom`, `dark_sight`,
+  `natural_weapons`, `scales`} (Q-X6-3/D70). Scales:
+  `soak_mod{amount:3, gate}` — "a scaled character might have a Soak bonus
+  of +3" (ArMDE:6681), the one computable minor advantage (D58.1: if the
+  sheet shows it, compute it). Natural weapons (melee use) and dark sight
+  (see in the dark) stay text — neither names a fixed total the engine's
+  vocabulary can bind to. **Classification stays `uncomputed_rule`** — a
+  hard constraint (`tests/fixtures/s1_before_offenders.json`'s
+  `en/de flaw.repellent: true` entries require the id to remain
+  `uncomputed_rule`, else `uncomputed_clauses.rs::regex_screen_never_loses_an_s1_recorded_flag`
+  regresses), the same shape Commanding Aura/Special Circumstances already
+  established: a gated, computed effect can sit on an `uncomputed_rule`
+  entry when the REST of the passage (the -6 trust penalty here) stays
+  uncomputed.
+- **`virtue.turb_trained`** — `language` enumerated over the existing
+  `catalogue.language` values (`language.arabic/aramaic/gothic/greek/hebrew/latin/persian`
+  — D70/Q-X6-2 confirms reusing the catalogue as-is, no new subset). The
+  `ability_authorization` effect gains `abilities:
+  [{ability: ability.dead_language, instance: {param: "language"}}]`
+  alongside its existing `categories: [martial]` — D14 shape 2, the
+  param-bound sibling of Custos's fixed-Latin literal. Gained a full
+  `description` in both locales (previously `summary`-only; needed once the
+  entry started tripping `no_swept_entry_drops_an_uncomputed_mechanical_clause`'s
+  looser "does displayed text state a rule" check).
+- **`flaw.warped_senses`** — one merged `affliction` enumerated parameter
+  covering ten leaf values (`sensitive_hearing/_sight/_smell/_taste`,
+  `sensitive_to_cold/_heat`, `weak_hearing/_sight/_smell/_taste`,
+  ArMDE:7029-7037), `max_total: 255` — **not** the design note's literal
+  "form + sense" two-parameter split. `ParamGate` carries a single
+  `equals`, with no OR; two parameters would need "sense required_if
+  form ∈ {sensitive, weak}", which no existing gate shape expresses within
+  this data-only slice. One combined value per leaf choice sidesteps the
+  gap entirely (no engine change, and a simpler single-dropdown UI to
+  boot). Four `conditional_incompatible_with` entries (e7), gated on the
+  merged value directly: Sensitive Sight forbids Blind; Weak Sight forbids
+  Blind AND Keen Vision (ArMDE:7031, :7033); Sensitive Hearing forbids
+  Deaf; Weak Hearing forbids Deaf AND Sharp Ears — both "inadvisable" and
+  "incompatible" phrasings become hard errors per D58's absolute reading.
+  **Known gap:** the passage's OWN same-item pairing ("inadvisable to
+  combine Sensitive Sight with... Weak Sight" is implied by both naming
+  each other) is not enforced — `conditional_incompatible_with.forbids`
+  naming the declaring item's own id would self-match every copy
+  (`selected_ids` includes the item currently being checked), so this
+  cross-copy exclusion is left out rather than built wrong. The -2 penalty
+  stays text (D61); classification stays `uncomputed_rule` (a hard
+  constraint, same `s1_before_offenders.json` mechanism as Repellent).
+
+**Fixture and cross-file fallout** (every new REQUIRED parameter making an
+old bare selection newly report `missing_param`, per D70/Q-X6-4):
+`crates/arm-rules/tests/fixtures/book_templates/{magus_mercere,magus_merinita,magus_verditius}.json`
+gained the book's own stated values (Mercere's Special Circumstances "during
+a storm", ArMDE:1966; Merinita's Strong Faerie Blood "(Undine)", ArMDE:2014,
+plus an invented, mechanically-inert `quirk` the book's own archetype
+summary does not state; Verditius's Faerie Blood "(Dwarf)", ArMDE:2165).
+`core_type_conformance.rs`'s grog/companion fixtures gained
+`scope`/`class` for their bare `flaw.ability_block` selections.
+`x1_authorization_family.rs`'s `virtue.turb_trained` row gained a
+`dead_language_param()` helper (the `ParamValue::Bound` sibling of the
+existing `latin()` literal) alongside its `categories: [Martial]`
+expectation.
+
+**Fluent:** twelve new `param-label-*` keys (`rank`, `favored`, `abilities`,
+`heritage`, `quirk`, `scope`, `class`, `custom`, `feature`, `affliction`,
+`field`, `circumstance` — both locales); no new issue codes (e1-e7's plumbing
+already covers every new effect/validator this data exercises).
+
+**i18n:** every new enumerated value id, both locales
+(`rules/i18n/{en,de}/virtues_flaws.json`), German terms taken from
+`rules/source/de/translation-tables/tugenden-fehler.md` (Bee King, the
+Sensitive/Weak (Sense) family) where tabled, else the line-parallel German
+rulebook (Commanding Aura's ranks, Faerie Blood's remaining heritages, Turb
+Trained's own passage) per standing rule — `Spinnen-Blut` is used over the
+German rulebook's own heading spelling `Stinnen-Blut` (ArMDE:3817, whose body
+text says "Spinnen" three times against the heading's one "Stinnen";
+`tmp/x6-scope.md`'s own `heritage.spinnen` slug agrees). `language.*`'s seven
+values are ALSO
+duplicated into `virtues_flaws.json`'s own i18n (redundant with
+`parameter_catalogue.json`, where they already lived) because
+`every_enumerated_value_id_has_english_and_german_text` resolves names
+through `virtues_flaws.json` alone, not the app's own
+`merge_catalogue_display_names` — the same "second, hand-authored copy, no
+completeness guardrail" shape `ability_category.*`'s pre-existing duplication
+already has (`derive.ts::displayName`'s own doc comment).
 
 ---
 

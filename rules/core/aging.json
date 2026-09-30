@@ -7,186 +7,199 @@
     {
       "id": "living_condition.average_peasant",
       "modifier": 0,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16587, 16587] }
+      "source": { "anchor": "aging/living-conditions/average-peasant", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16587, 16587] }
     },
     {
       "id": "living_condition.leper",
       "modifier": -2,
       "cumulative": true,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16592, 16592] }
+      "source": { "anchor": "aging/living-conditions/leper", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16592, 16592] }
     },
     {
       "id": "living_condition.live_in_a_leper_colony",
       "modifier": -1,
       "cumulative": true,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16588, 16588] }
+      "source": { "anchor": "aging/living-conditions/live-in-a-leper-colony", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16588, 16588] }
     },
     {
       "id": "living_condition.poor_or_unhealthy_location_typical_town",
       "modifier": -2,
       "cumulative": true,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16591, 16591] }
+      "source": { "anchor": "aging/living-conditions/poor-or-unhealthy-location-typical-town", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16591, 16591] }
     },
     {
       "id": "living_condition.typical_spring_or_winter_covenant_magus",
       "modifier": 1,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16586, 16586] }
+      "source": { "anchor": "aging/living-conditions/typical-spring-or-winter-covenant-magus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16586, 16586] }
     },
     {
       "id": "living_condition.typical_summer_or_autumn_covenant_magus",
       "modifier": 2,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16584, 16584] }
+      "source": { "anchor": "aging/living-conditions/typical-summer-or-autumn-covenant-magus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16584, 16584] }
     },
     {
       "id": "living_condition.typical_summer_or_autumn_covenant_mundane",
       "modifier": 1,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16585, 16585] }
+      "source": { "anchor": "aging/living-conditions/typical-summer-or-autumn-covenant-mundane", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16585, 16585] }
     },
     {
       "id": "living_condition.wealthy_or_healthy_location",
       "modifier": 2,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16583, 16583] }
+      "source": { "anchor": "aging/living-conditions/wealthy-or-healthy-location", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16583, 16583] }
     },
     {
       "id": "living_condition.work_in_a_bad_air_trade",
       "modifier": -1,
       "cumulative": true,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16589, 16589] }
+      "source": { "anchor": "aging/living-conditions/work-in-a-bad-air-trade", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16589, 16589] }
     },
     {
       "id": "living_condition.work_in_a_mine",
       "modifier": -1,
       "cumulative": true,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16590, 16590] }
+      "source": { "anchor": "aging/living-conditions/work-in-a-mine", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16590, 16590] }
     }
   ],
   "outcomes": [
     {
+      "id": "aging.roll.10_12",
       "min": 10,
       "max": 12,
       "effect": { "type": "any_characteristic", "points": 1 },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16601, 16601] }
+      "source": { "anchor": "aging/aging-roll/10-12", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16601, 16601] }
     },
     {
+      "id": "aging.roll.13",
       "min": 13,
       "max": 13,
       "effect": { "type": "next_decrepitude_level_and_crisis" },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16602, 16602] }
+      "source": { "anchor": "aging/aging-roll/13", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16602, 16602] }
     },
     {
+      "id": "aging.roll.14",
       "min": 14,
       "max": 14,
       "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["qik"] },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16603, 16603] }
+      "source": { "anchor": "aging/aging-roll/14", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16603, 16603] }
     },
     {
+      "id": "aging.roll.15",
       "min": 15,
       "max": 15,
       "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["sta"] },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16604, 16604] }
+      "source": { "anchor": "aging/aging-roll/15", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16604, 16604] }
     },
     {
+      "id": "aging.roll.16",
       "min": 16,
       "max": 16,
       "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["per"] },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16605, 16605] }
+      "source": { "anchor": "aging/aging-roll/16", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16605, 16605] }
     },
     {
+      "id": "aging.roll.17",
       "min": 17,
       "max": 17,
       "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["pre"] },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16606, 16606] }
+      "source": { "anchor": "aging/aging-roll/17", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16606, 16606] }
     },
     {
+      "id": "aging.roll.18",
       "min": 18,
       "max": 18,
       "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["str", "sta"] },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16607, 16607] }
+      "source": { "anchor": "aging/aging-roll/18", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16607, 16607] }
     },
     {
+      "id": "aging.roll.19",
       "min": 19,
       "max": 19,
       "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["dex", "qik"] },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16608, 16608] }
+      "source": { "anchor": "aging/aging-roll/19", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16608, 16608] }
     },
     {
+      "id": "aging.roll.20",
       "min": 20,
       "max": 20,
       "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["com", "pre"] },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16609, 16609] }
+      "source": { "anchor": "aging/aging-roll/20", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16609, 16609] }
     },
     {
+      "id": "aging.roll.21",
       "min": 21,
       "max": 21,
       "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["int", "per"] },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16610, 16610] }
+      "source": { "anchor": "aging/aging-roll/21", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16610, 16610] }
     },
     {
+      "id": "aging.roll.22_plus",
       "min": 22,
       "effect": { "type": "next_decrepitude_level_and_crisis" },
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16611, 16611] }
+      "source": { "anchor": "aging/aging-roll/22", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16611, 16611] }
     }
   ],
   "crisis": {
     "die": {
+      "id": "crisis.die",
       "min": 1,
       "max": 10,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [474, 474] }
+      "source": { "anchor": "simple-die", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [472, 474] }
     },
     "attendant": {
+      "id": "crisis.attendant",
       "ability": "ability.medicine",
       "characteristic": "int",
       "ease_factor": 6,
       "botch_penalty": -3,
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16634, 16634] }
+      "source": { "anchor": "aging/medical-attention-may-help", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16634, 16634] }
     },
     "rows": [
       {
         "id": "crisis.bedridden_week",
         "max": 8,
         "outcome": { "type": "bedridden" },
-        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16626, 16626] }
+        "source": { "anchor": "aging/crisis-roll/8-or-less", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16626, 16626] }
       },
       {
         "id": "crisis.bedridden_month",
         "min": 9,
         "max": 14,
         "outcome": { "type": "bedridden" },
-        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16627, 16627] }
+        "source": { "anchor": "aging/crisis-roll/9-14", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16627, 16627] }
       },
       {
         "id": "crisis.minor_illness",
         "min": 15,
         "max": 15,
         "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 },
-        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16628, 16628] }
+        "source": { "anchor": "aging/crisis-roll/15", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16628, 16628] }
       },
       {
         "id": "crisis.serious_illness",
         "min": 16,
         "max": 16,
         "outcome": { "type": "illness", "severity": "serious", "ease_factor": 6, "ritual_level": 25 },
-        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16629, 16629] }
+        "source": { "anchor": "aging/crisis-roll/16", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16629, 16629] }
       },
       {
         "id": "crisis.major_illness",
         "min": 17,
         "max": 17,
         "outcome": { "type": "illness", "severity": "major", "ease_factor": 9, "ritual_level": 30 },
-        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16630, 16630] }
+        "source": { "anchor": "aging/crisis-roll/17", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16630, 16630] }
       },
       {
         "id": "crisis.critical_illness",
         "min": 18,
         "max": 18,
         "outcome": { "type": "illness", "severity": "critical", "ease_factor": 12, "ritual_level": 35 },
-        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16631, 16631] }
+        "source": { "anchor": "aging/crisis-roll/18", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16631, 16631] }
       },
       {
         "id": "crisis.terminal_illness",
         "min": 19,
         "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 },
-        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16632, 16632] }
+        "source": { "anchor": "aging/crisis-roll/19", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16632, 16632] }
       }
     ]
   },

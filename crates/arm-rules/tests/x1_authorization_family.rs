@@ -75,6 +75,19 @@ fn latin() -> AbilityRef {
     }
 }
 
+/// `ability.dead_language` bound to Turb Trained's own player-chosen
+/// `language` parameter (X6b, design-x6-parameters.md e5, D14 shape 2) — the
+/// param-bound sibling of [`latin`]'s fixed literal.
+fn dead_language_param() -> AbilityRef {
+    AbilityRef::Scoped {
+        ability: Id::new("ability.dead_language"),
+        instance: Some(ParamValue::Bound {
+            param: "language".into(),
+        }),
+        gate: None,
+    }
+}
+
 fn auth(abilities: Vec<AbilityRef>, categories: Vec<CategoryRef>) -> Effect {
     Effect::AbilityAuthorization {
         abilities,
@@ -392,13 +405,17 @@ fn authorization_family_entries_carry_the_stated_permission() {
             "virtue.templar_administrator",
             auth(vec![], vec![cat(AbilityCategory::Academic)]),
         ),
-        // turb_trained: only the martial half is asserted here — the
-        // dead-language half needs a new player-chosen `language` parameter
-        // (the book leaves the language open, unlike custos's fixed Latin),
-        // which is a Phase-2 design choice, not asserted structurally here.
+        // turb_trained: the dead-language half is now asserted too (X6b,
+        // design-x6-parameters.md e5) — `language` is a player-chosen
+        // enumerated parameter over the dead languages the book prints
+        // (ArMDE:5181), bound via the same `ParamValue::Bound` shape
+        // `latin()` above uses for its own literal instance.
         (
             "virtue.turb_trained",
-            auth(vec![], vec![cat(AbilityCategory::Martial)]),
+            auth(
+                vec![dead_language_param()],
+                vec![cat(AbilityCategory::Martial)],
+            ),
         ),
         (
             "virtue.troubadour",

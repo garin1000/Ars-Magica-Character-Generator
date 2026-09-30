@@ -2128,12 +2128,13 @@ const PENDING_D46_CLASSIFICATION: &[(&str, &str)] = &[
     // `flaw.corrupted_arts` resolved (Phase 2 C5c, D15): reclassified
     // `uncomputed_rule`, so it no longer trips this creation_effect-scoped
     // guard at all.
-    (
-        "flaw.savantism",
-        "creation_effect, carries no effects, no prerequisites, no incompatible_with, and is \
-         named in no type profile's required_traits/forbidden_traits (measurements.md § 8 row \
-         11)",
-    ),
+    // `flaw.savantism` resolved (X6b, design-x6-parameters.md e6): the favored-
+    // Ability cap (6) and the all-other cap (3) now carry
+    // `ability_score_cap_override_param`/`ability_score_cap_all_except`
+    // effects through `ability_age_cap`'s single resolution point, so it is
+    // computed and no longer trips this guard. The halved starting XP,
+    // halved Advancement Totals, and +3 specialty roll remain uncomputed —
+    // handed to X7b-d's F-510, a separate finding.
     // `virtue.devil_child` and `virtue.nephilim` are no longer pending here: D67
     // widened `is_computed` to read `incompatible_with`, and both carry one
     // (each names the other, plus `virtue.faerie_doctor`/`virtue.the_gift`), so
@@ -2188,10 +2189,10 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     // on `flaw.ambitious_major` with exactly that message before this edit.
     // Deleting the row is therefore correct under D67's own shrink-only
     // discipline for a row that stopped applying, not a reclassification.
-    (
-        "flaw.false_power_minor",
-        "narrative, but declares prerequisites — D67 counts that as computed",
-    ),
+    // flaw.false_power_minor: resolved (X2f) — reclassifies narrative ->
+    // uncomputed_rule (D46/D50, the same trigger as its Major sibling); the
+    // `prerequisites` gate stays computed regardless (D67). See
+    // tmp/x2f-verdicts.md.
     (
         "flaw.primogeniture_lineage",
         "narrative, but declares prerequisites — D67 counts that as computed",
@@ -2262,26 +2263,12 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     // storyguide-decides clause, Consumed Casting Tools' consume/remake
     // mechanic, Difficult Spontaneous Magic's exertion requirement) and
     // removed from this list.
-    (
-        "flaw.disorientating_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.exciting_experimentation",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.fettered_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.harmless_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.incompatible_arts",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
+    // flaw.disorientating_magic, flaw.exciting_experimentation,
+    // flaw.fettered_magic, flaw.harmless_magic, flaw.incompatible_arts:
+    // resolved (X2f) — each of the five reclassifies narrative ->
+    // uncomputed_rule (D46/D50: a real uncomputed clause survives the
+    // `prerequisites` gate), same Hermetic-gate-group shape X2e already
+    // established for its own range's siblings. See tmp/x2f-verdicts.md.
     (
         "flaw.monastic_vows_hermetic",
         "narrative, but declares prerequisites — D68 counts that as computed",
@@ -4168,7 +4155,11 @@ fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
         die_source.file,
         "Ars Magica - Definitive Edition (Core Rules).md"
     );
-    assert_eq!((die_source.lines.start, die_source.lines.end), (474, 474));
+    // The range opens on the `### Simple Die` heading itself rather than only
+    // the prose line (ArMDE:472, :474): D72.4 moves a short section's prose
+    // citation onto its own heading so the row can carry a plain heading
+    // anchor (`simple-die`) instead of a four-word prose fingerprint.
+    assert_eq!((die_source.lines.start, die_source.lines.end), (472, 474));
 
     // "An Int + Medicine roll against an Ease Factor of 6 allows the character to
     // add the attendant's Medicine score to the roll to survive the crisis. …
@@ -5720,7 +5711,12 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
 
     // No replacement fixture exists, so pin the fact rather than discovering it
     // the next time this one is questioned: a grog forbids only `hermetic`, and
-    // this is the sole multi-category item in the catalogue that carries it.
+    // these are the only multi-category items in the catalogue that carry it.
+    // `flaw.vengeful_powers` joined (X6b): its `taken_as` parameter records
+    // which reading (story or hermetic) applies, so it too is a genuine
+    // multi-category ["story", "hermetic"] item now — same shape as
+    // `flaw.suppressed_gift`, not a duplicate to collapse.
+    let vengeful_powers = Id::new("flaw.vengeful_powers");
     let multi_category_hermetic: Vec<&Id> = rs
         .items()
         .filter(|item| item.categories.len() > 1 && item.has_category("hermetic"))
@@ -5728,8 +5724,8 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
         .collect();
     assert_eq!(
         multi_category_hermetic,
-        vec![&suppressed],
-        "the grog conjunction has exactly one possible fixture"
+        vec![&suppressed, &vengeful_powers],
+        "the grog conjunction has exactly two possible fixtures"
     );
 
     // The structural half: the secondary-position forbidden hit is unreachable
@@ -8799,6 +8795,12 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 /// own `entity.powers` — so it now sits in [`PER_POWER_ITEMS`] beside them. The
 /// other three name nothing else the sheet already tracks, so each got its own
 /// plain free-text parameter instead: see [`TEXT_TARGET_PARAM_ITEMS`] below.
+///
+/// `virtue.special_circumstances` moved out (X6b, F-541/F-287): it now
+/// carries its own `circumstance` free-text parameter, so it belongs in
+/// [`TEXT_TARGET_PARAM_ITEMS`] instead — the parameter is precisely what
+/// closes the "identical copies" inversion this list's own doc comment
+/// describes.
 const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.demonic_might", 3665),
     ("virtue.demonic_powers", 3669),
@@ -8812,7 +8814,6 @@ const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.minor_enchantments", 4534),
     ("virtue.personal_power", 4724),
     ("virtue.ritual_power", 4874),
-    ("virtue.special_circumstances", 5000),
     ("virtue.strong_angelic_heritage", 5030),
     ("virtue.withstand_casting", 5265),
     ("flaw.vulnerable_casting", 6997),
@@ -8835,6 +8836,10 @@ const TEXT_TARGET_PARAM_ITEMS: &[(&str, &str, u32)] = &[
     ("virtue.greater_immunity", "hazard", 4015),
     // "each time specifying a different social group" (ArMDE:4990).
     ("virtue.social_contacts", "social_group", 4990),
+    // "you may take this Virtue more than once, but you only gain a +3 bonus
+    // even if more than one set of circumstances applies" (ArMDE:5000, X6b,
+    // F-541/F-287) — the parameter distinguishes copies by circumstance.
+    ("virtue.special_circumstances", "circumstance", 5000),
 ];
 
 /// Items whose descriptor states a ceiling of exactly two copies, paired with

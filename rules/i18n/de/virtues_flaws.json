@@ -26,6 +26,9 @@
   "being.mundane_humans": {
     "name": "Sterbliche Menschen"
   },
+  "bloodline.custom": {
+    "name": "Andere"
+  },
   "bloodline.magic_animal": {
     "name": "Magisches Tier"
   },
@@ -46,6 +49,18 @@
   },
   "cycle.solar": {
     "name": "Solar"
+  },
+  "feature.custom": {
+    "name": "Andere"
+  },
+  "feature.dark_sight": {
+    "name": "Dunkelsicht"
+  },
+  "feature.natural_weapons": {
+    "name": "Natürliche Waffen"
+  },
+  "feature.scales": {
+    "name": "Schuppen"
   },
   "flaw.a_deal_with_the_devil": {
     "name": "Ein Pakt mit dem Teufel",
@@ -422,7 +437,8 @@
   },
   "flaw.disorientating_magic": {
     "name": "Desorientierungsmagie",
-    "summary": "Nach dem Wirken eines Zaubers musst du eine Runde lang nichts tun außer deine geistigen Kräfte zu sammeln."
+    "summary": "Nach dem Wirken eines Zaubers musst du eine Runde lang nichts tun außer deine geistigen Kräfte zu sammeln.",
+    "description": "Nach dem Wirken eines Zaubers musst du eine Runde lang nichts tun außer deine geistigen Kräfte zu sammeln."
   },
   "flaw.driven_major": {
     "name": "Getrieben (Groß)",
@@ -450,11 +466,13 @@
   },
   "flaw.enfeebled": {
     "name": "Entkräftet",
-    "summary": "Du kannst dich nicht länger als ein paar Sekunden anstrengen."
+    "summary": "Du kannst dich nicht länger als ein paar Sekunden anstrengen.",
+    "description": "Du kannst dich nicht länger als ein paar Sekunden anstrengen. Jeder Bedarf an rascher Bewegung, wie Kampf oder eine Verfolgungsjagd, lässt dich hilflos zurück. Auch lange Märsche übersteigen deine Möglichkeiten. Du bist nicht in der Lage, Kampffertigkeiten oder andere Fertigkeiten zu erlernen, die körperliche Anstrengung erfordern, da du nicht in ihnen üben kannst. Bist du ein Magus, verlierst du beim Wirken von Zaubern doppelt so viele Erschöpfungsstufen wie normal, kannst aber Laborarbeiten ohne Einschränkung durchführen."
   },
   "flaw.envied_beauty": {
     "name": "Beneidete Schönheit",
-    "summary": "Die Schönheit des Charakters weckt Abneigung und Eifersucht."
+    "summary": "Die Schönheit des Charakters weckt Abneigung und Eifersucht.",
+    "description": "Die Schönheit des Charakters weckt Abneigung und Eifersucht. Diese Missgunst trifft nicht jeden, aber eitle Personen desselben Geschlechts des Charakters sind besonders anfällig dafür. Charaktere mit diesem Fehler können seinen Nachteilen ausweichen, indem sie ihre Schönheit vor der Welt verbergen, was wiederum eigene Komplikationen mit sich bringt. Ein Charakter ohne positiven Präsenz-Wert darf diesen Fehler nicht nehmen."
   },
   "flaw.envious_major": {
     "name": "Neidisch (Groß)",
@@ -466,7 +484,8 @@
   },
   "flaw.environmental_magic_condition": {
     "name": "Magische Umgebungsbedingung",
-    "summary": "Alle Zauber- und Laborsummen des Charakters werden unter bestimmten häufigen Umständen, die mit seiner Umgebung zusammenhängen, halbiert – beispielsweise immer dann, wenn er sich in einem Gebäude befindet."
+    "summary": "Alle Zauber- und Laborsummen des Charakters werden unter bestimmten häufigen Umständen, die mit seiner Umgebung zusammenhängen, halbiert – beispielsweise immer dann, wenn er sich in einem Gebäude befindet.",
+    "description": "Alle Zauber- und Laborsummen des Charakters werden unter bestimmten häufigen Umständen, die mit seiner Umgebung zusammenhängen, halbiert – beispielsweise immer dann, wenn er sich in einem Gebäude befindet. Beachte, dass dies deutlich einschränkender sein sollte als der Hermetische Fehler Abträgliche Umstände."
   },
   "flaw.environmental_sensitivity": {
     "name": "Umgebungsempfindlichkeit",
@@ -484,15 +503,18 @@
   },
   "flaw.exciting_experimentation": {
     "name": "Aufregendes Experimentieren",
-    "summary": "Die Experimente deines Charakters neigen zu einer gewissen ..."
+    "summary": "Die Experimente deines Charakters neigen zu einer gewissen ...",
+    "description": "Die Experimente deines Charakters neigen zu einer gewissen ... dramatischen Note. Wenn du auf einer der Experimentiertabellen würfelst, wirfst du zwei Würfel statt des normalen einen. Der Spielleiter wählt dann das amüsantere deiner beiden Ergebnisse aus und wendet es an."
   },
   "flaw.excommunicate": {
     "name": "Exkommuniziert",
-    "summary": "Für deine Vergehen gegen Gott und die Kirche wurdest du aus deinem Glauben ausgestoßen, deine Taufe wurde rückgängig gemacht und du wurdest aus deiner Glaubensgemeinschaft vertrieben."
+    "summary": "Für deine Vergehen gegen Gott und die Kirche wurdest du aus deinem Glauben ausgestoßen, deine Taufe wurde rückgängig gemacht und du wurdest aus deiner Glaubensgemeinschaft vertrieben.",
+    "description": "Für deine Vergehen gegen Gott und die Kirche wurdest du aus deinem Glauben ausgestoßen, deine Taufe wurde rückgängig gemacht und du wurdest aus deiner Glaubensgemeinschaft vertrieben. Du hast eine schlechte Reputation der Stufe 3 innerhalb der Kirche und kannst nicht von den Sakramenten profitieren."
   },
   "flaw.exiled_atlantean": {
     "name": "Verbannter Atlantier",
-    "summary": "Der Charakter ist ein verbannter Atlantier; er ist durch seinen Kontakt mit der Oberwelt befleckt und kann nicht in seine magische Regio zurückkehren."
+    "summary": "Der Charakter ist ein verbannter Atlantier; er ist durch seinen Kontakt mit der Oberwelt befleckt und kann nicht in seine magische Regio zurückkehren.",
+    "description": "Der Charakter ist ein verbannter Atlantier; er ist durch seinen Kontakt mit der Oberwelt befleckt und kann nicht in seine magische Regio zurückkehren. Diese Verbannung wird durch die Natur der magischen Regio selbst erzwungen, der die Atlantier entstammen, sodass es keine Autorität gibt, an die sie appellieren könnte, und keine offensichtliche Möglichkeit, wieder in die Gunst aufgenommen zu werden. Die Verbannung gilt auch dann, wenn der Atlantier seine heimische magische Regio unfreiwillig verlassen hat. Weitere Einzelheiten über die Atlantier finden sich in Sphären der Macht: Magie, Seite 90."
   },
   "flaw.faerie_friend": {
     "name": "Feenfreund",
@@ -520,11 +542,13 @@
   },
   "flaw.false_power": {
     "name": "Falsche Macht (Groß): {virtue}",
-    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen Untersuchung unterzogen wird."
+    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen Untersuchung unterzogen wird.",
+    "description": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen Untersuchung unterzogen wird. Diese Eigenschaft kann daran liegen, dass etwas in der Macht selbst inhärent ist, oder möglicherweise durch das Eingreifen infernaler Agenten. Dieser Fehler kann auf Übernatürliche Tugenden zutreffen, die den Hintergrund des Charakters prägen, wie Feenblut, Diedne-Magie oder sogar Die Gabe. In diesen Fällen durchdringt die Falschheit das gesamte Wesen des Charakters und lässt alles, was sie tut, für jene, die es wahrnehmen können, unheilig erscheinen. Die Falsche Macht wird oft subtil durch ihren infernalen Aspekt verändert, wodurch sie finsterer oder negativer wirkt. Hier sind einige Beispiele:\n\n(Falsche) Vorahnungen: Der Makel der Vorahnungs-Macht des Charakters macht sie anfällig für infernale Manipulation, selbst wenn der Charakter Magieresistenz besitzt. Viele der Vorahnungen des Charakters sind zutreffend, und das Verfolgen der Geschichten, die sie hervorrufen, ist in der Regel lohnenswert. Diese wertvollen Einblicke verleiten Charaktere oft dazu, Lügen zu vertrauen, die ein Dämon durch die Macht einflüstert, um ihre Reaktion auf entscheidende Ereignisse zu manipulieren.\n\n(Falsches) Zweites Gesicht: Der Charakter ist besonders dazu geneigt, eine Illusion oder Täuschung zu durchschauen, wenn das, was er sieht, ihn zur Sünde verleiten würde. Manchmal kann er auch gewöhnliche Hindernisse durchschauen, wenn die gewonnene Information ihn zu sündigen Handlungen verführen würde.\n\n(Falscher) Gestaltwandler: Der Charakter kann seine Gestalt annehmen, aber nur in Tiere, die üblicherweise mit dem Infernalen assoziiert werden, wie eine Katze, ein Wolf, ein Rabe oder eine Ratte. In diesen Gestalten erscheint er jenen, die diese Eigenschaft erkennen können, unheilig.\n\nEs ist durchaus möglich, dass der Charakter nicht weiß, dass seine Macht falsch ist. Wenn er es erst einmal herausfindet, könnte er sich in einem moralischen Dilemma befinden. Die meisten Menschen betrachten es als Sünde, Mächte zu nutzen, die mit der Höllensphäre verbunden sind, aus welchem Grund auch immer, und würden ihn als Infernalisten bezeichnen, wenn sie die Natur seiner Macht entdeckten. Doch seine Macht ist auch mit einer anderen Sphäre verbunden, was es schwieriger macht, sie als infernal zu erkennen, und offen lässt, ob die Macht von Natur aus böse oder lediglich durch Assoziation befleckt ist. Vielleicht glaubt der Charakter, dass es für ihn nicht falsch ist, seine Mächte zu nutzen, solange er keine bösen Ziele damit verfolgt.\n\nSobald der Charakter erkennt, dass die Macht einen unheiligen Aspekt hat, kann er sie jederzeit als Infernale Macht behandeln, dabei die Infernale Macht-Spalte der Sphären-Interaktionstabelle verwenden und so einen Bonus in infernalen Auren erhalten. Dies kann ihm auch andere Vorteile gewähren: Wie andere Infernalisten kann er seine Zaubersumme durch Opfergaben erhöhen und eine Infernale Zeremonie nutzen, um andere in die Aktivierung einzubeziehen, wie in Sphären der Macht: Das Infernale, Seite 91, beschrieben. Dies beseitigt jedoch alle Illusionen über die Sphäre der Macht – selbst magische und Feenmächte können erkennen, dass sie infernal ist.\n\nWenn der Charakter erkennt, dass seine Macht korrumpiert ist, kann er beschließen, Hilfe beim Göttlichen zu suchen. Aufrichtige Reue und die Teilnahme an einer Form der zeremoniellen Absolution erlauben es dem Charakter, diesen Fehler zu verlieren, obwohl damit auch die Tugend wegfällt, die er verändert. Dies ist eine schwere Buße, aber es ist der einzige Weg, den bösen Einfluss der Höllensphäre auszutreiben, und natürlich warten im Himmel weitaus größere Belohnungen.\n\nDieser Fehler kann mehrfach genommen werden, einmal für jede geeignete Übernatürliche Tugend, die der Charakter besitzt, aber in jedem nachfolgenden Fall als Kleiner Fehler statt als Großer. Beachte auch, dass dieser Fehler nicht auf Übernatürliche Tugenden angewendet werden kann, die von vornherein der Höllensphäre angehören, und die Spieltruppe kann es möglicherweise nicht erlauben, ihn auf Tugenden anzuwenden, die vom Göttlichen abstammen."
   },
   "flaw.false_power_minor": {
     "name": "Falsche Macht (Klein): {virtue}",
-    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen Untersuchung unterzogen wird."
+    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen Untersuchung unterzogen wird.",
+    "description": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen Untersuchung unterzogen wird. Diese Eigenschaft kann daran liegen, dass etwas in der Macht selbst inhärent ist, oder möglicherweise durch das Eingreifen infernaler Agenten. Dieser Fehler kann auf Übernatürliche Tugenden zutreffen, die den Hintergrund des Charakters prägen, wie Feenblut, Diedne-Magie oder sogar Die Gabe. In diesen Fällen durchdringt die Falschheit das gesamte Wesen des Charakters und lässt alles, was sie tut, für jene, die es wahrnehmen können, unheilig erscheinen. Die Falsche Macht wird oft subtil durch ihren infernalen Aspekt verändert, wodurch sie finsterer oder negativer wirkt. Hier sind einige Beispiele:\n\n(Falsche) Vorahnungen: Der Makel der Vorahnungs-Macht des Charakters macht sie anfällig für infernale Manipulation, selbst wenn der Charakter Magieresistenz besitzt. Viele der Vorahnungen des Charakters sind zutreffend, und das Verfolgen der Geschichten, die sie hervorrufen, ist in der Regel lohnenswert. Diese wertvollen Einblicke verleiten Charaktere oft dazu, Lügen zu vertrauen, die ein Dämon durch die Macht einflüstert, um ihre Reaktion auf entscheidende Ereignisse zu manipulieren.\n\n(Falsches) Zweites Gesicht: Der Charakter ist besonders dazu geneigt, eine Illusion oder Täuschung zu durchschauen, wenn das, was er sieht, ihn zur Sünde verleiten würde. Manchmal kann er auch gewöhnliche Hindernisse durchschauen, wenn die gewonnene Information ihn zu sündigen Handlungen verführen würde.\n\n(Falscher) Gestaltwandler: Der Charakter kann seine Gestalt annehmen, aber nur in Tiere, die üblicherweise mit dem Infernalen assoziiert werden, wie eine Katze, ein Wolf, ein Rabe oder eine Ratte. In diesen Gestalten erscheint er jenen, die diese Eigenschaft erkennen können, unheilig.\n\nEs ist durchaus möglich, dass der Charakter nicht weiß, dass seine Macht falsch ist. Wenn er es erst einmal herausfindet, könnte er sich in einem moralischen Dilemma befinden. Die meisten Menschen betrachten es als Sünde, Mächte zu nutzen, die mit der Höllensphäre verbunden sind, aus welchem Grund auch immer, und würden ihn als Infernalisten bezeichnen, wenn sie die Natur seiner Macht entdeckten. Doch seine Macht ist auch mit einer anderen Sphäre verbunden, was es schwieriger macht, sie als infernal zu erkennen, und offen lässt, ob die Macht von Natur aus böse oder lediglich durch Assoziation befleckt ist. Vielleicht glaubt der Charakter, dass es für ihn nicht falsch ist, seine Mächte zu nutzen, solange er keine bösen Ziele damit verfolgt.\n\nSobald der Charakter erkennt, dass die Macht einen unheiligen Aspekt hat, kann er sie jederzeit als Infernale Macht behandeln, dabei die Infernale Macht-Spalte der Sphären-Interaktionstabelle verwenden und so einen Bonus in infernalen Auren erhalten. Dies kann ihm auch andere Vorteile gewähren: Wie andere Infernalisten kann er seine Zaubersumme durch Opfergaben erhöhen und eine Infernale Zeremonie nutzen, um andere in die Aktivierung einzubeziehen, wie in Sphären der Macht: Das Infernale, Seite 91, beschrieben. Dies beseitigt jedoch alle Illusionen über die Sphäre der Macht – selbst magische und Feenmächte können erkennen, dass sie infernal ist.\n\nWenn der Charakter erkennt, dass seine Macht korrumpiert ist, kann er beschließen, Hilfe beim Göttlichen zu suchen. Aufrichtige Reue und die Teilnahme an einer Form der zeremoniellen Absolution erlauben es dem Charakter, diesen Fehler zu verlieren, obwohl damit auch die Tugend wegfällt, die er verändert. Dies ist eine schwere Buße, aber es ist der einzige Weg, den bösen Einfluss der Höllensphäre auszutreiben, und natürlich warten im Himmel weitaus größere Belohnungen.\n\nDieser Fehler kann mehrfach genommen werden, einmal für jede geeignete Übernatürliche Tugend, die der Charakter besitzt, aber in jedem nachfolgenden Fall als Kleiner Fehler statt als Großer. Beachte auch, dass dieser Fehler nicht auf Übernatürliche Tugenden angewendet werden kann, die von vornherein der Höllensphäre angehören, und die Spieltruppe kann es möglicherweise nicht erlauben, ihn auf Tugenden anzuwenden, die vom Göttlichen abstammen."
   },
   "flaw.favors": {
     "name": "Gefälligkeiten",
@@ -536,7 +560,8 @@
   },
   "flaw.feral_scent": {
     "name": "Wildgeruch",
-    "summary": "Vielleicht aufgrund seines Tierbluts oder seiner wilden Erziehung hat der Charakter den starken natürlichen Geruch eines wilden Tieres."
+    "summary": "Vielleicht aufgrund seines Tierbluts oder seiner wilden Erziehung hat der Charakter den starken natürlichen Geruch eines wilden Tieres.",
+    "description": "Vielleicht aufgrund seines Tierbluts oder seiner wilden Erziehung hat der Charakter den starken natürlichen Geruch eines wilden Tieres. Menschen neigen dazu, ihm gegenüber nicht zu nahe zu kommen, und können in seiner Nähe ohne erkennbaren Grund angespannt sein. Er kann domestizierte Tiere erschrecken, wenn er sie überrascht. Er erleidet -1 auf soziale Interaktionen (was sich mit den Abzügen durch Die Gabe stapelt, falls er sie besitzt) und erwirbt eine negative Reputation als Unrein der Stufe 2. Hat er jedoch das Mysterium der Sinnesmagie eingeweiht (beschrieben in Häuser des Hermes: Mysterienkulte, Seite 27), haben alle Zauber, die er mit einem Duft-Ziel wirkt, die doppelte normale Reichweite."
   },
   "flaw.feral_upbringing": {
     "name": "Wilde Erziehung",
@@ -544,7 +569,8 @@
   },
   "flaw.fettered_magic": {
     "name": "Gefesselte Magie",
-    "summary": "Alle deine Zauber und die Wirkungen aller Magieartefakte, die du aktivierst, sind Arkane Verbindungen zu dir."
+    "summary": "Alle deine Zauber und die Wirkungen aller Magieartefakte, die du aktivierst, sind Arkane Verbindungen zu dir.",
+    "description": "Alle deine Zauber und die Wirkungen aller Magieartefakte, die du aktivierst, sind Arkane Verbindungen zu dir. Du kannst dies nicht zusammen mit der Tugend Gefesselte Magie nehmen, da die Tugend diesen Effekt bereits einschließt."
   },
   "flaw.feud": {
     "name": "Fehde",
@@ -577,7 +603,8 @@
   },
   "flaw.fluctuating_fortune": {
     "name": "Schwankendes Glück",
-    "summary": "Die Finanzen des Charakters steigen und fallen wie die Gezeiten, unabhängig davon, wie erfolgreich er ist oder welche Vorsorgemaßnahmen er trifft."
+    "summary": "Die Finanzen des Charakters steigen und fallen wie die Gezeiten, unabhängig davon, wie erfolgreich er ist oder welche Vorsorgemaßnahmen er trifft.",
+    "description": "Die Finanzen des Charakters steigen und fallen wie die Gezeiten, unabhängig davon, wie erfolgreich er ist oder welche Vorsorgemaßnahmen er trifft. Er gilt ein Jahr lang als Tugend Wohlhabend, gefolgt von einem Jahr mit dem Fehler Arm. Abgesehen von monetären Sorgen bedeutet dies, dass der Charakter in einem Jahr nur eine Jahreszeit arbeiten muss, gefolgt von einem Jahr, in dem er drei arbeiten muss, um seinen Lebensunterhalt zu sichern. Dieser Zyklus aus Fülle und Mangel setzt sich das gesamte Leben des Charakters fort, stets entgegen seinen finanziellen Wünschen. Wenn er Geld am dringendsten braucht, hat er keines, und hat einen Überfluss an Mitteln, wenn diese überflüssig sind."
   },
   "flaw.follower": {
     "name": "Mitläufer",
@@ -589,7 +616,8 @@
   },
   "flaw.form_monstrosity": {
     "name": "{form} Missgeburt",
-    "summary": "Dieser Fehler ist in erster Linie für Tiercharaktere gedacht, kann aber mit Zustimmung der Spieltruppe auch für Charaktere gewählt werden, die im Wesentlichen menschlich sind."
+    "summary": "Dieser Fehler ist in erster Linie für Tiercharaktere gedacht, kann aber mit Zustimmung der Spieltruppe auch für Charaktere gewählt werden, die im Wesentlichen menschlich sind.",
+    "description": "Dieser Fehler ist in erster Linie für Tiercharaktere gedacht, kann aber mit Zustimmung der Spieltruppe auch für Charaktere gewählt werden, die im Wesentlichen menschlich sind. Der Charakter ist eine Missgeburt mit einem monströsen Merkmal oder einer Mutation, die einer magischen Form entspricht. Das Merkmal kann unter bestimmten Umständen vorteilhaft sein, verschafft dem Charakter gegenüber seinen nicht mutierten Artgenossen jedoch im Allgemeinen keinen Vorteil.\n\nTiere werden von Monstern in der Regel nicht beunruhigt – der Charakter hat noch immer den richtigen Geruch und das richtige Verhalten –, und ein einzelner monströser Bulle könnte beispielsweise fröhlich in einer Herde ansonsten normaler Rinder leben. Menschen hingegen werden durch das Erscheinen von Missgeburten in hohem Maße beunruhigt, da sie es unweigerlich auf bösen Einfluss zurückführen: Offensichtlich missgestaltete Tiere werden von Bauern meist getötet. Häufig kann aus dem Kadaver eines monsterhaften Charakters 1 Bauer Muto-Vis gewonnen werden, der sich im monsterhaften Merkmal konzentriert findet.\n\nEinige Beispiele für mögliche Missgeburten sind nachstehend aufgeführt, aber die Spieltruppe darf nach Bedarf auch eigene erfinden:"
   },
   "flaw.fragile_constitution": {
     "name": "Gebrechliche Konstitution",
@@ -626,7 +654,8 @@
   },
   "flaw.greater_malediction": {
     "name": "Große Verfluchung",
-    "summary": "Du wurdest von einer übernatürlichen Macht verflucht, und zwar auf eine Weise, die dich erheblich behindert."
+    "summary": "Du wurdest von einer übernatürlichen Macht verflucht, und zwar auf eine Weise, die dich erheblich behindert.",
+    "description": "Du wurdest von einer übernatürlichen Macht verflucht, und zwar auf eine Weise, die dich erheblich behindert. Die Auswirkungen des Fluchs sollten denen anderer Großer Fehler vergleichbar sein. Tatsächlich könnte fast jeder Fehler das Ergebnis eines Fluches sein."
   },
   "flaw.greedy_major": {
     "name": "Gierig (Groß)",
@@ -651,7 +680,8 @@
   },
   "flaw.harmless_magic": {
     "name": "Harmlose Magie",
-    "summary": "Die Perdo-Zauber des Charakters können nichts dauerhaft zerstören; sie stören das Ziel vorübergehend, ähnlich wie Perdo-Imaginem-Magie, aber sobald die Dauer verstrichen ist, kehrt das Ziel in seinen natürlichen Zustand zurück, als wäre nichts geschehen – wie bei einem Muto-Effekt."
+    "summary": "Die Perdo-Zauber des Charakters können nichts dauerhaft zerstören; sie stören das Ziel vorübergehend, ähnlich wie Perdo-Imaginem-Magie, aber sobald die Dauer verstrichen ist, kehrt das Ziel in seinen natürlichen Zustand zurück, als wäre nichts geschehen – wie bei einem Muto-Effekt.",
+    "description": "Die Perdo-Zauber des Charakters können nichts dauerhaft zerstören; sie stören das Ziel vorübergehend, ähnlich wie Perdo-Imaginem-Magie, aber sobald die Dauer verstrichen ist, kehrt das Ziel in seinen natürlichen Zustand zurück, als wäre nichts geschehen – wie bei einem Muto-Effekt. Das bedeutet, dass eine Version des Zauberspruches „Die Wunde, die blutet\" (PeCo 15) zum Beispiel kurzzeitig eine schmerzhafte, blutende Wunde verursacht, die sich sofort wieder schließt. Ebenso lässt „Faust des Zerschmetterns\" (PeTe 10) ein Objekt aus Stein oder weniger hartem Material kurz auseinanderbrechen, das sich dann aber wieder zusammenfügt. Die Ritualmagie-Perdo-Zauber des Charakters funktionieren jedoch normal.\n\nDiese Schwäche kann für einen findigen Charakter ein Segen sein. Eine Maga könnte einen Zauber erfinden, um einen schweren Felsen bei Konzentrationsdauer zu zerstören, ihn dann wirken und auf der Lauer liegen. Wenn ihr Feind in den freien Raum tritt, könnte sie ihre Konzentration loslassen und ihr Opfer unter dem sich neu bildenden Stein zerquetschen. In den meisten Fällen ist diese Einschränkung jedoch eine geringfügige Behinderung, da nützliche Perdo-Magie längere Dauern erfordert."
   },
   "flaw.hatred_major": {
     "name": "Hass (Groß)",
@@ -688,7 +718,8 @@
   },
   "flaw.horrifying_appearance_snake_legs": {
     "name": "Schreckliches Äußeres – Schlangenbeine",
-    "summary": "Du hast keine Beine, stattdessen gehen von deinen Hüften zwei oder mehr schlangenartige Schwänze aus; du solltest dir überlegen, wie du die Kindheit mit dieser schrecklichen Missgestalt überlebt hast."
+    "summary": "Du hast keine Beine, stattdessen gehen von deinen Hüften zwei oder mehr schlangenartige Schwänze aus; du solltest dir überlegen, wie du die Kindheit mit dieser schrecklichen Missgestalt überlebt hast.",
+    "description": "Du hast keine Beine, stattdessen gehen von deinen Hüften zwei oder mehr schlangenartige Schwänze aus; du solltest dir überlegen, wie du die Kindheit mit dieser schrecklichen Missgestalt überlebt hast. Deine Bewegung wird unter den meisten Umständen nicht behindert. Du kannst diese Missgestalt unter Kleidung verbergen, aber du kannst dich nicht bewegen, ohne sie zu enthüllen, sodass du auch als Gelähmter gelten musst."
   },
   "flaw.humble": {
     "name": "Demütig",
@@ -706,7 +737,8 @@
   },
   "flaw.imagined_folk_tradition_vulnerability": {
     "name": "Eingebildete Volksmagie-Verwundbarkeit",
-    "summary": "Obwohl dieser Fehler einer Wahnvorstellung ähnelt, hat die Eingebildete Volksüberlieferungsanfälligkeit auch andere spielmechanische Auswirkungen."
+    "summary": "Obwohl dieser Fehler einer Wahnvorstellung ähnelt, hat die Eingebildete Volksüberlieferungsanfälligkeit auch andere spielmechanische Auswirkungen.",
+    "description": "Obwohl dieser Fehler einer Wahnvorstellung ähnelt, hat die Eingebildete Volksüberlieferungsanfälligkeit auch andere spielmechanische Auswirkungen. Dieser Charakter glaubt vollkommen und aufrichtig, dass er von den Feen berührt wurde und dass sie ihm seine besonderen Fähigkeiten geschenkt haben – ob es solche gibt oder nicht. Natürlich ist er davon überzeugt, dass er gegenüber traditionellen Schutzmitteln und Volksmagie ebenso verwundbar ist wie die Feen. Wann immer von solchen Volksheilmitteln die Rede ist oder Menschen in seiner Umgebung versuchen, sie durchzuführen, versucht er mit aller Kraft, sie davon abzubringen. Wenn er damit durchkommt, beseitigt oder sabotiert er solche Schutzmittel; zum Beispiel schleicht er nachts herum und entfernt alle Schutzzeichen oder -materialien an Türen. Schließlich zeigt er ein seltsames Verhalten in Gegenwart aktiver Schutzmittel oder ritueller Handlungen. Das könnte darin bestehen, jemandem unmittelbar nach dem Kreuzzeichen nicht die Hand zu schütteln, oder zusammenzuzucken, wenn jemand Salz über seine Schulter streut. Auf der positiven Seite erlaubt dieser Fehler dem Charakter, bei der Charaktererschaffung einen Wert von 1 (aber nicht mehr) in Feenkunde zu kaufen. Dies liegt daran, dass er ein grundlegendes Wissen über die Feen und die Schutzmaßnahmen gegen sie benötigt, um sich so verhalten zu können. Ohne dieses Wissen basiert sein Verhalten auf dem, was er für solche Schutzmittel hält."
   },
   "flaw.impious_friend": {
     "name": "Gottloser Freund",
@@ -714,7 +746,8 @@
   },
   "flaw.incompatible_arts": {
     "name": "Unvereinbare Künste",
-    "summary": "Aus irgendeinem Grund bist du völlig außerstande, zwei Kombinationen von Techniken und Formen zu verwenden."
+    "summary": "Aus irgendeinem Grund bist du völlig außerstande, zwei Kombinationen von Techniken und Formen zu verwenden.",
+    "description": "Aus irgendeinem Grund bist du völlig außerstande, zwei Kombinationen von Techniken und Formen zu verwenden. Zum Beispiel bist du möglicherweise nicht in der Lage, Intellego Herbam und Intellego Animal zu verwenden. Du kannst diese Künste nicht zusammen einsetzen, selbst wenn eine oder beide als Requisite benötigt werden. Dieser Fehler kann mehrfach mit unterschiedlichen Kombinationen gewählt werden, darf aber nicht mit einem Defizit kombiniert werden (siehe Seite 125)."
   },
   "flaw.incomprehensible": {
     "name": "Unverständlich",
@@ -755,7 +788,8 @@
   },
   "flaw.judged_unfairly": {
     "name": "Ungerecht beurteilt",
-    "summary": "Irgendwie wirkst du auf Menschen falsch, und sie misstrauen dir und unterschätzen dich allgemein."
+    "summary": "Irgendwie wirkst du auf Menschen falsch, und sie misstrauen dir und unterschätzen dich allgemein.",
+    "description": "Irgendwie wirkst du auf Menschen falsch, und sie misstrauen dir und unterschätzen dich allgemein. Du fällst niemandem auf, beeindruckst niemanden und niemand nimmt dich ernst. Wenn du ausnahmsweise jemanden findest, der dich so sieht, wie du gesehen werden möchtest, wirst du an dieser Person festhalten. Du kannst in keiner Gemeinschaft eine positive Reputation erwerben, und dieser Fehler ist mit jeder Tugend unvereinbar, die dir eine solche Reputation verleiht."
   },
   "flaw.lame": {
     "name": "Lahm",
@@ -772,11 +806,13 @@
   },
   "flaw.leprosy": {
     "name": "Lepra",
-    "summary": "Der Charakter hat Lepra."
+    "summary": "Der Charakter hat Lepra.",
+    "description": "Der Charakter hat Lepra. Ein Leprakranker hat einen dauerhaften -2-Modifikator auf seine Lebensumstände (mit einem zusätzlichen -1, wenn er in einer Leprakolonie lebt), und wann immer er eine Alterskrise erleidet (Seite 392), erleidet der Leprakranke zusätzlich zu jedem anderen Ergebnis eine Schwere Wunde. Leprakranke können aufgrund eines beißenden Verwesungsgeruchs, den sie ausströmen, keine positive Reputation erwerben."
   },
   "flaw.lesser_malediction": {
     "name": "Kleine Verfluchung",
-    "summary": "Du wurdest von einer übernatürlichen Macht verflucht."
+    "summary": "Du wurdest von einer übernatürlichen Macht verflucht.",
+    "description": "Du wurdest von einer übernatürlichen Macht verflucht. Die Auswirkungen des Fluches sollten ungefähr so schlimm sein wie andere Kleine Allgemeine Fehler."
   },
   "flaw.limited_magic_resistance": {
     "name": "Begrenzte Magieresistenz",
@@ -1132,7 +1168,8 @@
   },
   "flaw.restricted_learning": {
     "name": "Eingeschränktes Lernen",
-    "summary": "Der Charakter ist unfähig, ohne Unterstützung neue Dinge zu erlernen."
+    "summary": "Der Charakter ist unfähig, ohne Unterstützung neue Dinge zu erlernen.",
+    "description": "Der Charakter ist unfähig, ohne Unterstützung neue Dinge zu erlernen. Wähle fünf Fertigkeiten bei der Charaktererschaffung; du kannst Erfahrungspunkte nur auf diese Fertigkeiten anwenden. Der Charakter kann keine neuen Fertigkeiten selbstständig erlernen; er muss Erfahrungspunkte aus Unterricht oder Ausbildung erhalten, um eine neue Fertigkeit zu entwickeln oder eine zu verbessern, die nicht zu den ursprünglichen fünf gehört. Außerdem kann er eine Fertigkeit, in der er keinen Wert hat, nicht einsetzen, auch wenn sie normalerweise ungeübt eingesetzt werden kann. Alle Übernatürlichen Fertigkeiten aus Tugenden, die er besitzt, werden der Liste der Fertigkeiten hinzugefügt, auf die er Erfahrungspunkte anwenden kann."
   },
   "flaw.restricted_power": {
     "name": "Eingeschränkte Kraft ({power})",
@@ -1534,6 +1571,102 @@
   },
   "folk_magic.healing": {
     "name": "Heilung"
+  },
+  "affliction.sensitive_hearing": {
+    "name": "Empfindliches Gehör"
+  },
+  "affliction.sensitive_sight": {
+    "name": "Empfindliche Sicht"
+  },
+  "affliction.sensitive_smell": {
+    "name": "Empfindlicher Geruchssinn"
+  },
+  "affliction.sensitive_taste": {
+    "name": "Empfindlicher Geschmack"
+  },
+  "affliction.sensitive_to_cold": {
+    "name": "Empfindlich gegen Kälte"
+  },
+  "affliction.sensitive_to_heat": {
+    "name": "Empfindlich gegen Hitze"
+  },
+  "affliction.weak_hearing": {
+    "name": "Schwaches Gehör"
+  },
+  "affliction.weak_sight": {
+    "name": "Schwache Sicht"
+  },
+  "affliction.weak_smell": {
+    "name": "Schwacher Geruchssinn"
+  },
+  "affliction.weak_taste": {
+    "name": "Schwacher Geschmack"
+  },
+  "heritage.bee_king": {
+    "name": "Blut des Bienenkönigs"
+  },
+  "heritage.custom": {
+    "name": "Andere"
+  },
+  "heritage.dwarf": {
+    "name": "Zwergenblut"
+  },
+  "heritage.goblin": {
+    "name": "Koboldblut"
+  },
+  "heritage.satyr": {
+    "name": "Satyrblut"
+  },
+  "heritage.sidhe": {
+    "name": "Sidhe-Blut"
+  },
+  "heritage.spinnen": {
+    "name": "Spinnen-Blut"
+  },
+  "heritage.undine": {
+    "name": "Undinen-Blut"
+  },
+  "language.arabic": {
+    "name": "Arabisch"
+  },
+  "language.aramaic": {
+    "name": "Aramäisch"
+  },
+  "language.gothic": {
+    "name": "Gotisch"
+  },
+  "language.greek": {
+    "name": "Griechisch"
+  },
+  "language.hebrew": {
+    "name": "Hebräisch"
+  },
+  "language.latin": {
+    "name": "Latein"
+  },
+  "language.persian": {
+    "name": "Persisch"
+  },
+  "rank.archbishop": {
+    "name": "Erzbischof"
+  },
+  "rank.cardinal_legatus": {
+    "name": "Kardinal oder Legatus a latere"
+  },
+  "rank.king": {
+    "name": "König"
+  },
+  "rank.legatus_missus": {
+    "name": "Legatus missus"
+  },
+  "rank.pope": {
+    "name": "Papst"
+  },
+  "scope.category": {
+    "name": "Ganze Kategorie"
+  },
+  "scope.custom": {
+    "name": "Eigene Angabe"
   },
   "virtue.academic_concentration_subject": {
     "name": "Akademische Vertiefung {subject}",
@@ -2924,7 +3057,8 @@
   },
   "virtue.turb_trained": {
     "name": "Turba-Ausgebildet",
-    "summary": "Dieser Charakter ist im Konvent aufgewachsen, wurde für den Kampf in der Turba ausgebildet und hat einiges von den vertrauenswürdigen Dienern der Magi aufgeschnappt."
+    "summary": "Dieser Charakter ist im Konvent aufgewachsen, wurde für den Kampf in der Turba ausgebildet und hat einiges von den vertrauenswürdigen Dienern der Magi aufgeschnappt.",
+    "description": "Dieser Charakter ist im Konvent aufgewachsen, wurde für den Kampf in der Turba ausgebildet und hat einiges von den vertrauenswürdigen Dienern der Magi aufgeschnappt. Bei der Charaktererschaffung darf er Kampffertigkeiten erlernen. Er darf außerdem die einzige tote Sprache erlernen, die die Magi sprechen, zusätzlich zu seiner Muttersprache. Sein Schicksal ist mit der Turba verbunden, weshalb es ihm verboten ist, Wohlhabend oder Arm zu sein."
   },
   "virtue.unaffected_by_the_gift": {
     "name": "Unempfindlich gegenüber der Gabe",

@@ -37,7 +37,10 @@
       }
     },
     {
-      "ref": "virtue.faerie_blood"
+      "ref": "virtue.faerie_blood",
+      "params": {
+        "heritage": "heritage.dwarf"
+      }
     },
     {
       "ref": "virtue.hermetic_magus"

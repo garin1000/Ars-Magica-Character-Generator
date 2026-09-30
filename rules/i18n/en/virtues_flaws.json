@@ -26,6 +26,9 @@
   "being.mundane_humans": {
     "name": "Mundane Humans"
   },
+  "bloodline.custom": {
+    "name": "Other"
+  },
   "bloodline.magic_animal": {
     "name": "Magic Animal"
   },
@@ -46,6 +49,18 @@
   },
   "cycle.solar": {
     "name": "Solar"
+  },
+  "feature.custom": {
+    "name": "Other"
+  },
+  "feature.dark_sight": {
+    "name": "Dark Sight"
+  },
+  "feature.natural_weapons": {
+    "name": "Natural Weapons"
+  },
+  "feature.scales": {
+    "name": "Scales"
   },
   "flaw.a_deal_with_the_devil": {
     "name": "A Deal with the Devil",
@@ -421,7 +436,8 @@
   },
   "flaw.disorientating_magic": {
     "name": "Disorientating Magic",
-    "summary": "After casting a spell, you must spend a round doing nothing but recovering your mental faculties."
+    "summary": "After casting a spell, you must spend a round doing nothing but recovering your mental faculties.",
+    "description": "After casting a spell, you must spend a round doing nothing but recovering your mental faculties."
   },
   "flaw.driven_major": {
     "name": "Driven (Major)",
@@ -449,11 +465,13 @@
   },
   "flaw.enfeebled": {
     "name": "Enfeebled",
-    "summary": "You cannot exert yourself for longer than a few seconds."
+    "summary": "You cannot exert yourself for longer than a few seconds.",
+    "description": "You cannot exert yourself for longer than a few seconds. Any need for rapid movement, such as combat or a chase, leaves you helpless. Long hikes are likewise beyond your capability. You are unable to learn Martial Abilities or any other skills involving physical exertion, since you cannot train in them. If you are a magus, you lose double the normal number of Fatigue levels from casting spells, but you may carry out Laboratory activities as normal."
   },
   "flaw.envied_beauty": {
     "name": "Envied Beauty",
-    "summary": "The character's beauty draws revulsion and jealousy."
+    "summary": "The character's beauty draws revulsion and jealousy.",
+    "description": "The character's beauty draws revulsion and jealousy. This envy does not strike everyone, but vain persons of the character's gender are particularly susceptible to it. Characters with this Flaw may avoid its penalties by refusing to reveal their beauty to the world, which creates its own complications. A character lacking a positive Presence score may not have this Flaw."
   },
   "flaw.envious_major": {
     "name": "Envious (Major)",
@@ -465,7 +483,8 @@
   },
   "flaw.environmental_magic_condition": {
     "name": "Environmental Magic Condition",
-    "summary": "All of the character's Casting and Lab Totals are halved in certain common conditions related to his environment, for example, whenever he is inside."
+    "summary": "All of the character's Casting and Lab Totals are halved in certain common conditions related to his environment, for example, whenever he is inside.",
+    "description": "All of the character's Casting and Lab Totals are halved in certain common conditions related to his environment, for example, whenever he is inside. Note that this should be significantly more restrictive than the Hermetic Flaw Deleterious Circumstances."
   },
   "flaw.environmental_sensitivity": {
     "name": "Environmental Sensitivity",
@@ -483,15 +502,18 @@
   },
   "flaw.exciting_experimentation": {
     "name": "Exciting Experimentation",
-    "summary": "Your character's experiments tend to have a flair for the ..."
+    "summary": "Your character's experiments tend to have a flair for the ...",
+    "description": "Your character's experiments tend to have a flair for the ... dramatic. When rolling on any of the experimentation tables, roll two dice instead of the normal one. The storyguide then chooses and applies the more amusing of your two results."
   },
   "flaw.excommunicate": {
     "name": "Excommunicate",
-    "summary": "For your crimes against God and the Church, you have been cast out of your faith, undoing your baptism and driving you from your religious community."
+    "summary": "For your crimes against God and the Church, you have been cast out of your faith, undoing your baptism and driving you from your religious community.",
+    "description": "For your crimes against God and the Church, you have been cast out of your faith, undoing your baptism and driving you from your religious community. You have a bad reputation at level 3 within the Church, and cannot benefit from the sacraments."
   },
   "flaw.exiled_atlantean": {
     "name": "Exiled Atlantean",
-    "summary": "The character is an exiled Atlantean, she is tainted by her contact with the surface world, and cannot return to her magic regio."
+    "summary": "The character is an exiled Atlantean, she is tainted by her contact with the surface world, and cannot return to her magic regio.",
+    "description": "The character is an exiled Atlantean, she is tainted by her contact with the surface world, and cannot return to her magic regio. This exile is enforced by the very nature of the magic regio to which the Atlanteans are native, so there is no authority figure to which she may appeal, or any obvious method of returning to favor. The exile applies even if the Atlantean left her native magic regio involuntarily. More details about the Atlanteans can be found in Realms of Power: Magic, page 90."
   },
   "flaw.faerie_friend": {
     "name": "Faerie Friend",
@@ -519,11 +541,13 @@
   },
   "flaw.false_power": {
     "name": "False Power (Major): {virtue}",
-    "summary": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation."
+    "summary": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation.",
+    "description": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation. This quality could be because of something inherent to the Power, or perhaps because of the interference of Infernal agents. This Flaw can apply to Supernatural Virtues that define the character's background, like Faerie Blood, Diedne Magic, or even The Gift. In these cases, falsehood permeates the whole of the character's being, causing everything she does to seem unholy to those with the ability to sense it The False Power is often subtly changed by its Infernal aspect, making it more sinister or negative. Here are some examples:\n\n(False) Premonitions: The taint of the character's Premonitions Power leaves it vulnerable to Infernal manipulation, even if the character has Magic Resistance. Many of the character's premonitions are accurate, and pursuit of the stories they evoke is usually worthwhile. These valuable insights often lead characters to trust lies that a demon offers through the Power in order to manipulate their response to pivotal events.\n\n(False) Second Sight: The character is particularly likely to see through an illusion or deception when what he sees would lead him to sin. Sometimes he may see through mundane obstacles, if the information gained would tempt him to sinful acts.\n\n(False) Shapeshifter: The character can change his shape, but only into animals typically associated with the Infernal, such as a cat, a wolf, a raven, or a rat. When in these shapes, he seems unholy to those can recognize that quality.\n\nIt is quite possible that the character does not know that his Power is false. Once he does, he may find himself in a moral dilemma. Most people consider it a sin to use Powers associated with the Infernal realm for any reason, and would label him an infernalist if they discovered the nature of his Power. Yet his Power is also associated with another realm, making it more difficult to recognize it as Infernal, and leaving it unclear whether the Power is inherently evil or simply tainted by association. Perhaps the character believes it is not wrong for him to use his Powers, so long as he does not pursue evil ends with them.\n\nOnce the character recognizes that the Power has an unholy aspect, he may choose to treat it as an Infernal Power at any time, using the Infernal Power column of the realm interaction chart and thus giving him a bonus in Infernal auras. This may also grant him other benefits: like other infernalists he can boost his casting total with sacrifices, and use an Infernal Ceremony to include others in the activation, as described in Realms of Power: The Infernal, page 91. However, doing this removes any illusions about the Power's realm — even magical and faerie Powers can recognize that it is Infernal.\n\nIf the character realizes his Power is corrupted, he may decide to seek help from the Divine. Sincere repentance and participation in a form of ceremonial absolution allow the character to lose this Flaw, though this also takes away the Virtue it modifies. This is a heavy penance, but it is the only way to exorcise the evil influence of the Infernal realm, and of course there are far greater rewards in Heaven.\n\nThis Flaw may be taken multiple times, once for each appropriate Supernatural Virtue that the character possesses, but in each subsequent instance as a Minor Flaw rather than a Major one. Also note that this Flaw cannot apply to Supernatural Virtues that are affiliated to the Infernal realm in the first place, and the troupe may not allow it to apply to Virtues derived from the Divine."
   },
   "flaw.false_power_minor": {
     "name": "False Power (Minor): {virtue}",
-    "summary": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation."
+    "summary": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation.",
+    "description": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation. This quality could be because of something inherent to the Power, or perhaps because of the interference of Infernal agents. This Flaw can apply to Supernatural Virtues that define the character's background, like Faerie Blood, Diedne Magic, or even The Gift. In these cases, falsehood permeates the whole of the character's being, causing everything she does to seem unholy to those with the ability to sense it The False Power is often subtly changed by its Infernal aspect, making it more sinister or negative. Here are some examples:\n\n(False) Premonitions: The taint of the character's Premonitions Power leaves it vulnerable to Infernal manipulation, even if the character has Magic Resistance. Many of the character's premonitions are accurate, and pursuit of the stories they evoke is usually worthwhile. These valuable insights often lead characters to trust lies that a demon offers through the Power in order to manipulate their response to pivotal events.\n\n(False) Second Sight: The character is particularly likely to see through an illusion or deception when what he sees would lead him to sin. Sometimes he may see through mundane obstacles, if the information gained would tempt him to sinful acts.\n\n(False) Shapeshifter: The character can change his shape, but only into animals typically associated with the Infernal, such as a cat, a wolf, a raven, or a rat. When in these shapes, he seems unholy to those can recognize that quality.\n\nIt is quite possible that the character does not know that his Power is false. Once he does, he may find himself in a moral dilemma. Most people consider it a sin to use Powers associated with the Infernal realm for any reason, and would label him an infernalist if they discovered the nature of his Power. Yet his Power is also associated with another realm, making it more difficult to recognize it as Infernal, and leaving it unclear whether the Power is inherently evil or simply tainted by association. Perhaps the character believes it is not wrong for him to use his Powers, so long as he does not pursue evil ends with them.\n\nOnce the character recognizes that the Power has an unholy aspect, he may choose to treat it as an Infernal Power at any time, using the Infernal Power column of the realm interaction chart and thus giving him a bonus in Infernal auras. This may also grant him other benefits: like other infernalists he can boost his casting total with sacrifices, and use an Infernal Ceremony to include others in the activation, as described in Realms of Power: The Infernal, page 91. However, doing this removes any illusions about the Power's realm — even magical and faerie Powers can recognize that it is Infernal.\n\nIf the character realizes his Power is corrupted, he may decide to seek help from the Divine. Sincere repentance and participation in a form of ceremonial absolution allow the character to lose this Flaw, though this also takes away the Virtue it modifies. This is a heavy penance, but it is the only way to exorcise the evil influence of the Infernal realm, and of course there are far greater rewards in Heaven.\n\nThis Flaw may be taken multiple times, once for each appropriate Supernatural Virtue that the character possesses, but in each subsequent instance as a Minor Flaw rather than a Major one. Also note that this Flaw cannot apply to Supernatural Virtues that are affiliated to the Infernal realm in the first place, and the troupe may not allow it to apply to Virtues derived from the Divine."
   },
   "flaw.favors": {
     "name": "Favors",
@@ -535,7 +559,8 @@
   },
   "flaw.feral_scent": {
     "name": "Feral Scent",
-    "summary": "Perhaps due to his beast blood or feral upbringing, the character has the strong natural smell of a wild animal."
+    "summary": "Perhaps due to his beast blood or feral upbringing, the character has the strong natural smell of a wild animal.",
+    "description": "Perhaps due to his beast blood or feral upbringing, the character has the strong natural smell of a wild animal. Humans tend to avoid being too close to him, and may be on edge in his vicinity without knowing why. He may well spook domesticated animals if he surprises them. He suffers a -1 penalty to social interactions (which stacks with the penalties imposed by The Gift, if he has it), and develops a negative Reputation of Unclean at level 2. However, if he has Initiated the Sensory Magic Mystery (described in Houses of Hermes: Mystery Cults, page 27), any spells he casts with a Scent Target have twice their normal area of effect."
   },
   "flaw.feral_upbringing": {
     "name": "Feral Upbringing",
@@ -543,7 +568,8 @@
   },
   "flaw.fettered_magic": {
     "name": "Fettered Magic",
-    "summary": "All of your spells and the effects of any magic items you activate are Arcane Connections to you."
+    "summary": "All of your spells and the effects of any magic items you activate are Arcane Connections to you.",
+    "description": "All of your spells and the effects of any magic items you activate are Arcane Connections to you. You cannot take this with the Virtue Tethered Magic, as the Virtue already includes this effect."
   },
   "flaw.feud": {
     "name": "Feud",
@@ -576,7 +602,8 @@
   },
   "flaw.fluctuating_fortune": {
     "name": "Fluctuating Fortune",
-    "summary": "The character's finances rise and fall like the tide, regardless of how successful he is or what preventative measures he takes."
+    "summary": "The character's finances rise and fall like the tide, regardless of how successful he is or what preventative measures he takes.",
+    "description": "The character's finances rise and fall like the tide, regardless of how successful he is or what preventative measures he takes. He is considered to have the Wealthy Virtue one year, followed by the Poor Flaw the next. Besides monetary concerns, this means that the character will have to only work one season in one year, followed by a year in which he has to work three, all to maintain his livelihood. This cycle of feast and famine continues throughout the character's life, always in opposition to his financial desires. When he needs money most, he has none, and has an abundance of funds when they are superfluous."
   },
   "flaw.follower": {
     "name": "Follower",
@@ -588,7 +615,8 @@
   },
   "flaw.form_monstrosity": {
     "name": "{form} Monstrosity",
-    "summary": "This Flaw is primarily intended for animal characters, but may be taken for characters who are basically human with the approval of the troupe."
+    "summary": "This Flaw is primarily intended for animal characters, but may be taken for characters who are basically human with the approval of the troupe.",
+    "description": "This Flaw is primarily intended for animal characters, but may be taken for characters who are basically human with the approval of the troupe. The character is a monstrosity with a monstrous feature, or mutation, which corresponds to a magical Form. The feature may be beneficial in limited circumstances, but generally gives the character no advantage over its non-mutated peers.\n\nAnimals are not usually bothered by monsters — the character still has the correct scent, and behavior — and a single monstrous bull might be found happily living among a herd of otherwise normal cattle, for example. People, on the other hand, are highly troubled by the appearance of monstrosities, which they invariably attribute to malign influence: obviously monstrous animals are usually killed by peasants. Often, 1 pawn of Muto vis may be extracted from the corpse of a monstrous character, found concentrated in the monstrous feature.\n\nSome examples of possible monstrosities are listed nearby, but the troupe may devise their own, as required:"
   },
   "flaw.fragile_constitution": {
     "name": "Fragile Constitution",
@@ -625,7 +653,8 @@
   },
   "flaw.greater_malediction": {
     "name": "Greater Malediction",
-    "summary": "You have been cursed by some supernatural power, in a way that greatly hinders you."
+    "summary": "You have been cursed by some supernatural power, in a way that greatly hinders you.",
+    "description": "You have been cursed by some supernatural power, in a way that greatly hinders you. The effects of the curse should be comparable to those of other Major Flaws. Indeed, almost any Flaw could be the result of a curse."
   },
   "flaw.greedy_major": {
     "name": "Greedy (Major)",
@@ -650,7 +679,8 @@
   },
   "flaw.harmless_magic": {
     "name": "Harmless Magic",
-    "summary": "The character's Perdo spells cannot permanently destroy anything; they temporarily disrupt the target, like Perdo Imaginem magic, but as soon as the duration has passed the target returns to its natural state as if nothing had happened, like a Muto effect."
+    "summary": "The character's Perdo spells cannot permanently destroy anything; they temporarily disrupt the target, like Perdo Imaginem magic, but as soon as the duration has passed the target returns to its natural state as if nothing had happened, like a Muto effect.",
+    "description": "The character's Perdo spells cannot permanently destroy anything; they temporarily disrupt the target, like Perdo Imaginem magic, but as soon as the duration has passed the target returns to its natural state as if nothing had happened, like a Muto effect. This means that a version of The Wound that Weeps (PeCo15), for example, briefly causes a painful, bleeding wound that immediately closes again. Likewise, Fist of Shattering (PeTe10) causes an object of stone or weaker material to briefly break apart, but then fuse itself together again. The character's Ritual Perdo spells function normally, however.\n\nThis weakness can be a boon to a crafty character. A maga might invent a spell to destroy a heavy rock at Concentration Duration, she could then cast it and lie in wait. When her enemy walks into the vacant space, she could release her concentration and crush her victim beneath it when it reforms. However, in most cases this limitation is a minor hindrance, as useful Perdo magic requires longer Durations."
   },
   "flaw.hatred_major": {
     "name": "Hatred (Major)",
@@ -687,7 +717,8 @@
   },
   "flaw.horrifying_appearance_snake_legs": {
     "name": "Horrifying Appearance – Snake Legs",
-    "summary": "You have no legs, and instead your hips give rise to two or more snake-like tails; you should consider how you survived childhood with this horrific deformity."
+    "summary": "You have no legs, and instead your hips give rise to two or more snake-like tails; you should consider how you survived childhood with this horrific deformity.",
+    "description": "You have no legs, and instead your hips give rise to two or more snake-like tails; you should consider how you survived childhood with this horrific deformity. Your movement is not hindered under most circumstances. You can hide this deformity under clothing, but you cannot move without revealing it, leaving you feigning being crippled as well."
   },
   "flaw.humble": {
     "name": "Humble",
@@ -705,7 +736,8 @@
   },
   "flaw.imagined_folk_tradition_vulnerability": {
     "name": "Imagined Folk Tradition Vulnerability",
-    "summary": "Although this flaw closely resembles a Delusion, Imagined Folk Tradition Vulnerability has other game mechanical effects as well."
+    "summary": "Although this flaw closely resembles a Delusion, Imagined Folk Tradition Vulnerability has other game mechanical effects as well.",
+    "description": "Although this flaw closely resembles a Delusion, Imagined Folk Tradition Vulnerability has other game mechanical effects as well. This character utterly and sincerely believes that he has been touched by the fay, and that they have granted him his special skills — whether or not any such exist. So, naturally, he is convinced that he is as vulnerable to traditional wards and folk magic as the fey. Whenever there is talk about such folk remedies, or people around him try to perform them, he does his best to dissuade them. If he can get away with it, he removes or sabotage such wards; for instance, he sneaks around at night and removes any warding marks or materials at doorways. Finally, he exhibits strange behavior around active wards or ritualistic actions. This could be refusing to shake hands with a person right after they have drawn the sign of the cross, or flinching whenever salt is flung over someone's shoulder. On the plus side, this Flaw allows the character to purchase a score of 1 (but no more) in Faerie Lore at character creation. This is because he needs a rudimentary knowledge of the fay and the wards against them in order to be able to act this way. Without such knowledge, his behavior is based on what he thinks such wards might be."
   },
   "flaw.impious_friend": {
     "name": "Impious Friend",
@@ -713,7 +745,8 @@
   },
   "flaw.incompatible_arts": {
     "name": "Incompatible Arts",
-    "summary": "For some reason you are completely unable to use two combinations of Techniques and Forms."
+    "summary": "For some reason you are completely unable to use two combinations of Techniques and Forms.",
+    "description": "For some reason you are completely unable to use two combinations of Techniques and Forms. For example, you may be unable to use Intellego Herbam and Intellego Animal. You may not use these Arts together even if one or both are requisites. This Flaw may be taken repeatedly with different combinations, but may not be combined with a Deficiency (see page 125)."
   },
   "flaw.incomprehensible": {
     "name": "Incomprehensible",
@@ -754,7 +787,8 @@
   },
   "flaw.judged_unfairly": {
     "name": "Judged Unfairly",
-    "summary": "Somehow you come across the wrong way to people, and they universally distrust and underestimate you."
+    "summary": "Somehow you come across the wrong way to people, and they universally distrust and underestimate you.",
+    "description": "Somehow you come across the wrong way to people, and they universally distrust and underestimate you. You catch no one's eye, impress no one, and can get no one to take you seriously. If you ever find an exceptional someone who sees you as you want to be seen, you will cling to that person. You cannot gain a positive Reputation in any community, and this Flaw is incompatible with any Virtue that gives you such a Reputation."
   },
   "flaw.lame": {
     "name": "Lame",
@@ -771,11 +805,13 @@
   },
   "flaw.leprosy": {
     "name": "Leprosy",
-    "summary": "The character has leprosy."
+    "summary": "The character has leprosy.",
+    "description": "The character has leprosy. A leper has a permanent -2 modifier to her Living Condition (with an additional -1 if she lives in a leper colony), and whenever she undergoes an Aging Crisis (page 392) the leper sustains a Heavy Wound in addition to any other result. Lepers cannot gain a positive Reputation due to a pungent rotting smell that they emit."
   },
   "flaw.lesser_malediction": {
     "name": "Lesser Malediction",
-    "summary": "You have been cursed by some supernatural power."
+    "summary": "You have been cursed by some supernatural power.",
+    "description": "You have been cursed by some supernatural power. The effects of the curse should be about as bad as other Minor General Flaws."
   },
   "flaw.limited_magic_resistance": {
     "name": "Limited Magic Resistance",
@@ -1130,7 +1166,8 @@
   },
   "flaw.restricted_learning": {
     "name": "Restricted Learning",
-    "summary": "The character is incapable of learning new things without assistance."
+    "summary": "The character is incapable of learning new things without assistance.",
+    "description": "The character is incapable of learning new things without assistance. Pick five Abilities at character creation; you can only apply experience points to these Abilities. The character cannot learn any new Abilities on her own; she must receive experience points from Teaching or Training to develop a new Ability or to improve one that is not part of the initial five. Furthermore, she cannot use an Ability with no score, even if it can normally be used untrained. Any Supernatural Abilities from Virtues she possesses are added to the list of Abilities to which she can apply experience points."
   },
   "flaw.restricted_power": {
     "name": "Restricted Power ({power})",
@@ -1532,6 +1569,102 @@
   },
   "folk_magic.healing": {
     "name": "Healing"
+  },
+  "affliction.sensitive_hearing": {
+    "name": "Sensitive Hearing"
+  },
+  "affliction.sensitive_sight": {
+    "name": "Sensitive Sight"
+  },
+  "affliction.sensitive_smell": {
+    "name": "Sensitive Smell"
+  },
+  "affliction.sensitive_taste": {
+    "name": "Sensitive Taste"
+  },
+  "affliction.sensitive_to_cold": {
+    "name": "Sensitive to Cold"
+  },
+  "affliction.sensitive_to_heat": {
+    "name": "Sensitive to Heat"
+  },
+  "affliction.weak_hearing": {
+    "name": "Weak Hearing"
+  },
+  "affliction.weak_sight": {
+    "name": "Weak Sight"
+  },
+  "affliction.weak_smell": {
+    "name": "Weak Smell"
+  },
+  "affliction.weak_taste": {
+    "name": "Weak Taste"
+  },
+  "heritage.bee_king": {
+    "name": "Blood of the Bee King"
+  },
+  "heritage.custom": {
+    "name": "Other"
+  },
+  "heritage.dwarf": {
+    "name": "Dwarf Blood"
+  },
+  "heritage.goblin": {
+    "name": "Goblin Blood"
+  },
+  "heritage.satyr": {
+    "name": "Satyr Blood"
+  },
+  "heritage.sidhe": {
+    "name": "Sidhe Blood"
+  },
+  "heritage.spinnen": {
+    "name": "Spinnen Blood"
+  },
+  "heritage.undine": {
+    "name": "Undine Blood"
+  },
+  "language.arabic": {
+    "name": "Arabic"
+  },
+  "language.aramaic": {
+    "name": "Aramaic"
+  },
+  "language.gothic": {
+    "name": "Gothic"
+  },
+  "language.greek": {
+    "name": "Greek"
+  },
+  "language.hebrew": {
+    "name": "Hebrew"
+  },
+  "language.latin": {
+    "name": "Latin"
+  },
+  "language.persian": {
+    "name": "Persian"
+  },
+  "rank.archbishop": {
+    "name": "Archbishop"
+  },
+  "rank.cardinal_legatus": {
+    "name": "Cardinal or Legatus a Latere"
+  },
+  "rank.king": {
+    "name": "King"
+  },
+  "rank.legatus_missus": {
+    "name": "Legatus Missus"
+  },
+  "rank.pope": {
+    "name": "Pope"
+  },
+  "scope.category": {
+    "name": "Whole Category"
+  },
+  "scope.custom": {
+    "name": "Custom"
   },
   "virtue.academic_concentration_subject": {
     "name": "Academic Concentration {subject}",
@@ -2921,7 +3054,8 @@
   },
   "virtue.turb_trained": {
     "name": "Turb Trained",
-    "summary": "This character has grown up at the covenant, been trained to fight in the turb, and picked up a few things from the magi's trusted servants."
+    "summary": "This character has grown up at the covenant, been trained to fight in the turb, and picked up a few things from the magi's trusted servants.",
+    "description": "This character has grown up at the covenant, been trained to fight in the turb, and picked up a few things from the magi's trusted servants. At character creation, he is allowed to learn Martial Abilities. He may also learn whichever single dead language the magi speak in addition to his local tongue. His fortunes are tied to the turb, and he is thus prohibited from being Wealthy or Poor."
   },
   "virtue.unaffected_by_the_gift": {
     "name": "Unaffected by The Gift",

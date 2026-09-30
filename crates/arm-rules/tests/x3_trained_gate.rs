@@ -680,7 +680,15 @@ const X3C_FLAWS: &[(&str, Gate)] = &[
 /// by name, and an empty-but-named list is the honest shape to reuse if a
 /// future hermetic entry is ever added mid-catalogue and needs staging before
 /// its own gate lands.
-const PENDING_HERMETIC_FLAWS: &[&str] = &[];
+// `flaw.vengeful_powers` (X6b, design-x6-parameters.md): its passage lets it
+// be "taken as a Hermetic Flaw" OR the ordinary Story reading (ArMDE:6975),
+// recorded by a `taken_as` Category parameter — but `trained`/`prerequisites`
+// gate the WHOLE item unconditionally, with no per-value conditional
+// prerequisite mechanism in the engine, so gating it here would wrongly
+// block the Story reading for a non-magus. Left pending rather than gated
+// wrong; a real per-value Prereq gate is an engine change outside this
+// data-only slice.
+const PENDING_HERMETIC_FLAWS: &[&str] = &["flaw.vengeful_powers"];
 
 /// D68.3's per-entry shape, table-driven, for X3a's 55 Virtues. RED now for
 /// every entry: nothing in the shipped catalogue carries `trained: true` yet

@@ -178,9 +178,15 @@ export interface ConditionalIncompatibility {
 
 // A property-based test over a point item, for an exclusion the rulebook
 // states by description rather than by id (`PointItem.incompatible_with`) or
-// category (`Effect.forbids_item_category`) — D23/D33. Mirrors the engine's
-// `ItemPredicate`, a closed 3-member enum.
-export type ItemPredicate = 'trained' | 'grants_reputation' | 'grants_personality_trait';
+// category (`Effect.forbids_item_category`) — D23/D33/D68.4/D69.5. Mirrors the
+// engine's `ItemPredicate`, a closed 5-member enum
+// (`item-predicate-parity.test.ts` guards the two sides against drift).
+export type ItemPredicate =
+  | 'trained'
+  | 'grants_reputation'
+  | 'grants_personality_trait'
+  | 'requires_hermetic_arts'
+  | 'affects_size';
 
 // Mechanical effect a virtue/flaw applies. `ability_bonus` adds to an ability's
 // effective score (Puissant Ability +2); `characteristic_score_delta_param`

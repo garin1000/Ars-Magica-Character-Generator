@@ -1025,7 +1025,7 @@ param-label-role = Rolle
 # Begriff aus rules/source/de/translation-tables/tiere-kreaturen.md:144
 # („Power“ → „Kraft“).
 param-label-power = Kraft
-# „Anfällige Magie" — „solange für jede Instanz eine andere Bedingung
+# „Verwundbare Magie" — „solange für jede Instanz eine andere Bedingung
 # angegeben wird" (rules/source/de/Ars Magica Definitive Edition
 # Basisregeln.md:7009). Begriff aus
 # rules/source/de/translation-tables/magie-regeln.md:91
@@ -1075,6 +1075,36 @@ param-label-targets = Ziele
 # (ArMDE:3747-3750, F-63) — "Musik, Tanz, Zeichnen, Geschichtenerzählen, sogar
 # Handwerk".
 param-label-medium = Medium
+
+# X6b's 16 regelbestimmende Parameter (design-x6-parameters.md § 2).
+# Der Rang der Befehlenden Aura (ArMDE:3585-3591, :17651).
+param-label-rank = Rang
+# Die bevorzugte Fertigkeit bei Savantismus (ArMDE:6703-6708).
+param-label-favored = Bevorzugte Fertigkeit
+# Die fünf benannten Fertigkeiten von Eingeschränktem Lernen, und die drei
+# verbundenen von Magischer Abstammung (Groß) (ArMDE:6685, :4345).
+param-label-abilities = Fertigkeiten
+# Die Art des Feenbluts bei Feenblut / Starkem Feenblut (ArMDE:3805-3819).
+param-label-heritage = Abstammung
+# Die bedingungslose körperliche Eigenheit bei Starkem Feenblut (ArMDE:5042).
+param-label-quirk = Körperliche Eigenheit
+# Der Entweder-Oder-Unterscheider von Fähigkeitsblock zwischen einer ganzen
+# Kategorie und einer eigenen, engeren Auswahl (ArMDE:5651-5654).
+param-label-scope = Umfang
+param-label-class = Fertigkeitsklasse
+# Das gemeinsame "oder erschaffe/beschreibe deine eigene" Freitextfeld —
+# Feenbluts Abstammung, Monströsem Bluts Blutlinie, Fähigkeitsblocks engere
+# Auswahl und Abstoßends Merkmal teilen sich diesen einen Schlüssel (D9's
+# E+-Idiom).
+param-label-custom = Eigene Angabe
+# Der geringfügige Vorteil bei Abstoßend (ArMDE:6681, Q-X6-3).
+param-label-feature = Merkmal
+# Die Sinnes-/Umweltbeeinträchtigung bei Verzerrten Sinnen (ArMDE:7027-7051).
+param-label-affliction = Beeinträchtigung
+# Das Fachgebiet bei Starker Magie (ArMDE:4742-4746).
+param-label-field = Fachgebiet
+# Der Umstand bei Besonderen Umständen (ArMDE:4998-5001, F-541/F-287).
+param-label-circumstance = Umstand
 
 # C5b: Die Mehrfachauswahl-Checkliste (ein `multi_ref`-Parameter, D9 Teil 3)
 # zeigt diesen Hinweis statt einer unerklärten leeren Liste, wenn es nichts
@@ -1128,6 +1158,17 @@ param-domain-text = Text
 param-domain-number = Zahl
 param-domain-spell = Zauber
 param-domain-ability_category = Fertigkeitskategorie
+
+# Lokalisierte Namen für die `ItemPredicate`-Varianten der Engine — ein
+# eigenschaftsbasierter Test über einen Punkte-Eintrag (D23/D33/D68.4/D69.5),
+# gelesen nur vom `$predicate`-Argument von `excluded_by_predicate`. Die Engine
+# liefert den serialisierten Namen des Enums, und ein Slug darf niemals auf dem
+# Bildschirm erscheinen.
+predicate-trained = Erfordert hermetische Ausbildung
+predicate-grants_reputation = Verleiht eine Reputation
+predicate-grants_personality_trait = Verleiht eine Persönlichkeitseigenschaft
+predicate-requires_hermetic_arts = Erfordert hermetische Künste
+predicate-affects_size = Beeinflusst die Größe
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }
@@ -1558,7 +1599,7 @@ derived-detail-spell_improvisation = Zauberimprovisation
 derived-detail-mercurian = Merkurische Magie
 derived-detail-life_boost = Lebensschub
 derived-detail-circumstantial = Umständeabhängig
-# Anfälligkeit für Göttliche Macht: die Abzüge der Aura auf deine Magie — der
+# Anfälligkeit für Göttliche Kraft: die Abzüge der Aura auf deine Magie — der
 # Auramodifikator und die Patzerwürfel — zählen in dieser Aura doppelt.
 derived-detail-doubled_aura_penalty = Verdoppelte Aura-Abzüge
 derived-detail-fatigue_roll = Erschöpfungswurf

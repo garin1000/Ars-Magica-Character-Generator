@@ -2763,6 +2763,57 @@ describe('the gated-Ability-category finding (Sabine 1)', () => {
   );
 });
 
+// Review 2026-09-30b #1: `excluded_by_predicate`'s `predicate` arg is the
+// engine's `ItemPredicate` serde tag (`trained`, `grants_reputation`,
+// `grants_personality_trait`, `requires_hermetic_arts`, `affects_size`) — a raw
+// slug with no Fluent prefix registered for it, so it printed straight into the
+// message on every emission. `affects_size` is live via
+// `virtue.blood_of_the_nephilim`'s `excluded_if_holds`.
+describe('issue-excluded_by_predicate renders a localized predicate, not the raw slug (review 2026-09-30b #1)', () => {
+  const allPredicates = [
+    'trained',
+    'grants_reputation',
+    'grants_personality_trait',
+    'requires_hermetic_arts',
+    'affects_size',
+  ] as const;
+
+  it.each(['en', 'de'] as const)(
+    'labels every ItemPredicate through its own Fluent family, never as a slug (%s)',
+    (lang) => {
+      const bundle = buildBundle(lang);
+      const t: Translate = (key, a) => formatMessage(bundle, key, a);
+      const rs = makeRuleset([], {
+        i18n: {
+          'flaw.university_dean': { name: 'University Dean' },
+          'virtue.blood_of_the_nephilim': { name: 'Blood of the Nephilim' },
+        },
+      });
+      for (const predicate of allPredicates) {
+        const label = formatMessage(bundle, `predicate-${predicate}`);
+        expect(label, `${lang} is missing predicate-${predicate}`).not.toBe(
+          `predicate-${predicate}`,
+        );
+        const resolved = resolveIssueArgs(
+          rs,
+          {
+            item: 'flaw.university_dean',
+            other: 'virtue.blood_of_the_nephilim',
+            predicate,
+          },
+          t,
+        );
+        const message = formatMessage(bundle, 'issue-excluded_by_predicate', resolved).replace(
+          /[⁦-⁩]/g,
+          '',
+        );
+        expect(message).toContain(label);
+        expect(message).not.toContain(predicate);
+      }
+    },
+  );
+});
+
 describe('issue-ability_outside_restricted_scope renders fully localized (UI review #1)', () => {
   it.each(['en', 'de'] as const)(
     'names abilities and categories through real labels, never a raw slug (%s)',

@@ -348,12 +348,22 @@ pub enum Prereq {
     IsGrog,
     /// The entity must hold (bought or granted) at least one item whose
     /// in-force category is this string — the category-ranging twin of
-    /// [`Self::Has`], evaluated the same grant-aware way (D21;
-    /// `flaw.rector`'s "must have a Social Status Virtue", ArMDE:6671-6674).
-    /// A free-form category string rather than a closed registry, matching
+    /// [`Self::Has`], evaluated the same grant-aware way (D21). A free-form
+    /// category string rather than a closed registry, matching
     /// [`PointItem::categories`] — enumerating every item of a category in a
     /// `Prereq::Any` would freeze a catalogue count into code (CLAUDE.md:
     /// "Catalogue size is data, never code").
+    ///
+    /// Not the right tool whenever the category itself would be vacuous,
+    /// though: `flaw.rector`'s "a Social Status Virtue dictating his place
+    /// within the university" (ArMDE:6671-6674) reads like a bare
+    /// `HasCategory("social_status")` leaf, but every profile already
+    /// requires SOME Social Status (D41), so that leaf would never exclude
+    /// anything. D68.10 (`RULES.md`, "Rector/Proctor and Male Guild Sponsor —
+    /// closed lists, not a bare Social Status") gave `flaw.rector` and
+    /// `virtue.male_guild_sponsor` a named, book-defined [`Self::Any`] list of
+    /// the specific qualifying Virtues instead — this variant stays for the
+    /// cases where "any item of this category" is the actual rule.
     HasCategory(String),
     /// The entity must be at least this many years old (University Dean,
     /// ArMDE:6923-6926: "must ... be at least 40 years old"). Evaluated

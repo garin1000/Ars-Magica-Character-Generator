@@ -44,7 +44,10 @@
       }
     },
     {
-      "ref": "virtue.special_circumstances"
+      "ref": "virtue.special_circumstances",
+      "params": {
+        "circumstance": "during a storm"
+      }
     },
     {
       "ref": "virtue.the_gift"

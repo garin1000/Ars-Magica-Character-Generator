@@ -879,6 +879,12 @@ fn the_mercere_matches_the_book() {
 #[test]
 fn the_merinita_matches_the_book() {
     let ruleset = full_ruleset();
+    // The fixture's `virtue.strong_faerie_blood` selection carries
+    // `"quirk": "webbed fingers"` — a placeholder value. D70 makes `quirk` a
+    // required parameter, but the book's statblock (ArMDE:2000-2048) never
+    // states what the character's faerie quirk actually is, so this fixture
+    // invents one purely to satisfy the parameter requirement. Plain JSON
+    // carries no comment syntax, hence the note lives here instead.
     let merinita = load(include_str!("fixtures/book_templates/magus_merinita.json"));
 
     assert_eq!(error_codes(&merinita, &ruleset), codes(&[]));

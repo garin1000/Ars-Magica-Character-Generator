@@ -1016,6 +1016,35 @@ param-label-targets = Targets
 # — "music, dance, drawing, storytelling, even craftwork".
 param-label-medium = Medium
 
+# X6b's 16 rule-driving parameters (design-x6-parameters.md § 2).
+# Commanding Aura's rank (ArMDE:3585-3591, :17651).
+param-label-rank = Rank
+# Savantism's favored Ability (ArMDE:6703-6708).
+param-label-favored = Favored Ability
+# Restricted Learning's five named Abilities, and Magian Lineage (Major)'s
+# three connected ones (ArMDE:6685, :4345).
+param-label-abilities = Abilities
+# Faerie Blood / Strong Faerie Blood's type of fay heritage (ArMDE:3805-3819).
+param-label-heritage = Heritage
+# Strong Faerie Blood's unconditional physical quirk (ArMDE:5042).
+param-label-quirk = Physical Quirk
+# Ability Block's either/or discriminator between a whole category and a
+# custom, narrower set (ArMDE:5651-5654).
+param-label-scope = Scope
+param-label-class = Ability Category
+# Shared "or create/describe your own" free-text sibling — Faerie Blood's
+# heritage, Monstrous Blood's bloodline, Ability Block's limited set, and
+# Repellent's feature all reuse this one key (D9's E+ idiom).
+param-label-custom = Custom
+# Repellent's minor advantage (ArMDE:6681, Q-X6-3).
+param-label-feature = Feature
+# Warped Senses' sense/environmental affliction (ArMDE:7027-7051).
+param-label-affliction = Affliction
+# Potent Magic's field (ArMDE:4742-4746).
+param-label-field = Field
+# Special Circumstances' circumstance (ArMDE:4998-5001, F-541/F-287).
+param-label-circumstance = Circumstance
+
 # C5b: the multi-select checklist (a `multi_ref` parameter, D9 part 3) shown
 # instead of a bare, unexplained empty list when there is nothing to choose
 # from — e.g. Corrupted Spells before the character has learned any spells.
@@ -1061,6 +1090,16 @@ param-domain-text = Text
 param-domain-number = Number
 param-domain-spell = Spell
 param-domain-ability_category = Ability Category
+
+# Localized names for the engine's `ItemPredicate` variants — a property-based
+# test over a point item (D23/D33/D68.4/D69.5), read only by
+# `excluded_by_predicate`'s `$predicate` arg. The engine emits the enum's
+# serialized name, and a slug must never reach the screen.
+predicate-trained = Requires Hermetic Training
+predicate-grants_reputation = Grants a Reputation
+predicate-grants_personality_trait = Grants a Personality Trait
+predicate-requires_hermetic_arts = Requires Hermetic Arts
+predicate-affects_size = Affects Size
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }

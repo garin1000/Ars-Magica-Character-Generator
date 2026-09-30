@@ -689,6 +689,38 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     "virtue.wisdom_from_ignorance",
     "virtue.wise_one",
     "virtue.withstand_casting",
+    // X2f (`tmp/x2-worklist.md` rows 261-317, `tmp/x2f-verdicts.md`): already
+    // `uncomputed_rule` with a description carrying the full cited passage —
+    // added here only to gate it against the verbatim-fidelity check.
+    "flaw.lycanthrope",
+    // X2f Phase 2: newly swept entries whose `description` is the full cited
+    // passage, verbatim in both locales. `flaw.form_monstrosity` is
+    // deliberately NOT here — its citation's range includes the "Monstrosity
+    // Examples" Markdown table, which is not prose and is not reproduced in
+    // the shipped description (`tmp/x2f-handover.md` § 2).
+    "flaw.disorientating_magic",
+    "flaw.enfeebled",
+    "flaw.envied_beauty",
+    "flaw.exciting_experimentation",
+    "flaw.excommunicate",
+    "flaw.exiled_atlantean",
+    "flaw.false_power",
+    "flaw.false_power_minor",
+    "flaw.feral_scent",
+    "flaw.fettered_magic",
+    "flaw.fluctuating_fortune",
+    "flaw.greater_malediction",
+    "flaw.harmless_magic",
+    "flaw.horrifying_appearance_snake_legs",
+    "flaw.imagined_folk_tradition_vulnerability",
+    "flaw.incompatible_arts",
+    "flaw.judged_unfairly",
+    "flaw.leprosy",
+    "flaw.lesser_malediction",
+    // D20 correction: reclassified to `uncomputed_rule`, but its shipped
+    // description is the same severity-comparison text added this slice —
+    // gated here for the same reason as the rest of this block.
+    "flaw.environmental_magic_condition",
 ];
 
 /// D5/D46: a shipped `description` is a rule's only carrier once the entry
@@ -2495,15 +2527,22 @@ fn busybody_reclassifies_and_states_its_creation_time_scope_choice() {
 /// halving (a signed-shaped clause, D58's surfaced-modifier family), so the
 /// coarse screen never flagged the circumstance taxonomy (state/target/place
 /// examples, ArMDE:5917-5920) that determines when the halving applies.
-/// `classification` stays `in_play_effect`.
+/// **D20/D67 correction (X2f Phase 2):** X2e's original reading kept this
+/// `in_play_effect` on the theory that a surfaced-only effect (a bare
+/// `special_casting_mod: circumstantial` label with no number) satisfies
+/// `in_play_effect` — D20 rules that it does not: a bare category label tells
+/// the player nothing, so the rule's only real carrier is `description`,
+/// which is what `uncomputed_rule` is for. D67 confirms an `uncomputed_rule`
+/// entry keeps whatever it does compute, so `effects` is unchanged.
 #[test]
 fn deleterious_circumstances_states_its_circumstance_taxonomy() {
     let rs = load_ruleset();
     assert_eq!(
         classification_of(&rs, "flaw.deleterious_circumstances"),
-        Classification::InPlayEffect,
-        "F-401: the halving is genuinely computed via special_casting_mod; only the circumstance \
-         taxonomy is missing, which does not change the classification"
+        Classification::UncomputedRule,
+        "D20/D67: a bare special_casting_mod marker with no number is a surfaced-only effect, so \
+         the rule's only carrier is the description text — uncomputed_rule, not in_play_effect, \
+         though the effect itself stays computed"
     );
 
     let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
@@ -2532,16 +2571,18 @@ fn deleterious_circumstances_states_its_circumstance_taxonomy() {
 
 /// F-421: flaw.disjointed_magic computes nothing but a bare
 /// `special_casting_mod` marker, and neither of its two stated clauses
-/// reaches the player. `classification` stays `in_play_effect` (D58's
-/// surfaced-modifier family).
+/// reaches the player. **D20/D67 correction (X2f Phase 2):** the same
+/// surfaced-only reasoning as `flaw.deleterious_circumstances` applies here —
+/// `classification` flips to `uncomputed_rule`, `effects` is unchanged.
 #[test]
 fn disjointed_magic_states_its_two_clauses() {
     let rs = load_ruleset();
     assert_eq!(
         classification_of(&rs, "flaw.disjointed_magic"),
-        Classification::InPlayEffect,
-        "F-421: a bare special_casting_mod marker is computed; neither stated clause reaches the \
-         player, which does not change the classification (D58)"
+        Classification::UncomputedRule,
+        "D20/D67: a bare special_casting_mod marker with no number is a surfaced-only effect, so \
+         the rule's only carrier is the description text — uncomputed_rule, not in_play_effect, \
+         though the effect itself stays computed"
     );
 
     let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
@@ -2572,6 +2613,173 @@ fn disjointed_magic_states_its_two_clauses() {
         offenders.is_empty(),
         "X2e (tmp/x2e-verdicts.md), F-421: flaw.disjointed_magic's description must state both \
          clauses in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+// ---------------------------------------------------------------------------
+// X2f (`tmp/x2-worklist.md` rows 261-317, ArMDE:5984-6377, `tmp/x2f-verdicts.md`)
+// ---------------------------------------------------------------------------
+
+/// D8 (`docs/vf-audit/decisions.md`): every `supernatural`-category
+/// `narrative` entry reclassifies to `uncomputed_rule` ("a capability is a
+/// rule"), independent of whether the mechanical-token screen recognizes
+/// anything in the passage — these four passages state no signed number, no
+/// botch term, and no idiom family the screen already carries, so no pending
+/// list bites them; this table is the only thing that does. `(id, why)`.
+const X2F_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
+    (
+        "flaw.fluctuating_fortune",
+        "D8: ArMDE:6150-6153 states the character effectively holds Wealthy one year and Poor \
+         the next (one season of work one year, three the next) — a concrete, unmodelled \
+         toggling mechanic naming both Virtue/Flaw by name, not mere colour",
+    ),
+    (
+        "flaw.form_monstrosity",
+        "D8: ArMDE:6162-6185 states a real quantity — \"1 pawn of Muto vis may be extracted from \
+         the corpse of a monstrous character\" — computed nowhere (the entry ships only a `form` \
+         parameter, no effects)",
+    ),
+    (
+        "flaw.greater_malediction",
+        "D8/F-442: ArMDE:6210-6213's curse-design guidance (\"effects... should be comparable to \
+         those of other Major Flaws\") is the storyguide-actionable content D50 requires reach \
+         the player as text, and the category (supernatural) independently requires \
+         uncomputed_rule under D8",
+    ),
+    (
+        "flaw.lesser_malediction",
+        "D8/F-442/F-452: the Minor-scale sibling of greater_malediction, ArMDE:6342-6345 — same \
+         reading, same trigger",
+    ),
+];
+
+#[test]
+fn x2f_entries_reclassify_to_uncomputed_rule_with_a_description() {
+    let rs = load_ruleset();
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+
+    let mut offenders = Vec::new();
+    for (id, why) in X2F_RECLASSIFY_WITH_DESCRIPTION {
+        let classification = classification_of(&rs, id);
+        if classification != Classification::UncomputedRule {
+            offenders.push(format!(
+                "{id}: classified {classification:?}, expected UncomputedRule ({why})"
+            ));
+        }
+        for (lang, loc) in [("en", &loc_en), ("de", &loc_de)] {
+            if displayed_text(loc, id).is_none() {
+                offenders.push(format!(
+                    "{lang}/{id}: no displayed rules text at all ({why})"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2f (tmp/x2f-verdicts.md): these entries must reclassify to `uncomputed_rule` and carry \
+         a description in every locale — a Phase 2 data change, not yet landed:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-… (`tmp/x2f-verdicts.md`): flaw.environmental_magic_condition's own
+/// summary already states the halving (D58's surfaced-modifier family, the
+/// same `special_casting_mod: circumstantial` shape as
+/// flaw.deleterious_circumstances/flaw.disjointed_magic), so the coarse
+/// screen never flagged the missing severity comparison
+/// (ArMDE:6020-6023's second sentence). **D20/D67 correction (X2f Phase 2):**
+/// X2f Phase 1 originally "overturned" this back to `in_play_effect` on the
+/// same surfaced-only theory X2e used for its two siblings — D20 rejects that
+/// theory for all 19 of its entries, so this one reclassifies to
+/// `uncomputed_rule` too, keeping its `special_casting_mod` effect per D67.
+#[test]
+fn environmental_magic_condition_states_its_severity_comparison() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.environmental_magic_condition"),
+        Classification::UncomputedRule,
+        "D20/D67: a bare special_casting_mod marker with no number is a surfaced-only effect, so \
+         the rule's only carrier is the description text — uncomputed_rule, not in_play_effect, \
+         though the effect itself stays computed"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "more restrictive than the Hermetic Flaw Deleterious Circumstances",
+        ),
+        (
+            "de",
+            &loc_de,
+            "einschränkender sein sollte als der Hermetische Fehler Abträgliche Umstände",
+        ),
+    ] {
+        let text = displayed_text(loc, "flaw.environmental_magic_condition").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/flaw.environmental_magic_condition: displayed text {text:?} does not \
+                 state the severity comparison to Deleterious Circumstances (ArMDE:6020-6023)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2f (tmp/x2f-verdicts.md): flaw.environmental_magic_condition's description must state \
+         the severity comparison in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// `tmp/rules-md-audit-2026-09-30.md` item 5 / D3: flaw.imagined_folk_
+/// tradition_vulnerability's "a score of 1 (but no more)" cap on Faerie Lore
+/// (ArMDE:6280-6283) is D3-inexpressible (no score-cap effect exists), the
+/// same shape as flaw.magical_fascination's own PENDING_DROPPED_CLAUSE row —
+/// but unlike that row, the generic screen cannot see this gap at all: the
+/// shipped summary IS the passage's own first sentence, "...has other game
+/// mechanical effects as well", which happens to trip the "named rulebook
+/// term" idiom (`game mechanical effects`) without stating what the effect
+/// IS. `classification` stays `creation_effect` (the Faerie Lore permission
+/// itself is computed via `ability_authorization`); only the cap is missing.
+#[test]
+fn imagined_folk_tradition_vulnerability_states_its_faerie_lore_cap() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.imagined_folk_tradition_vulnerability"),
+        Classification::CreationEffect,
+        "the Faerie Lore permission is genuinely computed via ability_authorization; only the \
+         score-of-1 cap is missing, which does not change the classification (D3)"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "score of 1 (but no more)"),
+        ("de", &loc_de, "Wert von 1 (aber nicht mehr)"),
+    ] {
+        let text =
+            displayed_text(loc, "flaw.imagined_folk_tradition_vulnerability").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/flaw.imagined_folk_tradition_vulnerability: displayed text {text:?} does \
+                 not state the score-of-1 Faerie Lore cap (ArMDE:6280-6283)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2f (tmp/x2f-verdicts.md), tmp/rules-md-audit-2026-09-30.md item 5: \
+         flaw.imagined_folk_tradition_vulnerability's description must state the score-of-1 \
+         Faerie Lore cap in both locales:\n{}",
         offenders.join("\n")
     );
 }

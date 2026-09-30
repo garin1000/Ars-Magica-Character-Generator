@@ -465,6 +465,16 @@ const FULLY_ANCHORED_CATALOGUES: &[(&str, usize)] = &[
     // Armor (`####`), Melee/Missile Weapon Statistics and Natural Weapons
     // Table (`###`) sections.
     ("equipment.json", 4),
+    // Mixed: 29 of the 30 entries are row-key anchors under `## Aging`
+    // (`aging/<table-key>/<row-key>`, D72.1's 3-segment form — the section
+    // holds three tables whose row-keys collide, e.g. "15" is a row of both
+    // the Aging Roll and the Crisis Roll table) or, for `crisis.attendant`
+    // alone, the 2-segment `aging/<four-word-prose-key>` (D72.4). The one
+    // exception is `crisis.die`, whose short `### Simple Die` section is a
+    // plain heading anchor instead (Q2's recommendation) — which is the only
+    // entry this level-3 actually gates, since it is ignored for every
+    // row-key entry (see the field doc above).
+    ("aging.json", 3),
 ];
 
 /// Every `rules/i18n/<lang>/source_anchors.json`, as
@@ -913,6 +923,83 @@ fn derive_row_key_normalizes_en_and_em_dashes_before_slugifying() {
     assert_eq!(key.key, "10-12");
 }
 
+// --- X9a: the 3-segment `heading/table-key/row-key` form (D72.1, aging) ---
+//
+// The aging catalogue is the one D72.1 reserved this form for: `## Aging`
+// holds three tables (Living Conditions, Aging Roll, Crisis Roll), and their
+// row-keys collide — "15" is a row of both the Aging Roll and the Crisis
+// Roll tables (`tmp/x9a-spike.md` §2 risk 2). A bare `heading/row-key` would
+// resolve to whichever table's "15" the scan hit first and call it unique by
+// accident; the table-key segment disambiguates which table is meant.
+
+/// **X9a red.** Before `resolve_row_key_anchor` learns the 3-segment form,
+/// every attempt at it falls into the `_` arm of the old 2-segment match and
+/// returns `Err`, whatever table-key is given.
+#[test]
+fn a_three_segment_anchor_disambiguates_two_tables_that_share_a_row_key() {
+    let file = "## Aging\n\
+                \n\
+                | Aging Roll | Result |\n\
+                | ---------- | ------ |\n\
+                | 15         | 1 Aging Point in Sta |\n\
+                \n\
+                | Crisis Roll | Result |\n\
+                | ----------- | ------ |\n\
+                | 15          | Minor illness |\n";
+    let file_headings = headings(file);
+    let lines: Vec<String> = file.lines().map(str::to_string).collect();
+
+    let (line, key) = resolve_row_key_anchor(&file_headings, &lines, "aging/aging-roll/15")
+        .expect("the Aging Roll table's own \"15\" resolves");
+    assert_eq!(line, 5);
+    assert_eq!(key.key, "15");
+
+    let (line, key) = resolve_row_key_anchor(&file_headings, &lines, "aging/crisis-roll/15")
+        .expect("the Crisis Roll table's own \"15\" resolves to a DIFFERENT line");
+    assert_eq!(line, 9);
+    assert_eq!(key.key, "15");
+
+    let err = resolve_row_key_anchor(&file_headings, &lines, "aging/no-such-table/15")
+        .expect_err("a table-key naming no table in the section is not silently ignored");
+    assert!(err.contains("no-such-table"), "{err}");
+}
+
+/// **X9a red.** An aging-roll row must carry both an `id` (the sibling JSON
+/// key `collect_source_refs` reads as `entry_label`) and a `source.anchor`
+/// that resolves — via the 3-segment form above — against the real rulebook,
+/// at the exact line the row's own `source.lines[0]` cites.
+#[test]
+fn an_aging_roll_row_carries_an_id_and_resolves_its_three_segment_anchor() {
+    let value: Value = serde_json::from_str(
+        r#"{ "outcomes": [
+            { "id": "aging.roll.10_12", "min": 10, "max": 12,
+              "effect": { "type": "any_characteristic", "points": 1 },
+              "source": { "anchor": "aging/aging-roll/10-12",
+                          "file": "Ars Magica - Definitive Edition (Core Rules).md",
+                          "lines": [16601, 16601] } }
+        ] }"#,
+    )
+    .expect("the fixture is valid JSON");
+
+    let mut refs = Vec::new();
+    collect_source_refs("aging.json", &value, &mut refs);
+    let found = refs
+        .first()
+        .expect("the outcome row's source block is found");
+    assert_eq!(found.entry_label, "aging.roll.10_12");
+
+    let mut heading_cache = BTreeMap::new();
+    let mut line_cache = BTreeMap::new();
+    let file_headings = headings_for(&mut heading_cache, CANONICAL_LANGUAGE, &found.source_file);
+    let lines = file_lines_for(&mut line_cache, CANONICAL_LANGUAGE, &found.source_file);
+    let anchor = found.anchor.as_deref().expect("the row records an anchor");
+
+    let (line, key) = resolve_row_key_anchor(&file_headings, &lines, anchor)
+        .expect("the 3-segment anchor resolves against the real rulebook");
+    assert_eq!(line as i64, found.start);
+    assert_eq!(key.key, "10-12");
+}
+
 /// The heading segment of a possibly-compound anchor (`sample-childhoods` out
 /// of `sample-childhoods/athletic-childhood`) — the part every anchor-store
 /// guard resolves against a real heading, whether the anchor names a heading
@@ -935,30 +1022,80 @@ fn is_numeric_key(key: &str) -> bool {
     !key.is_empty() && key.chars().all(|c| c.is_ascii_digit() || c == '-')
 }
 
-/// Resolves a compound row-key anchor (`heading/row-key`) against one
-/// language's source file: the heading segment must name a real heading, and
-/// within that heading's own section — bounded by [`section_boundary_after`]
-/// — exactly one line must derive the row-key segment. Returns that line's
-/// 1-based number and its derived [`RowKey`], or an `Err` describing why it
-/// didn't resolve.
+/// The body lines (1-based, excluding the header row) of the contiguous
+/// Markdown table inside `[start, end)` whose header row derives `table_key` —
+/// the 3-segment form's own table lookup. A section may hold more than one
+/// table (`## Aging` holds three), so this stops each candidate block at its
+/// first non-`|` line rather than scanning past it into the next table.
 ///
-/// Deliberately 2-segment only. D72.1's 3-segment `heading/table-key/row-key`
-/// form (for a section holding more than one table) is reserved for the aging
-/// catalogue, which is out of this slice's scope (`tmp/x9a-spike.md` §3
-/// X9a-8) — no data exercises it yet, so it is not implemented speculatively.
+/// `None` when no block in range derives `table_key` at all — a distinct
+/// failure from "the key exists but no row matches", which is
+/// [`resolve_row_key_anchor`]'s to report.
+fn table_block_with_key(
+    lines: &[String],
+    start: usize,
+    end: usize,
+    table_key: &str,
+) -> Option<Vec<usize>> {
+    let is_table_line = |line_no: usize| {
+        lines
+            .get(line_no - 1)
+            .is_some_and(|text| text.trim_start().starts_with('|'))
+    };
+
+    let mut line_no = start;
+    while line_no < end {
+        if !is_table_line(line_no) {
+            line_no += 1;
+            continue;
+        }
+        let block_start = line_no;
+        let mut block_end = line_no;
+        while block_end + 1 < end && is_table_line(block_end + 1) {
+            block_end += 1;
+        }
+        let header_key = lines
+            .get(block_start - 1)
+            .and_then(|text| derive_row_key(text))
+            .map(|key| key.key);
+        if header_key.as_deref() == Some(table_key) {
+            return Some(((block_start + 1)..=block_end).collect());
+        }
+        line_no = block_end + 1;
+    }
+    None
+}
+
+/// Resolves a compound row-key anchor against one language's source file: the
+/// heading segment must name a real heading, and within that heading's own
+/// section — bounded by [`section_boundary_after`] — exactly one line must
+/// derive the row-key segment. Returns that line's 1-based number and its
+/// derived [`RowKey`], or an `Err` describing why it didn't resolve.
+///
+/// Two forms (D72.1):
+/// - **2-segment** `heading/row-key` — every line in the section is a
+///   candidate, as if the whole section were one table.
+/// - **3-segment** `heading/table-key/row-key` — for a section holding more
+///   than one table (the aging catalogue's `## Aging`, whose Living
+///   Conditions, Aging Roll and Crisis Roll tables all sit under one
+///   heading and whose row-keys collide, e.g. "15" is a row of both the
+///   Aging Roll and the Crisis Roll table). The middle segment is resolved
+///   via [`table_block_with_key`] first, and only that table's own body
+///   lines are searched for the row-key — which is what lets `aging/aging-
+///   roll/15` and `aging/crisis-roll/15` resolve to two different lines.
 fn resolve_row_key_anchor(
     file_headings: &[Heading],
     lines: &[String],
     anchor: &str,
 ) -> Result<(usize, RowKey), String> {
-    let mut segments = anchor.split('/');
-    let heading_slug = segments.next().unwrap_or(anchor);
-    let row_key = match (segments.next(), segments.next()) {
-        (Some(row_key), None) => row_key,
+    let segments: Vec<&str> = anchor.split('/').collect();
+    let (heading_slug, table_key, row_key) = match segments.as_slice() {
+        [heading_slug, row_key] => (*heading_slug, None, *row_key),
+        [heading_slug, table_key, row_key] => (*heading_slug, Some(*table_key), *row_key),
         _ => {
             return Err(format!(
-                "anchor \"#{anchor}\" is not the 2-segment `heading/row-key` form this guard \
-                 supports"
+                "anchor \"#{anchor}\" is not the 2-segment `heading/row-key` or 3-segment \
+                 `heading/table-key/row-key` form this guard supports"
             ));
         }
     };
@@ -971,8 +1108,19 @@ fn resolve_row_key_anchor(
         .map(|h| h.line)
         .unwrap_or(lines.len() + 1);
 
+    let candidates: Vec<usize> = match table_key {
+        None => ((heading.line + 1)..boundary_line).collect(),
+        Some(table_key) => table_block_with_key(lines, heading.line + 1, boundary_line, table_key)
+            .ok_or_else(|| {
+                format!(
+                    "no table with key \"{table_key}\" in \"#{heading_slug}\"'s section, so the \
+                     row-key \"{row_key}\" has no table to resolve against"
+                )
+            })?,
+    };
+
     let mut matches: Vec<(usize, RowKey)> = Vec::new();
-    for line_no in (heading.line + 1)..boundary_line {
+    for line_no in candidates {
         if let Some(text) = lines.get(line_no - 1)
             && let Some(key) = derive_row_key(text)
             && key.key == row_key

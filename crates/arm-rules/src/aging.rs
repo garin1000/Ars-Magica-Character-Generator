@@ -1713,6 +1713,17 @@ pub struct LivingCondition {
 /// Source: ArMDE:16597-16611.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgingRow {
+    /// Slug-style id, e.g. `aging.roll.10_12` (D72.3). Unlike
+    /// [`LivingCondition::id`] and [`CrisisRow::id`], nothing in the engine
+    /// resolves a reference *against* this id — no [`Entity`] field ever
+    /// names an Aging Roll row — so it exists purely for provenance: it is
+    /// the sibling key the D72.1 row-key anchor and the German
+    /// `source_anchors.json` sidecar are keyed by. Optional, matching
+    /// [`Self::source`]'s own reasoning: a fixture built to exercise the
+    /// loader's tiling/gap/overlap gates has no reason to carry one, while
+    /// every row of the shipped `rules/core/aging.json` does.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<Id>,
     /// Lowest total the row covers (inclusive).
     pub min: i32,
     /// Highest total the row covers (inclusive). `None` for the open-ended top
@@ -1932,6 +1943,12 @@ impl std::fmt::Display for CrisisSeverity {
 /// Source: ArMDE:474, :16621.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CrisisDie {
+    /// Slug-style id, `crisis.die` (D72.3) — provenance only, like
+    /// [`AgingRow::id`]: nothing resolves a reference against it, and it
+    /// exists so the sole shipped die block has a sibling key for the
+    /// German `source_anchors.json` sidecar. Optional for the same reason.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<Id>,
     /// Lowest result the die can show (inclusive).
     pub min: i32,
     /// Highest result the die can show (inclusive).
@@ -1953,6 +1970,12 @@ pub struct CrisisDie {
 /// Source: ArMDE:16634.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CrisisAttendant {
+    /// Slug-style id, `crisis.attendant` (D72.3) — provenance only, like
+    /// [`AgingRow::id`]: nothing resolves a reference against it, and it
+    /// exists so the sole shipped attendant block has a sibling key for the
+    /// German `source_anchors.json` sidecar. Optional for the same reason.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<Id>,
     /// The Ability rolled and then added on a success — `ability.medicine`.
     pub ability: Id,
     /// The Characteristic added to the attendant's roll — Int.

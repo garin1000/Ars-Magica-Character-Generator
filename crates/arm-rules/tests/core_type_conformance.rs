@@ -249,7 +249,13 @@ fn grog_full_build_validates() {
         sel("virtue.craftsman"),
         sel("virtue.tough"),
         sel("flaw.clumsy"),
-        sel("flaw.ability_block"),
+        Selection::with_params(
+            Id::new("flaw.ability_block"),
+            BTreeMap::from([
+                ("scope".to_string(), Id::new("scope.category")),
+                ("class".to_string(), Id::new("ability_category.martial")),
+            ]),
+        ),
     ];
     grog.xp_pool = 60;
     grog.ability_scores = vec![
@@ -276,7 +282,13 @@ fn companion_full_build_validates() {
         sel("virtue.tough"),
         sel("virtue.arcane_lore"),
         sel("flaw.clumsy"),
-        sel("flaw.ability_block"),
+        Selection::with_params(
+            Id::new("flaw.ability_block"),
+            BTreeMap::from([
+                ("scope".to_string(), Id::new("scope.category")),
+                ("class".to_string(), Id::new("ability_category.martial")),
+            ]),
+        ),
         sel("flaw.arthritis"),
     ];
     comp.xp_pool = 120;

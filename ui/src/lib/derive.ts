@@ -1902,6 +1902,7 @@ const ENUM_ARG_FLUENT_PREFIX: Record<string, string> = {
   category: 'category-',
   ability_category: 'ability-category-',
   domain: 'param-domain-',
+  predicate: 'predicate-',
 };
 
 /**
@@ -1941,9 +1942,9 @@ const QUALIFIER_ARG_KEYS = new Set(['exemplar', ...Object.values(ABILITY_INSTANC
  *  - a value that is a key in the ruleset i18n is a rules id → its localized name
  *    (with the param hint so a parameterized name reads "(Area) Lore", never a
  *    literal "{area} Lore");
- *  - an enum-valued arg (characteristic, reputation kind, Might realm) maps
- *    through its Fluent key — but a numeric value stays as-is, so a Characteristic
- *    base score is not mistaken for a realm;
+ *  - an enum-valued arg (characteristic, reputation kind, Might realm,
+ *    `ItemPredicate`) maps through its Fluent key — but a numeric value stays
+ *    as-is, so a Characteristic base score is not mistaken for a realm;
  *  - a `key` arg names a parameter → its `param-label` Fluent string;
  *  - an `origin` arg names the pool an unspent-experience warning is about. An
  *    item-granted pool is a rules id and is already localized above; a life-stage
