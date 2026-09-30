@@ -1414,6 +1414,43 @@ pub enum CharacteristicDeltaCap {
     WithinBase,
 }
 
+/// Where a [`Effect::LabTotalMod`] amount is counted in the **in-play** (5b) Lab
+/// Total grid `derived.rs` builds (D4, `docs/vf-audit/decisions.md`) — data, not
+/// an id list the engine hardcodes. Independent of
+/// `effective::lab_total_mod` (D1), which folds every `LabTotalMod` amount flat
+/// and unconditionally regardless of this field, because D1 is a generous
+/// creation-time ceiling on which spells may be chosen, not a played-out number
+/// a character sheet prints.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum LabTotalModScope {
+    /// Counted flat in the ordinary in-play Lab Total grid — the
+    /// character-generation-default reading (Inventive Genius, Creative Block:
+    /// their qualifying condition, "not using a Lab Text or being taught", is
+    /// what character generation already assumes). The default: every entry
+    /// shipped before this field existed keeps this behavior exactly,
+    /// byte-identical, no `SCHEMA_VERSION` bump (`Effect` lives in ruleset
+    /// JSON, not in saves).
+    #[default]
+    InPlayGrid,
+    /// Counted only within a Magical Focus's doubled total, never the ordinary
+    /// Lab Total (Potent Magic Major/Minor — "only within the chosen [Magical]
+    /// focus"). Read separately by
+    /// `derived.rs::in_play_lab_total_mod_within_focus`, added to
+    /// `within_focus` alone (`derived/lab.rs::lab_totals`).
+    ///
+    /// Source: ArMDE:4740-4781.
+    WithinFocusOnly,
+    /// Never counted in the in-play grid at all: the entry's qualifying
+    /// condition can never hold at character generation (Adept Laboratory
+    /// Student and Weak Scholar apply only "when working from the lab texts of
+    /// others", which creation cannot be).
+    ///
+    /// Source: ArMDE:3368-3371 (Adept
+    /// Laboratory Student), `ArMDE:7080-7083` (Weak Scholar).
+    NeverAtCreation,
+}
+
 /// A mechanical effect a virtue/flaw applies to a character's scores.
 ///
 /// Effects are *parameter-relative*: each names the parameter key (see
@@ -1761,6 +1798,19 @@ pub enum Effect {
         /// Experience points earned per year of later life.
         amount: u32,
     },
+    /// Suppresses every OTHER selection's [`Self::LaterLifeXpRate`] outright,
+    /// falling straight through to the ruleset's base rate — Guild Apprentice,
+    /// who is "not able to benefit from either the Poor Flaw or the Wealthy
+    /// Virtue … until he moves to the journeyman stage" (D47,
+    /// `docs/vf-audit/decisions.md`). A bare marker with no fields, matching
+    /// the shape of [`Self::ConfersHermeticTraining`] and
+    /// [`Self::WaivesAbilityAgeCap`] above: D47 explicitly rejects a general
+    /// "nullify any effect" mechanism for this one caller, so this names the
+    /// one family it suppresses rather than generalizing. Consumed only by
+    /// `life_stage.rs::later_life_rate`.
+    ///
+    /// Source: ArMDE:4041-4044.
+    SuppressesLaterLifeXpRate,
     /// Narrows the age → maximum-Ability-score cap to `num/den` of its normal value
     /// (rounded **up**) for Abilities the catalogue marks `locality_dependent`:
     ///
@@ -2226,6 +2276,24 @@ pub enum Effect {
     LabTotalMod {
         /// Points added to (or, when negative, removed from) the Lab Total.
         amount: i8,
+        /// Where this amount counts in the in-play (D4) grid — see
+        /// [`LabTotalModScope`]. Defaults to [`LabTotalModScope::InPlayGrid`],
+        /// so every entry shipped before this field existed keeps its exact
+        /// behavior.
+        #[serde(default, skip_serializing_if = "is_default_lab_total_mod_scope")]
+        scope: LabTotalModScope,
+        /// This amount is EXCLUDED from the in-play grid while the OWNING
+        /// selection's own gate holds — Cyclic Magic (Negative)'s D52 cycle
+        /// gate: the penalty applies "unless [the cycle] is seasonal", since a
+        /// seasonal cycle's negative half aligns with season boundaries,
+        /// reintroducing the same "which season am I in" uncertainty that
+        /// keeps the Virtue's own bonus out of the grid entirely (D4). `None`
+        /// for every other carrier — additive, byte-compatible, no
+        /// `SCHEMA_VERSION` bump.
+        ///
+        /// Source: ArMDE:3635-3638.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        suppressed_when: Option<ParamGate>,
     },
     /// Halves the creation-time spell-level cap
     /// ([`crate::effective::spell_level_cap`]) for a spell whose Range is
@@ -3744,6 +3812,13 @@ pub(crate) fn is_default_max_per_value(value: &u8) -> bool {
 /// byte-identical.
 pub(crate) fn is_default_characteristic_delta_cap(cap: &CharacteristicDeltaCap) -> bool {
     *cap == CharacteristicDeltaCap::AboveBase
+}
+
+/// `skip_serializing_if` for [`LabTotalModScope`] — every entry shipped before
+/// this field existed is `InPlayGrid`, so this keeps every one of them
+/// byte-identical.
+pub(crate) fn is_default_lab_total_mod_scope(scope: &LabTotalModScope) -> bool {
+    *scope == LabTotalModScope::InPlayGrid
 }
 
 /// The default selection multiplicity: an item may be taken once per target.
@@ -6362,7 +6437,11 @@ mod tests {
                 amount: 3,
                 scope: CastingScope::FormulaicRitual,
             },
-            Effect::LabTotalMod { amount: 3 },
+            Effect::LabTotalMod {
+                amount: 3,
+                scope: LabTotalModScope::InPlayGrid,
+                suppressed_when: None,
+            },
             Effect::DeficientArt {
                 param: "technique".into(),
             },

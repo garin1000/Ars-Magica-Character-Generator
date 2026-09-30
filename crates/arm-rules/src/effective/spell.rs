@@ -34,6 +34,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AbilityScoreGrantParam { .. }
         | Effect::GeneralXp { .. }
         | Effect::LaterLifeXpRate { .. }
+        | Effect::SuppressesLaterLifeXpRate
         | Effect::AbilityAuthorization { .. }
         | Effect::AbilityBonusGated { .. }
         | Effect::LocalityAbilityCapFraction { .. }
@@ -139,6 +140,7 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // life-stage budget (see `life_stage::LifeStageRules::later_life_budget`),
         // which then becomes the general pool. Adding it here would double-count.
         | Effect::LaterLifeXpRate { .. }
+        | Effect::SuppressesLaterLifeXpRate
         | Effect::AbilityAuthorization { .. }
         | Effect::AbilityBonusGated { .. }
         | Effect::LocalityAbilityCapFraction { .. }
@@ -317,7 +319,10 @@ pub(crate) fn lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
             continue;
         };
         for effect in &item.effects {
-            if let Effect::LabTotalMod { amount } = effect {
+            // D1 deliberately ignores `scope`/`suppressed_when`: those resolve
+            // D4's in-play conditions, and D1 stays the flat, condition-free
+            // ceiling regardless of them (this function's own doc comment).
+            if let Effect::LabTotalMod { amount, .. } = effect {
                 total += i32::from(*amount);
             }
         }
@@ -572,6 +577,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
+                | Effect::SuppressesLaterLifeXpRate
                 | Effect::AbilityAuthorization { .. }
                 | Effect::AbilityBonusGated { .. }
                 | Effect::LocalityAbilityCapFraction { .. }

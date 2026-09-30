@@ -879,6 +879,7 @@ pub(crate) fn ability_authorizations(entity: &Entity, ruleset: &Ruleset) -> Abil
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
+                | Effect::SuppressesLaterLifeXpRate
                 | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }

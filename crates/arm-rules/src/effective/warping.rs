@@ -64,6 +64,7 @@ fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
+                | Effect::SuppressesLaterLifeXpRate
                 | Effect::AbilityAuthorization { .. }
                 | Effect::AbilityBonusGated { .. }
                 | Effect::LocalityAbilityCapFraction { .. }

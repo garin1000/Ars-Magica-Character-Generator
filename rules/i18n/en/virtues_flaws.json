@@ -856,11 +856,13 @@
   },
   "flaw.magical_being_companion": {
     "name": "Magical {being} Companion",
-    "summary": "The character is accompanied by an intelligent magical being, one that is smart enough to follow orders or disobey them on its own initiative, which the character must regularly look after."
+    "summary": "The character is accompanied by an intelligent magical being, one that is smart enough to follow orders or disobey them on its own initiative, which the character must regularly look after.",
+    "description": "The character is accompanied by an intelligent magical being, one that is smart enough to follow orders or disobey them on its own initiative, which the character must regularly look after. This might be an animal, a spirit, a human-like creature, or even an animate object. Realms of Power: Magic contains extensive rules for designing such characters, but they can also be made following the guidelines and examples in Chapter 13 of this book. A grog-level character might be essentially an extension of the character's will, while a companion-level character might follow instructions but often do what it thinks is best, and a magus-level character might be condescending or wild, and rarely act except on its own initiative.\n\nA particularly common example is a magical animal that's smart enough to follow your orders or to disobey them on its own initiative. The smaller and more innocuous the creature, the more intelligent it is. A ferret or crow is as intelligent as a human, a wolf is very cunning, and an animal the size of a horse is simply more intelligent than normal. The creature has a Magic Might score of 10 – Size."
   },
   "flaw.magical_fascination": {
     "name": "Magical Fascination",
-    "summary": "This character is intensely interested in supernatural and magical phenomena, to the exclusion of all other motivations."
+    "summary": "This character is intensely interested in supernatural and magical phenomena, to the exclusion of all other motivations.",
+    "description": "This character is intensely interested in supernatural and magical phenomena, to the exclusion of all other motivations. It is as if his life is hollow and drab without these experiences. He will involve himself in any supernatural investigation, social encounter, or confrontation. He must try and find out as much as he can about it, and he is curious and has busy hands, definitely trying to take souvenirs. To represent the scraps of knowledge he has, he is allowed to have a score of 1 (but no more) in either Magic or Faerie Lore at character creation. But most of the time, he is filling in the blanks himself and making it up as he goes along, enthusiastically."
   },
   "flaw.manifest_sin": {
     "name": "Manifest Sin",
@@ -877,7 +879,8 @@
   },
   "flaw.master_of_none": {
     "name": "Master of None",
-    "summary": "Either by choice or circumstance, this character never seems to be able to stick at a task or job for longer than a season, usually following the work as it moves through the year."
+    "summary": "Either by choice or circumstance, this character never seems to be able to stick at a task or job for longer than a season, usually following the work as it moves through the year.",
+    "description": "Either by choice or circumstance, this character never seems to be able to stick at a task or job for longer than a season, usually following the work as it moves through the year. As a result, this character can't apply any experience points earned through an Advancement Total to an Ability or Art that they have already applied experience points to this year. Where they can't be applied to a different Ability or Art, the experience points are lost. Experience points gained through other means, such as Secondary Insight, are unaffected and may be applied normally."
   },
   "flaw.meddler_major": {
     "name": "Meddler (Major)",
@@ -915,15 +918,18 @@
   },
   "flaw.monastic_vows_hermetic": {
     "name": "Monastic Vows (Hermetic)",
-    "summary": "You have taken vows of poverty, chastity, and obedience to a religious superior, which means that you cannot own vis and must only possess functional magic devices."
+    "summary": "You have taken vows of poverty, chastity, and obedience to a religious superior, which means that you cannot own vis and must only possess functional magic devices.",
+    "description": "You have taken vows of poverty, chastity, and obedience to a religious superior, which means that you cannot own vis and must only possess functional magic devices. You cannot marry, and many magi might interpret that as prohibiting binding a familiar. You must do what your master commands in service of your order, though in return you can expect aid and assistance when needed."
   },
   "flaw.monstrous_blood": {
     "name": "Monstrous Blood",
-    "summary": "The character's essential nature has been changed through exposure to the Magic realm, often because of a relationship to a magic being, which gives her true form unfortunate supernatural properties."
+    "summary": "The character's essential nature has been changed through exposure to the Magic realm, often because of a relationship to a magic being, which gives her true form unfortunate supernatural properties.",
+    "description": "The character's essential nature has been changed through exposure to the Magic realm, often because of a relationship to a magic being, which gives her true form unfortunate supernatural properties. This changes the character's appearance enough that others can immediately recognize that there is something wrong about her, and people might say that she has tainted blood. The character is more resistant to age and receives a -1 bonus to all Aging rolls, and may learn Magic Lore during character creation.\n\nHowever, the character also gains a minor physical deformity appropriate to the Magic being type that is associated with the character's background. Some examples are below, or you can make up your own.\n\nMagic Animal: The character has a physical feature normally associated with animals, such as wings, scales, gills, sharp teeth, or claws. These are not usable by the character, and give a -3 penalty to appropriate activities (such as running or climbing) as these deformities get in the way.\n\nMagic Human: The character must decrease one of his Characteristics by 1, but not below -3. This might be Strength or Stamina to represent weakened blood, or Presence to indicate a dowdy appearance. The character also has a poor Reputation of level 3 among other magic beings.\n\nMagic Spirit: The character has a mental block against many activities that are not supernatural, possibly due to a noticeable difficulty with retaining memories. Subtract 3 from all of the character's Intelligence and Perception rolls that do not involve a Supernatural Ability or Art.\n\nMagic Thing: The character has a constant Lesser Power that is mostly detrimental to it in some way, such as a ward that prevents it from picking up wooden objects, or that causes books it touches to burst into flame. The effect normally occurs involuntarily, but the character can spend a Confidence Point to prevent it from triggering."
   },
   "flaw.motion_sickness": {
     "name": "Motion Sickness",
-    "summary": "Riding a horse, in a cart, or sailing on a ship makes you violently ill."
+    "summary": "Riding a horse, in a cart, or sailing on a ship makes you violently ill.",
+    "description": "Riding a horse, in a cart, or sailing on a ship makes you violently ill. When not traveling on foot, you suffer double the fatigue loss on long journeys, with a minimum loss of two Fatigue levels. Violent jostling over a period of a few hours could conceivably lead to unconsciousness."
   },
   "flaw.mute": {
     "name": "Mute",
@@ -932,7 +938,8 @@
   },
   "flaw.necessary_condition": {
     "name": "Necessary Condition",
-    "summary": "In order for your magic to work, you must perform a specific action while casting any spell."
+    "summary": "In order for your magic to work, you must perform a specific action while casting any spell.",
+    "description": "In order for your magic to work, you must perform a specific action while casting any spell. This should be something simple, such as singing or spinning around three times. If you cannot perform the action, you cannot cast spells at all."
   },
   "flaw.necessary_realm_aura_for_ability": {
     "name": "Necessary {realm} Aura for {ability}",
@@ -946,7 +953,8 @@
   },
   "flaw.no_hands": {
     "name": "No Hands",
-    "summary": "You have no hands."
+    "summary": "You have no hands.",
+    "description": "You have no hands. Any activity requiring hands is impossible, and magi with this Flaw take a – 5 penalty to all Casting Scores. This may be offset by taking the Subtle Magic Virtue (page 110) or the Still Casting Spell Mastery ability."
   },
   "flaw.no_sense_of_direction": {
     "name": "No Sense of Direction",
@@ -964,11 +972,13 @@
   },
   "flaw.oath_of_fealty": {
     "name": "Oath of Fealty",
-    "summary": "You have sworn an oath of loyalty and support to someone outside the covenant, and sometimes they call on you to uphold your vow."
+    "summary": "You have sworn an oath of loyalty and support to someone outside the covenant, and sometimes they call on you to uphold your vow.",
+    "description": "You have sworn an oath of loyalty and support to someone outside the covenant, and sometimes they call on you to uphold your vow. Magi are forbidden from taking Oaths of Fealty by the Hermetic Code. Some don't let that stop them."
   },
   "flaw.obese": {
     "name": "Obese",
-    "summary": "You are large because of fat, not muscle."
+    "summary": "You are large because of fat, not muscle.",
+    "description": "You are large because of fat, not muscle. You are at -1 to all rolls that involve moving quickly or gracefully and at -3 to all Fatigue rolls. You are not so large that your Size is increased, and you may take this Flaw along with the Virtues and Flaws that change your Size."
   },
   "flaw.obsessed_major": {
     "name": "Obsessed (Major)",
@@ -998,11 +1008,13 @@
   },
   "flaw.outlaw": {
     "name": "Outlaw",
-    "summary": "You have been outlawed, and must live by your wits outside society."
+    "summary": "You have been outlawed, and must live by your wits outside society.",
+    "description": "You have been outlawed, and must live by your wits outside society. You may take Martial Abilities at character generation, and have a Reputation at level 2 for whatever got you outlawed. Outlaw followers created as grogs should take the Branded Criminal, Outcast or Wanderer social status."
   },
   "flaw.outlaw_leader": {
     "name": "Outlaw Leader",
-    "summary": "You command a small group (three to six persons) of outlaws."
+    "summary": "You command a small group (three to six persons) of outlaws.",
+    "description": "You command a small group (three to six persons) of outlaws. Your followers look up to you and do what you tell them within reason. However, you must occasionally stick up for the group or one of its members, as well as provide for them. You often have to deal with challenges to your leadership in one form or another. You are well known as an outlaw in the local area, with a Reputation level of 3. You are actively sought by the local lord, sheriff, or other such official. You may take Martial Abilities at character generation. Grogs may not take this Flaw."
   },
   "flaw.outsider_major": {
     "name": "Outsider (Major)",
@@ -1034,7 +1046,8 @@
   },
   "flaw.painful_magic": {
     "name": "Painful Magic",
-    "summary": "Casting spells causes you to suffer the equivalent of one Fatigue level in pain for each spell you cast."
+    "summary": "Casting spells causes you to suffer the equivalent of one Fatigue level in pain for each spell you cast.",
+    "description": "Casting spells causes you to suffer the equivalent of one Fatigue level in pain for each spell you cast. This reduces all your actions by the appropriate Fatigue penalty, which is cumulative with any from actual fatigue or injuries (though you do not suffer any physical damage from pain). You recover these \"pain levels\" just like Fatigue levels."
   },
   "flaw.palsied_hands": {
     "name": "Palsied Hands",
@@ -1072,7 +1085,8 @@
   },
   "flaw.poor_eyesight": {
     "name": "Poor Eyesight",
-    "summary": "Bleary vision impedes your performance."
+    "summary": "Bleary vision impedes your performance.",
+    "description": "Bleary vision impedes your performance. Rolls involving sight, including rolls to attack and defend, are at -3. New environments are disorienting and perhaps frightening for you. This Flaw can be combined with Missing Eye, but the penalties are cumulative."
   },
   "flaw.poor_formulaic_magic": {
     "name": "Poor Formulaic Magic",
@@ -1157,7 +1171,8 @@
   },
   "flaw.regular": {
     "name": "Regular",
-    "summary": "The character lives according to a strict religious rule, which leaves little time for other activities."
+    "summary": "The character lives according to a strict religious rule, which leaves little time for other activities.",
+    "description": "The character lives according to a strict religious rule, which leaves little time for other activities. The character must spend one of his free seasons on the seasonal activity of worship. This is particularly suitable for monk and canon characters, but it is not compulsory. The Regular Flaw is compatible with Wealthy and Poor, but a Poor Regular character effectively has no free seasons and may be unsuitable as a player character. Magi can be Regular."
   },
   "flaw.repellent": {
     "name": "Repellent",
@@ -1172,11 +1187,13 @@
   "flaw.restricted_power": {
     "name": "Restricted Power ({power})",
     "name_unfilled": "Restricted Power",
-    "summary": "This Flaw limits the use of a supernatural power that can normally be used at will, such as those granted by the Focus Power, Greater Power, Lesser Power, Personal Power, and Ritual Power Virtues."
+    "summary": "This Flaw limits the use of a supernatural power that can normally be used at will, such as those granted by the Focus Power, Greater Power, Lesser Power, Personal Power, and Ritual Power Virtues.",
+    "description": "This Flaw limits the use of a supernatural power that can normally be used at will, such as those granted by the Focus Power, Greater Power, Lesser Power, Personal Power, and Ritual Power Virtues. The character must perform some special ceremony to activate it, such as drawing symbols on the ground or gesturing and chanting like a magus, or else the power only functions on a limited class of targets (such as men, wolves, sounds, or sand) or in specific circumstances (like at night, under water, when touching iron, or after singing a song). This Flaw may be taken once for each power the character possesses."
   },
   "flaw.restriction": {
     "name": "Restriction",
-    "summary": "You cannot cast spells at all under certain uncommon conditions."
+    "summary": "You cannot cast spells at all under certain uncommon conditions.",
+    "description": "You cannot cast spells at all under certain uncommon conditions. These might refer to your state, such as touching the earth directly or having no beard, or to the target, such as birds or glass, or to your location when you use the magic, such as on a small boat or in a storm. The Restriction also applies to effects generated by any enchanted items you create. Spells cast remain in effect even if the Restriction comes into play. Thus, if your Restriction is that you must not have a beard, you cast a spell with Year duration, and then grow a beard, the spell does not fail."
   },
   "flaw.rigid_magic": {
     "name": "Rigid Magic",
@@ -1190,7 +1207,8 @@
   },
   "flaw.savantism": {
     "name": "Savantism",
-    "summary": "The character's family was cursed by faeries; his mother tripped over a hare while pregnant with him; or he was born on horseback."
+    "summary": "The character's family was cursed by faeries; his mother tripped over a hare while pregnant with him; or he was born on horseback.",
+    "description": "The character's family was cursed by faeries; his mother tripped over a hare while pregnant with him; or he was born on horseback. He is physically capable, but simpleminded and slow-witted. He has half the standard experience points at character generation, all future Advancement Totals are halved, and he may not begin with an Ability above 3. However, with one favored Ability, he is exceptionally gifted. This Ability can improve normally, is limited to a score of 6 as a starting character, and has +3 to all rolls related to its specialization rather than just +1. The Ability must be something he could reasonably have access to learn; there would need to be an extraordinary background story for a savant who is a master of the longsword!\n\nMost savants will be like the tragic fool whose precocious skill with horses has gone forever unnoticed, but some may have more esoteric talents. If the favored Ability requires a Virtue, such as Academic or Martial Abilities, then he must have that Virtue as normal; a mathematical savant would need a Virtue such as Educated to learn Artes Liberales. Magi may well desire the company of certain specialists: a Jerbiton maga would appreciate an artistic savant, for example. Similarly, a Failed Apprentice may have been left stricken with savantism when his Gift abandoned him, but he retained remarkable clarity on the Code of Hermes, becoming a valued clerk to a Quaesitor."
   },
   "flaw.secretive": {
     "name": "Secretive",

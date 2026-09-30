@@ -857,11 +857,13 @@
   },
   "flaw.magical_being_companion": {
     "name": "Magischer {being}-Gefährte",
-    "summary": "Der Charakter wird von einem intelligenten magischen Wesen begleitet, das klug genug ist, Befehlen zu folgen oder sie auf eigene Initiative zu verweigern, und für das der Charakter regelmäßig sorgen muss."
+    "summary": "Der Charakter wird von einem intelligenten magischen Wesen begleitet, das klug genug ist, Befehlen zu folgen oder sie auf eigene Initiative zu verweigern, und für das der Charakter regelmäßig sorgen muss.",
+    "description": "Der Charakter wird von einem intelligenten magischen Wesen begleitet, das klug genug ist, Befehlen zu folgen oder sie auf eigene Initiative zu verweigern, und für das der Charakter regelmäßig sorgen muss. Das könnte ein Tier, ein Geist, ein menschenähnliches Wesen oder sogar ein belebtes Objekt sein. Mächte der Magie enthält umfangreiche Regeln für die Gestaltung solcher Charaktere, sie können aber auch nach den Richtlinien und Beispielen in Kapitel 13 dieses Buches erstellt werden. Ein Grog-Charakter könnte im Wesentlichen eine Verlängerung des Willens des Charakters sein, während ein Gefährten-Charakter Anweisungen befolgen könnte, aber oft tut, was er für das Beste hält, und ein Magus-Charakter herablassend oder wild sein und nur selten auf eigene Initiative handeln könnte.\n\nEin besonders häufiges Beispiel ist ein magisches Tier, das klug genug ist, deinen Befehlen zu folgen oder sie auf eigene Initiative zu verweigern. Je kleiner und harmloser das Geschöpf, desto intelligenter ist es. Ein Frettchen oder eine Krähe ist so intelligent wie ein Mensch, ein Wolf ist sehr schlau, und ein Tier in der Größe eines Pferdes ist schlicht intelligenter als normal. Das Geschöpf hat einen Machtwert von 10 – Größe."
   },
   "flaw.magical_fascination": {
     "name": "Magische Faszination",
-    "summary": "Dieser Charakter ist intensiv an übernatürlichen und magischen Phänomenen interessiert, unter Ausschluss aller anderen Motivationen."
+    "summary": "Dieser Charakter ist intensiv an übernatürlichen und magischen Phänomenen interessiert, unter Ausschluss aller anderen Motivationen.",
+    "description": "Dieser Charakter ist intensiv an übernatürlichen und magischen Phänomenen interessiert, unter Ausschluss aller anderen Motivationen. Es ist, als wäre sein Leben leer und trostlos ohne diese Erlebnisse. Er wird sich in jede übernatürliche Untersuchung, soziale Begegnung oder Konfrontation einbringen. Er muss versuchen, so viel wie möglich darüber herauszufinden, und er ist neugierig und hat neugierige Hände, versucht definitiv, Andenken mitzunehmen. Um die Bruchstücke seines Wissens darzustellen, darf er bei der Charaktererschaffung einen Wert von 1 (aber nicht mehr) in Magie- oder Feenkunde haben. Aber meistens füllt er die Lücken selbst und improvisiert enthusiastisch."
   },
   "flaw.manifest_sin": {
     "name": "Offenbarte Sünde",
@@ -878,7 +880,8 @@
   },
   "flaw.master_of_none": {
     "name": "Meister von nichts",
-    "summary": "Ob aus eigenem Willen oder aus äußeren Umständen, dieser Charakter scheint nie länger als eine Jahreszeit bei einer Aufgabe oder einem Beruf zu bleiben, meistens folgt er der Arbeit, wie sie durch das Jahr wandert."
+    "summary": "Ob aus eigenem Willen oder aus äußeren Umständen, dieser Charakter scheint nie länger als eine Jahreszeit bei einer Aufgabe oder einem Beruf zu bleiben, meistens folgt er der Arbeit, wie sie durch das Jahr wandert.",
+    "description": "Ob aus eigenem Willen oder aus äußeren Umständen, dieser Charakter scheint nie länger als eine Jahreszeit bei einer Aufgabe oder einem Beruf zu bleiben, meistens folgt er der Arbeit, wie sie durch das Jahr wandert. Infolgedessen kann dieser Charakter keine Erfahrungspunkte, die durch einen Fortschrittssumme erlangt wurden, auf eine Fertigkeit oder Kunst anwenden, auf die er in diesem Jahr bereits Erfahrungspunkte angewendet hat. Wenn sie nicht auf eine andere Fertigkeit oder Kunst angewendet werden können, gehen die Erfahrungspunkte verloren. Erfahrungspunkte, die durch andere Mittel erlangt wurden, wie z.B. Nebenerkenntnis, sind davon nicht betroffen und können normal angewendet werden."
   },
   "flaw.meddler_major": {
     "name": "Einmischer (Groß)",
@@ -916,15 +919,18 @@
   },
   "flaw.monastic_vows_hermetic": {
     "name": "Klostergelübde (Hermetisch)",
-    "summary": "Du hast Gelübde der Armut, der Keuschheit und des Gehorsams gegenüber einem geistlichen Vorgesetzten abgelegt, was bedeutet, dass du kein Vis besitzen und nur funktionale Magieartefakte haben darfst."
+    "summary": "Du hast Gelübde der Armut, der Keuschheit und des Gehorsams gegenüber einem geistlichen Vorgesetzten abgelegt, was bedeutet, dass du kein Vis besitzen und nur funktionale Magieartefakte haben darfst.",
+    "description": "Du hast Gelübde der Armut, der Keuschheit und des Gehorsams gegenüber einem geistlichen Vorgesetzten abgelegt, was bedeutet, dass du kein Vis besitzen und nur funktionale Magieartefakte haben darfst. Du darfst nicht heiraten, und viele Magi könnten das so auslegen, dass es auch das Binden eines Vertrauten untersagt. Du musst tun, was dein Meister im Dienst deines Ordens befiehlt, kannst aber im Gegenzug Hilfe und Unterstützung erwarten, wenn du sie benötigst."
   },
   "flaw.monstrous_blood": {
     "name": "Monströses Blut",
-    "summary": "Die essentielle Natur des Charakters wurde durch den Kontakt mit der Magiesphäre verändert – häufig infolge einer Beziehung zu einem magischen Wesen –, was seiner wahren Gestalt unglückselige übernatürliche Eigenschaften verleiht."
+    "summary": "Die essentielle Natur des Charakters wurde durch den Kontakt mit der Magiesphäre verändert – häufig infolge einer Beziehung zu einem magischen Wesen –, was seiner wahren Gestalt unglückselige übernatürliche Eigenschaften verleiht.",
+    "description": "Die essentielle Natur des Charakters wurde durch den Kontakt mit der Magiesphäre verändert – häufig infolge einer Beziehung zu einem magischen Wesen –, was seiner wahren Gestalt unglückselige übernatürliche Eigenschaften verleiht. Diese Veränderung ist äußerlich so deutlich erkennbar, dass andere sofort spüren, dass mit ihr etwas nicht stimmt; man sagt, sie habe verdorbenes Blut. Der Charakter ist widerstandsfähiger gegen das Altern und erhält einen -1 Bonus auf alle Alterungswürfe; außerdem darf er Magiekunde bereits bei der Charaktererschaffung erlernen.\n\nAllerdings erhält der Charakter auch eine geringfügige körperliche Missbildung, die zum Typ des magischen Wesens passt, das mit seinem Hintergrund verbunden ist. Einige Beispiele sind unten aufgeführt; du kannst dir jedoch auch eigene ausdenken.\n\nMagisches Tier: Der Charakter weist ein körperliches Merkmal auf, das normalerweise mit Tieren verbunden ist, wie Flügel, Schuppen, Kiemen, spitze Zähne oder Klauen. Diese sind vom Charakter nicht nutzbar und geben -3 auf geeignete Aktivitäten (wie Laufen oder Klettern), da diese Missbildungen dabei im Weg sind.\n\nMagischer Mensch: Der Charakter muss eine seiner Eigenschaften um 1 senken, jedoch nicht unter -3. Dies könnte Stärke oder Ausdauer sein, um geschwächtes Blut darzustellen, oder Präsenz, um ein unscheinbares Äußeres anzuzeigen. Der Charakter hat außerdem eine schlechte Reputation der Stufe 3 unter anderen magischen Wesen.\n\nMagischer Geist: Der Charakter hat eine mentale Blockade gegenüber vielen Tätigkeiten, die nicht übernatürlicher Natur sind, möglicherweise aufgrund einer auffälligen Schwierigkeit beim Behalten von Erinnerungen. Ziehe 3 von allen Intelligenz- und Wahrnehmungswürfen des Charakters ab, die keine Übernatürliche Fertigkeit oder Kunst einschließen.\n\nMagisches Ding: Der Charakter besitzt eine andauernde Mindere Macht, die sich für ihn in irgendeiner Weise meist nachteilig auswirkt – etwa ein Schutzwall, der ihn daran hindert, hölzerne Gegenstände aufzuheben, oder der dazu führt, dass Bücher, die er berührt, in Flammen aufgehen. Der Effekt tritt normalerweise unwillkürlich auf, doch der Charakter kann einen Selbstvertrauenspunkt ausgeben, um ihn zu unterdrücken."
   },
   "flaw.motion_sickness": {
     "name": "Reisekrankheit",
-    "summary": "Das Reiten auf einem Pferd, das Fahren in einem Karren oder das Segeln auf einem Schiff macht dich schwer krank."
+    "summary": "Das Reiten auf einem Pferd, das Fahren in einem Karren oder das Segeln auf einem Schiff macht dich schwer krank.",
+    "description": "Das Reiten auf einem Pferd, das Fahren in einem Karren oder das Segeln auf einem Schiff macht dich schwer krank. Wenn du dich nicht zu Fuß fortbewegst, erleidest du auf langen Reisen doppelten Erschöpfungsverlust, wobei der Mindestverlust zwei Erschöpfungsstufen beträgt. Heftiges Schütteln über einen Zeitraum von einigen Stunden könnte theoretisch zur Bewusstlosigkeit führen."
   },
   "flaw.mute": {
     "name": "Stumm",
@@ -933,7 +939,8 @@
   },
   "flaw.necessary_condition": {
     "name": "Notwendige Bedingung",
-    "summary": "Damit deine Magie funktioniert, musst du beim Wirken jedes Zaubers eine bestimmte Handlung ausführen."
+    "summary": "Damit deine Magie funktioniert, musst du beim Wirken jedes Zaubers eine bestimmte Handlung ausführen.",
+    "description": "Damit deine Magie funktioniert, musst du beim Wirken jedes Zaubers eine bestimmte Handlung ausführen. Diese sollte etwas Einfaches sein, wie Singen oder dreimaliges Drehen. Kannst du die Handlung nicht ausführen, kannst du überhaupt keine Zauber wirken."
   },
   "flaw.necessary_realm_aura_for_ability": {
     "name": "Notwendige Aura für {ability}, {realm}",
@@ -947,7 +954,8 @@
   },
   "flaw.no_hands": {
     "name": "Keine Hände",
-    "summary": "Du hast keine Hände."
+    "summary": "Du hast keine Hände.",
+    "description": "Du hast keine Hände. Jede Tätigkeit, die Hände erfordert, ist unmöglich, und Magi mit diesem Fehler erhalten -5 auf alle Zauberwerte. Dies kann durch die Tugend Subtile Magie (Seite 110) oder die Meisterschaftsfähigkeit Regloses Zaubern ausgeglichen werden."
   },
   "flaw.no_sense_of_direction": {
     "name": "Kein Orientierungssinn",
@@ -965,11 +973,13 @@
   },
   "flaw.oath_of_fealty": {
     "name": "Treueeid",
-    "summary": "Du hast jemandem außerhalb des Konvents einen Eid der Loyalität und Unterstützung geschworen, und manchmal werden sie dich auffordern, deinen Schwur einzuhalten."
+    "summary": "Du hast jemandem außerhalb des Konvents einen Eid der Loyalität und Unterstützung geschworen, und manchmal werden sie dich auffordern, deinen Schwur einzuhalten.",
+    "description": "Du hast jemandem außerhalb des Konvents einen Eid der Loyalität und Unterstützung geschworen, und manchmal werden sie dich auffordern, deinen Schwur einzuhalten. Magi ist es durch den Hermetischen Kodex verboten, Treueeide zu leisten. Manche lassen sich davon nicht aufhalten."
   },
   "flaw.obese": {
     "name": "Fettleibig",
-    "summary": "Du bist wegen Fett groß, nicht wegen Muskeln."
+    "summary": "Du bist wegen Fett groß, nicht wegen Muskeln.",
+    "description": "Du bist wegen Fett groß, nicht wegen Muskeln. Du hast -1 auf alle Würfe, die schnelles oder anmutiges Bewegen erfordern, und -3 auf alle Erschöpfungswürfe. Du bist nicht so groß, dass deine Größe erhöht wird, und du kannst diesen Fehler zusammen mit den Tugenden und Fehlern nehmen, die deine Größe verändern."
   },
   "flaw.obsessed_major": {
     "name": "Besessen (Groß)",
@@ -999,11 +1009,13 @@
   },
   "flaw.outlaw": {
     "name": "Geächteter",
-    "summary": "Du wurdest geächtet und musst außerhalb der Gesellschaft mit deinem Verstand überleben."
+    "summary": "Du wurdest geächtet und musst außerhalb der Gesellschaft mit deinem Verstand überleben.",
+    "description": "Du wurdest geächtet und musst außerhalb der Gesellschaft mit deinem Verstand überleben. Du darfst Kampffertigkeiten bei der Charaktererschaffung erwerben und hast eine Reputation der Stufe 2 für das, was dir die Ächtung eingebracht hat. Geächtete Gefolgsleute, die als Grogs erschaffen werden, sollten den sozialen Status Brandgezeichneter Verbrecher, Ausgestoßener oder Wanderer nehmen."
   },
   "flaw.outlaw_leader": {
     "name": "Anführer von Geächteten",
-    "summary": "Du befehligst eine kleine Gruppe (drei bis sechs Personen) von Geächteten."
+    "summary": "Du befehligst eine kleine Gruppe (drei bis sechs Personen) von Geächteten.",
+    "description": "Du befehligst eine kleine Gruppe (drei bis sechs Personen) von Geächteten. Deine Gefolgsleute schauen zu dir auf und tun im Rahmen des Vernünftigen, was du ihnen sagst. Du musst dich jedoch gelegentlich für die Gruppe oder eines ihrer Mitglieder einsetzen sowie für sie sorgen. Oft musst du dich mit Herausforderungen an deine Führungsposition in der einen oder anderen Form auseinandersetzen. Du bist in der unmittelbaren Umgebung als Geächteter weithin bekannt, mit einer Reputation der Stufe 3. Du wirst aktiv vom örtlichen Herrn, Sheriff oder einem ähnlichen Amtsträger gesucht. Du darfst Kampffertigkeiten bei der Charaktererschaffung erwerben. Grogs dürfen diesen Fehler nicht nehmen."
   },
   "flaw.outsider_major": {
     "name": "Außenseiter (Groß)",
@@ -1035,7 +1047,8 @@
   },
   "flaw.painful_magic": {
     "name": "Schmerzhafte Magie",
-    "summary": "Das Wirken von Zaubern verursacht dir das Äquivalent einer Erschöpfungsstufe an Schmerz für jeden Zauber, den du wirkst."
+    "summary": "Das Wirken von Zaubern verursacht dir das Äquivalent einer Erschöpfungsstufe an Schmerz für jeden Zauber, den du wirkst.",
+    "description": "Das Wirken von Zaubern verursacht dir das Äquivalent einer Erschöpfungsstufe an Schmerz für jeden Zauber, den du wirkst. Dies verringert alle deine Aktionen um den entsprechenden Erschöpfungsmalus, der sich mit etwaigen Wunden oder tatsächlicher Erschöpfung kumuliert (obwohl du durch Schmerz keinen körperlichen Schaden erleidest). Du erholst dich von diesen „Schmerzstufen\" genauso wie von Erschöpfungsstufen."
   },
   "flaw.palsied_hands": {
     "name": "Zitternde Hände",
@@ -1073,7 +1086,8 @@
   },
   "flaw.poor_eyesight": {
     "name": "Schlechtes Sehvermögen",
-    "summary": "Verschwommenes Sehen beeinträchtigt deine Leistung."
+    "summary": "Verschwommenes Sehen beeinträchtigt deine Leistung.",
+    "description": "Verschwommenes Sehen beeinträchtigt deine Leistung. Würfe, die Sehen beinhalten, einschließlich Angriffs- und Verteidigungswürfe, haben -3. Neue Umgebungen sind für dich desorientierend und vielleicht beängstigend. Dieser Fehler kann mit Fehlendes Auge kombiniert werden, aber die Malus sind kumulativ."
   },
   "flaw.poor_formulaic_magic": {
     "name": "Schwache Formulaische Magie",
@@ -1159,7 +1173,8 @@
   },
   "flaw.regular": {
     "name": "Regelmäßig",
-    "summary": "Der Charakter lebt nach einer strengen religiösen Regel, die wenig Zeit für andere Aktivitäten lässt."
+    "summary": "Der Charakter lebt nach einer strengen religiösen Regel, die wenig Zeit für andere Aktivitäten lässt.",
+    "description": "Der Charakter lebt nach einer strengen religiösen Regel, die wenig Zeit für andere Aktivitäten lässt. Der Charakter muss eines seiner freien Quartale für die Quartalsaktivität Andacht aufwenden. Dies ist besonders für Mönchs- und Kanoniker-Charaktere geeignet, ist aber nicht zwingend. Der Fehler Regelmäßig ist vereinbar mit Wohlhabend und Arm, aber ein Armer Regelmäßiger Charakter hat faktisch keine freien Quartale und ist möglicherweise als Spielercharakter ungeeignet. Magi können Regelmäßig sein."
   },
   "flaw.repellent": {
     "name": "Abstoßend",
@@ -1174,11 +1189,13 @@
   "flaw.restricted_power": {
     "name": "Eingeschränkte Kraft ({power})",
     "name_unfilled": "Eingeschränkte Kraft",
-    "summary": "Dieser Fehler schränkt die Nutzung einer übernatürlichen Kraft ein, die normalerweise nach Belieben eingesetzt werden kann, wie etwa jene, die durch die Tugenden Fokussierte Macht, Große Macht, Mindere Macht, Persönliche Kraft und Ritualmacht gewährt werden."
+    "summary": "Dieser Fehler schränkt die Nutzung einer übernatürlichen Kraft ein, die normalerweise nach Belieben eingesetzt werden kann, wie etwa jene, die durch die Tugenden Fokussierte Macht, Große Macht, Mindere Macht, Persönliche Kraft und Ritualmacht gewährt werden.",
+    "description": "Dieser Fehler schränkt die Nutzung einer übernatürlichen Kraft ein, die normalerweise nach Belieben eingesetzt werden kann, wie etwa jene, die durch die Tugenden Fokussierte Macht, Große Macht, Mindere Macht, Persönliche Kraft und Ritualmacht gewährt werden. Der Charakter muss eine besondere Zeremonie durchführen, um sie zu aktivieren – etwa Symbole auf den Boden zeichnen oder wie ein Magus gestikulieren und singen – oder die Kraft wirkt nur auf eine begrenzte Klasse von Zielen (wie Männer, Wölfe, Klänge oder Sand) oder unter bestimmten Umständen (wie nachts, unter Wasser, beim Berühren von Eisen oder nach dem Singen eines Liedes). Dieser Fehler darf einmal für jede Kraft genommen werden, die der Charakter besitzt."
   },
   "flaw.restriction": {
     "name": "Einschränkung",
-    "summary": "Du kannst unter bestimmten, seltenen Bedingungen überhaupt keine Zauber wirken."
+    "summary": "Du kannst unter bestimmten, seltenen Bedingungen überhaupt keine Zauber wirken.",
+    "description": "Du kannst unter bestimmten, seltenen Bedingungen überhaupt keine Zauber wirken. Diese könnten sich auf deinen Zustand beziehen, wie direktes Berühren der Erde oder kein Bart, oder auf das Ziel, wie Vögel oder Glas, oder auf deinen Standort, wenn du die Magie einsetzt, wie auf einem kleinen Boot oder in einem Sturm. Die Einschränkung gilt auch für Effekte, die von verzauberten Gegenständen erzeugt werden, die du erschaffst. Bereits gewirkte Zauber bleiben in Kraft, auch wenn die Einschränkung in Kraft tritt. Wenn also deine Einschränkung lautet, dass du keinen Bart haben darfst, du einen Zauber mit Jahresdauer wirkst und dir dann einen Bart wachsen lässt, schlägt der Zauber nicht fehl."
   },
   "flaw.rigid_magic": {
     "name": "Starre Magie",
@@ -1192,7 +1209,8 @@
   },
   "flaw.savantism": {
     "name": "Savantismus",
-    "summary": "Die Familie des Charakters wurde von Feen verflucht; seine Mutter stolperte während der Schwangerschaft über einen Hasen; oder er wurde auf dem Rücken eines Pferdes geboren."
+    "summary": "Die Familie des Charakters wurde von Feen verflucht; seine Mutter stolperte während der Schwangerschaft über einen Hasen; oder er wurde auf dem Rücken eines Pferdes geboren.",
+    "description": "Die Familie des Charakters wurde von Feen verflucht; seine Mutter stolperte während der Schwangerschaft über einen Hasen; oder er wurde auf dem Rücken eines Pferdes geboren. Er ist körperlich fähig, aber einfältig und langsam von Begriff. Er hat die halbe Anzahl der Standard-Erfahrungspunkte bei der Charaktererschaffung, alle zukünftigen Fortschrittssummen sind halbiert, und er darf nicht mit einer Fertigkeit über 3 beginnen. Jedoch ist er bei einer bevorzugten Fertigkeit außergewöhnlich begabt. Diese Fertigkeit kann sich normal verbessern, ist bei einem Startercharakter auf eine Stufe von 6 begrenzt, und hat +3 auf alle Würfe, die mit ihrer Spezialisierung zusammenhängen, statt nur +1. Die Fertigkeit muss etwas sein, das er vernünftigerweise erlernen könnte; für einen Savanten, der ein Meister des Langschwerts ist, bräuchte es eine außergewöhnliche Hintergrundgeschichte!\n\nDie meisten Savanten werden wie der tragische Narr sein, dessen frühreife Begabung mit Pferden immer unbemerkt geblieben ist, aber einige mögen esoterischere Talente haben. Wenn die bevorzugte Fertigkeit eine Tugend erfordert, etwa Akademische oder Kampffertigkeiten, muss er diese Tugend wie üblich besitzen; ein mathematischer Savant würde eine Tugend wie Gebildet benötigen, um Artes Liberales zu erlernen. Magi könnten die Gesellschaft bestimmter Spezialisten gut gebrauchen: Eine Jerbiton-Maga würde einen künstlerischen Savanten schätzen. Gleichermaßen könnte ein Gescheiterter Lehrling durch Savantismus gelähmt worden sein, als seine Gabe ihn verließ, er behielt jedoch eine bemerkenswerte Klarheit über den Kodex des Hermes und wurde ein wertvoller Kleriker eines Quaesitors."
   },
   "flaw.secretive": {
     "name": "Geheimniskrämerisch",

@@ -2193,10 +2193,15 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     // uncomputed_rule (D46/D50, the same trigger as its Major sibling); the
     // `prerequisites` gate stays computed regardless (D67). See
     // tmp/x2f-verdicts.md.
-    (
-        "flaw.primogeniture_lineage",
-        "narrative, but declares prerequisites — D67 counts that as computed",
-    ),
+    // flaw.primogeniture_lineage: resolved (X2g, `tmp/x2g-verdicts.md`) —
+    // reclassifies narrative -> creation_effect, not uncomputed_rule: its own
+    // `uncomputed_clauses.rs::NO_RULE_DESPITE_TOKEN` row already establishes
+    // the passage's one genuine mechanical clause ("can only be taken by
+    // magi of House Verditius") is fully computed via
+    // `prerequisites: all(order_member, house.verditius)`, and nothing else
+    // in the passage states a rule (fictional-succession colour only) — see
+    // `primogeniture_lineage_reclassifies_to_creation_effect` in
+    // x2_reclassification.rs.
     (
         "flaw.suppressed_gift",
         "narrative, but declares prerequisites — D67 counts that as computed",
@@ -2269,18 +2274,16 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     // uncomputed_rule (D46/D50: a real uncomputed clause survives the
     // `prerequisites` gate), same Hermetic-gate-group shape X2e already
     // established for its own range's siblings. See tmp/x2f-verdicts.md.
-    (
-        "flaw.monastic_vows_hermetic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.necessary_condition",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.restriction",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
+    // flaw.monastic_vows_hermetic: resolved (X2g, `tmp/x2g-verdicts.md`) —
+    // reclassifies narrative -> uncomputed_rule (the existing `prerequisites:
+    // hermetically_trained` computes something, but the "cannot own vis"/
+    // "cannot marry" clauses are a real, separately uncomputed rule the
+    // engine does not enforce) — see uncomputed_clauses.rs's own removed PMC
+    // row for the same entry.
+    // flaw.necessary_condition: resolved (X2g) — same D67 shape as
+    // monastic_vows_hermetic above, reclassifies narrative -> uncomputed_rule.
+    // flaw.restriction: resolved (X2g) — same D67 shape as
+    // monastic_vows_hermetic above, reclassifies narrative -> uncomputed_rule.
     (
         "flaw.short_lived_magic",
         "narrative, but declares prerequisites — D68 counts that as computed",

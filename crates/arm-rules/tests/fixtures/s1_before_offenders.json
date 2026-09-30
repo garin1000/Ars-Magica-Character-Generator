@@ -129,7 +129,7 @@
     "flaw.plagued_by_supernatural_entity": false,
     "flaw.poor_hearing": false,
     "flaw.poor_memory": false,
-    "flaw.primogeniture_lineage": true,
+    "flaw.primogeniture_lineage": false,
     "flaw.prohibition": false,
     "flaw.proud_major": false,
     "flaw.proud_minor": false,

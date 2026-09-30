@@ -126,7 +126,7 @@ fn cyclic_magic_positive_keeps_only_lab_total_mod() {
     assert!(
         item.effects
             .iter()
-            .any(|e| matches!(e, Effect::LabTotalMod { amount: 3 })),
+            .any(|e| matches!(e, Effect::LabTotalMod { amount: 3, .. })),
         "the Lab Total clause is X7a's problem and must stay untouched here"
     );
 }
@@ -149,7 +149,7 @@ fn cyclic_magic_negative_keeps_only_lab_total_mod() {
     assert!(
         item.effects
             .iter()
-            .any(|e| matches!(e, Effect::LabTotalMod { amount: -3 })),
+            .any(|e| matches!(e, Effect::LabTotalMod { amount: -3, .. })),
         "the Lab Total clause is X7a's problem and must stay untouched here"
     );
 }

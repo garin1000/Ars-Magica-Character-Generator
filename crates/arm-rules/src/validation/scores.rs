@@ -714,6 +714,7 @@ pub(crate) fn validate_personality_traits(
             | Effect::SpellLevels { .. }
             | Effect::GeneralXp { .. }
             | Effect::LaterLifeXpRate { .. }
+            | Effect::SuppressesLaterLifeXpRate
             | Effect::LocalityAbilityCapFraction { .. }
             | Effect::AbilityAuthorization { .. }
             | Effect::AbilityBonusGated { .. }
@@ -834,6 +835,7 @@ pub(crate) fn validate_personality_trait_pairs(
             | Effect::SpellLevels { .. }
             | Effect::GeneralXp { .. }
             | Effect::LaterLifeXpRate { .. }
+            | Effect::SuppressesLaterLifeXpRate
             | Effect::LocalityAbilityCapFraction { .. }
             | Effect::AbilityAuthorization { .. }
             | Effect::AbilityBonusGated { .. }

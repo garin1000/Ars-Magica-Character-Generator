@@ -106,12 +106,13 @@ const RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
         "D50: \"may be created using the rules for any other House\" while remaining politically \
          Criamon (ArMDE:4037-4040) is a real creation-rules substitution; 0 effects today",
     ),
-    (
-        "virtue.guild_apprentice",
-        "F-100: \"not able to benefit from either the Poor Flaw or the Wealthy Virtue... until he \
-         moves to the journeyman rank\" (ArMDE:4041-4044); encoding the suppression itself is a \
-         later slice's job, X2a owns only class+desc",
-    ),
+    // "virtue.guild_apprentice" (F-100, ArMDE:4041-4044) is REMOVED here (X7a-refactor):
+    // its one stated mechanical rule — the Poor/Wealthy later-life-XP-rate suppression —
+    // is now computed, via `Effect::SuppressesLaterLifeXpRate`
+    // (`types.rs`/`life_stage.rs::later_life_rate`), so D67's "any stated rule computed
+    // nowhere" no longer applies and the entry reclassifies `uncomputed_rule` ->
+    // `in_play_effect` (`rules/core/virtues_flaws.json`). See
+    // `crates/arm-rules/RULES.md`'s D47/X7a section.
     (
         "virtue.aristotelian_training",
         "D4/D65 N6: the +1 Lab Total is conditioned on an Art and Academe activity this app can \
@@ -721,6 +722,29 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     // description is the same severity-comparison text added this slice —
     // gated here for the same reason as the rest of this block.
     "flaw.environmental_magic_condition",
+    // X2g (`tmp/x2-worklist.md` rows 318-374, `tmp/x2g-verdicts.md`): newly
+    // swept entries whose `description` is the full cited passage, verbatim
+    // in both locales. `flaw.prohibition` and `flaw.primogeniture_lineage`
+    // are deliberately NOT here — neither ships a `description` at all
+    // (classification-only reclassifications).
+    "flaw.magical_being_companion",
+    "flaw.magical_fascination",
+    "flaw.master_of_none",
+    "flaw.monastic_vows_hermetic",
+    "flaw.monstrous_blood",
+    "flaw.motion_sickness",
+    "flaw.necessary_condition",
+    "flaw.no_hands",
+    "flaw.oath_of_fealty",
+    "flaw.obese",
+    "flaw.outlaw",
+    "flaw.outlaw_leader",
+    "flaw.painful_magic",
+    "flaw.poor_eyesight",
+    "flaw.regular",
+    "flaw.restricted_power",
+    "flaw.restriction",
+    "flaw.savantism",
 ];
 
 /// D5/D46: a shipped `description` is a rule's only carrier once the entry
@@ -2781,5 +2805,153 @@ fn imagined_folk_tradition_vulnerability_states_its_faerie_lore_cap() {
          flaw.imagined_folk_tradition_vulnerability's description must state the score-of-1 \
          Faerie Lore cap in both locales:\n{}",
         offenders.join("\n")
+    );
+}
+
+// ---------------------------------------------------------------------------
+// X2g (`tmp/x2-worklist.md` rows 318-374, ArMDE:6382-6708, `tmp/x2g-verdicts.md`)
+// ---------------------------------------------------------------------------
+
+/// Four entries this slice's own read finds narrative-but-actionable, none
+/// caught by any pending list, plus one PDC entry (`flaw.savantism`) whose fix
+/// is a full reclassification rather than merely a description.
+/// `flaw.prohibition`/`flaw.restricted_power` are `categories:["supernatural"]`
+/// (D8: "a capability is a rule"). `flaw.oath_of_fealty` states a hard
+/// eligibility rule — "Magi are forbidden from taking Oaths of Fealty by the
+/// Hermetic Code" (ArMDE:6512-6515) — no `Prereq`/`incompatible_with`
+/// enforces (D50: a player building a magus would get it wrong without the
+/// text). `flaw.regular` states a compulsory seasonal expenditure D62 rules
+/// stays text ("The season rules of Landed Noble, License of Absence, Lone
+/// Redcap, Redcap, Wealthy, Poor and Regular stay in description"; D62).
+/// `flaw.savantism` is D67's own shape: the two `ability_score_cap_*` effects
+/// (X6b) compute the score caps, but the halved starting XP, halved future
+/// Advancement Totals, and the +3-not-+1 specialization roll (F-510 points
+/// 1-3) are computed nowhere, so D67 makes the whole entry `uncomputed_rule`
+/// regardless of what else it computes. `(id, why)`.
+const X2G_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
+    (
+        "flaw.prohibition",
+        "D8: categories:[\"supernatural\"], ArMDE:6638-6641 — a Geas's obey-or-be-cursed \
+         capability is a rule regardless of table adjudication; the shipped summary already \
+         states it, so only the classification is owed, no new description text",
+    ),
+    (
+        "flaw.restricted_power",
+        "D8: categories:[\"supernatural\"], ArMDE:6687-6690 — the ceremony/limited-target \
+         activation mechanism is computed nowhere and the shipped summary stops before it",
+    ),
+    (
+        "flaw.oath_of_fealty",
+        "D50: ArMDE:6512-6515's \"Magi are forbidden from taking Oaths of Fealty by the \
+         Hermetic Code\" is a hard eligibility rule no Prereq/incompatible_with enforces",
+    ),
+    (
+        "flaw.regular",
+        "D62/F-503: ArMDE:6675-6678's compulsory seasonal worship activity and the \
+         Poor-Regular consequence (\"effectively has no free seasons\") are D62's own named \
+         case for staying text (\"The season rules of ... Regular stay in description\")",
+    ),
+    (
+        "flaw.savantism",
+        "D67/F-510 (points 1-3): the two ability_score_cap_* effects (X6b) compute the score \
+         caps, but ArMDE:6703-6708's halved starting XP, halved future Advancement Totals, and \
+         +3-not-+1 specialization roll are computed nowhere — D67: any stated rule computed \
+         nowhere makes the whole entry uncomputed_rule",
+    ),
+];
+
+#[test]
+fn x2g_entries_reclassify_to_uncomputed_rule_with_a_description() {
+    let rs = load_ruleset();
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+
+    let mut offenders = Vec::new();
+    for (id, why) in X2G_RECLASSIFY_WITH_DESCRIPTION {
+        let classification = classification_of(&rs, id);
+        if classification != Classification::UncomputedRule {
+            offenders.push(format!(
+                "{id}: classified {classification:?}, expected UncomputedRule ({why})"
+            ));
+        }
+        for (lang, loc) in [("en", &loc_en), ("de", &loc_de)] {
+            if displayed_text(loc, id).is_none() {
+                offenders.push(format!(
+                    "{lang}/{id}: no displayed rules text at all ({why})"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2g (tmp/x2g-verdicts.md): these entries must reclassify to `uncomputed_rule` and \
+         carry displayed rules text in every locale — a Phase 2 data change, not yet landed:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// D61/OQ-4 correction: `flaw.poor_eyesight`'s `uncomputed_clauses.rs`
+/// `COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE` row claimed the whole passage
+/// ("rolls involving sight, including rolls to attack and defend, are at –3")
+/// is computed via its two `combat_mod` effects — but those only cover
+/// attack/defense. D61 rules the broader "rolls involving sight" penalty (a
+/// table call, the same shape as Poor Hearing/Sharp Ears/Keen Vision) stays
+/// text. So that row is overturned (removed), and this dedicated test — the
+/// same shape as `environmental_magic_condition_states_its_severity_comparison`
+/// — pins the specific missing clause instead.
+#[test]
+fn poor_eyesight_states_its_non_combat_sight_penalty() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.poor_eyesight"),
+        Classification::InPlayEffect,
+        "D61: the attack/defense -3 stays computed via combat_mod; only the broader sight-roll \
+         penalty is text, so the classification itself does not change"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "rolls involving sight"),
+        ("de", &loc_de, "würfe, die sehen beinhalten"),
+    ] {
+        let text = displayed_text(loc, "flaw.poor_eyesight")
+            .unwrap_or_default()
+            .to_lowercase();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/flaw.poor_eyesight: displayed text {text:?} does not state the general \
+                 sight-roll penalty, only attack/defense (ArMDE:6606-6609)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2g (tmp/x2g-verdicts.md), D61: flaw.poor_eyesight's description must state the general \
+         sight-roll penalty in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// D67: `flaw.primogeniture_lineage`'s `uncomputed_clauses.rs`
+/// `NO_RULE_DESPITE_TOKEN` row already establishes that the passage's one
+/// genuinely mechanical clause — "This Flaw can only be taken by magi of
+/// House Verditius" — is fully computed by the entry's own
+/// `prerequisites: all(order_member, house.verditius)`, and nothing else in
+/// the passage states a rule (the rest is fictional-succession colour). So
+/// D67 places it at `creation_effect`, not `uncomputed_rule` — pinned here
+/// because the generic D67 guard (`data_integrity.rs::every_vf_is_classified`)
+/// only requires "not narrative if computed," not which computed class.
+#[test]
+fn primogeniture_lineage_reclassifies_to_creation_effect() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.primogeniture_lineage"),
+        Classification::CreationEffect,
+        "X2g (tmp/x2g-verdicts.md), D67: the only stated rule is already computed via \
+         `prerequisites`, so this reclassifies to creation_effect, not uncomputed_rule"
     );
 }

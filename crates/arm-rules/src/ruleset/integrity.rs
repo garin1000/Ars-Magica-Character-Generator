@@ -2761,6 +2761,7 @@ impl Ruleset {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
+                | Effect::SuppressesLaterLifeXpRate
                 | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 // B3/D23/F-542: `name`/`value` are free-text/plain fields,

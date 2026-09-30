@@ -56,8 +56,8 @@ use crate::ruleset::{
 };
 use crate::types::{
     AdvancementFactor, CastingScope, CombatStat, Effect, Entity, Familiar, HalvableTotal,
-    HealthTrack, Id, LoadoutState, LongevitySource, MAX_CORD_SCORE, MagicResistanceEffect,
-    SelectionParamValue, SpecialCasting,
+    HealthTrack, Id, LabTotalModScope, LoadoutState, LongevitySource, MAX_CORD_SCORE,
+    MagicResistanceEffect, SelectionParamValue, SpecialCasting,
 };
 
 // --- Non-standard-casting penalty constants (ArMDE:9243-9245) -----------
@@ -207,40 +207,6 @@ struct InPlayMods {
     surfaced: Vec<SurfacedModifier>,
 }
 
-/// The `lab_total_mod` carriers D4 (`docs/vf-audit/decisions.md`) resolves as
-/// **never** true at character generation, and so hard-excludes from the
-/// in-play Lab Total grid (X7a, `tmp/x7a-handover.md`): Adept Laboratory
-/// Student and Weak Scholar apply only "when working from the lab texts of
-/// others" (ArMDE:3368-3371, :7080-7083), and Cyclic Magic's Virtue half only
-/// "if the positive part of the cycle covers the whole season" (ArMDE:3635-3638)
-/// — creation fixes no season. `virtue.aristotelian_training` needs no entry
-/// here: its `lab_total_mod` effect is deleted at the source instead (X7a item
-/// 5), since D4 says its condition can never be satisfied by anything this app
-/// models, unlike the other three, which are merely undecided per character.
-const D4_EXCLUDED_FROM_LAB_GRID: &[&str] = &[
-    "virtue.adept_laboratory_student",
-    "flaw.weak_scholar",
-    "virtue.cyclic_magic_positive",
-];
-
-/// D4's other split: both Potent Magic entries apply "only within the chosen
-/// [Magical] focus" (ArMDE:4740-4781), never to the ordinary Lab Total. They
-/// are excluded from the flat `in_play_lab_total_mod` fold and instead folded
-/// separately by `in_play_lab_total_mod_within_focus`, added to `within_focus`
-/// alone (`derived/lab.rs::lab_totals`).
-const D4_WITHIN_FOCUS_ONLY: &[&str] = &["virtue.potent_magic_major", "virtue.potent_magic_minor"];
-
-/// `flaw.cyclic_magic_negative`'s cycle-type parameter key, and the one value
-/// (of `cycle.solar`/`cycle.lunar`/`cycle.seasonal`) that suppresses its Lab
-/// Total penalty in the in-play grid (D52): a seasonal cycle makes the
-/// negative half align with season boundaries, reintroducing the same
-/// "which season am I in" uncertainty that keeps the Virtue's bonus out —
-/// solar/lunar cycles always leave negative time within every season, so the
-/// penalty stays certain (and applies) for those.
-const CYCLIC_MAGIC_NEGATIVE: &str = "flaw.cyclic_magic_negative";
-const CYCLE_PARAM_KEY: &str = "cycle";
-const CYCLE_SEASONAL: &str = "cycle.seasonal";
-
 /// D4's per-entry-resolved Lab-Total-modifier fold for the in-play Lab Total
 /// grid (`derived/lab.rs::lab_totals`, `creo_corpus_lab_total`, and via those,
 /// the familiar and Masterpiece read-outs) — **separate** from
@@ -250,41 +216,44 @@ const CYCLE_SEASONAL: &str = "cycle.seasonal";
 /// which spells may be chosen, D4 is a played-out number a character sheet
 /// prints.
 ///
-/// Every carrier not named in [`D4_EXCLUDED_FROM_LAB_GRID`] or cycle-gated
-/// below applies flat here too — Inventive Genius and Creative Block because
-/// their condition ("not using a Lab Text or being taught") is the
-/// character-generation default, and both Potent Magic entries because their
-/// `within_focus` split is X7b-d's, not this fold's, concern.
-///
-/// There is no exhaustive-match safeguard here (unlike [`Effect`]'s variants):
-/// this is a per-*entry* distinction, not a per-*variant* one. See
-/// `lab_total_mod_carriers_match_the_d4_table` for the enumeration test that
-/// stands in for one, so a tenth carrier cannot silently default to the wrong
-/// fold.
+/// Each carrier's [`LabTotalModScope`] is DATA
+/// (`Effect::LabTotalMod::scope`), never an id the engine hardcodes: the
+/// default `InPlayGrid` applies flat here — Inventive Genius and Creative
+/// Block, because their condition ("not using a Lab Text or being taught") is
+/// the character-generation default. `WithinFocusOnly` (Potent Magic) is
+/// excluded from this fold entirely and instead folded by
+/// [`in_play_lab_total_mod_within_focus`]. `NeverAtCreation` (Adept
+/// Laboratory Student, Weak Scholar: D4 resolves their condition as never true
+/// at creation) is excluded outright. A `suppressed_when` gate that holds for
+/// the selection (Cyclic Magic (Negative)'s seasonal cycle, D52 — a seasonal
+/// cycle's negative half aligns with season boundaries, reintroducing the same
+/// "which season am I in" uncertainty that keeps the Virtue's own bonus out)
+/// excludes the entry too, regardless of scope.
 fn in_play_lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0i32;
     for selection in selections_for_effects(entity, ruleset).iter() {
-        let item_ref = selection.item_ref.as_str();
-        if D4_EXCLUDED_FROM_LAB_GRID.contains(&item_ref) || D4_WITHIN_FOCUS_ONLY.contains(&item_ref)
-        {
-            continue;
-        }
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
-        let seasonal_cyclic_negative = item_ref == CYCLIC_MAGIC_NEGATIVE
-            && selection
-                .params
-                .get(CYCLE_PARAM_KEY)
-                .and_then(SelectionParamValue::as_single)
-                == Some(&Id::new(CYCLE_SEASONAL));
-        if seasonal_cyclic_negative {
-            continue;
-        }
         for effect in &item.effects {
-            if let Effect::LabTotalMod { amount } = effect {
-                total += i32::from(*amount);
+            let Effect::LabTotalMod {
+                amount,
+                scope,
+                suppressed_when,
+            } = effect
+            else {
+                continue;
+            };
+            if *scope != LabTotalModScope::InPlayGrid {
+                continue;
             }
+            if suppressed_when
+                .as_ref()
+                .is_some_and(|gate| gate.holds(selection))
+            {
+                continue;
+            }
+            total += i32::from(*amount);
         }
     }
     total
@@ -292,19 +261,21 @@ fn in_play_lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
 
 /// D4's within-focus-only half of the same fold: Potent Magic's flat bonus,
 /// summed separately so it never reaches `total`/`base`, only `within_focus`
-/// (`derived/lab.rs::lab_totals`).
+/// (`derived/lab.rs::lab_totals`). Reads [`LabTotalModScope::WithinFocusOnly`]
+/// off the data rather than an id list.
 fn in_play_lab_total_mod_within_focus(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0i32;
     for selection in selections_for_effects(entity, ruleset).iter() {
-        let item_ref = selection.item_ref.as_str();
-        if !D4_WITHIN_FOCUS_ONLY.contains(&item_ref) {
-            continue;
-        }
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
         for effect in &item.effects {
-            if let Effect::LabTotalMod { amount } = effect {
+            if let Effect::LabTotalMod {
+                amount,
+                scope: LabTotalModScope::WithinFocusOnly,
+                ..
+            } = effect
+            {
                 total += i32::from(*amount);
             }
         }
@@ -614,6 +585,10 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
+                // D47: a creation-time later-life-XP-rate suppression, not an
+                // in-play total; consumed only by
+                // `life_stage.rs::later_life_rate`.
+                | Effect::SuppressesLaterLifeXpRate
                 | Effect::AbilityAuthorization { .. }
                 | Effect::AbilityBonusGated { .. }
                 | Effect::LocalityAbilityCapFraction { .. }
@@ -4008,13 +3983,13 @@ mod tests {
         assert_eq!(cell.total, 3);
     }
 
-    /// Every `lab_total_mod` carrier in the SHIPPED catalogue must be
-    /// classified by [`in_play_lab_total_mod`]'s D4 fold membership — either
-    /// hard-excluded, cycle-gated (`flaw.cyclic_magic_negative` only), or left
-    /// flat/included. There is no exhaustive-match safeguard for a per-entry
-    /// distinction (unlike `Effect`'s variants), so this enumeration stands in
-    /// for one: a tenth carrier added later must be triaged here rather than
-    /// silently defaulting to "included" (X7a, `tmp/x7a-handover.md`).
+    /// Every `lab_total_mod` carrier in the SHIPPED catalogue must carry the
+    /// D4-correct `scope`/`suppressed_when` DATA on its `Effect::LabTotalMod`
+    /// — never an id the engine hardcodes. There is no exhaustive-match
+    /// safeguard for a per-entry distinction (unlike `Effect`'s variants), so
+    /// this enumeration stands in for one: a tenth carrier added later must be
+    /// triaged here rather than silently defaulting to `InPlayGrid` (X7a,
+    /// `tmp/x7a-handover.md`).
     #[test]
     fn lab_total_mod_carriers_match_the_d4_table() {
         let rs = Ruleset::from_sources(RulesetSources {
@@ -4041,77 +4016,74 @@ mod tests {
         })
         .expect("shipped core ruleset loads");
 
-        let carriers: BTreeSet<&str> = rs
+        // Every point_item carrying a `LabTotalMod` effect, mapped to that
+        // effect's own `(scope, carries a suppressed_when gate)` — read off
+        // the data, not looked up in an id list.
+        let carriers: BTreeMap<&str, (LabTotalModScope, bool)> = rs
             .point_items
             .iter()
-            .filter(|(_, item)| {
-                item.effects
-                    .iter()
-                    .any(|e| matches!(e, Effect::LabTotalMod { .. }))
+            .filter_map(|(id, item)| {
+                item.effects.iter().find_map(|e| match e {
+                    Effect::LabTotalMod {
+                        scope,
+                        suppressed_when,
+                        ..
+                    } => Some((id.as_str(), (*scope, suppressed_when.is_some()))),
+                    _ => None,
+                })
             })
-            .map(|(id, _)| id.as_str())
             .collect();
 
         // `virtue.aristotelian_training` is deliberately absent: its
         // `lab_total_mod` effect is deleted at the source (X7a item 5), not
         // excluded by this fold, so it must carry no `LabTotalMod` effect at
         // all any more.
-        let expected: BTreeSet<&str> = [
-            "virtue.adept_laboratory_student",
-            "flaw.weak_scholar",
-            "virtue.cyclic_magic_positive",
-            "flaw.cyclic_magic_negative",
-            "flaw.creative_block",
-            "virtue.inventive_genius",
-            "virtue.potent_magic_major",
-            "virtue.potent_magic_minor",
+        let expected: BTreeMap<&str, (LabTotalModScope, bool)> = [
+            (
+                "virtue.adept_laboratory_student",
+                (LabTotalModScope::NeverAtCreation, false),
+            ),
+            (
+                "flaw.weak_scholar",
+                (LabTotalModScope::NeverAtCreation, false),
+            ),
+            (
+                "virtue.cyclic_magic_positive",
+                (LabTotalModScope::NeverAtCreation, false),
+            ),
+            // Cyclic Magic (Negative) is cycle-gated, not flatly excluded or
+            // within-focus-only — its behavior is asserted end-to-end by
+            // `x7a_lab_rows.rs::cyclic_magic_negative_lab_penalty_is_cycle_gated`.
+            (
+                "flaw.cyclic_magic_negative",
+                (LabTotalModScope::InPlayGrid, true),
+            ),
+            // Everything else applies flat, per the character-generation-default
+            // reading (Inventive Genius, Creative Block).
+            ("flaw.creative_block", (LabTotalModScope::InPlayGrid, false)),
+            (
+                "virtue.inventive_genius",
+                (LabTotalModScope::InPlayGrid, false),
+            ),
+            // Both Potent Magic entries are within-focus-only (X7b-d): their
+            // +6/+3 must never reach the flat `in_play_lab_total_mod` fold.
+            (
+                "virtue.potent_magic_major",
+                (LabTotalModScope::WithinFocusOnly, false),
+            ),
+            (
+                "virtue.potent_magic_minor",
+                (LabTotalModScope::WithinFocusOnly, false),
+            ),
         ]
         .into_iter()
         .collect();
         assert_eq!(
             carriers, expected,
-            "a lab_total_mod carrier was added or removed from the catalogue without updating \
-             this D4 enumeration (and, if added, without triaging its fold membership)"
+            "a lab_total_mod carrier was added, removed, or reclassified in the catalogue \
+             without updating this D4 enumeration (and, if added, without triaging its \
+             scope/suppressed_when data)"
         );
-
-        for &excluded in D4_EXCLUDED_FROM_LAB_GRID {
-            assert!(
-                carriers.contains(excluded),
-                "{excluded} is in the D4 exclusion list but no longer carries lab_total_mod"
-            );
-        }
-
-        // Cyclic Magic's Flaw is cycle-gated, not flatly excluded or included —
-        // its behavior is asserted end-to-end by
-        // `x7a_lab_rows.rs::cyclic_magic_negative_lab_penalty_is_cycle_gated`.
-        assert!(!D4_EXCLUDED_FROM_LAB_GRID.contains(&CYCLIC_MAGIC_NEGATIVE));
-
-        // Everything else in the shipped catalogue applies flat, per the
-        // character-generation-default reading (Inventive Genius, Creative
-        // Block).
-        for &flat in &["flaw.creative_block", "virtue.inventive_genius"] {
-            assert!(
-                !D4_EXCLUDED_FROM_LAB_GRID.contains(&flat)
-                    && !D4_WITHIN_FOCUS_ONLY.contains(&flat)
-                    && flat != CYCLIC_MAGIC_NEGATIVE,
-                "{flat} must apply flat in the D4 fold, not be excluded, \
-                 within-focus-only, or cycle-gated"
-            );
-        }
-
-        // Both Potent Magic entries are within-focus-only (X7b-d): their
-        // +6/+3 must never reach the flat `in_play_lab_total_mod` fold.
-        for &within_focus_only in D4_WITHIN_FOCUS_ONLY {
-            assert!(
-                carriers.contains(within_focus_only),
-                "{within_focus_only} is in the D4 within-focus-only list but \
-                 no longer carries lab_total_mod"
-            );
-            assert!(
-                !D4_EXCLUDED_FROM_LAB_GRID.contains(&within_focus_only),
-                "{within_focus_only} cannot be both within-focus-only and hard-excluded"
-            );
-        }
     }
 
     /// Weak Enchanter (GD3, round 2): "Halve your Lab Total whenever you

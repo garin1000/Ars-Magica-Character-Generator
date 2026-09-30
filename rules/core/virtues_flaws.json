@@ -639,7 +639,8 @@
     "prerequisites": { "kind": "hermetically_trained" },
     "parameters": [{ "key": "cycle", "type": "ref", "domain": "enumerated",
       "values": ["cycle.solar", "cycle.lunar", "cycle.seasonal"] }],
-    "effects": [{ "type": "lab_total_mod", "amount": -3 }],
+    "effects": [{ "type": "lab_total_mod", "amount": -3,
+      "suppressed_when": { "param": "cycle", "equals": "cycle.seasonal" } }],
     "source": { "anchor": "cyclic-magic-negative", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5893, 5896] }
   },
   {
@@ -1829,7 +1830,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
     "source": { "anchor": "magical-being-companion", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6386, 6391] }
@@ -1877,7 +1878,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "master-of-none", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6418, 6421] }
   },
@@ -1974,7 +1975,7 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
@@ -2008,7 +2009,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "motion-sickness", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6468, 6471] }
   },
@@ -2026,7 +2027,7 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
@@ -2058,7 +2059,7 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "no-hands", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6496, 6499] }
   },
@@ -2095,7 +2096,7 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "oath-of-fealty", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6512, 6515] }
   },
@@ -2453,7 +2454,7 @@
     "magnitude": "minor",
     "categories": ["story"],
     "index_categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "all", "value": [{ "kind": "order_member" }, { "kind": "house", "value": "house.verditius" }] },
     "source": { "anchor": "primogeniture-lineage", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6634, 6637] }
@@ -2463,7 +2464,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "prohibition", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6638, 6641] }
   },
@@ -2597,7 +2598,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "source": { "anchor": "regular", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6675, 6678] }
   },
@@ -2638,7 +2639,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "power", "type": "ref", "domain": "text", "require_power": true }],
     "max_total": 255,
@@ -2649,7 +2650,7 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
@@ -2681,7 +2682,7 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "creation_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [
       { "key": "favored", "type": "ref", "domain": "ability" }
@@ -3529,7 +3530,7 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
-    "effects": [{ "type": "lab_total_mod", "amount": -6 }],
+    "effects": [{ "type": "lab_total_mod", "amount": -6, "scope": "never_at_creation" }],
     "source": { "anchor": "weak-scholar", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7080, 7083] }
   },
   {
@@ -3638,7 +3639,7 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
-    "effects": [{ "type": "lab_total_mod", "amount": 6 }],
+    "effects": [{ "type": "lab_total_mod", "amount": 6, "scope": "never_at_creation" }],
     "source": { "anchor": "adept-laboratory-student", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3368, 3371] }
   },
   {
@@ -4180,7 +4181,7 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
-    "effects": [{ "type": "lab_total_mod", "amount": 3 }],
+    "effects": [{ "type": "lab_total_mod", "amount": 3, "scope": "never_at_creation" }],
     "source": { "anchor": "cyclic-magic-positive", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3635, 3638] }
   },
   {
@@ -5035,8 +5036,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["social_status"],
-    "classification": "uncomputed_rule",
+    "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "suppresses_later_life_xp_rate" }],
     "source": { "anchor": "guild-apprentice", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4041, 4044] }
   },
   {
@@ -6282,7 +6284,7 @@
     "max_total": 255,
     "effects": [
       { "type": "casting_total_mod", "amount": 6, "scope": "all" },
-      { "type": "lab_total_mod", "amount": 6 }
+      { "type": "lab_total_mod", "amount": 6, "scope": "within_focus_only" }
     ],
     "source": { "anchor": "potent-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4740, 4781] }
   },
@@ -6302,7 +6304,7 @@
     "max_total": 255,
     "effects": [
       { "type": "casting_total_mod", "amount": 3, "scope": "all" },
-      { "type": "lab_total_mod", "amount": 3 }
+      { "type": "lab_total_mod", "amount": 3, "scope": "within_focus_only" }
     ],
     "source": { "anchor": "potent-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4740, 4781] }
   },

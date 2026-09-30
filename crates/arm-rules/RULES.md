@@ -6319,7 +6319,7 @@ here by the consuming slice.
 | F-449 | `flaw.low_tolerance` | `derived/combat.rs::fatigue_levels` — Low Tolerance's `delta` now applies only to tiers whose base penalty is already nonzero (Weary/Tired/Dazed); Fresh/Winded stay 0 regardless of sign ("Each Fatigue level above Winded has a penalty", `ArMDE:17129` — Winded itself takes none) | `ArMDE:6366-6369`, `ArMDE:17129` |
 | F-462 | `flaw.missing_eye` | added weapon-scoped `combat_mod` at −3 for each ranged weapon (`weapon.bow_long`/`bow_short`/`sling`/`javelin`/`axe_throwing`/`knife_thrown`/`stone`), mirroring `flaw.lame`'s scoped-delta pattern; the unscoped −1 stays for melee | `ArMDE:6434-6437` |
 | F-306 | (confidence engine) | `effective/gift_confidence.rs::confidence` skips `ConfidenceBonus` entirely when the profile's Confidence base is 0/0 — the general fix for any Confidence-less profile ("Grogs do not have Confidence Points", `ArMDE:2522`; the 1-score/3-point Companion/Magus default is `ArMDE:2524`) | `ArMDE:2522-2524` |
-| D4 | `virtue.potent_magic_major`/`_minor` | `derived.rs`/`derived/lab.rs::lab_totals` split: new `D4_WITHIN_FOCUS_ONLY` list + `lab_mod_within_focus` field — Potent Magic's +6/+3 now lands only in `within_focus`, never `total`. Casting Total's mirror (`derived/casting.rs::casting_totals`) is not yet split — flagged, no red test pins it | `ArMDE:4740-4781` (`ArMDE:4746` Minor +3, `ArMDE:4748` Major +6) |
+| D4 | `virtue.potent_magic_major`/`_minor` | `derived.rs`/`derived/lab.rs::lab_totals` split: `lab_mod_within_focus` field, fed by each entry's `LabTotalMod::scope: within_focus_only` (X7a-refactor; formerly `derived.rs::D4_WITHIN_FOCUS_ONLY`) — Potent Magic's +6/+3 now lands only in `within_focus`, never `total`. Casting Total's mirror (`derived/casting.rs::casting_totals`) is not yet split — flagged, no red test pins it | `ArMDE:4740-4781` (`ArMDE:4746` Minor +3, `ArMDE:4748` Major +6) |
 | F-256 | `virtue.relic`/`virtue.powerful_relic` | new `Effect::RelicTrueFaith { score }`, NOT consumed by `effective::true_faith` (so a Relic no longer moves the bearer's own True Faith Score/MR floor). The relic-as-item mechanic itself (`ArMDE:17607-17623`: a Faith Points pool usable as Confidence, and a separate MR the relic grants its bearer) is NOT implemented — the effect is surfaced-only today | corrections.md § 3.10 |
 | (n/a) | `types.rs::HealthTrack::CastingFatigue` | doc comment's sign convention corrected to "positive = fewer levels lost" (Withstand Casting +1; Vulnerable Casting/Painful Magic negative); Fluent label `derived-detail-casting_fatigue` reworded to "Casting fatigue resistance" (en) so a positive number reads as a resistance, not a cost | (label/doc only, no rulebook value) |
 
@@ -6327,6 +6327,49 @@ F-89 (`virtue.ferocity`) stays correctly unfixed here — cross-slice blocked on
 F-556/X5's character-type gate (D58: "animals only" becomes permanently
 unselectable by every human type once that `Prereq` lands); inventing a
 standalone gate for this one entry would pre-empt that slice's design.
+
+### X2g — rows 318-374 (ArMDE:6382-6708, `tmp/x2g-verdicts.md`)
+
+Thirteen reclassifications and seven description-only additions, none adding a
+new computed `Effect` (all keep whatever effects/prerequisites they already
+had):
+
+| Entry | Change | Source |
+|---|---|---|
+| `flaw.magical_being_companion` | `narrative` → `uncomputed_rule`; full passage as `description` (the Magic Might formula "10 – Size") | `ArMDE:6386-6391` |
+| `flaw.master_of_none` | `narrative` → `uncomputed_rule`; full passage as `description` (lost-XP rule) | `ArMDE:6418-6421` |
+| `flaw.monastic_vows_hermetic` | `narrative` → `uncomputed_rule`; full passage as `description` ("cannot own vis"/"cannot marry"); `prerequisites: hermetically_trained` unchanged | `ArMDE:6450-6453` |
+| `flaw.motion_sickness` | `narrative` → `uncomputed_rule`; full passage as `description` (doubled fatigue loss, 2-level minimum) | `ArMDE:6468-6471` |
+| `flaw.necessary_condition` | `narrative` → `uncomputed_rule`; full passage as `description`; `prerequisites: hermetically_trained` unchanged | `ArMDE:6476-6479` |
+| `flaw.no_hands` | `narrative` → `uncomputed_rule`; full passage as `description` ("– 5" penalty to Casting Scores, en dash + space + digit reproduced byte-for-byte per the verbatim checker) | `ArMDE:6496-6499` |
+| `flaw.restriction` | `narrative` → `uncomputed_rule`; full passage as `description`; `prerequisites: hermetically_trained` unchanged | `ArMDE:6691-6694` |
+| `flaw.prohibition` | `narrative` → `uncomputed_rule` (D8: `categories:["supernatural"]`); classification only — the shipped `summary` already states the whole rule | `ArMDE:6638-6641` |
+| `flaw.restricted_power` | `narrative` → `uncomputed_rule` (D8); full passage as `description` (the summary stopped before the ceremony/limited-target mechanism) | `ArMDE:6687-6690` |
+| `flaw.oath_of_fealty` | `narrative` → `uncomputed_rule` (D50: a hard eligibility rule no `Prereq`/`incompatible_with` enforces); full passage as `description` | `ArMDE:6512-6515` |
+| `flaw.regular` | `narrative` → `uncomputed_rule` (D62 names Regular explicitly as staying text); full passage as `description` | `ArMDE:6675-6678` |
+| `flaw.savantism` | `creation_effect` → `uncomputed_rule` (D67/F-510: the two `ability_score_cap_*` effects (X6b) compute the score caps, but halved starting XP, halved future Advancement Totals and the +3-not-+1 specialization roll are computed nowhere); full 2-paragraph passage as `description`; effects/parameters unchanged | `ArMDE:6703-6708` |
+| `flaw.primogeniture_lineage` | `narrative` → `creation_effect` (D67: the one real clause, "can only be taken by magi of House Verditius", is already computed via `prerequisites: all(order_member, house.verditius)`); no `description` — nothing else in the passage states a rule | `ArMDE:6634-6637` |
+| `flaw.magical_fascination` | classification unchanged (`creation_effect`); `description` added (the "score of 1 (but no more)" Faerie/Magic Lore cap, alongside the existing `ability_authorization` clause) | `ArMDE:6392-6395` |
+| `flaw.monstrous_blood` | classification unchanged (`in_play_effect`); `description` added covering all four sub-branches (Magic Animal/Human/Spirit/Thing) — only the Magic Human branch is computed (`characteristic_score_delta_param`/`grants_reputation`, X6b), the other three stay text | `ArMDE:6454-6467` |
+| `flaw.obese` | classification unchanged (`in_play_effect`); `description` added stating the non-Fatigue "-1 to rolls that involve moving quickly or gracefully" clause alongside the existing `health_mod`/fatigue_roll effect | `ArMDE:6516-6519` |
+| `flaw.outlaw` | classification unchanged (`creation_effect`); `description` added stating the Reputation-2 and Martial-Abilities-authorization clauses (both already computed, neither previously displayed) plus the advisory Outlaw-follower sentence | `ArMDE:6542-6545` |
+| `flaw.outlaw_leader` | classification unchanged (`creation_effect`); `description` added, same shape as `flaw.outlaw` (Reputation-3 local, Martial-Abilities authorization, and the already-landed `is_grog` Nor-prerequisite, X5) | `ArMDE:6546-6549` |
+| `flaw.painful_magic` | classification unchanged (`in_play_effect`); `description` added stating the "though you do not suffer any physical damage from pain" clarifying clause alongside the existing `health_mod`/`casting_fatigue` effect | `ArMDE:6574-6577` |
+| `flaw.poor_eyesight` | classification unchanged (`in_play_effect`) — **D61/OQ-4 overturn**: the attack/defense −3 stays computed via two `combat_mod` effects, but the broader "rolls involving sight" penalty (a table call, like Poor Hearing/Sharp Ears/Keen Vision) stays text; `description` added stating it | `ArMDE:6606-6609` |
+
+Two `uncomputed_clauses.rs` mechanical-token screen misses this slice's own
+newly-swept entries tripped are fixed with narrowly-scoped `S2_IDIOM`
+additions rather than the bare high-collision verb ("must obey"/"must
+perform" each hit an unrelated entry — `virtue.apprentice`/`flaw.vow` — so the
+idiom is scoped to the fuller phrase instead): `"forbidden"`/`"verboten"`,
+`"restrictions of your prohibition"`/`"befolgen"`, `"must spend"`/`"aufwenden"`,
+`"special ceremony"`/`muss…durchführen`, and `"überhaupt keine"` (DE only;
+the EN mirror already matches the existing bare `"cannot"`). `flaw.painful_magic`
+gets a `COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE` row (the one Fatigue level in
+pain is stated in prose, not as a digit — a screen vocabulary gap, not a
+dropped rule) and `flaw.primogeniture_lineage` moves from `NO_RULE_DESPITE_TOKEN`
+to the same list (its own reasoning was always an argument for `creation_effect`,
+not for staying `narrative`).
 
 ### In-play effect families (definitive input to slice 4 / 5b)
 
@@ -6376,12 +6419,26 @@ standalone gate for this one entry would pre-empt that slice's design.
   `creative_block` stay flat in **both** consumers. See
   `derived.rs::in_play_lab_total_mod`.
 
+  **X7a-refactor correction**: which carriers are excluded/gated is now DATA on
+  the `LabTotalMod` effect itself, never an id the engine hardcodes.
+  `Effect::LabTotalMod` (`types.rs`) carries a `scope: LabTotalModScope`
+  (`in_play_grid` default / `within_focus_only` / `never_at_creation`) and an
+  optional `suppressed_when: ParamGate`; `adept_laboratory_student`,
+  `weak_scholar` and `cyclic_magic_positive` set
+  `scope: "never_at_creation"`, and `cyclic_magic_negative` sets
+  `suppressed_when: { "param": "cycle", "equals": "cycle.seasonal" }`
+  (`rules/core/virtues_flaws.json`). `derived.rs::in_play_lab_total_mod` reads
+  these fields off each carrier's effect rather than matching against an id
+  list; `lab_total_mod_carriers_match_the_d4_table` is the enumeration test
+  that still stands in for an exhaustive-match safeguard.
+
   **X7b-d/D4 correction (8c2a252)**: both Potent Magic entries no longer stay
   "flat" either. `ArMDE:4746`/`ArMDE:4748` ("Minor Potent Magic covers the same
   narrow fields as a Minor Magical Focus, and grants a +3 bonus to Lab Totals
   and Casting Score" / Major, +6) is a **within-focus-only** bonus, not an
-  unconditional one — `derived.rs::D4_WITHIN_FOCUS_ONLY` now excludes both from
-  `in_play_lab_total_mod`'s unconditional fold, and
+  unconditional one — both set `scope: "within_focus_only"` (X7a-refactor;
+  formerly `derived.rs::D4_WITHIN_FOCUS_ONLY`), so `in_play_lab_total_mod`
+  excludes them from its `in_play_grid` fold, and
   `in_play_lab_total_mod_within_focus`/`InPlayMods::lab_mod_within_focus`
   (`derived/lab.rs::lab_totals`) add the bonus to `within_focus` alone. D1's
   `spell_level_cap` fold is unaffected (it still reads `lab_total_mod`
@@ -6633,8 +6690,8 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 |---|---|---|---|
 | `MagicalFocus { param(Text), major }` | Magical Focus — major/minor/mythic_blood | ArMDE:4399-4422, 4536-4542, 4573-4589 | computed |
 | `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | ArMDE:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed; conditional ones folded **unconditionally** (no toggle exists), surfaced per scope as the `casting_mod_formulaic`/`_ritual`/`_spontaneous` addends |
-| `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), creative_block (−3), weak_scholar (−6), cyclic_magic (±3), potent_magic. Flat only for `spell_level_cap` (D1); the in-play grid excludes/cycle-gates several of these per D4/D52, see the "Flat lab-total bonus/penalty" bullet above and `derived.rs::in_play_lab_total_mod` (X7a). `virtue.aristotelian_training`'s `+1` (ArMDE:3440-3443) was deleted (X7a/D4) and no longer carries this effect. **X7c (D46/D67, Phase 2)**: `inventive_genius` and `creative_block` each state a second, still-uncomputed experimentation-dice clause (+6 / roll twice as many dice); both reclassify to `uncomputed_rule` carrying the whole passage in `description`, while keeping this flat modifier. | ArMDE:3368-3371, 4151-4154, 5873-5876, 7080-7083, 3635-3638, 5893-5896, 4740-4781 | computed |
-| `flaw.cyclic_magic_negative`'s `parameters` — `cycle` (Enumerated: `cycle.solar`/`cycle.lunar`/`cycle.seasonal`) | D9/D52/X7a: "attuned to some cycle of nature (solar, lunar, or seasonal, for example)" (ArMDE:3637, mirrored at :5893-5896 for the Flaw) is a stated choice D9 obliges recording. Read only by `derived.rs::in_play_lab_total_mod`: `cycle.seasonal` suppresses the −3 in the in-play grid (D52 — a seasonal cycle is exactly as uncertain at creation as the Virtue's bonus); solar/lunar/absent apply the flat −3. `virtue.cyclic_magic_positive` needs no parameter — its in-play Lab answer is "no" regardless of cycle type. i18n: `param-label-cycle` (`.ftl`), `cycle.solar`/`cycle.lunar`/`cycle.seasonal` (`rules/i18n/<lang>/virtues_flaws.json`) | ArMDE:3635-3638, 5893-5896 | computed (lab_mod only; D1's `spell_level_cap` fold ignores it, matching every other carrier) |
+| `LabTotalMod { amount, scope, suppressed_when }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), creative_block (−3), weak_scholar (−6), cyclic_magic (±3), potent_magic. Flat only for `spell_level_cap` (D1), which ignores `scope`/`suppressed_when` entirely; the in-play grid reads them per-entry instead of hardcoding ids (X7a-refactor: `scope: LabTotalModScope` is `in_play_grid`/`within_focus_only`/`never_at_creation`; `suppressed_when: ParamGate` excludes the amount while it holds), see the "Flat lab-total bonus/penalty" bullet above and `derived.rs::in_play_lab_total_mod` (X7a). `virtue.aristotelian_training`'s `+1` (ArMDE:3440-3443) was deleted (X7a/D4) and no longer carries this effect. **X7c (D46/D67, Phase 2)**: `inventive_genius` and `creative_block` each state a second, still-uncomputed experimentation-dice clause (+6 / roll twice as many dice); both reclassify to `uncomputed_rule` carrying the whole passage in `description`, while keeping this flat modifier. | ArMDE:3368-3371, 4151-4154, 5873-5876, 7080-7083, 3635-3638, 5893-5896, 4740-4781 | computed |
+| `flaw.cyclic_magic_negative`'s `parameters` — `cycle` (Enumerated: `cycle.solar`/`cycle.lunar`/`cycle.seasonal`) | D9/D52/X7a: "attuned to some cycle of nature (solar, lunar, or seasonal, for example)" (ArMDE:3637, mirrored at :5893-5896 for the Flaw) is a stated choice D9 obliges recording. The entry's own `LabTotalMod::suppressed_when: { "param": "cycle", "equals": "cycle.seasonal" }` (X7a-refactor; formerly a hardcoded check in `derived.rs::in_play_lab_total_mod`) suppresses the −3 in the in-play grid when `cycle.seasonal` is selected (D52 — a seasonal cycle is exactly as uncertain at creation as the Virtue's bonus); solar/lunar/absent apply the flat −3. `virtue.cyclic_magic_positive` needs no parameter — its in-play Lab answer is "no" regardless of cycle type. i18n: `param-label-cycle` (`.ftl`), `cycle.solar`/`cycle.lunar`/`cycle.seasonal` (`rules/i18n/<lang>/virtues_flaws.json`) | ArMDE:3635-3638, 5893-5896 | computed (lab_mod only; D1's `spell_level_cap` fold ignores it, matching every other carrier) |
 | `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | ArMDE:5913-5915, 5909-5912 | computed |
 | `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic. Two items have left this family: weak_magic_resistance in the round-5 audit (`ArMDE:7070` halves nothing), and flawed_parma_magica with row 35 (it halves one *addend* against one *Form*, which is not a whole total — see **Magic-resistance modifier** above). `HalvableTotal::MagicResistance` was deleted with the second of them | ArMDE:7084-7089, 7060-7063, 5962-5964, 7064-7067 | **computed** (round-2 audit finding GD3 closed the last gap): `spontaneous_casting`, `penetration`, `lab_longevity` (since M5.5a), and now `lab_enchanting` too — folded into the new `LabTotal.enchanting` field in `derived/lab.rs::lab_totals` (Deficiency first, then this halving, per `ArMDE:7060-7063`'s own stated order). Round 3 (G1) wired `enchanting` into `masterpiece_item_cap` too — the one remaining consumer of a Lab Total that used to read `total` instead — and into the frontend `LabTotal` type / `DerivedTotalsPanel` (G2) |
 | `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | ArMDE:5145-5147, 6190-6193, 3500-3503 | computed |
@@ -6756,16 +6813,20 @@ true:
   longer true for every carrier. `effective/spell.rs::lab_total_mod` (D1)
   still folds every carrier unconditionally for `spell_level_cap` only; the
   in-play `lab_mod` addend above is folded by a **separate** function,
-  `derived.rs::in_play_lab_total_mod`, which hard-excludes
+  `derived.rs::in_play_lab_total_mod`, which excludes
   `virtue.adept_laboratory_student`, `flaw.weak_scholar` and
   `virtue.cyclic_magic_positive` (their condition never holds at character
-  generation) and cycle-gates `flaw.cyclic_magic_negative` (no penalty when
-  its `cycle` parameter is `cycle.seasonal`, D52). Inventive Genius and
-  Creative Block are unaffected. **X7b-d (8c2a252)**: both Potent Magic
-  entries are no longer unaffected either — `in_play_lab_total_mod` now
-  excludes them (`D4_WITHIN_FOCUS_ONLY`), and their +3/+6 lands only in the
-  separate `within_focus` field via `in_play_lab_total_mod_within_focus` — see
-  the "Flat lab-total bonus/penalty" and `LabTotalMod` rows below.
+  generation) and gates `flaw.cyclic_magic_negative` (no penalty when
+  its `cycle` parameter is `cycle.seasonal`, D52) — **X7a-refactor**: reading
+  the entry's own `scope: LabTotalModScope`/`suppressed_when: ParamGate`
+  fields (`types.rs`) rather than matching against a hardcoded id list.
+  Inventive Genius and Creative Block are unaffected. **X7b-d (8c2a252)**:
+  both Potent Magic entries are no longer unaffected either — both set
+  `scope: "within_focus_only"` (X7a-refactor; formerly
+  `derived.rs::D4_WITHIN_FOCUS_ONLY`), so `in_play_lab_total_mod` excludes
+  them and their +3/+6 lands only in the separate `within_focus` field via
+  `in_play_lab_total_mod_within_focus` — see the "Flat lab-total
+  bonus/penalty" and `LabTotalMod` rows below.
 - `CastingTotalMod` — folded, and labelled since round 4 as the three per-scope
   `casting_mod_*` addends (`derived/casting.rs::CastingTotal`); before that it
   was folded into the printed figure with nothing on screen accounting for it.
@@ -7976,14 +8037,23 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - **D47/X7a — Guild Apprentice suppresses both, until the journeyman rank.**
   `ArMDE:4041-4044`: "The character is not able to benefit from either the Poor
   Flaw or the Wealthy Virtue … until he moves to the journeyman rank."
-  `LifeStageRules::later_life_rate` checks for `virtue.guild_apprentice` among
-  the entity's selections first and, if present, returns the ruleset's base
+  `virtue.guild_apprentice` carries `Effect::SuppressesLaterLifeXpRate`
+  (`types.rs`; X7a-refactor — formerly a hardcoded check for
+  `virtue.guild_apprentice`'s id in `LifeStageRules::later_life_rate`, now
+  data on the entry itself, `classification` moved `uncomputed_rule` →
+  `in_play_effect`). `later_life_rate` checks the entity's selections for any
+  item carrying that effect first and, if present, returns the ruleset's base
   rate outright — skipping the `LaterLifeXpRate` fold entirely rather than
-  adding a new `Effect` variant or an `incompatible_with` (D47 rejects a
-  general "nullify any effect" mechanism for what is a single, narrow,
-  hardcoded check with one caller). Both `virtue.wealthy` and
+  adding an `incompatible_with` (D47 rejects a general "nullify any effect"
+  mechanism, hence the narrow, single-purpose marker effect rather than a
+  generic suppression variant). Both `virtue.wealthy` and
   `virtue.guild_apprentice` state the interaction in `description` (both
   locales); test: `x7a_lab_rows.rs::guild_apprentice_suppresses_wealthys_later_life_rate`.
+  **Cross-cutting note (X7a-refactor):** this reclassification makes
+  `crates/arm-rules/tests/x2_reclassification.rs`'s `RECLASSIFY_WITH_DESCRIPTION`
+  entry for `virtue.guild_apprentice` (which still asserts `UncomputedRule`)
+  stale — that file is owned by a different slice (X2g) and was not edited
+  here; the row needs removing there.
 - **Eligibility is a `Prereq` on the entry, not three profile lists (D38, F-339).**
   Before this milestone the "only companions" line was enforced twice
   explicitly (`magus` and `mythic_companion` each listed both ids in
@@ -11278,8 +11348,10 @@ required/negative pair) per entry, against the SHIPPED `rules/core/*.json`.
   A real per-value gate is a future engine change, not this slice's.
 - **`virtue.potent_magic_major` / `_minor`** — `field` (`text`,
   `max_total: 255` — "more than one area of Potent Magic", ArMDE:4742). Data
-  only: the +3/+6 bonus is X7b-d's D4 fix (already landed,
-  `derived.rs::D4_WITHIN_FOCUS_ONLY`/`in_play_lab_total_mod_within_focus`),
+  only: the +3/+6 bonus is X7b-d's D4 fix (already landed, each entry's
+  `LabTotalMod::scope: within_focus_only` +
+  `in_play_lab_total_mod_within_focus`; X7a-refactor replaced the original
+  `derived.rs::D4_WITHIN_FOCUS_ONLY` id list with this data field),
   coordinated with, not duplicated by, this slice.
 - **`virtue.special_circumstances`** — `circumstance` (`text`). Closes
   F-541/F-287 (the duplicate-copy inversion): `max_per_target: 255` removed

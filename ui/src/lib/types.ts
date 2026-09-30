@@ -283,7 +283,21 @@ export type Effect =
   // M5/5b in-play effects (consumed by the derived-totals read-out, slice 5i).
   | { type: 'magical_focus'; param: string; major: boolean }
   | { type: 'casting_total_mod'; amount: number; scope: CastingScope }
-  | { type: 'lab_total_mod'; amount: number }
+  | {
+      type: 'lab_total_mod';
+      amount: number;
+      // D4/X7a: where this amount counts in the in-play Lab Total grid —
+      // data, never an id the app hardcodes. `in_play_grid` (the default,
+      // omitted from the JSON) applies flat; `within_focus_only` (Potent
+      // Magic) counts only within a Magical Focus; `never_at_creation`
+      // (Adept Laboratory Student, Weak Scholar) never counts at all.
+      // Mirrors the engine's `LabTotalModScope`.
+      scope?: 'in_play_grid' | 'within_focus_only' | 'never_at_creation';
+      // D52: this amount is excluded from the in-play grid while the OWNING
+      // selection's own gate holds (Cyclic Magic (Negative)'s seasonal
+      // cycle).
+      suppressed_when?: ParamGate;
+    }
   | { type: 'deficient_art'; param: string }
   | { type: 'magic_total_halving'; total: HalvableTotal }
   | {
