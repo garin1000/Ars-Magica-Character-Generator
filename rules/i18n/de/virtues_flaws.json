@@ -90,7 +90,7 @@
     "summary": "Du wirst von einem treuen, klugen (aber gewöhnlichen) Tier begleitet, das einfache Befehle befolgen kann."
   },
   "flaw.apostate": {
-    "name": "Apostat",
+    "name": "Abtrünniger",
     "summary": "Du bist von einem Glauben zu einem anderen oder von einem Überzeugungssystem zum anderen übergetreten."
   },
   "flaw.arthritis": {
@@ -377,8 +377,8 @@
     "summary": "Du hast eine düstere Lebenseinstellung, siehst kaum einen Sinn im Handeln und findest an nichts, was geschieht, Freude."
   },
   "flaw.deteriorating_power": {
-    "name": "Schwindende Macht ({power})",
-    "name_unfilled": "Schwindende Macht",
+    "name": "Schwindende Kraft ({power})",
+    "name_unfilled": "Schwindende Kraft",
     "summary": "Ähnlich wie die Tugend Variable Mächte verringert dieser Fehler die Wirksamkeit einer der Mächte des Charakters (Große, Mindere oder Ritualmacht) im Laufe der Zeit.",
     "description": "Ähnlich wie die Tugend Variable Mächte verringert dieser Fehler die Wirksamkeit einer der Mächte des Charakters (Große, Mindere oder Ritualmacht) im Laufe der Zeit. Diese Einbuße ist entweder an (Alter / 10), (Machtwert – Machtpool / 5) oder den Verzerrungswert des Charakters geknüpft. Beispielsweise hätte ein Magiecharakter mit Nachlassender Macht, die ans Alter gebunden ist, und einem Alter von 25 eine seiner Mächte um 3 Magnituden reduziert.\n\nDieser Fehler kann mehrfach genommen werden, wenn der Charakter mehr als eine Macht besitzt."
   },
@@ -421,7 +421,7 @@
     "description": "Du kannst früheres Wissen nicht zur Unterstützung deiner Magie heranziehen. Du erhältst keinen Nutzen daraus, einen Zauber zu kennen, der einem ähnelt, den du gerade erlernst oder erfindest, und du erhältst keine Verzauberungsboni von Techniken und Formen, die bereits in einen Gegenstand eingebettet wurden."
   },
   "flaw.disorientating_magic": {
-    "name": "Desorientierende Magie",
+    "name": "Desorientierungsmagie",
     "summary": "Nach dem Wirken eines Zaubers musst du eine Runde lang nichts tun außer deine geistigen Kräfte zu sammeln."
   },
   "flaw.driven_major": {
@@ -449,7 +449,7 @@
     "summary": "Jemand macht dir das Leben schwer, etwa ein örtlicher Baron oder Bischof, eine Räuberbande oder ein besonders unangenehmer Gastwirt."
   },
   "flaw.enfeebled": {
-    "name": "Geschwächt",
+    "name": "Entkräftet",
     "summary": "Du kannst dich nicht länger als ein paar Sekunden anstrengen."
   },
   "flaw.envied_beauty": {
@@ -465,11 +465,11 @@
     "summary": "Du glaubst, dass es jedem anderen besser geht als dir, und dass diese ihr Glück nicht verdienen, während du es verdienst."
   },
   "flaw.environmental_magic_condition": {
-    "name": "Magische Umweltbedingung",
+    "name": "Magische Umgebungsbedingung",
     "summary": "Alle Zauber- und Laborsummen des Charakters werden unter bestimmten häufigen Umständen, die mit seiner Umgebung zusammenhängen, halbiert – beispielsweise immer dann, wenn er sich in einem Gebäude befindet."
   },
   "flaw.environmental_sensitivity": {
-    "name": "Umweltempfindlichkeit",
+    "name": "Umgebungsempfindlichkeit",
     "summary": "Der Charakter reagiert ungewöhnlich empfindlich auf ein seltenes Umweltmerkmal, wie schlechte Luft, Salzwasser oder extreme Temperaturen.",
     "description": "Der Charakter reagiert ungewöhnlich empfindlich auf ein seltenes Umweltmerkmal, wie schlechte Luft, Salzwasser oder extreme Temperaturen. Immer wenn der Charakter diesen Bedingungen ausgesetzt ist, hat er -3 auf seine Ausdauer für alle Erschöpfungsproben (Seite 406)."
   },
@@ -535,7 +535,7 @@
     "summary": "Du hast Angst vor etwas, dem du ziemlich oft begegnen wirst."
   },
   "flaw.feral_scent": {
-    "name": "Wilder Geruch",
+    "name": "Wildgeruch",
     "summary": "Vielleicht aufgrund seines Tierbluts oder seiner wilden Erziehung hat der Charakter den starken natürlichen Geruch eines wilden Tieres."
   },
   "flaw.feral_upbringing": {
@@ -609,11 +609,11 @@
     "summary": "Vom Gemeinderat ernannt, ist der Gabai der örtliche Steuereintreiber."
   },
   "flaw.gender_nonconforming_major": {
-    "name": "Geschlechtsnichtkonform (Groß)",
+    "name": "Geschlechtsnonkonform (Groß)",
     "summary": "Du entsprichst nicht dem erwarteten Verhalten für eine Person des Geschlechts, das die Gesellschaft dir in Abwesenheit sozialer Hinweise wie Kleidung und Verhalten zuweisen würde."
   },
   "flaw.gender_nonconforming_minor": {
-    "name": "Geschlechtsnichtkonform (Klein)",
+    "name": "Geschlechtsnonkonform (Klein)",
     "summary": "Du entsprichst nicht dem erwarteten Verhalten für eine Person des Geschlechts, das die Gesellschaft dir in Abwesenheit sozialer Hinweise wie Kleidung und Verhalten zuweisen würde."
   },
   "flaw.generous_major": {
@@ -705,7 +705,7 @@
     "description": "Der Charakter wurde wiederholt Magie ausgesetzt und ist dadurch auf Magie zum Überleben angewiesen. Der Charakter muss jede Jahreszeit 1 Bauer Vis verbrauchen, der der Form entspricht, der er hauptsächlich ausgesetzt wurde. Ist der Charakter nicht in der Lage, in einer Jahreszeit einen Bauern Vis zu verbrauchen, verliert er eine Langzeit-Erschöpfungsstufe, die erst wieder erlangt werden kann, wenn ein Bauer des entsprechenden Vis verbraucht wurde. Ein Charakter, der Hunger nach Ignem-Magie hat und ein ganzes Jahr lang keinen Bauern Ignem-Vis verbraucht hat, hat zum Beispiel 4 Langzeit-Erschöpfungsstufen verloren und ist daher Betäubt mit einem -5-Malus auf Aktivitäten. Verbraucht der Charakter dann 1 Bauern Ignem-Vis, erlangt er nach einer Stunde eine Erschöpfungsstufe zurück und ist Müde."
   },
   "flaw.imagined_folk_tradition_vulnerability": {
-    "name": "Eingebildete Volksüberlieferungsanfälligkeit",
+    "name": "Eingebildete Volksmagie-Verwundbarkeit",
     "summary": "Obwohl dieser Fehler einer Wahnvorstellung ähnelt, hat die Eingebildete Volksüberlieferungsanfälligkeit auch andere spielmechanische Auswirkungen."
   },
   "flaw.impious_friend": {
@@ -1235,7 +1235,7 @@
     "summary": "Der Charakter muss Zauberwerkzeuge einsetzen, um spontane Zauber zu wirken, genauso wie er es für formulaische Zauber tut."
   },
   "flaw.stigmatic_catalyst": {
-    "name": "Stigma-Katalysator",
+    "name": "Stigmatischer Katalysator",
     "summary": "Die Anwesenheit des Charakters verursacht manchmal, dass symbolische Male auf den Körpern von Menschen in der Nähe erscheinen, die keine Magieresistenz besitzen.",
     "description": "Die Anwesenheit des Charakters verursacht manchmal, dass symbolische Male auf den Körpern von Menschen in der Nähe erscheinen, die keine Magieresistenz besitzen. Der Charakter kann diesen Vorgang nicht kontrollieren, kann jedoch Intelligenz + Enigmatische Weisheit würfeln gegen einen Schwierigkeitsgrad von 6, um den so Betroffenen mitzuteilen, welche Form geistiger Reinigung sie durchlaufen müssen, damit das Stigma verschwindet. Charaktere, die stigmatisiert werden, reagieren möglicherweise feindselig, wenn sie die Quelle der Stigmata erkennen. Dieser Fehler findet sich normalerweise bei Magi des Hauses Criamon, und Magi dieses Hauses würden sich für jeden anderen Charakter interessieren, der ihn aufweist."
   },
@@ -1265,15 +1265,15 @@
     "description": "Du bist von Beruf Chirurg, hast aber nie eine breite Grundausbildung in diesem Fach erhalten; vielmehr hat sich deine Ausbildung nur auf einen einzigen Aspekt der Chirurgie konzentriert. Wähle eine Art von Chirurgie als deine Spezialisierung in dieser Fertigkeit (Starkataraktierung, Entfernung von Steinen, Knochenrichten usw.). Bei dieser Art von Chirurgie erhältst du den üblichen +1-Bonus auf deinen Wurf, aber wenn du eine andere Anwendung der Chirurgie versuchst, musst du deinen Chirurgie-Wert aufgrund deiner Unerfahrenheit halbieren. Wahrscheinlich reist du, um genug Klientel für deine Praxis zu finden, kannst aber in der Regel gut davon leben."
   },
   "flaw.susceptibility_to_divine_power": {
-    "name": "Anfälligkeit für Göttliche Macht",
+    "name": "Anfälligkeit für Göttliche Kraft",
     "summary": "Du bist besonders empfindlich gegenüber dem Dominium und erleidest doppelt so starke normale Strafen (wie Zauberwirkungsmodifikatoren und Patzerwürfel) auf deine Magie, wenn du dich in einer göttlichen Aura befindest."
   },
   "flaw.susceptibility_to_faerie_power": {
-    "name": "Anfälligkeit für Feenmacht",
+    "name": "Anfälligkeit für Feenkraft",
     "summary": "Du bist besonders anfällig gegenüber Feen und ihrer Magie. Wann immer du eine Feenaura betrittst, musst du einen Ausdauerwurf gleich oder größer als ihre Aurastärke ablegen, um nicht desorientiert zu werden. Darüber hinaus wird dein Magieresistenzwert, einschließlich der Parma Magica, gegen Feeneffekte halbiert. Wenn jemand anderes seine Parma Magica einsetzt, um dich zu schützen, wird seine Resistenz nicht beeinflusst und du profitierst normal davon."
   },
   "flaw.susceptibility_to_infernal_power": {
-    "name": "Anfälligkeit für Höllische Macht",
+    "name": "Anfälligkeit für Infernale Kraft",
     "summary": "Du bist besonders anfällig gegenüber den dunklen Mächten. Wann immer du ein Gebiet mit höllischem Einfluss betrittst, musst du einen Ausdauerwurf gleich oder größer als die Aurastärke ablegen oder krank werden (-1 auf alle Würfe). Du erhältst nur die Hälfte deines normalen Magieresistenzwerts gegen Höllische Effekte, obwohl die Parma Magica eines anderen, die dich schützt, normal zählt."
   },
   "flaw.susceptibility_to_sunlight": {
@@ -1286,7 +1286,7 @@
     "summary": "Die ständige Exposition des Charakters gegenüber Magie hat ihn anfälliger für übernatürliche Verzerrung gemacht, als er es sonst wäre."
   },
   "flaw.tainted_offspring": {
-    "name": "Befleckter Nachwuchs",
+    "name": "Befleckter Nachkomme",
     "summary": "Der Charakter hat ein Kind, das von einem mächtigen Dämon für große, aber unangenehme Dinge bestimmt wurde."
   },
   "flaw.tainted_with_evil": {
@@ -1430,12 +1430,12 @@
     "summary": "Manche Magi können den Erschöpfungsverlust durch das Wirken von Zaubern besser verkraften, andere weniger."
   },
   "flaw.vulnerable_magic": {
-    "name": "Anfällige Magie ({condition})",
-    "name_unfilled": "Anfällige Magie",
+    "name": "Verwundbare Magie ({condition})",
+    "name_unfilled": "Verwundbare Magie",
     "summary": "Die Magie des Charakters wird unter bestimmten ungewöhnlichen Umständen automatisch aufgelöst."
   },
   "flaw.vulnerable_to_folk_tradition": {
-    "name": "Anfällig für Volksüberlieferungen",
+    "name": "Anfällig für Volkszauber",
     "summary": "Die Magie des Magus ist anfällig gegenüber verschiedenen Volksheilmitteln zur Abwehr feindlicher Zauber.",
     "description": "Die Magie des Magus ist anfällig gegenüber verschiedenen Volksheilmitteln zur Abwehr feindlicher Zauber. Jedes Ziel, das weiß, dass der Magus gerade seine Magie eingesetzt hat, kann ein Volksritual versuchen, wie das Zeichen gegen das Böse machen oder Spucken, und so weiter. Dies verleiht dem Ziel oder den Zielen eine Magieresistenz von (5 × der Magiekunde des Ziels) oder 0, wenn das Ziel diese Fertigkeit nicht besitzt, nur gegen die Magie des Magus. Außerdem kann jemand mit Magiekunde möglicherweise eine Methode zum Brechen einer anhaltenden Verzauberung entwickeln, wie das Bestreuen mit Salz oder das Liegen auf einem Eisenbett; dies erfordert normalerweise einen Intelligenz + Magiekunde-Wurf gegen einen Schwierigkeitsgrad von (9 + die Magnitude des Zaubers) oder höher."
   },
@@ -1885,7 +1885,7 @@
     "description": "Der Charakter kann die Qualität eines gefertigten Gegenstands intuitiv einschätzen. Ist der Gegenstand in irgendeiner Weise fehlerhaft, wird er sich dessen durch bloßes Berühren sofort bewusst. Er hat auch eine Chance festzustellen, ob ein Gegenstand magisch ist. Für übernatürliche Gegenstände, die von einem Handwerker hergestellt wurden, wird ein Wahrnehmung + Wahrnehmungs-Fertigkeit + Stresswürfelwurf gegen einen Schwierigkeitsgrad von 9 vorgenommen. Bei Erfolg kennt der Charakter die Stärke des Gegenstands. Für hermetisch verzauberte Gegenstände oder solche, die von anderen Zauberern hergestellt wurden, wird ein Wahrnehmung + Wahrnehmungs-Fertigkeit + Stresswürfelwurf gegen einen Schwierigkeitsgrad von 12 vorgenommen. Bei Erfolg weiß der Charakter, dass der Gegenstand verzaubert ist, hat aber keine Ahnung, wie oder welche Kräfte er haben könnte. Das Patzen bei einem dieser Würfe führt zu falschen Informationen. Diese Tugend liefert keine Informationen über die Aktionen oder Befehle, die nötig sind, um die Kräfte eines Gegenstands auszulösen.\n\nHephaistos war ein heidnischer Gott der Handwerker, hauptsächlich der Metallurgen. Für christliche Charaktere ist es passender, diese Tugend als Auge des Heiligen Dunstan zu bezeichnen."
   },
   "virtue.fabric_ripper": {
-    "name": "Stoffreißer",
+    "name": "Stoffzerreißer",
     "summary": "Der Charakter besitzt die übernatürliche Fähigkeit, jedes gefertigte Ding zu zerreißen, das aus Pflanzen- oder Tierfasern besteht.",
     "description": "Der Charakter besitzt die übernatürliche Fähigkeit, jedes gefertigte Ding zu zerreißen, das aus Pflanzen- oder Tierfasern besteht. Dies erlaubt ihr, Segel zu zerstören, den Riemen zu lösen, der einzelne Rüstungsteile hält, das Zaumzeug eines Pferdes zu sprengen, einen Sack zu platzen zu lassen und eine Hose mit dem Geist zu zerfetzen. Sie gibt eine Erschöpfungsstufe aus, um die Fähigkeit zu aktivieren, und kann pro ausgegebener Erschöpfungsstufe nur ein Objekt zum Ziel machen. Es handelt sich um einen PeAn(He)-25-Effekt mit +0 Penetration, der weder Worte noch Gesten erfordert."
   },
@@ -2001,7 +2001,7 @@
     "description": "Du bist in der Lage, durch dein Auftreten großes Entsetzen zu wecken. Dies kann auf zwei Arten funktionieren: Entweder bist du in der Lage, dein Gesicht zu einer Schreckensvision zu verzerren (häufig, wenn die Präsenz unter null liegt), oder du strahlst eine Aura der Ehrfurcht und Pracht aus, die andere in die Knie zwingt (häufig, wenn die Präsenz über null liegt).\n\nJeder, der deine Furchteinflößende Erscheinung miterlebt, muss sofort einen Tapfer-Persönlichkeitseigenschaftswurf gegen einen Schwierigkeitsgrad von 3 ablegen. Addiere deine Präsenz zum Schwierigkeitsgrad, ohne etwaige Minuszeichen zu berücksichtigen (zum Beispiel macht eine Präsenz von +3 oder -3 den Schwierigkeitsgrad zu 6). Bei einem Misserfolg versuchen sie entweder, deine unmittelbare Nähe zu fliehen, oder werden von deiner Pracht eingeschüchtert.\n\nBleiben die Betroffenen in deiner Nähe (weil sie beeindruckt sind oder weil sie gefangen sind), können sie den Tapfer-Wurf alle zwei Minuten erneut versuchen. Sobald eine Person von der Furchteinflößenden Erscheinung betroffen war und sich von deren Effekten erholt hat, kann sie nicht erneut davon betroffen werden; allerdings wirst du eine entsprechende Reputation (wie Furchteinflößend oder Ehrfurchtgebietend) mit einem Wert von 2 bei jenen erwerben, die du betroffen hast, was deine Beziehungen zu ihnen färben wird.\n\nDieser Effekt hat eine Penetrationssumme von 0."
   },
   "virtue.gender_shift": {
-    "name": "Geschlechtswechsel",
+    "name": "Geschlechtswandel",
     "summary": "Jeden Mitternacht kann der Charakter wählen, das Geschlecht zu wechseln.",
     "description": "Jeden Mitternacht kann der Charakter wählen, das Geschlecht zu wechseln. Die männliche und weibliche Form des Charakters sind über alle Verwandlungen hinweg konsistent und sehen einander üblicherweise wie Blutsverwandte aus. Die Persönlichkeitseigenschaften des Charakters können sich zwischen den Formen leicht unterscheiden. Schwangere Charaktere können diese Fähigkeit nicht nutzen."
   },
@@ -2111,7 +2111,7 @@
     "summary": "Der Charakter hat die Fähigkeit, ihre Feinde zu verfluchen, indem sie unheilvolle Prophezeiungen über deren Zukunft ausspricht, die sich zu bewahrheiten pflegen."
   },
   "virtue.homing_instinct": {
-    "name": "Heimfindungsinstinkt",
+    "name": "Ortsgespür",
     "summary": "Der Charakter weiß stets genau, wie er von seinem aktuellen Standort zu einer Anzahl von Orten gelangt, die seinem Intelligenzwert entspricht (mindestens jedoch 1).",
     "description": "Der Charakter weiß stets genau, wie er von seinem aktuellen Standort zu einer Anzahl von Orten gelangt, die seinem Intelligenzwert entspricht (mindestens jedoch 1). Um einen Ort in das Repertoire des Charakters aufzunehmen, muss er sich an diesem Ort befinden, der Ort muss im Freien liegen (darf also beispielsweise nicht im Inneren eines Gebäudes sein), und der Spieler muss einen Intelligenz + Konzentrations-Wurf gegen einen Schwierigkeitsgrad von 6 schaffen. Würde dies die Anzahl der bekannten Orte über das Limit des Charakters hinaus erhöhen, muss ein anderer Ort „vergessen\" werden.\n\nDarüber hinaus hat der Charakter eine feste Arkane Verbindung zu den Orten, die er kennt, die auf die übliche Weise genutzt werden kann (Seite 219). Diese Arkane Verbindung ist ein Artefakt des Geistes und kann daher nicht an einen anderen Charakter weitergegeben werden."
   },
@@ -2135,7 +2135,7 @@
     "summary": "+3 Punkte zum Kauf von Eigenschaften. Kann mehrfach gewählt werden."
   },
   "virtue.independent_study": {
-    "name": "Unabhängiges Studium",
+    "name": "Eigenständiges Studium",
     "summary": "Der Charakter entwickelt neue Fertigkeiten auf eigene Faust außerordentlich schnell."
   },
   "virtue.indescribable_face": {
@@ -2252,7 +2252,7 @@
     "description": "Du bist in der Lage, eine bestimmte Fertigkeit durch wiederholtes Scheitern zu verbessern. Beim ersten Mal in einer gegebenen Spielsitzung, dass du einen Wurf verpatzst oder um genau einen Punkt verfehlst, erhältst du fünf Erfahrungspunkte in der Fertigkeit. Der Wurf muss sich natürlich im Verlauf der Geschichte ergeben haben. Du kannst diese Tugend mehrmals nehmen, je einmal für jede gewählte Fertigkeit."
   },
   "virtue.leather_ripper": {
-    "name": "Lederreißer",
+    "name": "Lederzerreißer",
     "summary": "Dieser Charakter hat die übernatürliche Fähigkeit, eine Gruppe von Ledergegenständen zu zerstören.",
     "description": "Dieser Charakter hat die übernatürliche Fähigkeit, eine Gruppe von Ledergegenständen zu zerstören. Dadurch fällt Metallrüstungen auseinander, da die sie zusammenhaltenden Riemen zerfallen. Es zerstört das Zaumzeug eines Reiters und erzwingt einen Reitenwurf mit Abzügen von bis zu -9, je nach der Gefährlichkeit seiner aktuellen Manöver. Es kann Scheide, Gürtel und Stiefel eines Feindes zerstören und erlaubt dem Lederreißer so zu fliehen oder anzugreifen. Dies ist ein PeAn(He) 30-Effekt mit +0 Penetration. Der Charakter muss sich einen Moment konzentrieren und eine Erschöpfungsstufe aufwenden, um die Kraft zu aktivieren, muss aber nicht sprechen oder gestikulieren."
   },
@@ -2311,7 +2311,7 @@
     "description": "Du bist außerordentlich begabt darin, neue Sprachen zu erlernen. Alle Fortschrittssummen für jede Sprache werden um ein Viertel erhöht (aufgerundet), ebenso wie alle Erfahrungspunkte, die du bei der Charaktererschaffung in eine Sprache investierst. Sowohl Lebende als auch Tote Sprachen werden mit dieser Tugend gefördert."
   },
   "virtue.lone_redcap": {
-    "name": "Einsame Rotkappe",
+    "name": "Einzelgänger-Rotkappe",
     "summary": "Du bist eine Rotkappe, die keine Bindungen an ein Mercere-Haus unterhält und daher weder Zauberartefakte noch Langlebigkeitsrituale erhält.",
     "description": "Du bist eine Rotkappe, die keine Bindungen an ein Mercere-Haus unterhält und daher weder Zauberartefakte noch Langlebigkeitsrituale erhält. Du beginnst dennoch mit 300 Erfahrungspunkten für deine fünfzehn als Lehrling verbrachten Jahre und erhältst die Vorteile der Tugend Vielgereist, bist jedoch von den anderen Rotkappen in deiner Gegend entfremdet und hast eine schlechte Reputation der Stufe 2 innerhalb deines Hauses.\n\nDu musst weiterhin jedes Jahr zwei Quartale damit verbringen, Nachrichten zu überbringen und andere Dienste für den Orden zu leisten, denn tust du das nicht, besteht die Möglichkeit, dass du als Orbus erklärt und aus deinem Haus ausgeschlossen wirst. Diese Arbeit reicht aus, um davon zu leben, wenn du keinem Konvent angehörst, sofern du nicht den Fehler Arm nimmst und ein drittes Quartal arbeiten musst. Nimmst du die Tugend Wohlhabend, kannst du deine Stellung mit nur einem Quartal Einsatz pro Jahr aufrechterhalten.\n\nDieser Soziale Status ist mit jedem anderen weltlichen Sozialen Status vereinbar, der dir vernünftigerweise erlaubt, deinen Job als Rotkappe zu erledigen, wie etwa Händler oder Bettelorden."
   },
@@ -2363,7 +2363,7 @@
     "description": "Der Charakter besitzt ein Reittier, Lasttier oder einen „Wachhund\" – eine Kreatur, die Scharfsinn statt Intelligenz besitzt und einen Machtwert von bis zu 25. Sie hat eine zusätzliche Persönlichkeitseigenschaft (Loyal 0) und gehorcht einfachen verbalen Befehlen. Besitzt sie einen positiven Scharfsinnwert, ist die Kreatur außerdem in der Lage, begrenzt aus eigener Initiative zu handeln. Wenn der Charakter nicht in der Lage ist, die Kreatur selbst zu trainieren, muss sie ein Geschenk eines anderen Charakters (wahrscheinlich eines mächtigen Magus) gewesen sein, und der Charakter muss einen Großen Geschichte-Fehler wählen, um die Konsequenzen darzustellen: Gefälligkeiten, um die Schuld gegenüber seinem Gönner zu verkörpern, ist die einfachste Möglichkeit; Feinde, falls das Reittier weggelockt wurde, ist ebenfalls denkbar. In diesem Fall kann nur ein Gefährte oder ein Charakter auf Magus-Ebene diese Tugend nehmen."
   },
   "virtue.magical_warder": {
-    "name": "Magischer Hüter",
+    "name": "Magischer Wächter",
     "summary": "Der Charakter wird von einem magischen Wesen begleitet, das über ihn wacht und darauf achtet, dass ihm kein Schaden widerfährt.",
     "description": "Der Charakter wird von einem magischen Wesen begleitet, das über ihn wacht und darauf achtet, dass ihm kein Schaden widerfährt. Das Wesen fordert nichts vom Charakter als Gegenleistung für seinen Dienst; beachte jedoch, dass ein mächtigerer Wächter weniger willens oder in der Lage ist, dem Charakter zu helfen, und seltener verfügbar ist, um ihn zu beschützen.\n\nEin klassisches Beispiel ist das Gespenst einer dem Charakter nahestehenden Person. Das Gespenst ist für jeden unsichtbar und unhörbar außer für dich, es sei denn, jemand besitzt das Zweite Gesicht oder ein anderes übernatürliches Mittel, es zu entdecken. Es kann sehen und hören, was um dich herum vorgeht, und deiner Gegenwart bis zu einem halben Tag fernbleiben – es ist daher ein guter Spion. Beispielwerte für einen solchen Magischen Wächter finden sich auf Seite 457.\n\nGestalte dieses Wesen als magischen Charakter nach den Richtlinien in Kapitel 13 oder in Sphären der Macht: Magie – ein geisterhafter Wächter ist ein gutes Beispiel für einen Gefährtencharakter; er ist weniger mächtig und im Grunde eine Verlängerung des Willens des Charakters, während die Unterstützung eines mächtigeren Wächters seltener und noch situationsabhängiger ist."
   },
@@ -2927,7 +2927,7 @@
     "summary": "Dieser Charakter ist im Konvent aufgewachsen, wurde für den Kampf in der Turba ausgebildet und hat einiges von den vertrauenswürdigen Dienern der Magi aufgeschnappt."
   },
   "virtue.unaffected_by_the_gift": {
-    "name": "Unbeeindruckt von der Gabe",
+    "name": "Unempfindlich gegenüber der Gabe",
     "summary": "Der Charakter ist von den negativen Auswirkungen der Gabe oder des Magischen Flairs anderer nicht betroffen.",
     "description": "Der Charakter ist von den negativen Auswirkungen der Gabe oder des Magischen Flairs anderer nicht betroffen. Selbst eine Auffällige Gabe stört den Charakter nicht sonderlich."
   },
