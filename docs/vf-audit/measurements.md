@@ -572,6 +572,106 @@ carry 16 further rows. The effect has no sign field; "bad" is implied by `kind: 
 
 ---
 
+## § 8 row 14 — D18 / D31: the 21 table disagreements, re-derived (X8d)
+
+Re-derived 2026-09-30 at `8c2a252`. `rules/i18n/de/` and `rules/source/de/` are
+unmodified in the working tree; the tables are unchanged since `d779d92`. Input
+list: gitignored `tmp/table-sync-check.md` §§ 1a-1e, whose verdicts D31 withdrew.
+
+Test per row, in CLAUDE.md's order. **D31 amends only D7 rule 1**, so rules 3 and
+4 still apply: (1) rule fact → rulebook (no row here turns on one); (2) name →
+**table**, and the stale heading breaks no tie; (3) table vs table → thematic
+table before `tugenden-fehler.md`; (4) a row tagged in its own cells with
+another book is not in the dispute, and the shipped name stays.
+
+```sh
+jq -r '."<id>".name' rules/i18n/de/virtues_flaws.json
+grep -rn -a "| <EN name>" rules/source/de/translation-tables/
+grep -n -a "^#### <DE heading>" "rules/source/de/Ars Magica Definitive Edition Basisregeln.md"
+jq -r '.[] | select(.id=="<id>") | .source.lines[0]' rules/core/virtues_flaws.json
+```
+
+All 30 headings compared sit exactly at their entry's `source.lines[0]`, and
+**heading = current in every row**, which is expected because the shipped data was
+generated from that copy. So the heading column reads `= current`.
+
+### Live name disagreements (19 cases, 20 ids)
+
+| # | id | current | table (row) | heading | verdict |
+|---|---|---|---|---|---|
+| 1 | `virtue.fabric_ripper` | Stoffreißer | Stoffzerreißer (`tugenden-fehler.md:118`) | = current | **adopt** |
+| 2 | `virtue.leather_ripper` | Lederreißer | Lederzerreißer (`tugenden-fehler.md:128`) | = current | **adopt** |
+| 3 | `flaw.susceptibility_to_divine_power` | Anfälligkeit für Göttliche Macht | Anfälligkeit für Göttliche Kraft (`tugenden-fehler.md:353`) | = current | **adopt** |
+| 4 | `flaw.susceptibility_to_faerie_power` | Anfälligkeit für Feenmacht | Anfälligkeit für Feenkraft (`tugenden-fehler.md:354`) | = current | **adopt** |
+| 5 | `flaw.susceptibility_to_infernal_power` | Anfälligkeit für Höllische Macht | Anfälligkeit für Infernale Kraft (`tugenden-fehler.md:355`) | = current | **adopt** |
+| 6 | `flaw.imagined_folk_tradition_vulnerability` | Eingebildete Volksüberlieferungsanfälligkeit | Eingebildete Volksmagie-Verwundbarkeit (`tugenden-fehler.md:348`) | = current | **adopt** |
+| 7 | `flaw.tainted_offspring` | Befleckter Nachwuchs | Befleckter Nachkomme (`sphären-mächte.md:280`) | = current | **adopt** |
+| 8 | `flaw.hobbled` | Humpelnd | Verkrüppelt (`grundbegriffe.md:331`) | = current | **adopt, but it collides** — `flaw.crippled` ships *Verkrüppelt* and no table row names Crippled. Open item 2 |
+| 9 | `flaw.stigmatic_catalyst` | Stigma-Katalysator | Stigmatischer Katalysator (`grundbegriffe.md:317`) | = current | **adopt** |
+| 10 | `virtue.independent_study` | Unabhängiges Studium | Eigenständiges Studium (`grundbegriffe.md:348`) | = current | **adopt** |
+| 11 | `virtue.lone_redcap` | Einsame Rotkappe | Einzelgänger-Rotkappe (`reputationen.md:111`; `tugenden-fehler.md:671`, tagged `HdH:WL`, agrees) | = current | **adopt** |
+| 12 | `flaw.feral_scent` | Wilder Geruch | Wildgeruch (`reputationen.md:110`; `:137` agrees) | = current | **adopt** |
+| 13 | `flaw.apostate` | Apostat | Abtrünniger (`reputationen.md:102`); `tugenden-fehler.md:794` *Apostat* is `SdM:G`-tagged, so rule 4 puts it out | = current | **adopt** |
+| 14 | `flaw.gender_nonconforming_major` / `_minor` | Geschlechtsnichtkonform (Groß) / (Klein) | Geschlechtsnonkonform (`tugenden-fehler.md:923`, SdM:I section; the row's own cells carry no tag, and its Duden note is book-independent) | = current | **adopt** |
+| 15 | `virtue.homing_instinct` | Heimfindungsinstinkt | Ortsgespür (`tugenden-fehler.md:126`, cell `SdM:M; …`, core section) | = current | **keep** (rule 4). Open item 1 |
+| 16 | `virtue.magical_warder` | Magischer Hüter | Magischer Wächter (`tugenden-fehler.md:168`, `SdM:M; …`) | = current | **keep** (rule 4). Open item 1 |
+| 17 | `virtue.unaffected_by_the_gift` | Unbeeindruckt von der Gabe | Unempfindlich gegenüber der Gabe (`tugenden-fehler.md:225`, `SdM:M; …`) | = current | **keep** (rule 4). Open item 1 |
+| 18 | `virtue.gender_shift` | Geschlechtswechsel | Geschlechtswandel (`tugenden-fehler.md:924`, "SdM:I bleibt beim Buchstand") | = current | **keep** (rule 4). Open item 3 |
+| 19 | `virtue.sense_holiness_and_unholiness` | Gespür für Heiliges und Unheiliges | `tugenden-fehler.md:142` *Heiligkeit/Unheiligkeit spüren* against `fertigkeiten.md:83` *Gespür für Heiliges und Unheiliges* | = current | **keep**. Q-65: this is table vs table, so rule 3 applies, the thematic table wins, and the Ability name stays in step |
+
+### Already ship the table value (3), so no edit is owed
+
+`virtue.relic` *Reliquie* and `virtue.powerful_relic` *Mächtige Reliquie*
+(`tugenden-fehler.md:213`, `:169`), and `spell.curse_of_circe` *Fluch der Circe*
+(`zauber-nach-form.md`). All three were adopted under D18.
+
+### The seven reverts (D31, explicit)
+
+The shipped value equals today's (corrected) table row and heading. The value to
+restore is the row **before** our correction:
+
+```sh
+git show 4e14426 -- rules/source/de/translation-tables/ | grep -n -a "^[-+]|"
+git show f7e872f -- rules/source/de/translation-tables/ | grep -n -a "^[-+]|"
+```
+
+| id | current | table row today | pre-correction table value | verdict |
+|---|---|---|---|---|
+| `flaw.deteriorating_power` | Schwindende Macht ({power}) | `tugenden-fehler.md:344` | Schwindende Kraft (cell was `SdM:M; …`) | **revert** to *Schwindende Kraft ({power})*. Open item 1 |
+| `flaw.disorientating_magic` | Desorientierende Magie | `tugenden-fehler.md:298` | Desorientierungsmagie | **revert** |
+| `flaw.enfeebled` | Geschwächt | `tugenden-fehler.md:373` | Entkräftet | **revert** |
+| `flaw.environmental_magic_condition` | Magische Umweltbedingung | `tugenden-fehler.md:271` | Magische Umgebungsbedingung (both old rows agreed, including the untagged Klein one) | **revert** the name only. Removing the duplicate Klein row was a magnitude fact, so it stands (D6.1) |
+| `flaw.environmental_sensitivity` | Umweltempfindlichkeit | `tugenden-fehler.md:345` | Umgebungsempfindlichkeit | **revert** |
+| `flaw.vulnerable_magic` | Anfällige Magie ({condition}) | `grundbegriffe.md:350` | Verwundbare Magie | **revert** to *Verwundbare Magie ({condition})* |
+| `flaw.vulnerable_to_folk_tradition` | Anfällig für Volksüberlieferungen | `grundbegriffe.md:415` | Anfällig für Volkszauber | **revert** |
+
+### Counts, and where they differ from D31
+
+**Adopt 14 cases (15 ids) · keep 5 · revert 7 · already done 3.** D31 and the plan
+expect 19 adopts. The five keeps come from rules D31 never touched: rule 4 applies
+to four of them and rule 3 to one. The 19 appear to be the 18 still-live rows of
+the old 21 (21 minus Relic, Powerful Relic and Circe) plus Gender Shift, which the
+old report left out under rule 4.
+
+**Open for Norbert.**
+
+1. **An `SdM:M` tag on a core-section row.** Rows 15-17 are kept under rule 4, but
+   D31 reverts Deteriorating Power, whose original row carried the same `SdM:M;`
+   cell. Either all four are in the dispute (adopt three, revert one) or none of
+   them is (keep three, and Deteriorating Power keeps *Schwindende Macht*).
+2. **Hobbled → *Verkrüppelt*** would give two Flaws, Major and Minor, one label.
+   D31 withdraws the collision argument as evidence, but it does not rename
+   Crippled.
+3. **Gender Shift.** The row's SdM:I sentence concerns the *Befleckt* label, not
+   the name. If it does not scope the name, adopt *Geschlechtswandel*.
+
+A side effect, with no verdict change: the reverts and adopts leave three German
+stems for *Folk Tradition* (*Volkszauber*, *Volksmagie*, *Volksüberlieferung*).
+Nothing is filed upstream (D65 N7). The data edits owed are in the gitignored
+`tmp/x8d-handover.md`.
+
+---
+
 ## Handover § 8 — entry-less `ArMDE:` citations
 
 A citation is **entry-less** when its (first) line falls inside no V/F entry's
