@@ -952,6 +952,9 @@ param-label-focus = Focus
 param-label-area = Area
 param-label-language = Language
 param-label-characteristic = Characteristic
+# Cyclic Magic (Negative)'s cycle type — solar/lunar/seasonal (ArMDE:5893-5896,
+# X7a/D52).
+param-label-cycle = Cycle
 # Magical Blood's four bloodline sub-types — Magic Animal/Human/Spirit/Thing
 # (ArMDE:4359-4372).
 param-label-bloodline = Bloodline

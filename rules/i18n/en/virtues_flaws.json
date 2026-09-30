@@ -38,6 +38,15 @@
   "bloodline.magic_thing": {
     "name": "Magic Thing"
   },
+  "cycle.lunar": {
+    "name": "Lunar"
+  },
+  "cycle.seasonal": {
+    "name": "Seasonal"
+  },
+  "cycle.solar": {
+    "name": "Solar"
+  },
   "flaw.a_deal_with_the_devil": {
     "name": "A Deal with the Devil",
     "summary": "The character has sold his soul to the devil and now finds himself destined to infernal damnation."

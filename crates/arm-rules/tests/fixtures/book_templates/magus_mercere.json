@@ -11,7 +11,10 @@
       "ref": "flaw.ambitious_major"
     },
     {
-      "ref": "flaw.cyclic_magic_negative"
+      "ref": "flaw.cyclic_magic_negative",
+      "params": {
+        "cycle": "cycle.solar"
+      }
     },
     {
       "ref": "flaw.difficult_longevity_ritual"

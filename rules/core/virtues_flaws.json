@@ -622,6 +622,8 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
+    "parameters": [{ "key": "cycle", "type": "ref", "domain": "enumerated",
+      "values": ["cycle.solar", "cycle.lunar", "cycle.seasonal"] }],
     "effects": [{ "type": "lab_total_mod", "amount": -3 }],
     "source": { "anchor": "cyclic-magic-negative", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5893, 5896] }
   },
@@ -3702,7 +3704,6 @@
     "categories": ["general"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "lab_total_mod", "amount": 1 }],
     "source": { "anchor": "aristotelian-training", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3440, 3443] }
   },
   {

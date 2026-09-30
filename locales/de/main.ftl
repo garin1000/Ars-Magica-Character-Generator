@@ -992,6 +992,9 @@ param-label-focus = Fokus
 param-label-area = Gebiet
 param-label-language = Sprache
 param-label-characteristic = Eigenschaft
+# Zyklische Magie (negativ): der Zyklustyp — solar/lunar/saisonal
+# (ArMDE:5893-5896, X7a/D52).
+param-label-cycle = Zyklus
 # Magisches Blut, die vier Blutlinien-Subtypen — Magisches Tier/Magischer
 # Mensch/Magischer Geist/Magisches Ding (ArMDE:4359-4372).
 param-label-bloodline = Blutlinie

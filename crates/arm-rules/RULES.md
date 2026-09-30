@@ -6158,7 +6158,22 @@ it computes). Full per-entry citation and D58 reasoning:
   precise mechanic (a *doubling*, of the *aura's* penalties) that "Circumstantial"
   would throw away in the one place the player reads it. The value the engine
   cannot compute lives in the Flaw's own rules text in `rules/i18n/<lang>/`.
-- **Flat lab-total bonus/penalty** — `virtue.adept_laboratory_student` (ArMDE:3368-3371), `virtue.aristotelian_training` (ArMDE:3440-3443), `virtue.inventive_genius` (ArMDE:4151-4154), `flaw.creative_block` (ArMDE:5873-5876), `flaw.weak_scholar` (ArMDE:7080-7083), `virtue.potent_magic_major` (ArMDE:4740-4781), `virtue.potent_magic_minor` (ArMDE:4740-4781)
+- **Flat lab-total bonus/penalty** — `virtue.adept_laboratory_student` (ArMDE:3368-3371), `virtue.inventive_genius` (ArMDE:4151-4154), `flaw.creative_block` (ArMDE:5873-5876), `flaw.weak_scholar` (ArMDE:7080-7083), `virtue.potent_magic_major` (ArMDE:4740-4781), `virtue.potent_magic_minor` (ArMDE:4740-4781), `virtue.cyclic_magic_positive` (ArMDE:3635-3638), `flaw.cyclic_magic_negative` (ArMDE:5893-5896)
+
+  **X7a/D4 correction**: "flat" here means only "an unconditional `LabTotalMod`
+  effect in the JSON, read by D1's `effective::lab_total_mod` for
+  `spell_level_cap`." As of X7a it is no longer true for the **in-play** Lab
+  Total grid: `adept_laboratory_student`, `weak_scholar` and
+  `cyclic_magic_positive` never apply there (D4 — their condition cannot hold
+  at character generation), and `cyclic_magic_negative` applies there unless
+  its `cycle` parameter is `cycle.seasonal` (D52). Only `inventive_genius`,
+  `creative_block` and both Potent Magic entries stay flat in **both**
+  consumers. See `derived.rs::in_play_lab_total_mod`.
+
+  `virtue.aristotelian_training` (ArMDE:3440-3443) is no longer in this list:
+  X7a deleted its `lab_total_mod` effect entirely (D4 — its condition can
+  never be satisfied by anything this app models, not even D1's generous flat
+  fold), so the +1 is now purely textual in `description`.
 
   **Two items were listed here and belong to neither family.** `flaw.disjointed_magic`
   carries `special_casting_mod { circumstantial }`, never a `lab_total_mod`, and
@@ -6401,7 +6416,8 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 |---|---|---|---|
 | `MagicalFocus { param(Text), major }` | Magical Focus — major/minor/mythic_blood | ArMDE:4399-4422, 4536-4542, 4573-4589 | computed |
 | `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | ArMDE:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed; conditional ones folded **unconditionally** (no toggle exists), surfaced per scope as the `casting_mod_formulaic`/`_ritual`/`_spontaneous` addends |
-| `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), aristotelian_training (+1), creative_block (−3), weak_scholar (−6), cyclic_magic, potent_magic | ArMDE:3368-3371, 4151-4154, 3440-3443, 5873-5876, 7080-7083, 4740-4781 | computed |
+| `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), creative_block (−3), weak_scholar (−6), cyclic_magic (±3), potent_magic. Flat only for `spell_level_cap` (D1); the in-play grid excludes/cycle-gates several of these per D4/D52, see the "Flat lab-total bonus/penalty" bullet above and `derived.rs::in_play_lab_total_mod` (X7a). `virtue.aristotelian_training`'s `+1` (ArMDE:3440-3443) was deleted (X7a/D4) and no longer carries this effect. | ArMDE:3368-3371, 4151-4154, 5873-5876, 7080-7083, 3635-3638, 5893-5896, 4740-4781 | computed |
+| `flaw.cyclic_magic_negative`'s `parameters` — `cycle` (Enumerated: `cycle.solar`/`cycle.lunar`/`cycle.seasonal`) | D9/D52/X7a: "attuned to some cycle of nature (solar, lunar, or seasonal, for example)" (ArMDE:3637, mirrored at :5893-5896 for the Flaw) is a stated choice D9 obliges recording. Read only by `derived.rs::in_play_lab_total_mod`: `cycle.seasonal` suppresses the −3 in the in-play grid (D52 — a seasonal cycle is exactly as uncertain at creation as the Virtue's bonus); solar/lunar/absent apply the flat −3. `virtue.cyclic_magic_positive` needs no parameter — its in-play Lab answer is "no" regardless of cycle type. i18n: `param-label-cycle` (`.ftl`), `cycle.solar`/`cycle.lunar`/`cycle.seasonal` (`rules/i18n/<lang>/virtues_flaws.json`) | ArMDE:3635-3638, 5893-5896 | computed (lab_mod only; D1's `spell_level_cap` fold ignores it, matching every other carrier) |
 | `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | ArMDE:5913-5915, 5909-5912 | computed |
 | `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic. Two items have left this family: weak_magic_resistance in the round-5 audit (`ArMDE:7070` halves nothing), and flawed_parma_magica with row 35 (it halves one *addend* against one *Form*, which is not a whole total — see **Magic-resistance modifier** above). `HalvableTotal::MagicResistance` was deleted with the second of them | ArMDE:7084-7089, 7060-7063, 5962-5964, 7064-7067 | **computed** (round-2 audit finding GD3 closed the last gap): `spontaneous_casting`, `penetration`, `lab_longevity` (since M5.5a), and now `lab_enchanting` too — folded into the new `LabTotal.enchanting` field in `derived/lab.rs::lab_totals` (Deficiency first, then this halving, per `ArMDE:7060-7063`'s own stated order). Round 3 (G1) wired `enchanting` into `masterpiece_item_cap` too — the one remaining consumer of a Lab Total that used to read `total` instead — and into the frontend `LabTotal` type / `DerivedTotalsPanel` (G2) |
 | `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | ArMDE:5145-5147, 6190-6193, 3500-3503 | computed |
@@ -6512,7 +6528,17 @@ round 4 (Gerda 5) established that no toggle exists anywhere in `crates/` or
 true:
 
 - `LabTotalMod` — folded, and **labelled** as the `lab_mod` addend
-  (`derived/lab.rs::lab_totals`).
+  (`derived/lab.rs::lab_totals`). **X7a/D4 correction**: as of X7a, this is no
+  longer true for every carrier. `effective/spell.rs::lab_total_mod` (D1)
+  still folds every carrier unconditionally for `spell_level_cap` only; the
+  in-play `lab_mod` addend above is folded by a **separate** function,
+  `derived.rs::in_play_lab_total_mod`, which hard-excludes
+  `virtue.adept_laboratory_student`, `flaw.weak_scholar` and
+  `virtue.cyclic_magic_positive` (their condition never holds at character
+  generation) and cycle-gates `flaw.cyclic_magic_negative` (no penalty when
+  its `cycle` parameter is `cycle.seasonal`, D52). Inventive Genius, Creative
+  Block and both Potent Magic entries are unaffected — see the "Flat
+  lab-total bonus/penalty" and `LabTotalMod` rows below.
 - `CastingTotalMod` — folded, and labelled since round 4 as the three per-scope
   `casting_mod_*` addends (`derived/casting.rs::CastingTotal`); before that it
   was folded into the printed figure with nothing on screen accounting for it.
@@ -7713,6 +7739,17 @@ Abilities are bought with experience earned in blocks, not from one bank:
   than adjusting it, because the passage states the whole rate. Engine reading where
   the text is silent: if several selections ever name a rate, the lowest applies —
   nothing ranks them, so this is the conservative and deterministic choice.
+- **D47/X7a — Guild Apprentice suppresses both, until the journeyman stage.**
+  `ArMDE:4041-4044`: "The character is not able to benefit from either the Poor
+  Flaw or the Wealthy Virtue … until he moves to the journeyman stage."
+  `LifeStageRules::later_life_rate` checks for `virtue.guild_apprentice` among
+  the entity's selections first and, if present, returns the ruleset's base
+  rate outright — skipping the `LaterLifeXpRate` fold entirely rather than
+  adding a new `Effect` variant or an `incompatible_with` (D47 rejects a
+  general "nullify any effect" mechanism for what is a single, narrow,
+  hardcoded check with one caller). Both `virtue.wealthy` and
+  `virtue.guild_apprentice` state the interaction in `description` (both
+  locales); test: `x7a_lab_rows.rs::guild_apprentice_suppresses_wealthys_later_life_rate`.
 - **Eligibility is a `Prereq` on the entry, not three profile lists (D38, F-339).**
   Before this milestone the "only companions" line was enforced twice
   explicitly (`magus` and `mythic_companion` each listed both ids in
@@ -10325,8 +10362,10 @@ the real load, the four listed Abilities read as `catalogued`, and the two
     printed Casting Totals (`ArMDE:1643-1650`) are now exact.
   - **`virtue.cyclic_magic_positive` / `flaw.cyclic_magic_negative`**: only
     the `casting_total_mod` clause is deleted; the `lab_total_mod` (X7a's
-    separate, still-open Lab Total correctness question) is untouched, so both
-    entries **stay** `in_play_effect`. The two `COMPUTED_ENTRY_COVERS_WHOLE_
+    separate Lab Total correctness question, since **resolved** — see the
+    "Flat lab-total bonus/penalty" bullet and the `LabTotalMod`/`cycle`
+    parameter rows above) is untouched by *this* deletion, so both entries
+    **stay** `in_play_effect`. The two `COMPUTED_ENTRY_COVERS_WHOLE_
     PASSAGE` exemption rows in `uncomputed_clauses.rs` that used to read "both
     stated bonuses... are computed via two effects" are **removed** (not left
     stale) — that guard matches by id only and never re-checks its own prose

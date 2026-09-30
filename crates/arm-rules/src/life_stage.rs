@@ -966,14 +966,30 @@ impl LifeStageRules {
     /// wins: nothing in the text ranks them, so the engine takes the conservative
     /// reading rather than depending on declaration order.
     ///
+    /// A Guild Apprentice is "not able to benefit from either the Poor Flaw or
+    /// the Wealthy Virtue … until he moves to the journeyman stage" (ArMDE:4041-4044,
+    /// D47) — so any named rate is suppressed outright for a holder of
+    /// `virtue.guild_apprentice`, falling straight through to the base rate. This
+    /// is a single narrow, hardcoded check (D47 explicitly rejects a general
+    /// "nullify any effect" mechanism for one caller), not a new [`Effect`]
+    /// variant or an `incompatible_with` (the book neutralises rather than
+    /// forbids holding both).
+    ///
     /// Source: ArMDE:2392, :2394.
     pub fn later_life_rate(&self, entity: &Entity, ruleset: &Ruleset) -> u32 {
+        let selections = selections_for_effects(entity, ruleset);
+        if selections
+            .iter()
+            .any(|s| s.item_ref == Id::new("virtue.guild_apprentice"))
+        {
+            return self.later_life.xp_per_year;
+        }
         // The base rate is not one of the candidates: a named rate replaces it
         // outright, so `min` is taken over the named rates only (or the base stands
         // when nothing names one). Folding the base in would make Wealthy's 20 lose
         // to it.
         let mut named: Option<u32> = None;
-        for selection in selections_for_effects(entity, ruleset).iter() {
+        for selection in selections.iter() {
             let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
                 continue;
             };

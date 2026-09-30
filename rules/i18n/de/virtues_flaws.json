@@ -38,6 +38,15 @@
   "bloodline.magic_thing": {
     "name": "Magisches Ding"
   },
+  "cycle.lunar": {
+    "name": "Lunar"
+  },
+  "cycle.seasonal": {
+    "name": "Saisonal"
+  },
+  "cycle.solar": {
+    "name": "Solar"
+  },
   "flaw.a_deal_with_the_devil": {
     "name": "Ein Pakt mit dem Teufel",
     "summary": "Der Charakter hat seine Seele dem Teufel verkauft und sieht sich nun der ewigen Verdammnis geweiht."
