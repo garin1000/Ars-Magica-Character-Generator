@@ -189,3 +189,32 @@ describe('ArtGrid effective-score badge', () => {
     expect(clean(textOf(body, 'data-testid="art-eff-art.creo"'))).toContain('5');
   });
 });
+
+// X10b (design-x10bc-save-format.md § 3): a banked-XP number input beside
+// each Art's score spinner — the "Z" of the book's own "X (Z)" notation
+// (ArMDE:1179). Labelled via the `art-banked-xp-label` Fluent key, never a
+// raw art id. Red-checkpoint protocol, phase 1: `ArtGrid.svelte`'s template
+// is untouched, so every assertion below fails looking for an element that
+// does not exist yet.
+describe('ArtGrid banked XP input (X10b)', () => {
+  it("renders a labelled number input beside every Art's score spinner", () => {
+    const body = html();
+    for (const id of [CREO, ANIMAL, CORPUS, IGNEM]) {
+      const tag = tagContaining(body, `data-testid="art-banked-xp-${id}"`);
+      expect(tag).toContain('type="number"');
+      expect(tag).toContain('aria-label="Banked XP"');
+    }
+  });
+
+  it('defaults to 0 when the entity records no banked XP', () => {
+    store.entity.art_scores = [{ art: CREO, score: 4 }];
+    const body = html();
+    expect(tagContaining(body, 'data-testid="art-banked-xp-art.creo"')).toContain('value="0"');
+  });
+
+  it('reads a banked XP value back from the entity', () => {
+    store.entity.art_scores = [{ art: CREO, score: 4, banked_xp: 7 }];
+    const body = html();
+    expect(tagContaining(body, 'data-testid="art-banked-xp-art.creo"')).toContain('value="7"');
+  });
+});

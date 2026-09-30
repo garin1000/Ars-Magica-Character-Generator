@@ -403,6 +403,8 @@ spell-level-label = Level
 # within-focus figure — i.e. the character holds a Magical Focus that could
 # cover it. The player's own claim the spell falls within that focus.
 spell-within-focus-label = Within focus
+# X10c (D73.2): the in-app per-spell Casting Total beside a known spell.
+spell-casting-total-label = Casting Total
 # The min/max level range filter (two inputs, inclusive bounds; empty = open).
 spell-level-min-label = Min level
 spell-level-max-label = Max level

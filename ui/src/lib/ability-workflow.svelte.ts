@@ -13,6 +13,7 @@
 // holds a copy, so `AppStore` stays the sole owner of the document and `dirty`
 // keeps comparing the very object these methods mutate.
 
+import { clampInt, U32_MAX } from './clamp';
 import type { AbilityParamValue, Entity, LocalizedRuleset } from './types';
 
 /** The slice of `AppStore` the Ability workflow needs, as live accessors so it
@@ -67,6 +68,23 @@ export class AbilityWorkflow {
     const spec = specialty.trim() ? specialty.trim() : undefined;
     entity.ability_scores = (entity.ability_scores ?? []).map((a, i) =>
       i === index ? { ...a, specialty: spec } : a,
+    );
+    this.#host.scheduleValidate();
+  }
+
+  /**
+   * Set (or clear) the banked XP at `index` — the "Z" of the book's own
+   * "X (Z)" notation (ArMDE:1177), XP already acquired toward the NEXT score.
+   * Unlike an Art, an Ability row's existence is already owned by
+   * {@link add}/{@link removeAt} (it is never upserted by score alone), so
+   * this never creates or deletes a row — only ever writes the field on one
+   * that already exists.
+   */
+  setBankedXpAt(index: number, xp: number): void {
+    const entity = this.#host.entity();
+    const clamped = clampInt(xp, 0, U32_MAX);
+    entity.ability_scores = (entity.ability_scores ?? []).map((a, i) =>
+      i === index ? { ...a, banked_xp: clamped === 0 ? undefined : clamped } : a,
     );
     this.#host.scheduleValidate();
   }

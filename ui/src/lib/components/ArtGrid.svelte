@@ -39,6 +39,12 @@
     return store.effective?.art_bonuses?.find((b) => b.art === artId)?.bonus ?? 0;
   }
 
+  // X10b: the "Z" of the book's own "X (Z)" notation (ArMDE:1179) — XP already
+  // banked toward the next score.
+  function bankedXpOf(artId: string): number {
+    return store.entity.art_scores?.find((a) => a.art === artId)?.banked_xp ?? 0;
+  }
+
   // The bought score `bonusOf` was computed against — NOT the live one the spinner
   // shows (#16). The spinner is direct feedback and must move on the keystroke; the
   // badge is a bought+bonus pair, and mixing a fresh half with a stale one renders a
@@ -92,6 +98,19 @@
                     <span class="spinner-value" data-testid="art-score-{art.id}">{score}</span>
                   {/snippet}
                 </Spinner>
+                <input
+                  type="number"
+                  min="0"
+                  class="spinner-value-input"
+                  aria-label={store.t('art-banked-xp-label')}
+                  value={bankedXpOf(art.id)}
+                  oninput={(e) =>
+                    store.setArtBankedXp(
+                      art.id,
+                      Number((e.currentTarget as HTMLInputElement).value),
+                    )}
+                  data-testid="art-banked-xp-{art.id}"
+                />
                 {#if bonus !== 0}
                   <span class="eff-slot">
                     <span class="eff-badge" data-testid="art-eff-{art.id}">

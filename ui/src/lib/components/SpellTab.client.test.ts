@@ -1,7 +1,13 @@
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { EffectiveScores, Entity, LocalizedRuleset, ValidationResult } from '../types';
+import type {
+  DerivedTotals,
+  EffectiveScores,
+  Entity,
+  LocalizedRuleset,
+  ValidationResult,
+} from '../types';
 
 // S3 (tmp/review/review-round-2-sabine.md): adding a General Ritual spell
 // through the ordinary "Add" click defaulted its level to the flat
@@ -147,5 +153,64 @@ describe('SpellTab defaults a new General Ritual to a legal level (S3)', () => {
 
     await store.revalidate();
     expect(store.result?.issues.filter((i) => i.severity === 'error')).toEqual([]);
+  });
+});
+
+// X10c: the within-focus toggle writes through the store like every other
+// picker edit. A `client` test because it exercises the real `onchange`
+// wiring, not just the rendered markup. Red-checkpoint protocol, phase 1:
+// `SpellTab.svelte` carries no such toggle yet, so `toggle` throws looking
+// for an element that does not exist.
+describe('SpellTab within-focus toggle writes through the store (X10c)', () => {
+  function mountTab(): void {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(SpellTab, { target });
+    flushSync();
+  }
+
+  function toggle(): HTMLInputElement {
+    const testid = `spell-within-focus-${RITUAL}-0`;
+    const el = target.querySelector<HTMLInputElement>(`[data-testid="${testid}"]`);
+    if (!el) throw new Error(`within-focus toggle not rendered: no [data-testid="${testid}"]`);
+    return el;
+  }
+
+  beforeEach(() => {
+    store.derived = {
+      casting_totals: [
+        {
+          technique: 'art.creo',
+          form: 'art.animal',
+          within_focus: {
+            focus_art: 0,
+            formulaic: 41,
+            ritual: 41,
+            spontaneous_fatiguing: 20,
+            spontaneous_non_fatiguing: 20,
+          },
+        },
+      ],
+    } as unknown as DerivedTotals;
+  });
+
+  it('toggling on writes within_focus: true onto the spell selection', () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20 }];
+    mountTab();
+    const input = toggle();
+    input.checked = true;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.spells![0].within_focus).toBe(true);
+  });
+
+  it('toggling back off clears within_focus', () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_focus: true }];
+    mountTab();
+    const input = toggle();
+    input.checked = false;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.spells![0].within_focus ?? false).toBe(false);
   });
 });

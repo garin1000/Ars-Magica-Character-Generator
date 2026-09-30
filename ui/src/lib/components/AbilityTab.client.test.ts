@@ -326,3 +326,63 @@ describe('AbilityTab parameter picker combo box (CV7)', () => {
     });
   });
 });
+
+// X10b: the banked-XP input writes through the store like every other picker
+// edit, and dirties the document exactly as any other entity edit does. A
+// `client` test because it exercises the real `oninput` wiring, not just the
+// rendered markup. Red-checkpoint protocol, phase 1: `AbilityTab.svelte`
+// carries no such input yet, so `bankedXpInput` throws looking for an element
+// that does not exist.
+describe('AbilityTab banked XP input writes through the store (X10b)', () => {
+  function bankedXpInput(): HTMLInputElement {
+    const testid = `ability-banked-xp-${ATHLETICS}-0`;
+    const el = target.querySelector<HTMLInputElement>(`[data-testid="${testid}"]`);
+    if (!el) throw new Error(`banked XP input not rendered: no [data-testid="${testid}"]`);
+    return el;
+  }
+
+  it("writes a typed value onto the Ability row's banked_xp", () => {
+    const input = bankedXpInput();
+    input.value = '4';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(store.entity.ability_scores![0].banked_xp).toBe(4);
+  });
+
+  it('typing 0 clears/omits the banked XP, leaving the bought score alone', () => {
+    store.entity.ability_scores = [{ ability: ATHLETICS, score: 3, banked_xp: 4 }];
+    flushSync();
+    const input = bankedXpInput();
+    input.value = '0';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(store.entity.ability_scores![0].score).toBe(3);
+    expect(store.entity.ability_scores![0].banked_xp ?? 0).toBe(0);
+  });
+
+  it('dirties the document when banked XP is edited', async () => {
+    // A CLEAN baseline, which the dirty assertion needs and only a load can
+    // give (mirrors SagaYearField.client.test.ts). `mockResolvedValueOnce`
+    // short-circuits the deferred `effectiveScores` mock for exactly the one
+    // call `open()`'s own revalidate makes.
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/saga.armc',
+      entity: { ...store.entity },
+      migrated_aging_characteristics: [],
+    });
+    vi.mocked(ipc.effectiveScores).mockResolvedValueOnce({
+      ability_bonuses: [],
+    } as unknown as EffectiveScores);
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+    flushSync();
+    expect(store.dirty).toBe(false);
+
+    const input = bankedXpInput();
+    input.value = '2';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(store.dirty).toBe(true);
+  });
+});

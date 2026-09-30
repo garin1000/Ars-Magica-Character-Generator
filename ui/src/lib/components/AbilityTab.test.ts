@@ -651,3 +651,38 @@ describe('AbilityTab parameter picker (CV7)', () => {
     expect(html()).not.toContain('data-testid="ability-param-hint-ability.dead_language-0"');
   });
 });
+
+// X10b (design-x10bc-save-format.md § 3): a banked-XP number input beside
+// each bought Ability's score — the "Z" of the book's own "X (Z)" notation
+// (ArMDE:1177). Labelled via the `ability-banked-xp-label` Fluent key, never a
+// raw ability id. Red-checkpoint protocol, phase 1: `AbilityTab.svelte`'s
+// template is untouched, so every assertion below fails looking for an
+// element that does not exist yet.
+describe('AbilityTab banked XP input (X10b)', () => {
+  beforeEach(() => {
+    store.entity.ability_scores = [{ ability: 'ability.athletics', score: 3 }];
+  });
+
+  function bankedXpTag(body: string): string {
+    const match = /<input[^>]*data-testid="ability-banked-xp-ability\.athletics-0"[^>]*>/.exec(
+      body,
+    );
+    if (!match) throw new Error('no banked XP input for ability.athletics-0');
+    return match[0];
+  }
+
+  it("renders a labelled number input beside the Ability's score", () => {
+    const tag = bankedXpTag(html());
+    expect(tag).toContain('type="number"');
+    expect(tag).toContain('aria-label="Banked XP"');
+  });
+
+  it('defaults to 0 when the entity records no banked XP', () => {
+    expect(bankedXpTag(html())).toContain('value="0"');
+  });
+
+  it('reads a banked XP value back from the entity', () => {
+    store.entity.ability_scores = [{ ability: 'ability.athletics', score: 3, banked_xp: 6 }];
+    expect(bankedXpTag(html())).toContain('value="6"');
+  });
+});

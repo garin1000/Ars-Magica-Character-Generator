@@ -16,6 +16,7 @@
     ORDINARY_SPELL_MINIMUM_LEVEL,
     RITUAL_MINIMUM_LEVEL_FALLBACK,
     usedSpellForms,
+    spellCastingTotal,
     spellDisplayName,
   } from '../derive';
   import type { SelectedSpellGroup } from '../derive';
@@ -261,6 +262,25 @@
     return { text: store.ruleset?.i18n[spellId]?.description ?? undefined };
   }
 
+  // X10c (design-x10bc-save-format.md § 3): whether this spell's own
+  // (Technique, Form) cell carries a within-focus figure at all — the same
+  // `within_focus != null` gate `DerivedLabCastingSection.svelte` already uses
+  // for its own column. The toggle is offered only when it could matter.
+  function hasFocusFigure(spell: Spell): boolean {
+    return (store.derived?.casting_totals ?? []).some(
+      (c) => c.technique === spell.technique && c.form === spell.form && c.within_focus != null,
+    );
+  }
+
+  // The in-app Casting Total for a known spell (X10c, D73.2) — a pure
+  // selector over figures the engine already computed; see `spellCastingTotal`
+  // in `derive.ts`.
+  function castingTotalOf(spell: Spell, chosen: SpellSelection): number | null {
+    const castingTotals = store.derived?.casting_totals;
+    if (!castingTotals) return null;
+    return spellCastingTotal(spell, castingTotals, chosen.within_focus ?? false);
+  }
+
   // The Spell Mastery special-ability catalogue (id order), for the per-spell
   // "add ability" picker. Empty when the ruleset ships no mastery catalogue.
   // Localized name/tooltip lookups for a catalogue entry live in
@@ -364,6 +384,8 @@
             {#snippet row(item: { selection: SpellSelection; index: number })}
               {@const chosen = item.selection}
               {@const i = item.index}
+              {@const cat = store.ruleset?.ruleset.spells?.[chosen.spell]}
+              {@const total = cat ? castingTotalOf(cat, chosen) : null}
               <li class:invalid-selection={invalidIds.has(chosen.spell)}>
                 <!-- Deliberately focusable, and NOT on the `<li>` (Sabine 3): a list
                      item is not interactive, and `use:tooltip` points
@@ -379,6 +401,29 @@
                   use:tooltip={tip(chosen.spell)}
                   data-testid="spell-name-{chosen.spell}-{i}">{rowLabel(chosen)}</span
                 >
+                {#if total != null}
+                  <span
+                    class="casting-total-badge"
+                    data-testid="spell-casting-total-{chosen.spell}-{i}"
+                  >
+                    {store.t('spell-casting-total-label')}: {total}
+                  </span>
+                {/if}
+                {#if cat && hasFocusFigure(cat)}
+                  <label class="within-focus-toggle">
+                    <input
+                      type="checkbox"
+                      aria-label={store.t('spell-within-focus-label')}
+                      checked={chosen.within_focus ?? false}
+                      onchange={(e) =>
+                        store.setSpellWithinFocusAt(
+                          i,
+                          (e.currentTarget as HTMLInputElement).checked,
+                        )}
+                      data-testid="spell-within-focus-{chosen.spell}-{i}"
+                    />
+                  </label>
+                {/if}
                 {#if isParametrized(chosen.spell)}
                   <!-- The target Form of a meta-magic Vim spell — display + identity
                      only, so the same spell can be taken once per distinct Form.

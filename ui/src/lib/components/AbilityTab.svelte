@@ -247,6 +247,12 @@
     );
   }
 
+  // X10b: the "Z" of the book's own "X (Z)" notation (ArMDE:1177) — XP already
+  // banked toward the next score.
+  function bankedXpOf(entry: AbilityScore): number {
+    return entry.banked_xp ?? 0;
+  }
+
   // The effective score shown: max(bought, granted floor) + bonus.
   function effectiveOf(
     score: number,
@@ -454,6 +460,21 @@
                   </span>
                 {/snippet}
               </Spinner>
+              {#if !unbought}
+                <input
+                  type="number"
+                  min="0"
+                  class="spinner-value-input"
+                  aria-label={store.t('ability-banked-xp-label')}
+                  value={bankedXpOf(entry)}
+                  oninput={(e) =>
+                    store.setAbilityBankedXpAt(
+                      i,
+                      Number((e.currentTarget as HTMLInputElement).value),
+                    )}
+                  data-testid="ability-banked-xp-{entry.ability}-{id}"
+                />
+              {/if}
               {#if effectiveOf(settledScore, entry.ability, entry.parameter) !== settledScore}
                 <span class="eff-slot">
                   <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{id}">

@@ -427,6 +427,8 @@ spell-level-label = Stufe
 # der ihn abdecken könnte. Die eigene Einschätzung des Spielers, dass der
 # Zauber innerhalb dieses Fokus liegt.
 spell-within-focus-label = Im Fokus
+# X10c (D73.2): die Zaubersumme eines bekannten Zaubers in der App.
+spell-casting-total-label = Zaubersumme
 spell-level-min-label = Stufe min
 spell-level-max-label = Stufe max
 spell-group-header = { $technique } { $form }

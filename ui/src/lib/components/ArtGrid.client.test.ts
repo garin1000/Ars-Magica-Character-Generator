@@ -26,6 +26,7 @@ vi.mock('../ipc', () => ({
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
+  confirmDiscard: vi.fn().mockResolvedValue(true),
 }));
 
 import * as ipc from '../ipc';
@@ -254,5 +255,78 @@ describe('ArtGrid effective-score badge staleness (#16)', () => {
     await first;
     flushSync();
     expect(badge()).toBe('5');
+  });
+});
+
+// X10b: the banked-XP input writes through the store like every other picker
+// edit. A `client` test because it exercises the real `oninput` wiring, not
+// just the rendered markup. Red-checkpoint protocol, phase 1: `ArtGrid.svelte`
+// carries no such input yet, so `bankedXpInput` throws looking for an element
+// that does not exist.
+describe('ArtGrid banked XP input writes through the store (X10b)', () => {
+  function bankedXpInput(art: string): HTMLInputElement {
+    const testid = `art-banked-xp-${art}`;
+    const el = target.querySelector<HTMLInputElement>(`[data-testid="${testid}"]`);
+    if (!el) throw new Error(`banked XP input not rendered: no [data-testid="${testid}"]`);
+    return el;
+  }
+
+  it("writes a typed value onto the Art's banked_xp", () => {
+    const input = bankedXpInput(CREO);
+    input.value = '5';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(store.entity.art_scores?.find((a) => a.art === CREO)?.banked_xp).toBe(5);
+  });
+
+  it('typing 0 clears/omits the banked XP, leaving the bought score alone', () => {
+    store.entity.art_scores = [{ art: CREO, score: 3, banked_xp: 5 }];
+    flushSync();
+    const input = bankedXpInput(CREO);
+    input.value = '0';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    const entry = store.entity.art_scores?.find((a) => a.art === CREO);
+    expect(entry?.score).toBe(3);
+    expect(entry?.banked_xp ?? 0).toBe(0);
+  });
+});
+
+// X10b, coordinator ruling (phase 2): `adjust()` used to prune the art_scores
+// row the moment score hit 0, which is correct when there is nothing else to
+// remember but DATA LOSS once the row can also carry banked_xp — lowering the
+// score to 0 would silently discard recorded XP. A row is pruned only once
+// BOTH fields are back to their defaults.
+describe('ArtGrid banked XP is never pruned while it is still positive (X10b)', () => {
+  it('creates a bare row (score 0) to hold banked XP alone', () => {
+    // IGNEM (not CREO): the shared `resetEntity()` already seeds a score-3 row
+    // for CREO, which is not what this test is about.
+    store.setArtBankedXp(IGNEM, 5);
+    flushSync();
+    expect(store.entity.art_scores?.find((a) => a.art === IGNEM)).toEqual({
+      art: IGNEM,
+      score: 0,
+      banked_xp: 5,
+    });
+  });
+
+  it('does not prune the row when the spinner lowers the score to 0 while banked XP remains', () => {
+    store.entity.art_scores = [{ art: CREO, score: 1, banked_xp: 5 }];
+    flushSync();
+    store.adjustArt(CREO, -1, MAX);
+    flushSync();
+    expect(store.entity.art_scores?.find((a) => a.art === CREO)).toEqual({
+      art: CREO,
+      score: 0,
+      banked_xp: 5,
+    });
+  });
+
+  it('prunes the row once BOTH score and banked XP return to 0', () => {
+    store.entity.art_scores = [{ art: CREO, score: 0, banked_xp: 5 }];
+    flushSync();
+    store.setArtBankedXp(CREO, 0);
+    flushSync();
+    expect(store.entity.art_scores?.find((a) => a.art === CREO)).toBeUndefined();
   });
 });

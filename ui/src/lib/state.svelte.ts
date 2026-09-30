@@ -1176,6 +1176,11 @@ class AppStore {
     this.#abilityWorkflow.setSpecialtyAt(index, specialty);
   }
 
+  /** @see AbilityWorkflow.setBankedXpAt */
+  setAbilityBankedXpAt(index: number, xp: number): void {
+    this.#abilityWorkflow.setBankedXpAt(index, xp);
+  }
+
   /** @see AbilityWorkflow.setParameterAt */
   setAbilityParameterAt(index: number, value: string): void {
     this.#abilityWorkflow.setParameterAt(index, value);
@@ -1428,6 +1433,11 @@ class AppStore {
     this.#artWorkflow.adjust(art, delta, max);
   }
 
+  /** @see ArtWorkflow.setBankedXp */
+  setArtBankedXp(art: string, xp: number): void {
+    this.#artWorkflow.setBankedXp(art, xp);
+  }
+
   /**
    * Point an Art-domain parameter of a selection at a specific Art (by id).
    *
@@ -1461,6 +1471,11 @@ class AppStore {
    */
   setSpellParameterAt(index: number, parameter: string | null): void {
     this.#spellWorkflow.setParameterAt(index, parameter);
+  }
+
+  /** @see SpellWorkflow.setWithinFocusAt */
+  setSpellWithinFocusAt(index: number, value: boolean): void {
+    this.#spellWorkflow.setWithinFocusAt(index, value);
   }
 
   /**

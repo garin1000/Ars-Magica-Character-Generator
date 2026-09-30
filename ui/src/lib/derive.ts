@@ -12,6 +12,7 @@ import type {
   Addend,
   Art,
   ArtType,
+  CastingTotal,
   Characteristic,
   ChildhoodEntry,
   ChildhoodPackage,
@@ -1327,6 +1328,26 @@ export const ORDINARY_SPELL_MINIMUM_LEVEL = 1;
  * `RITUAL_MIN_LEVEL`, which `ruleset.ritual_min_level` normally carries.
  */
 export const RITUAL_MINIMUM_LEVEL_FALLBACK = 20;
+
+/**
+ * The in-app Casting Total for one known spell (X10c, D73.2) — a pure
+ * SELECTOR over the two figures `casting_totals` already computed for the
+ * spell's own (Technique, Form) cell, never new rules math. Mirrors the
+ * engine's own selector exactly:
+ * `crates/arm-rules/src/derived/casting.rs::spell_casting_total`. `null` when
+ * no cell exists yet for that pair (e.g. before the first derived-totals
+ * pass).
+ */
+export function spellCastingTotal(
+  spell: Pick<Spell, 'technique' | 'form'>,
+  castingTotals: readonly CastingTotal[],
+  withinFocus: boolean | null | undefined,
+): number | null {
+  const cell = castingTotals.find((c) => c.technique === spell.technique && c.form === spell.form);
+  if (!cell) return null;
+  if (withinFocus && cell.within_focus != null) return cell.within_focus.formulaic;
+  return cell.formulaic;
+}
 
 /**
  * Whether a spell's Range makes it subject to Short-Ranged Magic's beyond-Touch

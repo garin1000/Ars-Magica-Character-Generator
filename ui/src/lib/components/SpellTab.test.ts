@@ -3,7 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { EffectiveScores, Entity, LocalizedRuleset } from '../types';
+import type {
+  CastingTotal,
+  DerivedTotals,
+  EffectiveScores,
+  Entity,
+  LocalizedRuleset,
+} from '../types';
 
 // The Spells tab reads the shared store singleton (ruleset catalogue + entity +
 // engine-derived effective scores) and the Fluent bundle. The store schedules a
@@ -389,5 +395,131 @@ describe('SpellTab separates a header-less group from the one above it (#8)', ()
     // And the broken selector is gone — any fix rebuilt on `:last-child` has the
     // same per-parent scoping bug.
     expect(appCss).not.toMatch(/^\.spell-list li:last-child/m);
+  });
+});
+
+// X10c (design-x10bc-save-format.md § 3): a per-spell "within the focus"
+// toggle, shown ONLY when the spell's own (Technique, Form) casting-total
+// cell carries a within-focus figure — the same `within_focus != null` gate
+// `DerivedLabCastingSection.svelte` already uses for its own column. Labelled
+// via the `spell-within-focus-label` Fluent key. Red-checkpoint protocol,
+// phase 1: `SpellTab.svelte`'s template is untouched, so every assertion
+// below fails looking for an element that does not exist yet.
+describe('SpellTab within-focus toggle (X10c)', () => {
+  function castingTotal(withinFocus: boolean): CastingTotal {
+    return {
+      technique: 'art.creo',
+      form: 'art.animal',
+      addends: [],
+      ritual_addends: [],
+      casting_mod_addends: [],
+      formulaic: 29,
+      ritual: 29,
+      spontaneous_fatiguing: 14,
+      spontaneous_non_fatiguing: 14,
+      within_focus: withinFocus
+        ? {
+            focus_art: 0,
+            formulaic: 41,
+            ritual: 41,
+            spontaneous_fatiguing: 20,
+            spontaneous_non_fatiguing: 20,
+          }
+        : null,
+      non_standard: {
+        voice_penalty: 0,
+        gesture_penalty: 0,
+        silent: 0,
+        still: 0,
+        silent_and_still: 0,
+        deft_form: false,
+      },
+      deficient: false,
+    };
+  }
+
+  function installDerived(withinFocus: boolean): void {
+    store.derived = {
+      casting_totals: [castingTotal(withinFocus)],
+    } as unknown as DerivedTotals;
+  }
+
+  function toggleTag(body: string): string {
+    const match = new RegExp(`<input[^>]*data-testid="spell-within-focus-${SPELL}-0"[^>]*>`).exec(
+      body,
+    );
+    if (!match) throw new Error(`no within-focus toggle for ${SPELL}-0`);
+    return match[0];
+  }
+
+  it('shows the toggle, labelled via the Fluent key, when the cell carries a within-focus figure', () => {
+    installDerived(true);
+    const tag = toggleTag(html());
+    expect(tag).toContain('type="checkbox"');
+    expect(tag).toContain('aria-label="Within focus"');
+  });
+
+  it('hides the toggle when the character holds no Magical Focus for this cell', () => {
+    installDerived(false);
+    expect(html()).not.toContain(`data-testid="spell-within-focus-${SPELL}-0"`);
+  });
+
+  it('hides the toggle before any derived totals have been computed', () => {
+    store.derived = null;
+    expect(html()).not.toContain(`data-testid="spell-within-focus-${SPELL}-0"`);
+  });
+
+  it("reflects the spell's own stored claim", () => {
+    installDerived(true);
+    store.entity.spells = [{ spell: SPELL, mastery: 1, within_focus: true }];
+    expect(toggleTag(html())).toContain('checked');
+  });
+});
+
+// X10c (design-x10bc-save-format.md § 3, D73.2): "X10c covers the marker and
+// the in-app totals" — a read-only per-spell Casting Total badge, selecting
+// between the two figures `casting_totals` already computed via the pure
+// `spellCastingTotal` selector (mirrors
+// `crates/arm-rules/src/derived/casting.rs::spell_casting_total`). Labelled
+// via the Fluent key `spell-casting-total-label` ("Casting Total").
+describe('SpellTab in-app Casting Total (D73.2)', () => {
+  function installDerived(formulaic: number, withinFocusFormulaic?: number): void {
+    store.derived = {
+      casting_totals: [
+        {
+          technique: 'art.creo',
+          form: 'art.animal',
+          formulaic,
+          within_focus:
+            withinFocusFormulaic == null
+              ? null
+              : {
+                  focus_art: 0,
+                  formulaic: withinFocusFormulaic,
+                  ritual: 0,
+                  spontaneous_fatiguing: 0,
+                  spontaneous_non_fatiguing: 0,
+                },
+        },
+      ],
+    } as unknown as DerivedTotals;
+  }
+
+  it('shows the base formulaic Casting Total for a known spell, labelled via the Fluent key', () => {
+    installDerived(29);
+    const badge = outer(html(), `spell-casting-total-${SPELL}-0`);
+    expect(badge).toContain('Casting Total');
+    expect(badge).toContain('29');
+  });
+
+  it('shows the within-focus figure once the player claims the spell is within the Focus', () => {
+    installDerived(29, 41);
+    store.entity.spells = [{ spell: SPELL, mastery: 1, within_focus: true }];
+    expect(outer(html(), `spell-casting-total-${SPELL}-0`)).toContain('41');
+  });
+
+  it('hides the total before any derived totals have been computed', () => {
+    store.derived = null;
+    expect(html()).not.toContain(`data-testid="spell-casting-total-${SPELL}-0"`);
   });
 });
