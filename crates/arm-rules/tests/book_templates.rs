@@ -1,6 +1,7 @@
 //! Conformance of every character template the core rulebook prints — the six
-//! **Grog Templates** (ArMDE:1191-1404), the five **Companion Templates**
-//! (ArMDE:1406-1597) and the twelve **Magus Templates** (ArMDE:1599-2199), one
+//! **Grog Templates** (ArMDE:1191-1404 `### Grog Templates`), the five
+//! **Companion Templates** (ArMDE:1406-1597 `### Companion Templates`) and the
+//! twelve **Magus Templates** (ArMDE:1599-2199 `### Magus Templates`), one
 //! per House — against this engine.
 //!
 //! Each template is transcribed into a save fixture under
@@ -132,7 +133,8 @@ fn stats(line: &CombatLine) -> (i32, Option<i32>, i32, Option<i32>) {
 }
 
 /// The five Fatigue-level penalties, in order. Every grog and companion template
-/// prints "OK, 0, -1, -3, -5, Unconscious" (e.g. ArMDE:1217, :1435); the engine
+/// prints "OK, 0, -1, -3, -5, Unconscious" (e.g. ArMDE:1217 `#### The
+/// Berserker`, :1435 `#### The Female Scholar`); the engine
 /// omits Unconscious, which is a state rather than an action penalty.
 const BOOK_FATIGUE_PENALTIES: [i32; 5] = [0, 0, -1, -3, -5];
 
@@ -143,7 +145,8 @@ fn wound_bounds(ranges: &[WoundRange]) -> Vec<(i32, Option<i32>)> {
 }
 
 /// Wound bands for a Size 0 character: -1 (1-5), -3 (6-10), -5 (11-15),
-/// Incapacitated (16-20), Dead (21+). Source: ArMDE:1255.
+/// Incapacitated (16-20), Dead (21+). Source: ArMDE:1255 `#### The Grizzled
+/// Veteran`.
 fn size_zero_wound_bounds() -> Vec<(i32, Option<i32>)> {
     vec![
         (1, Some(5)),
@@ -155,7 +158,7 @@ fn size_zero_wound_bounds() -> Vec<(i32, Option<i32>)> {
 }
 
 /// Wound bands for a Size +1 character: -1 (1-6), -3 (7-12), -5 (13-18),
-/// Incapacitated (19-24), Dead (25+). Source: ArMDE:1219.
+/// Incapacitated (19-24), Dead (25+). Source: ArMDE:1219 `#### The Berserker`.
 fn size_one_wound_bounds() -> Vec<(i32, Option<i32>)> {
     vec![
         (1, Some(6)),
@@ -167,7 +170,8 @@ fn size_one_wound_bounds() -> Vec<(i32, Option<i32>)> {
 }
 
 /// Wound bands for a Size +2 character: -1 (1-7), -3 (8-14), -5 (15-21),
-/// Incapacitated (22-28), Dead (29+). Source: ArMDE:1780.
+/// Incapacitated (22-28), Dead (29+). Source: ArMDE:1780 `#### Ex
+/// Miscellanea`.
 fn size_two_wound_bounds() -> Vec<(i32, Option<i32>)> {
     vec![
         (1, Some(7)),
@@ -179,7 +183,7 @@ fn size_two_wound_bounds() -> Vec<(i32, Option<i32>)> {
 }
 
 /// Wound bands for a Size -2 character: -1 (1-3), -3 (4-6), -5 (7-9),
-/// Incapacitated (10-12), Dead (13+). Source: ArMDE:2178.
+/// Incapacitated (10-12), Dead (13+). Source: ArMDE:2178 `#### Verditius`.
 fn size_minus_two_wound_bounds() -> Vec<(i32, Option<i32>)> {
     vec![
         (1, Some(3)),
@@ -248,7 +252,7 @@ fn the_bjornaer_matches_the_book() {
     assert_eq!(error_codes(&bjornaer, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&bjornaer, &ruleset), codes(&[]));
 
-    // Arts: Mu 10, Pe 3, In 1, Re 1, An 8, Co 8, Ig 0 (ArMDE:1634).
+    // Arts: Mu 10, Pe 3, In 1, Re 1, An 8, Co 8, Ig 0 (ArMDE:1634 `#### Bjornaer`).
     assert_eq!(art_score(&bjornaer, &ruleset, "art.muto"), 10);
     assert_eq!(art_score(&bjornaer, &ruleset, "art.perdo"), 3);
     assert_eq!(art_score(&bjornaer, &ruleset, "art.intellego"), 1);
@@ -257,14 +261,14 @@ fn the_bjornaer_matches_the_book() {
     assert_eq!(art_score(&bjornaer, &ruleset, "art.corpus"), 8);
     assert_eq!(art_score(&bjornaer, &ruleset, "art.ignem"), 0);
 
-    // "Heartbeast 2" (ArMDE:1632) — the House Virtue's free first point is a
+    // "Heartbeast 2" (ArMDE:1632 `#### Bjornaer`) — the House Virtue's free first point is a
     // floor, so the bought 2 stands.
     assert_eq!(
         ability_score(&bjornaer, &ruleset, "ability.heartbeast", None),
         2
     );
 
-    // Soak: +1 (ArMDE:1626).
+    // Soak: +1 (ArMDE:1626 `#### Bjornaer`).
     assert_eq!(soak(&bjornaer, &ruleset).total, 1);
 
     let fatigue: Vec<i32> = fatigue_levels(&bjornaer, &ruleset)
@@ -278,11 +282,11 @@ fn the_bjornaer_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1640.
+    // Encumbrance: 0 (0). Source: ArMDE:1640 `#### Bjornaer`.
     let enc = encumbrance(&bjornaer, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +1, Atk n/a, Def +4, Dam n/a. Source: ArMDE:1624.
+    // Dodging: Init +1, Atk n/a, Def +4, Dam n/a. Source: ArMDE:1624 `#### Bjornaer`.
     let lines = combat_totals(&bjornaer, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
@@ -293,7 +297,8 @@ fn the_bjornaer_matches_the_book() {
     // DISAGREEMENT MAG1 is resolved by deleting Ways of the Land's
     // `casting_total_mod` and reclassifying it to `uncomputed_rule` — no
     // template ever prints the boosted figure. The book prints MuAn +19,
-    // PeAn +12, ReAn +10 and the Corpus mirror of each (ArMDE:1643-1650) —
+    // PeAn +12, ReAn +10 and the Corpus mirror of each (ArMDE:1643-1650
+    // `#### Bjornaer`) —
     // Technique + Form + Stamina, with nothing else. No Magical Focus, so no
     // focused figure. `rules/core/virtues_flaws.json` has not been edited yet,
     // so the engine still adds the unconditional +3 until it is.
@@ -321,7 +326,7 @@ fn the_bonisagus_matches_the_book() {
     assert_eq!(error_codes(&bonisagus, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&bonisagus, &ruleset), codes(&[]));
 
-    // Int +5 (ArMDE:1656) is a bought +3 lifted by Great Intelligence twice.
+    // Int +5 (ArMDE:1656 `#### Bonisagus`) is a bought +3 lifted by Great Intelligence twice.
     assert_eq!(
         arm_rules::effective::effective_characteristic_score(
             &bonisagus,
@@ -331,19 +336,19 @@ fn the_bonisagus_matches_the_book() {
         5
     );
 
-    // Arts: Cr 12, Re 3, Au 12, Co 4 (ArMDE:1685).
+    // Arts: Cr 12, Re 3, Au 12, Co 4 (ArMDE:1685 `#### Bonisagus`).
     assert_eq!(art_score(&bonisagus, &ruleset, "art.creo"), 12);
     assert_eq!(art_score(&bonisagus, &ruleset, "art.rego"), 3);
     assert_eq!(art_score(&bonisagus, &ruleset, "art.auram"), 12);
     assert_eq!(art_score(&bonisagus, &ruleset, "art.corpus"), 4);
 
-    // "Magic Theory 4+2" (ArMDE:1683) — the House's free Puissant Magic Theory.
+    // "Magic Theory 4+2" (ArMDE:1683 `#### Bonisagus`) — the House's free Puissant Magic Theory.
     assert_eq!(
         ability_score(&bonisagus, &ruleset, "ability.magic_theory", None),
         6
     );
 
-    // Soak: 0 (ArMDE:1677).
+    // Soak: 0 (ArMDE:1677 `#### Bonisagus`).
     assert_eq!(soak(&bonisagus, &ruleset).total, 0);
 
     let fatigue: Vec<i32> = fatigue_levels(&bonisagus, &ruleset)
@@ -357,18 +362,18 @@ fn the_bonisagus_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1691.
+    // Encumbrance: 0 (0). Source: ArMDE:1691 `#### Bonisagus`.
     let enc = encumbrance(&bonisagus, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +0, Atk n/a, Def +0, Dam n/a. Source: ArMDE:1675.
+    // Dodging: Init +0, Atk n/a, Def +0, Dam n/a. Source: ArMDE:1675 `#### Bonisagus`.
     let lines = combat_totals(&bonisagus, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (0, None, 0, None)
     );
 
-    // Casting Totals, ArMDE:1694-1698: CrAu +24 (12 + 12 + Sta 0) on all four
+    // Casting Totals, ArMDE:1694-1698 `#### Bonisagus`: CrAu +24 (12 + 12 + Sta 0) on all four
     // Auram spells, CrCo +16.
     let casting = |spell: &str| spell_casting(&bonisagus, &ruleset, spell);
     assert_eq!(casting("spell.charge_of_the_angry_winds"), (24, None));
@@ -391,7 +396,7 @@ fn the_criamon_matches_the_book() {
     assert_eq!(error_codes(&criamon, &ruleset), codes(&[]));
     // DISAGREEMENT MAG2 (docs/book-template-conformance.md). The book lists seven
     // spells totalling the magus budget of 120 levels, but one of them —
-    // "Piercing the Magical Veil" (ArMDE:1745) — is a spell `rules/core/spells.json`
+    // "Piercing the Magical Veil" (ArMDE:1745 `#### Criamon`) — is a spell `rules/core/spells.json`
     // does not contain: the template links it to `#piercing-the-faerie-veil` and
     // adds "(see Piercing the Faerie Veil)", so the extraction folded the two into
     // the single `spell.piercing_the_faerie_veil`. The fixture can therefore carry
@@ -401,7 +406,7 @@ fn the_criamon_matches_the_book() {
         codes(&["spell_levels_unspent"])
     );
 
-    // Arts: Cr 4, In 6, Mu 4, Pe 4, Re 4, Im 2, Me 1, Vi 10 (ArMDE:1733).
+    // Arts: Cr 4, In 6, Mu 4, Pe 4, Re 4, Im 2, Me 1, Vi 10 (ArMDE:1733 `#### Criamon`).
     assert_eq!(art_score(&criamon, &ruleset, "art.creo"), 4);
     assert_eq!(art_score(&criamon, &ruleset, "art.intellego"), 6);
     assert_eq!(art_score(&criamon, &ruleset, "art.muto"), 4);
@@ -411,14 +416,14 @@ fn the_criamon_matches_the_book() {
     assert_eq!(art_score(&criamon, &ruleset, "art.mentem"), 1);
     assert_eq!(art_score(&criamon, &ruleset, "art.vim"), 10);
 
-    // "Enigmatic Wisdom 3+2" (ArMDE:1731) — Puissant Enigmatic Wisdom on a
+    // "Enigmatic Wisdom 3+2" (ArMDE:1731 `#### Criamon`) — Puissant Enigmatic Wisdom on a
     // bought 3, whose own first point the House Virtue already pays for.
     assert_eq!(
         ability_score(&criamon, &ruleset, "ability.enigmatic_wisdom", None),
         5
     );
 
-    // Soak: +2 (ArMDE:1725).
+    // Soak: +2 (ArMDE:1725 `#### Criamon`).
     assert_eq!(soak(&criamon, &ruleset).total, 2);
 
     let fatigue: Vec<i32> = fatigue_levels(&criamon, &ruleset)
@@ -432,18 +437,18 @@ fn the_criamon_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1739.
+    // Encumbrance: 0 (0). Source: ArMDE:1739 `#### Criamon`.
     let enc = encumbrance(&criamon, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +1, Atk n/a, Def +1, Dam n/a. Source: ArMDE:1723.
+    // Dodging: Init +1, Atk n/a, Def +1, Dam n/a. Source: ArMDE:1723 `#### Criamon`.
     let lines = combat_totals(&criamon, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (1, None, 1, None)
     );
 
-    // Casting Totals, ArMDE:1742-1748.
+    // Casting Totals, ArMDE:1742-1748 `#### Criamon`.
     let casting = |spell: &str| spell_casting(&criamon, &ruleset, spell);
     assert_eq!(casting("spell.phantasm_of_the_talking_head"), (8, None));
     assert_eq!(casting("spell.aura_of_ennobled_presence"), (8, None));
@@ -457,9 +462,10 @@ fn the_criamon_matches_the_book() {
 /// `tmp/x10-verdicts.md`). MAG2 (`docs/book-template-conformance.md`) is resolved
 /// by adding `spell.piercing_the_magical_veil` to `rules/core/spells.json` — In Vi
 /// 20, the Technique/Form/level *and* Casting Total the book itself prints for it,
-/// "Piercing the Magical Veil (InVi 20/+18)" (`ArMDE:1745`), distinct from its
-/// Faerie-veil sibling that same line links to and from which the extraction
-/// folded it (see MAG2's full account and `ArMDE:15709`, which only *names* the
+/// "Piercing the Magical Veil (InVi 20/+18)" (`ArMDE:1745` `#### Criamon`),
+/// distinct from its Faerie-veil sibling that same line links to and from
+/// which the extraction folded it (see MAG2's full account and
+/// `ArMDE:15709` `#### LEVEL 20`, which only *names* the
 /// Magical/Divine/Infernal siblings without printing Range/Duration/Target for
 /// any of them — a gap `tmp/x10-verdicts.md` records and does not invent a value
 /// for). Once that entry ships, this fixture — the book's own seven spells,
@@ -475,7 +481,7 @@ fn the_criamon_reaches_120_spell_levels_once_piercing_the_magical_veil_exists() 
     assert_eq!(error_codes(&criamon, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&criamon, &ruleset), codes(&[]));
 
-    // "Piercing the Magical Veil" (InVi 20/+18). Source: ArMDE:1745.
+    // "Piercing the Magical Veil" (InVi 20/+18). Source: ArMDE:1745 `#### Criamon`.
     let casting = |spell: &str| spell_casting(&criamon, &ruleset, spell);
     assert_eq!(casting("spell.piercing_the_magical_veil"), (18, None));
 }
@@ -492,7 +498,7 @@ fn the_ex_miscellanea_matches_the_book() {
     assert_eq!(error_codes(&ex_misc, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&ex_misc, &ruleset), codes(&[]));
 
-    // Str +4, Sta +4 (ArMDE:1754) are a bought +3 each plus Giant Blood's +1.
+    // Str +4, Sta +4 (ArMDE:1754 `#### Ex Miscellanea`) are a bought +3 each plus Giant Blood's +1.
     assert_eq!(
         arm_rules::effective::effective_characteristic_score(
             &ex_misc,
@@ -510,7 +516,7 @@ fn the_ex_miscellanea_matches_the_book() {
         4
     );
 
-    // Arts: Cr 8, Mu 4, Pe 3, Re 5, Co 1, Te 12+3 (ArMDE:1784).
+    // Arts: Cr 8, Mu 4, Pe 3, Re 5, Co 1, Te 12+3 (ArMDE:1784 `#### Ex Miscellanea`).
     assert_eq!(art_score(&ex_misc, &ruleset, "art.creo"), 8);
     assert_eq!(art_score(&ex_misc, &ruleset, "art.muto"), 4);
     assert_eq!(art_score(&ex_misc, &ruleset, "art.perdo"), 3);
@@ -518,7 +524,7 @@ fn the_ex_miscellanea_matches_the_book() {
     assert_eq!(art_score(&ex_misc, &ruleset, "art.corpus"), 1);
     assert_eq!(art_score(&ex_misc, &ruleset, "art.terram"), 15);
 
-    // Soak: +7 (Stamina +4, Tough +3). Source: ArMDE:1776.
+    // Soak: +7 (Stamina +4, Tough +3). Source: ArMDE:1776 `#### Ex Miscellanea`.
     assert_eq!(soak(&ex_misc, &ruleset).total, 7);
 
     let fatigue: Vec<i32> = fatigue_levels(&ex_misc, &ruleset)
@@ -532,18 +538,19 @@ fn the_ex_miscellanea_matches_the_book() {
         size_two_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1790.
+    // Encumbrance: 0 (0). Source: ArMDE:1790 `#### Ex Miscellanea`.
     let enc = encumbrance(&ex_misc, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init -2, Atk n/a, Def +1, Dam n/a. Source: ArMDE:1773.
-    // Grappling: Init -2, Attack +2, Defense +2, Damage n/a. Source: ArMDE:1774.
+    // Dodging: Init -2, Atk n/a, Def +1, Dam n/a. Source: ArMDE:1773 `#### Ex Miscellanea`.
+    // Grappling: Init -2, Attack +2, Defense +2, Damage n/a. Source: ArMDE:1774 `#### Ex Miscellanea`.
     // X10(d) target shape (docs/vf-audit/decisions.md D65 row N5,
     // tmp/x10-verdicts.md). MAG5 (docs/book-template-conformance.md) is resolved
     // by a zero-Load `weapon.grapple` in `rules/core/equipment.json` (Ability
     // Brawl, Init/Attack/Defense mods 0, no Damage) — the figures the bestiary's
-    // own Natural Weapons Table gives for "Grapple" (ArMDE:18561), which the book
-    // itself says use "Combat Statistics ... calculated as normal" (ArMDE:18551),
+    // own Natural Weapons Table gives for "Grapple" (ArMDE:18561 `### Natural
+    // Weapons Table`), which the book itself says use "Combat Statistics ...
+    // calculated as normal" (ArMDE:18551 `### 6. Combat Statistics`),
     // i.e. the same formula `derived/combat.rs::combat_totals` already applies to
     // a magus. Run through that formula with this magus's own Brawl 3
     // (grappling) — a specialty aligned to the fixture's grapple slot — and her
@@ -564,7 +571,7 @@ fn the_ex_miscellanea_matches_the_book() {
         (-2, Some(2), 2, None)
     );
 
-    // Casting Totals, ArMDE:1793-1799. Major Magical Focus (stone), so each cell
+    // Casting Totals, ArMDE:1793-1799 `#### Ex Miscellanea`. Major Magical Focus (stone), so each cell
     // carries a base and a within-focus figure; the book prints whichever applies
     // to the spell.
     let casting = |spell: &str| spell_casting(&ex_misc, &ruleset, spell);
@@ -578,7 +585,7 @@ fn the_ex_miscellanea_matches_the_book() {
     );
     // DISAGREEMENT MAG4 (docs/book-template-conformance.md). The book prints +27
     // for The Earth's Carbuncle and +23 for Hands of the Grasping Earth
-    // (ArMDE:1798-1799) although both are Re(Mu)Te 15 and its own Arts line gives
+    // (ArMDE:1798-1799 `#### Ex Miscellanea`) although both are Re(Mu)Te 15 and its own Arts line gives
     // Re 5 + Te 15 + Sta +4 = 24 base, 29 within the stone focus. The two figures
     // cannot both be right, and neither is either of the two the arithmetic
     // allows; the engine returns 24 / 29 for both rows.
@@ -596,14 +603,14 @@ fn the_flambeau_matches_the_book() {
     assert_eq!(error_codes(&flambeau, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&flambeau, &ruleset), codes(&[]));
 
-    // Arts: Cr 12, Pe 4, Re 5, Ig 12+3, Te 1 (ArMDE:1834).
+    // Arts: Cr 12, Pe 4, Re 5, Ig 12+3, Te 1 (ArMDE:1834 `#### Flambeau`).
     assert_eq!(art_score(&flambeau, &ruleset, "art.creo"), 12);
     assert_eq!(art_score(&flambeau, &ruleset, "art.perdo"), 4);
     assert_eq!(art_score(&flambeau, &ruleset, "art.rego"), 5);
     assert_eq!(art_score(&flambeau, &ruleset, "art.ignem"), 15);
     assert_eq!(art_score(&flambeau, &ruleset, "art.terram"), 1);
 
-    // Soak: +2 (ArMDE:1826).
+    // Soak: +2 (ArMDE:1826 `#### Flambeau`).
     assert_eq!(soak(&flambeau, &ruleset).total, 2);
 
     let fatigue: Vec<i32> = fatigue_levels(&flambeau, &ruleset)
@@ -617,18 +624,18 @@ fn the_flambeau_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1840.
+    // Encumbrance: 0 (0). Source: ArMDE:1840 `#### Flambeau`.
     let enc = encumbrance(&flambeau, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +1, Atk n/a, Def +4, Dam n/a. Source: ArMDE:1824.
+    // Dodging: Init +1, Atk n/a, Def +4, Dam n/a. Source: ArMDE:1824 `#### Flambeau`.
     let lines = combat_totals(&flambeau, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (1, None, 4, None)
     );
 
-    // Casting Totals, ArMDE:1843-1847. Every spell is a flame and so inside the
+    // Casting Totals, ArMDE:1843-1847 `#### Flambeau`. Every spell is a flame and so inside the
     // Major Magical Focus: Cr 12 + Ig 15 + Sta +2 = 29 base, + min(12, 15) = 41.
     // The book prints the focused figure; the engine reports both, because a
     // focus is free text and nothing relates it to a spell — MAG8 in
@@ -653,7 +660,7 @@ fn the_guernicus_matches_the_book() {
 
     // DISAGREEMENT MAG12 (docs/book-template-conformance.md) is why this fixture
     // carries `xp_pool: 432` where the age formula grants 435: the book prints
-    // "In 12+3 (5)" (ArMDE:1881) and `types.rs::ArtScore` stores a whole score
+    // "In 12+3 (5)" (ArMDE:1881 `#### Guernicus`) and `types.rs::ArtScore` stores a whole score
     // with nowhere to bank the 5 points toward the next one. Both code sets are
     // empty at 432 and not at 435, so the figure is exact in both directions.
     assert_eq!(error_codes(&guernicus, &ruleset), codes(&[]));
@@ -663,8 +670,8 @@ fn the_guernicus_matches_the_book() {
     // (docs/book-template-conformance.md), and the FIRST witness to it: the
     // Virtue's own entry says level **4** (ArMDE:4071-4073 `#### Hermetic
     // Prestige`), but this very template prints "Quaesitor (Hermetic) 3"
-    // (ArMDE:1869) — the same "3" the Darius worked example repeats
-    // (ArMDE:2518, the SECOND witness, `darius_of_flambeau_at_gauntlet_matches_the_book`
+    // (ArMDE:1869 `#### Guernicus`) — the same "3" the Darius worked example repeats
+    // (ArMDE:2518 `### Reputations`, the SECOND witness, `darius_of_flambeau_at_gauntlet_matches_the_book`
     // below). D11/Q5 makes score enforced and exact by default, so a stored 3
     // under a grant of exactly 4 no longer validates (the empty error set above
     // already proves it): the fixture is corrected to 4, following the Virtue's
@@ -673,7 +680,7 @@ fn the_guernicus_matches_the_book() {
     assert_eq!(guernicus.reputations.len(), 1);
     assert_eq!(guernicus.reputations[0].score, 4);
 
-    // Per +4 (ArMDE:1853) is a bought +3 lifted by Great Perception.
+    // Per +4 (ArMDE:1853 `#### Guernicus`) is a bought +3 lifted by Great Perception.
     assert_eq!(
         arm_rules::effective::effective_characteristic_score(
             &guernicus,
@@ -683,14 +690,14 @@ fn the_guernicus_matches_the_book() {
         4
     );
 
-    // Arts: In 12+3, Pe 2, Co 5, Im 6, Me 6 (ArMDE:1881).
+    // Arts: In 12+3, Pe 2, Co 5, Im 6, Me 6 (ArMDE:1881 `#### Guernicus`).
     assert_eq!(art_score(&guernicus, &ruleset, "art.intellego"), 15);
     assert_eq!(art_score(&guernicus, &ruleset, "art.perdo"), 2);
     assert_eq!(art_score(&guernicus, &ruleset, "art.corpus"), 5);
     assert_eq!(art_score(&guernicus, &ruleset, "art.imaginem"), 6);
     assert_eq!(art_score(&guernicus, &ruleset, "art.mentem"), 6);
 
-    // Soak: +0 (ArMDE:1873).
+    // Soak: +0 (ArMDE:1873 `#### Guernicus`).
     assert_eq!(soak(&guernicus, &ruleset).total, 0);
 
     let fatigue: Vec<i32> = fatigue_levels(&guernicus, &ruleset)
@@ -704,18 +711,18 @@ fn the_guernicus_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1887.
+    // Encumbrance: 0 (0). Source: ArMDE:1887 `#### Guernicus`.
     let enc = encumbrance(&guernicus, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +0, Atk n/a, Def +2, Dam n/a. Source: ArMDE:1871.
+    // Dodging: Init +0, Atk n/a, Def +2, Dam n/a. Source: ArMDE:1871 `#### Guernicus`.
     let lines = combat_totals(&guernicus, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (0, None, 2, None)
     );
 
-    // Casting Totals, ArMDE:1890-1895.
+    // Casting Totals, ArMDE:1890-1895 `#### Guernicus`.
     let casting = |spell: &str| spell_casting(&guernicus, &ruleset, spell);
     assert_eq!(casting("spell.physicians_eye"), (20, None));
     assert_eq!(casting("spell.eyes_of_the_eagle"), (21, None));
@@ -738,7 +745,7 @@ fn the_jerbiton_matches_the_book() {
     assert_eq!(error_codes(&jerbiton, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&jerbiton, &ruleset), codes(&[]));
 
-    // Arts: Cr 6, In 1, Mu 6, Pe 1, Re 6, Co 5, Im 10 (ArMDE:1930).
+    // Arts: Cr 6, In 1, Mu 6, Pe 1, Re 6, Co 5, Im 10 (ArMDE:1930 `#### Jerbiton`).
     assert_eq!(art_score(&jerbiton, &ruleset, "art.creo"), 6);
     assert_eq!(art_score(&jerbiton, &ruleset, "art.intellego"), 1);
     assert_eq!(art_score(&jerbiton, &ruleset, "art.muto"), 6);
@@ -747,11 +754,11 @@ fn the_jerbiton_matches_the_book() {
     assert_eq!(art_score(&jerbiton, &ruleset, "art.corpus"), 5);
     assert_eq!(art_score(&jerbiton, &ruleset, "art.imaginem"), 10);
 
-    // "Music 4+2" (ArMDE:1928) — the House's free Minor Virtue, spent on
-    // Puissant Music (ArMDE:1950).
+    // "Music 4+2" (ArMDE:1928 `#### Jerbiton`) — the House's free Minor Virtue, spent on
+    // Puissant Music (ArMDE:1950 `#### Jerbiton`).
     assert_eq!(ability_score(&jerbiton, &ruleset, "ability.music", None), 6);
 
-    // Soak: +0 (ArMDE:1922).
+    // Soak: +0 (ArMDE:1922 `#### Jerbiton`).
     assert_eq!(soak(&jerbiton, &ruleset).total, 0);
 
     let fatigue: Vec<i32> = fatigue_levels(&jerbiton, &ruleset)
@@ -765,18 +772,18 @@ fn the_jerbiton_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1936.
+    // Encumbrance: 0 (0). Source: ArMDE:1936 `#### Jerbiton`.
     let enc = encumbrance(&jerbiton, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +0, Atk n/a, Def +0, Dam n/a. Source: ArMDE:1920.
+    // Dodging: Init +0, Atk n/a, Def +0, Dam n/a. Source: ArMDE:1920 `#### Jerbiton`.
     let lines = combat_totals(&jerbiton, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (0, None, 0, None)
     );
 
-    // Casting Totals, ArMDE:1939-1948.
+    // Casting Totals, ArMDE:1939-1948 `#### Jerbiton`.
     let casting = |spell: &str| spell_casting(&jerbiton, &ruleset, spell);
     assert_eq!(casting("spell.phantasm_of_the_talking_head"), (16, None));
     assert_eq!(casting("spell.phantasm_of_the_human_form"), (16, None));
@@ -789,11 +796,12 @@ fn the_jerbiton_matches_the_book() {
         (16, None)
     );
     // DISAGREEMENT MAG6 (docs/book-template-conformance.md). Deficient Technique
-    // (Perdo) halves every total the Technique is added to (ArMDE:5915), and the
-    // Perdo Imaginem Casting Score is Pe 1 + Im 10 + Sta 0 = 11. The book prints
-    // +6, i.e. 11 rounded **up**; ArMDE:547 says that where a rule does not say
-    // which way to round, "round down", and ArMDE:5915 does not say. The engine
-    // rounds down and returns 5.
+    // (Perdo) halves every total the Technique is added to (ArMDE:5915 `####
+    // Deficient Technique`), and the Perdo Imaginem Casting Score is Pe 1 +
+    // Im 10 + Sta 0 = 11. The book prints +6, i.e. 11 rounded **up**;
+    // ArMDE:547 `### Ease Factor` says that where a rule does not say which
+    // way to round, "round down", and ArMDE:5915 `#### Deficient Technique`
+    // does not say. The engine rounds down and returns 5.
     assert_eq!(casting("spell.illusion_of_cool_flames"), (5, None));
     assert_eq!(casting("spell.illusion_of_the_shifted_image"), (16, None));
     assert_eq!(casting("spell.wizards_sidestep"), (16, None));
@@ -809,7 +817,7 @@ fn the_mercere_matches_the_book() {
     assert_eq!(error_codes(&mercere, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&mercere, &ruleset), codes(&[]));
 
-    // Arts: Cr 6+3, In 4, Mu 4, Pe 3, Re 5, Au 12+3, Co 2, Me 2 (ArMDE:1983).
+    // Arts: Cr 6+3, In 4, Mu 4, Pe 3, Re 5, Au 12+3, Co 2, Me 2 (ArMDE:1983 `#### Mercere`).
     assert_eq!(art_score(&mercere, &ruleset, "art.creo"), 9);
     assert_eq!(art_score(&mercere, &ruleset, "art.intellego"), 4);
     assert_eq!(art_score(&mercere, &ruleset, "art.muto"), 4);
@@ -819,7 +827,7 @@ fn the_mercere_matches_the_book() {
     assert_eq!(art_score(&mercere, &ruleset, "art.corpus"), 2);
     assert_eq!(art_score(&mercere, &ruleset, "art.mentem"), 2);
 
-    // Soak: +2 (ArMDE:1975).
+    // Soak: +2 (ArMDE:1975 `#### Mercere`).
     assert_eq!(soak(&mercere, &ruleset).total, 2);
 
     let fatigue: Vec<i32> = fatigue_levels(&mercere, &ruleset)
@@ -833,11 +841,11 @@ fn the_mercere_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1989.
+    // Encumbrance: 0 (0). Source: ArMDE:1989 `#### Mercere`.
     let enc = encumbrance(&mercere, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +1, Atk n/a, Def +1, Dam n/a. Source: ArMDE:1973.
+    // Dodging: Init +1, Atk n/a, Def +1, Dam n/a. Source: ArMDE:1973 `#### Mercere`.
     let lines = combat_totals(&mercere, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
@@ -850,7 +858,7 @@ fn the_mercere_matches_the_book() {
     // Circumstances) and keeping each entry's other, untouched effect (Lab
     // Total / aura_bonus — X7a's separate problem). The book's Cr 9 + Au 15 +
     // Sta +2 = 26 base, 35 within the Major Magical Focus (Weather) —
-    // ArMDE:1992-1996 prints +26 for the two non-weather spells and +35 for
+    // ArMDE:1992-1996 `#### Mercere` prints +26 for the two non-weather spells and +35 for
     // the two weather ones. `rules/core/virtues_flaws.json` has not been
     // edited yet, so the engine still returns 29 / 38 (the net +3 from all
     // three unconditional casting_total_mod effects) until it is.
@@ -859,10 +867,10 @@ fn the_mercere_matches_the_book() {
     assert_eq!(casting("spell.clouds_of_rain_and_thunder"), (26, Some(35)));
     assert_eq!(casting("spell.clouds_of_summer_snow"), (26, Some(35)));
     assert_eq!(casting("spell.pull_of_the_skybound_winds"), (26, Some(35)));
-    // DISAGREEMENT MAG7: the book prints +27 here (ArMDE:1996) where every other
+    // DISAGREEMENT MAG7: the book prints +27 here (ArMDE:1996 `#### Mercere`) where every other
     // Creo Auram row on the same statblock reads +26 or +35, and nothing in the
     // Arts line makes 27 reachable — the Rego requisite of Cr(Re)Au adds nothing
-    // to a Casting Total (ArMDE:9089).
+    // to a Casting Total (ArMDE:9089 `## Casting Spells`).
     assert_eq!(casting("spell.wings_of_the_soaring_wind"), (26, Some(35)));
 }
 
@@ -876,7 +884,7 @@ fn the_merinita_matches_the_book() {
     assert_eq!(error_codes(&merinita, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&merinita, &ruleset), codes(&[]));
 
-    // Arts: Cr 5, In 1, Mu 5, Pe 2, Re 5, Co 1, Im 10+3, Me 5 (ArMDE:2031).
+    // Arts: Cr 5, In 1, Mu 5, Pe 2, Re 5, Co 1, Im 10+3, Me 5 (ArMDE:2031 `#### Merinita`).
     assert_eq!(art_score(&merinita, &ruleset, "art.creo"), 5);
     assert_eq!(art_score(&merinita, &ruleset, "art.intellego"), 1);
     assert_eq!(art_score(&merinita, &ruleset, "art.muto"), 5);
@@ -887,15 +895,15 @@ fn the_merinita_matches_the_book() {
     assert_eq!(art_score(&merinita, &ruleset, "art.mentem"), 5);
 
     // DISAGREEMENT P3, RESOLVED (docs/book-template-conformance.md): the book
-    // prints "Faerie Lore 3+2" (ArMDE:2029) for Student of Faerie's "+2 bonus
-    // on all uses of the appropriate Lore" (ArMDE:5054); `virtue.student_of_realm`
+    // prints "Faerie Lore 3+2" (ArMDE:2029 `#### Merinita`) for Student of Faerie's "+2 bonus
+    // on all uses of the appropriate Lore" (ArMDE:5054 `#### Student of (Realm)`); `virtue.student_of_realm`
     // now carries a gated `ability_bonus_gated`, so the engine matches.
     assert_eq!(
         ability_score(&merinita, &ruleset, "ability.faerie_lore", None),
         5
     );
 
-    // Soak: -1 (ArMDE:2023).
+    // Soak: -1 (ArMDE:2023 `#### Merinita`).
     assert_eq!(soak(&merinita, &ruleset).total, -1);
 
     let fatigue: Vec<i32> = fatigue_levels(&merinita, &ruleset)
@@ -909,18 +917,18 @@ fn the_merinita_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:2037.
+    // Encumbrance: 0 (0). Source: ArMDE:2037 `#### Merinita`.
     let enc = encumbrance(&merinita, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init -1, Atk n/a, Def -1, Dam n/a. Source: ArMDE:2021.
+    // Dodging: Init -1, Atk n/a, Def -1, Dam n/a. Source: ArMDE:2021 `#### Merinita`.
     let lines = combat_totals(&merinita, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (-1, None, -1, None)
     );
 
-    // Casting Totals, ArMDE:2040-2046.
+    // Casting Totals, ArMDE:2040-2046 `#### Merinita`.
     let casting = |spell: &str| spell_casting(&merinita, &ruleset, spell);
     assert_eq!(casting("spell.phantasmal_animal"), (17, None));
     assert_eq!(casting("spell.phantasm_of_the_human_form"), (17, None));
@@ -944,9 +952,10 @@ fn the_tremere_matches_the_book() {
     // X10(a) target shape (docs/vf-audit/decisions.md D65 row N5,
     // tmp/x10-verdicts.md). MAG10 (docs/book-template-conformance.md) is resolved
     // by a `params: { "focus": "certamen" } }` on House Tremere's fixed grant in
-    // `rules/core/houses.json` — "Minor Magical Focus(certamen)\*" (ArMDE:2064),
-    // the asterisk marking it the free House Virtue, and the House table's "Minor
-    // Magical Focus (certamen)." (ArMDE:2281). RED until that param ships.
+    // `rules/core/houses.json` — "Minor Magical Focus(certamen)\*" (ArMDE:2064
+    // `#### Tremere`), the asterisk marking it the free House Virtue, and the
+    // House table's "Minor Magical Focus (certamen)." (ArMDE:2281 `####
+    // Hermetic Houses Summary`). RED until that param ships.
     let tremere_grants = arm_rules::house::granted_selections(&tremere, &ruleset);
     let focus_grant = tremere_grants
         .iter()
@@ -961,9 +970,9 @@ fn the_tremere_matches_the_book() {
     );
 
     // Arts: Cr 5, In 5, Mu 5, Pe 5, Re 5, Aq 8 (3), Au 9 (1), Ig 9 (1), Me 1,
-    // Te 9 (1) — ArMDE:2081. The four elemental Forms are bought at Aq 3, Au 6,
+    // Te 9 (1) — ArMDE:2081 `#### Tremere`. The four elemental Forms are bought at Aq 3, Au 6,
     // Ig 6, Te 6 and lifted by Elemental Magic, whose arithmetic the template's
-    // own Customization Notes spell out at ArMDE:2099-2101.
+    // own Customization Notes spell out at ArMDE:2099-2101 `#### Tremere`.
     assert_eq!(art_score(&tremere, &ruleset, "art.creo"), 5);
     assert_eq!(art_score(&tremere, &ruleset, "art.intellego"), 5);
     assert_eq!(art_score(&tremere, &ruleset, "art.muto"), 5);
@@ -975,7 +984,7 @@ fn the_tremere_matches_the_book() {
     assert_eq!(art_score(&tremere, &ruleset, "art.mentem"), 1);
     assert_eq!(art_score(&tremere, &ruleset, "art.terram"), 9);
 
-    // Soak: +2 (ArMDE:2073).
+    // Soak: +2 (ArMDE:2073 `#### Tremere`).
     assert_eq!(soak(&tremere, &ruleset).total, 2);
 
     let fatigue: Vec<i32> = fatigue_levels(&tremere, &ruleset)
@@ -989,18 +998,18 @@ fn the_tremere_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:2087.
+    // Encumbrance: 0 (0). Source: ArMDE:2087 `#### Tremere`.
     let enc = encumbrance(&tremere, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +1, Atk n/a, Def +1, Dam n/a. Source: ArMDE:2071.
+    // Dodging: Init +1, Atk n/a, Def +1, Dam n/a. Source: ArMDE:2071 `#### Tremere`.
     let lines = combat_totals(&tremere, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (1, None, 1, None)
     );
 
-    // Casting Totals, ArMDE:2090-2097: every row +16, which is Technique 5 +
+    // Casting Totals, ArMDE:2090-2097 `#### Tremere`: every row +16, which is Technique 5 +
     // Form 9 + Sta +2. The Minor Magical Focus (certamen) covers no spell on the
     // list, so the book prints the base figure throughout.
     let casting = |spell: &str| spell_casting(&tremere, &ruleset, spell);
@@ -1027,7 +1036,7 @@ fn the_tytalus_matches_the_book() {
     assert_eq!(error_codes(&tytalus, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&tytalus, &ruleset), codes(&[]));
 
-    // Int +4 (ArMDE:2105) is a bought +3 lifted by Great Intelligence.
+    // Int +4 (ArMDE:2105 `#### Tytalus`) is a bought +3 lifted by Great Intelligence.
     assert_eq!(
         arm_rules::effective::effective_characteristic_score(
             &tytalus,
@@ -1037,7 +1046,7 @@ fn the_tytalus_matches_the_book() {
         4
     );
 
-    // Confidence Score: 2 (5) — ArMDE:2115 — against the magus profile's 1 (3),
+    // Confidence Score: 2 (5) — ArMDE:2115 `#### Tytalus` — against the magus profile's 1 (3),
     // because House Tytalus's free Self-Confident adds +1 score and +2 points.
     let profile = ruleset
         .profile(&tytalus.type_id)
@@ -1055,13 +1064,13 @@ fn the_tytalus_matches_the_book() {
         }
     );
 
-    // Arts: Cr 5, In 5, Re 5, Me 9 (ArMDE:2134).
+    // Arts: Cr 5, In 5, Re 5, Me 9 (ArMDE:2134 `#### Tytalus`).
     assert_eq!(art_score(&tytalus, &ruleset, "art.creo"), 5);
     assert_eq!(art_score(&tytalus, &ruleset, "art.intellego"), 5);
     assert_eq!(art_score(&tytalus, &ruleset, "art.rego"), 5);
     assert_eq!(art_score(&tytalus, &ruleset, "art.mentem"), 9);
 
-    // Soak: +2 (ArMDE:2126).
+    // Soak: +2 (ArMDE:2126 `#### Tytalus`).
     assert_eq!(soak(&tytalus, &ruleset).total, 2);
 
     let fatigue: Vec<i32> = fatigue_levels(&tytalus, &ruleset)
@@ -1075,18 +1084,18 @@ fn the_tytalus_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:2140.
+    // Encumbrance: 0 (0). Source: ArMDE:2140 `#### Tytalus`.
     let enc = encumbrance(&tytalus, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +1, Atk n/a, Def +4, Dam n/a. Source: ArMDE:2124.
+    // Dodging: Init +1, Atk n/a, Def +4, Dam n/a. Source: ArMDE:2124 `#### Tytalus`.
     let lines = combat_totals(&tytalus, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (1, None, 4, None)
     );
 
-    // Casting Totals, ArMDE:2143-2147.
+    // Casting Totals, ArMDE:2143-2147 `#### Tytalus`.
     let casting = |spell: &str| spell_casting(&tytalus, &ruleset, spell);
     assert_eq!(casting("spell.pains_of_the_perpetual_worry"), (16, None));
     assert_eq!(casting("spell.posing_the_silent_question"), (16, None));
@@ -1108,7 +1117,7 @@ fn the_verditius_matches_the_book() {
     assert_eq!(error_codes(&verditius, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&verditius, &ruleset), codes(&[]));
 
-    // Str -3, Sta +1 (ArMDE:2153) are a bought -2 / +2 shifted by Dwarf's -1 each.
+    // Str -3, Sta +1 (ArMDE:2153 `#### Verditius`) are a bought -2 / +2 shifted by Dwarf's -1 each.
     assert_eq!(
         arm_rules::effective::effective_characteristic_score(
             &verditius,
@@ -1126,7 +1135,7 @@ fn the_verditius_matches_the_book() {
         1
     );
 
-    // Arts: Cr 7, In 3, Mu 5, Pe 3, Re 5, Te 12+3 (ArMDE:2182).
+    // Arts: Cr 7, In 3, Mu 5, Pe 3, Re 5, Te 12+3 (ArMDE:2182 `#### Verditius`).
     assert_eq!(art_score(&verditius, &ruleset, "art.creo"), 7);
     assert_eq!(art_score(&verditius, &ruleset, "art.intellego"), 3);
     assert_eq!(art_score(&verditius, &ruleset, "art.muto"), 5);
@@ -1139,12 +1148,14 @@ fn the_verditius_matches_the_book() {
     // instance the selection names and on no other.
     //
     // DISAGREEMENT MAG14 (docs/book-template-conformance.md). The book prints
-    // "Craft (metalsmith) 5+3" and "Craft (stonemason) 4+3" (ArMDE:2180), but
-    // Puissant *Ability* adds 2 — "add 2 to its value whenever you use it"
-    // (ArMDE:4816) — and 3 is Puissant *Art*'s figure (ArMDE:4820). Every other
+    // "Craft (metalsmith) 5+3" and "Craft (stonemason) 4+3" (ArMDE:2180 `####
+    // Verditius`), but Puissant *Ability* adds 2 — "add 2 to its value
+    // whenever you use it" (ArMDE:4816 `#### Puissant Ability`) — and 3 is
+    // Puissant *Art*'s figure (ArMDE:4820 `#### Puissant Art`). Every other
     // template prints the +2 correctly (the Knight's "Single Weapon 5+2"
-    // ArMDE:1480, Bonisagus's "Magic Theory 4+2" ArMDE:1683, Criamon's
-    // "Enigmatic Wisdom 3+2" ArMDE:1731, Jerbiton's "Music 4+2" ArMDE:1928), so
+    // ArMDE:1480 `#### The Knight`, Bonisagus's "Magic Theory 4+2" ArMDE:1683
+    // `#### Bonisagus`, Criamon's "Enigmatic Wisdom 3+2" ArMDE:1731 `####
+    // Criamon`, Jerbiton's "Music 4+2" ArMDE:1928 `#### Jerbiton`), so
     // the engine's 7 and 6 are right and this statblock is alone in saying 3.
     assert_eq!(
         ability_score(&verditius, &ruleset, "ability.craft", Some("metalsmith")),
@@ -1155,7 +1166,7 @@ fn the_verditius_matches_the_book() {
         6
     );
 
-    // Soak: +1 (ArMDE:2174).
+    // Soak: +1 (ArMDE:2174 `#### Verditius`).
     assert_eq!(soak(&verditius, &ruleset).total, 1);
 
     let fatigue: Vec<i32> = fatigue_levels(&verditius, &ruleset)
@@ -1169,22 +1180,22 @@ fn the_verditius_matches_the_book() {
         size_minus_two_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:2188.
+    // Encumbrance: 0 (0). Source: ArMDE:2188 `#### Verditius`.
     let enc = encumbrance(&verditius, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +0, Atk n/a, Def +0, Dam n/a. Source: ArMDE:2172.
+    // Dodging: Init +0, Atk n/a, Def +0, Dam n/a. Source: ArMDE:2172 `#### Verditius`.
     let lines = combat_totals(&verditius, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
         (0, None, 0, None)
     );
 
-    // Casting Totals, ArMDE:2191-2197: Technique + Te 15 + Sta +1.
+    // Casting Totals, ArMDE:2191-2197 `#### Verditius`: Technique + Te 15 + Sta +1.
     let casting = |spell: &str| spell_casting(&verditius, &ruleset, spell);
     assert_eq!(casting("spell.seal_the_earth"), (23, None));
     // DISAGREEMENT MAG9 (docs/book-template-conformance.md). The book prints +25
-    // for Touch of Midas (ArMDE:2192) where its two Creo Terram neighbours on the
+    // for Touch of Midas (ArMDE:2192 `#### Verditius`) where its two Creo Terram neighbours on the
     // same statblock read +23, and Cr 7 + Te 15 + Sta +1 = 23. This magus holds
     // no Magical Focus, so there is no second reading to reach 25 by.
     assert_eq!(casting("spell.touch_of_midas"), (23, None));
@@ -1195,7 +1206,7 @@ fn the_verditius_matches_the_book() {
     assert_eq!(casting("spell.hands_of_the_grasping_earth"), (21, None));
 }
 
-// --- The Female Scholar (ArMDE:1410-1445) ----------------------------------
+// --- The Female Scholar (ArMDE:1410-1445 `#### The Female Scholar`) --------
 
 #[test]
 fn the_female_scholar_matches_the_book() {
@@ -1206,13 +1217,13 @@ fn the_female_scholar_matches_the_book() {
 
     // DISAGREEMENT F1 (docs/book-template-conformance.md) — RESOLVED (X1/D43).
     // Clerk's own description grants Academic access — "Due to your training,
-    // you may take Academic Abilities during character generation" (ArMDE:3573)
+    // you may take Academic Abilities during character generation" (ArMDE:3573 `#### Clerk`)
     // — and `virtue.clerk` now carries `ability_authorization{categories:[academic]}`,
     // so her six Academic Abilities are legal, matching the book.
     assert_eq!(error_codes(&scholar, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&scholar, &ruleset), codes(&[]));
 
-    // Soak: -1 (Stamina). Source: ArMDE:1433.
+    // Soak: -1 (Stamina). Source: ArMDE:1433 `#### The Female Scholar`.
     assert_eq!(soak(&scholar, &ruleset).total, -1);
 
     let fatigue: Vec<i32> = fatigue_levels(&scholar, &ruleset)
@@ -1226,11 +1237,11 @@ fn the_female_scholar_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1443.
+    // Encumbrance: 0 (0). Source: ArMDE:1443 `#### The Female Scholar`.
     let enc = encumbrance(&scholar, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +1, Atk n/a, Def +1, Dam n/a. Source: ArMDE:1431.
+    // Dodging: Init +1, Atk n/a, Def +1, Dam n/a. Source: ArMDE:1431 `#### The Female Scholar`.
     let lines = combat_totals(&scholar, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
@@ -1238,7 +1249,7 @@ fn the_female_scholar_matches_the_book() {
     );
 }
 
-// --- The Knight (ArMDE:1447-1486) ------------------------------------------
+// --- The Knight (ArMDE:1447-1486 `#### The Knight`) -------------------------
 
 #[test]
 fn the_knight_matches_the_book() {
@@ -1249,13 +1260,13 @@ fn the_knight_matches_the_book() {
 
     // DISAGREEMENT K1 (docs/book-template-conformance.md) — RESOLVED (X1/D43),
     // the same shape as F1 and as the Berserker's B1. The Knight Virtue says
-    // "You may take Martial Abilities during character generation" (ArMDE:4197),
+    // "You may take Martial Abilities during character generation" (ArMDE:4197 `#### Knight`),
     // and `virtue.knight` now carries `ability_authorization{categories:[martial]}`,
     // so Great Weapon 5 and Single Weapon 5 are both legal, matching the book.
     assert_eq!(error_codes(&knight, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&knight, &ruleset), codes(&[]));
 
-    // "Single Weapon 5+2 (heater shield)" (ArMDE:1480) — Puissant Single Weapon's
+    // "Single Weapon 5+2 (heater shield)" (ArMDE:1480 `#### The Knight`) — Puissant Single Weapon's
     // fixed +2 on a bought 5, and the reason the sword rows below read +14 rather
     // than +12.
     assert_eq!(
@@ -1268,7 +1279,7 @@ fn the_knight_matches_the_book() {
         7
     );
 
-    // Soak: +10 (chain mail, Stamina). Source: ArMDE:1474.
+    // Soak: +10 (chain mail, Stamina). Source: ArMDE:1474 `#### The Knight`.
     assert_eq!(soak(&knight, &ruleset).total, 10);
 
     let fatigue: Vec<i32> = fatigue_levels(&knight, &ruleset)
@@ -1282,7 +1293,7 @@ fn the_knight_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 2 (3). Source: ArMDE:1484. Reproduced exactly, and it is the
+    // Encumbrance: 2 (3). Source: ArMDE:1484 `#### The Knight`. Reproduced exactly, and it is the
     // reason the fixture leaves the great sword UNequipped: only equipped gear
     // contributes Load (`combat.rs::encumbrance`), so the wielded set is chain
     // mail 6 + long sword 1 + heater shield 2 = 9 → Burden 3, less Strength +1.
@@ -1294,17 +1305,17 @@ fn the_knight_matches_the_book() {
 
     let lines = combat_totals(&knight, &ruleset);
     // Long sword and heater shield (on foot): Init +2, Atk +14, Def +14, Dam +7
-    // (ArMDE:1469). Every figure exact.
+    // (ArMDE:1469 `#### The Knight`). Every figure exact.
     assert_eq!(
         stats(line(&lines, "weapon.sword_long", true)),
         (2, Some(14), 14, Some(7))
     );
-    // Fist: Init +0, Atk +5, Def +5, Dam +1 (ArMDE:1472). Every figure exact.
+    // Fist: Init +0, Atk +5, Def +5, Dam +1 (ArMDE:1472 `#### The Knight`). Every figure exact.
     assert_eq!(
         stats(line(&lines, "weapon.fist", false)),
         (0, Some(5), 5, Some(1))
     );
-    // Great sword (on foot): Init +2, Atk +13, Def +10, Dam +10 (ArMDE:1471).
+    // Great sword (on foot): Init +2, Atk +13, Def +10, Dam +10 (ArMDE:1471 `#### The Knight`).
     // Already exact today — F1's K5 fix (the `loadout: "carried"` row) needs no
     // F2 change to be right; this is a control assertion, not a new red.
     assert_eq!(
@@ -1313,21 +1324,22 @@ fn the_knight_matches_the_book() {
     );
 
     // K3 (RED CHECKPOINT — design-f0-book-template-engine.md § 2b, D66): the
-    // book prints TWO mounted rows (ArMDE:1468, :1470), each the on-foot figure
-    // plus min(Ride, 3) = +3 (Ride 5, ArMDE:1480) on Attack and Defense only.
+    // book prints TWO mounted rows (ArMDE:1468 `#### The Knight`, :1470), each
+    // the on-foot figure plus min(Ride, 3) = +3 (Ride 5, ArMDE:1480 `#### The
+    // Knight`) on Attack and Defense only.
     // Long sword and heater shield (mounted): Init +2, Atk +17, Def +17, Dam +7
-    // (ArMDE:1468).
+    // (ArMDE:1468 `#### The Knight`).
     assert_eq!(
         stats(mounted_line(&lines, "weapon.sword_long", true)),
         (2, Some(17), 17, Some(7))
     );
-    // Great sword (mounted): Init +2, Atk +16, Def +13, Dam +10 (ArMDE:1470).
+    // Great sword (mounted): Init +2, Atk +16, Def +13, Dam +10 (ArMDE:1470 `#### The Knight`).
     assert_eq!(
         stats(mounted_line(&lines, "weapon.sword_great", false)),
         (2, Some(16), 13, Some(10))
     );
     // Fist gets NO mounted twin (D66: `weapon.fist` is a body attack) — the
-    // book's own template prints no mounted Fist row (ArMDE:1472).
+    // book's own template prints no mounted Fist row (ArMDE:1472 `#### The Knight`).
     assert!(
         !lines
             .iter()
@@ -1365,7 +1377,7 @@ fn the_knight_matches_the_book() {
     );
 }
 
-// --- The Priest (ArMDE:1488-1523) ------------------------------------------
+// --- The Priest (ArMDE:1488-1523 `#### The Priest`) -------------------------
 
 #[test]
 fn the_priest_matches_the_book() {
@@ -1376,14 +1388,14 @@ fn the_priest_matches_the_book() {
 
     // DISAGREEMENT P1 (docs/book-template-conformance.md) — RESOLVED (X1/D43),
     // a third instance of F1/K1: "You may purchase Academic Abilities during
-    // character generation" (ArMDE:4804) is part of the Priest Virtue, and
+    // character generation" (ArMDE:4804 `#### Priest`) is part of the Priest Virtue, and
     // `virtue.priest` now carries `ability_authorization{categories:[academic]}`,
     // so his four Academic Abilities are legal. His *Arcane* one, Dominion Lore,
     // is accepted — `virtue.student_of_realm`'s gated `ability_bonus_gated`
     // target (realm.divine) authorizes it (P3/P4, RESOLVED).
     //
     // `xp_pool` moved 590 → 540 in the same change (X1/D43). Well-Traveled now
-    // carries its own 50-point restricted pool (ArMDE:5239-5242) covering
+    // carries its own 50-point restricted pool (ArMDE:5239-5242 `#### Well-Traveled`) covering
     // exactly six of the Abilities on this sheet (Area Lore, Charm, Etiquette,
     // Folk Ken, Living Language, Organization Lore). `two_phase_max_flow`
     // (`effective/xp.rs`) fills restricted pools before General, so those 50
@@ -1395,10 +1407,11 @@ fn the_priest_matches_the_book() {
     assert_eq!(warning_codes(&priest, &ruleset), codes(&[]));
 
     // DISAGREEMENT P3, RESOLVED (docs/book-template-conformance.md). The book
-    // prints "Dominion Lore 3+2 (angels)" (ArMDE:1517) — a bought 3 plus a fixed
-    // Virtue bonus of 2 (the `X+Y` format, ArMDE:1177), here Student of the
-    // Divine: "you have a +2 bonus on all uses of the appropriate Lore"
-    // (ArMDE:5054). `virtue.student_of_realm` now carries a gated
+    // prints "Dominion Lore 3+2 (angels)" (ArMDE:1517 `#### The Priest`) — a
+    // bought 3 plus a fixed Virtue bonus of 2 (the `X+Y` format, ArMDE:1177
+    // `### Format`), here Student of the Divine: "you have a +2 bonus on all
+    // uses of the appropriate Lore" (ArMDE:5054 `#### Student of (Realm)`).
+    // `virtue.student_of_realm` now carries a gated
     // `ability_bonus_gated`, so the engine matches.
     assert_eq!(
         arm_rules::effective::effective_ability_score(
@@ -1409,8 +1422,8 @@ fn the_priest_matches_the_book() {
         ),
         5
     );
-    // "Sense Holiness and Unholiness 4" (ArMDE:1517) is a Supernatural Ability the
-    // character may hold only because a Virtue confers it (ArMDE:4928); that grant is
+    // "Sense Holiness and Unholiness 4" (ArMDE:1517 `#### The Priest`) is a Supernatural Ability the
+    // character may hold only because a Virtue confers it (ArMDE:4928 `#### Sense Holiness and Unholiness`); that grant is
     // a free floor of 1, so the bought 4 stands as the effective score and the
     // first point costs nothing (S-note in the doc).
     assert_eq!(
@@ -1423,7 +1436,7 @@ fn the_priest_matches_the_book() {
         4
     );
 
-    // Soak: +0 (Stamina). Source: ArMDE:1511.
+    // Soak: +0 (Stamina). Source: ArMDE:1511 `#### The Priest`.
     assert_eq!(soak(&priest, &ruleset).total, 0);
 
     let fatigue: Vec<i32> = fatigue_levels(&priest, &ruleset)
@@ -1437,11 +1450,11 @@ fn the_priest_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1521.
+    // Encumbrance: 0 (0). Source: ArMDE:1521 `#### The Priest`.
     let enc = encumbrance(&priest, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +0, Atk n/a, Def +2, Dam n/a. Source: ArMDE:1509.
+    // Dodging: Init +0, Atk n/a, Def +2, Dam n/a. Source: ArMDE:1509 `#### The Priest`.
     let lines = combat_totals(&priest, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
@@ -1449,7 +1462,7 @@ fn the_priest_matches_the_book() {
     );
 }
 
-// --- The Rogue (ArMDE:1525-1560) -------------------------------------------
+// --- The Rogue (ArMDE:1525-1560 `#### The Rogue`) ---------------------------
 
 #[test]
 fn the_rogue_matches_the_book() {
@@ -1459,9 +1472,9 @@ fn the_rogue_matches_the_book() {
     assert_eq!(error_codes(&rogue, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&rogue, &ruleset), codes(&[]));
 
-    // The book prints Dex +4 and Qik +4 (ArMDE:1527) although the buy floor is +3:
+    // The book prints Dex +4 and Qik +4 (ArMDE:1527 `#### The Rogue`) although the buy floor is +3:
     // Great Dexterity and Great Quickness each add their +1 after purchase
-    // (ArMDE:3987-3989). The fixture buys +3 twice and the engine derives +4.
+    // (ArMDE:3987-3989 `#### Great (Characteristic)`). The fixture buys +3 twice and the engine derives +4.
     assert_eq!(
         arm_rules::effective::effective_characteristic_score(&rogue, &ruleset, Characteristic::Dex),
         4
@@ -1471,7 +1484,7 @@ fn the_rogue_matches_the_book() {
         4
     );
 
-    // Soak: 0 (Stamina). Source: ArMDE:1548.
+    // Soak: 0 (Stamina). Source: ArMDE:1548 `#### The Rogue`.
     assert_eq!(soak(&rogue, &ruleset).total, 0);
 
     let fatigue: Vec<i32> = fatigue_levels(&rogue, &ruleset)
@@ -1485,11 +1498,11 @@ fn the_rogue_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1558.
+    // Encumbrance: 0 (0). Source: ArMDE:1558 `#### The Rogue`.
     let enc = encumbrance(&rogue, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Fist: Init +4, Atk +7, Def +7, Dam -1. Source: ArMDE:1546.
+    // Fist: Init +4, Atk +7, Def +7, Dam -1. Source: ArMDE:1546 `#### The Rogue`.
     let lines = combat_totals(&rogue, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.fist", false)),
@@ -1497,7 +1510,7 @@ fn the_rogue_matches_the_book() {
     );
 }
 
-// --- The Witch (ArMDE:1562-1597) -------------------------------------------
+// --- The Witch (ArMDE:1562-1597 `#### The Witch`) ---------------------------
 
 #[test]
 fn the_witch_matches_the_book() {
@@ -1507,7 +1520,7 @@ fn the_witch_matches_the_book() {
     // DISAGREEMENT W1 (docs/book-template-conformance.md) — RESOLVED (X1/D43).
     // Educated is "You may purchase Academic Abilities during character
     // generation" plus 50 experience points "which must be spent on Latin and
-    // Artes Liberales" (ArMDE:3713); `virtue.educated` now carries
+    // Artes Liberales" (ArMDE:3713 `#### Educated`); `virtue.educated` now carries
     // `ability_authorization{categories:[academic]}` in addition to its
     // earmarked pool, so Medicine — Academic, and not on the XP list — is
     // legal too, matching the book.
@@ -1515,7 +1528,7 @@ fn the_witch_matches_the_book() {
     assert_eq!(warning_codes(&witch, &ruleset), codes(&[]));
 
     // DISAGREEMENT P3, RESOLVED, again on the other side of the same Virtue:
-    // the book prints "Magic Lore 3+2 (regiones)" (ArMDE:1591) for Student of
+    // the book prints "Magic Lore 3+2 (regiones)" (ArMDE:1591 `#### The Witch`) for Student of
     // Magic, and the engine now matches.
     assert_eq!(
         arm_rules::effective::effective_ability_score(
@@ -1527,7 +1540,7 @@ fn the_witch_matches_the_book() {
         5
     );
 
-    // Soak: +0 (Stamina). Source: ArMDE:1585.
+    // Soak: +0 (Stamina). Source: ArMDE:1585 `#### The Witch`.
     assert_eq!(soak(&witch, &ruleset).total, 0);
 
     let fatigue: Vec<i32> = fatigue_levels(&witch, &ruleset)
@@ -1541,11 +1554,11 @@ fn the_witch_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 0 (0). Source: ArMDE:1595.
+    // Encumbrance: 0 (0). Source: ArMDE:1595 `#### The Witch`.
     let enc = encumbrance(&witch, &ruleset);
     assert_eq!((enc.burden, enc.total), (0, 0));
 
-    // Dodging: Init +0, Atk n/a, Def +0, Dam n/a. Source: ArMDE:1583.
+    // Dodging: Init +0, Atk n/a, Def +0, Dam n/a. Source: ArMDE:1583 `#### The Witch`.
     let lines = combat_totals(&witch, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.dodge", false)),
@@ -1553,7 +1566,7 @@ fn the_witch_matches_the_book() {
     );
 }
 
-// --- The Berserker (ArMDE:1195-1227) ---------------------------------------
+// --- The Berserker (ArMDE:1195-1227 `#### The Berserker`) -------------------
 
 #[test]
 fn the_berserker_matches_the_book() {
@@ -1562,15 +1575,15 @@ fn the_berserker_matches_the_book() {
 
     // DISAGREEMENT B1 (docs/book-template-conformance.md) — RESOLVED (X1/D43).
     // The Berserker buys Great Weapon 5 and Single Weapon 1 with no Warrior,
-    // and the engine gates Martial Abilities behind a Virtue (ArMDE:2392).
+    // and the engine gates Martial Abilities behind a Virtue (ArMDE:2392 `#### Later Life`).
     // Berserk IS such a Virtue — "You may learn Martial Abilities at character
-    // creation" (ArMDE:3502) — and `virtue.berserk` now carries
+    // creation" (ArMDE:3502 `#### Berserk`) — and `virtue.berserk` now carries
     // `ability_authorization{categories:[martial]}`, so both weapons are legal,
     // matching the book.
     assert_eq!(error_codes(&berserker, &ruleset), codes(&[]));
     // DISAGREEMENT B3 (docs/book-template-conformance.md). Short Attention Span
     // and Wrathful (Minor) are both Personality Flaws, and the grog rule is "You
-    // should not take more than one Personality Flaw" (ArMDE:2827). The engine is
+    // should not take more than one Personality Flaw" (ArMDE:2827 `#### Grogs`). The engine is
     // right and the template breaks the book's own grog checklist; it is a
     // guideline ("should"), hence a warning rather than an error.
     assert_eq!(
@@ -1582,7 +1595,7 @@ fn the_berserker_matches_the_book() {
     // CHECKPOINT: DISAGREEMENT B2 is resolved by deleting Berserk's
     // Soak/Attack/Defense effects and reclassifying it to `uncomputed_rule`
     // (no template anywhere shows the "while berserk" figure). The book
-    // prints Soak: +9 (Stamina +2, full metal scale armor +7) — ArMDE:1215.
+    // prints Soak: +9 (Stamina +2, full metal scale armor +7) — ArMDE:1215 `#### The Berserker`.
     // `rules/core/virtues_flaws.json` has not been edited yet, so the engine
     // still returns 11 (the old unconditional +2 Soak) until it is.
     assert_eq!(soak(&berserker, &ruleset).total, 9);
@@ -1598,13 +1611,13 @@ fn the_berserker_matches_the_book() {
         size_one_wound_bounds()
     );
 
-    // Encumbrance: 0 (3). Source: ArMDE:1225.
+    // Encumbrance: 0 (3). Source: ArMDE:1225 `#### The Berserker`.
     let enc = encumbrance(&berserker, &ruleset);
     assert_eq!((enc.burden, enc.total), (3, 0));
 
     // F2 — RED CHECKPOINT: same fix, on both weapon lines. The book prints
-    // Pole Axe: Init +2, Attack +13, Defense +7, Damage +14 (ArMDE:1212) and
-    // Kick: Init +0, Attack +6, Defense +4, Damage +6 (ArMDE:1213) — the
+    // Pole Axe: Init +2, Attack +13, Defense +7, Damage +14 (ArMDE:1212 `#### The Berserker`) and
+    // Kick: Init +0, Attack +6, Defense +4, Damage +6 (ArMDE:1213 `#### The Berserker`) — the
     // figures once Berserk's unconditional +2 Attack / -2 Defense is deleted.
     // Initiative and Damage, which Berserk never touched, already match.
     let lines = combat_totals(&berserker, &ruleset);
@@ -1618,7 +1631,7 @@ fn the_berserker_matches_the_book() {
     );
 }
 
-// --- The Grizzled Veteran (ArMDE:1229-1263) --------------------------------
+// --- The Grizzled Veteran (ArMDE:1229-1263 `#### The Grizzled Veteran`) ----
 
 #[test]
 fn the_grizzled_veteran_matches_the_book() {
@@ -1630,7 +1643,7 @@ fn the_grizzled_veteran_matches_the_book() {
     assert_eq!(error_codes(&veteran, &ruleset), codes(&[]));
     // Not a rules disagreement (docs/book-template-conformance.md, V3): at 45 the
     // character owes aging rolls, and the template shows their *outcome*
-    // (Decrepitude 1 (2), ArMDE:1237) without the per-year log that recorded
+    // (Decrepitude 1 (2), ArMDE:1237 `#### The Grizzled Veteran`) without the per-year log that recorded
     // them. The save format has nowhere to put an unrolled history, so the
     // advisory stands.
     assert_eq!(
@@ -1640,7 +1653,7 @@ fn the_grizzled_veteran_matches_the_book() {
 
     // The book prints Pre -1 and Com -1 although the point-buy bought them at 0:
     // "the years have already reduced his Presence and Communication to -1 each"
-    // (ArMDE:1263). The fixture records the aging points; the engine derives the
+    // (ArMDE:1263 `#### The Grizzled Veteran`). The fixture records the aging points; the engine derives the
     // drop.
     assert_eq!(
         arm_rules::effective::effective_characteristic_after_aging(
@@ -1659,7 +1672,7 @@ fn the_grizzled_veteran_matches_the_book() {
         -1
     );
 
-    // Soak: +8 (full metal scale armor). Source: ArMDE:1251.
+    // Soak: +8 (full metal scale armor). Source: ArMDE:1251 `#### The Grizzled Veteran`.
     assert_eq!(soak(&veteran, &ruleset).total, 8);
 
     let fatigue: Vec<i32> = fatigue_levels(&veteran, &ruleset)
@@ -1673,18 +1686,18 @@ fn the_grizzled_veteran_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 4 (4). Source: ArMDE:1261.
+    // Encumbrance: 4 (4). Source: ArMDE:1261 `#### The Grizzled Veteran`.
     let enc = encumbrance(&veteran, &ruleset);
     assert_eq!((enc.burden, enc.total), (4, 4));
 
     // Axe & Heater Shield: Init -1, Attack +15, Defense +14, Damage +6.
-    // Source: ArMDE:1248.
+    // Source: ArMDE:1248 `#### The Grizzled Veteran`.
     let lines = combat_totals(&veteran, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.axe", true)),
         (-1, Some(15), 14, Some(6))
     );
-    // Kick: Init -3, Attack +6, Defense +5, Damage +3. Source: ArMDE:1249. The
+    // Kick: Init -3, Attack +6, Defense +5, Damage +3. Source: ArMDE:1249 `#### The Grizzled Veteran`. The
     // book prints the bare line; the engine also offers a with-shield one.
     assert_eq!(
         stats(line(&lines, "weapon.kick", false)),
@@ -1692,7 +1705,7 @@ fn the_grizzled_veteran_matches_the_book() {
     );
 }
 
-// --- The Hunter (ArMDE:1265-1296) ------------------------------------------
+// --- The Hunter (ArMDE:1265-1296 `#### The Hunter`) -------------------------
 
 #[test]
 fn the_hunter_matches_the_book() {
@@ -1702,7 +1715,7 @@ fn the_hunter_matches_the_book() {
     assert_eq!(error_codes(&hunter, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&hunter, &ruleset), codes(&[]));
 
-    // Soak: +3 (partial leather armor, Stamina). Source: ArMDE:1284.
+    // Soak: +3 (partial leather armor, Stamina). Source: ArMDE:1284 `#### The Hunter`.
     assert_eq!(soak(&hunter, &ruleset).total, 3);
 
     let fatigue: Vec<i32> = fatigue_levels(&hunter, &ruleset)
@@ -1716,11 +1729,11 @@ fn the_hunter_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 2 (2). Source: ArMDE:1294.
+    // Encumbrance: 2 (2). Source: ArMDE:1294 `#### The Hunter`.
     let enc = encumbrance(&hunter, &ruleset);
     assert_eq!((enc.burden, enc.total), (2, 2));
 
-    // Short Bow: Init -1, Attack +9, Defense +6, Damage +6. Source: ArMDE:1282.
+    // Short Bow: Init -1, Attack +9, Defense +6, Damage +6. Source: ArMDE:1282 `#### The Hunter`.
     let lines = combat_totals(&hunter, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.bow_short", false)),
@@ -1728,7 +1741,7 @@ fn the_hunter_matches_the_book() {
     );
 }
 
-// --- The Specialist (ArMDE:1298-1332) --------------------------------------
+// --- The Specialist (ArMDE:1298-1332 `#### The Specialist`) ----------------
 
 #[test]
 fn the_specialist_matches_the_book() {
@@ -1740,14 +1753,14 @@ fn the_specialist_matches_the_book() {
     // (row 47/F-547, formerly S2). At the book's own general-XP grant of 330
     // (age formula: 75 + 45 + 15x14), that leaves exactly the 2 XP the book
     // itself banks toward the next Bows increase — the printed "Bows 1 (2)"
-    // (ArMDE:1326). So `general_xp_unspent` is not a disagreement here: it is
+    // (ArMDE:1326 `#### The Specialist`). So `general_xp_unspent` is not a disagreement here: it is
     // the engine correctly reproducing the book's own banked points.
     assert_eq!(
         warning_codes(&specialist, &ruleset),
         codes(&["general_xp_unspent"])
     );
 
-    // Soak: +9 (full metal scale armor). Source: ArMDE:1320.
+    // Soak: +9 (full metal scale armor). Source: ArMDE:1320 `#### The Specialist`.
     assert_eq!(soak(&specialist, &ruleset).total, 9);
 
     let fatigue: Vec<i32> = fatigue_levels(&specialist, &ruleset)
@@ -1761,25 +1774,25 @@ fn the_specialist_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 2 (4). Source: ArMDE:1330.
+    // Encumbrance: 2 (4). Source: ArMDE:1330 `#### The Specialist`.
     let enc = encumbrance(&specialist, &ruleset);
     assert_eq!((enc.burden, enc.total), (4, 2));
 
     // Axe & Heater Shield: Init +1, Attack +17, Defense +15, Damage +8.
-    // Source: ArMDE:1317.
+    // Source: ArMDE:1317 `#### The Specialist`.
     let lines = combat_totals(&specialist, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.axe", true)),
         (1, Some(17), 15, Some(8))
     );
-    // Fist: Init 0, Attack +8, Defense +7, Damage +2. Source: ArMDE:1318.
+    // Fist: Init 0, Attack +8, Defense +7, Damage +2. Source: ArMDE:1318 `#### The Specialist`.
     assert_eq!(
         stats(line(&lines, "weapon.fist", false)),
         (0, Some(8), 7, Some(2))
     );
 }
 
-// --- The Standard Soldier (ArMDE:1334-1368) --------------------------------
+// --- The Standard Soldier (ArMDE:1334-1368 `#### The Standard Soldier`) ----
 
 #[test]
 fn the_standard_soldier_matches_the_book() {
@@ -1791,7 +1804,7 @@ fn the_standard_soldier_matches_the_book() {
     assert_eq!(error_codes(&soldier, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&soldier, &ruleset), codes(&[]));
 
-    // Soak: +8 (full metal scale armor). Source: ArMDE:1356.
+    // Soak: +8 (full metal scale armor). Source: ArMDE:1356 `#### The Standard Soldier`.
     assert_eq!(soak(&soldier, &ruleset).total, 8);
 
     let fatigue: Vec<i32> = fatigue_levels(&soldier, &ruleset)
@@ -1805,25 +1818,25 @@ fn the_standard_soldier_matches_the_book() {
         size_zero_wound_bounds()
     );
 
-    // Encumbrance: 3 (4). Source: ArMDE:1366.
+    // Encumbrance: 3 (4). Source: ArMDE:1366 `#### The Standard Soldier`.
     let enc = encumbrance(&soldier, &ruleset);
     assert_eq!((enc.burden, enc.total), (4, 3));
 
     // Axe & Heater Shield: Init +0, Attack +12, Defense +11, Damage +7.
-    // Source: ArMDE:1353.
+    // Source: ArMDE:1353 `#### The Standard Soldier`.
     let lines = combat_totals(&soldier, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.axe", true)),
         (0, Some(12), 11, Some(7))
     );
-    // Fist: Init -1, Attack +7, Defense +7, Damage +1. Source: ArMDE:1354.
+    // Fist: Init -1, Attack +7, Defense +7, Damage +1. Source: ArMDE:1354 `#### The Standard Soldier`.
     assert_eq!(
         stats(line(&lines, "weapon.fist", false)),
         (-1, Some(7), 7, Some(1))
     );
 }
 
-// --- The Tough Guy (ArMDE:1370-1404) ---------------------------------------
+// --- The Tough Guy (ArMDE:1370-1404 `#### The Tough Guy`) -------------------
 
 #[test]
 fn the_tough_guy_matches_the_book() {
@@ -1833,13 +1846,13 @@ fn the_tough_guy_matches_the_book() {
     assert_eq!(error_codes(&tough_guy, &ruleset), codes(&[]));
     // DISAGREEMENT T1 (docs/book-template-conformance.md), the same shape as B3:
     // Overconfident and Weakness are both Personality Flaws, against the grog
-    // rule "You should not take more than one Personality Flaw" (ArMDE:2827).
+    // rule "You should not take more than one Personality Flaw" (ArMDE:2827 `#### Grogs`).
     assert_eq!(
         warning_codes(&tough_guy, &ruleset),
         codes(&["too_many_personality_flaws"])
     );
 
-    // Soak: +13 (full metal scale armor + Tough). Source: ArMDE:1392.
+    // Soak: +13 (full metal scale armor + Tough). Source: ArMDE:1392 `#### The Tough Guy`.
     assert_eq!(soak(&tough_guy, &ruleset).total, 13);
 
     let fatigue: Vec<i32> = fatigue_levels(&tough_guy, &ruleset)
@@ -1853,43 +1866,48 @@ fn the_tough_guy_matches_the_book() {
         size_one_wound_bounds()
     );
 
-    // Encumbrance: 3 (4). Source: ArMDE:1402.
+    // Encumbrance: 3 (4). Source: ArMDE:1402 `#### The Tough Guy`.
     let enc = encumbrance(&tough_guy, &ruleset);
     assert_eq!((enc.burden, enc.total), (4, 3));
 
     // Axe & Heater Shield: Init -1, Attack +10, Defense +10, Damage +7.
-    // Source: ArMDE:1389.
+    // Source: ArMDE:1389 `#### The Tough Guy`.
     let lines = combat_totals(&tough_guy, &ruleset);
     assert_eq!(
         stats(line(&lines, "weapon.axe", true)),
         (-1, Some(10), 10, Some(7))
     );
-    // Fist: Init -2, Attack +3, Defense +4, Damage +1. Source: ArMDE:1390.
+    // Fist: Init -2, Attack +3, Defense +4, Damage +1. Source: ArMDE:1390 `#### The Tough Guy`.
     assert_eq!(
         stats(line(&lines, "weapon.fist", false)),
         (-2, Some(3), 4, Some(1))
     );
 }
 
-// --- Darius of Flambeau, at Gauntlet (ArMDE:2285-2449) ----------------------
+// --- Darius of Flambeau, at Gauntlet (ArMDE:2285-2449 `## Detailed Character
+// Creation`) ----------------------------------------------------------------
 
 /// The core rulebook's one **worked** character, as he stands the day he passes
 /// his Gauntlet — the state the Detailed Character Creation chapter builds him
-/// to, before the post-apprenticeship advancement at ArMDE:2484-2492 carries him
-/// to 87.
+/// to, before the post-apprenticeship advancement at ArMDE:2484-2492 `####
+/// Magus Only — After Apprenticeship` carries him to 87.
 ///
 /// He is a sharper instrument than the 23 statblock templates, because the book
 /// shows its arithmetic at every step instead of only printing totals: the Flaw
-/// points as they are spent (ArMDE:2336), the Virtue points (ArMDE:2338), the
-/// Characteristic buy narrated point by point (ArMDE:2358-2360), the childhood
-/// and later-life experience (ArMDE:2400, :2402), the apprenticeship split
-/// (ArMDE:2441, :2443) and the final 5 points (ArMDE:2449). Every figure below
+/// points as they are spent (ArMDE:2336 `#### Quick and Easy Virtues and
+/// Flaws`), the Virtue points (ArMDE:2338 `#### Quick and Easy Virtues and
+/// Flaws`), the Characteristic buy narrated point by point (ArMDE:2358-2360
+/// `### Characteristics`), the childhood and later-life experience
+/// (ArMDE:2400, :2402 `#### Later Life`), the apprenticeship split
+/// (ArMDE:2441, :2443 `#### Magus Only — Apprenticeship`) and the final 5
+/// points (ArMDE:2449 `#### Magus Only — Apprenticeship`). Every figure below
 /// is therefore checkable against a stated intermediate, not inferred from a
 /// total.
 ///
 /// Deliberately **not** asserted here: the Soak, Combat, Fatigue and Wound rows
-/// printed at ArMDE:2556-2565. Those belong to the 87-year-old, after 62 years of
-/// advancement, aging and Twilight that this entity does not represent.
+/// printed at ArMDE:2556-2565 `### Equipment`. Those belong to the
+/// 87-year-old, after 62 years of advancement, aging and Twilight that this
+/// entity does not represent.
 #[test]
 fn darius_of_flambeau_at_gauntlet_matches_the_book() {
     let ruleset = full_ruleset();
@@ -1900,7 +1918,9 @@ fn darius_of_flambeau_at_gauntlet_matches_the_book() {
     // Clean, and the empty error set is load-bearing: it is what proves the
     // fixture's `xp_pool` of 435 is **exact**. The book's own total is
     // 75 (native language) + 45 (childhood) + 15 x 5 (ages 5-10) + 240
-    // (apprenticeship) = 435 (ArMDE:2378, :2392, :2400, :2402, :2435). Probed in
+    // (apprenticeship) = 435 (ArMDE:2378 `#### Early Childhood`, :2392 `####
+    // Later Life`, :2400, :2402 `#### Later Life`, :2435 `#### Magus Only —
+    // Apprenticeship`). Probed in
     // both directions while writing this test: at 436 the engine reports
     // `general_xp_unspent`, at 434 `not_enough_xp`. So every figure the book
     // narrates spending — 180 on apprenticeship Abilities, 55 on Arts, the last 5
@@ -1908,18 +1928,19 @@ fn darius_of_flambeau_at_gauntlet_matches_the_book() {
     assert_eq!(error_codes(&darius, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&darius, &ruleset), codes(&[]));
 
-    // Arts (ArMDE:2443): "37 points on Perdo, which his affinity turns into 56
+    // Arts (ArMDE:2443 `#### Magus Only — Apprenticeship`): "37 points on
+    // Perdo, which his affinity turns into 56
     // points, so that he has Perdo 10 (1), and a bonus of +3 from Puissant", then
     // "15 exp on Creo 5, 3 exp on Corpus 2". Perdo reads 13 with the House
-    // Virtue's +3 folded in (ArMDE:4820 — Puissant *Art* is +3, unlike Puissant
-    // Ability's +2; see MAG14).
+    // Virtue's +3 folded in (ArMDE:4820 `#### Puissant Art` — Puissant *Art*
+    // is +3, unlike Puissant Ability's +2; see MAG14).
     assert_eq!(art_score(&darius, &ruleset, "art.perdo"), 13);
     assert_eq!(art_score(&darius, &ruleset, "art.creo"), 5);
     assert_eq!(art_score(&darius, &ruleset, "art.corpus"), 2);
 
     // The two Abilities his Virtues hand him outright, before any experience is
     // spent: "Darius has a number of free Abilities from his Virtues, so Niall
-    // notes them first: Premonitions 1, Second Sight 1" (ArMDE:2398). Neither is
+    // notes them first: Premonitions 1, Second Sight 1" (ArMDE:2398 `#### Later Life`). Neither is
     // bought in the fixture; both must still read 1.
     assert_eq!(
         ability_score(&darius, &ruleset, "ability.premonitions", None),
@@ -1930,7 +1951,8 @@ fn darius_of_flambeau_at_gauntlet_matches_the_book() {
         1
     );
 
-    // Apprenticeship Abilities, the four the book names a cost for (ArMDE:2441):
+    // Apprenticeship Abilities, the four the book names a cost for (ArMDE:2441
+    // `#### Magus Only — Apprenticeship`):
     // "50 exp for Latin 4, 50 exp on Magic Theory 4, 30 exp on Artes Liberales 3
     // … 15 exp on Penetration 2".
     // The fixture types "Latin" (ArMDE:2441's own word); the catalogue-matching
@@ -1959,7 +1981,7 @@ fn darius_of_flambeau_at_gauntlet_matches_the_book() {
     );
 
     // "Finally, just before Gauntlet, he spends his last 5 exp on Parma Magica 1"
-    // (ArMDE:2449) — the spend that makes the 240 apprenticeship points exact.
+    // (ArMDE:2449 `#### Magus Only — Apprenticeship`) — the spend that makes the 240 apprenticeship points exact.
     assert_eq!(
         ability_score(&darius, &ruleset, "ability.parma_magica", None),
         1
@@ -1967,16 +1989,18 @@ fn darius_of_flambeau_at_gauntlet_matches_the_book() {
 
     // Reputation from Hermetic Prestige. The Virtue says level **4**
     // (ArMDE:4071-4073 `#### Hermetic Prestige`); the worked example says 3
-    // ("it has a level of 3", ArMDE:2518), exactly as the Guernicus template
-    // prints 3 (ArMDE:1869). The data follows the Virtue, so Darius is the
+    // ("it has a level of 3", ArMDE:2518 `### Reputations`), exactly as the Guernicus template
+    // prints 3 (ArMDE:1869 `#### Guernicus`). The data follows the Virtue, so Darius is the
     // SECOND witness to MAG11 in docs/book-template-conformance.md and the
     // fixture records the Virtue's figure rather than the example's.
     let reputations = &darius.reputations;
     assert_eq!(reputations.len(), 1);
     assert_eq!(reputations[0].score, 4);
 
-    // Spells (ArMDE:2445): seven, all Perdo, 15+15+20+20+20+15+15 = 120 — exactly
-    // the magus spell-levels budget (ArMDE:2435), which an empty error set above
+    // Spells (ArMDE:2445 `#### Magus Only — Apprenticeship`): seven, all
+    // Perdo, 15+15+20+20+20+15+15 = 120 — exactly
+    // the magus spell-levels budget (ArMDE:2435 `#### Magus Only —
+    // Apprenticeship`), which an empty error set above
     // already proves is neither over- nor under-spent.
     assert_eq!(darius.spells.len(), 7);
 
