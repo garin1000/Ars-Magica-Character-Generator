@@ -91,39 +91,37 @@ fn issue_codes(result: &ValidationResult) -> Vec<&str> {
 /// profile's own base, but the passage ("Like companion and magus characters,
 /// this character has Confidence points") exists only to give an *animal* —
 /// which has no base Confidence — what a companion/magus already has. On a
-/// companion the delta double-counts: today Confidence Score 2 / Points 6,
-/// where the book gives an animal Score 1 / Points 3 and gives a companion
-/// nothing extra at all (Q-11 is settled: an "animals only" tag stays
-/// unselectable by a human once the D38 character-type gate lands — see
-/// `tmp/x7bd-verdicts.md` for the fix sketch). This red pins the double-count
-/// on today's engine, independent of which remedy Phase 2 picks.
+/// companion the delta used to double-count: Confidence Score 2 / Points 6,
+/// where the book gives an animal Score 1 / Points 3 and a companion nothing
+/// extra at all.
 ///
-/// Blocked on the D38 character-type gate that X5 builds (F-556), so this test is
-/// ignored until X5 lands the gate and removes the `ignore`.
+/// RE-SCOPED, not merely un-ignored (Q-11/D58 is now settled: animal
+/// characters are a deliberate non-goal, so this Virtue's "animals only"
+/// restriction is not a computable axis to build — it must instead become
+/// unselectable by every buildable character type, exactly like
+/// `virtue.domestic_animal`'s own F-556 remedy). X5a's gate
+/// (`prerequisites: {kind: none, value: [is_grog, is_companion,
+/// order_member]}`, ArMDE:3873-3876) covers grog, companion, magus AND
+/// mythic_companion (`is_companion` is true for both), since none of the four
+/// shipped types are animals. Once Ferocity can never be legally selected at
+/// all, the ORIGINAL arithmetic assertion (compute `confidence()` directly on
+/// an entity holding it) tests a state `validate()` now refuses outright —
+/// asserting unselectability is the meaningful replacement, not the
+/// now-moot arithmetic. The double-count "disappears with it" exactly as
+/// `docs/vf-audit/batch-03.md`'s own F-89 analysis predicted for this branch.
 #[test]
-#[ignore = "F-89 waits on X5's character-type gate (F-556); X5 removes this ignore"]
 fn f89_ferocity_does_not_double_the_companion_profiles_own_confidence_base() {
     let rs = load_ruleset();
-    let companion = rs.profile(&Id::new("companion")).unwrap();
-    let base_score = companion.confidence_score;
-    let base_points = companion.confidence_points;
-
-    let e = entity("companion", vec![sel("virtue.ferocity")]);
-    let c = confidence(base_score, base_points, &e, &rs);
-
-    assert_eq!(
-        c.score, base_score,
-        "a companion who takes Ferocity should not gain a Confidence Score \
-         the book already grants him for free (ArMDE:3873-3875): got {}, \
-         expected the unmodified base {base_score}",
-        c.score
-    );
-    assert_eq!(
-        c.points, base_points,
-        "a companion who takes Ferocity should not gain Confidence Points \
-         beyond the profile base: got {}, expected {base_points}",
-        c.points
-    );
+    for type_id in ["grog", "companion", "magus", "mythic_companion"] {
+        let e = entity(type_id, vec![sel("virtue.ferocity")]);
+        let result = validate(&e, &rs);
+        assert!(
+            issue_codes(&result).contains(&"prereq_not_met"),
+            "ArMDE:3873-3876 — Ferocity is animals-only (Q-11/D58); a \
+             {type_id} taking it must be refused, got: {:?}",
+            issue_codes(&result)
+        );
+    }
 }
 
 /// F-256 — `virtue.relic`/`virtue.powerful_relic` ship `true_faith_grant`,

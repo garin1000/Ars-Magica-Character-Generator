@@ -132,13 +132,39 @@ pub(crate) fn validate_caps(
             // Social Status must not count against a Supernatural cap, and vice
             // versa — `ArMDE:5083` is a choice between the two readings, not both at
             // once.
-            let matched = matching_ids(&|i, s| {
+            let mut matched = matching_ids(&|i, s| {
                 (cap.both_kinds || i.kind == kind)
                     && i.categories_for(&s.params)
                         .iter()
                         .any(|c| c == &cap.category)
                     && (!cap.major_only || i.magnitude == Magnitude::Major)
             });
+
+            // D68.11: fold in `Effect::GrantsCategoryCount` on BOUGHT
+            // selections (Mythic Blood's hereditary Personality Flaw) — an
+            // id-less phantom item, so the granting selection's own id
+            // stands in for it in the paired-entry message. Bought-only,
+            // matching this whole function's "House-granted items are
+            // exempt" scope: the effect is defined to be read only from
+            // `entity.selections`, never a granted row.
+            for selection in &entity.selections {
+                let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+                    continue;
+                };
+                let counts = item.effects.iter().any(|effect| {
+                    matches!(
+                        effect,
+                        Effect::GrantsCategoryCount { category, magnitude, item_kind }
+                            if (cap.both_kinds || *item_kind == kind)
+                                && category == &cap.category
+                                && (!cap.major_only || *magnitude == Magnitude::Major)
+                    )
+                });
+                if counts {
+                    matched.push(selection.item_ref.clone());
+                }
+            }
+            matched.sort();
             let n = matched.len();
 
             if n > cap.max as usize {

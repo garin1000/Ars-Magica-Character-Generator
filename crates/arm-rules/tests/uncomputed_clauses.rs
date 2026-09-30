@@ -1182,6 +1182,14 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::De,
         family: "eligibility",
     },
+    S2Idiom {
+        // flaw.vendetta (ArMDE:6955-6958, DE): "Dieser Fehler ist im
+        // Allgemeinen auf Magi des Hauses Verditius beschränkt" — the German
+        // rendering of the same "restricted to" eligibility idiom.
+        pattern: r"\bbeschränkt\b",
+        language: Language::De,
+        family: "eligibility",
+    },
     // --- Family 17 (X2c Phase 2 additions, 2026-09-29) ----------------------
     // Writing X2c's verbatim descriptions re-exposed genuine D5/D8/D50-shaped
     // rules this screen did not yet recognize under their real phrasing. Each
@@ -1836,10 +1844,9 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "flaw.harmless_magic",
         "prohibition: bare \"cannot\" — \"cannot permanently destroy anything\", ArMDE:6230-6235",
     ),
-    (
-        "flaw.hermetic_patron",
-        "eligibility: \"must be\" a Redcap or magus \"to take this\" Flaw, ArMDE:6248-6255",
-    ),
+    // flaw.hermetic_patron: resolved (X5a) — the "must be a Redcap or magus"
+    // eligibility clause is now a `prerequisites` gate (D68.2); reclassifies
+    // narrative -> creation_effect. See tmp/x5-verdicts.md.
     (
         "flaw.incompatible_arts",
         "incompatibility: \"may not be combined with\" a Deficiency, ArMDE:6290-6293",
@@ -1952,11 +1959,10 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "flaw.tzadik_nistar",
         "\"need not\" idiom: \"a character need not be Jewish to take this Flaw\", ArMDE:6883-6886",
     ),
-    (
-        "flaw.vendetta",
-        "\"restricted to\" idiom (added for virtue.male_guild_sponsor): \"This Flaw is generally \
-         restricted to magi of House Verditius\", ArMDE:6955-6958",
-    ),
+    // flaw.vendetta: resolved (X5a) — the "restricted to magi of House
+    // Verditius" clause is now a hard `order_member` prerequisite for the
+    // magus half (the House half stays the existing advisory hedge, D16);
+    // reclassifies narrative -> creation_effect. See tmp/x5-verdicts.md.
     // virtue.templar_confrere_or_consoeur: resolved (X2d) — reclassifies to
     // uncomputed_rule; the "need not" idiom hit was a false trigger, but a real
     // clause survives it ("he may possess other Social Status Virtues or
@@ -2915,9 +2921,10 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // tmp/x2c-verdicts.md.
     (
         "virtue.mercurian_magic",
-        "orphan: the Wizard's Vigil auto-knowledge, the Mastery-score stacking, and the \
-         required companion Flaw (Ceremonial Spontaneous Magic, no grants_selection) all have \
-         no effect — only a bare \"mercurian\" marker is computed, ArMDE:4514-4523",
+        "orphan: the Wizard's Vigil auto-knowledge and the Mastery-score stacking still have no \
+         effect — only a bare \"mercurian\" marker is computed. The required companion Flaw \
+         (Ceremonial Spontaneous Magic, \"also have\") is resolved (X5a/D51 row 1): a \
+         `prerequisites` gate, not a grant, ArMDE:4514-4523",
     ),
     (
         "virtue.potent_magic_major",

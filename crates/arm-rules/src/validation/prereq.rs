@@ -115,6 +115,10 @@ pub(crate) struct PrereqCtx<'a> {
     /// otherwise the profile's `is_companion` flag alone — no entity-level
     /// override, mirroring `trained`/`order` (D38).
     is_companion: Option<bool>,
+    /// `Prereq::IsGrog`'s fact: `None` when the type profile is missing,
+    /// otherwise the profile's `is_grog` flag alone — no entity-level
+    /// override, mirroring `is_companion` (D68.9).
+    is_grog: Option<bool>,
     /// The entity's own Hermetic House, if any. `Prereq::House` compares against
     /// it: matching → True, differing → False, absent → Unknown (mirrors how
     /// `trained`/`order` yield Unknown when the profile is missing).
@@ -179,6 +183,7 @@ impl<'a> PrereqCtx<'a> {
         });
         let order: Option<bool> = type_profile.map(|p| p.order_member);
         let is_companion: Option<bool> = type_profile.map(|p| p.is_companion);
+        let is_grog: Option<bool> = type_profile.map(|p| p.is_grog);
 
         // Effective score per ability: the max bought score (a parameterized
         // ability may appear more than once with different specialties; the
@@ -267,6 +272,7 @@ impl<'a> PrereqCtx<'a> {
             trained,
             order,
             is_companion,
+            is_grog,
             house: entity.house.as_ref(),
             ability_scores,
             art_scores,
@@ -388,6 +394,13 @@ fn evaluate_prereq(
         // narrower audience stated on the entry rather than duplicated across
         // every type profile's `forbidden_traits`.
         Prereq::IsCompanion => match ctx.is_companion {
+            Some(true) => (Tri::True, false),
+            Some(false) => (Tri::False, false),
+            None => (Tri::Unknown, true),
+        },
+        // Enforced against the profile's `is_grog` flag alone (D68.9), the
+        // audience twin of `IsCompanion`.
+        Prereq::IsGrog => match ctx.is_grog {
             Some(true) => (Tri::True, false),
             Some(false) => (Tri::False, false),
             None => (Tri::Unknown, true),
@@ -609,6 +622,7 @@ mod tests {
             trained: None,
             order: None,
             is_companion: None,
+            is_grog: None,
             house: None,
             ability_scores,
             art_scores,
@@ -640,6 +654,7 @@ mod tests {
             trained: Some(true),
             order: None,
             is_companion: None,
+            is_grog: None,
             house: None,
             ability_scores,
             art_scores,
@@ -693,6 +708,7 @@ mod tests {
             trained: None,
             order: None,
             is_companion: Some(true),
+            is_grog: None,
             house: None,
             ability_scores,
             art_scores,
@@ -719,6 +735,7 @@ mod tests {
             trained: None,
             order: None,
             is_companion: Some(false),
+            is_grog: None,
             house: None,
             ability_scores,
             art_scores,
@@ -743,6 +760,7 @@ mod tests {
             trained: None,
             order: None,
             is_companion: None,
+            is_grog: None,
             house: None,
             ability_scores,
             art_scores,
@@ -768,6 +786,7 @@ mod tests {
             trained: None,
             order: None,
             is_companion: None,
+            is_grog: None,
             house: None,
             ability_scores,
             art_scores,
@@ -796,6 +815,7 @@ mod tests {
             trained: None,
             order: None,
             is_companion: None,
+            is_grog: None,
             house: None,
             ability_scores,
             art_scores,

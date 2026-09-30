@@ -956,7 +956,10 @@ pub(crate) fn ability_authorizations(entity: &Entity, ruleset: &Ruleset) -> Abil
                 | Effect::AbilityScoreCapAllExcept { .. }
                 // D69/X7b-e: a surfaced-only roll penalty, not an Ability
                 // authorization.
-                | Effect::DecrepitudeScaledRollMod { .. } => {}
+                | Effect::DecrepitudeScaledRollMod { .. }
+                // D68.11: an id-less category-cap count, not an Ability
+                // authorization.
+                | Effect::GrantsCategoryCount { .. } => {}
             }
         }
     }

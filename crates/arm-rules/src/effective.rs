@@ -452,6 +452,10 @@ macro_rules! irrelevant_effect_variants {
         // mod; consumed only there.
         | Effect::AbilityScoreCapOverrideParam { .. }
         | Effect::AbilityScoreCapAllExcept { .. }
+        // D68.11: an id-less category-cap count, consumed only by
+        // `validation/caps.rs::validate_caps` reading `entity.selections`
+        // directly — no score, no Affinity ratio, no in-play mod.
+        | Effect::GrantsCategoryCount { .. }
     };
 }
 // Re-exported (rather than left textually scoped) so the domain submodules

@@ -2001,9 +2001,9 @@ impl Ruleset {
     /// [`Prereq::Has`] against point items, [`Prereq::AbilityMin`] against the
     /// ability catalogue, [`Prereq::ArtMin`] against the Art catalogue, and
     /// [`Prereq::House`] against the House registry. `HermeticallyTrained`,
-    /// `OrderMember`, and `IsCompanion` (D38) carry no reference at all — each
-    /// reads a bare profile flag — so there is nothing to check for any of
-    /// them.
+    /// `OrderMember`, `IsCompanion` (D38), and `IsGrog` (D68.9) carry no
+    /// reference at all — each reads a bare profile flag — so there is
+    /// nothing to check for any of them.
     ///
     /// `depth` is 1 at the top-level prerequisite and increments once per
     /// `All`/`Any`/`Nor` nesting level (K8). Past [`PREREQ_MAX_DEPTH`] this
@@ -2069,7 +2069,10 @@ impl Ruleset {
                 }
             }
             // Bare markers, none carrying a reference: nothing to check.
-            Prereq::HermeticallyTrained | Prereq::OrderMember | Prereq::IsCompanion => {}
+            Prereq::HermeticallyTrained
+            | Prereq::OrderMember
+            | Prereq::IsCompanion
+            | Prereq::IsGrog => {}
             // B1/D21/F-502: `category` has no closed registry (free-form, like
             // `PointItem::categories` itself), so the only referential check
             // available is "does at least one point item declare it" — the
@@ -2788,7 +2791,12 @@ impl Ruleset {
                 | Effect::WaivesAbilityAgeCap
                 | Effect::HalvesSpellCapBeyondTouch
                 // Identical shape: no parameter, no ref, nothing to validate.
-                | Effect::ConfersHermeticTraining => {
+                | Effect::ConfersHermeticTraining
+                // D68.11: `category` is free-form (like `PointItem::categories`
+                // itself) and `magnitude`/`item_kind` are closed enums,
+                // serde-checked at parse time — nothing left to resolve
+                // referentially.
+                | Effect::GrantsCategoryCount { .. } => {
                     continue;
                 }
                 // D3/R3-1: presence-only gate — `param` must resolve to a

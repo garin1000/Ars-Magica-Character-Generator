@@ -224,6 +224,10 @@ export type Effect =
       advancement_den?: number;
     }
   | { type: 'grants_selection'; items: string[] }
+  // D68.11: an id-less category-cap count (Mythic Blood's hereditary
+  // Personality Flaw, ArMDE:4588) — no real point item, so nothing for a
+  // picker to render; read only by the derived category-cap counts.
+  | { type: 'grants_category_count'; category: string; magnitude: Magnitude; item_kind: ItemKind }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
   | {
@@ -370,7 +374,8 @@ export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic' | 'academic
 // are companions too"), so a narrower audience ("only companions can take
 // this") lives on the entry rather than duplicated across every type
 // profile's forbidden traits, and a future companion-like profile joins by
-// setting the flag alone. `has_category` (D21/F-502) is the category-ranging
+// setting the flag alone. `is_grog` (D68.9) is the audience twin of
+// `is_companion`, true only for `grog` today. `has_category` (D21/F-502) is the category-ranging
 // twin of `has`: the entity must hold (bought or granted) at least one item
 // whose in-force category is `value`. `age_min` (D69/X7b-e, University Dean)
 // requires the entity's own age to be at least `value` years. `has_category_at_magnitude`
@@ -390,6 +395,7 @@ export type Prereq =
   | { kind: 'hermetically_trained' }
   | { kind: 'order_member' }
   | { kind: 'is_companion' }
+  | { kind: 'is_grog' }
   | { kind: 'has_category'; value: string }
   | { kind: 'age_min'; value: number }
   | { kind: 'has_category_at_magnitude'; value: HasCategoryAtMagnitudeValue };
@@ -1271,6 +1277,10 @@ export interface EntityTypeProfile {
   // companions are companions too" — a capability flag parallel to
   // hermetically_trained, never the exact type id. Omitted when false.
   is_companion?: boolean;
+  // Whether this character type counts as a grog for the `is_grog` Prereq
+  // (D68.9): true only for `grog` today. A capability flag parallel to
+  // is_companion, never the exact type id. Omitted when false.
+  is_grog?: boolean;
   // Whether this type chooses a Mythic Companion type (free status/Minor Virtue
   // + required package). Capability flag parallel to hermetically_trained. Omitted when false.
   has_mythic_type?: boolean;

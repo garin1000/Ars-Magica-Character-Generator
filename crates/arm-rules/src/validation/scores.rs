@@ -763,7 +763,8 @@ pub(crate) fn validate_personality_traits(
             | Effect::ForbidsAbilities { .. }
             | Effect::AbilityScoreCapOverrideParam { .. }
             | Effect::AbilityScoreCapAllExcept { .. }
-            | Effect::DecrepitudeScaledRollMod { .. } => {}
+            | Effect::DecrepitudeScaledRollMod { .. }
+            | Effect::GrantsCategoryCount { .. } => {}
         }
     });
     let effective_max = tightened_max.unwrap_or(3);
@@ -882,7 +883,8 @@ pub(crate) fn validate_personality_trait_pairs(
             | Effect::ForbidsAbilities { .. }
             | Effect::AbilityScoreCapOverrideParam { .. }
             | Effect::AbilityScoreCapAllExcept { .. }
-            | Effect::DecrepitudeScaledRollMod { .. } => {}
+            | Effect::DecrepitudeScaledRollMod { .. }
+            | Effect::GrantsCategoryCount { .. } => {}
         }
     });
 }

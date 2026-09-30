@@ -651,6 +651,7 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
     case 'hermetically_trained':
     case 'order_member':
     case 'is_companion':
+    case 'is_grog':
     case 'has_category':
     case 'age_min':
     case 'has_category_at_magnitude':

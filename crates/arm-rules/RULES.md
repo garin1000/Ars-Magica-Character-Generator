@@ -164,7 +164,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   below under-count their points; `core_rules_tainted_virtues_carry_the_tainted_flag`
   in `crates/arm-rules/tests/data_integrity.rs` now pins a sample of tagged
   entries plus that control.
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:231).
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:257).
   The book frames the limit as a "should", so it is a **non-blocking warning**,
   measured against the points **actually taken** (not the type budget): a side
   warns when `2·tainted_points > total_points` for that side (Virtue / Flaw).
@@ -214,7 +214,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   Tainted precedent.** `validate_share_of_kind_cap` takes the **folded**
   selection list (bought ++ granted), because **Devil Child grants a free
   Demonic Might or Demonic Powers** (`ArMDE:3673`) and a granted copy is still a copy
-  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :231) reads raw
+  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :257) reads raw
   `entity.selections` and so counts only bought ones — arguably right for Tainted,
   which the book frames as a character-generation guideline. Two identically
   worded "half" rules therefore disagree about grants **on purpose**; do not
@@ -1156,7 +1156,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :320) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :326) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -1241,8 +1241,8 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2111, shared by
-  `validate_prereq_refs` :2014 and `validate_effect_refs` :2450) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2114, shared by
+  `validate_prereq_refs` :2022 and `validate_effect_refs` :2461) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
@@ -10093,6 +10093,235 @@ which input surface owns which step:
 
 `CreationPhase::ALL` therefore still has twelve members; the magus flow is ten
 declared phases plus the wizard's synthetic `review`.
+
+#### `Prereq::IsGrog` — the grog audience twin of `IsCompanion` (D68.9)
+
+> "Grogs may not take this Virtue." (Temporal Influence, `ArMDE:5139`)
+> "Grogs may not take this Flaw." (Outlaw Leader, `ArMDE:6548`)
+> "This Flaw may only be taken by grogs." (Bound to Role (Role), `ArMDE:5747`)
+
+Three entries name grogs as an audience — two excluding them, one admitting only
+them — with no engine gate before this milestone.
+
+- Data: `rules/core/character_types.json` — `grog` gains `"is_grog": true`
+  (every other profile leaves it unset, default `false`, matching `is_companion`'s
+  own shape).
+- Implementation: `Prereq::IsGrog` (`types.rs`, beside `IsCompanion`), evaluated
+  by `validation/prereq.rs::evaluate_prereq` against
+  `PrereqCtx::build`'s new `is_grog: Option<bool>` fact — profile-only, no
+  entity-level override, exactly mirroring `is_companion`/`trained`/`order`
+  (D56/A0). `ruleset/integrity.rs::validate_prereq_refs` lists it among the
+  bare-marker variants (nothing to resolve referentially).
+- Data: `virtue.temporal_influence` and `flaw.outlaw_leader` each carry
+  `"prerequisites": { "kind": "none", "value": [{ "kind": "is_grog" }] }`
+  (`Nor` — "not a grog"); `flaw.bound_to_role_role` carries
+  `"prerequisites": { "kind": "is_grog" }` directly ("must be a grog").
+- UI mirror: `ui/src/lib/types.ts`'s `Prereq` union gains `{ kind: 'is_grog' }`
+  and `EntityTypeProfile.is_grog?: boolean`; `ui/src/lib/derive.ts::houseOnlyValue`
+  lists `'is_grog'` among the undecided kinds. Parity enforced by the existing
+  `prereq-parity.test.ts`, which diffs the Rust `Prereq` enum against the TS
+  union textually — adding `IsGrog` to `types.rs` without the TS/derive.ts twin
+  fails that test.
+- Tests: `x5_prerequisites.rs` — `grog_is_refused_temporal_influence`,
+  `grog_is_refused_outlaw_leader`, `companion_is_refused_bound_to_role`.
+
+#### Blood of the Nephilim — companions only (F-24/D38)
+
+> "Magi and Grogs may not take this Virtue."
+> — `ArMDE:3517` (entry `ArMDE:3504-3518`)
+
+"Only companions (and mythic companions) may" is exactly the already-built
+`Prereq::IsCompanion` (Wealthy/Poor, above) — no engine change, only the missing
+gate.
+
+- Data: `rules/core/virtues_flaws.json` — `virtue.blood_of_the_nephilim` gains
+  `"prerequisites": { "kind": "is_companion" }`.
+- Test: `x5_prerequisites.rs::blood_of_the_nephilim_is_refused_to_magus_and_grog_but_legal_for_companion`.
+
+#### The Order-audience Story Flaws — Tormenting Master, Vendetta, Hermetic Patron (D68.2)
+
+> "This Flaw is only applicable to magi." (Tormenting Master, `ArMDE:6851-6854`,
+> the Gauntlet named one sentence earlier)
+> "This Flaw is generally restricted to magi of House Verditius." (Vendetta,
+> `ArMDE:6955-6958`)
+> "You must be a Redcap or magus to take this Flaw." (Hermetic Patron,
+> `ArMDE:6248-6255`)
+
+All three name the Order of Hermes' membership (magus, or — for Hermetic
+Patron — a Redcap) as the audience, not Hermetic training: an Abandoned
+Apprentice (trained, never Gauntleted, no Order membership) must stay refused
+Tormenting Master, which is exactly what `Prereq::OrderMember` (not
+`HermeticallyTrained`) gives.
+
+- Data: `flaw.tormenting_master` gains `"prerequisites": { "kind": "order_member" }`
+  and reclassifies `narrative` → `creation_effect` (D67: a prerequisite the
+  engine checks counts as computed).
+- Data: `flaw.vendetta` gains the SAME hard `"prerequisites": { "kind":
+  "order_member" }`, alongside its existing (untouched) `advisory_prerequisites:
+  { kind: house, value: house.verditius }` — the House half stays a hedge
+  (D16), only the unhedged magus half becomes a hard gate. Reclassifies
+  `narrative` → `creation_effect`.
+- Data: `flaw.hermetic_patron` gains `"prerequisites": { "kind": "any", "value":
+  [{ "kind": "has", "value": "virtue.redcap" }, { "kind": "has", "value":
+  "virtue.lone_redcap" }, { "kind": "order_member" }] }` and reclassifies
+  `narrative` → `creation_effect`.
+- Tests: `x5_prerequisites.rs` —
+  `tormenting_master_requires_order_membership`,
+  `vendetta_house_half_stays_advisory_and_magus_half_becomes_a_hard_gate`,
+  `hermetic_patron_requires_redcap_or_magus`.
+
+#### Rector/Proctor and Male Guild Sponsor — closed lists, not a bare Social Status (D68.10/Q-X5-2)
+
+> "The character must have a Social Status Virtue dictating his place within
+> the university." (Rector/Proctor, `ArMDE:6673`)
+> "The character must select a separate guild Social Status Virtue as well as
+> this free Virtue." (Male Guild Sponsor, `ArMDE:4441`)
+
+Both previously read (or would have read) a bare `has_category: social_status`
+leaf — vacuous, since every profile already requires *some* Social Status
+(D41), so ANY Social Status Virtue (a Merchant, say) would satisfy either
+clause without actually naming a university post or a guild rank.
+
+- Data: `flaw.rector` gains `"prerequisites": { "kind": "any", "value":
+  [...] }` over seven university-affiliated Social Status Virtues, swept
+  directly against each entry's own passage: `virtue.baccalaureus`
+  (`ArMDE:3470-3474`, "a three-year program at a university"),
+  `virtue.beadle` (`ArMDE:3480-3482`, "employed by the university"),
+  `virtue.doctor_in_faculty` (`ArMDE:3683-3691`, "graduated from one of the
+  higher faculties of a university"), `virtue.magister_in_artibus`
+  (`ArMDE:4385-4393`, "incepted Master of Arts in one of the universities"),
+  `virtue.magister_in_medicina` (`ArMDE:4395-4397`, "the same benefits as
+  Doctor in (Faculty)"), `virtue.simple_student` (`ArMDE:4958-4962`, "a
+  university student"), `virtue.university_grammar_teacher`
+  (`ArMDE:5195-5197`, "employed by a university"). Explicitly excluded:
+  `virtue.cathedral_school_master` (`ArMDE:3551`, "typically not a university
+  man"), `virtue.jurist` (`ArMDE:4165`, "not necessarily university
+  trained"), `virtue.nuntius` (`ArMDE:4604`, "employed by a university
+  nation" but "not necessarily educated", a distinct claim from holding
+  university standing). Reclassifies `narrative` → `creation_effect`.
+- Data: `virtue.male_guild_sponsor`'s existing `has_category: social_status`
+  leaf is REPLACED by `"prerequisites": { "kind": "any", "value": [{ "kind":
+  "has", "value": "virtue.guild_apprentice" }, { "kind": "has", "value":
+  "virtue.journeyman" }, { "kind": "has", "value": "virtue.guild_master" },
+  { "kind": "has", "value": "virtue.senior_master" }, { "kind": "has",
+  "value": "virtue.guild_dean" }] }` — the five guild-rank Social Status
+  Virtues the catalogue carries. Classification (`uncomputed_rule`) already
+  reflected a computed prerequisite and is unchanged.
+- Tests: `x5_prerequisites.rs` —
+  `rector_without_a_university_status_is_refused_and_with_one_is_legal`,
+  `male_guild_sponsor_without_a_guild_status_is_refused_and_with_one_is_legal`.
+
+#### D51's worked instances — Mercurian Magic, Leper Magus, Mythic Blood
+
+> "All known members of the Mercurian lineage also have the Minor Flaw
+> Ceremonial Spontaneous Magic." — Mercurian Magic, `ArMDE:4522`
+
+"Also have" states a prerequisite, not a bundled effect: `virtue.mercurian_magic`'s
+`"prerequisites": { "kind": "hermetically_trained" }` becomes `"prerequisites":
+{ "kind": "all", "value": [{ "kind": "hermetically_trained" }, { "kind": "has",
+"value": "flaw.ceremonial_spontaneous_magic" }] }`.
+
+> "This Virtue can only be bought if the character also has the Leprosy Flaw
+> … granting the Life Boost Minor Virtue." — Leper Magus, `ArMDE:4249-4252`
+
+Two separate corrections. First, "can only be bought if… also has" is a
+prerequisite `virtue.leper_magus` was missing: its existing three-way
+`"prerequisites": { "kind": "all", "value": [order_member, house(house.tytalus)]
+}` (already landed by X3) gains a third conjunct, `{ "kind": "has", "value":
+"flaw.leprosy" }`. Second, "granting the Life Boost Minor Virtue" is a GRANT,
+not a duplicated effect: the entry's inlined `{ "type": "special_casting_mod",
+"kind": "life_boost" }` — which duplicated `virtue.life_boost`'s own effect
+rather than actually holding that Virtue — is replaced by `{ "type":
+"grants_selection", "items": ["virtue.life_boost"] }`.
+
+> "the character also gains a Minor Personality Flaw representing an inherited
+> trait from her heritage… both at no extra cost." — Mythic Blood, `ArMDE:4588`
+> (cf. the Personality-Flaw soft cap of 2, `ArMDE:2820`)
+
+The hardest of the three: an OPEN grant naming no specific Flaw id, so nothing
+exists to hold via `Effect::GrantsSelection` (no id to grant, `Prereq::Has`, or
+export by name) — yet it must still count toward the Personality-Flaw category
+cap, while remaining free of the point budget (D68.11).
+
+- New machinery, once (D68.11): `Effect::GrantsCategoryCount { category,
+  magnitude, item_kind }` (`types.rs`, beside `GrantsSelection`) — an id-less
+  phantom item this entity is treated as holding one more of, for
+  `validate_caps`'s per-category ceiling/floor counts only. Read from BOUGHT
+  selections alone, exactly like every OTHER cap input
+  (`validation/caps.rs::validate_caps`'s existing "House-granted items are
+  exempt" scope): `push_category_cap_issues` now folds in every bought
+  selection carrying a matching `GrantsCategoryCount`, naming that selection's
+  own id in the paired-entry message (there being no id of its own to name).
+  Every OTHER exhaustive `Effect` fold in the engine (`effective.rs`'s
+  `irrelevant_effect_variants!()` macro and its seven call sites, `derived.rs`,
+  `effective/spell.rs` ×3, `validation/scores.rs` ×2, `validation/mod.rs`,
+  `ruleset/integrity.rs::validate_effect_refs`) gained a no-op arm — it
+  contributes to nothing else (no score, no Affinity ratio, no in-play mod, no
+  referential check).
+- Data: `virtue.mythic_blood` gains a second effect, `{ "type":
+  "grants_category_count", "category": "personality", "magnitude": "minor",
+  "item_kind": "flaw" }`, alongside its existing `magical_focus` effect.
+- **The Magical Focus exclusion needs NO change.** `tmp/x3-scope.md`'s note
+  that Mythic Blood should gain `incompatible_with` against both Magical Focus
+  Virtues (`ArMDE:4405`, "only one Magical Focus… regardless of the source")
+  is already true today by a better mechanism:
+  `validation/selections.rs::validate_magical_focus` counts
+  `Effect::MagicalFocus` across every bought-PLUS-granted selection, and Mythic
+  Blood's bundled focus already carries that effect. Adding `incompatible_with`
+  on top would be a second, redundant mechanism for the same rule (D37).
+- Tests: `x5_prerequisites.rs` —
+  `mercurian_magic_requires_ceremonial_spontaneous_magic`,
+  `leper_magus_requires_leprosy`,
+  `leper_magus_grants_life_boost_via_grants_selection`,
+  `mythic_blood_open_flaw_grant_counts_toward_personality_cap`,
+  `mythic_blood_and_a_standalone_magical_focus_already_trip_the_one_focus_rule`
+  (SANITY).
+
+#### Shamash and Sofer — require Educated (Hebrew) (F-270/F-283)
+
+> "the character must have the Educated (Hebrew) Virtue" — Shamash,
+> `ArMDE:4944`; Sofer, `ArMDE:4996` (same sentence)
+
+Both entries carried the requirement in prose only.
+
+- Data: `virtue.shamash` and `virtue.sofer` each gain `"prerequisites": {
+  "kind": "has", "value": "virtue.educated_hebrew" }` and reclassify
+  `narrative` → `creation_effect`.
+- Tests: `x5_prerequisites.rs::shamash_requires_educated_hebrew`,
+  `sofer_requires_educated_hebrew`.
+
+#### Ferocity — animals-only, so unselectable by every buildable type (F-89/Q-11/D58)
+
+> "Like companion and magus characters, this character has Confidence
+> points… take 3 Confidence points and a Confidence Score of 1."
+> — `ArMDE:3873-3876`
+
+The passage's "animals only" descriptor (shared with `virtue.domestic_animal`
+and `flaw.companion_animal`) has no engine model — animal characters are a
+deliberate non-goal (D58) — and on a companion/magus its `confidence_bonus`
+Effect used to double-count what the type profile already grants for free
+(Confidence Score 2/Points 6 instead of the book's unmodified 1/3). Per Q-11's
+settled ruling, the fix is the SAME shape F-556 gives `virtue.domestic_animal`:
+gate the entry so no buildable human type can select it at all, rather than
+inventing a partial arithmetic patch.
+
+- Data: `virtue.ferocity` gains `"prerequisites": { "kind": "none", "value":
+  [{ "kind": "is_grog" }, { "kind": "is_companion" }, { "kind":
+  "order_member" }] }` — `Nor` over the three profile flags that between them
+  cover every shipped type (grog via `is_grog`; companion and mythic_companion
+  via `is_companion`; magus via `order_member`), so the Virtue is refused to
+  all four.
+- This also resolves, rather than requiring a code change for, the review
+  finding that `effective/gift_confidence.rs::confidence`'s base-0 gate
+  (added for F-306, `virtue.self_confident`'s own grog case) zeroes Ferocity's
+  grant for a grog: since a grog can no longer legally hold Ferocity at all,
+  that gate's behavior on it is unreachable in the normal build flow, and the
+  gate's own job (denying a *delta* Effect any purchase on a base-0 profile)
+  remains correct for `virtue.self_confident`.
+- Test: `x7bd_wrong_numbers.rs::f89_ferocity_does_not_double_the_companion_profiles_own_confidence_base`,
+  RE-SCOPED from an arithmetic assertion (now moot — the state it tested is no
+  longer reachable through `validate()`) to an unselectability check across
+  all four shipped types.
 
 ---
 

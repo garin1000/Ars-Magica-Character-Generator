@@ -337,6 +337,15 @@ pub enum Prereq {
     /// prerequisite. `mythic_companion` sets it too: "mythic companions are
     /// companions too" (RULES.md records the ruling).
     IsCompanion,
+    /// The entity must count as a grog — the audience twin of [`Self::IsCompanion`]
+    /// (D68.9): some entries name grogs as the only permitted audience
+    /// ("This Flaw may only be taken by grogs", ArMDE:5747), others exclude them
+    /// specifically ("Grogs may not take this Virtue", ArMDE:5139) via
+    /// [`Self::Nor`] wrapping this leaf. Evaluated against the type profile's own
+    /// `is_grog` flag alone, profile-only like `IsCompanion`/`HermeticallyTrained`/
+    /// `OrderMember` (D56/A0) — **not** the profile's `id`, so a future grog-like
+    /// profile joins this audience by setting the flag in data.
+    IsGrog,
     /// The entity must hold (bought or granted) at least one item whose
     /// in-force category is this string — the category-ranging twin of
     /// [`Self::Has`], evaluated the same grant-aware way (D21;
@@ -390,7 +399,7 @@ impl Prereq {
     /// which depends on the expression and the House and nothing else. Every
     /// non-House leaf is therefore treated as undecided rather than as false, so
     /// a `Has`/`AbilityMin`/`ArtMin`/`HermeticallyTrained`/`OrderMember`/
-    /// `IsCompanion` prerequisite never excludes an
+    /// `IsCompanion`/`IsGrog` prerequisite never excludes an
     /// item from a menu: those resolve as the build progresses, and dropping
     /// them would be an order-dependent exclusion, harsher than the
     /// error-that-resolves model the engine uses everywhere else. A House does
@@ -435,6 +444,7 @@ impl Prereq {
             | Prereq::HermeticallyTrained
             | Prereq::OrderMember
             | Prereq::IsCompanion
+            | Prereq::IsGrog
             | Prereq::HasCategory(_)
             | Prereq::AgeMin(_)
             | Prereq::HasCategoryAtMagnitude { .. } => None,
@@ -1855,6 +1865,27 @@ pub enum Effect {
     GrantsSelection {
         /// The Virtue/Flaw ids granted for free.
         items: std::collections::BTreeSet<Id>,
+    },
+    /// An open, id-less grant that counts toward a category cap without
+    /// naming a real point item (D68.11) — Mythic Blood's hereditary "the
+    /// character also gains a Minor Personality Flaw... both at no extra
+    /// cost" (ArMDE:4588): the rulebook fixes no specific Flaw, so there is
+    /// nothing to grant via [`Self::GrantsSelection`] (no id exists to grant,
+    /// `Prereq::Has` it, or export by name) — only a category/magnitude/kind
+    /// this entity is treated as holding one more of, purely for
+    /// `validate_caps`'s per-category ceiling/floor counts (ArMDE:2820).
+    /// Budget-exempt like every other grant, and read from the BOUGHT
+    /// selection carrying it alone, never from a granted row (mirrors
+    /// `validate_caps`'s existing "counts `entity.selections` only" scope).
+    ///
+    /// Source: ArMDE:4588.
+    GrantsCategoryCount {
+        /// The category this entity is treated as holding one more item of.
+        category: String,
+        /// The magnitude that phantom item carries.
+        magnitude: Magnitude,
+        /// Which item kind (Virtue vs Flaw) the phantom item counts as.
+        item_kind: ItemKind,
     },
     /// Grants `amount` starting levels of enchanted devices (base 0, summed).
     /// Magic Items grants +25 (stackable), Redcap 50.
@@ -4282,6 +4313,12 @@ pub struct EntityTypeProfile {
     /// type id. Defaults to false.
     #[serde(default, skip_serializing_if = "is_false")]
     pub is_companion: bool,
+    /// Whether this character type counts as a grog for the audience
+    /// `Prereq::IsGrog` reads (D68.9): true only for the plain `grog` profile
+    /// today. A capability flag parallel to `is_companion`, never a hardcoded
+    /// type id. Defaults to false.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub is_grog: bool,
     /// Whether this character type chooses a Mythic Companion *type* (which
     /// confers a free status/Minor Virtue and a required V/F package). A
     /// capability flag parallel to `is_magus`; the type selector and

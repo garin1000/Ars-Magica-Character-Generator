@@ -102,7 +102,9 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AbilityScoreCapOverrideParam { .. }
         | Effect::AbilityScoreCapAllExcept { .. }
         // D69/X7b-e: a surfaced-only roll penalty, not a contribution here.
-        | Effect::DecrepitudeScaledRollMod { .. } => None,
+        | Effect::DecrepitudeScaledRollMod { .. }
+        // D68.11: an id-less category-cap count, not a spell-levels contribution.
+        | Effect::GrantsCategoryCount { .. } => None,
     })
 }
 
@@ -206,7 +208,9 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AbilityScoreCapOverrideParam { .. }
         | Effect::AbilityScoreCapAllExcept { .. }
         // D69/X7b-e: a surfaced-only roll penalty, not a contribution here.
-        | Effect::DecrepitudeScaledRollMod { .. } => None,
+        | Effect::DecrepitudeScaledRollMod { .. }
+        // D68.11: an id-less category-cap count, not a general-XP contribution.
+        | Effect::GrantsCategoryCount { .. } => None,
     })
 }
 
@@ -627,7 +631,10 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::ForbidsAbilities { .. }
                 | Effect::AbilityScoreCapOverrideParam { .. }
                 | Effect::AbilityScoreCapAllExcept { .. }
-                | Effect::DecrepitudeScaledRollMod { .. } => None,
+                | Effect::DecrepitudeScaledRollMod { .. }
+                // D68.11: an id-less category-cap count, not a Spell Mastery
+                // Affinity.
+                | Effect::GrantsCategoryCount { .. } => None,
             })
     });
     best_affinity(found)

@@ -264,16 +264,22 @@ fn male_guild_sponsor_alone_fails_prereq_not_met() {
     );
 }
 
-/// Control: held alongside a genuinely separate Social Status, the
-/// prerequisite must be satisfied. Passes today (no prereq exists yet) and
-/// must keep passing, meaningfully, once phase 2 lands a prereq that
-/// correctly excludes the item's own row from the category it asks about.
+/// Control: held alongside a genuinely separate GUILD Social Status, the
+/// prerequisite must be satisfied. X5a (D68.10/Q-X5-2) narrowed the
+/// prerequisite from a bare `has_category: social_status` leaf (vacuous — ANY
+/// Social Status satisfied it, since D41 already mandates one) to a closed
+/// list of the five guild-rank Social Status Virtues, so `virtue.gentleman`
+/// (a non-guild status) no longer qualifies here; `virtue.guild_apprentice`
+/// does.
 #[test]
 fn male_guild_sponsor_with_a_separate_social_status_is_satisfied() {
     let ruleset = full_ruleset();
     let e = entity(
         "companion",
-        vec![sel("virtue.male_guild_sponsor"), sel("virtue.gentleman")],
+        vec![
+            sel("virtue.male_guild_sponsor"),
+            sel("virtue.guild_apprentice"),
+        ],
     );
     let result = validate(&e, &ruleset);
     let named_male_guild_sponsor = result.issues.iter().any(|i| {

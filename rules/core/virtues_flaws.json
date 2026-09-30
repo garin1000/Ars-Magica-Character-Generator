@@ -264,6 +264,7 @@
     "categories": ["supernatural"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "is_grog" },
     "parameters": [{ "key": "role", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }],
     "source": { "anchor": "bound-to-role-role", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5735, 5748] }
@@ -1457,8 +1458,16 @@
     "kind": "flaw",
     "magnitude": "minor",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": {
+      "kind": "any",
+      "value": [
+        { "kind": "has", "value": "virtue.redcap" },
+        { "kind": "has", "value": "virtue.lone_redcap" },
+        { "kind": "order_member" }
+      ]
+    },
     "source": { "anchor": "hermetic-patron", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6248, 6255] }
   },
   {
@@ -2168,6 +2177,7 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "none", "value": [{ "kind": "is_grog" }] },
     "effects": [
       { "type": "grants_reputation", "kind": "local", "score": 3 },
       { "type": "ability_authorization", "categories": ["martial"] }
@@ -2550,8 +2560,20 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": {
+      "kind": "any",
+      "value": [
+        { "kind": "has", "value": "virtue.baccalaureus" },
+        { "kind": "has", "value": "virtue.beadle" },
+        { "kind": "has", "value": "virtue.doctor_in_faculty" },
+        { "kind": "has", "value": "virtue.magister_in_artibus" },
+        { "kind": "has", "value": "virtue.magister_in_medicina" },
+        { "kind": "has", "value": "virtue.simple_student" },
+        { "kind": "has", "value": "virtue.university_grammar_teacher" }
+      ]
+    },
     "source": { "anchor": "rectorproctor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6671, 6674] }
   },
   {
@@ -2993,8 +3015,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "order_member" },
     "source": { "anchor": "tormenting-master", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6851, 6854] }
   },
   {
@@ -3222,8 +3245,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "order_member" },
     "advisory_prerequisites": { "kind": "house", "value": "house.verditius" },
     "source": { "anchor": "vendetta", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6955, 6958] }
   },
@@ -3802,6 +3826,7 @@
     "categories": ["supernatural"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "is_companion" },
     "incompatible_with": ["flaw.age_quickly", "flaw.lycanthrope", "virtue.faerie_blood", "virtue.giant_blood", "virtue.mythic_blood", "virtue.the_gift", "virtue.true_faith"],
     "excluded_if_holds": ["affects_size"],
     "effects": [
@@ -4620,6 +4645,10 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": {
+      "kind": "none",
+      "value": [{ "kind": "is_grog" }, { "kind": "is_companion" }, { "kind": "order_member" }]
+    },
     "effects": [{ "type": "confidence_bonus", "score": 1, "points": 3 }],
     "source": { "anchor": "ferocity", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3873, 3876] }
   },
@@ -5350,8 +5379,15 @@
     "classification": "uncomputed_rule",
     "trained": true,
     "entity_kinds": ["character"],
-    "prerequisites": { "kind": "all", "value": [{ "kind": "order_member" }, { "kind": "house", "value": "house.tytalus" }] },
-    "effects": [{ "type": "special_casting_mod", "kind": "life_boost" }],
+    "prerequisites": {
+      "kind": "all",
+      "value": [
+        { "kind": "order_member" },
+        { "kind": "house", "value": "house.tytalus" },
+        { "kind": "has", "value": "flaw.leprosy" }
+      ]
+    },
+    "effects": [{ "type": "grants_selection", "items": ["virtue.life_boost"] }],
     "source": { "anchor": "leper-magus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4249, 4252] }
   },
   {
@@ -5683,7 +5719,16 @@
     "categories": ["social_status"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "prerequisites": { "kind": "has_category", "value": "social_status" },
+    "prerequisites": {
+      "kind": "any",
+      "value": [
+        { "kind": "has", "value": "virtue.guild_apprentice" },
+        { "kind": "has", "value": "virtue.journeyman" },
+        { "kind": "has", "value": "virtue.guild_master" },
+        { "kind": "has", "value": "virtue.senior_master" },
+        { "kind": "has", "value": "virtue.guild_dean" }
+      ]
+    },
     "source": { "anchor": "male-guild-sponsor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4439, 4442] }
   },
   {
@@ -5872,7 +5917,10 @@
     "classification": "in_play_effect",
     "trained": true,
     "entity_kinds": ["character"],
-    "prerequisites": { "kind": "hermetically_trained" },
+    "prerequisites": {
+      "kind": "all",
+      "value": [{ "kind": "hermetically_trained" }, { "kind": "has", "value": "flaw.ceremonial_spontaneous_magic" }]
+    },
     "effects": [{ "type": "special_casting_mod", "kind": "mercurian" }],
     "source": { "anchor": "mercurian-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4514, 4523] }
   },
@@ -5966,7 +6014,10 @@
     "prerequisites": { "kind": "hermetically_trained" },
     "incompatible_with": ["virtue.blood_of_the_nephilim"],
     "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
-    "effects": [{ "type": "magical_focus", "param": "focus", "major": false }],
+    "effects": [
+      { "type": "magical_focus", "param": "focus", "major": false },
+      { "type": "grants_category_count", "category": "personality", "magnitude": "minor", "item_kind": "flaw" }
+    ],
     "source": { "anchor": "mythic-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4573, 4589] }
   },
   {
@@ -6527,8 +6578,9 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.educated_hebrew" },
     "source": { "anchor": "shamash", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4940, 4945] }
   },
   {
@@ -6637,8 +6689,9 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.educated_hebrew" },
     "source": { "anchor": "sofer", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4992, 4997] }
   },
   {
@@ -6926,8 +6979,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "uncomputed_rule",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "none", "value": [{ "kind": "is_grog" }] },
     "source": { "anchor": "temporal-influence", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5137, 5140] }
   },
   {

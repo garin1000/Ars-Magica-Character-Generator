@@ -1409,7 +1409,10 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::AbilityScoreCapAllExcept { .. }
         // D69/X7b-e: a surfaced-only roll penalty, no ability/characteristic
         // creation-time target here.
-        | Effect::DecrepitudeScaledRollMod { .. } => EffectTarget::Other,
+        | Effect::DecrepitudeScaledRollMod { .. }
+        // D68.11: an id-less category-cap count, no ability/characteristic
+        // creation-time target either.
+        | Effect::GrantsCategoryCount { .. } => EffectTarget::Other,
     }
 }
 

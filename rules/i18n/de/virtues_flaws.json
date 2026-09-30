@@ -1401,7 +1401,7 @@
   },
   "flaw.vendetta": {
     "name": "Vendetta",
-    "summary": "Der Magus ist in eine der Vendettas des Hauses Verditius verwickelt und führt höchstwahrscheinlich die Vendetta seines Parens gegen einen anderen Verditius-Magus fort."
+    "summary": "Der Magus ist in eine der Vendettas des Hauses Verditius verwickelt und führt höchstwahrscheinlich die Vendetta seines Parens gegen einen anderen Verditius-Magus fort. Dieser Fehler ist im Allgemeinen auf Magi des Hauses Verditius beschränkt, da der Brauch der Vendetta auf dieses Haus beschränkt ist."
   },
   "flaw.vengeful_powers": {
     "name": "Rachsüchtige Mächte",

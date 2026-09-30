@@ -72,6 +72,7 @@
     "forbidden_traits": ["virtue.the_gift"],
     "hermetically_trained": false,
     "order_member": false,
+    "is_grog": true,
     "gift_policy": "forbidden",
     "gift_id": "virtue.the_gift",
     "gift_categories": ["hermetic"],

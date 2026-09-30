@@ -664,7 +664,9 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::ForbidsAbilities { .. }
                 // X6a/e6: folded only by `ability_age_cap`, not an in-play total.
                 | Effect::AbilityScoreCapOverrideParam { .. }
-                | Effect::AbilityScoreCapAllExcept { .. } => {}
+                | Effect::AbilityScoreCapAllExcept { .. }
+                // D68.11: an id-less category-cap count, not an in-play total.
+                | Effect::GrantsCategoryCount { .. } => {}
             }
         }
     }
