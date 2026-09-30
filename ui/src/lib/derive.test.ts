@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
+  abilityCategoryLabel,
   abilityDisplayName,
   abilityLabel,
   agingMigrationNotice,
@@ -709,6 +710,37 @@ describe('incompatibleRefs', () => {
     expect(blocked.get('flaw.small_frame')).toBe('flaw.dwarf');
     expect(blocked.get('virtue.large')).toBe('flaw.dwarf');
     expect(blocked.get('virtue.brave')).toBeUndefined();
+  });
+});
+
+describe('incompatibleRefs — conditional exclusions (UI review #5)', () => {
+  // Warped Senses excludes Keen Vision only when its `sense` param names sight
+  // (`PointItem::conditional_incompatible_with`, X6a/e7).
+  const ruleset = makeRuleset([
+    item({
+      id: 'flaw.warped_senses',
+      kind: 'flaw',
+      conditional_incompatible_with: [
+        { gate: { param: 'sense', equals: 'sense.sight' }, forbids: ['virtue.keen_vision'] },
+      ],
+    }),
+    item({ id: 'virtue.keen_vision', kind: 'virtue' }),
+  ]);
+
+  it("blocks the conditional target only while the declaring selection's gate holds", () => {
+    const sighted = [{ ref: 'flaw.warped_senses', params: { sense: 'sense.sight' } }];
+    const blocked = incompatibleRefs(ruleset, sighted, 'enforced');
+    expect(blocked.get('virtue.keen_vision')).toBe('flaw.warped_senses');
+  });
+
+  it('does not block the conditional target when the gate names a different value', () => {
+    const unsighted = [{ ref: 'flaw.warped_senses', params: { sense: 'sense.hearing' } }];
+    expect(incompatibleRefs(ruleset, unsighted, 'enforced').has('virtue.keen_vision')).toBe(false);
+  });
+
+  it('does not block when the gated parameter is unanswered', () => {
+    const unanswered = [{ ref: 'flaw.warped_senses' }];
+    expect(incompatibleRefs(ruleset, unanswered, 'enforced').has('virtue.keen_vision')).toBe(false);
   });
 });
 
@@ -2378,6 +2410,9 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
       'category-supernatural': 'Supernatural',
       'param-domain-realm': 'Realm',
       'param-domain-text': 'Text',
+      'ability-category-academic': 'Academic',
+      'ability-category-martial': 'Martial',
+      'restricted-xp-list-separator': ',',
     };
     if (key === 'param-hint') return `(${args?.label})`;
     return table[key] ?? key;
@@ -2463,6 +2498,21 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
     expect(resolveIssueArgValue(rs, 'name', 'Brave', t)).toBe('Brave');
     expect(resolveIssueArgValue(rs, 'content', 'A hidden shame', t)).toBe('A hidden shame');
     expect(resolveIssueArgValue(rs, 'score', '5', t)).toBe('5');
+  });
+
+  // UI review 2026-09-30 #1: `ability_outside_restricted_scope`'s `allowed` arg
+  // is a single comma-joined string mixing Ability ids and
+  // `ability_category.<slug>` tokens (`validation/selections.rs`) — a composite
+  // list, not the one id/enum every other arg carries.
+  it('resolves the composite "allowed" list arg (ability ids + tagged categories) (UI review #1)', () => {
+    const rs = makeRuleset([], {
+      i18n: { 'ability.artes_liberales': { name: 'Artes Liberales' } },
+    });
+    const value = 'ability.artes_liberales, ability_category.academic, ability_category.martial';
+    const label = resolveIssueArgValue(rs, 'allowed', value, t);
+    expect(label).toBe('Artes Liberales, Academic, Martial');
+    expect(label).not.toContain('ability_category.');
+    expect(label).not.toContain('ability.artes_liberales,');
   });
 
   it('resolves a whole args map, arg by arg', () => {
@@ -2711,6 +2761,80 @@ describe('the gated-Ability-category finding (Sabine 1)', () => {
       }
     },
   );
+});
+
+describe('issue-ability_outside_restricted_scope renders fully localized (UI review #1)', () => {
+  it.each(['en', 'de'] as const)(
+    'names abilities and categories through real labels, never a raw slug (%s)',
+    (lang) => {
+      const bundle = buildBundle(lang);
+      const t: Translate = (key, a) => formatMessage(bundle, key, a);
+      const rs = makeRuleset([], {
+        i18n: {
+          'flaw.restricted_learning': { name: 'Restricted Learning' },
+          'ability.artes_liberales': { name: 'Artes Liberales' },
+          'ability.single_weapon': { name: 'Single Weapon' },
+        },
+      });
+      const args = {
+        item: 'flaw.restricted_learning',
+        allowed: 'ability.artes_liberales, ability_category.academic, ability_category.martial',
+        ability: 'ability.single_weapon',
+      };
+      const resolved = resolveIssueArgs(rs, args, t);
+      const message = formatMessage(bundle, 'issue-ability_outside_restricted_scope', resolved);
+      const academicLabel = formatMessage(bundle, 'ability-category-academic');
+      const martialLabel = formatMessage(bundle, 'ability-category-martial');
+      expect(message).toContain(academicLabel);
+      expect(message).toContain(martialLabel);
+      expect(message).not.toContain('ability_category.');
+      expect(message).not.toContain('ability.artes_liberales');
+      expect(message).not.toContain('ability.single_weapon');
+    },
+  );
+});
+
+// --- UI review 2026-09-30 #2: enumerated-domain ability_category values -----
+
+describe('abilityCategoryLabel (UI review #2)', () => {
+  /** `virtue.custos`'s own `study` parameter values, straight from shipped data. */
+  function custosStudyValues(): string[] {
+    const read = (path: string) =>
+      JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf-8'));
+    const core = read('../../../rules/core/virtues_flaws.json') as {
+      id: string;
+      parameters?: { key: string; values?: string[] }[];
+    }[];
+    const custos = core.find((i) => i.id === 'virtue.custos');
+    return custos?.parameters?.find((p) => p.key === 'study')?.values ?? [];
+  }
+
+  it.each(['en', 'de'] as const)(
+    "resolves virtue.custos's study parameter values through the real Fluent bundle, never the raw slug (%s)",
+    (lang) => {
+      const values = custosStudyValues();
+      expect(values.length).toBeGreaterThan(0);
+      const bundle = buildBundle(lang);
+      const t: Translate = (key, a) => formatMessage(bundle, key, a);
+      // No rules-i18n entries at all — the ONLY source of the label is the
+      // Fluent `ability-category-<slug>` family, so this proves the resolution
+      // does not depend on the accidental duplicate in `virtues_flaws.json`.
+      const localized = makeRuleset([]);
+      for (const value of values) {
+        const label = abilityCategoryLabel(localized, value, t);
+        expect(label).not.toBeNull();
+        expect(label).not.toBe(value);
+        expect(label).not.toMatch(/^ability_category\./);
+      }
+    },
+  );
+
+  it('returns null for a value that names no AbilityCategory', () => {
+    const localized = makeRuleset([]);
+    const t: Translate = (key) => key;
+    expect(abilityCategoryLabel(localized, 'ability.awareness', t)).toBeNull();
+    expect(abilityCategoryLabel(localized, 'realm.magic', t)).toBeNull();
+  });
 });
 
 // --- Round-1 audit, slice-2 handoff: the schema-migration notice ------------

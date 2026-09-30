@@ -41,7 +41,81 @@ fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
                         .unwrap_or(0);
                     points += u32::from(*base_points) + years;
                 }
-                _ => {}
+                // Every other Effect variant grants no Warping Points. Listed
+                // explicitly (not a wildcard `_`) so a new variant is a compile
+                // error here, matching this diff's own established pattern
+                // elsewhere (`ability.rs`, `characteristic.rs`, `spell.rs`,
+                // `validation/scores.rs`) — the shared `irrelevant_effect_variants!()`
+                // macro is not reusable here: it lists `WarpingGrant`/`WarpingGrantParam`
+                // themselves as "irrelevant" (correctly, for ITS callers, which do
+                // not care about Warping), which would collide with the two
+                // unconditional arms above and never reach them.
+                Effect::AbilityBonus { .. }
+                | Effect::CharacteristicScoreDeltaParam { .. }
+                | Effect::ArtBonus { .. }
+                | Effect::AffinityAbilityCost { .. }
+                | Effect::AffinityArtCost { .. }
+                | Effect::RestrictedAbilityXp { .. }
+                | Effect::ScaledRestrictedAbilityXp { .. }
+                | Effect::ReplacesLifeStageXp { .. }
+                | Effect::CharacteristicPoints { .. }
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::AbilityScoreGrantParam { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
+                | Effect::AbilityAuthorization { .. }
+                | Effect::AbilityBonusGated { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
+                | Effect::GrantsSelection { .. }
+                | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
+                | Effect::TrueFaithGrant { .. }
+                | Effect::RelicTrueFaith { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
+                | Effect::CharacteristicMax { .. }
+                | Effect::GroupAffinityCost { .. }
+                | Effect::GrantsReputation { .. }
+                | Effect::GrantsPersonalityTrait
+                | Effect::PersonalityTraitRange { .. }
+                | Effect::RequiresPersonalityTraitPair { .. }
+                | Effect::DecrepitudeScaledRollMod { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
+                | Effect::FocusPoints { .. }
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::HalvesSpellCapBeyondTouch
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. }
+                | Effect::AbilityRollModParam { .. }
+                | Effect::ElementalMagic { .. }
+                | Effect::ForbidsAbilitySpecialties
+                | Effect::ForbidsRitualCasting
+                | Effect::WaivesAbilityAgeCap
+                | Effect::ConfersHermeticTraining
+                | Effect::ConfersHermeticTrainingIf { .. }
+                | Effect::TruncatedApprenticeshipXp { .. }
+                | Effect::ForbidsAbilityCategory { .. }
+                | Effect::ForbidsAbilityCategoryParam { .. }
+                | Effect::ForbidsItemCategory { .. }
+                | Effect::ForbidsAbilities { .. }
+                | Effect::AbilityScoreCapOverrideParam { .. }
+                | Effect::AbilityScoreCapAllExcept { .. }
+                | Effect::GrantsCategoryCount { .. } => {}
             }
         }
     }

@@ -24,6 +24,7 @@ import type {
   LifeStagePlan,
   LocalizedRuleset,
   Magnitude,
+  ParamGate,
   PhaseRule,
   PointItem,
   Prereq,
@@ -338,6 +339,40 @@ function realmLabel(value: string, t: Translate): string | null {
   if (!value.startsWith(REALM_ID_PREFIX)) return null;
   const slug = value.slice(REALM_ID_PREFIX.length);
   return (REALMS as readonly string[]).includes(slug) ? t(`realm-${slug}`) : null;
+}
+
+/** Id prefix of an AbilityCategory enumerated parameter value (`ability_category.academic`). */
+const ABILITY_CATEGORY_ID_PREFIX = 'ability_category.';
+
+/**
+ * The `ability-category-<slug>` Fluent label for an AbilityCategory enumerated
+ * parameter value (`virtue.custos`'s `study` parameter: Academic/Arcane/
+ * Martial), or `null` when the value names no category.
+ *
+ * `AbilityCategory` is a closed engine enum with its OWN canonical Fluent
+ * family — the one the Ability picker's category filter and the
+ * gated-Ability-category validation issue already read
+ * (`ENUM_ARG_FLUENT_PREFIX.ability_category` above). A same-named rules-i18n
+ * entry happens to exist too (`rules/i18n/<lang>/virtues_flaws.json`), so
+ * `displayName` alone does not currently show a raw slug — but that is a
+ * second, hand-authored copy of the same five labels with no completeness
+ * guardrail, exactly the kind of divergence-by-accident finding #3 hit for
+ * `param-label-company`/`Unternehmen`. Resolving through the Fluent family
+ * here instead keeps ONE source of truth for the label (UI review 2026-09-30
+ * #2). Membership is tested against the engine-surfaced
+ * `ability_category_order` rather than a hardcoded list, per CLAUDE.md's
+ * "catalogue size is data" invariant.
+ */
+export function abilityCategoryLabel(
+  localized: LocalizedRuleset,
+  value: string,
+  t: Translate,
+): string | null {
+  if (!value.startsWith(ABILITY_CATEGORY_ID_PREFIX)) return null;
+  const slug = value.slice(ABILITY_CATEGORY_ID_PREFIX.length);
+  return (localized.ruleset.ability_category_order as readonly string[]).includes(slug)
+    ? t(`ability-category-${slug}`)
+    : null;
 }
 
 /**
@@ -1071,12 +1106,27 @@ export function mandatoryTraitRefs(profile: EntityTypeProfile | undefined): Set<
 }
 
 /**
+ * Whether a `ParamGate` holds for `selection` — its named parameter (on the
+ * SAME item) currently carries the gate's literal value. Mirrors the engine's
+ * `ParamGate::holds`: a multi-valued parameter (a `string[]`) never matches, on
+ * the same "gate reads a single value" contract the engine's own
+ * `SelectionParamValue::as_single` enforces.
+ */
+function paramGateHolds(gate: ParamGate, selection: Selection): boolean {
+  const value = selection.params?.[gate.param];
+  return typeof value === 'string' && value === gate.equals;
+}
+
+/**
  * Item ids that may not be added because a currently selected item excludes
  * them, each mapped to the selected item responsible (so a greyed row can say
- * WHY). Built from every selected item's `incompatible_with`. Covers both
- * magnitude-variant pairs (Major/Minor Magical Focus, Ambitious Major/Minor) and
- * hand-authored exclusion cliques (Gentle vs Blatant Gift; Dwarf / Small Frame /
- * Giant Blood / Large), since both are expressed through the same data field.
+ * WHY). Built from every selected item's `incompatible_with`, PLUS every
+ * `conditional_incompatible_with` entry whose `gate` holds for that selection's
+ * own params (X6a/e7: Warped Senses excludes Keen Vision only when its `sense`
+ * param names sight). Covers both magnitude-variant pairs (Major/Minor Magical
+ * Focus, Ambitious Major/Minor) and hand-authored exclusion cliques (Gentle vs
+ * Blatant Gift; Dwarf / Small Frame / Giant Blood / Large), since all three are
+ * expressed through the same data fields.
  *
  * Only `enforced` mode blocks: `advisory` and `silent` leave every option
  * takeable and let the engine's `incompatible` issue report the violation
@@ -1099,6 +1149,12 @@ export function incompatibleRefs(
       // First blocker wins: with several selected excluders the reason names one,
       // and removing it re-derives the map against whatever still blocks.
       if (!blocked.has(ref)) blocked.set(ref, selection.ref);
+    }
+    for (const entry of item?.conditional_incompatible_with ?? []) {
+      if (!paramGateHolds(entry.gate, selection)) continue;
+      for (const ref of entry.forbids) {
+        if (!blocked.has(ref)) blocked.set(ref, selection.ref);
+      }
     }
   }
   return blocked;
@@ -1895,6 +1951,8 @@ const QUALIFIER_ARG_KEYS = new Set(['exemplar', ...Object.values(ABILITY_INSTANC
  *    `xp-pool-<block>` keys `restrictedPoolLabel` uses — one wording for the block
  *    wherever it appears, and never the raw `childhood_spread` slug;
  *  - anything else (free text like a trait name, or a number) passes through.
+ *  - an `allowed` arg (`ability_outside_restricted_scope`) is a composite list,
+ *    not one id/enum — see {@link resolveAllowedList}.
  */
 export function resolveIssueArgValue(
   localized: LocalizedRuleset,
@@ -1902,12 +1960,38 @@ export function resolveIssueArgValue(
   value: string,
   t: Translate,
 ): string {
+  if (argKey === 'allowed') return resolveAllowedList(localized, value, t);
   if (localized.i18n[value]) return displayName(localized, value, undefined, paramHint(t));
   const prefix = ENUM_ARG_FLUENT_PREFIX[argKey];
   if (prefix && !/^-?\d+$/.test(value)) return t(`${prefix}${value}`);
   if (argKey === 'key') return t(`param-label-${value}`);
   if (argKey === 'origin') return t(`xp-pool-${value}`);
   return value;
+}
+
+/**
+ * `ability_outside_restricted_scope`'s `allowed` arg
+ * (`validation/selections.rs::validate_ability_xp_scope`): a closed-scope XP
+ * restriction's eligibility list, pre-joined by the engine into ONE
+ * comma-separated string of Ability ids and `ability_category.<slug>` tokens
+ * (`ValidationIssue::args` is one string per key, never a list). Splits it back
+ * into tokens and resolves each exactly like {@link restrictedPoolLabel}
+ * resolves the same eligibility data from its own (structured)
+ * `RestrictedXpPool` shape: an Ability id through its i18n name, a category
+ * through {@link abilityCategoryLabel} — then rejoins with the same localized
+ * list separator, so the two surfaces read identically (UI review 2026-09-30
+ * #1).
+ */
+function resolveAllowedList(localized: LocalizedRuleset, value: string, t: Translate): string {
+  const labels = value
+    .split(', ')
+    .filter((token) => token !== '')
+    .map(
+      (token) =>
+        abilityCategoryLabel(localized, token, t) ??
+        displayName(localized, token, undefined, paramHint(t)),
+    );
+  return labels.join(`${t('restricted-xp-list-separator')} `);
 }
 
 /**

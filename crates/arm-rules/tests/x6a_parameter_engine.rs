@@ -614,6 +614,73 @@ mod e5_xp_scope_validators {
             "Single Weapon is neither named nor Supernatural: must be refused"
         );
     }
+
+    /// UI review 2026-09-30 #1: the `allowed` arg mixes raw Ability ids and raw
+    /// `AbilityCategory` enum words in one comma-joined string, which the
+    /// frontend cannot tell apart to localize (`derive.ts::resolveIssueArgValue`
+    /// resolves one id/enum per arg, never a composite list). Tagging each
+    /// category as an `ability_category.<slug>` id — the same id-shaped form
+    /// `AbilityCategory::from_id` and `rules/core/virtues_flaws.json`'s
+    /// enumerated parameter values already use — makes every token
+    /// self-describing, so the frontend can split and resolve each one.
+    #[test]
+    fn ability_outside_restricted_scope_allowed_arg_tags_categories_as_ids() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.restricted_learning", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "major", "categories": ["general"],
+            "parameters": [{ "key": "abilities", "type": "multi_ref", "domain": "ability",
+              "exact_count": 1 }],
+            "effects": [{ "type": "restricted_ability_xp", "amount": 0,
+              "categories": ["supernatural"], "abilities_param": "abilities" }] }
+        ]"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: COMPANION_TYPE,
+            abilities: Some(ABILITIES),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let mut params = BTreeMap::new();
+        params.insert(
+            "abilities".to_string(),
+            SelectionParamValue::Multi(BTreeSet::from([Id::new("ability.awareness")])),
+        );
+        let mut e = entity(
+            "companion",
+            vec![Selection {
+                item_ref: Id::new("flaw.restricted_learning"),
+                params,
+            }],
+        );
+        e.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.single_weapon"),
+            score: 1,
+            specialty: None,
+            parameter: None,
+        });
+        let issues = validate(&e, &rs).issues;
+        let issue = issues
+            .iter()
+            .find(|i| i.code == "ability_outside_restricted_scope")
+            .expect("Single Weapon is out of scope");
+        let allowed = issue.args.get("allowed").expect("allowed arg present");
+        assert!(
+            allowed.contains("ability_category.supernatural"),
+            "category token must be id-shaped, got: {allowed}"
+        );
+        assert!(
+            !allowed.split(", ").any(|t| t == "supernatural"),
+            "category token must not be a bare enum word, got: {allowed}"
+        );
+        assert!(
+            allowed.contains("ability.awareness"),
+            "ability token must still be present, got: {allowed}"
+        );
+    }
 }
 
 // --- e6: Savantism through D29's single resolution point --------------------

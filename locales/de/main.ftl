@@ -1019,7 +1019,7 @@ param-label-sin = Sünde
 param-label-faculty = Fakultät
 param-label-hermetic_flaw = Hermetischer Fehler
 param-label-commodity = Ware
-param-label-company = Kompanie
+param-label-company = Unternehmen
 param-label-role = Rolle
 # Übernatürliche Kraft eines Charakters (Große/Mindere/Persönliche/Rituelle Kraft).
 # Begriff aus rules/source/de/translation-tables/tiere-kreaturen.md:144

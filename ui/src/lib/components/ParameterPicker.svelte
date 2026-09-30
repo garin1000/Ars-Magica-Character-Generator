@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import {
+    abilityCategoryLabel,
     abilityDisplayName,
     abilityParamDisplay,
     abilityParamKey,
@@ -574,6 +575,13 @@
            i18n here — options do NOT get localized for free (`resolveIssueArgValue`
            localizes validation-issue arguments, not picker options), and rendering
            the slug would be the same violation as hardcoding a string.
+           An `ability_category.<slug>` value (Custos's `study`) is the ONE
+           exception: `AbilityCategory` is a closed engine enum with its own
+           canonical `ability-category-<id>` Fluent family (already read by the
+           Ability picker's filter), so `abilityCategoryLabel` resolves it there
+           instead of through a same-named rules-i18n entry — one source of
+           truth for the label, not two that can silently drift (UI review
+           2026-09-30 #2).
            `max_per_target` greys out a value another copy already holds, which is
            what caps Folk Magic at one copy per category. -->
           <select
@@ -586,9 +594,10 @@
             {#each param.values ?? [] as value (value)}
               <option {value} disabled={full(used, value)}>
                 {store.ruleset
-                  ? displayName(store.ruleset, value, undefined, (key) =>
+                  ? (abilityCategoryLabel(store.ruleset, value, store.t) ??
+                    displayName(store.ruleset, value, undefined, (key) =>
                       store.t('param-hint', { label: store.t(`param-label-${key}`) }),
-                    )
+                    ))
                   : value}
               </option>
             {/each}

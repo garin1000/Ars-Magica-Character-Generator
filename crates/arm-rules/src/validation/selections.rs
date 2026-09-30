@@ -445,10 +445,21 @@ pub(crate) fn validate_ability_xp_scope(
         return;
     };
 
+    // Each category is tagged as an `ability_category.<slug>` id — the same
+    // id-shaped form `AbilityCategory::from_id` and the enumerated parameter
+    // values in `rules/core/virtues_flaws.json` already use — so every token in
+    // this comma-joined list is self-describing: the frontend
+    // (`derive.ts::resolveIssueArgValue`) cannot otherwise tell an Ability id
+    // from a bare category word once they are joined into one string arg
+    // (UI review 2026-09-30 #1).
     let allowed_display = allowed_abilities
         .iter()
         .map(Id::to_string)
-        .chain(allowed_categories.iter().map(|c| c.to_string()))
+        .chain(
+            allowed_categories
+                .iter()
+                .map(|c| format!("ability_category.{c}")),
+        )
         .collect::<Vec<_>>()
         .join(", ");
 

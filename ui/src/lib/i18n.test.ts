@@ -710,4 +710,22 @@ describe('German UI bundle', () => {
       );
     }
   });
+
+  // UI review 2026-09-30 #3: `param-label-company` used to say "Kompanie" — a
+  // military reading — while Educated (Vernacular)'s own German summary
+  // already names the same referent (a merchant/trading company)
+  // "Unternehmen". Pins the two texts to the SAME term so a player does not
+  // see one word in the picker and a different one in the Virtue's own text.
+  it('names "company" the same way the picker label and Educated (Vernacular) do', () => {
+    const virtuesFlaws = JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL('../../../rules/i18n/de/virtues_flaws.json', import.meta.url)),
+        'utf-8',
+      ),
+    ) as Record<string, { summary?: string }>;
+    const summary = virtuesFlaws['virtue.educated_vernacular']?.summary;
+    expect(summary).toBeDefined();
+    const label = translate(buildBundle('de'), 'param-label-company');
+    expect(summary).toContain(label);
+  });
 });

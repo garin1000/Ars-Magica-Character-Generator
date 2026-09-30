@@ -168,6 +168,14 @@ export interface ParamGate {
   equals: string;
 }
 
+// One entry of `PointItem.conditional_incompatible_with` (X6a/e7): while
+// `gate` holds for the declaring item's own selection, every id in `forbids`
+// becomes incompatible with it. Mirrors the engine's `ConditionalIncompatibility`.
+export interface ConditionalIncompatibility {
+  gate: ParamGate;
+  forbids: string[];
+}
+
 // A property-based test over a point item, for an exclusion the rulebook
 // states by description rather than by id (`PointItem.incompatible_with`) or
 // category (`Effect.forbids_item_category`) — D23/D33. Mirrors the engine's
@@ -201,7 +209,17 @@ export type Effect =
   | { type: 'art_bonus'; param: string; amount: number }
   | { type: 'affinity_ability_cost'; param: string; counts_as_num: number; counts_as_den: number }
   | { type: 'affinity_art_cost'; param: string; counts_as_num: number; counts_as_den: number }
-  | { type: 'restricted_ability_xp'; amount: number; abilities?: string[]; categories?: string[] }
+  | {
+      type: 'restricted_ability_xp';
+      amount: number;
+      abilities?: string[];
+      categories?: string[];
+      // X6a/e5: names a `multi_ref`/`ability`-domain parameter on the SAME
+      // item whose resolved set is a further eligibility source, unioned with
+      // `abilities`/`categories` (Restricted Learning's five player-named
+      // Abilities, ArMDE:6685).
+      abilities_param?: string;
+    }
   | {
       type: 'group_affinity_cost';
       abilities: string[];
@@ -214,7 +232,14 @@ export type Effect =
   | { type: 'general_xp'; amount: number }
   | { type: 'confidence_bonus'; score: number; points: number }
   | { type: 'warping_grant'; score: number; points: number }
+  // D69.1: Raised from the Dead's parameterized sibling of `warping_grant` —
+  // `base_points` unconditionally, plus one per unit named by the OWNING
+  // selection's `params[param]` (ArMDE:6646-6649).
+  | { type: 'warping_grant_param'; param: string; base_points: number }
   | { type: 'true_faith_grant'; score: number }
+  // F-256: a Relic's own True Faith Score (ArMDE:17607), not the bearer's.
+  // Surfaced-only — nothing here renders it directly.
+  | { type: 'relic_true_faith'; score: number }
   | { type: 'item_level_budget'; amount: number }
   | { type: 'spell_mastery_xp'; amount: number }
   | {
@@ -229,7 +254,18 @@ export type Effect =
   // picker to render; read only by the derived category-cap counts.
   | { type: 'grants_category_count'; category: string; magnitude: Magnitude; item_kind: ItemKind }
   | { type: 'size_delta'; amount: number }
-  | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
+  | {
+      type: 'characteristic_score_delta';
+      characteristic: string;
+      amount: number;
+      // X6a/e1: applies only when the OWNING selection's own gate holds
+      // (Faerie Blood's Sidhe clause). Absent for every unconditional carrier.
+      gate?: ParamGate;
+    }
+  // D69/X7b-e (row 42, Uninspirational): lowers the BUY CAP of a fixed
+  // Characteristic while this selection is in effect, rather than adding a
+  // free delta — the sign-mirror of `characteristic_score_delta` above.
+  | { type: 'characteristic_max'; characteristic: string; max: number }
   | {
       type: 'grants_reputation';
       kind?: ReputationType;
@@ -244,7 +280,13 @@ export type Effect =
   | { type: 'lab_total_mod'; amount: number }
   | { type: 'deficient_art'; param: string }
   | { type: 'magic_total_halving'; total: HalvableTotal }
-  | { type: 'soak_mod'; amount: number }
+  | {
+      type: 'soak_mod';
+      amount: number;
+      // X6a/e1: applies only when the OWNING selection's own gate holds
+      // (Repellent's "scales" branch). Absent for every unconditional carrier.
+      gate?: ParamGate;
+    }
   // `weapon` scopes the modifier to one weapon's combat line, for a rule that
   // singles a weapon out — Lame's -3 applies to Dodge (`ArMDE:6332`), which is a
   // Brawling Weapons row rather than an Ability (`ArMDE:16959`), so the scope is
@@ -254,7 +296,17 @@ export type Effect =
   // `param` names the selection parameter carrying the Form the modifier is
   // scoped to, for the two kinds the rulebook scopes that way. Absent for the
   // realm- and scene-conditional kinds, which name no Form.
-  | { type: 'magic_resistance_mod'; kind: MagicResistanceEffect; param?: string }
+  | {
+      type: 'magic_resistance_mod';
+      kind: MagicResistanceEffect;
+      param?: string;
+      // X6a/e1-e2: the flat Magic Resistance bonus (Commanding Aura's rank
+      // figure). Absent (0) for every kind that carries no number of its own.
+      amount?: number;
+      // Applies only when the OWNING selection's own gate holds (Commanding
+      // Aura's `rank` enumeration). Absent for every unconditional carrier.
+      gate?: ParamGate;
+    }
   | { type: 'aging_mod'; kind: AgingEffect; amount: number }
   // Exactly one of `amount`/`factor` is present (D55; load-time validated,
   // `ruleset/integrity.rs::validate_advancement_mod_shape`): `amount` is a
@@ -270,8 +322,19 @@ export type Effect =
   // B5/F-489: fixed target, named directly by the entry (Poor Hearing: -3 to
   // Awareness) — the parameter-relative shape below carries the OLD
   // `ability_roll_mod` tag's original meaning under its renamed tag.
-  | { type: 'ability_roll_mod'; ability: string; amount: number }
+  | {
+      type: 'ability_roll_mod';
+      ability: string;
+      amount: number;
+      // X6a/e1: applies only when the OWNING selection's own gate holds
+      // (Faerie Blood's Dwarf clause). Absent for every unconditional carrier.
+      gate?: ParamGate;
+    }
   | { type: 'ability_roll_mod_param'; param: string; amount: number }
+  // D69/X7b-e row 42 (Lingering Injury): a roll penalty over an unenumerated
+  // category of rolls, scaled by 1 + Decrepitude Score. Surfaced-only —
+  // nothing here renders it directly.
+  | { type: 'decrepitude_scaled_roll_mod'; amount: number }
   // Elemental Magic (5c): creation-time Art-XP redistribution over the four
   // elemental Forms. Surfaced through the effective art bonus, not rendered raw.
   | { type: 'elemental_magic'; forms: string[] }
@@ -288,12 +351,30 @@ export type Effect =
   // for every Ability — a creation-time constraint the engine's age-cap
   // resolution point folds in; nothing here renders it directly.
   | { type: 'waives_ability_age_cap' }
+  // X6a/e6 (Savantism, ArMDE:6705-6706): the Ability named by the OWNING
+  // selection's `params[param]` caps at `max` INSTEAD OF the age-band figure.
+  | { type: 'ability_score_cap_override_param'; param: string; max: number }
+  // Savantism's sibling clause: every OTHER Ability (all but the one named by
+  // the SAME item's `param`) caps at `max`, lowering the otherwise-applicable
+  // age band.
+  | { type: 'ability_score_cap_all_except'; param: string; max: number }
   // B1 (D21/F-355, F-542, F-511): category/ability prohibitions. All three
   // are creation-time constraints a dedicated validator enforces; nothing
   // here renders any of them directly.
   | { type: 'forbids_ability_category'; category: string }
+  // X6a/e5: the parameter-relative sibling — the forbidden category is named
+  // by the OWNING selection's own `params[param]` rather than fixed by the
+  // item (Ability Block, ArMDE:5651-5654).
+  | { type: 'forbids_ability_category_param'; param: string }
   | { type: 'forbids_item_category'; category: string }
-  | { type: 'forbids_abilities'; abilities: string[] };
+  | { type: 'forbids_abilities'; abilities: string[] }
+  // D69/X7b-e row 42 (Weak Personality): tightens the universal +-3
+  // Personality Trait range to `max` while this selection is in effect.
+  | { type: 'personality_trait_range'; max: number }
+  // D69/X7b-e row 42 (Fickle Nature): requires at least two distinct
+  // Personality Trait entries at exactly `value` while this selection is in
+  // effect.
+  | { type: 'requires_personality_trait_pair'; value: number };
 
 // M5/5b scalar enums mirroring the engine (rendered via Fluent in slice 5i).
 export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' | 'spontaneous';
@@ -447,6 +528,12 @@ export interface PointItem {
   // Items that may not be selected alongside this one. Symmetric (the engine
   // rejects a ruleset whose declarations are one-sided) and omitted when empty.
   incompatible_with?: string[];
+  // X6a/e7: while `gate` holds for THIS item's own selection, every id in
+  // `forbids` becomes incompatible with it — a per-VALUE extension of the flat
+  // `incompatible_with` above (Warped Senses excludes Keen Vision only when
+  // its `sense` param names sight). Omitted when empty. Mirrors the engine's
+  // `PointItem::conditional_incompatible_with`.
+  conditional_incompatible_with?: ConditionalIncompatibility[];
   // This item is illegal while ANY OTHER effective (bought or granted)
   // selection satisfies one of these predicates (D23/B3) — one-directional,
   // unlike `incompatible_with`. Omitted when empty.

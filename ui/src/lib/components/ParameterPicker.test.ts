@@ -163,6 +163,20 @@ const ITEMS: Record<string, PointItem> = {
       at_most_one_of: [['realm.divine', 'realm.infernal']],
     },
   ]),
+  // UI review 2026-09-30 #2: Custos's own shape (ArMDE, `virtue.custos`'s
+  // `study` parameter) — an `ability_category.<slug>` enumerated value.
+  // Deliberately NO matching rules-i18n dict entry below (unlike the shipped
+  // `virtue.custos`, which happens to have one): the label must come from the
+  // `ability-category-<id>` Fluent family alone, never from a same-named i18n
+  // entry that could be absent or drift.
+  'virtue.custos_probe': pointItem('virtue.custos_probe', [
+    {
+      key: 'study',
+      type: 'ref',
+      domain: 'enumerated',
+      values: ['ability_category.academic', 'ability_category.arcane', 'ability_category.martial'],
+    },
+  ]),
   // Row 19 "taken as": Sufi (ArMDE:5083) "either as a Minor Social Status
   // Virtue or a Minor
   // Supernatural Virtue" — the `category` domain's own values are a subset of
@@ -222,7 +236,7 @@ function installRuleset(): void {
       houses: {},
       mythic_types: {},
       magnitude_points: { free: 0, minor: 1, major: 3 },
-      ability_category_order: ['general'],
+      ability_category_order: ['general', 'academic', 'arcane', 'martial', 'supernatural'],
       art_type_order: ['technique', 'form'],
     },
     i18n: {
@@ -259,6 +273,7 @@ function installRuleset(): void {
       'folk_magic.divination': { name: 'Divination' },
       'folk_magic.healing': { name: 'Healing' },
       'virtue.sufi': { name: 'Sufi' },
+      'virtue.custos_probe': { name: 'Custos Probe' },
       'flaw.corrupted_spells_probe': { name: 'Corrupted Spells Probe' },
       'spell.pilum_of_fire': { name: 'Pilum of Fire' },
       'spell.aegis_of_the_hearth': { name: 'Aegis of the Hearth' },
@@ -710,6 +725,29 @@ describe('ParameterPicker category domain (row 19 "taken as")', () => {
     const select = selectFor(pickerBody('virtue.sufi', 1), 'param-virtue.sufi-taken_as-1');
     expect(optionByText(select!, 'Social Status')).toContain('disabled');
     expect(optionByText(select!, 'Supernatural')).not.toContain('disabled');
+  });
+});
+
+// UI review 2026-09-30 #2: an `enumerated` parameter whose values are
+// `ability_category.<slug>` (Custos's `study`) must be labelled through the
+// `ability-category-<id>` Fluent family, never rendered as the raw slug.
+describe('ParameterPicker enumerated domain — ability_category values (UI review #2)', () => {
+  const TESTID = 'param-virtue.custos_probe-study-0';
+
+  it('labels each option through ability-category-<id>, never as its raw slug', () => {
+    const body = pickerBody('virtue.custos_probe');
+    const select = selectFor(body, TESTID);
+    expect(select).not.toBeNull();
+    expect(select!).toContain('value="ability_category.academic"');
+    expect(optionTexts(select!)).toEqual(['Study', 'Academic', 'Arcane', 'Martial']);
+    expect(optionTexts(select!).join(' ')).not.toContain('ability_category.');
+  });
+
+  it('names the control and its options in the active language', () => {
+    store.lang = 'de';
+    const select = selectFor(pickerBody('virtue.custos_probe'), TESTID);
+    expect(ariaLabel(select!)).toBe('Studium');
+    expect(optionTexts(select!)).toEqual(['Studium', 'Akademisch', 'Arkan', 'Kampf']);
   });
 });
 
