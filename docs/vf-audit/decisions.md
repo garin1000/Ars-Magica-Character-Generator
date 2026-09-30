@@ -828,6 +828,18 @@ presumption of correctness.
 
 ---
 
+## D73 — X10b/X10c (`docs/vf-audit/design-x10bc-save-format.md`)
+
+**Norbert, 2026-09-30.**
+1. A banked XP value at or above the next level's cost is a **warning**, not an
+   error.
+2. There is **no Casting Total column in the Markdown export** now. X10c covers
+   the marker and the in-app totals.
+3. **No SCHEMA_VERSION bump.** Both fields are additive with defaults, which is
+   the plan's own criterion. This supersedes row 51's "(bump)" tags.
+
+---
+
 ## D72 — X9a's anchor questions (`tmp/x9a-spike.md`)
 
 **Norbert, 2026-09-30.**
