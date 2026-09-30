@@ -15,7 +15,7 @@
     {
       "id": "catalogue.organization",
       "values": [
-        { "id": "organization.church", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5791, 5791] } },
+        { "id": "organization.church", "source": { "anchor": "church-upbringing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5789, 5791] } },
         { "id": "organization.house_bjornaer", "source": { "anchor": "clan-ilfetu", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
         { "id": "organization.order_of_hermes", "source": { "anchor": "hermetic-experience", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4065] } }
       ]
@@ -27,8 +27,8 @@
         { "id": "profession.marshal", "source": { "anchor": "marshal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4449, 4453] } },
         { "id": "profession.master_of_kennels", "source": { "anchor": "master-of-kennels", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4467, 4470] } },
         { "id": "profession.merchant", "source": { "anchor": "educated-vernacular", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3727, 3729] } },
-        { "id": "profession.poet", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4456, 4461] } },
-        { "id": "profession.storyteller", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4456, 4461] } }
+        { "id": "profession.poet", "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4461] } },
+        { "id": "profession.storyteller", "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4461] } }
       ]
     }
   ]

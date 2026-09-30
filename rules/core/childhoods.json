@@ -8,7 +8,7 @@
         { "ability": "ability.living_language", "score": 5, "native": true },
         { "ability": "ability.swim", "score": 2 }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2384, 2384] }
+      "source": { "anchor": "sample-childhoods/athletic-childhood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2384, 2384] }
     },
     {
       "id": "childhood.exploring",
@@ -20,7 +20,7 @@
         { "ability": "ability.stealth", "score": 1 },
         { "ability": "ability.survival", "score": 2 }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2385, 2385] }
+      "source": { "anchor": "sample-childhoods/exploring-childhood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2385, 2385] }
     },
     {
       "id": "childhood.mischievous",
@@ -30,7 +30,7 @@
         { "ability": "ability.living_language", "score": 5, "native": true },
         { "ability": "ability.stealth", "score": 2 }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2386, 2386] }
+      "source": { "anchor": "sample-childhoods/mischievous-childhood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2386, 2386] }
     },
     {
       "id": "childhood.social",
@@ -40,7 +40,7 @@
         { "ability": "ability.guile", "score": 2 },
         { "ability": "ability.living_language", "score": 5, "native": true }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2387, 2387] }
+      "source": { "anchor": "sample-childhoods/social-childhood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2387, 2387] }
     },
     {
       "id": "childhood.traveling",
@@ -52,7 +52,7 @@
         { "ability": "ability.living_language", "score": 1, "slot": "language" },
         { "ability": "ability.survival", "score": 2 }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2388, 2388] }
+      "source": { "anchor": "sample-childhoods/traveling-childhood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2388, 2388] }
     }
   ]
 }

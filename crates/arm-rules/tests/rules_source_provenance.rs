@@ -434,18 +434,37 @@ fn headings_for(
 /// `CATALOGUES_TO_SWEEP` below) stays out until that reading lands. Widen this
 /// list as later catalogues are swept to completion — never loosen the
 /// assertion instead.
+/// The `usize` is ignored for a catalogue whose entries are *all* row-key
+/// anchors (`heading/row-key`, D72.1) — `equipment.json` and
+/// `childhoods.json` below — since that form is resolved against its
+/// enclosing section rather than a fixed heading level; it is kept only so
+/// every row shares one tuple shape, and set to the level of the catalogue's
+/// representative enclosing heading for readability.
 const FULLY_ANCHORED_CATALOGUES: &[(&str, usize)] = &[
     ("virtues_flaws.json", 4),
     ("arts.json", 4),
     ("spell_mastery_abilities.json", 4),
     ("mythic_companion_types.json", 3),
     ("abilities.json", 4),
-    // `spells.json` and `parameter_catalogues.json` are NOT here yet: each has
-    // one or more entries a heading-only sweep cannot resolve
-    // (`spell.piercing_the_magical_veil`; `profession.poet`,
-    // `profession.storyteller`, `organization.church`) and needs a human
-    // reading first (`tmp/x9a-spike.md` §4 Q2, Q7) before every entry in the
-    // file carries an anchor. They join once that reading lands.
+    // `spell.piercing_the_magical_veil` (a row-key anchor onto its Criamon
+    // template line, D72.4) was the one entry a heading-only sweep could not
+    // resolve; every other spell already carries a level-5 heading anchor.
+    ("spells.json", 5),
+    // `profession.poet`/`.storyteller` and `organization.church` (D72.4) were
+    // the three entries a heading-only sweep could not resolve; each now
+    // anchors on its own short section's heading (Q2's recommendation).
+    ("parameter_catalogues.json", 4),
+    // Each House anchors to its own `### House <Name>` section (D72.2), not
+    // the `#### Hermetic Houses Summary` table it used to share a citation
+    // with.
+    ("houses.json", 3),
+    // Every entry is a row-key anchor onto its own list item under
+    // `#### Sample Childhoods`.
+    ("childhoods.json", 4),
+    // Every entry is a row-key anchor onto its own table row, across the
+    // Armor (`####`), Melee/Missile Weapon Statistics and Natural Weapons
+    // Table (`###`) sections.
+    ("equipment.json", 4),
 ];
 
 /// Every `rules/i18n/<lang>/source_anchors.json`, as
@@ -529,7 +548,8 @@ fn every_recorded_source_anchor_resolves_to_its_own_heading() {
         };
         recorded += 1;
         let anchors = anchors_for(&mut cache, CANONICAL_LANGUAGE, &found.source_file);
-        match anchors.get(anchor) {
+        let heading_segment = anchor_heading_segment(anchor);
+        match anchors.get(heading_segment) {
             None => errors.push(format!(
                 "{}: \"{}\" records anchor \"#{anchor}\", but {} has no heading with that \
                  anchor — the heading was renamed, or the anchor was mistyped",
@@ -537,7 +557,20 @@ fn every_recorded_source_anchor_resolves_to_its_own_heading() {
             )),
             Some(&line) => {
                 let line = line as i64;
-                if line < found.start || line > found.end {
+                // A row-key anchor's heading is the section it sits *inside*,
+                // so it precedes the cited line rather than falling within it
+                // — only a plain heading anchor is required to land in range
+                // (Guard A pins that exactly; this is the looser sibling).
+                if is_row_key_anchor(anchor) {
+                    if line > found.start {
+                        errors.push(format!(
+                            "{}: \"{}\" records anchor \"#{anchor}\", whose heading \"#{heading_segment}\" \
+                             is at {}:{line} — after the cited line {}, so it cannot be the \
+                             section the entry sits inside.",
+                            found.core_file, found.entry_label, found.source_file, found.start
+                        ));
+                    }
+                } else if line < found.start || line > found.end {
                     errors.push(format!(
                         "{}: \"{}\" records anchor \"#{anchor}\", whose heading is at \
                          {}:{line} — outside the cited range {}-{}. The two halves of this \
@@ -588,7 +621,7 @@ fn every_localized_source_anchor_resolves_to_a_heading() {
                 ));
                 continue;
             }
-            if !anchors_for(&mut cache, lang, file).contains_key(anchor) {
+            if !anchors_for(&mut cache, lang, file).contains_key(anchor_heading_segment(anchor)) {
                 errors.push(format!(
                     "{lang}/{ANCHOR_SIDECAR}: \"{id}\" records anchor \"#{anchor}\", but {file} \
                      has no heading with that anchor"
@@ -640,9 +673,11 @@ fn german_anchors_sit_on_the_same_line_as_their_english_counterparts() {
                 continue;
             };
             let english_line = anchors_for(&mut cache, CANONICAL_LANGUAGE, english_file)
-                .get(english_anchor)
+                .get(anchor_heading_segment(english_anchor))
                 .copied();
-            let localized_line = anchors_for(&mut cache, lang, file).get(anchor).copied();
+            let localized_line = anchors_for(&mut cache, lang, file)
+                .get(anchor_heading_segment(anchor))
+                .copied();
             let (Some(english_line), Some(localized_line)) = (english_line, localized_line) else {
                 // Unresolvable anchors are the other two tests' finding.
                 continue;
@@ -717,6 +752,268 @@ fn the_heading_slug_matches_the_sources_own_generated_links() {
     assert!(prose.is_empty(), "{prose:?}");
 }
 
+// --- Row-key anchors for table rows, list items, and prose (D72.1) --------
+
+/// The shape of Markdown line a [`RowKey`] was derived from — exactly the
+/// property the German parity check in
+/// [`every_anchored_catalogue_entry_records_the_heading_that_opens_its_range`]
+/// compares across languages (D72.1: "the German line is the same kind (same
+/// cell count)").
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum LineKind {
+    /// A Markdown table row, carrying its cell count (including its own first
+    /// cell) — a header/data row of `n` cells compares only against another
+    /// `n`-cell row.
+    TableRow(usize),
+    /// A Markdown list item (`- …`).
+    ListItem,
+    /// Plain prose, keyed by its first four words.
+    Prose,
+}
+
+/// One line's derived row-key, alongside the [`LineKind`] that produced it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RowKey {
+    kind: LineKind,
+    key: String,
+}
+
+/// En dash and em dash become an ASCII hyphen before slugifying, so `10–12`
+/// slugs to `10-12` rather than losing the separator entirely (`1012`) —
+/// `tmp/x9a-spike.md` §2.
+fn normalize_dashes(text: &str) -> String {
+    text.chars()
+        .map(|c| match c {
+            '\u{2013}' | '\u{2014}' => '-',
+            other => other,
+        })
+        .collect()
+}
+
+/// [`slugify_heading`], preceded by [`normalize_dashes`] — the one extra step
+/// `tmp/x9a-spike.md` §2 calls for when slugifying a row/list/prose key rather
+/// than a heading.
+fn slugify_row_text(text: &str) -> String {
+    slugify_heading(&normalize_dashes(text))
+}
+
+/// Derives the anchor key of one non-heading source line, per
+/// `tmp/x9a-spike.md` §2 / D72.1:
+/// - a Markdown table row (`| Chain Mail | 6 | ... |`) keys on its first cell;
+/// - a list item (`- Athletic Childhood: ...`) keys on the text before its
+///   first `:` — or, when the item opens with a Markdown link (which carries
+///   no `:` of its own, e.g. `- [Piercing the Magical Veil](#...) ...`), on
+///   the link's own display text;
+/// - anything else keys on its first four words of prose.
+///
+/// Returns `None` for a line with no derivable key at all: a table's own
+/// separator row (`| --- | --- |`), a blank line, or a line whose would-be key
+/// slugs to nothing (an empty header cell).
+fn derive_row_key(line: &str) -> Option<RowKey> {
+    let trimmed = line.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    if let Some(rest) = trimmed.strip_prefix('|') {
+        let cells: Vec<&str> = rest
+            .trim_end_matches('|')
+            .split('|')
+            .map(str::trim)
+            .collect();
+        let first_cell = *cells.first()?;
+        if !first_cell.is_empty() && first_cell.chars().all(|c| c == '-' || c == ':') {
+            // The table's own header/body separator row (`| --- | --- |`).
+            return None;
+        }
+        let key = slugify_row_text(first_cell);
+        if key.is_empty() {
+            return None;
+        }
+        return Some(RowKey {
+            kind: LineKind::TableRow(cells.len()),
+            key,
+        });
+    }
+
+    if let Some(rest) = trimmed.strip_prefix("- ") {
+        let text = match rest.strip_prefix('[') {
+            Some(after_bracket) => after_bracket.split(']').next().unwrap_or(rest),
+            None => rest.split(':').next().unwrap_or(rest),
+        };
+        let key = slugify_row_text(text);
+        if key.is_empty() {
+            return None;
+        }
+        return Some(RowKey {
+            kind: LineKind::ListItem,
+            key,
+        });
+    }
+
+    let words: Vec<&str> = trimmed.split_whitespace().take(4).collect();
+    if words.is_empty() {
+        return None;
+    }
+    let key = slugify_row_text(&words.join(" "));
+    if key.is_empty() {
+        return None;
+    }
+    Some(RowKey {
+        kind: LineKind::Prose,
+        key,
+    })
+}
+
+#[test]
+fn derive_row_key_reads_a_table_rows_first_cell() {
+    let key = derive_row_key("| Chain Mail          | 6    | 4    | 9    | 6    | Exp.   |")
+        .expect("a table row derives a key");
+    assert_eq!(key.kind, LineKind::TableRow(6));
+    assert_eq!(key.key, "chain-mail");
+}
+
+#[test]
+fn derive_row_key_ignores_a_tables_separator_row() {
+    assert!(
+        derive_row_key("| ------------------- | ---- | ---- | ---- | ---- | ------ |").is_none()
+    );
+}
+
+#[test]
+fn derive_row_key_reads_a_list_items_text_before_its_colon() {
+    let key =
+        derive_row_key("- Athletic Childhood: Athletics 2, Brawl 2, Native Language 5, Swim 2")
+            .expect("a list item derives a key");
+    assert_eq!(key.kind, LineKind::ListItem);
+    assert_eq!(key.key, "athletic-childhood");
+}
+
+#[test]
+fn derive_row_key_reads_a_list_items_markdown_link_when_there_is_no_colon() {
+    let key = derive_row_key(
+        "- [Piercing the Magical Veil](#piercing-the-faerie-veil) (InVi 20/+18) (see Piercing the Faerie Veil)",
+    )
+    .expect("a list item opening with a link derives a key");
+    assert_eq!(key.kind, LineKind::ListItem);
+    assert_eq!(key.key, "piercing-the-magical-veil");
+}
+
+#[test]
+fn derive_row_key_reads_proses_first_four_words() {
+    let key = derive_row_key("Medical attention may help an aging character recover.")
+        .expect("a prose line derives a key");
+    assert_eq!(key.kind, LineKind::Prose);
+    assert_eq!(key.key, "medical-attention-may-help");
+}
+
+#[test]
+fn derive_row_key_normalizes_en_and_em_dashes_before_slugifying() {
+    let key = derive_row_key("| 10–12 | +1 |").expect("a dashed row derives a key");
+    assert_eq!(key.key, "10-12");
+}
+
+/// The heading segment of a possibly-compound anchor (`sample-childhoods` out
+/// of `sample-childhoods/athletic-childhood`) — the part every anchor-store
+/// guard resolves against a real heading, whether the anchor names a heading
+/// directly or a row/list/prose line inside one. `slugify_heading` never
+/// produces `/`, so the split is unambiguous (`tmp/x9a-spike.md` §2).
+fn anchor_heading_segment(anchor: &str) -> &str {
+    anchor.split('/').next().unwrap_or(anchor)
+}
+
+/// Whether an anchor names a row/list/prose line inside a heading's section
+/// (`heading/row-key`) rather than the heading itself.
+fn is_row_key_anchor(anchor: &str) -> bool {
+    anchor.contains('/')
+}
+
+/// A key made only of digits and hyphens (`10-12`, `15`) — D72.1's numeric
+/// keys, which must match byte-for-byte across languages rather than merely
+/// agreeing in *kind*.
+fn is_numeric_key(key: &str) -> bool {
+    !key.is_empty() && key.chars().all(|c| c.is_ascii_digit() || c == '-')
+}
+
+/// Resolves a compound row-key anchor (`heading/row-key`) against one
+/// language's source file: the heading segment must name a real heading, and
+/// within that heading's own section — bounded by [`section_boundary_after`]
+/// — exactly one line must derive the row-key segment. Returns that line's
+/// 1-based number and its derived [`RowKey`], or an `Err` describing why it
+/// didn't resolve.
+///
+/// Deliberately 2-segment only. D72.1's 3-segment `heading/table-key/row-key`
+/// form (for a section holding more than one table) is reserved for the aging
+/// catalogue, which is out of this slice's scope (`tmp/x9a-spike.md` §3
+/// X9a-8) — no data exercises it yet, so it is not implemented speculatively.
+fn resolve_row_key_anchor(
+    file_headings: &[Heading],
+    lines: &[String],
+    anchor: &str,
+) -> Result<(usize, RowKey), String> {
+    let mut segments = anchor.split('/');
+    let heading_slug = segments.next().unwrap_or(anchor);
+    let row_key = match (segments.next(), segments.next()) {
+        (Some(row_key), None) => row_key,
+        _ => {
+            return Err(format!(
+                "anchor \"#{anchor}\" is not the 2-segment `heading/row-key` form this guard \
+                 supports"
+            ));
+        }
+    };
+
+    let heading = file_headings
+        .iter()
+        .find(|h| h.anchor == heading_slug)
+        .ok_or_else(|| format!("no heading with anchor \"#{heading_slug}\""))?;
+    let boundary_line = section_boundary_after(file_headings, heading)
+        .map(|h| h.line)
+        .unwrap_or(lines.len() + 1);
+
+    let mut matches: Vec<(usize, RowKey)> = Vec::new();
+    for line_no in (heading.line + 1)..boundary_line {
+        if let Some(text) = lines.get(line_no - 1)
+            && let Some(key) = derive_row_key(text)
+            && key.key == row_key
+        {
+            matches.push((line_no, key));
+        }
+    }
+
+    match matches.len() {
+        0 => Err(format!(
+            "no line in \"#{heading_slug}\"'s section derives the key \"{row_key}\""
+        )),
+        1 => Ok(matches.into_iter().next().expect("checked len == 1")),
+        _ => Err(format!(
+            "{} lines in \"#{heading_slug}\"'s section derive the key \"{row_key}\" — more than \
+             one, so the key is not unique",
+            matches.len()
+        )),
+    }
+}
+
+/// `rules/source/<lang>/<file>` -> its raw lines, read once per file. What
+/// [`resolve_row_key_anchor`] scans for a row/list/prose key, alongside the
+/// [`headings_for`] structure it resolves the heading segment against.
+fn file_lines_for(
+    cache: &mut BTreeMap<(String, String), Vec<String>>,
+    lang: &str,
+    file: &str,
+) -> Vec<String> {
+    cache
+        .entry((lang.to_string(), file.to_string()))
+        .or_insert_with(|| {
+            let path = rules_dir().join("source").join(lang).join(file);
+            match fs::read_to_string(&path) {
+                Ok(text) => text.lines().map(str::to_string).collect(),
+                Err(_) => Vec::new(),
+            }
+        })
+        .clone()
+}
+
 /// **Guard A — the anchor is the heading the range opens on, in both
 /// languages.**
 ///
@@ -749,6 +1046,7 @@ fn every_anchored_catalogue_entry_records_the_heading_that_opens_its_range() {
     let german = localized_anchors();
     let german_rows = german.get(GERMAN).cloned().unwrap_or_default();
     let mut cache = BTreeMap::new();
+    let mut line_cache = BTreeMap::new();
     let mut checked = 0usize;
     let mut errors = Vec::new();
 
@@ -762,45 +1060,72 @@ fn every_anchored_catalogue_entry_records_the_heading_that_opens_its_range() {
         checked += 1;
 
         let english = headings_for(&mut cache, CANONICAL_LANGUAGE, &found.source_file);
-        let opening = english
-            .iter()
-            .find(|heading| heading.line as i64 == found.start);
 
-        match (&found.anchor, opening) {
-            (None, _) => errors.push(format!(
+        match &found.anchor {
+            None => errors.push(format!(
                 "{}: \"{}\" records no source.anchor. Every entry of this catalogue must carry \
                  the heading anchor of its own definition — it is the only half of the citation \
                  that survives a re-paginated rulebook.",
                 found.core_file, found.entry_label
             )),
-            (Some(anchor), None) => errors.push(format!(
-                "{}: \"{}\" records anchor \"#{anchor}\", but {}:{} is not a heading line at all \
-                 — the range no longer opens on the item's definition",
-                found.core_file, found.entry_label, found.source_file, found.start
-            )),
-            (Some(anchor), Some(heading)) => {
-                if heading.level != expected_level {
-                    errors.push(format!(
-                        "{}: \"{}\" opens on {}:{}, which is a level-{} heading — this \
-                         catalogue's items are defined under a level-{expected_level} heading \
-                         (`{}`)",
-                        found.core_file,
-                        found.entry_label,
-                        found.source_file,
-                        found.start,
-                        heading.level,
-                        "#".repeat(expected_level),
-                    ));
-                } else if *anchor != heading.anchor {
-                    errors.push(format!(
-                        "{}: \"{}\" records anchor \"#{anchor}\", but the heading at {}:{} slugs \
-                         to \"#{}\" — the anchor and the line range name different items",
-                        found.core_file,
-                        found.entry_label,
-                        found.source_file,
-                        found.start,
-                        heading.anchor
-                    ));
+            // A row/list/prose anchor (`heading/row-key`): resolved against the
+            // section, not required to open on a heading of any particular
+            // level — `tmp/x9a-spike.md` §2's form for table rows, list items
+            // and prose, D72.1.
+            Some(anchor) if is_row_key_anchor(anchor) => {
+                let english_lines =
+                    file_lines_for(&mut line_cache, CANONICAL_LANGUAGE, &found.source_file);
+                match resolve_row_key_anchor(&english, &english_lines, anchor) {
+                    Err(reason) => errors.push(format!(
+                        "{}: \"{}\" records row-key anchor \"#{anchor}\", which does not \
+                         resolve against {}: {reason}",
+                        found.core_file, found.entry_label, found.source_file
+                    )),
+                    Ok((line, _)) if line as i64 != found.start => errors.push(format!(
+                        "{}: \"{}\" records row-key anchor \"#{anchor}\", which resolves to \
+                         {}:{line}, but source.lines[0] is {} — the anchor and the line range \
+                         name different items",
+                        found.core_file, found.entry_label, found.source_file, found.start
+                    )),
+                    Ok(_) => {}
+                }
+            }
+            Some(anchor) => {
+                let opening = english
+                    .iter()
+                    .find(|heading| heading.line as i64 == found.start);
+                match opening {
+                    None => errors.push(format!(
+                        "{}: \"{}\" records anchor \"#{anchor}\", but {}:{} is not a heading \
+                         line at all — the range no longer opens on the item's definition",
+                        found.core_file, found.entry_label, found.source_file, found.start
+                    )),
+                    Some(heading) => {
+                        if heading.level != expected_level {
+                            errors.push(format!(
+                                "{}: \"{}\" opens on {}:{}, which is a level-{} heading — this \
+                                 catalogue's items are defined under a level-{expected_level} \
+                                 heading (`{}`)",
+                                found.core_file,
+                                found.entry_label,
+                                found.source_file,
+                                found.start,
+                                heading.level,
+                                "#".repeat(expected_level),
+                            ));
+                        } else if *anchor != heading.anchor {
+                            errors.push(format!(
+                                "{}: \"{}\" records anchor \"#{anchor}\", but the heading at \
+                                 {}:{} slugs to \"#{}\" — the anchor and the line range name \
+                                 different items",
+                                found.core_file,
+                                found.entry_label,
+                                found.source_file,
+                                found.start,
+                                heading.anchor
+                            ));
+                        }
+                    }
                 }
             }
         }
@@ -811,6 +1136,62 @@ fn every_anchored_catalogue_entry_records_the_heading_that_opens_its_range() {
                  scope of every slice, so a swept entry carries an anchor in each.",
                 found.entry_label
             )),
+            Some((file, anchor)) if is_row_key_anchor(anchor) => {
+                let localized = headings_for(&mut cache, GERMAN, file);
+                let localized_lines = file_lines_for(&mut line_cache, GERMAN, file);
+                match resolve_row_key_anchor(&localized, &localized_lines, anchor) {
+                    Err(reason) => errors.push(format!(
+                        "de/{ANCHOR_SIDECAR}: \"{}\" records row-key anchor \"#{anchor}\", which \
+                         does not resolve against {file}: {reason}",
+                        found.entry_label
+                    )),
+                    Ok((line, de_key)) => {
+                        if line as i64 != found.start {
+                            errors.push(format!(
+                                "de/{ANCHOR_SIDECAR}: \"{}\" records row-key anchor \"#{anchor}\", \
+                                 which resolves to {file}:{line}, but its English counterpart is \
+                                 defined on {} — the line-parity invariant does not hold here",
+                                found.entry_label, found.start
+                            ));
+                        }
+                        // D72.1's German parity check: the two lines must be
+                        // the same *kind*, and a purely numeric key must match
+                        // byte-for-byte (`10-12` cannot silently become `15`).
+                        let english_lines =
+                            file_lines_for(&mut line_cache, CANONICAL_LANGUAGE, &found.source_file);
+                        let english_key = english_lines
+                            .get(found.start as usize - 1)
+                            .and_then(|text| derive_row_key(text));
+                        match english_key {
+                            None => {}
+                            Some(english_key) if english_key.kind != de_key.kind => {
+                                errors.push(format!(
+                                    "de/{ANCHOR_SIDECAR}: \"{}\" cites {file}:{line} ({:?}), but \
+                                     its English counterpart at {}:{} is {:?} — the two lines are \
+                                     not the same kind",
+                                    found.entry_label,
+                                    de_key.kind,
+                                    found.source_file,
+                                    found.start,
+                                    english_key.kind
+                                ));
+                            }
+                            Some(english_key)
+                                if is_numeric_key(&english_key.key)
+                                    && english_key.key != de_key.key =>
+                            {
+                                errors.push(format!(
+                                    "de/{ANCHOR_SIDECAR}: \"{}\" records numeric key \"{}\", but \
+                                     its English counterpart is \"{}\" — numeric keys must match \
+                                     byte-for-byte across languages",
+                                    found.entry_label, de_key.key, english_key.key
+                                ));
+                            }
+                            Some(_) => {}
+                        }
+                    }
+                }
+            }
             Some((file, anchor)) => {
                 let localized = headings_for(&mut cache, GERMAN, file);
                 match localized

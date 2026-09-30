@@ -4,7 +4,7 @@
       "id": "house.bjornaer",
       "lineage_type": "mystery_cult",
       "grants": [{ "kind": "fixed", "item": "virtue.heartbeast" }],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-bjornaer", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [643, 653] }
     },
     {
       "id": "house.bonisagus",
@@ -19,13 +19,13 @@
           ]
         }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-bonisagus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [655, 659] }
     },
     {
       "id": "house.criamon",
       "lineage_type": "mystery_cult",
       "grants": [{ "kind": "fixed", "item": "virtue.the_enigma" }],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-criamon", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [661, 671] }
     },
     {
       "id": "house.ex_miscellanea",
@@ -47,7 +47,7 @@
           "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["hermetic"] }
         }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-ex-miscellanea", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [673, 683] }
     },
     {
       "id": "house.flambeau",
@@ -62,13 +62,13 @@
           ]
         }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-flambeau", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [685, 691] }
     },
     {
       "id": "house.guernicus",
       "lineage_type": "true_lineage",
       "grants": [{ "kind": "fixed", "item": "virtue.hermetic_prestige" }],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-guernicus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [693, 703] }
     },
     {
       "id": "house.jerbiton",
@@ -80,7 +80,7 @@
           "constraint": { "kind": "virtue", "magnitude": "minor" }
         }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-jerbiton", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [705, 715] }
     },
     {
       "id": "house.mercere",
@@ -95,13 +95,13 @@
           ]
         }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-mercere", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [717, 727] }
     },
     {
       "id": "house.merinita",
       "lineage_type": "mystery_cult",
       "grants": [{ "kind": "fixed", "item": "virtue.faerie_magic" }],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-merinita", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [729, 741] }
     },
     {
       "id": "house.tremere",
@@ -113,19 +113,19 @@
           "params": { "focus": "certamen" }
         }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-tremere", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [743, 753] }
     },
     {
       "id": "house.tytalus",
       "lineage_type": "societas",
       "grants": [{ "kind": "fixed", "item": "virtue.self_confident" }],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-tytalus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [755, 761] }
     },
     {
       "id": "house.verditius",
       "lineage_type": "mystery_cult",
       "grants": [{ "kind": "fixed", "item": "virtue.verditius_magic" }],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+      "source": { "anchor": "house-verditius", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [763, 777] }
     }
   ]
 }
