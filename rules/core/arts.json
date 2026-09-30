@@ -22,20 +22,20 @@
     { "score": 20, "total_xp": 210 }
   ],
   "arts": [
-    { "id": "art.animal", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8901, 8907] } },
-    { "id": "art.aquam", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8909, 8915] } },
-    { "id": "art.auram", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8917, 8923] } },
-    { "id": "art.corpus", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8925, 8931] } },
-    { "id": "art.creo", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8847, 8863] } },
-    { "id": "art.herbam", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8933, 8939] } },
-    { "id": "art.ignem", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8941, 8945] } },
-    { "id": "art.imaginem", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8947, 8959] } },
-    { "id": "art.intellego", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8865, 8869] } },
-    { "id": "art.mentem", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8961, 8967] } },
-    { "id": "art.muto", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8871, 8879] } },
-    { "id": "art.perdo", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8881, 8889] } },
-    { "id": "art.rego", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8891, 8897] } },
-    { "id": "art.terram", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8969, 8975] } },
-    { "id": "art.vim", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8977, 8982] } }
+    { "id": "art.animal", "art_type": "form", "source": { "anchor": "animal-an-animal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8901, 8907] } },
+    { "id": "art.aquam", "art_type": "form", "source": { "anchor": "aquam-aq-water", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8909, 8915] } },
+    { "id": "art.auram", "art_type": "form", "source": { "anchor": "auram-au-air", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8917, 8923] } },
+    { "id": "art.corpus", "art_type": "form", "source": { "anchor": "corpus-co-body", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8925, 8931] } },
+    { "id": "art.creo", "art_type": "technique", "source": { "anchor": "creo-cr-i-create", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8847, 8863] } },
+    { "id": "art.herbam", "art_type": "form", "source": { "anchor": "herbam-he-plant", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8933, 8939] } },
+    { "id": "art.ignem", "art_type": "form", "source": { "anchor": "ignem-ig-fire", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8941, 8945] } },
+    { "id": "art.imaginem", "art_type": "form", "source": { "anchor": "imaginem-im-image", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8947, 8959] } },
+    { "id": "art.intellego", "art_type": "technique", "source": { "anchor": "intellego-in-i-perceive", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8865, 8869] } },
+    { "id": "art.mentem", "art_type": "form", "source": { "anchor": "mentem-me-mind", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8961, 8967] } },
+    { "id": "art.muto", "art_type": "technique", "source": { "anchor": "muto-mu-i-transform", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8871, 8879] } },
+    { "id": "art.perdo", "art_type": "technique", "source": { "anchor": "perdo-pe-i-destroy", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8881, 8889] } },
+    { "id": "art.rego", "art_type": "technique", "source": { "anchor": "rego-re-i-control", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8891, 8897] } },
+    { "id": "art.terram", "art_type": "form", "source": { "anchor": "terram-te-earth", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8969, 8975] } },
+    { "id": "art.vim", "art_type": "form", "source": { "anchor": "vim-vi-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8977, 8982] } }
   ]
 }

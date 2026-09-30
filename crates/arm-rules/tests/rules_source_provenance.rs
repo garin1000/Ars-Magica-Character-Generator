@@ -424,12 +424,29 @@ fn headings_for(
         .clone()
 }
 
-/// The catalogue whose entries are required to carry a heading anchor in both
-/// stores. Scoped to one file on purpose: the anchor sweep is incremental
-/// (`docs/rules-source-resync.md`), and Virtues/Flaws is the catalogue it has
-/// finished. Widen this list as later catalogues are swept — never loosen the
+/// The catalogues whose entries are *all* required to carry a heading anchor
+/// in both stores, paired with the heading level their catalogue is defined
+/// under (`####` for most books' entries, `###` for mythic companion types,
+/// `#####` for spells — a structural fact, not a count). Scoped incrementally
+/// on purpose: the anchor sweep is incremental (`docs/rules-source-resync.md`),
+/// and a catalogue earns a place here only once *every* entry resolves — a
+/// catalogue with even one entry pending a human reading (see
+/// `CATALOGUES_TO_SWEEP` below) stays out until that reading lands. Widen this
+/// list as later catalogues are swept to completion — never loosen the
 /// assertion instead.
-const FULLY_ANCHORED_CATALOGUES: &[&str] = &["virtues_flaws.json"];
+const FULLY_ANCHORED_CATALOGUES: &[(&str, usize)] = &[
+    ("virtues_flaws.json", 4),
+    ("arts.json", 4),
+    ("spell_mastery_abilities.json", 4),
+    ("mythic_companion_types.json", 3),
+    ("abilities.json", 4),
+    // `spells.json` and `parameter_catalogues.json` are NOT here yet: each has
+    // one or more entries a heading-only sweep cannot resolve
+    // (`spell.piercing_the_magical_veil`; `profession.poet`,
+    // `profession.storyteller`, `organization.church`) and needs a human
+    // reading first (`tmp/x9a-spike.md` §4 Q2, Q7) before every entry in the
+    // file carries an anchor. They join once that reading lands.
+];
 
 /// Every `rules/i18n/<lang>/source_anchors.json`, as
 /// `lang -> id -> (file, anchor)`. The canonical language is skipped: its
@@ -707,9 +724,13 @@ fn the_heading_slug_matches_the_sources_own_generated_links() {
 /// the anchor's heading fall *somewhere* inside the cited range. That is too
 /// loose to survive a re-sync: a range that shifted by a line or two still
 /// contains its heading. The extraction actually produces a tighter fact —
-/// `source.lines[0]` **is** the `####` line the item is defined under — so this
-/// asserts exactly that, for the English anchor in `rules/core/` and for the
-/// German one in `rules/i18n/de/source_anchors.json` alike.
+/// `source.lines[0]` **is** the heading line the item is defined under — so
+/// this asserts exactly that, for the English anchor in `rules/core/` and for
+/// the German one in `rules/i18n/de/source_anchors.json` alike. The expected
+/// heading *level* is per catalogue (recorded beside its name in
+/// [`FULLY_ANCHORED_CATALOGUES`]): `####` for most, `###` for mythic
+/// companion types, `#####` for spells — a structural fact about how each
+/// book lays that catalogue out, not a count.
 ///
 /// It is also the coverage assertion for the backfill: every entry of a
 /// catalogue in [`FULLY_ANCHORED_CATALOGUES`] must record an anchor in *both*
@@ -732,9 +753,12 @@ fn every_anchored_catalogue_entry_records_the_heading_that_opens_its_range() {
     let mut errors = Vec::new();
 
     for found in all_source_refs() {
-        if !FULLY_ANCHORED_CATALOGUES.contains(&found.core_file.as_str()) {
+        let Some(&(_, expected_level)) = FULLY_ANCHORED_CATALOGUES
+            .iter()
+            .find(|(name, _)| *name == found.core_file)
+        else {
             continue;
-        }
+        };
         checked += 1;
 
         let english = headings_for(&mut cache, CANONICAL_LANGUAGE, &found.source_file);
@@ -755,15 +779,17 @@ fn every_anchored_catalogue_entry_records_the_heading_that_opens_its_range() {
                 found.core_file, found.entry_label, found.source_file, found.start
             )),
             (Some(anchor), Some(heading)) => {
-                if heading.level != 4 {
+                if heading.level != expected_level {
                     errors.push(format!(
-                        "{}: \"{}\" opens on {}:{}, which is a level-{} heading — a catalogue \
-                         item is defined under a `####`",
+                        "{}: \"{}\" opens on {}:{}, which is a level-{} heading — this \
+                         catalogue's items are defined under a level-{expected_level} heading \
+                         (`{}`)",
                         found.core_file,
                         found.entry_label,
                         found.source_file,
                         found.start,
-                        heading.level
+                        heading.level,
+                        "#".repeat(expected_level),
                     ));
                 } else if *anchor != heading.anchor {
                     errors.push(format!(
@@ -981,6 +1007,31 @@ fn every_subdivided_item_really_is_subdivided() {
 
 // --- The regenerator -------------------------------------------------------
 
+/// Catalogues the regenerator knows how to sweep, paired with the heading
+/// level their entries are defined under (`####` for most, `###` for mythic
+/// companion types, `#####` for spells — a structural fact, not a count). A
+/// superset of [`FULLY_ANCHORED_CATALOGUES`]: a catalogue enters this list as
+/// soon as its anchors are mechanically derivable, even before *every* entry
+/// resolves — a few need a human reading first (`tmp/x9a-spike.md`,
+/// `docs/rules-source-resync.md`), and the loop below leaves each of those
+/// exactly as it was rather than failing the whole catalogue. A catalogue
+/// earns a place in `FULLY_ANCHORED_CATALOGUES`, and Guard A's stricter
+/// promise, only once every one of its entries resolves.
+///
+/// `virtues_flaws.json` is deliberately **not** listed here even though it is
+/// in [`FULLY_ANCHORED_CATALOGUES`]: it was swept to completion by an earlier
+/// slice, so this regenerator has nothing left to derive for it, and leaving
+/// it out of the write path means a run for the newer catalogues below never
+/// touches a file that a concurrent workstream may be mid-edit on.
+const CATALOGUES_TO_SWEEP: &[(&str, usize)] = &[
+    ("arts.json", 4),
+    ("spell_mastery_abilities.json", 4),
+    ("mythic_companion_types.json", 3),
+    ("abilities.json", 4),
+    ("spells.json", 5),
+    ("parameter_catalogues.json", 4),
+];
+
 /// **The tool that satisfies the two guards above — not a test, and never run
 /// by the gate.**
 ///
@@ -991,20 +1042,30 @@ fn every_subdivided_item_really_is_subdivided() {
 /// realistic to *create* the anchors by hand either — which is why the sweep sat
 /// at 94 of 655 for so long.
 ///
-/// So this derives the anchor of every Virtue/Flaw from the `####` heading its
-/// `source.lines[0]` lands on, in English and (via the line-parity invariant) in
-/// German, and rewrites both stores. It is `#[ignore]`d because it **writes into
-/// the repository**: `cargo test --workspace` must never mutate the tree, and
-/// running it is a deliberate act (`cargo test -p arm-rules --test
+/// So this derives the anchor of every entry of every catalogue in
+/// [`CATALOGUES_TO_SWEEP`] from the heading its `source.lines[0]` lands on, at
+/// that catalogue's own level, in English and (via the line-parity invariant)
+/// in German, and rewrites both stores. It is `#[ignore]`d because it **writes
+/// into the repository**: `cargo test --workspace` must never mutate the tree,
+/// and running it is a deliberate act (`cargo test -p arm-rules --test
 /// rules_source_provenance -- --ignored regenerate_source_anchors`) whose output
 /// is then reviewed as a diff like any other change.
 ///
-/// It deliberately rewrites `rules/core/virtues_flaws.json` **line by line**
-/// rather than reserializing it. Round-tripping the whole document through
-/// `serde_json` would reflow every entry and bury the anchors in thousands of
-/// lines of formatting churn, against `CLAUDE.md` → "Canonical serialization"'s
-/// whole purpose of zero-noise diffs. The `source` block is always one line, so
-/// replacing that one line is both sufficient and minimal.
+/// An entry whose `lines[0]` does **not** land on a heading of the expected
+/// level is left exactly as it was — no `anchor` added, no German row written —
+/// rather than aborting the whole catalogue. That is a deliberate design point,
+/// not a laxity: a few entries across these catalogues need a human reading
+/// before they can be anchored at all (a citation into body prose, a `-N`
+/// disambiguation that needs a name check), and the fix for those is
+/// Norbert's, not a crash.
+///
+/// It deliberately rewrites each `rules/core/*.json` catalogue **line by
+/// line** rather than reserializing it. Round-tripping the whole document
+/// through `serde_json` would reflow every entry and bury the anchors in
+/// thousands of lines of formatting churn, against `CLAUDE.md` → "Canonical
+/// serialization"'s whole purpose of zero-noise diffs. The `source` block is
+/// always one line, so replacing that one line is both sufficient and
+/// minimal.
 ///
 /// Correctness is not this function's claim to make:
 /// [`every_anchored_catalogue_entry_records_the_heading_that_opens_its_range`]
@@ -1012,11 +1073,8 @@ fn every_subdivided_item_really_is_subdivided() {
 #[test]
 #[ignore = "writes into rules/; run deliberately after a rulebook re-sync"]
 fn regenerate_source_anchors() {
-    let catalogue = rules_dir().join("core/virtues_flaws.json");
-    let text = fs::read_to_string(&catalogue).expect("virtues_flaws.json is readable");
-
-    // The German book each English one is mirrored by, learned from the rows
-    // the sidecar already carries rather than hardcoded here.
+    // The German book each English source file is mirrored by, learned from
+    // the rows the sidecar already carries rather than hardcoded here.
     let existing = localized_anchors();
     let german_rows = existing.get("de").cloned().unwrap_or_default();
     let mut german_book: BTreeMap<String, String> = BTreeMap::new();
@@ -1031,79 +1089,106 @@ fn regenerate_source_anchors() {
     }
 
     let mut cache = BTreeMap::new();
-    let mut german_sidecar: BTreeMap<String, (String, String)> = BTreeMap::new();
-    let mut rewritten = Vec::new();
+    // Seeded from the existing sidecar so a catalogue outside
+    // `CATALOGUES_TO_SWEEP` keeps its rows; every id this run touches is then
+    // overwritten with a freshly-derived one.
+    let mut sidecar_rows: BTreeMap<String, (String, String)> = german_rows
+        .iter()
+        .map(|(id, (file, anchor))| (id.clone(), (file.clone(), anchor.clone())))
+        .collect();
 
-    // A handful of entries carry the block across several lines because it grew
-    // long; joining them first lets the rewrite below treat every block alike,
-    // and emits them all in the file's dominant one-line form.
-    let mut source_lines = text.lines().peekable();
-    while let Some(first) = source_lines.next() {
-        let Some((prefix, rest)) = first.split_once("\"source\": {") else {
-            rewritten.push(first.to_string());
-            continue;
-        };
-        let mut block_text = rest.to_string();
-        while !block_text.contains('}') {
-            block_text.push(' ');
-            block_text.push_str(source_lines.next().expect("the block closes").trim());
+    for &(catalogue_name, level) in CATALOGUES_TO_SWEEP {
+        let catalogue = rules_dir().join("core").join(catalogue_name);
+        let text = fs::read_to_string(&catalogue)
+            .unwrap_or_else(|e| panic!("{catalogue_name} is readable: {e}"));
+
+        // A handful of entries carry the block across several lines because it
+        // grew long; joining them first lets the rewrite below treat every
+        // block alike, and emits them all in the file's dominant one-line form.
+        let mut rewritten = Vec::new();
+        let mut source_lines = text.lines().peekable();
+        while let Some(first) = source_lines.next() {
+            let Some((prefix, rest)) = first.split_once("\"source\": {") else {
+                rewritten.push(first.to_string());
+                continue;
+            };
+            let mut block_text = rest.to_string();
+            while !block_text.contains('}') {
+                block_text.push(' ');
+                block_text.push_str(source_lines.next().expect("the block closes").trim());
+            }
+            // The *first* `}` in `block_text` is always `source`'s own closing
+            // brace: a `source` object is flat (string/array values only, no
+            // nested `{`), so nothing earlier in `block_text` can close before
+            // it does. Some catalogues (arts, spell mastery, ...) serialize an
+            // entry compactly on one line, so `source` is not the entry's last
+            // key and a *last*-`}` split would swallow the entry's own closing
+            // brace into `body` instead of leaving it in `suffix`.
+            let (body, suffix) = block_text.split_once('}').expect("the block closes");
+            let block: Value = serde_json::from_str(&format!("{{{body}}}"))
+                .unwrap_or_else(|e| panic!("{catalogue_name}: source block parses: {e}"));
+            let file = block["file"].as_str().expect("source.file is a string");
+            let start = block["lines"][0]
+                .as_u64()
+                .expect("source.lines[0] is a number") as usize;
+            let end = block["lines"][1]
+                .as_u64()
+                .expect("source.lines[1] is a number") as usize;
+
+            match anchor_opening(&mut cache, CANONICAL_LANGUAGE, file, start, level) {
+                Some(anchor) => rewritten.push(format!(
+                    "{prefix}\"source\": {{ \"anchor\": {}, \"file\": {}, \"lines\": [{start}, {end}] }}{suffix}",
+                    serde_json::to_string(&anchor).expect("a string serializes"),
+                    serde_json::to_string(file).expect("a string serializes"),
+                )),
+                None => rewritten.push(format!(
+                    "{prefix}\"source\": {{ \"file\": {}, \"lines\": [{start}, {end}] }}{suffix}",
+                    serde_json::to_string(file).expect("a string serializes"),
+                )),
+            }
         }
-        let (body, suffix) = block_text.rsplit_once('}').expect("the block closes");
-        let block: Value =
-            serde_json::from_str(&format!("{{{body}}}")).expect("source block parses");
-        let file = block["file"].as_str().expect("source.file is a string");
-        let start = block["lines"][0]
-            .as_u64()
-            .expect("source.lines[0] is a number") as usize;
-        let end = block["lines"][1]
-            .as_u64()
-            .expect("source.lines[1] is a number") as usize;
 
-        let anchor = anchor_opening(&mut cache, CANONICAL_LANGUAGE, file, start)
-            .unwrap_or_else(|| panic!("{file}:{start} opens a `####` heading"));
-        rewritten.push(format!(
-            "{prefix}\"source\": {{ \"anchor\": {}, \"file\": {}, \"lines\": [{start}, {end}] }}{suffix}",
-            serde_json::to_string(&anchor).expect("a string serializes"),
-            serde_json::to_string(file).expect("a string serializes"),
-        ));
+        fs::write(&catalogue, format!("{}\n", rewritten.join("\n")))
+            .unwrap_or_else(|e| panic!("{catalogue_name} is writable: {e}"));
 
-        let german_file = german_book
-            .get(file)
-            .unwrap_or_else(|| panic!("no German counterpart recorded for {file}"));
-        let german_anchor = anchor_opening(&mut cache, "de", german_file, start)
-            .unwrap_or_else(|| panic!("de/{german_file}:{start} opens a `####` heading"));
-        german_sidecar.insert(
-            format!("{file}\u{0}{start}\u{0}{end}"),
-            (german_file.clone(), german_anchor),
-        );
+        // Re-read the now-anchored catalogue so the sidecar is keyed by id,
+        // which only the parsed document knows — reusing the same walker that
+        // finds every `source` block regardless of how deeply this catalogue
+        // nests its entries (a flat array for virtues_flaws.json, a
+        // `{ "catalogues": [ { "values": [...] } ] }` tree for parameter
+        // catalogues).
+        let reparsed_text = fs::read_to_string(&catalogue)
+            .unwrap_or_else(|e| panic!("{catalogue_name} is readable: {e}"));
+        let reparsed: Value = serde_json::from_str(&reparsed_text)
+            .unwrap_or_else(|e| panic!("the rewritten {catalogue_name} is valid JSON: {e}"));
+        let mut refs = Vec::new();
+        collect_source_refs(catalogue_name, &reparsed, &mut refs);
+
+        for found in &refs {
+            // Unresolved this run (a reading is still pending) — no German
+            // counterpart to derive either.
+            if found.anchor.is_none() {
+                continue;
+            }
+            let german_file = german_book.get(&found.source_file).unwrap_or_else(|| {
+                panic!("no German counterpart recorded for {}", found.source_file)
+            });
+            let german_anchor =
+                anchor_opening(&mut cache, "de", german_file, found.start as usize, level)
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "de/{german_file}:{} does not open a level-{level} heading",
+                            found.start
+                        )
+                    });
+            sidecar_rows.insert(
+                found.entry_label.clone(),
+                (german_file.clone(), german_anchor),
+            );
+        }
     }
 
-    fs::write(&catalogue, format!("{}\n", rewritten.join("\n")))
-        .expect("virtues_flaws.json is writable");
-
-    // Re-read the now-anchored catalogue so the sidecar is keyed by id, which
-    // only the parsed document knows.
-    let reparsed: Value = serde_json::from_str(
-        &fs::read_to_string(&catalogue).expect("virtues_flaws.json is readable"),
-    )
-    .expect("virtues_flaws.json is valid JSON");
-    let mut rows: BTreeMap<String, (String, String)> = BTreeMap::new();
-    for entry in reparsed.as_array().expect("the catalogue is an array") {
-        let id = entry["id"]
-            .as_str()
-            .expect("an entry has an id")
-            .to_string();
-        let file = entry["source"]["file"].as_str().expect("a source file");
-        let start = entry["source"]["lines"][0].as_u64().expect("a start line") as usize;
-        let end = entry["source"]["lines"][1].as_u64().expect("an end line") as usize;
-        let key = format!("{file}\u{0}{start}\u{0}{end}");
-        let (german_file, german_anchor) = german_sidecar
-            .get(&key)
-            .unwrap_or_else(|| panic!("\"{id}\" has a German anchor"));
-        rows.insert(id, (german_file.clone(), german_anchor.clone()));
-    }
-
-    let body: Vec<String> = rows
+    let body: Vec<String> = sidecar_rows
         .iter()
         .map(|(id, (file, anchor))| {
             format!(
@@ -1121,19 +1206,44 @@ fn regenerate_source_anchors() {
     .expect("the German sidecar is writable");
 }
 
-/// The anchor of the `####` heading that opens at `line` in
-/// `rules/source/<lang>/<file>`, or `None` if that line is not a level-4
-/// heading.
+/// **X9a-1 red.** Before generalising `anchor_opening` and Guard A to a
+/// per-catalogue heading level, nothing in this file can recognise anything
+/// but a `####` (level-4) heading. Spells are defined under a `#####`
+/// (level-5) heading, so a level-5 catalogue entry needs a heading finder
+/// that takes the level as a parameter instead of hardcoding 4.
+#[test]
+fn heading_opening_recognises_a_level_five_spell_heading() {
+    let text = "#### Some Ability\n\n##### Piercing the Faerie Veil\n";
+    let all = headings(text);
+    let opening = heading_opening(&all, 3, 5);
+    assert_eq!(
+        opening.map(|heading| heading.anchor.as_str()),
+        Some("piercing-the-faerie-veil")
+    );
+}
+
+/// The heading at `line` whose level is exactly `level`, or `None` if that
+/// line opens no heading or opens one at a different level. Pulled out of
+/// `anchor_opening` so the level-matching rule is unit-testable without
+/// reading a real file from `rules/source/`.
+fn heading_opening(headings: &[Heading], line: usize, level: usize) -> Option<&Heading> {
+    headings
+        .iter()
+        .find(|heading| heading.line == line && heading.level == level)
+}
+
+/// The anchor of the heading of the expected `level` that opens at `line` in
+/// `rules/source/<lang>/<file>`, or `None` if that line is not a heading of
+/// that level.
 fn anchor_opening(
     cache: &mut BTreeMap<(String, String), Vec<Heading>>,
     lang: &str,
     file: &str,
     line: usize,
+    level: usize,
 ) -> Option<String> {
-    headings_for(cache, lang, file)
-        .into_iter()
-        .find(|heading| heading.line == line && heading.level == 4)
-        .map(|heading| heading.anchor)
+    let found = headings_for(cache, lang, file);
+    heading_opening(&found, line, level).map(|heading| heading.anchor.clone())
 }
 
 // --- The mechanic-vs-passage guard -----------------------------------------

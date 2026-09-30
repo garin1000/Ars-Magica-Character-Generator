@@ -23,7 +23,7 @@
           "constraint": { "kind": "flaw", "magnitude": "major" }
         }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2643, 2666] }
+      "source": { "anchor": "devil-child", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2643, 2666] }
     },
     {
       "id": "mythic_type.faerie_doctor",
@@ -45,7 +45,7 @@
           "constraint": { "kind": "flaw", "magnitude": "minor", "require_categories": ["personality"] }
         }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2668, 2704] }
+      "source": { "anchor": "faerie-doctors", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2668, 2704] }
     },
     {
       "id": "mythic_type.nephilim",
@@ -61,7 +61,7 @@
         { "ref": "virtue.improved_characteristics" },
         { "ref": "virtue.sense_holiness_and_unholiness" }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2714, 2739] }
+      "source": { "anchor": "nephilim", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2714, 2739] }
     },
     {
       "id": "mythic_type.spirit_votary",
@@ -78,7 +78,7 @@
           "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["personality"] }
         }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2741, 2764] }
+      "source": { "anchor": "spirit-votary", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2741, 2764] }
     }
   ]
 }
