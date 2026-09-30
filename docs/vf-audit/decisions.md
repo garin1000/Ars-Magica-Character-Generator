@@ -828,6 +828,31 @@ presumption of correctness.
 
 ---
 
+## D72 — X9a's anchor questions (`tmp/x9a-spike.md`)
+
+**Norbert, 2026-09-30.**
+
+1. **Table rows** anchor as `<heading>/<row>`, with an optional table key where
+   one heading holds several tables (e.g. `aging/aging-roll/10-12`). The row
+   key is the first cell, the text before `:`, or the first four words of
+   prose, passed through the existing slug rule.
+2. **Houses** anchor to each House's own section heading, not to the summary
+   table row.
+3. **Aging rows get ids.** This is a Rust type change, and the German sidecar
+   stays keyed by id.
+4. **Accepted as recommended:**
+   - prose starts move onto a short section's heading; the four-word key is
+     used only at ArMDE:16634;
+   - the 27 `-N` anchors;
+   - no provenance is added for catalogues without `source`;
+   - Piercing the Magical Veil anchors on its Criamon template line;
+   - only `anchor` becomes non-optional.
+
+**Not pushed:** worktrees therefore keep branching from the stale
+`origin/main`, and each one is fast-forwarded by hand.
+
+---
+
 ## D71 — X8d's three held German-name items
 
 **Norbert, 2026-09-30** (details in `docs/vf-audit/measurements.md` § 8 row 14).
