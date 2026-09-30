@@ -2743,6 +2743,7 @@ impl Ruleset {
                 | Effect::ItemLevelBudget { .. }
                 | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
+                | Effect::RelicTrueFaith { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicPoints { .. }

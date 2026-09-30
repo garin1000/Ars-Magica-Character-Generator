@@ -887,6 +887,9 @@ pub(crate) fn ability_authorizations(entity: &Entity, ruleset: &Ruleset) -> Abil
                 | Effect::ItemLevelBudget { .. }
                 | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
+                // F-256: the relic's own True Faith Score, not an Ability
+                // authorization.
+                | Effect::RelicTrueFaith { .. }
                 | Effect::WarpingGrant { .. }
                 // D69/X7b-e: a Warping grant, not an Ability authorization.
                 | Effect::WarpingGrantParam { .. }

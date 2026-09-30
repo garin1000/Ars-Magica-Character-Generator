@@ -60,16 +60,22 @@ pub fn confidence(
 ) -> Confidence {
     let mut score = i32::from(base_score);
     let mut points = i32::from(base_points);
-    for_each_effect!(entity, ruleset, |_selection, effect| {
-        if let Effect::ConfidenceBonus {
-            score: s,
-            points: p,
-        } = effect
-        {
-            score += i32::from(*s);
-            points += i32::from(*p);
-        }
-    });
+    // A profile with no Confidence base at all (the grog, ArMDE:1161/:2522)
+    // has no Confidence track for a ConfidenceBonus effect to add to — a
+    // Virtue delta cannot conjure a Confidence Score/Points a type profile
+    // denies outright.
+    if base_score != 0 || base_points != 0 {
+        for_each_effect!(entity, ruleset, |_selection, effect| {
+            if let Effect::ConfidenceBonus {
+                score: s,
+                points: p,
+            } = effect
+            {
+                score += i32::from(*s);
+                points += i32::from(*p);
+            }
+        });
+    }
     let clamp = |n: i32| u8::try_from(n.max(0)).unwrap_or(u8::MAX);
     Confidence {
         score: clamp(score),

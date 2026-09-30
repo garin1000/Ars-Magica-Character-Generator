@@ -1559,7 +1559,7 @@ derived-detail-circumstantial = Umständeabhängig
 # Auramodifikator und die Patzerwürfel — zählen in dieser Aura doppelt.
 derived-detail-doubled_aura_penalty = Verdoppelte Aura-Abzüge
 derived-detail-fatigue_roll = Erschöpfungswurf
-derived-detail-casting_fatigue = Zauber-Erschöpfung
+derived-detail-casting_fatigue = Zauber-Erschöpfungswiderstand
 derived-detail-recovery = Genesung
 derived-detail-susceptible_faerie = Anfällig für das Feenreich
 derived-detail-susceptible_infernal = Anfällig für das Infernale

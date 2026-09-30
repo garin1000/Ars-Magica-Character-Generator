@@ -724,6 +724,7 @@ pub(crate) fn validate_personality_traits(
             | Effect::ItemLevelBudget { .. }
             | Effect::MasterpieceItem
             | Effect::TrueFaithGrant { .. }
+            | Effect::RelicTrueFaith { .. }
             | Effect::WarpingGrant { .. }
             | Effect::WarpingGrantParam { .. }
             | Effect::SizeDelta { .. }
@@ -842,6 +843,7 @@ pub(crate) fn validate_personality_trait_pairs(
             | Effect::ItemLevelBudget { .. }
             | Effect::MasterpieceItem
             | Effect::TrueFaithGrant { .. }
+            | Effect::RelicTrueFaith { .. }
             | Effect::WarpingGrant { .. }
             | Effect::WarpingGrantParam { .. }
             | Effect::SizeDelta { .. }

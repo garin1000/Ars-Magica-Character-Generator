@@ -1329,6 +1329,7 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         | Effect::ItemLevelBudget { .. }
         | Effect::MasterpieceItem
         | Effect::TrueFaithGrant { .. }
+        | Effect::RelicTrueFaith { .. }
         | Effect::WarpingGrant { .. }
         // D69/X7b-e: a parameterized Warping grant, checked instead by
         // `ruleset/integrity.rs::validate_effect_refs`'s own dedicated arm.

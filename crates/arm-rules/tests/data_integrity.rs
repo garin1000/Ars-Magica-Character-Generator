@@ -2300,10 +2300,6 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
         "narrative, but declares incompatible_with (Lecherous Major) — D67 counts that as computed",
     ),
     (
-        "flaw.magical_air",
-        "narrative, but declares incompatible_with (Blatant Gift) — D67 counts that as computed",
-    ),
-    (
         "flaw.meddler_major",
         "narrative, but declares incompatible_with (Meddler Minor) — D67 counts that as computed",
     ),
@@ -3665,14 +3661,17 @@ fn shipped_confidence_true_faith_and_size_granters() {
         },
         "Low Self-Esteem zeroes Confidence"
     );
-    // Relic → True Faith 1 (ArMDE:4854); Powerful Relic → 3 (ArMDE:4783).
+    // Relic/Powerful Relic grant the RELIC's own True Faith Score
+    // (ArMDE:17607: only the True Faith Virtue gives a CHARACTER one), not the
+    // bearer's — F-256. `effective::true_faith` must stay 0 for a bearer who
+    // holds no True Faith Virtue of their own.
     let relic = entity("companion", vec![Selection::new(Id::new("virtue.relic"))]);
-    assert_eq!(true_faith(&relic, &rs), 1);
+    assert_eq!(true_faith(&relic, &rs), 0);
     let prelic = entity(
         "companion",
         vec![Selection::new(Id::new("virtue.powerful_relic"))],
     );
-    assert_eq!(true_faith(&prelic, &rs), 3);
+    assert_eq!(true_faith(&prelic, &rs), 0);
     // Blood of the Nephilim → Size +1 (Divine:1945).
     let bon = entity(
         "companion",

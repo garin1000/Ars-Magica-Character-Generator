@@ -44,6 +44,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::ItemLevelBudget { .. }
         | Effect::MasterpieceItem
         | Effect::TrueFaithGrant { .. }
+        | Effect::RelicTrueFaith { .. }
         | Effect::WarpingGrant { .. }
         // D69/X7b-e: a Warping grant, not a spell-levels/general-XP contribution.
         | Effect::WarpingGrantParam { .. }
@@ -146,6 +147,7 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::ItemLevelBudget { .. }
         | Effect::MasterpieceItem
         | Effect::TrueFaithGrant { .. }
+        | Effect::RelicTrueFaith { .. }
         | Effect::WarpingGrant { .. }
         // D69/X7b-e: a Warping grant, not a spell-levels/general-XP contribution.
         | Effect::WarpingGrantParam { .. }
@@ -575,6 +577,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::ItemLevelBudget { .. }
                 | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
+                | Effect::RelicTrueFaith { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::WarpingGrantParam { .. }
                 | Effect::SizeDelta { .. }

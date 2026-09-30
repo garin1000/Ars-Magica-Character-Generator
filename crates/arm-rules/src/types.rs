@@ -1842,6 +1842,20 @@ pub enum Effect {
         /// True Faith Score added.
         score: u8,
     },
+    /// F-256: a Relic's own True Faith Score (ArMDE:17607: "Only by possessing
+    /// the True Faith Major Virtue may a **character** have a True Faith
+    /// score"). Deliberately **not** consumed by
+    /// [`crate::effective::true_faith`] — that reads only
+    /// [`Effect::TrueFaithGrant`], the character's own Virtue. Surfaced-only
+    /// today: the relic's "usable by its bearer as Confidence" and "grants
+    /// Magic Resistance equal to ten times its True Faith score to its
+    /// bearer" (ArMDE:17623) are not yet separately modelled.
+    ///
+    /// Source: ArMDE:17607, :17623.
+    RelicTrueFaith {
+        /// The relic's own True Faith Score (not the bearer's).
+        score: u8,
+    },
     /// Grants a derived Warping Score and Warping Points (base 0 each, summed
     /// across grants). Warped by Magic confers Warping Score 1 + 5 Warping Points.
     ///
@@ -2763,8 +2777,9 @@ pub enum HealthTrack {
     /// Fatigue / Stamina rolls to avoid fatigue (Long-Winded +3, Obese/Short of
     /// Breath −3). Surfaced-only.
     FatigueRoll,
-    /// Fatigue levels lost per spell cast (Vulnerable Casting +1, Withstand
-    /// Casting −1, Painful Magic). Surfaced-only.
+    /// Fatigue levels lost per spell cast, positive = fewer levels lost
+    /// (Withstand Casting +1; Vulnerable Casting and Painful Magic are
+    /// negative). Surfaced-only.
     CastingFatigue,
     /// Wound-recovery rolls (Rapid Convalescence +3, Fragile Constitution −3).
     /// Surfaced-only.

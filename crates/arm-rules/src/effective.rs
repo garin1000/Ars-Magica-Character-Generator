@@ -361,6 +361,10 @@ macro_rules! irrelevant_effect_variants {
         | Effect::ItemLevelBudget { .. }
         | Effect::MasterpieceItem
         | Effect::TrueFaithGrant { .. }
+        // F-256: the relic's own True Faith Score, never the bearer's — no
+        // score, no Affinity ratio, no in-play mod; deliberately not consumed
+        // by `effective::true_faith`.
+        | Effect::RelicTrueFaith { .. }
         | Effect::WarpingGrant { .. }
         // D69/X7b-e: the parameterized Warping grant (Raised from the Dead) —
         // no score, no Affinity ratio; consumed only by `effective/warping.rs`.

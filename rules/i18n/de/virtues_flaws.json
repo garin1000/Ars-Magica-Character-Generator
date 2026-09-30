@@ -49,7 +49,8 @@
   },
   "flaw.a_deal_with_the_devil": {
     "name": "Ein Pakt mit dem Teufel",
-    "summary": "Der Charakter hat seine Seele dem Teufel verkauft und sieht sich nun der ewigen Verdammnis geweiht."
+    "summary": "Der Charakter hat seine Seele dem Teufel verkauft und sieht sich nun der ewigen Verdammnis geweiht.",
+    "description": "Der Charakter hat seine Seele dem Teufel verkauft und sieht sich nun der ewigen Verdammnis geweiht. Dieser Fehler schließt die Auswirkungen von Gepeinigt von einem übernatürlichen Wesen ein, da die Agenten der Hölle den Charakter antreiben und beschwatzen, ihn an den Handel erinnern, den er eingegangen ist, und ihn mit Angeboten einer möglichen Befreiung im Tausch gegen nur noch einen kleinen Dienst verführen. Der Charakter wird aufgefordert, eine von Grund auf sündige Handlung zu begehen, doch die Belohnung wird ihm stets durch eine Spitzfindigkeit des Vertrages oder schlicht durch die Falschheit des Infernalen entrissen. Beachte, dass der Charakter tatsächlich bereuen und durch Gottes Gnade aus dem Pakt herausfinden kann, doch die Reue muss aufrichtig sein, und die Mächte der Hölle werden versuchen, sie zu verhindern – was auf diese Weise neue Geschichten entstehen lässt."
   },
   "flaw.abandoned_apprentice": {
     "name": "Verlassener Lehrling",
@@ -793,7 +794,8 @@
   },
   "flaw.magical_air": {
     "name": "Magische Ausstrahlung",
-    "summary": "Menschen und Tiere reagieren auf dich, als hättest du die Gabe."
+    "summary": "Menschen und Tiere reagieren auf dich, als hättest du die Gabe.",
+    "description": "Menschen und Tiere reagieren auf dich, als hättest du die Gabe. Du kannst diesen Fehler nicht wählen, wenn du tatsächlich die Gabe besitzt.\n\nWie bei einer begabten Figur erleidest du, wenn du versuchst, diese Reaktion durch Verhandlung zu überwinden, einen Abzug von -3 auf alle Würfe; gelingt es dir, jemanden zu überzeugen oder zu zwingen, mit dir zu interagieren, erleidest du den -3-Abzug auf alle Würfe und Summen bei sozialen Interaktionen."
   },
   "flaw.magical_being_companion": {
     "name": "Magischer {being}-Gefährte",
@@ -2466,7 +2468,8 @@
   },
   "virtue.mythic_blood": {
     "name": "Mythisches Blut",
-    "summary": "Du bist ein Blutsnachkomme entweder eines Zauberers der Legende (möglicherweise eines der Zwölf Gründer oder eines anderen uralten und mächtigen Zauberers) oder eines übernatürlichen Wesens (wie eines Drachen)."
+    "summary": "Du bist ein Blutsnachkomme entweder eines Zauberers der Legende (möglicherweise eines der Zwölf Gründer oder eines anderen uralten und mächtigen Zauberers) oder eines übernatürlichen Wesens (wie eines Drachen).",
+    "description": "Du bist ein Blutsnachkomme entweder eines Zauberers der Legende (möglicherweise eines der Zwölf Gründer oder eines anderen uralten und mächtigen Zauberers) oder eines übernatürlichen Wesens (wie eines Drachen).\n\nDeine potente Gabe bedeutet, dass du keine Erschöpfungsstufen verlierst, wenn deine Zaubersumme die Stufe eines formulaischen Zaubers um zehn Punkte oder weniger verfehlt; du verlierst jedoch Erschöpfung, wenn der Zauber vollständig misslingt. Beim Wirken ritueller Zauber verlierst du drei Erschöpfungsstufen weniger als normal. Das bedeutet, dass du keine Erschöpfungsstufen verlierst, wenn du erfolgreich bist oder um zehn Punkte oder weniger scheiterst. Für das Wirken Spontaner Magie musst du Erschöpfung normal aufwenden, und wenn du einen Formulaischen Zauber nicht wirkst, verlierst du die normale Anzahl an Erschöpfungsstufen.\n\nAußerdem darfst du eine besondere magische Tat wählen, die du nach Belieben auslösen und aufheben kannst, so oft du möchtest. Das Auslösen dieser Tat dauert so lange wie das Schnellzaubern eines Gemeisterten Formulaischen Zaubers (siehe Seite 213) und erfordert dasselbe Maß an Konzentration. Der Effekt sollte als nicht-ritueller Hermetischer Effekt entworfen werden, dessen Stufe + Penetration wie folgt begrenzt ist. Die Penetration des Effekts wird nicht durch den Penetrationswert des Magus modifiziert und kann nicht negativ sein, sodass die höchstmögliche Stufe des Effekts 30 beträgt.\n\n| Auslösung                       | Stufe + Penetration | | ------------------------------- | ------------------- | | Weder Sprechen noch Geste       | 15                  | | Geste                           | 20                  | | Sprechen                        | 25                  | | Sprechen und Geste              | 30                  |\n\nDiese Tugend beinhaltet einen Kleinen Magischen Fokus in einem Bereich, der mit deinem legendären Vorfahren verbunden ist, sowie einen erblichen Kleinen Persönlichkeits-Fehler (beide ohne zusätzliche Kosten). Mythisches Blut ist im Orden des Hermes nicht ungewöhnlich, daher verleiht diese Tugend keine Reputation."
   },
   "virtue.natural_leader": {
     "name": "Natürlicher Anführer",

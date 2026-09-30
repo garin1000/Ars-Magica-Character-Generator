@@ -4,8 +4,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["story"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_selection", "items": ["flaw.plagued_by_supernatural_entity"] }],
     "source": { "anchor": "a-deal-with-the-devil", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5905, 5908] }
   },
   {
@@ -1791,9 +1792,9 @@
     "kind": "flaw",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "narrative",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "incompatible_with": ["flaw.offensive_to_beings"],
+    "incompatible_with": ["flaw.offensive_to_beings", "virtue.the_gift"],
     "source": { "anchor": "magical-air", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6382, 6385] }
   },
   {
@@ -1898,7 +1899,16 @@
     "categories": ["general"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "combat_mod", "amount": -1, "target": "attack" }],
+    "effects": [
+      { "type": "combat_mod", "amount": -1, "target": "attack" },
+      { "type": "combat_mod", "amount": -3, "target": "attack", "weapon": "weapon.axe_throwing" },
+      { "type": "combat_mod", "amount": -3, "target": "attack", "weapon": "weapon.bow_long" },
+      { "type": "combat_mod", "amount": -3, "target": "attack", "weapon": "weapon.bow_short" },
+      { "type": "combat_mod", "amount": -3, "target": "attack", "weapon": "weapon.javelin" },
+      { "type": "combat_mod", "amount": -3, "target": "attack", "weapon": "weapon.knife_thrown" },
+      { "type": "combat_mod", "amount": -3, "target": "attack", "weapon": "weapon.sling" },
+      { "type": "combat_mod", "amount": -3, "target": "attack", "weapon": "weapon.stone" }
+    ],
     "source": { "anchor": "missing-eye", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6434, 6437] }
   },
   {
@@ -3770,7 +3780,8 @@
     "entity_kinds": ["character"],
     "effects": [
       { "type": "size_delta", "amount": 1 },
-      { "type": "ability_authorization", "abilities": ["ability.dominion_lore"] }
+      { "type": "ability_authorization", "abilities": ["ability.dominion_lore"] },
+      { "type": "aging_mod", "kind": "aging_roll", "amount": -5 }
     ],
     "source": { "anchor": "blood-of-the-nephilim", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3504, 3518] }
   },
@@ -4086,7 +4097,9 @@
     "effects": [
       { "type": "might_grant", "realm": "infernal", "score": 5 },
       { "type": "power_levels", "amount": 30 },
-      { "type": "ability_authorization", "abilities": ["ability.infernal_lore"] }
+      { "type": "ability_authorization", "abilities": ["ability.infernal_lore"] },
+      { "type": "aging_mod", "kind": "no_aging", "amount": 0 },
+      { "type": "aging_mod", "kind": "no_apparent_aging", "amount": 0 }
     ],
     "source": { "anchor": "demonic-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3649, 3662] }
   },
@@ -4489,7 +4502,10 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
-    "effects": [{ "type": "special_casting_mod", "kind": "faerie_raised" }],
+    "effects": [
+      { "type": "special_casting_mod", "kind": "faerie_raised" },
+      { "type": "special_casting_mod", "kind": "spell_improvisation" }
+    ],
     "source": { "anchor": "faerie-raised-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3829, 3842] }
   },
   {
@@ -5910,7 +5926,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["hermetic"],
-    "classification": "in_play_effect",
+    "classification": "uncomputed_rule",
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
@@ -5935,6 +5951,7 @@
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.spirit_votary", "virtue.the_gift"],
+    "effects": [{ "type": "grants_selection", "items": ["virtue.strong_angelic_heritage"] }],
     "source": { "anchor": "nephilim-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4594, 4597] }
   },
   {
@@ -6117,7 +6134,7 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "true_faith_grant", "score": 3 }],
+    "effects": [{ "type": "relic_true_faith", "score": 3 }],
     "source": { "anchor": "powerful-relic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4782, 4787] }
   },
   {
@@ -6264,7 +6281,8 @@
     "effects": [
       { "type": "item_level_budget", "amount": 50 },
       { "type": "replaces_life_stage_xp", "stage": "apprenticeship", "amount": 300, "years": 15, "categories": ["academic", "arcane", "general", "martial", "supernatural"] },
-      { "type": "ability_authorization", "categories": ["academic", "arcane", "martial"] }
+      { "type": "ability_authorization", "categories": ["academic", "arcane", "martial"] },
+      { "type": "grants_selection", "items": ["virtue.well_traveled"] }
     ],
     "source": { "anchor": "redcap", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4842, 4851] }
   },
@@ -6275,7 +6293,7 @@
     "categories": ["general"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "true_faith_grant", "score": 1 }],
+    "effects": [{ "type": "relic_true_faith", "score": 1 }],
     "source": { "anchor": "relic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4852, 4855] }
   },
   {
@@ -6302,8 +6320,9 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["supernatural"],
-    "classification": "uncomputed_rule",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "power_levels", "amount": 70 }],
     "source": { "anchor": "ripper", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4866, 4869] }
   },
   {
@@ -6890,7 +6909,7 @@
     "categories": ["special"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.failed_apprentice", "virtue.nephilim", "virtue.spirit_votary"],
+    "incompatible_with": ["flaw.magical_air", "virtue.devil_child", "virtue.faerie_doctor", "virtue.failed_apprentice", "virtue.nephilim", "virtue.spirit_votary"],
     "source": { "anchor": "the-gift-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3967, 3970] }
   },
   {

@@ -165,6 +165,9 @@ struct InPlayMods {
     casting_mods: Vec<(i32, CastingScope)>,
     /// Flat Lab-Total modifier (Inventive Genius +3, summed).
     lab_mod: i32,
+    /// Lab-Total modifier that applies only within a Magical Focus (Potent
+    /// Magic's +6/+3, D4) — added to `within_focus` alone, never to `lab_mod`.
+    lab_mod_within_focus: i32,
     /// The deficient Technique/Form Art ids (Deficient Art halves totals adding one).
     deficient_arts: BTreeSet<Id>,
     /// Whole-total halvings in effect (Weak Magic → Penetration, Weak Enchanter →
@@ -220,6 +223,13 @@ const D4_EXCLUDED_FROM_LAB_GRID: &[&str] = &[
     "virtue.cyclic_magic_positive",
 ];
 
+/// D4's other split: both Potent Magic entries apply "only within the chosen
+/// [Magical] focus" (ArMDE:4740-4781), never to the ordinary Lab Total. They
+/// are excluded from the flat `in_play_lab_total_mod` fold and instead folded
+/// separately by `in_play_lab_total_mod_within_focus`, added to `within_focus`
+/// alone (`derived/lab.rs::lab_totals`).
+const D4_WITHIN_FOCUS_ONLY: &[&str] = &["virtue.potent_magic_major", "virtue.potent_magic_minor"];
+
 /// `flaw.cyclic_magic_negative`'s cycle-type parameter key, and the one value
 /// (of `cycle.solar`/`cycle.lunar`/`cycle.seasonal`) that suppresses its Lab
 /// Total penalty in the in-play grid (D52): a seasonal cycle makes the
@@ -255,7 +265,8 @@ fn in_play_lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0i32;
     for selection in selections_for_effects(entity, ruleset).iter() {
         let item_ref = selection.item_ref.as_str();
-        if D4_EXCLUDED_FROM_LAB_GRID.contains(&item_ref) {
+        if D4_EXCLUDED_FROM_LAB_GRID.contains(&item_ref) || D4_WITHIN_FOCUS_ONLY.contains(&item_ref)
+        {
             continue;
         }
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -270,6 +281,28 @@ fn in_play_lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
         if seasonal_cyclic_negative {
             continue;
         }
+        for effect in &item.effects {
+            if let Effect::LabTotalMod { amount } = effect {
+                total += i32::from(*amount);
+            }
+        }
+    }
+    total
+}
+
+/// D4's within-focus-only half of the same fold: Potent Magic's flat bonus,
+/// summed separately so it never reaches `total`/`base`, only `within_focus`
+/// (`derived/lab.rs::lab_totals`).
+fn in_play_lab_total_mod_within_focus(entity: &Entity, ruleset: &Ruleset) -> i32 {
+    let mut total = 0i32;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let item_ref = selection.item_ref.as_str();
+        if !D4_WITHIN_FOCUS_ONLY.contains(&item_ref) {
+            continue;
+        }
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
         for effect in &item.effects {
             if let Effect::LabTotalMod { amount } = effect {
                 total += i32::from(*amount);
@@ -296,6 +329,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
     let mut m = InPlayMods {
         deficient_arts: deficient_arts(entity, ruleset),
         lab_mod: in_play_lab_total_mod(entity, ruleset),
+        lab_mod_within_focus: in_play_lab_total_mod_within_focus(entity, ruleset),
         ..InPlayMods::default()
     };
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -589,6 +623,9 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
+                // F-256: the relic's own True Faith Score, not an in-play
+                // total for the character.
+                | Effect::RelicTrueFaith { .. }
                 | Effect::WarpingGrant { .. }
                 // D69/X7b-e: the parameterized Warping grant (Raised from the
                 // Dead) is a creation-time total, not an in-play total;
@@ -4049,17 +4086,28 @@ mod tests {
 
         // Everything else in the shipped catalogue applies flat, per the
         // character-generation-default reading (Inventive Genius, Creative
-        // Block) or because it is out of this slice's scope (both Potent
-        // Magic entries, X7b-d).
-        for &flat in &[
-            "flaw.creative_block",
-            "virtue.inventive_genius",
-            "virtue.potent_magic_major",
-            "virtue.potent_magic_minor",
-        ] {
+        // Block).
+        for &flat in &["flaw.creative_block", "virtue.inventive_genius"] {
             assert!(
-                !D4_EXCLUDED_FROM_LAB_GRID.contains(&flat) && flat != CYCLIC_MAGIC_NEGATIVE,
-                "{flat} must apply flat in the D4 fold, not be excluded or cycle-gated"
+                !D4_EXCLUDED_FROM_LAB_GRID.contains(&flat)
+                    && !D4_WITHIN_FOCUS_ONLY.contains(&flat)
+                    && flat != CYCLIC_MAGIC_NEGATIVE,
+                "{flat} must apply flat in the D4 fold, not be excluded, \
+                 within-focus-only, or cycle-gated"
+            );
+        }
+
+        // Both Potent Magic entries are within-focus-only (X7b-d): their
+        // +6/+3 must never reach the flat `in_play_lab_total_mod` fold.
+        for &within_focus_only in D4_WITHIN_FOCUS_ONLY {
+            assert!(
+                carriers.contains(within_focus_only),
+                "{within_focus_only} is in the D4 within-focus-only list but \
+                 no longer carries lab_total_mod"
+            );
+            assert!(
+                !D4_EXCLUDED_FROM_LAB_GRID.contains(&within_focus_only),
+                "{within_focus_only} cannot be both within-focus-only and hard-excluded"
             );
         }
     }

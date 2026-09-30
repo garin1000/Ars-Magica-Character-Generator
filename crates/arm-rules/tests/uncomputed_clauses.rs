@@ -1738,10 +1738,6 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
 /// [`NO_RULE_DESPITE_TOKEN`]. X2 is the slice that empties it.
 const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     (
-        "flaw.a_deal_with_the_devil",
-        "item transfer: \"includes the effects of\" (Plagued By Supernatural Entity), ArMDE:5905-5908",
-    ),
-    (
         "flaw.ability_block",
         "prohibition: \"completely unable to learn\" a class of Abilities, ArMDE:5651-5654",
     ),
@@ -1841,10 +1837,6 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "flaw.judged_unfairly",
         "prohibition + incompatibility: bare \"cannot\" gain a Reputation, \"is incompatible \
          with\", ArMDE:6326-6329",
-    ),
-    (
-        "flaw.magical_air",
-        "prohibition: \"may not take\" this Flaw with The Gift, ArMDE:6382-6385",
     ),
     (
         "flaw.magical_being_companion",
@@ -2921,12 +2913,6 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
         "orphan: the Wizard's Vigil auto-knowledge, the Mastery-score stacking, and the \
          required companion Flaw (Ceremonial Spontaneous Magic, no grants_selection) all have \
          no effect — only a bare \"mercurian\" marker is computed, ArMDE:4514-4523",
-    ),
-    (
-        "virtue.mythic_blood",
-        "orphan: the potent-Gift Fatigue-loss reduction, the invokable magic-feat table \
-         (level+Penetration by gesture/speech), and the hereditary Personality Flaw grant all \
-         have no effect — only the included Minor Magical Focus is computed, ArMDE:4573-4589",
     ),
     (
         "virtue.potent_magic_major",

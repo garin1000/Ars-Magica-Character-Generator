@@ -49,7 +49,8 @@
   },
   "flaw.a_deal_with_the_devil": {
     "name": "A Deal with the Devil",
-    "summary": "The character has sold his soul to the devil and now finds himself destined to infernal damnation."
+    "summary": "The character has sold his soul to the devil and now finds himself destined to infernal damnation.",
+    "description": "The character has sold his soul to the devil and now finds himself destined to infernal damnation. This Flaw includes the effects of Plagued By Supernatural Entity as Hell's agents goad and cajole the character, reminding him of the bargain he made and tempting him with offers of possible release in return for just one more small service. The character is called upon to undertake an inherently sinful action, but the reward is always snatched away on some technicality of the agreement or simply because of the duplicitous nature of the infernal. Note that the character can, in fact, repent and get out of the deal by God's grace, but the repentance must be genuine, and the forces of Hell will try to stop it, thus generating stories that way."
   },
   "flaw.abandoned_apprentice": {
     "name": "Abandoned Apprentice",
@@ -792,7 +793,8 @@
   },
   "flaw.magical_air": {
     "name": "Magical Air",
-    "summary": "People and animals react to you as if you had The Gift."
+    "summary": "People and animals react to you as if you had The Gift.",
+    "description": "People and animals react to you as if you had The Gift. You may not take this Flaw if you actually do have The Gift.\n\nAs with a Gifted character, if you try to overcome this reaction through negotiation, you suffer a -3 penalty to any die rolls you must make; if you manage to convince or coerce someone into interacting with you, you suffer the -3 penalty to all rolls and totals based on social interaction."
   },
   "flaw.magical_being_companion": {
     "name": "Magical {being} Companion",
@@ -2464,7 +2466,8 @@
   },
   "virtue.mythic_blood": {
     "name": "Mythic Blood",
-    "summary": "You are a blood descendant of either a wizard of legend (possibly one of the Twelve Founders, or some other ancient and powerful sorcerer) or a supernatural being (such as a dragon)."
+    "summary": "You are a blood descendant of either a wizard of legend (possibly one of the Twelve Founders, or some other ancient and powerful sorcerer) or a supernatural being (such as a dragon).",
+    "description": "You are a blood descendant of either a wizard of legend (possibly one of the Twelve Founders, or some other ancient and powerful sorcerer) or a supernatural being (such as a dragon).\n\nYour potent Gift means that you do not lose Fatigue levels if your Casting Total falls short of the level of a formulaic spell by ten points or less, although you do lose Fatigue if the spell fails completely. When casting Ritual spells, lose three fewer Fatigue levels than normal. This means that you lose no Fatigue levels if you succeed, or fail by ten points or less. You must expend Fatigue normally to cast Spontaneous magic, and if you fail to cast a Formulaic spell you lose the normal number of Fatigue levels.\n\nAdditionally, you may choose one special magic feat which you can invoke at will and cancel at will, as often as you like. Invoking this feat takes as long as fast-casting a Mastered Formulaic spell (see page 213), and requires the same level of concentration. The effect should be designed as a non-Ritual Hermetic effect, with a level + Penetration limited as below. The Penetration of the effect is not modified by the magus's Penetration Ability score, and cannot be negative, so that the highest possible level of the effect is 30.\n\n| Invocation                | Level + Penetration | | --------------------------- | --------------------- | | Neither speak nor gesture | 15                  | | Gesture                   | 20                  | | Speak                     | 25                  | | Speak and gesture         | 30                  |\n\nThis Virtue includes a Minor Magical Focus in an area related to your legendary ancestor and a hereditary Minor Personality Flaw (both at no extra cost). Mythic Blood is not particularly uncommon in the Order of Hermes, so this Virtue does not grant any Reputation."
   },
   "virtue.natural_leader": {
     "name": "Natural Leader",

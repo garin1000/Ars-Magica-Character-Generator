@@ -1482,7 +1482,7 @@ derived-detail-circumstantial = Circumstantial
 # Aura Modifier and the botch dice — count double in that realm's aura.
 derived-detail-doubled_aura_penalty = Doubled aura penalties
 derived-detail-fatigue_roll = Fatigue roll
-derived-detail-casting_fatigue = Casting fatigue
+derived-detail-casting_fatigue = Casting fatigue resistance
 derived-detail-recovery = Recovery
 derived-detail-susceptible_faerie = Susceptible to Faerie
 derived-detail-susceptible_infernal = Susceptible to the Infernal

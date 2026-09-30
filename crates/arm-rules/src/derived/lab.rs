@@ -67,7 +67,9 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
                 // `base` is already saturated by `sum`, so a plain `+` here would
                 // abort under `overflow-checks = true`; fold through the same
                 // helper instead. See `derived.rs::saturating_i32_sum`.
-                let focused = saturating_i32_sum([base, te.min(fo)]);
+                // D4: Potent Magic's flat bonus (`lab_mod_within_focus`) applies
+                // only here, never to `base`/`total`.
+                let focused = saturating_i32_sum([base, te.min(fo), mods.lab_mod_within_focus]);
                 if deficient { halve(focused) } else { focused }
             });
             // Weak Enchanter: Deficiency (already folded into `total`) first,

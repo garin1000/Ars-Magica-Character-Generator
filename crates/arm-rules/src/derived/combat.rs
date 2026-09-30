@@ -430,7 +430,10 @@ pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
     .map(|(level, base)| FatigueLevel {
         level,
         // A positive delta reduces magnitude; never flip a penalty positive.
-        penalty: (base + delta).min(0),
+        // Fresh/Winded carry no base penalty at all (ArMDE:17129), so a
+        // penalty-increasing delta (Low Tolerance) must not invent one there —
+        // only tiers that already have a nonzero base penalty are modified.
+        penalty: if base == 0 { 0 } else { (base + delta).min(0) },
     })
     .collect()
 }
