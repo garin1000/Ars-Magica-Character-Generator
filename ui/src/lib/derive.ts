@@ -690,6 +690,7 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
     case 'has_category':
     case 'age_min':
     case 'has_category_at_magnitude':
+    case 'character_type':
       return undefined;
   }
   // Exhaustiveness guard: `prereq` narrows to `never` here only while every

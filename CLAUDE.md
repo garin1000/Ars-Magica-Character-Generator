@@ -632,6 +632,7 @@ enum Prereq {
     AgeMin(u32),       // entity.age >= this; unset age is Unknown, not False
     HasCategoryAtMagnitude { category: String, magnitude: Magnitude, item_kind: ItemKind },
         // magnitude/kind-filtered twin of HasCategory (e.g. "a Major Supernatural Virtue")
+    CharacterType(Id),  // entity's own type profile id equals this, literally (D38/D75)
 }
 ```
 

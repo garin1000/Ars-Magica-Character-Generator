@@ -1156,7 +1156,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :326) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :333) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -1241,15 +1241,15 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2114, shared by
-  `validate_prereq_refs` :2022 and `validate_effect_refs` :2461) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2123, shared by
+  `validate_prereq_refs` :2025 and `validate_effect_refs` :2508) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :684).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :685).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -11401,8 +11401,11 @@ required/negative pair) per entry, against the SHIPPED `rules/core/*.json`.
   `spinnen`, `undine`} (E+, ArMDE:3805-3819/:5032-5047 — "or create a similar
   one"). Sidhe: `characteristic_score_delta{characteristic.pre, amount:1,
   gate}` (ArMDE:3815). Dwarf: `ability_roll_mod{ability.craft, amount:1,
-  gate}` (ArMDE:3809, surfaced-only). Goblin/Satyr/Spinnen/Undine/Bee
-  King/custom stay text (D61) — Satyr/Goblin/Undine's own totals name no
+  gate}` (ArMDE:3809, surfaced-only). Goblin: `ability_roll_mod{ability.stealth,
+  amount:1, gate}` (ArMDE:3811, "+1 bonus on all totals involving stealth" —
+  RC review-C item 3, formerly left text in error; this one names a single
+  Ability, exactly Dwarf's shape). Satyr/Spinnen/Undine/Bee King/custom stay
+  text (D61) — Satyr/Undine's own totals name no
   fixed target the engine's vocabulary can bind to. **Known gap, flagged for
   Norbert:** Sidhe's own text caps at "+1 to Presence, but not to more than
   +3" (ArMDE:3815), but `CharacteristicScoreDelta` (unlike its
@@ -11467,11 +11470,19 @@ required/negative pair) per entry, against the SHIPPED `rules/core/*.json`.
   "circumstance is active" toggle exists).
 - **`virtue.performance_magic`** — `ability` (`ability` domain,
   `require_ability_categories:[general]`, `max_total: 255` — "distinct
-  Virtues for each possible Ability", ArMDE:4648). e3's category narrowing
-  IS the "not Language, Supernatural, Academic, or Arcane" exclusion
-  (ArMDE:4646): General is the one category left. No effect — the picker/
-  validator domain is the whole of D9's obligation here; classification
-  stays `uncomputed_rule`.
+  Virtues for each possible Ability", ArMDE:4648). **Corrected, RC review-C
+  item 4a/4b: the category narrowing above was WRONG.** Martial is not
+  excluded — ArMDE:4676/:4684 explicitly list Bows/Great Weapon/Single
+  Weapon/Thrown Weapon/Brawl as legal Performance Magic choices (with a
+  combat-casting restriction, not a ban) — so `require_ability_categories`
+  widens to `[general, martial]`. General alone also let through
+  `ability.living_language` (catalogued `general`, not `academic` — only
+  `ability.dead_language` is), which ArMDE:4646 excludes by name ("not
+  ... Language"); `forbid_ids: [ability.living_language]` now excludes it,
+  the same mechanism `virtue.magian_lineage_major` uses for True Names. No
+  effect — the picker/validator domain is the whole of D9's obligation here;
+  classification stays `uncomputed_rule`. See "RC review-C fixes" below for
+  the full citation and tests.
 - **`virtue.magian_lineage_major`** — `abilities` (`multi_ref`/`ability`,
   `require_ability_categories:[arcane, supernatural]`,
   `forbid_ids:[ability.true_names]`, `exact_count: 3`, ArMDE:4345). No
@@ -11521,14 +11532,18 @@ required/negative pair) per entry, against the SHIPPED `rules/core/*.json`.
   Blind AND Keen Vision (ArMDE:7031, :7033); Sensitive Hearing forbids
   Deaf; Weak Hearing forbids Deaf AND Sharp Ears — both "inadvisable" and
   "incompatible" phrasings become hard errors per D58's absolute reading.
-  **Known gap:** the passage's OWN same-item pairing ("inadvisable to
-  combine Sensitive Sight with... Weak Sight" is implied by both naming
-  each other) is not enforced — `conditional_incompatible_with.forbids`
-  naming the declaring item's own id would self-match every copy
-  (`selected_ids` includes the item currently being checked), so this
-  cross-copy exclusion is left out rather than built wrong. The -2 penalty
-  stays text (D61); classification stays `uncomputed_rule` (a hard
-  constraint, same `s1_before_offenders.json` mechanism as Repellent).
+  **Same-item pairing now enforced too (RC review-C item 2).** The passage's
+  OWN same-copy pairing (Weak Sight forbids a SEPARATE copy holding Sensitive
+  Sight; Weak Hearing forbids a separate copy holding Sensitive Hearing,
+  ArMDE:7033) was formerly left unbuilt — `conditional_incompatible_with.forbids`
+  names OTHER items' ids, and the validator's `selected_ids` collapses every
+  copy of one parameterized item to a single id, so a self-referencing
+  `forbids` would have wrongly also caught every LEGAL pair of copies
+  (Sensitive to Cold + Sensitive to Heat). The new
+  `forbids_same_item_values` field (see "RC review-C fixes" below) closes
+  this without that trap. The -2 penalty stays text (D61); classification
+  stays `uncomputed_rule` (a hard constraint, same `s1_before_offenders.json`
+  mechanism as Repellent).
 
 **Fixture and cross-file fallout** (every new REQUIRED parameter making an
 old bare selection newly report `missing_param`, per D70/Q-X6-4):
@@ -11707,6 +11722,125 @@ slice.
   `derived/casting.rs::spell_casting_total`, `export/sections.rs::score_cell`.
   Tests: `crates/arm-rules/tests/x10bc_banked_xp_and_within_focus.rs`,
   `crates/arm-rules/tests/book_templates.rs`.
+
+---
+
+#### RC review-C fixes — Goblin stealth, Performance Magic's Ability filter, Warped Senses' same-copy pairing, F-556 (`tmp/rc-verdicts.md`, `tmp/rc-handover.md`)
+
+Four confirmed defects from the 2026-09-30c review pass, one of them (F-556)
+needing a new engine capability D38 had already called for.
+
+> "Goblin Blood: ... you get a +1 bonus on all totals involving stealth."
+> — `ArMDE:3811`
+>
+> "You may not choose any Language, Supernatural, Academic, or Arcane
+> Ability." — Performance Magic, `ArMDE:4646`. "While Brawl and Martial
+> Abilities may be used in Performance Magic..." — `ArMDE:4684`
+>
+> "Weak Sight is incompatible with Sensitive Sight, Keen Vision, and Blind
+> and you cannot take Weak Hearing with Sensitive Hearing, Sharp Ears, or
+> Deaf." — Warped Senses, `ArMDE:7033`
+
+**Goblin heritage's stealth bonus (item 3).** `virtue.faerie_blood` and
+`virtue.strong_faerie_blood` each gain `{ "type": "ability_roll_mod",
+"ability": "ability.stealth", "amount": 1, "gate": { "param": "heritage",
+"equals": "heritage.goblin" } }` — the same shape Dwarf Blood's Craft bonus
+already had. Data only.
+
+- Test: `rc_review_c_fixes.rs::goblin_heritage_grants_a_stealth_roll_bonus`.
+
+**Performance Magic's Ability filter (items 4a/4b).** `require_ability_categories`
+widens from `[general]` to `[general, martial]` (ArMDE:4676/:4684 explicitly
+list Bows/Great Weapon/Single Weapon/Thrown Weapon/Brawl as legal, with a
+combat-casting restriction, not a ban), and `forbid_ids: [ability.living_language]`
+is added (ArMDE:4646 excludes Language, but `ability.living_language` is
+catalogued `general` — only `ability.dead_language` is `academic` — so the
+category filter alone did not exclude it; `forbid_ids` is the same mechanism
+`virtue.magian_lineage_major` already uses for True Names). **Corrects this
+file's own prior claim** at the "Performance Magic" entry above ("General is
+the one category left... IS the exclusion") — that reading was wrong against
+the primary source; Martial was never excluded.
+
+- Tests: `rc_review_c_fixes.rs::performance_magic_accepts_a_martial_ability`,
+  `::performance_magic_rejects_a_language_ability`.
+
+**Warped Senses' same-copy pairing (item 2, new engine capability).** The
+cross-item half of ArMDE:7033 (Weak Sight excludes Blind/Keen Vision, Weak
+Hearing excludes Deaf/Sharp Ears) was already encoded; the SAME-copy half
+(Weak Sight excludes a SEPARATE copy holding Sensitive Sight; Weak Hearing
+excludes a separate copy holding Sensitive Hearing) had no engine shape —
+`conditional_incompatible_with.forbids` names OTHER items' ids, and
+`validate_incompatibilities`'s `selected_ids: BTreeSet<&Id>` collapses every
+copy of ONE parameterized item to a single id, so a self-referencing `forbids`
+would wrongly also catch every LEGAL pair of copies (Sensitive to Cold +
+Sensitive to Heat).
+
+- Implementation: `types.rs::ConditionalIncompatibility` gains
+  `forbids_same_item_values: BTreeSet<Id>` — while `gate` holds for the
+  declaring selection, an OTHER selection of the SAME item whose own value of
+  `gate.param` is one of these is also forbidden (both copies read the SAME
+  parameter key, so no second field is needed to name it).
+  `validation/prereq.rs::validate_incompatibilities` gains a second loop,
+  keyed on same-item-id + differing param value, reading `entity.selections`
+  directly (not `selected_ids`) since the id collapse is exactly what this
+  shape needs to see past. The pair-dedup key degenerates to `(id, id)` for a
+  same-item pairing, so at most one `incompatible` issue is ever raised per
+  item regardless of how many colliding copies exist.
+- Load-time integrity: `ruleset/integrity.rs::validate_forbids_same_item_values`
+  resolves each `forbids_same_item_values` entry against the SAME parameter
+  domain `gate.equals` is already checked against (both the declaring copy and
+  the copy it forbids are instances of one parameter).
+- Data: `flaw.warped_senses`'s `weak_sight` and `weak_hearing` conditional
+  entries each gain `forbids_same_item_values` naming their Sensitive
+  counterpart.
+- Tests: `x6a_parameter_engine.rs::e7_conditional_incompatibility` —
+  `weak_sight_excludes_a_second_copy_holding_sensitive_sight`,
+  `two_copies_of_the_same_value_carry_no_incompatibility` (synthetic
+  ruleset); `rc_review_c_fixes.rs::warped_senses_forbids_pairing_weak_sight_with_sensitive_sight`,
+  `::warped_senses_forbids_pairing_weak_hearing_with_sensitive_hearing`
+  (shipped ruleset). No new Fluent key — reuses `issue-incompatible`
+  (`$item`/`$other`), which for a same-item pairing resolves both to the same
+  localized name.
+
+**F-556 — `virtue.domestic_animal` takeable by a human (item 9, new `Prereq`
+variant, D75).** ArMDE:3701 opens "The character is an animal who is the
+property of a covenant or character", and animal characters are a deliberate
+non-goal (D58: no Cunning characteristic, no animal profile) — so the entry
+must be gated so NO current (human) character type can select it, without
+inventing animal machinery. D38 had already called for "a `Prereq` that can
+name a character type" for the opposite need (narrowing TO a type); D75
+settles that this is the SAME capability, used here to gate AWAY FROM every
+type at once.
+
+- Implementation: `Prereq::CharacterType(Id)` (`types.rs`) — evaluated
+  against the entity's own type profile id
+  (`validation/prereq.rs::PrereqCtx::type_profile_id`, profile-only like
+  `IsCompanion`/`IsGrog`: unknown when the profile cannot be resolved, never a
+  definite answer either way). **Deliberately NOT referentially checked**
+  against the type-profile registry at load
+  (`ruleset/integrity.rs::validate_prereq_refs`) — unlike `Prereq::House`,
+  this variant's whole point is to name an id NO profile carries.
+- Data: `virtue.domestic_animal` gains `"prerequisites": { "kind":
+  "character_type", "value": "character_type.domestic_animal" }` — an id no
+  shipped profile carries, so no human character type can ever satisfy it,
+  forward-compatible if an animal profile is ever added (against D58's present
+  non-goal). Reclassifies `narrative` → `creation_effect` (D67: a prerequisite
+  the engine checks counts as computed).
+- UI mirror: `ui/src/lib/types.ts`'s `Prereq` union gains `{ kind:
+  'character_type'; value: string }`; `ui/src/lib/derive.ts::houseOnlyValue`
+  lists `'character_type'` among the undecided kinds. Parity enforced by the
+  existing `prereq-parity.test.ts`.
+- `docs/vf-audit/corrections.md`'s F-556 row marked fixed.
+- Test: `rc_review_c_fixes.rs::f556_domestic_animal_is_refused_for_a_human_character_type`;
+  `validation/prereq.rs`'s own unit tests —
+  `evaluate_prereq_character_type_true_when_id_matches`,
+  `::evaluate_prereq_character_type_false_when_id_differs`,
+  `::evaluate_prereq_character_type_unknown_when_type_unresolved`.
+
+**Fluent:** none new — both fixes reuse existing issue codes
+(`prereq_not_met`, `incompatible`).
+
+**CLAUDE.md:** the `Prereq` quick-reference block gains `CharacterType(Id)`.
 
 ---
 

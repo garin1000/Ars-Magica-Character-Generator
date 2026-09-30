@@ -3447,9 +3447,11 @@
     "max_total": 255,
     "conditional_incompatible_with": [
       { "gate": { "param": "affliction", "equals": "affliction.sensitive_sight" }, "forbids": ["flaw.blind"] },
-      { "gate": { "param": "affliction", "equals": "affliction.weak_sight" }, "forbids": ["flaw.blind", "virtue.keen_vision"] },
+      { "gate": { "param": "affliction", "equals": "affliction.weak_sight" }, "forbids": ["flaw.blind", "virtue.keen_vision"],
+        "forbids_same_item_values": ["affliction.sensitive_sight"] },
       { "gate": { "param": "affliction", "equals": "affliction.sensitive_hearing" }, "forbids": ["flaw.deaf"] },
-      { "gate": { "param": "affliction", "equals": "affliction.weak_hearing" }, "forbids": ["flaw.deaf", "virtue.sharp_ears"] }
+      { "gate": { "param": "affliction", "equals": "affliction.weak_hearing" }, "forbids": ["flaw.deaf", "virtue.sharp_ears"],
+        "forbids_same_item_values": ["affliction.sensitive_hearing"] }
     ],
     "source": { "anchor": "warped-senses", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7027, 7051] }
   },
@@ -4318,8 +4320,9 @@
     "kind": "virtue",
     "magnitude": "free",
     "categories": ["social_status"],
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "character_type", "value": "character_type.domestic_animal" },
     "source": { "anchor": "domestic-animal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3699, 3702] }
   },
   {
@@ -4617,7 +4620,9 @@
       { "type": "characteristic_score_delta", "characteristic": "characteristic.pre", "amount": 1,
         "gate": { "param": "heritage", "equals": "heritage.sidhe" } },
       { "type": "ability_roll_mod", "ability": "ability.craft", "amount": 1,
-        "gate": { "param": "heritage", "equals": "heritage.dwarf" } }
+        "gate": { "param": "heritage", "equals": "heritage.dwarf" } },
+      { "type": "ability_roll_mod", "ability": "ability.stealth", "amount": 1,
+        "gate": { "param": "heritage", "equals": "heritage.goblin" } }
     ],
     "source": { "anchor": "faerie-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3797, 3820] }
   },
@@ -6228,7 +6233,8 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
     "parameters": [
-      { "key": "ability", "type": "ref", "domain": "ability", "require_ability_categories": ["general"] }
+      { "key": "ability", "type": "ref", "domain": "ability", "require_ability_categories": ["general", "martial"],
+        "forbid_ids": ["ability.living_language"] }
     ],
     "max_total": 255,
     "source": { "anchor": "performance-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4642, 4709] }
@@ -6892,7 +6898,9 @@
       { "type": "characteristic_score_delta", "characteristic": "characteristic.pre", "amount": 1,
         "gate": { "param": "heritage", "equals": "heritage.sidhe" } },
       { "type": "ability_roll_mod", "ability": "ability.craft", "amount": 1,
-        "gate": { "param": "heritage", "equals": "heritage.dwarf" } }
+        "gate": { "param": "heritage", "equals": "heritage.dwarf" } },
+      { "type": "ability_roll_mod", "ability": "ability.stealth", "amount": 1,
+        "gate": { "param": "heritage", "equals": "heritage.goblin" } }
     ],
     "source": { "anchor": "strong-faerie-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5032, 5047] }
   },

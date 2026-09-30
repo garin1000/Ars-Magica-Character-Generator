@@ -119,6 +119,11 @@ pub(crate) struct PrereqCtx<'a> {
     /// otherwise the profile's `is_grog` flag alone — no entity-level
     /// override, mirroring `is_companion` (D68.9).
     is_grog: Option<bool>,
+    /// `Prereq::CharacterType`'s fact (D38/D75): `None` when the type profile
+    /// is missing, otherwise the profile's own [`EntityTypeProfile::id`] —
+    /// owned rather than borrowed (unlike `house` below) since the profile it
+    /// is read from does not share this struct's `'a` lifetime.
+    type_profile_id: Option<Id>,
     /// The entity's own Hermetic House, if any. `Prereq::House` compares against
     /// it: matching → True, differing → False, absent → Unknown (mirrors how
     /// `trained`/`order` yield Unknown when the profile is missing).
@@ -184,6 +189,7 @@ impl<'a> PrereqCtx<'a> {
         let order: Option<bool> = type_profile.map(|p| p.order_member);
         let is_companion: Option<bool> = type_profile.map(|p| p.is_companion);
         let is_grog: Option<bool> = type_profile.map(|p| p.is_grog);
+        let type_profile_id: Option<Id> = type_profile.map(|p| p.id.clone());
 
         // Effective score per ability: the max bought score (a parameterized
         // ability may appear more than once with different specialties; the
@@ -273,6 +279,7 @@ impl<'a> PrereqCtx<'a> {
             order,
             is_companion,
             is_grog,
+            type_profile_id,
             house: entity.house.as_ref(),
             ability_scores,
             art_scores,
@@ -403,6 +410,15 @@ fn evaluate_prereq(
         Prereq::IsGrog => match ctx.is_grog {
             Some(true) => (Tri::True, false),
             Some(false) => (Tri::False, false),
+            None => (Tri::Unknown, true),
+        },
+        // Enforced against the profile's own id (D38/D75) — unlike
+        // `IsCompanion`/`IsGrog`, which read a bare flag, this compares the
+        // literal id so an item can name an audience no flag models (F-556's
+        // `character_type.domestic_animal`, which no profile carries).
+        Prereq::CharacterType(id) => match &ctx.type_profile_id {
+            Some(profile_id) if profile_id == id => (Tri::True, false),
+            Some(_) => (Tri::False, false),
             None => (Tri::Unknown, true),
         },
         // AbilityMin compares against the entity's max *effective* score for
@@ -593,6 +609,50 @@ pub(crate) fn validate_incompatibilities(
                     }
                 }
             }
+
+            // RC review-C item 2 (ArMDE:7033): the same-copy twin of the loop
+            // above — while `gate` holds for THIS selection, forbid any OTHER
+            // selection of the SAME item whose own value of `gate.param` is
+            // one of `forbids_same_item_values` (Weak Sight forbids a
+            // SEPARATE copy of Warped Senses holding Sensitive Sight).
+            // `selected_ids` collapses every copy of one parameterized item to
+            // a single id, so this reads `entity.selections` directly instead;
+            // the declaring selection is excluded by identity (`ptr::eq`),
+            // since both copies share the same id and so cannot be told apart
+            // by it.
+            if !conditional.forbids_same_item_values.is_empty() {
+                for other in &entity.selections {
+                    if std::ptr::eq(other, selection) || other.item_ref != selection.item_ref {
+                        continue;
+                    }
+                    let Some(other_value) = other
+                        .params
+                        .get(&conditional.gate.param)
+                        .and_then(SelectionParamValue::as_single)
+                    else {
+                        continue;
+                    };
+                    if !conditional.forbids_same_item_values.contains(other_value) {
+                        continue;
+                    }
+                    // Both copies share one id, so the pair-dedup key
+                    // degenerates to (id, id): at most one `incompatible`
+                    // issue is ever reported for this item, regardless of how
+                    // many colliding copies exist — the same single-report
+                    // behavior the flat lists above give a mutual pair.
+                    if reported.insert((&selection.item_ref, &selection.item_ref)) {
+                        issues.push(ValidationIssue::error(
+                            ValidationIssue::CODE_INCOMPATIBLE,
+                            CreationPhase::VirtuesFlaws,
+                            args([
+                                ("item", selection.item_ref.to_string()),
+                                ("other", selection.item_ref.to_string()),
+                            ]),
+                            Some(selection.item_ref.clone()),
+                        ));
+                    }
+                }
+            }
         }
     }
 }
@@ -623,6 +683,7 @@ mod tests {
             order: None,
             is_companion: None,
             is_grog: None,
+            type_profile_id: None,
             house: None,
             ability_scores,
             art_scores,
@@ -655,6 +716,7 @@ mod tests {
             order: None,
             is_companion: None,
             is_grog: None,
+            type_profile_id: None,
             house: None,
             ability_scores,
             art_scores,
@@ -709,6 +771,7 @@ mod tests {
             order: None,
             is_companion: Some(true),
             is_grog: None,
+            type_profile_id: None,
             house: None,
             ability_scores,
             art_scores,
@@ -736,6 +799,7 @@ mod tests {
             order: None,
             is_companion: Some(false),
             is_grog: None,
+            type_profile_id: None,
             house: None,
             ability_scores,
             art_scores,
@@ -761,6 +825,7 @@ mod tests {
             order: None,
             is_companion: None,
             is_grog: None,
+            type_profile_id: None,
             house: None,
             ability_scores,
             art_scores,
@@ -770,6 +835,91 @@ mod tests {
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
+        assert_eq!(outcome, Tri::Unknown);
+        assert!(depended_on_unknown);
+    }
+
+    /// D38/D75/F-556: `Prereq::CharacterType` matches the profile's own id
+    /// literally — True only when it equals `type_profile_id`.
+    #[test]
+    fn evaluate_prereq_character_type_true_when_id_matches() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: Some(Id::new("grog")),
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
+        };
+
+        let (outcome, depended_on_unknown) =
+            evaluate_prereq(&Prereq::CharacterType(Id::new("grog")), &ctx, 1, None);
+        assert_eq!(outcome, Tri::True);
+        assert!(!depended_on_unknown);
+    }
+
+    /// F-556's actual use: a resolved profile whose id differs (every shipped
+    /// profile, against `character_type.domestic_animal`) is a definite False.
+    #[test]
+    fn evaluate_prereq_character_type_false_when_id_differs() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: Some(Id::new("grog")),
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(
+            &Prereq::CharacterType(Id::new("character_type.domestic_animal")),
+            &ctx,
+            1,
+            None,
+        );
+        assert_eq!(outcome, Tri::False);
+        assert!(!depended_on_unknown);
+    }
+
+    /// An entity whose type profile cannot be resolved leaves the fact
+    /// genuinely unknown, mirroring `IsCompanion`/`IsGrog`.
+    #[test]
+    fn evaluate_prereq_character_type_unknown_when_type_unresolved() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
+        };
+
+        let (outcome, depended_on_unknown) =
+            evaluate_prereq(&Prereq::CharacterType(Id::new("grog")), &ctx, 1, None);
         assert_eq!(outcome, Tri::Unknown);
         assert!(depended_on_unknown);
     }
@@ -787,6 +937,7 @@ mod tests {
             order: None,
             is_companion: None,
             is_grog: None,
+            type_profile_id: None,
             house: None,
             ability_scores,
             art_scores,
@@ -816,6 +967,7 @@ mod tests {
             order: None,
             is_companion: None,
             is_grog: None,
+            type_profile_id: None,
             house: None,
             ability_scores,
             art_scores,

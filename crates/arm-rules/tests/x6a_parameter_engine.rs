@@ -837,4 +837,75 @@ mod e7_conditional_incompatibility {
             "Weak Hearing must not exclude Keen Vision"
         );
     }
+
+    // --- RC review-C item 2: the same-copy twin (ArMDE:7033) ---------------
+
+    fn same_item_ruleset() -> Ruleset {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.warped_senses", "kind": "flaw", "classification": "uncomputed_rule",
+            "magnitude": "minor", "categories": ["general"], "max_total": 255,
+            "parameters": [{ "key": "affliction", "type": "ref", "domain": "enumerated",
+              "values": ["affliction.weak_sight", "affliction.sensitive_sight"] }],
+            "conditional_incompatible_with": [
+              { "gate": { "param": "affliction", "equals": "affliction.weak_sight" },
+                "forbids": [], "forbids_same_item_values": ["affliction.sensitive_sight"] }
+            ] }
+        ]"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: COMPANION_TYPE,
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    fn affliction(value: &str) -> Selection {
+        let mut params = BTreeMap::new();
+        params.insert("affliction".to_string(), Id::new(value));
+        Selection::with_params(Id::new("flaw.warped_senses"), params)
+    }
+
+    /// New engine capability (RC review-C item 2, ArMDE:7033): a SECOND copy
+    /// of the SAME item, whose own `affliction` value is one of
+    /// `forbids_same_item_values`, is incompatible with the declaring copy.
+    /// `forbids` alone (naming OTHER items' ids) cannot express this, since
+    /// `selected_ids` collapses both copies of `flaw.warped_senses` to one id.
+    #[test]
+    fn weak_sight_excludes_a_second_copy_holding_sensitive_sight() {
+        let rs = same_item_ruleset();
+        let e = entity(
+            "companion",
+            vec![
+                affliction("affliction.weak_sight"),
+                affliction("affliction.sensitive_sight"),
+            ],
+        );
+        assert!(
+            issue_codes(&e, &rs).iter().any(|c| c == "incompatible"),
+            "Weak Sight must exclude a second copy holding Sensitive Sight"
+        );
+    }
+
+    /// The gate-unmet counterpart: two copies both holding the SAME value
+    /// carry no incompatibility — this is not a generic "no duplicate
+    /// copies" rule, only the stated same-item pairing.
+    #[test]
+    fn two_copies_of_the_same_value_carry_no_incompatibility() {
+        let rs = same_item_ruleset();
+        let e = entity(
+            "companion",
+            vec![
+                affliction("affliction.weak_sight"),
+                affliction("affliction.weak_sight"),
+            ],
+        );
+        assert!(
+            !issue_codes(&e, &rs).iter().any(|c| c == "incompatible"),
+            "two copies of the same value must not collide"
+        );
+    }
 }

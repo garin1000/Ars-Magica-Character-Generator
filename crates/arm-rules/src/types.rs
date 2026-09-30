@@ -396,6 +396,24 @@ pub enum Prereq {
         /// Which item kind (Virtue vs Flaw) a matching item must be.
         item_kind: ItemKind,
     },
+    /// The entity's own type profile must carry this exact id (D38/D75) — the
+    /// id-matching capability D38 originally called for and deferred, since
+    /// `IsCompanion`/`IsGrog`/`OrderMember`/`HermeticallyTrained` turned out to
+    /// cover every audience needed until now via a profile FLAG rather than an
+    /// id. F-556 needs the id form instead: `virtue.domestic_animal` is gated
+    /// on `character_type.domestic_animal`, an id no shipped profile carries,
+    /// so no human character type can ever satisfy it — forward-compatible if
+    /// an animal profile is ever added (against D58's present non-goal),
+    /// requiring no change to the entry itself. Evaluated against the type
+    /// profile's own [`EntityTypeProfile::id`] alone, profile-only like
+    /// `IsCompanion`/`IsGrog` (D56/A0): unknown when the profile cannot be
+    /// resolved, never a definite answer either way.
+    ///
+    /// Deliberately **not** referentially checked against the type-profile
+    /// registry at load time (unlike [`Self::House`]): the whole point of
+    /// F-556's use is to name an id that resolves to NO profile, so requiring
+    /// one to exist would make the fix itself illegal to load.
+    CharacterType(Id),
 }
 
 impl Prereq {
@@ -457,7 +475,8 @@ impl Prereq {
             | Prereq::IsGrog
             | Prereq::HasCategory(_)
             | Prereq::AgeMin(_)
-            | Prereq::HasCategoryAtMagnitude { .. } => None,
+            | Prereq::HasCategoryAtMagnitude { .. }
+            | Prereq::CharacterType(_) => None,
         }
     }
 
@@ -1227,6 +1246,21 @@ pub struct ConditionalIncompatibility {
     pub gate: ParamGate,
     /// The ids forbidden alongside the declaring selection while `gate` holds.
     pub forbids: BTreeSet<Id>,
+    /// The same-copy twin of [`Self::forbids`] (RC review-C item 2,
+    /// ArMDE:7033): while `gate` holds for the declaring selection, an OTHER
+    /// selection of the SAME item whose own value of `gate`'s own `param` key
+    /// equals one of these is also forbidden. `forbids` alone cannot express
+    /// this — it names OTHER items' ids, and the validator's `selected_ids`
+    /// collapses every copy of one parameterized item to a single id, so a
+    /// self-referencing `forbids` would wrongly catch every pair of copies,
+    /// including legal ones (e.g. Sensitive to Cold + Sensitive to Heat).
+    /// "Weak Sight is incompatible with Sensitive Sight" is two copies of
+    /// `flaw.warped_senses`, one with `affliction: affliction.weak_sight`, the
+    /// other with `affliction: affliction.sensitive_sight` — both read the
+    /// SAME `affliction` parameter key `gate.param` already names, so no
+    /// second parameter-key field is needed.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub forbids_same_item_values: BTreeSet<Id>,
 }
 
 /// One entry of [`PointItem::same_choice_exclusions`] (D69.6): the rulebook

@@ -163,6 +163,7 @@ impl Ruleset {
                         ));
                     }
                 }
+                self.validate_forbids_same_item_values(item, conditional, id, errors);
             }
 
             // Parameter domains are validated at parse time by the
@@ -2003,7 +2004,9 @@ impl Ruleset {
     /// [`Prereq::House`] against the House registry. `HermeticallyTrained`,
     /// `OrderMember`, `IsCompanion` (D38), and `IsGrog` (D68.9) carry no
     /// reference at all — each reads a bare profile flag — so there is
-    /// nothing to check for any of them.
+    /// nothing to check for any of them. [`Prereq::CharacterType`] (D38/D75)
+    /// carries an id but is deliberately NOT checked against the type-profile
+    /// registry — see that variant's own doc comment for why.
     ///
     /// `depth` is 1 at the top-level prerequisite and increments once per
     /// `All`/`Any`/`Nor` nesting level (K8). Past [`PREREQ_MAX_DEPTH`] this
@@ -2073,6 +2076,12 @@ impl Ruleset {
             | Prereq::OrderMember
             | Prereq::IsCompanion
             | Prereq::IsGrog => {}
+            // D38/D75: deliberately NOT checked against the type-profile
+            // registry, unlike `House` above — F-556's whole point is an id
+            // that names NO profile (`virtue.domestic_animal` gated on
+            // `character_type.domestic_animal`), so requiring one to exist
+            // would reject the fix this variant exists to express.
+            Prereq::CharacterType(_) => {}
             // B1/D21/F-502: `category` has no closed registry (free-form, like
             // `PointItem::categories` itself), so the only referential check
             // available is "does at least one point item declare it" — the
@@ -2264,6 +2273,44 @@ impl Ruleset {
                  resolve in domain '{}'",
                 gate.param, gate.equals, def.domain
             ));
+        }
+    }
+
+    /// RC review-C item 2: each [`ConditionalIncompatibility::forbids_same_item_values`]
+    /// entry must resolve in the SAME parameter's domain as `conditional.gate`
+    /// itself — both `gate.equals` (checked by [`Self::validate_param_gate`]
+    /// above) and every value here are read against ONE parameter
+    /// (`gate.param`), since both the declaring copy and the copy it forbids
+    /// are instances of the same item's same parameter (ArMDE:7033: Weak
+    /// Sight's copy and the Sensitive Sight copy it forbids both read Warped
+    /// Senses' own `affliction` parameter). A no-op when the list is empty, or
+    /// when the gate's own parameter is unknown — that failure is already
+    /// reported by `validate_param_gate`, so this does not double-report it.
+    fn validate_forbids_same_item_values(
+        &self,
+        item: &PointItem,
+        conditional: &ConditionalIncompatibility,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        if conditional.forbids_same_item_values.is_empty() {
+            return;
+        }
+        let Some(def) = item
+            .parameters
+            .iter()
+            .find(|p| p.key == conditional.gate.param)
+        else {
+            return;
+        };
+        for value in &conditional.forbids_same_item_values {
+            if !param_value_resolves(self, def, value) {
+                errors.push(format!(
+                    "{id}: conditional_incompatible_with 'forbids_same_item_values' names \
+                     value '{value}', which does not resolve in parameter '{}' domain '{}'",
+                    conditional.gate.param, def.domain
+                ));
+            }
         }
     }
 

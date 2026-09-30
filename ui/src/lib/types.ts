@@ -482,7 +482,11 @@ export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic' | 'academic
 // requires the entity's own age to be at least `value` years. `has_category_at_magnitude`
 // (D69/X7b-e/D68.4, Flawed Powers) is `has_category`'s magnitude- and kind-filtered
 // twin: the entity must hold at least one item of `item_kind` whose in-force
-// category is `category`, at or above `magnitude`.
+// category is `category`, at or above `magnitude`. `character_type` (D38/D75,
+// F-556) requires the entity's own type profile id to equal `value` literally
+// (unlike `is_companion`/`is_grog`, which read a profile FLAG) —
+// `virtue.domestic_animal` gates on an id no shipped profile carries, so no
+// human character type can ever satisfy it.
 type HasCategoryAtMagnitudeValue = { category: string; magnitude: Magnitude; item_kind: ItemKind };
 
 export type Prereq =
@@ -499,7 +503,8 @@ export type Prereq =
   | { kind: 'is_grog' }
   | { kind: 'has_category'; value: string }
   | { kind: 'age_min'; value: number }
-  | { kind: 'has_category_at_magnitude'; value: HasCategoryAtMagnitudeValue };
+  | { kind: 'has_category_at_magnitude'; value: HasCategoryAtMagnitudeValue }
+  | { kind: 'character_type'; value: string };
 
 // How a V/F impacts a character mechanically (M5 slice 5a). Mirrors the engine's
 // `Classification`. Required on every PointItem.
