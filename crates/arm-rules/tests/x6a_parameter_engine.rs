@@ -542,6 +542,7 @@ mod e5_xp_scope_validators {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         });
         assert!(
             !issue_codes(&e, &rs).is_empty(),
@@ -592,6 +593,7 @@ mod e5_xp_scope_validators {
             score: 3,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         });
         // In scope: the supernatural category union member.
         e.ability_scores.push(AbilityScore {
@@ -599,6 +601,7 @@ mod e5_xp_scope_validators {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         });
         // OUT of scope: neither named nor supernatural.
         e.ability_scores.push(AbilityScore {
@@ -606,6 +609,7 @@ mod e5_xp_scope_validators {
             score: 1,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         });
         assert!(
             issue_codes(&e, &rs)
@@ -661,6 +665,7 @@ mod e5_xp_scope_validators {
             score: 1,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         });
         let issues = validate(&e, &rs).issues;
         let issue = issues

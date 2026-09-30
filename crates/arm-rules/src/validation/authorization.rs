@@ -323,6 +323,7 @@ mod tests {
             parameter: parameter.map(|id| AbilityParameterValue::Catalogued { id: Id::new(id) }),
             score,
             specialty: None,
+            banked_xp: 0,
         });
         entity
     }
@@ -362,6 +363,7 @@ mod tests {
                 parameter: None,
                 score,
                 specialty: None,
+                banked_xp: 0,
             })
             .collect();
         entity.xp_pool = 500;

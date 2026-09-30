@@ -4712,20 +4712,34 @@ pub struct AbilityScore {
     /// character may hold several `(Area) Lore`s. `None` for plain abilities.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameter: Option<AbilityParameterValue>,
+    /// XP already banked toward the NEXT score, in raw table-XP currency
+    /// (`xp_for_score`'s scale — not charged XP, not [`Entity::xp_pool`]). The
+    /// book prints "X (Z)" beside a score (ArMDE:1177-1179): X = [`Self::score`],
+    /// Z = this field. X10b. Appended last (not after `score`): every
+    /// pre-X10b save has `banked_xp == 0` throughout, so a trailing tie-break
+    /// key leaves [`Entity::normalize`]'s sort byte-identical for old saves.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub banked_xp: u32,
 }
 
 /// A whole bought Hermetic Art score. Arts are not parameterized and carry no
 /// specialty, so an instance is identified by `art` alone. Like Abilities, the XP
 /// to reach the score is priced from the ruleset's *Art* advancement table (a
 /// separate, cheaper curve), and the leftover XP banks against
-/// [`Entity::art_xp_pool`]. The *effective* score (bought + Puissant Art) is
-/// computed at validation time, never stored.
+/// [`Self::banked_xp`], counted from the one shared [`Entity::xp_pool`]. The
+/// *effective* score (bought + Puissant Art) is computed at validation time,
+/// never stored.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct ArtScore {
     /// The Art's id (e.g. `art.creo`).
     pub art: Id,
     /// The whole bought score.
     pub score: u8,
+    /// XP already banked toward the next score, same currency and printed
+    /// form as [`AbilityScore::banked_xp`] (X10b). Appended last for the same
+    /// byte-identity reason.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub banked_xp: u32,
 }
 
 /// A spell the character knows (magi only). Saves store the choice, not the
@@ -4768,6 +4782,15 @@ pub struct SpellSelection {
     /// sorted (stable, with duplicates) by [`Entity::normalize`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub mastery_abilities: Vec<Id>,
+    /// The player's own claim that this spell falls within the character's
+    /// Magical Focus (ArMDE:4399-4422). Free-text [`Effect::MagicalFocus`]
+    /// can't supply this (MAG8: which Technique/Form cells a free-text focus
+    /// covers is table judgement, not something the engine derives), so it is
+    /// a recorded per-spell choice. Harmless if the character holds no Focus
+    /// at all — see `derived/casting.rs::spell_casting_total`. X10c. Appended
+    /// last, same byte-identity reasoning as [`AbilityScore::banked_xp`].
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub within_focus: bool,
 }
 
 /// How a piece of equipment is currently carried. A fixed rules taxonomy
@@ -7168,6 +7191,7 @@ mod tests {
                 score: 3,
                 specialty: Some("searching".into()),
                 parameter: None,
+                banked_xp: 0,
             }],
             xp_pool: 30,
             life_stages: None,
@@ -7176,6 +7200,7 @@ mod tests {
             art_scores: vec![ArtScore {
                 art: Id::new("art.creo"),
                 score: 5,
+                banked_xp: 0,
             }],
             spells: vec![SpellSelection {
                 spell: Id::new("spell.pilum_of_fire"),
@@ -7183,6 +7208,7 @@ mod tests {
                 mastery: None,
                 parameter: None,
                 mastery_abilities: Vec::new(),
+                within_focus: false,
             }],
             spell_levels_override: None,
             house: None,
@@ -7441,6 +7467,7 @@ mod tests {
                 mastery: None,
                 parameter: None,
                 mastery_abilities: Vec::new(),
+                within_focus: false,
             },
             SpellSelection {
                 spell: Id::new("spell.aegis_of_the_hearth"),
@@ -7448,6 +7475,7 @@ mod tests {
                 mastery: None,
                 parameter: None,
                 mastery_abilities: Vec::new(),
+                within_focus: false,
             },
         ];
         entity.normalize();
@@ -8646,12 +8674,14 @@ mod tests {
                 score: 2,
                 specialty: None,
                 parameter: None,
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.awareness"),
                 score: 3,
                 specialty: None,
                 parameter: None,
+                banked_xp: 0,
             },
         ];
         entity.normalize();

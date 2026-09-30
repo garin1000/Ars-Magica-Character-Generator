@@ -139,6 +139,7 @@ fn fixed_ability_roll_mod_does_not_change_bought_or_effective_ability_score() {
         score: 3,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     });
     let bought = entity.ability_scores[0].score;
     let effective = effective_ability_score(&entity, &rs, &Id::new("ability.awareness"), None);
@@ -337,6 +338,7 @@ fn assert_shipped_roll_mod_carrier(id: &str, ability: &str, amount: i32) {
         score: 3,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     });
     let bought = entity.ability_scores[0].score;
     let effective = effective_ability_score(&entity, &rs, &Id::new(ability), None);

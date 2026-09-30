@@ -717,6 +717,7 @@ mod tests {
             score,
             specialty: None,
             parameter: Some(AbilityParameterValue::text(area)),
+            banked_xp: 0,
         }
     }
 
@@ -743,6 +744,7 @@ mod tests {
             score: 3,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert_eq!(
             ability_bonus(&e, &rs, &Id::new("ability.awareness"), None),
@@ -988,6 +990,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.ignem"),
             score: 5,
+            banked_xp: 0,
         }];
         assert_eq!(art_bonus(&e, &rs, &Id::new("art.ignem")), 3);
         assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 8);
@@ -1020,10 +1023,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 3,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 2,
+                banked_xp: 0,
             },
         ];
         // Only Ignem is boosted; Creo has no bonus and is omitted.
@@ -1091,12 +1096,14 @@ mod tests {
                 score: 2,
                 specialty: None,
                 parameter: None,
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.stealth"),
                 score: 1,
                 specialty: None,
                 parameter: None,
+                banked_xp: 0,
             },
         ];
 
@@ -1446,6 +1453,7 @@ mod tests {
             score,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }
     }
 
@@ -1464,6 +1472,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 5,
+            banked_xp: 0,
         }]; // table 15
         let alloc = xp_allocation(&e, &rs);
         // ceil(15·2/3) = 10, not 15.
@@ -1735,6 +1744,7 @@ mod tests {
             mastery: None,
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         };
         assert_eq!(effective_spell_mastery(&unbought, &flawless, &rs), 1);
         let bought = SpellSelection {
@@ -1743,6 +1753,7 @@ mod tests {
             mastery: Some(3),
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         };
         assert_eq!(effective_spell_mastery(&bought, &flawless, &rs), 3);
     }
@@ -1754,6 +1765,7 @@ mod tests {
             mastery: Some(score),
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }
     }
 
@@ -2712,6 +2724,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.ignem"),
             score: 2,
+            banked_xp: 0,
         }];
         // The House-granted Puissant Ignem (+3) stacks on the bought score.
         assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 5);
@@ -2812,6 +2825,7 @@ mod tests {
         ArtScore {
             art: Id::new(art),
             score,
+            banked_xp: 0,
         }
     }
 
@@ -2960,10 +2974,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 2,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 3,
+                banked_xp: 0,
             },
         ];
         e.characteristics.insert(Characteristic::Int, 1);
@@ -2988,10 +3004,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 2,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 3,
+                banked_xp: 0,
             },
         ];
         e.characteristics.insert(Characteristic::Int, 1);
@@ -3331,6 +3349,7 @@ mod tests {
             parameter: Some(AbilityParameterValue::text("German")),
             score: 5,
             specialty: None,
+            banked_xp: 0,
         }];
         entity
     }
@@ -3423,6 +3442,7 @@ mod tests {
             parameter: None,
             score: 2,
             specialty: None,
+            banked_xp: 0,
         });
         let allocation = xp_allocation(&entity, &rs);
         assert_eq!(allocation.total_demand, 90, "75 + 15");
@@ -3440,6 +3460,7 @@ mod tests {
             parameter: None,
             score: 2,
             specialty: None,
+            banked_xp: 0,
         });
         let allocation = xp_allocation(&entity, &rs);
         assert_eq!(allocation.max_flow, 90, "fully funded");
@@ -3459,6 +3480,7 @@ mod tests {
             parameter: Some(AbilityParameterValue::text("French")),
             score: 3, // 30 xp: more than the 45 spread can spare alongside nothing else
             specialty: None,
+            banked_xp: 0,
         });
         let allocation = xp_allocation(&entity, &rs);
         assert_eq!(allocation.total_demand, 105, "75 + 30");
@@ -3492,6 +3514,7 @@ mod tests {
             parameter: None,
             score: 2,
             specialty: None,
+            banked_xp: 0,
         });
         let allocation = xp_allocation(&entity, &rs);
         assert_eq!(allocation.total_demand, 85, "75 + ceil(15 * 2/3) = 75 + 10");
@@ -3562,6 +3585,7 @@ mod tests {
             parameter: None,
             score: 3,
             specialty: None,
+            banked_xp: 0,
         });
         let allocation = xp_allocation(&magus, &rs);
         let pool = later_life_pool(&allocation).expect("a guided magus has a later-life pool");
@@ -3577,6 +3601,7 @@ mod tests {
             parameter: None,
             score: 3,
             specialty: None,
+            banked_xp: 0,
         });
         let allocation = xp_allocation(&magus, &rs);
         assert_eq!(later_life_pool(&allocation).expect("still there").used, 0);
@@ -3603,6 +3628,7 @@ mod tests {
             parameter: Some(AbilityParameterValue::text("Latin")),
             score: 3,
             specialty: None,
+            banked_xp: 0,
         });
 
         // Without the Flaw, the 30 points must come from apprenticeship.
@@ -3623,6 +3649,7 @@ mod tests {
             parameter: None,
             score: 3,
             specialty: None,
+            banked_xp: 0,
         });
         let allocation = xp_allocation(&magus, &rs);
         assert_eq!(later_life_pool(&allocation).expect("a pool").used, 0);
@@ -3660,10 +3687,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 20,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 20,
+                banked_xp: 0,
             },
         ];
         let allocation = xp_allocation(&magus, &rs);
@@ -3693,12 +3722,14 @@ mod tests {
         magus.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 5,
+            banked_xp: 0,
         }];
         magus.ability_scores.push(AbilityScore {
             ability: Id::new("ability.artes_liberales"),
             parameter: None,
             score: 3,
             specialty: None,
+            banked_xp: 0,
         });
         let allocation = xp_allocation(&magus, &rs);
         let pool = later_life_pool(&allocation).expect("an experienced magus still has one");
@@ -3960,6 +3991,7 @@ mod tests {
             parameter: Some(AbilityParameterValue::text("Latin")),
             score: 3,
             specialty: None,
+            banked_xp: 0,
         }];
 
         let allocation = xp_allocation(&entity, &rs);
@@ -4038,6 +4070,7 @@ mod tests {
             parameter: Some(AbilityParameterValue::text("French")),
             score: 1,
             specialty: None,
+            banked_xp: 0,
         }];
 
         let allocation = xp_allocation(&entity, &rs);

@@ -392,6 +392,9 @@ magus-minimum-met = { $ability } { $min }{ $qualifier } ist erfüllt: dieser Cha
 magus-minimum-unmet = { $ability } { $min }{ $qualifier } ist nicht erfüllt: dieser Charakter hat { $score }.
 magus-recommended-label = Empfohlene Mindestfertigkeiten
 ability-score-label = Wert
+# X10b: Eingabefeld für das „Z“ der buchtypischen Notation „X (Z)“
+# (ArMDE:1177) — bereits angespartes EP für den nächsten Wert.
+ability-banked-xp-label = Angespartes EP
 ability-specialty-label = Spezialisierung
 # Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.
 ability-specialties-label = Spezialisierungen
@@ -405,6 +408,9 @@ ability-decrement = { $name } verringern
 # sich den EP-Vorrat der Fertigkeiten (Schlüssel `xp-pool`).
 art-type-technique = Techniken
 art-type-form = Formen
+# X10b: Eingabefeld für das „Z“ der buchtypischen Notation „X (Z)“
+# (ArMDE:1179) — bereits angespartes EP für den nächsten Wert.
+art-banked-xp-label = Angespartes EP
 art-add = Kunst hinzufügen
 # Je Zeile benannt ($name ist der Anzeigename der Kunst) — dieselbe Begründung
 # wie bei ability-increment/-decrement oben.
@@ -416,6 +422,11 @@ art-decrement = { $name } verringern
 spell-technique-label = Technik
 spell-form-label = Form
 spell-level-label = Stufe
+# X10c: nur sichtbar für einen bekannten Zauber, dessen (Technik, Form)-Feld
+# eine Im-Fokus-Zahl besitzt — der Charakter also einen Magischen Fokus hält,
+# der ihn abdecken könnte. Die eigene Einschätzung des Spielers, dass der
+# Zauber innerhalb dieses Fokus liegt.
+spell-within-focus-label = Im Fokus
 spell-level-min-label = Stufe min
 spell-level-max-label = Stufe max
 spell-group-header = { $technique } { $form }
@@ -1318,6 +1329,10 @@ issue-ability_bonus_dangling_target = Füge { $ability } zu den Fertigkeiten des
 issue-unknown_art = Unbekannte Kunst: { $art }.
 issue-duplicate_art = { $art } ist { $count }-mal aufgeführt.
 issue-art_score_out_of_range = Kunst { $art } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
+# X10b. Wird sowohl für eine Fertigkeit als auch für eine Kunst ausgelöst; die
+# Argumente tragen `ability` bzw. `art` — nie beide zugleich —, daher
+# interpoliert die Nachricht keines davon direkt.
+issue-banked_xp_at_or_above_next_level = { $banked } angesparte Erfahrungspunkte reichen bereits aus, um diesen Wert zu steigern — nur { $needed } werden für die nächste Stufe gebraucht.
 issue-house_choice_unresolved = Haus { $house } hat eine offene Spezialisierungswahl ({ $choice_key }).
 issue-house_grant_constraint = Haus { $house }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
 issue-warping_owed_minor_flaws = Dir fehlen noch { $count } Kleine Fehler aus der Verzerrung.

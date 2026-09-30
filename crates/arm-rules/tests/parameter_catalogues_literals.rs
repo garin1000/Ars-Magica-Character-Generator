@@ -194,6 +194,7 @@ fn companion_with(selection: &str, ability: &str, parameter: &str) -> Entity {
         parameter: Some(AbilityParameterValue::Catalogued {
             id: Id::new(parameter),
         }),
+        banked_xp: 0,
     }];
     e
 }
@@ -294,6 +295,7 @@ fn craft_guild_training_funds_the_organization_lore_matching_its_own_guild() {
         score: 1,
         specialty: None,
         parameter: Some(AbilityParameterValue::text("Smiths' Guild of Verdi")),
+        banked_xp: 0,
     }];
 
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
@@ -322,6 +324,7 @@ fn craft_guild_training_does_not_fund_a_different_organization_lore() {
         score: 1,
         specialty: None,
         parameter: Some(AbilityParameterValue::text("A Completely Different Guild")),
+        banked_xp: 0,
     }];
 
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");

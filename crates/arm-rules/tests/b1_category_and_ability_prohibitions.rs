@@ -50,6 +50,7 @@ fn ability_score(ability: &str, score: u8) -> AbilityScore {
         score,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     }
 }
 

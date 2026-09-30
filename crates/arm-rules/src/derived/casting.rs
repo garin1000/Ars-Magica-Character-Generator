@@ -315,6 +315,34 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
     out
 }
 
+/// The Casting Total the book prints beside one known spell (ArMDE:1179's
+/// "TeFo X/+Y"; formulaic only — Ritual/Spontaneous stay grid-only). Selects
+/// between a `(Technique, Form)` cell's base and within-focus formulaic
+/// figures by [`SpellSelection::within_focus`] (X10c) — a pure selector over
+/// the two numbers [`casting_totals`] already computes, so Potent Magic (which
+/// folds into `within_focus` alone, never the base total) comes along
+/// automatically whenever the flag is set. `within_focus: true` with no
+/// Magical Focus falls back to the base figure silently: reachable only via a
+/// hand-edited save, since the UI offers the toggle only when the character
+/// holds a Focus.
+pub fn spell_casting_total(
+    chosen: &SpellSelection,
+    entity: &Entity,
+    ruleset: &Ruleset,
+) -> Option<i32> {
+    let spell = ruleset.spell(&chosen.spell)?;
+    let cell = casting_totals(entity, ruleset)
+        .into_iter()
+        .find(|c| c.technique == spell.technique && c.form == spell.form)?;
+    Some(if chosen.within_focus {
+        cell.within_focus
+            .map(|wf| wf.formulaic)
+            .unwrap_or(cell.formulaic)
+    } else {
+        cell.formulaic
+    })
+}
+
 /// Applies the Deficient-Art halving to a casting score. Weak Spontaneous
 /// Magic is handled separately (it fixes the spontaneous *divisor* to 5
 /// rather than halving an already-computed score — see the `spontaneous_fatiguing`

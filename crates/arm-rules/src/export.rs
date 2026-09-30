@@ -953,52 +953,62 @@ mod tests {
                 score: 3,
                 specialty: Some("searching".to_string()),
                 parameter: None,
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.area_lore"),
                 score: 2,
                 specialty: Some("legends".to_string()),
                 parameter: Some(AbilityParameterValue::text("Provence")),
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.magic_theory"),
                 score: 4,
                 specialty: None,
                 parameter: None,
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.parma_magica"),
                 score: 3,
                 specialty: None,
                 parameter: None,
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.single_weapon"),
                 score: 4,
                 specialty: Some("long sword".to_string()),
                 parameter: None,
+                banked_xp: 0,
             },
         ];
         e.art_scores = vec![
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.muto"),
                 score: 5,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 5,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 8,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.vim"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.spells = vec![
@@ -1008,6 +1018,7 @@ mod tests {
                 mastery: Some(2),
                 parameter: None,
                 mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
+                within_focus: false,
             },
             SpellSelection {
                 spell: Id::new("spell.wizards_boost_form"),
@@ -1015,6 +1026,7 @@ mod tests {
                 mastery: None,
                 parameter: Some("art.ignem".to_string()),
                 mastery_abilities: Vec::new(),
+                within_focus: false,
             },
         ];
         e.equipment = vec![
@@ -1895,6 +1907,7 @@ mod tests {
             score: 3,
             specialty: Some("searching".to_string()),
             parameter: None,
+            banked_xp: 0,
         }];
         e.selections = vec![Selection::with_params(
             Id::new("virtue.puissant_ability"),
@@ -1921,12 +1934,14 @@ mod tests {
                 score: 2,
                 specialty: None,
                 parameter: Some(AbilityParameterValue::text("Provence")),
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.area_lore"),
                 score: 1,
                 specialty: Some("legends".to_string()),
                 parameter: Some(AbilityParameterValue::text("the Rhine")),
+                banked_xp: 0,
             },
         ];
         e.normalize();
@@ -1944,6 +1959,7 @@ mod tests {
             score: 3,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         e.selections = vec![Selection::new(Id::new("virtue.warrior"))];
         let doc = character_markdown(
@@ -1977,6 +1993,7 @@ mod tests {
                 score: 1,
                 specialty: None,
                 parameter: None,
+                banked_xp: 0,
             })
             .collect();
         let doc = super::character_markdown(
@@ -2017,6 +2034,7 @@ mod tests {
             score: 3,
             specialty: Some("visions".to_string()),
             parameter: None,
+            banked_xp: 0,
         }];
         let doc = character_markdown(&e, &ruleset(), &no_labels());
         // The catalogue names the Virtue and the Ability it grants identically (the
@@ -2041,6 +2059,7 @@ mod tests {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         let doc = character_markdown(&e, &ruleset(), &no_labels());
         // Scoped to the Abilities table: the catalogue names the Virtue and the
@@ -2190,10 +2209,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 8,
+                banked_xp: 0,
             },
         ];
         let doc = character_markdown(
@@ -2218,6 +2239,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 10,
+            banked_xp: 0,
         }];
         e.selections = vec![Selection::with_params(
             Id::new("virtue.puissant_art"),
@@ -2237,6 +2259,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.ignem"),
             score: 8,
+            banked_xp: 0,
         }];
         let doc = character_markdown(
             &e,
@@ -2282,6 +2305,7 @@ mod tests {
             mastery: Some(2),
             parameter: None,
             mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
+            within_focus: false,
         }];
         let doc = character_markdown(
             &e,
@@ -2314,6 +2338,7 @@ mod tests {
             mastery: None,
             parameter: Some("art.ignem".to_string()),
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }];
         let doc = character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]));
         assert!(doc.contains("| Wizard's Boost of Ignem |"), "{doc}");
@@ -3169,6 +3194,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.imaginem"),
             score: 4,
+            banked_xp: 0,
         }];
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.trebuchet"),
@@ -3201,6 +3227,7 @@ mod tests {
             mastery: None,
             parameter: Some("free text".to_string()),
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }];
         let err =
             super::character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]))

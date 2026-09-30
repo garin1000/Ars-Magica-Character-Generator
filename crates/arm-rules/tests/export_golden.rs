@@ -160,36 +160,42 @@ fn golden_magus() -> Entity {
             score: 2,
             specialty: Some("legends".to_string()),
             parameter: Some(AbilityParameterValue::text("Provence")),
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.artes_liberales"),
             score: 1,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.awareness"),
             score: 2,
             specialty: Some("searching".to_string()),
             parameter: None,
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.magic_theory"),
             score: 4,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.parma_magica"),
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.single_weapon"),
             score: 4,
             specialty: Some("long sword".to_string()),
             parameter: None,
+            banked_xp: 0,
         },
     ];
     e.art_scores = vec![
@@ -199,22 +205,27 @@ fn golden_magus() -> Entity {
         ArtScore {
             art: Id::new("art.creo"),
             score: 8,
+            banked_xp: 0,
         },
         ArtScore {
             art: Id::new("art.rego"),
             score: 5,
+            banked_xp: 0,
         },
         ArtScore {
             art: Id::new("art.corpus"),
             score: 5,
+            banked_xp: 0,
         },
         ArtScore {
             art: Id::new("art.ignem"),
             score: 8,
+            banked_xp: 0,
         },
         ArtScore {
             art: Id::new("art.vim"),
             score: 5,
+            banked_xp: 0,
         },
     ];
     e.spells = vec![SpellSelection {
@@ -223,6 +234,7 @@ fn golden_magus() -> Entity {
         mastery: Some(2),
         parameter: None,
         mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
+        within_focus: false,
     }];
     e.equipment = vec![
         EquipmentSlot {
@@ -508,6 +520,7 @@ fn entity_with_every_parameter_kind() -> Entity {
             parameter: Some(AbilityParameterValue::Catalogued {
                 id: Id::new("language.latin"),
             }),
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.organization_lore"),
@@ -517,12 +530,14 @@ fn entity_with_every_parameter_kind() -> Entity {
                 item: Id::new("virtue.craft_guild_training"),
                 param: "guild".to_string(),
             }),
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.area_lore"),
             score: 1,
             specialty: None,
             parameter: Some(AbilityParameterValue::text("Provence")),
+            banked_xp: 0,
         },
     ];
     e.normalize();

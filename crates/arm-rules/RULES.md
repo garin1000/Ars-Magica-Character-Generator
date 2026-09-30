@@ -1488,7 +1488,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:552).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:600).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -11626,6 +11626,87 @@ slice.
   `virtue.physician_of_salerno`, `virtue.rosh_beth_din`,
   `virtue.senior_bard`.
 - Tests: `crates/arm-rules/tests/x5b_ability_minimums.rs`.
+
+---
+
+#### Banked Ability/Art XP and the per-spell within-focus marker (X10b/X10c, D65 N5(b)/(c), D73)
+
+> "**Abilities:** All of the character's Abilities, in alphabetical order. The
+> format is Ability X(Z) (specialization), where X is the score in the
+> Ability and Z is the number of experience points acquired towards the next
+> level." (ArMDE:1177.) "**Arts:** The character's scores in the Hermetic
+> Arts, in the format Art X (Z), where X is the score and Z the number of
+> experience points acquired towards the next level." (ArMDE:1179.) "When you
+> cast a spell or generate a Lab Total within your focus, add the lowest
+> applicable Art score twice." (ArMDE:4403.)
+
+- **X10b**: `AbilityScore`/`ArtScore` gain `banked_xp: u32` — the book's own
+  "Z", raw table-XP a score has already earned toward the next point,
+  distinct from both the charged XP and `Entity::xp_pool`.
+  `#[serde(default, skip_serializing_if = "is_zero")]`, appended last so a
+  pre-X10b save (every field at 0) sorts and round-trips byte-identically.
+  **Spend loops**: banked XP joins the raw table total *before* Affinity
+  reduction, in both the Ability loop and the Art loop of `build_spends` —
+  taxed exactly like any other XP spent toward the score, not added on top
+  of an already-charged figure. `saturating_add` closes the hostile-input
+  path (a crafted `banked_xp: u32::MAX`): no panic.
+- **Validation (new, warning)**: `banked_xp_at_or_above_next_level` fires
+  when `banked_xp` is at or above the raw-table delta to the next score —
+  that figure names a score the character should already have, mis-recorded,
+  not a crash — or at any `banked_xp > 0` sitting at the ceiling score (no
+  next row to bank toward). Severity warning, matching
+  `ValidationIssue::CODE_GENERAL_XP_UNSPENT` (D73.1 — an error was
+  considered and rejected).
+- **X10c**: `SpellSelection::within_focus: bool`, same shape
+  (`skip_serializing_if` on false). The player's own claim that a known
+  spell falls within the character's Magical Focus — free-text
+  `Effect::MagicalFocus.param` cannot supply this (MAG8's capability gap
+  stands; the engine still cannot *derive* membership, only record the
+  claim). `spell_casting_total` selects the one figure the book prints
+  beside a known spell: the cell's within-focus formulaic figure when the
+  flag is set (falling back to the base formulaic figure if the character
+  holds no Magical Focus — reachable only via a hand-edited save, since the
+  UI's toggle shows only when a Focus is held), else the base figure. A pure
+  selector over the two numbers `casting_totals` already computes, so Potent
+  Magic (which folds into the within-focus figure alone, never the base
+  total) comes along automatically.
+- **Export**: the book's own "X (Z)" notation — `write_abilities`/
+  `write_arts` append `" ({banked_xp})"` to the score cell only when
+  `banked_xp > 0`, so every export written before X10b stays byte-identical.
+  **D73.2: no Casting Total column** — the Markdown export prints none for
+  any spell today, and X10c does not add one; the marker and the in-app
+  totals are the whole of this slice.
+- **Saves / `SCHEMA_VERSION`**: no bump (D73.3) — both fields are ordinary
+  `serde(default, skip_serializing_if)` additions to an existing Vec-item
+  struct, identical in shape to `mastery_abilities`/`from_normal_budget`,
+  both shipped bump-free; an old save omits the key, defaults to
+  `0`/`false`, and round-trips byte-identically.
+- **Book-template conformance**: Guernicus's `art.intellego`
+  (`banked_xp: 5`, `xp_pool: 435`) and the Specialist's `ability.bows`
+  (`banked_xp: 2`) go from "exact only because the pool happens to
+  under-fund the difference" to actually exact (§§ MAG12, S2,
+  `docs/book-template-conformance.md`). The MAG8 quartet's per-spell
+  `within_focus` marks land on exactly the spells whose printed Casting
+  Total matches the cell's within-focus figure (Ex Miscellanea: Wall of
+  Protecting Stone, The Crystal Dart, Rock of Viscid Clay, Earth that Breaks
+  No More — four spells, verified against the printed figures directly, not
+  the two an earlier paraphrase suggested; Flambeau: all five; Mercere:
+  Clouds of Rain and Thunder, Clouds of Summer Snow — two, not the one the
+  same paraphrase suggested; Tremere: none). The pre-existing MAG4/MAG7
+  disagreements (neither candidate figure matches the book) are left
+  `within_focus: false` — X10c cannot fix a figure neither candidate
+  reaches.
+- Fluent: `issue-banked_xp_at_or_above_next_level`, `art-banked-xp-label`,
+  `ability-banked-xp-label`, `spell-within-focus-label` (both locales; the UI
+  wiring itself is a separate port step).
+- Source: `ArMDE:1177-1179` (the "X (Z)" notation), `ArMDE:4399-4422` (Major
+  Magical Focus). `types.rs::AbilityScore`, `types.rs::ArtScore`,
+  `types.rs::SpellSelection`, `effective/xp.rs::build_spends`,
+  `validation/scores.rs::validate_ability_banked_xp`,
+  `validation/scores.rs::validate_art_banked_xp`,
+  `derived/casting.rs::spell_casting_total`, `export/sections.rs::score_cell`.
+  Tests: `crates/arm-rules/tests/x10bc_banked_xp_and_within_focus.rs`,
+  `crates/arm-rules/tests/book_templates.rs`.
 
 ---
 

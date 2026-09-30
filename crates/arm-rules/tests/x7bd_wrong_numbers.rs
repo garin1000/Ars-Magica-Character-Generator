@@ -70,6 +70,7 @@ fn score(ability: &str, value: u8) -> AbilityScore {
         score: value,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     }
 }
 

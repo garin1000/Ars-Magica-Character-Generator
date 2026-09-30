@@ -167,19 +167,24 @@
   ],
   "spells": [
     {
-      "spell": "spell.arc_of_fiery_ribbons"
+      "spell": "spell.arc_of_fiery_ribbons",
+      "within_focus": true
     },
     {
-      "spell": "spell.ball_of_abysmal_flame"
+      "spell": "spell.ball_of_abysmal_flame",
+      "within_focus": true
     },
     {
-      "spell": "spell.circle_of_encompassing_flames"
+      "spell": "spell.circle_of_encompassing_flames",
+      "within_focus": true
     },
     {
-      "spell": "spell.palm_of_flame"
+      "spell": "spell.palm_of_flame",
+      "within_focus": true
     },
     {
-      "spell": "spell.pilum_of_fire"
+      "spell": "spell.pilum_of_fire",
+      "within_focus": true
     }
   ],
   "house": "house.flambeau",

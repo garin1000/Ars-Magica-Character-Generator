@@ -73,7 +73,8 @@
     {
       "ability": "ability.bows",
       "score": 1,
-      "specialty": "short bow"
+      "specialty": "short bow",
+      "banked_xp": 2
     },
     {
       "ability": "ability.brawl",

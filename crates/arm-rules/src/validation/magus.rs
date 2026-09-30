@@ -1096,6 +1096,7 @@ mod tests {
                 parameter: parameter.map(AbilityParameterValue::text),
                 score,
                 specialty: None,
+                banked_xp: 0,
             })
             .collect();
         entity

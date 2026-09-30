@@ -166,10 +166,12 @@
   ],
   "spells": [
     {
-      "spell": "spell.clouds_of_rain_and_thunder"
+      "spell": "spell.clouds_of_rain_and_thunder",
+      "within_focus": true
     },
     {
-      "spell": "spell.clouds_of_summer_snow"
+      "spell": "spell.clouds_of_summer_snow",
+      "within_focus": true
     },
     {
       "spell": "spell.jupiters_resounding_blow"

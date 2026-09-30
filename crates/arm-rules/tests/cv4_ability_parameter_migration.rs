@@ -207,6 +207,7 @@ fn a_literal_is_funded_by_catalogued_not_by_text_with_the_same_spelling() {
             score: 1,
             specialty: None,
             parameter: Some(parameter),
+            banked_xp: 0,
         }];
         let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
         allocation.max_flow == allocation.total_demand

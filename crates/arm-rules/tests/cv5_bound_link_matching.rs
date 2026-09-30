@@ -64,6 +64,7 @@ fn companion_with_guild_and_ability(guild: &str, parameter: AbilityParameterValu
         score: 1,
         specialty: None,
         parameter: Some(parameter),
+        banked_xp: 0,
     }];
     e
 }
@@ -160,6 +161,7 @@ fn bought_twice_with_a_link_resolves_ambiguous_and_funds_nothing() {
             item: Id::new("virtue.craft_guild_training"),
             param: "guild".into(),
         }),
+        banked_xp: 0,
     }];
 
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");

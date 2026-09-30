@@ -57,7 +57,7 @@ use crate::ruleset::{
 use crate::types::{
     AdvancementFactor, CastingScope, CombatStat, Effect, Entity, Familiar, HalvableTotal,
     HealthTrack, Id, LabTotalModScope, LoadoutState, LongevitySource, MAX_CORD_SCORE,
-    MagicResistanceEffect, SelectionParamValue, SpecialCasting,
+    MagicResistanceEffect, SelectionParamValue, SpecialCasting, SpellSelection,
 };
 
 // --- Non-standard-casting penalty constants (ArMDE:9243-9245) -----------
@@ -737,7 +737,7 @@ mod casting;
 
 pub use casting::{
     CastingTotal, CastingWithinFocus, MagicResistance, NonStandardCasting, PenetrationLine,
-    casting_totals, magic_resistance, penetration,
+    casting_totals, magic_resistance, penetration, spell_casting_total,
 };
 
 mod combat;
@@ -1339,15 +1339,18 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.art_scores = vec![
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 13,
+                banked_xp: 0,
             },
         ];
         e.aura = 5;
@@ -1568,15 +1571,18 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.art_scores = vec![
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 13,
+                banked_xp: 0,
             },
         ];
         e.aura = 5;
@@ -1597,6 +1603,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 10,
+            banked_xp: 0,
         }];
         assert!(masterpiece_item_cap(&lab_totals(&e, &rs), &e, &rs).is_none());
         assert!(derived_totals(&e, &rs).masterpiece.is_none());
@@ -1620,15 +1627,18 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.art_scores = vec![
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 13,
+                banked_xp: 0,
             },
         ];
         e.aura = 5;
@@ -1655,18 +1665,22 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.perdo"),
                 score: 4,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 12,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 8,
+                banked_xp: 0,
             },
         ];
         e.talisman = Some(Talisman::default());
@@ -1692,6 +1706,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 10,
+            banked_xp: 0,
         }];
         assert!(talisman_capacity(&e, &rs).is_none());
         assert!(derived_totals(&e, &rs).talisman_capacity.is_none());
@@ -1716,19 +1731,23 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.art_scores = vec![
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.perdo"),
                 score: 4,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 12,
+                banked_xp: 0,
             },
         ];
         e.selections = vec![Selection::with_params(
@@ -2160,10 +2179,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.ability_scores = vec![
@@ -2172,12 +2193,14 @@ mod tests {
                 parameter: None,
                 specialty: None,
                 score: 4,
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.penetration"),
                 parameter: None,
                 specialty: None,
                 score: 4,
+                banked_xp: 0,
             },
         ];
         e.spells = vec![SpellSelection {
@@ -2186,6 +2209,7 @@ mod tests {
             mastery: None,
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }];
 
         let out = derived_totals(&e, &rs);
@@ -2241,15 +2265,18 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.art_scores = vec![
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 13,
+                banked_xp: 0,
             },
         ];
         e.aura = 5;
@@ -2360,10 +2387,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.aura = 3;
@@ -2417,10 +2446,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.aura = i32::MAX; // deliberately unclamped — normalize() was not called
@@ -2461,10 +2492,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         // The addends the per-total fixtures leave at zero: the ritual pair…
@@ -2474,12 +2507,14 @@ mod tests {
                 parameter: None,
                 specialty: None,
                 score: 3,
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.philosophiae"),
                 parameter: None,
                 specialty: None,
                 score: 2,
+                banked_xp: 0,
             },
         ];
         // …and a Magical Focus, which is what makes `focus_add` and the Lab
@@ -2532,10 +2567,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.aura = i32::MIN; // deliberately unclamped — normalize() was not called
@@ -2587,10 +2624,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.ability_scores = vec![AbilityScore {
@@ -2598,6 +2637,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 3,
+            banked_xp: 0,
         }];
         e.selections = vec![Selection::with_params(
             Id::new("virtue.magical_focus"),
@@ -2638,10 +2678,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 4,
+                banked_xp: 0,
             },
         ];
         e.selections = vec![Selection::with_params(
@@ -2677,10 +2719,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         let totals = casting_totals(&e, &rs);
@@ -2726,10 +2770,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 7,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.selections = vec![
@@ -2844,10 +2890,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 1,
+                banked_xp: 0,
             },
         ];
         e.selections = vec![Selection::with_params(
@@ -2939,10 +2987,12 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 3,
+            banked_xp: 0,
         }];
         e.art_scores = vec![ArtScore {
             art: Id::new("art.ignem"),
             score: 4,
+            banked_xp: 0,
         }];
         let mr = magic_resistance(&e, &rs);
         let ignem = mr
@@ -2970,15 +3020,18 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 3,
+            banked_xp: 0,
         }];
         e.art_scores = vec![
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 10,
+                banked_xp: 0,
             },
         ];
         e.selections = vec![Selection::with_params(
@@ -3022,10 +3075,12 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 3,
+            banked_xp: 0,
         }];
         e.art_scores = vec![ArtScore {
             art: Id::new("art.ignem"),
             score: 10,
+            banked_xp: 0,
         }];
         e.selections = vec![Selection::with_params(
             Id::new("flaw.flawed_parma"),
@@ -3076,6 +3131,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 3, // 5×3 = 15 < 30
+            banked_xp: 0,
         }];
         let mr = magic_resistance(&e, &rs);
         let corpus = mr.iter().find(|m| m.form.as_str() == "art.corpus").unwrap();
@@ -3117,10 +3173,12 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 3,
+            banked_xp: 0,
         }];
         e.art_scores = vec![ArtScore {
             art: Id::new("art.ignem"),
             score: 10,
+            banked_xp: 0,
         }];
         let mr = magic_resistance(&e, &rs);
         let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
@@ -3150,10 +3208,12 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 3,
+            banked_xp: 0,
         }];
         e.art_scores = vec![ArtScore {
             art: Id::new("art.ignem"),
             score: 10,
+            banked_xp: 0,
         }];
         let mr = magic_resistance(&e, &rs);
         // Ignem: 10 + halve(15) = 17, reduced by the Flaw, but True Faith 2 x 10
@@ -3182,10 +3242,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.aura = 0;
@@ -3194,6 +3256,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.spells = vec![SpellSelection {
             spell: Id::new("spell.pilum_of_fire"),
@@ -3201,6 +3264,7 @@ mod tests {
             mastery: None,
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }];
         let pen = penetration(&e, &rs);
         assert_eq!(pen.len(), 1);
@@ -3228,10 +3292,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.aura = i32::MAX; // deliberately unclamped — normalize() was not called
@@ -3240,6 +3306,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.spells = vec![SpellSelection {
             spell: Id::new("spell.pilum_of_fire"),
@@ -3247,6 +3314,7 @@ mod tests {
             mastery: None,
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }];
         let pen = penetration(&e, &rs);
         assert_eq!(pen.len(), 1);
@@ -3277,15 +3345,18 @@ mod tests {
             ArtScore {
                 art: Id::new("art.muto"),
                 score: 3,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.vim"),
                 score: 4,
+                banked_xp: 0,
             },
             // A high target-Form score that MUST NOT feed the casting total.
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 20,
+                banked_xp: 0,
             },
         ];
         e.ability_scores = vec![AbilityScore {
@@ -3293,6 +3364,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 0,
+            banked_xp: 0,
         }];
         e.spells = vec![SpellSelection {
             spell: Id::new("spell.wizards_boost_form"),
@@ -3300,6 +3372,7 @@ mod tests {
             mastery: None,
             parameter: Some("art.ignem".into()),
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }];
         let pen = penetration(&e, &rs);
         assert_eq!(pen.len(), 1);
@@ -3326,6 +3399,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.equipment = vec![
             EquipmentSlot {
@@ -3382,6 +3456,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.long_sword"),
@@ -3434,6 +3509,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         let round_shield = || EquipmentSlot {
             item: Id::new("shield.round"),
@@ -3479,6 +3555,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.equipment = vec![
             EquipmentSlot {
@@ -3526,6 +3603,7 @@ mod tests {
             parameter: None,
             specialty: Some("longsword".into()),
             score: 4,
+            banked_xp: 0,
         }];
         let long_sword = || EquipmentSlot {
             item: Id::new("weapon.long_sword"),
@@ -3584,6 +3662,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         // Weapon Load 1 + armor Load 1 = 2 → Burden 1; Str 0 → Enc 1. All combat.
         e.equipment = vec![
@@ -3706,6 +3785,7 @@ mod tests {
             score: 5,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.long_sword"),
@@ -3738,6 +3818,7 @@ mod tests {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.long_sword"),
@@ -3770,6 +3851,7 @@ mod tests {
             score: 5,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.dodge"),
@@ -4103,10 +4185,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 6,
+                banked_xp: 0,
             },
         ];
         let totals = lab_totals(&e, &rs);
@@ -4136,10 +4220,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 6,
+                banked_xp: 0,
             },
         ];
         let totals = lab_totals(&e, &rs);
@@ -4163,10 +4249,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 6,
+                banked_xp: 0,
             },
         ];
         let totals = lab_totals(&e, &rs);
@@ -4251,15 +4339,18 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 3,
+            banked_xp: 0,
         }];
         e.art_scores = vec![
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 4,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.corpus"),
                 score: 4,
+                banked_xp: 0,
             },
         ];
         e.selections = vec![Selection::with_params(
@@ -4407,10 +4498,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.selections = vec![Selection::new(Id::new("flaw.weak_spontaneous"))];
@@ -4438,10 +4531,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.selections = vec![
@@ -4473,10 +4568,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 10,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 5,
+                banked_xp: 0,
             },
         ];
         e.ability_scores = vec![AbilityScore {
@@ -4484,6 +4581,7 @@ mod tests {
             parameter: None,
             specialty: None,
             score: 4,
+            banked_xp: 0,
         }];
         e.spells = vec![SpellSelection {
             spell: Id::new("spell.pilum_of_fire"),
@@ -4491,6 +4589,7 @@ mod tests {
             mastery: None,
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }];
         e.selections = vec![Selection::with_params(
             Id::new("flaw.deficient_technique"),
@@ -4628,6 +4727,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 5,
+            banked_xp: 0,
         }];
         e.selections = vec![Selection::new(Id::new("virtue.method_caster"))];
         let before = e.clone();

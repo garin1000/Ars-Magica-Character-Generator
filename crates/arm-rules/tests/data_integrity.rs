@@ -1993,6 +1993,7 @@ fn shipped_elemental_magic_redistributes_art_xp() {
     let row = |art: &str, score: u8| ArtScore {
         art: Id::new(art),
         score,
+        banked_xp: 0,
     };
     e.art_scores = vec![
         row("art.aquam", 4),
@@ -2052,12 +2053,14 @@ fn fully_specified_companion_validates() {
             score: 2,
             specialty: Some("searching".into()),
             parameter: None,
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.living_language"),
             score: 5,
             specialty: None,
             parameter: Some(AbilityParameterValue::text("German")),
+            banked_xp: 0,
         },
     ];
     // Awareness 2 (15 xp) + Living Language 5 (75 xp) = 90 spent; give a pool that
@@ -2790,6 +2793,7 @@ fn shipped_score_effects_apply() {
         score: 2,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     }];
     e.characteristics = BTreeMap::from([(Characteristic::Str, 3), (Characteristic::Qik, -3)]);
 
@@ -2951,6 +2955,7 @@ fn in_play_effects_do_not_perturb_creation_totals() {
         score: 3,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     }];
     base.characteristics = BTreeMap::from([(Characteristic::Int, 2)]);
 
@@ -3188,6 +3193,7 @@ fn mentored_by_demons_character_validates_above_the_age_band() {
         parameter: None,
         score: 7,
         specialty: None,
+        banked_xp: 0,
     }];
     let result = validate(&e, &rs);
     assert!(
@@ -3349,12 +3355,14 @@ fn simple_student_funds_latin_but_not_another_dead_language() {
             }),
             score: 1,
             specialty: None,
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.dead_language"),
             parameter: Some(AbilityParameterValue::text("ancient_greek")),
             score: 1,
             specialty: None,
+            banked_xp: 0,
         },
     ];
     let allocation = checked_xp_allocation(&e, &rs).unwrap();
@@ -3496,6 +3504,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
         parameter: None,
         specialty: None,
         score,
+        banked_xp: 0,
     };
     e.ability_scores = vec![
         ab("ability.magic_theory", 4),
@@ -3508,6 +3517,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     let art = |id: &str, score: u8| ArtScore {
         art: Id::new(id),
         score,
+        banked_xp: 0,
     };
     e.art_scores = vec![
         art("art.creo", 10),
@@ -3522,6 +3532,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
         mastery: None,
         parameter: None,
         mastery_abilities: Vec::new(),
+        within_focus: false,
     }];
     e.equipment = vec![
         EquipmentSlot {
@@ -3778,15 +3789,18 @@ fn longevity_hint_reproduces_the_books_lab_total_35_example() {
         parameter: None,
         specialty: None,
         score: 4,
+        banked_xp: 0,
     }];
     e.art_scores = vec![
         ArtScore {
             art: Id::new("art.creo"),
             score: 10,
+            banked_xp: 0,
         },
         ArtScore {
             art: Id::new("art.corpus"),
             score: 13,
+            banked_xp: 0,
         },
     ];
     e.aura = 5;
@@ -6088,6 +6102,7 @@ fn abandoned_apprentice_completed_years_fund_16_xp_and_8_spell_levels_per_year()
         parameter: Some(AbilityParameterValue::text("German")),
         score: 5,
         specialty: None,
+        banked_xp: 0,
     }];
 
     let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
@@ -6355,12 +6370,14 @@ fn church_upbringing_earmark_authorizes_only_its_named_abilities() {
             parameter: None,
             score: 1,
             specialty: None,
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.philosophiae"),
             parameter: None,
             score: 1,
             specialty: None,
+            banked_xp: 0,
         },
     ];
 
@@ -6405,6 +6422,7 @@ fn church_upbringing_unspent_earmark_is_not_refunded_and_still_warns() {
         parameter: None,
         score: 1,
         specialty: None,
+        banked_xp: 0,
     }];
 
     let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
@@ -6455,6 +6473,7 @@ fn church_upbringing_earmark_cannot_inflate_a_general_pool_smaller_than_itself()
         parameter: None,
         score: 3,
         specialty: None,
+        banked_xp: 0,
     }];
 
     let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
@@ -10768,10 +10787,12 @@ fn magus_with_parma(selections: Vec<Selection>) -> Entity {
         parameter: None,
         specialty: None,
         score: 3,
+        banked_xp: 0,
     }];
     e.art_scores = vec![ArtScore {
         art: Id::new("art.ignem"),
         score: 8,
+        banked_xp: 0,
     }];
     e
 }

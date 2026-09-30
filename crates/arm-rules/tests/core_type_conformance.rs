@@ -59,6 +59,7 @@ fn ability(id: &str, score: u8) -> AbilityScore {
         score,
         specialty: Some("focus".into()),
         parameter: None,
+        banked_xp: 0,
     }
 }
 
@@ -390,6 +391,7 @@ fn magus_full_build_validates() {
             score: 4,
             specialty: Some("Latin".into()),
             parameter: Some(AbilityParameterValue::text("Latin")),
+            banked_xp: 0,
         },
         ability("ability.artes_liberales", 1),
         ability("ability.magic_theory", 3),
@@ -400,18 +402,22 @@ fn magus_full_build_validates() {
         ArtScore {
             art: Id::new("art.creo"),
             score: 10,
+            banked_xp: 0,
         },
         ArtScore {
             art: Id::new("art.ignem"),
             score: 10,
+            banked_xp: 0,
         },
         ArtScore {
             art: Id::new("art.rego"),
             score: 5,
+            banked_xp: 0,
         },
         ArtScore {
             art: Id::new("art.vim"),
             score: 4,
+            banked_xp: 0,
         },
     ];
     mag.spells = vec![
@@ -421,6 +427,7 @@ fn magus_full_build_validates() {
             mastery: None,
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         },
         SpellSelection {
             spell: Id::new("spell.airs_ghostly_form"),
@@ -428,6 +435,7 @@ fn magus_full_build_validates() {
             mastery: None,
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         },
     ];
     assert_valid("magus", &mag, &full_ruleset());

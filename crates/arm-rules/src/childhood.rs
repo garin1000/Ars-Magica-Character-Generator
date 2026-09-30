@@ -383,6 +383,7 @@ fn raise_score(
         score,
         specialty: None,
         parameter,
+        banked_xp: 0,
     });
 }
 
@@ -773,6 +774,7 @@ mod tests {
             score,
             specialty: specialty.map(str::to_string),
             parameter: None,
+            banked_xp: 0,
         }
     }
 

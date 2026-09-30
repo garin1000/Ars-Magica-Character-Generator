@@ -126,6 +126,7 @@ fn companion_with_guild_link(guild: &str) -> Entity {
             item: Id::new("virtue.craft_guild_training"),
             param: "guild".into(),
         }),
+        banked_xp: 0,
     }];
     e
 }

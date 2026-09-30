@@ -1120,7 +1120,15 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
             .filter(|f| *f > 0)
             .and_then(|f| ruleset.advancement.xp_for_score(f))
             .unwrap_or(0);
-        let payable = table.saturating_sub(floor_table);
+        // Banked XP (already earned toward the next score, e.g. from a
+        // Virtue's practice-time grant) joins the raw table total BEFORE
+        // Affinity reduction — it is taxed the same as any other XP spent on
+        // this score, not added after the fact. `saturating_add` closes the
+        // hostile-input path (a crafted `banked_xp: u32::MAX`): no panic.
+        // Source: ArMDE:1177-1179.
+        let payable = table
+            .saturating_sub(floor_table)
+            .saturating_add(a.banked_xp);
         let cost = charged_cost(
             payable,
             ability_affinity(
@@ -1171,6 +1179,9 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
         let Some(table) = ruleset.art_advancement.xp_for_score(a.score) else {
             continue;
         };
+        // Banked XP joins the raw table total before Affinity, same as the
+        // Ability loop above. Source: ArMDE:1177-1179.
+        let table = table.saturating_add(a.banked_xp);
         let cost = charged_cost(table, art_affinity(entity, ruleset, &a.art));
         spends.push(Spend {
             cost,
@@ -2041,6 +2052,7 @@ mod tests {
                 parameter: None,
                 score: 1,
                 specialty: None,
+                banked_xp: 0,
             })
             .collect();
         e
@@ -2344,6 +2356,7 @@ mod tests {
         entity.art_scores = vec![crate::types::ArtScore {
             art: Id::new("art.creo"),
             score: 1,
+            banked_xp: 0,
         }];
         let allocation = checked_xp_allocation(&entity, &rs).unwrap();
         assert_eq!(allocation.total_demand, 130);

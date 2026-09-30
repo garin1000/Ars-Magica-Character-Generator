@@ -1522,10 +1522,12 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
         ArtScore {
             art: Id::new("art.creo"),
             score: 3, // 6 xp
+            banked_xp: 0,
         },
         ArtScore {
             art: Id::new("art.ignem"),
             score: 5, // 15 xp
+            banked_xp: 0,
         },
     ];
     entity.selections.push(Selection::with_params(
@@ -2185,6 +2187,7 @@ fn effective_scores_surface_the_magus_minimum_ability_checklist() {
         score: 1,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     }];
     let checklist = effective_scores_loaded(&magus, &ruleset).magus_minimum_abilities;
     assert_eq!(checklist.iter().filter(|row| row.met).count(), 1);
@@ -2249,6 +2252,7 @@ fn effective_scores_surface_max_flow_so_the_ui_can_show_an_overspent_pool() {
         score: 2,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     }];
 
     let effective = effective_scores_loaded(&entity, &ruleset);
@@ -4600,6 +4604,7 @@ fn unlink_ability_parameters_converts_a_linked_ability_score_to_text() {
             item: Id::new("virtue.craft_guild_training"),
             param: "guild".to_string(),
         }),
+        banked_xp: 0,
     }];
 
     let updated = unlink_ability_parameters_loaded(

@@ -147,7 +147,8 @@
   ],
   "spells": [
     {
-      "spell": "spell.earth_that_breaks_no_more"
+      "spell": "spell.earth_that_breaks_no_more",
+      "within_focus": true
     },
     {
       "spell": "spell.hands_of_the_grasping_earth"
@@ -156,16 +157,19 @@
       "spell": "spell.obliteration_of_the_metallic_barrier"
     },
     {
-      "spell": "spell.rock_of_viscid_clay"
+      "spell": "spell.rock_of_viscid_clay",
+      "within_focus": true
     },
     {
-      "spell": "spell.the_crystal_dart"
+      "spell": "spell.the_crystal_dart",
+      "within_focus": true
     },
     {
       "spell": "spell.the_earths_carbuncle"
     },
     {
-      "spell": "spell.wall_of_protecting_stone"
+      "spell": "spell.wall_of_protecting_stone",
+      "within_focus": true
     }
   ],
   "house": "house.ex_miscellanea",

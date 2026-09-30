@@ -97,11 +97,16 @@ fn arb_ability_score() -> impl Strategy<Value = AbilityScore> {
             score,
             specialty,
             parameter,
+            banked_xp: 0,
         })
 }
 
 fn arb_art_score() -> impl Strategy<Value = ArtScore> {
-    (arb_small_id(), 0u8..4).prop_map(|(art, score)| ArtScore { art, score })
+    (arb_small_id(), 0u8..4).prop_map(|(art, score)| ArtScore {
+        art,
+        score,
+        banked_xp: 0,
+    })
 }
 
 /// A spell selection including its own nested `mastery_abilities` list — the
@@ -122,6 +127,7 @@ fn arb_spell() -> impl Strategy<Value = SpellSelection> {
                 mastery,
                 parameter,
                 mastery_abilities,
+                within_focus: false,
             },
         )
 }

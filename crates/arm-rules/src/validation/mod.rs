@@ -214,6 +214,7 @@ impl fmt::Display for IssueSeverity {
 /// | `unknown_art` | error | arts | `art` |
 /// | `duplicate_art` | error | arts | `art`, `count` |
 /// | `art_score_out_of_range` | error | arts | `art`, `score`, `max` |
+/// | `banked_xp_at_or_above_next_level` | warning | abilities, arts | `ability`/`art`, `banked`, `needed` |
 /// | `house_choice_unresolved` | error | house_specialisation | `house`, `choice_key` |
 /// | `house_grant_constraint` | error | house_specialisation | `house`, `choice_key`, `item` |
 /// | `house_unset` | warning | house_specialisation | (none) |
@@ -959,6 +960,14 @@ impl ValidationIssue {
     /// FUNDED, not what may be HELD.
     pub const CODE_ABILITY_OUTSIDE_RESTRICTED_SCOPE: &'static str =
         "ability_outside_restricted_scope";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning: a `banked_xp` figure (X10b) at or
+    /// above the raw-table delta to the next score is a self-contradiction — that
+    /// IS the next score, mis-recorded — not an illegal state, matching
+    /// [`Self::CODE_GENERAL_XP_UNSPENT`]'s severity. Shared by the Abilities and Arts
+    /// phases: `args` carries `ability` when emitted for an Ability score, or `art`
+    /// when emitted for an Art score — never both at once.
+    pub const CODE_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL: &'static str =
+        "banked_xp_at_or_above_next_level";
 
     /// Builds an issue with the given severity, code, phase, args, and context.
     pub fn new(
@@ -5262,6 +5271,7 @@ mod tests {
             score: 3,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
 
         let result = validate(&entity, &rs);
@@ -5282,6 +5292,7 @@ mod tests {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
 
         let result = validate(&entity, &rs);
@@ -5369,6 +5380,7 @@ mod tests {
             score: 1,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         let result = validate(&entity, &rs);
         assert!(
@@ -5387,6 +5399,7 @@ mod tests {
             score: 1,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&entity, &rs)).contains(&"prereq_not_met".to_string()));
     }
@@ -5642,6 +5655,7 @@ mod tests {
             score,
             specialty: None,
             parameter: Some(AbilityParameterValue::text(area)),
+            banked_xp: 0,
         }
     }
 
@@ -5710,6 +5724,7 @@ mod tests {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
@@ -5786,6 +5801,7 @@ mod tests {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&entity, &rs)).contains(&"unexpected_param".to_string()));
     }
@@ -5912,6 +5928,7 @@ mod tests {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
@@ -6024,6 +6041,7 @@ mod tests {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&entity, &rs)).contains(&"unknown_ability".to_string()));
     }
@@ -6042,6 +6060,7 @@ mod tests {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
 
         // As a character, both stray fields are flagged.
@@ -6072,12 +6091,14 @@ mod tests {
                 score: 2,
                 specialty: None,
                 parameter: None,
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.awareness"),
                 score: 3,
                 specialty: None,
                 parameter: None,
+                banked_xp: 0,
             },
         ];
         assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()));
@@ -6094,6 +6115,7 @@ mod tests {
             score: 3,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()),
@@ -6112,6 +6134,7 @@ mod tests {
             score: 3,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()));
     }
@@ -6174,10 +6197,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 5,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 3,
+                banked_xp: 0,
             },
         ];
         let found = codes(&validate(&e, &rs));
@@ -6193,6 +6218,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 5,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
     }
@@ -6208,10 +6234,12 @@ mod tests {
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         e.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 3,
+            banked_xp: 0,
         }];
         e.xp_pool = 20;
         assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
@@ -6311,6 +6339,7 @@ mod tests {
             score: 4, // 50 xp = the whole Educated pool
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         let result = validate(&e, &rs);
         assert!(
@@ -6352,6 +6381,7 @@ mod tests {
             score: 5, // 75 xp
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         e.xp_pool = 75;
         let result = validate(&e, &rs);
@@ -6427,6 +6457,7 @@ mod tests {
             score: 2, // 15 xp
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
     }
@@ -6437,6 +6468,7 @@ mod tests {
         let creo5 = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 5, // table cost 15
+            banked_xp: 0,
         }];
         // Without Affinity, Creo 5 costs 15 and a pool of 10 overspends.
         let mut bare = make_entity("companion", vec![]);
@@ -6464,6 +6496,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.made_up"),
             score: 1,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&e, &rs)).contains(&"unknown_art".to_string()));
     }
@@ -6477,10 +6510,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 2,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 3,
+                banked_xp: 0,
             },
         ];
         assert!(codes(&validate(&e, &rs)).contains(&"duplicate_art".to_string()));
@@ -6494,6 +6529,7 @@ mod tests {
         e.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 9,
+            banked_xp: 0,
         }];
         let found = codes(&validate(&e, &rs));
         assert_eq!(
@@ -6516,6 +6552,7 @@ mod tests {
             score: 9, // far above the table max
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         let found = codes(&validate(&entity, &rs));
         assert_eq!(
@@ -6538,6 +6575,7 @@ mod tests {
             score: 3, // the table's max — in range
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"ability_score_out_of_range".to_string()),
@@ -6554,6 +6592,7 @@ mod tests {
             score: 1,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()));
     }
@@ -6568,6 +6607,7 @@ mod tests {
             score: 0,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()),
@@ -6587,12 +6627,14 @@ mod tests {
                 score: 5,
                 specialty: None,
                 parameter: Some(AbilityParameterValue::text("German")),
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.living_language"),
                 score: 1,
                 specialty: None,
                 parameter: Some(AbilityParameterValue::text("Latin")),
+                banked_xp: 0,
             },
         ];
         assert!(
@@ -6612,12 +6654,14 @@ mod tests {
                 score: 5,
                 specialty: None,
                 parameter: Some(AbilityParameterValue::text("German")),
+                banked_xp: 0,
             },
             AbilityScore {
                 ability: Id::new("ability.living_language"),
                 score: 2,
                 specialty: None,
                 parameter: Some(AbilityParameterValue::text("German")),
+                banked_xp: 0,
             },
         ];
         assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()));
@@ -6634,6 +6678,7 @@ mod tests {
             score: 1,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&entity, &rs)).contains(&"ability_parameter_required".to_string()));
     }
@@ -6682,6 +6727,7 @@ mod tests {
         met.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 5,
+            banked_xp: 0,
         }];
         let result = validate(&met, &rs);
         assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
@@ -6698,6 +6744,7 @@ mod tests {
         unmet.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 4,
+            banked_xp: 0,
         }];
         assert!(codes(&validate(&unmet, &rs)).contains(&"prereq_not_met".to_string()));
     }
@@ -9429,6 +9476,7 @@ mod tests {
             mastery: None,
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }
     }
 
@@ -9441,6 +9489,7 @@ mod tests {
             mastery: None,
             parameter: Some(parameter.to_string()),
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }
     }
 
@@ -9455,10 +9504,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 20,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 20,
+                banked_xp: 0,
             },
         ];
         e.characteristics.insert(Characteristic::Int, 3);
@@ -9467,6 +9518,7 @@ mod tests {
             score: 5,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }];
         e.xp_pool = 1000; // cover the Art/MT costs so no not_enough_xp noise
         e.spells = vec![spell("spell.pilum_of_fire", None)];
@@ -9646,10 +9698,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.creo"),
                 score: 12,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.ignem"),
                 score: 12,
+                banked_xp: 0,
             },
         ];
         legal.characteristics.insert(Characteristic::Int, 3);
@@ -9658,6 +9712,7 @@ mod tests {
             parameter: None,
             score: 5,
             specialty: None,
+            banked_xp: 0,
         }];
         legal.spells = vec![spell("spell.pilum_of_fire", None)];
         assert!(
@@ -9692,10 +9747,12 @@ mod tests {
             ArtScore {
                 art: Id::new("art.rego"),
                 score: 12,
+                banked_xp: 0,
             },
             ArtScore {
                 art: Id::new("art.vim"),
                 score: 12,
+                banked_xp: 0,
             },
         ];
         e.characteristics.insert(Characteristic::Int, 3);
@@ -9704,6 +9761,7 @@ mod tests {
             parameter: None,
             score: 5,
             specialty: None,
+            banked_xp: 0,
         }];
         // Rego Vim cap is the unhalved 35; the General spell is taken at 20.
         e.spells = vec![spell("spell.general_ward", Some(20))];
@@ -9863,6 +9921,7 @@ mod tests {
                 Id::new("spell_mastery_ability.penetration"),
                 Id::new("spell_mastery_ability.fast_casting"),
             ],
+            within_focus: false,
         }];
         let codes = all_codes(&validate(&e, &rs));
         assert!(
@@ -9888,6 +9947,7 @@ mod tests {
                 Id::new("spell_mastery_ability.penetration"),
                 Id::new("spell_mastery_ability.fast_casting"),
             ],
+            within_focus: false,
         }];
         assert!(all_codes(&validate(&e, &rs)).contains(&"too_many_mastery_abilities".to_string()));
     }
@@ -9908,6 +9968,7 @@ mod tests {
                 Id::new("spell_mastery_ability.penetration"),
                 Id::new("spell_mastery_ability.penetration"),
             ],
+            within_focus: false,
         }];
         assert!(all_codes(&validate(&e, &rs)).contains(&"duplicate_mastery_ability".to_string()));
     }
@@ -9928,6 +9989,7 @@ mod tests {
                 Id::new("spell_mastery_ability.quiet_casting"),
                 Id::new("spell_mastery_ability.quiet_casting"),
             ],
+            within_focus: false,
         }];
         assert!(!all_codes(&validate(&e, &rs)).contains(&"duplicate_mastery_ability".to_string()));
     }
@@ -9944,6 +10006,7 @@ mod tests {
             mastery: Some(1),
             parameter: None,
             mastery_abilities: vec![Id::new("spell_mastery_ability.does_not_exist")],
+            within_focus: false,
         }];
         assert!(all_codes(&validate(&e, &rs)).contains(&"unknown_mastery_ability".to_string()));
     }
@@ -10178,6 +10241,7 @@ mod tests {
             score,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         }
     }
 

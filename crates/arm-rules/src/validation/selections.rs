@@ -1752,6 +1752,7 @@ mod multi_ref_tests {
             mastery: None,
             parameter: None,
             mastery_abilities: Vec::new(),
+            within_focus: false,
         }];
         entity
     }

@@ -126,7 +126,7 @@
       "score": 1
     }
   ],
-  "xp_pool": 432,
+  "xp_pool": 435,
   "ability_funding": "pool",
   "art_scores": [
     {
@@ -139,7 +139,8 @@
     },
     {
       "art": "art.intellego",
-      "score": 12
+      "score": 12,
+      "banked_xp": 5
     },
     {
       "art": "art.mentem",

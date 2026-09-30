@@ -944,6 +944,7 @@ mod tests {
                 parameter: None,
                 score: 1,
                 specialty: None,
+                banked_xp: 0,
             })
             .collect();
 

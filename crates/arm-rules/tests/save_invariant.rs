@@ -89,10 +89,12 @@ fn fully_populated_entity() -> Entity {
         score: 3,
         specialty: Some("searching".to_string()),
         parameter: None,
+        banked_xp: 0,
     }];
     e.art_scores = vec![ArtScore {
         art: Id::new("art.creo"),
         score: 5,
+        banked_xp: 0,
     }];
     e.spells = vec![SpellSelection {
         spell: Id::new("spell.pilum_of_fire"),
@@ -100,6 +102,7 @@ fn fully_populated_entity() -> Entity {
         mastery: Some(1),
         parameter: Some("art.ignem".to_string()),
         mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
+        within_focus: false,
     }];
 
     e.personality_traits = vec![PersonalityTrait {

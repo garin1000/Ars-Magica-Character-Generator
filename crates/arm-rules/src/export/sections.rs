@@ -6,6 +6,17 @@
 
 use super::*;
 
+/// X10b: the book's own "X (Z)" notation (ArMDE:1177/:1179) for a bought
+/// score with banked XP toward the next one — omitted at `banked_xp == 0` so
+/// every export written before X10b stays byte-identical.
+fn score_cell(score: i32, banked_xp: u32) -> String {
+    if banked_xp > 0 {
+        format!("{score} ({banked_xp})")
+    } else {
+        score.to_string()
+    }
+}
+
 impl<'a> Doc<'a> {
     /// The `# ` title and the subtitle line (character type, House, ages).
     pub(super) fn write_title(&self, out: &mut String) {
@@ -268,7 +279,7 @@ impl<'a> Doc<'a> {
             rows.push(vec![
                 self.parameterized_name(&bought.ability, &values),
                 escape_cell(bought.specialty.as_deref().unwrap_or_default()),
-                score.to_string(),
+                score_cell(score, bought.banked_xp),
                 if effective == score {
                     String::new()
                 } else {
@@ -423,16 +434,13 @@ impl<'a> Doc<'a> {
                 .art_ids_of(art_type)
                 .iter()
                 .map(|art| {
-                    let score = e
-                        .art_scores
-                        .iter()
-                        .find(|stored| &stored.art == art)
-                        .map(|stored| i32::from(stored.score))
-                        .unwrap_or(0);
+                    let stored = e.art_scores.iter().find(|stored| &stored.art == art);
+                    let score = stored.map(|stored| i32::from(stored.score)).unwrap_or(0);
+                    let banked_xp = stored.map_or(0, |stored| stored.banked_xp);
                     let effective = effective_art_score(e, self.rules(), art);
                     vec![
                         escape_cell(&self.name(art)),
-                        score.to_string(),
+                        score_cell(score, banked_xp),
                         if effective == score {
                             String::new()
                         } else {

@@ -408,6 +408,7 @@ mod tests {
             parameter: None,
             score: 2,
             specialty: None,
+            banked_xp: 0,
         }];
         assert!(!incomplete(&entity).contains(&CreationPhase::Abilities));
     }
@@ -418,6 +419,7 @@ mod tests {
         entity.art_scores = vec![ArtScore {
             art: Id::new("art.creo"),
             score: 5,
+            banked_xp: 0,
         }];
         assert!(!incomplete(&entity).contains(&CreationPhase::Arts));
     }
@@ -431,6 +433,7 @@ mod tests {
             mastery: None,
             mastery_abilities: Vec::new(),
             parameter: None,
+            within_focus: false,
         }];
         assert!(!incomplete(&entity).contains(&CreationPhase::Spells));
     }

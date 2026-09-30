@@ -1527,6 +1527,12 @@ export interface SpellSelection {
   // repeatable ability (Precise/Quick/Quiet Casting) may appear more than once, so
   // this may hold duplicates. Absent/empty when none are chosen.
   mastery_abilities?: string[];
+  // X10c: the player's own claim that this known spell falls within the
+  // character's Magical Focus (ArMDE:4399-4422) — free-text `focus` can't
+  // supply this (MAG8's capability gap). Absent/false = not claimed. Feeds
+  // `derived/casting.rs::spell_casting_total`'s selector; harmless if the
+  // character holds no Focus.
+  within_focus?: boolean;
 }
 
 // A named Personality Trait with a value in ±3 (±6 for a Major Personality Flaw).
@@ -2060,6 +2066,10 @@ export interface AbilityScore {
   // Player-supplied value for a parameterized ability (e.g. the area for
   // (Area) Lore). Part of the instance identity, so several can coexist.
   parameter?: AbilityParamValue | null;
+  // X10b: XP already banked toward the next score, in raw table-XP currency —
+  // not charged XP, not the entity's `xp_pool`. The book's own "X (Z)"
+  // notation (ArMDE:1177): X = `score`, Z = this field. Absent/0 = none.
+  banked_xp?: number;
 }
 
 // A whole bought Art score (magi only). Arts are not parameterized and carry no
@@ -2067,6 +2077,8 @@ export interface AbilityScore {
 export interface ArtScore {
   art: string;
   score: number;
+  // X10b: same shape as `AbilityScore.banked_xp` (ArMDE:1179's "Art X (Z)").
+  banked_xp?: number;
 }
 
 /**

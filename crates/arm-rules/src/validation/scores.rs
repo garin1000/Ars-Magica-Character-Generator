@@ -7,7 +7,7 @@ use super::*;
 use crate::characteristics::CharacteristicRules;
 use crate::effective::{for_each_effect, selections_for_effects};
 use crate::ruleset::ENGINE_REQUIRED_CATEGORY_PERSONALITY;
-use crate::types::{AbilityParameterValue, AbilityScore};
+use crate::types::{AbilityParameterValue, AbilityScore, ArtScore};
 
 /// Validates Characteristic point-buy: each score must be a legal table value
 /// and within the characteristic's per-target buy range, and the total cost must
@@ -320,6 +320,7 @@ pub(crate) fn validate_abilities(
         validate_ability_age_cap(entity, ruleset, entry, issues);
         validate_ability_specialty_permitted(ruleset, effective_selections, entry, issues);
         validate_ability_parameter_link(entity, ruleset, entry, issues);
+        validate_ability_banked_xp(ruleset, entry, issues);
 
         let key = (
             &entry.ability,
@@ -471,6 +472,53 @@ fn validate_ability_score_in_range(
     }
 }
 
+/// X10b: a `banked_xp` figure at or above the raw-table delta to the next
+/// score is a self-contradiction — that IS the next score, mis-recorded — so
+/// it warns (`banked_xp_at_or_above_next_level`) rather than erroring, mirroring
+/// [`ValidationIssue::CODE_GENERAL_XP_UNSPENT`]: `effective/xp.rs`'s
+/// `saturating_add` already keeps a hostile `banked_xp: u32::MAX` from ever
+/// panicking on the way here. Fires too when any `banked_xp > 0` sits at the
+/// ceiling score (no next table row to compare against, so the banked figure
+/// can never be spent on anything). Skipped entirely when the score itself is
+/// off-table — `validate_ability_score_in_range` already flags that.
+/// Source: ArMDE:1177-1179.
+fn validate_ability_banked_xp(
+    ruleset: &Ruleset,
+    entry: &AbilityScore,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if entry.banked_xp == 0 {
+        return;
+    }
+    let Some(current) = ruleset.advancement.xp_for_score(entry.score) else {
+        return;
+    };
+    let needed = match entry
+        .score
+        .checked_add(1)
+        .and_then(|next| ruleset.advancement.xp_for_score(next))
+    {
+        Some(next_table) => {
+            let needed = next_table.saturating_sub(current);
+            if entry.banked_xp < needed {
+                return;
+            }
+            needed
+        }
+        None => 0, // ceiling score: nothing left to bank toward
+    };
+    issues.push(ValidationIssue::warning(
+        ValidationIssue::CODE_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL,
+        CreationPhase::Abilities,
+        args([
+            ("ability", entry.ability.to_string()),
+            ("banked", entry.banked_xp.to_string()),
+            ("needed", needed.to_string()),
+        ]),
+        Some(entry.ability.clone()),
+    ));
+}
+
 /// Age → max-Ability-score cap (ArMDE:2366-2374).
 ///
 /// **D29: one resolution point.** `crate::effective::ability_age_cap` folds the
@@ -581,6 +629,7 @@ pub(crate) fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
                 Some(entry.art.clone()),
             ));
         }
+        validate_art_banked_xp(ruleset, entry, issues);
         *seen.entry(&entry.art).or_insert(0) += 1;
     }
 
@@ -594,6 +643,41 @@ pub(crate) fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
             ));
         }
     }
+}
+
+/// Art counterpart of [`validate_ability_banked_xp`] — same rule, the Art
+/// advancement table. Source: ArMDE:1177-1179.
+fn validate_art_banked_xp(ruleset: &Ruleset, entry: &ArtScore, issues: &mut Vec<ValidationIssue>) {
+    if entry.banked_xp == 0 {
+        return;
+    }
+    let Some(current) = ruleset.art_advancement.xp_for_score(entry.score) else {
+        return;
+    };
+    let needed = match entry
+        .score
+        .checked_add(1)
+        .and_then(|next| ruleset.art_advancement.xp_for_score(next))
+    {
+        Some(next_table) => {
+            let needed = next_table.saturating_sub(current);
+            if entry.banked_xp < needed {
+                return;
+            }
+            needed
+        }
+        None => 0,
+    };
+    issues.push(ValidationIssue::warning(
+        ValidationIssue::CODE_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL,
+        CreationPhase::Arts,
+        args([
+            ("art", entry.art.to_string()),
+            ("banked", entry.banked_xp.to_string()),
+            ("needed", needed.to_string()),
+        ]),
+        Some(entry.art.clone()),
+    ));
 }
 
 /// Validates that every held Supernatural Ability is legal: it must be covered by
@@ -1049,6 +1133,7 @@ mod locality_cap_tests {
             parameter: Some(AbilityParameterValue::text("Bavaria")),
             score,
             specialty: None,
+            banked_xp: 0,
         }];
         entity
     }
@@ -1138,6 +1223,7 @@ mod unspecialized_flaw_tests {
             parameter: None,
             score: 1,
             specialty: specialty.map(str::to_string),
+            banked_xp: 0,
         }];
         entity
     }

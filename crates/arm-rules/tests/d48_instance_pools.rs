@@ -84,6 +84,7 @@ fn companion_with_parameter(
         score: 1,
         specialty: None,
         parameter: Some(parameter),
+        banked_xp: 0,
     }];
     e
 }
@@ -151,12 +152,14 @@ fn master_bard_pool_is_exactly_240_and_still_funds_faerie_and_magic_lore() {
             score: 9,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         },
         AbilityScore {
             ability: Id::new("ability.magic_lore"),
             score: 2,
             specialty: None,
             parameter: None,
+            banked_xp: 0,
         },
     ];
 
@@ -175,6 +178,7 @@ fn master_bard_pool_is_exactly_240_and_still_funds_faerie_and_magic_lore() {
         score: 1,
         specialty: None,
         parameter: Some(AbilityParameterValue::text("guild")),
+        banked_xp: 0,
     });
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
     assert_eq!(allocation.total_demand, 245);
@@ -215,6 +219,7 @@ fn master_bard_pool_funds_storyteller_and_faerie_lore_but_not_an_unrelated_profe
         score: 1,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     }];
     let allocation = checked_xp_allocation(&faerie_lore, &ruleset).expect("solve stays in bounds");
     assert_eq!(

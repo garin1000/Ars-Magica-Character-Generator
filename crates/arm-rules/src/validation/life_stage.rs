@@ -642,6 +642,7 @@ mod tests {
             parameter: Some(AbilityParameterValue::text("German")),
             score: 5,
             specialty: None,
+            banked_xp: 0,
         }];
         entity
     }
@@ -792,6 +793,7 @@ mod tests {
             parameter: None,
             score: 1,
             specialty: None,
+            banked_xp: 0,
         });
         let result = validate(&entity, &rs());
         let issue = result
@@ -1170,6 +1172,7 @@ mod tests {
             parameter: Some(AbilityParameterValue::text("German")),
             score: 2,
             specialty: None,
+            banked_xp: 0,
         }];
 
         let result = validate(&entity, &rs());
@@ -1191,6 +1194,7 @@ mod tests {
             parameter: Some(AbilityParameterValue::text("German")),
             score: 0,
             specialty: None,
+            banked_xp: 0,
         }];
 
         let result = validate(&entity, &rs());
@@ -1369,6 +1373,7 @@ mod tests {
             parameter: None,
             score: 3,
             specialty: None,
+            banked_xp: 0,
         });
 
         let origins: Vec<(String, String)> = validate(&magus, &rs())

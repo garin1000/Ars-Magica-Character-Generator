@@ -369,6 +369,9 @@ magus-minimum-met = { $ability } { $min }{ $qualifier } is met: this character h
 magus-minimum-unmet = { $ability } { $min }{ $qualifier } is not met: this character has { $score }.
 magus-recommended-label = Recommended minimum Abilities
 ability-score-label = Score
+# X10b: the number input for the "Z" of the book's own "X (Z)" notation
+# (ArMDE:1177) — XP already banked toward the next score.
+ability-banked-xp-label = Banked XP
 ability-specialty-label = Specialty
 # Heading for the rulebook's list of example specialties shown in the picker.
 ability-specialties-label = Specialties
@@ -382,6 +385,9 @@ ability-decrement = Lower { $name }
 # Abilities XP pool (the `xp-pool` key), so no Art-specific pool label.
 art-type-technique = Techniques
 art-type-form = Forms
+# X10b: the number input for the "Z" of the book's own "X (Z)" notation
+# (ArMDE:1179) — XP already banked toward the next score.
+art-banked-xp-label = Banked XP
 art-add = Add Art
 # Named per row ($name is the Art's own display name) — same reasoning as
 # ability-increment/-decrement above.
@@ -393,6 +399,10 @@ art-decrement = Lower { $name }
 spell-technique-label = Technique
 spell-form-label = Form
 spell-level-label = Level
+# X10c: shown only for a known spell whose (Technique, Form) cell has a
+# within-focus figure — i.e. the character holds a Magical Focus that could
+# cover it. The player's own claim the spell falls within that focus.
+spell-within-focus-label = Within focus
 # The min/max level range filter (two inputs, inclusive bounds; empty = open).
 spell-level-min-label = Min level
 spell-level-max-label = Max level
@@ -1246,6 +1256,10 @@ issue-ability_bonus_dangling_target = Add { $ability } to the character's Abilit
 issue-unknown_art = Unknown Art: { $art }.
 issue-duplicate_art = { $art } is listed { $count } times.
 issue-art_score_out_of_range = Art { $art } score { $score } is outside the allowed range (0 to { $max }).
+# X10b. Shared by an Ability and an Art score, whose args carry `ability` or
+# `art` respectively — never both — so the message interpolates neither
+# directly and names only the two figures both cases share.
+issue-banked_xp_at_or_above_next_level = { $banked } banked experience points are already enough to raise this score — only { $needed } are needed for the next level.
 issue-house_choice_unresolved = House { $house } has an unresolved specialisation choice ({ $choice_key }).
 issue-house_grant_constraint = The House { $house } grant { $choice_key } picks { $item }, which does not meet its constraint.
 issue-warping_owed_minor_flaws = You still owe { $count } Minor Flaw(s) from Warping.

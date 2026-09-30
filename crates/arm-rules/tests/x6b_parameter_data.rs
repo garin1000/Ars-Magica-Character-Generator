@@ -82,6 +82,7 @@ fn ability_score(ability: &str, score: u8) -> AbilityScore {
         score,
         specialty: None,
         parameter: None,
+        banked_xp: 0,
     }
 }
 
@@ -724,6 +725,7 @@ fn turb_trained_authorizes_only_the_chosen_dead_language() {
         parameter: Some(AbilityParameterValue::Catalogued {
             id: Id::new("language.latin"),
         }),
+        banked_xp: 0,
     });
     assert!(
         !issue_codes(&with_latin, &rs)
@@ -746,6 +748,7 @@ fn turb_trained_authorizes_only_the_chosen_dead_language() {
         parameter: Some(AbilityParameterValue::Catalogued {
             id: Id::new("language.hebrew"),
         }),
+        banked_xp: 0,
     });
     assert!(
         issue_codes(&with_hebrew, &rs)

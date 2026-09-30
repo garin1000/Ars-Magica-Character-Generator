@@ -23,7 +23,7 @@
 use arm_rules::characteristics::Characteristic;
 use arm_rules::derived::{
     CombatLine, WoundRange, casting_totals, combat_totals, encumbrance, fatigue_levels,
-    penetration, soak, wound_ranges,
+    penetration, soak, spell_casting_total, wound_ranges,
 };
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::{Entity, Id, SelectionParamValue};
@@ -240,6 +240,23 @@ fn spell_casting(entity: &Entity, ruleset: &Ruleset, spell: &str) -> (i32, Optio
         .find(|cell| cell.technique == definition.technique && cell.form == definition.form)
         .and_then(|cell| cell.within_focus.map(|focus| focus.formulaic));
     (base, focused)
+}
+
+/// The ONE Casting Total the book prints beside a known spell — X10c's
+/// per-spell selector (`SpellSelection::within_focus`), rather than the two
+/// candidate figures [`spell_casting`] reports. Use this once a fixture's
+/// spell carries an explicit `within_focus` marker; [`spell_casting`] stays
+/// for fixtures where nothing adjudicates (no Focus, or MAG8's unresolved
+/// capability gap).
+fn printed_casting(entity: &Entity, ruleset: &Ruleset, spell: &str) -> i32 {
+    let id = Id::new(spell);
+    let chosen = entity
+        .spells
+        .iter()
+        .find(|s| s.spell == id)
+        .unwrap_or_else(|| panic!("{spell} is not a known spell of this fixture"));
+    spell_casting_total(chosen, entity, ruleset)
+        .unwrap_or_else(|| panic!("{spell} has no Casting Total"))
 }
 
 // --- Bjornaer (ArMDE:1603-1652 `#### Bjornaer`) -----------------------------
@@ -571,26 +588,28 @@ fn the_ex_miscellanea_matches_the_book() {
         (-2, Some(2), 2, None)
     );
 
-    // Casting Totals, ArMDE:1793-1799 `#### Ex Miscellanea`. Major Magical Focus (stone), so each cell
-    // carries a base and a within-focus figure; the book prints whichever applies
-    // to the spell.
-    let casting = |spell: &str| spell_casting(&ex_misc, &ruleset, spell);
-    assert_eq!(casting("spell.wall_of_protecting_stone"), (27, Some(35)));
-    assert_eq!(casting("spell.the_crystal_dart"), (23, Some(27)));
-    assert_eq!(casting("spell.rock_of_viscid_clay"), (23, Some(27)));
-    assert_eq!(casting("spell.earth_that_breaks_no_more"), (23, Some(27)));
-    assert_eq!(
-        casting("spell.obliteration_of_the_metallic_barrier"),
-        (22, Some(25))
-    );
-    // DISAGREEMENT MAG4 (docs/book-template-conformance.md). The book prints +27
-    // for The Earth's Carbuncle and +23 for Hands of the Grasping Earth
-    // (ArMDE:1798-1799 `#### Ex Miscellanea`) although both are Re(Mu)Te 15 and its own Arts line gives
-    // Re 5 + Te 15 + Sta +4 = 24 base, 29 within the stone focus. The two figures
-    // cannot both be right, and neither is either of the two the arithmetic
-    // allows; the engine returns 24 / 29 for both rows.
-    assert_eq!(casting("spell.the_earths_carbuncle"), (24, Some(29)));
-    assert_eq!(casting("spell.hands_of_the_grasping_earth"), (24, Some(29)));
+    // Casting Totals, ArMDE:1793-1799 `#### Ex Miscellanea`. Major Magical Focus (stone): the book
+    // prints the within-focus figure for four spells (CrTe and MuTe cells) and
+    // the base figure for one (PeTe) — `within_focus` on each spell in
+    // `magus_ex_miscellanea.json` (X10c) now records exactly that. RED until
+    // X10c's engine change wires the selector into `spell_casting_total`
+    // (today it always returns the base/grid figure regardless of the flag).
+    let casting = |spell: &str| printed_casting(&ex_misc, &ruleset, spell);
+    assert_eq!(casting("spell.wall_of_protecting_stone"), 35);
+    assert_eq!(casting("spell.the_crystal_dart"), 27);
+    assert_eq!(casting("spell.rock_of_viscid_clay"), 27);
+    assert_eq!(casting("spell.earth_that_breaks_no_more"), 27);
+    assert_eq!(casting("spell.obliteration_of_the_metallic_barrier"), 22);
+    // DISAGREEMENT MAG4 (docs/book-template-conformance.md), UNCHANGED by X10c.
+    // The book prints +27 for The Earth's Carbuncle and +23 for Hands of the
+    // Grasping Earth (ArMDE:1798-1799 `#### Ex Miscellanea`) although both are
+    // Re(Mu)Te 15 and its own Arts line gives Re 5 + Te 15 + Sta +4 = 24 base,
+    // 29 within the stone focus. The two figures cannot both be right, and
+    // neither is either of the two the arithmetic allows, so no `within_focus`
+    // value fixes this: both spells are marked `false` (the base figure, 24,
+    // is what the engine reaches either way) and the disagreement stands.
+    assert_eq!(casting("spell.the_earths_carbuncle"), 24);
+    assert_eq!(casting("spell.hands_of_the_grasping_earth"), 24);
 }
 
 // --- Flambeau (ArMDE:1803-1849 `#### Flambeau`) -----------------------------
@@ -637,18 +656,18 @@ fn the_flambeau_matches_the_book() {
 
     // Casting Totals, ArMDE:1843-1847 `#### Flambeau`. Every spell is a flame and so inside the
     // Major Magical Focus: Cr 12 + Ig 15 + Sta +2 = 29 base, + min(12, 15) = 41.
-    // The book prints the focused figure; the engine reports both, because a
-    // focus is free text and nothing relates it to a spell — MAG8 in
-    // docs/book-template-conformance.md.
-    let casting = |spell: &str| spell_casting(&flambeau, &ruleset, spell);
-    assert_eq!(casting("spell.palm_of_flame"), (29, Some(41)));
-    assert_eq!(casting("spell.pilum_of_fire"), (29, Some(41)));
-    assert_eq!(casting("spell.arc_of_fiery_ribbons"), (29, Some(41)));
-    assert_eq!(casting("spell.ball_of_abysmal_flame"), (29, Some(41)));
-    assert_eq!(
-        casting("spell.circle_of_encompassing_flames"),
-        (29, Some(41))
-    );
+    // The book prints the focused figure for all five — MAG8 in
+    // docs/book-template-conformance.md is why this used to need reporting
+    // both candidates; `within_focus: true` on every spell in
+    // `magus_flambeau.json` (X10c) now picks the one the book prints. RED
+    // until X10c's engine change wires the selector into
+    // `spell_casting_total`.
+    let casting = |spell: &str| printed_casting(&flambeau, &ruleset, spell);
+    assert_eq!(casting("spell.palm_of_flame"), 41);
+    assert_eq!(casting("spell.pilum_of_fire"), 41);
+    assert_eq!(casting("spell.arc_of_fiery_ribbons"), 41);
+    assert_eq!(casting("spell.ball_of_abysmal_flame"), 41);
+    assert_eq!(casting("spell.circle_of_encompassing_flames"), 41);
 }
 
 // --- Guernicus (ArMDE:1851-1897 `#### Guernicus`) ---------------------------
@@ -658,11 +677,17 @@ fn the_guernicus_matches_the_book() {
     let ruleset = full_ruleset();
     let guernicus = load(include_str!("fixtures/book_templates/magus_guernicus.json"));
 
-    // DISAGREEMENT MAG12 (docs/book-template-conformance.md) is why this fixture
-    // carries `xp_pool: 432` where the age formula grants 435: the book prints
-    // "In 12+3 (5)" (ArMDE:1881 `#### Guernicus`) and `types.rs::ArtScore` stores a whole score
-    // with nowhere to bank the 5 points toward the next one. Both code sets are
-    // empty at 432 and not at 435, so the figure is exact in both directions.
+    // DISAGREEMENT MAG12 (docs/book-template-conformance.md), TARGETED FOR
+    // RESOLUTION by X10b (not yet resolved — see the RED note below):
+    // the book prints "In 12+3 (5)" (ArMDE:1881 `#### Guernicus`) — score 12,
+    // Puissant Art +3, and 5 XP already banked toward Intellego 13.
+    // `art.intellego` now carries `"banked_xp": 5` and `xp_pool` is the age
+    // formula's true 435 (not the old 432 that silently absorbed the missing 3
+    // charged XP by underfunding the pool to match). RED until X10b's engine
+    // change folds `banked_xp` into the raw table total before `charged_cost`
+    // (`effective/xp.rs`'s Ability/Art spend loops) — today the 5 banked
+    // points are still inert data, so the fixture's true 435-point pool reads
+    // as 3 XP left unspent (`general_xp_unspent`) rather than exact.
     assert_eq!(error_codes(&guernicus, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&guernicus, &ruleset), codes(&[]));
 
@@ -852,26 +877,30 @@ fn the_mercere_matches_the_book() {
         (1, None, 1, None)
     );
 
-    // F2 (design-f0-book-template-engine.md § 1a/§ 2c, D61) — RED CHECKPOINT:
-    // DISAGREEMENT MAG1 is resolved by deleting the Casting-Total clause from
-    // all three conditional carriers (Cyclic Magic Positive/Negative, Special
-    // Circumstances) and keeping each entry's other, untouched effect (Lab
-    // Total / aura_bonus — X7a's separate problem). The book's Cr 9 + Au 15 +
-    // Sta +2 = 26 base, 35 within the Major Magical Focus (Weather) —
-    // ArMDE:1992-1996 `#### Mercere` prints +26 for the two non-weather spells and +35 for
-    // the two weather ones. `rules/core/virtues_flaws.json` has not been
-    // edited yet, so the engine still returns 29 / 38 (the net +3 from all
-    // three unconditional casting_total_mod effects) until it is.
-    let casting = |spell: &str| spell_casting(&mercere, &ruleset, spell);
-    assert_eq!(casting("spell.jupiters_resounding_blow"), (26, Some(35)));
-    assert_eq!(casting("spell.clouds_of_rain_and_thunder"), (26, Some(35)));
-    assert_eq!(casting("spell.clouds_of_summer_snow"), (26, Some(35)));
-    assert_eq!(casting("spell.pull_of_the_skybound_winds"), (26, Some(35)));
+    // F2 (design-f0-book-template-engine.md § 1a/§ 2c, D61): DISAGREEMENT MAG1
+    // is resolved — the Casting-Total clause is gone from all three
+    // conditional carriers (Cyclic Magic Positive/Negative, Special
+    // Circumstances) in `rules/core/virtues_flaws.json`, leaving only each
+    // entry's other, untouched effect (Lab Total / aura_bonus — X7a's
+    // separate problem), so this fixture (which selects none of them anyway)
+    // sees no +3 offset. The book's Cr 9 + Au 15 + Sta +2 = 26 base, 35 within
+    // the Major Magical Focus (Weather) — ArMDE:1992-1996 `#### Mercere`
+    // prints +35 for the two weather spells (Clouds of Rain and Thunder,
+    // Clouds of Summer Snow — `within_focus: true` in `magus_mercere.json`,
+    // X10c) and +26 for the rest, now selected by `spell_casting_total`
+    // (X10bc phase 2).
+    let casting = |spell: &str| printed_casting(&mercere, &ruleset, spell);
+    assert_eq!(casting("spell.jupiters_resounding_blow"), 26);
+    assert_eq!(casting("spell.clouds_of_rain_and_thunder"), 35);
+    assert_eq!(casting("spell.clouds_of_summer_snow"), 35);
+    assert_eq!(casting("spell.pull_of_the_skybound_winds"), 26);
     // DISAGREEMENT MAG7: the book prints +27 here (ArMDE:1996 `#### Mercere`) where every other
     // Creo Auram row on the same statblock reads +26 or +35, and nothing in the
     // Arts line makes 27 reachable — the Rego requisite of Cr(Re)Au adds nothing
-    // to a Casting Total (ArMDE:9089 `## Casting Spells`).
-    assert_eq!(casting("spell.wings_of_the_soaring_wind"), (26, Some(35)));
+    // to a Casting Total (ArMDE:9089 `## Casting Spells`). Marked `within_focus:
+    // false` (the base figure, 26, is the best available; neither candidate
+    // is 27), unresolved by X10c same as MAG4 above.
+    assert_eq!(casting("spell.wings_of_the_soaring_wind"), 26);
 }
 
 // --- Merinita (ArMDE:2000-2048 `#### Merinita`) -----------------------------
@@ -1017,19 +1046,20 @@ fn the_tremere_matches_the_book() {
 
     // Casting Totals, ArMDE:2090-2097 `#### Tremere`: every row +16, which is Technique 5 +
     // Form 9 + Sta +2. The Minor Magical Focus (certamen) covers no spell on the
-    // list, so the book prints the base figure throughout.
-    let casting = |spell: &str| spell_casting(&tremere, &ruleset, spell);
-    assert_eq!(
-        casting("spell.circling_winds_of_protection"),
-        (16, Some(21))
-    );
-    assert_eq!(casting("spell.rain_of_stones"), (16, Some(21)));
-    assert_eq!(casting("spell.pilum_of_fire"), (16, Some(21)));
-    assert_eq!(casting("spell.soothe_the_raging_flames"), (16, Some(21)));
-    assert_eq!(casting("spell.seal_the_earth"), (16, Some(21)));
-    assert_eq!(casting("spell.the_miners_keen_eye"), (16, Some(21)));
-    assert_eq!(casting("spell.earth_that_breaks_no_more"), (16, Some(21)));
-    assert_eq!(casting("spell.pit_of_the_gaping_earth"), (16, Some(21)));
+    // list (none is certamen), so the book prints the base figure throughout —
+    // no spell in `magus_tremere.json` carries `within_focus: true` (X10c),
+    // matching that. This block stays green even under the phase-1 stub
+    // (`spell_casting_total` always returns the base figure today), since
+    // `false` is what every one of these spells should resolve to anyway.
+    let casting = |spell: &str| printed_casting(&tremere, &ruleset, spell);
+    assert_eq!(casting("spell.circling_winds_of_protection"), 16);
+    assert_eq!(casting("spell.rain_of_stones"), 16);
+    assert_eq!(casting("spell.pilum_of_fire"), 16);
+    assert_eq!(casting("spell.soothe_the_raging_flames"), 16);
+    assert_eq!(casting("spell.seal_the_earth"), 16);
+    assert_eq!(casting("spell.the_miners_keen_eye"), 16);
+    assert_eq!(casting("spell.earth_that_breaks_no_more"), 16);
+    assert_eq!(casting("spell.pit_of_the_gaping_earth"), 16);
 }
 
 // --- Tytalus (ArMDE:2103-2149 `#### Tytalus`) -------------------------------
@@ -1759,12 +1789,13 @@ fn the_specialist_matches_the_book() {
     // (row 47/F-547, formerly S2). At the book's own general-XP grant of 330
     // (age formula: 75 + 45 + 15x14), that leaves exactly the 2 XP the book
     // itself banks toward the next Bows increase — the printed "Bows 1 (2)"
-    // (ArMDE:1326 `#### The Specialist`). So `general_xp_unspent` is not a disagreement here: it is
-    // the engine correctly reproducing the book's own banked points.
-    assert_eq!(
-        warning_codes(&specialist, &ruleset),
-        codes(&["general_xp_unspent"])
-    );
+    // (ArMDE:1326 `#### The Specialist`). TARGETED FOR RESOLUTION by X10b (not
+    // yet resolved): `ability.bows` now carries `"banked_xp": 2`, and once
+    // X10b's engine change folds `banked_xp` into the raw table total before
+    // `charged_cost`, the fixture becomes fully exact — no more
+    // `general_xp_unspent`, since those 2 XP are no longer unspent, they are
+    // banked. RED today: the fixture still reports the warning.
+    assert_eq!(warning_codes(&specialist, &ruleset), codes(&[]));
 
     // Soak: +9 (full metal scale armor). Source: ArMDE:1320 `#### The Specialist`.
     assert_eq!(soak(&specialist, &ruleset).total, 9);

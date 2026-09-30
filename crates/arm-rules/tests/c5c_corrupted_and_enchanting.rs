@@ -278,6 +278,7 @@ fn corrupted_spells_accepts_a_learned_spell() {
         mastery: None,
         parameter: None,
         mastery_abilities: Vec::new(),
+        within_focus: false,
     }];
     let found = codes(&e, &rs);
 
@@ -557,6 +558,7 @@ fn enchanting_style_grant_authorizes_the_linked_bought_instance() {
         }),
         score: 1,
         specialty: None,
+        banked_xp: 0,
     }];
 
     let found = codes(&e, &rs);

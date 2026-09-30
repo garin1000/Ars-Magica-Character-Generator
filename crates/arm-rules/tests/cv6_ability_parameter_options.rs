@@ -75,6 +75,7 @@ fn dead_language_lists_the_language_catalogue_ids() {
         score: 1,
         specialty: None,
         parameter: Some(AbilityParameterValue::text("Latin")),
+        banked_xp: 0,
     }];
 
     let options = ability_parameter_options(&entity, &ruleset);
@@ -176,6 +177,7 @@ fn hint_set_when_a_text_value_leaves_an_educated_instance_unmet() {
         // Educated's `Literal { "language.latin" }` instance (design § 4 rule
         // 1: a Literal is satisfied ONLY by `Catalogued`).
         parameter: Some(AbilityParameterValue::text("Latin")),
+        banked_xp: 0,
     }];
 
     let options = ability_parameter_options(&entity, &ruleset);
@@ -202,6 +204,7 @@ fn hint_set_when_a_text_value_leaves_a_guild_instance_unmet() {
         score: 1,
         specialty: None,
         parameter: Some(AbilityParameterValue::text("A Completely Different Guild")),
+        banked_xp: 0,
     }];
 
     let options = ability_parameter_options(&entity, &ruleset);
@@ -231,6 +234,7 @@ fn hint_not_set_for_an_ability_with_no_targeting_rule() {
         score: 1,
         specialty: Some("Blacksmith".into()),
         parameter: Some(AbilityParameterValue::text("Blacksmithing")),
+        banked_xp: 0,
     }];
 
     let options = ability_parameter_options(&entity, &ruleset);
@@ -258,6 +262,7 @@ fn hint_not_set_for_a_catalogued_ability_with_no_targeting_rule() {
         score: 1,
         specialty: None,
         parameter: Some(AbilityParameterValue::text("Klingon")),
+        banked_xp: 0,
     }];
 
     let options = ability_parameter_options(&entity, &ruleset);
