@@ -597,15 +597,18 @@ describe('mutually exclusive Virtues/Flaws', () => {
   });
 
   it('greys out the Major variant of an already selected Minor Flaw', async () => {
-    // A character may take only one magnitude of the same Virtue/Flaw.
-    await (await addButton('flaw.ambitious_minor')).click();
-    await waitForEnabled('flaw.ambitious_major', false);
+    // Outsider's two magnitudes exclude each other: the book gives them as
+    // alternative circumstances (ArMDE:6554, :6556; D69.4). Unsourced twins
+    // such as Ambitious may now be taken together (D68.8), so they no longer
+    // exercise this path.
+    await (await addButton('flaw.outsider_minor')).click();
+    await waitForEnabled('flaw.outsider_major', false);
 
     // Removing the Minor variant frees the Major one again.
-    const remove = await $('[data-testid^="remove-flaw.ambitious_minor-"]');
+    const remove = await $('[data-testid^="remove-flaw.outsider_minor-"]');
     await remove.waitForExist({ timeout: 5000 });
     await remove.click();
-    await waitForEnabled('flaw.ambitious_major', true);
+    await waitForEnabled('flaw.outsider_major', true);
   });
 });
 
