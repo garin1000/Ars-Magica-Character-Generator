@@ -828,6 +828,39 @@ presumption of correctness.
 
 ---
 
+## D75 — F-556 and the covenant gap
+
+**Norbert, 2026-09-30.**
+1. **F-556:** add a generic `Prereq::CharacterType(id)`, as D38 foresaw.
+   `virtue.domestic_animal` is gated on an animal type that no profile has, so
+   humans can never take it.
+2. **Covenants:** the UI has no covenant creation path. This is a known gap,
+   out of scope before Saturday, and the try-out script drops it.
+
+---
+
+## D74 — D42's open points (`tmp/d42-realm-verdicts.md`)
+
+**Norbert, 2026-09-30.** These extend D70 Q-X6-5/6.
+1. **Blood of the Nephilim** (ArMDE:3507) and **Viaticarus** (:6979) are fixed
+   Divine. **Sufi** (:5079) defaults to Divine and **Cursed Guile** (:5891) to
+   Infernal; changing either warns, like Hex.
+2. **Manifest Sin** (:6406): the realm domain may carry a narrowed value list
+   (a general loader change). An unanswered subset realm is a warning, never a
+   silent fallback.
+3. **Bound to (Realm), (Realm) Stigmatic, Necessary (Realm) Aura:** the
+   entry's realm defaults to its own named realm, overridable, with no
+   warning.
+4. **Accepted as recommended:**
+   - a fixed realm is shown as read-only text;
+   - Tainted entries derive Infernal from `tainted` (:3000);
+   - granted copies carry a realm only where stated, and mythic-type grants
+     default to the type's realm;
+   - the weak doubtfuls stay free;
+   - the Magic fallback has no marker.
+
+---
+
 ## D73 — X10b/X10c (`docs/vf-audit/design-x10bc-save-format.md`)
 
 **Norbert, 2026-09-30.**
