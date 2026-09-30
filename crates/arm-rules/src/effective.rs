@@ -468,6 +468,387 @@ macro_rules! irrelevant_effect_variants {
 // file.
 pub(crate) use irrelevant_effect_variants;
 
+/// Like [`irrelevant_effect_variants!`], but for a fold whose "interesting"
+/// arm(s) match one or more variants **unconditionally** — reusing that macro
+/// directly would list the same variant twice (once in the caller's own
+/// unconditional arm, once again in the macro's tail) and trip rustc's
+/// `unreachable_patterns` lint under `-D warnings`, exactly as that macro's own
+/// doc comment explains.
+///
+/// Each arm below names the exact exclusion set one real caller needs
+/// (`effective/warping.rs::warping_grant_points_in`,
+/// `validation/scores.rs::validate_personality_traits`,
+/// `validation/scores.rs::validate_personality_trait_pairs`,
+/// `effective/xp.rs::ability_authorizations`,
+/// `ruleset/integrity.rs::Ruleset::validate_item_ratios`) and expands to the
+/// same ~64-to-68-variant tail with just those variants removed — so the
+/// enumeration still lives in ONE file (this one) even though these four call
+/// sites can no longer share `irrelevant_effect_variants!` itself. Adding a new
+/// `Effect` variant is still a compile error at every arm below, exactly as it
+/// is in `irrelevant_effect_variants!` — this only moves the duplication into
+/// one place instead of four; it does not relax the exhaustiveness discipline.
+/// Per-variant rationale for why each one is a no-op lives on
+/// `irrelevant_effect_variants!`'s own definition, not repeated here.
+///
+/// Add a new arm here (named in this doc comment) rather than hand-copying the
+/// tail again at a fifth call site.
+macro_rules! irrelevant_effect_variants_except {
+    (WarpingGrant, WarpingGrantParam) => {
+        Effect::AbilityBonus { .. }
+            | Effect::CharacteristicScoreDeltaParam { .. }
+            | Effect::ArtBonus { .. }
+            | Effect::AffinityAbilityCost { .. }
+            | Effect::AffinityArtCost { .. }
+            | Effect::RestrictedAbilityXp { .. }
+            | Effect::ScaledRestrictedAbilityXp { .. }
+            | Effect::ReplacesLifeStageXp { .. }
+            | Effect::CharacteristicPoints { .. }
+            | Effect::AbilityScoreGrant { .. }
+            | Effect::AbilityScoreGrantParam { .. }
+            | Effect::SpellLevels { .. }
+            | Effect::GeneralXp { .. }
+            | Effect::LaterLifeXpRate { .. }
+            | Effect::SuppressesLaterLifeXpRate
+            | Effect::AbilityAuthorization { .. }
+            | Effect::AbilityBonusGated { .. }
+            | Effect::LocalityAbilityCapFraction { .. }
+            | Effect::ConfidenceBonus { .. }
+            | Effect::SpellMasteryXp { .. }
+            | Effect::GrantsSpellMastery { .. }
+            | Effect::GrantsSelection { .. }
+            | Effect::ItemLevelBudget { .. }
+            | Effect::MasterpieceItem
+            | Effect::TrueFaithGrant { .. }
+            | Effect::RelicTrueFaith { .. }
+            | Effect::SizeDelta { .. }
+            | Effect::CharacteristicScoreDelta { .. }
+            | Effect::CharacteristicMax { .. }
+            | Effect::GroupAffinityCost { .. }
+            | Effect::GrantsReputation { .. }
+            | Effect::GrantsPersonalityTrait
+            | Effect::PersonalityTraitRange { .. }
+            | Effect::RequiresPersonalityTraitPair { .. }
+            | Effect::DecrepitudeScaledRollMod { .. }
+            | Effect::MightGrant { .. }
+            | Effect::PowerLevels { .. }
+            | Effect::FocusPoints { .. }
+            | Effect::MagicalFocus { .. }
+            | Effect::CastingTotalMod { .. }
+            | Effect::LabTotalMod { .. }
+            | Effect::HalvesSpellCapBeyondTouch
+            | Effect::DeficientArt { .. }
+            | Effect::MagicTotalHalving { .. }
+            | Effect::SoakMod { .. }
+            | Effect::CombatMod { .. }
+            | Effect::HealthMod { .. }
+            | Effect::MagicResistanceMod { .. }
+            | Effect::AgingMod { .. }
+            | Effect::AdvancementMod { .. }
+            | Effect::SpecialCastingMod { .. }
+            | Effect::AbilityRollMod { .. }
+            | Effect::AbilityRollModParam { .. }
+            | Effect::ElementalMagic { .. }
+            | Effect::ForbidsAbilitySpecialties
+            | Effect::ForbidsRitualCasting
+            | Effect::WaivesAbilityAgeCap
+            | Effect::ConfersHermeticTraining
+            | Effect::ConfersHermeticTrainingIf { .. }
+            | Effect::TruncatedApprenticeshipXp { .. }
+            | Effect::ForbidsAbilityCategory { .. }
+            | Effect::ForbidsAbilityCategoryParam { .. }
+            | Effect::ForbidsItemCategory { .. }
+            | Effect::ForbidsAbilities { .. }
+            | Effect::AbilityScoreCapOverrideParam { .. }
+            | Effect::AbilityScoreCapAllExcept { .. }
+            | Effect::GrantsCategoryCount { .. }
+    };
+    (PersonalityTraitRange) => {
+        Effect::AbilityBonus { .. }
+            | Effect::CharacteristicScoreDeltaParam { .. }
+            | Effect::ArtBonus { .. }
+            | Effect::AffinityAbilityCost { .. }
+            | Effect::AffinityArtCost { .. }
+            | Effect::GroupAffinityCost { .. }
+            | Effect::RestrictedAbilityXp { .. }
+            | Effect::ScaledRestrictedAbilityXp { .. }
+            | Effect::ReplacesLifeStageXp { .. }
+            | Effect::TruncatedApprenticeshipXp { .. }
+            | Effect::CharacteristicPoints { .. }
+            | Effect::AbilityScoreGrant { .. }
+            | Effect::AbilityScoreGrantParam { .. }
+            | Effect::SpellLevels { .. }
+            | Effect::GeneralXp { .. }
+            | Effect::LaterLifeXpRate { .. }
+            | Effect::SuppressesLaterLifeXpRate
+            | Effect::LocalityAbilityCapFraction { .. }
+            | Effect::AbilityAuthorization { .. }
+            | Effect::AbilityBonusGated { .. }
+            | Effect::ConfidenceBonus { .. }
+            | Effect::SpellMasteryXp { .. }
+            | Effect::GrantsSpellMastery { .. }
+            | Effect::GrantsSelection { .. }
+            | Effect::ItemLevelBudget { .. }
+            | Effect::MasterpieceItem
+            | Effect::TrueFaithGrant { .. }
+            | Effect::RelicTrueFaith { .. }
+            | Effect::WarpingGrant { .. }
+            | Effect::WarpingGrantParam { .. }
+            | Effect::SizeDelta { .. }
+            | Effect::CharacteristicScoreDelta { .. }
+            | Effect::CharacteristicMax { .. }
+            | Effect::GrantsReputation { .. }
+            | Effect::GrantsPersonalityTrait
+            | Effect::RequiresPersonalityTraitPair { .. }
+            | Effect::MightGrant { .. }
+            | Effect::PowerLevels { .. }
+            | Effect::FocusPoints { .. }
+            | Effect::MagicalFocus { .. }
+            | Effect::CastingTotalMod { .. }
+            | Effect::LabTotalMod { .. }
+            | Effect::HalvesSpellCapBeyondTouch
+            | Effect::DeficientArt { .. }
+            | Effect::MagicTotalHalving { .. }
+            | Effect::SoakMod { .. }
+            | Effect::CombatMod { .. }
+            | Effect::HealthMod { .. }
+            | Effect::MagicResistanceMod { .. }
+            | Effect::AgingMod { .. }
+            | Effect::AdvancementMod { .. }
+            | Effect::SpecialCastingMod { .. }
+            | Effect::AbilityRollMod { .. }
+            | Effect::AbilityRollModParam { .. }
+            | Effect::ElementalMagic { .. }
+            | Effect::ForbidsAbilitySpecialties
+            | Effect::ForbidsRitualCasting
+            | Effect::WaivesAbilityAgeCap
+            | Effect::ConfersHermeticTraining
+            | Effect::ConfersHermeticTrainingIf { .. }
+            | Effect::ForbidsAbilityCategory { .. }
+            | Effect::ForbidsAbilityCategoryParam { .. }
+            | Effect::ForbidsItemCategory { .. }
+            | Effect::ForbidsAbilities { .. }
+            | Effect::AbilityScoreCapOverrideParam { .. }
+            | Effect::AbilityScoreCapAllExcept { .. }
+            | Effect::DecrepitudeScaledRollMod { .. }
+            | Effect::GrantsCategoryCount { .. }
+    };
+    (RequiresPersonalityTraitPair) => {
+        Effect::AbilityBonus { .. }
+            | Effect::CharacteristicScoreDeltaParam { .. }
+            | Effect::ArtBonus { .. }
+            | Effect::AffinityAbilityCost { .. }
+            | Effect::AffinityArtCost { .. }
+            | Effect::GroupAffinityCost { .. }
+            | Effect::RestrictedAbilityXp { .. }
+            | Effect::ScaledRestrictedAbilityXp { .. }
+            | Effect::ReplacesLifeStageXp { .. }
+            | Effect::TruncatedApprenticeshipXp { .. }
+            | Effect::CharacteristicPoints { .. }
+            | Effect::AbilityScoreGrant { .. }
+            | Effect::AbilityScoreGrantParam { .. }
+            | Effect::SpellLevels { .. }
+            | Effect::GeneralXp { .. }
+            | Effect::LaterLifeXpRate { .. }
+            | Effect::SuppressesLaterLifeXpRate
+            | Effect::LocalityAbilityCapFraction { .. }
+            | Effect::AbilityAuthorization { .. }
+            | Effect::AbilityBonusGated { .. }
+            | Effect::ConfidenceBonus { .. }
+            | Effect::SpellMasteryXp { .. }
+            | Effect::GrantsSpellMastery { .. }
+            | Effect::GrantsSelection { .. }
+            | Effect::ItemLevelBudget { .. }
+            | Effect::MasterpieceItem
+            | Effect::TrueFaithGrant { .. }
+            | Effect::RelicTrueFaith { .. }
+            | Effect::WarpingGrant { .. }
+            | Effect::WarpingGrantParam { .. }
+            | Effect::SizeDelta { .. }
+            | Effect::CharacteristicScoreDelta { .. }
+            | Effect::CharacteristicMax { .. }
+            | Effect::GrantsReputation { .. }
+            | Effect::GrantsPersonalityTrait
+            | Effect::PersonalityTraitRange { .. }
+            | Effect::MightGrant { .. }
+            | Effect::PowerLevels { .. }
+            | Effect::FocusPoints { .. }
+            | Effect::MagicalFocus { .. }
+            | Effect::CastingTotalMod { .. }
+            | Effect::LabTotalMod { .. }
+            | Effect::HalvesSpellCapBeyondTouch
+            | Effect::DeficientArt { .. }
+            | Effect::MagicTotalHalving { .. }
+            | Effect::SoakMod { .. }
+            | Effect::CombatMod { .. }
+            | Effect::HealthMod { .. }
+            | Effect::MagicResistanceMod { .. }
+            | Effect::AgingMod { .. }
+            | Effect::AdvancementMod { .. }
+            | Effect::SpecialCastingMod { .. }
+            | Effect::AbilityRollMod { .. }
+            | Effect::AbilityRollModParam { .. }
+            | Effect::ElementalMagic { .. }
+            | Effect::ForbidsAbilitySpecialties
+            | Effect::ForbidsRitualCasting
+            | Effect::WaivesAbilityAgeCap
+            | Effect::ConfersHermeticTraining
+            | Effect::ConfersHermeticTrainingIf { .. }
+            | Effect::ForbidsAbilityCategory { .. }
+            | Effect::ForbidsAbilityCategoryParam { .. }
+            | Effect::ForbidsItemCategory { .. }
+            | Effect::ForbidsAbilities { .. }
+            | Effect::AbilityScoreCapOverrideParam { .. }
+            | Effect::AbilityScoreCapAllExcept { .. }
+            | Effect::DecrepitudeScaledRollMod { .. }
+            | Effect::GrantsCategoryCount { .. }
+    };
+    (
+        RestrictedAbilityXp,
+        ScaledRestrictedAbilityXp,
+        AbilityAuthorization,
+        AbilityScoreGrant,
+        AbilityScoreGrantParam,
+        AbilityBonusGated,
+        ReplacesLifeStageXp
+    ) => {
+        Effect::AbilityBonus { .. }
+            | Effect::CharacteristicScoreDeltaParam { .. }
+            | Effect::ArtBonus { .. }
+            | Effect::AffinityAbilityCost { .. }
+            | Effect::AffinityArtCost { .. }
+            | Effect::GroupAffinityCost { .. }
+            | Effect::CharacteristicPoints { .. }
+            | Effect::SpellLevels { .. }
+            | Effect::GeneralXp { .. }
+            | Effect::LaterLifeXpRate { .. }
+            | Effect::SuppressesLaterLifeXpRate
+            | Effect::LocalityAbilityCapFraction { .. }
+            | Effect::ConfidenceBonus { .. }
+            | Effect::SpellMasteryXp { .. }
+            | Effect::GrantsSpellMastery { .. }
+            | Effect::GrantsSelection { .. }
+            | Effect::ItemLevelBudget { .. }
+            | Effect::MasterpieceItem
+            | Effect::TrueFaithGrant { .. }
+            | Effect::RelicTrueFaith { .. }
+            | Effect::WarpingGrant { .. }
+            | Effect::WarpingGrantParam { .. }
+            | Effect::SizeDelta { .. }
+            | Effect::CharacteristicScoreDelta { .. }
+            | Effect::CharacteristicMax { .. }
+            | Effect::GrantsReputation { .. }
+            | Effect::GrantsPersonalityTrait
+            | Effect::PersonalityTraitRange { .. }
+            | Effect::RequiresPersonalityTraitPair { .. }
+            | Effect::MightGrant { .. }
+            | Effect::PowerLevels { .. }
+            | Effect::FocusPoints { .. }
+            | Effect::MagicalFocus { .. }
+            | Effect::CastingTotalMod { .. }
+            | Effect::LabTotalMod { .. }
+            | Effect::HalvesSpellCapBeyondTouch
+            | Effect::DeficientArt { .. }
+            | Effect::MagicTotalHalving { .. }
+            | Effect::SoakMod { .. }
+            | Effect::CombatMod { .. }
+            | Effect::HealthMod { .. }
+            | Effect::MagicResistanceMod { .. }
+            | Effect::AgingMod { .. }
+            | Effect::AdvancementMod { .. }
+            | Effect::SpecialCastingMod { .. }
+            | Effect::AbilityRollMod { .. }
+            | Effect::AbilityRollModParam { .. }
+            | Effect::ElementalMagic { .. }
+            | Effect::ForbidsAbilitySpecialties
+            | Effect::ForbidsRitualCasting
+            | Effect::WaivesAbilityAgeCap
+            | Effect::ConfersHermeticTraining
+            | Effect::ConfersHermeticTrainingIf { .. }
+            | Effect::TruncatedApprenticeshipXp { .. }
+            | Effect::ForbidsAbilityCategory { .. }
+            | Effect::ForbidsAbilityCategoryParam { .. }
+            | Effect::ForbidsItemCategory { .. }
+            | Effect::ForbidsAbilities { .. }
+            | Effect::AbilityScoreCapOverrideParam { .. }
+            | Effect::AbilityScoreCapAllExcept { .. }
+            | Effect::DecrepitudeScaledRollMod { .. }
+            | Effect::GrantsCategoryCount { .. }
+    };
+    (
+        AffinityAbilityCost,
+        AffinityArtCost,
+        GroupAffinityCost,
+        GrantsSpellMastery,
+        LocalityAbilityCapFraction
+    ) => {
+        Effect::AbilityBonus { .. }
+            | Effect::CharacteristicScoreDeltaParam { .. }
+            | Effect::ArtBonus { .. }
+            | Effect::RestrictedAbilityXp { .. }
+            | Effect::ScaledRestrictedAbilityXp { .. }
+            | Effect::ReplacesLifeStageXp { .. }
+            | Effect::CharacteristicPoints { .. }
+            | Effect::AbilityScoreGrant { .. }
+            | Effect::AbilityScoreGrantParam { .. }
+            | Effect::SpellLevels { .. }
+            | Effect::GeneralXp { .. }
+            | Effect::LaterLifeXpRate { .. }
+            | Effect::SuppressesLaterLifeXpRate
+            | Effect::AbilityAuthorization { .. }
+            | Effect::AbilityBonusGated { .. }
+            | Effect::ConfidenceBonus { .. }
+            | Effect::SpellMasteryXp { .. }
+            | Effect::GrantsSelection { .. }
+            | Effect::ItemLevelBudget { .. }
+            | Effect::MasterpieceItem
+            | Effect::TrueFaithGrant { .. }
+            | Effect::RelicTrueFaith { .. }
+            | Effect::WarpingGrant { .. }
+            | Effect::WarpingGrantParam { .. }
+            | Effect::SizeDelta { .. }
+            | Effect::CharacteristicScoreDelta { .. }
+            | Effect::CharacteristicMax { .. }
+            | Effect::GrantsReputation { .. }
+            | Effect::GrantsPersonalityTrait
+            | Effect::PersonalityTraitRange { .. }
+            | Effect::RequiresPersonalityTraitPair { .. }
+            | Effect::DecrepitudeScaledRollMod { .. }
+            | Effect::MightGrant { .. }
+            | Effect::PowerLevels { .. }
+            | Effect::FocusPoints { .. }
+            | Effect::MagicalFocus { .. }
+            | Effect::CastingTotalMod { .. }
+            | Effect::LabTotalMod { .. }
+            | Effect::HalvesSpellCapBeyondTouch
+            | Effect::DeficientArt { .. }
+            | Effect::MagicTotalHalving { .. }
+            | Effect::SoakMod { .. }
+            | Effect::CombatMod { .. }
+            | Effect::HealthMod { .. }
+            | Effect::MagicResistanceMod { .. }
+            | Effect::AgingMod { .. }
+            | Effect::AdvancementMod { .. }
+            | Effect::SpecialCastingMod { .. }
+            | Effect::AbilityRollMod { .. }
+            | Effect::AbilityRollModParam { .. }
+            | Effect::ElementalMagic { .. }
+            | Effect::ForbidsAbilitySpecialties
+            | Effect::ForbidsRitualCasting
+            | Effect::WaivesAbilityAgeCap
+            | Effect::ConfersHermeticTraining
+            | Effect::ConfersHermeticTrainingIf { .. }
+            | Effect::TruncatedApprenticeshipXp { .. }
+            | Effect::ForbidsAbilityCategory { .. }
+            | Effect::ForbidsAbilityCategoryParam { .. }
+            | Effect::ForbidsItemCategory { .. }
+            | Effect::ForbidsAbilities { .. }
+            | Effect::AbilityScoreCapOverrideParam { .. }
+            | Effect::AbilityScoreCapAllExcept { .. }
+            | Effect::GrantsCategoryCount { .. }
+    };
+}
+pub(crate) use irrelevant_effect_variants_except;
+
 /// Clamps a signed budget total to a non-negative `u32` (a net-negative grant
 /// floors at 0 rather than underflowing).
 fn clamp_to_u32(n: i64) -> u32 {

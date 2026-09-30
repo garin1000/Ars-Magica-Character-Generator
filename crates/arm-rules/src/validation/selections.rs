@@ -508,6 +508,10 @@ pub(crate) fn validate_excluded_if_holds(
     selections: &[Selection],
     issues: &mut Vec<ValidationIssue>,
 ) {
+    // O(n²) over `selections`, uncapped — unlike `effective/xp.rs`'s flow
+    // solve (`MAX_XP_SOLVE_NODES`), there is no selection-count guard upstream
+    // of this validator; see CLAUDE.md's desktop-app severity model for why
+    // this is a LOW-severity accepted gap, not a fix made here.
     for selection in selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
@@ -563,6 +567,8 @@ pub(crate) fn validate_same_choice_exclusions(
     selections: &[Selection],
     issues: &mut Vec<ValidationIssue>,
 ) {
+    // O(n²) over `selections`, uncapped — same accepted gap as
+    // `validate_excluded_if_holds` above, its own precedent for this shape.
     for selection in selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;

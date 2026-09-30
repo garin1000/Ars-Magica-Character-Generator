@@ -6154,7 +6154,7 @@ mod tests {
     use crate::ruleset::{Ruleset, RulesetSources};
     use crate::validation::DEFAULT_SAGA_YEAR;
     use pretty_assertions::assert_eq;
-    use std::collections::BTreeMap;
+    use std::collections::{BTreeMap, BTreeSet};
 
     /// An empty ruleset + empty catalogue names — the two tests below route
     /// through [`load_entity_migrating`] only for a field-serialization round
@@ -6208,6 +6208,104 @@ mod tests {
                 score: 1,
             }
             .conflicts_with_house(Some(&Id::new("house.bjornaer")))
+        );
+    }
+
+    /// Every `Prereq::CharacterType` leaf a tree contains, as the referenced
+    /// character-type ids (there may be more than one, e.g. inside an `Any`).
+    /// Mirrors `ruleset/integrity.rs::validate_prereq_refs`'s own recursion
+    /// shape, but collects rather than validates — exhaustive, so a future
+    /// `Prereq` variant is a compile error here too, not a silently-missed leaf.
+    fn character_type_leaves<'a>(prereq: &'a Prereq, out: &mut Vec<&'a Id>) {
+        match prereq {
+            Prereq::All(children) | Prereq::Any(children) | Prereq::Nor(children) => {
+                for child in children {
+                    character_type_leaves(child, out);
+                }
+            }
+            Prereq::CharacterType(id) => out.push(id),
+            Prereq::Has(_)
+            | Prereq::House(_)
+            | Prereq::AbilityMin { .. }
+            | Prereq::ArtMin { .. }
+            | Prereq::HermeticallyTrained
+            | Prereq::OrderMember
+            | Prereq::IsCompanion
+            | Prereq::IsGrog
+            | Prereq::HasCategory(_)
+            | Prereq::AgeMin(_)
+            | Prereq::HasCategoryAtMagnitude { .. } => {}
+        }
+    }
+
+    /// Every `Prereq::CharacterType` (D38/D75, F-556) carrier in the SHIPPED
+    /// catalogue's point-item `prerequisites`/`advisory_prerequisites`, as
+    /// `(item id, character-type id)` pairs. `CharacterType` is the only
+    /// `Prereq` variant carrying a real id that gets NO referential check at
+    /// load (`ruleset/integrity.rs::Ruleset::validate_prereq_refs` deliberately
+    /// skips it — see that variant's own doc comment for why: F-556's whole
+    /// point is naming an id that resolves to no shipped profile). A typo on
+    /// either side therefore fails closed — the Virtue becomes permanently
+    /// unselectable — with no load error and no other test failure, unless
+    /// this enumeration catches it: a carrier added, removed, or retargeted
+    /// without updating this list fails the assertion below instead of
+    /// silently drifting.
+    ///
+    /// Scoped to `PointItem`'s own two prerequisite trees — a type profile's
+    /// `CategoryRule`/`PhaseRule` `when` field also carries a `Prereq` (see
+    /// `validate_prereq_refs`'s other two call sites), but no shipped profile
+    /// uses `CharacterType` there today; that is a separate carrier class this
+    /// enumeration does not claim to cover.
+    #[test]
+    fn character_type_prereq_carriers_match_the_shipped_catalogue() {
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+            type_profiles: include_str!("../../../rules/core/character_types.json"),
+            abilities: Some(include_str!("../../../rules/core/abilities.json")),
+            arts: Some(include_str!("../../../rules/core/arts.json")),
+            houses: Some(include_str!("../../../rules/core/houses.json")),
+            mythic_types: Some(include_str!(
+                "../../../rules/core/mythic_companion_types.json"
+            )),
+            spells: Some(include_str!("../../../rules/core/spells.json")),
+            spell_mastery_abilities: None,
+            equipment: Some(include_str!("../../../rules/core/equipment.json")),
+            characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+            life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
+            childhoods: None,
+            aging: Some(include_str!("../../../rules/core/aging.json")),
+            parameter_catalogues: Some(include_str!(
+                "../../../rules/core/parameter_catalogues.json"
+            )),
+        })
+        .expect("shipped core ruleset loads");
+
+        let mut carriers: BTreeSet<(&str, &str)> = BTreeSet::new();
+        for (id, item) in &rs.point_items {
+            for tree in [&item.prerequisites, &item.advisory_prerequisites]
+                .into_iter()
+                .flatten()
+            {
+                let mut leaves = Vec::new();
+                character_type_leaves(tree, &mut leaves);
+                for character_type in leaves {
+                    carriers.insert((id.as_str(), character_type.as_str()));
+                }
+            }
+        }
+
+        let expected: BTreeSet<(&str, &str)> =
+            [("virtue.domestic_animal", "character_type.domestic_animal")]
+                .into_iter()
+                .collect();
+        assert_eq!(
+            carriers, expected,
+            "a Prereq::CharacterType carrier was added, removed, or retargeted in the \
+             catalogue without updating this enumeration — CharacterType gets no \
+             referential check at load (by design, F-556), so a mismatch here would \
+             otherwise fail closed and silent"
         );
     }
 

@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1695).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1701).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1241,7 +1241,7 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2162, shared by
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2174, shared by
   `validate_prereq_refs` :2064 and `validate_effect_refs` :2547) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
@@ -1249,7 +1249,7 @@ reason: a category condition would license itself.
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :724).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :736).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -1351,7 +1351,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
   `base_max_score`, `base_min_score`); enforced in
-  `validation/scores.rs` — `validate_characteristics` (:33) (off-table
+  `validation/scores.rs` — `validate_characteristics` (:35) (off-table
   out-of-range error, above-cap / below-floor errors against the buy range,
   overspent error, points-unspent warning). The out-of-range error is what a save
   written against the old invented rows now trips — see *Save compatibility*
@@ -1440,7 +1440,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:299).
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:301).
 
 ### Arts
 
@@ -1488,7 +1488,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:600).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:602).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -1694,7 +1694,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :646) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :652) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -3547,7 +3547,7 @@ naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
   the `max_per_target` — see *Selection multiplicity* above. Copies stack: two
   grant 6 points.
 - Implementation: `effective/characteristic.rs::characteristic_points_granted` sums the grants;
-  `validation/scores.rs::validate_characteristics` (:33) budget = `start_points + granted`. The
+  `validation/scores.rs::validate_characteristics` (:35) budget = `start_points + granted`. The
   per-characteristic +3 *cap* is unchanged (only Great Characteristic widens it).
 
 #### Weak Characteristics — −3 Characteristic-buy points (`characteristic_points`, signed)
@@ -10585,11 +10585,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:941),
-  `validate_forbidden_traits` (:962))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:947),
+  `validate_forbidden_traits` (:968))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:613),
-  `validate_parameters` (:1162), `validate_duplicate_selections` (:646))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:619),
+  `validate_parameters` (:1168), `validate_duplicate_selections` (:652))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

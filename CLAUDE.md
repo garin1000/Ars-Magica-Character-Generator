@@ -371,8 +371,11 @@ relevant surface MUST preserve them and keep their tests green.
 - **Canonical serialization.** Sort object keys and arrays by `id`/`ref` before
   writing JSON. Use `BTreeMap` / explicit sort. Zero-noise git diffs.
 - **Referential integrity validated at load.** Every `has`, `incompatible_with`,
-  and parameter `ref` must resolve. Incompatibilities must be symmetric. Fail
-  loudly with clear error listing offending IDs.
+  and parameter `ref` must resolve. `incompatible_with` entries must be
+  symmetric; `conditional_incompatible_with` and `same_choice_exclusions` are
+  deliberately one-directional (only the declaring item's list is walked) and
+  are not held to that rule. Fail loudly with clear error listing offending
+  IDs.
 - **Saves store choices, not resolved values.** Record ruleset `id` + `version`.
   Schema-versioned (`schema_version` field).
 - **YAGNI / KISS.** Build what is needed now, nothing speculative.

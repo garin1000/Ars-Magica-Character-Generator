@@ -869,98 +869,26 @@ pub(crate) fn ability_authorizations(entity: &Entity, ruleset: &Ruleset) -> Abil
                     }));
                     pool_categories.extend(cats.iter().copied());
                 }
-                Effect::AbilityBonus { .. }
-                | Effect::CharacteristicScoreDeltaParam { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityAbilityCost { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::LaterLifeXpRate { .. }
-                | Effect::SuppressesLaterLifeXpRate
-                | Effect::LocalityAbilityCapFraction { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                // F-256: the relic's own True Faith Score, not an Ability
-                // authorization.
-                | Effect::RelicTrueFaith { .. }
-                | Effect::WarpingGrant { .. }
-                // D69/X7b-e: a Warping grant, not an Ability authorization.
-                | Effect::WarpingGrantParam { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                // D69/X7b-e: a Characteristic buy-cap shift, not an Ability
-                // authorization.
-                | Effect::CharacteristicMax { .. }
-                | Effect::GrantsReputation { .. }
-                // B3/D23/F-542: consumed only by
-                // `ItemPredicate::GrantsPersonalityTrait`'s derivation.
-                | Effect::GrantsPersonalityTrait
-                // D69/X7b-e: creation-legality constraints on Personality
-                // Traits, not an Ability authorization.
-                | Effect::PersonalityTraitRange { .. }
-                | Effect::RequiresPersonalityTraitPair { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                | Effect::FocusPoints { .. }
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::HalvesSpellCapBeyondTouch
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                | Effect::AbilityRollModParam { .. }
-                | Effect::ElementalMagic { .. }
-                | Effect::ForbidsAbilitySpecialties
-                | Effect::ForbidsRitualCasting
-                // A cap waiver raises a ceiling, not a permission to own an
-                // Ability in the first place.
-                | Effect::WaivesAbilityAgeCap
-                // Grants Hermetic training as a fact, not permission to own a
-                // specific Ability or category — Arcane authorization for a
-                // trained non-magus is a profile/entity-level gate in
-                // `validation/authorization.rs`, not a per-effect grant here.
-                | Effect::ConfersHermeticTraining
-                // The conditional sibling (D3/R3-1): identical reasoning.
-                | Effect::ConfersHermeticTrainingIf { .. }
-                // D3: an Abandoned Apprentice's Arcane/Academic/Martial access
-                // comes from `is_hermetically_trained`'s whole-character
-                // exemption (`validation/authorization.rs`, fed by either
-                // `ConfersHermeticTraining` or `ConfersHermeticTrainingIf`),
-                // not from this variant, which only SIZES a pool the
-                // exemption has already opened.
-                | Effect::TruncatedApprenticeshipXp { .. }
-                // B1/D21: these are PROHIBITIONS (forbid), never an
-                // authorization grant — they stay independent of this fold,
-                // exactly as design § 4 states, so `xp_allocation` never
-                // treats a forbid as permission to fund the forbidden target.
-                | Effect::ForbidsAbilityCategory { .. }
-                | Effect::ForbidsAbilityCategoryParam { .. }
-                | Effect::ForbidsItemCategory { .. }
-                | Effect::ForbidsAbilities { .. }
-                | Effect::AbilityScoreCapOverrideParam { .. }
-                | Effect::AbilityScoreCapAllExcept { .. }
-                // D69/X7b-e: a surfaced-only roll penalty, not an Ability
-                // authorization.
-                | Effect::DecrepitudeScaledRollMod { .. }
-                // D68.11: an id-less category-cap count, not an Ability
-                // authorization.
-                | Effect::GrantsCategoryCount { .. } => {}
+                // Every other Effect variant grants no Ability-ownership
+                // authorization. Enumerated (not a wildcard `_`) via
+                // `irrelevant_effect_variants_except!` so a new variant is a
+                // compile error here — the plain `irrelevant_effect_variants!()`
+                // macro is not reusable: `RestrictedAbilityXp`,
+                // `ScaledRestrictedAbilityXp`, `AbilityAuthorization`,
+                // `AbilityScoreGrant`, `AbilityScoreGrantParam`,
+                // `AbilityBonusGated` and `ReplacesLifeStageXp` are all matched
+                // unconditionally above, and the shared macro lists every one of
+                // them too (correctly, for its own five callers, which read them
+                // as score-space no-ops rather than ownership grants).
+                irrelevant_effect_variants_except!(
+                    RestrictedAbilityXp,
+                    ScaledRestrictedAbilityXp,
+                    AbilityAuthorization,
+                    AbilityScoreGrant,
+                    AbilityScoreGrantParam,
+                    AbilityBonusGated,
+                    ReplacesLifeStageXp
+                ) => {}
             }
         }
     }

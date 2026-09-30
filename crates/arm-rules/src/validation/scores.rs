@@ -5,7 +5,9 @@
 
 use super::*;
 use crate::characteristics::CharacteristicRules;
-use crate::effective::{for_each_effect, selections_for_effects};
+use crate::effective::{
+    for_each_effect, irrelevant_effect_variants_except, selections_for_effects,
+};
 use crate::ruleset::ENGINE_REQUIRED_CATEGORY_PERSONALITY;
 use crate::types::{AbilityParameterValue, AbilityScore, ArtScore};
 
@@ -782,74 +784,7 @@ pub(crate) fn validate_personality_traits(
             }
             // Exhaustive so adding an Effect variant is a compile error here,
             // not a silently-ignored personality-trait-range override.
-            Effect::AbilityBonus { .. }
-            | Effect::CharacteristicScoreDeltaParam { .. }
-            | Effect::ArtBonus { .. }
-            | Effect::AffinityAbilityCost { .. }
-            | Effect::AffinityArtCost { .. }
-            | Effect::GroupAffinityCost { .. }
-            | Effect::RestrictedAbilityXp { .. }
-            | Effect::ScaledRestrictedAbilityXp { .. }
-            | Effect::ReplacesLifeStageXp { .. }
-            | Effect::TruncatedApprenticeshipXp { .. }
-            | Effect::CharacteristicPoints { .. }
-            | Effect::AbilityScoreGrant { .. }
-            | Effect::AbilityScoreGrantParam { .. }
-            | Effect::SpellLevels { .. }
-            | Effect::GeneralXp { .. }
-            | Effect::LaterLifeXpRate { .. }
-            | Effect::SuppressesLaterLifeXpRate
-            | Effect::LocalityAbilityCapFraction { .. }
-            | Effect::AbilityAuthorization { .. }
-            | Effect::AbilityBonusGated { .. }
-            | Effect::ConfidenceBonus { .. }
-            | Effect::SpellMasteryXp { .. }
-            | Effect::GrantsSpellMastery { .. }
-            | Effect::GrantsSelection { .. }
-            | Effect::ItemLevelBudget { .. }
-            | Effect::MasterpieceItem
-            | Effect::TrueFaithGrant { .. }
-            | Effect::RelicTrueFaith { .. }
-            | Effect::WarpingGrant { .. }
-            | Effect::WarpingGrantParam { .. }
-            | Effect::SizeDelta { .. }
-            | Effect::CharacteristicScoreDelta { .. }
-            | Effect::CharacteristicMax { .. }
-            | Effect::GrantsReputation { .. }
-            | Effect::GrantsPersonalityTrait
-            | Effect::RequiresPersonalityTraitPair { .. }
-            | Effect::MightGrant { .. }
-            | Effect::PowerLevels { .. }
-            | Effect::FocusPoints { .. }
-            | Effect::MagicalFocus { .. }
-            | Effect::CastingTotalMod { .. }
-            | Effect::LabTotalMod { .. }
-            | Effect::HalvesSpellCapBeyondTouch
-            | Effect::DeficientArt { .. }
-            | Effect::MagicTotalHalving { .. }
-            | Effect::SoakMod { .. }
-            | Effect::CombatMod { .. }
-            | Effect::HealthMod { .. }
-            | Effect::MagicResistanceMod { .. }
-            | Effect::AgingMod { .. }
-            | Effect::AdvancementMod { .. }
-            | Effect::SpecialCastingMod { .. }
-            | Effect::AbilityRollMod { .. }
-            | Effect::AbilityRollModParam { .. }
-            | Effect::ElementalMagic { .. }
-            | Effect::ForbidsAbilitySpecialties
-            | Effect::ForbidsRitualCasting
-            | Effect::WaivesAbilityAgeCap
-            | Effect::ConfersHermeticTraining
-            | Effect::ConfersHermeticTrainingIf { .. }
-            | Effect::ForbidsAbilityCategory { .. }
-            | Effect::ForbidsAbilityCategoryParam { .. }
-            | Effect::ForbidsItemCategory { .. }
-            | Effect::ForbidsAbilities { .. }
-            | Effect::AbilityScoreCapOverrideParam { .. }
-            | Effect::AbilityScoreCapAllExcept { .. }
-            | Effect::DecrepitudeScaledRollMod { .. }
-            | Effect::GrantsCategoryCount { .. } => {}
+            irrelevant_effect_variants_except!(PersonalityTraitRange) => {}
         }
     });
     let effective_max = tightened_max.unwrap_or(3);
@@ -903,74 +838,7 @@ pub(crate) fn validate_personality_trait_pairs(
             }
             // Exhaustive so adding an Effect variant is a compile error here,
             // not a silently-ignored trait-pair requirement.
-            Effect::AbilityBonus { .. }
-            | Effect::CharacteristicScoreDeltaParam { .. }
-            | Effect::ArtBonus { .. }
-            | Effect::AffinityAbilityCost { .. }
-            | Effect::AffinityArtCost { .. }
-            | Effect::GroupAffinityCost { .. }
-            | Effect::RestrictedAbilityXp { .. }
-            | Effect::ScaledRestrictedAbilityXp { .. }
-            | Effect::ReplacesLifeStageXp { .. }
-            | Effect::TruncatedApprenticeshipXp { .. }
-            | Effect::CharacteristicPoints { .. }
-            | Effect::AbilityScoreGrant { .. }
-            | Effect::AbilityScoreGrantParam { .. }
-            | Effect::SpellLevels { .. }
-            | Effect::GeneralXp { .. }
-            | Effect::LaterLifeXpRate { .. }
-            | Effect::SuppressesLaterLifeXpRate
-            | Effect::LocalityAbilityCapFraction { .. }
-            | Effect::AbilityAuthorization { .. }
-            | Effect::AbilityBonusGated { .. }
-            | Effect::ConfidenceBonus { .. }
-            | Effect::SpellMasteryXp { .. }
-            | Effect::GrantsSpellMastery { .. }
-            | Effect::GrantsSelection { .. }
-            | Effect::ItemLevelBudget { .. }
-            | Effect::MasterpieceItem
-            | Effect::TrueFaithGrant { .. }
-            | Effect::RelicTrueFaith { .. }
-            | Effect::WarpingGrant { .. }
-            | Effect::WarpingGrantParam { .. }
-            | Effect::SizeDelta { .. }
-            | Effect::CharacteristicScoreDelta { .. }
-            | Effect::CharacteristicMax { .. }
-            | Effect::GrantsReputation { .. }
-            | Effect::GrantsPersonalityTrait
-            | Effect::PersonalityTraitRange { .. }
-            | Effect::MightGrant { .. }
-            | Effect::PowerLevels { .. }
-            | Effect::FocusPoints { .. }
-            | Effect::MagicalFocus { .. }
-            | Effect::CastingTotalMod { .. }
-            | Effect::LabTotalMod { .. }
-            | Effect::HalvesSpellCapBeyondTouch
-            | Effect::DeficientArt { .. }
-            | Effect::MagicTotalHalving { .. }
-            | Effect::SoakMod { .. }
-            | Effect::CombatMod { .. }
-            | Effect::HealthMod { .. }
-            | Effect::MagicResistanceMod { .. }
-            | Effect::AgingMod { .. }
-            | Effect::AdvancementMod { .. }
-            | Effect::SpecialCastingMod { .. }
-            | Effect::AbilityRollMod { .. }
-            | Effect::AbilityRollModParam { .. }
-            | Effect::ElementalMagic { .. }
-            | Effect::ForbidsAbilitySpecialties
-            | Effect::ForbidsRitualCasting
-            | Effect::WaivesAbilityAgeCap
-            | Effect::ConfersHermeticTraining
-            | Effect::ConfersHermeticTrainingIf { .. }
-            | Effect::ForbidsAbilityCategory { .. }
-            | Effect::ForbidsAbilityCategoryParam { .. }
-            | Effect::ForbidsItemCategory { .. }
-            | Effect::ForbidsAbilities { .. }
-            | Effect::AbilityScoreCapOverrideParam { .. }
-            | Effect::AbilityScoreCapAllExcept { .. }
-            | Effect::DecrepitudeScaledRollMod { .. }
-            | Effect::GrantsCategoryCount { .. } => {}
+            irrelevant_effect_variants_except!(RequiresPersonalityTraitPair) => {}
         }
     });
 }

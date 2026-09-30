@@ -504,19 +504,21 @@ impl Ruleset {
     /// Affinity (3/2, 5/4, 2/1): the ratio reduces the cost rather than capping a
     /// count.
     ///
-    /// The trailing `_` is deliberate rather than the exhaustive `Effect` tail the
-    /// folds in `effective.rs` spell out: this is a `ruleset` module, and the
-    /// exhaustive-match machinery (`irrelevant_effect_variants`) lives a layer
-    /// above it in `effective.rs`. What that `_` therefore costs is stated rather
-    /// than hand-waved: **nothing outside this list is checked at load**, and
-    /// there is no single downstream backstop that makes the omission safe.
-    /// `charged_cost`'s guard covers the three Affinity variants and
-    /// `grants_spell_mastery` only — it is on the XP path, which
-    /// `LocalityAbilityCapFraction` never reaches, and it was the claim that this
-    /// guard covered "a future ratio-bearing variant" that kept the fifth ratio
-    /// invisible for three audit rounds. A new ratio-bearing variant must be added
-    /// here, with its own two consequences worked out, and its use-site guard kept
-    /// as defence in depth rather than treated as the check.
+    /// The match is exhaustive, via
+    /// [`crate::effective::irrelevant_effect_variants_except`] (this is a
+    /// `ruleset` module, so it reaches across to the macro `effective.rs`
+    /// defines rather than hosting its own copy): every `Effect` variant this
+    /// function does not name a ratio family for is listed there as a no-op, so
+    /// adding a new variant is a compile error **here** too, not a silently
+    /// unchecked ratio. This closes the historical gap a bare `_ => continue`
+    /// used to leave open — it was the claim that `charged_cost`'s guard
+    /// (which covers only the three Affinity variants and
+    /// `grants_spell_mastery`, on the XP path `LocalityAbilityCapFraction`
+    /// never reaches) covered "a future ratio-bearing variant" that kept the
+    /// fifth ratio invisible for three audit rounds. A new ratio-bearing
+    /// variant must still be added here, with its own two consequences worked
+    /// out, and its use-site guard kept as defence in depth rather than
+    /// treated as the check.
     fn validate_item_ratios(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
         for effect in &item.effects {
             // `(kind, num, den, what a zero denominator does, what a zero
@@ -573,7 +575,17 @@ impl Ruleset {
                     LOCALITY_ZERO_DEN,
                     LOCALITY_ZERO_NUM,
                 ),
-                _ => continue,
+                // Every other Effect variant carries no num/den ratio. Listed
+                // explicitly (not a wildcard `_`) so a new variant is a compile
+                // error here — see this function's own doc comment for the
+                // historical cost of the wildcard this replaces.
+                crate::effective::irrelevant_effect_variants_except!(
+                    AffinityAbilityCost,
+                    AffinityArtCost,
+                    GroupAffinityCost,
+                    GrantsSpellMastery,
+                    LocalityAbilityCapFraction
+                ) => continue,
             };
             if den == 0 {
                 errors.push(format!("{id}: '{kind}' has a denominator of 0; {zero_den}"));
