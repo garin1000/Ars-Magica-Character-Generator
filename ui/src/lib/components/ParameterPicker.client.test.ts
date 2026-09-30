@@ -346,3 +346,95 @@ describe('ParameterPicker multi-select (multi_ref, C5b, D9 part 3)', () => {
     expect(multiSelection().params?.targets).toEqual([]);
   });
 });
+
+// Functional review 2026-09-30 #1 (HIGH): `multiRefOptions` only handles
+// `domain === 'spell'`, so today NO checkbox exists for an `ability`-domain
+// multi_ref parameter — the exact shape `flaw.restricted_learning` and
+// `virtue.magian_lineage_major` ship with. A client test, because checking a
+// box and observing the resulting `params` write needs a live component
+// exactly as the spell-domain block above does.
+describe('ParameterPicker multi-select ability domain (functional review 2026-09-30 #1)', () => {
+  const ABILITY_A = 'ability.parma_magica';
+  const ABILITY_B = 'ability.premonitions';
+  const TESTID = 'param-flaw.corrupted_abilities_probe-targets-0';
+
+  const MULTI_ABILITY_ITEM = {
+    id: 'flaw.corrupted_abilities_probe',
+    kind: 'flaw',
+    magnitude: 'minor',
+    categories: ['general'],
+    classification: 'uncomputed_rule',
+    entity_kinds: ['character'],
+    parameters: [{ key: 'targets', type: 'multi_ref', domain: 'ability' }],
+  } as unknown as PointItem;
+
+  let abilityTarget: HTMLElement;
+  let abilityApp: { setSelection: (next: Selection) => void } | undefined;
+
+  function fieldset(): HTMLElement | null {
+    return abilityTarget.querySelector(`[data-testid="${TESTID}"]`);
+  }
+  function checkbox(abilityId: string): HTMLInputElement | null {
+    return abilityTarget.querySelector(`[data-testid="${TESTID}-${abilityId}"]`);
+  }
+  function abilitySelection(): Selection {
+    return (store.entity.selections ?? [])[0];
+  }
+
+  beforeEach(() => {
+    store.ruleset!.ruleset.point_items['flaw.corrupted_abilities_probe'] = MULTI_ABILITY_ITEM;
+    store.ruleset!.ruleset.abilities = {
+      [ABILITY_A]: { id: ABILITY_A, category: 'arcane' },
+      [ABILITY_B]: { id: ABILITY_B, category: 'supernatural' },
+    };
+    store.ruleset!.i18n['flaw.corrupted_abilities_probe'] = { name: 'Corrupted Abilities Probe' };
+    store.ruleset!.i18n[ABILITY_A] = { name: 'Parma Magica' };
+    store.ruleset!.i18n[ABILITY_B] = { name: 'Premonitions' };
+    store.entity.selections = [{ ref: 'flaw.corrupted_abilities_probe', params: {} }];
+
+    abilityTarget = document.createElement('div');
+    document.body.appendChild(abilityTarget);
+    abilityApp = mount(ParameterPickerHarness, {
+      target: abilityTarget,
+      props: { initial: abilitySelection(), index: 0, params: MULTI_ABILITY_ITEM.parameters! },
+    }) as unknown as { setSelection: (next: Selection) => void };
+    flushSync();
+  });
+
+  afterEach(() => {
+    if (abilityApp) unmount(abilityApp);
+    abilityApp = undefined;
+    abilityTarget?.remove();
+  });
+
+  /** Mirrors `toggle` above: asserts the checkbox exists FIRST, so today's RED
+   *  fails there (no options ever rendered for this domain) rather than on a
+   *  null dereference. */
+  function toggle(abilityId: string, checked: boolean): void {
+    const cb = checkbox(abilityId);
+    expect(cb).not.toBeNull();
+    cb!.checked = checked;
+    cb!.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    abilityApp?.setSelection(abilitySelection());
+    flushSync();
+  }
+
+  it('renders one checkbox per catalogue ability', () => {
+    expect(fieldset()).not.toBeNull();
+    expect(checkbox(ABILITY_A)).not.toBeNull();
+    expect(checkbox(ABILITY_B)).not.toBeNull();
+  });
+
+  it('checking a box writes the ability id into the multi_ref value', () => {
+    toggle(ABILITY_A, true);
+    expect(abilitySelection().params?.targets).toEqual([ABILITY_A]);
+  });
+
+  it('unchecking removes only that member, leaving the other checked one', () => {
+    toggle(ABILITY_A, true);
+    toggle(ABILITY_B, true);
+    toggle(ABILITY_A, false);
+    expect(abilitySelection().params?.targets).toEqual([ABILITY_B]);
+  });
+});

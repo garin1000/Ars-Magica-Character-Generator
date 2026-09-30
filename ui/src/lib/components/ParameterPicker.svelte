@@ -110,30 +110,6 @@
     setParam(key, String(clamped));
   }
 
-  // Options for a `multi_ref` parameter — the only domain shipping today is
-  // `spell` (Corrupted Spells, C5c): the character's OWN learned spells
-  // (`Entity.spells`), never the whole spell catalogue — § 8's own "the
-  // character's spells" reading (ArMDE:5859-5863). Deduplicated by base spell
-  // id (a parameterized spell may carry several instances) and left in the
-  // order the character learned them: nothing about "affect this spell" needs
-  // a second sort axis, unlike the catalogue-wide lists above. A `multi_ref`
-  // param currently only ever pairs with `spell` (C5a's own
-  // `ParameterDomain::Spell` doc comment), so every other domain falls to the
-  // empty defensive fallback rather than a branch of its own.
-  function multiRefOptions(param: ParameterDef): { value: string; label: string }[] {
-    if (param.domain !== 'spell') return [];
-    const localized = store.ruleset;
-    if (!localized) return [];
-    const seen = new Set<string>();
-    const options: { value: string; label: string }[] = [];
-    for (const row of store.entity.spells ?? []) {
-      if (seen.has(row.spell)) continue;
-      seen.add(row.spell);
-      options.push({ value: row.spell, label: spellName(localized, row.spell) });
-    }
-    return options;
-  }
-
   // Toggles one value of a multi_ref parameter's set. Unlike a single-select's
   // onchange, there is no "current value" to read off the control that fired —
   // every OTHER checkbox in the group keeps its own independent state — so the
@@ -161,10 +137,37 @@
     );
   }
 
-  // Every catalogue Ability, plus the character's own instances of the
-  // parameterized ones. Like the `art` domain below, the target need NOT already be
-  // on the sheet: Puissant Ability is "choose one Ability" with no requirement that
-  // a score exists (ArMDE:4814-4816), and
+  // Whether `abilityId` is a legal target of an `ability`-domain parameter —
+  // the frontend mirror of the engine's `param_value_resolves`
+  // (`validation/selections.rs`), which applies both checks identically
+  // whether the parameter is `ref` (single-select) or `multi_ref` (checkbox
+  // group). `require_ability_categories` narrows to a non-empty intersection
+  // with the ability's own category (X6a/e3); `forbid_ids` then subtracts
+  // specific ids even from within an admitted category (X6a/e3: Magian
+  // Lineage Major excludes True Names despite its Arcane category) —
+  // functional review 2026-09-30 #2.
+  function abilityAllowed(param: ParameterDef, abilityId: string): boolean {
+    const required = param.require_ability_categories;
+    if (required?.length) {
+      const category = store.ruleset?.ruleset.abilities?.[abilityId]?.category;
+      if (!category || !required.includes(category)) return false;
+    }
+    return !param.forbid_ids?.includes(abilityId);
+  }
+
+  // The catalogue ability ids a given `ability`-domain parameter admits,
+  // filtered but NOT yet sorted or turned into option rows — shared by the
+  // single-select's instance-expanding `abilityOptionsFor` below and the
+  // multi_ref branch's plain-id list in `multiRefOptions`.
+  function catalogueAbilityIds(param: ParameterDef): string[] {
+    const catalogue = store.ruleset?.ruleset.abilities ?? {};
+    return Object.keys(catalogue).filter((id) => abilityAllowed(param, id));
+  }
+
+  // Every catalogue Ability the parameter admits, plus the character's own
+  // instances of the parameterized ones. Like the `art` domain below, the
+  // target need NOT already be on the sheet: Puissant Ability is "choose one
+  // Ability" with no requirement that a score exists (ArMDE:4814-4816), and
   // abilities are bought on a LATER step — so offering only owned rows left the
   // parameter unfillable where the Virtue is taken and deadlocked the wizard
   // (manual-testing-findings-2026-09-03 #5).
@@ -174,12 +177,12 @@
   // instance input below then takes the area itself. An owned PLAIN ability needs no
   // extra option — its instance value is the bare id the catalogue entry already
   // carries, so listing it twice would only duplicate the row.
-  const abilityOptions = $derived.by(() => {
+  function abilityOptionsFor(param: ParameterDef): { value: string; label: string }[] {
     const localized = store.ruleset;
     if (!localized) return [];
     const catalogue = localized.ruleset.abilities ?? {};
     const rows = store.entity.ability_scores ?? [];
-    return Object.keys(catalogue)
+    return catalogueAbilityIds(param)
       .sort((a, b) => localizedSortKey(localized, a).localeCompare(localizedSortKey(localized, b)))
       .flatMap((id) => {
         const generic = { value: id, label: abilityInstanceLabel(id, undefined) };
@@ -192,7 +195,7 @@
           }));
         return [generic, ...instances];
       });
-  });
+  }
 
   // The instance key the chosen target still needs a value for ((Area) Lore →
   // `area`), or undefined for a plain target. Only meaningful once an ability is
@@ -235,6 +238,43 @@
         )
       : [],
   );
+
+  // Options for a `multi_ref` parameter — shipped data pairs it with three
+  // domains (functional review 2026-09-30 #1): `spell` (Corrupted Spells,
+  // C5c), `ability` (Restricted Learning, Magian Lineage Major) and `art`
+  // (Corrupted Arts). `spell` resolves against the character's OWN learned
+  // spells (`Entity.spells`), never the whole spell catalogue — § 8's own "the
+  // character's spells" reading (ArMDE:5859-5863) — deduplicated by base spell
+  // id and left in learned order. `ability` reuses the single-select's own
+  // catalogue + filter (`catalogueAbilityIds`), but lists only the generic
+  // catalogue entry per ability, never a parameterized instance: both shipped
+  // ability multi_ref entries name plain Abilities, never an (Area) Lore
+  // instance, so there is no "which area" question to ask here. `art` reuses
+  // `artOptions` above as-is — no `ParameterDef` field narrows the `art`
+  // domain, so every catalogue Art is always eligible.
+  function multiRefOptions(param: ParameterDef): { value: string; label: string }[] {
+    const localized = store.ruleset;
+    if (!localized) return [];
+    if (param.domain === 'spell') {
+      const seen = new Set<string>();
+      const options: { value: string; label: string }[] = [];
+      for (const row of store.entity.spells ?? []) {
+        if (seen.has(row.spell)) continue;
+        seen.add(row.spell);
+        options.push({ value: row.spell, label: spellName(localized, row.spell) });
+      }
+      return options;
+    }
+    if (param.domain === 'ability') {
+      return catalogueAbilityIds(param)
+        .sort((a, b) =>
+          localizedSortKey(localized, a).localeCompare(localizedSortKey(localized, b)),
+        )
+        .map((id) => ({ value: id, label: abilityInstanceLabel(id, undefined) }));
+    }
+    if (param.domain === 'art') return artOptions;
+    return [];
+  }
 
   function onSelectArt(key: string, event: Event) {
     const artId = (event.currentTarget as HTMLSelectElement).value;
@@ -503,7 +543,10 @@
           <!-- Targets an Ability from the catalogue — it need not be on the sheet yet,
            since abilities are bought on a later step. For (Area) Lore each area is
            its own target, so the character's own areas are listed alongside the
-           generic entry (which the instance input below completes). -->
+           generic entry (which the instance input below completes). Narrowed by
+           `require_ability_categories`/`forbid_ids` when the parameter declares
+           either (functional review 2026-09-30 #2), the same filter the multi_ref
+           branch above applies. -->
           <select
             aria-label={typeLabel}
             value={abilityTargetValue(param.key)}
@@ -515,7 +558,7 @@
              ability whose parameter is still unset share the same bare id, and a
              duplicate key throws `each_key_duplicate` (in production too), which
              would kill this whole tab's render. -->
-            {#each abilityOptions as instance, i (`${instance.value}:${i}`)}
+            {#each abilityOptionsFor(param) as instance, i (`${instance.value}:${i}`)}
               <option value={instance.value} disabled={full(usedAbilityTargets, instance.value)}>
                 {instance.label}
               </option>

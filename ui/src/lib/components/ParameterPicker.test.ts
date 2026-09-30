@@ -55,6 +55,14 @@ const ABILITIES: Record<string, Ability> = {
     category: 'academic',
     parameter: 'language',
   },
+  // Functional review 2026-09-30 #1/#2: four plain abilities spanning the
+  // categories `require_ability_categories`/`forbid_ids` need to tell apart —
+  // mirroring `virtue.magian_lineage_major`'s real shape (arcane+supernatural
+  // required, `ability.true_names` forbidden outright despite its category).
+  'ability.parma_magica': { id: 'ability.parma_magica', category: 'arcane' },
+  'ability.premonitions': { id: 'ability.premonitions', category: 'supernatural' },
+  'ability.true_names': { id: 'ability.true_names', category: 'arcane' },
+  'ability.finesse': { id: 'ability.finesse', category: 'martial' },
 };
 
 function pointItem(
@@ -200,6 +208,55 @@ const ITEMS: Record<string, PointItem> = {
     [{ key: 'targets', type: 'multi_ref', domain: 'spell' }],
     ['general'],
   ),
+  // Functional review 2026-09-30 #1: `flaw.corrupted_abilities`'s own shape
+  // (`rules/core/virtues_flaws.json:526`) — unfiltered `multi_ref`/`ability`,
+  // so the catalogue's plain abilities are all eligible.
+  'flaw.corrupted_abilities_probe': pointItem(
+    'flaw.corrupted_abilities_probe',
+    [{ key: 'targets', type: 'multi_ref', domain: 'ability' }],
+    ['general'],
+  ),
+  // Functional review 2026-09-30 #1: `flaw.corrupted_arts`'s own shape
+  // (`rules/core/virtues_flaws.json:539`) — the THIRD domain shipped data pairs
+  // with `multi_ref`, flagged in the phase-1 handover as out of the original
+  // two findings' scope; the coordinator asked for a RED here before phase 2.
+  // Unfiltered, so the fix is `artOptions` (Techniques then Forms) reused as-is.
+  'flaw.corrupted_arts_probe': pointItem(
+    'flaw.corrupted_arts_probe',
+    [{ key: 'targets', type: 'multi_ref', domain: 'art' }],
+    ['general'],
+  ),
+  // Functional review 2026-09-30 #1: `virtue.magian_lineage_major`'s own shape
+  // (`rules/core/virtues_flaws.json:5632-5634`) — a FILTERED `multi_ref`/`ability`
+  // parameter, so a legal option list must apply both axes, not just gate the
+  // domain open.
+  'flaw.restricted_learning_probe': pointItem(
+    'flaw.restricted_learning_probe',
+    [
+      {
+        key: 'abilities',
+        type: 'multi_ref',
+        domain: 'ability',
+        require_ability_categories: ['arcane', 'supernatural'],
+        forbid_ids: ['ability.true_names'],
+        exact_count: 3,
+      },
+    ],
+    ['general'],
+  ),
+  // Functional review 2026-09-30 #2: the SINGLE-select twin of the same
+  // filters, on a fixture parameter rather than `virtue.performance_magic`
+  // (whose own data an RC slice is concurrently changing) — proves the filter
+  // MECHANISM, which the single ability `<select>` ignores today.
+  'virtue.arcane_ability_probe': pointItem('virtue.arcane_ability_probe', [
+    {
+      key: 'ability',
+      type: 'ref',
+      domain: 'ability',
+      require_ability_categories: ['arcane', 'supernatural'],
+      forbid_ids: ['ability.true_names'],
+    },
+  ]),
 };
 
 /** Catalogue spells: two the fixture character has learned, one it has not —
@@ -278,6 +335,14 @@ function installRuleset(): void {
       'spell.pilum_of_fire': { name: 'Pilum of Fire' },
       'spell.aegis_of_the_hearth': { name: 'Aegis of the Hearth' },
       'spell.unlearned_probe': { name: 'Unlearned Probe' },
+      'ability.parma_magica': { name: 'Parma Magica' },
+      'ability.premonitions': { name: 'Premonitions' },
+      'ability.true_names': { name: 'True Names' },
+      'ability.finesse': { name: 'Finesse' },
+      'flaw.corrupted_abilities_probe': { name: 'Corrupted Abilities Probe' },
+      'flaw.corrupted_arts_probe': { name: 'Corrupted Arts Probe' },
+      'flaw.restricted_learning_probe': { name: 'Restricted Learning Probe' },
+      'virtue.arcane_ability_probe': { name: 'Arcane Ability Probe {ability}' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -1008,6 +1073,102 @@ describe('ParameterPicker multi_ref parameter (C5b, D9 part 3)', () => {
     const fieldset = fieldsetFor(pickerBody('flaw.corrupted_spells_probe'), TESTID);
     expect(fieldset).not.toBeNull();
     expect(fieldset).toContain(store.t('param-multi-ref-empty'));
+  });
+});
+
+// Functional review 2026-09-30 #1 (HIGH): `multiRefOptions` only builds
+// options for `domain === 'spell'`; every other domain falls to the empty
+// `return []` fallback, including `ability` — which two SHIPPED, unrestricted
+// catalogue entries use (`flaw.restricted_learning` exact_count 5,
+// `virtue.magian_lineage_major` exact_count 3, `rules/core/virtues_flaws.json`).
+// A required multi_ref/ability parameter with zero offered checkboxes can
+// never satisfy its `exact_count`, so Enforced mode refuses the phase forever
+// with no on-screen way out. `art` is the THIRD domain the shipped data pairs
+// with `multi_ref` (`flaw.corrupted_arts`, `virtues_flaws.json:539`) but is out
+// of scope for this slice's fix (UIFIX phase-2 plan); flagged in the handover.
+// Same gap as the `ability` block below, for the THIRD shipped domain
+// (`flaw.corrupted_arts`, `virtues_flaws.json:539`) — flagged in the phase-1
+// handover, added here per the coordinator's phase-2 go-ahead. Unfiltered:
+// `ParameterDef` declares no art-specific narrowing field, so the fix is
+// `artOptions` (Techniques then Forms, ArtGrid's own order) reused directly.
+describe('ParameterPicker multi_ref parameter — art domain (functional review 2026-09-30 #1, flaw.corrupted_arts gap)', () => {
+  it('renders one checkbox per catalogue Art, Techniques then Forms, localized labels, never raw ids', () => {
+    const fieldset = fieldsetFor(
+      pickerBody('flaw.corrupted_arts_probe'),
+      'param-flaw.corrupted_arts_probe-targets-0',
+    );
+    expect(fieldset).not.toBeNull();
+    expect(checkboxLabels(fieldset!)).toEqual(['Creo', 'Rego', 'Aquam', 'Ignem']);
+    expect(checkboxLabels(fieldset!).join(' ')).not.toContain('art.');
+  });
+});
+
+describe('ParameterPicker multi_ref parameter — ability domain (functional review 2026-09-30 #1)', () => {
+  it('renders one checkbox per catalogue ability, localized labels, never raw ids', () => {
+    const fieldset = fieldsetFor(
+      pickerBody('flaw.corrupted_abilities_probe'),
+      'param-flaw.corrupted_abilities_probe-targets-0',
+    );
+    expect(fieldset).not.toBeNull();
+    const labels = checkboxLabels(fieldset!);
+    expect(labels).toEqual(
+      expect.arrayContaining(['Parma Magica', 'Premonitions', 'True Names', 'Finesse']),
+    );
+    expect(labels.join(' ')).not.toContain('ability.');
+    // Every checkbox is wrapped in its own `<label>` (accessible name), not a
+    // bare unlabelled input — the shared markup `onToggleMulti`'s callers rely
+    // on, so this domain gets it too once it stops falling to `[]`.
+    expect((fieldset!.match(/<label class="checkbox inline">/g) ?? []).length).toBe(labels.length);
+  });
+
+  it("lists only the catalogue's abilities, nothing else", () => {
+    const fieldset = fieldsetFor(
+      pickerBody('flaw.corrupted_abilities_probe'),
+      'param-flaw.corrupted_abilities_probe-targets-0',
+    );
+    expect(fieldset).not.toBeNull();
+    expect(checkboxLabels(fieldset!)).not.toEqual([]);
+  });
+
+  // Mirrors `virtue.magian_lineage_major`'s real shape exactly: both filter
+  // axes must narrow the multi-select the same way they narrow the
+  // single-select `<select>` (see the sibling describe block below) —
+  // offering an illegal ability here is offering a choice Enforced mode will
+  // reject after the player has already spent effort checking boxes to reach
+  // `exact_count`.
+  it('honours require_ability_categories and forbid_ids in a multi_ref ability parameter', () => {
+    const fieldset = fieldsetFor(
+      pickerBody('flaw.restricted_learning_probe'),
+      'param-flaw.restricted_learning_probe-abilities-0',
+    );
+    expect(fieldset).not.toBeNull();
+    expect(checkboxLabels(fieldset!)).toEqual(['Parma Magica', 'Premonitions']);
+    // Wrong category (martial), excluded by `require_ability_categories`.
+    expect(checkboxLabels(fieldset!)).not.toContain('Finesse');
+    // Right category (arcane) but explicitly named in `forbid_ids`.
+    expect(checkboxLabels(fieldset!)).not.toContain('True Names');
+  });
+});
+
+// Functional review 2026-09-30 #2 (MED): the single-select ability `<select>`
+// (`abilityOptions`, `ParameterPicker.svelte:177-195`) takes no `param`
+// argument and never filters by `require_ability_categories`/`forbid_ids`,
+// unlike the sibling `itemOptionsFor`. Fixture parameter, not
+// `virtue.performance_magic` — a concurrent RC slice is changing that entry's
+// own data, so this proves the FILTER MECHANISM instead.
+describe('ParameterPicker single-select ability domain ignores category/forbid filters (functional review 2026-09-30 #2)', () => {
+  const TESTID = 'param-virtue.arcane_ability_probe-ability-0';
+
+  it('offers only abilities matching require_ability_categories, excluding forbid_ids', () => {
+    const select = selectFor(pickerBody('virtue.arcane_ability_probe'), TESTID);
+    expect(select).not.toBeNull();
+    expect(optionTexts(select!)).toContain('Parma Magica');
+    expect(optionTexts(select!)).toContain('Premonitions');
+    // Wrong category (martial) — the engine's `param_value_resolves` refuses
+    // it as `unknown_param_value`, so offering it is offering a dead end.
+    expect(optionTexts(select!)).not.toContain('Finesse');
+    // Right category (arcane) but explicitly named in `forbid_ids`.
+    expect(optionTexts(select!)).not.toContain('True Names');
   });
 });
 
