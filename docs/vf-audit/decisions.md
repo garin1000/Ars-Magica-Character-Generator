@@ -828,6 +828,26 @@ presumption of correctness.
 
 ---
 
+## D71 — X8d's three held German-name items
+
+**Norbert, 2026-09-30** (details in `docs/vf-audit/measurements.md` § 8 row 14).
+
+1. **All four `SdM:M`-tagged rows are in the dispute.** The three kept rows
+   (Homing Instinct, Magical Warder, Unaffected by The Gift) adopt the table
+   name, and Deteriorating Power is reverted as D31 says. This applies D31 to
+   those rows despite precedence rule 4.
+2. **Hobbled stays "Humpelnd".** Norbert asked for the translation repository to
+   be checked. Its reviewed core (`german-reviewed/…Basisregeln.md`) uses
+   Humpelnd for Hobbled (:6328) and Verkrüppelt for Crippled (:5945). The table
+   row "Hobbled → Verkrüppelt" (`grundbegriffe.md:331`) contradicts that current
+   text, so it is treated as a table error, and the two Flaws keep distinct
+   names. Nothing is filed upstream (D65 N7).
+3. **Gender Shift adopts "Geschlechtswandel",** per the upstream table
+   (`tugenden-fehler.md:924`) and the reviewed SdM:I translation (:4234). The
+   row's note concerns the "Befleckt" label only.
+
+---
+
 ## D70 — X6 scoping answers
 
 **Norbert, 2026-09-29** (details in `tmp/x6-scope.md`).
