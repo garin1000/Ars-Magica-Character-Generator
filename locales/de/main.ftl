@@ -1122,6 +1122,7 @@ param-domain-realm = Sphäre
 param-domain-text = Text
 param-domain-number = Zahl
 param-domain-spell = Zauber
+param-domain-ability_category = Fertigkeitskategorie
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }
@@ -1297,6 +1298,8 @@ issue-duplicate_mastery_ability = Meisterschaftsfähigkeit { $ability } wurde { 
 issue-ability_above_age_cap = { $ability } mit Wert { $score } überschreitet das Maximum von { $cap } für Alter { $age }.
 issue-specialty_forbidden = { $ability } darf keine Spezialisierung haben ({ $specialty }) — Nicht spezialisiert verbietet jede Spezialisierung einer Fertigkeit.
 issue-ambiguous_bound_parameter = { $item } wird mehr als einmal gehalten; der verknüpfte Wert von { $ability } kann erst aufgelöst werden, wenn das Duplikat entfernt wurde.
+issue-wrong_param_count = { $item } nennt { $count } Werte für { $key }, es sind aber genau { $expected } erforderlich.
+issue-ability_outside_restricted_scope = { $item } beschränkt Erfahrungspunkte auf { $allowed }; { $ability } liegt außerhalb dieser Liste.
 issue-supernatural_ability_requires_virtue = { $ability } ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend (oder die eine freie Fertigkeit der Gabe).
 issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
 issue-fickle_nature_trait_pair_missing = { $item } erfordert mindestens zwei Persönlichkeitseigenschaften mit genau dem Wert { $value } (ein zusammengehöriges Paar).
@@ -1493,6 +1496,7 @@ derived-addend-casting_mod_spontaneous = Zaubermodifikator (spontan)
 derived-addend-parma = Parma Magica
 derived-addend-might = Macht
 derived-addend-true_faith = Wahrer Glaube
+derived-addend-aura_bonus = Aura-Bonus
 derived-addend-armor = Rüstung
 derived-addend-soak_mod = Absorptionsmodifikator
 derived-addend-bronze_cord = Bronzene Kordel

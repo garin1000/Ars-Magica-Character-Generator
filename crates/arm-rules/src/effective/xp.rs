@@ -946,8 +946,11 @@ pub(crate) fn ability_authorizations(entity: &Entity, ruleset: &Ruleset) -> Abil
                 // exactly as design § 4 states, so `xp_allocation` never
                 // treats a forbid as permission to fund the forbidden target.
                 | Effect::ForbidsAbilityCategory { .. }
+                | Effect::ForbidsAbilityCategoryParam { .. }
                 | Effect::ForbidsItemCategory { .. }
                 | Effect::ForbidsAbilities { .. }
+                | Effect::AbilityScoreCapOverrideParam { .. }
+                | Effect::AbilityScoreCapAllExcept { .. }
                 // D69/X7b-e: a surfaced-only roll penalty, not an Ability
                 // authorization.
                 | Effect::DecrepitudeScaledRollMod { .. } => {}
@@ -1237,6 +1240,10 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                     categories,
                     instances,
                     from_normal_budget,
+                    // X6a/e5: `abilities_param` widens `validate_ability_xp_scope`'s
+                    // funding-scope union only (`validation/selections.rs`), not
+                    // this pool-building fold.
+                    abilities_param: _,
                 } => {
                     // D13/D0 § 2 (amended): an earmark is not additional supply
                     // — it draws from the general pool the character already

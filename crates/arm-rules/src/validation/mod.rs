@@ -208,6 +208,8 @@ impl fmt::Display for IssueSeverity {
 /// | `ability_bonus_dangling_target` | error | abilities | `item`, `ability`, `parameter` |
 /// | `specialty_forbidden` | error | abilities | `ability`, `specialty` |
 /// | `ambiguous_bound_parameter` | error | abilities | `item`, `ability`, `param` |
+/// | `wrong_param_count` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key`, `count`, `expected` |
+/// | `ability_outside_restricted_scope` | error | abilities | `item`, `allowed`, `ability` |
 /// | `unknown_art` | error | arts | `art` |
 /// | `duplicate_art` | error | arts | `art`, `count` |
 /// | `art_score_out_of_range` | error | arts | `art`, `score`, `max` |
@@ -933,6 +935,20 @@ impl ValidationIssue {
     /// only via a hand-edited or direct-unchecked save holding the same
     /// once-only item twice.
     pub const CODE_AMBIGUOUS_BOUND_PARAMETER: &'static str = "ambiguous_bound_parameter";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: X6a/e4 — a
+    /// [`crate::types::ParamType::MultiRef`] selection whose
+    /// [`crate::types::ParameterDef::exact_count`] is set names a different
+    /// number of DISTINCT values than that count (Restricted Learning:
+    /// exactly five Abilities, ArMDE:6685).
+    pub const CODE_WRONG_PARAM_COUNT: &'static str = "wrong_param_count";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: X6a/e5 — Restricted
+    /// Learning's funding scope (the five named Abilities plus its
+    /// `categories`) does not cover a scored Ability the character has put
+    /// experience into (ArMDE:6685). The parameter-scope sibling of
+    /// [`Self::CODE_ABILITY_FORBIDDEN_BY_EFFECT`]: this asks what may be
+    /// FUNDED, not what may be HELD.
+    pub const CODE_ABILITY_OUTSIDE_RESTRICTED_SCOPE: &'static str =
+        "ability_outside_restricted_scope";
 
     /// Builds an issue with the given severity, code, phase, args, and context.
     pub fn new(
@@ -1143,6 +1159,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_life_stage_plan(entity, ruleset, type_profile, &mut issues);
         validate_magus_minimum_abilities(entity, ruleset, &mut issues);
         validate_ability_authorization(entity, ruleset, type_profile, &mut issues);
+        validate_ability_xp_scope(entity, ruleset, &effective_selections, &mut issues);
         validate_academic_language(entity, ruleset, &mut issues);
         validate_warping(entity, ruleset, type_profile, &mut issues);
     }
@@ -1370,8 +1387,14 @@ pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
         // `AbilityScoreGrant` gets above. Consumed only by the dedicated
         // grant-aware prohibition validator (`validation/selections.rs`).
         | Effect::ForbidsAbilityCategory { .. }
+        | Effect::ForbidsAbilityCategoryParam { .. }
         | Effect::ForbidsItemCategory { .. }
         | Effect::ForbidsAbilities { .. }
+        // X6a/e6: both Savantism clauses fold into `ability_age_cap` (D29's
+        // single resolution point), never this dangling-target check — same
+        // classification as `LocalityAbilityCapFraction` above.
+        | Effect::AbilityScoreCapOverrideParam { .. }
+        | Effect::AbilityScoreCapAllExcept { .. }
         // D69/X7b-e: a surfaced-only roll penalty, no ability/characteristic
         // creation-time target here.
         | Effect::DecrepitudeScaledRollMod { .. } => EffectTarget::Other,

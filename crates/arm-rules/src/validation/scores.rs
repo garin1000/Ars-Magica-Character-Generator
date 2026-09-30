@@ -757,8 +757,11 @@ pub(crate) fn validate_personality_traits(
             | Effect::ConfersHermeticTraining
             | Effect::ConfersHermeticTrainingIf { .. }
             | Effect::ForbidsAbilityCategory { .. }
+            | Effect::ForbidsAbilityCategoryParam { .. }
             | Effect::ForbidsItemCategory { .. }
             | Effect::ForbidsAbilities { .. }
+            | Effect::AbilityScoreCapOverrideParam { .. }
+            | Effect::AbilityScoreCapAllExcept { .. }
             | Effect::DecrepitudeScaledRollMod { .. } => {}
         }
     });
@@ -872,8 +875,11 @@ pub(crate) fn validate_personality_trait_pairs(
             | Effect::ConfersHermeticTraining
             | Effect::ConfersHermeticTrainingIf { .. }
             | Effect::ForbidsAbilityCategory { .. }
+            | Effect::ForbidsAbilityCategoryParam { .. }
             | Effect::ForbidsItemCategory { .. }
             | Effect::ForbidsAbilities { .. }
+            | Effect::AbilityScoreCapOverrideParam { .. }
+            | Effect::AbilityScoreCapAllExcept { .. }
             | Effect::DecrepitudeScaledRollMod { .. } => {}
         }
     });

@@ -50,6 +50,16 @@ impl AbilityCategory {
         AbilityCategory::Martial,
         AbilityCategory::Supernatural,
     ];
+
+    /// Resolves an `ability_category.<slug>` id against the closed enum —
+    /// X6a/e5's [`crate::types::ParameterDomain::AbilityCategory`], the same
+    /// "the enum IS the registry" idiom `Realm::from_id`/`Characteristic::from_id`
+    /// already use. `None` for anything else, including a bare category slug
+    /// with no `ability_category.` prefix.
+    pub fn from_id(id: &crate::types::Id) -> Option<Self> {
+        let slug = id.as_str().strip_prefix("ability_category.")?;
+        Self::ALL.into_iter().find(|c| c.to_string() == slug)
+    }
 }
 
 impl fmt::Display for AbilityCategory {

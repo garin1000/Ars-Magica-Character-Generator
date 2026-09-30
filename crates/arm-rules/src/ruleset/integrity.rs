@@ -135,6 +135,28 @@ impl Ruleset {
                 }
             }
 
+            // X6a/e7: each conditional entry's gate must resolve on THIS item
+            // (the same `validate_param_gate` C1 built for
+            // `AbilityRef`/`CategoryRef`'s own gate), and every forbidden id
+            // must be a real point item, on `incompatible_with`'s own
+            // precedent immediately above.
+            for conditional in &item.conditional_incompatible_with {
+                self.validate_param_gate(
+                    item,
+                    &conditional.gate,
+                    "conditional_incompatible_with",
+                    id,
+                    errors,
+                );
+                for incompat_id in &conditional.forbids {
+                    if !self.point_items.contains_key(incompat_id) {
+                        errors.push(format!(
+                            "{id}: conditional_incompatible_with references unknown ID '{incompat_id}'"
+                        ));
+                    }
+                }
+            }
+
             // Parameter domains are validated at parse time by the
             // ParameterDomain enum; concrete param VALUES are resolved per
             // selection in validation::validate_parameters. What is checked
@@ -2778,6 +2800,26 @@ impl Ruleset {
                 // A closed enum (`AbilityCategory`), serde-checked at parse
                 // time — nothing left to check referentially (B1/D21/F-355).
                 Effect::ForbidsAbilityCategory { .. } => continue,
+                // X6a/e5: the parameter-relative sibling — `param` must
+                // resolve to a declared `ability_category`-domain parameter
+                // on the SAME item.
+                Effect::ForbidsAbilityCategoryParam { param } => (
+                    param,
+                    ParameterDomain::AbilityCategory,
+                    "forbids_ability_category_param",
+                ),
+                // X6a/e6: both Savantism clauses name their favored Ability
+                // through an `ability`-domain parameter on the SAME item.
+                Effect::AbilityScoreCapOverrideParam { param, .. } => (
+                    param,
+                    ParameterDomain::Ability,
+                    "ability_score_cap_override_param",
+                ),
+                Effect::AbilityScoreCapAllExcept { param, .. } => (
+                    param,
+                    ParameterDomain::Ability,
+                    "ability_score_cap_all_except",
+                ),
                 // The item-axis twin of `Prereq::HasCategory`: same
                 // referential check, same reasoning (B1/D21/F-542).
                 Effect::ForbidsItemCategory { category } => {
@@ -3079,6 +3121,44 @@ fn validate_parameter_defs(
                 "{subject}: parameter '{key}' declares 'max_per_value' 0; no \
                  copy could then name any value, leaving the item unfillable"
             ));
+        }
+        // X6a/e3: `require_ability_categories` and `forbid_ids` both narrow
+        // an `ability`-domain parameter against the ability catalogue —
+        // rejected on any other domain for the same reason `require_categories`
+        // is rejected off `item` above: nothing else would read them.
+        if !param.require_ability_categories.is_empty() && param.domain != ParameterDomain::Ability
+        {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has domain '{}' but declares \
+                 'require_ability_categories'; only an 'ability' domain resolves \
+                 against the ability catalogue, so the list would narrow nothing",
+                param.domain
+            ));
+        }
+        if !param.forbid_ids.is_empty() && param.domain != ParameterDomain::Ability {
+            errors.push(format!(
+                "{subject}: parameter '{key}' has domain '{}' but declares \
+                 'forbid_ids'; only an 'ability' domain resolves against the \
+                 ability catalogue, so the list would exclude nothing",
+                param.domain
+            ));
+        }
+        // X6a/e4: `exact_count` counts DISTINCT members of a `MultiRef`
+        // selection's set — meaningless on a single-valued `Ref` parameter,
+        // and `0` would forbid every selection from ever satisfying it.
+        if let Some(expected) = param.exact_count {
+            if param.param_type != ParamType::MultiRef {
+                errors.push(format!(
+                    "{subject}: parameter '{key}' declares 'exact_count' but is not \
+                     'multi_ref'; only a set of values has a count to constrain"
+                ));
+            }
+            if expected == 0 {
+                errors.push(format!(
+                    "{subject}: parameter '{key}' declares 'exact_count' 0; no \
+                     selection could ever satisfy it"
+                ));
+            }
         }
         let declares_values = matches!(
             param.domain,

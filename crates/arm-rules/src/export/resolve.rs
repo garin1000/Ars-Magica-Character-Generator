@@ -255,6 +255,11 @@ impl<'a> Doc<'a> {
             ParameterDomain::Realm => {
                 Realm::from_id(value).map(|realm| self.label(&format!("realm-{realm}")))
             }
+            // X6a/e5: the closed 5-member `AbilityCategory` enum, labelled
+            // through the already-shipped `ability-category-<slug>` family
+            // (the ability filter UI) — the same idiom as `Realm` above.
+            ParameterDomain::AbilityCategory => crate::ability::AbilityCategory::from_id(value)
+                .map(|category| self.label(&format!("ability-category-{category}"))),
             ParameterDomain::Ability
             | ParameterDomain::Art
             | ParameterDomain::Technique

@@ -549,6 +549,38 @@ pub(crate) fn validate_incompatibilities(
                 }
             }
         }
+
+        // X6a/e7: a per-VALUE incompatibility, active only while its own
+        // gate holds for THIS selection — Warped Senses' sight-only clause
+        // forbids Keen Vision only when `sense` names sight (D58, ArMDE:7029-7037:
+        // a hard error even though the -2 penalty stays text). Reported
+        // through the same `incompatible`/pair-dedup machinery as the flat
+        // list above.
+        for conditional in &item.conditional_incompatible_with {
+            if !conditional.gate.holds(selection) {
+                continue;
+            }
+            for incompat_id in &conditional.forbids {
+                if selected_ids.contains(incompat_id) {
+                    let pair = if selection.item_ref < *incompat_id {
+                        (&selection.item_ref, incompat_id)
+                    } else {
+                        (incompat_id, &selection.item_ref)
+                    };
+                    if reported.insert(pair) {
+                        issues.push(ValidationIssue::error(
+                            ValidationIssue::CODE_INCOMPATIBLE,
+                            CreationPhase::VirtuesFlaws,
+                            args([
+                                ("item", selection.item_ref.to_string()),
+                                ("other", incompat_id.to_string()),
+                            ]),
+                            Some(selection.item_ref.clone()),
+                        ));
+                    }
+                }
+            }
+        }
     }
 }
 

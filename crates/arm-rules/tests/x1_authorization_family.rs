@@ -525,6 +525,7 @@ fn well_traveled_carries_its_fifty_point_pool() {
         categories: vec![],
         instances: vec![],
         from_normal_budget: false,
+        abilities_param: None,
     };
     assert!(
         item.effects.contains(&expected),
@@ -573,6 +574,7 @@ fn church_upbringing_earmarks_from_the_normal_budget() {
             },
         ],
         from_normal_budget: true,
+        abilities_param: None,
     };
     assert!(
         item.effects.contains(&expected),

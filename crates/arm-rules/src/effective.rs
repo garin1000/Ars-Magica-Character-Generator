@@ -438,8 +438,16 @@ macro_rules! irrelevant_effect_variants {
         // ratio, no in-play mod; consumed only by the dedicated grant-aware
         // validator in `validation/selections.rs`.
         | Effect::ForbidsAbilityCategory { .. }
+        // X6a/e5: the parameter-relative sibling — same reasoning, same
+        // validator.
+        | Effect::ForbidsAbilityCategoryParam { .. }
         | Effect::ForbidsItemCategory { .. }
         | Effect::ForbidsAbilities { .. }
+        // X6a/e6: both Savantism clauses fold into `ability_age_cap` (D29's
+        // single resolution point) — no score, no Affinity ratio, no in-play
+        // mod; consumed only there.
+        | Effect::AbilityScoreCapOverrideParam { .. }
+        | Effect::AbilityScoreCapAllExcept { .. }
     };
 }
 // Re-exported (rather than left textually scoped) so the domain submodules

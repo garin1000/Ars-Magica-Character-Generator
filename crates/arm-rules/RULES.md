@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1460).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1601).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1241,15 +1241,15 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2081, shared by
-  `validate_prereq_refs` :1992 and `validate_effect_refs` :2428) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2103, shared by
+  `validate_prereq_refs` :2014 and `validate_effect_refs` :2450) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :654).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :676).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -1694,7 +1694,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :459) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :565) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -9841,11 +9841,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:754),
-  `validate_forbidden_traits` (:775))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:860),
+  `validate_forbidden_traits` (:881))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:426),
-  `validate_parameters` (:958), `validate_duplicate_selections` (:459))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:532),
+  `validate_parameters` (:1081), `validate_duplicate_selections` (:565))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,
@@ -10553,6 +10553,186 @@ conditional_effect_and_stays_a_creation_effect` (D46 re-scope, above);
 now `COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE`, or `PENDING_DROPPED_CLAUSE` for the
 genuine residual gaps above); `rules_source_provenance.rs` (the four new DE
 anchors).
+
+---
+
+## X6a — rule-driving parameter engine additions (`docs/vf-audit/design-x6-parameters.md` § 1)
+
+Engine only, **no data** — the 16 rule-driving entries themselves land in X6b.
+Every field below is additive on `Effect`/`ParameterDef`/`PointItem` (ruleset
+JSON, not saves), so no `SCHEMA_VERSION` bump (D70/Q-X6-4).
+
+**e1 — `gate: Option<ParamGate>` on `SoakMod`/`CharacteristicScoreDelta`/
+`AbilityRollMod`, plus `MagicResistanceMod::amount`.** Same idiom as
+`CharacteristicScoreDeltaParam`/`GrantsReputation`'s own `gate`: an inactive
+gate contributes nothing.
+
+- Engine: `types.rs::Effect::SoakMod`, `Effect::CharacteristicScoreDelta`,
+  `Effect::AbilityRollMod`, `Effect::MagicResistanceMod` (each gains `gate`;
+  `MagicResistanceMod` also gains `amount: i32`). Consumers: `derived.rs::in_play_mods`
+  (`SoakMod`, `AbilityRollMod`, `MagicResistanceMod`'s `AuraBonus` arm — folded
+  into a new `InPlayMods::aura_bonus` field), `effective/characteristic.rs::characteristic_score_bonus`
+  (`CharacteristicScoreDelta`).
+- Tests: `crates/arm-rules/tests/x6a_parameter_engine.rs`, `mod e1_gated_effects`.
+
+**e2 — Commanding Aura's flat MR (plumbing only; relic composition is X7b-d's,
+not yet wired).** Source: ArMDE:3583, ArMDE:17653, ArMDE:2627 (the book's
+"relic absent" composition). `derived/casting.rs::magic_resistance` folds
+`mods.aura_bonus` against the ordinary/True-Faith floor via `max()`. The
+"relic present" branch (adds instead of competing) needs X7b-d's `relic_mr`,
+which does not exist yet; until then this is always the relic-absent path.
+
+- Tests: `x6a_parameter_engine.rs::e1_gated_effects::magic_resistance_mod_aura_bonus_applies_when_gate_met`
+  (tagged e1/e2 in its own doc comment).
+
+**e3 — Ability-category/id narrowing on `ParameterDef`.** `require_ability_categories:
+BTreeSet<AbilityCategory>` (non-empty-intersection, `Ability` domain only,
+mirrors `require_categories`) and `forbid_ids: BTreeSet<Id>` (subtractive
+mirror of `allow_ids`). Both raise the existing `unknown_param_value` — the
+narrowing IS the domain, no code of its own.
+
+- Engine: `types.rs::ParameterDef`; enforced in
+  `validation/selections.rs::param_value_resolves` (`Ability` arm); load-time
+  gates in `ruleset/integrity.rs::validate_parameter_defs` (domain must be
+  `ability`).
+- Tests: `x6a_parameter_engine.rs`, `mod e3_ability_category_narrowing`.
+
+**e4 — `exact_count: Option<u8>` on `MultiRef`.** New code
+`wrong_param_count` (`issue-wrong_param_count = { $item } names { $count }
+values for { $key }, but exactly { $expected } are required.`, both locales).
+Counts DISTINCT members of the selection's `BTreeSet<Id>`, so a repeated value
+never inflates the count.
+
+- Engine: `types.rs::ParameterDef::exact_count`; enforced in
+  `validation/selections.rs::validate_selection_parameters` (the `Multi`/`true`
+  arm); load-time gates in `ruleset/integrity.rs::validate_parameter_defs`
+  (`multi_ref`-only, rejects `0`).
+- Fluent: `issue-wrong_param_count` (`locales/en/main.ftl`, `locales/de/main.ftl`).
+- Contract table row: `validation/mod.rs::ValidationIssue` doc comment.
+- Tests: `x6a_parameter_engine.rs`, `mod e4_multi_ref_exact_count`.
+
+**e5 — the two XP-scope validators.** *Ability Block:* `Effect::ForbidsAbilityCategoryParam
+{ param }`, the parameter-relative sibling of B1's fixed `ForbidsAbilityCategory`,
+consumed by the SAME grant-aware validator
+(`validation/selections.rs::validate_category_effect_prohibitions`), gaining
+an arm that resolves `selection.params[param]` against the new
+`ParameterDomain::AbilityCategory` (closed 5-member enum, `AbilityCategory::from_id`,
+`ability.rs`; labelled through the already-shipped `ability-category-<slug>`
+Fluent family — no new i18n). *Restricted Learning:* `RestrictedAbilityXp::abilities_param:
+Option<String>` names a `multi_ref`/`ability` parameter whose resolved set is a
+FOURTH eligibility source unioned with `abilities`/`categories`/`instances`
+(D48 extended). New validator `validation/selections.rs::validate_ability_xp_scope`
+fires only when at least one effective selection carries an entry naming
+`abilities_param` (an ordinary earmark — Educated, Warrior, Privileged
+Upbringing — never sets it and stays unaffected); it checks every scored
+Ability against the union. New code `ability_outside_restricted_scope`
+(`issue-ability_outside_restricted_scope = { $item } restricts experience to
+{ $allowed }; { $ability } is outside that list.`, both locales).
+
+- Engine: `types.rs::Effect::ForbidsAbilityCategoryParam`,
+  `Effect::RestrictedAbilityXp::abilities_param`, `types.rs::ParameterDomain::AbilityCategory`;
+  `ability.rs::AbilityCategory::from_id`; `validation/selections.rs::validate_ability_xp_scope`,
+  wired into `validation/mod.rs::validate`; export label:
+  `export/resolve.rs::Doc::taxonomy_label` (`AbilityCategory` arm).
+- Fluent: `issue-ability_outside_restricted_scope` (both locales).
+- Contract table row: `validation/mod.rs::ValidationIssue` doc comment.
+- Tests: `x6a_parameter_engine.rs`, `mod e5_xp_scope_validators`.
+
+**e6 — Savantism through D29's single resolution point.** `Effect::AbilityScoreCapOverrideParam
+{ param, max }` (the favored Ability caps at `max` INSTEAD OF the age band —
+may raise, not just lower) and `Effect::AbilityScoreCapAllExcept { param, max }`
+(every OTHER Ability caps at `max`, lowering the band). Both fold into
+`ability_age_cap` — never a second check beside it, per D29 — with the
+override taking precedence (returns outright) over the all-except clamp.
+
+- Engine: `types.rs::Effect::AbilityScoreCapOverrideParam`,
+  `Effect::AbilityScoreCapAllExcept`; folded in
+  `effective/reputation_and_caps.rs::ability_age_cap`.
+- No new Fluent key (existing cap-violation plumbing reads the resolved cap).
+- Tests: `x6a_parameter_engine.rs`, `mod e6_savantism_caps`.
+
+**e7 — Warped Senses' conditional incompatibility (surfaced by this pass, not
+in `tmp/x6-scope.md`'s own e1-e8 list).** `PointItem::conditional_incompatible_with:
+Vec<ConditionalIncompatibility>`, `ConditionalIncompatibility { gate: ParamGate,
+forbids: BTreeSet<Id> }` — a per-VALUE extension of the flat
+`incompatible_with`, active only when `gate` holds for the declaring
+selection. Consumed by `validation/prereq.rs::validate_incompatibilities` as
+one more forbidden-id source per selection, reusing the existing
+`incompatible` code and its pair-dedup — D58 rules this a hard error even
+though the -2 penalty itself stays text (D61).
+
+- Engine: `types.rs::PointItem::conditional_incompatible_with`,
+  `types.rs::ConditionalIncompatibility`; consumed in
+  `validation/prereq.rs::validate_incompatibilities`; load-time gates in
+  `ruleset/integrity.rs::validate_point_items` (gate resolves on the SAME
+  item via `validate_param_gate`; every forbidden id is a real point item).
+- No new Fluent key.
+- Tests: `x6a_parameter_engine.rs`, `mod e7_conditional_incompatibility`.
+
+**Not this slice:** the 16 rule-driving entries' own JSON data (X6b); the
+relic/True-Faith composition split (F-256, X7b-d); Commanding Aura stacking,
+Turb Trained's dead-language catalogue dependency, and Special Circumstances'
++3 (design note § 5, Norbert's answers recorded in `decisions.md` D70).
+
+---
+
+#### Ability-minimum / cross-Virtue prerequisites — F-30, F-56, F-145, F-169, F-172, F-183, F-223, F-252, F-261, F-322, F-324 (X5b, `docs/vf-audit/corrections.md` § 3.6)
+
+Eleven entries state an eligibility gate — an Ability score floor, a
+cross-Virtue requirement, or both. All eleven are pure data: every gate is
+expressible with a `Prereq` variant that already existed
+(`All`/`Any`/`Nor`/`Has`/`AbilityMin`), so no engine change landed with this
+slice.
+
+- **The id-level proxy for a parameterized Ability applies again, at four more
+  sites.** `virtue.cathedral_school_master`, `virtue.doctor_in_faculty`,
+  `virtue.magister_in_artibus`, `virtue.magister_in_medicina` and
+  `virtue.rosh_beth_din` each state a Latin or Hebrew minimum — an instance of
+  the parameterized `ability.dead_language` — and `AbilityMin` matches by
+  Ability id alone, ignoring `AbilityScore::parameter` entirely (see "Hermetic
+  minimum Abilities" above, which documents this as PERMANENT). Encoding
+  `ability_min ability.dead_language 5` for these is that same shipped
+  precedent applied to a second family, not a fresh judgement.
+- **`virtue.master_bard`'s Profession clause is enforced too (D70).** Norbert,
+  2026-09-29: "Master Bard's Profession clause is enforced as 'some Profession
+  at 5', the id-level check already used for the Latin minimums." So the gate
+  is `all[ability_min(ability.profession, 5), any[the four Lores at 5]]`,
+  matching `ArMDE:4457-4462`.
+- **`virtue.doctor_in_faculty`'s third clause stays text (F-56).** "The
+  Ability that correlates to his faculty degree" depends on this entry's own
+  open `faculty` parameter, which no `Prereq` variant can bind to — only two
+  of the three stated minima (Artes Liberales, Latin) are encoded.
+- **`virtue.license_of_absence` reclassifies `uncomputed_rule` →
+  `creation_effect` (D67).** Its only two stated rules ("only a Priest may
+  take it", "never a Senior Clergy") are now both captured by
+  `all[has(virtue.priest), none[has(virtue.senior_clergy)]]` — per D67, "an
+  entry whose only stated rule is such a constraint is `creation_effect`."
+- **Three age formulas stay `description` text, not `Prereq`** — none reads
+  `Entity::age`, and two are formulas a flat floor cannot express anyway:
+  `virtue.cathedral_school_master`/`virtue.magister_in_artibus`
+  ("30/25 − Int", F-29/F-171, out of this family's scope), and
+  `virtue.rosh_beth_din` ("30 − Int", F-252, in scope — the shipped
+  `description` now states it verbatim in both locales).
+  `virtue.senior_bard`'s flat "minimum age of 22" (F-261) is likewise
+  text-only here since `Prereq::AgeMin` was not yet on `main` at this slice's
+  HEAD; a later pass should reconsider it once `AgeMin` ships (it cannot help
+  Rosh Beth Din's formula either way).
+- **`virtue.physician_of_salerno`'s "must be able to take Academic Abilities"
+  (F-223) is not a `Prereq` at all** — it gates on whether a *category* is
+  authorized, which no `Prereq` variant tests, and the entry's own
+  `restricted_ability_xp` effect grants exactly that permission, so a
+  same-entry gate would be circular. `description` text in both locales.
+- **`virtue.town_magistrate`** (F-322): `any[ability_min(civil_and_canon_law,
+  3), ability_min(common_law, 3)]`, `ArMDE:5149-5152`.
+- **`virtue.trained_assassin`** (F-324): `any[has(virtue.fidai),
+  has(virtue.lasiq)]` — the passage names no Virtue directly ("one of the
+  Social Status Virtues of the Nizaris"), resolved to the two Nizari
+  Social-Status Virtues in the catalogue, `ArMDE:5153-5156`.
+- Data: `rules/core/virtues_flaws.json`, all eleven entries above. Text-only
+  additions: `rules/i18n/{en,de}/virtues_flaws.json` for
+  `virtue.physician_of_salerno`, `virtue.rosh_beth_din`,
+  `virtue.senior_bard`.
+- Tests: `crates/arm-rules/tests/x5b_ability_minimums.rs`.
 
 ---
 

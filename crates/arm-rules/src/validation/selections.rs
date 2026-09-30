@@ -320,6 +320,35 @@ pub(crate) fn validate_category_effect_prohibitions(
                     }
                 }
             }
+            // X6a/e5: the parameter-relative sibling — the forbidden
+            // category is named by THIS selection's own parameter (Ability
+            // Block, "may be Martial Abilities, or a more limited set of the
+            // others") rather than fixed on the item.
+            if let Effect::ForbidsAbilityCategoryParam { param } = effect
+                && let Some(category) = selection
+                    .params
+                    .get(param)
+                    .and_then(SelectionParamValue::as_single)
+                    .and_then(crate::ability::AbilityCategory::from_id)
+            {
+                for ability_id in &held_abilities {
+                    if ruleset
+                        .abilities
+                        .get(ability_id)
+                        .is_some_and(|a| a.category == category)
+                    {
+                        issues.push(ValidationIssue::error(
+                            ValidationIssue::CODE_ABILITY_FORBIDDEN_BY_EFFECT,
+                            CreationPhase::Abilities,
+                            args([
+                                ("ability", ability_id.to_string()),
+                                ("other", selection.item_ref.to_string()),
+                            ]),
+                            Some(ability_id.clone()),
+                        ));
+                    }
+                }
+            }
             if let Effect::ForbidsAbilities { abilities } = effect {
                 for ability_id in abilities {
                     if held_abilities.contains(ability_id) {
@@ -363,6 +392,83 @@ pub(crate) fn validate_category_effect_prohibitions(
                     }
                 }
             }
+        }
+    }
+}
+
+/// X6a/e5: Restricted Learning's closed funding scope — an
+/// [`Effect::RestrictedAbilityXp`] entry that names `abilities_param` states
+/// that the union of its `abilities`/`categories` PLUS that parameter's own
+/// resolved set is the ONLY thing experience may fund at all (ArMDE:6685),
+/// unlike an ordinary earmark (Educated, Warrior, Privileged Upbringing),
+/// which merely reserves part of the general pool and leaves the rest free.
+/// Fires only when at least one effective selection carries such an entry —
+/// an entity with no closed-scope grant is unrestricted, exactly as before
+/// this validator existed.
+///
+/// Grant-aware (`selections` is the folded bought-plus-granted list), on
+/// [`validate_category_effect_prohibitions`]'s own precedent (D2).
+pub(crate) fn validate_ability_xp_scope(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    selections: &[Selection],
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let mut allowed_abilities: BTreeSet<Id> = BTreeSet::new();
+    let mut allowed_categories: BTreeSet<crate::ability::AbilityCategory> = BTreeSet::new();
+    let mut scoping_item: Option<Id> = None;
+
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            let Effect::RestrictedAbilityXp {
+                abilities,
+                categories,
+                abilities_param: Some(param_key),
+                ..
+            } = effect
+            else {
+                continue;
+            };
+            scoping_item = Some(selection.item_ref.clone());
+            allowed_abilities.extend(abilities.iter().cloned());
+            allowed_categories.extend(categories.iter().copied());
+            if let Some(SelectionParamValue::Multi(named)) = selection.params.get(param_key) {
+                allowed_abilities.extend(named.iter().cloned());
+            }
+        }
+    }
+
+    let Some(scoping_item) = scoping_item else {
+        return;
+    };
+
+    let allowed_display = allowed_abilities
+        .iter()
+        .map(Id::to_string)
+        .chain(allowed_categories.iter().map(|c| c.to_string()))
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    for scored in &entity.ability_scores {
+        let in_scope = allowed_abilities.contains(&scored.ability)
+            || ruleset
+                .abilities
+                .get(&scored.ability)
+                .is_some_and(|def| allowed_categories.contains(&def.category));
+        if !in_scope {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_ABILITY_OUTSIDE_RESTRICTED_SCOPE,
+                CreationPhase::Abilities,
+                args([
+                    ("item", scoping_item.to_string()),
+                    ("allowed", allowed_display.clone()),
+                    ("ability", scored.ability.to_string()),
+                ]),
+                Some(scored.ability.clone()),
+            ));
         }
     }
 }
@@ -845,7 +951,18 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
                     .exclude_if
                     .is_some_and(|predicate| predicate.holds_for(item))
         }),
-        ParameterDomain::Ability => ruleset.abilities.contains_key(value),
+        // X6a/e3: `require_ability_categories` narrows to a non-empty
+        // intersection with the ability's own category (Performance Magic:
+        // General only); `forbid_ids` subtracts specific ids even if their
+        // category would otherwise qualify (Magian Lineage Major: excludes
+        // True Names). Both narrow the SAME domain, so a value failing
+        // either raises the existing `unknown_param_value`, on
+        // `require_categories`'s own precedent.
+        ParameterDomain::Ability => ruleset.abilities.get(value).is_some_and(|def| {
+            (param.require_ability_categories.is_empty()
+                || param.require_ability_categories.contains(&def.category))
+                && !param.forbid_ids.contains(value)
+        }),
         ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
         ParameterDomain::Art => ruleset.arts.contains_key(value),
         ParameterDomain::Technique => ruleset
@@ -866,6 +983,12 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // registry, the same way `Characteristic` is for `characteristic`
         // (ArMDE:3909).
         ParameterDomain::Realm => Realm::from_id(value).is_some(),
+        // No catalogue and no declared list: the closed 5-member
+        // `AbilityCategory` enum IS the registry (X6a/e5), the same idiom as
+        // `Realm` immediately above.
+        ParameterDomain::AbilityCategory => {
+            crate::ability::AbilityCategory::from_id(value).is_some()
+        }
         ParameterDomain::Text => !value.as_str().trim().is_empty(),
         // D35: the domain carries no registry of its own (see
         // `ParameterDomain::Number`'s doc comment) — the bound lives on
@@ -1134,6 +1257,24 @@ pub(crate) fn validate_selection_parameters(
                             Some(selection.item_ref.clone()),
                         ));
                     }
+                }
+                // X6a/e4: `exact_count` counts DISTINCT members — `set` is
+                // already a `BTreeSet`, so a duplicate the player entered
+                // twice has already collapsed before this comparison runs.
+                if let Some(expected) = param.exact_count
+                    && set.len() != usize::from(expected)
+                {
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_WRONG_PARAM_COUNT,
+                        phase,
+                        args([
+                            ("item", selection.item_ref.to_string()),
+                            ("key", param.key.clone()),
+                            ("count", set.len().to_string()),
+                            ("expected", expected.to_string()),
+                        ]),
+                        Some(selection.item_ref.clone()),
+                    ));
                 }
             }
         }

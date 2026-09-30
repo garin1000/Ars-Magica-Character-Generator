@@ -663,6 +663,16 @@ pub enum ParameterDomain {
     /// Corrupted entries all let the player name a set), but nothing in the
     /// type system forces that pairing.
     Spell,
+    /// Value is one of the closed 5-member [`AbilityCategory`] enum, as
+    /// `ability_category.<slug>` — resolved by [`AbilityCategory::from_id`],
+    /// with no catalogue and no declared `values` list, exactly as
+    /// [`Self::Realm`] resolves against the closed [`Realm`] enum (X6a/e5:
+    /// Ability Block's `class` parameter, ArMDE:5651-5654).
+    ///
+    /// Labels come from the already-shipped `ability-category-<slug>` Fluent
+    /// family (the ability filter UI), never from rules i18n, which has no
+    /// entry for a bare category slug.
+    AbilityCategory,
 }
 
 impl ParameterDomain {
@@ -701,6 +711,7 @@ impl fmt::Display for ParameterDomain {
             ParameterDomain::Text => f.write_str("text"),
             ParameterDomain::Number => f.write_str("number"),
             ParameterDomain::Spell => f.write_str("spell"),
+            ParameterDomain::AbilityCategory => f.write_str("ability_category"),
         }
     }
 }
@@ -871,6 +882,31 @@ pub struct ParameterDef {
     /// [`Self::require_categories`]'s own catalogue check).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub allow_ids: BTreeSet<Id>,
+    /// Narrows an [`ParameterDomain::Ability`] parameter to a non-empty
+    /// intersection with these [`AbilityCategory`] values — the `Ability`-domain
+    /// mirror of [`Self::require_categories`] (X6a/e3: Performance Magic,
+    /// "General Ability", ArMDE:4646-4648). Empty (the default) means "any
+    /// category", exactly as before this field existed.
+    ///
+    /// Enforced by `validation::selections::param_value_resolves`, raising the
+    /// existing [`crate::validation::ValidationIssue::CODE_UNKNOWN_PARAM_VALUE`]
+    /// — the narrowing IS the domain, not a code of its own.
+    ///
+    /// Load-time integrity rejects the field on any domain but `ability`.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub require_ability_categories: BTreeSet<AbilityCategory>,
+    /// Subtracts these ids from an [`ParameterDomain::Ability`] parameter's
+    /// domain — the subtractive mirror of [`Self::allow_ids`] (X6a/e3: Magian
+    /// Lineage (Major) excludes True Names even though it is
+    /// Supernatural-category, ArMDE:4345). Empty (the default) excludes
+    /// nothing.
+    ///
+    /// Enforced by `validation::selections::param_value_resolves`, raising the
+    /// existing [`crate::validation::ValidationIssue::CODE_UNKNOWN_PARAM_VALUE`].
+    ///
+    /// Load-time integrity rejects the field on any domain but `ability`.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub forbid_ids: BTreeSet<Id>,
     /// The point item an [`ParameterDomain::Item`] value names must be one the
     /// entity actually **holds**. `false` (the default, and the shape of every
     /// parameter shipped before False Power) means the target need not be on
@@ -1018,6 +1054,21 @@ pub struct ParameterDef {
     /// `AbilityRef`/`CategoryRef`'s own gate — not a new invention.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub required_if: Option<ParamGate>,
+    /// The exact number of DISTINCT values a [`ParamType::MultiRef`] selection
+    /// must name — valid only when `param_type` is `multi_ref` (X6a/e4:
+    /// Restricted Learning, "choose five Abilities", ArMDE:6685). `None` (the
+    /// default) states no count. Counted against
+    /// [`SelectionParamValue::Multi`]'s own `BTreeSet<Id>`, so a repeated
+    /// value never inflates the count — the point of using a set at all.
+    ///
+    /// Enforced by `validation::selections::validate_selection_parameters`,
+    /// raising the new
+    /// [`crate::validation::ValidationIssue::CODE_WRONG_PARAM_COUNT`].
+    ///
+    /// Load-time integrity rejects the field on any `param_type` but
+    /// `multi_ref`, and rejects `0` (no selection could ever satisfy it).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exact_count: Option<u8>,
 }
 
 impl ParameterDef {
@@ -1033,11 +1084,14 @@ impl ParameterDef {
             max_per_value: default_max_per_value(),
             require_categories: Default::default(),
             allow_ids: Default::default(),
+            require_ability_categories: Default::default(),
+            forbid_ids: Default::default(),
             require_possessed: false,
             forbid_tainted: false,
             require_power: false,
             exclude_if: None,
             required_if: None,
+            exact_count: None,
         }
     }
 
@@ -1052,11 +1106,14 @@ impl ParameterDef {
             max_per_value: default_max_per_value(),
             require_categories: Default::default(),
             allow_ids: Default::default(),
+            require_ability_categories: Default::default(),
+            forbid_ids: Default::default(),
             require_possessed: false,
             forbid_tainted: false,
             require_power: false,
             exclude_if: None,
             required_if: None,
+            exact_count: None,
         }
     }
 }
@@ -1132,6 +1189,20 @@ impl ParamGate {
             .and_then(SelectionParamValue::as_single)
             == Some(&self.equals)
     }
+}
+
+/// One entry of [`PointItem::conditional_incompatible_with`] (X6a/e7): while
+/// `gate` holds for the declaring item's own selection, every id in `forbids`
+/// becomes incompatible with it — a per-VALUE extension of the flat
+/// [`PointItem::incompatible_with`], read by
+/// `validation::prereq::validate_incompatibilities`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConditionalIncompatibility {
+    /// The condition on the declaring item's OWN parameter that activates
+    /// this exclusion.
+    pub gate: ParamGate,
+    /// The ids forbidden alongside the declaring selection while `gate` holds.
+    pub forbids: BTreeSet<Id>,
 }
 
 /// An Ability id inside an [`Effect::AbilityAuthorization`] /
@@ -1426,6 +1497,14 @@ pub enum Effect {
         /// are real grants, not earmarks, and must not lose XP by this change.
         #[serde(default, skip_serializing_if = "is_false")]
         from_normal_budget: bool,
+        /// Names a `multi_ref`/`ability`-domain parameter on the SAME item
+        /// whose resolved set is a FOURTH eligibility source, unioned with
+        /// `abilities`/`categories`/`instances` (X6a/e5, D48 extended):
+        /// Restricted Learning's five player-named Abilities
+        /// (ArMDE:6685). `None` (the default) leaves the
+        /// union exactly as it was before this field existed.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        abilities_param: Option<String>,
     },
     /// D35's parameter-scaled sibling of [`Self::RestrictedAbilityXp`]: the
     /// granted pool's `amount` is `per_unit` times the value the selection's
@@ -1825,6 +1904,14 @@ pub enum Effect {
         characteristic: Id,
         /// The free effective-score bonus per selection (may be negative).
         amount: i8,
+        /// This grant applies only when the OWNING selection's own gate holds
+        /// — the fixed-target twin of [`Self::CharacteristicScoreDeltaParam`]'s
+        /// own `gate` (X6a/e1: Faerie Blood's Sidhe clause, +1 Presence only
+        /// for that heritage). Absent for every existing carrier — additive,
+        /// no `SCHEMA_VERSION` bump (`Effect` lives in ruleset JSON, not
+        /// saves).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gate: Option<ParamGate>,
     },
     /// Lowers the **buy cap** of a fixed Characteristic while this selection
     /// is in effect (bought or granted) — Uninspirational, "His Presence and
@@ -2088,6 +2175,13 @@ pub enum Effect {
     SoakMod {
         /// Points added to (or, when negative, removed from) Soak.
         amount: i8,
+        /// This modifier applies only when the OWNING selection's own gate
+        /// holds (X6a/e1: Repellent's "scales" branch, +3 Soak only for that
+        /// enumerated choice). Absent for every existing carrier — additive,
+        /// no `SCHEMA_VERSION` bump (`Effect` lives in ruleset JSON, not
+        /// saves).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gate: Option<ParamGate>,
     },
     /// A flat modifier to one combat total (Berserk, Lame, Missing Hand). An item
     /// may carry several (one per affected `target`). Consumed by `derived.rs`
@@ -2155,6 +2249,17 @@ pub enum Effect {
         /// Parameter key whose value names the Form this modifier is scoped to.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         param: Option<String>,
+        /// The flat Magic Resistance bonus (X6a/e1-e2: [`MagicResistanceEffect::AuraBonus`]'s
+        /// Commanding Aura figure — Pope rank grants 25). `0` (the default)
+        /// for every kind that carries no number of its own. Additive, no
+        /// `SCHEMA_VERSION` bump (`Effect` lives in ruleset JSON, not saves).
+        #[serde(default, skip_serializing_if = "is_zero_i32")]
+        amount: i32,
+        /// This modifier applies only when the OWNING selection's own gate
+        /// holds (Commanding Aura's `rank` enumeration). Absent for every
+        /// existing carrier.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gate: Option<ParamGate>,
     },
     /// An aging / longevity modifier. `kind` selects which aging subsystem it
     /// touches, `amount` the signed modifier — 0 when the `kind` is itself the
@@ -2246,6 +2351,11 @@ pub enum Effect {
         ability: Id,
         /// Points added to rolls of that ability.
         amount: i8,
+        /// This modifier applies only when the OWNING selection's own gate
+        /// holds (X6a/e1: Faerie Blood's Dwarf clause, +1 Craft only for that
+        /// heritage). Absent for every existing carrier.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gate: Option<ParamGate>,
     },
     /// A flat modifier to rolls of a specific Ability in the free-text subject
     /// named by the selection's `params[param]` (Academic Concentration: a bonus
@@ -2327,6 +2437,38 @@ pub enum Effect {
     ///
     /// Source: ArMDE:4498.
     WaivesAbilityAgeCap,
+    /// The favored-Ability override this variant's own doc comment above
+    /// anticipated (X6a/e6, D9): the Ability named by the OWNING selection's
+    /// `params[param]` caps at `max` INSTEAD OF the age-band figure — Savantism,
+    /// "except for one favored Ability, which is limited to a score of 6"
+    /// (ArMDE:6705-6706). Folds into the single
+    /// age-cap resolution point (D29,
+    /// `effective/reputation_and_caps.rs::ability_age_cap`), never a second
+    /// check beside it: an override naming the asked-about ability returns
+    /// `max` outright, bypassing the age band entirely (so it may raise the
+    /// cap, not just lower it).
+    ///
+    /// Source: ArMDE:6705-6706.
+    AbilityScoreCapOverrideParam {
+        /// Parameter key whose value names the favored Ability.
+        param: String,
+        /// The flat cap the favored Ability gets instead of the age band.
+        max: u8,
+    },
+    /// Savantism's sibling clause (X6a/e6): every OTHER Ability — every one
+    /// but the one named by the SAME item's `param` — caps at `max`, lowering
+    /// (never raising) the otherwise-applicable age band. Folds into the same
+    /// single age-cap resolution point as
+    /// [`Self::AbilityScoreCapOverrideParam`].
+    ///
+    /// Source: ArMDE:6705-6706.
+    AbilityScoreCapAllExcept {
+        /// Parameter key whose value names the ONE Ability this cap does
+        /// NOT apply to (Savantism's own favored Ability).
+        param: String,
+        /// The lowered cap for every other Ability.
+        max: u8,
+    },
     /// Marks the character as Hermetically trained without the type profile
     /// itself declaring so — the Abandoned Apprentice Flaw, "you have most of
     /// the skills and knowledge of a fully trained magus, but you were never
@@ -2384,6 +2526,20 @@ pub enum Effect {
     ForbidsAbilityCategory {
         /// The forbidden Ability category.
         category: AbilityCategory,
+    },
+    /// The parameter-relative sibling of [`Self::ForbidsAbilityCategory`]
+    /// (X6a/e5): the forbidden category is named by the OWNING selection's
+    /// own `params[param]` rather than fixed by the item — Ability Block,
+    /// "This may be Martial Abilities, or a more limited set of the others"
+    /// (ArMDE:5651-5654). Consumed by the SAME grant-aware validator, gaining
+    /// an arm that resolves `param` against
+    /// [`crate::types::ParameterDomain::AbilityCategory`] instead of matching
+    /// a fixed variant.
+    ///
+    /// Source: ArMDE:5651-5654.
+    ForbidsAbilityCategoryParam {
+        /// Parameter key whose value names the forbidden Ability category.
+        param: String,
     },
     /// Forbids the character from holding any OTHER Virtue/Flaw whose
     /// in-force category is this string — Weak Personality, "The character
@@ -3290,6 +3446,17 @@ pub struct PointItem {
     /// Items that may not be selected alongside this one (must be symmetric).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub incompatible_with: BTreeSet<Id>,
+    /// A per-VALUE extension of [`Self::incompatible_with`] (X6a/e7): each
+    /// entry's `forbids` applies only while its own `gate` holds for the
+    /// selection — Warped Senses' sight-only clause forbids Keen Vision only
+    /// when `sense` names sight, never for the hearing/smell/touch/taste
+    /// branches (D58, ArMDE:7029-7037: the incompatibility is absolute even
+    /// though the -2 penalty itself stays text, D61). Consumed by
+    /// `validation::prereq::validate_incompatibilities` as one more
+    /// forbidden-id source per selection, active only when the gate holds —
+    /// reuses the existing [`crate::validation::ValidationIssue::CODE_INCOMPATIBLE`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conditional_incompatible_with: Vec<ConditionalIncompatibility>,
     /// This item is illegal while ANY OTHER effective (bought or granted)
     /// selection satisfies one of these predicates — D23/B3,
     /// `flaw.university_dean`: "can not have the Poor Flaw or any other Flaw
@@ -3461,6 +3628,8 @@ struct PointItemRepr {
     #[serde(default)]
     incompatible_with: BTreeSet<Id>,
     #[serde(default)]
+    conditional_incompatible_with: Vec<ConditionalIncompatibility>,
+    #[serde(default)]
     excluded_if_holds: Vec<ItemPredicate>,
     #[serde(default)]
     parameters: Vec<ParameterDef>,
@@ -3494,6 +3663,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             prerequisites,
             advisory_prerequisites,
             incompatible_with,
+            conditional_incompatible_with,
             excluded_if_holds,
             parameters,
             effects,
@@ -3530,6 +3700,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             prerequisites,
             advisory_prerequisites,
             incompatible_with,
+            conditional_incompatible_with,
             excluded_if_holds,
             parameters,
             effects,
@@ -5993,7 +6164,10 @@ mod tests {
             Effect::MagicTotalHalving {
                 total: HalvableTotal::Penetration,
             },
-            Effect::SoakMod { amount: 3 },
+            Effect::SoakMod {
+                amount: 3,
+                gate: None,
+            },
             Effect::CombatMod {
                 amount: -2,
                 target: CombatStat::Defense,
@@ -6006,14 +6180,20 @@ mod tests {
             Effect::MagicResistanceMod {
                 kind: MagicResistanceEffect::NoFormBonus,
                 param: Some("form".into()),
+                amount: 0,
+                gate: None,
             },
             Effect::MagicResistanceMod {
                 kind: MagicResistanceEffect::HalvedParma,
                 param: Some("form".into()),
+                amount: 0,
+                gate: None,
             },
             Effect::MagicResistanceMod {
                 kind: MagicResistanceEffect::SusceptibleFaerie,
                 param: None,
+                amount: 0,
+                gate: None,
             },
             Effect::AgingMod {
                 kind: AgingEffect::AgingRoll,
@@ -6049,6 +6229,7 @@ mod tests {
             Effect::AbilityRollMod {
                 ability: Id::new("ability.awareness"),
                 amount: -3,
+                gate: None,
             },
             Effect::ElementalMagic {
                 forms: std::collections::BTreeSet::from([
@@ -8367,6 +8548,7 @@ mod tests {
                 categories: Vec::new(),
                 instances: Vec::new(),
                 from_normal_budget: false,
+                abilities_param: None,
             }
         );
         let round_tripped = serde_json::to_string(&effect).unwrap();

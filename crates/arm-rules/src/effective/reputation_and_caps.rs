@@ -198,6 +198,43 @@ pub fn ability_age_cap(
         // without limit, so this is an addend, never a second waiver.
         cap = cap.saturating_add(2);
     }
+    // X6a/e6: Savantism's favored-Ability override RAISES (not merely lowers)
+    // the cap for the one Ability its own `param` names, bypassing every
+    // adjustment above — the reason D29 requires this to be the single fold
+    // point rather than a second check beside it. Its sibling clause lowers
+    // every OTHER Ability's cap instead. Two selections could disagree (two
+    // Savantism copies with different favored Abilities); the override takes
+    // the higher figure and the all-except takes the lower, on the same
+    // "compose by the stricter/looser reading" precedent this function
+    // already uses for `LocalityAbilityCapFraction`.
+    let mut override_cap: Option<u8> = None;
+    let mut all_except_cap: Option<u8> = None;
+    for_each_effect!(entity, ruleset, |selection, effect| {
+        if let Effect::AbilityScoreCapOverrideParam { param, max } = effect
+            && selection
+                .params
+                .get(param)
+                .and_then(SelectionParamValue::as_single)
+                == Some(ability)
+        {
+            override_cap = Some(override_cap.map_or(*max, |m: u8| m.max(*max)));
+        }
+        if let Effect::AbilityScoreCapAllExcept { param, max } = effect
+            && selection
+                .params
+                .get(param)
+                .and_then(SelectionParamValue::as_single)
+                != Some(ability)
+        {
+            all_except_cap = Some(all_except_cap.map_or(*max, |m: u8| m.min(*max)));
+        }
+    });
+    if let Some(max) = override_cap {
+        return Some(max);
+    }
+    if let Some(max) = all_except_cap {
+        cap = cap.min(max);
+    }
     Some(cap)
 }
 

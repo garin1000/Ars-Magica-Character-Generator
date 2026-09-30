@@ -506,6 +506,21 @@ pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistan
         } else {
             (addends, ordinary_total)
         };
+        // X6a/e1-e2: Commanding Aura's flat bonus competes with (never adds
+        // to) the ordinary/True-Faith floor above, via the same `max()`
+        // idiom — the "relic absent" branch of the book's composition rule
+        // (ArMDE:3583, :17653, :2627). The "relic present" branch (adds
+        // instead of competing) is X7b-d's F-256 and not yet wired: `relic_mr`
+        // is a permanent 0 until that slice lands, so this is always the
+        // relic-absent path today.
+        let (addends, total) = if mods.aura_bonus > total {
+            (
+                vec![Addend::new("aura_bonus", mods.aura_bonus)],
+                mods.aura_bonus,
+            )
+        } else {
+            (addends, total)
+        };
         out.push(MagicResistance {
             form,
             addends,

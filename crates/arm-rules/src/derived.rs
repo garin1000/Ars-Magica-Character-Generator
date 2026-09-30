@@ -188,6 +188,10 @@ struct InPlayMods {
     /// Forms against which the Parma contribution to Magic Resistance is halved
     /// (Flawed Parma Magica, one copy per Form).
     halved_parma_forms: BTreeSet<Id>,
+    /// Sum of every active [`MagicResistanceEffect::AuraBonus`] (X6a/e1-e2:
+    /// Commanding Aura's flat MR bonus, gate-filtered). Read by
+    /// `derived/casting.rs::magic_resistance`.
+    aura_bonus: i32,
     /// Total no-voice-penalty reduction from Quiet Magic (+5 per casting; a second
     /// casting eliminates the penalty once clamped).
     voice_reduction: i32,
@@ -261,7 +265,13 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 Effect::MagicTotalHalving { total } => {
                     m.halvings.insert(*total);
                 }
-                Effect::SoakMod { amount } => m.soak_mod += i32::from(*amount),
+                // X6a/e1: an inactive gate contributes nothing — the same
+                // idiom `AbilityRef::active_for` already follows.
+                Effect::SoakMod { amount, gate } => {
+                    if gate.as_ref().is_none_or(|g| g.holds(selection)) {
+                        m.soak_mod += i32::from(*amount);
+                    }
+                }
                 // A weapon-scoped figure replaces this item's unscoped one on that
                 // weapon alone, so it is stored as the delta between them: adding
                 // it to the summed unscoped total yields the scoped figure while
@@ -309,7 +319,12 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // (the two realm susceptibilities that do halve MR), :3579-3596
                 // (Commanding Aura) & :4998-5001 (Special Circumstances) for
                 // aura_bonus, :7068-7070 (Weak Magic Resistance).
-                Effect::MagicResistanceMod { kind, param } => match kind {
+                Effect::MagicResistanceMod {
+                    kind,
+                    param,
+                    amount,
+                    gate,
+                } => match kind {
                     MagicResistanceEffect::NoFormBonus => {
                         if let Some(form) = param
                             .as_ref()
@@ -328,8 +343,16 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                             m.halved_parma_forms.insert(form.clone());
                         }
                     }
-                    MagicResistanceEffect::AuraBonus
-                    | MagicResistanceEffect::SusceptibleFaerie
+                    // X6a/e1-e2: Commanding Aura's flat bonus — folded into a
+                    // number `magic_resistance()` reads, unlike the three
+                    // scene-conditional kinds below, which stay surfaced-only.
+                    // An inactive gate contributes nothing.
+                    MagicResistanceEffect::AuraBonus => {
+                        if gate.as_ref().is_none_or(|g| g.holds(selection)) {
+                            m.aura_bonus += *amount;
+                        }
+                    }
+                    MagicResistanceEffect::SusceptibleFaerie
                     | MagicResistanceEffect::SusceptibleInfernal
                     | MagicResistanceEffect::ConditionalPenetrationWaiver => {
                         m.surfaced.push(SurfacedModifier {
@@ -424,14 +447,24 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // (`abilityLabel`'s own path), exactly like a bought Ability's
                 // name, so a raw catalogue id never reaches a field the
                 // component renders verbatim.
-                Effect::AbilityRollMod { ability, amount } => m.surfaced.push(SurfacedModifier {
-                    family: ModifierFamily::AbilityRoll,
-                    detail: String::new(),
-                    amount: i32::from(*amount),
-                    factor: None,
-                    source: Some(item.id.clone()),
-                    ability: Some(ability.clone()),
-                }),
+                // X6a/e1: an inactive gate surfaces nothing (Faerie Blood's
+                // Dwarf-only Craft bonus).
+                Effect::AbilityRollMod {
+                    ability,
+                    amount,
+                    gate,
+                } => {
+                    if gate.as_ref().is_none_or(|g| g.holds(selection)) {
+                        m.surfaced.push(SurfacedModifier {
+                            family: ModifierFamily::AbilityRoll,
+                            detail: String::new(),
+                            amount: i32::from(*amount),
+                            factor: None,
+                            source: Some(item.id.clone()),
+                            ability: Some(ability.clone()),
+                        });
+                    }
+                }
                 // D69/X7b-e row 42: Lingering Injury's category-wide penalty,
                 // multiplied by 1 + Decrepitude Score (ArMDE:6350-6352). The
                 // aggravated (-3) alternative stays text (no aggravation
@@ -512,8 +545,12 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // category/id forbid) — not an in-play total, no different
                 // from `ForbidsAbilitySpecialties` above.
                 | Effect::ForbidsAbilityCategory { .. }
+                | Effect::ForbidsAbilityCategoryParam { .. }
                 | Effect::ForbidsItemCategory { .. }
-                | Effect::ForbidsAbilities { .. } => {}
+                | Effect::ForbidsAbilities { .. }
+                // X6a/e6: folded only by `ability_age_cap`, not an in-play total.
+                | Effect::AbilityScoreCapOverrideParam { .. }
+                | Effect::AbilityScoreCapAllExcept { .. } => {}
             }
         }
     }

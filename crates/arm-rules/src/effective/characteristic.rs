@@ -204,8 +204,15 @@ pub fn characteristic_score_bonus(
             Effect::CharacteristicScoreDelta {
                 characteristic: target,
                 amount,
+                gate,
             } if Characteristic::from_id(target) == Some(characteristic) => {
-                bonus += i32::from(*amount);
+                // X6a/e1: an inactive gate contributes nothing (Faerie
+                // Blood's Sidhe-only Presence bonus) — same idiom as
+                // `CharacteristicScoreDeltaParam`'s own `gate` immediately
+                // below.
+                if gate.as_ref().is_none_or(|g| g.holds(selection)) {
+                    bonus += i32::from(*amount);
+                }
             }
             Effect::CharacteristicScoreDeltaParam {
                 param,

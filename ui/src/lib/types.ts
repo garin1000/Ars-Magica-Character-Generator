@@ -74,7 +74,12 @@ export type ParameterDomain =
   // spells (`Entity.spells`), never the ruleset's whole spell catalogue —
   // Corrupted Spells (ArMDE:5859-5863). In practice only ever paired with
   // `multi_ref`.
-  | 'spell';
+  | 'spell'
+  // X6a/e5: one of the closed 5-member AbilityCategory enum, as
+  // `ability_category.<slug>` — no catalogue, no declared `values`, exactly
+  // like `realm` above. Labelled through the already-shipped
+  // `ability-category-<slug>` Fluent family.
+  | 'ability_category';
 
 export interface ParameterDef {
   key: string;
@@ -114,6 +119,16 @@ export interface ParameterDef {
   // OWN category ('hermetic', 'special') the domain does not otherwise reach.
   // Absent on every other domain, where the engine rejects it at load (D34).
   allow_ids?: string[];
+  // Narrows the `ability` domain to a non-empty intersection with these
+  // AbilityCategory values (X6a/e3, the `ability`-domain mirror of
+  // `require_categories`). Absent on every other domain, where the engine
+  // rejects it at load.
+  require_ability_categories?: string[];
+  // Subtracts these ids from an `ability` domain's resolution — the
+  // subtractive mirror of `allow_ids` (X6a/e3: Magian Lineage Major excludes
+  // True Names). Absent on every other domain, where the engine rejects it
+  // at load.
+  forbid_ids?: string[];
   // The `item` the value names must be one the character HOLDS — bought or
   // granted, the engine's grants-inclusive `present_ids`. False Power is taken
   // "once for each appropriate Supernatural Virtue that the character
@@ -139,6 +154,10 @@ export interface ParameterDef {
   // control entirely when the gate does not hold, matching the engine's own
   // `missing_param` relaxation (`validation/selections.rs`).
   required_if?: ParamGate;
+  // The exact number of DISTINCT values a `multi_ref` selection must name
+  // (X6a/e4: Restricted Learning, "choose five Abilities"). Absent on any
+  // other `type`, where the engine rejects it at load.
+  exact_count?: number;
 }
 
 // Names a parameter this item declares and the literal value that activates

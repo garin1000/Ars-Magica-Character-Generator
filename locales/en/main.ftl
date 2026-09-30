@@ -1055,6 +1055,7 @@ param-domain-realm = Realm
 param-domain-text = Text
 param-domain-number = Number
 param-domain-spell = Spell
+param-domain-ability_category = Ability Category
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }
@@ -1227,6 +1228,8 @@ issue-duplicate_mastery_ability = Mastery ability { $ability } is chosen { $coun
 issue-ability_above_age_cap = { $ability } score { $score } exceeds the age-{ $age } maximum of { $cap }.
 issue-specialty_forbidden = { $ability } may not have a specialty ({ $specialty }) — Unspecialized forbids any Ability specialty.
 issue-ambiguous_bound_parameter = { $item } is held more than once; { $ability }'s linked value cannot be resolved until the duplicate is removed.
+issue-wrong_param_count = { $item } names { $count } values for { $key }, but exactly { $expected } are required.
+issue-ability_outside_restricted_scope = { $item } restricts experience to { $allowed }; { $ability } is outside that list.
 issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue (or the Gift's one free Ability).
 issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
 issue-fickle_nature_trait_pair_missing = { $item } requires at least two Personality Traits at exactly { $value } (a matched pair).
@@ -1416,6 +1419,7 @@ derived-addend-casting_mod_spontaneous = Casting modifier (spontaneous)
 derived-addend-parma = Parma Magica
 derived-addend-might = Might
 derived-addend-true_faith = True Faith
+derived-addend-aura_bonus = Aura bonus
 derived-addend-armor = Armor
 derived-addend-soak_mod = Soak modifier
 derived-addend-bronze_cord = Bronze cord

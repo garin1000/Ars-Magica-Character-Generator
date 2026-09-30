@@ -379,6 +379,7 @@ describe('German UI bundle', () => {
     text: true,
     number: true,
     spell: true,
+    ability_category: true,
   };
 
   it('labels every parameter domain in both locales', () => {

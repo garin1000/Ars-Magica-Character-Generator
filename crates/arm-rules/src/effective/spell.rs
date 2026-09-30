@@ -94,8 +94,12 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // B1/D21: category/ability prohibitions — no spell-levels
         // contribution, same reasoning as the markers above.
         | Effect::ForbidsAbilityCategory { .. }
+        | Effect::ForbidsAbilityCategoryParam { .. }
         | Effect::ForbidsItemCategory { .. }
         | Effect::ForbidsAbilities { .. }
+        // X6a/e6: folded only by `ability_age_cap`, no contribution here.
+        | Effect::AbilityScoreCapOverrideParam { .. }
+        | Effect::AbilityScoreCapAllExcept { .. }
         // D69/X7b-e: a surfaced-only roll penalty, not a contribution here.
         | Effect::DecrepitudeScaledRollMod { .. } => None,
     })
@@ -193,8 +197,12 @@ pub(crate) fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // B1/D21: category/ability prohibitions — no general-XP
         // contribution, same reasoning as the markers above.
         | Effect::ForbidsAbilityCategory { .. }
+        | Effect::ForbidsAbilityCategoryParam { .. }
         | Effect::ForbidsItemCategory { .. }
         | Effect::ForbidsAbilities { .. }
+        // X6a/e6: folded only by `ability_age_cap`, no contribution here.
+        | Effect::AbilityScoreCapOverrideParam { .. }
+        | Effect::AbilityScoreCapAllExcept { .. }
         // D69/X7b-e: a surfaced-only roll penalty, not a contribution here.
         | Effect::DecrepitudeScaledRollMod { .. } => None,
     })
@@ -611,8 +619,11 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 // B1/D21: category/ability prohibitions — no advancement
                 // multiplier either.
                 | Effect::ForbidsAbilityCategory { .. }
+                | Effect::ForbidsAbilityCategoryParam { .. }
                 | Effect::ForbidsItemCategory { .. }
                 | Effect::ForbidsAbilities { .. }
+                | Effect::AbilityScoreCapOverrideParam { .. }
+                | Effect::AbilityScoreCapAllExcept { .. }
                 | Effect::DecrepitudeScaledRollMod { .. } => None,
             })
     });
