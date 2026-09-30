@@ -1150,7 +1150,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1682).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1695).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1241,15 +1241,15 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2123, shared by
-  `validate_prereq_refs` :2025 and `validate_effect_refs` :2508) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2162, shared by
+  `validate_prereq_refs` :2064 and `validate_effect_refs` :2547) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :685).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :724).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -2805,6 +2805,78 @@ Inventing it for Student of (Realm) would forbid a build the book permits.
   (`docs/open-todos.md`). The same entry's "You may not take Student of (Realm)
   and Puissant Ability for the same Lore" (`ArMDE:5054`) is a cross-*item*
   constraint over a parameter value and is likewise unmodelled.
+
+#### D42 — every Supernatural entry's realm association (`docs/vf-audit/decisions.md` D42/D70/D74)
+
+> "All Supernatural Virtues and Flaws are associated with one of the four
+> realms … this should be the choice if the character concept does not
+> suggest another option. Some Virtues are always associated with other
+> realms, such as Faerie Blood and Strong Faerie Blood, which are always
+> associated with Faerie. A Virtue's description notes if it is limited in
+> this way." — `ArMDE:2960`.
+
+> "Tainted Virtues and Flaws are associated with the Infernal realm …
+> Supernatural abilities granted by Tainted Virtues or Flaws are always
+> Infernal powers." — `ArMDE:3000`.
+
+- Source: `ArMDE:2960`, `ArMDE:3000`; per-entry fixes at `ArMDE:3486` (Bee
+  King), `ArMDE:3581` (Commanding Aura), `ArMDE:3507` (Blood of the
+  Nephilim), `ArMDE:3661` (Demonic Blood's cross-entry bar, which is what
+  fixes Demonic Might/Powers), `ArMDE:4177` (Kassalan Exorcism),
+  `ArMDE:5026` (Strong Angelic Heritage), `ArMDE:6648` (Raised from the
+  Dead), `ArMDE:6979` (Viaticarus), `ArMDE:6406` (Manifest Sin's
+  Divine/Infernal subset), `ArMDE:3486` calibration note also covers
+  `ArMDE:4361` (Magical Blood) and `ArMDE:6456` (Monstrous Blood — same
+  origin-stated shape as Faerie Blood).
+- Data model: `types.rs::RealmAssociation` — `Fixed`/`Default`/`Subset`/
+  `FromParam`, an optional field on `types.rs::PointItem::realm_association`.
+  `None` for the ~90 Supernatural entries the book leaves free. A `tainted:
+  true` item (`ArMDE:3000`) resolves Infernal by that rule alone, ahead of
+  this field, so the nine Tainted-tagged entries in the 17-fixed tally carry
+  no `realm_association` of their own (double-storing the same fact could
+  silently drift). `types.rs::Entity::concept_realm: Option<Realm>` is the
+  concept-phase default source (D42: "a default source and nothing else" —
+  never the character's own realm).
+- Data: `rules/core/virtues_flaws.json` — Fixed: `virtue.faerie_blood`,
+  `virtue.strong_faerie_blood`, `virtue.bee_king` (Faerie); `virtue.
+  kassalan_exorcism`, `virtue.magical_blood`, `flaw.monstrous_blood` (Magic);
+  `virtue.strong_angelic_heritage`, `virtue.blood_of_the_nephilim`, `flaw.
+  viaticarus`, `virtue.commanding_aura`, `flaw.raised_from_the_dead`
+  (Divine); `virtue.demonic_might`, `virtue.demonic_powers` (Infernal).
+  Default: `virtue.hex`, `flaw.cursed_guile` (Infernal); `virtue.
+  spiritual_pact`, `flaw.warped_by_magic` (Magic); `virtue.sufi` (Divine).
+  Subset: `flaw.manifest_sin` (`{divine, infernal}`). FromParam (reusing the
+  entry's own `realm` parameter, D74 Q3): `flaw.bound_to_realm`, `flaw.
+  realm_stigmatic`, `flaw.necessary_realm_aura_for_ability`, `virtue.
+  folk_magic`.
+- Engine: the override is stored under a selection param key of its own,
+  `effective/realm.rs::REALM_OVERRIDE_PARAM_KEY` (`"association"`) — not
+  `"realm"`, which four of the entries above already use for a different (or,
+  for Folk Magic, the same) value. It is admitted as a legal key but never a
+  *required* one (`validation/selections.rs::validate_selection_parameters`),
+  so an old save with none of this stays clean. `effective/realm.rs::
+  resolve_realm` is the pure resolver (override → entry association →
+  concept → `Realm::Magic`); `validation/realm.rs::validate_realm_
+  associations` turns its warning into `realm_changed_default` /
+  `realm_unset_subset`, and separately flags a garbage override
+  (`unknown_param_value`, the same code any other unresolvable parameter
+  value raises) or one naming a realm outside a `Subset` entry's list
+  (`realm_override_invalid`).
+- Export: `export/sections.rs::Doc::item_rows` appends the resolved realm to
+  the existing text cell for a qualifying selection only
+  (`effective/realm.rs::item_has_realm_association`) — no new column, so an
+  entity holding no Supernatural entry renders byte-identical to before this
+  existed.
+- Tests: `crates/arm-rules/tests/d42_realms.rs` (resolution chain, each
+  association class, the garbage-override safety net, old-save
+  compatibility); `crates/arm-rules/tests/export_golden.rs` (`a_fixed_
+  supernatural_entrys_realm_rides_the_text_cell`, `a_non_supernatural_
+  entrys_text_cell_gets_no_realm_line`).
+- **Not modelled**: a *granted* copy's realm (Strong Faerie Blood's "faerie
+  eyes" Second Sight, Faerie Doctor's Dowsing, mythic-type grants) — D74
+  accepted "only where stated" as the target shape, but nothing wires a
+  per-grant override onto `grants_selection` yet. Recorded, not invented
+  (`docs/open-todos.md`).
 
 #### Selection multiplicity — one copy per named power
 > "This Flaw may be taken once for each power the character possesses."

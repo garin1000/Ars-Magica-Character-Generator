@@ -228,14 +228,34 @@ impl<'a> Doc<'a> {
                     return None;
                 }
                 let values = self.param_display_values(item, &selection.params);
-                let text = match item.classification {
+                let mut text = match item.classification {
                     Classification::UncomputedRule => self
                         .ruleset
                         .description(&selection.item_ref)
                         .or_else(|| self.ruleset.summary(&selection.item_ref)),
                     _ => self.ruleset.summary(&selection.item_ref),
                 }
-                .unwrap_or_default();
+                .unwrap_or_default()
+                .to_string();
+                // D42/D70/D74: every Supernatural entry is associated with one of
+                // the four Realms (ArMDE:2960); the association is resolved, never
+                // stored, so it has no cell of its own — it rides the existing
+                // text column instead, and only for a qualifying selection, so an
+                // entity holding no Supernatural entry renders byte-identical to
+                // before this existed.
+                if item_has_realm_association(item, selection) {
+                    let resolved = resolve_realm(item, selection, self.entity.concept_realm).realm;
+                    let realm_line = format!(
+                        "{}: {}",
+                        self.label("export-vf-realm-label"),
+                        self.label(&format!("realm-{resolved}"))
+                    );
+                    text = if text.is_empty() {
+                        realm_line
+                    } else {
+                        format!("{text} ({realm_line})")
+                    };
+                }
                 Some(vec![
                     self.parameterized_name(&selection.item_ref, &values),
                     item.categories
@@ -244,7 +264,7 @@ impl<'a> Doc<'a> {
                         .collect::<Vec<_>>()
                         .join(&self.list_separator()),
                     self.label(&format!("magnitude-{}", item.magnitude)),
-                    escape_cell(text),
+                    escape_cell(&text),
                 ])
             })
             .collect()

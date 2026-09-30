@@ -665,3 +665,43 @@ describe("VirtueFlawTab shows a multi_ref selection's values as joined, localize
     expect(outline.join(' ')).not.toContain('{targets}');
   });
 });
+
+// D42/D70/D74: a Supernatural selection's resolved realm, engine-computed via
+// `EffectiveScores.realm_associations` and keyed by the row's own `index`
+// (never `item_ref` alone — Folk Magic can repeat). `virtue.second_sight` is
+// this fixture's only `supernatural`-categoried item.
+describe('VirtueFlawTab D42 realm row', () => {
+  it('shows a Fixed realm read-only, with no override control', () => {
+    resetEntity([{ ref: 'virtue.second_sight' }]);
+    store.effective = {
+      realm_associations: [
+        { index: 0, item_ref: 'virtue.second_sight', realm: 'faerie', fixed: true },
+      ],
+    } as unknown as EffectiveScores;
+
+    const body = virtueColumn(html());
+    const realm = /<[a-z]+[^>]*data-testid="realm-0"[\s\S]*?<\/[a-z]+>/.exec(body)![0];
+    expect(realm).not.toContain('<select');
+    expect(clean(realm)).toContain('Faerie');
+  });
+
+  it('offers an override select for a non-fixed qualifying entry, resolved realm pre-selected', () => {
+    resetEntity([{ ref: 'virtue.second_sight' }]);
+    store.effective = {
+      realm_associations: [
+        { index: 0, item_ref: 'virtue.second_sight', realm: 'magic', fixed: false },
+      ],
+    } as unknown as EffectiveScores;
+
+    const body = virtueColumn(html());
+    const select = /<select[^>]*data-testid="realm-0"[\s\S]*?<\/select>/.exec(body)![0];
+    expect(select).toMatch(/<option value="realm.magic" selected/);
+  });
+
+  it('renders no realm control for an item with no realm association', () => {
+    resetEntity([{ ref: 'virtue.affinity' }]);
+    store.effective = { realm_associations: [] } as unknown as EffectiveScores;
+    const body = virtueColumn(html());
+    expect(body).not.toContain('data-testid="realm-0"');
+  });
+});

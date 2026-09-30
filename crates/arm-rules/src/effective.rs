@@ -59,6 +59,8 @@ mod reputation_and_caps;
 pub use reputation_and_caps::*;
 mod parameter_options;
 pub use parameter_options::*;
+mod realm;
+pub use realm::*;
 
 /// The selection list every effect / score computation iterates: the entity's
 /// bought selections plus any Virtue rows its Hermetic House grants (see

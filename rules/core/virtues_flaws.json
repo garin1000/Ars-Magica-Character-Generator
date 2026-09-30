@@ -261,6 +261,7 @@
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }],
+    "realm_association": { "kind": "from_param", "key": "realm" },
     "source": { "anchor": "bound-to-realm", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5731, 5734] }
   },
   {
@@ -626,6 +627,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "realm_association": { "kind": "default", "realm": "infernal" },
     "source": { "anchor": "cursed-guile", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5889, 5892] }
   },
   {
@@ -1852,6 +1854,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "realm_association": { "kind": "subset", "realms": ["divine", "infernal"] },
     "source": { "anchor": "manifest-sin", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6396, 6407] }
   },
   {
@@ -2002,6 +2005,7 @@
         "gate": { "param": "bloodline", "equals": "bloodline.magic_human" } },
       { "type": "ability_authorization", "abilities": ["ability.magic_lore"] }
     ],
+    "realm_association": { "kind": "fixed", "realm": "magic" },
     "source": { "anchor": "monstrous-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6454, 6467] }
   },
   {
@@ -2041,6 +2045,7 @@
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "realm", "type": "ref", "domain": "realm", "max_per_value": 255 }, { "key": "ability", "type": "ref", "domain": "ability", "max_per_value": 1 }],
+    "realm_association": { "kind": "from_param", "key": "realm" },
     "max_total": 255,
     "source": { "anchor": "necessary-realm-aura-for-ability", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6480, 6487] }
   },
@@ -2502,6 +2507,7 @@
       { "type": "warping_grant_param", "param": "years_since_resurrection", "base_points": 3 },
       { "type": "grants_reputation", "kind": "local", "score": 4 }
     ],
+    "realm_association": { "kind": "fixed", "realm": "divine" },
     "source": { "anchor": "raised-from-the-dead", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6646, 6649] }
   },
   {
@@ -2521,6 +2527,7 @@
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "realm", "type": "ref", "domain": "realm" }],
+    "realm_association": { "kind": "from_param", "key": "realm" },
     "source": { "anchor": "realm-stigmatic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6654, 6658] }
   },
   {
@@ -3329,6 +3336,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "realm_association": { "kind": "fixed", "realm": "divine" },
     "source": { "anchor": "viaticarus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6977, 6984] }
   },
   {
@@ -3419,6 +3427,7 @@
       { "type": "warping_grant", "score": 1, "points": 5 },
       { "type": "ability_authorization", "abilities": ["ability.magic_lore"] }
     ],
+    "realm_association": { "kind": "default", "realm": "magic" },
     "source": { "anchor": "warped-by-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7019, 7022] }
   },
   {
@@ -3882,6 +3891,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "aging_mod", "kind": "no_apparent_aging", "amount": 0 }],
+    "realm_association": { "kind": "fixed", "realm": "faerie" },
     "source": { "anchor": "bee-king", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3484, 3499] }
   },
   {
@@ -3910,6 +3920,7 @@
       { "type": "aging_mod", "kind": "aging_roll", "amount": -5 },
       { "type": "forbids_item_category", "category": "hermetic" }
     ],
+    "realm_association": { "kind": "fixed", "realm": "divine" },
     "source": { "anchor": "blood-of-the-nephilim", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3504, 3518] }
   },
   {
@@ -4078,6 +4089,7 @@
       { "key": "rank", "type": "ref", "domain": "enumerated",
         "values": ["rank.archbishop", "rank.cardinal_legatus", "rank.king", "rank.legatus_missus", "rank.pope"] }
     ],
+    "realm_association": { "kind": "fixed", "realm": "divine" },
     "effects": [
       { "type": "magic_resistance_mod", "kind": "aura_bonus", "amount": 25, "gate": { "param": "rank", "equals": "rank.pope" } },
       { "type": "soak_mod", "amount": 5, "gate": { "param": "rank", "equals": "rank.pope" } },
@@ -4255,6 +4267,7 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "might_grant", "realm": "infernal", "score": 2 }],
+    "realm_association": { "kind": "fixed", "realm": "infernal" },
     "max_per_target": 255,
     "max_total": 255,
     "max_share_of_kind": { "numerator": 1, "denominator": 2 },
@@ -4269,6 +4282,7 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "power_levels", "amount": 20 }],
+    "realm_association": { "kind": "fixed", "realm": "infernal" },
     "max_per_target": 255,
     "max_total": 255,
     "max_share_of_kind": { "numerator": 1, "denominator": 2 },
@@ -4624,6 +4638,7 @@
       { "type": "ability_roll_mod", "ability": "ability.stealth", "amount": 1,
         "gate": { "param": "heritage", "equals": "heritage.goblin" } }
     ],
+    "realm_association": { "kind": "fixed", "realm": "faerie" },
     "source": { "anchor": "faerie-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3797, 3820] }
   },
   {
@@ -4828,6 +4843,7 @@
         ]
       }
     ],
+    "realm_association": { "kind": "from_param", "key": "realm" },
     "max_total": 255,
     "source": { "anchor": "folk-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3907, 3920] }
   },
@@ -5154,6 +5170,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_score_grant", "ability": "ability.hex", "amount": 1 }],
+    "realm_association": { "kind": "default", "realm": "infernal" },
     "source": { "anchor": "hex", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4075, 4078] }
   },
   {
@@ -5356,6 +5373,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "realm_association": { "kind": "fixed", "realm": "magic" },
     "source": { "anchor": "kassalan-exorcism", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4173, 4186] }
   },
   {
@@ -5716,6 +5734,7 @@
         "gate": { "param": "bloodline", "equals": "bloodline.magic_human" } },
       { "type": "ability_authorization", "abilities": ["ability.magic_lore"] }
     ],
+    "realm_association": { "kind": "fixed", "realm": "magic" },
     "source": { "anchor": "magical-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4359, 4372] }
   },
   {
@@ -6860,6 +6879,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "realm_association": { "kind": "default", "realm": "magic" },
     "source": { "anchor": "spiritual-pact", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5010, 5021] }
   },
   {
@@ -6874,6 +6894,7 @@
       { "type": "might_grant", "realm": "divine", "score": 0 },
       { "type": "power_levels", "amount": 30 }
     ],
+    "realm_association": { "kind": "fixed", "realm": "divine" },
     "max_per_target": 255,
     "max_total": 255,
     "source": { "anchor": "strong-angelic-heritage", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5022, 5031] }
@@ -6902,6 +6923,7 @@
       { "type": "ability_roll_mod", "ability": "ability.stealth", "amount": 1,
         "gate": { "param": "heritage", "equals": "heritage.goblin" } }
     ],
+    "realm_association": { "kind": "fixed", "realm": "faerie" },
     "source": { "anchor": "strong-faerie-blood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5032, 5047] }
   },
   {
@@ -6994,6 +7016,7 @@
     "effects": [
       { "type": "ability_authorization", "abilities": ["ability.dominion_lore", "ability.islamic_law", "ability.theology_islam"] }
     ],
+    "realm_association": { "kind": "default", "realm": "divine" },
     "max_total": 1,
     "source": { "anchor": "sufi", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5077, 5084] }
   },

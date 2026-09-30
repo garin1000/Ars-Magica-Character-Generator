@@ -87,11 +87,11 @@ pub use effective::{
     decrepitude_score, effective_ability_score, effective_art_score,
     effective_characteristic_after_aging, effective_characteristic_score,
     effective_characteristics, effective_might, effective_spell_mastery, entity_grants,
-    focus_points_budget, focus_points_used, is_hermetically_trained, item_level_budget,
-    item_level_used, life_stage_spell_levels, power_levels_budget, powers_used, reputation_grants,
-    resolved_spell_level, restricted_xp_pools, size, spell_level_cap, spell_level_caps,
-    spell_levels_base, spell_levels_bonus, spell_levels_budget, spell_levels_used,
-    spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
+    focus_points_budget, focus_points_used, is_hermetically_trained, item_has_realm_association,
+    item_level_budget, item_level_used, life_stage_spell_levels, power_levels_budget, powers_used,
+    reputation_grants, resolve_realm, resolved_spell_level, restricted_xp_pools, size,
+    spell_level_cap, spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
+    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
     supernatural_free_slots, true_faith, unlink_ability_parameters, warping, warping_owed,
     warping_owed_grants, warping_points_total, warping_score,
 };
@@ -115,8 +115,9 @@ pub use types::{
     HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind, ItemPredicate, LineRange, LoadoutState,
     LongevityRitual, LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType,
     ParameterDef, ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm,
-    Reputation, ReputationType, RulesetRef, Selection, SourceRef, SpecialCasting, SpellSelection,
-    SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar, ValidationMode,
+    RealmAssociation, Reputation, ReputationType, RulesetRef, Selection, SourceRef, SpecialCasting,
+    SpellSelection, SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar,
+    ValidationMode,
 };
 pub use validation::{
     AgeInSagaYear, Balance, DEFAULT_SAGA_YEAR, IssueSeverity, PointCeilings, ValidationIssue,

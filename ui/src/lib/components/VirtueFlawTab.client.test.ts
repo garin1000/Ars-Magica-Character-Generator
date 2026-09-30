@@ -239,3 +239,47 @@ describe('VirtueFlawTab gives the at-cap block a reason', () => {
     expect(reason?.textContent?.replace(/[⁦-⁩]/g, '')).toBe('Maximum of 2 already reached');
   });
 });
+
+// D42/D70/D74: picking a realm in the override `<select>` must write it as the
+// `association` parameter on the selection at that row's INDEX (via the same
+// `setParamAt` path `ParameterPicker`'s own realm dropdown uses) — a real DOM
+// `change` event, so this must be a client test.
+describe('VirtueFlawTab D42 realm override control writes the association param', () => {
+  const SECOND_SIGHT: PointItem = {
+    id: 'virtue.second_sight',
+    kind: 'virtue',
+    magnitude: 'free',
+    categories: ['supernatural'],
+    classification: 'narrative',
+    entity_kinds: ['character'],
+  } as PointItem;
+
+  it('writes `association` on change, and clears it back to blank when unset is chosen', () => {
+    store.ruleset!.ruleset.point_items[SECOND_SIGHT.id] = SECOND_SIGHT;
+    store.ruleset!.i18n[SECOND_SIGHT.id] = { name: 'Second Sight' };
+    resetEntity([{ ref: 'virtue.second_sight' }]);
+    store.effective = {
+      realm_associations: [
+        { index: 0, item_ref: 'virtue.second_sight', realm: 'magic', fixed: false },
+      ],
+    } as unknown as EffectiveScores;
+
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(VirtueFlawTab, { target });
+    flushSync();
+
+    const select = target.querySelector<HTMLSelectElement>('[data-testid="realm-0"]');
+    expect(select).not.toBeNull();
+
+    select!.value = 'realm.faerie';
+    select!.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.selections?.[0].params?.association).toBe('realm.faerie');
+
+    select!.value = '';
+    select!.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.selections?.[0].params?.association).toBe('');
+  });
+});

@@ -29,7 +29,7 @@ use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityRef, CategoryRef, CategoryRule,
     ConditionalIncompatibility, CreationPhase, Effect, EntityTypeProfile, I18nEntry, Id, ItemKind,
     Magnitude, PREREQ_MAX_DEPTH, ParamGate, ParamType, ParamValue, ParameterDef, ParameterDomain,
-    PointItem, Prereq, ReputationType, RulesetRef, SourceRef, SpecialCasting,
+    PointItem, Prereq, RealmAssociation, ReputationType, RulesetRef, SourceRef, SpecialCasting,
 };
 
 mod accessors;

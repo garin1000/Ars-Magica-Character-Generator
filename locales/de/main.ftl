@@ -542,6 +542,11 @@ identity-concept = Konzept
 identity-concept-placeholder = Beschreibe das Charakterkonzept
 identity-gender = Geschlecht
 identity-birth-year = Geburtsjahr
+# D42: die Standard-Sphäre des Konzepts — eine Standardquelle für die Sphäre
+# jeder übernatürlichen Tugend/jedes übernatürlichen Fehlers (ArMDE:2960),
+# niemals die Sphäre des Charakters selbst.
+identity-concept-realm = Standard-Sphäre
+identity-concept-realm-none = — Keine —
 # Das Jahr der Saga (guided-creation-review-2026-08 #25). Seit C8 Teil des
 # CHARAKTERS — das Jahr, in dem die Saga steht, für die dieser Charakter gebaut
 # wurde. Bis dahin eine appweite Einstellung, die damit für jede Saga außer einer
@@ -793,6 +798,8 @@ realm-magic = Magie
 realm-faerie = Fee
 realm-divine = Göttlich
 realm-infernal = Infernal
+vf-realm-label = Sphäre
+vf-realm-override-none = — Nicht gesetzt —
 familiar-label = Vertrauter
 familiar-name-placeholder = Name des Vertrauten
 familiar-cord-gold = Goldene Kordel
@@ -1354,6 +1361,9 @@ issue-warping_owed_major_flaws = Dir fehlen noch { $count } Große Fehler aus de
 issue-warping_fill_constraint = Die Verzerrungswahl { $choice_key } fällt auf { $item }, was nicht zum geschuldeten Platz passt.
 issue-warping_fill_ineligible = Die Verzerrungswahl { $choice_key } fällt auf { $item }, das selbst Verzerrung gewährt und keinen Verzerrungsplatz füllen kann.
 issue-warping_fill_excess = Die Verzerrungswahl { $choice_key } wird nicht geschuldet und sollte entfernt werden.
+issue-realm_changed_default = { $item } weicht von seiner üblichen Sphäre ab; bitte bestätigen, dass dies beabsichtigt ist.
+issue-realm_unset_subset = { $item } benötigt eine Sphäre aus seiner eingeschränkten Liste; ein Rückfall auf Magie ist hier nicht möglich.
+issue-realm_override_invalid = Die Sphäre von { $item } muss eine der erlaubten Sphären sein, nicht { $value }.
 issue-house_unset = Ein Magus sollte einem hermetischen Haus angehören.
 issue-missing_hermetic_flaw = Ein Magus sollte mindestens einen hermetischen Fehler wählen.
 issue-mythic_type_unset = Ein mythischer Gefährte sollte einen Typ wählen.
@@ -1670,4 +1680,5 @@ export-items-hooks = Haken
 # Unterüberschrift der Tugend-/Fehler-Tabellen für die freien Einträge außerhalb des
 # Budgets, die Haus, mythischer Typ oder Verzerrung gewähren (nie in der Bilanz).
 export-granted = Gewährt
+export-vf-realm-label = Sphäre
 export-xp-restricted = Eingeschränkte Erfahrungspunkte

@@ -526,6 +526,10 @@ identity-concept = Concept
 identity-concept-placeholder = Describe the character concept
 identity-gender = Gender
 identity-birth-year = Birth year
+# D42: the concept's default realm — a default SOURCE for every Supernatural
+# Virtue/Flaw's realm (ArMDE:2960), never the character's own realm.
+identity-concept-realm = Default realm
+identity-concept-realm-none = — None —
 # The saga year (guided-creation-review-2026-08 #25). Part of the CHARACTER since
 # C8 — the year the saga this one was built for stands in, and the year against
 # which its age and birth year are two views of one fact. It was a machine-global
@@ -760,6 +764,10 @@ realm-magic = Magic
 realm-faerie = Faerie
 realm-divine = Divine
 realm-infernal = Infernal
+# D42: the V/F row's resolved-realm label (read-only for a Fixed entry) and
+# its override control's unset option.
+vf-realm-label = Realm
+vf-realm-override-none = — Unset —
 familiar-label = Familiar
 familiar-name-placeholder = Familiar name
 familiar-cord-gold = Gold cord
@@ -1277,6 +1285,9 @@ issue-warping_owed_major_flaws = You still owe { $count } Major Flaw(s) from War
 issue-warping_fill_constraint = The Warping fill { $choice_key } picks { $item }, which does not match the owed slot.
 issue-warping_fill_ineligible = The Warping fill { $choice_key } picks { $item }, which itself grants Warping and cannot fill a Warping slot.
 issue-warping_fill_excess = The Warping fill { $choice_key } is not owed and should be removed.
+issue-realm_changed_default = { $item } is changed away from its usual realm; confirm this is intended.
+issue-realm_unset_subset = { $item } needs a realm chosen from its restricted list; it cannot default to Magic.
+issue-realm_override_invalid = { $item }'s realm must be one of its allowed realms, not { $value }.
 issue-house_unset = A magus should belong to a Hermetic House.
 issue-missing_hermetic_flaw = A magus should take at least one Hermetic Flaw.
 issue-mythic_type_unset = A Mythic Companion should choose a type.
@@ -1583,4 +1594,7 @@ export-items-hooks = Hooks
 # Sub-heading of the Virtue/Flaw tables that lists the free, off-budget items the
 # character's House, mythic type or Warping grants (never counted in the balance).
 export-granted = Granted
+# D42/D70/D74: prefixes the resolved realm a Supernatural Virtue/Flaw is
+# associated with, appended to that row's text cell (e.g. "Realm: Faerie").
+export-vf-realm-label = Realm
 export-xp-restricted = Restricted experience

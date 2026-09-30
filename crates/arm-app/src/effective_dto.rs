@@ -13,17 +13,18 @@ use std::collections::BTreeMap;
 use arm_rules::{
     AbilityBonus, AbilityFloor, AbilityParameterOptions, ArtBonus, Characteristic,
     CharacteristicBonus, Confidence, CreationPhase, Entity, EntityTypeProfile, Grant, Id,
-    LifeStageBudget, MagusMinimumAbility, MightScore, PointCeilings, ReputationType,
-    RestrictedXpPool, Ruleset, Selection, SpellLevelCap, SupernaturalFreeSlots, ability_bonuses,
-    ability_parameter_options, ability_score_floors, aging_schedule, aging_total, art_bonuses,
-    characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, checked_xp_allocation, compute_balance, confidence,
-    decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
-    entity_grants, focus_points_budget, focus_points_used, is_hermetically_trained,
-    item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
-    magus_minimum_abilities, phases_in_force, power_levels_budget, powers_used, reputation_grants,
-    size, spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
-    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
+    LifeStageBudget, MagusMinimumAbility, MightScore, PointCeilings, Realm, RealmAssociation,
+    ReputationType, RestrictedXpPool, Ruleset, Selection, SpellLevelCap, SupernaturalFreeSlots,
+    ability_bonuses, ability_parameter_options, ability_score_floors, aging_schedule, aging_total,
+    art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_caps,
+    characteristic_floors, characteristic_points_granted, checked_xp_allocation, compute_balance,
+    confidence, decrepitude_score, effective_characteristics, effective_might,
+    effective_point_ceilings, entity_grants, focus_points_budget, focus_points_used,
+    is_hermetically_trained, item_has_realm_association, item_level_budget, item_level_used,
+    life_stage_spell_levels, longevity_bonus, magus_minimum_abilities, phases_in_force,
+    power_levels_budget, powers_used, reputation_grants, resolve_realm, size, spell_level_caps,
+    spell_levels_base, spell_levels_bonus, spell_levels_budget, spell_levels_used,
+    spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
     supernatural_free_slots, true_faith, warping, warping_owed_grants,
 };
 use serde::Serialize;
@@ -262,6 +263,54 @@ pub struct EffectiveScores {
     /// The UI must not derive any of this itself — CV6 ships the engine
     /// output only; CV7 wires the picker.
     pub ability_parameter_options: Vec<AbilityParameterOptions>,
+    /// D42/D70/D74: the resolved realm for every BOUGHT selection that carries
+    /// one (a Tainted item, or one currently read as `supernatural` —
+    /// `arm_rules::item_has_realm_association`), so the V/F row shows it
+    /// without re-implementing `resolve_realm`'s chain in TypeScript. Empty
+    /// for an entity holding none.
+    pub realm_associations: Vec<ResolvedRealmEntry>,
+}
+
+/// One selection's resolved D42 realm, for the V/F row. `fixed` is `true`
+/// when the book states the realm outright
+/// ([`arm_rules::RealmAssociation::Fixed`], or any Tainted item): the row
+/// shows it read-only rather than offering an override control.
+#[derive(Debug, Clone, Serialize)]
+pub struct ResolvedRealmEntry {
+    /// The selection's position in `Entity::selections` — repeatable items
+    /// (Folk Magic) can hold the same `item_ref` more than once with
+    /// different overrides, so `item_ref` alone cannot key a row; this
+    /// matches the `index` the V/F tab already keys a selection row by.
+    pub index: usize,
+    pub item_ref: Id,
+    pub realm: Realm,
+    pub fixed: bool,
+}
+
+/// Builds [`EffectiveScores::realm_associations`] from the entity's own
+/// bought selections. Granted copies (a House/mythic-type grant) are not
+/// covered — see `docs/open-todos.md` row 55.
+fn realm_associations_for_ui(entity: &Entity, ruleset: &Ruleset) -> Vec<ResolvedRealmEntry> {
+    entity
+        .selections
+        .iter()
+        .enumerate()
+        .filter_map(|(index, selection)| {
+            let item = ruleset.item(&selection.item_ref)?;
+            if !item_has_realm_association(item, selection) {
+                return None;
+            }
+            let resolved = resolve_realm(item, selection, entity.concept_realm);
+            let fixed = item.tainted
+                || matches!(item.realm_association, Some(RealmAssociation::Fixed { .. }));
+            Some(ResolvedRealmEntry {
+                index,
+                item_ref: selection.item_ref.clone(),
+                realm: resolved.realm,
+                fixed,
+            })
+        })
+        .collect()
 }
 
 /// Everything about a character's aging that does **not** depend on a die.
@@ -779,6 +828,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         phases_in_force: phases_in_force(entity, ruleset),
 
         ability_parameter_options: ability_parameter_options(entity, ruleset),
+
+        realm_associations: realm_associations_for_ui(entity, ruleset),
     }
 }
 

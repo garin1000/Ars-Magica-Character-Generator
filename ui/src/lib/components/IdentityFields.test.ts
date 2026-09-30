@@ -115,3 +115,24 @@ describe('IdentityFields reflects stored entity values', () => {
     expect(valueOf(html(), 'identity-birth-year')).toBe('1220');
   });
 });
+
+// D42: the concept's optional default realm, a free identity field exactly
+// like the six above — set in the concept step, read back on reopen.
+describe('IdentityFields concept realm', () => {
+  it('renders the "none" option selected for a fresh entity', () => {
+    const body = html();
+    const select = /<select[^>]*data-testid="identity-concept-realm"[\s\S]*?<\/select>/.exec(
+      body,
+    )![0];
+    expect(select).toMatch(/<option value="" selected/);
+  });
+
+  it('reads a stored concept realm back as the selected option', () => {
+    store.entity.concept_realm = 'faerie';
+    const body = html();
+    const select = /<select[^>]*data-testid="identity-concept-realm"[\s\S]*?<\/select>/.exec(
+      body,
+    )![0];
+    expect(select).toMatch(/<option value="faerie" selected/);
+  });
+});

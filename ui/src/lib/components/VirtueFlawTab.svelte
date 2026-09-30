@@ -16,7 +16,15 @@
     type SelectionRow,
   } from '../derive';
   import { reserveTagSpace, tooltip, withReason, type TooltipContent } from '../actions';
-  import type { ItemKind, Magnitude, PointItem, Selection } from '../types';
+  import { REALMS, type ItemKind, type Magnitude, type PointItem, type Selection } from '../types';
+
+  // D42/D70/D74: writes the realm override control's choice as the
+  // `association` selection parameter — the same `setParamAt` write path
+  // ParameterPicker's own realm dropdown uses, so a blank (unset) choice
+  // resolves through the concept/Magic fallback exactly like an absent key.
+  function onRealmOverride(index: number, event: Event) {
+    store.setParamAt(index, 'association', (event.currentTarget as HTMLSelectElement).value);
+  }
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
   import ParameterPicker from './ParameterPicker.svelte';
@@ -376,6 +384,9 @@
               {@const index = item.index}
               {@const pointItem = store.ruleset?.ruleset.point_items[selection.ref]}
               {@const required = mandatory.has(selection.ref)}
+              {@const realmEntry = store.effective?.realm_associations?.find(
+                (r) => r.index === index,
+              )}
               <li>
                 <div class="selection-row">
                   {@render nameWrap(selection.ref, displayParams(selection))}
@@ -397,6 +408,32 @@
                 </div>
                 {#if pointItem?.parameters && pointItem.parameters.length > 0}
                   <ParameterPicker {selection} {index} params={pointItem.parameters} />
+                {/if}
+                {#if realmEntry}
+                  {#if realmEntry.fixed}
+                    <!-- D74 Q4: the book fixes this entry's realm, so it is shown
+                         read-only rather than offered a control that could never
+                         legally change it. -->
+                    <span class="realm-fixed" data-testid="realm-{index}">
+                      {store.t('vf-realm-label')}: {store.t(`realm-${realmEntry.realm}`)}
+                    </span>
+                  {:else}
+                    <!-- The resolved realm (override, else the entry's own default/
+                         concept/Magic — never re-derived here, see `EffectiveScores.
+                         realm_associations`) is pre-selected, so choosing a
+                         DIFFERENT one is what writes an explicit override. -->
+                    <select
+                      aria-label={store.t('vf-realm-label')}
+                      value={`realm.${realmEntry.realm}`}
+                      onchange={(e) => onRealmOverride(index, e)}
+                      data-testid="realm-{index}"
+                    >
+                      <option value="">{store.t('vf-realm-override-none')}</option>
+                      {#each REALMS as realm (realm)}
+                        <option value="realm.{realm}">{store.t(`realm-${realm}`)}</option>
+                      {/each}
+                    </select>
+                  {/if}
                 {/if}
               </li>
             {:else}

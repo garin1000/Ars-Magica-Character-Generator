@@ -407,6 +407,61 @@ fn the_type_cell_lists_every_category_the_descriptor_names() {
     );
 }
 
+/// D42/D70/D74: a Supernatural Virtue/Flaw's resolved realm rides the
+/// existing text cell — a new cell would change the table shape (and hence
+/// the byte-stability of every OTHER row) just because one row needs it.
+/// Faerie Blood is `Fixed { realm: Faerie }` in the shipped data, so the
+/// concept realm set here must be ignored.
+#[test]
+fn a_fixed_supernatural_entrys_realm_rides_the_text_cell() {
+    let ruleset = shipped_ruleset();
+    let mut entity = Entity::new(
+        EntityKind::Character,
+        Id::new("companion"),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    entity.concept_realm = Some(Realm::Infernal);
+    entity.selections = vec![Selection::with_params(
+        Id::new("virtue.faerie_blood"),
+        BTreeMap::from([("heritage".to_string(), Id::new("heritage.sidhe"))]),
+    )];
+
+    let mut labels = synthetic_labels();
+    labels.insert("export-vf-realm-label".to_string(), "Realm".to_string());
+    labels.insert("realm-faerie".to_string(), "Faerie".to_string());
+
+    let rendered = character_markdown(&entity, &ruleset, &labels)
+        .expect("synthetic_labels resolves every chrome key and every id is real");
+    assert!(
+        rendered.contains("Realm: Faerie"),
+        "the Fixed realm must render regardless of the concept realm; got:\n{rendered}"
+    );
+}
+
+/// A non-Supernatural entry's text cell is untouched — no "Realm:" line, no
+/// trailing parenthesis — so an entity holding none of these renders exactly
+/// as it did before this feature existed (already locked end-to-end by
+/// `a_fully_populated_magus_matches_the_golden_document`; this is the
+/// targeted, single-row version of the same claim).
+#[test]
+fn a_non_supernatural_entrys_text_cell_gets_no_realm_line() {
+    let ruleset = shipped_ruleset();
+    let mut entity = Entity::new(
+        EntityKind::Character,
+        Id::new("companion"),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    entity.selections = vec![Selection::new(Id::new("virtue.warrior"))];
+
+    let labels = synthetic_labels();
+    let rendered = character_markdown(&entity, &ruleset, &labels)
+        .expect("synthetic_labels resolves every chrome key and every id is real");
+    assert!(
+        !rendered.contains("export-vf-realm-label") && !rendered.contains("Realm:"),
+        "a non-Supernatural row must carry no realm text; got:\n{rendered}"
+    );
+}
+
 #[test]
 fn rendering_the_same_magus_twice_is_byte_identical() {
     let ruleset = shipped_ruleset();

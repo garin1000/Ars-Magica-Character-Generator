@@ -31,6 +31,7 @@ mod life_stage;
 mod magus;
 mod might;
 mod prereq;
+mod realm;
 mod saga;
 mod scores;
 mod selections;
@@ -45,6 +46,7 @@ use life_stage::*;
 use magus::*;
 use might::*;
 use prereq::*;
+use realm::*;
 use scores::*;
 use selections::*;
 use warping::*;
@@ -264,6 +266,9 @@ impl fmt::Display for IssueSeverity {
 /// | `warping_fill_constraint` | error | review | `choice_key`, `item` |
 /// | `warping_fill_ineligible` | error | review | `choice_key`, `item` |
 /// | `warping_fill_excess` | error | review | `choice_key` |
+/// | `realm_changed_default` | warning | virtues_flaws | `item` |
+/// | `realm_unset_subset` | warning | virtues_flaws | `item` |
+/// | `realm_override_invalid` | error | virtues_flaws | `item`, `value` |
 ///
 /// † The per-category caps emit a code derived from the `flaw_category_caps` /
 /// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
@@ -968,6 +973,20 @@ impl ValidationIssue {
     /// when emitted for an Art score — never both at once.
     pub const CODE_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL: &'static str =
         "banked_xp_at_or_above_next_level";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning (D42/D70/D74): a
+    /// `RealmAssociation::Default` entry's `association` override differs
+    /// from the entry's own stated default (Hex/Spiritual Pact/Warped by
+    /// Magic/Sufi/Cursed Guile). `args` carries `item`.
+    pub const CODE_REALM_CHANGED_DEFAULT: &'static str = "realm_changed_default";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning (D42/D70/D74): a
+    /// `RealmAssociation::Subset` entry (Manifest Sin) has no override and no
+    /// concept realm inside its subset, so resolution cannot honestly fall
+    /// back to Magic. `args` carries `item`.
+    pub const CODE_REALM_UNANSWERED_SUBSET: &'static str = "realm_unset_subset";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Error (D74 Q2): an `association`
+    /// override names a realm outside a `RealmAssociation::Subset` entry's
+    /// allowed list. `args` carries `item` and `value`.
+    pub const CODE_REALM_OVERRIDE_INVALID: &'static str = "realm_override_invalid";
 
     /// Builds an issue with the given severity, code, phase, args, and context.
     pub fn new(
@@ -1137,6 +1156,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_required_traits(type_profile, &selected_ids, &mut issues);
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
+    validate_realm_associations(entity, ruleset, &mut issues);
     validate_ability_bonus_targets(entity, &effective_selections, ruleset, &mut issues);
     validate_possessed_param_targets(&effective_selections, ruleset, &prereq_ctx, &mut issues);
     validate_magical_focus(&effective_selections, ruleset, &mut issues);

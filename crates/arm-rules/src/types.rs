@@ -3642,6 +3642,11 @@ pub struct PointItem {
     /// Source: ArMDE:2998-3002.
     #[serde(default, skip_serializing_if = "is_false")]
     pub tainted: bool,
+    /// D42/D70/D74: how this entry's realm association resolves beyond the
+    /// plain override/concept/Magic chain. `None` for every Supernatural
+    /// entry the book leaves free. See [`RealmAssociation`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub realm_association: Option<RealmAssociation>,
     /// D12's intrinsic/trained classification: `true` when this item
     /// operates on Techniques, Forms, spells, Casting/Lab Totals, Parma
     /// Magica, certámen, or Twilight — things that exist only after
@@ -3914,6 +3919,8 @@ struct PointItemRepr {
     #[serde(default)]
     tainted: bool,
     #[serde(default)]
+    realm_association: Option<RealmAssociation>,
+    #[serde(default)]
     trained: bool,
     #[serde(default)]
     requires_hermetic_arts: bool,
@@ -3960,6 +3967,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             index_categories,
             classification,
             tainted,
+            realm_association,
             trained,
             requires_hermetic_arts,
             entity_kinds,
@@ -4000,6 +4008,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             index_categories,
             classification,
             tainted,
+            realm_association,
             trained,
             requires_hermetic_arts,
             entity_kinds,
@@ -4984,6 +4993,44 @@ impl fmt::Display for Realm {
     }
 }
 
+/// How a Supernatural [`PointItem`]'s realm association (ArMDE:2960, "All
+/// Supernatural Virtues and Flaws are associated with one of the four
+/// realms") resolves, for the ~37 entries where the book says more than
+/// nothing (D42/D70/D74, `docs/vf-audit/decisions.md`). Absent (`None`) for
+/// every other Supernatural entry: it resolves through the plain chain
+/// (override, else [`Entity::concept_realm`], else [`Realm::Magic`]) that
+/// [`crate::effective::resolve_realm`] implements, with no warning ever.
+///
+/// A `tainted: true` item (ArMDE:3000) resolves Infernal by that rule alone,
+/// checked ahead of this field — so only the two entries the book fixes
+/// Infernal by cross-entry reference rather than by their own Tainted tag
+/// (Demonic Might/Powers, ArMDE:3661) need [`Self::Fixed`] data for it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "kind")]
+pub enum RealmAssociation {
+    /// The book states this entry's realm outright (Faerie Blood, Strong
+    /// Faerie Blood, Kassalan Exorcism, Strong Angelic Heritage, Blood of the
+    /// Nephilim, Viaticarus, Bee King, Commanding Aura, Raised from the
+    /// Dead). Shown read-only in the UI; an override present in data (e.g. a
+    /// pre-ruling save) is silently ignored by the resolver rather than
+    /// rejected.
+    Fixed { realm: Realm },
+    /// The book states a default the concept does not override (Spiritual
+    /// Pact, Warped by Magic, Hex, Sufi, Cursed Guile). An override is legal
+    /// but raises the `realm_changed_default` warning when it differs.
+    Default { realm: Realm },
+    /// The book restricts this entry to a named subset of realms (Manifest
+    /// Sin: Divine/Infernal). No override and no concept realm inside the
+    /// subset raises `realm_unset_subset` rather than silently falling back
+    /// to Magic, which would be illegal here. An override outside the subset
+    /// is a validator error (`realm_override_invalid`), not resolved here.
+    Subset { realms: BTreeSet<Realm> },
+    /// This entry already declares a named-realm parameter of its own (Bound
+    /// to (Realm)'s `realm` key, (Realm) Stigmatic's, Necessary (Realm) Aura
+    /// for (Ability)'s) that supplies the default; no warning either way.
+    FromParam { key: String },
+}
+
 /// A supernatural being's **Might Score** and the Realm it is aligned to. A Might
 /// Score grants blanket Magic Resistance equal to the score (RoP:M:1472). Only the choice is stored; the effective
 /// score and its Magic Resistance are derived. Source: RoP:M:1470-1472.
@@ -5818,6 +5865,15 @@ pub struct Entity {
     /// The character's birth year (flavor; no mechanical effect). `None` when unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub birth_year: Option<i32>,
+    /// D42: the concept's default realm — a **default source, nothing else**
+    /// (ArMDE:2960's "this should be the choice if the character concept does
+    /// not suggest another option"). Every Supernatural entry's realm
+    /// resolves from its own override, else this, else [`Realm::Magic`]
+    /// ([`crate::effective::resolve_realm`]); it is NOT the character's own
+    /// realm and carries no mechanical force on its own (D42 "What it is
+    /// not"). `None` when unset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub concept_realm: Option<Realm>,
     /// The calendar year the saga this entity was built for stands in (schema 17).
     ///
     /// **Document state, not a preference.** It was a machine-global app setting until
@@ -5959,6 +6015,7 @@ impl Entity {
             concept: String::new(),
             gender: String::new(),
             birth_year: None,
+            concept_realm: None,
             saga_year: crate::validation::DEFAULT_SAGA_YEAR,
             sigil: String::new(),
             covenant_name: String::new(),
@@ -7274,6 +7331,7 @@ mod tests {
             concept: String::new(),
             gender: String::new(),
             birth_year: None,
+            concept_realm: None,
             saga_year: crate::validation::DEFAULT_SAGA_YEAR,
             sigil: String::new(),
             covenant_name: String::new(),
@@ -7571,6 +7629,7 @@ mod tests {
             concept: String::new(),
             gender: String::new(),
             birth_year: None,
+            concept_realm: None,
             saga_year: crate::validation::DEFAULT_SAGA_YEAR,
             sigil: String::new(),
             covenant_name: String::new(),

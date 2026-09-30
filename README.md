@@ -247,6 +247,11 @@ focus.
   Characteristic compute an effective score that drives prerequisites, the +5
   characteristic ceiling, and a read-only display badge.
 
+- **Supernatural realm association.** Every Supernatural Virtue/Flaw is associated
+  with one of the four realms (Magic, Faerie, Divine, Infernal); the V/F row shows
+  the book-fixed realm read-only where the rules state it outright, and an
+  overridable control — pre-filled with the resolved default — everywhere else.
+
 - **Experience-effect Virtues.** Affinity (Ability/Art) reduces the XP charged for
   its target; the restricted-pool Virtues (Educated, Warrior, Privileged
   Upbringing) grant experience spendable only on eligible Abilities, allocated by
@@ -255,7 +260,9 @@ focus.
   Premonitions) confer their Ability at a free floor.
 
 - **Details, aging and Warping.** The Details tab captures identity/flavor fields
-  (name, gender, birth year, Wizard's sigil, covenant, parens), the age, and an
+  (name, gender, birth year, Wizard's sigil, covenant, parens), an optional default
+  realm (Magic/Faerie/Divine/Infernal) that seeds every Supernatural Virtue/Flaw's
+  own realm where the book leaves it a free choice, the age, and an
   already-warped character's raw state — Warping Points and free-text Twilight
   Scars — from which the engine derives the Warping score. The Aging tab carries
   the whole aging surface the guided step uses: an already-aged character's raw

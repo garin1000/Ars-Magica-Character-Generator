@@ -2360,6 +2360,14 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /** D42: the concept's optional default realm — a default SOURCE for every
+   *  Supernatural entry's realm (ArMDE:2960), never the character's own realm
+   *  and never mechanical on its own. `null` clears it back to unset. */
+  setConceptRealm(realm: Realm | null): void {
+    this.entity.concept_realm = realm;
+    this.#scheduleValidate();
+  }
+
   // --- The saga year, and age ↔ birth year as two views of one fact ----------
   //
   // Three values exist and only two can be authoritative. `age` and `birth_year`

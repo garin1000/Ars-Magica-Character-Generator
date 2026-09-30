@@ -68,7 +68,7 @@ use crate::effective::{
     RestrictedXpPool, XpPoolOrigin, ability_score_floors, checked_xp_allocation, confidence,
     decrepitude_score, effective_ability_score, effective_art_score,
     effective_characteristic_after_aging, effective_might, effective_spell_mastery, entity_grants,
-    resolved_spell_level, warping,
+    item_has_realm_association, resolve_realm, resolved_spell_level, warping,
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
@@ -189,6 +189,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "export-items-boons",
     "export-items-hooks",
     "export-untitled",
+    "export-vf-realm-label",
     "export-xp-restricted",
     "familiar-animal-label",
     "familiar-cord-bronze",

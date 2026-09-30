@@ -1,10 +1,16 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { I32_MAX, I32_MIN } from '../derive';
+  import { REALMS, type Realm } from '../types';
 
   function onBirthYear(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
     store.setBirthYear(raw === '' ? null : Number(raw));
+  }
+
+  function onConceptRealm(event: Event) {
+    const raw = (event.currentTarget as HTMLSelectElement).value;
+    store.setConceptRealm(raw === '' ? null : (raw as Realm));
   }
 </script>
 
@@ -43,6 +49,19 @@
       oninput={onBirthYear}
       data-testid="identity-birth-year"
     />
+  </label>
+  <label class="field">
+    <span>{store.t('identity-concept-realm')}</span>
+    <select
+      value={store.entity.concept_realm ?? ''}
+      onchange={onConceptRealm}
+      data-testid="identity-concept-realm"
+    >
+      <option value="">{store.t('identity-concept-realm-none')}</option>
+      {#each REALMS as realm (realm)}
+        <option value={realm}>{store.t(`realm-${realm}`)}</option>
+      {/each}
+    </select>
   </label>
   <label class="field">
     <span>{store.t('identity-sigil')}</span>

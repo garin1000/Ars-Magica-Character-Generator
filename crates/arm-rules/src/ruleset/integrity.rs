@@ -119,6 +119,7 @@ impl Ruleset {
             Self::validate_item_share(id, item, errors);
             Self::validate_item_ratios(id, item, errors);
             Self::validate_advancement_mod_shape(id, item, errors);
+            Self::validate_realm_association(id, item, errors);
 
             if let Some(ref prereq) = item.prerequisites {
                 self.validate_prereq_refs(prereq, id.as_str(), 1, errors);
@@ -430,6 +431,44 @@ impl Ruleset {
                  {}; a share cannot be larger than the whole",
                 share.numerator, share.denominator
             ));
+        }
+    }
+
+    /// D42/D70/D74: rejects the two authoring slips `RealmAssociation` makes
+    /// possible. A `Subset` with no members would force
+    /// `effective::resolve_realm` to pick a "first member" that does not
+    /// exist — caught here instead of as a runtime panic, the same
+    /// "look enforced and not be" reasoning [`Self::validate_require_categories`]
+    /// already documents. A `FromParam` naming a key the item does not
+    /// declare (or declares under a domain other than `realm`) would resolve
+    /// silently through the plain override/concept/Magic chain instead of the
+    /// entry's own named realm — wrong, not absent, so it must fail loudly
+    /// rather than be discovered at the table.
+    fn validate_realm_association(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
+        match &item.realm_association {
+            Some(RealmAssociation::Subset { realms }) if realms.is_empty() => {
+                errors.push(format!(
+                    "{id}: 'realm_association' is an empty 'subset'; no override or \
+                     concept realm could ever satisfy it"
+                ));
+            }
+            Some(RealmAssociation::FromParam { key }) => {
+                match item.parameters.iter().find(|p| &p.key == key) {
+                    None => errors.push(format!(
+                        "{id}: 'realm_association' is 'from_param' naming '{key}', which \
+                         this item declares no parameter for"
+                    )),
+                    Some(param) if param.domain != ParameterDomain::Realm => {
+                        errors.push(format!(
+                            "{id}: 'realm_association' is 'from_param' naming '{key}', whose \
+                             domain is '{}', not 'realm'",
+                            param.domain
+                        ));
+                    }
+                    Some(_) => {}
+                }
+            }
+            _ => {}
         }
     }
 

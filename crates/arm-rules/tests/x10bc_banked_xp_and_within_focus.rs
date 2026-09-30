@@ -176,6 +176,79 @@ fn art_banked_xp_at_next_level_warns() {
     );
 }
 
+// --- The ceiling-score branch (review E-1): the advancement table's own last
+// row has no score+1 entry to bank toward, so `validate_ability_banked_xp` /
+// `validate_art_banked_xp` fall to their `None` arm (`needed = 0`) rather than
+// comparing against a next-level delta. Any `banked_xp > 0` there must still
+// warn — there is nowhere left for it to go. The behavior is already
+// implemented (commit 6918b0c); this locks it with the dedicated test that
+// commit's own review found missing.
+
+#[test]
+fn ability_banked_xp_at_the_ceiling_score_warns() {
+    let ruleset = full_ruleset();
+    let ceiling = ruleset
+        .advancement()
+        .rows()
+        .iter()
+        .map(|row| row.score)
+        .max()
+        .expect("shipped table is non-empty");
+    assert!(
+        ruleset.advancement().xp_for_score(ceiling + 1).is_none(),
+        "the shipped table's own last row must have no score+1 entry"
+    );
+
+    let mut e = entity("grog");
+    e.xp_pool = u32::MAX;
+    e.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.awareness"),
+        score: ceiling,
+        specialty: None,
+        parameter: None,
+        banked_xp: 1,
+    }];
+    let issues = validate(&e, &ruleset).issues;
+    let issue = issues
+        .iter()
+        .find(|i| i.code == "banked_xp_at_or_above_next_level")
+        .expect("banked_xp above 0 at the ceiling score must still warn");
+    assert_eq!(issue.args.get("needed").map(String::as_str), Some("0"));
+}
+
+#[test]
+fn art_banked_xp_at_the_ceiling_score_warns() {
+    let ruleset = full_ruleset();
+    let ceiling = ruleset
+        .art_advancement()
+        .rows()
+        .iter()
+        .map(|row| row.score)
+        .max()
+        .expect("shipped table is non-empty");
+    assert!(
+        ruleset
+            .art_advancement()
+            .xp_for_score(ceiling + 1)
+            .is_none(),
+        "the shipped table's own last row must have no score+1 entry"
+    );
+
+    let mut e = entity("magus");
+    e.xp_pool = u32::MAX;
+    e.art_scores = vec![ArtScore {
+        art: Id::new("art.creo"),
+        score: ceiling,
+        banked_xp: 1,
+    }];
+    let issues = validate(&e, &ruleset).issues;
+    let issue = issues
+        .iter()
+        .find(|i| i.code == "banked_xp_at_or_above_next_level")
+        .expect("an Art's banked_xp above 0 at the ceiling score must still warn");
+    assert_eq!(issue.args.get("needed").map(String::as_str), Some("0"));
+}
+
 // --- Round trip (X10b + X10c): plain serde mechanics, expected GREEN today --
 
 #[test]

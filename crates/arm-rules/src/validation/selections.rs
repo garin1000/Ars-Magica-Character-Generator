@@ -1235,6 +1235,15 @@ pub(crate) fn validate_selection_parameters(
         }
     }
 
+    // D42/D70/D74: every Supernatural entry's realm `association` override is
+    // a legal key wherever the entry carries a realm association at all, but
+    // it is never REQUIRED — an unset override just resolves through the
+    // concept/Magic fallback (`crate::effective::resolve_realm`), so it is
+    // added to `expected` only (never to `required` below).
+    if crate::effective::item_has_realm_association(item, selection) {
+        expected.insert(crate::effective::REALM_OVERRIDE_PARAM_KEY);
+    }
+
     // B4/Q-51: a declared param whose `required_if` gate does NOT hold is
     // still a LEGAL key (stays in `expected`, so filling it is never
     // `unexpected_param`), but is not yet REQUIRED — Magic Animal/Spirit/Thing
@@ -1249,6 +1258,10 @@ pub(crate) fn validate_selection_parameters(
             required.remove(param.key.as_str());
         }
     }
+    // The realm `association` override is legal (see above) but, unlike every
+    // declared parameter, is NEVER required — D70 Q-X6-5 resolves an unset
+    // one through the concept/Magic fallback rather than erroring.
+    required.remove(crate::effective::REALM_OVERRIDE_PARAM_KEY);
 
     for missing in required.difference(&filled) {
         issues.push(ValidationIssue::error(

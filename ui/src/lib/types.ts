@@ -540,6 +540,11 @@ export interface PointItem {
   classification: Classification;
   // Descriptor "Type" tag: a Tainted (Infernal-associated) V/F. Omitted when false.
   tainted?: boolean;
+  // D42/D70/D74: how this entry's realm association resolves beyond the plain
+  // override/concept/Magic chain. Omitted for every Supernatural entry the
+  // book leaves free, and for a Tainted entry (which resolves Infernal from
+  // `tainted` alone, ArMDE:3000, never storing the same fact twice).
+  realm_association?: RealmAssociation;
   // Entity kinds this item may be selected for. Omitted when empty, which the
   // engine reads as "any kind".
   entity_kinds?: EntityKind[];
@@ -1041,6 +1046,24 @@ export interface EffectiveScores {
   // catalogued-or-linkable Ability (design § 6.3). The UI must not derive this
   // itself — see `AbilityParameterOptions`'s own doc comment.
   ability_parameter_options: AbilityParameterOptions[];
+  // D42/D70/D74: the resolved realm for every bought selection that carries
+  // one, engine-authoritative — the UI must not re-implement `resolve_realm`'s
+  // chain here. Empty for an entity holding no such entry.
+  realm_associations: ResolvedRealmEntry[];
+}
+
+// One selection's resolved D42 realm association. `fixed` means the book
+// states it outright (or the item is Tainted): the V/F row shows it
+// read-only rather than offering an override control. Mirrors the engine's
+// `arm_app::effective_dto::ResolvedRealmEntry`.
+export interface ResolvedRealmEntry {
+  // The selection's position in `Entity.selections` — a repeatable item
+  // (Folk Magic) can appear more than once, so this is the row key, not
+  // `item_ref` alone.
+  index: number;
+  item_ref: string;
+  realm: Realm;
+  fixed: boolean;
 }
 
 // --- Derived play-stat totals (M5/5i), mirrored from `arm_rules::derived`.
@@ -1568,6 +1591,15 @@ export type Realm = 'magic' | 'faerie' | 'divine' | 'infernal';
 // re-hardcoded per component; always rendered through Fluent (`realm-<id>`),
 // never as a raw slug.
 export const REALMS: Realm[] = ['magic', 'faerie', 'divine', 'infernal'];
+
+// D42/D70/D74: how a Supernatural PointItem's realm association resolves
+// beyond the plain override/concept/Magic chain. Mirrors the engine's
+// `RealmAssociation` (`crates/arm-rules/src/types.rs`), tagged by `kind`.
+export type RealmAssociation =
+  | { kind: 'fixed'; realm: Realm }
+  | { kind: 'default'; realm: Realm }
+  | { kind: 'subset'; realms: Realm[] }
+  | { kind: 'from_param'; key: string };
 
 // A supernatural being's base Might Score + Realm (Virtue grants add on top).
 export interface MightScore {
@@ -2225,6 +2257,12 @@ export interface Entity {
   concept?: string;
   gender?: string;
   birth_year?: number | null;
+  // D42: the concept's default realm — a default SOURCE for every Supernatural
+  // entry's realm, never the character's own realm and never mechanical on its
+  // own (concept_realm is free, like every other identity field). Omitted when
+  // unset, in which case each entry resolves through its own override, else
+  // Magic. See `realm_association` on `PointItem`.
+  concept_realm?: Realm | null;
   // The calendar year the saga this document was built for stands in (C8, schema
   // 17). Required, and always written even at its default: `load_entity_migrating`
   // dispatches on the key's ABSENCE to fill a pre-17 save from the configured
