@@ -55,11 +55,12 @@
   "flaw.abandoned_apprentice": {
     "name": "Verlassener Lehrling",
     "summary": "Der Charakter wurde von seinem Meister mitten in seiner hermetischen Ausbildung im Stich gelassen.",
-    "description": "Der Charakter wurde von seinem Meister mitten in seiner hermetischen Ausbildung im Stich gelassen. Er kennt die hermetische Magie und kann wie andere Magi Zauber wirken und Artefakte verzaubern. Er ist jedoch kein Mitglied des Ordens des Hermes. Manche Tribunale urteilen, dass ein Lehrling ein Jahr Zeit hat, einen neuen Parens zu finden, bevor er wie ein mit dem Ordensbann belegter Magus gejagt und getötet wird. Die meisten Tribunale urteilen, dass das Verlassen eines Lehrlings ein niederes Vergehen darstellt, und falls der Charakter seine Lage bekannt macht, kann sein Parens rechtliche Konsequenzen zu spüren bekommen. Entscheide, in welchem Alter der Charakter verlassen wurde. Erschaffe den Charakter wie einen regulären Lehrling bis zu diesem Alter, und vergib ihm dann Erfahrungspunkte entsprechend seinem Alter und weiteren Tugenden für sein Leben nach dem Verlassenwerden. Kennt der Charakter die Parma Magica, muss er dem Orden beitreten oder wird getötet. Auch wenn der Charakter dem Orden beitritt, bereitet ihm sein Hintergrund weiterhin Schwierigkeiten."
+    "description": "Der Charakter wurde von seinem Meister mitten in seiner hermetischen Ausbildung im Stich gelassen. Er kennt die hermetische Magie und kann wie andere Magi Zauber wirken und Artefakte verzaubern. Er ist jedoch kein Mitglied des Ordens des Hermes.\n\nManche Tribunale urteilen, dass ein Lehrling ein Jahr Zeit hat, einen neuen Parens zu finden, bevor er wie ein mit dem Ordensbann belegter Magus gejagt und getötet wird. Die meisten Tribunale urteilen, dass das Verlassen eines Lehrlings ein niederes Vergehen darstellt, und falls der Charakter seine Lage bekannt macht, kann sein Parens rechtliche Konsequenzen zu spüren bekommen.\n\nEntscheide, in welchem Alter der Charakter verlassen wurde. Erschaffe den Charakter wie einen regulären Lehrling bis zu diesem Alter, und vergib ihm dann Erfahrungspunkte entsprechend seinem Alter und weiteren Tugenden für sein Leben nach dem Verlassenwerden. Kennt der Charakter die Parma Magica, muss er dem Orden beitreten oder wird getötet.\n\nAuch wenn der Charakter dem Orden beitritt, bereitet ihm sein Hintergrund weiterhin Schwierigkeiten."
   },
   "flaw.ability_block": {
     "name": "Fähigkeitsblock",
-    "summary": "Du bist aus irgendeinem Grund völlig unfähig, eine bestimmte Klasse von Fertigkeiten zu erlernen."
+    "summary": "Du bist aus irgendeinem Grund völlig unfähig, eine bestimmte Klasse von Fertigkeiten zu erlernen.",
+    "description": "Du bist aus irgendeinem Grund völlig unfähig, eine bestimmte Klasse von Fertigkeiten zu erlernen. Das kann Kampffertigkeiten betreffen oder eine eingeschränktere Auswahl anderer Fertigkeiten. Eine tiefgreifende Unfähigkeit, Logik zu beherrschen, würde Artes Liberales, Philosophiae, jegliches Recht, Medizin und Theologie ausschließen. Alternativ bist du möglicherweise unfähig, irgendeine andere Sprache als deine Muttersprache zu erlernen. Es muss grundsätzlich möglich sein, dass dein Charakter die betreffenden Fertigkeiten ohne diesen Fehler erlernen könnte, wobei er nicht beabsichtigen muss, dies zu tun. Du darfst diesen Fehler nur einmal nehmen."
   },
   "flaw.afflicted_tongue": {
     "name": "Sprachfehler",
@@ -120,7 +121,8 @@
   },
   "flaw.bigamist": {
     "name": "Bigamist",
-    "summary": "Der Charakter führt zwei völlig getrennte Leben in zwei Städten und wechselt unter einem Vorwand zwischen ihnen hin und her, höchstwahrscheinlich als Händler."
+    "summary": "Der Charakter führt zwei völlig getrennte Leben in zwei Städten und wechselt unter einem Vorwand zwischen ihnen hin und her, höchstwahrscheinlich als Händler.",
+    "description": "Der Charakter führt zwei völlig getrennte Leben in zwei Städten und wechselt unter einem Vorwand zwischen ihnen hin und her, höchstwahrscheinlich als Händler. Bigamisten haben zwei Ehepartner und unterhalten zwei Haushalte, die sie finanzieren müssen. Wenn du die Regeln aus Stadt & Gilde verwendest, erhöhen sich die jährlichen Kosten des Kaufmanns für die Aufrechterhaltung seines Geschäfts um (6 × Vermögensmultiplikator) Arbeitspunkte. Manche Bigamisten mildern diese Ausgabe, indem sie in ihrem anderen Leben einen niedrigeren sozialen Status vortäuschen, was die zusätzlichen Arbeitspunktkosten um die Hälfte reduziert (auf 3 × Vermögensmultiplikator)."
   },
   "flaw.black_sheep": {
     "name": "Schwarzes Schaf",
@@ -128,7 +130,8 @@
   },
   "flaw.blackmail": {
     "name": "Erpressung",
-    "summary": "Du besitzt Informationen, die eine mächtige Person lieber verborgen wüsste."
+    "summary": "Du besitzt Informationen, die eine mächtige Person lieber verborgen wüsste.",
+    "description": "Du besitzt Informationen, die eine mächtige Person lieber verborgen wüsste. Im Gegenzug für dein Schweigen erhältst du Zahlungen oder Dienste und kannst gelegentlich besondere Gefälligkeiten einfordern. Treibe es nicht auf die Spitze – dein Opfer könnte entscheiden, dass es den Preis nicht wert ist, oder dich dauerhaft zum Schweigen bringen. Dieser Vorteil hat einen jährlichen Wert von etwa 50 Silberpfennigen, möglicherweise mehr, wenn du den Druck aufrechterhältst. Du solltest die Einzelheiten dieser Abmachung festhalten."
   },
   "flaw.blatant_gift": {
     "name": "Auffällige Gabe",
@@ -142,15 +145,18 @@
   },
   "flaw.blind": {
     "name": "Blind",
-    "summary": "Du hast wenig oder gar keine Sehkraft."
+    "summary": "Du hast wenig oder gar keine Sehkraft.",
+    "description": "Du hast wenig oder gar keine Sehkraft. Den Einsatz von Fernkampfwaffen ist aussichtslos, Lesen ist unmöglich, und die Navigation in unbekanntem Gelände ist, um es milde auszudrücken, schwierig. Blinde Magi können Ziele durch andere Sinne wahrnehmen und sind daher weniger eingeschränkt als Menschen, die versuchen, Fernkampfwaffen einzusetzen. Blinde Magi können jedoch Zauber ohne magische Hilfsmittel nicht zielen."
   },
   "flaw.bound_casting_tools": {
     "name": "Gebundene Zauberwerkzeuge",
-    "summary": "Die Zauberwerkzeuge des Magus, wie sie von Haus Verditius verwendet werden, sind so persönlich, dass sie zu dauerhaften Arkanen Verbindungen zu ihm werden."
+    "summary": "Die Zauberwerkzeuge des Magus, wie sie von Haus Verditius verwendet werden, sind so persönlich, dass sie zu dauerhaften Arkanen Verbindungen zu ihm werden.",
+    "description": "Die Zauberwerkzeuge des Magus, wie sie von Haus Verditius verwendet werden, sind so persönlich, dass sie zu dauerhaften Arkanen Verbindungen zu ihm werden. Reguläre Zauberwerkzeuge bleiben wenige Wochen als Arkane Verbindungen erhalten, die zuletzt verwendeten bleiben es jahrelang."
   },
   "flaw.bound_magic": {
     "name": "Gebundene Magie",
-    "summary": "Wenn du stirbst, enden alle deine Zauber abrupt, und alle magischen Artefakte, die du erschaffen hast, hören auf zu funktionieren."
+    "summary": "Wenn du stirbst, enden alle deine Zauber abrupt, und alle magischen Artefakte, die du erschaffen hast, hören auf zu funktionieren.",
+    "description": "Wenn du stirbst, enden alle deine Zauber abrupt, und alle magischen Artefakte, die du erschaffen hast, hören auf zu funktionieren. Du kannst diesen Fehler nicht zusammen mit Gezügelter Magie (Seite 85) nehmen, da jene Tugend diesen Effekt bereits beinhaltet."
   },
   "flaw.bound_to_realm": {
     "name": "Gebunden an eine Sphäre, {realm}",
@@ -160,11 +166,13 @@
   },
   "flaw.bound_to_role_role": {
     "name": "Gebunden an {role}",
-    "summary": "Dieser Charakter ist physisch an eine bestimmte Art von Gerät gebunden, sei es durch ein mystisches Ereignis, jahrelange Exposition und Verzerrung oder die Eingriffe eines experimentierenden Magus."
+    "summary": "Dieser Charakter ist physisch an eine bestimmte Art von Gerät gebunden, sei es durch ein mystisches Ereignis, jahrelange Exposition und Verzerrung oder die Eingriffe eines experimentierenden Magus.",
+    "description": "Dieser Charakter ist physisch an eine bestimmte Art von Gerät gebunden, sei es durch ein mystisches Ereignis, jahrelange Exposition und Verzerrung oder die Eingriffe eines experimentierenden Magus. Der Grad der Bindung liegt im Ermessen der Spieltruppe; die Bindung kann physisch sein, etwa bei einem Schlosser, dessen Finger zu Dietrichen, Feilen und Schlüsseln geworden sind, oder mystisch, etwa bei einem Wächter, der in seinem Wachturm gefangen ist, als wäre er von einem unzerbrechlichen Schutzzeichen eingeschlossen.\n\nDie Art dieser Bindung bestimmt, welche Art von Leben der Charakter führen kann. Ein Wächter, der seinen Turm nicht verlassen kann, kann ihn zu seinem Zuhause machen, während ein Kutscher, der ein Teil seiner Kutsche geworden ist, lange nicht ohne sie überleben kann.\n\nWird der Charakter auf irgendeine Weise von dem gebundenen Gerät oder Ort getrennt, muss er Entbehrungswürfe ablegen, als wäre er ohne Nahrung (d. h. einen Wurf alle drei Tage). Die Auswirkungen werden aufgehoben, wenn der Charakter wieder in Kontakt mit dem Gerät gebracht oder an seinen gebundenen Ort zurückgebracht wird, woraufhin die Bindung erneut einsetzt.\n\nDieser Fehler beinhaltet auch die Auswirkungen der Nicht-Alternd-Tugend, doch das scheinbare Alter des Charakters schreitet entsprechend seinem physischen Alter voran. Rollenbgebundene Charaktere behalten das Bedürfnis zu schlafen und zu atmen, und jene, die nicht physisch an ein Gerät gebunden sind, wie jene, die an einen Ort gebunden sind, behalten ihre anderen körperlichen Bedürfnisse.\n\nDieser Fehler kann seinen Ursprung in einem der übernatürlichen Bereiche haben: Ein magischer Ursprung könnte die Ausdrucksform einer Wesentlichen Eigenschaft darstellen, ein feenhafter Ursprung könnte zeigen, dass der Charakter eine archetypische Rolle einnimmt und bereit ist, seinen Teil in der größeren Geschichte zu spielen, während göttliche und höllische Ursprünge ewige Strafe auf Erden darstellen können.\n\nDieser Fehler darf nur von Grogs genommen werden und eignet sich für den Kleinen Orts-Haken „Verzerrung zu einem Muster\", wie er in Covenants, Seite 11, beschrieben ist."
   },
   "flaw.branded_criminal": {
     "name": "Gebrandmarkter Verbrecher",
-    "summary": "Als Strafe für ein vergangenes Verbrechen wurde dir ein Zeichen in die Wange gebrannt."
+    "summary": "Als Strafe für ein vergangenes Verbrechen wurde dir ein Zeichen in die Wange gebrannt.",
+    "description": "Als Strafe für ein vergangenes Verbrechen wurde dir ein Zeichen in die Wange gebrannt. Das beeinträchtigt deine Fähigkeit, in der Gesellschaft zu funktionieren. Du kannst die Wohlhabend-Tugend nicht nehmen, darfst jedoch bei der Charaktererschaffung Kampffertigkeiten wählen. Du kannst auf solche Fertigkeiten auch verzichten, wenn dein Verbrechen nicht gewalttätiger Natur war."
   },
   "flaw.broken_vessel": {
     "name": "Zerbrochenes Gefäß",
@@ -178,7 +186,8 @@
   },
   "flaw.busybody": {
     "name": "Klatschbase",
-    "summary": "Du weißt gewöhnlich über alles Bescheid, was unter deinen Freunden und Bekannten vorgeht, besonders in privaten Angelegenheiten."
+    "summary": "Du weißt gewöhnlich über alles Bescheid, was unter deinen Freunden und Bekannten vorgeht, besonders in privaten Angelegenheiten.",
+    "description": "Du weißt gewöhnlich über alles Bescheid, was unter deinen Freunden und Bekannten vorgeht, besonders in privaten Angelegenheiten. Du bist stets an Gerüchten und Klatsch interessiert und kannst häufig persönliche Geheimnisse aus Menschen herauslocken. Unter Magi ist die Sprache würdevoller, aber die Idee ist dieselbe: Du behältst die hermetische Gemeinschaft im Blick (deinen Konvent, dein Haus und nahegelegene Konvente – zumindest das). Allerdings haben Magi wahrscheinlich wenig Kenntnis davon, was unter den niedrigeren Konventsbewohnern vor sich geht, es sei denn, sie entscheiden bei der Charaktererschaffung, diesen Fehler ausdrücklich auf solche Personen anzuwenden."
   },
   "flaw.carefree": {
     "name": "Sorglos",
@@ -201,11 +210,13 @@
   },
   "flaw.ceremonial_spontaneous_magic": {
     "name": "Zeremonielle Spontane Magie",
-    "summary": "Du brauchst Zeit und Aufwand, um deine Spontane Magie zu fokussieren."
+    "summary": "Du brauchst Zeit und Aufwand, um deine Spontane Magie zu fokussieren.",
+    "description": "Du brauchst Zeit und Aufwand, um deine Spontane Magie zu fokussieren. Du kannst Spontane Zauber nur nach den Regeln für Zeremonielles Zaubern wirken (Seite 217). Dieser Fehler ist nicht mit Schwieriger Spontaner Magie oder Schwacher Spontaner Magie vereinbar."
   },
   "flaw.chaotic_magic": {
     "name": "Chaotische Magie",
-    "summary": "Deine Magie ist sehr unkontrolliert."
+    "summary": "Deine Magie ist sehr unkontrolliert.",
+    "description": "Deine Magie ist sehr unkontrolliert. Wenn du einen Spontanzauber wirkst, musst du eine gewünschte Effektstufe angeben. Unterschreitest oder überschreitest du diese Zielstufe um mehr als eine Stufe, funktioniert der Zauber zwar, aber seine Wirkungen liegen außerhalb deiner Kontrolle – der Spielleiter entscheidet über die Ergebnisse. Die Effektstufe schließt alle Stufen ein, die du der Penetration zuweist."
   },
   "flaw.church_upbringing": {
     "name": "Kirchliche Erziehung",
@@ -228,7 +239,8 @@
   },
   "flaw.companion_animal": {
     "name": "Begleittier",
-    "summary": "Der Charakter ist das Tierbegleittier eines anderen Charakters (entweder ein Spielercharakter oder ein Spielleitercharakter) und hat daher wenig Kontrolle über sein eigenes Leben."
+    "summary": "Der Charakter ist das Tierbegleittier eines anderen Charakters (entweder ein Spielercharakter oder ein Spielleitercharakter) und hat daher wenig Kontrolle über sein eigenes Leben.",
+    "description": "Der Charakter ist das Tierbegleittier eines anderen Charakters (entweder ein Spielercharakter oder ein Spielleitercharakter) und hat daher wenig Kontrolle über sein eigenes Leben. Er ist weitgehend von seinem Herrn für Nahrung und Unterkunft abhängig und hat eine zusätzliche Persönlichkeitseigenschaft „Treu gegenüber dem Herrn\", die diese Bindung widerspiegelt. Unter Menschen, die seinen Herrn kennen, wird der Charakter besser behandelt, als er es sonst wäre, vielleicht als Haustier oder Leibwächter jener Person. Andere behandeln ihn höchstwahrscheinlich wie ein wildes oder stummes Tier."
   },
   "flaw.compassionate_major": {
     "name": "Mitfühlend (Groß)",
@@ -256,7 +268,8 @@
   },
   "flaw.consumed_casting_tools": {
     "name": "Verbrauchende Zauberwerkzeuge",
-    "summary": "Die Zauberwerkzeuge des Charakters werden nach ihrer Verwendung magisch verbraucht."
+    "summary": "Die Zauberwerkzeuge des Charakters werden nach ihrer Verwendung magisch verbraucht.",
+    "description": "Die Zauberwerkzeuge des Charakters werden nach ihrer Verwendung magisch verbraucht. Das Herstellen eines neuen Zauberwerkzeugs dauert eine Stunde. Reguläre Zauberwerkzeuge erlauben es dem Magus nicht, mehrere Kopien davon herzustellen, sodass er keine Vorräte anlegen kann. Die Herstellung eines Zauberwerkzeugs für einen Zauber, der bereits ein Zauberwerkzeug hat, löscht die magische Verbindung vom bestehenden Werkzeug zu dem Zauber. Der Magus benötigt kein Laboratorium, um Zauberwerkzeuge herzustellen. Dieser Fehler darf nur von Verditius-Magi genommen werden."
   },
   "flaw.continence": {
     "name": "Enthaltsamkeit",
@@ -279,7 +292,8 @@
   },
   "flaw.covenant_upbringing": {
     "name": "Konventsprägung",
-    "summary": "Du wurdest in einem großen, alten Konvent aufgezogen, der wenig Kontakt zur Außenwelt hat."
+    "summary": "Du wurdest in einem großen, alten Konvent aufgezogen, der wenig Kontakt zur Außenwelt hat.",
+    "description": "Du wurdest in einem großen, alten Konvent aufgezogen, der wenig Kontakt zur Außenwelt hat. Du hast möglicherweise sehr merkwürdige religiöse Überzeugungen, und die mittelalterlichen sozialen und politischen Strukturen findest du sicher sehr seltsam. Du kannst bei der Charaktererschaffung Latein nehmen und hast wahrscheinlich einen Wert in Ordenskunde. Während Latein nicht deine Muttersprache sein kann, darfst du eine Sprache sprechen, die eng mit Latein verwandt ist und nur in deinem Heimatkonvent gesprochen wird."
   },
   "flaw.craving_for_travel": {
     "name": "Reiselust",
@@ -293,7 +307,8 @@
   },
   "flaw.crippled": {
     "name": "Verkrüppelt",
-    "summary": "Du hast entweder keine Beine, oder deine Beine sind vollständig unbrauchbar."
+    "summary": "Du hast entweder keine Beine, oder deine Beine sind vollständig unbrauchbar.",
+    "description": "Du hast entweder keine Beine, oder deine Beine sind vollständig unbrauchbar. Du hast sie möglicherweise durch einen Unfall oder als Strafe verloren. Du kannst nicht gehen, obwohl du dich am Boden entlangziehen oder mit einem Stock einen Karren voranschieben kannst."
   },
   "flaw.curse_of_slander": {
     "name": "Verleumdungsfluch",
@@ -329,11 +344,13 @@
   },
   "flaw.deficient_technique": {
     "name": "Defizitäre {technique}",
-    "summary": "Du bist unfähig, eine Technik effektiv einzusetzen."
+    "summary": "Du bist unfähig, eine Technik effektiv einzusetzen.",
+    "description": "Alle Gesamtwerte, einschließlich Labor- und Zaubersummen, die eine bestimmte Technik enthalten, werden halbiert. Fortschreits-Gesamtwerte werden nicht halbiert. Die benötigten Erfahrungspunkte richten sich nach dem tatsächlichen Wert der Technik vor der Halbierung."
   },
   "flaw.deleterious_circumstances": {
     "name": "Abträgliche Umstände",
-    "summary": "Alle deine Magie-Gesamtwerte, ausgenommen Magieresistenz, werden unter bestimmten seltenen Umständen halbiert."
+    "summary": "Alle deine Magie-Gesamtwerte, ausgenommen Magieresistenz, werden unter bestimmten seltenen Umständen halbiert.",
+    "description": "Alle deine Magie-Gesamtwerte, ausgenommen Magieresistenz, werden unter bestimmten seltenen Umständen halbiert. Das kann dein Zustand sein, beispielsweise sitzend oder nass, das Ziel der Magie, wie wilde Tiere oder Eisen, oder der Ort, an dem du den Zauber wirkst, wie eine Stadt oder hoch oben auf einem Berg."
   },
   "flaw.delusion": {
     "name": "Wahnvorstellung",
@@ -362,7 +379,8 @@
   "flaw.deteriorating_power": {
     "name": "Schwindende Macht ({power})",
     "name_unfilled": "Schwindende Macht",
-    "summary": "Ähnlich wie die Tugend Variable Mächte verringert dieser Fehler die Wirksamkeit einer der Mächte des Charakters (Große, Mindere oder Ritualmacht) im Laufe der Zeit."
+    "summary": "Ähnlich wie die Tugend Variable Mächte verringert dieser Fehler die Wirksamkeit einer der Mächte des Charakters (Große, Mindere oder Ritualmacht) im Laufe der Zeit.",
+    "description": "Ähnlich wie die Tugend Variable Mächte verringert dieser Fehler die Wirksamkeit einer der Mächte des Charakters (Große, Mindere oder Ritualmacht) im Laufe der Zeit. Diese Einbuße ist entweder an (Alter / 10), (Machtwert – Machtpool / 5) oder den Verzerrungswert des Charakters geknüpft. Beispielsweise hätte ein Magiecharakter mit Nachlassender Macht, die ans Alter gebunden ist, und einem Alter von 25 eine seiner Mächte um 3 Magnituden reduziert.\n\nDieser Fehler kann mehrfach genommen werden, wenn der Charakter mehr als eine Macht besitzt."
   },
   "flaw.devoted_parent": {
     "name": "Hingebungsvolles Elternteil/Kind",
@@ -379,15 +397,18 @@
   },
   "flaw.difficult_longevity_ritual": {
     "name": "Schwieriges Langlebigkeitsritual",
-    "summary": "Etwas in deiner magischen Natur macht es schwierig, ein wirksames Langlebigkeitsritual für dich zu erschaffen."
+    "summary": "Etwas in deiner magischen Natur macht es schwierig, ein wirksames Langlebigkeitsritual für dich zu erschaffen.",
+    "description": "Etwas in deiner magischen Natur macht es schwierig, ein wirksames Langlebigkeitsritual für dich zu erschaffen. Jeder (einschließlich dir selbst), der ein Langlebigkeitsritual für dich erschafft, muss seine Laborsumme halbieren. Du kannst ohne Einschränkung Langlebigkeitsrituale für andere erschaffen."
   },
   "flaw.difficult_spontaneous_magic": {
     "name": "Schwierige Spontane Magie",
-    "summary": "Spontane Magie erfordert für dich stets Anstrengung."
+    "summary": "Spontane Magie erfordert für dich stets Anstrengung.",
+    "description": "Spontane Magie erfordert für dich stets Anstrengung. Du kannst keine spontanen Zauber wirken, ohne dich dabei anzustrengen. Wenn du dich jedoch anstrengst, wirkst du Zauber wie jeder andere Magus.\n\nDieser Fehler kann mit Schwache Spontane Magie (Seite 153) kombiniert werden, um einen Magus zu erschaffen, der überhaupt keine Spontane Magie einsetzen kann."
   },
   "flaw.difficult_underlings": {
     "name": "Schwierige Untergebene",
-    "summary": "Du darfst diesen Geschichte-Fehler nur nehmen, wenn dein Charakter Untergebene hat und auch weiterhin haben wird."
+    "summary": "Du darfst diesen Geschichte-Fehler nur nehmen, wenn dein Charakter Untergebene hat und auch weiterhin haben wird.",
+    "description": "Du darfst diesen Geschichte-Fehler nur nehmen, wenn dein Charakter Untergebene hat und auch weiterhin haben wird. Egal wie viele Menschen du entlässt oder wie sorgfältig du neue Kandidaten prüfst – deine Untergebenen bereiten dir stets Probleme. Die Art der Probleme kann sich ändern, aber du wirst immer wieder dazu gebracht, dich mit den Schwierigkeiten auseinanderzusetzen, die sie verursacht haben. Wenn andere Menschen denselben Untergebenen Befehle geben, haben sie keinerlei Probleme. Es liegt nicht an ihnen, es liegt an dir."
   },
   "flaw.disfigured": {
     "name": "Entstellt",
@@ -396,7 +417,8 @@
   },
   "flaw.disjointed_magic": {
     "name": "Zusammenhanglose Magie",
-    "summary": "Du kannst früheres Wissen nicht zur Unterstützung deiner Magie heranziehen."
+    "summary": "Du kannst früheres Wissen nicht zur Unterstützung deiner Magie heranziehen.",
+    "description": "Du kannst früheres Wissen nicht zur Unterstützung deiner Magie heranziehen. Du erhältst keinen Nutzen daraus, einen Zauber zu kennen, der einem ähnelt, den du gerade erlernst oder erfindest, und du erhältst keine Verzauberungsboni von Techniken und Formen, die bereits in einen Gegenstand eingebettet wurden."
   },
   "flaw.disorientating_magic": {
     "name": "Desorientierende Magie",
@@ -893,7 +915,8 @@
   },
   "flaw.no_sense_of_direction": {
     "name": "Kein Orientierungssinn",
-    "summary": "Du bist völlig unfähig, Richtungsangaben zu folgen."
+    "summary": "Du bist völlig unfähig, Richtungsangaben zu folgen.",
+    "description": "Du bist völlig unfähig, Richtungsangaben zu folgen. Nord, Süd, Ost und West bedeuten dir nichts, und du verwechselst oft rechts und links. Du verläufst dich häufig auf unbekannten Wegen, wenn du allein unterwegs bist oder wenn andere dir folgen, und musst dich oft durch Überlegung nach Hause oder zu deinem Ziel vorarbeiten. Dieser Fehler ist unvereinbar mit der Tugend Vielgereist."
   },
   "flaw.nocturnal": {
     "name": "Nachtmensch",
@@ -935,7 +958,8 @@
   },
   "flaw.outcast": {
     "name": "Ausgestoßener",
-    "summary": "Du hast die schwierige Aufgabe, allein klarzukommen – die normale Gesellschaft lehnt dich ab, und du bist nicht an einen Konvent gebunden."
+    "summary": "Du hast die schwierige Aufgabe, allein klarzukommen – die normale Gesellschaft lehnt dich ab, und du bist nicht an einen Konvent gebunden.",
+    "description": "Du hast die schwierige Aufgabe, allein klarzukommen – die normale Gesellschaft lehnt dich ab, und du bist nicht an einen Konvent gebunden. Vielleicht hast du eine magische Natur, einen übernatürlichen Hintergrund, eine Entstellung oder einen ungeheuerlichen Skandal in deiner Vergangenheit. Du darfst nicht die Tugend Wohlhabend nehmen."
   },
   "flaw.outlaw": {
     "name": "Geächteter",
@@ -1275,7 +1299,8 @@
   },
   "flaw.the_constant_expression": {
     "name": "Der Stete Ausdruck",
-    "summary": "Die Maga bildet den Mittelpunkt eines magischen Mahlstroms und wirkt fortwährend nicht-ermüdende Spontane Magie-Effekte."
+    "summary": "Die Maga bildet den Mittelpunkt eines magischen Mahlstroms und wirkt fortwährend nicht-ermüdende Spontane Magie-Effekte.",
+    "description": "Die Maga bildet den Mittelpunkt eines magischen Mahlstroms und wirkt fortwährend nicht-ermüdende Spontane Magie-Effekte. Die entstehenden Effekte sind aufgrund der Natur nicht-ermüdender Spontaner Magie geringfügig, werden aber wahrscheinlich Ablenkung und/oder andere Probleme verursachen. Obwohl nicht-ermüdend, ist die Mühe, die Magie in weniger gefährliche Formen zu lenken, anstrengend, und die Maga gilt als eine dauerhafte Erschöpfungsstufe verloren zu haben, die nicht durch Schlaf zurückgewonnen werden kann.\n\nDie durch den steten Ausdruck erzeugten Effekte können alles treffen, was die Maga normalerweise mit einem Spontanzauber treffen könnte, einschließlich sie selbst, obwohl sie eher Dinge treffen, die die Maga berührt oder sieht.\n\nDie Maga kann sich aktiv konzentrieren, um diese automatische Magie gänzlich zu unterdrücken, indem sie einen anfänglichen Ausdauer + Konzentration-Einfachwurf gegen Schwierigkeitsgrad 3 + (Verzerrungswert) ablegt. Bei einem Misserfolg ist alle zwei Minuten ein weiterer Wurf erlaubt, nachdem die Maga sich gesammelt hat. Ist die Magie unterdrückt, kann die Maga Spontane und Formulaische Zauber normal wirken.\n\nUm Zeremoniellen oder Ritualzauber zu wirken, muss die Maga einen Konzentrationswurf wie oben beschrieben ablegen. Ein Versuch ist alle 15 Minuten möglich, und ein erfolgreicher Versuch reicht für die Dauer des Wirkens aus. Dennoch erleidet die Maga eine Anzahl zusätzlicher Patzerwürfel in Höhe ihres Verzerrungswerts.\n\nDer stete Ausdruck von Magie macht die Laborarbeit grundsätzlich riskant. Jedes Laboratorium, in dem die Maga arbeitet, wird so behandelt, als hätte es einen kostenlosen Fehler mit einer Sicherheitsstrafe von -3 (siehe Seite 288).\n\nStrafen durch fremde Auren oder Effekte wie die Aegis des Herdes können den steten Ausdruck dämpfen. Wo die Strafe den Zaubersumme auf 0 reduziert, wird keine Magie ausgedrückt.\n\nDer Spieler sollte basierend auf der Persönlichkeit, dem Sigil und den bevorzugten Künsten entscheiden, wie der stete Ausdruck sich am häufigsten manifestiert, obwohl der Spielleiter den tatsächlichen Effekt von Szene zu Szene variieren kann.\n\nConciatta von Bonisagus, eine brillante Theoretikerin des zehnten Jahrhunderts, die die hermetische Magie so erweiterte, dass sie die göttliche, feenhafte und höllische Sphäre betraf, litt berühmtermaßen unter diesem Fehler, der ansonsten äußerst selten ist. Andere Magi können annehmen, dass ein Charakter, der ihn besitzt, irgendeine Verbindung zu ihr hat. Weitere Einzelheiten zu Conciatta finden sich in Legends of Hermes."
   },
   "flaw.the_falling_evil": {
     "name": "Fallsucht",

@@ -159,6 +159,7 @@ impl fmt::Display for IssueSeverity {
 /// | `category_forbidden_by_effect` | error | virtues_flaws | `item`, `category`, `other` |
 /// | `ability_forbidden_by_effect` | error | abilities | `ability`, `other` |
 /// | `excluded_by_predicate` | error | virtues_flaws | `item`, `other`, `predicate` |
+/// | `same_choice_conflict` | error | virtues_flaws | `item`, `other`, `target` |
 /// | `missing_required_trait` | error | virtues_flaws | `item` |
 /// | `forbidden_trait` | error | virtues_flaws | `item` |
 /// | `missing_param` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key` |
@@ -414,6 +415,15 @@ impl ValidationIssue {
     /// no validator raises it yet — see
     /// `crates/arm-rules/tests/b3_predicate_exclusions.rs`.
     pub const CODE_EXCLUDED_BY_PREDICATE: &'static str = "excluded_by_predicate";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: D69.6 —
+    /// [`crate::types::PointItem::same_choice_exclusions`], another Virtue/
+    /// Flaw this entity holds (bought or granted) resolves to the SAME
+    /// target this item does — "You may not take Student of (Realm) and
+    /// Puissant Ability for the same Lore" (ArMDE:5054). One-directional
+    /// (only the declaring item's own list is walked) and grant-aware on
+    /// both sides, on [`Self::CODE_EXCLUDED_BY_PREDICATE`]'s own precedent.
+    /// Filed under `virtues_flaws`, the step that owns both sides.
+    pub const CODE_SAME_CHOICE_CONFLICT: &'static str = "same_choice_conflict";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_MISSING_REQUIRED_TRAIT: &'static str = "missing_required_trait";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -1114,6 +1124,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_forbidden_categories(entity, ruleset, type_profile, &prereq_ctx, &mut issues);
     validate_category_effect_prohibitions(entity, ruleset, &effective_selections, &mut issues);
     validate_excluded_if_holds(ruleset, &effective_selections, &mut issues);
+    validate_same_choice_exclusions(ruleset, &effective_selections, &mut issues);
     validate_required_traits(type_profile, &selected_ids, &mut issues);
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);

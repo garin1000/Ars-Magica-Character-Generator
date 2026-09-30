@@ -162,7 +162,9 @@ fn special_circumstances_keeps_only_magic_resistance_mod() {
     let item = rs
         .item(&Id::new("virtue.special_circumstances"))
         .expect("virtue.special_circumstances must ship");
-    assert_eq!(item.classification, Classification::InPlayEffect);
+    // X2d reclassified it to uncomputed_rule: its +3 stays text (D20, D67,
+    // D70), while the MR modifier below is still computed.
+    assert_eq!(item.classification, Classification::UncomputedRule);
     assert!(
         !item
             .effects

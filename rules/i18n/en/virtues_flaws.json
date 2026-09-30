@@ -50,16 +50,17 @@
   "flaw.a_deal_with_the_devil": {
     "name": "A Deal with the Devil",
     "summary": "The character has sold his soul to the devil and now finds himself destined to infernal damnation.",
-    "description": "The character has sold his soul to the devil and now finds himself destined to infernal damnation. This Flaw includes the effects of Plagued By Supernatural Entity as Hell's agents goad and cajole the character, reminding him of the bargain he made and tempting him with offers of possible release in return for just one more small service. The character is called upon to undertake an inherently sinful action, but the reward is always snatched away on some technicality of the agreement or simply because of the duplicitous nature of the infernal. Note that the character can, in fact, repent and get out of the deal by God's grace, but the repentance must be genuine, and the forces of Hell will try to stop it, thus generating stories that way."
+    "description": "The character has sold his soul to the devil and now finds himself destined to infernal damnation. This Flaw includes the effects of Plagued By Supernatural Entity as Hell’s agents goad and cajole the character, reminding him of the bargain he made and tempting him with offers of possible release in return for just one more small service. The character is called upon to undertake an inherently sinful action, but the reward is always snatched away on some technicality of the agreement or simply because of the duplicitous nature of the infernal. Note that the character can, in fact, repent and get out of the deal by God's grace, but the repentance must be genuine, and the forces of Hell will try to stop it, thus generating stories that way."
   },
   "flaw.abandoned_apprentice": {
     "name": "Abandoned Apprentice",
     "summary": "The character was abandoned by his master midway through his Hermetic training.",
-    "description": "The character was abandoned by his master midway through his Hermetic training. He knows Hermetic magic and can cast spells and enchant items like other magi. He is not a member of the Order of Hermes, however. Some Tribunals rule that an apprentice has a year to find another parens before he is hunted down and slain like a Marched magus. Most Tribunals rule that abandoning an apprentice is a low crime, and if the character makes his situation known his parens may face legal action. Decide at what age the character was abandoned. Create the character as a regular apprentice up until that age, and then give him experience points based on his age and other Virtues for his life past being abandoned. If the character knows the Parma Magica, he must join the Order or be slain. Even if the character joins the Order, his background continues to cause problems for him."
+    "description": "The character was abandoned by his master midway through his Hermetic training. He knows Hermetic magic and can cast spells and enchant items like other magi. He is not a member of the Order of Hermes, however.\n\nSome Tribunals rule that an apprentice has a year to find another parens before he is hunted down and slain like a Marched magus. Most Tribunals rule that abandoning an apprentice is a low crime, and if the character makes his situation known his parens may face legal action.\n\nDecide at what age the character was abandoned. Create the character as a regular apprentice up until that age, and then give him experience points based on his age and other Virtues for his life past being abandoned. If the character knows the Parma Magica, he must join the Order or be slain.\n\nEven if the character joins the Order, his background continues to cause problems for him."
   },
   "flaw.ability_block": {
     "name": "Ability Block",
-    "summary": "You are completely unable to learn a certain class of Abilities, for some reason."
+    "summary": "You are completely unable to learn a certain class of Abilities, for some reason.",
+    "description": "You are completely unable to learn a certain class of Abilities, for some reason. This may be Martial Abilities, or a more limited set of the others. A profound inability to master logic would rule out Artes Liberales, Philosophiae, any Law, Medicine, and Theology. Alternatively, you might be unable to learn any languages other than your native tongue. It must be possible for your character to learn the abilities in question in the absence of this Flaw, but she need have no intention of doing so. You may only take this Flaw once."
   },
   "flaw.afflicted_tongue": {
     "name": "Afflicted Tongue",
@@ -120,7 +121,8 @@
   },
   "flaw.bigamist": {
     "name": "Bigamist",
-    "summary": "The character has two entirely separate lives, in two cities, and moves between the two on some pretext, most likely trade."
+    "summary": "The character has two entirely separate lives, in two cities, and moves between the two on some pretext, most likely trade.",
+    "description": "The character has two entirely separate lives, in two cities, and moves between the two on some pretext, most likely trade. Bigamists have two spouses, and maintain two households, which they must pay for. If you are using the rules in City and Guild, the merchant's annual cost of maintaining his business rises by (6 x Wealth Multiplier) Labor Points. Some bigamists mitigate this expense by pretending to be of lower status in their alternate life, which reduces the additional Labor Point cost by half (to 3 x Wealth Multiplier)."
   },
   "flaw.black_sheep": {
     "name": "Black Sheep",
@@ -128,7 +130,8 @@
   },
   "flaw.blackmail": {
     "name": "Blackmail",
-    "summary": "You have information that some powerful person would prefer kept hidden."
+    "summary": "You have information that some powerful person would prefer kept hidden.",
+    "description": "You have information that some powerful person would prefer kept hidden. You receive payments or services in return for your silence, and you may occasionally demand special favors. Don't push your luck your victim may decide it isn't worth the cost, or silence you permanently. This benefit has a yearly value of about 50 silver pennies, possibly more if you keep the pressure on. You should detail and record the specifics of this arrangement."
   },
   "flaw.blatant_gift": {
     "name": "Blatant Gift",
@@ -142,15 +145,18 @@
   },
   "flaw.blind": {
     "name": "Blind",
-    "summary": "You have little or no sight."
+    "summary": "You have little or no sight.",
+    "description": "You have little or no sight. Using missile weapons is futile, reading is impossible, and navigation in unknown territory is difficult to say the least. Blind magi can detect targets by other senses, and thus are less limited than people trying to use missile weapons. However, blind magi cannot aim spells without magical aid."
   },
   "flaw.bound_casting_tools": {
     "name": "Bound Casting Tools",
-    "summary": "The magus's casting tools, as used by House Verditius, are so personal that they become lasting Arcane Connections to him."
+    "summary": "The magus's casting tools, as used by House Verditius, are so personal that they become lasting Arcane Connections to him.",
+    "description": "The magus's casting tools, as used by House Verditius, are so personal that they become lasting Arcane Connections to him. Regular casting tools remain as Arcane Connections for a few weeks, but his last for years."
   },
   "flaw.bound_magic": {
     "name": "Bound Magic",
-    "summary": "When you die, all of your spells end abruptly and any magic items that you created cease to function."
+    "summary": "When you die, all of your spells end abruptly and any magic items that you created cease to function.",
+    "description": "When you die, all of your spells end abruptly and any magic items that you created cease to function. You cannot take this Flaw with Harnessed Magic (page 85), as that Virtue already includes this effect."
   },
   "flaw.bound_to_realm": {
     "name": "Bound to {realm}",
@@ -159,11 +165,13 @@
   },
   "flaw.bound_to_role_role": {
     "name": "Bound to {role} Role",
-    "summary": "This character is physically bonded to some form of device, whether through a mystic event, long years of exposure and warping, or the ministrations of an experimental magus."
+    "summary": "This character is physically bonded to some form of device, whether through a mystic event, long years of exposure and warping, or the ministrations of an experimental magus.",
+    "description": "This character is physically bonded to some form of device, whether through a mystic event, long years of exposure and warping, or the ministrations of an experimental magus. The degree of the bonding is for the troupe to define, but the bonding may be physical, such as a locksmith whose fingers are picks, files, and keys, or mystical, such as a watchman who is confined to his watch tower as though contained by an unbreakable ward.\n\nThe manner of this bonding determines the kind of life that the character may live. A watchman unable to leave his tower may make it his home, while a coachman who has become part of his coach cannot survive for long once separated from it.\n\nIf separated from the bonded device or place in any way, the character must make deprivation checks as though deprived of food (i.e., a check every three days). The effects of this are canceled if the character is brought into contact with the device or returned to his bound place, at which point they rebond.\n\nThis Flaw also includes the effects of the Unaging Virtue, but the character's apparent age advances in line with their physical age. Role-Bound characters retain the need to sleep and breathe and those not physically bonded to a device, such as those bound to a place, retain their other physical needs.\n\nThis Flaw may originate from any of the Supernatural Realms: a magical origin might represent the expression of an Essential Trait, a faerie origin could show that the character occupies an archetypal role, ready to play his part in the wider story, while divine and infernal origins may represent eternal punishment on Earth.\n\nThis Flaw may only be taken by grogs and is suitable for the Warping to a Pattern Minor Site Hook presented in Covenants, page 11."
   },
   "flaw.branded_criminal": {
     "name": "Branded Criminal",
-    "summary": "As punishment for some crime in your past, a mark has been burned into your cheek."
+    "summary": "As punishment for some crime in your past, a mark has been burned into your cheek.",
+    "description": "As punishment for some crime in your past, a mark has been burned into your cheek. This adversely affects your ability to function in society. You may not take the Wealthy Virtue, but you may take Martial Abilities at character creation. You may choose not to take such abilities, if your crime was not violent."
   },
   "flaw.broken_vessel": {
     "name": "Broken Vessel",
@@ -177,7 +185,8 @@
   },
   "flaw.busybody": {
     "name": "Busybody",
-    "summary": "You usually know everything that is going on among your friends and acquaintances, especially in private matters."
+    "summary": "You usually know everything that is going on among your friends and acquaintances, especially in private matters.",
+    "description": "You usually know everything that is going on among your friends and acquaintances, especially in private matters. You are always interested in rumors and gossip, and are frequently able to extract personal secrets from people. Among magi the language is more dignified, but the idea is the same: you keep tabs on the Hermetic community (your covenant, your House, and nearby covenants — at the least). However, magi probably don't have much knowledge of what's going on among the lower-class members of their covenant unless they choose to apply this Flaw specifically to such people at character creation."
   },
   "flaw.carefree": {
     "name": "Carefree",
@@ -200,11 +209,13 @@
   },
   "flaw.ceremonial_spontaneous_magic": {
     "name": "Ceremonial Spontaneous Magic",
-    "summary": "You need time and effort to focus your Spontaneous magic."
+    "summary": "You need time and effort to focus your Spontaneous magic.",
+    "description": "You need time and effort to focus your Spontaneous magic. You can only cast Spontaneous spells using the rules for Ceremonial Casting (page 217). This Flaw is not compatible with Difficult Spontaneous Magic or Weak Spontaneous Magic."
   },
   "flaw.chaotic_magic": {
     "name": "Chaotic Magic",
-    "summary": "Your magic is very wild."
+    "summary": "Your magic is very wild.",
+    "description": "Your magic is very wild. When you cast a spontaneous spell, you must specify a desired level of effect. If you fall short of or exceed that target by more than one level, the spell still works, but its effects are beyond your control—the storyguide decides the results. The level of effect includes any levels you assign to Penetration."
   },
   "flaw.church_upbringing": {
     "name": "Church Upbringing",
@@ -227,7 +238,8 @@
   },
   "flaw.companion_animal": {
     "name": "Companion Animal",
-    "summary": "The character is the Animal Companion of another character (either a player character or a storyguide character) and therefore has little control over his own life."
+    "summary": "The character is the Animal Companion of another character (either a player character or a storyguide character) and therefore has little control over his own life.",
+    "description": "The character is the Animal Companion of another character (either a player character or a storyguide character) and therefore has little control over his own life. He is largely dependent on his master for food and shelter, and has an additional Personality Trait of \"Loyal to Master\" which represents this bond. Among people who know his master, the character is treated better than he would be, perhaps as that person's pet or bodyguard. Others most likely treat him as a brute or a dumb beast."
   },
   "flaw.compassionate_major": {
     "name": "Compassionate (Major)",
@@ -255,7 +267,8 @@
   },
   "flaw.consumed_casting_tools": {
     "name": "Consumed Casting Tools",
-    "summary": "The character's casting tools are magically consumed after he uses them."
+    "summary": "The character's casting tools are magically consumed after he uses them.",
+    "description": "The character's casting tools are magically consumed after he uses them. It takes an hour to make a new casting tool. Regular casting tools do not allow the magus to make multiple copies of them, so he may not stock up on casting tools. Making a casting tool for a spell that already has a casting tool erases the magical connection from the existing tool to the spell. The magus does not need a laboratory to make casting tools. This Flaw may only be taken by Verditius magi."
   },
   "flaw.continence": {
     "name": "Continence",
@@ -278,7 +291,8 @@
   },
   "flaw.covenant_upbringing": {
     "name": "Covenant Upbringing",
-    "summary": "You were raised in a large, old covenant that has little contact with the outside world."
+    "summary": "You were raised in a large, old covenant that has little contact with the outside world.",
+    "description": "You were raised in a large, old covenant that has little contact with the outside world. You might have very strange religious beliefs, and you certainly find medieval social and political structures very odd. You may take Latin at character creation, and are likely to have a score in Order of Hermes Lore. While Latin cannot be your native language, you may speak a language closely related to Latin that is spoken only at your home covenant."
   },
   "flaw.craving_for_travel": {
     "name": "Craving for Travel",
@@ -292,7 +306,8 @@
   },
   "flaw.crippled": {
     "name": "Crippled",
-    "summary": "You either have no legs, or your legs are completely useless."
+    "summary": "You either have no legs, or your legs are completely useless.",
+    "description": "You either have no legs, or your legs are completely useless. You may have lost them in an accident or as a punishment. You cannot walk, although you may drag yourself along the ground, or push a trolley around with a stick."
   },
   "flaw.curse_of_slander": {
     "name": "Curse of Slander",
@@ -328,11 +343,13 @@
   },
   "flaw.deficient_technique": {
     "name": "Deficient {technique}",
-    "summary": "You are unable to use one Technique effectively."
+    "summary": "You are unable to use one Technique effectively.",
+    "description": "All totals, including Lab and Casting totals, including a particular Technique are halved. Advancement Totals are not halved. Experience points required are based on the actual value of the Technique, before halving."
   },
   "flaw.deleterious_circumstances": {
     "name": "Deleterious Circumstances",
-    "summary": "All your magic totals, excluding Magic Resistance, are halved under certain uncommon circumstances."
+    "summary": "All your magic totals, excluding Magic Resistance, are halved under certain uncommon circumstances.",
+    "description": "All your magic totals, excluding Magic Resistance, are halved under certain uncommon circumstances. This can be your state, such as sitting or wet, the target of the magic, such as wild animals or iron, or the place where you are casting the magic, such as a city or high up a mountain."
   },
   "flaw.delusion": {
     "name": "Delusion",
@@ -361,7 +378,8 @@
   "flaw.deteriorating_power": {
     "name": "Deteriorating Power ({power})",
     "name_unfilled": "Deteriorating Power",
-    "summary": "Like the Variable Powers Virtue, this Flaw reduces the effectiveness of one of the character's powers (Greater, Lesser, or Ritual) over time."
+    "summary": "Like the Variable Powers Virtue, this Flaw reduces the effectiveness of one of the character's powers (Greater, Lesser, or Ritual) over time.",
+    "description": "Like the Variable Powers Virtue, this Flaw reduces the effectiveness of one of the character's powers (Greater, Lesser, or Ritual) over time. This penalty is linked to either the character's (age / 10), (Might Score – Might Pool / 5), or Warping Score. For example, a magic character with Deteriorating Powers linked to age and an age of 25 would have one of his powers reduced by 3 magnitudes.\n\nThis Flaw may be taken more than once, if the character has more than one Power."
   },
   "flaw.devoted_parent": {
     "name": "Devoted Parent/Child",
@@ -378,15 +396,18 @@
   },
   "flaw.difficult_longevity_ritual": {
     "name": "Difficult Longevity Ritual",
-    "summary": "Something in your magical nature makes it difficult to create an effective Longevity Ritual for you."
+    "summary": "Something in your magical nature makes it difficult to create an effective Longevity Ritual for you.",
+    "description": "Something in your magical nature makes it difficult to create an effective Longevity Ritual for you. Anyone (including yourself) creating a Longevity Ritual for you must halve their Lab Total. You may create Longevity Rituals for others without penalty."
   },
   "flaw.difficult_spontaneous_magic": {
     "name": "Difficult Spontaneous Magic",
-    "summary": "Spontaneous magic is always an effort for you."
+    "summary": "Spontaneous magic is always an effort for you.",
+    "description": "Spontaneous magic is always an effort for you. You cannot cast Spontaneous spells without exerting yourself. However, when you do exert yourself, you cast spells as any other magus.\n\nThis Flaw may be combined with Weak Spontaneous Magic (page 153) to create a magus who cannot use Spontaneous magic at all."
   },
   "flaw.difficult_underlings": {
     "name": "Difficult Underlings",
-    "summary": "You may only take this Story Flaw if your character has, and will keep, underlings of some sort or another."
+    "summary": "You may only take this Story Flaw if your character has, and will keep, underlings of some sort or another.",
+    "description": "You may only take this Story Flaw if your character has, and will keep, underlings of some sort or another. No matter how many people you fire, or how carefully you vet new candidates, your underlings always cause problems for you. The nature of the problems may change, but you are repeatedly drawn into dealing with the trouble they have caused. If other people give the same underlings orders, they have no problem. It's not them, it's you."
   },
   "flaw.disfigured": {
     "name": "Disfigured",
@@ -395,7 +416,8 @@
   },
   "flaw.disjointed_magic": {
     "name": "Disjointed Magic",
-    "summary": "You cannot use previous knowledge to help you with magic."
+    "summary": "You cannot use previous knowledge to help you with magic.",
+    "description": "You cannot use previous knowledge to help you with magic. You gain no benefit from knowing a spell that is similar to one you are learning or inventing, and you gain no enchantment bonuses from Techniques and Forms already invested in an item."
   },
   "flaw.disorientating_magic": {
     "name": "Disorientating Magic",
@@ -892,7 +914,8 @@
   },
   "flaw.no_sense_of_direction": {
     "name": "No Sense of Direction",
-    "summary": "You are completely unable to follow directions."
+    "summary": "You are completely unable to follow directions.",
+    "description": "You are completely unable to follow directions. North, south, east, and west have no meaning to you, and you often confuse right and left. You frequently get lost while traveling unfamiliar paths by yourself, or with others following your lead, and often have to reason your way home or to your destination from first principles. This Flaw is incompatible with the Well Traveled Virtue."
   },
   "flaw.nocturnal": {
     "name": "Nocturnal",
@@ -934,7 +957,8 @@
   },
   "flaw.outcast": {
     "name": "Outcast",
-    "summary": "You have the rough task of making it on your own—normal society rejects you and you are not attached to a covenant."
+    "summary": "You have the rough task of making it on your own—normal society rejects you and you are not attached to a covenant.",
+    "description": "You have the rough task of making it on your own—normal society rejects you and you are not attached to a covenant. Perhaps you have a magical nature, a supernatural background, some disfigurement, or a tremendous scandal in your past. You may not take the Wealthy Virtue."
   },
   "flaw.outlaw": {
     "name": "Outlaw",
@@ -1273,7 +1297,8 @@
   },
   "flaw.the_constant_expression": {
     "name": "The Constant Expression",
-    "summary": "The maga forms the center of a magical maelstrom, perpetually casting non-fatiguing Spontaneous magic effects."
+    "summary": "The maga forms the center of a magical maelstrom, perpetually casting non-fatiguing Spontaneous magic effects.",
+    "description": "The maga forms the center of a magical maelstrom, perpetually casting non-fatiguing Spontaneous magic effects. The resulting effects are minor due to the nature of non-fatiguing Spontaneous magic but are likely to cause distraction and/or other problems. Though nonfatiguing, the effort of marshaling the magic into less dangerous forms is tiring and the maga is considered to have lost one long-term Fatigue level which cannot be regained through sleep.\n\nThe effects produced by the constant expression may target anything that the maga could normally target with spontaneous spell, including herself, although they are more likely to target things touched by or seen by the maga.\n\nThe maga may actively concentrate in order to suppress this automatic magic entirely, making an initial Stamina + Concentration simple roll against Ease Factor 3 + (Warping Score). On a failure, a further roll is allowed every two minutes after the maga has composed herself. If the magic has been suppressed, the maga may cast Spontaneous and Formulaic spells normally.\n\nIn order to cast Ceremonial or Ritual magic the maga must make a Concentration roll as described above. One attempt can be made every 15 minutes, a successful attempt sufficient to cover the duration of the casting. Nevertheless, the maga suffers a number of additional botch dice equal to her Warping Score.\n\nThe constant expression of magic also makes laboratory work inherently risky. Any laboratory the maga works in is treated as having a free Flaw providing a Safety penalty of -3 (see page 288).\n\nPenalties from foreign auras, or from effects such as Aegis of the Hearth, may dampen the constant expression. Where the penalty reduces the casting total to 0, no magic is expressed.\n\nThe player should decide, based on personality, sigil, and favored arts, how the constant expression most often manifests, though the storyguide may vary the actual effect scene-by-scene.\n\nConciatta of Bonisagus, a brilliant theorist of the tenth century who extended Hermetic magic to affect the Divine, Faerie, and Infernal realms, famously suffered from this Flaw, which is otherwise extremely rare. Other magi may assume that a character who has it has some connection with her. More details of Conciatta can be found in Legends of Hermes."
   },
   "flaw.the_falling_evil": {
     "name": "The Falling Evil",

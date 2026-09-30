@@ -2169,215 +2169,32 @@ const PENDING_D46_CLASSIFICATION: &[(&str, &str)] = &[
 /// [`pending_d67_classification_entries_still_trip_the_guard`] keeps every row
 /// honest.
 const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
-    (
-        "flaw.ambitious_major",
-        "narrative, but declares incompatible_with (Ambitious Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.ambitious_minor",
-        "narrative, but declares incompatible_with (Ambitious Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.avaricious_major",
-        "narrative, but declares incompatible_with (Avaricious Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.avaricious_minor",
-        "narrative, but declares incompatible_with (Avaricious Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.beloved_rival_major",
-        "narrative, but declares incompatible_with (Beloved Rival Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.beloved_rival_minor",
-        "narrative, but declares incompatible_with (Beloved Rival Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.compassionate_major",
-        "narrative, but declares incompatible_with (Compassionate Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.compassionate_minor",
-        "narrative, but declares incompatible_with (Compassionate Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.compulsion_major",
-        "narrative, but declares incompatible_with (Compulsion Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.compulsion_minor",
-        "narrative, but declares incompatible_with (Compulsion Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.compulsive_lying_major",
-        "narrative, but declares incompatible_with (Compulsive Lying Minor) — D67 counts that as \
-         computed",
-    ),
-    (
-        "flaw.compulsive_lying_minor",
-        "narrative, but declares incompatible_with (Compulsive Lying Major) — D67 counts that as \
-         computed",
-    ),
-    (
-        "flaw.depraved_major",
-        "narrative, but declares incompatible_with (Depraved Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.depraved_minor",
-        "narrative, but declares incompatible_with (Depraved Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.driven_major",
-        "narrative, but declares incompatible_with (Driven Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.driven_minor",
-        "narrative, but declares incompatible_with (Driven Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.envious_major",
-        "narrative, but declares incompatible_with (Envious Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.envious_minor",
-        "narrative, but declares incompatible_with (Envious Major) — D67 counts that as computed",
-    ),
+    // X2e (`tmp/x2-worklist.md` rows 204-260, `tmp/x2e-verdicts.md`): the 14
+    // rows this slice was routed (ambitious/avaricious/beloved_rival/
+    // compassionate/compulsion/compulsive_lying/depraved major-minor pairs)
+    // are gone, not reclassified. A concurrent slice (X4,
+    // `validate_magnitude_variant_exclusivity`'s D68.8 exemption,
+    // `crates/arm-rules/src/ruleset/integrity.rs`) landed
+    // `skip_magnitude_variant_guard: true` on every one of these pairs and
+    // removed their auto-derived `incompatible_with` — each pair's own
+    // passage (ArMDE:5663-5666 etc.) never actually states a mutual-exclusion
+    // rule (unlike Magical Focus, ArMDE:4405), so the twin exclusion was
+    // itself the defect X4 fixed. With `incompatible_with` gone and no
+    // `effects`/`prerequisites`/profile reference either, `is_computed` now
+    // reads `false` for all 14: they are correctly `narrative` (D50: each
+    // passage is pure personality colour, no player/storyguide-actionable
+    // rule), and the row no longer trips the D67 guard at all — verified via
+    // `pending_d67_classification_entries_still_trip_the_guard`, which failed
+    // on `flaw.ambitious_major` with exactly that message before this edit.
+    // Deleting the row is therefore correct under D67's own shrink-only
+    // discipline for a row that stopped applying, not a reclassification.
     (
         "flaw.false_power_minor",
         "narrative, but declares prerequisites — D67 counts that as computed",
     ),
     (
-        "flaw.gender_nonconforming_major",
-        "narrative, but declares incompatible_with (Gender Nonconforming Minor) — D67 counts \
-         that as computed",
-    ),
-    (
-        "flaw.gender_nonconforming_minor",
-        "narrative, but declares incompatible_with (Gender Nonconforming Major) — D67 counts \
-         that as computed",
-    ),
-    (
-        "flaw.generous_major",
-        "narrative, but declares incompatible_with (Generous Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.generous_minor",
-        "narrative, but declares incompatible_with (Generous Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.greedy_major",
-        "narrative, but declares incompatible_with (Greedy Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.greedy_minor",
-        "narrative, but declares incompatible_with (Greedy Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.hatred_major",
-        "narrative, but declares incompatible_with (Hatred Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.hatred_minor",
-        "narrative, but declares incompatible_with (Hatred Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.higher_purpose_major",
-        "narrative, but declares incompatible_with (Higher Purpose Minor) — D67 counts that as \
-         computed",
-    ),
-    (
-        "flaw.higher_purpose_minor",
-        "narrative, but declares incompatible_with (Higher Purpose Major) — D67 counts that as \
-         computed",
-    ),
-    (
-        "flaw.lecherous_major",
-        "narrative, but declares incompatible_with (Lecherous Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.lecherous_minor",
-        "narrative, but declares incompatible_with (Lecherous Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.meddler_major",
-        "narrative, but declares incompatible_with (Meddler Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.meddler_minor",
-        "narrative, but declares incompatible_with (Meddler Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.obsessed_major",
-        "narrative, but declares incompatible_with (Obsessed Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.obsessed_minor",
-        "narrative, but declares incompatible_with (Obsessed Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.optimistic_major",
-        "narrative, but declares incompatible_with (Optimistic Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.optimistic_minor",
-        "narrative, but declares incompatible_with (Optimistic Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.overconfident_major",
-        "narrative, but declares incompatible_with (Overconfident Minor) — D67 counts that as \
-         computed",
-    ),
-    (
-        "flaw.overconfident_minor",
-        "narrative, but declares incompatible_with (Overconfident Major) — D67 counts that as \
-         computed",
-    ),
-    (
-        "flaw.oversensitive_major",
-        "narrative, but declares incompatible_with (Oversensitive Minor) — D67 counts that as \
-         computed",
-    ),
-    (
-        "flaw.oversensitive_minor",
-        "narrative, but declares incompatible_with (Oversensitive Major) — D67 counts that as \
-         computed",
-    ),
-    (
-        "flaw.pious_major",
-        "narrative, but declares incompatible_with (Pious Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.pious_minor",
-        "narrative, but declares incompatible_with (Pious Major) — D67 counts that as computed",
-    ),
-    (
         "flaw.primogeniture_lineage",
         "narrative, but declares prerequisites — D67 counts that as computed",
-    ),
-    (
-        "flaw.proud_major",
-        "narrative, but declares incompatible_with (Proud Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.proud_minor",
-        "narrative, but declares incompatible_with (Proud Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.rebellious_major",
-        "narrative, but declares incompatible_with (Rebellious Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.rebellious_minor",
-        "narrative, but declares incompatible_with (Rebellious Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.reckless_major",
-        "narrative, but declares incompatible_with (Reckless Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.reckless_minor",
-        "narrative, but declares incompatible_with (Reckless Major) — D67 counts that as computed",
     ),
     (
         "flaw.suppressed_gift",
@@ -2390,30 +2207,6 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     (
         "flaw.true_love_minor",
         "narrative, but declares incompatible_with (True Love Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.vow_major",
-        "narrative, but declares incompatible_with (Vow Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.vow_minor",
-        "narrative, but declares incompatible_with (Vow Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.weakness_major",
-        "narrative, but declares incompatible_with (Weakness Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.weakness_minor",
-        "narrative, but declares incompatible_with (Weakness Major) — D67 counts that as computed",
-    ),
-    (
-        "flaw.wrathful_major",
-        "narrative, but declares incompatible_with (Wrathful Minor) — D67 counts that as computed",
-    ),
-    (
-        "flaw.wrathful_minor",
-        "narrative, but declares incompatible_with (Wrathful Major) — D67 counts that as computed",
     ),
     // virtue.amorphous_major, virtue.amorphous_minor, virtue.apprentice,
     // virtue.covenfolk, virtue.gentle_gift: resolved (X2a) — apprentice and
@@ -2458,30 +2251,17 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     // (`tests/uncomputed_clauses.rs`) — same shape as X3a's
     // virtue.side_effect/virtue.tethered_magic above. Reclassifying each is X2's
     // own routed work, not this data-only slice's.
-    (
-        "flaw.bound_casting_tools",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.bound_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.ceremonial_spontaneous_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.chaotic_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.consumed_casting_tools",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "flaw.difficult_spontaneous_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
+    // flaw.bound_casting_tools, flaw.bound_magic,
+    // flaw.ceremonial_spontaneous_magic, flaw.chaotic_magic,
+    // flaw.consumed_casting_tools, flaw.difficult_spontaneous_magic: gap
+    // closed in Phase 2 (X2e reclassified all six from `narrative` to
+    // `uncomputed_rule` with a description stating each entry's own
+    // uncomputed clause — Bound Casting Tools' lasting-Arcane-Connection
+    // duration, Bound Magic's death-triggered cessation, Ceremonial
+    // Spontaneous Magic's casting-rules restriction, Chaotic Magic's
+    // storyguide-decides clause, Consumed Casting Tools' consume/remake
+    // mechanic, Difficult Spontaneous Magic's exertion requirement) and
+    // removed from this list.
     (
         "flaw.disorientating_magic",
         "narrative, but declares prerequisites — D68 counts that as computed",

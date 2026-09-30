@@ -529,6 +529,76 @@ pub(crate) fn validate_excluded_if_holds(
     }
 }
 
+/// Enforces [`crate::types::PointItem::same_choice_exclusions`] (D69.6): this
+/// item is illegal while another effective selection of the declared `other`
+/// id resolves its own `other_param` to the SAME target this item resolves
+/// to (a fixed one, or its own `this_param` mapped through `via`) —
+/// "You may not take Student of (Realm) and Puissant Ability for the same
+/// Lore" (ArMDE:5054), "incompatible with... Puissant Artes Liberales"
+/// (ArMDE:3364).
+///
+/// Grant-aware on both sides, on [`validate_excluded_if_holds`]'s own
+/// precedent (D2/B15): `selections` is the caller's folded bought-plus-granted
+/// list, so both which selection carries the exclusion and which OTHER
+/// selection shares its target are read bought-or-granted.
+///
+/// A selection whose own `this_param`/`other_param` value is unresolved
+/// (missing, or absent from `via`) resolves no target and so conflicts with
+/// nothing — `missing_param`/`unknown_param_value` already cover an unfilled
+/// or invalid parameter; this validator only judges two FILLED choices
+/// against each other.
+pub(crate) fn validate_same_choice_exclusions(
+    ruleset: &Ruleset,
+    selections: &[Selection],
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        if item.same_choice_exclusions.is_empty() {
+            continue;
+        }
+        for exclusion in &item.same_choice_exclusions {
+            let this_target = match (&exclusion.this_param, &exclusion.fixed_target) {
+                (_, Some(fixed)) => Some(fixed.clone()),
+                (Some(key), None) => selection
+                    .params
+                    .get(key)
+                    .and_then(SelectionParamValue::as_single)
+                    .and_then(|value| exclusion.via.get(value))
+                    .cloned(),
+                (None, None) => None,
+            };
+            let Some(this_target) = this_target else {
+                continue;
+            };
+
+            for other in selections {
+                if std::ptr::eq(other, selection) || other.item_ref != exclusion.other {
+                    continue;
+                }
+                let other_target = other
+                    .params
+                    .get(&exclusion.other_param)
+                    .and_then(SelectionParamValue::as_single);
+                if other_target == Some(&this_target) {
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_SAME_CHOICE_CONFLICT,
+                        CreationPhase::VirtuesFlaws,
+                        args([
+                            ("item", selection.item_ref.to_string()),
+                            ("other", other.item_ref.to_string()),
+                            ("target", this_target.to_string()),
+                        ]),
+                        Some(selection.item_ref.clone()),
+                    ));
+                }
+            }
+        }
+    }
+}
+
 pub(crate) fn validate_entity_kind_applicability(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -938,12 +1008,12 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // Tainted refusal, so `forbid_tainted` still applies to a whitelisted
         // id exactly as it does to a category match.
         //
-        // `exclude_if` (D33/B3) narrows the SAME domain by description
+        // `exclude_if` (D33/D68.4/B3) narrows the SAME domain by description
         // rather than category: a candidate satisfying the predicate is
         // refused regardless of which of the two tests above admitted it —
-        // `flaw.flawed_powers`'s imported Flaw must not be `trained`
-        // (ArMDE:6146-6148) even though it already passed
-        // `require_categories: ["hermetic"]`.
+        // `flaw.flawed_powers`'s imported Flaw must not
+        // `requires_hermetic_arts` (ArMDE:6146-6148) even though it already
+        // passed `require_categories: ["hermetic"]`.
         ParameterDomain::Item => ruleset.point_items.get(value).is_some_and(|item| {
             (item_matches_required_categories(item, param) || param.allow_ids.contains(value))
                 && !(param.forbid_tainted && item.tainted)

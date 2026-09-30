@@ -1017,7 +1017,9 @@ param-label-terrain = Gelände
 param-label-subject = Fach
 param-label-sin = Sünde
 param-label-faculty = Fakultät
+param-label-hermetic_flaw = Hermetischer Fehler
 param-label-commodity = Ware
+param-label-company = Kompanie
 param-label-role = Rolle
 # Übernatürliche Kraft eines Charakters (Große/Mindere/Persönliche/Rituelle Kraft).
 # Begriff aus rules/source/de/translation-tables/tiere-kreaturen.md:144
@@ -1183,6 +1185,7 @@ issue-category_not_permitted = { $item } ist in keiner erlaubten Kategorie ({ $c
 issue-category_forbidden_by_effect = { $item } ist verboten, solange { $other } gilt (Kategorie { $category }).
 issue-ability_forbidden_by_effect = { $ability } ist verboten, solange { $other } gilt.
 issue-excluded_by_predicate = { $item } ist verboten, solange { $other } gilt ({ $predicate }).
+issue-same_choice_conflict = { $item } und { $other } dürfen nicht beide auf { $target } zielen.
 issue-wrong_entity_kind = { $item } ist für die Wesensart { $entity_kind } nicht zulässig.
 issue-duplicate_selection = { $item } ist { $count }-mal ausgewählt, darf aber höchstens { $max }-mal für dasselbe Ziel gewählt werden.
 issue-too_many_selections = { $item } ist insgesamt { $count }-mal über alle Ziele hinweg ausgewählt, darf aber insgesamt höchstens { $max }-mal gewählt werden.

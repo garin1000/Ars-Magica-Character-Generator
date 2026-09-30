@@ -135,6 +135,14 @@ impl Ruleset {
                 }
             }
 
+            // D69.6: each same-choice exclusion must name a real other item,
+            // a parameter that item actually declares, exactly one of
+            // this_param/fixed_target (never both, never neither), and — when
+            // this_param is set — a parameter THIS item actually declares.
+            for exclusion in &item.same_choice_exclusions {
+                self.validate_same_choice_exclusion(id, item, exclusion, errors);
+            }
+
             // X6a/e7: each conditional entry's gate must resolve on THIS item
             // (the same `validate_param_gate` C1 built for
             // `AbilityRef`/`CategoryRef`'s own gate), and every forbidden id
@@ -2866,6 +2874,62 @@ impl Ruleset {
         }
     }
 
+    /// Referential half of [`crate::types::PointItem::same_choice_exclusions`]
+    /// (D69.6): `other` must be a real point item declaring `other_param`;
+    /// exactly one of `this_param`/`fixed_target` must be set (never both —
+    /// ambiguous which target wins; never neither — nothing to compare
+    /// against); and when `this_param` is set, it must be a parameter THIS
+    /// item (`id`/`item`) actually declares, on `validate_param_gate`'s own
+    /// precedent for a same-item parameter reference.
+    fn validate_same_choice_exclusion(
+        &self,
+        id: &Id,
+        item: &PointItem,
+        exclusion: &crate::types::SameChoiceExclusion,
+        errors: &mut Vec<String>,
+    ) {
+        match self.point_items.get(&exclusion.other) {
+            None => errors.push(format!(
+                "{id}: same_choice_exclusions references unknown ID '{}'",
+                exclusion.other
+            )),
+            Some(other_item) => {
+                if !other_item
+                    .parameters
+                    .iter()
+                    .any(|p| p.key == exclusion.other_param)
+                {
+                    errors.push(format!(
+                        "{id}: same_choice_exclusions' other_param '{}' is not a parameter '{}' declares",
+                        exclusion.other_param, exclusion.other
+                    ));
+                }
+            }
+        }
+
+        match (&exclusion.this_param, &exclusion.fixed_target) {
+            (Some(_), Some(_)) => errors.push(format!(
+                "{id}: same_choice_exclusions sets both this_param and fixed_target; exactly one must be set"
+            )),
+            (None, None) => errors.push(format!(
+                "{id}: same_choice_exclusions sets neither this_param nor fixed_target; exactly one must be set"
+            )),
+            (Some(key), None) => {
+                if !item.parameters.iter().any(|p| &p.key == key) {
+                    errors.push(format!(
+                        "{id}: same_choice_exclusions' this_param '{key}' is not a parameter this item declares"
+                    ));
+                }
+                if exclusion.via.is_empty() {
+                    errors.push(format!(
+                        "{id}: same_choice_exclusions sets this_param but 'via' is empty, so no value can ever resolve"
+                    ));
+                }
+            }
+            (None, Some(_)) => {}
+        }
+    }
+
     /// Enforces that the Major and Minor variants of the SAME Virtue/Flaw mutually
     /// exclude — a character may only take one magnitude of a given item. Variant
     /// pairs are detected by a shared stem under two naming conventions: the suffix
@@ -2878,6 +2942,14 @@ impl Ruleset {
     /// members must list each other in `incompatible_with`; otherwise this fails
     /// loudly naming both offending ids.
     ///
+    /// **D68.8 exemption**: a pair where EITHER side sets
+    /// [`PointItem::skip_magnitude_variant_guard`] is skipped entirely — the
+    /// ruling is that each twin exclusion needs its own passage (ArMDE:2814
+    /// is not a blanket source), and a pair without one loses its exclusion.
+    /// The flag is checked on either side (not required on both) so a single
+    /// authoring slip cannot silently re-enable the guard on a pair meant to
+    /// be exempt.
+    ///
     /// Source: ArMDE:4405 ("A character
     /// can have only one Magical Focus, either major or minor").
     fn validate_magnitude_variant_exclusivity(&self, errors: &mut Vec<String>) {
@@ -2888,6 +2960,9 @@ impl Ruleset {
             let Some(minor_item) = self.point_items.get(&minor_id) else {
                 continue;
             };
+            if major_item.skip_magnitude_variant_guard || minor_item.skip_magnitude_variant_guard {
+                continue;
+            }
             if !major_item.incompatible_with.contains(&minor_id)
                 || !minor_item.incompatible_with.contains(major_id)
             {

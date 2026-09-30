@@ -975,7 +975,9 @@ param-label-terrain = Terrain
 param-label-subject = Subject
 param-label-sin = Sin
 param-label-faculty = Faculty
+param-label-hermetic_flaw = Hermetic Flaw
 param-label-commodity = Commodity
+param-label-company = Company
 param-label-role = Role
 param-label-power = Power
 # "Vulnerable Magic" — "so long as a different condition is specified for
@@ -1116,6 +1118,7 @@ issue-category_not_permitted = { $item } is not in a permitted category ({ $cate
 issue-category_forbidden_by_effect = { $item } is forbidden while { $other } is in effect (category { $category }).
 issue-ability_forbidden_by_effect = { $ability } is forbidden while { $other } is in effect.
 issue-excluded_by_predicate = { $item } is forbidden while { $other } is in effect ({ $predicate }).
+issue-same_choice_conflict = { $item } and { $other } may not both target { $target }.
 issue-wrong_entity_kind = { $item } cannot be taken by a { $entity_kind }.
 issue-duplicate_selection = { $item } is selected { $count } times, but may be taken at most { $max } time(s) for the same target.
 issue-too_many_selections = { $item } is selected { $count } times in total across all targets, but may be taken at most { $max } time(s) altogether.

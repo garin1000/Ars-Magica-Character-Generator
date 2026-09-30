@@ -1011,16 +1011,20 @@ pub struct ParameterDef {
     /// other narrowing test as the sole gate, exactly as before this field
     /// existed.
     ///
-    /// **D33** (`docs/vf-audit/decisions.md`): `flaw.flawed_powers` imports a
-    /// Major Hermetic Flaw, but "Any Flaw that is only appropriate to
-    /// Hermetic Magic... cannot be taken with this Flaw" (ArMDE:6148) — a
+    /// **D33/D68.4** (`docs/vf-audit/decisions.md`): `flaw.flawed_powers`
+    /// imports a Major Hermetic Flaw, but "Any Flaw that is only appropriate
+    /// to Hermetic Magic... cannot be taken with this Flaw" (ArMDE:6148) — a
     /// constraint on WHICH Flaw may be imported, not an incompatibility with
     /// holding one in one's own right (D33 corrects an earlier reading that
     /// would have modelled this as an exclusion instead). `exclude_if:
-    /// "trained"` on the imported-Flaw parameter is the fix: [`Self::domain`]
-    /// stays `item` + `require_categories: ["hermetic"]`, and this field
-    /// additionally refuses any candidate for which
-    /// [`ItemPredicate::Trained`] holds.
+    /// "requires_hermetic_arts"` on the imported-Flaw parameter is the fix:
+    /// [`Self::domain`] stays `item` + `require_categories: ["hermetic"]`,
+    /// and this field additionally refuses any candidate for which
+    /// [`ItemPredicate::RequiresHermeticArts`] holds. (D68.4 amends D33's
+    /// original plan to use [`ItemPredicate::Trained`] here — every
+    /// candidate is `trained: true`, so `Trained` cannot tell Deficient
+    /// Technique/Unstructured Caster apart from Restriction/Necessary
+    /// Condition.)
     ///
     /// **Not** the same mechanism as [`Self::allow_ids`] (D34): a whitelist is
     /// a closed, hand-maintained list of exact ids; this is an open-ended
@@ -1203,6 +1207,45 @@ pub struct ConditionalIncompatibility {
     pub gate: ParamGate,
     /// The ids forbidden alongside the declaring selection while `gate` holds.
     pub forbids: BTreeSet<Id>,
+}
+
+/// One entry of [`PointItem::same_choice_exclusions`] (D69.6): the rulebook
+/// sometimes forbids two selections from naming the SAME target rather than
+/// forbidding the pair outright regardless of what either names — "You may
+/// not take Student of (Realm) and Puissant Ability for the same Lore"
+/// (ArMDE:5054), where BOTH sides are parameterized and only a shared target
+/// conflicts. A flat [`PointItem::incompatible_with`] cannot express this: it
+/// forbids the pair unconditionally, and `Prereq`/`ItemPredicate` narrow on a
+/// PROPERTY of the other item, never on a specific PARAMETER VALUE matching
+/// this item's own.
+///
+/// `other`'s own `other_param` value is compared against a target THIS item
+/// resolves to: either `fixed_target` (Academic Concentration always means
+/// Artes Liberales, regardless of its own unrelated `subject` parameter), or
+/// — when `this_param` is set — THIS item's own parameter value, mapped
+/// through `via` (Student of Realm's `realm` parameter, mapped to the Lore
+/// Ability that realm trains). Load-time integrity requires exactly one of
+/// `this_param`/`fixed_target` to be set.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SameChoiceExclusion {
+    /// The other item id this item may not share a resolved target with.
+    pub other: Id,
+    /// The parameter key on the OTHER item (`other`) whose value is the
+    /// target compared against this item's own.
+    pub other_param: String,
+    /// The parameter key on THIS item whose value selects a target via
+    /// [`Self::via`]. `None` when this item's target is fixed regardless of
+    /// its own parameters — see [`Self::fixed_target`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub this_param: Option<String>,
+    /// Maps [`Self::this_param`]'s resolved value to the target id compared
+    /// against `other_param`. Empty when [`Self::this_param`] is `None`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub via: BTreeMap<Id, Id>,
+    /// The fixed target id to compare against when [`Self::this_param`] is
+    /// `None`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fixed_target: Option<Id>,
 }
 
 /// An Ability id inside an [`Effect::AbilityAuthorization`] /
@@ -1893,12 +1936,19 @@ pub enum Effect {
     },
     /// Adds `amount` to the character's derived Size (base 0). Size is not a
     /// bought Characteristic; it is a separate racial stat modified only by these
-    /// grants (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2). Summed across
-    /// selections.
+    /// grants (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2, Blood of the
+    /// Nephilim +1). Summed across selections.
+    ///
+    /// **The complete Size-affecting sweep** (D69.5,
+    /// `docs/vf-audit/decisions.md`): these five carriers are the only shipped
+    /// items that change Size, and [`ItemPredicate::AffectsSize`] ranges over
+    /// exactly this effect to enforce Blood of the Nephilim's own "Virtues or
+    /// Flaws that affect your Size, such as Giant..." exclusion
+    /// (ArMDE:3517) without hand-enumerating a closed id list.
     ///
     /// Source: ArMDE:3975-3978 (Giant
     /// Blood +2), `ArMDE:4229-4231` (Large +1), `ArMDE:6767-6769` (Small Frame −1),
-    /// `ArMDE:5996-5998` (Dwarf −2).
+    /// `ArMDE:5996-5998` (Dwarf −2), `ArMDE:3504-3518` (Blood of the Nephilim +1).
     SizeDelta {
         /// Size adjustment per selection (may be negative).
         amount: i8,
@@ -2635,18 +2685,42 @@ pub enum ItemPredicate {
     /// fixtures that set the flag directly (design-b0 § 1 point 5), not
     /// against real data.
     Trained,
-    /// Carries an [`Effect::GrantsReputation`] effect (Q-137,
-    /// `flaw.university_dean`, ArMDE:6923-6926: "can not have the Poor Flaw
-    /// or any other Flaw that grants a Bad Reputation"). Derivable with no
-    /// new data: `item.effects.iter().any(|e| matches!(e,
-    /// Effect::GrantsReputation { .. }))`.
+    /// Carries an [`Effect::GrantsReputation`] effect AND is a **Flaw**
+    /// (Q-137, `flaw.university_dean`, ArMDE:6923-6926: "can not have the
+    /// Poor Flaw or any other Flaw that grants a Bad Reputation" — the kind
+    /// check is in the passage itself: "any OTHER FLAW"). Mostly derivable
+    /// with no new data: `item.kind == ItemKind::Flaw && item.effects.iter().any(|e|
+    /// matches!(e, Effect::GrantsReputation { .. }))` — the kind half matters
+    /// because `virtue.doctor_in_faculty`, University Dean's own required
+    /// Virtue, ALSO grants a Reputation (an academic one, not Bad), and the
+    /// passage excludes only Flaws.
     GrantsReputation,
     /// Carries an [`Effect::GrantsPersonalityTrait`] effect (F-542 clause 2,
     /// `flaw.weak_personality`, ArMDE:7076-7079: "...or Virtues or Flaws that
     /// grant Personality Traits"). Same derivable shape as
     /// [`Self::GrantsReputation`], scanning for
-    /// [`Effect::GrantsPersonalityTrait`] instead.
+    /// [`Effect::GrantsPersonalityTrait`] instead. Unlike `GrantsReputation`,
+    /// the passage names both kinds ("Virtues or Flaws"), so no kind check.
     GrantsPersonalityTrait,
+    /// D68.4 (`docs/vf-audit/decisions.md`): this item's mechanic is
+    /// inherently Hermetic-Arts-specific, per
+    /// [`PointItem::requires_hermetic_arts`]. Supersedes an earlier D23/D33
+    /// plan to reuse [`Self::Trained`] for `flaw.flawed_powers`'s import
+    /// filter (ArMDE:6148, Q-138): every candidate is `trained: true`, so
+    /// `Trained` cannot distinguish Deficient Technique/Unstructured Caster
+    /// (excluded) from Restriction/Necessary Condition (importable).
+    RequiresHermeticArts,
+    /// D69.5 (`docs/vf-audit/decisions.md`): carries an [`Effect::SizeDelta`]
+    /// effect — Blood of the Nephilim's "Virtues or Flaws that affect your
+    /// Size, such as Giant..." (ArMDE:3517) is open-ended, so rather than
+    /// hand-enumerating a closed list, this predicate ranges over every item
+    /// whose mechanic actually changes Size, exactly the same way
+    /// [`Self::GrantsReputation`]/[`Self::GrantsPersonalityTrait`] range over
+    /// their own effects. [`Effect::SizeDelta`]'s doc comment is the complete
+    /// sweep: Giant Blood, Large, Small Frame, Dwarf, and Blood of the
+    /// Nephilim's own +1 are the only five carriers in the shipped catalogue
+    /// (verified: no entry changes Size any other way).
+    AffectsSize,
 }
 
 impl ItemPredicate {
@@ -2657,14 +2731,22 @@ impl ItemPredicate {
     pub(crate) fn holds_for(&self, item: &PointItem) -> bool {
         match self {
             ItemPredicate::Trained => item.trained,
-            ItemPredicate::GrantsReputation => item
-                .effects
-                .iter()
-                .any(|e| matches!(e, Effect::GrantsReputation { .. })),
+            ItemPredicate::GrantsReputation => {
+                item.kind == ItemKind::Flaw
+                    && item
+                        .effects
+                        .iter()
+                        .any(|e| matches!(e, Effect::GrantsReputation { .. }))
+            }
             ItemPredicate::GrantsPersonalityTrait => item
                 .effects
                 .iter()
                 .any(|e| matches!(e, Effect::GrantsPersonalityTrait)),
+            ItemPredicate::RequiresHermeticArts => item.requires_hermetic_arts,
+            ItemPredicate::AffectsSize => item
+                .effects
+                .iter()
+                .any(|e| matches!(e, Effect::SizeDelta { .. })),
         }
     }
 }
@@ -2678,6 +2760,8 @@ impl std::fmt::Display for ItemPredicate {
             ItemPredicate::Trained => f.write_str("trained"),
             ItemPredicate::GrantsReputation => f.write_str("grants_reputation"),
             ItemPredicate::GrantsPersonalityTrait => f.write_str("grants_personality_trait"),
+            ItemPredicate::RequiresHermeticArts => f.write_str("requires_hermetic_arts"),
+            ItemPredicate::AffectsSize => f.write_str("affects_size"),
         }
     }
 }
@@ -3430,6 +3514,27 @@ pub struct PointItem {
     /// X3's real catalogue pass (design-b0 § 1 point 5).
     #[serde(default, skip_serializing_if = "is_false")]
     pub trained: bool,
+    /// D68.4 (`docs/vf-audit/decisions.md`): `true` when this item's mechanic
+    /// is inherently Hermetic-Arts-specific — it operates on Techniques,
+    /// Forms, or normal Hermetic casting so directly that it cannot sensibly
+    /// apply to a Supernatural Virtue at all (Deficient Technique,
+    /// Unstructured Caster) — as opposed to a Flaw that merely happens to
+    /// carry `categories: ["hermetic"]` while stating a general restriction
+    /// or narrative condition (Restriction, Necessary Condition), which
+    /// remains importable.
+    ///
+    /// **Narrower than [`Self::trained`] on purpose, and NOT a reuse of it.**
+    /// All four candidate entries are `trained: true` (D12's classification
+    /// pass), so `Trained` cannot tell them apart — D68.4 amends the earlier
+    /// D23/D33 plan to reuse [`ItemPredicate::Trained`] here and introduces
+    /// [`ItemPredicate::RequiresHermeticArts`], read by this field alone.
+    ///
+    /// `flaw.flawed_powers`'s "only appropriate to Hermetic Magic... cannot
+    /// be taken with this Flaw" (ArMDE:6148, Q-138) is this predicate's only
+    /// consumer today, via [`ParameterDef::exclude_if`] on the imported-Flaw
+    /// parameter.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub requires_hermetic_arts: bool,
     /// Entity kinds this item may be selected for. Empty means any kind.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub entity_kinds: BTreeSet<EntityKind>,
@@ -3461,6 +3566,24 @@ pub struct PointItem {
     /// Items that may not be selected alongside this one (must be symmetric).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub incompatible_with: BTreeSet<Id>,
+    /// D68.8 (`docs/vf-audit/decisions.md`): exempts this item from
+    /// `ruleset::integrity::validate_magnitude_variant_exclusivity`, the
+    /// load-time guard that otherwise FORCES every detected `_major`/`_minor`
+    /// (or `major_`/`minor_`) sibling pair to declare each other in
+    /// [`Self::incompatible_with`] or refuses to load at all.
+    ///
+    /// D68.8's ruling is that each twin exclusion needs its OWN passage —
+    /// ArMDE:2814 is not a blanket source — and a pair without one loses its
+    /// exclusion. Since the guard cannot tell "no passage" from "an authoring
+    /// slip" on its own, the exemption is carried in data: set `true` on
+    /// BOTH sides of a pair the guard must stop forcing (the 26 personality-
+    /// Flaw pairs, plus Potent Magic and Beloved Rival — the latter's hard
+    /// block also becomes [`Self::advisory_prerequisites`], D16). Left
+    /// `false` (the default) for the one pair the ruling keeps sourced
+    /// (Magical Focus, ArMDE:4405) and the four D44-entailed pairs (Outsider,
+    /// True Love, Amorphous, Magian Lineage), which stay hard-blocked.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub skip_magnitude_variant_guard: bool,
     /// A per-VALUE extension of [`Self::incompatible_with`] (X6a/e7): each
     /// entry's `forbids` applies only while its own `gate` holds for the
     /// selection — Warped Senses' sight-only clause forbids Keen Vision only
@@ -3490,6 +3613,14 @@ pub struct PointItem {
     /// at all, are each read bought-or-granted.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub excluded_if_holds: Vec<ItemPredicate>,
+    /// D69.6 (`docs/vf-audit/decisions.md`): this item may not be held
+    /// alongside another selection that resolves to the SAME target as this
+    /// one — "You may not take Student of (Realm) and Puissant Ability for
+    /// the same Lore" (ArMDE:5054), "incompatible with... Puissant Artes
+    /// Liberales" (ArMDE:3364). See [`SameChoiceExclusion`] for how the two
+    /// sides resolve.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub same_choice_exclusions: Vec<SameChoiceExclusion>,
     /// Parameter slots a selection of this item must fill.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<ParameterDef>,
@@ -3635,6 +3766,8 @@ struct PointItemRepr {
     #[serde(default)]
     trained: bool,
     #[serde(default)]
+    requires_hermetic_arts: bool,
+    #[serde(default)]
     entity_kinds: BTreeSet<EntityKind>,
     #[serde(default)]
     prerequisites: Option<Prereq>,
@@ -3643,9 +3776,13 @@ struct PointItemRepr {
     #[serde(default)]
     incompatible_with: BTreeSet<Id>,
     #[serde(default)]
+    skip_magnitude_variant_guard: bool,
+    #[serde(default)]
     conditional_incompatible_with: Vec<ConditionalIncompatibility>,
     #[serde(default)]
     excluded_if_holds: Vec<ItemPredicate>,
+    #[serde(default)]
+    same_choice_exclusions: Vec<SameChoiceExclusion>,
     #[serde(default)]
     parameters: Vec<ParameterDef>,
     #[serde(default)]
@@ -3674,12 +3811,15 @@ impl TryFrom<PointItemRepr> for PointItem {
             classification,
             tainted,
             trained,
+            requires_hermetic_arts,
             entity_kinds,
             prerequisites,
             advisory_prerequisites,
             incompatible_with,
+            skip_magnitude_variant_guard,
             conditional_incompatible_with,
             excluded_if_holds,
+            same_choice_exclusions,
             parameters,
             effects,
             max_per_target,
@@ -3711,12 +3851,15 @@ impl TryFrom<PointItemRepr> for PointItem {
             classification,
             tainted,
             trained,
+            requires_hermetic_arts,
             entity_kinds,
             prerequisites,
             advisory_prerequisites,
             incompatible_with,
+            skip_magnitude_variant_guard,
             conditional_incompatible_with,
             excluded_if_holds,
+            same_choice_exclusions,
             parameters,
             effects,
             max_per_target,

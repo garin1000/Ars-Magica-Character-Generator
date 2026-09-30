@@ -465,6 +465,23 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     "flaw.age_quickly",
     "flaw.baneful_circumstances",
     "flaw.creative_block",
+    // X2e (`tmp/x2-worklist.md` rows 204-260, `tmp/x2e-verdicts.md`): six
+    // already-settled entries (Bucket A) whose classification/effects are
+    // unchanged this slice — added here only to gate their shipped
+    // `description` against the verbatim-fidelity check. Two are expected to
+    // fail today (a real Phase 2 finding, not a bug in this test):
+    // `flaw.abandoned_apprentice`'s shipped English text flattens the
+    // rulebook's four paragraphs (ArMDE:5643-5649) into one running
+    // paragraph, and `flaw.a_deal_with_the_devil`'s shipped text normalizes
+    // the rulebook's curly apostrophe in "Hell's" (ArMDE:5907) to a straight
+    // one, which the verbatim check (only en-dash-before-digit and Markdown
+    // normalization are allowed) does not permit.
+    "flaw.a_deal_with_the_devil",
+    "flaw.abandoned_apprentice",
+    "flaw.blatant_gift",
+    "flaw.church_upbringing",
+    "flaw.cyclic_magic_negative",
+    "flaw.deaf",
     "virtue.academic_concentration_subject",
     "virtue.affinity_ability",
     "virtue.affinity_art",
@@ -2412,6 +2429,149 @@ fn withstand_casting_states_its_vulnerable_casting_ordering() {
         offenders.is_empty(),
         "X2d (tmp/x2d-verdicts.md), F-353: virtue.withstand_casting's description must state the \
          Vulnerable-Casting ordering rule in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+// ---------------------------------------------------------------------------
+// X2e (`tmp/x2-worklist.md` rows 204-260, ArMDE:5641-5979) — see
+// `tmp/x2e-verdicts.md` for the full per-entry citation and rationale this file
+// intentionally does not re-derive inline.
+// ---------------------------------------------------------------------------
+
+/// X2e: `flaw.busybody` is this slice's only reclassification with no
+/// existing pending-list mechanism to bite on it — it sat on
+/// `uncomputed_clauses.rs::NO_RULE_DESPITE_TOKEN`, whose row this slice
+/// overturns rather than confirms. D50: ArMDE:5763-5764's "unless they choose
+/// to apply this Flaw specifically to such people at character creation" is a
+/// real creation-time scope choice a player must know to make, the same shape
+/// as X2b's `virtue.indescribable_face` overturn.
+#[test]
+fn busybody_reclassifies_and_states_its_creation_time_scope_choice() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.busybody"),
+        Classification::UncomputedRule,
+        "D50: ArMDE:5763-5764's creation-time scope choice (whether the Flaw's gossip network \
+         extends to the covenant's lower-class members) reaches the player nowhere; \
+         flaw.busybody must reclassify to uncomputed_rule"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "unless they choose to apply this Flaw specifically to such people at character \
+             creation",
+        ),
+        (
+            "de",
+            &loc_de,
+            "es sei denn, sie entscheiden bei der Charaktererschaffung, diesen Fehler \
+             ausdrücklich auf solche Personen anzuwenden",
+        ),
+    ] {
+        let text = displayed_text(loc, "flaw.busybody").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/flaw.busybody: displayed text {text:?} does not state the creation-time \
+                 scope choice (ArMDE:5761-5764)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2e (tmp/x2e-verdicts.md), D50: flaw.busybody's description must state the \
+         creation-time scope choice in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-401: flaw.deleterious_circumstances's own summary already states the
+/// halving (a signed-shaped clause, D58's surfaced-modifier family), so the
+/// coarse screen never flagged the circumstance taxonomy (state/target/place
+/// examples, ArMDE:5917-5920) that determines when the halving applies.
+/// `classification` stays `in_play_effect`.
+#[test]
+fn deleterious_circumstances_states_its_circumstance_taxonomy() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.deleterious_circumstances"),
+        Classification::InPlayEffect,
+        "F-401: the halving is genuinely computed via special_casting_mod; only the circumstance \
+         taxonomy is missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "such as sitting or wet"),
+        ("de", &loc_de, "beispielsweise sitzend oder nass"),
+    ] {
+        let text = displayed_text(loc, "flaw.deleterious_circumstances").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/flaw.deleterious_circumstances: displayed text {text:?} does not state \
+                 the circumstance taxonomy (ArMDE:5917-5920)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2e (tmp/x2e-verdicts.md), F-401: flaw.deleterious_circumstances's description must \
+         state the circumstance taxonomy in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-421: flaw.disjointed_magic computes nothing but a bare
+/// `special_casting_mod` marker, and neither of its two stated clauses
+/// reaches the player. `classification` stays `in_play_effect` (D58's
+/// surfaced-modifier family).
+#[test]
+fn disjointed_magic_states_its_two_clauses() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "flaw.disjointed_magic"),
+        Classification::InPlayEffect,
+        "F-421: a bare special_casting_mod marker is computed; neither stated clause reaches the \
+         player, which does not change the classification (D58)"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "no enchantment bonuses from Techniques and Forms",
+        ),
+        (
+            "de",
+            &loc_de,
+            "keine Verzauberungsboni von Techniken und Formen",
+        ),
+    ] {
+        let text = displayed_text(loc, "flaw.disjointed_magic").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/flaw.disjointed_magic: displayed text {text:?} does not state the \
+                 enchantment-bonus clause (ArMDE:5972-5975)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2e (tmp/x2e-verdicts.md), F-421: flaw.disjointed_magic's description must state both \
+         clauses in both locales:\n{}",
         offenders.join("\n")
     );
 }

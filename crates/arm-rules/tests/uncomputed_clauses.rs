@@ -555,8 +555,14 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::En,
         family: "permission",
     },
+    // "nehmen" added (X2e, 2026-09-30): `flaw.ability_block`'s "Du darfst
+    // diesen Fehler nur einmal nehmen" (ArMDE:5651-5654) and
+    // `flaw.difficult_underlings`'s "Du darfst diesen Geschichte-Fehler nur
+    // nehmen, wenn..." (ArMDE:5976-5979) both close the same modal-verb
+    // permission idiom with "nehmen" ("take this Flaw"), a verb this list did
+    // not yet carry.
     S2Idiom {
-        pattern: r"\b(?:darf|darfst|dürfen)\b[^.]{0,40}?\b(?:wählen|erwerben|erlernen|haben)",
+        pattern: r"\b(?:darf|darfst|dürfen)\b[^.]{0,40}?\b(?:wählen|erwerben|erlernen|haben|nehmen)",
         language: Language::De,
         family: "permission",
     },
@@ -634,8 +640,16 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::En,
         family: "incompatibility",
     },
+    // X2e (2026-09-30): `flaw.ceremonial_spontaneous_magic` (ArMDE:5781-5784)
+    // widens this gap from 40 to 70 — its DE mirror's "Dieser Fehler ist
+    // nicht mit Schwieriger Spontaner Magie oder Schwacher Spontaner Magie
+    // vereinbar" puts 64 characters between "ist nicht" and "vereinbar" (the
+    // two full Flaw names in between), wider than any hit seen when 40 was
+    // chosen. Verified this is still the same idiom, not a different one:
+    // the passage states a plain mutual-exclusion rule, same shape as every
+    // other hit on this pattern.
     S2Idiom {
-        pattern: r"\bist nicht\b[^.]{0,40}?\bvereinbar",
+        pattern: r"\bist nicht\b[^.]{0,70}?\bvereinbar",
         language: Language::De,
         family: "incompatibility",
     },
@@ -716,6 +730,15 @@ const S2_IDIOMS: &[S2Idiom] = &[
     S2Idiom {
         pattern: r"\bpossibly more",
         language: Language::En,
+        family: "\"more\" without \"or\"",
+    },
+    // X2e (2026-09-30): `flaw.blackmail`'s German mirror (ArMDE:5707-5710)
+    // states the same "more" without "or" idiom as its own EN entry's
+    // "possibly more" — "möglicherweise mehr, wenn du den Druck
+    // aufrechterhältst" — with no DE counterpart on this family until now.
+    S2Idiom {
+        pattern: r"\bmöglicherweise mehr",
+        language: Language::De,
         family: "\"more\" without \"or\"",
     },
     // --- Family 10 (Bare "no more") -----------------------------------------
@@ -859,6 +882,15 @@ const S2_IDIOMS: &[S2Idiom] = &[
     },
     S2Idiom {
         pattern: r"\bzwei würfel statt",
+        language: Language::De,
+        family: "named rulebook term",
+    },
+    // X2e (2026-09-30): `flaw.companion_animal`'s German mirror
+    // (ArMDE:5805-5808) states the same named-rulebook-term idiom as the EN
+    // "an additional personality trait of" above — "eine zusätzliche
+    // Persönlichkeitseigenschaft" — with no DE counterpart until now.
+    S2Idiom {
+        pattern: r"\bzusätzliche persönlichkeitseigenschaft",
         language: Language::De,
         family: "named rulebook term",
     },
@@ -1369,6 +1401,25 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::En,
         family: "capability limiter",
     },
+    // --- Family 16 (Arcane Connection duration) ------------------------------
+    // X2e (2026-09-30): flaw.bound_casting_tools (ArMDE:5723-5726) states a
+    // real mechanical fact — its casting tools become lasting Arcane
+    // Connections, where a regular one only lasts weeks — using neither
+    // family "arcane connection side effect" above's "are Arcane
+    // Connections? to you" construction (this passage says "to him", not
+    // "to you", and "become lasting", not "are") nor any signed number or
+    // botch term. Distinct enough from that family to need its own pair
+    // rather than a widened pattern.
+    S2Idiom {
+        pattern: r"\blasting arcane connections?",
+        language: Language::En,
+        family: "arcane connection duration",
+    },
+    S2Idiom {
+        pattern: r"\bdauerhaften arkanen verbindungen",
+        language: Language::De,
+        family: "arcane connection duration",
+    },
 ];
 
 /// [`S2_IDIOMS`], compiled once.
@@ -1611,12 +1662,17 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // --- S2 additions (docs/vf-audit/corrections.md § 3.1): growing the screen's
     // families newly trips these, and reading each passage finds no rule —
     // an idiom used non-mechanically, not a dropped clause.
-    (
-        "flaw.busybody",
-        "ArMDE:5761-5764's \"at character creation\" (family 2, permission) marks a narrative \
-         choice — whether the character's gossip network extends to the lower-class members of \
-         the covenant — not an Ability or XP authorization. Nothing is granted, nothing computed.",
-    ),
+    // flaw.busybody: OVERTURNED (X2e) — this reading pre-dates D50. Re-read
+    // against D50's actual test ("would a player/storyguide get it wrong
+    // without knowing it"), not the narrower "is it computed" question this
+    // row asked: ArMDE:5763-5764's "magi probably don't have much knowledge
+    // of what's going on among the lower-class members of their covenant
+    // unless they choose to apply this Flaw specifically to such people at
+    // character creation" is a real creation-time scope choice — the same
+    // shape as X2b's virtue.indescribable_face overturn (a mandatory-if-
+    // desired choice the player must know to make, even though neither
+    // choice's behavior is itself computed). Reclassifies to
+    // uncomputed_rule; see tmp/x2e-verdicts.md.
     (
         "flaw.compassionate_major",
         "ArMDE:5809-5812's \"You cannot bear to see suffering in others\" (bare \"cannot\", \
@@ -1737,60 +1793,15 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
 /// that directly, since this list is the only thing it skips besides
 /// [`NO_RULE_DESPITE_TOKEN`]. X2 is the slice that empties it.
 const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
-    (
-        "flaw.ability_block",
-        "prohibition: \"completely unable to learn\" a class of Abilities, ArMDE:5651-5654",
-    ),
-    (
-        "flaw.bigamist",
-        "multiplier stem: \"Wealth Multiplier\" cost formula, ArMDE:5699-5702",
-    ),
-    (
-        "flaw.blackmail",
-        "\"possibly more\" (family 9): a quantified yearly value with an escalation condition, \
-         ArMDE:5707-5710",
-    ),
-    (
-        "flaw.blind",
-        "prohibition: bare \"cannot\" — \"cannot aim spells without magical aid\", ArMDE:5719-5722",
-    ),
-    (
-        "flaw.bound_magic",
-        "prohibition: bare \"cannot\" — incompatible with Harnessed Magic, ArMDE:5727-5730",
-    ),
-    (
-        "flaw.ceremonial_spontaneous_magic",
-        "incompatibility: \"is not compatible with\", ArMDE:5781-5784",
-    ),
-    (
-        "flaw.chaotic_magic",
-        "magnitude/level stem: \"by more than one level\", ArMDE:5785-5788",
-    ),
-    (
-        "flaw.companion_animal",
-        "named rulebook term: \"an additional Personality Trait of\", ArMDE:5805-5808",
-    ),
-    (
-        "flaw.consumed_casting_tools",
-        "eligibility: \"may only be taken by\" Verditius magi, ArMDE:5839-5842",
-    ),
-    (
-        "flaw.crippled",
-        "prohibition: bare \"cannot\" — \"cannot walk\", ArMDE:5877-5880",
-    ),
-    (
-        "flaw.deteriorating_power",
-        "magnitude/level stem: \"reduced by 3 magnitudes\" (D8), ArMDE:5944-5949",
-    ),
-    (
-        "flaw.difficult_spontaneous_magic",
-        "prohibition: bare \"cannot\" — \"cannot use Spontaneous magic at all\" in combination, \
-         ArMDE:5966-5971",
-    ),
-    (
-        "flaw.difficult_underlings",
-        "eligibility: \"may only take this\", ArMDE:5976-5979",
-    ),
+    // X2e (`tmp/x2-worklist.md` rows 204-260, `tmp/x2e-verdicts.md`): all 13 of
+    // this slice's rows below (ability_block, bigamist, blackmail, blind,
+    // bound_magic, ceremonial_spontaneous_magic, chaotic_magic,
+    // companion_animal, consumed_casting_tools, crippled, deteriorating_power,
+    // difficult_spontaneous_magic, difficult_underlings) resolved the same
+    // way: each passage genuinely states an uncomputed rule (D46/D50), so the
+    // reclassification target is `uncomputed_rule`, not a misclassification —
+    // Phase 2's job. `no_swept_entry_drops_an_uncomputed_mechanical_clause`
+    // bites each directly now that the row is gone.
     (
         "flaw.disorientating_magic",
         "named rulebook term: \"spend a round\", ArMDE:5984-5987",
@@ -1865,14 +1876,12 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "signed-number blind spot F-464 (S2, has_signed_number): \"take a – 5 penalty\" — EN \
          DASH, space, digit, ArMDE:6498",
     ),
-    (
-        "flaw.no_sense_of_direction",
-        "incompatibility: \"is incompatible with\" the Well-Traveled Virtue, ArMDE:6500-6503",
-    ),
-    (
-        "flaw.outcast",
-        "prohibition: \"may not take\" the Wealthy Virtue, ArMDE:6538-6541",
-    ),
+    // flaw.no_sense_of_direction, flaw.outcast: resolved (X4/X2e fallout,
+    // 2026-09-30) — a concurrent slice's data change gave each entry an
+    // `incompatible_with` (well_traveled / wealthy respectively), which D67
+    // counts as computed, so both already reclassified to `creation_effect`
+    // and stopped tripping this guard. Removed per shrink-only list
+    // semantics, same convention as the 13 X2e rows above.
     (
         "flaw.restricted_learning",
         "permission: \"at character creation\" — the five-Ability restriction itself, \
@@ -2276,24 +2285,13 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          loanword — a screen vocabulary gap (family 14 only recognizes \"Reputation der Stufe\"), \
          not a dropped rule.",
     ),
-    (
-        "flaw.covenant_upbringing",
-        "operative clause (\"may take Latin\") is computed via ability_authorization \
-         (over-permissively — the dead_language/Latin binding is D14's already-tracked \
-         defect, not a new one here); the rest of the passage is flavor.",
-    ),
-    (
-        "flaw.deficient_technique",
-        "the halving is computed via deficient_art; the Advancement-Total exception and the \
-         pre-halving XP basis are refinements of that same mechanism, handled downstream \
-         (D12's family).",
-    ),
-    (
-        "flaw.difficult_longevity_ritual",
-        "single clause (halve the Lab Total for a Longevity Ritual for this character), fully \
-         computed via magic_total_halving/lab_longevity; \"without penalty for others\" is \
-         already implicit in that total's scope.",
-    ),
+    // flaw.covenant_upbringing, flaw.deficient_technique,
+    // flaw.difficult_longevity_ritual: resolved (X2e) — each certification
+    // was wrong; a real clause reaches neither locale (F-395/F-399/F-420).
+    // Removing the row is enough: `no_swept_entry_drops_an_uncomputed_
+    // mechanical_clause` bites each directly (each still computes
+    // *something*, so classification does not change). See
+    // tmp/x2e-verdicts.md.
     (
         "flaw.dwarf",
         "all three signed numbers (Size -2, Strength -1, Stamina -1) match three effects \
@@ -2656,11 +2654,14 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
 /// [`PENDING_MECHANICAL_CLASSIFICATION`] —
 /// [`pending_dropped_clause_entries_still_trip_the_screen`] enforces it.
 const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
-    (
-        "flaw.branded_criminal",
-        "orphan: \"you may not take the Wealthy Virtue\" carries no incompatible_with — F-340's \
-         family, a separate slice (X4), not this row's ability_authorization fix, ArMDE:5749-5752",
-    ),
+    // flaw.branded_criminal: resolved (X2e) — the Wealthy exclusion is now X4's
+    // territory (`incompatible_with`), landed separately; this row's own
+    // description obligation (the mark-in-cheek social consequence and the
+    // martial-abilities choice reach neither locale) is real and unaffected
+    // by that. Removing the row is enough —
+    // `no_swept_entry_drops_an_uncomputed_mechanical_clause` bites it
+    // directly (classification stays creation_effect). See
+    // tmp/x2e-verdicts.md.
     (
         "flaw.magical_fascination",
         "orphan: \"a score of 1 (but no more)\" cap is D3-inexpressible — no score-cap effect \
@@ -2702,11 +2703,12 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // `uncomputed_rule` with the full passage in `description` in both
     // locales, so it no longer trips this creation_effect/in_play_effect-
     // scoped screen — see tmp/x7c-verdicts.md.
-    (
-        "flaw.bound_to_role_role",
-        "orphan: the deprivation-check-as-food clause and \"may only be taken by grogs\" carry \
-         no effect/prerequisite — only the Unaging half is computed, ArMDE:5735-5748",
-    ),
+    // flaw.bound_to_role_role: resolved (X2e) — the deprivation-check-as-food
+    // clause and "may only be taken by grogs" (F-375, ArMDE:5735-5748) reach
+    // neither locale; only the Unaging half is computed. Removing the row is
+    // enough — `no_swept_entry_drops_an_uncomputed_mechanical_clause` bites
+    // it directly (classification stays in_play_effect). See
+    // tmp/x2e-verdicts.md.
     // `flaw.corrupted_arts` resolved (Phase 2 C5c, D15): reclassified
     // `uncomputed_rule` with the full passage in `description` in both
     // locales, so it no longer trips this creation_effect/in_play_effect-
@@ -2766,13 +2768,16 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          starting cap, and the favored-Ability exception (+3 specialization, cap 6) are entirely \
          uncomputed (also D46-pending), ArMDE:6703-6708",
     ),
-    (
-        "flaw.the_constant_expression",
-        "orphan: the permanent lost Fatigue level, the Concentration roll to suppress (Ease \
-         Factor 3 + Warping), the extra botch dice on Ceremonial/Ritual casting, and the free \
-         -3 lab Safety Flaw all have no effect — only a bare \"circumstantial\" marker is \
-         computed, ArMDE:5821-5838",
-    ),
+    // flaw.the_constant_expression: resolved (X2e) — the permanent lost
+    // Fatigue level, the Concentration roll to suppress (Ease Factor 3 +
+    // Warping), the extra botch dice on Ceremonial/Ritual casting, and the
+    // free -3 lab Safety Flaw (F-392, ArMDE:5821-5838) all reach neither
+    // locale; only a bare "circumstantial" marker is computed. D58 governs:
+    // the surfaced-modifier family stays computed as-is (a doubling/marker
+    // still cannot be computed where the engine does not know the base) —
+    // classification stays in_play_effect, description is owed. Removing the
+    // row is enough — `no_swept_entry_drops_an_uncomputed_mechanical_clause`
+    // bites it directly. See tmp/x2e-verdicts.md.
     (
         "flaw.usurer",
         "orphan: the ~10 pounds of silver yearly income has no effect — only the Reputation is \
@@ -2889,14 +2894,14 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // `docs/vf-audit/design-f0-book-template-engine.md`) — the text now states
     // it (D5), but computing it is still out of X2's scope. See
     // tmp/x2b-verdicts.md.
-    (
-        "virtue.marshal",
-        "orphan (X2c corrected this reading — the original \"no ability_authorization\" claim \
-         is stale: X1 already added it): \"It functions as the Ability Medicine for the purpose \
-         of treating veterinary diseases, and for surgery involving these animals\" has no \
-         effect at all — the 50 XP grant and the Martial Abilities authorization are both \
-         genuinely computed, ArMDE:4449-4456",
-    ),
+    // virtue.marshal: gap closed (X2e, 2026-09-30, collateral effect of
+    // widening the DE permission-modal idiom to cover "nehmen") — its DE
+    // description's "...aufteilen darf, und kann Kampffertigkeiten frei
+    // nehmen" now matches the modal+"nehmen" pattern added for
+    // flaw.ability_block/flaw.difficult_underlings, so the row's own recorded
+    // gap ("no residue beyond the already-computed XP grant and Martial
+    // Abilities authorization") is moot: the text states a real permission
+    // clause the screen now sees. Removed per shrink-only list semantics.
     // virtue.master_of_kennels: moved to COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE
     // (X2c) — its own orphan comment above predated X1's authorization work
     // and is now stale; re-reading finds no residue beyond flavor. See
